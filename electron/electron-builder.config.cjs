@@ -112,6 +112,10 @@ module.exports = {
       from: "../scripts/companion-data",
       to: "modtools/scripts/companion-data",
     },
+    {
+      from: "../scripts/difficulty-data",
+      to: "modtools/scripts/difficulty-data",
+    },
     { from: "../scripts/enemy-data", to: "modtools/scripts/enemy-data" },
     { from: "../scripts/item-data", to: "modtools/scripts/item-data" },
     { from: "../scripts/level-data", to: "modtools/scripts/level-data" },

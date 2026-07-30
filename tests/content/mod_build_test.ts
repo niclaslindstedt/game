@@ -393,6 +393,29 @@ describe("what the compiler refuses", () => {
     expect(hood.setId).toBe("scratch_kit");
   });
 
+  it("a mod's own name for the difficulty ladder's rungs", () => {
+    const dir = scratchMod(
+      setMod({
+        "difficulties.yaml": [
+          "difficulties:",
+          "  jesus:",
+          "    name: THE LONG NIGHT",
+          "    tagline: NOTHING SURVIVES IT",
+          "  easy:",
+          "    tagline: A QUIET SHIFT",
+        ].join("\n"),
+      }),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle!.difficulties).toEqual({
+      jesus: { name: "THE LONG NIGHT", tagline: "NOTHING SURVIVES IT" },
+      // A rung may be given a new blurb and keep its name — the page folds
+      // each field on separately rather than replacing the rung.
+      easy: { tagline: "A QUIET SHIFT" },
+    });
+  });
+
   it("…and a CONVERSION may bring its own name for the game", () => {
     const dir = exampleWithManifest((yaml) =>
       yaml.replace(
@@ -666,6 +689,50 @@ describe("what the compiler refuses", () => {
     );
     expect(buildMod(dir, catalog).errors.join()).toMatch(
       /already exist in the base game/,
+    );
+  });
+
+  it("a difficulty rung the game does not have", () => {
+    // A mod renames the ladder's rungs; it cannot add one. The length of the
+    // ladder is baked into the unlock chain, the per-map ladder cells and the
+    // four-tuple every level compiles its ramps into, so an unknown key here
+    // would silently do nothing at all.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+      "difficulties.yaml": "difficulties:\n  impossible:\n    name: NO",
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /is not one of the game's rungs/,
+    );
+  });
+
+  it("a difficulty tuned rather than renamed", () => {
+    // The rung's NUMBERS are one economy with content/ladder.yaml, which prices
+    // every venue — the shipped ones included — against them.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+      "difficulties.yaml": [
+        "difficulties:",
+        "  easy:",
+        "    name: A QUIET SHIFT",
+        "    enemyHpMult: 0.1",
+      ].join("\n"),
+    });
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/unknown field "enemyHpMult"/);
+    expect(errors).toMatch(/the numbers are the game's economy/);
+  });
+
+  it("a rung renamed in letters the pixel font cannot draw", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+      "difficulties.yaml": "difficulties:\n  hard:\n    name: BRÜTAL",
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /pixel font cannot draw/,
     );
   });
 

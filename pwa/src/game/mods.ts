@@ -33,6 +33,7 @@ import {
   CAP_THOUGHT_IDS,
   COMPANION_DEFS,
   CUTSCENE_DEFS,
+  DIFFICULTY_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
@@ -105,6 +106,7 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.powerups,
       bundle.companions,
       bundle.sets,
+      bundle.difficulties,
       bundle.cutscenes,
       bundle.thoughts,
       bundle.storyItems,
@@ -167,6 +169,7 @@ export async function applyMods(
       thoughts: THOUGHT_DEFS,
       capThoughts: CAP_THOUGHT_IDS,
       sets: SET_DEFS,
+      difficulties: DIFFICULTY_DEFS,
       storyItems: STORY_ITEM_DEFS,
     };
   }
@@ -189,6 +192,16 @@ export async function applyMods(
     ...(baseDefs.companions ?? {}),
   };
   const sets: Record<string, unknown> = { ...(baseDefs.sets ?? {}) };
+  // The ladder's rungs are MERGED per rung, not replaced: a mod supplies a name
+  // and a tagline, and everything else about the rung — the mob multipliers,
+  // the xp rates, the mercy curves, the starting weapon — is the game's economy
+  // and stays exactly as it shipped.
+  const difficulties: Record<string, unknown> = Object.fromEntries(
+    Object.entries(baseDefs.difficulties ?? {}).map(([id, def]) => [
+      id,
+      { ...def },
+    ]),
+  );
   const cutscenes: Record<string, unknown> = { ...(baseDefs.cutscenes ?? {}) };
   const thoughts: Record<string, unknown> = { ...(baseDefs.thoughts ?? {}) };
   const storyItems: Record<string, unknown> = {
@@ -211,6 +224,7 @@ export async function applyMods(
   const powerupOwners = new Map<string, string[]>();
   const companionOwners = new Map<string, string[]>();
   const setOwners = new Map<string, string[]>();
+  const difficultyOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
   const musicOwners = new Map<string, string[]>();
   const cutsceneOwners = new Map<string, string[]>();
@@ -260,6 +274,19 @@ export async function applyMods(
     for (const [id, def] of Object.entries(bundle.sets ?? {})) {
       sets[id] = def;
       claim(setOwners, id, bundle.id);
+    }
+    for (const [id, voice] of Object.entries(bundle.difficulties ?? {})) {
+      // Fold, never assign: an unknown rung is impossible (the compiler checks
+      // it against the five the game ships), and a rung a mod does not mention
+      // keeps the name it shipped with.
+      const base = difficulties[id];
+      if (!base) continue;
+      difficulties[id] = {
+        ...(base as object),
+        ...(voice.name === undefined ? {} : { name: voice.name }),
+        ...(voice.tagline === undefined ? {} : { tagline: voice.tagline }),
+      };
+      claim(difficultyOwners, id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.sounds ?? {})) {
       sounds[id] = def as SoundDef;
@@ -311,6 +338,7 @@ export async function applyMods(
     abilities: abilities as DefOverrides["abilities"],
     companions: companions as DefOverrides["companions"],
     sets: sets as DefOverrides["sets"],
+    difficulties: difficulties as DefOverrides["difficulties"],
     cutscenes: cutscenes as DefOverrides["cutscenes"],
     thoughts: thoughts as DefOverrides["thoughts"],
     capThoughts,
@@ -332,6 +360,7 @@ export async function applyMods(
     ...contested("powerup", powerupOwners),
     ...contested("companion", companionOwners),
     ...contested("set", setOwners),
+    ...contested("difficulty", difficultyOwners),
     ...contested("music", musicOwners),
     ...contested("cutscene", cutsceneOwners),
     ...contested("thought", thoughtOwners),

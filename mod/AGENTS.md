@@ -51,22 +51,23 @@ One file per thing, in the game's own format. The shipped content under
 [`../content/`](../content) is the reference — it is the same format, so any
 shipped file is a worked example of its kind.
 
-| What                                           | Where                          | Reference                                                    |
-| ---------------------------------------------- | ------------------------------ | ------------------------------------------------------------ |
-| A venue                                        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml) |
-| A venue's carve recipe (GENERATED MAPS)        | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)     |
-| Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)   |
-| A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                  |
-| A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                      |
-| A companion (a spared elite joining you)       | `companions.yaml`              | [`../content/companions.yaml`](../content/companions.yaml)   |
-| An item SET (a kit of green armor)             | `sets.yaml`                    | [`../content/sets.yaml`](../content/sets.yaml)               |
-| Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                  |
-| A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                    |
-| A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                      |
-| A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)       |
-| A cutscene                                     | `cutscenes/<id>.yaml`          | [`../content/cutscenes/`](../content/cutscenes)              |
-| The hero's inner monologues                    | `thoughts.yaml`                | [`../content/thoughts.yaml`](../content/thoughts.yaml)       |
-| A story item and its lore                      | `story-items.yaml`             | [`../content/story-items.yaml`](../content/story-items.yaml) |
+| What                                           | Where                          | Reference                                                       |
+| ---------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
+| A venue                                        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml)    |
+| A venue's carve recipe (GENERATED MAPS)        | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)        |
+| Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)      |
+| A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                     |
+| A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                         |
+| A companion (a spared elite joining you)       | `companions.yaml`              | [`../content/companions.yaml`](../content/companions.yaml)      |
+| An item SET (a kit of green armor)             | `sets.yaml`                    | [`../content/sets.yaml`](../content/sets.yaml)                  |
+| What the difficulty rungs are CALLED           | `difficulties.yaml`            | [`FORMAT.md`](FORMAT.md#difficultiesyaml--what-the-ladder-says) |
+| Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                     |
+| A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                       |
+| A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                         |
+| A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)          |
+| A cutscene                                     | `cutscenes/<id>.yaml`          | [`../content/cutscenes/`](../content/cutscenes)                 |
+| The hero's inner monologues                    | `thoughts.yaml`                | [`../content/thoughts.yaml`](../content/thoughts.yaml)          |
+| A story item and its lore                      | `story-items.yaml`             | [`../content/story-items.yaml`](../content/story-items.yaml)    |
 
 **Every level needs a `ladder.yaml` row**, or it has no difficulty band and the
 compiler refuses it. This catches people out; it is step 3b, not an optional
@@ -109,6 +110,7 @@ means the game will accept it.
 | `is not a level this mod ships`            | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).            |
 | `unknown compass region "x"`               | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
 | `belongs to no set`                        | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
+| `is not one of the game's rungs`           | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
 
 ## 5. Play it
 

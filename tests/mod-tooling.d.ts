@@ -48,6 +48,9 @@ declare module "*/mod/tools/build.mjs" {
     /** The mod's own SETS, already `{ id → SetDef }` — the kits its green
      * pieces belong to. */
     sets: Record<string, unknown>;
+    /** What the difficulty rungs are CALLED under this mod — a partial
+     * `{ rung → { name?, tagline? } }` folded onto the shipped defs. */
+    difficulties: Record<string, { name?: string; tagline?: string }>;
     /** THE STORY. `cutscenes` arrives with its `variants:` already expanded into
      * `<id>_<difficulty>` scenes; `capRotation` REPLACES the shipped cap-farm
      * rotation rather than merging with it. */

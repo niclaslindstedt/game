@@ -150,6 +150,31 @@ Two decisions worth keeping:
   conversion re-homing a shipped kit ships the pieces too, which puts them in
   the list anyway.
 
+### 3a⅞. The ladder speaks in the mod's voice
+
+`difficulties.yaml` renames the five rungs and rewrites their taglines, and does
+nothing else. The split is the interesting part, and it is the same one
+`item_rarity.yaml` sits on:
+
+- **The VOICE is the mod's.** "JESUS CHRIST!" / "THEY NEVER STOP COMING" is this
+  game's register, and a conversion set in a hospital or a courtroom reads as
+  somebody else's game the moment its ladder speaks in it. There is nothing to
+  balance in a label.
+- **The NUMBERS are the game's.** A rung's mob multipliers, xp rates, mercy
+  curves, stamina ladders and starting weapon are one economy with
+  `content/ladder.yaml`, which prices every venue — the shipped ones included —
+  against them.
+
+So `DefOverrides.difficulties` takes a FULL def, but `applyMods` folds a mod's
+two strings onto the shipped rung rather than replacing it, and the schema
+refuses any other field with that reason in the message. A mod also cannot ADD a
+rung: the ladder's length is baked into the unlock chain, the per-map ladder
+cells and the four-tuple every level compiles its ramps into.
+
+It lands before the picker is drawn — `applyMods` runs and then the flow goes to
+the difficulty ladder — so the rows a player reads are already the mod's, with
+no extra plumbing.
+
 ### 3b. The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs

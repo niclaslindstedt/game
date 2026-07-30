@@ -259,6 +259,36 @@ shipped `setId` that your mod cannot edit, so claiming one would compile into
 exactly the mismatch above. A conversion re-homing a shipped kit ships the
 pieces too.
 
+## `difficulties.yaml` — what the ladder says
+
+One file at your mod's root. Renames the difficulty rungs and rewrites the
+one-line blurb under each, so a conversion's CHOOSE YOUR NIGHTMARE screen speaks
+in its own register instead of this game's:
+
+```yaml
+difficulties:
+  easy:
+    name: A QUIET SHIFT
+    tagline: NOBODY IS LOOKING FOR YOU YET
+  jesus:
+    name: THE LONG NIGHT
+    tagline: NOTHING SURVIVES IT
+```
+
+Both fields are optional per rung, and a rung you leave out keeps what it
+shipped with. The five rung ids are `easy`, `medium`, `hard`, `nightmare`,
+`jesus` — you may rename them, but you cannot add one.
+
+**The VOICE is yours; the NUMBERS are the game's.** A rung's mob multipliers, xp
+rates, mercy curves, stamina ladders and starting weapon are one economy with
+`ladder.yaml`, which prices every venue — the shipped ones and yours — against
+them. A mod that moved those would be rebalancing the campaign rather than
+adding to it, so any other field here is an error. Same line `grades:` and the
+loot economy are on.
+
+Both strings are drawn in the pixel font, so the glyph rule from `brand:`
+applies to them too.
+
 ## `sprites/<family>/<name>.yaml` — pixel art
 
 The file stem is the `name`, and the name is what an enemy or level references.

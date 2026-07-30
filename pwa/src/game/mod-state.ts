@@ -80,6 +80,10 @@ export type ModBundle = {
   /** The mod's own SETS, by id — the kits its `rarity: set` pieces belong to
    * and draw their tiered bonuses from. */
   sets: Record<string, unknown>;
+  /** What the difficulty ladder's rungs are CALLED under this mod: a PARTIAL
+   * `{ rung → { name?, tagline? } }` folded onto the shipped defs. The numbers
+   * behind a rung stay the game's — see the schema's header for why. */
+  difficulties: Record<string, { name?: string; tagline?: string }>;
   /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
    * replaces a shipped sound rather than only adding one. */
   soundKeys: Record<string, string>;
@@ -117,6 +121,7 @@ export type ModClash = {
     | "powerup"
     | "companion"
     | "set"
+    | "difficulty"
     | "cutscene"
     | "thought"
     | "story item";

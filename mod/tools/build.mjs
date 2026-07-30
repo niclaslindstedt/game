@@ -37,6 +37,7 @@ import path from "node:path";
 import { parse } from "yaml";
 
 import { validateCompanion } from "../../scripts/asset-tools/companion-schema.mjs";
+import { validateDifficultyVoice } from "../../scripts/asset-tools/difficulty-schema.mjs";
 import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
 import { validateItem } from "../../scripts/asset-tools/item-schema.mjs";
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
@@ -52,8 +53,10 @@ import {
   validateStoryItem,
   validateThought,
 } from "../../scripts/asset-tools/story-schema.mjs";
+import { glyphProblem } from "../../scripts/asset-tools/glyphs.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
 import { loadCompanions } from "../../scripts/companion-data/load-yaml.mjs";
+import { loadDifficultyVoices } from "../../scripts/difficulty-data/load-yaml.mjs";
 import { loadEnemies } from "../../scripts/enemy-data/load-yaml.mjs";
 import {
   baseDef,
@@ -205,6 +208,14 @@ export function buildMod(modDir, catalog) {
   // THE KITS. A mod could already ship `rarity: set` items; without this the
   // pieces belonged to nothing, granted nothing, and read as a bug in the mod.
   const sets = loadTree(() => loadSets(modDir), "sets", fail);
+  // THE LADDER'S VOICE — what the difficulty rungs are CALLED. A conversion set
+  // somewhere else entirely still offered "JESUS CHRIST!"; the numbers behind
+  // each rung stay the game's (see the schema's header).
+  const difficulties = loadTree(
+    () => loadDifficultyVoices(modDir),
+    "difficulties",
+    fail,
+  );
   // THE STORY: the scenes a mod opens with, the hero's inner monologues, and the
   // plot pieces his finds spell out. A conversion that shipped none of these
   // would be a re-skin — new monsters on somebody else's plot — so all three go
@@ -233,6 +244,7 @@ export function buildMod(modDir, catalog) {
   const modPowerups = powerups?.powerups ?? {};
   const modCompanions = companions?.companions ?? {};
   const modSets = sets?.sets ?? {};
+  const modDifficulties = difficulties?.voices ?? {};
   const modCutscenes = cutscenes?.cutscenes ?? {};
   const modThoughts = thoughts?.thoughts ?? {};
   const modCapRotation = thoughts?.capRotation ?? [];
@@ -247,6 +259,7 @@ export function buildMod(modDir, catalog) {
     Object.keys(modPowerups).length +
     Object.keys(modCompanions).length +
     Object.keys(modSets).length +
+    Object.keys(modDifficulties).length +
     Object.keys(modCutscenes).length +
     Object.keys(modThoughts).length +
     Object.keys(modStoryItems).length;
@@ -447,6 +460,20 @@ export function buildMod(modDir, catalog) {
     }
   }
 
+  // The ladder's voice. Both strings are drawn in the pixel font on the CHOOSE
+  // YOUR NIGHTMARE screen, so they go through the same glyph check the brand
+  // does — a rung named with an accent renders as "?" on the one screen every
+  // player passes through.
+  const difficultyRefs = {
+    difficulties: new Set(catalog.difficulties ?? []),
+    glyphs: catalog.glyphs,
+  };
+  for (const { id, def } of difficulties?.entries ?? []) {
+    const res = validateDifficultyVoice(id, def, difficultyRefs);
+    errors.push(...prefix(res.errors, "difficulties.yaml"));
+    warnings.push(...prefix(res.warnings, "difficulties.yaml"));
+  }
+
   const itemRefs = {
     weapons: refs.weapons,
     gear: refs.gear,
@@ -634,6 +661,10 @@ export function buildMod(modDir, catalog) {
       // The KITS a mod's green pieces belong to. `{ id → SetDef }`, exactly the
       // shape `registerDefs({ sets })` takes.
       sets: modSets,
+      // What the ladder's rungs are CALLED under this mod — a partial
+      // `{ rung → { name?, tagline? } }` the page folds onto the shipped defs,
+      // never a replacement for them.
+      difficulties: modDifficulties,
       // The story. `cutscenes` has its `variants:` already expanded into
       // `<id>_<difficulty>` scenes, so the page registers exactly what
       // `cutsceneVariant` looks up.
@@ -939,30 +970,13 @@ function readBrand(manifest, kind, catalog, errors) {
     ["title", title],
     ["tagline", tagline],
   ]) {
-    const missing = unwritable(text, catalog.glyphs);
-    if (missing.length > 0)
-      errors.push(
-        `mod.yaml: brand.${field} uses ${missing.map((c) => `"${c}"`).join(", ")}, ` +
-          'which the game\'s pixel font cannot draw — it would render as "?" ' +
-          "across the top of your own title screen",
-      );
+    const problem = glyphProblem(text, catalog.glyphs, `brand.${field}`);
+    // The generic wording plus where it would show: a "?" at triple size across
+    // the author's own front page is worth naming.
+    if (problem)
+      errors.push(`mod.yaml: ${problem} — across the top of your title screen`);
   }
   return { title, tagline };
-}
-
-/** The characters of `text` the pixel font has no cell for, deduped and in the
- * order they appear. Uppercased first, exactly as `PixelText` looks a glyph up
- * (spaces included — the font carries one). */
-function unwritable(text, glyphs) {
-  const known = new Set((glyphs ?? "").split(""));
-  // No glyph list means an old catalog; a check that cannot be made must not
-  // report every character as broken.
-  if (known.size === 0) return [];
-  const missing = [];
-  for (const char of text.toUpperCase()) {
-    if (!known.has(char) && !missing.includes(char)) missing.push(char);
-  }
-  return missing;
 }
 
 /**
