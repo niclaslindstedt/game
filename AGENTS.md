@@ -1442,24 +1442,33 @@ look (no toggle). Both are pure render concerns:
   `drawPlayer` poses the weapon layer via `weaponPose`.
 
   **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
-  look, and a UNIQUE gets its OWN — keyed off the equipped weapon's `uniqueId`
-  so a named weapon FEELS more powerful. **Melee** (`SLASH_STYLES` → `SlashStyle`
-  → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
+  look, and a UNIQUE gets its OWN, so a named weapon FEELS more powerful. **THE
+  WEAPON OWNS ITS LOOK** — `fx:` in its own YAML (`UniqueDef.fx`: an ELEMENT from
+  the shared vocabulary plus any channel it wants to tweak), for exactly the
+  reason a power owns its `look:`: while the mapping was a table in the app keyed
+  by shipped ids, a MOD's legendary could only ever swing the plain class look.
+  The kits live in the import-free leaf `weapon-elements.ts` (the item pipeline
+  reads the element names from it to check every authored `fx:`, and runs before
+  the catalog `weapon-fx.ts` reaches through `@game/core`); the drawing is
+  `weapon-fx.ts`, and the resolved style is memoized per weapon because a shot
+  style is asked for per projectile per frame. **Melee** (`SLASH_ELEMENTS` →
+  `SlashStyle` → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
   `afterimages`) plus a `gore` `burst` (`drawBurst`) thrown over the plain splash
   on the hero's own blows (GameScreen's `heroGore`) — Excalibur flares holy gold,
-  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_STYLES` →
+  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_ELEMENTS` →
   `ShotStyle` → `drawMuzzle` + `drawProjectileTrail`): a themed muzzle flash / cast
   bloom at the tip AND a glow trail riding the hero's round/bolt in flight
   (`render.ts`, gated to the hero's own shots via the projectile's
   `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
   shot. The hero faces where he MOVES, not where he shoots, so his flash pins to
   the barrel's facing side (the muzzle effect's `faceLeft`) — a shot at a foe
-  behind him still fires at the weapon, not off his back. It's all a pwa-side
-  catalog (the engine knows nothing of it);
-  un-listed weapons keep the plain class look, so the catalog grows one entry at
-  a time. Reusable elemental kits (FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM for
-  slashes; FLAME/HOLY/STORM/COSMIC/FROST/VENOM/DEATH/SOLAR/TECH for shots) cover
-  most weapons. The engine's shared `nova` crit-AoE is NOT themed (it carries no
+  behind him still fires at the weapon, not off his back. The PIXELS are the
+  app's and the engine draws none of it; what travels on the def is the weapon's
+  CHOICE. A weapon with no `fx:` keeps the plain class look, so the roster grows
+  one weapon at a time. The eleven elements (fire, holy, frost, storm, void,
+  blood, venom, cosmic, death, solar, tech) each have a slash kit AND a shot kit,
+  so one word means the same element on a blade and on a gun — an asymmetric
+  vocabulary would make `element: blood` mean nothing on a rifle. The engine's shared `nova` crit-AoE is NOT themed (it carries no
   weapon attribution).
 
   Tune and author all of it with the `weapon-swing` preview script

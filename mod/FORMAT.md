@@ -342,6 +342,30 @@ ladder would be rebalancing the campaign rather than adding to it.
 
 Full reference: [`../content/items/`](../content/items).
 
+### A weapon's SIGNATURE LOOK
+
+A named weapon may say what its swing or its shot looks like, so your legendary
+flares its own element instead of swinging the plain class look:
+
+```yaml
+# items/unique/mymod_brand.yaml
+fx:
+  element: fire # fire holy frost storm void blood venom cosmic death solar tech
+  weight: 1.2 # optional — a heavier crescent, a bigger flash
+  glow: "#ff5a1e" # optional — any channel of the kit, overridden
+```
+
+Every element has both a MELEE kit and a SHOT kit, so the same word works on a
+blade and on a gun; your weapon's own class picks which. Leave `element` out and
+it starts from the plain class look — that is how you author something
+deliberately modest.
+
+Channels: `core`, `glow` and `particle` on both; `edge`, `afterimages` and
+`gore` are the melee half; `spark` is the shot half. `cli.mjs ids --kind
+elements` lists the elements. The kits themselves are the game's palette and are
+not a mod's to extend — a name nothing draws would be a weapon that silently
+swings the plain look, so the compiler refuses one.
+
 ## `sounds/<id>.yaml` — a sound
 
 The file stem is the id. A sound is a list of **voices** fired in order, each

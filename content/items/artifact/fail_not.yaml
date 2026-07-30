@@ -23,3 +23,6 @@ bonuses:
   - kind: crit
     value: 0.15
 lore: IT HAS LOOSED TEN THOUSAND ARROWS. NONE HAVE LANDED ANYWHERE BUT HOME.
+fx:
+  element: holy
+  weight: 1.2

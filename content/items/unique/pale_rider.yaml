@@ -15,3 +15,5 @@ bonuses:
     value: 0.6
 lore: I LOOKED, AND BEHELD A PALE HORSE. HELL FOLLOWED AT A CANTER.
 world: true
+fx:
+  element: death

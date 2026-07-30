@@ -16,3 +16,8 @@ bonuses:
     value: 40
 lore: WHAT IT FELLS STAYS FELLED. THE GROUND REMEMBERS EVERY BLOW.
 world: true
+fx:
+  element: frost
+  core: "#d7e6ea"
+  glow: "#5aa0b0"
+  particle: "void"

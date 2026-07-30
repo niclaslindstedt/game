@@ -478,6 +478,10 @@ export function buildMod(modDir, catalog) {
     weapons: refs.weapons,
     gear: refs.gear,
     sprites: spriteNames,
+    // The elements a weapon's `fx:` may name — the game's palette, not a mod's
+    // to extend: a kit is pixels drawn by the app, so a name nothing draws
+    // would be a weapon that silently swings the plain look.
+    elements: new Set(catalog.elements ?? []),
   };
   for (const entry of items?.entries ?? []) {
     // `grades:` mints extra ids at ENGINE LOAD, out of a catalog that ships

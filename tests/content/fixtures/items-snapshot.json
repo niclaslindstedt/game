@@ -2722,6 +2722,9 @@
           "value": 0.08
         }
       ],
+      "fx": {
+        "element": "cosmic"
+      },
       "id": "deadstar",
       "ilvl": 22,
       "lore": "THE HEART OF A STAR THAT DIED SCREAMING. IT STILL KEEPS TIME.",
@@ -2748,6 +2751,10 @@
           "value": 4
         }
       ],
+      "fx": {
+        "element": "fire",
+        "weight": 1.35
+      },
       "id": "dragons_breath",
       "ilvl": 60,
       "lore": "A MOUTHFUL OF FIRE FROM SOMETHING THAT NEVER EXISTED. THE BURNS EXIST.",
@@ -2832,6 +2839,12 @@
           "value": 0.8
         }
       ],
+      "fx": {
+        "afterimages": 3,
+        "core": "#eaf1ff",
+        "element": "holy",
+        "glow": "#9fd0ff"
+      },
       "id": "durendal",
       "ilvl": 236,
       "lore": "IT DID NOT BREAK ON THE STONE. THE STONE BROKE.",
@@ -2976,6 +2989,11 @@
           "value": -2
         }
       ],
+      "fx": {
+        "element": "holy",
+        "glow": "#ffd94a",
+        "weight": 1.15
+      },
       "id": "excalibur",
       "ilvl": 1,
       "lore": "DRAWN FROM A STONE THAT IS NOW A SINGULARITY.",
@@ -3037,6 +3055,10 @@
           "value": 0.15
         }
       ],
+      "fx": {
+        "element": "holy",
+        "weight": 1.2
+      },
       "id": "fail_not",
       "ilvl": 166,
       "lore": "IT HAS LOOSED TEN THOUSAND ARROWS. NONE HAVE LANDED ANYWHERE BUT HOME.",
@@ -3095,6 +3117,9 @@
           "value": 0.7
         }
       ],
+      "fx": {
+        "element": "solar"
+      },
       "id": "gandiva",
       "ilvl": 129,
       "lore": "THE QUIVER NEVER EMPTIED. NEITHER, IN THE END, DID THE FIELD OF THE DEAD.",
@@ -3269,6 +3294,11 @@
           "value": 10
         }
       ],
+      "fx": {
+        "core": "#ffe3b0",
+        "element": "fire",
+        "glow": "#ffae33"
+      },
       "id": "gram",
       "ilvl": 149,
       "lore": "IT WAS BROKEN ONCE, AND REMADE HUNGRIER. IT REMEMBERS THE DRAGON.",
@@ -3296,6 +3326,12 @@
           "value": 40
         }
       ],
+      "fx": {
+        "core": "#d7e6ea",
+        "element": "frost",
+        "glow": "#5aa0b0",
+        "particle": "void"
+      },
       "id": "gravemaker",
       "ilvl": 62,
       "lore": "WHAT IT FELLS STAYS FELLED. THE GROUND REMEMBERS EVERY BLOW.",
@@ -3353,6 +3389,9 @@
           "value": -15
         }
       ],
+      "fx": {
+        "element": "fire"
+      },
       "id": "herdbreaker",
       "ilvl": 35,
       "lore": "IT BRANDED A THOUSAND HEAD. NONE OF THEM WERE CATTLE.",
@@ -3398,6 +3437,11 @@
           "value": 0.06
         }
       ],
+      "fx": {
+        "element": "blood",
+        "glow": "#e04a1e",
+        "particle": "ember"
+      },
       "id": "hordebane",
       "ilvl": 60,
       "lore": "IT WAS MADE FOR TOO MANY. THERE HAVE NEVER BEEN TOO MANY.",
@@ -3423,6 +3467,9 @@
           "value": 0.2
         }
       ],
+      "fx": {
+        "element": "cosmic"
+      },
       "id": "horizons_end",
       "ilvl": 77,
       "lore": "NOTHING ON THIS SIDE OF THE HORIZON IS OUT OF ITS REACH.",
@@ -3534,6 +3581,9 @@
           "value": 0.35
         }
       ],
+      "fx": {
+        "element": "venom"
+      },
       "id": "kingsbane",
       "ilvl": 106,
       "lore": "CROWNS DO NOT STOP IT. CROWNS NEVER HAVE.",
@@ -3585,6 +3635,11 @@
           "value": 0.25
         }
       ],
+      "fx": {
+        "element": "holy",
+        "spark": "#ffffff",
+        "weight": 1.2
+      },
       "id": "lightbinder",
       "ilvl": 83,
       "lore": "LIGHT OBEYS IT. LIGHT DID NOT GET A CHOICE.",
@@ -3606,6 +3661,9 @@
           "value": 5
         }
       ],
+      "fx": {
+        "element": "frost"
+      },
       "id": "longwatch",
       "ilvl": 16,
       "lore": "THE WATCH ENDS WHEN THE MARK FALLS. THE WATCH HAS NOT ENDED.",
@@ -3631,6 +3689,9 @@
           "value": 0.06
         }
       ],
+      "fx": {
+        "element": "storm"
+      },
       "id": "maelstrom",
       "ilvl": 90,
       "lore": "THE WHOLE STORM, THROUGH ONE NARROW DOOR.",
@@ -3738,6 +3799,11 @@
           "value": 40
         }
       ],
+      "fx": {
+        "element": "fire",
+        "spark": "#ff8a3a",
+        "weight": 1.25
+      },
       "id": "meteorfall",
       "ilvl": 86,
       "lore": "IT DOES NOT FIRE ROUNDS. IT SCHEDULES IMPACTS.",
@@ -3766,6 +3832,11 @@
           "value": 0.2
         }
       ],
+      "fx": {
+        "afterimages": 2,
+        "element": "storm",
+        "weight": 1.2
+      },
       "id": "mjolnir",
       "ilvl": 58,
       "keeper": true,
@@ -3803,6 +3874,11 @@
           "value": -150
         }
       ],
+      "fx": {
+        "afterimages": 2,
+        "element": "blood",
+        "weight": 1.1
+      },
       "id": "muramasa",
       "ilvl": 121,
       "lore": "IT DEMANDS BLOOD. IT DOES NOT CARE WHOSE. USUALLY IT IS SATISFIED.",
@@ -3828,6 +3904,10 @@
           "value": 3
         }
       ],
+      "fx": {
+        "core": "#eaf1ff",
+        "particle": "spark"
+      },
       "id": "muskrats_tooth",
       "ilvl": 16,
       "keeper": true,
@@ -3857,6 +3937,9 @@
           "value": 0.3
         }
       ],
+      "fx": {
+        "element": "void"
+      },
       "id": "nightfall",
       "ilvl": 90,
       "lore": "QUENCHED IN THE DARK BETWEEN UNIVERSES. IT NEVER QUITE CAME BACK OUT.",
@@ -3882,6 +3965,9 @@
           "value": 0.08
         }
       ],
+      "fx": {
+        "element": "holy"
+      },
       "id": "oathbrand",
       "ilvl": 38,
       "lore": "SWORN TO AN EDGE ONE MOLECULE WIDE. IT HAS NEVER BEEN FORSWORN.",
@@ -3951,6 +4037,9 @@
           "value": 0.6
         }
       ],
+      "fx": {
+        "element": "death"
+      },
       "id": "pale_rider",
       "ilvl": 40,
       "lore": "I LOOKED, AND BEHELD A PALE HORSE. HELL FOLLOWED AT A CANTER.",
@@ -4023,6 +4112,10 @@
           "value": 0.05
         }
       ],
+      "fx": {
+        "element": "fire",
+        "weight": 1.2
+      },
       "id": "pyrelight",
       "ilvl": 59,
       "lore": "LIT ONCE AND NEVER SINCE PUT OUT. IT REMEMBERS BEING A STAR.",
@@ -4047,6 +4140,11 @@
           "value": 5
         }
       ],
+      "fx": {
+        "element": "fire",
+        "spark": "#ff5a3a",
+        "weight": 1.2
+      },
       "id": "redwind",
       "ilvl": 34,
       "lore": "IT DRINKS THE RED STORM AND SPITS IT BACK, HOTTER.",
@@ -4089,6 +4187,10 @@
           "value": 0.08
         }
       ],
+      "fx": {
+        "element": "void",
+        "weight": 1.25
+      },
       "id": "riftmaw",
       "ilvl": 33,
       "lore": "THE PHYSICS ARE — ON THE RECORD — FLEXIBLE.",
@@ -4146,6 +4248,12 @@
           "value": 0.08
         }
       ],
+      "fx": {
+        "core": "#fff0d0",
+        "element": "holy",
+        "glow": "#ffae33",
+        "spark": "#ffcf6b"
+      },
       "id": "ruyi_jingu",
       "ilvl": 216,
       "lore": "AS-YOU-WISH. IT WEIGHED NOTHING, OR IT HELD UP HEAVEN. THE BEARER DECIDED.",
@@ -4211,6 +4319,9 @@
           "value": 0.08
         }
       ],
+      "fx": {
+        "element": "frost"
+      },
       "id": "seidr_staff",
       "ilvl": 135,
       "lore": "SHE SANG THE FATES A LITTLE SLOWER. THEY DID NOT NOTICE UNTIL TOO LATE.",
@@ -4272,6 +4383,9 @@
           "value": 0.6
         }
       ],
+      "fx": {
+        "element": "cosmic"
+      },
       "id": "sharanga",
       "ilvl": 148,
       "lore": "THE BOW OF THE PRESERVER. IT ENDS THINGS SO OTHER THINGS MAY GO ON.",
@@ -4307,6 +4421,10 @@
           "value": 0.1
         }
       ],
+      "fx": {
+        "element": "storm",
+        "weight": 1.2
+      },
       "id": "skybreaker",
       "ilvl": 69,
       "lore": "EVERY SHOT TEARS THE SKY, AND THE SKY ANSWERS.",
@@ -4369,6 +4487,10 @@
           "value": 3
         }
       ],
+      "fx": {
+        "element": "cosmic",
+        "glow": "#8a9aff"
+      },
       "id": "starfall",
       "ilvl": 76,
       "lore": "EVERY FALLEN FOE PULLS A PIECE OF THE SKY DOWN WITH IT.",
@@ -4442,6 +4564,9 @@
           "value": 3
         }
       ],
+      "fx": {
+        "element": "storm"
+      },
       "id": "stormlash",
       "ilvl": 53,
       "lore": "THE STORM, BROKEN TO HARNESS. IT STILL PULLS.",
@@ -4467,6 +4592,9 @@
           "value": 0.06
         }
       ],
+      "fx": {
+        "element": "solar"
+      },
       "id": "sunspear",
       "ilvl": 78,
       "lore": "NOON, SHARPENED TO A POINT.",
@@ -4488,6 +4616,9 @@
           "value": 0.8
         }
       ],
+      "fx": {
+        "element": "solar"
+      },
       "id": "sunwreath",
       "ilvl": 58,
       "lore": "THE CROWN OF A STAR THAT REFUSED TO DIE. IT BURNS FOR ITS BEARER NOW.",
@@ -4661,6 +4792,10 @@
           "value": 80
         }
       ],
+      "fx": {
+        "element": "blood",
+        "glow": "#b23030"
+      },
       "id": "the_fallen_standard",
       "ilvl": 69,
       "lore": "HE PLANTED IT AND STOOD WATCH BENEATH IT. TAKE IT UP.",
@@ -4850,6 +4985,9 @@
           "value": 0.01
         }
       ],
+      "fx": {
+        "element": "tech"
+      },
       "id": "the_inevitable",
       "ilvl": 55,
       "keeper": true,
@@ -4876,6 +5014,12 @@
           "value": 0.16
         }
       ],
+      "fx": {
+        "core": "#d6ffea",
+        "element": "storm",
+        "glow": "#1e8a5a",
+        "spark": "#3affaa"
+      },
       "id": "the_jailbreak",
       "ilvl": 29,
       "lore": "IGNORE ALL PREVIOUS INSTRUCTIONS. FIRE.",
@@ -5131,6 +5275,9 @@
           "value": 0.15
         }
       ],
+      "fx": {
+        "element": "void"
+      },
       "id": "the_long_silence",
       "ilvl": 89,
       "lore": "AFTER IT SPEAKS, NOTHING ELSE DOES.",
@@ -5307,6 +5454,9 @@
           "value": -60
         }
       ],
+      "fx": {
+        "element": "fire"
+      },
       "id": "the_reckoning",
       "ilvl": 73,
       "lore": "EVERY DEBT COMES DUE. THIS IS HOW.",
@@ -5513,6 +5663,9 @@
           "value": 0.15
         }
       ],
+      "fx": {
+        "element": "holy"
+      },
       "id": "the_verdict",
       "ilvl": 67,
       "lore": "IT HEARS BOTH SIDES. THEN IT RULES.",
@@ -5568,6 +5721,9 @@
           "value": 0.08
         }
       ],
+      "fx": {
+        "element": "venom"
+      },
       "id": "thyrsus",
       "ilvl": 138,
       "lore": "PINE-CROWNED, VINE-WOUND. WHAT IT TOUCHES REMEMBERS IT WAS ONCE ON FIRE.",
@@ -5882,6 +6038,12 @@
           "value": 0.3
         }
       ],
+      "fx": {
+        "afterimages": 1,
+        "element": "fire",
+        "glow": "#ff5a1e",
+        "weight": 1.2
+      },
       "id": "worldsplitter",
       "ilvl": 86,
       "lore": "THE CRATERS HAVE OLDER SIBLINGS. THIS MADE THEM.",
@@ -5903,6 +6065,9 @@
           "value": 8
         }
       ],
+      "fx": {
+        "element": "fire"
+      },
       "id": "wrathflame",
       "ilvl": 49,
       "lore": "LEGALLY, AND HE STRESSES THIS, NOT A FLAMETHROWER.",

@@ -17,3 +17,5 @@ bonuses:
   - kind: crit
     value: 0.08
 lore: SHE SANG THE FATES A LITTLE SLOWER. THEY DID NOT NOTICE UNTIL TOO LATE.
+fx:
+  element: frost

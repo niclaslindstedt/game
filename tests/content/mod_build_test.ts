@@ -393,6 +393,33 @@ describe("what the compiler refuses", () => {
     expect(hood.setId).toBe("scratch_kit");
   });
 
+  it("a mod's own weapon, flaring its own element", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/unique/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: unique",
+        "rarity: unique",
+        "name: SCRATCH BLADE",
+        "base: medieval_sword",
+        "slot: weapon",
+        "ilvl: 18",
+        "bonuses: []",
+        "lore: A TEST BLADE.",
+        "fx:",
+        "  element: void",
+        "  weight: 1.2",
+      ].join("\n"),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    // It travels on the def, so the renderer resolves it exactly as it does a
+    // shipped weapon's — this is the whole feature.
+    expect(
+      (bundle!.uniques.scratch_blade as { fx?: Record<string, unknown> }).fx,
+    ).toEqual({ element: "void", weight: 1.2 });
+  });
+
   it("a mod's own name for the difficulty ladder's rungs", () => {
     const dir = scratchMod(
       setMod({
@@ -569,6 +596,52 @@ describe("what the compiler refuses", () => {
       "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(/keep it to 28/);
+  });
+
+  it("a weapon whose signature names an element nothing draws", () => {
+    // The elements are the game's palette — a kit is pixels this app draws — so
+    // an unknown name is a legendary that silently swings the plain look.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/unique/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: unique",
+        "rarity: unique",
+        "name: SCRATCH BLADE",
+        "base: medieval_sword",
+        "slot: weapon",
+        "ilvl: 18",
+        "bonuses: []",
+        "lore: A TEST BLADE.",
+        "fx:",
+        "  element: banana",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /fx.element "banana" is not one of the game's elements/,
+    );
+  });
+
+  it("a signature on a piece of armor, which draws nowhere", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/unique/scratch_hat.yaml": [
+        "id: scratch_hat",
+        "kind: unique",
+        "rarity: unique",
+        "name: SCRATCH HAT",
+        "base: mission_cap",
+        "slot: head",
+        "ilvl: 18",
+        "bonuses: []",
+        "lore: A TEST HAT.",
+        "fx:",
+        "  element: fire",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /fx is a WEAPON's signature look/,
+    );
   });
 
   it("a set piece with no kit to belong to", () => {

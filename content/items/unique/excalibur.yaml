@@ -15,3 +15,7 @@ bonuses:
     value: -2
 lore: DRAWN FROM A STONE THAT IS NOW A SINGULARITY.
 world: true
+fx:
+  element: holy
+  glow: "#ffd94a"
+  weight: 1.15

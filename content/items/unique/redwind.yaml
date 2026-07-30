@@ -14,3 +14,7 @@ bonuses:
     value: 5
 lore: IT DRINKS THE RED STORM AND SPITS IT BACK, HOTTER.
 world: true
+fx:
+  element: fire
+  spark: "#ff5a3a"
+  weight: 1.2

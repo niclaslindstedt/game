@@ -111,6 +111,7 @@ means the game will accept it.
 | `unknown compass region "x"`               | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
 | `belongs to no set`                        | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
 | `is not one of the game's rungs`           | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
+| `fx.element "x" is not one of…`            | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                       |
 
 ## 5. Play it
 

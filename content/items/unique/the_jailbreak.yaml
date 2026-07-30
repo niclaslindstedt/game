@@ -14,3 +14,8 @@ bonuses:
   - kind: crit
     value: 0.16
 lore: IGNORE ALL PREVIOUS INSTRUCTIONS. FIRE.
+fx:
+  element: storm
+  core: "#d6ffea"
+  spark: "#3affaa"
+  glow: "#1e8a5a"

@@ -72,6 +72,13 @@ const { loadCompanions } = await import(
 const { REGION_TERMS, parseRegion } = await import(
   engine("src/game/mapgen/regions.ts")
 );
+// The ELEMENT vocabulary a weapon's `fx:` may name. An import-free leaf on the
+// app side (the kits are pixels), snapshotted here for the same reason the
+// compass regions are: the compiler runs where there is no TypeScript to read
+// it from.
+const { SLASH_ELEMENTS, SHOT_ELEMENTS } = await import(
+  engine("pwa/src/game/weapon-elements.ts")
+);
 // The pixel font's glyph set — what a mod's BRAND may be written with.
 const { GLYPHS: FONT_GLYPHS } = await import(
   engine("scripts/asset-tools/font.mjs")
@@ -205,6 +212,10 @@ const catalog = {
   // where the engine's parser cannot — see `regionNames`.
   regions: regionNames(),
   sprites: shippedSpriteNames(),
+  // The elements a weapon's signature look may name (see `WeaponFx`).
+  elements: sorted(
+    new Set([...Object.keys(SLASH_ELEMENTS), ...Object.keys(SHOT_ELEMENTS)]),
+  ),
   // Not an id set: the characters the pixel font can draw (see `fontGlyphs`).
   glyphs: fontGlyphs(),
   sounds: shippedSoundIds(),

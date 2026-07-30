@@ -15,3 +15,5 @@ bonuses:
     value: 0.06
 lore: NOON, SHARPENED TO A POINT.
 world: true
+fx:
+  element: solar

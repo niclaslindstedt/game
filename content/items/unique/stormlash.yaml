@@ -16,3 +16,5 @@ bonuses:
     value: 3
 lore: THE STORM, BROKEN TO HARNESS. IT STILL PULLS.
 world: true
+fx:
+  element: storm

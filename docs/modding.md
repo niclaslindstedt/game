@@ -175,6 +175,35 @@ It lands before the picker is drawn — `applyMods` runs and then the flow goes 
 the difficulty ladder — so the rows a player reads are already the mod's, with
 no extra plumbing.
 
+### 3a⁹⁄₁₀. A mod's weapon flares its own element
+
+`UniqueDef.fx` is the last of the four "a mod's content can only look like
+whichever shipped thing it resembles" gaps. The signature slash and muzzle flash
+were a table in `weapon-fx.ts` keyed by shipped unique id, so a mod's legendary
+had no way in at all; the mapping now lives on the weapon (`fx:` in its own
+YAML) and the app keeps only the kits and the drawing. Exactly the move
+`AbilityDef.look` made for the powers, and the shipped roster was migrated onto
+it wholesale — verified by resolving all 43 styled weapons both ways and
+comparing (the diff found two dead rows on the way: a slash style each for
+`skybreaker` and `stormlash`, a gun and a wand, which could never have played).
+
+Three decisions:
+
+- **The kits are a LEAF** (`weapon-elements.ts`). `generate-items.mjs` reads the
+  element names from it to check every authored `fx:`, and it runs FIRST in the
+  content chain — before the catalog `weapon-fx.ts` reaches through
+  `@game/core`. A leaf breaks that cycle; the names beside the drawing re-make
+  it.
+- **The vocabulary is SYMMETRIC.** Every element has a slash kit and a shot kit,
+  so `element: blood` means something on a rifle as well as on a blade. The four
+  melee kits and one shot kit that were missing were derived from their
+  counterparts' palettes rather than left out.
+- **The resolved style is MEMOIZED**, keyed by unique id and rebuilt when the
+  def's identity changes — which is exactly when a mod is applied or backed out,
+  so it needs no invalidation hook. `shotStyleFor` is asked per projectile per
+  frame, and building a style object there would allocate through the whole
+  flight of every round on screen.
+
 ### 3b. The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs
