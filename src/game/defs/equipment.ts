@@ -103,6 +103,12 @@ export const QUALITY_PREFIX: Record<Quality, string> = ITEM_QUALITY.prefix;
 
 // ---- Weapons ----------------------------------------------------------------
 
+/**
+ * Whether a weapon CUTS or CRUSHES — the only thing the killing blow's look
+ * asks about the thing that landed it (see `WeaponDef.edge`).
+ */
+export type WeaponEdge = "sharp" | "blunt";
+
 export type WeaponDef = {
   id: string;
   name: string;
@@ -169,6 +175,22 @@ export type WeaponDef = {
    * genuinely magical) for four times. Omitted = ordinary matter, base value.
    */
   material?: "metal" | "precious";
+  /**
+   * MELEE only: whether the weapon has an EDGE.
+   *
+   * The one thing a killing blow's PRESENTATION needs that nothing else in the
+   * game asked before: an edged weapon opens a body along the line it was swung
+   * (the app cuts the corpse in two), a blunt one bursts it (the app throws
+   * gibs) — see `pwa/src/game/game-screen/kill-presentation.ts`. Nothing in the
+   * simulation reads it; damage, reach and cadence are unchanged either way.
+   *
+   * OMITTED MEANS SHARP, and only for melee: most weapons that swing are blades,
+   * so the mauls, batons and knuckles are the ones that declare themselves
+   * (`edge: blunt`). A ranged or magic weapon is blunt whatever it says — a
+   * bullet and a bolt of fire do not cleave — so the field is meaningless there
+   * and the schema refuses it rather than letting an author believe otherwise.
+   */
+  edge?: WeaponEdge;
   /**
    * Melee only: the full angle (degrees) of the swing's cone of effect. Every
    * monster within `range` and inside this arc of the aim is struck at once,

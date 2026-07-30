@@ -6,6 +6,7 @@ description: THE PROSPECTOR's tunneler, from digging Site T on the far side. It
   chews rock, and it kept chewing after the crates coming up started breathing.
 material: metal
 class: melee
+edge: blunt
 levelReq: 6
 damage: 16
 cooldownMs: 330

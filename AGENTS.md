@@ -1460,6 +1460,79 @@ Judge both in the EFFECTS GALLERY — `blood-soaked` (DRENCHED) and `blood-track
 guessing: the whole feature is a curve over a map's worth of kills, and a
 diorama cannot show you where that curve sits.
 
+**AND PAST A POINT THE BODY DOES NOT SURVIVE THE BLOW AT ALL — THE CLEAVE AND
+THE GIB.** The blood ladder above tops out at a spray; what it could not say is
+that the body came APART. So a killing blow far past what a body could hold now
+takes it apart, and **WHICH WAY IT COMES APART IS THE WEAPON'S DOING**: an EDGE
+opens it (the sprite is cut in two along the swing and the halves keel outward),
+a MASS bursts it (Quake's gibs — meat, gut, bone, organs and a head, thrown
+across the floor). Everything else in the game lands blunt: a round, a bolt, a
+spell, a bomb, a hazard, a bare fist. Five rules:
+
+1. **SHARPNESS IS CONTENT, NOT AN APP-SIDE LIST.** `WeaponDef.edge`
+   (`edge: blunt` on the mauls, batons and knuckles; omitted means sharp,
+   because most things that swing are blades) is resolved by the engine leaf
+   `src/game/items/edge.ts` and rides out on `enemyKilled.edged`. The
+   alternative — the app guessing from weapon NAMES — drifts the moment anyone
+   authors a new one and could never include a MOD's. Nothing in the simulation
+   reads it; damage, reach and cadence are identical either way.
+2. **THE GATE IS `bloodAmount()`, THE SAME ONE THE BLOOD ASKS**, checked in
+   `kill-presentation.ts` where the death is DECIDED, and what a refusal falls
+   back to is the ORDINARY punt-and-topple — the same shape the nuke's
+   incinerate gate takes, and for the same reason (a censored blow whose bodies
+   cease to exist reads as a bug, not as a gentler game). A boss NEVER comes
+   apart: it speaks its last words over its own body and that corpse is the
+   level's landmark of the fight. Nothing that doesn't bleed comes apart either
+   — a wisp has no halves and a rover has no intestines.
+3. **THE PIECES AND THE BLOOD ARE ONE LIST, READ TWICE.** `gore-burst.ts` owns
+   what a body becomes and where each piece lands; `event-fx.ts` wets the floor
+   at `landingSpots(burst)` and `render/gibs.ts` flies each piece to the same
+   spot — so a head always comes down ON its own spatter. Either half deriving
+   its own scatter is how you get blood pooled where nothing landed.
+4. **A GIB FLIES LIKE LOOT DOES, AND WHAT BOUNCES IS WHAT IT IS MADE OF.** The
+   arc, the shadow that tightens as it climbs and the tumble are the loot toss's
+   (`items/toss.ts`) — a body's pieces and a body's drops leave the same corpse
+   at the same instant, and the two reading as one event is most of what sells
+   the kill. On top of it: a skull, a ribcage, a bone shard, a heart and a
+   kidney are dense and BOUNCE; a liver, a gut, a hand and a slab of meat are wet
+   and stick where they land. Get that pairing wrong and it is comically wrong —
+   a bouncing liver is a beach ball.
+5. **A BURST THROWS PIECES OF THE THING IT BURST.** `render/sprite-split.ts` is
+   the one module in the game that takes authored art apart: `splitSprite` cuts
+   a bitmap in two for the cleave, `shredSprite` cuts it into fragments that ride
+   the burst — so a green alien throws green pieces, for every mob and every mob
+   a MOD adds, with nothing authored per monster. Both are baked and cached
+   (dropped by `ensureCaches`), and the cut angle is quantized into eight
+   buckets: a cut is a canvas allocation, and one per body per frame on a
+   screen-clearing kill is how a spectacle becomes a stutter.
+
+Two things about the LOOK are worth knowing before touching it, because both
+were shipped wrong first and are wrong again the moment they are "simplified".
+**THE CUT IS AXIS-ALIGNED** — the blow's bearing only chooses BETWEEN two cuts
+(down the middle when the hero stood to one side, across the waist when he stood
+in front or behind), because a cut at the exact bearing is what a physicist
+would draw and it is mush: a 16 px body ends up a red smear nobody can read. And
+**THE TWO CLOCKS ARE SEPARATE** — the flight runs on the burst's own short
+duration (`GORE_BURST_MS` / `CLEAVE_MS`) while the effect LIVES for seconds
+after it, so the pieces come apart at the speed of a blow and then lie there at
+the speed of a battlefield. One clock for both plays the whole thing in slow
+motion and reads as a body politely disassembling itself.
+
+**ONLY A PERSON LOSES A FACE.** `EnemyDef.anatomy` (`humanoid` by default, since
+nearly everything on this roster that BLEEDS is a person; `beast` on the giant
+lizard and the thing on wheels) decides whether the head, hands, feet, arms and
+shins are in the pool at all. It is presentation only, like `gore` and
+`locomotion` — and, like them, a new `EnemyDef` field has to be added to
+`canonicalEnemyDef` or it silently reads `undefined` with every check green.
+
+The gore art is `content/sprites/effects/gib_*` (three ruined HEADS picked off
+the kill's seed, ribs, arm, hand, foot, shin, two guts, heart, liver, kidney,
+bone, two meat slabs — all of them bloody, none of them intact) plus
+`cleave_wound`, the cut face drawn in the gap a cleaved body opens. That one is
+deliberately the DARKEST gore in the game: a bright band between two halves
+reads as a light source rather than as an inside. Judge all of it in the EFFECTS
+GALLERY — `cleave` (CLEAVED IN TWO) and `gib` (BURST INTO PIECES).
+
 **LOOT IS THROWN, LANDS, AND THEN ADVERTISES ITSELF.** A drop that materialises
 under the corpse is indistinguishable from the floor texture, and a legendary
 that materialises the same way is the entire chase arriving with no more
@@ -1608,6 +1681,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
+| A new GORE PIECE a burst body throws                      | `content/sprites/effects/gib_<part>.yaml` (the art) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                                                       |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
 | A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
 | An errand (a quest) and the person who hands it out       | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |

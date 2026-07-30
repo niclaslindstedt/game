@@ -17,6 +17,10 @@ const BASE_RARITIES = new Set(["regular", "trash"]);
 const NAMED_RARITIES = new Set(["set", "unique", "legendary", "artifact"]);
 
 const WEAPON_CLASSES = new Set(["melee", "ranged", "magic"]);
+/** Whether a MELEE weapon cuts or crushes — what a killing blow leaves of the
+ * body (`WeaponDef.edge`). Omitted reads as `sharp`, so this is the short list
+ * of things that swing without an edge. */
+const WEAPON_EDGES = new Set(["sharp", "blunt"]);
 // The item KINDS gear is authored as. `trinket` is the carried charm — it is
 // never worn in a slot, it pays out from the bag; `ring` fills either of the
 // hero's two fingers.
@@ -170,6 +174,13 @@ export function validateItem(doc, refs) {
     }
     if (doc.durability === undefined)
       err(`missing required field "durability"`);
+    // MELEE ONLY, and omitted means SHARP (src/game/items/edge.ts). Refused on
+    // a ranged or magic weapon rather than ignored: a bullet cannot cleave
+    // whatever the file says, and a silently-ignored field is an author who
+    // believes they authored something.
+    oneOf(doc.edge, WEAPON_EDGES, "weapon edge");
+    if (doc.edge !== undefined && doc.class !== "melee")
+      err(`edge is melee-only (class "${doc.class}" always lands blunt)`);
     if (doc.projectile !== undefined) {
       const p = doc.projectile;
       if (typeof p !== "object") {

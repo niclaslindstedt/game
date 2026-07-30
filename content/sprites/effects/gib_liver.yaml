@@ -1,0 +1,21 @@
+name: gib_liver
+family: effects
+size: [12, 7]
+description: >
+  A liver, both lobes still joined.
+subject:
+  kind: gore piece
+  build: a broad flat slab of deep maroon organ, notched at the bottom into two lobes, with a wet bright streak across its middle where it tore free
+  flavor: the FLOPPY gib — it is wide, thin and heavy, so it lands with a wet slap and stays exactly where it lands
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ...dddddd...
+  .ddiiiiiidd.
+  ddiiiiiiiidd
+  diiiiiirriid
+  ddiiiiiiiidd
+  .ddiiii.iid.
+  ..ddd....dd.

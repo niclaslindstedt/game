@@ -1,0 +1,24 @@
+name: gib_hand
+family: effects
+size: [8, 8]
+description: >
+  A hand, off at the wrist.
+subject:
+  kind: gore piece
+  build: an open palm with four stubby fingers spread at the top and a thumb off one side, cut clean at the wrist and wet red across the stump
+  flavor: the small human gib — it is the one piece a player recognises instantly at eight pixels, which is exactly why it is worth having
+palette:
+  p: "#deaa86" # flesh
+  s: "#b07a5a" # flesh shade
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..p.p.p.
+  .pppppp.
+  .pppppp.
+  pppppppp
+  psrppppd
+  .ssprps.
+  ..rddi..
+  ...ri...

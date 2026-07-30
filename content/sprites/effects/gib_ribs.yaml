@@ -1,0 +1,26 @@
+name: gib_ribs
+family: effects
+size: [12, 10]
+description: >
+  A piece of ribcage, the bone still in it.
+subject:
+  kind: gore piece
+  build: a lump of dark meat rimmed in broken pale bone, wet red at the torn edges and clotted at the core
+  flavor: the heaviest gib — what is left of a chest when the blow went through it rather than into it
+palette:
+  b: "#e8e0c8" # bone
+  n: "#b8ad90" # bone shade
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .b..........
+  .bbbbbb.....
+  .bidddbn....
+  .bbbbbbbn...
+  .biddddibn..
+  .bbbbbbbbn..
+  .biddddiibn.
+  .bbbbbbbbn..
+  .bidddiib...
+  .briii......

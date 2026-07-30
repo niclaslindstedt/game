@@ -1,0 +1,25 @@
+name: gib_arm
+family: effects
+size: [14, 8]
+description: >
+  A whole arm, torn off at the shoulder.
+subject:
+  kind: gore piece
+  build: a bare arm lying along its length, a snapped bone and a wet red socket at the shoulder end, the elbow shaded, and a lumpy open hand with stubby fingers at the far end
+  flavor: the LONG gib — it tumbles end over end where the round pieces spin, which is what tells the two apart in flight
+palette:
+  p: "#deaa86" # flesh
+  s: "#b07a5a" # flesh shade
+  b: "#e8e0c8" # bone
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..bb..........
+  .bbrrp........
+  bbrrpppp......
+  .brrppsspppp..
+  .brrppspppppp.
+  ..brdppppppppp
+  ...rdippppp.p.
+  ....ri..ppp...

@@ -7,6 +7,7 @@ description: A black cube floating on a handle. Swinging it moves the ground
   this is their exclamation mark.
 material: metal
 class: melee
+edge: blunt
 levelReq: 16
 damage: 38
 damageVariance: 0.4

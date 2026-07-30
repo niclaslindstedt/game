@@ -1,0 +1,29 @@
+name: gib_head_0
+family: effects
+size: [10, 10]
+description: >
+  A head with the jaw torn off.
+subject:
+  kind: gore piece
+  build: a face down to the cheekbones, wet red across the brow and one eye, everything below the mouth gone into a ragged clotted mess that drips off the bottom
+  flavor: the first of three heads a burst body may throw, picked off the kill's own seed so a room full of them is a room full of different dead
+palette:
+  p: "#deaa86" # flesh
+  s: "#b07a5a" # flesh shade
+  b: "#e8e0c8" # skull bone
+  g: "#c4705e" # exposed soft tissue
+  O: "#1a1c2c" # socket dark
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ...pppp...
+  ..prrppp..
+  .prrpppps.
+  .pOprppOp.
+  .pppppppp.
+  .psrppprs.
+  ..drriid..
+  ..rdiid...
+  ...rii....
+  ....r.....

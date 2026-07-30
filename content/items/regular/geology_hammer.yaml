@@ -6,6 +6,7 @@ description: A geologist's pick hammer from the sample runs. It was made to open
   rocks that kept secrets; on this moon, the rocks aren't the only ones.
 material: metal
 class: melee
+edge: blunt
 levelReq: 8
 damage: 30
 cooldownMs: 650

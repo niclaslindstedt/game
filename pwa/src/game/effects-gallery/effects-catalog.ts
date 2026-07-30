@@ -195,6 +195,38 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
   {
+    id: "cleave",
+    icon: "icon_machete",
+    label: "CLEAVED IN TWO",
+    blurb: "AN EDGED BLOW GOES THROUGH - THE BODY FALLS APART ALONG THE SWING",
+    group: "IMPACT",
+    keywords: ["gore", "cut", "halves", "blade", "dismember", "nsfw"],
+    stage: { spawns: horde(8, 34, 90) },
+    showMs: 2600,
+    fire: (ctx) => {
+      const mob = ctx.kill();
+      // A blade taking the whole bar and a third in one stroke: the threshold a
+      // cut is earned at (see CLEAVE_BARS).
+      if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+    },
+  },
+  {
+    id: "gib",
+    icon: "gib_ribs",
+    label: "BURST INTO PIECES",
+    blurb: "A BLUNT BLOW BURSTS THE BODY - IT LANDS IN ITS OWN SPATTER",
+    group: "IMPACT",
+    keywords: ["gore", "gibs", "meat", "viscera", "dismember", "quake", "nsfw"],
+    stage: { spawns: horde(8, 34, 90) },
+    showMs: 3200,
+    fire: (ctx) => {
+      const mob = ctx.kill();
+      // Far past what the body could hold — the top of the ladder, where a
+      // person comes apart into their own inventory.
+      if (mob) ctx.emit(killEvent(mob, { overkillBars: 8 }));
+    },
+  },
+  {
     id: "incinerate",
     icon: "spell_inferno",
     label: "INCINERATION",

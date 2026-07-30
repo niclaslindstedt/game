@@ -7,6 +7,7 @@ description: A gift from an uncle who said the block was getting rough. He was
   dropped engine, then asks for a long breath.
 material: metal
 class: melee
+edge: blunt
 levelReq: 1
 damage: 38
 cooldownMs: 1100

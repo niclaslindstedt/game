@@ -42,6 +42,7 @@ import {
   weaponDropDamage,
   weaponDropDps,
   weaponDropRange,
+  weaponEdge,
 } from "./catalogs.mjs";
 
 /**
@@ -67,6 +68,7 @@ export const WEAPON_FIELDS = {
   gradeBase: "the grade ladder on the ancestor's page",
   material: "the SALVAGE note",
   sweepDeg: "the ARC row and the cleave note",
+  edge: "the EDGE row — whether the weapon cuts a body open or bursts it",
   projectile: "the shot section",
   icon: "the portrait",
 };
@@ -327,6 +329,9 @@ function baseStats(family, def) {
       reach: weaponDropRange(def.id),
       variance: weaponDamageVariance(def),
       sweepDeg: def.sweepDeg ?? null,
+      // Melee only, and the engine's own default (omitted = an edge) rather
+      // than the raw authored field — a page must say what the game does.
+      edge: def.class === "melee" ? weaponEdge(def.id) : null,
       durability: def.durability,
       projectile: def.projectile ?? null,
       // The budget model's own reading of the weapon's shape: how much of the

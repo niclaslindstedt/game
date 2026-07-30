@@ -43,6 +43,7 @@ import { weaponDef } from "./defs/equipment.ts";
 import {
   armorValueOf,
   dropItem,
+  isEdgedWeapon,
   meetsLevelReq,
   playerSpeed,
   qualityMult,
@@ -642,7 +643,13 @@ function companionAttack(
         // meter: menace answers an overpowered HERO, and a party carrying the
         // fight is not the hero being too strong (see `noMenace` in hitEnemy).
         // `companionId` credits the kill's XP to this companion (loot.ts).
-        { noMenace: true, companionId: companion.id },
+        // `edged` says whether ITS signature weapon cuts — a recruit swinging a
+        // blade opens a body exactly as the hero's does (items/edge.ts).
+        {
+          noMenace: true,
+          companionId: companion.id,
+          edged: isEdgedWeapon(companion.equipment.weapon.defId),
+        },
       );
     }
     if (state.stats.kills > killsBefore) {

@@ -1,0 +1,24 @@
+name: gib_foot
+family: effects
+size: [8, 8]
+description: >
+  A foot, off at the ankle.
+subject:
+  kind: gore piece
+  build: a bare foot seen from the side, heel behind and toes ahead, the ankle above it cut through and running wet red down onto the arch
+  flavor: lands flat and stays — a foot is the one gib that comes to rest looking like it is still standing on something
+palette:
+  p: "#deaa86" # flesh
+  s: "#b07a5a" # flesh shade
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .rd.....
+  .rddi...
+  .rpps...
+  .ppps...
+  .ppps...
+  .pppps..
+  pppppppp
+  .ssssss.

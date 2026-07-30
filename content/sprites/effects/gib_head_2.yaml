@@ -1,0 +1,29 @@
+name: gib_head_2
+family: effects
+size: [10, 10]
+description: >
+  A head, whole and drenched.
+subject:
+  kind: gore piece
+  build: a face still in one piece and unrecognisable for the blood on it, sheeting from the scalp down over one dark socket, the mouth slack open and the neck torn through
+  flavor: the mildest of the three, and still nobody's idea of intact — no head this game throws is clean
+palette:
+  p: "#deaa86" # flesh
+  s: "#b07a5a" # flesh shade
+  b: "#e8e0c8" # skull bone
+  g: "#c4705e" # exposed soft tissue
+  O: "#1a1c2c" # socket dark
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ...pprr...
+  ..prrrdp..
+  .prrppdps.
+  .pOpppdrp.
+  .prpppddp.
+  .psrpppsp.
+  ..prOOpp..
+  ...rsis...
+  ...rrii...
+  ....ri....

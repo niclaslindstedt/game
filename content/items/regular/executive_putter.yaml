@@ -7,6 +7,7 @@ description: THE NIGHT MANAGER's back-nine special, kept behind the desk for the
   well-balanced club.
 material: metal
 class: melee
+edge: blunt
 levelReq: 3
 damage: 15
 cooldownMs: 380

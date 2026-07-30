@@ -1,0 +1,21 @@
+name: cleave_wound
+family: effects
+size: [16, 5]
+description: >
+  The cut face of a body split in two.
+subject:
+  kind: gore detail
+  build: a flat band of opened flesh, dark clotted red all through with a slightly lighter rim, and a single pale pip of severed spine at its centre
+  flavor: drawn in the gap a cleaved body opens, so the body is seen INTO rather than merely coming apart; deliberately the darkest gore in the game, because a bright band between two halves reads as a light source rather than as an inside
+palette:
+  b: "#e8e0c8" # bone
+  n: "#b8ad90" # bone shade
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..diiiiiiiidd...
+  .diiiiiibiiiid..
+  diiiiiibnbiiiid.
+  .diiiiiibiiiid..
+  ..ddiiiiiidd....

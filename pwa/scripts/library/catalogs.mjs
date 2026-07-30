@@ -47,6 +47,7 @@ const [
   rolling,
   quality,
   durability,
+  edge,
   weaponMath,
   requirements,
   create,
@@ -71,6 +72,7 @@ const [
   engine("game/items/rolling.ts"),
   engine("game/items/quality.ts"),
   engine("game/items/durability.ts"),
+  engine("game/items/edge.ts"),
   engine("game/items/weapon-math.ts"),
   engine("game/items/requirements.ts"),
   engine("game/create.ts"),
@@ -144,6 +146,10 @@ export const baseCritMult = equipment.baseCritMult;
 export const armorValueOf = durability.armorValueOf;
 /** Engine: a gear def's armor material. */
 export const armorTypeOf = durability.armorTypeOf;
+/** Engine: whether a weapon CUTS or CRUSHES — carrying the engine's own
+ * "melee omits it, so it is sharp" default rather than the raw authored
+ * field, so a page says what the game does. */
+export const weaponEdge = edge.weaponEdge;
 /** Engine: an equipment def's two-way level gate. */
 export const equipmentLevelReq = equipment.equipmentLevelReq;
 /** Engine: a base's TreasureClass weight within its level's pool. */

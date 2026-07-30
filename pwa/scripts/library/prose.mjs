@@ -439,7 +439,16 @@ export function traitNotes(enemy) {
       enemy.rarity === "unique" ? "UNIQUE MONSTER" : "RARE MONSTER",
       `Fields ${enemy.rarityTuning.hpMult}× the health, ${enemy.rarityTuning.damageMult}× the damage and pays ${enemy.rarityTuning.xpMult}× the experience of an ordinary monster of its kind.`,
     ]);
-  notes.push(["WHEN STRUCK", `It ${GORE_NOUN[enemy.gore]}.`]);
+  notes.push([
+    "WHEN STRUCK",
+    `It ${GORE_NOUN[enemy.gore]}.` +
+      // What is LEFT of it, which only a body that bleeds has an answer to.
+      (enemy.anatomy === null
+        ? ""
+        : enemy.anatomy === "humanoid"
+          ? " A blow that overwhelms it bursts it, and there is a face among what lands."
+          : " A blow that overwhelms it bursts it into meat and bone — no face in it, whatever it was."),
+  ]);
   return notes;
 }
 

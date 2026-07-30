@@ -22,7 +22,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { setDevicePolicyForTest } from "../pwa/src/app/device-policy.ts";
-import { killPresentation } from "../pwa/src/game/game-screen/kill-presentation.ts";
+import {
+  killPresentation,
+  type KillBlow,
+} from "../pwa/src/game/game-screen/kill-presentation.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
 
 const HERO = { x: 500, y: 500 };
@@ -33,9 +36,24 @@ const VICTIM = { x: 900, y: 500 };
 const DAMAGE = 400;
 const MAX_HP = 100;
 
-/** One nuked minion's death, as the fx pass resolves it. */
+/** One minion's death, as the fx pass resolves it. */
+function death(over: Partial<KillBlow> = {}) {
+  return killPresentation({
+    damage: DAMAGE,
+    maxHp: MAX_HP,
+    heroPos: HERO,
+    pos: VICTIM,
+    role: "minion",
+    bleeds: true,
+    anatomy: "humanoid",
+    seed: 7,
+    ...over,
+  });
+}
+
+/** One NUKED minion's death. */
 function nukeDeath() {
-  return killPresentation(true, DAMAGE, MAX_HP, HERO, VICTIM, "minion");
+  return death({ incinerated: true });
 }
 
 beforeEach(() => {
@@ -45,10 +63,10 @@ beforeEach(() => {
 
 describe("a screen-nuke kill", () => {
   it("burns the body to a skeleton when mature content is allowed", () => {
-    const death = nukeDeath();
-    expect(death.incinerate).toBe(true);
+    const nuked = nukeDeath();
+    expect(nuked.incinerate).toBe(true);
     // Nothing to throw — the body is gone.
-    expect(death.launch).toBeNull();
+    expect(nuked.launch).toBeNull();
   });
 
   it("falls back to the ordinary corpse when mature content is off", () => {
@@ -73,30 +91,19 @@ describe("a screen-nuke kill", () => {
     // normal death, so the same blow lands the same throw either way.
     setDevicePolicyForTest({ nsfw: false, store: true });
     const censored = nukeDeath().launch;
-    const ordinary = killPresentation(
-      undefined,
-      DAMAGE,
-      MAX_HP,
-      HERO,
-      VICTIM,
-      "minion",
-    ).launch;
-    expect(censored).toEqual(ordinary);
+    expect(censored).toEqual(death().launch);
   });
 
   it("leaves an ordinary kill alone whichever way the switch is set", () => {
     for (const nsfw of [true, false]) {
       setDevicePolicyForTest({ nsfw, store: true });
-      const death = killPresentation(
-        undefined,
-        DAMAGE,
-        MAX_HP,
-        HERO,
-        VICTIM,
-        "minion",
-      );
-      expect(death.incinerate).toBe(false);
-      expect(death.launch).not.toBeNull();
+      // A solid one-shot rather than the nuke's fourfold overkill — hard enough
+      // to punt the body, short of the overpressure that would burst it (that
+      // ladder is gore_dismemberment_test.ts's business, not this suite's).
+      const ordinary = death({ damage: MAX_HP + 20 });
+      expect(ordinary.incinerate).toBe(false);
+      expect(ordinary.gore).toBeNull();
+      expect(ordinary.launch).not.toBeNull();
     }
   });
 });

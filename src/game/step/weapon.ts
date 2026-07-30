@@ -9,6 +9,7 @@ import { cratesInCone, damageCrate, nearestCrate } from "../crates.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import {
+  isEdgedWeapon,
   maxMeleeTargets,
   rollWeaponHit,
   weaponCooldownFor,
@@ -273,6 +274,10 @@ function meleeSweep(
   // menace judges the sweep as ONE attack (see bankOverkill) however many
   // fodder it drops.
   const attack = state.nextId++;
+  // Does this blade CUT? Read once for the swing — every body the cleave bites
+  // comes apart the same way — and carried out on each kill event so the app
+  // can cut the corpse in two instead of bursting it (items/edge.ts).
+  const edged = isEdgedWeapon(weapon.defId);
   // TWIN STRIKE (melee tree): a chance each blow echoes for a second hit. Read
   // once for the swing; the per-hit roll is gated on it so untrained draws no rng.
   const twin = talentTwinStrike(state);
@@ -285,6 +290,7 @@ function meleeSweep(
       critMult,
       damageRoll: roll,
       attack,
+      edged,
     });
     // The echo lands only on a foe the primary blow left standing — a spliced
     // corpse must never be re-hit — and omits `rollAccuracy` so it never
@@ -293,6 +299,7 @@ function meleeSweep(
       hitEnemy(state, target, damage * twin.echoFrac, weaponClass, {
         critMult,
         attack,
+        edged,
       });
     }
   }

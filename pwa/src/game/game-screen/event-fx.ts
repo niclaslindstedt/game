@@ -43,6 +43,7 @@ import {
 } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
+import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
 import { soakHero } from "./hero-soak.ts";
 import { killPresentation } from "./kill-presentation.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
@@ -62,6 +63,15 @@ const BAG_FULL_HINT_MS = 4000;
 // body-width apart still count as one knot, so a wide blast over a loosely
 // packed horde (bodies rarely literally overlapping) still merges instead of
 // dripping a dozen separate numbers.
+/** How hard a landed GIB wets the floor under it, and how wide a patch — a
+ * piece of a body is a good deal more than a droplet, so it soaks harder than a
+ * spatter (0.13) and rather less than a whole death pool (0.32+). The first
+ * piece of a burst counts double: it is the heaviest one thrown (the signature
+ * ladder puts the biggest slab first), and something has to be the middle of the
+ * mess. */
+const GIB_SPILL_AMOUNT = 0.22;
+const GIB_SPILL_RADIUS = 9;
+
 const XP_MERGE_MIN_KILLS = 3;
 const XP_MERGE_SLACK_PX = 16;
 const XP_MERGE_MIN_SCALE = 1.4;
@@ -357,48 +367,65 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   if (event.type === "enemyHit" || event.type === "enemyKilled") {
     const def = enemyDef(event.defId);
     const kill = event.type === "enemyKilled";
-    // How this death presents — burned up, or thrown and toppled (see
-    // kill-presentation.ts, which owns the rule and the MATURE CONTENT gate on
-    // it). A screen-nuke kill burns the body up instead of splattering it: the
-    // fire replaces the gore splash and the plain corpse with a smoking charred
-    // skeleton (the `incinerate` effect below). The damage number + XP float
-    // still play, so the blast reads as the kills it is.
+    // WARM-BLOODED things BLEED, and the blood is priced on the blow (see
+    // blood-hit.ts): a nick freckles the floor, a blow that opens the mob up
+    // throws a proper spray. Ghosts and machines keep the plain two-frame
+    // ecto/sparks splash and never bleed at all.
+    //
+    // Priced FIRST, before the death is presented, because the presentation is
+    // priced on it: how far a burst body's pieces carry and how many of them
+    // there are is the very same `force` the spray, the pool and the corpse
+    // launch all read, so the gore can never disagree with the blood about how
+    // bad the hit was.
+    const gore = def.gore ?? "blood";
+    const blow =
+      gore === "blood"
+        ? bloodBlow(event.damage, event.maxHp, def.role, kill)
+        : null;
+    // One seed for the whole kill: the spray, the stains and the pieces are all
+    // scattered off it, which is what puts a gib on its own spatter.
+    const seed = Math.floor(Math.random() * 997);
+    // Blood comes off the side the blow landed on — away from the hero — and so
+    // does everything the body comes apart into.
+    const heading = Math.atan2(
+      event.pos.y - state.player.pos.y,
+      event.pos.x - state.player.pos.x,
+    );
+    // How this death presents — burned up, cut in two, burst into pieces, or
+    // thrown and toppled (see kill-presentation.ts, which owns the rule and the
+    // MATURE CONTENT gate on it). A screen-nuke kill burns the body up instead
+    // of splattering it: the fire replaces the gore splash and the plain corpse
+    // with a smoking charred skeleton (the `incinerate` effect below). The
+    // damage number + XP float still play, so the blast reads as the kills it is.
     //
     // Resolved HERE rather than down in the corpse branch because the blood has
     // to know about the throw too: a pool left at the spot a punted corpse took
     // off from reads as the body having been deleted rather than thrown.
     const death =
       kill && event.type === "enemyKilled"
-        ? killPresentation(
-            event.incinerated,
-            event.damage,
-            event.maxHp,
-            state.player.pos,
-            event.pos,
-            def.role,
-          )
+        ? killPresentation({
+            incinerated: event.incinerated,
+            edged: event.edged,
+            damage: event.damage,
+            maxHp: event.maxHp,
+            heroPos: state.player.pos,
+            pos: event.pos,
+            role: def.role,
+            bleeds: gore === "blood",
+            anatomy: def.anatomy ?? "humanoid",
+            force: blow?.force,
+            body: blow?.body,
+            seed,
+          })
         : null;
     const incinerated = death?.incinerate ?? false;
+    const burst = death?.gore ?? null;
     const launch = death?.launch ?? undefined;
     if (!incinerated) {
-      // WARM-BLOODED things BLEED, and the blood is priced on the blow (see
-      // blood-hit.ts): a nick freckles the floor, a blow that opens the mob up
-      // throws a proper spray, and what lands STAYS — soaked into the floor's
-      // own saturation grid here (`spillBlood`), one byte per tile, never kept
-      // as an object and never forgotten.
-      // Ghosts and machines keep the plain two-frame ecto/sparks splash.
-      const gore = def.gore ?? "blood";
-      const blow =
-        gore === "blood"
-          ? bloodBlow(event.damage, event.maxHp, def.role, kill)
-          : null;
+      // What the spray lands on STAYS — soaked into the floor's own saturation
+      // grid here (`spillBlood`), one byte per tile, never kept as an object and
+      // never forgotten.
       if (blow) {
-        const seed = Math.floor(Math.random() * 997);
-        // Blood comes off the side the blow landed on — away from the hero.
-        const heading = Math.atan2(
-          event.pos.y - state.player.pos.y,
-          event.pos.x - state.player.pos.x,
-        );
         effects.push({
           kind: "blood",
           pos: { ...event.pos },
@@ -408,7 +435,36 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
           angle: heading,
           seed,
         });
-        spillBlood(state, bloodSpills(blow, event.pos, seed, heading, launch));
+        // A body that came apart leaves no pool where it stood and takes no
+        // punt with it — every piece of it is somewhere else, so the pool is
+        // dropped and the floor is wetted under each landing spot instead
+        // (below). A CLEAVE keeps the pool: its two halves ride the punt
+        // together and end up in one place.
+        spillBlood(
+          state,
+          bloodSpills(
+            burst?.kind === "gib" ? { ...blow, pool: null } : blow,
+            event.pos,
+            seed,
+            heading,
+            launch,
+          ),
+        );
+        // WHERE THE PIECES CAME DOWN. Read off the very same burst the renderer
+        // flies them along (`landingSpots`), so a head always lands ON its own
+        // puddle rather than beside it — the same agreement the spray's drops
+        // and their stains already have.
+        if (burst) {
+          spillBlood(
+            state,
+            landingSpots(burst).map((spot, i) => ({
+              x: event.pos.x + spot.x,
+              y: event.pos.y + spot.y,
+              radius: GIB_SPILL_RADIUS * blow.body,
+              amount: GIB_SPILL_AMOUNT * (i === 0 ? 2 : 1),
+            })),
+          );
+        }
         // …and what missed the floor lands on the MAN. Priced off the very same
         // blow, so the hero, the spray and the ground can never disagree about
         // how bad the hit was (game-screen/hero-soak.ts).
@@ -465,6 +521,27 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         durationMs: 1600,
         sprite: def.sprite,
         seed: Math.floor(Math.random() * 997),
+      });
+    } else if (event.type === "enemyKilled" && burst) {
+      // THE BODY CAME APART — cut in two by an edge, or burst by a blunt blow.
+      // There is no corpse effect at all: this one draws whatever is left of it
+      // (render/gibs.ts). An epic's remains stay on the field for the level
+      // exactly as an epic corpse does.
+      const epic = def.role !== "minion";
+      const lifeMs = epic
+        ? 86_400_000
+        : burst.kind === "cleave"
+          ? CLEAVE_MS + 2400
+          : GORE_BURST_MS + 2400;
+      effects.push({
+        kind: burst.kind,
+        pos: { x: event.pos.x, y: event.pos.y },
+        untilMs: state.stats.timeMs + lifeMs,
+        durationMs: lifeMs,
+        sprite: def.sprite,
+        gib: burst,
+        persist: epic || undefined,
+        launch,
       });
     } else if (event.type === "enemyKilled") {
       const epic = def.role !== "minion";

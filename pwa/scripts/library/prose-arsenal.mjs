@@ -204,6 +204,17 @@ export function weaponShapeNotes(stats) {
       `The swing carves a ${stats.sweepDeg}° cone and strikes everything standing in it. INTELLECT widens that cone as you grow, out to a full half circle.`,
     ]);
   }
+  // What it LEAVES of what it kills. No number moves either way — this is the
+  // shape of the corpse, and it is the one reason to prefer a blade over a
+  // maul of the same damage.
+  if (stats.edge != null) {
+    notes.push([
+      stats.edge === "sharp" ? "EDGED" : "BLUNT",
+      stats.edge === "sharp"
+        ? "It has an edge. A blow that takes a body's whole health in one goes clean through it, and the two halves fall apart along the swing."
+        : "It has no edge. A blow that overwhelms a body bursts it instead of opening it — there is nothing left to fall over.",
+    ]);
+  }
   notes.push([
     "PRICED FOR",
     `About ${oneDp(stats.targets)} ${stats.targets < 1.5 ? "target" : "targets"} a swing. That is what the damage budget assumes it reaches, which is why a wide weapon carries a smaller blow than a narrow one of the same level.`,

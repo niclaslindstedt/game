@@ -13,6 +13,7 @@ lore: >-
 role: minion
 hellborn: true
 sprite: scaled_ancestor
+anatomy: beast
 gore: blood
 levelBonus: 3
 hp: 620

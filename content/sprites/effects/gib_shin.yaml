@@ -1,0 +1,27 @@
+name: gib_shin
+family: effects
+size: [10, 10]
+description: >
+  A lower leg, foot still on it.
+subject:
+  kind: gore piece
+  build: a leg torn off above the knee, splintered bone and a wet red mess at the top, the calf shaded down one side and a bare foot turned out at the bottom
+  flavor: the biggest of the human pieces, and the one that reads at a glance from across a room
+palette:
+  p: "#deaa86" # flesh
+  s: "#b07a5a" # flesh shade
+  b: "#e8e0c8" # bone
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..bbr.....
+  .bbrrdd...
+  ..brrpp...
+  ...prpps..
+  ...pppps..
+  ...ppps...
+  ...ppps...
+  ..pppps...
+  ..pppppp..
+  ..ssssss..
