@@ -81,11 +81,14 @@ They live as fragments in [`.lessons/`](./.lessons/) next to this file.
    beat one-off decor).
 5. **Cut recently-redrawn art — never re-improve fresh work.** Before the
    list is locked, check what was touched in the last few passes:
-   `git log -n 30 --oneline -- scripts/sprites/<family>/`
-   (levels) or `.../icons.mjs` (items), and `git blame -- <file>` on a
-   candidate's grid lines when unsure. A sprite whose grid was rewritten in a
-   recent art pass is **not weak art — it's fresh art**, and its sprite YAML
-   comment usually says so out loud (an elaborate, just-finished rationale like
+   `git log -n 30 --oneline -- content/sprites/<family>/` (levels) or
+   `content/sprites/icons/` (items), and `git blame -- <file>` on a
+   candidate's grid lines when unsure. **In a shallow clone an empty
+   `git log -- <path>` proves nothing** — a file untouched within the graft
+   looks exactly like one never touched at all — so fall back on the sprite's
+   own words and this skill's lesson log. A sprite whose grid was rewritten in
+   a recent art pass is **not weak art — it's fresh art**, and its
+   `description`/`subject` usually says so out loud (an elaborate, just-finished rationale like
    _"drawn bulkier on an 18px canvas so it looms over the 16px staff"_ or
    _"drawn on a bigger 20×20 canvas… reads as a heavy machine, not an
    appliance"_ is a redesign someone shipped, not a placeholder). Drop every
@@ -109,6 +112,13 @@ not from memory:
 - **Noise** — orphan pixels, dithering soup, ragged edges.
 - **Scale/hierarchy lies** — an elite that reads smaller or quieter than
   a minion; a boss without visual weight; decor louder than threats.
+- **Identity collision** — two or more sprites in the family share a
+  silhouette and a palette, so the player cannot tell an elite from a minion
+  at a glance. This one is invisible sprite-by-sprite: it only shows when you
+  put the family's mobs on ONE `sheet` and the same figure repeats in
+  different colours. It is usually one shared template defect (arms drawn in
+  the torso colour with no seam, say), so score every sprite that inherits it
+  and fix the template once.
 - **Style drift** — outline weight, saturation, or detail density unlike
   the rest of its family.
 - **Story mismatch** — doesn't look like what the manuscript and its def
@@ -239,10 +249,13 @@ For each candidate, in the numbered order:
 4. **Refine**: make **2 more variations** of the pick (push what works,
    fix what doesn't) → render the pick + both refinements together →
    choose the best of the 3, re-reading the acceptance prompt as you judge.
-5. **Install the winner** in its family module under
-   `scripts/sprites/` (both walk frames for animated sprites
-   — redraw `_1` to match, don't leave a mismatched old frame; new chars
-   go in the FAMILY palette; check `wounds` overrides still apply). For a
+5. **Install the winner** in its own file — `content/sprites/<family>/<id>.yaml`,
+   and for an animated sprite BOTH walk frames (`<id>_0.yaml` and `<id>_1.yaml`)
+   — redrawing `_1` to match, never leaving a mismatched old frame. Each file
+   declares its OWN `palette` as `char: "#hex" # name`; a new shade is allowed
+   as long as it sits on an existing ramp and is named. `size:` lives in the
+   file too, so a canvas change is part of the install (check `wounds`
+   overrides still apply). For a
    computed grid (above), generate BOTH frames from the one base — the `_1`
    frame is usually just the leg stride shifted — and preview them together
    in one last concept sheet to check the walk cycle reads before you paste.
