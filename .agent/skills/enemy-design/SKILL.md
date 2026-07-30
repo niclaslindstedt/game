@@ -24,7 +24,7 @@ the map wiring, `weapon-system` for named drops.
 | Sprites | one YAML per frame in `scripts/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
 | Wound stages | **Auto-derived** by `sprite-data/index.mjs` from `role` (minion `hurt`; elite +`wrecked`; boss +`dying`) and `gore` (`blood`/`ecto`/`sparks`); a family `wounds` override only when the default splat can't contrast the body |
 | Mechanics engine | `src/game/mechanics.ts` — `charge`, `slam`, `enrage`, `summon`; `phases` (hp-gated mechanic swaps) |
-| Companions (spareable elites) | `src/game/defs/companions.ts` (`COMPANION_DEFS`); resolution in `src/game/companions.ts` |
+| Companions (spareable elites) | `content/companions.yaml` (compiled to `COMPANION_DEFS`); resolution in `src/game/companions.ts` |
 | Inner monologues | `content/thoughts.yaml` + a `firstKillThoughts`/`firstSightThoughts` pin on the level |
 | Scaling | `src/game/create.ts` (`spawnEnemy` stamps hp/mlvl/contact), `src/game/menace.ts` (`mobLevelFor`, `maybePowerScale` re-stamp on elite/boss engagement) |
 | Content tests | `tests/content/`: `wounds_test.ts`, `last_words_test.ts`, `last_stand_test.ts`, `aggro_test.ts`, `catalog_test.ts`, `companions_test.ts`, `enemy_roundtrip_test.ts` (pins the compiled catalog to `fixtures/enemies-snapshot.json` — accept an intentional change with `node scripts/update-enemy-snapshot.mjs`), the per-level suites |

@@ -1,0 +1,147 @@
+{
+  "amelia_earhart": {
+    "hp": 150,
+    "id": "amelia_earhart",
+    "joinWords": [
+      [
+        "YOU HAD ME GROUNDED AND",
+        "LET ME BACK UP. THAT'S A",
+        "DEBT, PILOT. I PAY THOSE."
+      ],
+      [
+        "I'LL FLY YOUR WING TO THE",
+        "FAR DOOR AND PAST IT.",
+        "NOBODY TOUCHES MY LEAD."
+      ]
+    ],
+    "killQuotes": [
+      "CLEARED FOR DEPARTURE.",
+      "THAT ONE'S GROUNDED.",
+      "SMOOTH LANDING.",
+      "FLIGHT PLAN? NEVER FILED ONE."
+    ],
+    "name": "AMELIA EARHART",
+    "power": {
+      "blurb": "HER BLUNDERBUSS GAINS A PELLET EACH RANK",
+      "everyLevels": 3,
+      "name": "FULL BROADSIDE",
+      "pelletsPerRank": 1
+    },
+    "radius": 12,
+    "speed": 87,
+    "sprite": "amelia_earhart",
+    "weapon": "blunderbuss"
+  },
+  "grigori_rasputin": {
+    "hp": 190,
+    "id": "grigori_rasputin",
+    "joinWords": [
+      [
+        "POISON. BULLETS. RIVERS.",
+        "ONLY YOU EVER MADE ME KNEEL,",
+        "AND YOU LET ME STAND."
+      ],
+      [
+        "MY LIFE IS YOURS NOW, WARM",
+        "ONE. I WILL WATCH YOUR BACK.",
+        "PITY WHATEVER COMES AT IT."
+      ]
+    ],
+    "killQuotes": [
+      "NOW YOU TRY DYING.",
+      "I MAKE IT LOOK EASY.",
+      "STAY DOWN. I NEVER DID.",
+      "THE HOLY MAN SENDS REGARDS."
+    ],
+    "name": "GRIGORI RASPUTIN",
+    "nova": {
+      "chillFactor": 0.45,
+      "chillMs": 1600,
+      "damage": 46,
+      "everyMs": 2600,
+      "radius": 96
+    },
+    "power": {
+      "blurb": "HIS FROST NOVA WIDENS AND BITES HARDER EACH RANK",
+      "everyLevels": 3,
+      "name": "DEEPENING FROST",
+      "novaDamagePerRank": 8,
+      "novaRadiusPerRank": 10
+    },
+    "radius": 12,
+    "speed": 72,
+    "sprite": "grigori_rasputin",
+    "weapon": "executioners_axe"
+  },
+  "lucky": {
+    "aura": {
+      "magicFind": 0.5
+    },
+    "hp": 140,
+    "id": "lucky",
+    "joinWords": [
+      [
+        "YE BEAT ME FAIR AND LET ME",
+        "KEEP ME HEAD. THAT'S A LIFE",
+        "DEBT, THAT IS. BINDING."
+      ],
+      [
+        "SO I'M YOURS NOW - ME, ME",
+        "LUCK, AND ME GOLD... WELL.",
+        "THE LUCK, ANYWAY. C'MON."
+      ]
+    ],
+    "killQuotes": [
+      "OOPS. BAD LUCK.",
+      "NOT YOUR DAY, FRIEND.",
+      "FORTUNE FAVORS ME.",
+      "THAT'S ME GOLD NOW.",
+      "SHOULDA RUBBED A CLOVER."
+    ],
+    "name": "LUCKY",
+    "power": {
+      "blurb": "HIS MAGIC-FIND AURA SWELLS EACH RANK",
+      "everyLevels": 3,
+      "magicFindPerRank": 0.15,
+      "name": "RUNAWAY LUCK"
+    },
+    "radius": 9,
+    "speed": 84,
+    "sprite": "lucky",
+    "weapon": "sorcerers_staff"
+  },
+  "nikola_tesla": {
+    "hp": 160,
+    "id": "nikola_tesla",
+    "joinWords": [
+      [
+        "YOU HELD THE CURRENT AND",
+        "GAVE IT BACK. I OWE YOU A",
+        "LIFE, LITTLE BUILDER."
+      ],
+      [
+        "MY COIL WALKS WITH YOU NOW.",
+        "STAY CLOSE - I AM AT MY BEST",
+        "NEAR A GOOD CONDUCTOR."
+      ]
+    ],
+    "killQuotes": [
+      "SCIENCE!",
+      "ALTERNATING CURRENT. DIRECT RESULTS.",
+      "EDISON COULD NEVER.",
+      "WIRELESS. PATENT PENDING.",
+      "THE PIGEONS WOULD BE PROUD."
+    ],
+    "name": "NIKOLA TESLA",
+    "power": {
+      "blurb": "HIS BOLTS ARC TO ANOTHER FOE EACH RANK",
+      "chainPerRank": 1,
+      "everyLevels": 3,
+      "name": "CHAIN LIGHTNING"
+    },
+    "radius": 12,
+    "speed": 78,
+    "sprite": "nikola_tesla",
+    "weapon": "tesla_coil"
+  }
+}

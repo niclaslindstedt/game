@@ -9,7 +9,15 @@
 // addon that quietly shadows one of the shipped venues. Each test below is one
 // of those failures, caught while there is still a filename to blame.
 
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -42,6 +50,30 @@ afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
 });
 
+/**
+ * A throwaway copy of the worked example with its BLUEPRINT rewritten.
+ *
+ * A blueprint is the one part of the format that cannot be tested from a
+ * three-line scratch file: it needs a level to inherit from, a ladder row to
+ * price that level, and a roster to populate the carve. Starting from something
+ * that compiles and breaking exactly one line is what makes each failure below
+ * name one thing.
+ */
+function exampleWithMap(
+  mutate: (yaml: string) => string,
+  { as = "greenhouse" }: { as?: string } = {},
+): string {
+  const dir = mkdtempSync(path.join(tmpdir(), "gis-mod-"));
+  temps.push(dir);
+  cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, "maps", `${as}.yaml`);
+  if (as !== "greenhouse") {
+    renameSync(path.join(dir, "maps", "greenhouse.yaml"), file);
+  }
+  writeFileSync(file, mutate(readFileSync(file, "utf8")));
+  return dir;
+}
+
 const MANIFEST = [
   "id: scratch-mod",
   "name: SCRATCH",
@@ -71,7 +103,10 @@ describe("the worked example", () => {
     expect(bundle).not.toBeNull();
     expect(bundle!.id).toBe("greenhouse");
     expect(bundle!.levels).toHaveLength(1);
-    expect(Object.keys(bundle!.enemies)).toEqual(["greenhouse_creeper"]);
+    expect(Object.keys(bundle!.enemies).sort()).toEqual([
+      "greenhouse_creeper",
+      "greenhouse_gardener",
+    ]);
   });
 
   it("rasterizes its sprites to RGBA the page can blit without a decoder", () => {
@@ -176,6 +211,49 @@ describe("the worked example", () => {
     });
   });
 
+  it("carries its own companion, and the elite that recruits her", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    expect(Object.keys(bundle!.companions)).toEqual(["greenhouse_gardener"]);
+    // The catalog KEY is the id, stamped in by the loader — the same rule the
+    // powers and the thoughts follow, so the YAML never repeats itself.
+    const gardener = bundle!.companions.greenhouse_gardener as {
+      id: string;
+      weapon: string;
+      killQuotes: string[];
+    };
+    expect(gardener.id).toBe("greenhouse_gardener");
+    // Her signature weapon is one this MOD ships — the cross-ref that only
+    // works because the refs are BASE ∪ MOD.
+    expect(gardener.weapon).toBe("greenhouse_pruning_saw");
+    expect(gardener.killQuotes.length).toBeGreaterThan(0);
+    // And the elite's `spareable` resolves to her, which is the whole beat: a
+    // mod's monster, spared, becomes a mod's ally. Before companions were
+    // loadable it could only ever have named one of the shipped four.
+    const elite = bundle!.enemies.greenhouse_gardener as {
+      spareable?: { companion: string };
+    };
+    expect(elite.spareable?.companion).toBe("greenhouse_gardener");
+  });
+
+  it("carries a blueprint, so its venue is carved rather than hand-drawn", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    // Keyed by the level it carves — exactly the shape `registerDefs` takes.
+    expect(Object.keys(bundle!.blueprints)).toEqual(["greenhouse"]);
+    const bp = bundle!.blueprints.greenhouse as {
+      level: string;
+      horde: { ramps: number[][][] };
+      boss: { level: number[]; hp: number[]; regions: string[] };
+    };
+    expect(bp.level).toBe("greenhouse");
+    // The authoring-only `ramp` names are gone, expanded against the SHIPPED
+    // ladder into the four [easy, medium, hard, nightmare] tuples the engine
+    // reads — against the band the mod's own ladder.yaml prices its venue at.
+    expect(bp.horde.ramps).toHaveLength(4);
+    expect(bp.boss.level).toHaveLength(4);
+    expect(bp.boss.hp).toHaveLength(4);
+    expect(bp.boss.regions).toContain("northeast");
+  });
+
   it("carries the ladder rows its level is priced with", () => {
     const { bundle } = buildMod(EXAMPLE, catalog);
     const level = bundle!.levels[0] as { mobLevels: number[] };
@@ -248,6 +326,75 @@ describe("what the compiler refuses", () => {
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
       /campaign names "ghost-level"/,
+    );
+  });
+
+  it("a blueprint whose boss hides in a direction nobody can parse", () => {
+    // The desktop app has no engine to parse a region with, so the compiler
+    // checks against the names the engine's OWN parser accepts, snapshotted
+    // into the catalog. Without it a typo relocates the boss silently.
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("- northeast", "- northeastward"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown compass region "northeastward"/,
+    );
+  });
+
+  it("a blueprint whose horde names a monster nobody ships", () => {
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("enemy: greenhouse_creeper", "enemy: no_such_mob"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown enemy "no_such_mob"/,
+    );
+  });
+
+  it("an ADDON whose blueprint would re-carve a shipped venue", () => {
+    // A blueprint carves the level it is NAMED AFTER, so `maps/moon.yaml` in an
+    // addon is not a new map — it is somebody else's map, re-cut.
+    const dir = exampleWithMap(
+      (yaml) =>
+        yaml.replace(
+          "id: greenhouse\nlevel: greenhouse",
+          "id: moon\nlevel: moon",
+        ),
+      { as: "moon" },
+    );
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/is not a level this mod ships/);
+    // Again: the message says how to do the thing they were trying to do.
+    expect(errors).toMatch(/kind: conversion/);
+  });
+
+  it("…but a CONVERSION may re-carve one, because that is what it is for", () => {
+    const dir = exampleWithMap(
+      (yaml) =>
+        yaml.replace(
+          "id: greenhouse\nlevel: greenhouse",
+          "id: moon\nlevel: moon",
+        ),
+      { as: "moon" },
+    );
+    const manifest = path.join(dir, "mod.yaml");
+    writeFileSync(
+      manifest,
+      `${readFileSync(manifest, "utf8")}\ncampaign: [greenhouse]\n`.replace(
+        "kind: addon",
+        "kind: conversion",
+      ),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.blueprints)).toEqual(["moon"]);
+  });
+
+  it("a blueprint whose file name and id disagree", () => {
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("id: greenhouse", "id: nursery"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /id is "nursery", expected "greenhouse"/,
     );
   });
 
@@ -428,7 +575,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, enemy, item, sound, track, powerup, cutscene/,
+      /at least one level, map blueprint, enemy, item, sound, track, powerup, companion/,
     );
   });
 
@@ -564,6 +711,131 @@ describe("what the compiler refuses", () => {
     const { bundle, errors } = buildMod(dir, catalog);
     expect(errors).toEqual([]);
     expect(Object.keys(bundle!.thoughts)).toEqual(["scratch_read"]);
+  });
+
+  /** A minimal valid companion, parameterized on what each test breaks. */
+  const companionYaml = (lines: string[]) =>
+    ["companions:", "  scratch_ally:", ...lines].join("\n");
+
+  const VALID_ALLY = [
+    "    name: SCRATCH ALLY",
+    "    sprite: wisp",
+    "    hp: 120",
+    "    speed: 80",
+    "    radius: 12",
+    "    weapon: blaster",
+    "    killQuotes: [DONE.]",
+  ];
+
+  it("a companion whose sprite family has no frames — the silent one", () => {
+    // The same failure as the enemy sprite check, and just as invisible: the
+    // renderer skips a name `spriteByName` answers nothing to, so a spared ally
+    // walks beside the hero as empty floor.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "companions.yaml": companionYaml(
+        VALID_ALLY.map((l) =>
+          l.includes("sprite:") ? "    sprite: scratch_nobody" : l,
+        ),
+      ),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /sprite "scratch_nobody" has no frames/,
+    );
+  });
+
+  it("a companion whose signature weapon exists nowhere", () => {
+    // Worse than silent: the weapon is minted the instant she joins, so an
+    // unknown id throws in the middle of the scene where the player just chose
+    // to spare somebody.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "companions.yaml": companionYaml(
+        VALID_ALLY.map((l) =>
+          l.includes("weapon:") ? "    weapon: scratch_nothing" : l,
+        ),
+      ),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /weapon "scratch_nothing" is not a weapon/,
+    );
+  });
+
+  it("a power that grows a kit the companion has not got", () => {
+    // The one check that is about NOTHING happening. Nova growth is applied on
+    // top of a `nova:` block, so on a companion without one every rank-up adds
+    // nothing at all — forever, with no error at play time to explain it.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "companions.yaml": companionYaml([
+        ...VALID_ALLY,
+        "    power:",
+        "      name: DEEP FROST",
+        "      blurb: WIDENS EACH RANK",
+        "      everyLevels: 3",
+        "      novaRadiusPerRank: 10",
+      ]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /grows a `nova:` this companion has not got/,
+    );
+  });
+
+  it("a power that grows nothing at all", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "companions.yaml": companionYaml([
+        ...VALID_ALLY,
+        "    power:",
+        "      name: A NAME",
+        "      blurb: AND NO EFFECT",
+        "      everyLevels: 3",
+      ]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/power grows nothing/);
+  });
+
+  it("an addon that shadows one of the game's own companions", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "companions.yaml": ["companions:", "  lucky:", ...VALID_ALLY].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game: companion "lucky"/,
+    );
+  });
+
+  it("…but NOT a mod whose only content is a companion, which is a mod", () => {
+    // A mod may be nothing but a recruit — an addon that hands the player one
+    // new ally off a shipped elite is a real, small mod.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "companions.yaml": companionYaml(VALID_ALLY),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.companions)).toEqual(["scratch_ally"]);
+  });
+
+  it("lets a mod's elite spare into a SHIPPED companion", () => {
+    // The other direction of base ∪ mod: an addon need not author a roster to
+    // use one. Its monster may hand the player Tesla.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      // `enemyYaml` is deliberately incomplete (the negative cases only ever
+      // assert on ONE error), so this fills in what a def actually owes.
+      "enemies/x/scratch_elite.yaml": [
+        enemyYaml("scratch_elite", "wisp"),
+        "lore: >-",
+        "  A thing that was here before any of this, and has been waiting",
+        "  patiently for somebody to walk past it close enough to reach.",
+        "ai:",
+        "  aggroRadius: 250",
+        "spareable:",
+        "  companion: nikola_tesla",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors).toEqual([]);
   });
 
   it("an item that names a base neither the mod nor the game has", () => {

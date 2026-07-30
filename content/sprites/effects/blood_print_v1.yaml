@@ -1,0 +1,30 @@
+name: blood_print_v1
+family: effects
+size: [6, 12]
+description: >
+  A drying boot print, toe pointing away from the eye — most of the sole has
+  already been left behind, so only one edge of the tread still marks.
+subject:
+  kind: ground decal
+  build: >-
+    the same boot sole as the wet print but mostly gone — a broken line down one side of the ball pad and two dark specks where the heel was, nothing joined all the way across and no wet highlight left
+  flavor: >-
+    the last rung of the trail; the boot is running out of what it picked up
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  D: "#4a1414" # near-black pressed rim
+grid: |
+  ..DD..
+  .DdD..
+  .Dd...
+  .DdD..
+  ..D...
+  ......
+  ......
+  ......
+  ......
+  ..DD..
+  .DdD..
+  ..D...

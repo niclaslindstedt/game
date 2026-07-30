@@ -55,7 +55,11 @@ run against synthetic fixtures with no shipped content (see
   hand-authored map, so the boss is somewhere new every run and has to be found;
   everything non-geometric (story, loot pools, merchant, hazards) is inherited
   from the level the blueprint names. Walls are DERIVED from which two kinds of
-  place meet at each border, never authored. Nothing outside a run imports this —
+  place meet at each border, never authored. A MOD may ship a blueprint too
+  (`maps/<id>.yaml` in its folder, through the same loader and schema), which is
+  why the registry is the import-free leaf `mapgen/blueprints.ts` —
+  `registerDefs({ blueprints })` swaps a mod's recipes in without the def
+  registry importing the carve. Nothing outside a run imports this —
   the menus reach levels through `defs/levels/summary.ts`, and pulling the
   generator onto the startup path would put the whole level catalog in the
   critical-path budget. See the GENERATED MAPS section of `AGENTS.md`.
@@ -153,8 +157,11 @@ run against synthetic fixtures with no shipped content (see
   boss is wired to its controllers. This game's
   actual roster (and the story it tells) is in
   [`game-content.md`](./game-content.md).
-- **`src/game/defs/companions.ts`** — the companion catalog: who a spared
-  unique becomes. Each def carries the sprite family (the enemy twin's), a
+- **`src/game/defs/companions.ts`** — the companion TYPES and registry: who a
+  spared unique becomes. The roster itself is authored in
+  `content/companions.yaml` and compiled to `src/generated/companions.ts` by
+  `scripts/generate-companions.mjs`, so a MOD ships its own recruits by putting
+  that same file at its root. Each def carries the sprite family (the enemy twin's), a
   base hp that grows with the companion's OWN level, a signature starting
   weapon, an optional party-wide `aura` (LUCKY's +50% magic find), an optional
   signature `nova` (RASPUTIN's FROST NOVA — a chilling pulse that damages and

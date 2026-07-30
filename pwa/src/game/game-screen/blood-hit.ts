@@ -118,6 +118,27 @@ export type BloodBlow = {
 };
 
 /**
+ * THE ONE GATE, and everything that spills blood asks it: the device's MATURE
+ * CONTENT switch, the player's EXTRA GORE row, and the DEVELOPER → VISUALS
+ * BLOOD amount, folded into a single answer — the multiplier to price blood at,
+ * or `null` for "there is no blood in this game right now".
+ *
+ * Read by `bloodBlow` (the spray and what it wets), by `hero-soak.ts` (what
+ * comes back on the hero) and by `render/blood-tracks.ts` (what his boots carry
+ * out of it). Every one of them checks it where the blood is DECIDED rather
+ * than where it is drawn, so `off` means nothing is recorded either — a gate at
+ * the draw call would leave the floor's grid, the hero's soak and his trail all
+ * quietly filling up, and hand the player the lot the moment the switch came
+ * back (see app/device-policy.ts).
+ */
+export function bloodAmount(): number | null {
+  if (!nsfwAllowed()) return null;
+  const settings = getSettings();
+  if (settings.extraGore !== "on") return null;
+  return settings.blood > 0 ? settings.blood : null;
+}
+
+/**
  * Price one landed blow. Returns null when no blood should exist at all — the
  * device's MATURE CONTENT switch off, EXTRA GORE off, or the developer amount at
  * zero. Otherwise every connecting blow is worth at least the floor spray:
@@ -139,11 +160,8 @@ export function bloodBlow(
   role: string,
   kill: boolean,
 ): BloodBlow | null {
-  if (!nsfwAllowed()) return null;
-  const settings = getSettings();
-  if (settings.extraGore !== "on") return null;
-  const amount = settings.blood;
-  if (amount <= 0) return null;
+  const amount = bloodAmount();
+  if (amount == null) return null;
   const bars = Math.max(0, damage) / Math.max(1, maxHp);
   const raw = bars / FULL_BARS;
   // VOLUME saturates. Everything the body had is already on the floor at one

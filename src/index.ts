@@ -55,6 +55,7 @@ export {
   parseRegion,
   regionRect,
   resolveLevelDef,
+  setMapBlueprints,
   resolveMapSize,
   type MapBlueprint,
   type MapObject,

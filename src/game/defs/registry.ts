@@ -20,6 +20,11 @@ import {
   type QuestDef,
   type QuestGiverDef,
 } from "./quests.ts";
+// The import-free blueprint LEAF, never `mapgen/index.ts` — that one reaches
+// `generate.ts` and with it the whole carve, which nothing swapping catalogs
+// needs to have loaded.
+import { setMapBlueprints } from "../mapgen/blueprints.ts";
+import type { MapBlueprint } from "../mapgen/types.ts";
 import { setSetDefs, type SetDef } from "./sets.ts";
 import { setStoryItemDefs, type StoryItemDef } from "./story.ts";
 import { setThoughtDefs, type ThoughtDef } from "./thoughts.ts";
@@ -30,6 +35,10 @@ import type { CutsceneDef } from "@game/lib/cutscene.ts";
  * (usually shipped) contents. */
 export type DefOverrides = {
   levels?: Record<string, LevelDef>;
+  /** The GENERATED MAPS recipes, keyed by the level id each one carves. A mod
+   * ships `maps/<id>.yaml` beside its `levels/<id>.yaml` and its venue is
+   * carved per run like a shipped one; omitted, the shipped blueprints stand. */
+  blueprints?: Record<string, MapBlueprint>;
   enemies?: Record<string, EnemyDef>;
   companions?: Record<string, CompanionDef>;
   weapons?: Record<string, WeaponDef>;
@@ -58,6 +67,7 @@ export type DefOverrides = {
  */
 export function registerDefs(defs: DefOverrides): void {
   if (defs.levels) setLevelDefs(defs.levels);
+  if (defs.blueprints) setMapBlueprints(defs.blueprints);
   if (defs.enemies) setEnemyDefs(defs.enemies);
   if (defs.companions) setCompanionDefs(defs.companions);
   if (defs.weapons || defs.gear) {

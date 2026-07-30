@@ -51,16 +51,27 @@ const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
 const { DIFFICULTY_DEFS } = await import(
   engine("src/game/defs/difficulties.ts")
 );
-const { COMPANION_DEFS } = await import(engine("src/game/defs/companions.ts"));
 const { GENERATED_LEVEL_SUMMARIES } = await import(
   engine("src/generated/level-index.ts")
 );
-// The story catalogs are read from `content/` through the same loaders a mod's
-// own story goes through, rather than from the engine — the ids are the content
-// tree's to state, and one reader means the two can never disagree.
+// The story and companion catalogs are read from `content/` through the same
+// loaders a mod's own go through, rather than from the engine — the ids are the
+// content tree's to state, and one reader means the two can never disagree.
 const { loadCutscenes, loadStoryItems, loadThoughts } = await import(
   engine("scripts/story-data/load-yaml.mjs")
 );
+const { loadCompanions } = await import(
+  engine("scripts/companion-data/load-yaml.mjs")
+);
+// The compass-region grammar a MAP BLUEPRINT points its boss with. A parser
+// cannot travel in a JSON file, and the shipped app has no TypeScript to run
+// the engine's — so the names the engine's OWN parser accepts are enumerated
+// here and snapshotted, which keeps one grammar rather than a second one
+// living in the SDK. See `REGION_TERMS` in src/game/mapgen/regions.ts.
+const { REGION_TERMS, parseRegion } = await import(
+  engine("src/game/mapgen/regions.ts")
+);
+const { companions: COMPANION_DEFS } = loadCompanions();
 const { cutscenes: CUTSCENES } = loadCutscenes();
 // The errands, read the same way and for the same reason — the ids are the
 // content tree's to state, and a mod's quests go through this exact loader.
@@ -91,6 +102,33 @@ function shippedMusicIds() {
     readdirSync(engine("content/music"))
       .filter((f) => f.endsWith(".yaml"))
       .map((f) => f.slice(0, -".yaml".length)),
+  );
+}
+
+/**
+ * Every compass region a blueprint's `regions:` may name, enumerated by trying
+ * the engine's own parser on one- and two-term names built from its vocabulary.
+ *
+ * Two terms is the whole grammar: one fixes an axis (`north`), two fix both
+ * (`center-east`, `north-east`), and a third can only repeat or contradict. So
+ * this is the complete set of names that MEAN anything, which is what a mod
+ * author wants out of `cli.mjs ids --kind regions`.
+ */
+function regionNames() {
+  const names = new Set();
+  for (const a of REGION_TERMS) {
+    names.add(a);
+    for (const b of REGION_TERMS) names.add(`${a}-${b}`);
+  }
+  return sorted(
+    [...names].filter((name) => {
+      try {
+        parseRegion(name);
+        return true;
+      } catch {
+        return false;
+      }
+    }),
   );
 }
 
@@ -152,6 +190,10 @@ const catalog = {
   // The shipped venues, so an ADDON that would shadow one is caught at compile
   // time rather than by the level registry throwing on a duplicate id.
   levels: sorted(Object.keys(GENERATED_LEVEL_SUMMARIES)),
+  // The compass grammar a map blueprint says WHERE with (`boss.regions`, an
+  // elite's `regions`). Names rather than a parser, because the compiler runs
+  // where the engine's parser cannot — see `regionNames`.
+  regions: regionNames(),
   sprites: shippedSpriteNames(),
   sounds: shippedSoundIds(),
   music: shippedMusicIds(),

@@ -635,11 +635,27 @@ knot-bearing cells, not the carve — or the deepest ramps of the ladder (and th
 breed authored for `[0.8, 1]`) are never reached, because the deepest cells are
 precisely the quiet ones.
 
+**A MOD MAY SHIP ONE TOO, and that is why the registry is a LEAF.** A blueprint
+is content like a level (`maps/<id>.yaml` beside `levels/<id>.yaml`, through the
+same loader and the same `validateMap`), so a mod's venue is carved per run
+rather than being permanently hand-drawn — see **STEAM WORKSHOP MODS** below.
+The catalog therefore has to be swappable, and it lives in the import-free
+`mapgen/blueprints.ts` so `registerDefs({ blueprints })` can replace it without
+the def registry importing `generate.ts` and the whole carve behind it. Two rules
+fall out. **A blueprint carves the mission it is NAMED AFTER** (stem == `id` ==
+`level`), so one named after a shipped venue re-cuts that venue — a conversion's
+business, refused for an addon. And **the compass grammar cannot travel**: the
+mod compiler runs in the desktop app's main process, which has no TypeScript to
+call `regions.ts` with, so `mod/catalog.json` carries the names the engine's OWN
+parser accepts, enumerated from it by `mod/tools/catalog.mjs` off the exported
+`REGION_TERMS`. Never re-implement the grammar in the SDK; snapshot what the one
+parser says yes to.
+
 Where the code lives: `src/game/mapgen/` (`types.ts` the blueprint shape,
 `regions.ts` the compass grammar, `areas.ts` the area rules, `rooms.ts` the carve
 and the borders, `place.ts` the dressing, `generate.ts` the decisions,
-`index.ts` the registry and `resolveLevelDef` — the ONE seam `createGame` hangs
-off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
+`blueprints.ts` the swappable registry, `index.ts` `resolveLevelDef` — the ONE
+seam `createGame` hangs off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
 
 - `map-data/load-yaml.mjs`, emitting the gitignored
   `src/generated/map-blueprints.ts`. `tests/content/generated_maps_test.ts` is the
@@ -753,11 +769,14 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    that reaches the page — which keeps the renderer sandboxed with no
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
-2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy, item, sprite, sound,
-   score, power and STORY (`cutscenes/`, `thoughts.yaml`, `story-items.yaml`) are
-   the same files as `content/levels/`, `content/enemies/`, `content/items/`,
-   `content/sprites/`, `content/cutscenes/` and the rest, going through the same
-   loaders and the same validators —
+2. **ONE COMPILER, ONE SCHEMA.** A mod's level, MAP BLUEPRINT (`maps/`), enemy,
+   item, sprite, sound,
+   score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
+   `thoughts.yaml`, `story-items.yaml`) are
+   the same files as `content/levels/`, `content/maps/`, `content/enemies/`,
+   `content/items/`,
+   `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
+   rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
    owning a constant, and why the item COOKING is shared out into
    `scripts/item-data/compile.mjs` rather than living in the generator. `node mod/tools/cli.mjs check` runs the code the game runs at
@@ -1348,10 +1367,82 @@ escalating for ever. Three pieces:
 
 - **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → DISPLAY → **EXTRA GORE** (on by
   default; off falls back to the plain two-frame splash) and the DEVELOPER →
-  VISUALS **BLOOD** amount are both read inside `bloodBlow`. Off means nothing is
-  drawn AND nothing is recorded — a gate at the draw call would leave the grid
-  filling up invisibly and hand the player a red floor the moment they switched
-  it back on.
+  VISUALS **BLOOD** amount fold into `bloodAmount()` (blood-hit.ts) — the single
+  answer everything that spills blood asks, `bloodBlow` included. Off means
+  nothing is drawn AND nothing is recorded — a gate at the draw call would leave
+  the grid filling up invisibly and hand the player a red floor the moment they
+  switched it back on.
+
+**AND THE MAN DOING IT DOES NOT WALK AWAY CLEAN — THE SOAK AND THE TRAIL.** The
+floor remembering a fight is only half of it; a hero still factory-fresh after
+six hundred bodies is the loudest thing on the screen saying none of it happened.
+So blood lands on HIM and stays, and his boots carry it out onto clean ground.
+Both are pure presentation, priced off the very same `BloodBlow`, and both are
+gated at `bloodAmount()` with everything else.
+
+- **THE SOAK IS FIVE NUMBERS, AND A ZONE IS A GEAR SLOT**
+  (`game-screen/hero-soak.ts`): the four armor slots plus the weapon. That is the
+  design, not a convenience — the only thing that ever CLEANS a zone is putting
+  something new on it, compared on the piece's INSTANCE id, so swapping the
+  breastplate freshens his front while the helmet he has worn all level stays
+  crusted and a blade picked up off the floor comes up clean in his hand. The
+  head zone is his FACE when he has nothing on it. There is no decay; he does not
+  wipe it off.
+- **IT ONLY LANDS AT CONTACT RANGE, AND THAT IS THE WHOLE BUILD DIFFERENCE.** A
+  blow marks him if it landed about a melee swing away (`SPLASH_RANGE`, held
+  UNDER the shipped blades' own 24–48 px) and not otherwise, so a hero who kills
+  things by walking up to them wears every one of them and a gunslinger working
+  at 160–300 px only wears what died in his face. Nothing anywhere reads a
+  weapon's CLASS — the difference falls out of where the bodies were, which is
+  also why a mage cornered in a doorway gets exactly as filthy as he should.
+  GENEROUS IS THE FAILURE MODE: measured on autopilot runs, a 40 px range made a
+  ranged build come out DIRTIER than a melee one, because in a swarm map almost
+  everything eventually dies within a stride.
+- **THE FLOOR MARKS HIM BACK, AND STOPS AT THE KNEES.** Standing in a pool wets
+  the BOOTS fast and the shins a little (`wadeHero`), on a LOWER threshold than
+  the trail's pickup — there can be far too little on a tile to track a print out
+  of and still plenty to stain a boot. It never reaches his chest or his face,
+  deliberately: the wade is the one source of soak that does not care how he
+  fights, and a generous one climbing past his knees quietly erases the build
+  difference above.
+- **THE COAT IS MASKED TO HIS OWN SILHOUETTE AND IT MULTIPLIES**
+  (`render/hero-coat.ts`). Authoring a bloodied twin of every sprite he can be
+  drawn as is a combinatorial explosion (two costumes × three stride frames ×
+  four slots × eighty generated overlays, plus whatever a mod adds), so the doll
+  is composed into a scratch canvas and the coat is CLIPPED TO WHAT IS ACTUALLY
+  THERE — it hugs gear that did not exist when the coat was drawn. And it
+  `multiply`s rather than repaints: opaque red over him deletes the dark outline
+  every sprite in the game is built on and a drenched hero becomes a red blob in
+  the shape of a man, while multiply keeps the outline, keeps the shading, and
+  makes the same four sprites work over white plate, brown leather and black
+  mail. A second pass at `GLOSS` lifts it back toward blood red, because pure
+  multiply over an already-dark boot goes to mud. **The WEAPON is composited
+  separately**, inside its own swing pivot, or its blood would hang in mid-air
+  while the blade swept out from under it. The DOM portraits (HUD bust,
+  inventory, dialogue) run the same compositor off the same numbers — a hero
+  drenched on the field and pristine in his own portrait is the feature
+  contradicting itself on one screen.
+- **THE TRAIL IS A CARRY, NOT A TIMER** (`render/blood-tracks.ts`). The boot
+  holds a finite amount and spends one print per footfall, so the trail always
+  fades out and always ENDS — a duration would print at full strength for N
+  seconds and then stop dead, which reads as a bug. The step is GROUND COVERED,
+  like the gait's (its own accumulator, because `walkGait` measures from its last
+  call and a second call in a frame reads zero). Prints are PERMANENT like the
+  floor's blood, so they cannot be a list that grows with the walking: they are
+  BUCKETED BY TILE with a small per-tile cap, which bounds the whole record by
+  the map's area however long the player paces one corridor. Orientation is
+  quantized to the four compass steps and drawn from two authored sprites
+  mirrored — the same trick the floor's fringe uses, because rotating pixel art
+  to an arbitrary bearing resamples it. **A print must be DARKER than the spray,
+  not fainter**: it lands on ground the fight has already freckled in the same
+  three reds, so contrast is the only thing that separates it (the art carries a
+  near-black pressed rim; a low-alpha print is invisible exactly where the trail
+  matters most).
+
+Judge both in the EFFECTS GALLERY — `blood-soaked` (DRENCHED) and `blood-tracks`
+(BLOODY BOOTPRINTS) — and MEASURE the rates on a real autopilot run rather than
+guessing: the whole feature is a curve over a map's worth of kills, and a
+diorama cannot show you where that curve sits.
 
 **LOOT IS THROWN, LANDS, AND THEN ADVERTISES ITSELF.** A drop that materialises
 under the corpse is indistinguishable from the floor texture, and a legendary
@@ -1502,6 +1593,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
+| A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
 | An errand (a quest) and the person who hands it out       | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
@@ -1809,6 +1901,27 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   **A level's `music:` is cross-checked** against `content/music/` by the level
   schema — an unknown id used to be silent, the player falling back to the
   default theme so the venue quietly played the moon's music.
+- **THE COMPANION ROSTER is compiled from YAML too.**
+  `content/companions.yaml` (a `companions:` map of id → companion — who a spared
+  elite BECOMES when it joins the party) is the source of truth; `make levels`
+  runs `generate-companions.mjs` (schema
+  `scripts/asset-tools/companion-schema.mjs`, loader `scripts/companion-data/`)
+  to emit `src/generated/companions.ts`, which `src/game/defs/companions.ts`
+  re-exposes as COMPANION_DEFS. It runs AFTER the item pipeline (a companion's
+  signature `weapon` is cross-checked against the live weapon catalog) but is
+  deliberately NOT a prerequisite of the enemy pipeline: `generate-enemies.mjs`
+  reads the ids an elite's `spareable:` may name from the content tree through
+  the same loader, so neither generator waits on the other. The schema's one
+  non-obvious rule is that a `power:` may not grow a kit the def hasn't got — a
+  `novaRadiusPerRank` with no `nova:` block ranks up forever and adds nothing,
+  silently, which is precisely what a compile-time check is for. The snapshot
+  guard (`tests/content/companion_roundtrip_test.ts`) pins the compiled roster to
+  `tests/content/fixtures/companions-snapshot.json`, frozen from the hand-written
+  TypeScript catalog the moment before the lift so it is a PROOF that nothing
+  changed; accept an intentional change with `node
+scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
+  `killQuotes` owes docs/manuscript.md an update, which needs the user's
+  confirmation first).
 - **THE STORY is compiled from YAML too, and that is what makes a CONVERSION
   possible.** `content/cutscenes/<id>.yaml` (one scene: a stage, a cast, a
   timeline of beats), `content/thoughts.yaml` (the hero's inner monologues plus

@@ -5,6 +5,15 @@
 // kill-quote banter it floats while fighting. Content is data, referenced by
 // id, exactly like the enemy and equipment catalogs: a new companion is a new
 // entry + the sprites its enemy twin already ships — no engine changes.
+//
+// This module owns the TYPES and the registry; the ROSTER is authored in
+// `content/companions.yaml` and compiled to `src/generated/companions.ts` by
+// `scripts/generate-companions.mjs`. A MOD ships its own `companions.yaml` and
+// its recruits arrive through `registerDefs` (pwa/src/game/mods.ts) — which is
+// what lets a conversion's spared elite join the party, the story beat a
+// re-skinned roster could not otherwise have.
+
+import { GENERATED_COMPANIONS } from "../../generated/companions.ts";
 
 /**
  * A companion's SIGNATURE POWER and how it scales with level (see
@@ -114,170 +123,9 @@ export type CompanionDef = {
   killQuotes: string[];
 };
 
-export const COMPANION_DEFS: Record<string, CompanionDef> = {
-  // The physics. Spared, he brings the coil he defended his corner with —
-  // and treats every kill as a public demonstration.
-  nikola_tesla: {
-    id: "nikola_tesla",
-    name: "NIKOLA TESLA",
-    sprite: "nikola_tesla",
-    hp: 160,
-    speed: 78,
-    radius: 12,
-    weapon: "tesla_coil",
-    // The coil's wireless current learns to LEAP: every few levels his bolts
-    // arc to one more foe, so a leveled Tesla chains the whole pack.
-    power: {
-      name: "CHAIN LIGHTNING",
-      blurb: "HIS BOLTS ARC TO ANOTHER FOE EACH RANK",
-      everyLevels: 3,
-      chainPerRank: 1,
-    },
-    joinWords: [
-      [
-        "YOU HELD THE CURRENT AND",
-        "GAVE IT BACK. I OWE YOU A",
-        "LIFE, LITTLE BUILDER.",
-      ],
-      [
-        "MY COIL WALKS WITH YOU NOW.",
-        "STAY CLOSE - I AM AT MY BEST",
-        "NEAR A GOOD CONDUCTOR.",
-      ],
-    ],
-    killQuotes: [
-      "SCIENCE!",
-      "ALTERNATING CURRENT. DIRECT RESULTS.",
-      "EDISON COULD NEVER.",
-      "WIRELESS. PATENT PENDING.",
-      "THE PIGEONS WOULD BE PROUD.",
-    ],
-  },
-  // The pilot. Navigates a place with no north by pure dead reckoning and
-  // calls every takedown an airfield matter.
-  amelia_earhart: {
-    id: "amelia_earhart",
-    name: "AMELIA EARHART",
-    sprite: "amelia_earhart",
-    hp: 150,
-    speed: 87,
-    radius: 12,
-    weapon: "blunderbuss",
-    // She packs the muzzle fuller every few levels: more pellets down the
-    // barrel, a wider wall of shot with each rank.
-    power: {
-      name: "FULL BROADSIDE",
-      blurb: "HER BLUNDERBUSS GAINS A PELLET EACH RANK",
-      everyLevels: 3,
-      pelletsPerRank: 1,
-    },
-    joinWords: [
-      [
-        "YOU HAD ME GROUNDED AND",
-        "LET ME BACK UP. THAT'S A",
-        "DEBT, PILOT. I PAY THOSE.",
-      ],
-      [
-        "I'LL FLY YOUR WING TO THE",
-        "FAR DOOR AND PAST IT.",
-        "NOBODY TOUCHES MY LEAD.",
-      ],
-    ],
-    killQuotes: [
-      "CLEARED FOR DEPARTURE.",
-      "THAT ONE'S GROUNDED.",
-      "SMOOTH LANDING.",
-      "FLIGHT PLAN? NEVER FILED ONE.",
-    ],
-  },
-  // The unkillable mystic. Finds the whole business of dying hilarious,
-  // professionally speaking. His long stint frozen between universes rubbed
-  // off: he pulses a FROST NOVA that grips the horde in the cold that could
-  // never keep HIM down — a chilling ring that slows and chips everything
-  // near him, turning a plain axeman into the party's crowd-control anchor.
-  grigori_rasputin: {
-    id: "grigori_rasputin",
-    name: "GRIGORI RASPUTIN",
-    sprite: "grigori_rasputin",
-    hp: 190,
-    speed: 72,
-    radius: 12,
-    weapon: "executioners_axe",
-    nova: {
-      everyMs: 2600,
-      radius: 96,
-      damage: 46,
-      chillMs: 1600,
-      chillFactor: 0.45,
-    },
-    // The cold that could never keep HIM down spreads further every few
-    // levels: a wider ring, a deeper bite.
-    power: {
-      name: "DEEPENING FROST",
-      blurb: "HIS FROST NOVA WIDENS AND BITES HARDER EACH RANK",
-      everyLevels: 3,
-      novaRadiusPerRank: 10,
-      novaDamagePerRank: 8,
-    },
-    joinWords: [
-      [
-        "POISON. BULLETS. RIVERS.",
-        "ONLY YOU EVER MADE ME KNEEL,",
-        "AND YOU LET ME STAND.",
-      ],
-      [
-        "MY LIFE IS YOURS NOW, WARM",
-        "ONE. I WILL WATCH YOUR BACK.",
-        "PITY WHATEVER COMES AT IT.",
-      ],
-    ],
-    killQuotes: [
-      "NOW YOU TRY DYING.",
-      "I MAKE IT LOOK EASY.",
-      "STAY DOWN. I NEVER DID.",
-      "THE HOLY MAN SENDS REGARDS.",
-    ],
-  },
-  // The little man with the pot of gold. His luck rubs off: +50% MAGIC FIND
-  // for the whole party while he's on his feet.
-  lucky: {
-    id: "lucky",
-    name: "LUCKY",
-    sprite: "lucky",
-    hp: 140,
-    speed: 84,
-    radius: 9,
-    weapon: "sorcerers_staff",
-    aura: { magicFind: 0.5 },
-    // The luck runs deeper the longer he's around: his magic-find aura swells
-    // with every rank, so the party's finds keep getting shinier.
-    power: {
-      name: "RUNAWAY LUCK",
-      blurb: "HIS MAGIC-FIND AURA SWELLS EACH RANK",
-      everyLevels: 3,
-      magicFindPerRank: 0.15,
-    },
-    joinWords: [
-      [
-        "YE BEAT ME FAIR AND LET ME",
-        "KEEP ME HEAD. THAT'S A LIFE",
-        "DEBT, THAT IS. BINDING.",
-      ],
-      [
-        "SO I'M YOURS NOW - ME, ME",
-        "LUCK, AND ME GOLD... WELL.",
-        "THE LUCK, ANYWAY. C'MON.",
-      ],
-    ],
-    killQuotes: [
-      "OOPS. BAD LUCK.",
-      "NOT YOUR DAY, FRIEND.",
-      "FORTUNE FAVORS ME.",
-      "THAT'S ME GOLD NOW.",
-      "SHOULDA RUBBED A CLOVER.",
-    ],
-  },
-};
+/** The shipped roster, compiled from `content/companions.yaml`. */
+export const COMPANION_DEFS: Record<string, CompanionDef> =
+  GENERATED_COMPANIONS;
 
 // Active registry the accessor reads (defaults to the shipped catalog;
 // tests swap in fixtures via `registerDefs`). See src/index.ts.

@@ -26,6 +26,8 @@ declare module "*/mod/tools/build.mjs" {
     kind: "addon" | "conversion";
     campaign: string[] | null;
     levels: unknown[];
+    /** The GENERATED MAPS recipes, keyed by the level each one carves. */
+    blueprints: Record<string, unknown>;
     enemies: Record<string, unknown>;
     weapons: Record<string, unknown>;
     gear: Record<string, unknown>;
@@ -38,6 +40,9 @@ declare module "*/mod/tools/build.mjs" {
     music: Record<string, unknown>;
     /** The mod's own POWERS, already `{ id → AbilityDef }`. */
     powerups: Record<string, unknown>;
+    /** The mod's own COMPANIONS, already `{ id → CompanionDef }` — who its
+     * spared elites become. */
+    companions: Record<string, unknown>;
     /** THE STORY. `cutscenes` arrives with its `variants:` already expanded into
      * `<id>_<difficulty>` scenes; `capRotation` REPLACES the shipped cap-farm
      * rotation rather than merging with it. */

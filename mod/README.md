@@ -42,12 +42,14 @@ my-mod/
   mod.yaml                     the manifest — id, name, version, author, kind
   ladder.yaml                  where your levels sit on the difficulty ladder
   levels/<id>.yaml             one venue each
+  maps/<id>.yaml               a venue's carve recipe — GENERATED MAPS
   enemies/<biome>/<id>.yaml    one monster each
   items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each
   sounds/<id>.yaml             one sound each
   music/<id>.yaml              one score each
   powerups.yaml                every power your mod adds
+  companions.yaml              who your spared elites join you as
   cutscenes/<id>.yaml          one scene each — stage, cast, timeline of beats
   thoughts.yaml                the hero's inner monologues
   story-items.yaml             the plot pieces his finds spell out
@@ -63,6 +65,12 @@ what make a mod a different game rather than a re-skin: the scene it opens on, t
 hero's read on what he is looking at, and the lore he finds on the floor. They are
 also the part nobody governs — your plot does not have to agree with the shipped
 one, and a conversion's usually shouldn't.
+
+`companions.yaml` belongs to that half too. Sparing a beaten elite and having it
+walk out beside you is one of the game's few real decisions, and until a mod could
+author its own roster the only figures it could hand over were the shipped four —
+so a conversion's monsters could be its own while its allies stayed somebody
+else's.
 
 ## Testing a mod without publishing it
 
@@ -130,8 +138,8 @@ mean to override.
 
 ## What you may reference
 
-Your level can name any monster, weapon, gear piece, power or sprite the base
-game ships, plus everything your own mod adds.
+Your level can name any monster, weapon, gear piece, power, companion or sprite
+the base game ships, plus everything your own mod adds.
 [`catalog.json`](catalog.json) is the complete list, and the compiler checks
 every id against it — a typo is an error with a filename, never a monster that
 silently fails to appear.

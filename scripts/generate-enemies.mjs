@@ -30,12 +30,12 @@ import { fileURLToPath } from "node:url";
 register("./game-alias-loader.mjs", import.meta.url);
 
 import { validateEnemy } from "./asset-tools/enemy-schema.mjs";
+import { loadCompanions } from "./companion-data/load-yaml.mjs";
 import { loadEnemies } from "./enemy-data/load-yaml.mjs";
 import { loadStoryItems } from "./story-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
-const { COMPANION_DEFS } = await import(engine("src/game/defs/companions.ts"));
 const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
@@ -44,7 +44,12 @@ const { enemies, entries } = loadEnemies();
 
 const refs = {
   enemies: new Set(Object.keys(enemies)),
-  companions: new Set(Object.keys(COMPANION_DEFS)),
+  // Read from `content/companions.yaml` through the same loader a mod's roster
+  // goes through, for the same reason the story items are: the ids are the
+  // content tree's to state, one reader means the two can never disagree, and
+  // reaching for `defs/companions.ts` — which now reads a GENERATED module —
+  // would put this pipeline behind the companion one for no gain.
+  companions: new Set(Object.keys(loadCompanions().companions)),
   uniques: new Set(Object.keys(UNIQUE_DEFS)),
   // Read from `content/story-items.yaml` rather than the engine: the plot
   // pieces are content now, and a generator that reaches for a def module it

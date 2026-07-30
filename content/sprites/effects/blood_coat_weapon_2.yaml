@@ -1,0 +1,30 @@
+name: blood_coat_weapon_2
+family: effects
+size: [12, 12]
+description: >
+  The blade running with it — one rung of the coat masked onto whatever the hero is
+  holding, so a blade that has been through a crowd looks like it.
+subject:
+  kind: held-weapon soak overlay
+  build: >-
+    near-total coverage of the upper-right diagonal from the far end most of the way back to the grip, wet and bright along the top edge, darkening through a midtone band to clotted underneath, with two drips hanging off the lower edge
+  flavor: >-
+    the top rung of the weapon's soak ladder — it is running off the end; it is masked to the weapon's own silhouette at draw time, so it must
+    read along the DIAGONAL a held icon lies on rather than filling the cell
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ....rrrrrd..
+  ...rrrrrrdd.
+  ..rrrrrrddi.
+  ..rrrrrddi..
+  .rrrrrddi...
+  .rrrrddi....
+  rrrrddi.....
+  rrrddi......
+  rrddi.......
+  .ddi........
+  ..i.........
+  ............

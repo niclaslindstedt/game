@@ -63,6 +63,50 @@ and every difficulty number comes from one file.
 Full reference: [`../content/levels/moon.yaml`](../content/levels/moon.yaml) is
 a complete, heavily commented venue.
 
+## `maps/<id>.yaml` — carving a venue fresh every run
+
+Optional, and the only file here that changes how a level is _played_ rather
+than what is in it. With **GENERATED MAPS** on, a venue that ships a blueprint is
+**carved from the run's own seed** instead of loading its hand-drawn layout — so
+the boss has to be **found**. No guidance arrow is emitted; the fog-of-war
+minimap is the only record of where the player has been.
+
+The file stem, the `id` and the `level` are all the same word: **a blueprint
+carves the mission it is named after.** An addon may only name one of its own
+levels — re-carving a shipped venue is a `kind: conversion`'s business.
+
+**A blueprint is a RECIPE, not a layout.** It carries only what the carve needs:
+
+| Field                  | What it says                                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                    |
+| `sizes`                | `small` / `medium` / `large`, each a width, a height and a chamber count                                   |
+| `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of |
+| `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, …)      |
+| `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                           |
+| `elites` / `guardians` | the set pieces the carve places for you                                                                    |
+| `boss`                 | who, and the candidate **compass regions** one is rolled from per run                                      |
+
+Everything else about the mission — its name, its story, its intro, its loot
+pools, its music, its merchant — is **inherited from the level it names**, so a
+venue is still described in exactly one place.
+
+Three rules to author by:
+
+- **A count is a DENSITY.** Densities are per 1,000,000 world px², because the
+  same blueprint is carved at three sizes and a fixed count leaves LARGE bare.
+- **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
+  `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
+  barrier between two cells falls out of the PAIR — you never draw a wall.
+- **Say WHERE with a compass region**, never a coordinate: `northeast`,
+  `center-east`, `south`. `node mod/tools/cli.mjs ids --kind regions` lists every
+  name the game accepts, and a typo is a compile error rather than a boss quietly
+  relocated.
+
+Full reference: [`examples/greenhouse/maps/greenhouse.yaml`](examples/greenhouse/maps/greenhouse.yaml)
+is a small commented one, and [`../content/maps/moon.yaml`](../content/maps/moon.yaml)
+is a shipped venue's.
+
 ## `enemies/<biome>/<id>.yaml` — a monster
 
 The file stem is the id; the `<biome>` directory is organizational only (the
@@ -83,6 +127,72 @@ and the compiler refuses the mod if they do not, because a missing sprite draws
 as **nothing at all** rather than as an error.
 
 Full reference: [`../content/enemies/`](../content/enemies).
+
+## `companions.yaml` — who a spared elite joins you as
+
+One file at your mod's root, a `companions:` mapping of id → companion. The KEY
+is the id; don't repeat it inside the entry.
+
+An elite earns a recruit by carrying `spareable:`. Beat it down and the game
+offers you the choice; spare it and the companion's `joinWords` play, then the
+figure falls in beside you for the rest of the run — fighting with its own
+weapon, earning its own levels off its own kills, and floating its own banter.
+
+```yaml
+companions:
+  mymod_gardener:
+    name: THE GARDENER
+    sprite: mymod_gardener # a FAMILY: `_0` and `_1` must both exist
+    hp: 145
+    speed: 80 # world px/s, on the HERO's scale, not the horde's
+    radius: 12
+    weapon: mymod_pruning_saw # any weapon id — yours or the game's
+    killQuotes: # required; floated over its own kills
+      - PRUNED.
+      - THAT ONE WAS OVERDUE.
+    joinWords: # optional; one entry per PAGE, one string per LINE
+      - - FORTY YEARS I PRUNED THIS
+        - PLACE. YOU'RE THE FIRST THING
+        - THROUGH THAT DOOR THAT KNOCKED.
+```
+
+Then point an elite at it:
+
+```yaml
+# enemies/mymod/mymod_gardener.yaml
+role: elite
+spareable:
+  companion: mymod_gardener
+```
+
+You do **not** have to author a roster to use one: your elite may name one of the
+game's four (`nikola_tesla`, `amelia_earhart`, `grigori_rasputin`, `lucky`)
+instead. And an addon may not shadow one of those ids — a conversion may, which
+is how it makes the spare verdict hand over its own figure.
+
+### Optional kit
+
+- `aura: { magicFind: 0.2 }` — a party-wide bonus it radiates while on its feet,
+  silent while downed. `0.2` is +20% on every loot-tier roll.
+- `nova:` — a FROST NOVA it pulses when a foe is in reach, damaging and slowing
+  everything in the ring. All five fields are required together:
+  `everyMs`, `radius`, `damage`, `chillMs`, `chillFactor` (0..1).
+- `power:` — its SIGNATURE trick, which gains a RANK every `everyLevels` of its
+  own levels. Needs `name`, `blurb`, `everyLevels`, and at least one growth
+  field: `pelletsPerRank`, `chainPerRank`, `piercePerRank`, `magicFindPerRank`,
+  `novaRadiusPerRank`, `novaDamagePerRank`.
+
+Growth is applied **on top of** the base kit, and two of those six need the base
+to exist: `novaRadiusPerRank` and `novaDamagePerRank` do nothing at all without a
+`nova:` block, so the compiler refuses that combination rather than letting a
+companion rank up forever and gain nothing. The other four are grants in their
+own right — `chainPerRank` teaches a weapon with no base chain to arc, and
+`magicFindPerRank` works with no `aura:` at all.
+
+A companion with no `power:` still trains: hp and damage grow with its level. It
+just never learns a new trick.
+
+Full reference: [`../content/companions.yaml`](../content/companions.yaml).
 
 ## `sprites/<family>/<name>.yaml` — pixel art
 

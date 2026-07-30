@@ -45,6 +45,10 @@ export type ModBundle = {
    * join the shipped order at their own `index`. */
   campaign: string[] | null;
   levels: unknown[];
+  /** The GENERATED MAPS recipes, keyed by the level each one carves — a mod's
+   * venue gets a fresh carve per run like a shipped one instead of always
+   * playing its hand-drawn layout. */
+  blueprints: Record<string, unknown>;
   enemies: Record<string, unknown>;
   /** Plain bases the loot system rolls tiers and affixes onto. */
   weapons: Record<string, unknown>;
@@ -55,6 +59,9 @@ export type ModBundle = {
   sounds: Record<string, unknown>;
   /** The mod's own POWERUPS, by id — already `{ id → AbilityDef }`. */
   powerups: Record<string, unknown>;
+  /** The mod's own COMPANIONS, by id — who its spared elites become. An
+   * enemy's `spareable.companion` names one of these or a shipped one. */
+  companions: Record<string, unknown>;
   /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
    * replaces a shipped sound rather than only adding one. */
   soundKeys: Record<string, string>;
@@ -89,11 +96,13 @@ export type ModClash = {
   kind:
     | "sprite"
     | "level"
+    | "map blueprint"
     | "enemy"
     | "item"
     | "sound"
     | "music"
     | "powerup"
+    | "companion"
     | "cutscene"
     | "thought"
     | "story item"

@@ -67,6 +67,37 @@ module, since the shell compiled them, which is the one place a mod's content
 does not travel the same road as the game's: the shipped scores are each behind
 their own dynamic `import()` and stay there.
 
+### 3a. A mod's venue may be CARVED, not only drawn
+
+`maps/<id>.yaml` is the recipe half of a venue (see **GENERATED MAPS** in
+`AGENTS.md`): with the flag on, the mission's geometry is carved fresh from the
+run's own seed instead of loading its hand-drawn layout, so the boss has to be
+found. A mod ships one beside its level and gets the same treatment — the loader
+(`scripts/map-data/load-yaml.mjs`) takes a directory like every other, the schema
+is `validateMap`, and the ramp names expand against the shipped `ladder.yaml`
+using the mod's own rows for its own venue.
+
+Two details are the whole design here, and both come from rules that already
+existed:
+
+- **The registry is a LEAF.** `src/game/mapgen/blueprints.ts` holds the active
+  catalog and nothing else, so `registerDefs({ blueprints })` swaps a mod's
+  recipes in without the def registry importing `generate.ts` — the carve, the
+  dressing passes and the whole area rule engine. Same move `flags.ts` makes for
+  the engine's runtime toggles.
+- **A blueprint carves the mission it is NAMED AFTER**, so `maps/moon.yaml` is
+  not a new map, it is the shipped moon re-cut. An addon may therefore only name
+  one of its own levels; a conversion may name any, which is how it re-carves a
+  venue it has already re-skinned. The compiler says exactly that, with the fix
+  in the message.
+
+The one thing that could not travel is the compass-region PARSER. The compiler
+runs in the shipped app's main process, which has no TypeScript and cannot call
+`mapgen/regions.ts` — and a second grammar in the SDK would drift within a
+release. So `mod/catalog.json` carries the list of names the engine's own parser
+accepts, enumerated from it by `mod/tools/catalog.mjs` and drift-tested like
+every other id set in that file. One grammar, a snapshot of what it says yes to.
+
 ### 3b. The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs
@@ -95,6 +126,38 @@ Three things are worth knowing about the format:
   speaks stops at the mod folder's edge (see AGENTS.md, and the note at the top of
   the manuscript). A mod's scenes are never transcribed there and never corrected
   to match it. The distinction is origin, not format.
+
+### 3c. The party is the story's other half
+
+A companion is the same lift again: `registerDefs` already took a `companions`
+catalog, and what was missing was the authoring form. The roster is content now
+(`content/companions.yaml`, compiled by `scripts/generate-companions.mjs`), so a
+mod ships one by putting that file at its own root.
+
+It belongs beside the story rather than beside the stat catalogs, because of what
+it gates. **Sparing a beaten elite is one of the few decisions the game asks the
+player to make**, and the payoff is a named figure who thanks you, follows you,
+fights with the weapon it just used on you, and talks over its own kills. Until
+the roster was loadable the only figures a mod could hand over were the shipped
+four, so a conversion's monsters, venues, script and loot could all be its own
+while its allies stayed Tesla and a leprechaun — the one place the re-skin showed
+through at the exact moment the player had earned something.
+
+Two things are worth knowing about the format:
+
+- **`spareable` resolves against BASE ∪ MOD, both ways.** A mod's elite may
+  recruit a mod's companion (the point) or a shipped one (an addon that hands the
+  player Tesla off a monster of its own, authoring no roster at all). An addon may
+  not shadow a shipped companion id; a conversion may, which is how it makes the
+  spare verdict hand over its own figure instead.
+- **The schema refuses a power that grows a kit the companion has not got.** A
+  `power:` block is pure growth applied on top of a base — and
+  `novaRadiusPerRank` reads a `nova:` block that may not be there, so on a
+  companion without one every rank-up adds precisely nothing, forever, with no
+  error at play time to explain it. That is exactly the class of failure a
+  compiler exists to catch, so `companion-schema.mjs` names the missing block and
+  refuses the mod. The other four growth fields are grants in their own right
+  (`chainPerRank` teaches an un-chained weapon to arc) and are legal alone.
 
 ### 4. Clashes between mods resolve by an order the player owns
 
@@ -140,8 +203,9 @@ unsubscribed from everything.
 ## The reference catalog
 
 `mod/catalog.json` is every id a mod may name — enemies, weapons, gear, powers,
-uniques, sprites, sounds, music tracks, the shipped venues, and the engine's
-event names (what a sound's `on:` may answer). It exists because the compiler runs in the
+uniques, sprites, sounds, music tracks, the shipped venues, the compass regions a
+map blueprint points its boss with, and the engine's event names (what a sound's
+`on:` may answer). It exists because the compiler runs in the
 shipped app's main process, which has no TypeScript and no `src/generated/` to
 import the real catalogs from, so the id sets are snapshotted into JSON that
 travels inside the build.
@@ -237,11 +301,7 @@ dynamic import.
 
 ## What is not here yet
 
-- **Companions and item sets.** Both are accepted by `registerDefs` and both are
-  still TypeScript, so each is the same lift the story just had. Companions
-  matter most for a conversion — a spared elite joining you is a real story beat.
-  Sets are half-there: a mod can ship `rarity: set` items, but the `SetDef` that
-  pays the bonuses is code, so the pieces have nothing to belong to.
-- **Generated-map blueprints.** `content/maps/<id>.yaml` is not loaded from a
-  mod, so a mod's venue is always hand-drawn and never carved fresh per run.
-  Purely additive, and it inherits the existing schema.
+- **Item sets.** Accepted by `registerDefs` and still TypeScript, so it is the
+  same lift the story and the companions have had. Sets are half-there: a mod can
+  ship `rarity: set` items, but the `SetDef` that pays the bonuses is code, so the
+  pieces have nothing to belong to.

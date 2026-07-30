@@ -107,6 +107,48 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
   {
+    id: "blood-soaked",
+    icon: "spell_berserk",
+    label: "DRENCHED",
+    blurb: "HE WEARS WHAT HE DID - IT LANDS ON HIM AND IT STAYS THERE",
+    group: "IMPACT",
+    keywords: [
+      "blood",
+      "gore",
+      "hero",
+      "player",
+      "soak",
+      "coat",
+      "drenched",
+      "armor",
+      "face",
+      "horror",
+    ],
+    // Point-blank work, because that is the only kind that reaches his face:
+    // the soak is mixed by DISTANCE (hero-soak.ts), so a crowd cut down at
+    // arm's length paints his visor while the same pack at range would only
+    // ever mark his boots. Nine rounds of it over the show, which is the real
+    // path a bad map puts him through — nothing here sets the soak directly.
+    stage: { spawns: horde(27, 14, 32) },
+    // Long, and deliberately: the money shot is the LAST beat, once the crowd
+    // and its damage numbers are gone and he is left standing alone in the
+    // middle of it wearing the lot.
+    showMs: 7000,
+    fire: (ctx) => {
+      const rounds = 9;
+      for (let round = 0; round < rounds; round++) {
+        ctx.after(round * 380, () => {
+          // Taken OFF the field as well as killed, so the bodies stop piling up
+          // in front of the one thing the exhibit is about.
+          for (let i = 0; i < 3; i++) {
+            const mob = ctx.kill();
+            if (mob) ctx.emit(killEvent(mob, { overkillBars: 2.2, xp: 0 }));
+          }
+        });
+      }
+    },
+  },
+  {
     id: "crit",
     icon: "spell_crushing_blow",
     label: "CRITICAL HIT",
@@ -1082,6 +1124,41 @@ const FIELD_EXHIBITS: Exhibit[] = [
         { id: ctx.state.nextId++, kind: "xp", pos: { ...from } },
         from,
       );
+    },
+  },
+  {
+    id: "blood-tracks",
+    icon: "icon_leather_boots",
+    label: "BLOODY BOOTPRINTS",
+    blurb: "HE WALKS IT OUT OF THE POOL AND PRINTS IT ON CLEAN GROUND",
+    group: "WORLD",
+    keywords: [
+      "blood",
+      "gore",
+      "footprints",
+      "bootprints",
+      "tracks",
+      "trail",
+      "floor",
+      "walk",
+      "steps",
+    ],
+    // The whole exhibit is the WALK: a pack cut down on one spot leaves a pool,
+    // and he laps past it. What to watch is the trail RUNNING OUT — the prints
+    // go from a wet sole to a drying scuff over the next few strides, because
+    // the boot carries a finite amount (render/blood-tracks.ts).
+    // A knot cut down right where he is standing, then a lap that carries him
+    // OUT of the pool it left and back in again: the ellipse he walks is wider
+    // than the mess is, so half of every lap is clean ground for him to print
+    // on. Staging the kills out on the lap instead would leave him permanently
+    // in the blood, and a hero who never leaves it never lays a trail. The
+    // moon's dark regolith is the floor that shows a dark mark best.
+    levelId: "moon",
+    stage: { spawns: horde(9, 10, 40) },
+    walk: { radius: 76, periodMs: 5200 },
+    showMs: 7000,
+    fire: (ctx) => {
+      for (const mob of ctx.mobs) ctx.emit(killEvent(mob, { overkillBars: 1 }));
     },
   },
   {

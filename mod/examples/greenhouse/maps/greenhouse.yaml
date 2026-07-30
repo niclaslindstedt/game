@@ -1,0 +1,175 @@
+# SPDX-License-Identifier: CC0-1.0
+description: |-
+  GENERATED THE GREENHOUSE — the seed vault as a carve instead of the one hall
+  in levels/greenhouse.yaml. THE READ: open growing beds run into each other with
+  nothing between them, hedged NURSERIES are fenced off with one wide gate, and
+  somewhere out east is the sealed SEED VAULT the gardener never left. Which room
+  she is in is rolled per run, so the second playthrough is a search rather than a
+  commute, and the fog-of-war minimap is the only map you get.
+  A blueprint is a RECIPE, not a layout: it says what kinds of place the venue is
+  made of and what grows in them, and the game carves the geometry fresh from the
+  run's own seed. Everything else about the mission — its name, its story, its
+  intro, its loot pools, its music — is INHERITED from levels/greenhouse.yaml, so
+  there is exactly one place the venue is described.
+
+# The blueprint carves the level it is NAMED AFTER: the file stem, the `id` and
+# the `level` are all the same word, so the game can look this up by the id a run
+# was started with. An addon may only name one of ITS OWN levels here.
+id: greenhouse
+level: greenhouse
+
+# WHAT THE PLACE IS MADE OF. Every carved cell is assigned one of these, and the
+# barrier between two cells falls out of the PAIR: nothing at all between two
+# open beds, a hedge with a wide gate into a nursery, a sealed wall with one
+# doorway into the vault. That is the whole rule engine — you describe kinds of
+# place, not walls.
+areas:
+  # Open growing beds: the default. `enclosure: none` means two of them are one
+  # continuous floor, so the venue still reads as a long hall you can back down.
+  # The hero always lands here (`boss: false` keeps the gardener out of it).
+  - id: bed
+    enclosure: none
+    weight: 4
+    horde: 1
+    boss: false
+    label: GROWING BED
+    # NO `ground:` here, though the format allows one, and the reason is worth
+    # knowing: a district's floor is drawn as an axis-aligned rectangle inside
+    # its own cell, which is right where a wall closes the cell off (see the
+    # nursery below) and wrong on OPEN ground — two beds that flow together come
+    # out as two rugs with a seam between them. Open districts are told apart by
+    # what STANDS on them; enclosed ones can have their own floor.
+  # A hedged nursery: fenced off, one broad gate in. Thicker horde, its own lawn
+  # floor — an area READS as an area because of what it is made of, not because
+  # something wrote a label on it.
+  - id: nursery
+    enclosure: soft
+    weight: 3
+    horde: 1.15
+    spawn: false
+    label: NURSERY
+    ground:
+      common: colony_lawn_0
+      rare: colony_lawn_1
+      rareEvery: 12
+  # The seed vault: sealed, one doorway, and `once: true` — a weight can only say
+  # "often" or "rarely", never "there is ONE of these", and a map with five vaults
+  # has nothing worth finding in any of them.
+  - id: vault
+    enclosure: hard
+    weight: 1.5
+    horde: 1.3
+    spawn: false
+    once: true
+    label: SEED VAULT
+    ground:
+      common: colony_paving_0
+      rare: colony_paving_1
+      rareEvery: 9
+
+# A blueprint is carved at THREE sizes (the player picks one under DEVELOPER →
+# GENERATED MAPS), so every count below is a DENSITY rather than a number — a
+# fixed count leaves LARGE bare. Each size must fit the chambers it asks for.
+sizes:
+  small:
+    width: 2200
+    height: 1400
+    rooms: 8
+  medium:
+    width: 2800
+    height: 1800
+    rooms: 14
+  large:
+    width: 3400
+    height: 2200
+    rooms: 20
+
+# THE CARVE. `wall` names the object the barriers are built out of; `doorWidth`
+# is how wide a gate is punched (keep it over 160 or scattered props plug it);
+# `cluster` is how big a district grows before the next one seeds.
+layout:
+  minRoom: 420
+  doorWidth: 180
+  loopDoors: 0.3
+  cluster: 0.5
+  wall: hedge
+
+# THE PALETTE, typed by PURPOSE rather than by position — that is what lets the
+# generator place a thing without being told where. A `chest` belongs at the end
+# of a dead end, `decor` may land anywhere, a `wall` is only ever a barrier.
+objects:
+  # The hedges every fence and vault wall is built from. Three sprites picked per
+  # bush down the chain and a 10px wander off true, so a hedge reads as planting
+  # rather than as a pencil line.
+  - id: hedge
+    type: wall
+    kind: colony_hedge
+    radius: 11
+    wander: 10
+    sprites:
+      - colony_hedge
+      - colony_shrub
+      - sage_bush
+  # Planters: solid cover you fight around. Density is per 1,000,000 world px².
+  - id: colony_planter
+    type: obstacle
+    radius: 9
+    density: 13
+    areas: [bed, nursery]
+  # Supply crates, stacked where the work was done.
+  - id: crate
+    type: crate
+    radius: 7
+    density: 9
+    areas: [nursery, vault]
+  # Declaring a chest is all it takes to pay out the dead ends the carve grew.
+  - id: cache
+    type: chest
+  # Flat ground texture. Cheap, thick, and the difference between a floor and a
+  # grey rectangle.
+  - id: colony_flowers
+    type: decor
+    density: 6
+  - id: wildflowers
+    type: decor
+    density: 4.5
+    areas: [bed]
+
+# THE HORDE is a density too, spread over the cells that may hold one, and its
+# breeds hand over along the map's DEPTH axis (0 at the hero's cell, 1 at the
+# deepest) — so the creepers are underfoot from the start and the ghosts only
+# turn up out where the vault might be.
+horde:
+  perRoom: [18, 28]
+  maxAlive: 8
+  lingering: 5
+  ramps: [meek, bold, fierce, savage]
+  members:
+    - enemy: greenhouse_creeper
+      window: [0, 0.8]
+      weight: 4
+    - enemy: wisp
+      window: [0, 0.45]
+      weight: 2
+    - enemy: ghost
+      window: [0.45, 1]
+      weight: 2
+
+# The cache keepers, cycled across whichever dead ends the carve grew.
+guardians:
+  - enemy: greenhouse_creeper
+    ramp: savage
+    hp: 90
+
+# WHERE THE GARDENER IS. Not a coordinate — a list of compass regions, one rolled
+# per run, so she is never where she was last time. Never the centre: a boss in
+# the middle of the map is found on the way to somewhere else, which is the
+# opposite of a search. `cli.mjs ids --kind regions` lists every name.
+boss:
+  enemy: greenhouse_gardener
+  ramp: brutal
+  hp: 260
+  regions:
+    - northeast
+    - southeast
+    - center-east

@@ -13,7 +13,8 @@
 //
 //  1. **A mod's content is authored exactly like the game's.** A mod's level is
 //     a `content/levels/<id>.yaml` file, its enemy a
-//     `content/enemies/<biome>/<id>.yaml` file, its sprite a
+//     `content/enemies/<biome>/<id>.yaml` file, its companion a
+//     `content/companions.yaml` entry, its sprite a
 //     `content/sprites/<family>/<name>.yaml` file — same keys, same schema,
 //     same validator. That is why the loaders take a directory (see
 //     `scripts/*-data/load-yaml.mjs`): "it works in my mod" and "it works in
@@ -35,9 +36,11 @@ import path from "node:path";
 
 import { parse } from "yaml";
 
+import { validateCompanion } from "../../scripts/asset-tools/companion-schema.mjs";
 import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
 import { validateItem } from "../../scripts/asset-tools/item-schema.mjs";
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
+import { validateMap } from "../../scripts/asset-tools/map-schema.mjs";
 import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
 import { validatePowerup } from "../../scripts/asset-tools/powerup-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
@@ -54,6 +57,7 @@ import {
   validateQuestGiver,
 } from "../../scripts/asset-tools/quest-schema.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
+import { loadCompanions } from "../../scripts/companion-data/load-yaml.mjs";
 import { loadEnemies } from "../../scripts/enemy-data/load-yaml.mjs";
 import {
   baseDef,
@@ -62,7 +66,9 @@ import {
   uniqueDef,
 } from "../../scripts/item-data/compile.mjs";
 import { loadItems } from "../../scripts/item-data/load-yaml.mjs";
+import { loadLadder } from "../../scripts/level-data/ladder.mjs";
 import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
+import { loadMaps } from "../../scripts/map-data/load-yaml.mjs";
 import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
@@ -173,6 +179,15 @@ export function buildMod(modDir, catalog) {
     "levels",
     fail,
   );
+  // THE RECIPE HALF of a venue: `maps/<id>.yaml` beside `levels/<id>.yaml`, so a
+  // mod's map is carved fresh per run under GENERATED MAPS instead of being
+  // permanently hand-drawn. Optional in every sense — a mod may ship levels and
+  // no blueprints, blueprints for only some of its levels, or neither.
+  const maps = loadTree(
+    () => loadMaps(path.join(modDir, "maps"), { extraLadder }),
+    "maps",
+    fail,
+  );
   const sprites = loadSprites(path.join(modDir, "sprites"), errors, warnings);
   const items = loadTree(() => loadItems(modDir), "items", fail);
   const sounds = loadTree(
@@ -185,9 +200,14 @@ export function buildMod(modDir, catalog) {
     "music",
     fail,
   );
-  // The one catalog that is a single FILE rather than a tree, so it takes the
-  // mod's root — `powerups.yaml`, exactly like `ladder.yaml`.
+  // The catalogs that are a single FILE rather than a tree, so they take the
+  // mod's root — `powerups.yaml` and `companions.yaml`, exactly like
+  // `ladder.yaml`.
   const powerups = loadTree(() => loadPowerups(modDir), "powerups", fail);
+  // THE PARTY. A spared elite falling in beside the hero is a story beat, not a
+  // stat line — so a conversion whose roster could be re-skinned but whose
+  // recruits could not would be missing the payoff for sparing anything.
+  const companions = loadTree(() => loadCompanions(modDir), "companions", fail);
   // THE STORY: the scenes a mod opens with, the hero's inner monologues, and the
   // plot pieces his finds spell out. A conversion that shipped none of these
   // would be a re-skin — new monsters on somebody else's plot — so all three go
@@ -221,11 +241,13 @@ export function buildMod(modDir, catalog) {
 
   const modEnemies = enemies?.enemies ?? {};
   const modLevels = (levels?.entries ?? []).map((e) => e.def);
+  const modBlueprints = maps?.entries ?? [];
   const modItems = splitItems(items?.entries ?? []);
 
   const modSounds = sounds?.entries ?? [];
   const modMusic = music?.entries ?? [];
   const modPowerups = powerups?.powerups ?? {};
+  const modCompanions = companions?.companions ?? {};
   const modCutscenes = cutscenes?.cutscenes ?? {};
   const modThoughts = thoughts?.thoughts ?? {};
   const modCapRotation = thoughts?.capRotation ?? [];
@@ -234,21 +256,22 @@ export function buildMod(modDir, catalog) {
   const modQuestGivers = questGivers?.questGivers ?? {};
   const adds =
     modLevels.length +
+    modBlueprints.length +
     Object.keys(modEnemies).length +
     (items?.entries?.length ?? 0) +
     modSounds.length +
     modMusic.length +
     Object.keys(modPowerups).length +
+    Object.keys(modCompanions).length +
     Object.keys(modCutscenes).length +
     Object.keys(modThoughts).length +
     Object.keys(modStoryItems).length +
     Object.keys(modQuests).length;
   if (adds === 0) {
     fail(
-      "a mod must add at least one level, enemy, item, sound, track, powerup, " +
-        "cutscene, thought, story item or quest — a bundle of nothing would " +
-        "install " +
-        "and do nothing at all",
+      "a mod must add at least one level, map blueprint, enemy, item, sound, " +
+        "track, powerup, companion, cutscene, thought, story item or quest — " +
+        "a bundle of nothing would install and do nothing at all",
     );
   }
 
@@ -263,6 +286,7 @@ export function buildMod(modDir, catalog) {
     sounds: modSounds,
     music: modMusic,
     powerups: modPowerups,
+    companions: modCompanions,
     cutscenes: modCutscenes,
     thoughts: modThoughts,
     storyItems: modStoryItems,
@@ -315,10 +339,20 @@ export function buildMod(modDir, catalog) {
   // pool a `loot.items` line may name), and it has no notion of sprites.
   const enemyRefs = {
     enemies: refs.enemies,
-    companions: new Set(catalog.companions),
+    // Base ∪ mod, like every other cross-reference — which is the whole point
+    // of a mod-authored roster: a mod's elite spares into a mod's companion.
+    // Naming a SHIPPED one still resolves, so an addon can hand the player
+    // Tesla off a monster of its own.
+    companions: union(catalog.companions, Object.keys(modCompanions)),
     uniques: refs.uniques,
     storyItems: refs.storyItems,
-    items: union(catalog.weapons, catalog.gear),
+    // Base ∪ mod, like everything else. `refs.weapons`/`refs.gear` already carry
+    // this mod's own — reading `catalog.*` here instead meant a mod's monster
+    // could not drop a weapon the SAME MOD ships, which is rule 2 of this file
+    // broken in the one place it is easiest not to notice.
+    // (Spread rather than `union`, which flattens ARRAYS — handing it two Sets
+    // yields a Set holding two Set objects and every id check quietly fails.)
+    items: new Set([...refs.weapons, ...refs.gear]),
   };
   for (const { id, def } of enemies?.entries ?? []) {
     const res = validateEnemy(def, enemyRefs);
@@ -381,6 +415,18 @@ export function buildMod(modDir, catalog) {
     const res = validatePowerup(id, def, powerupRefs);
     errors.push(...prefix(res.errors, "powerups.yaml"));
     warnings.push(...prefix(res.warnings, "powerups.yaml"));
+  }
+
+  // THE PARTY, against the same schema the shipped roster goes through. Its two
+  // references are the ones that fail SILENTLY at play time: a sprite family
+  // nothing answers to walks beside the hero as nothing at all, and an unknown
+  // signature weapon throws out of the mint the instant the figure joins — which
+  // is the middle of the scene where the player just spared somebody.
+  const companionRefs = { sprites: spriteNames, weapons: refs.weapons };
+  for (const { id, def } of companions?.entries ?? []) {
+    const res = validateCompanion(id, def, companionRefs);
+    errors.push(...prefix(res.errors, "companions.yaml"));
+    warnings.push(...prefix(res.warnings, "companions.yaml"));
   }
 
   const itemRefs = {
@@ -505,6 +551,42 @@ export function buildMod(modDir, catalog) {
     warnings.push(...prefix(res.warnings, `levels/${entry.id}`));
   }
 
+  // THE BLUEPRINTS, through the same gate the shipped ones go through.
+  //
+  // Two of its four id sets are base ∪ mod like every other cross-reference (a
+  // mod's carve places a mod's monster on a mod's sprite); the RAMP names come
+  // from the shipped ladder, because a mod prices where its venue sits and never
+  // what `savage` means; and the compass grammar arrives as the list of names
+  // the ENGINE's own parser accepts, snapshotted into the catalog, since the
+  // desktop app compiling this has no TypeScript to run that parser with.
+  const mapRefs = {
+    enemies: refs.enemies,
+    levels: union(
+      catalog.levels ?? [],
+      modLevels.map((def) => def.id),
+    ),
+    sprites: spriteNames,
+    ramps: new Set(Object.keys(loadLadder().ramps)),
+    parseRegion: regionChecker(catalog.regions),
+  };
+  const ownLevelIds = new Set(modLevels.map((def) => def.id));
+  for (const { id, raw, description } of modBlueprints) {
+    const res = validateMap(raw, mapRefs, description);
+    errors.push(...prefix(res.errors, `maps/${id}`));
+    warnings.push(...prefix(res.warnings, `maps/${id}`));
+    // A blueprint carves the mission it is NAMED AFTER, so one naming a shipped
+    // venue re-carves that venue — which is a conversion's business, not an
+    // addon's. Caught here rather than in `checkIds` because the rule is not
+    // "this id is taken" but "this is somebody else's map".
+    if (kind !== "conversion" && !ownLevelIds.has(id)) {
+      errors.push(
+        `maps/${id}: a blueprint carves the level it is named after, and ` +
+          `"${id}" is not a level this mod ships. Name it after one of your ` +
+          "own levels, or set kind: conversion to re-carve a shipped venue.",
+      );
+    }
+  }
+
   // The one cross-reference no shipped schema makes, because the shipped
   // pipeline cannot get it wrong: the atlas is GENERATED from the sprite tree,
   // so a name that resolves at build time always resolves at draw time. A mod's
@@ -541,6 +623,11 @@ export function buildMod(modDir, catalog) {
       kind,
       campaign,
       levels: modLevels,
+      // The carve recipes, keyed by the level each one generates — exactly the
+      // shape `registerDefs({ blueprints })` takes.
+      blueprints: Object.fromEntries(
+        modBlueprints.map((e) => [e.id, e.blueprint]),
+      ),
       enemies: modEnemies,
       weapons: toRecord(modItems.weapons, baseDef),
       gear: toRecord(modItems.gear, baseDef),
@@ -562,6 +649,7 @@ export function buildMod(modDir, catalog) {
       // Already `{ id → def }` with each id stamped in by the loader, which is
       // exactly the shape `registerDefs` takes.
       powerups: modPowerups,
+      companions: modCompanions,
       // The story. `cutscenes` has its `variants:` already expanded into
       // `<id>_<difficulty>` scenes, so the page registers exactly what
       // `cutsceneVariant` looks up.
@@ -709,6 +797,7 @@ function checkIds({
   sounds,
   music,
   powerups,
+  companions,
   cutscenes,
   thoughts,
   storyItems,
@@ -725,6 +814,7 @@ function checkIds({
     gear: new Set(catalog.gear),
     unique: new Set(catalog.uniques),
     powerup: new Set(catalog.abilities ?? []),
+    companion: new Set(catalog.companions ?? []),
     cutscene: new Set(catalog.cutscenes ?? []),
     thought: new Set(catalog.thoughts ?? []),
     storyItem: new Set(catalog.storyItems ?? []),
@@ -746,6 +836,12 @@ function checkIds({
   }
   for (const id of Object.keys(powerups ?? {})) {
     if (shipped.powerup.has(id)) clashes.push(`powerup "${id}"`);
+  }
+  // A CONVERSION shadowing `lucky` is the point — it is how a mod's spared elite
+  // becomes its OWN figure rather than the leprechaun — so, like every other
+  // clash, this is an error only for an ADDON.
+  for (const id of Object.keys(companions ?? {})) {
+    if (shipped.companion.has(id)) clashes.push(`companion "${id}"`);
   }
   // The story. A CONVERSION shadowing `prelude` is the point — it is how a mod
   // opens on its own night instead of Ada's — so, like every other clash, this
@@ -815,6 +911,27 @@ function campaignOrder(manifest, kind, entries, errors) {
     }
   }
   return declared;
+}
+
+/**
+ * The map schema's region gate, backed by the catalog's snapshot of the names
+ * the engine's parser accepts.
+ *
+ * It is shaped as a THROWING parser rather than a Set because that is the shape
+ * `validateMap` takes — the repo's own build hands it `parseRegion` straight out
+ * of the engine — so there is one code path in the schema and the difference
+ * between the two callers stays here, in the one file that knows the app has no
+ * engine to ask.
+ */
+function regionChecker(regions) {
+  const known = new Set(regions ?? []);
+  return (name) => {
+    if (typeof name !== "string" || !known.has(name.toLowerCase()))
+      throw new Error(
+        `unknown compass region "${name}" — try northeast, center-east, south ` +
+          "(`cli.mjs ids --kind regions` lists them all)",
+      );
+  };
 }
 
 const union = (...lists) => new Set(lists.flat());

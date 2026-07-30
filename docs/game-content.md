@@ -1076,7 +1076,7 @@ terrifying, not a punishment for it.
 ## Companions — the SPARE-or-KILL verdict
 
 The rift's four fighting uniques are the game's first **companions**
-(`src/game/defs/companions.ts`, engine in `src/game/companions.ts`). Beating
+(`content/companions.yaml`, engine in `src/game/companions.ts`). Beating
 a spareable unique to 0 hp pauses the run in the `choice` phase: **KILL**
 lands the withheld blow through the ordinary kill rails (loot, last words,
 the lot); **SPARE** recruits the figure — it hands over its STORY items (the

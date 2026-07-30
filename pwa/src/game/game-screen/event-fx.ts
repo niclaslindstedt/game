@@ -43,6 +43,7 @@ import {
 } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
+import { soakHero } from "./hero-soak.ts";
 import { killPresentation } from "./kill-presentation.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
 import type { LoopShared } from "./loop-shared.ts";
@@ -408,6 +409,10 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
           seed,
         });
         spillBlood(state, bloodSpills(blow, event.pos, seed, heading, launch));
+        // …and what missed the floor lands on the MAN. Priced off the very same
+        // blow, so the hero, the spray and the ground can never disagree about
+        // how bad the hit was (game-screen/hero-soak.ts).
+        soakHero(state, blow, event.pos);
       } else if (
         gore !== "blood" ||
         !nsfwAllowed() ||

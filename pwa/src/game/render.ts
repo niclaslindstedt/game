@@ -20,6 +20,7 @@ import {
   drawMerchant,
 } from "./render/actors.ts";
 import { drawBloodGround } from "./render/blood-ground.ts";
+import { drawBloodTracks, stepBloodTracks } from "./render/blood-tracks.ts";
 import { ensureCaches } from "./render/caches.ts";
 import { combatNoiseFade, drawDeathClouds } from "./render/death.ts";
 import {
@@ -177,6 +178,13 @@ export function drawFrame(
   // a pool would smear north. It takes the world rect for the same reason — it
   // scans tiles, not pixels.
   drawBloodGround(ctx, state, sprites, camera, worldView);
+  // THE TRAIL, over the pools that made it and under everything that walks: the
+  // hero's boots pick blood up off a soaked tile and print it onto clean ground
+  // for the next few strides. Stepped here, immediately before it is drawn, for
+  // the same reason the gait is stepped from the draw — it measures the stride
+  // from the last frame, so it must be called exactly once per frame.
+  stepBloodTracks(state);
+  drawBloodTracks(ctx, state, sprites, camera, worldView);
   // BURNING FLOOR a boss's beam laid — on the ground plane, under everything
   // that walks, because a body stands ON burning ground rather than behind it.
   drawScorches(ctx, state, sprites, camera, inView, timeMs);
