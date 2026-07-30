@@ -44,7 +44,6 @@ function death(over: Partial<KillBlow> = {}) {
     heroPos: HERO,
     pos: VICTIM,
     role: "minion",
-    bleeds: true,
     anatomy: "humanoid",
     seed: 7,
     ...over,

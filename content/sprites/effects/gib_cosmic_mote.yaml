@@ -1,0 +1,22 @@
+name: gib_cosmic_mote
+family: effects
+size: [5, 5]
+description: >-
+  A knot of loose light.
+subject:
+  kind: gore piece
+  build: >-
+    a four-pointed star of white light inside a violet halo, bright and
+    weightless
+  flavor: >-
+    the filler of a rift burst — dozens of them, and they drift where meat
+    falls
+palette:
+  L: "#d4a5ec" # starlight
+  W: "#f4f4f4" # white heat
+grid: |
+  ..L..
+  .LWL.
+  LWWWL
+  .LWL.
+  ..L..

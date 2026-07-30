@@ -43,6 +43,13 @@ export type EnemyLocomotion = "legs" | "float" | "wheels";
 export type EnemyAnatomy = "humanoid" | "beast";
 
 /**
+ * WHAT A BODY IS MADE OF (see `EnemyDef.gore`). The engine treats it as an
+ * opaque label — nothing in the simulation reads it — and the app turns it into
+ * a whole look: a spray, a pool of pieces, a cut face and something in the air.
+ */
+export type GoreFamily = "blood" | "ecto" | "sparks" | "cosmic";
+
+/**
  * One page of a unique's arrival scene. A plain `string[]` is the speaker's
  * own page (one string per line); `{ hero: [...] }` is the HERO talking back
  * mid-scene — the app swaps in his name and portrait for that page, so a
@@ -167,11 +174,20 @@ export type EnemyDef = {
   /** Sprite family the renderer draws (frames `<sprite>_0`, `<sprite>_1`). */
   sprite: string;
   /**
-   * Hit-splash family: what sprays when this enemy is struck. Ghosts
-   * splash "ecto", machines throw "sparks"; everything warm-blooded
-   * defaults to "blood".
+   * WHAT THIS THING IS MADE OF, which decides everything that comes out of it
+   * when it is struck, cut open or burst — the spray, the pieces, the cut face,
+   * and what hangs in the air afterwards (`pwa/src/game/game-screen/gore.ts`).
+   *
+   * `blood` (the default) is everything warm-blooded: red spray, organs, and a
+   * haze. `ecto` is the haunted — green goo, a puff of it as it goes. `sparks`
+   * is the machines — oil, wire, cells and plate, and smoke. `cosmic` is the
+   * things the rift is made of rather than the things that fell into it —
+   * light, void and shards, and a glimmer.
+   *
+   * A family is not a costume: it picks a different set of PIECES, because a
+   * rover has no liver and a collapsed star has no ribcage.
    */
-  gore?: "blood" | "ecto" | "sparks";
+  gore?: GoreFamily;
   /**
    * WHAT SHAPE IT IS UNDER THE SKIN — which pieces are left of it when a blunt
    * blow bursts it (`pwa/src/game/render/gibs.ts`). Presentation only, like

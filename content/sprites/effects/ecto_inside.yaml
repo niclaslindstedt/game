@@ -1,0 +1,35 @@
+name: ecto_inside
+family: effects
+size: [16, 16]
+description: >-
+  The inside of a haunting, as a tile.
+subject:
+  kind: gore texture
+  build: >-
+    a churn of pale green goo shot through with darker folds and two knots
+    of cold light
+  flavor: >-
+    never drawn as itself — it is the FILL a ghost's own silhouette is
+    masked out of when a blade takes it apart front to back
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+  x: "#c5e6eb" # cold light
+grid: |
+  ccCcccnccCccccnc
+  cCCcnnccCCcccncc
+  CCcnncccCcccnccC
+  ccnnccxxcccncccC
+  cnncccxxccncccCC
+  nncccccccncccCCc
+  ncccccccnccCCccn
+  cccccccnccCCccnn
+  ccccccnccCCccnnc
+  cccccnccCCccnncc
+  ccccnccCCccnnccc
+  cccnccCCccnncccc
+  ccnccCCccnncccxx
+  cnccCCccnncccxxc
+  nccCCccnncccccnc
+  ccCCccnnccccccnc

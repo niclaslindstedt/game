@@ -1,0 +1,30 @@
+name: cosmic_1
+family: rift
+size: [12, 12]
+description: >-
+  The rift horde's gore splat, second frame — the flare spreading and going
+  out.
+subject:
+  kind: gore splat effect
+  build: a wider, dimmer four-pointed star, its white core shrunk to a point and its violet halo thrown further
+  accent: starlight and deep violet
+  flavor: >-
+    the second beat of the splash, wider and colder, which is how light dies
+    where blood merely spreads
+palette:
+  W: "#f4f4f4" # white heat
+  L: "#d4a5ec" # starlight
+  P: "#b05cdc" # deep violet
+grid: |
+  ............
+  .....PP.....
+  ....PLLP....
+  ..P.PLLP.P..
+  .PPLLWWLLPP.
+  .PLLWWWWLLP.
+  .PLLWWWWLLP.
+  .PPLLWWLLPP.
+  ..P.PLLP.P..
+  ....PLLP....
+  .....PP.....
+  ............

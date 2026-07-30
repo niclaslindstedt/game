@@ -1,0 +1,24 @@
+name: gib_ecto_veil
+family: effects
+size: [8, 6]
+description: >-
+  A torn piece of the shroud.
+subject:
+  kind: gore piece
+  build: >-
+    a ragged sheet of goo gone thin enough to see through, frayed into two
+    hanging points along its lower edge
+  flavor: >-
+    the piece that reads as CLOTH rather than as fluid, which is what
+    keeps a ghost's wreck from being a puddle
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  .nnccnn.
+  ncccccCn
+  cccCCccc
+  ccCccCcc
+  .cCc.Cc.
+  ..c...c.

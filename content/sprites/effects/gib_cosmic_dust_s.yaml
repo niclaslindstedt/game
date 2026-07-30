@@ -1,0 +1,19 @@
+name: gib_cosmic_dust_s
+family: effects
+size: [4, 3]
+description: >-
+  A puff of stardust.
+subject:
+  kind: gore piece
+  build: >-
+    a small scatter of pale ash round a white core
+  flavor: >-
+    the small tier
+palette:
+  L: "#d4a5ec" # starlight
+  W: "#f4f4f4" # white heat
+  a: "#d6dce4" # ash
+grid: |
+  .LL.
+  LaWL
+  .LL.

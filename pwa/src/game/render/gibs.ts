@@ -26,13 +26,19 @@
 //
 // The CLEAVE is the one thing in the game that takes authored art apart:
 // `render/sprite-split.ts` cuts the victim's own sprite in two along the blade's
-// line and this module flies the halves apart, with the cut face
-// (`cleave_wound`) drawn along the seam so the body is seen from INSIDE rather
-// than merely in two pieces — and a length of gut left hanging out of the top
-// half, because that is the detail that makes it read as a body rather than as a
-// broken statue.
+// line and this module flies the halves apart, with the cut face drawn along the
+// seam so the body is seen from INSIDE rather than merely in two pieces — and a
+// strand left hanging out of the top half, because that is the detail that makes
+// it read as a body rather than as a broken statue.
+//
+// WHICH cut face, which strand and what colour the beads are is the FAMILY's
+// (`game-screen/gore.ts`): a man opens on viscera and trails a rope of gut, a
+// machine on packed wiring and trails a torn loom, a rift-thing on collapsed
+// light and trails a thread of it. Nothing here knows which — it asks the family
+// and blits what it is handed.
 
 import { spriteByName, type Sprites } from "../assets.ts";
+import { goreFamily, type GoreFamily } from "../game-screen/gore.ts";
 import {
   cleaveCut,
   CLEAVE_MS,
@@ -43,6 +49,7 @@ import {
   type GorePiece,
 } from "../game-screen/gore-burst.ts";
 import { enemySprites } from "./caches.ts";
+import { recolorSprite } from "./recolor.ts";
 import { clamp01, fract } from "./shared.ts";
 import {
   pickShreds,
@@ -72,6 +79,25 @@ function gorePiece(
     if (small) return small;
   }
   return spriteByName(sprites, name);
+}
+
+/**
+ * A piece of BLOOD's own spray art, re-hued to whatever this body was made of.
+ *
+ * Only the shared bits go through here — the bead a piece sheds behind it in
+ * flight. The gore PIECES themselves are authored per family (a wire is not a
+ * green gut), so they never touch it; the spray, the haze and the floor do,
+ * which is what keeps four families off sixty sprites (see render/recolor.ts).
+ * Blood's own ramp is null, so its art comes back untouched.
+ */
+function familyArt(
+  sprites: Sprites,
+  name: string,
+  family: GoreFamily,
+): ImageBitmap | HTMLCanvasElement | undefined {
+  const art = spriteByName(sprites, name);
+  if (!art || !family.ramp) return art;
+  return recolorSprite(art, name, family.ramp);
 }
 
 /** World px above the recorded point a body's middle sits — the event carries
@@ -143,13 +169,17 @@ export function drawGore(
       ? 1
       : 1 - clamp01((age - (life - FADE_MS)) / FADE_MS);
   const by = y - BODY_LIFT;
-  const family = effect.sprite ?? "ghost";
+  const mob = effect.sprite ?? "ghost";
+  // WHAT THIS BODY WAS MADE OF, resolved once and handed down: the wound in the
+  // gap, the wet face of an oblique slice, the strand left hanging and the beads
+  // shed in flight all come off it (game-screen/gore.ts).
+  const family = goreFamily(burst.family);
 
   ctx.save();
   if (burst.kind === "cleave") {
-    drawCleave(ctx, effect, burst, family, x, by, t, fade, sprites);
+    drawCleave(ctx, effect, burst, mob, family, x, by, t, fade, sprites);
   } else {
-    drawGibs(ctx, burst, family, x, by, t, fade, sprites);
+    drawGibs(ctx, burst, mob, family, x, by, t, fade, sprites);
   }
   ctx.restore();
   ctx.globalAlpha = 1;
@@ -185,7 +215,8 @@ function drawCleave(
   ctx: CanvasRenderingContext2D,
   effect: Effect,
   burst: GoreBurst,
-  family: string,
+  mob: string,
+  family: GoreFamily,
   x: number,
   y: number,
   t: number,
@@ -193,12 +224,14 @@ function drawCleave(
   sprites: Sprites,
 ): void {
   ctx.globalAlpha = fade;
-  const body = enemySprites(sprites, family).dying[0];
+  const body = enemySprites(sprites, mob).dying[0];
   const w = body.width;
   const h = body.height;
   // A burst that somehow reached here without a cut still has to draw a body
   // coming apart, so one is rolled on the spot from its own seed.
-  const cut = burst.cut ?? cleaveCut(burst.heading, burst.force, burst.seed);
+  const cut =
+    burst.cut ??
+    cleaveCut(burst.heading, burst.force, burst.seed, "humanoid", burst.family);
   // Where the cut line sits, in sprite px along its own normal — the same
   // number the splitter cuts at and the wound is drawn on, so the three can
   // never disagree about where the body was opened.
@@ -217,19 +250,23 @@ function drawCleave(
   const backPx = Math.round(
     Math.min(span / 2, Math.max(-span / 2, offsetPx + cut.depth * span)),
   );
-  const wet = cut.depth > 0 ? spriteByName(sprites, "gore_inside") : null;
+  // The wet face is the FAMILY's own inside — a body's viscera, a ghost's goo, a
+  // machine's packed innards, a rift-thing's collapsed light — masked to the
+  // victim's own silhouette, so every mob gets a correct view of its own inside
+  // with nothing authored per monster.
+  const wet = cut.depth > 0 ? spriteByName(sprites, family.inside) : null;
   const halves =
     wet && cut.depth > 0
       ? ([
           // The piece whose face we SEE: its own art out to the entry line, then
           // its cut face out to the exit line.
-          slicedPiece(body, family, wet, cut.angle, offsetPx, backPx, -1),
+          slicedPiece(body, mob, wet, cut.angle, offsetPx, backPx, -1),
           // The piece whose face is turned AWAY: plain art, starting at the exit
           // line, so the two of them are a quarter and the rest rather than two
           // halves of the same line.
-          slicedPiece(body, family, wet, cut.angle, backPx, backPx, 1),
+          slicedPiece(body, mob, wet, cut.angle, backPx, backPx, 1),
         ] as const)
-      : splitSprite(body, family, cut.angle, offsetPx);
+      : splitSprite(body, mob, cut.angle, offsetPx);
   // The punt, on the same curve the corpse effect flies: out fast, easing into
   // the landing.
   const launch = effect.launch;
@@ -314,7 +351,7 @@ function drawCleave(
   // was straightened out to avoid. Laid ON the cut line (angle and offset both),
   // and gone by the time the pieces have keeled over, at which point the gap
   // between them is the thing doing the talking.
-  const wound = cut.depth > 0 ? null : spriteByName(sprites, "cleave_wound");
+  const wound = cut.depth > 0 ? null : spriteByName(sprites, family.wound);
   if (wound) {
     ctx.save();
     ctx.translate(Math.round(x + px), Math.round(y + py - hop));
@@ -340,6 +377,7 @@ function drawCleave(
     drawPiece(
       ctx,
       burst,
+      family,
       gib,
       art,
       x + px + nx * offsetPx,
@@ -351,11 +389,13 @@ function drawCleave(
     );
   }
 
-  // What was inside: a length of gut hanging out of the cut and swinging as the
-  // body goes over. Only on a blow that properly opened it, and never out of a
-  // neck — a beheading is a clean thing and a rope of intestine coming out of
-  // one is a different, sillier effect.
-  const gut = spriteByName(sprites, "gib_gut_1");
+  // What was inside, LEFT HANGING rather than thrown clear: a rope of gut out of
+  // a man, a trailing wisp out of a haunting, a torn loom of wire out of a
+  // machine, a thread of light out of a rift-thing — swinging as the body goes
+  // over. Only on a blow that properly opened it, and never out of a neck: a
+  // beheading is a clean thing and a rope of intestine coming out of one is a
+  // different, sillier effect.
+  const gut = spriteByName(sprites, family.strand);
   if (gut && burst.force >= 1.6 && cut.toss === null) {
     const sway = Math.sin(t * Math.PI * 2.2) * 3 * (1 - t * 0.6);
     ctx.globalAlpha = fade * (1 - clamp01((t - 0.4) / 0.4));
@@ -381,23 +421,24 @@ function drawCleave(
 function drawGibs(
   ctx: CanvasRenderingContext2D,
   burst: GoreBurst,
-  family: string,
+  mob: string,
+  family: GoreFamily,
   x: number,
   y: number,
   t: number,
   fade: number,
   sprites: Sprites,
 ): void {
-  const bodyPx = enemySprites(sprites, family).dying[0].width;
+  const bodyPx = enemySprites(sprites, mob).dying[0].width;
   for (const [i, gib] of burst.pieces.entries()) {
     const art = gib.sprite ? gorePiece(sprites, gib.sprite, bodyPx) : null;
     if (!art) continue;
-    drawPiece(ctx, burst, gib, art, x, y, t, fade, i, sprites);
+    drawPiece(ctx, burst, family, gib, art, x, y, t, fade, i, sprites);
   }
   // The victim's OWN fragments ride the same flight on bearings of their own,
   // and each starts where it SAT on the body rather than at its centre — so the
   // burst blows the mob apart along its own outline.
-  const shreds = shredsFor(burst, family, sprites);
+  const shreds = shredsFor(burst, mob, sprites);
   const count = burst.pieces.length;
   for (const [i, shred] of shreds.entries()) {
     const gib = burst.pieces[(i * 3 + 1) % Math.max(1, count)];
@@ -405,6 +446,7 @@ function drawGibs(
     drawPiece(
       ctx,
       burst,
+      family,
       // A shred is a scrap of skin: it never bounces, whatever piece's flight
       // it borrowed.
       { ...gib, angle: gib.angle + 0.7 + i * 0.9, bounces: 0 },
@@ -423,13 +465,13 @@ function drawGibs(
  * them, so this is a map lookup after the first burst of each family. */
 function shredsFor(
   burst: GoreBurst,
-  family: string,
+  mob: string,
   sprites: Sprites,
 ): readonly SpriteShred[] {
   if (burst.shreds <= 0) return [];
-  const body = enemySprites(sprites, family).dying[0];
+  const body = enemySprites(sprites, mob).dying[0];
   return pickShreds(
-    shredSprite(body, family, burst.shreds > 5 ? 4 : 3),
+    shredSprite(body, mob, burst.shreds > 5 ? 4 : 3),
     burst.shreds,
     burst.seed,
   );
@@ -441,6 +483,7 @@ function shredsFor(
 function drawPiece(
   ctx: CanvasRenderingContext2D,
   burst: GoreBurst,
+  family: GoreFamily,
   gib: GorePiece,
   art: ImageBitmap | HTMLCanvasElement,
   x: number,
@@ -480,7 +523,7 @@ function drawPiece(
   // in the air — a piece skittering along the floor is already painting the
   // ground layer's own blood.
   if (!pose.landed && pose.lift > 1) {
-    const bead = spriteByName(sprites, "blood_drop_1");
+    const bead = familyArt(sprites, "blood_drop_1", family);
     if (bead) {
       for (let s = 1; s <= TRAIL_STEPS; s++) {
         const back = s / (TRAIL_STEPS + 1);

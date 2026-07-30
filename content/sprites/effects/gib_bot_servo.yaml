@@ -1,0 +1,25 @@
+name: gib_bot_servo
+family: effects
+size: [6, 6]
+description: >-
+  A servo, stripped out of its mounting.
+subject:
+  kind: gore piece
+  build: >-
+    a toothed gear seized inside a torn housing, brass at the core and
+    grey steel around it
+  flavor: >-
+    the piece that reads as MACHINERY at a glance rather than as debris
+palette:
+  A: "#8d9196" # plate
+  T: "#c0c5cf" # bright steel
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+  o: "#d6a842" # brass
+grid: |
+  .kkk..
+  kTAbk.
+  kAoAkk
+  kbooAk
+  .kAbk.
+  ..kk..

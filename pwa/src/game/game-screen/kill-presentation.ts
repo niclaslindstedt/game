@@ -35,14 +35,22 @@
 // a bug rather than as a gentler game — which is what
 // `tests/nuke_incineration_test.ts` and `tests/gore_dismemberment_test.ts` pin.
 //
-// AND ONLY A BODY THAT BLEEDS COMES APART. A wisp has no halves and a rover has
-// no intestines: `gore: ecto` and `gore: sparks` keep the plain two-frame
-// splash and the plain corpse, whatever they were killed with.
+// EVERY KIND OF BODY COMES APART, AND EACH COMES APART AS ITSELF. A wisp has no
+// intestines, but it does have goo and a cold light at the middle of it; a rover
+// has no ribcage, but it has plate, a loom of wire and a cell. What each one is
+// made of is `./gore.ts` (`EnemyDef.gore` names the family) — so this module
+// decides only WHETHER and HOW HARD, and never what falls out.
+//
+// A BOSS is the one body that never does, and that is a rule about the FICTION
+// rather than about gore: a boss has last words to say over its own corpse, and
+// that corpse stays on the field for the rest of the level as the landmark of
+// the fight.
 
 import { nsfwAllowed } from "../../app/device-policy.ts";
 
 import { bloodAmount } from "./blood-hit.ts";
 import { corpseLaunch, type CorpseLaunch } from "./corpse-launch.ts";
+import type { GoreFamilyId } from "./gore.ts";
 import { goreBurst, type Anatomy, type GoreBurst } from "./gore-burst.ts";
 
 /**
@@ -105,12 +113,13 @@ export type KillBlow = {
   /** Where the victim stood. */
   pos: { x: number; y: number };
   role: string;
-  /** Whether this body has blood in it at all (`EnemyDef.gore === "blood"`). */
-  bleeds: boolean;
-  /** What it is built of, for the pieces (`EnemyDef.anatomy`). */
+  /** WHAT KIND OF BODY it is (`EnemyDef.gore`) — which pools it comes apart
+   * into. Absent reads as blood, exactly as it does in the def. */
+  family?: GoreFamilyId;
+  /** What SHAPE it is, for the pieces only a person has (`EnemyDef.anatomy`). */
   anatomy: Anatomy;
   /** How hard the blow was, in the victim's own healthbars, scaled by the blood
-   * knobs — `BloodBlow.force`. Absent when nothing bled (no blood, no gore). */
+   * knobs — `BloodBlow.force`. Absent when the gore knobs said no. */
   force?: number;
   /** The victim's build multiplier — `BloodBlow.body`. */
   body?: number;
@@ -152,8 +161,8 @@ function goreFor(blow: KillBlow): GoreBurst | null {
   // CONTENT switch, the player's EXTRA GORE row, and the developer BLOOD
   // amount. Refused, the kill falls all the way back to the ordinary death.
   if (bloodAmount() == null) return null;
-  // Nothing that doesn't bleed can come apart, and a boss never does.
-  if (!blow.bleeds || blow.role === "boss") return null;
+  // A boss never comes apart — see the header.
+  if (blow.role === "boss") return null;
   const bars = Math.max(0, blow.damage) / Math.max(1, blow.maxHp);
   const cost = ROLE_COST[blow.role] ?? 1;
   const kind: "cleave" | "gib" | null = blow.edged
@@ -178,5 +187,6 @@ function goreFor(blow: KillBlow): GoreBurst | null {
     blow.body ?? 1,
     blow.anatomy,
     blow.seed,
+    blow.family ?? "blood",
   );
 }

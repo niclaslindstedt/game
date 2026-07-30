@@ -1,0 +1,26 @@
+name: gib_cosmic_lens
+family: effects
+size: [7, 6]
+description: >-
+  A piece of bent space.
+subject:
+  kind: gore piece
+  build: >-
+    a rounded pane with a warm point trapped at its centre, ringed in
+    white and violet as though the light behind it were being pulled
+    through
+  flavor: >-
+    the strangest piece: it is not a part of the thing at all, it is a
+    piece of where the thing WAS
+palette:
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+  j: "#4054bc" # cold blue
+  y: "#ffb02e" # last warmth
+grid: |
+  ..jPP..
+  .jPWPj.
+  jPWyWPj
+  jPWyWPj
+  .jPWPj.
+  ..jPP..

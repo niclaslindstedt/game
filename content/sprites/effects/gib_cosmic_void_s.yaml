@@ -1,0 +1,20 @@
+name: gib_cosmic_void_s
+family: effects
+size: [4, 4]
+description: >-
+  A scrap of the dark between things.
+subject:
+  kind: gore piece
+  build: >-
+    a small ragged hole of black with a violet rim
+  flavor: >-
+    the small tier
+palette:
+  O: "#1a1c2c" # void
+  P: "#b05cdc" # deep violet
+  j: "#4054bc" # cold blue
+grid: |
+  .jP.
+  POOP
+  POOj
+  .Pj.

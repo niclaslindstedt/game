@@ -1,0 +1,27 @@
+name: gib_bot_piston
+family: effects
+size: [4, 8]
+description: >-
+  A hydraulic ram, sheared off at the mount.
+subject:
+  kind: gore piece
+  build: >-
+    a bright chromed rod standing out of a dark cylinder, the cylinder
+    torn open at its foot and running oil
+  flavor: >-
+    the long piece — it tumbles end over end where the small ones spin,
+    exactly as a limb does
+palette:
+  A: "#8d9196" # plate
+  T: "#c0c5cf" # bright steel
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+grid: |
+  .kk.
+  kTTk
+  kTTk
+  kbbk
+  kbbk
+  kbbk
+  .kk.
+  .k..

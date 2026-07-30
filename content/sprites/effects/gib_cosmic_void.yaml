@@ -1,0 +1,24 @@
+name: gib_cosmic_void
+family: effects
+size: [6, 6]
+description: >-
+  A scrap of the dark between things.
+subject:
+  kind: gore piece
+  build: >-
+    a ragged hole of pure black with a violet rim and a cold blue fringe,
+    darker than the floor behind it
+  flavor: >-
+    the DARK piece, and the reason a rift burst is not a firework — some
+    of what was in there was nothing at all
+palette:
+  O: "#1a1c2c" # void
+  P: "#b05cdc" # deep violet
+  j: "#4054bc" # cold blue
+grid: |
+  .jPP..
+  jPOOP.
+  POOOOP
+  POOOPj
+  .POPj.
+  ..Pj..

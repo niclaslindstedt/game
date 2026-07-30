@@ -1,0 +1,20 @@
+name: gib_ecto_ring_s
+family: effects
+size: [4, 4]
+description: >-
+  A loop of ectoplasm, still holding its shape.
+subject:
+  kind: gore piece
+  build: >-
+    a small open ring of goo
+  flavor: >-
+    the small tier
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  .nc.
+  n..c
+  c..C
+  .CC.

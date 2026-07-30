@@ -46,6 +46,7 @@ import {
 } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
+import { goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
 import { soakHero } from "./hero-soak.ts";
 import { killPresentation } from "./kill-presentation.ts";
@@ -394,11 +395,13 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // there are is the very same `force` the spray, the pool and the corpse
     // launch all read, so the gore can never disagree with the blood about how
     // bad the hit was.
-    const gore = def.gore ?? "blood";
-    const blow =
-      gore === "blood"
-        ? bloodBlow(event.damage, event.maxHp, def.role, kill)
-        : null;
+    // EVERY KIND OF BODY SPILLS SOMETHING, and it is the same arithmetic for all
+    // four — a ghost's goo and a machine's oil are priced on the blow exactly as
+    // blood is. What differs is the COLOUR it comes out in, what hangs in the air
+    // after, and whether the floor keeps it: all three off the family catalog
+    // (game-screen/gore.ts), none of them a fork here.
+    const family = goreFamily(def.gore);
+    const blow = bloodBlow(event.damage, event.maxHp, def.role, kill);
     // One seed for the whole kill: the spray, the stains and the pieces are all
     // scattered off it, which is what puts a gib on its own spatter.
     const seed = Math.floor(Math.random() * 997);
@@ -428,7 +431,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
             heroPos: state.player.pos,
             pos: event.pos,
             role: def.role,
-            bleeds: gore === "blood",
+            family: family.id,
             anatomy: def.anatomy ?? "humanoid",
             force: blow?.force,
             body: blow?.body,
@@ -449,6 +452,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
           untilMs: state.stats.timeMs + BLOOD_SPRAY_MS,
           durationMs: BLOOD_SPRAY_MS,
           blood: blow,
+          family: family.id,
           angle: heading,
           seed,
         });
@@ -457,21 +461,29 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         // dropped and the floor is wetted under each landing spot instead
         // (below). A CLEAVE keeps the pool: its two halves ride the punt
         // together and end up in one place.
-        spillBlood(
-          state,
-          bloodSpills(
-            burst?.kind === "gib" ? { ...blow, pool: null } : blow,
-            event.pos,
-            seed,
-            heading,
-            launch,
-          ),
-        );
+        // …and STAYS, but only if this family's mess is the kind that stays.
+        // Blood, oil and a ghost's goo are matter and they lie there; a
+        // rift-thing is light and goes out, so it marks nothing — checked HERE,
+        // where the mark is decided, rather than at the draw, exactly as the
+        // gore gate itself is.
+        if (family.stains) {
+          spillBlood(
+            state,
+            bloodSpills(
+              burst?.kind === "gib" ? { ...blow, pool: null } : blow,
+              event.pos,
+              seed,
+              heading,
+              launch,
+            ),
+            family.id,
+          );
+        }
         // WHERE THE PIECES CAME DOWN. Read off the very same burst the renderer
         // flies them along (`landingSpots`), so a head always lands ON its own
         // puddle rather than beside it — the same agreement the spray's drops
         // and their stains already have.
-        if (burst) {
+        if (burst && family.stains) {
           spillBlood(
             state,
             landingSpots(burst).map((spot, i) => ({
@@ -480,24 +492,22 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
               radius: GIB_SPILL_RADIUS * blow.body,
               amount: GIB_SPILL_AMOUNT * (i === 0 ? 2 : 1),
             })),
+            family.id,
           );
         }
         // …and what missed the floor lands on the MAN. Priced off the very same
         // blow, so the hero, the spray and the ground can never disagree about
-        // how bad the hit was (game-screen/hero-soak.ts).
-        soakHero(state, blow, event.pos);
-      } else if (
-        gore !== "blood" ||
-        !nsfwAllowed() ||
-        getSettings().extraGore !== "on"
-      ) {
-        // The plain two-frame splash, for the three cases that are NOT the blood
-        // system: something that doesn't bleed (ecto, sparks — untouched by
-        // either blood knob), a player who turned EXTRA GORE off, and a device
-        // whose MATURE CONTENT switch is off — all of whom still need a landed
-        // blow to register as one. A blow that fell through because the
-        // DEVELOPER amount is at zero lands dry on purpose — that switch exists
-        // to get a clean field for a screenshot.
+        // how bad the hit was (game-screen/hero-soak.ts). BLOOD alone: the coat
+        // is blood art in blood's colours, and a hero streaked in four different
+        // hues reads as a man who fell in some paint.
+        if (family.id === "blood") soakHero(state, blow, event.pos);
+      } else if (!nsfwAllowed() || getSettings().extraGore !== "on") {
+        // The plain two-frame splash, for the two cases that are NOT the gore
+        // system: a player who turned EXTRA GORE off, and a device whose MATURE
+        // CONTENT switch is off — both of whom still need a landed blow to
+        // register as one. A blow that fell through because the DEVELOPER amount
+        // is at zero lands dry on purpose: that switch exists to get a clean
+        // field for a screenshot.
         effects.push({
           kind: "splash",
           pos: {
@@ -506,7 +516,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
           },
           untilMs: state.stats.timeMs + 240,
           durationMs: 240,
-          sprite: gore,
+          sprite: family.splash,
         });
       }
     }

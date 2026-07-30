@@ -19,6 +19,8 @@ import {
   type ScenarioSpec,
 } from "@game/core";
 
+import { type CleaveCut } from "../game-screen/gore-burst.ts";
+
 /** Which shelf of the gallery an exhibit sits on (also a search term). */
 export type ExhibitGroup =
   | "IMPACT"
@@ -83,6 +85,19 @@ export type Exhibit = {
    * (`clearEnemies` in the base makes that idempotent instead of a pile-up).
    */
   stage?: ScenarioSpec;
+  /**
+   * THE CUT THIS EXHIBIT IS OF, pinned over the roll for the length of its show
+   * (`pinCleaveCut`) and cleared when the gallery stops, so nothing leaks into
+   * the next exhibit or into a real run.
+   *
+   * Everything about a cleave is rolled, which is the feature and also what
+   * makes the rare cuts impossible to LOOK at — an oblique slice comes up about
+   * a fifth of the time, so tuning the depth illusion otherwise means replaying
+   * until one appears. Pin the ONE axis the exhibit is about and let the rest go
+   * on varying: a diorama that showed the same picture every take would
+   * misreport a system whose whole point is that it does not.
+   */
+  cut?: Partial<CleaveCut>;
   /**
    * How long this effect's show LASTS, in ms — the beat before the loop runs it
    * again (and before the PLAY button steps back into the middle of the screen).

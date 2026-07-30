@@ -1,0 +1,24 @@
+name: gib_cosmic_ring
+family: effects
+size: [8, 5]
+description: >-
+  A fragment of the ring it wore.
+subject:
+  kind: gore piece
+  build: >-
+    a broken loop of light seen edge-on, bright at the two ends where it
+    catches and open through the middle
+  flavor: >-
+    the shape a cosmic thing was ORBITED by, and the only piece of one you
+    can see the floor through
+palette:
+  L: "#d4a5ec" # starlight
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+  j: "#4054bc" # cold blue
+grid: |
+  ..LWWL..
+  .L.PP.L.
+  Lj....jL
+  .L.PP.L.
+  ..LWWL..

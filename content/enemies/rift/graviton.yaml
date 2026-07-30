@@ -8,7 +8,7 @@ lore: >-
 role: minion
 sprite: graviton
 locomotion: float
-gore: sparks
+gore: cosmic
 hp: 260
 speed: 9
 radius: 11

@@ -1,0 +1,25 @@
+name: gib_bot_board
+family: effects
+size: [7, 5]
+description: >-
+  A circuit board, snapped out of its rack.
+subject:
+  kind: gore piece
+  build: >-
+    a dark blue card printed with copper traces and studded with brass,
+    one contact still arcing white, its lower corner smeared with oil
+  flavor: >-
+    the piece a machine has instead of a brain, and the one that keeps
+    twitching after it lands
+palette:
+  W: "#f4f4f4" # arc white
+  j: "#2d3b84" # board blue
+  k: "#342c26" # oil
+  o: "#d6a842" # brass
+  y: "#ffb02e" # live copper
+grid: |
+  .jjjjj.
+  jyjojyj
+  jjWjjyj
+  jyjjojj
+  .jjkjj.

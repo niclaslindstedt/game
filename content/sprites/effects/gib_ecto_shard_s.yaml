@@ -1,0 +1,21 @@
+name: gib_ecto_shard_s
+family: effects
+size: [3, 4]
+description: >-
+  A splinter of ectoplasm gone hard.
+subject:
+  kind: gore piece
+  build: >-
+    a small frozen sliver of goo
+  flavor: >-
+    the small tier
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+  x: "#c5e6eb" # cold light
+grid: |
+  xn.
+  xnc
+  xnc
+  .cC

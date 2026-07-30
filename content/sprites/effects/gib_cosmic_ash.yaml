@@ -1,0 +1,22 @@
+name: gib_cosmic_ash
+family: effects
+size: [5, 5]
+description: >-
+  A cold cinder.
+subject:
+  kind: gore piece
+  build: >-
+    a lump of grey ash gone dark at its heart, the light entirely out of
+    it
+  flavor: >-
+    the DEAD piece: every other cosmic gib is still shining, and this is
+    what they all become
+palette:
+  O: "#1a1c2c" # void
+  a: "#d6dce4" # ash
+grid: |
+  ..aa.
+  .aOa.
+  aOOOa
+  .aOa.
+  ..aa.

@@ -1,0 +1,24 @@
+name: gib_ecto_ember
+family: effects
+size: [4, 4]
+description: >-
+  A cold ember off a haunting.
+subject:
+  kind: gore piece
+  build: >-
+    a small point of white light with a green skirt of goo dragging under
+    it
+  flavor: >-
+    the filler a cosmic burst has as motes and a body has as meat — dozens
+    of them, drifting
+palette:
+  C: "#5b858c" # ecto shadow
+  W: "#f4f4f4" # white core
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+  x: "#c5e6eb" # cold light
+grid: |
+  .xn.
+  xWnc
+  xnCc
+  .cc.

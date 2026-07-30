@@ -1,0 +1,20 @@
+name: gib_ecto_blob_s
+family: effects
+size: [4, 4]
+description: >-
+  A gobbet of ectoplasm.
+subject:
+  kind: gore piece
+  build: >-
+    a small sagging drop of pale green goo, lit on top and dark beneath
+  flavor: >-
+    the small tier, for the 16 px hauntings
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  nnc.
+  ncCc
+  cCCc
+  .cc.

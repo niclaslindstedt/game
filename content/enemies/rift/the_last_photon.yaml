@@ -8,7 +8,7 @@ role: minion
 rarity: unique
 sprite: the_last_photon
 locomotion: float
-gore: ecto
+gore: cosmic
 phasing: true
 hp: 60
 speed: 30

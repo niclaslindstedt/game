@@ -1,0 +1,22 @@
+name: gib_ecto_mask_s
+family: effects
+size: [5, 5]
+description: >-
+  The face it was still wearing.
+subject:
+  kind: gore piece
+  build: >-
+    a small hollow shell of goo in the shape of a face
+  flavor: >-
+    the small tier
+palette:
+  C: "#5b858c" # ecto shadow
+  O: "#1a1c2c" # hollow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  .ncn.
+  cOcOc
+  ccccc
+  cCOCc
+  .ccc.

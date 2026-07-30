@@ -1,0 +1,24 @@
+name: ecto_wound
+family: effects
+size: [14, 5]
+description: >-
+  The cut face of a haunting.
+subject:
+  kind: gore detail
+  build: >-
+    a band of opened ectoplasm, pale green at the rim and lit cold white
+    through the middle where the light it held is escaping
+  flavor: >-
+    brighter than the body it is cut into, because what a ghost keeps
+    inside is light
+palette:
+  W: "#f4f4f4" # white core
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+  x: "#c5e6eb" # cold light
+grid: |
+  ..cnnccnncc...
+  .ccnxxxxncc...
+  ccnxxWWxxncc..
+  .ccnxxxxncc...
+  ..ccnnccc.....

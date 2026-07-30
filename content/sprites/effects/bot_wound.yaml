@@ -1,0 +1,27 @@
+name: bot_wound
+family: effects
+size: [14, 5]
+description: >-
+  The cut face of a machine.
+subject:
+  kind: gore detail
+  build: >-
+    a band of severed innards — grey plate at the rim, copper and brass
+    strand through the middle, and an arc of white where something is
+    still live
+  flavor: >-
+    a machine cut open shows a LOOM rather than a wound, and the one white
+    pixel is what makes it read as still powered
+palette:
+  A: "#8d9196" # plate
+  W: "#f4f4f4" # arc white
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+  o: "#d6a842" # brass
+  y: "#ffb02e" # live copper
+grid: |
+  kkkkkkkkkk....
+  kbkyokybk.....
+  kkyoWoykk.....
+  kbkyokybk.....
+  kkkkkkkkkk....

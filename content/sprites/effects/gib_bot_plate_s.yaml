@@ -1,0 +1,20 @@
+name: gib_bot_plate_s
+family: effects
+size: [5, 3]
+description: >-
+  A shard of torn hull plating.
+subject:
+  kind: gore piece
+  build: >-
+    a small buckled panel of plate smeared with oil
+  flavor: >-
+    the small tier
+palette:
+  A: "#8d9196" # plate
+  T: "#c0c5cf" # bright steel
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+grid: |
+  .TAT.
+  AbbAk
+  .Ak..

@@ -1,0 +1,18 @@
+name: gib_bot_oil_s
+family: effects
+size: [4, 3]
+description: >-
+  A gobbet of black oil.
+subject:
+  kind: gore piece
+  build: >-
+    a small blot of near-black oil
+  flavor: >-
+    the small tier
+palette:
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+grid: |
+  .kk.
+  kkbk
+  .kk.

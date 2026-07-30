@@ -1,0 +1,23 @@
+name: gib_cosmic_dust
+family: effects
+size: [6, 5]
+description: >-
+  A puff of stardust.
+subject:
+  kind: gore piece
+  build: >-
+    a loose scatter of pale ash around a white core, spreading rather than
+    holding together
+  flavor: >-
+    what the burning parts leave — it is the piece that is already halfway
+    to being nothing
+palette:
+  L: "#d4a5ec" # starlight
+  W: "#f4f4f4" # white heat
+  a: "#d6dce4" # ash
+grid: |
+  ..LL..
+  .LaWL.
+  LaWaL.
+  .LaaL.
+  ..LL..

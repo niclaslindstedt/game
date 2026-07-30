@@ -1,0 +1,24 @@
+name: gib_bot_wire
+family: effects
+size: [7, 6]
+description: >-
+  A torn-out bundle of wiring.
+subject:
+  kind: gore piece
+  build: >-
+    a snarl of copper and brass strands sprung loose from each other,
+    slick with black oil where they were pulled out
+  flavor: >-
+    the piece that says a machine had an INSIDE — it is a robot's viscera
+    and it tangles like it
+palette:
+  k: "#342c26" # oil
+  o: "#d6a842" # brass
+  y: "#ffb02e" # live copper
+grid: |
+  ..yk...
+  .yoky..
+  ykoyko.
+  kyokoy.
+  .koyk..
+  ..kk...

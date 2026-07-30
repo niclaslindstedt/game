@@ -1,0 +1,24 @@
+name: gib_cosmic_core
+family: effects
+size: [6, 6]
+description: >-
+  The collapsed heart of it.
+subject:
+  kind: gore piece
+  build: >-
+    a dense knot with a black centre held inside a ring of white heat and
+    a violet shell, too heavy for its size
+  flavor: >-
+    the one cosmic piece with WEIGHT — it bounces and skitters where the
+    light drifts, because it is what the light was orbiting
+palette:
+  O: "#1a1c2c" # void
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+grid: |
+  ..PP..
+  .PWWP.
+  PWOOWP
+  PWOOWP
+  .PWWP.
+  ..PP..

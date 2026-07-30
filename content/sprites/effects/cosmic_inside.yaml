@@ -1,0 +1,35 @@
+name: cosmic_inside
+family: effects
+size: [16, 16]
+description: >-
+  The inside of something made of light, as a tile.
+subject:
+  kind: gore texture
+  build: >-
+    a lattice of white cores in violet halos over a cold blue field,
+    packed edge to edge with no dark between them
+  flavor: >-
+    never drawn as itself — it is the FILL a rift-thing's own silhouette
+    is masked out of when a blade takes it apart front to back
+palette:
+  L: "#d4a5ec" # starlight
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+  j: "#4054bc" # cold blue
+grid: |
+  PLLPjPPLLPjjPLLP
+  LWWLPjPLWWLPjPLW
+  LWWLPPjLWWLPPjLW
+  PLLPjjPPLLPjjPPL
+  jPPLLPjjPPLLPjjP
+  PjPLWWLPjPLWWLPj
+  PjPLWWLPjPLWWLPj
+  jjPPLLPjjPPLLPjj
+  LPjjPPLLPjjPPLLP
+  WLPjPLWWLPjPLWWL
+  WLPPjLWWLPPjLWWL
+  LPjjPPLLPjjPPLLP
+  PLLPjjPPLLPjjPPL
+  LWWLPjPLWWLPjPLW
+  LWWLPPjLWWLPPjLW
+  PLLPjjPPLLPjjPPL

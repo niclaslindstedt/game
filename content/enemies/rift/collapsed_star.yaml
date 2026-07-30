@@ -7,7 +7,7 @@ role: minion
 rarity: rare
 sprite: collapsed_star
 locomotion: float
-gore: ecto
+gore: cosmic
 phasing: true
 hp: 100
 speed: 12

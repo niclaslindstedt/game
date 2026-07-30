@@ -1,0 +1,20 @@
+name: gib_ecto_veil_s
+family: effects
+size: [5, 4]
+description: >-
+  A torn piece of the shroud.
+subject:
+  kind: gore piece
+  build: >-
+    a small frayed sheet of thin goo
+  flavor: >-
+    the small tier
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  .ncn.
+  ccCcc
+  cCcCc
+  .c.c.
