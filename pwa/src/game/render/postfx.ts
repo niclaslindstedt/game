@@ -42,12 +42,21 @@ export type FxRange = { min: number; max: number; default: number };
 /**
  * BLOOM — how much light bleeds out of the bright things.
  *
- * 0 is off (and skips the pass entirely). 1 is the shipped look: enough that a
- * legendary's light shaft, a muzzle flash and the level-up pillar read as light
- * rather than as decals, without washing the field out. Past that it is a
- * deliberate overdose, which is what a knob is for.
+ * **THE ONE KNOB HERE THAT SHIPS OFF**, and off is the considered answer rather
+ * than a placeholder. At 1 a legendary's light shaft, a muzzle flash and the
+ * level-up pillar do read as light — but the game they are lit against is pixel
+ * art at ~422×195, where every luminance point a halo adds is a luminance point
+ * of the artist's own shading it paints over. Judged side by side on the real
+ * field, the shafts gain a little atmosphere and the floor, the rocks and the
+ * bodies lose a little of their drawing, and that is not a trade the default
+ * should make on a player's behalf.
+ *
+ * So it is offered rather than assumed: 1 is a tuned, restrained look for
+ * anyone who wants it (see GAIN in render/bloom.ts) and 2 is a deliberate
+ * overdose, which is what a knob is for. Off skips the pass entirely and costs
+ * nothing at all, which is also the right default on a phone.
  */
-export const BLOOM: FxRange = { min: 0, max: 2, default: 1 };
+export const BLOOM: FxRange = { min: 0, max: 2, default: 0 };
 
 /**
  * COLOUR GRADE — how far the picture is pushed toward its venue's own mood

@@ -1,0 +1,34 @@
+name: icon_menu_visuals
+family: icons
+size: [12, 12]
+description: >
+  A big four-pointed sparkle with a small glint flashing off its shoulder — the
+  VISUALS menu row's marker. Deliberately nothing like the DISPLAY row's
+  monitor: that row decides WHAT is drawn, this one decides how the picture is
+  lit.
+subject:
+  kind: UI icon
+  features: a large outlined four-pointed sparkle filling the tile, its waist
+    flaring wide and its four arms tapering to single-pixel tips, with a small
+    unoutlined glint of pure light off its top right corner
+  accent: bright gold with a white core, shading to dark gold on the lower right
+  flavor: the lights bleeding out past the things making them
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white core
+  Y: "#ffe3b6" # pale gold, lit side
+  q: "#96762e" # dark gold shadow
+  y: "#ffb02e" # bright gold
+grid: |
+  ..........Y.
+  .....O...YWY
+  ....OYO...Y.
+  ....OYO.....
+  ...OYYyO....
+  ..OYYWyyO...
+  OYYYyWyyqqO.
+  ..OyyyyqO...
+  ...OyyqO....
+  ....OqO.....
+  ....OqO.....
+  .....O......

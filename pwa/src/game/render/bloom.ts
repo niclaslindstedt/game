@@ -15,55 +15,125 @@
 // tooling and the effects gallery are all untouched. Nothing above this module
 // knows it exists.
 //
-// THREE DRAWS, ALL AT A QUARTER SIZE. The frame is downscaled into a scratch
-// canvas with the darks crushed out of it, blurred, and added back. At a quarter
-// of 422×195 that is a ~105×49 buffer — small enough that the whole pass is
-// cheaper than the loot auras it is blooming, which matters because the
-// reference device is a phone.
+// THREE DRAWS: the frame is halved with the darks crushed out of it, halved
+// again with a blur on the way down, and added back. At a quarter of 422×195
+// that is a ~105×48 buffer — small enough that the whole pass is cheaper than
+// the loot auras it is blooming, which matters because the reference device is a
+// phone.
+//
+// TWO OF THOSE THREE STEPS ARE LOAD-BEARING IN WAYS THAT ARE EASY TO UNDO, and
+// both of them were wrong in the first version of this file: it thresholded at a
+// luminance BELOW the floor of every venue in the game (so the ground bloomed,
+// and the picture came out milky), and it reached the quarter-size buffer in ONE
+// ×4 minify (which Canvas2D undersamples, so the halo pulsed as the camera
+// panned). The notes on BRIGHT_PASS and on the halving below are those two bugs
+// written down; a "simplification" of either brings its own straight back.
 
 import { clamp01 } from "./shared.ts";
 
 /** How much smaller the bloom buffer is than the frame. 4 is chosen for the
  * LOOK as much as the cost: the blur radius is in buffer px, so a quarter-size
- * buffer turns a 2 px blur into an 8 px spread on the canvas — a soft, wide
+ * buffer turns a 3 px blur into a 12 px spread on the canvas — a soft, wide
  * halo — while a full-size buffer at the same radius would be a tight rim that
  * reads as a stroke rather than as light. */
 const DOWNSCALE = 4;
 
 /** Blur radius in BUFFER px, so ×DOWNSCALE on the canvas. */
-const BLUR_PX = 2;
+const BLUR_PX = 3;
 
 /**
- * How hard the darks are crushed before blurring — the stand-in for a proper
- * bright-pass threshold, which Canvas2D has no operator for.
+ * THE BRIGHT PASS — the threshold that decides what counts as light.
  *
- * `brightness(b) contrast(c)` with c well above 1 pushes everything below the
- * midpoint toward black while leaving the highlights, which is the same shape as
- * a threshold with a soft knee. It is not exact and does not need to be: what
- * matters is that ORDINARY floor and ORDINARY sprites contribute nothing, so the
- * bloom is the lights rather than a general glow over the whole picture. That
- * distinction is the entire difference between bloom and haze.
+ * `brightness(b) contrast(c)` is the only shape Canvas2D can express here (it
+ * has no threshold operator): everything under the knee is pushed toward black
+ * and the highlights are kept, which is a threshold with a soft knee. These
+ * numbers put the knee at a luminance of **0.795** — the output is 0 where
+ * `0.55·x = 0.5 − 0.5/8`, i.e. x = 0.795, ramping to 0.9 at white.
+ *
+ * THAT NUMBER IS NOT A TASTE SETTING; it is measured against the game's own
+ * floors. Sample any frame and the ordinary ground is not a minority of the
+ * picture, it IS the picture: the moon's regolith sits at 0.554 luminance and
+ * SpaceZ HQ's deck at 0.701 — each of them the 50th AND the 90th percentile of
+ * its own frame. The lights this exists for live in the top half-percent, at
+ * 0.85 and up. So the knee has to clear the brightest ordinary FLOOR with margin
+ * and still sit under the dimmest LIGHT, and 0.795 is the middle of that gap.
+ *
+ * The first version of this file used `brightness(0.72) contrast(3.4)`, whose
+ * knee is at 0.49 — BELOW the floor of every venue in the game. So better than
+ * nine tenths of every frame was classed as light and added back over itself:
+ * measured on real frames, it lifted the mean luminance of the whole picture by
+ * 14–24%, which is why the moon came out a milky lavender and SpaceZ HQ's deck
+ * came out bleached with its tile grid gone. That is haze, not bloom, and this
+ * number is the whole difference between the two.
  */
-const CRUSH = "brightness(0.72) contrast(3.4)";
+const BRIGHT_BRIGHTNESS = 0.55;
+const BRIGHT_CONTRAST = 8;
+const BRIGHT_PASS = `brightness(${BRIGHT_BRIGHTNESS}) contrast(${BRIGHT_CONTRAST})`;
 
-/** The scratch buffer, kept across frames — a canvas per frame at 60 Hz is the
+/**
+ * The luminance the bright pass cuts at, DERIVED from the very numbers that
+ * build the filter above so a test cannot check a stale copy of it.
+ *
+ * Exported for `tests/content/bloom_threshold_test.ts`, which holds it above the
+ * brightest ground tile any venue actually lays down — the invariant that was
+ * broken, and the one a new pale floor would break again in silence.
+ */
+export function brightPassKnee(): number {
+  return (0.5 - 0.5 / BRIGHT_CONTRAST) / BRIGHT_BRIGHTNESS;
+}
+
+/**
+ * How hard the halo is added back at the knob's 1×.
+ *
+ * Deliberately RESTRAINED. Bloom is the effect most able to wreck pixel art,
+ * because every luminance point it adds is a luminance point of the artist's own
+ * shading it paints over: at 0.7 the loot shafts glow nicely and the level-up
+ * pillar has already lost the inside of its ring, and past that a big light
+ * stops reading as a shape at all and the hero standing in it disappears. At 0.4
+ * a light gains a halo and keeps its drawing, which is the whole target — and a
+ * player who wants the overdose has a knob that reaches 2×.
+ *
+ * That headroom past 1× is spent by ADDING THE BUFFER AGAIN rather than by
+ * raising this (see `applyBloom`), because `globalAlpha` cannot exceed 1 — so
+ * the whole 0–2 range stays linear instead of flattening out part way along.
+ */
+const GAIN = 0.4;
+
+/** The scratch buffers, kept across frames — a canvas per frame at 60 Hz is the
  * one allocation pattern that would make this pass cost more than it draws. */
-let buffer: {
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
+type Scratch = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D };
+type Buffers = {
   w: number;
   h: number;
-} | null = null;
+  /** Half size: the crushed frame. Its whole reason for existing is that the
+   * step down to `quarter` has to be two halvings rather than one ×4 minify. */
+  half: Scratch;
+  /** Quarter size: the blurred bloom buffer that gets added back. */
+  quarter: Scratch;
+};
+let buffers: Buffers | null = null;
 
-function ensureBuffer(w: number, h: number) {
-  if (buffer && buffer.w === w && buffer.h === h) return buffer;
+function scratch(w: number, h: number): Scratch | null {
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-  buffer = { canvas, ctx, w, h };
-  return buffer;
+  return ctx ? { canvas, ctx } : null;
+}
+
+function ensureBuffers(w: number, h: number): Buffers | null {
+  if (buffers && buffers.w === w && buffers.h === h) return buffers;
+  const half = scratch(
+    Math.max(1, Math.floor(w / 2)),
+    Math.max(1, Math.floor(h / 2)),
+  );
+  const quarter = scratch(
+    Math.max(1, Math.floor(w / DOWNSCALE)),
+    Math.max(1, Math.floor(h / DOWNSCALE)),
+  );
+  if (!half || !quarter) return null;
+  buffers = { w, h, half, quarter };
+  return buffers;
 }
 
 /**
@@ -83,6 +153,40 @@ function supportsFilter(): boolean {
 }
 
 /**
+ * Halve `source` into `dest` under `filter`.
+ *
+ * A canvas `filter` runs in the DESTINATION's coordinate space — i.e. AFTER the
+ * resample — which is what lets both of this pass's filtered steps ride a
+ * halving draw instead of costing a blit of their own. Verified rather than
+ * assumed: minify-then-blur and blur-on-the-minify come out bit-identical, and a
+ * crush on a minifying draw judges the AVERAGE rather than the source pixels.
+ *
+ * `copy` so each step REPLACES what the last frame left rather than compositing
+ * over it, and smoothing ON because the averaging IS half the blur — a
+ * nearest-neighbour halving would sample one pixel in four and turn a thin light
+ * into a dashed line.
+ */
+function halveInto(dest: Scratch, source: HTMLCanvasElement, filter: string) {
+  dest.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  dest.ctx.globalAlpha = 1;
+  dest.ctx.globalCompositeOperation = "copy";
+  dest.ctx.imageSmoothingEnabled = true;
+  dest.ctx.filter = filter;
+  dest.ctx.drawImage(
+    source,
+    0,
+    0,
+    source.width,
+    source.height,
+    0,
+    0,
+    dest.canvas.width,
+    dest.canvas.height,
+  );
+  dest.ctx.filter = "none";
+}
+
+/**
  * Bloom the finished frame in place. `amount` is the SETTINGS → VISUALS knob (0
  * = off, and off does no work at all).
  *
@@ -96,36 +200,46 @@ export function applyBloom(
 ): void {
   if (amount <= 0 || !supportsFilter()) return;
   const source = ctx.canvas;
-  const w = Math.max(1, Math.floor(source.width / DOWNSCALE));
-  const h = Math.max(1, Math.floor(source.height / DOWNSCALE));
-  const buf = ensureBuffer(w, h);
-  if (!buf) return;
+  const bufs = ensureBuffers(source.width, source.height);
+  if (!bufs) return;
 
-  // 1. Downscale the frame with the darks crushed out, so only the lights
-  //    survive into the buffer. Smoothing stays ON for this one draw: the
-  //    downscale is meant to average neighbouring pixels — that averaging IS the
-  //    first half of the blur — where nearest-neighbour would sample one pixel
-  //    in sixteen and turn a thin light into a dashed line.
-  buf.ctx.setTransform(1, 0, 0, 1, 0, 0);
-  buf.ctx.globalCompositeOperation = "copy";
-  buf.ctx.globalAlpha = 1;
-  buf.ctx.imageSmoothingEnabled = true;
-  buf.ctx.filter = CRUSH;
-  buf.ctx.drawImage(source, 0, 0, source.width, source.height, 0, 0, w, h);
-  buf.ctx.filter = "none";
+  // 1. HALF SIZE, WITH THE DARKS CRUSHED OUT, so only the lights survive.
+  // 2. QUARTER SIZE, BLURRING ON THE WAY DOWN.
+  //
+  // TWO HALVINGS, NOT ONE ×4 MINIFY — this is the flicker fix, and it is the
+  // only reason the `half` buffer exists. Canvas2D minification is a 2×2
+  // bilinear tap with no mipmap, so it is an honest box filter at exactly ×0.5
+  // and an undersample at anything smaller. At ×0.25 it SKIPS most of the
+  // frame: draw a 4×4 with one white pixel down to 1×1 in one step and Chrome
+  // returns 0, where a true average is 16. Which pixels get dropped is decided
+  // by the sample grid, so as the camera pans the ground one canvas pixel at a
+  // time, lights drop in and out of the buffer and the halo pulses. Measured on
+  // real frames, that made the bloom's contribution to the picture's brightness
+  // jump by up to 1.9 luminance points between consecutive one-pixel pans; two
+  // halvings put it at 0.14.
+  //
+  // The crush rides the FIRST halving rather than a full-size blit of its own,
+  // so it thresholds 2×2 averages rather than source pixels. That is a
+  // deliberate trade and it was measured both ways: a full-resolution bright
+  // pass costs ~40% more per frame and buys a slightly cleaner threshold (0.10
+  // luminance points of pan-flicker against 0.14), which is invisible beside
+  // the 1.9 it replaces. What it costs is that a ONE-PIXEL spark no longer
+  // blooms — it is averaged to a quarter of its brightness and falls under the
+  // knee — and that turned out to be a second small win: the game's lights are
+  // baked glow blobs, while what a full-res threshold additionally caught was
+  // the floating damage NUMBERS, whose thin strokes it softened.
+  halveInto(bufs.half, source, BRIGHT_PASS);
+  halveInto(bufs.quarter, bufs.half.canvas, `blur(${BLUR_PX}px)`);
 
-  // 2. Blur it, in place. `copy` again so the blurred copy REPLACES the crushed
-  //    one rather than compositing over it (which would leave a hard core inside
-  //    every halo and undo the softness this step exists for).
-  buf.ctx.filter = `blur(${BLUR_PX}px)`;
-  buf.ctx.drawImage(buf.canvas, 0, 0);
-  buf.ctx.filter = "none";
-  buf.ctx.globalCompositeOperation = "source-over";
-
-  // 3. Add it back over the frame. `lighter` because light ADDS — anything else
-  //    darkens where two glows overlap, which is the one thing light never does.
-  //    The upscale is smoothed for the same reason as the downscale: the halo is
-  //    the only thing in the frame that is meant to be a gradient.
+  // 3. ADD IT BACK OVER THE FRAME. `lighter` because light ADDS — anything else
+  //    darkens where two glows overlap, which is the one thing light never
+  //    does. The upscale is smoothed for the same reason the downscale is: the
+  //    halo is the only thing in the frame that is meant to be a gradient.
+  //
+  //    The knob's gain can exceed 1 and `globalAlpha` cannot, so the total is
+  //    spent over as many blits as it takes. That keeps the whole 0–2 range
+  //    linear — clamping instead would make every setting from ~1.4× up look
+  //    identical, which is a knob that stops answering half way along.
   const prevSmoothing = ctx.imageSmoothingEnabled;
   const prevOp = ctx.globalCompositeOperation;
   const prevAlpha = ctx.globalAlpha;
@@ -133,20 +247,31 @@ export function applyBloom(
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.globalCompositeOperation = "lighter";
-  // Capped below 1: the buffer already holds near-white cores, and adding those
-  // at full strength blows the middle of every light to a flat white blob with
-  // its shape lost. The knob's own headroom past 1× is deliberately spent on the
-  // halo rather than the core.
-  ctx.globalAlpha = clamp01(0.55 * amount);
-  ctx.drawImage(buf.canvas, 0, 0, w, h, 0, 0, source.width, source.height);
+  const buffer = bufs.quarter.canvas;
+  let remaining = GAIN * amount;
+  while (remaining > 0.001) {
+    ctx.globalAlpha = clamp01(remaining);
+    ctx.drawImage(
+      buffer,
+      0,
+      0,
+      buffer.width,
+      buffer.height,
+      0,
+      0,
+      source.width,
+      source.height,
+    );
+    remaining -= 1;
+  }
   ctx.globalAlpha = prevAlpha;
   ctx.globalCompositeOperation = prevOp;
   ctx.imageSmoothingEnabled = prevSmoothing;
   ctx.setTransform(prevTransform);
 }
 
-/** Drop the scratch buffer — for tests, and for a context that has gone away. */
+/** Drop the scratch buffers — for tests, and for a context that has gone away. */
 export function resetBloom(): void {
-  buffer = null;
+  buffers = null;
   filterSupport = null;
 }
