@@ -149,6 +149,12 @@ const CLOUD_RADIUS_BASE = 9;
 const CLOUD_RADIUS_PER_FORCE = 6;
 const CLOUD_ALPHA = 0.23;
 
+/** The ONE radius every cloud puff's glow is baked at, whatever size it is
+ * drawn. A gradient carries no pixels to resample, so this is a resolution
+ * rather than a size — big enough that a puff on a monstrous blow is stretched
+ * from plenty of samples, small enough to be a rounding error in memory. */
+const CLOUD_BAKE_RADIUS = 64;
+
 /**
  * WHAT HANGS IN THE AIR AFTERWARDS, per family — the one part of the spray that
  * is not a palette swap, because what a mess does after it stops moving is most
@@ -277,11 +283,19 @@ function drawWound(
  *
  * It is the one part of a spray that is NOT authored art, and deliberately: what
  * it is drawing is atomized liquid with no shape of its own, and pixel art is
- * exactly the wrong tool for a soft edge. So it is a handful of BAKED radial
- * glows (`glowSprite`, cached per colour and radius like every other light in
- * the game) thrown along the very same cone the drops fly down, blooming and
- * thinning — a spray-can puff rather than a ball, because a cloud centred on the
- * body reads as a smoke bomb going off inside it.
+ * exactly the wrong tool for a soft edge. So it is a handful of puffs of ONE
+ * BAKED radial glow (`glowSprite`) thrown along the very same cone the drops fly
+ * down, blooming and thinning — a spray-can puff rather than a ball, because a
+ * cloud centred on the body reads as a smoke bomb going off inside it.
+ *
+ * **THE BAKE IS ONE FIXED SIZE AND THE PUFFS ARE SCALED TO IT.** A gradient is
+ * scale-invariant, so this costs nothing in fidelity — and the alternative is
+ * the bug this replaced: the puff's radius grows with its own animation clock,
+ * so asking `glowSprite` for it baked a fresh gradient per puff per FRAME into a
+ * cache nothing empties within a session. It read as a memory leak everywhere
+ * BUT here — the tab past 280 MB, the browser dropping canvas backing stores,
+ * and every label in the game (the pixel font is a cached canvas) going blank
+ * over a level-up box while the sprites beside them drew fine.
  *
  * **IT IS COMPOSITED WITH PLAIN ALPHA, NEVER `lighter`,** and that is the whole
  * reason one pass serves four families. Additive is the obvious choice for a
@@ -313,6 +327,21 @@ function drawCloud(
         blow.body,
     ),
   );
+  // ONE bake per family colour, for the whole game, ever — then SCALED to each
+  // puff's live size below. A radial gradient is scale-invariant (both stops
+  // are linear in r), so a bake stretched to size S is the same picture as a
+  // bake made at S; asking `glowSprite` for the live radius instead baked a new
+  // gradient per puff per FRAME into a cache nothing empties, which is what put
+  // the tab past 280 MB and started the browser evicting the pixel font's own
+  // canvases. See `glowSize`.
+  const glow = glowSprite(family.cloud, CLOUD_BAKE_RADIUS);
+  if (!glow) return;
+  // The one surface in the game that WANTS smoothing: this is atomized liquid
+  // with no shape of its own, and a nearest-neighbour upscale of a gradient
+  // draws it as concentric bands. Every other pass here is pixel art and stays
+  // crisp — so the flag is flipped for these blits alone and put straight back.
+  const smoothing = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = true;
   for (let i = 0; i < puffs; i++) {
     const n = i + seed * 5.11 + 23;
     // Each puff blooms on its own stagger, so the cloud SWELLS out of the wound
@@ -331,22 +360,42 @@ function drawCloud(
     // A cloud EXPANDS as it thins — the one thing about it that has to be a
     // scale rather than a frame, since a baked gradient has no pixels to
     // resample and is the one surface in the game where smoothness is the point.
-    const radius =
-      (CLOUD_RADIUS_BASE + CLOUD_RADIUS_PER_FORCE * blow.force) *
-      blow.body *
-      (0.5 + 0.9 * ease) *
-      (0.7 + 0.6 * fract(n * 4.91));
-    const glow = glowSprite(family.cloud, radius);
-    if (!glow) continue;
+    const radius = cloudPuffRadius(blow, ease, n);
+    const size = Math.max(2, Math.round(radius * 2));
     ctx.globalAlpha = CLOUD_ALPHA * (1 - life) * (1 - life);
     ctx.drawImage(
       glow,
-      Math.round(x + at.x - glow.width / 2),
+      Math.round(x + at.x - size / 2),
       // It drifts UP as it thins, a true screen vertical like the drops' hop.
-      Math.round(y + at.y - ease * air.rise * 0.6 - glow.height / 2),
+      Math.round(y + at.y - ease * air.rise * 0.6 - size / 2),
+      size,
+      size,
     );
   }
   ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = smoothing;
+}
+
+/**
+ * How wide a single puff stands, in world px, at `ease` through its life.
+ *
+ * A puff SWELLS as it thins, and that growth has to be a scale of one baked
+ * gradient rather than a gradient baked per size — see `drawCloud`. Kept as a
+ * pure function so the growth curve is testable, and so the thing that made
+ * this a memory leak (feeding a per-frame value to a cache keyed on it) stays
+ * visibly separate from the bake.
+ */
+export function cloudPuffRadius(
+  blow: BloodBlow,
+  ease: number,
+  n: number,
+): number {
+  return (
+    (CLOUD_RADIUS_BASE + CLOUD_RADIUS_PER_FORCE * blow.force) *
+    blow.body *
+    (0.5 + 0.9 * ease) *
+    (0.7 + 0.6 * fract(n * 4.91))
+  );
 }
 
 /**
