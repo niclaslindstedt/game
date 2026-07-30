@@ -45,6 +45,9 @@ declare module "*/mod/tools/build.mjs" {
     /** The mod's own COMPANIONS, already `{ id → CompanionDef }` — who its
      * spared elites become. */
     companions: Record<string, unknown>;
+    /** The mod's own SETS, already `{ id → SetDef }` — the kits its green
+     * pieces belong to. */
+    sets: Record<string, unknown>;
     /** THE STORY. `cutscenes` arrives with its `variants:` already expanded into
      * `<id>_<difficulty>` scenes; `capRotation` REPLACES the shipped cap-farm
      * rotation rather than merging with it. */

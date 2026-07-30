@@ -127,6 +127,29 @@ a glyph the atlas has no cell for, so a brand with an accent in it renders as
 therefore carries the font's glyph set — the one entry in it that is not an id —
 and the compiler names the offending character.
 
+### 3a¾. The kits are content now too
+
+`content/sets.yaml` is the last catalog to have been code. A SET is what makes a
+boss worth farming past the first drop, and a mod could already ship
+`rarity: set` pieces — they just belonged to nothing. The lift is the same one
+the story and the companions had: a loader that takes a DIRECTORY
+(`scripts/set-data/`), the schema both the shipped build and a mod validate
+through (`asset-tools/set-schema.mjs`), a generator into `src/generated/sets.ts`,
+and a snapshot frozen from the hand-written TypeScript the moment before, so the
+move is provably lossless.
+
+Two decisions worth keeping:
+
+- **The affix vocabulary is SHARED** (`asset-tools/affix.mjs`). A set's tiered
+  bonuses are the same `Affix[]` a unique's `bonuses:` are, and a second copy of
+  the kind list would be a second answer to "is `armorPen` a real bonus", one of
+  which is wrong within a release.
+- **A mod's kit may only claim the MOD's own pieces.** A piece and its kit each
+  name the other, and a mod cannot edit a shipped piece's `setId` — so claiming
+  one would compile into exactly the mismatch the schema exists to catch. A
+  conversion re-homing a shipped kit ships the pieces too, which puts them in
+  the list anyway.
+
 ### 3b. The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs
@@ -330,7 +353,9 @@ dynamic import.
 
 ## What is not here yet
 
-- **Item sets.** Accepted by `registerDefs` and still TypeScript, so it is the
-  same lift the story and the companions have had. Sets are half-there: a mod can
-  ship `rarity: set` items, but the `SetDef` that pays the bonuses is code, so the
-  pieces have nothing to belong to.
+- **The passive TALENT trees** (`src/game/defs/talents/`) are still TypeScript, so
+  a conversion's hero grows the shipped Warlord / Windrunner / Archon trees.
+- **`grades:`** ladders and the loot economy (`content/item_quality.yaml`,
+  `content/item_rarity.yaml`) are deliberately the game's rather than a mod's — a
+  mod that moved the tier ladder would be rebalancing the campaign instead of
+  adding to it.

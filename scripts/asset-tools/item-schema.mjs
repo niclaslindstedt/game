@@ -10,6 +10,8 @@
 // and `UniqueDef` (defs/uniques.ts); the quality/rarity knob files get their
 // own validators below.
 
+import { STAT_NAMES, validateAffixes } from "./affix.mjs";
+
 const KINDS = new Set(["weapon", "gear", "unique"]);
 /** The rarities a PLAIN base may live under (its quality axis rolls at drop). */
 const BASE_RARITIES = new Set(["regular", "trash"]);
@@ -35,29 +37,6 @@ const ARMOR_TYPES = new Set(["cloth", "leather", "mail", "plate"]);
 const MATERIALS = new Set(["metal", "precious"]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard", "nightmare", "jesus"]);
 const WORN_STYLES = new Set(["cap", "helm", "visor", "mask"]);
-const STAT_NAMES = new Set([
-  "stamina",
-  "strength",
-  "dexterity",
-  "intelligence",
-  "luck",
-]);
-const AFFIX_KINDS = new Set([
-  "damagePct",
-  "maxHp",
-  "crit",
-  "armor",
-  "armorPen",
-  "stat",
-  "statPct",
-  "maxHpPct",
-  "spell",
-  "proc",
-  "sureStrike",
-  "knockback",
-]);
-/** The scaling "keeper" bonus kinds a unique may carry at most ONE of. */
-const SCALING_KINDS = new Set(["statPct", "maxHpPct"]);
 
 /** The five make qualities, worst to best (src/game/types.ts `Quality`). */
 export const QUALITY_IDS = ["broken", "crude", "normal", "superior", "perfect"];
@@ -112,26 +91,10 @@ export function validateItem(doc, refs) {
   }
   oneOf(doc.kind, KINDS, "kind");
 
-  const bonuses = (list) => {
-    if (list === undefined) return;
-    if (!Array.isArray(list)) return err(`bonuses must be a list of affixes`);
-    let scaling = 0;
-    for (const b of list) {
-      if (!b || typeof b !== "object") {
-        err(`bonuses entries must be mappings`);
-        continue;
-      }
-      oneOf(b.kind, AFFIX_KINDS, "bonus kind");
-      if (SCALING_KINDS.has(b.kind)) scaling++;
-      if (
-        (b.kind === "stat" || b.kind === "statPct") &&
-        !STAT_NAMES.has(b.stat)
-      )
-        err(`bonus "${b.kind}" names unknown stat "${b.stat}"`);
-    }
-    // At most one scaling bonus, the keeper rule (mirrors mergeUniques).
-    if (scaling > 1) err(`has ${scaling} scaling (*Pct) bonuses (max 1)`);
-  };
+  // The affix vocabulary is shared with the SET schema (asset-tools/affix.mjs):
+  // a set's tiered bonuses are the same `Affix[]` a unique's are, so a second
+  // copy of the kind list would be a second answer to the same question.
+  const bonuses = (list) => validateAffixes(list, err);
 
   if (doc.kind === "weapon" || doc.kind === "gear") {
     oneOf(doc.rarity, BASE_RARITIES, "base-item rarity");

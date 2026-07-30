@@ -43,6 +43,7 @@ import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
 import { validateMap } from "../../scripts/asset-tools/map-schema.mjs";
 import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
 import { validatePowerup } from "../../scripts/asset-tools/powerup-schema.mjs";
+import { validateSet } from "../../scripts/asset-tools/set-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import {
@@ -66,6 +67,7 @@ import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
 import { loadMaps } from "../../scripts/map-data/load-yaml.mjs";
 import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
+import { loadSets } from "../../scripts/set-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
 import {
   loadCutscenes,
@@ -200,6 +202,9 @@ export function buildMod(modDir, catalog) {
   // stat line — so a conversion whose roster could be re-skinned but whose
   // recruits could not would be missing the payoff for sparing anything.
   const companions = loadTree(() => loadCompanions(modDir), "companions", fail);
+  // THE KITS. A mod could already ship `rarity: set` items; without this the
+  // pieces belonged to nothing, granted nothing, and read as a bug in the mod.
+  const sets = loadTree(() => loadSets(modDir), "sets", fail);
   // THE STORY: the scenes a mod opens with, the hero's inner monologues, and the
   // plot pieces his finds spell out. A conversion that shipped none of these
   // would be a re-skin — new monsters on somebody else's plot — so all three go
@@ -227,6 +232,7 @@ export function buildMod(modDir, catalog) {
   const modMusic = music?.entries ?? [];
   const modPowerups = powerups?.powerups ?? {};
   const modCompanions = companions?.companions ?? {};
+  const modSets = sets?.sets ?? {};
   const modCutscenes = cutscenes?.cutscenes ?? {};
   const modThoughts = thoughts?.thoughts ?? {};
   const modCapRotation = thoughts?.capRotation ?? [];
@@ -240,6 +246,7 @@ export function buildMod(modDir, catalog) {
     modMusic.length +
     Object.keys(modPowerups).length +
     Object.keys(modCompanions).length +
+    Object.keys(modSets).length +
     Object.keys(modCutscenes).length +
     Object.keys(modThoughts).length +
     Object.keys(modStoryItems).length;
@@ -263,6 +270,7 @@ export function buildMod(modDir, catalog) {
     music: modMusic,
     powerups: modPowerups,
     companions: modCompanions,
+    sets: modSets,
     cutscenes: modCutscenes,
     thoughts: modThoughts,
     storyItems: modStoryItems,
@@ -401,6 +409,42 @@ export function buildMod(modDir, catalog) {
     const res = validateCompanion(id, def, companionRefs);
     errors.push(...prefix(res.errors, "companions.yaml"));
     warnings.push(...prefix(res.warnings, "companions.yaml"));
+  }
+
+  // THE KITS, against the same schema the shipped ones go through.
+  //
+  // Its members are the MOD'S OWN named items, and only those — not base ∪ mod
+  // like every other cross-reference here. That is not an oversight: a piece
+  // and its kit each name the other (`UniqueDef.setId` ↔ `SetDef.members`), and
+  // a mod cannot edit a shipped piece's back-reference. So a kit claiming a
+  // shipped piece would compile into exactly the mismatch this schema exists to
+  // catch — a green piece paying one set's bonuses while its card names
+  // another. A conversion that wants a shipped kit re-homed ships the pieces
+  // too, which puts them in this very list.
+  const modUniques = new Map(
+    modItems.uniques.map((entry) => [
+      entry.id,
+      { tier: entry.rarity, slot: entry.doc.slot, setId: entry.doc.setId },
+    ]),
+  );
+  for (const { id, def } of sets?.entries ?? []) {
+    const res = validateSet(id, def, { uniques: modUniques });
+    errors.push(...prefix(res.errors, "sets.yaml"));
+    warnings.push(...prefix(res.warnings, "sets.yaml"));
+  }
+  // And the other direction: a `rarity: set` piece with no kit grants nothing
+  // and reads as a bug in the mod rather than as a missing file.
+  {
+    const claimed = new Set(
+      Object.values(modSets).flatMap((def) => def.members ?? []),
+    );
+    for (const entry of modItems.uniques) {
+      if (entry.rarity !== "set" || claimed.has(entry.id)) continue;
+      errors.push(
+        `items/set/${entry.id}: belongs to no set — add it to a kit's ` +
+          "`members:` in sets.yaml, or make it a plain unique",
+      );
+    }
   }
 
   const itemRefs = {
@@ -587,6 +631,9 @@ export function buildMod(modDir, catalog) {
       // exactly the shape `registerDefs` takes.
       powerups: modPowerups,
       companions: modCompanions,
+      // The KITS a mod's green pieces belong to. `{ id → SetDef }`, exactly the
+      // shape `registerDefs({ sets })` takes.
+      sets: modSets,
       // The story. `cutscenes` has its `variants:` already expanded into
       // `<id>_<difficulty>` scenes, so the page registers exactly what
       // `cutsceneVariant` looks up.
@@ -730,6 +777,7 @@ function checkIds({
   music,
   powerups,
   companions,
+  sets,
   cutscenes,
   thoughts,
   storyItems,
@@ -745,6 +793,7 @@ function checkIds({
     unique: new Set(catalog.uniques),
     powerup: new Set(catalog.abilities ?? []),
     companion: new Set(catalog.companions ?? []),
+    set: new Set(catalog.sets ?? []),
     cutscene: new Set(catalog.cutscenes ?? []),
     thought: new Set(catalog.thoughts ?? []),
     storyItem: new Set(catalog.storyItems ?? []),
@@ -770,6 +819,9 @@ function checkIds({
   // clash, this is an error only for an ADDON.
   for (const id of Object.keys(companions ?? {})) {
     if (shipped.companion.has(id)) clashes.push(`companion "${id}"`);
+  }
+  for (const id of Object.keys(sets ?? {})) {
+    if (shipped.set.has(id)) clashes.push(`set "${id}"`);
   }
   // The story. A CONVERSION shadowing `prelude` is the point — it is how a mod
   // opens on its own night instead of Ada's — so, like every other clash, this

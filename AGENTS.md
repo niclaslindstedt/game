@@ -689,11 +689,11 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
 2. **ONE COMPILER, ONE SCHEMA.** A mod's level, MAP BLUEPRINT (`maps/`), enemy,
-   item, sprite, sound,
+   item, item SET (`sets.yaml`), sprite, sound,
    score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
    `thoughts.yaml`, `story-items.yaml`) are
    the same files as `content/levels/`, `content/maps/`, `content/enemies/`,
-   `content/items/`,
+   `content/items/`, `content/sets.yaml`,
    `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
    rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
@@ -779,7 +779,9 @@ NOT author, and both refusals are deliberate: a `grades:` ladder (minted at
 engine load from a catalog compiled into the build, so there is no runtime seam
 to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` —
 a mod that moved the tier ladder would be rebalancing the campaign rather than
-adding to it). **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
+adding to it). A CONVERSION may also rename the game itself on the title screen
+(`brand:` in its manifest) — the screen only, never the storage prefix, the
+precache id or any discovery surface, and never for an addon. **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
 the repo's layout under `resources/modtools/` (`extraResources` in
 `electron-builder.config.cjs`, resolved by `electron/src/resources.ts`): every
 module in it finds its neighbours by relative path, so a flattened copy resolves
@@ -1513,6 +1515,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
 | A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
+| An item SET (the kit a boss's green armor belongs to)     | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                              |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
 | A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                    |

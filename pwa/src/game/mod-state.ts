@@ -77,6 +77,9 @@ export type ModBundle = {
   /** The mod's own COMPANIONS, by id — who its spared elites become. An
    * enemy's `spareable.companion` names one of these or a shipped one. */
   companions: Record<string, unknown>;
+  /** The mod's own SETS, by id — the kits its `rarity: set` pieces belong to
+   * and draw their tiered bonuses from. */
+  sets: Record<string, unknown>;
   /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
    * replaces a shipped sound rather than only adding one. */
   soundKeys: Record<string, string>;
@@ -113,6 +116,7 @@ export type ModClash = {
     | "music"
     | "powerup"
     | "companion"
+    | "set"
     | "cutscene"
     | "thought"
     | "story item";

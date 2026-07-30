@@ -50,6 +50,7 @@ my-mod/
   music/<id>.yaml              one score each
   powerups.yaml                every power your mod adds
   companions.yaml              who your spared elites join you as
+  sets.yaml                    the kits your green armor pieces belong to
   cutscenes/<id>.yaml          one scene each — stage, cast, timeline of beats
   thoughts.yaml                the hero's inner monologues
   story-items.yaml             the plot pieces his finds spell out

@@ -48,6 +48,7 @@ const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
   engine("src/game/defs/uniques.ts")
 );
+const { SET_DEFS } = await import(engine("src/game/defs/sets.ts"));
 const { DIFFICULTY_DEFS } = await import(
   engine("src/game/defs/difficulties.ts")
 );
@@ -192,6 +193,9 @@ const catalog = {
     ),
   ),
   companions: sorted(Object.keys(COMPANION_DEFS)),
+  // The shipped KITS, so an addon that would shadow one is caught at compile
+  // time rather than by two sets claiming the same green pieces at load.
+  sets: sorted(Object.keys(SET_DEFS)),
   difficulties: sorted(Object.keys(DIFFICULTY_DEFS)),
   // The shipped venues, so an ADDON that would shadow one is caught at compile
   // time rather than by the level registry throwing on a duplicate id.

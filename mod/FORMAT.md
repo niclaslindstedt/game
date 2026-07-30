@@ -221,6 +221,44 @@ just never learns a new trick.
 
 Full reference: [`../content/companions.yaml`](../content/companions.yaml).
 
+## `sets.yaml` — a kit of green armor
+
+One file at your mod's root, a `sets:` mapping of id → set. The KEY is the id;
+don't repeat it inside the entry.
+
+A SET is the D2 green tier: a themed group of armor pieces, dropped by one boss,
+that grant extra bonuses as more of them are worn. The pieces are ordinary
+`items/set/<id>.yaml` files (`rarity: set`) carrying a `setId:` back-reference;
+this file is the other half.
+
+```yaml
+sets:
+  my_kit:
+    name: THE GARDENER'S HABIT
+    weaponClass: melee # what build the kit supports
+    members: # 2–4 pieces, one per armor slot
+      - mymod_hood
+      - mymod_apron
+      - mymod_boots
+    bonuses:
+      - pieces: 2
+        bonuses: [{ kind: stat, stat: stamina, value: 5 }]
+      - pieces: 3 # the CAPSTONE — a spell, a proc, sure-strike
+        bonuses:
+          [{ kind: proc, trigger: struck, spell: nova, chance: 0.15, rank: 2 }]
+```
+
+Thresholds are cumulative, ascend, and start at 2 (a 1-piece bonus is the
+piece's own). The compiler holds the kit together for you: a piece that is not
+`rarity: set`, two pieces for the same slot, a piece and a kit that disagree
+about which set it is in, a threshold higher than the kit's own size, or a green
+piece belonging to no kit at all are each an error with the file that caused it.
+
+**Your kit may only claim YOUR pieces.** A shipped piece already carries a
+shipped `setId` that your mod cannot edit, so claiming one would compile into
+exactly the mismatch above. A conversion re-homing a shipped kit ships the
+pieces too.
+
 ## `sprites/<family>/<name>.yaml` — pixel art
 
 The file stem is the `name`, and the name is what an enemy or level references.

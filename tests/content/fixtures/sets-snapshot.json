@@ -1,0 +1,222 @@
+{
+  "exiles_flight": {
+    "bonuses": [
+      {
+        "bonuses": [
+          {
+            "kind": "stat",
+            "stat": "dexterity",
+            "value": 6
+          }
+        ],
+        "pieces": 2
+      },
+      {
+        "bonuses": [
+          {
+            "kind": "stat",
+            "stat": "luck",
+            "value": 6
+          }
+        ],
+        "pieces": 3
+      },
+      {
+        "bonuses": [
+          {
+            "chance": 0.15,
+            "kind": "proc",
+            "rank": 2,
+            "spell": "bolt",
+            "trigger": "hit"
+          }
+        ],
+        "pieces": 4
+      }
+    ],
+    "id": "exiles_flight",
+    "members": [
+      "the_redacted",
+      "aegis_of_exile",
+      "exiles_stride",
+      "escapists_tread"
+    ],
+    "name": "THE EXILE'S FLIGHT",
+    "weaponClass": "ranged"
+  },
+  "mosque_brand": {
+    "bonuses": [
+      {
+        "bonuses": [
+          {
+            "kind": "stat",
+            "stat": "dexterity",
+            "value": 5
+          }
+        ],
+        "pieces": 2
+      },
+      {
+        "bonuses": [
+          {
+            "kind": "crit",
+            "value": 0.08
+          }
+        ],
+        "pieces": 3
+      },
+      {
+        "bonuses": [
+          {
+            "chance": 0.12,
+            "kind": "proc",
+            "rank": 2,
+            "spell": "nova",
+            "trigger": "hit"
+          }
+        ],
+        "pieces": 4
+      }
+    ],
+    "id": "mosque_brand",
+    "members": [
+      "the_signal_crown",
+      "gilded_carapace",
+      "lawless_stride",
+      "ovation_striders"
+    ],
+    "name": "THE MOSQUE BRAND",
+    "weaponClass": "ranged"
+  },
+  "scavengers_hide": {
+    "bonuses": [
+      {
+        "bonuses": [
+          {
+            "kind": "stat",
+            "stat": "dexterity",
+            "value": 5
+          }
+        ],
+        "pieces": 2
+      },
+      {
+        "bonuses": [
+          {
+            "kind": "crit",
+            "value": 0.06
+          }
+        ],
+        "pieces": 3
+      },
+      {
+        "bonuses": [
+          {
+            "kind": "stat",
+            "stat": "dexterity",
+            "value": 4
+          },
+          {
+            "kind": "sureStrike"
+          }
+        ],
+        "pieces": 4
+      }
+    ],
+    "id": "scavengers_hide",
+    "members": [
+      "whiskerweave_hood",
+      "vermin_pelt",
+      "burrow_greaves",
+      "gnawed_sabatons"
+    ],
+    "name": "THE GOOD BOY",
+    "weaponClass": "melee"
+  },
+  "sentinels_vigil": {
+    "bonuses": [
+      {
+        "bonuses": [
+          {
+            "kind": "stat",
+            "stat": "stamina",
+            "value": 5
+          }
+        ],
+        "pieces": 2
+      },
+      {
+        "bonuses": [
+          {
+            "kind": "maxHp",
+            "value": 90
+          }
+        ],
+        "pieces": 3
+      },
+      {
+        "bonuses": [
+          {
+            "chance": 0.15,
+            "kind": "proc",
+            "rank": 2,
+            "spell": "nova",
+            "trigger": "struck"
+          }
+        ],
+        "pieces": 4
+      }
+    ],
+    "id": "sentinels_vigil",
+    "members": [
+      "the_long_vigil",
+      "palegrave",
+      "sentinels_greaves",
+      "marewalkers"
+    ],
+    "name": "THE SENTINEL'S VIGIL",
+    "weaponClass": "melee"
+  },
+  "walled_garden_set": {
+    "bonuses": [
+      {
+        "bonuses": [
+          {
+            "kind": "stat",
+            "stat": "intelligence",
+            "value": 6
+          }
+        ],
+        "pieces": 2
+      },
+      {
+        "bonuses": [
+          {
+            "kind": "crit",
+            "value": 0.06
+          }
+        ],
+        "pieces": 3
+      },
+      {
+        "bonuses": [
+          {
+            "kind": "spell",
+            "rank": 1,
+            "spell": "storm"
+          }
+        ],
+        "pieces": 4
+      }
+    ],
+    "id": "walled_garden_set",
+    "members": [
+      "the_panopticon",
+      "truthseeker",
+      "walled_garden",
+      "boundstride"
+    ],
+    "name": "THE WALLED GARDEN",
+    "weaponClass": "magic"
+  }
+}

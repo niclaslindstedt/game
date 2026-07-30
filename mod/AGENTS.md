@@ -59,6 +59,7 @@ shipped file is a worked example of its kind.
 | A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                  |
 | A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                      |
 | A companion (a spared elite joining you)       | `companions.yaml`              | [`../content/companions.yaml`](../content/companions.yaml)   |
+| An item SET (a kit of green armor)             | `sets.yaml`                    | [`../content/sets.yaml`](../content/sets.yaml)               |
 | Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                  |
 | A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                    |
 | A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                      |
@@ -107,6 +108,7 @@ means the game will accept it.
 | `campaign names "x"`                       | A conversion's `campaign:` lists a level it does not ship.                                                                     |
 | `is not a level this mod ships`            | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).            |
 | `unknown compass region "x"`               | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
+| `belongs to no set`                        | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
 
 ## 5. Play it
 
@@ -196,9 +198,6 @@ judgement needs looking at the sprite; and Workshop store presentation
 
 Honest list, so nothing is spent looking for a feature that is not there:
 
-- **Item sets** are not mod-authorable yet. A mod can ship `rarity: set` items,
-  but the `SetDef` that pays the bonuses is still code, so the pieces have
-  nothing to belong to.
 - **`grades:`** ladders and the loot economy (`item_quality.yaml`,
   `item_rarity.yaml`) are deliberately the game's, not a mod's.
 

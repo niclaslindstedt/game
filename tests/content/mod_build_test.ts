@@ -92,6 +92,64 @@ const MANIFEST = [
   "author: test",
 ].join("\n");
 
+/** One armor piece of a mod's own SET, parameterized on what tests break. */
+const setPieceYaml = (
+  id: string,
+  slot: string,
+  setId: string,
+  rarity = "set",
+) =>
+  [
+    `id: ${id}`,
+    "kind: unique",
+    `rarity: ${rarity}`,
+    `name: ${id.toUpperCase()}`,
+    "base: mission_cap",
+    `slot: ${slot}`,
+    "ilvl: 18",
+    `setId: ${setId}`,
+    "bonuses:",
+    "  - kind: maxHp",
+    "    value: 20",
+    "lore: A TEST PIECE.",
+  ].join("\n");
+
+/** A mod's own kit: two pieces, one threshold. */
+const setsYaml = (id: string, members: string[], pieces = 2) =>
+  [
+    "sets:",
+    `  ${id}:`,
+    `    name: THE ${id.toUpperCase()}`,
+    "    weaponClass: melee",
+    "    members:",
+    ...members.map((m) => `      - ${m}`),
+    "    bonuses:",
+    `      - pieces: ${pieces}`,
+    "        bonuses:",
+    "          - { kind: stat, stat: strength, value: 4 }",
+  ].join("\n");
+
+/** A mod's own kit, as a whole folder — pieces plus the sets.yaml that owns
+ * them, which is the only combination that compiles. */
+const setMod = (
+  files: Record<string, string> = {},
+  members = ["scratch_hood", "scratch_boots"],
+) => ({
+  "mod.yaml": MANIFEST,
+  [`items/set/${members[0]}.yaml`]: setPieceYaml(
+    members[0]!,
+    "head",
+    "scratch_kit",
+  ),
+  [`items/set/${members[1]}.yaml`]: setPieceYaml(
+    members[1]!,
+    "feet",
+    "scratch_kit",
+  ),
+  "sets.yaml": setsYaml("scratch_kit", members),
+  ...files,
+});
+
 /** A minimal valid enemy, parameterized on the two things tests break. */
 const enemyYaml = (id: string, sprite: string) =>
   [
@@ -311,6 +369,30 @@ describe("what the compiler refuses", () => {
     expect(errors.join()).toMatch(/kind: conversion/);
   });
 
+  it("a mod's own KIT, and the green pieces that belong to it", () => {
+    const { bundle, errors } = buildMod(scratchMod(setMod()), catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.sets)).toEqual(["scratch_kit"]);
+    const kit = bundle!.sets.scratch_kit as {
+      id: string;
+      members: string[];
+      bonuses: { pieces: number }[];
+    };
+    // The catalog KEY is the id, stamped in by the loader — the rule every
+    // single-file catalog here follows.
+    expect(kit.id).toBe("scratch_kit");
+    expect(kit.members).toEqual(["scratch_hood", "scratch_boots"]);
+    expect(kit.bonuses[0]?.pieces).toBe(2);
+    // The pieces themselves compile as uniques at the `set` tier, which is what
+    // colours them green and what the set block on the card reads.
+    const hood = bundle!.uniques.scratch_hood as {
+      tier: string;
+      setId: string;
+    };
+    expect(hood.tier).toBe("set");
+    expect(hood.setId).toBe("scratch_kit");
+  });
+
   it("…and a CONVERSION may bring its own name for the game", () => {
     const dir = exampleWithManifest((yaml) =>
       yaml.replace(
@@ -464,6 +546,127 @@ describe("what the compiler refuses", () => {
       "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(/keep it to 28/);
+  });
+
+  it("a set piece with no kit to belong to", () => {
+    // A mod could already ship `rarity: set` items; before sets were authorable
+    // the pieces belonged to nothing and quietly granted nothing.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/set/scratch_hood.yaml": setPieceYaml(
+        "scratch_hood",
+        "head",
+        "scratch_kit",
+      ),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/belongs to no set/);
+  });
+
+  it("a kit claiming a piece that is not green", () => {
+    // The piece is a plain UNIQUE (its directory says so, and the item loader
+    // holds the two to each other). Claimed by a kit it would be minted and
+    // coloured as a unique while quietly paying set bonuses nothing on its
+    // card explains.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/set/scratch_hood.yaml": setPieceYaml(
+        "scratch_hood",
+        "head",
+        "scratch_kit",
+      ),
+      "items/unique/scratch_boots.yaml": setPieceYaml(
+        "scratch_boots",
+        "feet",
+        "scratch_kit",
+        "unique",
+      ),
+      "sets.yaml": setsYaml("scratch_kit", ["scratch_hood", "scratch_boots"]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /is rarity unique, not set/,
+    );
+  });
+
+  it("a kit with two pieces for the same slot", () => {
+    // Only one of them can ever be worn, so the full-set bonus is unreachable.
+    const dir = scratchMod(
+      setMod({
+        "items/set/scratch_boots.yaml": setPieceYaml(
+          "scratch_boots",
+          "head",
+          "scratch_kit",
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/two "head" pieces/);
+  });
+
+  it("a kit and a piece that disagree about which set it is in", () => {
+    const dir = scratchMod(
+      setMod({
+        "items/set/scratch_boots.yaml": setPieceYaml(
+          "scratch_boots",
+          "feet",
+          "some_other_kit",
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /points at set "some_other_kit"/,
+    );
+  });
+
+  it("a bonus threshold the kit can never reach", () => {
+    const dir = scratchMod(
+      setMod({
+        "sets.yaml": setsYaml(
+          "scratch_kit",
+          ["scratch_hood", "scratch_boots"],
+          4,
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/can never be earned/);
+  });
+
+  it("a kit claiming one of the GAME's own pieces", () => {
+    // A shipped piece carries a shipped `setId` a mod cannot edit, so this
+    // would compile into exactly the mismatch the schema exists to catch.
+    const dir = scratchMod(
+      setMod({
+        "sets.yaml": setsYaml("scratch_kit", [
+          "scratch_hood",
+          "whiskerweave_hood",
+        ]),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown member "whiskerweave_hood"/,
+    );
+  });
+
+  it("an addon that shadows one of the game's own kits", () => {
+    const dir = scratchMod(
+      setMod({
+        "sets.yaml": setsYaml("scavengers_hide", [
+          "scratch_hood",
+          "scratch_boots",
+        ]),
+        "items/set/scratch_hood.yaml": setPieceYaml(
+          "scratch_hood",
+          "head",
+          "scavengers_hide",
+        ),
+        "items/set/scratch_boots.yaml": setPieceYaml(
+          "scratch_boots",
+          "feet",
+          "scavengers_hide",
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game/,
+    );
   });
 
   it("a weapon naming a sound that exists nowhere", () => {
