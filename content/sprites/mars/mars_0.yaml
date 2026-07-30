@@ -6,27 +6,27 @@ description: >
   a shallow ripple, over a fine grain of grit.
 subject:
   kind: ground tile
-  build: rusty-orange Martian dust drawn as two shallow wind ripples over a fine scatter of grit
-  features: each ripple a lit crest with a darker lee shadow under it, meandering so it meets itself across the tile edge
+  build: rusty-orange Martian dust drawn as a fine scatter of grit under one broken wind ripple
+  features: the ripple a line of lit crests meandering so it meets itself across the tile edge, kept faint so the floor never competes with what stands on it
   flavor: the open terrain west of the colony dome, worked over by wind rather than pocked like the moon
 palette:
-  d: "#80482d" # lee shadow under a ripple crest
+  d: "#80482d" # dark grit
   t: "#b2643e" # rusty-orange dust
   U: "#bb7350" # lit ripple crest
 grid: |
   ttttttUttttttttt
-  tttttttttUUttttU
-  ttttttttUtdttdUt
-  tttttUtUttttttdt
-  ttttttUdtttttttt
-  ttttUUdttttUtttU
-  ttttddttUttttttt
+  tttttttttttttttU
+  tttttttttttttdUt
+  tttttUtdtttUttdt
+  tttttttUttUttttt
+  ttttttdttttUtttU
+  ttttttttUttttttt
   ttttttUtttttttUt
-  tttttdtttttdtttt
+  ttttUUtttttdtttt
   UUttttttUtttttUU
-  tttttttUtttttttU
-  dttttttdUttUUtUd
-  tUttttttdUttttdt
-  ttttUttttdtttttt
+  tttttttttttttttt
+  dttttttttttUUttU
+  tUttttttttttttdt
+  ttttUttttttttttt
   tUtUUtttttUttUtt
   tttttttttttttttt

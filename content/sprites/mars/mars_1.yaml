@@ -7,28 +7,28 @@ description: >
 subject:
   kind: ground tile
   build: the same rusty-orange rippled dust, with a small dark stone half-buried at its middle
-  features: the stone lit along its top-left edge and sunk into the dust, with a pale wind-drift tail trailing off downwind of it
+  features: the stone lit along its top-left edge and sunk into the dust, with a pale wind-drift tail trailing off downwind of it, over the same faint grit and broken ripple as the base tile
   flavor: sprinkled in occasionally to break up the field
 palette:
-  d: "#80482d" # lee shadow, stone body
+  d: "#80482d" # dark grit, stone body
   e: "#623722" # buried stone's dark edge
   t: "#b2643e" # rusty-orange dust
   u: "#c38668" # sunlit top of the stone
   U: "#bb7350" # lit ripple crest and wind drift
 grid: |
-  tUttttddUttUtttt
-  tttUtUtddUtdtttd
-  ttUdttttttUttttt
-  tUddtttttttttdtd
-  UdttttttttttdUUU
-  ttttUdtdtttttdtt
+  tUttttttdttUtttt
+  tttttUtttttdtttd
+  ttdtttttttUttttt
+  tUtdtttttttttdtd
+  UtttttttttttdtUU
+  ttttUdtdtttttttt
   ttdtUtteeUttttUt
   tttUtteuuddttttt
   tttdteudddeUUttt
   tttttteddettUUtt
   tttUttteettUdttt
-  UtttttttUtttttUt
-  tttttttttdttUUtt
-  ttUUttUUtttUddtt
-  tttdUUdttUUdtdtt
-  ttttddUUUdtttttt
+  ttttttttUttttttt
+  tttttttttdtttttt
+  ttUtttUUtttUtttt
+  ttttttdttttttdtt
+  tttttdtttUtttttt
