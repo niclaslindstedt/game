@@ -414,7 +414,9 @@ export async function installModSprites(loaded) {
         };
         if (!FAMILIES.includes(family)) FAMILIES.push(family);
         for (const file of files) {
-          const sprite = parse(readFileSync(path.join(familyDir, file), "utf8"));
+          const sprite = parse(
+            readFileSync(path.join(familyDir, file), "utf8"),
+          );
           // Already validated by `buildMod` — a mod whose sprite is malformed
           // never reaches this function.
           const grid = gridRows(sprite.grid);

@@ -52,7 +52,7 @@ const REF_CRIT = 0.15;
 // ---- CLI --------------------------------------------------------------------
 
 const { applyMods, takeModFlags } = await import(
-  path.join(root, "scripts/mod-support.mjs"),
+  path.join(root, "scripts/mod-support.mjs")
 );
 // `--mod <dir>` forges against the MODDED catalogs — so a mod's new item is
 // priced beside the mod's own arsenal rather than only the shipped one, and

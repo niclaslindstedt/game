@@ -65,7 +65,9 @@ for (let i = 0; i < argv.length; i += 1) {
 const modBundles = modDirs.map((dir) => {
   const { bundle, errors } = buildMod(
     dir,
-    readCatalog(fileURLToPath(new URL("../../mod/catalog.json", import.meta.url))),
+    readCatalog(
+      fileURLToPath(new URL("../../mod/catalog.json", import.meta.url)),
+    ),
   );
   if (!bundle) {
     for (const e of errors) console.error(`  ✗ ${e}`);

@@ -196,7 +196,8 @@ export function deriveWorn(defs) {
       continue; // already derived
     }
     const icon = SPRITES[def.icon];
-    if (!icon) throw new Error(`gear "${def.id}": no icon sprite "${def.icon}"`);
+    if (!icon)
+      throw new Error(`gear "${def.id}": no icon sprite "${def.icon}"`);
     const ramp = wornRamp(icon, SPRITE_PALETTES[def.icon], def.wornChar);
     for (const [suffix, grid] of Object.entries(
       wornFrames(def.slot, def.worn),

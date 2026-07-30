@@ -57,7 +57,9 @@ describe("takeModFlags", () => {
 
   it("refuses a --mod with nothing after it", () => {
     expect(() => takeModFlags(["--mod"])).toThrow(/needs a mod folder/);
-    expect(() => takeModFlags(["--mod", "--all"])).toThrow(/needs a mod folder/);
+    expect(() => takeModFlags(["--mod", "--all"])).toThrow(
+      /needs a mod folder/,
+    );
   });
 
   it("is a no-op without the flag, so a tool can pass it through blindly", () => {

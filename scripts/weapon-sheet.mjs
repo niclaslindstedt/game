@@ -130,9 +130,7 @@ if (argv.includes("--list") || argv.includes("--md")) {
       const { min, max } = dmgRange(def);
       const dps = Math.round((def.damage * 1000) / def.cooldownMs);
       const eff = Math.round(
-        dps *
-          weaponAssumedTargets(def) *
-          (1 + 0.15 * (baseCritMult(def) - 1)),
+        dps * weaponAssumedTargets(def) * (1 + 0.15 * (baseCritMult(def) - 1)),
       );
       out.push(
         `| ${def.levelReq} | ${def.class} | ${def.name} | ${min}-${max} | ${def.cooldownMs}ms | ${dps} | ${eff} | ${def.range} | ${behaviorsOf(def)} |`,

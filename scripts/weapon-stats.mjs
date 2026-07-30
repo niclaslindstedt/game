@@ -140,10 +140,10 @@ for (const levelId of LEVEL_ORDER) {
 
   // Pool reqs against the level's expected monster-level band.
   // The authored band, else the LADDER's own for this venue — a mod's level is
-// not in the table above and never will be, but `content/ladder.yaml` (and a
-// mod's own `ladder.yaml`) stamps `mobLevels` onto every def, which is the
-// same band read from the source the campaign's table was written off.
-const band = LEVEL_MLVL_BANDS[levelId] ?? ladderBand(LEVELS[levelId]);
+  // not in the table above and never will be, but `content/ladder.yaml` (and a
+  // mod's own `ladder.yaml`) stamps `mobLevels` onto every def, which is the
+  // same band read from the source the campaign's table was written off.
+  const band = LEVEL_MLVL_BANDS[levelId] ?? ladderBand(LEVELS[levelId]);
   if (band) {
     for (const def of pool) {
       if (def.levelReq > band[1]) {

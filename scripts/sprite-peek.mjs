@@ -27,9 +27,8 @@ const previewDir = fileURLToPath(
 );
 mkdirSync(previewDir, { recursive: true });
 
-const { applyModsWithSprites, takeModFlags } = await import(
-  "./mod-support.mjs"
-);
+const { applyModsWithSprites, takeModFlags } =
+  await import("./mod-support.mjs");
 // `--mod <dir>` peeks at a MOD's sprites by name, exactly like the game's own.
 const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
 await applyModsWithSprites(mods);
