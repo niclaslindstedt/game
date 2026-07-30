@@ -1,5 +1,5 @@
 ---
-title: A fifth nav item is the last one, and it vanishes without a trace
+title: The nav's last item vanishes without a trace when a section is added
 date: 2026-07-30
 ---
 
@@ -19,7 +19,9 @@ Only the screenshot at 390 px caught it. The fix is `flex-wrap: wrap` — two ti
 rows beat one clipped one — with the scroll kept underneath as the last resort
 for something narrower still. **When a section is added, re-shoot the header at
 the reference phone**; the nav is the one piece of shared chrome every new
-section silently enlarges.
+section silently enlarges. (The SIXTH name, TALENTS, was added later and the
+wrap held: two rows of three at 390 px, nothing clipped. That is the check
+passing, not the check being unnecessary — re-shoot it anyway.)
 
 Two smaller things from the same pass, both also invisible in markup:
 

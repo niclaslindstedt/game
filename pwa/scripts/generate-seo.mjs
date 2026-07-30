@@ -225,6 +225,7 @@ function renderLlmsTxt() {
     // rather than a link from here.
     `- [Bestiary](${SITE_URL}/library/bestiary/): every monster — health, damage, where it spawns, what it drops, one page each`,
     `- [Arsenal](${SITE_URL}/library/arsenal/): every item — the base types and the named chase relics stacked on them, with damage, armor, level requirements, make quality and drop sources`,
+    `- [Talents](${SITE_URL}/library/talents/): every passive talent — what each of its ranks buys, which stat pays for it, and how the three trees are earned and spent`,
     `- [Powers](${SITE_URL}/library/powers/): every powerup — what each does, its numbers, how long it runs, whether it stacks, and which venues drop it`,
     `- [Missions](${SITE_URL}/library/missions/): every level — what it fields on each difficulty, its roster, its loot pool, its powers and its map`,
     `- [Story](${SITE_URL}/library/story/): the whole plot, a chapter per mission — every cutscene, monologue, arrival scene and piece of found lore, as the game plays them`,

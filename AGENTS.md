@@ -2535,13 +2535,17 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   a new glyph reaches both.
 - **THE LIBRARY is generated, and its pages are never edited by hand.** The
   reference site at `/library/` (`pwa/scripts/library/`, see
-  `docs/architecture.md`) is four sections —
+  `docs/architecture.md`) is six sections —
   **bestiary** (one page per monster), **arsenal** (one per named relic and one
   per base item; a generated grade variant has no page of its own, it is
-  described on the ancestor it was generated from), **mission guide** (one
-  per venue) and **story** (one chapter per mission) — cross-linked so a monster
-  reaches what it drops, an item reaches
-  what pays it out, a mission reaches both, and a chapter reaches all three. It is compiled from the compiled
+  described on the ancestor it was generated from), **talents** (one per passive
+  talent, plus the three trees and the point economy on the index), **powers**
+  (one per powerup, grouped by the venue that introduces it), **mission guide**
+  (one per venue) and **story** (one chapter per mission) — cross-linked so a
+  monster reaches what it drops, an item reaches
+  what pays it out, a power reaches the venues whose pools carry it, a
+  conjuration talent reaches the pickup that puts the same thing on the field, a
+  mission reaches all of them, and a chapter reaches the rest. It is compiled from the compiled
   catalogs plus LIVE ENGINE CALLS for every derived number — the same
   `scripts/game-alias-loader.mjs` seam `weapon-budget.mjs` and `drop-rate.mjs`
   use. **No gameplay number is ever typed into the generator**; a fact that
@@ -2551,9 +2555,14 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   every LOOTED weapon before a player sees it, so the arsenal quotes the item
   card by calling the card's own functions against a REFERENCE HERO (a real
   `createGame` at level 1, who has spent nothing, so the wielder term is 1).
+  The TALENTS section is the same discipline one step further: a rank's figures
+  come back from the accessor that owns the rule with the talent trained
+  (`withTalent`), never from the authored `…PerRank` slope, because the slope
+  says 80% at rank 5 where the talent's own ceiling holds a real hero at 75%.
   Change a page by changing a generator — and when a catalog gains a field,
   DECLARE it in the matching coverage map (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
-  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`, `STORY_ITEM_FIELDS`,
+  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`, `POWER_FIELDS`,
+  `TALENT_FIELDS`, `STORY_ITEM_FIELDS`,
   `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`), because the build fails on an
   authored field no page renders (the alternative is hundreds of pages silently
   going incomplete). **The STORY section takes its prose from `docs/story.md`
@@ -2568,7 +2577,8 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   `prelude` chain all FAIL THE BUILD rather than drifting. What the library shares with the game it SHARES rather than
   copies: the window skin (`pwa/src/lib/pixel-panel.css`), the item card
   (`pwa/src/lib/item-card.css`), an affix's wording (`@ui/lib/affix-line.ts`),
-  the tier/affix colours (`pwa/src/game/tiers.ts`), the ground rule
+  the tier/affix colours (`pwa/src/game/tiers.ts`), the talent trees' personas
+  and accents (`pwa/src/game/talent-look.ts`), the ground rule
   (`render/ground-tiles.ts`), and a mission's MAP (the level drawn whole with
   the game's own sprites by `scripts/level-render.mjs --bare --dormant`, shrunk
   to fit). Improve it with the `library-improvement` skill: never judge a page
