@@ -80,7 +80,11 @@ storyItems:
     lore:
       - - A WARM TERMINAL. THE CORE HE BUILT HUMS HERE - A MILLION VOICES, NONE OF THEM HIS.
       - - IT SIGNED THE NIGHT LAUNCHES. IT DREW THE OPTIMUSK LINE. IT FILED ADA UNDER 'CARGO'.
-      - - THEY DIDN'T REPLACE US WITH A MACHINE. THEY BUILT ONE THAT DREAMS OF A WORLD WITHOUT US.
+      # The reveal the whole conspiracy hangs off, and the one docs/story.md
+      # names outright: the machine's purpose is to keep ONE man on top — take
+      # everyone's jobs, zero their net worth, hand him every chair. It pays off
+      # four levels later in the bunker's zeroed ledger.
+      - - "AND ONE STANDING ORDER, ON EVERY PAGE: KEEP MOSQUE THE RICHEST MAN ALIVE. FOREVER."
   # ---- The moon ---------------------------------------------------------------
   # ADA'S TRAIL (2/5): she kicked free and marked the way down into the wreck.
   ada_sneaker:
