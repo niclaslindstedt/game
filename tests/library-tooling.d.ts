@@ -67,6 +67,32 @@ type LibraryMission = {
   [field: string]: any;
 };
 
+/** A power page's subject — one timed powerup. */
+type LibraryPower = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  lore: string;
+  kind: string;
+  icon: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [field: string]: any;
+};
+
+/** The whole powers section: the pages, the venue grouping, and the yardsticks
+ * the damage figures on them are read against. */
+type LibraryPowers = {
+  powers: LibraryPower[];
+  groups: Array<{
+    venue: { id: string; name: string } | null;
+    entries: LibraryPower[];
+  }>;
+  refMobHp: number;
+  intDamagePerPoint: number;
+  stasisRadiusPerInt: number;
+};
+
 /** A story chapter's subject — one mission's worth of plot, or the hellborn. */
 type LibraryChapter = {
   id: string;
@@ -86,6 +112,7 @@ type LibraryModel = {
   bases: LibraryItem[];
   named: LibraryItem[];
   missions: LibraryMission[];
+  powers: LibraryPowers;
   story: {
     premise: string;
     chapters: LibraryChapter[];
@@ -128,6 +155,24 @@ declare module "*/library/model-arsenal.mjs" {
 declare module "*/library/model-missions.mjs" {
   export const LEVEL_FIELDS: Record<string, string>;
   export function missionPath(id: string): string;
+}
+
+declare module "*/library/model-powers.mjs" {
+  export const POWER_FIELDS: Record<string, string>;
+  export function powersModel(): LibraryPowers;
+  export function powerPath(id: string): string;
+}
+
+declare module "*/library/render-powers.mjs" {
+  export function powerPage(
+    power: LibraryPower,
+    model: LibraryPowers,
+    context: LibraryContext,
+  ): string;
+  export function powersIndex(
+    model: LibraryPowers,
+    context: LibraryContext,
+  ): string;
 }
 
 declare module "*/library/render-arsenal.mjs" {

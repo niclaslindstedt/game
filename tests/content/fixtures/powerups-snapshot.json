@@ -13,6 +13,7 @@
       "hot": "236, 248, 255",
       "spark": "200, 232, 255"
     },
+    "lore": "A launch-pad deflector panel, held. It eats a chunk of the hero's own healthbar in incoming damage and then SHATTERS — the power ends with its pool rather than with its clock — which makes it the one powerup that is spent BEFORE the blow lands rather than after it.",
     "name": "BLAST SHIELD",
     "rarity": 30
   },
@@ -27,6 +28,7 @@
       "hot": "255, 244, 206",
       "spark": "255, 226, 140"
     },
+    "lore": "What the residents actually bought down here. While it holds, the killing blow is not permitted: damage that would take the hero under leaves him standing on one hp instead. It buys a window, never a life — when it lapses the next blow kills like any other.",
     "name": "CONTINUITY PROTOCOL",
     "rarity": 10,
     "uniqueHeld": true,
@@ -45,6 +47,7 @@
       "hot": "240, 250, 255",
       "spark": "196, 232, 255"
     },
+    "lore": "A host gunslinger's last draw, still loaded. Phantom rounds crack off on their own and go looking for the nearest thing wearing a hat, whatever the hero happens to have in his hands — so it stacks on top of a build rather than replacing one. Two hands, two guns.",
     "name": "DEAD MAN'S HAND",
     "rarity": 80,
     "stackable": true,
@@ -73,6 +76,7 @@
       "spark": "232, 176, 112",
       "wellLook": "grit"
     },
+    "lore": "A rover-scale cyclone cut loose off the red desert. It HUNTS: the column walks itself to the nearest body, drags what it reaches into the grit and grinds it. Fire and forget — spend it into a crowd and go fight somewhere else while it works.",
     "name": "DUST DEVIL",
     "rarity": 70,
     "well": {
@@ -95,6 +99,7 @@
       "spark": "206, 150, 255",
       "wellLook": "void"
     },
+    "lore": "One of the road's own black holes, torn open where the hero stands and left there. It does not follow him: it holds that ground, hauling everything that comes near into the throat and crushing it. Drop it in a doorway and the doorway stops being one.",
     "name": "EVENT HORIZON",
     "rarity": 15,
     "well": {
@@ -116,6 +121,7 @@
       "hot": "255, 236, 178",
       "spark": "255, 196, 92"
     },
+    "lore": "Three igniter charges off the assembly floor, lit and set turning around the man who lit them. It is the one power with no reach at all — the ring IS the weapon — so it is spent by walking INTO the crowd rather than away from it, and a second pickup thickens the ring rather than widening it.",
     "name": "FIRE ORBS",
     "orbit": {
       "angularSpeed": 3.2,
@@ -139,6 +145,7 @@
       "hot": "226, 246, 255",
       "spark": "168, 224, 255"
     },
+    "lore": "A test-fired thruster strapped to the hero's back. He drags the engine wash behind him and the floor stays lit: the power is MOVEMENT, so the way to spend it is to run the horde over your own exhaust rather than to stand and burn. Two wakes lay a wider burn.",
     "name": "ION WAKE",
     "stackable": true,
     "trail": {
@@ -160,6 +167,7 @@
       "hot": "255, 236, 200",
       "spark": "216, 190, 150"
     },
+    "lore": "The park's LONGHORN line, off its leash and pointed the other way. Three tonnes of licensed robotics comes through in a line and keeps going through whatever is standing in it. The heaviest thing in the dock: slow, wide, and it does not stop at the first body — so it is spent down the length of a crowd rather than into the middle of one.",
     "name": "IRON STAMPEDE",
     "rarity": 30,
     "volley": {
@@ -186,6 +194,7 @@
       "hot": "255, 208, 168",
       "spark": "255, 226, 150"
     },
+    "lore": "A salvage hook wound the wrong way round, hauling every loose thing on the floor to the man instead of the man to it. The only power in the dock that does no damage and grants no protection: what it buys is the loot off ground the hero has no business standing still on.",
     "magnet": {
       "pullSpeed": 200,
       "radius": 80,
@@ -204,6 +213,7 @@
       "hot": "255, 255, 255",
       "spark": "232, 238, 248"
     },
+    "lore": "The sky over the far side still hasn't finished falling. Struck regolith comes down on the fight in twos, cratering wherever it lands. The only power that reaches PAST the hero's own body, so it is the one that clears the pack he is running away from rather than the one on top of him.",
     "name": "MOONFALL",
     "rain": {
       "count": 2,
@@ -226,6 +236,7 @@
       "hot": "236, 252, 255",
       "spark": "206, 242, 250"
     },
+    "lore": "What ARMSTRONG has been wearing out there. For a handful of seconds the hero is as dead as the things chasing him: they walk him down and their hands go straight through. It buys time and never damage — it is the escape hatch, and it drifts him along faster than boots ever did.",
     "name": "PALE SHROUD",
     "phase": {
       "speedMult": 1.35
@@ -243,6 +254,7 @@
       "hot": "255, 246, 214",
       "spark": "255, 214, 120"
     },
+    "lore": "A tap straight off the colony's fusion stack. Nothing is conjured and nothing is thrown: the hero's OWN weapon runs hot, swinging harder and coming around faster, so what it is worth depends entirely on what he is holding. The power for the fight already being won, to end it before it turns.",
     "name": "REACTOR SURGE",
     "rarity": 30,
     "surge": {
@@ -255,6 +267,7 @@
     "icon": "icon_nuke",
     "id": "screen_nuke",
     "kind": "nuke",
+    "lore": "The one power that is over the instant it is spent. It bills every body within sight — minion, elite and boss alike, nobody exempt — twice what the average one of them is carrying, so the rank and file are simply gone and the heavy things are merely badly hurt. It is the answer to a room, never the answer to a fight.",
     "name": "NUKE",
     "nuke": {
       "radius": 240
@@ -272,6 +285,7 @@
       "hot": "255, 226, 182",
       "spark": "255, 176, 46"
     },
+    "lore": "The VAULT WARDEN's own defence grid, repurposed. Four guns bolt themselves to the floor where the power was spent and rake everything that comes into the room. It holds GROUND rather than the hero: plant it on the choke he is about to be pushed off, then go stand somewhere else.",
     "name": "SENTRY GRID",
     "rarity": 40,
     "turret": {
@@ -296,6 +310,7 @@
       "hot": "226, 248, 255",
       "spark": "198, 240, 255"
     },
+    "lore": "A holding field of the kind the pad uses on things it would rather not have moving. It does no damage whatsoever and it does not stop the horde — everything inside it simply arrives at a crawl, which is the difference between being surrounded and being followed.",
     "name": "STASIS FIELD",
     "rarity": 70,
     "stasis": {
@@ -308,6 +323,7 @@
     "icon": "icon_storm",
     "id": "storm_cell",
     "kind": "storm",
+    "lore": "A charged cell that will not hold its charge, grounding itself through whatever body is nearest on a beat the hero has no say in. It picks its own target and it never misses; the only way to waste one is to be standing somewhere with nothing in range.",
     "name": "STORM CELL",
     "stackable": true,
     "storm": {
@@ -327,6 +343,7 @@
       "hot": "232, 208, 255",
       "spark": "196, 154, 255"
     },
+    "lore": "The rift's answer to being walked through. A ring of nothing washes out of the hero on a beat, unwriting what it touches and throwing the rest clear. The crowd-breaker: it will not kill a boss, it gives back the room that was being lost.",
     "name": "THE UNMAKING",
     "pulse": {
       "damage": 30,

@@ -567,6 +567,8 @@ adds. The catalog KEY is the id — never repeat it inside the entry.
 powerups:
   mymod_spore_bloom:
     name: SPORE BLOOM
+    lore: > # required — what it IS and how it wants to be spent
+      Vault-grown spores in a pressurised canister...
     kind: trail # the effect it LEADS with (see below)
     durationMs: 11000
     stackable: true # several copies may run at once
@@ -578,6 +580,14 @@ powerups:
       damage: 9
       tickMs: 320
 ```
+
+Required: `name`, `lore`, `kind`, `durationMs`, `icon`, and the effect block
+your `kind` names.
+
+`lore` is a short paragraph, in the same register as an enemy's — and it is
+required for the same reason. Nothing in the GAME ever explains a power: it
+arrives as an icon on the floor, runs for a few seconds and is gone. So say
+what it is and how it wants to be spent, in a sentence or two.
 
 ### A power is a COMPOSITION of effects
 

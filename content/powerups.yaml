@@ -28,6 +28,12 @@
 # power's `kind` decides which param block it must carry (and it may carry only
 # that one); the block's fields are documented on `AbilityDef`.
 #
+#   lore        REQUIRED, and the one field here written for a READER rather
+#               than for the engine: a sentence or two on what the power IS and
+#               how it wants to be spent. Nothing in the GAME ever explains a
+#               power — it arrives as an icon, runs for six seconds and is gone
+#               — so the library is its only surface, and a power without one
+#               fails the build exactly as a monster without one does.
 #   stackable   several copies may run at once (a second STORM CELL doubles the
 #               lightning). Off = a running copy blocks re-activation and the
 #               pickup stays banked instead of being wasted.
@@ -59,6 +65,11 @@ powerups:
   # ── THE CLASSICS (SPACEZ HQ) ──────────────────────────────────────────────
   fire_orbs:
     name: FIRE ORBS
+    lore: >-
+      Three igniter charges off the assembly floor, lit and set turning around
+      the man who lit them. It is the one power with no reach at all — the ring
+      IS the weapon — so it is spent by walking INTO the crowd rather than away
+      from it, and a second pickup thickens the ring rather than widening it.
     kind: orbit
     durationMs: 12000
     stackable: true
@@ -79,6 +90,11 @@ powerups:
 
   storm_cell:
     name: STORM CELL
+    lore: >-
+      A charged cell that will not hold its charge, grounding itself through
+      whatever body is nearest on a beat the hero has no say in. It picks its
+      own target and it never misses; the only way to waste one is to be
+      standing somewhere with nothing in range.
     kind: storm
     durationMs: 10000
     stackable: true
@@ -90,6 +106,11 @@ powerups:
 
   stasis_field:
     name: STASIS FIELD
+    lore: >-
+      A holding field of the kind the pad uses on things it would rather not
+      have moving. It does no damage whatsoever and it does not stop the horde
+      — everything inside it simply arrives at a crawl, which is the difference
+      between being surrounded and being followed.
     kind: stasis
     # A strong utility — it does not kill, it buys the room to.
     rarity: 70
@@ -106,6 +127,12 @@ powerups:
 
   screen_nuke:
     name: NUKE
+    lore: >-
+      The one power that is over the instant it is spent. It bills every body
+      within sight — minion, elite and boss alike, nobody exempt — twice what
+      the average one of them is carrying, so the rank and file are simply gone
+      and the heavy things are merely badly hurt. It is the answer to a room,
+      never the answer to a fight.
     kind: nuke
     # Instant — it never becomes a running ability.
     durationMs: 0
@@ -120,6 +147,11 @@ powerups:
 
   item_magnet:
     name: MAGNET
+    lore: >-
+      A salvage hook wound the wrong way round, hauling every loose thing on the
+      floor to the man instead of the man to it. The only power in the dock that
+      does no damage and grants no protection: what it buys is the loot off
+      ground the hero has no business standing still on.
     kind: magnet
     durationMs: 12000
     icon: icon_magnet
@@ -134,12 +166,13 @@ powerups:
       pullSpeed: 200
 
   # ── SPACEZ HQ: the assembly floor's own two ───────────────────────────────
-  # A test-fired thruster strapped to the hero's back. He drags the engine wash
-  # behind him and the floor stays lit: the power is MOVEMENT, so the way to
-  # use it is to run the horde over your own exhaust. Two wakes lay a wider
-  # burn.
   ion_wake:
     name: ION WAKE
+    lore: >-
+      A test-fired thruster strapped to the hero's back. He drags the engine
+      wash behind him and the floor stays lit: the power is MOVEMENT, so the
+      way to spend it is to run the horde over your own exhaust rather than to
+      stand and burn. Two wakes lay a wider burn.
     kind: trail
     durationMs: 10000
     stackable: true
@@ -156,12 +189,13 @@ powerups:
       damage: 9
       tickMs: 220
 
-  # A launch-pad deflector panel, held. It eats a chunk of the hero's own
-  # healthbar in incoming damage and then SHATTERS (the power ends with its
-  # pool, not with a clock), which makes it the one powerup you spend BEFORE
-  # the hit lands rather than after.
   blast_shield:
     name: BLAST SHIELD
+    lore: >-
+      A launch-pad deflector panel, held. It eats a chunk of the hero's own
+      healthbar in incoming damage and then SHATTERS — the power ends with its
+      pool rather than with its clock — which makes it the one powerup that is
+      spent BEFORE the blow lands rather than after it.
     kind: barrier
     # A heavy: most of the hero's own healthbar, absorbed.
     rarity: 30
@@ -176,12 +210,13 @@ powerups:
       poolFrac: 0.6
 
   # ── THE MOON: rock and ghosts ─────────────────────────────────────────────
-  # The sky over the far side still hasn't finished falling. Struck regolith
-  # drops on the fight in twos, cratering wherever it lands. The only powerup
-  # that reaches PAST the hero's own body, so it clears the pack you are
-  # running away from.
   moonfall:
     name: MOONFALL
+    lore: >-
+      The sky over the far side still hasn't finished falling. Struck regolith
+      comes down on the fight in twos, cratering wherever it lands. The only
+      power that reaches PAST the hero's own body, so it is the one that clears
+      the pack he is running away from rather than the one on top of him.
     kind: rain
     # A good area power, and the only one that reaches past the hero.
     rarity: 70
@@ -200,12 +235,13 @@ powerups:
       damage: 38
       range: 190
 
-  # What ARMSTRONG has been wearing out there. For a handful of seconds the
-  # hero is as dead as the things chasing him: they walk him down and their
-  # hands go straight through. No damage of its own — it is the escape hatch,
-  # and it drifts him along faster than boots ever did.
   pale_shroud:
     name: PALE SHROUD
+    lore: >-
+      What ARMSTRONG has been wearing out there. For a handful of seconds the
+      hero is as dead as the things chasing him: they walk him down and their
+      hands go straight through. It buys time and never damage — it is the
+      escape hatch, and it drifts him along faster than boots ever did.
     kind: phase
     # A fight-turner: the escape hatch out of a closed circle.
     rarity: 40
@@ -220,12 +256,13 @@ powerups:
       speedMult: 1.35
 
   # ── MARS: the red colony ──────────────────────────────────────────────────
-  # A rover-scale cyclone cut loose off the red desert. It HUNTS: the column
-  # walks itself to the nearest body, drags what it reaches into the grit and
-  # grinds it. Fire and forget — the hero fights on somewhere else while it
-  # works.
   dust_devil:
     name: DUST DEVIL
+    lore: >-
+      A rover-scale cyclone cut loose off the red desert. It HUNTS: the column
+      walks itself to the nearest body, drags what it reaches into the grit and
+      grinds it. Fire and forget — spend it into a crowd and go fight somewhere
+      else while it works.
     kind: well
     # A good area power — fire and forget, and it hunts.
     rarity: 70
@@ -244,12 +281,14 @@ powerups:
       pull: 22
       chase: 95
 
-  # A tap straight off the colony's fusion stack. Nothing is conjured and
-  # nothing is thrown: the hero's OWN weapon runs hot, swinging harder and
-  # coming around faster. The powerup for the fight you are already winning, to
-  # end it before it turns.
   reactor_surge:
     name: REACTOR SURGE
+    lore: >-
+      A tap straight off the colony's fusion stack. Nothing is conjured and
+      nothing is thrown: the hero's OWN weapon runs hot, swinging harder and
+      coming around faster, so what it is worth depends entirely on what he is
+      holding. The power for the fight already being won, to end it before it
+      turns.
     kind: surge
     # A heavy: the hero's own weapon at 1.65x, swinging faster.
     rarity: 30
@@ -265,12 +304,13 @@ powerups:
       cooldownMult: 0.68
 
   # ── THE RIFT: the void road ───────────────────────────────────────────────
-  # One of the road's own black holes, torn open where the hero stands and left
-  # there. It does not follow him: it holds that ground, hauling everything
-  # that comes near into the throat and crushing it. Drop it in a doorway and
-  # the doorway stops being one.
   event_horizon:
     name: EVENT HORIZON
+    lore: >-
+      One of the road's own black holes, torn open where the hero stands and
+      left there. It does not follow him: it holds that ground, hauling
+      everything that comes near into the throat and crushing it. Drop it in a
+      doorway and the doorway stops being one.
     kind: well
     # It deletes a doorway for six seconds. Nearly the rarest thing
     # in the dock.
@@ -291,12 +331,13 @@ powerups:
       # Anchored: it holds the ground it was spent on.
       chase: 0
 
-  # The rift's answer to being walked through. A ring of nothing washes out of
-  # the hero on a beat, unwriting what it touches and throwing the rest clear.
-  # The crowd-breaker: it does not kill a boss, it gives you back the room you
-  # were losing.
   the_unmaking:
     name: THE UNMAKING
+    lore: >-
+      The rift's answer to being walked through. A ring of nothing washes out
+      of the hero on a beat, unwriting what it touches and throwing the rest
+      clear. The crowd-breaker: it will not kill a boss, it gives back the room
+      that was being lost.
     kind: pulse
     # A fight-turner: the crowd-breaker that gives back the room.
     rarity: 40
@@ -315,11 +356,13 @@ powerups:
       push: 46
 
   # ── EASTWORLD: the robot west ─────────────────────────────────────────────
-  # A host gunslinger's last draw, still loaded. Phantom rounds crack off on
-  # their own and go looking for the nearest thing wearing a hat, whatever the
-  # hero has in his hands. Two hands, two guns.
   dead_mans_hand:
     name: DEAD MAN'S HAND
+    lore: >-
+      A host gunslinger's last draw, still loaded. Phantom rounds crack off on
+      their own and go looking for the nearest thing wearing a hat, whatever
+      the hero happens to have in his hands — so it stacks on top of a build
+      rather than replacing one. Two hands, two guns.
     kind: volley
     # Ordinary-ish: good damage, but it needs the hero to stay in it.
     rarity: 80
@@ -343,12 +386,14 @@ powerups:
       range: 240
       homing: 3.4
 
-  # The park's LONGHORN line, off its leash and pointed the other way. Three
-  # tonnes of licensed robotics comes through in a line and keeps going through
-  # whatever is standing in it. The heaviest thing in the dock: slow, wide, and
-  # it does not stop at the first body.
   iron_stampede:
     name: IRON STAMPEDE
+    lore: >-
+      The park's LONGHORN line, off its leash and pointed the other way. Three
+      tonnes of licensed robotics comes through in a line and keeps going
+      through whatever is standing in it. The heaviest thing in the dock: slow,
+      wide, and it does not stop at the first body — so it is spent down the
+      length of a crowd rather than into the middle of one.
     kind: volley
     # A heavy: three tonnes through eight bodies without slowing.
     rarity: 30
@@ -372,13 +417,13 @@ powerups:
       pierce: 8
 
   # ── THE BUNKER: the vault ─────────────────────────────────────────────────
-  # What the residents actually bought down here. While it holds, the killing
-  # blow is not permitted: damage that would take the hero under leaves him
-  # standing on one hp instead. It buys a window, never a life — when it lapses
-  # the next blow kills like any other. One in the dock at a time; a pocket
-  # full of these would be a pocket full of lives.
   continuity_protocol:
     name: CONTINUITY PROTOCOL
+    lore: >-
+      What the residents actually bought down here. While it holds, the killing
+      blow is not permitted: damage that would take the hero under leaves him
+      standing on one hp instead. It buys a window, never a life — when it
+      lapses the next blow kills like any other.
     kind: ward
     # THE RAREST POWER IN THE GAME: the killing blow is not permitted.
     # Nothing else in the dock hands a run back.
@@ -394,12 +439,13 @@ powerups:
     ward:
       floor: 1
 
-  # The VAULT WARDEN's own defence grid, repurposed. Four guns bolt themselves
-  # to the floor where the power was spent and rake everything that comes into
-  # the room. It holds GROUND, not the hero: plant it on the choke you are
-  # about to be pushed off, then go stand somewhere else.
   sentry_grid:
     name: SENTRY GRID
+    lore: >-
+      The VAULT WARDEN's own defence grid, repurposed. Four guns bolt
+      themselves to the floor where the power was spent and rake everything
+      that comes into the room. It holds GROUND rather than the hero: plant it
+      on the choke he is about to be pushed off, then go stand somewhere else.
     kind: turret
     # A fight-turner: four guns holding a choke the hero has left.
     rarity: 40

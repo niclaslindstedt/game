@@ -624,6 +624,7 @@ export {
   abilityDef,
   abilityRarity,
   hasAbilityBlock,
+  NUKE_DEF_ID,
   pickAbility,
   ABILITY_BLOCKS,
   type AbilityDef,

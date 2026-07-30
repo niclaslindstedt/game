@@ -79,6 +79,22 @@ export type AbilityDef = {
   /** Display name (pickup toast, HUD). */
   name: string;
   /**
+   * WHAT THIS POWER IS, in prose — one authored paragraph, REQUIRED.
+   *
+   * The twin of `EnemyDef.lore`, and it exists for the same reason: nothing in
+   * the game ever explains a power. It arrives as an icon on the floor, runs
+   * for a few seconds and is gone, so a player who never worked out that the
+   * ION WAKE wants to be run in circles never finds out. The dock has no room
+   * to say so and the fight is the wrong moment to read it — which leaves the
+   * LIBRARY as the only surface that can, and the only reader of this field.
+   *
+   * Written in the same dry register an item's `description` is, and bound by
+   * the story chain exactly as a monster's lore is: it may ELABORATE what
+   * `docs/story.md` and `docs/manuscript.md` already establish and must never
+   * introduce a plot fact of its own.
+   */
+  lore: string;
+  /**
    * The block this power LEADS WITH — a label, never a dispatch key. It names
    * the def's headline effect for the surfaces that need one word for a whole
    * power (the bot's valuation, the ONE NUKE loot rule, the screen aura), and
@@ -401,6 +417,23 @@ export type AbilityDef = {
 
 /** The shipped catalog, compiled from `content/powerups.yaml`. */
 export const ABILITY_DEFS: Record<string, AbilityDef> = GENERATED_POWERUPS;
+
+/**
+ * THE ONE POWER THE ENGINE KNOWS BY NAME — the screen-nuke.
+ *
+ * Every other power reaches the player exactly one way: a level's authored
+ * `loot.abilityPool`, picked from by weight. The bomb is not in any pool at
+ * all. It has two channels of its own written into the loot rules — a flat
+ * slice of every payout (`LOOT.nukeShare`) and the packed-field mercy roll
+ * (`crowdBombChance`) — plus the ONE NUKE gate that stops a second one existing
+ * while one waits, and the blast the hero's own detonation reads its radius
+ * from.
+ *
+ * So the id is a constant rather than a string literal repeated at five call
+ * sites, exactly as `SIDEARM_DEF_ID` is for the other thing the engine mints
+ * without a catalog asking it to.
+ */
+export const NUKE_DEF_ID = "screen_nuke";
 
 // Active registry the accessor reads (defaults to the shipped catalog;
 // tests swap in fixtures via `registerDefs`). See src/index.ts.
