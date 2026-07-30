@@ -5605,7 +5605,11 @@ html.app-locked body {
   overflow: hidden;
 }
 
-.dialogue-portrait {
+/* The framed portrait's own art, shared by every surface that shows a speaker's
+   face (SpritePortrait.tsx): the dialogue box, the quest offer, the merchant's
+   counter. Only the FRAME differs between them — see each surface's own
+   `*-portrait-frame` rule. */
+.sprite-portrait {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -6460,14 +6464,16 @@ canvas.tier-artifact {
 
 /* ---- The merchant's shop (ShopPanel.tsx) --------------------------------- */
 
-/* Reuses the inventory panel's window skin; its own rows below. A STABLE
-   height (not content-sized) so selecting a short armor card vs a tall weapon
-   card doesn't grow and shrink the whole modal — the detail row absorbs the
-   difference by filling and scrolling. Capped to the viewport on a short
-   landscape screen. */
+/* Reuses the inventory panel's window skin; its own rows below. CONTENT-SIZED,
+   capped to the viewport: the panel used to hold a fixed 33rem height so the
+   detail row at its foot could absorb the difference between a short armor card
+   and a tall weapon one without the modal jumping. That row is now a floating
+   card OUTSIDE the layout (ShopDealCard), so nothing inside the panel changes
+   height when a selection changes — and the counter shrinks to the stall and the
+   bag it actually has, which on a phone is most of a screen given back. */
 .shop-panel {
   gap: 0.7rem;
-  height: min(92vh, 33rem);
+  max-height: min(92vh, 33rem);
   /* The shop is a tap-only surface (no drag-to-equip), so drop the inventory
      panel's `touch-action: none`: a touch anywhere must be free to pan the bag
      grid vertically. The ancestor's `none` would otherwise veto the cell-level
@@ -6475,12 +6481,13 @@ canvas.tier-artifact {
   touch-action: pan-y;
 }
 
-/* Merchant name on the left, the purse on the right. */
-/* The merchant's name sits CENTRED over his stall like every other overlay
-   heading, with the purse pinned to the right rail. A three-column grid with a
-   mirrored empty first column keeps the name centred on the PANEL rather than
-   on the space the purse leaves — a plain space-between put the title on the
-   left rail and made this the one overlay whose heading didn't line up. */
+/* The trader's FACE on the left rail, his name CENTRED over his stall like every
+   other overlay heading, the purse pinned right. A three-column grid keeps the
+   name centred on the PANEL rather than on the space its neighbours leave — a
+   plain space-between put the title on the left rail and made this the one
+   overlay whose heading didn't line up. The portrait rides in the column that
+   used to be empty for exactly that mirroring, so adding him moved the name by
+   nothing. */
 .shop-header {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -6488,10 +6495,39 @@ canvas.tier-artifact {
   gap: 0.75rem;
 }
 
-/* The name canvas also has to shake off the panel-wide `align-self:
-   flex-start` parking, which in a grid row rides it up against the top edge
-   instead of centring it on the purse beside it. */
-.shop-header > :first-child {
+/* The portrait and the name canvas both have to shake off the panel-wide
+   `align-self: flex-start` parking, which in a grid row rides them up against
+   the top edge instead of centring them on the purse beside them. */
+.shop-header > .shop-portrait-frame {
+  grid-column: 1;
+  justify-self: start;
+  align-self: center;
+}
+
+/* THE TRADER'S FACE, on the left rail of the counter's header. The stall is the
+   only place in the game where you talk to somebody through a grid of icons
+   rather than a speech box, and without him on it the shop read as a vending
+   machine — the whole point of the wandering merchant is that he is a PERSON who
+   dresses for the venue (a vendor's uniform at HQ, a patched 70s suit on the
+   moon). Deliberately the SAME size and rim as the quest giver's portrait
+   (`.quest-portrait-frame`): the two are the same idiom — somebody is talking to
+   you — and a counter whose face was a size of its own would read as a different
+   kind of thing. */
+.shop-portrait-frame {
+  flex: 0 0 auto;
+  width: 3.4rem;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  background: rgba(6, 8, 12, 0.5);
+  border: 2px solid #5c4b24;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.shop-header > .shop-name {
   grid-column: 2;
   justify-self: center;
   align-self: center;
@@ -6531,6 +6567,10 @@ canvas.tier-artifact {
   width: 2.6rem;
   height: 2.6rem;
   aspect-ratio: auto;
+  /* The stall cell is the containing block for its own "how many left" chip,
+     which is absolutely positioned (`.shop-stall-count`). Without this the chip
+     escapes to the nearest positioned ancestor and the count vanishes. */
+  position: relative;
 }
 
 .shop-stall-item.sold-out .inv-cell {
@@ -6574,93 +6614,72 @@ canvas.tier-artifact {
   padding: 3px;
 }
 
-/* The deal bar: the selection's full stat card on the left, the one BUY/SELL
-   action on the right. It FILLS the panel's leftover height (so the modal
-   stays one stable size) and the card side scrolls inside it when an item runs
-   taller than the box — the deal button never wraps below and pins to the top.
-   No `flex-wrap`: the button always sits to the card's right, never jumping
-   under it on a long, wrapped item name. */
-.shop-detail {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.6rem;
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 0.55rem 0.7rem;
-  background: rgba(6, 8, 12, 0.6);
-  border: 2px solid #232b35;
-  border-radius: 3px;
-}
-
-/* The card side: the item's icon beside its stat lines (same reading as the
-   inventory tooltip). Grows to take the bar's width and scrolls on its own
-   when the card is taller than the box; the deal button holds its own size on
-   the right and stays put. */
-.shop-detail-info {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 0.6rem;
-  flex: 1 1 auto;
-  align-self: stretch;
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.shop-detail-icon {
-  width: 3.2rem;
-  height: 3.2rem;
-  aspect-ratio: auto;
-  flex: 0 0 auto;
-  cursor: default;
-}
-
-.shop-detail-card {
+/* THE FLOATING DEAL CARD (ShopDealCard.tsx): the item-card skin, portaled to
+   <body> and positioned in viewport coordinates beside the cell that raised it
+   (@ui/lib/anchor-box.ts). It borrows `.item-tooltip`'s fixed positioning and
+   stacking whole — the inventory's hover card and the counter's are the same
+   object in two places — and adds only the room for the BUY/SELL button at its
+   foot. Capped to the viewport height with its own scroll, so a legendary's full
+   stat block on a short landscape phone scrolls inside the card instead of
+   running off the screen. */
+.shop-deal-card {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
+  gap: 0.3rem;
+  max-height: calc(100vh - 1.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* `.item-tooltip` ignores the pointer (it is a HOVER card there, and a card
+     that ate clicks would block the cell under it). Here the card is the trade's
+     own control surface — its button has to be pressable, and its presses have
+     to reach the wrapper that swallows them — so it opts back in. */
+  pointer-events: auto;
 }
 
-/* No longer spelling "SELL", so it can sit a touch tighter to its coins. */
-.shop-deal-btn {
-  padding: 0.4rem 0.7rem;
-  flex: 0 0 auto;
-}
-
-/* Portrait / narrow: the side-by-side row leaves the card too little width and
-   a long item name clips at the button's edge. Stack instead — the stat card
-   spans the full panel width (names wrap cleanly) with the deal button as a
-   full-width tap target beneath it. Consistent within the orientation, so the
-   modal still never jumps. */
-@media (max-aspect-ratio: 4/3) {
-  .shop-detail {
-    flex-direction: column;
-  }
-
-  .shop-detail .shop-deal-btn {
-    align-self: stretch;
-    justify-content: center;
-  }
-}
-
-/* The empty deal bar: park the "tap an item" hint in the middle of the box
-   rather than a whisper in its top corner. */
-.shop-detail-empty {
-  flex: 1 1 auto;
-  align-self: stretch;
+/* The card's own BUY/SELL button spans its foot — a full-width tap target under
+   the facts it is acting on, like the inventory tooltip's USE row. */
+/* The card's own BUY/SELL action, sized like the quest box's ACCEPT — a
+   content-width button on a right-hand action rail, not a banner across the
+   foot. It was stretched full-width at first (copying the inventory tooltip's
+   USE row), which put a 150x56 slab under "coin 6" and spent a quarter of the
+   card's area on its smallest fact. The selector carries TWO classes on purpose:
+   `.pixel-button`'s own `0.75rem 1.5rem` is a single class and lands later in
+   this file, so a one-class override here silently loses to it — which is
+   exactly how the slab got its height. */
+.shop-deal-card .shop-deal-btn {
+  /* FLEX, not the button's default block: `.pixel-button` inherits a 25.6px
+     line-height from the body font, so an 18px-tall label sat in a 25.6px line
+     box and the button carried 8px of leading it had no text to use. That was
+     the last of the excess height, and no amount of padding tuning could reach
+     it. */
   display: flex;
   align-items: center;
+  align-self: flex-end;
   justify-content: center;
+  /* Sized to the counter's OWN button height — CLOSE is 28px and the bulk-sell
+     tools 38px, so a 45px deal button was the tallest thing in the shop, on the
+     card whose whole job is the stat lines above it. The min-width keeps a
+     one-digit price a comfortable thumb target at the shorter height. */
+  min-width: 4rem;
+  padding: 0.22rem 0.7rem;
+  margin-top: 0.35rem;
 }
 
-/* Outrank the blanket `.inventory-panel canvas` flex-start parking. */
-.shop-detail .shop-detail-empty canvas {
-  align-self: center;
+/* The portal wrapper is a BOX-LESS pass-through: `display: contents` keeps it in
+   the DOM (so the card's presses still bubble to the handlers that swallow them,
+   which is the wrapper's only job) while laying down no rect of its own — and,
+   crucially, no stacking context, so the card keeps `.item-tooltip`'s z-index and
+   stays above the panel it was opened from. */
+.shop-deal-portal {
+  display: contents;
+}
+
+/* HOW MANY ARE LEFT, on the stall cell. Reuses the consumable dock's count chip
+   (same shape, same dark backing) — one badge idiom for "how many of these do I
+   have", whether the answer is in the pouch or on the counter. */
+.shop-stall-count {
+  right: 1px;
+  bottom: 0;
 }
 
 /* The deal button's face: verb, coin, amount on one baseline. */
@@ -6670,9 +6689,14 @@ canvas.tier-artifact {
   gap: 0.3rem;
 }
 
+/* The coin inside the BUY/SELL button — the SAME size as the coin on a stall
+   price tag (`.shop-coin`), because it is the same coin saying the same thing.
+   At 1.3rem it was the tallest element in the card by a distance and set the
+   button's whole height: 21px of glyph beside 10px of price text, which is what
+   made a compact button impossible however its padding was tuned. */
 .shop-deal-coin {
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 /* The counter's bottom row: the bulk-sell tools on the left, the CLOSE button
@@ -10906,13 +10930,6 @@ canvas.tier-artifact {
   background: rgba(6, 8, 12, 0.5);
   border: 2px solid #5c4b24;
   overflow: hidden;
-}
-
-.quest-portrait {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  image-rendering: pixelated;
 }
 
 .quest-content {
