@@ -355,6 +355,24 @@ For each candidate, in the numbered order:
 - **Color is a budget.** Ramps from the family palette, few and far
   apart in value; one accent hue for the focal point (eyes, wound, core)
   buys more than five new shades.
+- **A light effect drawn the cheap way reads as a mistake.** Two shortcuts fail
+  the same way — they approximate a lit surface with a flat two-tone rule, and
+  the eye reads the rule instead of the light:
+  - a **chromatic fringe / ghost** painted as the first and last lit pixel of
+    every row is an OUTLINE, not a split. Real mis-registration is a DISPLACED
+    COPY of the whole silhouette — offset the body by 1px, paint the cold hue
+    where it lags and the warm hue where it leads, and only where the solid body
+    isn't. (2px displacement on a boxy body gives solid bars, not a fringe.)
+  - a **facet** painted as a light half and a dark half is a flat silhouette
+    with a shadow. Crystal needs a RAMP — three or four planes (lit edge, face,
+    turn, back face) meeting at hard diagonal ridges — and a jagged multi-tip
+    silhouette rather than one dome.
+- **A loose speck must be at least two pixels.** `make assets` flags any lit
+  pixel with no lit 4-neighbor as an orphan (it reads as noise at 1x), so
+  authored "flecks flung off around it" and "a tail scattering into loose
+  specks" fail the lint one pixel at a time. Draw each as a 2px pair — still a
+  speck at 16px, and the pair satisfies the rule. Budget for this whenever a
+  subject asks for sparks, embers, tails, or debris.
 - **Icons read in the grid.** Item icons live in an inventory grid and
   the drop rain — a strong local silhouette and one identifying prop
   (barrel, blade, cross) beat miniature realism at 12×12.
