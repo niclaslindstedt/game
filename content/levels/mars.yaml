@@ -5,7 +5,7 @@ description: |-
   - the desert earns its size before you're let inside. A breather + the colony
   merchant wait at the airlock threshold. ACT 2 is the colony proper: deck
   plating, the servo and fembot lines, and a con that CLIMBS hard through a tight
-  serpentine (BUILD GATES at the entry, OPTIMUSK PRIME mid, PETER SEAL on the
+  serpentine (BUILD GATES at the entry, OPTIMUSK PRIME mid, PETER TEAL on the
   approach) to ELON MOSQUE at the far north-east - the man who owns the planet,
   who doesn't die but flees into a rift. Two airlock gaps funnel the horde. The
   TERRARIUM is an OPTIONAL keycard detour locked in the SE corner: grab the green
@@ -195,7 +195,7 @@ spawns:
     hp: 340
   # Moved OUT of the SE terrarium cul-de-sac onto the open colony approach, so
   # the fight no longer pins the hero (and the bot) in a concave dead end.
-  - enemy: peter_seal
+  - enemy: peter_teal
     at:
       x: 2360
       y: 580

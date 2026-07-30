@@ -3416,7 +3416,7 @@
     "speed": 20,
     "sprite": "permafrost_saint"
   },
-  "peter_seal": {
+  "peter_teal": {
     "ai": {
       "aggroRadius": 250,
       "rushSpeed": 115
@@ -3456,7 +3456,7 @@
       ]
     ],
     "hp": 280,
-    "id": "peter_seal",
+    "id": "peter_teal",
     "lastWords": ["THE TITHE... IS DUE...", "...IT'S ALWAYS... DUE..."],
     "levelBonus": 3,
     "loot": {
@@ -3474,11 +3474,11 @@
       "xpArrows": 1
     },
     "lore": "He funds what people flee and what they flee to, and on Mars he keeps the shrine. MOSQUE only rents this planet; the landlords are older, scaled and cold-blooded, and their tithe has lately started asking for warm things.",
-    "name": "PETER SEAL",
+    "name": "PETER TEAL",
     "radius": 12,
     "role": "elite",
     "speed": 20,
-    "sprite": "peter_seal"
+    "sprite": "peter_teal"
   },
   "phobos_shepherd": {
     "ai": {

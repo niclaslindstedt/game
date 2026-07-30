@@ -29,7 +29,7 @@ animations:
   build_gates_walk: { frames: [build_gates_0, build_gates_1], delayMs: 300 }
   optimusk_prime_walk:
     { frames: [optimusk_prime_0, optimusk_prime_1], delayMs: 340 }
-  peter_seal_walk: { frames: [peter_seal_0, peter_seal_1], delayMs: 300 }
+  peter_teal_walk: { frames: [peter_teal_0, peter_teal_1], delayMs: 300 }
   elon_mosque_strut: { frames: [elon_mosque_0, elon_mosque_1], delayMs: 380 }
   sandstorm_churn:
     {
@@ -47,7 +47,7 @@ wounds:
   scout_rover: { splat: y, core: H }
   servo_bot: { splat: y, core: Y, scuff: H }
   mining_rover: { splat: x, core: b }
-  peter_seal: { splat: r, core: r }
+  peter_teal: { splat: r, core: r }
   elon_mosque: { splat: r, core: r }
 contrastExempt:
   [

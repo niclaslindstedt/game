@@ -1,12 +1,12 @@
-id: peter_seal
-name: PETER SEAL
+id: peter_teal
+name: PETER TEAL
 lore: >-
   He funds what people flee and what they flee to, and on Mars he keeps the
   shrine. MOSQUE only rents this planet; the landlords are older, scaled and
   cold-blooded, and their tithe has lately started asking for warm things.
 role: elite
 levelBonus: 3
-sprite: peter_seal
+sprite: peter_teal
 hp: 280
 speed: 20
 radius: 12

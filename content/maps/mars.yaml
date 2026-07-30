@@ -358,7 +358,7 @@ elites:
   - enemy: optimusk_prime
     ramp: merciless
     hp: 340
-  - enemy: peter_seal
+  - enemy: peter_teal
     ramp: endgame
     hp: 280
 
