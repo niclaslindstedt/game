@@ -1,0 +1,9 @@
+{
+  "name": "gone-in-space-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The authoritative session server: the game engine plus the wire, compiled for Node and shipped inside the desktop app (and, from PR 5, standalone).",
+  "main": "main.ts",
+  "dependencies": {}
+}

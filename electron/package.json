@@ -5,7 +5,8 @@
   "main": "dist/main.js",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "server": "node ../scripts/build-server.mjs",
+    "build": "npm run server && tsc -p tsconfig.json",
     "bundle": "node scripts/bundle-web.mjs",
     "bundle:copy": "node scripts/bundle-web.mjs --skip-build",
     "start": "npm run build && electron .",

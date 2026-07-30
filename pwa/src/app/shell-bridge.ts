@@ -4,9 +4,10 @@
 //
 // The game ships inside more than one shell: the Expo WebView (`native/`, iOS
 // and Android) and the Electron desktop app (`electron/`, Steam). Both wrap the
-// SAME built website and both answer the SAME four bridge protocols (the coin
-// store, cloud save, achievements, leaderboards) — they differ only in the pipe
-// the JSON travels down:
+// SAME built website and both answer the SAME bridge protocols (the coin store,
+// cloud save, achievements, leaderboards; plus mods and MULTIPLAYER, which only
+// the desktop shell can honour) — they differ only in the pipe the JSON travels
+// down:
 //
 //   Expo WebView   `window.ReactNativeWebView.postMessage(json)`
 //   Electron       `window.__gisShell.post(json)`  (preload → ipcRenderer)
@@ -37,7 +38,21 @@ declare global {
     ReactNativeWebView?: { postMessage(message: string): void };
     /** The Electron shell's message channel, exposed by the preload over
      * `contextBridge` (electron/src/preload.ts). Same JSON, same protocols. */
-    __gisShell?: { post(message: string): void };
+    __gisShell?: {
+      post(message: string): void;
+      /**
+       * MULTIPLAYER'S SNAPSHOT CHANNEL — the one thing this shell hands over
+       * that is not a JSON string, and the only exception to "the pipe carries
+       * text". A session publishes twenty times a second, which is not traffic
+       * for a channel built around round trips, so the shell mints a
+       * `MessagePort` pair and gives the page one end (see
+       * `pwa/src/app/net-bridge.ts` and `electron/src/net.ts`).
+       *
+       * Optional because only the desktop shell has it: the WebView shells
+       * host nothing, and a browser has no shell at all.
+       */
+      onNetPort?(listener: (port: MessagePort) => void): void;
+    };
     /** Which shell this is — set by the shell before the game boots, beside
      * `__GIS_NATIVE__`. Absent in a browser/PWA. */
     __GIS_PLATFORM__?: ShellPlatform;
