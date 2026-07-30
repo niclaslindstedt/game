@@ -48,6 +48,10 @@ import { validateSet } from "../../scripts/asset-tools/set-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import {
+  validateTalent,
+  validateTalentCatalog,
+} from "../../scripts/asset-tools/talent-schema.mjs";
+import {
   validateCapRotation,
   validateCutscene,
   validateStoryItem,
@@ -77,6 +81,7 @@ import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
 import { loadSets } from "../../scripts/set-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
+import { loadTalents } from "../../scripts/talent-data/load-yaml.mjs";
 import {
   loadCutscenes,
   loadStoryItems,
@@ -210,6 +215,14 @@ export function buildMod(modDir, catalog) {
   // mod's root — `powerups.yaml` and `companions.yaml`, exactly like
   // `ladder.yaml`.
   const powerups = loadTree(() => loadPowerups(modDir), "powerups", fail);
+  // THE TALENT TREES. A conversion could already re-skin every monster, venue
+  // and relic and still hand the player THIS game's eight melee talents — the
+  // build system was the one thing a mod could not touch. A mod's talents MERGE
+  // into the shipped trees like its monsters do (later wins), so an addon adds a
+  // talent and a conversion replaces one by shipping its id. The point ECONOMY
+  // behind them — a point per 10 chosen stat points, the shared rank ceiling —
+  // stays the game's.
+  const talents = loadTree(() => loadTalents(modDir), "talents", fail);
   // THE PARTY. A spared elite falling in beside the hero is a story beat, not a
   // stat line — so a conversion whose roster could be re-skinned but whose
   // recruits could not would be missing the payoff for sparing anything.
@@ -264,6 +277,7 @@ export function buildMod(modDir, catalog) {
   const modSounds = sounds?.entries ?? [];
   const modMusic = music?.entries ?? [];
   const modPowerups = powerups?.powerups ?? {};
+  const modTalents = talents?.talents ?? {};
   const modCompanions = companions?.companions ?? {};
   const modSets = sets?.sets ?? {};
   const modDifficulties = difficulties?.voices ?? {};
@@ -281,6 +295,7 @@ export function buildMod(modDir, catalog) {
     modSounds.length +
     modMusic.length +
     Object.keys(modPowerups).length +
+    Object.keys(modTalents).length +
     Object.keys(modCompanions).length +
     Object.keys(modSets).length +
     Object.keys(modDifficulties).length +
@@ -291,8 +306,8 @@ export function buildMod(modDir, catalog) {
   if (adds === 0) {
     fail(
       "a mod must add at least one level, map blueprint, enemy, item, sound, " +
-        "track, powerup, companion, cutscene, thought, story item or quest — " +
-        "a bundle of nothing would install and do nothing at all",
+        "track, powerup, talent, companion, cutscene, thought, story item or " +
+        "quest — a bundle of nothing would install and do nothing at all",
     );
   }
 
@@ -307,6 +322,7 @@ export function buildMod(modDir, catalog) {
     sounds: modSounds,
     music: modMusic,
     powerups: modPowerups,
+    talents: modTalents,
     companions: modCompanions,
     sets: modSets,
     cutscenes: modCutscenes,
@@ -437,6 +453,40 @@ export function buildMod(modDir, catalog) {
     const res = validatePowerup(id, def, powerupRefs);
     errors.push(...prefix(res.errors, "powerups.yaml"));
     warnings.push(...prefix(res.warnings, "powerups.yaml"));
+  }
+
+  // THE TALENT TREES, against the same schema the shipped ones go through. Its
+  // one reference is the picker's GLYPH, which fails silently at play time: a
+  // talent whose icon nothing answers to draws a blank card in the one screen
+  // the player has to choose from. The rank CEILING comes from the catalog —
+  // the shared cap is the game's economy, and a mod may choose a shallower
+  // ladder but never a deeper one.
+  {
+    const talentRefs = {
+      sprites: spriteNames,
+      maxRank: catalog.talentMaxRank,
+    };
+    for (const { id, def } of talents?.entries ?? []) {
+      const res = validateTalent(id, def, talentRefs);
+      errors.push(...prefix(res.errors, "talents.yaml"));
+      warnings.push(...prefix(res.warnings, "talents.yaml"));
+    }
+    // ONE CARRIER PER PROC, judged over BASE ∪ MOD — because a mod's talents
+    // MERGE into the shipped trees rather than replacing them, exactly as its
+    // monsters and venues do. So an addon adding a second talent that carries
+    // `parry:` would make "whose numbers apply" a question about catalog order,
+    // which is not a decision anybody made. The way to re-carry a shipped proc
+    // is to REPLACE the talent that has it (ship a talent with its id — a
+    // conversion's business), and that is what this skips a shipped carrier for.
+    const merged = {};
+    for (const [proc, owner] of Object.entries(catalog.talentProcs ?? {})) {
+      if (modTalents[owner]) continue;
+      merged[owner] = { ...(merged[owner] ?? {}), [proc]: {} };
+    }
+    Object.assign(merged, modTalents);
+    const res = validateTalentCatalog(merged);
+    errors.push(...prefix(res.errors, "talents.yaml"));
+    warnings.push(...prefix(res.warnings, "talents.yaml"));
   }
 
   // THE PARTY, against the same schema the shipped roster goes through. Its two
@@ -728,6 +778,10 @@ export function buildMod(modDir, catalog) {
       // Already `{ id → def }` with each id stamped in by the loader, which is
       // exactly the shape `registerDefs` takes.
       powerups: modPowerups,
+      // The three passive TREES, merged into the shipped ones at load — already
+      // `{ id → TalentDef }` with each id stamped in by the loader, which is
+      // exactly the shape `registerDefs({ talents })` takes.
+      talents: modTalents,
       companions: modCompanions,
       // The KITS a mod's green pieces belong to. `{ id → SetDef }`, exactly the
       // shape `registerDefs({ sets })` takes.
@@ -883,6 +937,7 @@ function checkIds({
   sounds,
   music,
   powerups,
+  talents,
   companions,
   sets,
   cutscenes,
@@ -901,6 +956,7 @@ function checkIds({
     gear: new Set(catalog.gear),
     unique: new Set(catalog.uniques),
     powerup: new Set(catalog.abilities ?? []),
+    talent: new Set(catalog.talents ?? []),
     companion: new Set(catalog.companions ?? []),
     set: new Set(catalog.sets ?? []),
     cutscene: new Set(catalog.cutscenes ?? []),
@@ -924,6 +980,12 @@ function checkIds({
   }
   for (const id of Object.keys(powerups ?? {})) {
     if (shipped.powerup.has(id)) clashes.push(`powerup "${id}"`);
+  }
+  // A CONVERSION shadowing a talent id is how it REPLACES one of the game's —
+  // which is also the only way to re-carry a proc block the shipped catalog
+  // already claims (see the carrier check in `buildMod`).
+  for (const id of Object.keys(talents ?? {})) {
+    if (shipped.talent.has(id)) clashes.push(`talent "${id}"`);
   }
   // A CONVERSION shadowing `lucky` is the point — it is how a mod's spared elite
   // becomes its OWN figure rather than the leprechaun — so, like every other

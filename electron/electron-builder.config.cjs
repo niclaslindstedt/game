@@ -126,6 +126,7 @@ module.exports = {
     { from: "../scripts/set-data", to: "modtools/scripts/set-data" },
     { from: "../scripts/sound-data", to: "modtools/scripts/sound-data" },
     { from: "../scripts/story-data", to: "modtools/scripts/story-data" },
+    { from: "../scripts/talent-data", to: "modtools/scripts/talent-data" },
     // The ladder and the loot economy: the compiler reads them so a mod's
     // `savage` and a shipped `savage` mean the same thing.
     { from: "../content/ladder.yaml", to: "modtools/content/ladder.yaml" },

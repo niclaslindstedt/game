@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: CC0-1.0
+# A TALENT GLYPH. The picker draws a talent from `icon_talent_<id>` unless the
+# def names an `icon:` of its own — so this file's `name` is the whole reason
+# DEEP ROOTS has a card the player can read, and the compiler refuses the
+# talent if it is missing.
+#
+# 12×12, like every shipped talent glyph: it is drawn small, beside a row of
+# rank pips, so it wants one silhouette and no detail.
+name: icon_talent_greenhouse_deep_roots
+family: greenhouse
+size: [12, 12]
+description: >
+  Talent glyph: a pale seedling with two leaves standing over a fan of thick
+  taproots that spread wider than the plant above them.
+subject:
+  kind: UI talent icon
+  features: a short stem with two leaves, a wide fanned root system below
+  accent: green leaves over pale roots on a dark outline
+  flavor: DEEP ROOTS — what stands in the vault outlasts what tends it
+palette:
+  O: "#1a1c2c" # dark outline
+  g: "#3f7a3a" # leaf shadow
+  G: "#6fc25a" # leaf
+  r: "#8a7a52" # root
+  R: "#c9bb92" # root highlight
+grid: |
+  ....O..O....
+  ...OGOOGO...
+  ..OGGOOGGO..
+  ..OgGGGGgO..
+  ...OOgGgOO..
+  .....OGO....
+  .....ORO....
+  ....ORRRO...
+  ..OORRRROO..
+  .OrROOORRrO.
+  .Or.O.O.rO..
+  .O.......O..

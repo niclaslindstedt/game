@@ -986,7 +986,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, map blueprint, enemy, item, sound, track, powerup, companion/,
+      /at least one level, map blueprint, enemy, item, sound, track, powerup, talent, companion/,
     );
   });
 
@@ -1204,6 +1204,155 @@ describe("what the compiler refuses", () => {
       ]),
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(/power grows nothing/);
+  });
+
+  /** A minimal valid talent, parameterized on what each test breaks. */
+  const talentYaml = (lines: string[]) =>
+    ["talents:", "  scratch_talent:", ...lines].join("\n");
+
+  /** Everything a talent owes BUT its effect — each case below adds the one
+   * thing it is about, so a failure names that thing and not a missing field.
+   * The icon is a shipped glyph for the same reason. */
+  const VALID_TALENT = [
+    "    name: SCRATCH TALENT",
+    "    tree: melee",
+    "    kind: tank",
+    "    maxRank: 5",
+    "    blurb: A SCRATCH PASSIVE.",
+    "    icon: icon_talent_bulwark",
+  ];
+
+  it("a talent that carries neither a slope nor a proc — the silent one", () => {
+    // The one content bug this format can produce in total silence: the picker
+    // offers the card, the player spends a point, and every rank buys nothing
+    // for the rest of the campaign.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": talentYaml([
+        "    name: A NAME",
+        "    blurb: AND NO EFFECT",
+      ]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /carries neither an `effect:` slope nor a proc block/,
+    );
+  });
+
+  it("a talent whose slope nothing reads", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": talentYaml([
+        ...VALID_TALENT,
+        "    effect:",
+        "      luckPerRank: 0.05",
+      ]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown field "effect.luckPerRank" — nothing reads it/,
+    );
+  });
+
+  it("a talent whose proc block is missing a field the hook reads", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": talentYaml([
+        ...VALID_TALENT,
+        "    parry:",
+        "      chancePerRank: 0.06",
+        "      chanceCap: 0.4",
+      ]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /parry.riposteFrac is required/,
+    );
+  });
+
+  it("a talent with no picker glyph", () => {
+    // Silent at play time: the picker draws a blank card in the one screen the
+    // player has to choose from.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": [
+        "talents:",
+        "  scratch_nobody:",
+        ...VALID_TALENT.filter((l) => !l.includes("icon:")),
+        "    effect:",
+        "      maxHpPerRank: 0.05",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /no picker icon — draw sprites\/icons\/icon_talent_scratch_nobody.yaml/,
+    );
+  });
+
+  it("a talent ranked deeper than the shared ceiling", () => {
+    // The rank cap is ECONOMY: the picker draws that many pips and the point
+    // milestones are priced against a full tree.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": talentYaml([
+        ...VALID_TALENT.map((l) =>
+          l.includes("maxRank:") ? "    maxRank: 9" : l,
+        ),
+        "    effect:",
+        "      maxHpPerRank: 0.05",
+      ]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /maxRank 9 exceeds the shared cap 5/,
+    );
+  });
+
+  it("an addon that carries a proc the shipped catalog already has", () => {
+    // BASE ∪ MOD: two carriers would make "whose numbers apply" a question
+    // about catalog order, which is not a decision anybody made. Re-carrying a
+    // proc means REPLACING the talent that has it — a conversion's business.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": talentYaml([
+        ...VALID_TALENT,
+        "    parry:",
+        "      chancePerRank: 0.06",
+        "      chanceCap: 0.4",
+        "      riposteFrac: 0.5",
+        "      riposteRank: 5",
+      ]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /talents "parry" and "scratch_talent" both carry the "parry" proc/,
+    );
+  });
+
+  it("an addon that shadows one of the game's own talents", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": [
+        "talents:",
+        "  bulwark:",
+        ...VALID_TALENT,
+        "    effect:",
+        "      maxHpPerRank: 0.05",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game: talent "bulwark"/,
+    );
+  });
+
+  it("…but NOT a mod whose only content is a talent, which is a mod", () => {
+    // A mod may be nothing but one new passive — an addon that adds a single
+    // talent to the melee tree is a real, small mod.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "talents.yaml": talentYaml([
+        ...VALID_TALENT,
+        "    effect:",
+        "      maxHpPerRank: 0.05",
+      ]),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.talents)).toEqual(["scratch_talent"]);
   });
 
   it("an addon that shadows one of the game's own companions", () => {

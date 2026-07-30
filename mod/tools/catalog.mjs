@@ -45,6 +45,14 @@ const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
 const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
+// The passive TREES, plus the two things a mod's own talents are judged
+// against: the shared rank CEILING (economy — a mod may go shallower, never
+// deeper) and WHO CARRIES EACH PROC BLOCK, since one proc has exactly one
+// carrier in the merged catalog and a mod re-carrying one must replace the
+// talent that has it.
+const { TALENT_DEFS, TALENT_BLOCKS, TALENT_MAX_RANK } = await import(
+  engine("src/game/defs/talents/index.ts")
+);
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
   engine("src/game/defs/uniques.ts")
 );
@@ -96,6 +104,20 @@ const { thoughts: THOUGHT_DEFS } = loadThoughts();
 const { storyItems: STORY_ITEM_DEFS } = loadStoryItems();
 
 const sorted = (ids) => [...ids].sort();
+
+/** proc block name → the shipped talent that carries it, so the compiler can
+ * hold a mod's trees to the one-carrier-per-proc rule over BASE ∪ MOD without
+ * reading a single one of the game's talent numbers. */
+function talentProcCarriers() {
+  const out = {};
+  for (const name of [...TALENT_BLOCKS].sort()) {
+    const owner = Object.keys(TALENT_DEFS)
+      .sort()
+      .find((id) => TALENT_DEFS[id][name] !== undefined);
+    if (owner) out[name] = owner;
+  }
+  return out;
+}
 
 /** The sound ids the game ships, so a mod may replace one by name and a
  * weapon's `sfx:` can be checked against something. */
@@ -192,6 +214,13 @@ const catalog = {
   weapons: sorted(Object.keys(WEAPON_DEFS)),
   gear: sorted(Object.keys(GEAR_DEFS)),
   abilities: sorted(Object.keys(ABILITY_DEFS)),
+  // The shipped TALENTS, so an ADDON that would shadow one is caught at compile
+  // time rather than by two defs claiming one rank ladder at load.
+  talents: sorted(Object.keys(TALENT_DEFS)),
+  talentMaxRank: TALENT_MAX_RANK,
+  // proc block → the shipped talent that carries it (see `PROC_BLOCKS`). A
+  // NAME, not a number: what a parry is worth stays the game's tuning.
+  talentProcs: talentProcCarriers(),
   thoughts: sorted(Object.keys(THOUGHT_DEFS)),
   storyItems: sorted(Object.keys(STORY_ITEM_DEFS)),
   // Every scene a level's `prelude` may name — the per-difficulty variants

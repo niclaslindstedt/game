@@ -27,6 +27,7 @@ import { setMapBlueprints } from "../mapgen/blueprints.ts";
 import type { MapBlueprint } from "../mapgen/types.ts";
 import { setSetDefs, type SetDef } from "./sets.ts";
 import { setStoryItemDefs, type StoryItemDef } from "./story.ts";
+import { setTalentDefs, type TalentDef } from "./talents/index.ts";
 import { setThoughtDefs, type ThoughtDef } from "./thoughts.ts";
 import { setUniqueDefs, type UniqueDef } from "./uniques.ts";
 import type { CutsceneDef } from "@game/lib/cutscene.ts";
@@ -44,6 +45,10 @@ export type DefOverrides = {
   weapons?: Record<string, WeaponDef>;
   gear?: Record<string, GearDef>;
   abilities?: Record<string, AbilityDef>;
+  /** The passive TALENT trees (`defs/talents/`). A mod ships its own
+   * `talents.yaml` and its trees replace the shipped ones wholesale — the point
+   * ECONOMY (how a point is earned, the shared rank ceiling) stays the game's. */
+  talents?: Record<string, TalentDef>;
   difficulties?: Record<string, DifficultyDef>;
   storyItems?: Record<string, StoryItemDef>;
   cutscenes?: Record<string, CutsceneDef>;
@@ -74,6 +79,7 @@ export function registerDefs(defs: DefOverrides): void {
     setEquipmentDefs({ weapons: defs.weapons ?? {}, gear: defs.gear ?? {} });
   }
   if (defs.abilities) setAbilityDefs(defs.abilities);
+  if (defs.talents) setTalentDefs(defs.talents);
   if (defs.difficulties) setDifficultyDefs(defs.difficulties);
   if (defs.storyItems) setStoryItemDefs(defs.storyItems);
   if (defs.cutscenes) setCutsceneDefs(defs.cutscenes);

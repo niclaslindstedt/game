@@ -65,6 +65,7 @@ shipped file is a worked example of its kind.
 | A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                       |
 | A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                         |
 | A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)          |
+| A passive TALENT the hero ranks up             | `talents.yaml`                 | [`../content/talents.yaml`](../content/talents.yaml)            |
 | A cutscene                                     | `cutscenes/<id>.yaml`          | [`../content/cutscenes/`](../content/cutscenes)                 |
 | The hero's inner monologues                    | `thoughts.yaml`                | [`../content/thoughts.yaml`](../content/thoughts.yaml)          |
 | A story item and its lore                      | `story-items.yaml`             | [`../content/story-items.yaml`](../content/story-items.yaml)    |

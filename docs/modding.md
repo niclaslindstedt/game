@@ -265,6 +265,57 @@ Two things are worth knowing about the format:
   refuses the mod. The other four growth fields are grants in their own right
   (`chainPerRank` teaches an un-chained weapon to arc) and are legal alone.
 
+### 3d. The build system is content too
+
+The passive TALENT trees were the last catalog a mod could not touch — the one
+place where a total conversion could re-skin every monster, venue, relic, scene
+and recruit and still hand the player _this_ game's eight melee talents. The
+trees are content now (`content/talents.yaml`, compiled by
+`scripts/generate-talents.mjs` into `src/generated/talents.ts`), `registerDefs`
+takes a `talents` catalog beside `abilities`, and a mod ships one by putting that
+file at its own root. A mod's talents MERGE into the shipped trees like its
+monsters do, so an addon adds one good passive and a conversion replaces one by
+shipping its id.
+
+The lift is not just a file move, because a talent's numbers used to live in two
+places at once: the def carried its per-rank slopes, and every structured PROC
+(a parry, a volley, a frost nova) kept its chances, radii and cooldowns in
+`src/game/config/talents.ts` under a key the accessor reached for by SHIPPED
+TALENT ID — `talentParry` read `TALENTS.parry` after checking the rank of the
+talent literally called `parry`. A YAML catalog on top of that would have let a
+mod author a talent and no numbers to put in it.
+
+So the procs moved onto the def as **blocks**, and the hook now asks the catalog
+_which trained talent carries this block_ (`procTalent` in `talent-effects.ts`)
+rather than what rank `frost_nova` is. That is the same rule
+[`AbilityDef`](../AGENTS.md) already followed — `kind` is a label, the BLOCKS are
+the behaviour — and it is what makes a mod's talent able to fire a shipped proc
+with its own numbers. `src/game/config/talents.ts` is down to the one thing that
+is true of every talent: the shared rank ceiling.
+
+Three things are worth knowing about the format:
+
+- **A proc has exactly one carrier**, checked at compile time over BASE ∪ MOD.
+  Two carriers would make "whose numbers apply" a question about catalog order,
+  which is not a decision anybody made — so an addon that carries `parry:` is
+  refused by name, and re-carrying a proc means REPLACING the talent that has it
+  (a conversion's business). The compiler knows who carries what from
+  `catalog.json`'s `talentProcs`, which is a map of proc → talent NAME and
+  carries no numbers, like the rest of that file.
+- **A talent that does nothing is refused.** A def with no slope, no `conjure`
+  and no proc block still draws a card, still costs a point, and buys nothing —
+  forever, with nothing at play time to explain it. That is the one bug this
+  format could produce in total silence, so `talent-schema.mjs` names it.
+- **`conjure:` is the cheapest powerful thing a mod can write.** It hands the
+  talent's rank to one of the game's always-on granted spells — the machinery a
+  legendary's `spell` affix already drives — so a fully drawn, fully sounded,
+  INT-deepened magic passive is four lines and no numbers.
+
+What stays the game's is the point ECONOMY: how many chosen stat points earn a
+talent point, and the rank ceiling every talent shares. Both price the whole
+level-up flow, and a talent ranked past the ceiling would enqueue points the
+picker has no milestone to spend them at.
+
 ### 4. Clashes between mods resolve by an order the player owns
 
 The compiler catches a clash with the BASE GAME (an addon may not shadow a
@@ -449,8 +500,11 @@ dynamic import.
 
 ## What is not here yet
 
-- **The passive TALENT trees** (`src/game/defs/talents/`) are still TypeScript, so
-  a conversion's hero grows the shipped Warlord / Windrunner / Archon trees.
+- **A NEW KIND of talent proc.** A mod may author, retune or replace any of the
+  eleven proc blocks the engine fires (see 3d), but a proc the engine has no hook
+  for — "your blows sometimes stun" — is engine code, not content. The format has
+  no scripting hook and adding one would turn "subscribe to a mod" into "run a
+  stranger's code".
 - **`grades:`** ladders and the loot economy (`content/item_quality.yaml`,
   `content/item_rarity.yaml`) are deliberately the game's rather than a mod's — a
   mod that moved the tier ladder would be rebalancing the campaign instead of

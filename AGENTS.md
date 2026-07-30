@@ -953,11 +953,12 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
 2. **ONE COMPILER, ONE SCHEMA.** A mod's level, MAP BLUEPRINT (`maps/`), enemy,
    item, item SET (`sets.yaml`), sprite, sound,
-   score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
-   `thoughts.yaml`, `story-items.yaml`) are
+   score, power, TALENT (`talents.yaml`), COMPANION (`companions.yaml`) and
+   STORY (`cutscenes/`, `thoughts.yaml`, `story-items.yaml`) are
    the same files as `content/levels/`, `content/maps/`, `content/enemies/`,
    `content/items/`, `content/sets.yaml`,
-   `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
+   `content/sprites/`, `content/talents.yaml`, `content/companions.yaml`,
+   `content/cutscenes/` and the
    rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
    owning a constant, and why the item COOKING is shared out into
@@ -1037,7 +1038,12 @@ The Workshop itself is the same three-file seam as cloud save and the
 achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
 exists, `electron/src/mods.ts` is the bridge above it, and what is uploaded is
 the **authored folder**, not a compiled bundle, so a published mod stays
-readable and forkable the way the game's own content is. Two things a mod may
+readable and forkable the way the game's own content is. The BUILD SYSTEM travels too: the three passive TALENT trees are
+`content/talents.yaml`, so a conversion's hero no longer grows this game's
+Warlord / Windrunner / Archon — and, because a talent's structured PROCS carry
+their own numbers on the def and are found BY BLOCK rather than by id, a mod's
+talent can fire one with its own tuning (one carrier per proc, checked over
+base ∪ mod). Two things a mod may
 NOT author, and both refusals are deliberate: a `grades:` ladder (minted at
 engine load from a catalog compiled into the build, so there is no runtime seam
 to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` —
@@ -2073,6 +2079,8 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
+| A passive TALENT (a rank the hero buys in a tree)         | `content/talents.yaml` — the whole catalog in one file (id → talent), compiled to `src/generated/talents.ts` by `make levels`. A talent is what it CARRIES: an `effect:` bag of per-rank slopes, a `conjure:`, and/or a PROC BLOCK                                              |
+| A new PROC a talent can fire                              | a block type on `TalentDef` + its entry in `TALENT_BLOCKS` + one reader in `src/game/talent-effects.ts` + its entry in `PROC_BLOCKS` (`scripts/asset-tools/talent-schema.mjs`) — never a branch on a talent id                                                                  |
 | A new GORE PIECE a burst body throws                      | `content/sprites/effects/gib_<part>.yaml` (the art — it must be something that was INSIDE) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                |
 | A new ORGAN a cut can spill                               | `content/sprites/effects/gib_<organ>.yaml` + the `ANATOMY_BANDS` band it lives in (`pwa/src/game/game-screen/gore-burst.ts`), plus `BOUNCY` if it is dense. Every cut through that band spills it from then on                                                                  |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
@@ -2341,6 +2349,43 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   what came before (`loot.abilityPool` in each `content/levels/<id>.yaml`), so
   the dock's vocabulary grows the whole way down and each venue is announced by
   two powers that could only have come from there.
+- **THE PASSIVE TALENT TREES are compiled from YAML too, and a TALENT IS WHAT IT
+  CARRIES.** `content/talents.yaml` (a `talents:` map of id → talent, the catalog
+  key stamped in as the def's `id`) is the source of truth for all three trees;
+  `make levels` runs `generate-talents.mjs` (schema
+  `scripts/asset-tools/talent-schema.mjs`, loader `scripts/talent-data/`) to emit
+  `src/generated/talents.ts`, which `src/game/defs/talents/index.ts` re-exposes
+  as `TALENT_DEFS`. It is a LEAF pipeline — its only engine import is the
+  import-free `config/talents.ts` for the shared rank cap — and nothing
+  cross-references a talent id, so it has no downstream dependents in the chain.
+  The snapshot guard (`tests/content/talent_roundtrip_test.ts`) pins the compiled
+  catalog to `tests/content/fixtures/talents-snapshot.json`; accept an
+  intentional rebalance with `node scripts/update-talent-snapshot.mjs`.
+
+  **`TalentKind` IS A LABEL, NEVER A DISPATCH KEY** — the same rule `AbilityDef`
+  follows. It names the role the picker groups and tints by; what a talent DOES
+  is whatever it carries: an `effect:` bag of per-rank slopes summed at the ONE
+  read site that owns each rule, a `conjure:` feeding an always-on granted spell
+  through the machinery a legendary's `spell` affix already drives, and/or a
+  **PROC BLOCK** — a structured effect (`parry`, `volley`, `frostNova`,
+  `seismic`, …) whose chances, radii and cooldowns live on the def. Those numbers
+  used to sit in `config/talents.ts` under a key the accessor reached for by
+  SHIPPED TALENT ID, which is exactly what made the trees unmoddable: a mod could
+  author a talent and have no numbers to put in it. **A hook now asks the catalog
+  WHICH TRAINED TALENT CARRIES A BLOCK (`procTalent` in `talent-effects.ts`),
+  never what rank `frost_nova` is** — so a mod's talent can fire a shipped proc
+  with its own tuning. Adding a proc is a block type on `TalentDef` + an entry in
+  `TALENT_BLOCKS` + one reader + its `PROC_BLOCKS` entry in the schema.
+
+  **A PROC HAS EXACTLY ONE CARRIER**, enforced at build time (over BASE ∪ MOD in
+  the mod compiler): two carriers would make "whose numbers apply" a question
+  about catalog order, which is not a decision anybody made — re-carrying a proc
+  means REPLACING the talent that has it. And **a talent carrying nothing at all
+  is refused**, since it would draw a card, cost a point and buy nothing forever
+  with no error to explain it. What stays in `config/talents.ts` is only what is
+  true of EVERY talent — the shared rank ceiling, which prices the whole level-up
+  flow — and a def may choose a shallower ladder, never a deeper one.
+
 - **Items are compiled from YAML**, the same way. `content/items/<rarity>/<id>.yaml`
   is the source of truth — one self-describing file per hand-authored item
   (stem == id, directory == rarity: `regular`/`trash` for the plain bases,

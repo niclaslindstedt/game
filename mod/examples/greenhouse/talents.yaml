@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: CC0-1.0
+# THE GREENHOUSE's own TALENTS. One file at the mod's root, exactly like the
+# game's own `content/talents.yaml` (and like `powerups.yaml` and
+# `companions.yaml`) — a `talents:` mapping of id → talent, where the KEY is the
+# id.
+#
+# A talent is a PASSIVE the hero buys ranks in: every 10 chosen points in
+# STRENGTH / DEXTERITY / INTELLIGENCE earn one point in that stat's tree, spent
+# through the level-up picker. Yours merge into the shipped trees, so the two
+# below simply appear in the melee and magic pickers beside the game's own.
+#
+# The four things worth copying out of this file:
+#
+# 1. A TALENT IS WHAT IT CARRIES. `kind:` is a label the picker tints by and
+#    nothing else. What a talent DOES is its `effect:` bag of per-rank slopes,
+#    its `conjure:`, or a proc block — and it may carry more than one.
+#
+# 2. A SLOPE IS PER RANK. `maxHpPerRank: 0.04` is +4% per rank, so a rank-5 DEEP
+#    ROOTS is +20%. Author the step, never the total.
+#
+# 3. A CONJURATION COSTS YOU NOTHING TO WRITE. `conjure:` hands your talent's
+#    rank to one of the game's always-on granted spells — the same machinery a
+#    legendary's `spell` affix drives — so VAULT LIGHTS is a real, fully drawn,
+#    fully sounded magic passive in four lines. It STACKS with any worn source
+#    of the same spell.
+#
+# 4. THE PROC BLOCKS ARE ONE-TO-A-CATALOG. A talent may carry a structured proc
+#    (`parry:`, `volley:`, `frostNova:`, `seismic:` …) with its own numbers, and
+#    the engine fires whichever trained talent CARRIES it — but exactly one
+#    talent may carry each, and the shipped catalog already claims all of them.
+#    So an ADDON like this one adds slopes and conjurations; re-carrying a proc
+#    (with your own chances and radii) means REPLACING the talent that has it,
+#    which is a `kind: conversion`'s business. The compiler says so by name.
+#
+# Every field, every slope and every proc block is listed in mod/FORMAT.md.
+
+talents:
+  greenhouse_deep_roots:
+    name: DEEP ROOTS
+    # Which stat's tree it lives in: melee = STRENGTH, ranged = DEXTERITY,
+    # magic = INTELLIGENCE.
+    tree: melee
+    # Presentational only — damage | tank | control | mobility | survival |
+    # offense | defense.
+    kind: tank
+    # Never above the game's shared ceiling (5). Shallower is allowed.
+    maxRank: 5
+    blurb: Stand your ground — a deeper pool and a thicker hide.
+    # Two read sites from one talent: the bag is additive, so a talent may touch
+    # as many as it likes.
+    effect:
+      maxHpPerRank: 0.04
+      damageReductionPerRank: 0.02
+    # Drawn from this mod's own sprites/. Omit `icon:` and the picker looks for
+    # `icon_talent_<id>` — which is exactly what this file is called, so the
+    # line below is spelled out only to show that the field exists.
+    icon: icon_talent_greenhouse_deep_roots
+
+  greenhouse_vault_lights:
+    name: VAULT LIGHTS
+    tree: magic
+    kind: offense
+    maxRank: 5
+    blurb: The grow-lamps still orbit you, and they still burn.
+    # A CONJURATION: your rank feeds one of the game's always-on granted spells
+    # (orbit, storm, stasis, seeker, singularity, immolation). No numbers to
+    # author — rank deepens it, INT quickens it, and it draws and sounds itself.
+    effect:
+      conjure: orbit
+    # A shipped glyph rather than one of this mod's, which is what `icon:` is
+    # for: a mod may point at any sprite the game or the mod has.
+    icon: icon_talent_orbiting_flames

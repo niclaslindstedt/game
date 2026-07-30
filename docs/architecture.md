@@ -363,6 +363,21 @@ escort.ts` walks the people an escort errand puts on the field, and
   fresh instance from its own slot, so two storm cells strike twice as often;
   a non-stackable one (the magnet) refuses to re-enable while a copy is
   running, keeping the pickup banked.
+- **`src/game/defs/talents/index.ts`** — the passive TALENT trees' TYPES, tree/
+  stat wiring and registry. The catalog itself is CONTENT: `content/talents.yaml`
+  (one file, a `talents:` map of id → talent) is compiled into
+  `src/generated/talents.ts` by `scripts/generate-talents.mjs` (`make levels`)
+  and re-exposed here as `TALENT_DEFS`. A talent is WHAT IT CARRIES — `kind` is
+  a picker label nothing branches on, while an `effect` bag of per-rank slopes,
+  a `conjure` feeding an always-on granted spell, and any of eleven structured
+  PROC BLOCKS (parry, volley, frost nova, …) are the behaviour. Each proc's
+  chances, radii and cooldowns live in its block on the def, and the hook that
+  fires it asks the catalog _which trained talent carries this block_
+  (`procTalent`, `src/game/talent-effects.ts`) rather than looking a talent up
+  by id — which is what lets a mod own a proc with its own numbers. Exactly one
+  talent may carry each block, enforced at build time. `src/game/config/talents.ts`
+  keeps only the shared rank ceiling, because it is the one number true of every
+  talent; the point economy and spending live in `src/game/talents.ts`.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level. A rung turns a whole rack of knobs: the hero's

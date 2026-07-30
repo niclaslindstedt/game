@@ -74,6 +74,10 @@ export type ModBundle = {
   sounds: Record<string, unknown>;
   /** The mod's own POWERUPS, by id — already `{ id → AbilityDef }`. */
   powerups: Record<string, unknown>;
+  /** The mod's own TALENTS, by id — already `{ id → TalentDef }`. They merge
+   * into the shipped trees like every other catalog (later wins), so an addon
+   * ADDS a talent and a conversion replaces one by shipping its id. */
+  talents: Record<string, unknown>;
   /** The mod's own COMPANIONS, by id — who its spared elites become. An
    * enemy's `spareable.companion` names one of these or a shipped one. */
   companions: Record<string, unknown>;
@@ -124,6 +128,7 @@ export type ModClash = {
     | "sound"
     | "music"
     | "powerup"
+    | "talent"
     | "companion"
     | "set"
     | "difficulty"

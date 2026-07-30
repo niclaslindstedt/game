@@ -1,0 +1,354 @@
+# The TALENT catalog — the three passive trees the hero grows alongside the
+# cast-spell system, and the single source of truth for their balance. Compiled
+# to `src/generated/talents.ts` by `scripts/generate-talents.mjs` (folded into
+# `make levels` / `make assets`); the engine reads it through
+# `src/game/defs/talents/index.ts`, which owns the TYPES and documents what
+# every field and every proc block means. Nothing here needs a rebuild of engine
+# code to retune — a slope, a proc chance, or a whole new talent is an edit to
+# this file, and a MOD authors its own the same way (`mod/FORMAT.md`).
+#
+# THE ECONOMY. Every 10 CHOSEN points a hero pours into STRENGTH / DEXTERITY /
+# INTELLIGENCE earns one talent point in THAT stat's tree, spent through the
+# level-up picker on a new talent or a rank-up of an owned one. Talents are
+# ALWAYS ON — no mana, no cooldown, no tapping. The shared rank ceiling
+# (`TALENTS.maxRank`) is engine economy and stays in `src/game/config/talents.ts`
+# — a talent may not author a `maxRank` above it.
+#
+# A TALENT IS A COMPOSITION, NOT A KIND. `kind:` is a purely presentational
+# label the picker groups and tints by; the engine never branches on it. What a
+# talent DOES is whatever it CARRIES, and there are two carriers:
+#
+#   effect:   the bag of per-rank additive SLOPES, each summed as `rank × slope`
+#             at the ONE combat read site that owns its rule (crit, dodge, move
+#             speed, max hp, damage reduction, an enrage curve, reflection) —
+#             plus `conjure:`, which feeds an always-on granted spell through
+#             the exact machinery a legendary's `spell` affix drives.
+#   a PROC BLOCK, named for the effect it fires (`parry:`, `volley:`,
+#             `frostNova:`, …). Each block is read at the engine hook that owns
+#             it, and the engine finds the block by LOOKING FOR IT rather than
+#             by talent id — which is what lets a mod author a talent that
+#             parries, or retune the one that ships, without touching a line of
+#             engine code. A def may carry several, and one carrying none but an
+#             `effect:` bag is a plain stat modifier.
+#
+# BALANCING NOTES. A per-rank slope is the boost ONE rank buys, so a rank-5
+# EXECUTIONER is `5 × 0.03` crit. Every proc chance is `rank × chancePerRank`
+# clamped to its own `chanceCap` — the cap is what keeps a maxed build from
+# doubling every swing — and a flat proc DAMAGE figure is authored AT LEVEL 1
+# and rides `abilityPowerScale` at its read site, exactly as a powerup's is, so
+# it keeps clipping the same fraction of a level-appropriate healthbar all
+# campaign (the level-1 reference minion has ~45 hp, `LEVELING.refMobHp`).
+#
+# Each tree is ordered offense → defense, the way the picker reads it top to
+# bottom. A talent's picker glyph is `icon_talent_<id>` unless it names an
+# `icon:` of its own.
+
+talents:
+  # ── MELEE — the STRENGTH tree ("Warlord") ─────────────────────────────────
+  # Tank or damage, scaling the held weapon. It runs from the crowd-shredding
+  # cleaves at the top, through the pure damage multipliers, to the tank half.
+  cleaving_echo:
+    name: CLEAVING ECHO
+    tree: melee
+    kind: damage
+    maxRank: 5
+    blurb: Your swings sometimes cleave extra foes.
+    # A per-SWING roll (one per swing, not per body) for the sweep to strike
+    # EXTRA targets beyond the weapon's own `maxMeleeTargets` cap. Ranks 1–3 add
+    # `extraTargets`, ranks `bonusFromRank`+ add `bonusTargets` instead. Read in
+    # `stepWeapon` (`talentCleavingEcho`).
+    cleavingEcho:
+      chancePerRank: 0.09
+      chanceCap: 0.55
+      extraTargets: 1
+      bonusTargets: 2
+      bonusFromRank: 4
+  twin_strike:
+    name: TWIN STRIKE
+    tree: melee
+    kind: damage
+    maxRank: 5
+    blurb: Your blows sometimes strike twice.
+    # A per-HIT roll for a melee blow to land a second time — an extra `hitEnemy`
+    # at `echoDamageFrac` of the blow, going to FULL damage from `fullEchoRank`.
+    # Read once per hit in `meleeSweep` (`talentTwinStrike`).
+    twinStrike:
+      chancePerRank: 0.07
+      chanceCap: 0.5
+      echoDamageFrac: 0.5
+      fullEchoRank: 5
+  executioner:
+    name: EXECUTIONER
+    tree: melee
+    kind: damage
+    maxRank: 5
+    blurb: Melee blows crit more often, and harder.
+    # A crit talent in the MELEE tree, so it lands on melee blows only — the
+    # runtime gates crit bonuses by the tree matching the weapon class.
+    effect:
+      critChancePerRank: 0.03
+      critDamagePerRank: 0.15
+  berserker_rage:
+    name: BERSERKER RAGE
+    tree: melee
+    kind: damage
+    maxRank: 5
+    blurb: The lower your health, the harder you hit.
+    # Enrage: the boost is `rank × slope` at zero hp, fading linearly to nothing
+    # at full — a wounded warlord hits like a truck.
+    effect:
+      berserkPerRank: 0.1
+  parry:
+    name: PARRY
+    tree: melee
+    kind: tank
+    maxRank: 5
+    blurb: Turn aside enemy blows — and, mastered, strike back.
+    # A struck roll to FULLY negate an enemy MELEE blow (contact/slam), on no
+    # cooldown but chance-capped. From `riposteRank` a parry RIPOSTES, billing
+    # `riposteFrac` of the negated blow back to the attacker. Read in the struck
+    # path (`talentParry`).
+    parry:
+      chancePerRank: 0.06
+      chanceCap: 0.4
+      riposteFrac: 0.5
+      riposteRank: 5
+  seismic_landing:
+    name: SEISMIC LANDING
+    tree: melee
+    kind: damage
+    maxRank: 5
+    blurb: Your jump landings shake the ground and fling foes back.
+    # A jump landing slams the ground, dealing AoE damage and KNOCKING BACK every
+    # foe in reach. Rank grows the radius and the damage; `knockback` is the flat
+    # shove (world px, role-scaled like the weapon knockback affix). Read on the
+    # `land` event (`talentSeismic`), fired only when trained.
+    seismic:
+      radius: 44
+      radiusPerRank: 12
+      damage: 7
+      damagePerRank: 5
+      knockback: 34
+  ironhide:
+    name: IRONHIDE
+    tree: melee
+    kind: tank
+    maxRank: 5
+    blurb: Shrug off a flat share of every blow you take.
+    effect:
+      damageReductionPerRank: 0.03
+  bulwark:
+    name: BULWARK
+    tree: melee
+    kind: tank
+    maxRank: 5
+    blurb: Carry a deeper health pool into the horde.
+    effect:
+      maxHpPerRank: 0.05
+
+  # ── RANGED — the DEXTERITY tree ("Windrunner") ────────────────────────────
+  # Damage, distance control, and the mobility that used to be the SPEED stat.
+  piercing_shot:
+    name: PIERCING SHOT
+    tree: ranged
+    kind: damage
+    maxRank: 5
+    blurb: Your shots punch through foes in a line.
+    # The hero's shots punch through `piercePerRank` extra bodies per rank, each
+    # softening the shot by a falloff that RANK itself softens: `retainBase` is
+    # the share kept at rank 1, lifted `retainPerRank` toward `retainCap`. Read
+    # in `stepWeapon` (`talentPiercing`); the falloff lands per body in
+    # `stepProjectiles`.
+    piercing:
+      piercePerRank: 1
+      retainBase: 0.55
+      retainPerRank: 0.08
+      retainCap: 0.92
+  deadeye:
+    name: DEADEYE
+    tree: ranged
+    kind: damage
+    maxRank: 5
+    blurb: Ranged shots crit more often, and harder.
+    # The ranged mirror of EXECUTIONER — the same slopes, in the tree that gates
+    # them onto ranged shots.
+    effect:
+      critChancePerRank: 0.03
+      critDamagePerRank: 0.15
+  concussive_rounds:
+    name: CONCUSSIVE ROUNDS
+    tree: ranged
+    kind: control
+    maxRank: 5
+    blurb: Your shots sometimes knock foes back.
+    # A roll for a shot to SHOVE the struck foe straight back — the same
+    # displacement machinery the knockback affix uses, role-scaled at the read
+    # site. Read on the hero's surviving ranged hits (`talentConcussive`).
+    concussive:
+      chancePerRank: 0.13
+      chanceCap: 0.65
+      distance: 22
+      distancePerRank: 6
+  crippling_shot:
+    name: CRIPPLING SHOT
+    tree: ranged
+    kind: control
+    maxRank: 5
+    blurb: Your shots sometimes slow foes to a hobble.
+    # A roll for a shot to SLOW the struck foe (the engine's chill fields, at
+    # `slowFactor` — a hobble, milder than a frost freeze). Read on the hero's
+    # ranged hits (`talentCrippling`).
+    crippling:
+      chancePerRank: 0.16
+      chanceCap: 0.75
+      slowFactor: 0.5
+      slowMs: 900
+      slowMsPerRank: 250
+  wind_runner:
+    name: WIND RUNNER
+    tree: ranged
+    kind: mobility
+    maxRank: 5
+    blurb: Move faster — the ranged tree's identity.
+    # The SPEED stat's successor: mobility is a ranged-tree talent now.
+    effect:
+      moveSpeedPerRank: 0.04
+  spring_heels:
+    name: SPRING HEELS
+    tree: ranged
+    kind: mobility
+    maxRank: 5
+    blurb: Jump higher and farther — and, mastered, cheaper.
+    # Higher, longer jumps: `velocityPerRank` lifts the takeoff speed (a
+    # floatier, further-reaching arc), and from `costReductionRank` a hop costs
+    # `jumpCostReduction` less stamina. Read in `stepPlayer` (`talentJumpMods`).
+    springHeels:
+      velocityPerRank: 0.07
+      jumpCostReduction: 0.4
+      costReductionRank: 5
+  evasion:
+    name: EVASION
+    tree: ranged
+    kind: survival
+    maxRank: 5
+    blurb: Slip more incoming blows — mastered, and dart away.
+    # The base dodge scales per rank through the effect bag; the mastery kicker
+    # is its own block.
+    effect:
+      dodgePerRank: 0.03
+    # From `rank`, a successful dodge leaves an afterimage and a brief SPEED
+    # BURST (`speedMult` for `ms`). Armed on a dodge in the struck path, read in
+    # `playerSpeed` (`talentEvasionBurstMult` / `talentEvasionBurstMs`).
+    evasionBurst:
+      speedMult: 1.35
+      ms: 700
+      rank: 5
+  volley:
+    name: VOLLEY
+    tree: ranged
+    kind: damage
+    maxRank: 5
+    blurb: Your shots sometimes loose a spread of extra rounds.
+    # A per-PULL roll to loose EXTRA projectiles in a spread: ranks 1–3 add
+    # `extra`, ranks `bonusFromRank`+ add `bonusExtra` instead, fanned by
+    # `spreadDeg` so they don't stack into one line. Read once per pull in
+    # `stepWeapon` (`talentVolley`).
+    volley:
+      chancePerRank: 0.07
+      chanceCap: 0.5
+      extra: 2
+      bonusExtra: 4
+      bonusFromRank: 4
+      spreadDeg: 26
+
+  # ── MAGIC — the INTELLIGENCE tree ("Archon") ──────────────────────────────
+  # Weapon-independent and always on. Its signature is the CONJURATIONS: a
+  # deep-INT hero stands in the horde while ranked-up spells do the killing, no
+  # weapon and no button. All five feed the granted-spell machinery items
+  # already carry, so they run, render and sound off `player.itemSpells` like a
+  # legendary's forever powers — and STACK with one. The tree closes on its
+  # defensive answers.
+  orbiting_flames:
+    name: ORBITING FLAMES
+    tree: magic
+    kind: offense
+    maxRank: 5
+    blurb: Rings of fire orbit you, burning what they touch.
+    # Rank adds orbs and per-tick bite, INT quickens the sweep and deepens the
+    # burn (the per-rank power lives in the spell's own config, `SPELL.orbit`).
+    effect:
+      conjure: orbit
+  storm_call:
+    name: STORM CALL
+    tree: magic
+    kind: offense
+    maxRank: 5
+    blurb: Lightning strikes the nearest foe, again and again.
+    effect:
+      conjure: storm
+  seeker_orbs:
+    name: SEEKER ORBS
+    tree: magic
+    kind: offense
+    maxRank: 5
+    blurb: Homing orbs hunt the horde and burst on impact.
+    effect:
+      conjure: seeker
+  immolation_aura:
+    name: IMMOLATION AURA
+    tree: magic
+    kind: offense
+    maxRank: 5
+    blurb: A ring of fire sears everything that closes on you.
+    effect:
+      conjure: immolation
+  arcane_singularity:
+    name: ARCANE SINGULARITY
+    tree: magic
+    kind: offense
+    maxRank: 5
+    blurb: A vortex drags the swarm together and crushes it.
+    effect:
+      conjure: singularity
+  frost_nova:
+    name: FROST NOVA
+    tree: magic
+    kind: defense
+    maxRank: 5
+    blurb: When struck, freeze the foes around you solid.
+    # The blow that lands on the hero freezes the foes around him solid, then the
+    # proc goes on an internal cooldown so a dogpile can't chain-freeze the
+    # screen every frame. Rank widens the ring, lengthens the freeze and shortens
+    # the reset (never below `cooldownFloorMs`). The freeze reuses the engine's
+    # chill fields, so a frozen mob crawls at `slowFactor`. Read once in the
+    # struck path (`talentFrostNova`).
+    frostNova:
+      radius: 60
+      radiusPerRank: 10
+      freezeMs: 800
+      freezeMsPerRank: 250
+      slowFactor: 0.15
+      cooldownMs: 6000
+      cooldownPerRank: 700
+      cooldownFloorMs: 2500
+  arcane_retribution:
+    name: ARCANE RETRIBUTION
+    tree: magic
+    kind: defense
+    maxRank: 5
+    blurb: Turn a share of every blow back on the attacker.
+    # Reflect a growing share of every blow back at its owner (struck path →
+    # `applyRetribution`, resolved after the enemy pass).
+    effect:
+      reflectPerRank: 0.1
+  mage_armor:
+    name: MAGE ARMOR
+    tree: magic
+    kind: defense
+    maxRank: 5
+    blurb: A magic ward softens every blow you take.
+    # A flat magic ward. Folded into the same flat damage cut as IRONHIDE at the
+    # player-damage choke point; its own read-site field keeps the magic
+    # mitigation legible.
+    effect:
+      magicReductionPerRank: 0.03
