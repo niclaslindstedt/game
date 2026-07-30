@@ -324,10 +324,19 @@ function levelEntries(def) {
   };
 
   add("hero", "the hero");
+  // EVERY way a level names a mob, not just the opening scatter: a breed that
+  // only ever arrives in a placed pack, out of a spawn point, as a rare roll or
+  // through a lair door is still art the player meets, and a survey that leaves
+  // it off reports the level as cleaner than it is.
   for (const spec of [
     ...def.spawns,
     ...(def.waves?.budget ?? []),
     ...(def.openingStrike ? [def.openingStrike] : []),
+    ...(def.packs ?? []).flatMap((p) => p.members),
+    ...(def.spawners ?? []).flatMap((s) => s.members),
+    ...(def.rareSpawns?.rare ?? []).map((enemy) => ({ enemy })),
+    ...(def.rareSpawns?.unique ?? []).map((enemy) => ({ enemy })),
+    ...(def.lairs ?? []).flatMap((l) => [{ enemy: l.enemy }, ...(l.escort ?? [])]),
   ]) {
     const enemy = ENEMY_DEFS[spec.enemy];
     if (!enemy) continue;
@@ -358,6 +367,14 @@ function levelEntries(def) {
   for (const wall of def.walls ?? []) add(wall.sprite ?? wall.kind, "wall");
   if (def.doors?.length) add("door_locked", "locked door");
   for (const d of def.decor) add(d.sprite ?? d.kind, "decor");
+  for (const lair of def.lairs ?? []) {
+    add(lair.sprite, "lair door (shut)");
+    add(lair.openSprite, "lair door (open)");
+  }
+  // The canopy drifts BETWEEN the eye and the ground, blurred and faint by
+  // design — flagged as such so the rubric isn't applied to it as if it were a
+  // sprite meant to read sharply.
+  for (const c of def.canopy ?? []) add(c.sprite ?? c.kind, "canopy (drawn blurred + faint)");
   return entries;
 }
 
