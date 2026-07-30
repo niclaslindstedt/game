@@ -135,7 +135,7 @@ names its in-run music with an optional `music` id (a key into the app's
   use of **tile zones** (`TileSpec.zones`) swaps everything east of the dome
   wall to the base's deck plating. The dome wall (two airlock gaps) and an
   interior divider carve the base into chambers; the **TERRARIUM** — a locked
-  lizard-shrine room in the SE corner — opens with PETER SEAL's keycard and
+  lizard-shrine room in the SE corner — opens with PETER TEAL's keycard and
   holds the TRIBUTE SCHEDULE (and its chest); a second cache sits in the dead
   SW flats, the detour across empty regolith its price. Scattered **marsrock**
   slabs and red craters mirror the moon's cover rules. **Sand storms** (`LevelDef.sandstorms` → the
@@ -985,7 +985,7 @@ over-head health bar, and the loot are the whole encounter.
   → FEMBOT (the quick, high-crit companion line) → mining rover (the outdoor
   heavy with a sweetened `dropProfile`), plus the OPTIMUSK garrison carried
   over — four elites: three tech billionaires (LARRY WEBPAGE, BUILD GATES,
-  PETER SEAL) and OPTIMUSK PRIME, the robot foreman orchestrating the
+  PETER TEAL) and OPTIMUSK PRIME, the robot foreman orchestrating the
   OPTIMUSK line (it drops the PROMPT INJECTOR and the ORG CHART, whose
   dotted line points back to the level-1 CORE), and ELON MOSQUE, the boss
   who **flees instead of dying**

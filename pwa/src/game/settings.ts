@@ -31,6 +31,13 @@ import { setHapticsEnabled } from "./haptics.ts";
 // plays for the engine's own runtime toggles). See the critical-path budget in
 // AGENTS.md.
 import {
+  clampFx,
+  defaultFx,
+  FX_RANGES,
+  type FxName,
+  type FxSettings,
+} from "./render/postfx.ts";
+import {
   DEFAULT_PITCH,
   DEFAULT_YAW,
   PITCH_RANGE,
@@ -337,6 +344,21 @@ export type GameSettings = {
    * feel, up to BLOOD_MAX× for a slaughterhouse. Read app-side only (a pure
    * render effect), so it needs no engine setter. */
   blood: number;
+  /**
+   * SETTINGS → VISUALS: the four knobs of how the field is PRESENTED — bloom on
+   * the lights, the colour grade, the vignette, and the depth haze up the raked
+   * floor (see `render/postfx.ts` for what each one is and which mechanism it
+   * uses). Every one is an amount, 0 = off, and every one is read app-side only
+   * (pure presentation), so none needs an engine setter.
+   *
+   * These are PLAYER settings, not developer ones — they cost frames on a phone
+   * and a player has to be able to turn them off — so they are deliberately NOT
+   * in `stripDeveloperState`.
+   */
+  bloom: number;
+  colorGrade: number;
+  vignette: number;
+  depthHaze: number;
   /** Developer sliders: the WORLD PROJECTION — how the flat top-down
    * simulation is put on screen (see pwa/src/game/render/tilt.ts).
    *
@@ -438,6 +460,10 @@ function defaults(): GameSettings {
     blood: 1,
     cameraPitch: DEFAULT_PITCH,
     cameraYaw: DEFAULT_YAW,
+    // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
+    // look: this is how the game is meant to be seen, and the rows exist for a
+    // player who wants it plainer or a phone that wants the frames back.
+    ...defaultFx(),
     // Balance multipliers start at the shipped tuning (neutral 1 for all but
     // the world's pace — see BALANCE_TUNING_DEFAULTS).
     balance: { ...BALANCE_TUNING_DEFAULTS },
@@ -495,6 +521,29 @@ function clampPitch(v: number): number {
 }
 function clampYaw(v: number): number {
   return Math.round(clamp(v, YAW_RANGE.min, YAW_RANGE.max));
+}
+
+/**
+ * The SETTINGS → VISUALS knobs, read out of a stored blob and clamped to their
+ * own ranges (`render/postfx.ts` owns those). Snapped to a fiftieth so a dragged
+ * value reads as a round number, exactly as the camera pair above.
+ *
+ * A knob the stored settings never mentioned falls back to the shipped default
+ * rather than to zero — a player who last saved before these existed gets the
+ * game as it is made, not a flat picture.
+ */
+function visualsFrom(
+  stored: Partial<Record<FxName, unknown>>,
+  base: FxSettings,
+): FxSettings {
+  const out = { ...base };
+  for (const name of Object.keys(FX_RANGES) as FxName[]) {
+    const value = stored[name];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[name] = Math.round(clampFx(name, value) * 50) / 50;
+    }
+  }
+  return out;
 }
 
 /** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real
@@ -748,6 +797,9 @@ function load(): GameSettings {
         Number.isFinite(stored.cameraYaw)
           ? clampYaw(stored.cameraYaw)
           : base.cameraYaw,
+      // Each VISUALS knob clamped to its OWN range (`postfx.ts` owns them), so a
+      // hand-edited or downgraded store can't hand the renderer a bloom of 40.
+      ...visualsFrom(stored, base),
       balance: loadBalance(stored.balance, developerUnlocked),
     };
   } catch {

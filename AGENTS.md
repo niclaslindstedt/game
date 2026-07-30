@@ -271,6 +271,65 @@ are functions rather than two scale factors because the projection is a matrix:
 where the player is pointing, which foe the cursor aims at, whether a tap hit the
 merchant, and where a floating DOM label pins itself all follow from that pair.
 
+**HOW THE PICTURE IS PRESENTED — SETTINGS → VISUALS, and the split that decides
+where each effect goes.** Four player-facing knobs (`render/postfx.ts`): BLOOM,
+COLOR GRADE, VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off. They
+are PLAYER settings, not developer ones — every one costs frames on a phone — so
+they are deliberately absent from `stripDeveloperState` and ship in the store
+build.
+
+**THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT — NOT TASTE — DECIDES THE
+MECHANISM.** The canvas is sized in WORLD units (`viewScaleFor`) and CSS blows it
+up 2–3× with `image-rendering: pixelated`. So there are two places to put an
+effect and they are not interchangeable. **ON THE CANVAS** is chunky, at world
+resolution, in the same pixel grid as the art — where BLOOM belongs, because the
+light it blooms is the game's own baked glow art (`glowSprite`, `beamSprite`, the
+loot shafts, the muzzle flashes) living on that same grid; a bloom computed at
+device resolution is smoother than the light casting it, which reads as a photo
+filter over pixel art rather than as pixel art glowing. **IN CSS** is smooth, at
+device resolution, and per-frame FREE — where the GRADE, the VIGNETTE and the
+HAZE belong, because all three are broad low-frequency washes that on the canvas
+would cost a full-frame composite every frame to come out in 2–3 px staircase
+bands. The CSS half is three custom properties from `fxStyleVars` written on the
+GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on the canvas,
+which is the overlay's SIBLING and would never inherit them), and the overlay
+sits at `z-index: 0` directly after the canvas so every positioned HUD element
+after it paints on top: the corners of the SCREEN going dark is atmosphere, the
+corners of the HEALTH BAR going dark is a bug.
+
+**THERE IS NO SHADER PASS, and that is a conclusion rather than a gap.** A WebGL
+stage would have to own the whole present path — the world would move to an
+offscreen target and the visible canvas would become the GL one, touching every
+screen↔world crossing, the DOM overlay pinning, the screenshot tooling and the
+gallery — and for these four effects it buys nothing: three are strictly better
+in CSS and the fourth wants to be chunky. What a shader WOULD buy is CRT
+curvature, chromatic aberration and a real 3D LUT. That is the day to write it.
+
+**DEPTH OF FIELD IS THE ONE REQUEST TO REFUSE.** There is no depth to focus on —
+the whole field is ONE ground plane and the hero is always at the middle of it —
+so a distance blur would blur a mob standing beside him exactly as hard as one
+the same distance north, and hide half the horde while it was at it. DEPTH HAZE
+is the honest version: what reads as distance on a raked plane is losing contrast
+toward the horizon. It is scaled by the live PITCH (`fxStyleVars`), because a
+camera looking straight down has no horizon to fade toward.
+
+**ANTI-ALIASING IS THE OTHER ONE, EXCEPT AT ONE PLACE.** The whole renderer is
+built for crisp integer pixels — `imageSmoothingEnabled = false`, an INTEGER
+`VIEW_SCALE × uiScale`, `billboard` composing to the identity at a whole-pixel
+offset. The one place averaging is right is a PROJECTED BAKE, because it happens
+once: `flatSprite` bakes at `BAKE_SUPERSAMPLE`× and box-averages down, so a wall
+panel's turned edges come out antialiased instead of as a staircase of single
+pixels, and at yaw 0 / pitch 1 it is a no-op by construction (a square-on sprite
+downsampled from an integer upscale of itself is bit-identical). The GROUND LAYER
+is deliberately NOT supersampled, for two independent reasons either of which
+stands alone: the intermediate for a big map would be ~7200×3000 (~86 MB, and
+larger maps walk into the browser's canvas cap), and it would look WORSE anyway —
+a wall panel is a small outlined silhouette, but the floor is a texture covering
+the whole screen, and averaging its rotation softens every speckle and seam at
+once, which reads as the one surface in the game being out of focus. The
+staircase on a yawed floor seam is the honest cost of turning pixel art; the fix
+is iso-drawn tile art, not a filter.
+
 **Mobile-first, landscape.** The reference device is a phone held
 horizontally: a ~844×390 CSS viewport (≈422×260 world units at the app's
 `VIEW_SCALE` of 2 and the shipped pitch — the projection makes the view taller

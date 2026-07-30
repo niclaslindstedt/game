@@ -82,7 +82,7 @@ describe("MARS level def", () => {
       "build_gates",
       "larry_webpage",
       "optimusk_prime",
-      "peter_seal",
+      "peter_teal",
     ]);
 
     const state = startGame(SEED, "mars");
@@ -90,11 +90,11 @@ describe("MARS level def", () => {
     expect(boss.defId).toBe("elon_mosque");
   });
 
-  it("locks the TERRARIUM behind PETER SEAL's keycard", () => {
+  it("locks the TERRARIUM behind PETER TEAL's keycard", () => {
     expect(MARS.doors!.some((d) => d.id === "terrarium")).toBe(true);
     expect(storyItemDef("keycard_terrarium").unlocks).toBe("terrarium");
     // ...and the keycard is really in SEAL's pockets.
-    expect(enemyDef("peter_seal").loot!.storyItems).toContain(
+    expect(enemyDef("peter_teal").loot!.storyItems).toContain(
       "keycard_terrarium",
     );
     // The tribute schedule waits inside the locked room.

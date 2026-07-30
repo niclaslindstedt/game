@@ -46,15 +46,20 @@ export { SPRITE_PLANES };
 /** Frame sequences the generator turns into film strips + motion previews. */
 export { ANIMATIONS };
 
-/** Register a derived sprite under a family, guarding against name clashes. */
-function register(family, name, grid) {
+/**
+ * Register a derived sprite under a family, guarding against name clashes.
+ * `palette` defaults to the family scope; a variant derived from ONE base
+ * sprite passes that sprite's own palette merged over it, so a char the base
+ * defines locally still paints the color the base painted it with.
+ */
+function register(family, name, grid, palette = family.palette) {
   if (name in SPRITES) {
     throw new Error(
       `sprite "${name}" defined by both "${SPRITE_FAMILY[name]}" and "${family.name}"`,
     );
   }
   SPRITES[name] = grid;
-  SPRITE_PALETTES[name] = family.palette;
+  SPRITE_PALETTES[name] = palette;
   SPRITE_FAMILY[name] = family.name;
 }
 
@@ -110,6 +115,12 @@ for (const def of bySprite.values()) {
   const style = family.wounds?.[def.sprite] ?? GORE_STYLES[def.gore ?? "blood"];
   const stages = ROLE_STAGES[def.role];
   WOUND_PLANS[def.sprite] = { style, stages, family: family.name };
+  // The wounded frames are the base frames with splats dealt onto them, so
+  // they must render in the base sprite's OWN palette (the family scope backs
+  // the gore chars). Reading the family scope alone renders a locally-defined
+  // body char in the family's color — or, when the family never defined it at
+  // all, in nothing.
+  const palette = { ...family.palette, ...SPRITE_PALETTES[`${def.sprite}_0`] };
   // The seeded deal can collapse its clusters onto too few pixels to read
   // (the wandering-tourist case: overlapping anchors left a 5-px "wound").
   // Re-deal with a bumped seed until the hurt stage passes the visibility
@@ -119,11 +130,11 @@ for (const def of bySprite.values()) {
   for (let reroll = 1; reroll <= 8; reroll++) {
     const hurt = wounds[`${def.sprite}_hurt_0`];
     if (!hurt) break;
-    if (woundVisibility(frames[0], hurt, family.palette) === null) break;
+    if (woundVisibility(frames[0], hurt, palette) === null) break;
     wounds = woundedFrames(def.sprite, frames, style, stages, reroll);
   }
   for (const [name, grid] of Object.entries(wounds)) {
-    register(family, name, grid);
+    register(family, name, grid, palette);
   }
 }
 
