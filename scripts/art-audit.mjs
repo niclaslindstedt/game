@@ -336,7 +336,10 @@ function levelEntries(def) {
     ...(def.spawners ?? []).flatMap((s) => s.members),
     ...(def.rareSpawns?.rare ?? []).map((enemy) => ({ enemy })),
     ...(def.rareSpawns?.unique ?? []).map((enemy) => ({ enemy })),
-    ...(def.lairs ?? []).flatMap((l) => [{ enemy: l.enemy }, ...(l.escort ?? [])]),
+    ...(def.lairs ?? []).flatMap((l) => [
+      { enemy: l.enemy },
+      ...(l.escort ?? []),
+    ]),
   ]) {
     const enemy = ENEMY_DEFS[spec.enemy];
     if (!enemy) continue;
@@ -374,7 +377,8 @@ function levelEntries(def) {
   // The canopy drifts BETWEEN the eye and the ground, blurred and faint by
   // design — flagged as such so the rubric isn't applied to it as if it were a
   // sprite meant to read sharply.
-  for (const c of def.canopy ?? []) add(c.sprite ?? c.kind, "canopy (drawn blurred + faint)");
+  for (const c of def.canopy ?? [])
+    add(c.sprite ?? c.kind, "canopy (drawn blurred + faint)");
   return entries;
 }
 
