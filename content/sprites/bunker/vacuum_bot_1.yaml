@@ -2,35 +2,38 @@ name: vacuum_bot_1
 family: bunker
 size: [16, 16]
 description: >
-  A low, flat grey robot-vacuum disc mid-glide, with a glowing cyan sensor
-  strip along its front rim — armed housekeeping.
+  Armed housekeeping, mid-roll: the hazard-banded vacuum disc rides up on
+  its casters and the taser arc snaps across the gap between its prongs.
 subject:
   kind: machine minion
-  build: a low, flat, wide ground-hugging robot-vacuum disc seen at a shallow near-top-down angle
-  features: a glowing cyan sensor strip along the front rim
-  accent: glowing cyan sensor strip
+  build: a low, wide, ground-hugging robot-vacuum disc on two casters
+  features: a wide cyan sensor band around the front, amber hazard bands top and bottom, and a taser arc snapping across the mast
+  accent: cyan sensor band and the amber taser arc
+  pose: mid-roll, the arc snapping across
   flavor: armed housekeeping — a fast swarm unit that keeps the marble spotless and the intruders bleeding
 palette:
-  K: "#0c0b12" # black wheel gaps
+  K: "#0c0b12" # black caster gaps
   O: "#1a1c2c" # navy outline
-  Q: "#5cd2ff" # cyan sensor strip
+  Q: "#5cd2ff" # cyan sensor band
   V: "#9095a5" # light-grey top plate
+  W: "#f4f4f4" # white-hot arc core
   b: "#3f4553" # dark underside
   v: "#60687e" # grey chassis
+  y: "#ffb02e" # amber hazard bands and taser arc
 grid: |
   ................
-  ................
-  ................
-  ................
-  ................
-  ................
-  ......OOOO......
-  ....OOvvvvOO....
-  ...OvvVVVVvvO...
-  ..OvVVVVVVVVvO..
-  ..OQQQvvvvvvvO..
-  ..OvvvvvvvvvvO..
-  ...ObbbbbbbbO...
-  ...OKO....OKO...
-  ................
+  ......y..y......
+  ......yWWy......
+  ......OvvO......
+  ....OOOvvOOO....
+  ..OOVVVVVVVVOO..
+  .OVyyyyyyyyyyVO.
+  .OVVvvvvvvvvVVO.
+  .OvvQQQQQQQQvvO.
+  .OvvQQQQQQQQvvO.
+  .OvvvvvvvvvvvvO.
+  .OyyyyyyyyyyyyO.
+  ..ObbbbbbbbbbO..
+  ..OKKOOOOOOKKO..
+  ..OOO......OOO..
   ................
