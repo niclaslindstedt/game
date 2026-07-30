@@ -6638,10 +6638,23 @@ canvas.tier-artifact {
 
 /* The card's own BUY/SELL button spans its foot — a full-width tap target under
    the facts it is acting on, like the inventory tooltip's USE row. */
+/* The card's own BUY/SELL action, sized like the quest box's ACCEPT — a
+   content-width button on a right-hand action rail, not a banner across the
+   foot. It was stretched full-width at first (copying the inventory tooltip's
+   USE row), which put a 150x56 slab under "coin 6" and spent a quarter of the
+   card's area on its smallest fact. The selector carries TWO classes on purpose:
+   `.pixel-button`'s own `0.75rem 1.5rem` is a single class and lands later in
+   this file, so a one-class override here silently loses to it — which is
+   exactly how the slab got its height. */
 .shop-deal-card .shop-deal-btn {
-  align-self: stretch;
+  align-self: flex-end;
   justify-content: center;
-  margin-top: 0.15rem;
+  /* Wide enough that a one-digit price is still a comfortable thumb target,
+     narrow enough that the button never becomes the loudest thing on a card
+     whose whole job is the stat lines above it. */
+  min-width: 4.5rem;
+  padding: 0.4rem 0.8rem;
+  margin-top: 0.35rem;
 }
 
 /* The portal wrapper is a BOX-LESS pass-through: `display: contents` keeps it in
