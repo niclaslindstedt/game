@@ -1,0 +1,21 @@
+name: gib_ecto_core_s
+family: effects
+size: [4, 4]
+description: >-
+  The cold light a haunting was wrapped around.
+subject:
+  kind: gore piece
+  build: >-
+    a hard knot of white light in a blue corona
+  flavor: >-
+    the small tier
+palette:
+  W: "#f4f4f4" # white core
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+  x: "#c5e6eb" # cold light
+grid: |
+  .xx.
+  xWWx
+  xWnx
+  .cc.

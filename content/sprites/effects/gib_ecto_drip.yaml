@@ -1,0 +1,21 @@
+name: gib_ecto_drip
+family: effects
+size: [5, 5]
+description: >-
+  A drip of ectoplasm.
+subject:
+  kind: gore piece
+  build: >-
+    a small teardrop of goo with a lit crown and a dark tail
+  flavor: >-
+    the shower a burst haunting throws by the dozen
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  ..n..
+  .ncc.
+  nccCc
+  .ccC.
+  ..c..

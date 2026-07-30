@@ -1,0 +1,26 @@
+name: gib_cosmic_shard
+family: effects
+size: [6, 7]
+description: >-
+  A shard of something that used to shine.
+subject:
+  kind: gore piece
+  build: >-
+    a long tapering splinter of light, white-hot at its broad end and
+    cooling through violet to cold blue at the point
+  flavor: >-
+    it is going OUT along its own length, which is the whole read: a piece
+    of a star dying a second time
+palette:
+  L: "#d4a5ec" # starlight
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+  j: "#4054bc" # cold blue
+grid: |
+  ..WL..
+  .WLLP.
+  WLLPPj
+  LLPPj.
+  .LPj..
+  ..Pj..
+  ...j..

@@ -1465,16 +1465,28 @@ flattened the top of the range (a 3× and a 10× overkill both hit the cap and d
 the same picture); the split is what lets a level 99 hero in a level 1 crowd keep
 escalating for ever. Three pieces:
 
-- **THE SPRAY** (`render/blood.ts`, built like `dust.ts`): a wound splash at the
-  point of impact, droplets thrown along seeded bearings that arc up and back
-  down, and a haze only a blow worth more than a scratch makes at all. The splash
+- **THE SPRAY** (`render/blood.ts`, built like `dust.ts`): a CLOUD of colour
+  under everything, a wound splash at the point of impact, droplets thrown along
+  seeded bearings that arc up and back down, and a haze only a blow worth more
+  than a scratch makes at all. The **CLOUD** is the one part that is not authored
+  art and deliberately so — it is atomized liquid with no shape of its own, and
+  pixel art is the wrong tool for a soft edge — so it is a handful of BAKED
+  radial glows (`glowSprite`) thrown down the same cone the drops fly, blooming
+  and thinning, and it is what makes a landed blow read before a single drop has
+  travelled anywhere. It is **composited with plain alpha, never `lighter`**, and
+  that is what lets one pass serve four families: additive is the obvious choice
+  for a glow and is wrong here, because a machine's cloud is near-black and
+  adding black to a floor draws nothing at all. Plain alpha lets red, green and
+  violet lie over the ground as colour AND lets the oily one genuinely DARKEN it.
+  Its alpha is deliberately low — this is a wash the fight is seen THROUGH, and a
+  solid one hides the mob being hit, which is the one thing a hit effect may
+  never do. The splash
   grows by walking FURTHER UP ITS OWN FRAME CHAIN rather than by being scaled —
   scaling a pixel sprite just resamples the art — and the chain runs past the
   16 px `blood_hit_*` ring into the `blood_burst_*` gore detonations, because a
   ring is the right picture for a solid kill and the wrong one for a blow a
   hundred times a body's health. Past `CHUNK_FORCE` the drops become authored
-  PIECES (`blood_chunk_*`) instead of beads. Only the warm-blooded bleed;
-  `EnemyDef.gore` ecto/sparks keep the plain two-frame splash.
+  PIECES (`blood_chunk_*`) instead of beads.
 - **THE FLOOR** (`render/blood-ground.ts`) is **ONE BYTE PER TILE** — a
   `Uint8Array` of saturation over the level's tile grid, 28 KB for the biggest
   map, permanent, never evicted. A list of stains would grow with every kill and
@@ -1721,8 +1733,73 @@ heart, a liver, a kidney, two lengths of gut, a bone shard, two meat slabs — a
 of them bloody, all of them things that were on the INSIDE) plus `cleave_wound`,
 the cut face drawn in the gap a cleaved body opens. That one is
 deliberately the DARKEST gore in the game: a bright band between two halves
-reads as a light source rather than as an inside. Judge all of it in the EFFECTS
-GALLERY — `cleave` (CLEAVED IN TWO) and `gib` (BURST INTO PIECES).
+reads as a light source rather than as an inside.
+
+**AND EVERY KIND OF BODY COMES APART AS ITSELF — `EnemyDef.gore` IS A FAMILY, AND
+`game-screen/gore.ts` IS ITS ONE CATALOG.** A ghost, a machine and a rift-thing
+used to keep a plain two-frame splash and a plain corpse whatever killed them,
+which made three quarters of the roster the one part of the game a hit did not
+land on. There are four families now — `blood`, `ecto`, `sparks`, `cosmic` — and
+each sprays, cuts, bursts, spills and hangs its own ambient. Adding a fifth is a
+ROW IN THAT FILE plus its art, never an edit to the spray, the burst, the cleave,
+the floor and the effect pass. Four things vary, and each is a different reason a
+burst reads as one kind of thing:
+
+- **THE PIECES**, which is the half that does the work. A rover has no liver and
+  a collapsed star has no ribcage, so each family carries its own `bands` (what
+  is inside a body of that kind, top to bottom — a machine's are sensor, chassis,
+  core and drive), its own `signature` ladder and its own `filler` shower. The
+  cut rule is untouched: it still spills WHAT IT WENT THROUGH, so a cut across a
+  rover's head spills its eye for exactly the reason one across a man's neck
+  spills his skull. Each family also says what BOUNCES, and a machine is the
+  inverse of a body — everything it is made of is hard except its oil.
+- **THE RAMP.** The spray, the haze, the floor rungs and the plain splash are
+  BLOOD's authored art re-hued onto three stops (`render/recolor.ts`: luminance
+  per pixel → a colour off the family's ramp, alpha untouched), not authored four
+  times over — sixty sprites nobody would keep in step. A TINT cannot do this:
+  tinting MULTIPLIES, which only darkens, and red art multiplied by green is
+  near-black. **Blood's ramp is deliberately `null`** rather than the red one it
+  would otherwise be: a re-hue of red art onto a red ramp is very nearly the
+  identity and "very nearly" is a silent regression on the look that shipped.
+- **THE CLOUD's COLOUR** — `GoreFamily.cloud`, the one colour that names the
+  family. For the three re-hued families it is the ramp's own middle stop; blood
+  states it outright, because blood has no ramp and the cloud still has to know
+  what colour blood is.
+- **THE AIR** (`AIR` in `render/blood.ts`) — what hangs once the pieces land, and
+  the cheapest of the four differences as well as the one that names the family
+  from across a room. Blood HAZES, a machine SMOKES (climbs three times as far
+  and outlives the burst that made it), a haunting PUFFS (blows outward, gone
+  fastest), a rift-thing GLIMMERS (hardly moves, just goes out).
+- **THE FLOOR.** Blood, oil and a ghost's goo are all matter and all stay for the
+  rest of the level; a rift-thing is LIGHT and marks nothing. That is recorded as
+  a SECOND byte per tile — which family last spilled there — so the same eight
+  authored rungs draw red, green or oil-black, with last writer winning the
+  colour while the saturation stays the running total either way. `stains` is
+  checked where the mark is DECIDED (event-fx.ts), never at the draw, exactly as
+  the gore gate itself is. `bloodAt` — what the hero's boots wade through — is
+  deliberately blood ALONE, because the soak and the trail are blood art in
+  blood's colours and a tile of oil must not print red bootprints out of it.
+
+The same gate covers all four: `bloodAmount()`, so a censored blow still falls
+back to the plain splash and the ordinary corpse. **A boss is still the one body
+that never comes apart**, and that is a rule about the FICTION — it has last
+words to say over its own corpse, and that corpse is the level's landmark.
+
+**JUDGE ALL OF IT IN THE EFFECTS GALLERY, AND THE RARE CUTS ARE PINNED SO THEY
+CAN BE.** `cleave` (CLEAVED IN TWO) and `gib` (BURST INTO PIECES) show the roll
+honestly; `gore-ecto`, `gore-sparks` and `gore-cosmic` put each family's cut and
+burst on screen together, which is the only way to judge the claim that a ghost
+comes apart as a ghost rather than as a person in green. The other four exist
+because everything about a cleave is ROLLED, which is the feature and also what
+makes its rare cuts impossible to LOOK at — an oblique slice comes up about a
+fifth of the time, so tuning the depth illusion otherwise means replaying until
+one appears. `Exhibit.cut` pins a PARTIAL cut over the roll for the length of a
+show (`pinCleaveCut`, cleared when the gallery stops so it can never reach a real
+run): `cleave-behead` and `cleave-legs` pin the two ends of the limb rule,
+`cleave-oblique` and `cleave-slab` the two ends of the depth one. Pin the ONE
+axis the exhibit is about and let the rest go on rolling — a diorama showing the
+same picture every take would misreport a system whose whole point is that it
+does not.
 
 **THE SECOND ARM IS ONE SLOT AND TWO ANSWERS — `EquipSlot.offhand`.** It used
 to hold a bag and nothing else, which made it a slot rather than a decision. It

@@ -1,0 +1,24 @@
+name: gib_ecto_blob
+family: effects
+size: [7, 6]
+description: >-
+  A gobbet of ectoplasm.
+subject:
+  kind: gore piece
+  build: >-
+    a heavy sagging drop of pale green goo, lit along its upper edge and
+    pooling darker underneath
+  flavor: >-
+    the commonest thing a haunting leaves when it is opened — it is most
+    of what one was ever made of
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  ..nnc..
+  .nccccC
+  ncccCCc
+  cccCCcc
+  .ccCcc.
+  ..ccc..

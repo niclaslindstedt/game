@@ -1,0 +1,27 @@
+name: gib_cosmic_thread
+family: effects
+size: [4, 8]
+description: >-
+  A filament pulled out of the light.
+subject:
+  kind: gore piece
+  build: >-
+    a long fine thread of light running from white at one end down through
+    violet to blue at the other, kinked once
+  flavor: >-
+    the long piece — it turns end over end in flight exactly as a limb or
+    a piston does
+palette:
+  L: "#d4a5ec" # starlight
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+  j: "#4054bc" # cold blue
+grid: |
+  ..Wj
+  .WLj
+  .WL.
+  WLP.
+  WLP.
+  .LP.
+  .Pj.
+  ..j.

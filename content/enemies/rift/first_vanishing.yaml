@@ -16,7 +16,7 @@ role: minion
 hellborn: true
 sprite: first_vanishing
 locomotion: float
-gore: ecto
+gore: cosmic
 phasing: true
 levelBonus: 2
 hp: 400

@@ -144,7 +144,7 @@ export function splitSprite(
     ctx.translate(sprite.width / 2, sprite.height / 2);
     ctx.rotate(baked);
     // Slide the line along its own normal: this is what turns ONE angle into a
-    // beheading, a bisection and a pair of severed legs (see `CLEAVE_CUTS`).
+    // beheading, a bisection and a pair of severed legs (see `cleaveCut`).
     ctx.translate(0, shift);
     ctx.fillStyle = "#000";
     ctx.fillRect(-reach, keep < 0 ? 0 : -reach, reach * 2, reach);

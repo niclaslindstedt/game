@@ -53,6 +53,21 @@
 // ground is settled; the only thing that moves is the spray, and that is over in
 // a third of a second.
 //
+// **AND NOT EVERY MESS STAYS.** Blood, a machine's oil and a ghost's goo are all
+// matter and are all on this floor for the rest of the level. A rift-thing is the
+// one exception: it is light, and light goes out, so it marks nothing at all.
+// That is a fact about it rather than a saving, and it is enforced at the CALLER
+// (`GoreFamily.stains`) — a family that leaves no mark never reaches this module,
+// so the grid holds only things that are genuinely still there.
+//
+// What DOES stay is recorded in a second byte per tile: WHICH family last spilled
+// on it, so oil draws black and amber and ectoplasm green where blood draws red,
+// out of the same eight authored rungs re-hued (`render/recolor.ts`). Last writer
+// wins the colour —
+// the freshest thing spilled on a tile is the thing lying on top of it — while
+// the SATURATION is the running total either way, because a tile with blood and
+// oil on it is a dirtier tile whichever one you can see.
+//
 // The whole feature is gated on the EXTRA GORE setting, checked by the caller
 // (`bloodBlow`) before anything reaches here.
 
@@ -60,8 +75,15 @@ import { type GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { type BloodSpill } from "../game-screen/blood-hit.ts";
+import {
+  goreFamily,
+  GORE_FAMILIES,
+  type GoreFamily,
+  type GoreFamilyId,
+} from "../game-screen/gore.ts";
 import { drawnRung, RUNG_AT, SOAKED_RUNG } from "./blood-rungs.ts";
 import { tileHash } from "./ground-tiles.ts";
+import { recolorSprite } from "./recolor.ts";
 import { TILE, type ViewSize } from "./shared.ts";
 import { type Camera } from "./view.ts";
 
@@ -132,8 +154,19 @@ const SPILL_UNIT = 255;
  * mount hands us a different object and the floor comes up clean. */
 let owner: GameState | null = null;
 let sat = new Uint8Array(0);
+/** WHICH family last spilled on each tile, as an index into `GORE_FAMILIES` —
+ * the second byte, and the whole of what makes oil look like oil. */
+let fam = new Uint8Array(0);
 let cols = 0;
 let rows = 0;
+
+/** `GORE_FAMILIES`' order IS the tile encoding, so the lookup is an index rather
+ * than a string compare inside the draw loop. Blood is index 0, which is also
+ * what a freshly-zeroed grid reads as — the right default in both directions. */
+const FAMILY_INDEX = new Map<GoreFamilyId, number>(
+  GORE_FAMILIES.map((f, i) => [f.id, i]),
+);
+const BLOOD_INDEX = FAMILY_INDEX.get("blood") ?? 0;
 
 /** Pre-mirrored tile art, keyed `name/flip`. Four flips of eight 16×16 sprites
  * is a few KB, and it keeps the draw loop to one `drawImage` per tile — a
@@ -147,6 +180,7 @@ const flipCache = new Map<string, HTMLCanvasElement | ImageBitmap>();
 export function resetBloodGround(): void {
   owner = null;
   sat = new Uint8Array(0);
+  fam = new Uint8Array(0);
   cols = 0;
   rows = 0;
 }
@@ -157,6 +191,7 @@ function ensureGrid(state: GameState): void {
   cols = Math.ceil(state.level.width / TILE);
   rows = Math.ceil(state.level.height / TILE);
   sat = new Uint8Array(cols * rows);
+  fam = new Uint8Array(cols * rows);
 }
 
 /**
@@ -171,9 +206,11 @@ function ensureGrid(state: GameState): void {
 export function spillBlood(
   state: GameState,
   spills: readonly BloodSpill[],
+  family: GoreFamilyId = "blood",
 ): void {
   if (spills.length === 0) return;
   ensureGrid(state);
+  const mark = FAMILY_INDEX.get(family) ?? BLOOD_INDEX;
   for (const spill of spills) {
     const rx = Math.max(TILE * 0.5, spill.radius);
     const ry = Math.max(TILE * 0.5, spill.radius * FLATTEN);
@@ -194,6 +231,7 @@ export function spillBlood(
         const add = spill.amount * SPILL_UNIT * falloff * jitter;
         const i = ty * cols + tx;
         sat[i] = Math.min(255, (sat[i] ?? 0) + add);
+        fam[i] = mark;
       }
     }
   }
@@ -204,16 +242,22 @@ function flipped(
   sprites: Sprites,
   name: string,
   flip: number,
+  family: GoreFamily,
 ): HTMLCanvasElement | ImageBitmap | null {
   if (flipCacheFor !== sprites) {
     flipCacheFor = sprites;
     flipCache.clear();
   }
-  const key = `${name}/${flip}`;
+  const key = `${name}/${flip}/${family.id}`;
   const cached = flipCache.get(key);
   if (cached) return cached;
-  const art = spriteByName(sprites, name);
-  if (!art) return null;
+  const source = spriteByName(sprites, name);
+  if (!source) return null;
+  // RE-HUED FIRST, MIRRORED SECOND. The re-hue is a full pixel walk with a cache
+  // of its own keyed on the sprite, so doing it before the flip means one walk
+  // per (tile, family) rather than one per (tile, family, flip) — four times the
+  // work for four identical results.
+  const art = family.ramp ? recolorSprite(source, name, family.ramp) : source;
   if (flip === 0) {
     flipCache.set(key, art);
     return art;
@@ -309,6 +353,12 @@ export function drawBloodGround(
     for (let tx = tx0; tx <= tx1; tx++) {
       const s = sat[ty * cols + tx] ?? 0;
       if (s < RUNG_AT[0]!) continue;
+      // WHAT IS ON THIS TILE. Every blot below is asked for through it, so a
+      // machine's oil comes out of the same four rungs in its own black and
+      // amber (see the header).
+      const family =
+        GORE_FAMILIES[fam[ty * cols + tx] ?? BLOOD_INDEX] ??
+        goreFamily("blood");
       const px = tx * TILE - camera.x;
       const py = ty * TILE - camera.y;
       const hash = tileHash(tx, ty);
@@ -344,6 +394,7 @@ export function drawBloodGround(
             sprites,
             RUNGS[rung - 1]![(hash >>> 9) & 1]!,
             (hash >>> 10) & 3,
+            family,
           ),
           px,
           py,
@@ -354,7 +405,7 @@ export function drawBloodGround(
       }
       blot(
         ctx,
-        flipped(sprites, RUNGS[rung]![(hash >>> 3) & 1]!, flip),
+        flipped(sprites, RUNGS[rung]![(hash >>> 3) & 1]!, flip, family),
         px,
         py,
         jx,
@@ -376,7 +427,7 @@ export function drawBloodGround(
           const [name, edgeFlip] = FRINGE[d]!;
           blot(
             ctx,
-            flipped(sprites, name, edgeFlip),
+            flipped(sprites, name, edgeFlip, family),
             px,
             py,
             jx,
@@ -398,6 +449,7 @@ export function drawBloodGround(
             sprites,
             RUNGS[SOAKED_RUNG]![(hash >>> 4) & 1]!,
             (hash >>> 7) & 3,
+            family,
           ),
           px,
           py,
@@ -419,7 +471,21 @@ export function bloodTileCount(): number {
   return n;
 }
 
-/** Saturation at a world point, 0–255 — a test/diagnostic reader. */
+/**
+ * BLOOD at a world point, 0–255 — what the hero's boots may pick up.
+ *
+ * Deliberately blood ALONE: the hero wades through what is on the floor and
+ * tracks it out on his boots (render/blood-tracks.ts, game-screen/hero-soak.ts),
+ * and both of those are built out of blood art in blood's colours. A tile whose
+ * last spill was a machine's oil reads as clean to them rather than printing red
+ * bootprints out of a puddle of oil — which is the one way this grid could lie
+ * about what is on the floor.
+ */
 export function bloodAt(x: number, y: number): number {
-  return satAt(Math.floor(x / TILE), Math.floor(y / TILE));
+  const tx = Math.floor(x / TILE);
+  const ty = Math.floor(y / TILE);
+  if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return 0;
+  return (fam[ty * cols + tx] ?? BLOOD_INDEX) === BLOOD_INDEX
+    ? (sat[ty * cols + tx] ?? 0)
+    : 0;
 }

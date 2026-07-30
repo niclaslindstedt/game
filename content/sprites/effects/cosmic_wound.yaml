@@ -1,0 +1,23 @@
+name: cosmic_wound
+family: effects
+size: [14, 5]
+description: >-
+  The cut face of something made of light.
+subject:
+  kind: gore detail
+  build: >-
+    a band of raw white light with a violet rim, the brightest thing on
+    the screen for the moment it lasts
+  flavor: >-
+    the one cut face that GLOWS rather than gleams — there is nothing
+    inside it but what it was made of
+palette:
+  L: "#d4a5ec" # starlight
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+grid: |
+  ..PLLPPLLP....
+  .PLWWWWWLP....
+  PLWWWWWWWLP...
+  .PLWWWWWLP....
+  ..PLLPPLLP....

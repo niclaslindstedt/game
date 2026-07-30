@@ -7,7 +7,7 @@ lore: >-
 role: minion
 sprite: star_jelly
 locomotion: float
-gore: ecto
+gore: cosmic
 phasing: true
 hp: 75
 speed: 14

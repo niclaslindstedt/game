@@ -1,0 +1,20 @@
+name: gib_ecto_string_s
+family: effects
+size: [3, 5]
+description: >-
+  A trailing string of ectoplasm.
+subject:
+  kind: gore piece
+  build: >-
+    a short kinked thread of goo
+  flavor: >-
+    the small tier
+palette:
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  .n.
+  .c.
+  cc.
+  .cc
+  ..c

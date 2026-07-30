@@ -1,0 +1,19 @@
+name: gib_cosmic_ring_s
+family: effects
+size: [4, 4]
+description: >-
+  A fragment of the ring it wore.
+subject:
+  kind: gore piece
+  build: >-
+    a small broken loop of light
+  flavor: >-
+    the small tier
+palette:
+  L: "#d4a5ec" # starlight
+  W: "#f4f4f4" # white heat
+grid: |
+  .LL.
+  L..L
+  L..L
+  .LL.

@@ -1,0 +1,22 @@
+name: gib_bot_oil
+family: effects
+size: [6, 5]
+description: >-
+  A gobbet of black oil.
+subject:
+  kind: gore piece
+  build: >-
+    a heavy blot of oil, near-black with one dull grey highlight where the
+    light catches its skin
+  flavor: >-
+    the machines' blood, and the only soft thing in their wreck — it lands
+    with a slap and stays
+palette:
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+grid: |
+  ..kk..
+  .kkkk.
+  kkkbkk
+  .kkkk.
+  ..kk..

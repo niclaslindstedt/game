@@ -1,0 +1,26 @@
+name: gib_ecto_mask
+family: effects
+size: [7, 7]
+description: >-
+  The face it was still wearing.
+subject:
+  kind: gore piece
+  build: >-
+    a hollow shell of goo holding the shape of a face — two dark sockets,
+    an open dark mouth, and nothing at all behind it
+  flavor: >-
+    a haunting's skull: the piece that says this used to be somebody, and
+    the only one that is recognisably a PERSON
+palette:
+  C: "#5b858c" # ecto shadow
+  O: "#1a1c2c" # hollow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  .nccn..
+  ncccccn
+  cOccOcc
+  ccccccc
+  cCOOOCc
+  .cCCCc.
+  ..ccc..

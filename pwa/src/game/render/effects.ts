@@ -9,6 +9,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
 import { type BloodBlow } from "../game-screen/blood-hit.ts";
+import { type GoreFamilyId } from "../game-screen/gore.ts";
 import { type GoreBurst } from "../game-screen/gore-burst.ts";
 import {
   drawBurst,
@@ -141,6 +142,10 @@ export type Effect = {
    * (drops, haze, reach, how far up the wound's frame chain it gets) comes off
    * this one shape (game-screen/blood-hit.ts, drawn by ./blood.ts). */
   blood?: BloodBlow;
+  /** Blood/splash: WHAT KIND OF BODY threw it (`EnemyDef.gore`) — the ramp its
+   * frames are re-hued onto and what hangs in the air afterwards
+   * (game-screen/gore.ts). A cleave/gib carries its own on the burst. */
+  family?: GoreFamilyId;
   /** Cleave/gib: what the body came apart INTO — the pieces, their bearings,
    * their arcs and their bounces (game-screen/gore-burst.ts, drawn by
    * ./gibs.ts). The very same shape the floor's blood was laid out from, so a

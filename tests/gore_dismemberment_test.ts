@@ -25,6 +25,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { setDevicePolicyForTest } from "../pwa/src/app/device-policy.ts";
+import { GORE_FAMILIES } from "../pwa/src/game/game-screen/gore.ts";
 import {
   cleaveCut,
   goreBurst,
@@ -51,7 +52,6 @@ function death(over: Partial<KillBlow> = {}) {
     heroPos: HERO,
     pos: VICTIM,
     role: "minion",
-    bleeds: true,
     anatomy: "humanoid",
     force: 2,
     body: 1,
@@ -117,10 +117,38 @@ describe("what a killing blow leaves of the body", () => {
     }
   });
 
-  it("never takes apart a body with no blood in it", () => {
-    // A wisp has no halves and a rover has no intestines.
-    for (const edged of [true, false]) {
-      expect(death({ edged, damage: 900, bleeds: false }).gore).toBeNull();
+  it("takes EVERY kind of body apart, each into its own pieces", () => {
+    // A wisp has no intestines and a rover has no ribcage — but a wisp has goo
+    // and a cold light in it, and a rover has plate and a loom of wire, so both
+    // come apart as themselves. What each is made of is the family catalog's;
+    // that every one of them CAN come apart is this module's.
+    for (const family of GORE_FAMILIES) {
+      const burst = death({
+        edged: false,
+        damage: 900,
+        family: family.id,
+      }).gore;
+      expect(burst?.kind).toBe("gib");
+      expect(burst?.family).toBe(family.id);
+      // Every piece it threw is one this family actually has.
+      const owned = new Set([
+        ...family.signature.map((e) => e.sprite),
+        ...family.filler.map((e) => e.sprite),
+      ]);
+      for (const piece of burst!.pieces) {
+        expect(owned.has(piece.sprite!)).toBe(true);
+      }
+    }
+  });
+
+  it("gives every family its own cut, spilling only what is inside it", () => {
+    for (const family of GORE_FAMILIES) {
+      const burst = death({ edged: true, damage: 900, family: family.id }).gore;
+      expect(burst?.kind).toBe("cleave");
+      const inside = new Set(family.bands.flatMap((b) => b.spills));
+      for (const piece of burst!.pieces) {
+        expect(inside.has(piece.sprite!)).toBe(true);
+      }
     }
   });
 });

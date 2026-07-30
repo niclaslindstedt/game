@@ -1,0 +1,19 @@
+name: gib_ecto_drip_s
+family: effects
+size: [3, 3]
+description: >-
+  A drip of ectoplasm.
+subject:
+  kind: gore piece
+  build: >-
+    a bead of pale goo
+  flavor: >-
+    the small tier
+palette:
+  C: "#5b858c" # ecto shadow
+  c: "#8cd7a0" # ecto goo
+  n: "#b9e6cd" # ecto highlight
+grid: |
+  .n.
+  ncC
+  .c.

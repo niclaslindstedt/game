@@ -10,7 +10,7 @@ pack:
   - 5
 sprite: stray_comet
 locomotion: float
-gore: ecto
+gore: cosmic
 hp: 20
 speed: 22
 radius: 8

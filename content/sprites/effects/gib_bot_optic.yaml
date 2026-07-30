@@ -1,0 +1,24 @@
+name: gib_bot_optic
+family: effects
+size: [6, 6]
+description: >-
+  An optic, still lit.
+subject:
+  kind: gore piece
+  build: >-
+    a round lens in a steel bezel with a red glow behind the glass,
+    unblinking, a bead of oil hanging off its rim
+  flavor: >-
+    a robot's skull: the one piece that is recognisably a FACE, and the
+    one that is still looking at you on the floor
+palette:
+  R: "#ff5252" # warning red
+  T: "#c0c5cf" # bright steel
+  k: "#342c26" # oil
+grid: |
+  ..kk..
+  .kTTk.
+  kTRRTk
+  kTRRTk
+  .kTTk.
+  ..kk..

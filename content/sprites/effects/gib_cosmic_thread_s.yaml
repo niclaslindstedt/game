@@ -1,0 +1,22 @@
+name: gib_cosmic_thread_s
+family: effects
+size: [3, 5]
+description: >-
+  A filament pulled out of the light.
+subject:
+  kind: gore piece
+  build: >-
+    a small fine thread running white to blue
+  flavor: >-
+    the small tier
+palette:
+  L: "#d4a5ec" # starlight
+  P: "#b05cdc" # deep violet
+  W: "#f4f4f4" # white heat
+  j: "#4054bc" # cold blue
+grid: |
+  .Wj
+  WL.
+  WL.
+  .LP
+  .Pj

@@ -1,0 +1,23 @@
+name: gib_bot_cell_s
+family: effects
+size: [3, 5]
+description: >-
+  A cracked power cell, leaking.
+subject:
+  kind: gore piece
+  build: >-
+    a small can split at the base and running green acid
+  flavor: >-
+    the small tier
+palette:
+  A: "#8d9196" # plate
+  G: "#7be08a" # battery acid
+  T: "#c0c5cf" # bright steel
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+grid: |
+  kTk
+  kGk
+  kbk
+  .G.
+  .G.

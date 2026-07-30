@@ -1,0 +1,24 @@
+name: gib_bot_plate
+family: effects
+size: [8, 5]
+description: >-
+  A shard of torn hull plating.
+subject:
+  kind: gore piece
+  build: >-
+    a buckled panel of grey plate with the metal folded back bright along
+    its torn edge and oil smeared where it came away
+  flavor: >-
+    the machines' equivalent of bone — the hard piece that survives the
+    blast and lands with a clatter
+palette:
+  A: "#8d9196" # plate
+  T: "#c0c5cf" # bright steel
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+grid: |
+  ..TAAT..
+  .AbbbbA.
+  AbbAAbbA
+  .AbbbbkA
+  ..Akk...

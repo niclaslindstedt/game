@@ -1,0 +1,38 @@
+name: bot_inside
+family: effects
+size: [16, 16]
+description: >-
+  The inside of a machine, as a tile.
+subject:
+  kind: gore texture
+  build: >-
+    a dense loom of copper and brass strand running through grey plate and
+    black oil, with a cell leaking green and an arc still live
+  flavor: >-
+    never drawn as itself — it is the FILL a robot's own silhouette is
+    masked out of when a blade takes it apart front to back
+palette:
+  A: "#8d9196" # plate
+  G: "#7be08a" # battery acid
+  W: "#f4f4f4" # arc white
+  b: "#3f4553" # plate shadow
+  k: "#342c26" # oil
+  o: "#d6a842" # brass
+  y: "#ffb02e" # live copper
+grid: |
+  AbbAykobAbbAykob
+  bAbkyokAbAbkyokA
+  bbAyokybbAyokybb
+  AykobAbbAykobAbb
+  ykobAbbAykobAbbA
+  kobAbGGAkobAbbAy
+  obAbbGGbbAbbAyko
+  bAbbAbbAbAbAykob
+  AbbAbbAbAbAykobA
+  bbAbbAbAbAykobAb
+  bAWWAbAbAykobAbb
+  AbWWbAbAykobAbbA
+  bbAbAbAykobAbbAy
+  bAbAbAykobAbbAyk
+  AbAbAykobAbbAyko
+  bAbAykobAbbAykob

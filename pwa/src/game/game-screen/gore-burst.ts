@@ -27,8 +27,17 @@
 // stick, and stay in the puddle they made. Getting that pairing wrong is
 // instantly, comically wrong in a way no amount of tuning fixes — a bouncing
 // liver is a beach ball.
+//
+// WHAT A BODY IS MADE OF IS NOT DECIDED HERE EITHER. Every pool, every band and
+// every bounce comes off `./gore.ts` — the family catalog — because a rover has
+// no liver and a collapsed star has no ribcage. This module owns the GEOMETRY of
+// coming apart (where the line fell, what it crossed, how far each piece
+// carries) and the catalog owns WHAT, which is what lets a fifth kind of body be
+// a row in a table rather than a fork in every function below.
 
 import { fract } from "../render/shared.ts";
+
+import { goreFamily, type GoreBand, type GoreFamilyId } from "./gore.ts";
 
 /** How a body was taken apart. */
 export type GoreKind =
@@ -97,45 +106,33 @@ export type CleaveCut = {
 };
 
 /**
- * THE BODY, IN BANDS — where a person is, top to bottom, as fractions of the
- * sprite's height, and WHAT IS INSIDE EACH.
+ * THE BODY, IN BANDS — where a body of this kind is, top to bottom, as fractions
+ * of the sprite's height, and WHAT IS INSIDE EACH. The table itself lives in
+ * `./gore.ts` (one row per family); this is only where it is READ.
  *
- * This is the table that replaced a catalog of hand-authored cuts, and the
- * trade is the whole design. Twenty authored rows gave twenty pictures and a
- * maintenance burden; six bands and a rolled cut line give an UNBOUNDED number,
- * and — the part that actually matters — the organs can no longer disagree with
- * the wound, because they are not chosen at all. They are read off the bands the
- * blade PASSED THROUGH.
+ * It is the table that replaced a catalog of hand-authored cuts, and the trade
+ * is the whole design. Twenty authored rows gave twenty pictures and a
+ * maintenance burden; a handful of bands and a rolled cut line give an UNBOUNDED
+ * number, and — the part that actually matters — the organs can no longer
+ * disagree with the wound, because they are not chosen at all. They are read off
+ * the bands the blade PASSED THROUGH.
  *
  * So a cut at the neck spills a skull and a brain because that is what is up
  * there; a cut across the belly spills the gut and the liver; and a cut straight
  * down the middle spills nearly everything, for free, because a vertical line
- * crosses every band on its way. Nobody wrote the bisection down.
+ * crosses every band on its way. Nobody wrote the bisection down. A machine's
+ * bands say optic, chassis, cell and drive instead, and the identical rule reads
+ * them: a cut across a rover's head spills its eye.
  *
- * The fractions are measured from the TOP of the sprite. They are deliberately a
- * person's proportions rather than any particular monster's — every mob that can
- * be cleaved is roughly upright and roughly humanoid (`EnemyDef.anatomy`), and a
- * per-monster anatomy would be an authoring burden paid on every mob a mod adds
- * for a difference nobody can see at sixteen pixels.
+ * The fractions are measured from the TOP of the sprite, and are deliberately
+ * one set of proportions per FAMILY rather than per monster — every mob that can
+ * come apart is roughly upright, and a per-monster anatomy would be an authoring
+ * burden paid on every mob a mod adds for a difference nobody can see at sixteen
+ * pixels.
  */
-const ANATOMY_BANDS: readonly {
-  id: string;
-  from: number;
-  to: number;
-  spills: readonly string[];
-}[] = [
-  { id: "skull", from: 0, to: 0.2, spills: ["gib_brain", "gib_skull"] },
-  { id: "neck", from: 0.2, to: 0.3, spills: ["gib_skull", "gib_meat_0"] },
-  { id: "chest", from: 0.3, to: 0.5, spills: ["gib_heart", "gib_ribs"] },
-  {
-    id: "belly",
-    from: 0.5,
-    to: 0.68,
-    spills: ["gib_gut_0", "gib_liver", "gib_gut_1"],
-  },
-  { id: "hips", from: 0.68, to: 0.82, spills: ["gib_kidney", "gib_meat_1"] },
-  { id: "legs", from: 0.82, to: 1, spills: ["gib_bone", "gib_meat_0"] },
-];
+function bandsOf(family: GoreFamilyId) {
+  return goreFamily(family).bands;
+}
 
 /** The four bearings a cut may run at. Not a style choice: `splitSprite`
  * quantizes into eight buckets and these are the four it lands on exactly, and
@@ -191,6 +188,32 @@ const SPILL_MAX = 5;
 const BODY_WIDTH_FRAC = 0.55;
 
 /**
+ * A CUT PINNED FOR STAGING — the effects gallery's own seam, and the reason the
+ * split is iterable at all.
+ *
+ * Everything about a cut is ROLLED (that is the whole feature), which makes the
+ * rare ones impossible to LOOK at: an oblique slice comes up about a fifth of
+ * the time, so a diorama firing four cleaves shows one roughly half the time and
+ * a developer tuning the depth illusion is reduced to replaying until it appears.
+ * Pinning lets an exhibit stage the exact cut it is an exhibit OF.
+ *
+ * It is a partial merged over the roll rather than a whole cut, so an exhibit
+ * pins the ONE axis it is about (`{ depth: 0.6 }`) and the rest still varies —
+ * a pinned diorama that showed the identical picture every time would misreport
+ * a system whose point is variety.
+ *
+ * Staging only: `applyMods`-style, the runner sets it around its own show and
+ * clears it after, so nothing leaks into the next exhibit or into a real run.
+ */
+// Named for the whole cut, not `pinned` — `CleaveCut.pinned` is the piece left
+// STANDING where it was, and a local of that name lives inside `cleaveCut`.
+let pinnedCut: Partial<CleaveCut> | null = null;
+
+export function pinCleaveCut(cut: Partial<CleaveCut> | null): void {
+  pinnedCut = cut;
+}
+
+/**
  * WHICH CUT THIS BLOW MADE — rolled, not chosen from a list.
  *
  * The bearing picks the FAMILY (a blade that swept down the screen cannot open
@@ -205,6 +228,7 @@ export function cleaveCut(
   force: number,
   seed: number,
   anatomy: Anatomy = "humanoid",
+  family: GoreFamilyId = "blood",
 ): CleaveCut {
   const h = (salt: number) => fract(seed * salt + 0.317);
   const lengthwise = Math.abs(Math.cos(heading)) > Math.abs(Math.sin(heading));
@@ -251,7 +275,7 @@ export function cleaveCut(
   return {
     // Named for what the blade went through, which is what a debug line, a
     // gallery caption and a failing test all want to say.
-    id: `${bandsCrossed(angle, offset)
+    id: `${bandsCrossed(angle, offset, family)
       .map((b) => b.id)
       .join("-")}/${Math.round((angle * 180) / Math.PI)}`,
     angle,
@@ -266,10 +290,8 @@ export function cleaveCut(
     // An OBLIQUE slice goes through the whole thickness of a body, so it opens
     // everything the line crosses on screen AND everything behind it — which is
     // to say all of it. A flat cut only opens what it crossed.
-    spills:
-      depth > 0
-        ? spillsFor(angle, offset, seed, anatomy, true)
-        : spillsFor(angle, offset, seed, anatomy),
+    spills: spillsFor(angle, offset, seed, anatomy, family, depth > 0),
+    ...(pinnedCut ?? {}),
   };
 }
 
@@ -284,7 +306,9 @@ export function cleaveCut(
 function bandsCrossed(
   angle: number,
   offset: number,
-): readonly (typeof ANATOMY_BANDS)[number][] {
+  family: GoreFamilyId,
+): readonly GoreBand[] {
+  const bands = bandsOf(family);
   // The line runs through `offset` along its normal, in the direction `angle`.
   // How far it reaches UP AND DOWN is how much height it gains crossing the
   // body's WIDTH: none at all for a cut straight across (it stays at one
@@ -298,14 +322,11 @@ function bandsCrossed(
   // As fractions from the TOP of the sprite, clamped inside it.
   const lo = Math.max(0, mid - half + 0.5);
   const hi = Math.min(1, mid + half + 0.5);
-  const hit = ANATOMY_BANDS.filter((b) => b.to > lo && b.from < hi);
+  const hit = bands.filter((b) => b.to > lo && b.from < hi);
   // A cut that somehow fell outside every band still went through SOMETHING.
   return hit.length > 0
     ? hit
-    : [
-        ANATOMY_BANDS.find((b) => mid + 0.5 <= b.to) ??
-          ANATOMY_BANDS[ANATOMY_BANDS.length - 1]!,
-      ];
+    : [bands.find((b) => mid + 0.5 <= b.to) ?? bands[bands.length - 1]!];
 }
 
 /** What falls out: every band the blade passed through, capped and shuffled off
@@ -315,16 +336,18 @@ function spillsFor(
   offset: number,
   seed: number,
   anatomy: Anatomy,
+  family: GoreFamilyId,
   everything = false,
 ): readonly string[] {
+  const humanOnly = goreFamily(family).humanOnly;
   // Deduped: two neighbouring bands may name the same organ (a skull is in the
   // head band and at the top of the neck), and a cut that crossed both should
   // not spill two of it.
   const pool = [
     ...new Set(
-      (everything ? ANATOMY_BANDS : bandsCrossed(angle, offset))
+      (everything ? bandsOf(family) : bandsCrossed(angle, offset, family))
         .flatMap((b) => b.spills)
-        .filter((sprite) => anatomy === "humanoid" || !HUMAN_ONLY.has(sprite)),
+        .filter((sprite) => anatomy === "humanoid" || !humanOnly.has(sprite)),
     ),
   ];
   if (pool.length <= SPILL_MAX) return pool;
@@ -372,7 +395,9 @@ function spillPieces(
   force: number,
   body: number,
   seed: number,
+  family: GoreFamilyId,
 ): GorePiece[] {
+  const bouncy = goreFamily(family).bouncy;
   return cut.spills.map((sprite, n) => {
     const h = (salt: number) => fract((n + 1) * salt + seed * 2.29);
     // Out of the cut and down: offal falls, it does not fly. Spread wide, and
@@ -387,7 +412,7 @@ function spillPieces(
       dist,
       peak: 3 + dist * SPILL_ARC_FRAC,
       spins: h(5.13) < 0.5 ? 0 : 1,
-      bounces: BOUNCY.has(sprite) ? 1 : 0,
+      bounces: bouncy.has(sprite) ? 1 : 0,
       // They come out as the cut opens rather than at the instant of the blow.
       delay: 0.06 + h(6.7) * 0.2,
       flight: 0.35 + 0.2 * h(4.9),
@@ -424,6 +449,12 @@ export type GorePiece = {
 /** Everything one burst body throws. */
 export type GoreBurst = {
   kind: GoreKind;
+  /** WHAT KIND OF BODY it was (`EnemyDef.gore`) — which pools it came apart
+   * into, what colour its spray is, whether its mess stays on the floor and what
+   * hangs in the air after. Carried on the burst rather than looked up again
+   * downstream, because the renderer, the floor and the effect pass all have to
+   * agree, and a second lookup is a second chance to disagree. */
+  family: GoreFamilyId;
   /** The blow's bearing (away from whoever landed it). The cut runs along it;
    * a burst throws widest across it. */
   heading: number;
@@ -450,16 +481,6 @@ export type GoreBurst = {
   origin: { x: number; y: number };
 };
 
-/** THE DENSE PIECES — what kicks back up off the floor. A heart is muscle, a
- * kidney is rubber, a skull and a rib and a bone shard are bone. */
-const BOUNCY = new Set([
-  "gib_skull",
-  "gib_ribs",
-  "gib_bone",
-  "gib_heart",
-  "gib_kidney",
-]);
-
 /** EVERY GIB IS SOMETHING THAT WAS ON THE INSIDE, and that is a rule rather
  * than an oversight. There is no severed head, no hand, no foot and no arm in
  * any pool here, because the victim's OWN SPRITE is already supplying those:
@@ -471,42 +492,14 @@ const BOUNCY = new Set([
  * monster is not the shape that head was drawn as.
  *
  * So the authored gore is exactly what a sprite cannot show: the organs, the
- * viscera, the bone and the meat that were never on the outside to be drawn. */
-
-/** The pieces only a PERSON has. The rest — a heart, a liver, a gut, a kidney,
- * bone, meat — is in anything warm-blooded, so a beast throws all of it. A
- * cranium with a row of human teeth in it is not in a giant lizard. */
-const HUMAN_ONLY = new Set(["gib_skull"]);
-
-/** The SIGNATURE pieces, worst first: a body only gives up so many recognisable
- * parts, and which ones it gives up is how a burst reads as an escalation. Each
- * is thrown at most once, and only once the blow is worth the `force` beside it
- * — so a bare burst is meat and gut, and a truly obscene one is a person coming
- * apart into their own inventory. */
-const SIGNATURE: readonly { sprite: string; force: number }[] = [
-  { sprite: "gib_meat_1", force: 0 },
-  { sprite: "gib_gut_0", force: 0.6 },
-  { sprite: "gib_liver", force: 1 },
-  { sprite: "gib_ribs", force: 1.3 },
-  { sprite: "gib_kidney", force: 1.6 },
-  { sprite: "gib_heart", force: 1.9 },
-  { sprite: "gib_gut_1", force: 2.2 },
-  { sprite: "gib_bone", force: 2.6 },
-  { sprite: "gib_brain", force: 3 },
-  { sprite: "gib_skull", force: 3.6 },
-];
-
-/** The FILLER pool — the shower of small stuff every burst throws a lot of,
- * picked at random with the weights below (meat is most of a body). */
-const FILLER: readonly { sprite: string; weight: number }[] = [
-  { sprite: "gib_meat_0", weight: 5 },
-  { sprite: "gib_meat_1", weight: 3 },
-  { sprite: "gib_gut_1", weight: 2 },
-  { sprite: "gib_bone", weight: 2 },
-  { sprite: "gib_kidney", weight: 2 },
-  { sprite: "gib_gut_0", weight: 1 },
-];
-const FILLER_TOTAL = FILLER.reduce((sum, f) => sum + f.weight, 0);
+ * viscera, the bone and the meat that were never on the outside to be drawn —
+ * and, for the other three families, the goo, the wiring and the light.
+ *
+ * WHICH pieces those are is `./gore.ts`: each family's `signature` ladder (the
+ * recognisable parts, worst first, each thrown at most once and only once the
+ * blow is worth the force beside it — so a bare burst is meat and gut and a
+ * truly obscene one is a person coming apart into their own inventory), its
+ * `filler` shower, its `bouncy` set and its `humanOnly` pieces. */
 
 /** How many filler pieces fly, at no force and per unit of it, and the draw
  * budget on top: a screen-clearing bomb bursts a whole horde at once, so no
@@ -562,19 +555,21 @@ export function goreBurst(
   body: number,
   anatomy: Anatomy,
   seed: number,
+  family: GoreFamilyId = "blood",
 ): GoreBurst {
   const cut =
-    kind === "cleave" ? cleaveCut(heading, force, seed, anatomy) : null;
+    kind === "cleave" ? cleaveCut(heading, force, seed, anatomy, family) : null;
   // A BURST throws the whole body; a CLEAVE spills what the blade went through
   // out of the opening it made. Both are `GorePiece`s, so both ride the same
   // flight and both wet the floor where they land.
   const pieces: GorePiece[] = cut
-    ? spillPieces(cut, force, body, seed)
+    ? spillPieces(cut, force, body, seed, family)
     : kind === "gib"
-      ? gibPieces(force, body, anatomy, seed)
+      ? gibPieces(force, body, anatomy, seed, family)
       : [];
   return {
     kind,
+    family,
     heading,
     force,
     body,
@@ -607,13 +602,15 @@ function gibPieces(
   body: number,
   anatomy: Anatomy,
   seed: number,
+  family: GoreFamilyId,
 ): GorePiece[] {
+  const def = goreFamily(family);
   const pieces: GorePiece[] = [];
   let n = 0;
-  for (const entry of SIGNATURE) {
+  for (const entry of def.signature) {
     if (force < entry.force) continue;
-    if (anatomy !== "humanoid" && HUMAN_ONLY.has(entry.sprite)) continue;
-    pieces.push(piece(entry.sprite, n++, force, body, seed));
+    if (anatomy !== "humanoid" && def.humanOnly.has(entry.sprite)) continue;
+    pieces.push(piece(entry.sprite, n++, force, body, seed, def.bouncy));
   }
   const filler = Math.min(
     FILLER_MAX,
@@ -622,19 +619,23 @@ function gibPieces(
     ),
   );
   for (let i = 0; i < filler; i++) {
-    pieces.push(piece(pickFiller(n, seed), n++, force, body, seed));
+    pieces.push(
+      piece(pickFiller(n, seed, family), n++, force, body, seed, def.bouncy),
+    );
   }
   return pieces;
 }
 
 /** Which filler sprite the `n`th piece is, by weight. */
-function pickFiller(n: number, seed: number): string {
-  let roll = fract(n * 3.71 + seed * 5.17) * FILLER_TOTAL;
-  for (const entry of FILLER) {
+function pickFiller(n: number, seed: number, family: GoreFamilyId): string {
+  const filler = goreFamily(family).filler;
+  const total = filler.reduce((sum, f) => sum + f.weight, 0);
+  let roll = fract(n * 3.71 + seed * 5.17) * total;
+  for (const entry of filler) {
     roll -= entry.weight;
     if (roll <= 0) return entry.sprite;
   }
-  return FILLER[0]!.sprite;
+  return filler[0]!.sprite;
 }
 
 /** One piece's whole flight, derived from its index and the burst's seed. */
@@ -644,6 +645,7 @@ function piece(
   force: number,
   body: number,
   seed: number,
+  bouncy: ReadonlySet<string>,
 ): GorePiece {
   const h = (salt: number) => fract((n + 1) * salt + seed * 1.37);
   // Where it goes. The bearing is measured from the BLOW, and how far it
@@ -653,7 +655,7 @@ function piece(
   const along = 1 - FOLLOW_THROUGH * (Math.abs(angle) / BURST_CONE);
   const reach = (REACH_BASE + REACH_PER_FORCE * force) * body;
   const dist = reach * along * (0.35 + 0.65 * h(2.93));
-  const bounces = BOUNCY.has(sprite) ? (h(6.13) < 0.45 ? 2 : 1) : 0;
+  const bounces = bouncy.has(sprite) ? (h(6.13) < 0.45 ? 2 : 1) : 0;
   return {
     sprite,
     angle,

@@ -32,6 +32,7 @@ import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { type GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { applyEventFx, expireEffects } from "../game-screen/event-fx.ts";
+import { pinCleaveCut } from "../game-screen/gore-burst.ts";
 import { createLevelUpFx } from "../game-screen/levelup-fx.ts";
 import { createLoopShared } from "../game-screen/loop-shared.ts";
 import { createNukeFx } from "../game-screen/nuke-fx.ts";
@@ -220,6 +221,11 @@ export function runExhibit(deps: {
   const fire = () => {
     const mobs = sortedMobs(state);
     beats = [];
+    // THE CUT THIS EXHIBIT STAGES, pinned over the roll (see `Exhibit.cut`).
+    // Set on every take rather than once at mount, because a re-stage has to
+    // put it back, and dropped again when the gallery stops so it can never
+    // reach a real run.
+    pinCleaveCut(exhibit.cut ?? null);
     exhibit.fire?.({
       state,
       emit: (event: GameEvent) => state.events.push(event),
@@ -371,6 +377,9 @@ export function runExhibit(deps: {
       observer.disconnect();
       nukeFx.dispose();
       levelUpFx.dispose();
+      // Hand the roll back: a pinned cut is a staging device and must not
+      // outlive the display case it was staged in.
+      pinCleaveCut(null);
     },
   };
 }

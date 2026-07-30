@@ -83,7 +83,7 @@ const LORE_MIN_CHARS = 80;
  * refusal — the odd elite genuinely needs the room). */
 const LORE_WARN_CHARS = 420;
 
-const GORES = new Set(["blood", "ecto", "sparks"]);
+const GORES = new Set(["blood", "ecto", "sparks", "cosmic"]);
 /** What a body is built of, for the one moment a blunt blow bursts it — a
  * `humanoid` loses a head among the meat, a `beast` does not. Omitted reads
  * as humanoid (see EnemyDef.anatomy). */

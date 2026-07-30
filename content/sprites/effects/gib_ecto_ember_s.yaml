@@ -1,0 +1,19 @@
+name: gib_ecto_ember_s
+family: effects
+size: [3, 3]
+description: >-
+  A cold ember off a haunting.
+subject:
+  kind: gore piece
+  build: >-
+    a small point of light with a green skirt
+  flavor: >-
+    the small tier
+palette:
+  W: "#f4f4f4" # white core
+  c: "#8cd7a0" # ecto goo
+  x: "#c5e6eb" # cold light
+grid: |
+  .x.
+  xWc
+  .c.

@@ -7,7 +7,7 @@ lore: >-
 role: minion
 sprite: unraveler
 locomotion: float
-gore: sparks
+gore: cosmic
 hp: 100
 speed: 25
 radius: 8

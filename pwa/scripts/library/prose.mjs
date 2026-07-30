@@ -20,6 +20,17 @@ const GORE_NOUN = {
   blood: "bleeds",
   ecto: "comes apart in ectoplasm",
   sparks: "throws sparks",
+  cosmic: "sheds light",
+};
+
+/** What is left of a body that does not bleed, when a blow overwhelms it. */
+const GORE_APART = {
+  blood: "",
+  ecto: " A blow that overwhelms it bursts it, and the goo it was holding together goes everywhere.",
+  sparks:
+    " A blow that overwhelms it bursts it into wire, cells and torn plate, and it smokes where it lands.",
+  cosmic:
+    " A blow that overwhelms it bursts it into shards of whatever it was made of, and they go out slowly.",
 };
 
 /** A count of enemies, phrased. */
@@ -443,11 +454,11 @@ export function traitNotes(enemy) {
     "WHEN STRUCK",
     `It ${GORE_NOUN[enemy.gore]}.` +
       // What is LEFT of it, which only a body that bleeds has an answer to.
-      (enemy.anatomy === null
-        ? ""
-        : enemy.anatomy === "humanoid"
-          ? " A blow that overwhelms it bursts it, and there is a face among what lands."
-          : " A blow that overwhelms it bursts it into meat and bone — no face in it, whatever it was."),
+      (enemy.anatomy === "humanoid"
+        ? " A blow that overwhelms it bursts it, and there is a face among what lands."
+        : enemy.anatomy === "beast"
+          ? " A blow that overwhelms it bursts it into meat and bone — no face in it, whatever it was."
+          : GORE_APART[enemy.gore]),
   ]);
   return notes;
 }

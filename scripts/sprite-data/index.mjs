@@ -91,6 +91,10 @@ const GORE_STYLES = {
   ecto: { splat: "c", core: "C" },
   // Machines throw sparks, not blood: hot gold splats with a white-hot core.
   sparks: { splat: "y", core: "Y" },
+  // The rift's own things are made of light: a pale violet wound with a
+  // white-hot point where it is leaking out. Both chars are core-palette, so a
+  // MOD's family needs no fallback for them.
+  cosmic: { splat: "L", core: "W" },
 };
 
 /**

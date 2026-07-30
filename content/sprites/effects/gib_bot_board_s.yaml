@@ -1,0 +1,20 @@
+name: gib_bot_board_s
+family: effects
+size: [4, 3]
+description: >-
+  A circuit board, snapped out of its rack.
+subject:
+  kind: gore piece
+  build: >-
+    a small dark blue card printed with copper
+  flavor: >-
+    the small tier
+palette:
+  W: "#f4f4f4" # arc white
+  j: "#2d3b84" # board blue
+  k: "#342c26" # oil
+  y: "#ffb02e" # live copper
+grid: |
+  jjjj
+  jyWj
+  .jkj

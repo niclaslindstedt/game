@@ -1,0 +1,23 @@
+name: gib_bot_spring
+family: effects
+size: [5, 6]
+description: >-
+  A coil spring, sprung.
+subject:
+  kind: gore piece
+  build: >-
+    a bright steel helix stretched out of true, wound loose enough to see
+    the floor through its turns
+  flavor: >-
+    it BOUNCES, obviously, and it is the funniest thing in the wreck for
+    exactly that reason
+palette:
+  T: "#c0c5cf" # bright steel
+  k: "#342c26" # oil
+grid: |
+  .kTTk
+  kTkkT
+  TkkTk
+  kTTkk
+  kkTTk
+  ..kk.

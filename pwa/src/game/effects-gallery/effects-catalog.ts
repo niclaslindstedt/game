@@ -242,6 +242,144 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
   {
+    id: "cleave-behead",
+    icon: "gib_skull",
+    label: "TAKEN AT THE NECK",
+    blurb:
+      "A SMALL PIECE OFF THE TOP IS THROWN CLEAR - THE SKULL COMES WITH IT",
+    group: "IMPACT",
+    keywords: ["gore", "cut", "behead", "head", "skull", "limb", "nsfw"],
+    stage: { spawns: horde(10, 34, 90) },
+    // A cut ACROSS the body, high enough up that the piece above it is a limb
+    // rather than a half — which is what makes it be thrown clear instead of
+    // merely parting (`CUT_LIMB_FRAC`). The offset is pinned and nothing else
+    // is, so what falls out of the neck still varies take to take.
+    cut: { angle: 0, offset: -0.38, toss: -1, pinned: null, depth: 0 },
+    showMs: 2600,
+    fire: (ctx) => {
+      for (let i = 0; i < 3; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+      }
+    },
+  },
+  {
+    id: "cleave-legs",
+    icon: "gib_bone",
+    label: "WALKED OUT FROM UNDER HIMSELF",
+    blurb: "A SMALL PIECE OFF THE BOTTOM STAYS STANDING WHERE IT WAS",
+    group: "IMPACT",
+    keywords: ["gore", "cut", "legs", "knees", "standing", "limb", "nsfw"],
+    stage: { spawns: horde(10, 34, 90) },
+    // The mirror of the beheading, and the reason neither is authored: both fall
+    // out of ONE rule about where the line landed (a small piece off the top has
+    // nowhere to stand, a small piece off the bottom is already on the floor).
+    cut: { angle: 0, offset: 0.38, toss: null, pinned: 1, depth: 0 },
+    showMs: 2800,
+    fire: (ctx) => {
+      for (let i = 0; i < 3; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+      }
+    },
+  },
+  {
+    id: "cleave-oblique",
+    icon: "cleave_wound",
+    label: "SLICED THROUGH THE DEPTH",
+    blurb: "IN AT THE FRONT, OUT AT THE SIDE OF THE BACK - THE WET FACE SHOWS",
+    group: "IMPACT",
+    keywords: ["gore", "cut", "oblique", "slice", "depth", "3d", "nsfw"],
+    stage: { spawns: horde(10, 34, 90) },
+    // THE THIRD AXIS, pinned because it is a MINORITY by design — about a fifth
+    // of cuts go in obliquely, so a diorama that rolled honestly would show the
+    // effect this exhibit exists for roughly half the time. Only the depth is
+    // pinned: the angle, where the line fell and what spilled all still roll,
+    // which is what keeps it a picture of the system rather than of one frame.
+    cut: { depth: 0.55 },
+    showMs: 2800,
+    fire: (ctx) => {
+      for (let i = 0; i < 4; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+      }
+    },
+  },
+  {
+    id: "cleave-slab",
+    icon: "gore_inside",
+    label: "A SLAB OFF THE FRONT",
+    blurb: "THE BLADE WENT IN NEARLY FLAT - MOSTLY INSIDE, A RIND OF SKIN",
+    group: "IMPACT",
+    keywords: ["gore", "cut", "slab", "slice", "depth", "inside", "nsfw"],
+    stage: { spawns: horde(8, 34, 90) },
+    // The far end of the same knob (`OBLIQUE_MAX`), where the ratio of skin to
+    // red says the blade went almost parallel to the screen. Worth its own case
+    // because it is the one that breaks if the exit line is ever allowed all the
+    // way through: at a full slab the far piece starts at the body's own edge
+    // and there is nothing left of it to draw.
+    cut: { depth: 0.8 },
+    showMs: 2800,
+    fire: (ctx) => {
+      for (let i = 0; i < 3; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { overkillBars: 4, edged: true }));
+      }
+    },
+  },
+  {
+    id: "gore-ecto",
+    icon: "gib_ecto_core",
+    label: "A HAUNTING COMES APART",
+    blurb: "GREEN GOO, A COLD LIGHT, AND A PUFF WHERE IT WAS STANDING",
+    group: "IMPACT",
+    keywords: ["gore", "ghost", "ecto", "goo", "green", "slime", "nsfw"],
+    stage: { spawns: horde(8, 34, 90, "ghost") },
+    showMs: 3200,
+    fire: (ctx) => {
+      // BOTH SHAPES SIDE BY SIDE, and that is the exhibit: the whole claim of
+      // the family work is that a ghost CUTS and BURSTS as a ghost rather than
+      // as a person in green, so the cut and the burst have to be on screen
+      // together to be judged against each other.
+      const cut = ctx.kill();
+      if (cut) ctx.emit(killEvent(cut, { overkillBars: 3, edged: true }));
+      const burst = ctx.kill();
+      if (burst) ctx.emit(killEvent(burst, { overkillBars: 8 }));
+    },
+  },
+  {
+    id: "gore-sparks",
+    icon: "gib_bot_optic",
+    label: "A MACHINE COMES APART",
+    blurb: "PLATE, WIRE AND A CELL - AND IT SMOKES WHERE IT STOOD",
+    group: "IMPACT",
+    keywords: ["gore", "robot", "sparks", "oil", "wire", "machine", "nsfw"],
+    stage: { spawns: horde(8, 34, 90, "servo_bot") },
+    showMs: 3200,
+    fire: (ctx) => {
+      const cut = ctx.kill();
+      if (cut) ctx.emit(killEvent(cut, { overkillBars: 3, edged: true }));
+      const burst = ctx.kill();
+      if (burst) ctx.emit(killEvent(burst, { overkillBars: 8 }));
+    },
+  },
+  {
+    id: "gore-cosmic",
+    icon: "gib_cosmic_core",
+    label: "A RIFT-THING COMES APART",
+    blurb: "SHARDS AND MOTES - IT GLIMMERS, AND THEN THE FLOOR IS CLEAN",
+    group: "IMPACT",
+    keywords: ["gore", "rift", "cosmic", "void", "star", "light", "nsfw"],
+    stage: { spawns: horde(8, 34, 90, "voidling") },
+    showMs: 3200,
+    fire: (ctx) => {
+      const cut = ctx.kill();
+      if (cut) ctx.emit(killEvent(cut, { overkillBars: 3, edged: true }));
+      const burst = ctx.kill();
+      if (burst) ctx.emit(killEvent(burst, { overkillBars: 8 }));
+    },
+  },
+  {
     id: "incinerate",
     icon: "spell_inferno",
     label: "INCINERATION",

@@ -6,7 +6,7 @@ lore: >-
 role: minion
 sprite: voidling
 locomotion: float
-gore: ecto
+gore: cosmic
 hp: 16
 speed: 19
 radius: 8
