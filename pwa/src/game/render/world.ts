@@ -14,8 +14,8 @@ import {
   groundLayerOrigin,
   groundLayerPoint,
 } from "./caches.ts";
+import { drawWorldSprite } from "./plane.ts";
 import { drawSpriteCentered, type ViewSize } from "./shared.ts";
-import { billboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -62,9 +62,10 @@ export function drawGround(
  * belts roll; every piece shares the clock, so a belt's segments move as
  * one machine.
  *
- * Billboarded: most of the catalog is a rock, a bush or a machine — a thing
- * with a side to it — and the handful of genuinely flat pieces lose less by
- * standing a touch tall than the rocks would by being squashed. */
+ * The art says which plane it belongs to (./plane.ts): a bush or a machine
+ * stands up, a painted marking or a run of conduit laid flush along the floor
+ * lies down with the tiles. An ANIMATED piece is judged per FRAME name, which
+ * is what a belt wants — each of `conveyor_0..4` is its own authored file. */
 export function drawDecor(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -76,12 +77,14 @@ export function drawDecor(
   for (const decor of state.decor) {
     if (!inView(decor.pos.x, decor.pos.y, 32)) continue;
     const frames = decorFrames(sprites, decor.sprite);
+    const frame = frames
+      ? Math.floor(timeMs / DECOR_FRAME_MS) % frames.length
+      : -1;
+    const name = frames ? `${decor.sprite}_${frame}` : decor.sprite;
     const sprite = frames
-      ? frames[Math.floor(timeMs / DECOR_FRAME_MS) % frames.length]!
+      ? frames[frame]!
       : (spriteByName(sprites, decor.sprite) ?? sprites.rocks);
-    billboard(ctx, decor.pos.x, decor.pos.y, camera.x, camera.y, () =>
-      drawSpriteCentered(ctx, sprite, decor.pos, camera),
-    );
+    drawWorldSprite(ctx, name, sprite, decor.pos, camera);
   }
 }
 
@@ -122,9 +125,10 @@ export function drawCraters(
 }
 
 /** Landmarks: `anchor` (from the def) decides whether the sprite's foot or
- * its center sits on the pos — no per-kind special-casing. Billboarded: a
- * landmark is the tallest thing on most maps, and the one whose height is the
- * point of it. */
+ * its center sits on the pos — no per-kind special-casing. Standing up by
+ * default: a landmark is the tallest thing on most maps, and the one whose
+ * height is the point of it. A landmark authored in PLAN (a hatch, a pad)
+ * lies down instead, which is ./plane.ts's call rather than this pass's. */
 export function drawLandmarks(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -135,14 +139,13 @@ export function drawLandmarks(
   for (const landmark of state.landmarks) {
     if (!inView(landmark.pos.x, landmark.pos.y, 48)) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
-    const yAnchor =
-      landmark.anchor === "base" ? sprite.height - 2 : sprite.height / 2;
-    billboard(ctx, landmark.pos.x, landmark.pos.y, camera.x, camera.y, () =>
-      ctx.drawImage(
-        sprite,
-        Math.round(landmark.pos.x - sprite.width / 2 - camera.x),
-        Math.round(landmark.pos.y - yAnchor - camera.y),
-      ),
+    drawWorldSprite(
+      ctx,
+      landmark.sprite,
+      sprite,
+      landmark.pos,
+      camera,
+      landmark.anchor === "base" ? "base" : "center",
     );
   }
 }
@@ -179,8 +182,9 @@ export function drawBossCorpseRing(
 }
 
 /** Obstacles sit on the ground plane, under everything that moves. Each
- * carries its sprite name from the def. Billboarded — a wall, a boulder or a
- * house is exactly the kind of thing the tilt exists to stand up. */
+ * carries its sprite name from the def, and the ART decides which plane it is
+ * drawn on (./plane.ts): a boulder or a house front stands up, a wall panel or
+ * a top-down crate lies down with the floor it is set into. */
 export function drawObstacles(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -191,9 +195,7 @@ export function drawObstacles(
   for (const obstacle of state.obstacles) {
     if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
     const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
-    billboard(ctx, obstacle.pos.x, obstacle.pos.y, camera.x, camera.y, () =>
-      drawSpriteCentered(ctx, sprite, obstacle.pos, camera),
-    );
+    drawWorldSprite(ctx, obstacle.sprite, sprite, obstacle.pos, camera);
   }
 }
 

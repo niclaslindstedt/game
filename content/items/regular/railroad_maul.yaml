@@ -1,0 +1,27 @@
+id: railroad_maul
+kind: weapon
+rarity: regular
+name: RAILROAD MAUL
+description: >-
+  A double-faced spike maul off the permanent way. It drove every tie
+  between the station and the pass, swung all day by men who were written
+  out of the park's story when the line was finished.
+material: metal
+class: melee
+levelReq: 18
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 78
+damageVariance: 0.35
+cooldownMs: 1150
+range: 50
+sweepDeg: 120
+durability: 150
+icon: icon_railroad_maul
+grades:
+  exceptional:
+    id: spike_maul
+    name: SPIKE MAUL
+  elite:
+    id: ironhorse_maul
+    name: IRONHORSE MAUL

@@ -307,6 +307,31 @@ grid: |
 - Every row must be exactly `size[0]` characters, and there must be exactly
   `size[1]` rows. The compiler checks both.
 - Every character in the grid must be in the palette.
+- `plane:` says which plane the art is drawn on — `upright` (the default) for
+  anything with a side to it, `floor` for art drawn in PLAN. See below.
+
+### `plane:` — does it stand up, or does it lie down?
+
+The camera looks at the ground at an angle, so the floor foreshortens (and, with
+the yaw knob up, turns). Which half of that a sprite belongs to is a property of
+the ART, so the art says so:
+
+```yaml
+plane: floor # a wall panel, a painted marking, a hatch, a crate seen from above
+```
+
+`upright` — the default, so a sprite that says nothing keeps the obvious
+behaviour — is a thing with a SIDE to it: a body, a rock, a building front. It is
+anchored at its spot on the floor and then drawn standing at full size.
+
+`floor` is art drawn looking straight DOWN at it. It belongs to the ground and
+takes the projection whole, exactly as the ground tiles under it do. Get this
+wrong on a wall panel and it comes out taller than the floor grid it is set into
+— and once the camera is turned, a straight run of them staircases diagonally
+across a floor whose own seams run the other way.
+
+It applies to the level's furniture — obstacles, decor, landmarks, lair doors,
+elevator pads. Characters always stand up.
 
 A walking monster needs two frames (`_0` and `_1`). Keep the torso pixels
 identical between them and move only the legs, or the sprite appears to wobble
@@ -327,6 +352,27 @@ relics with fixed bonuses.
   for anything that fires).
 - `unique` — a named relic. Needs `base` (which may name one of the game's
   bases or one of yours), `slot`, `ilvl`, `bonuses` and `lore`.
+
+### The SECOND ARM: `shield`, `bag`, and `twoHanded`
+
+A gear piece's `slot` may be `shield` or `bag`. Both go in the hero's off hand
+and only one can be worn at a time, so the two are the build choice that slot
+exists to pose:
+
+- `slot: shield` needs `armor` and an `armorType`. The material is what makes
+  shields a melee lane — every shield derives a STRENGTH requirement with a
+  floor under it, well above a weapon's own gate, so an archer or a caster
+  cannot heft one. A shield may not carry `bagSlots`.
+- `slot: bag` needs `bagSlots` (extra inventory cells) and may **not** carry
+  `armor`. A bag is what the light builds put there, so lean its `bonuses.stats`
+  toward DEXTERITY and INTELLIGENCE and let the room grow with `levelReq`. A
+  deep drop of a bag grows its cells the way armour grows its points.
+
+A weapon may declare `twoHanded: true`, which claims the off hand as well: its
+wielder carries neither a shield nor a bag. Pay for it in the numbers — a
+two-hander should hit meaningfully harder than a one-hander of the same
+`levelReq`, and a two-handed melee weapon usually carries a wider `sweepDeg`
+too, because clearing the crowd is what it has instead of a shield.
 
 An item's `icon` is **one** sprite, not a two-frame family: an item is drawn on
 its card, in the bag and on the ground, and never walks.

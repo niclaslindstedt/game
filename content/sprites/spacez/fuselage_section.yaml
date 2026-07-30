@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: fuselage_section
 family: spacez
+plane: floor
 size: [26, 13]
 description: >
   A rocket fuselage section on its cradle, seen from above — SpaceZ factory floor

@@ -13,7 +13,8 @@
       "hot": "236, 248, 255",
       "spark": "200, 232, 255"
     },
-    "name": "BLAST SHIELD"
+    "name": "BLAST SHIELD",
+    "rarity": 30
   },
   "continuity_protocol": {
     "durationMs": 7000,
@@ -27,6 +28,7 @@
       "spark": "255, 226, 140"
     },
     "name": "CONTINUITY PROTOCOL",
+    "rarity": 10,
     "uniqueHeld": true,
     "ward": {
       "floor": 1
@@ -44,6 +46,7 @@
       "spark": "196, 232, 255"
     },
     "name": "DEAD MAN'S HAND",
+    "rarity": 80,
     "stackable": true,
     "volley": {
       "count": 2,
@@ -71,6 +74,7 @@
       "wellLook": "grit"
     },
     "name": "DUST DEVIL",
+    "rarity": 70,
     "well": {
       "chase": 95,
       "damage": 13,
@@ -92,6 +96,7 @@
       "wellLook": "void"
     },
     "name": "EVENT HORIZON",
+    "rarity": 15,
     "well": {
       "chase": 0,
       "damage": 20,
@@ -156,6 +161,7 @@
       "spark": "216, 190, 150"
     },
     "name": "IRON STAMPEDE",
+    "rarity": 30,
     "volley": {
       "count": 3,
       "damage": 52,
@@ -206,6 +212,7 @@
       "radius": 40,
       "range": 190
     },
+    "rarity": 70,
     "stackable": true
   },
   "pale_shroud": {
@@ -222,7 +229,8 @@
     "name": "PALE SHROUD",
     "phase": {
       "speedMult": 1.35
-    }
+    },
+    "rarity": 40
   },
   "reactor_surge": {
     "durationMs": 8000,
@@ -236,6 +244,7 @@
       "spark": "255, 214, 120"
     },
     "name": "REACTOR SURGE",
+    "rarity": 30,
     "surge": {
       "cooldownMult": 0.68,
       "damageMult": 1.65
@@ -264,6 +273,7 @@
       "spark": "255, 176, 46"
     },
     "name": "SENTRY GRID",
+    "rarity": 40,
     "turret": {
       "count": 4,
       "damage": 17,
@@ -287,6 +297,7 @@
       "spark": "198, 240, 255"
     },
     "name": "STASIS FIELD",
+    "rarity": 70,
     "stasis": {
       "radius": 130,
       "slowFactor": 0.3
@@ -323,6 +334,7 @@
       "push": 46,
       "radius": 128
     },
+    "rarity": 40,
     "stackable": true
   }
 }

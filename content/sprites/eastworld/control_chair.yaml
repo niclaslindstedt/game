@@ -1,5 +1,6 @@
 name: control_chair
 family: eastworld
+plane: floor
 size: [14, 16]
 description: >
   An operator's chair - a padded oxblood leather seat and back on a steel

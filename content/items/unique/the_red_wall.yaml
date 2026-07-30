@@ -1,0 +1,20 @@
+id: the_red_wall
+kind: unique
+rarity: unique
+name: THE RED WALL
+base: regolith_pavise
+slot: shield
+ilvl: 25
+bonuses:
+  - kind: armor
+    value: 22
+  - kind: maxHp
+    value: 40
+  - kind: stat
+    stat: stamina
+    value: 6
+  - kind: stat
+    stat: strength
+    value: 4
+lore: MARS MADE IT OUT OF MARS. STAND STILL LONG ENOUGH AND IT STOPS LOOKING LIKE A SHIELD.
+world: true

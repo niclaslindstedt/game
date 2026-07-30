@@ -1,0 +1,15 @@
+id: component_satchel
+kind: gear
+rarity: regular
+name: COMPONENT SATCHEL
+description: >-
+  A technician's satchel four outer pockets deep, every one of them full of
+  somebody else's spares. The pockets are neatly labelled. The labels are
+  wrong, and have been for years.
+slot: bag
+levelReq: 12
+bonuses:
+  stats:
+    intelligence: 4
+bagSlots: 6
+icon: icon_component_satchel

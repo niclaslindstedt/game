@@ -8,7 +8,9 @@ description: A black cube floating on a handle. Swinging it moves the ground
 material: metal
 class: melee
 levelReq: 16
-damage: 38
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 53
 damageVariance: 0.4
 cooldownMs: 850
 range: 46

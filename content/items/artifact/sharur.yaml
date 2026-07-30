@@ -1,0 +1,26 @@
+id: sharur
+kind: unique
+rarity: artifact
+name: SHARUR
+base: ironhorse_maul
+slot: weapon
+ilvl: 177
+bonuses:
+  - kind: proc
+    trigger: hit
+    spell: bolt
+    chance: 0.2
+    rank: 5
+  - kind: statPct
+    stat: strength
+    value: 0.02
+  - kind: damagePct
+    value: 1.6
+  - kind: stat
+    stat: strength
+    value: 30
+  - kind: stat
+    stat: stamina
+    value: 20
+lore: THE SMASHER OF THOUSANDS. IT SPOKE TO ITS OWNER, AND ITS ADVICE WAS ALWAYS THE SAME.
+world: true

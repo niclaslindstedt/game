@@ -1,5 +1,6 @@
 name: floor_marks
 family: spacez
+plane: floor
 size: [16, 14]
 description: >
   Painted hazard chevrons striping the assembly-floor plating — a lane marking in

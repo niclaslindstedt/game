@@ -1,0 +1,21 @@
+id: the_ironclad
+kind: unique
+rarity: legendary
+name: THE IRONCLAD
+base: bounty_board
+slot: shield
+ilvl: 82
+keeper: true
+bonuses:
+  - kind: spell
+    spell: stasis
+    rank: 2
+  - kind: armor
+    value: 55
+  - kind: maxHp
+    value: 110
+  - kind: stat
+    stat: stamina
+    value: 12
+lore: EVERY FACE ON IT WAS WANTED ALIVE. THE PAPER IS THE ONLY PART THAT KEPT ITS WORD.
+world: true

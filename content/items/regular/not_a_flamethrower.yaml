@@ -7,7 +7,9 @@ description: Dropped by MOSQUE as he bolted for the rift. Legally — and he
   is not arson.
 class: ranged
 levelReq: 14
-damage: 48
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 67
 damageVariance: 0.4
 cooldownMs: 520
 range: 240

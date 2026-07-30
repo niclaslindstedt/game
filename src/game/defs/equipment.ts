@@ -106,9 +106,18 @@ export const QUALITY_PREFIX: Record<Quality, string> = ITEM_QUALITY.prefix;
 export type WeaponDef = {
   id: string;
   name: string;
-  /** A few sentences of lore — where the piece comes from in the story's
-   * world. Authored in the item's YAML; the engine treats it as opaque
-   * flavor. The engine's built-in sidearm and test fixtures may omit it. */
+  /**
+   * A few sentences of lore — where the piece comes from in the story's world.
+   * Authored in the item's YAML; the engine treats it as opaque flavor and
+   * nothing in the shipped game reads it at all.
+   *
+   * Which is why a SHIPPED base does not carry one at runtime: it is the only
+   * authored field no rule reads, so the pipeline emits it into its own module
+   * (`src/generated/item-lore.ts`, read by the LIBRARY generator) rather than
+   * leaving 9 KB gzipped of prose in the app's startup chunk. A MOD's base
+   * DOES carry it — a mod reaches the engine through `registerDefs` with no
+   * second module to put it in — hence optional here rather than gone.
+   */
   description?: string;
   /** Governs which stat scales it: melee=STR, ranged=DEX, magic=INT. */
   class: WeaponClass;
@@ -177,6 +186,23 @@ export type WeaponDef = {
    * rather than sweeping sideways. Defaults to `MELEE.defaultSweepDeg`.
    */
   sweepDeg?: number;
+  /**
+   * TWO-HANDED: this weapon occupies BOTH arms, so the hero can carry no
+   * shield and no bag while it is drawn (see `EquipSlot.offhand`). Equipping
+   * one banks whatever the second arm held; equipping a shield or a bag banks
+   * the two-hander. Omitted = one-handed, the default.
+   *
+   * It is a COST, and the catalog pays for it: a two-hander is forged at the
+   * damage budget's `TWO_HANDED_PREMIUM` (scripts/weapon-budget.mjs), because
+   * the alternative it is competing with is a fifth armor piece. A greatsword
+   * or a maul additionally swings a WIDER cone than its one-handed cousins —
+   * the arc is what a shieldless bruiser's survivability actually is, since a
+   * blow that clears the crowd is a blow the crowd doesn't return. Both come
+   * out of the same premium: a wider `sweepDeg` raises the weapon's assumed
+   * targets and so LOWERS the per-hit damage the budget hands back, which is
+   * exactly the trade "reach more of them, hit each a little softer".
+   */
+  twoHanded?: boolean;
   /**
    * This weapon's OWN sound, by id — a `content/sounds/<id>.yaml` entry, or one
    * a mod ships.

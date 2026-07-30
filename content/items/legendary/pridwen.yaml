@@ -1,0 +1,23 @@
+id: pridwen
+kind: unique
+rarity: legendary
+name: PRIDWEN
+base: kite_shield
+slot: shield
+ilvl: 81
+keeper: true
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: nova
+    chance: 0.2
+    rank: 3
+  - kind: armor
+    value: 60
+  - kind: maxHp
+    value: 120
+  - kind: stat
+    stat: strength
+    value: 14
+lore: THE IMAGE ON THE INSIDE FACES THE MAN CARRYING IT. THAT WAS ALWAYS THE POINT.
+world: true

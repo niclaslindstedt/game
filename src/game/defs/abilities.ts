@@ -119,6 +119,22 @@ export type AbilityDef = {
    */
   sfx?: string;
   /**
+   * RELATIVE ODDS this power is the one a drop (or a stall slot) rolls out of
+   * the level's pool — a WEIGHT, not a probability, defaulting to
+   * `ABILITY_DEFAULT_RARITY` so an un-annotated catalog picks uniformly the way
+   * it always did. Lower is rarer: a power weighted 25 turns up a quarter as
+   * often as its 100-weight shelfmates.
+   *
+   * It exists because a pool is a FLAT list and the powers in it are not: a
+   * campaign pool grows to fourteen entries by the bunker, and picking uniformly
+   * made the run-saving ones (the death ward, the anchored black hole) exactly as
+   * common as three orbiting fireballs. A power's weight is the one place to say
+   * "this one is a moment, not a resource" — and the stall reads it too, both to
+   * choose what it stocks and to PRICE it (`ECONOMY.abilityRarityMarkupCap`), so
+   * coins can't buy past the rarity.
+   */
+  rarity?: number;
+  /**
    * How the power LOOKS — its colour kit, and the one shape choice a kit makes.
    *
    * A power's BLOCKS decide what is drawn (a well draws a core, a trail draws
@@ -416,4 +432,47 @@ export function abilityDef(defId: string): AbilityDef {
   const def = activeAbilityDefs[defId];
   if (!def) throw new Error(`unknown ability def "${defId}"`);
   return def;
+}
+
+/**
+ * The weight an un-annotated power carries (see `AbilityDef.rarity`) — the
+ * yardstick every authored weight is written against, and the numerator of the
+ * stall's rarity markup. 100 so a weight reads as a percentage of "ordinary".
+ */
+export const ABILITY_DEFAULT_RARITY = 100;
+
+/** This power's selection weight — its authored `rarity`, else the default. */
+export function abilityRarity(defId: string): number {
+  return Math.max(0, abilityDef(defId).rarity ?? ABILITY_DEFAULT_RARITY);
+}
+
+/**
+ * Pick one power out of `pool`, weighted by each entry's `rarity`, off a single
+ * `roll` in [0,1). ONE draw, like the uniform `pool[floor(roll × n)]` it
+ * replaced — the caller's rng stream keeps its exact shape, which is what lets
+ * the drop ladder gain rarity weighting without reshuffling a seeded run.
+ *
+ * Returns null only for an empty pool (or one whose every weight is zero), so a
+ * level that ships no powerups is a caller's `null` check rather than a throw.
+ */
+export function pickAbility(
+  pool: readonly string[],
+  roll: number,
+): string | null {
+  if (pool.length === 0) return null;
+  let total = 0;
+  for (const id of pool) total += abilityRarity(id);
+  if (total <= 0) return null;
+  let cursor = roll * total;
+  let last: string | null = null;
+  for (const id of pool) {
+    const weight = abilityRarity(id);
+    if (weight <= 0) continue; // a zero-weight power can never be picked
+    last = id;
+    cursor -= weight;
+    if (cursor < 0) return id;
+  }
+  // roll === 1 (or float drift on the last step): the last WEIGHTED entry —
+  // never simply the last of the pool, which may carry no weight at all.
+  return last;
 }

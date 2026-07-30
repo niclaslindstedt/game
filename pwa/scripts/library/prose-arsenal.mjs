@@ -204,6 +204,12 @@ export function weaponShapeNotes(stats) {
       `The swing carves a ${stats.sweepDeg}° cone and strikes everything standing in it. INTELLECT widens that cone as you grow, out to a full half circle.`,
     ]);
   }
+  if (stats.twoHanded) {
+    notes.push([
+      "BOTH HANDS",
+      "It takes the off hand as well, so you carry no shield and no bag while it is drawn. That is what the extra damage is paying for — a two-hander is forged above the budget line every one-hander sits on, because the alternative to carrying one is carrying a fifth piece of armour.",
+    ]);
+  }
   notes.push([
     "PRICED FOR",
     `About ${oneDp(stats.targets)} ${stats.targets < 1.5 ? "target" : "targets"} a swing. That is what the damage budget assumes it reaches, which is why a wide weapon carries a smaller blow than a narrow one of the same level.`,

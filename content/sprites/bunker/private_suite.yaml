@@ -1,5 +1,6 @@
 name: private_suite
 family: bunker
+plane: floor
 size: [68, 46]
 description: >
   A private suite front, top-down - a marble facing under a gilt cornice

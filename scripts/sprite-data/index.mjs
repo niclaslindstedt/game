@@ -32,6 +32,7 @@ const {
   SPRITES,
   SPRITE_PALETTES,
   SPRITE_FAMILY,
+  SPRITE_PLANES,
   ANIMATIONS,
 } = loadSprites();
 
@@ -45,18 +46,25 @@ export { SPRITES };
 export { SPRITE_PALETTES };
 /** Which family a sprite belongs to, name → family name. */
 export { SPRITE_FAMILY };
+/** Sprites drawn on a plane other than the default `upright`, name → plane. */
+export { SPRITE_PLANES };
 /** Frame sequences the generator turns into film strips + motion previews. */
 export { ANIMATIONS };
 
-/** Register a derived sprite under a family, guarding against name clashes. */
-function register(family, name, grid) {
+/**
+ * Register a derived sprite under a family, guarding against name clashes.
+ * `palette` defaults to the family scope; a variant derived from ONE base
+ * sprite passes that sprite's own palette merged over it, so a char the base
+ * defines locally still paints the color the base painted it with.
+ */
+function register(family, name, grid, palette = family.palette) {
   if (name in SPRITES) {
     throw new Error(
       `sprite "${name}" defined by both "${SPRITE_FAMILY[name]}" and "${family.name}"`,
     );
   }
   SPRITES[name] = grid;
-  SPRITE_PALETTES[name] = family.palette;
+  SPRITE_PALETTES[name] = palette;
   SPRITE_FAMILY[name] = family.name;
 }
 
@@ -136,13 +144,23 @@ export function deriveWounds(defs) {
     );
     const style =
       family.wounds?.[def.sprite] ?? GORE_STYLES[def.gore ?? "blood"];
-    for (const char of Object.values(style)) {
-      if (!(char in family.palette) && char in STYLE_FALLBACK) {
-        family.palette[char] = STYLE_FALLBACK[char];
-      }
-    }
     const stages = ROLE_STAGES[def.role];
     WOUND_PLANS[def.sprite] = { style, stages, family: family.name };
+    // The wounded frames are the base frames with splats dealt onto them, so
+    // they must render in the base sprite's OWN palette (the family scope backs
+    // the gore chars). Reading the family scope alone renders a locally-defined
+    // body char in the family's color — or, when the family never defined it at
+    // all, in nothing.
+    const palette = {
+      ...family.palette,
+      ...SPRITE_PALETTES[`${def.sprite}_0`],
+    };
+    // …and a MOD's family has no scope at all to back those gore chars with.
+    for (const char of Object.values(style)) {
+      if (!(char in palette) && char in STYLE_FALLBACK) {
+        palette[char] = STYLE_FALLBACK[char];
+      }
+    }
     // The seeded deal can collapse its clusters onto too few pixels to read
     // (the wandering-tourist case: overlapping anchors left a 5-px "wound").
     // Re-deal with a bumped seed until the hurt stage passes the visibility
@@ -152,11 +170,11 @@ export function deriveWounds(defs) {
     for (let reroll = 1; reroll <= 8; reroll++) {
       const hurt = wounds[`${def.sprite}_hurt_0`];
       if (!hurt) break;
-      if (woundVisibility(frames[0], hurt, family.palette) === null) break;
+      if (woundVisibility(frames[0], hurt, palette) === null) break;
       wounds = woundedFrames(def.sprite, frames, style, stages, reroll);
     }
     for (const [name, grid] of Object.entries(wounds)) {
-      register(family, name, grid);
+      register(family, name, grid, palette);
     }
   }
 }
@@ -172,7 +190,12 @@ deriveWounds(GENERATED_ENEMIES);
 // `make assets`. Grade variants share their base's look (grades.ts keeps
 // the icon) and derive nothing — the renderer resolves them via `gradeBase`.
 
-const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet"]);
+// The slots that carry an on-body look. BOTH off-hand kinds are here for the
+// same reason the four armor slots are: the second arm is a build choice, and a
+// choice you cannot SEE on the hero is one the player has to go and read a
+// screen to remember making. A shield draws raised and broad, a bag slung low
+// and small (asset-tools/worn.mjs) — one glance, one answer.
+const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet", "shield", "bag"]);
 
 const worn = {
   name: "worn",

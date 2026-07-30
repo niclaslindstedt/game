@@ -17,7 +17,8 @@
 //     [--difficulty easy|medium|hard|nightmare|jesus] \
 //     [--level spacez_hq|moon|the_bunker|…] [--seed 42] [--speed 4] \
 //       (any catalog level, SECRET levels included — forced via ?level=)
-//     [--scenario '{"place":"boss","hp":2}'] [--mod <dir>]
+//     [--scenario '{"place":"boss","hp":2}'] [--pitch 0.5] [--yaw 45] \
+//     [--mod <dir>]
 //
 // `--speed <n>` FAST-FORWARDS the run: the app simulates n× as many game-loop
 // steps per frame, so a bot playtest finishes in a fraction of the wall-clock
@@ -107,6 +108,12 @@ const speed = opt("speed", "");
 // storage before the app boots — which is what `addInitScript` below does.
 const generated = args.includes("--generated");
 const mapSize = opt("map-size", "medium");
+// THE CAMERA KNOBS (--pitch, --yaw): the world projection, dialled for this run
+// (see AGENTS.md § THE WORLD PROJECTION). Like GENERATED MAPS they are persisted
+// DEVELOPER settings rather than URL params, so they are seeded into storage
+// before the app boots. Omit either to play on the shipped camera.
+const pitch = opt("pitch", "");
+const yaw = opt("yaw", "");
 
 const shotDir = fileURLToPath(
   new URL("../assets-preview/playtest", import.meta.url),
@@ -120,11 +127,11 @@ const browser = await chromium.launch({
 // Mobile-first: the game targets phones held horizontally, so playtests run
 // at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
-if (generated) {
+if (generated || pitch || yaw) {
   // Written before any app code runs, so the engine flags are applied from it on
   // load exactly as they would be for a developer who flipped the switch.
   await page.addInitScript(
-    ([size]) => {
+    ([size, carve, camPitch, camYaw]) => {
       const KEY = "gone-in-space:settings";
       let stored;
       try {
@@ -137,12 +144,13 @@ if (generated) {
         JSON.stringify({
           ...stored,
           developerUnlocked: true,
-          generatedMaps: "on",
-          generatedMapSize: size,
+          ...(carve ? { generatedMaps: "on", generatedMapSize: size } : {}),
+          ...(camPitch ? { cameraPitch: Number(camPitch) } : {}),
+          ...(camYaw ? { cameraYaw: Number(camYaw) } : {}),
         }),
       );
     },
-    [mapSize],
+    [mapSize, generated, pitch, yaw],
   );
 }
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));

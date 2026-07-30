@@ -239,7 +239,19 @@ const FORGE_SLOTS = [
   "ring",
   "trinket",
   "bag",
+  "shield",
 ];
+/**
+ * The SHIELD slot's seed armor line — `3 + 1.8 × levelReq`, used only while the
+ * catalog holds fewer than two shields to regress against (it does not, today,
+ * but a sequel stripping `content/items/` would put it back there).
+ *
+ * It sits between the head and chest curves on purpose: a shield is nearly a
+ * second breastplate, because it is what a melee hero gives up a bagful of
+ * cells — and, holding a two-hander, a large damage premium — to carry. Under
+ * this and nobody brings one; over it and nobody brings anything else.
+ */
+const SHIELD_SEED = (req) => Math.max(1, Math.round(3 + 1.8 * req));
 /** The kinds that carry no armor and never wear out — jewellery, the carried
  * trinket, and bags. They skip the armor-curve fit and the durability stamp. */
 const NO_ARMOR_SLOTS = new Set(["amulet", "ring", "trinket", "bag"]);
@@ -251,11 +263,25 @@ if (!FORGE_SLOTS.includes(slot ?? "")) {
 // Armor is an OUTPUT: fit the per-slot catalog line (armor vs levelReq over
 // the authored bases) and read the forged piece's armor off it, so a new
 // piece lands ON the slot's curve instead of above it.
+// HAND-AUTHORED NORMAL BASES ONLY. `GEAR_DEFS` carries the generated
+// EXCEPTIONAL/ELITE variants of every base too (defs/grades.ts), and those grow
+// their armor along `ARMOR.armorPerIlvl` — 6% per requirement level, all the way
+// out to req 100. Fitting a straight line through them dragged the intercept
+// deeply negative and handed every freshly forged piece a fraction of its
+// slot's real line (a req-12 chest came out at 8 armor against the catalog's
+// 28). The line a new hand-authored base owes is the one the OTHER hand-authored
+// bases sit on.
 const peers = Object.values(GEAR_DEFS).filter(
-  (d) => d.slot === slot && (d.armor ?? 0) > 0 && d.levelReq !== undefined,
+  (d) =>
+    d.slot === slot &&
+    d.grade === undefined &&
+    (d.armor ?? 0) > 0 &&
+    d.levelReq !== undefined,
 );
 let armor = 0;
-if (peers.length >= 2 && !NO_ARMOR_SLOTS.has(slot)) {
+if (peers.length < 2 && slot === "shield") {
+  armor = SHIELD_SEED(req);
+} else if (peers.length >= 2 && !NO_ARMOR_SLOTS.has(slot)) {
   const n = peers.length;
   const sx = peers.reduce((s, d) => s + d.levelReq, 0);
   const sy = peers.reduce((s, d) => s + d.armor, 0);

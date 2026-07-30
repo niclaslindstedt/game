@@ -1,5 +1,6 @@
 name: horseshoe
 family: eastworld
+plane: floor
 size: [8, 8]
 description: >
   A single iron horseshoe lying in the dust; tiny good-luck ground decor.

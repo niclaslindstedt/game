@@ -164,9 +164,11 @@ export function buildHud(
   // Empty cells: the capacity (which grows with STRENGTH / a worn bag)
   // minus what's carried — shown on the avatar badge, red at 0.
   const bagFree = state.player.inventory.length - bagCount;
-  // The worn bag's own icon (the default carry-all when none is worn) —
-  // drawn on the minimap-corner bag badge so the pouch matches the gear.
-  const wornBag = state.player.equipment.bag;
+  // The worn bag's own icon (the default carry-all when none is worn, or when
+  // the second arm is holding a SHIELD) — drawn on the minimap-corner bag badge
+  // so the pouch matches the gear.
+  const offhand = state.player.equipment.offhand;
+  const wornBag = offhand?.slot === "bag" ? offhand : null;
   const bagIcon =
     wornBag && !isWeaponDef(wornBag.defId)
       ? equipmentIcon(wornBag.defId)

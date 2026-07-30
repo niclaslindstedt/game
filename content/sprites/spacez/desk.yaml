@@ -1,5 +1,6 @@
 name: desk
 family: spacez
+plane: floor
 size: [20, 12]
 description: >
   A grey office desk seen from above with a small dark monitor and keyboard on

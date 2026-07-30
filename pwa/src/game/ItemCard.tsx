@@ -382,6 +382,14 @@ export function itemLines(
           intBonus > 0 ? { text: `+${intBonus}`, color: STAT_LIFT_BLUE } : null,
       });
     }
+    // TWO-HANDED, in the same AoE cyan as the multi-target line above it — it
+    // belongs with the "what does swinging this actually cost" group rather
+    // than with the stats. It is the one line on the card that reads as a
+    // MINUS, so it says what is lost rather than what is gained: the off hand
+    // is spoken for and the shield or bag in it comes off.
+    if (def.twoHanded) {
+      lines.push({ text: "TWO-HANDED - NO OFF HAND", color: "#7ecbff" });
+    }
     // Crit DAMAGE is a CLASS trait now (ranged > melee > magic, deepened by DEX),
     // not a per-item number — so the item card carries no crit-damage line.
     // DURABILITY is appended below the affixes (durabilityLine / ItemCardBody),
@@ -405,6 +413,18 @@ export function itemLines(
         text: `${value} ARMOR · ${armorTypeOf(item.defId).toUpperCase()}`,
         color: AFFIX_COLORS.armor,
         delta: equipped ? bonusDelta(value, worn) : null,
+      });
+    }
+    // A BAG leads with the ROOM it buys, which is its whole reason to exist —
+    // the instance's ilvl-grown stamp when it carries one, so a deep find reads
+    // as the upgrade it is. Compared against the bag in the off hand now; a
+    // SHIELD there counts as zero cells, which is exactly the trade being made.
+    const cells = bagSlotsOf(item);
+    if (cells) {
+      lines.push({
+        text: `+${cells} BAG SLOTS`,
+        color: "#7ecbff",
+        delta: equipped ? bonusDelta(cells, bagSlotsOf(equipped)) : null,
       });
     }
     // MAX HP and CRIT each combine the base slot bonus with their rolled affixes
@@ -442,6 +462,21 @@ export function itemLines(
     // right above the requirement footer — the WoW tooltip order.
   }
   return lines;
+}
+
+/**
+ * The cells a BAG buys — the instance's ilvl-grown stamp first, then the frozen
+ * def a unique's override rides on, then the catalog. The same ladder the engine
+ * reads through `equippedBagSlots`, so the card can never promise room the bag
+ * will not give. Zero for everything that is not a bag, the SHIELD in the same
+ * slot included.
+ */
+function bagSlotsOf(item: Equipment): number {
+  if (item.slot !== "bag" || isWeaponDef(item.defId)) return 0;
+  if (item.bagSlots !== undefined) return item.bagSlots;
+  const frozen = item.def;
+  if (frozen && "bagSlots" in frozen) return frozen.bagSlots ?? 0;
+  return gearDef(item.defId).bagSlots ?? 0;
 }
 
 /**
@@ -632,9 +667,14 @@ export function ItemCardBody({
   const weaponClass = isWeaponDef(item.defId)
     ? weaponDef(item.defId).class
     : null;
+  // A SHIELD borrows the OFF HAND frame's own glyph (`icon_slot_offhand`, which
+  // IS a shield silhouette) rather than shipping an identical second copy of it.
+  // A BAG keeps its satchel glyph: the two share a slot, and the glyph is how
+  // the card says which of them this is.
+  const slotGlyph = item.slot === "shield" ? "offhand" : item.slot;
   const glyph = spriteDataUrl(
     sprites,
-    weaponClass ? `icon_class_${weaponClass}` : `icon_slot_${item.slot}`,
+    weaponClass ? `icon_class_${weaponClass}` : `icon_slot_${slotGlyph}`,
   );
   // A unique/legendary/artifact name is struck in its tier's own golden RELIC
   // font (pre-colored, so no `color` — see assets.relicFonts), each rung

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: colony_pool_round
 family: mars
+plane: floor
 size: [26, 26]
 description: >
   A circular plunge pool ringed in bright coping.

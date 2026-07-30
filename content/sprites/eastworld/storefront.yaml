@@ -1,5 +1,6 @@
 name: storefront
 family: eastworld
+plane: floor
 size: [16, 16]
 description: >
   A western storefront facade — a brown wooden shop front of plank boards with

@@ -65,4 +65,35 @@ describe("the powerup ladder", () => {
       expect(pooled, `"${id}" can never drop`).toContain(id);
     }
   });
+
+  it("weights every power on the authored rarity ladder", () => {
+    // The rungs `content/powerups.yaml` documents. A new power picks one of
+    // these (or leaves `rarity` off, which IS the 100 rung) rather than
+    // inventing a number nobody can compare against.
+    const RUNGS = [10, 15, 30, 40, 70, 80, 100];
+    for (const [id, def] of Object.entries(ABILITY_DEFS)) {
+      if (def.rarity === undefined) continue;
+      expect(RUNGS, `"${id}" is weighted ${def.rarity}`).toContain(def.rarity);
+    }
+  });
+
+  it("keeps the run-savers rarer than the classics", () => {
+    // The whole point of the weights: a power that hands a run back must not
+    // turn up as often as three orbiting fireballs. Pinned by NAME rather than
+    // by number so a rebalance is free to move the rungs and this still bites.
+    const weight = (id: string) => ABILITY_DEFS[id]?.rarity ?? 100;
+    const classics = ["fire_orbs", "storm_cell", "item_magnet", "ion_wake"];
+    for (const classic of classics) expect(weight(classic)).toBe(100);
+    // The death ward is the rarest thing in the dock; the anchored black hole
+    // is next. Every "heavy" sits under every classic.
+    expect(weight("continuity_protocol")).toBeLessThan(weight("event_horizon"));
+    for (const heavy of [
+      "event_horizon",
+      "reactor_surge",
+      "iron_stampede",
+      "blast_shield",
+    ]) {
+      expect(weight(heavy), `"${heavy}"`).toBeLessThan(100);
+    }
+  });
 });

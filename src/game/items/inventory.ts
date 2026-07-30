@@ -18,7 +18,8 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
 } from "./derived.ts";
-import { fitsEquipSlot, RING_SLOTS } from "./slots.ts";
+import { freeHandsFor } from "./hands.ts";
+import { equipSlotForItem, fitsEquipSlot, RING_SLOTS } from "./slots.ts";
 import { canEquip } from "./requirements.ts";
 import { gearScore } from "./weapon-math.ts";
 
@@ -53,7 +54,7 @@ export function wearSlotFor(
 ): EquipSlot | null {
   if (piece.slot === "trinket") return null;
   if (piece.slot === "ring") return ringSlotFor(state);
-  return piece.slot;
+  return equipSlotForItem(piece.slot);
 }
 
 /**
@@ -77,15 +78,21 @@ export function wornCounterpart(
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
 
 /**
- * Extra cells granted by the BAG worn in the bag slot (its `GearDef.bagSlots`),
- * or 0 when no bag is worn. A bag only pays out from the slot — one sitting in
- * a cell is just loot until it's equipped.
+ * Extra cells granted by the BAG worn in the OFFHAND slot (its
+ * `GearDef.bagSlots`), or 0 when the second arm is empty or holding a SHIELD.
+ * A bag only pays out from the slot — one sitting in a cell is just loot until
+ * it's equipped, and a hero who chose the shield chose the smaller carry.
  */
 export function equippedBagSlots(state: GameState): number {
-  const bag = state.player.equipment.bag;
-  if (!bag || isWeaponDef(bag.defId)) return 0;
-  // Prefer the FROZEN def so a unique bag's overridden capacity (mintUnique)
-  // stands; fall back to the live catalog for rolled/legacy bags.
+  const bag = state.player.equipment.offhand;
+  // The second arm may be holding a SHIELD instead, which carries no cells.
+  if (!bag || bag.slot !== "bag" || isWeaponDef(bag.defId)) return 0;
+  // The INSTANCE stamp first — the ilvl-grown count `rollEquipment` froze at
+  // mint (`LOOT.bagSlotsPerIlvl`), which is what makes a deep find roomier than
+  // an early one. Then the FROZEN def, so a unique bag's overridden capacity
+  // (mintUnique) stands; then the live catalog, for legacy instances minted
+  // before either.
+  if (bag.bagSlots !== undefined) return bag.bagSlots;
   const frozen = bag.def;
   const slots =
     frozen && "bagSlots" in frozen
@@ -137,6 +144,10 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   // in, so "equipping" one is a no-op rather than a failure.
   const slot = wearSlotFor(state, item);
   if (!slot) return false;
+  // THE TWO-HANDED RULE: a greatsword needs the second arm, and a shield or
+  // bag needs the hand a greatsword is holding. Refused whole when the bag has
+  // no room for what would come off (items/hands.ts).
+  if (!freeHandsFor(state, item, index)) return false;
   const previous = player.equipment[slot];
   player.inventory[index] = previous ?? null;
   if (slot === "weapon") {
@@ -172,6 +183,7 @@ export function equipFromInventoryInto(
   if (!item) return false;
   if (!fitsEquipSlot(item.slot, slot)) return false;
   if (!canEquip(state, item)) return false;
+  if (!freeHandsFor(state, item, index)) return false;
   const previous = player.equipment[slot];
   player.inventory[index] = previous ?? null;
   if (slot === "weapon") {

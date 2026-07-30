@@ -50,7 +50,8 @@ const NAMED_RARITIES = new Set(["set", "unique", "legendary", "artifact"]);
 const WEAPON_CLASSES = new Set(["melee", "ranged", "magic"]);
 // The item KINDS gear is authored as. `trinket` is the carried charm — it is
 // never worn in a slot, it pays out from the bag; `ring` fills either of the
-// hero's two fingers.
+// hero's two fingers; `bag` and `shield` are the two things the SECOND ARM
+// (`EquipSlot.offhand`) holds, and a piece is one or the other, never both.
 const GEAR_SLOTS = new Set([
   "head",
   "chest",
@@ -60,6 +61,7 @@ const GEAR_SLOTS = new Set([
   "ring",
   "trinket",
   "bag",
+  "shield",
 ]);
 const EQUIP_SLOTS = new Set(["weapon", ...GEAR_SLOTS]);
 const ARMOR_TYPES = new Set(["cloth", "leather", "mail", "plate"]);
@@ -225,6 +227,12 @@ export function validateItem(doc, refs) {
     ]) {
       num(doc[f], f);
     }
+    // TWO-HANDED: the weapon claims the SECOND ARM as well, so its wielder
+    // carries no shield and no bag (see `WeaponDef.twoHanded`). Forged at the
+    // budget's two-handed premium — `weapon-budget.mjs --strict` is what holds
+    // that side of the bargain, so all the schema owes is the type.
+    if (doc.twoHanded !== undefined && typeof doc.twoHanded !== "boolean")
+      err(`twoHanded must be a boolean`);
     if (doc.durability === undefined)
       err(`missing required field "durability"`);
     if (doc.projectile !== undefined) {
@@ -269,6 +277,21 @@ export function validateItem(doc, refs) {
     }
     oneOf(doc.armorType, ARMOR_TYPES, "armorType");
     oneOf(doc.worn, WORN_STYLES, "worn style");
+    // THE SECOND ARM'S TWO KINDS ARE EACH DEFINED BY WHAT THEY PAY, and a piece
+    // that pays neither is a slot spent on nothing. A SHIELD is armor — it owes
+    // `armor` and the `armorType` that scales it and sets its STRENGTH gate
+    // (which is what keeps shields a melee lane, see config `SHIELD`). A BAG is
+    // room — it owes `bagSlots`, and may not carry armor, because a bag that
+    // protected would make the choice free.
+    if (doc.slot === "shield") {
+      if (doc.armor === undefined) err(`shield needs an "armor" value`);
+      if (doc.armorType === undefined) err(`shield needs an "armorType"`);
+      if (doc.bagSlots !== undefined) err(`shield may not carry bagSlots`);
+    }
+    if (doc.slot === "bag") {
+      if (doc.bagSlots === undefined) err(`bag needs a "bagSlots" count`);
+      if (doc.armor !== undefined) err(`bag may not carry armor`);
+    }
     // The per-BASE difficulty drop gate (GearDef.minDifficulty): how a whole
     // item kind is held back for the deep ladder — rings from nightmare,
     // amulets from JESUS.
@@ -293,6 +316,8 @@ export function validateItem(doc, refs) {
     // it dropWeight, same name as a base's TreasureClass knob).
     num(doc.dropWeight, "dropWeight");
     num(doc.bagSlots, "bagSlots");
+    if (doc.bagSlots !== undefined && doc.slot !== "bag")
+      err(`bagSlots on a ${doc.slot} unique (only a bag carries cells)`);
     for (const f of ["world", "keeper"]) {
       if (doc[f] !== undefined && typeof doc[f] !== "boolean")
         err(`${f} must be a boolean`);

@@ -224,6 +224,9 @@ export {
   equipFromInventory,
   equipFromInventoryInto,
   fitsEquipSlot,
+  equipSlotForItem,
+  isOffhandItem,
+  isTwoHandedWeapon,
   isLiveItemSlot,
   carriedTrinkets,
   isTrinket,
@@ -372,6 +375,7 @@ export {
   repairGear,
   sellItem,
   sellValue,
+  stockName,
 } from "./game/merchant.ts";
 // QUESTS — the errands the field's non-combatants ask of the hero (see
 // quests/). The conversation is a pause phase like the shop; everything else
@@ -609,10 +613,13 @@ export {
 
 // Content catalogs: levels, monsters, equipment, tiers, difficulties.
 export {
+  ABILITY_DEFAULT_RARITY,
   ABILITY_DEFS,
   abilityBlocks,
   abilityDef,
+  abilityRarity,
   hasAbilityBlock,
+  pickAbility,
   ABILITY_BLOCKS,
   type AbilityDef,
   type AbilityKind,
@@ -731,6 +738,7 @@ export {
   isWeaponDef,
   QUALITY_ORDER,
   QUALITY_PREFIX,
+  SIDEARM_DEF_ID,
   STAT_NAMES,
   TIER_LADDER,
   TIER_ROLL_ORDER,
@@ -897,6 +905,7 @@ export type {
   MapMarker,
   MapMarkerKind,
   Merchant,
+  MerchantConsumable,
   MerchantStock,
   Obstacle,
   PackState,

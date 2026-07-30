@@ -60,14 +60,14 @@ describe("merchant stall uniques (stockUniques)", () => {
       );
       expect(entry.equipment.tier).toBe("unique");
       expect(entry.equipment.name).toBe("TEST RELIC");
-      // Rich enough to buy it: the one-off purchase latches `sold`.
+      // Rich enough to buy it: the one-off purchase spends the entry's `qty`.
       state.player.coins = entry.price;
       // The dialogue-free fixture merchant leaves the run playing; walk up
       // and trade.
       state.player.pos = { ...state.merchant.pos };
       expect(openShop(state)).toBe(true);
       expect(buyStock(state, entry.id)).toBe(true);
-      expect(entry.sold).toBe(true);
+      expect(entry.qty).toBe(0);
       expect(state.player.coins).toBe(0);
       expect(
         state.player.inventory.some((i) => i?.uniqueId === "test_relic"),

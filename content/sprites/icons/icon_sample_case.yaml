@@ -1,0 +1,30 @@
+name: icon_sample_case
+family: icons
+size: [12, 12]
+description: >
+  A rigid field-sample case, latched, with six vials racked behind the
+  window — four of them still hold something.
+subject:
+  kind: bag icon
+  features: a hard white case with a carry handle, two brass latches and a window of green vials
+  accent: lab white with vial green
+  flavor: survey issue; the labels came off somewhere around Mars
+palette:
+  L: "#d6a842" # brass latch
+  O: "#1a1c2c" # dark outline
+  c: "#c8ccd4" # case shell
+  h: "#5a6272" # carry handle
+  v: "#6fd0b0" # sample vial
+grid: |
+  ............
+  ....OOOO....
+  ....OhhO....
+  .OOOOOOOOOO.
+  .OccccccccO.
+  .OcvOvOvOcO.
+  .OcvOvOvOcO.
+  .OccccccccO.
+  .OcLccccLcO.
+  .OccccccccO.
+  .OOOOOOOOOO.
+  ............

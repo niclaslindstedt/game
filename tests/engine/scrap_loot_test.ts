@@ -76,7 +76,7 @@ describe("scrapInferiorLoot", () => {
   it("scraps a gear piece worse than what's worn in its slot", () => {
     const state = startGame();
     // A roomy bag worn (5 cells → score 50); a smaller bag banked (2 → 20).
-    state.player.equipment.bag = gear("test_big_bag", "bag");
+    state.player.equipment.offhand = gear("test_big_bag", "bag");
     const smallBag = gear("test_bag", "bag");
     stock(state, [smallBag]);
 

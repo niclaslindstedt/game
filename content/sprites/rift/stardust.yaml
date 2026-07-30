@@ -1,5 +1,6 @@
 name: stardust
 family: rift
+plane: floor
 size: [16, 16]
 description: >
   Ambient decor — a loose scatter of pale-blue and white star-specks, a faint

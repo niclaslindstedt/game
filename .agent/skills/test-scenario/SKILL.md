@@ -31,7 +31,7 @@ Every field optional — describe only what differs from a normal run.
 | `level`, `stats`, `coins` | Player level (xp curve re-derived), ABSOLUTE stat allocations, purse |
 | `weapon` | A `WEAPON_DEFS` id minted plain — or `null` for the unbreakable fallback sidearm (the game's "no weapon") |
 | `disarmed` | `true` holsters entirely: the auto-attack sits out, the hero cannot fight at all |
-| `gear` | Per-slot (`head/chest/legs/feet/charm/bag`): a `GEAR_DEFS` id minted plain, or `null` to strip the slot |
+| `gear` | Per-slot (`head/chest/legs/feet/amulet/ring1/ring2/offhand`): a `GEAR_DEFS` id minted plain, or `null` to strip the slot. `offhand` takes either kind the second arm holds — a `shield` or a `bag` |
 | `abilities` | Powerups banked into the dock, capped at its size |
 | `runAbilities` | Powerups already RUNNING — the orbit circling, the stasis field slowing, the magnet pulling. `abilities` banks what the player must still spend; this stages the power itself, mid-flight. Each starts at its def's full duration; the instant NUKE has no running form and is refused (fire it with `debugDetonateNuke`) |
 | `clearEnemies` | Empty the field — bosses are KEPT (deleting the objective would clear the level on the spot) |

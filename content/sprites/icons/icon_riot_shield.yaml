@@ -1,0 +1,28 @@
+name: icon_riot_shield
+family: icons
+size: [12, 12]
+description: >
+  A security-desk riot shield: a tall polycarbonate slab in a dark frame,
+  scuffed where it has been leaned on.
+subject:
+  kind: shield icon
+  features: a tall rounded polycarbonate slab with a dark frame and a reinforcing bar across the middle
+  accent: translucent blue plastic
+  flavor: issued for a protest that never came, used for something worse
+palette:
+  O: "#1a1c2c" # dark outline
+  c: "#7fb6d9" # translucent polycarbonate
+  p: "#3a4152" # dark frame
+grid: |
+  .OOOOOOOOOO.
+  .OpccccccpO.
+  .OpccccccpO.
+  .OpccccccpO.
+  .OpccccccpO.
+  .OppppppppO.
+  .OpccccccpO.
+  .OpccccccpO.
+  ..OpcccpO...
+  ...OpppO....
+  ....OOO.....
+  ............

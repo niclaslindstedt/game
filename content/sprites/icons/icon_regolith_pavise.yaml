@@ -1,0 +1,29 @@
+name: icon_regolith_pavise
+family: icons
+size: [12, 12]
+description: >
+  A sintered regolith pavise — moondust fused into a slab in a solar kiln,
+  and cracked twice since.
+subject:
+  kind: shield icon
+  features: a tall rounded-top slab of fused grey-brown regolith with hairline cracks
+  accent: dusty basalt brown
+  flavor: the colony printed walls with the same kiln; this is a wall you can carry
+palette:
+  O: "#1a1c2c" # dark outline
+  d: "#6b5f52" # regolith face
+  k: "#463d34" # hairline crack
+  r: "#8a7a68" # sintered rim
+grid: |
+  ..OOOOOOOO..
+  .OrrrrrrrrO.
+  .OrddddddrO.
+  .OrdddkddrO.
+  .OrddkdddrO.
+  .OrddddddrO.
+  .OrdkddddrO.
+  .OrddddddrO.
+  .OrddddddrO.
+  .OrrrrrrrrO.
+  .OOOOOOOOOO.
+  ............

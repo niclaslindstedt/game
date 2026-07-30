@@ -1,0 +1,27 @@
+id: ancile
+kind: unique
+rarity: artifact
+name: ANCILE
+base: aegis_tower
+slot: shield
+ilvl: 198
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: nova
+    chance: 0.3
+    rank: 5
+  - kind: maxHpPct
+    value: 0.02
+  - kind: armor
+    value: 150
+  - kind: maxHp
+    value: 260
+  - kind: stat
+    stat: strength
+    value: 24
+  - kind: stat
+    stat: stamina
+    value: 22
+lore: IT FELL OUT OF A CLEAR SKY ONTO A KING'S ROOF, AND THE CITY DID NOT FALL WHILE IT STAYED.
+world: true

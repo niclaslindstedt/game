@@ -1,0 +1,29 @@
+name: icon_ducci_holdall
+family: icons
+size: [12, 12]
+description: >
+  A DUCCI monogram holdall out of the executive floor, gold hardware,
+  calfskin, and rather more room than taste.
+subject:
+  kind: bag icon
+  features: a monogrammed calfskin holdall with twin gold handles and a gold band across the body
+  accent: brown monogram calfskin with gold hardware
+  flavor: somebody expensed this; nobody ever asked what for
+palette:
+  G: "#e0b84a" # gold hardware
+  M: "#c8a05a" # monogram figure
+  O: "#1a1c2c" # dark outline
+  m: "#6b4a2e" # monogram calfskin
+grid: |
+  ............
+  ...OOOOOO...
+  ..OGGGGGGO..
+  .OOOOOOOOOO.
+  .OmmmmmmmmO.
+  .OmMmmmmMmO.
+  .OmmmmmmmmO.
+  .OGGGGGGGGO.
+  .OmmMmmMmmO.
+  .OmmmmmmmmO.
+  .OOOOOOOOOO.
+  ............

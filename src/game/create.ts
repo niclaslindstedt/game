@@ -47,6 +47,7 @@ import type { DifficultyHp, DifficultyMobLevels } from "./defs/levels/types.ts";
 import { crateMaxHp } from "./crates.ts";
 import { buildWells } from "./hazards.ts";
 import {
+  isOffhandItem,
   recomputeMaxHp,
   recomputeMaxStamina,
   rollEquipment,
@@ -760,9 +761,10 @@ export function createGame(
         amulet: null,
         ring1: null,
         ring2: null,
-        // No bag worn to start — the base carry is all the hero has until he
-        // loots one (see the BAG gear + inventoryCapacity).
-        bag: null,
+        // Nothing in the second arm to start: no bag (the base carry is all
+        // the hero has until he loots one — see inventoryCapacity) and no
+        // shield either.
+        offhand: null,
       },
       // The bag starts at its STRENGTH-0 floor; allocating STRENGTH grows it
       // (see inventoryCapacity / syncInventoryCapacity).
@@ -883,8 +885,8 @@ export function createGame(
   for (const gearId of diff.startingGear ?? []) {
     const def = gearDef(gearId);
     // A TRINKET is never worn (it pays out from the bag) and no rung opens
-    // with a bag, so neither is minted onto the body here.
-    if (def.slot === "trinket" || def.slot === "bag") continue;
+    // with a second arm filled, so neither is minted onto the body here.
+    if (def.slot === "trinket" || isOffhandItem(def.slot)) continue;
     const piece: Equipment = {
       id: state.nextId++,
       defId: gearId,

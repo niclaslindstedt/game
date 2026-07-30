@@ -1,0 +1,17 @@
+id: the_long_reach
+kind: unique
+rarity: unique
+name: THE LONG REACH
+base: bardiche
+slot: weapon
+ilvl: 60
+bonuses:
+  - kind: damagePct
+    value: 0.55
+  - kind: stat
+    stat: strength
+    value: 12
+  - kind: armorPen
+    value: 0.1
+lore: THEY NEVER GOT CLOSE ENOUGH TO EXPLAIN THEMSELVES. THAT SUITED EVERYBODY.
+world: true

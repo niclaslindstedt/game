@@ -1,0 +1,29 @@
+name: icon_hatch_cover
+family: icons
+size: [12, 12]
+description: >
+  A round equipment-locker hatch torn off its hinges and carried as a
+  shield, bolt heads still in the rim.
+subject:
+  kind: shield icon
+  features: a circular steel hatch with a raised rim and four bolt heads
+  accent: cold station grey
+  flavor: the first thing to hand when the corridor filled up
+palette:
+  B: "#5c6474" # bolt head
+  O: "#1a1c2c" # dark outline
+  b: "#9aa3b0" # hatch face
+  s: "#7a8290" # hatch rim
+grid: |
+  ....OOOO....
+  ..OOssssOO..
+  .OsbbbbbbsO.
+  .OsbBbbBbsO.
+  OsbbbbbbbbsO
+  OsbbbbbbbbsO
+  OsbBbbbbBbsO
+  .OsbbbbbbsO.
+  .OsbbbbbbsO.
+  ..OOssssOO..
+  ....OOOO....
+  ............

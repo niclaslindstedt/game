@@ -1,5 +1,6 @@
 name: house_3x2
 family: eastworld
+plane: floor
 size: [48, 32]
 description: >
   A small frontier-town house, top-down — brown plank walls, a shingled roof

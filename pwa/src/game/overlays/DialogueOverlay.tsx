@@ -38,6 +38,7 @@ import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import { heroSoak } from "../game-screen/hero-soak.ts";
 import { dollDataUrl } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
+import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
 
 /** The reveal state the overlay publishes so the app's keyboard/gamepad
  * advance can share the tap's semantics (finish, scroll, then turn). */
@@ -198,9 +199,10 @@ export function DialogueOverlay({
         ) ??
         spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
         null)
-      : dialogue.source.kind === "story"
-        ? spriteDataUrl(assets.sprites, content.portrait)
-        : (spriteDataUrl(assets.sprites, `${content.portrait}_0`) ?? null);
+      : // A story item names an exact icon; a character names a walk-cycle
+        // family. `portraitSrc` tries the exact name first, so one call covers
+        // both (see SpritePortrait.tsx).
+        portraitSrc(assets.sprites, content.portrait);
 
   // Reserve a stable row count for the whole page (the tallest screen) so the
   // box never resizes as the speech scrolls; the last, short screen pads with
@@ -253,15 +255,7 @@ export function DialogueOverlay({
             left, name + line stacked beside it — no wasted rows now that the
             "tap to continue" hint is gone. */}
         <div className="dialogue-vn">
-          {portrait && (
-            <div className="dialogue-portrait-frame">
-              <img
-                src={portrait}
-                alt=""
-                className="pixel-img dialogue-portrait"
-              />
-            </div>
-          )}
+          <SpritePortrait src={portrait} frameClass="dialogue-portrait-frame" />
           <div className="dialogue-content">
             <div className="dialogue-header">
               <PixelText

@@ -28,6 +28,19 @@ slots](#structured-subject-slots) below). When a `subject` is present the free
 `description` shrinks to a one-line human summary; the slots become the
 acceptance target.
 
+**Decide which PLANE a piece of world furniture is drawn on before you draw
+it** — `plane: upright` (the default) or `plane: floor` in the sprite's YAML.
+The camera looks at the ground at an angle, so the floor foreshortens (and,
+under the yaw knob, turns); `upright` is anything with a SIDE to it (a body, a
+rock, a building front), drawn standing at full size, while `floor` is art drawn
+looking straight DOWN — a wall panel, a painted marking, a hatch, a crate seen
+from above — which takes the projection whole like the ground tiles under it.
+Getting it wrong on a wall panel is loud: it comes out taller than the floor grid
+it is set into, and under a yaw a straight run of them staircases across the
+floor. It applies to the level's furniture (obstacles, decor, landmarks, lair
+doors, elevator pads); characters always stand up. See **THE WORLD PROJECTION**
+in `AGENTS.md`.
+
 **Before drawing, read the [art style guide](../../../docs/art-style.md)** — the
 house style for the game's pixel art: the feel, the shared look every sprite
 obeys, and the design best practices (silhouette-first, budgeted color pops,

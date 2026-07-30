@@ -1,0 +1,29 @@
+name: icon_boiler_plate
+family: icons
+size: [12, 12]
+description: >
+  A locomotive firebox plate, riveted at the corners and still coloured by
+  the heat it spent forty years holding back.
+subject:
+  kind: shield icon
+  features: a riveted iron plate with a heat-blued patch in the middle
+  accent: scorched iron
+  flavor: off the Eastworld ten-fifteen, which will not be running today
+palette:
+  O: "#1a1c2c" # dark outline
+  R: "#2f2a25" # rivet head
+  h: "#7d7168" # heat-blued patch
+  i: "#5a5148" # riveted iron
+grid: |
+  .OOOOOOOOOO.
+  .OiRiiiiRiO.
+  .OiiiiiiiiO.
+  .OiihhhhiiO.
+  .OiihhhhiiO.
+  .OiiiiiiiiO.
+  .OiRiiiiRiO.
+  ..OiiiiiiO..
+  ..OiiiiiiO..
+  ...OiiiiO...
+  ....OiiO....
+  .....OO.....

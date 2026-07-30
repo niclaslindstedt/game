@@ -93,6 +93,14 @@ export const LEVEL_ORDER = levels.LEVEL_ORDER;
 export const SECRET_LEVEL_ORDER = levels.SECRET_LEVEL_ORDER;
 export const DIFFICULTY_DEFS = difficulties.DIFFICULTY_DEFS;
 export const WEAPON_DEFS = equipment.WEAPON_DEFS;
+/** Every hand-authored base's lore paragraph, by id. It rides its own generated
+ * module rather than the def, because it is the one authored field the shipped
+ * game never reads and 9 KB gzipped of prose has no business in the app's
+ * startup chunk (see scripts/generate-items.mjs). The LIBRARY is its only
+ * reader, so it is merged back onto the def here — `baseLore(id) ?? def.description`
+ * keeps a MOD's own base, whose lore does ride its def, working unchanged. */
+const itemLore = await engine("generated/item-lore.ts");
+export const baseLore = (id) => itemLore.GENERATED_ITEM_LORE[id];
 export const GEAR_DEFS = gear.GEAR_DEFS;
 export const UNIQUE_DEFS = uniques.UNIQUE_DEFS;
 export const STORY_ITEM_DEFS = story.STORY_ITEM_DEFS;

@@ -190,11 +190,10 @@ people mean by isometric; 45° with pitch 0.5 is Diablo's 2:1 floor. Both are
 live sliders on DEVELOPER → VISUALS (persisted as `cameraPitch`/`cameraYaw`,
 stripped from a store build like every developer setting), because the answer to
 "how far down, how far round" is settled by dialling it on a real field, not by
-rebuilding to look. **Yaw ships at 0**: the floor art, the wall sprites and the
-buildings are all drawn square-on, so a turned camera reads as diagonal floor
-seams under front-facing structures whose sprites no longer cover their
-axis-aligned collision boxes — a proper isometric look needs the structural art
-redrawn as iso pieces, which is an art project, not a render setting.
+rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
+longer cover their axis-aligned collision boxes still read wrong under a turned
+camera, and a proper isometric look needs that structural art redrawn as iso
+pieces — which is an art project, not a render setting.
 
 The whole thing rests on one split, and getting it backwards is the only way to
 break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
@@ -207,6 +206,56 @@ upright at FULL size through `billboard`, whose composite works out to exactly
 the identity at a whole-pixel offset so the pixel art stays crisp. Billboarding
 a pass is therefore a one-line wrap, never a rewrite of its arithmetic — which
 is how the yaw knob was added later without touching a single draw pass.
+
+**WHICH SIDE OF THAT SPLIT A PIECE OF FURNITURE FALLS ON IS THE ART'S CALL, NOT
+THE PASS'S — `plane:` on the sprite.** A boulder and a house front are drawn in
+elevation and have to stand; a wall panel, a painted lane marking, a hatch and a
+crate seen from above are drawn in PLAN and have to lie. Standing plan-view art
+up is loud: the panel comes out taller than the floor grid it is set into, and
+under a yaw a straight run of them staircases diagonally across a floor whose
+own seams run the other way. So `content/sprites/<family>/<id>.yaml` carries
+`plane: upright | floor` (**upright is the default**, so a sprite that says
+nothing keeps the look it has), the build emits the floor-plane names to
+`assets/sprite-planes.json`, and `render/plane.ts` is the ONE place that acts on
+it — read by the obstacles, the decor, the landmarks, the lair doors and the
+elevator pads, never by an actor. A floor-plane sprite is **baked through the
+projection once** (`flatSprite`) for exactly the reason the ground layer is:
+transforming pixel art per frame re-picks which rows the nearest-neighbour
+resample drops, and the wall boils as the camera pans.
+
+**A DISTANCE ACROSS THE FLOOR IS NOT A DISTANCE ACROSS THE SCREEN —
+`projectOffset`.** The billboarded EFFECTS layer projects its ANCHOR and draws
+everything else at full size in screen px, which is right for a thing happening
+in the AIR above a point (an explosion, a rising damage number, a muzzle flash)
+and wrong for anything that measures ground: a blood drop's travel, a jump's
+dust smear, a corpse punted along a bearing, the wedge of floor a swing sweeps.
+Those go through `projectOffset`, so they stay over the marks they leave — a
+spray whose drops flew along the screen while its own spatter landed on the
+turned floor was the tell. A VERTICAL is the exception and stays a true screen
+vertical: a drop's hop, a corpse's arc, dust drifting up. Beware the tempting
+shortcut this replaced — a hardcoded `FLATTEN` squash faking the foreshortening,
+which is wrong at every pitch but the one it was eyeballed at.
+
+**A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
+`screenDirToWorld`.** A destination goes through `toWorld`, but the controls that
+STEER rather than point (the touch dpad, the stick, the WASD cluster) have no
+destination to convert: they hand the simulation a direction. Passing the raw
+screen vector is the bug the pointer would have had without the inverse — under
+a yaw, down the screen is south AND west, so a hero told to walk "down" sets off
+45° from where the player pushed. Only the BEARING comes from the projection; the
+length is normalized away, because the caller's own magnitude is the PACE and the
+foreshortening would otherwise make walking north slower than walking east.
+
+**THE FOG IS COMPOSITED IN SCREEN SPACE, SO IT SNAPS TO A SCREEN PIXEL.** Its
+Bayer stipple is a rigid lattice on its own buffer, so the buffer has to be
+registered the way every other pass is: `fogGridAnchor` seats the camera on the
+PROJECTED ground grid, rounded to a whole pixel, exactly as the ground blit does,
+and the dither is indexed there. Snapping in WORLD units instead (what this did
+before the projection existed, when the two were the same thing) leaves the fog
+looking at a floor up to a whole world unit from the one under it — a
+fractional, continuously-varying number of screen pixels once the floor is
+foreshortened and turned. That misregistration is the crawl: the frontier band
+slides against the ground and the stipple re-phases as the hero walks.
 
 Three consequences to keep in mind. The ground layer is **baked already
 projected** (`groundLayer`, keyed on the projection so a knob change re-bakes):
@@ -221,6 +270,65 @@ renderer goes through the viewport's `toWorld`/`toCss` pair (GameScreen), which
 are functions rather than two scale factors because the projection is a matrix:
 where the player is pointing, which foe the cursor aims at, whether a tap hit the
 merchant, and where a floating DOM label pins itself all follow from that pair.
+
+**HOW THE PICTURE IS PRESENTED — SETTINGS → VISUALS, and the split that decides
+where each effect goes.** Four player-facing knobs (`render/postfx.ts`): BLOOM,
+COLOR GRADE, VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off. They
+are PLAYER settings, not developer ones — every one costs frames on a phone — so
+they are deliberately absent from `stripDeveloperState` and ship in the store
+build.
+
+**THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT — NOT TASTE — DECIDES THE
+MECHANISM.** The canvas is sized in WORLD units (`viewScaleFor`) and CSS blows it
+up 2–3× with `image-rendering: pixelated`. So there are two places to put an
+effect and they are not interchangeable. **ON THE CANVAS** is chunky, at world
+resolution, in the same pixel grid as the art — where BLOOM belongs, because the
+light it blooms is the game's own baked glow art (`glowSprite`, `beamSprite`, the
+loot shafts, the muzzle flashes) living on that same grid; a bloom computed at
+device resolution is smoother than the light casting it, which reads as a photo
+filter over pixel art rather than as pixel art glowing. **IN CSS** is smooth, at
+device resolution, and per-frame FREE — where the GRADE, the VIGNETTE and the
+HAZE belong, because all three are broad low-frequency washes that on the canvas
+would cost a full-frame composite every frame to come out in 2–3 px staircase
+bands. The CSS half is three custom properties from `fxStyleVars` written on the
+GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on the canvas,
+which is the overlay's SIBLING and would never inherit them), and the overlay
+sits at `z-index: 0` directly after the canvas so every positioned HUD element
+after it paints on top: the corners of the SCREEN going dark is atmosphere, the
+corners of the HEALTH BAR going dark is a bug.
+
+**THERE IS NO SHADER PASS, and that is a conclusion rather than a gap.** A WebGL
+stage would have to own the whole present path — the world would move to an
+offscreen target and the visible canvas would become the GL one, touching every
+screen↔world crossing, the DOM overlay pinning, the screenshot tooling and the
+gallery — and for these four effects it buys nothing: three are strictly better
+in CSS and the fourth wants to be chunky. What a shader WOULD buy is CRT
+curvature, chromatic aberration and a real 3D LUT. That is the day to write it.
+
+**DEPTH OF FIELD IS THE ONE REQUEST TO REFUSE.** There is no depth to focus on —
+the whole field is ONE ground plane and the hero is always at the middle of it —
+so a distance blur would blur a mob standing beside him exactly as hard as one
+the same distance north, and hide half the horde while it was at it. DEPTH HAZE
+is the honest version: what reads as distance on a raked plane is losing contrast
+toward the horizon. It is scaled by the live PITCH (`fxStyleVars`), because a
+camera looking straight down has no horizon to fade toward.
+
+**ANTI-ALIASING IS THE OTHER ONE, EXCEPT AT ONE PLACE.** The whole renderer is
+built for crisp integer pixels — `imageSmoothingEnabled = false`, an INTEGER
+`VIEW_SCALE × uiScale`, `billboard` composing to the identity at a whole-pixel
+offset. The one place averaging is right is a PROJECTED BAKE, because it happens
+once: `flatSprite` bakes at `BAKE_SUPERSAMPLE`× and box-averages down, so a wall
+panel's turned edges come out antialiased instead of as a staircase of single
+pixels, and at yaw 0 / pitch 1 it is a no-op by construction (a square-on sprite
+downsampled from an integer upscale of itself is bit-identical). The GROUND LAYER
+is deliberately NOT supersampled, for two independent reasons either of which
+stands alone: the intermediate for a big map would be ~7200×3000 (~86 MB, and
+larger maps walk into the browser's canvas cap), and it would look WORSE anyway —
+a wall panel is a small outlined silhouette, but the floor is a texture covering
+the whole screen, and averaging its rotation softens every speckle and seam at
+once, which reads as the one surface in the game being out of focus. The
+staircase on a yawed floor seam is the honest cost of turning pixel art; the fix
+is iso-drawn tile art, not a filter.
 
 **Mobile-first, landscape.** The reference device is a phone held
 horizontally: a ~844×390 CSS viewport (≈422×260 world units at the app's
@@ -1481,6 +1589,63 @@ Judge both in the EFFECTS GALLERY — `blood-soaked` (DRENCHED) and `blood-track
 guessing: the whole feature is a curve over a map's worth of kills, and a
 diorama cannot show you where that curve sits.
 
+**THE SECOND ARM IS ONE SLOT AND TWO ANSWERS — `EquipSlot.offhand`.** It used
+to hold a bag and nothing else, which made it a slot rather than a decision. It
+now holds a **SHIELD** or a **BAG**, and a **TWO-HANDED** weapon
+(`WeaponDef.twoHanded`) says neither — so every build spends the arm on exactly
+one of survivability, room, or damage. Four rules hold it up:
+
+1. **THE TWO KINDS ARE DEFINED BY WHAT THEY PAY, and the schema refuses a piece
+   that pays neither.** A shield owes `armor` + `armorType` and may carry no
+   cells; a bag owes `bagSlots` and may carry no armor. That is what keeps the
+   choice a choice: a bag that protected, or a shield with pockets, would make
+   the arm free.
+2. **WHAT SEPARATES THE LANES IS THE STRENGTH FLOOR, not a class check.** A
+   shield derives its gate the same way heavy armor does — a fraction of the
+   hero's banked points, never authored per item — with a FLOOR under the
+   material's own rate (`SHIELD.strReqFraction`, above a weapon's own 0.4), so a
+   bruiser clears every shield with his own points and an archer or caster
+   clears none. Bags are ungated, which is precisely why they are the light
+   build's answer, and their stat block leans DEX/INT to say so. A bag's growth
+   axis is ROOM: `LOOT.bagSlotsPerIlvl` stamps an ilvl-grown cell count at mint,
+   exactly as `ARMOR.armorPerIlvl` stamps armor.
+3. **THE CONFLICT IS RESOLVED IN ONE PLACE — `items/hands.ts`.** Every door a
+   piece comes through (the bag's tap, a drag onto a named slot, both auto-equip
+   sweeps, a loadout arriving from the last level) calls `freeHandsFor`, which
+   either clears the arms or refuses the equip WHOLE. The awkward half is that
+   the weapon slot is never empty, so taking a two-hander off is a REPLACEMENT:
+   the same best-remaining-weapon pick the on-break swap makes lives there too,
+   which is why it is not in `durability.ts` (that module is downstream of the
+   bag and cannot be reached from it). The auto-equip sweep decides the HAND
+   first and lets it win — `weaponScore` already prices a two-hander's premium,
+   and there is no honest exchange rate between that and a shield's armor, so
+   guessing one would just flap the build on whatever the horde dropped last.
+4. **A TWO-HANDER IS PAID FOR IN THE CATALOG, NOT WAIVED.** It is forged at
+   `TWO_HANDED_PREMIUM` (1.4) over the budget line every one-hander sits on
+   (`scripts/weapon-budget.mjs`, mirrored in `defs/grades.ts` so a grade variant
+   inherits it), because what it competes with is a fifth armor piece. A melee
+   two-hander additionally swings a WIDER `sweepDeg` — and that costs nothing
+   extra, because a wider arc raises the weapon's assumed targets and so lowers
+   the per-hit damage the same premium hands back.
+
+**AND ALL THREE SHOW ON THE HERO.** A build choice the player cannot see on his
+own character is one he has to open a screen to remember making. The two
+off-hand kinds ride the SAME generated-overlay machinery the worn armor does
+(`asset-tools/worn.mjs` → `worn_<defId>`, coloured from the piece's own icon), so
+a new shield or bag costs no art beyond its 12×12 icon: a shield draws raised
+and broad, a bag slung low and small, one glance apart. The overlay is the one
+worn template that hangs OFF the body silhouette, so it is the one that paints
+its own outline (the `4` char in `wornRamp`) — every sprite in this game is built
+on that near-black, and a shield without it reads as a smear. The off hand is a
+SOAK ZONE of its own (`SOAK_ZONES`, `blood_coat_offhand_0..2`) for the same
+reason every other zone is a gear slot: it is the piece held BETWEEN him and the
+work, it catches the most of what comes back, and swapping it is what cleans it.
+A **TWO-HANDER is posed differently** rather than redrawn (`render/player.ts`):
+it rests across the body, and its swing turns about the low central grip both
+hands are on — wound back past the cone's start edge and carried past its end,
+over a longer clock — so it comes ROUND the hero instead of off one shoulder. The
+cone the engine hit with is untouched; only the picture changes.
+
 **LOOT IS THROWN, LANDS, AND THEN ADVERTISES ITSELF.** A drop that materialises
 under the corpse is indistinguishable from the floor texture, and a legendary
 that materialises the same way is the entire chase arriving with no more
@@ -1632,7 +1797,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Change type                                               | Goes in                                                                                                                                                                                                                                                                         |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                     |
-| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                                                                                                           |
+| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                         |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                                                                                                     |
 | A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                 |
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |

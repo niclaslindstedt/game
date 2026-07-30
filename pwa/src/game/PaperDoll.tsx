@@ -2,15 +2,15 @@
 // The inventory's PAPER DOLL — Diablo 2's character panel: the equipment slots
 // laid out in the shape of a body instead of strung along a row. The layout is
 // a named-area grid (see `.paper-doll` in styles.css) and the areas ARE the
-// anatomy: the weapon hangs down the left the way D2's weapon does, the bag
-// balances it on the right where D2 puts the shield, the head/chest/legs/feet
+// anatomy: the weapon hangs down the left the way D2's weapon does, the OFF
+// HAND balances it on the right where D2 puts the shield, the head/chest/legs/feet
 // run down the middle, and the two narrow gutter columns carry the accessories
 // — beside the collar for the amulet, at the hips for the rings.
 //
 // Two rules the row-of-cells version had no room for:
 //
 //   • A SLOT'S SIZE IS PART OF ITS MEANING. A ring is not a breastplate, so it
-//     does not get a breastplate's frame: the weapon and the bag are long 2x5
+//     does not get a breastplate's frame: the weapon and the off hand are long 2x5
 //     bays, the body plates 2x2, and the neck and fingers a single unit. Every
 //     frame is measured in ONE unit (`--slot-u`) so the whole doll rescales
 //     with a single number per breakpoint, and the item icon inside scales with
@@ -78,10 +78,13 @@ const DOLL_SLOTS: {
     icon: 1.5,
   },
   {
-    slot: "bag",
+    // The SECOND ARM. D2 puts the shield here and so does this doll — the
+    // glyph is a shield rather than a pouch because a shield is what the frame
+    // is SHAPED like, and a bag is the other thing that fits in it.
+    slot: "offhand",
     area: "bag",
-    label: "BAG",
-    glyph: "icon_slot_bag",
+    label: "OFF HAND",
+    glyph: "icon_slot_offhand",
     icon: 1.75,
   },
   // Both fingers are labelled RING — they are interchangeable, so numbering
