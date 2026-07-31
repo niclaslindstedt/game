@@ -741,6 +741,8 @@ deaths, simulated minutes — which is a stronger statement than any reading of 
 
 ## PR 1.75 — THE LOOP MOVES
 
+Tracked as [#793](https://github.com/niclaslindstedt/game/issues/793).
+
 **Goal: `GameScreen` stops owning the loop.** A run started from the title menu
 plays identically to today, with the simulation in the utility process and the
 renderer applying snapshots. Nobody notices anything.
