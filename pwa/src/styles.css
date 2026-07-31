@@ -11527,3 +11527,69 @@ canvas.tier-artifact {
   cursor: default;
   opacity: 0.55;
 }
+
+/* ── THE ELITE TIER's one screen-space moment: a WARD SHIELD breaking ────────
+   The only elite ability that reaches CSS at all. Every other one is anchored
+   to a world position and lives on the canvas (see render/elite-fx.ts); this
+   one is a whole-screen event because the shell going is the feedback the move
+   rests on, and it is rare enough that a flash still means something.
+
+   The two colour stops come in as custom properties from the BREAKING SHELL's
+   own `look` kit (game-screen/elite-css-fx.ts), so one authored animation
+   serves every caster instead of needing a rule apiece. */
+.elite-ward-break {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  /* A rim that closes inward rather than a flat wash: the shell is coming off
+     the field, and light leaving the edges reads as something being taken away
+     — a full-screen fill would read as the player being hit. */
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 42%,
+      var(--elite-core, rgba(150, 170, 255, 1)) 92%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      var(--elite-hot, rgba(232, 238, 255, 1)) 0%,
+      transparent 38%
+    );
+  mix-blend-mode: screen;
+  animation: elite-ward-break 420ms ease-out forwards;
+}
+
+@keyframes elite-ward-break {
+  0% {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  18% {
+    opacity: 0.62;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+/* The shake is the canvas's job and the wash is atmosphere, so a player who
+   asked for less motion keeps the colour and loses the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .elite-ward-break {
+    animation: elite-ward-break-still 300ms ease-out forwards;
+  }
+  @keyframes elite-ward-break-still {
+    0% {
+      opacity: 0;
+    }
+    20% {
+      opacity: 0.45;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}

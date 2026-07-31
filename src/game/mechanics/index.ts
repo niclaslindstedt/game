@@ -54,6 +54,17 @@ import "./airstrike.ts";
 import "./call-horde.ts";
 import "./recompile.ts";
 import "./lockdown.ts";
+// The ELITE TIER — personal moves built out of the hero's own vocabulary.
+import "./orbit-guard.ts";
+import "./seeker-volley.ts";
+import "./ember-trail.ts";
+import "./shock-pulse.ts";
+import "./blink-strike.ts";
+import "./rally-cry.ts";
+import "./snare-field.ts";
+import "./siphon-tether.ts";
+import "./ward-shield.ts";
+import "./quake-line.ts";
 
 /** How much further than its trigger range a charge dash carries (the mob
  * overshoots the spot the player stood on, like a real bull rush). */
@@ -61,6 +72,13 @@ const CHARGE_OVERSHOOT = 1.3;
 
 /** The charge's default contact multiplier while dashing. */
 const CHARGE_DAMAGE_MULT = 1.5;
+
+// Re-exported from the ONE module that imports every ability, so a caller
+// asking "what may a def name?" gets the answer AFTER the whole catalog has
+// registered itself. Reaching for `catalog.ts` directly would answer with an
+// empty registry unless the caller happened to import the modules too — which
+// is precisely the trap the mod SDK's own catalog generator would fall into.
+export { registeredAbilityIds } from "./catalog.ts";
 
 /**
  * The mechanic set active on this mob RIGHT NOW: the deepest crossed phase's
@@ -85,8 +103,33 @@ export function activeMechanics(
  * the enrage's fury (1 for everything calm). moveEnemy multiplies through.
  */
 export function mechSpeedMult(enemy: Enemy, def: EnemyDef): number {
+  const mech = enemy.mech;
+  if (!mech) return 1;
   const enrage = activeMechanics(enemy, def)?.enrage;
-  return enemy.mech?.enraged && enrage ? enrage.speedMult : 1;
+  let mult = mech.enraged && enrage ? enrage.speedMult : 1;
+  // A RALLY CRY's lift (mechanics/rally-cry.ts). Folded in here rather than
+  // given a pass of its own precisely because this hook is already called for
+  // EVERY body on the field — which is what lets a shout reach minions, who
+  // never step their own mechanics at all.
+  if (mech.rallyMs && mech.rallyMs > 0) mult *= mech.rallySpeedMult ?? 1;
+  return mult;
+}
+
+/**
+ * Burn down a RALLY's lift on whoever is carrying it. Called at the top of
+ * `stepEnemyMechanics`, BEFORE the role gate below turns minions away — the
+ * whole point of the shout is that it lands on the horde, and the horde is
+ * exactly what that gate excludes.
+ */
+function tickRally(enemy: Enemy, dtMs: number): void {
+  const mech = enemy.mech;
+  if (!mech?.rallyMs) return;
+  mech.rallyMs = Math.max(0, mech.rallyMs - dtMs);
+  if (mech.rallyMs <= 0) {
+    mech.rallyMs = undefined;
+    mech.rallySpeedMult = undefined;
+    mech.rallyDamageMult = undefined;
+  }
 }
 
 /**
@@ -101,6 +144,8 @@ export function mechDamageMult(enemy: Enemy, def: EnemyDef): number {
   if (mech.dashMs && mech.dashMs > 0) mult *= mech.dashDamageMult ?? 1;
   const enrage = activeMechanics(enemy, def)?.enrage;
   if (mech.enraged && enrage) mult *= enrage.damageMult;
+  // A RALLY CRY's lift — see `mechSpeedMult` for why it rides these two hooks.
+  if (mech.rallyMs && mech.rallyMs > 0) mult *= mech.rallyDamageMult ?? 1;
   return mult;
 }
 
@@ -117,6 +162,9 @@ export function stepEnemyMechanics(
   dtMs: number,
 ): boolean {
   const def = enemyDef(enemy.defId);
+  // A RALLY's lift is carried by whoever was SHOUTED AT — which is mostly
+  // minions, and the gate below turns minions away. So it burns down first.
+  tickRally(enemy, dtMs);
   const mechanics = activeMechanics(enemy, def);
   if (!mechanics || def.role === "minion" || def.apparition) return false;
   const mech = (enemy.mech ??= {});
@@ -214,6 +262,7 @@ export function stepEnemyMechanics(
       // is already gone (clearing it is what un-roots the mob), so this is the
       // only surviving copy — see `AbilityCtx.lockedDir`.
       ctx.lockedDir = telegraph.dir;
+      ctx.lockedDistance = telegraph.dist;
       // A CATALOG ability's windup ran out: commit it. The cooldown is started
       // there rather than inside the handler so no ability can forget to, and
       // it counts from the CAST — a move's cooldown is the gap between casts,
@@ -410,7 +459,13 @@ function startReadyAbility(
     if (!handler.ready(ability as never, ctx as never)) continue;
     const ms = abilityWindupMs(ability, state.difficulty);
     const dir = direction(enemy.pos, state.player.pos);
-    mech.telegraph = { kind: ability.id, remainingMs: ms, dir };
+    // The bearing AND the range are both locked here — see `AbilityCtx`.
+    mech.telegraph = {
+      kind: ability.id,
+      remainingMs: ms,
+      dir,
+      dist: ctx.distance,
+    };
     state.events.push({
       type: "enemyTelegraph",
       kind: ability.id,

@@ -26,6 +26,31 @@ dialogue:
 lastWords:
   - CHECK THE OTHER... ...FREEZERS...
 mechanics:
+  abilities:
+    - id: rally_cry
+      bark:
+        - THE ORIGINAL IS
+        - GONE. THE ORDERS
+        - STILL CARRY.
+      windupMs: 700
+      cooldownMs: 12000
+      radius: 230
+      durationMs: 6500
+      speedMult: 1.26
+      damageMult: 1.22
+      look:
+        core: "176, 96, 92"
+        hot: "244, 200, 190"
+        deep: "28, 14, 14"
+        spark: "208, 142, 134"
+    - id: quake_line
+      windupMs: 720
+      cooldownMs: 10000
+      count: 6
+      spacing: 34
+      radius: 24
+      damageFrac: 0.7
+      stepMs: 115
   charge:
     windupMs: 650
     speedMult: 3.6

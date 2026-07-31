@@ -76,7 +76,67 @@ const ABILITY_FIELDS = {
     "sprite",
     "segmentRadius",
   ],
+  // ── THE ELITE TIER — personal moves, the hero's own kit turned around ──
+  orbit_guard: [
+    "count",
+    "radius",
+    "angularSpeed",
+    "orbRadius",
+    "damageFrac",
+    "hitIntervalMs",
+    "durationMs",
+    "sprite",
+  ],
+  seeker_volley: [
+    "count",
+    "spreadDeg",
+    "range",
+    "speed",
+    "lifetimeMs",
+    "homing",
+    "damageFrac",
+    "sprite",
+  ],
+  ember_trail: [
+    "durationMs",
+    "dropMs",
+    "radius",
+    "patchMs",
+    "damageFrac",
+    "tickMs",
+  ],
+  shock_pulse: ["radius", "damageFrac", "push"],
+  blink_strike: ["range", "arriveDistance", "damageFrac", "strikeRadius"],
+  rally_cry: ["radius", "durationMs", "speedMult", "damageMult"],
+  snare_field: ["radius", "durationMs", "slowFactor", "range"],
+  siphon_tether: ["range", "durationMs", "damageFrac", "tickMs", "healFrac"],
+  ward_shield: ["poolFrac", "durationMs"],
+  quake_line: ["count", "spacing", "radius", "damageFrac", "stepMs"],
 };
+
+/**
+ * The OPTIONAL numbers an ability may carry beyond its required set — every one
+ * of them a knob the shipping code would otherwise have had to pick for every
+ * mob at once. They are checked here so a typo is caught rather than silently
+ * ignored (an unknown key would simply never be read, and the mob would keep
+ * quietly using the default the author was trying to override).
+ */
+const OPTIONAL_ABILITY_FIELDS = {
+  orbit_guard: ["range"],
+  seeker_volley: ["boltRadius"],
+  ember_trail: ["range"],
+  shock_pulse: ["pushCoastMs"],
+  ward_shield: ["raiseBelowHpFrac", "range"],
+};
+
+/**
+ * The four colours every `look` kit owes (`AbilityLook`, mirrored from
+ * src/game/defs/abilities.ts). An ability's kit is what makes two mobs casting
+ * the SAME primitive read as nothing alike, so a half-written one is a
+ * signature that silently falls back to the neutral default — visible only to
+ * somebody who already knew what it was supposed to look like.
+ */
+const LOOK_FIELDS = ["core", "hot", "deep", "spark"];
 /** The shortest `lore` that can plausibly say what a monster is. */
 const LORE_MIN_CHARS = 80;
 /** Past this a bestiary entry has stopped being an entry (a warning, not a
@@ -248,6 +308,121 @@ export function validateEnemy(def, refs) {
         err(
           `${where} "${id}": windupFloorMs (${ability.windupFloorMs}) is above ` +
             `windupMs (${ability.windupMs}) — the floor may only shorten a windup`,
+        );
+      }
+      // THE ABILITY'S OWN LOOK. Optional (an ability that says nothing draws in
+      // a neutral kit), but a PARTIAL one is refused: the whole point of the
+      // elite tier is that a shared primitive wears the caster's own colours,
+      // and a kit missing a stop falls back silently.
+      if (ability.look !== undefined) {
+        if (typeof ability.look !== "object" || Array.isArray(ability.look)) {
+          err(`${where} "${id}": look must be a mapping of colours`);
+        } else {
+          for (const stop of LOOK_FIELDS) {
+            if (typeof ability.look[stop] !== "string") {
+              err(`${where} "${id}": look.${stop} must be a colour string`);
+            }
+          }
+          for (const stop of Object.keys(ability.look)) {
+            if (!LOOK_FIELDS.includes(stop) && stop !== "wellLook") {
+              err(
+                `${where} "${id}": unknown look field "${stop}" ` +
+                  `(valid: ${LOOK_FIELDS.join(", ")})`,
+              );
+            }
+          }
+        }
+      }
+      // ── THE ELITE TIER's own bounds. Each of these is a number that reads as
+      // plausible and plays as broken, which is exactly what a build check is
+      // for: nothing below crashes, they just quietly stop being mechanics.
+      // A SNARE that stops the hero dead is not a slow, it is a stun with no
+      // tell and no end — and one that does nothing is a wasted cast.
+      if (id === "snare_field" && typeof ability.slowFactor === "number") {
+        if (ability.slowFactor <= 0 || ability.slowFactor >= 1) {
+          err(
+            `${where} "snare_field": slowFactor (${ability.slowFactor}) must be ` +
+              `between 0 and 1 — 1 holds nobody, 0 is a stun`,
+          );
+        }
+      }
+      // A DRAIN that returns more than it took is a heal wearing a costume: the
+      // mob gains on a fight it is losing, and the player's damage stops
+      // meaning anything.
+      if (id === "siphon_tether" && typeof ability.healFrac === "number") {
+        if (ability.healFrac < 0 || ability.healFrac > 1) {
+          err(
+            `${where} "siphon_tether": healFrac (${ability.healFrac}) must be ` +
+              `within [0, 1] — it may only keep what it took`,
+          );
+        }
+      }
+      // A BOLT that turns on a coin cannot be outrun, and a projectile that
+      // cannot be outrun is not a projectile, it is damage on a delay.
+      if (id === "seeker_volley" && typeof ability.homing === "number") {
+        if (ability.homing < 0 || ability.homing > 1) {
+          err(`${where} "seeker_volley": homing must be within [0, 1]`);
+        }
+      }
+      // A SHOUT that made the horde slower or gentler is a gift.
+      if (id === "rally_cry") {
+        for (const field of ["speedMult", "damageMult"]) {
+          if (typeof ability[field] === "number" && ability[field] < 1) {
+            err(
+              `${where} "rally_cry": ${field} (${ability[field]}) is below 1 — ` +
+                `a rally may only lift the horde`,
+            );
+          }
+        }
+      }
+      // A SHELL with no budget never eats anything and never breaks, so the
+      // player never learns it is there.
+      if (id === "ward_shield" && typeof ability.poolFrac === "number") {
+        if (ability.poolFrac <= 0) {
+          err(`${where} "ward_shield": poolFrac must be above 0`);
+        }
+      }
+      // A BLINK that arrives further out than it started is a retreat, and one
+      // that arrives on top of the hero gets shoved back out by the collision
+      // pass — what the player sees is a mob stuttering, not arriving.
+      if (id === "blink_strike") {
+        if (
+          typeof ability.arriveDistance === "number" &&
+          typeof ability.range === "number" &&
+          ability.arriveDistance >= ability.range
+        ) {
+          err(
+            `${where} "blink_strike": arriveDistance (${ability.arriveDistance}) ` +
+              `must be well inside range (${ability.range})`,
+          );
+        }
+        if (
+          typeof ability.arriveDistance === "number" &&
+          ability.arriveDistance <= 0
+        ) {
+          err(`${where} "blink_strike": arriveDistance must be above 0`);
+        }
+      }
+      // The optional per-mob knobs: a number if present at all.
+      for (const field of OPTIONAL_ABILITY_FIELDS[id] ?? []) {
+        if (ability[field] === undefined) continue;
+        if (
+          typeof ability[field] !== "number" ||
+          !Number.isFinite(ability[field])
+        ) {
+          err(`${where} "${id}": ${field} must be a finite number`);
+        }
+      }
+      // A shell raised at FULL health is a mob with more health rather than a
+      // move — the player has to see it go up in answer to something they did.
+      if (
+        id === "ward_shield" &&
+        typeof ability.raiseBelowHpFrac === "number" &&
+        (ability.raiseBelowHpFrac <= 0 || ability.raiseBelowHpFrac > 1)
+      ) {
+        err(
+          `${where} "ward_shield": raiseBelowHpFrac (${ability.raiseBelowHpFrac}) ` +
+            `must be within (0, 1] — above 1 raises the shell before it is hurt`,
         );
       }
       if (id === "flag_plant") ref(refs.enemies, ability.defId, "planted body");

@@ -27,6 +27,34 @@ dialogue:
 lastWords:
   - ONE SMALL... STEP... ONTO A... GRAVE... HHK
 mechanics:
+  abilities:
+    - id: orbit_guard
+      bark:
+        - FIFTY YEARS OF
+        - SUIT LIGHTS, AND
+        - THEY STILL CIRCLE.
+      windupMs: 600
+      cooldownMs: 11000
+      count: 4
+      radius: 30
+      angularSpeed: 1.9
+      orbRadius: 5
+      durationMs: 7000
+      damageFrac: 0.5
+      hitIntervalMs: 700
+      sprite: elite_mote
+      look:
+        core: "164, 208, 255"
+        hot: "240, 250, 255"
+        deep: "12, 20, 34"
+        spark: "200, 228, 255"
+    - id: blink_strike
+      windupMs: 760
+      cooldownMs: 10000
+      range: 220
+      arriveDistance: 26
+      strikeRadius: 30
+      damageFrac: 0.7
   enrage:
     belowHpFrac: 0.35
     speedMult: 1.4

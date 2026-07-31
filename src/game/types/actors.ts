@@ -105,6 +105,18 @@ export type Player = {
    * ready to fight.
    */
   disarmed?: boolean;
+  /**
+   * What the ground underfoot is doing to the hero's PACE right now — the
+   * `snare_field` ability's whole effect (1 = free, below 1 = held).
+   *
+   * It is RECOMPUTED every tick by `stepScorches`, which is already walking
+   * the patch list to decide what is biting him, rather than being scanned for
+   * inside `playerSpeed`: the pace is read several times a frame and the patch
+   * list is as long as a boss's last beam sweep left it, so a scan there would
+   * pay for the whole hazard field once per read. Derived state with exactly
+   * one writer — never authored, never saved, never merged.
+   */
+  snareFactor?: number;
   /** Remaining ms of post-hit invulnerability flash (visual only). */
   hurtFlashMs: number;
   /**
@@ -483,7 +495,20 @@ export type EnemyMech = {
   /** The windup in progress: which move, ms left, and the LOCKED bearing (the
    * charge's dash line, the beam's sweep centre). While set the mob is rooted
    * — the readable tell, and the frames the renderer poses the cast on. */
-  telegraph?: { kind: TelegraphKind; remainingMs: number; dir?: Vec2 };
+  telegraph?: {
+    kind: TelegraphKind;
+    remainingMs: number;
+    dir?: Vec2;
+    /**
+     * How far the hero was when the tell STARTED, locked alongside the bearing
+     * and for the identical reason: a move that re-measures the range at the
+     * moment it commits has quietly un-promised its own windup. BLINK STRIKE is
+     * the one that made this necessary — it arrives at a spot derived from the
+     * range, so re-reading it lands the mob on a hero who ran, which is exactly
+     * the thing running is supposed to beat.
+     */
+    dist?: number;
+  };
   /** Ms of dash left, and the locked unit bearing it rides. */
   dashMs?: number;
   dashDir?: Vec2;
@@ -520,6 +545,46 @@ export type EnemyMech = {
    * the ring can be pulled back out of `state.obstacles` when it expires. */
   lockdownMs?: number;
   shutterIds?: number[];
+
+  // ── THE ELITE TIER's scratch (see defs/enemies/abilities.ts) ──
+  // Every field below is one primitive's running state. They sit here rather
+  // than in a list of their own for the reason the boss tier's do: a move that
+  // belongs to ONE mob and dies with it is the mob's state, and holding it here
+  // means a body's removal takes its live effects with it — no sweep, and
+  // nothing can outlive the thing that cast it.
+  /** ORBIT GUARD: ms of ring left, the sweep angle (radians), and the ms until
+   * the ring may bite again. */
+  orbitMs?: number;
+  orbitAngle?: number;
+  orbitBiteMs?: number;
+  /** EMBER TRAIL: ms of painting left, and the ms until the next patch drops. */
+  trailMs?: number;
+  trailDropMs?: number;
+  /** SIPHON TETHER: ms of tether left and the ms until its next pull. */
+  siphonMs?: number;
+  siphonTickMs?: number;
+  /** WARD SHIELD: the damage the shell can still eat, and the ms it has left.
+   * A BUDGET, not a timer — `wardHp` reaching 0 breaks it early (`hitEnemy`). */
+  wardHp?: number;
+  wardMs?: number;
+  /**
+   * RALLY CRY's lift, held on the mobs it REACHED rather than on the caller —
+   * which is what lets it outlive the shout and, deliberately, the shouter.
+   * Folded in by `mechSpeedMult` / `mechDamageMult`, the two multiplier hooks
+   * `stepEnemies` already calls for every body on the field, so a rallied
+   * MINION needs no new call site and no new pass.
+   */
+  rallyMs?: number;
+  rallySpeedMult?: number;
+  rallyDamageMult?: number;
+  /** QUAKE LINE: the lane still opening — where it started, its unit bearing,
+   * how many fissures have gone off, and the ms until the next one. */
+  quake?: {
+    from: Vec2;
+    dir: Vec2;
+    opened: number;
+    nextMs: number;
+  };
 };
 
 /** What a windup is winding up: the two original moves, or a catalog ability. */

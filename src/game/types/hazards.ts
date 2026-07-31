@@ -5,6 +5,7 @@
 import type { Vec2 } from "@game/lib/vec.ts";
 
 import type { WeaponClass } from "./core.ts";
+import type { AbilityLook } from "../defs/abilities.ts";
 
 /**
  * A black hole built from the level def (LevelDef.wells): a static gravity
@@ -188,6 +189,31 @@ export type BaitCharge = {
  */
 export type ScorchPatch = {
   pos: Vec2;
+  /**
+   * WHAT THIS PIECE OF GROUND DOES. A patch is a disc with a duration and a
+   * rule about whoever stands in it; FIRE is one rule and a SNARE is another,
+   * so the elite tier's `snare_field` rides this list rather than growing a
+   * second one beside it — the aging, the sweep, the tile-snapped placement,
+   * the wire and the save all came free (see `BossAbilityId`'s tier note).
+   *
+   * `burn` (the default, so every patch authored before this said nothing and
+   * kept its behaviour) bites for `damage`; `snare` deals nothing at all and
+   * multiplies the hero's pace by `slowFactor` instead. Read at the ONE place
+   * that owns each rule — `stepScorches` for the bite, `playerSpeed` for the
+   * pace — never at a draw call.
+   */
+  field?: "burn" | "snare";
+  /** A `snare` patch's pace multiplier (0..1). Ignored by a `burn`. */
+  slowFactor?: number;
+  /**
+   * The colour kit the patch is drawn in — the casting ability's own `look`
+   * (see `AbilityBase.look`). Absent keeps the boss beam's authored char-and-
+   * flame look, which is what every patch laid before the elite tier existed
+   * carries. This is what lets one hazard list hold ARMSTRONG's burning
+   * regolith and an elite's own guttering trail without either learning about
+   * the other.
+   */
+  look?: AbilityLook;
   /** Burn radius (world px). */
   radius: number;
   /** Ms of burn left; the patch is swept once it reaches 0. */

@@ -25,6 +25,34 @@ dialogue:
   - - NO MORE TALKING, OLD FRIEND. NOW YOU WILL DIE.
 lastWords:
   - THE CHIP... TAKE IT... IT WAS NEVER... MINE...
+mechanics:
+  abilities:
+    - id: seeker_volley
+      bark:
+        - I BUILT THESE TO
+        - FIND THINGS. THEY
+        - ALWAYS FIND THINGS.
+      windupMs: 680
+      cooldownMs: 8000
+      count: 3
+      spreadDeg: 26
+      range: 230
+      speed: 88
+      lifetimeMs: 2600
+      homing: 0.28
+      damageFrac: 0.55
+      sprite: elite_bolt
+      look:
+        core: "116, 150, 200"
+        hot: "220, 234, 255"
+        deep: "12, 18, 32"
+        spark: "170, 196, 240"
+    - id: shock_pulse
+      windupMs: 520
+      cooldownMs: 9000
+      radius: 52
+      damageFrac: 0.6
+      push: 190
 ai:
   aggroRadius: 240
   idle: work

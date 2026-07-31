@@ -161,6 +161,14 @@ describe("elite ambushes", () => {
     // …and it now moves at its fighting speed, not the rush.
     const before = { ...elite.pos };
     state.player.pos.x = elite.pos.x + 200;
+    // This assertion is about THE RUSH BEING OVER, not about the speaker's own
+    // kit. Every elite carries set-piece abilities now (see the elite tier in
+    // defs/enemies/abilities.ts), and a speaker standing point-blank as its
+    // scene closes will quite reasonably open with one — which roots it for the
+    // windup and would read here as "it did not resume". So the scratch is
+    // cleared for the one step being measured; what is under test is the speed
+    // it walks at once it does walk.
+    elite.mech = {};
     step(state, idle, DT);
     expect(dist(elite.pos, before)).toBeCloseTo(
       (elite.speed * mobSpeedMult() * DT) / 1000,

@@ -27,6 +27,34 @@ lastWords:
   - THE CURRENT... ...RETURNS TO THE COIL...
 spareable:
   companion: nikola_tesla
+mechanics:
+  abilities:
+    - id: shock_pulse
+      bark:
+        - I HAVE BEEN IN
+        - THE CURRENT SINCE
+        - "'43. STAND BACK."
+      windupMs: 520
+      cooldownMs: 7000
+      radius: 66
+      damageFrac: 0.78
+      push: 240
+      look:
+        core: "176, 152, 255"
+        hot: "244, 240, 255"
+        deep: "16, 12, 34"
+        spark: "212, 200, 255"
+    - id: orbit_guard
+      windupMs: 620
+      cooldownMs: 12000
+      count: 3
+      radius: 28
+      angularSpeed: 2.6
+      orbRadius: 5
+      durationMs: 6000
+      damageFrac: 0.45
+      hitIntervalMs: 700
+      sprite: elite_mote
 ai:
   aggroRadius: 250
   rushSpeed: 115

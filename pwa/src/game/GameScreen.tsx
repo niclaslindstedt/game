@@ -97,6 +97,7 @@ import {
 import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
 import { type Hud } from "./game-screen/hud-model.ts";
 import { createLoopShared } from "./game-screen/loop-shared.ts";
+import { createEliteFx } from "./game-screen/elite-css-fx.ts";
 import { createNukeFx } from "./game-screen/nuke-fx.ts";
 import { createPowerupAura } from "./game-screen/powerup-aura.ts";
 import { createLevelUpFx } from "./game-screen/levelup-fx.ts";
@@ -226,6 +227,7 @@ export function GameScreen({
   // The screen-clearing NUKE's full-screen flash/fire/smoke overlay layer
   // (createNukeFx writes into it directly from the sim loop's event pass).
   const nukeFxRef = useRef<HTMLDivElement>(null);
+  const eliteFxRef = useRef<HTMLDivElement>(null);
   // The LEVEL-UP light explosion's full-screen flash/bloom/rays/pillar overlay
   // layer (createLevelUpFx writes into it from the sim loop's event pass).
   const levelUpFxRef = useRef<HTMLDivElement>(null);
@@ -440,6 +442,7 @@ export function GameScreen({
     });
     const tapFx = createTapFx(tapFxRef);
     const nukeFx = createNukeFx(nukeFxRef);
+    const eliteFx = createEliteFx(eliteFxRef);
     const levelUpFx = createLevelUpFx(levelUpFxRef);
     const powerupAura = createPowerupAura(powerupAuraRef);
     const demoDirector = createDemoDirector({
@@ -782,6 +785,16 @@ export function GameScreen({
           // The screen-clearing NUKE also fires its screen-space CSS detonation
           // (flash / light / fire / smoke), centred on the blast's screen point;
           // the canvas keeps the world-anchored rings + embers + scorch.
+          // A WARD SHIELD breaking is the one elite-tier moment that earns a
+          // screen-space wash — see game-screen/elite-css-fx.ts for why the
+          // other nine primitives deliberately stay on the canvas.
+          if (
+            event.type === "eliteCast" &&
+            event.kind === "ward_shield" &&
+            event.phase === "end"
+          ) {
+            eliteFx.flash(event.look);
+          }
           if (event.type === "nuke") {
             const cr = canvas.getBoundingClientRect();
             const at = viewport.toCss(event.pos.x, event.pos.y, camera);
@@ -843,6 +856,7 @@ export function GameScreen({
       feed.dispose();
       tapFx.dispose();
       nukeFx.dispose();
+      eliteFx.dispose();
       levelUpFx.dispose();
       powerupAura.dispose();
       cardQueue.dispose();
@@ -958,6 +972,7 @@ export function GameScreen({
         botDpadRef={botDpadRef}
         tapFxRef={tapFxRef}
         nukeFxRef={nukeFxRef}
+        eliteFxRef={eliteFxRef}
         levelUpFxRef={levelUpFxRef}
         powerupAuraRef={powerupAuraRef}
         fpsRef={fpsRef}

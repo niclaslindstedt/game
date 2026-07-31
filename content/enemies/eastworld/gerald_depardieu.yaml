@@ -26,6 +26,30 @@ dialogue:
 lastWords:
   - AT LAST... A ROLE I CANNOT ...EAT MY WAY OUT OF...
 mechanics:
+  abilities:
+    - id: quake_line
+      bark:
+        - TWO HUNDRED FILMS!
+        - THE GROUND HAS
+        - NEVER MISSED A CUE!
+      windupMs: 740
+      cooldownMs: 9500
+      count: 6
+      spacing: 34
+      radius: 24
+      damageFrac: 0.75
+      stepMs: 120
+      look:
+        core: "152, 48, 78"
+        hot: "236, 160, 186"
+        deep: "26, 8, 16"
+        spark: "198, 96, 128"
+    - id: shock_pulse
+      windupMs: 540
+      cooldownMs: 9000
+      radius: 58
+      damageFrac: 0.7
+      push: 210
   slam:
     windupMs: 1000
     radius: 80

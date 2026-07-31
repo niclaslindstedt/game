@@ -27,6 +27,29 @@ dialogue:
 lastWords:
   - IN MY FILMS... ...I ALWAYS GOT UP...
 mechanics:
+  abilities:
+    - id: shock_pulse
+      bark:
+        - AIKIDO. I DON'T
+        - PUSH YOU. I JUST
+        - LET GO OF YOU.
+      windupMs: 500
+      cooldownMs: 7500
+      radius: 62
+      damageFrac: 0.8
+      push: 260
+      look:
+        core: "214, 74, 62"
+        hot: "255, 196, 168"
+        deep: "32, 10, 8"
+        spark: "240, 132, 100"
+    - id: blink_strike
+      windupMs: 740
+      cooldownMs: 10500
+      range: 230
+      arriveDistance: 26
+      strikeRadius: 30
+      damageFrac: 0.75
   enrage:
     belowHpFrac: 0.4
     speedMult: 1.5

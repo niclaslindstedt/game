@@ -26,6 +26,30 @@ dialogue:
   - - A DOOR OUT? WHY WOULD I WANT ONE. IF YOU FIND IT, DON'T MENTION I ASKED. I DIDN'T ASK.
 lastWords:
   - THIS IS FINE... ...THIS IS GOOD FOR SAFETY...
+mechanics:
+  abilities:
+    - id: siphon_tether
+      bark:
+        - IT DRAINED ME
+        - FIRST. I ONLY
+        - LEARNED THE TRICK.
+      windupMs: 760
+      cooldownMs: 10000
+      range: 220
+      durationMs: 3200
+      damageFrac: 0.3
+      tickMs: 500
+      healFrac: 0.75
+      look:
+        core: "214, 226, 240"
+        hot: "255, 255, 255"
+        deep: "20, 24, 32"
+        spark: "236, 242, 250"
+    - id: ward_shield
+      windupMs: 700
+      cooldownMs: 13000
+      durationMs: 6500
+      poolFrac: 0.2
 ai:
   aggroRadius: 300
   rushSpeed: 100

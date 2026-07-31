@@ -23,6 +23,7 @@ import { enemySprites } from "./caches.ts";
 import { drawDust } from "./dust.ts";
 import { drawGore } from "./gibs.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
+import { drawEliteBurst } from "./elite-fx.ts";
 import { drawLootShine } from "./loot-aura.ts";
 import {
   MELEE_SWING_MS,
@@ -30,6 +31,7 @@ import {
   SWING_WINDUP_END,
 } from "./player.ts";
 import { drawPowerupBurst } from "./powerup-bursts.ts";
+import type { AbilityLook, BossAbilityId } from "@game/core";
 import type { PowerupStyle } from "../powerup-fx.ts";
 import { clamp01, fract } from "./shared.ts";
 import {
@@ -73,7 +75,13 @@ export type Effect = {
     | "meteorFall"
     | "voidWave"
     | "barrierBreak"
-    | "wardHold";
+    | "wardHold"
+    // THE ELITE TIER's one-shot bursts — the pulse ring, the blink's two ends,
+    // a fissure opening, a shout going out, a volley leaving (./elite-fx.ts).
+    // ONE kind for all of them, discriminated by `eliteKind`, mirroring the
+    // single `eliteCast` engine event they come from: ten primitives sharing a
+    // draw pass is what keeps the effect list from growing a member per idea.
+    | "elite";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -127,8 +135,19 @@ export type Effect = {
    * bar). Sized in GameScreen from the kill's `damage / maxHp` (see
    * `corpseLaunch`); absent when the throw is too small to read. */
   launch?: { dx: number; dy: number; dist: number; spins: number };
-  /** Swing: the arc's reach in world px (the weapon's effective range). */
+  /** Swing: the arc's reach in world px (the weapon's effective range).
+   * Elite: whatever the move drew — the pulse ring, the fissure, the shout. */
   radius?: number;
+  /** Elite: WHICH primitive this burst is (`BossAbilityId`) — the draw switch,
+   * exactly as it is the sound key on the event it came from. */
+  eliteKind?: BossAbilityId;
+  /** Elite: the caster's own colour kit, RESOLVED BY THE ENGINE and carried on
+   * the event. It travels rather than being looked up here because by the time
+   * a burst is drawn its caster is frequently dead — an effect that lost its
+   * colours the moment the mob did is the bug this field prevents. */
+  look?: AbilityLook;
+  /** Elite: the far end — a blink's arrival, a tether's other end. */
+  to?: { x: number; y: number };
   /** Nova: an icy-blue chilling burst (a companion's FROST NOVA) rather than
    * the plain violet arcane ring. */
   frost?: boolean;
@@ -277,6 +296,12 @@ function drawEffectPass(
     // the rarity chime, in the tier's own colour (./loot-aura.ts, which also
     // owns the standing aura the find then wears for the rest of the level).
     if (drawLootShine(ctx, effect, x, groundY, timeMs)) continue;
+
+    // THE ELITE TIER's one-shot bursts (./elite-fx.ts) — the pulse, the blink,
+    // a fissure's light, a shout, and the cast bloom every other primitive
+    // gets. The long-lived halves (the ring, the shell, the tether) are drawn
+    // from state by `drawEliteAuras`, not from here.
+    if (drawEliteBurst(ctx, effect, x, groundY, timeMs, camera)) continue;
 
     if (effect.kind === "splash") {
       // Two-frame gore burst pinned to where the hit landed.

@@ -10,9 +10,13 @@
 // catalogs, so they cannot fall behind them).
 
 import {
+  activeMechanics,
   enemyDef,
   weaponRangeFor,
   weaponSweepHalfAngle,
+  type AbilityLook,
+  type BossAbility,
+  type BossAbilityId,
   type Enemy,
   type GameEvent,
   type GameState,
@@ -29,6 +33,12 @@ export type ExhibitGroup =
   | "POWERS"
   | "TALENTS"
   | "BOSSES"
+  // THE ELITE TIER — a shelf of its own rather than more rows on BOSSES, and
+  // for the reason the tiers are separate at all: these are ten SMALL moves
+  // judged against each other (does the ring read at a glance, is the snare
+  // obviously not a damage pool), and mixing them in among the arena-eating
+  // set pieces would flatter every one of them.
+  | "ELITES"
   | "WORLD"
   | "UI";
 
@@ -188,6 +198,56 @@ export function heroPos(state: GameState): { x: number; y: number } {
     x: state.player.pos.x,
     y: state.player.pos.y - state.player.z,
   };
+}
+
+/**
+ * RESTAGE every elite exhibit in ANOTHER mob's colours (the gallery's
+ * `?caster=<enemy id>` deep link, driven by scripts/elite-abilities.mjs).
+ *
+ * It is a module-level pin rather than a prop threaded through the catalog for
+ * the same reason `pinCleaveCut` is: an exhibit's `fire` is authored data, not
+ * a component, and there is nothing to thread it through. Like that pin, it is
+ * CLEARED when the gallery stops, so it can never reach a real run — a mob
+ * casting in somebody else's colours mid-fight would be a genuinely confusing
+ * bug to chase.
+ *
+ * An id that carries no such ability simply yields the neutral kit, which is
+ * the honest answer: that mob does not cast this.
+ */
+let casterOverride: string | undefined;
+
+export function pinEliteCaster(defId: string | undefined): void {
+  casterOverride = defId;
+}
+
+/**
+ * The colour kit `defId` casts `ability` in, read off its OWN authored def.
+ *
+ * The elite exhibits call this rather than writing the colours out, and that is
+ * not tidiness — it is what makes the shelf tell the truth. The whole claim of
+ * the elite tier is that a SHARED primitive reads as a different move in a
+ * different mob's hands, and an exhibit carrying its own copy of the colours
+ * would keep showing the look the author typed here long after the mob's own
+ * `look:` had been re-tuned. It also means `?caster=<defId>` can restage any
+ * exhibit in any other elite's colours for nothing, which is exactly the
+ * comparison the claim needs to be judged on.
+ *
+ * Falls back to undefined (the renderer's neutral kit) rather than throwing: a
+ * gallery that white-screened over a retired id would be worse than one that
+ * showed a move in blue.
+ */
+export function eliteLook(
+  defId: string,
+  ability: BossAbilityId,
+): AbilityLook | undefined {
+  try {
+    const def = enemyDef(casterOverride ?? defId);
+    const list = (activeMechanics({ hp: 1, maxHp: 1 } as Enemy, def)
+      ?.abilities ?? []) as BossAbility[];
+    return list.find((a) => a.id === ability)?.look;
+  } catch {
+    return undefined;
+  }
 }
 
 /** A landed blow on `mob`: the gore splash + the damage number. `bars` is the

@@ -33,6 +33,7 @@ import { type GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { applyEventFx, expireEffects } from "../game-screen/event-fx.ts";
 import { pinCleaveCut } from "../game-screen/gore-burst.ts";
+import { pinEliteCaster } from "./exhibit-kit.ts";
 import { createLevelUpFx } from "../game-screen/levelup-fx.ts";
 import { createLoopShared } from "../game-screen/loop-shared.ts";
 import { createNukeFx } from "../game-screen/nuke-fx.ts";
@@ -381,6 +382,9 @@ export function runExhibit(deps: {
       // Hand the roll back: a pinned cut is a staging device and must not
       // outlive the display case it was staged in.
       pinCleaveCut(null);
+      // Cleared with the cleave pin and for the identical reason: a mob casting
+      // in another mob's colours must never survive into a real run.
+      pinEliteCaster(undefined);
     },
   };
 }

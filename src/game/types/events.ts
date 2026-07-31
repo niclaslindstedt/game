@@ -7,6 +7,8 @@ import type { Vec2 } from "@game/lib/vec.ts";
 import type { WeaponMotion } from "../defs/equipment.ts";
 
 import type { TelegraphKind } from "./actors.ts";
+import type { AbilityLook } from "../defs/abilities.ts";
+import type { BossAbilityId } from "../defs/enemies/abilities.ts";
 import type { Quality, StatName, Tier, WeaponClass } from "./core.ts";
 import type { Item, ItemVoice } from "./world.ts";
 
@@ -276,6 +278,54 @@ export type GameEvent =
    * app floats it over the speaker and play never stops.
    */
   | { type: "bossBark"; pos: Vec2; defId: string; lines: string[] }
+  /**
+   * AN ELITE-TIER ABILITY DID SOMETHING (see defs/enemies/abilities.ts).
+   *
+   * ONE event for all ten primitives, discriminated by `kind`, rather than ten
+   * near-identical ones — and the reason is not brevity, it is that `kind` is
+   * already a field `soundKey` picks a sound on (exactly as it is for
+   * `enemyTelegraph`), so ten primitives × their phases become ten distinct
+   * catalog sounds with no matcher change at all. The app switches on the same
+   * field to draw them.
+   *
+   * `phase` separates the moments within one move that deserve different
+   * treatment — a ward going UP and a ward being BROKEN are the same ability
+   * and opposite events, and the break is the one the player needs to hear.
+   *
+   * The `look` is RESOLVED HERE, by the engine, off the casting ability's own
+   * kit, rather than left for the app to recover from the def: by the time a
+   * burst is drawn the caster may be dead, and an effect that lost its colours
+   * the instant its owner died is the one bug this field exists to prevent.
+   * The geometry fields are the union of what the ten need; each is documented
+   * with who fills it, and an unread one is simply absent.
+   */
+  | {
+      type: "eliteCast";
+      /** Which primitive — the sound key and the app's draw switch. */
+      kind: BossAbilityId;
+      /** `cast` the move committing, `tick` a repeat beat within a running one
+       * (a fissure opening, a tether pull), `end` its close (a ward breaking, a
+       * ring going out). Absent reads as `cast`. */
+      phase?: "cast" | "tick" | "end";
+      /** Where it happened — usually the caster, but the AFFECTED spot for a
+       * move that lands away from it (a snare's centre, a fissure). */
+      pos: Vec2;
+      defId: string;
+      /** The caster's authored colour kit (`AbilityBase.look`). */
+      look?: AbilityLook;
+      /** The far end: a blink's arrival, a tether's other end. */
+      to?: Vec2;
+      /** The reach of whatever it drew (pulse ring, snare field, quake fissure,
+       * orbit ring). */
+      radius?: number;
+      /** A fan's centre bearing and full width, in radians (seeker volley). */
+      angle?: number;
+      spread?: number;
+      /** How many things went out or were reached (bolts, motes, rallied mobs). */
+      count?: number;
+      /** How long the thing it started will run (orbit, snare, ward, tether). */
+      ms?: number;
+    }
   /** The hero is standing in BURNING FLOOR and it just bit him (see
    * `ScorchPatch`). `pos` is the hero — the app licks flame up his legs. */
   | { type: "scorchBurn"; pos: Vec2; defId: string }

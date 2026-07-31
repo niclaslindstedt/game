@@ -25,6 +25,29 @@ dialogue:
 lastWords:
   - AND I JUST... URGH... ...DID THIS FLOOR...
 mechanics:
+  abilities:
+    - id: snare_field
+      bark:
+        - MIND THE FLOOR.
+        - I JUST DID IT.
+        - I DID WARN YOU.
+      windupMs: 560
+      cooldownMs: 8500
+      range: 170
+      radius: 52
+      durationMs: 5000
+      slowFactor: 0.55
+      look:
+        core: "176, 200, 92"
+        hot: "236, 250, 190"
+        deep: "26, 30, 10"
+        spark: "206, 228, 140"
+    - id: shock_pulse
+      windupMs: 540
+      cooldownMs: 9500
+      radius: 50
+      damageFrac: 0.6
+      push: 170
   slam:
     windupMs: 900
     radius: 70

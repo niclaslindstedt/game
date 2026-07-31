@@ -12,7 +12,9 @@ import {
 } from "../items/index.ts";
 import { queueStruckProcs } from "../loot.ts";
 import { BALANCE } from "../tuning.ts";
-import type { Enemy, GameState } from "../types/index.ts";
+import type { Vec2 } from "@game/lib/vec.ts";
+import type { BossAbility } from "../defs/enemies/abilities.ts";
+import type { Enemy, GameEvent, GameState } from "../types/index.ts";
 
 /**
  * Land one hostile blow on the hero, through every layer a contact hit goes
@@ -71,4 +73,33 @@ export function mobBlowDamage(
  */
 export function groundMoveCanTouch(state: GameState): boolean {
   return state.player.z <= JUMP.dodgeHeight && !state.player.disarmed;
+}
+
+/**
+ * Announce one beat of an ELITE-TIER ability (see `GameEvent.eliteCast`).
+ *
+ * Every primitive reports through here rather than pushing the event itself,
+ * for one reason: the `look` and the `defId` are the two fields an effect
+ * cannot recover once the caster is dead, and a burst that outlives its owner
+ * is the common case rather than the edge one — the mob that just cast a pulse
+ * is frequently killed by the answer to it. Filling them in one place means no
+ * primitive can forget, and a mod's elite gets its own colours for free.
+ */
+export function pushEliteCast(
+  state: GameState,
+  enemy: Enemy,
+  ability: BossAbility,
+  fields: Omit<
+    Extract<GameEvent, { type: "eliteCast" }>,
+    "type" | "kind" | "defId" | "look" | "pos"
+  > & { pos?: Vec2 },
+): void {
+  state.events.push({
+    type: "eliteCast",
+    kind: ability.id,
+    defId: enemy.defId,
+    look: ability.look,
+    pos: fields.pos ? { ...fields.pos } : { ...enemy.pos },
+    ...fields,
+  });
 }

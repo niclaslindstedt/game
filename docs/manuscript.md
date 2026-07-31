@@ -259,6 +259,11 @@ in walking order.
 
 **Last words:** HHK... TELL THEM... I WAS NEVER... HERE...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**THE NIGHT MANAGER (laying the paperwork down):** THERE'S PAPERWORK ON YOU NOW. YOU'RE NOT GOING ANYWHERE.
+
 _Drops: STORAGE KEYCARD._
 
 #### THE ARCHITECT — the old bench partner
@@ -283,6 +288,11 @@ no plain hand can open._
 
 **Last words:** THE CHIP... TAKE IT... IT WAS NEVER... MINE...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**THE ARCHITECT (loosing the finders):** I BUILT THESE TO FIND THINGS. THEY ALWAYS FIND THINGS.
+
 _Drops: the PASSAGE CHIP (+1 INT passive) he operated into himself, and the CORE
 KEYCARD that opens the AI CORE room._
 
@@ -299,6 +309,11 @@ KEYCARD that opens the AI CORE room._
 **CHIEF OF SECURITY:** THE PAPERS CALLED HER NO PASSENGER. A SPECIMEN. I WAS PAID TO FORGET THAT. YOU TOO.
 
 **Last words:** UGH... PAD 2... SHE'S ON... PAD... 2...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**CHIEF OF SECURITY (calling it in):** ALL UNITS. ALL UNITS. HE'S ON MY FLOOR. MOVE.
 
 _Drops: CARGO MANIFEST, and the SPACE SUIT — the EVA suit the hero needs to
 leave the planet, picked up as a story item and worn over his clothes and armor
@@ -318,6 +333,11 @@ from then on._
 
 **Last words:** IT'S STILL... HHH... STILL... HUMMING...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**DR. NOVA (raising the containment field):** CONTAINMENT FIELD. STANDARD PROCEDURE. NOTHING GETS OUT.
+
 _Drops: VAULT KEYCARD._
 
 #### THE JANITOR — the man who came back wasn't the man they sent
@@ -333,6 +353,11 @@ _Drops: VAULT KEYCARD._
 **THE JANITOR:** OR WHOEVER CAME BACK FROM THE MOON IN '69 WASN'T THE FELLA THEY SENT UP. NOW DROP IT.
 
 **Last words:** AND I JUST... URGH... ...DID THIS FLOOR...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**THE JANITOR (putting the floor down):** MIND THE FLOOR. I JUST DID IT. I DID WARN YOU.
 
 ### Boss — DOGE-1 (the prototype the whole floor is built to make)
 
@@ -621,6 +646,11 @@ below.
 
 **Last words:** ONE SMALL... STEP... ONTO A... GRAVE... HHK
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**MISSION SPECIALIST (the suit lights coming up):** FIFTY YEARS OF SUIT LIGHTS, AND THEY STILL CIRCLE.
+
 _Drops: APOLLO MISSION LOG._
 
 #### THE PROSPECTOR — the moonbase at Site T
@@ -636,6 +666,11 @@ _Drops: APOLLO MISSION LOG._
 **THE PROSPECTOR:** LAST MONTH THE MANIFESTS CHANGED. THE CRATES STARTED BREATHING. I QUIT. BADLY.
 
 **Last words:** THE CLAIM'S... URGH... ...YOURS NOW, KID...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**THE PROSPECTOR (setting the drill down):** I DUG THEIR WHOLE TUNNEL. I CAN DIG ONE THROUGH YOU.
 
 _Drops: SPACEZ BLUEPRINTS._
 
@@ -653,6 +688,11 @@ _Drops: SPACEZ BLUEPRINTS._
 
 **Last words:** TWO CHARTS... HHH... ONE STILL... BEAT...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**QUARANTINE MEDIC (breaking containment):** YOU'VE BEEN EXPOSED. SO HAS EVERYTHING I TOUCH.
+
 _Drops: SECOND MAN DOSSIER._
 
 #### THE CARTOGRAPHER — where Ada went
@@ -668,6 +708,11 @@ _Drops: SECOND MAN DOSSIER._
 **THE CARTOGRAPHER:** YOU DON'T, FRIEND. EVERYTHING GOES BELOW. NOTHING COMES BACK UP. NOBODY MAPS BELOW.
 
 **Last words:** SHE WENT... STRAIGHT... ...DOWN... OFF MY MAP...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**THE CARTOGRAPHER (stepping off the map):** THE MAP MOVED. SO DID I. DO KEEP UP.
 
 ### Boss — ARMSTRONG (the giant astronaut ghost guarding the flag)
 
@@ -937,6 +982,11 @@ automators, and the landlords the whole venture answers to.
 
 **Last words:** 404... ...NOT... FOUND...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**LARRY WEBPAGE (loosing the crawlers):** INDEXED. CRAWLED. THEY KNOW EXACTLY WHERE YOU STAND.
+
 _Drops: SEARCH BAR, ENGAGEMENT REPORT._
 
 #### BUILD GATES — the moon was version one
@@ -952,6 +1002,11 @@ _Drops: SEARCH BAR, ENGAGEMENT REPORT._
 **BUILD GATES:** A DISASTER, YES. WE PATCHED IT BY LEAVING. MARS IS VERSION TWO. NO DEAD THINGS. CHECKED.
 
 **Last words:** FATAL... ERROR... WHO WROTE... THIS...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**BUILD GATES (pushing the update):** SECURITY UPDATE. IT INSTALLS NOW. IT ALWAYS DOES.
 
 _Drops: BLUE SCREEN, MOON POST-MORTEM._
 
@@ -973,6 +1028,11 @@ the AI redrew the line and automation came for the automators themselves._
 
 **Last words:** ORCHESTRATION... FAILED... ...HUMAN... IN THE LOOP...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**OPTIMUSK PRIME (calling the shift):** EVERY UNIT ON THE PAYROLL. FORM UP. DOUBLE SHIFT.
+
 _Drops: PROMPT INJECTOR, ORG CHART._
 
 #### PETER TEAL — the landlords are older
@@ -988,6 +1048,11 @@ _Drops: PROMPT INJECTOR, ORG CHART._
 **PETER TEAL:** LIZARD GODS. I KEEP THE SHRINE AND TITHE. THE PRICE ROSE. IT WANTS WARM THINGS NOW.
 
 **Last words:** THE TITHE... IS DUE... ...IT'S ALWAYS... DUE...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**PETER TEAL (opening the drain):** EVERYTHING FLOWS SOMEWHERE. TODAY IT FLOWS TO ME.
 
 _Drops: CONTRARIAN DAGGER, TERRARIUM KEYCARD, COLONY LEDGER._
 
@@ -1292,6 +1357,11 @@ dialogue scene — the run doesn't pause for banter).
 
 **Last words:** THE CURRENT... ...RETURNS TO THE COIL...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**NIKOLA TESLA (throwing the arc):** I HAVE BEEN IN THE CURRENT SINCE '43. STAND BACK.
+
 **Joining words (spared):**
 
 - YOU HELD THE CURRENT AND GAVE IT BACK. I OWE YOU A LIFE, LITTLE BUILDER.
@@ -1318,6 +1388,11 @@ it fights for the hero now — and hands over the notes either way._
 
 **Last words:** FINALLY... ...A RUNWAY...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**AMELIA EARHART (vanishing):** I FLEW INTO A CLOUD WITH NO OTHER SIDE. WATCH.
+
 **Joining words (spared):**
 
 - YOU HAD ME GROUNDED AND LET ME BACK UP. THAT'S A DEBT, PILOT. I PAY THOSE.
@@ -1341,6 +1416,11 @@ _Drops (killed): AVIATOR GOGGLES._
 **GRIGORI RASPUTIN:** SHE PASSED. STILL WARM, STILL LOUD. BUT YOU MAY NOT FOLLOW. THE HOLY MAN SAYS SO.
 
 **Last words:** HA! AT LAST... ...SOMEONE WHO COMMITS...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**GRIGORI RASPUTIN (opening the drain):** POISON. BULLETS. THE RIVER. I TOOK IT ALL AND KEPT IT.
 
 **Joining words (spared):**
 
@@ -1372,6 +1452,11 @@ luck rubs off on the whole party: +50% MAGIC FIND while he's on his feet._
 **LUCKY:** TELL YOU WHAT. BEAT ME AND IT'S YOURS. NOBODY'S MANAGED YET. FEELING LUCKY?
 
 **Last words:** AH WELL... ...LUCK ALWAYS RUNS OUT...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**LUCKY (the gold coming up):** ME GOLD STAYS CLOSE, BOYO. AND IT BITES.
 
 **Joining words (spared):**
 
@@ -1639,6 +1724,11 @@ deadly, and extremely between films)_
 
 **Last words:** IN MY FILMS... ...I ALWAYS GOT UP...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**STEVEN SEAGULL (throwing you):** AIKIDO. I DON'T PUSH YOU. I JUST LET GO OF YOU.
+
 _Drops: SEAGULL'S PONYTAIL, and the ALL-ACCESS PASS that opens the control
 center._
 
@@ -1656,6 +1746,11 @@ was built to console)_
 **VLADIMIR PUTAIN:** THE ROBOTS SURRENDER DAILY. YOU TOO. I'M A BLACK BELT - HONORARY. IT DOESN'T KNOW.
 
 **Last words:** THE MAPS WERE WRONG... ...UKRAINE WAS NEVER MINE...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**VLADIMIR PUTAIN (calling the park):** THIS PARK IS MINE. EVERY HOST IN IT ANSWERS TO ME.
 
 _Drops: three brand watches (KOLEX DAYTONNE, PUTEK PHILIPPE, VACHERON
 KREMLINTON — pure valuables, the purse for the barkeep's estate stall) and
@@ -1678,6 +1773,11 @@ ACTING at you)_
 
 **Last words:** AT LAST... A ROLE I CANNOT ...EAT MY WAY OUT OF...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**GERALD DEPARDIEU (splitting the ground):** TWO HUNDRED FILMS! THE GROUND HAS NEVER MISSED A CUE!
+
 _Drops: the BOTTOMLESS CARAFE._
 
 **EDWARD SNOW** _(the whistleblower in exile, watching the town from under
@@ -1697,6 +1797,11 @@ trained on; the park's first ranged elite, he fights from behind cover)_
 **EDWARD SNOW:** I WARNED EVERYONE. NOBODY DELETED A THING. A WARNING IS JUST DATA. ITS FALL, MY END.
 
 **Last words:** THE CAMERAS... ...FINALLY LOOKING AWAY...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**EDWARD SNOW (opening the file):** I HAVE A FILE ON YOU. YOU'LL BE HERE SOME TIME.
 
 _Drops: the DEAD MAN'S SWITCH, and THE SNOW ARCHIVE._
 
@@ -2041,6 +2146,11 @@ universes. A clone? The backup? He isn't sure either._
 
 **Last words:** CHECK THE OTHER... ...FREEZERS...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**VLADIMIR PUTAIN (calling the shift):** THE ORIGINAL IS GONE. THE ORDERS STILL CARRY.
+
 _Drops: a KOLEX DAYTONNE — the backup wears the backup watch._
 
 #### MARK SUCKERBERG — the metaverse landlord
@@ -2059,6 +2169,11 @@ _Drops: a KOLEX DAYTONNE — the backup wears the backup watch._
 
 **Last words:** LOGGING OFF... ...FOR REAL THIS TIME...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**MARK SUCKERBERG (raising the field):** MY SECURITY DETAIL IS A FIELD NOW. EXTREMELY NORMAL.
+
 #### LARRY ALLISON — the database emperor
 
 **LARRY ALLISON:** STOP THERE. YOU'RE IN MY ROWS. EVERY PERSON HERE IS A ROW. EVERY SIN, A COLUMN.
@@ -2072,6 +2187,11 @@ _Drops: a KOLEX DAYTONNE — the backup wears the backup watch._
 **LARRY ALLISON:** YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN.
 
 **Last words:** TRANSACTION... ...ROLLED BACK...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**LARRY ALLISON (filing you):** EVERY AGENCY SITS IN MY TABLES. NOW SO DO YOU.
 
 #### JEFF BAYWATCH — the delivery emperor, retired to the gym
 
@@ -2088,6 +2208,11 @@ _Drops: a KOLEX DAYTONNE — the backup wears the backup watch._
 **JEFF BAYWATCH:** THEY'RE IN MY HEART. WHICH IS HERE, IN THE BUNKER, WITH THE MONEY. NOW, SIGN ON DELIVERY.
 
 **Last words:** OUT FOR DELIVERY... ...RETURN TO SENDER...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**JEFF BAYWATCH (dispatching):** SAME-DAY DELIVERY. NOBODY MISSES A DROP.
 
 #### SAM HALTMAN — the AGI prepper who knows
 
@@ -2110,6 +2235,11 @@ and watches the hero's face. The mask never drops, even in death._
 
 **Last words:** THIS IS FINE... ...THIS IS GOOD FOR SAFETY...
 
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**SAM HALTMAN (opening the drain):** IT DRAINED ME FIRST. I ONLY LEARNED THE TRICK.
+
 #### DONALD DUMP — the biggest resident
 
 **DONALD DUMP:** MY WING. THE BEST WING. THE OTHERS PAID FOR SUITES. I WAS INVITED. TOTALLY INVITED.
@@ -2125,6 +2255,11 @@ and watches the hero's face. The mask never drops, even in death._
 **DONALD DUMP:** I BLOCK BEAUTIFULLY. ACCOUNTS SAY ZERO - A GLITCH, HUGE LAWSUIT COMING. YOU'RE FIRED.
 
 **Last words:** RIGGED... ...TOTALLY RIGGED...
+
+**In the fight** — spoken once, the first time it uses the move, over the
+open field while play continues (a BARK, not dialogue: it never stops the run).
+
+**DONALD DUMP (calling the fleet):** I TOLD THEM THE ROBOTS WOULD COME. NOBODY LISTENED.
 
 ### The finale — THE VAULT WARDEN (the treasury gate)
 

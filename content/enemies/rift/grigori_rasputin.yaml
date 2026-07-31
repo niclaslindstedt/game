@@ -28,6 +28,29 @@ lastWords:
 spareable:
   companion: grigori_rasputin
 mechanics:
+  abilities:
+    - id: siphon_tether
+      bark:
+        - POISON. BULLETS.
+        - THE RIVER. I TOOK
+        - IT ALL AND KEPT IT.
+      windupMs: 720
+      cooldownMs: 9500
+      range: 220
+      durationMs: 3200
+      damageFrac: 0.32
+      tickMs: 480
+      healFrac: 0.85
+      look:
+        core: "150, 88, 200"
+        hot: "232, 200, 255"
+        deep: "20, 10, 30"
+        spark: "192, 140, 236"
+    - id: ward_shield
+      windupMs: 660
+      cooldownMs: 13500
+      durationMs: 7000
+      poolFrac: 0.24
   enrage:
     belowHpFrac: 0.5
     speedMult: 1.35

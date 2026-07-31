@@ -1,0 +1,40 @@
+name: elite_snare_0
+family: effects
+plane: floor
+size: [16, 16]
+description: >
+  A patch of an elite's SNARE FIELD at full hold: a lattice of grasping threads
+  laid over the ground, thickest where they cross, with the floor showing
+  clearly through the gaps. It is a WEAVE rather than a disc on purpose — a
+  filled circle reads as a pool of something, and this is a thing that has hold
+  of your feet. In NEUTRAL GREYS for the re-hue, on the FLOOR plane because a
+  thing on the ground lies down.
+subject:
+  kind: effect
+  build: an open lattice of thin threads crossing a square of ground
+  features: bright knots where threads cross, thinning to half-there at the edges
+  accent: the knots
+  pose: laid over the floor and pulled taut
+  flavor: it deals no damage at all, which is not the same as being harmless
+palette:
+  W: "#ffffff" # a knot, pulled tight
+  m: "#d6dbe8f0" # thread, taut
+  n: "#aab2c4a8" # thread, slack
+  s: "#8790a460" # the fraying edge
+grid: |
+  ....s.n..s......
+  ..s.n.m..n.s....
+  .s..m.W.m..n..s.
+  ..n.m.m.W.m..s..
+  s..W.m.m.m.W..n.
+  ..m.m.W.m.m..m..
+  .n.m.m.m.W.m..s.
+  s.m.W.m.m.m.W.n.
+  .m.m.m.W.m.m..s.
+  ..W.m.m.m.W..n..
+  .n.m.W.m.m.m..s.
+  s..m.m.m.W..m.n.
+  ..n.m.W.m..m..s.
+  .s..n.m.m.n..s..
+  ...s..n.n..s....
+  .....s...s......

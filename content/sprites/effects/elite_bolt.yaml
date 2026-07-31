@@ -1,0 +1,30 @@
+name: elite_bolt
+family: effects
+size: [8, 8]
+description: >
+  One bolt of an elite's SEEKER VOLLEY, drawn as LIGHT rather than as a
+  projectile: a hot nose to the right trailing back into a wake that dissolves
+  through falling alpha. No dark outline, for the same reason the mote has
+  none — an outline would make it a thrown object, and this is something a mob
+  conjured. In NEUTRAL GREYS for the re-hue, over a baked glow.
+subject:
+  kind: effect
+  build: a teardrop of light, nose to the right, tapering into a dissolving wake
+  features: a white nose falling back through a mid shell into half-there trail
+  accent: the white-hot nose, where the thing is going
+  pose: in flight, nose forward, steering after somebody
+  flavor: it is slow enough to outrun, which is the only reason it is fair
+palette:
+  W: "#ffffff" # the hot nose
+  m: "#d6dbe8f0" # mid shell
+  n: "#aab2c4a8" # wake, half there
+  s: "#8790a460" # the last of the wake
+grid: |
+  ........
+  ....snm.
+  .ssnmWWs
+  ssnmWWWW
+  ssnmWWWW
+  .ssnmWWs
+  ....snm.
+  ........

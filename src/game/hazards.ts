@@ -376,18 +376,36 @@ function launchEnemy(enemy: Enemy, from: Vec2, speed: number): void {
   knockEnemyBack(enemy, from, speed, ASTEROIDS.knockbackMs);
 }
 
-/** Arm the same outward impulse on the hero — he coasts along it (on top of
- * whatever he steers) until it bleeds out. */
-function launchPlayer(
+/**
+ * Shove the hero away from a point — he coasts along it (on top of whatever he
+ * steers) until it bleeds out.
+ *
+ * Exported because a SHOCK PULSE is the same shove a blast is, and an ability
+ * that rolled its own would drift from this one on the two details that
+ * actually matter: the degenerate case where the hero is standing exactly on
+ * the origin (which yields a zero vector and no push at all), and the fact that
+ * the impulse RIDES ALONGSIDE his steering rather than replacing it.
+ */
+export function pushPlayer(
   player: GameState["player"],
   from: Vec2,
   speed: number,
+  coastMs: number,
 ): void {
   if (speed <= 0) return;
   let dir = direction(from, player.pos);
   if (dir.x === 0 && dir.y === 0) dir = { x: 1, y: 0 };
   player.knockVel = { x: dir.x * speed, y: dir.y * speed };
-  player.knockMs = ASTEROIDS.knockbackMs;
+  player.knockMs = coastMs;
+}
+
+/** Arm the blast's own outward impulse on the hero, at its coast length. */
+function launchPlayer(
+  player: GameState["player"],
+  from: Vec2,
+  speed: number,
+): void {
+  pushPlayer(player, from, speed, ASTEROIDS.knockbackMs);
 }
 
 /** Scar the surface where a meteor struck. Levels whose ground can't hold a
@@ -1063,6 +1081,14 @@ export function stepScorches(state: GameState, dtMs: number): void {
 
   let hottest: (typeof scorches)[number] | null = null;
   const standing: (typeof scorches)[number][] = [];
+  // THE SNARE's hold, recomputed from scratch every tick (see
+  // `Player.snareFactor`): this loop is already walking the whole patch list to
+  // decide what is biting him, so the pace costs one comparison rather than a
+  // second scan inside `playerSpeed`. Overlapping fields take the STRONGEST
+  // rather than multiplying — two snares laid on one spot should not compound
+  // into a hero who cannot move at all, which is the one state a slow must
+  // never reach.
+  let snare = 1;
   for (let i = scorches.length - 1; i >= 0; i--) {
     const patch = scorches[i] as (typeof scorches)[number];
     patch.remainingMs -= dtMs;
@@ -1071,13 +1097,22 @@ export function stepScorches(state: GameState, dtMs: number): void {
       continue;
     }
     if (patch.tickMs > 0) patch.tickMs = Math.max(0, patch.tickMs - dtMs);
-    if (!canBurn) continue;
-    if (distance(player.pos, patch.pos) > patch.radius + PLAYER.radius)
+    const inside =
+      distance(player.pos, patch.pos) <= patch.radius + PLAYER.radius;
+    // A SNARE is ground, so a JUMP clears it exactly as it clears fire — the
+    // one answer the player carries from move to move.
+    if (patch.field === "snare") {
+      if (inside && canBurn) snare = Math.min(snare, patch.slowFactor ?? 1);
       continue;
+    }
+    if (!canBurn || !inside) continue;
     standing.push(patch);
     if (!hottest || patch.damage > hottest.damage) hottest = patch;
   }
-  if (!hottest || hottest.tickMs > 0) return;
+  player.snareFactor = snare < 1 ? snare : undefined;
+  // A patch that deals nothing cannot be the hottest thing standing — it would
+  // report a `playerHurt` of zero damage and flash him for free.
+  if (!hottest || hottest.damage <= 0 || hottest.tickMs > 0) return;
 
   const damage = hottest.damage;
   const cause = `hazard:scorch:${hottest.defId}`;

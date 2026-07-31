@@ -45,6 +45,16 @@ const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
 const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
+// THE SET-PIECE ABILITY CATALOG a mod's elite or boss may name in its
+// `mechanics.abilities` (boss tier AND elite tier alike — see
+// src/game/defs/enemies/abilities.ts). Enumerated from the RUNTIME REGISTRY
+// rather than typed out, for the same reason the compass grammar is snapshotted
+// from the engine's own parser: this file is the only thing a modder can read
+// to find out what exists, and a hand-kept list drifts silently the moment an
+// ability is added.
+const { registeredAbilityIds } = await import(
+  engine("src/game/mechanics/index.ts")
+);
 // The passive TREES, plus the two things a mod's own talents are judged
 // against: the shared rank CEILING (economy — a mod may go shallower, never
 // deeper) and WHO CARRIES EACH PROC BLOCK, since one proc has exactly one
@@ -214,6 +224,11 @@ const catalog = {
   weapons: sorted(Object.keys(WEAPON_DEFS)),
   gear: sorted(Object.keys(GEAR_DEFS)),
   abilities: sorted(Object.keys(ABILITY_DEFS)),
+  // The set-piece moves an enemy def may carry. NAMES only, no numbers — a mod
+  // names the primitive and authors its own tuning and its own `look` kit,
+  // which is exactly what makes one shared primitive read as 27 different
+  // signatures (see the elite tier's note in defs/enemies/abilities.ts).
+  enemyAbilities: sorted(registeredAbilityIds()),
   // The shipped TALENTS, so an ADDON that would shadow one is caught at compile
   // time rather than by two defs claiming one rank ladder at load.
   talents: sorted(Object.keys(TALENT_DEFS)),
@@ -292,6 +307,7 @@ const counts = [
   ["gear", catalog.gear.length],
   ["uniques", catalog.uniques.length],
   ["abilities", catalog.abilities.length],
+  ["enemy abilities", catalog.enemyAbilities.length],
   ["sprites", catalog.sprites.length],
   ["sounds", catalog.sounds.length],
   ["tracks", catalog.music.length],

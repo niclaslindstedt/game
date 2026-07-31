@@ -23,6 +23,30 @@ dialogue:
   - - LIZARD GODS. I KEEP THE SHRINE AND TITHE. THE PRICE ROSE. IT WANTS WARM THINGS NOW.
 lastWords:
   - THE TITHE... IS DUE... ...IT'S ALWAYS... DUE...
+mechanics:
+  abilities:
+    - id: siphon_tether
+      bark:
+        - EVERYTHING FLOWS
+        - SOMEWHERE. TODAY
+        - IT FLOWS TO ME.
+      windupMs: 740
+      cooldownMs: 10500
+      range: 210
+      durationMs: 3000
+      damageFrac: 0.3
+      tickMs: 500
+      healFrac: 0.8
+      look:
+        core: "64, 190, 178"
+        hot: "196, 250, 244"
+        deep: "8, 28, 26"
+        spark: "130, 224, 214"
+    - id: ward_shield
+      windupMs: 680
+      cooldownMs: 13000
+      durationMs: 6000
+      poolFrac: 0.2
 ai:
   aggroRadius: 250
   rushSpeed: 115

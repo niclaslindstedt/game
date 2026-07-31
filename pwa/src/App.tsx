@@ -315,6 +315,10 @@ export function App() {
           <EffectsGallery
             initialId={params.get("effects") ?? undefined}
             initialSpeed={Number(params.get("speed")) || undefined}
+            // `?caster=<enemy id>` restages the ELITE exhibits in that mob's
+            // own authored colours — the comparison the elite tier's whole
+            // claim rests on (scripts/elite-abilities.mjs drives it).
+            caster={params.get("caster") ?? undefined}
             onClose={() => {
               const url = new URL(window.location.href);
               url.searchParams.delete("effects");

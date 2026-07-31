@@ -25,6 +25,7 @@ import {
 } from "@game/core";
 
 import {
+  eliteLook,
   heroPos,
   hitEvent,
   horde,
@@ -1161,6 +1162,395 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
 
+  // ── ELITES: the tier built out of the hero's own kit ───────────────────────
+  // Ten primitives, each shown in ONE elite's authored colours (see the `look`
+  // note in src/game/defs/enemies/abilities.ts) — which is also what these
+  // exhibits are FOR. The whole claim of the tier is that a shared primitive
+  // reads as a different move in a different mob's hands, and the only way to
+  // judge that claim is to look at one and then look at another.
+  //
+  // Every one fires the REAL `eliteCast` event the engine pushes, so an exhibit
+  // can never drift from what ships; the three that are drawn from live state
+  // rather than from the event (the ring, the shell, the tether) stage that
+  // state on a real mob, exactly as the RECOMPILE exhibit stages its node.
+  {
+    id: "elite-orbit-guard",
+    icon: "elite_mote",
+    label: "ORBIT GUARD",
+    blurb: "A RING OF MOTES TURNING, AND THE LAST STRIDE IN COSTS SOMETHING",
+    group: "ELITES",
+    keywords: [
+      "elite",
+      "orbit",
+      "ring",
+      "motes",
+      "lucky",
+      "leprechaun",
+      "gold",
+    ],
+    levelId: "the_rift",
+    stage: {
+      spawns: [{ enemy: "lucky", count: 1, minDistance: 54, maxDistance: 62 }],
+    },
+    showMs: 4200,
+    fire: (ctx) => {
+      // The ring is drawn from the caster's LIVE state (an effect holds a
+      // position, and a ring is attached to a body that walks), so the exhibit
+      // starts the real thing rather than miming it.
+      const mob = ctx.mobs.find((m) => m.defId === "lucky");
+      if (mob) {
+        const mech = (mob.mech ??= {});
+        mech.orbitMs = 4200;
+        mech.orbitAngle = 0;
+        mech.orbitBiteMs = 0;
+      }
+      ctx.emit({
+        type: "eliteCast",
+        kind: "orbit_guard",
+        pos: mob ? { ...mob.pos } : heroPos(ctx.state),
+        defId: "lucky",
+        count: 5,
+        radius: 32,
+        ms: 4200,
+      });
+    },
+  },
+  {
+    id: "elite-seeker-volley",
+    icon: "elite_bolt",
+    label: "SEEKER VOLLEY",
+    blurb: "SLOW BOLTS THAT STEER — OUTRUN THEM OR BREAK THE LINE",
+    group: "ELITES",
+    keywords: [
+      "elite",
+      "seeker",
+      "homing",
+      "bolt",
+      "volley",
+      "jeff",
+      "delivery",
+    ],
+    levelId: "the_bunker",
+    stage: {
+      spawns: [
+        {
+          enemy: "jeff_baywatch",
+          count: 1,
+          minDistance: 120,
+          maxDistance: 140,
+        },
+      ],
+    },
+    showMs: 3200,
+    fire: (ctx) => {
+      const mob = ctx.mobs.find((m) => m.defId === "jeff_baywatch");
+      const from = mob ? { ...mob.pos } : heroPos(ctx.state);
+      ctx.emit({
+        type: "eliteCast",
+        kind: "seeker_volley",
+        pos: from,
+        defId: "jeff_baywatch",
+        angle: Math.atan2(
+          ctx.state.player.pos.y - from.y,
+          ctx.state.player.pos.x - from.x,
+        ),
+        spread: (38 * Math.PI) / 180,
+        count: 5,
+      });
+    },
+  },
+  {
+    id: "elite-ember-trail",
+    icon: "scorch_char",
+    label: "EMBER TRAIL",
+    blurb: "IT PAINTS THE PATH YOU KITE IT DOWN, AND THE PATH BURNS",
+    group: "ELITES",
+    keywords: ["elite", "trail", "fire", "burn", "medic", "contagion", "moon"],
+    levelId: "moon",
+    stage: {},
+    showMs: 4200,
+    fire: (ctx) => {
+      // Laid straight into `state.scorches`, because that is genuinely what the
+      // ability does — the patches ARE the burning floor the boss beam lays,
+      // wearing the caster's own kit. A curve rather than a line, so the
+      // exhibit shows the one thing that matters: it paints where the mob WENT.
+      const hero = heroPos(ctx.state);
+      ctx.state.scorches.length = 0;
+      for (let i = 0; i < 9; i++) {
+        const t = i / 8;
+        ctx.state.scorches.push({
+          pos: {
+            x: hero.x - 90 + t * 180,
+            y: hero.y + Math.sin(t * Math.PI) * 46,
+          },
+          field: "burn",
+          look: eliteLook("quarantine_medic", "ember_trail"),
+          radius: 24,
+          remainingMs: 4200,
+          durationMs: 4200,
+          tickMs: 0,
+          intervalMs: 560,
+          damage: 0,
+          defId: "quarantine_medic",
+          seed: i * 37,
+        });
+      }
+      ctx.emit({
+        type: "eliteCast",
+        kind: "ember_trail",
+        pos: hero,
+        defId: "quarantine_medic",
+        ms: 4200,
+      });
+    },
+  },
+  {
+    id: "elite-shock-pulse",
+    icon: "nikola_tesla_1",
+    label: "SHOCK PULSE",
+    blurb: "A RING OUT, AND YOU ARE PUT BACK WHERE IT WANTS YOU",
+    group: "ELITES",
+    keywords: ["elite", "pulse", "ring", "knockback", "tesla", "shock", "rift"],
+    levelId: "the_rift",
+    stage: {},
+    showMs: 1600,
+    fire: (ctx) => {
+      ctx.emit({
+        type: "eliteCast",
+        kind: "shock_pulse",
+        pos: heroPos(ctx.state),
+        defId: "nikola_tesla",
+        radius: 66,
+        look: eliteLook("nikola_tesla", "shock_pulse"),
+      });
+    },
+  },
+  {
+    id: "elite-blink-strike",
+    icon: "amelia_earhart_1",
+    label: "BLINK STRIKE",
+    blurb: "IT IS NOT WHERE IT WAS — AND IT SWINGS WHERE YOU WERE",
+    group: "ELITES",
+    keywords: [
+      "elite",
+      "blink",
+      "teleport",
+      "amelia",
+      "earhart",
+      "gap",
+      "rift",
+    ],
+    levelId: "the_rift",
+    stage: {},
+    showMs: 1800,
+    fire: (ctx) => {
+      // ONE event carrying BOTH ends, which is how the ability reports it: the
+      // departure and the arrival are one move, and two effects would drift.
+      const hero = heroPos(ctx.state);
+      ctx.emit({
+        type: "eliteCast",
+        kind: "blink_strike",
+        pos: { x: hero.x - 150, y: hero.y - 40 },
+        to: { x: hero.x - 30, y: hero.y },
+        defId: "amelia_earhart",
+        look: eliteLook("amelia_earhart", "blink_strike"),
+      });
+    },
+  },
+  {
+    id: "elite-rally-cry",
+    icon: "security_chief_1",
+    label: "RALLY CRY",
+    blurb: "IT TOUCHES YOU NOT AT ALL, AND MAKES EVERYTHING ELSE WORSE",
+    group: "ELITES",
+    keywords: ["elite", "rally", "shout", "buff", "horde", "security", "chief"],
+    stage: {
+      spawns: [{ enemy: "guard", count: 6, minDistance: 40, maxDistance: 110 }],
+    },
+    showMs: 2400,
+    fire: (ctx) => {
+      ctx.emit({
+        type: "eliteCast",
+        kind: "rally_cry",
+        pos: heroPos(ctx.state),
+        defId: "security_chief",
+        radius: 200,
+        count: ctx.mobs.length,
+        ms: 6000,
+        look: eliteLook("security_chief", "rally_cry"),
+      });
+    },
+  },
+  {
+    id: "elite-snare-field",
+    icon: "janitor_1",
+    label: "SNARE FIELD",
+    blurb: "IT HURTS NOBODY, WHICH IS WHY IT WORKS",
+    group: "ELITES",
+    keywords: ["elite", "snare", "slow", "field", "janitor", "web", "mop"],
+    showMs: 4000,
+    stage: {},
+    fire: (ctx) => {
+      // A `snare` patch is the SECOND rule `state.scorches` holds, so the
+      // exhibit lays a real one — the weave, the release, and the fact that it
+      // deals nothing are all the shipping code's.
+      const hero = heroPos(ctx.state);
+      ctx.state.scorches.length = 0;
+      ctx.state.scorches.push({
+        pos: { ...hero },
+        field: "snare",
+        slowFactor: 0.55,
+        look: eliteLook("janitor", "snare_field"),
+        radius: 52,
+        remainingMs: 4000,
+        durationMs: 4000,
+        tickMs: 0,
+        intervalMs: 0,
+        damage: 0,
+        defId: "janitor",
+        seed: 11,
+      });
+      ctx.emit({
+        type: "eliteCast",
+        kind: "snare_field",
+        pos: { ...hero },
+        defId: "janitor",
+        radius: 52,
+        ms: 4000,
+      });
+    },
+  },
+  {
+    id: "elite-siphon-tether",
+    icon: "grigori_rasputin_1",
+    label: "SIPHON TETHER",
+    blurb: "IT HOLDS STILL AND DRINKS — BREAK THE LINE OR FEED IT",
+    group: "ELITES",
+    keywords: [
+      "elite",
+      "siphon",
+      "drain",
+      "tether",
+      "rasputin",
+      "heal",
+      "rift",
+    ],
+    levelId: "the_rift",
+    stage: {
+      spawns: [
+        {
+          enemy: "grigori_rasputin",
+          count: 1,
+          minDistance: 110,
+          maxDistance: 130,
+        },
+      ],
+    },
+    showMs: 3600,
+    fire: (ctx) => {
+      // Drawn from live state like the ring and the shell: a tether is a link
+      // between two moving things, so the exhibit ties a real one.
+      const mob = ctx.mobs.find((m) => m.defId === "grigori_rasputin");
+      if (mob) {
+        const mech = (mob.mech ??= {});
+        mech.siphonMs = 3600;
+        mech.siphonTickMs = 0;
+        mob.hp = mob.maxHp * 0.5;
+      }
+      ctx.emit({
+        type: "eliteCast",
+        kind: "siphon_tether",
+        pos: mob ? { ...mob.pos } : heroPos(ctx.state),
+        to: { ...ctx.state.player.pos },
+        defId: "grigori_rasputin",
+        ms: 3600,
+      });
+    },
+  },
+  {
+    id: "elite-ward-shield",
+    icon: "mark_suckerberg_1",
+    label: "WARD SHIELD",
+    blurb: "A BUDGET, NOT A TIMER — SPEND EVERYTHING NOW",
+    group: "ELITES",
+    keywords: [
+      "elite",
+      "ward",
+      "shield",
+      "shell",
+      "barrier",
+      "suckerberg",
+      "bunker",
+    ],
+    levelId: "the_bunker",
+    stage: {
+      spawns: [
+        {
+          enemy: "mark_suckerberg",
+          count: 1,
+          minDistance: 56,
+          maxDistance: 66,
+        },
+      ],
+    },
+    showMs: 4200,
+    fire: (ctx) => {
+      const mob = ctx.mobs.find((m) => m.defId === "mark_suckerberg");
+      if (mob) {
+        const mech = (mob.mech ??= {});
+        mob.hp = mob.maxHp * 0.7;
+        mech.wardHp = Math.round(mob.maxHp * 0.26);
+        mech.wardMs = 4200;
+      }
+      ctx.emit({
+        type: "eliteCast",
+        kind: "ward_shield",
+        pos: mob ? { ...mob.pos } : heroPos(ctx.state),
+        defId: "mark_suckerberg",
+        ms: 4200,
+      });
+    },
+  },
+  {
+    id: "elite-quake-line",
+    icon: "elite_fissure_0",
+    label: "QUAKE LINE",
+    blurb: "IT STAYS PUT AND THE FLOOR DOES THE WALKING",
+    group: "ELITES",
+    keywords: [
+      "elite",
+      "quake",
+      "fissure",
+      "crack",
+      "lane",
+      "prospector",
+      "drill",
+    ],
+    levelId: "moon",
+    stage: {},
+    showMs: 2400,
+    fire: (ctx) => {
+      // The fissures arrive IN ORDER down the lane, which is the whole read —
+      // so the exhibit staggers them exactly as the ability's `stepMs` does
+      // rather than flashing the lane all at once.
+      const hero = heroPos(ctx.state);
+      const look = eliteLook("prospector", "quake_line");
+      for (let i = 0; i < 5; i++) {
+        ctx.after(i * 110, () => {
+          ctx.emit({
+            type: "eliteCast",
+            kind: "quake_line",
+            phase: "tick",
+            pos: { x: hero.x - 60 + i * 30, y: hero.y },
+            defId: "prospector",
+            radius: 20,
+            look,
+          });
+        });
+      }
+    },
+  },
+
   // ── WORLD: the field's own effects ─────────────────────────────────────────
   {
     id: "crate-smash",
@@ -1507,6 +1897,7 @@ export function effectsCatalog(): Exhibit[] {
     ...FIELD_EXHIBITS.filter((e) => e.group === "POWERS"),
     ...talentExhibits(),
     ...FIELD_EXHIBITS.filter((e) => e.group === "BOSSES"),
+    ...FIELD_EXHIBITS.filter((e) => e.group === "ELITES"),
     ...FIELD_EXHIBITS.filter((e) => e.group === "WORLD"),
   ];
 }

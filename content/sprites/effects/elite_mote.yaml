@@ -1,0 +1,31 @@
+name: elite_mote
+family: effects
+size: [8, 8]
+description: >
+  One mote of an elite's ORBIT GUARD ring, drawn as LIGHT rather than as an
+  object: a white-hot core falling away through a mid shell to an alpha-graded
+  rim that dissolves into the air. It carries NO dark outline — every solid
+  thing in this game is built on one, so leaving it off is what separates a
+  conjured light from a bead somebody threw. In NEUTRAL GREYS, so the renderer
+  can re-hue it onto any caster's own colour kit, and drawn over a baked glow.
+subject:
+  kind: effect
+  build: a small round bloom of light, brightest at its centre, no hard edge
+  features: three brightness steps dissolving outward through falling alpha
+  accent: the white-hot core
+  pose: turning on a ring around its caster
+  flavor: whatever the thing circling you is made of, it is the same shape either way
+palette:
+  W: "#ffffff" # the hot core
+  m: "#d6dbe8f0" # mid shell
+  n: "#aab2c4a8" # outer shell, half there
+  s: "#8790a460" # the last of it, dissolving
+grid: |
+  ..ssss..
+  .snmmns.
+  snmWWmns
+  smWWWWms
+  smWWWWms
+  snmWWmns
+  .snmmns.
+  ..ssss..

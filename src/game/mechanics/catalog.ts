@@ -50,6 +50,17 @@ export type AbilityCtx = {
    * breaks the promise every tell in the game makes.
    */
   lockedDir?: { x: number; y: number };
+  /**
+   * The RANGE locked when the windup started, handed to `cast` for exactly the
+   * reason `lockedDir` is and travelling the same way (the telegraph is already
+   * cleared by the time the move commits).
+   *
+   * A move that locks the bearing but re-measures the range at cast time has
+   * only half-kept its promise: it can no longer be dodged sideways but can
+   * still follow a hero who ran straight back. BLINK STRIKE is the one that
+   * needs both, since its arrival spot is derived from the two together.
+   */
+  lockedDistance?: number;
 };
 
 /**

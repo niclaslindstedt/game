@@ -26,6 +26,31 @@ dialogue:
 lastWords:
   - THE MAPS WERE WRONG... ...UKRAINE WAS NEVER MINE...
 mechanics:
+  abilities:
+    - id: rally_cry
+      bark:
+        - THIS PARK IS MINE.
+        - EVERY HOST IN IT
+        - ANSWERS TO ME.
+      windupMs: 700
+      cooldownMs: 12500
+      radius: 230
+      durationMs: 6500
+      speedMult: 1.28
+      damageMult: 1.24
+      look:
+        core: "206, 56, 48"
+        hot: "255, 184, 150"
+        deep: "30, 8, 8"
+        spark: "236, 116, 84"
+    - id: quake_line
+      windupMs: 720
+      cooldownMs: 10500
+      count: 6
+      spacing: 32
+      radius: 22
+      damageFrac: 0.68
+      stepMs: 110
   charge:
     windupMs: 700
     speedMult: 3.5

@@ -1196,6 +1196,62 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     );
   }
 
+  // THE ELITE TIER (src/game/defs/enemies/abilities.ts). ONE handler for all
+  // ten primitives, because they arrive as ONE event discriminated by `kind` —
+  // the world-anchored picture is `render/elite-fx.ts`'s, and this only decides
+  // how long each burst lives and which of them is worth a shake or a word.
+  //
+  // The long-lived halves are deliberately NOT pushed as effects: the ring, the
+  // shell and the tether are drawn from the caster's own live state, because an
+  // effect holds a POSITION and all three are attached to a body that moves.
+  if (event.type === "eliteCast") {
+    // A `tick` is a repeat beat inside a running move (a fissure opening, a
+    // tether pulling). Those get a burst; an `end` is bookkeeping the drawn
+    // layers already show, and only the WARD's break earns anything, below.
+    const spent = event.phase === "end";
+    if (!spent) {
+      const life = event.kind === "blink_strike" ? 320 : 420;
+      effects.push({
+        kind: "elite",
+        eliteKind: event.kind,
+        look: event.look,
+        pos: { ...event.pos },
+        to: event.to ? { ...event.to } : undefined,
+        radius: event.radius,
+        untilMs: state.stats.timeMs + life,
+        durationMs: life,
+      });
+    }
+    // A PULSE is the one elite move whose whole point is the shove, so it is
+    // the one that shakes — a knockback the player feels in the frame as well
+    // as in their position. Sized off the ring, exactly as the slam's is.
+    if (event.kind === "shock_pulse" && !spent) {
+      kickCameraShake(
+        shared.cameraShake,
+        state.stats.timeMs,
+        Math.min(3.5, 1.2 + (event.radius ?? 48) / 34),
+        260,
+      );
+    }
+    // A SHELL BREAKING is the feedback the whole move rests on: the player has
+    // to learn that hitting it harder was working, and a shell that went
+    // quietly teaches the opposite. So the break borrows the PULSE's expanding
+    // ring — the shell coming off the body outward — in the shell's own
+    // colours. Its screen-space half is fired from GameScreen's event loop,
+    // where every CSS burst in the game is fired from.
+    if (event.kind === "ward_shield" && spent) {
+      effects.push({
+        kind: "elite",
+        eliteKind: "shock_pulse",
+        look: event.look,
+        pos: { ...event.pos },
+        radius: 34,
+        untilMs: state.stats.timeMs + 380,
+        durationMs: 380,
+      });
+    }
+  }
+
   // THE TURN. An enrage is permanent and the player should know the fight just
   // changed — one hot ring off the body and a word, once, rather than a tell
   // that keeps shouting (the standing red aura in render/enemies.ts carries it

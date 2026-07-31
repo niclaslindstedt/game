@@ -24,6 +24,8 @@
 import { activeMechanics, enemyDef, type GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
+import { lookRamp } from "./elite-fx.ts";
+import { recolorSprite } from "./recolor.ts";
 import { clamp01 } from "./shared.ts";
 import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
@@ -61,6 +63,14 @@ export function drawScorches(
   if (!blot) return;
   for (const patch of state.scorches) {
     if (!inView(patch.pos.x, patch.pos.y, patch.radius + 16)) continue;
+    // A SNARE is the other rule this list holds (`ScorchPatch.field`) — ground
+    // that grips rather than ground that burns — and it is drawn as its own
+    // authored weave rather than as a colder fire. Handed off whole so the
+    // burning-floor pass below never grows a branch per rule.
+    if (patch.field === "snare") {
+      drawSnarePatch(ctx, patch, sprites, camera, timeMs);
+      continue;
+    }
     const left = clamp01(patch.remainingMs / patch.durationMs);
     // Full strength until the last stretch, then cool away.
     const heat = left > COOL_FRAC ? 1 : left / COOL_FRAC;
@@ -77,8 +87,14 @@ export function drawScorches(
     // A quarter turn per seed — four orientations is enough to break the
     // repeat and costs nothing, and it keeps the blot pixel-aligned.
     ctx.rotate((Math.PI / 2) * (patch.seed % 4));
+    // A patch laid by an ELITE's trail carries its caster's own kit and is
+    // re-hued onto it; ARMSTRONG's beam authors none and keeps the char-and-
+    // cyan look this pass shipped with. One hazard, two casters, no branch
+    // anywhere but here.
     ctx.drawImage(
-      blot,
+      patch.look
+        ? recolorSprite(blot, "scorch_char", lookRamp(patch.look))
+        : blot,
       Math.round(-size / 2),
       Math.round(-size / 2),
       size,
@@ -97,15 +113,79 @@ export function drawScorches(
       const frame = Math.floor(timeMs / LICK_FRAME_MS + spin) % 3;
       const lick = spriteByName(sprites, `ghostfire_${frame}`);
       if (!lick) continue;
+      const flame = patch.look
+        ? recolorSprite(lick, `ghostfire_${frame}`, lookRamp(patch.look))
+        : lick;
       // Fire stands UP off the floor, so each lick is lifted by its own height
       // and only its foot sits at the sampled point.
       const lx = Math.round(sx + Math.cos(angle) * reach - 4);
       const ly = Math.round(sy + Math.sin(angle) * reach * 0.5 - 10);
       ctx.globalAlpha = (0.3 + 0.3 * heat) * (0.7 + 0.3 * ((spin % 5) / 5));
-      ctx.drawImage(lick, lx, ly, 6, 9);
+      ctx.drawImage(flame, lx, ly, 6, 9);
     }
     ctx.restore();
   }
+}
+
+/**
+ * A SNARE patch — the elite tier's `snare_field`, the second rule this hazard
+ * list carries (see `ScorchPatch.field`).
+ *
+ * A WEAVE, not a disc. A filled circle on the floor reads as a pool of
+ * something and the player's learned answer to a pool is "don't stand in it,
+ * it hurts" — which is exactly wrong here, since a snare deals nothing at all
+ * and its whole danger is what ELSE is on the field while it holds you. The
+ * lattice says "this has hold of your feet" instead.
+ *
+ * Two authored frames rather than a fade: it lets go by COMING APART (the
+ * threads slacken and the knots go), because a patch that simply dimmed would
+ * read as the artist turning the opacity down rather than as the thing
+ * releasing you. Re-hued onto the caster's own kit, like everything else in the
+ * elite tier, so one weave serves every mob that lays one.
+ */
+function drawSnarePatch(
+  ctx: CanvasRenderingContext2D,
+  patch: GameState["scorches"][number],
+  sprites: Sprites,
+  camera: Camera,
+  timeMs: number,
+): void {
+  const left = clamp01(patch.remainingMs / patch.durationMs);
+  // The second frame takes over for the last third — the release, not a fade.
+  const art = spriteByName(
+    sprites,
+    left > 0.34 ? "elite_snare_0" : "elite_snare_1",
+  );
+  if (!art) return;
+  const tinted = recolorSprite(
+    art,
+    left > 0.34 ? "elite_snare_0" : "elite_snare_1",
+    lookRamp(patch.look),
+  );
+  const sx = Math.round(patch.pos.x - camera.x);
+  const sy = Math.round(patch.pos.y - camera.y);
+  const size = Math.round(patch.radius * 2);
+  ctx.save();
+  // Additive, so overlapping fields pool into a brighter weave instead of
+  // stacking into an opaque mat that hides the floor under it.
+  ctx.globalCompositeOperation = "lighter";
+  // A slow shimmer along the threads, so the field reads as held taut rather
+  // than as a decal somebody stuck to the ground.
+  ctx.globalAlpha = 0.5 * (0.78 + 0.22 * Math.sin(timeMs / 300 + patch.seed));
+  ctx.translate(sx, sy);
+  // A quarter turn per seed, exactly as the burn blot takes: four orientations
+  // break the repeat for nothing and keep the weave pixel-aligned.
+  ctx.rotate((Math.PI / 2) * (patch.seed % 4));
+  ctx.drawImage(
+    tinted,
+    Math.round(-size / 2),
+    Math.round(-size / 2),
+    size,
+    // Foreshortened onto the ground plane like the burn blot beside it: this is
+    // FLOOR, and floor lies down.
+    Math.round(size * 0.83),
+  );
+  ctx.restore();
 }
 
 /**

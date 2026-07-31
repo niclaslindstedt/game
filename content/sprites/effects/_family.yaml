@@ -14,7 +14,22 @@ animations:
 # Sprites whose isolated pixels are AUTHORED, not accidental — the orphan-pixel
 # check skips them (see scripts/generate-assets.mjs). Deliberately NOT the
 # `blood_hit_*` ring: that one is compact, so a stray pixel in it is a slip.
+# The ELITE TIER's conjured light is drawn to DISSOLVE at its edges — it is not
+# an object with an outline, it is something a mob called up, and every solid
+# thing in this game is built on a near-black rim precisely so that light can be
+# told apart from matter by not having one. The edge-contrast check exists to
+# catch a sprite whose outline vanishes into the ground, which is the opposite
+# problem; and neither of these is ever drawn alone in the first place — both
+# ride a baked glow and are re-hued onto their caster's own kit
+# (render/elite-fx.ts), so the neutral grey the check measures is not a colour
+# any player ever sees.
+contrastExempt: [elite_mote, elite_bolt, elite_snare_0, elite_snare_1]
 speckleExempt:
+  # The SNARE's weave is a lattice with gaps in it — an open mesh whose loose
+  # threads are the drawing. Its last frame is mostly loose threads by design:
+  # a snare lets go by coming apart.
+  - elite_snare_0
+  - elite_snare_1
   # The soak ladder's first rungs and the trail's drying prints ARE freckles —
   # a scatter of unjoined marks is exactly what "it has only just started" and
   # "the boot is running out" look like.
