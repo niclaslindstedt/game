@@ -82,12 +82,13 @@ and something enormous haunts the old flag.
   back from) — tap (or press **Space** / **Enter**) to advance a beat, hit
   SKIP, or press **Escape** to skip the whole scene. It plays **once per
   device**: retries and later runs jump straight to the level.
-- **Steer with the pointer** — on desktop the character chases the cursor;
-  on touch, hold and drag: a virtual joystick appears under your finger and
-  you walk in the direction you drag — release to stop. (Desktop can swap
-  the mouse to **AIM & SHOOT** under SETTINGS → CONTROLS: WASD walks, the
-  pointer aims, and the left button fires — flip its AUTO-FIRE toggle off
-  to hold every shot until you click.)
+- **Point and shoot** — desktop opens on **AIM & SHOOT**: **WASD** walks, the
+  pointer aims, and the left button fires (flip its AUTO-FIRE toggle off to
+  hold every shot until you click). On touch, hold and drag: a virtual
+  joystick appears under your finger and you walk in the direction you drag —
+  release to stop. (Desktop can swap back to **FOLLOW CURSOR** under
+  SETTINGS → CONTROLS, where the character chases the cursor instead and the
+  hero picks his own targets — an elite or a boss over the chaff around it.)
 - **Or use the keyboard** — on desktop, **WASD** runs, **Shift** walks, and no
   key stands still (a binary run/walk mode that frees the mouse from steering).
   Toggle it under SETTINGS → CONTROLS, and rebind every key (movement, actions,

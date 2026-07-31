@@ -178,13 +178,52 @@ export const KNOCKBACK = {
  * and the bearing to the foe: 1 = the foe sits dead along the cursor, −1 =
  * opposite it. So a foe in the pointer's direction outranks a merely-closer one
  * elsewhere — the cursor carries the priority when foes stand in several
- * directions. It is only ever a bias: with no mouse (touch, keyboard-only,
- * bots) or the pointer resting on the hero, targeting falls back to the plain
- * nearest foe, so the hero is never left unable to fire at empty space.
+ * directions.
+ *
+ * ONLY THE AIM & SHOOT SCHEME SUPPLIES ONE. A cursor the hero is WALKING toward
+ * (FOLLOW CURSOR) is not an aim, and reading it as one made the target flip to
+ * whatever lay along the walk; a gamepad player's mouse is sitting still on a
+ * desk. Absent (both of those, plus touch, keyboard-only and bots) or with the
+ * pointer resting on the hero, the pick falls through to `TARGET_PRIORITY`
+ * below, so the hero is never left unable to fire at empty space.
  */
 export const AIM = {
   /** At 4 a pointer-aligned foe outranks one up to ~5× closer behind the hero. */
   biasStrength: 4,
+} as const;
+
+/**
+ * WHAT THE HERO PICKS WHEN NOBODY IS POINTING — the BEST target, not merely the
+ * nearest one.
+ *
+ * Plain nearest is only ever right by accident: the horde is what stands
+ * closest by construction, so an autonomous hero standing in front of a boss
+ * spent the whole fight cleaning up the fodder that wandered into his face,
+ * which is the one target a player would never have chosen. Every foe's
+ * distance is scaled by its ROLE before the pick, so a set piece outranks the
+ * chaff around it — a bias in the same shape as the cursor's, and for the same
+ * reason: the pick is a preference, never a lock.
+ *
+ * It bounds itself, which is what makes it safe: `nearestEnemy` has already
+ * thrown away everything outside the weapon's own reach, so this only ever
+ * chooses between foes the hero could hit THIS tick. A boss across the map is
+ * not a candidate, and a minion right on top of him still wins on distance.
+ *
+ * Reads as "an elite outranks a minion up to 2× closer, a boss one up to 4×".
+ * The two multiply where they meet: with the cursor aimed at a minion an elite
+ * off to the side is still refused, because the alignment penalty is the larger
+ * factor — an explicit point outranks the heuristic, which is the whole point
+ * of having a point-and-shoot mode at all.
+ */
+export const TARGET_PRIORITY = {
+  /**
+   * Distance multipliers by `EnemyDef.role`. Below 1 means "treat this foe as
+   * nearer than it is"; 1 is the horde's own, unweighted, distance.
+   */
+  roleScale: { minion: 1, elite: 0.5, boss: 0.25 } as Record<
+    "minion" | "elite" | "boss",
+    number
+  >,
 } as const;
 
 /** Projectile rules shared by every weapon (per-weapon numbers in defs). */

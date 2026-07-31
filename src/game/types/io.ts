@@ -80,8 +80,15 @@ export type GameInput = {
    * The desktop mouse pointer's world position — the aim dimension. When set,
    * the auto-weapon prefers the monster in the pointer's direction over a
    * merely-closer one elsewhere (see `AIM.biasStrength`), so a desktop player
-   * steers where the hero fires. Absent (touch, keyboard-only, bots) or
-   * resting on the hero: targeting stays the plain nearest foe.
+   * steers where the hero fires.
+   *
+   * Set by AIM & SHOOT ALONE — the one scheme whose pointer is pointing AT
+   * something. FOLLOW CURSOR's pointer is a destination, so reading it as an
+   * aim as well made the hero shoot whatever he was walking toward; a gamepad
+   * player's mouse is not being held at all. Absent there (as for touch, bots
+   * and headless tests), or resting on the hero, the pick falls back to the
+   * engine's own best target — nearest, weighted by role, so an elite or a
+   * boss outranks the chaff in front of it (see `TARGET_PRIORITY`).
    */
   aim?: Vec2;
   /**

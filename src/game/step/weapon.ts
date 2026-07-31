@@ -4,7 +4,7 @@
 // projectiles. Part of the step pipeline (see ./index.ts).
 
 import { direction, distanceSq, type Vec2 } from "@game/lib/vec.ts";
-import { AIM, JUMP } from "../config/index.ts";
+import { AIM, JUMP, TARGET_PRIORITY } from "../config/index.ts";
 import { cratesInCone, damageCrate, nearestCrate } from "../crates.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
@@ -38,7 +38,7 @@ import type {
   Player,
   WeaponClass,
 } from "../types/index.ts";
-import { inert, inertEnemy } from "../disposition.ts";
+import { inert } from "../disposition.ts";
 
 /**
  * The character fights autonomously with whatever is in the weapon slot:
@@ -366,6 +366,15 @@ function meleeSweep(
   return { eligible: eligible.length, executed };
 }
 
+/**
+ * THE ONE TARGET PICKER — the BEST reachable foe, not merely the closest.
+ *
+ * Two biases scale a candidate's distance before the pick, and neither is ever
+ * a lock: its ROLE (`TARGET_PRIORITY` — a set piece outranks the chaff standing
+ * in front of it, which is what the hero picks when nobody is pointing) and,
+ * where the player IS pointing, its alignment with that bearing (`AIM`). They
+ * multiply, so an explicit point still beats the heuristic.
+ */
 export function nearestEnemy(
   enemies: Enemy[],
   from: Vec2,
@@ -375,20 +384,31 @@ export function nearestEnemy(
   aim?: Vec2,
 ): Enemy | undefined {
   const rangeSq = range * range;
-  // With a pointer bearing (desktop mouse) the pick is scored by distance
+  // With a pointer bearing (desktop AIM & SHOOT) the pick is scored by distance
   // AND alignment with the cursor, so the aimed-at foe wins over a closer one
-  // off to the side; without it (or a zero bearing) it's the plain nearest.
+  // off to the side; without it (or a zero bearing) the role weight alone
+  // decides between foes the hero can already reach.
   const aimed = aim !== undefined && (aim.x !== 0 || aim.y !== 0);
   let best: Enemy | undefined;
   let bestScore = aimed ? Infinity : rangeSq;
   for (const enemy of enemies) {
     if (view && !insideView(enemy.pos, view)) continue;
-    // Apparitions are never targets — the weapon (and the storm) look
-    // straight through them at the real crowd.
-    if (inertEnemy(enemy)) continue;
+    // Reach first, THEN the def: the two cheap coordinate tests throw away most
+    // of the horde, so the catalog lookup below is paid only for the handful of
+    // bodies actually in range (it answers both the bystander question and the
+    // role weight, so it is read once rather than twice).
     const dSq = distanceSq(from, enemy.pos);
     if (dSq > rangeSq) continue;
-    let score = dSq;
+    const def = enemyDef(enemy.defId);
+    // Apparitions are never targets — the weapon (and the storm) look
+    // straight through them at the real crowd.
+    if (inert(def, enemy)) continue;
+    // The role weight is a multiplier on DISTANCE, so the un-aimed branch —
+    // which scores in squared space to keep the sqrt off the whole horde —
+    // squares it. Both weights are ≤ 1, so a weighted score never climbs past
+    // the `rangeSq` seed above.
+    const weight = TARGET_PRIORITY.roleScale[def.role] ?? 1;
+    let score = dSq * weight * weight;
     if (aimed) {
       const dist = Math.sqrt(dSq);
       // Alignment of the foe's bearing with the cursor's: 1 dead ahead of the
@@ -400,7 +420,7 @@ export function nearestEnemy(
           ? 1
           : ((enemy.pos.x - from.x) * aim.x + (enemy.pos.y - from.y) * aim.y) /
             dist;
-      score = dist * (1 + AIM.biasStrength * (1 - dot) * 0.5);
+      score = dist * (1 + AIM.biasStrength * (1 - dot) * 0.5) * weight;
     }
     // `clear` (line of sight) is checked lazily — only for candidates that
     // would actually win — so its cost scales with improvements, not with

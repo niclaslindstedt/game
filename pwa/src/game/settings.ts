@@ -57,8 +57,12 @@ import {
  * dragging, and ignores this).
  *
  * `hover` (FOLLOW CURSOR): the character chases the cursor, a click uses an
- * item. `aim` (AIM & SHOOT): the keyboard walks the character, the pointer is
- * the aim — the hero favors the foe the cursor points at — and the left button
+ * item — and the cursor NEVER aims there, because a pointer that is already
+ * saying "walk this way" cannot also be read as "shoot that one"; the hero
+ * picks his own best target instead (`nearestEnemy`, which prefers an elite or
+ * a boss over the chaff). `aim` (AIM & SHOOT, the desktop default): the
+ * keyboard walks the character, the pointer is the aim — the hero favors the
+ * foe the cursor points at — and the left button
  * is the trigger; with AUTO-FIRE off the weapon only fires while it is held.
  * `gamepad` (GAMEPAD): the left stick walks, analogue — how far it is pushed is
  * the pace, so the same stick creeps and sprints — and the strike button is the
@@ -488,10 +492,13 @@ function defaults(): GameSettings {
     typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
   return {
-    // Mouse-only (touch always hold-and-drags): cursor-follow out of the
-    // box, with AIM & SHOOT the opt-in scheme — and its trigger autonomous
-    // until AUTO-FIRE is turned off.
-    steering: "hover",
+    // Mouse-only (touch always hold-and-drags, and the row is hidden there):
+    // AIM & SHOOT out of the box on a fine pointer — WASD walks, the pointer
+    // aims — because that is what a desktop player reaches for first, and it
+    // is the one scheme where the keyboard hand and the mouse hand each have a
+    // job. FOLLOW CURSOR stays one press away for anyone who wants it. The
+    // trigger is autonomous until AUTO-FIRE is turned off, either way.
+    steering: touchFirst ? "hover" : "aim",
     autoFire: "on",
     itemUse: "manual",
     // Auto-equip off out of the box — finds bank to the bag so the player

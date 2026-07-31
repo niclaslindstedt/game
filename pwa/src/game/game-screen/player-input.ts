@@ -216,11 +216,20 @@ export function readHumanInput(
 ): void {
   const { state, pointer, camera, viewport, queues, gamepad } = deps;
   const settings = getSettings();
-  // Desktop mouse aim: the pointer adds a second steering dimension —
-  // the hero prefers the foe the cursor points at. Live in every mouse
-  // mode (freed WASD steering, cursor-follow, aim & shoot); touch/pen
-  // never aim, so it stays the plain nearest foe there.
+  // Desktop mouse aim: the pointer adds a second steering dimension — the hero
+  // prefers the foe the cursor points at. AIM & SHOOT ALONE, because that is
+  // the one scheme where the pointer's whole job is to point at something.
+  //
+  // In FOLLOW CURSOR the very same pixel is the hero's DESTINATION, and reading
+  // it as an aim too meant the target flipped to whatever happened to lie along
+  // the walk — a player running past a boss shot the minion he was running
+  // toward. Same for GAMEPAD, where a mouse resting anywhere on screen was
+  // silently steering the pick of a player who is not holding one. Both fall
+  // back to the engine's own best target (`nearestEnemy`), which outranks a
+  // near minion with an elite or a boss — exactly what the player would pick.
+  // Touch/pen never aimed to begin with.
   input.aim =
+    settings.steering === "aim" &&
     pointer.state.pointerType === "mouse" &&
     (pointer.state.hovering || pointer.state.held)
       ? viewport.toWorld(pointer.state.x, pointer.state.y, camera)
