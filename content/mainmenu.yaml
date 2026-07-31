@@ -127,6 +127,14 @@ screens:
       - id: how-to-play
         label: HOW TO PLAY
         icon: icon_menu_help
+      # MULTIPLAYER — Steam builds only (a phone has no listening socket and a
+      # browser tab is not a server). It sits with the PLAY block because it is
+      # a way to play rather than a preference, and below HOW TO PLAY because a
+      # first launch has nobody to play with yet.
+      - id: multiplayer
+        label: MULTIPLAYER
+        icon: icon_menu_cloud
+        opens: multiplayer
       # The coin store — native app builds only (purchases need the platform's
       # own store). Struck out of gold by the builder; no help line, because a
       # row that glitters has already said what it is.
@@ -613,6 +621,115 @@ screens:
     form: menu
     scroll: true
     rows: []
+
+  # =========================================================================
+  # MULTIPLAYER — the three doors of docs/multiplayer-plan.md §2.4, and Steam
+  # builds only.
+  #
+  # HOST and JOIN are two different questions and they are asked on two
+  # different screens, deliberately: hosting is a handful of settings answered
+  # once and then largely forgotten, and joining is a list you look at every
+  # time. A single screen carrying both makes the list the smaller half of a
+  # settings page.
+  # =========================================================================
+  multiplayer:
+    title: MULTIPLAYER
+    parent: main
+    tone: player
+    form: menu
+    rows:
+      - id: host-game
+        label: HOST GAME
+        icon: icon_menu_new
+        help: OPEN YOUR NEXT RUN TO FRIENDS
+        opens: host
+      - id: join-game
+        label: JOIN GAME
+        icon: icon_menu_load
+        help: WATCH A GAME SOMEBODY IS HOSTING
+        opens: sessions
+      - id: join-address
+        label: JOIN BY ADDRESS
+        icon: icon_menu_import
+        help: TYPE THE ADDRESS A HOST GAVE YOU
+        opens: address
+
+  # The session's own settings. A form rather than a list: every row here is a
+  # value, and the one thing it does not carry is the mission — HOST GAME walks
+  # into the ordinary difficulty and level pickers, because a hosted session IS
+  # a run and there is no second way to choose one.
+  host:
+    title: HOST GAME
+    parent: multiplayer
+    tone: player
+    form: settings
+    rows:
+      - id: doors
+        label: OPEN TO
+        help:
+          both: FRIENDS ON STEAM AND ANYBODY WITH YOUR ADDRESS
+          steam: STEAM FRIENDS ONLY - NO PORT TO OPEN
+          direct: ANYBODY WITH YOUR ADDRESS
+      - id: max-players
+        label: PLAYERS
+        help: HOW MANY SEATS THE SESSION HAS - YOURS INCLUDED
+      - id: password
+        label: PASSWORD
+        help:
+          set: JOINERS MUST TYPE IT - PRESS TO CHANGE IT
+          none: ANYBODY WHO FINDS THE GAME CAN WATCH IT
+      # The port the socket TRIES. What it GOT is a different number and is
+      # printed by the session panel in the run (server/net/udp.ts), which is
+      # the rule this row exists to not break.
+      - id: port
+        label: PORT
+        help:
+          direct: THE PORT TO TRY FIRST FOR DIRECT CONNECTIONS
+          steam: NOT USED WHILE ONLY STEAM FRIENDS CAN JOIN
+      # One press, once, and only when the check says a rule is missing. Never
+      # at launch and never without being asked — see the plan's §2.3.
+      - id: firewall
+        label: FIREWALL
+      - id: start
+        label: START A HOSTED GAME
+        icon: icon_swords
+        help: PICK A DIFFICULTY AND A MISSION AS USUAL
+
+  # The browser. Rows come from the lobbies this Steam account can see, so the
+  # screen authors only the two alternates that stand in for an empty list and
+  # the row that refills it.
+  sessions:
+    title: JOIN GAME
+    parent: multiplayer
+    tone: player
+    form: menu
+    scroll: true
+    rows:
+      - id: searching
+        label: LOOKING FOR GAMES...
+      - id: empty
+        label: NO GAMES FOUND
+        help: ONLY GAMES OPEN TO STEAM FRIENDS SHOW UP HERE
+      - id: refresh
+        label: REFRESH
+        icon: icon_menu_resume
+
+  # The typed door. The list is the addresses this device has joined before —
+  # a LAN party is one press after the first time — and the row above it is
+  # where a new one is typed.
+  address:
+    title: JOIN BY ADDRESS
+    parent: multiplayer
+    tone: player
+    form: menu
+    scroll: true
+    rows:
+      - id: enter
+        label: TYPE AN ADDRESS
+        icon: icon_menu_import
+        help: HOST AND PORT - LIKE 192.168.1.42:27015
+      - id: empty
+        label: NOTHING JOINED YET
 
   # =========================================================================
   # MODS — every installed mod in LOAD ORDER, and the way into them. Steam

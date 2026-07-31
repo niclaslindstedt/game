@@ -68,6 +68,7 @@ export type NetRequest = {
     | "status"
     | "browse"
     | "join"
+    | "connect"
     | "firewall"
     | "allow-firewall";
   requestId?: number;
@@ -87,6 +88,11 @@ export type NetRequest = {
   name?: string;
   /** `join`: the lobby id. */
   lobbyId?: string;
+  /** `connect`: where to, and as whom. One of `address` (typed, or copied out
+   * of a browser row) or `peer` (a Steam id a `join` just handed back). */
+  address?: string;
+  peer?: string;
+  playerName?: string;
 };
 
 /** An event to inject back into the page (see the web bridge's protocol). */
@@ -123,6 +129,13 @@ export type NetEvent =
     }
   | { event: "browse"; requestId: number; ok: boolean; rows: LobbyRow[] }
   | {
+      event: "connected";
+      requestId: number;
+      ok: boolean;
+      reason?: string;
+      detail?: string;
+    }
+  | {
       event: "joined";
       requestId: number;
       ok: boolean;
@@ -153,6 +166,13 @@ const REPLY_TIMEOUT_MS = 15_000;
  * the router half is deliberately not waited on inside the server — but a
  * `listen` still has more to do than a `status`. */
 const LISTEN_TIMEOUT_MS = 20_000;
+
+/** …and a JOIN has more to do than either: probe an address that may not
+ * answer, then wait out a level being built on somebody else's machine. The
+ * connector's own deadlines are what usually settle it (six seconds of probing,
+ * fifteen for a welcome); this only has to outlast their sum, so that a refusal
+ * the player can read beats a timeout they cannot. */
+const CONNECT_TIMEOUT_MS = 25_000;
 
 export function createNetBridge(
   window: BrowserWindow,
@@ -291,6 +311,10 @@ export function createNetBridge(
         void join(requestId, request.lobbyId);
         return;
       }
+      if (request.action === "connect") {
+        void connect(requestId, request);
+        return;
+      }
       if (
         request.action === "firewall" ||
         request.action === "allow-firewall"
@@ -343,6 +367,70 @@ export function createNetBridge(
     } catch (err) {
       output.error(`could not host a session: ${String(err)}`);
       emit({ event: "hosted", requestId, ok: false, reason: String(err) });
+    }
+  }
+
+  /**
+   * JOIN somebody else's session — the mirror of `startSession`, and
+   * deliberately the same three moves: fork, mint the port, hand one end to
+   * each side.
+   *
+   * The renderer gets a port and a session's frames come down it; whether the
+   * process behind it is simulating (a host) or piping (a joiner) is not
+   * something the page is ever told, because nothing it does depends on it.
+   *
+   * The STEAM path needs the pump on this side for the reason the host path
+   * does: `steamworks.init()` is a global handshake this process owns, so a
+   * relayed peer's packets have to come through here whichever end of the
+   * connection we are.
+   */
+  async function connect(
+    requestId: number,
+    request: NetRequest,
+  ): Promise<void> {
+    try {
+      const running = ensureHost();
+      if (request.peer) {
+        steam = createSteamP2P({
+          onPacket: (from, data) =>
+            running.send({ kind: "peer", from, data: [...data] }),
+          onPeerLost: (from, reason) =>
+            running.send({ kind: "peer-lost", from, reason }),
+        });
+      }
+      const channel = new MessageChannelMain();
+      running.givePort(channel.port1, {
+        kind: "connect",
+        address: request.address,
+        peer: request.peer,
+        name: request.playerName ?? "PLAYER",
+        password: request.password,
+        mods: request.mods,
+      });
+      window.webContents.postMessage(NET_PORT_CHANNEL, null, [channel.port2]);
+      const reply = await await_("connected", CONNECT_TIMEOUT_MS);
+      if (reply?.kind === "connected" && reply.ok) {
+        emit({ event: "connected", requestId, ok: true });
+        return;
+      }
+      // A refused join leaves nothing worth keeping alive: the process holds no
+      // session, and a second attempt forks a fresh one anyway.
+      closeDoors();
+      host?.stop();
+      host = null;
+      emit({
+        event: "connected",
+        requestId,
+        ok: false,
+        reason:
+          reply?.kind === "connected"
+            ? (reply.reason ?? "no-session")
+            : "no-reply",
+        detail: reply?.kind === "connected" ? reply.detail : undefined,
+      });
+    } catch (err) {
+      output.error(`could not join a session: ${String(err)}`);
+      emit({ event: "connected", requestId, ok: false, reason: String(err) });
     }
   }
 

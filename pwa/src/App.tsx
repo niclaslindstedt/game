@@ -18,8 +18,10 @@ import {
   loadCharacters,
   resumeTargetFor,
   setActiveCharacterId,
+  spectatorCharacter,
   type Character,
 } from "./game/characters.ts";
+import type { JoinIntent } from "./game/session-intent.ts";
 import { DEMO_DIFFICULTY, DEMO_LEVEL_ID } from "./game/demo.ts";
 import { LoadGame } from "./game/LoadGame.tsx";
 import { NewGame } from "./game/NewGame.tsx";
@@ -111,6 +113,18 @@ export function App() {
   // re-renders during the demo don't mint a new shell hero underneath it.
   const [demo, setDemo] = useState(false);
   const demoHero = useMemo(() => (demo ? demoCharacter() : null), [demo]);
+
+  // JOINING somebody else's session (Steam builds only): the run on screen is
+  // theirs and this player is watching it. It stands apart from `run` exactly
+  // as the demo does — its own throwaway hero, no parked-run bookkeeping,
+  // nothing banked — because none of what happens in it belongs to this
+  // roster. Memoised so an App re-render mid-session does not mint a second
+  // hero (and, through the prop identity, reconnect).
+  const [join, setJoin] = useState<JoinIntent | null>(null);
+  const joinHero = useMemo(
+    () => (join ? spectatorCharacter(join.name) : null),
+    [join],
+  );
 
   // The pending run: the difficulty and starting level chosen on the menu.
   // null = still on the menu (or roster).
@@ -357,6 +371,33 @@ export function App() {
     );
   }
 
+  // A session is being watched. Before the active hero's own run, like the demo
+  // above and for the same reason: it belongs to neither the roster nor the
+  // parked run, and leaving it drops the connection and nothing else.
+  if (join && joinHero) {
+    return (
+      <ErrorBoundary
+        fallback={<RunLoadError />}
+        onError={(e) => warn(`session failed: ${String(e)}`)}
+      >
+        <Suspense fallback={null}>
+          <GameScreen
+            character={joinHero}
+            // The level and difficulty a joined run plays are the HOST's, and
+            // they arrive with the welcome — these two are the shape the props
+            // require, read by nothing on this path (`createRunSession` adopts
+            // the state the session sent rather than building one).
+            difficulty="easy"
+            levelId={DEMO_LEVEL_ID}
+            join={join}
+            onExitToMenu={() => setJoin(null)}
+            onQuit={() => setJoin(null)}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
   // A run is playing: hand it to the active hero. (`character` is always set
   // when `run` is — a run can only be started from the title screen, which
   // needs a character.)
@@ -526,6 +567,10 @@ export function App() {
           setPicking("play");
         }}
         onHowToPlay={() => setDemo(true)}
+        // JOIN GAME / JOIN BY ADDRESS: watch somebody else's session. It never
+        // touches the parked run — a player who ducks out of their own game to
+        // watch a friend's comes back to their own exactly where it was.
+        onJoin={setJoin}
         startOnDifficulty={startOnDifficulty}
         onResume={
           // CONTINUE is the active hero's alone: only offer it when a hero is

@@ -62,6 +62,7 @@ import {
   STEAM_APP_ID,
   STEAM_ENABLED,
 } from "./config";
+import { readInvite, type Invite } from "./net-invite";
 import { output } from "./output";
 import { SHELL_CHANNEL } from "./preload";
 import { steamClient } from "./steam";
@@ -274,6 +275,11 @@ function createWindow(): BrowserWindow {
 
   window.once("ready-to-show", () => window.show());
 
+  // The parked invite goes over as soon as the page can receive it — on every
+  // load, so a reload mid-session does not strand a player who was invited a
+  // second ago. `deliverInvite` consumes it, so the second load is a no-op.
+  window.webContents.on("did-finish-load", () => deliverInvite(window));
+
   // Persist geometry on the way out. Read the NORMAL bounds rather than the
   // current ones: a maximized window reports the screen rect, and restoring
   // that as its un-maximized size leaves the player unable to get a small
@@ -332,10 +338,35 @@ function createWindow(): BrowserWindow {
 // Lifecycle
 // ---------------------------------------------------------------------------
 
-app.on("second-instance", () => {
+/** An invite read off a command line and waiting for a page to hand it to. */
+let pendingInvite: Invite | null = null;
+
+/**
+ * Hand the page whatever invite is parked, once.
+ *
+ * Down the NET bridge's own event channel rather than a new one: the page's
+ * half already exists and already knows how to reach the JOIN path, and a
+ * second channel for one message would be a second thing to keep in step.
+ */
+function deliverInvite(window: BrowserWindow): void {
+  if (!pendingInvite) return;
+  const invite = pendingInvite;
+  pendingInvite = null;
+  emit(window, "__gisNetEvent", { event: "invite", ...invite });
+}
+
+app.on("second-instance", (_event, argv) => {
   if (!mainWindow) return;
   if (mainWindow.isMinimized()) mainWindow.restore();
   mainWindow.focus();
+  // STEAM HANDS THE INVITE TO THE SECOND INSTANCE, which is about to exit —
+  // this is the ONLY place a friend's "accept" reaches a game that is already
+  // running, and dropping it here is the difference between a join and
+  // nothing at all.
+  const invite = readInvite(argv);
+  if (!invite) return;
+  pendingInvite = invite;
+  deliverInvite(mainWindow);
 });
 
 void app.whenReady().then(() => {
@@ -362,6 +393,11 @@ void app.whenReady().then(() => {
     const from = BrowserWindow.fromWebContents(event.sender);
     if (from) routeMessage(from, message);
   });
+
+  // `+connect_lobby <id>` (a friend accepted an invite while the game was
+  // closed) or `--connect <address>` (a shareable link). It arrives before the
+  // window exists, so it is parked and delivered on the page's first load.
+  pendingInvite = readInvite(process.argv);
 
   mainWindow = createWindow();
 

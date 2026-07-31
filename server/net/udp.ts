@@ -114,7 +114,15 @@ export function createUdpTransport(
       for (let port = first; port <= last; port++) {
         try {
           socket = await bindOnce(port, options.host);
-          bound = { address: options.host ?? localAddress(), port };
+          // THE PORT THE SOCKET GOT, read off the socket rather than off the
+          // loop variable — which are the same number for a host walking the
+          // range, and are not for a JOINER, who asks for port 0 and is given
+          // an ephemeral one. Reading the request back would have reported a
+          // client bound "on port 0".
+          bound = {
+            address: options.host ?? localAddress(),
+            port: socket.address().port,
+          };
           socket.on("message", (data, rinfo) => {
             const key = keyFor(rinfo.address, rinfo.port);
             peerFor(key).receive(new Uint8Array(data));

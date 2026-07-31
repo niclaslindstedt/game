@@ -315,6 +315,19 @@ html.app-locked body {
   color: #7a8088;
 }
 
+/* CONNECTING to somebody else's session, and the refusal it can end in. The
+   loading screen's own frame with a column of lines in it: the wait here is
+   long enough (a probe, a handshake, a level built on another machine) that it
+   has to say WHO is being reached, and short of that, WHY it did not work. */
+.net-connecting {
+  grid-auto-flow: row;
+  align-content: center;
+  justify-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
 /* The FPS meter (DEBUG MODE / ?debug, see GameScreen `showFps`): a quiet
    bottom-center readout the render loop writes into directly. Framed like
    the HUD units so it reads as family, small enough to never crowd play. */
@@ -4280,6 +4293,43 @@ html.app-locked body {
 
 .pixel-input-field::selection {
   background: transparent;
+}
+
+/* A value the field can already tell is wrong (an address that does not parse):
+   said HERE, while the player is still looking at what they typed, rather than
+   ten seconds later as "could not connect". */
+.pixel-input.invalid {
+  border-color: #ff6d6d;
+}
+
+/* THE ONE LINE OF TEXT THE MENU ASKS FOR — a session password, a port, an
+   address. A modal over the whole title screen, because while it is up the
+   arrow keys belong to the field rather than to the row list under it (the
+   gamepad reaches every menu by dispatching those very keys). */
+.pixel-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 8, 11, 0.82);
+}
+
+.pixel-prompt-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: min(90vw, 26rem);
+  padding: 1.4rem;
+  box-sizing: border-box;
+  background: #10141a;
+  border: 3px solid #2a3442;
+  box-shadow: 0 0 0 3px #0b0d10;
+}
+
+.pixel-prompt-box .pixel-input {
+  width: 100%;
 }
 
 .character-toggle {
@@ -11610,4 +11660,100 @@ canvas.tier-artifact {
       opacity: 0;
     }
   }
+}
+
+/* ---------------------------------------------------------------------------
+   THE SESSION'S CHAT (overlays/ChatOverlay.tsx)
+
+   BOTTOM LEFT, and that is a rule rather than a taste: the reference device is
+   a phone held in landscape and the right-hand third of it is where the
+   steering thumb lives, so a scrollback over there would be a scrollback the
+   player's own hand covers — and every line of it a tap the hero did not take.
+   The log is pointer-transparent for the same reason; only the raised field
+   takes a press.
+   --------------------------------------------------------------------------- */
+.chat-overlay {
+  position: absolute;
+  left: max(0.6rem, env(safe-area-inset-left));
+  /* Above the bottom docks (the powerup / consumable stacks), measured on the
+     reference landscape phone and in rem so it rides the large-screen root
+     font bump with the rest of the HUD. */
+  bottom: calc(max(0.6rem, env(safe-area-inset-bottom)) + 5.6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  max-width: min(52vw, 26rem);
+  pointer-events: none;
+  z-index: 6;
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.25rem 0.4rem;
+  background: rgba(11, 13, 16, 0.42);
+  border-left: 2px solid rgba(126, 240, 200, 0.5);
+  border-radius: 3px;
+}
+
+/* The raised field is the one part that takes the pointer — it has a caret in
+   it, and a text box you cannot tap is a text box on a phone nobody can use. */
+.chat-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: min(52vw, 26rem);
+  pointer-events: auto;
+}
+
+.chat-field .pixel-input {
+  flex: 1;
+  min-height: 1.8rem;
+  padding: 0.2rem 0.4rem;
+}
+
+.chat-field .pixel-caret {
+  width: 0.4rem;
+  height: 0.8rem;
+}
+
+/* THE SESSION PANEL (game-screen/SessionPanel.tsx) — the live status rows on
+   the pause screen. A column of label/value pairs in the pause menu's own dark
+   plate, so it reads as part of the screen it hangs under rather than as a
+   dialog on top of it. */
+.session-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: min(90vw, 30rem);
+  padding: 0.6rem 0.8rem;
+  box-sizing: border-box;
+  background: rgba(11, 13, 16, 0.6);
+  border: 3px solid #2a3442;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+/* The COPY button beside an address. Small, quiet, and its own affordance: an
+   address a player has to read off the screen and type into a phone is an
+   address half of them will mistype. */
+.session-copy {
+  appearance: none;
+  background: none;
+  border: 2px solid #2a3442;
+  border-radius: 3px;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+}
+
+.session-copy:hover {
+  border-color: #7ef0c8;
 }

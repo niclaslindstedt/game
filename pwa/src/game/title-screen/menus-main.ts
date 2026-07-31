@@ -79,6 +79,11 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
           before: () => ctx.setNotice(null),
         })
       : null,
+    // MULTIPLAYER — Steam builds only, and with the PLAY block rather than
+    // under SETTINGS: hosting a game and joining one are ways to play, not
+    // preferences. Absent rather than dead everywhere else — a phone has no
+    // listening socket and a browser tab is not a server.
+    multiplayer: ctx.netOpen ? navRow(ctx, "main", "multiplayer") : null,
     // MODS — the player's own content, and other people's. Not shiny: the
     // store row's struck gold says "spend money here", which is exactly the
     // wrong thing to say about a free Workshop.

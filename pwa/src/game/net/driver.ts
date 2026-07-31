@@ -32,15 +32,21 @@ import type { GameState } from "@game/core";
 import { engineVersion } from "@game/core";
 
 import {
+  connectSession,
   hostSession,
+  listenSession,
   netBridgeAvailable,
   onSessionPort,
   stopSession,
+  type ConnectOptions,
+  type ListenOptions,
 } from "../../app/net-bridge.ts";
 import type { SessionParams } from "@game/wire/protocol.ts";
 import { setCommandSink } from "../run-commands.ts";
 import type { RunDriver } from "../game-screen/run-driver.ts";
-import { createNetClient, type ClientTransport } from "./client.ts";
+import { createNetClient } from "./client.ts";
+import { portTransport } from "./port-transport.ts";
+import { createSessionLink } from "./session-link.ts";
 
 export type NetDriverOptions = {
   /** The run this renderer already built, and the object the loop reads. */
@@ -58,6 +64,15 @@ export type NetDriverOptions = {
   adopt?: unknown | null;
   /** The mods this run has applied, in load order. */
   mods?: string[];
+  /**
+   * Open the doors once the session is up, and on which of them.
+   *
+   * Absent for every ordinary run, which is the common case and the reason
+   * this is separate from hosting at all: a single-player game on Steam still
+   * simulates in the session process, and it must not bind a socket, ask a
+   * router for a mapping or advertise a lobby for that.
+   */
+  listen?: ListenOptions & { password?: string; maxClients?: number };
   /** The session ended under us — a crashed fork, a refused handshake. The run
    * loop has no state to fall back to, so the caller decides what to say. */
   onClosed?: (reason: string, detail?: string) => void;
@@ -78,6 +93,8 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
   let client: ReturnType<typeof createNetClient> | null = null;
   let live = false;
   let disposed = false;
+  // The HOST steers the hero, so its own seat is not a spectator's.
+  const link = createSessionLink((text) => client?.sendChat(text), false);
 
   // REGISTERED BEFORE THE HOST REQUEST, ALWAYS. The shell hands the port over
   // with the same message that starts the session, so a listener installed
@@ -97,6 +114,8 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
         live = false;
         options.onClosed?.(reason, detail);
       },
+      onChat: (lines) => link.receive(lines),
+      onRoster: (entries) => link.seat(entries),
     });
     // FROM HERE THE APP'S VERBS TRAVEL. `run-commands.ts` still applies each
     // one locally as well — the call sites read what a verb returned, and a
@@ -109,13 +128,23 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
     params: options.params,
     adopt: options.adopt ?? undefined,
     mods: options.mods,
+    password: options.listen?.password,
+    maxClients: options.listen?.maxClients,
   }).then((result) => {
-    if (!result.ok && !disposed) {
-      options.onClosed?.("error", result.reason);
+    if (!result.ok) {
+      if (!disposed) options.onClosed?.("error", result.reason);
+      return;
     }
+    // THE DOORS OPEN AFTER THE SESSION IS UP, and are their own round trip:
+    // binding a socket, advertising a lobby and asking a router are all things
+    // that can fail without stopping a run, and a player whose port was busy
+    // should be told that while playing rather than instead of playing.
+    if (!options.listen || disposed) return;
+    void listenSession(options.listen);
   });
 
   return {
+    session: link.link,
     advance(input) {
       // No stepping here, ever. The server owns the clock; this hands over what
       // the player did and the next snapshot says what came of it.
@@ -149,31 +178,109 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
   };
 }
 
+export type JoinDriverOptions = ConnectOptions & {
+  /**
+   * The session welcomed us and the world is built.
+   *
+   * THE STATE ARRIVES HERE AND NOWHERE ELSE, which is the difference between
+   * this and the host path in one line: a host already holds the run its own
+   * setup built, and a joiner has nothing at all until the welcome lands. The
+   * run loop is what waits — see `GameScreen`'s join gate.
+   */
+  onReady(state: GameState, params: SessionParams): void;
+  /** The join was refused, or the session ended. */
+  onClosed?: (reason: string, detail?: string) => void;
+};
+
 /**
- * A `ClientTransport` over the shell's `MessagePort`.
+ * JOIN a session and watch it — the driver a spectator runs.
  *
- * The buffer is TRANSFERRED rather than copied — it is the whole reason the
- * frames travel on their own port instead of down the JSON control channel,
- * and at twenty snapshots a second the copy would be the most expensive thing
- * in the feature.
+ * It is the host driver with two things removed and one added. Removed: the
+ * `hostSession` call (somebody else is simulating) and the `adopt` (there is no
+ * local run to correct — `createNetClient` builds the world from the welcome's
+ * parameters, which is the ordinary path its static tier was designed for).
+ * Added: the state has to be handed OUT, because nothing in this process built
+ * it.
+ *
+ * The command sink is installed NON-OPTIMISTICALLY. A spectator's verbs are
+ * refused by the session (`session.receive` — the one place a client cannot
+ * argue), so applying them to the local replica would edit somebody else's hero
+ * on this screen alone. They still travel, because the day PR 3 seats a second
+ * hero they stop being refused.
  */
-function portTransport(port: MessagePort): ClientTransport {
-  let onFrame: ((frame: ArrayBuffer) => void) | null = null;
-  port.onmessage = (event: MessageEvent) => {
-    const data = event.data as ArrayBuffer | undefined;
-    if (data instanceof ArrayBuffer) onFrame?.(data);
-  };
-  port.start();
+export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
+  if (!netBridgeAvailable()) return null;
+
+  let client: ReturnType<typeof createNetClient> | null = null;
+  let state: GameState | null = null;
+  let live = false;
+  let disposed = false;
+  const link = createSessionLink((text) => client?.sendChat(text), true);
+
+  // BEFORE the connect request, for the same reason the host path registers
+  // before hosting: the shell hands the port over with the message that starts
+  // the work, and a listener installed afterwards misses the welcome.
+  onSessionPort((port) => {
+    if (disposed) return;
+    client = createNetClient({
+      transport: portTransport(port),
+      build: engineVersion,
+      mods: options.mods,
+      onReady: (ready, params) => {
+        state = ready;
+        live = true;
+        options.onReady(ready, params);
+      },
+      onClosed: (reason, detail) => {
+        live = false;
+        options.onClosed?.(reason, detail);
+      },
+      onChat: (lines) => link.receive(lines),
+      onRoster: (entries) => link.seat(entries),
+    });
+    setCommandSink((name, args) => client?.sendCommand(name, args), {
+      optimistic: false,
+    });
+  });
+
+  void connectSession({
+    address: options.address,
+    peer: options.peer,
+    name: options.name,
+    password: options.password,
+    mods: options.mods,
+  }).then((result) => {
+    if (result.ok || disposed) return;
+    options.onClosed?.(result.reason, result.detail);
+  });
+
   return {
-    send(frame) {
-      port.postMessage(frame, [frame]);
+    session: link.link,
+    advance(input) {
+      // Sent even though the session refuses it today: a spectator's steering
+      // is dropped at the one place that may drop it, and the day PR 3 seats a
+      // second hero this line is already right.
+      if (!live) return;
+      client?.sendInput(input);
     },
-    onFrame(listener) {
-      onFrame = listener;
+    endTick() {
+      if (state?.events.length) state.events.length = 0;
     },
-    close() {
-      port.onmessage = null;
-      port.close();
+    get live() {
+      return live;
+    },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      live = false;
+      setCommandSink(null);
+      client?.dispose();
+      client = null;
+      state = null;
+      // The same `stop` a host sends: it is the session PROCESS being asked to
+      // go away, and in the joiner role that process is holding a socket rather
+      // than a simulation.
+      void stopSession();
     },
   };
 }

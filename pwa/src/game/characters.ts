@@ -470,6 +470,33 @@ export function demoCharacter(): Character {
 }
 
 /**
+ * The hero a SPECTATOR carries into somebody else's session.
+ *
+ * The same trick the demo hero above rests on, for the same reason and one
+ * machine further away: the run on screen is not this player's, so every
+ * `persist()` over it must be a no-op. A watcher whose roster grew a level
+ * clear, a banked loadout or a hardcore death out of a game they only watched
+ * would be the worst kind of bug — silent, permanent, and other people's.
+ *
+ * The NAME is the player's own, because it is what the roster and every chat
+ * line in the session call them.
+ */
+export function spectatorCharacter(name: string): Character {
+  return {
+    id: "__spectator__",
+    name,
+    hardcore: false,
+    createdAt: 0,
+    dead: false,
+    loadout: null,
+    clears: [],
+    beaten: [],
+    storySeen: [],
+    merchantsMet: [],
+  };
+}
+
+/**
  * Mint a DEVELOPER seed character (see seed-characters.ts): a softcore hero
  * dropped in with a pre-built `loadout` and stamped as having already BEATEN
  * `beaten` (so every listed difficulty's level picker is open and the ladder

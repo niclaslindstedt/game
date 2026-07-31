@@ -42,6 +42,7 @@ import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
 import type { Character } from "./characters.ts";
+import type { JoinIntent } from "./session-intent.ts";
 import {
   mouseButtonCode,
   wheelCode,
@@ -60,6 +61,7 @@ import {
   type MenuContext,
   type MenuEntry,
   type MenuScreen,
+  type PromptSpec,
   type TitleNotice,
 } from "./title-screen/menu-model.ts";
 import {
@@ -76,6 +78,8 @@ import { useCoinStore } from "./title-screen/use-coin-store.ts";
 import type { InstalledMod } from "../app/mods-bridge.ts";
 import type { ModBundle } from "./mod-state.ts";
 import { useMods } from "./title-screen/use-mods.ts";
+import { useSessions } from "./title-screen/use-sessions.ts";
+import { PixelPrompt } from "./title-screen/PixelPrompt.tsx";
 import {
   useHelpWrapRem,
   useMenuOverflow,
@@ -122,6 +126,7 @@ export function TitleScreen({
   onLoadGame,
   onHowToPlay,
   onCharacterChange,
+  onJoin,
   startOnDifficulty = false,
 }: {
   /** The active hero, or null when none is selected yet (the menu still opens
@@ -155,6 +160,9 @@ export function TitleScreen({
   /** Mount straight on the difficulty ladder (set when returning from the
    * roster via PLAY) instead of the main menu. */
   startOnDifficulty?: boolean;
+  /** Go and watch somebody else's session (JOIN GAME / JOIN BY ADDRESS). The
+   * menu never connects: joining is a RUN, and a run belongs to the app. */
+  onJoin: (intent: JoinIntent) => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [screen, setScreen] = useState<MenuScreen>(
@@ -396,6 +404,20 @@ export function TitleScreen({
     setNotice: setTransferNotice,
     onPlayMods,
   });
+  // MULTIPLAYER (Steam builds only): the lobby list, the firewall check, and
+  // the persisted session settings the HOST screen writes through.
+  const { netOpen, net } = useSessions({
+    screen,
+    // A player is known in a session by the hero they came with; with no hero
+    // picked yet the roster is one press away and the name is a placeholder
+    // nothing is stored under.
+    heroName: character?.name ?? "PLAYER",
+    onJoin,
+  });
+  // The one line of text the menu ever asks for — a password, a port, an
+  // address. Held here rather than inside a screen because it is a MODAL over
+  // the whole menu: while it is up the arrow keys belong to the field.
+  const [prompt, setPrompt] = useState<PromptSpec | null>(null);
   // WHOSE GAME THIS IS. A total conversion may bring its own name and tagline
   // (`ModBundle.brand`), and this is the only surface that wears it: the
   // storage prefix, the precache id, the character archive's game name and
@@ -455,6 +477,9 @@ export function TitleScreen({
       pickImport,
       beginExportPicker,
       runSeed,
+      prompt: setPrompt,
+      netOpen,
+      net,
       modsOpen,
       mods,
       storeOpen,
@@ -511,6 +536,8 @@ export function TitleScreen({
     pickImport,
     beginExportPicker,
     runSeed,
+    netOpen,
+    net,
     modsOpen,
     mods,
     storeOpen,
@@ -886,6 +913,17 @@ export function TitleScreen({
             </p>
           )}
         </div>
+      )}
+
+      {/* The one line of text the menu ever asks for — a session password, a
+          port, an address to join. A modal over everything, because while it is
+          up the arrow keys belong to the field rather than to the row list. */}
+      {prompt && (
+        <PixelPrompt
+          font={font}
+          spec={prompt}
+          onClose={() => setPrompt(null)}
+        />
       )}
 
       {/* The ACHIEVEMENTS browser: a full-screen overlay over the menu,

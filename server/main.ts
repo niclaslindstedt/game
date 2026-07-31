@@ -20,6 +20,14 @@
 // ONE PROCESS PER SESSION, not per app: PR 5's dedicated server runs several,
 // and one process per session is what makes that free.
 //
+// **AND IT HAS TWO ROLES, WHICH IS ONE FORK AND ONE PORT EITHER WAY.** `start`
+// makes this process a HOST: it simulates, and the renderer at the other end of
+// the `MessagePort` is its first client. `connect` makes it a JOINER: nothing
+// simulates here, a socket is opened outward, and the same port carries
+// somebody else's frames to the same renderer. The page's client cannot tell
+// the two apart — it speaks frames to a port — which is exactly why joining
+// cost one small module (`net/connect.ts`) rather than a second client.
+//
 // **SNAPSHOTS DO NOT TRAVEL DOWN THE CONTROL CHANNEL.** The four existing
 // bridges move a handful of JSON round trips per session; this one moves a
 // snapshot twenty times a second, and routing that through the main process's
@@ -29,12 +37,15 @@
 // directly, with the `ArrayBuffer` transferred rather than copied. The control
 // channel carries only lifecycle: start, stop, status.
 
+import { lookup } from "node:dns/promises";
+
 import { engineVersion, type FrozenRun } from "@game/core";
 
+import { createJoinLink, type JoinLink } from "./net/connect.ts";
 import { createPeerHub, type PeerHub } from "./net/hub.ts";
 import { createRelayTransport, type RelayTransport } from "./net/relay.ts";
 import type { Bound, SendMode } from "./net/transport.ts";
-import { createUdpTransport } from "./net/udp.ts";
+import { createUdpTransport, keyFor } from "./net/udp.ts";
 import {
   behindNat,
   createPortMapper,
@@ -42,11 +53,14 @@ import {
   type PortMapper,
 } from "./net/upnp.ts";
 import { createSession, type Session } from "./session.ts";
-import { decodeFrame } from "./wire/codec.ts";
+import { parseAddress } from "./wire/address.ts";
+import { decodeFrame, encodeFrame } from "./wire/codec.ts";
 import {
+  FRAME,
   MAX_CLIENTS,
   PROTOCOL_VERSION,
   TICK_MS,
+  type ByePayload,
   type RosterEntry,
   type SessionParams,
 } from "./wire/protocol.ts";
@@ -69,6 +83,25 @@ type ControlMessage =
   /** Open the doors. `port` is what to TRY; what was got comes back in the
    * reply, and the two are not the same thing — see `net/udp.ts`. */
   | { kind: "listen"; port?: number; udp?: boolean; steam?: boolean }
+  /**
+   * The OTHER direction: this process is a JOINER rather than a host.
+   *
+   * The same fork, the same `MessagePort` to the renderer, the same frames on
+   * it — only nothing simulates here and the bytes come off a socket instead of
+   * out of a session. That symmetry is the whole reason the page's `NetClient`
+   * needs no join-specific code: it speaks to a port either way.
+   */
+  | {
+      kind: "connect";
+      /** `host:port` as the player typed it, for the direct path. */
+      address?: string;
+      /** A relayed peer key (a Steam id) instead, with the shell pumping. */
+      peer?: string;
+      name: string;
+      password?: string;
+      /** This client's mods, in load order — the host refuses a mismatch. */
+      mods?: string[];
+    }
   /** One packet the shell pumped off the Steam P2P queue. */
   | { kind: "peer"; from: string; data: ArrayBuffer | Uint8Array | number[] }
   /** The shell says a relayed peer has gone. */
@@ -101,6 +134,11 @@ type ControlReply =
       build: string;
       detail?: string;
     }
+  /** The join settled: admitted, or refused with the host's own reason. One
+   * reply per `connect`, and never a second — a session that ends AFTER
+   * admission is reported to the page as a `bye` frame down the port, because
+   * that is the surface the player is looking at. */
+  | { kind: "connected"; ok: boolean; reason?: string; detail?: string }
   /** One packet for the shell to put on the Steam P2P queue. */
   | { kind: "peer-send"; to: string; data: number[]; mode: SendMode }
   /** The session asked for the platform's invite panel. */
@@ -145,6 +183,11 @@ let relay: RelayTransport | null = null;
 let mapper: PortMapper | null = null;
 let bound: Bound | null = null;
 let steamOpen = false;
+/** Set only in the JOINER role, and mutually exclusive with `session`: this
+ * process either simulates a run or carries somebody else's, never both. */
+let link: JoinLink | null = null;
+let linkTimer: ReturnType<typeof setInterval> | null = null;
+let admitted = false;
 
 /**
  * The session's challenge secret, minted once per process.
@@ -183,6 +226,15 @@ if (parent) {
 function attachClient(port: ClientPort): void {
   clientPort = port;
   port.on?.("message", (event) => {
+    // IN THE JOINER ROLE THE PORT IS A PIPE, and the bytes are passed on
+    // UNREAD. There is nothing here entitled to an opinion about them: the
+    // session that will act on them is on another machine, and decoding them
+    // twice would only add a second place for the two ends to disagree about
+    // what a frame is.
+    if (link) {
+      link.send(new Uint8Array(event.data as ArrayBuffer));
+      return;
+    }
     // Client → server. Nothing here reaches the simulation directly: the frame
     // is decoded, refused if it is not one, and handed to the session, which
     // owns what an input may do. That layering is what PR 5's hardening hangs
@@ -270,6 +322,10 @@ function handleControl(
       void openDoors(message, reply);
       return;
     }
+    if (message.kind === "connect") {
+      void joinSession(message, reply);
+      return;
+    }
     if (message.kind === "peer") {
       relay?.accept({ from: message.from, data: toBytes(message.data) });
       return;
@@ -355,6 +411,132 @@ async function openDoors(
   }
 }
 
+/**
+ * JOIN somebody else's session: the other role this process can be forked into.
+ *
+ * Nothing simulates here. The renderer's `NetClient` builds the world from the
+ * welcome and this end is a pipe with a handshake in front of it — which is why
+ * the whole joiner is one small module (`net/connect.ts`) plus this function,
+ * rather than a second copy of the session.
+ *
+ * **THE ADDRESS IS RESOLVED BEFORE THE SOCKET IS TOUCHED.** A peer key is the
+ * string a transport names one peer by, and `node:dgram` reports arrivals by
+ * IP — so a link keyed on the hostname the player typed would send fine and
+ * then drop every packet that came back as a stranger's. Resolving here also
+ * turns "that name does not exist" into an immediate, legible refusal instead
+ * of six seconds of probing.
+ */
+async function joinSession(
+  message: ControlMessage & { kind: "connect" },
+  reply: (event: ControlReply) => void,
+): Promise<void> {
+  stop("restarted");
+  admitted = false;
+  let transport: RelayTransport | ReturnType<typeof createUdpTransport>;
+  let peerKey: string;
+  if (message.peer) {
+    relay = createRelayTransport((to, data, mode) => {
+      post({ kind: "peer-send", to, data: [...data], mode });
+    });
+    steamOpen = true;
+    transport = relay;
+    peerKey = message.peer;
+  } else {
+    const target = parseAddress(message.address);
+    if (!target) {
+      reply({ kind: "connected", ok: false, reason: "bad-address" });
+      return;
+    }
+    let address: string;
+    try {
+      address = (await lookup(target.host)).address;
+    } catch {
+      reply({
+        kind: "connected",
+        ok: false,
+        reason: "no-session",
+        detail: `COULD NOT FIND ${target.host.toUpperCase()}`,
+      });
+      return;
+    }
+    // Port 0: a joiner asks the OS for whatever is free rather than walking the
+    // host range. Binding 27015 here would take the port a session on this very
+    // machine wants to host on, which is how "I can join but not host" happens.
+    transport = createUdpTransport({ port: 0, maxPort: 0, now });
+    peerKey = keyFor(address, target.port);
+  }
+  let settled = false;
+  const settle = (event: ControlReply): void => {
+    if (settled) return;
+    settled = true;
+    reply(event);
+  };
+  link = createJoinLink({
+    transport,
+    host: peerKey,
+    handshake: {
+      protocol: PROTOCOL_VERSION,
+      build: engineVersion,
+      mods: message.mods ?? [],
+    },
+    name: message.name,
+    password: message.password,
+    now,
+    deliver: (frame) => {
+      // A COPY, because the renderer's end takes ownership: the buffer is
+      // transferred, and handing over a view onto the socket's own scratch
+      // would neuter memory the transport is still holding.
+      const copy = frame.slice().buffer;
+      clientPort?.postMessage(copy, [copy]);
+    },
+    onAdmitted: () => {
+      admitted = true;
+      settle({ kind: "connected", ok: true });
+    },
+    onClosed: (reason, detail) => {
+      // AFTER admission the page has already been told, by the `bye` the link
+      // forwarded — or by nothing at all, when the host simply stopped
+      // answering, which is the case this synthesizes one for. A run whose
+      // session died in silence must not sit there looking playable.
+      if (admitted) {
+        if (reason !== "shutdown" || detail) sendBye(reason, detail);
+        stopLinkClock();
+        return;
+      }
+      settle({ kind: "connected", ok: false, reason, detail });
+      stopLinkClock();
+    },
+    log: (line) => post({ kind: "log", line }),
+  });
+  await link.start();
+  startLinkClock();
+}
+
+/** Tell the page the session ended, in the frame it already knows how to
+ * read. The link is gone by here, so this is manufactured rather than
+ * forwarded — the one frame in the whole feature that no host sent. */
+function sendBye(reason: string, detail?: string): void {
+  const payload = { reason, detail } as ByePayload;
+  const frame = encodeFrame(
+    { type: FRAME.bye, seq: 0, ack: 0, tick: 0 },
+    payload,
+  );
+  clientPort?.postMessage(frame, [frame]);
+}
+
+/** The joiner's clock. Its own rather than the session's, because in this role
+ * there is no session — what has to be pumped is the probe's retry, the
+ * reliability layer's retransmits and the socket. */
+function startLinkClock(): void {
+  stopLinkClock();
+  linkTimer = setInterval(() => link?.tick(), TICK_MS);
+}
+
+function stopLinkClock(): void {
+  if (linkTimer) clearInterval(linkTimer);
+  linkTimer = null;
+}
+
 /** Bytes, whatever shape they survived the structured clone in. */
 function toBytes(data: ArrayBuffer | Uint8Array | number[]): Uint8Array {
   if (data instanceof Uint8Array) return data;
@@ -401,6 +583,13 @@ function stopClock(): void {
 
 function stop(reason: string): void {
   stopClock();
+  stopLinkClock();
+  // A joiner's link is closed WITHOUT a bye to the page: this path is the page
+  // asking, and answering its own request with a refusal would put "the session
+  // ended" on a screen the player just left.
+  link?.close();
+  link = null;
+  admitted = false;
   session?.close(reason);
   session = null;
   hub?.close();

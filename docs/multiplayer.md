@@ -1,19 +1,19 @@
 # Multiplayer — the shipped architecture
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
-describes what actually exists. **PR 1, the NETWORKING half of PR 2, PR 1.5 and
-PR 1.75 have landed** — the run loop drives a session now, so none of this is
-dead code any more. The simulation runs in its own process, the
-wire between it and a renderer is complete and tested, the desktop shell forks
-and supervises a session — a session can open a UDP socket and a Steam lobby,
-admit remote clients behind a challenge handshake, seat them as spectators, and
-carry chat and `/players N` between them — and everything the app DOES to a run
-now travels as a named command rather than as a direct call on a local state.
+describes what actually exists. **PR 1, PR 2, PR 1.5, PR 1.75 and PR 2.5 have
+landed** — the feature is reachable by a player now, end to end. The simulation
+runs in its own process, the run loop drives it, the wire between it and a
+renderer is complete and tested, the desktop shell forks and supervises a
+session, a session can open a UDP socket and a Steam lobby and admit remote
+clients behind a challenge handshake — and the title menu has the three doors
+that let somebody walk through it: **HOST GAME**, the **server browser**, and
+**JOIN BY ADDRESS**, plus the in-run chat and the live session panel.
 
-What is NOT here is the half a player would SEE: the HOST, JOIN and server-
-browser screens, and the in-run chat overlay. That is **PR 2.5**, and it can go
-now — the reason it was held (a door into a session nothing plays through) no
-longer applies.
+What is NOT here is a second HERO. Every joiner is a **spectator**: they see the
+run, they are on the roster, they can talk, and the session refuses their
+steering in the one place a client cannot argue with it. Seating a second player
+is PR 3.
 
 ## The topology
 
@@ -42,7 +42,19 @@ server/net/upnp.ts            the router mapping (NAT-PMP, then UPnP-IGD)
         ▼
 pwa/src/app/net-bridge.ts     the page's control half
 pwa/src/game/net/client.ts    the run driver the renderer reads
+pwa/src/game/net/driver.ts    host a run, or join somebody else's
+pwa/src/game/title-screen/    the three doors (menus-net.ts, use-sessions.ts)
 ```
+
+The JOINER's half of the wire is `server/net/connect.ts`, and it lives beside
+the hub rather than in the shell or in the page for the two reasons the seam
+itself moved here: a page cannot open a UDP socket at all, and PR 5's dedicated
+server has no shell to put one in. The session process therefore has **two
+roles** — `start` makes it a HOST (it simulates, and the renderer is its first
+client), `connect` makes it a JOINER (nothing simulates, a socket is opened
+outward, and the same `MessagePort` carries somebody else's frames to the same
+renderer). The page's client cannot tell the two apart, which is exactly why
+joining cost one small module rather than a second client.
 
 `server/wire/` is the vocabulary both ends speak, and it imports nothing at
 all — not even the engine. Both halves read it, and the page reads it from
@@ -393,33 +405,61 @@ compiler.
 | `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
 | `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam   |
 
+## The three doors, and where each half of the HOST screen lives
+
+The screens are authored in `content/mainmenu.yaml` like every other screen —
+**the menu tree is content**, and `assembleRows` throws for a row id no builder
+answers, so rows and builders land together. `menus-net.ts` owns the behaviour
+and `use-sessions.ts` the plumbing, and **neither may import
+`pwa/src/game/net/`**: these are title-menu screens, i.e. the app's startup
+path, and that directory reaches `@game/core`. They talk to the import-free
+`net-bridge.ts` and to the `@game/wire/*` leaves alone.
+
+**A HOSTED GAME IS A RUN, NOT A LOBBY.** HOST GAME is the SESSION's settings —
+who may come in, how many, on what port, behind what password — and its START
+row walks into the same difficulty and mission pickers every other run uses.
+`armHosting` (`session-intent.ts`) is the one bit that travels from the screen
+to the run; `run-driver.ts` consumes it and opens the doors once the session is
+up. The alternative — a lobby that waits for players before anybody is playing —
+would mean a second, idle simulation standing on the map, and would make the
+host's own renderer a client of a session it did not build.
+
+That is also why **the live status rows are on the PAUSE screen**
+(`game-screen/SessionPanel.tsx`) rather than on the HOST screen the plan's §2.2
+sketched them on: the port the socket ACTUALLY got, the address a friend should
+type, what the router said and who is in the seats are all facts about a running
+session, and there is no session until the run starts. The HOST screen keeps the
+half that can be answered beforehand — the firewall check, which is a property
+of the machine.
+
+**A ROW THIS BUILD CANNOT JOIN IS SHOWN, NOT HIDDEN.** The browser greys a
+session with the reason on it (`sessionRowRefusal`, judged with the very
+`refuseHandshake` the host's `admit` runs). A player whose friend is on a newer
+build and whose list is simply empty concludes the feature is broken; one who
+sees "ONE OF YOU NEEDS TO UPDATE - HOST BUILD 1.5.0" goes and updates.
+
+**AN INVITE ARRIVES BEFORE THE GAME DOES.** `+connect_lobby <id>` (Steam, when a
+friend accepts while the game is closed) and `--connect <addr>` (a shareable
+link) are read by `electron/src/net-invite.ts` and PARKED until the page is up —
+at startup there is no window to hand them to, and on a `second-instance` event
+the process that received them is about to exit. They are delivered on the
+page's `did-finish-load` as the bridge's one unsolicited event, and consumed:
+an invite left parked would re-join the same session on every reload.
+
 ## What is NOT here yet
 
-- **The run still simulates in the renderer.** `GameScreen` owns the loop as it
-  always has; nothing in the shipped game reaches `pwa/src/game/net/` yet. The
-  verbs it calls all travel now, and so do the parameters a run is built from
-  (below), so what is left of **PR 1.75 (THE LOOP MOVES)** is the driver seam
-  itself, the adopt-a-state start, and a packaged launch.
-
-  The **parked run** and the **checkpoint restore** are the part that
-  parameters cannot reach: both adopt an arbitrary `GameState` rather than
-  building one, so the session needs a way to ADOPT a state and send the
-  arriving client a full snapshot instead of a delta against a genesis it does
-  not share. `server/session.ts` already has the `Sent.full` shape for that and
-  nothing has ever used it.
-
-- **No screens.** HOST, JOIN, the server browser, JOIN BY ADDRESS and the chat
-  overlay are not authored yet, so nothing in the title menu reaches any of the
-  above. This is the reason they were held rather than an oversight: the menu
-  tree is content (`content/mainmenu.yaml`) and a screen's builder lands in the
-  same commit as its rows, so authoring them now would put a door in front of a
-  session no player can yet play through. They land with the cutover above, and
-  everything the shell needs to draw them — the bound address, the router and
-  firewall rows, the roster, the browser rows — is already on the bridge.
 - **The Steam path is written but unproven.** The binding's legacy P2P API is
   polled, deprecated and thinner on guarantees than SDR, and the plan is
   unsparing about spiking it under load before the UI rests on it. The direct
   UDP path exists partly as the insurance policy on exactly that.
 - **No second player.** `state.player` is still one hero — PR 3. Every joiner is
   a spectator, and the session refuses their steering in the one place a client
-  cannot argue with it.
+  cannot argue with it. A spectator therefore plays on a THROWAWAY hero
+  (`spectatorCharacter`), so nothing they watch can be banked onto their own
+  roster, and their run commands are sent but not applied locally
+  (`setCommandSink(…, { optimistic: false })`) — the server would refuse them,
+  and an optimistic apply would edit a replica of somebody else's hero.
+- **Nothing has been proven on eight machines through a real NAT**, and it
+  cannot be from CI: that criterion, the UPnP mapping against a real router, and
+  the packaged `npm run electron` launch all need hardware this repo's checks do
+  not have. See the plan's §2.5.3.

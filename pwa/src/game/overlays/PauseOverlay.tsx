@@ -15,7 +15,7 @@
 // the in-run COIN STORE over it, so a purse too thin to fly can be topped up
 // without leaving the run for the title menu.
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -76,6 +76,7 @@ export function PauseOverlay({
   onResume,
   onExit,
   autopilot,
+  session,
 }: {
   font: PixelFont;
   /** The atlas — forwarded to the AUTO PILOT picker for its column icons. */
@@ -87,6 +88,10 @@ export function PauseOverlay({
   onResume: () => void;
   onExit: () => void;
   autopilot?: PauseAutopilot;
+  /** The multiplayer status panel, for a run that is hosted or joined. Passed
+   * in rather than built here: this overlay knows nothing about sessions, and
+   * the one thing that does is the run loop that owns the driver. */
+  session?: ReactNode;
 }) {
   const stop = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
@@ -213,6 +218,12 @@ export function PauseOverlay({
               <PixelText font={font} text="≡ MENU" scale={3} />
             </button>
           </div>
+          {/* THE SESSION, when this run has one: the address a friend types,
+              what the router said, and who is in the seats. It hangs here
+              because a session exists only while a run does — see the panel's
+              own header — and because the pause screen is the one place in a
+              run a player is reading rather than fighting. */}
+          {session}
         </div>
       </div>
       {autopilot && !autopilot.active && picking && (

@@ -26,6 +26,8 @@ import { RunVaultScreen } from "../VaultScreen.tsx";
 import { DemoExitOverlay } from "../overlays/DemoExitOverlay.tsx";
 import { resumeMusic } from "../music/index.ts";
 import { PauseOverlay } from "../overlays/PauseOverlay.tsx";
+import type { SessionLink } from "../net/session-link.ts";
+import { SessionPanel } from "./SessionPanel.tsx";
 import {
   finishAutopilotRide,
   type useAutopilotSession,
@@ -49,6 +51,7 @@ export function RunPausedOverlay({
   onQuit,
   onExitToMenu,
   bumpUi,
+  sessionLink,
 }: {
   state: GameState;
   font: PixelFont;
@@ -73,6 +76,9 @@ export function RunPausedOverlay({
    * resumes it. The state is already in the `paused` phase here. */
   onExitToMenu: (state: GameState) => void;
   bumpUi: () => void;
+  /** The session behind this run, when there is one — the pause screen is
+   * where its live status rows hang (see SessionPanel). */
+  sessionLink?: SessionLink | null;
 }) {
   // The in-run COIN STORE's buy runner (the AUTO PILOT picker's STORE button):
   // banks the pack onto the hero and tops up the live purse. Declared before
@@ -128,6 +134,9 @@ export function RunPausedOverlay({
       <PauseOverlay
         font={font}
         sprites={sprites}
+        session={
+          sessionLink ? <SessionPanel font={font} link={sessionLink} /> : null
+        }
         onResume={resumeRun}
         onExit={exitToMenu}
         cleanSlates={state.player.cleanSlates}

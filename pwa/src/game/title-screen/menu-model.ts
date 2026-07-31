@@ -14,10 +14,17 @@ import type { CloudState } from "../cloud-save.ts";
 import type { BindableAction } from "../keybindings.ts";
 import { playTitleMusic } from "../music/index.ts";
 import type { SeedTier } from "../seed-tiers.ts";
-import { getSettings, updateSettings, type GameSettings } from "../settings.ts";
+import {
+  getSettings,
+  updateSettings,
+  type GameSettings,
+  type SessionSettings,
+} from "../settings.ts";
+import type { HostIntent } from "../session-intent.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import type { CoinPack } from "../store.ts";
 import type { InstalledMod } from "../../app/mods-bridge.ts";
+import type { BrowserRow, FirewallStatus } from "../../app/net-bridge.ts";
 import { parentOf, rowAria, rowDef, rowHelp, screenDef } from "./menu-tree.ts";
 
 /** Every screen the title menu can be on.
@@ -56,7 +63,11 @@ export type MenuScreen =
   | "storehero"
   | "storesend"
   | "mods"
-  | "modorder";
+  | "modorder"
+  | "multiplayer"
+  | "host"
+  | "sessions"
+  | "address";
 
 export type MenuEntry = {
   label: string;
@@ -171,6 +182,48 @@ export type ModsMenuState = {
   onPublish: (mod: InstalledMod) => void;
 };
 
+/** What the three MULTIPLAYER screens need beyond the shared context. Declared
+ * here for the same reason `ModsMenuState` is — the types point one way. */
+export type NetMenuState = {
+  /** The sessions this account can see, or null while the browse is in flight.
+   * Rows this build cannot join are IN it (greyed by the screen), never
+   * filtered out — see `sessionRowRefusal`. */
+  rows: BrowserRow[] | null;
+  refresh: () => void;
+  /** Whether this machine's firewall would let an inbound packet through, or
+   * null while the check is running. */
+  firewall: FirewallStatus | null;
+  /** One press to ask for a rule. Reports what the RE-CHECK said. */
+  allowFirewall: () => void;
+  /** The persisted session settings, and the way to write one through. */
+  session: SessionSettings;
+  setSession: (patch: Partial<SessionSettings>) => void;
+  /** What the next run should host with, resolved from those settings at the
+   * moment START is pressed. */
+  hostIntent: () => HostIntent;
+  /** Why this build could not join that row, or null. */
+  refusalFor: (row: BrowserRow) => string | null;
+  joinRow: (row: BrowserRow, password?: string) => void;
+  joinAddress: (address: string, password?: string) => void;
+};
+
+/** One line of text asked of the player, over the menu (see PixelPrompt): a
+ * session password, a port, an address. It is a MODAL rather than an inline
+ * field because the menu column is a list of rows the arrow keys walk, and a
+ * row that swallowed the keyboard would take the navigation with it. */
+export type PromptSpec = {
+  title: string;
+  value: string;
+  placeholder: string;
+  maxLength: number;
+  /** Digits only — a port. */
+  digits?: boolean;
+  /** Refuse a value the field can already tell is wrong, so the player is told
+   * while they are still looking at what they typed. */
+  validate?: (text: string) => boolean;
+  onSubmit: (text: string) => void;
+};
+
 /** The import/export/store result line shown under the menu. */
 export type TitleNotice = { tone: "info" | "error"; text: string };
 
@@ -241,6 +294,16 @@ export type MenuContext = {
   pickImport: () => void;
   beginExportPicker: () => void;
   runSeed: (tier: SeedTier | null) => void;
+  /** Ask the player for one line of text, over the menu. */
+  prompt: (spec: PromptSpec) => void;
+  // MULTIPLAYER. True only in the Steam shell with its session bridge up — a
+  // phone has no listening socket and a browser tab is not a server (see
+  // `netBridgeAvailable`). Gates the main menu's MULTIPLAYER row.
+  netOpen: boolean;
+  /** The three multiplayer screens' own state (use-sessions.ts). Its own
+   * bundle for the same reason the mods' is: the lobby list arrives over a
+   * bridge, and a builder must be handed async state rather than fetch it. */
+  net: NetMenuState;
   // STEAM WORKSHOP MODS. True only in the Steam shell — the mobile stores
   // permit no such content channel, and a browser has nothing to load a mod
   // from. Gates the main menu's MODS row.

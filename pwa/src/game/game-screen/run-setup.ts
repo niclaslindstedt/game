@@ -142,7 +142,20 @@ export function createRunSession(deps: {
   /** Warp-in (the developer menu's SELECT LEVEL): skip the whole opening. */
   skipOpening: boolean;
   runId: number;
+  /**
+   * SPECTATING somebody else's session: the state the net client already built
+   * from the welcome, adopted whole.
+   *
+   * It short-circuits everything below, and that is the point rather than a
+   * shortcut. A spectator's run was not built here, is not theirs to mutate,
+   * and every construction-time step in this file — seeding the story ledger,
+   * `?scenario=`, the autoplay bot, the opening skips, the checkpoint — either
+   * edits a replica the server will overwrite or books somebody else's progress
+   * onto this hero.
+   */
+  spectate?: GameState | null;
 }): RunSession {
+  if (deps.spectate) return spectatorSession(deps.spectate, deps.runId);
   const {
     levelId,
     difficulty,
@@ -503,5 +516,47 @@ export function createRunSession(deps: {
     // parameters of a run it is not simulating is a client carving one map and
     // playing on another.
     params: resumed || checkpoint ? null : runParams,
+  };
+}
+
+/**
+ * The run a SPECTATOR watches.
+ *
+ * Everything this hands back is deliberately inert. The state came off the wire
+ * and the session that owns it is on somebody else's machine, so there is no
+ * seed to pin, no bot to run, no checkpoint to capture and no parameters to
+ * describe it with (`params: null` is the same answer a parked run gives, and
+ * for the same reason — a session must never be handed the parameters of a run
+ * it is not simulating).
+ *
+ * The one thing it does is roll the level's music, because a watcher who can
+ * hear the fight is watching a game and one who cannot is watching a diagram.
+ */
+function spectatorSession(state: GameState, runId: number): RunSession {
+  debug(`run ${runId} joined as a spectator (${state.level.id})`);
+  playLevelMusic(runLevelDef(state).music);
+  return {
+    state,
+    runLevelId: state.level.id,
+    // Not "resumed": that word means a run parked on THIS device, and it is
+    // what tells the loop to land on the paused overlay. A joined run is live.
+    resumed: false,
+    captureCheckpoint: false,
+    bot: null,
+    tuning: {
+      // REAL TIME, always. The session owns the clock; a spectator running its
+      // loop at 4× would only send four times as many inputs nobody applies.
+      simSpeed: 1,
+      timeScale: 1,
+      debugPose: null,
+      nukePending: false,
+      levelUpPending: false,
+    },
+    // The intro belongs to whoever is playing. A spectator's tap must not
+    // dismiss it — the verb is refused by the session anyway, and a local
+    // no-op is the honest thing to hand the title card.
+    beginRun: () => {},
+    seed: 0,
+    params: null,
   };
 }

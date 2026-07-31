@@ -72,6 +72,16 @@ export type ServerControl =
   | { kind: "stop" }
   | { kind: "status" }
   | { kind: "listen"; port?: number; udp?: boolean; steam?: boolean }
+  /** The other role: JOIN somebody else's session instead of hosting one. The
+   * same fork, the same port to the renderer — see `server/main.ts`. */
+  | {
+      kind: "connect";
+      address?: string;
+      peer?: string;
+      name: string;
+      password?: string;
+      mods?: string[];
+    }
   | { kind: "peer"; from: string; data: number[] }
   | { kind: "peer-lost"; from: string; reason: string };
 
@@ -97,6 +107,7 @@ export type ServerReply =
       build: string;
       detail?: string;
     }
+  | { kind: "connected"; ok: boolean; reason?: string; detail?: string }
   | {
       kind: "peer-send";
       to: string;
