@@ -29,6 +29,7 @@
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
 
 import { LOOT } from "../config/index.ts";
+import { heroesWithin, seatOf } from "../party.ts";
 import { gearDef, isWeaponDef, weaponDef } from "../defs/equipment.ts";
 import type { Equipment, GameState, Item, ItemVoice } from "../types/index.ts";
 
@@ -122,6 +123,36 @@ export function dropItem(state: GameState, item: Item, from: Vec2): Item {
   const dist = Math.hypot(item.pos.x - from.x, item.pos.y - from.y);
   const totalMs = tossDurationMs(dist);
   item.toss = { from: { ...from }, ms: totalMs, totalMs };
+  allocateLoot(state, item);
   state.items.push(item);
   return item;
+}
+
+/**
+ * Stamp an ALLOCATED drop with the seat it belongs to (`Item.owner`).
+ *
+ * The one funnel every drop goes through is also the one place this can be
+ * decided, which is why it lives here rather than at the twenty-odd sites that
+ * pay loot out: none of them knows who killed the thing, and every one of them
+ * knows where it fell — and where it fell is the honest question anyway, since
+ * the party who was in the fight is the party standing around the body.
+ *
+ * A no-op in a free-for-all session and in single player, so nothing is stamped
+ * on any drop the campaign has ever produced.
+ *
+ * THE ROLL USES THE ITEM'S HASH, NOT `state.rng()`, for exactly the reason the
+ * scatter above does: the drop ladder's draws are load-bearing, and consuming
+ * one here would shift every roll after it — so a session with allocated loot
+ * would roll DIFFERENT ITEMS from the same seed than one without.
+ */
+function allocateLoot(state: GameState, item: Item): void {
+  if (state.lootMode !== "allocated") return;
+  const near = heroesWithin(state, item.pos, LOOT.allocationRadius);
+  // Nobody in the fight — a hazard's kill, a crate broken and walked away from
+  // — leaves the drop unowned rather than assigning it to a distant stranger:
+  // an allocation nobody was there for is indistinguishable from the drop being
+  // broken, and free-for-all is the safe failure.
+  if (near.length === 0) return;
+  const pick = near[Math.floor(hash01(item.id, 2) * near.length)];
+  if (pick) item.owner = seatOf(state, pick);
 }

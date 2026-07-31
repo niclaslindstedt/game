@@ -13,9 +13,13 @@
 //
 //  1. **A SEAT IS APPENDED, NEVER INSERTED, AND NEVER SPLICED OUT.** Every
 //     command and every input frame in flight names a seat by INDEX; renumbering
-//     the party mid-run would deliver seat 4's steering to seat 3's hero. A
-//     player who leaves keeps their hero standing where they left it (PR 4 owns
-//     what happens to it) — the list only ever grows for the life of a run.
+//     the party mid-run would deliver seat 4's steering to seat 3's hero. So a
+//     player who leaves is `departHero`'d rather than removed: the seat stays
+//     where it is, holding a body the world no longer answers for
+//     (`Player.departed`), and the NEXT arrival is seated INTO it rather than
+//     past it. The list of seats therefore only ever grows to the high-water
+//     mark of people who have been here at once — a session that eight players
+//     have cycled through two at a time is a party of two, not of sixteen.
 //
 //  2. **THEY ARRIVE WHERE THE PARTY IS, NOT AT THE LEVEL'S SPAWN.** A hero
 //     dropped on the authored spawn point of a map the group cleared twenty
@@ -48,7 +52,7 @@ const ARRIVAL_RING = PLAYER.radius * 6;
  * what a brand-new character joining a friend's game gets.
  */
 export function seatHero(state: GameState, loadout: Loadout | null): Player {
-  const seat = state.players.length;
+  const seat = nextFreeSeat(state);
   const def = runLevelDef(state);
   const diff = difficultyDef(state.difficulty);
   const hero = createHero(
@@ -62,9 +66,52 @@ export function seatHero(state: GameState, loadout: Loadout | null): Player {
   // run, not to the person, and one arriving holstered would stand there unable
   // to swing because a scripted strike three districts away has not fired.
   hero.disarmed = false;
-  state.players.push(hero);
+  if (seat < state.players.length) state.players[seat] = hero;
+  else state.players.push(hero);
   if (loadout) applyLoadout(state, hero, loadout);
   return hero;
+}
+
+/**
+ * THE SEAT THIS ARRIVAL TAKES: the lowest DEPARTED one, or a fresh seat past
+ * the end of the party.
+ *
+ * Re-using an emptied seat is what stops a session that people have come and
+ * gone from filling up with bodies nobody is behind — the party is capped, and
+ * without this a group of two that four people had passed through would be
+ * refused a fifth member on the strength of three abandoned corpses.
+ *
+ * Re-use is only safe because a departed seat's owner is GONE: their commands
+ * and input frames left with them, so nothing in flight can still name this
+ * index and land on the newcomer. That is the one thing to preserve here — a
+ * seat vacated by anything OTHER than a disconnect (a dead hero, a player in a
+ * menu) must never be handed out.
+ */
+export function nextFreeSeat(state: GameState): number {
+  const seat = state.players.findIndex((hero) => hero.departed);
+  return seat >= 0 ? seat : state.players.length;
+}
+
+/**
+ * The player in this seat has left the session; their hero is no longer
+ * anybody's.
+ *
+ * See `Player.departed` for what that MEANS — in short, the world stops
+ * answering for the body: it is not chased, not counted in the party's level or
+ * its centre, not a pack's alarm clock, and not alive, so the people still
+ * playing can both grow past it and lose the run.
+ *
+ * Seat 0 is refused, and that is a rule rather than a guard: seat 0 is the
+ * HOST's, the host leaving ENDS the session (there is no host migration — see
+ * the plan's §4.2), and a run whose seat 0 had quietly departed would keep
+ * simulating with nobody entitled to it.
+ */
+export function departHero(state: GameState, seat: number): boolean {
+  if (seat <= 0) return false;
+  const hero = state.players[seat];
+  if (!hero || hero.departed) return false;
+  hero.departed = true;
+  return true;
 }
 
 /** Where seat `seat` is set down: on a ring around the party's middle, each

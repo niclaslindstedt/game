@@ -21,7 +21,11 @@
 // session quietly listening because of a decision made two runs ago is exactly
 // the kind of thing that has to be pressed for every time.
 
-import { getSettings, type SessionDoors } from "./settings.ts";
+import {
+  getSettings,
+  type SessionDoors,
+  type SessionLoot,
+} from "./settings.ts";
 
 /** What a hosted run opens, resolved from the settings at the moment START was
  * pressed rather than read live: the run is what the player configured, not
@@ -36,6 +40,9 @@ export type HostIntent = {
   port: number;
   udp: boolean;
   steam: boolean;
+  /** The session's loot rule — see `SessionLoot`. Travels to the engine as
+   * `SessionParams.lootMode`. */
+  loot: SessionLoot;
 };
 
 /** Where a JOINER is going. Exactly one of `address` and `peer`, as
@@ -73,6 +80,21 @@ export function hostingArmed(): boolean {
   return armed !== null;
 }
 
+/**
+ * The LOOT RULE the armed session will play under, or undefined for the
+ * ordinary free-for-all — read WITHOUT consuming the arm.
+ *
+ * It is read one step earlier than everything else on the intent, and that is
+ * why it needs its own door: the port, the password and the seats are the
+ * DRIVER's business and are consumed when the socket is opened, but the loot
+ * rule is a property of the RUN and has to be in the `RunParams` that build it,
+ * which happens first (`run-setup.ts`). Consuming here would leave the driver
+ * with nothing to open a door with.
+ */
+export function armedLootMode(): SessionLoot | undefined {
+  return armed?.loot === "allocated" ? "allocated" : undefined;
+}
+
 export function disarmHosting(): void {
   armed = null;
 }
@@ -95,6 +117,7 @@ export function hostIntentFor(heroName: string): HostIntent {
     port: session.port,
     udp: doorOpen(session.doors, "direct"),
     steam: doorOpen(session.doors, "steam"),
+    loot: session.loot,
   };
 }
 

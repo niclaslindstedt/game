@@ -106,6 +106,25 @@ export type Player = {
    */
   disarmed?: boolean;
   /**
+   * THE OWNER OF THIS SEAT LEFT THE SESSION.
+   *
+   * A seat is APPENDED and never spliced out (see `seating.ts`) — every command
+   * and input frame in flight names a seat by INDEX, so renumbering the party
+   * mid-run would deliver seat 4's steering to seat 3's hero. The consequence
+   * is a body left standing on the map, and this flag is what that body MEANS:
+   * nothing. `heroInPlay` reads false for it, so it is not chased, not counted
+   * in the party's level, not in the centroid, not a pack's alarm clock, not a
+   * hazard's victim — and, the sharp end, not ALIVE, so `partyWiped` can fire
+   * and a group whose fourth player quit can lose the run (multiplayer plan
+   * §4.2). It is not a corpse either: a corpse is what §4.2's death rule leaves
+   * and holds what its owner was carrying, while a departed hero's kit went
+   * home with the person who was steering it.
+   *
+   * Absent on every hero anybody is still playing, which is all of them in a
+   * single-player run.
+   */
+  departed?: boolean;
+  /**
    * What the ground underfoot is doing to the hero's PACE right now — the
    * `snare_field` ability's whole effect (1 = free, below 1 = held).
    *

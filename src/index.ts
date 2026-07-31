@@ -69,7 +69,7 @@ export { IDLE_INPUT, step, type PartyInput } from "./game/step/index.ts";
 export {
   anyHeroWithin,
   distanceToParty,
-  heroAlive,
+  heroInPlay,
   heroAt,
   heroes,
   heroesWithin,
@@ -83,7 +83,10 @@ export {
   seatOf,
 } from "./game/party.ts";
 export { quarryFor, quarryOf } from "./game/aggro.ts";
-export { seatHero } from "./game/seating.ts";
+// PARTY XP — how a kill's payout is divided (the plan's §4.3). The rule is a
+// leaf so the wire, the tests and the headless simulator can all read it.
+export { partyXpBonus, splitXp, type XpCut } from "./game/xp-share.ts";
+export { departHero, nextFreeSeat, seatHero } from "./game/seating.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
 export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";
@@ -124,6 +127,7 @@ export {
   killEnemy,
   mobArmorMult,
   mobArmorReduction,
+  shareXp,
   staminaDrinkChance,
 } from "./game/loot.ts";
 export { mercyRescueWaiting, type MercyRescue } from "./game/items/index.ts";
@@ -584,6 +588,7 @@ export {
   mobHpScaleFor,
   mobLevelScale,
   overkillEfficiency,
+  tickMenace,
 } from "./game/menace.ts";
 
 // Set-piece mechanics (telegraphed charge/slam, enrage, summons, phases):

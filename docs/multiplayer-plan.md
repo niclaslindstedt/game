@@ -1319,6 +1319,15 @@ until last is how PR 4's `/players N` pass ends up guessed anyway.
 **Goal: the campaign, played co-op, start to finish.** PR 3 makes eight heroes
 possible; PR 4 makes eight heroes a game.
 
+> **§4.2's ABANDONED HERO AND §4.3's RULES HAVE LANDED; §4.1, §4.4, §4.5 AND
+> §4.2's CORPSE HAVE NOT.** The split is along the same seam every earlier one
+> was: making the run's ARITHMETIC party-aware — whose the XP is, whose the loot
+> is, what heats the meter, what a body nobody is steering means — is one job,
+> and it is a prerequisite of the fixtures (a hub, a party HUD, banking) that
+> sit on top of it. See **§4.7** for exactly what that means, what it
+> deliberately did not do, and the one thing that turned out to be a
+> prerequisite nobody had scheduled.
+
 ### 4.1 The town — the fixture this game has never had
 
 D2's whole social loop is town ↔ wilderness: meet, vendor, stash, regroup, chat,
@@ -1447,6 +1456,85 @@ the common case on Steam:
 - Deaths, corpses and respawns work; one death never ends anyone else's game.
 - Every player's character is correctly banked after a level and after a quit.
 - `docs/game-content.md` covers the hub; the story chain is intact if it speaks.
+
+### 4.7 What the first half actually shipped — and the instrument it could not use
+
+Four rules landed, and they have one property in common that is worth stating
+before the list, because it is what made them safe to ship together: **every one
+is an exact no-op at one hero.** Not "close enough" — a solo run pays the same
+XP, stamps no owner on any drop, divides its menace read by one, and has no seat
+anybody can leave. So none of them can re-tune the shipped campaign, and the
+whole engine suite (1688 tests) stayed green without a single expectation being
+moved.
+
+**LANDED.**
+
+- **`Player.departed`, and `heroInPlay` as the ONE predicate.** The question
+  §3.7 created and nobody owned. A seat is still never spliced out; what changed
+  is that the world stops answering for the body in it. Not chased, not in the
+  centroid, not in `partyLevel`, not a pack's alarm clock, not a hazard's
+  victim, not a share of the meter's per-capita read, not stepped at all — and
+  not ALIVE, so `partyWiped` fires and a group whose fourth player quit can lose
+  the run. `nextFreeSeat` then hands that seat to the next arrival, so a session
+  people have come and gone from does not fill up with bodies holding slots.
+  The predicate folds "at 0 hp" and "nobody is steering this" into one check on
+  purpose: every question above has the same answer for both, and splitting them
+  is how one of the eight sites quietly keeps reacting to a body nobody is
+  behind.
+- **§4.3's XP sharing** — proximity-gated and level-weighted, in the leaf
+  `src/game/xp-share.ts`. `grantXp` took the recipient as a PARAMETER (§3.1's
+  rule: a bar and a pile of banked stat points are as private as a bag), and
+  `shareXp(state, amount, pos)` is the door every KILL goes through. Everything
+  else with an obvious owner — an arrow, an errand, a scripted grant — stays a
+  direct grant, because sharing one out would be a gift from the player who
+  earned it to one who did not. The per-map cap now reads the RECIPIENT's level.
+- **§4.3's loot ownership** — `GameState.lootMode`, free-for-all by default with
+  a host toggle (HOST GAME → LOOT), decided deliberately rather than inherited.
+  `Item.owner` is stamped in `dropItem` — the one funnel every drop goes through,
+  which is why no call site had to learn who killed anything — off the ITEM's
+  hash rather than `state.rng()`, so an allocated session rolls the same items
+  from the same seed a free-for-all one does.
+- **§4.3's menace meter** — read PER CAPITA. `stepItems` had to be split into a
+  per-ITEM arc pass and a per-HERO pickup pass on the way, which was a real bug
+  rather than a tidy-up: a party of eight walking one loop counted every toss
+  down eight times as fast.
+
+**NOT LANDED, and the reasons differ.**
+
+- **§4.2's corpse and respawn are BLOCKED**, and by this plan's own text: "PR 3's
+  phase split already makes `dying` a `Player.screen`". §3.2 has not landed, so
+  `dying` and `defeat` are still global phases and there is no per-player death
+  to give a corpse to. `applyDeathXpPenalty` is party-aware in the meantime — it
+  bills every non-departed hero on the wipe, which is the transition it actually
+  rides — but that is the PARTY falling, not a player dying.
+- **§4.1 the town, §4.4 mods, §4.5 the party HUD and banking are simply not
+  done.** §4.1 is authored content and, if the hub speaks a single line, a story
+  chain edit that needs the user's confirmation before it is written — which is
+  a conversation rather than a commit. §4.5's banking is the other half of the
+  spectator's throwaway character.
+
+**AND THE INSTRUMENT IS THE FINDING — §4.3's "measured pass, not a guessed one"
+COULD NOT BE RUN, AND IT IS §3.4's FAULT RATHER THAN §4.3's.** This section says
+the menace reconciliation is measured with `scripts/simulate-run.mjs` plus the
+autopilot at 2/4/8 players. That simulator can fly exactly one hero: **the bot
+reads `state.players[0]` at 164 sites across `src/game/bot/`**, so `botAct` has
+no notion of WHICH hero it is steering. §3.7 predicted this in as many words —
+"leaving this one until last is how PR 4's `/players N` pass ends up guessed
+anyway" — and it was right.
+
+What shipped instead is the STRUCTURE with its reasoning stated, plus unit-level
+proof of each claim (`tests/engine/coop_rules_test.ts`): the meter reads a party
+of eight's summed output as identical to one hero's, the XP splits 20:60 the way
+it says it does. That is not the same as a campaign measured at four players, and
+it must not be recorded as if it were. So the next thing PR 4 owes, BEFORE the
+hub or the HUD, is the bot parameterized on a `Player` — the same mechanical
+refactor §3.1 did to the engine, one file at a time — and then the numbers.
+
+Two knobs are the levers when that happens, and both are deliberately shipped at
+a stated default rather than a tuned one: `XP_SHARE.partyBonusPerHero` (how much
+bigger a shared pot is than a solo one — read the per-CAPITA XP rate off a
+multi-player run, never the per-kill share, because a party also clears faster
+and the two effects only show up together) and the `/players N` pairing itself.
 
 ---
 

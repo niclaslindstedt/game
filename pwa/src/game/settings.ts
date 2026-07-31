@@ -453,6 +453,19 @@ export type GameSettings = {
  * address. */
 export type SessionDoors = "both" | "steam" | "direct";
 
+/**
+ * WHO MAY PICK A DROP UP in a hosted session (the engine's `LootMode`, spelled
+ * out here rather than imported because this module is on the app's STARTUP
+ * path and may not reach `@game/core`).
+ *
+ * FREE FOR ALL ships, and that is a decision rather than an inheritance: it is
+ * Diablo 2 classic, friends-only sessions are the use case, and the scramble
+ * for a legendary is most of what makes a party feel like a party. ALLOCATED
+ * exists because that same scramble is the reason strangers stop playing
+ * together, and a host running a public game should be able to say so.
+ */
+export type SessionLoot = "free" | "allocated";
+
 export type SessionSettings = {
   /**
    * The UDP port to TRY first.
@@ -468,6 +481,10 @@ export type SessionSettings = {
   maxPlayers: number;
   /** What a joiner must know, or "" for an open game. */
   password: string;
+  /** Free-for-all, or one drop per player. Fixed for the life of a run — a
+   * loot rule that changed under a party mid-fight would be a rule nobody
+   * could plan around. */
+  loot: SessionLoot;
   /** Addresses this device has joined, newest first — the JOIN BY ADDRESS
    * screen's own list, so a LAN party is one press after the first time. */
   recent: string[];
@@ -586,6 +603,7 @@ function defaults(): GameSettings {
       doors: "both",
       maxPlayers: MAX_SESSION_PLAYERS,
       password: "",
+      loot: "free",
       recent: [],
     },
   };
@@ -623,6 +641,7 @@ function loadSession(stored: unknown, base: SessionSettings): SessionSettings {
       typeof held.password === "string"
         ? held.password.slice(0, MAX_SESSION_PASSWORD)
         : base.password,
+    loot: held.loot === "allocated" ? "allocated" : base.loot,
     recent: Array.isArray(held.recent)
       ? held.recent
           .filter((entry): entry is string => typeof entry === "string")

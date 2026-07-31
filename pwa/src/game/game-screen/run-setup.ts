@@ -45,6 +45,7 @@ import {
 import { DEMO_BOT_SPEC, DEMO_GAME_SPEED } from "../demo.ts";
 import { pauseMusic, playLevelMusic } from "../music/index.ts";
 import { buildBotViewLoadout } from "../seed-characters.ts";
+import { armedLootMode } from "../session-intent.ts";
 import { getSettings } from "../settings.ts";
 import type { PlayerAction } from "../render.ts";
 import type { RunCheckpoint } from "./run-progress.ts";
@@ -309,6 +310,11 @@ export function createRunSession(deps: {
           ? "story"
           : "none",
     muteDialogue: bot !== null,
+    // THE SESSION'S LOOT RULE, read from the armed HOST intent WITHOUT
+    // consuming it — the run is built here and the doors are opened later, in
+    // the driver. Undefined (every single-player run, and every hosted game
+    // left on the default) is free-for-all.
+    lootMode: armedLootMode(),
   };
 
   const state =

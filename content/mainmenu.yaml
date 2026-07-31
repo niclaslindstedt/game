@@ -682,6 +682,14 @@ screens:
       - id: max-players
         label: PLAYERS
         help: HOW MANY SEATS THE SESSION HAS - YOURS INCLUDED
+      # Free for all is the shipped answer and the row exists for the other
+      # case: the scramble for a legendary is what makes a party feel like a
+      # party among friends, and what makes strangers stop playing together.
+      - id: loot
+        label: LOOT
+        help:
+          free: ANY DROP GOES TO WHOEVER REACHES IT FIRST
+          allocated: EVERY DROP IS SET ASIDE FOR ONE PLAYER
       - id: password
         label: PASSWORD
         help:

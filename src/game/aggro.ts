@@ -36,7 +36,7 @@
 import { distanceSq } from "@game/lib/vec.ts";
 
 import { ENEMY_AI } from "./config/index.ts";
-import { heroAlive, nearestHero } from "./party.ts";
+import { heroInPlay, nearestHero } from "./party.ts";
 import type { Enemy, GameState, Player } from "./types/index.ts";
 
 /** How much nearer a rival hero must be before a mob turns on them, as a
@@ -62,7 +62,7 @@ export function quarryFor(
   const party = state.players;
   const held = enemy.quarry;
   const current =
-    held !== undefined && party[held] && heroAlive(party[held])
+    held !== undefined && party[held] && heroInPlay(party[held])
       ? party[held]
       : null;
 
@@ -78,7 +78,7 @@ export function quarryFor(
   // second hero stood beside it in the open.
   let holdsSight = false;
   for (const hero of party) {
-    if (!heroAlive(hero)) continue;
+    if (!heroInPlay(hero)) continue;
     if (!sees(hero)) continue;
     if (hero === current) holdsSight = true;
     const d = distanceSq(hero.pos, enemy.pos);
@@ -121,7 +121,7 @@ export function quarryOf(state: GameState, enemy: Enemy): Player {
   const party = state.players;
   if (held !== undefined) {
     const hero = party[held];
-    if (hero && heroAlive(hero)) return hero;
+    if (hero && heroInPlay(hero)) return hero;
   }
   return nearestHero(state, enemy.pos) ?? party[0];
 }

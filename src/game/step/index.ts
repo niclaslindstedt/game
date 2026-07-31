@@ -43,7 +43,7 @@ import {
 } from "../hazards.ts";
 import { packsCleared, unspawnedMinions } from "../loot.ts";
 import { revealAround } from "../map.ts";
-import { anyHeroWithin, partyWiped } from "../party.ts";
+import { anyHeroWithin, heroInPlay, partyWiped } from "../party.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
 import { advancePath } from "../path.ts";
@@ -216,10 +216,16 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // A DOWNED hero is skipped whole. Nothing of his ticks — he is not steering,
   // shooting, casting or picking anything up — but he is still on the field and
   // still in `state.players`, because the horde walking over a corpse is what
-  // makes a party death mean something (PR 4 owns the corpse and the respawn).
+  // makes a party death mean something (PR 4's §4.2 owns the corpse and the
+  // respawn; it waits on the per-player `dying` screen).
+  //
+  // A DEPARTED hero is skipped for the same reason and a different one: nobody
+  // is behind him at all (`Player.departed`), so a body that kept regenerating,
+  // kept its powers running and kept lifting the fog would be a ghost player
+  // still contributing to a run he left.
   for (let seat = 0; seat < state.players.length; seat++) {
     const player = state.players[seat] as Player;
-    if (player.hp <= 0) continue;
+    if (!heroInPlay(player)) continue;
     const seatInput = inputFor(input, seat);
     stepPlayer(state, player, seatInput, dt, dtMs);
     // Playing lifts the fog of war as a CIRCLE sweeping the hero's path

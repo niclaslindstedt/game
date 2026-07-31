@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 6;
+export const PROTOCOL_VERSION = 7;
 
 /**
  * The most clients one session seats, host included.
@@ -142,6 +142,14 @@ export type SessionParams = {
   openingSkip?: string;
   /** Mute the in-world dialogue — a bot run has nobody to tap through it. */
   muteDialogue?: boolean;
+  /**
+   * The session's LOOT RULE — `free` (the default) or `allocated`; see
+   * `GameState.lootMode`. Structural, so this leaf needs no engine import to
+   * name it, and it travels as a session parameter rather than a command
+   * because it must be the same for everybody and cannot change under a party
+   * mid-fight.
+   */
+  lootMode?: string;
   /** GENERATED MAPS: the carve is on, and at which size. Both are engine
    * FLAGS rather than `createGame` arguments, so they travel separately and
    * the client applies them before it builds. */

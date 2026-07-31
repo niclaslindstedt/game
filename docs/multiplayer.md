@@ -71,13 +71,34 @@ gust or the herd, not about the party, so a wall of them cannot flatten a group
 in one pass.
 
 **The run ends when the party falls, not when a hero does** (`partyWiped`). One
-player going down is a setback the rest fight through; PR 4 owns the corpse and
-the respawn.
+player going down is a setback the rest fight through; PR 4's §4.2 owns the
+corpse and the respawn, and waits on the per-player `dying` screen.
 
 **A seat is appended, never inserted, and never spliced out.** Every command and
 every input frame in flight names a seat by INDEX, so renumbering the party
-mid-run would deliver seat 4's steering to seat 3's hero. A player who leaves
-keeps their hero standing where they left it.
+mid-run would deliver seat 4's steering to seat 3's hero.
+
+**So a player who leaves is DEPARTED, not removed — and `heroInPlay` is the one
+predicate that says what that means.** The body stays where it is at the index
+it always had, and the world stops answering for it: `Player.departed` reads
+false through `heroInPlay`, so it is not chased, not in the centroid, not in
+`partyLevel`, not a pack's alarm clock, not a hazard's victim, not a share of
+the menace meter's per-capita read, and — the sharp end — not ALIVE, so
+`partyWiped` can fire and a group whose fourth player quit can lose the run.
+Before that flag existed four separate rules answered for the body by accident,
+and the worst of them made such a group undefeatable: the abandoned hero stood
+at full health for the rest of the run while the three people still playing were
+wiped over and over without it ever ending.
+
+The predicate deliberately folds "at 0 hp" and "nobody is steering this" into
+ONE check, because every question above has the same answer for both; splitting
+them is how one of the eight sites quietly keeps reacting to a body nobody is
+behind. And the seat is HANDED OUT AGAIN: `nextFreeSeat` gives the next arrival
+the lowest departed slot, so a session people have come and gone from is not
+eventually full of corpses holding seats nobody can use. Re-use is only safe
+because the departing player's commands and input frames left with them —
+a seat vacated by anything else (a dead hero, a player in a menu) must never be
+recycled.
 
 ## The topology
 
@@ -414,8 +435,69 @@ D2's rule: monster hp ×(1 + 0.5(N−1)) with a matching experience bump.
 XP here is level-based, so a hp-scaled mob is tougher and pays exactly the same
 XP for its level. Scaling `mobHp` alone makes `/players 8` strictly punishing
 rather than the risk/reward trade it is meant to be, so the two move together,
-always. The real tuning pass is PR 4's — it has the multi-player simulator to
-measure with and the menace meter to reconcile, neither of which exists yet.
+always.
+
+The MEASURED tuning pass is still owed: it needs the multi-player headless
+campaign that does not exist yet (see the last section). What has landed beside
+it is the meter it had to be reconciled with — below.
+
+## What a kill is worth, and whose it is
+
+Three rules a run does differently once there is more than one hero in it. All
+three are exact no-ops at one hero, which is what makes them safe and is also
+the trap: a single-player test proves nothing about any of them.
+
+**XP is proximity-gated and level-weighted** (`src/game/xp-share.ts`,
+Diablo 2's shape). Only heroes near the kill share it, and the pot splits in
+proportion to level. Both halves are load-bearing and both are counter-intuitive
+in the same direction:
+
+- Without the GATE, a party's optimal play is to scatter to the four corners of
+  the map and farm four fights at once for four times the XP each — which is not
+  a party, it is four solo runs sharing a lobby.
+- Without the WEIGHTING — i.e. with the even split that looks generous — a
+  level-90 running a level-12 through a map hands over half of every kill, so
+  grouping with somebody below you is a straight tax and nobody does it.
+  Weighted, the veteran keeps most of the pot and the newcomer still gains far
+  more than they could alone, because the horde is priced against `partyLevel`:
+  a sixth of a level-90 kill is a sixth of something enormous. That asymmetry IS
+  the power-levelling D2 is famous for, and it is the reason bringing a friend
+  is worth doing.
+
+Only a KILL is the party's. A golden arrow, a handed-in errand and a scripted
+grant each have an obvious owner and go through `grantXp(state, hero, amount)`
+directly — sharing one out to the neighbours would be a gift from the player who
+earned it to one who did not. The per-map XP cap is read against the RECIPIENT's
+level, so a level-90 in the party cannot throttle the level-20 beside them down
+to an outgrown map's trickle.
+
+**Loot is FREE FOR ALL by default, with a host toggle for ALLOCATED**
+(`GameState.lootMode`, HOST GAME → LOOT). Free-for-all is D2 classic and the
+scramble for a legendary is most of what makes a party feel like a party;
+allocated exists because that same scramble is why strangers stop playing
+together. An allocated drop is stamped ONCE, at the moment it is thrown, with a
+seat rolled among the heroes who were in the fight — never re-decided, since a
+drop that changed hands because somebody walked past it would break the only
+promise allocated loot makes. It is stamped in `dropItem`, the one funnel every
+drop in the game goes through, which is why no call site had to learn who killed
+anything. The roll is off the ITEM'S HASH rather than `state.rng()`, exactly as
+the toss scatter is: consuming a draw would make an allocated session roll
+different items from the same seed than a free-for-all one.
+
+An allocated drop is visible to everybody and deliberately NOT in
+`PRIVATE_PLAYER_FIELDS` — hiding it would make a party walk over piles they
+cannot see on the way to their own.
+
+**The menace meter reads the party's output PER CAPITA** (`tickMenace`). The
+damage and kills it is handed are the RUN's totals, summed over everybody, and
+the question the meter asks — "is this too easy" — with eight people in the room
+honestly means "is it too easy FOR EACH OF THEM". Fed the raw sum it reads eight
+times the DPS it was tuned against, saturates within about a minute, and because
+the evolution ratchet is a PERMANENT floor within a run it never comes back
+down: an untuned meter does not merely make co-op hard, it makes it hard for
+ever after the first minute. The divisor is the party in play, so a departed
+seat and a downed hero both stop diluting the read the moment they stop
+fighting.
 
 ## The engine's Node ship target
 
@@ -465,6 +547,8 @@ compiler.
 | `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                        |
 | `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger      |
 | `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's |
+| `tests/engine/party_test.ts`             | Every shared read the plan's §3.1 table answers, each staged with two heroes  |
+| `tests/engine/coop_rules_test.ts`        | The abandoned hero, the XP split, allocated loot, and the per-capita meter    |
 | `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it |
 | `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
 | `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam   |
@@ -543,12 +627,15 @@ an invite left parked would re-join the same session on every reload.
   dispatch is where the seat has to arrive, and it comes BEFORE the per-player
   screens rather than after them: `openInventory` cannot be made non-blocking per
   player until it knows which player. See the plan's §3.7.
-- **An abandoned hero is nobody's yet.** A seat is never spliced out, so a player
-  who leaves has a body left standing. It stops walking (their last input frame
-  is cleared), but it still holds a seat, still counts in `partyLevel`, still
-  draws aggro, and still counts as ALIVE — so a group whose fourth player quit
-  cannot lose the run. The policy belongs with PR 4's corpse and respawn, and is
-  written up at both ends (plan §3.7 and §4.2).
+- **The co-op tuning is STRUCTURAL, not measured.** The XP share, the loot
+  allocation and the menace meter's per-capita read are each shaped correctly
+  and each an exact no-op at one hero, but the two knobs that decide how they
+  FEEL — `XP_SHARE.partyBonusPerHero` and the `/players N` pairing — have not
+  been run at 2/4/8 players across the ladder, because the instrument for that
+  (a multi-player headless campaign, the plan's §3.4) does not exist: the
+  autopilot reads seat 0 throughout, so `scripts/simulate-run.mjs` can only fly
+  one hero. Parameterizing the bot on a `Player` is the prerequisite, and it is
+  the next thing PR 4 owes. See the plan's §4.7.
 - **Nothing has been proven on eight machines through a real NAT**, and it
   cannot be from CI: that criterion, the UPnP mapping against a real router, and
   the packaged `npm run electron` launch all need hardware this repo's checks do

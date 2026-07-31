@@ -117,6 +117,13 @@ export type RunParams = {
    * read as `none`, because a parameter that arrives from a wire is a claim
    * rather than a fact). */
   openingSkip?: string;
+  /**
+   * THE SESSION'S LOOT RULE — `free` (the default and the shipped campaign's)
+   * or `allocated`. A string rather than the union because a parameter that
+   * arrives from a wire is a claim rather than a fact; anything else is read as
+   * `free`, which is the safe answer (nobody is locked out of anything).
+   */
+  lootMode?: string;
   /** Mute the in-world dialogue: with a bot steering there is nobody to tap
    * through the arrival scenes, so un-muted they would freeze the run in the
    * `dialogue` phase and flash a page per tick. */
@@ -159,6 +166,7 @@ export function createRunFromParams(params: RunParams): GameState {
     markThoughtsSeen(state, params.seenThoughts);
   }
   state.autopilot.build = (params.autopilotBuild as BuildSnapshot) ?? null;
+  if (params.lootMode === "allocated") state.lootMode = "allocated";
   if (params.muteDialogue) muteDialogue(state);
   applyOpeningSkip(state, params.openingSkip);
   return state;
