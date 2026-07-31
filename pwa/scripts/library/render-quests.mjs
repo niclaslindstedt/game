@@ -457,7 +457,7 @@ export function giverPage(
 
   const said = [
     giver.story.greeting.length > 0
-      ? `      <h3>Walking up</h3>
+      ? `      <h3>On being spoken to</h3>
       <blockquote class="speech">
         <span class="who">${escapeHtml(giver.name)}</span>
         <p>${giver.story.greeting.map(escapeHtml).join("<br />")}</p>

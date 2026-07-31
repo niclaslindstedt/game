@@ -890,21 +890,65 @@ Five rules are load-bearing:
    (the purse is a flat economy) and the LOOT is rolled through the ordinary
    drop pipeline — a quest is a second CALLER of the loot system, never a second
    loot system.
+
+   **AND THE GEAR IS DECIDED BEFORE THE PLAYER SAYS YES —
+   `quests/reward-choices.ts`.** An errand used to promise "AN ITEM" and roll it
+   at the handover, which is two problems wearing one sentence: the player could
+   not tell whether the job was worth doing, and the piece that arrived had no
+   relation to the build they were playing. The gear is now MINTED ONCE, when
+   the conversation first opens (`GameState.questRewards`, keyed by quest id),
+   and shown in full — real bases, real tier, real rolled affixes, drawn with
+   the bag's own `affixLine` and tier colours. Four rules:
+   - **IT IS THE ORDINARY PIPELINE, CALLED THREE TIMES.** Every row is a
+     `rollEquipment` off the level's own pool at the SAME tier and quality, so
+     the choice is about the build and never about which row rolled better.
+     `eligibleBases` is exported from `items/rolling.ts` for it rather than
+     re-derived, or the level gates, the material gates and the base-level floor
+     would exist twice.
+   - **THE THREE ARE ONE PER CLASS, AND THE GAME ALREADY HAD THE THREE.** A
+     weapon reward offers a MELEE, a RANGED and a MAGIC base (`WeaponClass`); an
+     armor reward offers MAIL, LEATHER and CLOTH — and those materials already
+     lean STR/DEX/INT in their own `ARMOR_TYPES[…].statWeights`, so the class
+     flavour of the affixes falls out of picking the base and nothing reaches
+     into the affix roller. PLATE is deliberately not a lane (NIGHTMARE-gated,
+     so it would be empty for most of the campaign).
+   - **SOMETHING EVERYONE WOULD WANT IS OFFERED ALONE.** A charm or a bag has no
+     material, no weapon class and an even affix spread, so there is no second
+     version of it to want instead — three copies of one piece is a menu with
+     one dish.
+   - **MINTED AT THE CONVERSATION, NEVER AT THE RENDER.** The app is a pure
+     READER (`questRewardChoices`); minting per render would spin a slot machine
+     while the player read it and mint an item id every frame. The pick is
+     `chooseQuestReward` (a run command like every other verb) and rides the
+     errand, so it survives walking away and coming back.
+
 2. **THE LOG IS THE TRUTH; THE MARK IS DERIVED.** `giverMark` recomputes the
    `!` / `?` over a head from the quest log every time it is asked, and nothing
    caches it — a stored mark goes stale the instant a kill three rooms away
    completes an objective, and a `?` that isn't there is a quest the player
    never hands in. The three states are WoW's: gold `!` (work to take), gold `?`
    (work to hand in), grey `?` (work running).
-3. **A CONVERSATION STARTS ITSELF EXACTLY ONCE, AND OPENS THE WHOLE SLATE.**
-   Walking up auto-opens the giver's conversation, because a quest nobody
-   notices is a quest nobody takes; a giver with more than one thing to say
-   opens on the **PICK LIST** (WoW's gossip window) rather than handing back one
-   errand at a time, because the one-at-a-time rule makes a second quest
-   reachable only by refusing the first — which reads as the game losing track
-   of what it already offered. Every exit from an errand returns to the slate,
-   so taking three off one person costs one walk-up. With exactly one topic the
-   list is skipped: a menu of one is a menu nobody wants.
+3. **A CONVERSATION NEVER STARTS ITSELF, AND A TAP OPENS THE WHOLE SLATE.**
+   Walking up MEETS somebody — discovered, pinned on the map, `!` over the head
+   — and that is all it does; `talkToQuestGiver` is the only door in, and only a
+   tap on the person calls it. It used to auto-open on approach, on the theory
+   that a quest nobody notices is a quest nobody takes, and what that actually
+   did was freeze the run into a modal the player had not asked for because
+   they rounded the wrong crate mid-fight. The head mark carries the invitation
+   instead — WoW has never needed more than one — which is also why the
+   GREETING is written as an ASK ("CAN I ASK YOU A FAVOR?") rather than as a
+   line of ambient character: it is now heard only by a player who deliberately
+   walked up and pressed, so it has to pay for the press. A giver with more
+   than one thing to say opens on the **PICK LIST** (WoW's gossip window)
+   rather than handing back one errand at a time, because the one-at-a-time
+   rule makes a second quest reachable only by refusing the first — which reads
+   as the game losing track of what it already offered. Every exit from an
+   errand returns to the slate, so taking three off one person costs one
+   walk-up. With exactly one topic the list is skipped: a menu of one is a menu
+   nobody wants. **A LIST ROW IS A BUTTON AND IS SIZED LIKE ONE** — the same
+   vertical padding as `.pixel-button`, because a row at text height is a
+   quarter of the tap target of the GOODBYE button sitting under it, and the
+   row is the one the player came to press.
 4. **PROGRESS IS BOOKED WHERE IT HAPPENS, NOT SCANNED FOR.** `creditQuestKill`
    is called from `killEnemy` and `creditQuestPickup` from the item pass — the
    tally counts what the hero DID, not what is left standing.
@@ -995,8 +1039,8 @@ mechanic. What a branch may DO is deliberately four things and no scripting hook
 (a mod ships these files): set a FLAG, PROVOKE the speaker, hand over a piece, or
 go to another node. Everything a conversation appears to accomplish elsewhere is
 something else reading a flag. Three rules: a bystander is TAPPED rather than
-triggered (a giver's offer opens itself, but a venue holds a dozen bystanders and
-self-opening would be a stream of modals over a fight); the app indexes the
+triggered, exactly as a quest giver is — a venue holds a dozen of them and
+self-opening would be a stream of modals over a fight; the app indexes the
 ENGINE's FILTERED choice list, or a gate shifts which branch a tap takes; and a
 gated row is left OUT rather than greyed, because a greyed row is a spoiler
 printed in the shape of a locked door. Re-entry is by FLAGS alone — there is no

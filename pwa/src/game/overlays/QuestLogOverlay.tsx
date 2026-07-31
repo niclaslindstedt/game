@@ -84,7 +84,7 @@ export function QuestLogOverlay({
             <PixelText
               font={font}
               text="NOBODY HERE HAS ASKED YOU FOR ANYTHING."
-              scale={1}
+              scale={2}
               color="#6f7a88"
               maxWidth={30}
             />
@@ -117,7 +117,7 @@ export function QuestLogOverlay({
                   <PixelText
                     font={font}
                     text={`${questGiverName(quest.giver)} - ${status.label}`}
-                    scale={1}
+                    scale={2}
                     color={status.color}
                     maxWidth={28}
                   />
@@ -131,7 +131,7 @@ export function QuestLogOverlay({
                           objective,
                           progress.counts[i] ?? 0,
                         )}
-                        scale={1}
+                        scale={2}
                         color={
                           (progress.counts[i] ?? 0) >= objectiveNeed(objective)
                             ? "#7fe3a0"
@@ -150,7 +150,7 @@ export function QuestLogOverlay({
               <PixelText
                 font={font}
                 text="ASKING FOR HELP"
-                scale={1}
+                scale={2}
                 color="#c9a95c"
               />
               {untaken.map((giver) => (
@@ -181,7 +181,7 @@ export function QuestLogOverlay({
                           ? "MARKED ON YOUR MAP"
                           : "SOMEWHERE ON THIS MAP"
                       }
-                      scale={1}
+                      scale={2}
                       color="#6f7a88"
                       maxWidth={28}
                     />

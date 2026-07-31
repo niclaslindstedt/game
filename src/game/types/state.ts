@@ -17,6 +17,7 @@ import type {
 } from "./quests.ts";
 import type {
   Difficulty,
+  Equipment,
   GamePhase,
   PendingCritBlob,
   PendingProc,
@@ -522,6 +523,19 @@ export type GameState = {
    * restarted level offers its errands again.
    */
   quests: Record<string, QuestProgress>;
+  /**
+   * WHAT EACH ERRAND IS PAYING IN GEAR, keyed by quest id — minted ONCE, the
+   * first time its conversation opens, and read unchanged by the offer, the log
+   * and the handover.
+   *
+   * It is stored rather than derived, and that is the whole point of the
+   * feature: a reward the player is shown before they accept has to be the
+   * reward they are handed afterwards. Rolling it at the handover made the
+   * offer's promise a lie; rolling it per render made it a slot machine that
+   * span while they read it (and minted an item id every frame). See
+   * quests/reward-choices.ts.
+   */
+  questRewards: Record<string, Equipment[]>;
   /**
    * The conversation on screen while `phase === "quest"`; null otherwise. The
    * run freezes behind it exactly as it does behind the shop.

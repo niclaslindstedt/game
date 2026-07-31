@@ -35,14 +35,37 @@ import { talkChoices, talkNode, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { wrapPage } from "@ui/lib/text-pager.ts";
+import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { type GameAssets } from "../assets.ts";
 import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
 
-/** The box's inner content width in rem — shared with the errand box so a
- * speaker's line and an errand's line break at exactly the same place. */
-const QUEST_WRAP_REM = 13;
+/** The scale every spoken and printed surface in the game shares. */
+const TEXT_SCALE = 2;
+
+/** Fallback cap until the box's column has been measured — see `columnCapRem`.
+ * The box's real width is a share of the viewport, so this is the first frame's
+ * bound and nothing else. It replaced a hardcoded 13rem that was applied at
+ * every viewport: on anything wider than a small phone that printed a
+ * half-width ragged column down the middle of a box twice its width. */
+const QUEST_WRAP_REM = 20;
+
+/** What a ROW eats before its label starts, in rem: `.quest-topic`'s padding
+ * (0.7 × 2) and border (2px each side), its gap (0.6), and the mark slot
+ * (0.85). A row's label is measured against its LIST's width, so this comes off
+ * the top or a long sentence runs past the row it is in. Read it off
+ * `.quest-topic` in styles.css if either changes. */
+const ROW_INSET_REM = 0.7 * 2 + 0.25 + 0.6 + 0.85;
+
+/** The cap for a label inside a pick-list row. */
+function rowLabelCap(colFontPx: number | null, fallbackRem: number): number {
+  return Math.max(
+    4,
+    columnCapRem(colFontPx, TEXT_SCALE, fallbackRem) - ROW_INSET_REM,
+  );
+}
 
 export function TalkOverlay({
   state,
@@ -82,8 +105,19 @@ export function TalkOverlay({
 
   // A node's `say` is ONE page — the speaker's whole speech, typed out — so
   // the options appear the moment the crawl finishes and never before: a player
-  // cannot answer a question they have not been asked yet.
-  const speech = useMemo(() => [...(node?.say ?? [])], [node]);
+  // cannot answer a question they have not been asked yet. An authored line is
+  // a PARAGRAPH, so it is flowed into the box's own measured column rather than
+  // printed at whatever width it was typed at.
+  const { ref: linesRef, fontPx: colFontPx } = useTextColumn(TEXT_SCALE);
+  const { ref: choiceRef, fontPx: choiceColFontPx } = useTextColumn(TEXT_SCALE);
+  const speech = useMemo(
+    () =>
+      wrapPage(
+        [...(node?.say ?? [])],
+        colFontPx == null ? null : (line) => font.wrap(line, colFontPx),
+      ),
+    [node, colFontPx, font],
+  );
   const { rows, done, skip } = useTypewriter(speech, (visibleIndex) => {
     // Every other character — the same cadence the dialogue and quest boxes use.
     if (visibleIndex % 2 === 0) onBlip();
@@ -145,7 +179,7 @@ export function TalkOverlay({
     <div className="game-overlay quest-overlay" role="presentation">
       <div className="quest-box">
         <div className="quest-banner">
-          <PixelText text="TALKING" font={font} scale={1} color="#3a2a10" />
+          <PixelText text="TALKING" font={font} scale={2} color="#3a2a10" />
         </div>
 
         <div className="quest-vn">
@@ -158,7 +192,7 @@ export function TalkOverlay({
               <PixelText
                 text={talk.speaker.name}
                 font={font}
-                scale={1}
+                scale={TEXT_SCALE}
                 color="#f4e2b0"
               />
             </div>
@@ -168,6 +202,7 @@ export function TalkOverlay({
                 player before they had read the question. */}
             <div
               className="quest-lines"
+              ref={linesRef}
               onPointerDown={showChoices ? undefined : advance}
             >
               {rows.map((row, i) => (
@@ -175,9 +210,9 @@ export function TalkOverlay({
                   key={i}
                   text={row}
                   font={font}
-                  scale={1}
+                  scale={TEXT_SCALE}
                   color="#efe6cd"
-                  maxWidth={QUEST_WRAP_REM}
+                  maxWidth={columnCapRem(colFontPx, TEXT_SCALE, QUEST_WRAP_REM)}
                 />
               ))}
             </div>
@@ -185,7 +220,7 @@ export function TalkOverlay({
         </div>
 
         {showChoices ? (
-          <div className="quest-topics talk-choices">
+          <div className="quest-topics talk-choices" ref={choiceRef}>
             {choices.map((choice, i) => (
               <button
                 type="button"
@@ -201,16 +236,16 @@ export function TalkOverlay({
                   <PixelText
                     text={i === cursor ? ">" : " "}
                     font={font}
-                    scale={1}
+                    scale={TEXT_SCALE}
                     color="#ffb02e"
                   />
                 </span>
                 <PixelText
                   text={choice.text}
                   font={font}
-                  scale={1}
+                  scale={TEXT_SCALE}
                   color={i === cursor ? "#ffd98a" : "#c8bda0"}
-                  maxWidth={QUEST_WRAP_REM}
+                  maxWidth={rowLabelCap(choiceColFontPx, QUEST_WRAP_REM)}
                 />
               </button>
             ))}

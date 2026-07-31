@@ -18,20 +18,14 @@
 // engine still owns page turns (`advanceDialogue`), which only fire once the
 // last screen of the last page has been read.
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useState, type MutableRefObject } from "react";
 
 import { dialogueContent, playerAppearance, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { paginateLines, wrapPage } from "@ui/lib/text-pager.ts";
-import { useTextColumn } from "@ui/lib/use-text-column.ts";
+import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
@@ -94,8 +88,7 @@ export function DialogueOverlay({
   // The rendered text column's width, in unscaled font pixels — the unit
   // `font.wrap` measures in. Measured from the live box so wrapping tracks the
   // actual viewport, portrait or landscape, phone or desktop.
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const colFontPx = useTextColumn(bodyRef, TEXT_SCALE);
+  const { ref: bodyRef, fontPx: colFontPx } = useTextColumn(TEXT_SCALE);
 
   // Flow each authored line into the measured column, then window the folded
   // result into screens of at most MAX_VISIBLE_LINES rows. (React Compiler
@@ -249,7 +242,11 @@ export function DialogueOverlay({
                     font={font}
                     text={rows[i] ?? ""}
                     scale={2}
-                    maxWidth={DIALOGUE_TEXT_REM}
+                    // The column's OWN width, so `PixelText`'s second wrap is a
+                    // no-op over rows already flowed to it — see `columnCapRem`
+                    // for why neither a narrower constant nor no cap at all
+                    // works here.
+                    maxWidth={columnCapRem(colFontPx, 2, DIALOGUE_TEXT_REM)}
                   />
                 ))}
               </div>

@@ -13,9 +13,10 @@ import type { Vec2 } from "@game/lib/vec.ts";
  * `offered` is the state a quest sits in before it has been taken — it is NOT
  * "the modal is open": the modal is `GameState.questOffer`, and a quest can be
  * offerable for the whole run without the player ever accepting it. `declined`
- * is remembered separately from `offered` for one reason: an offer AUTO-OPENS
- * the first time the hero walks up, and a player who said no must not be asked
- * again every time they cross the same ground. They can still tap the giver.
+ * is remembered separately from `offered` for one reason: a CAMPAIGN merge
+ * ranks a decline BELOW an untaken offer, so saying no on a later visit can
+ * never overwrite a run that took the job. The giver keeps their `!` either
+ * way, and a tap still takes it.
  */
 export type QuestStatus =
   "offered" | "declined" | "active" | "complete" | "turnedIn" | "failed";
@@ -41,6 +42,14 @@ export type QuestProgress = {
    * on most recently at the top.
    */
   acceptedAtMs: number;
+  /**
+   * WHICH of the errand's offered pieces the player wants (an index into
+   * `GameState.questRewards[id]`), set by `chooseQuestReward` and paid out at
+   * the handover. Absent means the top row, so an errand turned in without ever
+   * touching the choice still pays — a reward must never be withheld because
+   * nobody pressed anything.
+   */
+  rewardPick?: number;
 };
 
 /**
@@ -54,13 +63,12 @@ export type QuestGiver = {
   pos: Vec2;
   /** Sprite mirror, so they turn to face the hero they are talking to. */
   faceLeft: boolean;
-  /** Latched the first time the hero comes near — pins them on the level map. */
-  discovered: boolean;
   /**
-   * Quest ids whose offer has already AUTO-OPENED this run. A conversation
-   * starts itself exactly once per errand; after that it is a tap.
+   * Latched the first time the hero comes near — pins them on the level map,
+   * and is the gate on `talkToQuestGiver`. Meeting somebody is all approach
+   * does: a conversation never opens itself, it waits for a tap.
    */
-  autoOffered: string[];
+  discovered: boolean;
 };
 
 /**
@@ -119,6 +127,12 @@ export type QuestOffer = {
    * three walk-ups.
    */
   fromList?: boolean;
+  /**
+   * The reward row the player has highlighted, mirrored here so a pick made at
+   * the OFFER — before the errand exists in the log — is not lost when they
+   * accept. `acceptQuest` copies it onto the new `QuestProgress`.
+   */
+  rewardPick?: number;
 };
 
 /**

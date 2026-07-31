@@ -114,6 +114,7 @@ import {
   closeQuestLog,
   declineQuest,
   openQuestLog,
+  chooseQuestReward,
   pickQuestTopic,
   talkToQuestGiver,
   turnInQuest,
@@ -242,6 +243,7 @@ export const RUN_COMMAND_ARGS = {
   // THE ERRANDS.
   talkToQuestGiver: ["str"],
   pickQuestTopic: ["str"],
+  chooseQuestReward: ["num"],
   acceptQuest: [],
   declineQuest: [],
   turnInQuest: [],
@@ -478,6 +480,8 @@ export function applyRunCommand(
       return talkToQuestGiver(state, str(a, 0));
     case "pickQuestTopic":
       return pickQuestTopic(state, str(a, 0));
+    case "chooseQuestReward":
+      return chooseQuestReward(state, num(a, 0));
     case "acceptQuest":
       return acceptQuest(state);
     case "declineQuest":
