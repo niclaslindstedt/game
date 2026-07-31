@@ -1,0 +1,31 @@
+name: icon_sawed_off_shotgun
+family: icons
+size: [12, 12]
+description: >
+  A double-barrelled shotgun cut down to a stub — twin steel barrels held
+  level, a chopped wooden grip under the breech, and nothing else. The
+  EASY-difficulty starting weapon.
+subject:
+  kind: weapon icon
+  features: a short horizontal double barrel, the upper tube catching the light and the lower one in shadow, over a stubby cut-down wooden grip
+  accent: bright steel along the top barrel
+  flavor: a family shotgun shortened in somebody's garage and kept loaded ever since
+palette:
+  A: "#8d9196" # lower barrel in shadow
+  B: "#92643e" # wooden grip
+  E: "#5d4028" # grip shadow
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bright steel, upper barrel
+grid: |
+  ............
+  ............
+  ..OOOOOOOOO.
+  ..OaaaaaaaOO
+  ..OOOOOOOOOO
+  ..OAAAAAAAOO
+  ..OOOOOOOOO.
+  .OBBBO......
+  .OBBEO......
+  .OBEEO......
+  .OOOOO......
+  ............

@@ -171,8 +171,8 @@ _(Ada crosses to the door and exits.)_
 
 _(The closing caption names the wall weapon, per difficulty:)_
 
-- **EASY** (FIRE EXTINGUISHER):
-  > **CAPTION:** THE OLD EXTINGUISHER OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
+- **EASY** (SAWED-OFF SHOTGUN):
+  > **CAPTION:** GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
 - **MEDIUM** (MEDIEVAL SWORD):
   > **CAPTION:** THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
 - **HARD** (COMBAT KNIFE):

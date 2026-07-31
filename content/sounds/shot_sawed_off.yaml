@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: shot_sawed_off
+description: >-
+  Both barrels at once: a sub-heavy boom under a lowpass powder blast, a sharp
+  crack of the report on top, and the shot sizzling away after it. The class
+  `shot_ranged` zap is a pea-shooter beside it — the opening weapon of the
+  gentlest rung is meant to land like a door being kicked in, so it sits above
+  every other weapon in the mix and stays under `player_hurt`, which is the
+  ceiling. Named by the weapon itself (`WeaponDef.sfx`), not by an event shape.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 260
+    to: 52
+    durationMs: 130
+    volume: 0.05
+    detuneCents: 9
+    echo: 0.2
+  - call: noise
+    durationMs: 150
+    volume: 0.042
+    filter:
+      type: lowpass
+      frequency: 1100
+    echo: 0.22
+  - call: noise
+    durationMs: 40
+    volume: 0.026
+    filter:
+      type: highpass
+      frequency: 3600
+  - call: noise
+    durationMs: 90
+    volume: 0.015
+    delayMs: 45
+    filter:
+      type: highpass
+      frequency: 5200
+    echo: 0.15

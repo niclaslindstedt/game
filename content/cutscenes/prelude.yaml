@@ -20,8 +20,11 @@ stage:
     - { sprite: window, at: { x: 150, y: 52 } }
     # The starting weapon, mounted on the back wall the whole scene — the one
     # thing the hero owns worth taking, and what he fights with until the run
-    # yields better (DifficultyDef.startingWeapon).
-    - { label: arm, sprite: wall_medieval_sword, at: { x: 178, y: 54 } }
+    # yields better (DifficultyDef.startingWeapon). It hangs ABOVE THE COUCH
+    # (centred on the couch's own x, clear of the seated pair's heads at y≈73):
+    # the thing he will carry out of this room is over the two of them for the
+    # whole scene, rather than parked in the corner by the door.
+    - { label: arm, sprite: wall_medieval_sword, at: { x: 104, y: 54 } }
     - { sprite: door, at: { x: 202, y: 80 } }
     # The set they are watching, off to the left; the couch faces it and the
     # coffee table sits in the gap, pulled toward each other so the pair reads
@@ -111,10 +114,10 @@ beats:
 # One entry per non-base difficulty; each patches the labelled parts above.
 variants:
   easy:
-    arm: { sprite: wall_fire_extinguisher }
+    arm: { sprite: wall_sawed_off_shotgun }
     take:
       text:
-        - THE OLD EXTINGUISHER OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
+        - GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
   hard:
     arm: { sprite: wall_combat_knife }
     take:
