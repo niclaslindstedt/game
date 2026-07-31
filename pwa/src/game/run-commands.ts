@@ -63,11 +63,26 @@ export type CommandSink = (
 ) => void;
 
 let sink: CommandSink | null = null;
+let optimistic = true;
 
-/** Route commands to `next` as well as applying them locally. Pass null to go
- * back to a purely local run. The driver owns both calls. */
-export function setCommandSink(next: CommandSink | null): void {
+/**
+ * Route commands to `next` as well as applying them locally. Pass null to go
+ * back to a purely local run. The driver owns both calls.
+ *
+ * `optimistic` is what a SPECTATOR turns off, and it is the exception the
+ * header's whole argument rests on: applying locally is right because the
+ * server will confirm it, and for a watcher the server will do no such thing —
+ * every verb they could reach is refused by `session.receive`, so a local apply
+ * would edit a replica of somebody else's hero and stay edited until the server
+ * happened to touch the same field. The screens then read as dead, which is
+ * exactly what a spectator's bag IS.
+ */
+export function setCommandSink(
+  next: CommandSink | null,
+  opts: { optimistic?: boolean } = {},
+): void {
   sink = next;
+  optimistic = opts.optimistic ?? true;
 }
 
 /** True when this run's authority is somewhere else. Read by the handful of
@@ -101,7 +116,7 @@ export function runCommand(
   ...args: CommandArg[]
 ): unknown {
   if (!state) return null;
-  const applied = applyRunCommand(state, name, args);
+  const applied = optimistic ? applyRunCommand(state, name, args) : undefined;
   sink?.(name, args);
   return applied ?? null;
 }

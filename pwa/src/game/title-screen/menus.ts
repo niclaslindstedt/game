@@ -29,6 +29,12 @@ import {
 import { buildExtrasMenu, buildMainMenu } from "./menus-main.ts";
 import { buildModOrderMenu, buildModsMenu } from "./menus-mods.ts";
 import {
+  buildAddressMenu,
+  buildHostMenu,
+  buildMultiplayerMenu,
+  buildSessionsMenu,
+} from "./menus-net.ts";
+import {
   buildAudioMenu,
   buildControlsMenu,
   buildGameplayMenu,
@@ -68,6 +74,10 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (__DEV_TOOLS__ && screen === "botspeed" && ctx.character) {
     return buildBotspeedMenu(ctx);
   }
+  if (screen === "multiplayer") return buildMultiplayerMenu(ctx);
+  if (screen === "host") return buildHostMenu(ctx, ctx.net);
+  if (screen === "sessions") return buildSessionsMenu(ctx, ctx.net);
+  if (screen === "address") return buildAddressMenu(ctx, ctx.net);
   if (screen === "mods") return buildModsMenu(ctx, ctx.mods);
   if (screen === "modorder") return buildModOrderMenu(ctx, ctx.mods);
   if (screen === "settings") return buildSettingsMenu(ctx);

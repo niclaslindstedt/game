@@ -33,17 +33,20 @@ export type TickReactions = {
 };
 
 /**
- * Build the per-run event consumers. `demo` skips the achievement ledger
- * entirely — the HOW TO PLAY viewer is watching, not playing, so the trophy
- * shelf stays the player's.
+ * Build the per-run event consumers. `transient` skips the achievement ledger
+ * entirely — the HOW TO PLAY viewer and a session's SPECTATOR are both watching
+ * rather than playing, so the trophy shelf and the lifetime totals stay the
+ * player's own.
  */
 export function createTickReactions(deps: {
   state: GameState;
-  demo: boolean;
+  /** This run banks nothing: the HOW TO PLAY demo, or somebody else's session
+   * being watched. */
+  transient: boolean;
   difficulty: Difficulty;
   celebrateAchievements: (ids: string[]) => void;
 }): TickReactions {
-  const { state, demo, difficulty, celebrateAchievements } = deps;
+  const { state, transient, difficulty, celebrateAchievements } = deps;
   const wornChanged = makeWornEquipmentGate();
   // The run's rolling KILL RATE window (kill-rate.ts) — per run, because the
   // combat clock it reads is per run. Built here rather than in the ledger:
@@ -80,7 +83,7 @@ export function createTickReactions(deps: {
     } else if (state.events.some((e) => e.type === "lightning")) {
       playLightningHaptic();
     }
-    if (demo) return;
+    if (transient) return;
     // Book the tick's events on the achievement ledger (kills, loot, clears,
     // …) and celebrate whatever unlocked — the toast + chime, sized a notch
     // below the ding and the unique card.

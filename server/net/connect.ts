@@ -1,0 +1,294 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// THE JOINER'S SIDE OF THE DOOR — the one thing PR 2 built no half of.
+//
+// `hub.ts` is the host's admission desk: it answers a padded `hello` with a
+// challenge and turns a `join` into a seat. Nothing anywhere spoke the OTHER
+// side of that conversation, because PR 2 shipped the wire and PR 2.5 is where
+// a player first gets to walk through it. This is that side, and it is
+// deliberately the SMALLEST thing that can be: a state machine with three
+// states, no game knowledge at all, and one job past admission — carry bytes.
+//
+// **IT LIVES BESIDE THE HUB, NOT IN THE SHELL OR IN THE PAGE**, for the two
+// reasons the seam itself moved here (§2.1). The page cannot open a UDP socket
+// at all, and PR 5's dedicated server has no shell to put one in — so the
+// connector sits with the transport it drives, in the process that already
+// holds one, and the renderer reaches it down the same `MessagePort` a HOST's
+// renderer already uses. That is what makes the page's `NetClient` identical on
+// both paths: it speaks frames to a port and never learns whether the session
+// is one process away or one continent.
+//
+// **THE CLIENT CHECKS WHAT THE CHALLENGE TOLD IT, AND THE HOST STILL DECIDES.**
+// A challenge carries the session's protocol, its build and whether a password
+// is wanted, which is enough to refuse a skew in ONE round trip with the two
+// numbers named — rather than sending a join the host will drop and leaving the
+// player watching a spinner time out. That is not a second copy of the admission
+// rules: `refuseHandshake` is the SAME function `admit` runs, called here on the
+// data the host volunteered, and every refusal that matters still comes back as
+// the host's own `bye`.
+//
+// **A `hello` IS RETRIED; A `join` IS NOT.** The probe goes out unreliable (it
+// is answered unreliably too — see `onHello`), so losing either end of it is
+// ordinary and the fix is to ask again. The join goes RELIABLE, which means the
+// reliability layer under the transport already retransmits it until it is
+// acknowledged; sending a second one would earn the duplicate-join branch the
+// hub has, for nothing. What remains is a deadline, because a host that
+// acknowledges a join and then says nothing is indistinguishable from one that
+// crashed between the two.
+
+import { decodeFrame, encodeFrame } from "../wire/codec.ts";
+import { passwordProof } from "../wire/handshake.ts";
+import {
+  FRAME,
+  HELLO_MIN_BYTES,
+  refuseHandshake,
+  type ByePayload,
+  type ChallengePayload,
+  type Handshake,
+  type HelloPayload,
+  type JoinPayload,
+  type RefusalReason,
+} from "../wire/protocol.ts";
+import type { PeerKey, Transport } from "./transport.ts";
+
+/** How often an unanswered probe is sent again. */
+const HELLO_RETRY_MS = 500;
+/** How many probes go unanswered before the address is called dead. Six
+ * seconds of asking: long enough for a slow route and a busy host, short enough
+ * that a player who mistyped an address finds out while they still remember
+ * typing it. */
+const HELLO_ATTEMPTS = 12;
+/** How long a session may take to answer an acknowledged join. Its own deadline
+ * rather than the probe's, because by here the host is provably reachable and
+ * what is being waited on is a level being built. */
+const WELCOME_TIMEOUT_MS = 15_000;
+
+/**
+ * The padding, made once.
+ *
+ * `HELLO_MIN_BYTES` is measured against the whole decoded frame, so padding to
+ * that many characters is comfortably over it once the header and the JSON
+ * envelope are counted. Deliberately over rather than exactly at: the rule is
+ * the host's and a client that sat one byte the wrong side of it would be
+ * dropped in the silence the anti-reflection rule demands, which is the least
+ * debuggable failure this feature can have.
+ */
+const HELLO_PAD = "-".repeat(HELLO_MIN_BYTES);
+
+export type JoinLinkOptions = {
+  transport: Transport;
+  /** The host, as the transport names one: `"1.2.3.4:27015"` for a datagram, a
+   * Steam id for a relayed peer. */
+  host: PeerKey;
+  /** This build's own handshake, compared with the session's. */
+  handshake: Handshake;
+  /** What this player is called in the roster and in chat. */
+  name: string;
+  /** The session's password, or "" — an empty one proves 0, which is what a
+   * client that was never asked for one sends anyway. */
+  password?: string;
+  now(): number;
+  /** One frame for the renderer, exactly as it arrived. */
+  deliver(frame: Uint8Array): void;
+  /** The session welcomed us. Fired once. */
+  onAdmitted(): void;
+  /**
+   * The attempt is over and no game will be played: a refusal from the host, a
+   * skew this side spotted in the challenge, or an address nobody answered.
+   *
+   * The link is closed by the time this fires — there is nothing to retry with,
+   * because a `join` the host refused took its peer record with it.
+   */
+  onClosed(reason: RefusalReason | ByePayload["reason"], detail?: string): void;
+  log?(line: string): void;
+};
+
+export type JoinLink = {
+  /** Open the socket and send the first probe. */
+  start(): Promise<void>;
+  /** One frame from the renderer, on its way to the host. Dropped before
+   * admission: nothing the page can say is meaningful to a session that has not
+   * seated it, and the hub would drop it unlooked-at anyway. */
+  send(frame: Uint8Array): void;
+  /** Retry the probe, mind the deadlines, pump the transport. Called from the
+   * process's own clock — there is no timer below this line, exactly as on the
+   * host path (see `transport.ts`'s `tick`). */
+  tick(): void;
+  close(): void;
+};
+
+export function createJoinLink(options: JoinLinkOptions): JoinLink {
+  const { transport, host } = options;
+  let phase: "probing" | "joining" | "live" | "done" = "probing";
+  let attempts = 0;
+  let lastProbeAt = 0;
+  let joinedAt = 0;
+
+  function finish(
+    reason: RefusalReason | ByePayload["reason"],
+    detail?: string,
+  ): void {
+    if (phase === "done") return;
+    phase = "done";
+    transport.close();
+    options.onClosed(reason, detail);
+  }
+
+  function probe(): void {
+    attempts++;
+    lastProbeAt = options.now();
+    const payload: HelloPayload = {
+      protocol: options.handshake.protocol,
+      pad: HELLO_PAD,
+    };
+    transport.send(
+      host,
+      new Uint8Array(
+        encodeFrame({ type: FRAME.hello, seq: 0, ack: 0, tick: 0 }, payload),
+      ),
+      "unreliable",
+    );
+  }
+
+  /**
+   * The challenge came back: refuse a skew here, or send the join.
+   *
+   * A repeat challenge (the probe was retried and both answers arrived) is
+   * ignored rather than answered with a second join — the cookie the first one
+   * carried is good for its whole epoch, and a second join is the duplicate the
+   * hub has to have a branch for.
+   */
+  function onChallenge(payload: ChallengePayload): void {
+    if (phase !== "probing") return;
+    const theirs: Handshake = {
+      protocol: Number(payload.protocol) || 0,
+      build: typeof payload.build === "string" ? payload.build : "",
+      // A challenge does not carry the host's mod list — it is answered before
+      // anything is known about the asker, and a list of ids is not something
+      // to hand a stranger. The mod check is therefore the host's alone and
+      // comes back as a `bye`, which is the one refusal in the order this side
+      // cannot pre-empt.
+      mods: options.handshake.mods,
+    };
+    const skew = refuseHandshake(theirs, options.handshake);
+    if (skew) {
+      finish(skew, detailFor(skew, theirs, options.handshake));
+      return;
+    }
+    const cookie = Number(payload.cookie) || 0;
+    const join: JoinPayload = {
+      cookie,
+      handshake: options.handshake,
+      proof: passwordProof(options.password ?? "", cookie),
+      name: options.name,
+    };
+    phase = "joining";
+    joinedAt = options.now();
+    transport.send(
+      host,
+      new Uint8Array(
+        encodeFrame({ type: FRAME.join, seq: 0, ack: 0, tick: 0 }, join),
+      ),
+      "reliable",
+    );
+    options.log?.(`net: joining ${host}`);
+  }
+
+  function onFrame(data: Uint8Array): void {
+    const frame = decodeFrame(data);
+    // Undecodable bytes are dropped in silence: this socket is open to the
+    // internet and a stray datagram is an ordinary event, not an error.
+    if (!frame) return;
+    if (frame.type === FRAME.challenge) {
+      onChallenge((frame.payload ?? {}) as ChallengePayload);
+      return;
+    }
+    if (frame.type === FRAME.bye) {
+      const bye = (frame.payload ?? {}) as ByePayload;
+      // FORWARDED FIRST, THEN ACTED ON. The page's own client words a refusal
+      // for the JOIN screen, and a `bye` that only reached the control channel
+      // would leave a live session's ending unexplained on the one surface the
+      // player is looking at.
+      options.deliver(data);
+      finish(bye.reason ?? "shutdown", bye.detail);
+      return;
+    }
+    if (frame.type === FRAME.welcome && phase !== "live") {
+      phase = "live";
+      options.onAdmitted();
+    }
+    options.deliver(data);
+  }
+
+  return {
+    async start() {
+      await transport.listen({
+        onPacket: (packet) => {
+          // A packet from anybody but the host is dropped. The session we are
+          // talking to is the one we asked for; anything else arriving on this
+          // socket is a stranger scanning ports.
+          if (packet.from !== host) return;
+          onFrame(packet.data);
+        },
+        onPeerLost: (peer, reason) => {
+          if (peer === host) finish("no-session", reason);
+        },
+        onError: (detail) => finish("no-session", detail),
+      });
+      if (phase === "probing") probe();
+    },
+
+    send(frame) {
+      if (phase !== "live") return;
+      // The MODE is chosen from what the frame IS, exactly as the hub chooses
+      // it in the other direction: an input frame carries the current state of
+      // the stick and the next one supersedes it, so retransmitting a lost one
+      // delivers stale steering late. Everything else the page sends — a
+      // command, a chat line, the ack — has to arrive.
+      const type = frame[0] ?? 0;
+      transport.send(
+        host,
+        frame,
+        type === FRAME.input || type === FRAME.ack ? "unreliable" : "reliable",
+      );
+    },
+
+    tick() {
+      if (phase === "done") return;
+      transport.tick();
+      const at = options.now();
+      if (phase === "probing" && at - lastProbeAt >= HELLO_RETRY_MS) {
+        if (attempts >= HELLO_ATTEMPTS) {
+          finish("no-session");
+          return;
+        }
+        probe();
+        return;
+      }
+      if (phase === "joining" && at - joinedAt >= WELCOME_TIMEOUT_MS) {
+        finish("no-session", "the session stopped answering");
+      }
+    },
+
+    close() {
+      if (phase === "done") return;
+      phase = "done";
+      transport.close();
+    },
+  };
+}
+
+/** The half of a refusal only the numbers can supply. Both sides are always
+ * named: a mismatch a player can act on beats one they can only report. */
+function detailFor(
+  reason: RefusalReason,
+  theirs: Handshake,
+  mine: Handshake,
+): string | undefined {
+  if (reason === "protocol-mismatch") {
+    return `PROTOCOL ${mine.protocol} HERE, ${theirs.protocol} THERE`;
+  }
+  if (reason === "build-mismatch") {
+    return `BUILD ${mine.build} HERE, ${theirs.build} THERE`;
+  }
+  return undefined;
+}

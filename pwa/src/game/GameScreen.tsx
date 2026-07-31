@@ -127,8 +127,14 @@ import {
 } from "./game-screen/run-progress.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
-import { createRunDriver } from "./game-screen/run-driver.ts";
+import { ConnectingScreen } from "./game-screen/ConnectingScreen.tsx";
+import { createRunDriver, type RunDriver } from "./game-screen/run-driver.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
+import { activeMods } from "./mod-state.ts";
+import { joinRefusalText } from "./net-text.ts";
+import type { SessionLink } from "./net/session-link.ts";
+import { ChatOverlay } from "./overlays/ChatOverlay.tsx";
+import type { JoinIntent } from "./session-intent.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays, type CharTab } from "./game-screen/SceneOverlays.tsx";
 import { DemoChrome, ScreenChrome } from "./game-screen/ScreenChrome.tsx";
@@ -146,6 +152,7 @@ export function GameScreen({
   botView = false,
   demo = false,
   resume,
+  join,
 }: {
   /** The hero playing this run — the run starts from their persistent build,
    * and every victory (and, in hardcore, death) is banked onto them. */
@@ -174,6 +181,17 @@ export function GameScreen({
    * as-is instead of starting fresh. Consumed once — a later RETRY / NEXT
    * LEVEL in this same mount recreates the game normally. */
   resume?: GameState;
+  /**
+   * JOINING somebody else's session: watch their run instead of starting one.
+   *
+   * The whole screen works the same way — the renderer, the HUD, the effects
+   * and the sound bus read a `GameState` and one is still there — with two
+   * differences the rest of this file is written around. The state ARRIVES
+   * (nothing here builds it, so the loop waits on the welcome exactly as it
+   * waits on the sprite atlas), and nothing is BANKED: a spectator plays on a
+   * throwaway hero, so somebody else's kills cannot land on their roster.
+   */
+  join?: JoinIntent;
 }) {
   // The level this run is on. Retry replays it; the victory splash's NEXT
   // LEVEL button advances it along LEVEL_ORDER, which re-runs the mount effect
@@ -381,9 +399,62 @@ export function GameScreen({
     };
   }, []);
 
+  // JOINING: connect first, play second.
+  //
+  // The run loop below cannot start without a `GameState`, and on this path
+  // nothing in this process builds one — the net client builds it from the
+  // welcome's own session parameters, which is the ordinary path its static
+  // tier was designed for. So this effect stands where the sprite atlas's does
+  // and the loop waits on it the same way: `joined` is null, the effect below
+  // returns early, and the CONNECTING screen is up.
+  //
+  // It owns the driver for the whole mount, deliberately. The run effect
+  // re-runs for a dozen ordinary reasons (a RETRY, NEXT LEVEL, the FPS row) and
+  // every one of them would otherwise drop the connection and reconnect.
+  const [joined, setJoined] = useState<{
+    state: GameState;
+    driver: RunDriver;
+  } | null>(null);
+  const [joinRefusal, setJoinRefusal] = useState<string | null>(null);
+  const [sessionLink, setSessionLink] = useState<SessionLink | null>(null);
+  useEffect(() => {
+    if (!join) return;
+    let live = true;
+    let made: RunDriver | null = null;
+    void import("./net/driver.ts").then(({ createJoinDriver }) => {
+      if (!live) return;
+      made = createJoinDriver({
+        address: join.address,
+        peer: join.peer,
+        name: join.name,
+        password: join.password,
+        mods: activeMods().map((stamp) => stamp.id),
+        onReady: (state: GameState) => {
+          if (live) setJoined({ state, driver: made as RunDriver });
+        },
+        onClosed: (reason, detail) => {
+          if (!live) return;
+          setJoinRefusal(joinRefusalText(reason, detail));
+        },
+      });
+      // No bridge at all — a browser, a phone, a desktop build with the shell
+      // down. The JOIN screens are hidden on those, so this is the case where
+      // one was reached anyway (a deep link, a stale window).
+      if (!made) setJoinRefusal(joinRefusalText("no-session"));
+    });
+    return () => {
+      live = false;
+      made?.dispose();
+    };
+  }, [join]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!assets || !canvas) return;
+    // JOINING: nothing to draw until the welcome lands and the world is built.
+    // The same shape as the atlas gate above it, and the effect re-runs when
+    // `joined` arrives.
+    if (join && !joined) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -405,6 +476,7 @@ export function GameScreen({
       demo,
       skipOpening,
       runId,
+      spectate: joined?.state ?? null,
     });
     const { state, runLevelId, bot, tuning, beginRun } = session;
     // WHO ADVANCES THIS RUN. A local driver steps it here, exactly as this
@@ -412,8 +484,15 @@ export function GameScreen({
     // applies what comes back. Which one is decided once, at the top of the
     // run, and nothing below this line knows the difference — see
     // ./game-screen/run-driver.ts.
-    const driver = createRunDriver(session);
+    // A SPECTATOR'S DRIVER IS ALREADY RUNNING — the connection is what built
+    // the state this loop is about to read, so it cannot be created here, and
+    // it is owned by the join effect above rather than by this one.
+    const driver = joined?.driver ?? createRunDriver(session);
     setState(state);
+    // THE SESSION BEHIND THIS RUN, if there is one — what the chat overlay is
+    // mounted from. Null for every local run, which is every browser, every
+    // phone and every desktop game nobody opened the doors on.
+    setSessionLink(driver.session ?? null);
     setNewRecord(false);
     setKilledBy(null);
 
@@ -422,8 +501,9 @@ export function GameScreen({
     // run continuing, so it doesn't. Run-count badges can unlock right here.
     // The HOW TO PLAY demo never touches the account-wide trophy shelf: the
     // player is watching, not playing, so the bot must bank no achievements and
-    // inflate no lifetime totals.
-    if (!session.resumed && !demo)
+    // inflate no lifetime totals — and a SPECTATOR is the same case for the
+    // same reason, one machine further away.
+    if (!session.resumed && !demo && !join)
       celebrateAchievements(recordRunStarted(runLevelId));
 
     // The per-run scratch shared between simulate and render (effects, the
@@ -552,7 +632,10 @@ export function GameScreen({
 
     const reactions = createTickReactions({
       state,
-      demo,
+      // A SPECTATOR banks nothing, exactly as the demo banks nothing: the kills
+      // on this screen are somebody else's, and a lifetime ledger that counted
+      // them would pay a watcher for a run they are not playing.
+      transient: demo || Boolean(join),
       difficulty,
       celebrateAchievements,
     });
@@ -861,7 +944,10 @@ export function GameScreen({
 
     return () => {
       stop();
-      driver.dispose();
+      // A joined run's driver belongs to the join effect, which holds the
+      // connection for the whole mount: disposing it here would drop the
+      // session every time this effect re-ran.
+      if (!joined) driver.dispose();
       stopMusic();
       controls.detach();
       observer.disconnect();
@@ -876,6 +962,8 @@ export function GameScreen({
     };
   }, [
     assets,
+    join,
+    joined,
     runId,
     difficulty,
     levelId,
@@ -897,6 +985,19 @@ export function GameScreen({
 
   if (!assets) {
     return <LoadingScreen />;
+  }
+  // JOINING: the handshake, then somebody else's level being built. It can take
+  // seconds and it can be refused, so it says which — a spinner that turns into
+  // a black screen is how "multiplayer is broken" gets reported.
+  if (join && !joined) {
+    return (
+      <ConnectingScreen
+        font={assets.font}
+        target={join.label ?? join.address ?? "THE SESSION"}
+        refusal={joinRefusal}
+        onBack={onQuit}
+      />
+    );
   }
   const font = assets.font;
   // Which bottom corner the powerup dock lives in; the pickup feed takes the
@@ -1138,6 +1239,20 @@ export function GameScreen({
         />
       )}
 
+      {/* THE SESSION'S CHAT — mounted only when there IS a session, which is
+          what `driver.session` answers. Its own overlay rather than a panel
+          inside the pause screen: what it is for is being read while the fight
+          goes on, and a chat you have to pause the game to see is a chat
+          nobody uses. It hands ENTER back whenever a screen that owns the
+          keyboard is up. */}
+      {sessionLink && (
+        <ChatOverlay
+          font={font}
+          link={sessionLink}
+          suspended={hud?.phase !== "playing"}
+        />
+      )}
+
       {/* The phase-driven overlay stack: cutscene, intro/outro, title card,
           dialogue (+ the arrival-scene bag shortcut), choice, companion,
           level-up, spell unlock, respec, inventory, shop, and map. */}
@@ -1266,6 +1381,7 @@ export function GameScreen({
           onQuit={onQuit}
           onExitToMenu={onExitToMenu}
           bumpUi={bumpUi}
+          sessionLink={sessionLink}
         />
       )}
 

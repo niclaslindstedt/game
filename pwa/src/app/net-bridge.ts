@@ -13,6 +13,7 @@
 //   → { action: "status", requestId }           the HOST screen's status rows
 //   → { action: "browse", requestId }           the server browser
 //   → { action: "join", requestId, lobbyId }    join a Steam lobby
+//   → { action: "connect", requestId, address? , peer?, playerName, password? }
 //   → { action: "firewall" | "allow-firewall", requestId, port }
 //   ← { event: "hosted", requestId, ok, levelId?, reason? }
 //   ← { event: "listening", requestId, ok, bound, steam, lobbyId, reason? }
@@ -21,6 +22,7 @@
 //       bound, mapping, roster }
 //   ← { event: "browse", requestId, ok, rows }
 //   ← { event: "joined", requestId, ok, hostId?, row?, reason? }
+//   ← { event: "connected", requestId, ok, reason?, detail? }
 //   ← { event: "firewall", requestId, ok, state }
 //   ← { event: "port" }                         the snapshot channel is up
 //
@@ -53,6 +55,13 @@ declare global {
  * disk, so this is generous — but finite, because a HOST screen that hangs is
  * worse than one that says it could not start. */
 const CONTROL_TIMEOUT_MS = 20_000;
+
+/** …and how long a JOIN may take, which is longer for a reason no control
+ * round trip on this bridge has: it waits on another machine — a probe that may
+ * go unanswered and a level built on the far end. It has to outlast the
+ * connector's own deadlines (`server/net/connect.ts`), so that what the player
+ * reads is the host's refusal rather than this timeout. */
+const CONNECT_TIMEOUT_MS = 30_000;
 
 export type HostResult =
   { ok: true; levelId: string } | { ok: false; reason: string };
@@ -163,6 +172,16 @@ export type ListenOptions = {
 let nextRequestId = 1;
 const waiters = new Map<number, (payload: unknown) => void>();
 let portListener: ((port: MessagePort) => void) | null = null;
+let inviteListener: ((invite: SessionInvite) => void) | null = null;
+/** An invite that arrived before anything was listening. The shell delivers it
+ * on the page's first load, which can beat the title screen's own mount by a
+ * frame — and an invite dropped for being early is a friend's session the
+ * player never reaches. */
+let pendingInvite: SessionInvite | null = null;
+
+/** What a `+connect_lobby` / `--connect` launch asked for. Exactly one of the
+ * two, mirroring `ConnectOptions`. */
+export type SessionInvite = { lobbyId?: string; address?: string };
 
 /**
  * True where a session can actually be hosted: a shell with its channel up, on
@@ -183,7 +202,25 @@ export function initNetBridge(): void {
   if (!netBridgeAvailable()) return;
   if (!window.__gisNetEvent) {
     window.__gisNetEvent = (event: unknown) => {
-      const payload = event as { requestId?: number } | null;
+      const payload = event as {
+        requestId?: number;
+        event?: string;
+        lobbyId?: string;
+        address?: string;
+      } | null;
+      // THE ONE UNSOLICITED EVENT ON THIS BRIDGE. Everything else here is a
+      // reply to a request the page made and is matched by id; an invite was
+      // made on a command line before this page existed, so it has no id to
+      // match and is dispatched by name.
+      if (payload?.event === "invite") {
+        const invite: SessionInvite = {
+          lobbyId: payload.lobbyId,
+          address: payload.address,
+        };
+        if (inviteListener) inviteListener(invite);
+        else pendingInvite = invite;
+        return;
+      }
       if (!payload || typeof payload.requestId !== "number") return;
       const waiter = waiters.get(payload.requestId);
       if (!waiter) return;
@@ -203,6 +240,28 @@ export function initNetBridge(): void {
  */
 export function onSessionPort(listener: (port: MessagePort) => void): void {
   portListener = listener;
+}
+
+/**
+ * Be told when the game was LAUNCHED into a session — a friend's Steam invite
+ * accepted while the game was closed, or a shared address clicked.
+ *
+ * Registering hands over an invite that already arrived, because it usually
+ * has: the shell delivers it the moment the page loads, which is before any
+ * screen has mounted. Returns the unsubscribe.
+ */
+export function onSessionInvite(
+  listener: (invite: SessionInvite) => void,
+): () => void {
+  inviteListener = listener;
+  if (pendingInvite) {
+    const held = pendingInvite;
+    pendingInvite = null;
+    listener(held);
+  }
+  return () => {
+    if (inviteListener === listener) inviteListener = null;
+  };
 }
 
 /** Start a session. The shell forks the server and hands back a port. */
@@ -295,6 +354,59 @@ export async function joinSession(
   return { hostId: reply.hostId, row: reply.row };
 }
 
+/** Where a joiner is going, and as whom. Exactly one of `address` (typed, or
+ * copied out of a browser row) and `peer` (a Steam id `joinSession` handed
+ * back) — the transport is chosen by which one is there. */
+export type ConnectOptions = {
+  address?: string;
+  peer?: string;
+  name: string;
+  password?: string;
+  /** The mods this build has applied, in load order. A mismatch is what the
+   * host refuses on; sending them is how it can. */
+  mods?: string[];
+};
+
+export type ConnectResult =
+  { ok: true } | { ok: false; reason: string; detail?: string };
+
+/**
+ * Join a session, and be told whether the door opened.
+ *
+ * The snapshot port arrives on the SAME channel a host's does
+ * (`onSessionPort`), which is why nothing downstream of it knows which of the
+ * two happened: a joiner's frames come off a socket in the session process and
+ * a host's out of a simulation there, and both reach this page as bytes on a
+ * `MessagePort`.
+ *
+ * Its own generous timeout, because this is the one control round trip whose
+ * duration is somebody ELSE's machine: a probe that goes unanswered for six
+ * seconds and a level being built on a cold disk on the far end. It still ends,
+ * because a JOIN screen that spins for ever is worse than one that says nobody
+ * answered.
+ */
+export async function connectSession(
+  options: ConnectOptions,
+): Promise<ConnectResult> {
+  const reply = (await request(
+    {
+      action: "connect",
+      address: options.address,
+      peer: options.peer,
+      playerName: options.name,
+      password: options.password,
+      mods: options.mods,
+    },
+    CONNECT_TIMEOUT_MS,
+  )) as { ok?: boolean; reason?: string; detail?: string } | null;
+  if (reply?.ok) return { ok: true };
+  return {
+    ok: false,
+    reason: reply?.reason ?? "no-session",
+    detail: reply?.detail,
+  };
+}
+
 /**
  * Is UDP `port` allowed in, and — with `allow` — one press to ask for it.
  *
@@ -320,14 +432,17 @@ export async function firewallStatus(
  * does: every caller here is drawing a screen, and a screen that throws because
  * a process was slow to fork is worse than one that reports it could not host.
  */
-function request(message: Record<string, unknown>): Promise<unknown> {
+function request(
+  message: Record<string, unknown>,
+  timeoutMs = CONTROL_TIMEOUT_MS,
+): Promise<unknown> {
   if (!netBridgeAvailable()) return Promise.resolve(null);
   const requestId = nextRequestId++;
   return new Promise((resolve) => {
     const timer = window.setTimeout(() => {
       waiters.delete(requestId);
       resolve(null);
-    }, CONTROL_TIMEOUT_MS);
+    }, timeoutMs);
     waiters.set(requestId, (payload) => {
       window.clearTimeout(timer);
       resolve(payload);

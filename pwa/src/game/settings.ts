@@ -385,6 +385,41 @@ export type GameSettings = {
    * the engine's shipped config — XP pace, mob strength, loot percentages…
    * All 1 (neutral) by default; applied via `setBalanceTuning`. */
   balance: BalanceTuning;
+  /**
+   * MULTIPLAYER — how a hosted session is opened, and where a joiner has been.
+   * Steam builds only; everywhere else nothing reads it (see
+   * `pwa/src/app/net-bridge.ts` for why a phone and a tab cannot host).
+   *
+   * It is a PLAYER setting rather than a developer one and is deliberately not
+   * stripped from a store build: hosting is the feature.
+   */
+  multiplayer: SessionSettings;
+};
+
+/** Which doors a hosted session opens. BOTH by default and it should be: Steam
+ * friends get the frictionless path — nothing inbound is bound at all, so no
+ * port, no router mapping, no firewall rule — and everybody else gets an
+ * address. */
+export type SessionDoors = "both" | "steam" | "direct";
+
+export type SessionSettings = {
+  /**
+   * The UDP port to TRY first.
+   *
+   * TRY, because the socket walks up to 27030 on `EADDRINUSE` and what it GOT
+   * is what the session panel prints (`server/net/udp.ts`). A host reading this
+   * number off a settings page while the socket sits one along is the exact bug
+   * that makes "direct connect doesn't work" unanswerable.
+   */
+  port: number;
+  doors: SessionDoors;
+  /** Seats, host included. */
+  maxPlayers: number;
+  /** What a joiner must know, or "" for an open game. */
+  password: string;
+  /** Addresses this device has joined, newest first — the JOIN BY ADDRESS
+   * screen's own list, so a LAN party is one press after the first time. */
+  recent: string[];
 };
 
 const STORAGE_KEY = storageKey("settings");
@@ -483,8 +518,62 @@ function defaults(): GameSettings {
     // Balance multipliers start at the shipped tuning (neutral 1 for all but
     // the world's pace — see BALANCE_TUNING_DEFAULTS).
     balance: { ...BALANCE_TUNING_DEFAULTS },
+    multiplayer: {
+      port: DEFAULT_SESSION_PORT,
+      doors: "both",
+      maxPlayers: MAX_SESSION_PLAYERS,
+      password: "",
+      recent: [],
+    },
   };
 }
+
+/** The conventional port, and why it is this one: 27015 sits in Steam's own
+ * game-port range, so a player who has already forwarded ports for another game
+ * very likely has it open. Mirrors `DEFAULT_PORT` in `server/wire/address.ts`,
+ * spelled here rather than imported because this module is on the app's STARTUP
+ * path and stays import-light. */
+export const DEFAULT_SESSION_PORT = 27015;
+/** Seats, host included. Mirrors `MAX_CLIENTS` in `server/wire/protocol.ts`. */
+export const MAX_SESSION_PLAYERS = 8;
+
+/** The stored session block, read defensively — the port in particular, which
+ * reaches a `bind()` call. */
+function loadSession(stored: unknown, base: SessionSettings): SessionSettings {
+  const held = stored as Partial<SessionSettings> | null;
+  if (!held || typeof held !== "object") return base;
+  const port = Number(held.port);
+  return {
+    port:
+      Number.isFinite(port) && port >= 1 && port <= 65535
+        ? Math.floor(port)
+        : base.port,
+    doors:
+      held.doors === "both" || held.doors === "steam" || held.doors === "direct"
+        ? held.doors
+        : base.doors,
+    maxPlayers:
+      typeof held.maxPlayers === "number"
+        ? clamp(Math.round(held.maxPlayers), 2, MAX_SESSION_PLAYERS)
+        : base.maxPlayers,
+    password:
+      typeof held.password === "string"
+        ? held.password.slice(0, MAX_SESSION_PASSWORD)
+        : base.password,
+    recent: Array.isArray(held.recent)
+      ? held.recent
+          .filter((entry): entry is string => typeof entry === "string")
+          .slice(0, MAX_RECENT_SESSIONS)
+      : base.recent,
+  };
+}
+
+/** How long a session password may be. Long enough for a phrase, short enough
+ * to type on a controller. */
+export const MAX_SESSION_PASSWORD = 24;
+/** How many addresses JOIN BY ADDRESS remembers. A list, not a history: what it
+ * is for is the four machines at a LAN party, not an archive. */
+export const MAX_RECENT_SESSIONS = 6;
 
 /** Sanitize a stored balance object: every knob falls back to the shipped
  * default unless it is a finite, non-negative number (0 is a valid "system off"
@@ -832,6 +921,7 @@ function load(): GameSettings {
       // hand-edited or downgraded store can't hand the renderer a bloom of 40.
       ...visualsFrom(stored, base),
       balance: loadBalance(stored.balance, developerUnlocked),
+      multiplayer: loadSession(stored.multiplayer, base.multiplayer),
     };
   } catch {
     return base; // private mode / corrupt JSON — play with defaults

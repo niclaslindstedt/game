@@ -44,10 +44,23 @@ import {
 } from "@game/core";
 import type { SessionParams } from "@game/wire/protocol.ts";
 
+import { activeMods } from "../mod-state.ts";
 import { createNetDriver } from "../net/driver.ts";
+import type { SessionLink } from "../net/session-link.ts";
+import { takeHostIntent } from "../session-intent.ts";
 import type { RunSession } from "./run-setup.ts";
 
 export type RunDriver = {
+  /**
+   * The session behind this run, or null when there is none.
+   *
+   * Null on the LOCAL path, which is the answer for every browser, every phone
+   * and every desktop single-player game — and the reason the chat overlay and
+   * the session panel are mounted from this one field rather than from a
+   * platform check: a surface that exists only when there is a session to talk
+   * to cannot be drawn over a game that has none.
+   */
+  readonly session?: SessionLink | null;
   /**
    * Advance the run by one fixed slice.
    *
@@ -124,10 +137,30 @@ export function createRunDriver(session: RunSession): RunDriver {
   // sends every client a full first snapshot, which carries the terrain as
   // well, so a client that could not have built the world is still given one.
   const params = session.params;
+  // HOST GAME armed this run, or nothing did. A run that nobody asked to host
+  // still simulates in the session process — that is the cutover, not a
+  // multiplayer feature — and must not bind a socket for it.
+  const hosting = takeHostIntent();
   const net = createNetDriver({
     state: session.state,
     params: params ? wireParams(params) : adoptedParams(session.state),
     adopt: params ? null : freezeRun(session.state),
+    // THE MODS THIS RUN IS ACTUALLY PLAYING, in load order. They travel because
+    // the handshake refuses a mismatch on them: a host with a conversion on and
+    // a joiner without hold different catalogs, and the two worlds diverge on
+    // the first spawn. A host that advertised none would admit exactly that
+    // joiner and call the desync a replication bug.
+    mods: activeMods().map((stamp) => stamp.id),
+    listen: hosting
+      ? {
+          name: hosting.name,
+          port: hosting.port,
+          udp: hosting.udp,
+          steam: hosting.steam,
+          password: hosting.password,
+          maxClients: hosting.maxPlayers,
+        }
+      : undefined,
     onClosed: (reason, detail) => {
       error(`session ended: ${reason}${detail ? ` — ${detail}` : ""}`);
     },

@@ -55,6 +55,10 @@ const UNION: MenuScreen[] = [
   "storesend",
   "mods",
   "modorder",
+  "multiplayer",
+  "host",
+  "sessions",
+  "address",
 ];
 
 /**
@@ -102,6 +106,33 @@ function ctxFor(overrides: Partial<MenuContext> = {}): MenuContext {
     pickImport: () => {},
     beginExportPicker: () => {},
     runSeed: () => {},
+    prompt: () => {},
+    netOpen: true,
+    net: {
+      rows: [],
+      refresh: () => {},
+      firewall: null,
+      allowFirewall: () => {},
+      session: {
+        port: 27015,
+        doors: "both",
+        maxPlayers: 8,
+        password: "",
+        recent: [],
+      },
+      setSession: () => {},
+      hostIntent: () => ({
+        name: "TEST",
+        password: "",
+        maxPlayers: 8,
+        port: 27015,
+        udp: true,
+        steam: true,
+      }),
+      refusalFor: () => null,
+      joinRow: () => {},
+      joinAddress: () => {},
+    },
     modsOpen: true,
     mods: {
       rows: [],
@@ -212,6 +243,7 @@ describe("the title menu tree", () => {
       "main-new-game",
       "main-load-game",
       "main-how-to-play",
+      "main-multiplayer",
       "main-store",
       "main-mods",
       "main-extras",
@@ -228,6 +260,7 @@ describe("the title menu tree", () => {
         onResume: undefined,
         storeOpen: false,
         modsOpen: false,
+        netOpen: false,
         canQuit: false,
       }),
     ).map((row) => row.aria);

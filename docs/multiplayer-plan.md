@@ -149,7 +149,7 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 | **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7   |
 | **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
 | **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4       |
-| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks |                               |
+| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4        |
 | **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                               |
 | **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
 | **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                               |
@@ -979,6 +979,56 @@ Plus, of this PR's own:
 - The `ui-review` skill's screenshot audit passes at all nine reference
   viewports, chat overlay included.
 - The budget check still passes.
+
+### 2.5.4 What PR 2.5 actually shipped — and the finding it ran into
+
+**THE JOINER'S HALF OF THE WIRE DID NOT EXIST.** §2.5's own preamble says
+nothing here "was deferred for lack of a foundation", and that was true of every
+row it listed and false of the thing they all lead to: `hub.ts` is the host's
+admission desk, and NOTHING anywhere spoke the other side of that conversation.
+The page's `NetClient` waits for a welcome; it never probes, never echoes a
+challenge and never sends a join, because until this PR the only client was the
+host's own renderer at the end of a `MessagePort`. So a JOIN screen built to the
+letter of §2.5.1 would have been the third repetition of this plan's own
+recorded failure — a layer that ships with nothing able to reach it.
+
+So PR 2.5 also built `server/net/connect.ts` (the probe → challenge → join
+state machine, tested against the REAL hub in `tests/engine/net_connect_test.ts`)
+and gave the session process a second role: `connect` makes it a JOINER, with no
+simulation, a socket opened outward and the same port carrying somebody else's
+frames to the same renderer. The page's client cannot tell the two apart, which
+is why joining cost one module rather than a second client.
+
+**Four deliberate departures from §2.2 and §2.4, each with its reason:**
+
+1. **THE HOST SCREEN IS NOT A LOBBY, AND THE LIVE ROWS ARE ON THE PAUSE
+   SCREEN.** §2.2 sketches the status panel on the HOST screen. A session exists
+   only while a RUN does — hosting is a game you start with the doors open — so
+   the port the socket actually got, the address to hand a friend, the router's
+   answer and the seats are all facts a title-menu screen cannot have. HOST GAME
+   keeps what it can answer beforehand (the doors, the seats, the password, the
+   port to try, the FIREWALL check, which is a property of the machine) and its
+   START row walks into the ordinary difficulty and mission pickers. Building
+   the lobby instead would have meant a second idle simulation standing on the
+   map, and would have made the host's own renderer a client of a session it did
+   not build — which is PR 3's cutover, not this one's.
+2. **THE PORT SETTING IS ON THE HOST SCREEN, NOT IN SETTINGS.** §2.2 says
+   "configurable in SETTINGS". The HOST screen IS a settings form, and a port
+   row three screens away from the only thing that binds it is a row nobody
+   finds. It is persisted with the rest of the session settings either way.
+3. **THE SESSION NAME IS DERIVED, NOT TYPED.** `NIGHTHAWK'S GAME`, from the
+   hero. A browser row needs to say who is hosting; a text field for it costs a
+   modal and earns a joke that stops being funny by the third session.
+4. **THE THREE DOORS HANG UNDER A `MULTIPLAYER` SCREEN** on the front door
+   rather than as three front-door rows, which would have run a landscape phone
+   to eleven rows again — the exact length EXTRAS exists to avoid.
+
+**What could not be verified here, and is still owed:** the eight-machine runs
+over each transport through a NAT, the UPnP mapping against a real router, the
+firewall remedies on each OS, and the packaged `npm run electron` launch (still
+§1.75.4's debt). None of them can be met in CI, and none of them are met by
+reading the diff. The `ui-review` screenshot audit is likewise owed: the harness
+drives a browser, where every one of these screens is deliberately absent.
 
 ---
 
