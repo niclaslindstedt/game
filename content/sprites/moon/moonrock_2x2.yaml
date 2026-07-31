@@ -1,31 +1,34 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: moonrock_2x2
 family: moon
 size: [32, 32]
 description: >
-  A large four-tile block of grey lunar moonrock, a chunky boulder mass that
-  fully walls off sight, shots, and blast.
+  A large four-tile mass of grey moonrock: the same vacuum-lit crown and facet
+  ramp as its smaller siblings, at the size that fully walls off sight, shots
+  and blast.
 subject:
   kind: prop
   build: a large four-tile block of grey moonrock, a chunky boulder mass
-  features: shaded angular facets
-  accent: desaturated stone grey
+  features: hard flat facets falling away from a lit crown to a deep shadow side
+  accent: a vacuum-lit crown well above the regolith's own grey, over a shadow side well below it
   flavor: cover against robots that fully walls off sight, shots, and blast, phased through by the dead
 palette:
   F: "#a2a4ad" # light stone face
   O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # vacuum-lit crown
   d: "#676972" # mid stone shadow
   e: "#4e4f56" # deep stone shadow
-  f: "#888a96" # base stone grey
+  f: "#9a9daa" # stone mid-face, lifted clear of the ground tile's own grey
 grid: |
   ................................
   ................................
   ........OOOOOOOOOOOOOOO.........
-  .....OOOFFFFffffeffffffOOOO.....
-  ...OOFFFFFFfffffeffffffffddOO...
-  ..OFFFFFFFfffffffeffffffdddddO..
-  ..OFFFFFFffffffffefffffdddddddO.
-  .OFFFFFFffffffffffffffddddddddO.
-  .OFFFFFffffffffffffffdddddddddO.
+  .....OOOTTTTffffeffffffOOOO.....
+  ...OOTTTTTTfffffeffffffffddOO...
+  ..OTTTTTTTfffffffeffffffdddddO..
+  ..OTTTTTTffffffffefffffdddddddO.
+  .OTTTTTTffffffffffffffddddddddO.
+  .OTTTTTffffffffffffffdddddddddO.
   .OFFFFffffffffffffffddddddddddO.
   .OFFffffffffffffffddddddddddddO.
   .OFffffffffffffffddddddddddddOO.

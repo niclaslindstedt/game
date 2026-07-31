@@ -315,8 +315,7 @@ for (const vp of VIEWPORTS) {
   // Boot a fresh run on the game page (also the recovery path — see below).
   const bootRun = async () => {
     await game.goto(`${url}/?debug&seed=7`);
-    await game.getByRole("button", { name: "play", exact: true }).waitFor();
-    await game.getByRole("button", { name: "play", exact: true }).click();
+    await game.getByRole("button", { name: "new-game" }).waitFor();
     await game.getByRole("button", { name: "new-game" }).click();
     await game
       .getByRole("textbox", { name: "character-name" })
@@ -735,8 +734,7 @@ for (const vp of VIEWPORTS) {
   };
   await tryStep("bot-run", async () => {
     await bot.goto(`${url}/?debug&seed=11&bot=kite`);
-    await bot.getByRole("button", { name: "play", exact: true }).waitFor();
-    await bot.getByRole("button", { name: "play", exact: true }).click();
+    await bot.getByRole("button", { name: "new-game" }).waitFor();
     await bot.getByRole("button", { name: "new-game" }).click();
     await bot.getByRole("textbox", { name: "character-name" }).fill("KITE");
     await bot.getByRole("button", { name: "character-create" }).click();

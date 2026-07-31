@@ -72,6 +72,7 @@ import {
 } from "./render-quests.mjs";
 import { talentCardSpec, talentPage, talentsIndex } from "./render-talents.mjs";
 import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
+import { achievementsIndex, categoryPage } from "./render-achievements.mjs";
 import { libraryCss } from "./styles.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -274,6 +275,10 @@ function spritesUsed(model) {
       if (objective.escort) sprites.add(objective.escort.sprite);
     }
   }
+  // A badge's own sprite, which the catalog picks out of the same atlas
+  // everything else here draws from — a relic's icon for a relic's trophy, a
+  // companion's weapon for an ally, a skull for the body count.
+  for (const badge of model.achievements.badges) sprites.add(badge.icon);
   return sprites;
 }
 
@@ -396,6 +401,13 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   for (const giver of model.quests.givers) {
     writePage(giver.path, giverPage(giver, model.quests, context));
   }
+  writePage("achievements", achievementsIndex(model.achievements, context));
+  for (const category of model.achievements.categories) {
+    writePage(
+      category.path,
+      categoryPage(category, model.achievements, context),
+    );
+  }
   writePage("story", storyIndex(model, context));
   const chapters = model.story.chapters;
   for (const [i, chapter] of chapters.entries()) {
@@ -414,8 +426,9 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
       model.missions.length +
       model.quests.quests.length +
       model.quests.givers.length +
+      model.achievements.categories.length +
       chapters.length +
-      8,
+      9,
     sprites: spritesUsed(model).size,
     maps: maps.size,
     cards: imageCount,

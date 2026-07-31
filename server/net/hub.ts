@@ -1,0 +1,422 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// THE PEER HUB — the one place a stranger's packet turns into a client, and
+// the only thing in this feature standing between an open UDP port and the
+// simulation.
+//
+// **NOTHING REACHES THE SESSION BEFORE THE CONNECTION IS ESTABLISHED.** §5.2's
+// rule, implemented literally: a peer that has not been admitted may send
+// exactly two frames — a padded `hello` and a `join` — and every other frame
+// from it is dropped without being looked at. Input, commands and chat are only
+// parsed for a peer that has already cleared the protocol check, the build
+// check, the mod check, the challenge and the password.
+//
+// **THE HOST IS ADMITTED WITHOUT ANY OF IT, AND THAT IS NOT AN EXCEPTION.**
+// The host's own renderer reaches the session over a `MessagePort` inside the
+// same machine; there is no address to verify, no version skew possible, and
+// no password a player should have to type to play their own game. It is a
+// different DOOR, not a privileged client — it is seated by `server/main.ts`
+// exactly as it was in PR 1, and everything below this line is about the door
+// that faces the internet.
+//
+// THREE BOUNDS, EACH ANSWERING A DIFFERENT ABUSE:
+//
+//  1. **A CONNECTIONLESS BUDGET PER ADDRESS.** A `hello` costs the host a
+//     hash and a small reply. A million of them costs it a tick. The bucket is
+//     per address and refills slowly, so an ordinary retry is free and a flood
+//     is answered with silence — never with a refusal, which would itself be a
+//     reply worth eliciting.
+//  2. **A HALF-OPEN COUNT.** There is none, deliberately, and that is the
+//     point of the cookie: nothing is remembered between a `hello` and a
+//     `join`, so there is no half-open table to exhaust. If this ever grows
+//     one, the flood defence is gone and this comment is the warning.
+//  3. **A SEAT CAP.** `MAX_CLIENTS`, checked in `admit`, so a session cannot
+//     be filled past what its publish loop was measured for.
+//
+// **AND A REFUSAL IS A `bye`, NOT A SILENCE.** Version skew is the failure mode
+// that reaches a player as "random crashes"; a joiner told "one of you needs to
+// update" fixes it in a minute, and a joiner told nothing at all files a bug.
+// The one exception is the rate limiter above, where answering is the abuse.
+
+import { decodeFrame, encodeFrame } from "../wire/codec.ts";
+import {
+  admit,
+  challengeEpoch,
+  challengeFor,
+  sanitizeName,
+} from "../wire/handshake.ts";
+import {
+  FRAME,
+  HELLO_MIN_BYTES,
+  MAX_CLIENTS,
+  type ChallengePayload,
+  type Handshake,
+  type JoinPayload,
+  type RefusalReason,
+} from "../wire/protocol.ts";
+import type { Packet, PeerKey, SendMode, Transport } from "./transport.ts";
+
+/**
+ * How many connectionless frames one address may send in a burst, and how fast
+ * the allowance comes back.
+ *
+ * Five is enough for a probe, a retry and a join with room to spare; one per
+ * second back is far below what a flood needs and far above what a player's
+ * second attempt costs.
+ */
+const CONNECTIONLESS_BURST = 5;
+const CONNECTIONLESS_REFILL_MS = 1_000;
+
+/** How long an idle rate-limit record is kept. A bound on the table, so the
+ * defence against a flood is not itself a way to grow memory by flooding. */
+const LIMITER_IDLE_MS = 60_000;
+
+/** What the hub needs from the session. Structural rather than the `Session`
+ * type itself so the whole admission path can be tested against a stub — the
+ * alternative is a test that has to build a level to check a password. */
+export type HubSession = {
+  addClient(
+    id: number,
+    send: (frame: ArrayBuffer) => void,
+    owns: boolean,
+    name?: string,
+  ): void;
+  removeClient(id: number): void;
+  receive(id: number, type: number, seq: number, payload: unknown): void;
+  /** How many seats are taken, host included. */
+  readonly clientCount: number;
+};
+
+export type HubOptions = {
+  session: HubSession;
+  /** The session's own handshake — what a joiner's is compared against. */
+  handshake: Handshake;
+  /** The session's password, or "" for an open game. */
+  password?: string;
+  /** Seats, host included. */
+  maxClients?: number;
+  /** The per-session challenge secret. Passed in rather than minted here
+   * because this module has no randomness of its own — see `wire/handshake.ts`
+   * for why that is the rule and not an inconvenience. */
+  secret: number;
+  now(): number;
+  /** A line for the host's own log. Refusals are worth seeing; a flood is not,
+   * so the limiter is silent. */
+  log?(message: string): void;
+};
+
+export type PeerHub = {
+  /** Take a transport under management. It is `listen`ed immediately. */
+  add(transport: Transport): Promise<void>;
+  /** Pump every transport and expire the rate-limit table. */
+  tick(): void;
+  /** Remove one admitted peer — a kick, or a host shutting the door. */
+  kick(clientId: number, reason: string): void;
+  /** How the session names a peer, for the roster. */
+  nameOf(clientId: number): string;
+  /** Round trip to one peer in ms, or -1 when nothing can measure it. */
+  pingOf(clientId: number): number;
+  /** Close every transport and forget every peer. */
+  close(): void;
+};
+
+export function createPeerHub(options: HubOptions): PeerHub {
+  const maxClients = options.maxClients ?? MAX_CLIENTS;
+  const password = options.password ?? "";
+  const transports: Transport[] = [];
+
+  /** An admitted peer. A peer that has not been admitted has no record at all
+   * — see bound 2 in the header. */
+  type Admitted = {
+    id: number;
+    key: PeerKey;
+    name: string;
+    transport: Transport;
+  };
+  const byKey = new Map<PeerKey, Admitted>();
+  const byId = new Map<number, Admitted>();
+  /** Client ids start above the host's, which `server/main.ts` owns. */
+  let nextClientId = 100;
+
+  /** Tokens left, and when they were last topped up. */
+  const limiter = new Map<string, { tokens: number; at: number }>();
+
+  function allow(key: PeerKey): boolean {
+    const at = options.now();
+    // The BUCKET IS KEYED ON THE ADDRESS, NOT THE ADDRESS AND PORT: a flood
+    // trivially varies its source port, and a limiter that counted those would
+    // hand every attacker a fresh allowance per packet.
+    const bucketKey = addressOf(key);
+    const held = limiter.get(bucketKey);
+    if (!held) {
+      limiter.set(bucketKey, { tokens: CONNECTIONLESS_BURST - 1, at });
+      return true;
+    }
+    const refill = Math.floor((at - held.at) / CONNECTIONLESS_REFILL_MS);
+    if (refill > 0) {
+      held.tokens = Math.min(CONNECTIONLESS_BURST, held.tokens + refill);
+      held.at += refill * CONNECTIONLESS_REFILL_MS;
+    }
+    if (held.tokens <= 0) return false;
+    held.tokens--;
+    return true;
+  }
+
+  /**
+   * Send one frame to a peer, choosing the mode from what the frame IS.
+   *
+   * The session hands over bytes and has no opinion about delivery, which is
+   * right: whether a snapshot may be lost is a property of the snapshot, not of
+   * the session's mood. A delta is coded against the client's ACKNOWLEDGED
+   * baseline, so losing one costs a frame of smoothness and can never desync —
+   * and retransmitting it would deliver stale ground late, which is worse than
+   * not delivering it. Everything else here is one small packet that has to
+   * arrive.
+   */
+  function sendTo(peer: Admitted, frame: ArrayBuffer): void {
+    const type = new Uint8Array(frame)[0] ?? 0;
+    const mode: SendMode =
+      type === FRAME.delta || type === FRAME.snapshot
+        ? "unreliable"
+        : "reliable";
+    peer.transport.send(peer.key, new Uint8Array(frame), mode);
+  }
+
+  function refuse(
+    transport: Transport,
+    key: PeerKey,
+    reason: RefusalReason,
+    detail?: string,
+  ): void {
+    transport.send(
+      key,
+      new Uint8Array(
+        encodeFrame(
+          { type: FRAME.bye, seq: 0, ack: 0, tick: 0 },
+          {
+            reason,
+            detail,
+          },
+        ),
+      ),
+      "reliable",
+    );
+    // Dropped immediately after, which means the refusal goes out ONCE and is
+    // never retransmitted. That is deliberate: keeping per-peer state alive so
+    // a rejected stranger's `bye` could be retried is precisely the half-open
+    // table the cookie exists to avoid, and a joiner who misses it times out
+    // and sees "could not reach that session" instead of the better sentence.
+    // Best-effort is the right trade; a retained record is not.
+    transport.drop(key);
+    options.log?.(`net: refused ${key} — ${reason}`);
+  }
+
+  function onHello(
+    transport: Transport,
+    key: PeerKey,
+    frameBytes: number,
+  ): void {
+    // THE ANTI-REFLECTION CHECK. An unpadded probe is dropped in silence: a
+    // spoofed source address must not be able to make this host send more bytes
+    // than it received, and answering "you did not pad it" would be a reply of
+    // exactly the kind the rule forbids.
+    if (frameBytes < HELLO_MIN_BYTES) return;
+    const payload: ChallengePayload = {
+      cookie: challengeFor(options.secret, key, challengeEpoch(options.now())),
+      protocol: options.handshake.protocol,
+      build: options.handshake.build,
+      needsPassword: password.length > 0,
+      players: options.session.clientCount,
+      maxPlayers: maxClients,
+    };
+    transport.send(
+      key,
+      new Uint8Array(
+        encodeFrame(
+          { type: FRAME.challenge, seq: 0, ack: 0, tick: 0 },
+          payload,
+        ),
+      ),
+      "unreliable",
+    );
+  }
+
+  function onJoin(transport: Transport, key: PeerKey, payload: unknown): void {
+    if (byKey.has(key)) return; // already in; a duplicate join is not a re-seat
+    const join = payload as Partial<JoinPayload> | null;
+    if (!join || typeof join !== "object" || !join.handshake) {
+      refuse(transport, key, "protocol-mismatch", "malformed join");
+      return;
+    }
+    const refusal = admit({
+      host: options.handshake,
+      joiner: normalizeHandshake(join.handshake),
+      secret: options.secret,
+      peerKey: key,
+      cookie: Number(join.cookie) || 0,
+      nowMs: options.now(),
+      password,
+      proof: Number(join.proof) || 0,
+      seats: options.session.clientCount,
+      maxSeats: maxClients,
+    });
+    if (refusal) {
+      refuse(transport, key, refusal, detailFor(refusal, options.handshake));
+      return;
+    }
+    const id = nextClientId++;
+    const peer: Admitted = {
+      id,
+      key,
+      // The slot is not known until the session seats them, and a name has to
+      // exist before then for the fallback to read sensibly; the session's own
+      // count is the closest honest guess and is only ever a default.
+      name: sanitizeName(join.name, options.session.clientCount),
+      transport,
+    };
+    byKey.set(key, peer);
+    byId.set(id, peer);
+    // A JOINER IS A SPECTATOR. PR 2 replicates one hero to eight machines;
+    // seating a second is PR 3's whole subject, and handing this one the
+    // owner's flag would let it steer somebody else's character today.
+    // The NAME travels with the seat. Without it the roster and every chat
+    // line would fall back to "PLAYER N" for somebody who told us what they
+    // are called, and the fallback would look like the feature.
+    options.session.addClient(
+      id,
+      (frame) => sendTo(peer, frame),
+      false,
+      peer.name,
+    );
+    options.log?.(`net: ${peer.name} joined from ${key}`);
+  }
+
+  function onPacket(transport: Transport, packet: Packet): void {
+    const known = byKey.get(packet.from);
+    const frame = decodeFrame(packet.data);
+    if (!frame) return;
+    if (known) {
+      // An admitted peer's frames go straight to the session, which owns what
+      // an input, a command or a chat line may do. It refuses a spectator's
+      // steering itself — the one place a client cannot argue with it.
+      options.session.receive(known.id, frame.type, frame.seq, frame.payload);
+      return;
+    }
+    // Not admitted: two frames are permitted and both are rate limited.
+    if (frame.type !== FRAME.hello && frame.type !== FRAME.join) return;
+    if (!allow(packet.from)) return;
+    if (frame.type === FRAME.hello) {
+      // The whole frame as it arrived — header included, reliability header
+      // already stripped — which is what `HELLO_MIN_BYTES` is measured
+      // against: the padding has to be in the thing the attacker had to send,
+      // not in a framing this side added afterwards.
+      onHello(transport, packet.from, packet.data.byteLength);
+      return;
+    }
+    onJoin(transport, packet.from, frame.payload);
+  }
+
+  function forget(key: PeerKey, reason: string): void {
+    const peer = byKey.get(key);
+    if (!peer) return;
+    byKey.delete(key);
+    byId.delete(peer.id);
+    peer.transport.drop(key);
+    options.session.removeClient(peer.id);
+    options.log?.(`net: ${peer.name} left — ${reason}`);
+  }
+
+  return {
+    async add(transport) {
+      transports.push(transport);
+      await transport.listen({
+        onPacket: (packet) => onPacket(transport, packet),
+        onPeerLost: (peer, reason) => forget(peer, reason),
+        onError: (detail) => options.log?.(`net: ${transport.id} — ${detail}`),
+      });
+    },
+
+    tick() {
+      for (const transport of transports) transport.tick();
+      const at = options.now();
+      for (const [key, entry] of limiter) {
+        if (at - entry.at > LIMITER_IDLE_MS) limiter.delete(key);
+      }
+    },
+
+    kick(clientId, reason) {
+      const peer = byId.get(clientId);
+      if (!peer) return;
+      peer.transport.send(
+        peer.key,
+        new Uint8Array(
+          encodeFrame(
+            { type: FRAME.bye, seq: 0, ack: 0, tick: 0 },
+            {
+              reason: "kicked",
+              detail: reason,
+            },
+          ),
+        ),
+        "reliable",
+      );
+      forget(peer.key, reason);
+    },
+
+    nameOf(clientId) {
+      return byId.get(clientId)?.name ?? "";
+    },
+
+    pingOf(clientId) {
+      const peer = byId.get(clientId);
+      return peer ? peer.transport.ping(peer.key) : -1;
+    },
+
+    close() {
+      for (const transport of transports) transport.close();
+      transports.length = 0;
+      byKey.clear();
+      byId.clear();
+      limiter.clear();
+    },
+  };
+}
+
+/**
+ * A handshake this build is willing to compare against its own.
+ *
+ * The claim came from a stranger, so every field is coerced rather than
+ * trusted: a `mods` that is not an array would otherwise reach `refuseHandshake`
+ * and throw on `.length`, inside the host's own tick, from one malformed
+ * packet.
+ */
+function normalizeHandshake(raw: unknown): Handshake {
+  const claim = raw as Partial<Handshake> | null;
+  return {
+    protocol: Number(claim?.protocol) || 0,
+    build: typeof claim?.build === "string" ? claim.build : "",
+    mods: Array.isArray(claim?.mods)
+      ? claim.mods.filter((id): id is string => typeof id === "string")
+      : [],
+  };
+}
+
+/** The half of a refusal only the host can supply — the numbers the player is
+ * being asked to reconcile. */
+function detailFor(reason: RefusalReason, host: Handshake): string | undefined {
+  if (reason === "protocol-mismatch") return `HOST PROTOCOL ${host.protocol}`;
+  if (reason === "build-mismatch") return `HOST BUILD ${host.build}`;
+  if (reason === "mod-mismatch") {
+    return host.mods.length ? host.mods.join(", ") : "THE HOST HAS NO MODS ON";
+  }
+  return undefined;
+}
+
+/** The address half of a peer key, for the rate limiter. */
+function addressOf(key: PeerKey): string {
+  if (key.startsWith("[")) {
+    const close = key.indexOf("]:");
+    return close < 0 ? key : key.slice(0, close + 1);
+  }
+  const at = key.lastIndexOf(":");
+  return at < 0 ? key : key.slice(0, at);
+}

@@ -161,7 +161,7 @@ for (const vp of VIEWPORTS) {
   // The orbiting solar system is the shipped title backdrop, so nothing needs
   // to be seeded — the app boots straight into it.
   await page.goto(url);
-  await page.getByRole("button", { name: "play", exact: true }).waitFor();
+  await page.getByRole("button", { name: "new-game" }).waitFor();
 
   for (const sample of SAMPLES) {
     await page.evaluate((p) => {

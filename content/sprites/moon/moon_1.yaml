@@ -1,34 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: moon_1
 family: moon
 size: [16, 16]
 description: >
-  A rare variant of the lunar ground tile: the same flat grey regolith with a
-  few extra pocks and scuffs of dust.
+  The rare lunar ground tile: the same regolith worked over with a dense field
+  of micrometeorite pocks and a few lit pebbles sitting on the dust.
 subject:
   kind: ground tile
-  build: a seamless flat regolith surface, a rare variant that breaks up the repeating floor
-  features: extra pocks and scuffs of dust
-  accent: desaturated regolith grey
-  flavor: the base lunar floor of the moonscape
+  build: a seamless regolith surface, the rare variant laid every twenty-third tile to break up the repeating floor
+  features: a dense scatter of small pocks with no single recognisable shape, so nothing reads as a stamp where it repeats, plus a few pebbles catching the light
+  accent: desaturated regolith grey, varied darker rather than brighter so the floor stays well under the bloom's bright-pass knee
+  flavor: the base lunar floor of the moonscape, chewed up by sixty years of nothing but micrometeorites
 palette:
   F: "#a2a4ad" # light regolith fleck
+  a: "#bdc2cb" # lit pebble top
   d: "#676972" # dark dust pock
   e: "#4e4f56" # deepest pock shadow
   f: "#888a96" # base regolith grey
 grid: |
-  ffffffffffffffff
-  fdFfffffffffffff
-  ffffffffffffdfff
-  fffffffFffffffff
-  ffffffffffffffff
-  ffffffffffffffff
-  fffffffddfffffff
-  ffffffdeedffffff
-  ffffffdeedffffdf
-  fffffffddfffffff
-  ffffFfffffffffff
+  ffffffffffdeffff
+  ffFffffffffdffff
+  ffffdefffffffFff
+  ffffffffffadeeff
+  ffdeffffffffdfff
   fffdffffffffffff
+  ffffffffffdeffff
+  ffadffffffffdfff
+  ffedeffdeffffFff
+  ffFffffffdffffff
   ffffffffffffffff
-  ffffffffdfffffff
-  ffffffffffffffff
-  ffffffffffffffff
+  fffdeffffffadfff
+  ffffdffffffedeff
+  ffffFffffffffdff
+  ffffffffdeffffff
+  fffffffffdffffff

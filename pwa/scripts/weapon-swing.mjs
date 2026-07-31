@@ -166,8 +166,7 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // default now, so nothing needs forcing on before the app reads its settings.
 
 await page.goto(`${url}/?debug&bot=idle&seed=${seed}`);
-await page.getByRole("button", { name: "play", exact: true }).waitFor();
-await page.getByRole("button", { name: "play", exact: true }).click();
+await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.getByRole("button", { name: "new-game" }).click();
 await page.getByRole("textbox", { name: "character-name" }).waitFor();
 await page.getByRole("textbox", { name: "character-name" }).fill("SWING");

@@ -146,8 +146,7 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // `bot=survivor` steers a competent hero who holds ground and fights the ring,
 // so procs land and struck-defenses trigger while the always-on FX runs.
 await page.goto(`${url}/?debug&bot=survivor&seed=${seed}`);
-await page.getByRole("button", { name: "play", exact: true }).waitFor();
-await page.getByRole("button", { name: "play", exact: true }).click();
+await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.getByRole("button", { name: "new-game" }).click();
 await page.getByRole("textbox", { name: "character-name" }).waitFor();
 await page.getByRole("textbox", { name: "character-name" }).fill("TALENT");

@@ -38,6 +38,12 @@ import { contextBridge, ipcRenderer } from "electron";
  * does. */
 export const SHELL_CHANNEL = "gis:post";
 
+/** The channel the renderer's end of the multiplayer snapshot port arrives on.
+ * Mirrors `NET_PORT_CHANNEL` in net.ts — it cannot be imported from there,
+ * because the preload is a separate bundle with no view of the main process's
+ * module graph. */
+const NET_PORT_CHANNEL = "gis:net-port";
+
 contextBridge.exposeInMainWorld("__GIS_NATIVE__", true);
 contextBridge.exposeInMainWorld("__GIS_PLATFORM__", "steam");
 contextBridge.exposeInMainWorld("__gisShell", {
@@ -47,5 +53,28 @@ contextBridge.exposeInMainWorld("__gisShell", {
     // to argue about, and the protocol is JSON on the phone shell anyway.
     if (typeof message !== "string") return;
     ipcRenderer.send(SHELL_CHANNEL, message);
+  },
+  /**
+   * MULTIPLAYER'S SNAPSHOT CHANNEL — the one thing that crosses this bridge
+   * which is not a JSON string, and the exception is deliberate.
+   *
+   * A session publishes twenty times a second; routing that through
+   * `post`/`executeJavaScript` like the other five protocols would serialize
+   * every mob on the field through the main process's event loop and back out
+   * as a JavaScript literal. So the main process mints a `MessagePort` pair and
+   * hands one end to the utility process running the simulation and the other
+   * to this page, and the two talk directly with the buffer TRANSFERRED rather
+   * than copied.
+   *
+   * A port is not a value `contextBridge` can hand over, so the listener is
+   * registered here and the port is delivered to it — which also keeps the
+   * page from ever seeing the `ipcRenderer` event that carried it.
+   */
+  onNetPort(listener: (port: MessagePort) => void): void {
+    if (typeof listener !== "function") return;
+    ipcRenderer.on(NET_PORT_CHANNEL, (event) => {
+      const port = event.ports[0];
+      if (port) listener(port);
+    });
   },
 });
