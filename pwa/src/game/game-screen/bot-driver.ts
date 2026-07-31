@@ -12,17 +12,16 @@ import {
   giverTopics,
   botAct,
   botAllocate,
-  botAutoEquip,
+  botCareCommand,
   botPickTalent,
   createBot,
-  cullWorstLoot,
+  driveBotActions,
+  driveBotUpkeep,
   gateKeyTarget,
-  sortInventory,
-  careForCompanion,
-  stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
   type Bot,
+  type BotCommand,
   type GameInput,
   type GameState,
 } from "@game/core";
@@ -79,6 +78,20 @@ export function createBotDriver(deps: {
     beginRun,
     bumpUi,
   } = deps;
+
+  // WHERE THE BOT'S HOUSEKEEPING GOES. Every one of the autopilot's mutators is
+  // an INTENT now (multiplayer plan §7.2.5) — a verb from the closed list — and
+  // it leaves through the app's own router rather than being written straight
+  // onto the state. That is the whole point: a paid AUTO PILOT ride inside a
+  // Steam session has its run simulating somewhere else, and a direct write on a
+  // replica is erased by the next snapshot, so the ride's draw, shed and tidy
+  // silently did not happen. `runCommand` sends when there is a session and
+  // applies through the same dispatch when there is not.
+  //
+  // It takes a NULL command so the demo's own branch can hand it "nothing to do"
+  // without a second shape.
+  const send = (command: BotCommand | null): boolean =>
+    command ? Boolean(runCommand(state, command.name, ...command.args)) : false;
 
   // The AUTO PILOT ride's bot, built lazily on the first driven tick.
   let autopilotBot: Bot | null = null;
@@ -201,26 +214,32 @@ export function createBotDriver(deps: {
       // POCKET ARSENAL: keep the hand on whatever maximizes damage this
       // moment — the blade with a body in blade reach, the banked
       // ranged/magic shot out of reach and through every airborne frame
-      // (see bot/economy.ts stepBotWeaponSwap). The BAG DISCIPLINE cull +
-      // sort runs AFTER step() (postStep), not here: culling before the step
-      // only reopened a slot the same step's pickup immediately refilled,
-      // so a watched AUTO PILOT run rode a full bag — the "keep one slot
-      // open" rule looked broken. The sim culls after its step; so do we.
-      // The demo plays the swap as the two presses a player makes (open the
-      // switcher, tap the weapon — see demo-director); every other seat
-      // commits it silently.
-      const swapped = demo
-        ? demoDirector.stepWeaponSwap(drivingBot, dtMs)
-        : stepBotWeaponSwap(state, localHero(state));
-      if (swapped) bumpUi();
-      // KEEP THE FRIEND ON ITS FEET — the same call the campaign sim makes, in
-      // the same place, for both bot seats: a downed companion is woken with a
-      // bought bottle of SMELLING SALTS and a badly hurt one gets a spare
-      // medkit. It sits here rather than in the AUTO PILOT-only block below
+      // (see bot/intent.ts). The BAG DISCIPLINE sweep + shed + tidy runs
+      // AFTER step() (postStep), not here: culling before the step only
+      // reopened a slot the same step's pickup immediately refilled, so a
+      // watched AUTO PILOT run rode a full bag — the "keep one slot open" rule
+      // looked broken. The sim culls after its step; so do we.
+      //
+      // KEEP THE FRIEND ON ITS FEET comes with it — a downed companion woken
+      // with a bought bottle of SMELLING SALTS, a badly hurt one given a spare
+      // medkit. Both sit here rather than in the AUTO PILOT-only block below
       // (with the gate-key ritual) because the developer BOT VIEW is where this
       // gets measured, and a bot that plays the companion rules only when a
       // player is paying for it measures nothing.
-      if (careForCompanion(state, localHero(state))) bumpUi();
+      //
+      // The DEMO plays the draw as the two presses a player makes, so it keeps
+      // its own path and only the care travels as an intent.
+      let acted: boolean;
+      if (demo) {
+        // Two statements rather than one `||`: both halves run every tick, and
+        // a short-circuit would skip the friend's care on any tick the draw
+        // happened to land.
+        acted = demoDirector.stepWeaponSwap(drivingBot, dtMs);
+        if (send(botCareCommand(state, localHero(state)))) acted = true;
+      } else {
+        acted = driveBotActions(state, localHero(state), send);
+      }
+      if (acted) bumpUi();
       if (
         wantsMerchantVisit(state, localHero(state)) &&
         state.stats.timeMs - botShopMsRef.current >= BOT_SHOP_COOLDOWN_MS &&
@@ -289,22 +308,21 @@ export function createBotDriver(deps: {
 
   // BAG DISCIPLINE (mirrors the campaign sim, which sweeps AFTER its step):
   // now that THIS step's pickups have landed, WEAR the upgrades they brought
-  // (`botAutoEquip` — the bot equips whatever it finds regardless of the
+  // (`autoEquipGear` — the bot equips whatever it finds regardless of the
   // human's on-pickup AUTO-EQUIP setting, which ships off; the hand is left
-  // to the pocket arsenal), then trim the bag back to one free cell by
-  // dropping the cheapest outgrown junk (keepers, the pocket arsenal, and the
-  // good sell-fodder all stay — see bot/economy.ts), then re-sort. The sweep
-  // runs FIRST so the pieces it displaces are on the table for the cull, and
-  // so cells an upgrade freed count toward the open-slot rule. Running all of
-  // it here rather than before step() is the whole fix for "keep one slot
+  // to the pocket arsenal), then trim the bag back to one free cell by shedding
+  // the cheapest outgrown junk into the LOST & FOUND (`bankSpareItem`; keepers,
+  // the pocket arsenal, and the good sell-fodder all stay — see
+  // bot/economy.ts), then re-sort. The order lives in `driveBotUpkeep`: the
+  // sweep runs FIRST so the pieces it displaces are on the table for the cull,
+  // and so cells an upgrade freed count toward the open-slot rule. Running all
+  // of it here rather than before step() is the whole fix for "keep one slot
   // open" under AUTO PILOT: a pre-step cull reopened a slot the same step's
   // pickup refilled, so the rendered/at-rest bag never showed the promised
   // open cell.
   const postStep = (drivingBot: Bot | null) => {
     if (drivingBot && state.phase === "playing") {
-      if (botAutoEquip(state, localHero(state))) bumpUi();
-      cullWorstLoot(state, localHero(state));
-      if (sortInventory(state, localHero(state))) bumpUi();
+      if (driveBotUpkeep(state, localHero(state), send)) bumpUi();
     }
   };
 

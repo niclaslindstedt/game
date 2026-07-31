@@ -428,12 +428,20 @@ export function autoEquipBest(state: GameState, player: Player): number {
  */
 export function autoEquipGear(state: GameState, player: Player): number {
   let changed = 0;
-  for (const index of planAutoEquip(state, player, {
-    weapon: false,
-  })) {
+  for (const index of planAutoEquipGear(state, player)) {
     if (equipFromInventory(state, player, index)) changed++;
   }
   return changed;
+}
+
+/**
+ * The cells {@link autoEquipGear} would wear, without touching a thing — the
+ * autopilot's own read of "is there anything to put on?", asked every tick so
+ * it can decide whether to send the sweep at all (multiplayer plan §7.2.5).
+ * Empty means the worn kit is already the best the bag holds.
+ */
+export function planAutoEquipGear(state: GameState, player: Player): number[] {
+  return planAutoEquip(state, player, { weapon: false });
 }
 
 /**

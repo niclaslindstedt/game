@@ -917,12 +917,19 @@ escort.ts` walks the people an escort errand puts on the field, and
   the moment the hero grows into it), `cullWorstLoot` keeps a bag cell open by
   shedding the LEAST PRECIOUS piece the bag can spare — the outgrown junk
   first, and only then the cheapest KEEPER, ranked by TIER before sell value so
-  a unique is never thrown away to make room for a magic — `sortBotInventory`
+  a unique is never thrown away to make room for a magic — `inventoryNeedsSort`
   orders the bag like the powerup dock, and `tradeAtMerchant` runs the counter
   errand (sell → buy → mend → powerups). The WEAPON slot belongs to the POCKET
-  ARSENAL (`src/game/bot/weapon-swap.ts`, `stepBotWeaponSwap`), so
-  `botAutoEquip` deliberately leaves the hand alone rather than flapping
-  against it.
+  ARSENAL (`src/game/bot/weapon-swap.ts`, `stepBotWeaponSwap`), so the bot's
+  sweep deliberately leaves the hand alone rather than flapping against it.
+
+  **EVERY ONE OF THOSE IS A DECISION PLUS A VERB** (`src/game/bot/intent.ts`):
+  the opinion is the autopilot's and stays under `bot/`, the action is the
+  hero's and travels as a run command, so an AUTO PILOT ride whose run is
+  simulating in a session server sends its housekeeping instead of writing to a
+  replica the next snapshot erases. See docs/multiplayer.md → "The autopilot is
+  an intent".
+
 - **`src/game/bot/weapon-swap.ts`** — THE POCKET ARSENAL: which weapon is in
   the hand, moment by moment. The hero hauls a kit — a boss ROUND, a crowd
   SPRAY, and the spare his own spec would swing (`botPocketKeepIndices`, which

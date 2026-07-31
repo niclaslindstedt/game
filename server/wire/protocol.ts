@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 12;
+export const PROTOCOL_VERSION = 13;
 
 /**
  * The most clients one session seats, host included.
@@ -536,7 +536,9 @@ export const COMMANDS = [
   "spendGateKey",
   "spendReviveItem",
   "autoEquipBest",
+  "autoEquipGear",
   "scrapInferiorLoot",
+  "bankSpareItem",
   "discardHeldAbility",
   "buyStock",
   "sellItem",

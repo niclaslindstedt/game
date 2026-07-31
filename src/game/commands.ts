@@ -74,15 +74,21 @@ import {
   talkToEnemy,
 } from "./conversation.ts";
 import { STAT_NAMES } from "./defs/equipment.ts";
-import { autoEquipBest, scrapInferiorLoot } from "./items/auto-equip.ts";
-import { sortInventory, swapHand } from "./items/inventory.ts";
 import {
+  autoEquipBest,
+  autoEquipGear,
+  scrapInferiorLoot,
+} from "./items/auto-equip.ts";
+import {
+  bankSpareItem,
   discardEquipped,
   discardFromInventory,
   equipFromInventory,
   equipFromInventoryInto,
   moveInventoryItem,
+  sortInventory,
   spendGateKey,
+  swapHand,
   unequipToInventory,
 } from "./items/inventory.ts";
 import { EQUIP_SLOTS } from "./items/slots.ts";
@@ -237,7 +243,9 @@ export const RUN_COMMAND_ARGS = {
   spendGateKey: ["int"],
   spendReviveItem: ["int"],
   autoEquipBest: [],
+  autoEquipGear: [],
   scrapInferiorLoot: [],
+  bankSpareItem: ["int"],
   discardHeldAbility: ["int"],
 
   // THE COUNTER.
@@ -498,11 +506,25 @@ export function applyRunCommand(
     case "spendGateKey":
       return spendGateKey(state, hero, num(a, 0));
     case "spendReviveItem":
-      return spendReviveItem(state, num(a, 0));
+      return spendReviveItem(state, hero, num(a, 0));
     case "autoEquipBest":
       return autoEquipBest(state, hero);
+    // THE SWEEP MINUS THE HAND, and it is a separate verb rather than a flag
+    // for the same reason `swapHand` is (multiplayer plan §7.2.5): the
+    // autopilot's POCKET ARSENAL owns the weapon slot, so a sweep that re-drew
+    // the strongest weapon every tick would flap against it. The player's own
+    // OPTIMIZE button is `autoEquipBest` and takes the hand with it.
+    case "autoEquipGear":
+      return autoEquipGear(state, hero);
     case "scrapInferiorLoot":
       return scrapInferiorLoot(state, hero);
+    // BAG DISCIPLINE's shed: into the LOST & FOUND if the piece is worth
+    // rescuing, over the shoulder if it is not. Distinct from
+    // `discardFromInventory` (a deliberate trash, banked nowhere) and from
+    // `scrapInferiorLoot` (which empties every outgrown cell at once and would
+    // destroy the pocket arsenal the bot is deliberately carrying).
+    case "bankSpareItem":
+      return bankSpareItem(state, hero, num(a, 0));
     case "discardHeldAbility":
       return discardHeldAbility(state, hero, num(a, 0));
 
@@ -534,7 +556,7 @@ export function applyRunCommand(
 
     // THE PARTY
     case "healCompanionWithMedkit":
-      return healCompanionWithMedkit(state, num(a, 0));
+      return healCompanionWithMedkit(state, hero, num(a, 0));
     case "equipCompanionFromInventory":
       return equipCompanionFromInventory(state, num(a, 0), num(a, 1));
     case "unequipCompanionToInventory":
