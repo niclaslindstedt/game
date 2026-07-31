@@ -7,7 +7,7 @@ subject:
   kind: weapon icon
   features: a single-action revolver in profile, long barrel and curved grip
   accent: orange barrel glint
-  flavor: a host's live-round stage prop
+  flavor: a hand's live-round stage prop
 palette:
   B: "#92643e" # brown grip
   N: "#303444" # dark gunmetal

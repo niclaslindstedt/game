@@ -31,7 +31,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   frozen), with `tapCutscene`/`skipCutscene` mutators beside `dismissIntro`.
   Iteration tooling lives app-side: the `?cutscene=<id>` workbench + the
   beat-screenshot harness (`pwa/scripts/cutscene-preview.mjs`).
-- **Deliberate architecture (2026-07, SPACEZ HQ walls):** hand-placed
+- **Deliberate architecture (2026-07, GOODCO HQ walls):** hand-placed
   geometry is `LevelDef.walls` — segments expanded at creation into chains
   of overlapping obstacle circles (`buildWalls` in create.ts), so walls
   reuse ALL existing obstacle collision/AI/spawn-avoidance for free. Door
@@ -53,7 +53,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   rocks with a `rockSizes`/`cell` obstacle spec; one sprite per footprint,
   named `<base>_<w>x<h>`, drawn centered — no render edit. The screen nuke now
   gates each kill on `lineOfSight`, so a rock shelters the mob behind it.
-- **Event-pinned player monologue (2026-07, first moon OPTIMUSK kill):** a
+- **Event-pinned player monologue (2026-07, first moon SUCCESSOR kill):** a
   dialogue that is the HERO thinking, not a speaker on the board, is a new
   `DialogueState` source (`{ kind: "playerThought", defId }`) keyed into a
   content catalog (`defs/thoughts.ts`, same setter/accessor shape as story
@@ -62,7 +62,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   kill path in `loot.ts` after `startDeathWords`, guarded once-per-run by
   `state.thoughtsSeen`. `dialogueContent` grew a branch; the app's dialogue
   overlay needed no change (it renders whatever `dialogueContent` returns).
-  A second trigger flavor landed later (2026-07, SpaceZ HQ intern):
+  A second trigger flavor landed later (2026-07, GOODCO HQ intern):
   `LevelDef.firstSightThoughts` fires the same catalog on PROXIMITY instead
   of a kill — a `stepSightThoughts` pass in `step()` right after
   `stepEnemies` (so the sighting is judged on this tick's positions),
@@ -74,7 +74,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   then fires on the next qualifying kill/sighting. The gate matters because
   ranged weapons out-reach `sightRadius` (blaster 210 vs 96), so a snipe
   kill can legitimately precede the first sighting.
-- **Fleeing uniques (2026-07, ELON MOSQUE):** a boss that escapes instead of
+- **Fleeing uniques (2026-07, THE FOUNDER):** a boss that escapes instead of
   dying is data — `EnemyDef.flees: { landmark }`. The kill path in `loot.ts`
   branches before booking the kill: the mob leaves the board, XP and
   guaranteed drops still pay, `lastWords` still play (worded as the flight),
@@ -258,7 +258,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `autoPowerScale` multiplied into `mobHpScaleFor`/`enemyPowerScale` —
   keyed to the PLAYER's level so difficulty offsets stay linear. Suite:
   `tests/engine/leveling_test.ts` ("the ding" describe block).
-- **Ranged enemies & guarded bosses (2026-07, Eastworld):** enemy shooters are
+- **Ranged enemies & guarded bosses (2026-07, Boot Hill):** enemy shooters are
   data — `EnemyDef.ranged` (damage/cooldown/range/projectile, optional
   `takesCover`) with the behavior in a cohesive `src/game/ranged.ts`
   (movement handed off from `moveEnemy`, a `stepRangedAttacks` firing pass
@@ -278,7 +278,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   3-5-elites-per-level content rule counts only `elite`). Fixtures:
   `test_gunner`/`test_shielded_boss`/`test_guard`; suite:
   `tests/engine/ranged_test.ts`.
-- **Outro epilogue + victory quake (2026-07, Eastworld):** a level's closing
+- **Outro epilogue + victory quake (2026-07, Boot Hill):** a level's closing
   story is the intro's mirror — `LevelDef.outro` pages, a `outro` GamePhase
   entered when the victory countdown expires (the `victory` EVENT still
   fires at expiry so the app's end-of-run hooks run once), turned by
@@ -288,13 +288,13 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   takes a render clock; the simulate pass's view rect stays steady). App
   reuses `IntroOverlay` with a `variant: "outro"` prop; new phase + fields =
   pwa `SAVE_VERSION` bump. Suite: `tests/engine/outro_test.ts`.
-- **TRASH tier + scripted estates (2026-07, Eastworld):** a tier BELOW
+- **TRASH tier + scripted estates (2026-07, Boot Hill):** a tier BELOW
   regular ("trash") that never rolls — `TIER_ROLL_ORDER` omits it, only a
   boss's forced-tier `loot.items` mints it — with 0 affixes and a 0.1
   coin multiplier (`ECONOMY.tierValueMult`). Adding a Tier value is a
   sweep of every `Record<Tier, …>`: engine `TIERS`, `tierUnlockMlvl`,
   `tierValueMult`, app `TIER_COLORS`/`TIER_RANK` maps. `loot.uniqueItems`
-  is the guaranteed-named-unique sibling (PUTAIN's watches pattern uses
+  is the guaranteed-named-unique sibling (THE STRONGMAN's watches pattern uses
   plain gear defs at forced `tier: "unique"` instead — zero-bonus precious
   valuables whose worth is the merchant's scales). Stall uniques are
   `LevelDef.merchant.stockUniques`, rolled in `rollStock` at the

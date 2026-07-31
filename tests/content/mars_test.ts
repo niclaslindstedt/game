@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Level 3 — MARS: the secret colony. Rovers work the dust outside, robots
 // and the fembot line staff the base inside (a tile-zones split at the dome
-// wall), three tech billionaires carry the plot, and ELON MOSQUE — the game's
+// wall), three tech billionaires carry the plot, and THE FOUNDER — the game's
 // first FLEEING boss — escapes through a rift instead of dying.
 
 import { describe, expect, it } from "vitest";
@@ -50,9 +50,9 @@ describe("MARS level def", () => {
     expect(minionIds).toEqual([
       "fembot",
       "mining_rover",
-      "optimusk",
       "scout_rover",
       "servo_bot",
+      "successor",
     ]);
 
     // The desert-to-base transition: rovers band the near (outdoor) half,
@@ -74,28 +74,28 @@ describe("MARS level def", () => {
     expect(MARS.tiles.zones![0]!.ground.common).toBe("deck_0");
   });
 
-  it("pins the four elites along the route and MOSQUE in the boss wing", () => {
+  it("pins the four elites along the route and THE FOUNDER in the boss wing", () => {
     const elites = MARS.spawns
       .filter((s) => enemyDef(s.enemy).role === "elite")
       .map((s) => s.enemy)
       .sort();
     expect(elites).toEqual([
-      "build_gates",
-      "larry_webpage",
-      "optimusk_prime",
-      "peter_teal",
+      "successor_prime",
+      "the_indexer",
+      "the_seed",
+      "the_vendor",
     ]);
 
     const state = startGame(SEED, "mars");
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-    expect(boss.defId).toBe("elon_mosque");
+    expect(boss.defId).toBe("the_founder");
   });
 
-  it("locks the TERRARIUM behind PETER TEAL's keycard", () => {
+  it("locks the TERRARIUM behind THE SEED's keycard", () => {
     expect(MARS.doors!.some((d) => d.id === "terrarium")).toBe(true);
     expect(storyItemDef("keycard_terrarium").unlocks).toBe("terrarium");
     // ...and the keycard is really in SEAL's pockets.
-    expect(enemyDef("peter_teal").loot!.storyItems).toContain(
+    expect(enemyDef("the_seed").loot!.storyItems).toContain(
       "keycard_terrarium",
     );
     // The tribute schedule waits inside the locked room.
@@ -151,13 +151,13 @@ describe("MARS level def", () => {
   });
 });
 
-describe("ELON MOSQUE flees", () => {
-  /** Step until MOSQUE is off the board, collecting every event seen. */
+describe("THE FOUNDER flees", () => {
+  /** Step until THE FOUNDER is off the board, collecting every event seen. */
   function beatMosque(state: GameState): GameEvent[] {
     const seen: GameEvent[] = [];
     for (
       let i = 0;
-      i < 300 && state.enemies.some((e) => e.defId === "elon_mosque");
+      i < 300 && state.enemies.some((e) => e.defId === "the_founder");
       i++
     ) {
       step(state, idle, DT);
@@ -184,7 +184,7 @@ describe("ELON MOSQUE flees", () => {
           powerScaled: true,
           spoke: true, // arrival scene already played; the exit is under test
         },
-        "elon_mosque",
+        "the_founder",
       ),
     );
 
@@ -200,22 +200,22 @@ describe("ELON MOSQUE flees", () => {
     // The coward's exit plays through the death-scene box.
     expect(state.dialogue?.source).toEqual({
       kind: "enemyDeath",
-      defId: "elon_mosque",
+      defId: "the_founder",
     });
     expect(dialogueContent(state.dialogue!).pages).toEqual([
-      enemyDef("elon_mosque").lastWords,
+      enemyDef("the_founder").lastWords,
     ]);
 
-    // He drops the NOT-A-FLAMETHROWER as he bolts. It may land close enough
+    // He drops the THE LEGAL DISTINCTION as he bolts. It may land close enough
     // that the hero walks onto it and banks it, so accept it on the ground OR
     // already carried — the guaranteed DROP is what's under test, not where it
     // came to rest.
     const onGround = state.items.some(
       (i) =>
-        i.kind === "equipment" && i.equipment.defId === "not_a_flamethrower",
+        i.kind === "equipment" && i.equipment.defId === "legal_distinction",
     );
     const carried = state.players[0].inventory.some(
-      (e) => e?.defId === "not_a_flamethrower",
+      (e) => e?.defId === "legal_distinction",
     );
     expect(onGround || carried).toBe(true);
   });

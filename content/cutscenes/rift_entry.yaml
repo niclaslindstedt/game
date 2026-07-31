@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# INTO THE RIFT — between Mars and the rift. The colony's east end after MOSQUE
+# INTO THE RIFT — between Mars and the rift. The colony's east end after THE FOUNDER
 # fled: the tear he left hanging in the air, the hero's parked ship staying
 # behind, and the shortest decision he makes in the whole story.
 id: rift_entry
@@ -13,7 +13,7 @@ stage:
     - { sprite: stars_b, at: { x: 150, y: 30 } }
     # The ship stays on Mars — where he's going, thrust won't help.
     - { sprite: starship, at: { x: 30, y: 100 } }
-    # MOSQUE's exit, still open. Still humming.
+    # THE FOUNDER's exit, still open. Still humming.
     - { sprite: rift, at: { x: 168, y: 100 } }
 actors:
   - { id: hero, name: ME, sprite: hero_suit, at: { x: 52, y: 96 } }

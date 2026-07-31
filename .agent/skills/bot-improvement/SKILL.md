@@ -76,7 +76,7 @@ overrides.
 default:                 # shifts every level at once
   engageRangeFrac: 0.8
 levels:                  # bend one map only (partial — the rest fall through)
-  spacez_hq:
+  goodco_hq:
     armApproachStandoff: 150
 ```
 
@@ -118,7 +118,7 @@ not pure positioning).
 ## The iterate loop
 
 1. **Reproduce.** Headless is fastest:
-   `node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --strategy balanced --class auto --seed 1 --max-minutes 8`
+   `node scripts/simulate-run.mjs --difficulty easy --level goodco_hq --strategy balanced --class auto --seed 1 --max-minutes 8`
    — read deaths / kills / dmgIn / whether the boss is reached. For NAVIGATION
    failures, read the **STUCK AREAS** table (on by default, `--stuck-limit`):
    every wedge/loiter books world coordinates, a run that racks up enough
@@ -163,7 +163,7 @@ not pure positioning).
 npm install --no-save playwright                 # once per session
 cd pwa && npm run assets && npm run extract  # generate the app's assets first
 npx vite --port 5199 &                           # dev server (background)
-node pwa/scripts/playtest.mjs --strategy survivor --level spacez_hq --difficulty easy
+node pwa/scripts/playtest.mjs --strategy survivor --level goodco_hq --difficulty easy
 ```
 
 This environment ships Chromium at `/opt/pw-browsers/chromium-<v>/chrome-linux/chrome`;

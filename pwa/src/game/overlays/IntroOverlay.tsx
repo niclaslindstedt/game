@@ -139,7 +139,7 @@ export function IntroOverlay({
   );
 
   // The hero stands over the box in whatever he's wearing this level (plain
-  // clothes at SpaceZ HQ, the EVA suit on the moon) — his idle frame, bobbing.
+  // clothes at GOODCO HQ, the EVA suit on the moon) — his idle frame, bobbing.
   const hero = spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`);
 
   return (

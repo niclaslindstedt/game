@@ -535,7 +535,7 @@ export type GameState = {
    * Level ids the hero has already CLEARED on this run's difficulty (seeded by
    * the app from the character's clears; empty on a dev jump or fresh hero).
    * Read only by `requiresClear`-gated guaranteed drops — the bunker key
-   * (RASPUTIN's SEVERED HAND) stays latent until this contains "eastworld", so
+   * (RASPUTIN's SEVERED HAND) stays latent until this contains "boot_hill", so
    * the secret level unlocks only after the campaign is beaten.
    */
   clearedLevels: string[];

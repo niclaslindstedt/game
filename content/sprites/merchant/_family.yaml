@@ -18,5 +18,5 @@ animations:
     { frames: [merchant_moon_0, merchant_moon_1], delayMs: 200 }
   merchant_mars_walk:
     { frames: [merchant_mars_0, merchant_mars_1], delayMs: 200 }
-  merchant_eastworld_walk:
-    { frames: [merchant_eastworld_0, merchant_eastworld_1], delayMs: 200 }
+  merchant_boot_hill_walk:
+    { frames: [merchant_boot_hill_0, merchant_boot_hill_1], delayMs: 200 }

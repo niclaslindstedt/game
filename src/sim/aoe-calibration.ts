@@ -120,7 +120,7 @@ export type AoeCalibrationReport = {
 const DEFAULTS = {
   probeDegs: [20, 40, 60, 90, 120, 180, 300],
   seeds: [1, 2],
-  levels: ["spacez_hq", "moon", "mars"],
+  levels: ["goodco_hq", "moon", "mars"],
   difficulties: ["medium"] as Difficulty[],
   probeDamage: 14,
   probeRange: 40,
@@ -340,7 +340,7 @@ const REACH_DEFAULTS = {
   degs: [40, 90, 180],
   ranges: [30, 45, 60, 90, 130, 180, 240],
   seeds: [1, 2, 3],
-  levels: ["spacez_hq", "moon", "mars"],
+  levels: ["goodco_hq", "moon", "mars"],
   difficulties: ["medium"] as Difficulty[],
   probeDamage: 14,
   maxMinutes: 4,
@@ -641,7 +641,7 @@ export type RangedCalibrationReport = {
 
 const RANGED_DEFAULTS = {
   seeds: [1, 2],
-  levels: ["spacez_hq", "moon", "mars"],
+  levels: ["goodco_hq", "moon", "mars"],
   difficulties: ["medium"] as Difficulty[],
   // LOW per-hit so a pellet rarely fells a foe mid-volley (we want the GEOMETRIC
   // reach — how many the volley could touch — not a kill-thinned count).

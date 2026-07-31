@@ -11,7 +11,7 @@ subject:
   features: a horizontal gold visor band across the helmet, its lower edge glowing amber
   accent: a single small red indicator light set in the grey chest unit
   pose: a walk-stride frame, legs planted wide apart with boots spread to the outer edges mid-step
-  flavor: recovered working gear, not a sleek hero suit — the laid-off SpaceZ shipbuilder suited up
+  flavor: recovered working gear, not a sleek hero suit — the laid-off GOODCO shipbuilder suited up
 palette:
   A: "#5c6474" # cool blue-grey suit shadow (waist, boots)
   O: "#1a1c2c" # outline

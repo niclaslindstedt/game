@@ -2,7 +2,7 @@ id: plasma_cutter
 kind: weapon
 rarity: regular
 name: PLASMA CUTTER
-description: Cleanroom tooling rated for rocket hulls, from the vault DOGE-1
+description: Cleanroom tooling rated for rocket hulls, from the vault PAYLOAD-1
   guarded. It was built to open spaceships; everything between here and Ada is
   considerably softer.
 material: metal

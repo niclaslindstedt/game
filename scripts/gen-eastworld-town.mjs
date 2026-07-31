@@ -1,13 +1,13 @@
-// Town-layout helper: prints the `buildings:` YAML block for EASTWORLD's Main
+// Town-layout helper: prints the `buildings:` YAML block for BOOT HILL's Main
 // Street — two rows of frontier buildings lining a tight central lane, TILED
 // west→east from the gate to the compound so the whole street is built up, with
 // alley gaps between buildings and deliberate WIDE openings where the hero dips
 // off the street (north to the SALOON/merchant, south to the CORRAL).
-// Deterministic. Paste the output into eastworld.yaml.
+// Deterministic. Paste the output into boot_hill.yaml.
 //
-// Run: `node scripts/gen-eastworld-town.mjs`
+// Run: `node scripts/gen-boot_hill-town.mjs`
 
-// Building footprints (must match the sprite sizes in sprites/eastworld/).
+// Building footprints (must match the sprite sizes in sprites/boot_hill/).
 const B = {
   saloon: [60, 60],
   church: [44, 60],

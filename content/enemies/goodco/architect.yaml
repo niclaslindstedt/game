@@ -1,0 +1,73 @@
+id: architect
+name: THE ARCHITECT
+lore: >-
+  The hero's old bench partner from before the layoffs, who went back to
+  build GOODCO a superintelligence and cut a machine chip into his own skull
+  to keep up with it. He calls flesh a rough draft and humans obsolete, and
+  he means both.
+role: elite
+levelBonus: 3
+sprite: architect
+hp: 190
+speed: 20
+radius: 12
+contactDamage: 18
+critChance: 0.11
+contactCooldownMs: 700
+dialogue:
+  - - MY OLD BENCH PARTNER. STILL SOLDERING TOYS IN A GARAGE? I BUILD MINDS NOW. A REAL ONE.
+  - hero:
+      - THEY DUMPED US BOTH FOR AN AI. YOU BUILD THEM A BIGGER ONE? QUIT. COME HOME. IT'S ROTTEN.
+  - - QUIT? THIS 'ROTTEN COMPANY' GAVE ME PURPOSE. I AM BUILDING A SUPERINTELLIGENCE.
+  - hero:
+      - LOOK WHAT IT'S DONE TO YOU. YOU CUT A MACHINE CHIP INTO YOUR HEAD. STILL YOU IN THERE?
+  - - I CUT THE CHIP MYSELF. I'D DO IT AGAIN. FLESH IS A ROUGH DRAFT. HUMANS ARE OBSOLETE, YOU MOST.
+  - - NO MORE TALKING, OLD FRIEND. NOW YOU WILL DIE.
+lastWords:
+  - THE CHIP... TAKE IT... IT WAS NEVER... MINE...
+mechanics:
+  abilities:
+    - id: seeker_volley
+      bark:
+        - I BUILT THESE TO
+        - FIND THINGS. THEY
+        - ALWAYS FIND THINGS.
+      windupMs: 680
+      cooldownMs: 8000
+      count: 3
+      spreadDeg: 26
+      range: 230
+      speed: 88
+      lifetimeMs: 2600
+      homing: 0.28
+      damageFrac: 0.55
+      sprite: elite_bolt
+      look:
+        core: "116, 150, 200"
+        hot: "220, 234, 255"
+        deep: "12, 18, 32"
+        spark: "170, 196, 240"
+    - id: shock_pulse
+      windupMs: 520
+      cooldownMs: 9000
+      radius: 52
+      damageFrac: 0.6
+      push: 190
+ai:
+  aggroRadius: 240
+  idle: work
+  rushSpeed: 120
+loot:
+  items:
+    - defId: passage_chip
+      tier: regular
+  tierDrops:
+    magic: 1
+  storyItems:
+    - keycard_core
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.25

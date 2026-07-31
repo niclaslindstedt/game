@@ -14,7 +14,7 @@ that want DIFFERENT reads, and conflating them is a measurable regression:
   second. `walkThreatDist` (a 260px ring) can't tell them apart.
 - **"May I run?"** wants the RING. Pacing the APPROACH by the clock — walking
   at half speed toward everything slow — measured **9% fewer kills per minute
-  and a level lost** over five seeds on `spacez_hq` easy. Keep the plain
+  and a level lost** over five seeds on `goodco_hq` easy. Keep the plain
   `foeDist <= walkThreatDist` there.
 
 The one exception: a hero at the STAND FLOOR reads urgency off the clock too,

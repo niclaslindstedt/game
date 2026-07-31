@@ -1,0 +1,67 @@
+id: the_seed
+name: THE SEED
+lore: >-
+  He funds what people flee and what they flee to, and on Mars he keeps the
+  shrine. THE FOUNDER only rents this planet; the landlords are older, scaled and
+  cold-blooded, and their tithe has lately started asking for warm things.
+role: elite
+levelBonus: 3
+sprite: the_seed
+hp: 280
+speed: 20
+radius: 12
+contactDamage: 24
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - FASCINATING. EVERYONE FLEES SOMETHING. I FUND WHAT THEY FLEE TO. AND WHAT THEY FLEE.
+  - hero:
+      - YOU'RE ONE OF THE BILLIONAIRES WHO BOUGHT A SEAT OFF EARTH. SO WHO RUNS THIS PLACE? THE FOUNDER?
+  - - THE FOUNDER THINKS HE OWNS MARS. HE RENTS IT. THE LANDLORDS ARE OLDER. SCALED. COLD-BLOODED.
+  - hero:
+      - SCALED? YOU'RE TELLING ME THE PLANET'S REAL OWNERS ARE... WHAT, LIZARDS?
+  - - LIZARD GODS. I KEEP THE SHRINE AND TITHE. THE PRICE ROSE. IT WANTS WARM THINGS NOW.
+lastWords:
+  - THE TITHE... IS DUE... ...IT'S ALWAYS... DUE...
+mechanics:
+  abilities:
+    - id: siphon_tether
+      bark:
+        - EVERYTHING FLOWS
+        - SOMEWHERE. TODAY
+        - IT FLOWS TO ME.
+      windupMs: 740
+      cooldownMs: 10500
+      range: 210
+      durationMs: 3000
+      damageFrac: 0.3
+      tickMs: 500
+      healFrac: 0.8
+      look:
+        core: "64, 190, 178"
+        hot: "196, 250, 244"
+        deep: "8, 28, 26"
+        spark: "130, 224, 214"
+    - id: ward_shield
+      windupMs: 680
+      cooldownMs: 13000
+      durationMs: 6000
+      poolFrac: 0.2
+ai:
+  aggroRadius: 250
+  rushSpeed: 115
+loot:
+  items:
+    - contrarian_dagger
+  tierDrops:
+    magic: 1
+    rare: 0.35
+  storyItems:
+    - keycard_terrarium
+    - colony_ledger
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

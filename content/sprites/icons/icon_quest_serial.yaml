@@ -2,12 +2,12 @@ name: icon_quest_serial
 family: icons
 size: [12, 12]
 description: >
-  A host serial plate — a stamped tin tag with a punched number and a rivet hole.
+  A hand serial plate — a stamped tin tag with a punched number and a rivet hole.
 subject:
   kind: quest item icon
   features: a small stamped tin plate carrying a punched serial and one rivet hole
   accent: the punched digits
-  flavor: which host this was, before something else started driving
+  flavor: which hand this was, before something else started driving
 palette:
   O: "#1a1c2c" # dark outline
   m: "#b6bcc8" # tin plate

@@ -32,7 +32,7 @@ import {
  * import isn't version-gated and an older archive still adopts through
  * `migrateLoadout` (its chosen stats mint talent points, and the retired spell
  * fields are simply ignored). */
-const FORMAT = "gone-in-space/character";
+const FORMAT = "adas-trail/character";
 const FORMAT_VERSION = 3;
 
 /** The native/engine version — recorded for provenance, not gating (an import

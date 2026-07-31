@@ -56,7 +56,7 @@ const COMMAND_TIMEOUT_MS = 5_000;
 /** The rule's name on Windows and in every message about it. Stable, because
  * the check looks it up by name — renaming it would leave every existing
  * player with an invisible orphan rule. */
-const RULE_NAME = "Gone in Space (multiplayer)";
+const RULE_NAME = "Ada's Trail (multiplayer)";
 
 /**
  * Is UDP `port` allowed in?

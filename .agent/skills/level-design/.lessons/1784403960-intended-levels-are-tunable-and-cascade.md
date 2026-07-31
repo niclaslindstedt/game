@@ -13,8 +13,8 @@ else around it — the number itself is a candidate for the fix.
 
 The catch that makes this delicate: **the hero carries level + gear forward
 between maps**, so each map's band assumes an arrival level set by the PREVIOUS
-map. The bands form a chain (easy: `spacez_hq 6 → moon 10 → mars 18 →
-the_rift 25 → eastworld 31 → the_bunker 28`). Change one map's `hero:`/boss level
+map. The bands form a chain (easy: `goodco_hq 6 → moon 10 → mars 18 →
+the_rift 25 → boot_hill 31 → the_bunker 28`). Change one map's `hero:`/boss level
 and every following map is now entered under- or over-levelled — so a
 level-range change is NEVER a one-level edit. Re-flow it through all following
 maps AND every difficulty column, then re-verify the campaign is beatable

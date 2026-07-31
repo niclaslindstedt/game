@@ -20,7 +20,7 @@ Two rules that only bite once the AUTO PILOT runs for hours unattended:
   rather than deriving it.
 
 Gotcha when probing either in the running app: the localStorage prefix is
-`game.config.json`'s `storagePrefix` (`gone-in-space:`), NOT `game:`. Seeding a
+`game.config.json`'s `storagePrefix` (`adas-trail:`), NOT `game:`. Seeding a
 roster under a guessed prefix loads a silently EMPTY roster — `loadCharacters`
 swallows every failure and returns `[]`, so there is no error to see. Burned a
 few probe rounds on this; read the prefix from the config, don't infer it.

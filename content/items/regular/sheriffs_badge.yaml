@@ -2,9 +2,10 @@ id: sheriffs_badge
 kind: gear
 rarity: regular
 name: SHERIFF'S BADGE
-description: A marshal host's badge, ZAI-stamped. Authority in Eastworld is a
+description:
+  A marshal hand's badge, TRUST ME BRO-stamped. Authority in Boot Hill is a
   prop-department decision — but the badge doesn't know that, and neither do the
-  hosts.
+  hands.
 material: metal
 slot: trinket
 levelReq: 18

@@ -1,4 +1,4 @@
-# Modding Gone in Space
+# Modding Ada's Trail
 
 Make your own levels, monsters and pixel art — or replace the whole game with
 something else — and publish it to the Steam Workshop.
@@ -86,11 +86,11 @@ else's.
 Put the folder in the game's own mods directory and it appears in **MODS** on
 the next launch, alongside anything you have subscribed to:
 
-| OS      | Where                                               |
-| ------- | --------------------------------------------------- |
-| Windows | `%APPDATA%\Gone in Space\mods\`                     |
-| macOS   | `~/Library/Application Support/Gone in Space/mods/` |
-| Linux   | `~/.config/Gone in Space/mods/`                     |
+| OS      | Where                                             |
+| ------- | ------------------------------------------------- |
+| Windows | `%APPDATA%\Ada's Trail\mods\`                     |
+| macOS   | `~/Library/Application Support/Ada's Trail/mods/` |
+| Linux   | `~/.config/Ada's Trail/mods/`                     |
 
 A mod there is a **local** mod: it is the only kind the game offers a PUBLISH
 row for, because a subscription is somebody else's to update. Local mods also

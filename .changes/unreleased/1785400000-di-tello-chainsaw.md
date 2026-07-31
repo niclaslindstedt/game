@@ -1,9 +1,9 @@
 ---
 type: Added
-title: The DI TELLO CHAINSAW — twenty bodies, then it needs a workshop
+title: The THE AUSTERITY CHAINSAW — twenty bodies, then it needs a workshop
 ---
 
-ELON MOSQUE drops the outsized chainsaw a southern president handed him on a
+THE FOUNDER drops the outsized chainsaw a southern president handed him on a
 stage — a two-hander, and the only weapon in the game that does not kill by
 damage. Anything you are TOUCHING comes apart on the first bite, at six times
 whatever that body was holding, past its armour and past the crit roll, whatever

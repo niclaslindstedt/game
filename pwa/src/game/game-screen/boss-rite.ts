@@ -83,7 +83,7 @@ export function bossRitePresentation(blow: BossRiteBlow): BossRitePresentation {
   //   `dismemberAllowed(kind)` — may a body come apart THIS WAY at all, across
   //     every family, because a machine cut in two is still a body cut in two.
   //
-  // Both have to say yes. Turning ROBOTIC GORE off has to stop DOGE-1 bursting
+  // Both have to say yes. Turning ROBOTIC GORE off has to stop PAYLOAD-1 bursting
   // even with GIBS on, and turning GIBS off has to stop it bursting whatever it
   // is made of — a finisher is exactly where a player would notice the switch
   // they set being ignored.

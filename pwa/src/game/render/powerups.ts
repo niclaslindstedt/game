@@ -620,7 +620,7 @@ function drawTurrets(
   if (!nodes) return;
   const intervalMs = turret.intervalMs;
   // The gun the def asked for, falling back to the shipped one — this used to
-  // be hardcoded, so a mod's grid deployed SPACEZ hardware however it was drawn.
+  // be hardcoded, so a mod's grid deployed GOODCO hardware however it was drawn.
   const sprite =
     spriteByName(assets.sprites, turret.gunSprite ?? "sentry_gun") ??
     spriteByName(assets.sprites, "sentry_gun");

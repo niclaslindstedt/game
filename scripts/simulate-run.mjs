@@ -13,7 +13,7 @@
 //
 //   node scripts/simulate-run.mjs                            # full campaign, easy → JESUS
 //   node scripts/simulate-run.mjs --difficulty easy          # one rung
-//   node scripts/simulate-run.mjs --difficulty easy --level spacez_hq
+//   node scripts/simulate-run.mjs --difficulty easy --level goodco_hq
 //   node scripts/simulate-run.mjs --rerun 3                  # replay each map ×3 (XP-cap probe)
 //   node scripts/simulate-run.mjs --strategy kite --seed 42
 //   node scripts/simulate-run.mjs --full                     # per-run mob/drop detail

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Pinned inner monologues: a story beat pinned to a kill or a sighting rather
-// than a speaker. The first INTERN the hero SEES at SpaceZ HQ stops the run
+// than a speaker. The first INTERN the hero SEES at GOODCO HQ stops the run
 // for his read on a building fully staffed at midnight (a sight pin — no blow
-// struck), and the first OPTIMUSK he SEES there is personal — he helped build
+// struck), and the first SUCCESSOR he SEES there is personal — he helped build
 // the line that took everyone's jobs. The moon's haunting reads in two
 // ordered beats — SEEING the first wisp, then DOWNING one (its `after` gate
-// holds the kill beat until the sighting has played) — and the first OPTIMUSK
+// holds the kill beat until the sighting has played) — and the first SUCCESSOR
 // he DOWNS up there is its own beat. Each fires exactly once, each only on
 // its level.
 
@@ -68,27 +68,27 @@ function killAndCollect(state: GameState, enemyId: number): GameEvent[] {
 }
 
 describe("first-kill thoughts", () => {
-  it("opens the hero's monologue on the first moon OPTIMUSK kill", () => {
+  it("opens the hero's monologue on the first moon SUCCESSOR kill", () => {
     const state = startGame(); // the moon
     clearStage(state);
     equipBlaster(state); // kill at range — no hp traded for the story beat
-    const bot = placeDying(state, "optimusk");
+    const bot = placeDying(state, "successor");
 
     killAndCollect(state, bot.id);
     expect(state.phase).toBe("dialogue");
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "moon_optimusk",
+      defId: "moon_successor",
     });
     // Spoken in the hero's own voice, with his portrait — not a mob talking.
     const content = dialogueContent(state.dialogue!);
-    const def = thoughtDef("moon_optimusk");
+    const def = thoughtDef("moon_successor");
     expect(content.speaker).toBe(def.speaker);
     expect(content.portrait).toBe(def.portrait);
     expect(content.pages).toEqual(def.pages);
   });
 
-  it("plays once — a later OPTIMUSK kill is silent", () => {
+  it("plays once — a later SUCCESSOR kill is silent", () => {
     const state = startGame();
     clearStage(state);
     equipBlaster(state); // kill at range — no hp traded for the story beat
@@ -96,23 +96,23 @@ describe("first-kill thoughts", () => {
     // kill doesn't ding the fresh hero and freeze the run in the levelup phase.
     state.players[0].xpToNext = Number.MAX_SAFE_INTEGER;
 
-    const first = placeDying(state, "optimusk");
+    const first = placeDying(state, "successor");
     killAndCollect(state, first.id);
     expect(state.dialogue?.source).toMatchObject({ kind: "playerThought" });
     // Tap the whole monologue closed.
     tapThrough(state);
     expect(state.phase).toBe("playing");
 
-    const second = placeDying(state, "optimusk");
+    const second = placeDying(state, "successor");
     const events = killAndCollect(state, second.id);
     expect(events.some((e) => e.type === "enemyKilled")).toBe(true);
     expect(state.dialogue).toBeNull(); // no encore
     expect(state.phase).toBe("playing");
-    expect(state.thoughtsSeen).toEqual(["moon_optimusk"]);
+    expect(state.thoughtsSeen).toEqual(["moon_successor"]);
   });
 
   it("opens the hero's read on the night shift when the first HQ INTERN comes into view", () => {
-    const state = startGame(undefined, "spacez_hq");
+    const state = startGame(undefined, "goodco_hq");
     clearStage(state);
     // A live intern parked beyond the (wide, drop-in) sight radius: no reaction
     // yet. The beat uses a full-view radius so it fires the instant the packed
@@ -131,17 +131,17 @@ describe("first-kill thoughts", () => {
     expect(state.phase).toBe("dialogue");
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "spacez_staff",
+      defId: "goodco_staff",
     });
     expect(state.stats.kills).toBe(0); // sighted, not killed
     const content = dialogueContent(state.dialogue!);
-    const def = thoughtDef("spacez_staff");
+    const def = thoughtDef("goodco_staff");
     expect(content.speaker).toBe(def.speaker);
     expect(content.pages).toEqual(def.pages);
   });
 
   it("fires the sight beat once — later interns in view stay silent", () => {
-    const state = startGame(undefined, "spacez_hq");
+    const state = startGame(undefined, "goodco_hq");
     clearStage(state);
     const staffer = makeEnemy(
       { pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y } },
@@ -156,7 +156,7 @@ describe("first-kill thoughts", () => {
     // Still in view on the next tick — the beat never replays.
     step(state, idle, DT);
     expect(state.dialogue).toBeNull();
-    expect(state.thoughtsSeen).toEqual(["spacez_staff"]);
+    expect(state.thoughtsSeen).toEqual(["goodco_staff"]);
   });
 
   it("opens the haunting read when the first moon wisp comes into view, and closes it on the kill", () => {
@@ -237,8 +237,8 @@ describe("first-kill thoughts", () => {
     });
   });
 
-  it("opens the hero's read on his old robot when the first HQ OPTIMUSK comes into view", () => {
-    const state = startGame(undefined, "spacez_hq");
+  it("opens the hero's read on his old robot when the first HQ SUCCESSOR comes into view", () => {
+    const state = startGame(undefined, "goodco_hq");
     clearStage(state);
     // Parked beyond the sight radius: no reaction yet.
     const bot = makeEnemy(
@@ -247,7 +247,7 @@ describe("first-kill thoughts", () => {
         hp: 1,
         maxHp: 10,
       },
-      "optimusk",
+      "successor",
     );
     state.enemies.push(bot);
     step(state, idle, DT);
@@ -258,16 +258,16 @@ describe("first-kill thoughts", () => {
     step(state, idle, DT);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "spacez_optimusk",
+      defId: "goodco_successor",
     });
     tapThrough(state);
 
-    // Downing it here plays nothing more: the KILL beat (moon_optimusk)
+    // Downing it here plays nothing more: the KILL beat (moon_successor)
     // belongs to the moon, where the tin men have no business being.
     bot.pos = { ...state.players[0].pos };
     killAndCollect(state, bot.id);
     expect(state.dialogue).toBeNull();
     expect(state.phase).toBe("playing");
-    expect(state.thoughtsSeen).toEqual(["spacez_optimusk"]);
+    expect(state.thoughtsSeen).toEqual(["goodco_successor"]);
   });
 });

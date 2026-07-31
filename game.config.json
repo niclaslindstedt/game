@@ -1,6 +1,6 @@
 {
-  "title": "Gone in Space",
-  "shortName": "Gone in Space",
+  "title": "Ada's Trail",
+  "shortName": "Ada's Trail",
   "tagline": "survive the search for your lost love",
   "description": "Ada went out for a midnight walk and never came back — the trail leads to the moon. Fight your way to her and bring her home. Free and offline.",
   "shortDescription": "Ada is gone and the trail leads to the moon. Fight your way to her and bring her home — free and offline in your browser.",
@@ -17,11 +17,11 @@
     "name": "Niclas Lindstedt",
     "url": "https://github.com/niclaslindstedt"
   },
-  "storagePrefix": "gone-in-space",
+  "storagePrefix": "adas-trail",
   "cacheIdPrefix": "game",
-  "ogImageAlt": "Gone in Space — Ada is gone and the trail leads to the moon",
+  "ogImageAlt": "Ada's Trail — Ada is gone and the trail leads to the moon",
   "og": {
-    "logo": "GONE IN SPACE",
+    "logo": "ADA'S TRAIL",
     "tagline": "Survive the search for your lost love",
     "subtitle": "The trail leads to the moon"
   },

@@ -2,11 +2,11 @@ name: qe_showgirl_0
 family: quests
 size: [16, 16]
 description: >
-  A saloon dancer host in a red stage dress with black trim and a feather in her hair, one knee seizing as she walks.
+  A saloon dancer hand in a red stage dress with black trim and a feather in her hair, one knee seizing as she walks.
 subject:
-  kind: escort — a saloon dancer host with her legs seized
+  kind: escort — a saloon dancer hand with her legs seized
   name: "RUBY"
-  build: a host chassis in a stage dress, moving stiffly
+  build: a hand chassis in a stage dress, moving stiffly
   attire: a red saloon dress with black trim, a feather in her hair
   features: a warm painted face, one eye flickering
   accent: the red dress and the single black feather

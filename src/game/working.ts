@@ -2,7 +2,7 @@
 // The DORMANT "AT WORK" stroll (`EnemyDef.ai.idle === "work"`, tuning
 // `ENEMY_AI.work`): a mob that is asleep at its post potters around its `home`
 // instead of standing frozen — walk a short leg, stand a beat at the bench,
-// walk again — so a staffed venue (the SpaceZ assembly floor) reads as people
+// walk again — so a staffed venue (the GOODCO assembly floor) reads as people
 // working the place, not statues waiting for a fight. Called from `moveEnemy`
 // (step/) ONLY on dormant ticks: waking (aggro radius + line of sight,
 // wounds) and the woken fight are exactly as before, and a mob whose chase

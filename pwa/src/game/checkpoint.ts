@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The retry checkpoint: a deep, in-memory snapshot of the run taken the instant
 // combat truly begins — the hero armed and in the player's hands, past the
-// prelude cutscene, the intro monologue, and (on SpaceZ HQ) the scripted
+// prelude cutscene, the intro monologue, and (on GOODCO HQ) the scripted
 // opening strike. RETRY after a death adopts a fresh copy of it so the player
 // drops straight back into the action instead of sitting through the whole
 // opening again. It lives only in React memory (a ref that survives the RETRY

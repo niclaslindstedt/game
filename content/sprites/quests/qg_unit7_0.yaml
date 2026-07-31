@@ -2,9 +2,9 @@ name: qg_unit7_0
 family: quests
 size: [16, 16]
 description: >
-  A first-generation OPTIMUSK, decommissioned — grey plating, one shoulder panel torn away to rust, a single working lamp eye.
+  A first-generation SUCCESSOR, decommissioned — grey plating, one shoulder panel torn away to rust, a single working lamp eye.
 subject:
-  kind: quest giver — a decommissioned first-generation OPTIMUSK
+  kind: quest giver — a decommissioned first-generation SUCCESSOR
   name: "UNIT 7-ECHO"
   build: a boxy service chassis a head shorter than the line's current models
   attire: bare grey plating, one shoulder panel missing to the rust beneath

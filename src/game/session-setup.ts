@@ -89,7 +89,7 @@ export type RunParams = {
   /** A LEVEL TOKEN respec is owed at the run's start. */
   respec?: boolean;
   /** Level ids the hero has already cleared on this difficulty — the engine
-   * gates drops on them (the bunker key stays latent until Eastworld falls). */
+   * gates drops on them (the bunker key stays latent until Boot Hill falls). */
   clearedLevels?: readonly string[];
   /** The hero has already met this level's merchant on this difficulty, so the
    * trader is set up at the door from the start. */

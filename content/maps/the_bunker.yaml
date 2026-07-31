@@ -243,16 +243,16 @@ horde:
 # name attached to its guards, so a hall reads as somebody's floor rather than as
 # a mob with a boss in it.
 elites:
-  - enemy: mark_suckerberg
+  - enemy: the_moderator
     ramp: savage
     hp: 1700
     lair: penthouse
     escort:
-      - enemy: guard_meta
+      - enemy: guard_feed
         count: 3
         ramp: savage
         hp: 380
-  - enemy: sam_haltman
+  - enemy: the_safety_officer
     ramp: savage
     hp: 1600
     escort:
@@ -260,7 +260,7 @@ elites:
         count: 3
         ramp: savage
         hp: 380
-  - enemy: putain_clone
+  - enemy: strongman_clone
     ramp: savage
     hp: 2000
     escort:
@@ -268,23 +268,23 @@ elites:
         count: 3
         ramp: savage
         hp: 380
-  - enemy: larry_allison
+  - enemy: the_sysadmin
     ramp: savage
     hp: 1800
     escort:
-      - enemy: guard_oracle
+      - enemy: guard_ledger
         count: 3
         ramp: savage
         hp: 380
-  - enemy: jeff_baywatch
+  - enemy: the_fulfiller
     ramp: brutal
     hp: 2200
     escort:
-      - enemy: guard_prime
+      - enemy: guard_depot
         count: 3
         ramp: brutal
         hp: 400
-  - enemy: donald_dump
+  - enemy: the_developer
     ramp: brutal
     hp: 2600
     lair: safe_room

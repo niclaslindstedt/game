@@ -1,0 +1,29 @@
+name: tumbleweed
+family: boot_hill
+size: [12, 12]
+description: >
+  A round tumbleweed — a ball of tangled dry brown brush; rolls across the
+  desert as decor.
+subject:
+  kind: animated decor — tumbleweed
+  build: a round ball of tangled dry brush
+  accent: dry brown twig tones
+  flavor: rolls across the desert
+palette:
+  B: "#92643e" # mid brush brown
+  E: "#5d4028" # dark twig
+  O: "#1a1c2c" # gap / outline
+  S: "#b39378" # pale dry highlight
+grid: |
+  ............
+  ...OEEBO....
+  ..OBSBEBO...
+  .OEBOBOBEO..
+  .OBOBSBOBO..
+  .OEBOBOBEO..
+  .OBOBBSOBO..
+  ..OBEBOBO...
+  ...OBEBO....
+  ............
+  ............
+  ............

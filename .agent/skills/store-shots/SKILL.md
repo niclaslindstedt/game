@@ -20,7 +20,7 @@ listing text is a separate pipeline — see
 **STAGE THE ENDGAME, MID-FIGHT.** A freshly spawned hero on an empty floor is
 what the game looks like for its first ten minutes, and it sells nothing. Every
 frame should show a level-88+ build on NIGHTMARE, on a late map (the rift,
-mars, eastworld), with a named legendary in hand and something visibly happening — damage
+mars, boot_hill), with a named legendary in hand and something visibly happening — damage
 numbers in the air, a power detonating, talent FX burning, a legendary dropping.
 
 Corollaries, each learned the hard way:
@@ -114,7 +114,7 @@ evenly hemmed in.
 If a recipe looks weak at EVERY sampled delay, stop sweeping — the staging is
 wrong. Both original bunker shots swept weak across their whole timeline: a pale
 pink floor with mobs scattered to the edges. Moving them to **mars** (red) and
-**eastworld** (gold desert) fixed what no capture delay could, and gave the set
+**boot_hill** (gold desert) fixed what no capture delay could, and gave the set
 palette variety besides. Check, in order: is the floor dark or washed out, is
 the horde dense and close, is the hero's build actually doing something.
 

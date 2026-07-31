@@ -13,7 +13,7 @@
 // Usage (from pwa/, dev server on :5199 with assets built):
 //   npx vite --port 5199 &
 //   node scripts/levelup-preview.mjs [--url http://localhost:5199]
-//     [--level spacez_hq] [--seed 42] [--hero-level 99] [--out DIR]
+//     [--level goodco_hq] [--seed 42] [--hero-level 99] [--out DIR]
 //
 // `--hero-level` picks WHICH ding is previewed: the spectacle scales with the
 // level reached (levelup-intensity.ts), from a 20% glow at level 2 up to the
@@ -37,7 +37,7 @@ const opt = (name, fallback) => {
   return i >= 0 ? args[i + 1] : fallback;
 };
 const url = opt("url", "http://localhost:5199");
-const level = opt("level", "spacez_hq");
+const level = opt("level", "goodco_hq");
 const seed = opt("seed", "7");
 // A ring of mobs staged around the hero so the light shockwave has bodies to
 // hurl back (see the knockback). Forwarded as `?scenario=`.

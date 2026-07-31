@@ -3,13 +3,13 @@ family: scenes
 size: [32, 36]
 description: >
   A tear in reality hanging in the air: a tall almond-shaped slit glowing gold
-  and orange within a purple-pink fringed edge — the doorway out into Eastworld.
+  and orange within a purple-pink fringed edge — the doorway out into Boot Hill.
 subject:
   kind: scene prop / portal
   build: a tall almond, lens-shaped slit hanging in the air
   features: a glowing core ringed by an orange band inside a purple-pink fringed edge
   accent: warm gold-orange desert-sunset light leaking from within
-  flavor: the doorway out of the rift into Eastworld, warm daylight bleeding through
+  flavor: the doorway out of the rift into Boot Hill, warm daylight bleeding through
 palette:
   C: "#eb8e3e" # orange inner ring
   D: "#9c4032" # maroon inner edge

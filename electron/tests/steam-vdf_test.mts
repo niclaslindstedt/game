@@ -117,7 +117,7 @@ describe("buildAppVdf", () => {
     depotId: 1234561,
     contentRoot: "C:\\build\\win-unpacked",
     outputDir: "C:\\build\\out",
-    description: "Gone in Space 1.0.0 (windows)",
+    description: "Ada's Trail 1.0.0 (windows)",
   });
 
   it("names the app and the depot", () => {

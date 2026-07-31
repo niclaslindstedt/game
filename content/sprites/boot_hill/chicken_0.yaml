@@ -1,0 +1,30 @@
+name: chicken_0
+family: boot_hill
+size: [10, 10]
+description: >
+  A yard chicken seen from above, both feet down - a white body with a red
+  comb, a yellow beak and a fanned tail.
+subject:
+  kind: "critter - chicken"
+  build: "a plump chicken seen from above, head to the left, feet together"
+  features: "a red comb, a yellow beak, a fanned tail, yellow feet"
+  accent: "a red comb over white plumage"
+  flavor: "the birds pecking round a homestead yard"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white feather
+  T: "#c8ccd4" # feather shadow
+  r: "#d83a3a" # comb and wattle
+  y: "#ffb02e" # beak and legs
+  K: "#0c0b12" # eye
+grid: |
+  ..........
+  ..OrO.....
+  .OrrO.....
+  OyKWWOOOO.
+  OyWWWWWWTO
+  .OWWWWWTWO
+  .OWWWWWTWO
+  ..OWWWWOO.
+  ...OyOyO..
+  ....O.O...

@@ -208,7 +208,7 @@ function pickSpawnChamber(
  * THE HORDE'S DENSITY: spawn points per million world px² of MAP.
  *
  * Measured off the campaign it has to feel like — the hand-authored maps stand at
- * 1.6 (eastworld, the rift, mars) to 1.8 (the moon) knots per million px², which
+ * 1.6 (boot_hill, the rift, mars) to 1.8 (the moon) knots per million px², which
  * works out at a fight every 700-800 px of walking.
  *
  * The horde used to be one knot per CELL, which is a COUNT wearing a density's
@@ -799,7 +799,7 @@ export function generateLevel(
   // QUIET zone buys exactly that: no ambient horde is placed in it. A SAFE zone
   // (what this used to be) also REPELS every minion out of it and holds them at
   // its edge, which is a bubble the hero can stand in untouched all run — and on
-  // spacez_hq it froze the mission's opening beat solid: the scripted rusher was
+  // goodco_hq it froze the mission's opening beat solid: the scripted rusher was
   // shoved back out of the pad it was placed in and could never land the touch
   // that draws the hero's blade. No hand-authored map puts a safe zone on the
   // landing; they spend them on the trader's stall.
@@ -974,7 +974,7 @@ export function generateLevel(
     // waits on that thought). The hand-authored map stands the crowd at his
     // elbow, so the first line lands in the opening second. A carve puts the
     // horde in knots a district apart, which left the nearest of that breed 500
-    // px away on spacez_hq — so the rusher arrived, struck a hero the gate would
+    // px away on goodco_hq — so the rusher arrived, struck a hero the gate would
     // not arm, and he stayed HOLSTERED, chased around a map he could not fight
     // on until he happened to walk into one. So the crowd is pinned where he
     // lands, inside the pin's own sighting radius, exactly as it is authored.

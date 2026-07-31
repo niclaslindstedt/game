@@ -26,7 +26,7 @@ export const DIALOGUE = {
    * to within this distance of the player (world px). This generic fallback is
    * the phone-half-view (as `speakRadius`); a level should override it per-strike
    * via `OpeningStrike.radius` down to a CONTACT gap so the swing lands when the
-   * rusher is actually on top of the hero — see spacez_hq, which does exactly
+   * rusher is actually on top of the hero — see goodco_hq, which does exactly
    * that. A contact trigger only avoids a kiting stall when the vanguard's
    * `rushSpeed` outruns PLAYER.speed, so pair the two.
    */

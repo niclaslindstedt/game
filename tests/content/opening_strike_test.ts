@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The scripted opening strike at SpaceZ HQ (LevelDef.openingStrike): the hero
+// The scripted opening strike at GOODCO HQ (LevelDef.openingStrike): the hero
 // walks in with his sword holstered, and a lone VANGUARD scientist sprints out
 // ahead of the pack to reach him and land a harmless first swing — THAT is what
 // draws the blade, fires the "good thing I brought the sword" beat
-// (spacez_armed), and turns the auto-attack on. Verifies the disarmed state,
+// (goodco_armed), and turns the auto-attack on. Verifies the disarmed state,
 // the ordering gate (the sighting read lands first), the CONTACT trigger (the
 // swing lands when the rusher is on top of him, not half a screen away), the
 // no-HP-cost strike, and that a non-vanguard touch stays harmless until the
@@ -32,12 +32,12 @@ import {
 import { DT, idle, makeEnemy, SEED, stopWaves } from "../helpers.ts";
 
 /**
- * A SpaceZ HQ run past the opening scenes but with the hero still DISARMED —
+ * A GOODCO HQ run past the opening scenes but with the hero still DISARMED —
  * the real opening. (The shared `startGame` helper arms him on purpose so the
  * other suites test a fighting hero; here we want the holstered state.)
  */
 function disarmedHQ(seed = SEED): GameState {
-  const state = createGame(seed, "spacez_hq");
+  const state = createGame(seed, "goodco_hq");
   skipCutscene(state);
   dismissIntro(state);
   return state;
@@ -63,7 +63,7 @@ function tapThrough(state: GameState): void {
   while (state.dialogue) advanceDialogue(state);
 }
 
-describe("SpaceZ HQ opening strike", () => {
+describe("GOODCO HQ opening strike", () => {
   it("opens the hero disarmed, and other levels armed", () => {
     expect(disarmedHQ().players[0].disarmed).toBe(true);
     const moon = createGame(SEED, "moon");
@@ -100,7 +100,7 @@ describe("SpaceZ HQ opening strike", () => {
     );
     const startX = state.players[0].pos.x + 120;
     v.pos = { x: startX, y: state.players[0].pos.y };
-    // Sighting gate held shut (no interns to fire spacez_staff): the vanguard
+    // Sighting gate held shut (no interns to fire goodco_staff): the vanguard
     // waits at its post through the hero's opening read rather than rushing him
     // before he has even looked around. It must NOT have closed the gap — the
     // "look at this place" monologue is meant to land first.
@@ -109,13 +109,13 @@ describe("SpaceZ HQ opening strike", () => {
     expect(v.pos.x).toBeCloseTo(startX, 5); // never left its post
     // The moment the beat plays, it breaks from the pack, sprints the hero
     // down, and its swing draws the blade — the rush follows the read.
-    state.thoughtsSeen.push("spacez_staff");
+    state.thoughtsSeen.push("goodco_staff");
     for (let i = 0; i < 400 && state.players[0].disarmed; i++)
       step(state, idle, DT);
     expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "spacez_armed",
+      defId: "goodco_armed",
     });
     // The blade came out with the scientist on top of him, not half a screen
     // away — a contact-range strike, never the old distant standoff.
@@ -126,7 +126,7 @@ describe("SpaceZ HQ opening strike", () => {
   it("drops the sprint to normal mob speed once the blade is drawn", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff"); // gate open
+    state.thoughtsSeen.push("goodco_staff"); // gate open
     v.pos = { ...state.players[0].pos };
     step(state, idle, DT); // strike lands, arms the hero
     tapThrough(state);
@@ -160,7 +160,7 @@ describe("SpaceZ HQ opening strike", () => {
   it("arms the hero on the vanguard's strike — after the sighting beat", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff"); // the gate's prerequisite
+    state.thoughtsSeen.push("goodco_staff"); // the gate's prerequisite
     v.pos = { ...state.players[0].pos }; // in contact
     const hp = state.players[0].hp;
     step(state, idle, DT);
@@ -168,23 +168,23 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.players[0].hp).toBe(hp); // the first swing costs no HP
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "spacez_armed",
+      defId: "goodco_armed",
     });
-    expect(state.thoughtsSeen).toContain("spacez_armed");
+    expect(state.thoughtsSeen).toContain("goodco_armed");
   });
 
   it("arms even when the strike's thought is already seen (replay / BOT VIEW)", () => {
     // Regression: a REPLAY — or DEVELOPER → BOT VIEW, which seeds this
     // difficulty's read ledger into the fresh run via `markThoughtsSeen` —
-    // starts with `spacez_armed` ALREADY in thoughtsSeen. The old hook bailed
+    // starts with `goodco_armed` ALREADY in thoughtsSeen. The old hook bailed
     // outright on that (`includes(thought)` early return), so a holstered hero
     // whose vanguard reached him was never armed: the strike no-op'd and the
     // pack just piled up around him for the whole level. The blade must still be
     // drawn — arming is gated by `disarmed`, not by the monologue being unread.
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff"); // the gate's prerequisite
-    state.thoughtsSeen.push("spacez_armed"); // pre-seeded, as a replay would
+    state.thoughtsSeen.push("goodco_staff"); // the gate's prerequisite
+    state.thoughtsSeen.push("goodco_armed"); // pre-seeded, as a replay would
     v.pos = { ...state.players[0].pos }; // in contact
     step(state, idle, DT);
     // He drew the blade despite the beat already being marked read …
@@ -196,7 +196,7 @@ describe("SpaceZ HQ opening strike", () => {
   it("holds the blade until the vanguard reaches him, then draws it on contact", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff"); // gate open
+    state.thoughtsSeen.push("goodco_staff"); // gate open
     // A clear gap away — sprinting in, but nowhere near touching. A single
     // tick's rush can't close it, so the blade stays holstered: the beat waits
     // for the scientist to actually arrive, not a distant proximity read.
@@ -211,7 +211,7 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "spacez_armed",
+      defId: "goodco_armed",
     });
     // The swing landed with the scientist on top of him — a contact gap, never
     // the old ~96 px half-a-screen standoff.
@@ -222,14 +222,14 @@ describe("SpaceZ HQ opening strike", () => {
   it("stays holstered while the vanguard has yet to reach him", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff"); // gate open
+    state.thoughtsSeen.push("goodco_staff"); // gate open
     // Way off across the lobby: a single tick's rush can't close the ~300 px
     // gap, so the blade stays holstered — the beat waits on the rusher arriving,
     // not on time.
     v.pos = { x: state.players[0].pos.x + 400, y: state.players[0].pos.y };
     step(state, idle, DT);
     expect(state.players[0].disarmed).toBe(true);
-    expect(state.thoughtsSeen).not.toContain("spacez_armed");
+    expect(state.thoughtsSeen).not.toContain("goodco_armed");
     expect(state.dialogue).toBeNull();
   });
 
@@ -237,10 +237,10 @@ describe("SpaceZ HQ opening strike", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
     v.pos = { ...state.players[0].pos };
-    // spacez_staff not seen, and no interns on the board to fire it.
+    // goodco_staff not seen, and no interns on the board to fire it.
     for (let i = 0; i < 10; i++) step(state, idle, DT);
     expect(state.players[0].disarmed).toBe(true);
-    expect(state.thoughtsSeen).not.toContain("spacez_armed");
+    expect(state.thoughtsSeen).not.toContain("goodco_armed");
     expect(state.dialogue).toBeNull();
   });
 
@@ -253,13 +253,13 @@ describe("SpaceZ HQ opening strike", () => {
     // blade.
     const state = disarmedHQ();
     isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff"); // gate open
+    state.thoughtsSeen.push("goodco_staff"); // gate open
     // The companions got there first: the vanguard is off the board, never
     // having reached the hero.
     state.enemies = [];
     step(state, idle, DT);
     expect(state.players[0].disarmed).toBe(false);
-    expect(state.thoughtsSeen).toContain("spacez_armed");
+    expect(state.thoughtsSeen).toContain("goodco_armed");
     // A dead rusher landed no blow, so the arming costs no HP.
     // (hp is untouched — nothing struck him.)
   });
@@ -267,7 +267,7 @@ describe("SpaceZ HQ opening strike", () => {
   it("keeps a non-vanguard touch harmless while disarmed", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff"); // gate open, so only the mob matters
+    state.thoughtsSeen.push("goodco_staff"); // gate open, so only the mob matters
     // Keep the vanguard ALIVE but far across the lobby (never reaching him) so
     // the safety net that arms on a vanquished vanguard stays out of it — here
     // we test only that a NON-vanguard touch is harmless and never draws the
@@ -297,7 +297,7 @@ describe("SpaceZ HQ opening strike", () => {
       step(state, idle, DT);
       if (state.dialogue?.source.kind === "playerThought") {
         const src = state.dialogue.source as { defId: string };
-        if (src.defId === "spacez_staff") {
+        if (src.defId === "goodco_staff") {
           sawStaff = true;
           const v = vanguard(state);
           vgapAtStaff = Math.hypot(
@@ -320,16 +320,16 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "spacez_armed",
+      defId: "goodco_armed",
     });
   });
 
   it("resumes normal combat once armed", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("spacez_staff");
+    state.thoughtsSeen.push("goodco_staff");
     v.pos = { ...state.players[0].pos };
-    step(state, idle, DT); // the strike arms him and opens spacez_armed
+    step(state, idle, DT); // the strike arms him and opens goodco_armed
     tapThrough(state);
     expect(state.phase).toBe("playing");
 
@@ -407,14 +407,14 @@ describe("SpaceZ HQ opening strike", () => {
   it("the autopilot still arms with a seeded ledger (BOT VIEW / replay)", () => {
     // Regression for the iOS-PWA BOT VIEW soft-lock: DEVELOPER → BOT VIEW opens
     // via the warp/skipOpening path (a DISARMED arrival hero) and seeds this
-    // difficulty's read ledger through `markThoughtsSeen`, so `spacez_armed` is
+    // difficulty's read ledger through `markThoughtsSeen`, so `goodco_armed` is
     // already marked seen. The opening-strike hook used to bail on that, so the
     // vanguard reached the holstered hero and the strike no-op'd — the pack just
     // piled up around a defenceless hero forever ("ARM UP" stuck on screen). He
     // must still draw the blade. Muted like a real BOT VIEW run.
     for (const seed of [SEED, 1, 2, 3]) {
-      const state = createGame(seed, "spacez_hq", "easy");
-      markThoughtsSeen(state, ["spacez_staff", "spacez_armed"]);
+      const state = createGame(seed, "goodco_hq", "easy");
+      markThoughtsSeen(state, ["goodco_staff", "goodco_armed"]);
       skipCutscene(state);
       dismissIntro(state); // skipOpening leaves him disarmed
       muteDialogue(state);

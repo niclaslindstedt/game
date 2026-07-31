@@ -123,7 +123,7 @@ export const ASTEROIDS = {
 
 /**
  * Hay balls — the spinning, bouncing bales a level rolls in with
- * LevelDef.hayBalls (Eastworld's western prop hazard). Each spawns just past
+ * LevelDef.hayBalls (Boot Hill's western prop hazard). Each spawns just past
  * the RIGHT screen edge in a lane of its own and rolls straight to the LEFT
  * across the player's surroundings, spinning and hopping (the bounce is a
  * renderer-only sine off `bouncePeriodMs`/`bounceHeight`). Unlike the asteroid
@@ -199,7 +199,7 @@ export const SANDSTORMS = {
 } as const;
 
 /**
- * Employee stampedes — the "asteroid" beat of SpaceZ HQ (a level turns them on
+ * Employee stampedes — the "asteroid" beat of GOODCO HQ (a level turns them on
  * with LevelDef.stampedes). Every `everyMs` a HERD of `runnerCount` panicked
  * staffers mints just past the RIGHT screen edge in a vertical wall and
  * charges straight to the LEFT at a steady, heavy pace, a churning dust cloud

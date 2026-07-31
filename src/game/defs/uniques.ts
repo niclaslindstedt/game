@@ -19,7 +19,7 @@
 // tagged `tier: "set"` + a `setId` here — themed to one weapon class, plus one
 // on-theme SIGNATURE weapon kept as a plain unique. Which boss drops which is
 // wired on the enemy defs (`EnemyDef.uniquesByDifficulty`); the whole set is
-// farmable from its boss on the endgame rungs. DOGE-1 also drops a BAG and GROK
+// farmable from its boss on the endgame rungs. PAYLOAD-1 also drops a BAG and TRUST ME BRO
 // a CHARM on each rung (a separate accessory axis, ordinary uniques). Bases are
 // all existing catalog items for now — dedicated art (a fang dagger, a
 // flagstaff, a roomy bag) is a later polish pass.

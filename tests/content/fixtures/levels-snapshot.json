@@ -1,11 +1,11 @@
 {
-  "order": ["spacez_hq", "moon", "mars", "the_rift", "eastworld"],
+  "order": ["goodco_hq", "moon", "mars", "the_rift", "boot_hill"],
   "secret": ["the_bunker"],
   "defs": {
-    "spacez_hq": {
-      "id": "spacez_hq",
+    "goodco_hq": {
+      "id": "goodco_hq",
       "index": 1,
-      "name": "SPACEZ HQ",
+      "name": "GOODCO HQ",
       "prelude": "prelude",
       "music": "hq_lockdown",
       "intro": [
@@ -16,7 +16,7 @@
           "TO FOLLOW HER I NEED A SHIP. I'VE BEEN BUILDING ONE IN THE GARAGE FOR YEARS. IT'S ALMOST DONE."
         ],
         [
-          "ALMOST. THE ENGINE STILL NEEDS ONE PART I COULD NEVER GET. SPACEZ KEEPS IT IN THEIR CLEANROOM VAULT."
+          "ALMOST. THE ENGINE STILL NEEDS ONE PART I COULD NEVER GET. GOODCO KEEPS IT IN THEIR CLEANROOM VAULT."
         ],
         [
           "I KNOW, BECAUSE I WORKED THERE. I BUILT THEIR ENGINES - TILL AN AI LEARNED MY JOB AND THEY FIRED ME."
@@ -30,7 +30,7 @@
       "width": 2000,
       "height": 1200,
       "gravity": 800,
-      "biome": "spacez",
+      "biome": "goodco",
       "tiles": {
         "ground": {
           "common": "lab_0",
@@ -227,7 +227,7 @@
           "hp": [180, 252, 360, 630]
         },
         {
-          "enemy": "doge_1",
+          "enemy": "payload_1",
           "at": {
             "x": 1850,
             "y": 590
@@ -384,7 +384,7 @@
           "alarms": "a2"
         },
         {
-          "enemy": "optimusk",
+          "enemy": "successor",
           "at": {
             "x": 1150,
             "y": 150
@@ -398,7 +398,7 @@
           "alarms": "a3"
         },
         {
-          "enemy": "optimusk",
+          "enemy": "successor",
           "at": {
             "x": 1430,
             "y": 160
@@ -730,7 +730,7 @@
               "count": 40
             },
             {
-              "enemy": "optimusk",
+              "enemy": "successor",
               "count": 35
             },
             {
@@ -748,7 +748,7 @@
           "lingering": 6,
           "members": [
             {
-              "enemy": "optimusk",
+              "enemy": "successor",
               "count": 40
             },
             {
@@ -1522,12 +1522,12 @@
       "firstSightThoughts": [
         {
           "enemy": "intern",
-          "thought": "spacez_staff",
+          "thought": "goodco_staff",
           "radius": 200
         },
         {
-          "enemy": "optimusk",
-          "thought": "spacez_optimusk"
+          "enemy": "successor",
+          "thought": "goodco_successor"
         },
         {
           "enemy": "tunguska_walker",
@@ -1546,8 +1546,8 @@
           "x": 400,
           "y": 620
         },
-        "thought": "spacez_armed",
-        "after": "spacez_staff",
+        "thought": "goodco_armed",
+        "after": "goodco_staff",
         "radius": 22
       },
       "loot": {
@@ -1576,7 +1576,7 @@
           "hatch_cover",
           "riot_shield",
           "tool_pouch",
-          "ducci_holdall",
+          "monogram_holdall",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",
@@ -2105,7 +2105,7 @@
               "count": 10
             },
             {
-              "enemy": "optimusk",
+              "enemy": "successor",
               "count": 4
             }
           ]
@@ -2131,7 +2131,7 @@
               "count": 12
             },
             {
-              "enemy": "optimusk",
+              "enemy": "successor",
               "count": 3
             },
             {
@@ -2539,8 +2539,8 @@
           "after": "moon_wisp_sight"
         },
         {
-          "enemy": "optimusk",
-          "thought": "moon_optimusk"
+          "enemy": "successor",
+          "thought": "moon_successor"
         }
       ],
       "loot": {
@@ -2587,7 +2587,7 @@
           "hatch_cover",
           "riot_shield",
           "tool_pouch",
-          "ducci_holdall",
+          "monogram_holdall",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",
@@ -2671,10 +2671,10 @@
       "music": "red_dust",
       "intro": [
         [
-          "HE SAID THE MOON WAS SPACEZ'S BIG MISTAKE - THE COMPANY PACKED IT ALL INTO CRATES AND RAN. TO MARS."
+          "HE SAID THE MOON WAS GOODCO'S BIG MISTAKE - THE COMPANY PACKED IT ALL INTO CRATES AND RAN. TO MARS."
         ],
         [
-          "I KNOW WHAT A SPACEZ COLONY LOOKS LIKE - I REBUILT THEIR LANDER ONCE. DOMES. ROBOTS. SECRETS."
+          "I KNOW WHAT A GOODCO COLONY LOOKS LIKE - I REBUILT THEIR LANDER ONCE. DOMES. ROBOTS. SECRETS."
         ],
         [
           "SOMEBODY DOWN HERE TRADED MY GIRL AWAY LIKE CARGO. BAD TRADE. FOR THEM."
@@ -2865,12 +2865,12 @@
           "band": [0.6, 1]
         },
         {
-          "enemy": "optimusk",
+          "enemy": "successor",
           "count": 4,
           "band": [0.5, 1]
         },
         {
-          "enemy": "larry_webpage",
+          "enemy": "the_indexer",
           "at": {
             "x": 1200,
             "y": 540
@@ -2879,7 +2879,7 @@
           "hp": [260, 390, 598, 1560]
         },
         {
-          "enemy": "build_gates",
+          "enemy": "the_vendor",
           "at": {
             "x": 1740,
             "y": 820
@@ -2888,7 +2888,7 @@
           "hp": [250, 375, 575, 1500]
         },
         {
-          "enemy": "optimusk_prime",
+          "enemy": "successor_prime",
           "at": {
             "x": 1980,
             "y": 470
@@ -2897,7 +2897,7 @@
           "hp": [340, 510, 782, 2040]
         },
         {
-          "enemy": "peter_teal",
+          "enemy": "the_seed",
           "at": {
             "x": 2360,
             "y": 580
@@ -2906,7 +2906,7 @@
           "hp": [280, 420, 644, 1680]
         },
         {
-          "enemy": "elon_mosque",
+          "enemy": "the_founder",
           "at": {
             "x": 2640,
             "y": 760
@@ -3114,7 +3114,7 @@
               "count": 26
             },
             {
-              "enemy": "optimusk",
+              "enemy": "successor",
               "count": 14
             }
           ]
@@ -3667,7 +3667,7 @@
           "hatch_cover",
           "riot_shield",
           "tool_pouch",
-          "ducci_holdall",
+          "monogram_holdall",
           "micrometeoroid_shield",
           "courier_sling",
           "sample_case",
@@ -3980,7 +3980,7 @@
           "hp": [300, 450, 690, 1800]
         },
         {
-          "enemy": "the_king",
+          "enemy": "the_residency",
           "at": {
             "x": 1380,
             "y": 700
@@ -4007,7 +4007,7 @@
           "hp": [360, 540, 828, 2160]
         },
         {
-          "enemy": "grok_omega",
+          "enemy": "bro_omega",
           "at": {
             "x": 2470,
             "y": 780
@@ -4016,7 +4016,7 @@
           "hp": [850, 1275, 1955, 5100]
         },
         {
-          "enemy": "elon_mosque_rift",
+          "enemy": "the_founder_rift",
           "at": {
             "x": 2860,
             "y": 800
@@ -4517,7 +4517,7 @@
         },
         {
           "kind": "story",
-          "defId": "zai_probe",
+          "defId": "bro_probe",
           "pos": {
             "x": 2100,
             "y": 490
@@ -4853,7 +4853,7 @@
           "hatch_cover",
           "riot_shield",
           "tool_pouch",
-          "ducci_holdall",
+          "monogram_holdall",
           "micrometeoroid_shield",
           "courier_sling",
           "sample_case",
@@ -4942,10 +4942,10 @@
       ],
       "intendedLevel": [25, 25, 29, 50]
     },
-    "eastworld": {
-      "id": "eastworld",
+    "boot_hill": {
+      "id": "boot_hill",
       "index": 5,
-      "name": "EASTWORLD",
+      "name": "BOOT HILL",
       "prelude": "rift_exit",
       "music": "red_dust",
       "intro": [
@@ -4954,7 +4954,7 @@
           "DUST. SALOONS. A ROBOT TIPPED ITS HAT AT ME. ADA'S BEACON IS SCREAMING FROM THE BIG BUILDING."
         ],
         [
-          "THE SIGN SAYS 'EASTWORLD'. THE FINE PRINT SAYS 'POWERED BY ZAI'. OF COURSE IT IS. OF COURSE."
+          "THE SIGN SAYS 'BOOT HILL'. THE FINE PRINT SAYS 'POWERED BY TRUST ME BRO'. OF COURSE IT IS. OF COURSE."
         ],
         [
           "EVERY MACHINE HERE RUNS ON THE THING THAT TOOK MY JOB. TIME TO FILE A COMPLAINT."
@@ -4963,17 +4963,17 @@
       ],
       "outro": [
         [
-          "THE SUPERCORE DIED, AND THE WHOLE PARK SHOOK LIKE A MISSED HEARTBEAT. EVERY HOST TIPPED ITS HAT AND SAT."
+          "THE SUPERCORE DIED, AND THE WHOLE PARK SHOOK LIKE A MISSED HEARTBEAT. EVERY HAND TIPPED ITS HAT AND SAT."
         ],
         [
           "SHE WAS IN THE CONTROL ROOM, BEHIND GLASS, FURIOUS. FIRST SHE SAID: 'YOU TOOK YOUR TIME.'",
           "THEN: 'NICE HAT.'"
         ],
         [
-          "WE WALKED HOME THROUGH THE RIFT. BEHIND US, EASTWORLD RUSTED IN PEACE."
+          "WE WALKED HOME THROUGH THE RIFT. BEHIND US, BOOT HILL RUSTED IN PEACE."
         ],
         [
-          "WITH DOGE GONE, THE MACHINES STOPPED WORKING EVERYONE'S JOBS. NO HAND KEPT ONE MAN ON TOP."
+          "WITH PAYLOAD GONE, THE MACHINES STOPPED WORKING EVERYONE'S JOBS. NO HAND KEPT ONE MAN ON TOP."
         ],
         [
           "PEOPLE GOT HIRED BACK, RENT GOT PAID, AND THE WORLD BECAME A PLACE YOU COULD AFFORD. ON FRIDAY -"
@@ -4983,7 +4983,7 @@
       "width": 3200,
       "height": 1600,
       "gravity": 700,
-      "biome": "eastworld",
+      "biome": "boot_hill",
       "tiles": {
         "ground": {
           "common": "hardpan_0",
@@ -5011,10 +5011,10 @@
           }
         ]
       },
-      "foes": "HOSTS",
+      "foes": "HANDS",
       "heroSuited": false,
       "merchant": {
-        "sprite": "merchant_eastworld",
+        "sprite": "merchant_boot_hill",
         "name": "THE BARKEEP",
         "greeting": [
           [
@@ -5029,9 +5029,9 @@
         ],
         "returnGreeting": ["WELL, LOOK WHO'S BACK. SAME STOOL, PARTNER?"],
         "stockUniques": [
-          "putains_tracksuit",
+          "strongmans_tracksuit",
           "the_kremlin_ushanka",
-          "honorary_black_belt"
+          "honorary_rank"
         ]
       },
       "merchantSpawns": [
@@ -5053,7 +5053,7 @@
           }
         },
         {
-          "kind": "eastworld_gate",
+          "kind": "boot_hill_gate",
           "pos": {
             "x": 820,
             "y": 800
@@ -5155,7 +5155,7 @@
           "band": [0.6, 1]
         },
         {
-          "enemy": "edward_snow",
+          "enemy": "the_leak",
           "at": {
             "x": 1160,
             "y": 770
@@ -5164,7 +5164,7 @@
           "hp": [480, 720, 1104, 2880]
         },
         {
-          "enemy": "gerald_depardieu",
+          "enemy": "the_leading_man",
           "at": {
             "x": 1360,
             "y": 1200
@@ -5173,7 +5173,7 @@
           "hp": [950, 1425, 2185, 5700]
         },
         {
-          "enemy": "vladimir_putain",
+          "enemy": "the_strongman",
           "at": {
             "x": 1820,
             "y": 800
@@ -5182,7 +5182,7 @@
           "hp": [700, 1050, 1610, 4200]
         },
         {
-          "enemy": "steven_seagull",
+          "enemy": "the_stunt_double",
           "at": {
             "x": 2360,
             "y": 800
@@ -5191,7 +5191,7 @@
           "hp": [520, 780, 1196, 3120]
         },
         {
-          "enemy": "elon_mosque_eastworld",
+          "enemy": "the_founder_boot_hill",
           "at": {
             "x": 2620,
             "y": 900
@@ -5200,7 +5200,7 @@
           "hp": [900, 1350, 2070, 5400]
         },
         {
-          "enemy": "grok_alpha",
+          "enemy": "bro_alpha",
           "at": {
             "x": 2700,
             "y": 640
@@ -5209,7 +5209,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "grok_beta",
+          "enemy": "bro_beta",
           "at": {
             "x": 2780,
             "y": 960
@@ -5218,7 +5218,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "grok_gamma",
+          "enemy": "bro_gamma",
           "at": {
             "x": 3020,
             "y": 700
@@ -5227,7 +5227,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "zai_supercore",
+          "enemy": "bro_supercore",
           "at": {
             "x": 2900,
             "y": 800
@@ -5757,7 +5757,7 @@
           "jumpable": false
         },
         {
-          "kind": "eastrock",
+          "kind": "boothill_rock",
           "from": {
             "x": 2660,
             "y": 720
@@ -5770,7 +5770,7 @@
           "jumpable": false
         },
         {
-          "kind": "eastrock",
+          "kind": "boothill_rock",
           "from": {
             "x": 2820,
             "y": 880
@@ -5783,7 +5783,7 @@
           "jumpable": false
         },
         {
-          "kind": "eastrock",
+          "kind": "boothill_rock",
           "from": {
             "x": 2980,
             "y": 940
@@ -5796,7 +5796,7 @@
           "jumpable": false
         },
         {
-          "kind": "eastrock",
+          "kind": "boothill_rock",
           "from": {
             "x": 3020,
             "y": 640
@@ -5809,7 +5809,7 @@
           "jumpable": false
         },
         {
-          "kind": "eastrock",
+          "kind": "boothill_rock",
           "from": {
             "x": 2620,
             "y": 560
@@ -5822,7 +5822,7 @@
           "jumpable": false
         },
         {
-          "kind": "eastrock",
+          "kind": "boothill_rock",
           "from": {
             "x": 2880,
             "y": 700
@@ -6243,7 +6243,7 @@
       ],
       "obstacles": [
         {
-          "kind": "eastrock",
+          "kind": "boothill_rock",
           "count": 7,
           "radius": 9,
           "jumpable": false,
@@ -6312,7 +6312,7 @@
       "firstSightThoughts": [
         {
           "enemy": "cowbot",
-          "thought": "eastworld_arrival",
+          "thought": "boot_hill_arrival",
           "radius": 200
         },
         {
@@ -6329,8 +6329,8 @@
       "firstKillThoughts": [
         {
           "enemy": "cowbot",
-          "thought": "eastworld_hosts",
-          "after": "eastworld_arrival"
+          "thought": "boot_hill_hosts",
+          "after": "boot_hill_arrival"
         }
       ],
       "loot": {
@@ -6425,7 +6425,7 @@
           "hatch_cover",
           "riot_shield",
           "tool_pouch",
-          "ducci_holdall",
+          "monogram_holdall",
           "micrometeoroid_shield",
           "courier_sling",
           "sample_case",
@@ -6497,7 +6497,7 @@
             "the_verdict",
             "horizons_end",
             "the_last_ante",
-            "the_kings_ransom"
+            "the_residencys_ransom"
           ]
         },
         "arrowCapByDifficulty": {
@@ -6772,7 +6772,7 @@
           "hp": [150, 225, 345, 900]
         },
         {
-          "enemy": "mark_suckerberg",
+          "enemy": "the_moderator",
           "at": {
             "x": 1720,
             "y": 400
@@ -6781,7 +6781,7 @@
           "hp": [1700, 2550, 3910, 10200]
         },
         {
-          "enemy": "guard_meta",
+          "enemy": "guard_feed",
           "at": {
             "x": 1650,
             "y": 390
@@ -6790,7 +6790,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "guard_meta",
+          "enemy": "guard_feed",
           "at": {
             "x": 1790,
             "y": 345
@@ -6799,7 +6799,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "guard_meta",
+          "enemy": "guard_feed",
           "at": {
             "x": 1720,
             "y": 475
@@ -6808,7 +6808,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "sam_haltman",
+          "enemy": "the_safety_officer",
           "at": {
             "x": 1720,
             "y": 1300
@@ -6844,7 +6844,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "putain_clone",
+          "enemy": "strongman_clone",
           "at": {
             "x": 2340,
             "y": 400
@@ -6880,7 +6880,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "larry_allison",
+          "enemy": "the_sysadmin",
           "at": {
             "x": 2340,
             "y": 1300
@@ -6889,7 +6889,7 @@
           "hp": [1800, 2700, 4140, 10800]
         },
         {
-          "enemy": "guard_oracle",
+          "enemy": "guard_ledger",
           "at": {
             "x": 2270,
             "y": 1290
@@ -6898,7 +6898,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "guard_oracle",
+          "enemy": "guard_ledger",
           "at": {
             "x": 2410,
             "y": 1245
@@ -6907,7 +6907,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "guard_oracle",
+          "enemy": "guard_ledger",
           "at": {
             "x": 2340,
             "y": 1375
@@ -6916,7 +6916,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "jeff_baywatch",
+          "enemy": "the_fulfiller",
           "at": {
             "x": 2960,
             "y": 400
@@ -6925,7 +6925,7 @@
           "hp": [2200, 3300, 5060, 13200]
         },
         {
-          "enemy": "guard_prime",
+          "enemy": "guard_depot",
           "at": {
             "x": 2890,
             "y": 390
@@ -6934,7 +6934,7 @@
           "hp": [400, 600, 920, 2400]
         },
         {
-          "enemy": "guard_prime",
+          "enemy": "guard_depot",
           "at": {
             "x": 3030,
             "y": 345
@@ -6943,7 +6943,7 @@
           "hp": [400, 600, 920, 2400]
         },
         {
-          "enemy": "guard_prime",
+          "enemy": "guard_depot",
           "at": {
             "x": 2960,
             "y": 475
@@ -6952,7 +6952,7 @@
           "hp": [400, 600, 920, 2400]
         },
         {
-          "enemy": "donald_dump",
+          "enemy": "the_developer",
           "at": {
             "x": 2960,
             "y": 1300

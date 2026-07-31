@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
 
-# Gone in Space — desktop app
+# Ada's Trail — desktop app
 
 The Steam wrapper around the game, for **Windows, macOS and Linux**. It is a
 thin [Electron](https://www.electronjs.org) shell whose entire content is the

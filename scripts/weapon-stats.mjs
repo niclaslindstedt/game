@@ -69,11 +69,11 @@ await applyModsWithSprites(mods);
  * the new reality.
  */
 const LEVEL_MLVL_BANDS = {
-  spacez_hq: [1, 23],
+  goodco_hq: [1, 23],
   moon: [2, 25],
   mars: [5, 28],
   the_rift: [8, 31],
-  eastworld: [12, 34],
+  boot_hill: [12, 34],
 };
 
 const atlas = JSON.parse(

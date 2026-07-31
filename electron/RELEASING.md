@@ -118,7 +118,7 @@ see [What fails quietly](#what-fails-quietly).
    unavailable for everybody.
 
 6. **Application → Installation → General** → set the launch options: one per
-   OS, executable `Gone in Space.exe` / `Gone in Space.app` / `gone-in-space`.
+   OS, executable `Ada's Trail.exe` / `Ada's Trail.app` / `adas-trail`.
    A depot with no launch option installs and cannot be played.
 
 ## 2. Version

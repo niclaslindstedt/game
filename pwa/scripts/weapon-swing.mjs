@@ -128,7 +128,7 @@ const classFilter = flag("class", null);
 const explicit = argv
   .slice(1)
   .filter((a) => !a.startsWith("--") && weaponMeta(a));
-const DEFAULTS = ["medieval_sword", "nine_mm", "hairy_potters_wand"];
+const DEFAULTS = ["medieval_sword", "nine_mm", "licensed_replica"];
 let weaponIds;
 if (explicit.length) weaponIds = explicit;
 else if (mode === "uniques") weaponIds = uniqueMeleeIds;
@@ -175,7 +175,7 @@ await page.getByRole("button", { name: "difficulty-easy" }).waitFor();
 await page.getByRole("button", { name: "difficulty-easy" }).click();
 try {
   await page
-    .getByRole("button", { name: "level-spacez_hq" })
+    .getByRole("button", { name: "level-goodco_hq" })
     .click({ timeout: 3000 });
 } catch {
   /* a fresh hero walks straight into the first level */

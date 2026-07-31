@@ -2,7 +2,7 @@
 description: |-
   GENERATED MARS — the oxide plain as a field of OUTCROPS and COLONY MODULES
   instead of the authored run to the shrine. THE READ: rust-red hardpan broken by
-  rock outcrops and studded with pressurized colony pads, and ELON MOSQUE is
+  rock outcrops and studded with pressurized colony pads, and THE FOUNDER is
   holding court inside one of them. WHICH one is rolled per run out of the six
   outer thirds of the map, so the shrine is never where it was last time and the
   only way to the boss is to walk Mars pad by pad, reading the fog-of-war minimap
@@ -12,7 +12,7 @@ description: |-
   through, rovers grinding out of the haze — but the horizon is now broken by
   marsrock spines and the hard rectangles of colony plating. Every district holds
   one finite knot that arms as he steps in and drains as he clears it, and the
-  knots ramp with DEPTH (scout rovers out where he lands, OPTIMUSK units deep in
+  knots ramp with DEPTH (scout rovers out where he lands, SUCCESSOR units deep in
   the colony), so the search gets colder the further it runs. SINKHOLES are the
   Martian terrain twist: unlike the craters, a collapse cannot be jumped, so the
   open plains have to be routed around rather than crossed in a straight line.
@@ -26,7 +26,7 @@ level: mars
 # of the pairing: two PLAINS flow into each other with nothing between them (Mars
 # is open, and it should read open), an OUTCROP fences its neighbour off behind a
 # marsrock spine with a wide pass through it, and a COLONY pad is sealed, one way
-# in. ELON MOSQUE only ever holds the TERRARIUM (`boss` false everywhere else) —
+# in. THE FOUNDER only ever holds the TERRARIUM (`boss` false everywhere else) —
 # he holds court in the garden, never out on bare hardpan — and the hero always
 # puts down on open dust.
 #
@@ -57,7 +57,7 @@ areas:
   # billionaires' lifeboat"). Lawn and timber decking, trees, ponds and a
   # swimming pool, watered while the planet outside chokes on dust. It is the ONE
   # warm, green, wet place in the whole mission, and that contrast is the point:
-  # the hero crosses a poisoned desert to find somebody's lawn. ELON MOSQUE holds
+  # the hero crosses a poisoned desert to find somebody's lawn. THE FOUNDER holds
   # court here and nowhere else. Weighted LOW — a dome covering half of Mars is
   # scenery, where a rare one is the reveal it should be.
   #
@@ -323,7 +323,7 @@ objects:
 
 # THE HORDE: one finite knot per district, its breed mix handing over along the
 # depth axis and its mob level climbing the ladder — scout rovers where he lands,
-# servo bots and fembots through the middle, and the tanky OPTIMUSK only deep in,
+# servo bots and fembots through the middle, and the tanky SUCCESSOR only deep in,
 # so they never wall the middle of the search.
 horde:
   perRoom: [34, 48]
@@ -341,7 +341,7 @@ horde:
     - enemy: fembot
       window: [0.5, 1]
       weight: 3
-    - enemy: optimusk
+    - enemy: successor
       window: [0.82, 1]
       weight: 1
 
@@ -349,16 +349,16 @@ horde:
 # still unspools in order — the webpage, the foundation, the prime unit, and the
 # seal.
 elites:
-  - enemy: larry_webpage
+  - enemy: the_indexer
     ramp: fierce
     hp: 260
-  - enemy: build_gates
+  - enemy: the_vendor
     ramp: brutal
     hp: 250
-  - enemy: optimusk_prime
+  - enemy: successor_prime
     ramp: merciless
     hp: 340
-  - enemy: peter_teal
+  - enemy: the_seed
     ramp: endgame
     hp: 280
 
@@ -382,11 +382,11 @@ hellborn:
       count: 4
       minDifficulty: jesus
 
-# ELON MOSQUE holds one of the SIX OUTER THIRDS — the four corners and the two
+# THE FOUNDER holds one of the SIX OUTER THIRDS — the four corners and the two
 # middle flanks. Never the centre: a boss in the middle of the map is found by
 # accident on the way to somewhere else, which is the opposite of a search.
 boss:
-  enemy: elon_mosque
+  enemy: the_founder
   ramp: apex
   hp: 700
   regions:

@@ -1,0 +1,148 @@
+id: the_founder
+name: THE FOUNDER
+lore: >-
+  The richest man alive, owner of Mars on paper, and the coward this whole
+  chase is about. He sold Ada to the planet's real landlords as the down
+  payment on it, and would sooner tear a hole in the universe than lose a
+  negotiation.
+role: boss
+levelBonus: 5
+sprite: the_founder
+hp: 700
+speed: 42
+radius: 20
+contactDamage: 30
+critChance: 0.15
+contactCooldownMs: 900
+dialogue:
+  - - AH. THE GARAGE INVENTOR. YOU'RE TRENDING, YOU KNOW. MOSTLY LAUGHING EMOJIS.
+  - hero:
+      - WHERE'S ADA? YOUR COMPANY GRABBED HER OFF THE STREET AND FLEW HER HERE. I WANT HER BACK.
+  - - STRAIGHT TO BUSINESS? FINE. A WHOLE PLANET, NO REGULATORS. I'M THE LAW HERE. ALSO HR.
+  - hero:
+      - THE MOON IS FULL OF YOUR DEAD, AND YOU'RE GIVING ME A SALES TOUR. WHAT HAPPENED UP THERE?
+  - - THE MOON? A ROUNDING ERROR. WE PLUGGED INTO SOMETHING OLD AND IT SANG BACK. OFF-BRAND.
+  - - BUT IT INTRODUCED US TO THE ACTUAL OWNERS OUT HERE. THE LIZARD GODS. GREAT GUYS. HUGE.
+  - hero:
+      - THE GIRL, THE FOUNDER. WHERE IS SHE?
+  - - YOUR GIRL ISN'T CARGO. SHE'S MARS' PRICE TO THE GODS. AND I ALWAYS CLOSE. SECURITY!
+# THE FLIGHT RITE — he does not die here, he RUNS: tears the rift open,
+# bolts for it with his back turned, and is spun out of existence.
+death: bolt
+
+# THE HERO'S LINE as the coward goes through his own rift.
+deathBark:
+  - RUN, THEN. I'M GOING THE SAME WAY.
+
+lastWords:
+  - OKAY! OKAY! NOT THE FACE! BOARD MEETING. OTHER UNIVERSE.
+flees:
+  landmark: rift
+  belowHpFrac: 0.25
+mechanics:
+  summon:
+    defId: servo_bot
+    count: 2
+    cooldownMs: 13000
+    maxAlive: 4
+  # ORBITAL DELIVERY — he does not summon, he SHIPS. Pods come down on marks
+  # bracketing the hero, blow, and pop open with the security he just called.
+  # The telegraph is the meteor shadow Mars has been teaching for a level and a
+  # half, so the move is legible the first time it is used.
+  abilities:
+    - id: airstrike
+      windupMs: 1000
+      windupFloorMs: 700
+      cooldownMs: 12000
+      count: 3
+      spread: 130
+      fallMs: 1500
+      blastRadius: 58
+      damageFrac: 0.8
+      hatch: servo_bot
+      hatchCount: 1
+      bark:
+        - SECURITY IS AN
+        - INFRASTRUCTURE
+        - PROBLEM. SHIPPING.
+phases:
+  - belowHpFrac: 0.35
+    mechanics:
+      summon:
+        defId: servo_bot
+        count: 3
+        cooldownMs: 11000
+        maxAlive: 5
+      enrage:
+        belowHpFrac: 0.35
+        speedMult: 1.35
+        damageMult: 1.25
+      abilities:
+        - id: airstrike
+          windupMs: 850
+          windupFloorMs: 650
+          cooldownMs: 9500
+          count: 4
+          spread: 150
+          fallMs: 1350
+          blastRadius: 62
+          damageFrac: 0.9
+          hatch: servo_bot
+          hatchCount: 2
+        # CALL OF INCELS, NIGHTMARE AND ABOVE: the followers arrive at a dead
+        # run, down a lane the approach dust has already drawn. The answer is
+        # the one Boot Hill's herds already taught — get out of the lane.
+        - id: call_horde
+          minDifficulty: nightmare
+          windupMs: 900
+          cooldownMs: 17000
+          waves: 2
+          waveGapMs: 3200
+          runnerSprite: incel
+          bark:
+            - MY COMMUNITY HAS
+            - SOMETHING TO SAY
+            - TO YOU.
+ai:
+  aggroRadius: 280
+  leashRadius: 460
+loot:
+  items:
+    - legal_distinction
+    # The chainsaw a southern president handed him on a stage. He never used it
+    # and never serviced it; it comes off him with twenty teeth left on it.
+    - austerity_chainsaw
+  tierDrops:
+    magic: 1.5
+    rare: 0.75
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.35
+uniquesByDifficulty:
+  easy:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+  medium:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+  hard:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+  nightmare:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+    - the_signal_crown
+    - wrathflame
+  jesus:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+    - the_signal_crown
+    - wrathflame

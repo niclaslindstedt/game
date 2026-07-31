@@ -2,16 +2,16 @@ name: qg_clem_1
 family: quests
 size: [16, 16]
 description: >
-  A saloon barkeep host — grey plating in a maroon waistcoat, an amber eye band, a folded white bar towel over one arm.
+  A saloon barkeep hand — grey plating in a maroon waistcoat, an amber eye band, a folded white bar towel over one arm.
 subject:
-  kind: quest giver — the saloon's barkeep host, off its loop
+  kind: quest giver — the saloon's barkeep hand, off its loop
   name: "CLEM"
   build: a service chassis built to lean on a bar
   attire: a maroon waistcoat over grey plating, a bar towel over one arm
   features: a lit amber eye band where a face would be
   accent: the folded white towel it has carried for eleven years of shifts
   pose: a mid-stride frame, towel over the left arm, waiting to be ordered from
-  flavor: the only host in the park that noticed the guests stopped coming, and has spent the years since polishing glasses for nobody
+  flavor: the only hand in the park that noticed the guests stopped coming, and has spent the years since polishing glasses for nobody
 palette:
   O: "#1a1c2c" # navy outline
   m: "#9aa3b0" # grey chassis

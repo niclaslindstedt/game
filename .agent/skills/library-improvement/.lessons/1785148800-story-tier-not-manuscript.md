@@ -42,8 +42,8 @@ Two smaller things worth remembering:
   all the way down, and seven clicks to read one chapter is a toll for nothing.
   One checkbox plus the general sibling combinator (`:checked ~ * .reveal-body`)
   lifts them all — still CSS over real markup, so nothing changes for a crawler.
-- **A display name is not a key.** ELON MOSQUE is three separate monsters, one
+- **A display name is not a key.** THE FOUNDER is three separate monsters, one
   per venue he is cornered in, so auto-linking a name in prose picked one at
-  random — and on chapter one it picked the Eastworld copy, which spoils where
+  random — and on chapter one it picked the Boot Hill copy, which spoils where
   he ends up. Build the link dictionary per page with the page's OWN cast first,
   then everything else in first-sighting order.

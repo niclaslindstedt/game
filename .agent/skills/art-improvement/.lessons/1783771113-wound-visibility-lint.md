@@ -8,7 +8,7 @@ auto-generated wound doesn't move enough pixels. Minions get only the `hurt`
 stage (2 tiny clusters), and the RNG (seeded by the sprite name) anchors
 them at fixed spots, so a compact, dark, or sparse silhouette can land under
 6 visible px. Fixes, in order: (1) a family `wounds` override with a splat
-that contrasts the body (`{splat:"y",core:"Y"}` gold for steel/dark hosts);
+that contrasts the body (`{splat:"y",core:"Y"}` gold for steel/dark hands);
 (2) add a `scuff` (`{...,scuff:"H"}`) AND give it a STABLE lower-body row to
 land on — legs that stride between frames are *not* candidates (only pixels
 body-colored in BOTH frames count), so a fixed coat hem / boot band in the

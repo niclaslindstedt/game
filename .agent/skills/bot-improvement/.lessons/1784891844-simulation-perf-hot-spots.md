@@ -6,7 +6,7 @@ date: 2026-07-24
 When simulations feel slow, profile the REAL loop with V8, not guesswork:
 
 ```sh
-node --prof scripts/simulate-run.mjs --difficulty easy --level spacez_hq --seed 42
+node --prof scripts/simulate-run.mjs --difficulty easy --level goodco_hq --seed 42
 node --prof-process isolate-*.log > prof.txt   # [JavaScript] + [Bottom up (heavy)]
 ```
 

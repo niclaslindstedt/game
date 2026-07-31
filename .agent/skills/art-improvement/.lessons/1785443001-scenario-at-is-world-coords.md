@@ -8,7 +8,7 @@ Phase 4 step 7's pose check takes `"spawns":[{"enemy":"x","at":{...}}]`, and
 small signed numbers (`{"x":-90,"y":-30}`, the natural guess) puts every mob
 off the map and the screenshot comes back empty with no error — the run looks
 like it worked. Read the level's `playerSpawn` from
-`content/levels/<id>.yaml` and place them around it (Eastworld's is
+`content/levels/<id>.yaml` and place them around it (Boot Hill's is
 `{x: 300, y: 800}`).
 
 Even then, expect them not to hold their marks: a map's landing usually sits

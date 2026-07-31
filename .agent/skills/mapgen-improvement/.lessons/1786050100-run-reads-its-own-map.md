@@ -19,7 +19,7 @@ generator's output is fine. What breaks is everything the run asks for later:
 - `stepSpawner` read the AUTHORED `waves`, so generated the_bunker ran the endless
   wave budget the carve had dropped, on top of its own knots.
 - `stepLairs` index-matches `state.lairs` against the def's `lairs`; the authored
-  bunker/eastworld have none, so the doors never opened and their elites — with
+  bunker/boot_hill have none, so the doors never opened and their elites — with
   their dialogue, last words and drops — were never in the run at all.
 - the `reachExit` objective, `openingStrike`'s position and the area captions all
   came from the other map's coordinates.

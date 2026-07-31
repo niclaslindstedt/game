@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Hand-authored UNIQUE items: the registry integrity and `mintUnique` — fixed
 // name + bonuses on a base, a ±band roll on the base damage/armor, unbreakable.
-// Exercised through the SHIPPED uniques (GROK OMEGA's five) and real bases.
+// Exercised through the SHIPPED uniques (BRO OMEGA's five) and real bases.
 
 import {
   DIFFICULTY_ORDER,
@@ -171,7 +171,7 @@ describe("boss unique drop tables", () => {
     );
 
   // Merchant-stall uniques are SOLD by a level's trader instead of dropping
-  // (`LevelDef.merchant.stockUniques` — Eastworld's PUTAIN estate): the third
+  // (`LevelDef.merchant.stockUniques` — Boot Hill's THE STRONGMAN estate): the third
   // home kind, no difficulty rung (the stall stocks on every rung).
   const stallWiring = Object.values(LEVELS).flatMap((def) =>
     (def.merchant?.stockUniques ?? []).map((id) => ({ level: def.id, id })),
@@ -245,11 +245,11 @@ describe("boss unique drop tables", () => {
     const easy = [...(perRung.easy ?? [])].sort();
     expect([...(perRung.medium ?? [])].sort()).toEqual(easy);
     expect([...(perRung.hard ?? [])].sort()).toEqual(easy);
-    // The campaign rungs list each boss's low-ilvl taste (+ DOGE-1's bag /
-    // GROK's charm) — a merged 20 across the five bosses.
+    // The campaign rungs list each boss's low-ilvl taste (+ PAYLOAD-1's bag /
+    // TRUST ME BRO's charm) — a merged 20 across the five bosses.
     expect(easy.length).toBe(20);
     // The ENDGAME rungs are the SET FARM: each boss opens its whole green set +
-    // its signature weapon (DOGE-1/GROK also pay a bag/charm), so a
+    // its signature weapon (PAYLOAD-1/TRUST ME BRO also pay a bag/charm), so a
     // nightmare/jesus grind can complete a set from one boss. That's far more
     // per rung than the campaign taste — see sets_test.ts for the per-set proof.
     expect((perRung.nightmare ?? []).length).toBe(26);

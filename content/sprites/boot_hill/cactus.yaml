@@ -1,0 +1,34 @@
+name: cactus
+family: boot_hill
+size: [16, 16]
+description: >
+  A fake park saguaro cactus with two upraised arms; a hoppable desert-street
+  prop.
+subject:
+  kind: prop — cactus
+  build: an upright saguaro with two upraised arms
+  features: tiny spines dotting the skin
+  accent: bright green body against a dark outline
+  flavor: a fake park cactus, hoppable desert-street dressing
+palette:
+  G: "#4a7a3e" # cactus green body
+  O: "#1a1c2c" # outline
+  g: "#3d6433" # shaded cactus green
+  l: "#678f5d" # lit cactus green highlight
+grid: |
+  ................
+  ......OOO.......
+  .....OGlGO......
+  .....OGGGO......
+  .OO..OGGGO......
+  OGlO.OGGGO.OOO..
+  OGGO.OGGGO.OlGO.
+  OGGO.OGGGO.OGGO.
+  OGGOOOGGGOOOGGO.
+  OGgGGGGGGGGGgGO.
+  .OOGGGGGGGGGOO..
+  ...OGgGGGgGO....
+  ....OGGGGGO.....
+  ....OGGGGGO.....
+  ....OgGGGgO.....
+  ....OOOOOOO.....

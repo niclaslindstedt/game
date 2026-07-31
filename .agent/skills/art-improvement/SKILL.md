@@ -124,7 +124,7 @@ not from memory:
   own size, on its own swatch — so it has to be looked up: check a candidate's
   `size:` against its `w`/`h` in `content/maps/<id>.yaml` (a `type: building`
   entry) and against the `radius` on its `content/levels/<id>.yaml` obstacle
-  line. Eastworld's `storefront` was a 16×16 sprite declared as a 48×40
+  line. Boot Hill's `storefront` was a 16×16 sprite declared as a 48×40
   building — a shed you bumped into three tiles early, standing beside a 60×60
   saloon — and its own `subject.kind` still said "wall tile" from an earlier
   life. A mismatch is usually a sprite whose USE changed without its art

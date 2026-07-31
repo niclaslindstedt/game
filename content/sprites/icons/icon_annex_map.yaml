@@ -7,7 +7,7 @@ subject:
   kind: item icon
   features: a parchment map sheet marked with hand-drawn routes and labels
   accent: tan paper, red ink marks
-  flavor: a map of Eastworld relabeled with conquered "cities"
+  flavor: a map of Boot Hill relabeled with conquered "cities"
 palette:
   D: "#b28e5c" # map fold shade
   O: "#1a1c2c" # dark outline

@@ -29,7 +29,7 @@ LOOKED reasonable:
 Measured effect (easy campaign, seeds 1-3, 10 min/map): stuck cancellations
 12/15 → 0/15, wedge events ~100 → 1, six previously-unreached bosses now
 engaged and killed, final level 17 → 23 on seed 1. Remaining stuck signal is
-LOITER events on under-leveled late maps (eastworld at L23 vs intended L31) —
+LOITER events on under-leveled late maps (boot_hill at L23 vs intended L31) —
 a pacing/balance read, not navigation; they never near the cancel limit.
 
 Repro tooling: `scratchpad/trace-stuck.mjs`-style replay (mirror the sim loop,

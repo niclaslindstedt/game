@@ -1,0 +1,76 @@
+id: the_sysadmin
+name: THE SYSADMIN
+lore: >-
+  The database underneath all the other databases, and therefore the
+  landlord of the secrets of every agency in the corridors outside. He
+  regards the hero's visit as a row already written, and would like to fill
+  in the last column.
+role: elite
+levelBonus: 6
+sprite: the_sysadmin
+hp: 1800
+speed: 24
+radius: 12
+contactDamage: 32
+critChance: 0.12
+dodgeChance: 0.15
+contactCooldownMs: 700
+dialogue:
+  - - STOP THERE. YOU'RE IN MY ROWS. EVERY PERSON HERE IS A ROW. EVERY SIN, A COLUMN.
+  - hero:
+      - AND YOU ARE? I DON'T REMEMBER YOUR FACE FROM THE MAGAZINES.
+  - - THE SYSADMIN - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES ARE MY LICENSEES.
+  - hero:
+      - A BUNKER FULL OF SPIES, ALL WORKING FOR THE LANDLORD OF THEIR OWN SECRETS. OF COURSE.
+  - - YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN.
+lastWords:
+  - TRANSACTION... ...ROLLED BACK...
+mechanics:
+  abilities:
+    - id: snare_field
+      bark:
+        - EVERY AGENCY SITS
+        - IN MY TABLES.
+        - NOW SO DO YOU.
+      windupMs: 620
+      cooldownMs: 8000
+      range: 210
+      radius: 52
+      durationMs: 5000
+      slowFactor: 0.55
+      look:
+        core: "196, 62, 62"
+        hot: "252, 186, 168"
+        deep: "30, 10, 10"
+        spark: "232, 120, 100"
+    - id: siphon_tether
+      windupMs: 740
+      cooldownMs: 11000
+      range: 210
+      durationMs: 2800
+      damageFrac: 0.28
+      tickMs: 520
+      healFrac: 0.7
+ai:
+  aggroRadius: 300
+  rushSpeed: 100
+ranged:
+  damage: 30
+  cooldownMs: 2200
+  range: 230
+  projectile:
+    speed: 175
+    radius: 4
+    lifetimeMs: 2400
+    sprite: db_shard
+  takesCover: true
+loot:
+  tierDrops:
+    rare: 1
+    magic: 1.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.4

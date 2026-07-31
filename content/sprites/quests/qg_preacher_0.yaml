@@ -2,13 +2,13 @@ name: qg_preacher_0
 family: quests
 size: [16, 16]
 description: >
-  A western park host in a dusty black frock coat and flat-brimmed hat, holding a heavy black prop bible in both hands.
+  A western park hand in a dusty black frock coat and flat-brimmed hat, holding a heavy black prop bible in both hands.
 subject:
-  kind: quest giver — the park's church host
+  kind: quest giver — the park's church hand
   name: "BROTHER CALLOW"
   build: a tall narrow man in a long coat, hands folded over a book
   attire: a dusty black frock coat, white collar band, flat-brimmed preacher's hat
-  features: a mild painted host's face, seams at the jaw where the panel meets
+  features: a mild painted hand's face, seams at the jaw where the panel meets
   accent: the heavy black book he has held twice a day for eleven years
   pose: idle, book held in both hands at the waist
   flavor: he cannot read, and nobody has ever needed him to
@@ -16,7 +16,7 @@ palette:
   O: "#1a1c2c" # dark outline
   k: "#2e2c38" # dusty black coat
   K: "#454250" # coat highlight
-  p: "#c99a72" # painted host face
+  p: "#c99a72" # painted hand face
   W: "#e9e6dc" # collar band
   B: "#1f1d26" # the black book
   b: "#8a7a4a" # tarnished gilt on the book edge

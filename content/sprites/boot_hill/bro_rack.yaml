@@ -1,0 +1,53 @@
+name: bro_rack
+family: boot_hill
+plane: floor
+size: [18, 30]
+description: >
+  A TRUST ME BRO server column - a tall black-slotted steel rack with mint and
+  amber indicators running up both sides; the machine the park thinks
+  with.
+subject:
+  kind: "obstacle - server column"
+  build: "a tall narrow steel rack of stacked blade slots, seen top-down"
+  features: "black blade slots, paired indicator lamps, a lit top edge"
+  accent: "mint and amber lamps ticking up a black stack"
+  flavor: "the thing that runs every hand in the park"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#59617a" # rack shell
+  b: "#333a48" # rack shadow
+  T: "#7b8499" # lit rack edge
+  K: "#0c0b12" # blade slot
+  Q: "#60f0d0" # live indicator
+  y: "#ffd447" # amber indicator
+grid: |
+  ..................
+  .OOOOOOOOOOOOOOOO.
+  OTTTTTTTTTTTTTTTTO
+  OTAAAAAAAAAAAAAATO
+  OAOOOOOOOOOOOOOOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOKQQKKKKKKKyyOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOKyyKKKKKKKQQOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOOOOOOOOOOOOOOAO
+  OAAAAAAAAAAAAAAAAO
+  OAOOOOOOOOOOOOOOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOKQQKKKKKKKQQOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOKyyKKKKKKKyyOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOOOOOOOOOOOOOOAO
+  OAAAAAAAAAAAAAAAAO
+  OAOOOOOOOOOOOOOOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOKQQKKKKKKKyyOAO
+  OAOKKKKKKKKKKKKOAO
+  OAOOOOOOOOOOOOOOAO
+  ObAAAAAAAAAAAAAAbO
+  .Obbbbbbbbbbbbbbb.
+  ..................

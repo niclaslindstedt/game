@@ -240,7 +240,7 @@ export type BotTuning = {
    * out under the boss. */
   bossEngageMargin: number;
   /** How far AHEAD (world px, along its roll) a bouncing hay ball
-   * (`state.hayBalls`, Eastworld) must be before the hero sidesteps out of its
+   * (`state.hayBalls`, Boot Hill) must be before the hero sidesteps out of its
    * lane. Bigger = he reacts to a bale from further off; 0 disables the dodge.
    * Only bales in his lane and bearing down trigger it (see `dodgeHayBall`). */
   hayBallDodgeDist: number;
@@ -259,7 +259,7 @@ export type BotTuning = {
    * inside this window (or already overlaps), so he ignores a distant gust that
    * may still drift wide. */
   sandstormReactSec: number;
-  /** EMPLOYEE-STAMPEDE avoidance (SpaceZ HQ): how far AHEAD (world px, along its
+  /** EMPLOYEE-STAMPEDE avoidance (GOODCO HQ): how far AHEAD (world px, along its
    * charge) a herd's near edge must be before the hero HOPS to clear it. A herd
    * charges fast and a jump sails clean over the whole wall, so the read is a
    * well-timed hop — big enough that he's airborne (z above JUMP.dodgeHeight)

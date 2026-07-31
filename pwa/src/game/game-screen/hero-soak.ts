@@ -105,7 +105,7 @@ const HEAD_FALLOFF = 1.3;
  * The ladder is meant to be climbed over a MAP, not over a pack: a hero drenched
  * by his fourth kill has nowhere left to go for the next ten minutes, and one
  * still pristine at the boss never had the feature at all. Measured on real
- * autopilot runs of SPACEZ HQ, this puts a bladed hero's chest into the top rung
+ * autopilot runs of GOODCO HQ, this puts a bladed hero's chest into the top rung
  * somewhere around the two-hundredth body — most of the way through a map — with
  * his face following a good while after, while a gunslinger over the same stretch
  * comes out at less than half of it. */

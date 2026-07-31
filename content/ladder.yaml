@@ -57,7 +57,7 @@ ramps:
   # boss's rung so they reach the loot tier gates the rest of the map never
   # does. That is the point: the gates are the farm a rampage buys.
   hellborn: { fromEnd: 3 }
-  # the SPACEZ HQ onboarding opener: gentle on easy/nightmare, a deliberate bite
+  # the GOODCO HQ onboarding opener: gentle on easy/nightmare, a deliberate bite
   # on medium/hard so standing still is never free once past the tutorial rung.
   vanguard: { fromStart: [0, 2, 4, 0] }
 
@@ -65,13 +65,13 @@ ramps:
 # A pinned elite/boss carries a single BASE hp (its easy value) in the level
 # YAML; the loader scales it across the four difficulties by the named curve its
 # map uses (see `pinnedHp`). `standard` is the campaign-wide curve; `gentle`
-# keeps the SPACEZ HQ onboarding boss from spiking on the high rungs.
+# keeps the GOODCO HQ onboarding boss from spiking on the high rungs.
 hpCurves:
   standard: [1, 1.5, 2.3, 6]
   gentle: [1, 1.4, 2, 3.5]
 pinnedHp:
   default: standard
-  spacez_hq: gentle
+  goodco_hq: gentle
 
 # ─── STAMINA DRAIN ───────────────────────────────────────────────────────────
 # How fast a RUN spends the sprint pool on each rung, as a multiple of the
@@ -208,33 +208,33 @@ staminaEmptyLock:
   jesus: 4.5
 
 easy:
-  spacez_hq: { hero: 6, mob: [1, 7] }
+  goodco_hq: { hero: 6, mob: [1, 7] }
   moon: { hero: 13, mob: [8, 14] }
   mars: { hero: 19, mob: [15, 21] }
   the_rift: { hero: 25, mob: [20, 26] }
-  eastworld: { hero: 31, mob: [26, 32] }
+  boot_hill: { hero: 31, mob: [26, 32] }
   the_bunker: { hero: 28, mob: [25, 28] }
 
 medium:
-  spacez_hq: { hero: 6, mob: [1, 7] }
+  goodco_hq: { hero: 6, mob: [1, 7] }
   moon: { hero: 13, mob: [8, 15] }
   mars: { hero: 19, mob: [16, 22] }
   the_rift: { hero: 25, mob: [21, 28] }
-  eastworld: { hero: 32, mob: [28, 34] }
+  boot_hill: { hero: 32, mob: [28, 34] }
   the_bunker: { hero: 28, mob: [25, 30] }
 
 hard:
-  spacez_hq: { hero: 8, mob: [3, 10] }
+  goodco_hq: { hero: 8, mob: [3, 10] }
   moon: { hero: 15, mob: [9, 16] }
   mars: { hero: 22, mob: [18, 25] }
   the_rift: { hero: 29, mob: [24, 31] }
-  eastworld: { hero: 35, mob: [31, 38] }
+  boot_hill: { hero: 35, mob: [31, 38] }
   the_bunker: { hero: 31, mob: [27, 34] }
 
 nightmare:
-  spacez_hq: { hero: 42, mob: [42, 45] }
+  goodco_hq: { hero: 42, mob: [42, 45] }
   moon: { hero: 44, mob: [42, 47] }
   mars: { hero: 47, mob: [46, 50] }
   the_rift: { hero: 50, mob: [48, 53] }
-  eastworld: { hero: 54, mob: [51, 55] }
+  boot_hill: { hero: 54, mob: [51, 55] }
   the_bunker: { hero: 55, mob: [52, 56] }

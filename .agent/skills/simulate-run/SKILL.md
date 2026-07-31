@@ -46,7 +46,7 @@ playtest, and to answer the questions the analytic calculators can't:
 ```sh
 node scripts/simulate-run.mjs                            # full campaign, easy → JESUS (realistic pacing)
 node scripts/simulate-run.mjs --difficulty medium,nightmare,jesus  # the critical path (avoids outlevelled 0-kill runs)
-node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
+node scripts/simulate-run.mjs --difficulty easy --level goodco_hq --full
 node scripts/simulate-run.mjs --farm --rerun 3           # ENDGAME: farm to the cap (L99 / artifact chase)
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
 node scripts/simulate-run.mjs --level oasis --difficulty hard --start-level 20 --mortal  # survival read: deaths restart the level, abort at 10
@@ -284,7 +284,7 @@ the full stat block every N kills (default 25).
 
 ```sh
 node scripts/progression-sim.mjs                              # full game → L99, writes progression.html
-node scripts/progression-sim.mjs --difficulty easy --level spacez_hq --full
+node scripts/progression-sim.mjs --difficulty easy --level goodco_hq --full
 node scripts/progression-sim.mjs --stats strength=3,stamina=1 # a STR-heavy build
 node scripts/progression-sim.mjs --json out.json --html out.html
 ```

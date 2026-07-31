@@ -17,7 +17,7 @@ const EAS_PROJECT_ID = "180cff05-a398-48e3-ae63-a9b0bd408321";
 
 // Reverse-DNS app id, derived from the author domain. Kept identical on both
 // stores so the app is one product across platforms.
-const BUNDLE_ID = "se.niclaslindstedt.goneinspace";
+const BUNDLE_ID = "se.niclaslindstedt.adastrail";
 
 const BRAND_BG = "#0b0d10"; // game.config theme_color / color-scheme: dark
 
@@ -40,7 +40,7 @@ const CLOUD_ENTITLEMENTS = {
 module.exports = () => ({
   expo: {
     name: identity.shortName,
-    slug: "gone-in-space",
+    slug: "adas-trail",
     version,
     // Follow the device: the web game is fully responsive and ships a
     // dedicated portrait HUD (styles.css `@media (orientation: portrait)`), so
@@ -49,7 +49,7 @@ module.exports = () => ({
     // OS rotation lock / sensor, so portrait and landscape both work.
     orientation: "default",
     icon: "./assets/icon.png",
-    scheme: "goneinspace",
+    scheme: "adastrail",
     userInterfaceStyle: "dark",
     backgroundColor: BRAND_BG,
     // Ship the packed website (assets/webroot.zip) inside the app so the game

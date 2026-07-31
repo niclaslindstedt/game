@@ -12,7 +12,7 @@ description: |-
   of sight — but the horizon is now a wall of rubble with a gap in it. Every basin
   holds one finite knot that arms as he steps in and drains as he clears it, and
   the knots ramp with DEPTH (wisps in the basins near the lander, wraiths and
-  OPTIMUSK out where the flag might be), so the search gets colder the further it
+  SUCCESSOR out where the flag might be), so the search gets colder the further it
   runs. The dead-end basins — the ones with a single pass in and out — are where
   the caches sit, each with a lone keeper: the LOST COSMONAUT and THE THIRTEENTH
   MAN now guard whichever cul-de-sacs the carve grew, so exploring off the line
@@ -217,7 +217,7 @@ objects:
 
 # THE HORDE: one finite knot per basin, its breed mix handing over along the
 # depth axis and its mob level climbing the ladder — wisps near the lander,
-# wraiths and the tanky OPTIMUSK only out at the deep end, so they never wall the
+# wraiths and the tanky SUCCESSOR only out at the deep end, so they never wall the
 # middle of the search.
 horde:
   perRoom: [30, 44]
@@ -235,7 +235,7 @@ horde:
     - enemy: wraith
       window: [0.45, 1]
       weight: 3
-    - enemy: optimusk
+    - enemy: successor
       window: [0.8, 1]
       weight: 1
 

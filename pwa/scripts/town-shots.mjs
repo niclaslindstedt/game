@@ -1,4 +1,4 @@
-// Capture clean, frozen in-game screenshots of the EASTWORLD Main Street at a
+// Capture clean, frozen in-game screenshots of the BOOT HILL Main Street at a
 // series of x-positions, so the town composition can be eyeballed the way a
 // player sees it (phone-landscape viewport). Enemies cleared + world frozen;
 // the hero is re-placed via the live __scenario dev hook between shots.
@@ -25,10 +25,10 @@ const scenario = JSON.stringify({
   freeze: true,
   clearEnemies: true,
 });
-// ?bot dismisses the intro/cutscene for us; ?level forces eastworld; the
+// ?bot dismisses the intro/cutscene for us; ?level forces boot_hill; the
 // scenario (freeze) applies the instant the run is built.
 await page.goto(
-  `${URL}/?debug&bot=balanced&level=eastworld&difficulty=easy&seed=7` +
+  `${URL}/?debug&bot=balanced&level=boot_hill&difficulty=easy&seed=7` +
     `&scenario=${encodeURIComponent(scenario)}`,
 );
 

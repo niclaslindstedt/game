@@ -100,7 +100,7 @@ const emphasis = (html) =>
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\-]/g, "\\$&");
 
 /**
- * A name → route dictionary, longest name first so `DOGE-1` wins over `DOGE`.
+ * A name → route dictionary, longest name first so `PAYLOAD-1` wins over `PAYLOAD`.
  *
  * The names in the story's prose are the game's own, in the game's own capitals
  * — which is exactly what makes automatic linking safe here: a match is a full

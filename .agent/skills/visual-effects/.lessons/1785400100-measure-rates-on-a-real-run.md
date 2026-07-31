@@ -14,7 +14,7 @@ Drive the real game instead and read the numbers out of the module:
 
 ```js
 // probe.mjs — playwright + the dev server's own ESM graph
-await page.goto("http://localhost:5199/?debug&bot=aggro&level=spacez_hq&…");
+await page.goto("http://localhost:5199/?debug&bot=aggro&level=goodco_hq&…");
 // …click through play → new-game → character-create → difficulty → level…
 await page.evaluate(async () => {
   const soak = await import("/src/game/game-screen/hero-soak.ts");

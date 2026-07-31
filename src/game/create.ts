@@ -108,7 +108,7 @@ export function createGame(
   respec = false,
   // Level ids the hero has already CLEARED on this difficulty (the app seeds
   // this from the character's clears). Gates `requiresClear` guaranteed drops
-  // — chiefly the bunker key, latent until "eastworld" is beaten. Empty on a
+  // — chiefly the bunker key, latent until "boot_hill" is beaten. Empty on a
   // dev jump or a fresh hero.
   clearedLevels: string[] = [],
   // True when the hero has ALREADY met this level's merchant on this difficulty
@@ -1635,7 +1635,7 @@ export function createHero(
     cleanSlates: 0,
     moving: false,
     weaponCooldownMs: 0,
-    // Levels with a scripted opening strike (SpaceZ HQ) start the hero with
+    // Levels with a scripted opening strike (GOODCO HQ) start the hero with
     // his weapon holstered — the vanguard's first swing draws it. Every
     // other level opens armed.
     disarmed: def.openingStrike !== undefined,

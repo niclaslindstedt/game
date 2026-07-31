@@ -339,7 +339,7 @@ function preemptInput(
     return sprint(fire);
   }
   // Step out of a rolling hay ball's lane before it shoves him back down the
-  // street (Eastworld's `state.hayBalls`). A quick sidestep, like a human
+  // street (Boot Hill's `state.hayBalls`). A quick sidestep, like a human
   // giving a rolling bale room — below the boss-move dodge, above the fight.
   const hay = dodgeHayBall(state, tune);
   if (hay) {

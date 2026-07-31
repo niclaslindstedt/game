@@ -547,7 +547,7 @@ function moveEnemy(
     // The stare-down is the fight starting: match the player's power now, so
     // the boss is worthy whether the player opens with a shot or a charge.
     if (awake) maybePowerScale(state, enemy);
-    // A SHOOTER boss (the zAI controllers) fights at range once woken: hold
+    // A SHOOTER boss (the BRO controllers) fights at range once woken: hold
     // distance, peek for the shot, hide behind the rocks between shots. Its
     // cover dance replaces the leash — cover-seeking keeps it near its post.
     // An unplayed speaker still closes in first (the stare-down needs the

@@ -1,7 +1,7 @@
 {
-  "name": "gone-in-space-app",
+  "name": "adas-trail-app",
   "version": "0.1.0",
-  "description": "Native (Expo/React Native) App Store wrapper around the Gone in Space PWA \u2014 bundles the game on-device and serves it locally, plus Taptic haptics and an audio session.",
+  "description": "Native (Expo/React Native) App Store wrapper around the Ada's Trail PWA \u2014 bundles the game on-device and serves it locally, plus Taptic haptics and an audio session.",
   "main": "index.ts",
   "private": true,
   "scripts": {

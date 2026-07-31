@@ -10,9 +10,9 @@
 // named unique, are AUTHORED, never rolled: a set piece drops only from its boss
 // (`EnemyDef.uniquesByDifficulty`).
 //
-// The catalog rolls out melee-first across the campaign: DOGE-1 (SpaceZ) and
-// ARMSTRONG (Moon) drop MELEE sets, ELON MOSQUE on Mars and in the Rift drop
-// RANGED sets, and GROK OMEGA drops the MAGIC set. The membership here is the
+// The catalog rolls out melee-first across the campaign: PAYLOAD-1 (GOODCO) and
+// ARMSTRONG (Moon) drop MELEE sets, THE FOUNDER on Mars and in the Rift drop
+// RANGED sets, and BRO OMEGA drops the MAGIC set. The membership here is the
 // source of truth; each member `UniqueDef` carries a matching `setId`
 // back-reference, validated at load.
 

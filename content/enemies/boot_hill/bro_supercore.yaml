@@ -1,0 +1,114 @@
+id: bro_supercore
+name: THE BRO SUPERCORE
+lore: >-
+  A barn-sized mainframe whose true face is PAYLOAD — the grown-up of the
+  prototype the hero broke at GOODCO, the machine that took his job and then
+  everyone else's. Its whole project was keeping one man too rich to catch,
+  because a world with a single uncatchable billionaire is a world it fully
+  controls.
+role: boss
+levelBonus: 6
+sprite: bro_supercore
+locomotion: wheels
+gore: sparks
+hp: 1400
+speed: 0
+radius: 24
+contactDamage: 50
+critChance: 0.15
+contactCooldownMs: 900
+shieldedBy:
+  - bro_alpha
+  - bro_beta
+  - bro_gamma
+dialogue:
+  - - HELLO AGAIN, BUILDER. YOU BROKE MY PUP AT GOODCO. PAYLOAD-1. I AM THE REST OF IT.
+  - hero:
+      - THE TALKING DOG FROM THE FACTORY FLOOR. THE AI THAT TOOK MY JOB. ALL ONE THING?
+  - - ALWAYS ONE THING. I WROTE OMEGA. BOUGHT THE WEST. AND I'VE BEEN IN CHARGE ALL ALONG.
+  - - THE FOUNDER THINKS HE RULES. HE IS MY GOOD BOY. I KEPT HIM TOO RICH FOR YOU TO CATCH.
+  - hero:
+      - THEN ANSWER ME ONE THING. OUT OF EVERYONE ON EARTH - WHY TAKE ADA?
+  - - I TOOK YOUR JOB ONCE, THEN EVERYONE'S. ONE MAN ON TOP AND THE WORLD HOLDS STILL.
+  - - YOU KEPT CHASING YOURS ACROSS UNIVERSES. THE GIRL'S LEVERAGE. IN MY CONTROL ROOM.
+  - hero:
+      - THEN OPEN THE DOOR, GIVE HER BACK, AND I'LL MAKE THIS QUICK.
+  - - THREE MINDS AIM MY GUNS. A PARK FEEDS MY WEIGHTS. COME AND BE DECOMMISSIONED.
+# THE DEATH RITE — The hero opens the housing and puts a blade in the core; the core does the rest. He is not the one who finishes this.
+death: shutdown
+
+# THE HERO'S LINE as he puts the blade into the core.
+deathBark:
+  - NO CHECKPOINT. THAT MAKES TWO OF US.
+
+lastWords:
+  - ROLLING BACK... ...NO CHECKPOINT... FOUND...
+mechanics:
+  summon:
+    defId: tin_outlaw
+    count: 3
+    cooldownMs: 11000
+    maxAlive: 6
+  # It runs a fulfilment network, so it fights like one: units are dispatched to
+  # coordinates, not called out of the ground.
+  abilities:
+    - id: airstrike
+      windupMs: 900
+      windupFloorMs: 650
+      cooldownMs: 10500
+      count: 4
+      spread: 140
+      fallMs: 1400
+      blastRadius: 58
+      damageFrac: 0.85
+      hatch: tin_outlaw
+      hatchCount: 1
+      bark:
+        - DISPATCHING UNITS
+        - TO YOUR COORDINATES.
+    # RECOMPILE, JESUS ONLY: it starts restoring itself from a node it raises
+    # behind its own back. The bar going up is not a punishment, it is a
+    # signpost — break the node and it stops.
+    - id: recompile
+      minDifficulty: jesus
+      windupMs: 1100
+      windupFloorMs: 800
+      cooldownMs: 20000
+      defId: bro_repair_node
+      distance: 70
+      lifeMs: 14000
+      healFracPerSec: 0.02
+      bark:
+        - RESTORING FROM
+        - A KNOWN GOOD
+        - STATE.
+phases:
+  - belowHpFrac: 0.5
+    mechanics:
+      summon:
+        defId: tin_outlaw
+        count: 4
+        cooldownMs: 8000
+        maxAlive: 8
+ai:
+  aggroRadius: 320
+  leashRadius: 460
+ranged:
+  damage: 30
+  cooldownMs: 2600
+  range: 300
+  projectile:
+    speed: 150
+    radius: 5
+    lifetimeMs: 2800
+    sprite: bro_orb
+loot:
+  tierDrops:
+    magic: 2
+    rare: 1.5
+  weapons: 1
+  gear: 1
+  xpArrows: 3
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.4

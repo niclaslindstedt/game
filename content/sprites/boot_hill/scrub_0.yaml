@@ -1,0 +1,32 @@
+name: scrub_0
+family: boot_hill
+size: [16, 16]
+description: >
+  A dry-scrub ground patch — tan dirt flecked with sparse olive-green brush
+  tufts; occasional vegetation over the hardpan.
+subject:
+  kind: ground tile — scrub patch
+  build: a flat dirt tile scattered with small brush tufts
+  accent: sparse olive-green tufts over tan dirt
+  flavor: the level's occasional vegetation over the bare hardpan
+palette:
+  d: "#665c34" # dark brush fleck
+  e: "#8a7e46" # olive-green tuft
+  z: "#ceac78" # tan dirt base
+grid: |
+  zzzzzzzzzzzzzzzz
+  zzzezzzzzzzzzzzz
+  zzeeezzzzzzdzzzz
+  zzzezzzzzzzzzzzz
+  zzzzzzzzezzzzzzz
+  zzzzzzzeeezzzzzz
+  zzdzzzzzezzzzzzz
+  zzzzzzzzzzzzezzz
+  zzzzzzzzzzzeeezz
+  zzzezzzzzzzzezzz
+  zzeeezzzzzzzzzzz
+  zzzezzzdzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzezzzzz
+  zzzzzezzzeeezzzz
+  zzzzzzzzzzezzzzz

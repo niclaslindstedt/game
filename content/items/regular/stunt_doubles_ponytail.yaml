@@ -1,0 +1,11 @@
+id: stunt_doubles_ponytail
+kind: gear
+rarity: regular
+name: THE STUNT DOUBLE'S PONYTAIL
+description:
+  THE STUNT DOUBLE's ponytail, surrendered with the east gate. Decades
+  of direct-to-video authority are stored in it, like a battery.
+slot: trinket
+bonuses:
+  maxHp: 30
+icon: icon_ponytail

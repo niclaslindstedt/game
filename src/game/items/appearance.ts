@@ -14,8 +14,8 @@ import type { GameState } from "../types/index.ts";
  * Whether the hero is drawn as the astronaut. The EVA suit is STORY gear,
  * not equipment — it is worn OVER his clothes and armor, carries no slot and
  * no stats, and latches the moment its story item is picked up (a
- * `StoryItemDef.suitsHero` entry — SpaceZ HQ's recovered space suit). On
- * every level but SpaceZ HQ he starts suited (the story picks up
+ * `StoryItemDef.suitsHero` entry — GOODCO HQ's recovered space suit). On
+ * every level but GOODCO HQ he starts suited (the story picks up
  * mid-mission). The renderer reads this to choose the plain-clothes or
  * astronaut sprite set.
  */

@@ -2,7 +2,7 @@ id: blue_screen
 kind: weapon
 rarity: regular
 name: BLUE SCREEN
-description: BUILD GATES's tablet. It crashes whatever it is pointed at — which
+description: THE VENDOR's tablet. It crashes whatever it is pointed at — which
   the colony's operating system does anyway; this just chooses the target.
 class: magic
 levelReq: 12

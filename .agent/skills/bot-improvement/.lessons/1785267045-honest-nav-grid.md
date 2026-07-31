@@ -37,7 +37,7 @@ Three things the fix needs that are easy to miss:
 
 Second lesson, paid for twice: a bot HEADING change cannot be judged on one map.
 Making `travelHeading` read the A* route instead of beelining (its docstring had
-claimed route-awareness for a year; the code never did) fixed eastworld's wedges
+claimed route-awareness for a year; the code never did) fixed boot_hill's wedges
 16 → 3 and cut deaths 8 → 1 — while DOUBLING the rift's loiters and halving its
 kills per minute. The rift is the gravity-well map: the grid has the wells
 stamped out, so a route past one bends around it, and `steer` already repels him

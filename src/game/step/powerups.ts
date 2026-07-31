@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The CAMPAIGN POWERS' tick — the two powerups each map introduces past SPACEZ
+// The CAMPAIGN POWERS' tick — the two powerups each map introduces past GOODCO
 // HQ's classics (see defs/ability-catalog.ts). The classics (orbs, storms,
 // stasis, magnet) tick in ./powers.ts beside the granted spells; everything
 // here is a kind that arrived with a later venue:

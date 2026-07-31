@@ -45,9 +45,9 @@ const { runLevel } = await import(path.join(root, "src/sim/simulate.ts"));
 // change that only helps one horde size still shows up honestly.
 
 const CASES = [
-  { levelId: "spacez_hq", difficulty: "easy", maxMinutes: 4 },
+  { levelId: "goodco_hq", difficulty: "easy", maxMinutes: 4 },
   { levelId: "moon", difficulty: "hard", maxMinutes: 4 },
-  { levelId: "eastworld", difficulty: "nightmare", maxMinutes: 4 },
+  { levelId: "boot_hill", difficulty: "nightmare", maxMinutes: 4 },
 ];
 
 const args = process.argv.slice(2);

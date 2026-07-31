@@ -77,7 +77,7 @@ import {
  * or a NEWER version is left strictly alone — the older build neither merges
  * nor overwrites it, so an upgrade in progress across two devices can't have
  * the laggard flatten the leader's save. */
-export const CLOUD_FORMAT = "gone-in-space/cloud-save";
+export const CLOUD_FORMAT = "adas-trail/cloud-save";
 export const CLOUD_VERSION = 1;
 
 /** iCloud's key-value store caps a value at 1 MB. Measured in JS characters,

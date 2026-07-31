@@ -1,0 +1,24 @@
+id: archive_unit
+name: ARCHIVE UNIT
+lore: >-
+  The floor's records terminal, on treads, still the only thing at GOODCO
+  authorised to stamp a personnel form. It was told eleven years ago that no
+  record may be closed without a countersignature and has been standing by that
+  instruction ever since, which is the single most loyal act anybody on this
+  floor has managed.
+role: minion
+sprite: archive_unit
+disposition: neutral
+conversation: archive_unit
+locomotion: wheels
+gore: sparks
+hp: 220
+speed: 20
+radius: 9
+contactDamage: 26
+critChance: 0.08
+contactCooldownMs: 750
+xpMobMult: 1.4
+ai:
+  aggroRadius: 340
+  idle: work

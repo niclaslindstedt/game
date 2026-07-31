@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The POWERUP LADDER — this game's own rule for how the dock's vocabulary
-// grows: SPACEZ HQ opens with the classics, and every map after it introduces
+// grows: GOODCO HQ opens with the classics, and every map after it introduces
 // exactly TWO powers that could only have come from there while keeping
 // everything the player already learned. A shipped-content suite (it names
 // levels and powers by id), so a sequel deletes it wholesale.
@@ -15,7 +15,7 @@ const DEBUTS: Record<string, string[]> = {
   moon: ["moonfall", "pale_shroud"],
   mars: ["dust_devil", "reactor_surge"],
   the_rift: ["event_horizon", "the_unmaking"],
-  eastworld: ["dead_mans_hand", "iron_stampede"],
+  boot_hill: ["dead_mans_hand", "iron_stampede"],
   the_bunker: ["continuity_protocol", "sentry_grid"],
 };
 

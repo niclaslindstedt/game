@@ -1,0 +1,66 @@
+id: head_scientist
+name: DR. NOVA
+lore: >-
+  The cleanroom's lead, and keeper of the building's one honest fact: the
+  engine part in the vault was never built by anybody here. GOODCO dug it
+  out of the Sea of Tranquility in 1969, and has spent fifty years copying a
+  machine that is not broken, only waiting.
+role: elite
+levelBonus: 3
+sprite: head_scientist
+hp: 170
+speed: 18
+radius: 12
+contactDamage: 18
+critChance: 0.1
+contactCooldownMs: 700
+dialogue:
+  - - FASCINATING. AN INTRUDER WITH WORKING LEGS. KNOW WHAT WE KEEP IN THE CLEANROOM VAULT?
+  - hero:
+      - AN ENGINE PART. I CAME TO TAKE IT. I HELPED BUILD THAT ENGINE, BEFORE YOU PEOPLE FIRED ME.
+  - - BUILD IT? NOBODY BUILT IT. WE DUG IT FROM THE SEA OF TRANQUILITY IN '69. NOT EARTH'S.
+  - hero:
+      - NOT FROM EARTH? I MACHINED PARTS FOR THAT THING FOR TEN YEARS. IT'S JUST ENGINEERING.
+  - - WE SPENT FIFTY YEARS COPYING A MACHINE THAT ISN'T BROKEN. IT'S WAITING. TO GO HOME.
+lastWords:
+  - IT'S STILL... HHH... STILL... HUMMING...
+mechanics:
+  abilities:
+    - id: ward_shield
+      bark:
+        - CONTAINMENT FIELD.
+        - STANDARD PROCEDURE.
+        - NOTHING GETS OUT.
+      windupMs: 640
+      cooldownMs: 12000
+      durationMs: 7000
+      poolFrac: 0.22
+      look:
+        core: "120, 226, 232"
+        hot: "232, 252, 255"
+        deep: "10, 26, 30"
+        spark: "180, 240, 246"
+    - id: snare_field
+      windupMs: 620
+      cooldownMs: 10000
+      range: 170
+      radius: 40
+      durationMs: 3600
+      slowFactor: 0.7
+ai:
+  aggroRadius: 240
+  idle: work
+  rushSpeed: 115
+loot:
+  items:
+    - overclocked_laser
+  tierDrops:
+    magic: 1
+  storyItems:
+    - keycard_vault
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.25

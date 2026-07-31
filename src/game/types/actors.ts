@@ -99,7 +99,7 @@ export type Player = {
   weaponCooldownMs: number;
   /**
    * True while the hero's weapon is holstered — set on levels with a scripted
-   * `openingStrike` (SpaceZ HQ). The auto-attack sits out entirely until the
+   * `openingStrike` (GOODCO HQ). The auto-attack sits out entirely until the
    * vanguard's soft first swing arms him (see story.ts `tryOpeningStrike`);
    * cleared for good once armed. Absent/false everywhere else — the hero opens
    * ready to fight.

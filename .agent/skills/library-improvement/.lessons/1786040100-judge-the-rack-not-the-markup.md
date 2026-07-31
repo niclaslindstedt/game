@@ -24,7 +24,7 @@ Two more things from the same pass, both of which only the screenshot could
 have told you:
 
 - **A disambiguating qualifier goes UNDER the name, not in the trailing `.req`
-  column.** That column is sized for an `L34`. A venue name in it (`EASTWORLD`)
+  column.** That column is sized for an `L34`. A venue name in it (`BOOT HILL`)
   takes so much of a rack cell that the NAME — the only thing the row exists to
   say — folds mid-word: `LAB SCIENTI ST`. A `display: block` span inside the
   name gives it its own dim line and costs the row nothing.

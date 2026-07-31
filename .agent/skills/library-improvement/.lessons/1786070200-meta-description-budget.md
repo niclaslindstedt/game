@@ -12,7 +12,7 @@ or failed together.
 The natural wording was a full sentence with a subordinate clause:
 
 > AMELIA EARHART joins the party if you spare the elite of the same name on THE
-> RIFT — one of the Gone in Space companions: 150 health, BLUNDERBUSS in hand, a
+> RIFT — one of the Ada's Trail companions: 150 health, BLUNDERBUSS in hand, a
 > rank of FULL BROADSIDE every 3 levels, and what every rank of it actually
 > comes to.
 
@@ -20,7 +20,7 @@ The shape that fits is **name, one-clause what-it-is, then bare facts separated
 by commas, full stop**. No "and what X actually comes to" tail — that clause
 says nothing a searcher can act on and is the first thing the result page eats:
 
-> AMELIA EARHART, a Gone in Space companion — spared on THE RIFT rather than
+> AMELIA EARHART, a Ada's Trail companion — spared on THE RIFT rather than
 > finished. 150 health, BLUNDERBUSS, FULL BROADSIDE every 3 levels.
 
 Two rules that generalise:

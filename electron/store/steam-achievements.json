@@ -5,9 +5,9 @@
   "count": 86,
   "achievements": [
     {
-      "id": "clear_spacez_hq",
-      "name": "SPACEZ HQ",
-      "description": "CLEAR SPACEZ HQ ON ANY DIFFICULTY",
+      "id": "clear_goodco_hq",
+      "name": "GOODCO HQ",
+      "description": "CLEAR GOODCO HQ ON ANY DIFFICULTY",
       "category": "story",
       "tier": "beginner",
       "hidden": false
@@ -37,9 +37,9 @@
       "hidden": false
     },
     {
-      "id": "clear_eastworld",
-      "name": "EASTWORLD",
-      "description": "CLEAR EASTWORLD ON ANY DIFFICULTY",
+      "id": "clear_boot_hill",
+      "name": "BOOT HILL",
+      "description": "CLEAR BOOT HILL ON ANY DIFFICULTY",
       "category": "story",
       "tier": "intermediate",
       "hidden": false

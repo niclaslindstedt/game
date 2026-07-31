@@ -15,7 +15,7 @@
 //
 //   node scripts/gore-rate.mjs                        # easy → JESUS, every map
 //   node scripts/gore-rate.mjs --difficulty easy      # one rung
-//   node scripts/gore-rate.mjs --difficulty hard --level spacez_hq
+//   node scripts/gore-rate.mjs --difficulty hard --level goodco_hq
 //   node scripts/gore-rate.mjs --sweep                # candidate thresholds A/B
 //
 // THIS IS A LONG JOB, like every other tool here that plays the game rather than

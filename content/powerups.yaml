@@ -10,12 +10,12 @@
 # what came before, so the dock's vocabulary grows the whole way down and each
 # new venue is announced by two powers that could only have come from THERE:
 #
-#   SPACEZ HQ   the classics + ION WAKE, BLAST SHIELD,
+#   GOODCO HQ   the classics + ION WAKE, BLAST SHIELD,
 #               OVERPRESSURE                                 (the launch pad)
 #   THE MOON    MOONFALL, PALE SHROUD                        (rock and ghosts)
 #   MARS        DUST DEVIL, REACTOR SURGE                    (the red colony)
 #   THE RIFT    EVENT HORIZON, THE UNMAKING                  (the void road)
-#   EASTWORLD   DEAD MAN'S HAND, IRON STAMPEDE               (the robot west)
+#   BOOT HILL   DEAD MAN'S HAND, IRON STAMPEDE               (the robot west)
 #   THE BUNKER  CONTINUITY PROTOCOL, SENTRY GRID             (the vault)
 #
 # The pools themselves are authored per level (`loot.abilityPool` in
@@ -64,7 +64,7 @@
 # picked is a content bug, not a tuning number — drop it from the pool instead.
 
 powerups:
-  # ── THE CLASSICS (SPACEZ HQ) ──────────────────────────────────────────────
+  # ── THE CLASSICS (GOODCO HQ) ──────────────────────────────────────────────
   fire_orbs:
     name: FIRE ORBS
     lore: >-
@@ -167,7 +167,7 @@ powerups:
       radiusPerInt: 8
       pullSpeed: 200
 
-  # ── SPACEZ HQ: the assembly floor's own two ───────────────────────────────
+  # ── GOODCO HQ: the assembly floor's own two ───────────────────────────────
   ion_wake:
     name: ION WAKE
     lore: >-
@@ -392,11 +392,11 @@ powerups:
       damage: 30
       push: 46
 
-  # ── EASTWORLD: the robot west ─────────────────────────────────────────────
+  # ── BOOT HILL: the robot west ─────────────────────────────────────────────
   dead_mans_hand:
     name: DEAD MAN'S HAND
     lore: >-
-      A host gunslinger's last draw, still loaded. Phantom rounds crack off on
+      A hand gunslinger's last draw, still loaded. Phantom rounds crack off on
       their own and go looking for the nearest thing wearing a hat, whatever
       the hero happens to have in his hands — so it stacks on top of a build
       rather than replacing one. Two hands, two guns.

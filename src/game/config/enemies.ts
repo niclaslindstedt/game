@@ -78,7 +78,7 @@ export const ENEMY_AI = {
    * The DORMANT "AT WORK" stroll (`EnemyDef.ai.idle === "work"` — see
    * working.ts): instead of standing frozen at its post, an unaggroed mob
    * potters around its `home` — walk a short leg, stand a beat, walk again —
-   * so a staffed venue (the SpaceZ night shift) reads as people working the
+   * so a staffed venue (the GOODCO night shift) reads as people working the
    * floor, not statues waiting for a fight. Purely a dormant behavior: waking
    * (aggro + line of sight, wounds) is untouched, and a woken mob fights
    * exactly as before.
@@ -119,7 +119,7 @@ export const ENEMY_AI = {
   /**
    * PATROL ROUTES (a pinned spawn's `patrol` waypoints — see working.ts): a
    * dormant mob WALKS its authored route back and forth, WoW-style, instead
-   * of standing at (or pottering around) a post — the roaming OPTIMUSK unit
+   * of standing at (or pottering around) a post — the roaming SUCCESSOR unit
    * sweeping a build bay, the manager walking his floor. Purely a dormant
    * behavior: aggro/LOS waking is untouched, and a broken chase resumes the
    * route.

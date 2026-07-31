@@ -3,7 +3,7 @@ title: A weapon whose damage is irrelevant still owes the budget a number
 date: 2026-07-30
 ---
 
-Authoring the DI TELLO CHAINSAW (an EXECUTIONER: the blow is priced in the
+Authoring the THE AUSTERITY CHAINSAW (an EXECUTIONER: the blow is priced in the
 VICTIM's own healthbars, so its `damage` is only ever seen by a boss) turned up
 four things worth keeping.
 

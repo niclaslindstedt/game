@@ -130,7 +130,7 @@ export const WOUND_PLANS = {};
  * frame is made exactly the way the game's is.
  */
 export function deriveWounds(defs) {
-  // Two defs may share one sprite (the SpaceZ vanguard reuses "scientist"), so
+  // Two defs may share one sprite (the GOODCO vanguard reuses "scientist"), so
   // plans are derived per unique SPRITE: the def with the widest stage set wins,
   // and each sprite's wound frames register exactly once.
   const bySprite = new Map();

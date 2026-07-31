@@ -80,7 +80,7 @@ const RUN: SessionParams = {
   difficulty: "hard",
   loadout: null,
   respec: false,
-  clearedLevels: ["spacez_hq"],
+  clearedLevels: ["goodco_hq"],
   merchantDiscovered: true,
   campaignQuests: null,
   coins: 4242,

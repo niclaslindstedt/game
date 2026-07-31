@@ -1,0 +1,37 @@
+name: desk
+family: goodco
+plane: floor
+size: [20, 12]
+description: >
+  A grey office desk seen from above with a small dark monitor and keyboard on
+  top; a hop-over obstacle of the office floor.
+subject:
+  kind: hop-over obstacle prop
+  build: a rectangular office desk seen from above, drawers down one side
+  features: a small dark monitor and keyboard sitting on the surface
+  accent: cool-grey desktop with a cyan-lit screen
+  flavor: an abandoned workstation on the GOODCO office floor
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # pale desktop surface
+  V: "#9095a5" # light-grey keyboard
+  W: "#f4f4f4" # white screen bezel
+  b: "#3f4553" # dark drawer fronts
+  c: "#8ccdd7e1" # cyan monitor screen
+  o: "#d6a842" # small amber desk light
+  s: "#818690" # grey desktop shadow
+  v: "#60687e" # slate desk edge
+  x: "#c5e6ebe1" # bright screen highlight
+grid: |
+  ....OOOOOOO.........
+  ....OWxxxxO.........
+  ....OcccccO.........
+  ....OOOOOOO.......o.
+  .......b...OvVvVvVW.
+  .OOOOOOOOOOOOOOOOOO.
+  .OTTTTTTTTTTTTTTTTO.
+  .OssssssssssssssssO.
+  ..OOOVOOO......OOO..
+  ..ObbbbbO......ObO..
+  ..OvvVvvO......ObO..
+  ..OOOOOOO......OOO..
