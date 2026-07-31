@@ -411,22 +411,19 @@ screens:
   # which is exactly why they are one page: this is where a player goes when the
   # phone is warm.
   #
-  # The four knobs and their RESET come first because they are what the page is
-  # FOR; GORE sits at the bottom, past the reset, because it is the one row here
-  # that opens somewhere rather than moving a number — and because RESET ALL
-  # puts the four knobs above it back, never a player's considered answer about
-  # how much of a body they want to watch come apart. It is dropped entirely
-  # where the DEVICE says no mature content — a parental control the game still
-  # offers to defeat is not one.
+  # The four knobs come first because they are what the page is FOR; GORE sits
+  # at the bottom because it is the one row here that opens somewhere rather
+  # than moving a number. It is dropped entirely where the DEVICE says no mature
+  # content — a parental control the game still offers to defeat is not one.
   # -------------------------------------------------------------------------
   video:
     title: VIDEO
     parent: settings
     tone: player
     form: settings
-    # Four knobs, a reset and the way through to GORE: long enough on a short
-    # viewport to want capping, so the header and the help line stay put while
-    # the rows scroll under them.
+    # Four knobs and the way through to GORE: long enough on a short viewport to
+    # want capping, so the header and the help line stay put while the rows
+    # scroll under them.
     scroll: true
     rows:
       - id: bloom
@@ -449,9 +446,6 @@ screens:
         help:
           on: THE FLOOR FADES AS IT RAKES OFF TOWARD THE HORIZON
           off: THE FAR FLOOR READS AS CLEARLY AS THE NEAR
-      - id: reset
-        label: RESET ALL
-        help: PUT EVERY VISUAL BACK THE WAY THE GAME SHIPPED
       # A PAGE rather than the one EXTRA GORE switch it replaced: "is this too
       # much" is not one question, and the single switch made a player who did
       # not want to watch a PERSON opened up turn off the machines' sparks and
