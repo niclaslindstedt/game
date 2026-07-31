@@ -125,6 +125,28 @@ export type SimulateLevelOptions = {
   /** Combat profile — the weapon lane the build commits to (default "meta", the
    * level-band melee → magic → melee strategy). */
   profile?: BotProfile;
+  /**
+   * HOW MANY HEROES ARE ON THE MAP (multiplayer plan §7.2). One by default,
+   * which is the whole shipped campaign and every existing measurement.
+   *
+   * **IT IS NOT `/players N` AND THE TWO MUST NEVER BE CONFLATED.** That knob
+   * already means D2's monster-hp and XP scaling (`server/wire/players.ts`) and
+   * has nothing to do with how many bodies are standing on the floor. They are
+   * independent — a party of four at `/players 1` is four heroes against a solo
+   * horde — and the one place they most need telling apart is a report that
+   * prints both.
+   *
+   * Each seat gets its own `Bot` and, unless `partyProfiles` says otherwise,
+   * its own PROFILE: a party of four identical meta builds measures one build
+   * four times, which is the least interesting thing a party simulator could do.
+   */
+  party?: number;
+  /**
+   * The weapon lane each seat commits to, seat-indexed. Short lists repeat, so
+   * `["melee", "ranged"]` at party 4 alternates. Omitted, the seats are dealt
+   * from `STAT_BUILDS` so a party is a spread of lanes rather than a clone army.
+   */
+  partyProfiles?: BotProfile[];
   /** Cap on SIMULATED minutes of play before the run is called a timeout. */
   maxMinutes?: number;
   /** Fixed step size in ms (16 ≈ the app's frame cadence). */

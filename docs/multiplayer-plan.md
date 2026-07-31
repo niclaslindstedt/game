@@ -1874,13 +1874,17 @@ than rediscovered:
    the per-CAPITA XP rate off multi-player runs at 1/2/4/8 across the ladder,
    and move `XP_SHARE.partyBonusPerHero` and the `/players N` pairing on
    evidence.
-4. **§7.2.5 — the bot CLIENT**, blocked on (1) for the same reason (2) is: a
-   client's seat is never 0. It also forces decision 3b's other half, since on
-   a client a direct write is erased by the next snapshot.
-5. **§5.6's SOAK AND ADVERSITY PASS**, blocked on (4). Eight bot clients for
-   hours, watched for leaks, drift and snapshot growth; 150 ms and 2% loss
-   injected at the transport seam. §5.8 records that this could not be run, and
-   it must not be ticked from a green unit suite.
+4. **§7.2.5 — BOTS ARE CLIENTS**, blocked on (1) for the same reason (2) is: a
+   client's seat is never 0. Amended since it was written — this is now the
+   SHIPPED shape rather than a test harness beside it (see §7.2.5), so it lands
+   together with §7.3's local bots and needs no separate instrument. It also
+   forces decision 3b's other half, since on a client a direct write is erased
+   by the next snapshot.
+5. **§5.6's SOAK AND ADVERSITY PASS**, blocked on (4) — and cheap once (4) is
+   done, because under the amendment the soak is just "run a dedicated server
+   and let eight bots join it". Watched for leaks, drift and snapshot growth;
+   150 ms and 2% loss injected at the transport seam. §5.8 records that this
+   could not be run, and it must not be ticked from a green unit suite.
 6. **§3.2 — the per-player screens.** `state.phase` loses eleven members to a
    new `Player.screen`. This is the design exercise rather than the plumbing:
    the non-blocking level-up is a real SINGLE-PLAYER behaviour change that owes
@@ -1928,10 +1932,14 @@ order, beside the chain above.
   merge depends on precisely that. Its twin is that a joiner still plays the
   THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster —
   the same job from the other end, and it should land with it.
-- **Decision 3b's other half — the bot's five housekeeping mutators.** Four are
-  plain verbs and travel unchanged; the fifth (`stepBotWeaponSwap`) carries the
-  bot's own swap memory, and the plan already recommends moving that memory onto
-  the run rather than moving the bot.
+- **Decision 3b's other half — the bot's five housekeeping mutators.** It is
+  the SAME work as §7.2.5's adapter, reached from the other end: the bot's
+  output becomes `{ input, commands }` so that everything it does is an INTENT,
+  and the adapter decides whether an intent is applied in-process or sent. Two
+  of the five are already in `COMMANDS` (`autoEquipBest`, `scrapInferiorLoot`);
+  the fifth (`stepBotWeaponSwap`) carries the bot's own swap memory, and the
+  plan already recommends moving that memory onto the run rather than moving
+  the bot. Land it with §7.2.5 rather than beside it.
 - **§5.6's STORE SURFACES** — the Steam listing's multiplayer categories, the
   depot's launch options, and store screenshots showing a party (`store-shots`
   skill). Not code, but it is on PR 5's list and nobody is holding it.
@@ -2195,7 +2203,50 @@ state.players[0])` all describe one hero. The interesting readouts for a party
   difficulty, and the two levers `XP_SHARE.partyBonusPerHero` and the
   `/players N` pairing moved on evidence.
 
-### 7.2.5 THE BOT AS A CLIENT — the instrument PR 5 asks for and does not name
+### 7.2.5 THE BOT IS A CLIENT — the feature and the instrument are one thing
+
+> **AMENDED, AND THE CORRECTION IS TO A CLAIM THIS SECTION ITSELF MADE.** The
+> first draft kept two bot hosts apart: a bot CLIENT as a test harness, and
+> §7.3's local bots steered inside the session — on the stated grounds that "a
+> bot the host is not authoritative over is a peer". **That reasoning is wrong.**
+> A client sends input frames and commands; the server validates them and owns
+> the result. A bot client has exactly the authority a human client has, which
+> is none. There was never a safety argument here, and it was holding apart two
+> things that want to be one.
+>
+> **AND THE TOPOLOGY ALREADY PAYS FOR IT.** PR 1's §1.2 makes the host's own
+> renderer a client over a `MessagePort`. So a LOCAL bot needs no socket either:
+> bots are clients, and the TRANSPORT is whatever fits — a `MessagePort` in a
+> local game, a real UDP socket when one joins a dedicated server. One code
+> path, and "let bots join" BECOMES the soak rather than needing an instrument
+> built beside it.
+>
+> **AND THE SEAM IS AN ADAPTER OVER AN INTENT, WHICH IS MOSTLY ALREADY BUILT.**
+> `botAct` does not press keys and does not touch the run — it RETURNS a
+> `GameInput`, which is the very shape `FRAME.input` carries. So for steering
+> there is nothing to design: the caller decides what the intent means.
+> `step(state, input, dt)` in the simulator, the run loop in a local game,
+> `transport.send(encodeFrame(FRAME.input, …))` in a client. One function, three
+> adapters, no branch inside the bot.
+>
+> **THE GAP IS THE HALF THAT IS NOT AN INTENT YET** — the five housekeeping
+> calls that reach in and MUTATE (`stepBotWeaponSwap`, `careForCompanion`,
+> `botAutoEquip`, `cullWorstLoot`, `sortBotInventory`). Those cannot cross a
+> wire, because on a client a direct write is erased by the next snapshot. So
+> the bot's output becomes intent for BOTH halves — `{ input, commands }`, the
+> commands drawn from the closed list the channel already polices — and the
+> adapter stays trivial in either direction. Two of the five (`autoEquipBest`,
+> `scrapInferiorLoot`) are already in `COMMANDS` and can travel today; this is
+> the same work decision 3b has been describing since PR 1.75, arrived at from
+> the other end.
+>
+> **THE ONE THING THAT DOES NOT MOVE IS THE SIMULATOR.** §7.2's bots keep
+> calling `botAct` directly on the authoritative state, in-process, with no wire
+> under them. It runs thousands of ticks for a balance measurement and has to be
+> fast and deterministic; a network-shaped simulator measures jitter and reports
+> it as balance, which is this section's own second limit. So the split is
+> THREE-WAY, not two: **simulator → in-process** (what the numbers come from),
+> **game and dedicated server → bot clients** (what the mode actually is).
 
 **A fractional number for the reason PRs 1.5, 1.75 and 2.5 have one:** this was
 found after the numbering, and renumbering §7.3–§7.7 would break every reference
@@ -2290,22 +2341,23 @@ online. It is the same machinery: a bot seat is a real `Player` seated by
 
 Four decisions, and the last one is the sharp one:
 
-- **BOTS ARE STEERED WHERE THE SIMULATION IS — in the session, not the
-  renderer.** `botAct` is called by the APP today (GameScreen) and by the
-  simulator; a bot seat's input must be produced in the session process, or the
-  bot is a client nothing is authoritative over. That keeps the one code path
-  PR 1's §1.2 exists to protect, and it is what makes a bot seat identical to a
-  human one everywhere downstream.
+- **A BOT SEAT IS A CLIENT SEAT.** `botAct` is called by the APP today
+  (GameScreen) and by the simulator. A bot filling a party joins the session the
+  way every other client does — over a `MessagePort` locally, over a socket
+  against a dedicated server — so it is identical to a human seat everywhere
+  downstream by CONSTRUCTION rather than by care, and every rule that already
+  governs a client (the loadout check, the packet budget, the command
+  allow-list, the private split) governs it unchanged.
 
-  **THIS IS NOT IN TENSION WITH §7.2.5, and the difference is the JOB rather
-  than the machinery.** A bot filling a player's party is a FEATURE: it should
-  cost no socket, no serialization and no lost packets, and it must be something
-  the server is authoritative over. A bot CLIENT is an INSTRUMENT, and its whole
-  value is the wire it is deliberately made to cross. Same `Bot`, two hosts,
-  wanted at the same time — a soak worth running has bot clients on the wire and
-  session-side bots in the party. What would be a mistake is shipping the
-  player-facing feature over a loopback client because the harness already
-  existed.
+  **SUPERSEDED — SEE §7.2.5's AMENDMENT.** This bullet used to say a local bot
+  must be steered inside the session because a bot the host is not authoritative
+  over is a peer. That is not true: a client sends input and commands, and the
+  server owns the result either way. A local bot is a CLIENT over a
+  `MessagePort` — the same door the host's own renderer already comes through —
+  so it costs no socket, exercises the real client surface, and is
+  indistinguishable from a human seat everywhere downstream. Only the SIMULATOR
+  keeps a direct in-process `botAct`, because it is measuring balance rather
+  than playing.
 
 - **A BOT YIELDS ITS SEAT TO A PERSON.** A session with three bots and a spare
   seat should let a fourth human in; a session that is full of bots should drop
