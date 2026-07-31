@@ -1,19 +1,83 @@
 # Multiplayer — the shipped architecture
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
-describes what actually exists. **PR 1, PR 2, PR 1.5, PR 1.75 and PR 2.5 have
-landed** — the feature is reachable by a player now, end to end. The simulation
-runs in its own process, the run loop drives it, the wire between it and a
-renderer is complete and tested, the desktop shell forks and supervises a
-session, a session can open a UDP socket and a Steam lobby and admit remote
-clients behind a challenge handshake — and the title menu has the three doors
-that let somebody walk through it: **HOST GAME**, the **server browser**, and
-**JOIN BY ADDRESS**, plus the in-run chat and the live session panel.
+describes what actually exists. **PR 1, PR 2, PR 1.5, PR 1.75, PR 2.5 and the
+first half of PR 3 have landed.** The simulation runs in its own process, the
+run loop drives it, the wire between it and a renderer is complete and tested,
+the desktop shell forks and supervises a session, a session can open a UDP
+socket and a Steam lobby and admit remote clients behind a challenge handshake,
+the title menu has the three doors that let somebody walk through it (**HOST
+GAME**, the **server browser**, **JOIN BY ADDRESS**) — and a run now carries a
+**PARTY** rather than a hero, so an admitted player is seated with a character
+of their own.
 
-What is NOT here is a second HERO. Every joiner is a **spectator**: they see the
-run, they are on the roster, they can talk, and the session refuses their
-steering in the one place a client cannot argue with it. Seating a second player
-is PR 3.
+What is NOT here yet is the half of PR 3 that makes eight heroes comfortable
+rather than merely possible: a screen one player opens still stops the world for
+everybody, and a client still shows its hero where the last snapshot put him
+rather than predicting his own steering. See **What is NOT here yet** at the
+foot of this file.
+
+## The party
+
+**`GameState.players` is a non-empty tuple of heroes in SEAT order.** Seat 0 is
+the host's, and it is the only seat a single-player run has — nothing in the
+engine treats the one-element case specially, which is the whole point: a pass
+written against one hero silently means "seat 0" the day a second player
+arrives.
+
+The reads of it split exactly two ways, and the plan's §0 measured the split
+before any of this was written:
+
+- **PRIVATE reads** — the bag, the purse, the build, the talents, the worn kit —
+  are asking about ONE hero, and the answer is always "the one this pass is
+  about". They are a **PARAMETER**, not a lookup: `effectiveStat(state, player,
+stat)`. A pass that reaches for seat 0 to find a bag is a pass that has not
+  been parameterized yet.
+- **GEOMETRY reads** — where is the threat, the target, the anchor — are asking
+  about the party, and each needs a party-aware answer: nearest, any, all, or
+  centroid. Those live in `src/game/party.ts`, and picking the wrong one is a
+  design bug rather than a typo — `anyHeroWithin` wakes a pack (one half the
+  party walked past is a pack that never fights) where `nearestHero` is what a
+  mob chases.
+
+**Whom a mob chases is the nearest VISIBLE hero, with HYSTERESIS**
+(`src/game/aggro.ts`), and each word is load-bearing. Nearest, or a party parks
+one hero across the map and farms with the other seven. Visible, because the
+horde already refuses to chase a hero it cannot see, and a party-aware answer
+that ignored sight would have mobs grinding into walls toward the nearest hero
+while a second stood beside them in the open. Hysteresis, because "nearest"
+alone is a coin flip between two players standing a pixel apart, re-tossed sixty
+times a second — the mob judders, its flank offset is re-picked each tick, and a
+pack's envelope dissolves into noise. The answer is remembered on the mob
+(`Enemy.quarry`) rather than recomputed per read, so the move, the reach, the
+ranged lead and every set-piece mechanic's locked bearing agree about who is
+being fought; a mob walking toward one hero while its slam telegraphs at another
+is not a difficulty, it is a bug nobody can read.
+
+**The horde is budgeted around the PARTY and placed around a HERO.** The camp
+anchor tracks the centroid (anchored on seat 0, a group farms forever by leaving
+one player parked, since the clock would read "he has not moved" and starve the
+stream for everybody); the wave ring is drawn on one player, because a ring
+round the centroid delivers the horde into the empty floor between two players
+standing at opposite ends of a hall; and its level is the party's HIGHEST, which
+is Diablo 2's rule — an average lets a group carry a level-1 alt through a
+level-90 map by arithmetic, and seat 0's makes the difficulty of a run depend on
+who happened to press HOST.
+
+**A blast is a blast.** Burning floor pulses and everybody standing in it burns,
+a bait bomb bills every hero in its radius, a gravity well drags all of them.
+The single-victim hazards stay single BY DESIGN: `struck` is a fact about the
+gust or the herd, not about the party, so a wall of them cannot flatten a group
+in one pass.
+
+**The run ends when the party falls, not when a hero does** (`partyWiped`). One
+player going down is a setback the rest fight through; PR 4 owns the corpse and
+the respawn.
+
+**A seat is appended, never inserted, and never spliced out.** Every command and
+every input frame in flight names a seat by INDEX, so renumbering the party
+mid-run would deliver seat 4's steering to seat 3's hero. A player who leaves
+keeps their hero standing where they left it.
 
 ## The topology
 
@@ -452,13 +516,30 @@ an invite left parked would re-join the same session on every reload.
   polled, deprecated and thinner on guarantees than SDR, and the plan is
   unsparing about spiking it under load before the UI rests on it. The direct
   UDP path exists partly as the insurance policy on exactly that.
-- **No second player.** `state.player` is still one hero — PR 3. Every joiner is
-  a spectator, and the session refuses their steering in the one place a client
-  cannot argue with it. A spectator therefore plays on a THROWAWAY hero
-  (`spectatorCharacter`), so nothing they watch can be banked onto their own
-  roster, and their run commands are sent but not applied locally
-  (`setCommandSink(…, { optimistic: false })`) — the server would refuse them,
-  and an optimistic apply would edit a replica of somebody else's hero.
+- **A screen still stops the world.** `GamePhase` has 19 members and 16 of them
+  halt the simulation outright; eleven are per-player UI (`paused`, `levelup`,
+  `respec`, `inventory`, `map`, `questLog`, `shop`, `quest`, `talk`, `choice`,
+  `companion`) that in co-op must not freeze the other seven. Splitting the
+  concept — `state.phase` keeping only what is genuinely global, a new
+  `Player.screen` carrying what one player is looking at, with that player still
+  standing on the field and still killable — is PR 3's §3.2 and has NOT landed.
+  The verbs that raise those phases already travel (PR 1.5); what is left is
+  changing what they MEAN.
+- **Nothing is predicted.** A client shows its own hero where the last snapshot
+  put him, so its steering costs a round trip of felt latency. PR 3's §3.3 is
+  the fix: input frames with a sequence number, the LOCAL hero's movement
+  predicted by replaying unacknowledged input, everybody else interpolated one
+  interval behind — and combat deliberately NOT predicted, because that is a
+  rollback problem this codebase has no machinery for and the player would
+  experience as monsters un-dying.
+- **A joiner's run is not banked.** The spectator's THROWAWAY character
+  (`spectatorCharacter`) is still what a joining client plays on, so nothing a
+  seated player earns reaches their own roster. Banking eight characters is
+  PR 4's §4.5.
+- **A hero's private verbs still name seat 0.** The command channel carries no
+  seat, so a shop, an equip or a stat spend arriving from a joiner is applied to
+  the host's hero. The dispatch (`applyRunCommand`) is where the seat has to
+  arrive, and it is the next thing to do after §3.2.
 - **Nothing has been proven on eight machines through a real NAT**, and it
   cannot be from CI: that criterion, the UPnP mapping against a real router, and
   the packaged `npm run electron` launch all need hardware this repo's checks do

@@ -138,8 +138,8 @@ export function weaponAlternatives(
   order: WeaponSwitchOrder = getSettings().weaponSwitchOrder,
 ): { item: Equipment; index: number; dmg: number }[] {
   const byDps = order === "dps";
-  return localHero(state).inventory
-    .map((item, index) => ({ item, index }))
+  return localHero(state)
+    .inventory.map((item, index) => ({ item, index }))
     .filter(
       (e) =>
         e.item !== null &&
@@ -225,8 +225,8 @@ export function buildHud(
   // the ticking timer itself is animated straight on the DOM, so it stays
   // out of the change-key (which would otherwise thrash React state every
   // frame).
-  const active = localHero(state).abilities
-    .map((a) => a.slot)
+  const active = localHero(state)
+    .abilities.map((a) => a.slot)
     .filter((s) => s !== undefined)
     .sort((a, b) => a - b)
     .join(",");
@@ -311,8 +311,8 @@ export function buildHud(
       bagFullHint,
       questLog,
       heldAbilities: [...localHero(state).heldAbilities],
-      activeSlots: localHero(state).abilities
-        .map((a) => a.slot)
+      activeSlots: localHero(state)
+        .abilities.map((a) => a.slot)
         .filter((s): s is number => s !== undefined),
       medkitTier,
       medkitCount,

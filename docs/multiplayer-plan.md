@@ -150,7 +150,7 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 | **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
 | **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4       |
 | **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4        |
-| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                               |
+| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6     |
 | **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
 | **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                               |
 
@@ -1037,6 +1037,13 @@ drives a browser, where every one of these screens is deliberately absent.
 **Goal: eight heroes, not one.** This is the mountain, and it is a design
 exercise wearing a refactor's clothes.
 
+> **§3.1 HAS LANDED; §3.2 AND §3.3 HAVE NOT.** The party model, the
+> parameterization, every shared read in the table below and the session seating
+> are in the tree — see **§3.6** for exactly what that means and what it does
+> not. The split is along the same seam §1.5 was split on, and for the same
+> reason: making the simulation PARTY-AWARE and making a party COMFORTABLE are
+> two jobs, and the first is a prerequisite that leaves single player untouched.
+
 ### 3.1 `state.player` → `state.players[]`
 
 The mechanical rename is perhaps two weeks. The cost is that **each of those 538
@@ -1178,6 +1185,69 @@ each shared-read decision with its own test, and keep single-player passing the
 whole way — every commit in this PR should leave a playable single-player game,
 because a single-player regression discovered at the end of an 11-week branch is
 unbisectable.
+
+### 3.6 What §3.1 actually shipped — and the two things it deliberately did not
+
+The sequencing §3.5 asks for is what was followed, and it is what makes the
+split honest: four commits, each leaving `make lint` and `make test` at zero,
+each leaving single player byte-identical.
+
+**LANDED.**
+
+- **`GameState.players`**, a NON-EMPTY tuple (`[Player, ...Player[]]`) in seat
+  order. The type states the invariant the rest rests on: `players[0]` reads as
+  a `Player` while `players[seat]` — an index that may have come from a
+  stranger's command — reads as `Player | undefined` and has to be checked.
+- **The private reads became a parameter.** 285 declarations, ~1200 call sites:
+  every derived-stat, item, talent, spell and consumable accessor takes the
+  `Player` it is about beside the run it is in. The 103 sites that opened with
+  `const player = state.player;` had that line become the signature. The loadout
+  memo needed nothing — it was already keyed by the Player OBJECT in a WeakMap,
+  so a second hero gets a second memo for free.
+- **Every shared read in §3.1's table**, each with a test in
+  `tests/engine/party_test.ts` that would pass trivially with one hero: aggro
+  (nearest visible, hysteresis on `Enemy.quarry`, sight outranking the
+  hysteresis), the spawner (centroid budget, per-hero placement, party level),
+  packs and lairs and spawn points and the exit (ANY hero), hazards (a blast
+  bills everybody; a gust keeps its single victim by design), the merchant
+  (whoever finds him finds him for everybody), the fog (shared, one grid), and
+  the menace meter (scaled to the party's highest level).
+- **`step()` takes per-seat input.** A plain `GameInput` still means seat 0, so
+  no caller changed; an ARRAY is index-aligned with the party. A seat with no
+  frame contributes `IDLE_INPUT` rather than repeating its last one.
+- **The run ends when the PARTY falls** (`partyWiped`), not when a hero does.
+- **`createHero` is lifted out of `createGame`** so seat 0 and every later
+  arrival are built by one function, and **`seatHero`** appends a joiner beside
+  the party with their own bag, purse and build.
+- **The session seats every admitted player.** `addClient` takes a seat request;
+  the seat is the SERVER's answer and travels back in the `welcome`; the join
+  frame carries the arriving player's loadout. `Recipient` is a seat rather than
+  a boolean, so seat 3 sees seat 3's bag and nobody else's.
+- **The app knows which hero it is about.** `localHero(state)` replaced the 257
+  places that read seat 0; the seat comes from the welcome and is cleared on
+  dispose. 167.4 KB critical path, inside the budget.
+
+**NOT LANDED, and each is a job rather than a loose end.**
+
+- **§3.2, the per-player screens.** This is the design exercise, and it is
+  bigger than the plumbing it sits on: `state.phase` has to lose eleven members
+  to a new `Player.screen`, the non-blocking level-up is a real single-player
+  BEHAVIOUR change that owes the changelog a line of its own, and `dialogue`,
+  `cutscene` and `choice` each need a group protocol rather than a per-player
+  one. Nothing about it is blocked — the verbs already travel — but it changes
+  how the game feels for a single player, which is why it is not smuggled in
+  beside a refactor that changes nothing.
+- **§3.3, prediction and reconciliation.** Untouched. A client still shows its
+  hero where the last snapshot put him.
+- **The command channel carries no SEAT.** A shop, an equip or a stat spend
+  arriving from a joiner is dispatched against seat 0. `applyRunCommand` is
+  where the seat has to arrive; it is one field on the command frame plus the
+  seat the session already knows, and it belongs with §3.2 because the two touch
+  the same verbs.
+- **A joiner's run is still not banked** to their roster (PR 4's §4.5), and the
+  autopilot, the headless simulator and the analytic readouts still fly seat 0 —
+  which is correct for what they measure and is what §3.4's "multi-player
+  campaign headlessly" line will change.
 
 ---
 
