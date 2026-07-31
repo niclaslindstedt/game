@@ -100,8 +100,7 @@ async function waitForServer(timeoutMs = 30_000) {
 async function startRun(page) {
   const params = `?bot=balanced&level=${LEVEL}&difficulty=${DIFFICULTY}&seed=${SEED}`;
   await page.goto(`${BASE}/${params}`, { waitUntil: "load" });
-  await page.getByRole("button", { name: "play", exact: true }).waitFor();
-  await page.getByRole("button", { name: "play", exact: true }).click();
+  await page.getByRole("button", { name: "new-game" }).waitFor();
   await page.getByRole("button", { name: "new-game" }).click();
   await page.getByRole("textbox", { name: "character-name" }).waitFor();
   await page.getByRole("textbox", { name: "character-name" }).fill("ADA");

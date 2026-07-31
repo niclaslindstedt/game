@@ -139,6 +139,14 @@ module.exports = {
       to: "modtools/content/item_rarity.yaml",
     },
     ...MOD_TOOLCHAIN_DEPS,
+
+    // THE SESSION SERVER — the engine, compiled for Node
+    // (scripts/build-server.mjs). Outside the asar for a different reason from
+    // the toolchain's: `utilityProcess.fork` starts a real Node child, and a
+    // child's entry point has to be a real file on disk. Self-contained ESM
+    // with its own manifest, so only the entry path is ever resolved
+    // (electron/src/resources.ts) and Node finds the rest by relative import.
+    { from: "server-dist", to: "server" },
   ],
 
   // The native binding cannot be read from inside an asar archive — the OS

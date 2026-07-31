@@ -1,51 +1,54 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: moonrock_1x2
 family: moon
 size: [16, 32]
 description: >
-  A tall two-tile stack of grey lunar moonrock, a standing stone slab, angular
-  and shaded.
+  A tall standing slab of grey moonrock on a two-tile footprint: the same
+  vacuum-lit crown and hard facet break as its one-tile sibling, run up a
+  standing stone.
 subject:
   kind: prop
-  build: a tall two-tile standing slab of grey moonrock, angular and shaded
-  features: shaded angular facets
-  accent: desaturated stone grey
+  build: a tall standing slab of moonrock on a two-tile footprint, peaked at the top and widening as it falls
+  features: hard flat facets meeting on one long diagonal break, and dark micrometeorite pits
+  accent: a vacuum-lit crown well above the regolith's own grey, over a shadow side well below it
   flavor: solid cover that blocks sight and shots, but the haunting drifts straight through
 palette:
   F: "#a2a4ad" # light stone face
   O: "#1a1c2c" # dark outline
-  d: "#676972" # mid stone shadow
+  T: "#c0c5cf" # vacuum-lit crown
+  b: "#3f4553" # micrometeorite pit
   e: "#4e4f56" # deep stone shadow
-  f: "#888a96" # base stone grey
+  f: "#888a96" # base stone grey, shadow side only
 grid: |
   ................
-  .....OOOOO......
-  ...OOFFFffOO....
-  ..OFFFFFffffOO..
-  ..OFFFFffffffO..
-  .OFFFFffffffffO.
-  .OFFFFffffffffO.
-  .OFFFffffefffdO.
-  OFFFFffffeOffdO.
-  OFFFffffffeOdddO
-  OFFfffffffeOddO.
-  OFFffffffffeddO.
-  .OffffffffedddO.
-  .OfffffffdeddO..
-  .OfffffffdddddO.
-  .OffffffddddddO.
-  OfffffffddddddO.
-  OffffffdddddddO.
-  OfffffddddddddO.
-  .OffffdddddddddO
-  .OfffdddddddddO.
-  .OffdedddddddeO.
-  .OffddeOdddddeO.
-  .OfdddeOddddeO..
-  .OfddddeddddeO..
-  ..OddddedddeeeO.
-  .OddddddddeeeeO.
-  ..OdddddddeeeO..
-  ..OddddddeeeeO..
-  ...OOddddeeOO...
-  .....OOOOOO.....
+  ................
+  .......OOO......
+  ......OTTTO.....
+  .....OTTTTTO....
+  ....OTTTTTTTO...
+  ....OTTTTFFFTO..
+  ...OTTTFFFFFfO..
+  ...OTTFFFFFFfeO.
+  ..OTFFFFFFFFfeO.
+  ..OFFFFFFFFffeO.
+  ..OFFFbFFFFfeeO.
+  ..OFFFbFFFfeeeO.
+  ..OFFFFFFFfeeeO.
+  .OFFFFFFFFfeeeO.
+  .OFFFFFFFfeeeeO.
+  .OFFFFFFFfeeeeO.
+  .OFFFFFFfeeeeeO.
+  .OFFFFFFfeeeeeO.
+  .OFFFFFfeeeeeeO.
+  .OFFFFFfeeeeeeO.
+  .OFFFFfffeeeeeO.
+  .OFFFbffeeeeeeO.
+  .OFFFbfeeeeeeeO.
+  .OFFffeeeeeeeeO.
+  .OFfffeeeeeebeO.
+  .OFfffeeeeeebeO.
+  ..OfffeeeeeeeO..
+  ..OfffeeeeeeeO..
+  ..OOffeeeeeeOO..
+  ...OOOOOOOOOO...
   ................

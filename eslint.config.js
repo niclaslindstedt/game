@@ -70,7 +70,23 @@ export default [
     rules: { "no-console": "off" },
   },
   {
+    // THE SESSION SERVER runs under Node, inside a `utilityProcess` — it is
+    // the one tree of `.ts` in this repo that is neither browser code nor a
+    // build script, so it needs Node's globals on top of the browser ones the
+    // wire's own leaves are read with in the page.
+    files: ["server/**/*.ts"],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+  {
     files: ["tests/**"],
+    // A test may fork a real second process to prove a cross-process claim
+    // (tests/engine/net_determinism_test.ts), so Node's globals belong here
+    // too — the suite runs in a `node` environment either way.
+    languageOptions: {
+      globals: { ...globals.node },
+    },
     rules: { "no-console": "off" },
   },
 ];

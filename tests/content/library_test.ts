@@ -103,6 +103,19 @@ import {
   storyIndex,
   storyLinks,
 } from "../../pwa/scripts/library/render-story.mjs";
+import { ACHIEVEMENTS } from "../../pwa/src/game/achievement-defs.ts";
+import { emptyTotals } from "../../pwa/src/game/achievement-totals.ts";
+import {
+  isPlatformAchievement,
+  platformPoints,
+} from "../../pwa/src/game/platform-achievements.ts";
+import { TIER_POINTS } from "@niclaslindstedt/oss-framework/achievements";
+import { ACHIEVEMENT_FIELDS } from "../../pwa/scripts/library/model-achievements.mjs";
+import { CATEGORY_BLURB } from "../../pwa/scripts/library/prose-achievements.mjs";
+import {
+  achievementsIndex,
+  categoryPage,
+} from "../../pwa/scripts/library/render-achievements.mjs";
 
 const model = libraryModel();
 const context = {
@@ -305,6 +318,19 @@ describe("library coverage", () => {
     expect(paged.has("the-hellborn")).toBe(true);
   });
 
+  it("gives every BADGE a place on exactly one category page", () => {
+    // The achievements section files by CATEGORY rather than one page per badge
+    // (see model-achievements.mjs), so "every catalog entry has a page" becomes
+    // "every catalog entry is ON one" — and a badge whose category the app grew
+    // a ninth value for would vanish from the section without a word.
+    const filed = model.achievements.categories.flatMap(
+      (category: { badges: { id: string }[] }) =>
+        category.badges.map((badge) => badge.id),
+    );
+    expect(new Set(filed).size).toBe(filed.length);
+    expect(filed.sort()).toEqual(ACHIEVEMENTS.map((def) => def.id).sort());
+  });
+
   it("routes every page exactly once, and lists the landing and index", () => {
     const routes = libraryRoutes().map((route) => route.path);
     expect(new Set(routes).size).toBe(routes.length);
@@ -316,6 +342,7 @@ describe("library coverage", () => {
       "powers",
       "missions",
       "errands",
+      "achievements",
       "story",
     ]) {
       expect(routes).toContain(index);
@@ -328,8 +355,9 @@ describe("library coverage", () => {
         model.missions.length +
         model.quests.quests.length +
         model.quests.givers.length +
+        model.achievements.categories.length +
         model.story.chapters.length +
-        8,
+        9,
     );
   });
 
@@ -509,6 +537,40 @@ describe("library field coverage", () => {
     expect(missing).toEqual([]);
   });
 
+  it("declares every field the shipped BADGE catalog carries", () => {
+    // The one catalog behind a library page that is TypeScript rather than
+    // YAML, which makes this failure quieter rather than rarer: a field added
+    // to `AchievementDef` compiles, ships, and is silently missing from the one
+    // section of the product that describes badges.
+    const undeclared = new Set<string>();
+    for (const def of ACHIEVEMENTS) {
+      for (const key of Object.keys(def)) {
+        if (!(key in ACHIEVEMENT_FIELDS)) undeclared.add(key);
+      }
+    }
+    expect([...undeclared]).toEqual([]);
+  });
+
+  it("refuses to build a page for a badge carrying an unknown field", () => {
+    const def = ACHIEVEMENTS[0] as unknown as Record<string, unknown>;
+    def.somethingNobodyRenders = true;
+    try {
+      expect(() => libraryModel()).toThrow(/no library page renders/);
+    } finally {
+      delete def.somethingNobodyRenders;
+    }
+  });
+
+  it("has a plain-words clause for every badge category the catalog carries", () => {
+    // A category with no blurb heads its page WARDROBE and then explains
+    // nothing — complete-looking, and silent about what filing a badge there
+    // rather than under MASTERY actually means.
+    const missing = model.achievements.categories
+      .map((category: { id: string }) => category.id)
+      .filter((id: string) => !(id in CATEGORY_BLURB));
+    expect(missing).toEqual([]);
+  });
+
   it("refuses to build a page for a level carrying an unknown field", () => {
     const def = LEVELS.moon as unknown as Record<string, unknown>;
     def.somethingNobodyRenders = true;
@@ -646,6 +708,42 @@ describe("library numbers are the engine's", () => {
     }
   });
 
+  it("prices and meters a badge the way the shelf does", () => {
+    // Three figures on a badge row, and every one of them has an owner: the
+    // framework's tier weights, the badge's own progress meter, and the app's
+    // platform curation. A page that worked any of them out for itself would
+    // eventually disagree with the shelf sitting one tap away in the game.
+    const points = platformPoints();
+    const byId = new Map(
+      model.achievements.badges.map((badge) => [badge.id, badge]),
+    );
+    for (const def of ACHIEVEMENTS) {
+      const badge = byId.get(def.id);
+      expect(badge, def.id).toBeDefined();
+      expect(badge!.points, def.id).toBe(TIER_POINTS[def.tier]);
+      expect(badge!.goal, def.id).toBe(
+        def.progress ? def.progress(emptyTotals()).goal : null,
+      );
+      expect(badge!.platform, def.id).toBe(isPlatformAchievement(def.id));
+      expect(badge!.platformPoints, def.id).toBe(points[def.id] ?? null);
+    }
+  });
+
+  it("points a badge's subject at a page the library actually emits", () => {
+    // `clear_moon` being about the moon is a fact the badge catalog states
+    // (`AchievementDef.subject`) rather than one recovered by pulling an id
+    // apart — and the whole value of stating it is the link, so a subject that
+    // resolved to a route nobody writes would be a 404 on 150-odd rows.
+    const routes = new Set(libraryRoutes().map((route) => route.path));
+    const linked = model.achievements.badges.filter(
+      (badge) => badge.subject?.path,
+    );
+    expect(linked.length).toBeGreaterThan(0);
+    for (const badge of linked) {
+      expect(routes.has(badge.subject!.path!), badge.id).toBe(true);
+    }
+  });
+
   it("leaves JESUS off the field tables", () => {
     // It is the one rung that scales to the hero instead of to an authored
     // number, so it has no fixed figure to state.
@@ -719,6 +817,32 @@ describe("library pages", () => {
   };
   const giver = giverPage(giverById("hq_intern"), model.quests, context);
   const errands = questsIndex(model.quests, context);
+  // One of every SHAPE of badge page — a category the store lists carry whole
+  // (rows only), the relic wall (one rack of 149), and a mixed one (rows, a
+  // rack, then rows again) — plus the section index.
+  const categoryById = (id: string) => {
+    const found = model.achievements.categories.find(
+      (c: { id: string }) => c.id === id,
+    );
+    if (!found) throw new Error(`no library model for badge category "${id}"`);
+    return found;
+  };
+  const combatBadges = categoryPage(
+    categoryById("combat"),
+    model.achievements,
+    context,
+  );
+  const relicBadges = categoryPage(
+    categoryById("arsenal"),
+    model.achievements,
+    context,
+  );
+  const partyBadges = categoryPage(
+    categoryById("party"),
+    model.achievements,
+    context,
+  );
+  const badges = achievementsIndex(model.achievements, context);
   const chapter = chapterPage(chapterById("moon"), context, 2, 7);
   const hellborn = chapterPage(chapterById("the-hellborn"), context, 7, 7);
   const story = storyIndex(model, context);
@@ -743,6 +867,10 @@ describe("library pages", () => {
     escortQuest,
     giver,
     errands,
+    combatBadges,
+    relicBadges,
+    partyBadges,
+    badges,
     chapter,
     hellborn,
     story,
@@ -1030,6 +1158,56 @@ describe("library pages", () => {
     for (const html of [power, nuke, powers]) {
       expect(html).not.toContain('class="reveal"');
     }
+  });
+
+  it("prints every badge's condition in the game's own words", () => {
+    // The condition is one string with four readers — the shelf, the unlock
+    // toast, App Store Connect and the Steam partner site. A page rewording it
+    // would be the fifth, and the only one free to be wrong. A RACKED family
+    // states its shared condition once above the wall instead of 149 times
+    // down it, so what has to be on the page there is the template.
+    for (const category of model.achievements.categories) {
+      const html = categoryPage(category, model.achievements, context);
+      for (const block of category.blocks) {
+        if (block.kind === "rack") {
+          expect(html, category.id).toContain(
+            escapeHtml(block.ask!.trim().replace(/\s+/g, " ")),
+          );
+        }
+        for (const badge of block.badges) {
+          expect(html, badge.id).toContain(escapeHtml(badge.name));
+          if (block.kind !== "rack") {
+            expect(html, badge.id).toContain(escapeHtml(badge.ask));
+          }
+        }
+      }
+    }
+  });
+
+  it("keeps the badges in the open — a condition is not a spoiler", () => {
+    // The game shows every one of them from the first run, unhidden and
+    // unmissable. A cover here would tell a reader LESS than the game does,
+    // which is the one thing a reference page may never do.
+    for (const html of [badges, combatBadges, relicBadges, partyBadges]) {
+      expect(html).not.toContain('class="reveal"');
+    }
+  });
+
+  it("links a badge to the thing it is about, and back into the shelf", () => {
+    // The section is only worth generating as a graph: a relic's trophy is one
+    // click from the relic, an ally's from the elite you have to spare, and a
+    // mission's from the mission.
+    expect(relicBadges).toMatch(/href="\/library\/arsenal\/[a-z0-9-]+\/"/);
+    expect(partyBadges).toMatch(/href="\/library\/bestiary\/[a-z0-9-]+\/"/);
+    expect(
+      categoryPage(categoryById("story"), model.achievements, context),
+    ).toMatch(/href="\/library\/missions\/[a-z0-9-]+\/"/);
+    // …and every page leads back to the index, which leads to every category.
+    expect(combatBadges).toContain('href="/library/achievements/"');
+    for (const category of model.achievements.categories) {
+      expect(badges).toContain(`href="/library/${category.path}/"`);
+    }
+    expect(front).toContain('href="/library/achievements/"');
   });
 
   it("links the pages to each other", () => {

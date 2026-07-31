@@ -19,11 +19,13 @@
       "@game/core": ["./src/index.ts"],
       "@game/menu": ["./src/menu.ts"],
       "@game/lib/*": ["./src/lib/*"],
+      "@game/wire/*": ["./server/wire/*"],
       "@ui/lib/*": ["./pwa/src/lib/*"]
     }
   },
   "include": [
     "src",
+    "server",
     "tests",
     "vitest.config.ts",
     "pwa/src/build-globals.d.ts",

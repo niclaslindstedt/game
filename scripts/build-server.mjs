@@ -1,0 +1,261 @@
+#!/usr/bin/env node
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// THE ENGINE'S NODE SHIP TARGET.
+//
+// `@game/core` is consumed by Vite (for the browser) and by
+// `scripts/game-alias-loader.mjs` (for tooling). Neither produces something
+// that ships INSIDE the app, and the session server needs exactly that: the
+// simulation, running under plain Node, inside a `utilityProcess`.
+//
+// **The type-stripping route was spiked first, and the spike is what chose
+// this one.** The engine's imports already carry `.ts` extensions and the root
+// demands Node ≥ 24, so `node` running the sources directly looked like the
+// smallest possible change — and it does work: stripping is on by default from
+// Node 22.18, which is how `scripts/simulate-run.mjs` already imports
+// `src/sim/simulate.ts`. Two things killed it anyway:
+//
+//   * **It does not resolve the path ALIASES.** `@game/lib/vec.ts` needs
+//     `scripts/game-alias-loader.mjs` registered, and registering a loader
+//     inside a forked `utilityProcess` means threading `execArgv` through the
+//     fork and hoping Electron keeps honouring it.
+//   * **The runtime is not ours to pin.** `utilityProcess` runs ELECTRON's
+//     bundled Node, whose version moves with Electron. A ship target resting
+//     on an experimental flag in a runtime somebody else upgrades is one that
+//     breaks in a released build, on a player's machine, for a reason nobody
+//     changed.
+//
+// So this is the plan's own fallback (§1.1, second bullet): precompile, which
+// also makes PR 5's standalone dedicated server trivially portable.
+//
+// **WHY THE SOURCES ARE STAGED FIRST, which is the one surprising step.**
+// TypeScript refuses outright to EMIT a file whose import is both aliased and
+// carries a `.ts` extension (TS2877): it rewrites the extension only on
+// relative specifiers, and it never rewrites an alias at all. The engine's 112
+// `@game/lib/*.ts` imports are exactly that combination, so the alias has to be
+// gone before `tsc` sees the file. Staging a copy and rewriting the specifiers
+// there costs one directory and keeps the engine written in the repo's own
+// house style — which matters, because the alternative was to relativize
+// `@game/lib` across `src/` and lose the prefix swap that makes extraction into
+// oss-framework cheap.
+//
+// The alternative to all of it is a bundler, and it was refused for a reason
+// that already has a test in this repo: `typescript` is a declared devDependency
+// of both trees, while `rolldown` is here only as a transitive of vite — which
+// is precisely the class of undeclared dependency `mod/package.json` and
+// `tests/content/mod_toolchain_deps_test.ts` exist to prevent.
+
+import { execFileSync } from "node:child_process";
+import {
+  cpSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = fileURLToPath(new URL("..", import.meta.url));
+/** Where the rewritten copy of the sources is compiled FROM. Gitignored. */
+const stageDir = path.join(root, "electron", "server-src");
+/** Where the compiled server lands. Gitignored; `extraResources` copies it. */
+const outDir = path.join(root, "electron", "server-dist");
+
+/**
+ * Alias prefix → the directory it names, relative to the repo root. Keep in
+ * step with the four alias maps the builds read (tsconfig.json,
+ * pwa/tsconfig.json, vitest.config.ts, pwa/vite.config.ts) — a build that sees
+ * a different module graph than the game does is worse than one that fails.
+ */
+const ALIAS_DIRS = [["@game/lib/", "src/lib"]];
+const ALIAS_FILES = [
+  ["@game/core", "src/index.ts"],
+  ["@game/menu", "src/menu.ts"],
+];
+
+/** The trees that travel, by their path from the repo root. */
+const SOURCES = ["src", "server"];
+
+main();
+
+function main() {
+  rmSync(stageDir, { recursive: true, force: true });
+  rmSync(outDir, { recursive: true, force: true });
+
+  const staged = stage();
+  compile();
+  emitManifest();
+  copyRuntimeJson();
+
+  console.log(
+    `server: ${staged} files compiled into ${path.relative(root, outDir)}`,
+  );
+}
+
+/** Copy the sources and rewrite every alias specifier to a relative one.
+ * Returns how many TypeScript files were staged. */
+function stage() {
+  let count = 0;
+  // The stage sits under `electron/`, whose own manifest has no `type` field —
+  // so `nodenext` would read every staged file as CommonJS and refuse its ESM
+  // syntax outright. One manifest at the stage root settles it, and it has to
+  // be written BEFORE `tsc` looks, not with the output.
+  mkdirSync(stageDir, { recursive: true });
+  writeFileSync(
+    path.join(stageDir, "package.json"),
+    `${JSON.stringify({ type: "module" }, null, 2)}\n`,
+  );
+  for (const tree of SOURCES) {
+    for (const file of walk(path.join(root, tree))) {
+      if (!file.endsWith(".ts")) continue;
+      const dest = path.join(stageDir, path.relative(root, file));
+      mkdirSync(path.dirname(dest), { recursive: true });
+      writeFileSync(dest, relativizeAliases(readFileSync(file, "utf8"), file));
+      count++;
+    }
+  }
+  return count;
+}
+
+/** One file's source with `@game/…` specifiers turned into relative paths. */
+function relativizeAliases(source, file) {
+  const from = path.dirname(file);
+  return source.replace(
+    /((?:from|import)\s*\(?\s*)"([^"]+)"/g,
+    (match, lead, spec) => {
+      const target = aliasTarget(spec);
+      return target
+        ? `${lead}"${relative(from, path.join(root, target))}"`
+        : match;
+    },
+  );
+}
+
+/** The repo-relative path an alias specifier names, or null if it is not one. */
+function aliasTarget(spec) {
+  for (const [alias, file] of ALIAS_FILES) {
+    if (spec === alias) return file;
+  }
+  for (const [prefix, dir] of ALIAS_DIRS) {
+    if (spec.startsWith(prefix)) {
+      return path.posix.join(dir, spec.slice(prefix.length));
+    }
+  }
+  return null;
+}
+
+/** A specifier Node and TypeScript both accept: POSIX separators, and always
+ * explicitly relative (a bare `x.ts` is a package request, not a sibling). */
+function relative(from, to) {
+  const rel = path.relative(from, to).split(path.sep).join("/");
+  return rel.startsWith(".") ? rel : `./${rel}`;
+}
+
+function compile() {
+  const tsc = findTsc();
+  try {
+    execFileSync(tsc, ["-p", path.join(root, "server", "tsconfig.json")], {
+      stdio: "inherit",
+      cwd: root,
+    });
+  } catch {
+    // `tsc` has already printed its diagnostics; a stack trace on top of them
+    // adds nothing and buries the first error.
+    process.exit(1);
+  }
+}
+
+/**
+ * `type: module` so Node reads the emitted ESM as ESM, and the server's own
+ * runtime dependencies — declared once in `server/package.json`, so the
+ * packager and `tests/content/server_deps_test.ts` read one list rather than
+ * agreeing with each other by hand.
+ */
+function emitManifest() {
+  const manifest = JSON.parse(
+    readFileSync(path.join(root, "server", "package.json"), "utf8"),
+  );
+  writeFileSync(
+    path.join(outDir, "package.json"),
+    `${JSON.stringify(
+      {
+        name: manifest.name,
+        version: manifest.version,
+        private: true,
+        type: "module",
+        main: "server/main.js",
+        dependencies: manifest.dependencies ?? {},
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
+/**
+ * Any JSON the engine imports at runtime, which `tsc` does not emit.
+ *
+ * There is none today — every catalog is compiled TypeScript under
+ * `src/generated/` — and this exists so the day one appears is not the day the
+ * packaged app fails to start with a resolve error a developer's checkout
+ * cannot reproduce. Documentation and build manifests are deliberately left
+ * behind: the ship target carries what the process RUNS and nothing else.
+ */
+function copyRuntimeJson() {
+  for (const tree of SOURCES) {
+    const from = path.join(root, tree);
+    for (const file of walk(from)) {
+      const name = path.basename(file);
+      if (!name.endsWith(".json")) continue;
+      if (name === "package.json" || name === "tsconfig.json") continue;
+      const dest = path.join(outDir, tree, path.relative(from, file));
+      mkdirSync(path.dirname(dest), { recursive: true });
+      cpSync(file, dest);
+    }
+  }
+}
+
+/**
+ * `tsc`, from whichever tree has it.
+ *
+ * The desktop package job installs BOTH trees, but `electron/` is not a
+ * workspace member and its own CI installs only itself — so the compiler is
+ * looked for in the shell's tree as well as the root's. `typescript` is a
+ * declared devDependency of both, which is what makes the fallback honest
+ * rather than a hoisting accident.
+ */
+function findTsc() {
+  const bin = process.platform === "win32" ? "tsc.cmd" : "tsc";
+  const candidates = [
+    path.join(root, "node_modules", ".bin", bin),
+    path.join(root, "electron", "node_modules", ".bin", bin),
+  ];
+  for (const candidate of candidates) {
+    try {
+      statSync(candidate);
+      return candidate;
+    } catch {
+      // Try the next tree.
+    }
+  }
+  console.error(
+    "server: no `tsc` found. Run `npm ci` at the repo root (or in electron/).",
+  );
+  process.exit(1);
+}
+
+function* walk(dir) {
+  let entries;
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry);
+    if (statSync(full).isDirectory()) yield* walk(full);
+    else yield full;
+  }
+}
