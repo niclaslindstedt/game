@@ -28,7 +28,7 @@
 // the blueprint names, so a generated THE MOON is still the moon.
 
 import { createRng, type Rng } from "@game/lib/rng.ts";
-import { vec, type Vec2 } from "@game/lib/vec.ts";
+import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import type {
@@ -61,6 +61,7 @@ import {
   carveChambers,
   chamberCenter,
   doorDistances,
+  doorGaps,
   wallSegments,
   type Chamber,
   type ChamberGrid,
@@ -182,18 +183,29 @@ function pickSpawnChamber(
    * wins — which is what keeps a LARGE map from occasionally opening in the
    * boss's own neighbourhood.
    */
+  //
+  // …and the slack WIDENS until the landing is genuinely far away. One doorway
+  // of it is enough almost always; on the seeds where it is not, every cell at
+  // the graph's far end sits in the boss's own neighbourhood and the map opens
+  // with the objective in plain sight — measured, one large goodco seed in
+  // eight landed the hero 540 px from PAYLOAD-1. So the doorway requirement is
+  // relaxed a door at a time until the winner clears a floor of a third of the
+  // map's diagonal, which is the distance at which the thing being hidden is
+  // over the horizon rather than across the room.
+  const floor = Math.hypot(width, height) / 3;
   const pickFarthest = (pool: Chamber[]): Chamber => {
     const maxReach = pool.reduce((m, c) => Math.max(m, reach(c)), 0);
-    const tied = pool.filter((c) => reach(c) >= maxReach - 1);
-    return tied.reduce((best, c) => (gap(c) > gap(best) ? c : best));
+    let best: Chamber | null = null;
+    for (let slack = 1; slack <= maxReach + 1; slack++) {
+      const tied = pool.filter((c) => reach(c) >= maxReach - slack);
+      best = tied.reduce((far, c) => (gap(c) > gap(far) ? c : far));
+      if (gap(best) >= floor) break;
+    }
+    return best as Chamber;
   };
-  const eligible = grid.chambers.filter(
-    (c) => c.id !== goal.id && areaOf(areas, c).spawn !== false,
-  );
-  const pool =
-    eligible.length > 0
-      ? eligible
-      : grid.chambers.filter((c) => c.id !== goal.id);
+  const anywhere = grid.chambers.filter((c) => c.id !== goal.id);
+  const eligible = anywhere.filter((c) => areaOf(areas, c).spawn !== false);
+  const pool = eligible.length > 0 ? eligible : anywhere;
   if (regions && regions.length > 0) {
     const rect = regionRect(
       regions[Math.floor(rng() * regions.length)] as string,
@@ -204,9 +216,20 @@ function pickSpawnChamber(
       const mid = chamberCenter(c);
       return regionContains(rect, mid.x, mid.y);
     });
-    if (inside.length > 0) return pickFarthest(inside);
+    if (inside.length > 0) {
+      const pick = pickFarthest(inside);
+      if (gap(pick) >= floor) return pick;
+    }
   }
-  return pickFarthest(pool);
+  const pick = pickFarthest(pool);
+  // WHERE he may land is a preference; the LONG WALK is the rule. A carve can
+  // come out with barely any of the district a mission lands its hero on — one
+  // outdoor cell on a floor of sealed labs — and then the preference decides the
+  // landing all by itself, boss in plain sight. When that happens the whole map
+  // is back in play and the far side of it wins.
+  return gap(pick) >= floor || pool === anywhere
+    ? pick
+    : pickFarthest(anywhere);
 }
 
 /**
@@ -409,6 +432,34 @@ function buildHellgates(
   return out;
 }
 
+/**
+ * A BEAT ACROSS THE ROOM: the far end of the cell a set piece was placed in,
+ * measured down its LONGER axis and held a wall's width off the far side.
+ *
+ * One waypoint is the whole route, because the engine walks `at → patrol[0]`
+ * and back for as long as the mob stays dormant (`stepPatrol`) — so a single
+ * point is a sweep, and a sweep is what a sentry walks. Down the long axis
+ * rather than diagonally, because the diagonal of a cell is the line most
+ * likely to have the room's furniture standing on it, and a patroller that
+ * wedges on a crate is a patroller standing still.
+ */
+function patrolBeat(room: Chamber, at: Vec2): Vec2 {
+  const inset = Math.min(WALL_INSET * 1.5, room.w / 3, room.h / 3);
+  return room.w >= room.h
+    ? vec(
+        Math.round(
+          at.x - room.x < room.w / 2 ? room.x + room.w - inset : room.x + inset,
+        ),
+        Math.round(at.y),
+      )
+    : vec(
+        Math.round(at.x),
+        Math.round(
+          at.y - room.y < room.h / 2 ? room.y + room.h - inset : room.y + inset,
+        ),
+      );
+}
+
 /** A pinned set piece plus its retinue, scattered around `at`. */
 function pinSetPiece(
   piece: MapSetPiece,
@@ -427,6 +478,9 @@ function pinSetPiece(
   // An elite that wakes RAISES its cell's knot — the sentry who pulls the whole
   // room, and the reason a careless search costs more than a careful one.
   if (alarms) lead.alarms = alarms;
+  // …and one that WALKS its patch is somewhere else the second time the hero
+  // comes through, which is the difference between staff and statues.
+  if (piece.patrol) lead.patrol = [patrolBeat(chamber, at)];
   out.push(lead);
   for (const guard of piece.escort ?? []) {
     for (let i = 0; i < guard.count; i++) {
@@ -584,6 +638,14 @@ export function generateLevel(
   const band = bp.annex ? bp.annex.height + annexMargin * 2 : 0;
   const width = spec.width;
   const height = spec.height + band;
+  // A KEY PROMISES ITS ROOM. The lockable districts are seeded once per key
+  // before the weighted roll (see `assignAreas`), because a keycard the player
+  // fought an elite for and which opens nothing on this seed is worse than no
+  // keycard at all — and the odds alone left a third of the runs without one.
+  const lockable = bp.areas.filter((a) => a.lock === true).map((a) => a.id);
+  const promised = (bp.locks ?? []).map(
+    (_, i) => lockable[i % Math.max(1, lockable.length)] as string,
+  );
   const grid = carveChambers(
     spec.width,
     spec.height,
@@ -595,6 +657,7 @@ export function generateLevel(
     bp.layout.cluster,
     bp.layout.wall,
     rng,
+    lockable.length > 0 ? promised : [],
   );
 
   // --- Where the search ends, and where it starts ----------------------------
@@ -650,13 +713,110 @@ export function generateLevel(
   // cul-de-sac and the trader's pitch carry design zones that suppress ambient
   // spawns, so a knot placed there would budget forty mobs that never arrive.
   const offLimits = new Set([spawn.id, goal.id, bossHome.id]);
-  const chestRooms = detourRank(grid, offLimits, depth).slice(
-    0,
-    Math.max(2, Math.round(grid.chambers.length / 5)),
+  // A LOCKABLE cell is a dead end by construction, which is exactly what the
+  // cache picker looks for — so without this the two features fight over the
+  // same rooms and a map's one keyed door goes missing on the seeds where the
+  // cache won. The vaults pay their own cache out below.
+  const lockableIds = new Set(
+    grid.chambers
+      .filter((c) => areaOf(bp.areas, c).lock === true)
+      .map((c) => c.id),
   );
+  const chestRooms = detourRank(
+    grid,
+    new Set([...offLimits, ...lockableIds]),
+    depth,
+  ).slice(0, Math.max(2, Math.round(grid.chambers.length / 5)));
   const chestIds = new Set(chestRooms.map((c) => c.id));
+
+  // --- The vaults -----------------------------------------------------------
+  // THE KEYED ROOMS: one sealed cell per door id the blueprint still has
+  // unspent, taken from the DEEPEST lockable cells the carve grew — a locked
+  // room the hero walks into in the opening minute is a locked room he has no
+  // key for yet, which reads as a bug rather than as a promise.
+  //
+  // What goes IN is a cache and whatever knot the cell was going to hold; what
+  // stays out is everything the run needs — the boss, the landing, every set
+  // piece (a key locked inside the room it opens is an unfinishable run), the
+  // trader, the story trail. That exclusion is not a nicety, it is the whole
+  // reason this can be rolled per seed instead of drawn by hand.
+  //
+  // A ROOM IS A DISTRICT, NOT A CELL. Two lockable cells that grew side by side
+  // are one place — a store with an inner room — so they are grouped into
+  // connected components and a key is spent on the COMPONENT. Locking them
+  // separately would hang a second door inside the vault the first key opened,
+  // which reads as the map stuttering rather than as architecture.
+  const lockCells = grid.chambers.filter(
+    (c) => lockableIds.has(c.id) && !offLimits.has(c.id),
+  );
+  const lockIds = new Set(lockCells.map((c) => c.id));
+  const rooms: Chamber[][] = [];
+  const grouped = new Set<number>();
+  for (const cell of lockCells) {
+    if (grouped.has(cell.id)) continue;
+    const room: Chamber[] = [];
+    const queue = [cell];
+    grouped.add(cell.id);
+    while (queue.length > 0) {
+      const at = queue.pop() as Chamber;
+      room.push(at);
+      for (const next of grid.neighbors[at.id] ?? []) {
+        if (!lockIds.has(next) || grouped.has(next)) continue;
+        grouped.add(next);
+        queue.push(grid.chambers[next] as Chamber);
+      }
+    }
+    rooms.push(room);
+  }
+  // A VAULT IS A DETOUR, NEVER THE WAY ON — and this is the check that makes it
+  // one. The carve's doorway tree is free to route the map's only path THROUGH a
+  // lockable district, and sealing that district cuts the mission in half:
+  // measured before this existed, one goodco seed in eight put the boss, every
+  // elite and the exit behind a keycard. So a room is only sealed if the map
+  // still hangs together without it — every other cell reachable from the
+  // landing with this room and every room already sealed taken out.
+  const sealed = new Set<number>();
+  const survivesWithout = (room: Chamber[]): boolean => {
+    const shut = new Set([...sealed, ...room.map((c) => c.id)]);
+    if (shut.has(spawn.id)) return false;
+    const seen = new Set<number>([spawn.id]);
+    const queue = [spawn.id];
+    while (queue.length > 0) {
+      const at = queue.pop() as number;
+      for (const next of grid.neighbors[at] ?? []) {
+        if (shut.has(next) || seen.has(next)) continue;
+        seen.add(next);
+        queue.push(next);
+      }
+    }
+    return grid.chambers.every((c) => shut.has(c.id) || seen.has(c.id));
+  };
+  // Deepest first: a locked door in the opening minute is a door the hero has no
+  // key for yet, which reads as a wall rather than as a promise.
+  const vaultRooms: Chamber[][] = [];
+  const byDepth = rooms.sort(
+    (a, b) =>
+      Math.max(...b.map((c) => depth[c.id] as number)) -
+      Math.max(...a.map((c) => depth[c.id] as number)),
+  );
+  for (const room of byDepth) {
+    if (vaultRooms.length >= (bp.locks ?? []).length) break;
+    if (!survivesWithout(room)) continue;
+    for (const cell of room) sealed.add(cell.id);
+    vaultRooms.push(room);
+  }
+  // The id each one answers to — a real key, carried by somebody outside it.
+  const vaultKeys = new Map<number, string>();
+  vaultRooms.forEach((room, i) => {
+    for (const cell of room)
+      vaultKeys.set(cell.id, (bp.locks as string[])[i] as string);
+  });
+  const vaultIds = new Set(vaultKeys.keys());
+
   const throughfare = grid.chambers
-    .filter((c) => !offLimits.has(c.id) && !chestIds.has(c.id))
+    .filter(
+      (c) => !offLimits.has(c.id) && !chestIds.has(c.id) && !vaultIds.has(c.id),
+    )
     .sort((a, b) => (depth[a.id] as number) - (depth[b.id] as number));
   // The trader keeps a mid-depth cell — the halfway shop every mission wants,
   // wherever halfway turned out to be.
@@ -674,6 +834,24 @@ export function generateLevel(
     new Map([[spawn.id, farSide(spawn, playerSpawn)]]),
     rng,
   );
+  // A MAN WHO NEVER MOVES IS STILL FOUND. The opening knot stands at the FAR
+  // side of the landing cell so the hero has floor to arrive on before he meets
+  // it — and a knot arms on APPROACH, so in a cell wider than the default 300 px
+  // trigger, a player who plants his feet and never steers is never approached
+  // by anything at all. That is not the breather a quiet landing is for, it is a
+  // sanctuary: measured, one goodco seed left an idle MEDIUM run alive past a
+  // full minute, with only the three scripted interns ever arriving. So the
+  // OPENING knot alone is widened to reach the pad. It costs the arrival nothing
+  // — the mobs still have the whole room to cross, which IS the breather — and
+  // it keeps the promise the whole difficulty curve rests on: doing nothing
+  // loses.
+  const opener = knots.find((k) => k.id === `k${spawn.id}`);
+  if (opener) {
+    opener.triggerRadius = Math.max(
+      opener.triggerRadius ?? 0,
+      Math.round(distance(opener.at, playerSpawn)) + 40,
+    );
+  }
   // A knot is named after the cell it holds (`k<id>`), so an elite standing in
   // that cell can name it as its `alarms` link without a lookup table.
   const knotted = new Set(knots.map((k) => k.id));
@@ -689,7 +867,17 @@ export function generateLevel(
   // One lair per cell — two named neighbours on the same patch of street reads
   // as a coincidence rather than as somebody's house.
   const lairRooms = new Set<number>();
-  const elitePool = throughfare.length > 0 ? throughfare : grid.chambers;
+  // The fallback matters as much as the pool: on a small carve the thoroughfare
+  // can come out empty (endpoints, caches and vaults taking every cell), and
+  // falling back to EVERY cell put a keycard-carrying elite inside the room his
+  // own card opens. Whatever else happens, a set piece never stands in a vault.
+  const openCells = grid.chambers.filter((c) => !vaultIds.has(c.id));
+  const elitePool =
+    throughfare.length > 0
+      ? throughfare
+      : openCells.length > 0
+        ? openCells
+        : grid.chambers;
   const eliteRooms = spread(elitePool, bp.elites.length);
   bp.elites.forEach((piece, i) => {
     const room = eliteRooms[i] as Chamber;
@@ -771,6 +959,17 @@ export function generateLevel(
       spawns.push(...pinSetPiece(keeper, chamberCenter(room), rng, room));
   });
 
+  // THE VAULTS' OWN HAUL. A locked room has to be worth the key, and the payoff
+  // is the same cache a cul-de-sac pays — behind a door instead of behind a
+  // walk. It keeps its knot (see the vault selection above): what is worth
+  // locking up is worth standing over.
+  for (const room of vaultRooms) {
+    const cell = room[0] as Chamber;
+    chests.push({
+      at: pointIn(cell, rng, Math.min(WALL_INSET, cell.w / 3, cell.h / 3)),
+    });
+  }
+
   // The boss holds the goal cell — the annex when the mission ends in one, the
   // carved corner otherwise — offset off dead centre so a `reachExit` door (or
   // its landmark) is not standing inside him. His escort stands with him.
@@ -834,8 +1033,12 @@ export function generateLevel(
     if (enemyDef(spawn.enemy).disposition !== "neutral") continue;
     // A cell the horde stands in, so the bystander is somewhere the player has
     // a reason to walk — never the boss's cell, the trader's or a cache's,
-    // which are quiet by design and would hide him behind the ending.
-    const rooms = grid.chambers.filter((c) => knotIn(c) !== undefined);
+    // which are quiet by design and would hide him behind the ending, and never
+    // a VAULT: an errand whose giver is sealed behind a keycard is a chain that
+    // stops with no way to ask why.
+    const rooms = grid.chambers.filter(
+      (c) => knotIn(c) !== undefined && !vaultIds.has(c.id),
+    );
     const room = rooms[Math.floor(rng() * rooms.length)];
     if (!room) continue;
     const at = chamberCenter(room);
@@ -874,11 +1077,38 @@ export function generateLevel(
   // walk, not stranded past a lift — while its furniture is the whole point of
   // it: the control room has to look like a control room.
   const endpoints = new Set([spawn.id, goal.id]);
-  const offMap = new Set([spawn.id, goal.id, bossHome.id]);
+  const offMap = new Set([spawn.id, goal.id, bossHome.id, ...vaultIds]);
   const walls: NonNullable<LevelDef["walls"]> = buildWalls(
     bp,
     wallSegments(grid, bp.layout.doorWidth),
   );
+  // THE LOCKED DOORS: every doorway into a sealed cell, filled back in with the
+  // chain the matching keycard dissolves. A vault with three ways in gets three
+  // doors on ONE id — a key opens the ROOM, not one of its doorways, and a
+  // second unlocked entrance would make the first one scenery.
+  const doors: NonNullable<LevelDef["doors"]> = [];
+  if (vaultIds.size > 0) {
+    const material = areaById(
+      bp.areas,
+      ((vaultRooms[0] as Chamber[])[0] as Chamber).area,
+    );
+    const radius =
+      bp.objects.find((o) => o.id === (material.wall ?? bp.layout.wall))
+        ?.radius ?? 8;
+    for (const gap of doorGaps(grid, bp.layout.doorWidth)) {
+      const key = vaultKeys.get(gap.a) ?? vaultKeys.get(gap.b);
+      if (!key) continue;
+      // A doorway INSIDE one vault stays open: the key opens the room, and a
+      // second door between two halves of it is the same lock twice.
+      if (vaultKeys.get(gap.a) === vaultKeys.get(gap.b)) continue;
+      const from =
+        gap.axis === "v" ? vec(gap.coord, gap.from) : vec(gap.from, gap.coord);
+      const to =
+        gap.axis === "v" ? vec(gap.coord, gap.to) : vec(gap.to, gap.coord);
+      doors.push({ id: key, from, to, radius });
+    }
+  }
+
   // The annex's own box, the one wall set not derived from a border — it has
   // none, which is the point of it (see `MapAnnex`).
   if (annexRoom && bp.annex)
@@ -942,6 +1172,8 @@ export function generateLevel(
         to: arrival,
         sprite: padSprite,
         ...(bp.annex.downLabel ? { label: bp.annex.downLabel } : {}),
+        // The way DOWN may be keyed; the way back up never is (see `MapAnnex`).
+        ...(bp.annex.lock ? { opensWith: bp.annex.lock } : {}),
       },
       {
         id: "lift_up",
@@ -952,6 +1184,7 @@ export function generateLevel(
       },
     ];
   }
+  if (doors.length > 0) def.doors = doors;
   const fauna = buildFauna(bp, grid, rng);
   if (fauna) def.fauna = fauna;
   if (lairs.length > 0) def.lairs = lairs;

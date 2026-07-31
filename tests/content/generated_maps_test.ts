@@ -47,6 +47,7 @@ import {
   SECRET_LEVEL_ORDER,
   setGeneratedMapSize,
   skipCutscene,
+  skipStoryOpening,
   step,
   zoneContains,
   type Difficulty,
@@ -163,8 +164,17 @@ describe("generated levels", () => {
         for (const seed of WALK_SEEDS) {
           const def = resolveLevelDef(id, seed, size);
           // Built from a real run, so it sees the walls, the scattered rock and
-          // the crates exactly as the autopilot does.
-          const grid = buildNavGrid(createGame(seed, id, "medium"));
+          // the crates exactly as the autopilot does — with the KEYED DOORS
+          // dissolved, because a vault's cache is meant to be behind one and the
+          // key that opens it is proven reachable by the test below. What is
+          // asked here is that the map has a way to everything, not that it has
+          // one before the hero has earned it.
+          const run = createGame(seed, id, "medium");
+          const doorParts = new Set(run.doors.flatMap((d) => d.obstacleIds));
+          const grid = buildNavGrid({
+            ...run,
+            obstacles: run.obstacles.filter((o) => !doorParts.has(o.id)),
+          });
           const targets: [string, { x: number; y: number }][] = [];
           const goal = goalOf(def);
           if (goal) targets.push(["objective", goal]);
@@ -211,6 +221,139 @@ describe("generated levels", () => {
     setGeneratedMapSize("medium");
     expect(unreachable.slice(0, 8)).toEqual([]);
   }, 120_000);
+
+  it("never lock anything the run needs behind its own key", () => {
+    // THE KEYED ROOMS (`MapArea.lock`), and the one way they can go wrong: a
+    // vault is a dead end with a cache in it, so the map is playable with every
+    // door shut — but a key rolled INSIDE the room it opens, or a boss, or the
+    // landing, is a run that cannot be finished, and it would be a run in
+    // twenty rather than every run. So the check is made with the doors SHUT:
+    // everything the mission requires has to be reachable without opening one.
+    const trapped: string[] = [];
+    for (const id of MISSIONS)
+      for (const size of SIZES) {
+        setGeneratedMapSize(size);
+        for (const seed of WALK_SEEDS) {
+          const def = resolveLevelDef(id, seed, size);
+          const doors = def.doors ?? [];
+          if (doors.length === 0) continue;
+          const state = createGame(seed, id, "medium");
+          // TWO grids, and the difference between them is the whole test. One of
+          // a run with its doors STANDING (a locked door is a solid chain of
+          // obstacles, so this is the map before any key), one with the doors
+          // dissolved exactly as their keycards dissolve them. A thing reachable
+          // in the second and not the first is behind a lock; a thing reachable
+          // in neither is a carve problem, and the reachability suite above owns
+          // that one — this test is about the KEYS.
+          const grid = buildNavGrid(state);
+          const doorParts = new Set(state.doors.flatMap((d) => d.obstacleIds));
+          const unlocked = buildNavGrid({
+            ...state,
+            obstacles: state.obstacles.filter((o) => !doorParts.has(o.id)),
+          });
+          const shut: [string, { x: number; y: number }][] = [];
+          const goal = goalOf(def);
+          if (goal) shut.push(["objective", goal]);
+          for (const s of def.spawns)
+            if ("at" in s) shut.push([`spawn ${s.enemy}`, s.at]);
+          def.placedItems?.forEach((p, i) =>
+            shut.push([`item ${i} (${p.kind})`, p.pos]),
+          );
+          for (const at of def.merchantSpawns ?? [])
+            shut.push(["the trader", at]);
+          const origins = [def.playerSpawn];
+          for (const lift of def.elevators ?? [])
+            if (origins.some((from) => findPath(unlocked, from, lift.pos)))
+              origins.push(lift.to);
+          for (const [what, at] of shut) {
+            const withKey = origins.some((from) =>
+              findPath(unlocked, from, at),
+            );
+            const withoutKey = origins.some((from) => findPath(grid, from, at));
+            if (withKey && !withoutKey)
+              trapped.push(
+                `${id}/${size}/${seed}: ${what} is behind a locked door`,
+              );
+          }
+        }
+      }
+    setGeneratedMapSize("medium");
+    expect(trapped.slice(0, 8)).toEqual([]);
+  }, 120_000);
+
+  it("hang every locked door on a key somebody actually drops", () => {
+    // A door id has to be the `unlocks` of a story item, or the room is sealed
+    // for good. The blueprint schema checks the id exists; this checks the
+    // CARVE only ever emits ids from that list, on every seed and size.
+    const keys = new Set(
+      Object.values(STORY_ITEM_DEFS)
+        .map((d) => d.unlocks)
+        .filter(Boolean),
+    );
+    for (const id of MISSIONS)
+      for (const size of SIZES)
+        for (const seed of SEEDS) {
+          const def = resolveLevelDef(id, seed, size);
+          for (const door of def.doors ?? [])
+            expect(keys.has(door.id), `${id}/${size}/${seed} door`).toBe(true);
+          for (const lift of def.elevators ?? [])
+            if (lift.opensWith)
+              expect(
+                keys.has(lift.opensWith),
+                `${id}/${size}/${seed} lift`,
+              ).toBe(true);
+        }
+  });
+
+  it("walk the sentries a real beat inside their own room", () => {
+    // A patrolling elite is the difference between staff and statues, and the
+    // route is DERIVED (a sweep down the long axis of whatever room the carve
+    // gave him) — so what is checked is that the beat is real: long enough to
+    // read as a walk, and inside the map.
+    for (const id of MISSIONS)
+      for (const size of SIZES)
+        for (const seed of WALK_SEEDS) {
+          const def = resolveLevelDef(id, seed, size);
+          for (const spawn of def.spawns) {
+            if (!("at" in spawn) || !spawn.patrol) continue;
+            const end = spawn.patrol[0] as { x: number; y: number };
+            const leg = Math.hypot(end.x - spawn.at.x, end.y - spawn.at.y);
+            expect(
+              leg,
+              `${id}/${size}/${seed} ${spawn.enemy} paces on the spot`,
+            ).toBeGreaterThan(120);
+            expect(end.x).toBeGreaterThanOrEqual(0);
+            expect(end.x).toBeLessThanOrEqual(def.width);
+            expect(end.y).toBeGreaterThanOrEqual(0);
+            expect(end.y).toBeLessThanOrEqual(def.height);
+          }
+        }
+  });
+
+  it("keeps the sentries walking — the beat is not just data", () => {
+    // The route reaching the DEF is half of it; the other half is the engine
+    // walking it, which needs the run actually playing. GOODCO HQ is the mission
+    // whose blueprint asks for patrols.
+    const state = createGame(3, "goodco_hq", "medium");
+    skipStoryOpening(state);
+    const walker = state.enemies.find((e) => e.defId === "night_manager");
+    expect(
+      walker,
+      "the night manager was not carved onto the floor",
+    ).toBeDefined();
+    const post = { ...(walker as { pos: { x: number; y: number } }).pos };
+    let farthest = 0;
+    for (let i = 0; i < 900; i++) {
+      // A sight-pinned thought stops the world; tap through it, as a player does.
+      while (state.dialogue) advanceDialogue(state);
+      step(state, { steering: false, target: { x: 0, y: 0 }, jump: false }, 16);
+      const at = (walker as { pos: { x: number; y: number } }).pos;
+      farthest = Math.max(farthest, Math.hypot(at.x - post.x, at.y - post.y));
+    }
+    // He walks his patch while DORMANT — the point of the whole thing is that
+    // the room is not the same room the second time through.
+    expect(farthest).toBeGreaterThan(120);
+  }, 20_000);
 
   it("emit no intended path, so nothing points at the boss", () => {
     // The app's guidance arrow follows `path`; a generated map that shipped one

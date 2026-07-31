@@ -11,7 +11,7 @@ import {
   skipCutscene,
   step,
 } from "@game/core";
-import type { Enemy, GameEvent, GameInput, GameState } from "@game/core";
+import type { Enemy, GameEvent, GameInput, GameState, Vec2 } from "@game/core";
 
 export const SEED = 42;
 export const DT = 16;
@@ -107,6 +107,43 @@ export function clearStage(state: GameState): void {
   state.enemies = state.enemies.filter(
     (e) => enemyDef(e.defId).role === "boss",
   );
+}
+
+/**
+ * A spot exactly `range` px from `from` with nothing standing on it.
+ *
+ * Parking a test mob at a fixed offset is how a surgical arrangement used to be
+ * written, and it stopped being safe the day every map became a carve: the spot
+ * lands inside a prop on some seeds, the collision pass ejects the mob a hundred
+ * px on the first tick, and a test measuring a distance quietly measures a
+ * different one. This walks the bearings instead, so the RANGE is what the test
+ * asked for and the direction is whatever the floor allows. Falls back to due
+ * east when a map has no clear bearing at that range at all.
+ */
+export function openSpotNear(
+  state: GameState,
+  from: Vec2,
+  range: number,
+  clearance = 40,
+): Vec2 {
+  const BEARINGS = 24;
+  for (let i = 0; i < BEARINGS; i++) {
+    const a = (i / BEARINGS) * Math.PI * 2;
+    const spot = {
+      x: from.x + Math.cos(a) * range,
+      y: from.y + Math.sin(a) * range,
+    };
+    if (spot.x < clearance || spot.y < clearance) continue;
+    if (spot.x > state.level.width - clearance) continue;
+    if (spot.y > state.level.height - clearance) continue;
+    const blocked = state.obstacles.some((o) => {
+      const reach =
+        Math.max(o.radius, o.half?.x ?? 0, o.half?.y ?? 0) + clearance;
+      return Math.hypot(o.pos.x - spot.x, o.pos.y - spot.y) < reach;
+    });
+    if (!blocked) return spot;
+  }
+  return { x: from.x + range, y: from.y };
 }
 
 /**

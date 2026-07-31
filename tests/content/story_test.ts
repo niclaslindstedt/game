@@ -400,10 +400,10 @@ describe("catalog integrity", () => {
         expect(STORY_ITEM_DEFS[id], id).toBeDefined();
       }
     }
-    // A door has exactly ONE key. The doors themselves are not carved onto a
-    // map today (a blueprint has no way to name one — see docs/mapgen.md), so
-    // what is checked here is the half that still binds: two keycards claiming
-    // the same door would make one of them meaningless the day they are.
+    // A door has exactly ONE key. Which doors a carve actually hangs is the
+    // blueprint's business (`locks:` / `annex.lock`, checked in
+    // generated_maps_test.ts); what binds here is the catalog half — two
+    // keycards claiming the same door would make one of them meaningless.
     const doorIds = new Set(
       Object.values(STORY_ITEM_DEFS)
         .map((d) => d.unlocks)

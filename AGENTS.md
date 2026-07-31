@@ -701,15 +701,43 @@ against `content/ladder.yaml` by the same shared reader
 (`scripts/level-data/ladder.mjs`), so a `savage` knot means the same mob level on
 every map.
 
-**WHAT A CARVE STILL CANNOT DO, so nothing quietly relies on it: LOCKED DOORS
-and PATROLS.** A blueprint has no way to name either, so `LevelDef.doors` and a
-pinned spawn's `patrol` route reach no shipped map — the engine rules are intact
-and guarded (`tests/engine/doors_test.ts`, fixture levels), but the campaign's
-six keycards are lore rather than keys today, and the shipped venues' roaming
-sentries potter (`ai.idle`) instead of walking a beat. Both want a blueprint
-grammar of their own (an area sealed by a named key; a route derived from a
-cell's shape) and both are a design job rather than a plumbing one — see the
-`mapgen-improvement` skill.
+**A KEYCARD OPENS A ROOM THE CARVE PICKED — `lock:` on an area, `locks:` on the
+blueprint.** The campaign's keycards were lore for as long as a carve had no way
+to say "this district is sealed": a blueprint names a `lock: true` AREA (the kind
+of place worth locking — GoodCo's vault, Mars's shrine) and a `locks:` list of
+STORY ITEM ids, and the carve hangs one door per key on the borders of the
+deepest district it can afford to seal. Five rules make it a room rather than a
+soft-lock:
+
+- **A ROOM IS A DISTRICT, NOT A CELL.** Adjacent lockable cells are grouped into
+  one room first; hanging a door per cell would put a second lock inside the
+  room the first key already opened.
+- **SEALING IT MUST NOT CUT THE MAP IN HALF** (`survivesWithout`). A district
+  can grow across the map's waist, and a door there locks the boss away behind a
+  key that is also behind it. A candidate whose removal disconnects the carve is
+  refused and the next one tried.
+- **NOTHING THE RUN NEEDS GOES INSIDE.** The landing, the objective, the boss's
+  home, every set piece, bystander, placed item and well are excluded from the
+  vault cells (`openCells`, `offMap`), so the key is always somewhere the hero
+  can reach without it.
+- **A LOCKABLE DISTRICT DOES NOT SPREAD** (`areas.ts`). Seeded like any other, it
+  would swallow a small map; it stays the cell it was seeded on, and one seed per
+  key is `promised` to `carveChambers` so a declared key always has a room.
+- **THE ROOM PAYS FOR THE WALK.** Each vault gets its own cache and keeps its
+  knot: what is worth locking up is worth standing over.
+
+The ANNEX takes the same treatment through `annex.lock` — a keyed ELEVATOR
+(`ElevatorState.opensWith`), refused in `elevator.ts` with an `elevatorLocked`
+event rather than silently, so the app can answer with a locked call light and
+the key's name.
+
+**AND THE SENTRIES WALK A BEAT — `patrol: true` on an elite set piece.** A route
+is DERIVED, never authored: `patrolBeat` sweeps the pinned elite down the long
+axis of its own cell, inset off the walls, so the beat fits whatever room the
+carve grew it in. One waypoint is the whole route (the engine walks `at →
+patrol[0]` and back), and it deliberately avoids the cell's centre, which is
+where the furniture stands — a patroller wedged on a crate is a patroller
+standing still.
 
 **Objects are typed by PURPOSE, never by position** (`wall`, `obstacle`, `cover`,
 `crate`, `chest`, `decor`, `landmark`, `building`). The type is what lets the

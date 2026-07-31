@@ -72,6 +72,24 @@ export type MapArea = {
    */
   once?: boolean;
   /**
+   * A KEYED ROOM: this district may be SEALED, its doorways carrying a locked
+   * door that only its own keycard opens (`LevelDef.doors`, the engine's
+   * story-item keys).
+   *
+   * It is a permission rather than an instruction: the carve locks a cell of
+   * this kind only while the blueprint still has an unspent door id in its
+   * `locks` list, so a map with one key has one vault however many cells of the
+   * kind it grew. What is behind the door is the payoff — a cache and whatever
+   * stands guard over it — and what is NEVER behind it is anything the run
+   * requires: no boss, no landing, no set piece, no story pickup. A key locked
+   * inside the room it opens is a run that cannot be finished, and it would be
+   * rolled rather than authored, which is the worst kind of bug to ship.
+   *
+   * Only a `hard` district can be locked (the build refuses otherwise): a door
+   * across a border that was already open or gated is a door with a way round.
+   */
+  lock?: boolean;
+  /**
    * STREET BLOCKS: lay this area's `building` structures out along a street
    * instead of scattering them (see `buildBuildings`). The number is the street's
    * width in world px.
@@ -211,6 +229,11 @@ function rollArea(areas: MapArea[], rng: Rng): MapArea {
  * @param adjacent  cell id → the cells it shares any border with
  * @param areas     the blueprint's area palette
  * @param cluster   0..1 — bigger districts (fewer seeds) as it climbs
+ * @param promised  area ids the map is PROMISED — one seed each, taken before
+ *                  the weighted roll, so a district something else depends on
+ *                  cannot fail to appear. The keyed rooms use it: a map with
+ *                  three keycards on three elites has to have three rooms, or a
+ *                  card the player fought for opens nothing on that seed.
  * @returns one area id per cell, indexed by cell id
  */
 export function assignAreas(
@@ -219,6 +242,7 @@ export function assignAreas(
   areas: MapArea[],
   cluster: number,
   rng: Rng,
+  promised: string[] = [],
 ): string[] {
   if (chambers.length === 0) return [];
   const clamped = Math.max(0, Math.min(0.95, cluster));
@@ -245,7 +269,16 @@ export function assignAreas(
   let live = pool;
   for (let i = 0; i < seedCount; i++) {
     const id = order[i] as number;
-    const area = rollArea(live, rng);
+    // The PROMISED districts take the first seeds, in order, and are then out of
+    // the running: they are the ones something else in the mission depends on
+    // existing, so they cannot be left to the odds. Everything after them is the
+    // ordinary weighted roll.
+    const owed = promised[i];
+    const area = owed
+      ? (live.find((a) => a.id === owed) ??
+        pool.find((a) => a.id === owed) ??
+        rollArea(live, rng))
+      : rollArea(live, rng);
     assigned[id] = area.id;
     if (area.once) live = live.filter((a) => a !== area);
     // Withdrawing the last entry would leave nothing to roll; the map falls back
@@ -255,8 +288,16 @@ export function assignAreas(
   }
   // Simultaneous spread: every district advances one ring per pass, so two
   // neighbouring districts meet halfway instead of one overrunning the other.
+  //
+  // A LOCKABLE district does not spread at all, and that is what keeps it a
+  // ROOM. It is seeded first (it is promised), so in a simultaneous spread it
+  // has the head start and grows fastest — measured, one keyed seed took four of
+  // Mars's six cells and the "vault" became most of the map with the mission
+  // inside it. A keyed room is a room: one cell, or the couple that happen to
+  // adjoin when two keys seed side by side.
   for (let head = 0; head < queue.length; head++) {
     const at = queue[head] as number;
+    if (areaById(areas, assigned[at] as string).lock === true) continue;
     for (const next of adjacent[at] as number[]) {
       if (assigned[next] !== null) continue;
       assigned[next] = assigned[at] as string;
@@ -266,7 +307,7 @@ export function assignAreas(
   // A cell the spread never reached (one with no adjacency at all) still needs a
   // type. It takes an ordinary district, never a `once` one — the map already
   // grew its single town, and a stray second one is exactly what `once` is for.
-  const leftovers = pool.filter((a) => !a.once);
+  const leftovers = pool.filter((a) => !a.once && a.lock !== true);
   const fallback = leftovers.length > 0 ? leftovers : pool;
   return assigned.map((t) => t ?? rollArea(fallback, rng).id);
 }

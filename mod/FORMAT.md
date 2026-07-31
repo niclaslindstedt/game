@@ -139,6 +139,20 @@ Three rules to author by:
   name the game accepts, and a typo is a compile error rather than a boss quietly
   relocated.
 
+**A KEYCARD LOCKS A ROOM.** Mark an area `lock: true` (a `hard` enclosure that
+may hold neither the boss nor the landing) and list the STORY ITEM ids that open
+one under `locks:`. The carve seals the deepest such district it can afford to,
+one door per key, and pays for the walk with a cache of its own. You never say
+which room: it refuses any candidate whose sealing would cut the map in half,
+and it keeps the landing, the objective, every set piece and every placed item
+outside — so the key is always reachable without the key. `annex.lock` does the
+same to the boss annex's ELEVATOR: the pad is drawn and labelled, and the car
+does not come until the hero is carrying the pass.
+
+**`patrol: true` ON AN ELITE** walks it a beat instead of leaving it standing.
+The route is derived from the room the carve grew it in — a sweep down the cell's
+long axis, inset off the walls — so it fits every size and every seed.
+
 Full reference: [`examples/greenhouse/maps/greenhouse.yaml`](examples/greenhouse/maps/greenhouse.yaml)
 is a small commented one, and [`../content/maps/moon.yaml`](../content/maps/moon.yaml)
 is a shipped venue's.

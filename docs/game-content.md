@@ -67,9 +67,10 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   reward exploring a dead end (`chests`, the GOODCO locker sprite spilling a
   Diablo-2 haul — an 80% marquee item plus guaranteed supplies), each with one of
   the floor's keepers on it (the EMPLOYEE OF THE MONTH unique among them). The
-  keycards THE ARCHITECT and the other elites drop are story pieces with lore of
-  their own; the locked vaults they were cut for are not carved onto a map today
-  (see `AGENTS.md` § GENERATED MAPS). The
+  keycards THE ARCHITECT and the other elites drop really open something: the
+  carve seals the deepest **vault** districts it can afford to and hangs one door
+  per key on them, each paying for the walk with a cache of its own (see
+  `AGENTS.md` § GENERATED MAPS). The
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
   here. **Employee stampedes** (`LevelDef.stampedes` → the engine's herd
   hazard): once the hero is halfway to PAYLOAD-1 (`afterProgress: 0.5` — the

@@ -818,6 +818,20 @@ export type LevelDef = {
     radius?: number;
     /** Short label the app prints over the pad (e.g. `TO CONTROL ROOM`). */
     label?: string;
+    /**
+     * A KEYED CAR: the door id (a story item's `unlocks`) the hero must be
+     * carrying before this pad will take him.
+     *
+     * It is the same lock a keyed ROOM uses, hung on the one link a wall cannot
+     * carry. Where a mission ends past a lift — the compound at the end of the
+     * park, the vault under the bunker — the last door is the car, so gating
+     * the run's finale on a keycard means gating the RIDE. The pad still draws
+     * and still says where it goes: a lift you can see and cannot call is what
+     * makes the pass worth taking off the man who has it.
+     *
+     * Never put it on a car whose key is on the far side of it.
+     */
+    opensWith?: string;
   }[];
   /**
    * Hand-placed pickups (the loot inside locked rooms, plot pieces on

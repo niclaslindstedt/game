@@ -94,6 +94,61 @@ export type WallRun = {
   material: string;
 };
 
+/**
+ * The OPENING a `door` border leaves in its wall — the span between the two
+ * runs either side of it, and the two cells it joins.
+ *
+ * It exists so a doorway can be SHUT again: a keyed room's gaps are filled back
+ * in as `LevelDef.doors` (a chain of `door_locked` circles the matching story
+ * item dissolves), and the only honest way to draw that door is across exactly
+ * the hole the wall was given.
+ */
+export type DoorGap = {
+  axis: "v" | "h";
+  coord: number;
+  from: number;
+  to: number;
+  /** The cells either side, so a caller can ask whether one of them is sealed. */
+  a: number;
+  b: number;
+};
+
+/** Where a `door` border's opening sits: the MIDDLE of the border, which is the
+ * one placement that leaves matching walls either side instead of a corner
+ * sliver. Shared by the wall runs and the door gaps so the two can never
+ * disagree about where the hole is. */
+function doorwaySpan(
+  border: Border,
+  doorWidth: number,
+): { from: number; to: number } {
+  const mid = (border.from + border.to) / 2;
+  return { from: mid - doorWidth / 2, to: mid + doorWidth / 2 };
+}
+
+/**
+ * Every doorway the grid punched through a wall, as a span.
+ *
+ * Only `door` borders have one: an `open` border is not a wall at all and an
+ * `arch` is a gateway too wide to hang a door in — which is also why an area is
+ * only lockable when it is sealed `hard` (see `MapArea.lock`).
+ */
+export function doorGaps(grid: ChamberGrid, doorWidth: number): DoorGap[] {
+  const out: DoorGap[] = [];
+  for (const border of grid.borders) {
+    if (border.link !== "door") continue;
+    const span = doorwaySpan(border, doorWidth);
+    out.push({
+      axis: border.axis,
+      coord: border.coord,
+      from: span.from,
+      to: span.to,
+      a: border.a,
+      b: border.b,
+    });
+  }
+  return out;
+}
+
 /** The cell centre — where a knot, a set piece or a chest is anchored. */
 export function chamberCenter(c: Chamber): { x: number; y: number } {
   return { x: c.x + c.w / 2, y: c.y + c.h / 2 };
@@ -267,6 +322,8 @@ function unionFind(count: number) {
  * @param cluster    0..1 — how strongly a cell prefers a neighbour's area type
  * @param defaultWall the `wall` object id an area with no `wall` of its own uses
  * @param rng        the seeded stream — same seed, same grid
+ * @param promised   districts the map must grow whatever the weights roll (see
+ *                   `assignAreas`) — the keyed rooms, one per key
  */
 export function carveChambers(
   width: number,
@@ -279,6 +336,7 @@ export function carveChambers(
   cluster: number,
   defaultWall: string,
   rng: Rng,
+  promised: string[] = [],
 ): ChamberGrid {
   const cells = carve(width, height, target, minRoom, rng);
   const raw = findBorders(cells);
@@ -296,6 +354,7 @@ export function carveChambers(
     areas,
     cluster,
     rng,
+    promised,
   );
   const chambers: Chamber[] = cells.map((c, id) => ({
     id,
@@ -408,11 +467,9 @@ export function wallSegments(grid: ChamberGrid, doorWidth: number): WallRun[] {
         break;
       }
       case "door": {
-        // The opening sits in the MIDDLE of the border — the one placement that
-        // leaves matching walls either side instead of a corner sliver.
-        const mid = (border.from + border.to) / 2;
-        run(border, border.from, mid - doorWidth / 2);
-        run(border, mid + doorWidth / 2, border.to);
+        const gap = doorwaySpan(border, doorWidth);
+        run(border, border.from, gap.from);
+        run(border, gap.to, border.to);
         break;
       }
       case "closed":

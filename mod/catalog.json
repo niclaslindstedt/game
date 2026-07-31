@@ -3025,6 +3025,7 @@
     "defeat",
     "dialogueStarted",
     "doorOpened",
+    "elevatorLocked",
     "elevatorRide",
     "eliteCast",
     "enemyDodge",

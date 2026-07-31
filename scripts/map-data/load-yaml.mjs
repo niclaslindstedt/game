@@ -69,6 +69,10 @@ function expandSetPiece(piece, ctx, where) {
   // The house this one lives in, carried through unexpanded — it names a `lair`
   // object, and the generator resolves it against the palette.
   if (piece.lair) out.lair = piece.lair;
+  // …and whether it WALKS its patch rather than standing on it. Carried through
+  // the same way: the route itself is the carve's to derive, from the room this
+  // one turns out to be placed in.
+  if (piece.patrol) out.patrol = true;
   return out;
 }
 

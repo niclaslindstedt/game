@@ -34,6 +34,7 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 // Import the catalogs DIRECTLY (never @game/core — that pulls the mapgen
 // registry, which imports the file we are about to write: a bootstrap cycle).
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
+const { STORY_ITEM_DEFS } = await import(engine("src/game/defs/story.ts"));
 const { GENERATED_LEVELS } = await import(engine("src/generated/levels.ts"));
 // The region grammar comes from the engine itself — one parser, so the gate here
 // accepts exactly the names `generate.ts` can resolve. `regions.ts` is a leaf
@@ -67,6 +68,13 @@ const refs = {
   levels: new Set(GENERATED_LEVELS.map((l) => l.id)),
   sprites,
   ramps: new Set(Object.keys(ramps)),
+  // Every door a story item is the key to — what a blueprint's `locks` list may
+  // name, so a sealed room always has a key somebody carries.
+  doorKeys: new Set(
+    Object.values(STORY_ITEM_DEFS)
+      .map((d) => d.unlocks)
+      .filter(Boolean),
+  ),
   parseRegion,
 };
 

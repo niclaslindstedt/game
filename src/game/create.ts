@@ -641,6 +641,7 @@ export function createGame(
       sprite: e.sprite ?? "elevator_pad",
       radius: e.radius ?? ELEVATOR.rideRadius,
       ...(e.label ? { label: e.label } : {}),
+      ...(e.opensWith ? { opensWith: e.opensWith } : {}),
       used: false,
     })),
     elevatorLockMs: 0,
@@ -1320,6 +1321,20 @@ export function buildPropLines(
 ): { obstacles: Obstacle[]; decor: Decor[] } {
   const obstacles: Obstacle[] = [];
   const decor: Decor[] = [];
+  // A RANK YIELDS TO A PICKUP. The ranks are laid down deterministically and
+  // the hand-placed pieces sit where the level put them, so a line whose stride
+  // happens to land on a plot piece walls it in — and a story item the hero can
+  // see and cannot reach is a chain that stops with nothing to read. The prop is
+  // skipped rather than nudged: a rank with a gap in it reads as a rank
+  // somebody left room in, where a rank with one prop shunted aside reads as a
+  // mistake.
+  const spared = (pos: Vec2, radius: number): boolean =>
+    (def.placedItems ?? []).every(
+      (p) => distance(pos, p.pos) > PICKUP_CLEARANCE + radius,
+    ) &&
+    (def.chests ?? []).every(
+      (c) => distance(pos, c.at) > PICKUP_CLEARANCE + radius,
+    );
   for (const line of def.propLines ?? []) {
     const n = normalize(line.to.x - line.from.x, line.to.y - line.from.y);
     const step = Math.max(1, line.spacing);
@@ -1327,12 +1342,17 @@ export function buildPropLines(
       const pos = vec(line.from.x + n.x * d, line.from.y + n.y * d);
       if (line.collide) {
         const half = line.half ? vec(line.half.x, line.half.y) : undefined;
+        const radius = half ? boundingRadius(half) : (line.radius ?? 8);
+        if (!spared(pos, radius)) {
+          if (n.len === 0) break;
+          continue;
+        }
         obstacles.push({
           id: takeId(),
           kind: line.sprite,
           sprite: line.sprite,
           pos,
-          radius: half ? boundingRadius(half) : (line.radius ?? 8),
+          radius,
           ...(half ? { half } : {}),
           jumpable: line.jumpable ?? false,
         });
@@ -1410,6 +1430,11 @@ function distToPath(def: LevelDef, spawn: Vec2, p: Vec2): number {
   return best;
 }
 
+/** How much floor a hand-placed pickup keeps to itself, so the scatter can
+ * never wall one in: the hero's own width plus the spacing every prop already
+ * keeps from its neighbours. */
+const PICKUP_CLEARANCE = PLAYER.radius * 2 + OBSTACLES.spacing;
+
 function scatterObstacles(
   rng: Rng,
   def: LevelDef,
@@ -1453,6 +1478,17 @@ function scatterObstacles(
           distance(pos, playerSpawn) > OBSTACLES.spawnClearance + radius &&
           def.landmarks.every(
             (l) => distance(pos, l.pos) > def.decorClearance + radius,
+          ) &&
+          // A HAND-PLACED PICKUP MUST BE STANDABLE. A plot piece or a cache is
+          // put somewhere on purpose, and the scatter that lands on top of it
+          // does not hide it — it walls it in, and a story item the hero can see
+          // and cannot reach is a chain that stops with nothing to read. Clear
+          // by a body and a step, which is what the pickup radius asks for.
+          (def.placedItems ?? []).every(
+            (p) => distance(pos, p.pos) > PICKUP_CLEARANCE + radius,
+          ) &&
+          (def.chests ?? []).every(
+            (c) => distance(pos, c.at) > PICKUP_CLEARANCE + radius,
           ) &&
           // Keep the intended path walkable — no furniture on the route.
           distToPath(def, playerSpawn, pos) > PATH.clearance + radius &&
