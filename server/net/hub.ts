@@ -123,7 +123,7 @@ export type HubSession = {
   addClient(
     id: number,
     send: (frame: ArrayBuffer) => void,
-    seat: boolean | { play: boolean; loadout?: unknown },
+    seat: boolean | { play: boolean; loadout?: unknown; resume?: string },
     name?: string,
   ): void;
   removeClient(id: number): void;
@@ -378,7 +378,14 @@ export function createPeerHub(options: HubOptions): PeerHub {
     options.session.addClient(
       id,
       (frame) => sendTo(peer, frame),
-      { play: true, loadout: join.loadout ?? null },
+      // The RESUME ticket rides the join beside the loadout (plan §5.4). The
+      // hub does not read it — a ticket names a SEAT, and seats are the
+      // session's business — it only refuses to lose it on the way past.
+      {
+        play: true,
+        loadout: join.loadout ?? null,
+        resume: typeof join.resume === "string" ? join.resume : undefined,
+      },
       peer.name,
     );
     options.log?.(`net: ${peer.name} joined from ${key}`);

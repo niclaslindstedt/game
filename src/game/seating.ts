@@ -118,9 +118,14 @@ export function isPartyRun(state: GameState): boolean {
  * index and land on the newcomer. That is the one thing to preserve here — a
  * seat vacated by anything OTHER than a disconnect (a dead hero, a player in a
  * menu) must never be handed out.
+ *
+ * A HELD seat is skipped, and that is the same rule read the other way: it is
+ * being kept for the person who dropped out of it (`Player.held`, plan §5.4),
+ * so handing it to a newcomer would give away a hero somebody is on their way
+ * back to. The session releases the hold when the grace window lapses.
  */
 export function nextFreeSeat(state: GameState): number {
-  const seat = state.players.findIndex((hero) => hero.departed);
+  const seat = state.players.findIndex((hero) => hero.departed && !hero.held);
   return seat >= 0 ? seat : state.players.length;
 }
 
@@ -138,12 +143,57 @@ export function nextFreeSeat(state: GameState): number {
  * the plan's §4.2), and a run whose seat 0 had quietly departed would keep
  * simulating with nobody entitled to it.
  */
-export function departHero(state: GameState, seat: number): boolean {
+export function departHero(
+  state: GameState,
+  seat: number,
+  hold = false,
+): boolean {
   if (seat <= 0) return false;
   const hero = state.players[seat];
   if (!hero || hero.departed) return false;
   hero.departed = true;
+  // `hold` says this MIGHT be a dropped connection rather than somebody
+  // quitting, so the seat is kept for them — see `Player.held` and
+  // `resumeHero`. The two look identical from a socket, which is the whole
+  // reason the caller has to say which it is.
+  if (hold) hero.held = true;
   return true;
+}
+
+/**
+ * The person who dropped out of this seat is back — hand them the hero they
+ * were playing (multiplayer plan §5.4).
+ *
+ * The body has been standing on the field meaning nothing to the world while
+ * they were gone; this is the single flag flip that makes the world start
+ * answering for it again, with every point of xp, every item and every level it
+ * had at the moment the connection went. That is the whole value of the
+ * feature: the alternative is a fresh hero built from whatever loadout was last
+ * banked, i.e. losing the run so far to a dropped packet.
+ *
+ * False when the seat holds nobody, holds somebody still playing, or was not
+ * being held — a hold that has lapsed is a seat that may already have been
+ * given away, and reviving a hero out from under its new owner would be worse
+ * than making them start again.
+ */
+export function resumeHero(state: GameState, seat: number): Player | null {
+  const hero = state.players[seat];
+  if (!hero || !hero.departed || !hero.held) return null;
+  hero.departed = false;
+  hero.held = false;
+  return hero;
+}
+
+/**
+ * Stop keeping this seat — the grace window lapsed and nobody came back.
+ *
+ * The body stays exactly where it was and stays `departed`; all this does is
+ * make the seat available again, so the next arrival is seated into it as they
+ * would have been before §5.4 existed.
+ */
+export function releaseSeat(state: GameState, seat: number): void {
+  const hero = state.players[seat];
+  if (hero) hero.held = false;
 }
 
 /** Where seat `seat` is set down: on a ring around the party's middle, each

@@ -202,6 +202,18 @@ let admitted = false;
  */
 const CHALLENGE_SECRET = (Math.random() * 0xffffffff) >>> 0;
 
+/**
+ * THE RECONNECT TICKET LAST HANDED OUT BY EACH HOST WE JOINED (plan §5.4),
+ * keyed by peer.
+ *
+ * In memory and for the life of this process alone, which is the span the
+ * feature is about: the case it exists for is a connection dropping inside one
+ * sitting, and a ticket written to disk would be a credential for a session
+ * that has almost certainly ended. Bounded by how many distinct hosts one
+ * process joins, which is a handful.
+ */
+const resumeTickets = new Map<string, string>();
+
 const parent = (process as unknown as { parentPort?: ParentPort }).parentPort;
 
 if (parent) {
@@ -300,6 +312,11 @@ function handleControl(
           ping: (clientId) => hub?.pingOf(clientId) ?? -1,
         },
         log: (line) => post({ kind: "log", line }),
+        // The SAME secret the hub's challenge cookies use, and the same clock:
+        // one process, one roll, two derived schemes (plan §5.4's reconnect
+        // ticket beside §2.5's challenge).
+        secret: CHALLENGE_SECRET,
+        now,
       });
       hub = createPeerHub({
         session,
@@ -482,6 +499,12 @@ async function joinSession(
     },
     name: message.name,
     password: message.password,
+    // THE TICKET BACK INTO THE SEAT WE LAST HELD AT THIS ADDRESS (plan §5.4).
+    // Held per host for the life of this process, which is exactly the span
+    // that matters: the case the grace window exists for is a wifi hiccup
+    // inside one sitting, and a ticket that outlived the app would be a
+    // credential on disk for a session that no longer exists.
+    resume: resumeTickets.get(peerKey),
     now,
     deliver: (frame) => {
       // A COPY, because the renderer's end takes ownership: the buffer is
@@ -490,8 +513,12 @@ async function joinSession(
       const copy = frame.slice().buffer;
       clientPort?.postMessage(copy, [copy]);
     },
-    onAdmitted: () => {
+    onAdmitted: (resume) => {
       admitted = true;
+      // Every welcome issues a FRESH ticket and spends the one that got us in,
+      // so this is a replacement rather than an addition.
+      if (resume) resumeTickets.set(peerKey, resume);
+      else resumeTickets.delete(peerKey);
       settle({ kind: "connected", ok: true });
     },
     onClosed: (reason, detail) => {

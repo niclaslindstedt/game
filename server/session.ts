@@ -45,6 +45,8 @@ import {
   departHero,
   isRunCommand,
   nextFreeSeat,
+  releaseSeat,
+  resumeHero,
   seatHero,
   seatOf,
   setBalanceTuning,
@@ -60,6 +62,7 @@ import {
 } from "@game/core";
 
 import { createChatRoom, type ChatRoom } from "./chat-room.ts";
+import { hash32 } from "./wire/handshake.ts";
 import { encodeFrame, encodeFrameJson } from "./wire/codec.ts";
 import { playerScaling } from "./wire/players.ts";
 import {
@@ -72,6 +75,7 @@ import {
   FRAME,
   MAX_CLIENTS,
   PROTOCOL_VERSION,
+  RECONNECT_GRACE_MS,
   SNAPSHOT_EVERY_TICKS,
   TICK_MS,
   type ChatLine,
@@ -174,6 +178,31 @@ export type SessionOptions = {
    * omits it — the same shape `net/hub.ts` uses. */
   log?(message: string): void;
   /**
+   * The per-session secret RECONNECT TICKETS are derived from (plan §5.4).
+   *
+   * Passed in for the same reason the hub's challenge secret is: this module
+   * has no randomness of its own, and the engine's seeded rng is emphatically
+   * not a source for one — that stream is the simulation's, every draw from it
+   * is load-bearing for a replay, and a secret taken from a seed a client was
+   * TOLD is not a secret. `server/main.ts` rolls it once per process and hands
+   * the same number to both.
+   *
+   * Zero (the default) still produces distinct tickets per seat and per
+   * occupancy; what it costs is unguessability, which only matters against a
+   * stranger on the wire, and every caller that has one passes it.
+   */
+  secret?: number;
+  /**
+   * Monotonic ms, for the reconnect grace window — the ONE thing in this module
+   * measured in wall clock rather than in ticks.
+   *
+   * A grace window counted in ticks would run at the speed of the simulation,
+   * so a host whose machine hitched would hold seats longer than it meant to,
+   * and a paused session would hold them for ever. Defaulted so every test that
+   * does not care about reconnecting need not supply one.
+   */
+  now?(): number;
+  /**
    * A run to ADOPT instead of building one from `params` — a parked run, or a
    * checkpoint the player just retried into.
    *
@@ -217,7 +246,7 @@ export type Session = {
   addClient(
     id: number,
     send: SendFrame,
-    seat: boolean | { play: boolean; loadout?: unknown },
+    seat: boolean | { play: boolean; loadout?: unknown; resume?: string },
     name?: string,
   ): void;
   removeClient(id: number): void;
@@ -310,6 +339,28 @@ export function createSession(options: SessionOptions): Session {
 
   const clients = new Map<number, Client>();
   const inputs = new Map<number, GameInput>();
+  /**
+   * SEATS BEING KEPT FOR SOMEBODY WHO DROPPED (plan §5.4), by their ticket.
+   *
+   * A dropped connection and a player quitting are the same event as far as a
+   * socket is concerned, and only one of them should cost somebody the run they
+   * are an hour into. So a departure holds the seat for `RECONNECT_GRACE_MS`
+   * and the person who left holds the only ticket back into it.
+   *
+   * Bounded by the seat count, since a seat can be held once — which is why
+   * this is keyed by ticket and swept by seat rather than being a list.
+   */
+  const held = new Map<string, { seat: number; expiresAt: number }>();
+  /** Bumped for every ticket minted, so a seat's SECOND occupant never gets the
+   * ticket its first one was given — a stale ticket must not open a seat it no
+   * longer names. */
+  let ticketNonce = 0;
+  /** The live ticket each seated client was handed, so a DEPARTURE can put the
+   * right one in `held` — the ticket is minted at the welcome, long before
+   * anybody knows whether it will be needed. */
+  const tickets = new Map<number, string>();
+  const secret = options.secret ?? 0;
+  const now = options.now ?? (() => 0);
   /** Every event since the last publish, in the order the ticks produced them. */
   let pendingEvents: unknown[] = [];
   let tick = 0;
@@ -393,6 +444,53 @@ export function createSession(options: SessionOptions): Session {
     kick: kickByName,
     invite: () => peers.invite(),
   });
+
+  /**
+   * The seat a `resume` ticket opens, or null.
+   *
+   * The ticket is CONSUMED whether or not the seat is still resumable: a ticket
+   * is good for one return, and leaving a spent one in the table is leaving a
+   * second way into a seat somebody may by then be sitting in.
+   */
+  function claimHeldSeat(ticket: unknown): number | null {
+    if (typeof ticket !== "string" || !ticket) return null;
+    const record = held.get(ticket);
+    if (!record) return null;
+    held.delete(ticket);
+    // Expired between the sweep and here, or the hold was released for some
+    // other reason. `resumeHero` refuses a seat that is not being held, so
+    // this is belt and braces rather than the check itself.
+    if (now() > record.expiresAt) return null;
+    return resumeHero(state, record.seat) ? record.seat : null;
+  }
+
+  /** Give up every hold whose window has lapsed, so the seat can be handed to
+   * the next arrival. Swept from `advance` — the session's own clock is the
+   * only one this feature has. */
+  function sweepHeldSeats(): void {
+    if (held.size === 0) return;
+    const at = now();
+    for (const [ticket, record] of held) {
+      if (at <= record.expiresAt) continue;
+      held.delete(ticket);
+      releaseSeat(state, record.seat);
+      options.log?.(`net: seat ${record.seat} released — nobody came back`);
+    }
+  }
+
+  /**
+   * The ticket this seated client comes back with (`WelcomePayload.resume`).
+   *
+   * Derived rather than stored so nothing is remembered until somebody actually
+   * leaves: the same reasoning the challenge cookie is built on. The nonce is
+   * what stops a seat's previous occupant holding a key to it.
+   */
+  function mintTicket(seat: number): string {
+    ticketNonce++;
+    return hash32(`${secret >>> 0}|${seat}|${ticketNonce}|${params.seed}`)
+      .toString(36)
+      .padStart(7, "0");
+  }
 
   function chatFrame(lines: ChatLine[]): ArrayBuffer {
     const payload: ChatPayload = { lines };
@@ -509,6 +607,10 @@ export function createSession(options: SessionOptions): Session {
 
     advance(ms) {
       if (closed || !Number.isFinite(ms) || ms <= 0) return 0;
+      // Held seats lapse on the session's own clock rather than on a timer of
+      // their own — nothing below the session owns a timer, the same rule the
+      // transport seam follows.
+      sweepHeldSeats();
       const owed = Math.min(Math.floor(ms / TICK_MS), MAX_TICKS_PER_ADVANCE);
       for (let i = 0; i < owed; i++) {
         stepOnce();
@@ -540,8 +642,18 @@ export function createSession(options: SessionOptions): Session {
       // all — which is what every privacy and authority check below reads,
       // never a claim the client made about itself.
       let seat: number | null = null;
+      // A RECONNECT IS TRIED FIRST, and it short-circuits everything below —
+      // the seat cap included, since the seat is already theirs and was never
+      // given away. The hero standing on the field IS the authoritative one, so
+      // the `loadout` on the join is deliberately not read: dressing a resumed
+      // hero in a claim that arrived from a stranger would hand a reconnect the
+      // one thing a fresh join is checked for.
+      const resumed = wants.play ? claimHeldSeat(wants.resume) : null;
       if (host) {
         seat = 0;
+      } else if (resumed !== null) {
+        seat = resumed;
+        options.log?.(`net: slot ${slot} resumed seat ${seat}`);
       } else if (wants.play && nextFreeSeat(state) < maxClients) {
         // A joiner arrives beside the party with their OWN bag, purse and
         // build. The seat is never RENUMBERED — every command and input frame
@@ -607,7 +719,13 @@ export function createSession(options: SessionOptions): Session {
         params,
         slot: client.slot,
         seat: recipient.seat,
+        // The ticket back into this seat. Minted per WELCOME rather than per
+        // seat, so every reconnection issues a fresh one and the ticket that
+        // just got somebody in is spent.
+        resume:
+          recipient.seat === null ? undefined : mintTicket(recipient.seat),
       };
+      if (welcome.resume) tickets.set(id, welcome.resume);
       send(encodeFrame({ type: FRAME.welcome, seq, ack: 0, tick }, welcome));
       // The log is handed over WHOLE, and only to the arriving client: a
       // spectator who joins an hour in and sees an empty chat box has no way
@@ -636,9 +754,27 @@ export function createSession(options: SessionOptions): Session {
       // holding the horde's level over them, and — the sharp end — lets them
       // LOSE, since a run whose fourth player quit could not otherwise ever be
       // defeated.
+      //
+      // AND THE SEAT IS KEPT FOR THEM (plan §5.4). A dropped connection and a
+      // player quitting are indistinguishable from here, so every departure is
+      // treated as though it might be the first: the body still means nothing
+      // to the world, but the seat is not handed to a newcomer for
+      // `RECONNECT_GRACE_MS`, and the person who left holds the only ticket
+      // back into it. Coming back resumes the hero as it stands — every point
+      // of xp, every item, every level — rather than building a fresh one out
+      // of whatever loadout was last banked, which is the whole value of the
+      // feature: otherwise a lost packet costs an hour.
+      const ticket = tickets.get(id);
+      tickets.delete(id);
       if (client.recipient.seat !== null) {
         inputs.set(client.recipient.seat, { ...IDLE_INPUT });
-        departHero(state, client.recipient.seat);
+        departHero(state, client.recipient.seat, ticket !== undefined);
+        if (ticket !== undefined) {
+          held.set(ticket, {
+            seat: client.recipient.seat,
+            expiresAt: now() + RECONNECT_GRACE_MS,
+          });
+        }
       }
       // The host leaving is the session ending, and `close` says so in its own
       // words; announcing "HOST LEFT" first would put a chat line in front of

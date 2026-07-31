@@ -90,6 +90,8 @@ export {
   departHero,
   isPartyRun,
   nextFreeSeat,
+  releaseSeat,
+  resumeHero,
   seatHero,
 } from "./game/seating.ts";
 export { validateLoadout, type LoadoutCheck } from "./game/loadout-check.ts";
