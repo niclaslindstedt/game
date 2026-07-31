@@ -18,7 +18,13 @@ import { nsfwAllowed } from "../../app/device-policy.ts";
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
 import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
-import { getSettings, updateSettings, type SteeringMode } from "../settings.ts";
+import {
+  GORE_SWITCHES,
+  getSettings,
+  updateSettings,
+  type GoreSwitchKey,
+  type SteeringMode,
+} from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { FX_RANGES, type FxName } from "../render/postfx.ts";
 import { PICKUP_CARD_TIER_ORDER, pickupCardTierLabel } from "../tiers.ts";
@@ -58,7 +64,17 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
   return [
     ...assembleRows("settings", {
       gameplay: navRow(ctx, "settings", "gameplay"),
-      controls: navRow(ctx, "settings", "controls"),
+      // Absent when the page behind it would be blank. CONTROLS is the one
+      // settings page that can empty itself out: every scheme row on it is
+      // desktop-only (touch always steers by holding and dragging) and the one
+      // row that isn't needs a motor, so a touch device with no buzz — iOS in a
+      // browser or an installed PWA — reaches a page holding nothing but BACK.
+      // Asking the page itself rather than re-testing the device is what keeps
+      // the two from drifting: a row added to CONTROLS lights this back up on
+      // its own.
+      controls: controlsRows(ctx).length
+        ? navRow(ctx, "settings", "controls")
+        : null,
       interface: navRow(ctx, "settings", "interface"),
       video: navRow(ctx, "settings", "video"),
       audio: navRow(ctx, "settings", "audio"),
@@ -122,7 +138,14 @@ export function buildGameplayMenu(ctx: MenuContext): MenuEntry[] {
   ];
 }
 
-export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
+/**
+ * SETTINGS → CONTROLS's own rows — everything above its BACK row.
+ *
+ * Split out from the page so the SETTINGS index can ask whether there is
+ * anything ON it (see `buildSettingsMenu`), rather than repeating this
+ * screen's device tests one level up where they would quietly drift.
+ */
+function controlsRows(ctx: MenuContext): MenuEntry[] {
   const s = getSettings();
   // The mouse/keys rows are desktop-only, like KEY BINDINGS: touch always
   // steers by holding and dragging, so there is no scheme to configure there
@@ -132,74 +155,75 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
   // went.
   const pointer = ctx.hasFinePointer;
   const holds = s.steering === "aim" || s.steering === "gamepad";
-  return [
-    ...assembleRows("controls", {
-      // Named STEERING rather than MOUSE: the row picks between input DEVICES,
-      // and "MOUSE: GAMEPAD" would be nonsense.
-      steering: pointer
-        ? actionRow(
-            "controls",
-            "steering",
-            () => {
-              playUiSound(synth, "confirm");
-              updateSettings({ steering: nextSteering(s.steering) });
-              ctx.bumpSettings();
-            },
-            { value: STEERING_LABELS[s.steering], state: s.steering },
-          )
-        : null,
-      "auto-fire":
-        pointer && holds
-          ? onOffRow(ctx, "controls", "auto-fire", "autoFire", {
-              // The trigger is a different thing in each mode, so the OFF line
-              // names the one the player is actually holding.
-              offState: s.steering === "gamepad" ? "button" : "click",
-            })
-          : null,
-      keys: pointer
-        ? holds
-          ? actionRow(
-              "controls",
-              "keys",
-              () => {
-                playUiSound(synth, "back");
-              },
-              {
-                value: "WASD MOVE",
-                color: "#5a6068",
-                locked: true,
-                state: s.steering,
-              },
-            )
-          : actionRow(
-              "controls",
-              "keys",
-              () => {
-                playUiSound(synth, "confirm");
-                updateSettings({
-                  keyboardMove: s.keyboardMove === "on" ? "off" : "on",
-                });
-                ctx.bumpSettings();
-              },
-              {
-                value: s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
-                state: s.keyboardMove === "on" ? "wasd" : "mouse",
-              },
-            )
-        : null,
-      // VIBRATION shows only where a buzz can land (see canBuzz), so it never
-      // reads as a dead switch on desktop or iOS.
-      vibration: ctx.canBuzz
-        ? onOffRow(ctx, "controls", "vibration", "vibration", {
-            // Audition the new state — a firm tap confirms it is live.
-            audition: (on) => on && haptics.vibrate(28),
+  return assembleRows("controls", {
+    // Named STEERING rather than MOUSE: the row picks between input DEVICES,
+    // and "MOUSE: GAMEPAD" would be nonsense.
+    steering: pointer
+      ? actionRow(
+          "controls",
+          "steering",
+          () => {
+            playUiSound(synth, "confirm");
+            updateSettings({ steering: nextSteering(s.steering) });
+            ctx.bumpSettings();
+          },
+          { value: STEERING_LABELS[s.steering], state: s.steering },
+        )
+      : null,
+    "auto-fire":
+      pointer && holds
+        ? onOffRow(ctx, "controls", "auto-fire", "autoFire", {
+            // The trigger is a different thing in each mode, so the OFF line
+            // names the one the player is actually holding.
+            offState: s.steering === "gamepad" ? "button" : "click",
           })
         : null,
-      // Desktop-only: there is no keyboard to rebind on a touch phone.
-      keybindings: pointer ? navRow(ctx, "controls", "keybindings") : null,
-    }),
-    backRow(ctx, "controls"),
-  ];
+    keys: pointer
+      ? holds
+        ? actionRow(
+            "controls",
+            "keys",
+            () => {
+              playUiSound(synth, "back");
+            },
+            {
+              value: "WASD MOVE",
+              color: "#5a6068",
+              locked: true,
+              state: s.steering,
+            },
+          )
+        : actionRow(
+            "controls",
+            "keys",
+            () => {
+              playUiSound(synth, "confirm");
+              updateSettings({
+                keyboardMove: s.keyboardMove === "on" ? "off" : "on",
+              });
+              ctx.bumpSettings();
+            },
+            {
+              value: s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
+              state: s.keyboardMove === "on" ? "wasd" : "mouse",
+            },
+          )
+      : null,
+    // VIBRATION shows only where a buzz can land (see canBuzz), so it never
+    // reads as a dead switch on desktop or iOS.
+    vibration: ctx.canBuzz
+      ? onOffRow(ctx, "controls", "vibration", "vibration", {
+          // Audition the new state — a firm tap confirms it is live.
+          audition: (on) => on && haptics.vibrate(28),
+        })
+      : null,
+    // Desktop-only: there is no keyboard to rebind on a touch phone.
+    keybindings: pointer ? navRow(ctx, "controls", "keybindings") : null,
+  });
+}
+
+export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
+  return [...controlsRows(ctx), backRow(ctx, "controls")];
 }
 
 export function buildKeybindingsMenu(ctx: MenuContext): MenuEntry[] {
@@ -338,7 +362,8 @@ function fxRow(ctx: MenuContext, id: string): MenuEntry {
 /**
  * SETTINGS → VIDEO: how the field is PRESENTED — the four knobs of
  * `render/postfx.ts`, each a drag track from OFF through the shipped look and
- * on past it for a player who wants it laid on thick, plus the gore switch.
+ * on past it for a player who wants it laid on thick, then the way through to
+ * the gore switches at the bottom.
  *
  * Every row is honest about costing something, which is why they are all here
  * rather than folded into INTERFACE: this is the page you come to when the
@@ -347,14 +372,6 @@ function fxRow(ctx: MenuContext, id: string): MenuEntry {
 export function buildVideoMenu(ctx: MenuContext): MenuEntry[] {
   return [
     ...assembleRows("video", {
-      // Dropped entirely when the DEVICE says no mature content (iOS Settings →
-      // <app> → MATURE CONTENT — see app/device-policy.ts). The gate outranks
-      // this row, so leaving it would be a switch that visibly does nothing,
-      // and a parental control the game still offers to turn the gore back on
-      // reads as one the player can defeat.
-      "extra-gore": nsfwAllowed()
-        ? onOffRow(ctx, "video", "extra-gore", "extraGore")
-        : null,
       bloom: fxRow(ctx, "bloom"),
       "color-grade": fxRow(ctx, "color-grade"),
       vignette: fxRow(ctx, "vignette"),
@@ -369,16 +386,86 @@ export function buildVideoMenu(ctx: MenuContext): MenuEntry[] {
           colorGrade: FX_RANGES.colorGrade.default,
           vignette: FX_RANGES.vignette.default,
           depthHaze: FX_RANGES.depthHaze.default,
-          // The gore switch is on this page, so "the way the game shipped" has
-          // to include it — a reset that quietly skipped the one row a player
-          // is most likely to have moved would be a lie on its own help line.
-          ...(nsfwAllowed() ? { extraGore: "on" as const } : {}),
+          // The gore switches are NOT reset from here: they are a page of their
+          // own now, with a RESET ALL of their own on it, and this row's help
+          // line promises the VISUALS back — not a player's considered answer
+          // about how much of a body they want to watch come apart. Which is
+          // also why the GORE row sits BELOW this one in the tree.
         });
         ctx.bumpSettings();
       }),
+      // Dropped entirely when the DEVICE says no mature content (iOS Settings →
+      // <app> → MATURE CONTENT — see app/device-policy.ts). The gate outranks
+      // every switch behind this row, so leaving it would open a page of
+      // controls that visibly do nothing, and a parental control the game still
+      // offers to turn the gore back on reads as one the player can defeat.
+      gore: nsfwAllowed() ? navRow(ctx, "video", "gore") : null,
     }),
     backRow(ctx, "video"),
   ];
+}
+
+/** Which switch each GORE row drives. The row ids are the tree's, the keys are
+ * the settings'; `gore-gate.ts` is what reads them, and it is the only thing
+ * that does. */
+const GORE_ROWS = {
+  blood: "goreBlood",
+  ecto: "goreEcto",
+  sparks: "goreSparks",
+  cosmic: "goreCosmic",
+  cleaves: "goreCleaves",
+  gibs: "goreGibs",
+  "hero-soak": "goreSoak",
+  bootprints: "goreTracks",
+} as const;
+
+/** The two rows that are BLOOD's own art in blood's own colours, and so have
+ * nothing to do once HUMAN GORE is off. */
+const BLOOD_ONLY = ["hero-soak", "bootprints"] as const;
+
+/**
+ * SETTINGS → VIDEO → GORE: one switch per kind of gore.
+ *
+ * The page exists because "is this too much" is not one question — see the
+ * `GoreSwitch` doc in settings.ts for the three groups and why the families are
+ * separate rows at all. The whole page is behind the device's MATURE CONTENT
+ * switch, which is why nothing here re-checks it: `buildVideoMenu` does not
+ * offer the way in when the guardian has said no.
+ *
+ * BLOODY HERO and BOOTPRINTS are shown LOCKED rather than hidden while HUMAN
+ * GORE is off. That is the same call the CONTROLS page's KEYS row makes: a row that
+ * vanishes leaves a player hunting for a setting they remember, where a greyed
+ * one with a line under it saying why is an answer.
+ */
+export function buildGoreMenu(ctx: MenuContext): MenuEntry[] {
+  const bloodOff = getSettings().goreBlood !== "on";
+  const rows: Record<string, MenuEntry | null> = {};
+  for (const [id, key] of Object.entries(GORE_ROWS)) {
+    const locked = bloodOff && (BLOOD_ONLY as readonly string[]).includes(id);
+    rows[id] = locked
+      ? actionRow(
+          "gore",
+          id,
+          () => {
+            playUiSound(synth, "back");
+          },
+          { value: "OFF", color: "#5a6068", locked: true, state: "locked" },
+        )
+      : onOffRow(ctx, "gore", id, key);
+  }
+  // Eight switches is well past where a RESET row earns its place — and this is
+  // the page a player most easily leaves in a state they cannot reconstruct
+  // from memory.
+  rows.reset = actionRow("gore", "reset", () => {
+    playUiSound(synth, "confirm");
+    updateSettings(
+      Object.fromEntries(GORE_SWITCHES.map((key) => [key, "on"])) as Partial<
+        Record<GoreSwitchKey, "on">
+      >,
+    );
+    ctx.bumpSettings();
+  });
+  return [...assembleRows("gore", rows), backRow(ctx, "gore")];
 }
 
 export function buildAudioMenu(ctx: MenuContext): MenuEntry[] {

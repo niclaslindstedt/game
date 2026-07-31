@@ -16,9 +16,10 @@
 // to what they did, instead of the whole late game drowning in blood because the
 // numbers got bigger.
 
-import { nsfwAllowed } from "../../app/device-policy.ts";
 import { fract } from "../render/shared.ts";
-import { getSettings } from "../settings.ts";
+
+import { goreAmount } from "./gore-gate.ts";
+import type { GoreFamilyId } from "./gore.ts";
 
 /** Bars of the victim's own health a blow has to take to spill EVERYTHING it
  * has. Deliberately under one: most kills are the last hit of several, and a
@@ -127,49 +128,30 @@ export type BloodBlow = {
 };
 
 /**
- * THE ONE GATE, and everything that spills blood asks it: the device's MATURE
- * CONTENT switch, the player's EXTRA GORE row, and the DEVELOPER → VISUALS
- * BLOOD amount, folded into a single answer — the multiplier to price blood at,
- * or `null` for "there is no blood in this game right now".
+ * Price one landed blow. Returns null when this kind of body should spill
+ * nothing at all — the device's MATURE CONTENT switch off, the family's own
+ * GORE switch off, or the developer amount at zero. Otherwise every connecting
+ * blow is worth at least the floor spray: nothing the hero lands should read as
+ * a miss.
  *
- * Read by `bloodBlow` (the spray and what it wets), by `hero-soak.ts` (what
- * comes back on the hero) and by `render/blood-tracks.ts` (what his boots carry
- * out of it). Every one of them checks it where the blood is DECIDED rather
- * than where it is drawn, so `off` means nothing is recorded either — a gate at
- * the draw call would leave the floor's grid, the hero's soak and his trail all
- * quietly filling up, and hand the player the lot the moment the switch came
- * back (see app/device-policy.ts).
- */
-export function bloodAmount(): number | null {
-  if (!nsfwAllowed()) return null;
-  const settings = getSettings();
-  if (settings.extraGore !== "on") return null;
-  return settings.blood > 0 ? settings.blood : null;
-}
-
-/**
- * Price one landed blow. Returns null when no blood should exist at all — the
- * device's MATURE CONTENT switch off, EXTRA GORE off, or the developer amount at
- * zero. Otherwise every connecting blow is worth at least the floor spray:
- * nothing the hero lands should read as a miss.
- *
- * The device switch is checked HERE, in the same one place EXTRA GORE is, and
- * that is the whole trick: `off` means nothing is drawn AND nothing is recorded,
- * so a gate at the draw call would leave the floor's saturation grid quietly
- * filling up and hand the player a red battlefield the moment the switch came
- * back on. It also outranks the in-game row — a parental control the game can
- * offer to turn back on is not a control (see app/device-policy.ts).
+ * The gate is `goreAmount(family)` (game-screen/gore-gate.ts), asked HERE, where
+ * the spill is decided — never at the draw call. That is the whole trick: `off`
+ * means nothing is drawn AND nothing is recorded, so a gate further down would
+ * leave the floor's saturation grid quietly filling up and hand the player a red
+ * battlefield the moment the switch came back on.
  *
  * `damage` and `maxHp` come straight off the `enemyHit`/`enemyKilled` event,
- * `role` off the victim's def, and `kill` says whether this was the last blow.
+ * `role` and `family` off the victim's def, and `kill` says whether this was the
+ * last blow.
  */
 export function bloodBlow(
   damage: number,
   maxHp: number,
   role: string,
   kill: boolean,
+  family: GoreFamilyId = "blood",
 ): BloodBlow | null {
-  const amount = bloodAmount();
+  const amount = goreAmount(family);
   if (amount == null) return null;
   const bars = Math.max(0, damage) / Math.max(1, maxHp);
   const raw = bars / FULL_BARS;

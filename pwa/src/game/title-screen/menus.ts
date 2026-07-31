@@ -32,6 +32,7 @@ import {
   buildAudioMenu,
   buildControlsMenu,
   buildGameplayMenu,
+  buildGoreMenu,
   buildInterfaceMenu,
   buildKeybindingsMenu,
   buildSettingsMenu,
@@ -84,6 +85,7 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "keybindings") return buildKeybindingsMenu(ctx);
   if (screen === "interface") return buildInterfaceMenu(ctx);
   if (screen === "video") return buildVideoMenu(ctx);
+  if (screen === "gore") return buildGoreMenu(ctx);
   if (screen === "audio") return buildAudioMenu(ctx);
   return [backRow(ctx, screen)];
 }

@@ -617,7 +617,7 @@ at all. Both default ON — the game ships as it was made, and a guardian turns
 things off. They live OUTSIDE the game on purpose: a control reachable from
 inside the thing it restricts is not a restriction, so there is no in-game row
 for either, and the device's answer OUTRANKS every in-game setting and developer
-flag (EXTRA GORE and FORCE STORE included). Same three-file seam as cloud save
+flag (every GORE switch and FORCE STORE included). Same three-file seam as cloud save
 and the achievements — `native/src/device-settings.ts` (bridge) over
 `device-settings-provider.ts` (seam) and `device-settings-ios.ts` (Apple), backed
 by `native/modules/device-settings/` (Swift: `UserDefaults`) with the page itself
@@ -2055,20 +2055,44 @@ escalating for ever. Three pieces:
   floor nobody believes. Blood on the ground is settled; the only thing that
   moves is the spray, and that is over in a third of a second.
 
-- **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → VIDEO → **EXTRA GORE** (on by
-  default; off falls back to the plain two-frame splash) and the DEVELOPER →
-  VISUALS **BLOOD** amount fold into `bloodAmount()` (blood-hit.ts) — the single
-  answer everything that spills blood asks, `bloodBlow` included. Off means
+- **ONE GATE, CHECKED IN ONE PLACE — `game-screen/gore-gate.ts`.** The device's
+  MATURE CONTENT switch, the player's own GORE switches and the DEVELOPER →
+  VISUALS **BLOOD** amount fold into one answer, `goreAmount(family)`, which is
+  what everything that spills anything asks, `bloodBlow` included. Off means
   nothing is drawn AND nothing is recorded — a gate at the draw call would leave
   the grid filling up invisibly and hand the player a red floor the moment they
-  switched it back on.
+  switched it back on. Only ONE of the three is different in kind: a blow refused
+  because the DEVELOPER amount is zero lands completely DRY, where one refused by
+  the device or the player falls back to the plain two-frame splash (`splashOnly`)
+  — that knob exists to clear a field for a screenshot, not to make the game
+  gentler.
+
+- **AND "IS THIS TOO MUCH" IS NOT ONE QUESTION — SETTINGS → VIDEO → GORE.** What
+  was a single EXTRA GORE switch is a PAGE of eight, all shipping ON, because the
+  one switch made a player who did not want to watch a PERSON opened up turn off
+  the machines' sparks and the ghosts' ectoplasm with it. Three groups: one row
+  per gore FAMILY (HUMAN GORE, GHOST GORE, ROBOTIC GORE, COSMIC GORE — so
+  `goreBlood` off with
+  the other three on is "no human gore", the request the split was built for),
+  one per way a body comes APART (CLEAVES, GIBS — separate rows because a blade
+  opening a body and a mass bursting it are separate sights, and both cross every
+  family), and the two things blood leaves on the HERO (BLOODY HERO, BOOTPRINTS).
+  Those last two are blood's own art in blood's own colours, so HUMAN GORE off
+  leaves
+  them nothing to do: they are shown LOCKED rather than hidden, the way a locked
+  KEYS row shows where the movement went. A save carrying the retired `extraGore`
+  key at `off` arrives as all eight off — a player who turned the gore off years
+  ago must not be handed a page of switches that turned themselves back on. A
+  ninth kind of gore is a switch here plus its row in `FAMILY_SWITCH`/`KIND_SWITCH`,
+  never a new gate somewhere else.
 
 **AND THE MAN DOING IT DOES NOT WALK AWAY CLEAN — THE SOAK AND THE TRAIL.** The
 floor remembering a fight is only half of it; a hero still factory-fresh after
 six hundred bodies is the loudest thing on the screen saying none of it happened.
 So blood lands on HIM and stays, and his boots carry it out onto clean ground.
 Both are pure presentation, priced off the very same `BloodBlow`, and both are
-gated at `bloodAmount()` with everything else.
+gated with everything else — at `heroSoakAmount()` / `bloodTrackAmount()`, which
+are BLOOD's own gate plus each one's own switch.
 
 - **THE SOAK IS FIVE NUMBERS, AND A ZONE IS A GEAR SLOT**
   (`game-screen/hero-soak.ts`): the four armor slots plus the weapon. That is the
@@ -2186,9 +2210,11 @@ Five more rules:
    alternative — the app guessing from weapon NAMES — drifts the moment anyone
    authors a new one and could never include a MOD's. Nothing in the simulation
    reads it; damage, reach and cadence are identical either way.
-2. **THE GATE IS `bloodAmount()`, THE SAME ONE THE BLOOD ASKS**, checked in
-   `kill-presentation.ts` where the death is DECIDED, and what a refusal falls
-   back to is the ORDINARY punt-and-topple — the same shape the nuke's
+2. **THE GATE IS `gore-gate.ts`, THE SAME ONE THE BLOOD ASKS**, checked in
+   `kill-presentation.ts` where the death is DECIDED — and TWO switches have to
+   agree, the victim's FAMILY and the KIND of dismemberment. What a refusal falls
+   back to is the ORDINARY punt-and-topple, never the OTHER kind (turning cleaves
+   off must not start bursting the bodies a blade would have opened) — the same shape the nuke's
    incinerate gate takes, and for the same reason (a censored blow whose bodies
    cease to exist reads as a bug, not as a gentler game). A boss NEVER comes
    apart: it speaks its last words over its own body and that corpse is the
@@ -2349,8 +2375,9 @@ burst reads as one kind of thing:
   deliberately blood ALONE, because the soak and the trail are blood art in
   blood's colours and a tile of oil must not print red bootprints out of it.
 
-The same gate covers all four: `bloodAmount()`, so a censored blow still falls
-back to the plain splash and the ordinary corpse. **A boss is still the one body
+The same gate covers all four — `goreAmount(family)`, one switch per family — so
+a blow refused by the device or by the player's own row still falls back to the
+plain splash and the ordinary corpse. **A boss is still the one body
 that never comes apart**, and that is a rule about the FICTION — it has last
 words to say over its own corpse, and that corpse is the level's landmark.
 

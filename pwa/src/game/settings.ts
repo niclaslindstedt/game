@@ -154,15 +154,40 @@ export type MuteMode = "on" | "off";
  * `on` (the default) keeps it; `off` silences it for a cleaner field. */
 export type XpFloat = "on" | "off";
 
-/** EXTRA GORE: a display preference (SETTINGS → DISPLAY) for the whole blood
- * system — the spray a landed blow throws AND the blood that stays on the floor
- * afterwards (game-screen/blood-hit.ts, render/blood.ts, render/blood-ground.ts).
- * `on` (the default — this game is a splatter shooter) gives a wound that opens
- * in proportion to the damage and a battlefield that visibly reddens where the
- * fighting happened; `off` falls back to the plain two-frame splash the horde
- * always had, with nothing left behind. It is checked in exactly one place, so
- * `off` means nothing is drawn AND nothing is recorded. */
-export type ExtraGore = "on" | "off";
+/**
+ * GORE (SETTINGS → VIDEO → GORE): one switch per kind of gore, because "is this
+ * too much" is not one question.
+ *
+ * The page splits three ways, and the split is the whole point of it being a
+ * page rather than the single EXTRA GORE switch it replaced:
+ *
+ *   WHO BLEEDS.  One switch per gore FAMILY (game-screen/gore.ts) — people,
+ *                hauntings, machines, rift-things. A player who does not want
+ *                to see a PERSON opened up is not thereby asking for a rover to
+ *                stop throwing sparks, and until this page existed they had to
+ *                ask for both. `goreBlood` off with the other three on is
+ *                exactly that request, and it is the one the switch split was
+ *                added for.
+ *   WHAT A KILL DOES TO THE BODY.  `goreCleaves` (a blade opens it) and
+ *                `goreGibs` (a mass bursts it) — the two most graphic things in
+ *                the game, and the pair a player is most likely to want gone
+ *                while still wanting a hit to land visibly. They cross every
+ *                family: a machine cut in two is still a body cut in two.
+ *   WHAT IT LEAVES ON THE HERO.  `goreSoak` (it stays on his gear) and
+ *                `goreTracks` (his boots carry it out onto clean ground). Both
+ *                are BLOOD's own art in blood's own colours, so both are
+ *                meaningless with `goreBlood` off — the rows are shown LOCKED
+ *                there rather than hidden, the way a locked KEYS row shows
+ *                where the movement went.
+ *
+ * Every one of them ships ON: this game is a splatter shooter, and a mob that
+ * takes a blade without bleeding reads as a mob that was not hit. Each is
+ * checked where its effect is DECIDED (see game-screen/gore-gate.ts), never at
+ * the draw call, so `off` means nothing is drawn AND nothing is recorded.
+ *
+ * The device's MATURE CONTENT switch outranks all eight (app/device-policy.ts).
+ */
+export type GoreSwitch = "on" | "off";
 
 /** HEALTH BARS: a display preference (SETTINGS → DISPLAY) for a small hp bar
  * drawn over every wounded mob's head (see render.ts). `on` (the default)
@@ -309,9 +334,18 @@ export type GameSettings = {
   modBrand: ModBrandMemo | null;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
-  /** Display preference: the blood a blow throws and leaves behind (see
-   * ExtraGore). */
-  extraGore: ExtraGore;
+  /** Display preferences: one switch per kind of gore (see GoreSwitch). The
+   * four families first — a player may want the machines to spark and the
+   * people not to bleed — then what a killing blow does to a body, then what
+   * blood leaves on the hero. */
+  goreBlood: GoreSwitch;
+  goreEcto: GoreSwitch;
+  goreSparks: GoreSwitch;
+  goreCosmic: GoreSwitch;
+  goreCleaves: GoreSwitch;
+  goreGibs: GoreSwitch;
+  goreSoak: GoreSwitch;
+  goreTracks: GoreSwitch;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
   healthBars: HealthBars;
   /** Display preference: lowest rarity that pops a framed loot card on pickup;
@@ -443,9 +477,17 @@ function defaults(): GameSettings {
     modBrand: null,
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
-    // The blood ships ON — a mob that takes a blade and doesn't bleed reads as
-    // a mob that wasn't hit. The row is there for players who want it quiet.
-    extraGore: "on",
+    // Every kind of gore ships ON — a mob that takes a blade and doesn't bleed
+    // reads as a mob that wasn't hit. The GORE page is there for players who
+    // want some of it quiet, one kind at a time.
+    goreBlood: "on",
+    goreEcto: "on",
+    goreSparks: "on",
+    goreCosmic: "on",
+    goreCleaves: "on",
+    goreGibs: "on",
+    goreSoak: "on",
+    goreTracks: "on",
     // Health bars over regular mobs are on out of the box; a player who wants
     // a cleaner field turns them off (bosses/elites always show theirs).
     healthBars: "on",
@@ -561,12 +603,22 @@ function visualsFrom(
   stored: Partial<Record<FxName, unknown>>,
   base: FxSettings,
 ): FxSettings {
-  const out = { ...base };
+  // BUILT FROM NOTHING, never cloned from `base` — and that is the whole of it.
+  // `load()` hands its FULL defaults object in as `base` (a `GameSettings` is a
+  // structurally valid `FxSettings`), so a `{ ...base }` here returns EVERY
+  // default the game has, and this call is the LAST spread in `load()`'s object
+  // literal: it silently re-stamped every setting read above it with its
+  // shipped value, and nothing a player changed survived a reload. TypeScript
+  // cannot see it — the declared return type carries four keys and the runtime
+  // object carried sixty — so the guard is this comment plus
+  // `tests/settings_load_test.ts`.
+  const out = {} as FxSettings;
   for (const name of Object.keys(FX_RANGES) as FxName[]) {
     const value = stored[name];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      out[name] = Math.round(clampFx(name, value) * 50) / 50;
-    }
+    out[name] =
+      typeof value === "number" && Number.isFinite(value)
+        ? Math.round(clampFx(name, value) * 50) / 50
+        : base[name];
   }
   return out;
 }
@@ -685,6 +737,46 @@ function loadModBrand(stored: unknown): ModBrandMemo | null {
 const BRAND_TITLE_MAX = 28;
 const BRAND_TAGLINE_MAX = 48;
 
+/** The eight GORE switches this settings file owns, in the order the page
+ * shows them. Kept as a list so the loader, the RESET row and the tests all
+ * read one definition of "every kind of gore". */
+export const GORE_SWITCHES = [
+  "goreBlood",
+  "goreEcto",
+  "goreSparks",
+  "goreCosmic",
+  "goreCleaves",
+  "goreGibs",
+  "goreSoak",
+  "goreTracks",
+] as const;
+
+export type GoreSwitchKey = (typeof GORE_SWITCHES)[number];
+
+/**
+ * The GORE switches, read back — and the one legacy key they replaced.
+ *
+ * EXTRA GORE was a single switch over the lot, so a save carrying `off` is a
+ * player who has already said they want no gore: it arrives here as all eight
+ * off, never as a page of switches that quietly turned themselves back on
+ * behind a player who had turned the blood off years ago. An `on` (or a save
+ * predating the row entirely) takes the shipped defaults, which is the same
+ * thing it meant before.
+ */
+function loadGore(
+  stored: Partial<GameSettings> & { extraGore?: unknown },
+  base: GameSettings,
+): Record<GoreSwitchKey, GoreSwitch> {
+  const legacyOff = stored.extraGore === "off";
+  const out = {} as Record<GoreSwitchKey, GoreSwitch>;
+  for (const key of GORE_SWITCHES) {
+    const value = stored[key];
+    out[key] =
+      value === "on" || value === "off" ? value : legacyOff ? "off" : base[key];
+  }
+  return out;
+}
+
 function load(): GameSettings {
   const base = defaults();
   try {
@@ -775,10 +867,7 @@ function load(): GameSettings {
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat
           : base.xpFloat,
-      extraGore:
-        stored.extraGore === "on" || stored.extraGore === "off"
-          ? stored.extraGore
-          : base.extraGore,
+      ...loadGore(stored, base),
       healthBars:
         stored.healthBars === "on" || stored.healthBars === "off"
           ? stored.healthBars

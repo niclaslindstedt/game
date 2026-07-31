@@ -276,7 +276,7 @@ export function TitleScreen({
   // The device's own content switches (iOS Settings → <app>) are a settings
   // singleton too, just one this app can't write — so a change there rebuilds
   // the rows through the very same tick. It is the menu that has to notice:
-  // STORE and EXTRA GORE are rows whose EXISTENCE the policy decides, and the
+  // STORE and GORE are rows whose EXISTENCE the policy decides, and the
   // player flipping the switch is by definition standing in this menu, having
   // just come back from Settings.
   useEffect(() => subscribeDevicePolicy(bumpSettings), [bumpSettings]);
