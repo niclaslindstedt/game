@@ -377,24 +377,6 @@ export function buildVideoMenu(ctx: MenuContext): MenuEntry[] {
       "color-grade": fxRow(ctx, "color-grade"),
       vignette: fxRow(ctx, "vignette"),
       "depth-haze": fxRow(ctx, "depth-haze"),
-      // Five knobs is well past where a RESET row earns its place: a player who
-      // has dragged all of them somewhere odd has no other way back to the look
-      // the game shipped with.
-      reset: actionRow("video", "reset", () => {
-        playUiSound(synth, "confirm");
-        updateSettings({
-          bloom: FX_RANGES.bloom.default,
-          colorGrade: FX_RANGES.colorGrade.default,
-          vignette: FX_RANGES.vignette.default,
-          depthHaze: FX_RANGES.depthHaze.default,
-          // The gore switches are NOT reset from here: they are a page of their
-          // own now, with a RESET ALL of their own on it, and this row's help
-          // line promises the VISUALS back — not a player's considered answer
-          // about how much of a body they want to watch come apart. Which is
-          // also why the GORE row sits BELOW this one in the tree.
-        });
-        ctx.bumpSettings();
-      }),
       // Dropped entirely when the DEVICE says no mature content (iOS Settings →
       // <app> → MATURE CONTENT — see app/device-policy.ts). The gate outranks
       // every switch behind this row, so leaving it would open a page of
