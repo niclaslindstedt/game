@@ -639,6 +639,21 @@ h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: 
    run of badges rather than as two families. */
 .badge-rack { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); margin-bottom: 1.25rem; }
 
+/* AN ALLY RACK — the shared rack in the mint the game draws a companion's own
+   health bar in (see render-allies.mjs, which owns the value). It is the one
+   rack whose subject is on the reader's side, and the sub-label slot a
+   monster's venue uses carries what this one grows into instead. */
+.allies .ally-name { color: var(--mint); }
+.allies a:hover .ally-name { color: var(--amber); }
+
+/* A companion's BANTER: four or five one-liners it floats over its own kills.
+   Not a 'speech' block, which is sized for a scene somebody stops to deliver —
+   these are shouted mid-fight, and a column of bordered quotes reads as five
+   separate conversations. A plain indented list in the speaking voice is what
+   they are. */
+.quote-list { list-style: none; padding: 0 0 0 0.9rem; margin: 0.4rem 0 0.9rem; border-left: 2px solid #23524a; }
+.quote-list > li { margin: 0 0 0.3rem; color: var(--ink-dim); }
+
 .roster li > span.self { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem; font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: var(--amber); }
 .dim { color: var(--ink-faint); }
 h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.6rem; }

@@ -30,7 +30,6 @@ import {
   CATEGORY_LABELS,
   COMPANION_DEFS,
   DIFFICULTY_DEFS,
-  ENEMY_DEFS,
   LEVELS,
   PLATFORM_ACHIEVEMENT_LIMIT,
   PLATFORM_POINT_BUDGET,
@@ -42,6 +41,7 @@ import {
   isPlatformAchievement,
   platformPoints,
 } from "./catalogs.mjs";
+import { allyPath } from "./model-allies.mjs";
 
 /**
  * EVERY AUTHORED FIELD REACHES A PAGE — or the build stops. Same contract as the
@@ -93,16 +93,10 @@ export const achievementCategoryPath = (category) =>
 /**
  * WHERE A BADGE'S SUBJECT LIVES IN THE LIBRARY.
  *
- * The four generated families are minted off four catalogs, and three of those
- * catalogs already have pages — so a badge about them is a link rather than a
+ * The four generated families are minted off four catalogs, and every one of
+ * those catalogs has pages — so a badge about them is a link rather than a
  * name, which is the whole reason the section is worth generating instead of
  * printing the shelf into HTML.
- *
- * The odd one is a COMPANION, which has no page of its own: an ally is met as
- * the ELITE you decline to finish, so the badge leads to that elite's bestiary
- * page — asked of the roster (`spareable.companion`) rather than tabled here,
- * since re-homing a companion onto a different elite is an ordinary content
- * edit and this must follow it.
  *
  * A DIFFICULTY has no page anywhere, and gets a name and no link rather than a
  * link to something adjacent.
@@ -123,17 +117,11 @@ function resolveSubject(subject) {
   if (kind === "companion") {
     const companion = COMPANION_DEFS[id];
     if (!companion) return missing(kind, id);
-    const elite = Object.values(ENEMY_DEFS).find(
-      (def) => def.spareable?.companion === id,
-    );
-    return {
-      kind,
-      id,
-      name: companion.name,
-      // An ally nobody can be spared into is a badge nobody can earn, so the
-      // absence is left as a missing link rather than papered over.
-      path: elite ? `bestiary/${slugFor(elite.id)}` : null,
-    };
+    // The ALLY's own page, not the elite's. It used to be the elite's, because
+    // an ally had nowhere else to be — which pointed a badge for recruiting
+    // somebody at the page about killing them, and left the reader to work out
+    // that the two were the same figure.
+    return { kind, id, name: companion.name, path: allyPath(id) };
   }
   if (kind === "difficulty") {
     const difficulty = DIFFICULTY_DEFS[id];

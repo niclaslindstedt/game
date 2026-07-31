@@ -23,6 +23,7 @@ import {
   mobContactScaleFor,
 } from "./catalogs.mjs";
 import { achievementsModel } from "./model-achievements.mjs";
+import { alliesModel, allyPath } from "./model-allies.mjs";
 import { arsenalModel } from "./model-arsenal.mjs";
 import { missionsModel } from "./model-missions.mjs";
 import { powersModel } from "./model-powers.mjs";
@@ -488,12 +489,19 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
       talks: !!def.conversation,
       structure: !!def.structure,
       flees: def.flees ?? null,
+      // Who this one gets up as, if you spare it — LINKED, because the ally it
+      // becomes has a whole page of its own now (what it fields, what its
+      // signature power comes to, what it says). A name alone was the bestiary
+      // naming a thing the site could not take the reader to.
       spareable: def.spareable
         ? {
             ...def.spareable,
             name:
               COMPANION_DEFS[def.spareable.companion]?.name ??
               def.spareable.companion,
+            path: COMPANION_DEFS[def.spareable.companion]
+              ? allyPath(def.spareable.companion)
+              : null,
           }
         : null,
       ranged: def.ranged ?? null,
@@ -626,11 +634,13 @@ export function libraryModel() {
   const quests = questsModel();
   const story = storyModel();
   const achievements = achievementsModel();
+  const allies = alliesModel(venueList);
 
   return {
     enemies,
     venues: venueList,
     groups,
+    allies,
     items: arsenal.items,
     bases: arsenal.bases,
     named: arsenal.named,
@@ -651,6 +661,7 @@ export function libraryModel() {
 export function libraryRoutes() {
   const {
     achievements,
+    allies,
     enemies,
     items,
     missions,
@@ -662,6 +673,10 @@ export function libraryRoutes() {
   return [
     { path: "", sources: ["content", "pwa/scripts/library"] },
     { path: "bestiary", sources: ["content/enemies"] },
+    // The roster plus the party rules the index spends half its length on —
+    // and those live in the engine's config rather than in `content/`, so the
+    // index is dated by both or a rebalance of the leash would not move it.
+    { path: "allies", sources: allies.sourceFiles },
     { path: "arsenal", sources: ["content/items"] },
     { path: "powers", sources: ["content/powerups.yaml"] },
     { path: "talents", sources: ["content/talents.yaml"] },
@@ -682,6 +697,10 @@ export function libraryRoutes() {
       sources: category.sourceFiles,
     })),
     ...enemies.map((enemy) => ({ path: enemy.path, sources: enemy.sources })),
+    ...allies.allies.map((ally) => ({
+      path: ally.path,
+      sources: ally.sourceFiles,
+    })),
     ...items.map((item) => ({ path: item.path, sources: item.sourceFiles })),
     ...powers.powers.map((power) => ({
       path: power.path,
