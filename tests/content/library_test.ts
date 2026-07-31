@@ -205,9 +205,9 @@ describe("library coverage", () => {
     const paged = new Set(
       model.allies.allies.map((ally: { id: string }) => ally.id),
     );
-    expect([...Object.keys(COMPANION_DEFS)].filter((id) => !paged.has(id))).toEqual(
-      [],
-    );
+    expect(
+      [...Object.keys(COMPANION_DEFS)].filter((id) => !paged.has(id)),
+    ).toEqual([]);
     // And the other direction, which is the one that would ship quietly: an
     // ally page whose whole opening paragraph is about being spared by somebody
     // is a page about nothing if no elite names it.

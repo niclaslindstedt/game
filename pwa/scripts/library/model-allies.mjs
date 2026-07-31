@@ -237,9 +237,7 @@ function trainingLadder(def) {
         // in: `COMPANIONS.levelKills` of a reference mob's worth of XP. The
         // count is the engine's own two figures divided, never the config
         // constant re-grown here.
-        kills: Math.round(
-          companionXpToLevelUp(level) / referenceMobXp(level),
-        ),
+        kills: Math.round(companionXpToLevelUp(level) / referenceMobXp(level)),
         values: Object.fromEntries(
           measures.map((measure) => [measure.key, measure.read(level)]),
         ),

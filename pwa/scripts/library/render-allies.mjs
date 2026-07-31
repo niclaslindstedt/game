@@ -120,9 +120,7 @@ function kitSection(ally, base) {
     ["HITS EVERY", `${(ally.base.cooldownMs / 1000).toFixed(2)} S`],
     ["REACH", `${ally.weapon.range}`],
     ...(ally.weapon.sweepDeg ? [["ARC", `${ally.weapon.sweepDeg}°`]] : []),
-    ...(ally.weapon.pellets > 1
-      ? [["VOLLEY", `${ally.weapon.pellets}`]]
-      : []),
+    ...(ally.weapon.pellets > 1 ? [["VOLLEY", `${ally.weapon.pellets}`]] : []),
     ["PACE", `${ally.base.speed}`],
     ["SIZE", `${ally.base.radius}`],
   ];
