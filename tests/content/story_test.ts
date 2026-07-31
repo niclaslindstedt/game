@@ -17,6 +17,7 @@ import {
   gearDef,
   isWeaponDef,
   LEVELS,
+  MAP_BLUEPRINTS,
   SECRET_LEVEL_ORDER,
   step,
   STORY_ITEM_DEFS,
@@ -295,71 +296,19 @@ describe("story items", () => {
     expect(unit).toBeDefined();
   });
 
-  it("locks the AI CORE's log behind THE ARCHITECT's keycard", () => {
+  it("puts the AI CORE's log on the floor, and its keycard on THE ARCHITECT", () => {
     const state = startGame(SEED, "goodco_hq");
-    // The payoff sits inside the CORE room…
+    // The payoff is somewhere on the floor — the carve strings the story
+    // pieces along its own depth axis, so which room is the run's answer.
     const log = state.items.find(
       (i) => i.kind === "story" && i.defId === "core_log",
     );
     expect(log).toBeDefined();
-    // …and the only key to it is the keycard THE ARCHITECT drops.
+    // …and the card that names the CORE is the one THE ARCHITECT drops.
     const key = storyItemDef("keycard_core");
     expect(key.unlocks).toBe("core");
-    expect(state.doors.some((d) => d.id === "core")).toBe(true);
     const architectKeys = enemyDef("architect").loot?.storyItems ?? [];
     expect(architectKeys).toContain("keycard_core");
-  });
-});
-
-describe("locked doors", () => {
-  it("stays shut without the key, opens for its key, and only its own", () => {
-    const state = startGame(SEED, "goodco_hq");
-    stopWaves(state);
-    state.enemies = state.enemies.filter(
-      (e) => enemyDef(e.defId).role === "boss",
-    );
-    const storage = state.doors.find((d) => d.id === "storage")!;
-    const vault = state.doors.find((d) => d.id === "vault")!;
-
-    // Stand at the door empty-handed: nothing moves.
-    state.players[0].pos = { x: storage.center.x, y: storage.center.y + 34 };
-    step(state, idle, DT);
-    expect(storage.open).toBe(false);
-
-    // Bring the key: the chain vanishes and the event fires.
-    state.storyItems.push("keycard_storage");
-    step(state, idle, DT);
-    expect(storage.open).toBe(true);
-    expect(
-      state.obstacles.some((o) => storage.obstacleIds.includes(o.id)),
-    ).toBe(false);
-    expect(state.events).toContainEqual({
-      type: "doorOpened",
-      pos: { ...storage.center },
-    });
-
-    // The other door doesn't care about this key.
-    state.players[0].pos = { x: vault.center.x, y: vault.center.y - 34 };
-    step(state, idle, DT);
-    expect(vault.open).toBe(false);
-    expect(
-      state.obstacles.filter((o) => o.kind === "door_locked").length,
-    ).toBeGreaterThan(0);
-  });
-
-  it("builds every level-1 door as a solid, unjumpable chain", () => {
-    const state = startGame(SEED, "goodco_hq");
-    expect(state.doors).toHaveLength(3);
-    for (const door of state.doors) {
-      const chain = state.obstacles.filter((o) =>
-        door.obstacleIds.includes(o.id),
-      );
-      expect(chain.length).toBeGreaterThan(0);
-      for (const link of chain) {
-        expect(link.kind).toBe("door_locked");
-        expect(link.jumpable).toBe(false);
-      }
-    }
   });
 });
 
@@ -373,10 +322,9 @@ describe("catalog integrity", () => {
       // their own rule below. Apparitions are dialogue-only figures, not the
       // loot-bearing story fights this rule counts — same.
       if (secret.has(level.id)) continue;
-      const placed = level.spawns
-        .filter((s) => "at" in s)
-        .map((s) => enemyDef(s.enemy))
-        .filter((d) => d.role === "elite" && !d.apparition);
+      const placed = MAP_BLUEPRINTS[level.id]!.elites.map((e) =>
+        enemyDef(e.enemy),
+      ).filter((d) => d.role === "elite" && !d.apparition);
       expect(placed.length).toBeGreaterThanOrEqual(3);
       expect(placed.length).toBeLessThanOrEqual(5);
       for (const def of placed) {
@@ -388,10 +336,9 @@ describe("catalog integrity", () => {
   });
 
   it("fields six far-tougher speaking residents in the bunker", () => {
-    const bunker = LEVELS.the_bunker!;
-    const placed = bunker.spawns
-      .filter((s) => "at" in s)
-      .map((s) => enemyDef(s.enemy))
+    const bunker = MAP_BLUEPRINTS.the_bunker!;
+    const placed = [...bunker.elites, ...bunker.guardians]
+      .map((e) => enemyDef(e.enemy))
       .filter((d) => d.role === "elite" && !d.apparition);
     expect(placed.length).toBe(6);
     // The toughest campaign elite tops out around 950 hp — every resident
@@ -408,12 +355,12 @@ describe("catalog integrity", () => {
       ).toBeGreaterThan(0);
       expect(def.ai.rushSpeed ?? 0, def.id).toBeGreaterThan(def.speed);
     }
-    // Every resident is ringed by his personal detail: at least three
-    // bodyguards placed within reach of his post.
-    const guards = bunker.spawns.filter(
-      (s) => "at" in s && enemyDef(s.enemy).id.startsWith("guard_"),
-    );
-    expect(guards.length).toBe(18);
+    // Every resident is ringed by his personal detail: an ESCORT that comes
+    // out of the carve with him, wherever the search finds his suite.
+    for (const piece of bunker.elites) {
+      const detail = (piece.escort ?? []).reduce((n, g) => n + g.count, 0);
+      expect(detail, piece.enemy).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it("keeps every apparition a pure dialogue figure", () => {
@@ -447,19 +394,21 @@ describe("catalog integrity", () => {
     }
   });
 
-  it("resolves every dropped story item and every key's door", () => {
-    const doorIds = Object.values(LEVELS).flatMap((level) =>
-      (level.doors ?? []).map((d) => d.id),
-    );
+  it("resolves every dropped story item, and keeps each door to one key", () => {
     for (const def of Object.values(ENEMY_DEFS)) {
       for (const id of def.loot?.storyItems ?? []) {
         expect(STORY_ITEM_DEFS[id], id).toBeDefined();
       }
     }
-    for (const def of Object.values(STORY_ITEM_DEFS)) {
-      if (def.unlocks) expect(doorIds).toContain(def.unlocks);
-    }
-    // Every locked door has exactly one key somewhere in the catalogs.
+    // A door has exactly ONE key. Which doors a carve actually hangs is the
+    // blueprint's business (`locks:` / `annex.lock`, checked in
+    // generated_maps_test.ts); what binds here is the catalog half — two
+    // keycards claiming the same door would make one of them meaningless.
+    const doorIds = new Set(
+      Object.values(STORY_ITEM_DEFS)
+        .map((d) => d.unlocks)
+        .filter((id): id is string => Boolean(id)),
+    );
     for (const doorId of doorIds) {
       const keys = Object.values(STORY_ITEM_DEFS).filter(
         (d) => d.unlocks === doorId,

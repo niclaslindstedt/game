@@ -7,28 +7,48 @@
 // live def ids the generator harvests from the engine catalogs, so a typo in a
 // YAML level surfaces at `npm run levels`, not at runtime.
 
-/** Fields every level must declare (a missing one is a hard error). */
+/**
+ * Fields every MISSION must declare (a missing one is a hard error).
+ *
+ * The geometry is deliberately absent: a mission is not a map, and every
+ * positional field is carved per run from `content/maps/<id>.yaml` (the level
+ * loader refuses one that authors any of them by name). What a CARVE
+ * additionally owes is {@link CARVED_FIELDS}, checked when the caller says it
+ * is looking at one.
+ */
 export const REQUIRED_FIELDS = [
   "id",
   "index",
   "name",
-  "width",
-  "height",
   "gravity",
   "biome",
   "foes",
   "tiles",
-  "playerSpawn",
   "objective",
-  "spawns",
-  "obstacles",
-  "decor",
   "decorClearance",
   "intro",
   "loot",
   // HARD-CODED per-difficulty mob levels (easy/medium/hard/nightmare); JESUS
   // stays player-relative. Required on every level — a spawner may override it.
   "mobLevels",
+];
+
+/**
+ * What a CARVED level owes on top of the mission's own fields — checked with
+ * `validateLevel(def, refs, description, { carved: true })`.
+ *
+ * The generator emits a `LevelDef` and the rest of the engine cannot tell where
+ * one came from, so it has no business emitting one a human would not have been
+ * allowed to commit back when humans drew maps.
+ */
+export const CARVED_FIELDS = [
+  "width",
+  "height",
+  "playerSpawn",
+  "landmarks",
+  "spawns",
+  "obstacles",
+  "decor",
 ];
 
 const OBJECTIVES = new Set(["killBoss", "clearAll", "reachExit"]);
@@ -44,25 +64,37 @@ const isVec = (v) => v && typeof v.x === "number" && typeof v.y === "number";
  *                          cutscenes, music }` — each a Set<string> of live ids
  *                          (doorKeys = every story item's `unlocks` value).
  * @param {string} [description] the authoring description, for the warning.
+ * @param {{ carved?: boolean }} [options] `carved` → this def is a CARVED map
+ *        rather than an authored mission, so the geometry is required and every
+ *        position is checked against it.
  */
-export function validateLevel(def, refs, description = "") {
+export function validateLevel(def, refs, description = "", options = {}) {
   const errors = [];
   const warnings = [];
+  const carved = options.carved === true;
   const tag = def?.id ? `level "${def.id}"` : "level";
   const err = (m) => errors.push(`${tag}: ${m}`);
 
   for (const field of REQUIRED_FIELDS) {
     if (def[field] === undefined) err(`missing required field "${field}"`);
   }
-  if (def.width <= 0 || def.height <= 0) err("width/height must be positive");
+  if (carved)
+    for (const field of CARVED_FIELDS) {
+      if (def[field] === undefined) err(`carve emitted no "${field}"`);
+    }
+  if (def.width !== undefined && (def.width <= 0 || def.height <= 0))
+    err("width/height must be positive");
   // A `music` id nobody ships is the quietest bug in the level format: the
   // player silently falls back to the default theme, so the venue plays the
   // moon's music and reads as a decision rather than a typo.
   if (def.music !== undefined && refs.music && !refs.music.has(def.music)) {
     err(`unknown music "${def.music}" — no such track (see content/music/)`);
   }
+  // A mission has no map to be off, so a bounds check is only meaningful on a
+  // carve — every position on one belongs to the carve that put it there.
   const inBounds = (v) =>
-    isVec(v) && v.x >= 0 && v.x <= def.width && v.y >= 0 && v.y <= def.height;
+    def.width === undefined ||
+    (isVec(v) && v.x >= 0 && v.x <= def.width && v.y >= 0 && v.y <= def.height);
 
   // ---- hard-coded per-difficulty mob levels / hp ----------------------------
   // A LEVEL BAND is one difficulty's authored mob level: an exact level (>=1) or
@@ -209,7 +241,8 @@ export function validateLevel(def, refs, description = "") {
   for (const id of def.rareSpawns?.unique ?? []) enemy(id, "rareSpawns.unique");
   if (def.openingStrike) {
     enemy(def.openingStrike.enemy, "openingStrike");
-    if (!isVec(def.openingStrike.at)) err("openingStrike needs an { at }");
+    if (carved && !isVec(def.openingStrike.at))
+      err("openingStrike needs an { at }");
   }
 
   // ---- thought references ----------------------------------------------------
@@ -320,9 +353,10 @@ export function validateLevel(def, refs, description = "") {
   // ---- objective + geometry --------------------------------------------------
   if (def.objective && !OBJECTIVES.has(def.objective.type))
     err(`objective type "${def.objective.type}" not one of ${[...OBJECTIVES]}`);
-  if (def.objective?.type === "reachExit" && !isVec(def.objective.at))
+  if (carved && def.objective?.type === "reachExit" && !isVec(def.objective.at))
     err("reachExit objective needs an { at }");
-  if (!inBounds(def.playerSpawn)) err("playerSpawn is off the map");
+  if (def.playerSpawn !== undefined && !inBounds(def.playerSpawn))
+    err("playerSpawn is off the map");
 
   // The intended-path waypoints (navigation aid) must sit on the map.
   for (const p of def.path ?? []) {
@@ -486,8 +520,8 @@ export function validateLevel(def, refs, description = "") {
         typeof p.y !== "number" ||
         p.x < 0 ||
         p.y < 0 ||
-        p.x > def.width ||
-        p.y > def.height
+        (def.width !== undefined && p.x > def.width) ||
+        (def.height !== undefined && p.y > def.height)
       )
         err(`${where} ${key} must be a point inside the level`);
     }

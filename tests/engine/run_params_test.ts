@@ -34,12 +34,12 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 /**
  * What `SessionParams` carries that `RunParams` deliberately does not.
  *
- * The generated-maps pair are process-global engine FLAGS rather than arguments
- * — `setGeneratedMapsEnabled` and `setGeneratedMapSize` — so they are applied
- * by the CALLER before it builds, on both ends, and there is nothing for the
- * builder to do with them. Everything else must appear in both.
+ * The map SIZE is a process-global engine FLAG rather than an argument —
+ * `setGeneratedMapSize` — so it is applied by the CALLER before it builds, on
+ * both ends, and there is nothing for the builder to do with it. Everything
+ * else must appear in both.
  */
-const WIRE_ONLY = ["generatedMaps", "generatedMapSize"];
+const WIRE_ONLY = ["generatedMapSize"];
 
 const runParams = fieldsOf(
   path.join(repoRoot, "src", "game", "session-setup.ts"),
@@ -75,11 +75,11 @@ describe("a run's parameters and the wire's", () => {
     });
   });
 
-  it("keeps the two engine FLAGS on the wire side alone", () => {
+  it("keeps the engine FLAG on the wire side alone", () => {
     // Stated positively as well, so that deleting a row from `WIRE_ONLY` to
-    // make a failure go away is itself a failure. These two are on the wire
-    // because a client must carve the same map; they are absent from the
-    // builder because they are set before it, not by it.
+    // make a failure go away is itself a failure. It is on the wire because a
+    // client must carve the same map; it is absent from the builder because it
+    // is set before it, not by it.
     for (const flag of WIRE_ONLY) {
       expect(sessionParams).toContain(flag);
       expect(runParams).not.toContain(flag);

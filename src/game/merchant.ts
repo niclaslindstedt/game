@@ -95,9 +95,16 @@ export function createMerchant(
           .sort(() => rng() - 0.5)
           .find((p) => !blocked(p, MERCHANT.radius)) ?? spawnPoints[0])
       : null;
+  // COPIED, never aliased: the trader WALKS from wherever he is put, and `pos`
+  // is written every tick. Handing him the level's own point made his stall
+  // drag the def's `merchantSpawns` entry (and the safe zone that shares it)
+  // around the map behind him — invisible in a single run, and a desync the
+  // moment a second machine builds the same level and compares.
   let pos: Vec2 = preDiscovered
     ? nearSpawnSpot(playerSpawn, level, blocked)
-    : (authored ?? { x: level.width / 2, y: level.height / 2 });
+    : authored
+      ? { x: authored.x, y: authored.y }
+      : { x: level.width / 2, y: level.height / 2 };
   if (!preDiscovered && !authored) {
     for (let attempts = 0; attempts < 60; attempts++) {
       const candidate = {

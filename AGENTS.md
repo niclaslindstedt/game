@@ -667,27 +667,77 @@ the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
 slots into a single Pages artifact; each slot gets its own service worker and
 a disjoint precache cache id (`pwa/src/app/pwa.ts`).
 
-## GENERATED MAPS — the mission as a recipe, carved per run
+## GENERATED MAPS — THE ONLY MAPS. The mission is a recipe, carved per run
 
-A hand-authored mission pins its boss on a known rock and threads an intended
-`path` to it, so the second run of a map is a commute. **GENERATED MAPS** (a
-developer flag, off by default) instead carves the mission's geometry fresh from
-a **v2 BLUEPRINT** — `content/maps/<id>.yaml` — every run, so the boss has to be
-FOUND. That is the whole feature: no `path` is emitted, which silences the app's
-guidance arrow (`nextPathWaypoint` answers null without one), and the fog-of-war
-minimap becomes the only record of where you have been.
+**A MISSION IS NOT A MAP.** A hand-drawn one pinned its boss on a known rock and
+threaded an intended `path` to it, so the second run of a map was a commute.
+There are none left: every mission's geometry is carved fresh from a **v2
+BLUEPRINT** — `content/maps/<id>.yaml` — on the run's own seed, so the boss has
+to be FOUND. That is the whole feature: no `path` is emitted, which silences the
+app's guidance arrow (`nextPathWaypoint` answers null without one), and the
+fog-of-war minimap becomes the only record of where you have been.
+
+**THE SPLIT IS IN THE TYPES, and it is what keeps it honest.** `MissionDef`
+(`content/levels/<id>.yaml`, the catalog `levelDef()` answers with) is a venue
+MINUS its floor: its name, story, ladder rung, hazards, merchant, loot pools and
+thought pins. `LevelDef` is what a RUN is played on — the same fields plus every
+wall, prop, knot and pickup — and the only way to get one is `resolveLevelDef`,
+i.e. a carve. So a mission that authors geometry is refused BY NAME at build time
+(`scripts/level-data/load-yaml.mjs` names where each field went), and inside a
+run `runLevelDef(state)` is the one accessor: the catalog cannot answer a
+question about a floor it does not have. The old developer flag is gone — there
+is nothing left to switch between — and only the **MAP SIZE** row remains.
 
 **A blueprint is a RECIPE, not a layout.** It carries only what the carving
 needs: a purpose-typed **object palette**, an **area palette** saying what kinds
-of place the map is made of, the horde's breeds and the depths they hold, three
-sizes, and the compass regions the boss may be hiding in. Everything else about
-the mission — name, story, intro, cutscenes, loot pools, merchant persona,
-hazards, thought pins, travel gates — is **INHERITED** from the level it names, so
-the story lives in exactly one place and a generated THE MOON is still the moon.
-Like a level YAML it names **ramps** rather than per-difficulty numbers, expanded
+of place the map is made of, the horde's breeds and the depths they hold, the
+cast (elites, cache keepers, the boss, the errands' non-combatants), three sizes,
+and the compass regions the boss may be hiding in. Everything else about the
+mission — name, story, intro, cutscenes, loot pools, merchant persona, hazards,
+thought pins, travel gates — is **INHERITED** from the level it names, so the
+story lives in exactly one place and a carved THE MOON is still the moon. Like a
+level YAML it names **ramps** rather than per-difficulty numbers, expanded
 against `content/ladder.yaml` by the same shared reader
 (`scripts/level-data/ladder.mjs`), so a `savage` knot means the same mob level on
-a generated map as on the authored one.
+every map.
+
+**A KEYCARD OPENS A ROOM THE CARVE PICKED — `lock:` on an area, `locks:` on the
+blueprint.** The campaign's keycards were lore for as long as a carve had no way
+to say "this district is sealed": a blueprint names a `lock: true` AREA (the kind
+of place worth locking — GoodCo's vault, Mars's shrine) and a `locks:` list of
+STORY ITEM ids, and the carve hangs one door per key on the borders of the
+deepest district it can afford to seal. Five rules make it a room rather than a
+soft-lock:
+
+- **A ROOM IS A DISTRICT, NOT A CELL.** Adjacent lockable cells are grouped into
+  one room first; hanging a door per cell would put a second lock inside the
+  room the first key already opened.
+- **SEALING IT MUST NOT CUT THE MAP IN HALF** (`survivesWithout`). A district
+  can grow across the map's waist, and a door there locks the boss away behind a
+  key that is also behind it. A candidate whose removal disconnects the carve is
+  refused and the next one tried.
+- **NOTHING THE RUN NEEDS GOES INSIDE.** The landing, the objective, the boss's
+  home, every set piece, bystander, placed item and well are excluded from the
+  vault cells (`openCells`, `offMap`), so the key is always somewhere the hero
+  can reach without it.
+- **A LOCKABLE DISTRICT DOES NOT SPREAD** (`areas.ts`). Seeded like any other, it
+  would swallow a small map; it stays the cell it was seeded on, and one seed per
+  key is `promised` to `carveChambers` so a declared key always has a room.
+- **THE ROOM PAYS FOR THE WALK.** Each vault gets its own cache and keeps its
+  knot: what is worth locking up is worth standing over.
+
+The ANNEX takes the same treatment through `annex.lock` — a keyed ELEVATOR
+(`ElevatorState.opensWith`), refused in `elevator.ts` with an `elevatorLocked`
+event rather than silently, so the app can answer with a locked call light and
+the key's name.
+
+**AND THE SENTRIES WALK A BEAT — `patrol: true` on an elite set piece.** A route
+is DERIVED, never authored: `patrolBeat` sweeps the pinned elite down the long
+axis of its own cell, inset off the walls, so the beat fits whatever room the
+carve grew it in. One waypoint is the whole route (the engine walks `at →
+patrol[0]` and back), and it deliberately avoids the cell's centre, which is
+where the furniture stands — a patroller wedged on a crate is a patroller
+standing still.
 
 **Objects are typed by PURPOSE, never by position** (`wall`, `obstacle`, `cover`,
 `crate`, `chest`, `decor`, `landmark`, `building`). The type is what lets the
@@ -778,16 +828,13 @@ blocks a shot.
 
 **THE RUN READS ITS OWN MAP — `runLevelDef(state)`, never `levelDef(state.level.id)`.**
 `createGame` resolves the level once, but a run keeps ASKING the level questions
-for as long as it lasts: where the path goes, which zones suppress spawns, whose
-lair this door is, where the exit stands, whether this map streams waves. Every
-one of those used to go back to the CATALOG — i.e. to the hand-authored map — so
-a carved run was answered with another map's geometry: no-spawn zones drawn
-around rooms that were never carved, a guidance arrow to a landmark that does not
-exist, lair doors that never opened (their elites, dialogue and drops absent from
-the run entirely), and the bunker streaming the authored wave budget the carve
-had deliberately dropped. The carve travels on the state (`GameState.carvedLevel`)
-and `runLevelDef` is the ONE accessor; the rule is flat — inside a run, nothing
-reads the catalog for its own level.
+for as long as it lasts: which zones suppress spawns, whose lair this door is,
+where the exit stands, what is scattered here. Every one of those used to go back
+to the CATALOG, which now holds a MISSION with no geometry on it at all — so
+those reads have nowhere to land, and the type system says so (`levelDef()`
+answers a `MissionDef`, whose geometry is optional). The carve travels on the
+state (`GameState.carvedLevel`) and `runLevelDef` is the ONE accessor; the rule
+is flat — inside a run, nothing reads the catalog for its own level.
 
 **THE LANDING IS QUIET, NOT SAFE — and the opening beat's cast lands with the
 hero.** A SAFE zone does not merely keep the horde from spawning in it, it REPELS
@@ -795,9 +842,10 @@ every minion out and holds them at its edge, so one centred on the hero is a
 bubble he can stand in untouched all run. It also froze goodco_hq's opening beat
 solid: `openingStrike` is held in order by `after` (the hero reads the crowd,
 THEN the lone rusher breaks from the pack and starts swinging at him), and the
-rusher was shoved straight back out of the pad it was placed in. A QUIET zone gives the breather the landing wants — no ambient horde placed
-in it — without the wall; no hand-authored map spends a safe zone on its landing,
-they spend them on the trader's stall. The gate's other half is distance: the
+rusher was shoved straight back out of the pad it was placed in. A QUIET zone
+gives the breather the landing wants — no ambient horde placed in it — without
+the wall; the safe zone is spent on the trader's stall instead. The gate's other
+half is distance: the
 carve pins a few of the `firstSightThoughts` breed the `after` thought names
 around the landing, inside that pin's own radius, because a crowd carved a
 district away leaves the gate shut and the hero walking the map holstered.
@@ -842,20 +890,22 @@ seam `createGame` hangs off). The compile step is `scripts/generate-maps.mjs` + 
 
 - `map-data/load-yaml.mjs`, emitting the gitignored
   `src/generated/map-blueprints.ts`. `tests/content/generated_maps_test.ts` is the
-  guard: it holds every generated def to the SAME `validateLevel` the build runs
-  over hand-authored levels, and asserts the objective, every cache and every placed
+  guard: it holds every carved def to the SAME `validateLevel` the build runs
+  over the missions themselves (plus the geometry a carve owes, `carved: true`),
+  and asserts the objective, every cache and every placed
   item stay reachable using the engine's OWN `buildNavGrid`/`findPath` — a check
   that is only meaningful if the grid and the def come from the same carve, so it
-  sets the flag and the size before building the run.
+  sets the size before building the run.
 
 **Nothing outside a run may import `mapgen/`.** The menus reach levels through
 `defs/levels/summary.ts`; pulling the generator onto the startup path would put
 the whole level catalog and the carve in the app's critical-path budget.
 
-LOOK at a generated map rather than reading its JSON: `node
-scripts/level-render.mjs <id> --generated --size large --seed 3 --dormant` draws
-it with the real sprites and the real horde standing in it, and
-`scripts/map-layout.mjs <id> --generated` gives the schematic with con colours.
+LOOK at a map rather than reading its JSON: `node scripts/level-render.mjs <id>
+--size large --seed 3 --dormant` draws one run's carve with the real sprites and
+the real horde standing in it, and `scripts/map-layout.mjs <id> --seed 3` gives
+the schematic with con colours. Both render a CARVE, because there is nothing
+else to render — change the seed to see another run's map.
 
 ## QUESTS — the errands the field's non-combatants ask of the hero
 
@@ -1853,10 +1903,10 @@ GALLERY — see below), a **BALANCE** subpage (see
 below), a **DEBUG MODE** toggle
 (`debug: "on" | "off"`, also persisted), a **FORCE STORE** switch
 (`storeForce`, persisted — surfaces the coin store in any build with packs
-granted FREE; see `pwa/src/game/store.ts`), a **GENERATED MAPS** switch
-(`generatedMaps`, persisted — carves every mission from its blueprint instead of
-loading its hand-drawn layout; see **GENERATED MAPS** above) with a **MAP SIZE**
-row beside it while it is on (`generatedMapSize`: SMALL/MEDIUM/LARGE/RANDOM), a
+granted FREE; see `pwa/src/game/store.ts`), a **MAP SIZE** row
+(`generatedMapSize`, persisted: SMALL/MEDIUM/LARGE/RANDOM — every mission is
+carved from its blueprint, so the size is the one knob left over the generator;
+see **GENERATED MAPS** above), a
 **VISUALS** subpage (the KNOCKBACK and BLOOD amounts, plus the **CAMERA PITCH**
 and **CAMERA YAW** sliders that dial the whole world projection live — see **THE
 WORLD PROJECTION** above), and
@@ -2875,7 +2925,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Engine/gameplay logic specific to this game                       | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                                                                                                                                                                                                                                                                                     |
 | Authored sprite art                                               | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                                                                                                                                                                                                                                                                                         |
 | The TITLE MENU's shape (a screen, a row, its order/icon/help)     | `content/mainmenu.yaml` — the whole menu tree, compiled to `pwa/src/generated/menu.ts` by `make levels`; the row's BEHAVIOUR goes in the `menus-*.ts` builder that owns its screen — see **THE TITLE MENU IS CONTENT**                                                                                                                                                                                                                                                                                                                          |
-| A level (mission)                                                 | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                                                                                                                                                                                                                                                                                                                                                                     |
+| A level (mission)                                                 | `content/levels/<id>.yaml` — the venue MINUS its floor plan (story, ladder rung, hazards, merchant, loot pools), compiled to `src/generated/levels.ts` by `make levels`; its geometry is `content/maps/<id>.yaml` — see the `level-design` skill                                                                                                                                                                                                                                                                                                |
 | A GENERATED map (the "v2" blueprint for a mission)                | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                                                                                                                                                                                                                                                                                 |
 | The hero level curve (XP per level)                               | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                                                                                                                                                                                                                                                                                |
 | A powerup (a timed pickup power)                                  | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS**                                                                                                                                                                                                                                                                 |
@@ -3231,7 +3281,11 @@ rule like everything else.
   ahead of `vite`, `tsc`, and `vitest`, so the pixel grids are the sole
   committed source of truth. Never commit `pwa/src/game/assets/` — the
   binary atlas is a build output, not a reviewable artifact.
-- **Levels are compiled from YAML**, the same way. `content/levels/<id>.yaml`
+- **Levels are compiled from YAML**, the same way — and a level YAML is a
+  MISSION, not a map: the geometry lives in `content/maps/<id>.yaml` and is
+  carved per run (see **GENERATED MAPS**), so the loader refuses a mission that
+  authors a wall, a spawn, a prop, a zone or a coordinate, naming where each one
+  went. `content/levels/<id>.yaml`
   is the source of truth; `make levels` (folded into `make assets`, plus a root
   `pretypecheck`) validates it against the live engine catalogs and generates
   `src/generated/levels.ts` (the gitignored, regenerated-on-build output — never
@@ -3255,15 +3309,16 @@ rule like everything else.
   nightmare] `mobLevels` / `level` + `hp` tuples (scaling hp by the map's
   `hpCurves` entry) and stamps `mobLevels` + `intendedLevel` onto every def — so
   the con viz and the engine read one ladder and every difficulty number is tuned
-  from that one file. The
+  from that one file. (A mission names no ramp of its own any more — its cast is
+  the blueprint's, so `map-data/load-yaml.mjs` is what expands them now.) The
   round-trip guard (`tests/content/yaml_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/levels-snapshot.json`; accept an intentional
-  level change with `node scripts/update-level-snapshot.mjs`. Read a map's
-  authored layout with `make map-layout LEVEL=<id>`
+  level change with `node scripts/update-level-snapshot.mjs`. Read one run's
+  carve of a map with `make map-layout LEVEL=<id>`
   (`scripts/map-layout.mjs` — a high-res visual overview: coordinate
-  grid, walls, numbered path, distinct shapes, and CON CIRCLES for spawns (area
-  = count, colour = con vs the YAML's `intendedLevel`); read it alongside the
-  YAML), and how it plays with `make map LEVEL=<id>`
+  grid, walls, distinct shapes, and CON CIRCLES for spawns (area
+  = count, colour = con vs the ladder's `intendedLevel`); `--seed` picks which
+  run, `--size` the scale), and how it plays with `make map LEVEL=<id>`
   (`scripts/map-preview.mjs` — design/`--actual`/`--heatmap`).
 - **The hero level curve is compiled from YAML**, the same way.
   `content/leveling.yaml` authors the XP each level costs (rows annotated with
@@ -3558,8 +3613,8 @@ relevant `SKILL.md` before starting that kind of work:
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `new-game`            | Turning a clone of this repo into a new game/sequel — the ordered bootstrap: rename via `game.config.json`, strip content, rebuild on the same engine.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `engine-system`       | Adding/changing gameplay systems (enemies, weapons, items, rules) — the engine-first workflow: config → types → step → events → tests → presentation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `level-design`        | Adding a new level/mission — the YAML level format (`content/levels/<id>.yaml`, compiled by `make levels`), the map renderers (`map-layout.mjs` layout blueprint + `map-preview.mjs` analysis view), the design-zone systems (safe/quiet zones, tempo, chests, merchant spawns), campaign registration and unlock order, spawn/wave/pack budgets, the cumulative loot-pool rule, XP/arrow-cap pacing wiring, and the checker + test battery a new map must pass.                                                                                                                                                                                                                                                                                                                                                                 |
-| `map-improvement`     | Improving an EXISTING map's design and FEEL — the render → evaluate → improve loop. LOOKS at the layout blueprint (`make map-layout`) first, confirms the intended feel with the user (the YAML descriptions may be wrong), then reads the played heatmap and iterates — with the WHOLE design surface on the table (reshaping walls/geometry, new sprites/mobs/encounters, elite/boss hp + capabilities, level ranges, up to a complete redesign), held to best-practice game design, before/after sign-off before shipping.                                                                                                                                                                                                                                                                                                    |
+| `level-design`        | Adding a new level/mission — the TWO files a venue is (the mission's `content/levels/<id>.yaml` and the blueprint its map is carved from, `content/maps/<id>.yaml`), the map renderers (`map-layout.mjs` layout blueprint + `map-preview.mjs` analysis view), campaign registration and unlock order, the cumulative loot-pool rule, XP/arrow-cap pacing wiring, and the checker + test battery a new venue must pass.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `map-improvement`     | Improving an EXISTING venue's design and FEEL — the render → evaluate → improve loop. LOOKS at the layout blueprint (`make map-layout`) first, confirms the intended feel with the user (the YAML descriptions may be wrong), then reads the played heatmap and iterates. Its edits land in the venue's BLUEPRINT (areas, object palette, horde, cast) and its mission file, never in a hand-drawn layout — there is none; for the generator itself, see `mapgen-improvement`.                                                                                                                                                                                                                                                                                                                                                   |
 | `mapgen-improvement`  | Improving the MAP GENERATOR — the GENERATED MAPS feature that carves every mission fresh from its v2 blueprint per run, so a change lands on six missions × three sizes × every seed at once. The carve → dress → verify architecture and which file answers which question, how to add a new object purpose / area rule / `LevelDef` capability (and the four places each touches), the render → CROP → judge → iterate loop, the invariants that are load-bearing and easy to undo by accident (walls from borders, districts from seeds, densities not counts, tile-snapped ground zones, per-feature rng streams), what actually makes a carve look designed, and the verification traps — chiefly a nav grid built from a different carve than the def it paths through, which makes every assertion pass and mean nothing. |
 | `enemy-design`        | Adding or reworking an enemy (minion/elite/boss) — the `EnemyDef` anatomy, picking hp/damage against the scaling model (`LEVELING.refMobHp` anchor), mechanics/phases, manuscript-governed dialogue/lastWords, spareable companions, loot signatures, auto-derived wound sprites, and the content tests that bite when a piece is missing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `quest-design`        | Adding or reworking a QUEST — the errands the field's non-combatants ask of the hero — or the person who hands one out, the conversation tree behind it, or a campaign-long chain. The two catalogs and their pipeline (`content/quests/<id>.yaml` + `content/quest-givers.yaml`, compiled by `make levels`), the eight objective kinds and what each is FOR, how a reward is priced (`xpShare` against the hero's own bar, calibrated on the shipped 39), campaign vs run errands and why a chain may not mix them, conversations and neutral mobs, the trader hook, the story-chain obligation every spoken line carries, and the build refusals + content tests that bite when a piece is missing.                                                                                                                            |

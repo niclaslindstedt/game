@@ -35,7 +35,6 @@ import {
 } from "@game/core";
 import {
   setGeneratedMapSize,
-  setGeneratedMapsEnabled,
   type CommandArg,
   type GeneratedMapSizeSetting,
 } from "@game/core";
@@ -311,10 +310,10 @@ export function createNetClient(options: NetClientOptions): NetClient {
 /**
  * Build the RUN locally from the session parameters.
  *
- * The generated-maps pair are engine FLAGS rather than arguments, so they are
- * applied first — a client that carved with the host's seed but its own
- * map-size setting would build a different world and then spend the whole run
- * being corrected by deltas about geometry it should never have had.
+ * The map SIZE is an engine FLAG rather than an argument, so it is applied
+ * first — a client that carved with the host's seed but its own map-size
+ * setting would build a different world and then spend the whole run being
+ * corrected by deltas about geometry it should never have had.
  *
  * Everything else goes through `createRunFromParams`, the SAME function the
  * session used. That is the whole of why the first delta is empty: not that the
@@ -323,7 +322,6 @@ export function createNetClient(options: NetClientOptions): NetClient {
  * publish, for a run whose entire design is that the two start identical.
  */
 export function buildLocalState(params: SessionParams): GameState {
-  setGeneratedMapsEnabled(params.generatedMaps);
   setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
   return createRunFromParams(params);
 }

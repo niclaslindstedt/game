@@ -16,6 +16,8 @@ import {
   hitEnemy,
   LEVEL_ORDER,
   LEVELS,
+  MAP_BLUEPRINTS,
+  runLevelDef,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
@@ -24,6 +26,7 @@ import {
 import { SEED, startGame } from "../helpers.ts";
 
 const BOOT_HILL = LEVELS.boot_hill!;
+const BLUEPRINT = MAP_BLUEPRINTS.boot_hill!;
 
 describe("BOOT HILL level def", () => {
   it("is story level 5, after the rift", () => {
@@ -34,25 +37,22 @@ describe("BOOT HILL level def", () => {
     expect(state.level.foes).toBe("HANDS");
   });
 
-  it("builds Main Street from two rows of solid buildings framing a tight lane", () => {
-    const buildings = BOOT_HILL.buildings ?? [];
-    // A whole town: many hand-placed buildings, not a handful of scattered rocks.
-    expect(buildings.length).toBeGreaterThanOrEqual(24);
-    // Solid, building-sized footprints — the widest is a livery barn / big house.
-    expect(Math.max(...buildings.map((b) => b.w))).toBeGreaterThanOrEqual(60);
-    expect(buildings.every((b) => !b.jumpable)).toBe(true);
-    // Two rows FRAME a central lane: buildings north of it and buildings south
-    // of it, none sitting ON the walked street (y ~745..855).
-    const laneRow = buildings.filter(
-      (b) => b.pos.y > 745 && b.pos.y < 855 && b.pos.x < 2400,
-    );
-    expect(laneRow).toHaveLength(0);
-    const north = buildings.filter((b) => b.pos.y <= 745 && b.pos.x < 2400);
-    const south = buildings.filter((b) => b.pos.y >= 855 && b.pos.x < 2400);
-    expect(north.length).toBeGreaterThanOrEqual(8);
-    expect(south.length).toBeGreaterThanOrEqual(8);
+  it("builds Main Street from two rows of frontages framing a lane", () => {
+    // What makes a town read as a town is ALIGNMENT, not density: the blueprint
+    // gives its town district a `blocks` street width, and the carve walks the
+    // building palette down both sides of the cell's long axis instead of
+    // scattering it (see `streetBlock` in mapgen/place.ts).
+    const town = BLUEPRINT.areas.find((a) => a.blocks !== undefined)!;
+    expect(town.blocks).toBeGreaterThan(0);
+    // …and exactly one town per map: a `once` district is withdrawn from the
+    // palette the first time it wins a seed, so the map does not grow suburbs.
+    expect(town.once).toBe(true);
+
+    const frontages = BLUEPRINT.objects.filter((o) => o.type === "building");
+    // A whole town's worth of frontages to draw from, not a handful.
+    expect(frontages.length).toBeGreaterThanOrEqual(15);
     // The named landmarks that make it a frontier town, not just houses.
-    const sprites = new Set(buildings.map((b) => b.sprite));
+    const sprites = new Set(frontages.map((o) => o.sprite ?? o.id));
     for (const s of ["saloon", "church", "bank", "hotel", "general_store"])
       expect(sprites.has(s)).toBe(true);
   });
@@ -60,16 +60,21 @@ describe("BOOT HILL level def", () => {
   it("compiles the buildings into solid box-collider obstacles", () => {
     const state = startGame(SEED, "boot_hill");
     const built = state.obstacles.filter((o) => o.kind === "building");
-    // Every authored building lands in the field with a rectangular footprint.
-    expect(built.length).toBe((BOOT_HILL.buildings ?? []).length);
+    // Every building the carve laid down lands in the field with a rectangular
+    // footprint, and none of them is hoppable.
+    expect(built.length).toBe((runLevelDef(state).buildings ?? []).length);
+    expect(built.length).toBeGreaterThan(0);
     expect(built.every((o) => o.half !== undefined && !o.jumpable)).toBe(true);
   });
 
-  it("locks the control center behind THE STUNT DOUBLE's all-access pass", () => {
-    expect(BOOT_HILL.doors?.map((d) => d.id)).toEqual(["control"]);
+  it("keeps the control center's all-access pass on THE STUNT DOUBLE", () => {
     expect(STORY_ITEM_DEFS.keycard_boot_hill?.unlocks).toBe("control");
     const stuntDouble = enemyDef("the_stunt_double");
     expect(stuntDouble.loot?.storyItems).toContain("keycard_boot_hill");
+    // The compound itself is a district of the blueprint's own, sealed behind
+    // its fence with one way in.
+    const compound = BLUEPRINT.areas.find((a) => a.id === "control")!;
+    expect(compound.enclosure).toBe("hard");
   });
 
   it("plays the arrival read on sight, then the hands read on the first kill", () => {

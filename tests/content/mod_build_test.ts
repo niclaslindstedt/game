@@ -1524,7 +1524,11 @@ describe("what the compiler refuses", () => {
     );
   });
 
-  it("a level naming an enemy that exists nowhere", () => {
+  it("a MISSION that draws its own map", () => {
+    // A level is a mission now: the walls, the props and the horde are carved
+    // per run from `maps/<id>.yaml`, so a mission that authors any of them is
+    // refused BY NAME rather than ignored — an author who drew a wall, ran the
+    // game and saw no wall would otherwise have nothing at all to read.
     const dir = scratchMod({
       "mod.yaml": MANIFEST,
       "ladder.yaml":
@@ -1538,32 +1542,24 @@ describe("what the compiler refuses", () => {
         "index: 90",
         "name: SCRATCH",
         "foes: NOTHING",
-        "width: 800",
-        "height: 600",
         "gravity: 340",
         "biome: moon",
         "tiles: { ground: { common: moon_0 } }",
         "intro: [[A LINE]]",
-        "playerSpawn: { x: 100, y: 100 }",
         "objective: { type: clearAll }",
-        "obstacles: []",
-        "decor: []",
         "decorClearance: 60",
-        "spawns: []",
-        "spawners:",
-        "  - id: only",
-        "    at: { x: 400, y: 300 }",
-        "    maxAlive: 6",
-        "    ramp: meek",
-        "    members:",
-        "      - enemy: not_a_real_monster",
-        "        count: 5",
         "loot: { weaponPool: [lunar_wrench], gearPool: [bag], abilityPool: [fire_orbs] }",
+        "width: 800",
+        "height: 600",
+        "playerSpawn: { x: 100, y: 100 }",
       ].join("\n"),
     });
     const { bundle, errors } = buildMod(dir, catalog);
     expect(bundle).toBeNull();
-    expect(errors.join()).toMatch(/not_a_real_monster/);
+    // Each one names where it went.
+    expect(errors.join()).toMatch(/"width" is the map's/);
+    expect(errors.join()).toMatch(/`sizes` in the blueprint/);
+    expect(errors.join()).toMatch(/"playerSpawn" is the map's/);
   });
 
   it("a level with no ladder rows to price it", () => {
@@ -1575,18 +1571,12 @@ describe("what the compiler refuses", () => {
         "index: 90",
         "name: SCRATCH",
         "foes: NOTHING",
-        "width: 800",
-        "height: 600",
         "gravity: 340",
         "biome: moon",
         "tiles: { ground: { common: moon_0 } }",
         "intro: [[A LINE]]",
-        "playerSpawn: { x: 100, y: 100 }",
         "objective: { type: clearAll }",
-        "obstacles: []",
-        "decor: []",
         "decorClearance: 60",
-        "spawns: []",
         "loot: { weaponPool: [lunar_wrench], gearPool: [bag], abilityPool: [fire_orbs] }",
       ].join("\n"),
     });

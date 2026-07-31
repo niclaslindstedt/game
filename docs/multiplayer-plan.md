@@ -289,7 +289,7 @@ join, leave, kick, the session list, the status line.
 The state splits three ways, and getting the split right is most of the design:
 
 - **STATIC — never sent.** The level is deterministic from `(levelId, seed,
-difficulty, generatedMaps, mapSize)`, so the client calls `createGame` with the
+difficulty, mapSize)`, so the client calls `createGame` with the
   same arguments and builds obstacles, decor, spawner layout and the ground
   layer itself. On a measured `moon` run that is ~100 KB the wire never carries.
   **This is a bit-for-bit determinism claim across the same build, and it must

@@ -34,7 +34,6 @@ import {
   MAP_BLUEPRINTS,
   registerDefs,
   setGeneratedMapSize,
-  setGeneratedMapsEnabled,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
@@ -115,7 +114,6 @@ function bossAt(def: LevelDef): { x: number; y: number } {
 
 afterAll(() => {
   registerDefs(SHIPPED);
-  setGeneratedMapsEnabled(false);
   setGeneratedMapSize("random");
 });
 
@@ -132,7 +130,6 @@ describe("a mod's map blueprint", () => {
 
   it("carves the mod's own mission, and inherits everything it is not", () => {
     applyExample();
-    setGeneratedMapsEnabled(true);
     setGeneratedMapSize("medium");
     const def = carve(7);
     // INHERITED from the mod's level: a generated greenhouse is still the
@@ -155,7 +152,6 @@ describe("a mod's map blueprint", () => {
 
   it("hides its boss somewhere new every seed", () => {
     applyExample();
-    setGeneratedMapsEnabled(true);
     setGeneratedMapSize("medium");
     const homes = new Set<string>();
     for (const seed of [1, 7, 42, 99, 1234]) {
@@ -168,7 +164,6 @@ describe("a mod's map blueprint", () => {
 
   it("carves a map the boss can actually be walked to", () => {
     applyExample();
-    setGeneratedMapsEnabled(true);
     for (const size of ["small", "medium", "large"] as const) {
       setGeneratedMapSize(size);
       for (const seed of [3, 11, 77]) {

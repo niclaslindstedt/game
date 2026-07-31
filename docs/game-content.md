@@ -38,10 +38,17 @@ monologue too. All spoken lines are transcribed in
 
 ## Levels (`src/game/defs/levels/`)
 
-Each level is one file under `src/game/defs/levels/` (one `LevelDef` apiece),
-merged and ordered by `levels/index.ts` (which owns `LEVEL_ORDER`). A level
-names its in-run music with an optional `music` id (a key into the app's
-`LEVEL_TRACKS` registry; omitted falls back to the default theme).
+Each venue is TWO authored files, and the split is the thing to hold on to. The
+MISSION — `content/levels/<id>.yaml`, compiled into the `MissionDef` catalog
+`levels/index.ts` orders (it owns `LEVEL_ORDER`) — is the venue minus its floor:
+its name, story, ladder rung, hazards, merchant, loot pools and thought pins,
+plus the optional `music` id naming its in-run track. Its MAP is
+`content/maps/<id>.yaml`, a BLUEPRINT the geometry is CARVED from on the run's
+own seed (see `AGENTS.md` § GENERATED MAPS): the chambers, the walls between
+them, the props, the horde's knots, the caches and the boss's hiding place are
+all rolled fresh, so what follows describes what a venue is MADE OF rather than
+where anything is. No two runs of a map are the same walk, and no intended route
+is emitted — the fog-of-war minimap is the only record of where you have been.
 
 - **Level 1 — GOODCO HQ** (`levels/goodco_hq.ts`). A cleanroom raid for the
   ship engine's one missing part. `goodco` biome (polished lab
@@ -53,16 +60,17 @@ names its in-run music with an optional `music` id (a key into the app's
   spills) debut here: smashing a **vending machine** sometimes coughs up the
   drinks it holds (stamina-leaning, the odd health top-up) and a splintered
   **desk** occasionally drops a drawer stash — a gamble, never the crate's
-  guaranteed haul. The assembly floor is laid out like an
-  **assembly line**: a serpentine of five fuselage-jig `walls` with alternating
-  end-gaps herds the hero up and down the whole floor toward PAYLOAD-1's bay, so
-  clearing the level walks almost every square. **Four off-path detour lockers**
-  reward exploring a dead-end (`chests`, the GOODCO locker sprite spilling a
-  Diablo-2 haul — an 80% marquee item plus guaranteed supplies): the STOCK ROOM,
-  the BREAK ROOM (guarded by the EMPLOYEE OF THE MONTH unique), and one in each
-  of the CORE LAB and CLEANROOM keycard vaults, sweetening the story dips.
-  Three keycard-locked `doors` (storage, vault, and the AI CORE — THE
-  ARCHITECT's keycard opens the last) still gate the corner story vaults. The
+  guaranteed haul. The floor is carved as an **assembly line**: build bays whose
+  fuselage sections and gantries queue in RANKS down the bay with the belt
+  running between them, labs racked in aisles, offices and a server hall — with
+  PAYLOAD-1 booting up in whichever bay the carve put it in. **Detour lockers**
+  reward exploring a dead end (`chests`, the GOODCO locker sprite spilling a
+  Diablo-2 haul — an 80% marquee item plus guaranteed supplies), each with one of
+  the floor's keepers on it (the EMPLOYEE OF THE MONTH unique among them). The
+  keycards THE ARCHITECT and the other elites drop really open something: the
+  carve seals the deepest **vault** districts it can afford to and hangs one door
+  per key on them, each paying for the walk with a cache of its own (see
+  `AGENTS.md` § GENERATED MAPS). The
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
   here. **Employee stampedes** (`LevelDef.stampedes` → the engine's herd
   hazard): once the hero is halfway to PAYLOAD-1 (`afterProgress: 0.5` — the
@@ -96,27 +104,26 @@ names its in-run music with an optional `music` id (a key into the app's
   SECURITY and THE JANITOR walk their beats, and an errand intern, a bay
   guard, and two roaming SUCCESSOR units sweep the build bays. **Alarm
   sentries** (`SpawnSpec.alarms` → `raiseAlarm`, config
-  `SPAWNERS.alarmWindowMs`): the guard, both SUCCESSOR sweeps, and one foreman
-  per far belt are wired to their bay's spawn point — woken, each activates it
-  at once and it pours an answering squad at the hero for the alarm window
-  (falling back dormant if he never comes), so dodging a point's trigger
-  circle no longer dodges the bay once its patrol spots you. Music:
+  `SPAWNERS.alarmWindowMs`): every elite the carve stands in a room with a knot
+  in it is wired to that knot — woken, it activates at once and pours an
+  answering squad at the hero for the alarm window (falling back dormant if he
+  never comes), so dodging a knot's trigger circle no longer dodges the room once
+  the man standing in it spots you. Music:
   `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
-  soar). Three long **rock ridges** with offset pass-gaps break the open
-  regolith into a handful of BASINS, so the climb from the lander to THE FLAGBEARER
-  sweeps low, then up, then up again across most of the moon (an authored
-  `path` threads the gaps) rather than cutting one straight diagonal — clearing
-  the finite ridge-gap `spawners` (wisps → ghosts → wraiths → SUCCESSOR) on the
-  way. **Two off-path detours** reward exploring a dead pocket: the CRASHED
-  LANDER, a walled wreck where the LOST COSMONAUT guards a chest, and THE
-  THIRTEENTH GRAVE, a deep crater where THE THIRTEENTH MAN guards his own — each
-  a quiet cul-de-sac (no ambient horde) — plus a third, unguarded cache far up
-  the NW corner that only a deliberate walk into the empty dark finds.
-  Expedition **supply crates** dropped between the landings smash open for the
-  standard guaranteed spill. A STILL POINT safe nook by the flag
-  lets the moon salvage merchant trade before the boss. Scattered **moonrock**
+  soar). **Rubble ridges** — chains of fifteen different boulders, wandering off
+  true so a spine reads as scree rather than a fence — break the open regolith
+  into BASINS, RILLES and the sealed pads of the APOLLO STATIONS, and THE FLAGBEARER
+  haunts one of the stations in whichever outer third of the map the run rolled.
+  The hero lands as far from him as the grid allows and works basin by basin,
+  draining each one's finite knot (wisps → ghosts → wraiths → SUCCESSOR) on the
+  way. **The dead-end basins hold the caches**, each with a lone keeper — the
+  LOST COSMONAUT and THE THIRTEENTH MAN — and each a quiet cul-de-sac with no
+  ambient horde, so exploring off the line still pays and still costs.
+  Expedition **supply crates** stacked at the landing sites smash open for the
+  standard guaranteed spill. The moon salvage merchant keeps a safe pitch of his
+  own to trade from. Scattered **moonrock**
   slabs (1×1/1×2/2×2 rectangular obstacles) wall off sight, shots and even a
   nuke's blast — cover against GOODCO's grounded robots, useless against the
   phasing dead — while jumpable **craters** are gaps the player hops (landing on
@@ -130,14 +137,13 @@ names its in-run music with an optional `music` id (a key into the app's
   barrage. Music: `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
 - **Level 3 — MARS** (`levels/mars.ts`). The trail from the moon: GOODCO wrote
   the moon off as a disaster and moved everything — Ada included — to a secret
-  colony. `mars` biome, ~520 px/s² gravity. The level TRANSITIONS mid-map: red
-  regolith with oxide-gravel patches on the western desert half, and the first
-  use of **tile zones** (`TileSpec.zones`) swaps everything east of the dome
-  wall to the base's deck plating. The dome wall (two airlock gaps) and an
-  interior divider carve the base into chambers; the **TERRARIUM** — a locked
-  lizard-shrine room in the SE corner — opens with THE SEED's keycard and
-  holds the TRIBUTE SCHEDULE (and its chest); a second cache sits in the dead
-  SW flats, the detour across empty regolith its price. Scattered **marsrock**
+  colony. `mars` biome, ~520 px/s² gravity. The venue is two places under one
+  sky: red regolith with oxide-gravel patches out on the open desert, and the
+  pressurized colony's deck plating inside its domes — each DISTRICT paints its
+  own floor, so the ground changes as the hero walks in through an airlock. The
+  **TERRARIUM** is a sealed lizard-shrine dome with one way in, and the TRIBUTE
+  SCHEDULE is somewhere on the mission's own trail; the caches sit at the dead
+  ends, each with a keeper. Scattered **marsrock**
   slabs and red craters mirror the moon's cover rules. **Sand storms** (`LevelDef.sandstorms` → the
   engine's squall hazard): small animated dust gusts drift in on a rolled
   cadence and sweep the hero's surroundings SLOW enough to walk clear of —
@@ -152,7 +158,7 @@ names its in-run music with an optional `music` id (a key into the app's
   tiles (star-flecked indigo nothing) with nebula patches; there is no
   ground, the boots just grip something that isn't there. ~200 px/s² gravity
   (dreamy between-universe glides, floatier than the moon). The level debuts
-  both **environmental hazard systems**: seven **black holes**
+  both **environmental hazard systems**: eight **black holes**
   (`LevelDef.wells` → the engine's gravity wells: they drag the grounded
   player, devour minions at the core, and pull loose loot in from about a
   screen away — slow from the edges, then faster — to hoard it on the event
@@ -160,8 +166,9 @@ names its in-run music with an optional `music` id (a key into the app's
   for the rim loot is a real gamble. A jump no longer sails clean over the
   pull: airborne the hero still drifts toward the core and the hole's gravity
   drags his hop down early, so he jumps less high near the horizon — though he
-  floats above the core. The level map pins every hole so the road's hazards
-  read at a glance) and the **meteor strikes** (`LevelDef.asteroids`: rocks fall
+  floats above the core. The mission says how many holes the rift has and how
+  hard each one pulls; the carve re-anchors each into a room of its own, so
+  which rooms are dangerous is the run's answer) and the **meteor strikes** (`LevelDef.asteroids`: rocks fall
   from the sky onto a patch near the hero on a rolled cadence, telegraphed by a
   firming ground shadow, then DETONATE — an AoE that vaporizes weak mobs at the
   core, flings the rest (and the hero) to the sides, takes a difficulty-scaled
@@ -172,9 +179,9 @@ names its in-run music with an optional `music` id (a key into the app's
   Crystallized **rift shards** block sight and shots; drifting **space
   junk** is hoppable cover that doubles as breakable SALVAGE (a chance-based
   spill leaning gear — something usable sometimes tumbles out of a cracked
-  wreck); lost TVs and floating rocks decorate the nothing. Beside the EDDY's
-  guarded chest, a second cache skirts the first NW gravity well — swing wide
-  of the pull or pay the toll. The far door — a second rift at the east end — is where the
+  wreck); lost TVs and floating rocks decorate the nothing. The caches sit in the
+  road's dead ends, and a hole beside one is the toll for the greedy. The far
+  door — a second rift, wherever the search finds it — is where the
   tribute went and where THE FOUNDER flees again. Music: `rift_drift` ("RIFT
   DRIFT", a weightless lydian float).
 - **Level 5 — BOOT HILL** (`levels/boot_hill.ts`). The rift's far side: a
@@ -182,13 +189,14 @@ names its in-run music with an optional `music` id (a key into the app's
   THE STUNT DOUBLE, run on robotics and intelligence licensed from TRUST ME BRO — the reality
   THE STRONGMAN retreated into to escape the one where he loses. `boot_hill` biome
   (sun-baked hardpan + dry-scrub patches; the control-center compound swaps
-  to TRUST ME BRO deck plating via a tile zone), ~700 px/s² gravity. The town is the
-  level's signature: **building-sized `house` obstacles** (the game's largest
-  footprints — 3×2 up to 5×3 cells at 16 px/cell) plus two `storefront` wall
-  rows squeeze main street into tight corridors, so escaping the horde is
-  genuinely hard. A fenced CONTROL CENTER compound walls off the east end
-  behind a locked door (`control`) that THE STUNT DOUBLE's ALL-ACCESS PASS opens;
-  inside, a hand-placed rock garden gives the TRUST ME BRO controllers their cover.
+  to TRUST ME BRO deck plating), ~700 px/s² gravity. The town is the
+  level's signature, and the carve lays it out as a MAIN STREET: exactly one town
+  district per map (a `once` area, so the park never grows suburbs), its
+  **building-sized frontages** — saloon, church, bank, hotel, general store,
+  the game's largest footprints — walked down BOTH sides of a tight lane, so
+  escaping the horde down a side alley is genuinely hard. The fenced CONTROL
+  CENTER compound is a sealed district with one way in, and THE STUNT DOUBLE's
+  ALL-ACCESS PASS is the story piece he drops for it.
   The park's signature environmental hazard is the **spinning hay balls**
   (`LevelDef.hayBalls`, config `HAY_BALLS`): golden bales roll in from the east
   and bounce straight down main street to the west, spinning as they go. A bale
@@ -221,22 +229,19 @@ names its in-run music with an optional `music` id (a key into the app's
   in the rift (a `USE` row on its item card, or a desktop right-click;
   `LevelDef.gates` + `spendGateKey`) tears open a blast door beside the hero.
   Stepping in carries the whole build into the bunker: the billionaires'
-  continuity-of-wealth vault, walked as a **themed descent** through four
-  distinct chambers, west to east (`bunker` biome — polished concrete with
-  brass-inlay medallions and burgundy carpet runs; ~800 px/s² gravity). **(1)
-  The FOYER** — a grand marble reception (a two-tier fountain, gold chandeliers,
-  a security desk, an entry safe-pocket, the wandering merchant) where the hero
-  meets the first CIA suits and armed VACUUM BOTS. **(2) The CHECKPOINT** — a
-  fortified gauntlet where bolted-down automated **SENTRY GUNS** rake the
-  corridor from fixed emplacements while soldiers, ICE and FBI agents press in,
-  baffle walls forcing a zigzag under fire. **(3) The SUITES WING** — the
-  optional farm: six marble suites off a central boulevard, each holding a
-  **resident** — THE STRONGMAN (a clone? the backup), THE MODERATOR, LARRY
-  ALLISON, THE FULFILLER, THE SAFETY OFFICER, THE DEVELOPER — every one far tougher than
-  any campaign elite and ringed by his **personal bodyguards** (one drawing, six
-  liveries, a size up from the crew); the con ramps up west-to-east, the two
-  toughest residents in the easternmost suites. **(4) The TREASURY** — the
-  climax. The level's real reveal — delivered through a found **ZEROED LEDGER** (a
+  continuity-of-wealth vault, carved as a **themed descent** through the kinds of
+  place it is made of (`bunker` biome — polished concrete with brass-inlay
+  medallions and burgundy carpet runs; ~800 px/s² gravity). **ATRIA** — grand
+  marble reception, fountains, chandeliers, a security desk — where the hero
+  meets the first CIA suits and armed VACUUM BOTS. **HALLS**, where soldiers, ICE
+  and FBI agents press in. **The SUITES WING** — the optional farm: marble suites
+  each holding a **resident** — THE STRONGMAN (a clone? the backup), THE
+  MODERATOR, LARRY ALLISON, THE FULFILLER, THE SAFETY OFFICER, THE DEVELOPER —
+  every one far tougher than any campaign elite and ringed by his **personal
+  bodyguards** (one drawing, six liveries, a size up from the crew), with the con
+  climbing the deeper the search runs. **The TREASURY** — the climax, in a sealed
+  room past the floor plan that only the vault lift reaches, so the last thing to
+  find is the way DOWN. The level's real reveal — delivered through a found **ZEROED LEDGER** (a
   callback to Mars's COLONY LEDGER, every net-worth column now transferred to the
   CORE) and two residents (a knows-but-terrified THE SAFETY OFFICER, an oblivious DONALD
   DUMP) — is that the vault is a **prison**: the CORE already took the residents'
@@ -246,11 +251,11 @@ names its in-run music with an optional `music` id (a key into the app's
   enforcer, not the residents' — guards the treasury door. It deploys a
   sentry-gun defence grid (a `summon` mechanic that collapses once it drops below
   half and stops deploying — a winnable endgame, not an attrition stalemate) and
-  brings a piston **slam** down at the door, enraging past half. It is the
-  **mandatory gate**: the exit is a locked door (`doors` → `vault_exit`) and only
-  the **WARDEN ACCESS TOKEN** the warden drops (`loot.storyItems` → the story
-  item that `unlocks` it) opens it, so there is no slipping past. The objective is
-  still to reach the exit door (`reachExit`); reaching it plays the
+  brings a piston **slam** down at the door, enraging past half. It stands ON the
+  way out — the exit door is drawn at the goal and he is posted beside it, so the
+  ride down ends in front of him — and it drops the **WARDEN ACCESS TOKEN**, the
+  story piece cut for that door. The objective is
+  to reach the exit door (`reachExit`); reaching it plays the
   where-was-this-place mystery outro (its purpose now plain, its location still
   unknown), and the splash offers **BACK TO THE RIFT**
   (`exitTo`). The reward is the loot: the level's `worldUniques` table re-lists
@@ -259,8 +264,7 @@ names its in-run music with an optional `music` id (a key into the app's
   `WORLD_DROP.minPlayerLevel` gates. The vault's furnishings pay too —
   chance-based prop spills: **vending machines** cough up drinks, the
   billionaires' **wine racks** shatter for a restorative vintage, and bullion
-  **gold pallets** pry open for a gear roll; three lockers (the entry
-  safe-pocket, a forgotten SW barracks locker, and the vault antechamber's)
+  **gold pallets** pry open for a gear roll; the lockers at the dead ends
   spill the richer chest haul. Farming it again costs another hand.
   Music: `hq_lockdown`.
 

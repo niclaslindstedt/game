@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Catalog integrity across the whole shipped campaign: every id a level
-// references — its spawn/wave monsters, its loot pools, its hand-placed
-// pickups, its guaranteed drops — must resolve in the catalog it points at.
+// Catalog integrity across the whole shipped campaign: every id a mission and
+// the map carved for it reference — the horde, the set pieces, the loot pools,
+// the hand-placed pickups, the guaranteed drops — must resolve in the catalog
+// it points at.
 // With the levels and rosters split across many files (defs/levels/,
 // defs/enemies/), the cross-reference surface is far too large to eyeball, so
 // this suite walks it. A typo or a deleted def fails here, loudly, instead of
@@ -17,6 +18,7 @@ import {
   LEVEL_ORDER,
   LEVELS,
   SECRET_LEVEL_ORDER,
+  resolveLevelDef,
   storyItemDef,
   weaponDef,
   type LevelDef,
@@ -26,8 +28,12 @@ import {
 // venues (gate-only levels outside LEVEL_ORDER — the bunker). Cross-reference
 // integrity holds for every level; the ORDER assertions below only bind the
 // campaign.
-const levels: LevelDef[] = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER].map(
-  (id) => LEVELS[id]!,
+// Each one CARVED, because that is the level a run is actually played on: the
+// mission in the catalog carries the loot pools and the story, and the map
+// carved from its blueprint carries the cast. Both halves are walked below, so
+// a typo in either fails here rather than mid-run.
+const levels: LevelDef[] = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER].map((id) =>
+  resolveLevelDef(id, 11, "medium"),
 );
 
 /** Resolve an equipment id whether it is a weapon or a piece of gear. */

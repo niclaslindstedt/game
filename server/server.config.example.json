@@ -4,6 +4,6 @@
   "port": 27015,
   "maxPlayers": 8,
   "password": "",
-  "generatedMaps": false,
+  "generatedMapSize": "random",
   "statusEverySec": 30
 }

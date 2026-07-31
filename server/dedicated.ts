@@ -70,9 +70,8 @@ export type DedicatedConfig = {
   password?: string;
   /** Mod ids in load order. A joiner whose list differs is refused by name. */
   mods?: string[];
-  /** GENERATED MAPS: carve the mission from its blueprint instead of loading
-   * the hand-drawn layout, and at which size. */
-  generatedMaps?: boolean;
+  /** MAP SIZE: which of the three sizes this server's maps are carved at. Every
+   * mission is carved from its blueprint, so the size is the only knob left. */
   generatedMapSize?: string;
   /** Seconds between status lines on the console. 0 turns them off. */
   statusEverySec?: number;
@@ -126,7 +125,6 @@ export function paramsFrom(
     respec: false,
     clearedLevels: [],
     merchantDiscovered: false,
-    generatedMaps: config.generatedMaps === true,
     generatedMapSize: config.generatedMapSize ?? "random",
   };
 }
@@ -156,7 +154,7 @@ export function parseArgs(argv: readonly string[]): {
     else if (name === "port") overrides.port = Number(value);
     else if (name === "seed") overrides.seed = Number(value);
     else if (name === "players") overrides.maxPlayers = Number(value);
-    else if (name === "generated-maps") overrides.generatedMaps = true;
+    else if (name === "map-size") overrides.generatedMapSize = value;
   }
   return { config, overrides };
 }

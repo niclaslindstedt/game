@@ -21,19 +21,18 @@
 //   node scripts/map-layout.mjs --all                every level
 //   node scripts/map-layout.mjs <id> --difficulty hard   con vs that rung
 //   node scripts/map-layout.mjs <id> --seed 1        + scatter obstacles
-//   node scripts/map-layout.mjs <id> --generated --seed 3   the GENERATED map
-//   node scripts/map-layout.mjs <id> --generated --size large
+//   node scripts/map-layout.mjs <id> --seed 3     another carve of the same map
+//   node scripts/map-layout.mjs <id> --size large
 //   node scripts/map-layout.mjs <id> --width 1800    bigger map area (px)
 //   node scripts/map-layout.mjs <id> --mod ../my-mod   a MOD's own venue
 //   node scripts/map-layout.mjs <id> --highlight "1240,380;2010,660"
 //   node scripts/map-layout.mjs <id> --deaths "1240,380:raider;2010,660"
 //   node scripts/map-layout.mjs <id> --highlight-file report.json
 //
-// --generated renders the mission as the GENERATED MAPS feature carves it (see
-// src/game/mapgen) rather than as it is hand-authored: pass a --seed to pick the
-// run and --size small|medium|large to pick the scale. It is the LOOK half of the
-// blueprint authoring loop — the picture that shows whether a chamber grid reads
-// as a place worth searching.
+// Every map is CARVED from its blueprint per run (see src/game/mapgen), so a
+// render is of ONE run's map: --seed picks which, --size small|medium|large picks
+// the scale. It is the LOOK half of the blueprint authoring loop — the picture
+// that shows whether a chamber grid reads as a place worth searching.
 //
 // HIGHLIGHTS mark arbitrary world coordinates on the render — built for the
 // simulator's STUCK AREAS (simulate-run.mjs --stuck-limit prints the exact
@@ -104,7 +103,7 @@ async function renderLevel(entry, opts) {
   c.labels = [];
   label(
     c.surf,
-    `MAP LAYOUT - ${def.name} - ${def.id}${entry.generated ? ` - GENERATED ${opts.size.toUpperCase()} SEED ${opts.seed ?? 1}` : ""} - GRID ${gridStep(def)}U - CON vs ${diff.toUpperCase()}`,
+    `MAP LAYOUT - ${def.name} - ${def.id} - ${opts.size.toUpperCase()} SEED ${opts.seed ?? 1} - GRID ${gridStep(def)}U - CON vs ${diff.toUpperCase()}`,
     PAD,
     PAD - 1,
     C.ink,
@@ -120,7 +119,7 @@ async function renderLevel(entry, opts) {
   drawDeaths(c, deaths);
   placeLabels(c);
   drawKey(c, rows);
-  const out = `${previewDir}/map_${def.id}${entry.generated ? "_generated" : ""}_layout.png`;
+  const out = `${previewDir}/map_${def.id}_layout.png`;
   await writePng(upscale(c.surf, 2), out);
   console.log(
     `wrote ${out} (${c.width}×${c.height} @2x = ${c.width * 2}×${c.height * 2})`,
@@ -133,7 +132,6 @@ function parseArgs(argv) {
     difficulty: "easy",
     all: false,
     seed: null,
-    generated: false,
     size: "medium",
   };
   const rest = [];
@@ -141,7 +139,6 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === "--all") opts.all = true;
     else if (a === "--seed") opts.seed = Number(argv[++i]);
-    else if (a === "--generated") opts.generated = true;
     else if (a === "--size") opts.size = argv[++i];
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--width") opts.width = Number(argv[++i]);
@@ -162,21 +159,23 @@ const loaded = await applyModsWithSprites(mods);
 const entries = [...loadLevels().entries, ...(loaded?.levels ?? [])];
 const opts = parseArgs(argv);
 
-// --generated swaps each entry's hand-authored def for a chamber grid carved from
-// the mission's blueprint. Everything downstream is untouched: the drawers take a
-// plain LevelDef, which is exactly what the generator produces, so the generated
-// map is judged with the same picture as the authored one.
-if (opts.generated) {
+// EVERY MAP IS CARVED — a mission authors no geometry — so each entry's def is
+// resolved the way a run resolves it, on the seed and size given. Everything
+// downstream is untouched: the drawers take a plain LevelDef, which is exactly
+// what the generator produces.
+{
   const { resolveLevelDef, hasMapBlueprint } = await import(
     engineFile("src/game/mapgen/index.ts")
   );
   const seed = opts.seed ?? 1;
+  const missing = [];
   for (const entry of entries) {
-    if (!hasMapBlueprint(entry.id)) continue;
+    if (!hasMapBlueprint(entry.id)) {
+      missing.push(entry.id);
+      continue;
+    }
     entry.def = resolveLevelDef(entry.id, seed, opts.size);
-    entry.generated = true;
   }
-  const missing = entries.filter((e) => !e.generated).map((e) => e.id);
   if (missing.length > 0)
     console.warn(`! no map blueprint for: ${missing.join(", ")}`);
 }

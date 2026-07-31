@@ -279,6 +279,26 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: spawn must be a boolean`);
       if (a.once !== undefined && typeof a.once !== "boolean")
         err(`${where}: once must be a boolean`);
+      if (a.lock !== undefined) {
+        if (typeof a.lock !== "boolean")
+          err(`${where}: lock must be a boolean`);
+        // A door needs a doorway to hang in, and only a `hard` district has one:
+        // `none` is not a wall at all and `soft` is a gateway too wide to shut.
+        else if (a.lock === true && a.enclosure !== "hard")
+          err(
+            `${where}: only a "hard" district can be locked — an open or gated ` +
+              `border is a door with a way round it`,
+          );
+        // The room is sealed until a key turns up, so anything the run REQUIRES
+        // being rolled into it is an unfinishable run. The carve already refuses
+        // to put the boss or the landing in a vault; saying so here means an
+        // author reads it instead of wondering why their boss area never seals.
+        else if (a.lock === true && (a.boss !== false || a.spawn !== false))
+          err(
+            `${where}: a locked district must set "boss: false" and ` +
+              `"spawn: false" — nothing the run needs may be behind its own key`,
+          );
+      }
       if (a.blocks !== undefined && !isPosNum(a.blocks))
         err(`${where}: blocks must be a positive street width`);
       if (a.wall !== undefined) {
@@ -311,6 +331,7 @@ export function validateMap(bp, refs, description = "") {
         "apron",
         "once",
         "blocks",
+        "lock",
       ]);
       for (const key of Object.keys(a))
         if (!allowed.has(key)) err(`${where}: unknown field "${key}"`);
@@ -612,9 +633,21 @@ export function validateMap(bp, refs, description = "") {
   }
 
   // ---- set pieces ----------------------------------------------------------
-  const setPiece = (piece, where) => {
+  const setPiece = (piece, where, options = {}) => {
     enemy(piece?.enemy, where);
     ramp(piece?.ramp, where);
+    if (piece?.patrol !== undefined) {
+      if (typeof piece.patrol !== "boolean")
+        err(`${where}: patrol must be a boolean`);
+      // A BOSS guards its post and a KEEPER guards its cache: a walker that
+      // wanders off the thing it is standing over is not a sentry, it is a mob
+      // that left. Only the elites strung along the search may walk a beat.
+      else if (piece.patrol === true && options.patrol !== true)
+        err(
+          `${where}: only an elite may patrol — a boss guards its post and a ` +
+            `guardian guards its cache`,
+        );
+    }
     if (piece?.lair !== undefined) {
       const house = bp.objects?.find((o) => o.id === piece.lair);
       if (!house) err(`${where}: lair "${piece.lair}" is not in the palette`);
@@ -631,11 +664,30 @@ export function validateMap(bp, refs, description = "") {
     }
   };
   for (const [i, piece] of (bp.elites ?? []).entries())
-    setPiece(piece, `elites[${i}]`);
+    setPiece(piece, `elites[${i}]`, { patrol: true });
   for (const [i, piece] of (bp.guardians ?? []).entries())
     setPiece(piece, `guardians[${i}]`);
   if (bp.guardians !== undefined && bp.guardians.length === 0)
     err("guardians must not be empty — the chest rooms need a keeper");
+
+  // ---- the non-combatants ---------------------------------------------------
+  // The errand cast: named one by one, because they are cast rather than horde.
+  // A hostile id here is the failure worth catching at build time — the mob
+  // would be cleaved in half mid-swing and the chain it carries would dead-end
+  // with nothing on screen to explain it.
+  for (const [i, who] of (bp.bystanders ?? []).entries()) {
+    const where = `bystanders[${i}]`;
+    enemy(who?.enemy, where);
+    if (
+      who?.enemy !== undefined &&
+      refs.neutrals !== undefined &&
+      refs.enemies.has(who.enemy) &&
+      !refs.neutrals.has(who.enemy)
+    )
+      err(
+        `${where}: "${who.enemy}" is not neutral — a bystander must carry \`disposition: neutral\``,
+      );
+  }
 
   if (bp.hellborn !== undefined) {
     ramp(bp.hellborn.ramp, "hellborn");
@@ -730,7 +782,20 @@ export function validateMap(bp, refs, description = "") {
       "padSprite",
       "downLabel",
       "upLabel",
+      "lock",
     ]);
+    // A keyed car needs a real key, exactly as a keyed room does — and it must
+    // not be a key the annex itself is holding, which is a door locked from the
+    // inside with the only key behind it.
+    if (bp.annex.lock !== undefined) {
+      if (typeof bp.annex.lock !== "string" || bp.annex.lock.length === 0)
+        err(`${where}: lock must be a door id`);
+      else if (refs.doorKeys !== undefined && !refs.doorKeys.has(bp.annex.lock))
+        err(
+          `${where}: lock names "${bp.annex.lock}", which no story item ` +
+            `unlocks (content/story-items.yaml)`,
+        );
+    }
     for (const key of Object.keys(bp.annex))
       if (!allowed.has(key)) err(`${where}: unknown field "${key}"`);
   }
@@ -738,6 +803,39 @@ export function validateMap(bp, refs, description = "") {
   for (const tier of ["rare", "unique"]) {
     for (const id of bp.rareSpawns?.[tier] ?? [])
       enemy(id, `rareSpawns.${tier}`);
+  }
+
+  // ---- the keys ------------------------------------------------------------
+  // A door id has to be a REAL key: the `unlocks` value of a story item some
+  // monster on this map actually drops. A typo here is a room that can never be
+  // opened, on a map where the room was rolled somewhere different every run —
+  // the least reproducible bug this format could ship.
+  if (bp.locks !== undefined) {
+    if (!Array.isArray(bp.locks) || bp.locks.length === 0)
+      err("locks must be a non-empty list of door ids");
+    else {
+      const seen = new Set();
+      for (const id of bp.locks) {
+        if (typeof id !== "string" || id.length === 0) {
+          err("locks entries must be door ids");
+          continue;
+        }
+        if (seen.has(id))
+          err(`locks names "${id}" twice — one key opens one room`);
+        seen.add(id);
+        if (refs.doorKeys !== undefined && !refs.doorKeys.has(id))
+          err(
+            `locks names "${id}", which no story item unlocks — a locked room ` +
+              `needs a key somebody carries (content/story-items.yaml)`,
+          );
+      }
+      // …and somewhere to put them. A list of keys with no lockable district is
+      // a map whose doors were never carved.
+      if (!(bp.areas ?? []).some((a) => a?.lock === true))
+        err(
+          "locks names keys but no area is `lock: true` — nothing would be sealed",
+        );
+    }
   }
 
   return { errors, warnings };

@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   LEVELS,
+  MAP_BLUEPRINTS,
   QUEST_DEFS,
   QUEST_GIVER_DEFS,
   giversForLevel,
@@ -38,14 +39,20 @@ describe("the campaign's quest givers", () => {
     }
   });
 
-  it("each stand inside the map they are placed on", () => {
+  it("each stand inside the map they are placed on, at every size", () => {
+    // A giver's `at` is a HINT on a carved map — `questSpot` clamps it into the
+    // world and rings outward to clear ground (see quests/placement.ts) — so
+    // the honest check is against the SMALLEST carve the mission can produce.
+    // Inside that, the clamp never has to move anybody on any size.
     for (const giver of GIVERS) {
       const level = LEVELS[giver.level];
       expect(level, `${giver.id} names an unknown level`).toBeDefined();
+      const small = MAP_BLUEPRINTS[giver.level]?.sizes.small;
+      expect(small, `${giver.level} ships no blueprint`).toBeDefined();
       expect(giver.at.x, `${giver.id} x`).toBeGreaterThan(0);
       expect(giver.at.y, `${giver.id} y`).toBeGreaterThan(0);
-      expect(giver.at.x, `${giver.id} x`).toBeLessThan(level!.width);
-      expect(giver.at.y, `${giver.id} y`).toBeLessThan(level!.height);
+      expect(giver.at.x, `${giver.id} x`).toBeLessThan(small!.width);
+      expect(giver.at.y, `${giver.id} y`).toBeLessThan(small!.height);
     }
   });
 
@@ -151,12 +158,13 @@ describe("the campaign's errands", () => {
 
   it("place every fetch piece and escort destination inside the map", () => {
     for (const quest of QUESTS) {
-      const level = LEVELS[quest.level]!;
+      // The smallest carve, for the reason the givers' own check uses it.
+      const small = MAP_BLUEPRINTS[quest.level]!.sizes.small;
       const inside = (p: { x: number; y: number }, what: string) => {
         expect(p.x, `${quest.id} ${what} x`).toBeGreaterThan(0);
         expect(p.y, `${quest.id} ${what} y`).toBeGreaterThan(0);
-        expect(p.x, `${quest.id} ${what} x`).toBeLessThan(level.width);
-        expect(p.y, `${quest.id} ${what} y`).toBeLessThan(level.height);
+        expect(p.x, `${quest.id} ${what} x`).toBeLessThan(small.width);
+        expect(p.y, `${quest.id} ${what} y`).toBeLessThan(small.height);
       };
       for (const item of quest.items ?? []) {
         for (const at of item.at ?? []) inside(at, "placed piece");
@@ -182,10 +190,11 @@ describe("the campaign's errands", () => {
   });
 });
 
-/** Every enemy id the level `levelId` can put on the field, from every source
- * it has — the pinned spawns, the wave budget, the packs and the spawn points.
- * Deliberately generous: a false NEGATIVE here fails a working quest, and the
- * check only has to catch a breed that appears nowhere at all. */
+/** Every enemy id the mission `levelId` can put on the field, from every source
+ * it has — the blueprint's horde, its elites, guardians, bystanders, hellborn
+ * and boss, plus whatever the mission itself still names (the opening strike's
+ * vanguard). Deliberately generous: a false NEGATIVE here fails a working
+ * quest, and the check only has to catch a breed that appears nowhere at all. */
 function levelBreeds(levelId: string): Set<string> {
   const level = LEVELS[levelId];
   const ids = new Set<string>();
@@ -202,6 +211,7 @@ function levelBreeds(levelId: string): Set<string> {
     }
   };
   walk(level as unknown as Record<string, unknown>);
+  walk(MAP_BLUEPRINTS[levelId] as unknown as Record<string, unknown>);
   return ids;
 }
 

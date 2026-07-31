@@ -38,8 +38,8 @@ import {
 import { enemyDef } from "../game/defs/enemies/index.ts";
 import {
   LEVEL_ORDER,
-  levelDef,
   runLevelDef,
+  type LevelDef,
 } from "../game/defs/levels/index.ts";
 import {
   allocateStat,
@@ -278,13 +278,12 @@ type RosterEntry = { defId: string; role: "minion" | "elite" | "boss" };
  * exactly the population the real spawner would draw from its budget.
  */
 function enumerateRoster(
-  levelId: string,
+  level: LevelDef,
   difficulty: Difficulty,
   rareRng: () => number,
   includeRares: boolean,
   clearShare = 1,
 ): RosterEntry[] {
-  const level = levelDef(levelId);
   const minions: RosterEntry[] = [];
   const elites: RosterEntry[] = [];
   const rares: RosterEntry[] = [];
@@ -634,7 +633,7 @@ function runLevelPass(
   totalKillsBefore: number,
   excludeTiers: Set<Tier>,
 ): LevelResult {
-  const level = levelDef(levelId);
+  const level = runLevelDef(state);
   const heroLevelStart = state.players[0].level;
   const xpStart = state.stats.xpGained;
   const checkpoints: Checkpoint[] = [];
@@ -780,7 +779,7 @@ export function simulateProgression(
     state.items = [];
     const rareRng = createRng((seed ^ (runIndex * 2_654_435_761)) >>> 0);
     const roster = enumerateRoster(
-      levelId,
+      runLevelDef(state),
       difficulty,
       rareRng,
       includeRares,

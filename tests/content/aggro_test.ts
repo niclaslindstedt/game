@@ -8,9 +8,17 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ENEMY_AI, LEVELS, step } from "@game/core";
+import { ENEMY_AI, resolveLevelDef, runLevelDef, step } from "@game/core";
 import type { GameState, Obstacle } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, run, startGame } from "../helpers.ts";
+import {
+  clearStage,
+  DT,
+  idle,
+  makeEnemy,
+  run,
+  SEED,
+  startGame,
+} from "../helpers.ts";
 
 import { distance as dist } from "@game/lib/vec.ts";
 
@@ -177,8 +185,8 @@ describe("pack overlap", () => {
 });
 
 describe("moon stone ridges", () => {
-  it("the moon def raises solid boulder walls", () => {
-    const walls = LEVELS.moon!.walls!;
+  it("the carved moon raises solid boulder walls", () => {
+    const walls = resolveLevelDef("moon", SEED, "medium").walls!;
     expect(walls.length).toBeGreaterThan(0);
     for (const wall of walls) {
       expect(wall.jumpable).toBe(false); // true walls, not hop-overs
@@ -188,10 +196,10 @@ describe("moon stone ridges", () => {
 
   it("expands the ridges into obstacle chains at creation", () => {
     const state = startGame();
-    const segments = LEVELS.moon!.walls!.length;
+    const segments = runLevelDef(state).walls!.length;
     const boulders = state.obstacles.filter((o) => o.kind === "boulder");
     // Every ridge segment becomes a chain of overlapping boulders, so the
-    // count dwarfs the handful of authored segments.
+    // count dwarfs the handful of segments the carve drew.
     expect(boulders.length).toBeGreaterThan(segments * 2);
   });
 });

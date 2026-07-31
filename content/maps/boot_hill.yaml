@@ -104,6 +104,11 @@ annex:
   padSprite: elevator_pad
   downLabel: CONTROL ROOM
   upLabel: SURFACE
+  # THE ALL-ACCESS PASS. The control centre is past the lift, and an annex has no
+  # border to hang a door in — so the lock goes on the CAR: the hoist will not
+  # come for a hero who has not taken the pass off THE STUNT DOUBLE, which is
+  # what makes him the gate to the finale rather than one more duel on the way.
+  lock: control
 
 sizes:
   small:

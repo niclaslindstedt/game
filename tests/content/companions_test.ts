@@ -8,7 +8,13 @@
 
 import { describe, expect, it } from "vitest";
 
-import { COMPANION_DEFS, ENEMY_DEFS, LEVELS, WEAPON_DEFS } from "@game/core";
+import {
+  COMPANION_DEFS,
+  ENEMY_DEFS,
+  LEVELS,
+  MAP_BLUEPRINTS,
+  WEAPON_DEFS,
+} from "@game/core";
 
 const SPAREABLE_IDS = Object.values(ENEMY_DEFS)
   .filter((def) => def.spareable)
@@ -42,16 +48,16 @@ describe("the rift's spareable uniques", () => {
     }
   });
 
-  it("spawns LUCKY off the rift's main road, clover in pocket", () => {
-    const spawn = LEVELS.the_rift!.spawns.find(
-      (s) => "at" in s && s.enemy === "lucky",
-    );
-    expect(spawn).toBeDefined();
+  it("stands LUCKY somewhere on the rift, clover in pocket", () => {
+    // The rift's blueprint fields him as one of its speaking elites, so which
+    // room he is in is the run's answer — that he is ON the map is this one's.
+    const elites = MAP_BLUEPRINTS.the_rift!.elites.map((e) => e.enemy);
+    expect(elites).toContain("lucky");
     const items = (ENEMY_DEFS.lucky!.loot?.items ?? []).map((entry) =>
       typeof entry === "string" ? entry : entry.defId,
     );
     expect(items).toContain("lucky_clover");
-    // The clover is HIS: no level's random pool also rains it.
+    // The clover is HIS: no mission's random pool also rains it.
     for (const level of Object.values(LEVELS)) {
       expect(level.loot.gearPool).not.toContain("lucky_clover");
     }

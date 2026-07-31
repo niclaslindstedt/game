@@ -226,6 +226,23 @@ export type MapSetPiece = {
     level: DifficultyMobLevels;
     hp: DifficultyHp;
   }[];
+  /**
+   * THIS ONE WALKS ITS PATCH: a dormant beat across the cell it was placed in,
+   * rather than a post it stands on (`SpawnSpec.patrol` — the engine walks the
+   * route ping-pong at `ENEMY_AI.patrol.speedFactor` until something wakes it).
+   *
+   * It is the difference between a floor with staff on it and a floor with
+   * statues on it, and it is the reason a room can be entered twice and not be
+   * the same room: the manager pacing his aisle is somewhere else the second
+   * time. The route is DERIVED from the cell — down its long axis, inset from
+   * the walls — because a carve has no authored coordinates to walk to, and a
+   * mob that walks the room it is in is the only route that is true on every
+   * seed.
+   *
+   * Never on a boss (it guards its post), and never on a cache's keeper (it
+   * guards the cache); the build refuses both.
+   */
+  patrol?: boolean;
 };
 
 /** The ambient horde: one finite spawn point per chamber, ramping with depth. */
@@ -327,6 +344,19 @@ export type MapAnnex = {
   downLabel?: string;
   /** What the pad in the ANNEX says (the way back up). */
   upLabel?: string;
+  /**
+   * A KEYED CAR: the door id (a story item's `unlocks`) the hero must carry
+   * before the DOWN pad will take him — the mission's finale behind a keycard.
+   *
+   * It is the annex's answer to a locked room: an annex has no border to hang a
+   * door in (that is the whole point of it), so the lock goes on the one link
+   * it does have. The way back UP is never keyed — a hero who rode down and
+   * dropped the pass would be sealed in.
+   *
+   * Never key it to something the annex itself holds: the boss down there
+   * cannot be the one carrying the key to his own door.
+   */
+  lock?: string;
 };
 
 /** A compiled map blueprint — one `content/maps/<id>.yaml` file. */
@@ -369,6 +399,20 @@ export type MapBlueprint = {
   elites: MapSetPiece[];
   /** Dead-end guardians — the chest rooms' lone keepers. */
   guardians: MapSetPiece[];
+  /**
+   * THE NON-COMBATANTS: neutral mobs an errand sends the hero to talk to (see
+   * `EnemyDef.disposition`). They are cast rather than horde — one archive
+   * terminal, one surveyor, one assessor — so they are named here and dropped
+   * into knot-bearing cells off the carve's own stream, which means the map
+   * still has to be searched for them. Everything about one beyond where it
+   * stands is its own def.
+   *
+   * They belong to the BLUEPRINT rather than to the mission for the same reason
+   * the elites do: the mission has no map to stand them on. Without them a
+   * campaign chain simply cannot be finished, with nothing on screen to say why
+   * — which is exactly why the build refuses a non-neutral id here.
+   */
+  bystanders?: { enemy: string }[];
   hellborn?: MapHellborn;
   /** The boss; null on a `reachExit` mission that ends at a door instead. */
   boss: MapBoss | null;
@@ -377,4 +421,17 @@ export type MapBlueprint = {
   spawnRegions?: MapRegion[];
   /** Rolled rare/unique encounters, exactly as a `LevelDef` carries them. */
   rareSpawns?: { rare?: string[]; unique?: string[] };
+  /**
+   * THE KEYS THIS MAP'S DOORS ANSWER TO — story-item door ids (`unlocks` on a
+   * `content/story-items.yaml` entry), spent one per SEALED cell the carve grew
+   * out of a `lock`-able area.
+   *
+   * It is a LIST rather than a flag on the area because a key is a specific
+   * object with a specific carrier: GOODCO HQ has three keycards on three named
+   * elites, so it seals three rooms and no more. A carve that grew four
+   * lockable cells locks three of them and leaves the fourth open — the
+   * alternative (one id on every room of a kind) is one keycard opening every
+   * vault in the building, which is not a key, it is a door that looks locked.
+   */
+  locks?: string[];
 };

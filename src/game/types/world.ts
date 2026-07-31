@@ -357,6 +357,9 @@ export type ElevatorState = {
   sprite: string;
   radius: number;
   label?: string;
+  /** The door id this car is keyed to, if any — the hero rides only while
+   * carrying the story item that `unlocks` it (see `LevelDef.elevators`). */
+  opensWith?: string;
   /** Whether the hero has ridden this pad at least once (the app dims a used
    * pad's call light, and the arrival pad must not re-fire the moment he lands
    * on it — see `state.elevatorLockMs`). */

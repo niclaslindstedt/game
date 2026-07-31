@@ -13,7 +13,7 @@ import { setCutsceneDefs } from "./cutscenes.ts";
 import { setDifficultyDefs, type DifficultyDef } from "./difficulties.ts";
 import { setEnemyDefs, type EnemyDef } from "./enemies/index.ts";
 import { setEquipmentDefs, type GearDef, type WeaponDef } from "./equipment.ts";
-import { setLevelDefs, type LevelDef } from "./levels/index.ts";
+import { setLevelDefs, type MissionDef } from "./levels/index.ts";
 import {
   setQuestDefs,
   setQuestGiverDefs,
@@ -36,10 +36,11 @@ import type { CutsceneDef } from "@game/lib/cutscene.ts";
 /** A partial set of catalog overrides; omitted catalogs keep their current
  * (usually shipped) contents. */
 export type DefOverrides = {
-  levels?: Record<string, LevelDef>;
-  /** The GENERATED MAPS recipes, keyed by the level id each one carves. A mod
-   * ships `maps/<id>.yaml` beside its `levels/<id>.yaml` and its venue is
-   * carved per run like a shipped one; omitted, the shipped blueprints stand. */
+  levels?: Record<string, MissionDef>;
+  /** The MAP recipes, keyed by the level id each one carves. A mission's
+   * geometry lives here and nowhere else: a mod ships `maps/<id>.yaml` beside
+   * its `levels/<id>.yaml` and its venue is carved per run exactly like a
+   * shipped one; omitted, the shipped blueprints stand. */
   blueprints?: Record<string, MapBlueprint>;
   enemies?: Record<string, EnemyDef>;
   companions?: Record<string, CompanionDef>;

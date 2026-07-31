@@ -66,10 +66,10 @@ export type OpeningSkip =
  * Everything a run is built from — the arguments AND the six things the app
  * used to do afterwards.
  *
- * `server/wire/protocol.ts`'s `SessionParams` is structurally this plus the two
- * generated-map FLAGS, which are applied by the caller rather than here because
- * they are process-global engine toggles rather than arguments (see
- * `setGeneratedMapsEnabled`).
+ * `server/wire/protocol.ts`'s `SessionParams` is structurally this plus the map
+ * SIZE flag, which is applied by the caller rather than here because it is a
+ * process-global engine toggle rather than an argument (see
+ * `setGeneratedMapSize`).
  *
  * **IT IS WRITTEN IN THE WIRE'S TERMS ON PURPOSE** — `difficulty` a string,
  * `loadout` and `campaignQuests` opaque, `openingSkip` a string — so a

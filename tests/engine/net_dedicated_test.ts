@@ -58,7 +58,7 @@ describe("the dedicated server's command line", () => {
       "--password=hunter2",
       "--players=4",
       "--seed=7",
-      "--generated-maps",
+      "--map-size=large",
     ]);
     expect(overrides).toEqual({
       level: "moon",
@@ -66,7 +66,7 @@ describe("the dedicated server's command line", () => {
       password: "hunter2",
       maxPlayers: 4,
       seed: 7,
-      generatedMaps: true,
+      generatedMapSize: "large",
     });
   });
 

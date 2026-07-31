@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Level 3 — MARS: the secret colony. Rovers work the dust outside, robots
-// and the fembot line staff the base inside (a tile-zones split at the dome
-// wall), three tech billionaires carry the plot, and THE FOUNDER — the game's
-// first FLEEING boss — escapes through a rift instead of dying.
+// Level 3 — MARS: the secret colony. Rovers work the dust outside, robots and
+// the fembot line staff the domes inside (each district paints its own floor),
+// three tech billionaires carry the plot, and THE FOUNDER — the game's first
+// FLEEING boss — escapes through a rift instead of dying.
+//
+// The colony is carved from `content/maps/mars.yaml` per run, so the cast is
+// asserted against the BLUEPRINT (who the map fields, and where in the search
+// each one stands) rather than against the mission, which has no map on it.
 
 import { describe, expect, it } from "vitest";
 
@@ -13,6 +17,7 @@ import {
   enemyDef,
   LEVEL_ORDER,
   LEVELS,
+  MAP_BLUEPRINTS,
   OBSTACLES,
   step,
   storyItemDef,
@@ -32,6 +37,7 @@ import {
 } from "../helpers.ts";
 
 const MARS = LEVELS.mars!;
+const BLUEPRINT = MAP_BLUEPRINTS.mars!;
 
 describe("MARS level def", () => {
   it("is story level 3, after the moon", () => {
@@ -42,11 +48,8 @@ describe("MARS level def", () => {
     expect(state.level.foes).toBe("MACHINES");
   });
 
-  it("fields the colony's machines: rovers outside, robots and fembots inside", () => {
-    const minionIds = MARS.spawns
-      .filter((s) => "band" in s)
-      .map((s) => s.enemy)
-      .sort();
+  it("fields the colony's machines: rovers early, fembots deep", () => {
+    const minionIds = BLUEPRINT.horde.members.map((m) => m.enemy).sort();
     expect(minionIds).toEqual([
       "fembot",
       "mining_rover",
@@ -55,55 +58,53 @@ describe("MARS level def", () => {
       "successor",
     ]);
 
-    // The desert-to-base transition: rovers band the near (outdoor) half,
-    // fembots the far (indoor) half, matching the tile-zone split.
-    const rovers = MARS.spawns.find(
-      (s) => s.enemy === "scout_rover" && "band" in s,
+    // The desert-to-colony hand-over rides the carve's DEPTH axis rather than a
+    // line on a map: rovers hold the shallow end of the search, fembots the
+    // deep one, so the machines get more colonial the further in he gets.
+    const rovers = BLUEPRINT.horde.members.find(
+      (m) => m.enemy === "scout_rover",
     )!;
-    const fembots = MARS.spawns.find(
-      (s) => s.enemy === "fembot" && "band" in s,
-    )!;
-    expect("band" in rovers && rovers.band[1]).toBeLessThan(
-      "band" in fembots ? fembots.band[0] + 0.5 : 0,
-    );
+    const fembots = BLUEPRINT.horde.members.find((m) => m.enemy === "fembot")!;
+    expect(rovers.window[1]).toBeLessThan(fembots.window[0] + 0.5);
 
-    // The base interior gets its own ground: a tile zone starting at the
-    // dome wall swaps red regolith for deck plating.
-    expect(MARS.tiles.zones).toHaveLength(1);
-    expect(MARS.tiles.zones![0]!.rect.x).toBe(1560);
-    expect(MARS.tiles.zones![0]!.ground.common).toBe("deck_0");
+    // The colony gets its own ground: the districts INSIDE the dome paint deck
+    // plating over the red regolith, and the desert is left bare.
+    const floors = BLUEPRINT.areas.map((a) => a.ground?.common).filter(Boolean);
+    expect(floors).toContain("deck_0");
   });
 
-  it("pins the four elites along the route and THE FOUNDER in the boss wing", () => {
-    const elites = MARS.spawns
-      .filter((s) => enemyDef(s.enemy).role === "elite")
-      .map((s) => s.enemy)
-      .sort();
+  it("fields the four elites along the search and THE FOUNDER at the end", () => {
+    const elites = BLUEPRINT.elites.map((e) => e.enemy).sort();
     expect(elites).toEqual([
       "successor_prime",
       "the_indexer",
       "the_seed",
       "the_vendor",
     ]);
+    expect(BLUEPRINT.boss?.enemy).toBe("the_founder");
 
     const state = startGame(SEED, "mars");
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     expect(boss.defId).toBe("the_founder");
   });
 
-  it("locks the TERRARIUM behind THE SEED's keycard", () => {
-    expect(MARS.doors!.some((d) => d.id === "terrarium")).toBe(true);
+  it("keeps the TERRARIUM keycard on THE SEED, with its story waiting inside", () => {
     expect(storyItemDef("keycard_terrarium").unlocks).toBe("terrarium");
     // ...and the keycard is really in SEAL's pockets.
     expect(enemyDef("the_seed").loot!.storyItems).toContain(
       "keycard_terrarium",
     );
-    // The tribute schedule waits inside the locked room.
+    // The tribute schedule is one of the mission's own pickups, strung along
+    // the carve's depth axis with the rest of the trail.
     expect(
       MARS.placedItems!.some(
         (p) => p.kind === "story" && p.defId === "tribute_schedule",
       ),
     ).toBe(true);
+    // The TERRARIUM itself is a district of the blueprint's own — sealed behind
+    // its dome wall, with the colony's lawn under it.
+    const terrarium = BLUEPRINT.areas.find((a) => a.id === "terrarium")!;
+    expect(terrarium.enclosure).toBe("hard");
   });
 
   it("wires the rover and fembot first-kill monologues", () => {

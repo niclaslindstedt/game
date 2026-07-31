@@ -945,13 +945,8 @@ screens:
         help:
           on: THE COIN STORE SHOWS IN THIS BUILD - PACKS ARE FREE
           off: THE COIN STORE SHOWS IN NATIVE BUILDS ONLY
-      - id: generated-maps
-        label: GENERATED MAPS
-        help:
-          on: EVERY MISSION IS CARVED FRESH - HUNT THE BOSS DOWN
-          off: EVERY MISSION PLAYS ITS HAND-DRAWN MAP
-      # Appears with the generator rather than sitting greyed under a switch
-      # that is off.
+      # Every mission is carved from its blueprint, so the size is the only
+      # knob left over the generator.
       - id: map-size
         label: MAP SIZE
         help:

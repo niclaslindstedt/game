@@ -399,18 +399,17 @@ export type GameState = {
   respecPending: boolean;
   level: LevelInfo;
   /**
-   * THE MAP THIS RUN IS ACTUALLY BEING PLAYED ON, when it was CARVED rather
-   * than loaded (GENERATED MAPS — see `mapgen/`). Absent on an ordinary run,
-   * where the authored def in the catalog IS the run's def.
+   * THE MAP THIS RUN IS ACTUALLY BEING PLAYED ON — carved from the mission's
+   * blueprint on the run's own seed (see `mapgen/`).
    *
    * `createGame` resolves the level through `resolveLevelDef` and then builds
    * the world from what it got — but a run keeps ASKING the level questions
-   * long after creation (where is the path, which zones are quiet, whose lair
-   * is this door, where does the exit stand), and every one of those reads used
-   * to go back to the catalog, i.e. to the HAND-AUTHORED map. On a generated
-   * run that answered with another map's geometry. Parked here so
+   * long after creation (which zones are quiet, whose lair is this door, where
+   * does the exit stand), and the CATALOG cannot answer any of them: it holds
+   * the mission, which has no geometry on it at all. Parked here so
    * `runLevelDef(state)` can answer with the run's own def instead; never read
-   * directly.
+   * directly. Optional only for the synthetic states the engine tests build by
+   * hand.
    */
   carvedLevel?: LevelDef;
   /** The run's chosen difficulty (scales spawns, hp, and loot). */

@@ -14,7 +14,6 @@ import {
   setDeathScenesEnabled,
   setDialogueEnabled,
   setGeneratedMapSize,
-  setGeneratedMapsEnabled,
   type BalanceTuning,
   type GeneratedMapSizeSetting,
 } from "@game/menu";
@@ -120,15 +119,7 @@ export type DebugMode = "on" | "off";
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
 
-/** GENERATED MAPS: a developer feature flag for the map generator (see the
- * engine's `mapgen/`). `off` (the default) plays each mission's hand-authored
- * layout; `on` carves a fresh one per run from the mission's blueprint, so the
- * boss is somewhere new every time and has to be FOUND. Applied to the engine via
- * `setGeneratedMapsEnabled`, and read at level build — so it takes effect on the
- * next run, not the one in progress. */
-export type GeneratedMaps = "on" | "off";
-
-/** How big a GENERATED MAP is carved. The three sizes are the blueprint's own
+/** How big a map is carved. The three sizes are the blueprint's own
  * (each prices its own world dimensions and chamber count, so LARGE is a longer
  * search rather than the same map stretched); `random` rolls one per run off the
  * run's seed, so the scale varies along with the layout. */
@@ -325,9 +316,7 @@ export type GameSettings = {
   autoLevelStats: AutoLevelStats;
   /** Developer flag: surface the coin store in any build, free (see StoreForce). */
   storeForce: StoreForce;
-  /** Developer flag: carve each mission's map per run (see GeneratedMaps). */
-  generatedMaps: GeneratedMaps;
-  /** Developer setting: which size a generated map is carved at (see
+  /** Developer setting: which size a map is carved at (see
    * GeneratedMapSize). */
   generatedMapSize: GeneratedMapSize;
   /** THE MOD LOAD ORDER — every mod this device has seen, in the order they
@@ -538,7 +527,6 @@ function defaults(): GameSettings {
     // The coin store surfaces only in the native shell unless a developer
     // forces it (free purchases — see store.ts).
     storeForce: "off",
-    generatedMaps: "off",
     generatedMapSize: "medium",
     // No mods until the player installs some; the list grows as they appear.
     modOrder: [],
@@ -802,7 +790,6 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     debug: base.debug,
     autoLevelStats: base.autoLevelStats,
     storeForce: base.storeForce,
-    generatedMaps: base.generatedMaps,
     generatedMapSize: base.generatedMapSize,
     gameSpeed: base.gameSpeed,
     botViewSpec: base.botViewSpec,
@@ -983,10 +970,9 @@ function load(): GameSettings {
         stored.storeForce === "on" || stored.storeForce === "off"
           ? stored.storeForce
           : base.storeForce,
-      generatedMaps:
-        stored.generatedMaps === "on" || stored.generatedMaps === "off"
-          ? stored.generatedMaps
-          : base.generatedMaps,
+      // A save from before every map was carved may still carry a
+      // `generatedMaps` on/off — there is nothing to turn off any more, so it
+      // is read as the retired key it is and dropped.
       generatedMapSize: isGeneratedMapSize(stored.generatedMapSize)
         ? stored.generatedMapSize
         : base.generatedMapSize,
@@ -1079,7 +1065,6 @@ setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
 setDeathScenesEnabled(settings.deathScenes === "on");
 setStoreForced(settings.storeForce === "on");
-setGeneratedMapsEnabled(settings.generatedMaps === "on");
 setGeneratedMapSize(settings.generatedMapSize);
 setWorldProjection({ pitch: settings.cameraPitch, yaw: settings.cameraYaw });
 setBalanceTuning(settings.balance);
@@ -1108,7 +1093,6 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setCutscenesEnabled(settings.cutscenes === "on");
   setDeathScenesEnabled(settings.deathScenes === "on");
   setStoreForced(settings.storeForce === "on");
-  setGeneratedMapsEnabled(settings.generatedMaps === "on");
   setGeneratedMapSize(settings.generatedMapSize);
   setWorldProjection({ pitch: settings.cameraPitch, yaw: settings.cameraYaw });
   setBalanceTuning(settings.balance);

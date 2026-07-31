@@ -26,6 +26,7 @@ import {
   equipBlaster,
   idle,
   makeEnemy,
+  openSpotNear,
   startGame,
 } from "../helpers.ts";
 
@@ -116,9 +117,11 @@ describe("first-kill thoughts", () => {
     clearStage(state);
     // A live intern parked beyond the (wide, drop-in) sight radius: no reaction
     // yet. The beat uses a full-view radius so it fires the instant the packed
-    // opening ring is on screen, so "beyond" here is well past that.
+    // opening ring is on screen, so "beyond" here is well past that — and the
+    // spot is one the carve left CLEAR, or the collision pass would eject him
+    // out of a prop and into view on the very tick this checks he is not.
     const staffer = makeEnemy(
-      { pos: { x: state.players[0].pos.x + 280, y: state.players[0].pos.y } },
+      { pos: openSpotNear(state, state.players[0].pos, 280) },
       "intern",
     );
     state.enemies.push(staffer);

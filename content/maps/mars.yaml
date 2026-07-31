@@ -87,6 +87,22 @@ areas:
     shellWidth: 150
     label: DOME SHELL
     ground: { common: deck_0, rare: deck_1, rareEvery: 13 }
+  # THE LIZARD SHRINE — the one room on Mars with a door on it, and the green
+  # keycard THE SEED carries is what the door answers to. It is a DETOUR, never
+  # the way on: nothing the mission needs is ever carved behind a key (which is
+  # what `boss: false` / `spawn: false` state, and what the carve enforces), so
+  # what is in here is a cache and whoever the colony left standing over it.
+  - id: shrine
+    enclosure: hard
+    weight: 0.9
+    horde: 1
+    boss: false
+    spawn: false
+    lock: true
+    label: SHRINE
+    wall: dome
+    ground: { common: colony_lawn_0, rare: colony_lawn_1, rareEvery: 5 }
+    patch: { a: colony_wood_0, b: colony_wood_1, every: 11 }
 
 sizes:
   small:
@@ -221,7 +237,7 @@ objects:
     type: obstacle
     radius: 6
     density: 16.4
-    areas: [terrarium]
+    areas: [terrarium, shrine]
   - id: colony_hedge
     type: obstacle
     radius: 8
@@ -231,7 +247,7 @@ objects:
     type: obstacle
     radius: 9
     density: 4.1
-    areas: [terrarium, dome_shell]
+    areas: [terrarium, dome_shell, shrine]
   - id: colony_pond
     type: obstacle
     radius: 14
@@ -255,7 +271,7 @@ objects:
   - id: colony_flowers
     type: decor
     density: 9.2
-    areas: [terrarium]
+    areas: [terrarium, shrine]
   - id: colony_lawn_stripe
     type: decor
     density: 4.1
@@ -335,6 +351,12 @@ horde:
     - enemy: scout_rover
       window: [0, 0.5]
       weight: 4
+    # The mining units work the mid dust — and an errand on this map asks the
+    # hero for six of them (content/quests/mars_recovery.yaml), so the colony
+    # has to actually field them.
+    - enemy: mining_rover
+      window: [0.2, 0.6]
+      weight: 2
     - enemy: servo_bot
       window: [0.25, 0.85]
       weight: 4
@@ -361,6 +383,13 @@ elites:
   - enemy: the_seed
     ramp: endgame
     hp: 280
+
+# THE TITHE ASSESSOR — the campaign chain's non-combatant on the colony. It
+# works its own roaming round and stays neutral unless the hero deliberately
+# talks it into an argument it cannot lose politely
+# (content/conversations/tithe_assessor).
+bystanders:
+  - enemy: tithe_assessor
 
 # The cache keepers, cycled across the dead-end districts.
 guardians:
@@ -396,6 +425,11 @@ boss:
     - southeast
     - center-west
     - center-east
+
+# THE KEY: the green keycard THE SEED carries, which is what the SHRINE's door
+# answers to. One card, one room.
+locks:
+  - terrarium
 
 rareSpawns:
   rare:

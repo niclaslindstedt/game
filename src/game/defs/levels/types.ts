@@ -5,6 +5,13 @@
 // shipping a new level means adding a `content/levels/<id>.yaml` file (plus
 // its sprites), not touching the simulation. `make levels` compiles the YAML
 // into `src/generated/levels.ts`, which ./index.ts re-exposes.
+//
+// TWO TYPES LIVE HERE, and which one you have is the whole question. `LevelDef`
+// is the RUN's level — every wall, prop, knot and pickup of it, the thing the
+// simulation reads. `MissionDef` (at the foot of this file) is what a mission
+// AUTHORS: the same def minus the geometry, because the geometry is carved
+// fresh from `content/maps/<id>.yaml` every run. The catalog holds missions;
+// only a run holds a level.
 
 import type { Difficulty, TileSpec } from "../../types/index.ts";
 import type { Zone } from "../../zones.ts";
@@ -364,10 +371,7 @@ export type LevelDef = {
    * form (farm levels): standing within `radius` (default GATES.exitRadius)
    * of `at` clears the objective — the exit door anchors the axis instead.
    */
-  objective:
-    | { type: "killBoss" }
-    | { type: "clearAll" }
-    | { type: "reachExit"; at: Vec2; radius?: number };
+  objective: Objective;
   /**
    * THE INTENDED PATH: an ordered polyline of waypoints (world px) tracing the
    * route the designer means the hero to walk from `playerSpawn` toward the
@@ -662,13 +666,7 @@ export type LevelDef = {
    * Omitted numbers fall back to the config WELLS defaults; see GravityWell
    * for what each means.
    */
-  wells?: {
-    pos: Vec2;
-    pullRadius?: number;
-    coreRadius?: number;
-    pullSpeed?: number;
-    lootRadius?: number;
-  }[];
+  wells?: GravityWellSpec[];
   /**
    * Meteor strikes: presence turns the asteroid spawner on. Every `everyMs`
    * (rolled per rock) one falls out of the sky onto a patch near the hero,
@@ -820,16 +818,27 @@ export type LevelDef = {
     radius?: number;
     /** Short label the app prints over the pad (e.g. `TO CONTROL ROOM`). */
     label?: string;
+    /**
+     * A KEYED CAR: the door id (a story item's `unlocks`) the hero must be
+     * carrying before this pad will take him.
+     *
+     * It is the same lock a keyed ROOM uses, hung on the one link a wall cannot
+     * carry. Where a mission ends past a lift — the compound at the end of the
+     * park, the vault under the bunker — the last door is the car, so gating
+     * the run's finale on a keycard means gating the RIDE. The pad still draws
+     * and still says where it goes: a lift you can see and cannot call is what
+     * makes the pass worth taking off the man who has it.
+     *
+     * Never put it on a car whose key is on the far side of it.
+     */
+    opensWith?: string;
   }[];
   /**
    * Hand-placed pickups (the loot inside locked rooms, plot pieces on
    * pedestals). Equipment is minted from its def id; story items key into
    * STORY_ITEM_DEFS.
    */
-  placedItems?: (
-    | { kind: "story" | "equipment"; defId: string; pos: Vec2 }
-    | { kind: "medkit" | "xp" | "repair"; pos: Vec2 }
-  )[];
+  placedItems?: PlacedItem[];
   decor: {
     kind: string;
     sprite?: string;
@@ -1151,3 +1160,88 @@ export type EarlyDrop = {
   | { gear: string }
   | { item: "medkit" | "repair" | "xp" }
 );
+
+/**
+ * What ends the level. `killBoss` also anchors the difficulty axis: bands
+ * scale from the player spawn toward the boss. `reachExit` is the bossless
+ * form (farm levels): standing within `radius` (default GATES.exitRadius) of
+ * `at` clears the objective — the exit door anchors the axis instead.
+ */
+export type Objective =
+  | { type: "killBoss" }
+  | { type: "clearAll" }
+  | { type: "reachExit"; at: Vec2; radius?: number };
+
+/**
+ * A hand-placed pickup on the carved map (the loot inside a sealed room, a plot
+ * piece on a pedestal). Equipment is minted from its def id; story items key
+ * into STORY_ITEM_DEFS.
+ */
+export type PlacedItem =
+  | { kind: "story" | "equipment"; defId: string; pos: Vec2 }
+  | { kind: "medkit" | "xp" | "repair"; pos: Vec2 };
+
+/** A black hole on the carved map — see the `wells` field of {@link LevelDef}. */
+export type GravityWellSpec = {
+  pos: Vec2;
+  pullRadius?: number;
+  coreRadius?: number;
+  pullSpeed?: number;
+  lootRadius?: number;
+};
+
+/**
+ * The fields THE CARVE OWNS — the ones a `content/maps/<id>.yaml` blueprint
+ * decides fresh every run, and which a mission therefore no longer authors.
+ *
+ * They are the whole difference between the two types below. Everything else on
+ * a level — its name, story, ladder, loot pools, hazards, merchant, thought
+ * pins, travel gates — is the MISSION's, and is inherited by the carve
+ * untouched.
+ */
+type CarvedField =
+  | "width"
+  | "height"
+  | "playerSpawn"
+  | "landmarks"
+  | "spawns"
+  | "obstacles"
+  | "decor";
+
+/**
+ * A MISSION as it is AUTHORED — `content/levels/<id>.yaml`, the catalog
+ * `levelDef()` answers with.
+ *
+ * A mission is no longer a map: it is the recipe's other half. The geometry is
+ * carved per run from `content/maps/<id>.yaml` (see `game/mapgen/`), so
+ * everything positional is the carve's to decide and is OPTIONAL here —
+ * present only on the synthetic catalogs the engine tests install through
+ * `registerDefs`, which have no blueprint to carve from and hand-place their
+ * few props instead.
+ *
+ * The rule that falls out of the split is the one worth keeping: **a mission is
+ * not a level.** Anything reading geometry wants {@link LevelDef} — inside a
+ * run that is `runLevelDef(state)`, and nowhere else is there one at all.
+ */
+export type MissionDef = Omit<
+  LevelDef,
+  CarvedField | "objective" | "placedItems" | "wells"
+> &
+  Partial<Pick<LevelDef, CarvedField>> & {
+    /** The exit of a `reachExit` mission stands wherever the carve put the
+     * goal cell, so the authored form names no spot. */
+    objective:
+      | { type: "killBoss" }
+      | { type: "clearAll" }
+      | { type: "reachExit"; at?: Vec2; radius?: number };
+    /** WHAT the mission leaves lying around; the carve decides WHERE (it
+     * strings the story pieces along its own depth axis — see
+     * `mapgen/place.ts`). */
+    placedItems?: (
+      | { kind: "story" | "equipment"; defId: string; pos?: Vec2 }
+      | { kind: "medkit" | "xp" | "repair"; pos?: Vec2 }
+    )[];
+    /** The wells a mission has, with their authored pull geometry; the carve
+     * re-anchors each into a cell of its own. */
+    wells?: (Omit<GravityWellSpec, "pos"> & { pos?: Vec2 })[];
+  };

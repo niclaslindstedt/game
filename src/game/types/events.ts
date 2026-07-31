@@ -691,6 +691,10 @@ export type GameEvent =
    * end; the app plays the doors, the drop and the arrival.
    */
   | { type: "elevatorRide"; id: string; from: Vec2; to: Vec2; first: boolean }
+  /** A KEYED car refused the ride: the hero stood on the pad without the story
+   * item that `unlocks` it. Booked every tick he stands there, so the app can
+   * hold a "you need the pass" read on screen for as long as he is asking. */
+  | { type: "elevatorLocked"; id: string; key: string }
   /**
    * A travel gate tore open at `pos` (its key trinket was USED — see
    * `spendGateKey`). The app plays the rupture; the gate now stands on the

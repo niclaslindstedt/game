@@ -41,7 +41,6 @@ const PARAMS: SessionParams = {
   respec: false,
   clearedLevels: [],
   merchantDiscovered: false,
-  generatedMaps: false,
   generatedMapSize: "random",
 };
 

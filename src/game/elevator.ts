@@ -47,6 +47,18 @@ export function stepElevators(state: GameState, dtMs: number): void {
   if (state.players[0].z > 0) return;
   for (const pad of state.elevators) {
     if (distance(state.players[0].pos, pad.pos) > pad.radius) continue;
+    // A KEYED CAR does not come when called. The pad is drawn and labelled
+    // either way — a lift you can see and cannot ride is what sends the player
+    // back for whoever is carrying the pass — and the refusal is silent here
+    // because the app answers it (a locked call light and the key's name).
+    if (pad.opensWith && !state.storyItems.includes(pad.opensWith)) {
+      state.events.push({
+        type: "elevatorLocked",
+        id: pad.id,
+        key: pad.opensWith,
+      });
+      continue;
+    }
     const from = { ...state.players[0].pos };
     state.players[0].pos = { ...pad.to };
     // Cancel the momentum he arrived with, or he walks out of the car still

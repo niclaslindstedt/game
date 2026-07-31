@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: CC0-1.0
 description: |-
   THE GREENHOUSE — a GOODCO orbital seed vault, still running on a timer nobody
-  reset. THE READ: one long hall down the middle with planting beds either side,
-  so the fight is always a corridor with cover you can duck behind and never a
-  field you get surrounded in. The hero lands at the airlock end and walks the
-  length of it. THE POINT of this file, though, is to be the shortest level a
-  mod can ship that still reads as a real venue — copy it and grow it.
+  reset. THE READ: planting beds, gravel walks and the overgrowth that got out
+  of them, with the gardener still on shift somewhere in it. THE POINT of this
+  file is to be the shortest MISSION a mod can ship that still reads as a real
+  venue: its story, its ladder rung, its loot and its cast — copy it and grow
+  it. The floor plan is the other half, and it lives next door in
+  `maps/greenhouse.yaml`, carved fresh every run.
 campaign: true
 id: greenhouse
 index: 21
@@ -15,8 +16,6 @@ foes: THE OVERGROWTH
 # (cutscenes/greenhouse_arrival.yaml) or one of the game's. A list plays in
 # order, which is how the campaign chains a departure and a flight.
 prelude: greenhouse_arrival
-width: 1800
-height: 900
 gravity: 340
 biome: moon
 # Either one of the game's track ids or one of your own — this mod ships its
@@ -33,65 +32,9 @@ intro:
     - BEING FED.
   - - ADA'S BEACON CLIPPED THIS
     - ORBIT. SO I WALK IT.
-playerSpawn:
-  x: 180
-  y: 450
 objective:
   type: clearAll
-# The planting beds: two rows of low walls down the hall, offset so the lane
-# between them never runs straight for long.
-obstacles:
-  # `kind` names the SPRITE the prop is drawn as. A sized rock (`rockSizes`)
-  # picks a footprint per placement and draws `<kind>_<w>x<h>` — which is why
-  # the sizes are not optional decoration: without them this would ask the
-  # atlas for a sprite called "moonrock", nothing would answer, and the map
-  # would have eighteen invisible walls in it. `node scripts/level-render.mjs
-  # <id> --mod <dir>` is what shows you that (see mod/AGENTS.md).
-  - kind: moonrock
-    count: 18
-    radius: 8
-    jumpable: false
-    rockSizes:
-      - [1, 1]
-      - [1, 2]
-      - [2, 2]
-decor:
-  - kind: rocks
-    count: 12
 decorClearance: 70
-spawners:
-  - id: airlock
-    at: { x: 520, y: 450 }
-    maxAlive: 8
-    ramp: meek
-    triggerRadius: 480
-    lingering: 5
-    members:
-      - enemy: greenhouse_creeper
-        count: 22
-  - id: beds
-    at: { x: 1050, y: 380 }
-    maxAlive: 9
-    ramp: bold
-    triggerRadius: 460
-    lingering: 5
-    members:
-      - enemy: greenhouse_creeper
-        count: 26
-      - enemy: wisp
-        count: 10
-  - id: vault
-    at: { x: 1520, y: 470 }
-    maxAlive: 10
-    ramp: fierce
-    triggerRadius: 460
-    lingering: 4
-    members:
-      - enemy: greenhouse_creeper
-        count: 24
-      - enemy: ghost
-        count: 12
-spawns: []
 # The hero's own read on the place, fired the first time a creeper comes into
 # view (thoughts.yaml). `firstKillThoughts` is the same thing pinned to the kill.
 firstSightThoughts:

@@ -53,8 +53,8 @@ shipped file is a worked example of its kind.
 
 | What                                           | Where                          | Reference                                                       |
 | ---------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
-| A venue                                        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml)    |
-| A venue's carve recipe (GENERATED MAPS)        | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)        |
+| A venue's MISSION (story, ladder, loot)        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml)    |
+| That venue's MAP, carved fresh every run       | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)        |
 | Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)      |
 | A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                     |
 | A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                         |
@@ -142,12 +142,12 @@ players will actually get.
 **1. LOOK at the map.** Never judge a level from its YAML — the numbers do not
 tell you the fight is a corridor, and a wall you mistyped is invisible in text.
 
-| Command                                     | What it shows                                                                                                       |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `scripts/level-render.mjs <id> --mod <dir>` | the map drawn with the REAL sprites at true scale — add `--dormant` to stand the whole horde in it                  |
-| `scripts/map-layout.mjs <id> --mod <dir>`   | the design blueprint: walls, path, zones, and CON CIRCLES (mob level vs the hero level your `ladder.yaml` promises) |
-| `scripts/map-preview.mjs <id> --mod <dir>`  | the annotated design diagram; `--actual` scatters a real `createGame`, `--heatmap` overlays a played run            |
-| `… --generated --seed N --size large`       | the same three, carved from your `maps/<id>.yaml` blueprint instead of your hand-drawn layout                       |
+| Command                                     | What it shows                                                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `scripts/level-render.mjs <id> --mod <dir>` | the map drawn with the REAL sprites at true scale — add `--dormant` to stand the whole horde in it            |
+| `scripts/map-layout.mjs <id> --mod <dir>`   | the design blueprint: walls, zones, and CON CIRCLES (mob level vs the hero level your `ladder.yaml` promises) |
+| `scripts/map-preview.mjs <id> --mod <dir>`  | the annotated design diagram; `--actual` scatters a real `createGame`, `--heatmap` overlays a played run      |
+| `… --seed N --size large`                   | another run's carve of the same map — every render is of ONE carve, so change the seed to see the spread      |
 
 **2. PLAY it.** The autopilot plays your level in the real renderer, in headless
 Chromium, and hands back the run's stats and screenshots:

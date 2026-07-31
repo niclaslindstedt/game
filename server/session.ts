@@ -51,7 +51,6 @@ import {
   seatOf,
   setBalanceTuning,
   setGeneratedMapSize,
-  setGeneratedMapsEnabled,
   step,
   validateLoadout,
   type GameInput,
@@ -299,11 +298,10 @@ const MAX_TICKS_PER_ADVANCE = 240;
 
 export function createSession(options: SessionOptions): Session {
   const { params } = options;
-  // The engine's generated-maps toggle is a process-global FLAG, not a
-  // `createGame` argument — which is precisely why one session per process is
-  // the topology (see the plan's §1.2, reason 2). Applied here so the carve a
-  // client rebuilds from the same `SessionParams` matches the server's.
-  setGeneratedMapsEnabled(params.generatedMaps);
+  // The map SIZE is a process-global FLAG, not a `createGame` argument — which
+  // is precisely why one session per process is the topology (see the plan's
+  // §1.2, reason 2). Applied here so the carve a client rebuilds from the same
+  // `SessionParams` matches the server's.
   setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
 
   // TWO DOORS INTO A RUN, and which one was used decides what an arriving

@@ -62,6 +62,7 @@ const [
   deathRites,
   companionStats,
   party,
+  mapgen,
 ] = await Promise.all([
   engine("game/defs/enemies/index.ts"),
   engine("game/defs/levels/index.ts"),
@@ -95,6 +96,7 @@ const [
   engine("game/death-rites/catalog.ts"),
   engine("game/companion-stats.ts"),
   engine("game/companions.ts"),
+  engine("game/mapgen/index.ts"),
 ]);
 
 // How an affix WORDS itself is the app's, not the engine's — and it lives in
@@ -109,7 +111,31 @@ export const ENEMY_DEFS = enemies.ENEMY_DEFS;
 /** The scripted send-off a boss gets, resolved the way the engine resolves it
  * (the ENDING decides the default — see `riteFor`). */
 export const riteFor = deathRites.riteFor;
-export const LEVELS = levels.LEVELS;
+/**
+ * THE VENUES, AS ONE REPRESENTATIVE MAP EACH.
+ *
+ * A mission (`levels.LEVELS`) carries the story, the ladder rung and the loot
+ * pools and NOTHING positional — its geometry, its horde and its cast are
+ * carved fresh from `content/maps/<id>.yaml` on every run (see the engine's
+ * `mapgen/`). A reference page has to describe a real map, so every level the
+ * library reads is CARVED here, once, at a fixed seed and the shipped size: a
+ * page then shows what a player will actually meet, drawn from the same
+ * function the game builds a run with, rather than from a floor plan nobody
+ * has played since the maps stopped being drawn by hand.
+ *
+ * The seed is fixed so the site is reproducible build to build; nothing about
+ * a page should read as "the map is exactly this" — see the mission pages'
+ * own wording.
+ */
+const LIBRARY_CARVE_SEED = 7;
+export const LEVELS = Object.fromEntries(
+  Object.keys(levels.LEVELS).map((id) => [
+    id,
+    mapgen.resolveLevelDef(id, LIBRARY_CARVE_SEED, "medium"),
+  ]),
+);
+/** The authored half — what a mission says about itself, with no map on it. */
+export const MISSIONS = levels.LEVELS;
 export const LEVEL_ORDER = levels.LEVEL_ORDER;
 export const SECRET_LEVEL_ORDER = levels.SECRET_LEVEL_ORDER;
 export const DIFFICULTY_DEFS = difficulties.DIFFICULTY_DEFS;

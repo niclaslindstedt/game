@@ -102,12 +102,11 @@ const seed = opt("seed", "");
 // Fast-forward multiplier, forwarded to the app as `?speed=`: run the bot
 // through the level faster (more sim steps per frame). Empty / 1 = real time.
 const speed = opt("speed", "");
-// GENERATED MAPS (--generated, --map-size): play the mission as the generator
-// carves it rather than as it was drawn (see AGENTS.md § GENERATED MAPS). It is
-// a persisted DEVELOPER setting, not a URL param, so it has to be seeded into
+// MAP SIZE (--map-size): every mission's map is carved from its blueprint per
+// run (see AGENTS.md § GENERATED MAPS), so what this picks is the SCALE. It is a
+// persisted DEVELOPER setting, not a URL param, so it has to be seeded into
 // storage before the app boots — which is what `addInitScript` below does.
-const generated = args.includes("--generated");
-const mapSize = opt("map-size", "medium");
+const mapSize = opt("map-size", "");
 // THE CAMERA KNOBS (--pitch, --yaw): the world projection, dialled for this run
 // (see AGENTS.md § THE WORLD PROJECTION). Like GENERATED MAPS they are persisted
 // DEVELOPER settings rather than URL params, so they are seeded into storage
@@ -127,11 +126,11 @@ const browser = await chromium.launch({
 // Mobile-first: the game targets phones held horizontally, so playtests run
 // at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
-if (generated || pitch || yaw) {
+if (mapSize || pitch || yaw) {
   // Written before any app code runs, so the engine flags are applied from it on
   // load exactly as they would be for a developer who flipped the switch.
   await page.addInitScript(
-    ([size, carve, camPitch, camYaw]) => {
+    ([size, camPitch, camYaw]) => {
       const KEY = "adas-trail:settings";
       let stored;
       try {
@@ -144,13 +143,13 @@ if (generated || pitch || yaw) {
         JSON.stringify({
           ...stored,
           developerUnlocked: true,
-          ...(carve ? { generatedMaps: "on", generatedMapSize: size } : {}),
+          ...(size ? { generatedMapSize: size } : {}),
           ...(camPitch ? { cameraPitch: Number(camPitch) } : {}),
           ...(camYaw ? { cameraYaw: Number(camYaw) } : {}),
         }),
       );
     },
-    [mapSize, generated, pitch, yaw],
+    [mapSize, pitch, yaw],
   );
 }
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
@@ -251,11 +250,15 @@ if (startedLevel !== level) {
 const snapshot = () =>
   page.evaluate(() => {
     const g = window.__game;
+    // A run carries a PARTY (`state.players`, seat order); seat 0 is the local
+    // hero offline and for the host. `g.player` was the pre-party name and is
+    // gone, so reading it silently threw and killed the harness.
+    const hero = g.players[0];
     return {
       phase: g.phase,
-      hp: g.player.hp,
-      level: g.player.level,
-      inventory: g.player.inventory.filter(Boolean).length,
+      hp: hero.hp,
+      level: hero.level,
+      inventory: hero.inventory.filter(Boolean).length,
       stats: g.stats,
     };
   });
