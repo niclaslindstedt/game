@@ -547,10 +547,17 @@ escort.ts` walks the people an escort errand puts on the field, and
   multiplies its contact damage — the one-last-stand spike the renderer
   telegraphs with a flickering dying sprite. The character fights autonomously (and only
   targets monsters inside the visible view the app passes in
-  `input.view`) — it locks the nearest visible foe, but a desktop mouse adds an
-  aim dimension: `input.aim` (the pointer's world position) biases the pick
-  toward whatever the cursor points at (`AIM.biasStrength`), so foes in the
-  pointer's direction outrank merely-closer ones elsewhere; the player steers,
+  `input.view`) — it locks the BEST visible foe, which is the nearest one with
+  its distance weighted by ROLE (`TARGET_PRIORITY`), so an elite or a boss
+  outranks the chaff standing in front of it rather than the hero spending a
+  set-piece fight on whatever wandered into his face. The desktop AIM & SHOOT
+  scheme adds an aim dimension on top: `input.aim` (the pointer's world
+  position) biases the pick toward whatever the cursor points at
+  (`AIM.biasStrength`), so foes in the pointer's direction outrank
+  merely-closer ones elsewhere. It is supplied by that scheme ALONE — a
+  FOLLOW CURSOR pointer is a destination rather than an aim, and reading it as
+  both made the hero fire at whatever lay along his walk. Neither bias is a
+  lock: a foe close enough still wins on distance. The player steers,
   jumps (tap/Space), spends banked
   ability pickups (`input.useItem`), spends level-up stat points, and
   manages the inventory. Level-ups restore full health, land automatic
