@@ -376,6 +376,20 @@ any other blow of the hero's own. The app's MATURE CONTENT switch still has the
 last word, and a censored kill falls back to the ordinary corpse exactly as a
 censored nuke does.
 
+And it is the one weapon in the game with a **look of its own that is not a
+swing**. `motion: shake` says a weapon is not swung and so is drawn with none of
+a swing's furniture, which is right for the chainsaw and left the flamethrower
+firing in silence; `render/flame.ts` gives it a GOUT instead — a jet poured down
+the exact cone the blow struck. It is built as a stream rather than as a burst
+(every particle runs its own looping clock, so the cone is full from the first
+frame), it walks a five-rung authored ramp as it travels so distance reads as
+temperature (`flame_0` white-hot jet → `_1` bloom → `_2` body → `_3` cool → `_4`
+guttering tatters, each rung drawn twice so the stream never repeats), every
+particle tumbles as it goes, and what the fire burns out into climbs off the
+floor as smoke. Judge it in the EFFECTS GALLERY's IMPACT shelf — `flamethrower`
+(THE GOUT), which holds the trigger down for fifteen pulls so what is on screen
+is a continuous roar rather than one frame of one.
+
 It is the one weapon in the game **pooled by a single venue**. Every other base
 is repeated by the later maps' pools — that is how the campaign's arsenal
 accumulates — and this one is named nowhere else, so it is a GOODCO find and

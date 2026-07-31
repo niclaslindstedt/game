@@ -606,6 +606,9 @@ function companionAttack(
       // A recruit works its signature weapon the way the weapon is worked, so
       // the motion travels off ITS def exactly as the hero's does.
       ...(weapon.motion ? { motion: weapon.motion } : {}),
+      // And whether that weapon is FIRE, so a recruit handed a flamethrower
+      // pours a gout of its own instead of swinging in silence.
+      ...(weapon.burn ? { burn: true as const } : {}),
       // Set below once the eligible cone is gathered (uncapped count).
       targets: 0,
     };

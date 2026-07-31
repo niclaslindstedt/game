@@ -1,0 +1,28 @@
+name: flame_1b
+family: effects
+size: [9, 9]
+description: >
+  THE BLOOM, the other shape — the second stage of a flamethrower's gout,
+  opening lopsided: the fuel has caught the air on one side first and rolled
+  that way.
+subject:
+  kind: effect
+  build: a lopsided ball of flame, opened further on one side than the other
+  features: a white core inside yellow, an orange rim broken open where it rolled, no outline — it is light, not matter
+  accent: the orange rim against the white heart
+  pose: mid-air, a stride out from the nozzle, rolling
+  flavor: the second face of the bloom, so a stream never repeats itself
+palette:
+  W: "#fffbe8" # white-hot core
+  Y: "#ffe08a" # yellow body
+  o: "#ff9a3c" # orange rim
+grid: |
+  ..oo.....
+  .oYYoo...
+  .oYWWYo..
+  oYWWWWYo.
+  .YWWWWWo.
+  .oYWWWYo.
+  ..oYWWo..
+  ...ooYo..
+  ....oo...

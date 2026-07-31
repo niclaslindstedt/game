@@ -21,6 +21,7 @@ import {
 import { drawBlood } from "./blood.ts";
 import { enemySprites } from "./caches.ts";
 import { drawDust } from "./dust.ts";
+import { drawFlameGout } from "./flame.ts";
 import { drawGore } from "./gibs.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
 import { drawEliteBurst } from "./elite-fx.ts";
@@ -71,6 +72,8 @@ export type Effect = {
     // The dust a jump throws, at both ends of it — drawn by ./dust.ts.
     | "dustTakeoff"
     | "dustLand"
+    // The roaring cone a FLAMETHROWER throws — drawn by ./flame.ts.
+    | "flame"
     // The POWERUPS' one-shot bursts — drawn by ./powerup-bursts.ts.
     | "meteorFall"
     | "voidWave"
@@ -279,6 +282,13 @@ function drawEffectPass(
     // The dust a jump kicks up at either end of it, in the colour of the floor
     // it came off — its own module too (./dust.ts).
     if (drawDust(ctx, effect, x, groundY, timeMs, assets.sprites)) continue;
+
+    // The gout a FLAMETHROWER throws down the cone its blow struck — its own
+    // module too (./flame.ts), because a jet is built differently from a burst:
+    // every particle runs its own looping clock so the stream is full from the
+    // first frame instead of blooming into existence.
+    if (drawFlameGout(ctx, effect, x, groundY, timeMs, assets.sprites))
+      continue;
 
     // The blood a landed blow throws — the wound, the drops and the haze, all
     // sized by how hard the hit was (./blood.ts). The MARK it leaves on the

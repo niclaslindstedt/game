@@ -1,0 +1,32 @@
+name: flame_4b
+family: effects
+size: [14, 14]
+description: >
+  THE GUTTER, the other shape — the last stage of a flamethrower's gout with
+  even less left of it: a scatter of small ember tatters drifting apart, already
+  more gap than fire.
+subject:
+  kind: effect
+  build: a scatter of small ember tatters with nothing holding them together
+  features: deep ember dark with a thread of red-orange still in the biggest pieces, no outline — it is light, not matter
+  accent: how little of it is left
+  pose: mid-air, at the very end of the cone, all but gone
+  flavor: the second face of the gutter, so a stream never repeats itself
+palette:
+  r: "#e0451f" # the last red-orange, in the biggest tatters
+  d: "#8a2412" # deep ember dark
+grid: |
+  ..dd..........
+  .drrd....dd...
+  .drrd...drrd..
+  ..drd...drd...
+  ..dd.....dd...
+  ...d..........
+  ......dd......
+  .....drrd.....
+  ....drrrd..d..
+  ...drrrd..drd.
+  ...drrd...drd.
+  ....dd.....dd.
+  ..............
+  ..............

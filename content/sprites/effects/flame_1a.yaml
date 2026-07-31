@@ -1,0 +1,28 @@
+name: flame_1a
+family: effects
+size: [9, 9]
+description: >
+  THE BLOOM — the second stage of a flamethrower's gout: the jet has caught the
+  air and opened out, still white at heart but rimmed in orange where it meets
+  the cold.
+subject:
+  kind: effect
+  build: a ragged ball of flame half again the jet's size, opening as it travels
+  features: a white core inside yellow, an orange rim breaking up at the edges, no outline — it is light, not matter
+  accent: the orange rim against the white heart
+  pose: mid-air, a stride out from the nozzle
+  flavor: where the fuel stops being a jet and starts being a fire
+palette:
+  W: "#fffbe8" # white-hot core
+  Y: "#ffe08a" # yellow body
+  o: "#ff9a3c" # orange rim
+grid: |
+  ...oo....
+  ..oYYo...
+  .oYWWYo..
+  oYWWWWY..
+  oYWWWWYo.
+  .oYWWWYo.
+  ..oYWYo..
+  ..ooYo...
+  ...oo....

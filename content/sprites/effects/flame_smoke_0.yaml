@@ -1,0 +1,27 @@
+name: flame_smoke_0
+family: effects
+size: [10, 10]
+description: >
+  The first smoke off a flamethrower's gout — a small, dense, near-black puff,
+  new enough that it has not spread at all yet.
+subject:
+  kind: effect
+  build: a small dense round puff of smoke, tight and unspread
+  features: a near-black core with a grey rim, solid all through — smoke covers what is behind it
+  accent: how dark and how tight it is
+  pose: mid-air, an instant after the flame in front of it went out
+  flavor: what is left when the fuel is spent but the air is still moving
+palette:
+  k: "#3a3a44" # dense smoke core
+  g: "#5a5a66" # grey rim
+grid: |
+  ...gg.....
+  ..gkkg....
+  .gkkkkg...
+  .gkkkkkg..
+  gkkkkkkg..
+  gkkkkkkg..
+  .gkkkkkg..
+  .gkkkkg...
+  ..ggkgg...
+  ...gg.....

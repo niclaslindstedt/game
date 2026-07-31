@@ -1,0 +1,32 @@
+name: flame_4a
+family: effects
+size: [14, 14]
+description: >
+  THE GUTTER — the last stage of a flamethrower's gout, torn apart: the ball has
+  come to pieces and what is left is two ragged strands of ember with nothing
+  between them, running out of fuel in mid-air.
+subject:
+  kind: effect
+  build: two torn strands of dull fire curving past each other, nothing holding them together
+  features: deep ember dark with the last red-orange running down the middle of each strand, no outline — it is light, not matter
+  accent: the empty air the ball has come apart into
+  pose: mid-air, at the very end of the cone, coming apart
+  flavor: the moment fire stops being fire and starts being smoke
+palette:
+  r: "#e0451f" # the last red-orange, down the middle of each strand
+  d: "#8a2412" # deep ember dark
+grid: |
+  ....dd........
+  ...drrd.......
+  ..drrrd.......
+  ..drrd..dd....
+  .drrd..drrd...
+  .drd..drrrd...
+  .dd...drrd....
+  .d.....dd..d..
+  ......d...drd.
+  .....drd..drrd
+  ....drrd..drd.
+  ...drrd....dd.
+  ...ddd........
+  ..............

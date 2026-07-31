@@ -1,0 +1,32 @@
+name: flame_2b
+family: effects
+size: [12, 12]
+description: >
+  THE BODY, the other shape — the third stage of a flamethrower's gout rolled
+  the opposite way, its last white heart carried up one flank instead of down
+  the middle.
+subject:
+  kind: effect
+  build: a broad rolling ball of flame, its heart shouldered up one flank
+  features: a shrinking white core inside yellow, a thick orange body, a red-orange rim, no outline — it is light, not matter
+  accent: the orange body
+  pose: mid-air, out where the cone is at its widest, rolling the other way
+  flavor: the second face of the body, so a stream never repeats itself
+palette:
+  W: "#fffbe8" # white-hot remnant
+  Y: "#ffe08a" # yellow inner
+  o: "#ff9a3c" # orange body
+  r: "#e0451f" # red-orange rim
+grid: |
+  .....roo....
+  ...rroooo...
+  ..roooYYor..
+  .rooYYYYoor.
+  .roYYWWYoor.
+  rooYYWWWYoor
+  rooYYWWYYoor
+  .rooYYYYoor.
+  ..rooYYooor.
+  ..rroooooo..
+  ....rrooo...
+  .....rro....

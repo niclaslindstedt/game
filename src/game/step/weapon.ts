@@ -127,6 +127,11 @@ export function stepWeapon(
       // HOW it is worked, for the app to draw — a swung blade or a tool held
       // against a body and juddering (`WeaponDef.motion`). Presentation only.
       ...(weapon.motion ? { motion: weapon.motion } : {}),
+      // WHETHER IT IS FIRE (`WeaponDef.burn`), for the app to pour a gout down
+      // the cone. Presentation only, exactly like the two above — and it has to
+      // ride the EVENT rather than be looked up from the equipped weapon, or a
+      // companion's gout would come out of the player.
+      ...(weapon.burn ? { burn: true as const } : {}),
       // Filled in by meleeSweep below with the uncapped eligible count.
       targets: 0,
     };

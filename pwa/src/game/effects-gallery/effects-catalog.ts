@@ -203,6 +203,60 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
   {
+    id: "flamethrower",
+    icon: "icon_attrition_flamethrower",
+    label: "THE GOUT",
+    blurb: "FIRE POURS DOWN THE CONE - AND COMES BACK AS SMOKE",
+    group: "IMPACT",
+    keywords: [
+      "flame",
+      "flamethrower",
+      "fire",
+      "burn",
+      "gout",
+      "jet",
+      "smoke",
+      "attrition",
+      "pyro",
+    ],
+    stage: { spawns: horde(9, 40, 96) },
+    showMs: 2400,
+    fire: (ctx) => {
+      // A REAL PULL, not one frame of one. The whole design of this effect is
+      // that a jet looks CONTINUOUS while the trigger is down — every particle
+      // runs its own looping clock so the cone is full from the first frame —
+      // and a single swing event shows a fifth of a second of it, which proves
+      // nothing about the thing being claimed. So the exhibit holds the trigger:
+      // fifteen pulls at the weapon's own 150ms cadence, exactly as the auto
+      // attack fires them, which is what shows the stream OVERLAPPING itself
+      // into one roar instead of stuttering between pulls.
+      const hero = heroPos(ctx.state);
+      const def = ctx.mobs[0];
+      const aim = def
+        ? Math.atan2(def.pos.y - hero.y, def.pos.x - hero.x)
+        : 0.35;
+      for (let pull = 0; pull < 15; pull++) {
+        ctx.after(pull * 150, () => {
+          // The bearing WANDERS a little across the burst, because a man
+          // holding a lance against a crowd does not hold it perfectly still —
+          // and because a cone pinned to one bearing for a second and a half
+          // reads as a painted wedge rather than as something being aimed.
+          const drift = Math.sin(pull * 0.8) * 0.28;
+          ctx.emit({
+            type: "swing",
+            pos: { ...hero },
+            dir: { x: Math.cos(aim + drift), y: Math.sin(aim + drift) },
+            range: 72,
+            arc: (90 * Math.PI) / 180,
+            motion: "shake",
+            burn: true,
+            targets: 0,
+          });
+        });
+      }
+    },
+  },
+  {
     id: "cleave",
     icon: "icon_machete",
     label: "CLEAVED IN TWO",

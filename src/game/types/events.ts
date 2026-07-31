@@ -92,6 +92,20 @@ export type GameEvent =
        */
       motion?: WeaponMotion;
       /**
+       * The weapon is FIRE (`WeaponDef.burn`), forwarded for the app to draw —
+       * an opaque presentational word to the engine, exactly like `sfx` and
+       * `motion` beside it.
+       *
+       * It rides the SWING rather than being looked up app-side, and that is
+       * the same reasoning `motion` follows: the two paths that swing a melee
+       * weapon (the hero's sweep, a companion's) both emit this event, and a
+       * consumer that reached for "the local hero's equipped weapon" instead
+       * would draw a companion's gout coming out of the player. The engine
+       * itself does nothing with it — the cone it HIT with is unchanged, and
+       * `incinerated` on the kill is a separate flag on a separate event.
+       */
+      burn?: boolean;
+      /**
        * How many foes fell inside the cone this swing — the UNCAPPED eligible
        * count (within range + arc + line of sight), BEFORE the
        * `maxMeleeTargets` cap trims it to the nearest few. It is the geometry ×

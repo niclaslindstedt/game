@@ -23,7 +23,23 @@ animations:
 # ride a baked glow and are re-hued onto their caster's own kit
 # (render/elite-fx.ts), so the neutral grey the check measures is not a colour
 # any player ever sees.
-contrastExempt: [elite_mote, elite_bolt, elite_snare_0, elite_snare_1]
+# A gout's SMOKE is the same case one step further: it is not an object either,
+# it is a translucent volume drawn OVER a cone of fire at a third alpha, and it
+# is the one part of a gout deliberately painted with plain alpha rather than
+# additively (smoke covers, fire adds). Forcing it to out-contrast grey regolith
+# would make it a solid grey blob, which is the opposite of smoke — and it is
+# never on screen without the flames under it lighting it from beneath, which is
+# exactly what its pale rim is drawn for.
+contrastExempt:
+  [
+    elite_mote,
+    elite_bolt,
+    elite_snare_0,
+    elite_snare_1,
+    flame_smoke_0,
+    flame_smoke_1,
+    flame_smoke_2,
+  ]
 speckleExempt:
   # The SNARE's weave is a lattice with gaps in it — an open mesh whose loose
   # threads are the drawing. Its last frame is mostly loose threads by design:
