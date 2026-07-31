@@ -33,7 +33,7 @@ import { mapCols, mapRows } from "../map.ts";
 import { findPortalPath, navDistanceField } from "../pathfind.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import type { GameState, Obstacle } from "../types/index.ts";
+import type { GameState, Obstacle, Player } from "../types/index.ts";
 import { inert } from "../disposition.ts";
 
 /** Coarse cell (world px) the bot's ROUGH IDEA of a foe's position snaps to —
@@ -73,6 +73,7 @@ function chestTargets(state: GameState): Vec2[] {
  * sweep — only a real wall culls one. */
 export function nearestChestNearby(
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): Obstacle | undefined {
   if (tune.chestDetourDist <= 0) return undefined;
@@ -82,10 +83,9 @@ export function nearestChestNearby(
     if (!o.chest) continue;
     // A well-guarded chest is not worth the detour — see chestTargets.
     if (insideWellPull(state, o.pos)) continue;
-    const d = distance(o.pos, state.players[0].pos);
+    const d = distance(o.pos, hero.pos);
     if (d >= bestD) continue;
-    if (blockedByObstacle(state, state.players[0].pos, o.pos, PLAYER.radius))
-      continue;
+    if (blockedByObstacle(state, hero.pos, o.pos, PLAYER.radius)) continue;
     best = o;
     bestD = d;
   }
@@ -113,6 +113,7 @@ export function nearestChestNearby(
  * scenery) never count. */
 function eliteTargets(
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): { id: number; pos: Vec2 }[] {
   // HOPELESS PARITY (a player-relative rung — JESUS): the horde levels in
@@ -124,15 +125,12 @@ function eliteTargets(
   // pool early there re-created exactly the wedges the gate guards against
   // (measured: goodco/rift runs cancelled on under-levelled elite marches).
   const committed = parityHopeless(state);
-  if (!committed && !readyForBoss(state, tune)) return [];
+  if (!committed && !readyForBoss(state, hero, tune)) return [];
   const out: { id: number; pos: Vec2 }[] = [];
   for (const e of state.enemies) {
     const def = enemyDef(e.defId);
     if (def.role !== "elite" || inert(def, e)) continue;
-    if (
-      !committed &&
-      state.players[0].level < Math.max(1, e.mlvl - tune.bossEngageMargin)
-    )
+    if (!committed && hero.level < Math.max(1, e.mlvl - tune.bossEngageMargin))
       continue;
     out.push({ id: e.id, pos: roughPos(e.pos) });
   }
@@ -151,9 +149,9 @@ function eliteKey(id: number): string {
  * re-picked only when this changes (a chest cracked, an elite slain or grown
  * huntable, a hunted elite drifting to a new patch), so the bot holds one
  * target instead of dithering every tick. */
-function contentSig(state: GameState, tune: BotTuning): number {
+function contentSig(state: GameState, hero: Player, tune: BotTuning): number {
   let sig = chestTargets(state).length;
-  for (const e of eliteTargets(state, tune)) {
+  for (const e of eliteTargets(state, hero, tune)) {
     sig = (sig * 31 + e.id + e.pos.x * 3 + e.pos.y * 7) % 2147483647;
   }
   return sig;
@@ -199,13 +197,17 @@ const CONTENT_ENGAGE_ROUTE = 320;
  * would otherwise pin the run for the rest of the clock. An abandoned elite
  * is skipped by its enemy id ({@link eliteKey}); a chest by its cell. Called
  * from {@link botAct}; mutates only bot memory, so determinism holds. */
-export function trackContentAbandon(bot: Bot, state: GameState): void {
+export function trackContentAbandon(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+): void {
   const c = bot.content;
   const rc = bot.route;
   if (!c || !c.target || !rc) return;
   // Only gauge while the cached route actually leads to this target.
   if (distance(rc.goal, c.target) > ROUTE_REPLAN_GOAL) return;
-  const rem = remainingRoute(rc, state.players[0].pos);
+  const rem = remainingRoute(rc, hero.pos);
   const remSq = rem * rem;
   let headway = false;
   if (rem <= CONTENT_ENGAGE_ROUTE) {
@@ -259,17 +261,18 @@ export function trackContentAbandon(bot: Bot, state: GameState): void {
 export function nearestContent(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): Vec2 | null {
   const rc = ensureRoute(bot, state);
-  const sig = contentSig(state, tune);
+  const sig = contentSig(state, hero, tune);
   const needPick =
     !bot.content ||
     bot.content.levelId !== state.level.id ||
     bot.content.sig !== sig ||
     bot.content.target === null; // abandoned → re-pick, excluding the skip set
   if (needPick) {
-    const from = state.players[0].pos;
+    const from = hero.pos;
     const skip =
       bot.contentSkip && bot.contentSkip.levelId === state.level.id
         ? bot.contentSkip.keys
@@ -289,7 +292,9 @@ export function nearestContent(
       prev.enemyId !== undefined &&
       !skip.includes(eliteKey(prev.enemyId))
     ) {
-      const held = eliteTargets(state, tune).find((t) => t.id === prev.enemyId);
+      const held = eliteTargets(state, hero, tune).find(
+        (t) => t.id === prev.enemyId,
+      );
       if (held) {
         // The elite drifted to a NEW cell → restart the approach gauge: the
         // ratcheted best-route-so-far belongs to the OLD cell, and holding it
@@ -315,7 +320,7 @@ export function nearestContent(
     // drag the hero on long cross-map marches into the late-wave flood and
     // cost him the boss.)
     const candidates: { kind: "elite" | "chest"; id?: number; pos: Vec2 }[] = [
-      ...eliteTargets(state, tune).map((e) => ({
+      ...eliteTargets(state, hero, tune).map((e) => ({
         kind: "elite" as const,
         id: e.id,
         pos: e.pos,
@@ -423,6 +428,7 @@ const EXPLORE_REPICK_MS = 500;
 export function exploreTarget(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
   wholeMap = false,
 ): Vec2 | null {
@@ -436,7 +442,7 @@ export function exploreTarget(
     now - held.pickMs < EXPLORE_REPICK_MS
   )
     return held.pick ?? null;
-  const pick = pickFogPocket(bot, state, tune, wholeMap);
+  const pick = pickFogPocket(bot, state, hero, tune, wholeMap);
   if (held && held.levelId === state.level.id) {
     held.pick = pick;
     held.pickMs = now;
@@ -450,6 +456,7 @@ export function exploreTarget(
 function pickFogPocket(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
   wholeMap: boolean,
 ): Vec2 | null {
@@ -470,7 +477,7 @@ function pickFogPocket(
   // whole map is in scope however far the next dark pocket lies.
   const walk = navDistanceField(
     rc.grid,
-    state.players[0].pos,
+    hero.pos,
     wholeMap ? Infinity : tune.exploreReach,
   );
   const nav = rc.grid;

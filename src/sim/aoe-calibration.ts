@@ -497,7 +497,13 @@ function advanceUntilStep(
       case "levelup": {
         // Spend the point (prefer the bot's pick; else any stat with room) so
         // the ding resolves.
-        if (!allocateStat(state, state.players[0], botAllocate(bot, state))) {
+        if (
+          !allocateStat(
+            state,
+            state.players[0],
+            botAllocate(bot, state, state.players[0]),
+          )
+        ) {
           for (const s of STAT_NAMES)
             if (allocateStat(state, state.players[0], s)) break;
         }
@@ -505,7 +511,7 @@ function advanceUntilStep(
         // level-up pause; spend it per the bot's build so the ding resolves (see
         // allocateStat/resumeAfterLevelup).
         while (state.pendingTalentPoints.length > 0) {
-          const talentId = botPickTalent(bot, state);
+          const talentId = botPickTalent(bot, state, state.players[0]);
           if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
             break;
         }
@@ -569,7 +575,7 @@ function runOne(
       if (ex * ex + ey * ey <= rangeSq) crowdBefore++;
     }
 
-    step(state, botAct(bot, state), o.dtMs);
+    step(state, botAct(bot, state, state.players[0]), o.dtMs);
 
     // Read the hero's OWN swings off the event stream (companions emit swings
     // too, but from their own position; gate on proximity to the player).
@@ -803,7 +809,7 @@ function runRangedOne(
     if (state.players[0].equipment.weapon.defId !== defId) {
       state.players[0].equipment.weapon = { ...weapon };
     }
-    step(state, botAct(bot, state), o.dtMs);
+    step(state, botAct(bot, state, state.players[0]), o.dtMs);
 
     const nowMs = state.stats.timeMs;
     for (const event of state.events) {

@@ -14,7 +14,7 @@ import { blockedByObstacle } from "../obstacles.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponRangeFor } from "../items/index.ts";
-import type { Enemy, GameState } from "../types/index.ts";
+import type { Enemy, GameState, Player } from "../types/index.ts";
 import { inertEnemy } from "../disposition.ts";
 
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
@@ -48,11 +48,12 @@ const ESCAPE_DISTANCE = 340;
  * pack never drags him INTO it. */
 export function awayFromPack(
   state: GameState,
+  hero: Player,
   near: Enemy[],
   prefer?: Vec2 | null,
   bias = PATH_RETREAT_BIAS,
 ): Vec2 {
-  const pos = state.players[0].pos;
+  const pos = hero.pos;
   let ax = 0;
   let ay = 0;
   for (const e of near) {
@@ -73,17 +74,21 @@ export function awayFromPack(
  * backwards, not forwards" bearing. Null when the hero is already at the back
  * of the map (nothing behind to give) or the `retreatBackBias` knob is off —
  * the caller then falls back to the classic forward (objective-ward) drift. */
-export function retreatHeading(state: GameState, tune: BotTuning): Vec2 | null {
+export function retreatHeading(
+  state: GameState,
+  hero: Player,
+  tune: BotTuning,
+): Vec2 | null {
   if (tune.retreatBackBias <= 0) return null;
   const axis = objectiveAxis(state);
   if (axis) {
     // Already at the spawn end — backing further only finds the wall.
-    if (axisProgress(axis, state.players[0].pos) < 0.12) return null;
+    if (axisProgress(axis, hero.pos) < 0.12) return null;
     return { x: -axis.dir.x, y: -axis.dir.y };
   }
   const n = normalize(
-    state.playerSpawn.x - state.players[0].pos.x,
-    state.playerSpawn.y - state.players[0].pos.y,
+    state.playerSpawn.x - hero.pos.x,
+    state.playerSpawn.y - hero.pos.y,
   );
   if (n.len < 80) return null;
   return n;
@@ -131,8 +136,8 @@ const byDistance = (a: ThreatEntry, b: ThreatEntry): number => a.dSq - b.dSq;
 
 let threatScan: ThreatScan | null = null;
 
-function scanThreats(state: GameState): ThreatScan {
-  const pos = state.players[0].pos;
+function scanThreats(state: GameState, hero: Player): ThreatScan {
+  const pos = hero.pos;
   const scan = threatScan;
   if (
     scan &&
@@ -204,8 +209,12 @@ function ringSize(scan: ThreatScan, radius: number): number {
 }
 
 /** Non-apparition enemies within `radius`, nearest first. */
-export function threatsWithin(state: GameState, radius: number): Enemy[] {
-  const scan = scanThreats(state);
+export function threatsWithin(
+  state: GameState,
+  hero: Player,
+  radius: number,
+): Enemy[] {
+  const scan = scanThreats(state, hero);
   return scan.sorted.slice(0, ringSize(scan, radius));
 }
 
@@ -215,8 +224,12 @@ export function threatsWithin(state: GameState, radius: number): Enemy[] {
  * on me?"), and those ran several times per tick purely to measure a freshly
  * sliced array.
  */
-export function threatCountWithin(state: GameState, radius: number): number {
-  return ringSize(scanThreats(state), radius);
+export function threatCountWithin(
+  state: GameState,
+  hero: Player,
+  radius: number,
+): number {
+  return ringSize(scanThreats(state, hero), radius);
 }
 
 /** The current boss enemy, if one is on the field. */
@@ -240,12 +253,14 @@ export function bossPos(state: GameState): Vec2 | undefined {
  * boss even short of parity ({@link macroTarget}), so this can't strand a hero
  * who tops out under the boss's level.
  */
-export function readyForBoss(state: GameState, tune: BotTuning): boolean {
+export function readyForBoss(
+  state: GameState,
+  hero: Player,
+  tune: BotTuning,
+): boolean {
   const boss = bossOf(state);
   if (!boss) return true;
-  return (
-    state.players[0].level >= Math.max(1, boss.mlvl - tune.bossEngageMargin)
-  );
+  return hero.level >= Math.max(1, boss.mlvl - tune.bossEngageMargin);
 }
 
 /**
@@ -305,7 +320,7 @@ export function axisProgress(
  * mid-drip) within `SPAWNER_CLEAR_RANGE` of the hero, or null — the patch the
  * bot holds and clears before the path lets it advance. Null on levels that
  * author no spawners (inherently gating this behavior to spawner levels). */
-export function activeSpawnerNear(state: GameState): Vec2 | null {
+export function activeSpawnerNear(state: GameState, hero: Player): Vec2 | null {
   let best: Vec2 | null = null;
   let bestD = SPAWNER_CLEAR_RANGE;
   for (const spawner of state.spawners) {
@@ -315,7 +330,7 @@ export function activeSpawnerNear(state: GameState): Vec2 | null {
     // and once it has emitted its queue (→ drained) he moves on, mopping up the
     // chasers as he goes.
     if (spawner.status !== "active" || spawner.queue.length === 0) continue;
-    const d = distance(state.players[0].pos, spawner.at);
+    const d = distance(hero.pos, spawner.at);
     if (d < bestD) {
       best = spawner.at;
       bestD = d;
@@ -330,8 +345,12 @@ export function activeSpawnerNear(state: GameState): Vec2 | null {
  * so he must punch through rather than hug the edge. A dense pack on ONE side
  * only is NOT encircled: he can just back off along the open lane.
  */
-export function isEncircled(state: GameState, packed: Enemy[]): boolean {
-  const pos = state.players[0].pos;
+export function isEncircled(
+  state: GameState,
+  hero: Player,
+  packed: Enemy[],
+): boolean {
+  const pos = hero.pos;
   const cx = packed.reduce((s, e) => s + e.pos.x, 0) / packed.length;
   const cy = packed.reduce((s, e) => s + e.pos.y, 0) / packed.length;
   const r = normalize(pos.x - cx, pos.y - cy);
@@ -367,10 +386,11 @@ const ESCAPE_FORWARD_PENALTY = 4;
  */
 export function escapeLaneScores(
   state: GameState,
+  hero: Player,
   near: Enemy[],
   avoidForward: boolean,
 ): number[] {
-  const pos = state.players[0].pos;
+  const pos = hero.pos;
   const axis = avoidForward ? objectiveAxis(state) : null;
   // Each foe's unit bearing + distance, computed ONCE — the lane loop below
   // re-reads them 16 times, and the old per-lane hypot was the fan's hotspot
@@ -420,8 +440,12 @@ export function escapeLaneScores(
 }
 
 /** The world point down the openest lane of a scored escape fan. */
-export function bestLanePoint(state: GameState, scores: number[]): Vec2 {
-  const pos = state.players[0].pos;
+export function bestLanePoint(
+  state: GameState,
+  hero: Player,
+  scores: number[],
+): Vec2 {
+  const pos = hero.pos;
   let bestI = 0;
   let bestScore = Infinity;
   for (let i = 0; i < scores.length; i++) {
@@ -447,29 +471,29 @@ export function bestLanePoint(state: GameState, scores: number[]): Vec2 {
  */
 export function bestEscapeTarget(
   state: GameState,
+  hero: Player,
   near: Enemy[],
   avoidForward = false,
 ): Vec2 {
-  return bestLanePoint(state, escapeLaneScores(state, near, avoidForward));
+  return bestLanePoint(
+    state,
+    hero,
+    escapeLaneScores(state, hero, near, avoidForward),
+  );
 }
 
 /** Is there a foe the hero could actually strike right now — in weapon range with
  * a clear line? While there is, standing still is FIGHTING, not being wedged, so
  * the stall detector holds off (a boss/pack brawl never trips the unstuck). */
-export function hasReachableFoe(state: GameState): boolean {
-  const range = weaponRangeFor(
-    state,
-    state.players[0],
-    state.players[0].equipment.weapon,
-  );
+export function hasReachableFoe(state: GameState, hero: Player): boolean {
+  const range = weaponRangeFor(state, hero, hero.equipment.weapon);
   const rangeSq = range * range;
   const r = PLAYER.radius;
-  const scan = scanThreats(state);
+  const scan = scanThreats(state, hero);
   for (let i = 0; i < scan.len; i++) {
     if ((scan.distSq[i] as number) > rangeSq) break; // sorted — rest are farther
     const enemy = scan.sorted[i] as Enemy;
-    if (!blockedByObstacle(state, state.players[0].pos, enemy.pos, r))
-      return true;
+    if (!blockedByObstacle(state, hero.pos, enemy.pos, r)) return true;
   }
   return false;
 }
@@ -496,8 +520,8 @@ const CONTACT_ETA_HORIZON = 900;
  * most of a horde is asleep — because being wrong about a stand costs a free
  * hit, while being wrong the other way costs only a few points of pool.
  */
-export function contactEtaSec(state: GameState): number {
-  const scan = scanThreats(state);
+export function contactEtaSec(state: GameState, hero: Player): number {
+  const scan = scanThreats(state, hero);
   const horizonSq = CONTACT_ETA_HORIZON * CONTACT_ETA_HORIZON;
   let best = Infinity;
   for (let i = 0; i < scan.len; i++) {
@@ -516,10 +540,13 @@ export function contactEtaSec(state: GameState): number {
   return best;
 }
 
-export function nearestEnemy(state: GameState): Enemy | undefined {
+export function nearestEnemy(
+  state: GameState,
+  hero: Player,
+): Enemy | undefined {
   // Apparitions are untouchable scenery — a bot never fights or flees one;
   // the shared per-tick scan already filters them and sorts nearest first.
-  const scan = scanThreats(state);
+  const scan = scanThreats(state, hero);
   return scan.len > 0 ? scan.sorted[0] : undefined;
 }
 

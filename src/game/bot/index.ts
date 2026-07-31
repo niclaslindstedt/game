@@ -92,6 +92,7 @@ import {
 import type {
   GameInput,
   GameState,
+  Player,
   StatName,
   WeaponClass,
 } from "../types/index.ts";
@@ -132,9 +133,24 @@ const TOP_OFF_STAMINA_FRAC = 0.75;
  * it — over a short window — into the overarching thought BOT VIEW draws, so a
  * hero strafing a pack's edge reads as one "SKIRMISH" instead of flickering
  * between "KITE" and "GIVE GROUND", and a reflex (a dodge, a bail) preempts.
+ *
+ * **`hero` IS WHICH HERO THIS BOT STEERS, and it is a PARAMETER rather than a
+ * lookup** (multiplayer plan §7.1). Every read under `src/game/bot/` used to
+ * spell `state.players[0]` — 164 of them — which is why the headless simulator
+ * could fly exactly one hero and why PR 4's co-op tuning shipped as structure
+ * rather than as measured numbers. The bot's own memory was never the obstacle:
+ * `Bot` already owns all of it (the stall detector, the wall trace, the A*
+ * route, the pinned waypoint, the thought resolver), so N bots are N instances
+ * with no shared scratch, and `step()` has always taken a `PartyInput` array
+ * index-aligned with the party.
+ *
+ * Nothing here reads the party. A caller that wants seat 0 passes seat 0; the
+ * app passes `localHero(state)`; the simulator passes the seat each of its bots
+ * was given. That is the same rule every private engine read follows (§3.1): a
+ * bag, a purse and a build are about ONE hero, so they arrive as an argument.
  */
-export function botAct(bot: Bot, state: GameState): GameInput {
-  const input = decideAct(bot, state);
+export function botAct(bot: Bot, state: GameState, hero: Player): GameInput {
+  const input = decideAct(bot, state, hero);
   bot.thoughts ??= createThoughtMemory();
   bot.lastThought = resolveThought(
     bot.thoughts,
@@ -146,7 +162,7 @@ export function botAct(bot: Bot, state: GameState): GameInput {
 
 /** Decide this tick's input, recording the raw branch label via {@link think}.
  * The resolver-facing half of {@link botAct}. */
-function decideAct(bot: Bot, state: GameState): GameInput {
+function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
   if (bot.strategy === "idle") {
     think(bot, "IDLE");
     return idleInput();
@@ -166,22 +182,22 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     // the gust before standing easy.
     // A gravity well's drag works on a clear field too — a swallow is instant
     // death, so bolting clear outranks every other sidestep.
-    const wellBolt = dodgeWell(state);
+    const wellBolt = dodgeWell(state, hero);
     if (wellBolt) {
       think(bot, "WELL");
       return sprint(wellBolt);
     }
-    const herdHop = dodgeStampede(state, tune);
+    const herdHop = dodgeStampede(state, hero, tune);
     if (herdHop) {
       think(bot, "HERD");
       return sprint(herdHop);
     }
-    const rockDodge = dodgeAsteroid(state);
+    const rockDodge = dodgeAsteroid(state, hero);
     if (rockDodge) {
       think(bot, "METEOR");
       return sprint(rockDodge);
     }
-    const stormDodge = dodgeSandstorm(state, tune);
+    const stormDodge = dodgeSandstorm(state, hero, tune);
     if (stormDodge) {
       think(bot, "STORM");
       return sprint(stormDodge);
@@ -191,36 +207,32 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   }
   // Gauge headway toward the committed content target once per tick, so a cache
   // the sweep can't reach gets abandoned rather than deadlocking the run.
-  trackContentAbandon(bot, state);
+  trackContentAbandon(bot, state, hero);
   // Gauge map-coverage headway too, so a bogged run that can't reach boss-level
   // parity gives up exploring and commits to the boss instead of looping on fog.
   trackExploreStall(bot, state);
   // Track when the hero last had a real fight on his hands, and latch the
   // ANTI-LOITER hunt once he's idled past the knob — so a lull turns into a
   // march on the nearest enemy, never into pottering about (see seekTarget).
-  trackEngagement(bot, state, tune);
+  trackEngagement(bot, state, hero, tune);
   // Consume an arrived-at GPS nudge (see Bot.waypoint).
-  trackWaypoint(bot, state);
+  trackWaypoint(bot, state, hero);
   // Learn what a GOLDEN ARROW pays from this tick's collection events (the
   // 5%-increment memory the strategic-arrow reads consult — see Bot.arrowXp).
-  trackArrowXp(bot, state);
+  trackArrowXp(bot, state, hero);
   // LAND the committed hop: back on the ground (and not on the takeoff tick
   // itself), the jump's purpose is spent — clear the plan so the normal read
   // resumes. Also self-heals a takeoff the engine refused (z never left 0).
-  if (
-    bot.hopPlan &&
-    state.players[0].z === 0 &&
-    bot.hopPlan.sinceMs !== state.stats.timeMs
-  )
+  if (bot.hopPlan && hero.z === 0 && bot.hopPlan.sinceMs !== state.stats.timeMs)
     bot.hopPlan = null;
   // THE PREEMPT LADDER: the branches that outrank the strategy entirely — the
   // reflex dodges, the scripted disarmed opening, the anti-wedge escape, and a
   // committed hop in flight. They are also the ones the TURN RATE LIMIT below
   // must never hold back: an evasion is worthless a beat late, and a hop is
   // already committed. Null when nothing preempts — then the strategy decides.
-  const preempt = preemptInput(bot, state, tune);
-  const decided = preempt ?? strategyInput(bot, state, tune);
-  const player = state.players[0];
+  const preempt = preemptInput(bot, state, hero, tune);
+  const decided = preempt ?? strategyInput(bot, state, hero, tune);
+  const player = hero;
   // TURN RATE LIMIT — no turning around more than twice a second (nav.ts
   // `limitTurnRate`). The autopilot re-decides every tick, so two branches that
   // disagree used to trade the tick and leave the hero strobing
@@ -230,7 +242,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // about-face: he STANDS for the wait instead, which loses no ground (the two
   // half-steps were cancelling out) and is the only pace that really refills the
   // sprint pool. The preempt ladder above skips the limit entirely.
-  if (!preempt && limitTurnRate(bot, state, decided, tune) === "stand") {
+  if (!preempt && limitTurnRate(bot, state, hero, decided, tune) === "stand") {
     // Overrides the branch's label — a parked hero with a moving thought reads
     // as a wedge in BOT VIEW. The nav stall gauge is deliberately NOT reset
     // (unlike the stamina stands): a flicker that pins him on a quiet field IS
@@ -242,7 +254,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     decided.target = { x: player.pos.x, y: player.pos.y };
     decided.jump = false;
   }
-  return postDecision(bot, state, tune, decided, preempt !== null);
+  return postDecision(bot, state, hero, tune, decided, preempt !== null);
 }
 
 /** The PREEMPT LADDER (see {@link decideAct}): the reflex/committed branches that
@@ -251,13 +263,14 @@ function decideAct(bot: Bot, state: GameState): GameInput {
 function preemptInput(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput | null {
   // HOP an incoming employee stampede FIRST — before every strategy branch,
   // even while disarmed: a herd charges fast and a jump sails clean over the
   // whole wall, and a ~20% bite + a 2-second knockdown is the worst thing to
   // eat mid-arm-up. A reflex that preempts even the opening-strike approach.
-  const herdHopReflex = dodgeStampede(state, tune);
+  const herdHopReflex = dodgeStampede(state, hero, tune);
   if (herdHopReflex) {
     think(bot, "HERD");
     return sprint(herdHopReflex);
@@ -275,22 +288,22 @@ function preemptInput(
   // close, which trips the sight gate SOONER. Path-marching off toward the
   // objective would strand him unarmed for the whole run. A SCRIPTED beat, so
   // it preempts (and skips the turn limit) like the reflexes.
-  if (state.players[0].disarmed) {
+  if (hero.disarmed) {
     think(bot, "ARM UP");
-    const foe = nearestEnemy(state);
+    const foe = nearestEnemy(state, hero);
     if (!foe) return idleInput();
     // Outside the standoff → close in (trip the sight beat, draw the rusher
     // into contact). At or inside it → plant and take the harmless scripted
     // hit rather than retreating the pack across the map.
-    return distance(state.players[0].pos, foe.pos) > tune.armApproachStandoff
-      ? steer(state, foe.pos)
+    return distance(hero.pos, foe.pos) > tune.armApproachStandoff
+      ? steer(state, hero, foe.pos)
       : idleInput();
   }
   // LAST-RESORT UNSTUCK: if he's made no progress for a while and has nothing
   // he can reach to fight, the strategy has wedged him — override it with the
   // deterministic escape sweep until he's moving again. (Also keeps the
   // progress bookkeeping, so it must run before every strategy branch.)
-  const escape = unstuckInput(bot, state, tune);
+  const escape = unstuckInput(bot, state, hero, tune);
   if (escape) {
     think(bot, "UNSTICK");
     return sprint(escape);
@@ -298,7 +311,7 @@ function preemptInput(
   // Bolt clear of a gravity well's pull before it drags him into the core —
   // a swallow is INSTANT DEATH, so this preempts even the set-piece dodge:
   // kiting a fight is exactly how the hero backs blind into a hole.
-  const wellBolt = dodgeWell(state);
+  const wellBolt = dodgeWell(state, hero);
   if (wellBolt) {
     think(bot, "WELL");
     return sprint(wellBolt);
@@ -306,7 +319,7 @@ function preemptInput(
   // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
   // instant one threatens — stepping off the line beats whatever the strategy
   // below would do, so the hero doesn't eat a boss's rush while planted on it.
-  const dodge = dodgeTelegraph(state);
+  const dodge = dodgeTelegraph(state, hero);
   if (dodge) {
     think(bot, "DODGE");
     return sprint(dodge);
@@ -315,7 +328,7 @@ function preemptInput(
   // (`state.asteroids`). Reading the telegraph and walking off the blast is
   // pure survival — it outranks the fight and the hay-ball sidestep, right
   // beside the set-piece dodge.
-  const rock = dodgeAsteroid(state);
+  const rock = dodgeAsteroid(state, hero);
   if (rock) {
     think(bot, "METEOR");
     return sprint(rock);
@@ -324,7 +337,7 @@ function preemptInput(
   // bait is a one-shot bang rather than a tick, and — unlike fire — the hero is
   // actively DRAWN to it: loot-shaped things are what the autopilot exists to
   // run at, so without this it would clear a boss's whole scatter by hand.
-  const bait = dodgeBait(state);
+  const bait = dodgeBait(state, hero);
   if (bait) {
     think(bot, "BAIT");
     return sprint(bait);
@@ -333,7 +346,7 @@ function preemptInput(
   // alight, and a bot that held its firing position inside a fire would neither
   // play like a human nor produce a balance measurement worth having. Below the
   // real dodges: the burn is a slow tick, so clearing a slam still comes first.
-  const fire = dodgeScorch(state);
+  const fire = dodgeScorch(state, hero);
   if (fire) {
     think(bot, "FIRE");
     return sprint(fire);
@@ -341,7 +354,7 @@ function preemptInput(
   // Step out of a rolling hay ball's lane before it shoves him back down the
   // street (Boot Hill's `state.hayBalls`). A quick sidestep, like a human
   // giving a rolling bale room — below the boss-move dodge, above the fight.
-  const hay = dodgeHayBall(state, tune);
+  const hay = dodgeHayBall(state, hero, tune);
   if (hay) {
     think(bot, "HAY");
     return sprint(hay);
@@ -349,7 +362,7 @@ function preemptInput(
   // Sidestep an incoming sand storm (mars) before it sweeps over him — a
   // knockout in the horde is deadlier than most single hits, so getting off
   // its line preempts the strategy below.
-  const stormDodge = dodgeSandstorm(state, tune);
+  const stormDodge = dodgeSandstorm(state, hero, tune);
   if (stormDodge) {
     think(bot, "STORM");
     return sprint(stormDodge);
@@ -364,9 +377,9 @@ function preemptInput(
   // reflex dodges above still preempt (an airborne hero can steer), and a
   // mechanic hop (stampede/bale) never latches a plan — hopping in place IS
   // that dodge.
-  if (state.players[0].z > 0 && bot.hopPlan) {
+  if (hero.z > 0 && bot.hopPlan) {
     think(bot, bot.hopPlan.flee ? "HOP OUT" : "HOP OVER");
-    return sprint(navSteer(bot, state, bot.hopPlan.target));
+    return sprint(navSteer(bot, state, hero, bot.hopPlan.target));
   }
   return null;
 }
@@ -374,41 +387,44 @@ function preemptInput(
 /** The STRATEGY's own read (nothing preempted): the posture bodies in fight.ts,
  * plus the simple single-purpose strategies. Subject to the turn rate limit —
  * this is the code whose per-tick re-decisions the limiter steadies. */
-function strategyInput(bot: Bot, state: GameState, tune: BotTuning): GameInput {
+function strategyInput(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  tune: BotTuning,
+): GameInput {
   // With only untouchable apparitions left on the board there is no foe
   // to fight — push for the objective instead of chasing a hallucination.
-  const foe = nearestEnemy(state);
+  const foe = nearestEnemy(state, hero);
   switch (bot.strategy) {
     case "rush":
       think(bot, foe ? "RUSH" : "RUSH BOSS");
-      return foe ? steer(state, foe.pos) : pushBoss(bot, state, tune);
+      return foe
+        ? steer(state, hero, foe.pos)
+        : pushBoss(bot, state, hero, tune);
     case "kite": {
       if (!foe) {
         think(bot, "PUSH BOSS");
-        return pushBoss(bot, state, tune);
+        return pushBoss(bot, state, hero, tune);
       }
       // Hold inside weapon range, outside the pack's grasp. A lone chaser is
       // back-pedalled straight (holdOff) — circling one that out-runs you only
       // lets it cut the chord; the orbit is for a boss/set-piece the hero is
       // committed to DPSing (pushBoss / the survive boss-lock).
       think(bot, "KITE");
-      const reach = weaponRangeFor(
-        state,
-        state.players[0],
-        state.players[0].equipment.weapon,
-      );
-      return steer(state, holdOff(state, foe.pos, reach * 0.7));
+      const reach = weaponRangeFor(state, hero, hero.equipment.weapon);
+      return steer(state, hero, holdOff(state, hero, foe.pos, reach * 0.7));
     }
     case "boss":
       think(bot, "TO BOSS");
-      return pushBoss(bot, state, tune);
+      return pushBoss(bot, state, hero, tune);
     case "aggro":
-      return survive(bot, state, "aggro", tune);
+      return survive(bot, state, hero, "aggro", tune);
     case "flee":
-      return survive(bot, state, "flee", tune);
+      return survive(bot, state, hero, "flee", tune);
     case "survivor":
     case "balanced":
-      return survive(bot, state, "balanced", tune);
+      return survive(bot, state, hero, "balanced", tune);
     default:
       think(bot, "IDLE");
       return idleInput();
@@ -421,8 +437,13 @@ function strategyInput(bot: Bot, state: GameState, tune: BotTuning): GameInput {
  * cleared with it — a breather is a decision, not a wedge, and the sim's stuck
  * read must not book it as one (the pre-fight BREATHER does the same).
  */
-function plantBreather(bot: Bot, state: GameState, decided: GameInput): void {
-  const player = state.players[0];
+function plantBreather(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  decided: GameInput,
+): void {
+  const player = hero;
   decided.steering = false;
   decided.target = { x: player.pos.x, y: player.pos.y };
   decided.jump = false;
@@ -456,11 +477,12 @@ function plantBreather(bot: Bot, state: GameState, decided: GameInput): void {
 function digInForLockout(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
   eligible: boolean,
   window: number,
 ): boolean {
-  const player = state.players[0];
+  const player = hero;
   const owed = state.staminaRegenLockMs;
   if (!eligible || tune.digInMarginSec < 0 || owed <= 0 || player.stamina > 0) {
     bot.digIn = false;
@@ -483,11 +505,12 @@ function digInForLockout(
 function postDecision(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
   decided: GameInput,
   reflex: boolean,
 ): GameInput {
-  const player = state.players[0];
+  const player = hero;
   // STAMINA PACING — a post-decision pace modifier (like the aim/consumable
   // tweaks below; the branch's thought label stands, bar the deliberate
   // stands). The rule is absolute and simple: the hero RUNS only under
@@ -511,7 +534,7 @@ function postDecision(
   // (topUpBeforeFight), not this threshold's. (trackBravery still feeds the
   // top-up's rested bar — see braveryScore.)
   trackBravery(bot, state);
-  const foe = nearestEnemy(state);
+  const foe = nearestEnemy(state, hero);
   const foeDist = foe ? distance(player.pos, foe.pos) : Infinity;
   // A GENUINELY CLEAR field — nothing even at the horizon of the fight, so the
   // pool has nothing to be spent on and everything to gain from a stand.
@@ -576,7 +599,7 @@ function postDecision(
   // kills per minute (the hero walked at half speed toward everything slow),
   // so the walk keeps its plain ring — a body inside `walkThreatDist` means
   // full pace, as it always has.
-  const window = contactEtaSec(state);
+  const window = contactEtaSec(state, hero);
   const standSafe = !crowded && window >= tune.restMinSec;
   // URGENT — no time to pace: spend what's left of the pool at full speed. A
   // hero with a pool to spend reads that off the plain RING (see above). A
@@ -602,13 +625,14 @@ function postDecision(
     digInForLockout(
       bot,
       state,
+      hero,
       tune,
       decided.steering === true && !reflex && !affordableHop && !crowded,
       window,
     )
   ) {
     think(bot, "DIG IN");
-    plantBreather(bot, state, decided);
+    plantBreather(bot, state, hero, decided);
     decided.throttle = undefined;
   } else if (
     decided.steering &&
@@ -635,7 +659,7 @@ function postDecision(
       ((bot.winded && foeDist > tune.walkThreatDist) || bot.resting)
     ) {
       think(bot, "CATCH BREATH");
-      plantBreather(bot, state, decided);
+      plantBreather(bot, state, hero, decided);
     } else if (bot.recovering) {
       // The recovery WALK: the pool is down but something is close enough that
       // parking is unwise — walk it back at a trickle while covering ground
@@ -650,7 +674,7 @@ function postDecision(
   // fire the way a human does. Left unset with nothing worth diverting to,
   // which keeps the plain nearest-foe pick.
   if (!player.disarmed) {
-    const aim = bestAimTarget(state);
+    const aim = bestAimTarget(state, hero);
     if (aim) decided.aim = aim;
   }
   // POWERUPS, played by VALUE — one dock action per tick, in priority order:
@@ -665,9 +689,9 @@ function postDecision(
   //   4. one SORT step walking the dock into the bot's own priority order
   //      ({@link powerupSortMove}) — so the row on screen reads exactly how
   //      the bot ranks what it carries.
-  const moment = pickPowerupMoment(state);
-  const drop = moment < 0 ? powerupDropForUpgrade(state) : -1;
-  const burn = moment < 0 && drop < 0 ? pickPowerupBurn(state) : -1;
+  const moment = pickPowerupMoment(state, hero);
+  const drop = moment < 0 ? powerupDropForUpgrade(state, hero) : -1;
+  const burn = moment < 0 && drop < 0 ? pickPowerupBurn(state, hero) : -1;
   const spend = moment >= 0 ? moment : burn;
   if (spend >= 0) {
     decided.useItem = true;
@@ -675,7 +699,7 @@ function postDecision(
   } else if (drop >= 0) {
     decided.dropItemIndex = drop;
   } else {
-    const move = powerupSortMove(state);
+    const move = powerupSortMove(state, hero);
     if (move) decided.moveItem = move;
   }
   // Heal below the threshold (biggest-heal-first — consumeMedkit no-ops at full
@@ -692,12 +716,12 @@ function postDecision(
   // gamble the last of the bar on reaching the arrow.
   const dingHeal =
     player.hp >= player.maxHp * ARROW_MEDKIT_HOLD_HP_FRAC &&
-    dingArrowNearby(bot, state, ARROW_SAVE_REACH) !== undefined;
+    dingArrowNearby(bot, state, hero, ARROW_SAVE_REACH) !== undefined;
   decided.useMedkit =
     player.hp < player.maxHp * HEAL_HP_FRAC &&
     bestMedkitTier(state, player) >= 0 &&
     !dingHeal;
-  const threatNear = threatCountWithin(state, THREAT_RADIUS) > 0;
+  const threatNear = threatCountWithin(state, hero, THREAT_RADIUS) > 0;
   decided.useStaminaPotion =
     player.staminaPotions > 0 &&
     threatNear &&
@@ -706,7 +730,7 @@ function postDecision(
   // durability-0 spare sits in the bag) or the held blade is nearly spent — it
   // mends the whole kit and restores the shed weapon (useRepairKit no-ops with
   // nothing to mend, so a mistap is free).
-  decided.useRepairKit = player.repairKits > 0 && needsRepair(state);
+  decided.useRepairKit = player.repairKits > 0 && needsRepair(state, hero);
   // PASS-OVER TOP-OFF: a stack at its cap turns the ground pickup away, so
   // walking over one with full pockets normally wastes it. When the bar that
   // kind feeds has real room — hp down for a medkit, the sprint pool down for
@@ -722,7 +746,7 @@ function postDecision(
     (bot.lastTopOffMs === undefined ||
       state.stats.timeMs - bot.lastTopOffMs >= tune.topOffCooldownMs);
   if (topOffReady) {
-    const reach = topOffReach(state);
+    const reach = topOffReach(state, hero);
     for (const item of state.items) {
       if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
       if (distance(item.pos, player.pos) > reach) continue;
@@ -743,7 +767,8 @@ function postDecision(
           player.stamina < player.maxStamina * TOP_OFF_STAMINA_FRAC;
         if (fired) decided.useStaminaPotion = true;
       } else if (item.kind === "repair") {
-        fired = player.repairKits >= CONSUMABLES.stackCap && hasWear(state);
+        fired =
+          player.repairKits >= CONSUMABLES.stackCap && hasWear(state, hero);
         if (fired) decided.useRepairKit = true;
       }
       if (fired) {
@@ -772,12 +797,13 @@ function postDecision(
  * point rotates through the cycle rather than a whole level-up dumping into one
  * stat. Called whenever `pendingStatPoints > 0`.
  */
-export function botAllocate(bot: Bot, state: GameState): StatName {
-  const build = BUILD_ROTATION[botBuild(bot, state)];
-  const spent = Object.values(state.players[0].spentStats).reduce(
-    (a, b) => a + b,
-    0,
-  );
+export function botAllocate(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+): StatName {
+  const build = BUILD_ROTATION[botBuild(bot, state, hero)];
+  const spent = Object.values(hero.spentStats).reduce((a, b) => a + b, 0);
   return build[spent % build.length]!;
 }
 
@@ -787,10 +813,10 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
  * strategy. `auto` follows the emergent lane, `meta` the frozen starting-level
  * lane, and a fixed profile is its own build.
  */
-function botBuild(bot: Bot, state: GameState): StatBuild {
-  if (bot.profile === "auto") return botLane(state);
+function botBuild(bot: Bot, state: GameState, hero: Player): StatBuild {
+  if (bot.profile === "auto") return botLane(state, hero);
   if (bot.profile === "meta") {
-    bot.metaLaneChoice ??= metaLane(state.players[0].level);
+    bot.metaLaneChoice ??= metaLane(hero.level);
     return bot.metaLaneChoice;
   }
   return bot.profile;
@@ -804,25 +830,25 @@ function botBuild(bot: Bot, state: GameState): StatBuild {
  * always a pick). Called whenever `pendingTalentPoints` is non-empty; the driver
  * spends the returned id via `spendTalentPoint`.
  */
-export function botPickTalent(bot: Bot, state: GameState): string | null {
+export function botPickTalent(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+): string | null {
   const stat = state.pendingTalentPoints[0];
   if (!stat) return null;
   const tree = TALENT_STAT_CLASS[stat];
   if (!tree) return null;
-  const priority = BUILD_TALENTS[botBuild(bot, state)];
+  const priority = BUILD_TALENTS[botBuild(bot, state, hero)];
   for (const id of priority) {
     const def = talentDefs()[id];
-    if (
-      def?.tree === tree &&
-      talentRank(state, state.players[0], id) < def.maxRank
-    )
+    if (def?.tree === tree && talentRank(state, hero, id) < def.maxRank)
       return id;
   }
   // Fallback: any not-maxed talent in the tree, in catalog order — keeps the
   // point spendable even if a build's priority list misses a talent.
   for (const def of talentsForTree(tree)) {
-    if (talentRank(state, state.players[0], def.id) < def.maxRank)
-      return def.id;
+    if (talentRank(state, hero, def.id) < def.maxRank) return def.id;
   }
   return null;
 }
@@ -838,8 +864,8 @@ export function botPickTalent(bot: Bot, state: GameState): string | null {
  * through the stat-aware auto-equip the weapon itself — bends that way from
  * level 1.
  */
-function botLane(state: GameState): WeaponClass {
+function botLane(state: GameState, hero: Player): WeaponClass {
   // Shared with the auto-equip's on-lane preference (`weaponScore`), so the
   // lane the bot spends points on and the lane its gear favours are ONE rule.
-  return committedLane(state, state.players[0]);
+  return committedLane(state, hero);
 }

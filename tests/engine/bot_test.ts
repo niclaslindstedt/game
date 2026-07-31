@@ -48,9 +48,13 @@ function drive(
 ): number {
   for (let i = 0; i < maxSteps; i++) {
     if (done?.(state)) return i;
-    step(state, botAct(bot, state), DT);
+    step(state, botAct(bot, state, state.players[0]), DT);
     while (state.players[0].pendingStatPoints > 0) {
-      allocateStat(state, state.players[0], botAllocate(bot, state));
+      allocateStat(
+        state,
+        state.players[0],
+        botAllocate(bot, state, state.players[0]),
+      );
     }
   }
   return maxSteps;
@@ -192,7 +196,7 @@ describe("bot strategies", () => {
 
   it("idle never steers", () => {
     const state = startGame();
-    const input = botAct(createBot("idle"), state);
+    const input = botAct(createBot("idle"), state, state.players[0]);
     expect(input.steering).toBe(false);
     expect(input.jump).toBe(false);
   });
@@ -438,7 +442,7 @@ describe("bot strategic aim", () => {
         maxHp: 1_000_000,
       }),
     );
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.aim).toBeDefined();
     // The wounded body behind him is the pick — thin the pack.
     expect(input.aim!.x).toBeLessThan(p.x);
@@ -462,7 +466,7 @@ describe("bot strategic aim", () => {
         maxHp: 1_000_000,
       }),
     );
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.aim).toBeDefined();
     expect(input.aim!.x).toBeGreaterThan(p.x);
   });
@@ -486,7 +490,7 @@ describe("bot strategic aim", () => {
       makeEnemy({ id: 9102, pos: { x: p.x + 120, y: p.y } }),
       makeEnemy({ id: 9103, pos: { x: p.x + 120, y: p.y + 18 } }),
     );
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.aim).toBeDefined();
     expect(input.aim!.x).toBeGreaterThan(p.x);
   });
@@ -533,7 +537,7 @@ describe("bot safe-direction kiting", () => {
         }),
       );
     }
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     return (
       (input.target.x - state.players[0].pos.x) * ax +
       (input.target.y - state.players[0].pos.y) * ay
@@ -575,7 +579,7 @@ describe("bot jump discipline", () => {
     clearStage(state);
     ringHero(state, 110); // encircled, but nothing is inside biting range yet
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("PUNCH OUT");
     expect(input.jump).toBe(false); // runs the gap open, banking the pool
   });
@@ -585,7 +589,7 @@ describe("bot jump discipline", () => {
     clearStage(state);
     ringHero(state, 40); // a body inside contact range — hop over the ring
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("PUNCH OUT");
     expect(input.jump).toBe(true);
   });
@@ -596,7 +600,7 @@ describe("bot jump discipline", () => {
     ringHero(state, 40); // a body biting — would hop with a full pool
     state.players[0].stamina = state.players[0].maxStamina * 0.2; // …but the pool is low
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("PUNCH OUT");
     expect(input.jump).toBe(false); // keeps its sprint legs instead of winding out
   });
@@ -615,7 +619,7 @@ describe("bot jump discipline", () => {
     foe.mech = { dashMs: 400, dashDir: { x: 1, y: 0 } };
     state.enemies.push(foe);
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("DODGE");
     expect(input.jump).toBe(false);
   });
@@ -636,7 +640,7 @@ describe("bot jump discipline", () => {
         speed: 20,
       }),
     );
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.jump).toBe(true);
   });
 
@@ -656,7 +660,7 @@ describe("bot jump discipline", () => {
         speed: 20,
       }),
     );
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.jump).toBe(false);
   });
 
@@ -668,11 +672,11 @@ describe("bot jump discipline", () => {
     clearStage(state);
     ringHero(state, 40); // a body biting inside a genuine ring
     const bot = createBot("survivor");
-    expect(botAct(bot, state).jump).toBe(true); // the first hop fires
+    expect(botAct(bot, state, state.players[0]).jump).toBe(true); // the first hop fires
     state.stats.timeMs = 1000; // still inside the cooldown window
-    expect(botAct(bot, state).jump).toBe(false); // breaks out on foot
+    expect(botAct(bot, state, state.players[0]).jump).toBe(false); // breaks out on foot
     state.stats.timeMs = 4000; // cooldown served
-    expect(botAct(bot, state).jump).toBe(true); // the next hop is earned
+    expect(botAct(bot, state, state.players[0]).jump).toBe(true); // the next hop is earned
   });
 
   it("stays on foot for a lone biter while healthy", () => {
@@ -689,7 +693,7 @@ describe("bot jump discipline", () => {
         speed: 20,
       }),
     );
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.jump).toBe(false);
   });
 
@@ -725,13 +729,13 @@ describe("bot jump discipline", () => {
     // Unhurt: the foe sits in the hold band — he stands and grinds.
     const calm = stage();
     const calmBot = createBot("balanced");
-    expect(botAct(calmBot, calm).steering).toBe(false); // HOLD
+    expect(botAct(calmBot, calm, calm.players[0]).steering).toBe(false); // HOLD
 
     // Just bitten: the widened danger bubble now covers that same foe → give ground.
     const hurt = stage();
     hurt.players[0].hurtFlashMs = 200;
     const hurtBot = createBot("balanced");
-    const input = botAct(hurtBot, hurt);
+    const input = botAct(hurtBot, hurt, hurt.players[0]);
     expect(hurtBot.lastThought).toBe("GIVE GROUND");
     expect(input.steering).toBe(true);
   });
@@ -765,7 +769,7 @@ describe("bot hop commitment", () => {
     clearStage(state);
     ringHero(state, 40); // a body biting inside a genuine ring — hop out
     const bot = createBot("survivor");
-    const takeoff = botAct(bot, state);
+    const takeoff = botAct(bot, state, state.players[0]);
     expect(takeoff.jump).toBe(true);
     expect(bot.hopPlan?.flee).toBe(true);
     const plan = bot.hopPlan!;
@@ -773,14 +777,14 @@ describe("bot hop commitment", () => {
     // bot keeps steering at the committed escape ground until he lands.
     state.players[0].z = 20;
     state.stats.timeMs = 100;
-    const flight = botAct(bot, state);
+    const flight = botAct(bot, state, state.players[0]);
     expect(flight.steering).toBe(true);
     expect(flight.jump).toBe(false); // one takeoff per decision, no re-request
     expect(dist(flight.target, plan.target)).toBeLessThan(25);
     // Landed: the jump's purpose is spent — the plan clears, the read resumes.
     state.players[0].z = 0;
     state.stats.timeMs = 200;
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.hopPlan).toBeFalsy();
   });
 
@@ -832,7 +836,7 @@ describe("bot hop commitment", () => {
       },
     ];
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("PUNCH OUT");
     expect(input.jump).toBe(false);
     expect(bot.hopPlan).toBeFalsy();
@@ -848,7 +852,7 @@ describe("bot hop commitment", () => {
     state.players[0].disarmed = false;
     ringHero(state, 40);
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("PUNCH OUT");
     expect(input.jump).toBe(true);
     expect(bot.hopPlan?.flee).toBe(true);
@@ -871,13 +875,13 @@ describe("bot pickup discipline", () => {
     ];
     state.players[0].repairKits = CONSUMABLES.stackCap;
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("GRAB ITEM");
 
     // The same kit with pocket room IS wanted — the filter is the stack cap.
     state.players[0].repairKits = 0;
     const wanting = createBot("survivor");
-    botAct(wanting, state);
+    botAct(wanting, state, state.players[0]);
     expect(wanting.lastThought).toBe("GRAB ITEM");
   });
 
@@ -899,7 +903,7 @@ describe("bot pickup discipline", () => {
       },
     ];
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("GRAB ITEM");
     expect(input.target.x).toBeLessThan(state.players[0].pos.x); // toward the arrow
   });
@@ -918,7 +922,7 @@ describe("bot consumable top-off", () => {
     state.items = [
       { id: 9001, kind: "drink", pos: { ...state.players[0].pos } },
     ];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useStaminaPotion).toBe(true);
   });
 
@@ -930,7 +934,7 @@ describe("bot consumable top-off", () => {
     state.items = [
       { id: 9001, kind: "drink", pos: { ...state.players[0].pos } },
     ];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useStaminaPotion).toBe(false);
   });
 
@@ -942,7 +946,7 @@ describe("bot consumable top-off", () => {
     state.items = [
       { id: 9001, kind: "repair", pos: { ...state.players[0].pos } },
     ];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useRepairKit).toBe(true);
   });
 
@@ -955,11 +959,11 @@ describe("bot consumable top-off", () => {
       { id: 9001, kind: "repair", pos: { ...state.players[0].pos } },
     ];
     const bot = createBot("survivor");
-    expect(botAct(bot, state).useRepairKit).toBe(true); // first switch fires
+    expect(botAct(bot, state, state.players[0]).useRepairKit).toBe(true); // first switch fires
     state.stats.timeMs = 5000; // inside the 10s cooldown
-    expect(botAct(bot, state).useRepairKit).toBe(false);
+    expect(botAct(bot, state, state.players[0]).useRepairKit).toBe(false);
     state.stats.timeMs = 11_000; // cooldown served
-    expect(botAct(bot, state).useRepairKit).toBe(true);
+    expect(botAct(bot, state, state.players[0]).useRepairKit).toBe(true);
   });
 });
 
@@ -978,7 +982,7 @@ describe("bot arrow strategy", () => {
       xp: 23,
     });
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.arrowXp?.pct).toBe(0.25); // 23% remembered as the 25% step
   });
 
@@ -999,11 +1003,11 @@ describe("bot arrow strategy", () => {
     ];
     const bot = createBot("survivor");
     bot.arrowXp = { pct: 0.25, level: player.level };
-    expect(botAct(bot, state).useMedkit).toBe(false); // the arrow is the heal
+    expect(botAct(bot, state, state.players[0]).useMedkit).toBe(false); // the arrow is the heal
 
     // Nearly dead, the gamble is off — the kit fires even with the arrow near.
     player.hp = player.maxHp * 0.2;
-    expect(botAct(bot, state).useMedkit).toBe(true);
+    expect(botAct(bot, state, state.players[0]).useMedkit).toBe(true);
   });
 
   it("grabs the dinging arrow over a medkit when bleeding", () => {
@@ -1038,7 +1042,7 @@ describe("bot arrow strategy", () => {
     );
     const bot = createBot("survivor");
     bot.arrowXp = { pct: 0.25, level: player.level };
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("GRAB ARROW");
   });
 });
@@ -1070,7 +1074,7 @@ describe("bot chest cracking", () => {
     clearStage(state);
     placeChest(state, 200);
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("CRACK CHEST");
     const steps = drive(
       state,
@@ -1137,16 +1141,16 @@ describe("bot turn rate limit", () => {
     // The body lunges inside his hold: the kite now wants him to back-pedal
     // WEST — a full about-face, moments after he committed east.
     foe.pos = { x: state.players[0].pos.x + 40, y: state.players[0].pos.y };
-    expect(botAct(bot, state).steering).toBe(false); // plants instead
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false); // plants instead
     const at = { ...state.players[0].pos };
     for (let i = 0; i < 12; i++) {
       // ~200ms — still inside the beat (the body holds its ground on him)
-      step(state, botAct(bot, state), DT);
+      step(state, botAct(bot, state, state.players[0]), DT);
       foe.pos = { x: at.x + 40, y: at.y };
     }
     expect(dist(state.players[0].pos, at)).toBeLessThan(2); // he really stood
     for (let i = 0; i < 30; i++) {
-      step(state, botAct(bot, state), DT); // past the beat — the retreat is his
+      step(state, botAct(bot, state, state.players[0]), DT); // past the beat — the retreat is his
       foe.pos = { x: at.x + 40, y: at.y };
     }
     expect(state.players[0].pos.x).toBeLessThan(at.x - 10);
@@ -1157,7 +1161,7 @@ describe("bot turn rate limit", () => {
     // The body reappears due NORTH: a 90° turn is a legitimate change of
     // direction, not a reversal, so he swings onto it the same tick.
     foe.pos = { x: state.players[0].pos.x, y: state.players[0].pos.y - 300 };
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.target.y).toBeLessThan(state.players[0].pos.y - 10);
   });
@@ -1165,11 +1169,11 @@ describe("bot turn rate limit", () => {
   it("never holds back a reflex — a telegraph is dodged on the spot", () => {
     const { state, bot, foe } = press(); // committed east
     foe.pos = { x: state.players[0].pos.x + 40, y: state.players[0].pos.y };
-    expect(botAct(bot, state).steering).toBe(false); // mid-wait, standing
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false); // mid-wait, standing
     // …and now a charge winds up. An evasion is worthless a beat late, so the
     // reflex preempts the wait however recently he turned.
     foe.mech = { dashMs: 400, dashDir: { x: -1, y: 0 } };
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("DODGE");
     expect(input.steering).toBe(true);
   });
@@ -1197,7 +1201,7 @@ describe("bot winded pacing", () => {
   it("runs freely in the open while the pool sits above the run threshold", () => {
     // Above ~70% the pool is rested — sprint is cheap ground covered.
     const state = stage(600, 0.9);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
   });
@@ -1209,7 +1213,7 @@ describe("bot winded pacing", () => {
     // the clear-field line (560) — nothing to plant for, so he covers ground
     // at the walk instead of parking (see the stand below).
     const state = stage(520, 0.5);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
@@ -1221,7 +1225,7 @@ describe("bot winded pacing", () => {
     // whole march.
     const state = stage(900, 0.4);
     const bot = createBot("balanced");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(false);
     expect(bot.lastThought).toBe("CATCH BREATH");
   });
@@ -1231,7 +1235,7 @@ describe("bot winded pacing", () => {
     // parking at the run threshold would stutter and measurably lose ground,
     // since the walk regains while it covers it.
     const state = stage(900, 0.65);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
@@ -1242,11 +1246,11 @@ describe("bot winded pacing", () => {
     // the march resumes rested.
     const state = stage(900, 0.4);
     const bot = createBot("balanced");
-    botAct(bot, state); // the quiet-field breather latches
+    botAct(bot, state, state.players[0]); // the quiet-field breather latches
     state.players[0].stamina = state.players[0].maxStamina * 0.8; // past the threshold
-    expect(botAct(bot, state).steering).toBe(false);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false);
     state.players[0].stamina = state.players[0].maxStamina; // topped off — march on
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
   });
@@ -1256,11 +1260,11 @@ describe("bot winded pacing", () => {
     // spotted pack turns the open-ground breather into the top-up's own plant.
     const state = stage(900, 0.4);
     const bot = createBot("balanced");
-    expect(botAct(bot, state).steering).toBe(false);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false);
     expect(bot.resting).toBe(true);
     const foe = state.enemies[state.enemies.length - 1] as Enemy;
     foe.pos = { x: state.players[0].pos.x + 400, y: state.players[0].pos.y };
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.resting).toBe(false);
     expect(bot.lastThought).toBe("BREATHER");
   });
@@ -1270,7 +1274,7 @@ describe("bot winded pacing", () => {
     // so the hero has a good second and a half — worth taking at the stand floor.
     const state = stage(600, 0.12, 300);
     const bot = createBot("balanced");
-    expect(botAct(bot, state).steering).toBe(false);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false);
     expect(bot.lastThought).toBe("CATCH BREATH");
   });
 
@@ -1279,7 +1283,7 @@ describe("bot winded pacing", () => {
     // stand would be interrupted — that is urgency, and pacing steps aside.
     const state = stage(600, 0.12, 600);
     const bot = createBot("balanced");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(bot.lastThought).not.toBe("CATCH BREATH");
   });
@@ -1291,7 +1295,7 @@ describe("bot winded pacing", () => {
     // never lets it hit zero outside an urgent sprint.
     const state = stage(600, 0.12);
     const bot = createBot("balanced");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(false);
     expect(bot.lastThought).toBe("CATCH BREATH");
   });
@@ -1301,15 +1305,15 @@ describe("bot winded pacing", () => {
     // stand (floor to threshold), not the quiet-field breather below.
     const state = stage(520, 0);
     const bot = createBot("balanced");
-    botAct(bot, state); // bone-dry — the winded stand latches
+    botAct(bot, state, state.players[0]); // bone-dry — the winded stand latches
     // Half a pool back is still below the run threshold: keep standing (the
     // full breather beats the walk's trickle ten to one).
     state.players[0].stamina = state.players[0].maxStamina * 0.5;
-    expect(botAct(bot, state).steering).toBe(false);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false);
     expect(bot.lastThought).toBe("CATCH BREATH");
     // At the run threshold the pool counts as recovered — up and running.
     state.players[0].stamina = state.players[0].maxStamina * 0.8;
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
   });
@@ -1318,7 +1322,7 @@ describe("bot winded pacing", () => {
     // The body at 120px would maul a parked hero — he keeps moving (the
     // engine's empty-pool jog cap is the pace) and recovers later.
     const state = stage(120, 0);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
   });
 
@@ -1327,7 +1331,7 @@ describe("bot winded pacing", () => {
     // stretches, so he spends what's left of the pool at full speed (either
     // the branch's explicit sprint or the engine's full-throttle default).
     const state = stage(120, 0.05);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle ?? 1).toBe(1);
   });
@@ -1337,15 +1341,21 @@ describe("bot winded pacing", () => {
     // threshold), but once the pool has dipped the SAME bot keeps walking
     // through 72% and only opens back up past the resume band (~75%).
     const fresh = stage(520, 0.72);
-    expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
+    expect(
+      botAct(createBot("balanced"), fresh, fresh.players[0]).throttle,
+    ).toBeUndefined();
 
     const state = stage(520, 0.6);
     const bot = createBot("balanced");
-    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // dipped
+    expect(botAct(bot, state, state.players[0]).throttle).toBe(
+      STAMINA.walkThrottle,
+    ); // dipped
     state.players[0].stamina = state.players[0].maxStamina * 0.72;
-    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // recovering
+    expect(botAct(bot, state, state.players[0]).throttle).toBe(
+      STAMINA.walkThrottle,
+    ); // recovering
     state.players[0].stamina = state.players[0].maxStamina * 0.8;
-    expect(botAct(bot, state).throttle).toBeUndefined(); // recovered — run
+    expect(botAct(bot, state, state.players[0]).throttle).toBeUndefined(); // recovered — run
   });
 });
 
@@ -1378,7 +1388,7 @@ describe("bot bone-dry dig-in", () => {
     // is well inside the ring that normally pins him to the sprint.
     const state = spent(280, 25);
     const bot = createBot("balanced");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(false);
     expect(bot.lastThought).toBe("DIG IN");
   });
@@ -1388,7 +1398,7 @@ describe("bot bone-dry dig-in", () => {
     // be interrupted and re-arm the full lockout, so it buys nothing.
     const state = spent(280, 400);
     const bot = createBot("balanced");
-    expect(botAct(bot, state).steering).toBe(true);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(true);
     expect(bot.lastThought).not.toBe("DIG IN");
   });
 
@@ -1396,7 +1406,7 @@ describe("bot bone-dry dig-in", () => {
     // Inside the crowded floor no arithmetic makes standing a breather.
     const state = spent(100, 0);
     const bot = createBot("balanced");
-    expect(botAct(bot, state).steering).toBe(true);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(true);
     expect(bot.lastThought).not.toBe("DIG IN");
   });
 
@@ -1406,20 +1416,20 @@ describe("bot bone-dry dig-in", () => {
     // at the WALK, which trickles the pool back while covering ground.
     const state = spent(200, 10);
     const bot = createBot("balanced");
-    expect(botAct(bot, state).steering).toBe(false);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false);
     // Just short of the debt he is still standing — abandoning at 1.9s would
     // throw the whole stand away.
     const nearlyPaid = Math.floor((staminaEmptyLockMs(state) * 0.9) / DT);
     drive(state, bot, nearlyPaid);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
     expect(state.players[0].stamina).toBe(0);
-    expect(botAct(bot, state).steering).toBe(false);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(false);
     expect(bot.lastThought).toBe("DIG IN");
     // Paid off: regen thaws and the hero marches on at the recovery walk.
     drive(state, bot, Math.ceil(400 / DT));
     expect(state.staminaRegenLockMs).toBe(0);
     expect(state.players[0].stamina).toBeGreaterThan(0);
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.digIn).toBe(false);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
@@ -1467,9 +1477,9 @@ describe("bot bravery", () => {
       enemy.maxHp = 5;
       enemy.hp = 5;
     }
-    expect(botAct(createBot("balanced"), state).throttle).toBe(
-      STAMINA.walkThrottle,
-    );
+    expect(
+      botAct(createBot("balanced"), state, state.players[0]).throttle,
+    ).toBe(STAMINA.walkThrottle);
   });
 
   it("a brave hero's rested bar relaxes — he engages where the rookie tops up", () => {
@@ -1497,13 +1507,13 @@ describe("bot bravery", () => {
     const brave = spotPack();
     kitOut(brave);
     const braveBot = createBot("balanced");
-    const input = botAct(braveBot, brave);
+    const input = botAct(braveBot, brave, brave.players[0]);
     expect(input.steering).toBe(true);
     expect(braveBot.lastThought).not.toBe("BREATHER");
 
     const rookie = spotPack();
     const rookieBot = createBot("balanced");
-    botAct(rookieBot, rookie);
+    botAct(rookieBot, rookie, rookie.players[0]);
     expect(rookieBot.lastThought).toBe("BREATHER");
   });
 });
@@ -1535,7 +1545,7 @@ describe("bot pre-fight top-up", () => {
     // so he stands his ground and tops up while they close.
     const state = spot(400, 60, 0.3);
     const bot = createBot("balanced");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(input.steering).toBe(false);
     expect(bot.lastThought).toBe("BREATHER");
   });
@@ -1544,14 +1554,14 @@ describe("bot pre-fight top-up", () => {
     // A slow camp at the spot horizon, pool nearly full: the walk regen wins
     // the race, so he keeps covering ground at the breather pace.
     const state = spot(460, 5, 0.9);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
 
   it("engages at full pool without pausing", () => {
     const state = spot(400, 60, 1);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
   });
@@ -1560,7 +1570,7 @@ describe("bot pre-fight top-up", () => {
     // Rested pool (above the run threshold) so the open-field rule is a free
     // run, not the recovery walk — the point is no BREATHER plant fires.
     const state = spot(600, 60, 0.9);
-    const input = botAct(createBot("balanced"), state);
+    const input = botAct(createBot("balanced"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
   });
@@ -1580,7 +1590,7 @@ describe("bot travel discipline", () => {
 
   it("marches open ground on foot, never hopping", () => {
     const state = quietMarch();
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.steering).toBe(true);
     expect(input.jump).toBe(false);
   });
@@ -1589,7 +1599,7 @@ describe("bot travel discipline", () => {
     const state = quietMarch();
     state.players[0].staminaPotions = 5;
     state.players[0].stamina = 0; // bone-dry mid-march — jog it off, don't drink
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useStaminaPotion).toBeFalsy();
   });
 
@@ -1605,7 +1615,7 @@ describe("bot travel discipline", () => {
         mlvl: 99,
       }),
     );
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useStaminaPotion).toBe(true);
   });
 });
@@ -1644,14 +1654,16 @@ describe("bot powerup strategy", () => {
     const state = stage();
     state.players[0].heldAbilities = ["test_nuke"];
     pack(state, 10);
-    expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
+    expect(
+      botAct(createBot("survivor"), state, state.players[0]).useItem,
+    ).toBeFalsy();
   });
 
   it("spends the nuke into an overwhelming flood", () => {
     const state = stage();
     state.players[0].heldAbilities = ["test_nuke"];
     pack(state, 22, 120); // a real flood, inside the blast radius
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(0);
   });
@@ -1660,7 +1672,7 @@ describe("bot powerup strategy", () => {
     const state = stage();
     state.players[0].heldAbilities = ["test_stasis", "test_nuke"];
     pack(state, 22, 120);
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(1); // the nuke — not the older stasis
   });
@@ -1669,7 +1681,7 @@ describe("bot powerup strategy", () => {
     const state = stage();
     state.players[0].heldAbilities = ["test_storm"];
     pack(state, 3);
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(0);
   });
@@ -1680,7 +1692,7 @@ describe("bot powerup strategy", () => {
     state.players[0].stamina = state.players[0].maxStamina * 0.1; // can't outrun them
     state.players[0].hp = state.players[0].maxHp * 0.4; // bleeding under half
     pack(state, 5, 200); // five hunters inside the threat ring
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(0);
   });
@@ -1689,7 +1701,9 @@ describe("bot powerup strategy", () => {
     const state = stage();
     state.players[0].heldAbilities = ["test_stasis"];
     pack(state, 5, 200); // same hunters, but rested and unhurt
-    expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
+    expect(
+      botAct(createBot("survivor"), state, state.players[0]).useItem,
+    ).toBeFalsy();
   });
 
   it("pops the magnet over a lootable spill", () => {
@@ -1701,7 +1715,7 @@ describe("bot powerup strategy", () => {
       kind: "medkit" as const,
       pos: { x: p.x + 26 + i * 6, y: p.y + 18 },
     }));
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(0);
   });
@@ -1711,7 +1725,7 @@ describe("bot powerup strategy", () => {
     // Two of three slots taken, no fight and no loot anywhere — the magnet
     // still burns so a slot keeps cycling free for the next strong pickup.
     state.players[0].heldAbilities = ["test_magnet", "test_storm"];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(0);
   });
@@ -1719,7 +1733,7 @@ describe("bot powerup strategy", () => {
   it("with a full dock burns the cheapest power — never the nuke", () => {
     const state = stage();
     state.players[0].heldAbilities = ["test_nuke", "test_storm", "test_stasis"];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(2); // the stasis — cheapest on the shelf
   });
@@ -1727,7 +1741,9 @@ describe("bot powerup strategy", () => {
   it("holds a full dock of combat powers with nobody around to hit", () => {
     const state = stage();
     state.players[0].heldAbilities = ["test_storm", "test_storm", "test_storm"];
-    expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
+    expect(
+      botAct(createBot("survivor"), state, state.players[0]).useItem,
+    ).toBeFalsy();
   });
 
   it("sorts the dock into its own priority order, one move per tick", () => {
@@ -1735,7 +1751,7 @@ describe("bot powerup strategy", () => {
     // (nuke ahead of stasis) so the dock on screen reads how it values them.
     const state = stage();
     state.players[0].heldAbilities = ["test_stasis", "test_nuke"];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useItem).toBeFalsy();
     expect(input.moveItem).toEqual({ from: 1, to: 0 });
     // Applying the move settles the dock; the next tick has nothing to sort.
@@ -1744,7 +1760,9 @@ describe("bot powerup strategy", () => {
       "test_nuke",
       "test_stasis",
     ]);
-    expect(botAct(createBot("survivor"), state).moveItem).toBeUndefined();
+    expect(
+      botAct(createBot("survivor"), state, state.players[0]).moveItem,
+    ).toBeUndefined();
   });
 
   it("drops the cheapest powerup to make room for a better find", () => {
@@ -1764,7 +1782,7 @@ describe("bot powerup strategy", () => {
         pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       },
     ];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.dropItemIndex).toBe(0);
   });
 
@@ -1788,7 +1806,7 @@ describe("bot powerup strategy", () => {
         pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       },
     ];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.dropItemIndex).toBe(0);
   });
 
@@ -1803,7 +1821,7 @@ describe("bot powerup strategy", () => {
         pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       },
     ];
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.dropItemIndex).toBeUndefined();
   });
 });
@@ -1817,7 +1835,7 @@ describe("bot profiles", () => {
     const bot = createBot("balanced", profile);
     const counts: Partial<Record<string, number>> = {};
     for (let i = 0; i < n; i++) {
-      const stat = botAllocate(bot, state);
+      const stat = botAllocate(bot, state, state.players[0]);
       counts[stat] = (counts[stat] ?? 0) + 1;
       state.players[0].spentStats[stat]++;
     }
@@ -1850,7 +1868,7 @@ describe("bot profiles", () => {
     // A magic profile allocates INT even with the default melee sword in hand.
     const state = startGame();
     const bot = createBot("balanced", "magic");
-    expect(botAllocate(bot, state)).toBe("intelligence");
+    expect(botAllocate(bot, state, state.players[0])).toBe("intelligence");
   });
 
   it("defaults to the META (level-band) profile", () => {
@@ -1871,7 +1889,7 @@ describe("bot profiles", () => {
     const laneStat = (level: number): string => {
       const state = startGame();
       state.players[0].level = level;
-      return botAllocate(createBot("survivor"), state); // default meta
+      return botAllocate(createBot("survivor"), state, state.players[0]); // default meta
     };
     expect(laneStat(5)).toBe("strength"); // early melee
     expect(laneStat(50)).toBe("intelligence"); // mid–high magic
@@ -1885,9 +1903,9 @@ describe("bot profiles", () => {
     const state = startGame();
     state.players[0].level = 50; // constructed mid-game → magic
     const bot = createBot("survivor");
-    expect(botAllocate(bot, state)).toBe("intelligence");
+    expect(botAllocate(bot, state, state.players[0])).toBe("intelligence");
     state.players[0].level = 99; // now at the cap — lane stays put
-    expect(botAllocate(bot, state)).toBe("intelligence");
+    expect(botAllocate(bot, state, state.players[0])).toBe("intelligence");
     expect(bot.metaLaneChoice).toBe("magic");
   });
 });
@@ -1925,7 +1943,7 @@ describe("bot repair awareness", () => {
       pos: { x: state.players[0].pos.x + 100, y: state.players[0].pos.y },
     });
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("GET REPAIR");
     expect(input.target.x).toBeGreaterThan(state.players[0].pos.x); // toward the kit
   });
@@ -1940,7 +1958,7 @@ describe("bot repair awareness", () => {
         pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
       }),
     );
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useRepairKit).toBe(true);
   });
 
@@ -1956,7 +1974,7 @@ describe("bot repair awareness", () => {
         pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
       }),
     );
-    const input = botAct(createBot("survivor"), state);
+    const input = botAct(createBot("survivor"), state, state.players[0]);
     expect(input.useRepairKit).toBeFalsy();
   });
 
@@ -2005,7 +2023,7 @@ describe("bot hay-ball awareness", () => {
     // A bale just ahead (up-street) and a touch below the hero's lane.
     state.hayBalls.push(bale({ x: p.x + 40, y: p.y + 20 }));
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("HAY");
     // Steps perpendicular AWAY from the bale (up, since it is below him), not
     // forward into the roll — the target holds his x and clears his lane.
@@ -2018,7 +2036,7 @@ describe("bot hay-ball awareness", () => {
     const p = state.players[0].pos;
     state.hayBalls.push(bale({ x: p.x + 40, y: p.y + 300 }));
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("HAY");
   });
 
@@ -2027,7 +2045,7 @@ describe("bot hay-ball awareness", () => {
     const p = state.players[0].pos;
     state.hayBalls.push(bale({ x: p.x - 100, y: p.y }));
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("HAY");
   });
 });
@@ -2077,7 +2095,7 @@ describe("bot sand-storm avoidance", () => {
     // on its centreline and it's closing — he must step off the line (in ±y).
     pushStorm(state, { pos: { x: at.x - 100, y: at.y }, dir: { x: 1, y: 0 } });
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("STORM");
     expect(input.steering).toBe(true);
     // The escape is lateral: mostly a ±y move, not straight down the drift.
@@ -2094,7 +2112,7 @@ describe("bot sand-storm avoidance", () => {
     const at = { ...state.players[0].pos };
     pushStorm(state, { pos: { x: at.x - 100, y: at.y }, dir: { x: 1, y: 0 } });
     const bot = createBot("survivor");
-    expect(botAct(bot, state).steering).toBe(true);
+    expect(botAct(bot, state, state.players[0]).steering).toBe(true);
     expect(bot.lastThought).toBe("STORM");
   });
 
@@ -2108,7 +2126,7 @@ describe("bot sand-storm avoidance", () => {
       struck: true,
     });
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("STORM");
   });
 
@@ -2122,7 +2140,7 @@ describe("bot sand-storm avoidance", () => {
       dir: { x: 1, y: 0 },
     });
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("STORM");
   });
 
@@ -2136,7 +2154,7 @@ describe("bot sand-storm avoidance", () => {
       dir: { x: 1, y: 0 },
     });
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("STORM");
   });
 });
@@ -2176,7 +2194,7 @@ describe("bot stampede awareness", () => {
     const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("HERD");
     expect(input.jump).toBe(true);
   });
@@ -2187,7 +2205,7 @@ describe("bot stampede awareness", () => {
     const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("HERD");
     expect(input.jump).toBe(true);
   });
@@ -2198,7 +2216,7 @@ describe("bot stampede awareness", () => {
     const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y + 300 }));
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("HERD");
   });
 
@@ -2208,7 +2226,7 @@ describe("bot stampede awareness", () => {
     const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x - 200, y: p.y }));
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("HERD");
   });
 
@@ -2219,7 +2237,7 @@ describe("bot stampede awareness", () => {
     state.players[0].z = JUMP.dodgeHeight + 10;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("HERD");
   });
 });
@@ -2251,7 +2269,7 @@ describe("bot meteor awareness", () => {
     // A rock landing right on the hero in 600ms — inside the lead window.
     state.asteroids.push(rock({ x: p.x + 8, y: p.y }, 600));
     const bot = createBot("survivor");
-    const input = botAct(bot, state);
+    const input = botAct(bot, state, state.players[0]);
     expect(bot.lastThought).toBe("METEOR");
     // Steers clear of the blast circle — the target is outside the reach.
     const d = Math.hypot(input.target.x - (p.x + 8), input.target.y - p.y);
@@ -2263,7 +2281,7 @@ describe("bot meteor awareness", () => {
     const p = state.players[0].pos;
     state.asteroids.push(rock({ x: p.x + 300, y: p.y }, 600));
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("METEOR");
   });
 
@@ -2273,7 +2291,7 @@ describe("bot meteor awareness", () => {
     // Aimed at him, but a full 1.4s from impact — too early to bother yet.
     state.asteroids.push(rock({ x: p.x, y: p.y }, 1400));
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("METEOR");
   });
 });

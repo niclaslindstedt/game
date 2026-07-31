@@ -25,7 +25,7 @@ import {
   weaponSweepHalfAngle,
 } from "../items/index.ts";
 import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
-import type { Enemy, GameState } from "../types/index.ts";
+import type { Enemy, GameState, Player } from "../types/index.ts";
 import { inertEnemy } from "../disposition.ts";
 
 /** Spend the NUKE only into an OVERWHELMING flood — this many foes inside the
@@ -48,11 +48,11 @@ const MAGNET_LOOT_MIN = 3;
 /** Count of live, non-apparition foes within `radius` of the hero (the
  * powerup-moment reads — a nuke wipes anything, kneeling spareables included,
  * so this deliberately does NOT apply the cast-target `state.choice` guard). */
-function foesWithin(state: GameState, radius: number): number {
+function foesWithin(state: GameState, hero: Player, radius: number): number {
   let n = 0;
   for (const enemy of state.enemies) {
     if (inertEnemy(enemy)) continue;
-    if (distance(state.players[0].pos, enemy.pos) <= radius) n++;
+    if (distance(hero.pos, enemy.pos) <= radius) n++;
   }
   return n;
 }
@@ -60,10 +60,8 @@ function foesWithin(state: GameState, radius: number): number {
 /** Is a NUKE banked in the powerup dock? With one in his pocket the bot can
  * afford to be DARING: it keeps kiting forward and skips the escape-route
  * guard — worst case, the button clears the screen. Pure. */
-export function hasNukeBanked(state: GameState): boolean {
-  return state.players[0].heldAbilities.some(
-    (id) => abilityDef(id).nuke !== undefined,
-  );
+export function hasNukeBanked(state: GameState, hero: Player): boolean {
+  return hero.heldAbilities.some((id) => abilityDef(id).nuke !== undefined);
 }
 
 /**
@@ -75,8 +73,9 @@ export function hasNukeBanked(state: GameState): boolean {
  */
 function bankedPowerups(
   state: GameState,
+  hero: Player,
 ): { defId: string; slot: number; def: AbilityDef }[] {
-  const player = state.players[0];
+  const player = hero;
   return player.heldAbilities
     .map((defId, slot) => ({ defId, slot, def: abilityDef(defId) }))
     .filter(({ slot }) => !isSlotActive(state, player, slot))
@@ -98,17 +97,17 @@ function bankedPowerups(
  * spill sits inside its pull. Checked best-first, so a flood eats the nuke,
  * never the stasis. Pure (state only), so determinism holds.
  */
-export function pickPowerupMoment(state: GameState): number {
-  const player = state.players[0];
-  const banked = bankedPowerups(state);
+export function pickPowerupMoment(state: GameState, hero: Player): number {
+  const player = hero;
+  const banked = bankedPowerups(state, hero);
   if (banked.length === 0) return -1;
-  const packedClose = threatCountWithin(state, SURROUND_RADIUS);
+  const packedClose = threatCountWithin(state, hero, SURROUND_RADIUS);
   // CORNERED — the stasis moment: too winded to outrun the hunt, bleeding
   // under half, and a real pack on his heels inside the threat ring.
   const cornered =
     player.stamina < player.maxStamina * STAMINA_TOPUP_FRAC &&
     player.hp < player.maxHp * STASIS_HP_FRAC &&
-    threatCountWithin(state, THREAT_RADIUS) >= STASIS_HUNT_PACK;
+    threatCountWithin(state, hero, THREAT_RADIUS) >= STASIS_HUNT_PACK;
   for (const { def, slot } of banked) {
     // Read the BLOCKS, not the label: a composed power answers for every effect
     // it carries, so it is worth spending the moment any ONE of them has its
@@ -117,7 +116,7 @@ export function pickPowerupMoment(state: GameState): number {
       def.nuke !== undefined &&
       // Counted inside the blast itself, so "overwhelming" means what the wipe
       // would actually erase — not a wide tail of distant stragglers.
-      foesWithin(state, def.nuke.radius) >= NUKE_PACK
+      foesWithin(state, hero, def.nuke.radius) >= NUKE_PACK
     ) {
       return slot;
     }
@@ -128,7 +127,8 @@ export function pickPowerupMoment(state: GameState): number {
       return slot;
     }
     if (def.stasis !== undefined && cornered) return slot;
-    if (def.magnet !== undefined && magnetLootClose(state, def)) return slot;
+    if (def.magnet !== undefined && magnetLootClose(state, hero, def))
+      return slot;
   }
   return -1;
 }
@@ -145,11 +145,11 @@ export function pickPowerupMoment(state: GameState): number {
  * chain — an instant drop beats a burn whose slot only frees when the power
  * lapses. Pure.
  */
-export function pickPowerupBurn(state: GameState): number {
-  const banked = bankedPowerups(state);
+export function pickPowerupBurn(state: GameState, hero: Player): number {
+  const banked = bankedPowerups(state, hero);
   if (banked.length === 0) return -1;
-  const openSlots = HELD_ITEMS.cap - state.players[0].heldAbilities.length;
-  const anyFoeNear = threatCountWithin(state, THREAT_RADIUS) > 0;
+  const openSlots = HELD_ITEMS.cap - hero.heldAbilities.length;
+  const anyFoeNear = threatCountWithin(state, hero, THREAT_RADIUS) > 0;
   for (let i = banked.length - 1; i >= 0; i--) {
     const { def, defId, slot } = banked[i]!;
     if (def.nuke !== undefined) continue; // never burn the wipe for shelf space
@@ -169,12 +169,16 @@ export function pickPowerupBurn(state: GameState): number {
 /** Enough ground drops inside the magnet's pull to be worth popping it —
  * counts what the field would actually reel in (a mercy drop still riding its
  * angel down is out of the magnet's reach, see stepAbilities). */
-function magnetLootClose(state: GameState, def: AbilityDef): boolean {
-  const reach = magnetRadius(state, state.players[0], def);
+function magnetLootClose(
+  state: GameState,
+  hero: Player,
+  def: AbilityDef,
+): boolean {
+  const reach = magnetRadius(state, hero, def);
   let count = 0;
   for (const item of state.items) {
     if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
-    if (distance(state.players[0].pos, item.pos) > reach) continue;
+    if (distance(hero.pos, item.pos) > reach) continue;
     count++;
     if (count >= MAGNET_LOOT_MIN) return true;
   }
@@ -192,8 +196,9 @@ function magnetLootClose(state: GameState, def: AbilityDef): boolean {
  */
 export function powerupSortMove(
   state: GameState,
+  hero: Player,
 ): { from: number; to: number } | null {
-  const held = state.players[0].heldAbilities;
+  const held = hero.heldAbilities;
   if (held.length < 2) return null;
   const order = held
     .map((defId, i) => ({ i, v: abilityValue(defId) }))
@@ -219,8 +224,8 @@ export function powerupSortMove(
  * The NUKE is never tossed. Pure; the actual grab happens as the hero walks
  * over the item (nearestWantedItem already steers at ground abilities).
  */
-export function powerupDropForUpgrade(state: GameState): number {
-  const player = state.players[0];
+export function powerupDropForUpgrade(state: GameState, hero: Player): number {
+  const player = hero;
   const held = player.heldAbilities;
   if (held.length < HELD_ITEMS.cap) return -1; // room already
   // The best grabbable powerup find in reach.
@@ -290,8 +295,11 @@ const AIM_CLUSTER_CAP = 10;
  * shot first. Candidates need line of sight, so a cluster behind a wall never
  * wins over a hittable foe. Pure (state only), so determinism holds.
  */
-export function bestAimTarget(state: GameState): Vec2 | undefined {
-  const player = state.players[0];
+export function bestAimTarget(
+  state: GameState,
+  hero: Player,
+): Vec2 | undefined {
+  const player = hero;
   const equipped = player.equipment.weapon;
   const range = weaponRangeFor(state, player, equipped);
   // Candidates: live, targetable, in range, in sight — the foes a swing or a

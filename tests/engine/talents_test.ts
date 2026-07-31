@@ -299,7 +299,7 @@ describe("the autopilot spends talent points", () => {
   it("picks the build's top priority talent in the earning tree", () => {
     const bot = createBot("balanced", "melee");
     const state = heroWithStats({ str: 20 });
-    const id = botPickTalent(bot, state);
+    const id = botPickTalent(bot, state, state.players[0]);
     // The melee build leads with executioner.
     expect(id).toBe("executioner");
     expect(spendTalentPoint(state, state.players[0], id!)).toBe(true);
@@ -308,7 +308,7 @@ describe("the autopilot spends talent points", () => {
   it("only ever picks a talent in the front point's tree", () => {
     const bot = createBot("balanced", "melee");
     const state = heroWithStats({ int: 10 }); // an INT (magic) point
-    const id = botPickTalent(bot, state);
+    const id = botPickTalent(bot, state, state.players[0]);
     // A melee build's stray INT point dips into the magic tree's ward first.
     expect(id).toBe("mage_armor");
   });

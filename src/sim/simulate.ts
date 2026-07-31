@@ -1180,7 +1180,8 @@ function playRun(args: {
 
   // The hero can't fight his way out with the unbreakable fallback sidearm, or
   // with a weapon about to snap — the cue to run to the merchant (autoShop).
-  const weaponStarved = (): boolean => heroWeaponStarved(state);
+  const weaponStarved = (): boolean =>
+    heroWeaponStarved(state, state.players[0]);
   // The recovery a player would run at the counter — the shared bot COUNTER
   // ROUTINE (bot/economy.ts): bank the bag's outgrown junk for coins, buy the
   // best weapon he can wield and afford, mend the kit, stock powerups, equip
@@ -1191,8 +1192,9 @@ function playRun(args: {
   // of visits).
   const recoverAtMerchant = (): boolean => {
     autoEquipBest(state, state.players[0]); // a decent bag weapon may end the starve for free
-    if (!weaponStarved() && !wantsMerchantVisit(state)) return false;
-    if (!tradeAtMerchant(state)) return false;
+    if (!weaponStarved() && !wantsMerchantVisit(state, state.players[0]))
+      return false;
+    if (!tradeAtMerchant(state, state.players[0])) return false;
     shopVisits++;
     return true;
   };
@@ -1360,7 +1362,13 @@ function playRun(args: {
       case "levelup": {
         // If the bot's pick is at the level-scaled cap it won't take; dump the
         // point into any stat that still has room so the ding always resolves.
-        if (!allocateStat(state, state.players[0], botAllocate(bot, state))) {
+        if (
+          !allocateStat(
+            state,
+            state.players[0],
+            botAllocate(bot, state, state.players[0]),
+          )
+        ) {
           for (const s of STAT_NAMES)
             if (allocateStat(state, state.players[0], s)) break;
         }
@@ -1371,7 +1379,7 @@ function playRun(args: {
         // — the queue is capacity-clamped, so in practice there is always a
         // pick.
         while (state.pendingTalentPoints.length > 0) {
-          const talentId = botPickTalent(bot, state);
+          const talentId = botPickTalent(bot, state, state.players[0]);
           if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
             break;
         }
@@ -1440,14 +1448,14 @@ function playRun(args: {
     // — the blade with a body in blade reach, the banked ranged/magic shot
     // out of reach and through every airborne frame (see bot/economy.ts
     // stepBotWeaponSwap).
-    stepBotWeaponSwap(bot, state);
+    stepBotWeaponSwap(bot, state, state.players[0]);
     // KEEP THE FRIEND ON ITS FEET: crack a bought bottle of salts over a downed
     // companion, and spend a spare medkit on a badly hurt one. Nothing mends a
     // companion on its own any more, so a run that never did this would play
     // every level after the first loss a party member short — and report that
     // as balance rather than as the bot not knowing the rules.
-    careForCompanion(state);
-    const input = botAct(bot, state);
+    careForCompanion(state, state.players[0]);
+    const input = botAct(bot, state, state.players[0]);
     // The camera the simulated player watches through: player-centred and
     // clamped to the level, the same rect the app stamps from its canvas
     // (render.ts computeCamera) — so targeting, summon-in and the bot's
@@ -1463,9 +1471,9 @@ function playRun(args: {
     // the next drop always has a home. Cheap when a slot is already free.
     // Then keep the bag SORTED (pockets up front, loot by preciousness) the
     // way the powerup dock sorts its slots.
-    botAutoEquip(state);
-    cullWorstLoot(state);
-    sortBotInventory(state);
+    botAutoEquip(state, state.players[0]);
+    cullWorstLoot(state, state.players[0]);
+    sortBotInventory(state, state.players[0]);
 
     // STAMINA: sample the pool this tick left behind. An empty is counted on
     // the CROSSING into zero, and the dwell counters carry the ms the hero
@@ -1710,7 +1718,7 @@ function playRun(args: {
     if (
       args.autoShop &&
       state.phase === "playing" &&
-      (weaponStarved() || wantsMerchantVisit(state)) &&
+      (weaponStarved() || wantsMerchantVisit(state, state.players[0])) &&
       now() - lastShopMs >= SHOP_COOLDOWN_MS
     ) {
       // At the counter, recoverAtMerchant opens the shop and re-arms; a real

@@ -1362,7 +1362,9 @@ reads `state.players[0]` at 164 sites across `src/game/bot/` and `botAct` has no
 notion of WHICH hero it steers. The rules above are therefore STRUCTURE with
 their reasoning stated and unit-level proof (`tests/engine/coop_rules_test.ts`),
 not tuned numbers — do not record them as measured. Parameterizing the bot on a
-`Player` is the prerequisite (`botAct(bot, state, hero)`, 164 sites); then
+`Player` is the prerequisite and **has landed** — `botAct(bot, state, hero)`,
+164 sites, proven byte-identical on two full seeded campaigns — so the simulator
+flying a party (§7.2) is what the measured pass now waits on; then
 `XP_SHARE.partyBonusPerHero` and the `/players N` pairing are the levers. §4.2's
 corpse and respawn are BLOCKED on §3.2's per-player `dying` screen.
 
@@ -1370,8 +1372,16 @@ corpse and respawn are BLOCKED on §3.2's per-player `dying` screen.
 AND THAT IS THE ONE PLACE TO LOOK.** A dozen "NOT LANDED" boxes scattered across
 eleven PR sections is how a debt stops being anybody's, so §5.5 collects them,
 says which are BLOCKED and on what, and gives the order they unblock each other
-in: §7.1 → §7.2 → §4.3's measured pass → §7.2.5 → §5.6's soak → §3.2 → §4.2's
-corpse → §3.3. It also separates out the FOUR that no diff can close (a packaged
+in: **§7.1 (landed)** → §7.2 → §4.3's measured pass → §7.2.5 → §5.6's soak →
+§3.2 → §4.2's corpse → §3.3.
+
+**THE BOT TAKES THE HERO IT STEERS — `botAct(bot, state, hero)`.** Nothing under
+`src/game/bot/` reads `state.players[0]` any more, and a new one is a
+regression: the app passes `localHero(state)`, the simulator passes the seat
+each of its bots was given, and a single-player caller passes seat 0, which is
+the identity case that let 164 sites move at once. `tests/engine/bot_party_test.ts`
+is the guard — every OTHER bot suite flies one hero and would pass with the
+refactor reverted. It also separates out the FOUR that no diff can close (a packaged
 Electron launch, eight machines through a real NAT, a real router, the per-OS
 firewall prompts) — those need a human with hardware, and writing them as work
 items is how they get ticked from a diff.

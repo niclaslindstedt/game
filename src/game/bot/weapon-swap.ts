@@ -46,7 +46,12 @@ import {
   rangedShotTargets,
   weaponDef,
 } from "../defs/equipment.ts";
-import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
+import type {
+  Equipment,
+  GameState,
+  Player,
+  WeaponClass,
+} from "../types/index.ts";
 
 /** How near a live boss/elite must be (world px) for the moment to read as a
  * BIG BODY — one health pool that soaks every shape, so the pick collapses to
@@ -95,14 +100,18 @@ type Owned = { index: number; item: Equipment };
 /** Every wieldable weapon in the BAG (broken, under-leveled or under-statted
  * pieces are passed over — `canEquip`), optionally narrowed to the shots or to
  * the blades. */
-function bagWeapons(state: GameState, kind?: "shot" | "melee"): Owned[] {
+function bagWeapons(
+  state: GameState,
+  hero: Player,
+  kind?: "shot" | "melee",
+): Owned[] {
   const out: Owned[] = [];
-  const inv = state.players[0].inventory;
+  const inv = hero.inventory;
   for (let index = 0; index < inv.length; index++) {
     const item = inv[index];
     if (!item || item.slot !== "weapon") continue;
     if (kind && weaponKind(item) !== kind) continue;
-    if (!canEquip(state, state.players[0], item)) continue;
+    if (!canEquip(state, hero, item)) continue;
     out.push({ index, item });
   }
   return out;
@@ -118,8 +127,8 @@ function weaponKind(item: Equipment): "shot" | "melee" {
  * its forward reposition-hops on: a blade hero with a pocket banked keeps
  * dealing damage mid-air (the swap draws it at the top of the hop), so the
  * "an airborne melee blade is dead weight" rule stops applying to him. */
-export function hasPocketShooter(state: GameState): boolean {
-  return bagWeapons(state, "shot").length > 0;
+export function hasPocketShooter(state: GameState, hero: Player): boolean {
+  return bagWeapons(state, hero, "shot").length > 0;
 }
 
 // ---- The FIELD READ (what the fight in front of the hero is asking for) ---------
@@ -134,8 +143,8 @@ type Body = { dist: number; inPack: boolean };
  * stands (Infinity with none about). Pure. */
 type FieldRead = { bodies: Body[]; bossDist: number };
 
-function fieldRead(state: GameState): FieldRead {
-  const player = state.players[0];
+function fieldRead(state: GameState, hero: Player): FieldRead {
+  const player = hero;
   const bodies: Body[] = [];
   let bossDist = Infinity;
   let aim: Vec2 | null = null;
@@ -176,6 +185,7 @@ function fieldRead(state: GameState): FieldRead {
  */
 function weaponMomentValue(
   state: GameState,
+  hero: Player,
   item: Equipment,
   read: FieldRead,
   airborne: boolean,
@@ -183,7 +193,7 @@ function weaponMomentValue(
   const def = weaponDef(item.defId);
   const melee = def.projectile === undefined;
   if (melee && airborne) return -1;
-  const range = weaponRangeFor(state, state.players[0], item);
+  const range = weaponRangeFor(state, hero, item);
   let inRange = 0;
   let pack = 0;
   for (const body of read.bodies) {
@@ -195,28 +205,26 @@ function weaponMomentValue(
   const shape = def.projectile
     ? rangedShotTargets(def.projectile)
     : Math.min(
-        meleeRealizedTargets(
-          weaponSweepHalfAngle(state, state.players[0], item),
-          range,
-        ),
-        maxMeleeTargets(state, state.players[0]),
+        meleeRealizedTargets(weaponSweepHalfAngle(state, hero, item), range),
+        maxMeleeTargets(state, hero),
       );
   const bigBody = read.bossDist <= Math.min(POCKET_BOSS_RADIUS, range);
   const targets = bigBody ? 1 : Math.min(shape, Math.max(1, pack));
-  return weaponDps(state, state.players[0], item) * targets;
+  return weaponDps(state, hero, item) * targets;
 }
 
 /** The banked weapon of `kind` the moment values most, or null when none of
  * them can land a blow right now. */
 function bestBagDraw(
   state: GameState,
+  hero: Player,
   read: FieldRead,
   airborne: boolean,
   kind: "shot" | "melee",
 ): (Owned & { value: number }) | null {
   let best: (Owned & { value: number }) | null = null;
-  for (const { index, item } of bagWeapons(state, kind)) {
-    const value = weaponMomentValue(state, item, read, airborne);
+  for (const { index, item } of bagWeapons(state, hero, kind)) {
+    const value = weaponMomentValue(state, hero, item, read, airborne);
     if (value < 0 || (best && value <= best.value)) continue;
     best = { index, item, value };
   }
@@ -232,9 +240,15 @@ function bestBagDraw(
  * against a mass. A shot that reaches nobody never wins — drawing a gun with
  * nothing in range is churn, not damage.
  */
-export function botPocketShooterIndex(state: GameState): number {
-  const airborne = state.players[0].z > JUMP.dodgeHeight;
-  const pick = bestBagDraw(state, fieldRead(state), airborne, "shot");
+export function botPocketShooterIndex(state: GameState, hero: Player): number {
+  const airborne = hero.z > JUMP.dodgeHeight;
+  const pick = bestBagDraw(
+    state,
+    hero,
+    fieldRead(state, hero),
+    airborne,
+    "shot",
+  );
   return pick ? pick.index : -1;
 }
 
@@ -256,29 +270,25 @@ export function botPocketShooterIndex(state: GameState): number {
 const bestWeaponByLoadout = new WeakMap<object, Owned>();
 const pocketKeepByLoadout = new WeakMap<object, number[]>();
 
-export function bestOwnedWeapon(state: GameState): Owned {
-  const memo = heroLoadoutMemo(state, state.players[0]);
+export function bestOwnedWeapon(state: GameState, hero: Player): Owned {
+  const memo = heroLoadoutMemo(state, hero);
   const hit = bestWeaponByLoadout.get(memo);
   if (hit) return hit;
-  const result = computeBestOwnedWeapon(state);
+  const result = computeBestOwnedWeapon(state, hero);
   bestWeaponByLoadout.set(memo, result);
   return result;
 }
 
-function computeBestOwnedWeapon(state: GameState): Owned {
-  const inv = state.players[0].inventory;
-  let item = state.players[0].equipment.weapon;
+function computeBestOwnedWeapon(state: GameState, hero: Player): Owned {
+  const inv = hero.inventory;
+  let item = hero.equipment.weapon;
   let index = -1;
-  let bestScore = weaponScore(state, state.players[0], item);
+  let bestScore = weaponScore(state, hero, item);
   for (let i = 0; i < inv.length; i++) {
     const cell = inv[i];
-    if (
-      !cell ||
-      cell.slot !== "weapon" ||
-      !canEquip(state, state.players[0], cell)
-    )
+    if (!cell || cell.slot !== "weapon" || !canEquip(state, hero, cell))
       continue;
-    const score = weaponScore(state, state.players[0], cell);
+    const score = weaponScore(state, hero, cell);
     if (score > bestScore) {
       bestScore = score;
       item = cell;
@@ -290,15 +300,15 @@ function computeBestOwnedWeapon(state: GameState): Owned {
 
 /** How many targets a weapon's blow is SHAPED for, field aside — the paper
  * crowd credit that sorts the "spray" role from the "round" role. */
-function weaponShape(state: GameState, item: Equipment): number {
+function weaponShape(state: GameState, hero: Player, item: Equipment): number {
   const def = weaponDef(item.defId);
   if (def.projectile) return rangedShotTargets(def.projectile);
   return Math.min(
     meleeRealizedTargets(
-      weaponSweepHalfAngle(state, state.players[0], item),
-      weaponRangeFor(state, state.players[0], item),
+      weaponSweepHalfAngle(state, hero, item),
+      weaponRangeFor(state, hero, item),
     ),
-    maxMeleeTargets(state, state.players[0]),
+    maxMeleeTargets(state, hero),
   );
 }
 
@@ -328,40 +338,36 @@ type Role = { index: number; lane: WeaponClass };
  * at {@link POCKET_KEEP_MAX} cells and always leaves the bag a cell the cull
  * can free.
  */
-export function botPocketKeepIndices(state: GameState): number[] {
-  const memo = heroLoadoutMemo(state, state.players[0]);
+export function botPocketKeepIndices(state: GameState, hero: Player): number[] {
+  const memo = heroLoadoutMemo(state, hero);
   const hit = pocketKeepByLoadout.get(memo);
   if (hit) return hit;
-  const result = computePocketKeepIndices(state);
+  const result = computePocketKeepIndices(state, hero);
   pocketKeepByLoadout.set(memo, result);
   return result;
 }
 
-function computePocketKeepIndices(state: GameState): number[] {
+function computePocketKeepIndices(state: GameState, hero: Player): number[] {
   const keep = new Set<number>();
-  const main = bestOwnedWeapon(state);
+  const main = bestOwnedWeapon(state, hero);
   if (main.index >= 0) keep.add(main.index); // the stashed main, mid-swap
   const owned: Owned[] = [
-    { index: -1, item: state.players[0].equipment.weapon },
-    ...bagWeapons(state),
+    { index: -1, item: hero.equipment.weapon },
+    ...bagWeapons(state, hero),
   ];
   // The four jobs, each won by the best weapon the hero owns for it.
   const round = (kind: "shot" | "melee"): Role | null =>
-    bestRole(state, owned, kind, (item) =>
-      weaponDps(state, state.players[0], item),
-    );
+    bestRole(state, owned, kind, (item) => weaponDps(state, hero, item));
   const spray = (kind: "shot" | "melee"): Role | null =>
     bestRole(state, owned, kind, (item) => {
-      const shape = weaponShape(state, item);
-      return shape > 1 ? weaponDps(state, state.players[0], item) * shape : -1;
+      const shape = weaponShape(state, hero, item);
+      return shape > 1 ? weaponDps(state, hero, item) * shape : -1;
     });
   const byClass = (cls: WeaponClass): Role | null =>
     bestRole(state, owned, undefined, (item) =>
-      weaponDef(item.defId).class === cls
-        ? weaponScore(state, state.players[0], item)
-        : -1,
+      weaponDef(item.defId).class === cls ? weaponScore(state, hero, item) : -1,
     );
-  const lane = committedLane(state, state.players[0]);
+  const lane = committedLane(state, hero);
   const rest = [
     round("melee"),
     spray("melee"),
@@ -377,7 +383,7 @@ function computePocketKeepIndices(state: GameState): number[] {
     ...rest.filter((r) => r && r.lane !== lane),
   ];
   // Never spare so much that the cull can't free the bot's open cell.
-  const cap = Math.min(POCKET_KEEP_MAX, state.players[0].inventory.length - 1);
+  const cap = Math.min(POCKET_KEEP_MAX, hero.inventory.length - 1);
   let spent = 0;
   for (const role of roles) {
     if (spent >= cap) break;
@@ -422,8 +428,13 @@ export type SwapMemory = { lastSwapMs?: number };
  * cooldown, so juggling weapons never mints free shots (the UI's
  * `equipFromInventory` zeroes it — instant gratification for a hand-picked
  * swap; the bot, swapping every fight, plays fair). */
-function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
-  const player = state.players[0];
+function swapHand(
+  bot: SwapMemory,
+  state: GameState,
+  hero: Player,
+  index: number,
+): boolean {
+  const player = hero;
   const carried = player.weaponCooldownMs;
   if (!equipFromInventory(state, player, index)) return false;
   player.weaponCooldownMs = Math.min(
@@ -447,12 +458,16 @@ function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
  * before the hand actually changes, or it would light up the wrong row.
  * Everything else calls the committing form and never sees this.
  */
-export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
+export function botWeaponSwapTarget(
+  bot: SwapMemory,
+  state: GameState,
+  hero: Player,
+): number {
   if (state.phase !== "playing") return -1;
-  const player = state.players[0];
+  const player = hero;
   if (player.disarmed) return -1;
   const held = player.equipment.weapon;
-  const main = bestOwnedWeapon(state);
+  const main = bestOwnedWeapon(state, hero);
   const since =
     bot.lastSwapMs === undefined
       ? Infinity
@@ -460,7 +475,7 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
   const coolingDown = since < SWAP_COOLDOWN_MS;
   const heldShot = weaponKind(held) === "shot";
   const airborne = player.z > JUMP.dodgeHeight;
-  const read = fieldRead(state);
+  const read = fieldRead(state, hero);
 
   /** Trade the hand for a banked pick — but only on a CLEAR gain, so two
    * comparable weapons in the kit can't juggle. The anti-juggle gap applies on
@@ -478,7 +493,7 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
   const trade = (pick: (Owned & { value: number }) | null): number => {
     if (!pick) return -1;
     if (coolingDown && !airborne) return -1;
-    const mine = weaponMomentValue(state, held, read, airborne);
+    const mine = weaponMomentValue(state, hero, held, read, airborne);
     if (mine < 0) return pick.index; // the hand can't land a blow at all
     // A plainly BETTER weapon — one that wins the context-free ranking by the
     // same margin — is worth the ground too: that is how a fresh find gets
@@ -503,11 +518,11 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
     // would be left with the wrong weapon forever).
     if (!heldShot) {
       if (coolingDown && !airborne) return -1;
-      const shot = bestBagDraw(state, read, airborne, "shot");
+      const shot = bestBagDraw(state, hero, read, airborne, "shot");
       if (shot) return shot.index;
       return main.index >= 0 ? main.index : -1;
     }
-    return trade(bestBagDraw(state, read, airborne, "shot"));
+    return trade(bestBagDraw(state, hero, read, airborne, "shot"));
   }
 
   // A BLADE BUILD. Nearest live body against the MAIN blade's true reach
@@ -522,7 +537,7 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
     // A body in blade reach: nothing out-damages the blade there — and WHICH
     // blade is the moment's call too (the cleaver into a pack, the heavy
     // hitter at a boss).
-    const blade = bestBagDraw(state, read, airborne, "melee");
+    const blade = bestBagDraw(state, hero, read, airborne, "melee");
     if (!blade) return -1;
     if (!heldShot) return trade(blade); // already swinging: only a clear gain
     return coolingDown ? -1 : blade.index;
@@ -530,7 +545,7 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
   // Out of blade business: hold the shot the fight wants while anything
   // presents a target, and go back to the blade when the field is empty (the
   // idle hand).
-  const shot = bestBagDraw(state, read, airborne, "shot");
+  const shot = bestBagDraw(state, hero, read, airborne, "shot");
   if (shot) {
     if (heldShot) return trade(shot);
     if (coolingDown && !airborne) return -1;
@@ -570,8 +585,12 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
  * state, exactly like the rest of the bot's latches — the decision itself is
  * {@link botWeaponSwapTarget}.
  */
-export function stepBotWeaponSwap(bot: SwapMemory, state: GameState): boolean {
-  const index = botWeaponSwapTarget(bot, state);
+export function stepBotWeaponSwap(
+  bot: SwapMemory,
+  state: GameState,
+  hero: Player,
+): boolean {
+  const index = botWeaponSwapTarget(bot, state, hero);
   if (index < 0) return false;
-  return swapHand(bot, state, index);
+  return swapHand(bot, state, hero, index);
 }

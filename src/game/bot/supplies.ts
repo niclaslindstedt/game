@@ -26,7 +26,7 @@ import {
   weaponDamageFor,
 } from "../items/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
-import type { Equipment, GameState, Item } from "../types/index.ts";
+import type { Equipment, GameState, Item, Player } from "../types/index.ts";
 import { inertEnemy } from "../disposition.ts";
 
 /** Bots pop a medkit once health falls below this fraction of the bar. */
@@ -47,12 +47,11 @@ const TOP_OFF_REACH = 56;
  * widened to a running MAGNET's INT-scaled pull radius — everything inside
  * the ring is being reeled in, so the stack can be opened for each item the
  * pull is about to land. Pure read of the running abilities. */
-export function topOffReach(state: GameState): number {
+export function topOffReach(state: GameState, hero: Player): number {
   let reach = TOP_OFF_REACH;
-  for (const ability of state.players[0].abilities) {
+  for (const ability of hero.abilities) {
     const def = abilityDef(ability.defId);
-    if (def.magnet)
-      reach = Math.max(reach, magnetRadius(state, state.players[0], def));
+    if (def.magnet) reach = Math.max(reach, magnetRadius(state, hero, def));
   }
   return reach;
 }
@@ -119,8 +118,8 @@ export function trackBravery(bot: Bot, state: GameState): void {
  *     since a mistake can be paid for.
  * Pure (state + the bot's own trail), so determinism holds.
  */
-export function braveryScore(bot: Bot, state: GameState): number {
-  const player = state.players[0];
+export function braveryScore(bot: Bot, state: GameState, hero: Player): number {
+  const player = hero;
   let barSum = 0;
   let barN = 0;
   for (const enemy of state.enemies) {
@@ -148,7 +147,7 @@ export function braveryScore(bot: Bot, state: GameState): number {
   // level-up restores hp and stamina — see Bot.arrowXp): with one close by
   // the hero can afford to fight braver, so it credits the safety net like a
   // couple of pocketed kits.
-  const arrowHeals = dingArrowNearby(bot, state, THREAT_RADIUS) ? 2 : 0;
+  const arrowHeals = dingArrowNearby(bot, state, hero, THREAT_RADIUS) ? 2 : 0;
   const powerupValue = player.heldAbilities.reduce(
     (sum, id) => sum + abilityValue(id),
     0,
@@ -175,17 +174,15 @@ const REPAIR_SEEK_FRAC = 0.45;
 
 /** Is a spent weapon (durability 0) sitting in the bag, shed there when it broke
  * out of the hand — waiting on a repair kit to wake it? */
-function hasBrokenBagWeapon(state: GameState): boolean {
-  return state.players[0].inventory.some(
-    (cell) => cell !== null && isWeaponBroken(cell),
-  );
+function hasBrokenBagWeapon(state: GameState, hero: Player): boolean {
+  return hero.inventory.some((cell) => cell !== null && isWeaponBroken(cell));
 }
 
 /** The held weapon's remaining wear as a fraction of its full budget (1 = fresh,
  * 0 = about to break), or 1 for the unbreakable sidearm — the "how spent is my
  * blade" gauge the repair heuristics read. */
-function weaponWearFrac(state: GameState): number {
-  const weapon = state.players[0].equipment.weapon;
+function weaponWearFrac(state: GameState, hero: Player): number {
+  const weapon = hero.equipment.weapon;
   if (weapon.durability === undefined) return 1; // unbreakable sidearm
   const max = equipmentMaxDurability(weapon);
   return max > 0 ? weapon.durability / max : 1;
@@ -193,9 +190,9 @@ function weaponWearFrac(state: GameState): number {
 
 /** Is there anything a repair kit would meaningfully mend right now — a broken
  * weapon shed into the bag, or a held weapon worn down near breaking? */
-export function needsRepair(state: GameState): boolean {
-  if (hasBrokenBagWeapon(state)) return true;
-  return weaponWearFrac(state) <= REPAIR_DURABILITY_FRAC;
+export function needsRepair(state: GameState, hero: Player): boolean {
+  if (hasBrokenBagWeapon(state, hero)) return true;
+  return weaponWearFrac(state, hero) <= REPAIR_DURABILITY_FRAC;
 }
 
 /** Is there ANY wear a repair kit would mend — a worn or broken piece anywhere
@@ -203,8 +200,8 @@ export function needsRepair(state: GameState): boolean {
  * {@link needsRepair} (which waits for a weapon near breaking): this is the
  * pass-over TOP-OFF's gate, where a free refill is on the ground and even
  * light wear makes the spend worthwhile. Mirrors what `repairAll` touches. */
-export function hasWear(state: GameState): boolean {
-  const p = state.players[0];
+export function hasWear(state: GameState, hero: Player): boolean {
+  const p = hero;
   const worn = (piece: Equipment | null): boolean => {
     if (!piece || piece.durability === undefined) return false;
     const max = equipmentMaxDurability(piece);
@@ -225,19 +222,25 @@ export function hasWear(state: GameState): boolean {
  * hand is spent via {@link needsRepair}, not hoarded) AND its weapon is wearing
  * thin or a broken spare waits in the bag — the "stock a kit before the blade
  * gives out" read that makes the downgrade → repair → re-equip cycle work. */
-export function wantsRepairKitPickup(state: GameState): boolean {
-  if (state.players[0].repairKits > 0) return false;
-  return hasBrokenBagWeapon(state) || weaponWearFrac(state) <= REPAIR_SEEK_FRAC;
+export function wantsRepairKitPickup(state: GameState, hero: Player): boolean {
+  if (hero.repairKits > 0) return false;
+  return (
+    hasBrokenBagWeapon(state, hero) ||
+    weaponWearFrac(state, hero) <= REPAIR_SEEK_FRAC
+  );
 }
 
 /** The nearest grounded REPAIR-KIT pickup, or undefined when none is on the
  * field — the detour target for {@link wantsRepairKitPickup}. */
-export function nearestRepairKit(state: GameState): Item | undefined {
+export function nearestRepairKit(
+  state: GameState,
+  hero: Player,
+): Item | undefined {
   let best: Item | undefined;
   let bestD = Infinity;
   for (const item of state.items) {
     if (item.kind !== "repair") continue;
-    const d = distance(item.pos, state.players[0].pos);
+    const d = distance(item.pos, hero.pos);
     if (d < bestD) {
       best = item;
       bestD = d;
@@ -251,8 +254,8 @@ export function nearestRepairKit(state: GameState): Item | undefined {
  * pickup away (it stays on the ground), so steering at one parks the hero ON
  * an item he can never collect, standing there forever (measured: the
  * full-pockets stall). A capped kind is simply not wanted until one is spent. */
-function canBankPickup(state: GameState, item: Item): boolean {
-  const player = state.players[0];
+function canBankPickup(state: GameState, hero: Player, item: Item): boolean {
+  const player = hero;
   switch (item.kind) {
     case "medkit":
       return (
@@ -284,7 +287,10 @@ function canBankPickup(state: GameState, item: Item): boolean {
  * walks the bot into the pull chasing it — measured as repeated core deaths
  * at the rift's chest-guard well. The rim hoard is a dare for players with
  * a dash; the bot has none. */
-export function nearestWantedItem(state: GameState): Item | undefined {
+export function nearestWantedItem(
+  state: GameState,
+  hero: Player,
+): Item | undefined {
   let best: Item | undefined;
   let bestD = Infinity;
   for (const item of state.items) {
@@ -292,14 +298,13 @@ export function nearestWantedItem(state: GameState): Item | undefined {
     if (insideWellPull(state, item.pos)) continue;
     if (
       item.kind === "equipment" &&
-      !canCollectEquipment(state, state.players[0], item.equipment)
+      !canCollectEquipment(state, hero, item.equipment)
     )
       continue;
-    if (!canBankPickup(state, item)) continue;
-    const d = distance(item.pos, state.players[0].pos);
+    if (!canBankPickup(state, hero, item)) continue;
+    const d = distance(item.pos, hero.pos);
     if (d >= bestD) continue;
-    if (blockedByObstacle(state, state.players[0].pos, item.pos, PLAYER.radius))
-      continue;
+    if (blockedByObstacle(state, hero.pos, item.pos, PLAYER.radius)) continue;
     best = item;
     bestD = d;
   }
@@ -311,9 +316,9 @@ export function nearestWantedItem(state: GameState): Item | undefined {
  * current level's XP bar (the catch-up faucet), so it outranks every other
  * ground pickup; past the cap it goes cold (a sliver) and drops back to
  * ordinary loot. A rung with no cap entry never goes cold. */
-function arrowsWarm(state: GameState): boolean {
+function arrowsWarm(state: GameState, hero: Player): boolean {
   const cap = runLevelDef(state).loot.arrowCapByDifficulty?.[state.difficulty];
-  return cap === undefined || state.players[0].level < cap;
+  return cap === undefined || hero.level < cap;
 }
 
 /** The nearest collectable GOLDEN ARROW within `reach` the body can
@@ -321,6 +326,7 @@ function arrowsWarm(state: GameState): boolean {
  * ahead of everything else while the arrows are warm. */
 function nearestXpArrow(
   state: GameState,
+  hero: Player,
   reach: number = ITEM_REACH,
 ): Item | undefined {
   let best: Item | undefined;
@@ -328,10 +334,9 @@ function nearestXpArrow(
   for (const item of state.items) {
     if (item.kind !== "xp") continue;
     if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
-    const d = distance(item.pos, state.players[0].pos);
+    const d = distance(item.pos, hero.pos);
     if (d >= bestD) continue;
-    if (blockedByObstacle(state, state.players[0].pos, item.pos, PLAYER.radius))
-      continue;
+    if (blockedByObstacle(state, hero.pos, item.pos, PLAYER.radius)) continue;
     best = item;
     bestD = d;
   }
@@ -346,7 +351,7 @@ function nearestXpArrow(
  * award, so the ratio is unreadable that tick (the next arrow re-teaches it).
  * Reads only `state.events` + the bot's own memory, so determinism holds.
  */
-export function trackArrowXp(bot: Bot, state: GameState): void {
+export function trackArrowXp(bot: Bot, state: GameState, hero: Player): void {
   let award: number | undefined;
   for (const event of state.events) {
     if (event.type === "levelUp") return; // bar replaced mid-step — unreadable
@@ -355,10 +360,10 @@ export function trackArrowXp(bot: Bot, state: GameState): void {
     }
   }
   if (award === undefined) return;
-  const share = award / Math.max(1, state.players[0].xpToNext);
+  const share = award / Math.max(1, hero.xpToNext);
   bot.arrowXp = {
     pct: clamp(Math.round(share * 20) / 20, 0, 1),
-    level: state.players[0].level,
+    level: hero.level,
   };
 }
 
@@ -374,15 +379,16 @@ export function trackArrowXp(bot: Bot, state: GameState): void {
 export function dingArrowNearby(
   bot: Bot,
   state: GameState,
+  hero: Player,
   reach: number,
 ): Item | undefined {
   const learned = bot.arrowXp;
   if (!learned || learned.pct <= 0) return undefined;
-  if (!arrowsWarm(state)) return undefined;
-  const player = state.players[0];
+  if (!arrowsWarm(state, hero)) return undefined;
+  const player = hero;
   if (player.xpToNext - player.xp > learned.pct * player.xpToNext)
     return undefined; // an arrow would not tip the bar
-  return nearestXpArrow(state, reach);
+  return nearestXpArrow(state, hero, reach);
 }
 
 /** An item this close (world px) is stooped for freely — drops land where the
@@ -409,22 +415,23 @@ const ITEM_DETOUR_MIN_ALONG = -0.2;
 export function wantedItemNearby(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): Item | undefined {
-  if (arrowsWarm(state)) {
-    const arrow = nearestXpArrow(state);
+  if (arrowsWarm(state, hero)) {
+    const arrow = nearestXpArrow(state, hero);
     if (arrow) return arrow;
   }
-  const item = nearestWantedItem(state);
+  const item = nearestWantedItem(state, hero);
   if (!item) return undefined;
-  const d = distance(item.pos, state.players[0].pos);
+  const d = distance(item.pos, hero.pos);
   if (d > ITEM_REACH) return undefined;
   if (d <= ITEM_CLOSE_REACH) return item;
   if (item.kind === "equipment" || item.kind === "story") return item;
-  const heading = travelHeading(bot, state, tune);
+  const heading = travelHeading(bot, state, hero, tune);
   if (!heading) return item;
-  const ax = (item.pos.x - state.players[0].pos.x) / d;
-  const ay = (item.pos.y - state.players[0].pos.y) / d;
+  const ax = (item.pos.x - hero.pos.x) / d;
+  const ay = (item.pos.y - hero.pos.y) / d;
   const along = ax * heading.x + ay * heading.y;
   return along >= ITEM_DETOUR_MIN_ALONG ? item : undefined;
 }

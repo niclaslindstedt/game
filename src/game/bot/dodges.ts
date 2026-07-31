@@ -14,7 +14,7 @@ import { PLAYER, STAMPEDES } from "../config/index.ts";
 import { insideObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { activeMechanics } from "../mechanics/index.ts";
-import type { Asteroid, GameInput, GameState } from "../types/index.ts";
+import type { Asteroid, GameInput, GameState, Player } from "../types/index.ts";
 
 /**
  * A dodge input when a set-piece's TELEGRAPHED move (mechanics.ts) is about to
@@ -31,19 +31,22 @@ import type { Asteroid, GameInput, GameState } from "../types/index.ts";
  * stamina drain (jumps are reserved for breaking a genuine SURROUND, see
  * `survive`), and it left the hero winded for the next real pinch.
  */
-export function dodgeTelegraph(state: GameState): GameInput | null {
-  const player = state.players[0];
+export function dodgeTelegraph(
+  state: GameState,
+  hero: Player,
+): GameInput | null {
+  const player = hero;
   for (const e of state.enemies) {
     const mech = e.mech;
     if (!mech) continue;
     const def = enemyDef(e.defId);
-    const beamOut = dodgeBeam(state, e);
+    const beamOut = dodgeBeam(state, hero, e);
     if (beamOut) return beamOut;
     const slamR = def.mechanics?.slam?.radius;
     if (mech.telegraph?.kind === "slam" && slamR !== undefined) {
       const n = normalize(player.pos.x - e.pos.x, player.pos.y - e.pos.y);
       if (n.len < slamR + 28) {
-        return steer(state, {
+        return steer(state, hero, {
           x: player.pos.x + n.x * 140,
           y: player.pos.y + n.y * 140,
         });
@@ -71,7 +74,7 @@ export function dodgeTelegraph(state: GameState): GameInput | null {
             px = -px;
             py = -py;
           }
-          return steer(state, {
+          return steer(state, hero, {
             x: player.pos.x + px * 150,
             y: player.pos.y + py * 150,
           });
@@ -105,7 +108,11 @@ const BEAM_MARGIN_PX = 26;
  * the lane taking the full burn and then walks through the fire it left, which
  * would make every headless balance run of the moon meaningless.
  */
-function dodgeBeam(state: GameState, e: GameState["enemies"][number]) {
+function dodgeBeam(
+  state: GameState,
+  hero: Player,
+  e: GameState["enemies"][number],
+) {
   const mech = e.mech;
   if (!mech) return null;
   const beam = mech.beam;
@@ -132,7 +139,7 @@ function dodgeBeam(state: GameState, e: GameState["enemies"][number]) {
     reach = spec.range;
   }
 
-  const player = state.players[0];
+  const player = hero;
   const dx = player.pos.x - e.pos.x;
   const dy = player.pos.y - e.pos.y;
   const dist = Math.hypot(dx, dy);
@@ -151,7 +158,7 @@ function dodgeBeam(state: GameState, e: GameState["enemies"][number]) {
   // Walk around the boss to a bearing safely behind the beam, holding his
   // current distance — circling, not retreating, so he keeps his shot.
   const safe = bearing - BEAM_CLEAR_RAD;
-  return steer(state, {
+  return steer(state, hero, {
     x: e.pos.x + Math.cos(safe) * dist,
     y: e.pos.y + Math.sin(safe) * dist,
   });
@@ -168,9 +175,9 @@ function dodgeBeam(state: GameState, e: GameState["enemies"][number]) {
  * a beam lays a BAND of fire, so the way out is across the band, and the
  * shortest way across is the direction the patches thin out in.
  */
-export function dodgeScorch(state: GameState): GameInput | null {
+export function dodgeScorch(state: GameState, hero: Player): GameInput | null {
   if (state.scorches.length === 0) return null;
-  const player = state.players[0];
+  const player = hero;
   let inFire = false;
   // The summed outward push of every patch he is standing in: the way out of a
   // band is the way its own weight is not.
@@ -191,7 +198,7 @@ export function dodgeScorch(state: GameState): GameInput | null {
   if (!inFire) return null;
   const len = Math.hypot(awayX, awayY);
   if (len < 1e-4) return null;
-  return steer(state, {
+  return steer(state, hero, {
     x: player.pos.x + (awayX / len) * 90,
     y: player.pos.y + (awayY / len) * 90,
   });
@@ -212,9 +219,9 @@ export function dodgeScorch(state: GameState): GameInput | null {
  * straight over it, which is exactly the window the ability grants a player who
  * saw it land.
  */
-export function dodgeBait(state: GameState): GameInput | null {
+export function dodgeBait(state: GameState, hero: Player): GameInput | null {
   if (state.baits.length === 0) return null;
-  const player = state.players[0];
+  const player = hero;
   let awayX = 0;
   let awayY = 0;
   let threatened = false;
@@ -236,7 +243,7 @@ export function dodgeBait(state: GameState): GameInput | null {
   if (!threatened) return null;
   const len = Math.hypot(awayX, awayY);
   if (len < 1e-4) return null;
-  return steer(state, {
+  return steer(state, hero, {
     x: player.pos.x + (awayX / len) * 80,
     y: player.pos.y + (awayY / len) * 80,
   });
@@ -255,10 +262,11 @@ export function dodgeBait(state: GameState): GameInput | null {
  */
 export function dodgeHayBall(
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput | null {
   if (state.hayBalls.length === 0 || tune.hayBallDodgeDist <= 0) return null;
-  const player = state.players[0];
+  const player = hero;
   const midY = state.level.height / 2;
   let threat: (typeof state.hayBalls)[number] | null = null;
   let best = Infinity;
@@ -281,7 +289,12 @@ export function dodgeHayBall(
     sign = player.pos.y > midY ? -1 : 1;
   const grounded = player.z === 0;
   const jump = grounded && best <= threat.radius + PLAYER.radius;
-  return steer(state, { x: player.pos.x, y: player.pos.y + sign * 90 }, jump);
+  return steer(
+    state,
+    hero,
+    { x: player.pos.x, y: player.pos.y + sign * 90 },
+    jump,
+  );
 }
 
 /**
@@ -297,9 +310,10 @@ export function dodgeHayBall(
  */
 export function dodgeSandstorm(
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput | null {
-  const pos = state.players[0].pos;
+  const pos = hero.pos;
   for (const storm of state.sandstorms) {
     if (storm.struck) continue;
     const dir = storm.dir;
@@ -333,7 +347,7 @@ export function dodgeSandstorm(
       tx = pos.x - px * stepOut;
       ty = pos.y - py * stepOut;
     }
-    return steer(state, { x: tx, y: ty });
+    return steer(state, hero, { x: tx, y: ty });
   }
   return null;
 }
@@ -352,10 +366,11 @@ export function dodgeSandstorm(
  */
 export function dodgeStampede(
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput | null {
   if (state.stampedes.length === 0 || tune.stampedeDodgeDist <= 0) return null;
-  const player = state.players[0];
+  const player = hero;
   if (player.z > 0) return null; // already airborne — the current hop clears it
   const laneReach =
     STAMPEDES.bandHalfHeight + PLAYER.radius + tune.stampedeLaneMargin;
@@ -368,7 +383,7 @@ export function dodgeStampede(
     if (ahead < -nearReach * 2) continue; // already charged past him
     if (ahead > tune.stampedeDodgeDist) continue; // still too far to commit the hop
     // Hop in place — steer to hold his ground and clear the wall overhead.
-    return steer(state, { x: player.pos.x, y: player.pos.y }, true);
+    return steer(state, hero, { x: player.pos.x, y: player.pos.y }, true);
   }
   return null;
 }
@@ -393,8 +408,8 @@ const WELL_DODGE_TANGENT = 0.55;
  * Kiting is what feeds the hole (the survivor backs away from the horde and
  * into the pull, eyes on the fight), so this preempts every combat branch.
  */
-export function dodgeWell(state: GameState): GameInput | null {
-  const player = state.players[0];
+export function dodgeWell(state: GameState, hero: Player): GameInput | null {
+  const player = hero;
   for (const well of state.wells) {
     const n = normalize(player.pos.x - well.pos.x, player.pos.y - well.pos.y);
     const danger = wellDangerRadius(well);
@@ -433,6 +448,7 @@ export function dodgeWell(state: GameState): GameInput | null {
     const jump = player.z === 0 && pullHere > PLAYER.speed * 0.6;
     return steer(
       state,
+      hero,
       {
         x: well.pos.x + e.x * out,
         y: well.pos.y + e.y * out,
@@ -462,9 +478,12 @@ const ASTEROID_DODGE_LEAD_MS = 1100;
  * margin). Standing dead on the mark, it breaks the tie toward the map centre
  * so the dodge never walks him off the field.
  */
-export function dodgeAsteroid(state: GameState): GameInput | null {
+export function dodgeAsteroid(
+  state: GameState,
+  hero: Player,
+): GameInput | null {
   if (state.asteroids.length === 0) return null;
-  const player = state.players[0];
+  const player = hero;
   let threat: Asteroid | null = null;
   let soonest = Infinity;
   for (const rock of state.asteroids) {
@@ -488,7 +507,7 @@ export function dodgeAsteroid(state: GameState): GameInput | null {
     });
     if (away.x === 0 && away.y === 0) away = { x: 1, y: 0 };
   }
-  return steer(state, {
+  return steer(state, hero, {
     x: threat.target.x + away.x * (clear + 40),
     y: threat.target.y + away.y * (clear + 40),
   });

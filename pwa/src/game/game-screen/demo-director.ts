@@ -379,7 +379,7 @@ export function createDemoDirector(deps: {
     screenRef.current?.querySelector(`[aria-label="stat-${stat}"]`) ?? null;
   const stepLevelup = (dtMs: number) => {
     if (!bot || localHero(state).pendingStatPoints <= 0) return;
-    const stat = botAllocate(bot, state);
+    const stat = botAllocate(bot, state, localHero(state));
     const btn = statButton(stat);
     // The modal paints one render frame after the phase flips; hold off until
     // its stat buttons exist so the tip anchors and the reveal beat both start
@@ -445,12 +445,12 @@ export function createDemoDirector(deps: {
     screenRef.current?.querySelector(`[aria-label="talent-${id}"]`) ?? null;
   const stepTalent = (dtMs: number) => {
     if (!bot || state.pendingTalentPoints.length === 0) return;
-    const id = botPickTalent(bot, state);
+    const id = botPickTalent(bot, state, localHero(state));
     // No pickable talent (a maxed tree): fall back to the instant drain so the
     // queue can't wedge the run behind a picker nothing will ever spend.
     if (!id) {
       while (state.pendingTalentPoints.length > 0) {
-        const next = botPickTalent(bot, state);
+        const next = botPickTalent(bot, state, localHero(state));
         if (!next || !runCommandOk(state, "spendTalentPoint", next)) break;
       }
       bumpUi();
@@ -525,19 +525,19 @@ export function createDemoDirector(deps: {
       );
       const rows = screenRef.current?.querySelectorAll(".wpn-switch-slot");
       if (order >= 0) tapFx.rippleOnEl(rows?.[order]);
-      const changed = stepBotWeaponSwap(drivingBot, state);
+      const changed = stepBotWeaponSwap(drivingBot, state, localHero(state));
       setWeaponMenuOpen(false);
       bumpUi();
       return changed;
     }
-    const index = botWeaponSwapTarget(drivingBot, state);
+    const index = botWeaponSwapTarget(drivingBot, state, localHero(state));
     if (index < 0) return false;
     const slot = screenRef.current?.querySelector(
       '[aria-label="switch-weapon"]',
     );
     // No HUD yet (the switcher slot mounts with the playing HUD): commit the
     // swap plainly rather than stalling the bot's arsenal behind the look.
-    if (!slot) return stepBotWeaponSwap(drivingBot, state);
+    if (!slot) return stepBotWeaponSwap(drivingBot, state, localHero(state));
     tapFx.rippleOnEl(slot);
     setWeaponMenuOpen(true);
     bumpUi();

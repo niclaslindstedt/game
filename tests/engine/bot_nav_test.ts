@@ -33,7 +33,7 @@ function drive(
 ): number {
   for (let i = 0; i < maxSteps; i++) {
     if (done?.(state)) return i;
-    step(state, botAct(bot, state), DT);
+    step(state, botAct(bot, state, state.players[0]), DT);
   }
   return maxSteps;
 }
@@ -153,7 +153,7 @@ describe("bot guidance-arrow march", () => {
     state.obstacles = state.obstacles.filter((o) => !o.chest);
     state.pathIndex = 4; // every waypoint retired — the arrow is gone
     const bot = createBot("survivor");
-    botAct(bot, state);
+    botAct(bot, state, state.players[0]);
     expect(bot.lastThought).not.toBe("FOLLOW ARROW");
   });
 });
@@ -200,7 +200,7 @@ describe("bot wall sense on the uncovered map (fog of war)", () => {
     // that ground is uncovered, so the minimap KNOWS where the wall stops.
     explore(state, 40, 850, 620, 1450);
     const bot = createBot("survivor");
-    const t = navTarget(bot, state, goal);
+    const t = navTarget(bot, state, state.players[0], goal);
     // The sense points past the wall's north end — real eastward progress —
     // and latches the traced side.
     expect(t.y).toBeLessThan(1000);
@@ -217,11 +217,11 @@ describe("bot wall sense on the uncovered map (fog of war)", () => {
     // stand at the wall or wander south into the proven dead end.
     explore(state, 40, 1240, 620, 1600);
     const bot = createBot("survivor");
-    const t = navTarget(bot, state, goal);
+    const t = navTarget(bot, state, state.players[0], goal);
     expect(t.y).toBeLessThan(1320 - 40);
     expect(bot.trace).toEqual({ side: -1 });
     // The committed side HOLDS on the next read — no flip-flop mid-wall.
-    expect(navTarget(bot, state, goal).y).toBeLessThan(1320);
+    expect(navTarget(bot, state, state.players[0], goal).y).toBeLessThan(1320);
     expect(bot.trace).toEqual({ side: -1 });
   });
 });
