@@ -1841,12 +1841,31 @@ deliberately absent from a browser build.
 Three of these dependencies are non-obvious, so the order is stated once rather
 than rediscovered:
 
-1. **§7.1 — `botAct(bot, state, hero)`.** 164 sites across 14 files, the same
-   mechanical refactor §3.1 did to the engine, single player byte-identical at
-   every commit. **It sorts first because it unblocks the most** — four of the
-   items below wait on it — and because it is the one large item that is a
-   rename rather than a design. The hard half is already done: `Bot` owns all
-   its own memory and `step()` already takes a `PartyInput`.
+1. **§7.1 — `botAct(bot, state, hero)`. LANDED.** 164 sites across 12 files,
+   the same mechanical refactor §3.1 did to the engine. The hard half was
+   already done, exactly as predicted: `Bot` owns all its own memory and
+   `step()` already takes a `PartyInput`, so no design question came up in any
+   of the twelve files.
+
+   **BYTE-IDENTITY WAS PROVEN RATHER THAN ARGUED**: two full seeded campaigns
+   (moon/medium/4242 and goodco_hq/hard/777) produce simulator reports
+   byte-identical to the ones `main` produces — every kill, drop, damage
+   figure, weapon swap and death — and all 172 existing bot tests pass
+   unchanged. `tests/engine/bot_party_test.ts` is the new half: every other bot
+   suite flies ONE hero and would pass with the refactor reverted, so that file
+   is the one that fails if a `state.players[0]` creeps back in.
+
+   **AND THE METHOD IS WORTH RECORDING, because two attempts were thrown away
+   first.** A rewrite keyed on "insert after the `state` argument" mangles the
+   helpers that legitimately take `(state, tune)`; one keyed on "a function
+   mentioning `hero`" reaches every unrelated file with a local of that name.
+   Both failed the same way — the rule deciding what to edit was not derived
+   from the refactor, so neither could tell its own damage from its own work.
+   What worked was a REGISTRY: a function needs the parameter iff it reads seat
+   0 or calls something already registered, and a call gets the argument iff its
+   callee is registered, inserted at the index that callee's own declaration
+   uses. Anything outside `src/game/bot/` was done by hand.
+
 2. **§7.2 — the simulator flies a party.** `--party N` for how many bots, never
    `--players N`, which already means the hp/XP scaling and is the collision
    most worth avoiding. The report is seat-0 shaped and has to grow.

@@ -19,7 +19,12 @@ import type { BotTuning } from "./tuning.ts";
 import type { ThoughtMemory } from "./thoughts.ts";
 import { BOT_TUNING_OVERRIDES } from "../../generated/botTuning.ts";
 import type { NavGrid } from "../pathfind.ts";
-import type { GameInput, GameState, WeaponClass } from "../types/index.ts";
+import type {
+  GameInput,
+  GameState,
+  Player,
+  WeaponClass,
+} from "../types/index.ts";
 
 export type BotStrategy =
   | "idle"
@@ -436,10 +441,9 @@ export function setBotWaypoint(bot: Bot, target: Vec2 | null): void {
 
 /** Consume a pinned waypoint once the hero has arrived. Called once per tick
  * from {@link decideAct}; mutates only bot memory, so determinism holds. */
-export function trackWaypoint(bot: Bot, state: GameState): void {
+export function trackWaypoint(bot: Bot, state: GameState, hero: Player): void {
   if (!bot.waypoint) return;
-  if (distance(state.players[0].pos, bot.waypoint) <= WAYPOINT_REACH)
-    bot.waypoint = null;
+  if (distance(hero.pos, bot.waypoint) <= WAYPOINT_REACH) bot.waypoint = null;
 }
 
 /**

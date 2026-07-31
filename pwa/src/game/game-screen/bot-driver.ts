@@ -143,7 +143,11 @@ export function createBotDriver(deps: {
       if (demo) {
         demoDirector.stepLevelup(dtMs);
       } else {
-        runCommandOk(state, "allocateStat", botAllocate(drivingBot, state));
+        runCommandOk(
+          state,
+          "allocateStat",
+          botAllocate(drivingBot, state, localHero(state)),
+        );
         bumpUi();
       }
     } else if (demo) {
@@ -152,7 +156,11 @@ export function createBotDriver(deps: {
     if (state.phase === "respec") {
       // Spend the refunded pool point-by-point, then commit and drop in.
       if (localHero(state).pendingStatPoints > 0) {
-        runCommandOk(state, "allocateStat", botAllocate(drivingBot, state));
+        runCommandOk(
+          state,
+          "allocateStat",
+          botAllocate(drivingBot, state, localHero(state)),
+        );
       } else {
         runCommandOk(state, "confirmRespec");
       }
@@ -172,7 +180,7 @@ export function createBotDriver(deps: {
       } else {
         let picked = false;
         while (state.pendingTalentPoints.length > 0) {
-          const id = botPickTalent(drivingBot, state);
+          const id = botPickTalent(drivingBot, state, localHero(state));
           if (!id || !runCommandOk(state, "spendTalentPoint", id)) break;
           picked = true;
         }
@@ -203,7 +211,7 @@ export function createBotDriver(deps: {
       // commits it silently.
       const swapped = demo
         ? demoDirector.stepWeaponSwap(drivingBot, dtMs)
-        : stepBotWeaponSwap(drivingBot, state);
+        : stepBotWeaponSwap(drivingBot, state, localHero(state));
       if (swapped) bumpUi();
       // KEEP THE FRIEND ON ITS FEET — the same call the campaign sim makes, in
       // the same place, for both bot seats: a downed companion is woken with a
@@ -212,11 +220,11 @@ export function createBotDriver(deps: {
       // (with the gate-key ritual) because the developer BOT VIEW is where this
       // gets measured, and a bot that plays the companion rules only when a
       // player is paying for it measures nothing.
-      if (careForCompanion(state)) bumpUi();
+      if (careForCompanion(state, localHero(state))) bumpUi();
       if (
-        wantsMerchantVisit(state) &&
+        wantsMerchantVisit(state, localHero(state)) &&
         state.stats.timeMs - botShopMsRef.current >= BOT_SHOP_COOLDOWN_MS &&
-        tradeAtMerchant(state)
+        tradeAtMerchant(state, localHero(state))
       ) {
         botShopMsRef.current = state.stats.timeMs;
         bumpUi();
@@ -235,7 +243,7 @@ export function createBotDriver(deps: {
         if (keyAt >= 0 && runCommandOk(state, "spendGateKey", keyAt)) bumpUi();
       }
     }
-    const decided = botAct(drivingBot, state);
+    const decided = botAct(drivingBot, state, localHero(state));
     // HOW TO PLAY: keep the watched hero from strobing left↔right as the
     // bot re-steers each tick (a no-op outside the demo — the developer
     // BOT VIEW shows the raw steer).
@@ -294,9 +302,9 @@ export function createBotDriver(deps: {
   // open cell.
   const postStep = (drivingBot: Bot | null) => {
     if (drivingBot && state.phase === "playing") {
-      if (botAutoEquip(state)) bumpUi();
-      cullWorstLoot(state);
-      if (sortBotInventory(state)) bumpUi();
+      if (botAutoEquip(state, localHero(state))) bumpUi();
+      cullWorstLoot(state, localHero(state));
+      if (sortBotInventory(state, localHero(state))) bumpUi();
     }
   };
 

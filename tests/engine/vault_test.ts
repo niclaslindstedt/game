@@ -174,7 +174,7 @@ describe("the bag discipline fills it (cullWorstLoot)", () => {
     for (let i = 0; i < inv.length; i++) {
       inv[i] = piece(state, "blaster", "weapon", i === 1 ? "regular" : "magic");
     }
-    const shed = cullWorstLoot(state);
+    const shed = cullWorstLoot(state, state.players[0]);
     expect(shed).toHaveLength(1);
     expect(shed[0]?.tier).toBe("regular");
     // A plain find is junk — binned, not banked.
@@ -193,7 +193,7 @@ describe("the bag discipline fills it (cullWorstLoot)", () => {
     // the hero's banked MAIN weapon, which the swap system always spares.)
     const magic = piece(state, "test_hammer", "weapon", "magic");
     inv[1] = magic;
-    const shed = cullWorstLoot(state);
+    const shed = cullWorstLoot(state, state.players[0]);
     expect(shed).toHaveLength(1);
     expect(shed[0]?.id).toBe(magic.id);
     expect(inv.some((c) => c?.tier === "unique")).toBe(true);
@@ -210,7 +210,7 @@ describe("the bag discipline fills it (cullWorstLoot)", () => {
     fillBag(state, "unique");
     const set = piece(state, "test_hammer", "weapon", "set");
     inv[2] = set;
-    const shed = cullWorstLoot(state);
+    const shed = cullWorstLoot(state, state.players[0]);
     expect(shed).toHaveLength(1);
     expect(shed[0]?.id).toBe(set.id);
     expect(inv.indexOf(null)).not.toBe(-1);
@@ -226,7 +226,7 @@ describe("the bag discipline fills it (cullWorstLoot)", () => {
     // shed, and its worth is the door it opens.
     const key = piece(state, "test_gate_key", "trinket", "regular");
     inv[1] = key;
-    cullWorstLoot(state);
+    cullWorstLoot(state, state.players[0]);
     expect(inv.some((c) => c?.id === key.id)).toBe(true);
   });
 });

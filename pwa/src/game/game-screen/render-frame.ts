@@ -412,7 +412,7 @@ export function createRenderFrame(deps: {
     }
 
     // BOT VIEW: the autopilot's steering readout — a fixed lower-right dpad
-    // mirroring the bot's steer (direction + pace). Shown only while the bot
+    // mirroring the bot's steer (direction + pace, localHero(state)). Shown only while the bot
     // drives; normal play hides it (the human has their own anchored dpad
     // above). The steer target is the bot's world point relative to the hero
     // — the exact input step() consumes this frame — but the bot re-picks it

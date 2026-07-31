@@ -62,7 +62,7 @@ import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import { staminaRegenPerSec, weaponRangeFor } from "../items/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
-import type { GameInput, GameState } from "../types/index.ts";
+import type { GameInput, GameState, Player } from "../types/index.ts";
 
 /** On a path level, how close (world px) the hero must be to the boss to LOCK
  * onto it and fight it down rather than kite its adds — a boss-room-sized ring,
@@ -87,6 +87,7 @@ const OVERWHELMED_HP_FRAC = 0.7;
 export function pushBoss(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput {
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
@@ -95,22 +96,24 @@ export function pushBoss(
     think(bot, "IDLE");
     return idleInput();
   }
-  const d = distance(state.players[0].pos, target);
-  const hold =
-    weaponRangeFor(state, state.players[0], state.players[0].equipment.weapon) *
-    0.7;
+  const d = distance(hero.pos, target);
+  const hold = weaponRangeFor(state, hero, hero.equipment.weapon) * 0.7;
   // Far from the boss → follow a global A* route to him, so the runner rounds
   // every wall on the way instead of beelining through them. Close enough →
   // circle-strafe at weapon range and fight (a moving orbit slips his fire).
   if (d > hold + 60) {
     think(bot, "APPROACH BOSS");
-    return routeSteer(bot, state, target);
+    return routeSteer(bot, state, hero, target);
   }
   // The boss fight is URGENCY: the orbit's whole point is moving faster than
   // his aim, so it never drops to the recovery walk however low the pool sits.
   think(bot, "FIGHT BOSS");
   return sprint(
-    steer(state, orbitHold(bot, state, target, hold, tune.orbitStep)),
+    steer(
+      state,
+      hero,
+      orbitHold(bot, state, hero, target, hold, tune.orbitStep),
+    ),
   );
 }
 
@@ -135,18 +138,19 @@ export function pushBoss(
 function topUpBeforeFight(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput | null {
   if (tune.topUpSpotDist <= 0) return null;
-  const player = state.players[0];
+  const player = hero;
   // The rested bar slides with BRAVERY: a timid rookie tops to 100% before
   // engaging, a kitted shredder settles for ~70% (TOPUP_BRAVE_MIN_FRAC) —
   // idling for the last drops before an easy fight is its own waste.
   const target =
     player.maxStamina *
-    (1 - (1 - TOPUP_BRAVE_MIN_FRAC) * braveryScore(bot, state));
+    (1 - (1 - TOPUP_BRAVE_MIN_FRAC) * braveryScore(bot, state, hero));
   if (player.stamina >= target) return null; // rested — engage
-  const foe = nearestEnemy(state);
+  const foe = nearestEnemy(state, hero);
   if (!foe) return null;
   const d = distance(player.pos, foe.pos);
   if (d > tune.topUpSpotDist) return null; // nothing spotted — open field
@@ -162,7 +166,7 @@ function topUpBeforeFight(
   const walkContactS = d / Math.max(1, foe.speed + walkSpeed);
   if (walkRefillS <= walkContactS) {
     // The walk refills in time — keep marching, at the breather pace.
-    const input = macroSteer(bot, state, tune);
+    const input = macroSteer(bot, state, hero, tune);
     input.throttle = STAMINA.walkThrottle;
     return input;
   }
@@ -199,11 +203,12 @@ function topUpBeforeFight(
 function commitHop(
   bot: Bot,
   state: GameState,
+  hero: Player,
   target: Vec2,
   flee: boolean,
   tune: BotTuning,
 ): boolean {
-  const pos = state.players[0].pos;
+  const pos = hero.pos;
   const n = normalize(target.x - pos.x, target.y - pos.y);
   // No ground to gain — a hop in place is a loser move.
   if (n.len < 1) return false;
@@ -240,10 +245,11 @@ function commitHop(
 export function survive(
   bot: Bot,
   state: GameState,
+  hero: Player,
   posture: Posture,
   tune: BotTuning,
 ): GameInput {
-  const player = state.players[0];
+  const player = hero;
   let pt = tune.postures[posture];
   // RUSH THE OBJECTIVE: leveled for this map's named foes (readyForBoss — the
   // bossEngageMargin knob, e.g. committed from one level below) and marching
@@ -255,29 +261,29 @@ export function survive(
   // off at every scuffle on the way. `flee` keeps its deliberate cowardice.
   const rushing =
     posture !== "flee" &&
-    readyForBoss(state, tune) &&
-    marchingOnFoe(bot, state, tune);
+    readyForBoss(state, hero, tune) &&
+    marchingOnFoe(bot, state, hero, tune);
   if (posture === "balanced" && rushing) pt = tune.postures.aggro;
-  const near = threatsWithin(state, THREAT_RADIUS);
+  const near = threatsWithin(state, hero, THREAT_RADIUS);
 
   // 1. Breathing room: grab a pickup within reach; else follow the MACRO TRAVEL
   //    plan — farm this patch's spawner, sweep to the nearest reachable
   //    chest/elite, uncover remaining fog, and only then push the boss — routed
   //    globally (A*) so the runner threads the whole map to whatever's next.
   if (near.length === 0) {
-    const item = wantedItemNearby(bot, state, tune);
+    const item = wantedItemNearby(bot, state, hero, tune);
     if (item) {
       think(bot, "GRAB ITEM");
       // Wall-aware: the drop was sweep-clear when picked, but the walk can
       // still clip a shelf edge — round it instead of grinding on it.
-      return navSteer(bot, state, item.pos);
+      return navSteer(bot, state, hero, item.pos);
     }
     // CRACK A CHEST ON THE WAY: an un-looted locker within reach on a quiet
     // field is never walked past — close to weapon range and PLANT; with no
     // foe in reach the auto-attack turns on the nearest breakable box
     // (stepWeapon) and smashes it open, and standing still tops the pool up
     // while it does. The macro content sweep still routes to the far ones.
-    const chest = nearestChestNearby(state, tune);
+    const chest = nearestChestNearby(state, hero, tune);
     if (chest) {
       think(bot, "CRACK CHEST");
       const reach = weaponRangeFor(state, player, player.equipment.weapon);
@@ -292,12 +298,12 @@ export function survive(
           jump: false,
         };
       }
-      return navSteer(bot, state, chest.pos);
+      return navSteer(bot, state, hero, chest.pos);
     }
     // PRE-FIGHT TOP-UP: a pack spotted ahead is engaged at a FULL pool — the
     // where-do-we-meet read either walks the approach or plants a BREATHER
     // (see topUpBeforeFight).
-    const topUp = topUpBeforeFight(bot, state, tune);
+    const topUp = topUpBeforeFight(bot, state, hero, tune);
     if (topUp) return topUp;
     // On FOOT, never hopping: a jump on open ground buys nothing (the
     // untouchable frames matter only with a body about to bite) and each
@@ -305,7 +311,7 @@ export function survive(
     // back — the old travel-hop ground the pool to zero crossing a quiet
     // field. Jumps stay reserved for the reflexes (stampede) and the
     // surround/bleeding break-outs below.
-    return macroSteer(bot, state, tune);
+    return macroSteer(bot, state, hero, tune);
   }
 
   const grounded = player.z === 0;
@@ -319,7 +325,7 @@ export function survive(
   const nearestD = distance(player.pos, nearest.pos);
   // A NUKE in the dock buys DARING: the bot keeps the classic forward kite and
   // skips the escape-route guard — worst case, the button clears the screen.
-  const daring = hasNukeBanked(state);
+  const daring = hasNukeBanked(state, hero);
   // OVERWHELMED — the fight is actually going badly: the bar has been chewed
   // below the caution line. This is what arms the DEFENSIVE reads (the
   // escape-route guard, the kite-backward drift): a healthy hero holds the
@@ -350,7 +356,8 @@ export function survive(
   // of it, keeping the pool full so he outpaces it rather than hopping the whole
   // way and winding himself. `hasHopStamina` is the pool floor a hop needs, so
   // the bot never asks for a takeoff the engine would refuse.
-  const surrounded = packed.length >= pt.surround && isEncircled(state, packed);
+  const surrounded =
+    packed.length >= pt.surround && isEncircled(state, hero, packed);
   // The pool floor a discretionary hop needs: enough for the takeoff the engine
   // would otherwise refuse (`STAMINA.jumpCost`) AND a RESERVE on top
   // (`hopStaminaReserve`) so a break-out never taps the pool to the bottom and
@@ -420,7 +427,7 @@ export function survive(
   // there an awake boss locks at once: the fight has started, and drifting
   // back to the swarm between exchanges is how an engaged JESUS boss
   // survived whole runs (engaged at minute 9, still alive at the clock).
-  const bossReady = readyForBoss(state, tune) || parityHopeless(state);
+  const bossReady = readyForBoss(state, hero, tune) || parityHopeless(state);
   const lockTarget =
     bossEnemy !== undefined &&
     bossReady &&
@@ -445,20 +452,21 @@ export function survive(
       // A DINGING golden arrow beats any medkit: the level-up it tips is a
       // free FULL heal + stamina refill (see Bot.arrowXp — the bot knows what
       // an arrow pays from experience), and the medkit stays pocketed.
-      const arrow = dingArrowNearby(bot, state, ITEM_REACH);
+      const arrow = dingArrowNearby(bot, state, hero, ITEM_REACH);
       if (arrow) {
         think(bot, "GRAB ARROW");
         return sprint(
           navSteer(
             bot,
             state,
+            hero,
             arrow.pos,
-            wantHop && commitHop(bot, state, arrow.pos, true, tune),
+            wantHop && commitHop(bot, state, hero, arrow.pos, true, tune),
           ),
         );
       }
       // Else a medkit within reach is worth the detour when we're bleeding.
-      const item = nearestWantedItem(state);
+      const item = nearestWantedItem(state, hero);
       if (
         item &&
         item.kind === "medkit" &&
@@ -469,8 +477,9 @@ export function survive(
           navSteer(
             bot,
             state,
+            hero,
             item.pos,
-            wantHop && commitHop(bot, state, item.pos, true, tune),
+            wantHop && commitHop(bot, state, hero, item.pos, true, tune),
           ),
         );
       }
@@ -479,13 +488,14 @@ export function survive(
     // The break-out lane avoids FORWARD (the fresh spawns live up the axis)
     // unless a banked nuke makes the bot daring. An emergency is URGENCY —
     // it sprints on whatever pool is left.
-    const out = bestEscapeTarget(state, near, !daring);
+    const out = bestEscapeTarget(state, hero, near, !daring);
     return sprint(
       navSteer(
         bot,
         state,
+        hero,
         out,
-        wantHop && commitHop(bot, state, out, true, tune),
+        wantHop && commitHop(bot, state, hero, out, true, tune),
       ),
     );
   }
@@ -501,6 +511,7 @@ export function survive(
     const hold = orbitHold(
       bot,
       state,
+      hero,
       lockTarget.pos,
       reach * 0.7,
       tune.orbitStep,
@@ -514,9 +525,9 @@ export function survive(
       hopReady &&
       hasHopStamina &&
       nearestD < CONTACT_DODGE_RADIUS &&
-      commitHop(bot, state, hold, false, tune);
+      commitHop(bot, state, hero, hold, false, tune);
     // A locked boss fight is URGENCY — the orbit never drops to a walk.
-    return sprint(steer(state, hold, lockHop));
+    return sprint(steer(state, hero, hold, lockHop));
   }
 
   // 2.6. STOCK A REPAIR KIT. The held weapon is wearing thin (or a broken spare
@@ -528,13 +539,13 @@ export function survive(
   //    downgrade → repair → re-equip cycle close. Only when not pressed (nearest
   //    body beyond the danger bubble), so scooping loot never walks into a bite.
   const dangerHold = tune.graspStandoff * pt.standoffMul;
-  if (wantsRepairKitPickup(state) && nearestD > dangerHold) {
-    const kit = nearestRepairKit(state);
+  if (wantsRepairKitPickup(state, hero) && nearestD > dangerHold) {
+    const kit = nearestRepairKit(state, hero);
     if (kit && distance(player.pos, kit.pos) < ITEM_REACH) {
       think(bot, "GET REPAIR");
       // On foot — a supply detour is no place to spend jump stamina (the old
       // `grounded` flag here hopped the whole walk to the kit).
-      return navSteer(bot, state, kit.pos);
+      return navSteer(bot, state, hero, kit.pos);
     }
   }
 
@@ -547,10 +558,10 @@ export function survive(
   //    route), so the detour never walks into the horde, ends at a refused
   //    pickup, or yanks the march around in circles on a loot-rich field.
   if (nearestD > dangerHold) {
-    const loot = wantedItemNearby(bot, state, tune);
+    const loot = wantedItemNearby(bot, state, hero, tune);
     if (loot && distance(player.pos, loot.pos) < nearestD) {
       think(bot, "GRAB ITEM");
-      return navSteer(bot, state, loot.pos);
+      return navSteer(bot, state, hero, loot.pos);
     }
   }
 
@@ -568,7 +579,7 @@ export function survive(
   //    the errand is abandoned; the danger-bubble gate still yields to any
   //    body that actually breaches.
   if (nearestD > dangerHold) {
-    const chest = nearestChestNearby(state, tune);
+    const chest = nearestChestNearby(state, hero, tune);
     if (chest) {
       const chestD = distance(player.pos, chest.pos);
       const committed =
@@ -591,7 +602,7 @@ export function survive(
             jump: false,
           };
         }
-        return navSteer(bot, state, chest.pos);
+        return navSteer(bot, state, hero, chest.pos);
       }
     }
   }
@@ -610,21 +621,26 @@ export function survive(
     // Openness is judged on RAW pressure + walls only (no forward tiebreak) —
     // an exit is an exit; the spawn-side preference only decides which one to
     // take once the guard trips.
-    const lanes = escapeLaneScores(state, near, false);
+    const lanes = escapeLaneScores(state, hero, near, false);
     let open = 0;
     for (const s of lanes) {
       if (s < OPEN_LANE_SCORE) open++;
     }
     if (open < tune.escapeLaneMin) {
       think(bot, "KEEP EXIT");
-      const lane = bestLanePoint(state, escapeLaneScores(state, near, true));
+      const lane = bestLanePoint(
+        state,
+        hero,
+        escapeLaneScores(state, hero, near, true),
+      );
       // Getting to the open lane before the ring closes is URGENCY.
       return sprint(
         navSteer(
           bot,
           state,
+          hero,
           lane,
-          wantHop && commitHop(bot, state, lane, true, tune),
+          wantHop && commitHop(bot, state, hero, lane, true, tune),
         ),
       );
     }
@@ -642,9 +658,9 @@ export function survive(
   //    emergency bails above still outrank it, and a genuine surround still
   //    hops (`wantHop`).
   if (rushing && !overwhelmed && !recentlyHurt) {
-    const goal = macroTarget(bot, state, tune);
+    const goal = macroTarget(bot, state, hero, tune);
     const routeTgt = navigatesWalls(state)
-      ? routeTarget(bot, state, goal)
+      ? routeTarget(bot, state, hero, goal)
       : goal;
     const h = normalize(routeTgt.x - player.pos.x, routeTgt.y - player.pos.y);
     if (h.len >= 1) {
@@ -663,10 +679,11 @@ export function survive(
         navSteer(
           bot,
           state,
+          hero,
           press,
           wantHop &&
-            (ranged || hasPocketShooter(state)) &&
-            commitHop(bot, state, press, false, tune),
+            (ranged || hasPocketShooter(state, hero)) &&
+            commitHop(bot, state, hero, press, false, tune),
         ),
       );
     }
@@ -804,10 +821,10 @@ export function survive(
   const back =
     daring || !overwhelmed || packed.length < 3
       ? null
-      : retreatHeading(state, tune);
+      : retreatHeading(state, hero, tune);
   const away = back
-    ? awayFromPack(state, near, back, tune.retreatBackBias)
-    : awayFromPack(state, near, travelHeading(bot, state, tune));
+    ? awayFromPack(state, hero, near, back, tune.retreatBackBias)
+    : awayFromPack(state, hero, near, travelHeading(bot, state, hero, tune));
   // The engage hold is a SWEET SPOT, not a knife-edge: the DEADBAND (`band`,
   // computed above) around engageDist inside which the hero simply STANDS AND
   // FIRES. Once a foe sits within reach and outside the danger bubble there is
@@ -834,7 +851,7 @@ export function survive(
     // onto its danger bubble, so `nearestD < engageDist - band` implies
     // `nearestD < dangerDist` for a blade — the kite-forward zone is empty and
     // melee grind is unchanged.)
-    const forward = travelHeading(bot, state, tune);
+    const forward = travelHeading(bot, state, hero, tune);
     const kiteFwd =
       nearestD >= dangerDist &&
       !overwhelmed &&
@@ -848,7 +865,7 @@ export function survive(
       // with the (unit) objective heading can never flip the march backward.
       const span = Math.max(1, engageDist - band - dangerDist);
       const closeness = clamp((engageDist - band - nearestD) / span, 0, 1);
-      const awayUnit = awayFromPack(state, near);
+      const awayUnit = awayFromPack(state, hero, near);
       const push = tune.kiteForwardPush * closeness;
       const h = normalize(
         forward.x + awayUnit.x * push,
@@ -861,7 +878,7 @@ export function survive(
       };
       // Non-sprint (like ADVANCE): draining a knot on the move keeps the pack in
       // weapon range and banks stamina — no gap to open, so no reason to burn it.
-      return navSteer(bot, state, step);
+      return navSteer(bot, state, hero, step);
     }
     // A genuine ring (or a bleeding hero taking a bite) HOPS clear; an ordinary
     // standoff reset gives ground on foot — see `wantHop`. The hop commits to
@@ -876,8 +893,9 @@ export function survive(
       navSteer(
         bot,
         state,
+        hero,
         fall,
-        wantHop && commitHop(bot, state, fall, true, tune),
+        wantHop && commitHop(bot, state, hero, fall, true, tune),
       ),
     );
   }
@@ -903,11 +921,11 @@ export function survive(
       tune.advanceCloseIn > 0 &&
       nearestD <= engageDist + band + tune.advanceCloseIn;
     const goal = closingIn
-      ? holdOff(state, nearest.pos, engageDist)
-      : macroTarget(bot, state, tune);
+      ? holdOff(state, hero, nearest.pos, engageDist)
+      : macroTarget(bot, state, hero, tune);
     const routeTgt =
       navigatesWalls(state) && !closingIn
-        ? routeTarget(bot, state, goal)
+        ? routeTarget(bot, state, hero, goal)
         : goal;
     const h = normalize(routeTgt.x - player.pos.x, routeTgt.y - player.pos.y);
     const hx = h.len < 1 ? away.x : h.x;
@@ -924,10 +942,11 @@ export function survive(
     return navSteer(
       bot,
       state,
+      hero,
       press,
       wantHop &&
-        (ranged || hasPocketShooter(state)) &&
-        commitHop(bot, state, press, false, tune),
+        (ranged || hasPocketShooter(state, hero)) &&
+        commitHop(bot, state, hero, press, false, tune),
     );
   }
   // SWEET SPOT — a foe sits inside the hold band: STAND HIS GROUND and let the
@@ -946,7 +965,13 @@ export function survive(
       y: player.pos.y + away.y * 150,
     };
     return sprint(
-      navSteer(bot, state, out, commitHop(bot, state, out, true, tune)),
+      navSteer(
+        bot,
+        state,
+        hero,
+        out,
+        commitHop(bot, state, hero, out, true, tune),
+      ),
     );
   }
   think(bot, "HOLD");

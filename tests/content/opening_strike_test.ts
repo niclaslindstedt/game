@@ -502,7 +502,7 @@ describe("GOODCO HQ opening strike", () => {
         advanceDialogue(state);
         continue;
       }
-      step(state, botAct(bot, state), DT);
+      step(state, botAct(bot, state, state.players[0]), DT);
       if (!state.players[0].disarmed) {
         armedStep = i;
         break;
@@ -553,7 +553,7 @@ describe("GOODCO HQ opening strike", () => {
       const bot = createBot("survivor");
       let armedStep = -1;
       for (let i = 0; i < 1200; i++) {
-        step(state, botAct(bot, state), DT);
+        step(state, botAct(bot, state, state.players[0]), DT);
         if (!state.players[0].disarmed) {
           armedStep = i;
           break;

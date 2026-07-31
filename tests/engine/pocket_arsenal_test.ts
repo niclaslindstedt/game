@@ -62,16 +62,16 @@ describe("bot weapon swap (stepBotWeaponSwap)", () => {
       pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
     });
     state.enemies.push(foe);
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
     // The blade landed in the wand's cell — banked, not lost.
     expect(state.players[0].inventory[3]?.defId).toBe("crude_sword");
     // The foe closes into blade reach: the blade comes back (after the
     // anti-juggle gap).
     foe.pos = { x: state.players[0].pos.x + 30, y: state.players[0].pos.y };
-    expect(stepBotWeaponSwap(bot, state)).toBe(false); // inside the swap gap
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(false); // inside the swap gap
     state.stats.timeMs += 500;
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
   });
 
@@ -84,12 +84,12 @@ describe("bot weapon swap (stepBotWeaponSwap)", () => {
         pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     );
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
     // Field cleared: nothing presents a target, so the blade rests in hand.
     state.enemies.length = 0;
     state.stats.timeMs += 500;
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
   });
 
@@ -104,7 +104,7 @@ describe("bot weapon swap (stepBotWeaponSwap)", () => {
     );
     state.players[0].z = 20; // above JUMP.dodgeHeight — the blade is holstered
     state.players[0].weaponCooldownMs = 4000;
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     const wand = state.players[0].equipment.weapon;
     expect(wand.defId).toBe("test_wand");
     // The carried wait clamps to the wand's own full cooldown — never zero
@@ -126,7 +126,7 @@ describe("bot weapon swap (stepBotWeaponSwap)", () => {
         pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     );
-    expect(stepBotWeaponSwap({}, state)).toBe(false);
+    expect(stepBotWeaponSwap({}, state, state.players[0])).toBe(false);
     expect(state.players[0].equipment.weapon.defId).toBe("test_revolver");
   });
 
@@ -137,13 +137,13 @@ describe("bot weapon swap (stepBotWeaponSwap)", () => {
       pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
     });
     state.enemies.push(foe);
-    expect(hasPocketShooter(state)).toBe(false);
-    expect(stepBotWeaponSwap({}, state)).toBe(false);
+    expect(hasPocketShooter(state, state.players[0])).toBe(false);
+    expect(stepBotWeaponSwap({}, state, state.players[0])).toBe(false);
     // A pocket banked but every foe out of its range: the swap is churn.
     state.players[0].inventory[0] = weapon(state, "test_wand");
-    expect(hasPocketShooter(state)).toBe(true);
+    expect(hasPocketShooter(state, state.players[0])).toBe(true);
     foe.pos = { x: state.players[0].pos.x + 900, y: state.players[0].pos.y };
-    expect(stepBotWeaponSwap({}, state)).toBe(false);
+    expect(stepBotWeaponSwap({}, state, state.players[0])).toBe(false);
     expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
   });
 });
@@ -163,18 +163,18 @@ describe("swap decision vs commit (botWeaponSwapTarget)", () => {
     state.enemies.push(foe);
     // Out of blade reach: the pocket wand's cell is the answer, and asking
     // doesn't move the hand.
-    expect(botWeaponSwapTarget(bot, state)).toBe(3);
+    expect(botWeaponSwapTarget(bot, state, state.players[0])).toBe(3);
     expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
     // Inside the anti-juggle gap the hand is settled — no target, no swap.
     foe.pos = { x: state.players[0].pos.x + 30, y: state.players[0].pos.y };
-    expect(botWeaponSwapTarget(bot, state)).toBe(-1);
-    expect(stepBotWeaponSwap(bot, state)).toBe(false);
+    expect(botWeaponSwapTarget(bot, state, state.players[0])).toBe(-1);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(false);
     // Past the gap, the blade (banked in the wand's old cell) is the target.
     state.stats.timeMs += 500;
-    expect(botWeaponSwapTarget(bot, state)).toBe(3);
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(botWeaponSwapTarget(bot, state, state.players[0])).toBe(3);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
   });
 
@@ -188,7 +188,8 @@ describe("swap decision vs commit (botWeaponSwapTarget)", () => {
       }),
     );
     const held = state.players[0].equipment.weapon.id;
-    for (let i = 0; i < 5; i++) expect(botWeaponSwapTarget(bot, state)).toBe(0);
+    for (let i = 0; i < 5; i++)
+      expect(botWeaponSwapTarget(bot, state, state.players[0])).toBe(0);
     expect(state.players[0].equipment.weapon.id).toBe(held);
     expect(bot.lastSwapMs).toBeUndefined();
   });
@@ -217,7 +218,7 @@ describe("pocket pick context (botPocketShooterIndex)", () => {
     // A minion swarm: the 4-pellet hailgun lands across the mass, which beats
     // the revolver's harder single round.
     swarm(state, 3, 150);
-    expect(botPocketShooterIndex(state)).toBe(0);
+    expect(botPocketShooterIndex(state, state.players[0])).toBe(0);
     // A boss walks in: one big body cashes per-target DPS, not pellets — the
     // revolver takes the pocket.
     state.enemies.push(
@@ -226,7 +227,7 @@ describe("pocket pick context (botPocketShooterIndex)", () => {
         "test_boss",
       ),
     );
-    expect(botPocketShooterIndex(state)).toBe(1);
+    expect(botPocketShooterIndex(state, state.players[0])).toBe(1);
   });
 
   it("cashes the round on a lone straggler — pellets need a crowd", () => {
@@ -234,7 +235,7 @@ describe("pocket pick context (botPocketShooterIndex)", () => {
     state.players[0].inventory[0] = weapon(state, "test_hailgun");
     state.players[0].inventory[1] = weapon(state, "test_revolver");
     swarm(state, 1, 150);
-    expect(botPocketShooterIndex(state)).toBe(1);
+    expect(botPocketShooterIndex(state, state.players[0])).toBe(1);
   });
 
   it("is RANGE aware — a spread that falls short loses to the round that reaches", () => {
@@ -243,12 +244,12 @@ describe("pocket pick context (botPocketShooterIndex)", () => {
     state.players[0].inventory[1] = weapon(state, "test_revolver"); // reach 240
     // The pack stands inside the scattergun's reach: its pellets win.
     swarm(state, 4, 130);
-    expect(botPocketShooterIndex(state)).toBe(0);
+    expect(botPocketShooterIndex(state, state.players[0])).toBe(0);
     // The same pack, further out: the scattergun can't touch it, so the round
     // that reaches takes the pocket rather than a gun with nothing in range.
     for (const enemy of state.enemies)
       enemy.pos.x = state.players[0].pos.x + 200;
-    expect(botPocketShooterIndex(state)).toBe(1);
+    expect(botPocketShooterIndex(state, state.players[0])).toBe(1);
   });
 });
 
@@ -269,7 +270,7 @@ describe("intelligent re-picks (botWeaponSwapTarget)", () => {
       );
     }
     // Out of blade reach against a mass: the spray goes in the hand.
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_hailgun");
     // A boss joins the fight. The hand is no longer the right tool — once the
     // re-pick gap lapses the hero puts the spray away for the round.
@@ -279,9 +280,9 @@ describe("intelligent re-picks (botWeaponSwapTarget)", () => {
         "test_boss",
       ),
     );
-    expect(stepBotWeaponSwap(bot, state)).toBe(false); // still mid-engagement
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(false); // still mid-engagement
     state.stats.timeMs += 2500;
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_revolver");
   });
 
@@ -301,11 +302,11 @@ describe("intelligent re-picks (botWeaponSwapTarget)", () => {
       );
     }
     // On the ground the gap holds the hand still...
-    expect(botWeaponSwapTarget(bot, state)).toBe(-1);
+    expect(botWeaponSwapTarget(bot, state, state.players[0])).toBe(-1);
     // ...but a hop is shorter than the gap, so the pack the hero is sailing
     // over is met with the spray at the top of it.
     state.players[0].z = 20;
-    expect(botWeaponSwapTarget(bot, state)).toBe(0);
+    expect(botWeaponSwapTarget(bot, state, state.players[0])).toBe(0);
   });
 
   it("puts a stronger find straight in the hand", () => {
@@ -318,11 +319,11 @@ describe("intelligent re-picks (botWeaponSwapTarget)", () => {
       }),
     );
     // Nothing better banked: the hand stays put.
-    expect(botWeaponSwapTarget(bot, state)).toBe(-1);
+    expect(botWeaponSwapTarget(bot, state, state.players[0])).toBe(-1);
     // A revolver drops into the bag — strictly better, so it needs no
     // contextual margin to earn the hand.
     state.players[0].inventory[2] = weapon(state, "test_revolver");
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_revolver");
   });
 
@@ -337,7 +338,7 @@ describe("intelligent re-picks (botWeaponSwapTarget)", () => {
         pos: { x: state.players[0].pos.x + 20, y: state.players[0].pos.y },
       }),
     );
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_hammer");
     expect(state.players[0].inventory[0]?.defId).toBe("crude_sword");
   });
@@ -352,7 +353,7 @@ describe("pocket keepers (cullWorstLoot)", () => {
     for (let i = 2; i < inv.length; i++) {
       inv[i] = weapon(state, "blaster", { ilvl: 20 + i }); // fat, mid-tier junk
     }
-    cullWorstLoot(state);
+    cullWorstLoot(state, state.players[0]);
     expect(inv.some((c) => c?.defId === "test_hailgun")).toBe(true);
     expect(inv.some((c) => c?.defId === "test_revolver")).toBe(true);
   });
@@ -366,7 +367,7 @@ describe("pocket keepers (cullWorstLoot)", () => {
     for (let i = 1; i < inv.length; i++) {
       inv[i] = weapon(state, "blaster", { ilvl: 2 + i });
     }
-    const dropped = cullWorstLoot(state);
+    const dropped = cullWorstLoot(state, state.players[0]);
     expect(dropped.length).toBe(1);
     expect(dropped[0]?.defId).toBe("blaster");
     expect(inv.some((c) => c?.defId === "test_wand")).toBe(true);
@@ -383,7 +384,7 @@ describe("bag order (sortBotInventory)", () => {
     inv[4] = weapon(state, "test_pistol", { ilvl: 5 }); // best ranged
     inv[5] = weapon(state, "test_wand", { ilvl: 5 }); // best (only) magic
     inv[6] = weapon(state, "test_pipe", { ilvl: 9 }); // metal — out-sells the blaster
-    expect(sortBotInventory(state)).toBe(true);
+    expect(sortBotInventory(state, state.players[0])).toBe(true);
     expect(inv[0]?.defId).toBe("test_pistol");
     expect(inv[1]?.defId).toBe("test_wand");
     // Then preciousness: the legendary tops the sell ladder, metal beats
@@ -394,6 +395,6 @@ describe("bag order (sortBotInventory)", () => {
     expect(inv[4]?.defId).toBe("blaster");
     expect(inv[5]).toBeNull();
     // Idempotent: an already-sorted bag doesn't move.
-    expect(sortBotInventory(state)).toBe(false);
+    expect(sortBotInventory(state, state.players[0])).toBe(false);
   });
 });

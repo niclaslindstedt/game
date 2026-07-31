@@ -47,7 +47,7 @@ import { playerSpeed } from "../items/index.ts";
 import { nextPathWaypoint } from "../path.ts";
 import { blockedByObstacle, insideObstacle } from "../obstacles.ts";
 import { routeReachable } from "../pathfind.ts";
-import type { GameInput, GameState } from "../types/index.ts";
+import type { GameInput, GameState, Player } from "../types/index.ts";
 
 /** The GPS HEADING: a unit vector from the hero toward the next A* ROUTE
  * WAYPOINT of the current macro goal (the waypoint/elite/boss the sweep is
@@ -61,10 +61,11 @@ import type { GameInput, GameState } from "../types/index.ts";
 export function travelHeading(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): Vec2 | null {
-  const goal = macroTarget(bot, state, tune);
-  const p = state.players[0].pos;
+  const goal = macroTarget(bot, state, hero, tune);
+  const p = hero.pos;
   // NO PLAN, NO PULL: with nothing to travel to (the goal is where he already
   // stands) there is no heading, and the callers fall back to their own reads.
   // Asked of the GOAL, never of the route step below — a turning point can sit
@@ -92,7 +93,7 @@ export function travelHeading(
   // the bent route as his heading applies that dodge TWICE, and a retreat biased
   // tangentially around a hole is a hero orbiting it: measured on the rift as
   // the loiter count doubling and kills per minute halving.
-  const step = routeTarget(bot, state, goal);
+  const step = routeTarget(bot, state, hero, goal);
   const n = normalize(step.x - p.x, step.y - p.y);
   return n.len < 1 ? { x: bearing.x, y: bearing.y } : n;
 }
@@ -125,6 +126,7 @@ const SEEK_PROGRESS_EPS = 40;
 export function trackEngagement(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): void {
   const now = state.stats.timeMs;
@@ -140,25 +142,21 @@ export function trackEngagement(
   }
   const seek = bot.seek;
   const engaged =
-    state.players[0].disarmed ||
-    state.players[0].hurtFlashMs > 0 ||
-    threatCountWithin(state, THREAT_RADIUS) > 0;
+    hero.disarmed ||
+    hero.hurtFlashMs > 0 ||
+    threatCountWithin(state, hero, THREAT_RADIUS) > 0;
   if (engaged) seek.lastEngagedMs = now;
   if (seek.targetId !== null) {
     const foe = state.enemies.find((e) => e.id === seek.targetId);
     // Headway gauge: the hunt is healthy while the gap keeps shrinking.
     if (foe) {
-      const d = distance(state.players[0].pos, foe.pos);
+      const d = distance(hero.pos, foe.pos);
       if (d < seek.bestD - SEEK_PROGRESS_EPS) {
         seek.bestD = d;
         seek.bestMs = now;
       }
     }
-    if (
-      !foe ||
-      state.players[0].hurtFlashMs > 0 ||
-      now - seek.bestMs > SEEK_STALL_MS
-    ) {
+    if (!foe || hero.hurtFlashMs > 0 || now - seek.bestMs > SEEK_STALL_MS) {
       seek.targetId = null;
       seek.lastEngagedMs = now; // a fresh lull gates the next hunt
     }
@@ -167,12 +165,12 @@ export function trackEngagement(
   if (
     tune.seekFightAfterMs > 0 &&
     now - seek.lastEngagedMs > tune.seekFightAfterMs &&
-    macroPreemptible(bot, state, tune)
+    macroPreemptible(bot, state, hero, tune)
   ) {
-    const foe = nearestEnemy(state);
+    const foe = nearestEnemy(state, hero);
     if (foe) {
       seek.targetId = foe.id;
-      seek.bestD = distance(state.players[0].pos, foe.pos);
+      seek.bestD = distance(hero.pos, foe.pos);
       seek.bestMs = now;
     }
   }
@@ -190,11 +188,16 @@ export function trackEngagement(
 function macroPreemptible(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): boolean {
-  const goal = macroTarget(bot, state, tune);
+  const goal = macroTarget(bot, state, hero, tune);
   const stall = state.merchant.pos;
-  if (wantsMerchantVisit(state) && stall.x === goal.x && stall.y === goal.y)
+  if (
+    wantsMerchantVisit(state, hero) &&
+    stall.x === goal.x &&
+    stall.y === goal.y
+  )
     return false;
   const mark = bot.waypoint;
   if (mark && mark.x === goal.x && mark.y === goal.y) return false;
@@ -204,7 +207,7 @@ function macroPreemptible(
   // as uninterruptible as the boss beeline it replaces. An under-levelled
   // arrow march is the leveling walk (the fog sweep's stand-in), so a lull's
   // hunt may still preempt it toward a fight.
-  if (readyForBoss(state, tune)) {
+  if (readyForBoss(state, hero, tune)) {
     const arrowWp = nextPathWaypoint(state);
     if (arrowWp && arrowWp.x === goal.x && arrowWp.y === goal.y) return false;
   }
@@ -223,9 +226,10 @@ function macroPreemptible(
 export function marchingOnFoe(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): boolean {
-  const goal = macroTarget(bot, state, tune);
+  const goal = macroTarget(bot, state, hero, tune);
   const c = bot.content;
   if (
     c?.target &&
@@ -239,7 +243,7 @@ export function marchingOnFoe(
   // path, so the arrow's waypoint stands in for the boss as the goal — the
   // gauntlet run must arm the same way it did for the old boss beeline, or
   // the late-wave flood parks him at every scuffle on the approach.
-  if (readyForBoss(state, tune)) {
+  if (readyForBoss(state, hero, tune)) {
     const arrowWp = nextPathWaypoint(state);
     if (arrowWp && arrowWp.x === goal.x && arrowWp.y === goal.y) return true;
   }
@@ -282,7 +286,12 @@ function seekTarget(bot: Bot, state: GameState): Vec2 | null {
  * hit) discovery ends and he commits — a combat-bogged run can't get stuck
  * chasing fog it will never fully clear.
  */
-export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
+export function macroTarget(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  tune: BotTuning,
+): Vec2 {
   // THE MERCHANT ERRAND: when a stall visit would actually resolve something —
   // bank the bag's outgrown junk, buy an upgrade the purse covers, mend a
   // spent kit (see `wantsMerchantVisit`) — the counter joins the travel plan:
@@ -290,8 +299,8 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // slower than re-arming), otherwise as the errand between caches. The
   // harness runs the actual trade once he's at the counter (`tradeAtMerchant`),
   // which clears the want, so the errand can't loop.
-  const errand = wantsMerchantVisit(state);
-  if (errand && weaponStarved(state)) return state.merchant.pos;
+  const errand = wantsMerchantVisit(state, hero);
+  if (errand && weaponStarved(state, hero)) return state.merchant.pos;
   // A pinned GPS NUDGE outranks everything but the urgent shop run — the
   // caller pointed the bot at a coordinate, so he works his way there.
   if (bot.waypoint) return bot.waypoint;
@@ -305,12 +314,12 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // horde levels in lockstep with the hero: farming there never closes the
   // gap, it just burns the clock on spawners that refill forever (measured:
   // 500+ kills and zero net levels before the fallback finally committed).
-  const underLevel = !readyForBoss(state, tune) && !parityHopeless(state);
+  const underLevel = !readyForBoss(state, hero, tune) && !parityHopeless(state);
   if (underLevel) {
-    const spawner = activeSpawnerNear(state);
+    const spawner = activeSpawnerNear(state, hero);
     if (spawner) return spawner;
   }
-  const content = nearestContent(bot, state, tune);
+  const content = nearestContent(bot, state, hero, tune);
   if (content) return content;
   if (errand) return state.merchant.pos;
   // THE GUIDANCE ARROW IS AN INSTRUCTION. On a path level the blinking amber
@@ -337,14 +346,14 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // coverage cap and the stall latch: both exist to stop a bogged run from
   // chasing fog forever, and neither applies while there is nothing else to do.
   const objective = bossPos(state);
-  const noWayYet = objective !== undefined && !bossReachable(bot, state);
+  const noWayYet = objective !== undefined && !bossReachable(bot, state, hero);
   if (
     noWayYet ||
     (underLevel &&
       !exploreStalled(bot) &&
       exploredFraction(state) < tune.exploreTargetFrac)
   ) {
-    const fog = exploreTarget(bot, state, tune, noWayYet);
+    const fog = exploreTarget(bot, state, hero, tune, noWayYet);
     if (fog) return fog;
   }
   // Nothing left to uncover and still no way in — head for the furthest
@@ -353,14 +362,18 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // that ends in a sealed annex puts a landmark INSIDE it (the control room,
   // the vault), and marching at that one parks him against the dead rock for
   // the rest of the run — measured as five minutes of UNSTICK at one spot.
-  if (noWayYet) return reachableLandmark(bot, state) ?? state.players[0].pos;
-  return objective ?? furthestLandmark(state) ?? state.players[0].pos;
+  if (noWayYet) return reachableLandmark(bot, state, hero) ?? hero.pos;
+  return objective ?? furthestLandmark(state) ?? hero.pos;
 }
 
 /** The furthest landmark from the spawn the hero can actually route to — the
  * last-ditch "keep covering ground" destination, filtered so it is never a
  * place no route reaches. */
-function reachableLandmark(bot: Bot, state: GameState): Vec2 | null {
+function reachableLandmark(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+): Vec2 | null {
   const rc = ensureRoute(bot, state);
   const portals = knownPortals(state);
   let best: Vec2 | null = null;
@@ -368,8 +381,7 @@ function reachableLandmark(bot: Bot, state: GameState): Vec2 | null {
   for (const landmark of state.landmarks) {
     const d = distance(landmark.pos, state.playerSpawn);
     if (d <= bestD) continue;
-    if (!routeReachable(rc.grid, portals, state.players[0].pos, landmark.pos))
-      continue;
+    if (!routeReachable(rc.grid, portals, hero.pos, landmark.pos)) continue;
     best = landmark.pos;
     bestD = d;
   }
@@ -379,16 +391,11 @@ function reachableLandmark(bot: Bot, state: GameState): Vec2 | null {
 /** Is there a route to the boss — on foot, or riding a lift the hero has
  * FOUND? Component algebra over the cached grid, so the travel plan can ask
  * every tick. */
-function bossReachable(bot: Bot, state: GameState): boolean {
+function bossReachable(bot: Bot, state: GameState, hero: Player): boolean {
   const boss = bossPos(state);
   if (!boss) return true;
   const rc = ensureRoute(bot, state);
-  return routeReachable(
-    rc.grid,
-    knownPortals(state),
-    state.players[0].pos,
-    boss,
-  );
+  return routeReachable(rc.grid, knownPortals(state), hero.pos, boss);
 }
 
 /** The short label for the macro goal `macroTarget` returned, for the BOT VIEW
@@ -397,20 +404,25 @@ function bossReachable(bot: Bot, state: GameState): boolean {
 function macroThought(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
   goal: Vec2,
 ): string {
   const stall = state.merchant.pos;
-  if (wantsMerchantVisit(state) && stall.x === goal.x && stall.y === goal.y)
+  if (
+    wantsMerchantVisit(state, hero) &&
+    stall.x === goal.x &&
+    stall.y === goal.y
+  )
     return "TO SHOP";
   const mark = bot.waypoint;
   if (mark && mark.x === goal.x && mark.y === goal.y) return "TO MARK";
   const hunt = seekTarget(bot, state);
   if (hunt && hunt.x === goal.x && hunt.y === goal.y) return "SEEK FIGHT";
   if (
-    !readyForBoss(state, tune) &&
+    !readyForBoss(state, hero, tune) &&
     !parityHopeless(state) &&
-    activeSpawnerNear(state)
+    activeSpawnerNear(state, hero)
   )
     return "CLEAR SPAWNER";
   const content = bot.content?.target;
@@ -424,7 +436,9 @@ function macroThought(
   // Exploring with no route to the objective is a SEARCH FOR THE WAY IN, not
   // idle coverage — worth its own label, since it is the one that explains a
   // hero who walks past the boss room for minutes.
-  return boss && !bossReachable(bot, state) ? "FIND A WAY" : "EXPLORE FOG";
+  return boss && !bossReachable(bot, state, hero)
+    ? "FIND A WAY"
+    : "EXPLORE FOG";
 }
 
 /** Steer toward the current macro goal along its A* route, tagging the thought.
@@ -432,11 +446,12 @@ function macroThought(
 export function macroSteer(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput {
-  const goal = macroTarget(bot, state, tune);
-  think(bot, macroThought(bot, state, tune, goal));
-  return routeSteer(bot, state, goal);
+  const goal = macroTarget(bot, state, hero, tune);
+  think(bot, macroThought(bot, state, hero, tune, goal));
+  return routeSteer(bot, state, hero, goal);
 }
 
 // === ANTI-WEDGE UNSTUCK ===
@@ -493,13 +508,14 @@ const UNSTUCK_EXIT_DIST = 160;
 export function unstuckInput(
   bot: Bot,
   state: GameState,
+  hero: Player,
   tune: BotTuning,
 ): GameInput | null {
   // Same as the wall avoidance: the deterministic escape is a last resort for a
   // map with walls in it (see `navigatesWalls`). A genuinely open field never
   // wedged the old bot, so leave it untouched.
   if (!navigatesWalls(state)) return null;
-  const p = state.players[0].pos;
+  const p = hero.pos;
   const now = state.stats.timeMs;
   if (!bot.nav) {
     bot.nav = {
@@ -523,12 +539,10 @@ export function unstuckInput(
     // making progress, not wedged.
     const minDisp = Math.min(
       UNSTUCK_MIN_DISP,
-      playerSpeed(state, state.players[0]) *
-        (elapsed / 1000) *
-        UNSTUCK_SPEED_FRAC,
+      playerSpeed(state, hero) * (elapsed / 1000) * UNSTUCK_SPEED_FRAC,
     );
     const moved = distance(p, nav.lastPos);
-    if (moved >= minDisp || hasReachableFoe(state)) nav.stuckMs = 0;
+    if (moved >= minDisp || hasReachableFoe(state, hero)) nav.stuckMs = 0;
     else nav.stuckMs += elapsed;
     nav.lastPos = { x: p.x, y: p.y };
     nav.lastTimeMs = now;
@@ -544,7 +558,7 @@ export function unstuckInput(
     nav.escapeStartPos = { x: p.x, y: p.y };
     nav.escapeHeading = null;
   } else if (
-    hasReachableFoe(state) ||
+    hasReachableFoe(state, hero) ||
     distance(p, nav.escapeStartPos) >= UNSTUCK_EXIT_DIST
   ) {
     // Moved clear of the wedge, or reached something to fight → hand back.
@@ -555,7 +569,7 @@ export function unstuckInput(
   }
 
   // The macro goal orients the escape (goalward heading preferred first).
-  const goal = macroTarget(bot, state, tune);
+  const goal = macroTarget(bot, state, hero, tune);
   const heading = goal ?? { ...state.playerSpawn };
   const base = Math.atan2(heading.y - p.y, heading.x - p.x);
 
@@ -628,6 +642,6 @@ export function unstuckInput(
   // `STAMINA.jumpCost` of a pool the escape may badly need; the old every-tick
   // hop bounce-hopped the hero across the moon's low-g field and wound him out.
   const pinned =
-    threatCountWithin(state, CONTACT_DODGE_RADIUS) > 0 || allBlocked;
-  return steer(state, target, pinned && state.players[0].z === 0);
+    threatCountWithin(state, hero, CONTACT_DODGE_RADIUS) > 0 || allBlocked;
+  return steer(state, hero, target, pinned && hero.z === 0);
 }

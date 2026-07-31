@@ -36,7 +36,12 @@ import {
   insideObstacle,
   visibleObstacleEnd,
 } from "../obstacles.ts";
-import type { GameInput, GameState, GravityWell } from "../types/index.ts";
+import type {
+  GameInput,
+  GameState,
+  GravityWell,
+  Player,
+} from "../types/index.ts";
 
 /**
  * Does this map have GEOMETRY TO NAVIGATE — the gate on the whole wall-handling
@@ -121,8 +126,8 @@ const WELL_REPULSE_PUSH = 240;
  * reflex bolt (`dodgeWell`) stays the hard override for a hero already sunk
  * past the ring — this field is what keeps him from sinking at all.
  */
-function repelFromWells(state: GameState, target: Vec2): Vec2 {
-  const p = state.players[0].pos;
+function repelFromWells(state: GameState, hero: Player, target: Vec2): Vec2 {
+  const p = hero.pos;
   let x = target.x;
   let y = target.y;
   for (const well of state.wells) {
@@ -137,8 +142,13 @@ function repelFromWells(state: GameState, target: Vec2): Vec2 {
 }
 
 /** Steering input toward a world position (clamped inside the level). */
-export function steer(state: GameState, target: Vec2, jump = false): GameInput {
-  const bent = repelFromWells(state, target);
+export function steer(
+  state: GameState,
+  hero: Player,
+  target: Vec2,
+  jump = false,
+): GameInput {
+  const bent = repelFromWells(state, hero, target);
   return {
     steering: true,
     target: {
@@ -206,12 +216,13 @@ function rad(deg: number): number {
 export function limitTurnRate(
   bot: Bot,
   state: GameState,
+  hero: Player,
   input: GameInput,
   tune: BotTuning,
 ): TurnGate {
   // Standing still is always allowed — only a REVERSAL is ever held back.
   if (tune.turnCooldownMs <= 0 || !input.steering) return "free";
-  const p = state.players[0].pos;
+  const p = hero.pos;
   const now = state.stats.timeMs;
   const n = normalize(input.target.x - p.x, input.target.y - p.y);
   // A target underfoot moves nobody (the engine's own arrive radius stops him
@@ -351,8 +362,13 @@ function fogwardBearing(
  * back to the deflection fan. Pure w.r.t. state + the bot's trace memory, so
  * determinism holds.
  */
-function traceTowardFog(bot: Bot, state: GameState, goal: Vec2): Vec2 | null {
-  const from = state.players[0].pos;
+function traceTowardFog(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  goal: Vec2,
+): Vec2 | null {
+  const from = hero.pos;
   const base = Math.atan2(goal.y - from.y, goal.x - from.x);
   const cw = fogwardBearing(state, from, base, 1);
   const ccw = fogwardBearing(state, from, base, -1);
@@ -402,13 +418,18 @@ function traceTowardFog(bot: Bot, state: GameState, goal: Vec2): Vec2 | null {
  * map's wall-slide handles the odd ridge, and deflecting there only wanders), and
  * falls back to the raw goal when nothing is clear (better to nudge than freeze).
  */
-export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
+export function navTarget(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  goal: Vec2,
+): Vec2 {
   // Wall avoidance is a MAZE tactic — it's for the levels whose corridors a
   // straight steer would wedge on (see `navigatesWalls`). On a genuinely open
   // map the engine's wall-slide already carries a straight steer past the odd
   // ridge, and deflecting there only wanders, so keep the old behaviour.
   if (!navigatesWalls(state)) return goal;
-  const from = state.players[0].pos;
+  const from = hero.pos;
   const r = PLAYER.radius;
   // A clear body-width sweep straight to the goal → just go (and release any
   // latched wall trace — the wall is behind him).
@@ -454,7 +475,7 @@ export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
     // explored ground runs to the level edge with no fog left has PROVEN the
     // wall doesn't end that way, so the other side wins — the "the wall must
     // end the other way" deduction a human makes at the minimap.
-    const fogward = traceTowardFog(bot, state, goal);
+    const fogward = traceTowardFog(bot, state, hero, goal);
     if (fogward) return fogward;
   }
   const dist = distance(from, goal) || 1;
@@ -490,10 +511,11 @@ export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
 export function navSteer(
   bot: Bot,
   state: GameState,
+  hero: Player,
   goal: Vec2,
   jump = false,
 ): GameInput {
-  return steer(state, navTarget(bot, state, goal), jump);
+  return steer(state, hero, navTarget(bot, state, hero, goal), jump);
 }
 
 // === GLOBAL PATHFINDING TRAVEL (see pathfind.ts) ===
@@ -617,9 +639,14 @@ function strayedFromRoute(rc: NonNullable<Bot["route"]>, from: Vec2): boolean {
  * the walls actually force. Falls back to the raw goal when it's unreachable
  * (let the local steering try). Pure w.r.t. state + the bot's route memory.
  */
-export function routeTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
+export function routeTarget(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  goal: Vec2,
+): Vec2 {
   const rc = ensureRoute(bot, state);
-  const from = state.players[0].pos;
+  const from = hero.pos;
   // String-pull integrity: the next unretired waypoint must be REACHABLE in a
   // straight body-width sweep from where the hero actually stands. When the
   // horde shoves him into a wall pocket the corridor doesn't see, he can sit
@@ -674,12 +701,14 @@ export function routeTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
 export function routeSteer(
   bot: Bot,
   state: GameState,
+  hero: Player,
   goal: Vec2,
   jump = false,
 ): GameInput {
   return steer(
     state,
-    navTarget(bot, state, routeTarget(bot, state, goal)),
+    hero,
+    navTarget(bot, state, hero, routeTarget(bot, state, hero, goal)),
     jump,
   );
 }
@@ -699,11 +728,13 @@ export function remainingRoute(
 }
 
 /** The point `dist` away from `from`, on the player's side of it. */
-export function holdOff(state: GameState, from: Vec2, dist: number): Vec2 {
-  const n = normalize(
-    state.players[0].pos.x - from.x,
-    state.players[0].pos.y - from.y,
-  );
+export function holdOff(
+  state: GameState,
+  hero: Player,
+  from: Vec2,
+  dist: number,
+): Vec2 {
+  const n = normalize(hero.pos.x - from.x, hero.pos.y - from.y);
   return { x: from.x + n.x * dist, y: from.y + n.y * dist };
 }
 
@@ -729,12 +760,13 @@ const ORBIT_CLEARANCE = 44;
 export function orbitHold(
   bot: Bot,
   state: GameState,
+  hero: Player,
   center: Vec2,
   dist: number,
   step: number,
 ): Vec2 {
-  if (step <= 0) return holdOff(state, center, dist);
-  const p = state.players[0].pos;
+  if (step <= 0) return holdOff(state, hero, center, dist);
+  const p = hero.pos;
   const ang = Math.atan2(p.y - center.y, p.x - center.x);
   if (bot.orbitSign === undefined) bot.orbitSign = 1;
   const r = PLAYER.radius;
@@ -756,5 +788,5 @@ export function orbitHold(
     bot.orbitSign = sign;
     return pt;
   }
-  return holdOff(state, center, dist); // hemmed in → back straight out/in
+  return holdOff(state, hero, center, dist); // hemmed in → back straight out/in
 }

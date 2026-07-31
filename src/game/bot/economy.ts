@@ -56,7 +56,12 @@ import {
   weaponDef,
 } from "../defs/equipment.ts";
 import { botPocketKeepIndices } from "./weapon-swap.ts";
-import type { Equipment, GameState, MerchantStock } from "../types/index.ts";
+import type {
+  Equipment,
+  GameState,
+  MerchantStock,
+  Player,
+} from "../types/index.ts";
 
 /** Bag cells the autopilot keeps FREE, so the next find always has a home —
  * the "one slot open" discipline a human keeps so a drop is never refused. */
@@ -81,8 +86,8 @@ const REPAIR_VISIT_FRAC = 0.35;
  * on the unbreakable fallback sidearm, or his held weapon is about to snap?
  * The cue that a merchant visit is URGENT rather than a convenience. Pure.
  */
-export function weaponStarved(state: GameState): boolean {
-  const w = state.players[0].equipment.weapon;
+export function weaponStarved(state: GameState, hero: Player): boolean {
+  const w = hero.equipment.weapon;
   if (w.defId === SIDEARM_DEF_ID) return true; // dumped onto the fallback sidearm
   if (w.durability === undefined) return false; // a keeper unique/legendary
   const max = equipmentMaxDurability(w);
@@ -100,21 +105,20 @@ export function weaponStarved(state: GameState): boolean {
  * `wantsMerchantVisit` wanting a sell-run it can never resolve). These are
  * the merchant fodder the bot banks for coins; everything else in the bag is
  * a keeper. Pure. */
-export function sellableJunkCount(state: GameState): number {
+export function sellableJunkCount(state: GameState, hero: Player): number {
   // Loadout-pure (the pocket-keep set and every `isScrappableLoot` verdict turn
   // only on the worn kit + the bag), and read two or three times a tick by the
   // merchant-visit predicate — so it memoizes off the loadout memo like the
   // other economy reads, collapsing the repeated inventory walks into one.
-  const memo = heroLoadoutMemo(state, state.players[0]);
+  const memo = heroLoadoutMemo(state, hero);
   const hit = junkCountByLoadout.get(memo);
   if (hit !== undefined) return hit;
-  const keep = new Set(botPocketKeepIndices(state));
-  const inv = state.players[0].inventory;
+  const keep = new Set(botPocketKeepIndices(state, hero));
+  const inv = hero.inventory;
   let n = 0;
   for (let i = 0; i < inv.length; i++) {
     const cell = inv[i];
-    if (cell && !keep.has(i) && isScrappableLoot(state, state.players[0], cell))
-      n++;
+    if (cell && !keep.has(i) && isScrappableLoot(state, hero, cell)) n++;
   }
   junkCountByLoadout.set(memo, n);
   return n;
@@ -139,16 +143,16 @@ const junkCountByLoadout = new WeakMap<object, number>();
  *
  * Returns whether anything was equipped, so the app can refresh its HUD.
  */
-export function botAutoEquip(state: GameState): boolean {
+export function botAutoEquip(state: GameState, hero: Player): boolean {
   // Called EVERY tick, but the sweep is a pure function of the loadout (the
   // plan turns only on the worn kit, the bag, and the hero's level/stats — all
   // captured by the loadout memo). Once a loadout is swept there is nothing
   // left to wear until something moves, which mints a fresh memo — so the
   // common quiet tick short-circuits before walking the bag at all.
-  const memo = heroLoadoutMemo(state, state.players[0]);
+  const memo = heroLoadoutMemo(state, hero);
   if (sweptLoadouts.has(memo)) return false;
-  const changed = autoEquipGear(state, state.players[0]) > 0;
-  sweptLoadouts.add(heroLoadoutMemo(state, state.players[0]));
+  const changed = autoEquipGear(state, hero) > 0;
+  sweptLoadouts.add(heroLoadoutMemo(state, hero));
   return changed;
 }
 const sweptLoadouts = new WeakSet<object>();
@@ -181,15 +185,15 @@ const sweptLoadouts = new WeakSet<object>();
  * Returns the shed pieces. Called by the bot harnesses each tick; cheap when a
  * slot is already open.
  */
-export function cullWorstLoot(state: GameState): Equipment[] {
-  const inv = state.players[0].inventory;
+export function cullWorstLoot(state: GameState, hero: Player): Equipment[] {
+  const inv = hero.inventory;
   const dropped: Equipment[] = [];
   let free = 0;
   for (const cell of inv) {
     if (cell === null) free++;
   }
   if (free >= BOT_BAG_KEEP_FREE) return dropped;
-  const keep = new Set(botPocketKeepIndices(state));
+  const keep = new Set(botPocketKeepIndices(state, hero));
   const keys = gateKeyIds();
   /** The bag's least precious cell among those `spare` allows, or -1. */
   const worstCell = (spare: (item: Equipment) => boolean): number => {
@@ -209,15 +213,13 @@ export function cullWorstLoot(state: GameState): Equipment[] {
   };
   while (free < BOT_BAG_KEEP_FREE) {
     // Outgrown junk first; only once there is none left does a keeper go.
-    let worst = worstCell((item) =>
-      isScrappableLoot(state, state.players[0], item),
-    );
+    let worst = worstCell((item) => isScrappableLoot(state, hero, item));
     if (worst < 0) worst = worstCell(() => true);
     if (worst < 0) break; // every cell is a pocket or a key — nothing to shed
     const item = inv[worst] as Equipment;
     // Worth rescuing? Into the LOST & FOUND, where coins buy it back. Junk
     // just goes over the shoulder as it always did.
-    vaultItem(state, state.players[0], item);
+    vaultItem(state, hero, item);
     dropped.push(item);
     inv[worst] = null;
     free++;
@@ -245,16 +247,16 @@ export function cullWorstLoot(state: GameState): Equipment[] {
  */
 const sortedLoadouts = new WeakSet<object>();
 
-export function sortBotInventory(state: GameState): boolean {
+export function sortBotInventory(state: GameState, hero: Player): boolean {
   // Called EVERY tick by the harness, but the desired order is a pure function
   // of the loadout (the head picks by `weaponScore`/`canEquip`, the tail by
   // `sellValue`/mint id) — all captured by the loadout memo, which the bag's
   // own slot order feeds into. Once a given loadout is sorted the bag stays
   // sorted until something moves (which mints a fresh memo), so a memo already
   // marked sorted short-circuits the whole walk+sort — the common quiet tick.
-  const memo = heroLoadoutMemo(state, state.players[0]);
+  const memo = heroLoadoutMemo(state, hero);
   if (sortedLoadouts.has(memo)) return false;
-  const inv = state.players[0].inventory;
+  const inv = hero.inventory;
   const items = inv.filter((cell): cell is Equipment => cell !== null);
   if (items.length === 0) {
     sortedLoadouts.add(memo);
@@ -269,8 +271,8 @@ export function sortBotInventory(state: GameState): boolean {
       if (item.slot !== "weapon" || head.includes(item)) continue;
       const def = weaponDef(item.defId);
       if (def.class !== cls || !def.projectile) continue;
-      const wieldable = canEquip(state, state.players[0], item);
-      const key = weaponScore(state, state.players[0], item);
+      const wieldable = canEquip(state, hero, item);
+      const key = weaponScore(state, hero, item);
       if (
         (wieldable && !bestWieldable) ||
         (wieldable === bestWieldable && key > bestKey)
@@ -297,7 +299,7 @@ export function sortBotInventory(state: GameState): boolean {
   // Mark the resulting arrangement sorted — a reorder minted a fresh memo that
   // reflects the new slot order; a no-op keeps the same one. Either way the next
   // quiet tick short-circuits until a pickup/drop/equip changes the loadout.
-  sortedLoadouts.add(heroLoadoutMemo(state, state.players[0]));
+  sortedLoadouts.add(heroLoadoutMemo(state, hero));
   return changed;
 }
 
@@ -305,36 +307,28 @@ export function sortBotInventory(state: GameState): boolean {
 
 /** Is a stall weapon on the counter that the hero could buy, wield, and that
  * genuinely beats what's in his hand? The "the walk would re-arm me" probe. */
-function affordableStallUpgrade(state: GameState): boolean {
-  const held = weaponScore(
-    state,
-    state.players[0],
-    state.players[0].equipment.weapon,
-  );
+function affordableStallUpgrade(state: GameState, hero: Player): boolean {
+  const held = weaponScore(state, hero, hero.equipment.weapon);
   for (const entry of state.merchant.stock) {
     if (entry.kind !== "weapon" || entry.qty <= 0) continue;
     // stockUniques can mint unique GEAR into a stall entry — only arms compete
     // (weaponScore throws on a cuirass).
     if (entry.equipment.slot !== "weapon") continue;
-    if (
-      !canBuyStock(state, entry) ||
-      !canEquip(state, state.players[0], entry.equipment)
-    ) {
+    if (!canBuyStock(state, entry) || !canEquip(state, hero, entry.equipment)) {
       continue;
     }
-    if (weaponScore(state, state.players[0], entry.equipment) > held)
-      return true;
+    if (weaponScore(state, hero, entry.equipment) > held) return true;
   }
   return false;
 }
 
 /** Is the kit worn enough that a PAID mend is worth the counter visit — the
  * held weapon wearing thin, or a broken spare shed into the bag? */
-function kitWornOut(state: GameState): boolean {
-  if (state.players[0].inventory.some((c) => c !== null && isWeaponBroken(c))) {
+function kitWornOut(state: GameState, hero: Player): boolean {
+  if (hero.inventory.some((c) => c !== null && isWeaponBroken(c))) {
     return true;
   }
-  const w = state.players[0].equipment.weapon;
+  const w = hero.equipment.weapon;
   if (w.durability === undefined) return false;
   const max = equipmentMaxDurability(w);
   return max > 0 && w.durability / max <= REPAIR_VISIT_FRAC;
@@ -349,32 +343,35 @@ function kitWornOut(state: GameState): boolean {
  * clause clears itself after a `tradeAtMerchant`, so the errand can't loop.
  * Pure — `macro.ts` reads it to steer, the harnesses to trade.
  */
-export function wantsMerchantVisit(state: GameState): boolean {
+export function wantsMerchantVisit(state: GameState, hero: Player): boolean {
   if (!state.merchant.discovered) return false;
-  const junk = sellableJunkCount(state);
-  if (weaponStarved(state) && (junk > 0 || affordableStallUpgrade(state))) {
+  const junk = sellableJunkCount(state, hero);
+  if (
+    weaponStarved(state, hero) &&
+    (junk > 0 || affordableStallUpgrade(state, hero))
+  ) {
     return true;
   }
   if (junk >= SELL_RUN_MIN_JUNK) return true;
-  if (state.players[0].repairKits === 0 && kitWornOut(state)) {
-    const cost = repairAllCost(state, state.players[0]);
-    if (cost > 0 && state.players[0].coins >= cost) return true;
+  if (hero.repairKits === 0 && kitWornOut(state, hero)) {
+    const cost = repairAllCost(state, hero);
+    if (cost > 0 && hero.coins >= cost) return true;
   }
   // A FRIEND IS FACE-DOWN AND THE ANSWER IS ON THE COUNTER. The stall is the
   // only source of SMELLING SALTS, so a downed companion with no bottle in the
   // bag is a reason to walk over on its own — without this clause the bot plays
   // the rest of the campaign a companion short, and every reason it HAD to
   // visit (junk, a worn kit) clears itself long before it would think to.
-  if (needsRevive(state) && affordableRevive(state)) return true;
+  if (needsRevive(state, hero) && affordableRevive(state, hero)) return true;
   return false;
 }
 
 /** Is a companion down with nothing in the bag to wake it? The bot's read of
  * "I have lost a friend and have not fixed it yet" — pure, so `macro.ts` can
  * steer the errand on it. */
-function needsRevive(state: GameState): boolean {
+function needsRevive(state: GameState, hero: Player): boolean {
   if (!state.companions.some((c) => c.downed)) return false;
-  return !state.players[0].inventory.some(
+  return !hero.inventory.some(
     (item) => item !== null && reviveTarget(state, item) !== null,
   );
 }
@@ -393,9 +390,9 @@ function reviveRow(state: GameState): MerchantStock | null {
 
 /** Can the purse cover a bottle right now? Read before the walk, so the bot
  * never crosses a map to stand at a counter it cannot buy from. */
-function affordableRevive(state: GameState): boolean {
+function affordableRevive(state: GameState, hero: Player): boolean {
   const row = reviveRow(state);
-  return row !== null && state.players[0].coins >= row.price;
+  return row !== null && hero.coins >= row.price;
 }
 
 /**
@@ -441,22 +438,18 @@ const UNRANKED_BLOCK_VALUE = 2;
  * state (a harness-side action, like `autoEquipBest` — never called from the
  * pure `botAct`).
  */
-export function tradeAtMerchant(state: GameState): boolean {
+export function tradeAtMerchant(state: GameState, hero: Player): boolean {
   if (!openShop(state)) return false;
   // SELL: every outgrown piece across the counter. The cull (cullWorstLoot)
   // only ever drops the cheapest junk in the field, so the good junk lands
   // here — the whole reason the bag hauls it. The pocket shooters stay in
   // the bag (botPocketKeepIndices): a blade hero's jump-shot weapon is banked
   // on purpose, however its raw numbers read against the blade in hand.
-  const inv = state.players[0].inventory;
-  const keep = new Set(botPocketKeepIndices(state));
+  const inv = hero.inventory;
+  const keep = new Set(botPocketKeepIndices(state, hero));
   for (let i = 0; i < inv.length; i++) {
     const item = inv[i];
-    if (
-      item &&
-      !keep.has(i) &&
-      isScrappableLoot(state, state.players[0], item)
-    ) {
+    if (item && !keep.has(i) && isScrappableLoot(state, hero, item)) {
       sellItem(state, i);
     }
   }
@@ -466,29 +459,22 @@ export function tradeAtMerchant(state: GameState): boolean {
   // companion and fighting it without one for the rest of the campaign. Bought
   // ahead of the repair reserve too — a hero who cannot afford both a mend and
   // his friend should come back with his friend.
-  if (needsRevive(state)) {
+  if (needsRevive(state, hero)) {
     const bottle = reviveRow(state);
     if (bottle && canBuyStock(state, bottle)) buyStock(state, bottle.id);
   }
   // BUY the single best wieldable weapon upgrade the purse covers.
   let bestId = -1;
-  let bestScore = weaponScore(
-    state,
-    state.players[0],
-    state.players[0].equipment.weapon,
-  );
+  let bestScore = weaponScore(state, hero, hero.equipment.weapon);
   for (const entry of state.merchant.stock) {
     if (entry.kind !== "weapon" || entry.qty <= 0) continue;
     // stockUniques can mint unique GEAR into a stall entry — only arms compete
     // (weaponScore throws on a cuirass).
     if (entry.equipment.slot !== "weapon") continue;
-    if (
-      !canBuyStock(state, entry) ||
-      !canEquip(state, state.players[0], entry.equipment)
-    ) {
+    if (!canBuyStock(state, entry) || !canEquip(state, hero, entry.equipment)) {
       continue;
     }
-    const score = weaponScore(state, state.players[0], entry.equipment);
+    const score = weaponScore(state, hero, entry.equipment);
     if (score > bestScore) {
       bestScore = score;
       bestId = entry.id;
@@ -502,12 +488,9 @@ export function tradeAtMerchant(state: GameState): boolean {
   // next mend. Each shelf is bought DOWN until the purse, the dock stack, or
   // the entry's own `qty` says stop — nothing on the stall restocks, so the
   // loop always terminates on the counter's own supply.
-  const reserve = repairAllCost(state, state.players[0]);
+  const reserve = repairAllCost(state, hero);
   const buyDown = (entry: MerchantStock) => {
-    while (
-      state.players[0].coins - entry.price >= reserve &&
-      buyStock(state, entry.id)
-    ) {
+    while (hero.coins - entry.price >= reserve && buyStock(state, entry.id)) {
       // keep stocking up while it pays
     }
   };
@@ -527,10 +510,10 @@ export function tradeAtMerchant(state: GameState): boolean {
   for (const entry of powerups) buyDown(entry);
   closeShop(state);
   // Wear the purchase (and anything freed by the mend) on the spot.
-  autoEquipBest(state, state.players[0]);
+  autoEquipBest(state, hero);
   // Crack the bottle at the counter if one was just bought — the walk is over
   // and the friend has been down the whole way here.
-  careForCompanion(state);
+  careForCompanion(state, hero);
   return true;
 }
 
@@ -554,13 +537,13 @@ export function tradeAtMerchant(state: GameState): boolean {
  * called from the pure `botAct`. Returns whether anything was spent, so a
  * driver can bump its UI.
  */
-export function careForCompanion(state: GameState): boolean {
+export function careForCompanion(state: GameState, hero: Player): boolean {
   if (state.phase !== "playing" || state.companions.length === 0) return false;
-  const bottleAt = state.players[0].inventory.findIndex(
+  const bottleAt = hero.inventory.findIndex(
     (item) => item !== null && reviveTarget(state, item) !== null,
   );
   if (bottleAt >= 0 && spendReviveItem(state, bottleAt)) return true;
-  const kits = state.players[0].medkits.reduce((sum, n) => sum + (n ?? 0), 0);
+  const kits = hero.medkits.reduce((sum, n) => sum + (n ?? 0), 0);
   if (kits < BOT_COMPANION_MEDKIT_RESERVE) return false;
   for (const companion of state.companions) {
     if (companion.hp >= companion.maxHp * BOT_COMPANION_HEAL_FRAC) continue;

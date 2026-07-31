@@ -61,14 +61,14 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     inv[1] = gear(state, "test_helmet", "head");
 
     expect(state.players[0].equipment.chest).toBeNull();
-    expect(botAutoEquip(state)).toBe(true);
+    expect(botAutoEquip(state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.chest?.defId).toBe("test_vest");
     expect(state.players[0].equipment.head?.defId).toBe("test_helmet");
     // The cells they came from are free now — the whole point of the sweep.
     expect(inv[0]).toBeNull();
     expect(inv[1]).toBeNull();
     // Idempotent: a swept loadout doesn't re-sweep.
-    expect(botAutoEquip(state)).toBe(false);
+    expect(botAutoEquip(state, state.players[0])).toBe(false);
   });
 
   it("swaps a worn piece out for the better find and banks the loser", () => {
@@ -80,7 +80,7 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     better.affixes = [{ kind: "armor", value: 20 }];
     state.players[0].inventory[2] = better;
 
-    expect(botAutoEquip(state)).toBe(true);
+    expect(botAutoEquip(state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.chest?.id).toBe(better.id);
     // Nothing is destroyed — the displaced piece lands in the vacated cell.
     expect(state.players[0].inventory[2]?.id).toBe(worn.id);
@@ -100,10 +100,10 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
         pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     );
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
 
-    expect(botAutoEquip(state)).toBe(false);
+    expect(botAutoEquip(state, state.players[0])).toBe(false);
     expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
     expect(state.players[0].inventory[0]?.defId).toBe("crude_sword");
   });
@@ -119,11 +119,11 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
       tier: "artifact",
     });
     state.players[0].inventory[0] = heavy;
-    expect(botAutoEquip(state)).toBe(false);
+    expect(botAutoEquip(state, state.players[0])).toBe(false);
     expect(state.players[0].equipment.chest).toBeNull();
 
     state.players[0].level = 60;
-    expect(botAutoEquip(state)).toBe(true);
+    expect(botAutoEquip(state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.chest?.id).toBe(heavy.id);
   });
 
@@ -144,10 +144,10 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     inv[1] = gear(state, "test_greaves", "legs");
     expect(inv.every((cell) => cell !== null)).toBe(true);
 
-    expect(botAutoEquip(state)).toBe(true);
+    expect(botAutoEquip(state, state.players[0])).toBe(true);
     expect(inv.indexOf(null)).not.toBe(-1);
     // Nothing had to be thrown away to get there.
-    expect(cullWorstLoot(state)).toEqual([]);
+    expect(cullWorstLoot(state, state.players[0])).toEqual([]);
     expect(state.players[0].vault).toEqual([]);
   });
 });
@@ -172,10 +172,10 @@ describe("a shooter build draws its banked main (stepBotWeaponSwap)", () => {
       }),
     );
 
-    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.id).toBe(gun.id);
     // And once it is in hand the shooter build settles — no per-tick juggling.
     state.stats.timeMs += 5000;
-    expect(stepBotWeaponSwap(bot, state)).toBe(false);
+    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(false);
   });
 });
