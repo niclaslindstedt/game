@@ -1,42 +1,37 @@
-# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: wagon
 family: eastworld
 plane: floor
-size: [20, 18]
+size: [16, 16]
 description: >
-  A wooden buckboard wagon from above - a planked bed between side rails with
-  a driver's bench across the front, a shaft out ahead of it, four dark wheels
-  at the corners and a couple of planks sprung out of the bed.
+  A wooden buckboard wagon from above — a plank bed with side rails and dark
+  wheels beneath; hoppable street furniture.
 subject:
-  kind: "prop - wagon"
-  build: "a rectangular planked bed between two side rails, seen from directly above"
-  features: "plank seams running the length of the bed, a driver's bench across the front, a shaft, four dark spoked wheels at the corners, a few sprung planks"
-  accent: "sun-bleached planks over weathered brown timber"
-  flavor: "hoppable frontier street furniture that cracks open for a settler's kit"
+  kind: prop — wagon
+  build: a rectangular plank bed with side rails, four dark wheels showing beneath
+  features: a wooden buckboard body with a raised rail
+  accent: pale plank highlights over brown timber
+  flavor: hoppable frontier street furniture
 palette:
   B: "#92643e" # plank bed brown
-  D: "#5c3e28" # sprung plank shadow
-  E: "#5d4028" # dark rail timber / bench / shaft
+  E: "#5d4028" # dark rail timber
   K: "#0c0b12" # wheel hub
   N: "#3a3644" # dark wheel
   O: "#1a1c2c" # outline
-  S: "#b39378" # sun-bleached plank
+  S: "#b39378" # pale plank highlight
 grid: |
-  ........OOOO........
-  ........OSEO........
-  .OOO.OOOOEEOOOOOOO..
-  ONNNOEDDDDDDDDEONNO.
-  ONKNOESSSSSSSSEOKNO.
-  ONKNOEEEEEEEEEEOKNO.
-  ONNNOEESEEEEEEEONNO.
-  .OOOOSBBBBBBBBEOOO..
-  ....OEEEEDEEEEEO....
-  ....OEBSEEDEBBEO....
-  ....OEEEEEEEEEEO....
-  .OOOOEBBBBBBBBSOOO..
-  ONNNOEEDEEEEEEEONNO.
-  ONKNOEBBBBBBBBEOKNO.
-  ONKNOEBBBBBBBBEOKNO.
-  ONNNOOOOOOOOOOONNNO.
-  .OOO...........OOO..
-  ....................
+  ................
+  ................
+  ................
+  ..O..........O..
+  .OBOOOOOOOOOOBO.
+  .OBBBBBBBBBBBBO.
+  .OEBSBBBBSBBBEO.
+  .OEEEEEEEEEEEEO.
+  ..OOOOOOOOOOOO..
+  ...ONNO..ONNO...
+  ..ONKKNOONKKNO..
+  ..ONKKNOONKKNO..
+  ...ONNO..ONNO...
+  ....O......O....
+  ................
+  ................
