@@ -148,7 +148,7 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 | **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6   |
 | **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7   |
 | **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
-| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **In progress**, see §1.75.1  |
+| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4       |
 | **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks |                               |
 | **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                               |
 | **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
@@ -796,7 +796,7 @@ something other than its default (a parameter left at its default cannot fail a
 determinism test), and it asserts outright that a run and a bare `createGame`
 with the same seed are NOT the same thing.
 
-### 1.75.2 The adopted run — the parked run, the checkpoint, and `Sent.full`
+### 1.75.2 The adopted run — the parked run, the checkpoint, and `Sent.full` — **LANDED**
 
 The same finding, one step harder. A **parked run** (`saved-run.ts`) and a
 **checkpoint restore** (`checkpoint.ts`) do not call `createGame` at all; they
@@ -814,7 +814,7 @@ snapshots their positions through a migration ladder, and that is the mechanism
 to reuse), and the static tier is still free here, because a parked run's level
 came from the same seed and difficulty the client will rebuild from.
 
-### 1.75.3 The driver seam, and the three paths through it
+### 1.75.3 The driver seam, and the three paths through it — **LANDED**
 
 `GameScreen` stops calling `createGame` and driving `step()`, and drives
 `pwa/src/game/net/client.ts` instead — which already exists, already hands back a
@@ -845,7 +845,7 @@ conversion — either that memory moves onto the run, or the bot runs server-sid
 **Answer it deliberately; it is the last thing in this PR that is a design
 question rather than a rename.**
 
-### 1.75.4 And the packaged app gets launched, for the first time
+### 1.75.4 And the packaged app gets launched, for the first time — **STILL OWED**
 
 PR 1 flagged this, PR 1.5 did not reach it, and it is still outstanding: the
 `extraResources` entry, the `MessagePortMain` handover and a real

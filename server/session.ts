@@ -39,6 +39,7 @@
 //     ever sent in ordinary operation.
 
 import {
+  adoptRun,
   applyRunCommand,
   createRunFromParams,
   isRunCommand,
@@ -48,6 +49,7 @@ import {
   step,
   type GameInput,
   type GameState,
+  type FrozenRun,
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
@@ -109,6 +111,15 @@ type Client = {
   /** The last sequence this client said it had applied. */
   ackedSeq: number;
   /**
+   * This client has never been sent a world it can trust, so the next publish
+   * owes it a FULL snapshot rather than a delta.
+   *
+   * True only for a session that ADOPTED its run: an ordinary session's client
+   * built the genesis world for itself out of the same parameters, which is the
+   * whole of why the static tier is free.
+   */
+  needsFull: boolean;
+  /**
    * What was sent at each unacknowledged sequence. Patches, not snapshots:
    * every delta since the last ack is coded against the SAME baseline, so an
    * ack for sequence N is satisfied by applying N's patch alone — no chain to
@@ -153,6 +164,24 @@ export type SessionOptions = {
   /** Seats, host included. */
   maxClients?: number;
   peers?: Partial<SessionPeers>;
+  /**
+   * A run to ADOPT instead of building one from `params` — a parked run, or a
+   * checkpoint the player just retried into.
+   *
+   * **IT COSTS THE STATIC TIER, so pass one only when there is no alternative.**
+   * A client builds the terrain from the parameters and is sent only what
+   * differs from it; a client whose server adopted a state cannot build
+   * anything that matches, so every client is sent a FULL first snapshot
+   * instead (~100 KB per level, per client, that a parameter-built session
+   * never carries).
+   *
+   * The parameters still travel and still matter: they are what the client
+   * builds ITS OWN world from, so an adopted state must be handed the
+   * parameters it was originally built from. Hand it somebody else's and the
+   * client carves different terrain — which nothing will ever correct, because
+   * the static tier is never sent.
+   */
+  adopt?: FrozenRun | null;
 };
 
 export type Session = {
@@ -203,15 +232,20 @@ export function createSession(options: SessionOptions): Session {
   setGeneratedMapsEnabled(params.generatedMaps);
   setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
 
-  // THE RUN, NOT THE LEVEL. `createGame` builds the world; a RUN is that plus
-  // everything the app used to do to it before the first tick — the campaign
-  // chain, the purse, the thoughts already read, an opening already watched, a
-  // bot run's dialogue mute, and an AUTO PILOT flight's build baseline (a ride
-  // crosses levels, so without it the refund owed when it stops would revert to
-  // the build the BOT had already grown). ONE function performs all of it, here
-  // and in the client, which is what makes an arriving client's first delta
-  // empty rather than a list of corrections — see `src/game/session-setup.ts`.
-  const state = createRunFromParams(params);
+  // TWO DOORS INTO A RUN, and which one was used decides what an arriving
+  // client is sent.
+  //
+  // BUILT — `createGame` builds the world; a RUN is that plus everything the
+  // app used to do to it before the first tick: the campaign chain, the purse,
+  // the thoughts already read, an opening already watched, a bot run's dialogue
+  // mute, and an AUTO PILOT flight's build baseline. ONE function performs all
+  // of it, here and in the client, which is what makes an arriving client's
+  // first delta empty rather than a list of corrections.
+  //
+  // ADOPTED — a parked run or a checkpoint restore, which no set of parameters
+  // describes. The client cannot rebuild it, so it gets a full snapshot.
+  const adopted = options.adopt ?? null;
+  const state = adopted ? adoptRun(adopted) : createRunFromParams(params);
 
   /**
    * The world at tick 0, frozen — the state every client's first delta is
@@ -233,6 +267,29 @@ export function createSession(options: SessionOptions): Session {
       ),
     ),
   ) as Record<string, unknown>;
+
+  // WHAT THE ADOPTED STATE CLAIMS TO BE has to match what the parameters will
+  // make a client build, and there is no delta that could ever reconcile them:
+  // the terrain is the STATIC tier and is never sent, so a client would carve
+  // one map and walk around inside another for the whole run. Caught here,
+  // loudly, rather than shipped as a hero clipping through walls his server
+  // does not have.
+  //
+  // The LEVEL and the DIFFICULTY are what the state can be asked; the SEED it
+  // was carved from is not on a `GameState`, so this is a guard rather than a
+  // proof. It catches the mistake somebody actually makes — hosting a parked
+  // run under the parameters of the level they were about to start — and the
+  // rest is on `SessionOptions.adopt`'s own contract.
+  if (
+    adopted &&
+    (state.level.id !== params.levelId ||
+      state.difficulty !== params.difficulty)
+  ) {
+    throw new Error(
+      `adopted a ${state.level.id}/${state.difficulty} run into a ` +
+        `${params.levelId}/${params.difficulty} session`,
+    );
+  }
 
   const clients = new Map<number, Client>();
   const inputs = new Map<number, GameInput>();
@@ -362,26 +419,44 @@ export function createSession(options: SessionOptions): Session {
         client.recipient,
         pendingEvents,
       );
-      const patch = diffState(client.baseline, snapshot);
+      // A CLIENT THAT CANNOT REBUILD THE WORLD IS SENT ALL OF IT, ONCE. Only a
+      // session that ADOPTED its run ever takes this branch: everybody else
+      // built the genesis world for themselves from the same parameters, which
+      // is the whole of why the static tier costs nothing.
+      const full = client.needsFull;
+      const payload = full ? snapshot : diffState(client.baseline, snapshot);
       // Serialized ONCE and used twice: as the frame's bytes, and — parsed
       // back — as the history entry. The parse is what makes the entry safe to
       // keep: `diffState` puts LIVE references in the patch (it copies
       // nothing, deliberately), and a baseline holding live objects would
       // compare the running state against itself next publish and find nothing
       // changed. That bug is silent and total: the client simply stops
-      // receiving updates.
-      const json = JSON.stringify(patch);
-      client.history.set(seq, {
-        full: false,
-        patch: JSON.parse(json) as StatePatch,
-      });
+      // receiving updates. A full snapshot is `captureSnapshot`'s own output
+      // and holds live references for exactly the same reason, so it is parsed
+      // back for exactly the same reason.
+      const json = JSON.stringify(payload);
+      client.history.set(
+        seq,
+        full
+          ? { full: true, state: JSON.parse(json) as WireState }
+          : { full: false, patch: JSON.parse(json) as StatePatch },
+      );
       trimHistory(client);
       client.send(
         encodeFrameJson(
-          { type: FRAME.delta, seq, ack: client.ackedSeq, tick },
+          {
+            type: full ? FRAME.snapshot : FRAME.delta,
+            seq,
+            ack: client.ackedSeq,
+            tick,
+          },
           json,
         ),
       );
+      // Cleared only AFTER the frame is handed over, so a send that throws
+      // leaves the client still owed its world rather than baselined on one it
+      // never received.
+      client.needsFull = false;
     }
     // Every client that exists has been handed these; one that joins after
     // this point starts from the genesis baseline and owes nothing.
@@ -439,6 +514,7 @@ export function createSession(options: SessionOptions): Session {
         // fields the server must never confirm or deny.
         baseline: baselineFor(genesis, recipient),
         ackedSeq: 0,
+        needsFull: adopted !== null,
         history: new Map(),
       };
       clients.set(id, client);

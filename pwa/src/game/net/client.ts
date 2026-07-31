@@ -79,6 +79,21 @@ export type NetClientOptions = {
   build: string;
   /** The mods this client has applied, in load order. */
   mods?: string[];
+  /**
+   * Use THIS object as the run instead of building one.
+   *
+   * A HOST's renderer already holds a `GameState` — its own run setup built it,
+   * from the very parameters the session was hosted with — and every helper in
+   * the run loop closes over that object. Building a second one here would
+   * leave the renderer drawing a world nothing ever patches. So the host hands
+   * its own in and the client corrects it in place; a remote joiner passes
+   * nothing and gets one built from the welcome's parameters.
+   *
+   * It is the caller's job that this object and the session's agree. For a host
+   * that is free (one `RunParams`, one `createRunFromParams`, both ends); it is
+   * not a licence to hand in an arbitrary state.
+   */
+  adopt?: GameState | null;
   /** The run is live: the state is built and the first snapshot has landed. */
   onReady?: (state: GameState, params: SessionParams) => void;
   /** The session ended, or the join was refused. */
@@ -204,7 +219,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
       transport.close();
       return;
     }
-    state = buildLocalState(welcome.params);
+    state = options.adopt ?? buildLocalState(welcome.params);
     const recipient = { ownsPlayer: welcome.ownsPlayer };
     // A CLIENT THAT MAY NOT SEE THE BAG MUST NOT INVENT ONE. Its own
     // `createGame` just built a whole private hero — an empty inventory, a

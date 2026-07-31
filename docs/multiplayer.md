@@ -1,8 +1,9 @@
 # Multiplayer — the shipped architecture
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
-describes what actually exists. **PR 1, the NETWORKING half of PR 2, and the
-VERBS half of PR 1.5 have landed.** The simulation runs in its own process, the
+describes what actually exists. **PR 1, the NETWORKING half of PR 2, PR 1.5 and
+PR 1.75 have landed** — the run loop drives a session now, so none of this is
+dead code any more. The simulation runs in its own process, the
 wire between it and a renderer is complete and tested, the desktop shell forks
 and supervises a session — a session can open a UDP socket and a Steam lobby,
 admit remote clients behind a challenge handshake, seat them as spectators, and
@@ -10,10 +11,9 @@ carry chat and `/players N` between them — and everything the app DOES to a ru
 now travels as a named command rather than as a direct call on a local state.
 
 What is NOT here is the half a player would SEE: the HOST, JOIN and server-
-browser screens, and the in-run chat overlay. That is deliberate rather than
-abandoned — see [What is NOT here yet](#what-is-not-here-yet) — because the run
-still simulates in the renderer, so a JOIN screen would be a door into a session
-nothing plays through. Moving the loop is **PR 1.75**; the screens are PR 2.5.
+browser screens, and the in-run chat overlay. That is **PR 2.5**, and it can go
+now — the reason it was held (a door into a session nothing plays through) no
+longer applies.
 
 ## The topology
 
@@ -106,6 +106,46 @@ sound and the achievement ledger work on a client with no change at all. The
 one thing it needs is a server that does not LOSE any: the simulation runs at
 60 Hz and publishes every third tick, so the session accumulates the three
 ticks' events and hands them over together.
+
+## Who advances the run
+
+`GameScreen` used to call `step()` itself, which is the one thing that could not
+survive the simulation moving out of the renderer. It drives a **RunDriver**
+now (`pwa/src/game/game-screen/run-driver.ts`), and there are two:
+
+- **LOCAL** — `step(state, input, dt)`, in this process, exactly as before. What
+  a browser, a phone and a desktop single-player run all do. It is not a
+  fallback: a session per run costs a process, and running one in a renderer
+  would put the snapshot capture, the diff and the JSON round trip on the frame
+  thread twenty times a second, on a phone.
+- **NET** — send the input and let the session step; snapshots arrive on their
+  own and patch the state in place. Offered first and answering null wherever it
+  cannot host, so the platform question is never asked in the run loop — the
+  bridge answers a better one ("can a session actually be started?").
+
+Everything else in the loop reads a `GameState` and is untouched by which driver
+is behind it: the render pass, the HUD model, the effects, the overlays, the
+sound bus, the achievement ledger, the checkpoint capture. **If one of them ever
+has to know, that is a finding rather than a patch.**
+
+**THE HOST HANDS IN ITS OWN STATE.** The renderer already holds a run — its own
+setup built it, from the very `RunParams` the session is hosted with — and every
+helper in the loop closes over that object, so the client adopts it and corrects
+it in place. A second object built here would leave the renderer drawing a world
+nothing ever patches. A remote joiner has no such object and keeps the ordinary
+path.
+
+**AND `state.events` IS THE TRAP.** It is cleared by `step()` on the local path
+and by NOBODY on the net one, so the driver's `endTick` is where the net path
+empties it and where the local path deliberately does not. Both mistakes are
+silent and both sound like a bug in the audio rather than in the replication: a
+list left in place is replayed by every frame until the next snapshot lands
+(three times over, at 20 Hz against 60), and a list cleared on the local path
+loses a whole slice's events whenever a frame owes two.
+
+`?net=off` forces the local path. The session path is the one thing here that
+cannot be proved from a test, so a player who hits a bad session has a way back
+into their game that does not involve a new build.
 
 ## Two channels, deliberately
 
@@ -339,7 +379,8 @@ compiler.
 | `tests/engine/net_determinism_test.ts`   | The same arguments build the same world — in a real second process            |
 | `tests/engine/run_commands_test.ts`      | The two closed lists agreeing, and every argument a stranger may send         |
 | `tests/engine/run_params_test.ts`        | `RunParams` and `SessionParams` naming the same fields                        |
-| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine — and the cutover's own tripwire     |
+| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine, and the loop reaching the client    |
+| `tests/engine/run_driver_test.ts`        | The driver seam's contract — who clears `state.events`, and who must not      |
 | `tests/engine/net_session_test.ts`       | A real session and a real client, hashed against each other after 600 ticks   |
 | `tests/engine/wire_handshake_test.ts`    | The cookie's epoch window, the proof, and the ORDER the refusals come in      |
 | `tests/engine/wire_chat_test.ts`         | The slash grammar, and that hp and XP scale together                          |

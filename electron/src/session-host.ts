@@ -64,6 +64,10 @@ export type ServerControl =
       mods?: string[];
       password?: string;
       maxClients?: number;
+      /** A run the session should ADOPT rather than build. Opaque here — this
+       * process never learns what a run is, which is the point of the two
+       * channels (see net.ts). */
+      adopt?: unknown;
     }
   | { kind: "stop" }
   | { kind: "status" }

@@ -1,29 +1,25 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// WHERE THE NET CLIENT MAY AND MAY NOT BE REACHED FROM — one permanent rule
-// and one TRIPWIRE, and the tripwire is the more important of the two.
+// WHERE THE NET CLIENT MAY AND MAY NOT BE REACHED FROM — two rules pulling in
+// opposite directions, which is why they live in one file.
 //
-// This plan has now been amended twice for the same failure: a LAYER ships and
-// the CUTOVER that would make it reachable does not (PR 1 and PR 2 both, see
-// `docs/multiplayer-plan.md`'s amendments). Both times the corrective was more
-// prose, and prose is nought for two. So the state of the cutover is asserted
-// here instead, where the build can see it — this repo's own habit everywhere
-// else: the `COMMANDS` drift test, the library's coverage maps, `assembleRows`
-// throwing for a row id no builder answers.
+// **THE RUN LOOP MUST REACH IT.** The plan was amended twice for the same
+// failure: a LAYER ships and the CUTOVER that would make it reachable does not
+// (PR 1 and PR 2 both, see `docs/multiplayer-plan.md`'s amendments). Both times
+// the corrective was more prose, and prose was nought for two. So this began as
+// a TRIPWIRE — an assertion that the loop did NOT reach the client, green while
+// the machinery was orphaned and failing the moment somebody wired it up — and
+// it did exactly that when the driver seam landed. Inverted now, it is the
+// permanent statement that the session server, the wire, both transports, the
+// handshake, the spectators and the chat are on a path a player walks, and that
+// they cannot quietly become an orphan again.
 //
-// **THE TRIPWIRE IS WRITTEN NEGATIVELY ON PURPOSE, AND IT IS MEANT TO BREAK.**
-// It asserts what is true TODAY — that the run loop does not yet reach
-// `pwa/src/game/net/` — so it is green now and FAILS on the day somebody wires
-// the loop to the session. That is the point: whoever does the cutover cannot
-// finish without coming here and stating the new truth, and nobody can quietly
-// half-do it. An `it.fails` or a `todo` would have been green in both worlds,
-// which is the same silence this file exists to end.
-//
-// The permanent rule beside it is the 170 KB critical-path budget's, at the
-// source level: the app's STARTUP path must never statically reach the net
-// client, which imports `@game/core` and would drag the whole simulation into
-// every player's first download. `pwa/scripts/check-seo.mjs` measures the built
-// bytes; this says WHICH IMPORT would have caused it, which is the half a size
-// number cannot tell you.
+// **THE STARTUP PATH MUST NOT.** The other direction, and it is the 170 KB
+// critical-path budget at the source level: `pwa/src/game/net/` imports
+// `@game/core`, so a static edge to it from the app's first download drags the
+// whole simulation along. `pwa/scripts/check-seo.mjs` measures the built bytes;
+// this says WHICH IMPORT would have caused it, which is the half a size number
+// cannot tell you — and it is the rule PR 2.5's title-menu screens will be
+// tempted to break.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -211,20 +207,18 @@ describe("the cutover", () => {
     expect(fromClient.has(NET_CLIENT)).toBe(true);
   });
 
-  it("HAS NOT HAPPENED YET — and this test is the tripwire, not the goal", () => {
-    // **WHEN THIS FAILS, THAT IS THE GOOD NEWS.** It means the run loop finally
-    // reaches the session client and PR 1.75 has landed. Invert it — assert
-    // `toBe(true)` — and delete this comment down to the first line, which is
-    // then the permanent statement that the machinery is reachable.
+  it("HAS HAPPENED — the run loop reaches the session client", () => {
+    // This was written the other way round, as a tripwire: `pwa/src/game/net/`
+    // was DEAD CODE — the session server, the wire, both transports, the
+    // handshake, the spectators and the chat all shipped and none of it on a
+    // path a player walked — and the assertion recorded that where the build
+    // could see it rather than only in a plan nobody has to read. It failed the
+    // day the driver seam landed, which is what it was for, and was inverted
+    // then.
     //
-    // Until then it records, where the build can see it rather than only in a
-    // plan nobody has to read, that `pwa/src/game/net/` is DEAD CODE: the
-    // session server, the wire, both transports, the handshake, the spectators
-    // and the chat are all shipped and none of it is on a path a player walks.
-    // What stands between here and there is written up in
-    // `docs/multiplayer-plan.md` §1.75.2–4 — the adopt-a-state start for a
-    // parked run and a checkpoint, the driver seam itself, the autopilot's five
-    // remaining direct mutators, and a packaged launch.
-    expect(run.has(NET_CLIENT)).toBe(false);
+    // It stays as the permanent statement of the same fact from the other side:
+    // the run loop's driver reaches the client, so the machinery is reachable
+    // and cannot quietly become an orphan again.
+    expect(run.has(NET_CLIENT)).toBe(true);
   });
 });
