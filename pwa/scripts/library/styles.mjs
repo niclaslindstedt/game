@@ -38,6 +38,31 @@ const cardSkin = () =>
 export const CAP_EM = CAP_HEIGHT / UNITS_PER_EM;
 const PIXEL_LEADING = (CAP_EM * 2).toFixed(3);
 
+/**
+ * THE LEADING A CARD LINE GETS WHEN IT WRAPS, and the trim that keeps a
+ * one-line card row exactly as tall as it was.
+ *
+ * `.item-card` sets `line-height: CAP_EM` — one cap, no leading — because in
+ * the game a card row is a PixelText CANVAS one cap tall and the only thing
+ * between two rows is `item-card.css`'s own `gap: 0.35rem`. That is right for
+ * the pitch BETWEEN rows and catastrophic INSIDE one: a flex gap does not apply
+ * between the wrapped lines of a single child, so a name too long for the card
+ * ("GREAVES OF THE WALLED GARDEN") set its second line exactly one cap below
+ * the first — which for a font with no descenders means the two rows of caps
+ * touch, and read as one smeared line.
+ *
+ * PixelText has the honest answer already: it lays wrapped rows out at one
+ * glyph height plus `LINE_GAP_RATIO` (0.3) of one, and adds nothing at all to a
+ * single-line canvas. So a wrapping card line takes that same 1.3-cap pitch —
+ * and `WRAP_TRIM`, a negative block margin of exactly the half-leading the
+ * taller line-height adds top and bottom, hands the one-line case its old
+ * margin box back. One line is pitched as before, two lines are pitched as the
+ * game pitches them, and neither number is invented here: both come from the
+ * packed font's metrics and PixelText's own ratio.
+ */
+const WRAP_LEADING = (CAP_EM * 1.3).toFixed(3);
+const WRAP_TRIM = (CAP_EM * -0.15).toFixed(4);
+
 export function libraryCss() {
   return `/* GENERATED — do not edit. Emitted by pwa/scripts/library/. */
 ${panelSkin()}
@@ -717,6 +742,17 @@ h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.
 /* A long name WRAPS inside the card the way PixelText's wrap width wraps it in
    play. Without this it rides straight out over the rarity border. */
 .card-name { font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
+/* …and every card line that CAN wrap gets the leading PixelText would give it,
+   trimmed back so a single-line row keeps the pitch measured above. The list is
+   the card's text-bearing leaves — a new kind of card line belongs in it, or it
+   ships with its wrapped rows touching (see WRAP_LEADING). */
+.item-card :is(
+  .card-name, .card-ilvl, .card-tier, .card-foot,
+  .card-set-name, .card-set-member, .card-set-bonus
+), .item-card .tooltip-row > * {
+  line-height: ${WRAP_LEADING};
+  margin-block: ${WRAP_TRIM}em;
+}
 /* Sized to one row of the scale-2 name, exactly as the in-game name row is. */
 .card-icon { width: 16px; height: auto; flex: none; }
 .tooltip-name-row { display: flex; align-items: center; gap: 0.25rem; min-width: 0; }

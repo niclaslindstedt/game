@@ -874,10 +874,10 @@ mobs two body-widths off his stall. He roams the level until the hero first
 walks up to him: the **meeting** roots him to the spot for the rest of the
 run, pins him on the level map (a gold MERCHANT coin marker), plays his greeting,
 and stocks his stall. A gold coin bobs over his head from then on; tapping him
-at the counter opens the **shop** (the run freezes like the bag). Speaking to
-him also **revives the party** — any companion beaten down is stood back up at
-full health, mercy that costs no coin and works even in hardcore (see
-**Companions** below).
+at the counter opens the **shop** (the run freezes like the bag). He is also
+the only source of **SMELLING SALTS**, the one thing that puts a downed
+companion back on its feet — every stall stocks a couple, on every map (see
+**Companions** below). He no longer revives the party for free.
 
 The shop trades in **coins**, earned one way — selling loot across the
 counter — and spent on the stall, so the economy recycles the loot rain
@@ -1164,7 +1164,9 @@ a spareable unique to 0 hp pauses the run in the `choice` phase: **KILL**
 lands the withheld blow through the ordinary kill rails (loot, last words,
 the lot); **SPARE** recruits the figure — it hands over its STORY items (the
 plot must flow) but keeps its equipment loot as its own kit, swears a life
-debt (its `joinWords`, played through the dialogue box), and joins the party.
+debt (its `joinWords`, played through the dialogue box), and joins the hero.
+Only one figure walks with him at a time, so the verdict is a real trade
+rather than a collection: see the party rules below.
 
 A companion follows the hero in formation, fights autonomously with whatever
 is in its weapon slot (its signature piece at first — Tesla's coil, Lucky's
@@ -1187,13 +1189,20 @@ packs **more pellets**, **Rasputin's** frost nova **widens and bites harder**,
 and **Lucky's** magic-find aura **swells**. The current level, XP bar, and power
 rank show on its equip screen.
 
-Companions are never permanently killed, but they can be **beaten DOWN**: at 0
-hp one kneels out of the fight (its aura silent). A companion downed in a quiet
-scrap stands back up on its own once the mob is dead — but one downed in the
-**middle of a swarm STAYS down** (a live foe beside it freezes the revive
-count) until the field clears. The lifeline is the **wandering merchant**:
-**just speaking to him revives the whole party** at full health — even in
-**hardcore**, where the hero himself gets no such mercy.
+You keep **exactly one companion**. Spare a second figure and the one you had
+is **retired** on the spot — whatever armor you lent it comes back to your bag,
+and every level it earned is gone. Choosing who walks with you is the point.
+
+A companion is never permanently killed, but it is **beaten DOWN** and it
+**stays down**: at 0 hp it kneels out of the fight, its aura silent, and
+nothing in the world stands it back up — not time, not clearing the room, not
+the merchant, not the walk to the next venue. The cure is a bottle of
+**SMELLING SALTS** off the trader's shelf, **used from your bag**, which wakes
+it groggy on a fifth of its health. Filling the rest of the bar is **your own
+medkits**: pressing the companion's HUD portrait spends one on it (the portrait
+wears a medkit badge whenever a press would do that rather than open its equip
+screen). There is no passive regeneration at all — a friend is a supply line,
+and worth budgeting for before a boss.
 
 **LUCKY's aura** is the recruitment pitch: +50% MAGIC FIND for the whole
 party while he's on his feet — every loot-tier roll's chance is half again

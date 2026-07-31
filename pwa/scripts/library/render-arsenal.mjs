@@ -503,6 +503,14 @@ export function itemPage(
           .filter(Boolean)
           .join("\n");
 
+  // A REVIVE item's whole subject is somebody in another section, so it owes
+  // the link back — the same both-ways cross-reference a monster and what it
+  // drops keep. Built here rather than in the prose, which is escaped whole.
+  const revive = item.stats.revive
+    ? `      <p class="note">Who it wakes, and everything else about keeping one
+      alive, is under <a href="${base}library/allies/">the allies</a>.</p>`
+    : "";
+
   const durability =
     item.slot === "weapon" && item.stats.durability
       ? `      <p class="note">A dropped copy carries ${item.stats.durability} swings of wear.
@@ -521,6 +529,7 @@ ${lore}
       <section class="panel pixel-panel">
       <h2 id="stats">What it does</h2>
 ${notesList(notes)}
+${revive}
 ${durability}
       <p class="note">${escapeHtml(REFERENCE_NOTE)}</p>
       </section>

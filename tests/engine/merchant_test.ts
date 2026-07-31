@@ -33,6 +33,7 @@ import {
   skipCutscene,
   type Equipment,
   type GameState,
+  type MerchantStock,
   type Tier,
 } from "@game/core";
 import { clearStage, idle, makeEnemy, run, startGame } from "./helpers.ts";
@@ -394,14 +395,14 @@ describe("the shop", () => {
     openShop(state);
     const entry = state.merchant.stock.find(
       (s) => s.kind === "weapon" && s.equipment.slot === "weapon",
-    )!;
+    ) as Extract<MerchantStock, { kind: "weapon" }>;
     state.player.coins = entry.price * 2;
     expect(buyStock(state, entry.id)).toBe(true);
     // The piece that lands is the row's own roll, handed over as a FRESH
     // instance: a row may hold several units (the salts shelf), so the same
     // object must never end up in two bag cells sharing an id.
     const bought = state.player.inventory.find(
-      (i) => entry.kind === "weapon" && i?.defId === entry.equipment.defId,
+      (i) => i?.defId === entry.equipment.defId,
     );
     expect(bought).toBeDefined();
     expect(bought!.id).not.toBe(entry.equipment.id);

@@ -301,7 +301,7 @@ export function InventoryPanel({
   // disagree. Two pieces answer today and both are zero-stat trinkets whose
   // whole worth is what they DO: a travel-gate key on its home level (the
   // cow-level ritual), and SMELLING SALTS while a companion is face-down.
-  const useVerb = (item: Equipment) => {
+  const bagVerb = (item: Equipment) => {
     if (gateKeyTarget(state, item)) return "spendGateKey" as const;
     if (reviveTarget(state, item)) return "spendReviveItem" as const;
     return null;
@@ -312,7 +312,7 @@ export function InventoryPanel({
   // round. Reached from the tooltip's USE row (touch) or a right-click on the
   // bag cell (desktop).
   const activateItem = (item: Equipment) => {
-    const verb = useVerb(item);
+    const verb = bagVerb(item);
     const index = state.player.inventory.findIndex((i) => i?.id === item.id);
     if (!verb || index < 0 || !runCommandOk(state, verb, index)) return;
     playUiSound(synth, "confirm");
@@ -494,7 +494,7 @@ export function InventoryPanel({
                   // (a gate key on its home level, a bottle of salts with a
                   // friend down) uses it in place.
                   onContextMenu={
-                    item && useVerb(item)
+                    item && bagVerb(item)
                       ? (e) => {
                           e.preventDefault();
                           activateItem(item);
@@ -577,7 +577,7 @@ export function InventoryPanel({
           item={inspect.item}
           anchor={inspect.anchor}
           onUse={
-            useVerb(inspect.item)
+            bagVerb(inspect.item)
               ? () => activateItem(inspect.item)
               : undefined
           }

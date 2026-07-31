@@ -26,7 +26,7 @@ import {
   step,
 } from "@game/core";
 import type { Companion, GameEvent, GameState } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, startGame } from "./helpers.ts";
 
 const SEED_NEXT = 4242;
 
