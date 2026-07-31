@@ -5,6 +5,7 @@
 
 import {
   abilityDef,
+  AMMO_KINDS,
   equipmentIcon,
   MERCY,
   questItemDef,
@@ -217,24 +218,31 @@ export function drawItems(
             ? sprites.repair
             : item.kind === "drink"
               ? sprites.drink
-              : item.kind === "ability"
-                ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
+              : // A BOX OF AMMUNITION draws its kind's own ground sprite — a
+                // spilled handful of brass, a bundle of arrows, a strip of
+                // charged cells — so a shooter reads what is worth the walk
+                // from across the room.
+                item.kind === "ammo"
+                ? (spriteByName(sprites, AMMO_KINDS[item.ammo].sprite) ??
                   sprites.medkit)
-                : item.kind === "story"
-                  ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
+                : item.kind === "ability"
+                  ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
                     sprites.medkit)
-                  : // A QUEST PIECE draws the icon the errand that wants it
-                    // authored, resolved through the quest rather than a global
-                    // catalog — two mods may both ship a "spare fuse".
-                    item.kind === "quest"
-                    ? (spriteByName(
-                        sprites,
-                        questItemDef(item.questId, item.defId)?.icon ?? "",
-                      ) ?? sprites.medkit)
-                    : (spriteByName(
-                        sprites,
-                        equipmentIcon(item.equipment.defId),
-                      ) ?? sprites.medkit);
+                  : item.kind === "story"
+                    ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
+                      sprites.medkit)
+                    : // A QUEST PIECE draws the icon the errand that wants it
+                      // authored, resolved through the quest rather than a
+                      // global catalog — two mods may both ship a "spare fuse".
+                      item.kind === "quest"
+                      ? (spriteByName(
+                          sprites,
+                          questItemDef(item.questId, item.defId)?.icon ?? "",
+                        ) ?? sprites.medkit)
+                      : (spriteByName(
+                          sprites,
+                          equipmentIcon(item.equipment.defId),
+                        ) ?? sprites.medkit);
     // A MERCY DROP still riding its angel down (deliverMs ticking): the guardian
     // swoops in from above cradling the gift, then releases it to fall the last
     // stretch to `pos`. Purely presentational — the engine has already parked

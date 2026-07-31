@@ -1,0 +1,42 @@
+name: weapon_locker
+family: bunker
+size: [14, 20]
+description: >
+  A steel weapons locker standing against the wall — twin doors, a louvred vent
+  band across the top, a lever handle and a keyhole nobody has the key to any
+  more. Smashing it open is faster.
+subject:
+  kind: breakable obstacle prop — weapons locker
+  build: a tall two-door steel cabinet standing upright, seam down the middle
+  features: a louvred vent band across the top, a lever handle and lock plate
+    at the seam, bolted feet
+  accent: cold gunmetal with a brass lock plate
+  flavor: the armory cabinet, still stocked and still locked
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # lit steel door
+  V: "#9095a5" # shaded steel door
+  b: "#3f4553" # louvre slot and seam shadow
+  h: "#e2c640" # brass lock plate
+  k: "#342c26" # bolted foot
+grid: |
+  ..............
+  ..OOOOOOOOOO..
+  .OTTTTTTTTTTO.
+  .ObbbbObbbbbO.
+  .OTTTTOTTTTTO.
+  .ObbbbObbbbbO.
+  .OTTTTOTTTTTO.
+  .OVVVVOVVVVVO.
+  .OVVVVOVVVVVO.
+  .OVVVhOhVVVVO.
+  .OVVVhOhVVVVO.
+  .OVVVVOVVVVVO.
+  .OVVVVOVVVVVO.
+  .OVVVVOVVVVVO.
+  .OVVVVOVVVVVO.
+  .OVVVVOVVVVVO.
+  .OVVVVOVVVVVO.
+  .OkkkkOkkkkkO.
+  ..OOOOOOOOOO..
+  ..............

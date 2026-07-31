@@ -78,8 +78,10 @@ export function lowDurabilityDesperation(
 
 /** The rescue pickups a mercy signal can answer with: the low-health medkit,
  * the low-durability repair kit, the empty-sprint energy drink, the
- * packed-field screen-nuke, and the low-health plated-armor pull. */
-export type MercyRescue = "medkit" | "repair" | "drink" | "bomb" | "armor";
+ * packed-field screen-nuke, the low-health plated-armor pull, and the box of
+ * AMMUNITION for a hero whose every weapon has run dry. */
+export type MercyRescue =
+  "medkit" | "repair" | "drink" | "bomb" | "armor" | "ammo";
 
 /** Whether a ground item answers the given mercy signal. */
 function answersMercy(item: Item, rescue: MercyRescue): boolean {

@@ -14,6 +14,8 @@
 import { clamp } from "@game/lib/vec.ts";
 import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
+  AMMO,
+  AMMO_TYPES,
   ARRIVAL,
   CONSUMABLES,
   HELD_ITEMS,
@@ -45,6 +47,7 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
   RING_SLOTS,
+  startingAmmo,
 } from "./items/index.ts";
 import { reconcileTalentPoints } from "./talents.ts";
 import { statPointsAt, xpToLevelUp } from "./leveling.ts";
@@ -120,6 +123,7 @@ export function extractLoadout(state: GameState, player: Player): Loadout {
     medkits: [...player.medkits],
     staminaPotions: player.staminaPotions,
     repairKits: player.repairKits,
+    ammo: { ...player.ammo },
     cleanSlates: player.cleanSlates,
     coins: player.coins,
     // The party rides along: each companion's def, its EARNED level and XP (so
@@ -275,6 +279,17 @@ export function applyLoadout(
     0,
     Math.min(loadout.repairKits ?? 0, CONSUMABLES.stackCap),
   );
+  // THE POUCH RIDES ALONG, clamped per kind like every other stack — what the
+  // hero walked off the last level with is what he lands with. A loadout from
+  // before ammunition shipped carries no pouch at all; rather than land a
+  // returning hero unable to fire the weapon in his own hand, that case falls
+  // back to the opening holster (`startingAmmo`).
+  const carried = loadout.ammo;
+  player.ammo = carried ? {} : startingAmmo(player.equipment.weapon.defId);
+  for (const type of AMMO_TYPES) {
+    const held = carried?.[type];
+    if (held) player.ammo[type] = clamp(held, 0, AMMO.stackCap);
+  }
   // CLEAN SLATES are deliberately NOT capped at the consumable stack: they are
   // a chase reward, not a floor pickup, and a hero who has earned two has a
   // reason to be carrying two.

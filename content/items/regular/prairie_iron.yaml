@@ -10,7 +10,8 @@ levelReq: 17
 damage: 52
 cooldownMs: 500
 range: 240
-durability: 210
+# RANGED: eats bullets, and so never wears out (see WeaponDef.ammo).
+ammo: bullets
 projectile:
   speed: 420
   radius: 3

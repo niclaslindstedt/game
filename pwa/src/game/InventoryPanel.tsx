@@ -26,6 +26,10 @@ import {
 } from "react";
 
 import {
+  AMMO,
+  AMMO_KINDS,
+  AMMO_TYPES,
+  ammoCount,
   autoEquipUpgradeCount,
   equipmentName,
   gateKeyTarget,
@@ -538,6 +542,42 @@ export function InventoryPanel({
               scale={2}
               color="#ffd75e"
             />
+          </div>
+          {/* THE AMMUNITION POUCH, beside the purse and read the same way: an
+              icon and a number per kind. It hangs here rather than taking bag
+              cells because rounds the hero cannot pick up for want of room to
+              stow a spare helmet is a frustration with nothing to say — the
+              bag's own pressure (loot against loot) is the better game.
+              A kind he has never found is left out entirely, so the rail stays
+              short early and fills in as the arsenal does. */}
+          <div className="inv-ammo">
+            {AMMO_TYPES.filter((type) => ammoCount(player, type) > 0).map(
+              (type) => {
+                const icon = spriteDataUrl(sprites, AMMO_KINDS[type].icon);
+                const count = ammoCount(player, type);
+                return (
+                  <div className="inv-ammo-kind" key={type}>
+                    {icon ? (
+                      <img
+                        src={icon}
+                        alt={AMMO_KINDS[type].name}
+                        className="pixel-img inv-purse-icon"
+                        draggable={false}
+                      />
+                    ) : null}
+                    <PixelText
+                      font={font}
+                      text={String(count)}
+                      scale={2}
+                      // Amber once the stack is nearly full, so the player can
+                      // see at a glance which kind is about to start refusing
+                      // boxes on the floor.
+                      color={count >= AMMO.stackCap ? "#ffb14a" : "#c2ccd6"}
+                    />
+                  </div>
+                );
+              },
+            )}
           </div>
           <button
             type="button"

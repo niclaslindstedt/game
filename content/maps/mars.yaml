@@ -214,8 +214,34 @@ objects:
   - id: crate
     type: crate
     radius: 7
-    density: 11
+    density: 15
     areas: [dome_shell]
+  # SUPPLY BOXES out on the hardpan too — landing stores and dumped pallets, so
+  # the long walk in across the dust has somewhere to restock rather than making
+  # the dome the only place a shooter is ever solvent.
+  - id: supply_crate
+    type: crate
+    radius: 8
+    density: 3.2
+    areas: [plain, outcrop]
+    loot:
+      drop:
+        ammo: 8
+        health: 3
+        stamina: 2
+        gear: 2
+  # THE COLONY ARMORY — a steel weapons locker bolted to the dome plating. A
+  # billionaires' lifeboat came stocked, and the guns are still in the cabinet.
+  - id: weapon_locker
+    type: obstacle
+    radius: 8
+    density: 6
+    areas: [dome_shell]
+    loot:
+      drop:
+        ammo: 9
+        gear: 4
+        health: 1
   # THE GARDEN. Solid, all of it: a tree is cover, and you cannot walk into a
   # swimming pool any more than you can walk into a sinkhole.
   - id: colony_tree

@@ -675,16 +675,20 @@ export function rollEquipment(
   // sooner). Unique and legendary finds are the exception: very well built,
   // they never break (no durability also exempts them from the looted-weapon
   // damage damper, the way the built-in sidearm is exempt).
+  //
+  // …and so is every weapon that eats AMMUNITION. That is the RANGED class's
+  // side of a trade rather than a gap: a gun never wears out and never wants a
+  // repair kit, it runs dry instead, and its def carries no `durability` at all
+  // to stamp (see `WeaponDef.ammo`).
+  const weaponWear =
+    family === "weapon" ? weaponDef(defId).durability : undefined;
   if (
-    family === "weapon" &&
+    weaponWear !== undefined &&
     tier !== "unique" &&
     tier !== "legendary" &&
     tier !== "artifact"
   ) {
-    rolled.durability = Math.max(
-      1,
-      Math.round(weaponDef(defId).durability * qMult),
-    );
+    rolled.durability = Math.max(1, Math.round(weaponWear * qMult));
   }
   if (family === "gear") {
     const def = gearDef(defId);

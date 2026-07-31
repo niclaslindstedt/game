@@ -11,6 +11,9 @@ import { weaponDef } from "../defs/equipment.ts";
 import {
   canExecute,
   contactRange,
+  hasAmmoFor,
+  spendAmmo,
+  swapOffDryWeapon,
   isEdgedWeapon,
   maxMeleeTargets,
   weaponBurns,
@@ -66,7 +69,17 @@ export function stepWeapon(
   // the instant the player presses.
   if (input.fire === false) return;
 
+  // OUT OF AMMUNITION: a RANGED weapon whose pouch stack is empty cannot fire,
+  // so the hero puts it away and draws whatever in the bag he can actually
+  // fight with (`swapOffDryWeapon` — durability's twin: a ranged weapon never
+  // breaks, it runs dry). With nothing loaded to draw he keeps holding it and
+  // this tick simply produces no shot; the mercy ladder watches that state.
+  //
+  // BEFORE the equipped read below, so a swap this tick fights with the weapon
+  // he just drew rather than idling one tick on the empty one.
+  swapOffDryWeapon(state, player);
   const equipped = player.equipment.weapon;
+  if (!hasAmmoFor(player, equipped)) return;
   const weapon = weaponDef(equipped.defId);
   // Airborne over the fight: a melee weapon can't reach the grounded horde
   // while the hero floats above it — the same z rule (JUMP.dodgeHeight) that
@@ -178,6 +191,14 @@ export function stepWeapon(
     wearEquippedWeapon(state, player, Math.max(1, sweep.executed));
     return;
   }
+
+  // ONE ROUND PER TRIGGER PULL — never per projectile. A shotgun's whole
+  // volley of pellets is one shell and a VOLLEY talent's extra arrows are one
+  // nock, so the spread weapons stay worth carrying instead of costing eight
+  // times as much to shoot. Spent BEFORE the pellets are minted (the pull is
+  // what the round pays for) and after the aim is settled, so a pull that
+  // found no target costs nothing. Melee and magic spend nothing at all.
+  spendAmmo(player, equipped);
 
   // One trigger pull, `count` projectiles: a single shot flies straight at
   // the aim; a shotgun's volley fans its pellets evenly across `spreadDeg`

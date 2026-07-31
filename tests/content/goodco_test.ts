@@ -423,10 +423,14 @@ describe("THE ATTRITION FLAMETHROWER never leaves the building", () => {
     expect(def.rigid).toBe(true);
     expect(def.twoHanded).toBe(true);
     // It empties fast, and "fast" has to mean something against the catalog:
-    // well under the leanest ordinary plain drop rather than merely low.
+    // well under the leanest ordinary plain drop rather than merely low. Only
+    // the weapons that HAVE a wear budget are a comparison — the pool's ranged
+    // bases carry ammunition instead of durability and never wear at all.
     const ordinary = LEVELS.goodco_hq!.loot.weaponPool.filter(
       (id) => id !== FLAMETHROWER,
-    ).map((id) => weaponDef(id).durability);
+    )
+      .map((id) => weaponDef(id).durability)
+      .filter((wear): wear is number => wear !== undefined);
     const mean = ordinary.reduce((a, b) => a + b, 0) / ordinary.length;
     expect(def.durability).toBeLessThan(mean / 2);
   });

@@ -518,6 +518,17 @@ export function itemPage(
       repair kit mends it, and the hero draws the best thing left.</p>`
       : "";
 
+  // AMMUNITION is durability's opposite number, and stands in its place: a
+  // weapon that eats rounds never wears out and never wants a repair kit. Which
+  // kind it eats is the practical half — it tells a reader which boxes on the
+  // floor are worth the walk.
+  const ammo = item.stats.ammo
+    ? `      <p class="note">It feeds on ${escapeHtml(item.stats.ammo)}, one round per
+      trigger pull however many projectiles that pull throws. In exchange it
+      never wears out and never needs a repair kit — it runs dry instead, and
+      the hero puts it away for whatever he can still fire.</p>`
+    : "";
+
   const body = `      <ul class="chip-row">${chips.join("")}</ul>
       <div class="portrait item-portrait">
 ${itemCard(item, sprites)}
@@ -531,6 +542,7 @@ ${lore}
 ${notesList(notes)}
 ${revive}
 ${durability}
+${ammo}
       <p class="note">${escapeHtml(REFERENCE_NOTE)}</p>
       </section>
 ${

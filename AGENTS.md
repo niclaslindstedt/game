@@ -303,6 +303,22 @@ the seat the session admitted the client into — never from a field on the fram
 caches it; a wall that appears without the bump is a wall it routes straight
 through.
 
+**A RANGED WEAPON EATS AMMUNITION AND HAS NO `durability`; MELEE AND MAGIC ARE
+THE EXACT OPPOSITE.** It is one trade, not two independent fields — a gun never
+breaks, it runs dry — so a ranged def authors `ammo:` and no `durability:`, and
+the item schema refuses either half being wrong. One round per TRIGGER PULL,
+never per pellet. Everything that touches the pouch goes through
+`src/game/items/ammo.ts`; a read of `player.ammo[...]` anywhere else is a cap,
+an overflow remainder or a dry-swap that is about to disagree with the others.
+→ `docs/game-content.md` → Ammunition
+
+**A CRATE IS A WALL TO THE HORDE, SO ITS DENSITY IS A DIFFICULTY KNOB.** Nothing
+but the hero jumps, so boxes strewn across ground the horde has to cross buy a
+standing hero cover he did not earn — a modest scatter on the moon's open basin
+was enough to make the idle-overrun benchmark unable to kill a motionless hero
+on MEDIUM at all. Adding crates to a map means re-running
+`tests/content/balance_test.ts`, not eyeballing the render.
+
 **A NEW `EnemyDef` FIELD MUST BE ADDED TO `canonicalEnemyDef`**
 (`defs/enemies/index.ts`), which rebuilds every def through a fixed field list
 for V8 monomorphism — or it silently reads `undefined` with every check green.

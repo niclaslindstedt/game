@@ -68,6 +68,7 @@ export const WEAPON_FIELDS = {
   levelReq: "the REQUIRES LEVEL row, and the two-way gate note",
   dropWeight: "the COMMON/SCARCE note",
   durability: "the DURABILITY row",
+  ammo: "the AMMO row — which kind of ammunition the weapon eats, and that it never wears out",
   grade: "the grade ladder on the ancestor's page",
   gradeBase: "the grade ladder on the ancestor's page",
   material: "the SALVAGE note",
@@ -359,7 +360,11 @@ function baseStats(family, def) {
       // How it is WORKED — omitted reads as a swing, which is all but one of
       // them, so only the odd tool has anything to say here.
       motion: def.motion ?? null,
-      durability: def.durability,
+      // A RANGED weapon carries one or the other, never both: it eats
+      // AMMUNITION and never wears out, where melee and magic wear out and eat
+      // nothing (see `WeaponDef.ammo`).
+      durability: def.durability ?? null,
+      ammo: def.ammo ?? null,
       projectile: def.projectile ?? null,
       // The budget model's own reading of the weapon's shape: how much of the
       // crowd one trigger pull is priced at, and what its class crits for.

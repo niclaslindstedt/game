@@ -4,7 +4,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import type { Difficulty, Equipment } from "./core.ts";
+import type { AmmoType, Difficulty, Equipment } from "./core.ts";
 
 export type Item =
   /** `tier` indexes config MEDKIT.tiers (the D2-style kit sizes) — absent
@@ -23,6 +23,14 @@ export type Item =
      * kit it stays grounded when there is nothing to top up (stamina already
      * full), so it is never wasted on a rested hero. */
     | { id: number; kind: "drink"; pos: Vec2 }
+    /**
+     * A box of AMMUNITION: `ammo` names the kind (config `AMMO_TYPES`) and
+     * `count` how many rounds are in it. Banking tops the matching pouch stack
+     * up to `AMMO.stackCap` and leaves any REMAINDER on the ground as a
+     * smaller box — a nearly full pouch skims a find rather than refusing or
+     * swallowing it whole.
+     */
+    | { id: number; kind: "ammo"; pos: Vec2; ammo: AmmoType; count: number }
     | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
     /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
     | { id: number; kind: "ability"; pos: Vec2; defId: string }
@@ -260,6 +268,7 @@ export type Obstacle = {
     health?: number;
     stamina?: number;
     gear?: number;
+    ammo?: number;
   };
   /**
    * A special CHEST (see `LevelDef.chests` / crates.ts): a breakable that spills

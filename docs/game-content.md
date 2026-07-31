@@ -272,9 +272,11 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
 
 The hero's progress **carries through the campaign**. On the opener he
 starts at level 1 with the difficulty's starting weapon (the piece off the
-hero's wall in the prelude; it carries durability and wears out, so the
-run's first job is to scavenge a replacement — and any looted weapon
-auto-supplants the wall piece). The gentler rungs also bank a few
+hero's wall in the prelude; a melee or magic piece carries durability and wears
+out, a ranged one carries a hundred rounds instead — either way the run's first
+job is to scavenge a replacement, and any looted weapon auto-supplants the wall
+piece). The **ammunition pouch** carries between levels with everything else:
+what he walks off a level holding is what he lands with. The gentler rungs also bank a few
 pre-allocated stat points (`DifficultyDef.startingStats`). Clearing a level banks a
 **loadout snapshot** — his level, stats, worn equipment, bag, and pocketed
 powerups (`extractLoadout`, banked onto the playing **character** by
@@ -871,6 +873,75 @@ harder rung of the ladder — sees the whole story again.
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears
 from that rung of the ladder up (see `meetsMinDifficulty`).
+
+### Ammunition — what a ranged weapon spends instead of wearing out
+
+A gun does not get blunt. Every **RANGED** weapon in the game — and only those —
+carries no durability at all and eats **ammunition** instead (`WeaponDef.ammo`,
+the rules in `src/game/items/ammo.ts`, the knobs in `src/game/config/ammo.ts`).
+It never breaks and never wants a repair kit; it runs dry, which is a different
+kind of problem and has a different answer. Melee and magic made the opposite
+trade and are untouched: they wear out and eat nothing. Magic is powered by the
+hero, which is the whole difference between a wand and a gun.
+
+**There are three kinds, and deliberately only three.** The split is by what the
+thing IS, not by what fires it:
+
+| Kind        | What eats it                                                      |
+| ----------- | ----------------------------------------------------------------- |
+| **BULLETS** | every firearm — pistols, revolvers, rifles, shotguns, the stapler |
+| **ARROWS**  | anything drawn and loosed                                         |
+| **CELLS**   | charged shot — rails, tasers, plasma, the printed sidearm         |
+
+Every firearm shares one round from the 9MM PISTOL to the SAWED-OFF, because a
+game that asks a player to keep four calibres straight has bought a spreadsheet
+and sold a shooter. What genuinely reads different on the ground gets its own
+kind, and that is where it stops.
+
+**One round per TRIGGER PULL, never per projectile.** A shotgun's whole volley
+of pellets is one shell and a VOLLEY talent's extra arrows are one nock — so the
+spread weapons stay worth carrying instead of costing eight times as much to
+shoot.
+
+**The pouch, not the bag.** Rounds stack on the hero (`Player.ammo`), each kind
+to its own cap of **200** and each independent, so a full quiver never blocks a
+box of bullets. It is a pouch rather than bag cells on purpose: ammunition a
+hero cannot pick up because he is carrying a spare helmet is a frustration with
+nothing to say, and the bag's own pressure — loot against loot — is the better
+game. The pouch carries between levels with the rest of the loadout.
+
+**A run opens with a hundred rounds** for the weapon in the hero's hand and a
+hundred for the sidearm behind it (`AMMO.starting`). Both halves matter: EASY
+opens with a SAWED-OFF SHOTGUN, so a holster stocked from the sidearm alone
+would hand that player a shotgun and a hundred rounds of the wrong thing.
+
+**Where it comes from.** Ammunition takes its own slice of the kill drop ladder
+(`AMMO.dropShare`), leaned by an APPETITE like every other consumable — how full
+that kind's stack already is, how empty, and one factor nothing else has: _what
+is in the hero's hand_. A shooter with a draining pouch earns the whole slice; a
+hero swinging a sword earns a fraction of it, because the weapon he holds now is
+not the weapon he will hold in five minutes. But the boxes are the real supply:
+a crate's spill weights ammunition above everything else in it
+(`CRATES.drop.ammo`), and a special CHEST pays two boxes flat on top of its
+marquee item. That is what the **supply crates** on the moon and Mars and the
+**weapons lockers** in the bunker, on the Mars colony and across GOODCO HQ — and
+the **cartridge crates** stacked around BOOT HILL — are for.
+
+**Running dry is never a dead end.** A hero whose weapon is empty puts it away
+and draws the best thing in the bag he can actually fight with
+(`swapOffDryWeapon`); a full bag keeps the empty one in hand instead, since
+there is nothing to preserve by dropping it. Only a hero with an empty weapon
+and _nothing else he can fight with_ is genuinely stuck, and that is the one
+state the mercy ladder answers at **every** difficulty rather than tapering off
+by JESUS — the other ropes are kindnesses a good player should not need, and
+this one is the guard on a soft lock no amount of skill escapes.
+
+**The HUD says it where durability used to.** The ring around the weapon circle
+is the gauge of how many more attacks the thing in your hand has in it: for a
+melee or magic weapon that is its durability, for a ranged one it is the pouch,
+with the count printed in the corner exactly the way the bag prints its free
+cells. The inventory's foot rail carries the pouch itself, one icon and number
+per kind.
 
 ### Powerups — two new ones per map (`content/powerups.yaml`)
 

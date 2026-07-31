@@ -25,6 +25,7 @@ import {
   equipFromInventory,
   syncInventoryCapacity,
 } from "./inventory.ts";
+import { hasAmmoFor } from "./ammo.ts";
 import { drawSidearm, takeBestBagWeapon } from "./hands.ts";
 import { equipmentMaxDurability, qualityMult } from "./quality.ts";
 import { itemLevelReq } from "./requirements.ts";
@@ -332,6 +333,44 @@ export function wearEquippedWeapon(
     type: "autoEquipped",
     defId: player.equipment.weapon.defId,
   });
+}
+
+/**
+ * THE DRY-WEAPON SWAP — the on-break swap's twin, which is why it lives here
+ * beside it rather than in `items/ammo.ts`: a RANGED weapon does not wear out,
+ * it runs out, and the hero's answer to a click instead of a bang is exactly
+ * his answer to a snapped blade. Draw the best thing in the bag he can actually
+ * fight with (`loadedOnly`, so a second empty rifle is not an answer) and stow
+ * the empty one.
+ *
+ * A full bag keeps the dry weapon IN HAND instead — trading a rifle he will
+ * reload for a bag cell he does not have is not an improvement, and unlike a
+ * broken weapon there is nothing to preserve by putting it down.
+ *
+ * Returns whether the hand changed. False also covers the quiet common case:
+ * nothing loaded in the bag, so he keeps the dry weapon and the shot simply
+ * does not happen. That is the state `outOfAmmoDesperation` watches, and the
+ * mercy ladder is what eventually answers it.
+ */
+export function swapOffDryWeapon(state: GameState, player: Player): boolean {
+  const dry = player.equipment.weapon;
+  if (hasAmmoFor(player, dry)) return false;
+  const replacement = takeBestBagWeapon(state, player, { loadedOnly: true });
+  if (!replacement) return false;
+  if (!addToInventory(state, player, dry)) {
+    addToInventory(state, player, replacement);
+    return false;
+  }
+  player.equipment.weapon = replacement;
+  player.weaponCooldownMs = 0;
+  state.events.push({ type: "weaponDry", defId: dry.defId });
+  // The stowed weapon can carry stat affixes the pools were sized against —
+  // the same re-derive the on-break swap above does, for the same reason.
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  syncInventoryCapacity(state, player);
+  state.events.push({ type: "autoEquipped", defId: replacement.defId });
+  return true;
 }
 
 /**

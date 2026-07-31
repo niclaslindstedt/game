@@ -188,10 +188,14 @@ export function PlayingHud({
             {/* Below the portrait unit, floating free: the held weapon
                 circle and the bag pouch — same size, side by side. */}
             <div className="hud-gear-row">
-              {/* The held weapon: a round slot whose ring border IS the
-                  durability gauge — it depletes and reddens as the weapon
-                  wears, and reads a full teal ring for the unbreakable
-                  sidearm. Tapping it opens the weapon switcher (Q). */}
+              {/* The held weapon: a round slot whose ring border is the
+                  gauge of HOW MANY MORE ATTACKS THIS THING HAS IN IT. For a
+                  melee or magic weapon that is its durability; for a RANGED
+                  one — which never wears out — it is the AMMUNITION in the
+                  pouch, with the count printed on it the way the bag prints
+                  its free cells. Either way it depletes and reddens as it runs
+                  down, and reads a full teal ring for a weapon that can never
+                  run out of anything. Tapping it opens the switcher (Q). */}
               {(() => {
                 const equipped = localHero(state).equipment.weapon;
                 const equippedColor =
@@ -200,17 +204,30 @@ export function PlayingHud({
                   assets.sprites,
                   weaponDef(equipped.defId).icon,
                 );
-                // Durability ring: full teal for the unbreakable sidearm,
-                // else the wear fraction ramped steel → amber → red as it
-                // runs down.
+                // AMMUNITION wins the ring when the weapon eats any: a rifle
+                // has no durability to show, and rounds are the thing about to
+                // stop it. The fraction is against the pouch's per-kind stack
+                // cap, so a full pouch is a full ring and the gauge means the
+                // same thing on every weapon that shares a kind.
+                const ammo = hud.ammo;
                 const wear = hud.weaponWear;
-                const ringFrac = wear === null ? 1 : Math.max(0.03, wear);
+                const frac = ammo
+                  ? ammo.count / ammo.cap
+                  : wear === null
+                    ? null
+                    : wear;
+                // A dry weapon shows an EMPTY ring rather than the 3% stub a
+                // nearly-worn one keeps: "you have none" and "you have barely
+                // any" are different sentences, and only one of them means the
+                // trigger does nothing.
+                const ringFrac =
+                  frac === null ? 1 : frac <= 0 ? 0 : Math.max(0.03, frac);
                 const ringColor =
-                  wear === null
+                  frac === null
                     ? "#7ef0c8"
-                    : wear < 0.25
+                    : frac < 0.25
                       ? "#d83a3a"
-                      : wear < 0.5
+                      : frac < 0.5
                         ? "#ffb14a"
                         : "#c2ccd6";
                 // The other carried weapons, in the order the player asked for
@@ -237,8 +254,26 @@ export function PlayingHud({
                           className="pixel-img wpn-slot-img"
                         />
                       ) : null}
+                      {/* THE ROUNDS LEFT, printed on the slot exactly as the
+                          bag prints its free cells — same corner, same scale,
+                          same red-at-zero. The ring says "running low" at a
+                          glance and the number answers "how low" without
+                          opening anything, which is the pair the bag already
+                          taught the player to read. Only a weapon that eats
+                          ammunition carries one. */}
+                      {ammo && (
+                        <span className="wpn-ammo-count">
+                          <PixelText
+                            font={font}
+                            text={String(ammo.count)}
+                            scale={1}
+                            color={ammo.count === 0 ? "#d83a3a" : "#f4f4f4"}
+                          />
+                        </span>
+                      )}
                     </button>
-                    {/* The durability ring drawn around the slot. */}
+                    {/* The gauge ring drawn around the slot — ammunition for a
+                        ranged weapon, durability for anything else. */}
                     <svg className="wpn-ring" viewBox="0 0 44 44" aria-hidden>
                       <circle
                         cx="22"

@@ -21,6 +21,7 @@ import { GEAR_DEFS, type GearDef } from "./gear.ts";
 import { weaponGradeVariants, type Grade } from "./grades.ts";
 import type {
   Affix,
+  AmmoType,
   Quality,
   StatName,
   Tier,
@@ -190,10 +191,28 @@ export type WeaponDef = {
    */
   dropWeight?: number;
   /**
-   * Attacks before a dropped instance of this weapon breaks. The player's
-   * own starting sidearm is minted without durability and never breaks.
+   * Attacks before a dropped instance of this weapon breaks. Omitted on every
+   * weapon that carries `ammo` below — a RANGED weapon does not wear out, it
+   * runs dry — and on unique/legendary/artifact mints, which are built too
+   * well to break. `equipmentMaxDurability` reads an absent value as zero, so
+   * a weapon without one simply never wears.
    */
-  durability: number;
+  durability?: number;
+  /**
+   * WHAT THIS WEAPON EATS (`AmmoType`), and thereby whether it eats anything
+   * at all. A weapon naming a kind spends ONE round of it per TRIGGER PULL —
+   * a shotgun's whole volley of pellets is one shell, and a VOLLEY talent's
+   * extra arrows are one nock — and cannot fire on an empty pouch stack.
+   *
+   * This is the RANGED class's half of a trade, not a tax bolted onto it:
+   * every ranged weapon gives up `durability` for it, so it never breaks, never
+   * wants a repair kit, and the round gauge on the HUD that used to count down
+   * its life now counts its rounds instead. Melee and magic made the opposite
+   * trade and carry no `ammo` at all. The pairing is enforced —
+   * `tests/content/ammo_content_test.ts` fails a ranged weapon missing an
+   * `ammo` kind, and any weapon carrying both.
+   */
+  ammo?: AmmoType;
   /**
    * Set on a GENERATED base-grade variant (see defs/grades.ts): which rung
    * of the Normal → Exceptional → Elite ladder this def is. Absent on every
@@ -421,7 +440,13 @@ const ENGINE_WEAPONS: Record<string, WeaponDef> = {
     damage: 16,
     cooldownMs: 700,
     range: 260,
-    durability: 150,
+    // IMPOSSIBLE TO BREAK, and now that is the whole of it: the sidearm carries
+    // no durability at all, and like every RANGED weapon it eats AMMUNITION
+    // instead. A run opens with `AMMO.starting` (100) charged cells in the
+    // pouch, which is what "the easy starting weapon has a hundred shots"
+    // means. When they are gone he is not disarmed — he is looking for a box,
+    // and the drop ladder is leaning hard toward handing him one.
+    ammo: "cells",
     projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
     icon: "icon_blaster",
   },

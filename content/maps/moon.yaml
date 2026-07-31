@@ -154,6 +154,41 @@ objects:
     radius: 7
     density: 16
     areas: [station]
+  # EXPEDITION SUPPLY BOXES — the mission stores, dropped at the landing sites
+  # and never unpacked. Thickest on the pad, but scattered out on the basin too:
+  # a shooter crossing open regolith needs somewhere to top up that is not the
+  # one room everything else is in. Their spill leans hard on AMMUNITION (the
+  # rest of the crate weights stand), which is the whole reason to break one.
+  - id: supply_crate
+    type: crate
+    radius: 8
+    density: 9
+    areas: [station]
+    loot:
+      drop:
+        ammo: 8
+        health: 3
+        stamina: 2
+        gear: 2
+  # …and a THIN scatter out on the open basin. Thin on purpose and measured
+  # rather than guessed: a crate is a wall to the horde (nothing but the hero
+  # jumps), so boxes strewn across the ground the horde has to cross to reach a
+  # standing hero buy him cover he did not earn. At 3.4 the idle-overrun
+  # benchmark (tests/content/balance_test.ts) stopped being able to kill a
+  # motionless hero on MEDIUM at all. One per district-ish is the most this
+  # ground can carry.
+  - id: supply_crate_basin
+    type: crate
+    kind: supply_crate
+    radius: 8
+    density: 1.1
+    areas: [basin, rille]
+    loot:
+      drop:
+        ammo: 8
+        health: 3
+        stamina: 2
+        gear: 2
   # IMPASSABLE PITS — holes blown clean through the crust. Unlike the craters
   # above (which the hero HOPS and the horde piles up against) these are solid:
   # nothing crosses them, so they break a line of sight and a line of retreat and

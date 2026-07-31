@@ -62,7 +62,10 @@ export function itemVoice(item: Item): ItemVoice {
     case "medkit":
     case "drink":
       return "flask";
+    // A box of ammunition is a rattling handful of metal, whatever kind it is
+    // — the same small scrap note a repair kit lands on.
     case "repair":
+    case "ammo":
       return "scrap";
     // The golden arrow and a powerup canister are both charged things, and both
     // land on a bright electric ting rather than on a weight.

@@ -1967,7 +1967,7 @@ describe("bot repair awareness", () => {
     clearStage(state);
     state.players[0].repairKits = 1;
     state.players[0].equipment.weapon = wornWeapon(
-      weaponDef("test_pipe").durability, // fresh
+      weaponDef("test_pipe").durability as number, // fresh
     );
     state.enemies.push(
       makeEnemy({

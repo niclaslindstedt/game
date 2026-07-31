@@ -10,6 +10,8 @@ import { abilityDef } from "../defs/abilities.ts";
 import { tierRank } from "../defs/equipment.ts";
 import {
   addToInventory,
+  ammoName,
+  bankAmmo,
   bankConsumable,
   bankMedkit,
   consumableName,
@@ -171,6 +173,28 @@ export function stepItems(state: GameState, dtMs: number): void {
           name: consumableName(item.kind),
         });
         return false;
+      }
+
+      // A BOX OF AMMUNITION tops up its kind's pouch stack, capped at
+      // `AMMO.stackCap`. A pouch with room for only part of the box takes what
+      // fits and the box stays on the ground carrying the REMAINDER — a
+      // 190-round stack skims six off a twenty-round box and leaves fourteen
+      // for later, rather than swallowing the lot or refusing the find. Only a
+      // completely full stack turns it away untouched.
+      if (item.kind === "ammo") {
+        const taken = bankAmmo(player, item.ammo, item.count);
+        if (taken <= 0) return true;
+        item.count -= taken;
+        state.stats.itemsCollected++;
+        // The card names the kind AND how many went in: a box is worth a
+        // variable amount, and "BULLETS" alone tells the player nothing about
+        // whether it was worth the walk.
+        state.events.push({
+          type: "itemCollected",
+          kind: "ammo",
+          name: `${ammoName(item.ammo)} ${taken}`,
+        });
+        return item.count > 0;
       }
 
       // A QUEST PIECE is a token, not gear: it banks a tally on the errand that

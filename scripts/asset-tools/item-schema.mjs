@@ -49,6 +49,10 @@ const BASE_RARITIES = new Set(["regular", "trash"]);
 const NAMED_RARITIES = new Set(["set", "unique", "legendary", "artifact"]);
 
 const WEAPON_CLASSES = new Set(["melee", "ranged", "magic"]);
+/** What a RANGED weapon eats (`WeaponDef.ammo` / the engine's `AmmoType`) —
+ * every firearm shares `bullets`, bows draw `arrows`, charged shot burns
+ * `cells`. Melee and magic name none and wear `durability` instead. */
+const AMMO_TYPES = new Set(["bullets", "arrows", "cells"]);
 /** Whether a MELEE weapon cuts, crushes or reduces — what a killing blow leaves
  * of the body (`WeaponDef.edge`). Omitted reads as `sharp`, so this is the short
  * list of things that swing without an edge. */
@@ -279,8 +283,27 @@ export function validateItem(doc, refs) {
     // that side of the bargain, so all the schema owes is the type.
     if (doc.twoHanded !== undefined && typeof doc.twoHanded !== "boolean")
       err(`twoHanded must be a boolean`);
-    if (doc.durability === undefined)
-      err(`missing required field "durability"`);
+    // AMMUNITION vs DURABILITY — the RANGED class's trade, and an either/or
+    // rather than two independent fields. A ranged weapon eats one of the
+    // `AmmoType` kinds and never wears out; melee and magic wear out and eat
+    // nothing. Both halves are refused here so a weapon can never ship able to
+    // break AND run dry, or able to do neither.
+    if (doc.class === "ranged") {
+      if (doc.ammo === undefined)
+        err(
+          `a ranged weapon needs an "ammo" kind (${[...AMMO_TYPES].join(", ")})`,
+        );
+      if (doc.durability !== undefined)
+        err(
+          `a ranged weapon carries ammo instead of durability — drop "durability"`,
+        );
+    } else {
+      if (doc.ammo !== undefined)
+        err(`ammo is ranged-only (a "${doc.class}" weapon eats nothing)`);
+      if (doc.durability === undefined)
+        err(`missing required field "durability"`);
+    }
+    oneOf(doc.ammo, AMMO_TYPES, "ammo kind");
     // MELEE ONLY, and omitted means SHARP (src/game/items/edge.ts). Refused on
     // a ranged or magic weapon rather than ignored: a bullet cannot cleave
     // whatever the file says, and a silently-ignored field is an author who
