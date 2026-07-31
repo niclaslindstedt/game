@@ -42,11 +42,7 @@ import { fileURLToPath } from "node:url";
 import { canonicalJson } from "@ui/lib/canonical-json.ts";
 import { describe, expect, it } from "vitest";
 
-import {
-  createGame,
-  createRunFromParams,
-  type GameState,
-} from "@game/core";
+import { createGame, createRunFromParams, type GameState } from "@game/core";
 import { STATIC_FIELDS } from "@game/wire/split.ts";
 import type { SessionParams } from "@game/wire/protocol.ts";
 
