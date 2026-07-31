@@ -140,6 +140,20 @@ export type HubOptions = {
   password?: string;
   /** Seats, host included. */
   maxClients?: number;
+  /**
+   * Admit peers over a transport that is not Steam's.
+   *
+   * **DEFAULT FALSE, AND IT IS A LICENCE SWITCH RATHER THAN A DEBUG ONE**
+   * (decision 15). Multiplayer is licensed through Steam and nowhere else, so
+   * the shipped game never sets this: a session carried over a raw UDP socket
+   * is unlicensed play whoever set it up. It exists for the repo's own suites
+   * and the headless soak, which talk to a loopback socket with no Steam
+   * anywhere near them.
+   *
+   * It is an OPTION rather than an environment variable on purpose — an env var
+   * is a thing a player can set, and this must not be one.
+   */
+  allowUnlicensedTransport?: boolean;
   /** The per-session challenge secret. Passed in rather than minted here
    * because this module has no randomness of its own — see `wire/handshake.ts`
    * for why that is the rule and not an inconvenience. */
@@ -329,11 +343,50 @@ export function createPeerHub(options: HubOptions): PeerHub {
     );
   }
 
+  /**
+   * MAY A SESSION BE CARRIED OVER THIS TRANSPORT AT ALL? (decision 15.)
+   *
+   * Steam only. The `allowUnlicensedTransport` escape exists for the repo's own
+   * tests and the headless soak, which run over a loopback UDP socket with no
+   * Steam anywhere near them — it is an OPTION on the hub rather than an
+   * environment variable precisely so it cannot be set by a player, a launch
+   * argument, or a config file somebody edits.
+   */
+  function licensedTransport(transport: Transport): boolean {
+    if (options.allowUnlicensedTransport) return true;
+    return transport.id === "steam";
+  }
+
   function onJoin(transport: Transport, key: PeerKey, payload: unknown): void {
     if (byKey.has(key)) return; // already in; a duplicate join is not a re-seat
     const join = payload as Partial<JoinPayload> | null;
     if (!join || typeof join !== "object" || !join.handshake) {
       refuse(transport, key, "protocol-mismatch", "malformed join");
+      return;
+    }
+    // **MULTIPLAYER IS LICENSED THROUGH STEAM AND NOWHERE ELSE** (decision 15).
+    // The game ships under PolyForm-Noncommercial, and the multiplayer right
+    // travels with the Steam copy — so a session carried by anything other than
+    // the Steam relay is unlicensed play, whoever set it up and whatever they
+    // meant by it. That is a licence fact rather than a security one, and it is
+    // enforced HERE because the hub is the one door: every path into a session
+    // — the game's own HOST, the server browser, JOIN BY ADDRESS, the dedicated
+    // server — comes through this function.
+    //
+    // **THE CHECK IS THE TRANSPORT'S OWN NAME, NOT A TICKET.** `Transport.id`
+    // already distinguishes the two, and a peer that reached us over the Steam
+    // relay reached us through Steam's own matchmaking with a Steam identity
+    // behind it — there is nothing to validate that Valve has not already
+    // validated. A ticket scheme layered on top would be a second, weaker copy
+    // of that fact, and one this repo cannot honestly test.
+    //
+    // It sorts FIRST because it is the most fundamental thing that can be wrong
+    // and the cheapest to answer: a peer that may not be here at all should not
+    // have its build, its mods or its password looked at. And it fails CLOSED —
+    // an unrecognised transport is refused, so the next one added is licensed
+    // deliberately rather than by having been forgotten.
+    if (!licensedTransport(transport)) {
+      refuse(transport, key, "unlicensed", `transport ${transport.id}`);
       return;
     }
     const refusal = admit({

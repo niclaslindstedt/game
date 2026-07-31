@@ -30,10 +30,9 @@ import type { Vec2 } from "@game/lib/vec.ts";
 import {
   canEquip,
   committedLane,
-  equipFromInventory,
   heroLoadoutMemo,
   maxMeleeTargets,
-  weaponCooldownFor,
+  swapHand,
   weaponDps,
   weaponRangeFor,
   weaponScore,
@@ -418,39 +417,12 @@ function bestRole(
 
 // ---- The SWAP itself -----------------------------------------------------------
 
-/** The slice of bot memory the swap system writes: when the hand last
- * changed, for the anti-juggle cooldown. Structural, so `state.ts` needs no
- * import from here — the `Bot` type carries the field. */
-export type SwapMemory = { lastSwapMs?: number };
-
-/** Swap the hand to bag cell `index`, carrying the attack clock across: the
- * new hand inherits the shorter of the carried wait and its own full
- * cooldown, so juggling weapons never mints free shots (the UI's
- * `equipFromInventory` zeroes it — instant gratification for a hand-picked
- * swap; the bot, swapping every fight, plays fair). */
-function swapHand(
-  bot: SwapMemory,
-  state: GameState,
-  hero: Player,
-  index: number,
-): boolean {
-  const player = hero;
-  const carried = player.weaponCooldownMs;
-  if (!equipFromInventory(state, player, index)) return false;
-  player.weaponCooldownMs = Math.min(
-    carried,
-    weaponCooldownFor(state, player, player.equipment.weapon),
-  );
-  bot.lastSwapMs = state.stats.timeMs;
-  return true;
-}
-
 /**
  * THE WEAPON-SWAP DECISION, split out from the commit
  * ({@link stepBotWeaponSwap}) so a caller can see the hand change COMING:
  * returns the bag cell the swap system wants drawn RIGHT NOW, or -1 to keep
- * the current hand. Pure — reads the state and the bot's anti-juggle memory,
- * writes neither.
+ * the current hand. Pure — reads the state and the hero's own anti-juggle
+ * memory, writes neither.
  *
  * The split exists for the HOW TO PLAY demo, which plays the swap as the two
  * taps a player makes (open the switcher, then tap the weapon — see
@@ -458,20 +430,16 @@ function swapHand(
  * before the hand actually changes, or it would light up the wrong row.
  * Everything else calls the committing form and never sees this.
  */
-export function botWeaponSwapTarget(
-  bot: SwapMemory,
-  state: GameState,
-  hero: Player,
-): number {
+export function botWeaponSwapTarget(state: GameState, hero: Player): number {
   if (state.phase !== "playing") return -1;
   const player = hero;
   if (player.disarmed) return -1;
   const held = player.equipment.weapon;
   const main = bestOwnedWeapon(state, hero);
   const since =
-    bot.lastSwapMs === undefined
+    player.lastSwapMs === undefined
       ? Infinity
-      : state.stats.timeMs - bot.lastSwapMs;
+      : state.stats.timeMs - player.lastSwapMs;
   const coolingDown = since < SWAP_COOLDOWN_MS;
   const heldShot = weaponKind(held) === "shot";
   const airborne = player.z > JUMP.dodgeHeight;
@@ -585,12 +553,8 @@ export function botWeaponSwapTarget(
  * state, exactly like the rest of the bot's latches — the decision itself is
  * {@link botWeaponSwapTarget}.
  */
-export function stepBotWeaponSwap(
-  bot: SwapMemory,
-  state: GameState,
-  hero: Player,
-): boolean {
-  const index = botWeaponSwapTarget(bot, state, hero);
+export function stepBotWeaponSwap(state: GameState, hero: Player): boolean {
+  const index = botWeaponSwapTarget(state, hero);
   if (index < 0) return false;
-  return swapHand(bot, state, hero, index);
+  return swapHand(state, hero, index);
 }

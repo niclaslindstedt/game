@@ -1622,7 +1622,7 @@ function playRun(args: {
     // — the blade with a body in blade reach, the banked ranged/magic shot
     // out of reach and through every airborne frame (see bot/economy.ts
     // stepBotWeaponSwap).
-    stepBotWeaponSwap(bot, state, state.players[0]);
+    stepBotWeaponSwap(state, state.players[0]);
     // KEEP THE FRIEND ON ITS FEET: crack a bought bottle of salts over a downed
     // companion, and spend a spare medkit on a badly hurt one. Nothing mends a
     // companion on its own any more, so a run that never did this would play
@@ -1662,7 +1662,7 @@ function playRun(args: {
         // other members never equipped a find, never swapped a weapon and
         // never revived a companion would report the party's damage as flat
         // and call it balance.
-        stepBotWeaponSwap(seatBot, state, hero);
+        stepBotWeaponSwap(state, hero);
         careForCompanion(state, hero);
         const seatInput = botAct(seatBot, state, hero);
         // EACH SEAT WATCHES ITS OWN SCREEN. The weapon's targeting gate reads

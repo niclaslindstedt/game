@@ -53,6 +53,13 @@ export type HostOptions = {
   mods?: string[];
   /** The session's password, or "" for an open game. */
   password?: string;
+  /**
+   * Admit peers over a transport that is not Steam's — see
+   * `HubOptions.allowUnlicensedTransport`. Multiplayer is licensed through
+   * Steam and nowhere else (decision 15), so the shipped game never sets this;
+   * it exists for the repo's suites and the headless soak.
+   */
+  allowUnlicensedTransport?: boolean;
   /** Seats, host included. */
   maxClients?: number;
   /** A run to ADOPT rather than build — a parked run or a checkpoint. */
@@ -132,6 +139,11 @@ export function createHost(options: HostOptions): Host {
 
   const hub = createPeerHub({
     session,
+    // Decision 15: multiplayer is licensed through Steam. The host passes the
+    // escape straight through rather than deciding it, so the ONE place that
+    // may switch it on is whatever built the host — the repo's own suites and
+    // the headless soak, never a shipped path.
+    allowUnlicensedTransport: options.allowUnlicensedTransport,
     handshake: {
       protocol: PROTOCOL_VERSION,
       build: engineVersion,

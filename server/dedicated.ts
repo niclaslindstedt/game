@@ -54,6 +54,23 @@ import {
  * everybody else's.
  */
 export type DedicatedConfig = {
+  /**
+   * Admit players over a raw UDP socket rather than through Steam.
+   *
+   * **DEFAULT FALSE, AND WITHOUT IT THIS SERVER ADMITS NOBODY** (decision 15).
+   * Multiplayer is licensed through Steam and nowhere else, and a standalone
+   * server on an open port is exactly the play that is not — so the door is
+   * shut unless something deliberately opens it. It is here for the repo's own
+   * suites and §5.6's headless soak, which talk to a loopback socket.
+   *
+   * **THE HONEST LIMIT, stated rather than papered over:** this is read from a
+   * CONFIG FILE, and a config file is a thing a determined player can edit. It
+   * is a statement of what the licence permits, not a lock — the same shape as
+   * a licence header. A real lock is a Steam auth ticket validated at the hub or
+   * a build-time literal the shipped binary folds to false, and choosing between
+   * those two is work this has not done. Do not describe this as enforcement.
+   */
+  allowUnlicensedTransport?: boolean;
   /** The mission to run. Defaults to the campaign's first. */
   level?: string;
   /** `easy` … `jesus`. */
@@ -196,6 +213,11 @@ export async function startDedicated(
   if (config.password) info("password required");
 
   const host = createHost({
+    // Decision 15: multiplayer is licensed through Steam. A standalone server
+    // on a raw UDP socket is precisely the unlicensed path, so it is REFUSED by
+    // default and this is the only thing that opens it — see
+    // `DedicatedConfig.allowUnlicensedTransport` for what it is and is not.
+    allowUnlicensedTransport: config.allowUnlicensedTransport,
     params,
     // NOBODY OWNS THIS ONE. Seat 0 stands empty until somebody joins, the
     // first arrival is dressed in the hero they brought rather than in the

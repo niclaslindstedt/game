@@ -98,6 +98,24 @@ export type Player = {
   /** Remaining ms until the weapon may fire again. */
   weaponCooldownMs: number;
   /**
+   * `stats.timeMs` when this hero last drew a different weapon out of the bag —
+   * the POCKET ARSENAL's anti-juggle memory (`bot/weapon-swap.ts`).
+   *
+   * **IT LIVES ON THE RUN RATHER THAN ON THE BOT, and that is decision 3b's
+   * other half** (multiplayer plan §7.2.5). Everything else the autopilot
+   * remembers is an opinion — where it was heading, what it has given up on —
+   * and belongs to whatever is doing the thinking. This one is not: it is a fact
+   * about the HERO, in the same family as `weaponCooldownMs` beside it, and the
+   * rule it feeds (do not re-draw within `SWAP_MIN_GAP_MS`) has to hold whoever
+   * is holding the controller. Kept on the bot it could not survive the
+   * simulation moving out of the renderer: a client's swap is a COMMAND, the
+   * server applies it, and a memory the server never saw would let the same
+   * hero juggle freely from one end and not the other.
+   *
+   * Undefined until the first swap, which reads as "no gap to respect yet".
+   */
+  lastSwapMs?: number;
+  /**
    * True while the hero's weapon is holstered — set on levels with a scripted
    * `openingStrike` (GOODCO HQ). The auto-attack sits out entirely until the
    * vanguard's soft first swing arms him (see story.ts `tryOpeningStrike`);

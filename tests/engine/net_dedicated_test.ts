@@ -93,6 +93,8 @@ describe("the dedicated server's command line", () => {
 describe("a real client against a real dedicated server", () => {
   it("joins over a real socket and is given a seat", async () => {
     const host = await startDedicated({
+      // Decision 15's escape — a loopback socket with no Steam near it.
+      allowUnlicensedTransport: true,
       level: "moon",
       difficulty: "easy",
       seed: 31337,
@@ -168,6 +170,9 @@ describe("the host core both entries share", () => {
     // terminal are two entries rather than two servers.
     let clock = 0;
     const host = createHost({
+      // Loopback UDP with no Steam near it — decision 15's escape, which is
+      // exactly what a headless suite is for.
+      allowUnlicensedTransport: true,
       params: paramsFrom({ level: "moon", difficulty: "easy" }, 5),
       now: () => clock,
     });

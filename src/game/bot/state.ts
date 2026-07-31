@@ -335,15 +335,6 @@ export type Bot = {
    */
   waypoint?: Vec2 | null;
   /**
-   * WEAPON-SWAP clock (see economy.ts `stepBotWeaponSwap`): when the
-   * swap system last changed the hand (sim ms) — the anti-juggle cooldown
-   * that keeps a foe dancing on the blade-reach line from making the hero
-   * flap between blade and pocket gun every tick. Written by the harness's
-   * swap action, not by `botAct` (bots stay pure consumers of the state);
-   * per-bot memory keyed off pure state, so determinism holds.
-   */
-  lastSwapMs?: number;
-  /**
    * When the last GROUNDED, affordable JUMP was requested (sim ms,
    * `state.stats.timeMs`) — the memory behind the discretionary-hop COOLDOWN
    * ({@link BotTuning.hopCooldownMs}): a takeoff spends 10% of a pool only

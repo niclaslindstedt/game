@@ -7,6 +7,9 @@
 //     [--party 1,2,4,8] [--players 1] [--minutes 6] [--seeds 3] [--seed 4242]
 //     [--start-level 50] [--gear-tier rare]
 //
+// `--start-level` defaults per cell from the campaign ladder: NIGHTMARE and JESUS
+// arrive at the rung's own `intendedLevel` (~40), easy/medium/hard start fresh.
+//
 // **THE ONE READ THIS EXISTS TO PRODUCE IS PER-CAPITA XP PER MINUTE, and the
 // reason is the whole difficulty of tuning co-op.** A party shares each kill AND
 // clears the floor faster, so the two effects point in opposite directions and
@@ -57,6 +60,12 @@ const { playerScaling } = await import(
 const { synthesizeArrival } = await import(
   path.join(root, "src/sim/arrival.ts")
 );
+const { DIFFICULTY_ORDER } = await import(
+  path.join(root, "src/game/defs/difficulties.ts")
+);
+const { levelDef } = await import(
+  path.join(root, "src/game/defs/levels/index.ts")
+);
 
 // ---- Flags -----------------------------------------------------------------------
 
@@ -90,6 +99,37 @@ const seed0 = Number(opt("seed", "4242"));
 const startLevel = opt("start-level", "");
 const gearTier = opt("gear-tier", "rare");
 
+/**
+ * The level the hero ARRIVES at for this cell, when the caller named none.
+ *
+ * **NIGHTMARE AND JESUS ARE NEVER PLAYED FROM LEVEL 1**, and a probe that
+ * measured them that way measured nothing: the first read of this matrix had
+ * every party AND the soloist finish nightmare with zero kills, at every party
+ * size, which is a naked-rookie result rather than a co-op one. The campaign
+ * ladder (`content/ladder.yaml`, stamped onto each level as `intendedLevel`)
+ * already knows where the hero is when those rungs' mobs appear — around 40 —
+ * so the default comes from there rather than from a number typed here.
+ *
+ * This is `simulate-run`'s own `defaultStartLevel` rule, applied PER CELL
+ * because this harness sweeps difficulties and levels together. easy/medium/hard
+ * keep the fresh level-1 default, which is their realistic entry — you do climb
+ * those from a rookie. JESUS authors no ladder level of its own (it is
+ * player-relative), so it borrows nightmare's as the entry-from-nightmare proxy.
+ * An explicit `--start-level` always wins, including `--start-level 1` when
+ * somebody deliberately wants the rookie read.
+ */
+function arrivalLevel(levelId, difficulty) {
+  if (startLevel) return Number(startLevel);
+  if (difficulty !== "nightmare" && difficulty !== "jesus") return null;
+  const intended = levelDef(levelId).intendedLevel ?? [];
+  const nightmareIdx = DIFFICULTY_ORDER.indexOf("nightmare");
+  const idx =
+    difficulty === "jesus"
+      ? nightmareIdx
+      : DIFFICULTY_ORDER.indexOf(difficulty);
+  return intended[idx] ?? intended[nightmareIdx] ?? null;
+}
+
 // ---- Measure ---------------------------------------------------------------------
 
 const median = (xs) => {
@@ -112,10 +152,11 @@ const padE = (v, w) => String(v).padEnd(w);
 function measure(levelId, difficulty, party, playersN) {
   const rows = [];
   for (let i = 0; i < seedCount; i++) {
-    const loadout = startLevel
+    const arriveAt = arrivalLevel(levelId, difficulty);
+    const loadout = arriveAt
       ? synthesizeArrival({
           difficulty,
-          level: Number(startLevel),
+          level: arriveAt,
           seed: seed0,
           weaponTier: gearTier,
           gearTier,
@@ -193,6 +234,7 @@ const header =
   pad("k/min", 8) +
   pad("dmgIn", 8) +
   pad("alive", 7) +
+  pad("from", 6) +
   pad("heroL", 7);
 console.log(header);
 console.log("-".repeat(header.length));
@@ -216,6 +258,7 @@ for (const levelId of levels) {
             pad(m.kills, 8) +
             pad(m.dmg, 8) +
             pad(`${m.alive}/${party}`, 7) +
+            pad(arrivalLevel(levelId, difficulty) ?? 1, 6) +
             pad(m.level, 7),
         );
       }

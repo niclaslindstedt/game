@@ -23,7 +23,7 @@ import { isOfferedInTrade } from "../trade.ts";
 import { freeHandsFor } from "./hands.ts";
 import { equipSlotForItem, fitsEquipSlot, RING_SLOTS } from "./slots.ts";
 import { canEquip } from "./requirements.ts";
-import { gearScore } from "./weapon-math.ts";
+import { gearScore, weaponCooldownFor } from "./weapon-math.ts";
 
 // ---- Where a piece is worn ----------------------------------------------------
 
@@ -176,6 +176,45 @@ export function equipFromInventory(
   // A +STRENGTH piece can widen the bag; grow it so the swap has somewhere
   // to land (grow-only — see syncInventoryCapacity).
   syncInventoryCapacity(state, player);
+  return true;
+}
+
+/**
+ * THE POCKET ARSENAL'S DRAW — swap the hand to bag cell `index` the way a
+ * fighter reaching for a second weapon mid-fight does, rather than the way a
+ * player picking one off the paper doll does.
+ *
+ * Two things separate it from {@link equipFromInventory}, and both are rules:
+ *
+ *  1. **THE ATTACK CLOCK IS CARRIED ACROSS.** The new hand inherits the SHORTER
+ *     of the wait already served and its own full cooldown, so drawing a second
+ *     weapon can never mint a free shot. The hand-picked swap deliberately
+ *     zeroes it — that is instant gratification for a deliberate act — but
+ *     something swapping every fight has to play fair, or the optimal build is
+ *     two weapons juggled on the cooldown.
+ *  2. **IT STAMPS `Player.lastSwapMs`**, the anti-juggle memory the draw's own
+ *     decision reads (`bot/weapon-swap.ts`). That lives on the HERO rather than
+ *     on whatever is deciding, because it is a fact about the hero: the rule
+ *     holds whoever is holding the controller, and a memory the server never saw
+ *     would let the same hero juggle freely from one end of a session and not
+ *     the other (multiplayer plan §7.2.5, decision 3b).
+ *
+ * It sits here rather than under `bot/` for the same reason: the DECISION of
+ * when to draw is the autopilot's, the DRAW is the game's — and a run command
+ * may not reach into the autopilot to find one.
+ */
+export function swapHand(
+  state: GameState,
+  player: Player,
+  index: number,
+): boolean {
+  const carried = player.weaponCooldownMs;
+  if (!equipFromInventory(state, player, index)) return false;
+  player.weaponCooldownMs = Math.min(
+    carried,
+    weaponCooldownFor(state, player, player.equipment.weapon),
+  );
+  player.lastSwapMs = state.stats.timeMs;
   return true;
 }
 

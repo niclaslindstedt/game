@@ -75,6 +75,7 @@ import {
 } from "./conversation.ts";
 import { STAT_NAMES } from "./defs/equipment.ts";
 import { autoEquipBest, scrapInferiorLoot } from "./items/auto-equip.ts";
+import { swapHand } from "./items/inventory.ts";
 import {
   discardEquipped,
   discardFromInventory,
@@ -226,6 +227,7 @@ export const RUN_COMMAND_ARGS = {
   // THE BAG. Indices rather than items, always: an index names a cell the
   // server can check, an item would be a thing the client asserts exists.
   equipFromInventory: ["int"],
+  swapHand: ["int"],
   equipFromInventoryInto: ["int", "equipSlot"],
   unequipToInventory: ["equipSlot"],
   moveInventoryItem: ["int", "int"],
@@ -460,6 +462,17 @@ export function applyRunCommand(
     // THE BAG
     case "equipFromInventory":
       return equipFromInventory(state, hero, num(a, 0));
+    // THE POCKET ARSENAL's own draw, and it is a SEPARATE verb from the one
+    // above rather than a flag on it (multiplayer plan §7.2.5, decision 3b).
+    // Two things differ and both are rules rather than details: the attack
+    // clock is CARRIED ACROSS instead of zeroed, so swapping every fight can
+    // never mint free shots the way a hand-picked swap deliberately does, and
+    // the draw stamps `Player.lastSwapMs` so the anti-juggle gap holds for
+    // whoever is holding the controller. Folding the two into one verb with a
+    // boolean would put "may I have my cooldown wiped?" on the wire, which is
+    // exactly the kind of thing a closed list exists to keep off it.
+    case "swapHand":
+      return swapHand(state, hero, num(a, 0));
     case "equipFromInventoryInto":
       return equipFromInventoryInto(
         state,

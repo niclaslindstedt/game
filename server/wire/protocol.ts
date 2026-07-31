@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 10;
+export const PROTOCOL_VERSION = 11;
 
 /**
  * The most clients one session seats, host included.
@@ -196,7 +196,8 @@ export type RefusalReason =
   | "no-session"
   | "bad-password"
   | "bad-challenge"
-  | "rate-limited";
+  | "rate-limited"
+  | "unlicensed";
 
 /**
  * What the JOIN screen prints for each refusal.
@@ -215,6 +216,7 @@ export const REFUSAL_TEXT: Record<RefusalReason, string> = {
   "bad-password": "WRONG PASSWORD",
   "bad-challenge": "THE HANDSHAKE EXPIRED - TRY AGAIN",
   "rate-limited": "TOO MANY ATTEMPTS - WAIT A MOMENT",
+  unlicensed: "MULTIPLAYER IS PLAYED THROUGH STEAM",
 };
 
 // ---------------------------------------------------------------------------
@@ -524,6 +526,7 @@ export const COMMANDS = [
   "stayOnField",
   "reopenVictoryChoice",
   "equipFromInventory",
+  "swapHand",
   "equipFromInventoryInto",
   "unequipToInventory",
   "moveInventoryItem",

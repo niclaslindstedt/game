@@ -58,12 +58,12 @@ function stubSession() {
 }
 
 /** A transport that carries packets between the test and the hub. */
-function stubTransport() {
+function stubTransport(id: Transport["id"] = "udp") {
   const sent: { to: string; data: Uint8Array }[] = [];
   const dropped: string[] = [];
   let events: TransportEvents | null = null;
   const transport: Transport = {
-    id: "udp",
+    id,
     bound: { address: "0.0.0.0", port: 27015 },
     listen: (handlers) => {
       events = handlers;
@@ -96,12 +96,21 @@ function stubTransport() {
 
 /** A hub over one clock the test owns. */
 async function harness(
-  options: { password?: string; maxClients?: number } = {},
+  options: {
+    password?: string;
+    maxClients?: number;
+    /** Grant decision 15's escape. TRUE for every test but the licence ones —
+     * a headless suite has no Steam anywhere near it. */
+    licensed?: boolean;
+    /** What the transport calls itself, for the licence ladder. */
+    transportId?: string;
+  } = {},
 ) {
   let clock = 1_000;
   const session = stubSession();
-  const wire = stubTransport();
+  const wire = stubTransport((options.transportId ?? "udp") as Transport["id"]);
   const hub = createPeerHub({
+    allowUnlicensedTransport: options.licensed ?? true,
     session: session.session,
     handshake: HOST,
     secret: SECRET,
@@ -442,5 +451,72 @@ describe("leaving", () => {
       detail: "being a nuisance",
     });
     expect(net.removed).toEqual([net.added[0]!.id]);
+  });
+});
+
+describe("multiplayer is licensed through Steam", () => {
+  // DECISION 15. The game ships under PolyForm-Noncommercial and the
+  // multiplayer right travels with the Steam copy, so a session carried by
+  // anything other than the Steam relay is unlicensed play — whoever set it up
+  // and whatever they meant by it. The hub is the one door every path into a
+  // session comes through (the game's own HOST, the server browser, JOIN BY
+  // ADDRESS, the dedicated server), so it is the one place the rule can live.
+  //
+  // Every OTHER test in this file passes `allowUnlicensedTransport`, because a
+  // headless suite has no Steam anywhere near it — which is exactly why these
+  // three have to exist: without them the gate could be deleted and the suite
+  // would stay green.
+  it("refuses a peer that did not arrive through Steam", async () => {
+    const net = await harness({ licensed: false });
+    net.arrive({
+      from: PEER,
+      data: join({ cookie: net.cookie, handshake: HOST, proof: 0 }),
+    });
+    const frame = net.last();
+    expect(frame?.type).toBe(FRAME.bye);
+    expect(frame?.payload).toMatchObject({ reason: "unlicensed" });
+    expect(net.added).toHaveLength(0);
+  });
+
+  it("refuses BEFORE it looks at the build or the password", async () => {
+    // The ladder's ORDER is the design: a peer that may not be here at all
+    // should not have anything else about it examined, and the message it gets
+    // back has to name the thing it can actually act on. A joiner on the wrong
+    // build over an unlicensed transport is told about the LICENCE, not told to
+    // go and update.
+    const net = await harness({ licensed: false, password: "hunter2" });
+    net.arrive({
+      from: PEER,
+      data: join({
+        cookie: net.cookie,
+        handshake: { ...HOST, build: "9.9.9" },
+        proof: 0,
+      }),
+    });
+    expect(net.last()?.payload).toMatchObject({ reason: "unlicensed" });
+  });
+
+  it("fails CLOSED, so a transport added later is licensed deliberately", async () => {
+    // The check is `id === "steam"`, never `id !== "udp"`. The difference shows
+    // up only on the day somebody adds a third transport — and by then the
+    // wrong one is a hole nobody looks at again.
+    const net = await harness({ licensed: false, transportId: "relay-v2" });
+    net.arrive({
+      from: PEER,
+      data: join({ cookie: net.cookie, handshake: HOST, proof: 0 }),
+    });
+    expect(net.last()?.payload).toMatchObject({ reason: "unlicensed" });
+    expect(net.added).toHaveLength(0);
+  });
+
+  it("lets a Steam peer straight through", async () => {
+    const net = await harness({ licensed: false, transportId: "steam" });
+    net.arrive({
+      from: PEER,
+      data: join({ cookie: net.cookie, handshake: HOST, proof: 0 }),
+    });
+    // Seated, which is the only assertion that matters here: without this case
+    // a gate that refused EVERYBODY would pass the three above.
+    expect(net.added).toHaveLength(1);
   });
 });

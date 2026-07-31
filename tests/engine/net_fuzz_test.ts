@@ -202,6 +202,9 @@ describe("the hub under hostile packets", () => {
     const link = wire();
     let clock = 0;
     const hub = createPeerHub({
+      // Loopback UDP, with no Steam anywhere near it — the licence escape
+      // (decision 15) is exactly what this suite is for.
+      allowUnlicensedTransport: true,
       session,
       handshake: HOST,
       secret: 1,
@@ -229,6 +232,9 @@ describe("the hub under hostile packets", () => {
     link.transport.send = (_to, data) => replies.push(data.byteLength);
     let clock = 0;
     const hub = createPeerHub({
+      // Loopback UDP, with no Steam anywhere near it — the licence escape
+      // (decision 15) is exactly what this suite is for.
+      allowUnlicensedTransport: true,
       session,
       handshake: HOST,
       secret: 3,

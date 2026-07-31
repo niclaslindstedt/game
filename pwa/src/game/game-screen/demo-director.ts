@@ -525,19 +525,19 @@ export function createDemoDirector(deps: {
       );
       const rows = screenRef.current?.querySelectorAll(".wpn-switch-slot");
       if (order >= 0) tapFx.rippleOnEl(rows?.[order]);
-      const changed = stepBotWeaponSwap(drivingBot, state, localHero(state));
+      const changed = stepBotWeaponSwap(state, localHero(state));
       setWeaponMenuOpen(false);
       bumpUi();
       return changed;
     }
-    const index = botWeaponSwapTarget(drivingBot, state, localHero(state));
+    const index = botWeaponSwapTarget(state, localHero(state));
     if (index < 0) return false;
     const slot = screenRef.current?.querySelector(
       '[aria-label="switch-weapon"]',
     );
     // No HUD yet (the switcher slot mounts with the playing HUD): commit the
     // swap plainly rather than stalling the bot's arsenal behind the look.
-    if (!slot) return stepBotWeaponSwap(drivingBot, state, localHero(state));
+    if (!slot) return stepBotWeaponSwap(state, localHero(state));
     tapFx.rippleOnEl(slot);
     setWeaponMenuOpen(true);
     bumpUi();

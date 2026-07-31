@@ -2011,11 +2011,45 @@ order, beside the chain above.
 Neither is the plan's to make, and both should be settled before the thing that
 needs them rather than during it:
 
-- **Decision 15 — the LICENCE.** `PolyForm-Noncommercial-1.0.0` and hosted play:
-  what it permits for somebody running a server for other people. Running one
-  yourself for your friends is plainly inside it; a paid hosting business is
-  plainly not; the middle is unsettled, and PR 5 shipped a dedicated server
-  saying so in its own header rather than answering it.
+- **Decision 15 — the LICENCE. ANSWERED: multiplayer is played through STEAM,
+  and nowhere else.** The multiplayer right travels with the Steam copy, so a
+  session carried by anything but the Steam relay is unlicensed play — whoever
+  set it up and whatever they meant by it. That retires the "middle" this
+  paragraph used to describe: there is no unsettled band between playing with
+  friends and running a hosting business, because neither is licensed off Steam.
+
+  **Enforced at the HUB, on the transport's own name.** `hub.ts` is the one door
+  every path into a session comes through — the game's own HOST, the server
+  browser, JOIN BY ADDRESS and the dedicated server alike — so the check lives
+  there and nowhere else, as a new `unlicensed` refusal sorted FIRST in the
+  ladder (ahead of build, mods, challenge and password: a peer that may not be
+  here at all should not have anything else about it examined, and the message
+  it gets back has to name the thing it can act on). It reads `Transport.id ===
+"steam"` rather than validating a ticket, because a peer that reached us over
+  the Steam relay reached us through Steam's own matchmaking with a Steam
+  identity behind it — a ticket scheme layered on top would be a second, weaker
+  copy of a fact Valve has already established, and one this repo cannot
+  honestly test. It fails CLOSED, so the next transport added is licensed
+  deliberately rather than by having been forgotten.
+
+  `allowUnlicensedTransport` is the one escape, and it is an OPTION on the hub
+  rather than an environment variable precisely so a player cannot set it. The
+  repo's own suites and §5.6's headless soak pass it; no shipped path does.
+
+  **AND THE HONEST LIMIT, which must not be described as enforcement.** The
+  standalone dedicated server reads its escape from a CONFIG FILE, and a config
+  file is a thing a determined player can edit. What ships today is a statement
+  of what the licence permits — the same shape as a licence header — not a lock.
+  A real lock is one of two things, and choosing between them is work this has
+  not done: a Steam auth ticket (`GetAuthSessionTicket` / `BeginAuthSession`)
+  validated at the hub, which is the mechanism Valve provides and which §0's
+  "the Steam binding is narrower than it looks" warns must be verified against
+  `steamworks.js` before being leant on; or a build-time literal the shipped
+  binary folds to false, which is cheap and airtight for the SHIPPED build and
+  does nothing about somebody compiling the open-source tree themselves. The
+  second is probably right, and the first is what makes a public server list
+  possible later.
+
 - **PR 6's story chain.** If the garage speaks a single line that is a
   manuscript change, and the manuscript may not be rewritten without the user's
   confirmation first (see AGENTS.md's story chain). It is a conversation rather
@@ -2611,6 +2645,7 @@ settled before the PR that needs it, not during.
 | 2   | Default direct port                                      | UDP 27015, walking to 27030, always revealing the bound one                                                                                                                                                                                                                                                                                                                                                        | PR 2      |
 | 3   | Steam-only or dual transport                             | **Dual**, both offered by default                                                                                                                                                                                                                                                                                                                                                                                  | PR 2      |
 | 3a  | Do the deferred cutover and screens land as one PR?      | **No — two.** See PR 1.5's §1.5.5: the cutover is the change most likely to regress single-player silently, it is provable on its own (an autopilot campaign against the same seeds), and the screens are verified by a different loop entirely. Combining them puts the same seam through one PR that PRs 1 and 2 both split along                                                                                | PR 1.5    |
+| 15  | What does the LICENCE permit for hosted play?            | **Steam only.** The multiplayer right travels with the Steam copy; a session over any other transport is unlicensed play. Enforced at the hub as an `unlicensed` refusal on `Transport.id`, sorted first in the ladder and failing closed. The dedicated server's config-file escape is a STATEMENT rather than a lock — see §5.5.4 for the two real ones and why neither has been chosen yet                      | PR 5.5    |
 | 3b  | Does the AUTOPLAY BOT run on the client or the server?   | **Client, for now** — its decisions already travel as input and commands, so only its five housekeeping mutators need converting, and four of them are plain verbs. The fifth (`stepBotWeaponSwap`) carries the bot's own swap memory and is the one that forces the question; moving that memory onto the run is the cheaper answer than moving the bot. Revisit at PR 4, which owns co-op autopilot rules anyway | PR 1.75   |
 | 4   | Level-up: blocking chooser or banked points              | Banked + non-blocking chooser (changes single-player too)                                                                                                                                                                                                                                                                                                                                                          | PR 3      |
 | 5   | Fog of war: shared or per-player                         | Shared                                                                                                                                                                                                                                                                                                                                                                                                             | PR 3      |
