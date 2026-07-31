@@ -35,7 +35,7 @@ import type { Vec2 } from "@game/lib/vec.ts";
 // during module evaluation, so ESM resolves it safely.
 import { weaponDps } from "./items/index.ts";
 import { autoPowerScale } from "./leveling.ts";
-import { partyCentroid, partyLevel } from "./party.ts";
+import { livingHeroes, partyCentroid, partyLevel } from "./party.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState, Player } from "./types/index.ts";
 
@@ -661,8 +661,28 @@ export function tickMenace(
   // of the window one step covers, so the EMA tracks roughly the last
   // `rateWindowSec` of fighting and a lone burst can't spike it.
   const alpha = Math.min(1, dt / MENACE.rateWindowSec);
-  state.combatDps += (damageDealt / dt - state.combatDps) * alpha;
-  state.combatKillRate += (kills / dt - state.combatKillRate) * alpha;
+  // PER CAPITA, NOT PER PARTY — the one thing `/players N` does not cover.
+  //
+  // Both figures arrive SUMMED over everybody: `stats.damageDealt` and
+  // `stats.kills` are the run's, not a hero's. The meter asks "is this too
+  // easy", and the honest form of that question with eight people in the room
+  // is "is it too easy FOR EACH OF THEM" — eight heroes each fighting at an
+  // ordinary pace should read as an ordinary fight, because that is what it is.
+  //
+  // Fed the raw sum, the meter reads eight times the DPS and eight times the
+  // kill rate of the run it was tuned against, saturates within about a minute,
+  // and — because the evolution ratchet is a PERMANENT floor within a run
+  // (`bankOverkill`) — never comes back down. So an untuned meter does not
+  // merely make co-op hard, it makes it hard for ever after the first minute,
+  // which is the failure the plan's §4.3 names.
+  //
+  // The divisor is the party actually IN PLAY, so a departed seat and a downed
+  // hero both stop diluting the read the moment they stop fighting — otherwise
+  // three players carrying on after a fourth quits would be judged as four.
+  // One hero divides by one, so single player is untouched to the bit.
+  const share = Math.max(1, livingHeroes(state).length);
+  state.combatDps += (damageDealt / dt / share - state.combatDps) * alpha;
+  state.combatKillRate += (kills / dt / share - state.combatKillRate) * alpha;
 
   // Fold the minion spawn/kill counts booked since the last tick into the
   // clearance-gate rates (smoothed over the longer clearanceWindowSec so the

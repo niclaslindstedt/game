@@ -141,21 +141,40 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 
 ---
 
-## 1. The eight pull requests
+## 1. The ten pull requests
 
-| PR                     | Ships                                                                                                                                        | Playable at the end                                          | Estimate | State                         |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ----------------------------- |
-| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6   |
-| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7   |
-| **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
-| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4       |
-| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4        |
-| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6     |
-| **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
-| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                               |
+| PR                     | Ships                                                                                                                                    | Playable at the end                                          | Estimate | State                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ------------------------------------------ |
+| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                          | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6                |
+| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**               | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7                |
+| **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4              |
+| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                    |
+| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                     |
+| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6                  |
+| **4 — THE CO-OP GAME** | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7 |
+| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                | Shippable                                                    |  5–7 wks |                                            |
+| **6 — THE GARAGE**     | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks |                                            |
+| **7 — THE PARTY BOT**  | `botAct` takes the hero it steers; the simulator flies a party; BOTS IN A LOCAL GAME; the bot plays like somebody in a party             | A party without four friends online — and PR 4 measured      |  3–5 wks | **§7.1–§7.2 owed EARLY**, see PR 7         |
 
-**≈ 34–49 weeks.** The band is wide because PR 3 is a design exercise wearing a
+**≈ 39–58 weeks.** The band is wide because PR 3 is a design exercise wearing a
 refactor's clothes (see §PR 3), and its uncertainty dominates everything.
+
+**PR 6 SORTS LAST AND THAT IS A DECISION, not a leftover.** The garage was PR 4's
+§4.1 and has been lifted out whole, for two reasons. It is not co-op arithmetic —
+it is a level, a new level-swap mechanism, a parked merchant and a story-chain
+change, which is a different kind of work from "whose is this kill's XP". And it
+is the one piece here that is worth shipping AFTER the mode is stable rather than
+before: a hub is what makes co-op pleasant, and PR 5 is what makes it work at
+all. The cost of that order is stated in PR 6's own goal and must not be
+discovered later — until it lands, a joiner arrives in the middle of somebody
+else's boss fight.
+
+**PR 7's FIRST HALF IS OWED EARLIER THAN ITS NUMBER.** §7.1 (the bot takes the
+hero it steers) and §7.2 (the simulator flies a party) are the instrument PR 4's
+§4.3 tuning is blocked on — the co-op rules shipped as STRUCTURE precisely
+because they could not be measured. The number says where the work is DESCRIBED;
+the first half happens whenever PR 4's measured pass does. Same treatment §3.7
+gave the seat on the command channel, same reason.
 
 **The three inserted PRs are not new work, they are work the earlier ones
 deferred**, so the total grew by their estimates rather than by a re-plan. Note also what the
@@ -1319,32 +1338,34 @@ until last is how PR 4's `/players N` pass ends up guessed anyway.
 **Goal: the campaign, played co-op, start to finish.** PR 3 makes eight heroes
 possible; PR 4 makes eight heroes a game.
 
-### 4.1 The town — the fixture this game has never had
+> **§4.2's ABANDONED HERO AND §4.3's RULES HAVE LANDED; §4.4, §4.5 AND §4.2's
+> CORPSE HAVE NOT — AND §4.1's HUB IS NOW ITS OWN PR (PR 6).** The split is along the same seam every earlier one
+> was: making the run's ARITHMETIC party-aware — whose the XP is, whose the loot
+> is, what heats the meter, what a body nobody is steering means — is one job,
+> and it is a prerequisite of the fixtures (a hub, a party HUD, banking) that
+> sit on top of it. See **§4.7** for exactly what that means, what it
+> deliberately did not do, and the one thing that turned out to be a
+> prerequisite nobody had scheduled.
 
-D2's whole social loop is town ↔ wilderness: meet, vendor, stash, regroup, chat,
-portal out together. This game has **no hub**. The merchant _wanders the field_
-and is discovered by proximity; there is nowhere safe to stand; "start a game,
-people join" has nowhere to land.
+### 4.1 The town — MOVED TO PR 6
 
-**The fix is authored content, not engine work**, which is the good news: a
-`LevelDef` in the existing `content/levels/<id>.yaml` format with no spawners,
-the merchant parked at a counter, the quest givers present, safe zones (which
-already exist) over the whole floor, and level select as a set of portals. The
-`level-design` skill's checker battery applies unchanged.
+**The hub is no longer PR 4's**, and the section that was here has been lifted
+whole into **PR 6 — THE GARAGE**. Two reasons, and neither is that it stopped
+mattering:
 
-Two things it does drag in:
+- **It is not co-op arithmetic.** Everything else in PR 4 answers a question of
+  the form "with eight heroes, whose is this / what does this mean" — the XP,
+  the loot, the meter, a body nobody is steering. The hub is a level, a new
+  level-swap mechanism, a parked merchant and a change to the story chain. Those
+  share nothing but a PR number.
+- **It turned out not to be authored content.** The claim that it was is what
+  made it look small enough to sit inside PR 4; three findings against the real
+  tree say otherwise (they travel with it — see PR 6's §6.3).
 
-- **Party travel.** Everyone must arrive on the same map with their own
-  loadout. The host chooses; the session tears down its level and builds the
-  next from a new seed, with each player's `Loadout` re-applied. The existing
-  per-level handoff (`arrival.ts`, `applyLoadout`) is the mechanism; what is new
-  is that there are eight of them and they must all be banked before the switch.
-- **The story chain applies.** If the hub has a single spoken line — a
-  greeting, a sign, a named NPC — then `docs/story.md` is edited first, then
-  `docs/manuscript.md`, then the content, **and the manuscript edit needs the
-  user's confirmation before it is written**. A silent line in a level YAML with
-  a stale manuscript is exactly the drift the chain exists to prevent. Use the
-  `update-story` skill.
+What PR 4 keeps is the consequence: **until PR 6 lands there is nowhere to put a
+joiner**, so a session hosted mid-campaign drops them into somebody else's boss
+fight. That is a stated cost of the ordering rather than an oversight, and PR 6's
+goal says so in its own words.
 
 ### 4.2 Death, the corpse, and the respawn
 
@@ -1446,7 +1467,95 @@ the common case on Steam:
 - The `--verdict` line passes at 1, 2, 4 and 8 players on every difficulty.
 - Deaths, corpses and respawns work; one death never ends anyone else's game.
 - Every player's character is correctly banked after a level and after a quit.
-- `docs/game-content.md` covers the hub; the story chain is intact if it speaks.
+
+### 4.7 What the first half actually shipped — and the instrument it could not use
+
+Four rules landed, and they have one property in common that is worth stating
+before the list, because it is what made them safe to ship together: **every one
+is an exact no-op at one hero.** Not "close enough" — a solo run pays the same
+XP, stamps no owner on any drop, divides its menace read by one, and has no seat
+anybody can leave. So none of them can re-tune the shipped campaign, and the
+whole engine suite (1688 tests) stayed green without a single expectation being
+moved.
+
+**LANDED.**
+
+- **`Player.departed`, and `heroInPlay` as the ONE predicate.** The question
+  §3.7 created and nobody owned. A seat is still never spliced out; what changed
+  is that the world stops answering for the body in it. Not chased, not in the
+  centroid, not in `partyLevel`, not a pack's alarm clock, not a hazard's
+  victim, not a share of the meter's per-capita read, not stepped at all — and
+  not ALIVE, so `partyWiped` fires and a group whose fourth player quit can lose
+  the run. `nextFreeSeat` then hands that seat to the next arrival, so a session
+  people have come and gone from does not fill up with bodies holding slots.
+  The predicate folds "at 0 hp" and "nobody is steering this" into one check on
+  purpose: every question above has the same answer for both, and splitting them
+  is how one of the eight sites quietly keeps reacting to a body nobody is
+  behind.
+- **§4.3's XP sharing** — proximity-gated and level-weighted, in the leaf
+  `src/game/xp-share.ts`. `grantXp` took the recipient as a PARAMETER (§3.1's
+  rule: a bar and a pile of banked stat points are as private as a bag), and
+  `shareXp(state, amount, pos)` is the door every KILL goes through. Everything
+  else with an obvious owner — an arrow, an errand, a scripted grant — stays a
+  direct grant, because sharing one out would be a gift from the player who
+  earned it to one who did not. The per-map cap now reads the RECIPIENT's level.
+- **§4.3's loot ownership** — `GameState.lootMode`, free-for-all by default with
+  a host toggle (HOST GAME → LOOT), decided deliberately rather than inherited.
+  `Item.owner` is stamped in `dropItem` — the one funnel every drop goes through,
+  which is why no call site had to learn who killed anything — off the ITEM's
+  hash rather than `state.rng()`, so an allocated session rolls the same items
+  from the same seed a free-for-all one does.
+- **§4.3's menace meter** — read PER CAPITA. `stepItems` had to be split into a
+  per-ITEM arc pass and a per-HERO pickup pass on the way, which was a real bug
+  rather than a tidy-up: a party of eight walking one loop counted every toss
+  down eight times as fast.
+
+**NOT LANDED, and the reasons differ.**
+
+- **§4.2's corpse and respawn are BLOCKED**, and by this plan's own text: "PR 3's
+  phase split already makes `dying` a `Player.screen`". §3.2 has not landed, so
+  `dying` and `defeat` are still global phases and there is no per-player death
+  to give a corpse to. `applyDeathXpPenalty` is party-aware in the meantime — it
+  bills every non-departed hero on the wipe, which is the transition it actually
+  rides — but that is the PARTY falling, not a player dying.
+- **§4.1 the town, §4.4 mods, §4.5 the party HUD and banking are simply not
+  done.** §4.1 is authored content and, if the hub speaks a single line, a story
+  chain edit that needs the user's confirmation before it is written — which is
+  a conversation rather than a commit. §4.5's banking is the other half of the
+  spectator's throwaway character.
+
+**AND THE INSTRUMENT IS THE FINDING — §4.3's "measured pass, not a guessed one"
+COULD NOT BE RUN, AND IT IS §3.4's FAULT RATHER THAN §4.3's.** This section says
+the menace reconciliation is measured with `scripts/simulate-run.mjs` plus the
+autopilot at 2/4/8 players. That simulator can fly exactly one hero: **the bot
+reads `state.players[0]` at 164 sites across `src/game/bot/`**, so `botAct` has
+no notion of WHICH hero it is steering. §3.7 predicted this in as many words —
+"leaving this one until last is how PR 4's `/players N` pass ends up guessed
+anyway" — and it was right.
+
+What shipped instead is the STRUCTURE with its reasoning stated, plus unit-level
+proof of each claim (`tests/engine/coop_rules_test.ts`): the meter reads a party
+of eight's summed output as identical to one hero's, the XP splits 20:60 the way
+it says it does. That is not the same as a campaign measured at four players, and
+it must not be recorded as if it were. So the next thing PR 4 owes, BEFORE the
+party HUD, is **PR 7's §7.1–§7.2** — the bot parameterized on a `Player`, the
+same mechanical refactor §3.1 did to the engine, one file at a time — and then
+the numbers.
+
+Two knobs are the levers when that happens, and both are deliberately shipped at
+a stated default rather than a tuned one: `XP_SHARE.partyBonusPerHero` (how much
+bigger a shared pot is than a solo one — read the per-CAPITA XP rate off a
+multi-player run, never the per-kill share, because a party also clears faster
+and the two effects only show up together) and the `/players N` pairing itself.
+
+**AND TWO OF PR 5's RULES ARE ALREADY OWED — see the box at the head of §5.3.**
+A co-op run currently banks its records to the leaderboards exactly as a solo
+run does (there is no `PartyStamp`, and §5.3 says there must be), and a joiner's
+loadout is accepted verbatim off the wire (there is no validation, and §5.3 says
+there must be). Both became reachable when PR 2.5 opened the doors, which is a
+PR earlier than the section that owns them — so they are debts now rather than
+future work, and they belong at the front of PR 5 rather than beside the trade
+window.
 
 ---
 
@@ -1454,6 +1563,19 @@ the common case on Steam:
 
 **Goal: shippable.** Everything between "it works with friends" and "it works
 with strangers, at scale, forever".
+
+> **PR 5 IS NO LONGER LAST, AND "SHIPPABLE" IS THE WORD TO READ CAREFULLY.** The
+> garage (PR 6) sorts after it, so the mode ships WITHOUT A HUB: a joiner lands
+> in the middle of whatever mission the host is on. That is a deliberate order —
+> PR 5 is what makes co-op work, PR 6 is what makes it pleasant — and it is
+> stated at both ends so nobody reads this section's title as "and then we are
+> done". If the missing hub turns out to be the first complaint, PR 6 moves up;
+> nothing in PR 5 depends on it.
+>
+> **TWO OF THIS PR'S RULES ARE ALREADY DEBTS RATHER THAN FUTURE WORK** — see the
+> box at §5.3. They should be the FIRST commits here, ahead of the trade window,
+> because both are open in the tree today rather than at some point when this PR
+> starts.
 
 ### 5.1 Stash and trade
 
@@ -1485,6 +1607,33 @@ internet. Non-negotiable:
   that throws random bytes at it and asserts it never throws or over-reads.
 
 ### 5.3 The trust model, stated plainly
+
+> **TWO OF THIS SECTION'S RULES ARE ALREADY OWED — they became REACHABLE a PR
+> early, and neither is written.** This is the plan's recurring failure in its
+> fourth form: a layer ships and the rule that was supposed to arrive with it
+> does not. PR 2.5 opened the doors and PR 3 started seating real heroes off the
+> wire, so both of the gaps below are open in the tree TODAY, on the direct-UDP
+> path, rather than at some future point when PR 5 starts.
+>
+> 1. **THERE IS NO `PartyStamp`, so a co-op run banks records like a solo one.**
+>    The rule below says a multiplayer run must not contribute to leaderboards,
+>    and nothing anywhere marks a run as a session run — grep finds no stamp, no
+>    flag, no reader. The boards rank lifetime kills, the hardest single blow and
+>    the best kill rate SUSTAINED over ten minutes of combat clock, and every one
+>    of those is inflated by seven other people helping without anybody having to
+>    cheat at all. It is small — a flag on the run, seeded from `SessionParams`
+>    like every other run parameter, read where `ModStamp` is already read — and
+>    it should be done at the FRONT of PR 5 rather than beside the trade window.
+> 2. **A JOINER'S LOADOUT IS TAKEN VERBATIM.** `server/session.ts` passes
+>    `wants.loadout` — a claim that arrived from a stranger — straight into
+>    `seatHero`, and there is no `validateLoadout` in the tree. The rule below
+>    asks for level-within-range, items mintable from the catalogs, and stat
+>    points summing to what the level allows. Note the honesty the rule itself
+>    demands: it is a speed bump, not a wall, and whatever ships must say so.
+>
+> Both are recorded HERE rather than in PR 4's §4.7 on purpose: they are PR 5's
+> rules, and moving them would be renumbering a decision instead of noting a
+> debt. What §4.7 owes them is a pointer, which it has.
 
 **The host is a player, so the host can cheat.** This is precisely why Open
 Battle.net was a cheat-fest, and it is an accepted cost of a listen server —
@@ -1540,9 +1689,370 @@ and it should be a few hundred lines.
 - Store: the Steam listing's multiplayer categories, the depot's launch options,
   and store screenshots showing a party — `store-shots` skill.
 
+### 5.7 Done when
+
+- The two debts at §5.3 are paid: a co-op run is stamped and kept off every
+  leaderboard, and a joiner's loadout is validated on arrival (honestly
+  described as a speed bump, not a wall).
+- Trade moves an item in one server-side transaction or not at all, and the
+  anti-dupe rules have a test each.
+- The decoder survives a fuzz pass without throwing or over-reading.
+- An 8-player session soaks for hours without leaks, drift or snapshot growth,
+  and stays playable at 150 ms / 2% loss injected at the transport seam.
+- The dedicated server runs from a config file with no Steam dependency, out of
+  the same file the utility process uses.
+- `docs/multiplayer.md`, `docs/configuration.md`, `docs/troubleshooting.md` and
+  the README describe what actually shipped — including, plainly, that there is
+  no hub yet and where a joiner lands without one.
+
 ---
 
-## 6. Decisions register
+## PR 6 — THE GARAGE
+
+**Goal: somewhere to stand, and somewhere to land a joiner.** This was PR 4's
+§4.1 and is its own PR because it is a different kind of work: a level, a new
+level-swap mechanism, a parked merchant, party travel, and a change to the story
+chain — none of which is co-op arithmetic.
+
+**IT SORTS LAST ON PURPOSE, AND THE COST OF THAT IS STATED HERE RATHER THAN
+DISCOVERED.** A hub is what makes co-op PLEASANT; PR 5 is what makes it WORK.
+Until this lands, HOST GAME drops a joiner into the middle of somebody else's
+boss fight, which is a real and felt shortcoming of every session shipped before
+it — not a hypothetical. If that becomes the thing people complain about first,
+this PR moves up the order, and moving it is cheap because nothing else depends
+on it.
+
+### 6.1 The fixture: the hero's GARAGE
+
+D2's whole social loop is town ↔ wilderness: meet, vendor, stash, regroup, chat,
+portal out together. This game has **no hub**. The merchant _wanders the field_
+and is discovered by proximity; there is nowhere safe to stand; "start a game,
+people join" has nowhere to land.
+
+**The hub is the hero's GARAGE, and it should never have been a neutral town.**
+The garage is the most established place in this story and the only one that is
+HIS: ten years of weekends building the ship, the LAUNCH cutscene set there at
+night, the starting weapon coming off the wall of the room beside it, and it is
+what ELON MOSQUE calls him by — _"KEEP THE RIFT, GARAGE MAN."_ A hub is a place
+you come back to between missions, and this campaign is a man trying to get home.
+Inventing a town beside that would be building a worse version of a fixture the
+game already has.
+
+What stands in it: the **workbench** (the stash, when PR 5's §5.1 lands — until
+then the lost-and-found vault the AUTO PILOT already fills), the **merchant** at
+a counter, the **quest givers** present rather than scattered, a whole-floor
+**safe zone** (which already exists), and the **door** (§6.2). No spawners.
+
+### 6.2 The RIFT DOOR — the level select, and the one ordering decision
+
+**Level select is a rift door standing in the garage**, and the fiction needs no
+new idea for it, because a portable artefact that tears open the way to a LEVEL
+already ships: RASPUTIN drops **THE SEVERED HAND**, "a junk-looking trinket that
+secretly tears open the way to the secret BUNKER level". The rift door is the
+second instance of that mechanic, not the first. The fiction has also already
+established that a rift can be MADE by somebody who wants one — MOSQUE tears his
+own rather than lose.
+
+**THE ORDERING PROBLEM IS THE ONLY HARD QUESTION HERE, and it is not a story
+problem.** The rift is level 4 of 5. If the door is what the hero brings back OUT
+of the rift, the hub does not exist for the first three missions — which is most
+of the campaign, and precisely the stretch a new player and a new party spend the
+most time in. Two answers:
+
+1. **RECOMMENDED — the garage is the hub from the FIRST run, and what changes is
+   the DOOR.** Early on the way out is the SHIP, which is already how he reaches
+   SpaceZ, the moon and Mars and already has its own travel cutscenes (THE
+   LAUNCH, THE VOYAGE). The rift door then REPLACES the ship after level 4 and
+   opens everything at once. This fights none of the existing cutscene chain, and
+   it gives the artefact a job the player will feel rather than a retcon they
+   have to accept.
+2. The hub unlocks after the rift. Cheaper, and it leaves multiplayer without a
+   landing place for three fifths of the campaign — which is the problem this PR
+   exists to fix.
+
+**Either way, MULTIPLAYER MUST NOT REQUIRE CAMPAIGN PROGRESS TO HAVE A HUB.** A
+session hosted by a brand-new character needs somewhere to put four joiners on
+day one. Under (1) that falls out for free; under (2) it needs a second rule, and
+a second rule is how a hub ends up with two behaviours nobody can explain.
+
+### 6.3 What it actually costs in the engine — three findings
+
+**"The fix is authored content, not engine work" was the original claim, and it
+does not survive contact with the tree.** Checked against the current engine;
+budget for all three rather than discovering them on day two.
+
+- **`LevelDef.objective` IS REQUIRED, and a hub satisfies none of its kinds.**
+  The union is `killBoss | clearAll | reachExit`, and a hub is never "cleared" —
+  it is a place you return to. So it needs either a new objective kind or an
+  abuse of `reachExit`, and the second drags the whole victory → outro → bank
+  chain along behind it, which is exactly what must NOT fire when somebody walks
+  past the workbench.
+- **"LEVEL SELECT AS A SET OF PORTALS" DOES NOT EXIST.** The nearest mechanic is
+  the elevator, and `src/game/elevator.ts` rules itself out in its own header:
+  _"Nothing here is pathing, streaming or level-swapping — the destination is a
+  real place in the same level."_ Every level transition today is APP-driven off
+  a victory. A door that starts a DIFFERENT level from inside a run is new
+  mechanism — and it is the same mechanism §6.4's party travel needs, so the two
+  are one job rather than two.
+- **THE MERCHANT WANDERS BY CONSTRUCTION.** `merchant.ts` strolls him along
+  wander legs on his own seeded rng stream until he is met. "Parked at a counter"
+  is a new authored mode on him rather than a placement — and it is worth doing
+  properly, because it is also the answer PR 3's §3.1 table left open for him
+  ("whom does he follow?" stops being a question when he stops following).
+
+### 6.4 Party travel
+
+Everyone must arrive on the same map with their own loadout. The host chooses at
+the door; the session tears down its level and builds the next from a new seed,
+with each player's `Loadout` re-applied. The existing per-level handoff
+(`arrival.ts`, `applyLoadout`) is the mechanism; what is new is that there are
+eight of them and **they must all be banked before the switch** — which is the
+same banking PR 4's §4.5 owes, so whichever lands second inherits it rather than
+writing it twice.
+
+### 6.5 The story chain — and the confirmation it still needs
+
+**The direction in §6.2 is RECORDED HERE AND NOWHERE ELSE.** `docs/story.md` and
+`docs/manuscript.md` are deliberately untouched by it: this is an engineering
+plan noting a decision, not a story tier, and the chain runs downward from
+`story.md` or it does not run at all.
+
+So the FIRST commit of this PR is the story one, in this order and no other:
+`docs/story.md` (the gist — the garage as the place he comes back to, and what
+the door is), then `docs/manuscript.md`, then the content. **The manuscript edit
+needs the user's explicit confirmation before it is written** — the general rule
+for any story change, and it has not been given for this one; confirming the
+DIRECTION is not confirming the LINES. Use the `update-story` skill.
+
+Everything the hub says is in scope: a sign, a greeting, whatever the merchant
+says when he is standing at a counter instead of found in a field, and whatever
+the hero thinks the first time the door opens on somewhere he has already been.
+
+### 6.6 Done when
+
+- A party of four can be hosted from a fresh character, land in the garage
+  together, kit out, and leave through the door onto the same map.
+- The hub raises no objective, no victory, no outro and no bank — a player can
+  stand in it indefinitely and the run does not end.
+- The merchant is at his counter, the quest givers are present, and the
+  whole-floor safe zone holds: nothing hostile can be spawned or lured in.
+- The `level-design` skill's checker battery passes on the hub level unchanged.
+- `docs/game-content.md` covers the hub, and the story chain is intact —
+  `story.md`, then the manuscript, then the content, with the manuscript's own
+  confirmation on the record.
+
+### 6.7 Risks
+
+- **The level-swap mechanism is the real work and it is shared.** It is also
+  §6.4's, so a mistake in it is a mistake in party travel. Build it once, behind
+  one seam, and test it with one player before eight.
+- **A hub is where a "harmless" objective bug becomes unbearable.** The failure
+  mode is a victory or an outro firing in the one place the player is meant to
+  idle. Prefer a new objective kind over an abuse of `reachExit`.
+- **Scope creep toward a town.** The garage is one room. A hub with districts is
+  a different game and a different PR.
+
+---
+
+## PR 7 — THE PARTY BOT
+
+**Goal: the autopilot learns there is more than one hero.** One refactor with
+three payoffs, which is why they are one PR rather than three: the MEASURING
+INSTRUMENT PR 4 needs and does not have, BOTS IN A LOCAL GAME so a player can
+have a party without four friends online, and a bot that plays like somebody in a
+party rather than like a soloist who happens to be standing near you.
+
+> **§7.1 AND §7.2 ARE OWED EARLIER THAN THIS NUMBER SUGGESTS.** They are the
+> instrument PR 4's §4.3 tuning is blocked on, and §4.7 says so — the co-op
+> rules ship as STRUCTURE with unit-level proof precisely because the simulator
+> can only fly one hero. So the number says where the work is DESCRIBED, not
+> when it happens: the first half is pulled forward and done whenever PR 4's
+> measured pass is done. This is the same treatment §3.7 gave the seat on the
+> command channel, and for the same reason — a label that lied about the order
+> would be worse than no label.
+
+### 7.1 The parameterization — `botAct(bot, state, hero)`
+
+**The autopilot reads `state.players[0]` at 164 sites across 14 files in
+`src/game/bot/`**, and `botAct` has no notion of WHICH hero it is steering. That
+one fact is why `scripts/simulate-run.mjs` flies exactly one hero, why PR 4's
+tuning is unmeasured, and why there is no such thing as a second bot.
+
+It is the same mechanical refactor §3.1 did to the engine, one file at a time,
+and it is genuinely mechanical: the hero becomes a PARAMETER threaded from
+`botAct` down, the way every private engine read already is. The distribution is
+worth sequencing by — `economy.ts` (37), `weapon-swap.ts` (26), `supplies.ts`
+(21), `index.ts` (15), `perception.ts` (13), `macro.ts` (13), `arsenal.ts` (10),
+`dodges.ts` (9), `nav.ts` (8), `content.ts` (6), `fight.ts` (5), `state.ts` (1).
+
+**The good news is that the hard half is already done.** `Bot` is a per-instance
+object that already owns all of its own memory — the stall detector's `nav`, the
+wall-trace `trace`, the A* `route` (keyed on level id and `obstaclesVersion`), the
+pinned `waypoint`, the `thoughts` resolver — and `botAct` is already documented as
+pure with respect to `state`. So N bots are N `Bot` instances with no shared
+scratch to fight over, and `step()` already takes `PartyInput` as an array
+index-aligned with the party. Nothing structural is in the way.
+
+Two rules to hold while doing it:
+
+- **Single player must stay byte-identical at every commit**, exactly as §3.5
+  demanded of §3.1. Seat 0 passed as the parameter is the identity case, and the
+  existing bot suites (`bot_test`, `bot_nav_test`, `bot_economy_test`,
+  `bot_thoughts_test`, `bot_auto_equip_test`) are the guard.
+- **Determinism is per-bot and must stay that way.** A fresh bot on the same seed
+  must evolve identical memory, and the ORDER the party's bots are asked must not
+  matter — none of them mutates the state today, and a test should pin that
+  rather than trusting it.
+
+### 7.2 The simulator flies a party
+
+- **A bot per seat.** `simulateLevel` gains a party size; it seats N heroes via
+  `seatHero` and holds N `Bot`s, feeding `step()` the input array it already
+  accepts. Each bot may want its own `profile` (the melee/ranged/magic lane) —
+  a party of four identical meta builds measures one build four times, which is
+  the least interesting thing a party simulator could do.
+- **THE FLAG NAME IS A TRAP.** `/players N` already means D2's monster-hp and XP
+  scaling (`server/wire/players.ts`) and has nothing to do with how many heroes
+  are on the map. A simulator `--players N` that meant the second thing would be
+  the two knobs colliding in the one place they most need telling apart. Use
+  **`--party N`** for how many bots, and keep `--players N` for the scaling —
+  and the `--verdict` line should print both.
+- **The report is seat-0 shaped and has to grow.** `HeroSnapshot`, the boss
+  encounters, the weapon swaps, the deaths table and `extractLoadout(state,
+state.players[0])` all describe one hero. The interesting readouts for a party
+  are per-seat AND aggregate — per-capita XP rate is the one PR 4's §4.7 names
+  as the thing to read, never the per-kill share, because a party also clears
+  faster and the two effects only show up together.
+- **Then the measured pass**: `--verdict` at 1, 2, 4 and 8 across every
+  difficulty, and the two levers `XP_SHARE.partyBonusPerHero` and the
+  `/players N` pairing moved on evidence.
+
+### 7.3 BOTS IN A LOCAL GAME
+
+A player should be able to fill their own party with bots, without four friends
+online. It is the same machinery: a bot seat is a real `Player` seated by
+`seatHero`, steered by a `Bot`, and indistinguishable to every other system.
+
+Four decisions, and the last one is the sharp one:
+
+- **BOTS ARE STEERED WHERE THE SIMULATION IS — in the session, not the
+  renderer.** `botAct` is called by the APP today (GameScreen) and by the
+  simulator; a bot seat's input must be produced in the session process, or the
+  bot is a client nothing is authoritative over. That keeps the one code path
+  PR 1's §1.2 exists to protect, and it is what makes a bot seat identical to a
+  human one everywhere downstream.
+- **A BOT YIELDS ITS SEAT TO A PERSON.** A session with three bots and a spare
+  seat should let a fourth human in; a session that is full of bots should drop
+  one rather than refuse them. `nextFreeSeat` already recycles a departed seat,
+  and a bot leaving is exactly a `departHero` — the rule is already written.
+- **A BOT'S RUN IS NOBODY'S ROSTER.** It has no character, banks nothing, and
+  carries no loadout home — the same throwaway a spectator plays on. And a run
+  with bots in it is a PARTY run for §5.3's purposes: it must carry the
+  `PartyStamp` and stay off every leaderboard, because a bot is exactly the kind
+  of help those boards cannot see.
+- **A BOT MUST COST SOMETHING, OR IT IS A DIFFICULTY SLIDER WEARING A FRIEND'S
+  CLOTHES.** Two halves of one question:
+  1. **Does a bot take a share of the XP?** Recommendation: **no.** A
+     level-weighted share would mean adding three bots roughly quarters the
+     player's XP per kill, so nobody would ever use the feature — and this
+     codebase already has the precedent in COMPANIONS, which level on their own
+     kills and never touch the hero's bar (`creditCompanionKill`). It needs a
+     flag on the seat so `splitXp` can skip it.
+  2. **Which is exactly why they have to be priced.** Bots that add damage and
+     take no XP make a party of bots strictly better than playing alone. The
+     honest answer is that a bot seat moves the horde the way `/players N` does
+     — the pairing is already one pure function, and it is already the one thing
+     entitled to say what a player count means. Ship the two together or the
+     feature is a cheat.
+
+### 7.4 The bot learns there are other people on the map
+
+Today's bot is a soloist. Standing it next to another hero produces four
+behaviours a human would never choose, and each has a rule that fixes it — most
+of them keyed to numbers the engine ALREADY owns, which is what stops this
+becoming a pile of invented constants.
+
+- **SPACING.** Two bots converge on the same nearest foe and end up inside each
+  other, which in a game about being surrounded is how a party dies. They should
+  hold a personal envelope, and it is the same rule a human runs: melee closes,
+  ranged holds its `weaponRangeFor` lane, and neither stands where a friend is
+  already standing.
+- **DON'T LEAVE THE PARTY — the leash has a NUMBER.** `XP_SHARE.radius` (700 px)
+  is the distance past which a hero stops sharing in a kill. A bot that wanders
+  further is not merely out of position, it is costing the player XP, so the
+  leash is a mechanic rather than a preference. Past it, come back.
+- **SPLIT THE PACKS, DON'T QUEUE FOR ONE MOB.** The whole party beating on one
+  minion while six others chew on somebody is the most visible tell that these
+  are not players. `anyHeroWithin` and the existing pack state are enough to say
+  "that one is being handled, take the next one".
+- **DON'T TAKE WHAT ISN'T YOURS.** `Item.owner` exists as of PR 4, and a bot in
+  an allocated session walking over somebody's drop and being refused it every
+  tick is both wrong and noisy. In FREE-FOR-ALL the rule is a judgement rather
+  than a check: a bot should not race the human for a legendary.
+- **HELP THE ONE WHO IS DOWN.** Once §4.2's corpse lands there is a body to
+  stand over and a reason to; before it, the useful version is simpler — a bot
+  should notice a hero at low health and pull aggro rather than kite away from
+  them.
+- **CONVERGE FOR A BOSS, TRAVEL AS A GROUP.** Nobody in D2 walks through the
+  door alone. The macro goal (`macroTarget`) should be the PARTY's, not each
+  bot's own — with the human's heading as the default when there is one, since
+  a bot party that decides where the player is going is worse than useless.
+
+### 7.5 Quest and objective awareness
+
+**The bot has no quest awareness at all today** — `src/game/bot/` mentions quests
+only in comments, and `macroTarget` picks between waypoints, elites, the boss,
+the merchant and a fog sweep. That is fine for a balance instrument and wrong for
+a party member: PR 4 shipped errands with `collect` tokens on the floor, `visit`
+objectives, escorts to be walked, and a giver with a `?` over their head.
+
+What it should learn, in the order it is worth learning:
+
+- **Pick up a quest token it walks past.** Nearly free — the drop is already in
+  `state.items` and the tally is already booked at pickup.
+- **Read the running errands as macro goals.** A `kill` errand wants a breed, a
+  `visit` wants a place, a `collect` wants tokens — all of which `macroTarget`
+  already has the shape to prefer.
+- **Do not talk to givers, and do not take errands.** A bot accepting a quest on
+  the party's behalf is a bot making a decision the player did not; the giver's
+  conversation is the human's. A bot HELPS with an errand that is already taken.
+- **Escorts are the one to leave until last.** An escort is a timer with a body,
+  and a bot that outruns it converts a tense objective into a failed one.
+
+### 7.6 Done when
+
+- `botAct` takes the hero it steers; single player is byte-identical and the
+  existing bot suites pass unchanged.
+- `--party N` runs a real party headlessly; the same seed replays identically at
+  every N, and the order the bots are polled provably does not matter.
+- `--verdict` reports per-seat and per-capita, and PR 4's §4.3 tuning is done
+  ON EVIDENCE, with the two levers moved and the numbers written into §4.7.
+- A player can start a local game with bots, they hold formation, split packs,
+  stay inside the share radius and help with an errand already taken.
+- A bot yields its seat to a joining human, banks nothing, and the run carries
+  the party stamp.
+- The horde is priced for bot seats, and a run with three bots is not measurably
+  easier than the same run with three humans.
+
+### 7.7 Risks
+
+- **164 sites is a bisect hazard.** Land it as its own reviewable commit series,
+  one file at a time, each leaving single player identical — §3.5's lesson,
+  which is the one piece of sequencing advice in this plan that has been right
+  every time it was followed.
+- **A party bot is a HUMAN-capability target, not a perfect one.** The
+  `bot-improvement` skill's bar applies unchanged: the bot should make the
+  decisions a skilled human makes and never something a human never would. A bot
+  that plays a perfect spacing solution reads as a robot, which is worse than one
+  that occasionally crowds.
+- **The bot is a measuring instrument first.** Every behaviour added in §7.4 and
+  §7.5 changes what the simulator measures. Land §7.1–§7.2, take the PR 4
+  numbers, and only then start changing how the bot plays — or the tuning pass
+  is measuring a moving target.
+
+---
+
+## Decisions register
 
 Answers this plan recommends but does not have authority to make. Each should be
 settled before the PR that needs it, not during.
@@ -1569,7 +2079,7 @@ settled before the PR that needs it, not during.
 
 ---
 
-## 7. What this plan deliberately does not build
+## What this plan deliberately does not build
 
 - **Lockstep / rollback netcode.** The rng is bit-exact (integer `Math.imul`),
   but the 159 transcendental calls under `src/` are not IEEE-mandated to agree
@@ -1593,7 +2103,7 @@ settled before the PR that needs it, not during.
 
 ---
 
-## 8. Working notes for whoever picks this up
+## Working notes for whoever picks this up
 
 - **Every PR carries a `.changes/unreleased/` fragment.** The mode is
   user-visible; CI's `changeset` job enforces it.

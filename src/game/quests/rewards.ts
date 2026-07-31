@@ -77,8 +77,16 @@ export function payQuestReward(
   const xp = questXpReward(state, reward);
   if (xp > 0) {
     // Through the ordinary grant, so the difficulty's xpBonus, the BALANCE
-    // knob and the level-up celebration all behave exactly as on a kill.
-    grantXp(state, xp);
+    // knob and the level-up celebration all behave exactly as on a kill. NOT
+    // through `shareXp`: an errand is paid to the person who ran it, and a
+    // handover split with whoever happened to be standing nearby would be a
+    // gift from the player who did the work to one who did not.
+    //
+    // `state.players[0]` is an UN-MIGRATED SEAT, spelled out rather than hidden
+    // so it stays greppable (plan §3.7): the command channel carries no seat
+    // yet, so a joiner handing in an errand pays the host's bar. It is fixed
+    // where that list is fixed, not here.
+    grantXp(state, state.players[0], xp);
     payout.xp = xp;
   }
 

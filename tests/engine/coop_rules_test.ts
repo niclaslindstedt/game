@@ -1,0 +1,429 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// THE CO-OP RULES — the arithmetic a run does differently once there is more
+// than one hero in it (multiplayer plan §4.2's abandoned hero and §4.3's XP,
+// loot and menace).
+//
+// Every rule here has the same shape and the same trap: it is an exact no-op in
+// a single-player run, so a single-hero test proves nothing about it and a
+// regression that reverted it to "seat 0" would leave the whole shipped
+// campaign green. So every test below stages at least two heroes, and the ones
+// that CLAIM single player is untouched say so by comparing a party against a
+// solo run rather than by asserting a number nobody can trace.
+
+import { describe, expect, it } from "vitest";
+
+import {
+  departHero,
+  dropItem,
+  grantXp,
+  livingHeroes,
+  nearestHero,
+  nextFreeSeat,
+  partyLevel,
+  partyWiped,
+  partyXpBonus,
+  seatHero,
+  shareXp,
+  splitXp,
+  step,
+  tickMenace,
+  type GameState,
+  type Player,
+} from "@game/core";
+
+import { DT, idle, startGame, stopWaves } from "./helpers.ts";
+
+/** A run with `n` heroes seated, the field cleared and the waves stopped. */
+function party(n = 2, seed = 7): { state: GameState; heroes: Player[] } {
+  const state = startGame(seed);
+  stopWaves(state);
+  state.enemies = [];
+  for (let i = 1; i < n; i++) seatHero(state, null);
+  return { state, heroes: [...state.players] };
+}
+
+/** Park every hero on one spot, so "near the kill" is not the thing under
+ * test in a test about something else. */
+function huddle(state: GameState, at = { x: 400, y: 400 }): void {
+  for (const hero of state.players) hero.pos = { ...at };
+}
+
+describe("an abandoned hero", () => {
+  it("stops being alive, so the party that stayed can lose the run", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.hp = 0;
+    // The body is untouched and at full health — this is somebody who QUIT, not
+    // somebody who died, and that is the whole bug: before `departed`, a party
+    // whose second player left could be wiped over and over without the run
+    // ever ending.
+    expect(b.hp).toBeGreaterThan(0);
+    expect(partyWiped(state)).toBe(false);
+    departHero(state, 1);
+    expect(b.hp).toBeGreaterThan(0);
+    expect(partyWiped(state)).toBe(true);
+  });
+
+  it("stops holding the horde's level up over the people still playing", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.level = 20;
+    b.level = 90;
+    expect(partyLevel(state)).toBe(90);
+    departHero(state, 1);
+    expect(partyLevel(state)).toBe(20);
+  });
+
+  it("stops drawing the horde's attention", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 900, y: 900 };
+    b.pos = { x: 100, y: 100 };
+    expect(nearestHero(state, { x: 120, y: 120 })).toBe(b);
+    departHero(state, 1);
+    expect(nearestHero(state, { x: 120, y: 120 })).toBe(a);
+  });
+
+  it("hands its seat to the next arrival instead of blocking it", () => {
+    const { state } = party(3);
+    expect(nextFreeSeat(state)).toBe(3);
+    departHero(state, 1);
+    expect(nextFreeSeat(state)).toBe(1);
+    const fresh = seatHero(state, null);
+    // Seated INTO the emptied slot — the party did not grow, and no index
+    // anybody is still holding was renumbered.
+    expect(state.players).toHaveLength(3);
+    expect(state.players[1]).toBe(fresh);
+    expect(fresh.departed).toBeFalsy();
+  });
+
+  it("refuses to depart seat 0, because the host leaving ends the session", () => {
+    const { state } = party(2);
+    expect(departHero(state, 0)).toBe(false);
+    expect(state.players[0].departed).toBeFalsy();
+  });
+
+  it("is not counted among the living", () => {
+    const { state } = party(3);
+    expect(livingHeroes(state)).toHaveLength(3);
+    departHero(state, 2);
+    expect(livingHeroes(state)).toHaveLength(2);
+  });
+});
+
+describe("party XP", () => {
+  it("pays a lone hero the whole kill, exactly as it always has", () => {
+    const { state } = party(1);
+    const cuts = splitXp(state, 1000, state.players[0].pos);
+    expect(cuts).toHaveLength(1);
+    expect(cuts[0]?.amount).toBe(1000);
+  });
+
+  it("splits a shared kill in proportion to level", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    huddle(state);
+    a.level = 20;
+    b.level = 60;
+    const cuts = splitXp(state, 800, a.pos);
+    const pot = 800 * partyXpBonus(2);
+    expect(cuts).toHaveLength(2);
+    // 20:60 — the veteran keeps three quarters, which is the rule that makes
+    // grouping with somebody below you not a tax.
+    expect(cuts[0]?.amount).toBe(Math.round((pot * 20) / 80));
+    expect(cuts[1]?.amount).toBe(Math.round((pot * 60) / 80));
+  });
+
+  it("cuts out a hero who was not in the fight", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 200, y: 200 };
+    // Far enough away to be somewhere else entirely — this is what stops a
+    // party's best play being to scatter and farm four fights at once.
+    b.pos = { x: 4000, y: 4000 };
+    const cuts = splitXp(state, 500, a.pos);
+    expect(cuts).toHaveLength(1);
+    expect(cuts[0]?.hero).toBe(a);
+    expect(cuts[0]?.amount).toBe(500);
+  });
+
+  it("gives a kill nobody was near to the nearest hero rather than nobody", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 100, y: 100 };
+    b.pos = { x: 4000, y: 4000 };
+    const cuts = splitXp(state, 300, { x: 3900, y: 3900 });
+    expect(cuts).toHaveLength(1);
+    expect(cuts[0]?.hero).toBe(b);
+    expect(cuts[0]?.amount).toBe(300);
+  });
+
+  it("pays a departed body nothing", () => {
+    const { state } = party(2);
+    huddle(state);
+    departHero(state, 1);
+    const cuts = splitXp(state, 400, state.players[0].pos);
+    expect(cuts).toHaveLength(1);
+    expect(cuts[0]?.hero).toBe(state.players[0]);
+  });
+
+  it("makes a group's pot bigger than a soloist's, so grouping pays", () => {
+    expect(partyXpBonus(1)).toBe(1);
+    expect(partyXpBonus(4)).toBeGreaterThan(partyXpBonus(2));
+    expect(partyXpBonus(2)).toBeGreaterThan(1);
+  });
+
+  it("banks a share on each hero's OWN bar", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    huddle(state);
+    a.level = 10;
+    b.level = 10;
+    const beforeA = a.xp;
+    const beforeB = b.xp;
+    shareXp(state, 400, a.pos);
+    expect(a.xp).toBeGreaterThan(beforeA);
+    expect(b.xp).toBeGreaterThan(beforeB);
+  });
+
+  it("does not level the host when a joiner is handed a direct grant", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    const before = a.xp;
+    grantXp(state, b, 250);
+    expect(b.xp).toBeGreaterThan(0);
+    expect(a.xp).toBe(before);
+  });
+
+  it("reads the per-map cap against the RECIPIENT, not the party", () => {
+    // A level-90 in the party must not throttle the level-10 beside them down
+    // to the outgrown-map trickle on a map that is still right for the 10.
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    huddle(state);
+    a.level = 10;
+    b.level = 90;
+    const before = a.xp;
+    grantXp(state, a, 1000);
+    const withVeteran = a.xp - before;
+
+    const solo = party(1).state;
+    solo.players[0].level = 10;
+    const soloBefore = solo.players[0].xp;
+    grantXp(solo, solo.players[0], 1000);
+    expect(withVeteran).toBe(solo.players[0].xp - soloBefore);
+  });
+});
+
+describe("allocated loot", () => {
+  it("stamps no owner in a free-for-all session", () => {
+    const { state } = party(2);
+    huddle(state);
+    dropTestItem(state, { x: 400, y: 400 });
+    expect(state.items.at(-1)?.owner).toBeUndefined();
+  });
+
+  it("stamps an owner from the heroes who were in the fight", () => {
+    const { state } = party(2);
+    state.lootMode = "allocated";
+    huddle(state);
+    dropTestItem(state, { x: 400, y: 400 });
+    const owner = state.items.at(-1)?.owner;
+    expect(owner === 0 || owner === 1).toBe(true);
+  });
+
+  it("never allocates to somebody who was not there", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    state.lootMode = "allocated";
+    a.pos = { x: 400, y: 400 };
+    b.pos = { x: 5000, y: 5000 };
+    for (let i = 0; i < 20; i++) dropTestItem(state, { x: 400, y: 400 });
+    for (const item of state.items) expect(item.owner).not.toBe(1);
+  });
+
+  it("leaves a drop nobody was near unowned rather than assigning it away", () => {
+    const { state } = party(2);
+    state.lootMode = "allocated";
+    huddle(state, { x: 200, y: 200 });
+    dropTestItem(state, { x: 5000, y: 5000 });
+    expect(state.items.at(-1)?.owner).toBeUndefined();
+  });
+
+  it("does not disturb the run's rng, so the same seed rolls the same loot", () => {
+    // The allocation rolls off the item's own hash rather than `state.rng`;
+    // consuming a draw here would make an allocated session roll DIFFERENT
+    // items from the same seed than a free-for-all one.
+    const free = party(2, 11).state;
+    huddle(free);
+    const allocated = party(2, 11).state;
+    allocated.lootMode = "allocated";
+    huddle(allocated);
+    for (let i = 0; i < 10; i++) {
+      dropTestItem(free, { x: 400, y: 400 });
+      dropTestItem(allocated, { x: 400, y: 400 });
+    }
+    expect(allocated.rng()).toBe(free.rng());
+  });
+});
+
+/** Throw a plain medkit down through `dropItem` — the ONE funnel every drop in
+ * the game goes through, so the allocation under test is the shipped one. */
+function dropTestItem(state: GameState, at: { x: number; y: number }): void {
+  dropItem(
+    state,
+    { id: state.nextId++, kind: "medkit", pos: { ...at } },
+    { ...at },
+  );
+}
+
+describe("the menace meter with a party", () => {
+  /**
+   * Fight for two seconds and report both what the meter READ (the two rolling
+   * channels the per-capita rule touches) and what it BANKED.
+   *
+   * `damage`/`kills` are the RUN's totals, as `step()` hands them over — summed
+   * over everybody, which is the whole difficulty. The minion kills are booked
+   * alongside because the rolling heat only fires through the CLEARANCE GATE:
+   * without them the gate reads a party fighting nothing, returns 0, and every
+   * comparison below would be 0 === 0 — a test that passes whatever the code
+   * does.
+   */
+  function fight(
+    n: number,
+    damage: number,
+    kills: number,
+    depart = 0,
+  ): { dps: number; killRate: number; menace: number } {
+    const { state } = party(n);
+    huddle(state);
+    // Level the party out of the early-game warmup damping, or every read is a
+    // fraction of a fraction and the comparison is noise.
+    for (const hero of state.players) hero.level = 30;
+    for (
+      let seat = state.players.length - depart;
+      seat < state.players.length;
+      seat++
+    ) {
+      departHero(state, seat);
+    }
+    for (let i = 0; i < 20; i++) {
+      state.pendingMinionKills = kills * 0.1;
+      tickMenace(state, 100, damage * 0.1, kills * 0.1);
+    }
+    return {
+      dps: state.combatDps,
+      killRate: state.combatKillRate,
+      menace: state.menace,
+    };
+  }
+
+  it("reads a party's summed output PER CAPITA, not per party", () => {
+    // Eight heroes each fighting at an ordinary pace put out eight times the
+    // damage of one — and it is still an ordinary fight for each of them. Fed
+    // the raw sum the meter would saturate inside a minute and, because the
+    // evolution ratchet is a permanent floor within a run, never come back
+    // down: co-op would not be hard, it would be hard FOR EVER.
+    const solo = fight(1, 4000, 8);
+    const eight = fight(8, 32_000, 64);
+    expect(eight.dps).toBeCloseTo(solo.dps, 5);
+    expect(eight.killRate).toBeCloseTo(solo.killRate, 5);
+    expect(eight.menace).toBeCloseTo(solo.menace, 5);
+  });
+
+  it("is not measuring zero — a rampage still reads hotter than a fair fight", () => {
+    // The guard on the test above: both readings agreeing at 0 would prove
+    // nothing at all, and the clearance gate makes 0 the easy accident.
+    const fair = fight(4, 4000, 8);
+    const rampage = fight(4, 80_000, 160);
+    expect(fair.dps).toBeGreaterThan(0);
+    expect(rampage.dps).toBeGreaterThan(fair.dps);
+    expect(rampage.menace).toBeGreaterThan(fair.menace);
+  });
+
+  it("stops counting a departed seat as a share of the output", () => {
+    // Three players carrying on after a fourth quits must be judged as three,
+    // or the meter reads their fight as a quarter easier than it is.
+    const afterQuit = fight(4, 3600, 6, 1);
+    const three = fight(3, 3600, 6);
+    expect(afterQuit.dps).toBeCloseTo(three.dps, 5);
+    expect(afterQuit.menace).toBeCloseTo(three.menace, 5);
+  });
+});
+
+describe("picking things up with a party", () => {
+  /** Advance only the item pass, the way `step()` does inside `playing`. */
+  function tickItems(state: GameState, ms = DT): void {
+    step(state, idle, ms);
+  }
+
+  it("counts a drop's arc down ONCE, however many heroes are on the map", () => {
+    // The trap this pins: the toss countdown used to live inside the same loop
+    // as the pickup test, so a party of eight would have counted every arc
+    // down eight times as fast and every drop in the game would have landed in
+    // an eighth of its flight the day a second player joined.
+    const solo = party(1).state;
+    const eight = party(8).state;
+    for (const state of [solo, eight]) {
+      huddle(state, { x: 4000, y: 4000 });
+      dropTestItem(state, { x: 400, y: 400 });
+    }
+    tickItems(solo);
+    tickItems(eight);
+    // The ELAPSED share of the flight, not the remaining ms: the hop's own
+    // length is hash-derived off the item id and the two runs minted different
+    // ids, so the two arcs are legitimately different LENGTHS. What must match
+    // is how much of each was spent — one tick's worth.
+    expect(flown(eight)).toBeCloseTo(flown(solo), 9);
+    expect(flown(solo)).toBeCloseTo(DT, 9);
+  });
+
+  it("lets a second hero pick up what he is standing on", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 4000, y: 4000 };
+    b.pos = { x: 400, y: 400 };
+    b.medkits = [0, 0, 0];
+    dropTestItem(state, { x: 400, y: 400 });
+    landEverything(state);
+    tickItems(state);
+    expect(state.items).toHaveLength(0);
+    // Into HIS dock, not the host's — the pickup is per hero, all the way down.
+    expect(b.medkits.reduce((n, v) => n + v, 0)).toBe(1);
+  });
+
+  it("refuses a hero somebody else's allocated drop, and keeps it on the floor", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    state.lootMode = "allocated";
+    huddle(state, { x: 400, y: 400 });
+    a.medkits = [0, 0, 0];
+    b.medkits = [0, 0, 0];
+    dropTestItem(state, { x: 400, y: 400 });
+    landEverything(state);
+    const item = state.items[0];
+    if (!item) throw new Error("no drop");
+    // Give it to whichever seat did NOT get it, so the test does not depend on
+    // how the hash rolled.
+    item.owner = 1;
+    tickItems(state);
+    expect(state.items).toHaveLength(0);
+    expect(a.medkits.reduce((n, v) => n + v, 0)).toBe(0);
+    expect(b.medkits.reduce((n, v) => n + v, 0)).toBe(1);
+  });
+});
+
+/** How much of the first drop's arc has been flown, in ms. */
+function flown(state: GameState): number {
+  const toss = state.items[0]?.toss;
+  return toss ? toss.totalMs - toss.ms : 0;
+}
+
+/** Put every airborne drop on the ground, so a pickup test is about the pickup
+ * rather than about the length of a toss. */
+function landEverything(state: GameState): void {
+  for (const item of state.items) {
+    item.toss = undefined;
+    item.deliverMs = undefined;
+  }
+}

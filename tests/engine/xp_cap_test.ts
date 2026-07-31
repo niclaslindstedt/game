@@ -123,7 +123,7 @@ describe("grantXp obeys the per-map cap", () => {
     const cap = xpLevelCap("test_level", "medium");
     state.players[0].level = cap;
     state.players[0].xpToNext = xpToLevelUp(cap);
-    grantXp(state, 100_000);
+    grantXp(state, state.players[0], 100_000);
     const expected = Math.round(100_000 * xpCapMultiplier(cap, cap));
     expect(expected).toBeGreaterThan(0);
     expect(state.stats.xpGained).toBe(expected);
@@ -135,7 +135,7 @@ describe("grantXp obeys the per-map cap", () => {
     const cap = xpLevelCap("test_level", "medium");
     state.players[0].level = cap + 20; // deep in the trickle
     state.players[0].xpToNext = xpToLevelUp(state.players[0].level);
-    grantXp(state, 100_000);
+    grantXp(state, state.players[0], 100_000);
     expect(state.stats.xpGained).toBe(Math.round(100_000 * XP_CAP.floor));
     expect(state.stats.xpGained).toBeGreaterThan(0);
   });
@@ -149,7 +149,7 @@ describe("grantXp obeys the per-map cap", () => {
     // A firehose of XP: at the ~1/100 floor it lands slowly, but it DOES land —
     // the hero still climbs, there is no hard stop short of the global max.
     const before = state.players[0].level;
-    for (let i = 0; i < 200; i++) grantXp(state, 1_000_000);
+    for (let i = 0; i < 200; i++) grantXp(state, state.players[0], 1_000_000);
     expect(state.players[0].level).toBeGreaterThan(before);
     expect(state.players[0].level).toBeLessThan(LEVELING.maxLevel);
   });
@@ -161,7 +161,7 @@ describe("grantXp obeys the per-map cap", () => {
     const level = cap - 1; // deepest fade rung above zero
     state.players[0].level = level;
     state.players[0].xpToNext = xpToLevelUp(level);
-    grantXp(state, 1000);
+    grantXp(state, state.players[0], 1000);
     expect(state.players[0].xp).toBe(
       Math.round(1000 * xpCapMultiplier(level, cap)),
     );
@@ -170,7 +170,7 @@ describe("grantXp obeys the per-map cap", () => {
   it("a hero well under the cap gains full XP", () => {
     const state = startGame();
     clearStage(state);
-    grantXp(state, 50); // level 1 (cap is 14): far below the fade band
+    grantXp(state, state.players[0], 50); // level 1 (cap is 14): far below the fade band
     expect(state.players[0].xp).toBe(50);
   });
 });

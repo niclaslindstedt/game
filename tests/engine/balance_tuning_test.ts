@@ -57,11 +57,11 @@ describe("balance tuning plumbing", () => {
 describe("xpGain", () => {
   it("scales every XP grant at the door", () => {
     const state = startGame();
-    grantXp(state, 100);
+    grantXp(state, state.players[0], 100);
     expect(state.stats.xpGained).toBe(100);
 
     setBalanceTuning({ xpGain: 2 });
-    grantXp(state, 100);
+    grantXp(state, state.players[0], 100);
     expect(state.stats.xpGained).toBe(300); // +200 for the same kill
   });
 });

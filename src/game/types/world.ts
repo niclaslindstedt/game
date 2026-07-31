@@ -66,6 +66,24 @@ export type Item =
      * (`render.ts`); the engine only gates the pickup and never mentions angels.
      */
     deliverMs?: number;
+    /**
+     * WHOSE THIS IS — the SEAT entitled to pick it up, in ALLOCATED loot
+     * (`GameState.lootMode`). Absent means anybody's, which is every drop in a
+     * free-for-all session and every drop in a single-player run.
+     *
+     * A seat rather than a hero, for the reason every other cross-cutting
+     * reference in the multiplayer work is: a seat survives the wire and an
+     * object reference does not. It is stamped ONCE, at the moment the drop is
+     * thrown (`dropItem`), and never re-decided — a drop that changed hands
+     * because somebody walked past it would make "wait for me, that's mine"
+     * untrue, which is the only promise allocated loot makes.
+     *
+     * It is NOT a privacy boundary and deliberately not in
+     * `PRIVATE_PLAYER_FIELDS`: everybody SEES an allocated drop (the app tints
+     * it), they simply cannot take it. Hiding it would make a party of four
+     * walk over three invisible piles on the way to their own.
+     */
+    owner?: number;
   };
 
 /**
@@ -520,3 +538,13 @@ export type Merchant = {
    */
   rngState: number;
 };
+
+/**
+ * THE SESSION'S LOOT RULE (`GameState.lootMode`, multiplayer plan §4.3).
+ *
+ * Two answers and deliberately no third. A "need before greed" roll — the
+ * third answer every MMO eventually grows — needs a modal, a timer, and a
+ * quorum, all of which stop a fight the whole party is standing in; that is a
+ * trade window's problem (PR 5) rather than a floor drop's.
+ */
+export type LootMode = "free" | "allocated";

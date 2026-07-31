@@ -98,6 +98,23 @@ export function buildHostMenu(
             maxPlayers: clampSeats(session.maxPlayers + Math.sign(dir)),
           }),
       }),
+      // A label-cycling row rather than a switch: FREE FOR ALL and ALLOCATED
+      // are two modes, not an on and an off, and a switch would imply that one
+      // of them is the feature being disabled.
+      loot: {
+        ...actionRow(
+          "host",
+          "loot",
+          () => {
+            playUiSound(synth, "confirm");
+            net.setSession({
+              loot: session.loot === "allocated" ? "free" : "allocated",
+            });
+          },
+          { state: session.loot },
+        ),
+        value: session.loot === "allocated" ? "ALLOCATED" : "FREE FOR ALL",
+      },
       password: {
         ...actionRow(
           "host",

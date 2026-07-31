@@ -93,7 +93,7 @@ function killGhostWorth(maxHp: number, mlvl: number) {
 function dingToLevel2() {
   const state = startGame();
   clearStage(state);
-  grantXp(state, xpToLevelUp(1));
+  grantXp(state, state.players[0], xpToLevelUp(1));
   return state;
 }
 
@@ -152,7 +152,7 @@ describe("xp", () => {
     const state = startGame();
     clearStage(state);
     // 10 XP into level 3: one grant crossing both thresholds at once.
-    grantXp(state, xpToLevelUp(1) + xpToLevelUp(2) + 10);
+    grantXp(state, state.players[0], xpToLevelUp(1) + xpToLevelUp(2) + 10);
     expect(state.players[0].level).toBe(3);
     expect(state.players[0].pendingStatPoints).toBe(2);
     runUntilChooser(state); // burn the celebration down
@@ -415,7 +415,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
     const state = dingToLevel2(); // window armed
     expect(state.phase).toBe("playing");
     // More xp lands mid-celebration (below the next threshold): still playing.
-    grantXp(state, 1);
+    grantXp(state, state.players[0], 1);
     expect(state.phase).toBe("playing");
     runUntilChooser(state);
     expect(state.phase).toBe("levelup");

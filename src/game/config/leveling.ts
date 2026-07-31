@@ -248,3 +248,36 @@ export const XP_CAP = {
    */
   floor: 0.01,
 } as const;
+
+/**
+ * PARTY XP SHARING — how a kill's XP is divided when several heroes are
+ * standing in the same fight (`xp-share.ts`, multiplayer plan §4.3).
+ *
+ * Both knobs are inert in a single-player run BY CONSTRUCTION rather than by a
+ * special case: one hero in range takes the whole payout, and the bonus is 1 at
+ * a party of one. Neither number can therefore re-tune the shipped campaign,
+ * which is what makes them safe to move on measured co-op evidence alone.
+ */
+export const XP_SHARE = {
+  /**
+   * How near the kill (world px) a hero has to be to share in it.
+   *
+   * Measured against the reference viewport — a phone held horizontally sees
+   * roughly 422×195 world units, so a hero within this radius is at most about
+   * one and a half screens away: near enough to plausibly have been in the same
+   * fight, far enough that a ranged build holding the back of a hall is not cut
+   * out of the kills it is making. Tightening it toward one screen makes a party
+   * huddle; opening it toward the map makes the proximity gate stop gating, and
+   * a party's best play becomes to scatter and farm four fights at once.
+   */
+  radius: 700,
+  /**
+   * How much bigger the shared pot gets per EXTRA hero in range: at 0.1 a pair
+   * divides 1.1 kills' worth of XP and a full party of eight divides 1.7.
+   *
+   * The lever to move if measurement says grouping is not worth it — read the
+   * per-capita XP rate off a multi-player headless run, NOT the per-kill share,
+   * because a party also clears faster and the two effects only show up together.
+   */
+  partyBonusPerHero: 0.1,
+} as const;

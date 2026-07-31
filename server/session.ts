@@ -42,8 +42,11 @@ import {
   adoptRun,
   applyRunCommand,
   createRunFromParams,
+  departHero,
   isRunCommand,
+  nextFreeSeat,
   seatHero,
+  seatOf,
   setBalanceTuning,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
@@ -535,12 +538,16 @@ export function createSession(options: SessionOptions): Session {
       let seat: number | null = null;
       if (host) {
         seat = 0;
-      } else if (wants.play && state.players.length < maxClients) {
+      } else if (wants.play && nextFreeSeat(state) < maxClients) {
         // A joiner arrives beside the party with their OWN bag, purse and
-        // build. The seat is appended, never inserted: every command and input
-        // frame in flight names a seat by index (see `game/seating.ts`).
-        seatHero(state, (wants.loadout as Loadout | null) ?? null);
-        seat = state.players.length - 1;
+        // build. The seat is never RENUMBERED — every command and input frame
+        // in flight names one by index — but a seat somebody has LEFT is handed
+        // out again (see `game/seating.ts`), so a session people have come and
+        // gone from is not eventually full of bodies nobody is behind.
+        seat = seatOf(
+          state,
+          seatHero(state, (wants.loadout as Loadout | null) ?? null),
+        );
       }
       const recipient: Recipient = { seat };
       const client: Client = {
@@ -597,15 +604,21 @@ export function createSession(options: SessionOptions): Session {
       const client = clients.get(id);
       if (!client) return;
       clients.delete(id);
-      // A DEPARTING PLAYER'S HERO STOPS WALKING. The seat is NOT spliced out —
-      // every command and input frame in flight names a seat by index, so
-      // renumbering the party would deliver somebody else's steering to the
-      // wrong hero — but the last frame they sent has to go, or the body they
-      // left behind keeps walking toward wherever they were last steering for
-      // the rest of the run. The seat then contributes IDLE, exactly as a seat
-      // whose owner has a screen open does.
+      // A DEPARTING PLAYER'S HERO IS NO LONGER ANYBODY'S. The seat is NOT
+      // spliced out — every command and input frame in flight names a seat by
+      // index, so renumbering the party would deliver somebody else's steering
+      // to the wrong hero — but two things have to happen to the body it holds.
+      //
+      // The last frame they sent goes, or it keeps walking toward wherever they
+      // were last steering for the rest of the run. And the hero is DEPARTED
+      // (plan §4.2): the world stops answering for it, which is what lets the
+      // people still playing grow past the seat, keeps a departed level-90 from
+      // holding the horde's level over them, and — the sharp end — lets them
+      // LOSE, since a run whose fourth player quit could not otherwise ever be
+      // defeated.
       if (client.recipient.seat !== null) {
         inputs.set(client.recipient.seat, { ...IDLE_INPUT });
+        departHero(state, client.recipient.seat);
       }
       // The host leaving is the session ending, and `close` says so in its own
       // words; announcing "HOST LEFT" first would put a chat line in front of

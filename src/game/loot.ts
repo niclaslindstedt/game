@@ -92,9 +92,11 @@ import {
   startDeathWords,
 } from "./story.ts";
 import { BALANCE } from "./tuning.ts";
+import { splitXp } from "./xp-share.ts";
 import type {
   Enemy,
   GameState,
+  Player,
   ProcTrigger,
   Tier,
   WeaponClass,
@@ -754,7 +756,7 @@ export function hitEnemy(
     if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "kill");
     // The overkill toll applies to a routed foe like any kill: a blow far
     // beyond its full health collects only its share of the xp.
-    grantXp(
+    shareXp(
       state,
       Math.max(
         1,
@@ -763,6 +765,7 @@ export function hitEnemy(
             overkillEfficiency(damage, enemy.maxHp),
         ),
       ),
+      enemy.pos,
     );
     if (def.loot) dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
     // His parting words go over the rift he just went through, not over the
@@ -1040,7 +1043,7 @@ export function killEnemy(
     });
   }
 
-  grantXp(state, xpGain);
+  shareXp(state, xpGain, enemy.pos);
 
   // The level's scripted opening drops: hand over every schedule entry this
   // kill has reached, in author order — the guaranteed weapon → powerup → item
@@ -1807,11 +1810,45 @@ export function debugLevelUpFx(state: GameState): void {
 }
 
 /**
- * Award XP; each threshold crossed banks a stat point, lands the automatic
- * base-attribute gains, and arms the ding celebration — the stat chooser
- * only pauses the run once `levelUpFxMs` has burned down (see step()).
+ * PAY A KILL OUT TO WHOEVER WAS IN THE FIGHT — the party-aware door onto
+ * `grantXp`, and the one every kill goes through.
+ *
+ * `pos` is where it died, and it is the whole rule: `splitXp` gates on being
+ * near it and weights the cut by level (see `xp-share.ts` for why both halves
+ * are load-bearing). A single-player run pays the identical figure it always
+ * has, because one hero in range takes the payout whole.
+ *
+ * Every OTHER XP award in the game deliberately does NOT come through here — a
+ * golden arrow, a handed-in errand, a scripted grant — because each of those has
+ * an obvious owner (whoever walked over it, whoever handed it in) and sharing
+ * one out to the neighbours would be a gift from a player who earned it to one
+ * who did not. Only a KILL is the party's.
  */
-export function grantXp(state: GameState, amount: number): void {
+export function shareXp(
+  state: GameState,
+  amount: number,
+  pos: { x: number; y: number },
+): void {
+  for (const cut of splitXp(state, amount, pos)) {
+    grantXp(state, cut.hero, cut.amount);
+  }
+}
+
+/**
+ * Award XP to ONE hero; each threshold crossed banks a stat point, lands the
+ * automatic base-attribute gains, and arms the ding celebration — the stat
+ * chooser only pauses the run once `levelUpFxMs` has burned down (see step()).
+ *
+ * The hero is a PARAMETER rather than a lookup, per §3.1's rule: a bar, a level
+ * and a pile of banked stat points are as private as a bag, and a grant that
+ * reached for seat 0 would level the host every time a joiner killed something.
+ * A KILL's payout goes through `shareXp` above; this is the direct grant.
+ */
+export function grantXp(
+  state: GameState,
+  player: Player,
+  amount: number,
+): void {
   // The developer XP knob AND the per-difficulty `xpBonus` both scale every
   // grant at the door — kills, golden arrows, and scripted awards alike — so
   // they pace leveling without touching the cost curve (`xpToLevelUp`). The
@@ -1825,14 +1862,17 @@ export function grantXp(state: GameState, amount: number): void {
   // outgrown map farms loot and only crawls XP — no hard wall, just a glacial
   // pace. Applied at the same one door as the dev knob — kills, arrows, and
   // scripted awards all obey.
+  // Read against the RECIPIENT's own level, never the party's: the cap is a
+  // statement about how far past this map a given hero has grown, so a level-90
+  // in the party must not throttle the level-20 beside them down to a trickle
+  // on a map that is still exactly right for the level-20.
   amount = Math.round(
     amount *
       xpCapMultiplier(
-        state.players[0].level,
+        player.level,
         xpLevelCap(state.level.id, state.difficulty),
       ),
   );
-  const player = state.players[0];
   player.xp += amount;
   state.stats.xpGained += amount;
   let leveled = false;
@@ -1887,16 +1927,29 @@ export function grantXp(state: GameState, amount: number): void {
  * eats into the climb toward the next ding. Returns the XP actually lost (0
  * when the knob is off or the bar was already empty) and records it on the
  * run stats for the defeat splash. Called on the `defeat` transition (step()).
+ *
+ * IN CO-OP IT IS BILLED TO EVERY HERO, because the transition it rides is the
+ * PARTY going down (`partyWiped`) rather than one person falling: everybody
+ * who was still in the run when it was lost pays the toll on their own bar.
+ * A DEPARTED seat is billed nothing — its owner left before the wipe, and
+ * taking XP off a hero whose player was not there for the defeat is a bill for
+ * somebody else's mistake. The returned figure is the whole party's forfeit,
+ * which is what the defeat splash quotes; per-hero death (a fallen player in a
+ * party still standing) is §4.2's, and waits on the per-player `dying` screen.
  */
 export function applyDeathXpPenalty(state: GameState): number {
   const fraction =
     LEVELING.deathXpPenaltyFraction * Math.max(0, BALANCE.deathXpLoss);
   if (fraction <= 0) return 0;
-  const player = state.players[0];
-  const toll = Math.round(player.xpToNext * fraction);
-  const lost = Math.min(player.xp, toll);
-  if (lost <= 0) return 0;
-  player.xp -= lost;
-  state.stats.xpLost += lost;
-  return lost;
+  let total = 0;
+  for (const player of state.players) {
+    if (player.departed) continue;
+    const toll = Math.round(player.xpToNext * fraction);
+    const lost = Math.min(player.xp, toll);
+    if (lost <= 0) continue;
+    player.xp -= lost;
+    state.stats.xpLost += lost;
+    total += lost;
+  }
+  return total;
 }
