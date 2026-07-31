@@ -72,6 +72,22 @@ export function livingHeroes(state: GameState): Player[] {
 }
 
 /**
+ * HOW MANY, without the array — {@link livingHeroes} for the callers that only
+ * want the count.
+ *
+ * It exists because the per-capita divisors are read from the hot path: the
+ * spawner's movement pressure banks one per hero per tick, and allocating a
+ * filtered array there to divide by its length is a per-frame allocation in a
+ * loop that runs at 60 Hz. Never zero — a wiped party divides by one rather
+ * than by nothing, since a divisor of zero is a bug wearing a rule's clothes.
+ */
+export function heroesInPlay(state: GameState): number {
+  let n = 0;
+  for (const hero of state.players) if (heroInPlay(hero)) n++;
+  return Math.max(1, n);
+}
+
+/**
  * True when the whole party is down — the run's defeat condition.
  *
  * A DEPARTED seat does not hold this off. Before `departed` existed it did, and

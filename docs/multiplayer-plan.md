@@ -1561,6 +1561,57 @@ bigger a shared pot is than a solo one — read the per-CAPITA XP rate off a
 multi-player run, never the per-kill share, because a party also clears faster
 and the two effects only show up together) and the `/players N` pairing itself.
 
+> **THE PASS HAS NOW BEEN RUN, AND THE ANSWER IS THAT NEITHER LEVER MOVES.**
+> §7.2 built the party; `scripts/coop-tuning.mjs` is the harness, and it reads
+> exactly what this paragraph asked for — per-capita XP per minute at 1/2/4/8,
+> medianed over seeds with the spread printed beside it, and `--start-level` to
+> mint the hero the campaign implies rather than measuring a deep rung with a
+> naked rookie (the first read had EVERY party and the soloist finish nightmare
+> with zero kills, which is a rookie result rather than a co-op one).
+>
+> On the moon at NIGHTMARE, from a level-50 rare-geared arrival, 2 seeds × 4 min:
+>
+> | party | per-capita xp/min | vs solo  | per-capita kills/min |
+> | ----- | ----------------- | -------- | -------------------- |
+> | 1     | 11702             | 1×       | 69.3                 |
+> | 2     | 12913             | **1.1×** | 66.7                 |
+> | 4     | 5375              | 0.5×     | 17.7                 |
+>
+> **At party 2 grouping is neutral-to-slightly-positive, which is exactly what
+> the rule was designed to be** — the pot bonus and the level weighting land
+> where the reasoning said they would, and the shipped 0.1 needs no correction.
+>
+> **The drop at party 4 is NOT the XP rule and must not be tuned as if it were.**
+> The per-capita KILL RATE falls with it, from 69 to 18 — the party is banking a
+> third of the XP because it is landing a quarter of the kills, not because the
+> split shortchanged it. If the sharing were the problem the kill rate would have
+> stayed flat and only the XP would have moved. What actually collapses is the
+> bot's play in a crowd: four autopilots converge on the same bodies and stand
+> inside each other, which is §7.4's SPACING and PACK-SPLITTING rules, neither of
+> which has landed. Lifting `partyBonusPerHero` to make that column read 1× would
+> be re-tuning the game's XP economy to cover a bot deficiency — the same error
+> §7.2.5's second limit names in its own domain, and it would then have to be
+> undone the day §7.4 lands.
+>
+> So: **both levers stay where they are, on evidence**, and the remaining half of
+> this measurement is blocked on §7.4 rather than on an instrument. A scaling
+> pass at `/players 2/4/8` is worth running the same way once it is — the harness
+> takes `--players` and prints it beside the party size for exactly that.
+>
+> **A SECOND VENUE SAYS THE SAME THING, and that is what the conclusion rests
+> on.** On `goodco_hq` at MEDIUM (3 seeds × 6 min, fresh heroes) the per-capita
+> XP reads 1× / 0.4× / 0.2× / 0.2× at party 1/2/4/8 — and the per-capita KILL
+> RATE reads 62 / 21 / 9.8 / 7.6, which is the same curve. The two falling
+> together is the whole argument: a party shortchanged by the SPLIT would keep
+> its kill rate and lose only the XP, and that is not what either map shows.
+>
+> Two caveats the harness prints and this table inherits. The spread is wide
+> (8.9k–14.5k at party 1), so these are directional numbers over a handful of
+> seeds rather than a tuned constant — anything that would MOVE a knob wants more
+> seeds than two. And the deep rungs are only measurable WITH `--start-level`: a
+> fresh party on nightmare reads 0 xp/min at every size including party 1, which
+> is not a co-op result at all.
+
 **BOTH OF THE DEBTS BELOW WERE PAID BY PR 5** (see §5.8), and everything §4.7
 records as NOT LANDED — the corpse, the mods, the party HUD, the banking and the
 measured tuning pass — is now inventoried and sequenced in **PR 5.5** rather than
@@ -1866,21 +1917,36 @@ than rediscovered:
    callee is registered, inserted at the index that callee's own declaration
    uses. Anything outside `src/game/bot/` was done by hand.
 
-2. **§7.2 — the simulator flies a party.** `--party N` for how many bots, never
-   `--players N`, which already means the hp/XP scaling and is the collision
-   most worth avoiding. The report is seat-0 shaped and has to grow.
-3. **§4.3's MEASURED TUNING PASS** — the thing §4.7 says shipped as STRUCTURE
-   with its reasoning stated, and which must not be recorded as measured. Read
-   the per-CAPITA XP rate off multi-player runs at 1/2/4/8 across the ladder,
-   and move `XP_SHARE.partyBonusPerHero` and the `/players N` pairing on
-   evidence.
-4. **§7.2.5 — the bot CLIENT**, blocked on (1) for the same reason (2) is: a
-   client's seat is never 0. It also forces decision 3b's other half, since on
-   a client a direct write is erased by the next snapshot.
-5. **§5.6's SOAK AND ADVERSITY PASS**, blocked on (4). Eight bot clients for
-   hours, watched for leaks, drift and snapshot growth; 150 ms and 2% loss
-   injected at the transport seam. §5.8 records that this could not be run, and
-   it must not be ticked from a green unit suite.
+2. **§7.2 — the simulator flies a party. LANDED.** `--party N` for how many
+   bots, never `--players N`, which already means the hp/XP scaling and is the
+   collision most worth avoiding; the report grew a `PartyReport` beside the
+   seat-0 one rather than replacing it, so nothing downstream had to learn about
+   parties. **It found a real bug on its first run** — every ambient hazard in
+   the game was aimed at `partyCentroid`, which lands a blast on every head of a
+   tight party and on nobody at all in a spread one; see §7.2 for the
+   measurement, the `hazardFocus` fix, and the one piece of §7.4 (the LEASH) that
+   had to come with it for the instrument to be measuring co-op rather than N
+   soloists.
+3. **§4.3's MEASURED TUNING PASS — RUN, and the answer is that neither lever
+   moves.** `scripts/coop-tuning.mjs` reads per-capita XP per minute at 1/2/4/8,
+   medianed over seeds, with `--start-level` minting the hero a deep rung
+   implies. At party 2 grouping measures **1.1× solo** — neutral-to-positive,
+   exactly what the rule was designed to be. The fall at party 4 tracks a fall in
+   the per-capita KILL RATE (69 → 18), so it is §7.4's missing SPACING and
+   PACK-SPLITTING rather than the XP split, and lifting the bonus to hide it
+   would be re-tuning the economy to cover a bot deficiency. The numbers are in
+   §4.7; the remaining half is blocked on §7.4, not on an instrument.
+4. **§7.2.5 — BOTS ARE CLIENTS**, blocked on (1) for the same reason (2) is: a
+   client's seat is never 0. Amended since it was written — this is now the
+   SHIPPED shape rather than a test harness beside it (see §7.2.5), so it lands
+   together with §7.3's local bots and needs no separate instrument. It also
+   forces decision 3b's other half, since on a client a direct write is erased
+   by the next snapshot.
+5. **§5.6's SOAK AND ADVERSITY PASS**, blocked on (4) — and cheap once (4) is
+   done, because under the amendment the soak is just "run a dedicated server
+   and let eight bots join it". Watched for leaks, drift and snapshot growth;
+   150 ms and 2% loss injected at the transport seam. §5.8 records that this
+   could not be run, and it must not be ticked from a green unit suite.
 6. **§3.2 — the per-player screens.** `state.phase` loses eleven members to a
    new `Player.screen`. This is the design exercise rather than the plumbing:
    the non-blocking level-up is a real SINGLE-PLAYER behaviour change that owes
@@ -1928,10 +1994,14 @@ order, beside the chain above.
   merge depends on precisely that. Its twin is that a joiner still plays the
   THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster —
   the same job from the other end, and it should land with it.
-- **Decision 3b's other half — the bot's five housekeeping mutators.** Four are
-  plain verbs and travel unchanged; the fifth (`stepBotWeaponSwap`) carries the
-  bot's own swap memory, and the plan already recommends moving that memory onto
-  the run rather than moving the bot.
+- **Decision 3b's other half — the bot's five housekeeping mutators.** It is
+  the SAME work as §7.2.5's adapter, reached from the other end: the bot's
+  output becomes `{ input, commands }` so that everything it does is an INTENT,
+  and the adapter decides whether an intent is applied in-process or sent. Two
+  of the five are already in `COMMANDS` (`autoEquipBest`, `scrapInferiorLoot`);
+  the fifth (`stepBotWeaponSwap`) carries the bot's own swap memory, and the
+  plan already recommends moving that memory onto the run rather than moving
+  the bot. Land it with §7.2.5 rather than beside it.
 - **§5.6's STORE SURFACES** — the Steam listing's multiplayer categories, the
   depot's launch options, and store screenshots showing a party (`store-shots`
   skill). Not code, but it is on PR 5's list and nobody is holding it.
@@ -2172,7 +2242,52 @@ Two rules to hold while doing it:
   matter — none of them mutates the state today, and a test should pin that
   rather than trusting it.
 
-### 7.2 The simulator flies a party
+### 7.2 The simulator flies a party — **LANDED**
+
+> **AND IT FOUND SOMETHING ON ITS FIRST RUN, which is the whole argument for
+> building an instrument before tuning against one.** A party of two on the moon
+> landed **2 kills over three minutes where the same seed solo landed 128**, with
+> seat 0 spending **43% of the run in the anti-wedge UNSTICK sweep**. Nothing in
+> the bot or the wire was at fault. Every ambient hazard in the game
+> (`hazards.ts`) was laid down on `partyCentroid`, and every one of them carried
+> a comment saying — correctly — that with one hero the centroid IS that hero, so
+> single player is untouched. **Nobody had read the party case**, because until
+> this section landed nothing in the repo could produce one.
+>
+> It is wrong in both directions at once. A rock's blast bills EVERY hero in
+> range, so aimed at the centroid it falls, by construction, in the middle of a
+> group — a party that is doing the right thing and staying together is caught by
+> every rock, where a soloist is caught only by the ones he fails to dodge. The
+> per-hero hazard rate therefore climbs with the party size, and climbs fastest
+> exactly when the party plays well. A SPREAD party gets the mirror image: the
+> centroid of two heroes at opposite ends of a hall is empty floor, so the rain
+> falls where nobody is and the hazard stops existing.
+>
+> The fix is `hazardFocus` — the weather is aimed at ONE hero, rolled, never at
+> the middle of the party — and it covers the rain, the storms, the stampede lane
+> and the hay. The roll is SKIPPED at one hero rather than answered, which is
+> load-bearing rather than an optimisation: `state.rng` is the run's one stream,
+> so spending a draw would shift every roll after it in every seeded measurement
+> in the repo. Byte-identity was proven the same way §7.1's was — a moon run, a
+> goodco_hq run and a full easy campaign, all identical to `main`. With it, the
+> same party of two lands **145 kills, both heroes alive, and no UNSTICK at all**.
+>
+> **ONE PIECE OF §7.4 CAME WITH IT — THE LEASH, AND ONLY THE LEASH**
+> (`src/game/bot/party-play.ts`). §7.2's deliverable is the instrument §4.3's
+> tuning is read off, and an instrument that measures N SOLOISTS SHARING A SEED
+> cannot be used to tune co-op at all. The number is not invented: it is
+> `XP_SHARE.radius`, the distance past which a hero stops sharing in a kill, so a
+> bot beyond it is not merely out of position but spending the party's payout.
+> Spacing, splitting the packs, `Item.owner`, covering a hero who is down and
+> group travel stay in §7.4 — they are about how a bot party PLAYS, and they can
+> only be judged by watching one.
+>
+> Two smaller things fell out. `simCamera` centred EVERY seat's view on seat 0,
+> and the weapon's targeting gate reads the seat's own `input.view` — so a joiner
+> could only strike what was on the host's screen. And the simulator's `levelup`
+> drain only ever emptied seat 0's chooser, so a party member's ding wedged the
+> run outright; it drains whichever seat owes points, which is what makes a party
+> playable HERE without waiting for §3.2.
 
 - **A bot per seat.** `simulateLevel` gains a party size; it seats N heroes via
   `seatHero` and holds N `Bot`s, feeding `step()` the input array it already
@@ -2195,7 +2310,50 @@ state.players[0])` all describe one hero. The interesting readouts for a party
   difficulty, and the two levers `XP_SHARE.partyBonusPerHero` and the
   `/players N` pairing moved on evidence.
 
-### 7.2.5 THE BOT AS A CLIENT — the instrument PR 5 asks for and does not name
+### 7.2.5 THE BOT IS A CLIENT — the feature and the instrument are one thing
+
+> **AMENDED, AND THE CORRECTION IS TO A CLAIM THIS SECTION ITSELF MADE.** The
+> first draft kept two bot hosts apart: a bot CLIENT as a test harness, and
+> §7.3's local bots steered inside the session — on the stated grounds that "a
+> bot the host is not authoritative over is a peer". **That reasoning is wrong.**
+> A client sends input frames and commands; the server validates them and owns
+> the result. A bot client has exactly the authority a human client has, which
+> is none. There was never a safety argument here, and it was holding apart two
+> things that want to be one.
+>
+> **AND THE TOPOLOGY ALREADY PAYS FOR IT.** PR 1's §1.2 makes the host's own
+> renderer a client over a `MessagePort`. So a LOCAL bot needs no socket either:
+> bots are clients, and the TRANSPORT is whatever fits — a `MessagePort` in a
+> local game, a real UDP socket when one joins a dedicated server. One code
+> path, and "let bots join" BECOMES the soak rather than needing an instrument
+> built beside it.
+>
+> **AND THE SEAM IS AN ADAPTER OVER AN INTENT, WHICH IS MOSTLY ALREADY BUILT.**
+> `botAct` does not press keys and does not touch the run — it RETURNS a
+> `GameInput`, which is the very shape `FRAME.input` carries. So for steering
+> there is nothing to design: the caller decides what the intent means.
+> `step(state, input, dt)` in the simulator, the run loop in a local game,
+> `transport.send(encodeFrame(FRAME.input, …))` in a client. One function, three
+> adapters, no branch inside the bot.
+>
+> **THE GAP IS THE HALF THAT IS NOT AN INTENT YET** — the five housekeeping
+> calls that reach in and MUTATE (`stepBotWeaponSwap`, `careForCompanion`,
+> `botAutoEquip`, `cullWorstLoot`, `sortBotInventory`). Those cannot cross a
+> wire, because on a client a direct write is erased by the next snapshot. So
+> the bot's output becomes intent for BOTH halves — `{ input, commands }`, the
+> commands drawn from the closed list the channel already polices — and the
+> adapter stays trivial in either direction. Two of the five (`autoEquipBest`,
+> `scrapInferiorLoot`) are already in `COMMANDS` and can travel today; this is
+> the same work decision 3b has been describing since PR 1.75, arrived at from
+> the other end.
+>
+> **THE ONE THING THAT DOES NOT MOVE IS THE SIMULATOR.** §7.2's bots keep
+> calling `botAct` directly on the authoritative state, in-process, with no wire
+> under them. It runs thousands of ticks for a balance measurement and has to be
+> fast and deterministic; a network-shaped simulator measures jitter and reports
+> it as balance, which is this section's own second limit. So the split is
+> THREE-WAY, not two: **simulator → in-process** (what the numbers come from),
+> **game and dedicated server → bot clients** (what the mode actually is).
 
 **A fractional number for the reason PRs 1.5, 1.75 and 2.5 have one:** this was
 found after the numbering, and renumbering §7.3–§7.7 would break every reference
@@ -2290,22 +2448,23 @@ online. It is the same machinery: a bot seat is a real `Player` seated by
 
 Four decisions, and the last one is the sharp one:
 
-- **BOTS ARE STEERED WHERE THE SIMULATION IS — in the session, not the
-  renderer.** `botAct` is called by the APP today (GameScreen) and by the
-  simulator; a bot seat's input must be produced in the session process, or the
-  bot is a client nothing is authoritative over. That keeps the one code path
-  PR 1's §1.2 exists to protect, and it is what makes a bot seat identical to a
-  human one everywhere downstream.
+- **A BOT SEAT IS A CLIENT SEAT.** `botAct` is called by the APP today
+  (GameScreen) and by the simulator. A bot filling a party joins the session the
+  way every other client does — over a `MessagePort` locally, over a socket
+  against a dedicated server — so it is identical to a human seat everywhere
+  downstream by CONSTRUCTION rather than by care, and every rule that already
+  governs a client (the loadout check, the packet budget, the command
+  allow-list, the private split) governs it unchanged.
 
-  **THIS IS NOT IN TENSION WITH §7.2.5, and the difference is the JOB rather
-  than the machinery.** A bot filling a player's party is a FEATURE: it should
-  cost no socket, no serialization and no lost packets, and it must be something
-  the server is authoritative over. A bot CLIENT is an INSTRUMENT, and its whole
-  value is the wire it is deliberately made to cross. Same `Bot`, two hosts,
-  wanted at the same time — a soak worth running has bot clients on the wire and
-  session-side bots in the party. What would be a mistake is shipping the
-  player-facing feature over a loopback client because the harness already
-  existed.
+  **SUPERSEDED — SEE §7.2.5's AMENDMENT.** This bullet used to say a local bot
+  must be steered inside the session because a bot the host is not authoritative
+  over is a peer. That is not true: a client sends input and commands, and the
+  server owns the result either way. A local bot is a CLIENT over a
+  `MessagePort` — the same door the host's own renderer already comes through —
+  so it costs no socket, exercises the real client surface, and is
+  indistinguishable from a human seat everywhere downstream. Only the SIMULATOR
+  keeps a direct in-process `botAct`, because it is measuring balance rather
+  than playing.
 
 - **A BOT YIELDS ITS SEAT TO A PERSON.** A session with three bots and a spare
   seat should let a fourth human in; a session that is full of bots should drop

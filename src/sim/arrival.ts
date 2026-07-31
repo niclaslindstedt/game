@@ -39,6 +39,7 @@ import type {
   Difficulty,
   GameState,
   Loadout,
+  Player,
   StatName,
   Tier,
 } from "../game/types/index.ts";
@@ -192,12 +193,24 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
  * open point (of the spawn, the map's inset corners, and the landmarks) that is
  * FURTHEST from the nearest live foe models a checkpoint respawn: the death is
  * still booked once, but he gets a breath to move before the next blow.
+ *
+ * **EVERY SEAT IS IMMORTAL, NOT JUST SEAT 0** (multiplayer plan §7.2). A party
+ * run whose seats stay down is not a party of N after the first casualty — it is
+ * a party of one with the per-capita figures still divided by N, which reports a
+ * bot that died as a balance result. So the hero is a PARAMETER; omitted it is
+ * seat 0, which is every existing caller and the single-player identity.
+ *
+ * The `path` rewind stays SEAT 0's alone, deliberately: `state.pathIndex` is one
+ * shared cursor on the authored corridor, so rewinding it for a joiner's death
+ * would walk the whole party's route backwards. Everybody else takes the
+ * safest-point revive, which is what a carved mission (there is no authored path
+ * on one) gives every seat anyway.
  */
-export function reviveHero(state: GameState): void {
-  const player = state.players[0];
+export function reviveHero(state: GameState, hero?: Player): void {
+  const player = hero ?? state.players[0];
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
-  const path = runLevelDef(state).path;
+  const path = player === state.players[0] ? runLevelDef(state).path : null;
   if (path && path.length > 0) {
     // MAZE (path level): an arbitrary far corner can be walled off from the
     // route, stranding the no-pathfinding hero forever. Revive instead ON the

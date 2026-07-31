@@ -39,6 +39,7 @@ import { STAMINA } from "../game/config/index.ts";
 import { reviveHero } from "./arrival.ts";
 import {
   botAct,
+  type Bot,
   botAllocate,
   botPickTalent,
   createBot,
@@ -57,7 +58,12 @@ import {
 import { stepBotWeaponSwap } from "../game/bot/weapon-swap.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
+import { seatHero } from "../game/seating.ts";
+import { heroInPlay } from "../game/party.ts";
+import { STAT_BUILDS } from "../game/builds.ts";
 import { skipDeathScene } from "../game/death-scene.ts";
+import type { GameInput } from "../game/types/index.ts";
+import { IDLE_INPUT } from "../game/step/index.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
 import { STAT_NAMES } from "../game/defs/equipment.ts";
@@ -87,6 +93,7 @@ import {
   setArrowXpEnabled,
   xpCapMultiplier,
   xpLevelCap,
+  xpToLevelUp,
 } from "../game/leveling.ts";
 import {
   currentMobLevel,
@@ -107,6 +114,7 @@ import type {
   GameState,
   Item,
   Loadout,
+  Player,
   StatName,
   Tier,
 } from "../game/types/index.ts";
@@ -125,6 +133,42 @@ export type SimulateLevelOptions = {
   /** Combat profile — the weapon lane the build commits to (default "meta", the
    * level-band melee → magic → melee strategy). */
   profile?: BotProfile;
+  /**
+   * HOW MANY HEROES ARE ON THE MAP (multiplayer plan §7.2). One by default,
+   * which is the whole shipped campaign and every existing measurement.
+   *
+   * **IT IS NOT `/players N` AND THE TWO MUST NEVER BE CONFLATED.** That knob
+   * already means D2's monster-hp and XP scaling (`server/wire/players.ts`) and
+   * has nothing to do with how many bodies are standing on the floor. They are
+   * independent — a party of four at `/players 1` is four heroes against a solo
+   * horde — and the one place they most need telling apart is a report that
+   * prints both.
+   *
+   * Each seat gets its own `Bot` and, unless `partyProfiles` says otherwise,
+   * its own PROFILE: a party of four identical meta builds measures one build
+   * four times, which is the least interesting thing a party simulator could do.
+   */
+  party?: number;
+  /**
+   * The weapon lane each seat commits to, seat-indexed. Short lists repeat, so
+   * `["melee", "ranged"]` at party 4 alternates. Omitted, the seats are dealt
+   * from `STAT_BUILDS` so a party is a spread of lanes rather than a clone army.
+   */
+  partyProfiles?: BotProfile[];
+  /**
+   * The `/players N` scaling this run is being measured under — **a LABEL, not
+   * a lever.**
+   *
+   * The scaling itself is `playerScaling` (`server/wire/players.ts`), the one
+   * function entitled to say by how much, and it is applied by folding its pair
+   * into `balance` — because `server/` may import the engine and the engine must
+   * never import `server/`, so the CLI is the layer allowed to hold both. What
+   * travels here is the NUMBER, so the report can print it beside the party size
+   * and a reader can never take one knob for the other. Setting it without
+   * folding the multipliers in would label a run with a scaling it does not
+   * have, which is worse than not printing it at all.
+   */
+  players?: number;
   /** Cap on SIMULATED minutes of play before the run is called a timeout. */
   maxMinutes?: number;
   /** Fixed step size in ms (16 ≈ the app's frame cadence). */
@@ -280,6 +324,13 @@ export type SimulateCampaignOptions = {
   seed?: number;
   strategy?: BotStrategy;
   profile?: BotProfile;
+  /** Heroes on the map (plan §7.2) — see `SimulateLevelOptions.party`, and note
+   * it is NOT `/players N`. */
+  party?: number;
+  partyProfiles?: BotProfile[];
+  /** `/players N` — the OTHER knob, carried for the REPORT. See
+   * `SimulateLevelOptions.players`. */
+  players?: number;
   maxMinutes?: number;
   dtMs?: number;
   snapshotEveryMs?: number;
@@ -520,6 +571,54 @@ export type StuckReport = {
   areas: StuckArea[];
 };
 
+/**
+ * What a PARTY run adds to a level report (multiplayer plan §7.2).
+ *
+ * **THE PER-CAPITA READ IS THE POINT**, and §4.7 names it as the one to trust:
+ * a party clears FASTER as well as sharing a kill's payout, so the per-KILL
+ * share and the per-capita RATE move in opposite directions and only the second
+ * says whether grouping is worth doing. Reading the per-kill share alone is how
+ * a tuning pass concludes that co-op is a tax when it is a bonus, or the
+ * reverse.
+ */
+export type PartyReport = {
+  /** Heroes on the map. NOT `/players N` — see `SimulateLevelOptions.party`. */
+  size: number;
+  /** The `/players N` scaling this run was measured under, so a report can
+   * never be read as if the two knobs were one. 1 unless the caller moved it. */
+  playersScaling: number;
+  /** One row per seat, in seat order. Seat 0 is the same hero `report.hero`
+   * describes. */
+  seats: {
+    seat: number;
+    profile: BotProfile;
+    levelStart: number;
+    levelEnd: number;
+    xpGained: number;
+    /** Still standing at the end — a departed or dead seat says so. */
+    alive: boolean;
+    /** How many times this seat went down. Every seat is IMMORTAL in a
+     * non-mortal run, exactly as seat 0 always has been, so a death is a
+     * pressure gauge rather than the end of the measurement — a party whose
+     * casualties stayed down would be a party of one with the per-capita
+     * figures still divided by N. */
+    deaths: number;
+    weapon: string;
+    coins: number;
+  }[];
+  /** The reads a tuning pass moves a lever on. */
+  perCapita: {
+    /** XP per hero per simulated MINUTE — the rate §4.7 says to read, rather
+     * than the per-kill share. */
+    xpPerMinute: number;
+    /** Kills per hero per simulated minute. */
+    killsPerMinute: number;
+    /** Damage taken per hero — whether a party is safer per head as well as
+     * faster. */
+    damageTaken: number;
+  };
+};
+
 export type LevelReport = {
   levelId: string;
   levelName: string;
@@ -533,6 +632,16 @@ export type LevelReport = {
   deaths: number;
   /** Simulated play time of the run, ms. */
   timeMs: number;
+  /**
+   * THE PARTY, when there was one (multiplayer plan §7.2). Absent at party 1,
+   * which is the whole shipped campaign and every existing measurement — so no
+   * consumer of this report had to learn about it.
+   *
+   * `hero` above stays SEAT 0's, unchanged, for the same reason: `--verdict`,
+   * `--compare`, the skills and the CLI's whole render read it, and a party run
+   * is an addition rather than a different report.
+   */
+  party?: PartyReport;
   hero: {
     levelStart: number;
     levelEnd: number;
@@ -830,6 +939,9 @@ export function runLevel(options: SimulateLevelOptions): {
     loadout = null,
     strategy = "survivor",
     profile = "meta",
+    party = 1,
+    partyProfiles,
+    players = 1,
     maxMinutes = 15,
     dtMs = 16,
     snapshotEveryMs = 60_000,
@@ -868,6 +980,9 @@ export function runLevel(options: SimulateLevelOptions): {
       loadout,
       strategy,
       profile,
+      party,
+      partyProfiles,
+      players,
       maxMinutes,
       dtMs,
       snapshotEveryMs,
@@ -896,14 +1011,15 @@ export function runLevel(options: SimulateLevelOptions): {
 function simCamera(
   state: GameState,
   view: { width: number; height: number },
+  hero: Player = state.players[0],
 ): { x: number; y: number; width: number; height: number } {
   const clampAxis = (center: number, span: number, level: number) =>
     span >= level
       ? Math.round((level - span) / 2)
       : Math.round(Math.min(Math.max(center - span / 2, 0), level - span));
   return {
-    x: clampAxis(state.players[0].pos.x, view.width, state.level.width),
-    y: clampAxis(state.players[0].pos.y, view.height, state.level.height),
+    x: clampAxis(hero.pos.x, view.width, state.level.width),
+    y: clampAxis(hero.pos.y, view.height, state.level.height),
     width: view.width,
     height: view.height,
   };
@@ -916,6 +1032,14 @@ function playRun(args: {
   loadout: Loadout | null;
   strategy: BotStrategy;
   profile: BotProfile;
+  /** Heroes on the map (plan §7.2) — NOT `/players N`, which is the hp/XP
+   * scaling and is a different knob entirely. */
+  party: number;
+  partyProfiles?: BotProfile[];
+  /** The `/players N` scaling this run is measured under — carried for the
+   * REPORT alone (it was already folded into the balance tuning by `runLevel`),
+   * so a reader can never mistake it for the party size beside it. */
+  players: number;
   maxMinutes: number;
   dtMs: number;
   snapshotEveryMs: number;
@@ -956,6 +1080,49 @@ function playRun(args: {
     jumps: 0,
   };
   const bot = createBot(args.strategy, args.profile);
+  // THE REST OF THE PARTY (multiplayer plan §7.2). Seat 0 is `bot` above — the
+  // hero every existing readout describes — and the extra seats are appended
+  // through the engine's own `seatHero`, so a simulated party grows exactly the
+  // way a real one does (beside the party, dressed in their own loadout, and
+  // stamping the run as a PARTY run for §5.3's purposes).
+  //
+  // **EACH SEAT GETS ITS OWN LANE.** A party of four identical meta builds
+  // measures one build four times, which is the least interesting thing a party
+  // simulator could do — so unless the caller says otherwise the seats are
+  // dealt from `STAT_BUILDS`, and a short authored list simply repeats.
+  const partySize = Math.max(1, Math.floor(args.party));
+  const seatProfiles: BotProfile[] = [args.profile];
+  for (let seat = 1; seat < partySize; seat++) {
+    const chosen = args.partyProfiles?.length
+      ? args.partyProfiles[(seat - 1) % args.partyProfiles.length]!
+      : (STAT_BUILDS[(seat - 1) % STAT_BUILDS.length] as BotProfile);
+    seatProfiles.push(chosen);
+  }
+  const bots: Bot[] = [bot];
+  for (let seat = 1; seat < partySize; seat++) {
+    seatHero(state, args.loadout ?? null);
+    bots.push(createBot(args.strategy, seatProfiles[seat]!));
+  }
+  /**
+   * Where each seat STARTED, so the report can say what each one GAINED.
+   *
+   * `Player.xp` is progress toward the next ding, not a lifetime total — a hero
+   * who levelled four times reads a small number, so quoting it as "xp gained"
+   * reports a busy seat as an idle one. The honest figure is the bar's own
+   * arithmetic: every rung crossed, plus where in the current rung the hero
+   * ended, minus where they began.
+   */
+  const seatStart = state.players.map((hero) => ({
+    level: hero.level,
+    xp: hero.xp,
+  }));
+  /** How many times each seat has been stood back up. Seat 0's deaths are the
+   * report's own `deaths` ledger; these are everybody else's. */
+  const seatDeaths: number[] = [];
+  /** Reused across ticks: one slot per seat, so the per-tick input array is not
+   * a fresh allocation at 60 Hz — the same reason `server/session.ts` keeps
+   * one. */
+  const partyInput: GameInput[] = [];
   const def = levelDef(args.levelId);
   const cap = xpLevelCap(args.levelId, args.difficulty);
 
@@ -1360,17 +1527,24 @@ function playRun(args: {
         guardPhase(++phaseAdvances);
         continue;
       case "levelup": {
+        // WHICHEVER SEAT IS OWED THE POINTS, not seat 0 (plan §7.2).
+        //
+        // `levelup` is still a GLOBAL phase — §3.2's per-player screens have
+        // not landed — so a party member's ding pauses the whole run, and a
+        // simulator that only ever drained seat 0's chooser wedged the moment a
+        // second hero levelled: the phase never resumed and the guard fired.
+        // Draining the seat that actually owes points is what makes a party
+        // playable HERE without waiting for §3.2, and it is exactly what the
+        // app's autoplay does per hero.
+        const owing =
+          state.players.find((p) => p.pendingStatPoints > 0) ??
+          state.players[0];
+        const owingSeat = Math.max(0, state.players.indexOf(owing));
+        const owingBot = bots[owingSeat] ?? bot;
         // If the bot's pick is at the level-scaled cap it won't take; dump the
         // point into any stat that still has room so the ding always resolves.
-        if (
-          !allocateStat(
-            state,
-            state.players[0],
-            botAllocate(bot, state, state.players[0]),
-          )
-        ) {
-          for (const s of STAT_NAMES)
-            if (allocateStat(state, state.players[0], s)) break;
+        if (!allocateStat(state, owing, botAllocate(owingBot, state, owing))) {
+          for (const s of STAT_NAMES) if (allocateStat(state, owing, s)) break;
         }
         // A ×10 TREE milestone earns a passive TALENT point that holds the
         // level-up pause (see allocateStat/resumeAfterLevelup); spend it per the
@@ -1461,7 +1635,47 @@ function playRun(args: {
     // (render.ts computeCamera) — so targeting, summon-in and the bot's
     // wall-end sense all run as they do on a real screen.
     if (args.view) input.view = simCamera(state, args.view);
-    step(state, input, args.dtMs);
+    // THE REST OF THE PARTY STEERS ITSELF (plan §7.2). One `Bot` per seat, each
+    // handed the hero it is steering — which is what §7.1 was for. A seat the
+    // world has stopped answering for contributes IDLE rather than being asked,
+    // the same rule `server/session.ts` follows for an empty chair.
+    //
+    // Seat 0's input is the array's first element rather than a special case,
+    // so a party of ONE hands `step()` a one-element array that behaves exactly
+    // as the bare input did — which is what keeps every existing measurement
+    // byte-identical.
+    let acted: GameInput | GameInput[] = input;
+    if (bots.length > 1) {
+      partyInput.length = state.players.length;
+      for (let seat = 0; seat < partyInput.length; seat++) {
+        const hero = state.players[seat];
+        const seatBot = bots[seat];
+        if (!hero || !seatBot || !heroInPlay(hero)) {
+          partyInput[seat] = IDLE_INPUT;
+          continue;
+        }
+        if (seat === 0) {
+          partyInput[0] = input;
+          continue;
+        }
+        // Every seat runs the SAME housekeeping seat 0 does. A party whose
+        // other members never equipped a find, never swapped a weapon and
+        // never revived a companion would report the party's damage as flat
+        // and call it balance.
+        stepBotWeaponSwap(seatBot, state, hero);
+        careForCompanion(state, hero);
+        const seatInput = botAct(seatBot, state, hero);
+        // EACH SEAT WATCHES ITS OWN SCREEN. The weapon's targeting gate reads
+        // the SEAT's own `input.view` (step/weapon.ts) — eight clients have
+        // eight cameras — so handing every seat the host's rect means a joiner
+        // may only strike what is on the HOST's screen, and a party that
+        // spreads out stops being able to attack at all.
+        if (args.view) seatInput.view = simCamera(state, args.view, hero);
+        partyInput[seat] = seatInput;
+      }
+      acted = partyInput;
+    }
+    step(state, acted, args.dtMs);
     phaseAdvances = 0;
     // BAG DISCIPLINE: WEAR what the step's pickups brought (`botAutoEquip` —
     // gear only; the hand belongs to the pocket arsenal), which also catches a
@@ -1474,6 +1688,47 @@ function playRun(args: {
     botAutoEquip(state, state.players[0]);
     cullWorstLoot(state, state.players[0]);
     sortBotInventory(state, state.players[0]);
+    // EVERY SEAT RUNS THE SAME BAG DISCIPLINE, and every seat is IMMORTAL.
+    //
+    // The second half is the one that would silently ruin a measurement. Seat 0
+    // has never been allowed to stay down — the calibration hero's death is
+    // booked as a pressure gauge and the run marches on — but nothing stood the
+    // OTHER seats back up, because a single dead joiner does not wipe the party
+    // and so never reaches the `dying` phase the revive hangs off. A party of
+    // four that loses two is a party of TWO from then on, with every per-capita
+    // figure still divided by four: a bot that died reported as a balance
+    // result. So a downed seat is stood back up here, on the same rule and away
+    // from the swarm, and its death is booked against its seat.
+    //
+    // **SEAT 0 IS SWEPT HERE TOO, AND THAT IS THE HALF THAT BIT.** Seat 0's
+    // revive has always hung off the `dying` PHASE, and `dying` fires on
+    // `partyWiped` — the whole party — so a host who fell while three joiners
+    // were still standing simply lay there for the rest of the run. Every
+    // headline figure in the report describes seat 0, so the run read as a
+    // total collapse when what had happened was one early death nothing stood
+    // back up. In a party the revive is a per-SEAT rule; the phase path below
+    // still owns the wipe (and every single-player run, which is unchanged).
+    if (bots.length > 1) {
+      for (let seat = 0; seat < state.players.length; seat++) {
+        const hero = state.players[seat];
+        if (!hero) continue;
+        if (seat > 0) {
+          // Seat 0's bag discipline already ran above, in the order the
+          // single-player path has always used.
+          botAutoEquip(state, hero);
+          cullWorstLoot(state, hero);
+          sortBotInventory(state, hero);
+        }
+        if (hero.hp > 0 || hero.departed) continue;
+        if (seat === 0) bookDeath();
+        else seatDeaths[seat] = (seatDeaths[seat] ?? 0) + 1;
+        if (args.mortal) {
+          restartLevel();
+          break;
+        }
+        reviveHero(state, hero);
+      }
+    }
 
     // STAMINA: sample the pool this tick left behind. An empty is counted on
     // the CROSSING into zero, and the dwell counters carry the ms the hero
@@ -1903,6 +2158,47 @@ function playRun(args: {
     outcome,
     deaths: deathEvents.length,
     timeMs: now(),
+    ...(bots.length > 1
+      ? {
+          party: {
+            size: bots.length,
+            // The OTHER knob, printed beside it so the two can never be read as
+            // one — `/players N` scales the horde's hp and the XP it pays, and
+            // has nothing to do with how many bodies are on the floor.
+            playersScaling: args.players,
+            seats: state.players.map((hero, seat) => {
+              const from = seatStart[seat] ?? { level: 1, xp: 0 };
+              return {
+                seat,
+                profile: seatProfiles[seat] ?? args.profile,
+                levelStart: from.level,
+                levelEnd: hero.level,
+                xpGained: xpBetween(from, hero, args.difficulty),
+                alive: heroInPlay(hero),
+                deaths:
+                  seat === 0 ? deathEvents.length : (seatDeaths[seat] ?? 0),
+                weapon: equipmentName(hero.equipment.weapon),
+                coins: Math.round(hero.coins),
+              };
+            }),
+            perCapita: {
+              // Per hero per MINUTE. The denominator is both the party size and
+              // the clock, which is exactly why this is the read to trust: a
+              // party shares each kill AND clears faster, and only dividing by
+              // both shows which effect won.
+              xpPerMinute: round1(
+                totals.xpGained /
+                  bots.length /
+                  Math.max(1 / 60, now() / 60_000),
+              ),
+              killsPerMinute: round1(
+                totals.kills / bots.length / Math.max(1 / 60, now() / 60_000),
+              ),
+              damageTaken: Math.round(totals.damageTaken / bots.length),
+            },
+          },
+        }
+      : {}),
     hero: {
       levelStart,
       levelEnd: state.players[0].level,
@@ -2079,6 +2375,9 @@ export function simulateCampaign(
     seed = 1,
     strategy = "survivor",
     profile = "meta",
+    party = 1,
+    partyProfiles,
+    players = 1,
     maxMinutes = 15,
     dtMs = 16,
     snapshotEveryMs = 60_000,
@@ -2108,6 +2407,9 @@ export function simulateCampaign(
         loadout,
         strategy,
         profile,
+        party,
+        partyProfiles,
+        players,
         maxMinutes,
         dtMs,
         snapshotEveryMs,
@@ -2188,6 +2490,28 @@ function itemKindLabel(item: Item): string {
   if (item.kind === "equipment") return "equipment";
   if (item.kind === "ability") return `ability`;
   return item.kind;
+}
+
+/**
+ * How much XP a hero banked between two points on their own bar.
+ *
+ * The bar is not a running total — `Player.xp` resets at every ding — so the
+ * gain is every rung crossed plus the part of the current rung the hero has
+ * climbed, less the part they had already climbed when they started. At the
+ * level cap the bar is pinned full and the overflow is discarded, so this
+ * under-reports a capped hero; that is the engine's own rule rather than an
+ * approximation here, and a capped hero is not what a tuning pass is measuring.
+ */
+function xpBetween(
+  from: { level: number; xp: number },
+  hero: Player,
+  difficulty: Difficulty,
+): number {
+  let total = hero.xp - from.xp;
+  for (let level = from.level; level < hero.level; level++) {
+    total += xpToLevelUp(level, difficulty);
+  }
+  return Math.max(0, Math.round(total));
 }
 
 function round1(n: number): number {

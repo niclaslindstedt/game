@@ -39,6 +39,7 @@ import {
   THREAT_RADIUS,
   threatCountWithin,
 } from "./perception.ts";
+import { partyLeash } from "./party-play.ts";
 import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
@@ -301,6 +302,14 @@ export function macroTarget(
   // which clears the want, so the errand can't loop.
   const errand = wantsMerchantVisit(state, hero);
   if (errand && weaponStarved(state, hero)) return state.merchant.pos;
+  // DON'T LEAVE THE PARTY (multiplayer plan §7.4, and see `party-play.ts` for
+  // why this one rule is here a PR early). It outranks every errand below
+  // because it is not an errand: past `XP_SHARE.radius` the hero has stopped
+  // sharing in the party's kills, so a bot that keeps chasing its own cache out
+  // there is spending the run's payout on it. NULL in single player, which is
+  // what keeps every existing measurement unchanged.
+  const regroup = partyLeash(bot, state, hero);
+  if (regroup) return regroup;
   // A pinned GPS NUDGE outranks everything but the urgent shop run — the
   // caller pointed the bot at a coordinate, so he works his way there.
   if (bot.waypoint) return bot.waypoint;
@@ -415,6 +424,11 @@ function macroThought(
     stall.y === goal.y
   )
     return "TO SHOP";
+  // The leash reads before the mark for the same reason it steers before it:
+  // walking back to the party is what the hero is doing, and BOT VIEW showing
+  // "SEEK CHEST" while he marches away from the cache is exactly the kind of
+  // lie that sends the next reader looking at the nav code.
+  if (bot.regrouping) return "REGROUP";
   const mark = bot.waypoint;
   if (mark && mark.x === goal.x && mark.y === goal.y) return "TO MARK";
   const hunt = seekTarget(bot, state);

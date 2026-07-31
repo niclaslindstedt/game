@@ -1042,6 +1042,7 @@ export {
   WORLD_DROP,
   WOUNDS,
   XP_CAP,
+  XP_SHARE,
 } from "./game/config/index.ts";
 
 export type {

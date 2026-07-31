@@ -239,6 +239,16 @@ export type Bot = {
    */
   recovering?: boolean;
   /**
+   * REGROUP latch: true while the bot has committed to walking back to its
+   * party (see `party-play.ts`). The hero drifted past `XP_SHARE.radius` — the
+   * distance at which he stops sharing in a kill, so the leash is a MECHANIC
+   * rather than a preference — and holds the walk home until he is comfortably
+   * back inside the ring rather than merely across the line. Always false in
+   * single player, where there is nobody to be away from. Pure per-bot memory
+   * off pure state — determinism holds.
+   */
+  regrouping?: boolean;
+  /**
    * WINDED-STAND latch: true while the bot has committed to CATCHING ITS
    * BREATH — the pool fell to the stand floor
    * (`BotTuning.standStaminaFrac`), so with no foe inside the walk-threat

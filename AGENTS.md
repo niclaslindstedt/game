@@ -1289,6 +1289,22 @@ a fact about the gust rather than about the party. The **FOG IS SHARED** — one
 grid on the run, lifted by whoever walks. The **RUN ENDS WHEN THE PARTY FALLS**
 (`partyWiped`), not when a hero does.
 
+**AND THE WEATHER IS AIMED AT A HERO, NOT AT THE MIDDLE OF THE PARTY —
+`hazardFocus` (`src/game/hazards.ts`) is the ONE answer for all of it**: the
+meteor rain, the sand storms, the stampede's lane, the hay. It is the wave
+ring's rule one level down, and the same trap caught every hazard in the game at
+once, because each was written against `partyCentroid` with a true comment
+beside it saying single player was untouched (with one hero the centroid IS that
+hero) and nobody could read the party case until the simulator grew one. A
+blast bills EVERY hero in range, so aiming at the centroid drops it in the
+middle of a tight party — caught by every rock, where a soloist is caught only
+by the ones he misses — while a SPREAD party's centroid is empty floor and the
+hazard stops existing. Measured on the moon: a party of two landed 2 kills in
+three minutes against the same seed's solo 128, and 145 once the rain was aimed
+at somebody. **The roll is SKIPPED at one hero rather than answered** — `state.rng`
+is the run's one stream, so spending a draw there moves every seeded measurement,
+replay and test in the repo.
+
 **A SEAT IS APPENDED, NEVER INSERTED, AND NEVER SPLICED OUT** (`seatHero`,
 `src/game/seating.ts`). Every command and input frame in flight names a seat by
 INDEX, so renumbering the party mid-run delivers seat 4's steering to seat 3's
@@ -1361,19 +1377,27 @@ RUN: `scripts/simulate-run.mjs` flies exactly one hero, because the autopilot
 reads `state.players[0]` at 164 sites across `src/game/bot/` and `botAct` has no
 notion of WHICH hero it steers. The rules above are therefore STRUCTURE with
 their reasoning stated and unit-level proof (`tests/engine/coop_rules_test.ts`),
-not tuned numbers — do not record them as measured. Parameterizing the bot on a
-`Player` is the prerequisite and **has landed** — `botAct(bot, state, hero)`,
-164 sites, proven byte-identical on two full seeded campaigns — so the simulator
-flying a party (§7.2) is what the measured pass now waits on; then
-`XP_SHARE.partyBonusPerHero` and the `/players N` pairing are the levers. §4.2's
+not tuned numbers — do not record them as measured. Both prerequisites have now
+landed: `botAct(bot, state, hero)` (164 sites, byte-identical on two full seeded
+campaigns) and **`--party N`**, the simulator flying one bot per seat with a
+`PartyReport` whose PER-CAPITA rate is the read to trust — never the per-kill
+share, because a party also clears faster and only dividing by both the head
+count and the clock shows which effect won. **The pass has been RUN
+(`scripts/coop-tuning.mjs`) and the answer is that neither lever moves**: at
+party 2 grouping measures 1.1× solo per capita — neutral-to-positive, which is
+what the rule was designed to be — and the fall at party 4 tracks a fall in the
+per-capita KILL RATE (69 → 18), so it is the autopilot's missing SPACING and
+PACK-SPLITTING (§7.4) rather than the XP split. Lifting
+`XP_SHARE.partyBonusPerHero` to hide that would be re-tuning the game's economy
+to cover a bot deficiency, and would have to be undone the day §7.4 lands. §4.2's
 corpse and respawn are BLOCKED on §3.2's per-player `dying` screen.
 
 **EVERY ONE OF THOSE IS NOW INVENTORIED IN THE PLAN'S PR 5.5 — "THE REMAINDER" —
 AND THAT IS THE ONE PLACE TO LOOK.** A dozen "NOT LANDED" boxes scattered across
 eleven PR sections is how a debt stops being anybody's, so §5.5 collects them,
 says which are BLOCKED and on what, and gives the order they unblock each other
-in: **§7.1 (landed)** → §7.2 → §4.3's measured pass → §7.2.5 → §5.6's soak →
-§3.2 → §4.2's corpse → §3.3.
+in: **§7.1 (landed)** → **§7.2 (landed)** → **§4.3's measured pass (run — see
+above)** → §7.2.5 → §5.6's soak → §3.2 → §4.2's corpse → §3.3.
 
 **THE BOT TAKES THE HERO IT STEERS — `botAct(bot, state, hero)`.** Nothing under
 `src/game/bot/` reads `state.players[0]` any more, and a new one is a
@@ -1381,7 +1405,20 @@ regression: the app passes `localHero(state)`, the simulator passes the seat
 each of its bots was given, and a single-player caller passes seat 0, which is
 the identity case that let 164 sites move at once. `tests/engine/bot_party_test.ts`
 is the guard — every OTHER bot suite flies one hero and would pass with the
-refactor reverted. It also separates out the FOUR that no diff can close (a packaged
+refactor reverted.
+
+**AND IT KNOWS ONE THING ABOUT THE PARTY: DON'T LEAVE IT** (`bot/party-play.ts`).
+The rest of the plan's §7.4 — spacing, splitting the packs, `Item.owner`,
+covering a hero who is down, group travel — is about how a bot party PLAYS and
+waits until somebody can watch one. The LEASH came early because §7.2's
+simulator is what §4.3's tuning is read off, and an instrument measuring N
+SOLOISTS SHARING A SEED cannot tune co-op. Its number is DERIVED, not typed:
+`XP_SHARE.radius` is where a hero stops sharing in a kill, so past it a bot is
+spending the party's payout rather than merely standing badly. It latches with
+hysteresis (pull at 0.9 of the ring, release at 0.5) or a hero oscillates on the
+boundary all run; it walks to the NEAREST teammate rather than the centroid,
+which is a spot on the floor where nobody is standing; and it is null in single
+player, which is what keeps every existing measurement byte-identical. It also separates out the FOUR that no diff can close (a packaged
 Electron launch, eight machines through a real NAT, a real router, the per-OS
 firewall prompts) — those need a human with hardware, and writing them as work
 items is how they get ticked from a diff.
