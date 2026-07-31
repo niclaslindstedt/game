@@ -554,6 +554,58 @@ h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: 
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; padding: 0; margin: 1.5rem 0; list-style: none; }
 .cards h2 { margin-top: 0; }
 
+/* ---- the badge shelf ------------------------------------------------------- */
+
+/* A BADGE ROW, laid out the way the game's own shelf lays one out: the sprite in
+   a fixed column, then the name, the condition, and the figures stacked under
+   it.
+
+   A LIST RATHER THAN A TABLE, and the phone is the reason. Every table here is
+   set white-space: nowrap because its cells are figures; a badge's cell is a
+   SENTENCE, and a column of sentences that cannot wrap turns the reference
+   viewport into a horizontal scroll several screens wide. So the condition wraps
+   and the figures sit beneath it. */
+.badges { list-style: none; padding: 0; margin: 0.75rem 0 0; display: grid; gap: 0.4rem; }
+.badges > li {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.28);
+}
+.badges > li:target { border-color: var(--rule); background: rgba(0, 0, 0, 0.5); }
+.badges .badge-cell { display: flex; align-items: flex-start; min-height: 32px; }
+.badges img { image-rendering: pixelated; width: 32px; height: auto; }
+.badge-body { min-width: 0; }
+/* Achievement gold, the colour the shelf frames an earned badge in — a library
+   page has no player state to dim a locked one with, so every badge is drawn
+   the way the shelf draws one you have. */
+.badge-name {
+  display: block;
+  font-family: "GamePixel", ui-monospace, monospace;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  line-height: ${PIXEL_LEADING};
+  color: var(--amber);
+  overflow-wrap: anywhere;
+}
+/* The condition, in the game's own words — the one part of a row that is prose,
+   so it is the one part set in the prose face. */
+.badge-ask { display: block; color: var(--ink-dim); font-size: 0.95rem; }
+.badge-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+  margin-top: 0.15rem;
+  font-family: "GamePixel", ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
 /* An index rack's trailing detail — a level requirement, how a monster reaches
    the board. Pushed to the row's right edge and dimmed, so the NAME still leads. */
 .roster .req { margin-left: auto; padding-left: 0.5rem; color: var(--ink-faint); font-size: 14px; flex: none; }
@@ -570,6 +622,22 @@ h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: 
    monster's disambiguating venue does. */
 .talent-rack .talent-name { color: var(--tree, inherit); }
 .talent-rack a:hover .talent-name { color: var(--amber); }
+
+/* A BADGE rack — the relic wall and the companion roster, where a whole family
+   is one condition with a different subject each time. It is the shared rack
+   with the badge's own tier and point value in the sub-label slot a monster's
+   venue uses, and the name in achievement gold (the same #ffd75e the shelf
+   frames an earned badge in) so a wall of them reads as trophies. */
+.badge-rack .badge-name { color: var(--amber); }
+.badge-rack a:hover .badge-name { color: var(--ink); }
+/* A relic's name is two long words more often than a monster's — GLEIPNIR
+   CHAUSSES, HELM OF DARKNESS — and at the shared 11rem the wall folds nearly
+   every cell over two lines. A wider column reads as a wall instead of as a
+   ransom note, and the grid still collapses to one on a phone. */
+/* …and a bottom margin, because a rack is one block among several on a category
+   page: a wall butting straight up against the row list under it reads as one
+   run of badges rather than as two families. */
+.badge-rack { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); margin-bottom: 1.25rem; }
 
 .roster li > span.self { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem; font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: var(--amber); }
 .dim { color: var(--ink-faint); }

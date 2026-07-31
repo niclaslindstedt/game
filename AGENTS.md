@@ -2917,19 +2917,26 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   a new glyph reaches both.
 - **THE LIBRARY is generated, and its pages are never edited by hand.** The
   reference site at `/library/` (`pwa/scripts/library/`, see
-  `docs/architecture.md`) is seven sections —
+  `docs/architecture.md`) is eight sections —
   **bestiary** (one page per monster), **arsenal** (one per named relic and one
   per base item; a generated grade variant has no page of its own, it is
   described on the ancestor it was generated from), **talents** (one per passive
   talent, plus the three trees and the point economy on the index), **powers**
   (one per powerup, grouped by the venue that introduces it), **mission guide**
   (one per venue), **errands** (one per quest and one per quest giver, grouped
-  by the venue they stand on) and **story** (one chapter per mission) —
+  by the venue they stand on), **achievements** (one page per CATEGORY of badge
+  — the one section whose unit is a GROUP rather than an entry, because a badge
+  is four facts and a sprite and 244 pages of that is thin content beside the
+  arsenal page each relic trophy already points at) and **story** (one chapter
+  per mission) —
   cross-linked so a
   monster reaches what it drops, an item reaches
   what pays it out, a power reaches the venues whose pools carry it, a
   conjuration talent reaches the pickup that puts the same thing on the field, an
-  errand reaches the breed it sends the hero at and the person who asked, a
+  errand reaches the breed it sends the hero at and the person who asked, a badge
+  reaches the relic, mission or ally it is for (off `AchievementDef.subject`,
+  which the badge catalog states so the library never recovers it by pulling an
+  id apart), a
   mission reaches all of them, and a chapter reaches the rest. It is compiled from the compiled
   catalogs plus LIVE ENGINE CALLS for every derived number — the same
   `scripts/game-alias-loader.mjs` seam `weapon-budget.mjs` and `drop-rate.mjs`
@@ -2948,8 +2955,8 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   DECLARE it in the matching coverage map (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
   `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`, `POWER_FIELDS`,
   `TALENT_FIELDS`, `STORY_ITEM_FIELDS`,
-  `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`), because the build fails on an
-  authored field no page renders (the alternative is hundreds of pages silently
+  `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`, `ACHIEVEMENT_FIELDS`), because the
+  build fails on an authored field no page renders (the alternative is hundreds of pages silently
   going incomplete). **The STORY section takes its prose from `docs/story.md`
   and every quoted line from the GAME** — the cutscenes, level intros/outros,
   enemy dialogue and last words, pinned thoughts and story-item lore — never
@@ -2997,7 +3004,7 @@ relevant `SKILL.md` before starting that kind of work:
 | `test-scenario`       | Staging an exact in-game situation to reproduce a bug, probe fps, or eyeball a context — the `?scenario=` URL param / `applyScenario` spec (place the hero at the boss or merchant, set hp/gear, clear the field, spawn mob rings — pre-wounded if asked, lay out ground items, freeze the world into a pose) plus the FPS meter (DEBUG MODE or `?debug`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `store-shots`         | Regenerating the App Store / Play Store screenshot set — after resprites, an art pass, a HUD change, or new powers/talents. Drives the real game to staged ENDGAME moments (nightmare, late maps, legendaries, powers detonating) at Apple's exact rasters, captions them in the game's own pixel font, and holds each frame to a quality bar before it reaches a listing.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `ui-review`           | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the nine reference viewports (`pwa/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `library-improvement` | Building or improving THE LIBRARY — the generated companion site at `/library/` (bestiary, arsenal, mission guide, story; see `docs/architecture.md`). The generate → look → judge → improve loop: regenerate, screenshot at the reference viewports, hold every page to the quality bar (does it wear the game's own skin, is every number the engine's own, does it read like Arreat Summit rather than a database dump, do the spoiler panels cover without hiding from crawlers), fix the worst in the GENERATOR, and loop — with before/after sign-off before shipping.                                                                                                                                                                                                                                                     |
+| `library-improvement` | Building or improving THE LIBRARY — the generated companion site at `/library/` (bestiary, arsenal, mission guide, achievements, story; see `docs/architecture.md`). The generate → look → judge → improve loop: regenerate, screenshot at the reference viewports, hold every page to the quality bar (does it wear the game's own skin, is every number the engine's own, does it read like Arreat Summit rather than a database dump, do the spoiler panels cover without hiding from crawlers), fix the worst in the GENERATOR, and loop — with before/after sign-off before shipping.                                                                                                                                                                                                                                       |
 
 ## Maintenance skills
 

@@ -291,6 +291,55 @@ export const affixLine = affixText.affixLine;
 const tiers = await import(
   pathToFileURL(join(REPO, "pwa/src/game/tiers.ts")).href
 );
+
+// ---- the badges ---------------------------------------------------------------
+
+// THE ACHIEVEMENTS ARE THE APP'S, not the engine's — the engine never learns
+// they exist (the whole ledger is fed from the events the app already consumes).
+// So they are reached the same way the item card's wording and the tier palette
+// are: by importing the app's own module rather than restating any of it. Three
+// of them, because the catalog, the platform curation and the counter shape are
+// three separate questions and the library asks all three.
+const achievementDefs = await import(
+  pathToFileURL(join(REPO, "pwa/src/game/achievement-defs.ts")).href
+);
+const platformAchievements = await import(
+  pathToFileURL(join(REPO, "pwa/src/game/platform-achievements.ts")).href
+);
+const achievementTotals = await import(
+  pathToFileURL(join(REPO, "pwa/src/game/achievement-totals.ts")).href
+);
+// The effort ladder's point weights, straight out of oss-framework — the same
+// constant the shelf and the detail card price a badge with.
+const frameworkAchievements =
+  await import("@niclaslindstedt/oss-framework/achievements");
+
+/** Every badge the game can award, in shelf order. */
+export const ACHIEVEMENTS = achievementDefs.ACHIEVEMENTS;
+/** The browser's sections, in display order, and their display names. */
+export const ACHIEVEMENT_CATEGORIES = achievementDefs.ACHIEVEMENT_CATEGORIES;
+export const CATEGORY_LABELS = achievementDefs.CATEGORY_LABELS;
+/** App: a blank lifetime ledger — the honest way to ask a counter badge what
+ * its GOAL is, since a goal is only ever reported alongside a live tally. */
+export const emptyLifetimeTotals = achievementTotals.emptyTotals;
+/** Framework: what one badge of each tier is worth, in the game's own points. */
+export const TIER_POINTS = frameworkAchievements.TIER_POINTS;
+/** App: whether a badge is one the platform lists carry (Game Center, Steam). */
+export const isPlatformAchievement = platformAchievements.isPlatformAchievement;
+/** App: the curated platform list, and the caps that shape it. */
+export const PLATFORM_ACHIEVEMENTS = platformAchievements.PLATFORM_ACHIEVEMENTS;
+export const PLATFORM_ACHIEVEMENT_LIMIT =
+  platformAchievements.PLATFORM_ACHIEVEMENT_LIMIT;
+export const PLATFORM_POINT_BUDGET = platformAchievements.PLATFORM_POINT_BUDGET;
+/** App: the apportioned Game Center point value of every listed badge — asked
+ * rather than re-derived, because the whole budget is re-sliced every time a
+ * badge is added and a second implementation would be wrong within a release. */
+export const platformPoints = platformAchievements.platformPoints;
+/** App: whether Steam carries the whole catalog yet (it caps a new app at the
+ * same 100 Game Center does — see `STEAM_FULL_CATALOG`). */
+export const STEAM_FULL_CATALOG = platformAchievements.STEAM_FULL_CATALOG;
+export const STEAM_ACHIEVEMENTS = platformAchievements.STEAM_ACHIEVEMENTS;
+
 export const TIER_COLORS = tiers.TIER_COLORS;
 export const TIER_LABELS = tiers.TIER_LABELS;
 export const tierGlowClass = tiers.tierGlowClass;

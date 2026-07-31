@@ -55,6 +55,25 @@ export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
   mastery: "MASTERY",
 };
 
+/**
+ * THE ONE NAMED THING A BADGE IS ABOUT, for the badges that are about one.
+ *
+ * Four of the groups below are generated straight off a catalog — a badge per
+ * mission, per difficulty, per hand-authored relic, per companion — and the
+ * subject is the catalog entry each one was minted from. Nothing in the game
+ * reads it: the shelf, the toast and the platform mirror all work off `name` and
+ * `desc` like every other badge. THE LIBRARY reads it, and that is the whole
+ * reason it is stated rather than inferred — `clear_moon` being about the moon
+ * is a fact this file owns, and recovering it by pulling an id apart somewhere
+ * else is a second copy of that grammar, free to be wrong the day a family is
+ * renamed. Same idiom as `EnemyDef.lore`: an authored field for a reader.
+ */
+export type AchievementSubject = {
+  kind: "level" | "difficulty" | "unique" | "companion";
+  /** The catalog id, in whichever catalog `kind` names. */
+  id: string;
+};
+
 export type AchievementDef = {
   /** Stable ledger key — never rename a shipped id (unlocks key on it). */
   id: string;
@@ -67,6 +86,8 @@ export type AchievementDef = {
   icon: string;
   /** Effort ladder — drives the point weight and the badge's frame color. */
   tier: AchievementTier;
+  /** What this badge is about, when it is about one catalog entry (above). */
+  subject?: AchievementSubject;
   /** Progress meter for count ladders (have/goal); omit for one-shots. */
   progress?: (t: LifetimeTotals) => { have: number; goal: number };
   done: (t: LifetimeTotals) => boolean;
@@ -98,6 +119,7 @@ function missionBadges(): AchievementDef[] {
       desc: `CLEAR ${level.name} ON ANY DIFFICULTY`,
       icon: "map_story",
       tier: (i < 2 ? "beginner" : "intermediate") as AchievementTier,
+      subject: { kind: "level" as const, id: levelId },
       done: (t: LifetimeTotals) => t.levelClears.includes(levelId),
     };
   });
@@ -121,6 +143,7 @@ function difficultyBadges(): AchievementDef[] {
       desc: `BEAT THE CAMPAIGN ON ${def.name}`,
       icon: "icon_trophy",
       tier: tiers[Math.min(i, tiers.length - 1)] ?? "expert",
+      subject: { kind: "difficulty" as const, id: difficulty },
       done: (t: LifetimeTotals) => t.difficultiesBeaten.includes(difficulty),
     };
   });
@@ -139,6 +162,7 @@ function uniqueBadges(): AchievementDef[] {
       desc: `FIND ${u.name}`,
       icon: equipmentIcon(u.base),
       tier,
+      subject: { kind: "unique" as const, id },
       done: (t: LifetimeTotals) => t.uniquesFound.includes(id),
     };
   });
@@ -153,6 +177,7 @@ function companionBadges(): AchievementDef[] {
     desc: `SPARE ${c.name} AND GAIN AN ALLY`,
     icon: equipmentIcon(c.weapon),
     tier: "pro" as AchievementTier,
+    subject: { kind: "companion" as const, id: c.id },
     done: (t: LifetimeTotals) => t.companions.includes(c.id),
   }));
 }
