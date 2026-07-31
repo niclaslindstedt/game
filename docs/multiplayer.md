@@ -62,13 +62,31 @@ why nothing in this feature has an "and also, when you are the host…" clause.
 
 **The state splits three ways** (`server/wire/split.ts`):
 
-- **STATIC — never sent.** The level is a deterministic function of the
-  `SessionParams`, so the client calls `createGame` with the same arguments and
-  builds the obstacles, decor, canopy, spawner layout and carved geometry for
-  itself. That is ~100 KB per level, per client, that the wire never carries,
-  and it costs nothing even on the first frame: a client's very first delta is
-  coded against the world at tick 0, which it already holds.
+- **STATIC — never sent.** The run is a deterministic function of the
+  `SessionParams`, so the client calls `createRunFromParams` with the same
+  arguments and builds the obstacles, decor, canopy, spawner layout and carved
+  geometry for itself. That is ~100 KB per level, per client, that the wire
+  never carries, and it costs nothing even on the first frame: a client's very
+  first delta is coded against the world at tick 0, which it already holds.
   `tests/engine/net_determinism_test.ts` proves the two processes agree.
+
+  **THE RUN, NOT THE LEVEL — and that distinction cost a finding.** `createGame`
+  was always deterministic, but a RUN was not the same thing as a `createGame`:
+  the app performed several more mutations before the first tick (the hero's
+  campaign quest chain, the purse funded from his whole banked wealth, the
+  thoughts he had already read, an opening already watched on this difficulty, a
+  bot run's dialogue mute), and none of them could be said in `SessionParams`.
+  A session built from those parameters would have held a different world from
+  the one the app built, and the first delta — the one whose emptiness this
+  whole tier rests on — would have carried every difference as a "correction" to
+  a run that was right to begin with. They are parameters now, applied by ONE
+  function (`createRunFromParams`, `src/game/session-setup.ts`) that the app,
+  the session and an arriving client all call, and **the rule that keeps it true
+  is: anything the app does to a run before its first tick is a session
+  parameter, not app code.** A `?scenario=` is the one deliberate exception — a
+  developer staging hook applied locally, because a session that could be handed
+  an arbitrary scenario is a session a client could stage.
+
 - **DYNAMIC — snapshotted every third tick** (20 Hz), as a delta against the
   last snapshot the client ACKNOWLEDGED. A lost frame therefore costs one frame
   of smoothness and can never desync, which is what makes an unreliable
@@ -314,46 +332,37 @@ compiler.
 
 ## What is tested
 
-| Suite                                  | What it holds                                                                 |
-| -------------------------------------- | ----------------------------------------------------------------------------- |
-| `tests/engine/wire_codec_test.ts`      | Framing round trips, and every refusal a decoder on an open port must make    |
-| `tests/engine/wire_delta_test.ts`      | `patch(prev, diff(prev, next)) === next`, and each strategy separately        |
-| `tests/engine/net_determinism_test.ts` | The same arguments build the same world — in a real second process            |
-| `tests/engine/run_commands_test.ts`    | The two closed lists agreeing, and every argument a stranger may send         |
-| `tests/engine/net_session_test.ts`     | A real session and a real client, hashed against each other after 600 ticks   |
-| `tests/engine/wire_handshake_test.ts`  | The cookie's epoch window, the proof, and the ORDER the refusals come in      |
-| `tests/engine/wire_chat_test.ts`       | The slash grammar, and that hp and XP scale together                          |
-| `tests/engine/wire_address_test.ts`    | Every form a player may type, IPv6 brackets included                          |
-| `tests/engine/net_reliability_test.ts` | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link              |
-| `tests/engine/net_udp_test.ts`         | The port walk, and that `bound` is what the socket GOT                        |
-| `tests/engine/net_hub_test.ts`         | Mostly what does NOT happen: the unpadded probe, the flood, the stranger      |
-| `tests/engine/net_spectators_test.ts`  | Several clients, no bag on the wire, and the host's commands being the host's |
-| `tests/content/server_deps_test.ts`    | The ship target's dependency manifest, and that it reaches nothing outside it |
-| `electron/tests/session-host_test.ts`  | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
-| `electron/tests/net-lobby_test.ts`     | The metadata round trip through the short keys, and degrading without Steam   |
+| Suite                                    | What it holds                                                                 |
+| ---------------------------------------- | ----------------------------------------------------------------------------- |
+| `tests/engine/wire_codec_test.ts`        | Framing round trips, and every refusal a decoder on an open port must make    |
+| `tests/engine/wire_delta_test.ts`        | `patch(prev, diff(prev, next)) === next`, and each strategy separately        |
+| `tests/engine/net_determinism_test.ts`   | The same arguments build the same world — in a real second process            |
+| `tests/engine/run_commands_test.ts`      | The two closed lists agreeing, and every argument a stranger may send         |
+| `tests/engine/run_params_test.ts`        | `RunParams` and `SessionParams` naming the same fields                        |
+| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine — and the cutover's own tripwire     |
+| `tests/engine/net_session_test.ts`       | A real session and a real client, hashed against each other after 600 ticks   |
+| `tests/engine/wire_handshake_test.ts`    | The cookie's epoch window, the proof, and the ORDER the refusals come in      |
+| `tests/engine/wire_chat_test.ts`         | The slash grammar, and that hp and XP scale together                          |
+| `tests/engine/wire_address_test.ts`      | Every form a player may type, IPv6 brackets included                          |
+| `tests/engine/net_reliability_test.ts`   | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link              |
+| `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                        |
+| `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger      |
+| `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's |
+| `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it |
+| `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
+| `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam   |
 
 ## What is NOT here yet
 
 - **The run still simulates in the renderer.** `GameScreen` owns the loop as it
   always has; nothing in the shipped game reaches `pwa/src/game/net/` yet. The
-  verbs it calls all travel now, so the blocker that made this circular is gone
-  — what is left is **PR 1.75 (THE LOOP MOVES)**, and one thing the plan had not
-  measured stands in the way of it: **a run is not `createGame(params)`.**
-  `createRunSession` (`pwa/src/game/game-screen/run-setup.ts`) performs six
-  further mutations before the first tick — it seeds the hero's campaign quest
-  chain, funds the purse from the character's whole banked wealth, marks the
-  thoughts this hero has already read, applies a `?scenario=`, skips an opening
-  already watched on this difficulty, and mutes the dialogue for a bot run — and
-  the `SessionParams` cannot express any of them. So the session would build a
-  DIFFERENT world from the one the app built, and the client's first delta,
-  which is supposed to be nearly empty, would carry the difference as
-  "corrections" to a run that was right to begin with.
+  verbs it calls all travel now, and so do the parameters a run is built from
+  (below), so what is left of **PR 1.75 (THE LOOP MOVES)** is the driver seam
+  itself, the adopt-a-state start, and a packaged launch.
 
-  Five of the six are plain data and belong in `SessionParams` beside `loadout`
-  (which is already opaque there for exactly this reason); the sixth is dev-only
-  and does not travel. The **parked run** and the **checkpoint restore** are the
-  harder half of the same problem: both adopt an arbitrary `GameState` rather
-  than building one, so the session needs a way to ADOPT a state and send the
+  The **parked run** and the **checkpoint restore** are the part that
+  parameters cannot reach: both adopt an arbitrary `GameState` rather than
+  building one, so the session needs a way to ADOPT a state and send the
   arriving client a full snapshot instead of a delta against a genesis it does
   not share. `server/session.ts` already has the `Sent.full` shape for that and
   nothing has ever used it.

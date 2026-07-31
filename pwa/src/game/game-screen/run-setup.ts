@@ -8,13 +8,12 @@
 
 import type { MutableRefObject } from "react";
 
-import { seedCampaignQuests } from "@game/core";
 import {
   applyScenario,
   BOT_PROFILES,
+  createRunFromParams,
   BOT_STRATEGIES,
   createBot,
-  createGame,
   debug,
   runLevelDef,
   hasLevel,
@@ -28,6 +27,7 @@ import {
   type BotStrategy,
   type Difficulty,
   type GameState,
+  type RunParams,
   type ScenarioSpec,
 } from "@game/core";
 
@@ -194,74 +194,121 @@ export function createRunSession(deps: {
   const botViewLoadout = botViewChoice
     ? buildBotViewLoadout(runLevelId, difficulty, botViewChoice.build)
     : null;
-  const state =
-    resumed ??
-    (checkpoint
-      ? cloneGameState(checkpoint)
-      : createGame(
-          seed,
-          runLevelId,
-          difficulty,
-          botViewLoadout ?? characterRef.current.loadout ?? undefined,
-          false,
-          // Campaign progress the engine gates drops on (the bunker key
-          // stays latent until Eastworld is cleared on this difficulty).
-          clearedLevelsFor(characterRef.current, difficulty),
-          // Met the trader here before? He's set up at the door from the
-          // start, so a restart-after-death can walk over and repair.
-          hasMetMerchant(characterRef.current, runLevelId, difficulty),
-        ));
-  // THE CAMPAIGN CHAIN the hero carries (quests/campaign.ts) is seeded before
-  // anything reads the quest log, so a chain's gate, a giver's head mark and
-  // the tracker are all correct on the first frame. Only a FRESH run needs it:
-  // a resumed or checkpointed state already carries the log it was frozen with,
-  // and re-seeding would fold a stale bank back over live progress.
-  if (!resumed && !checkpoint) {
-    seedCampaignQuests(
-      state,
-      campaignChainFor(characterRef.current, difficulty),
-    );
-  }
+  // Autoplay: the engine bot steers instead of the pointer and spends level-ups
+  // itself. Turned on by DEVELOPER → BOT VIEW (the chosen BOT SPEC's posture +
+  // stat lane) or the `?bot=<strategy>` URL param. An optional
+  // ?botProfile=<build> (melee/ranged/magic/balanced/auto) commits the hero to a
+  // stat-distribution build — a lane, or the even `balanced` spread. See the
+  // playtest skill.
+  //
+  // Decided BEFORE the run is built, because whether a bot is steering is a
+  // RUN PARAMETER (it mutes the dialogue) rather than something done to the run
+  // afterwards. `createBot` touches no state, so it costs nothing to know early.
+  const requested = params.get("bot");
+  const requestedProfile = params.get("botProfile");
+  const profile =
+    requestedProfile && (BOT_PROFILES as string[]).includes(requestedProfile)
+      ? (requestedProfile as BotProfile)
+      : "meta";
+  // BOT VIEW plays the picked spec (its posture + stat lane); a `?bot=` playtest
+  // uses the requested strategy and ?botProfile.
+  const bot = botViewChoice
+    ? createBot(botViewChoice.strategy, botViewChoice.profile)
+    : requested && (BOT_STRATEGIES as string[]).includes(requested)
+      ? createBot(requested as BotStrategy, profile)
+      : null;
 
-  // A run started from scratch (not resumed from the menu, not adopted from a
-  // checkpoint that already froze it): capture the combat-start checkpoint
-  // once this mount, superseding any stale one from an earlier level.
-  const captureCheckpoint = !resumed && !checkpoint;
-  // Fund the run's purse from the hero's FULL banked wealth: the loadout's
-  // banked coins PLUS any store credit still held as `pendingCoins` (a
-  // brand-new hero who bought coins before ever banking a loadout — see
-  // characters.ts `characterPurse`). `applyLoadout` restored only
-  // `loadout.coins`, so without this the store-bought credit — shown as the
-  // hero's PURSE on the coin-store screen — is unspendable in the run: AUTO
-  // PILOT reads `state.player.coins` and would show 0 / "CAN'T AFFORD" while
-  // the menu shows billions. Fresh, real runs only — a resumed/checkpointed
-  // run already carries these coins in its frozen state, and BOT VIEW / demo
-  // fly a synthetic loadout, not the hero's purse. The run's end-of-run bank
-  // then already includes the pending (see `recordVictory`/`bankLoadout`'s
-  // `coinsIncludePending`), so it is not folded in a second time.
-  if (captureCheckpoint && !botView && !demo) {
-    state.player.coins = characterPurse(characterRef.current);
-  }
-  // The per-character story ledger (characters.ts): has this hero already
-  // watched this level's opening — and which inner monologues has he read —
-  // on this difficulty? We die and replay a lot, so a witnessed opening is
-  // skipped and already-read thoughts are pre-marked as seen. Seed the seen
-  // thoughts into every rebuild (a fresh createGame OR a cloned checkpoint,
-  // so a post-victory RETRY doesn't replay a late kill/sight beat either);
-  // the opening itself is skipped below, once, for a fresh createGame.
+  // Has this hero already watched this level's opening on this difficulty? We
+  // die and replay a lot, so a witnessed opening is skipped — which is a RUN
+  // PARAMETER, not something done to the run afterwards.
   const openingSeen = hasSeenOpening(
     characterRef.current,
     runLevelId,
     difficulty,
   );
+  // `?scenario=<json>` stages an exact situation on a run built from scratch,
+  // and it is applied AFTER the run is built. A run that is about to be staged
+  // therefore skips nothing here, exactly as before: the staging decides where
+  // it lands, and the music chain below reads the phase the spec left.
+  const scenarioParam = params.get("scenario");
+  const wantsScenario = Boolean(scenarioParam) && !resumed && !checkpoint;
+
+  /**
+   * EVERYTHING THIS RUN IS BUILT FROM — the arguments AND the things the app
+   * used to do to the state afterwards.
+   *
+   * It is one object rather than a series of calls because the same parameters
+   * have to be able to build the same run in the session server and in an
+   * arriving client's renderer (`createRunFromParams`, `src/game/session-setup.ts`).
+   * **A field added here and not to `RunParams` is a desync**, and it will
+   * present as a replication bug rather than as the missing line it is.
+   */
+  const runParams: RunParams = {
+    seed,
+    levelId: runLevelId,
+    difficulty,
+    loadout: botViewLoadout ?? characterRef.current.loadout ?? null,
+    respec: false,
+    // Campaign progress the engine gates drops on (the bunker key stays latent
+    // until Eastworld is cleared on this difficulty).
+    clearedLevels: clearedLevelsFor(characterRef.current, difficulty),
+    // Met the trader here before? He's set up at the door from the start, so a
+    // restart-after-death can walk over and repair.
+    merchantDiscovered: hasMetMerchant(
+      characterRef.current,
+      runLevelId,
+      difficulty,
+    ),
+    // THE CAMPAIGN CHAIN the hero carries (quests/campaign.ts), seeded before
+    // anything reads the quest log so a chain's gate, a giver's head mark and
+    // the tracker are all correct on the first frame.
+    campaignQuests: campaignChainFor(characterRef.current, difficulty) ?? null,
+    // Fund the purse from the hero's FULL banked wealth: the loadout's banked
+    // coins PLUS any store credit still held as `pendingCoins` (a brand-new
+    // hero who bought coins before ever banking a loadout — see characters.ts
+    // `characterPurse`). `applyLoadout` restores only `loadout.coins`, so
+    // without this the store-bought credit — shown as the hero's PURSE on the
+    // coin-store screen — is unspendable in the run: AUTO PILOT reads
+    // `state.player.coins` and would show 0 / "CAN'T AFFORD" while the menu
+    // shows billions. The end-of-run bank already includes the pending (see
+    // `recordVictory`/`bankLoadout`'s `coinsIncludePending`), so it is not
+    // folded in a second time. BOT VIEW / demo fly a synthetic loadout rather
+    // than the hero's purse and pass null.
+    coins: botView || demo ? null : characterPurse(characterRef.current),
+    // Already-read inner monologues are pre-marked so a die-and-retry loop does
+    // not replay them.
+    seenThoughts: seenThoughts(characterRef.current, difficulty),
+    openingSkip: wantsScenario
+      ? "none"
+      : skipOpening
+        ? "all"
+        : openingSeen
+          ? "story"
+          : "none",
+    muteDialogue: bot !== null,
+  };
+
+  const state =
+    resumed ??
+    (checkpoint ? cloneGameState(checkpoint) : createRunFromParams(runParams));
+
+  // A run started from scratch (not resumed from the menu, not adopted from a
+  // checkpoint that already froze it): capture the combat-start checkpoint
+  // once this mount, superseding any stale one from an earlier level.
+  const captureCheckpoint = !resumed && !checkpoint;
+  // The per-character story ledger, for the two paths the PARAMETERS do not
+  // build: a resumed or checkpointed state is adopted whole, so the thoughts
+  // this hero has already read are seeded into it here rather than at creation
+  // (a post-victory RETRY must not replay a late kill/sight beat either). A
+  // fresh run already carries them — `markThoughtsSeen` is idempotent, so
+  // saying so twice costs nothing and keeps the rule in one place.
   markThoughtsSeen(state, seenThoughts(characterRef.current, difficulty));
   // `?scenario=<json>` (dev/test): mutate the fresh run into an exact
   // situation — position, hp, gear, spawns (see docs/configuration.md and
   // the test-scenario skill). Resumed/checkpointed runs already lived past
   // their opening, so the spec only applies to a run built from scratch.
   let scenarioApplied = false;
-  const scenarioParam = params.get("scenario");
-  if (scenarioParam && !resumed && !checkpoint) {
+  if (wantsScenario && scenarioParam) {
     try {
       applyScenario(state, JSON.parse(scenarioParam) as ScenarioSpec);
       scenarioApplied = true;
@@ -307,33 +354,14 @@ export function createRunSession(deps: {
       });
   }
 
-  // Autoplay: the engine bot steers instead of the pointer and spends level-ups
-  // itself. Turned on by DEVELOPER → BOT VIEW (the chosen BOT SPEC's posture +
-  // stat lane) or the `?bot=<strategy>` URL param. An optional
-  // ?botProfile=<build> (melee/ranged/magic/balanced/auto) commits the hero to a
-  // stat-distribution build — a lane, or the even `balanced` spread. See the
-  // playtest skill.
-  const requested = params.get("bot");
-  const requestedProfile = params.get("botProfile");
-  const profile =
-    requestedProfile && (BOT_PROFILES as string[]).includes(requestedProfile)
-      ? (requestedProfile as BotProfile)
-      : "meta";
-  // BOT VIEW plays the picked spec (its posture + stat lane); a `?bot=` playtest
-  // uses the requested strategy and ?botProfile.
-  const bot = botViewChoice
-    ? createBot(botViewChoice.strategy, botViewChoice.profile)
-    : requested && (BOT_STRATEGIES as string[]).includes(requested)
-      ? createBot(requested as BotStrategy, profile)
-      : null;
-
   // Autoplay mutes the in-world dialogue: with the engine bot steering there
   // is nobody to read (or tap through) the arrival scenes, last words,
   // thoughts, lore, companion joins and merchant greeting — un-muted they'd
   // freeze the run in the `dialogue` phase and flash one page per tick as the
   // bot clicks through them. Muting latches `state.dialogueMuted` so those
   // scenes never enter the stage at all (BOT VIEW and the `?bot=` playtests
-  // watch the fight, not the story).
+  // watch the fight, not the story). A FRESH run is already muted by its own
+  // parameters; this catches the two paths that adopt a state instead.
   if (bot) muteDialogue(state);
 
   if (resumed) {

@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 /**
  * The most clients one session seats, host included.
@@ -73,17 +73,33 @@ export const TICK_MS = 1000 / 60;
 // ---------------------------------------------------------------------------
 
 /**
- * Everything a client needs to rebuild the level for itself.
+ * Everything a client needs to rebuild the RUN for itself.
  *
  * This is the whole of the plan's STATIC tier: the level is a deterministic
  * function of these arguments, so the obstacles, the decor, the canopy, the
  * ground layer, the spawner layout and the carved geometry are all built by
- * the client's own `createGame` call and NEVER travel. On a measured `moon`
- * run that is ~100 KB the wire does not carry, once per level, per client.
+ * the client's own `createRunFromParams` call and NEVER travel. On a measured
+ * `moon` run that is ~100 KB the wire does not carry, once per level, per
+ * client.
  *
  * The claim it rests on — that the same arguments build the same world in two
  * processes — is a determinism claim about the same build, and it is TESTED
  * rather than believed (`tests/engine/net_determinism_test.ts`).
+ *
+ * **THE RUN, NOT THE LEVEL — and the difference is where this shape went wrong
+ * once.** A RUN is not `createGame(params)`: the app performs several further
+ * mutations before the first tick (the campaign chain, the purse, the thoughts
+ * already read, an opening already watched, a bot run's dialogue mute), and
+ * while those were app code alone a session built from these parameters held a
+ * DIFFERENT world from the one the app built — which the client's first delta
+ * would have carried as corrections to a run that was right to begin with. They
+ * are parameters now, and the rule that keeps them so is stated where they are
+ * applied: **anything the app does to a run before its first tick belongs
+ * here** (`src/game/session-setup.ts`).
+ *
+ * This leaf may not import the engine, so it names `RunParams` structurally
+ * rather than by type. Keep the two in step; the determinism suite is what
+ * fails when they drift.
  */
 export type SessionParams = {
   /** The run's seed. Every rng stream in the level is derived from it. */
@@ -112,6 +128,20 @@ export type SessionParams = {
   clearedLevels: string[];
   /** The hero has already met this level's merchant on this difficulty. */
   merchantDiscovered: boolean;
+  /** The CAMPAIGN quest chain the hero carries. Opaque here like `loadout`:
+   * the wire moves it, the engine reads it. */
+  campaignQuests?: unknown | null;
+  /** The hero's whole banked wealth, or null to keep whatever the loadout gave
+   * — a synthetic BOT VIEW / demo run flies a loadout rather than a purse. */
+  coins?: number | null;
+  /** The inner monologues this hero has already read on this difficulty. */
+  seenThoughts?: string[];
+  /** How much of the opening to skip: `none`, `story` (already watched on this
+   * difficulty), or `all` (a developer warp-in). Structural, so this leaf needs
+   * no engine import to name it. */
+  openingSkip?: string;
+  /** Mute the in-world dialogue — a bot run has nobody to tap through it. */
+  muteDialogue?: boolean;
   /** GENERATED MAPS: the carve is on, and at which size. Both are engine
    * FLAGS rather than `createGame` arguments, so they travel separately and
    * the client applies them before it builds. */

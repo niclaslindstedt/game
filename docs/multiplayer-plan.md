@@ -148,7 +148,7 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 | **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6   |
 | **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7   |
 | **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
-| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Next**                      |
+| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **In progress**, see §1.75.1  |
 | **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks |                               |
 | **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                               |
 | **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
@@ -741,6 +741,8 @@ deaths, simulated minutes — which is a stronger statement than any reading of 
 
 ## PR 1.75 — THE LOOP MOVES
 
+Tracked as [#793](https://github.com/niclaslindstedt/game/issues/793).
+
 **Goal: `GameScreen` stops owning the loop.** A run started from the title menu
 plays identically to today, with the simulation in the utility process and the
 renderer applying snapshots. Nobody notices anything.
@@ -750,7 +752,7 @@ originally supposed to finish. The verbs it was blocked on now travel; what
 remains is four things, and the first two are the reason this is a PR rather
 than an afternoon.
 
-### 1.75.1 A RUN IS NOT `createGame(params)` — the finding this PR exists for
+### 1.75.1 A RUN IS NOT `createGame(params)` — the finding this PR exists for — **LANDED**
 
 The whole static tier rests on one claim: the client's own `createGame` produces
 the same world the server's did, so the first delta is nearly empty. That claim
@@ -767,16 +769,32 @@ before the first tick:
 | `muteDialogue` for a bot run                         | a flag         | a boolean                        |
 | `?scenario=` — the dev staging hook                  | arbitrary      | **it does not.** Dev-only, local |
 
-A session built from today's parameters therefore holds a hero with no campaign
+A session built from those parameters therefore held a hero with no campaign
 chain, an empty purse, unread thoughts made unread again, and an opening the
 player has already sat through four times playing a fifth — and the client's
-first delta would carry every one of those as a "correction" to a run that was
-right to begin with. So five of them join `SessionParams` beside `loadout`,
-which is already opaque there for exactly this reason, and **the rule to hold on
-to is the one that was violated by omission: anything the app does to a run
-before its first tick is a session parameter, not app code.** A field added to
-`createRunSession` and not to `SessionParams` is a desync that will look like a
-replication bug.
+first delta would have carried every one of those as a "correction" to a run
+that was right to begin with. So five of them joined `SessionParams` beside
+`loadout`, which was already opaque there for exactly this reason, and **the
+rule to hold on to is the one that was violated by omission: anything the app
+does to a run before its first tick is a session parameter, not app code.** A
+field added to `createRunSession` and not to `RunParams` is a desync that will
+look like a replication bug.
+
+**How it landed, and the shape worth keeping.** There is now ONE function —
+`createRunFromParams` (`src/game/session-setup.ts`) — and all three callers use
+it: the app builds a fresh run with it, the session server builds its
+authoritative run with it, and an arriving client rebuilds the same run with it.
+`RunParams` is deliberately written in the WIRE's terms (`difficulty` a string,
+`loadout` and `campaignQuests` opaque, `openingSkip` a string) so a
+`SessionParams` is assignable to it with no conversion at all: the wire leaf may
+not import the engine, so a conversion would be a third copy of the shape kept
+by hand, and the field somebody forgets to copy is precisely this bug again.
+
+The test that would have caught it is now in `net_determinism_test.ts`: it
+compares a REAL run rather than a bare level, with every parameter set to
+something other than its default (a parameter left at its default cannot fail a
+determinism test), and it asserts outright that a run and a bare `createGame`
+with the same seed are NOT the same thing.
 
 ### 1.75.2 The adopted run — the parked run, the checkpoint, and `Sent.full`
 
@@ -844,10 +862,14 @@ sandbox that cannot fetch the Electron binary — #790 tried.)
   run, compared against the same seeds before the cutover.
 - A parked run resumes, a checkpoint restores, and the autopilot flies — all
   three through the server.
-- A test proves the session's world and the client's world agree **for a real
-  run** rather than for a bare `createGame` — i.e. `net_determinism_test.ts`
-  extended to the parameters of §1.75.1, which is the check that would have
-  caught this finding before it was a PR.
+- ~~A test proves the session's world and the client's world agree **for a real
+  run** rather than for a bare `createGame`~~ — **done**: `net_determinism_test.ts`
+  builds a fully-populated run in a second process and hashes it, and asserts
+  that a run and a bare `createGame` differ.
+- **The tripwire is inverted.** `tests/content/net_reachability_test.ts` asserts
+  today that the run loop does NOT reach `pwa/src/game/net/client.ts`; the day
+  the cutover lands that test fails, and flipping it to the positive assertion
+  is part of this PR rather than a follow-up. See §1.75.7.
 - `npm run electron` launches the packaged path and plays.
 - `make test`, `make lint`, `npm run electron:test` green; the 170 KB budget
   still passes (the net client must stay lazy).
@@ -868,6 +890,34 @@ quietly costing bandwidth it was designed not to spend. **Assert on the size of
 the first delta**, not merely on the states agreeing afterwards — the two
 processes will converge on the server's world either way, which is exactly what
 makes the bug invisible.
+
+### 1.75.7 How this is kept honest
+
+**This plan has been amended twice for the same failure — a layer ships and the
+cutover does not — and both correctives were prose.** Prose is nought for two.
+So the state of the work is asserted where the build can see it, which is this
+repo's habit everywhere else (the `COMMANDS` drift test, the library's coverage
+maps, `assembleRows` throwing for a row id no builder answers).
+
+Three guards, and the second is the one that matters:
+
+1. **`tests/engine/run_params_test.ts`** — `RunParams` and `SessionParams` name
+   the same fields, minus the two engine FLAGS the wire carries and the builder
+   does not. It catches §1.75.1's failure class directly: a field added to one
+   shape and not the other, which converges on the server's world either way and
+   so can never announce itself as a crash.
+2. **`tests/content/net_reachability_test.ts`** — a TRIPWIRE, written negatively
+   on purpose. It asserts what is true today (the run loop does not reach the
+   net client) and therefore **fails on the day somebody wires the loop to the
+   session**. Whoever does the cutover cannot finish without coming to it and
+   stating the new truth, and nobody can quietly half-do it. An `it.fails` or a
+   `todo` would have been green in both worlds, which is the same silence the
+   file exists to end. It carries the permanent half of the rule beside it: the
+   app's STARTUP path must never statically reach `pwa/src/game/net/` or
+   `@game/core`, which is the 170 KB budget stated as the import that would
+   break it rather than as the number that would report it.
+3. **The first-delta size assertion** of §1.75.6, which has no home yet and
+   should get one with the driver seam.
 
 ---
 

@@ -40,18 +40,15 @@
 
 import {
   applyRunCommand,
-  createGame,
+  createRunFromParams,
   isRunCommand,
   setBalanceTuning,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
   step,
-  type BuildSnapshot,
-  type Difficulty,
   type GameInput,
   type GameState,
   type GeneratedMapSizeSetting,
-  type Loadout,
 } from "@game/core";
 
 import { createChatRoom, type ChatRoom } from "./chat-room.ts";
@@ -206,23 +203,15 @@ export function createSession(options: SessionOptions): Session {
   setGeneratedMapsEnabled(params.generatedMaps);
   setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
 
-  const state = createGame(
-    params.seed,
-    params.levelId,
-    params.difficulty as Difficulty,
-    (params.loadout as Loadout | null) ?? undefined,
-    params.respec,
-    params.clearedLevels,
-    params.merchantDiscovered,
-  );
-  // AN AUTO PILOT FLIGHT ALREADY IN PROGRESS arrives carrying the build it
-  // engaged on, exactly as the hero arrives carrying his gear. A ride crosses
-  // levels and every level is a new session, so without this the refund owed
-  // when it stops would revert to the build the BOT had already grown rather
-  // than the one the player left behind. `startAutopilot` only stamps a run
-  // that has no baseline yet, which is what keeps this one authoritative.
-  state.autopilot.build =
-    (params.autopilotBuild as BuildSnapshot | null) ?? null;
+  // THE RUN, NOT THE LEVEL. `createGame` builds the world; a RUN is that plus
+  // everything the app used to do to it before the first tick — the campaign
+  // chain, the purse, the thoughts already read, an opening already watched, a
+  // bot run's dialogue mute, and an AUTO PILOT flight's build baseline (a ride
+  // crosses levels, so without it the refund owed when it stops would revert to
+  // the build the BOT had already grown). ONE function performs all of it, here
+  // and in the client, which is what makes an arriving client's first delta
+  // empty rather than a list of corrections — see `src/game/session-setup.ts`.
+  const state = createRunFromParams(params);
 
   /**
    * The world at tick 0, frozen — the state every client's first delta is
