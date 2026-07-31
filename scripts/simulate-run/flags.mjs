@@ -194,6 +194,18 @@ export function parseFlags(args, deps) {
   // single campaign is one chained hero and cannot be split.
   const jobs = Math.max(1, Number(opt("jobs", String(cpuCount ?? 2))));
   const maxMinutes = Number(opt("max-minutes", "15"));
+  // HOW MANY HEROES ARE ON THE MAP (multiplayer plan §7.2).
+  //
+  // **IT IS `--party`, NOT `--players`, AND THE NAME IS THE WHOLE POINT.**
+  // `/players N` already means D2's monster-hp and XP scaling in this codebase
+  // (`server/wire/players.ts`), and it has nothing to do with how many bodies
+  // are standing on the floor — a party of four at `/players 1` is four heroes
+  // against a solo horde. A `--players N` that meant the second thing would be
+  // the two knobs colliding in the one place they most need telling apart.
+  const party = Math.max(1, Math.floor(Number(opt("party", "1"))));
+  // The scaling knob, spelled the way the game spells it, so a report can print
+  // both and a reader can never take one for the other.
+  const players = Math.max(1, Math.floor(Number(opt("players", "1"))));
   const carryLoadout = !flag("fresh");
   const full = flag("full");
   const verdict = flag("verdict");
@@ -339,6 +351,8 @@ export function parseFlags(args, deps) {
     profiles,
     combos,
     maxMinutes,
+    party,
+    players,
     carryLoadout,
     full,
     verdict,

@@ -108,6 +108,11 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   //    reason, and seeing it dominate the bubble is the tell that two branches
   //    are fighting over the tick.
   STEADY: { family: "steady", rank: 30, tier: "state" },
+  // ── The party leash: drifted out of the share ring, walking back to the
+  //    nearest teammate (party-play.ts). Ranked over every travel goal it
+  //    preempts, because it is not a destination the bot chose — it is the one
+  //    that outranks the errand it was in the middle of.
+  REGROUP: { family: "regroup", rank: 25, tier: "state" },
   // ── The GPS nudge: working toward an externally-pinned coordinate.
   "TO MARK": { family: "mark", rank: 25, tier: "state" },
   // ── The anti-loiter hunt: idled too long without a fight, marching on the

@@ -101,6 +101,7 @@ export function renderSingleCampaign(
     }
   }
 
+  renderParty(report.runs.map((run) => ({ tag: "", run })));
   renderStamina(report.runs.map((run) => ({ tag: "", run })));
   renderStuckAreas(report.runs.map((run) => ({ tag: "", run })));
   renderMenace(report.runs.map((run) => ({ tag: "", run })));
@@ -326,6 +327,64 @@ export function renderSingleCampaign(
       }
     }
   }
+}
+
+// ---- THE PARTY — one row per seat, and the per-capita read ----------------------
+
+// The `--party N` report (multiplayer plan §7.2): who was on the floor, what
+// each seat came away with, and the per-capita rates PR 4's §4.3 tuning pass is
+// read off.
+//
+// **IT PRINTS BOTH NUMBERS IN THE HEADING ON PURPOSE.** `--party N` is how many
+// heroes are standing there; `/players N` is D2's monster-hp and XP scaling, and
+// they are independent knobs that happen to be about "players". A report that
+// named only one of them is a measurement somebody will later read under the
+// wrong one.
+export function renderParty(taggedRuns) {
+  const rows = taggedRuns.filter(({ run }) => run.party);
+  if (rows.length === 0) return;
+  console.log("");
+  console.log(
+    "THE PARTY — heroes on the floor (--party), and what each seat came away with",
+  );
+  const header =
+    padE("difficulty", 11) +
+    padE("level", 13) +
+    pad("seat", 5) +
+    pad("lane", 8) +
+    pad("hero", 8) +
+    pad("xp", 9) +
+    pad("coins", 8) +
+    pad("alive", 7) +
+    "  weapon";
+  console.log(header);
+  console.log("-".repeat(header.length + 18));
+  for (const { run } of rows) {
+    for (const seat of run.party.seats) {
+      console.log(
+        padE(run.difficulty, 11) +
+          padE(run.levelId, 13) +
+          pad(seat.seat, 5) +
+          pad(seat.profile, 8) +
+          pad(`${seat.levelStart}→${seat.levelEnd}`, 8) +
+          pad(seat.xpGained, 9) +
+          pad(seat.coins, 8) +
+          pad(seat.alive ? "yes" : "no", 7) +
+          `  ${seat.weapon}`,
+      );
+    }
+    const per = run.party.perCapita;
+    console.log(
+      `  ${run.difficulty}/${run.levelId}: party ${run.party.size} · ` +
+        `/players scaling ${run.party.playersScaling}× · ` +
+        `PER CAPITA ${per.xpPerMinute} xp/min, ${per.killsPerMinute} kills/min, ` +
+        `${per.damageTaken} damage taken`,
+    );
+  }
+  console.log(
+    "  per-capita is the read to trust: a party shares each kill AND clears " +
+      "faster, so the per-kill share alone points the wrong way.",
+  );
 }
 
 // ---- STAMINA — how often the sprint pool actually ran dry -----------------------

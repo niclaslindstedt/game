@@ -1866,9 +1866,16 @@ than rediscovered:
    callee is registered, inserted at the index that callee's own declaration
    uses. Anything outside `src/game/bot/` was done by hand.
 
-2. **§7.2 — the simulator flies a party.** `--party N` for how many bots, never
-   `--players N`, which already means the hp/XP scaling and is the collision
-   most worth avoiding. The report is seat-0 shaped and has to grow.
+2. **§7.2 — the simulator flies a party. LANDED.** `--party N` for how many
+   bots, never `--players N`, which already means the hp/XP scaling and is the
+   collision most worth avoiding; the report grew a `PartyReport` beside the
+   seat-0 one rather than replacing it, so nothing downstream had to learn about
+   parties. **It found a real bug on its first run** — every ambient hazard in
+   the game was aimed at `partyCentroid`, which lands a blast on every head of a
+   tight party and on nobody at all in a spread one; see §7.2 for the
+   measurement, the `hazardFocus` fix, and the one piece of §7.4 (the LEASH) that
+   had to come with it for the instrument to be measuring co-op rather than N
+   soloists.
 3. **§4.3's MEASURED TUNING PASS** — the thing §4.7 says shipped as STRUCTURE
    with its reasoning stated, and which must not be recorded as measured. Read
    the per-CAPITA XP rate off multi-player runs at 1/2/4/8 across the ladder,
@@ -2180,7 +2187,52 @@ Two rules to hold while doing it:
   matter — none of them mutates the state today, and a test should pin that
   rather than trusting it.
 
-### 7.2 The simulator flies a party
+### 7.2 The simulator flies a party — **LANDED**
+
+> **AND IT FOUND SOMETHING ON ITS FIRST RUN, which is the whole argument for
+> building an instrument before tuning against one.** A party of two on the moon
+> landed **2 kills over three minutes where the same seed solo landed 128**, with
+> seat 0 spending **43% of the run in the anti-wedge UNSTICK sweep**. Nothing in
+> the bot or the wire was at fault. Every ambient hazard in the game
+> (`hazards.ts`) was laid down on `partyCentroid`, and every one of them carried
+> a comment saying — correctly — that with one hero the centroid IS that hero, so
+> single player is untouched. **Nobody had read the party case**, because until
+> this section landed nothing in the repo could produce one.
+>
+> It is wrong in both directions at once. A rock's blast bills EVERY hero in
+> range, so aimed at the centroid it falls, by construction, in the middle of a
+> group — a party that is doing the right thing and staying together is caught by
+> every rock, where a soloist is caught only by the ones he fails to dodge. The
+> per-hero hazard rate therefore climbs with the party size, and climbs fastest
+> exactly when the party plays well. A SPREAD party gets the mirror image: the
+> centroid of two heroes at opposite ends of a hall is empty floor, so the rain
+> falls where nobody is and the hazard stops existing.
+>
+> The fix is `hazardFocus` — the weather is aimed at ONE hero, rolled, never at
+> the middle of the party — and it covers the rain, the storms, the stampede lane
+> and the hay. The roll is SKIPPED at one hero rather than answered, which is
+> load-bearing rather than an optimisation: `state.rng` is the run's one stream,
+> so spending a draw would shift every roll after it in every seeded measurement
+> in the repo. Byte-identity was proven the same way §7.1's was — a moon run, a
+> goodco_hq run and a full easy campaign, all identical to `main`. With it, the
+> same party of two lands **145 kills, both heroes alive, and no UNSTICK at all**.
+>
+> **ONE PIECE OF §7.4 CAME WITH IT — THE LEASH, AND ONLY THE LEASH**
+> (`src/game/bot/party-play.ts`). §7.2's deliverable is the instrument §4.3's
+> tuning is read off, and an instrument that measures N SOLOISTS SHARING A SEED
+> cannot be used to tune co-op at all. The number is not invented: it is
+> `XP_SHARE.radius`, the distance past which a hero stops sharing in a kill, so a
+> bot beyond it is not merely out of position but spending the party's payout.
+> Spacing, splitting the packs, `Item.owner`, covering a hero who is down and
+> group travel stay in §7.4 — they are about how a bot party PLAYS, and they can
+> only be judged by watching one.
+>
+> Two smaller things fell out. `simCamera` centred EVERY seat's view on seat 0,
+> and the weapon's targeting gate reads the seat's own `input.view` — so a joiner
+> could only strike what was on the host's screen. And the simulator's `levelup`
+> drain only ever emptied seat 0's chooser, so a party member's ding wedged the
+> run outright; it drains whichever seat owes points, which is what makes a party
+> playable HERE without waiting for §3.2.
 
 - **A bot per seat.** `simulateLevel` gains a party size; it seats N heroes via
   `seatHero` and holds N `Bot`s, feeding `step()` the input array it already

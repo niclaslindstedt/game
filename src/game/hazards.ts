@@ -37,7 +37,12 @@ import {
 } from "./items/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
-import { distanceToParty, nearestHeroWhere, partyCentroid } from "./party.ts";
+import {
+  distanceToParty,
+  livingHeroes,
+  nearestHeroWhere,
+  partyCentroid,
+} from "./party.ts";
 import { knockEnemyBack, pushPlayer } from "./knockback.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { startPlayerThought } from "./story.ts";
@@ -64,6 +69,49 @@ export function buildWells(def: LevelDef, takeId: () => number): GravityWell[] {
     pullSpeed: well.pullSpeed ?? WELLS.pullSpeed,
     lootRadius: well.lootRadius ?? WELLS.lootRadius,
   }));
+}
+
+/**
+ * WHERE THE WEATHER IS AIMED — one hero, rolled, never the middle of the party.
+ *
+ * Every ambient hazard on every map used to be laid down on `partyCentroid`,
+ * and the comment beside each said the same true thing: with one hero the
+ * centroid IS that hero, so single player is untouched. What none of them
+ * looked at is the party case, and it is worse in both directions at once.
+ *
+ * A rock's blast BILLS EVERY HERO IN RANGE. Aimed at the centroid it lands, by
+ * construction, in the middle of the group — so a party that is doing the right
+ * thing and staying together is caught by EVERY rock, where a soloist is caught
+ * only by the ones he fails to dodge. The per-hero hazard rate therefore climbs
+ * with the party size, and climbs fastest exactly when the party is playing
+ * well: a punishment for grouping, which is the precise opposite of what the
+ * co-op rules exist to arrange. And a SPREAD party gets the mirror image — the
+ * centroid of two heroes at opposite ends of a hall is empty floor, so the rain
+ * falls where nobody is and the hazard stops existing.
+ *
+ * Measured on the moon, which is the map the rain belongs to: a party of two
+ * landed 2 kills over three minutes where the same seed solo landed 128. Both
+ * heroes were blasted early, and the moon's rain then held them in the
+ * autopilot's perpetual-flee state for the rest of the run.
+ *
+ * Rolled at ONE hero, the per-hero rate is exactly the solo rate however many
+ * people are playing, the picture each player sees is the one they have always
+ * seen, and a party standing shoulder to shoulder still shares the splash —
+ * which is the honest co-op difference rather than a multiplied one.
+ *
+ * **THE ROLL IS SKIPPED AT ONE HERO, AND THAT IS LOAD-BEARING RATHER THAN AN
+ * OPTIMISATION.** `state.rng` is the run's one stream; spending a draw here
+ * would shift every roll after it, so a single-player run would not merely
+ * change, it would change in every seeded measurement, replay and test in the
+ * repo. One hero in play has exactly one answer, so it is returned without
+ * asking.
+ */
+function hazardFocus(state: GameState): Vec2 {
+  const live = livingHeroes(state);
+  const only = live[0];
+  if (!only) return partyCentroid(state);
+  if (live.length === 1) return only.pos;
+  return (live[Math.floor(state.rng() * live.length)] ?? only).pos;
 }
 
 /** The pull (px/s) a well exerts on the player/enemies at distance `d`: peak
@@ -570,10 +618,7 @@ export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
 
 /** Mint one hay bale just past the right screen edge, in its own lane. */
 function spawnHayBall(state: GameState): void {
-  // THE WEATHER ROLLS ACROSS THE FIELD, so it is placed relative to the
-  // party's middle rather than to one hero. With one hero the centroid IS that
-  // hero, so single player is untouched.
-  const around = partyCentroid(state);
+  const around = hazardFocus(state);
   const pos = vec(
     around.x + HAY_BALLS.spawnDistance,
     around.y +
@@ -597,7 +642,7 @@ function spawnHayBall(state: GameState): void {
  * `entry`/`target`/`ageMs` to draw the slant and the firming ground shadow.
  */
 function spawnAsteroid(state: GameState): void {
-  const around = partyCentroid(state);
+  const around = hazardFocus(state);
   const target = vec(
     clamp(
       around.x +
@@ -738,7 +783,7 @@ export function stepSandstorms(
 /** Mint one storm on the spawn ring, aimed across the player with scatter. */
 function spawnSandstorm(state: GameState): void {
   const angle = state.rng() * Math.PI * 2;
-  const around = partyCentroid(state);
+  const around = hazardFocus(state);
   const pos = vec(
     around.x + Math.cos(angle) * SANDSTORMS.ringDistance,
     around.y + Math.sin(angle) * SANDSTORMS.ringDistance,
@@ -869,7 +914,7 @@ export function stepStampedes(
     ) {
       state.stampedeWarn = {
         y:
-          partyCentroid(state).y +
+          hazardFocus(state).y +
           randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
         leadMs,
         ageMs: 0,
@@ -995,7 +1040,7 @@ function spawnStampede(
   laneY?: number,
   runnerSprite?: string,
 ): void {
-  const around = partyCentroid(state);
+  const around = hazardFocus(state);
   const pos = vec(
     around.x + STAMPEDES.spawnDistance,
     // The telegraphed lane (locked when the dust lit) if there is one, else a

@@ -42,6 +42,7 @@ import {
   padE,
   renderDeathAreas,
   renderMenace,
+  renderParty,
   renderSingleCampaign,
   renderStamina,
   renderStuckAreas,
@@ -74,6 +75,13 @@ const { BOT_STRATEGIES, BOT_PROFILES, BOT_POSTURES } = await import(
 const { STAT_BUILDS, metaLane } = await import(
   path.join(root, "src/game/builds.ts")
 );
+// `/players N` — D2's monster-hp and XP scaling. It lives in the WIRE because
+// both ends read it, and the CLI is the layer allowed to hold both halves: the
+// engine may never import `server/`, so the simulator takes the scaling as a
+// pair of ordinary balance multipliers and the number itself only as a label.
+const { playerScaling } = await import(
+  path.join(root, "server/wire/players.ts")
+);
 
 // ---- Flags ---------------------------------------------------------------------
 
@@ -98,6 +106,8 @@ const {
   profiles,
   combos,
   maxMinutes,
+  party,
+  players,
   carryLoadout,
   full,
   verdict,
@@ -133,8 +143,24 @@ const {
 // ---- Run ------------------------------------------------------------------------
 
 const startedAt = Date.now();
-const balanceLabel = balance
-  ? Object.entries(balance)
+// `/players N` IS A BALANCE TUNING, folded in through the same door the
+// DEVELOPER knobs use. The two multipliers move TOGETHER, always — kill XP is
+// level-based, so a hp-scaled mob is tougher and pays exactly the same for its
+// level, and scaling `mobHp` alone makes `/players 8` strictly punishing rather
+// than the risk/reward trade D2 intends. It MULTIPLIES what the caller asked
+// for rather than replacing it, so `--balance mobHp=2 --players 4` means both.
+const scale = playerScaling(players);
+const tuned =
+  players > 1
+    ? {
+        ...(balance ?? {}),
+        mobHp: (balance?.mobHp ?? 1) * scale.mobHp,
+        xpGain: (balance?.xpGain ?? 1) * scale.xpGain,
+      }
+    : balance;
+
+const balanceLabel = tuned
+  ? Object.entries(tuned)
       .map(([k, v]) => `${k}=${v}×`)
       .join(" ")
   : "shipped 1×";
@@ -146,8 +172,10 @@ const campaignOptions = (strategy, profile) => ({
   strategy,
   profile,
   maxMinutes,
+  party,
+  players,
   carryLoadout,
-  balance,
+  balance: tuned,
   realisticPacing,
   autoShop,
   arrowXp,
@@ -274,6 +302,11 @@ if (combos.length > 1) {
         `  ${report.finalWeapon}`,
     );
   }
+  renderParty(
+    matrix.flatMap(({ strategy, profile, report }) =>
+      report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
+    ),
+  );
   renderStamina(
     matrix.flatMap(({ strategy, profile, report }) =>
       report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
