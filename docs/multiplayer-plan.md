@@ -25,7 +25,7 @@ the OS firewall rule needs elevation exactly once and is offered as one button
 with a verified result and a copyable manual fallback. §PR 2 is unsparing about
 which half of that is genuinely automatic.
 
-**This is a plan of seven pull requests.** Each is large and each is useful on
+**This is a plan of eight pull requests.** Each is large and each is useful on
 its own. At the end of PR 5 the desktop build has production multiplayer.
 
 > **AMENDED AFTER PR 2.** This plan was written as five PRs, each promising to
@@ -46,10 +46,25 @@ its own. At the end of PR 5 the desktop build has production multiplayer.
 > per-player** (genuinely PR 3).
 >
 > So **PR 1.5 (THE CUTOVER)** and **PR 2.5 (THE SCREENS)** are inserted below,
-> carrying exactly the work PRs 1 and 2 deferred. They are numbered as halves
+> carrying exactly the work PRs 1 and 2 deferred. (PR 1.5 has since split in
+> turn, and the half that kept the number is now called THE VERBS — see the
+> second amendment below.) They are numbered as halves
 > rather than renumbered to 3 and 4, so that every reference to "PR 3" and
 > "PR 5" in this document, in `docs/multiplayer.md`, in `AGENTS.md` and in the
 > comments throughout `server/` still names what it always named.
+>
+> **AMENDED AGAIN AFTER PR 1.5's FIRST HALF (#790).** The verbs landed; the loop
+> did not, and this time the split was made deliberately and in the open rather
+> than discovered afterwards. The reason is a measurement §0 did not have when
+> the cutover was planned: **a run is not `createGame(params)`** — the app
+> performs six further mutations before the first tick that the `SessionParams`
+> cannot express, and the parked run and the checkpoint restore do not call
+> `createGame` at all. Moving the loop on top of that would have shipped a
+> session holding a different world from the one the app built. So the remainder
+> is **PR 1.75 (THE LOOP MOVES)**, below, numbered by the same rule and for the
+> same reason: PR 1.5's name is already written into `src/game/commands.ts`,
+> `server/wire/protocol.ts`, `docs/multiplayer.md` and `AGENTS.md`, where it
+> means "the verbs travel", and it should keep meaning that.
 
 ---
 
@@ -126,23 +141,24 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 
 ---
 
-## 1. The seven pull requests
+## 1. The eight pull requests
 
-| PR                     | Ships                                                                                                                                        | Playable at the end                                          | Estimate | State                       |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | --------------------------- |
-| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6 |
-| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7 |
-| **1.5 — THE CUTOVER**  | The app's ~50 direct engine mutations become commands; `GameScreen` drives the net client instead of owning the loop                         | Identical single-player, over loopback. Zero networking      |  3–5 wks | **Half landed**, see §1.5.4 |
-| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks |                             |
-| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                             |
-| **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                             |
-| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                             |
+| PR                     | Ships                                                                                                                                        | Playable at the end                                          | Estimate | State                         |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ----------------------------- |
+| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6   |
+| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7   |
+| **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
+| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Next**                      |
+| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks |                               |
+| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                               |
+| **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
+| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                               |
 
-**≈ 33–48 weeks.** The band is wide because PR 3 is a design exercise wearing a
+**≈ 34–49 weeks.** The band is wide because PR 3 is a design exercise wearing a
 refactor's clothes (see §PR 3), and its uncertainty dominates everything.
 
-**The two inserted PRs are not new work, they are work the first two deferred**,
-so the total grew by their estimates rather than by a re-plan. Note also what the
+**The three inserted PRs are not new work, they are work the earlier ones
+deferred**, so the total grew by their estimates rather than by a re-plan. Note also what the
 "playable at the end" column now says for PRs 1 and 2: **nothing changes.** That
 is the honest reading of what shipped, and leaving the old claim in place is what
 would have let the next PR inherit the same mistake.
@@ -592,15 +608,19 @@ closed currently lands nowhere.**
 
 ---
 
-## PR 1.5 — THE CUTOVER
+## PR 1.5 — THE VERBS
 
-**Goal: the machinery built in PR 1 stops being unreachable.** A run started
-from the title menu plays identically to today, with the simulation in the
-utility process and the renderer applying snapshots. Nobody notices anything.
+**Goal: every act the app performs on a run becomes something that can travel.**
+Nothing a player can see changes; the loop still runs in the renderer. This is
+the prerequisite the cutover was blocked on, and it is the half of PR 1.5 that
+**landed** (#790).
 
-That is PR 1's own §1.6 headline, unmet, and it is numbered 1.5 rather than
-folded back into PR 1 because it is genuinely large — **~50 distinct engine
-mutators**, plus taking the loop away from a 1,000-line `GameScreen`.
+It was written as one PR with §1.5.2 below, and it is worth being plain about
+why it is not: **~50 distinct engine mutators** (69 verbs, as counted) is a PR on
+its own, and the loop move turned out to rest on a fact nobody had measured. The
+two are separated at the seam the plan itself keeps rediscovering — a layer that
+is provable in isolation, and a cutover that is not. §1.5.4 records what this
+half met; **the loop move is PR 1.75.**
 
 ### 1.5.1 The verbs have to travel before the loop can move
 
@@ -694,10 +714,12 @@ FULL snapshot instead of a delta against a genesis it does not share.
 has ever used it.
 
 §1.5.3 is unchanged and still outstanding: the packaged path has never been
-launched.
+launched — and cannot be from a sandbox that cannot fetch the Electron binary,
+which is where #790 ran.
 
-So what is left of this PR is: the five `SessionParams` fields, the adopt-a-state
-start, the run-driver seam in `GameScreen`, and a real `npm run electron`.
+**All of that is now PR 1.75 (THE LOOP MOVES)**, above: the five `SessionParams`
+fields, the adopt-a-state start, the run-driver seam in `GameScreen`, the
+autopilot's five remaining direct mutators, and a real `npm run electron`.
 
 ### 1.5.5 Risks
 
@@ -706,6 +728,146 @@ and the mitigation is the one §3.5 already prescribes for PR 3: **land it as a
 commit series, not one commit.** The mutator conversions in reviewable batches,
 each leaving the game playable, and the loop move last. A regression found at the
 end of an unbisectable branch costs more than the whole PR.
+
+What that risk actually looked like in practice is worth recording, because it
+was cheaper to answer than to argue about: the conversion is mechanical enough
+that it can be proved rather than reviewed. The same seeded run through
+`pwa/scripts/playtest.mjs` and `scripts/simulate-run.mjs` either side of the
+change produced identical reports — kills, damage dealt and taken, XP, drops,
+deaths, simulated minutes — which is a stronger statement than any reading of a
+110-site diff. **Do the same for PR 1.75**, where the risk is far higher.
+
+---
+
+## PR 1.75 — THE LOOP MOVES
+
+**Goal: `GameScreen` stops owning the loop.** A run started from the title menu
+plays identically to today, with the simulation in the utility process and the
+renderer applying snapshots. Nobody notices anything.
+
+That is PR 1's own §1.6 headline, still unmet, and it is what PR 1.5 was
+originally supposed to finish. The verbs it was blocked on now travel; what
+remains is four things, and the first two are the reason this is a PR rather
+than an afternoon.
+
+### 1.75.1 A RUN IS NOT `createGame(params)` — the finding this PR exists for
+
+The whole static tier rests on one claim: the client's own `createGame` produces
+the same world the server's did, so the first delta is nearly empty. That claim
+is TRUE of `createGame` and FALSE of a run, because `createRunSession`
+(`pwa/src/game/game-screen/run-setup.ts`) performs **six** further mutations
+before the first tick:
+
+| What                                                 | Shape          | Travels as                       |
+| ---------------------------------------------------- | -------------- | -------------------------------- |
+| `seedCampaignQuests` — the hero's campaign chain     | a plain record | opaque, like `loadout`           |
+| `state.player.coins = characterPurse(hero)`          | one number     | a number                         |
+| `markThoughtsSeen` — what this hero has already read | a string list  | a string list                    |
+| the opening already watched on this difficulty       | a decision     | a boolean                        |
+| `muteDialogue` for a bot run                         | a flag         | a boolean                        |
+| `?scenario=` — the dev staging hook                  | arbitrary      | **it does not.** Dev-only, local |
+
+A session built from today's parameters therefore holds a hero with no campaign
+chain, an empty purse, unread thoughts made unread again, and an opening the
+player has already sat through four times playing a fifth — and the client's
+first delta would carry every one of those as a "correction" to a run that was
+right to begin with. So five of them join `SessionParams` beside `loadout`,
+which is already opaque there for exactly this reason, and **the rule to hold on
+to is the one that was violated by omission: anything the app does to a run
+before its first tick is a session parameter, not app code.** A field added to
+`createRunSession` and not to `SessionParams` is a desync that will look like a
+replication bug.
+
+### 1.75.2 The adopted run — the parked run, the checkpoint, and `Sent.full`
+
+The same finding, one step harder. A **parked run** (`saved-run.ts`) and a
+**checkpoint restore** (`checkpoint.ts`) do not call `createGame` at all; they
+adopt an arbitrary `GameState`. There are no parameters that describe them,
+which is not a gap in the parameters — it is the nature of the thing.
+
+So the session needs a second way in: it is HANDED a state rather than told how
+to build one, and the arriving client is answered with a FULL snapshot instead
+of a delta against a genesis it does not share. `server/session.ts` already
+carries the `Sent.full` shape for precisely this and **nothing has ever used
+it**, which is worth treating as a warning rather than as a convenience: an
+untravelled path in a replication layer is an untested one. Two details it will
+need — the rng closures do not survive the trip (`saved-run.ts` already
+snapshots their positions through a migration ladder, and that is the mechanism
+to reuse), and the static tier is still free here, because a parked run's level
+came from the same seed and difficulty the client will rebuild from.
+
+### 1.75.3 The driver seam, and the three paths through it
+
+`GameScreen` stops calling `createGame` and driving `step()`, and drives
+`pwa/src/game/net/client.ts` instead — which already exists, already hands back a
+`GameState`-shaped object the renderer reads unchanged, and is today unreachable
+dead code. `render.ts`, the HUD model, the effects, the overlays and the sound
+bus should not need to change at all; if one of them does, that is a finding
+worth writing down rather than patching past.
+
+Two mechanical notes that are easy to get wrong and would be silent:
+
+- **The loop's `state` arrives ASYNCHRONOUSLY on the net path** (after the
+  welcome), while `createRunSession` hands it back synchronously today. Every
+  helper in the run effect closes over it.
+- **`state.events` is cleared by `step()` on the local path and by NOBODY on the
+  net path.** A snapshot goes out every third tick, so a driver that does not
+  clear the list after the app has consumed it replays every sound, gore burst
+  and haptic three times.
+
+And a third path the plan named but did not size: **the autopilot**. The bot's
+DECISIONS are already fine — `botAct`, `botAllocate` and `botPickTalent` only
+read, and their answers travel as input and as commands. But five of its
+housekeeping calls still mutate the state directly (`botAutoEquip`,
+`cullWorstLoot`, `sortBotInventory`, `tradeAtMerchant`, `stepBotWeaponSwap`), and
+against an authoritative server a local mutation is a change the next snapshot
+erases. Four take only a `GameState` and can become commands like any other; the
+fifth takes the bot's own swap memory, so it is a real decision rather than a
+conversion — either that memory moves onto the run, or the bot runs server-side.
+**Answer it deliberately; it is the last thing in this PR that is a design
+question rather than a rename.**
+
+### 1.75.4 And the packaged app gets launched, for the first time
+
+PR 1 flagged this, PR 1.5 did not reach it, and it is still outstanding: the
+`extraResources` entry, the `MessagePortMain` handover and a real
+`utilityProcess.fork` are covered by stubs and reasoning, not by a running app.
+This is the first PR whose work cannot be believed without launching one, so it
+is where that debt is paid. (Note for whoever does: it cannot be paid in a
+sandbox that cannot fetch the Electron binary — #790 tried.)
+
+### 1.75.5 Done when
+
+- A run started from the title menu plays identically to today, through the
+  server. **Measured, not eyeballed**, exactly as §1.5.5 did it: an autopilot
+  campaign through `scripts/simulate-run.mjs` and a `pwa/scripts/playtest.mjs`
+  run, compared against the same seeds before the cutover.
+- A parked run resumes, a checkpoint restores, and the autopilot flies — all
+  three through the server.
+- A test proves the session's world and the client's world agree **for a real
+  run** rather than for a bare `createGame` — i.e. `net_determinism_test.ts`
+  extended to the parameters of §1.75.1, which is the check that would have
+  caught this finding before it was a PR.
+- `npm run electron` launches the packaged path and plays.
+- `make test`, `make lint`, `npm run electron:test` green; the 170 KB budget
+  still passes (the net client must stay lazy).
+
+### 1.75.6 Risks
+
+**This is now the change most likely to cause a silent single-player
+regression** — PR 1.5 inherited that title and handed it on, having proved its
+own half harmless. The mitigations are the same and they are not optional: a
+commit series rather than one commit, the loop move last, and the seeded
+before/after comparison as the acceptance evidence rather than a reviewer's
+reading of the diff.
+
+The specific failure to watch for is the one this PR exists because of: a
+difference between the two worlds shows up not as a crash but as a first delta
+that is unexpectedly LARGE, and then as a run that plays correctly while
+quietly costing bandwidth it was designed not to spend. **Assert on the size of
+the first delta**, not merely on the states agreeing afterwards — the two
+processes will converge on the server's world either way, which is exactly what
+makes the bug invisible.
 
 ---
 
@@ -716,7 +878,7 @@ specified in §2 and deferred, and none of it was deferred for lack of a
 foundation — the bound address, the router and firewall rows, the roster and the
 browser rows are all on the `__gisNet` bridge already.
 
-**It depends on PR 1.5 and cannot go first.** A JOIN screen in front of a run
+**It depends on PR 1.75 and cannot go first.** A JOIN screen in front of a run
 that still simulates in the renderer is a door into a session nothing plays
 through — which is precisely why PR 2 held it.
 
@@ -1140,24 +1302,25 @@ and it should be a few hundred lines.
 Answers this plan recommends but does not have authority to make. Each should be
 settled before the PR that needs it, not during.
 
-| #   | Question                                                 | Recommendation                                                                                                                                                                                                                                                                                                                      | Needed by |
-| --- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| 1   | Max party size                                           | 8, matching D2 and the `/players` scale                                                                                                                                                                                                                                                                                             | PR 1      |
-| 2   | Default direct port                                      | UDP 27015, walking to 27030, always revealing the bound one                                                                                                                                                                                                                                                                         | PR 2      |
-| 3   | Steam-only or dual transport                             | **Dual**, both offered by default                                                                                                                                                                                                                                                                                                   | PR 2      |
-| 3a  | Do the deferred cutover and screens land as one PR?      | **No — two.** See PR 1.5's §1.5.5: the cutover is the change most likely to regress single-player silently, it is provable on its own (an autopilot campaign against the same seeds), and the screens are verified by a different loop entirely. Combining them puts the same seam through one PR that PRs 1 and 2 both split along | PR 1.5    |
-| 4   | Level-up: blocking chooser or banked points              | Banked + non-blocking chooser (changes single-player too)                                                                                                                                                                                                                                                                           | PR 3      |
-| 5   | Fog of war: shared or per-player                         | Shared                                                                                                                                                                                                                                                                                                                              | PR 3      |
-| 6   | Spare-or-kill: who decides                               | The killing blow's owner, shown to all                                                                                                                                                                                                                                                                                              | PR 3      |
-| 7   | Loot: FFA or allocated                                   | FFA default, host toggle for allocated                                                                                                                                                                                                                                                                                              | PR 4      |
-| 8   | XP: D2's proximity + level weighting                     | Yes, then measure across the level range                                                                                                                                                                                                                                                                                            | PR 4      |
-| 9   | Hardcore heroes in others' sessions                      | Only hardcore hosts, same difficulty, enforced at handshake                                                                                                                                                                                                                                                                         | PR 4      |
-| 10  | Host migration                                           | **No.** Host leaves, session ends, everyone banks                                                                                                                                                                                                                                                                                   | PR 4      |
-| 11  | Leaderboards from co-op runs                             | Excluded, marked with a `PartyStamp`                                                                                                                                                                                                                                                                                                | PR 5      |
-| 12  | Achievements from co-op runs                             | Count for everyone present                                                                                                                                                                                                                                                                                                          | PR 5      |
-| 13  | Browser PWA as a **joiner**                              | Out of scope. WebRTC + a signalling service is a separate project                                                                                                                                                                                                                                                                   | —         |
-| 14  | Mobile as a joiner                                       | Out of scope for the same reason                                                                                                                                                                                                                                                                                                    | —         |
-| 15  | Licence (`PolyForm-Noncommercial-1.0.0`) and hosted play | Confirm what it permits before a dedicated server ships                                                                                                                                                                                                                                                                             | PR 5      |
+| #   | Question                                                 | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                     | Needed by |
+| --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| 1   | Max party size                                           | 8, matching D2 and the `/players` scale                                                                                                                                                                                                                                                                                                                                                                            | PR 1      |
+| 2   | Default direct port                                      | UDP 27015, walking to 27030, always revealing the bound one                                                                                                                                                                                                                                                                                                                                                        | PR 2      |
+| 3   | Steam-only or dual transport                             | **Dual**, both offered by default                                                                                                                                                                                                                                                                                                                                                                                  | PR 2      |
+| 3a  | Do the deferred cutover and screens land as one PR?      | **No — two.** See PR 1.5's §1.5.5: the cutover is the change most likely to regress single-player silently, it is provable on its own (an autopilot campaign against the same seeds), and the screens are verified by a different loop entirely. Combining them puts the same seam through one PR that PRs 1 and 2 both split along                                                                                | PR 1.5    |
+| 3b  | Does the AUTOPLAY BOT run on the client or the server?   | **Client, for now** — its decisions already travel as input and commands, so only its five housekeeping mutators need converting, and four of them are plain verbs. The fifth (`stepBotWeaponSwap`) carries the bot's own swap memory and is the one that forces the question; moving that memory onto the run is the cheaper answer than moving the bot. Revisit at PR 4, which owns co-op autopilot rules anyway | PR 1.75   |
+| 4   | Level-up: blocking chooser or banked points              | Banked + non-blocking chooser (changes single-player too)                                                                                                                                                                                                                                                                                                                                                          | PR 3      |
+| 5   | Fog of war: shared or per-player                         | Shared                                                                                                                                                                                                                                                                                                                                                                                                             | PR 3      |
+| 6   | Spare-or-kill: who decides                               | The killing blow's owner, shown to all                                                                                                                                                                                                                                                                                                                                                                             | PR 3      |
+| 7   | Loot: FFA or allocated                                   | FFA default, host toggle for allocated                                                                                                                                                                                                                                                                                                                                                                             | PR 4      |
+| 8   | XP: D2's proximity + level weighting                     | Yes, then measure across the level range                                                                                                                                                                                                                                                                                                                                                                           | PR 4      |
+| 9   | Hardcore heroes in others' sessions                      | Only hardcore hosts, same difficulty, enforced at handshake                                                                                                                                                                                                                                                                                                                                                        | PR 4      |
+| 10  | Host migration                                           | **No.** Host leaves, session ends, everyone banks                                                                                                                                                                                                                                                                                                                                                                  | PR 4      |
+| 11  | Leaderboards from co-op runs                             | Excluded, marked with a `PartyStamp`                                                                                                                                                                                                                                                                                                                                                                               | PR 5      |
+| 12  | Achievements from co-op runs                             | Count for everyone present                                                                                                                                                                                                                                                                                                                                                                                         | PR 5      |
+| 13  | Browser PWA as a **joiner**                              | Out of scope. WebRTC + a signalling service is a separate project                                                                                                                                                                                                                                                                                                                                                  | —         |
+| 14  | Mobile as a joiner                                       | Out of scope for the same reason                                                                                                                                                                                                                                                                                                                                                                                   | —         |
+| 15  | Licence (`PolyForm-Noncommercial-1.0.0`) and hosted play | Confirm what it permits before a dedicated server ships                                                                                                                                                                                                                                                                                                                                                            | PR 5      |
 
 ---
 

@@ -13,8 +13,7 @@ What is NOT here is the half a player would SEE: the HOST, JOIN and server-
 browser screens, and the in-run chat overlay. That is deliberate rather than
 abandoned — see [What is NOT here yet](#what-is-not-here-yet) — because the run
 still simulates in the renderer, so a JOIN screen would be a door into a session
-nothing plays through. Moving the loop is the rest of PR 1.5; the screens are
-PR 2.5.
+nothing plays through. Moving the loop is **PR 1.75**; the screens are PR 2.5.
 
 ## The topology
 
@@ -338,7 +337,7 @@ compiler.
 - **The run still simulates in the renderer.** `GameScreen` owns the loop as it
   always has; nothing in the shipped game reaches `pwa/src/game/net/` yet. The
   verbs it calls all travel now, so the blocker that made this circular is gone
-  — what is left is moving the loop itself, and one thing the plan had not
+  — what is left is **PR 1.75 (THE LOOP MOVES)**, and one thing the plan had not
   measured stands in the way of it: **a run is not `createGame(params)`.**
   `createRunSession` (`pwa/src/game/game-screen/run-setup.ts`) performs six
   further mutations before the first tick — it seeds the hero's campaign quest

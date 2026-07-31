@@ -1077,11 +1077,12 @@ The run still simulates in the renderer — `pwa/src/game/net/` is dead code —
 there is no HOST or JOIN screen either, because a door into a session nothing
 plays through is worse than no door. PRs 1 and 2 both shipped a LAYER and
 deferred the cutover and the UI that would make it reachable, which is the same
-omission twice and is now recorded in the plan as **PR 1.5 (THE CUTOVER)** and
-**PR 2.5 (THE SCREENS)**. Do not build on top of this expecting a running
-multiplayer game; finish PR 1.5.
+omission twice and is now recorded in the plan as **PR 1.5 (THE VERBS)**,
+**PR 1.75 (THE LOOP MOVES)** and **PR 2.5 (THE SCREENS)**. Do not build on top of this expecting a running
+multiplayer game; the loop move is **PR 1.75 (THE LOOP MOVES)**, and it is the
+next thing to build.
 
-**WHAT IS LEFT OF PR 1.5 IS ONE MEASUREMENT NOBODY HAD MADE: A RUN IS NOT
+**WHAT PR 1.75 TURNS ON IS ONE MEASUREMENT NOBODY HAD MADE: A RUN IS NOT
 `createGame(params)`.** `createRunSession` performs six mutations after
 `createGame` that the `SessionParams` cannot express — it seeds the hero's
 campaign quest chain, funds the purse from his whole banked wealth, marks the
@@ -1096,7 +1097,14 @@ The parked run and the checkpoint restore are the same finding one step harder:
 both ADOPT an arbitrary `GameState`, so the session needs to be handed one and to
 answer the arriving client with a FULL snapshot rather than a delta against a
 genesis it does not share (`Sent.full` in `session.ts` exists for it and has
-never been used). `docs/multiplayer.md` is the shipped architecture; the plan is
+never been used). Three smaller things ride along with it, all written up in the
+plan's §1.75: the loop's state arrives ASYNCHRONOUSLY on the net path where
+`createRunSession` hands it back synchronously today, `state.events` is cleared
+by `step()` on the local path and by NOBODY on the net one (so a driver that does
+not clear it replays every sound and gore burst three times), and five of the
+autoplay bot's housekeeping calls still mutate the state directly — four are
+plain verbs, and the fifth carries the bot's own swap memory and is a real
+design question. `docs/multiplayer.md` is the shipped architecture; the plan is
 the roadmap and carries the amendment. Nine rules are load-bearing:
 
 1. **ONE PROCESS PER SESSION, AND THE HOST IS JUST ANOTHER CLIENT.** The
