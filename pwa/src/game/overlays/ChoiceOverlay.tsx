@@ -10,7 +10,8 @@ import { enemyDef, type GameState } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { type GameAssets } from "../assets.ts";
+import { bustSrc } from "../SpritePortrait.tsx";
 
 import { runCommandOk } from "../run-commands.ts";
 
@@ -27,7 +28,7 @@ export function ChoiceOverlay({
 }) {
   if (!state.choice) return null;
   const def = enemyDef(state.choice.defId);
-  const portrait = spriteDataUrl(assets.sprites, `${def.sprite}_0`);
+  const portrait = bustSrc(assets.sprites, def.sprite);
   return (
     <div className="game-overlay choice-overlay">
       <div className="choice-box">

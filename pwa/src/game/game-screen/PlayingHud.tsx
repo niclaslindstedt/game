@@ -15,6 +15,7 @@ import { type PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { bustSrc } from "../SpritePortrait.tsx";
 import { medkitIconFor } from "../consumables.ts";
 import { synth } from "../audio.ts";
 import { Minimap } from "../Minimap.tsx";
@@ -414,10 +415,9 @@ export function PlayingHud({
           {hud.companions.length > 0 && (
             <div className="companion-portraits">
               {hud.companions.map((companion) => {
-                const src = spriteDataUrl(
-                  assets.sprites,
-                  `${companion.sprite}_0`,
-                );
+                // The ally's FACE, cropped by the same rule the hero's bust
+                // beside it is — a party portrait is a who, not a token.
+                const src = bustSrc(assets.sprites, companion.sprite);
                 // The corner glyph says what this portrait wants: a medkit
                 // while a press would spend one, the salts bottle while it is
                 // down and only a bag item can help. Nothing when it is whole.

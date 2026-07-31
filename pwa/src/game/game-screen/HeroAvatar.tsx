@@ -12,7 +12,7 @@ import type { GameState } from "@game/core";
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
-import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { spriteBustUrl, type GameAssets } from "../assets.ts";
 import { heroSoak } from "./hero-soak.ts";
 import { dollDataUrl } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
@@ -47,14 +47,18 @@ export function HeroAvatar({
         {(() => {
           // The dressed paper-doll in worn armor — but WITHOUT the held weapon,
           // so the portrait is a clean square bust (the weapon has its own slot
-          // right below it now).
+          // right below it now). Cropped to head and shoulders by the same rule
+          // every speaker's portrait is (`@ui/lib/bust.ts`), which is what the
+          // frame's old fixed CSS zoom was eyeballing: measured on the body, it
+          // no longer sits the hero off-centre in his own portrait.
           const src = state
             ? dollDataUrl(
                 assets.sprites,
                 playerDollLayers(state, "0", { weapon: false }),
                 heroSoak(state),
+                { bust: true },
               )
-            : spriteDataUrl(assets.sprites, `${appearance}_0`);
+            : spriteBustUrl(assets.sprites, `${appearance}_0`);
           return src ? (
             <img src={src} alt="" className="pixel-img avatar-img" />
           ) : null;

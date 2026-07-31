@@ -22,7 +22,8 @@
 
 import { type ArmorSlot, type Loadout, gearDef, weaponDef } from "@game/menu";
 
-import { composeDataUrl, type ComposeLayer } from "@ui/lib/atlas.ts";
+import { composeCanvas, type ComposeLayer } from "@ui/lib/atlas.ts";
+import { bustRect, cropDataUrl, type Rect } from "@ui/lib/bust.ts";
 
 import { spriteByName, type Sprites } from "./assets.ts";
 import { drawCoatedLayers, drawCoatedSprite } from "./render/hero-coat.ts";
@@ -212,11 +213,17 @@ const COAT_ALPHA_STEPS = 8;
  * drenched to the visor on the field and pristine in his own inventory portrait
  * is the feature contradicting itself on the same screen. A saved hero on the
  * roster has no run behind him and passes none.
+ *
+ * `opts.bust` cuts the result down to head and shoulders (`dollBustRect`) — the
+ * two places the hero is a SPEAKER rather than a character sheet: the HUD's own
+ * portrait button and the dialogue box he talks out of. Cached separately from
+ * the full-length version of the same outfit, since both are on screen at once.
  */
 export function dollDataUrl(
   sprites: Sprites,
   layers: DollLayer[],
   soak: HeroSoak = NO_SOAK,
+  opts: { bust?: boolean } = {},
 ): string | undefined {
   const step = (c: CoatLayer) => ({
     sprite: c.sprite,
@@ -227,48 +234,89 @@ export function dollDataUrl(
   const key = [
     ...layers.map((l) => `${l.sprite}@${l.dx},${l.dy}${l.flip ? "~" : ""}`),
     ...[...body, ...held].map((c) => `+${c.sprite}*${c.alpha}`),
+    opts.bust ? "#bust" : "",
   ].join("|");
   let url = dollUrls.get(key);
   if (!url) {
-    if (body.length > 0 || held.length > 0) {
-      url = coatedDollUrl(sprites, layers, body, held);
-      if (!url) return undefined;
-    } else {
-      const composed: ComposeLayer[] = [];
-      for (const layer of layers) {
-        const image = spriteByName(sprites, layer.sprite);
-        if (image)
-          composed.push({
-            image,
-            dx: layer.dx,
-            dy: layer.dy,
-            flip: layer.flip,
-          });
-      }
-      if (composed.length === 0) return undefined;
-      const size = dollSizeFor(sprites, layers);
-      url = composeDataUrl(composed, size.width, size.height);
-    }
+    const canvas =
+      body.length > 0 || held.length > 0
+        ? coatedDollCanvas(sprites, layers, body, held)
+        : plainDollCanvas(sprites, layers);
+    if (!canvas) return undefined;
+    const rect = opts.bust ? dollBustRect(sprites, layers) : null;
+    url = rect ? cropDataUrl(canvas, rect) : canvas.toDataURL();
     dollUrls.set(key, url);
   }
   return url;
 }
 
+/** The undressed compose: every layer straight onto the doll's own canvas. */
+function plainDollCanvas(
+  sprites: Sprites,
+  layers: DollLayer[],
+): HTMLCanvasElement | null {
+  const composed: ComposeLayer[] = [];
+  for (const layer of layers) {
+    const image = spriteByName(sprites, layer.sprite);
+    if (image)
+      composed.push({ image, dx: layer.dx, dy: layer.dy, flip: layer.flip });
+  }
+  if (composed.length === 0) return null;
+  const size = dollSizeFor(sprites, layers);
+  return composeCanvas(composed, size.width, size.height);
+}
+
+const bustRects = new Map<string, Rect | null>();
+
+/**
+ * THE HERO'S BUST, measured on his BARE BODY — layers[0], the appearance sprite
+ * every other layer is drawn on top of.
+ *
+ * Two reasons it is not measured on the composed doll, and both are silent
+ * failures rather than wrong-by-a-pixel ones. The weapon in his hand is part of
+ * that picture and juts a whole icon's width off his shoulder, so a silhouette
+ * read over the finished doll finds a body half again as wide as the man and
+ * frames his face off-centre — which is exactly the accident the HUD's old
+ * fixed CSS zoom shipped with. And a raised SHIELD fills the rows beside his
+ * head, erasing the neck the crop is found by, so the framing would jump from a
+ * face to a full body the moment the player picked one up.
+ *
+ * The body plan is fixed (`worn.mjs` generates every armor overlay on it), so
+ * the bare body answers for the dressed one — and the CROP still draws the
+ * whole doll, so the weapon and the shield hang into the portrait as they
+ * should.
+ */
+function dollBustRect(sprites: Sprites, layers: DollLayer[]): Rect | null {
+  const body = layers[0];
+  if (!body) return null;
+  const key = `${body.sprite}@${body.dx},${body.dy}`;
+  const cached = bustRects.get(key);
+  if (cached !== undefined) return cached;
+  const image = spriteByName(sprites, body.sprite);
+  const measured = image ? bustRect(image, image.width, image.height) : null;
+  // Measured on the body sprite, used on the doll canvas the body sits in.
+  const rect = measured
+    ? { ...measured, x: measured.x + body.dx, y: measured.y + body.dy }
+    : null;
+  bustRects.set(key, rect);
+  return rect;
+}
+
 /** The bloodied portrait: the body soaked through the shared coat compositor,
  * then the held weapon over it — the very order the field renderer draws in, so
  * the two can't drift. */
-function coatedDollUrl(
+function coatedDollCanvas(
   sprites: Sprites,
   layers: DollLayer[],
   coat: CoatLayer[],
   held: CoatLayer[],
-): string | undefined {
+): HTMLCanvasElement | null {
   const size = dollSizeFor(sprites, layers);
   const canvas = document.createElement("canvas");
   canvas.width = size.width;
   canvas.height = size.height;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return undefined;
+  if (!ctx) return null;
   ctx.imageSmoothingEnabled = false;
   const body = layers.filter((l) => !l.weapon);
   // The BODY still composes at the standard doll rect — it is 16×16 wherever
@@ -291,5 +339,5 @@ function coatedDollUrl(
     );
     drawn = true;
   }
-  return drawn ? canvas.toDataURL() : undefined;
+  return drawn ? canvas : null;
 }

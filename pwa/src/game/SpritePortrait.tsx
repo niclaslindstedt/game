@@ -20,11 +20,21 @@
 // PAPER DOLL (worn gear, blood soak and all), which is a canvas the overlay
 // builds itself. A component that only took names would have locked him out of
 // the very thing it exists to share.
+//
+// A SPEAKER IS SHOWN AS A BUST, NEVER AT FULL LENGTH — `bustSrc`, the crop the
+// hero's own HUD portrait has always worn, now shared by everyone who talks. A
+// whole 16-to-48px body dropped into a small square frame puts a five-pixel
+// head beside two lines of speech, which is a picture of somebody standing in a
+// room rather than of somebody TALKING TO YOU; the face is the only part of the
+// art that answers the question the frame is there to ask. `@ui/lib/bust.ts`
+// finds the head. The full art stays available (`portraitSrc`) for the one
+// speaker in the box that is not a person: a story item, which is an icon of a
+// thing and has no face to find.
 
-import { spriteDataUrl, type Sprites } from "./assets.ts";
+import { spriteBustUrl, spriteDataUrl, type Sprites } from "./assets.ts";
 
 /**
- * The portrait art for a speaker named by sprite: an exact sprite name, or a
+ * The FULL art for a portrait named by sprite: an exact sprite name, or a
  * walk-cycle FAMILY (the merchant, every quest giver, every mob) resolved to its
  * first frame — the same convention the field renderer uses. Null when the atlas
  * answers to neither.
@@ -33,6 +43,19 @@ export function portraitSrc(sprites: Sprites, sprite: string): string | null {
   return (
     spriteDataUrl(sprites, sprite) ??
     spriteDataUrl(sprites, `${sprite}_0`) ??
+    null
+  );
+}
+
+/**
+ * The same art cropped to head and shoulders — what every surface showing a
+ * SPEAKER draws. Falls back to the full sprite for anything the crop can make
+ * no sense of, so a portrait is never missing.
+ */
+export function bustSrc(sprites: Sprites, sprite: string): string | null {
+  return (
+    spriteBustUrl(sprites, sprite) ??
+    spriteBustUrl(sprites, `${sprite}_0`) ??
     null
   );
 }

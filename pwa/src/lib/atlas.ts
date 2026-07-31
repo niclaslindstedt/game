@@ -34,20 +34,24 @@ export type ComposeLayer = {
 };
 
 /**
- * Compose sprite layers, in order, onto one canvas and return it as a data
- * URL — for DOM `<img>` portraits assembled from several atlas sprites
- * (a character wearing its equipment, an icon with an overlay badge).
+ * Compose sprite layers, in order, onto one canvas — for DOM `<img>` portraits
+ * assembled from several atlas sprites (a character wearing its equipment, an
+ * icon with an overlay badge).
+ *
+ * The CANVAS rather than the data URL, because a caller may still have pixel
+ * work to do on the result (measuring the silhouette, cropping a bust); a URL
+ * can only be read back through an async image decode.
  */
-export function composeDataUrl(
+export function composeCanvas(
   layers: ComposeLayer[],
   width: number,
   height: number,
-): string {
+): HTMLCanvasElement | null {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
+  if (!ctx) return null;
   for (const { image, dx = 0, dy = 0, flip } of layers) {
     if (flip) {
       ctx.save();
@@ -59,7 +63,16 @@ export function composeDataUrl(
       ctx.drawImage(image, dx, dy);
     }
   }
-  return canvas.toDataURL();
+  return canvas;
+}
+
+/** `composeCanvas` as a data URL. */
+export function composeDataUrl(
+  layers: ComposeLayer[],
+  width: number,
+  height: number,
+): string {
+  return composeCanvas(layers, width, height)?.toDataURL() ?? "";
 }
 
 /**

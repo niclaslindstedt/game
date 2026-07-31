@@ -49,7 +49,7 @@ import { ItemIcon } from "../ItemCard.tsx";
 import { ItemTooltip } from "../ItemTooltip.tsx";
 import { tierGlowClass } from "../tiers.ts";
 import { label, objectiveLine } from "../quest-text.ts";
-import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
+import { bustSrc, SpritePortrait } from "../SpritePortrait.tsx";
 
 /**
  * A list row's mark and colour, by what picking it opens. The `!` / `?` are the
@@ -327,7 +327,7 @@ export function QuestOverlay({
   if (!offer || !giver) return null;
   if (!listing && !quest) return null;
 
-  const portrait = portraitSrc(assets.sprites, giver.sprite);
+  const portrait = bustSrc(assets.sprites, giver.sprite);
 
   // THE PICK LIST — this person's whole slate at once. Shown only when they
   // have more than one thing to say (the engine skips it otherwise), because a
