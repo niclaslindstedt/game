@@ -44,7 +44,7 @@
     "name": "THE EXILE'S FLIGHT",
     "weaponClass": "ranged"
   },
-  "mosque_brand": {
+  "founder_brand": {
     "bonuses": [
       {
         "bonuses": [
@@ -78,7 +78,7 @@
         "pieces": 4
       }
     ],
-    "id": "mosque_brand",
+    "id": "founder_brand",
     "members": [
       "the_signal_crown",
       "gilded_carapace",

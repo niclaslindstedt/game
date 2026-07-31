@@ -209,7 +209,7 @@ export type ScorchPatch = {
    * The colour kit the patch is drawn in — the casting ability's own `look`
    * (see `AbilityBase.look`). Absent keeps the boss beam's authored char-and-
    * flame look, which is what every patch laid before the elite tier existed
-   * carries. This is what lets one hazard list hold ARMSTRONG's burning
+   * carries. This is what lets one hazard list hold THE FLAGBEARER's burning
    * regolith and an elite's own guttering trail without either learning about
    * the other.
    */

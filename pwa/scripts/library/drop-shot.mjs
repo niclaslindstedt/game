@@ -2,7 +2,7 @@
 // THE DROP SHOT — the picture that goes hunting in Google Images.
 //
 // It answers the question an image search actually asks. Somebody types a
-// weapon's name, or "gone in space legendary sword", and what they want back is
+// weapon's name, or "ada's trail legendary sword", and what they want back is
 // a picture of THE THING — recognisably a game item, in the place it comes from.
 // The social card (og-card.mjs) is the wrong picture for that: it is mostly
 // typography, built to be readable at feed size in a link preview, and a wall of

@@ -7,9 +7,9 @@ subject:
   kind: elite
   name: THE VENDOR
   build: a soft, balding man
-  attire: pale blue V-neck sweater over a white shirt, dark trousers
-  features: grey hair and glasses over a pale face
-  accent: the pale blue sweater
+  attire: a grey quarter-zip over a white shirt, dark trousers
+  features: thinning grey hair over a pale face
+  accent: the grey quarter-zip
   pose: a mild bureaucratic slouch, arms at his sides
   flavor: the billionaire who wrote the colony's operating system
 palette:
@@ -19,7 +19,7 @@ palette:
   c: "#8ccdd7e1" # pale-blue sweater highlight
   p: "#deaa86" # skin
   w: "#c6c6c6" # grey hair
-  x: "#c5e6ebe1" # pale blue V-neck sweater
+  x: "#c5e6ebe1" # grey quarter-zip
 grid: |
   ........................
   .........OOOOOO.........

@@ -66,7 +66,7 @@ ${pages
 
 /**
  * What a name in the story's prose may link to, in priority order. This is what
- * stitches the four sections into one graph: a chapter naming ARMSTRONG hands
+ * stitches the four sections into one graph: a chapter naming THE FLAGBEARER hands
  * the reader his stat block, one naming EXCALIBUR hands them its card.
  *
  * The order matters because a name is not always unique — THE FOUNDER is three

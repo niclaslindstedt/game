@@ -689,12 +689,12 @@ describe("library numbers are the engine's", () => {
   });
 
   it("uses the level ladder's own health for a hand-placed boss", () => {
-    // ARMSTRONG is pinned on the moon with an authored per-rung health curve,
+    // THE FLAGBEARER is pinned on the moon with an authored per-rung health curve,
     // which the run uses verbatim — the page must not quietly recompute it from
     // the catalog baseline instead.
-    const rungs = firstSighting("armstrong").rungs;
+    const rungs = firstSighting("the_flagbearer").rungs;
     expect(rungs.every((rung) => rung.authoredHp)).toBe(true);
-    expect(rungs[0]!.hp[0]).not.toBe(enemyDef("armstrong").hp);
+    expect(rungs[0]!.hp[0]).not.toBe(enemyDef("the_flagbearer").hp);
   });
 
   it("publishes the pool odds `pickAbility` actually obeys", () => {
@@ -886,7 +886,7 @@ describe("library numbers are the engine's", () => {
 });
 
 describe("library pages", () => {
-  const boss = enemyPage(byId("armstrong"), context);
+  const boss = enemyPage(byId("the_flagbearer"), context);
   const minion = enemyPage(byId("wisp"), context);
   const index = bestiaryIndex(model, context);
   const front = landing(model, context);
@@ -1064,11 +1064,11 @@ describe("library pages", () => {
   it("publishes story text behind a blur rather than hiding it", () => {
     // The spoiler panel is CSS over real markup. If the text ever stops being
     // in the DOM it stops being indexed, and publishing it was the whole point.
-    const spoken = enemyDef("armstrong").dialogue?.[0];
+    const spoken = enemyDef("the_flagbearer").dialogue?.[0];
     const line = Array.isArray(spoken) ? spoken[0] : undefined;
     expect(line).toBeTruthy();
     expect(boss).toContain(line as string);
-    expect(boss).toContain(enemyDef("armstrong").lastWords?.[0] as string);
+    expect(boss).toContain(enemyDef("the_flagbearer").lastWords?.[0] as string);
     expect(boss).toContain('class="reveal-body"');
     expect(boss).not.toContain("display: none");
     expect(boss).not.toContain("display:none");
@@ -1115,7 +1115,7 @@ describe("library pages", () => {
       ["boss", boss],
       ["minion", minion],
     ] as const) {
-      const id = name === "boss" ? "armstrong" : "wisp";
+      const id = name === "boss" ? "the_flagbearer" : "wisp";
       const lore = enemyDef(id).lore;
       expect(lore.length).toBeGreaterThan(0);
       const at = html.indexOf(escapeHtml(lore));
@@ -1204,7 +1204,7 @@ describe("library pages", () => {
     // panel covers, so a search result can't spoil it either.
     const alt = mission.match(/alt="([^"]*maps[^"]*|[^"]*top-down[^"]*)"/)?.[1];
     expect(alt).toBeTruthy();
-    expect(alt).not.toContain("ARMSTRONG");
+    expect(alt).not.toContain("THE FLAGBEARER");
   });
 
   it("quotes the item card's own figures, not the catalog's", () => {
@@ -1259,11 +1259,11 @@ describe("library pages", () => {
     expect(chapter).toContain(
       CUTSCENE_DEFS.launch!.beats.find((b) => b.kind === "caption")!.text[0]!,
     );
-    const spoken = enemyDef("armstrong").dialogue?.[0];
+    const spoken = enemyDef("the_flagbearer").dialogue?.[0];
     expect(chapter).toContain(
       (Array.isArray(spoken) ? spoken[0] : undefined) as string,
     );
-    expect(chapter).toContain(enemyDef("armstrong").lastWords![0]!);
+    expect(chapter).toContain(enemyDef("the_flagbearer").lastWords![0]!);
     expect(chapter).toContain(STORY_ITEM_DEFS.mission_log!.lore[0]![0]!);
     expect(chapter).toContain(
       THOUGHT_DEFS[level.firstSightThoughts![0]!.thought]!.pages[0]![0]!,
@@ -1287,14 +1287,14 @@ describe("library pages", () => {
       "",
     );
     expect(outside).not.toContain(LEVELS.moon!.intro![0]![0]!);
-    expect(outside).not.toContain(enemyDef("armstrong").lastWords![0]!);
+    expect(outside).not.toContain(enemyDef("the_flagbearer").lastWords![0]!);
   });
 
   it("links the story into the rest of the library, and back", () => {
     // The cross-link pass is what makes the story worth generating rather than
     // linking to a text file: a name in the prose is the reader's way into the
     // bestiary, the arsenal and the mission guide.
-    expect(chapter).toContain('href="/library/bestiary/armstrong/"');
+    expect(chapter).toContain('href="/library/bestiary/the-flagbearer/"');
     expect(chapter).toContain('href="/library/missions/moon/"');
     expect(story).toContain('href="/library/story/moon/"');
     expect(hellborn).toContain('href="/library/bestiary/dust-pharaoh/"');
@@ -1401,7 +1401,7 @@ describe("library pages", () => {
   });
 
   it("links the pages to each other", () => {
-    expect(index).toContain('href="/library/bestiary/armstrong/"');
+    expect(index).toContain('href="/library/bestiary/the-flagbearer/"');
     // A monster's venue heading leads to that venue's mission page…
     expect(boss).toContain('href="/library/missions/moon/"');
     // …its drops lead to the arsenal…
@@ -1409,7 +1409,7 @@ describe("library pages", () => {
     // …an item leads back to where it comes from…
     expect(relic).toContain('href="/library/missions/the-rift/"');
     // …and a mission leads to both.
-    expect(mission).toContain('href="/library/bestiary/armstrong/"');
+    expect(mission).toContain('href="/library/bestiary/the-flagbearer/"');
     expect(mission).toMatch(/href="\/library\/arsenal\/[a-z0-9-]+\/"/);
     // …a mission's pool leads to each power it hands out, and each power leads
     // back to every venue that carries it.
@@ -1510,10 +1510,10 @@ describe("library pages", () => {
 describe("library pictures", () => {
   const withImages = { ...context, hasImages: true };
   const relicShot = itemPage(itemById("excalibur"), withImages);
-  const bossShot = enemyPage(byId("armstrong"), withImages);
+  const bossShot = enemyPage(byId("the_flagbearer"), withImages);
   // The same two pages as an ordinary build renders them — no pictures.
   const relicBare = itemPage(itemById("excalibur"), context);
-  const bossBare = enemyPage(byId("armstrong"), context);
+  const bossBare = enemyPage(byId("the_flagbearer"), context);
 
   const ogImage = (html: string) =>
     html.match(/<meta property="og:image" content="([^"]+)"/)?.[1];

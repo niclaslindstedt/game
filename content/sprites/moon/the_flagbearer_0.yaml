@@ -1,12 +1,12 @@
-name: armstrong_0
+name: the_flagbearer_0
 family: moon
 size: [48, 48]
 description: >
-  ARMSTRONG, the boss: a giant translucent pale-green astronaut ghost looming
+  THE FLAGBEARER, the boss: a giant translucent pale-green astronaut ghost looming
   over the field, a gold-and-red control panel on his chest.
 subject:
   kind: boss
-  name: ARMSTRONG
+  name: THE FLAGBEARER
   build: a giant translucent astronaut colossus, broad round body on stubby limbs, looming over the field
   attire: a pale mint-green pressure suit
   features: two large dark hollow eyes in a domed helmet

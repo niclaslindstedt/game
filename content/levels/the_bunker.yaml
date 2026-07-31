@@ -251,8 +251,8 @@ spawns:
       y: 475
     ramp: savage
     hp: 380
-  # South suite 2 (mid) - THE SYSADMIN
-  - enemy: the_sysadmin
+  # South suite 2 (mid) - THE ROOT
+  - enemy: the_root
     at:
       x: 2340
       y: 1300

@@ -346,7 +346,7 @@ horde:
       weight: 1
 
 # The four speaking elites, strung along the depth axis so the colony's story
-# still unspools in order — the webpage, the foundation, the prime unit, and the
+# still unspools in order — the indexer, the foundation, the prime unit, and the
 # seal.
 elites:
   - enemy: the_indexer

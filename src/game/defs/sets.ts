@@ -11,7 +11,7 @@
 // (`EnemyDef.uniquesByDifficulty`).
 //
 // The catalog rolls out melee-first across the campaign: PAYLOAD-1 (GOODCO) and
-// ARMSTRONG (Moon) drop MELEE sets, THE FOUNDER on Mars and in the Rift drop
+// THE FLAGBEARER (Moon) drop MELEE sets, THE FOUNDER on Mars and in the Rift drop
 // RANGED sets, and BRO OMEGA drops the MAGIC set. The membership here is the
 // source of truth; each member `UniqueDef` carries a matching `setId`
 // back-reference, validated at load.
