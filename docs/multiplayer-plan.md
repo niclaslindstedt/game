@@ -141,7 +141,7 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 
 ---
 
-## 1. The nine pull requests
+## 1. The ten pull requests
 
 | PR                     | Ships                                                                                                                                    | Playable at the end                                          | Estimate | State                                      |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ------------------------------------------ |
@@ -154,8 +154,9 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 | **4 — THE CO-OP GAME** | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7 |
 | **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                | Shippable                                                    |  5–7 wks |                                            |
 | **6 — THE GARAGE**     | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks |                                            |
+| **7 — THE PARTY BOT**  | `botAct` takes the hero it steers; the simulator flies a party; BOTS IN A LOCAL GAME; the bot plays like somebody in a party             | A party without four friends online — and PR 4 measured      |  3–5 wks | **§7.1–§7.2 owed EARLY**, see PR 7         |
 
-**≈ 36–53 weeks.** The band is wide because PR 3 is a design exercise wearing a
+**≈ 39–58 weeks.** The band is wide because PR 3 is a design exercise wearing a
 refactor's clothes (see §PR 3), and its uncertainty dominates everything.
 
 **PR 6 SORTS LAST AND THAT IS A DECISION, not a leftover.** The garage was PR 4's
@@ -167,6 +168,13 @@ before: a hub is what makes co-op pleasant, and PR 5 is what makes it work at
 all. The cost of that order is stated in PR 6's own goal and must not be
 discovered later — until it lands, a joiner arrives in the middle of somebody
 else's boss fight.
+
+**PR 7's FIRST HALF IS OWED EARLIER THAN ITS NUMBER.** §7.1 (the bot takes the
+hero it steers) and §7.2 (the simulator flies a party) are the instrument PR 4's
+§4.3 tuning is blocked on — the co-op rules shipped as STRUCTURE precisely
+because they could not be measured. The number says where the work is DESCRIBED;
+the first half happens whenever PR 4's measured pass does. Same treatment §3.7
+gave the seat on the command channel, same reason.
 
 **The three inserted PRs are not new work, they are work the earlier ones
 deferred**, so the total grew by their estimates rather than by a re-plan. Note also what the
@@ -1530,8 +1538,9 @@ proof of each claim (`tests/engine/coop_rules_test.ts`): the meter reads a party
 of eight's summed output as identical to one hero's, the XP splits 20:60 the way
 it says it does. That is not the same as a campaign measured at four players, and
 it must not be recorded as if it were. So the next thing PR 4 owes, BEFORE the
-party HUD, is the bot parameterized on a `Player` — the same mechanical
-refactor §3.1 did to the engine, one file at a time — and then the numbers.
+party HUD, is **PR 7's §7.1–§7.2** — the bot parameterized on a `Player`, the
+same mechanical refactor §3.1 did to the engine, one file at a time — and then
+the numbers.
 
 Two knobs are the levers when that happens, and both are deliberately shipped at
 a stated default rather than a tuned one: `XP_SHARE.partyBonusPerHero` (how much
@@ -1845,7 +1854,205 @@ the hero thinks the first time the door opens on somewhere he has already been.
 
 ---
 
-## 7. Decisions register
+## PR 7 — THE PARTY BOT
+
+**Goal: the autopilot learns there is more than one hero.** One refactor with
+three payoffs, which is why they are one PR rather than three: the MEASURING
+INSTRUMENT PR 4 needs and does not have, BOTS IN A LOCAL GAME so a player can
+have a party without four friends online, and a bot that plays like somebody in a
+party rather than like a soloist who happens to be standing near you.
+
+> **§7.1 AND §7.2 ARE OWED EARLIER THAN THIS NUMBER SUGGESTS.** They are the
+> instrument PR 4's §4.3 tuning is blocked on, and §4.7 says so — the co-op
+> rules ship as STRUCTURE with unit-level proof precisely because the simulator
+> can only fly one hero. So the number says where the work is DESCRIBED, not
+> when it happens: the first half is pulled forward and done whenever PR 4's
+> measured pass is done. This is the same treatment §3.7 gave the seat on the
+> command channel, and for the same reason — a label that lied about the order
+> would be worse than no label.
+
+### 7.1 The parameterization — `botAct(bot, state, hero)`
+
+**The autopilot reads `state.players[0]` at 164 sites across 14 files in
+`src/game/bot/`**, and `botAct` has no notion of WHICH hero it is steering. That
+one fact is why `scripts/simulate-run.mjs` flies exactly one hero, why PR 4's
+tuning is unmeasured, and why there is no such thing as a second bot.
+
+It is the same mechanical refactor §3.1 did to the engine, one file at a time,
+and it is genuinely mechanical: the hero becomes a PARAMETER threaded from
+`botAct` down, the way every private engine read already is. The distribution is
+worth sequencing by — `economy.ts` (37), `weapon-swap.ts` (26), `supplies.ts`
+(21), `index.ts` (15), `perception.ts` (13), `macro.ts` (13), `arsenal.ts` (10),
+`dodges.ts` (9), `nav.ts` (8), `content.ts` (6), `fight.ts` (5), `state.ts` (1).
+
+**The good news is that the hard half is already done.** `Bot` is a per-instance
+object that already owns all of its own memory — the stall detector's `nav`, the
+wall-trace `trace`, the A* `route` (keyed on level id and `obstaclesVersion`), the
+pinned `waypoint`, the `thoughts` resolver — and `botAct` is already documented as
+pure with respect to `state`. So N bots are N `Bot` instances with no shared
+scratch to fight over, and `step()` already takes `PartyInput` as an array
+index-aligned with the party. Nothing structural is in the way.
+
+Two rules to hold while doing it:
+
+- **Single player must stay byte-identical at every commit**, exactly as §3.5
+  demanded of §3.1. Seat 0 passed as the parameter is the identity case, and the
+  existing bot suites (`bot_test`, `bot_nav_test`, `bot_economy_test`,
+  `bot_thoughts_test`, `bot_auto_equip_test`) are the guard.
+- **Determinism is per-bot and must stay that way.** A fresh bot on the same seed
+  must evolve identical memory, and the ORDER the party's bots are asked must not
+  matter — none of them mutates the state today, and a test should pin that
+  rather than trusting it.
+
+### 7.2 The simulator flies a party
+
+- **A bot per seat.** `simulateLevel` gains a party size; it seats N heroes via
+  `seatHero` and holds N `Bot`s, feeding `step()` the input array it already
+  accepts. Each bot may want its own `profile` (the melee/ranged/magic lane) —
+  a party of four identical meta builds measures one build four times, which is
+  the least interesting thing a party simulator could do.
+- **THE FLAG NAME IS A TRAP.** `/players N` already means D2's monster-hp and XP
+  scaling (`server/wire/players.ts`) and has nothing to do with how many heroes
+  are on the map. A simulator `--players N` that meant the second thing would be
+  the two knobs colliding in the one place they most need telling apart. Use
+  **`--party N`** for how many bots, and keep `--players N` for the scaling —
+  and the `--verdict` line should print both.
+- **The report is seat-0 shaped and has to grow.** `HeroSnapshot`, the boss
+  encounters, the weapon swaps, the deaths table and `extractLoadout(state,
+state.players[0])` all describe one hero. The interesting readouts for a party
+  are per-seat AND aggregate — per-capita XP rate is the one PR 4's §4.7 names
+  as the thing to read, never the per-kill share, because a party also clears
+  faster and the two effects only show up together.
+- **Then the measured pass**: `--verdict` at 1, 2, 4 and 8 across every
+  difficulty, and the two levers `XP_SHARE.partyBonusPerHero` and the
+  `/players N` pairing moved on evidence.
+
+### 7.3 BOTS IN A LOCAL GAME
+
+A player should be able to fill their own party with bots, without four friends
+online. It is the same machinery: a bot seat is a real `Player` seated by
+`seatHero`, steered by a `Bot`, and indistinguishable to every other system.
+
+Four decisions, and the last one is the sharp one:
+
+- **BOTS ARE STEERED WHERE THE SIMULATION IS — in the session, not the
+  renderer.** `botAct` is called by the APP today (GameScreen) and by the
+  simulator; a bot seat's input must be produced in the session process, or the
+  bot is a client nothing is authoritative over. That keeps the one code path
+  PR 1's §1.2 exists to protect, and it is what makes a bot seat identical to a
+  human one everywhere downstream.
+- **A BOT YIELDS ITS SEAT TO A PERSON.** A session with three bots and a spare
+  seat should let a fourth human in; a session that is full of bots should drop
+  one rather than refuse them. `nextFreeSeat` already recycles a departed seat,
+  and a bot leaving is exactly a `departHero` — the rule is already written.
+- **A BOT'S RUN IS NOBODY'S ROSTER.** It has no character, banks nothing, and
+  carries no loadout home — the same throwaway a spectator plays on. And a run
+  with bots in it is a PARTY run for §5.3's purposes: it must carry the
+  `PartyStamp` and stay off every leaderboard, because a bot is exactly the kind
+  of help those boards cannot see.
+- **A BOT MUST COST SOMETHING, OR IT IS A DIFFICULTY SLIDER WEARING A FRIEND'S
+  CLOTHES.** Two halves of one question:
+  1. **Does a bot take a share of the XP?** Recommendation: **no.** A
+     level-weighted share would mean adding three bots roughly quarters the
+     player's XP per kill, so nobody would ever use the feature — and this
+     codebase already has the precedent in COMPANIONS, which level on their own
+     kills and never touch the hero's bar (`creditCompanionKill`). It needs a
+     flag on the seat so `splitXp` can skip it.
+  2. **Which is exactly why they have to be priced.** Bots that add damage and
+     take no XP make a party of bots strictly better than playing alone. The
+     honest answer is that a bot seat moves the horde the way `/players N` does
+     — the pairing is already one pure function, and it is already the one thing
+     entitled to say what a player count means. Ship the two together or the
+     feature is a cheat.
+
+### 7.4 The bot learns there are other people on the map
+
+Today's bot is a soloist. Standing it next to another hero produces four
+behaviours a human would never choose, and each has a rule that fixes it — most
+of them keyed to numbers the engine ALREADY owns, which is what stops this
+becoming a pile of invented constants.
+
+- **SPACING.** Two bots converge on the same nearest foe and end up inside each
+  other, which in a game about being surrounded is how a party dies. They should
+  hold a personal envelope, and it is the same rule a human runs: melee closes,
+  ranged holds its `weaponRangeFor` lane, and neither stands where a friend is
+  already standing.
+- **DON'T LEAVE THE PARTY — the leash has a NUMBER.** `XP_SHARE.radius` (700 px)
+  is the distance past which a hero stops sharing in a kill. A bot that wanders
+  further is not merely out of position, it is costing the player XP, so the
+  leash is a mechanic rather than a preference. Past it, come back.
+- **SPLIT THE PACKS, DON'T QUEUE FOR ONE MOB.** The whole party beating on one
+  minion while six others chew on somebody is the most visible tell that these
+  are not players. `anyHeroWithin` and the existing pack state are enough to say
+  "that one is being handled, take the next one".
+- **DON'T TAKE WHAT ISN'T YOURS.** `Item.owner` exists as of PR 4, and a bot in
+  an allocated session walking over somebody's drop and being refused it every
+  tick is both wrong and noisy. In FREE-FOR-ALL the rule is a judgement rather
+  than a check: a bot should not race the human for a legendary.
+- **HELP THE ONE WHO IS DOWN.** Once §4.2's corpse lands there is a body to
+  stand over and a reason to; before it, the useful version is simpler — a bot
+  should notice a hero at low health and pull aggro rather than kite away from
+  them.
+- **CONVERGE FOR A BOSS, TRAVEL AS A GROUP.** Nobody in D2 walks through the
+  door alone. The macro goal (`macroTarget`) should be the PARTY's, not each
+  bot's own — with the human's heading as the default when there is one, since
+  a bot party that decides where the player is going is worse than useless.
+
+### 7.5 Quest and objective awareness
+
+**The bot has no quest awareness at all today** — `src/game/bot/` mentions quests
+only in comments, and `macroTarget` picks between waypoints, elites, the boss,
+the merchant and a fog sweep. That is fine for a balance instrument and wrong for
+a party member: PR 4 shipped errands with `collect` tokens on the floor, `visit`
+objectives, escorts to be walked, and a giver with a `?` over their head.
+
+What it should learn, in the order it is worth learning:
+
+- **Pick up a quest token it walks past.** Nearly free — the drop is already in
+  `state.items` and the tally is already booked at pickup.
+- **Read the running errands as macro goals.** A `kill` errand wants a breed, a
+  `visit` wants a place, a `collect` wants tokens — all of which `macroTarget`
+  already has the shape to prefer.
+- **Do not talk to givers, and do not take errands.** A bot accepting a quest on
+  the party's behalf is a bot making a decision the player did not; the giver's
+  conversation is the human's. A bot HELPS with an errand that is already taken.
+- **Escorts are the one to leave until last.** An escort is a timer with a body,
+  and a bot that outruns it converts a tense objective into a failed one.
+
+### 7.6 Done when
+
+- `botAct` takes the hero it steers; single player is byte-identical and the
+  existing bot suites pass unchanged.
+- `--party N` runs a real party headlessly; the same seed replays identically at
+  every N, and the order the bots are polled provably does not matter.
+- `--verdict` reports per-seat and per-capita, and PR 4's §4.3 tuning is done
+  ON EVIDENCE, with the two levers moved and the numbers written into §4.7.
+- A player can start a local game with bots, they hold formation, split packs,
+  stay inside the share radius and help with an errand already taken.
+- A bot yields its seat to a joining human, banks nothing, and the run carries
+  the party stamp.
+- The horde is priced for bot seats, and a run with three bots is not measurably
+  easier than the same run with three humans.
+
+### 7.7 Risks
+
+- **164 sites is a bisect hazard.** Land it as its own reviewable commit series,
+  one file at a time, each leaving single player identical — §3.5's lesson,
+  which is the one piece of sequencing advice in this plan that has been right
+  every time it was followed.
+- **A party bot is a HUMAN-capability target, not a perfect one.** The
+  `bot-improvement` skill's bar applies unchanged: the bot should make the
+  decisions a skilled human makes and never something a human never would. A bot
+  that plays a perfect spacing solution reads as a robot, which is worse than one
+  that occasionally crowds.
+- **The bot is a measuring instrument first.** Every behaviour added in §7.4 and
+  §7.5 changes what the simulator measures. Land §7.1–§7.2, take the PR 4
+  numbers, and only then start changing how the bot plays — or the tuning pass
+  is measuring a moving target.
+
+---
+
+## Decisions register
 
 Answers this plan recommends but does not have authority to make. Each should be
 settled before the PR that needs it, not during.
@@ -1872,7 +2079,7 @@ settled before the PR that needs it, not during.
 
 ---
 
-## 8. What this plan deliberately does not build
+## What this plan deliberately does not build
 
 - **Lockstep / rollback netcode.** The rng is bit-exact (integer `Math.imul`),
   but the 159 transcendental calls under `src/` are not IEEE-mandated to agree
@@ -1896,7 +2103,7 @@ settled before the PR that needs it, not during.
 
 ---
 
-## 9. Working notes for whoever picks this up
+## Working notes for whoever picks this up
 
 - **Every PR carries a `.changes/unreleased/` fragment.** The mode is
   user-visible; CI's `changeset` job enforces it.

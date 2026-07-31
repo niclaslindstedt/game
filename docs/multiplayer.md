@@ -635,7 +635,8 @@ an invite left parked would re-join the same session on every reload.
   (a multi-player headless campaign, the plan's §3.4) does not exist: the
   autopilot reads seat 0 throughout, so `scripts/simulate-run.mjs` can only fly
   one hero. Parameterizing the bot on a `Player` is the prerequisite, and it is
-  the next thing PR 4 owes. See the plan's §4.7.
+  the next thing PR 4 owes — it is PR 7's §7.1–§7.2, which is owed earlier than
+  its number because nothing else can measure this. See the plan's §4.7.
 - **Nothing has been proven on eight machines through a real NAT**, and it
   cannot be from CI: that criterion, the UPnP mapping against a real router, and
   the packaged `npm run electron` launch all need hardware this repo's checks do
