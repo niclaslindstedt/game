@@ -63,6 +63,16 @@ the building — he built their engines here until the AI replaced him — and t
 never changed the locks. Tonight he takes the part, finishes the ship, and goes
 to get Ada back.
 
+He walks in with the wall piece still holstered, because this is where he used
+to work. A lab scientist breaks from the crowd and hits him — and he does not
+hit back. He knows the man; they ate at the same table for six years. He says
+so, tells the floor to stand down, says he has never raised a hand to anyone in
+his life. The scientist knows him too, and it changes nothing: they have their
+orders, nobody walks out of here with GOODCO's secrets, and he would like to
+keep his job. They all would — as the hero, of all people, knows. He is hit a
+second time, and a third, and only then does he answer one, apologising as he
+does it.
+
 The floor is running a night shift it never ran — and it's an assembly line:
 half-built ships stand in their jigs, welding-arm robots work the racks, and the
 whole plant is building spaceships in the dark. The horde is that night shift —

@@ -840,11 +840,12 @@ is flat — inside a run, nothing reads the catalog for its own level.
 hero.** A SAFE zone does not merely keep the horde from spawning in it, it REPELS
 every minion out and holds them at its edge, so one centred on the hero is a
 bubble he can stand in untouched all run. It also froze goodco_hq's opening beat
-solid: `openingStrike` is a two-parter held in order by `after` (the hero reads
-the crowd, THEN the lone rusher breaks from the pack and its harmless touch draws
-his blade), and the rusher was shoved straight back out of the pad it was placed
-in. A QUIET zone gives the breather the landing wants — no ambient horde placed
-in it — without the wall; the safe zone is spent on the trader's stall instead. The gate's other half is distance: the
+solid: `openingStrike` is held in order by `after` (the hero reads the crowd,
+THEN the lone rusher breaks from the pack and starts swinging at him), and the
+rusher was shoved straight back out of the pad it was placed in. A QUIET zone
+gives the breather the landing wants — no ambient horde placed in it — without
+the wall; the safe zone is spent on the trader's stall instead. The gate's other
+half is distance: the
 carve pins a few of the `firstSightThoughts` breed the `after` thought names
 around the landing, inside that pin's own radius, because a crowd carved a
 district away leaves the gate shut and the hero walking the map holstered.
@@ -1176,15 +1177,77 @@ watching and the strip sat on a stale count.
 
 ## MULTIPLAYER — the simulation moves out of the renderer
 
-**Steam builds only.** PRs 1, 2, 1.5, 1.75, 2.5, **PR 3's §3.1** and **PR 4's
-§4.2-abandoned-hero + §4.3** of the ten in `docs/multiplayer-plan.md` have
-landed: a session server, the wire, the fifth bridge, two transports, a challenge
-handshake, chat, `/players N`, a closed list of 69 named commands covering
-everything the app DOES to a run, the three doors a player walks through (HOST
-GAME, the server browser, JOIN BY ADDRESS), the in-run chat, the live session
-panel, the invite launch arguments — from PR 3, a run that carries a **PARTY** —
-and from PR 4, the **CO-OP RULES**: whose the XP is, whose the loot is, what
-heats the meter, and what a body nobody is steering means.
+**Steam builds only, except the DEDICATED SERVER, which is plain Node.** PRs 1,
+2, 1.5, 1.75, 2.5, **PR 3's §3.1**, **PR 4's §4.2-abandoned-hero + §4.3** and
+**PR 5** of the ten in `docs/multiplayer-plan.md` have landed: a session server,
+the wire, the fifth bridge, two transports, a challenge handshake, chat,
+`/players N`, a closed list of 74 named commands covering everything the app
+DOES to a run, the three doors a player walks through (HOST GAME, the server
+browser, JOIN BY ADDRESS), the in-run chat, the live session panel, the invite
+launch arguments — from PR 3, a run that carries a **PARTY** — from PR 4, the
+**CO-OP RULES** (whose the XP is, whose the loot is, what heats the meter, and
+what a body nobody is steering means) — and from PR 5, **PRODUCTION**: the party
+stamp, the joiner's loadout check, the packet budget and the fuzzed decoders,
+RECONNECT, TRADE, and a standalone dedicated server.
+
+**FIVE PR 5 RULES, AND EACH IS A DIFFERENT KIND OF TRUST.**
+
+1. **A CO-OP RUN BANKS NO RECORD — `GameState.party`, a `PartyStamp`.** The host
+   is a player, so the host can cheat, and seven people helping inflates every
+   board-facing figure without anybody having to. It is LATCHED in `seatHero`
+   rather than passed in as a session parameter, deliberately: a run is marked
+   by what HAPPENED to it (a host playing alone with the door open is playing
+   solo), a parameter is a thing one of three builders can forget, and as
+   ordinary DYNAMIC state the latch replicates for free. It never clears. The
+   two readers genuinely disagree, so the ledger keeps both — a party kill
+   counts for everyone on the BADGES, and for nobody on the BOARDS, which read
+   `LifetimeTotals.solo`.
+2. **A JOINER'S HERO IS A CLAIM — `validateLoadout`.** Level inside the ladder,
+   each stat inside the level's own `statCap`, every item mintable from the
+   catalogs. That last one is the CRASH rather than the cheat: `gearDef` throws
+   on an id it does not hold and is called from the damage pass and the paper
+   doll. It SANITIZES rather than refuses (the case it fires on most often is an
+   older save with a retired id), logs host-side only, and is **a speed bump,
+   not a wall** — everything it checks is something a real hero could have.
+3. **A SEAT IS A LICENCE TO BE HEARD, NOT AT ANY RATE.** The hub's three older
+   bounds stop a stranger; the packet budget covers the peer who got IN. Over
+   the allowance a packet is DROPPED (what the reliability layer already does to
+   a lost datagram); only a real DEBT is a kick. And **every decoder is fuzzed**
+   — which found four crashes in the DELTA APPLIER, reachable by a malicious
+   HOST rather than a client, since a joiner applies whatever it is sent.
+4. **A DROPPED PLAYER COMES BACK TO THEIR OWN HERO.** The seat is HELD for
+   thirty seconds and the person who left holds the only ticket. The ENGINE only
+   honours a flag (`Player.held`) because it has no clock; the SESSION owns the
+   window. A resume IGNORES the loadout on the join — the hero on the field is
+   the authority — and an unknown ticket is an ordinary arrival, never a refusal.
+5. **A TRADE IS ONE TRANSACTION OR IT DOES NOT HAPPEN — `src/game/trade.ts`.**
+   An offer names a CELL and an ID and the cell is re-read at settlement (a cell
+   alone may have changed; an id alone would have to be searched for, which is
+   how a trade hands over something nobody put on the table). Any change clears
+   both acceptances. An offered piece may not be equipped, discarded or moved. A
+   departing seat's trade goes with it. There is deliberately **no shared
+   stash** — that is account-shaped state with a migration ladder, and what
+   players mean by "trade" is handing a friend the sword you just found.
+
+**AND `applyRunCommand` TAKES THE ACTING HERO** (PR 3's §3.6 debt, paid because
+trade could not be correct without it). It dispatched all 69 verbs against
+`state.players[0]`, so a joiner's shop, equip and stat spend acted on the host's
+hero. The hero comes from **the seat the session admitted that client into** and
+never from a field on the frame: letting a client name a seat would hand a
+stranger somebody else's inventory in one field. Seat 0 is the default, so
+single player is unchanged.
+
+**THE DEDICATED SERVER IS THE SAME CODE, AND `server/host.ts` IS WHY.** It owns
+the session, the admission desk, the sockets, the router mapping and the one
+fixed-timestep loop; `main.ts` picks its entry from whether anybody forked it
+(`parentPort` → the game's session server, none → `dedicated.ts`). Running one
+found the bug it exists to find: the host is identified by being the FIRST
+client to ask for a seat, which holds only because the shipped topology always
+seats a renderer over a `MessagePort` first — so the first network joiner was
+mistaken for the host and handed a DEFAULT hero. `SessionOptions.ownerless` is
+the answer, and three rules follow: seat 0 starts DEPARTED so the first arrival
+takes it with their own loadout, an empty server does not simulate at all, and
+the run is a PARTY run from the first tick.
 
 **THE RUN IS A PARTY, AND `game/party.ts` IS THE ONE MODULE ALLOWED TO ASK IT A
 QUESTION.** `GameState.players` is a NON-EMPTY tuple of heroes in SEAT order
@@ -1308,10 +1371,10 @@ screen. See the plan's §4.7.
 still stops the world for everybody (`Player.screen` and the non-blocking
 level-up are §3.2, and the level-up is a real single-player behaviour change that
 owes the changelog its own line); nothing is predicted, so a client shows its
-hero where the last snapshot put him (§3.3); the command channel carries no SEAT,
-so a joiner's shop or stat spend still dispatches against seat 0; and a joiner
+hero where the last snapshot put him (§3.3); and a joiner
 still plays on the THROWAWAY `spectatorCharacter`, so nothing they earn reaches
-their roster (PR 4's §4.5). Their run commands travel but are NOT applied locally
+their roster (PR 4's §4.5). The command channel's missing SEAT was the third of
+these and is PAID — see the rule above. Their run commands travel but are NOT applied locally
 (`setCommandSink(…, { optimistic: false })`) — the server is authoritative over
 the result, so an optimistic apply would draw an outcome the next snapshot may
 not agree with.
@@ -2895,6 +2958,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | MULTIPLAYER: a read of "the hero" inside the engine               | ASK WHICH KIND IT IS. A PRIVATE read (bag, purse, build, worn kit) is a `Player` PARAMETER beside the run — never a lookup. A GEOMETRY read goes through `src/game/party.ts` (`nearestHero` / `anyHeroWithin` / `heroesWithin` / `partyCentroid` / `partyLevel`), and a mob's own target through `src/game/aggro.ts` (`quarryFor` / `quarryOf`). "Is this hero somebody the world should react to" is `heroInPlay` — never `hp > 0`, which misses a DEPARTED seat. `state.players[0]` left in engine code is an un-migrated site, not an answer |
 | MULTIPLAYER: a payout, a drop, or anything else a kill produces   | A KILL's XP is the party's and goes through `shareXp(state, amount, pos)`; every other award has an owner and goes through `grantXp(state, hero, amount)`. A DROP goes through `dropItem` like every other drop, which stamps `Item.owner` on its own in an allocated session — never roll an owner at a call site, and never spend a `state.rng()` draw on presentation (use the item's hash, as the toss does)                                                                                                                                |
 | MULTIPLAYER: anything the app does to a RUN before its first tick | `src/game/session-setup.ts` — a field on `RunParams` and a line in `createRunFromParams`, plus the matching field on `SessionParams` (`server/wire/protocol.ts`). Never a mutation in `createRunSession` alone: the session and the client build the same run from the same parameters, and a field only one of them applies is a desync that reads as a replication bug                                                                                                                                                                        |
+| MULTIPLAYER: a rule about who may take, keep or move an item      | `src/game/trade.ts` when TWO players are involved — the swap is ONE transaction, and `isOfferedInTrade` is the predicate every verb that could spend a bag cell must ask; `items/` otherwise                                                                                                                                                                                                                                                                                                                                                    |
 | MULTIPLAYER: a new VERB the app may run against a run             | `src/game/commands.ts` (the arg shapes + the `case`) **and** `COMMANDS` in `server/wire/protocol.ts` (the literal copy the allow-list reads) — the drift test enforces the pair — then bump `PROTOCOL_VERSION`. Call it from the app through `pwa/src/game/run-commands.ts`, never by importing the engine function                                                                                                                                                                                                                             |
 | MULTIPLAYER: the session server, or the wire either end speaks    | `server/...` — engine code compiled for Node (`npm run server:build`). `server/wire/*` imports NOTHING, because the page reads it from the startup path; `server/session.ts` may import `@game/core`. Never anything under `pwa/`. See `docs/multiplayer.md`                                                                                                                                                                                                                                                                                    |
 | MULTIPLAYER: a transport, admission, the router mapping           | `server/net/...` — the seam, the reliability layer, the UDP socket, the relay, the hub, UPnP. Node builtins only; it ships with the session, which is what makes PR 5's dedicated server the same file. See `docs/multiplayer.md`                                                                                                                                                                                                                                                                                                               |
@@ -2966,6 +3030,42 @@ a mod's folder is its author's and answers to nobody. (The one thing a mod's
 story does answer to is the SCHEMA — a scene still has to name a sprite that
 exists.)
 
+**A SPOKEN BEAT IS NOT ALWAYS A MONOLOGUE — `ThoughtDef.voice` AND `them:`
+PAGES.** A pinned beat is the hero alone by default, and nearly all of them
+stay that way. A few need somebody talking back — a shove answered with "we
+have our orders" — so a def may name a second `voice: { speaker, portrait }`
+and tag a page `{ them: [...] }`. It is the exact MIRROR of an arrival scene's
+`{ hero: [...] }`: there the mob owns the scene and his replies are tagged,
+here he owns it and theirs are. Both resolve through `dialogueContent` into one
+`voices` array parallel to `pages`, so the dialogue box draws either without
+knowing which kind of scene it is in — which is why adding the second voice
+changed no renderer arithmetic. Reach for this rather than `EnemyDef.dialogue`
+when a line has to land INSIDE a scripted beat: an arrival scene fires on its
+own proximity trigger and cannot be sequenced with one. The scene kind is still
+called `playerThought` — a MECHANISM name, since the pinned-beat machinery, the
+read ledger and the `openingStrike` hook all key on it — so call the thing an
+EXCHANGE everywhere a reader sees it and leave the key alone.
+
+**AND THE CAMPAIGN'S FIRST FIGHT IS A REFUSAL — GOODCO HQ's THREE BLOWS.** The
+hero walks into his old workplace with the wall piece holstered; a lab
+scientist he knows breaks from the night shift and hits him, and he does NOT
+hit back. He names the man, tells the floor to stand down, says he has never
+raised a hand to anyone. They hit him again, and again, and only the third blow
+is answered — with an apology. The horde on this map is his old colleagues, and
+a hero who answered the first blow in the same tick would be somebody who came
+here to fight, which he is not and never becomes. Mechanically it is
+`OpeningStrike.warnings` (the beats the earlier blows play, in order) and the
+READ LEDGER is the counter, so the escalation carries no run state, survives a
+save, and a replay finds every warning read and arms on the first blow. Two
+things are load-bearing and neither is a number: the striker is SHOVED OFF
+between blows so the player watches him come again rather than reading three
+stacked monologues, and `stepOpeningStrike` skips a striker whose recoil is
+still LIVE — a contact radius tight enough to mean "on top of him" is one no
+shove clears in a tick, so a beat gated on distance alone fires again the
+instant the last one is tapped closed. The tonal whiplash on EASY, where the
+peaceful man finally answers with grandpa's sawed-off, is the joke and not a
+bug.
+
 **A PAGE IS A PARAGRAPH, AND THE BOX BREAKS IT — THE AUTHOR DOES NOT.** Every
 surface that speaks (the opening/closing monologue, the in-world dialogue box,
 a cutscene caption, the merchant, a quest giver's ask) measures the text column
@@ -2993,10 +3093,17 @@ on the open field rather than in a box, so its lines stay hard rows.
 When two tiers of the CAMPAIGN's chain disagree, the **higher tier wins**:
 `story.md` beats the manuscript, the manuscript beats the data — correct the
 lower tier to match.
-Use the **`update-story` skill** (`.agent/skills/update-story/`) to make a story
-change at the top and carry it down the whole chain (the manuscript, then the
-enemy roster, the story items and uniques, the pinned thoughts, and the
-companions — a boss swap re-homes that boss's drops).
+**LOAD THE `update-story` SKILL** (`.agent/skills/update-story/`) BEFORE
+TOUCHING ANY LINE THE GAME SPEAKS — not only when the plot moves. The unit is a
+LINE, not a beat: a retone ("he shouldn't sound so cold"), a second page on a
+monologue, a reworked scripted scene, a bark, a merchant greeting, a quest
+offer, a companion's joining words — every one of them is transcribed in the
+manuscript, so every one of them owes the chain a walk. The skill makes the
+change at the top and carries it down (the manuscript, then the cutscenes,
+level monologues, enemy roster, story items and uniques, pinned thoughts,
+quests and companions — a boss swap re-homes that boss's drops). A PR that
+edits a line of dialogue and leaves `docs/story.md` and `docs/manuscript.md`
+untouched is incomplete.
 
 **Changing the story is a two-step commitment:**
 
@@ -3525,6 +3632,7 @@ relevant `SKILL.md` before starting that kind of work:
 | `test-scenario`       | Staging an exact in-game situation to reproduce a bug, probe fps, or eyeball a context — the `?scenario=` URL param / `applyScenario` spec (place the hero at the boss or merchant, set hp/gear, clear the field, spawn mob rings — pre-wounded if asked, lay out ground items, freeze the world into a pose) plus the FPS meter (DEBUG MODE or `?debug`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `store-shots`         | Regenerating the App Store / Play Store screenshot set — after resprites, an art pass, a HUD change, or new powers/talents. Drives the real game to staged ENDGAME moments (nightmare, late maps, legendaries, powers detonating) at Apple's exact rasters, captions them in the game's own pixel font, and holds each frame to a quality bar before it reaches a listing.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `ui-review`           | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the nine reference viewports (`pwa/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `update-story`        | Writing, rewriting, retoning or removing ANY line the game speaks — a cutscene caption, a level intro/outro, an elite/boss `dialogue` or `lastWords`, a boss bark, a pinned thought, a merchant greeting, a quest offer, a companion's joining words, a story item's lore — as well as reshaping a scripted scene, replacing an elite/boss, or reconciling a drifted tier. Walks the three-tier chain top-down (`docs/story.md` → `docs/manuscript.md` → `content/`) so the tiers never drift.                                                                                                                                                                                                                                                                                                                                   |
 | `library-improvement` | Building or improving THE LIBRARY — the generated companion site at `/library/` (bestiary, arsenal, mission guide, achievements, story; see `docs/architecture.md`). The generate → look → judge → improve loop: regenerate, screenshot at the reference viewports, hold every page to the quality bar (does it wear the game's own skin, is every number the engine's own, does it read like Arreat Summit rather than a database dump, do the spoiler panels cover without hiding from crawlers), fix the worst in the GENERATOR, and loop — with before/after sign-off before shipping.                                                                                                                                                                                                                                       |
 
 ## Maintenance skills

@@ -125,6 +125,24 @@ export type Player = {
    */
   departed?: boolean;
   /**
+   * THIS DEPARTED SEAT IS BEING KEPT FOR THE PERSON WHO LEFT IT (multiplayer
+   * plan §5.4).
+   *
+   * A dropped connection and a player quitting look identical from the socket,
+   * and only one of them should cost somebody their hero. So a departure that
+   * might be a drop HOLDS the seat for a grace window: the body still means
+   * nothing to the world (`departed` is what says that, and it stays set), but
+   * `nextFreeSeat` will not hand the seat to a newcomer, so the owner can come
+   * back to the hero they were playing rather than to a fresh one built from
+   * whatever loadout they last banked.
+   *
+   * It is the SESSION that clears it, because the grace window is measured in
+   * wall clock and the engine has no clock — see `server/session.ts`. The engine
+   * only has to honour it, which is one line in `nextFreeSeat` and is why this
+   * is a flag rather than a timestamp.
+   */
+  held?: boolean;
+  /**
    * What the ground underfoot is doing to the hero's PACE right now — the
    * `snare_field` ability's whole effect (1 = free, below 1 = held).
    *

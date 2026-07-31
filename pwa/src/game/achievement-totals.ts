@@ -86,8 +86,36 @@ export type LifetimeTotals = {
    * ten-minute combat-clock window — see kill-rate.ts). Distinct from the
    * high-score board's `kpm`, which averages a whole campaign and so rewards
    * length as much as speed; this one is the peak the hero ever held long
-   * enough for it to mean anything. Ranked on the KILL RATE leaderboard.
+   * enough for it to mean anything.
    */
+  bestKillRate: number;
+  /**
+   * THE SAME RECORDS, KEPT FOR SOLO PLAY ALONE — what the platform boards rank
+   * (multiplayer plan §5.3).
+   *
+   * **Two readers, two rules, and they genuinely disagree.** The achievement
+   * catalog reads the counters above, and a PARTY KILL COUNTS FOR EVERYONE
+   * PRESENT — the alternative makes half the badges unearnable in the mode the
+   * player is enjoying. A leaderboard reads these, and a party run counts for
+   * NOBODY: the host is a player and so the host can cheat, and seven people
+   * helping inflates every one of these without anybody having to.
+   *
+   * This is not a second bookkeeper — it is the same ledger keeping the same
+   * records in the two flavours the game genuinely distinguishes, booked by the
+   * same reducers off one flag. Only the three the boards rank are kept; the
+   * two hardcore campaign boards read `highscores.ts`, which refuses a tainted
+   * campaign at its own door.
+   */
+  solo: SoloTotals;
+};
+
+/** The board-facing half of `LifetimeTotals` — see `LifetimeTotals.solo`. */
+export type SoloTotals = {
+  /** Kills booked in runs nobody else was in. */
+  kills: number;
+  /** The biggest one-tick blow ever landed in a run nobody else was in. */
+  maxBurstDamage: number;
+  /** The best sustained kill rate ever held in a run nobody else was in. */
   bestKillRate: number;
 };
 
@@ -123,7 +151,30 @@ export function emptyTotals(): LifetimeTotals {
     maxSingleHit: 0,
     maxBurstDamage: 0,
     bestKillRate: 0,
+    solo: { kills: 0, maxBurstDamage: 0, bestKillRate: 0 },
   };
+}
+
+/**
+ * Fill in the solo half of a ledger loaded from storage.
+ *
+ * A save written before the boards learned about co-op has no `solo` record —
+ * and every run it holds WAS a solo one, because multiplayer had not shipped.
+ * So the lifetime figures ARE the solo figures, and copying them across is the
+ * honest migration rather than a generous one: starting the player at zero
+ * would silently retire the standing they already have on all four boards.
+ */
+export function migrateSoloTotals(
+  totals: LifetimeTotals,
+  stored?: Partial<LifetimeTotals>,
+): LifetimeTotals {
+  if (stored?.solo) return totals;
+  totals.solo = {
+    kills: totals.kills,
+    maxBurstDamage: totals.maxBurstDamage,
+    bestKillRate: totals.bestKillRate,
+  };
+  return totals;
 }
 
 /** Every wearable slot, the full-outfit roster (`EquipSlot` order). */
@@ -174,6 +225,14 @@ export type RunContext = {
   levelId: string;
   difficulty: string;
   stats: GameStats;
+  /**
+   * MORE THAN ONE PERSON HAS PLAYED THIS RUN (`isPartyRun`). The badges book it
+   * exactly as they book a solo run — a party kill counts for everyone present
+   * — and the board-facing `solo` half books nothing at all. See
+   * `LifetimeTotals.solo`. Absent reads as solo, which is every run the shipped
+   * campaign has.
+   */
+  party?: boolean;
 };
 
 /** Add `value` to `list` if absent; true when it was genuinely new. */
@@ -221,6 +280,7 @@ export function applyEventsToTotals(
         break;
       case "enemyKilled": {
         totals.kills++;
+        if (!ctx.party) totals.solo.kills++;
         const role = roleOf(event.defId);
         if (role === "elite") totals.eliteKills++;
         if (role === "boss") totals.bossKills++;
@@ -300,6 +360,10 @@ export function applyEventsToTotals(
     totals.maxBurstDamage = tickDamage;
     changed = true;
   }
+  if (!ctx.party && tickDamage > totals.solo.maxBurstDamage) {
+    totals.solo.maxBurstDamage = tickDamage;
+    changed = true;
+  }
   return changed;
 }
 
@@ -310,10 +374,22 @@ export function applyEventsToTotals(
  * the caller's cue to persist. A high-water counter rather than an event
  * reducer because the rate is a property of a WINDOW, not of a tick.
  */
-export function applyKillRate(totals: LifetimeTotals, rate: number): boolean {
-  if (!Number.isFinite(rate) || rate <= totals.bestKillRate) return false;
-  totals.bestKillRate = rate;
-  return true;
+export function applyKillRate(
+  totals: LifetimeTotals,
+  rate: number,
+  party = false,
+): boolean {
+  if (!Number.isFinite(rate)) return false;
+  let changed = false;
+  if (rate > totals.bestKillRate) {
+    totals.bestKillRate = rate;
+    changed = true;
+  }
+  if (!party && rate > totals.solo.bestKillRate) {
+    totals.solo.bestKillRate = rate;
+    changed = true;
+  }
+  return changed;
 }
 
 /**

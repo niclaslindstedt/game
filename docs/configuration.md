@@ -302,6 +302,37 @@ releases it over the spot the mob died — the whole descent inside
 `MERCY.angelDeliverMs` (under two seconds), during which the gift is airborne
 and can't be grabbed (the magnet leaves it alone too).
 
+## The dedicated server
+
+Steam builds host a session from inside the game, and the same server runs from
+a terminal for a group that would rather not keep somebody's game open (see
+[`docs/multiplayer.md`](multiplayer.md)). It reads a JSON config file, and every
+field has a command-line twin; **flags win over the file**.
+
+```sh
+npm run server:start                          # defaults
+npm run server:start -- --port 27015          # …on a chosen port
+npm run server:start -- server.config.json    # …from a file
+```
+
+| Field              | Flag           | Default  | What it is                                                                                              |
+| ------------------ | -------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `level`            | `--level`      | `moon`   | The mission to run.                                                                                     |
+| `difficulty`       | `--difficulty` | `medium` | `easy` … `jesus`.                                                                                       |
+| `seed`             | `--seed`       | rolled   | The run's seed. A rolled one is PRINTED — a run nobody can reproduce is a bug report nobody can act on. |
+| `port`             | `--port`       | 27015    | The UDP port to TRY. What was BOUND is what gets printed, and the two are not the same thing.           |
+| `maxPlayers`       | `--players`    | 8        | Seats. Capped at the wire's own `MAX_CLIENTS`.                                                          |
+| `password`         | `--password`   | none     | A speed bump between the people invited and everybody else, never a wall.                               |
+| `mods`             | —              | none     | Mod ids in load order. A joiner whose list differs is refused by name.                                  |
+| `generatedMapSize` | `--map-size`   | `random` | `small` / `medium` / `large` / `random`. Every mission is carved, so the size is the only map knob.     |
+| `statusEverySec`   | —              | 30       | Console status interval. 0 turns it off.                                                                |
+
+There are deliberately **no balance knobs here**. A dedicated server runs the
+game; it does not retune it, and a host that could would be a host whose clears
+mean something different from everybody else's. Note also that a run on one is a
+PARTY run and banks no leaderboard record, for the same reason every co-op run
+does: whoever operates the machine controls the simulation.
+
 ## Repository pins
 
 | File                          | Pins                                                                                                           |

@@ -19,6 +19,7 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
 } from "./derived.ts";
+import { isOfferedInTrade } from "../trade.ts";
 import { freeHandsFor } from "./hands.ts";
 import { equipSlotForItem, fitsEquipSlot, RING_SLOTS } from "./slots.ts";
 import { canEquip } from "./requirements.ts";
@@ -145,6 +146,12 @@ export function equipFromInventory(
 ): boolean {
   const item = player.inventory[index];
   if (!item) return false;
+  // A PIECE ON A TRADE TABLE STAYS IN THE BAG UNTIL IT CROSSES, so it has to
+  // be refused here (plan §5.1, rule 3). `settleTrade` would catch it — the
+  // offer names the cell AND the id, and an equipped-away cell no longer holds
+  // it — but the player who moved it would have no idea why the trade failed
+  // a minute later.
+  if (isOfferedInTrade(state, player, index)) return false;
   // The equip gates hold in the bag too: an under-leveled or under-statted
   // find stays banked until the hero grows into it.
   if (!canEquip(state, player, item)) return false;
@@ -237,6 +244,14 @@ export function moveInventoryItem(
 ): void {
   const inv = player.inventory;
   if (from === to || !(from in inv) || !(to in inv)) return;
+  // Either end being on a trade table refuses the whole swap — see
+  // `isOfferedInTrade`.
+  if (
+    isOfferedInTrade(state, player, from) ||
+    isOfferedInTrade(state, player, to)
+  ) {
+    return;
+  }
   const a = inv[from] ?? null;
   inv[from] = inv[to] ?? null;
   inv[to] = a;
@@ -322,6 +337,8 @@ export function discardFromInventory(
   const inv = player.inventory;
   const item = inv[index] ?? null;
   if (!item) return null;
+  // Not while it is on a trade table — see `isOfferedInTrade`.
+  if (isOfferedInTrade(state, player, index)) return null;
   inv[index] = null;
   return item;
 }

@@ -38,6 +38,7 @@ import {
 import { spawnEnemy } from "./create.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
 import { distanceToParty, nearestHeroWhere, partyCentroid } from "./party.ts";
+import { knockEnemyBack, pushPlayer } from "./knockback.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { startPlayerThought } from "./story.ts";
 import type {
@@ -367,54 +368,10 @@ function explodeAsteroid(
   }
 }
 
-/**
- * Arm an outward KNOCKBACK impulse on a mob: point it straight away from
- * `from` at `speed` px/s and coast it for `coastMs`. `moveEnemy` sits the AI
- * out while `knockMs > 0`, and `stepKnockback` coasts and decays it. A
- * zero/negative speed (a boss, or a blast's rim) is a no-op. Shared by the
- * asteroid blast that flings and by THE UNMAKING's shove (step/powerups.ts) —
- * one impulse path, so every fling decays on the same curve.
- */
-export function knockEnemyBack(
-  enemy: Enemy,
-  from: Vec2,
-  speed: number,
-  coastMs: number,
-): void {
-  if (speed <= 0) return;
-  let dir = direction(from, enemy.pos);
-  if (dir.x === 0 && dir.y === 0) dir = { x: 1, y: 0 };
-  enemy.knockVel = { x: dir.x * speed, y: dir.y * speed };
-  enemy.knockMs = coastMs;
-}
-
 /** Arm the asteroid blast's own fling on a mob — `knockEnemyBack` at the
  * blast's coast length. */
 function launchEnemy(enemy: Enemy, from: Vec2, speed: number): void {
   knockEnemyBack(enemy, from, speed, ASTEROIDS.knockbackMs);
-}
-
-/**
- * Shove the hero away from a point — he coasts along it (on top of whatever he
- * steers) until it bleeds out.
- *
- * Exported because a SHOCK PULSE is the same shove a blast is, and an ability
- * that rolled its own would drift from this one on the two details that
- * actually matter: the degenerate case where the hero is standing exactly on
- * the origin (which yields a zero vector and no push at all), and the fact that
- * the impulse RIDES ALONGSIDE his steering rather than replacing it.
- */
-export function pushPlayer(
-  player: Player,
-  from: Vec2,
-  speed: number,
-  coastMs: number,
-): void {
-  if (speed <= 0) return;
-  let dir = direction(from, player.pos);
-  if (dir.x === 0 && dir.y === 0) dir = { x: 1, y: 0 };
-  player.knockVel = { x: dir.x * speed, y: dir.y * speed };
-  player.knockMs = coastMs;
 }
 
 /** Arm the blast's own outward impulse on the hero, at its coast length. */

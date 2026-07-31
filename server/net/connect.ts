@@ -46,6 +46,7 @@ import {
   type Handshake,
   type HelloPayload,
   type JoinPayload,
+  type WelcomePayload,
   type RefusalReason,
 } from "../wire/protocol.ts";
 import type { PeerKey, Transport } from "./transport.ts";
@@ -86,11 +87,25 @@ export type JoinLinkOptions = {
   /** The session's password, or "" — an empty one proves 0, which is what a
    * client that was never asked for one sends anyway. */
   password?: string;
+  /**
+   * A RECONNECT TICKET from an earlier welcome to this same session (plan
+   * §5.4), or undefined for a first join.
+   *
+   * Presenting one resumes the hero that is standing on the field rather than
+   * being built a fresh one, which is the difference between a dropped packet
+   * costing a frame and it costing an hour. A ticket the session no longer
+   * holds is simply not one and the join proceeds as an ordinary arrival — so
+   * this is always worth sending when there is one, and never worth waiting to
+   * find out about.
+   */
+  resume?: string;
   now(): number;
   /** One frame for the renderer, exactly as it arrived. */
   deliver(frame: Uint8Array): void;
-  /** The session welcomed us. Fired once. */
-  onAdmitted(): void;
+  /** The session welcomed us. Fired once, with the RECONNECT TICKET the
+   * welcome carried (undefined for a spectator, who has no hero to come back
+   * to) so the caller can present it if this connection drops. */
+  onAdmitted(resume?: string): void;
   /**
    * The attempt is over and no game will be played: a refusal from the host, a
    * skew this side spotted in the challenge, or an address nobody answered.
@@ -180,6 +195,7 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       handshake: options.handshake,
       proof: passwordProof(options.password ?? "", cookie),
       name: options.name,
+      resume: options.resume,
     };
     phase = "joining";
     joinedAt = options.now();
@@ -214,7 +230,10 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
     }
     if (frame.type === FRAME.welcome && phase !== "live") {
       phase = "live";
-      options.onAdmitted();
+      const welcome = (frame.payload ?? {}) as WelcomePayload;
+      options.onAdmitted(
+        typeof welcome.resume === "string" ? welcome.resume : undefined,
+      );
     }
     options.deliver(data);
   }

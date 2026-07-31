@@ -992,16 +992,23 @@ over-head health bar, and the loot are the whole encounter.
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
   The hero walks in with his weapon **holstered** (`LevelDef.openingStrike` —
-  `player.disarmed`): the auto-attack sits out until a lone VANGUARD scientist
-  sprints ahead of the pack and reaches him — `openingStrike.radius` is tuned to
-  a contact gap, so the swing lands with the scientist right on top of him,
-  which draws whatever he took off the wall ("good thing I came armed") and
-  turns combat on. The rusher outruns the hero (`ai.rushSpeed` > `PLAYER.speed`),
-  so a fleeing hero still gets run down rather than kiting the opening beat into
-  a stall. The beat is **ordered**: the vanguard HOLDS at its post (it doesn't
-  even break from the pack — `moveEnemy`) until the hero's arrival read has
-  played, so the scene always runs monologue-first, then the lone scientist
-  rushing in and striking. Two sight-pinned inner monologues also fire here
+  `player.disarmed`), because this is where he used to work, and the auto-attack
+  sits out until a lone VANGUARD scientist sprints ahead of the pack and reaches
+  him — `openingStrike.radius` is tuned to a contact gap, so the swing lands
+  with the scientist right on top of him. It takes **three** of them
+  (`openingStrike.warnings`): the first two land on a man who will not hit back,
+  who names the scientist, tells the floor to stand down and says he has never
+  raised a hand to anyone — and the scientist answers him (they have their
+  orders, nobody leaves with GOODCO's secrets, he would like to keep his job).
+  Only the third draws whatever he took off the wall, with an apology, and turns
+  combat on. Between blows the striker is shoved off (`DIALOGUE.strikeRecoil*`)
+  and has to come back, so each is its own event rather than three stacked
+  monologues; the read ledger counts them, so a replay arms on the first. The
+  rusher outruns the hero (`ai.rushSpeed` > `PLAYER.speed`), so a fleeing hero
+  still gets run down rather than kiting the opening beat into a stall. The beat
+  is **ordered**: the vanguard HOLDS at its post (it doesn't even break from the
+  pack — `moveEnemy`) until the hero's arrival read has played, so the scene
+  always runs monologue-first, then the lone scientist rushing in and striking. Two sight-pinned inner monologues also fire here
   (`firstSightThoughts` — on view, before any blow): the first intern the hero
   SEES plays that arrival read on a building fully staffed at midnight, pinned
   to a **wide, drop-in `radius`** so it lands the instant the packed opening

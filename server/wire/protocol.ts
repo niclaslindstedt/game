@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 8;
+export const PROTOCOL_VERSION = 10;
 
 /**
  * The most clients one session seats, host included.
@@ -61,6 +61,22 @@ export const HELLO_MIN_BYTES = 128;
  * interpolation buffer a moving target to smooth over.
  */
 export const SNAPSHOT_EVERY_TICKS = 3;
+
+/**
+ * How long a dropped player's seat is kept for them, in ms (plan §5.4).
+ *
+ * Thirty seconds is a judgement between two costs that pull opposite ways. Too
+ * short and a wifi hiccup — the whole case this exists for — costs somebody the
+ * run they were an hour into. Too long and a party that genuinely lost a player
+ * plays a member down with a body standing in the field, unable to admit the
+ * friend they invited to take the empty chair, because the seat is being kept
+ * for somebody who is not coming back. Thirty is comfortably past a router
+ * reboot and comfortably inside a fight.
+ *
+ * It is measured by the SESSION, which is the only part of this feature with a
+ * clock; the engine only honours the flag (`Player.held`).
+ */
+export const RECONNECT_GRACE_MS = 30_000;
 
 /** The simulation's fixed timestep, in ms. The same 1000/60 the browser loop
  * has always used — see `pwa/src/lib/game-loop.ts`. The server owns the clock
@@ -285,6 +301,22 @@ export type WelcomePayload = {
    * is what stops a stranger claiming somebody else's hero.
    */
   seat: number | null;
+  /**
+   * THE TICKET BACK INTO THIS SEAT if the connection drops (multiplayer plan
+   * §5.4). Opaque, unguessable, and this client's alone; echoed on a later
+   * `join` to resume the hero rather than be built a fresh one.
+   *
+   * Absent for a spectator, who has no hero to come back to.
+   *
+   * **IT IS A SECRET, and that is the whole of its security.** A seat is
+   * claimed by whoever presents the ticket, so anybody who can read one can
+   * take that hero — the same standing as a session password, which the trust
+   * model already calls a speed bump rather than a wall. What it is genuinely
+   * for is telling a reconnecting player apart from a newcomer, which nothing
+   * else on the wire can do: a peer key changes with the source port, and a
+   * name is not a credential.
+   */
+  resume?: string;
 };
 
 /** The payload of a `bye`. */
@@ -356,6 +388,20 @@ export type JoinPayload = {
    * in the `welcome`.
    */
   loadout?: unknown | null;
+  /**
+   * THE TICKET FROM AN EARLIER `welcome`, when this is a RECONNECT (plan §5.4).
+   *
+   * A ticket the session still holds resumes that seat's hero exactly as the
+   * connection left it — every point of xp, every item, every level — and the
+   * `loadout` above is IGNORED, which is the point: the authoritative hero is
+   * the one standing on the field, and dressing it in a claim that arrived from
+   * a stranger would hand a reconnect the one thing a fresh join is checked
+   * for. A ticket the session does not hold (the window lapsed, a different
+   * session, a guess) is simply not one, and the join proceeds as an ordinary
+   * arrival rather than being refused: somebody who took too long to come back
+   * should get into the game, not be told no.
+   */
+  resume?: string;
 };
 
 /** One line in the session's chat log. */
@@ -515,6 +561,11 @@ export const COMMANDS = [
   "advanceTalk",
   "pickTalkChoice",
   "closeTalk",
+  "openTrade",
+  "cancelTrade",
+  "offerTradeItem",
+  "offerTradeCoins",
+  "acceptTrade",
   "reclaimVaultItem",
   "clearVault",
   "startAutopilot",

@@ -390,11 +390,48 @@ looked at.
    costs the host almost nothing AND the message names the thing the player can
    actually fix. The challenge is checked before the password, because answering
    "wrong password" to a spoofed address is a small oracle offered for nothing.
-4. **A seat, as a SPECTATOR.** PR 2 replicates one hero to eight machines;
-   seating a second is PR 3's whole subject.
+4. **A seat, and the hero they brought is WEIGHED before the simulation is
+   handed it** (`validateLoadout`, §5.3): the level held inside the ladder, each
+   stat inside the level's own `statCap` and the block inside what that level
+   has paid for, and every item checked against the catalogs. That last one is
+   the crash rather than the cheat — `gearDef` throws on an id it does not hold
+   and is called from the damage pass and the paper doll, so one packet took the
+   host's process down. It SANITIZES rather than refuses, because the case it
+   fires on most often is an older save carrying a retired id, not an attacker;
+   what it corrected is logged host-side only, since telling a joiner which
+   field failed is telling an attacker which field to fix. **It is a speed bump,
+   not a wall** — everything it checks is something a legitimate hero could
+   genuinely have.
 
 Per-address token buckets keep a flood cheap, and they are keyed on the ADDRESS
 rather than the address and port — a flood trivially varies its source port.
+
+**And a FOURTH bound covers the peer who got IN.** The three above stop a
+stranger; none of them stopped an admitted client sending sixty thousand chat
+lines a second, each of which the session parses, dispatches and broadcasts to
+everybody else. A seat is a licence to be heard, not a licence to be heard at
+any rate, so an admitted peer draws on a bucket of its own — sized off what a
+client legitimately sends (an input per tick, an ack per publish, chat and
+commands between them) rather than off a round number. Over it, packets are
+DROPPED, which is the same answer the reliability layer already gives a lost
+datagram and one the game recovers from by design; only a peer that runs a real
+DEBT is dropped, with a `bye` that says why. Two thresholds, because a burst on
+a recovering connection and a flood are different things and treating them alike
+either kicks a friend or tolerates an attacker. The budget is spent BEFORE the
+frame is decoded — a decode is the cheapest thing the session does with a packet
+and still the thing a flood buys in bulk.
+
+**Every decoder is fuzzed** (`tests/engine/net_fuzz_test.ts`), and the pass
+found four real ones — all in the DELTA APPLIER, reachable by a malicious HOST
+rather than a malicious client, which is the direction nobody thinks of: a
+joiner applies whatever it is sent and has no more reason to trust that host
+than the host has to trust it. A null entry read for its discriminant, a `del`
+that was not iterable and an `upd` holding something with no `id` each took a
+joiner's renderer down from one packet; a byte field claiming a length of a
+billion took the machine down. The applier is total over arbitrary JSON now, and
+IGNORING a member of the wrong shape is right rather than merely safe: a delta
+is coded against an acknowledged baseline, so a dropped field is exactly a
+dropped packet, which the next publish corrects.
 
 ## Opening the port — what is genuinely automatic, and what is not
 
@@ -594,6 +631,143 @@ the process that received them is about to exit. They are delivered on the
 page's `did-finish-load` as the bridge's one unsolicited event, and consumed:
 an invite left parked would re-join the same session on every reload.
 
+## Reconnect — a dropped player comes back to their own hero
+
+A dropped connection and a player quitting are the same event as far as a socket
+is concerned, and only one of them should cost somebody the run they are an hour
+into. So every departure HOLDS the seat for `RECONNECT_GRACE_MS` (thirty
+seconds) and hands the person who left the only ticket back into it. Presenting
+it resumes the hero as it stands — every point of xp, every item, every level —
+rather than building a fresh one out of whatever loadout was last banked.
+
+The split of responsibility is the load-bearing part. The **engine** only
+honours a flag (`Player.held`, skipped by `nextFreeSeat`, cleared by
+`resumeHero` / `releaseSeat`), because it has no clock and a grace window
+counted in ticks would run at the speed of the simulation: a host that hitched
+would hold seats longer than it meant to, and a paused session would hold them
+for ever. The **session** owns the window, swept from its own `advance`, since
+nothing below the session owns a timer.
+
+Four rules:
+
+- **The ticket is DERIVED** from the process's secret and a nonce, so nothing is
+  remembered until somebody actually leaves and a seat's second occupant never
+  holds a key its first one was given.
+- **It is spent on use**, whether or not the seat was still resumable — a spent
+  ticket left in the table is a second way into a seat somebody is now in.
+- **A resume IGNORES the loadout on the join.** The hero standing on the field
+  is the authoritative one; dressing it in a stranger's claim would hand a
+  reconnect the one thing a fresh join is checked for.
+- **An unknown ticket is an ordinary arrival, not a refusal.** Somebody who took
+  too long to come back should get into the game, not be told no — and the same
+  answer covers a guess, which is why there is no refusal reason for it.
+
+The joiner process remembers each host's latest ticket for its own lifetime,
+which is the span the feature is about; a ticket on disk would be a credential
+for a session that has ended.
+
+## Trade — one item across a table
+
+`src/game/trade.ts`, and the whole design is one sentence: **the swap is a
+single transaction, on the authority, or it does not happen.** `settleTrade`
+does every check before it moves anything, so there is no reachable state in
+which an item has left one bag and not arrived in the other. Four rules keep
+that sentence true:
+
+1. **An offer names a CELL and an ID, and the cell is re-read at settlement.** A
+   cell alone may have changed since the offer (a sale, a sweep, a mercy drop
+   landing); an id alone would have to be searched for — and finding the same
+   item somewhere else in the bag is exactly how a trade hands over something
+   the offering player never put on the table. A cell that no longer holds its
+   id refuses the whole trade rather than guessing.
+2. **Any change clears both acceptances,** so an acceptance can only ever
+   describe the table as it was seen. Waiting for the other side to agree and
+   then swapping what is on the table is the oldest trade-window scam there is.
+3. **An offered piece may not be spent.** It stays in its owner's bag until it
+   crosses — which is what makes a cancel cost nothing — so equip, discard and
+   rearrange refuse it up front. Rule 1 would catch them, but a minute later and
+   with no way to explain why.
+4. **A departing seat's trade goes with it,** or the partner is stranded at a
+   table whose other side will never accept and whose cell stays locked all run.
+
+`TradeSide.item` carries a COPY of the offered piece, because a bag is PRIVATE
+and the partner has no other way to see what is on the table; it is presentation
+and never authority — the swap re-reads the real cell. `trades` is deliberately
+not a private field: a trade is a fact about two seats, and a per-owner rule
+would show each side its own offer and not the other's.
+
+**There is no shared STASH, deliberately.** A stash is account-shaped state that
+would have to merge across devices through cloud save and carry a migration
+ladder of its own; what players mean by "trade" is handing a friend the sword
+you just found, and the vault already covers "I threw something away and want it
+back".
+
+## The dedicated server
+
+The utility-process server and the standalone one are the same code.
+`server/host.ts` owns the session, the admission desk, the sockets, the router
+mapping and — the part that must not be copied — the fixed-timestep loop, whose
+second copy would drift from the first silently and only under load.
+`server/main.ts` picks its entry from whether anybody forked it: with a
+`parentPort` it is the game's session server, without one it hands over to
+`server/dedicated.ts`. One binary, so there is no second one to forget.
+
+```sh
+npm run server:start -- --port 27015 --level moon --difficulty medium
+npm run server:start -- server.config.json
+```
+
+**Nobody owns it, and three rules follow** (`SessionOptions.ownerless`). Seat 0
+starts DEPARTED so the first arrival is seated into it with their own loadout;
+an empty server does not simulate at all (every hero out of play would otherwise
+wipe a run nobody has played, and an idle machine should cost nothing); and the
+run carries the PARTY STAMP from the first tick, because whoever operates a
+machine you connect to has exactly the standing a listen server's host has.
+
+That rule exists because running one found the bug. The host is identified by
+being the FIRST client to ask for a seat — true only because in the shipped
+topology the host's own renderer always connects first, over a `MessagePort`,
+before any socket is open. A dedicated server has no such renderer, so the first
+person to join over the network was mistaken for the host and handed a DEFAULT
+character instead of the one they brought.
+
+**No Steam** is a consequence rather than a feature: `steamworks.init()` is a
+single global handshake the desktop shell's main process owns, so the relay
+transport is something the SHELL adds to a host. A dedicated server has only the
+direct UDP path, which is the transport that already carries the whole protocol
+and the only one that works on a LAN with the internet off.
+
+## Leaderboards, achievements, and what a co-op run is worth
+
+**The host is a player, so the host can cheat.** That is the accepted cost of a
+listen server — fine among friends, fatal for a ranking — and seven people
+helping inflates every board-facing record without anybody having to cheat at
+all. So a run more than one person has played is MARKED (`GameState.party`, a
+`PartyStamp`) and reaches no ranking.
+
+The mark is **latched** in `seatHero` rather than seeded from `SessionParams`,
+which is a deliberate departure from the plan's own sketch. A run is marked by
+what HAPPENED to it, not by how it was opened (a host who plays alone with the
+door open is playing solo); a parameter is a thing one of three builders can
+forget; and because it is ordinary DYNAMIC state the latch replicates for free,
+with no wire field and no protocol bump. It never clears — the party emptying
+out does not give the run its records back.
+
+The two readers genuinely disagree, so the ledger keeps both:
+
+- **A party kill counts for everyone present** on the badges, or half of them
+  are unearnable in the mode the player is enjoying.
+- **The four platform boards rank SOLO play alone.** The board-facing figures
+  live in `LifetimeTotals.solo`, booked by the same reducers off one flag, and a
+  save written before co-op existed seeds them from the lifetime figures they
+  used to be. The two hardcore campaign boards refuse a campaign any leg of
+  which was played in company — latched on the tally, since by the time one is
+  banked the co-op leg is three venues back.
+
+The honesty this owes: it stops a co-op run reaching a board, and it is not an
+anti-cheat. A determined host can still forge a solo record, exactly as they
+could before multiplayer existed.
+
 ## What is NOT here yet
 
 - **The Steam path is written but unproven.** The binding's legacy P2P API is
@@ -620,13 +794,6 @@ an invite left parked would re-join the same session on every reload.
   (`spectatorCharacter`) is still what a joining client plays on, so nothing a
   seated player earns reaches their own roster. Banking eight characters is
   PR 4's §4.5.
-- **A hero's private verbs still name seat 0.** The command channel carries no
-  seat, so a shop, an equip or a stat spend arriving from a joiner is applied to
-  the host's hero — 20 of the 72 verbs in `applyRunCommand`, and they are spelled
-  `state.players[0]` on purpose so the list is a grep rather than a read. The
-  dispatch is where the seat has to arrive, and it comes BEFORE the per-player
-  screens rather than after them: `openInventory` cannot be made non-blocking per
-  player until it knows which player. See the plan's §3.7.
 - **The co-op tuning is STRUCTURAL, not measured.** The XP share, the loot
   allocation and the menace meter's per-capita read are each shaped correctly
   and each an exact no-op at one hero, but the two knobs that decide how they
@@ -637,6 +804,22 @@ an invite left parked would re-join the same session on every reload.
   one hero. Parameterizing the bot on a `Player` is the prerequisite, and it is
   the next thing PR 4 owes — it is PR 7's §7.1–§7.2, which is owed earlier than
   its number because nothing else can measure this. See the plan's §4.7.
+- **Trade has no window yet.** The engine, the five verbs and the anti-dupe
+  rules are all here and tested; what is missing is the SCREEN — a trade is
+  currently something only a command can start. It is app work of exactly the
+  shape `QuestOverlay` already is, and the engine side it would read
+  (`tradeOf`, `tradePartner`, `TradeSide.item`) is deliberately shaped for it.
+- **There is no net graph.** The plan's §5.6 asks for round trip, snapshot size,
+  packet loss and prediction error behind DEBUG MODE, with the FPS meter as the
+  precedent. Every number it wants is already measured — `Reliability.stats` and
+  `.rtt` per peer, the roster's ping — so this is a readout rather than an
+  instrument.
+- **Nothing has been soaked.** §5.6 asks for eight players for hours and for
+  150 ms / 2% loss injected at the transport seam. Neither has been run, and
+  neither CAN be by hand: the instrument is a bot CLIENT, which the plan now
+  names in §7.2.5 and which is blocked on §7.1's parameterization. The end-to-end
+  test (`tests/engine/net_dedicated_test.ts`) proves the stack CONNECTS over a
+  real socket, which is not the same claim.
 - **Nothing has been proven on eight machines through a real NAT**, and it
   cannot be from CI: that criterion, the UPnP mapping against a real router, and
   the packaged `npm run electron` launch all need hardware this repo's checks do

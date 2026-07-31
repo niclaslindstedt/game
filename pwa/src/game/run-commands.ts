@@ -49,6 +49,8 @@
 //     note is here so the next one that does is written knowingly.
 
 import { applyRunCommand, type GameState } from "@game/core";
+
+import { localHero } from "./local-seat.ts";
 import type { CommandArg, RunCommandName } from "@game/core";
 
 /**
@@ -116,7 +118,14 @@ export function runCommand(
   ...args: CommandArg[]
 ): unknown {
   if (!state) return null;
-  const applied = optimistic ? applyRunCommand(state, name, args) : undefined;
+  // THE LOCAL APPLY ACTS FOR THIS SCREEN'S OWN HERO, which is seat 0 offline
+  // and for the host and the joiner's own seat in a session — the same answer
+  // `localHero` gives everything else the app draws. The optimistic path is
+  // only ever taken where this process IS the authority, so the two can never
+  // disagree about who is acting.
+  const applied = optimistic
+    ? applyRunCommand(state, name, args, localHero(state))
+    : undefined;
   sink?.(name, args);
   return applied ?? null;
 }

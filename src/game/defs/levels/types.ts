@@ -1102,6 +1102,30 @@ export type OpeningStrike = {
   /** THOUGHT_DEFS id fired when the vanguard closes in and draws the blade. */
   thought: string;
   /**
+   * THE BLOWS HE TAKES BEFORE HE ANSWERS ONE — the beats played, in order, by
+   * the strikes that land BEFORE the arming one. Each entry is a THOUGHT_DEFS
+   * id; the blow that lands with every one of them read is the blow that draws
+   * the weapon and plays `thought`.
+   *
+   * This is what turns a shove into a SCENE. One strike and an armed hero says
+   * "the night shift bites now" and gets on with it, which reads as a man who
+   * came here to fight; the horde is his old colleagues, and stepping over
+   * that in a single tick is the coldest thing the campaign could do with it.
+   * Each warning is a refusal — he names them, tells them to stand down, says
+   * he does not want this — and they hit him again anyway, so the answer he
+   * finally throws is the last option rather than the first.
+   *
+   * MECHANICALLY IT IS ONE RULE: the read ledger IS the counter. A warning is
+   * pushed to `thoughtsSeen` as it plays, so the beat needs no run state of
+   * its own, survives a save/resume for free, and a REPLAY (or BOT VIEW, which
+   * seeds the whole ledger through `markThoughtsSeen`) finds every warning
+   * already read and arms on the first blow — which is exactly right, since a
+   * player who has watched the scene should not sit through it again.
+   *
+   * Omitted (or empty) keeps the original single-blow beat.
+   */
+  warnings?: string[];
+  /**
    * How close (world px) the vanguard must get before the blade comes out.
    * Omitted falls back to `DIALOGUE.strikeRadius` — the phone-half-view default,
    * so the rusher is on screen and bearing down when the hero reacts.

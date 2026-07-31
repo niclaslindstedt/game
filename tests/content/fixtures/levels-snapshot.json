@@ -121,6 +121,7 @@
       "openingStrike": {
         "enemy": "vanguard_scientist",
         "thought": "goodco_armed",
+        "warnings": ["goodco_first_blow", "goodco_second_blow"],
         "after": "goodco_staff",
         "radius": 22
       },

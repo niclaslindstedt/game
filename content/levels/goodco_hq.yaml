@@ -104,9 +104,21 @@ firstSightThoughts:
   - enemy: first_investor
     thought: hellborn_investor
     radius: 260
+# THE OPENING STRIKE — three blows, and he only answers the third.
+#
+# The hero walks in with the wall piece holstered, because this is where he
+# used to work. A lone scientist breaks from the pack and hits him; he does not
+# hit back. He names the man, tells the floor to stand down, says he has never
+# raised a hand to anyone. They hit him again. Again. THEN he answers, the
+# weapon comes out, and the game starts. `warnings` are the beats the first two
+# blows play, in order; `thought` is the one the answering blow plays, and the
+# blow that lands with every warning read is the blow that arms him.
 openingStrike:
   enemy: vanguard_scientist
   thought: goodco_armed
+  warnings:
+    - goodco_first_blow
+    - goodco_second_blow
   after: goodco_staff
   radius: 22
 loot:

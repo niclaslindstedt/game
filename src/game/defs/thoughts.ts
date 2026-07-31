@@ -17,14 +17,36 @@ import {
   GENERATED_THOUGHTS,
 } from "../../generated/thoughts.ts";
 
+/**
+ * One page of a monologue. A plain `string[]` is the hero's own page (one
+ * string per line); `{ them: [...] }` is SOMEBODY ANSWERING HIM — the def's
+ * `voice` names who, and the app swaps in that name and portrait for the page.
+ *
+ * The exact inverse of an arrival scene's `DialoguePage`: there the mob owns
+ * the scene and `{ hero: … }` marks his replies; here he owns it and
+ * `{ them: … }` marks theirs. Two tags rather than one shared "the other
+ * party" because a scene should read from its own file — an author looking at
+ * a thought should see whose page each one is without knowing which kind of
+ * scene the engine filed it under.
+ */
+export type ThoughtPage = string[] | { them: string[] };
+
 export type ThoughtDef = {
   id: string;
   /** Name shown in the dialogue header — the hero's own voice ("ME"). */
   speaker: string;
   /** Portrait sprite family (frame `<portrait>_0`) drawn beside the words. */
   portrait: string;
+  /**
+   * THE OTHER VOICE IN THE BEAT — who a `{ them: … }` page belongs to. Absent
+   * on a plain monologue, which is nearly all of them: a thought is private by
+   * default, and the only reason to break that is a beat where somebody is
+   * talking AT him and what they say is the point (a shove answered with "we
+   * have our orders"). Required as soon as any page is tagged.
+   */
+  voice?: { speaker: string; portrait: string };
   /** What he thinks, one entry per page, one string per line. */
-  pages: string[][];
+  pages: ThoughtPage[];
 };
 
 export const THOUGHT_DEFS: Record<string, ThoughtDef> = GENERATED_THOUGHTS;

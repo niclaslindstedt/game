@@ -89,9 +89,45 @@ export function diffState(prev: WireState, next: WireState): StatePatch {
  * of it.
  */
 export function patchState(state: WireState, patch: StatePatch): void {
+  if (!isPlainObject(patch)) return;
   for (const [field, entry] of Object.entries(patch)) {
     applyPatch(state, field, entry);
   }
+}
+
+/**
+ * THE APPLIER IS TOTAL OVER ARBITRARY JSON, AND THAT IS A SECURITY PROPERTY
+ * RATHER THAN DEFENSIVENESS (multiplayer plan §5.2).
+ *
+ * Everything below `patchState` used to assume its input came from `diffState`,
+ * which is true of every patch the game produces and false of every patch a
+ * JOINER receives: a client applies whatever the host sends it, and it has no
+ * more reason to trust that host than the host has to trust the client. The
+ * fuzz suite found three ways one packet took a joiner's renderer down — a null
+ * entry read for its `k`, a `del` that was not iterable, an `upd` holding
+ * something with no `id` — and one way it took the machine down, which is a
+ * byte field claiming a length of a billion.
+ *
+ * So each helper below reads its own fields through a guard, and a member that
+ * is not the shape the strategy wants is IGNORED rather than applied. Ignoring
+ * is the right answer and not merely the safe one: a delta is coded against an
+ * acknowledged baseline, so a dropped field is exactly a dropped packet, which
+ * the next publish corrects.
+ */
+
+/**
+ * The most bytes one byte-array field may claim.
+ *
+ * `explored` is the only tenant and tops out near 28 KB on the biggest map;
+ * this is two orders of magnitude above that, so no honest patch comes near it
+ * and `new Uint8Array(n)` can never be asked for a gigabyte by a stranger.
+ */
+const MAX_BYTE_FIELD = 4 << 20;
+
+/** An array, or an empty one — so a `for…of` over a patch member can never
+ * throw on something that is not iterable. */
+function asList<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
 }
 
 // ---------------------------------------------------------------------------
@@ -117,6 +153,10 @@ function applyPatch(
   key: string,
   entry: FieldPatch,
 ): void {
+  // A patch arrives from the other end of a socket, so the discriminant is a
+  // claim rather than a fact — and reading `.k` off a null was the first thing
+  // the fuzzer knocked over.
+  if (!isPlainObject(entry)) return;
   const current = holder[key];
   if (entry.k === "v") {
     if (entry.v === undefined) delete holder[key];
@@ -137,9 +177,12 @@ function applyPatch(
   const target = isPlainObject(current)
     ? (current as Record<string, unknown>)
     : {};
-  for (const dead of entry.del ?? []) delete target[dead];
-  for (const [member, sub] of Object.entries(entry.set ?? {})) {
-    applyPatch(target, member, sub);
+  for (const dead of asList<string>(entry.del)) {
+    if (typeof dead === "string") delete target[dead];
+  }
+  const set = isPlainObject(entry.set) ? entry.set : {};
+  for (const [member, sub] of Object.entries(set)) {
+    applyPatch(target, member, sub as FieldPatch);
   }
   holder[key] = target;
 }
@@ -219,10 +262,15 @@ function patchEntities(current: unknown, entry: FieldPatch): unknown {
   const list = isEntityArray(current) ? current : [];
   const byId = new Map<number, Entity>();
   for (const item of list) byId.set(item.id, item);
-  for (const id of entry.del ?? []) byId.delete(id);
-  for (const item of entry.upd ?? []) {
-    const entity = item as Entity;
-    byId.set(entity.id, entity);
+  for (const id of asList<number>(entry.del)) {
+    if (typeof id === "number") byId.delete(id);
+  }
+  for (const item of asList<unknown>(entry.upd)) {
+    // Anything without a numeric id is dropped rather than seated under an
+    // `undefined` key: the sort below reads `a.id - b.id`, and one such
+    // entry turns the whole list's order into NaN.
+    if (!isPlainObject(item) || typeof item.id !== "number") continue;
+    byId.set(item.id, item as Entity);
   }
   // A Map iterates in first-seen order — the receiver's old order with
   // newcomers appended, which is NOT the sender's. Sorting by id restores an
@@ -258,11 +306,21 @@ function diffBytes(prev: unknown, next: unknown): FieldPatch | null {
 
 function patchBytes(current: unknown, entry: FieldPatch): unknown {
   if (entry.k !== "b") return current;
+  // The claimed LENGTH is the one number in a patch that costs memory on its
+  // own — `new Uint8Array(n)` allocates before anything is written into it.
+  const n = Math.floor(entry.n ?? 0);
+  if (!Number.isFinite(n) || n < 0 || n > MAX_BYTE_FIELD) return current;
   const held = asBytes(current);
-  const out = held && held.length === entry.n ? held : new Uint8Array(entry.n);
-  const ix = entry.ix ?? [];
-  const vs = entry.vs ?? [];
-  for (let i = 0; i < ix.length; i++) out[ix[i]!] = vs[i] ?? 0;
+  const out = held && held.length === n ? held : new Uint8Array(n);
+  const ix = asList<number>(entry.ix);
+  const vs = asList<number>(entry.vs);
+  for (let i = 0; i < ix.length; i++) {
+    const at = ix[i];
+    // Out of range writes are dropped by the typed array anyway; a
+    // non-integer index would silently become an ordinary property on it.
+    if (typeof at !== "number" || !Number.isInteger(at)) continue;
+    out[at] = vs[i] ?? 0;
+  }
   return out;
 }
 

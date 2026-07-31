@@ -236,17 +236,48 @@ few rooms later._
 - LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT.
 - WE NEVER RAN NIGHTS LIKE THIS. SOMETHING'S GOT THE WHOLE BUILDING UP AFTER DARK.
 
-### Hero's thought — the vanguard's first strike (draws the weapon)
+### The opening strike — three blows, and he only answers the third
 
-_The level opens with the hero's weapon holstered — he walks in like it's still
-his old job. A lone LAB SCIENTIST breaks from the pack and takes a harmless
-swing at him; staff don't fight, and that wrongness is what makes him draw
-whatever he took off the wall. Fires once, on that first strike (gated to play
-after the sighting read above), and arms the auto-attack for the rest of the
-run. Weapon-agnostic on purpose — the wall piece differs per difficulty._
+_The level opens with the hero's weapon holstered: he walks in like it's still
+his old job. A lone LAB SCIENTIST breaks from the pack and hits him — and he
+does not hit back. These are his old colleagues. He names the man, tells the
+floor to stand down, says he has never raised a hand to anyone; the scientist
+answers him, and every reason he gives is one the hero would have given himself
+in the years before the same machine walked him out of the same door. He is hit
+a second time, and a third. Only then does he answer one, apologising while he
+does it — and the auto-attack is live from there on._
 
-- A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID.
-- SO THE NIGHT SHIFT BITES NOW. GOOD THING I CAME ARMED.
+_The whole beat is gated to play after the sighting read above, and each blow
+is its own scene: the hero shoves the man off, the man picks himself up and
+comes back. Weapon-agnostic on purpose — the wall piece differs per difficulty,
+which is also the joke: on **EASY** the thing this peaceful man finally answers
+with is grandpa's sawed-off._
+
+**Blow one.**
+
+**ME:** A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT. I KNOW HIS FACE.
+
+**LAB SCIENTIST:** NOBODY GETS IN HERE. YOU'RE NOT WALKING OUT WITH OUR SECRETS.
+
+**ME:** WE ATE AT THE SAME TABLE FOR SIX YEARS. HEY. IT'S ME. LOOK AT ME.
+
+**Blow two.**
+
+**ME:** HE SWUNG AGAIN. HARDER. AND THE WHOLE FLOOR IS TURNING ROUND TO WATCH.
+
+**LAB SCIENTIST:** I KNOW WHO YOU ARE. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB.
+
+**ME:** STAY BACK. I HAVE NEVER RAISED A HAND TO ANYONE. DON'T MAKE ME START.
+
+**Blow three — he hits back, and the game starts.**
+
+**ME:** THIRD TIME. HE ISN'T LISTENING. NOBODY ON THIS FLOOR IS LISTENING.
+
+**LAB SCIENTIST:** WE ALL WANT TO KEEP OUR JOBS. NOTHING PERSONAL. YOU OF ALL PEOPLE KNOW.
+
+**ME:** I'M SORRY. I TRIED TO ASK. ADA IS ON A SHIP AND YOU'RE IN MY WAY.
+
+**ME:** I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES.
 
 ### Hero's thought — first SUCCESSOR sighted at GOODCO HQ
 
@@ -2863,23 +2894,24 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                                       | Canonical data file                                                                                                                                      |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cutscenes — prelude + travel scenes (captions, `say` beats)  | `content/cutscenes/<id>.yaml` (compiled to `src/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`) |
-| Per-level opening monologues (`intro`) + epilogues (`outro`) | `content/levels/<id>.yaml` (compiled to `src/generated/levels.ts` by `make levels`)                                                                      |
-| Elite/boss `dialogue` + `lastWords`                          | `content/enemies/<biome>/<id>.yaml` (compiled to `src/generated/enemies.ts` by `make levels`)                                                            |
-| Hero's inner thoughts (`firstKillThoughts`)                  | `content/thoughts.yaml` (compiled to `src/generated/thoughts.ts`; pinned from a `LevelDef`)                                                              |
-| Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                   |
-| Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                            |
-| Companion joining words + kill quotes                        | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                         |
-| Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                 |
-| The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                      |
-| Quest givers' greetings + farewells                          | `content/quest-givers.yaml` (compiled to `src/generated/quests.ts` by `make levels`; played by `src/game/quests/`)                                       |
-| Every errand's ask, nag and handover                         | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                              |
-| The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                    |
-| Bestiary lore (`EnemyDef.lore` — described, not spoken)      | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                       |
-| Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                                                   |
-| Brand strings (title, tagline — not story)                   | `game.config.json` → `pwa/src/identity.ts`                                                                                                               |
+| Story/dialogue element                                       | Canonical data file                                                                                                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cutscenes — prelude + travel scenes (captions, `say` beats)  | `content/cutscenes/<id>.yaml` (compiled to `src/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                  |
+| Per-level opening monologues (`intro`) + epilogues (`outro`) | `content/levels/<id>.yaml` (compiled to `src/generated/levels.ts` by `make levels`)                                                                                       |
+| Elite/boss `dialogue` + `lastWords`                          | `content/enemies/<biome>/<id>.yaml` (compiled to `src/generated/enemies.ts` by `make levels`)                                                                             |
+| Hero's inner thoughts (`firstKillThoughts`)                  | `content/thoughts.yaml` (compiled to `src/generated/thoughts.ts`; pinned from a `LevelDef`)                                                                               |
+| The scripted opening strike's blows (`openingStrike`)        | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml` |
+| Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                    |
+| Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                                             |
+| Companion joining words + kill quotes                        | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                          |
+| Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                  |
+| The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                                       |
+| Quest givers' greetings + farewells                          | `content/quest-givers.yaml` (compiled to `src/generated/quests.ts` by `make levels`; played by `src/game/quests/`)                                                        |
+| Every errand's ask, nag and handover                         | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                                               |
+| The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                     |
+| Bestiary lore (`EnemyDef.lore` — described, not spoken)      | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                        |
+| Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                                                                    |
+| Brand strings (title, tagline — not story)                   | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                |
 
 **A quest giver's `lore` is DESCRIBED, not spoken** — it is the paragraph the
 offer box and the quest log print under their name, in the same register as an
