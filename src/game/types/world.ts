@@ -578,6 +578,42 @@ export type LootMode = "free" | "allocated";
  * chain follows, and for the same reason: the alternative silently hands the
  * board a run that was played by four people.
  */
+/**
+ * ONE SIDE OF AN OPEN TRADE (`src/game/trade.ts`, multiplayer plan §5.1).
+ *
+ * The offered item is named by BOTH its bag cell and its instance id, and the
+ * pair is the anti-dupe rule: a cell alone is a cell whose contents may have
+ * changed since the offer, and an id alone would have to be searched for —
+ * which is exactly how a trade hands over something the offering player never
+ * put on the table. The item STAYS in its owner's bag until it crosses, so a
+ * cancelled trade costs nothing and there is never a moment when a piece of
+ * gear exists in two places or in none.
+ */
+export type TradeSide = {
+  /** The offering hero's inventory cell, or -1 for nothing. */
+  cell: number;
+  /** `Equipment.id` of the piece that was in that cell when it was offered. */
+  itemId: number;
+  /**
+   * A COPY of the offered piece, for the OTHER side to look at.
+   *
+   * It has to travel, and the reason is the replication split: a bag is
+   * PRIVATE, so the partner never receives the offering hero's inventory and
+   * has no way to see what is in the cell being named. Without this a trade
+   * window would show a cell index.
+   *
+   * **IT IS PRESENTATION AND NEVER AUTHORITY.** The swap re-reads the real cell
+   * and compares the real id (see `settleTrade`); this copy is not consulted,
+   * so a client that forged one would change a picture and nothing else.
+   */
+  item?: Equipment;
+  /** Coins on the table. */
+  coins: number;
+  /** This side has agreed to the table AS IT STANDS. Dropped by any change to
+   * either side, so an acceptance can only ever describe what was seen. */
+  accepted: boolean;
+};
+
 export type PartyStamp = {
   /**
    * The most seats this run has ever held at once, host included — a fact

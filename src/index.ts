@@ -96,6 +96,22 @@ export {
   type DepartOptions,
 } from "./game/seating.ts";
 export { validateLoadout, type LoadoutCheck } from "./game/loadout-check.ts";
+// TRADE (the plan's §5.1) — the one place a piece of gear leaves one private
+// bag and arrives in another, which is why every rule about it lives in one
+// module and the swap is a single transaction.
+export {
+  acceptTrade,
+  cancelTrade,
+  endTradesFor,
+  isOfferedInTrade,
+  offerCoins,
+  offerItem,
+  openTrade,
+  tradeOf,
+  tradePartner,
+  type Trade,
+  type TradeRefusal,
+} from "./game/trade.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
 export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";

@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 8;
+export const PROTOCOL_VERSION = 9;
 
 /**
  * The most clients one session seats, host included.
@@ -562,6 +562,11 @@ export const COMMANDS = [
   "advanceTalk",
   "pickTalkChoice",
   "closeTalk",
+  "openTrade",
+  "cancelTrade",
+  "offerTradeItem",
+  "offerTradeCoins",
+  "acceptTrade",
   "reclaimVaultItem",
   "clearVault",
   "startAutopilot",

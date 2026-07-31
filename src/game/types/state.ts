@@ -25,6 +25,7 @@ import type {
   StatName,
 } from "./core.ts";
 import type { GameEvent, GameStats } from "./events.ts";
+import type { Trade } from "../trade.ts";
 import type {
   Asteroid,
   BaitCharge,
@@ -440,6 +441,16 @@ export type GameState = {
    * Latched by `seatHero` when the second hero is seated, never cleared.
    */
   party?: PartyStamp | null;
+  /**
+   * OPEN TRADES (`src/game/trade.ts`, multiplayer plan §5.1) — at most one per
+   * seat, and absent on every single-player run, which is what makes this cost
+   * the shipped campaign nothing.
+   *
+   * It is RUN state rather than per-player state because a trade is a fact
+   * about two heroes at once: holding half of one on each side is how the two
+   * halves come to disagree about what is on the table.
+   */
+  trades?: Trade[];
   /**
    * The escalation meter (see config MENACE). Heated by the player's rolling
    * combat output (`combatDps` / `combatKillRate`) and jolted by overpowered

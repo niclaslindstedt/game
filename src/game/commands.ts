@@ -94,6 +94,13 @@ import {
   spendCleanSlate,
 } from "./items/stat-points.ts";
 import { clearVault, reclaimVaultItem } from "./items/vault.ts";
+import {
+  acceptTrade,
+  cancelTrade,
+  offerCoins,
+  offerItem,
+  openTrade,
+} from "./trade.ts";
 import { closeMap, openMap } from "./map.ts";
 import {
   buyStock,
@@ -129,6 +136,7 @@ import type {
   CompanionSlot,
   EquipSlot,
   GameState,
+  Player,
   StatName,
 } from "./types/index.ts";
 
@@ -267,6 +275,16 @@ export const RUN_COMMAND_ARGS = {
   pickTalkChoice: ["int"],
   closeTalk: [],
 
+  // THE TABLE — trade (plan §5.1). Every one of these acts for the seat the
+  // session admitted this client into, never a seat named on the frame.
+  // `openTrade` names the PARTNER, because who else is on the map is a public
+  // fact; whose bag is being offered FROM is the server's answer.
+  openTrade: ["int"],
+  cancelTrade: [],
+  offerTradeItem: ["int"],
+  offerTradeCoins: ["int"],
+  acceptTrade: [],
+
   // THE LOST & FOUND.
   reclaimVaultItem: ["int"],
   clearVault: [],
@@ -362,9 +380,20 @@ export function applyRunCommand(
   state: GameState,
   name: RunCommandName,
   args: readonly unknown[] = [],
+  actor?: Player,
 ): unknown {
   if (!checkRunCommandArgs(name, args)) return undefined;
   const a = args as CommandArg[];
+  // WHOSE VERB THIS IS. A bag, a purse, a build and a talent tree are PRIVATE
+  // (the plan's §3.1), so a command that touches one has to say which hero it
+  // is for — and the answer is the SERVER's, taken from the seat it admitted
+  // this client into, never a claim on the frame. Passing a seat would hand a
+  // stranger somebody else's inventory in one field.
+  //
+  // Defaulting to seat 0 keeps every single-player caller and every existing
+  // test unchanged, which is the same identity case §3.1 relied on: a run with
+  // one hero has exactly one answer to this question.
+  const hero = actor ?? state.players[0];
   switch (name) {
     // THE SCENE
     case "advanceIntro":
@@ -416,7 +445,7 @@ export function applyRunCommand(
     case "closeCompanionPanel":
       return closeCompanionPanel(state);
     case "promptPendingPoints":
-      return promptPendingPoints(state, state.players[0]);
+      return promptPendingPoints(state, hero);
 
     // THE RUN'S OWN FLOW
     case "pauseGame":
@@ -430,36 +459,32 @@ export function applyRunCommand(
 
     // THE BAG
     case "equipFromInventory":
-      return equipFromInventory(state, state.players[0], num(a, 0));
+      return equipFromInventory(state, hero, num(a, 0));
     case "equipFromInventoryInto":
       return equipFromInventoryInto(
         state,
-        state.players[0],
+        hero,
         num(a, 0),
         str(a, 1) as EquipSlot,
       );
     case "unequipToInventory":
-      return unequipToInventory(
-        state,
-        state.players[0],
-        str(a, 0) as EquipSlot,
-      );
+      return unequipToInventory(state, hero, str(a, 0) as EquipSlot);
     case "moveInventoryItem":
-      return moveInventoryItem(state, state.players[0], num(a, 0), num(a, 1));
+      return moveInventoryItem(state, hero, num(a, 0), num(a, 1));
     case "discardFromInventory":
-      return discardFromInventory(state, state.players[0], num(a, 0));
+      return discardFromInventory(state, hero, num(a, 0));
     case "discardEquipped":
-      return discardEquipped(state, state.players[0], str(a, 0) as EquipSlot);
+      return discardEquipped(state, hero, str(a, 0) as EquipSlot);
     case "spendGateKey":
-      return spendGateKey(state, state.players[0], num(a, 0));
+      return spendGateKey(state, hero, num(a, 0));
     case "spendReviveItem":
       return spendReviveItem(state, num(a, 0));
     case "autoEquipBest":
-      return autoEquipBest(state, state.players[0]);
+      return autoEquipBest(state, hero);
     case "scrapInferiorLoot":
-      return scrapInferiorLoot(state, state.players[0]);
+      return scrapInferiorLoot(state, hero);
     case "discardHeldAbility":
-      return discardHeldAbility(state, state.players[0], num(a, 0));
+      return discardHeldAbility(state, hero, num(a, 0));
 
     // THE COUNTER
     case "buyStock":
@@ -475,17 +500,17 @@ export function applyRunCommand(
 
     // THE BUILD
     case "allocateStat":
-      return allocateStat(state, state.players[0], str(a, 0) as StatName);
+      return allocateStat(state, hero, str(a, 0) as StatName);
     case "deallocateStat":
-      return deallocateStat(state, state.players[0], str(a, 0) as StatName);
+      return deallocateStat(state, hero, str(a, 0) as StatName);
     case "spendTalentPoint":
-      return spendTalentPoint(state, state.players[0], str(a, 0));
+      return spendTalentPoint(state, hero, str(a, 0));
     case "beginRespec":
-      return beginRespec(state, state.players[0]);
+      return beginRespec(state, hero);
     case "confirmRespec":
-      return confirmRespec(state, state.players[0]);
+      return confirmRespec(state, hero);
     case "spendCleanSlate":
-      return spendCleanSlate(state, state.players[0]);
+      return spendCleanSlate(state, hero);
 
     // THE PARTY
     case "healCompanionWithMedkit":
@@ -530,10 +555,20 @@ export function applyRunCommand(
       return closeTalk(state);
 
     // THE LOST & FOUND
+    case "openTrade":
+      return openTrade(state, hero, num(a, 0));
+    case "cancelTrade":
+      return cancelTrade(state, hero);
+    case "offerTradeItem":
+      return offerItem(state, hero, num(a, 0));
+    case "offerTradeCoins":
+      return offerCoins(state, hero, num(a, 0));
+    case "acceptTrade":
+      return acceptTrade(state, hero);
     case "reclaimVaultItem":
-      return reclaimVaultItem(state, state.players[0], num(a, 0));
+      return reclaimVaultItem(state, hero, num(a, 0));
     case "clearVault":
-      return clearVault(state, state.players[0]);
+      return clearVault(state, hero);
 
     // THE RIDE
     case "startAutopilot":
@@ -545,7 +580,7 @@ export function applyRunCommand(
     case "creditAutopilotPurse":
       return creditAutopilotPurse(state, num(a, 0));
     case "refundAutopilotBuild":
-      return refundAutopilotBuild(state, state.players[0]);
+      return refundAutopilotBuild(state, hero);
   }
 }
 

@@ -44,6 +44,7 @@ import { difficultyDef } from "./defs/difficulties.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import { applyLoadout } from "./arrival.ts";
 import { partyCentroid } from "./party.ts";
+import { endTradesFor } from "./trade.ts";
 import type { GameState, Loadout, Player } from "./types/index.ts";
 
 /** How far from the party a fresh arrival is set down, in world px. Far enough
@@ -177,6 +178,10 @@ export function departHero(
   const hero = state.players[seat];
   if (!hero || hero.departed) return false;
   hero.departed = true;
+  // A TRADE THIS SEAT WAS IN GOES WITH THEM (plan §5.1). Nothing has moved, so
+  // nothing is undone — but leaving it open would strand the partner at a
+  // table whose other side will never accept and can never settle.
+  endTradesFor(state, seat);
   // `hold` says this MIGHT be a dropped connection rather than somebody
   // quitting, so the seat is kept for them — see `Player.held` and
   // `resumeHero`. The two look identical from a socket, which is the whole

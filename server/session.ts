@@ -58,6 +58,7 @@ import {
   type GameState,
   type FrozenRun,
   type Loadout,
+  type Player,
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
@@ -890,7 +891,17 @@ export function createSession(options: SessionOptions): Session {
       }
       if (type === FRAME.command) {
         const frame = payload as { name?: unknown; args?: unknown } | null;
-        runCommand(state, frame?.name, frame?.args);
+        // THE ACTING HERO IS THE SEAT WE ADMITTED THIS CLIENT INTO, never a
+        // field on the frame (plan §3.6's debt). A bag, a purse, a build and a
+        // talent tree are private, so a command that touches one had to learn
+        // whose it is — and letting a client NAME the seat would hand a
+        // stranger somebody else's inventory in one field.
+        runCommand(
+          state,
+          frame?.name,
+          frame?.args,
+          state.players[client.recipient.seat],
+        );
       }
     },
 
@@ -962,9 +973,14 @@ function applyInput(
  * app may not depend on the difference between "refused" and "returned
  * nothing".
  */
-function runCommand(state: GameState, name: unknown, args: unknown): void {
+function runCommand(
+  state: GameState,
+  name: unknown,
+  args: unknown,
+  actor: Player | undefined,
+): void {
   if (!isRunCommand(name)) return;
-  applyRunCommand(state, name, Array.isArray(args) ? args : []);
+  applyRunCommand(state, name, Array.isArray(args) ? args : [], actor);
 }
 
 /** Clear the one-shot edges after the tick that consumed them. */
