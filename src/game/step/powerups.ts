@@ -38,7 +38,7 @@ import {
 } from "../ability-effects.ts";
 import { abilityDef, type AbilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { knockEnemyBack } from "../hazards.ts";
+import { knockEnemyBack } from "../knockback.ts";
 import { hitEnemy } from "../loot.ts";
 import type {
   ActiveAbility,

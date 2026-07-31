@@ -38,19 +38,69 @@ thoughts:
     pages:
       - - LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT.
       - - WE NEVER RAN NIGHTS LIKE THIS. SOMETHING'S GOT THE WHOLE BUILDING UP AFTER DARK.
-  # The scripted first strike: a lone scientist breaks from the pack and
-  # takes a harmless swing (see the level's `openingStrike`). It doesn't hurt
-  # — but staff don't fight, so the swing tells the hero the night shift has
-  # teeth now. This is the beat that ARMS his weapon; the "good thing I came
-  # armed" line lands here, as a reaction, not a boast. Weapon-agnostic on
-  # purpose — the piece off the wall differs per difficulty. Portrait is
-  # "hero" (still unsuited at HQ).
+  # THE OPENING STRIKE IS THREE BLOWS, NOT ONE (the level's `openingStrike`
+  # and its `warnings`), and these are its first two. A lone scientist breaks
+  # from the pack and swings at him — and the hero, who walked in holstered
+  # because this is where he used to work, does not swing back. He names the
+  # man, tells the floor to stand down, says he does not want this. That is
+  # the whole point of the beat: the horde on this map is his old colleagues,
+  # and answering the first blow in the same tick would make him somebody who
+  # came here to fight. He is not. They have to earn it, and they do — three
+  # times.
+  #
+  # Portrait is "hero" (still unsuited at HQ) on all three. Weapon-agnostic on
+  # purpose — the piece off the wall differs per difficulty.
+  # AND THE MAN HITTING HIM ANSWERS BACK (`voice:` + `them:` pages) — which is
+  # what keeps the scene from being the hero talking to himself about people
+  # who never get a word in. He is not a monster and he is not hollowed out:
+  # he has orders, he has a job he would like to keep, and he has been told
+  # what is in this building and who is not allowed near it. Every reason he
+  # gives is one the hero would have given, in the years before the same
+  # machine walked HIM out of the same door — which is why the swing at the
+  # end costs something.
+  goodco_first_blow:
+    speaker: ME
+    portrait: hero
+    voice:
+      speaker: LAB SCIENTIST
+      portrait: scientist
+    pages:
+      - - A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT. I KNOW HIS FACE.
+      - them:
+          - NOBODY GETS IN HERE. YOU'RE NOT WALKING OUT WITH OUR SECRETS.
+      - - WE ATE AT THE SAME TABLE FOR SIX YEARS. HEY. IT'S ME. LOOK AT ME.
+  # Blow two. The refusal gets louder — and the line that has to land is that
+  # he has never hit anyone, because everything he does for the rest of the
+  # campaign is measured against it. The scientist's answer is worse than
+  # not recognising him: he does, and it changes nothing.
+  goodco_second_blow:
+    speaker: ME
+    portrait: hero
+    voice:
+      speaker: LAB SCIENTIST
+      portrait: scientist
+    pages:
+      - - HE SWUNG AGAIN. HARDER. AND THE WHOLE FLOOR IS TURNING ROUND TO WATCH.
+      - them:
+          - I KNOW WHO YOU ARE. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB.
+      - - STAY BACK. I HAVE NEVER RAISED A HAND TO ANYONE. DON'T MAKE ME START.
+  # Blow three: he hits back, and THIS is the beat that ARMS his weapon and
+  # starts the game. It is an apology, not a boast — the old "good thing I
+  # came armed" made the swing sound like the plan. The dry last page is the
+  # joke the difficulty ladder writes for us: on EASY the thing he answers
+  # with is grandpa's sawed-off, and the night shift finds that out at once.
   goodco_armed:
     speaker: ME
     portrait: hero
+    voice:
+      speaker: LAB SCIENTIST
+      portrait: scientist
     pages:
-      - - A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID.
-      - - SO THE NIGHT SHIFT BITES NOW. GOOD THING I CAME ARMED.
+      - - THIRD TIME. HE ISN'T LISTENING. NOBODY ON THIS FLOOR IS LISTENING.
+      - them:
+          - WE ALL WANT TO KEEP OUR JOBS. NOTHING PERSONAL. YOU OF ALL PEOPLE KNOW.
+      - - I'M SORRY. I TRIED TO ASK. ADA IS ON A SHIP AND YOU'RE IN MY WAY.
+      - - I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES.
   # Sighting the first SUCCESSOR at GOODCO HQ: he was on the team that built
   # the first one, before the AI redrew the line (the CORE LOG's "IT DREW
   # THE SUCCESSOR LINE") and the machines started walking everyone's jobs out

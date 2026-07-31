@@ -18,7 +18,7 @@
 import { distance } from "@game/lib/vec.ts";
 import { PLAYER } from "../config/index.ts";
 import type { ShockPulseAbility } from "../defs/enemies/abilities.ts";
-import { pushPlayer } from "../hazards.ts";
+import { pushPlayer } from "../knockback.ts";
 import { registerAbility, type AbilityCtx } from "./catalog.ts";
 import {
   groundMoveCanTouch,

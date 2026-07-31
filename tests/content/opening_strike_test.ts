@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The scripted opening strike at GOODCO HQ (LevelDef.openingStrike): the hero
-// walks in with his sword holstered, and a lone VANGUARD scientist sprints out
-// ahead of the pack to reach him and land a harmless first swing — THAT is what
-// draws the blade, fires the "good thing I brought the sword" beat
-// (goodco_armed), and turns the auto-attack on. Verifies the disarmed state,
-// the ordering gate (the sighting read lands first), the CONTACT trigger (the
-// swing lands when the rusher is on top of him, not half a screen away), the
-// no-HP-cost strike, and that a non-vanguard touch stays harmless until the
-// beat lands.
+// walks in with his weapon holstered, and a lone VANGUARD scientist sprints out
+// ahead of the pack to reach him and swing at him — THREE TIMES. The first two
+// blows land on a man who will not hit back: these are his old colleagues, and
+// he names them, tells the floor to stand down, says he has never raised a hand
+// to anyone (`openingStrike.warnings` → goodco_first_blow, goodco_second_blow).
+// Only the THIRD draws the weapon, fires the apology beat (goodco_armed) and
+// turns the auto-attack on. Verifies the disarmed state, the ordering gate (the
+// sighting read lands first), the CONTACT trigger (a swing lands when the rusher
+// is on top of him, not half a screen away), the ESCALATION (three separate
+// blows, in order, with the striker shoved off between them so each is its own
+// event), the no-HP-cost strikes, and that a non-vanguard touch stays harmless
+// until the beat lands.
 
 import { describe, expect, it } from "vitest";
 
@@ -63,6 +67,36 @@ function tapThrough(state: GameState): void {
   while (state.dialogue) advanceDialogue(state);
 }
 
+/**
+ * Play the whole scripted beat out on an idle hero: step until the weapon is
+ * drawn, tapping every scene closed as it opens, and return the thought ids the
+ * strike fired IN ORDER. Stops with the ARMING scene still on stage (the
+ * assertions below read `state.dialogue`), and returns an empty list for a
+ * seeded ledger where nothing is re-shown.
+ */
+function playOpeningBeats(state: GameState, maxSteps = 2000): string[] {
+  const fired: string[] = [];
+  for (let i = 0; i < maxSteps; i++) {
+    const src = state.dialogue?.source;
+    if (src?.kind === "playerThought" && fired.at(-1) !== src.defId) {
+      fired.push(src.defId);
+    }
+    if (!state.players[0].disarmed) return fired;
+    if (state.dialogue) {
+      advanceDialogue(state);
+      continue;
+    }
+    step(state, idle, DT);
+  }
+  throw new Error("the opening strike never armed the hero");
+}
+
+/** The two beats his refusals play, then the one his answer plays. */
+const WARNINGS = ["goodco_first_blow", "goodco_second_blow"];
+const ARMED = "goodco_armed";
+/** The whole ledger a replay / BOT VIEW run seeds (see `markThoughtsSeen`). */
+const READ_LEDGER = ["goodco_staff", ...WARNINGS, ARMED];
+
 describe("GOODCO HQ opening strike", () => {
   it("opens the hero disarmed, and other levels armed", () => {
     expect(disarmedHQ().players[0].disarmed).toBe(true);
@@ -108,14 +142,13 @@ describe("GOODCO HQ opening strike", () => {
     expect(state.players[0].disarmed).toBe(true); // gate held, still holstered
     expect(v.pos.x).toBeCloseTo(startX, 5); // never left its post
     // The moment the beat plays, it breaks from the pack, sprints the hero
-    // down, and its swing draws the blade — the rush follows the read.
+    // down, and its three swings draw the blade — the rush follows the read.
     state.thoughtsSeen.push("goodco_staff");
-    for (let i = 0; i < 400 && state.players[0].disarmed; i++)
-      step(state, idle, DT);
+    expect(playOpeningBeats(state)).toEqual([...WARNINGS, ARMED]);
     expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "goodco_armed",
+      defId: ARMED,
     });
     // The blade came out with the scientist on top of him, not half a screen
     // away — a contact-range strike, never the old distant standoff.
@@ -128,7 +161,7 @@ describe("GOODCO HQ opening strike", () => {
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("goodco_staff"); // gate open
     v.pos = { ...state.players[0].pos };
-    step(state, idle, DT); // strike lands, arms the hero
+    playOpeningBeats(state); // the three blows land and arm the hero
     tapThrough(state);
     expect(state.players[0].disarmed).toBe(false);
     // Now it chases like any minion: one tick advances at most its plain
@@ -157,20 +190,99 @@ describe("GOODCO HQ opening strike", () => {
     expect(state.players[0].disarmed).toBe(true);
   });
 
-  it("arms the hero on the vanguard's strike — after the sighting beat", () => {
+  it("arms the hero on the vanguard's THIRD strike — after the sighting beat", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("goodco_staff"); // the gate's prerequisite
     v.pos = { ...state.players[0].pos }; // in contact
     const hp = state.players[0].hp;
-    step(state, idle, DT);
+    expect(playOpeningBeats(state)).toEqual([...WARNINGS, ARMED]);
     expect(state.players[0].disarmed).toBe(false);
-    expect(state.players[0].hp).toBe(hp); // the first swing costs no HP
+    // NONE of the three swings costs HP — the refusals are as free as the
+    // answer, or a hero who stands there taking two extra blows would be paying
+    // for the scene the game chose to make him sit through.
+    expect(state.players[0].hp).toBe(hp);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "goodco_armed",
+      defId: ARMED,
     });
-    expect(state.thoughtsSeen).toContain("goodco_armed");
+    expect(state.thoughtsSeen).toContain(ARMED);
+  });
+
+  it("takes three separate blows, in order, and answers only the third", () => {
+    const state = disarmedHQ();
+    const v = isolateVanguard(state);
+    state.thoughtsSeen.push("goodco_staff"); // gate open
+    v.pos = { ...state.players[0].pos }; // in contact
+
+    // BLOW ONE. He is hit, and he does not hit back: the weapon stays holstered
+    // and the beat that plays is a refusal, not a draw.
+    step(state, idle, DT);
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: WARNINGS[0],
+    });
+    expect(state.players[0].disarmed).toBe(true);
+    // …and the striker was SHOVED OFF. Without that he is still parked on the
+    // hero, satisfies the contact trigger again on the very next tick, and all
+    // three beats stack back to back with nothing happening between them —
+    // which reads as one long scene rather than as being hit three times.
+    expect(v.knockMs ?? 0).toBeGreaterThan(0);
+    tapThrough(state);
+
+    // BLOW TWO. He has to pick himself up and come back in for it — a real gap
+    // opens between them first — and it still buys no answer.
+    let apart = 0;
+    for (let i = 0; i < 400 && !state.dialogue; i++) {
+      step(state, idle, DT);
+      apart = Math.max(apart, distance(v.pos, state.players[0].pos));
+    }
+    // The shove put clear floor between them (the contact radius is 22 px), so
+    // the second blow is something the player watches ARRIVE.
+    expect(apart).toBeGreaterThan(30);
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: WARNINGS[1],
+    });
+    expect(state.players[0].disarmed).toBe(true);
+    tapThrough(state);
+
+    // BLOW THREE is the one he answers.
+    for (let i = 0; i < 400 && state.players[0].disarmed; i++)
+      step(state, idle, DT);
+    expect(state.players[0].disarmed).toBe(false);
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: ARMED,
+    });
+    expect(state.thoughtsSeen).toEqual(
+      expect.arrayContaining([...WARNINGS, ARMED]),
+    );
+  });
+
+  it("never swings back during the warnings, however long they take", () => {
+    // The whole point of the escalation is that the first two blows are
+    // ANSWERED WITH WORDS. An auto-attack that woke up between them would make
+    // the refusal a lie the player can watch being told.
+    const state = disarmedHQ();
+    const v = isolateVanguard(state);
+    state.thoughtsSeen.push("goodco_staff");
+    v.pos = { ...state.players[0].pos };
+    const before = state.stats.damageDealt;
+    for (let i = 0; i < 600; i++) {
+      if (state.dialogue) {
+        // Stop at the answering beat: from there on he IS fighting.
+        if (state.dialogue.source.kind === "playerThought") {
+          const src = state.dialogue.source as { defId: string };
+          if (src.defId === ARMED) break;
+        }
+        advanceDialogue(state);
+        continue;
+      }
+      step(state, idle, DT);
+      expect(state.stats.damageDealt).toBe(before);
+    }
+    expect(state.thoughtsSeen).toContain(ARMED);
   });
 
   it("arms even when the strike's thought is already seen (replay / BOT VIEW)", () => {
@@ -183,8 +295,9 @@ describe("GOODCO HQ opening strike", () => {
     // drawn — arming is gated by `disarmed`, not by the monologue being unread.
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    state.thoughtsSeen.push("goodco_staff"); // the gate's prerequisite
-    state.thoughtsSeen.push("goodco_armed"); // pre-seeded, as a replay would
+    // The whole ledger pre-seeded, exactly as a replay's would be — the two
+    // refusals included, so the escalation is spent and the FIRST blow answers.
+    state.thoughtsSeen.push(...READ_LEDGER);
     v.pos = { ...state.players[0].pos }; // in contact
     step(state, idle, DT);
     // He drew the blade despite the beat already being marked read …
@@ -204,14 +317,13 @@ describe("GOODCO HQ opening strike", () => {
     step(state, idle, DT);
     expect(state.players[0].disarmed).toBe(true);
     expect(state.dialogue).toBeNull();
-    // Let it sprint the rest of the way in. It parks right up against the hero
-    // and THAT touch draws the blade and fires the beat.
-    for (let i = 0; i < 200 && state.players[0].disarmed; i++)
-      step(state, idle, DT);
+    // Let it sprint the rest of the way in. It parks right up against the hero,
+    // and THAT touch is the first of the three that end with the blade out.
+    expect(playOpeningBeats(state)).toEqual([...WARNINGS, ARMED]);
     expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "goodco_armed",
+      defId: ARMED,
     });
     // The swing landed with the scientist on top of him — a contact gap, never
     // the old ~96 px half-a-screen standoff.
@@ -229,7 +341,8 @@ describe("GOODCO HQ opening strike", () => {
     v.pos = { x: state.players[0].pos.x + 400, y: state.players[0].pos.y };
     step(state, idle, DT);
     expect(state.players[0].disarmed).toBe(true);
-    expect(state.thoughtsSeen).not.toContain("goodco_armed");
+    expect(state.thoughtsSeen).not.toContain(WARNINGS[0]);
+    expect(state.thoughtsSeen).not.toContain(ARMED);
     expect(state.dialogue).toBeNull();
   });
 
@@ -240,7 +353,8 @@ describe("GOODCO HQ opening strike", () => {
     // goodco_staff not seen, and no interns on the board to fire it.
     for (let i = 0; i < 10; i++) step(state, idle, DT);
     expect(state.players[0].disarmed).toBe(true);
-    expect(state.thoughtsSeen).not.toContain("goodco_armed");
+    expect(state.thoughtsSeen).not.toContain(WARNINGS[0]);
+    expect(state.thoughtsSeen).not.toContain(ARMED);
     expect(state.dialogue).toBeNull();
   });
 
@@ -258,8 +372,11 @@ describe("GOODCO HQ opening strike", () => {
     // having reached the hero.
     state.enemies = [];
     step(state, idle, DT);
+    // A VANQUISHED vanguard skips the escalation whole. There is nobody left to
+    // refuse, so holding him unarmed through warnings that can never be
+    // delivered would reinstate the very soft-lock this net exists for.
     expect(state.players[0].disarmed).toBe(false);
-    expect(state.thoughtsSeen).toContain("goodco_armed");
+    expect(state.thoughtsSeen).toContain(ARMED);
     // A dead rusher landed no blow, so the arming costs no HP.
     // (hp is untouched — nothing struck him.)
   });
@@ -284,6 +401,7 @@ describe("GOODCO HQ opening strike", () => {
     expect(state.players[0].hp).toBe(hp);
     expect(state.players[0].disarmed).toBe(true);
     expect(state.dialogue).toBeNull();
+    expect(state.thoughtsSeen).not.toContain(WARNINGS[0]);
   });
 
   it("plays the sighting read before the vanguard reaches him, on the real crowd", () => {
@@ -312,15 +430,15 @@ describe("GOODCO HQ opening strike", () => {
     // The vanguard has NOT reached him yet — the read lands first, and the
     // scientist is still out in the lobby (its 180 px start), not glued on.
     expect(vgapAtStaff).toBeGreaterThan(100);
-    // Tap the read closed; now the vanguard breaks loose, closes, and its
-    // strike arms the hero and opens the "good thing I came armed" beat.
+    // Tap the read closed; now the vanguard breaks loose, closes, and its three
+    // strikes walk the hero through both refusals and out the other side with
+    // the weapon drawn — in order, on the real crowd.
     tapThrough(state);
-    for (let i = 0; i < 600 && state.players[0].disarmed; i++)
-      step(state, idle, DT);
+    expect(playOpeningBeats(state)).toEqual([...WARNINGS, ARMED]);
     expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
-      defId: "goodco_armed",
+      defId: ARMED,
     });
   });
 
@@ -329,7 +447,7 @@ describe("GOODCO HQ opening strike", () => {
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("goodco_staff");
     v.pos = { ...state.players[0].pos };
-    step(state, idle, DT); // the strike arms him and opens goodco_armed
+    playOpeningBeats(state); // the three blows arm him and open goodco_armed
     tapThrough(state);
     expect(state.phase).toBe("playing");
 
@@ -414,7 +532,7 @@ describe("GOODCO HQ opening strike", () => {
     // must still draw the blade. Muted like a real BOT VIEW run.
     for (const seed of [SEED, 1, 2, 3]) {
       const state = createGame(seed, "goodco_hq", "easy");
-      markThoughtsSeen(state, ["goodco_staff", "goodco_armed"]);
+      markThoughtsSeen(state, READ_LEDGER);
       skipCutscene(state);
       dismissIntro(state); // skipOpening leaves him disarmed
       muteDialogue(state);

@@ -2437,13 +2437,63 @@
     "goodco_armed": {
       "id": "goodco_armed",
       "pages": [
-        [
-          "A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID."
-        ],
-        ["SO THE NIGHT SHIFT BITES NOW. GOOD THING I CAME ARMED."]
+        ["THIRD TIME. HE ISN'T LISTENING. NOBODY ON THIS FLOOR IS LISTENING."],
+        {
+          "them": [
+            "WE ALL WANT TO KEEP OUR JOBS. NOTHING PERSONAL. YOU OF ALL PEOPLE KNOW."
+          ]
+        },
+        ["I'M SORRY. I TRIED TO ASK. ADA IS ON A SHIP AND YOU'RE IN MY WAY."],
+        ["I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES."]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "ME",
+      "voice": {
+        "portrait": "scientist",
+        "speaker": "LAB SCIENTIST"
+      }
+    },
+    "goodco_first_blow": {
+      "id": "goodco_first_blow",
+      "pages": [
+        [
+          "A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT. I KNOW HIS FACE."
+        ],
+        {
+          "them": [
+            "NOBODY GETS IN HERE. YOU'RE NOT WALKING OUT WITH OUR SECRETS."
+          ]
+        },
+        ["WE ATE AT THE SAME TABLE FOR SIX YEARS. HEY. IT'S ME. LOOK AT ME."]
+      ],
+      "portrait": "hero",
+      "speaker": "ME",
+      "voice": {
+        "portrait": "scientist",
+        "speaker": "LAB SCIENTIST"
+      }
+    },
+    "goodco_second_blow": {
+      "id": "goodco_second_blow",
+      "pages": [
+        [
+          "HE SWUNG AGAIN. HARDER. AND THE WHOLE FLOOR IS TURNING ROUND TO WATCH."
+        ],
+        {
+          "them": [
+            "I KNOW WHO YOU ARE. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB."
+          ]
+        },
+        [
+          "STAY BACK. I HAVE NEVER RAISED A HAND TO ANYONE. DON'T MAKE ME START."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME",
+      "voice": {
+        "portrait": "scientist",
+        "speaker": "LAB SCIENTIST"
+      }
     },
     "goodco_staff": {
       "id": "goodco_staff",

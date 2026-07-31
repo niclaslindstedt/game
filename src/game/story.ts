@@ -18,6 +18,7 @@ import { levelDef, runLevelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { capThoughtIds, thoughtDef } from "./defs/thoughts.ts";
+import { knockEnemyBack } from "./knockback.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
@@ -55,27 +56,52 @@ export function advanceCutsceneChain(state: GameState): void {
   }
 }
 
+/** The name over the hero's own words, wherever in a scene he speaks. */
+const HERO_SPEAKER = "ME";
+
+/**
+ * WHO IS DELIVERING ONE PAGE. Every scene in the game resolves to a list of
+ * these, one per page, so the box never has to know which KIND of scene it is
+ * drawing — which is the whole point: an arrival scene the hero answers back
+ * in, and an inner monologue somebody answers back TO, are the same shape.
+ */
+export type DialogueVoice = {
+  /** The name printed over the words. */
+  speaker: string;
+  /** Portrait sprite/icon key — unused when `hero` (see below). */
+  portrait: string;
+  /**
+   * THE HERO IS SPEAKING. The app draws his live dressed paper-doll rather than
+   * a sprite, so his lines are delivered by the character the player
+   * recognizes, gear and all — which is why his `portrait` here is only a
+   * fallback.
+   */
+  hero: boolean;
+};
+
 /** A single-speaker scene: every page belongs to the named speaker. */
-function soloPages(pages: string[][]): {
-  pages: string[][];
-  heroPages: boolean[];
-} {
-  return { pages, heroPages: pages.map(() => false) };
+function soloPages(
+  pages: string[][],
+  voice: DialogueVoice,
+): { pages: string[][]; voices: DialogueVoice[] } {
+  return { pages, voices: pages.map(() => voice) };
 }
 
 /**
  * The text behind a running dialogue: who is on stage and every page of
  * what they say. The app renders `pages[dialogue.page]`; tests assert on
- * the lot. `heroPages` runs parallel to `pages` and marks the pages the
- * HERO speaks (his replies in a two-way arrival scene) — the app swaps in
- * his name and portrait for those.
+ * the lot. `voices` runs parallel to `pages` and says who delivers each one —
+ * the scene's owner, or the other party in a two-way beat (the hero's replies
+ * in an arrival scene; a mob answering back in one of his own monologues).
+ * `speaker`/`portrait` remain the SCENE's owner, for anything that wants to
+ * name the scene rather than the page.
  */
 export function dialogueContent(dialogue: DialogueState): {
   speaker: string;
   /** Sprite/icon key for the speaker's portrait. */
   portrait: string;
   pages: string[][];
-  heroPages: boolean[];
+  voices: DialogueVoice[];
 } {
   if (
     dialogue.source.kind === "enemy" ||
@@ -88,7 +114,11 @@ export function dialogueContent(dialogue: DialogueState): {
       return {
         speaker: def.name,
         portrait: def.sprite,
-        ...soloPages(def.lastWords ? [def.lastWords] : []),
+        ...soloPages(def.lastWords ? [def.lastWords] : [], {
+          speaker: def.name,
+          portrait: def.sprite,
+          hero: false,
+        }),
       };
     }
     // The arrival scene runs the def's `dialogue` — the one scene kind that
@@ -98,17 +128,36 @@ export function dialogueContent(dialogue: DialogueState): {
       speaker: def.name,
       portrait: def.sprite,
       pages: authored.map((p) => (Array.isArray(p) ? p : p.hero)),
-      heroPages: authored.map((p) => !Array.isArray(p)),
+      voices: authored.map((p) =>
+        Array.isArray(p)
+          ? { speaker: def.name, portrait: def.sprite, hero: false }
+          : { speaker: HERO_SPEAKER, portrait: "hero", hero: true },
+      ),
     };
   }
-  // The hero's own head: his face in the portrait box, his private read on
-  // stage.
+  // The hero's own head — and, in a two-way beat, whoever is talking AT him.
+  // A thought's default voice is his, which is the exact inverse of an arrival
+  // scene: there the mob owns the scene and `{ hero: … }` marks his replies,
+  // here he owns it and `{ them: … }` marks theirs. `voice` names who "them"
+  // is, so a monologue somebody interrupts costs one authored line rather than
+  // a second scene kind.
   if (dialogue.source.kind === "playerThought") {
     const def = thoughtDef(dialogue.source.defId);
+    const mine: DialogueVoice = {
+      speaker: def.speaker,
+      portrait: def.portrait,
+      hero: true,
+    };
+    const theirs: DialogueVoice | null = def.voice
+      ? { ...def.voice, hero: false }
+      : null;
     return {
       speaker: def.speaker,
       portrait: def.portrait,
-      ...soloPages(def.pages),
+      pages: def.pages.map((p) => (Array.isArray(p) ? p : p.them)),
+      voices: def.pages.map((p) =>
+        Array.isArray(p) ? mine : (theirs ?? mine),
+      ),
     };
   }
   // A spared figure's joining scene: its companion def carries the thanks —
@@ -118,7 +167,11 @@ export function dialogueContent(dialogue: DialogueState): {
     return {
       speaker: def.name,
       portrait: def.sprite,
-      ...soloPages(def.joinWords ?? []),
+      ...soloPages(def.joinWords ?? [], {
+        speaker: def.name,
+        portrait: def.sprite,
+        hero: false,
+      }),
     };
   }
   // The wandering merchant's meeting scene: the level def carries his
@@ -138,14 +191,24 @@ export function dialogueContent(dialogue: DialogueState): {
             ],
           ]
         : (def?.greeting ?? []);
+    const speaker = def?.name ?? "THE MERCHANT";
+    const portrait = def?.sprite ?? "merchant";
     return {
-      speaker: def?.name ?? "THE MERCHANT",
-      portrait: def?.sprite ?? "merchant",
-      ...soloPages(pages),
+      speaker,
+      portrait,
+      ...soloPages(pages, { speaker, portrait, hero: false }),
     };
   }
   const def = storyItemDef(dialogue.source.defId);
-  return { speaker: def.name, portrait: def.icon, ...soloPages(def.lore) };
+  return {
+    speaker: def.name,
+    portrait: def.icon,
+    ...soloPages(def.lore, {
+      speaker: def.name,
+      portrait: def.icon,
+      hero: false,
+    }),
+  };
 }
 
 /**
@@ -407,6 +470,13 @@ export function stepSightThoughts(
  * reaction — a no-op once armed, and it simply retries on a later tick if a
  * scene is already on stage.
  *
+ * A level may script the strike as an ESCALATION rather than a single blow
+ * (`OpeningStrike.warnings`): the early blows land on a hero who refuses to
+ * answer them — one beat each, the striker shoved off between them so the next
+ * blow is a separate event the player watches arrive — and only the blow that
+ * lands with every warning already read draws the weapon. The read ledger is
+ * the counter, so the escalation needs no run state of its own.
+ *
  * A safety net closes the one way the beat could never fire: if the vanguard
  * is KILLED before it reaches the hero — a party (or a conjured power) cutting
  * the lone rusher down — the hero would otherwise stay disarmed for the whole
@@ -429,9 +499,18 @@ export function stepOpeningStrike(state: GameState): void {
   if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
   const radius = opening.radius ?? DIALOGUE.strikeRadius;
   const vanguards = state.enemies.filter((e) => e.vanguard);
-  const struck = vanguards.some(
-    (e) => distance(e.pos, state.players[0].pos) <= radius,
+  // A striker still COASTING from the last blow's recoil is being shoved off,
+  // not swinging: the trigger is contact, and one tick of the shove moves him a
+  // couple of px out of a contact-tight radius he is standing well inside, so
+  // without this gate the escalation collapses — the next beat fires on the
+  // very tick the player taps the last one closed, and three separate blows
+  // read as one uninterrupted scene. The gate is what makes "he comes again"
+  // a fact rather than a number that happens to be big enough today.
+  const striker = vanguards.find(
+    (e) =>
+      (e.knockMs ?? 0) <= 0 && distance(e.pos, state.players[0].pos) <= radius,
   );
+  const struck = striker !== undefined;
   // The vanguard's touch draws the blade — but a COMPANION (or a conjured
   // power) can cut the lone rusher down before it ever reaches the holstered
   // hero, and nothing else can trigger this beat. Left unhandled, the hero
@@ -441,6 +520,40 @@ export function stepOpeningStrike(state: GameState): void {
   // (none left on the board) draws the blade exactly as its strike would have.
   const vanquished = vanguards.length === 0;
   if (!struck && !vanquished) return;
+
+  // THE BLOWS HE DOESN'T ANSWER. A level may script the strike as an
+  // ESCALATION (`warnings`): the first blows land on a hero who will not hit
+  // back — he tells them who he is and to stand down — and only a striker who
+  // keeps coming gets an answer. The read ledger is the counter, so the next
+  // unread warning IS this blow's beat; when they are all read, the blow falls
+  // through below and draws the weapon.
+  //
+  // A VANQUISHED vanguard skips the whole escalation. There is nobody left to
+  // refuse, and the safety net exists precisely so a hero whose party cut the
+  // rusher down is never left holstered for the level — holding him unarmed
+  // through warnings that can no longer be delivered would reinstate the bug.
+  const pending = (opening.warnings ?? []).find(
+    (id) => !state.thoughtsSeen.includes(id),
+  );
+  if (striker && pending !== undefined) {
+    // He takes it — the flash, no HP, exactly as the arming blow costs none.
+    state.players[0].hurtFlashMs = 250;
+    state.events.push({ type: "playerHurt", crit: false });
+    // …and shoves the man off rather than swinging at him. The recoil is what
+    // makes the NEXT blow a separate event: the trigger is contact, so a
+    // striker left parked on the hero would satisfy it again the instant the
+    // player tapped this beat closed.
+    knockEnemyBack(
+      striker,
+      state.players[0].pos,
+      DIALOGUE.strikeRecoilSpeed,
+      DIALOGUE.strikeRecoilMs,
+    );
+    state.thoughtsSeen.push(pending);
+    startPlayerThought(state, pending);
+    return;
+  }
+
   // Draw the blade: combat is live from here on.
   state.players[0].disarmed = false;
   // The soft first hit is a flash, no HP — but a vanguard cut down before it

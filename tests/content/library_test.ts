@@ -1265,8 +1265,10 @@ describe("library pages", () => {
     );
     expect(chapter).toContain(enemyDef("the_flagbearer").lastWords![0]!);
     expect(chapter).toContain(STORY_ITEM_DEFS.mission_log!.lore[0]![0]!);
+    const thought =
+      THOUGHT_DEFS[level.firstSightThoughts![0]!.thought]!.pages[0]!;
     expect(chapter).toContain(
-      THOUGHT_DEFS[level.firstSightThoughts![0]!.thought]!.pages[0]![0]!,
+      (Array.isArray(thought) ? thought[0] : thought.them[0]) as string,
     );
   });
 
