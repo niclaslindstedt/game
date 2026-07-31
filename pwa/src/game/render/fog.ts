@@ -10,9 +10,9 @@ import { MAP, mapCols, type GameState } from "@game/core";
 import { type Camera } from "./view.ts";
 import { type ViewSize } from "./shared.ts";
 import {
+  cameraAnchorX,
+  cameraAnchorY,
   projectionKey,
-  projectX,
-  projectY,
   unprojectX,
   unprojectY,
 } from "./tilt.ts";
@@ -51,11 +51,48 @@ export type FogField = {
   count: number;
   cols: number;
   rows: number;
+  /** Where the frontier ACTUALLY is: the chamfer distance, in world px. */
   dist: Float32Array;
+  /** …and where it is DRAWN, easing up toward `dist` — see `easeFog`. */
+  shown: Float32Array;
+  /** Bumped whenever `shown` moved. The fog's composite cache keys on this
+   * rather than on the field's identity: while the ease is running the same
+   * field object is a different picture every frame. */
+  version: number;
 };
 let fogField: FogField | null = null;
+let easedAtMs = -1;
 
-export function ensureFogField(state: GameState): FogField {
+/**
+ * HOW FAST THE FRONTIER MAY GLIDE — the fix for the fog LURCHING as the hero
+ * walks.
+ *
+ * `state.explored` is one byte per `MAP.cellSize` (32 world px) cell, so the
+ * chamfer distance driving the band moves a whole CELL at a time. The band is
+ * `MAP.fogBand` (48 px) wide — barely more than one cell — so a single cell
+ * flipping shifts the frontier by a third to a half of the entire band in ONE
+ * frame, redrawing the whole stipple at once. Measured walking a straight line:
+ * the edge sat still for 20–30 px of travel and then jumped 16 px, over and
+ * over, with a period of exactly 32. That is the flash.
+ *
+ * So the DISTANCE is eased rather than the alpha: the frontier line itself
+ * glides outward instead of the dark merely changing shade, which is what a fog
+ * edge advancing over ground actually looks like. The rate is the error over
+ * `FOG_EASE_MS`, floored at `FOG_EASE_MIN` so the last fraction of a pixel still
+ * closes — an exponential alone never quite lands, which would park the frontier
+ * a hair inside where it belongs for the rest of the run. Everything therefore
+ * resolves in about `FOG_EASE_MS` however big the jump: a walked cell and the
+ * wide disc an elevator arrival opens alike, so neither needs a special case.
+ *
+ * The floor sits just above the hero's own pace (`PLAYER.speed` 84 × the shipped
+ * 0.8 PACE ≈ 67 px/s), because the frontier advances at exactly the speed he
+ * walks: an ease slower than that would fall a little further behind on every
+ * step and quietly shrink the circle of cleared ground he moves in.
+ */
+const FOG_EASE_MS = 120;
+const FOG_EASE_MIN = 0.09; // world px per ms ≈ 90 px/s
+
+export function ensureFogField(state: GameState, timeMs = 0): FogField {
   const explored = state.explored;
   const cell = MAP.cellSize;
   const cols = mapCols(state.level);
@@ -69,6 +106,10 @@ export function ensureFogField(state: GameState): FogField {
     fogField.cols === cols &&
     fogField.rows === rows
   ) {
+    // Settled or not, the ease still has to run: it keeps going for a beat
+    // AFTER the last cell flipped, which is exactly the beat that turns the
+    // lurch into a glide.
+    easeFog(fogField, timeMs);
     return fogField;
   }
   const n = cols * rows;
@@ -115,8 +156,60 @@ export function ensureFogField(state: GameState): FogField {
   }
   // Scale cell distances to world px so callers compare against MAP.fogBand.
   for (let i = 0; i < n; i++) dist[i] = Math.min(dist[i] ?? 0, INF) * cell;
-  fogField = { explored, count, cols, rows, dist };
+  // Carry the DRAWN field across the rebuild — it is what the ease is partway
+  // through, and dropping it would snap the frontier to its new place, which is
+  // the pop this exists to remove.
+  //
+  // Only within the SAME run, though, and `explored` is what says so: it is one
+  // array mutated in place for a level's whole life, and a new one means a new
+  // level. Keying on the grid's SIZE instead carries the last level's frontier
+  // onto a map that merely happens to be the same shape — showing the player
+  // cleared ground nobody has walked, since the ease only ever moves upward and
+  // would have nothing to pull it back down. A fresh grid starts SETTLED: there
+  // is nothing to have eased from, and fading the opening reveal in from
+  // nothing would just be a different pop.
+  const carried = fogField;
+  const shown =
+    carried && carried.explored === explored && carried.cols === cols
+      ? carried.shown
+      : dist.slice();
+  fogField = {
+    explored,
+    count,
+    cols,
+    rows,
+    dist,
+    shown,
+    version: (carried?.version ?? 0) + 1,
+  };
+  easeFog(fogField, timeMs);
   return fogField;
+}
+
+/**
+ * Walk the DRAWN field one frame toward the real one.
+ *
+ * Upward only, and that is a guarantee rather than an optimization: the hero
+ * never re-fogs ground, so `dist` only ever grows, and refusing to ease down
+ * means nothing below can make the fog crawl back over floor he has already
+ * uncovered.
+ */
+function easeFog(field: FogField, timeMs: number): void {
+  const dt = easedAtMs < 0 ? 0 : Math.min(100, timeMs - easedAtMs);
+  easedAtMs = timeMs;
+  if (dt <= 0) return;
+  const { dist, shown } = field;
+  let moved = false;
+  for (let i = 0; i < dist.length; i++) {
+    const target = dist[i] ?? 0;
+    const cur = shown[i] ?? 0;
+    const err = target - cur;
+    if (err <= 0) continue;
+    const step = dt * Math.max(FOG_EASE_MIN, err / FOG_EASE_MS);
+    shown[i] = step >= err ? target : cur + step;
+    moved = true;
+  }
+  if (moved) field.version++;
 }
 
 /**
@@ -125,10 +218,16 @@ export function ensureFogField(state: GameState): FogField {
  * interior. Off-grid samples read as unexplored (0) so the map edge fogs. Used
  * both to grade the fog band and to decide whether a mob stands on ground the
  * hero can see.
+ *
+ * Reads the DRAWN field (`shown`), not the settled one, and both callers want
+ * that same answer: a mob must appear as the ground under it clears, so the
+ * cull and the band have to be looking at the same frontier. Reading `dist`
+ * here would put a mob on screen standing in fog the player cannot yet see
+ * through.
  */
 export function fogDistanceAt(field: FogField, wx: number, wy: number): number {
   const cell = MAP.cellSize;
-  const { cols, rows, dist } = field;
+  const { cols, rows, shown: dist } = field;
   const fx = wx / cell - 0.5;
   const fy = wy / cell - 0.5;
   const x0 = Math.floor(fx);
@@ -171,6 +270,9 @@ let fogCompositeKey: {
   gridX: number;
   gridY: number;
   field: FogField;
+  /** …and which frame OF that field: the ease mutates it in place, so identity
+   * alone would re-blit a stale buffer for the whole glide. */
+  version: number;
   w: number;
   h: number;
   projection: string;
@@ -192,9 +294,12 @@ export function fogGridAnchor(camera: { x: number; y: number }): {
   x: number;
   y: number;
 } {
+  // The shared lattice (render/tilt.ts): the baked ground layer's blit and every
+  // standing body register against this same seat, so nothing drifts against
+  // anything else as the camera pans.
   return {
-    x: Math.round(projectX(camera.x, camera.y)),
-    y: Math.round(projectY(camera.x, camera.y)),
+    x: cameraAnchorX(camera.x, camera.y),
+    y: cameraAnchorY(camera.x, camera.y),
   };
 }
 
@@ -207,6 +312,7 @@ export function drawFog(
   const buffer = ensureFogBuffer(view.width, view.height);
   if (!buffer) return;
   const band = MAP.fogBand;
+  const cell = MAP.cellSize;
   const w = view.width;
   const h = view.height;
   // THE PROJECTED GROUND GRID — where the camera itself stands on it, rounded to
@@ -233,6 +339,7 @@ export function drawFog(
     key.gridX === gridX &&
     key.gridY === gridY &&
     key.field === field &&
+    key.version === field.version &&
     key.w === w &&
     key.h === h &&
     key.projection === projection
@@ -257,29 +364,81 @@ export function drawFog(
   // widening by that gives a bound on the whole block's interior — which holds
   // for ANY projection, including one where a screen-aligned block lands on the
   // world as a tilted parallelogram and cell-aligned walking is not available.
+  //
+  // The NEVER-SEEN half cannot be decided that way, and used to try: the test
+  // was `max + reach <= 0`, which is unsatisfiable — a chamfer distance is never
+  // negative and `reach` is always positive, so the black fast path never once
+  // fired and every unseen block on screen paid the full per-pixel dither, every
+  // frame the camera moved. That is worst exactly where it hurts most: walking
+  // into a fresh level, where nearly the whole screen is black.
+  //
+  // Corner samples cannot rescue it either — they bound the interior from
+  // BELOW, and what is wanted here is an upper bound. So ask the explored grid
+  // itself, which is the ground truth the field was built from: if every cell
+  // the block could sample is unexplored, every pixel in it reads 0. The margin
+  // covers what `fogDistanceAt`'s bilinear tap reaches past its own cell, and
+  // the range is taken over the block's four PROJECTED corners because under a
+  // yaw the block lands on the world as a tilted parallelogram — whose interior
+  // an affine map keeps inside the hull of those corners.
   const BLOCK = 8;
   const reach =
     Math.hypot(unprojectX(BLOCK, 0), unprojectY(BLOCK, 0)) +
     Math.hypot(unprojectX(0, BLOCK), unprojectY(0, BLOCK));
+  const { cols, rows, explored } = field;
+  const allUnexplored = (
+    wx0: number,
+    wy0: number,
+    wx1: number,
+    wy1: number,
+  ): boolean => {
+    const cx0 = Math.floor(wx0 / cell - 0.5) - 1;
+    const cy0 = Math.floor(wy0 / cell - 0.5) - 1;
+    const cx1 = Math.floor(wx1 / cell - 0.5) + 2;
+    const cy1 = Math.floor(wy1 / cell - 0.5) + 2;
+    for (let cy = cy0; cy <= cy1; cy++) {
+      // Off the grid reads as unexplored, exactly as `fogDistanceAt` treats it.
+      if (cy < 0 || cy >= rows) continue;
+      const row = cy * cols;
+      for (let cx = cx0; cx <= cx1; cx++) {
+        if (cx < 0 || cx >= cols) continue;
+        if (explored[row + cx] === 1) return false;
+      }
+    }
+    return true;
+  };
   for (let by = 0; by < h; by += BLOCK) {
     const byEnd = Math.min(h, by + BLOCK);
     for (let bx = 0; bx < w; bx += BLOCK) {
       const bxEnd = Math.min(w, bx + BLOCK);
       let min = Infinity;
       let max = -Infinity;
+      let wx0 = Infinity;
+      let wy0 = Infinity;
+      let wx1 = -Infinity;
+      let wy1 = -Infinity;
       for (const [cx, cy] of [
         [bx, by],
         [bxEnd, by],
         [bx, byEnd],
         [bxEnd, byEnd],
       ] as const) {
-        const d = fogDistanceAt(field, worldX(cx, cy), worldY(cx, cy));
+        const wx = worldX(cx, cy);
+        const wy = worldY(cx, cy);
+        const d = fogDistanceAt(field, wx, wy);
         if (d < min) min = d;
         if (d > max) max = d;
+        if (wx < wx0) wx0 = wx;
+        if (wx > wx1) wx1 = wx;
+        if (wy < wy0) wy0 = wy;
+        if (wy > wy1) wy1 = wy;
       }
-      if (min - reach >= band || max + reach <= 0) {
+      const clear = min - reach >= band;
+      // `max <= 0` is the cheap corner pre-filter; the grid walk is what
+      // actually proves it, and only runs on blocks that could pass.
+      const unseen = !clear && max <= 0 && allUnexplored(wx0, wy0, wx1, wy1);
+      if (clear || unseen) {
         // Uniform block: fully clear past the band, or solid never-seen black.
-        const alpha = max + reach <= 0 ? 255 : 0;
+        const alpha = unseen ? 255 : 0;
         for (let yy = by; yy < byEnd; yy++) {
           let p = (yy * w + bx) * 4 + 3;
           for (let xx = bx; xx < bxEnd; xx++) {
@@ -315,6 +474,14 @@ export function drawFog(
     }
   }
   buffer.ctx.putImageData(buffer.img, 0, 0);
-  fogCompositeKey = { gridX, gridY, field, w, h, projection };
+  fogCompositeKey = {
+    gridX,
+    gridY,
+    field,
+    version: field.version,
+    w,
+    h,
+    projection,
+  };
   ctx.drawImage(buffer.canvas, 0, 0);
 }
