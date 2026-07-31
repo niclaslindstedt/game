@@ -33,3 +33,4 @@ export * from "./flow.ts";
 export * from "./toss.ts";
 export * from "./edge.ts";
 export * from "./execute.ts";
+export * from "./burn.ts";

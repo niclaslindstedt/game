@@ -132,7 +132,8 @@
           "nine_mm",
           "prototype_laser",
           "microwave_emitter",
-          "pump_shotgun"
+          "pump_shotgun",
+          "attrition_flamethrower"
         ],
         "gearPool": [
           "baseball_cap",

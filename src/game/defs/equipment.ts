@@ -257,6 +257,25 @@ export type WeaponDef = {
     bars: number;
   };
   /**
+   * MELEE only: this weapon is FIRE — every body it drops is BURNED UP where it
+   * stood, leaving a smoking charred skeleton instead of a corpse (see
+   * `items/burn.ts`).
+   *
+   * It borrows the screen-nuke's own picture rather than growing a second one:
+   * the flag travels on the `enemyKilled` event as `incinerated`, which is the
+   * exact bit a bomb's kills already carry, so a flamethrower reads correctly
+   * the first time it is fired. Nothing in the simulation changes — damage,
+   * reach, cadence, armor, crit, xp and the drop roll are identical either way,
+   * and the weapon is forged on the ordinary damage-budget line — so this buys a
+   * gimmick its identity without buying it a balance exemption. In particular it
+   * is NOT the bomb's other two rules: a burn kill pays loot and heats the
+   * menace meter like every other blow of the hero's own.
+   *
+   * Melee only, because a burn happens where the weapon IS — the cone the hero
+   * leans into a crowd, not something that travels.
+   */
+  burn?: boolean;
+  /**
    * Melee only: the full angle (degrees) of the swing's cone of effect. Every
    * monster within `range` and inside this arc of the aim is struck at once,
    * so a swing cleaves the crowd. A wide arc is a blade's slash; a narrow arc

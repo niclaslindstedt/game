@@ -1,0 +1,41 @@
+name: icon_attrition_flamethrower
+family: icons
+# 16 WIDE like the chainsaw's, and for the same reason: this is the other
+# two-handed gimmick in the catalog, and a tank the hero wears with a wand he
+# holds out in front of him is a LONG silhouette. It grows only sideways (still
+# 12 tall) so it hangs off the paper doll horizontally, where the portrait canvas
+# can widen for it, instead of poking up over his head.
+size: [16, 12]
+description: >
+  A facilities incinerator wand seen side on — a white pressure tank standing at
+  the left with an amber hazard band round its waist and a brass valve on top, a
+  chrome lance running the full width off its shoulder, and a live orange pilot
+  flame licking off the muzzle.
+subject:
+  kind: weapon icon
+  features: an upright white fuel tank with a brass valve neck and an amber
+    hazard band across its middle, a long chrome lance running out to the right
+    on a short pistol grip, a pilot flame burning at the muzzle
+  accent: amber hazard band on corporate white, a live orange flame
+  flavor: signed out of facilities as a records-disposal tool
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white tank plating — the campus brand white
+  v: "#60687e" # slate shadow down the tank's far side and inside the grip
+  a: "#e8a33d" # amber hazard band round the tank
+  V: "#9095a5" # chrome lance
+  f: "#f2762e" # flame orange
+  y: "#ffd36e" # white-hot flame core
+grid: |
+  ..OO............
+  .OVVO...........
+  .OOOO.........Of
+  .OWvO........Ofy
+  .OWvO.......Ofyy
+  .OWvOVVVVVffyyyy
+  .OWvOVVVVVffyyyy
+  .OaaO.OvO...Ofyy
+  .OaaO.OvO....Ofy
+  .OWvO.OvO.....Of
+  .OWvO.OOO.......
+  .OOOO...........

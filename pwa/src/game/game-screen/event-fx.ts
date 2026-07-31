@@ -29,6 +29,7 @@ import { spillBlood } from "../render/blood-ground.ts";
 import { BLOOD_SPRAY_MS } from "../render/blood.ts";
 import { groundColorAt } from "../render/caches.ts";
 import { LANDING_DUST_MS, TAKEOFF_DUST_MS } from "../render/dust.ts";
+import { FLAME_MS } from "../render/flame.ts";
 import { LOOT_SHINE_MS } from "../render/loot-aura.ts";
 import {
   clearCameraShake,
@@ -339,6 +340,26 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         // stretches with it when the weapon takes both hands.
         untilMs: state.stats.timeMs + swingMs,
         durationMs: swingMs,
+      });
+    }
+    // A weapon that is FIRE (`WeaponDef.burn`) pours a GOUT down the exact cone
+    // the blow struck (render/flame.ts). It is the shaken weapon's replacement
+    // for the wedge skipped above, not an addition to it: `shake` says there is
+    // no swing to draw, and a flamethrower that drew nothing at all was a weapon
+    // whose whole identity is what comes out of the front of it firing in
+    // silence. The gout runs on its OWN short clock rather than the swing's, so
+    // a fast trigger overlaps its own stream into one continuous jet instead of
+    // stuttering between pulls.
+    if (event.burn) {
+      effects.push({
+        kind: "flame",
+        pos: { x: event.pos.x, y: event.pos.y - localHero(state).z },
+        angle: Math.atan2(event.dir.y, event.dir.x),
+        radius: event.range,
+        arc: event.arc,
+        untilMs: state.stats.timeMs + FLAME_MS,
+        durationMs: FLAME_MS,
+        seed: Math.floor(Math.random() * 997),
       });
     }
     // Work the hero's own weapon to match — companions swing from

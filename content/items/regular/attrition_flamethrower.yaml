@@ -1,0 +1,69 @@
+id: attrition_flamethrower
+kind: weapon
+rarity: regular
+name: THE ATTRITION FLAMETHROWER
+description: Facilities signs it out as a records-disposal wand, and on the days
+  it disposes of records that is entirely true. GOODCO keeps eleven years of
+  paperwork it is obliged to keep and owns one shredder that was never going to
+  manage it, so somebody rewrote the retention policy around a tool that leaves
+  nothing to retain. The tank is rated for ninety seconds at the trickle nobody
+  uses and about nine at the setting everybody does. Whoever chose the word
+  attrition chose it because it sounds like weather.
+material: metal
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded). The tank
+# is worn and the lance is held, and that is both hands accounted for.
+twoHanded: true
+class: melee
+levelReq: 6
+# Forged on the damage-budget line (item-forge.mjs) at the two-handed premium,
+# priced against the cone it actually covers — a wide arc raises the weapon's
+# assumed targets, which is what pays for the reach.
+damage: 6
+# It does not swing, it ROARS: a fast, continuous cadence, so the fuel goes as
+# fast as the fiction says it does.
+cooldownMs: 150
+# A CONE, and it never grows (see `rigid` below): further than a blade reaches
+# and nothing like a gun, spread across a wide fan of floor in front of him.
+range: 72
+sweepDeg: 90
+# The reach and the arc are the TANK'S, not the wielder's: no STRENGTH depth, no
+# INTELLIGENCE breadth. A flame goes as far as its pressure throws it, and no
+# amount of shoulder or wit raises a regulator. This is what keeps a weapon that
+# burns everything in a 90-degree fan honest — it can only ever reach the room
+# he is standing in.
+rigid: true
+# NINE SECONDS OF FUEL, and that is the whole gimmick: sixty pulls at 150ms is
+# what the tank holds, against the 130-260 swings every other plain drop in the
+# game is good for. So this is a panic button he happens to be carrying rather
+# than a weapon he fights a level with — and the reason it is authored ON the
+# budget line rather than above it: what it buys is the widest, longest melee
+# cone available anywhere near this rung, and it buys it for nine seconds. A
+# make-quality roll moves the tank a little either way, as it does every plain
+# drop.
+durability: 60
+# A gout of flame neither opens a body along a line nor crushes one. On the rare
+# blow that leaves a body at all (see `burn`), it bursts.
+edge: blunt
+# IT IS NOT SWUNG, so it is drawn with none of a swing's furniture — no blade
+# riding a cone, no streak off the edge. It is held out and JUDDERS against the
+# pressure. See WeaponMotion.
+motion: shake
+# IT IS FIRE: everything it drops is burned up where it stood and leaves a
+# smoking charred skeleton rather than a corpse — the screen-nuke's own picture,
+# pointed at a new author (src/game/items/burn.ts). Presentation only; the
+# damage, the reach, the cadence, the xp and the drop roll are the ordinary
+# ones, which is what lets a gimmick have an identity without having an excuse.
+burn: true
+icon: icon_attrition_flamethrower
+# The Normal → EXCEPTIONAL → ELITE ladder every pooled base owes, so GOODCO's
+# pool keeps paying on its NIGHTMARE and JESUS revisits instead of going dry
+# (defs/grades.ts). Both inherit `burn`, `rigid` and the two hands; the ladder
+# grows the tank, which is right — a better tank is what a better version of
+# this is — and the euphemism escalates with it.
+grades:
+  exceptional:
+    id: redundancy_torch
+    name: THE REDUNDANCY TORCH
+  elite:
+    id: scorched_earth_policy
+    name: THE SCORCHED EARTH POLICY

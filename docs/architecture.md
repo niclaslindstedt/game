@@ -840,7 +840,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   `inventory.ts`, `consumables.ts`, `mercy.ts`,
   `class-stats.ts`, `stat-points.ts`, `flow.ts` (phase toggles), and the two
   catalog leaves the hit paths read but do not own — `edge.ts` (does this blow
-  cut, crush or shred?) and `execute.ts` (does it damage a body, or take it?).
+  cut, crush or shred?), `execute.ts` (does it damage a body, or take it?) and
+  `burn.ts` (is this weapon FIRE — is there a body left at all?).
   Together they cover: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, the one-tap bag tools
   (`autoEquipBest` — wear the best wearable piece in every slot at once,

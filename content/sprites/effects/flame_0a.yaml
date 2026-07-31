@@ -1,0 +1,23 @@
+name: flame_0a
+family: effects
+size: [6, 6]
+description: >
+  THE JET — the first stage of a flamethrower's gout, straight off the nozzle:
+  a tiny white-hot knot of burning fuel, too new and too fast to have spread.
+subject:
+  kind: effect
+  build: a small round knot of flame, barely wider than the nozzle it left
+  features: a white-hot centre with a thin yellow rim, no outline — it is light, not matter
+  accent: the white-hot centre
+  pose: mid-air, an instant after ignition
+  flavor: the hottest the fuel ever gets, and the least of it you ever see
+palette:
+  W: "#fffbe8" # white-hot core
+  Y: "#ffe08a" # yellow rim
+grid: |
+  ..YY..
+  .YWWY.
+  YWWWWY
+  YWWWW.
+  .YWWY.
+  ..YY..

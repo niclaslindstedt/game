@@ -580,6 +580,27 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     durability: 5,
     icon: "icon_medieval_sword",
   },
+  // A BURNER: a melee weapon made of FIRE, so every body it drops is burned up
+  // where it stood rather than thrown as a corpse (items/burn.ts). Deliberately
+  // a fixture rather than the shipped flamethrower so the engine rule survives
+  // that weapon being retired; the numbers are a plain on-budget blade's,
+  // because `burn` must change NOTHING about the simulation and a fixture that
+  // varied them too would hide a regression that did.
+  test_burner: {
+    id: "test_burner",
+    name: "TEST BURNER",
+    class: "melee",
+    levelReq: 1,
+    damage: 20,
+    cooldownMs: 450,
+    range: 60,
+    sweepDeg: 90,
+    rigid: true,
+    edge: "blunt",
+    burn: true,
+    durability: 20,
+    icon: "icon_medieval_sword",
+  },
   // Shared id: the engine draws `blaster` as the unbreakable FALLBACK sidearm
   // when a breakable weapon shatters with an empty bag (items.ts). On the moon
   // it is also a scavengeable drop.

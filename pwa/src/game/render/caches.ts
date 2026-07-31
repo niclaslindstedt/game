@@ -424,6 +424,7 @@ export function ensureCaches(sprites: Sprites): void {
   decorFramesCache.clear();
   groundColorCache.clear();
   tintCache.clear();
+  spinCache.clear();
   // The baked halves and fragments a body comes apart into are keyed on the
   // sprite's NAME, so a fresh atlas has to drop them or a cleave would draw the
   // old art (render/sprite-split.ts).
@@ -603,6 +604,74 @@ export function glowSprite(
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, size, size);
   glowCache.set(key, canvas);
+  return canvas;
+}
+
+// ---- Spun sprites -----------------------------------------------------------
+
+/**
+ * How many turns a spun sprite is quantized into.
+ *
+ * A rotation is a CANVAS ALLOCATION, and the thing that wants one here is a
+ * flamethrower's gout — twenty-odd particles, every one of them tumbling, sixty
+ * times a second. Rotating live is how a spectacle becomes a stutter, which is
+ * the same lesson `sprite-split.ts` learned about a cleave's cut angle, so the
+ * same answer applies: quantize the angle into a few buckets and BAKE each one
+ * once. Eight is plenty for a tumbling blob of fire — what the eye reads is that
+ * it is turning, never which angle it is at.
+ */
+const SPIN_BUCKETS = 8;
+
+const spinCache = new Map<string, HTMLCanvasElement | null>();
+
+/** Which bucket `angle` (radians) falls in. */
+export function spinBucket(angle: number): number {
+  const turns = angle / (Math.PI * 2);
+  return (
+    ((Math.round(turns * SPIN_BUCKETS) % SPIN_BUCKETS) + SPIN_BUCKETS) %
+    SPIN_BUCKETS
+  );
+}
+
+/**
+ * `sprite` turned to `bucket`'s angle, baked once and reused.
+ *
+ * The bake is SQUARE and sized to the sprite's own diagonal so no corner is ever
+ * clipped, and the art stays centred in it — so a caller draws the result the
+ * same way it would draw the original, centred on the spot, and never has to
+ * know the canvas grew. Bucket 0 is the identity and hands back the sprite
+ * itself rather than paying for a copy of it.
+ *
+ * This is the ONE place in the renderer that resamples pixel art on purpose. It
+ * is affordable for exactly the reason `flatSprite`'s bake is: it happens once
+ * rather than per frame. It is also only ever asked for by LIGHT — a gout's
+ * flames and its smoke, which have no outline for the resample to chew up — and
+ * it must stay that way: spinning a sprite with a near-black rim frays the rim,
+ * which is the one thing every solid sprite in this game is built on.
+ */
+export function spunSprite(
+  sprite: ImageBitmap,
+  name: string,
+  bucket: number,
+): HTMLCanvasElement | ImageBitmap {
+  if (bucket % SPIN_BUCKETS === 0) return sprite;
+  const key = `${name}/${bucket}`;
+  const cached = spinCache.get(key);
+  if (cached !== undefined) return cached ?? sprite;
+  const size = Math.ceil(Math.hypot(sprite.width, sprite.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    spinCache.set(key, null);
+    return sprite;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(size / 2, size / 2);
+  ctx.rotate((bucket / SPIN_BUCKETS) * Math.PI * 2);
+  ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+  spinCache.set(key, canvas);
   return canvas;
 }
 

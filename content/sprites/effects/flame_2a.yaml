@@ -1,0 +1,31 @@
+name: flame_2a
+family: effects
+size: [12, 12]
+description: >
+  THE BODY — the third stage of a flamethrower's gout and the widest hot one: a
+  rolling ball of orange with the last of the white still buried in it.
+subject:
+  kind: effect
+  build: a broad rolling ball of flame, wider than it is tall where it has spread
+  features: a shrinking white core inside yellow, a thick orange body, a red-orange rim, no outline — it is light, not matter
+  accent: the orange body
+  pose: mid-air, out where the cone is at its widest
+  flavor: the part of the gout that does the work
+palette:
+  W: "#fffbe8" # white-hot remnant
+  Y: "#ffe08a" # yellow inner
+  o: "#ff9a3c" # orange body
+  r: "#e0451f" # red-orange rim
+grid: |
+  ....rroo....
+  ..rroooor...
+  .roooYYoor..
+  .rooYYYYoo..
+  roooYYWYoor.
+  rooYYWWYoor.
+  rooYYWWYYor.
+  .roYYYYYoo..
+  .rooYYYoor..
+  ..rooooor...
+  ..rroooo....
+  ....rro.....

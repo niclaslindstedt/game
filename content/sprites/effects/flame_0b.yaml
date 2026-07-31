@@ -1,0 +1,24 @@
+name: flame_0b
+family: effects
+size: [6, 6]
+description: >
+  THE JET, the other shape — the first stage of a flamethrower's gout, thrown a
+  little off true: a tiny white-hot knot of burning fuel leaning out of the
+  stream.
+subject:
+  kind: effect
+  build: a small knot of flame, leaning off the line it was thrown along
+  features: a white-hot centre with a thin yellow rim, no outline — it is light, not matter
+  accent: the white-hot centre
+  pose: mid-air, an instant after ignition, off true
+  flavor: the second face of the jet, so a stream never repeats itself
+palette:
+  W: "#fffbe8" # white-hot core
+  Y: "#ffe08a" # yellow rim
+grid: |
+  .YY...
+  YWWY..
+  YWWWY.
+  .WWWWY
+  .YWWY.
+  ..YY..

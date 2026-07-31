@@ -352,6 +352,7 @@ export {
   itemVoice,
   isEdgedWeapon,
   weaponEdge,
+  weaponBurns,
   canExecute,
   contactRange,
   weaponExecuteBars,

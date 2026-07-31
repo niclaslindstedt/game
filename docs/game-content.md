@@ -297,7 +297,8 @@ weapons** (`LevelDef.loot.weaponPool`, six per level at stepped level
 requirements — two melee, two ranged, two magic, so a melee, ranged, or
 caster build all find a steady climb): GOODCO HQ scavenges earthly arms
 (BOX CUTTER, SECURITY BATON, 9MM PISTOL, PROTOTYPE LASER, MICROWAVE
-EMITTER, PUMP SHOTGUN), the moon yields the 70s hardware the space race
+EMITTER, PUMP SHOTGUN — plus a seventh that never leaves the building, THE
+ATTRITION FLAMETHROWER, below), the moon yields the 70s hardware the space race
 ferried up (LUNAR WRENCH, SERVICE REVOLVER, GEOLOGY HAMMER, SURPLUS
 CARBINE, RETRO RAYGUN, PULSAR ROD), Mars prints AI-forged weapons (SMART
 PISTOL with homing darts, PLASMA BLADE, piercing RAILGUN, chain-lightning
@@ -351,6 +352,51 @@ the only `motion: shake` in the game (`WeaponMotion`): it is not swung, so it is
 drawn with none of a swing's furniture — no blade riding a cone, no streak off
 the edge, no wedge of floor lighting up. It JUDDERS where it is held, and what
 the player reads is the shiver and what comes off the body in front of it.
+
+Its opposite number at the campaign's other end is **THE ATTRITION
+FLAMETHROWER**, GOODCO HQ's facilities torch — signed out as a records-disposal
+wand, which is true on the days it disposes of records. Where the chainsaw's
+gimmick is a rule the health bar cannot answer, the flamethrower's is a
+**resource**: it carries the widest, longest melee cone anywhere near its rung
+(72px, a 90° fan, `rigid` like the saw so neither MIGHT nor INTELLECT ever grows
+it) on a 150ms cadence, and the tank holds **sixty pulls — about nine seconds of
+continuous fire**, against the 130–260 swings every other plain drop is good for.
+So it is a panic button the hero happens to be carrying rather than a weapon he
+fights a level with, and it is authored ON the damage-budget line rather than
+above it: what it buys is that cone, and it buys it for nine seconds.
+
+What it kills, it BURNS (`WeaponDef.burn`, `src/game/items/burn.ts`). There is no
+body afterwards — the thing goes up where it stood and leaves a smoking charred
+skeleton, which is the **screen-nuke's own picture pointed at a new author**
+rather than a second one drawn for it, so the weapon reads correctly the first
+time it is fired. That is deliberately ALL it is: not a point of damage, of
+reach, of experience or of loot moves either way, and in particular it is not the
+bomb's other two rules — a burn kill pays loot and heats the menace meter like
+any other blow of the hero's own. The app's MATURE CONTENT switch still has the
+last word, and a censored kill falls back to the ordinary corpse exactly as a
+censored nuke does.
+
+And it is the one weapon in the game with a **look of its own that is not a
+swing**. `motion: shake` says a weapon is not swung and so is drawn with none of
+a swing's furniture, which is right for the chainsaw and left the flamethrower
+firing in silence; `render/flame.ts` gives it a GOUT instead — a jet poured down
+the exact cone the blow struck. It is built as a stream rather than as a burst
+(every particle runs its own looping clock, so the cone is full from the first
+frame), it walks a five-rung authored ramp as it travels so distance reads as
+temperature (`flame_0` white-hot jet → `_1` bloom → `_2` body → `_3` cool → `_4`
+guttering tatters, each rung drawn twice so the stream never repeats), every
+particle tumbles as it goes, and what the fire burns out into climbs off the
+floor as smoke. Judge it in the EFFECTS GALLERY's IMPACT shelf — `flamethrower`
+(THE GOUT), which holds the trigger down for fifteen pulls so what is on screen
+is a continuous roar rather than one frame of one.
+
+It is the one weapon in the game **pooled by a single venue**. Every other base
+is repeated by the later maps' pools — that is how the campaign's arsenal
+accumulates — and this one is named nowhere else, so it is a GOODCO find and
+stops being available the moment the hero leaves the building. Its Normal →
+EXCEPTIONAL → ELITE ladder (THE REDUNDANCY TORCH, THE SCORCHED EARTH POLICY)
+inherits the burn, the fixed cone and both hands, and exists so GOODCO's pool
+keeps paying on its NIGHTMARE and JESUS revisits.
 
 The drop resolves in **two Diablo 2 stages**. **Stage 1 — the TreasureClass:**
 whether anything drops at all is the `LOOT.dropChance` gate (D2's NoDrop, ~91%
