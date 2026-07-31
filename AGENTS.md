@@ -793,10 +793,9 @@ reads the catalog for its own level.
 hero.** A SAFE zone does not merely keep the horde from spawning in it, it REPELS
 every minion out and holds them at its edge, so one centred on the hero is a
 bubble he can stand in untouched all run. It also froze goodco_hq's opening beat
-solid: `openingStrike` is a two-parter held in order by `after` (the hero reads
-the crowd, THEN the lone rusher breaks from the pack and its harmless touch draws
-his blade), and the rusher was shoved straight back out of the pad it was placed
-in. A QUIET zone gives the breather the landing wants — no ambient horde placed
+solid: `openingStrike` is held in order by `after` (the hero reads the crowd,
+THEN the lone rusher breaks from the pack and starts swinging at him), and the
+rusher was shoved straight back out of the pad it was placed in. A QUIET zone gives the breather the landing wants — no ambient horde placed
 in it — without the wall; no hand-authored map spends a safe zone on its landing,
 they spend them on the trader's stall. The gate's other half is distance: the
 carve pins a few of the `firstSightThoughts` breed the `after` thought names
@@ -2918,6 +2917,42 @@ a mod's folder is its author's and answers to nobody. (The one thing a mod's
 story does answer to is the SCHEMA — a scene still has to name a sprite that
 exists.)
 
+**A SPOKEN BEAT IS NOT ALWAYS A MONOLOGUE — `ThoughtDef.voice` AND `them:`
+PAGES.** A pinned beat is the hero alone by default, and nearly all of them
+stay that way. A few need somebody talking back — a shove answered with "we
+have our orders" — so a def may name a second `voice: { speaker, portrait }`
+and tag a page `{ them: [...] }`. It is the exact MIRROR of an arrival scene's
+`{ hero: [...] }`: there the mob owns the scene and his replies are tagged,
+here he owns it and theirs are. Both resolve through `dialogueContent` into one
+`voices` array parallel to `pages`, so the dialogue box draws either without
+knowing which kind of scene it is in — which is why adding the second voice
+changed no renderer arithmetic. Reach for this rather than `EnemyDef.dialogue`
+when a line has to land INSIDE a scripted beat: an arrival scene fires on its
+own proximity trigger and cannot be sequenced with one. The scene kind is still
+called `playerThought` — a MECHANISM name, since the pinned-beat machinery, the
+read ledger and the `openingStrike` hook all key on it — so call the thing an
+EXCHANGE everywhere a reader sees it and leave the key alone.
+
+**AND THE CAMPAIGN'S FIRST FIGHT IS A REFUSAL — GOODCO HQ's THREE BLOWS.** The
+hero walks into his old workplace with the wall piece holstered; a lab
+scientist he knows breaks from the night shift and hits him, and he does NOT
+hit back. He names the man, tells the floor to stand down, says he has never
+raised a hand to anyone. They hit him again, and again, and only the third blow
+is answered — with an apology. The horde on this map is his old colleagues, and
+a hero who answered the first blow in the same tick would be somebody who came
+here to fight, which he is not and never becomes. Mechanically it is
+`OpeningStrike.warnings` (the beats the earlier blows play, in order) and the
+READ LEDGER is the counter, so the escalation carries no run state, survives a
+save, and a replay finds every warning read and arms on the first blow. Two
+things are load-bearing and neither is a number: the striker is SHOVED OFF
+between blows so the player watches him come again rather than reading three
+stacked monologues, and `stepOpeningStrike` skips a striker whose recoil is
+still LIVE — a contact radius tight enough to mean "on top of him" is one no
+shove clears in a tick, so a beat gated on distance alone fires again the
+instant the last one is tapped closed. The tonal whiplash on EASY, where the
+peaceful man finally answers with grandpa's sawed-off, is the joke and not a
+bug.
+
 **A PAGE IS A PARAGRAPH, AND THE BOX BREAKS IT — THE AUTHOR DOES NOT.** Every
 surface that speaks (the opening/closing monologue, the in-world dialogue box,
 a cutscene caption, the merchant, a quest giver's ask) measures the text column
@@ -2945,10 +2980,17 @@ on the open field rather than in a box, so its lines stay hard rows.
 When two tiers of the CAMPAIGN's chain disagree, the **higher tier wins**:
 `story.md` beats the manuscript, the manuscript beats the data — correct the
 lower tier to match.
-Use the **`update-story` skill** (`.agent/skills/update-story/`) to make a story
-change at the top and carry it down the whole chain (the manuscript, then the
-enemy roster, the story items and uniques, the pinned thoughts, and the
-companions — a boss swap re-homes that boss's drops).
+**LOAD THE `update-story` SKILL** (`.agent/skills/update-story/`) BEFORE
+TOUCHING ANY LINE THE GAME SPEAKS — not only when the plot moves. The unit is a
+LINE, not a beat: a retone ("he shouldn't sound so cold"), a second page on a
+monologue, a reworked scripted scene, a bark, a merchant greeting, a quest
+offer, a companion's joining words — every one of them is transcribed in the
+manuscript, so every one of them owes the chain a walk. The skill makes the
+change at the top and carries it down (the manuscript, then the cutscenes,
+level monologues, enemy roster, story items and uniques, pinned thoughts,
+quests and companions — a boss swap re-homes that boss's drops). A PR that
+edits a line of dialogue and leaves `docs/story.md` and `docs/manuscript.md`
+untouched is incomplete.
 
 **Changing the story is a two-step commitment:**
 
@@ -3472,6 +3514,7 @@ relevant `SKILL.md` before starting that kind of work:
 | `test-scenario`       | Staging an exact in-game situation to reproduce a bug, probe fps, or eyeball a context — the `?scenario=` URL param / `applyScenario` spec (place the hero at the boss or merchant, set hp/gear, clear the field, spawn mob rings — pre-wounded if asked, lay out ground items, freeze the world into a pose) plus the FPS meter (DEBUG MODE or `?debug`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `store-shots`         | Regenerating the App Store / Play Store screenshot set — after resprites, an art pass, a HUD change, or new powers/talents. Drives the real game to staged ENDGAME moments (nightmare, late maps, legendaries, powers detonating) at Apple's exact rasters, captions them in the game's own pixel font, and holds each frame to a quality bar before it reaches a listing.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `ui-review`           | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the nine reference viewports (`pwa/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `update-story`        | Writing, rewriting, retoning or removing ANY line the game speaks — a cutscene caption, a level intro/outro, an elite/boss `dialogue` or `lastWords`, a boss bark, a pinned thought, a merchant greeting, a quest offer, a companion's joining words, a story item's lore — as well as reshaping a scripted scene, replacing an elite/boss, or reconciling a drifted tier. Walks the three-tier chain top-down (`docs/story.md` → `docs/manuscript.md` → `content/`) so the tiers never drift.                                                                                                                                                                                                                                                                                                        |
 | `library-improvement` | Building or improving THE LIBRARY — the generated companion site at `/library/` (bestiary, arsenal, mission guide, achievements, story; see `docs/architecture.md`). The generate → look → judge → improve loop: regenerate, screenshot at the reference viewports, hold every page to the quality bar (does it wear the game's own skin, is every number the engine's own, does it read like Arreat Summit rather than a database dump, do the spoiler panels cover without hiding from crawlers), fix the worst in the GENERATOR, and loop — with before/after sign-off before shipping.                                                                                                                                                                                                                                       |
 
 ## Maintenance skills

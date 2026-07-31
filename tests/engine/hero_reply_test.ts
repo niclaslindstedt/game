@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Two-way arrival scenes: a `{ hero: [...] }` page in EnemyDef.dialogue is
 // the HERO talking back mid-scene. `dialogueContent` normalizes the authored
-// pages into plain line pages plus a parallel `heroPages` flag array — the
-// app swaps in the hero's name and portrait on the flagged pages, and the
-// page-turn machinery treats a reply like any other page.
+// pages into plain line pages plus a parallel `voices` array saying who
+// delivers each one — the app draws that page's name and portrait, and the
+// page-turn machinery treats a reply like any other page. (A THOUGHT is the
+// mirror image, `{ them: [...] }`; see thought_voice_test.ts.)
 
 import { describe, expect, it } from "vitest";
 
@@ -27,7 +28,7 @@ function meetTalker(): GameState {
 }
 
 describe("hero replies in arrival scenes", () => {
-  it("normalizes hero pages into lines plus parallel heroPages flags", () => {
+  it("normalizes hero pages into lines plus a parallel voice per page", () => {
     const state = meetTalker();
     const content = dialogueContent(state.dialogue!);
     // The scene stays owned by the enemy speaker…
@@ -38,8 +39,14 @@ describe("hero replies in arrival scenes", () => {
       ["TEST HERO REPLY."],
       ["TEST TALKER LINE TWO."],
     ]);
-    // …and the flags mark exactly the page the hero speaks.
-    expect(content.heroPages).toEqual([false, true, false]);
+    // …and the voices mark exactly the page the hero speaks, with his own name
+    // over it rather than the mob's.
+    expect(content.voices.map((v) => v.hero)).toEqual([false, true, false]);
+    expect(content.voices.map((v) => v.speaker)).toEqual([
+      "TEST TALKER",
+      "ME",
+      "TEST TALKER",
+    ]);
   });
 
   it("turns a hero page like any other page", () => {
@@ -58,6 +65,11 @@ describe("hero replies in arrival scenes", () => {
     collectStoryItem(state, "test_key", { ...state.players[0].pos });
     expect(state.phase).toBe("dialogue");
     const content = dialogueContent(state.dialogue!);
-    expect(content.heroPages).toEqual(content.pages.map(() => false));
+    expect(content.voices.map((v) => v.hero)).toEqual(
+      content.pages.map(() => false),
+    );
+    expect(content.voices.every((v) => v.speaker === content.speaker)).toBe(
+      true,
+    );
   });
 });

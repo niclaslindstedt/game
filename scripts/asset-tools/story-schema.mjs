@@ -400,9 +400,58 @@ export function validateThought(id, def, refs) {
     err("speaker is required — the name over the words");
   }
   checkSprite(def.portrait, "portrait", refs, err, true);
-  checkPages(def.pages, "pages", err, warn);
+
+  // THE OTHER VOICE. A beat is the hero alone by default; `voice` names whoever
+  // answers him back, and a `{ them: … }` page is theirs. Both halves are
+  // checked together because either one alone is a scene that reads wrong and
+  // says nothing about it: a tagged page with nobody declared would come out in
+  // the hero's own box under his own name, and a declared voice nobody uses is
+  // a second speaker the player never meets.
+  if (def.voice !== undefined) {
+    if (!def.voice || typeof def.voice !== "object" || Array.isArray(def.voice)) {
+      err("voice must be a mapping of { speaker, portrait }");
+    } else {
+      if (typeof def.voice.speaker !== "string" || def.voice.speaker === "") {
+        err("voice.speaker is required — the name over their words");
+      }
+      checkSprite(def.voice.portrait, "voice.portrait", refs, err, true);
+      for (const key of Object.keys(def.voice)) {
+        if (!["speaker", "portrait"].includes(key)) {
+          err(`unknown field "voice.${key}"`);
+        }
+      }
+    }
+  }
+  const pages = Array.isArray(def.pages) ? def.pages : [];
+  const tagged = pages.filter((p) => p && !Array.isArray(p));
+  if (tagged.length > 0 && def.voice === undefined) {
+    err(
+      "a `them:` page needs a `voice:` — without one the other party's words " +
+        "print in the hero's own box under his own name",
+    );
+  }
+  if (def.voice !== undefined && tagged.length === 0) {
+    err("voice declares a speaker no `them:` page uses");
+  }
+  if (tagged.length === pages.length && pages.length > 0) {
+    err("every page is a `them:` page — this is somebody else's scene, not his");
+  }
+  for (const page of tagged) {
+    for (const key of Object.keys(page)) {
+      if (key !== "them") err(`unknown page tag "${key}" (only \`them\`)`);
+    }
+  }
+  // Check the LINES of every page, tagged or not, against the same page rules.
+  checkPages(
+    Array.isArray(def.pages)
+      ? def.pages.map((p) => (p && !Array.isArray(p) ? p.them : p))
+      : def.pages,
+    "pages",
+    err,
+    warn,
+  );
   for (const key of Object.keys(def)) {
-    if (!["speaker", "portrait", "pages"].includes(key)) {
+    if (!["speaker", "portrait", "voice", "pages"].includes(key)) {
       err(`unknown field "${key}"`);
     }
   }

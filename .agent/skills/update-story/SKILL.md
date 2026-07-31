@@ -1,6 +1,6 @@
 ---
 name: update-story
-description: "Use when the game's story changes — reshaping the plot, replacing or reworking an elite/boss, retiring a story beat, or bringing a drifted story tier back into line. Edits docs/story.md (the gist, the ground truth), then propagates the change DOWN the chain: the manuscript, the enemy roster, the story items and uniques, the pinned thoughts, and the companions — so the three tiers never drift."
+description: "Use whenever ANY story, dialogue, or spoken/written line in the game is written, rewritten, retoned or removed — however small. Triggers on: story, plot, beat, scene, script, manuscript, dialogue, conversation, monologue, thought, line, speech, caption, intro, outro, last words, bark, lore, description, greeting, quest offer, joining words, kill quote, and on any request to make a character sound different (colder, warmer, funnier, more human, less robotic) or to rework a scripted scene. Also for replacing or reworking an elite/boss, retiring a beat, or reconciling a drifted tier. Edits docs/story.md (the gist, the ground truth), then propagates DOWN the chain: docs/manuscript.md, then content/ (cutscenes, levels, enemies, thoughts, story items, quests, companions) — so the three tiers never drift. A PR that touches a single word of dialogue without this skill's chain walk is incomplete."
 ---
 
 # Updating the Story
@@ -22,13 +22,38 @@ story change at the top and carry it down so the lower tiers match — the
 manuscript is an extrapolated version of the story, and the game is an
 extrapolated version of the manuscript.
 
-Use this skill whenever the STORY moves: a new plot beat, a rewritten
-monologue, a replaced or reworked elite/boss (with the item and roster churn
-that follows — a boss swap changes who drops what), a retired thread, or a
-"the manuscript and the data drifted, reconcile them" sweep.
+## When this skill applies — broader than "the plot changed"
+
+Load it whenever **any line the game speaks or shows as prose** is written,
+rewritten, retoned or removed. The unit is a LINE, not a plot beat: "make him
+sound less cold", "give the scientist a second page", "he should warn them
+first" are all story changes, because every one of them lands in a file the
+manuscript transcribes. Concretely, all of these are in scope:
+
+| The ask | Why it's a story change |
+|---|---|
+| A cutscene caption or `say` beat | manuscript-transcribed |
+| A level `intro` / `outro` monologue | manuscript-transcribed |
+| An elite/boss `dialogue` or `lastWords` | manuscript-transcribed |
+| A boss **bark** (`AbilityDef` set-piece line) | manuscript-transcribed |
+| A pinned **thought** (`content/thoughts.yaml`) | manuscript-transcribed |
+| A **scripted scene**'s shape (`openingStrike`, an ambush beat) | the manuscript describes the scene, not only its words |
+| A merchant greeting, quest offer/handover, conversation node | manuscript-transcribed |
+| A companion `joinWords` / `killQuotes` | manuscript-transcribed |
+| A story item's `lore`, a unique's `description` | manuscript-transcribed (lore) / governed but not transcribed (description, `EnemyDef.lore`) |
+| **Retoning** a character — colder/warmer/funnier/more human | the voice IS the story |
+| Reworking or replacing an elite/boss | the widest change; see the swap sub-checklist |
+| "The manuscript and the data drifted" | a reconcile sweep |
 
 Do **not** use it for pure mechanics with no narrative surface (tuning hp,
-retuning a drop rate, an fps fix) — those never touch the chain.
+retuning a drop rate, an fps fix) — those never touch the chain. A change that
+is BOTH (a scripted scene whose engine hook and whose words both move) uses the
+skill for the words and the ordinary engine workflow for the hook; the chain
+walk still owes tiers 1 and 2 their edit.
+
+**A MOD'S STORY IS EXEMPT.** The chain governs the SHIPPED campaign only. A
+line under a mod folder answers to nobody — never file it into `story.md` or
+`manuscript.md`, and never "correct" it to match them.
 
 ## The confirmation rule (do not skip)
 
@@ -84,8 +109,9 @@ lower tier without reconciling the ones above.
 | 3a | Game — cutscenes & monologues | `content/cutscenes/<id>.yaml`; `src/game/defs/levels/*.ts` (`intro`, `outro`, `merchant.greeting`, `firstKillThoughts`/`firstSightThoughts` pins) | Prelude + travel scenes, per-level opening/closing monologues, merchant lines, thought pins. |
 | 3b | Game — roster | `src/game/defs/enemies/<level>.ts` + `enemies/index.ts` | Elite/boss `dialogue` + `lastWords`; if a mob is **added, removed, or replaced**, its `EnemyDef` (hp/damage/role/mechanics), its registration, and any `shieldedBy`/`flees`/`spareable`/`apparition` wiring. Load the `enemy-design` skill for the numbers. |
 | 3c | Game — items | `content/items/<rarity>/*.yaml` (named uniques + their `lore`/`description`), `content/story-items.yaml`, `EnemyDef.uniquesByDifficulty`, `LevelDef.loot.worldUniques` | Story items (keycards, dossiers, recovered hardware) and their `lore`; a boss's dropped uniques and world-drop relics. **A boss swap re-homes that boss's unique set** — the drops must follow the new owner. Load `weapon-system` for the item economy. |
-| 3d | Game — thoughts | `content/thoughts.yaml` | The hero's inner monologues, pinned to a kill/sighting from a `LevelDef`. |
+| 3d | Game — thoughts | `content/thoughts.yaml` | The hero's pinned beats (kill/sighting/scripted-strike pins from a `LevelDef`). A beat may be an **exchange**: `voice: { speaker, portrait }` names who answers him and a `{ them: [...] }` page is theirs — the mirror of `{ hero: [...] }` in an arrival scene. Reach for this, NOT `EnemyDef.dialogue`, when a line has to land inside a scripted beat. |
 | 3e | Game — companions | `content/companions.yaml` (spare verdict in `src/game/companions.ts`) | Joining words + kill quotes for any rift unique that can be spared. |
+| 3e2 | Game — the SCENE's shape | `src/game/defs/levels/types.ts` + `src/game/story.ts` + `scripts/asset-tools/level-schema.mjs` | Only when the beat's SHAPE changes, not just its words — a scripted strike gaining rounds, an ambush changing order. A retone of a scripted scene usually lands here first (see the lessons). Put the reasoning in the def's doc comment; the YAML is data a mod also authors. |
 | 3f | App overlays | `pwa/src/game/overlays/DialogueOverlay.tsx`, `CutsceneOverlay.tsx`, `pwa/src/game/copy.ts` | Only if the beat needs new rendering (a new scene kind) or loose UI copy; story text itself stays in the engine defs. |
 
 ### When a mob or boss is replaced
@@ -123,6 +149,13 @@ A boss/elite swap is the most far-reaching story change — it ripples across
       make test
       make lint
 
+- [ ] Refresh the snapshots the change moved, and only those:
+
+      node scripts/update-story-snapshot.mjs   # thoughts, cutscenes, story items
+      node scripts/update-level-snapshot.mjs   # a `LevelDef` field moved
+      node scripts/update-enemy-snapshot.mjs   # dialogue / lastWords moved
+      make mod-catalog                         # a new or retired id (a thought id counts)
+
 - [ ] Write the new baseline:
 
       git rev-parse HEAD > .agent/skills/update-story/.last-updated
@@ -132,6 +165,15 @@ A boss/elite swap is the most far-reaching story change — it ripples across
 1. **Top-down agreement.** Every elite/boss and cutscene named in `story.md`
    appears in the manuscript; every manuscript line appears verbatim in its
    data file (spot-check via the manuscript's "Where the data lives" table).
+2. **The line REACHES a reader.** Rebuild the library and grep the built pages
+   for a distinctive phrase you wrote:
+
+       cd pwa && npm run library && grep -rl "SOME DISTINCTIVE PHRASE" dist/library/
+
+   No hit means the data landed and the reader-facing tier didn't — the
+   coverage maps fail on an undeclared FIELD, never on a page that quietly
+   renders none of it (this is exactly how the whole opening strike went
+   unpublished). Fix the GENERATOR, never a built page.
 2. **No orphans.** After a swap, no `firstKillThoughts` pin, companion entry,
    `uniquesByDifficulty` slot, or `shieldedBy`/`flees` reference points at a mob
    that no longer exists — the content tests in `tests/content/` bite if one does.

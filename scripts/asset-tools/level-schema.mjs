@@ -230,6 +230,30 @@ export function validateLevel(def, refs, description = "") {
   if (def.openingStrike) {
     thought(def.openingStrike.thought, "openingStrike");
     thought(def.openingStrike.after, "openingStrike.after");
+    // The blows he takes before he answers one. Each names a beat, so a typo
+    // here would otherwise be a scene that silently never plays — the hero
+    // standing there holstered while the ledger waits on a thought that does
+    // not exist.
+    const warnings = def.openingStrike.warnings;
+    if (warnings !== undefined) {
+      if (!Array.isArray(warnings) || warnings.length === 0) {
+        err("openingStrike.warnings must be a non-empty list of thought ids");
+      } else {
+        warnings.forEach((id, i) => thought(id, `openingStrike.warnings[${i}]`));
+        if (warnings.includes(def.openingStrike.thought)) {
+          err(
+            "openingStrike.warnings names the arming thought — the beat it " +
+              "gates on would be read before the blow that draws the weapon",
+          );
+        }
+        if (new Set(warnings).size !== warnings.length) {
+          err(
+            "openingStrike.warnings repeats a thought — the ledger is the " +
+              "counter, so a repeat is a blow that plays nothing",
+          );
+        }
+      }
+    }
   }
   thought(def.asteroids?.struckThought, "asteroids.struckThought");
   thought(def.sandstorms?.struckThought, "sandstorms.struckThought");

@@ -142,9 +142,12 @@ export function DialogueOverlay({
   // A story-item find gets a banner so the box unmistakably reads as "you
   // picked this up — here's what it is", not another mob talking at you.
   const isStoryItem = dialogue.source.kind === "story";
-  // A two-way arrival scene: on the pages the HERO speaks, the box swaps to
-  // his name and face so the exchange reads as a conversation.
-  const heroSpeaks = content.heroPages[dialogue.page] ?? false;
+  // WHO IS DELIVERING THIS PAGE. The engine resolves it per page (see
+  // `DialogueVoice`), so the box draws a two-way exchange without knowing which
+  // KIND of scene it is in: a mob's arrival the hero answers back in, and one
+  // of his own monologues somebody answers back TO, arrive here identically.
+  const voice = content.voices[dialogue.page] ?? null;
+  const heroSpeaks = voice?.hero ?? false;
   // The hero's inner monologue — and his replies in a two-way scene — show
   // HIM: the dressed paper-doll (worn armor + held weapon over the body), the
   // same avatar the HUD and inventory portray, so his lines are delivered by
@@ -154,19 +157,18 @@ export function DialogueOverlay({
   // in-world dialogue only — the level intro monologue keeps its bare hero.)
   // Enemy speakers bob live on the canvas behind the box; story items show
   // their icon so the find stays on screen.
-  const portrait =
-    dialogue.source.kind === "playerThought" || heroSpeaks
-      ? (dollDataUrl(
+  const portrait = heroSpeaks
+    ? (dollDataUrl(
           assets.sprites,
           playerDollLayers(state, "0"),
           heroSoak(state),
         ) ??
         spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
         null)
-      : // A story item names an exact icon; a character names a walk-cycle
-        // family. `portraitSrc` tries the exact name first, so one call covers
-        // both (see SpritePortrait.tsx).
-        portraitSrc(assets.sprites, content.portrait);
+    : // A story item names an exact icon; a character names a walk-cycle
+      // family. `portraitSrc` tries the exact name first, so one call covers
+      // both (see SpritePortrait.tsx).
+      portraitSrc(assets.sprites, voice?.portrait ?? content.portrait);
 
   // Reserve a stable row count for the whole page (the tallest screen) so the
   // box never resizes as the speech scrolls; the last, short screen pads with
@@ -224,7 +226,7 @@ export function DialogueOverlay({
             <div className="dialogue-header">
               <PixelText
                 font={font}
-                text={heroSpeaks ? "ME" : content.speaker}
+                text={voice?.speaker ?? content.speaker}
                 scale={2}
                 color="#ffd75e"
                 maxWidth={DIALOGUE_TEXT_REM}

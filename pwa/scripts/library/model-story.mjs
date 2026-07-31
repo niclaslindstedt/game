@@ -55,6 +55,9 @@ export const THOUGHT_FIELDS = {
   speaker:
     "not reader-facing: the name the dialogue box prints (always the hero)",
   portrait: "not reader-facing: which face the dialogue box draws",
+  voice:
+    "who answers him back, on the few beats that are an exchange rather " +
+    "than a monologue — printed as the other party's own turn",
   pages: "the thought itself, behind the reveal",
 };
 
@@ -241,9 +244,32 @@ function sceneModel(id, section) {
   };
 }
 
-/** The hero's pinned inner monologues on a level, sightings before kills. */
+/**
+ * The hero's pinned beats on a level, in the order the run plays them: the
+ * SCRIPTED STRIKE first (it is the only one a level can guarantee lands, and on
+ * GOODCO HQ it is the opening scene of the whole campaign), then sightings,
+ * then kills.
+ *
+ * The strike used to be missing here entirely, which is the one omission this
+ * section cannot afford: `LEVEL_FIELDS` claims `openingStrike` is covered by
+ * "the roster's vanguard, and the opening line", and the roster half was all
+ * that shipped — so the mission page named the scientist while the line he is
+ * hit with, and every word of the exchange, was published nowhere.
+ */
 function thoughtsOn(level) {
+  const strike = level.openingStrike;
   const triggers = [
+    ...(strike
+      ? [...(strike.warnings ?? []), strike.thought].map((thought, blow) => ({
+          enemy: strike.enemy,
+          thought,
+          when: "strike",
+          // Which blow this is. The strike is ONE scene in several rounds, so
+          // only the first round names the man doing the swinging — heading
+          // each round with him again would read as three different people.
+          blow,
+        }))
+      : []),
     ...(level.firstSightThoughts ?? []).map((t) => ({ ...t, when: "sight" })),
     ...(level.firstKillThoughts ?? []).map((t) => ({ ...t, when: "kill" })),
   ];
@@ -255,6 +281,7 @@ function thoughtsOn(level) {
     return {
       id: def.id,
       when: trigger.when,
+      blow: trigger.blow,
       enemy: enemy
         ? {
             id: enemy.id,
@@ -263,6 +290,7 @@ function thoughtsOn(level) {
             hellborn: !!enemy.hellborn,
           }
         : null,
+      voice: def.voice ?? null,
       pages: def.pages,
     };
   });
@@ -655,7 +683,7 @@ export function storyModel() {
     refrain: CAP_THOUGHT_IDS.map((id) => {
       const def = THOUGHT_DEFS[id];
       assertFieldsCovered("thought", def, THOUGHT_FIELDS);
-      return { id, pages: def.pages };
+      return { id, voice: def.voice ?? null, pages: def.pages };
     }),
   };
 }

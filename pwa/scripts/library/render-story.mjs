@@ -57,12 +57,43 @@ const scene = (beats) =>
 const monologue = (
   pages,
   who = "THE HERO",
-) => `      <blockquote class="speech hero">
+  hero = true,
+) => `      <blockquote class="speech${hero ? " hero" : ""}">
         <span class="who">${escapeHtml(who)}</span>
 ${pages
   .map((lines) => `        <p>${lines.map(escapeHtml).join("<br />")}</p>`)
   .join("\n")}
       </blockquote>`;
+
+/**
+ * A PINNED BEAT, rendered as what it actually is. Nearly all of them are the
+ * hero alone, and print as one unbroken monologue. A few are an EXCHANGE —
+ * somebody answers him back (`{ them: … }`, `ThoughtDef.voice`) — and those
+ * have to take turns on the page, or the other party's words come out in the
+ * hero's own blockquote under his own name, which is the one thing a reader
+ * must never be shown about a scene with two people in it.
+ */
+const pinnedBeat = (thought) => {
+  const them = thought.voice?.speaker;
+  if (!them) return monologue(thought.pages);
+  let run = [];
+  let hero = true;
+  const out = [];
+  const flush = () => {
+    if (run.length > 0) out.push(monologue(run, hero ? "THE HERO" : them, hero));
+    run = [];
+  };
+  for (const page of thought.pages) {
+    const mine = Array.isArray(page);
+    if (mine !== hero) {
+      flush();
+      hero = mine;
+    }
+    run.push(mine ? page : page.them);
+  }
+  flush();
+  return out.join("\n");
+};
 
 /**
  * What a name in the story's prose may link to, in priority order. This is what
@@ -216,17 +247,29 @@ function thoughtsSection(chapter, { href }) {
       const who = thought.enemy
         ? `<a href="${href(thought.enemy.path)}">${escapeHtml(thought.enemy.name)}</a>`
         : "";
-      return `      <h3 id="thought-${i}">${
-        thought.when === "kill"
-          ? "The first one he kills"
-          : "The first one he sees"
-      }${who ? ` — ${who}` : ""}</h3>
-${monologue(thought.pages)}`;
+      // A scripted strike is one scene fought over several rounds, so only its
+      // FIRST round introduces the man swinging; the rest just say he did it
+      // again, which is the whole shape of the beat.
+      const again = thought.when === "strike" && thought.blow > 0;
+      const heading = again
+        ? thought.blow === 1
+          ? "He swings again"
+          : "And again"
+        : `${
+            {
+              kill: "The first one he kills",
+              sight: "The first one he sees",
+              strike: "The one who swings first",
+            }[thought.when]
+          }${who ? ` — ${who}` : ""}`;
+      return `      <h3 id="thought-${i}">${heading}</h3>
+${pinnedBeat(thought)}`;
     })
     .join("\n");
   return `      <h2 id="thoughts">What stops him mid-run</h2>
       <p>The run halts for these on their own, once each: something on this map
-      is worth him saying out loud, and there is nobody to say it to.</p>
+      is worth him saying out loud. Usually there is nobody to say it to — and
+      on the few where there is, they answer back.</p>
 ${reveal({ id: "reveal-thoughts", label: "WHAT HE THINKS", body })}`;
 }
 
@@ -334,7 +377,7 @@ function hellbornSection(chapter, { href, sprites }) {
       }<a href="${href(arrival.path)}">${escapeHtml(arrival.name)}</a></h3>
       <p class="note">Comes through at <a href="${href(arrival.venue.path)}">${escapeHtml(arrival.venue.name)}</a>,
       on <span style="color:${escapeHtml(arrival.color ?? "")}">${escapeHtml(arrival.rung)}</span> and up.</p>
-${arrival.thoughts.map((thought) => monologue(thought.pages)).join("\n")}${
+${arrival.thoughts.map((thought) => pinnedBeat(thought)).join("\n")}${
         arrival.lastWords.length > 0
           ? `\n${speech([arrival.lastWords], arrival.name)}`
           : ""
@@ -526,7 +569,7 @@ ${entries}
 ${reveal({
   id: "reveal-refrain",
   label: "THE REFRAIN",
-  body: story.refrain.map((thought) => monologue(thought.pages)).join("\n"),
+  body: story.refrain.map((thought) => pinnedBeat(thought)).join("\n"),
 })}`,
     schema: pageSchema({
       type: "CollectionPage",
