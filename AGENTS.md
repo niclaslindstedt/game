@@ -1362,10 +1362,19 @@ reads `state.players[0]` at 164 sites across `src/game/bot/` and `botAct` has no
 notion of WHICH hero it steers. The rules above are therefore STRUCTURE with
 their reasoning stated and unit-level proof (`tests/engine/coop_rules_test.ts`),
 not tuned numbers — do not record them as measured. Parameterizing the bot on a
-`Player` is the prerequisite and is the next thing PR 4 owes, BEFORE the party
-HUD (it is PR 7's §7.1–§7.2, owed earlier than its number); then
-`XP_SHARE.partyBonusPerHero` and the `/players N` pairing are the levers. §4.2's corpse and respawn are BLOCKED on §3.2's per-player `dying`
-screen. See the plan's §4.7.
+`Player` is the prerequisite (`botAct(bot, state, hero)`, 164 sites); then
+`XP_SHARE.partyBonusPerHero` and the `/players N` pairing are the levers. §4.2's
+corpse and respawn are BLOCKED on §3.2's per-player `dying` screen.
+
+**EVERY ONE OF THOSE IS NOW INVENTORIED IN THE PLAN'S PR 5.5 — "THE REMAINDER" —
+AND THAT IS THE ONE PLACE TO LOOK.** A dozen "NOT LANDED" boxes scattered across
+eleven PR sections is how a debt stops being anybody's, so §5.5 collects them,
+says which are BLOCKED and on what, and gives the order they unblock each other
+in: §7.1 → §7.2 → §4.3's measured pass → §7.2.5 → §5.6's soak → §3.2 → §4.2's
+corpse → §3.3. It also separates out the FOUR that no diff can close (a packaged
+Electron launch, eight machines through a real NAT, a real router, the per-OS
+firewall prompts) — those need a human with hardware, and writing them as work
+items is how they get ticked from a diff.
 
 **WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** A screen one player opens
 still stops the world for everybody (`Player.screen` and the non-blocking
