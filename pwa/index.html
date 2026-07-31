@@ -18,20 +18,29 @@
          the identity config (game.config.json) by pwa/pwa-plugin.ts, so a
          rename touches one file, not this shell.
 
-         The indexed strings are `SEO_*`, not `FULL_TITLE`/`DESCRIPTION`: the
-         title screen's own voice ("survive the search for your lost love") is
-         written for someone already looking at the game, and contains no word
-         a stranger would type. The brand voice still runs the page — it is the
-         <h1>, the tagline under it, and the manifest's app name — but the
-         strings a search engine reads lead with what the thing IS. -->
-    <title>{{SEO_TITLE}}</title>
+         The indexed strings are `SEO_*`/`SOCIAL_TITLE`, not
+         `FULL_TITLE`/`DESCRIPTION`: the title screen's own voice ("survive the
+         search for your lost love") is written for someone already looking at
+         the game, and contains no word a stranger would type. The brand voice
+         still runs the page — it is the <h1>, the tagline under it, and the
+         manifest's app name — but the strings a search engine reads lead with
+         what the thing IS.
+
+         The `<title>` is the ONE exception, and the reason is the browser tab:
+         it shows about twenty characters, so a genre suffix there is never read
+         — it is truncated away while crowding out the brand that has to survive
+         a row of pinned tabs. So the tab and the crawler's first line are the
+         name alone, and the search voice rides the card titles below, where a
+         full line is available. -->
+
+    <title>{{TITLE}}</title>
     <meta name="description" content="{{SEO_DESCRIPTION}}" />
     <link rel="canonical" href="{{SITE_URL}}/" />
 
     <meta property="og:site_name" content="{{TITLE}}" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="{{SEO_TITLE}}" />
+    <meta property="og:title" content="{{SOCIAL_TITLE}}" />
     <meta property="og:description" content="{{SEO_DESCRIPTION}}" />
     <meta property="og:url" content="{{SITE_URL}}/" />
     <meta property="og:image" content="{{SITE_URL}}/og-default.png" />
@@ -40,7 +49,7 @@
     <meta property="og:image:alt" content="{{OG_IMAGE_ALT}}" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{{SEO_TITLE}}" />
+    <meta name="twitter:title" content="{{SOCIAL_TITLE}}" />
     <meta name="twitter:description" content="{{SEO_DESCRIPTION}}" />
     <meta name="twitter:image" content="{{SITE_URL}}/og-default.png" />
     <meta name="twitter:image:alt" content="{{OG_IMAGE_ALT}}" />

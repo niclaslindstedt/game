@@ -41,9 +41,10 @@ export type GameIdentity = {
    */
   seo: {
     /**
-     * Appended after the title with an em dash to form the `<title>`. Keep the
-     * whole result under ~60 characters — Google truncates past that — and
-     * lead with what the thing IS, not what happens in it.
+     * Appended after the title with an em dash to form the OG / Twitter card
+     * title (`SOCIAL_TITLE`). Keep the whole result under ~60 characters —
+     * Google truncates past that — and lead with what the thing IS, not what
+     * happens in it. The `<title>` is the brand alone: see `SOCIAL_TITLE`.
      */
     titleSuffix: string;
     /** The search snippet (≤160 chars): what it is first, the hook second. */
@@ -130,10 +131,15 @@ export const IDENTITY: GameIdentity = config;
 export const FULL_TITLE = `${IDENTITY.title} — ${IDENTITY.tagline}`;
 
 /**
- * `${title} — ${seo.titleSuffix}`: the `<title>` / OG / Twitter title, in search
- * voice. Deliberately NOT `FULL_TITLE` — see `GameIdentity.seo`.
+ * `${title} — ${seo.titleSuffix}`: the OG / Twitter card title, in search voice.
+ * Deliberately NOT `FULL_TITLE` — see `GameIdentity.seo`.
+ *
+ * The `<title>` is deliberately NOT this: a browser tab is ~20 characters wide,
+ * so a suffix there is never read — it is truncated to an ellipsis while eating
+ * the room the brand needs. A card unfurl has a full line and no such squeeze,
+ * which is where the search voice still earns its place.
  */
-export const SEO_TITLE = `${IDENTITY.title} — ${IDENTITY.seo.titleSuffix}`;
+export const SOCIAL_TITLE = `${IDENTITY.title} — ${IDENTITY.seo.titleSuffix}`;
 
 /** The meta / OG / Twitter description, in search voice. See `GameIdentity.seo`. */
 export const SEO_DESCRIPTION = IDENTITY.seo.description;
