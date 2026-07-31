@@ -92,7 +92,9 @@ export function drawScorches(
     // cyan look this pass shipped with. One hazard, two casters, no branch
     // anywhere but here.
     ctx.drawImage(
-      patch.look ? recolorSprite(blot, "scorch_char", lookRamp(patch.look)) : blot,
+      patch.look
+        ? recolorSprite(blot, "scorch_char", lookRamp(patch.look))
+        : blot,
       Math.round(-size / 2),
       Math.round(-size / 2),
       size,
@@ -150,7 +152,10 @@ function drawSnarePatch(
 ): void {
   const left = clamp01(patch.remainingMs / patch.durationMs);
   // The second frame takes over for the last third — the release, not a fade.
-  const art = spriteByName(sprites, left > 0.34 ? "elite_snare_0" : "elite_snare_1");
+  const art = spriteByName(
+    sprites,
+    left > 0.34 ? "elite_snare_0" : "elite_snare_1",
+  );
   if (!art) return;
   const tinted = recolorSprite(
     art,

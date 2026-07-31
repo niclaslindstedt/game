@@ -275,8 +275,7 @@ function drawOrbitRing(
 ): void {
   const def = enemyDef(enemy.defId);
   const list = activeMechanics(enemy, def)?.abilities as
-    | BossAbility[]
-    | undefined;
+    BossAbility[] | undefined;
   const ability = list?.find((a) => a.id === "orbit_guard");
   if (!ability || ability.id !== "orbit_guard") return;
   const look = ability.look ?? DEFAULT_ELITE_LOOK;
@@ -326,8 +325,7 @@ function drawWard(
 ): void {
   const def = enemyDef(enemy.defId);
   const list = activeMechanics(enemy, def)?.abilities as
-    | BossAbility[]
-    | undefined;
+    BossAbility[] | undefined;
   const ability = list?.find((a) => a.id === "ward_shield");
   if (!ability || ability.id !== "ward_shield") return;
   const look = ability.look ?? DEFAULT_ELITE_LOOK;
@@ -370,8 +368,7 @@ function drawTether(
 ): void {
   const def = enemyDef(enemy.defId);
   const list = activeMechanics(enemy, def)?.abilities as
-    | BossAbility[]
-    | undefined;
+    BossAbility[] | undefined;
   const ability = list?.find((a) => a.id === "siphon_tether");
   if (!ability || ability.id !== "siphon_tether") return;
   const look = ability.look ?? DEFAULT_ELITE_LOOK;

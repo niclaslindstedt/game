@@ -242,10 +242,8 @@ export function eliteLook(
 ): AbilityLook | undefined {
   try {
     const def = enemyDef(casterOverride ?? defId);
-    const list = (activeMechanics(
-      { hp: 1, maxHp: 1 } as Enemy,
-      def,
-    )?.abilities ?? []) as BossAbility[];
+    const list = (activeMechanics({ hp: 1, maxHp: 1 } as Enemy, def)
+      ?.abilities ?? []) as BossAbility[];
     return list.find((a) => a.id === ability)?.look;
   } catch {
     return undefined;

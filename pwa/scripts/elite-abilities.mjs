@@ -70,11 +70,10 @@ const speed = Number(opt("speed", "1")) || 1;
 const strip = Number(opt("strip", "0")) || 0;
 const onlyAbility = opt("ability", null);
 const onlyElite = opt("elite", null);
-const [viewW, viewH] = (opt("viewport", "844x390") ?? "").split("x").map(Number);
-const outDir = resolve(
-  repo,
-  opt("out", "pwa/assets-preview/elite-abilities"),
-);
+const [viewW, viewH] = (opt("viewport", "844x390") ?? "")
+  .split("x")
+  .map(Number);
+const outDir = resolve(repo, opt("out", "pwa/assets-preview/elite-abilities"));
 const sampleAt = (opt("at", "180,900") ?? "")
   .split(",")
   .map((n) => Number(n.trim()))
@@ -188,7 +187,9 @@ for (const row of rows) {
 
   const offsets = strip > 0 ? stripOffsets(strip) : sampleAt;
   for (const at of offsets) {
-    await page.waitForTimeout(at === offsets[0] ? at : at - offsets[offsets.indexOf(at) - 1]);
+    await page.waitForTimeout(
+      at === offsets[0] ? at : at - offsets[offsets.indexOf(at) - 1],
+    );
     const file = `${String(++n).padStart(3, "0")}-${row.elite}-${row.ability}-${at}ms.png`;
     await page.screenshot({ path: resolve(outDir, file) });
     shots.push({ ...row, at, file });

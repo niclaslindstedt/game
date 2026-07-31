@@ -88,4 +88,9 @@ function step(ability: SiphonTetherAbility, ctx: AbilityCtx): boolean {
   return true;
 }
 
-registerAbility<SiphonTetherAbility>({ id: "siphon_tether", ready, cast, step });
+registerAbility<SiphonTetherAbility>({
+  id: "siphon_tether",
+  ready,
+  cast,
+  step,
+});

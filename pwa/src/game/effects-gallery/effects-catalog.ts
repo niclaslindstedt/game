@@ -1179,9 +1179,19 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "ORBIT GUARD",
     blurb: "A RING OF MOTES TURNING, AND THE LAST STRIDE IN COSTS SOMETHING",
     group: "ELITES",
-    keywords: ["elite", "orbit", "ring", "motes", "lucky", "leprechaun", "gold"],
+    keywords: [
+      "elite",
+      "orbit",
+      "ring",
+      "motes",
+      "lucky",
+      "leprechaun",
+      "gold",
+    ],
     levelId: "the_rift",
-    stage: { spawns: [{ enemy: "lucky", count: 1, minDistance: 54, maxDistance: 62 }] },
+    stage: {
+      spawns: [{ enemy: "lucky", count: 1, minDistance: 54, maxDistance: 62 }],
+    },
     showMs: 4200,
     fire: (ctx) => {
       // The ring is drawn from the caster's LIVE state (an effect holds a
@@ -1211,9 +1221,26 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "SEEKER VOLLEY",
     blurb: "SLOW BOLTS THAT STEER — OUTRUN THEM OR BREAK THE LINE",
     group: "ELITES",
-    keywords: ["elite", "seeker", "homing", "bolt", "volley", "jeff", "delivery"],
+    keywords: [
+      "elite",
+      "seeker",
+      "homing",
+      "bolt",
+      "volley",
+      "jeff",
+      "delivery",
+    ],
     levelId: "the_bunker",
-    stage: { spawns: [{ enemy: "jeff_baywatch", count: 1, minDistance: 120, maxDistance: 140 }] },
+    stage: {
+      spawns: [
+        {
+          enemy: "jeff_baywatch",
+          count: 1,
+          minDistance: 120,
+          maxDistance: 140,
+        },
+      ],
+    },
     showMs: 3200,
     fire: (ctx) => {
       const mob = ctx.mobs.find((m) => m.defId === "jeff_baywatch");
@@ -1304,7 +1331,15 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "BLINK STRIKE",
     blurb: "IT IS NOT WHERE IT WAS — AND IT SWINGS WHERE YOU WERE",
     group: "ELITES",
-    keywords: ["elite", "blink", "teleport", "amelia", "earhart", "gap", "rift"],
+    keywords: [
+      "elite",
+      "blink",
+      "teleport",
+      "amelia",
+      "earhart",
+      "gap",
+      "rift",
+    ],
     levelId: "the_rift",
     stage: {},
     showMs: 1800,
@@ -1329,7 +1364,9 @@ const FIELD_EXHIBITS: Exhibit[] = [
     blurb: "IT TOUCHES YOU NOT AT ALL, AND MAKES EVERYTHING ELSE WORSE",
     group: "ELITES",
     keywords: ["elite", "rally", "shout", "buff", "horde", "security", "chief"],
-    stage: { spawns: [{ enemy: "guard", count: 6, minDistance: 40, maxDistance: 110 }] },
+    stage: {
+      spawns: [{ enemy: "guard", count: 6, minDistance: 40, maxDistance: 110 }],
+    },
     showMs: 2400,
     fire: (ctx) => {
       ctx.emit({
@@ -1389,9 +1426,26 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "SIPHON TETHER",
     blurb: "IT HOLDS STILL AND DRINKS — BREAK THE LINE OR FEED IT",
     group: "ELITES",
-    keywords: ["elite", "siphon", "drain", "tether", "rasputin", "heal", "rift"],
+    keywords: [
+      "elite",
+      "siphon",
+      "drain",
+      "tether",
+      "rasputin",
+      "heal",
+      "rift",
+    ],
     levelId: "the_rift",
-    stage: { spawns: [{ enemy: "grigori_rasputin", count: 1, minDistance: 110, maxDistance: 130 }] },
+    stage: {
+      spawns: [
+        {
+          enemy: "grigori_rasputin",
+          count: 1,
+          minDistance: 110,
+          maxDistance: 130,
+        },
+      ],
+    },
     showMs: 3600,
     fire: (ctx) => {
       // Drawn from live state like the ring and the shell: a tether is a link
@@ -1419,9 +1473,26 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "WARD SHIELD",
     blurb: "A BUDGET, NOT A TIMER — SPEND EVERYTHING NOW",
     group: "ELITES",
-    keywords: ["elite", "ward", "shield", "shell", "barrier", "suckerberg", "bunker"],
+    keywords: [
+      "elite",
+      "ward",
+      "shield",
+      "shell",
+      "barrier",
+      "suckerberg",
+      "bunker",
+    ],
     levelId: "the_bunker",
-    stage: { spawns: [{ enemy: "mark_suckerberg", count: 1, minDistance: 56, maxDistance: 66 }] },
+    stage: {
+      spawns: [
+        {
+          enemy: "mark_suckerberg",
+          count: 1,
+          minDistance: 56,
+          maxDistance: 66,
+        },
+      ],
+    },
     showMs: 4200,
     fire: (ctx) => {
       const mob = ctx.mobs.find((m) => m.defId === "mark_suckerberg");
@@ -1446,7 +1517,15 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "QUAKE LINE",
     blurb: "IT STAYS PUT AND THE FLOOR DOES THE WALKING",
     group: "ELITES",
-    keywords: ["elite", "quake", "fissure", "crack", "lane", "prospector", "drill"],
+    keywords: [
+      "elite",
+      "quake",
+      "fissure",
+      "crack",
+      "lane",
+      "prospector",
+      "drill",
+    ],
     levelId: "moon",
     stage: {},
     showMs: 2400,

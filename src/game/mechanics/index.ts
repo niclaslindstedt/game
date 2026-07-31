@@ -460,7 +460,12 @@ function startReadyAbility(
     const ms = abilityWindupMs(ability, state.difficulty);
     const dir = direction(enemy.pos, state.player.pos);
     // The bearing AND the range are both locked here — see `AbilityCtx`.
-    mech.telegraph = { kind: ability.id, remainingMs: ms, dir, dist: ctx.distance };
+    mech.telegraph = {
+      kind: ability.id,
+      remainingMs: ms,
+      dir,
+      dist: ctx.distance,
+    };
     state.events.push({
       type: "enemyTelegraph",
       kind: ability.id,
