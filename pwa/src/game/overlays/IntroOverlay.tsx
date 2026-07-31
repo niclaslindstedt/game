@@ -12,13 +12,7 @@
 // authored breaks verbatim left a monologue stacked in a ragged half-width
 // column with the right half of the window empty.
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from "react";
+import { useCallback, useEffect, useState, type MutableRefObject } from "react";
 
 import { playerAppearance, runLevelDef, type GameState } from "@game/core";
 
@@ -91,8 +85,7 @@ export function IntroOverlay({
 
   // Flow each authored line into the box's live text column, then window the
   // folded result into screens the player scrolls through.
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const colFontPx = useTextColumn(bodyRef, TEXT_SCALE);
+  const { ref: bodyRef, fontPx: colFontPx } = useTextColumn(TEXT_SCALE);
   const visualLines = wrapPage(
     page,
     colFontPx == null ? null : (line) => font.wrap(line, colFontPx),

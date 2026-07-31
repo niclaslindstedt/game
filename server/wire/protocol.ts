@@ -498,6 +498,7 @@ export const COMMANDS = [
   "resolveChoice",
   "talkToQuestGiver",
   "pickQuestTopic",
+  "chooseQuestReward",
   "acceptQuest",
   "declineQuest",
   "turnInQuest",

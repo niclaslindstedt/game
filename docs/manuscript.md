@@ -466,10 +466,11 @@ is his floor. Spoken once, on the first meeting._
 
 _An unpaid contract intern nineteen hours into a shift nobody scheduled. She was told to log the night line's output and has kept logging it — through the lights going down, through the staff going strange, through the welders on the racks starting to look up as people walked past. The clipboard is the only part of the job that still works._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - HEY. YOU'RE NOT ON THE ROTA.
-- NEITHER AM I. IT'S FINE.
+- NEITHER AM I.
+- LISTEN, CAN I ASK YOU A FAVOR?
 
 #### THE NIGHT LOG
 
@@ -528,11 +529,12 @@ _An unpaid contract intern nineteen hours into a shift nobody scheduled. She was
 
 _A first-generation OPTIMUSK, decommissioned eleven years ago and never collected. It holds the last order it was given and will not act past it without a countersignature. It has watched the models that replaced it replace the people who built them, and files that under CHANGES TO THE LINE._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - ORDER PENDING.
 - COUNTERSIGNATURE REQUIRED.
-- YOU HAVE HANDS. THAT WILL DO.
+- YOU HAVE HANDS.
+- MAY I PUT SOMETHING TO YOU?
 
 **Once everything of theirs is done:**
 
@@ -815,10 +817,11 @@ his return ticket. Spoken once, on the first meeting._
 
 _The ghost of a mission-control relay man who sat the far-side shift and never got the handover. He is still calling a Houston that stopped answering, and will not leave the channel until somebody rogers it. He heard everything the dust heard, which is more than the mission logs admit._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - STATION, RELAY. DO YOU COPY.
-- ...ANYBODY. ANYBODY AT ALL.
+- ...YOU DO. YOU ACTUALLY DO.
+- THEN I HAVE SOMETHING TO ASK.
 
 #### ROGER THAT
 
@@ -872,11 +875,11 @@ _The ghost of a mission-control relay man who sat the far-side shift and never g
 
 _A living salvage hand off the same stranded run as the trader, and the reason that run has a survivor at all — he carries two tanks because once he did not, and watched a friend run out of air with the ship in sight. He has been walking the same grid squares ever since, on the theory that somebody else is out here doing the same._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - YOU'RE BREATHING. GOOD START.
-- I'VE GOT AIR.
-- WHAT I HAVEN'T GOT IS LUCK.
+- I'VE GOT AIR TO SPARE AND A FAVOR TO ASK.
+- INTERESTED?
 
 #### TWO TANKS
 
@@ -1163,10 +1166,11 @@ once, on the first meeting._
 
 _The colony's terraforming botanist, and the last human on the payroll down here. Her work is the only thing on Mars that will still matter in a century, which is exactly why nobody upstairs has asked her about it since the year she arrived. She has kept the trays alive through two power cuts and one evacuation she was not told about._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
-- CAREFUL. THOSE TRAYS ARE OLD.
-- OLDER THAN ANYONE'S CONTRACT HERE.
+- CAREFUL. THOSE TRAYS ARE OLDER THAN ANYONE'S CONTRACT HERE.
+- WHICH IS WHY I NEED A HAND.
+- HAVE YOU A MOMENT?
 
 #### THE GREENHOUSE
 
@@ -1220,11 +1224,12 @@ _The colony's terraforming botanist, and the last human on the payroll down here
 
 _A survey rover that drove itself into a drift eight months ago and has been politely requesting recovery on a frequency the colony stopped monitoring. Its dish still turns. Its logs are complete. Nobody has ever read them, which is the only thing about the situation it considers a genuine fault._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - RECOVERY REQUEST 4,110.
 - STILL OPEN.
-- NOT RECOVERY. NOTED. HELLO.
+- YOU ARE NOT RECOVERY. NOTED.
+- MAY I MAKE A REQUEST ANYWAY?
 
 #### RECOVERY REQUEST
 
@@ -1588,11 +1593,12 @@ on the first meeting._
 
 _One of three men who went out to trim a light in a gale in 1900 and were never found. He is still trimming it — the lantern has not gone out — and he is still two men short. He does not talk about the gale. He talks about the other two._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - THE LIGHT'S STILL LIT.
 - THAT HALF OF THE JOB IS DONE.
-- THE OTHER HALF IS THE OTHER TWO.
+- THE OTHER HALF I CANNOT DO ALONE.
+- WILL YOU HEAR IT?
 
 #### TWO SHORT
 
@@ -1651,10 +1657,11 @@ _One of three men who went out to trim a light in a gale in 1900 and were never 
 
 _He went below to put the midday meal on aboard a brigantine that was later found sailing along quite happily with nobody aboard. He maintains the crew are merely late. He keeps the meal warm on principle, and has views about the standard of provisions in a place with no ports._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - THEY'RE LATE. NOT GONE. LATE.
 - SIT DOWN, THERE'S PLENTY.
+- AND WHILE YOU EAT, A SMALL FAVOR?
 
 #### PROVISIONS
 
@@ -2013,11 +2020,12 @@ meeting._
 
 _The saloon's barkeep host, and the only machine in the park that noticed the guests had stopped coming. It has polished the same glasses every night for eleven years rather than admit the shift is over. It knows every host in town by serial, and which of them have lately started behaving like something else is driving._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - WHAT'LL IT BE, STRANGER.
 - SORRY. HABIT.
-- THERE'S NOTHING ON TAP.
+- NOTHING'S ON TAP.
+- BUT I'D TAKE A FAVOR, IF YOU'RE OFFERING.
 
 #### LAST CALL
 
@@ -2076,10 +2084,11 @@ _The saloon's barkeep host, and the only machine in the park that noticed the gu
 
 _The park's wardrobe mistress, human, on staff since the first season. She dressed every host in town and was never once written a line of dialogue. She has outlasted both founders and is entirely clear-eyed about which of those facts the park would find more embarrassing._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - HOLD STILL. FORTY-TWO LONG.
 - AND BLEEDING ON MY WORK.
+- YOU OWE ME FOR THAT. WANT TO HEAR WHAT?
 
 #### THE WARDROBE
 
@@ -2380,11 +2389,11 @@ Difficulty send-off, appended to the line above (`MERCHANT_RETURN_SENDOFF`):
 
 _The residence's concierge unit, which has served no guest anything in four years and files a flawless nightly report on the standard of service regardless. It is the only thing down here that still calls the residents GUESTS. It has never been asked why the doors only lock from outside, and would answer honestly if it were._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - WELCOME TO THE RESIDENCE, SIR.
-- YOUR SUITE IS NOT READY.
-- NOTHING IS.
+- YOUR SUITE IS NOT READY. NOTHING IS.
+- MIGHT I TROUBLE YOU INSTEAD?
 
 #### STANDARD OF SERVICE
 
@@ -2443,11 +2452,12 @@ _The residence's concierge unit, which has served no guest anything in four year
 
 _The last human on the kitchen staff, cooking five courses a night for men who taste none of it. He keeps the toque starched because the day he stops is the day this place is exactly what it looks like. He has counted the pantry down to the week and has not told anybody the number._
 
-**On walking up** (and the header of their errand list):
+**On being spoken to** (and the header of their errand list):
 
 - SERVICE IS AT EIGHT.
 - IT IS ALWAYS AT EIGHT.
-- NOBODY COMES. I STILL COOK.
+- NOBODY COMES. YOU CAME.
+- SO MAY I ASK SOMETHING OF YOU?
 
 #### THE PANTRY
 
@@ -2579,7 +2589,7 @@ is the only honest thing available to him._
 **Greeting.**
 
 > I'M NOT MEANT TO BE HERE EITHER. I'M ON THE LAST BOX.
-> I HAVE BEEN ON THE LAST BOX A WHILE NOW.
+> I HAVE BEEN ON THE LAST BOX A WHILE NOW. SPARE ME A MINUTE?
 
 **FORM 7-B — the ask.**
 
@@ -2655,7 +2665,7 @@ is the only honest thing available to him._
 
 **Greeting.**
 
-> THE TALLY IS SHORT. SHORT SINCE SIXTY-NINE.
+> THE TALLY IS SHORT. SHORT SINCE SIXTY-NINE. YOU LOOK LIKE SOMEONE WHO COULD SETTLE IT. MAY I ASK?
 
 **THE COLUMN THAT WON'T CLOSE — the handover.**
 
@@ -2715,7 +2725,7 @@ is the only honest thing available to him._
 **Greeting.**
 
 > THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG.
-> THOSE CANNOT BOTH BE TRUE.
+> THOSE CANNOT BOTH BE TRUE. WILL YOU HELP ME RESOLVE IT?
 
 **WHAT THE TITHE IS WORTH — the handover.**
 
@@ -2765,7 +2775,7 @@ is the only honest thing available to him._
 **Greeting.**
 
 > YOU'LL WANT MY NAME. EVERYONE DOES. I DON'T HAVE IT.
-> I HAD ONE. IT WAS TAKEN OUT OF SOMETHING.
+> I HAD ONE. IT WAS TAKEN OUT OF SOMETHING. HELP ME FIND WHAT?
 
 **A PAGE OF SOMEBODY — the ask.**
 
@@ -2818,7 +2828,7 @@ is the only honest thing available to him._
 **Greeting.**
 
 > SERVICE IS AT EIGHT, FRIEND. THE GOOD BOOK SAYS SO.
-> I THINK IT DOES.
+> I THINK IT DOES. THAT'S RATHER WHAT I WANTED TO ASK YOU ABOUT.
 
 **THE LAST PAGE — the ask.** (JESUS only.)
 

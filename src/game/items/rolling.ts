@@ -45,9 +45,9 @@ import { BALANCE } from "../tuning.ts";
 import type {
   Affix,
   Equipment,
+  Player,
   GameState,
   ItemSlot,
-  Player,
   Quality,
   StatName,
   Tier,
@@ -406,57 +406,25 @@ export function rollEnhancedDamage(
   return randomRange(fxRng, band.min, band.max);
 }
 
-export function rollEquipment(
+/**
+ * THE BASES A DROP AT `lootLevel` MAY LAND ON — the level's authored pool with
+ * its grade variants folded in, minus everything this rung and this hero cannot
+ * yet be paid. Pure: it spends no rng draw, which is what lets a second caller
+ * ask the question without shifting the seeded loot stream.
+ *
+ * Exported because a QUEST REWARD has to pick SIBLING bases — a mail, a leather
+ * and a cloth piece, or a melee, a ranged and a magic weapon — off exactly the
+ * ladder a drop would have used (see quests/reward-choices.ts). Re-deriving
+ * that eligibility beside it would be a second copy of the level gates, the
+ * material gates and the base-level floor, free to disagree with this one the
+ * first time any of them changed.
+ */
+export function eligibleBases(
   state: GameState,
-  player: Player,
-  opts: {
-    slot?: "weapon" | "gear";
-    tierBonus?: number;
-    defId?: string;
-    /** Force a specific tier instead of rolling one (story-guaranteed
-     * pieces like the space suit; a boss's `tierDrops` payouts). */
-    tier?: Tier;
-    /** Force a specific MAKE QUALITY instead of rolling one — scripted
-     * story drops (a level's `earlyDrops`) arrive exactly as tuned. */
-    quality?: Quality;
-    /** The killer's monster level; omitted = the live horde level. */
-    mlvl?: number;
-    /** The killer's ROLE — elites/bosses get the set-piece rarity bonus on
-     * unique/legendary (see `rollTier`) and are eligible to fold a named
-     * unique into the drop. Omitted = minion (no bonus). */
-    role?: EnemyRole;
-    /** The killer's RARITY tier (a RARE/UNIQUE mob, config RARE_MOBS): shares
-     * the elite named-tier bonus and skips the plain-minion named penalty, so
-     * a special find drops chase gear like a set piece does. Omitted = a plain
-     * minion (the penalty applies). */
-    mobRarity?: "rare" | "unique";
-  } = {},
-): Equipment {
-  const rng = state.rng;
-  const mlvl = opts.mlvl ?? currentMobLevel(state);
-  // LOOT LEVEL — what the loot GATES key off: the eligible base pool
-  // (`levelReq`), the tier unlocks, the dropped item's own level, and the
-  // make-quality roll. It strips the difficulty's MOB-LEVEL OFFSET back out of
-  // the monster level, so the gates track the hero's EARNED level rather than
-  // how far a rung shoves its horde up or down. The upshot the design wants:
-  // EASY (offset -3) drops loot sized to the hero, so its finds run RICHER
-  // relative to its weakened mobs than a hard rung's do (whose tougher mobs no
-  // longer buy earlier tiers). Combat scaling (mob hp/xp) still rides the real
-  // mlvl; only these loot gates strip the offset. A def's own `levelBonus`
-  // (elites/bosses run hot) survives — only the per-difficulty offset is
-  // removed. The explicit per-rung rewards (`tierChanceBonus`, `lootIlvlBonus`)
-  // still pay the harder rungs more in ABSOLUTE terms; this removes only the
-  // implicit mlvl edge, not those.
-  const lootLevel = Math.max(
-    1,
-    mlvl - difficultyDef(state.difficulty).mobLevelOffset,
-  );
+  family: "weapon" | "gear",
+  lootLevel: number,
+): string[] {
   const loot = runLevelDef(state).loot;
-  const family = opts.defId
-    ? isWeaponDef(opts.defId)
-      ? ("weapon" as const)
-      : ("gear" as const)
-    : (opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const)));
   // Levels author their pools in NORMAL bases only; each entry implies its
   // exceptional/elite versions (defs/grades.ts), folded in here so the base
   // ladder keeps unfolding to level 100. The levelReq gate below decides
@@ -506,7 +474,67 @@ export function rollEquipment(
   const floored = pool.filter(
     (id) => equipmentLevelReq(id) >= lootLevel - LOOT.dropLevelWindow,
   );
-  if (floored.length > 0) pool = floored;
+  return floored.length > 0 ? floored : pool;
+}
+
+/**
+ * The LOOT LEVEL a drop at `mlvl` gates off — the monster level with the
+ * difficulty's mob-level offset stripped back out (see the note inside
+ * `rollEquipment`). Exported alongside `eligibleBases`, because a caller
+ * asking which bases are eligible needs the same number the roll uses.
+ */
+export function lootLevelFor(state: GameState, mlvl: number): number {
+  return Math.max(1, mlvl - difficultyDef(state.difficulty).mobLevelOffset);
+}
+
+export function rollEquipment(
+  state: GameState,
+  player: Player,
+  opts: {
+    slot?: "weapon" | "gear";
+    tierBonus?: number;
+    defId?: string;
+    /** Force a specific tier instead of rolling one (story-guaranteed
+     * pieces like the space suit; a boss's `tierDrops` payouts). */
+    tier?: Tier;
+    /** Force a specific MAKE QUALITY instead of rolling one — scripted
+     * story drops (a level's `earlyDrops`) arrive exactly as tuned. */
+    quality?: Quality;
+    /** The killer's monster level; omitted = the live horde level. */
+    mlvl?: number;
+    /** The killer's ROLE — elites/bosses get the set-piece rarity bonus on
+     * unique/legendary (see `rollTier`) and are eligible to fold a named
+     * unique into the drop. Omitted = minion (no bonus). */
+    role?: EnemyRole;
+    /** The killer's RARITY tier (a RARE/UNIQUE mob, config RARE_MOBS): shares
+     * the elite named-tier bonus and skips the plain-minion named penalty, so
+     * a special find drops chase gear like a set piece does. Omitted = a plain
+     * minion (the penalty applies). */
+    mobRarity?: "rare" | "unique";
+  } = {},
+): Equipment {
+  const rng = state.rng;
+  const mlvl = opts.mlvl ?? currentMobLevel(state);
+  // LOOT LEVEL — what the loot GATES key off: the eligible base pool
+  // (`levelReq`), the tier unlocks, the dropped item's own level, and the
+  // make-quality roll. It strips the difficulty's MOB-LEVEL OFFSET back out of
+  // the monster level, so the gates track the hero's EARNED level rather than
+  // how far a rung shoves its horde up or down. The upshot the design wants:
+  // EASY (offset -3) drops loot sized to the hero, so its finds run RICHER
+  // relative to its weakened mobs than a hard rung's do (whose tougher mobs no
+  // longer buy earlier tiers). Combat scaling (mob hp/xp) still rides the real
+  // mlvl; only these loot gates strip the offset. A def's own `levelBonus`
+  // (elites/bosses run hot) survives — only the per-difficulty offset is
+  // removed. The explicit per-rung rewards (`tierChanceBonus`, `lootIlvlBonus`)
+  // still pay the harder rungs more in ABSOLUTE terms; this removes only the
+  // implicit mlvl edge, not those.
+  const lootLevel = lootLevelFor(state, mlvl);
+  const family = opts.defId
+    ? isWeaponDef(opts.defId)
+      ? ("weapon" as const)
+      : ("gear" as const)
+    : (opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const)));
+  const pool = eligibleBases(state, family, lootLevel);
   // STAGE 1 — the TREASURECLASS pick: weight the eligible pool by each base's
   // `dropWeight` (D2's `Prob`) instead of a flat uniform draw. Default weights
   // are all 1, so an un-authored pool behaves exactly like the old uniform

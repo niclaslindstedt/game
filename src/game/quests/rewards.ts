@@ -16,6 +16,7 @@
 import type { Vec2 } from "@game/lib/vec.ts";
 
 import { canBankAbility } from "../abilities.ts";
+import { pickedQuestReward } from "./reward-choices.ts";
 import type { QuestReward } from "../defs/quests.ts";
 import { xpToLevelUp } from "../leveling.ts";
 import { grantXp } from "../loot.ts";
@@ -65,6 +66,10 @@ export function payQuestReward(
   state: GameState,
   reward: QuestReward | undefined,
   at: Vec2,
+  /** The errand being paid — how the decided gear row is found. Omitted only by
+   * a caller that has no errand (there is none today; the parameter is optional
+   * so the signature stays compatible with a payout that carries no loot). */
+  questId?: string,
 ): QuestPayout {
   const payout: QuestPayout = { xp: 0, coins: 0, items: [], cleanSlates: 0 };
   if (!reward) return payout;
@@ -88,17 +93,32 @@ export function payQuestReward(
     payout.items.push(handOver(state, mintUnique(state, id), at));
   }
 
-  if (reward.loot) {
-    for (let i = 0; i < reward.loot.count; i++) {
-      const equipment = rollEquipment(state, state.players[0], {
-        ...(reward.loot.slot === "weapon" || reward.loot.slot === "gear"
-          ? { slot: reward.loot.slot }
-          : {}),
-        ...(reward.loot.tierBonus ? { tierBonus: reward.loot.tierBonus } : {}),
-        // Priced against the hero who did the work, exactly as the stall is.
-        mlvl: state.players[0].level,
-      });
-      payout.items.push(handOver(state, equipment, at));
+  // THE GEAR WAS DECIDED BEFORE THE PLAYER SAID YES, and this hands over the
+  // row they picked (see reward-choices.ts). Nothing is rolled here any more:
+  // rolling at the handover is exactly what made the offer's promise a lie —
+  // it showed one item and paid another.
+  //
+  // `count` above 1 still pays several pieces, and the extras come off the SAME
+  // decided row rather than opening a second choice: a `count: 3` errand hands
+  // over three of the piece that was chosen.
+  if (questId && reward.loot) {
+    const chosen = pickedQuestReward(state, questId);
+    if (chosen) {
+      payout.items.push(handOver(state, chosen, at));
+      for (let i = 1; i < reward.loot.count; i++) {
+        payout.items.push(
+          handOver(
+            state,
+            rollEquipment(state, state.players[0], {
+              defId: chosen.defId,
+              tier: chosen.tier,
+              quality: chosen.quality,
+              mlvl: state.players[0].level,
+            }),
+            at,
+          ),
+        );
+      }
     }
   }
 

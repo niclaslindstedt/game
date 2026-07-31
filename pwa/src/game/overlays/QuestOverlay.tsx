@@ -22,7 +22,7 @@
 // re-derived here: an offer that promises a different number than the handover
 // pays is a reward the player stops trusting.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   conversationPages,
@@ -30,18 +30,24 @@ import {
   objectiveNeed,
   questDef,
   questGiverDef,
+  questRewardChoices,
   questXpReward,
+  type Equipment,
   type GameState,
   type QuestTopic,
 } from "@game/core";
 
+import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { wrapPage } from "@ui/lib/text-pager.ts";
-import { useTextColumn } from "@ui/lib/use-text-column.ts";
+import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
-import { type GameAssets } from "../assets.ts";
+import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { ItemIcon } from "../ItemCard.tsx";
+import { ItemTooltip } from "../ItemTooltip.tsx";
+import { tierGlowClass } from "../tiers.ts";
 import { label, objectiveLine } from "../quest-text.ts";
 import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
 
@@ -71,11 +77,18 @@ const TOPIC_MARK: Record<QuestTopic["kind"], { glyph: string; color: string }> =
  * and a dialogue line are the same size on the same screen. */
 const TEXT_SCALE = 2;
 
-/** Loose safety cap for one row's `PixelText`, in rem (see DialogueOverlay).
- * The speech rows are already flowed to the box's measured column, so this only
- * catches the degenerate case (column not yet measured) plus the un-flowed
- * one-liners around them — a giver's name, an objective, a reward figure. */
+/** Fallback cap for one row's `PixelText`, in rem, used ONLY until a column has
+ * been measured (see `columnCapRem`, which is what every row here actually
+ * passes). It is deliberately loose: it exists to stop the very first frame
+ * running off the screen, not to size anything. */
 const QUEST_TEXT_REM = 26;
+
+/** What a pick-list ROW eats before its label starts, in rem: `.quest-topic`'s
+ * padding (0.7 × 2) and border (2px each side), its gap (0.6), and the mark
+ * slot (0.85). A label is measured against the LIST's width, so this comes off
+ * the top or a long errand name runs past the row it is in. Read it off
+ * `.quest-topic` in styles.css if either changes. */
+const ROW_INSET_REM = 0.7 * 2 + 0.25 + 0.6 + 0.85;
 
 export function QuestOverlay({
   state,
@@ -86,6 +99,7 @@ export function QuestOverlay({
   onDecline,
   onTurnIn,
   onPick,
+  onChooseReward,
   onBlip,
   onClose,
 }: {
@@ -99,6 +113,8 @@ export function QuestOverlay({
   onTurnIn: () => void;
   /** Pick one row off the giver's list. */
   onPick: (questId: string) => void;
+  /** Take THAT piece of gear (an index into the errand's offered pieces). */
+  onChooseReward: (index: number) => void;
   /** Play the letter-print blip — fired as characters land, exactly as the
    * in-world dialogue box fires it. */
   onBlip?: () => void;
@@ -136,6 +152,13 @@ export function QuestOverlay({
   const rowCount = topics.length;
   const listKey = listing && offer ? `${offer.giverId}:${rowCount}` : "";
   const [cursorState, setCursorState] = useState({ key: "", index: 0 });
+  // The reward piece whose card is open, and the slot it is anchored to. The
+  // bag's own tooltip draws it, so a quest reward is read on exactly the screen
+  // the player reads every other piece of gear on.
+  const [inspect, setInspect] = useState<{
+    item: Equipment;
+    anchor: DOMRect;
+  } | null>(null);
   const cursor =
     cursorState.key === listKey
       ? Math.min(cursorState.index, Math.max(0, rowCount - 1))
@@ -176,12 +199,17 @@ export function QuestOverlay({
   // An authored line is a PARAGRAPH: flow it into the speech column's own
   // measured width (the box is narrower than the dialogue box's — a portrait
   // and a contract share it) rather than printing the source's breaks.
-  const linesRef = useRef<HTMLDivElement>(null);
-  const colFontPx = useTextColumn(linesRef, TEXT_SCALE);
+  const { ref: linesRef, fontPx: colFontPx } = useTextColumn(TEXT_SCALE);
   // The pick list is a different render branch with a box of its own, so its
   // hello is measured separately — only one of the two is ever mounted.
-  const greetRef = useRef<HTMLDivElement>(null);
-  const greetColFontPx = useTextColumn(greetRef, TEXT_SCALE);
+  const { ref: greetRef, fontPx: greetColFontPx } = useTextColumn(TEXT_SCALE);
+  // THE CONTRACT IS FLOWED TOO, and it has to be: an objective is an authored
+  // SENTENCE (a `visit` says where to stand in words), and the block runs the
+  // box's full width with no portrait beside it — so it is a different column
+  // from the speech and needs its own measurement rather than the speech's.
+  const { ref: objRef, fontPx: objColFontPx } = useTextColumn(TEXT_SCALE);
+  const { ref: rewardRef, fontPx: rewardColFontPx } = useTextColumn(TEXT_SCALE);
+  const { ref: topicRef, fontPx: topicColFontPx } = useTextColumn(TEXT_SCALE);
   const spokenLines = useMemo(
     () =>
       wrapPage(
@@ -277,9 +305,24 @@ export function QuestOverlay({
   ]);
 
   const rewardRows = useMemo(
-    () => (quest ? rewardLines(state, quest.reward) : []),
-    [state, quest],
+    () => (quest ? rewardLines(state, assets, quest.reward) : []),
+    [state, assets, quest],
   );
+  // READ, never minted: the engine decided these when the conversation opened
+  // (see quests/reward-choices.ts), so a re-render cannot re-roll the reward.
+  const choices: Equipment[] = useMemo(
+    () => (quest && !listing ? questRewardChoices(state, quest.id) : []),
+    [state, quest, listing],
+  );
+  const rewardPick = quest
+    ? Math.min(
+        Math.max(
+          0,
+          state.quests[quest.id]?.rewardPick ?? offer?.rewardPick ?? 0,
+        ),
+        Math.max(0, choices.length - 1),
+      )
+    : 0;
 
   if (!offer || !giver) return null;
   if (!listing && !quest) return null;
@@ -303,9 +346,13 @@ export function QuestOverlay({
                 <PixelText
                   font={font}
                   text={giver.name}
-                  scale={1}
+                  scale={TEXT_SCALE}
                   color="#c9a95c"
-                  maxWidth={QUEST_TEXT_REM}
+                  maxWidth={columnCapRem(
+                    greetColFontPx,
+                    TEXT_SCALE,
+                    QUEST_TEXT_REM,
+                  )}
                 />
               </div>
               <div className="quest-lines" ref={greetRef}>
@@ -320,14 +367,18 @@ export function QuestOverlay({
                     font={font}
                     text={line}
                     scale={TEXT_SCALE}
-                    maxWidth={QUEST_TEXT_REM}
+                    maxWidth={columnCapRem(
+                      greetColFontPx,
+                      TEXT_SCALE,
+                      QUEST_TEXT_REM,
+                    )}
                   />
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="quest-topics">
+          <div className="quest-topics" ref={topicRef}>
             {topics.map((topic, i) => {
               const mark = TOPIC_MARK[topic.kind];
               return (
@@ -355,7 +406,11 @@ export function QuestOverlay({
                     text={questDef(topic.questId).name}
                     scale={TEXT_SCALE}
                     color={mark.color}
-                    maxWidth={QUEST_TEXT_REM}
+                    maxWidth={Math.max(
+                      4,
+                      columnCapRem(topicColFontPx, TEXT_SCALE, QUEST_TEXT_REM) -
+                        ROW_INSET_REM,
+                    )}
                   />
                 </button>
               );
@@ -377,13 +432,16 @@ export function QuestOverlay({
   }
 
   const progress = state.quests[quest!.id];
+  // The rows are PICKABLE only at the handover, and only when there is more
+  // than one of them (a lone neutral piece is shown, not chosen).
+  const picking = offer.kind === "complete" && choices.length > 1;
   // The primary action's label IS the state of the conversation, so the button
   // never has to be read alongside a title to know what it does.
   const primary =
     offer.kind === "offer"
       ? "ACCEPT"
       : offer.kind === "complete"
-        ? "TURN IN"
+        ? "COMPLETE"
         : "CLOSE";
 
   return (
@@ -413,20 +471,22 @@ export function QuestOverlay({
               <PixelText
                 font={font}
                 text={giver.name}
-                scale={1}
+                scale={TEXT_SCALE}
                 color="#c9a95c"
-                maxWidth={QUEST_TEXT_REM}
+                maxWidth={columnCapRem(colFontPx, TEXT_SCALE, QUEST_TEXT_REM)}
               />
             </div>
-            {/* A tap on the speech finishes the crawl — the dialogue box's own
-                gesture. It is scoped to the speech rather than the whole box on
+            {/* A tap on the speech finishes the crawl and then TURNS THE PAGE
+                — the dialogue box's own gesture, and now the only way through a
+                multi-page ask, since the footer is the decision rather than a
+                NEXT. It is scoped to the speech rather than the whole box on
                 purpose: the backdrop and the contract must never be a hidden
                 button, because one of this box's answers is DECLINE. */}
             <div
               className="quest-lines"
               ref={linesRef}
               onPointerDown={() => {
-                if (!crawlDone) skipCrawl();
+                if (!lastPage || !crawlDone) advance();
               }}
               role="presentation"
             >
@@ -439,7 +499,7 @@ export function QuestOverlay({
                   font={font}
                   text={spokenRows[i] ?? ""}
                   scale={TEXT_SCALE}
-                  maxWidth={QUEST_TEXT_REM}
+                  maxWidth={columnCapRem(colFontPx, TEXT_SCALE, QUEST_TEXT_REM)}
                 />
               ))}
             </div>
@@ -450,113 +510,237 @@ export function QuestOverlay({
             on the nag they are the live tally, and on the handover they are the
             receipt. One block, three readings, so the player never has to open
             the tracker to answer "what did this want again". */}
-        <div className="quest-objectives">
-          {quest!.objectives.map((objective, i) => (
-            <div className="quest-objective" key={i}>
-              <PixelText
-                font={font}
-                text={objectiveLine(
-                  quest!.id,
-                  objective,
-                  progress?.counts[i] ?? 0,
-                )}
-                scale={1}
-                color={
-                  (progress?.counts[i] ?? 0) >= objectiveNeed(objective)
-                    ? "#7fe3a0"
-                    : "#cfd6e0"
-                }
-                maxWidth={QUEST_TEXT_REM}
-              />
-            </div>
-          ))}
+        <div className="quest-objectives" ref={objRef}>
+          {quest!.objectives.map((objective, i) => {
+            const done = (progress?.counts[i] ?? 0) >= objectiveNeed(objective);
+            // An objective is a SENTENCE, so it is flowed like the speech
+            // rather than trusted to fit — `visit` words its target as prose.
+            const rows = wrapPage(
+              [objectiveLine(quest!.id, objective, progress?.counts[i] ?? 0)],
+              objColFontPx == null
+                ? null
+                : (line) => font.wrap(line, objColFontPx),
+            );
+            return (
+              <div className="quest-objective" key={i}>
+                {rows.map((row, r) => (
+                  <PixelText
+                    key={r}
+                    font={font}
+                    text={row}
+                    scale={TEXT_SCALE}
+                    color={done ? "#7fe3a0" : "#cfd6e0"}
+                    maxWidth={columnCapRem(
+                      objColFontPx,
+                      TEXT_SCALE,
+                      QUEST_TEXT_REM,
+                    )}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
 
-        {rewardRows.length > 0 && offer.kind !== "incomplete" && (
-          <div className="quest-rewards">
-            <PixelText font={font} text="REWARD" scale={1} color="#c9a95c" />
-            <div className="quest-reward-rows">
-              {rewardRows.map((row, i) => (
+        {(rewardRows.length > 0 || choices.length > 0) &&
+          offer.kind !== "incomplete" && (
+            <div className="quest-rewards" ref={rewardRef}>
+              <div className="quest-reward-title">
                 <PixelText
-                  key={i}
                   font={font}
-                  text={row}
-                  scale={1}
-                  color="#f6e3b0"
-                  maxWidth={QUEST_TEXT_REM}
+                  text="REWARD"
+                  scale={TEXT_SCALE}
+                  color="#c9a95c"
                 />
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="quest-actions">
-          {!lastPage ? (
-            <button
-              type="button"
-              className="pixel-button quest-button"
-              onClick={advance}
-            >
-              <PixelText font={font} text="NEXT" scale={2} color="#1a1c2c" />
-            </button>
-          ) : (
-            <>
-              {offer.kind === "offer" && (
-                <button
-                  type="button"
-                  className="pixel-button secondary quest-button"
-                  onClick={onDecline}
-                >
+              </div>
+              {/* ONE FACT PER LINE. They used to sit in a wrapping row — a
+                  strip reading "624 XP 60 COINS AN ITEM" that the eye has to
+                  parse into three things before it can price any of them. */}
+              {rewardRows.map((row) => (
+                <div className="quest-reward-line" key={row.label}>
+                  {row.icon && (
+                    <img
+                      src={row.icon}
+                      alt=""
+                      className="pixel-img quest-reward-icon"
+                    />
+                  )}
                   <PixelText
                     font={font}
-                    text="DECLINE"
-                    scale={2}
-                    color="#f6e3b0"
+                    text={row.label}
+                    scale={TEXT_SCALE}
+                    color={row.color}
+                    maxWidth={columnCapRem(
+                      rewardColFontPx,
+                      TEXT_SCALE,
+                      QUEST_TEXT_REM,
+                    )}
                   />
-                </button>
+                </div>
+              ))}
+
+              {/* THE GEAR, SHOWN RATHER THAN PROMISED. Each row is the real
+                  minted piece — its own icon, its name in its tier's colour,
+                  its rolled affixes — so the player can price the job before
+                  taking it. With more than one row it is a CHOICE, one per
+                  build lane, and the pick rides the errand. */}
+              {choices.length > 0 && (
+                <>
+                  <div className="quest-reward-title spaced">
+                    <PixelText
+                      font={font}
+                      // THE PICK HAPPENS AT THE HANDOVER, not at the ask. At the
+                      // ask these are a PROSPECTUS — what the job pays — and
+                      // choosing then would make the player commit to a piece
+                      // before doing the work, at the one moment they know least
+                      // about the build they will have when they come back.
+                      text={
+                        picking
+                          ? "CHOOSE ONE"
+                          : choices.length > 1
+                            ? "ITEM REWARDS"
+                            : "ITEM REWARD"
+                      }
+                      scale={TEXT_SCALE}
+                      color="#c9a95c"
+                    />
+                  </div>
+                  {/* SLOTS, LIKE THE BAG'S — the icon and nothing else. Names
+                      and affix lines were three stacked paragraphs of text in a
+                      box that already carries a speech and a contract, and they
+                      said far less than the art does at a glance. A press (or a
+                      hover) opens the piece's own card, which is the screen the
+                      player already reads gear on. */}
+                  <div className="quest-reward-slots">
+                    {choices.map((item, i) => (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={`inv-cell quest-reward-slot${
+                          picking && i === rewardPick ? " selected" : ""
+                        }${tierGlowClass(item.tier)}`}
+                        aria-label={`quest-reward-${item.id}`}
+                        onPointerEnter={(e) =>
+                          setInspect({
+                            item,
+                            anchor: e.currentTarget.getBoundingClientRect(),
+                          })
+                        }
+                        onPointerLeave={() => setInspect(null)}
+                        onClick={(e) => {
+                          // A press always SHOWS the piece (the only way in on
+                          // a touch screen, which has no hover) and, at the
+                          // handover, takes it.
+                          setInspect({
+                            item,
+                            anchor: e.currentTarget.getBoundingClientRect(),
+                          });
+                          if (picking) onChooseReward(i);
+                        }}
+                      >
+                        <ItemIcon sprites={assets.sprites} item={item} />
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
-              <button
-                type="button"
-                className="pixel-button quest-button"
-                onClick={
-                  offer.kind === "offer"
-                    ? onAccept
-                    : offer.kind === "complete"
-                      ? onTurnIn
-                      : onClose
-                }
-              >
-                <PixelText
-                  font={font}
-                  text={primary}
-                  scale={2}
-                  color="#1a1c2c"
-                />
-              </button>
-            </>
+            </div>
           )}
+
+        {/* THE FOOTER IS THE DECISION, ALWAYS — never a NEXT. It used to page
+            the speech first and only reveal ACCEPT on the last page, so the
+            button a player was looking at while reading an ask said NEXT: it
+            named the mechanism instead of the choice, and on a two-page offer
+            it hid the fact that there was anything to decide. The remaining
+            pages are turned by TAPPING THE SPEECH, which is the same gesture
+            the in-world dialogue box has always used. */}
+        <div className="quest-actions">
+          {offer.kind === "offer" && (
+            <button
+              type="button"
+              className="pixel-button secondary quest-button"
+              onClick={onDecline}
+            >
+              <PixelText font={font} text="DECLINE" scale={2} color="#f6e3b0" />
+            </button>
+          )}
+          <button
+            type="button"
+            className="pixel-button quest-button"
+            onClick={
+              offer.kind === "offer"
+                ? onAccept
+                : offer.kind === "complete"
+                  ? onTurnIn
+                  : onClose
+            }
+          >
+            <PixelText font={font} text={primary} scale={2} color="#1a1c2c" />
+          </button>
         </div>
+
+        {/* The bag's own card, portaled above the modal band and anchored to the
+            slot it describes. */}
+        {inspect && (
+          <ItemTooltip
+            font={font}
+            relicFonts={assets.relicFonts}
+            sprites={assets.sprites}
+            state={state}
+            item={inspect.item}
+            anchor={inspect.anchor}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-/** The reward, in the same words the handover will use. */
+/** XP's own blue — the colour every XP figure in the game is written in (the
+ * floating `+45 XP` off a kill, the bar), so the biggest number in the reward
+ * block is recognisable before it is read. */
+const XP_BLUE = "#7fc8ff";
+
+/** One non-gear line of the reward: what it says, what colour it says it in,
+ * and the sprite that leads it (coins get the purse's own coin art — a number
+ * beside the thing it counts needs no unit read). */
+type RewardLine = { label: string; color: string; icon?: string };
+
+/** The reward, in the same words the handover will use — one line per fact.
+ * The GEAR is deliberately absent: it is no longer a promise of "AN ITEM" but
+ * the actual pieces, drawn below by `RewardChoiceRow`. */
 function rewardLines(
   state: GameState,
+  assets: GameAssets,
   reward: ReturnType<typeof questDef>["reward"],
-): string[] {
+): RewardLine[] {
   if (!reward) return [];
-  const rows: string[] = [];
+  const rows: RewardLine[] = [];
   const xp = questXpReward(state, reward);
-  if (xp > 0) rows.push(`${xp} XP`);
-  if (reward.coins) rows.push(`${reward.coins} COINS`);
-  if (reward.loot) {
-    rows.push(
-      reward.loot.count === 1 ? "AN ITEM" : `${reward.loot.count} ITEMS`,
-    );
+  if (xp > 0) {
+    rows.push({ label: `${formatCompact(xp)} XP`, color: XP_BLUE });
   }
-  for (const id of reward.uniques ?? []) rows.push(label(id));
-  for (const id of reward.abilities ?? []) rows.push(`${label(id)} POWER`);
+  if (reward.coins) {
+    rows.push({
+      label: `${reward.coins}`,
+      color: "#ffd75e",
+      icon: spriteDataUrl(assets.sprites, "icon_coin") ?? undefined,
+    });
+  }
+  for (const id of reward.uniques ?? []) {
+    rows.push({ label: label(id), color: "#f6e3b0" });
+  }
+  for (const id of reward.abilities ?? []) {
+    rows.push({ label: `${label(id)} POWER`, color: "#c8a0ff" });
+  }
+  if (reward.cleanSlates) {
+    rows.push({
+      label:
+        reward.cleanSlates === 1
+          ? "A CLEAN SLATE"
+          : `${reward.cleanSlates} CLEAN SLATES`,
+      color: "#7fe3a0",
+    });
+  }
   return rows;
 }

@@ -11319,9 +11319,15 @@ canvas.tier-artifact {
   opacity: 0.9;
 }
 
+/* `min-width: 0` is load-bearing, not tidiness. A flex item's automatic minimum
+   size is its CONTENT, so a text canvas wider than the box would push this
+   column wider than `.quest-content`, the ResizeObserver would measure the
+   bigger box, the next wrap would be wider still, and the speech would walk off
+   the right edge of the modal. Same reason `.quest-content` carries it. */
 .quest-lines {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 0.1rem;
 }
 
@@ -11330,10 +11336,20 @@ canvas.tier-artifact {
 .quest-objectives {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 0.1rem;
   padding: 0.35rem 0.5rem;
   background: rgba(6, 8, 12, 0.4);
   border-left: 2px solid rgba(255, 215, 94, 0.4);
+}
+
+/* One objective's own rows: it is flowed to the block's measured column, so a
+   long sentence stacks rather than running out of the box. */
+.quest-objective {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.05rem;
 }
 
 /* THE PICK LIST — this person's whole slate, one row each. The row's mark is
@@ -11345,12 +11361,20 @@ canvas.tier-artifact {
 .quest-topics {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.3rem 0.25rem;
+  gap: 0.35rem;
+  padding: 0.4rem 0.35rem;
   background: rgba(6, 8, 12, 0.4);
   border-left: 2px solid rgba(255, 215, 94, 0.4);
 }
 
+/* A ROW IS A BUTTON, AND IS SIZED LIKE ONE. It used to be a text line with a
+   quarter-rem of padding — about 19px tall on a phone, against the 39px of the
+   GOODBYE button sitting directly under it, so the one control the player has
+   to hit to take an errand was less than half the target of the control that
+   leaves without one. The vertical padding here matches `.pixel-button`'s, and
+   the frame is what says "press me" from across a room. Note the height comes
+   from PADDING rather than a `min-height`: see the flex-start note below —
+   slack in the row is exactly what pulls the mark and its label apart. */
 .quest-topic {
   display: flex;
   flex-direction: row;
@@ -11364,10 +11388,10 @@ canvas.tier-artifact {
      keep doing so if the label ever wraps, where a bullet belongs on the first
      line anyway. */
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.25rem 0.4rem;
-  background: transparent;
-  border: 0;
+  gap: 0.6rem;
+  padding: 0.75rem 0.7rem;
+  background: rgba(255, 215, 94, 0.05);
+  border: 2px solid rgba(255, 215, 94, 0.22);
   border-radius: 4px;
   font: inherit;
   color: inherit;
@@ -11379,6 +11403,7 @@ canvas.tier-artifact {
 
 .quest-topic.selected {
   background: rgba(255, 215, 94, 0.14);
+  border-color: rgba(255, 215, 94, 0.55);
 }
 
 .quest-topic:active {
@@ -11394,22 +11419,108 @@ canvas.tier-artifact {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  width: 0.75rem;
+  width: 0.85rem;
 }
 
 .quest-rewards {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 0.15rem;
   padding: 0.35rem 0.5rem;
   background: rgba(6, 8, 12, 0.3);
 }
 
-.quest-reward-rows {
+/* A SECTION TITLE, AND IT HAS TO LOOK LIKE ONE. REWARD and CHOOSE ONE sat at
+   the block's own 0.15rem gap, flush against the first line under them, so they
+   read as another item in the list rather than as the label for it — the amber
+   alone was not enough separation. What makes a heading here is the same thing
+   that makes the title screen's headings: air beneath it and a hairline that
+   fades out, closing the label off from the rows it introduces. */
+.quest-reward-title {
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(255, 215, 94, 0.22);
+  /* The rule stops short of the right edge rather than running the full width:
+     a full-bleed line reads as a divider between two blocks, and this one
+     belongs to the title above it. */
+  mask-image: linear-gradient(90deg, #000 0%, #000 62%, transparent 100%);
+}
+
+/* CHOOSE ONE is a second heading INSIDE the same block, so it owes air above it
+   as well — without it the gear runs straight on from the coin line. */
+.quest-reward-title.spaced {
+  margin-top: 0.7rem;
+}
+
+/* ONE FACT PER LINE, each led by the sprite of the thing it counts where there
+   is one (coins). The old strip laid them out in a wrapping ROW, which read as
+   one sentence the eye had to cut into three before it could price any of them
+   — and on a phone it wrapped mid-fact. */
+.quest-reward-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+/* The row says `align-items: center` and it is NOT enough on its own: the
+   blanket `.game-overlay canvas` rule below parks every `PixelText` canvas at
+   `align-self: flex-start`, and it has equal specificity but comes later in the
+   file, so it wins. The number then sat 1.8px above the centre of the coin
+   beside it (measured: a 13.6px icon against a 10px canvas, both tops flush).
+   An extra class outranks it — the same fix the map header and the map legend
+   already carry, for the same reason. */
+.quest-reward-line canvas {
+  align-self: center;
+}
+
+.quest-reward-icon {
+  flex: 0 0 auto;
+  width: 0.85rem;
+  height: 0.85rem;
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* THE GEAR ON OFFER — BAG SLOTS, not a list of names. It began as a row per
+   piece with its name and every affix under it, which was three stacked
+   paragraphs inside a box that already carries a speech and a contract; the
+   icon says what the thing is faster than the words did, and the piece's own
+   card (the bag's, on press or hover) says the rest. Reuses `.inv-cell` so a
+   reward slot IS a bag cell — same frame, same tier glow. */
+.quest-reward-slots {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 0.15rem 0.9rem;
+  min-width: 0;
+  gap: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.quest-reward-slot {
+  /* A press target, not a 16px sprite: sized against the pick-list rows and
+     the box's own buttons rather than against the art inside it. */
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Only the HANDOVER's slots are chosen between, and the chosen one wears the
+   selection's amber — the same colour the pick list's selected row wears. */
+.quest-reward-slot.selected {
+  border-color: #ffd75e;
+  background: rgba(255, 215, 94, 0.16);
+}
+
+.quest-reward-slot:active {
+  transform: translateY(1px);
 }
 
 .quest-actions {
@@ -11530,7 +11641,13 @@ canvas.tier-artifact {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.35rem;
-  max-width: 40vw;
+  /* A DEFINITE width, not a max: the rows are text canvases that wrap to
+     whatever `QuestTracker` measures here, and a content-sized box would be
+     measured as whatever the text already is — which is circular, and lets a
+     long errand name push the strip across the field. The cap is still the
+     steering thumb's: the right-hand third of a landscape phone is where it
+     lives, so the strip may not have it. */
+  width: min(40vw, 18rem);
   pointer-events: none;
   text-align: right;
 }

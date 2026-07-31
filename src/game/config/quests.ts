@@ -14,10 +14,10 @@ export const QUESTS = {
    */
   talkRadius: 70,
   /**
-   * The re-open reach: past the auto-offer, a TAP on the giver within this
-   * distance re-opens their conversation. Wider than `talkRadius` so a player
-   * who declined once and walked off can come back without hunting for the
-   * exact spot.
+   * The TALK reach: a tap on the giver within this distance opens their
+   * conversation, which is the only way one ever opens. Wider than
+   * `talkRadius` (the reach that merely MEETS them) so a player who walked off
+   * can come back and press without hunting for the exact spot.
    */
   tapRadius: 96,
   /**

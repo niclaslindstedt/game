@@ -144,11 +144,20 @@ function questRun(): GameState {
   return state;
 }
 
-/** Step until the giver's conversation opens itself (or give up). */
+/**
+ * Walk into the giver's reach and stop. That MEETS them — discovered, pinned,
+ * marked — and nothing more: a conversation never opens itself.
+ */
 function walkUp(state: GameState, ticks = 20): void {
   for (let i = 0; i < ticks && state.phase === "playing"; i++) {
     step(state, idle, DT);
   }
+}
+
+/** Walk up AND tap them, which is the only way into a conversation. */
+function meet(state: GameState, ticks = 20): void {
+  walkUp(state, ticks);
+  talkToQuestGiver(state, "test_giver");
 }
 
 /**
@@ -226,11 +235,17 @@ describe("quest givers", () => {
         (m) => m.kind === "questGiver" && m.defId === "test_giver",
       ),
     ).toBe(true);
+    // ...AND THAT IS ALL WALKING UP DOES. The run keeps running: a person with
+    // an errand is an invitation (the `!` over their head), never a modal the
+    // player did not ask for while the horde is still moving.
+    expect(state.phase).toBe("playing");
+    expect(state.questOffer).toBeNull();
+    expect(giverMark(state, "test_giver")).toBe("offer");
   });
 
-  it("open the whole slate at once, then fall silent", () => {
+  it("open the whole slate at once on a tap, and never on their own", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     // Somebody with three errands opens on the PICK LIST rather than handing
     // them over one at a time: the alternative makes a giver's second quest
     // reachable only by refusing the first, which reads as the game losing
@@ -245,12 +260,15 @@ describe("quest givers", () => {
     ]);
 
     closeQuestDialogue(state);
-    // The greeting happens ONCE: standing there does not re-open it.
+    // STANDING THERE NEVER OPENS IT — not the first time and not the
+    // hundredth. A giver the hero is fighting beside must not keep grabbing
+    // the stage, so the only thing approach ever does is the meeting above.
     walkUp(state, 60);
     expect(state.phase).toBe("playing");
+    expect(state.questOffer).toBeNull();
 
-    // ...but the giver keeps their `!`, and a deliberate tap re-opens the
-    // slate: a player who walked away at level 3 may want the job at level 9.
+    // ...but the giver keeps their `!`, and a deliberate tap opens the slate:
+    // a player who walked away at level 3 may want the job at level 9.
     expect(giverMark(state, "test_giver")).toBe("offer");
     expect(talkToQuestGiver(state, "test_giver")).toBe(true);
     expect(state.questOffer?.kind).toBe("list");
@@ -260,7 +278,7 @@ describe("quest givers", () => {
     const state = questRun();
     // Take two of the three, leaving one offer — a menu of one is a menu
     // nobody wants, so the last one opens as the ask itself.
-    walkUp(state);
+    meet(state);
     take(state);
     if (state.questOffer?.kind === "list") take(state);
     closeQuestDialogue(state);
@@ -276,7 +294,7 @@ describe("quest givers", () => {
 
   it("come back to the slate after each errand, not out to the field", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     expect(state.questOffer?.kind).toBe("list");
     // Picking one, then backing out of it, returns to the list — so taking
     // three errands off one person costs one walk-up rather than three.
@@ -297,7 +315,7 @@ describe("quest givers", () => {
 
   it("hold the run frozen while the conversation is up", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     expect(state.phase).toBe("quest");
     const at = { ...state.players[0].pos };
     // A frozen phase is not stepped at all, so nothing in the world moves.
@@ -319,7 +337,7 @@ describe("a kill errand", () => {
 
   it("counts kills of its breed and nothing else", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
     expect(state.quests.test_cull?.status).toBe("active");
 
@@ -338,7 +356,7 @@ describe("a kill errand", () => {
 
   it("caps its tally rather than counting past the ask", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
     cull(state, 10);
     expect(state.quests.test_cull?.counts[0]).toBe(3);
@@ -346,7 +364,7 @@ describe("a kill errand", () => {
 
   it("moves the giver's mark to ? the moment it completes", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     expect(giverMark(state, "test_giver")).toBe("offer");
     takeAndLeave(state);
     // Still `!`: this giver holds two MORE errands, and unstarted work
@@ -361,7 +379,7 @@ describe("a kill errand", () => {
 
   it("shows the grey ? only while nothing else is on offer", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     // Take everything this giver has — each accept drops back to the slate, so
     // the whole set comes off one conversation.
     for (let i = 0; i < 4 && state.phase === "quest"; i++) take(state);
@@ -374,7 +392,7 @@ describe("the handover", () => {
 
   it("pays exactly what the offer quoted", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
     cull(state, 3);
 
@@ -414,7 +432,7 @@ describe("the handover", () => {
 
   it("unlocks the chain's next link, and not before", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
 
     // The second link is gated on the first being HANDED IN, not finished.
@@ -443,7 +461,7 @@ describe("a fetch errand", () => {
 
   it("lays its placed pieces out only once it is accepted", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     // Decline the first two so the fetch is what gets offered.
     declineQuest(state);
     expect(state.items.some((i) => i.kind === "quest")).toBe(false);
@@ -461,7 +479,7 @@ describe("a fetch errand", () => {
 
   it("drops its piece off the breeds that carry it", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     offerUntil(state, "test_fetch");
     takeAndLeave(state);
     const before = state.items.filter((i) => i.kind === "quest").length;
@@ -473,7 +491,7 @@ describe("a fetch errand", () => {
 
   it("stops dropping once the ask is met", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     offerUntil(state, "test_fetch");
     takeAndLeave(state);
     const progress = state.quests.test_fetch!;
@@ -488,7 +506,7 @@ describe("an escort errand", () => {
   beforeEach(() => installQuests());
 
   function takeWalk(state: GameState): void {
-    walkUp(state);
+    meet(state);
     offerUntil(state, "test_walk");
     takeAndLeave(state);
   }
@@ -563,7 +581,7 @@ describe("the quest log", () => {
   it("lists nothing until something is taken on", () => {
     const state = questRun();
     expect(trackedQuests(state)).toHaveLength(0);
-    walkUp(state);
+    meet(state);
     // An OFFERED-but-untaken errand is not "tracked" — the tracker shows work,
     // and a quest nobody accepted is not work.
     expect(trackedQuests(state)).toHaveLength(0);
@@ -573,7 +591,7 @@ describe("the quest log", () => {
 
   it("keeps a handed-in errand on the list", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
     cull(state, 3);
     talkToQuestGiver(state, "test_giver");
@@ -588,7 +606,7 @@ describe("the quest log screen", () => {
 
   it("openQuestLog freezes the run and closeQuestLog resumes it", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
     openQuestLog(state);
     expect(state.phase).toBe("questLog");
@@ -601,7 +619,7 @@ describe("the quest log screen", () => {
 
   it("only opens mid-run, and closing yields to a pending level-up", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
     pauseGame(state);
     openQuestLog(state); // not playing: a no-op
@@ -622,7 +640,7 @@ describe("the progress announcement", () => {
   // would leave a fetch piece or a delivered escort silently unremarked.
   it("emits a countable questProgress for a kill off the list", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     takeAndLeave(state);
     cull(state, 1);
     expect(
@@ -632,7 +650,7 @@ describe("the progress announcement", () => {
 
   it("emits one for a fetch piece walked over", () => {
     const state = questRun();
-    walkUp(state);
+    meet(state);
     offerUntil(state, "test_fetch");
     takeAndLeave(state);
     // The placed piece lies a step away; walk onto it.

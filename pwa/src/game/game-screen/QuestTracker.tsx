@@ -22,11 +22,23 @@ import {
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 
 import { objectiveLine } from "../quest-text.ts";
 
 /** The most errands the strip will show at once — see the note above. */
 const MAX_TRACKED = 3;
+
+/** The strip's text scale. It is the same 2 every other spoken and printed
+ * surface uses, and it is not negotiable for a HUD element: this is read at a
+ * glance, mid-fight, on a phone at arm's length. It shipped at 1 and was simply
+ * unreadable there. */
+const TEXT_SCALE = 2;
+
+/** Fallback cap until the strip has been measured — see `columnCapRem`. The
+ * strip's real bound is its own CSS width, which is viewport-relative, so the
+ * constant is only ever the first frame's. */
+const TRACKER_TEXT_REM = 12;
 
 export function QuestTracker({
   state,
@@ -44,10 +56,18 @@ export function QuestTracker({
     (q) => q.status === "complete",
   );
   const rows = [...complete, ...active].slice(0, MAX_TRACKED);
+
+  // Measured rather than capped in rem: the strip's width is a share of the
+  // VIEWPORT (it may not eat the steering thumb's third of the screen), and a
+  // rem constant that fits a landscape phone is wider than a portrait one's
+  // whole strip. Hooks run before the empty-list return, as they must.
+  const { ref: stripRef, fontPx: colFontPx } = useTextColumn(TEXT_SCALE);
+  const cap = columnCapRem(colFontPx, TEXT_SCALE, TRACKER_TEXT_REM);
+
   if (rows.length === 0) return null;
 
   return (
-    <div className="quest-tracker" aria-hidden="true">
+    <div className="quest-tracker" ref={stripRef} aria-hidden="true">
       {rows.map((progress) => {
         const quest = questDef(progress.id);
         const done = progress.status === "complete";
@@ -56,17 +76,17 @@ export function QuestTracker({
             <PixelText
               font={font}
               text={quest.name}
-              scale={1}
+              scale={TEXT_SCALE}
               color={done ? "#7fe3a0" : "#ffd75e"}
-              maxWidth={16}
+              maxWidth={cap}
             />
             {done ? (
               <PixelText
                 font={font}
                 text="COMPLETE - RETURN"
-                scale={1}
+                scale={TEXT_SCALE}
                 color="#7fe3a0"
-                maxWidth={16}
+                maxWidth={cap}
               />
             ) : (
               quest.objectives.map((objective, i) => (
@@ -78,13 +98,13 @@ export function QuestTracker({
                     objective,
                     progress.counts[i] ?? 0,
                   )}
-                  scale={1}
+                  scale={TEXT_SCALE}
                   color={
                     (progress.counts[i] ?? 0) >= objectiveNeed(objective)
                       ? "#7fe3a0"
                       : "#cfd6e0"
                   }
-                  maxWidth={16}
+                  maxWidth={cap}
                 />
               ))
             )}

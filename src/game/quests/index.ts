@@ -14,11 +14,15 @@
 //    nothing caches it. A stored mark goes stale the instant a kill three
 //    rooms away completes an objective, and a `?` that isn't there is a quest
 //    the player never hands in.
-// 2. **A CONVERSATION STARTS ITSELF EXACTLY ONCE.** Walking up auto-opens the
-//    offer, because a quest nobody notices is a quest nobody takes — but a
-//    DECLINED offer is remembered (`declined`) and never re-opens on its own.
-//    After that it is a tap on the giver, which is the same gesture the shop
-//    already uses.
+// 2. **A CONVERSATION NEVER STARTS ITSELF.** Walking up MEETS somebody — they
+//    are discovered, pinned on the map and marked with a `!` over the head —
+//    and that is all. The conversation waits for a deliberate tap, the same
+//    gesture the shop and a bystander already use. It used to auto-open on
+//    approach, on the theory that a quest nobody notices is a quest nobody
+//    takes; what that actually did was freeze the run into a modal the player
+//    had not asked for, mid-fight, because they walked past the wrong crate.
+//    The head mark is what carries the invitation now — WoW has never needed
+//    more than one — and it costs the player nothing to ignore.
 // 3. **PROGRESS IS BOOKED WHERE IT HAPPENS, NOT SCANNED FOR.** `creditQuestKill`
 //    is called from `killEnemy` and `creditQuestPickup` from the item pass.
 //    Polling the world for "are there still eight assemblers" would be both
@@ -56,12 +60,14 @@ import type {
 } from "../types/index.ts";
 import { clearEscorts, spawnEscort, stepEscorts } from "./escort.ts";
 import { questSpot } from "./placement.ts";
+import { questRewardChoices } from "./reward-choices.ts";
 import { payQuestReward, type QuestPayout } from "./rewards.ts";
 
 export * from "./campaign.ts";
 export * from "./escort.ts";
 export * from "./placement.ts";
 export * from "./merchant.ts";
+export * from "./reward-choices.ts";
 export * from "./rewards.ts";
 
 /**
@@ -85,7 +91,6 @@ export function createQuestGivers(
     pos: clearSpot({ ...def.at }, blocked),
     faceLeft: false,
     discovered: false,
-    autoOffered: [],
   }));
 }
 
@@ -110,10 +115,9 @@ function clearSpot(
 }
 
 /**
- * Advance the quest system one tick: meet the givers, open the conversations
- * that open themselves, walk the escorts, and pin what the hero has laid eyes
- * on. Runs after the horde has moved, so a sighting means the thing is
- * actually on screen.
+ * Advance the quest system one tick: MEET the givers (nothing opens — see rule
+ * 2), walk the escorts, and pin what the hero has laid eyes on. Runs after the
+ * horde has moved, so a sighting means the thing is actually on screen.
  */
 export function stepQuests(state: GameState, dt: number, dtMs: number): void {
   pollQuestConditions(state);
@@ -142,19 +146,8 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
         giverId: giver.id,
       });
     }
-    // The conversation only opens itself while the run is actually running and
-    // NOTHING ELSE HAS THE STAGE. Both halves matter: `phase` catches the bag,
-    // the shop and a level-up, and `dialogue` catches an in-world scene that
-    // this very tick's earlier passes may have raised — an offer that stepped
-    // over a monologue would take a page of the story away from the player and
-    // then be tapped away with it.
-    if (
-      state.phase === "playing" &&
-      state.dialogue === null &&
-      state.questOffer === null
-    ) {
-      maybeOpenConversation(state, giver);
-    }
+    // ...and that is the whole meeting. Nothing opens. `talkToQuestGiver` is
+    // the only door into a conversation, and only a tap calls it.
   }
 
   markQuestTargets(state);
@@ -221,31 +214,6 @@ function pollQuestConditions(state: GameState): void {
     });
     if (moved) refreshQuestCompletion(state, progress.id);
   }
-}
-
-/**
- * Open this giver's conversation on approach, if they have anything NEW to
- * say. "New" is the whole restraint: a finished errand always speaks up (it is
- * the payoff, and the walk back is the point of it), and a fresh errand speaks
- * up exactly once. Everything else waits for a deliberate tap, so standing
- * near somebody is never a stream of modals.
- */
-function maybeOpenConversation(state: GameState, giver: QuestGiver): void {
-  const topics = giverTopics(state, giver.id);
-  const speaksUp =
-    topics.some((t) => t.kind === "complete") ||
-    topics.some(
-      (t) => t.kind === "offer" && !giver.autoOffered.includes(t.questId),
-    );
-  if (!speaksUp) return;
-  // Every errand currently on the table counts as offered now, so the greeting
-  // is one conversation rather than one per quest.
-  for (const topic of topics) {
-    if (topic.kind === "offer" && !giver.autoOffered.includes(topic.questId)) {
-      giver.autoOffered.push(topic.questId);
-    }
-  }
-  openTopics(state, giver.id, topics, false);
 }
 
 /**
@@ -342,13 +310,14 @@ function leaveTopic(state: GameState): void {
 
 /**
  * Open a giver's conversation and FREEZE the run behind it (the `quest`
- * phase). The app calls this for a tap on a giver; the step calls it for the
- * walk-up. Returns false when there is nothing to say or the run is not in a
- * state to be interrupted, so a stray tap is simply ignored.
+ * phase). THE ONLY DOOR IN — the app calls it for a tap on a giver, and
+ * nothing calls it on the player's behalf. Returns false when there is nothing
+ * to say or the run is not in a state to be interrupted, so a stray tap is
+ * simply ignored.
  */
 export function talkToQuestGiver(state: GameState, giverId: string): boolean {
   if (state.phase !== "playing" || state.questOffer !== null) return false;
-  // Same rule as the walk-up: never step over a scene already on the stage.
+  // Never step over a scene already on the stage.
   if (state.dialogue !== null) return false;
   const giver = state.questGivers.find((g) => g.id === giverId);
   if (!giver || !giver.discovered) return false;
@@ -362,13 +331,7 @@ export function talkToQuestGiver(state: GameState, giverId: string): boolean {
   // level 3 may well want the job at level 9), so always returning the first
   // entry left a refused quest permanently hiding every other quest that giver
   // owned — and there is no other way in.
-  const topics = giverTopics(state, giverId);
-  for (const topic of topics) {
-    if (topic.kind === "offer" && !giver.autoOffered.includes(topic.questId)) {
-      giver.autoOffered.push(topic.questId);
-    }
-  }
-  return openTopics(state, giverId, topics, false);
+  return openTopics(state, giverId, giverTopics(state, giverId), false);
 }
 
 function openQuestConversation(
@@ -378,12 +341,20 @@ function openQuestConversation(
   kind: "offer" | "incomplete" | "complete",
   fromList = false,
 ): void {
+  // MINT THE REWARD BEFORE THE BOX IS ON SCREEN. The gear an errand pays is
+  // decided once, here, and shown in full — so what the offer promises is
+  // literally the item the handover hands over (see reward-choices.ts). Doing
+  // it at the moment the conversation opens is what keeps the app a pure
+  // reader: it never mints, so a re-render cannot re-roll the reward.
+  const picked = state.quests[questId]?.rewardPick;
+  questRewardChoices(state, questId);
   state.questOffer = {
     questId,
     giverId,
     kind,
     page: 0,
     ...(fromList ? { fromList: true } : {}),
+    ...(picked !== undefined ? { rewardPick: picked } : {}),
   };
   state.phase = "quest";
   const giver = state.questGivers.find((g) => g.id === giverId);
@@ -462,6 +433,9 @@ export function acceptQuest(state: GameState): boolean {
     counts: def.objectives.map(() => 0),
     dryKills: def.objectives.map(() => 0),
     acceptedAtMs: state.stats.timeMs,
+    // Carry a pick made at the OFFER onto the log — the player chose which
+    // piece they were saying yes to, and that choice is the reason they said it.
+    ...(offer.rewardPick !== undefined ? { rewardPick: offer.rewardPick } : {}),
   };
   state.events.push({
     type: "questAccepted",
@@ -486,9 +460,10 @@ export function acceptQuest(state: GameState): boolean {
 }
 
 /**
- * TURN IT DOWN. Remembered, so the offer never opens itself again — but the
- * giver keeps their `!` and a tap still takes it, because a player who said no
- * at level 3 may well want the job at level 9.
+ * TURN IT DOWN. Remembered — the giver keeps their `!` and a tap still takes
+ * it, because a player who said no at level 3 may well want the job at level
+ * 9, so the status is what tells a CAMPAIGN merge that a decline ranks below
+ * an untaken offer rather than above it (see campaign-save.ts).
  */
 export function declineQuest(state: GameState): boolean {
   const offer = state.questOffer;
@@ -532,7 +507,7 @@ export function turnInQuest(state: GameState): QuestPayout | null {
     (item) => !(item.kind === "quest" && item.questId === def.id),
   );
 
-  const payout = payQuestReward(state, def.reward, at);
+  const payout = payQuestReward(state, def.reward, at, def.id);
   state.events.push({
     type: "questTurnedIn",
     questId: def.id,
