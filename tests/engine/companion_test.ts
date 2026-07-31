@@ -363,7 +363,9 @@ describe("companions in the field", () => {
         Math.round(companion.maxHp * COMPANIONS.saltsHpFraction),
       );
       expect(state.player.inventory[at]).toBeNull(); // consumed
-      expect(state.events.some((e) => e.type === "companionRevived")).toBe(true);
+      expect(state.events.some((e) => e.type === "companionRevived")).toBe(
+        true,
+      );
       // Back at the hero's side rather than where it fell — the party is never
       // an errand to walk back for.
       const gap = Math.hypot(

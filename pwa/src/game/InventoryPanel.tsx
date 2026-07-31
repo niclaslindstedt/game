@@ -577,9 +577,7 @@ export function InventoryPanel({
           item={inspect.item}
           anchor={inspect.anchor}
           onUse={
-            bagVerb(inspect.item)
-              ? () => activateItem(inspect.item)
-              : undefined
+            bagVerb(inspect.item) ? () => activateItem(inspect.item) : undefined
           }
         />
       )}

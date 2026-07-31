@@ -892,7 +892,10 @@ export function spendReviveItem(state: GameState, index: number): boolean {
  * the press rather than after it. False for a DOWNED companion: a corpse does
  * not want a bandage, it wants the salts.
  */
-export function canHealCompanion(state: GameState, companionId: number): number {
+export function canHealCompanion(
+  state: GameState,
+  companionId: number,
+): number {
   const companion = companionById(state, companionId);
   if (!companion || companion.downed) return -1;
   if (companion.hp >= companion.maxHp) return -1;
@@ -926,7 +929,9 @@ export function healCompanionWithMedkit(
     Math.max(
       1,
       Math.round(
-        companion.maxHp * COMPANIONS.medkitHealFraction * (quality?.healPct ?? 1),
+        companion.maxHp *
+          COMPANIONS.medkitHealFraction *
+          (quality?.healPct ?? 1),
       ),
     ),
   );

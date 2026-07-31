@@ -14,6 +14,7 @@
 export * from "./slots.ts";
 export * from "./class-stats.ts";
 export * from "./quality.ts";
+export * from "./quote.ts";
 export * from "./worth.ts";
 export * from "./rolling.ts";
 export * from "./derived.ts";
