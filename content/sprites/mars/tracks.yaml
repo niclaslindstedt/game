@@ -3,20 +3,23 @@ family: mars
 plane: floor
 size: [16, 8]
 description: >
-  Rover tire tracks pressed into the dust.
+  Rover tire tracks pressed into the dust — two parallel ruts, each with a lit
+  lip of displaced fines along it and a chevron tread cut into the groove.
 subject:
   kind: decor (ground overlay)
-  build: two parallel dashed tread lines of dark brown across the regolith
+  build: two parallel tire ruts running across the regolith
+  features: a sunlit lip of pushed-up dust along the top of each rut, a dark groove under it, and chevron tread marks cut across both
   flavor: proof someone's machines have worked this ground for years
 palette:
-  d: "#80482d" # tread mark
-  e: "#623722" # dark tread shade
+  u: "#c38668" # sunlit lip of displaced dust
+  d: "#80482d" # chevron tread mark
+  e: "#623722" # shadowed groove
 grid: |
   ................
-  .dd..dd..dd..dd.
-  .ee..ee..ee..ee.
+  duuduuduuduuduud
+  edeedeedeedeedee
   ................
   ................
-  ....dd..dd..dd..
-  ....ee..ee..ee..
+  duuduuduuduuduud
+  edeedeedeedeedee
   ................

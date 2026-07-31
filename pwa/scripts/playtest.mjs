@@ -183,9 +183,10 @@ const extras =
   (speed && Number(speed) > 1 ? `&speed=${encodeURIComponent(speed)}` : "");
 await page.goto(`${url}/?debug&bot=${strategy}${extras}`);
 // The app opens on the Doom-style title menu. Wait for it (asset load) before
-// shooting the splash; NEW GAME on the front door opens the character create
-// form. (It used to sit behind a PLAY submenu — `content/mainmenu.yaml` is the
-// tree now, and it leads with the play verbs, so there is nothing in between.)
+// shooting the splash; NEW GAME then opens the character create form. The row
+// sits on the FRONT DOOR — there is no PLAY submenu to open first, since the
+// play verbs were lifted onto the main screen when the tree moved into
+// content/mainmenu.yaml.
 await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.screenshot({ path: `${shotDir}/title.png` });
 // The MODS, in load order, before any run exists: `applyMods` swaps the engine's

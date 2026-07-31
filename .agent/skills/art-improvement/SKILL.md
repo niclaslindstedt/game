@@ -45,6 +45,7 @@ numbers".
 | `items`                     | Survey: numbered sheet(s) of the whole item catalog (paginated `_pN` past 64 entries)                      |
 | `equipped [name...]`        | Survey/funnel: weapons & gear drawn ON the hero — whole catalog (no args) or a named shortlist (icons or def ids) |
 | `sheet <name...>`           | Funnel rounds: a numbered sheet of exactly the named sprites (30 → 20 → 10)                                |
+| `field <level\|name\|module.mjs>` | GROUND only: the tile laid down as the game lays it — a level id uses that level's own ground/patch rule, a sprite name tiles flat, a concept module tiles each sketch |
 | `variants <name...>`        | Finalist study: each name expanded to all frames, wound stages, rock footprints, worn overlays             |
 | `snapshot <name...>`        | Preserve the CURRENT renders as "before" PNGs — run BEFORE touching any grid                               |
 | `concepts <module.mjs>`     | Render a concept scratch module (current sprite first, then each concept, numbered)                        |
@@ -52,7 +53,7 @@ numbers".
 | `names <regex>`             | Grep atlas sprite names when unsure what a thing is called                                                 |
 | `palette <family\|sprite>`  | List the char → color map a redraw draws with (`*` = family-local) — run before sketching a concept module |
 
-Flags: `--out <png>`, `--scale <n>`, `--cols <n>`, `--chunk <n>`. Names
+Flags: `--out <png>`, `--scale <n>`, `--cols <n>`, `--rows <n>`, `--chunk <n>`. Names
 accept the base (`wraith`) or an exact key (`wraith_0`). The survey/shortlist
 sheets render small by default — pass `--scale 12` (or higher) when judging
 internal anatomy, not just silhouette.
@@ -72,7 +73,11 @@ They live as fragments in [`.lessons/`](./.lessons/) next to this file.
    weapons and gear drawn on the hero (held/worn), since a weapon or armor
    icon that reads fine as a loose square can sit wrong once equipped (bad
    grip angle, wrong scale on the body, colors clashing with the suit).
-   (The hero appears on every level sheet — judge him once.)
+   (The hero appears on every level sheet — judge him once.) In `levels` mode,
+   also run `field <id>` and Read it: a GROUND or patch tile cannot be judged
+   from one swatch — the defects it has (a lattice, a stamped patch, a seam)
+   only exist once it is repeated, and `field` lays it down under that level's
+   own ground rule.
 3. Judge each numbered cell against the **worst-art rubric** below. Keep a
    running table — `sprite name | where seen | defects | severity 1–5` —
    in sprite names, never bare numbers (numbers restart per sheet/page).
@@ -112,6 +117,18 @@ not from memory:
 - **Noise** — orphan pixels, dithering soup, ragged edges.
 - **Scale/hierarchy lies** — an elite that reads smaller or quieter than
   a minion; a boss without visual weight; decor louder than threats.
+- **Footprint mismatch** _(props/buildings)_ — the sprite's `size:` disagrees
+  with the FOOTPRINT the content places it at, so the player collides with a
+  box the art does not fill (or the art overhangs a hitbox that isn't there).
+  This one never shows on a survey sheet — every sprite is drawn alone, at its
+  own size, on its own swatch — so it has to be looked up: check a candidate's
+  `size:` against its `w`/`h` in `content/maps/<id>.yaml` (a `type: building`
+  entry) and against the `radius` on its `content/levels/<id>.yaml` obstacle
+  line. Eastworld's `storefront` was a 16×16 sprite declared as a 48×40
+  building — a shed you bumped into three tiles early, standing beside a 60×60
+  saloon — and its own `subject.kind` still said "wall tile" from an earlier
+  life. A mismatch is usually a sprite whose USE changed without its art
+  following, so fix the words (Phase 4 step 1) as well as the pixels.
 - **Identity collision** — two or more sprites in the family share a
   silhouette and a palette, so the player cannot tell an elite from a minion
   at a glance. This one is invisible sprite-by-sprite: it only shows when you
@@ -119,6 +136,23 @@ not from memory:
   different colours. It is usually one shared template defect (arms drawn in
   the torso colour with no seam, say), so score every sprite that inherits it
   and fix the template once.
+- **Tiling lattice** _(ground/patch tiles only — judge on `field`, never on a
+  `sheet` cell)_ — laid down across a map the tile resolves into a visible
+  16px grid: a sparse tile's isolated flecks line up into a lattice of dots, and
+  a patch pair stamps one recognizable clump in rows (patches clump on a 4×4
+  tile block, so whatever they draw appears sixteen times in a 64×64 area). The
+  cures are density (a dense grain gives the eye nothing to lock onto), wrapping
+  features (write the grid with wrapping coordinates so a line meanders into its
+  neighbour instead of stopping at the seam), and low contrast — a 16px tile
+  repeated cannot be aperiodic, so past a point the only fix is giving the eye
+  less structure.
+- **Biome recolour** — the sprite is another biome's sprite with a new palette,
+  pixel for pixel. Cheap to ship and it always reads as the wrong place: the
+  moon is airless, so its rock is sharp-shattered and its craters have bright
+  unweathered rims, and none of that is true anywhere with wind. Find them by
+  normalizing every grid in two families to a canonical char sequence and
+  diffing — identical shapes are exact copies. The fix is to replace the shape
+  LANGUAGE, not the hue.
 - **Style drift** — outline weight, saturation, or detail density unlike
   the rest of its family.
 - **Story mismatch** — doesn't look like what the manuscript and its def
@@ -312,6 +346,10 @@ For each candidate, in the numbered order:
 
 1. With all 10 committed: `before-after <the 10 names in order>` → Read
    it yourself first (a swap that looks wrong here goes back to Phase 4).
+   A GROUND or patch tile needs a second image, because `before-after` draws
+   both cells over the CURRENT ground and so shows a ground change as two
+   identical squares: crop the same patch of `scripts/level-render.mjs <id>
+   --bare --dormant` from before the pass and after it, and stack them.
 2. Send the sheet to the user and ask which candidates should ship,
    referring to them by their numbers. Use `AskUserQuestion`
    (multi-select; batch the 10 across questions — options are capped at
@@ -355,6 +393,24 @@ For each candidate, in the numbered order:
 - **Color is a budget.** Ramps from the family palette, few and far
   apart in value; one accent hue for the focal point (eyes, wound, core)
   buys more than five new shades.
+- **A light effect drawn the cheap way reads as a mistake.** Two shortcuts fail
+  the same way — they approximate a lit surface with a flat two-tone rule, and
+  the eye reads the rule instead of the light:
+  - a **chromatic fringe / ghost** painted as the first and last lit pixel of
+    every row is an OUTLINE, not a split. Real mis-registration is a DISPLACED
+    COPY of the whole silhouette — offset the body by 1px, paint the cold hue
+    where it lags and the warm hue where it leads, and only where the solid body
+    isn't. (2px displacement on a boxy body gives solid bars, not a fringe.)
+  - a **facet** painted as a light half and a dark half is a flat silhouette
+    with a shadow. Crystal needs a RAMP — three or four planes (lit edge, face,
+    turn, back face) meeting at hard diagonal ridges — and a jagged multi-tip
+    silhouette rather than one dome.
+- **A loose speck must be at least two pixels.** `make assets` flags any lit
+  pixel with no lit 4-neighbor as an orphan (it reads as noise at 1x), so
+  authored "flecks flung off around it" and "a tail scattering into loose
+  specks" fail the lint one pixel at a time. Draw each as a 2px pair — still a
+  speck at 16px, and the pair satisfies the rule. Budget for this whenever a
+  subject asks for sparks, embers, tails, or debris.
 - **Icons read in the grid.** Item icons live in an inventory grid and
   the drop rain — a strong local silhouette and one identifying prop
   (barrel, blade, cross) beat miniature realism at 12×12.

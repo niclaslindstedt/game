@@ -2,48 +2,50 @@ name: marsrock_2x2
 family: mars
 size: [32, 32]
 description: >
-  A large oxidized boulder mass spanning four tiles.
+  A broken massif of oxidized stone, a scoured cleft splitting its
+  crown, the largest of the field's rocks.
 subject:
   kind: rock (obstacle / cover)
-  build: a big rounded reddish-brown Martian rock spanning four tiles
-  features: darker cragged shadows
-  flavor: an impassable cover the horde routes around
+  build: a wide four-tile mass of oxide stone with a broad shoulder and a hard fall to its shadowed flank
+  features: a sun-caught dust rim along its upper-left edge, a cleft scoured down through the crown, pits across the lit shoulder, and pale wind-drift piled along its foot
+  flavor: stops sight, shots and machines
 palette:
-  O: "#1a1c2c" # outline
-  d: "#80482d" # oxide-brown body
-  e: "#623722" # dark crag shadow
-  t: "#b2643e" # rust-red highlight
-  u: "#c38668" # light tan highlight
+  O: "#1a1c2c" # dark outline
+  p: "#deaa86" # sun-caught dust rim
+  u: "#c38668" # light oxide face
+  t: "#b2643e" # base oxide red
+  e: "#623722" # deep oxide shadow
+  k: "#342c26" # pit shadow
 grid: |
   ................................
   ................................
-  ........OOOOOOOOOOOOOOO.........
-  .....OOOuuuuttttettttttOOOO.....
-  ...OOuuuuuutttttettttttttddOO...
-  ..OuuuuuuutttttttettttttdddddO..
-  ..OuuuuuuttttttttetttttdddddddO.
-  .OuuuuuuttttttttttttttddddddddO.
-  .OuuuuuttttttttttttttdddddddddO.
-  .OuuuuttttttttttttttddddddddddO.
-  .OuuttttttttttttttddddddddddddO.
-  .OuttttttttttttttddddddddddddOO.
-  .OttttttttttttttddddddddddddO...
-  .OtttttttttttttddddddddddddO....
-  .OttttttttttttddddddddddddddOO..
-  .OtttttttttttddddddddddddddeeeO.
-  .OttttttttttddddddddddddddeeeeO.
-  .OOttttttttddddddddddddddeeeeeO.
-  ...OttttttddddddddddddddeeeeeeO.
-  ..OttttttddddddddddddddeeeeeeeO.
-  .OtttttddddddOeddddddeeeeeeeeeO.
-  .OttttdddddddOedddddeeeeeeeeeeO.
-  .OtttdddddddddOedddeeeeeeeeeeeO.
-  .OttddddddddddOedOeeeeeeeeeeeeO.
-  .OtddddddddddOeddeOeeeeeeeeeeeO.
-  .OddddddddddddOeeeeOeeeeeeeeeO..
-  ..OdddddddddddOeeeeeOeeeeeeeO...
-  ..OdddddddddddeOeeeeeeeeeeeO....
-  ...OOddddddddeeeeeeeeeeeeOO.....
-  .....OOOddddeeeeeeeeeOOOO.......
-  ........OOOOOOOOOOOOO...........
+  .........OOOOOOOOOOOOO..........
+  .......OOppppppkppppppOOO.......
+  .....OOppuuuuuukuuuuuupptOOO....
+  ...OOppuuuuuuukuuuuuuttttpptO...
+  ..OppuuuuuuuuukuuutttuuutttttO..
+  ..OpuuuuuuukuuuktuuuuuttttttttO.
+  .OpuuuuuuuuuuuukuuutttktttttteeO
+  OpuuuuuuuuuuuukutttttttktttetttO
+  OpuuuuuuuuuuutkttttttttttttttteO
+  OpuuuukuuutttttuttttttttttteeeO.
+  .OpuuuukttuuuutttttttttteeeeeeO.
+  .OpuutuuuuutttttttttteeeeeteeeO.
+  .OpuuuuuttttttttttteeettteeeeeO.
+  .OpuuttttttttttteetttteeeeeeeeeO
+  .OttkttttttttttttttekeeeeeeeeeeO
+  .OttuttttttttttteeeeekeeeeeeeeeO
+  .OptttttttttteeeeeeeeeeeeeeeeeeO
+  .OtttttttkteeeeeeeeeeeeeeeeeeeeO
+  .OtttttteeettteeeeeeeeeeeekeeeeO
+  .OttteetttteeeeeeeeeeeeeeeeeeeeO
+  OttttttteeeeeeeeeeeeeeeeeeeeeeeO
+  OtttteeeeeeeeeeeeeeeeeeeeeeeeeeO
+  .OteeeeeeeeeeeeeeeeeeeeeeeeeeeeO
+  .OeeeeeeeeeeeeeeekeeeeeeeeeeeeO.
+  ..OeeeeeeeeeeeeeeeeeeeeeeeeeeeO.
+  .uOOOeeeeeeeeeeeeeeeeeeeeeeeOOu.
+  ...uuOOeeeeeeeeeeeeeeeeeeOOOuu..
+  ....uuuOOOOOOOOOOOOOOOOOOuuu....
+  ................................
   ................................
