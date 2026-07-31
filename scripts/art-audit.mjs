@@ -16,6 +16,7 @@
 //   node scripts/art-audit.mjs equipped
 //   node scripts/art-audit.mjs equipped icon_medieval_sword icon_tshirt
 //   node scripts/art-audit.mjs sheet wraith optimusk icon_stick
+//   node scripts/art-audit.mjs field mars mars_0 rust_0
 //   node scripts/art-audit.mjs variants wraith boulder
 //   node scripts/art-audit.mjs snapshot wraith optimusk
 //   node scripts/art-audit.mjs concepts /path/to/concepts.mjs
@@ -29,6 +30,7 @@
 // the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import { mkdirSync } from "node:fs";
+import { register } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -57,6 +59,11 @@ const root = path.join(here, "..");
 const auditDir = path.join(here, "../pwa/assets-preview/audit");
 const beforeDir = path.join(auditDir, "before");
 
+// The `field` command reaches into the RENDERER's own tiling rule, which
+// imports through the `@game/*` aliases — so the loader has to be registered
+// the way level-render.mjs registers it.
+register("./game-alias-loader.mjs", import.meta.url);
+
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
@@ -75,6 +82,13 @@ const { STORY_ITEM_DEFS } = await import(
 );
 const { applyModsWithSprites, takeModFlags } = await import(
   path.join(root, "scripts/mod-support.mjs")
+);
+// WHICH ground sprite goes in a cell is the renderer's rule, imported rather
+// than restated — the same reason level-render.mjs imports it. A tile only
+// lies about itself when you judge it alone; the `field` command below lays it
+// down the way the game does.
+const { groundTileName } = await import(
+  path.join(root, "pwa/src/game/render/ground-tiles.ts")
 );
 
 // `--mod <dir>` audits a MOD's art: its sprites join the atlas and its levels
@@ -274,6 +288,112 @@ function buildAuditSheet(entries, opts = {}) {
   });
 
   return upscale(sheet, scale);
+}
+
+/**
+ * A FIELD of ground: one block per entry, each laid out the way the game lays
+ * it — because a ground tile is the one kind of sprite a single swatch cannot
+ * judge. Alone it looks like texture; repeated a hundred times it can turn out
+ * to be a lattice of identical specks, and a patch pair that clumps on a 4×4
+ * grid can turn out to stamp the same mark in rows. Both are invisible in a
+ * `sheet` cell and unmissable here.
+ *
+ * An entry is `{ label, tiles }` where `tiles(tx, ty)` names the sprite for a
+ * cell — a level's own `groundTileName` rule for a level id, or a constant for
+ * a bare sprite name.
+ */
+function buildFieldSheet(entries, opts = {}) {
+  const scale = opts.scale ?? 3;
+  const cols = opts.cols ?? 28;
+  const rows = opts.rows ?? 16;
+  const pad = 2;
+  const lineH = 7;
+  const txt = (s) => s.toUpperCase().replace(/_/g, "-");
+
+  const blocks = entries.map((entry) => {
+    // Cell size follows the widest tile the rule can return, so a field of
+    // 16×32 rocks lays out as honestly as one of 16×16 dust.
+    const surfaces = new Map(Object.entries(entry.surfaces ?? {}));
+    const surface = (name) => {
+      if (!surfaces.has(name)) {
+        surfaces.set(
+          name,
+          SPRITES[name]
+            ? gridToSurface(SPRITES[name], SPRITE_PALETTES[name])
+            : null,
+        );
+      }
+      return surfaces.get(name);
+    };
+    const block = createSurface(cols * 16, rows * 16);
+    for (let ty = 0; ty < rows; ty++) {
+      for (let tx = 0; tx < cols; tx++) {
+        const s = surface(entry.tiles(tx, ty));
+        if (s) blit(block, s, tx * 16, ty * 16);
+      }
+    }
+    return block;
+  });
+
+  const width = Math.max(...blocks.map((b) => b.width)) + 2 * pad;
+  const height =
+    pad + blocks.reduce((h, b) => h + b.height + lineH + pad, 0) + pad;
+  const sheet = fill(createSurface(width, height), BG);
+  let y = pad;
+  entries.forEach((entry, i) => {
+    blit(sheet, renderText(txt(`${i + 1} ${entry.label}`), INK), pad, y);
+    y += lineH;
+    blit(sheet, blocks[i], pad, y);
+    y += blocks[i].height + pad;
+  });
+  return upscale(sheet, scale);
+}
+
+/** Field entries for CLI names: a level id lays its own ground rule down, a
+ * sprite name tiles flat, and a concept module (`*.mjs`) tiles each of its
+ * sketches — so a candidate ground tile is judged as a field before it is
+ * installed, not after. */
+async function fieldEntries(names) {
+  const entries = [];
+  for (const name of names) {
+    if (name.endsWith(".mjs")) {
+      const mod = (await import(path.resolve(name))).default;
+      const family = mod.base
+        ? FAMILIES.find(
+            (f) => f.name === SPRITE_FAMILY[resolveSprite(mod.base)],
+          )
+        : null;
+      const palette = { ...(family?.palette ?? {}), ...(mod.palette ?? {}) };
+      for (const [char, color] of Object.entries(palette)) {
+        palette[char] = [...color, 255].slice(0, 4);
+      }
+      for (const [label, grid] of Object.entries(mod.sprites)) {
+        validateGrid(label, grid, palette);
+        const surface = gridToSurface(grid, palette);
+        entries.push({
+          label,
+          tiles: () => label,
+          surfaces: { [label]: surface },
+        });
+      }
+      continue;
+    }
+    const level = LEVELS[name];
+    if (level) {
+      entries.push({
+        label: `${name} (level ground)`,
+        tiles: (tx, ty) => groundTileName(level.tiles, tx, ty),
+      });
+      continue;
+    }
+    const key = resolveSprite(name);
+    if (!key) {
+      console.warn(`! no level or sprite for "${name}" — skipped`);
+      continue;
+    }
+    entries.push({ label: key, tiles: () => key });
+  }
+  return entries;
 }
 
 /** Write one sheet, chunking into `_pN` pages past `chunk` entries. */
@@ -486,19 +606,20 @@ const USAGE = `usage:
   art-audit.mjs items                       audit sheet(s) of the item catalog
   art-audit.mjs equipped [name...]          items ON the hero (all, or named)
   art-audit.mjs sheet <name...>             numbered shortlist sheet
+  art-audit.mjs field <level|name|module.mjs>  ground tiled as the game lays it
   art-audit.mjs variants <name...>          sheet incl. frames/wounds/footprints
   art-audit.mjs snapshot <name...>          save current renders as "before"
   art-audit.mjs concepts <module.mjs>       render a concept scratch module
   art-audit.mjs before-after <name...>      before/after sheet from snapshots
   art-audit.mjs names <regex>               grep atlas sprite names
   art-audit.mjs palette [family|sprite]     list a family's char -> color map
-flags: --out <png>  --scale <n>  --cols <n>  --chunk <n>`;
+flags: --out <png>  --scale <n>  --cols <n>  --rows <n>  --chunk <n>`;
 
 const argv = modless;
 const flags = {};
 const positional = [];
 for (let i = 0; i < argv.length; i++) {
-  const m = /^--(out|scale|cols|chunk)$/.exec(argv[i]);
+  const m = /^--(out|scale|cols|chunk|rows)$/.exec(argv[i]);
   if (m) flags[m[1]] = argv[++i];
   else positional.push(argv[i]);
 }
@@ -507,6 +628,7 @@ const opts = {
   scale: flags.scale ? Number(flags.scale) : undefined,
   cols: flags.cols ? Number(flags.cols) : undefined,
   chunk: flags.chunk ? Number(flags.chunk) : undefined,
+  rows: flags.rows ? Number(flags.rows) : undefined,
 };
 const out = (name) => flags.out ?? path.join(auditDir, `${name}.png`);
 
@@ -568,6 +690,19 @@ switch (cmd) {
 
   case "sheet": {
     await writeSheets(namedEntries(args), out("sheet"), opts);
+    break;
+  }
+
+  case "field": {
+    const entries = await fieldEntries(args);
+    if (entries.length === 0) {
+      console.error("name a level id or a ground/decor sprite");
+      process.exit(1);
+    }
+    mkdirSync(auditDir, { recursive: true });
+    const file = out("field");
+    await writePng(buildFieldSheet(entries, opts), file);
+    console.log(`${file}  (${entries.length} fields)`);
     break;
   }
 

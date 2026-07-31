@@ -2,29 +2,31 @@ name: mars_0
 family: mars
 size: [16, 16]
 description: >
-  The base red-regolith ground tile of rusty-orange Martian dust.
+  The base red-regolith ground tile: rusty-orange dust the wind has worked into
+  a shallow ripple, over a fine grain of grit.
 subject:
   kind: ground tile
-  build: flat rusty-orange Martian dust with faint darker speckle
-  flavor: the open terrain west of the colony dome
+  build: rusty-orange Martian dust drawn as a fine scatter of grit under one broken wind ripple
+  features: the ripple a line of lit crests meandering so it meets itself across the tile edge, kept faint so the floor never competes with what stands on it
+  flavor: the open terrain west of the colony dome, worked over by wind rather than pocked like the moon
 palette:
-  d: "#80482d" # dark dust speckle
+  d: "#80482d" # dark grit
   t: "#b2643e" # rusty-orange dust
-  u: "#c38668" # light dust fleck
+  U: "#bb7350" # lit ripple crest
 grid: |
+  ttttttUttttttttt
+  tttttttttttttttU
+  tttttttttttttdUt
+  tttttUtdtttUttdt
+  tttttttUttUttttt
+  ttttttdttttUtttU
+  ttttttttUttttttt
+  ttttttUtttttttUt
+  ttttUUtttttdtttt
+  UUttttttUtttttUU
   tttttttttttttttt
-  ttttttttttttttdt
-  ttuttttttttttttt
-  ttttttttttttdttt
-  tttttttttttttttt
-  ttttttttttuttttt
-  tttttttttttttttt
-  tttttttttttttttt
-  tttttdtttttttttt
-  tttttttttttttttt
-  tttttttttttddttt
-  ttttttttttdttttt
-  tttutttttttttttt
-  ttttttttttttttdt
-  tttttttttttttttt
+  dttttttttttUUttU
+  tUttttttttttttdt
+  ttttUttttttttttt
+  tUtUUtttttUttUtt
   tttttttttttttttt

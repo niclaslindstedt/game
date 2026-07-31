@@ -2,48 +2,50 @@ name: marsrock_1x2
 family: mars
 size: [16, 32]
 description: >
-  A tall oxidized rock column stacked upright from the red dust.
+  A standing monolith of oxidized stone, its crown snapped at an
+  angle and its foot cut back into the drift.
 subject:
   kind: rock (obstacle / cover)
-  build: a reddish-brown Martian boulder stacked upright into a tall two-tile column
-  features: crags in darker rust
-  flavor: blocks sight and shots
+  build: a tall two-tile block of oxide stone leaning slightly, straight-flanked and notched
+  features: a sun-caught dust rim down its upper-left flank, a long lit face falling to deep shadow at the lower right, scoured pits down its length, and pale wind-drift piled at its foot
+  flavor: stops sight, shots and machines
 palette:
-  O: "#1a1c2c" # outline
-  d: "#80482d" # oxide-brown body
-  e: "#623722" # dark crag shadow
-  t: "#b2643e" # rust-red highlight
-  u: "#c38668" # light tan highlight
+  O: "#1a1c2c" # dark outline
+  p: "#deaa86" # sun-caught dust rim
+  u: "#c38668" # light oxide face
+  t: "#b2643e" # base oxide red
+  e: "#623722" # deep oxide shadow
+  k: "#342c26" # pit shadow
 grid: |
   ................
-  .....OOOOO......
-  ...OOuuuttOO....
-  ..OuuuuuttttOO..
-  ..OuuuuttttttO..
-  .OuuuuttttttttO.
-  .OuuuuttttttttO.
-  .OuuuttttetttdO.
-  OuuuutttteOttdO.
-  OuuutttttteOdddO
-  OuuttttttteOddO.
-  OuutttttttteddO.
-  .OttttttttedddO.
-  .OtttttttdeddO..
-  .OtttttttdddddO.
-  .OttttttddddddO.
-  OtttttttddddddO.
-  OttttttdddddddO.
-  OtttttddddddddO.
-  .OttttdddddddddO
-  .OtttdddddddddO.
-  .OttdedddddddeO.
-  .OttddeOdddddeO.
-  .OtdddeOddddeO..
-  .OtddddeddddeO..
-  ..OddddedddeeeO.
-  .OddddddddeeeeO.
-  ..OdddddddeeeO..
-  ..OddddddeeeeO..
-  ...OOddddeeOO...
-  .....OOOOOO.....
+  ................
+  ......OOOO......
+  .....OppppOO....
+  ...OOpuuuuppO...
+  ..OppuuuuuuttOO.
+  ..OpuukuutttttO.
+  .OpuuuuktuuttttO
+  .OpuuuuuuttttttO
+  .OpuuuuttttttttO
+  .OpuutttttttteeO
+  .OpuuuutttkeeeeO
+  .OpuutttttttteeO
+  .OptttttttteeeO.
+  .OttktttteeeeeO.
+  .OptttteeeeeeeO.
+  .OtttttttteeeeeO
+  .OtkttteeeeeeeeO
+  .OttteeeeeekeeeO
+  OtteeeteeeeeeeeO
+  OttttteeeeeeeeeO
+  OtteekeeeeeeeeeO
+  OeeeeeeeeeeeeeeO
+  OttteeeeeeeeeeeO
+  .OeeeeeeeeeeeeeO
+  ..OeeeeekeeeeeO.
+  .uOeeeeeeeeeeOOu
+  .uuOOOeeeeeOOuu.
+  ...uuuOOOOOuuu..
+  ................
+  ................
   ................

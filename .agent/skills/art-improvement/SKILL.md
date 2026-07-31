@@ -45,6 +45,7 @@ numbers".
 | `items`                     | Survey: numbered sheet(s) of the whole item catalog (paginated `_pN` past 64 entries)                      |
 | `equipped [name...]`        | Survey/funnel: weapons & gear drawn ON the hero — whole catalog (no args) or a named shortlist (icons or def ids) |
 | `sheet <name...>`           | Funnel rounds: a numbered sheet of exactly the named sprites (30 → 20 → 10)                                |
+| `field <level\|name\|module.mjs>` | GROUND only: the tile laid down as the game lays it — a level id uses that level's own ground/patch rule, a sprite name tiles flat, a concept module tiles each sketch |
 | `variants <name...>`        | Finalist study: each name expanded to all frames, wound stages, rock footprints, worn overlays             |
 | `snapshot <name...>`        | Preserve the CURRENT renders as "before" PNGs — run BEFORE touching any grid                               |
 | `concepts <module.mjs>`     | Render a concept scratch module (current sprite first, then each concept, numbered)                        |
@@ -52,7 +53,7 @@ numbers".
 | `names <regex>`             | Grep atlas sprite names when unsure what a thing is called                                                 |
 | `palette <family\|sprite>`  | List the char → color map a redraw draws with (`*` = family-local) — run before sketching a concept module |
 
-Flags: `--out <png>`, `--scale <n>`, `--cols <n>`, `--chunk <n>`. Names
+Flags: `--out <png>`, `--scale <n>`, `--cols <n>`, `--rows <n>`, `--chunk <n>`. Names
 accept the base (`wraith`) or an exact key (`wraith_0`). The survey/shortlist
 sheets render small by default — pass `--scale 12` (or higher) when judging
 internal anatomy, not just silhouette.
@@ -72,7 +73,11 @@ They live as fragments in [`.lessons/`](./.lessons/) next to this file.
    weapons and gear drawn on the hero (held/worn), since a weapon or armor
    icon that reads fine as a loose square can sit wrong once equipped (bad
    grip angle, wrong scale on the body, colors clashing with the suit).
-   (The hero appears on every level sheet — judge him once.)
+   (The hero appears on every level sheet — judge him once.) In `levels` mode,
+   also run `field <id>` and Read it: a GROUND or patch tile cannot be judged
+   from one swatch — the defects it has (a lattice, a stamped patch, a seam)
+   only exist once it is repeated, and `field` lays it down under that level's
+   own ground rule.
 3. Judge each numbered cell against the **worst-art rubric** below. Keep a
    running table — `sprite name | where seen | defects | severity 1–5` —
    in sprite names, never bare numbers (numbers restart per sheet/page).
@@ -131,6 +136,23 @@ not from memory:
   different colours. It is usually one shared template defect (arms drawn in
   the torso colour with no seam, say), so score every sprite that inherits it
   and fix the template once.
+- **Tiling lattice** _(ground/patch tiles only — judge on `field`, never on a
+  `sheet` cell)_ — laid down across a map the tile resolves into a visible
+  16px grid: a sparse tile's isolated flecks line up into a lattice of dots, and
+  a patch pair stamps one recognizable clump in rows (patches clump on a 4×4
+  tile block, so whatever they draw appears sixteen times in a 64×64 area). The
+  cures are density (a dense grain gives the eye nothing to lock onto), wrapping
+  features (write the grid with wrapping coordinates so a line meanders into its
+  neighbour instead of stopping at the seam), and low contrast — a 16px tile
+  repeated cannot be aperiodic, so past a point the only fix is giving the eye
+  less structure.
+- **Biome recolour** — the sprite is another biome's sprite with a new palette,
+  pixel for pixel. Cheap to ship and it always reads as the wrong place: the
+  moon is airless, so its rock is sharp-shattered and its craters have bright
+  unweathered rims, and none of that is true anywhere with wind. Find them by
+  normalizing every grid in two families to a canonical char sequence and
+  diffing — identical shapes are exact copies. The fix is to replace the shape
+  LANGUAGE, not the hue.
 - **Style drift** — outline weight, saturation, or detail density unlike
   the rest of its family.
 - **Story mismatch** — doesn't look like what the manuscript and its def
@@ -324,6 +346,10 @@ For each candidate, in the numbered order:
 
 1. With all 10 committed: `before-after <the 10 names in order>` → Read
    it yourself first (a swap that looks wrong here goes back to Phase 4).
+   A GROUND or patch tile needs a second image, because `before-after` draws
+   both cells over the CURRENT ground and so shows a ground change as two
+   identical squares: crop the same patch of `scripts/level-render.mjs <id>
+   --bare --dormant` from before the pass and after it, and stack them.
 2. Send the sheet to the user and ask which candidates should ship,
    referring to them by their numbers. Use `AskUserQuestion`
    (multi-select; batch the 10 across questions — options are capped at
