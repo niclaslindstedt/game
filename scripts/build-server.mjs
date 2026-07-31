@@ -78,9 +78,20 @@ const ALIAS_FILES = [
 /** The trees that travel, by their path from the repo root. */
 const SOURCES = ["src", "server"];
 
+/** Where the compiled content catalogs land. Gitignored; `npm run levels`
+ * regenerates them (§11.2). */
+const generatedDir = path.join(root, "src", "generated");
+
+/** Every `from "…"` / `import("…")` specifier in a source file. Shared with
+ * `relativizeAliases`, so the preflight and the rewrite can never disagree
+ * about what an import looks like. */
+const IMPORT_RE = /((?:from|import)\s*\(?\s*)"([^"]+)"/g;
+
 main();
 
 function main() {
+  requireGeneratedCatalogs();
+
   rmSync(stageDir, { recursive: true, force: true });
   rmSync(outDir, { recursive: true, force: true });
 
@@ -92,6 +103,55 @@ function main() {
   console.log(
     `server: ${staged} files compiled into ${path.relative(root, outDir)}`,
   );
+}
+
+/**
+ * REFUSE A BUILD WHOSE CONTENT CATALOGS HAVE NOT BEEN COMPILED YET, and name
+ * the command that compiles them.
+ *
+ * `src/generated/` is build output like every other generated artifact (§11.2)
+ * — gitignored, rebuilt by `npm run levels`, which the root's own `pre*` hooks
+ * run ahead of every test, typecheck and lint. This script had no such hook and
+ * no way to grow one that helps everybody, because `electron/` is not a
+ * workspace member and reaches it as `node ../scripts/build-server.mjs`. A
+ * fresh clone, or one that predates a catalog (`sets`, `talents`, `quests` and
+ * the story catalogs each arrived after the ones around them), therefore
+ * reached `tsc` and got a wall of TS2307s naming staged copies under
+ * `electron/server-src/` — paths that exist in no editor and no git status, and
+ * which say nothing about the one command that fixes all of them.
+ *
+ * The check is DERIVED rather than a list: every relative specifier that
+ * resolves into `src/generated/` is an import the compile is about to need, so
+ * a catalog added tomorrow is covered without this file learning its name.
+ */
+function requireGeneratedCatalogs() {
+  const missing = new Set();
+  for (const tree of SOURCES) {
+    for (const file of walk(path.join(root, tree))) {
+      if (!file.endsWith(".ts")) continue;
+      const from = path.dirname(file);
+      for (const [, , spec] of readFileSync(file, "utf8").matchAll(IMPORT_RE)) {
+        if (!spec.startsWith(".")) continue;
+        const target = path.resolve(from, spec);
+        if (!target.startsWith(`${generatedDir}${path.sep}`)) continue;
+        try {
+          statSync(target);
+        } catch {
+          missing.add(path.relative(root, target));
+        }
+      }
+    }
+  }
+  if (missing.size === 0) return;
+
+  console.error(
+    `server: ${missing.size} compiled content ${
+      missing.size === 1 ? "catalog is" : "catalogs are"
+    } missing, starting with ${[...missing].sort()[0]}.\n` +
+      "server: they are build output — run `npm run levels` at the repo root " +
+      "(or `make assets`) and build again.",
+  );
+  process.exit(1);
 }
 
 /** Copy the sources and rewrite every alias specifier to a relative one.
@@ -122,15 +182,12 @@ function stage() {
 /** One file's source with `@game/…` specifiers turned into relative paths. */
 function relativizeAliases(source, file) {
   const from = path.dirname(file);
-  return source.replace(
-    /((?:from|import)\s*\(?\s*)"([^"]+)"/g,
-    (match, lead, spec) => {
-      const target = aliasTarget(spec);
-      return target
-        ? `${lead}"${relative(from, path.join(root, target))}"`
-        : match;
-    },
-  );
+  return source.replace(IMPORT_RE, (match, lead, spec) => {
+    const target = aliasTarget(spec);
+    return target
+      ? `${lead}"${relative(from, path.join(root, target))}"`
+      : match;
+  });
 }
 
 /** The repo-relative path an alias specifier names, or null if it is not one. */
