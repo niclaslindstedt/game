@@ -114,13 +114,13 @@ screens:
       - id: new-game
         label: NEW GAME
         icon: icon_menu_new
+      # Absent until a hero exists to load — not greyed out. A dead row owes the
+      # player a line explaining its grey, and that line is a second row of text
+      # hanging off a centred column; the working row's label says everything on
+      # its own, so it carries no help at all.
       - id: load-game
         label: LOAD GAME
         icon: icon_menu_load
-        # Shown only while the row is greyed out — it is the one thing
-        # explaining why. A working row's label already says it.
-        help:
-          empty: NO SAVED HEROES YET - START A NEW GAME
       # A play action, not a document: it launches a real self-playing run. So
       # it stays with the play block rather than going down into EXTRAS, where a
       # first-time player would never look for it.
