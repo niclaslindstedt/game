@@ -159,12 +159,12 @@ export function DialogueOverlay({
   // their icon so the find stays on screen.
   const portrait = heroSpeaks
     ? (dollDataUrl(
-          assets.sprites,
-          playerDollLayers(state, "0"),
-          heroSoak(state),
-        ) ??
-        spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
-        null)
+        assets.sprites,
+        playerDollLayers(state, "0"),
+        heroSoak(state),
+      ) ??
+      spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
+      null)
     : // A story item names an exact icon; a character names a walk-cycle
       // family. `portraitSrc` tries the exact name first, so one call covers
       // both (see SpritePortrait.tsx).

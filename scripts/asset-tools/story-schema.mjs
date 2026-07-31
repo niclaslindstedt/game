@@ -408,7 +408,11 @@ export function validateThought(id, def, refs) {
   // the hero's own box under his own name, and a declared voice nobody uses is
   // a second speaker the player never meets.
   if (def.voice !== undefined) {
-    if (!def.voice || typeof def.voice !== "object" || Array.isArray(def.voice)) {
+    if (
+      !def.voice ||
+      typeof def.voice !== "object" ||
+      Array.isArray(def.voice)
+    ) {
       err("voice must be a mapping of { speaker, portrait }");
     } else {
       if (typeof def.voice.speaker !== "string" || def.voice.speaker === "") {
@@ -434,7 +438,9 @@ export function validateThought(id, def, refs) {
     err("voice declares a speaker no `them:` page uses");
   }
   if (tagged.length === pages.length && pages.length > 0) {
-    err("every page is a `them:` page — this is somebody else's scene, not his");
+    err(
+      "every page is a `them:` page — this is somebody else's scene, not his",
+    );
   }
   for (const page of tagged) {
     for (const key of Object.keys(page)) {

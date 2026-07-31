@@ -80,7 +80,8 @@ const pinnedBeat = (thought) => {
   let hero = true;
   const out = [];
   const flush = () => {
-    if (run.length > 0) out.push(monologue(run, hero ? "THE HERO" : them, hero));
+    if (run.length > 0)
+      out.push(monologue(run, hero ? "THE HERO" : them, hero));
     run = [];
   };
   for (const page of thought.pages) {

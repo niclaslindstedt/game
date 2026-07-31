@@ -55,11 +55,7 @@ describe("a pinned beat somebody answers back to", () => {
     // a sprite, so getting it wrong on the heckler's page would put the hero's
     // own face over somebody else's words.
     expect(voices.map((v) => v.hero)).toEqual([true, false, true]);
-    expect(voices.map((v) => v.speaker)).toEqual([
-      "ME",
-      "TEST HECKLER",
-      "ME",
-    ]);
+    expect(voices.map((v) => v.speaker)).toEqual(["ME", "TEST HECKLER", "ME"]);
     expect(voices[1]!.portrait).toBe("test_minion");
   });
 

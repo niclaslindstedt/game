@@ -239,7 +239,9 @@ export function validateLevel(def, refs, description = "") {
       if (!Array.isArray(warnings) || warnings.length === 0) {
         err("openingStrike.warnings must be a non-empty list of thought ids");
       } else {
-        warnings.forEach((id, i) => thought(id, `openingStrike.warnings[${i}]`));
+        warnings.forEach((id, i) =>
+          thought(id, `openingStrike.warnings[${i}]`),
+        );
         if (warnings.includes(def.openingStrike.thought)) {
           err(
             "openingStrike.warnings names the arming thought — the beat it " +
