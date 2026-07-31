@@ -12,17 +12,21 @@ import { describe, expect, it } from "vitest";
 import {
   advanceDialogue,
   allocateStat,
+  canHealCompanion,
   closeCompanionPanel,
   COMPANIONS,
   createGame,
   dialogueContent,
   equipCompanionFromInventory,
   extractLoadout,
+  healCompanionWithMedkit,
   magicFindBonus,
   openCompanionPanel,
   recruitCompanion,
   resolveChoice,
+  reviveTarget,
   rollEquipment,
+  spendReviveItem,
   step,
   unequipCompanionToInventory,
 } from "@game/core";
@@ -211,42 +215,59 @@ describe("companions in the field", () => {
     expect(gap).toBeLessThan(80);
   });
 
-  it("mends out of combat: a hurt companion regenerates when the field is quiet", () => {
+  it("never mends on its own — a hurt companion stays hurt", () => {
     const state = startGame();
     const companion = withCompanion(state); // clearStage — nothing to fight
     companion.hp = 1;
-    // Half a second of quiet: not yet full, so the gain is visibly gradual.
-    run(state, idle, Math.ceil(500 / DT));
-    const partway = companion.hp;
-    expect(partway).toBeGreaterThan(1);
-    expect(partway).toBeLessThan(companion.maxHp);
-    // Left alone long enough it tops all the way back up — and never past full.
-    // 8%/s from near-zero needs ~13s; 20s of ticks clears it with margin.
+    // Twenty seconds of total peace. The old rule knitted 8% of the bar back
+    // per calm second and would have topped this right up; the new one is that
+    // nothing heals a companion but a medkit the player chooses to spend.
     run(state, idle, Math.ceil(20_000 / DT));
-    expect(companion.hp).toBe(companion.maxHp);
+    expect(companion.hp).toBe(1);
   });
 
-  it("holds regen while there is a foe in the hero's engage bubble", () => {
+  it("spends a medkit on a hurt companion, and refuses when there is nothing to do", () => {
     const state = startGame();
     const companion = withCompanion(state);
     companion.hp = 1;
-    companion.combatMs = 0; // pretend it had already calmed down
-    // A mob inside the hero's engage bubble but well clear of the companion
-    // (no contact this tick) is still combat: the party is fighting.
-    companion.pos = { x: state.player.pos.x - 100, y: state.player.pos.y };
-    state.enemies.push(
-      makeEnemy(
-        {
-          id: state.nextId++,
-          pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
-        },
-        "test_minion",
-      ),
-    );
-    step(state, idle, DT);
-    // The heat timer re-armed off the live target, so regen never ticked.
-    expect(companion.combatMs).toBe(COMPANIONS.regenCalmMs);
+    state.player.medkits = [2, 0, 0, 0];
+
+    expect(healCompanionWithMedkit(state, companion.id)).toBe(true);
+    expect(companion.hp).toBeGreaterThan(1);
+    expect(state.player.medkits[0]).toBe(1); // exactly one kit spent
+    expect(state.events.some((e) => e.type === "companionHealed")).toBe(true);
+
+    // Topped right up, a further press buys nothing and costs nothing.
+    companion.hp = companion.maxHp;
+    expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
+    expect(state.player.medkits[0]).toBe(1);
+
+    // …and neither does an empty pouch.
+    companion.hp = 1;
+    state.player.medkits = [0, 0, 0, 0];
+    expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
     expect(companion.hp).toBe(1);
+  });
+
+  it("spends the LIGHTEST kit, keeping the hero's best bandages for himself", () => {
+    const state = startGame();
+    const companion = withCompanion(state);
+    companion.hp = 1;
+    state.player.medkits = [1, 0, 0, 1]; // one LIGHT, one SUPERIOR
+    expect(healCompanionWithMedkit(state, companion.id)).toBe(true);
+    expect(state.player.medkits[0]).toBe(0);
+    expect(state.player.medkits[3]).toBe(1);
+  });
+
+  it("refuses a medkit to a DOWNED companion — that wants the salts", () => {
+    const state = startGame();
+    const companion = withCompanion(state);
+    companion.hp = 0;
+    companion.downed = true;
+    state.player.medkits = [5, 0, 0, 0];
+    expect(canHealCompanion(state, companion.id)).toBeLessThan(0);
+    expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
+    expect(state.player.medkits[0]).toBe(5);
   });
 
   it("fights on its own: kills a nearby mob and may float its quote", () => {
@@ -283,7 +304,7 @@ describe("companions in the field", () => {
     expect(companion.quoteCooldownMs).toBeGreaterThan(0);
   });
 
-  it("goes DOWN at 0 hp — aura silent — and stands back up on its own", () => {
+  it("goes DOWN at 0 hp — aura silent — and STAYS down on its own", () => {
     const state = startGame();
     const companion = withCompanion(state);
     expect(magicFindBonus(state)).toBeCloseTo(0.5);
@@ -299,7 +320,7 @@ describe("companions in the field", () => {
       ),
     );
     const events: GameEvent[] = [];
-    for (let i = 0; i < 40 && companion.downedMs === undefined; i++) {
+    for (let i = 0; i < 40 && !companion.downed; i++) {
       step(state, idle, DT);
       events.push(...state.events);
     }
@@ -307,24 +328,122 @@ describe("companions in the field", () => {
     expect(state.companions).toHaveLength(1); // down, never dead
     expect(magicFindBonus(state)).toBe(0); // the aura kneels with him
 
-    // Left in peace, the count runs out and he stands back up at half.
-    state.enemies = state.enemies.filter((e) => e.id !== 9000);
+    // Left in total peace for a full minute — the old rule stood him back up
+    // after twelve seconds of quiet. Nothing in the simulation does now: the
+    // only thing that wakes him is a bottle the player has to go and buy.
     clearStage(state);
-    const ticks = Math.ceil(COMPANIONS.reviveMs / DT) + 5;
-    const revived: GameEvent[] = [];
-    for (let i = 0; i < ticks; i++) {
+    const quiet: GameEvent[] = [];
+    for (let i = 0; i < Math.ceil(60_000 / DT); i++) {
       step(state, idle, DT);
-      revived.push(...state.events);
+      quiet.push(...state.events);
     }
-    expect(revived.some((e) => e.type === "companionRevived")).toBe(true);
-    expect(companion.downedMs).toBeUndefined();
-    // Stands up at the revive fraction, then keeps knitting up out of combat —
-    // so at least the revive floor, never past full.
-    expect(companion.hp).toBeGreaterThanOrEqual(
-      Math.round(companion.maxHp * COMPANIONS.reviveHpFraction),
-    );
-    expect(companion.hp).toBeLessThanOrEqual(companion.maxHp);
-    expect(magicFindBonus(state)).toBeCloseTo(0.5);
+    expect(quiet.some((e) => e.type === "companionRevived")).toBe(false);
+    expect(companion.downed).toBe(true);
+    expect(companion.hp).toBe(0);
+    expect(magicFindBonus(state)).toBe(0);
+  });
+
+  describe("waking a downed companion with SMELLING SALTS", () => {
+    /** A bottle of the fixture revive item, banked in the hero's bag. */
+    const giveSalts = (state: GameState) =>
+      bagItem(state, "test_salts", "trinket");
+
+    it("wakes it at the salts fraction, at the hero's side, and spends the bottle", () => {
+      const state = startGame();
+      const companion = withCompanion(state);
+      companion.downed = true;
+      companion.hp = 0;
+      // Face-down clear across the map from where the hero ended up.
+      companion.pos = { x: state.player.pos.x + 600, y: state.player.pos.y };
+      const at = giveSalts(state);
+
+      expect(spendReviveItem(state, at)).toBe(true);
+      expect(companion.downed).toBeUndefined();
+      expect(companion.hp).toBe(
+        Math.round(companion.maxHp * COMPANIONS.saltsHpFraction),
+      );
+      expect(state.player.inventory[at]).toBeNull(); // consumed
+      expect(state.events.some((e) => e.type === "companionRevived")).toBe(true);
+      // Back at the hero's side rather than where it fell — the party is never
+      // an errand to walk back for.
+      const gap = Math.hypot(
+        companion.pos.x - state.player.pos.x,
+        companion.pos.y - state.player.pos.y,
+      );
+      expect(gap).toBeLessThan(80);
+      // Groggy, not whole: the medkits are what fills the rest of the bar.
+      expect(companion.hp).toBeLessThan(companion.maxHp);
+    });
+
+    it("is inert with nobody down — no USE row, and a mistap costs nothing", () => {
+      const state = startGame();
+      const companion = withCompanion(state);
+      const at = giveSalts(state);
+      const bottle = state.player.inventory[at] as Equipment;
+      expect(companion.downed).toBeUndefined();
+      expect(reviveTarget(state, bottle)).toBeNull();
+      expect(spendReviveItem(state, at)).toBe(false);
+      expect(state.player.inventory[at]).toBe(bottle); // not consumed
+    });
+
+    it("offers itself only for a piece that actually revives", () => {
+      const state = startGame();
+      const companion = withCompanion(state);
+      companion.downed = true;
+      const at = bagItem(state, "test_helmet", "head");
+      expect(reviveTarget(state, state.player.inventory[at] as Equipment)).toBe(
+        null,
+      );
+      expect(spendReviveItem(state, at)).toBe(false);
+    });
+
+    it("survives the walk to the next level — the loadout carries DOWN", () => {
+      const state = startGame();
+      const companion = withCompanion(state);
+      companion.downed = true;
+      companion.hp = 0;
+
+      const next = createGame(
+        SEED_NEXT,
+        "test_level_2",
+        "medium",
+        extractLoadout(state),
+      );
+      expect(next.companions).toHaveLength(1);
+      expect(next.companions[0]?.downed).toBe(true);
+      expect(next.companions[0]?.hp).toBe(0);
+      // The level it kept is its own — a death is not a demotion.
+      expect(next.companions[0]?.level).toBe(companion.level);
+    });
+  });
+
+  describe("the party is ONE", () => {
+    it("a second recruit retires the first, and hands his armor back", () => {
+      const state = startGame();
+      clearStage(state);
+      const first = recruitCompanion(state, "test_companion", {
+        ...state.player.pos,
+      });
+      // The hero lent it a helmet out of his own bag.
+      const at = bagItem(state, "test_helmet", "head");
+      const helmet = state.player.inventory[at] as Equipment;
+      expect(equipCompanionFromInventory(state, first.id, at)).toBe(true);
+      expect(first.equipment.head).toBe(helmet);
+      state.events = [];
+
+      const second = recruitCompanion(state, "test_companion", {
+        ...state.player.pos,
+      });
+      expect(state.companions).toHaveLength(COMPANIONS.maxParty);
+      expect(state.companions).toEqual([second]);
+      // Announced, not done quietly.
+      expect(state.events.some((e) => e.type === "companionDismissed")).toBe(
+        true,
+      );
+      // …and the hero's own helmet came back to his bag rather than walking off
+      // with somebody who is no longer in the party.
+      expect(state.player.inventory).toContain(helmet);
+    });
   });
 
   // Staying WITH the hero comes before clearing the horde: while he ranges

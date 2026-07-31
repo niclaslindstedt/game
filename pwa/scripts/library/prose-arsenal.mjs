@@ -325,6 +325,12 @@ export function gearShapeNotes(item) {
       `${list(parts)} — the effect rides in the pocket, so it works without an equip slot.`,
     ]);
   }
+  if (stats.revive) {
+    notes.push([
+      "WAKES A FRIEND",
+      "USE it out of the bag and your downed companion comes round — groggy, on a sliver of health, but back on its feet. It is spent doing so, and it is the only thing in the game that does this: nothing else revives a companion, not time, not the merchant, not the walk to the next venue.",
+    ]);
+  }
   if (stats.bagSlots) {
     notes.push([
       "ROOM",

@@ -31,6 +31,7 @@ import {
   gearDef,
   isWeaponDef,
   itemLevelReq,
+  itemQuote,
   maxMeleeTargets,
   MELEE,
   playerMissChance,
@@ -73,6 +74,16 @@ export const ITEM_CARD_TEXT_REM = 14.3;
 /** WoW's gold "ITEM LEVEL NN" line under the name — distinct from rare-yellow
  * so the promoted item level never reads as a rare-tier name. */
 const ILVL_GOLD = "#e6b84d";
+
+/**
+ * The FLAVOR LINE's own antique gold (`itemQuote` — a base's `quote`, a named
+ * item's `lore`). Deliberately duller and warmer than `ILVL_GOLD` above it: the
+ * two are the only gold on the card and they say opposite things, so the fact
+ * (ITEM LEVEL 42) reads brighter than the aside ("SMELLS BAD"). It also has to
+ * stay clear of rare-yellow, which is a NAME colour, and of the menu's amber,
+ * which everywhere else in the game means "the row you are on".
+ */
+const QUOTE_GOLD = "#c8a165";
 
 /** Positive = upgrade (green), negative = downgrade (red). */
 export const DELTA_UP = "#5fd97a";
@@ -763,6 +774,7 @@ export function ItemCardBody({
     );
   };
   const durability = durabilityLine(item);
+  const quote = itemQuote(item);
   return (
     <>
       {subtitle && (
@@ -807,6 +819,21 @@ export function ItemCardBody({
       {/* DURABILITY reads LAST among the lines — below the affixes, right above
           the requirement footer (the WoW tooltip order). */}
       {durability && renderLine(durability, "durability")}
+      {/* The FLAVOR LINE, in its own antique gold, under everything the piece
+          DOES and above what it REQUIRES — WoW's italic quote at the foot of a
+          tooltip. It is the one line on the card that is not a number, which is
+          why it gets a colour of its own rather than sharing the grey the stat
+          values use; on the SMELLING SALTS it is also the only place the game
+          says out loud what the bottle is for. */}
+      {quote && (
+        <PixelText
+          font={font}
+          text={quote}
+          scale={lineScale}
+          color={QUOTE_GOLD}
+          maxWidth={maxWidth}
+        />
+      )}
       {/* The item's REQUIREMENTS sit at the foot (WoW's "Requires Level NN"
           footer). An UNMET attribute gate (STR/DEX/INT) reads as its own red
           line first; the LEVEL gate rides the foot row itself, beside the

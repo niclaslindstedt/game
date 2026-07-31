@@ -239,6 +239,7 @@ export {
   spendGateKey,
   equipmentMaxDurability,
   equipmentName,
+  itemQuote,
   equippedBagSlots,
   inventoryCapacity,
   syncInventoryCapacity,
@@ -316,6 +317,7 @@ export {
 // companions.ts).
 export {
   COMPANION_SLOTS,
+  canHealCompanion,
   closeCompanionPanel,
   companionArmorReduction,
   companionById,
@@ -323,10 +325,12 @@ export {
   companionWeaponCooldown,
   companionWeaponDamage,
   equipCompanionFromInventory,
+  healCompanionWithMedkit,
   openCompanionPanel,
   recruitCompanion,
   resolveChoice,
-  reviveDownedCompanions,
+  reviveTarget,
+  spendReviveItem,
   unequipCompanionToInventory,
 } from "./game/companions.ts";
 
@@ -496,6 +500,7 @@ export { repairAllCost, repairCost } from "./game/items/index.ts";
 // the bot reads them for movement (see bot/economy.ts).
 export {
   botAutoEquip,
+  careForCompanion,
   cullWorstLoot,
   sellableJunkCount,
   sortBotInventory,

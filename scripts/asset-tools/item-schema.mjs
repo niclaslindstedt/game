@@ -11,6 +11,7 @@
 // own validators below.
 
 import { STAT_NAMES, validateAffixes } from "./affix.mjs";
+import { GLYPHS } from "./font.mjs";
 
 /** The fields a weapon's `fx:` may carry (`UniqueDef.WeaponFx`). `edge`,
  * `afterimages` and `gore` are the MELEE half; `spark` is the shot half. They
@@ -75,6 +76,26 @@ const ARMOR_TYPES = new Set(["cloth", "leather", "mail", "plate"]);
 const MATERIALS = new Set(["metal", "precious"]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard", "nightmare", "jesus"]);
 const WORN_STYLES = new Set(["cap", "helm", "visor", "mask"]);
+
+/**
+ * How long a base's `quote` (the item card's gold flavor line) may be. The card
+ * wraps at `ITEM_CARD_TEXT_REM` (~14rem of pixel font), so this is about three
+ * rows on the narrowest phone — past that the line pushes the requirement
+ * footer off a card that is floating beside a bag cell.
+ */
+const QUOTE_MAX_CHARS = 90;
+
+/**
+ * Characters the game's own 3×5 pixel font has no cell for. The card's flavor
+ * line is drawn with `PixelText`, which renders anything outside `GLYPHS` as a
+ * literal `?` and says nothing about it — so a semicolon or a curly quote ships
+ * as punctuation nobody typed. Checked here rather than discovered on a
+ * screenshot; the fix is either a plainer character or a new glyph (see the
+ * `pixel-assets` skill).
+ */
+function missingGlyphs(text) {
+  return [...new Set([...text.toUpperCase()])].filter((ch) => !(ch in GLYPHS));
+}
 
 /** The five make qualities, worst to best (src/game/types.ts `Quality`). */
 export const QUALITY_IDS = ["broken", "crude", "normal", "superior", "perfect"];
@@ -205,6 +226,24 @@ export function validateItem(doc, refs) {
     str(doc.description, "description");
     if (doc.description === undefined)
       err(`missing required field "description"`);
+    // FLAVOR TEXT — the optional gold line the item card prints at its foot,
+    // mid-run, in the PIXEL FONT and inside a ~14rem column. So it is held to
+    // one short line: `description` is the paragraph, and it is a different
+    // field for a different reader (the library) precisely so this one can stay
+    // the length a tooltip can carry. A NAMED item has no `quote` — its `lore`
+    // already IS this line (see `itemQuote`), which is why the check below
+    // refuses one rather than letting an author write the same line twice.
+    str(doc.quote, "quote");
+    if (typeof doc.quote === "string") {
+      if (doc.quote.length > QUOTE_MAX_CHARS)
+        err(
+          `quote is ${doc.quote.length} characters — hold it under ` +
+            `${QUOTE_MAX_CHARS}, it is one line at the foot of an item card`,
+        );
+      const missing = missingGlyphs(doc.quote);
+      if (missing.length > 0)
+        err(`quote uses ${missing.join(" ")} — the pixel font has no glyph`);
+    }
     if (doc.icon === undefined) err(`missing required field "icon"`);
     sprite(doc.icon, "icon");
     oneOf(doc.material, MATERIALS, "material");
@@ -351,6 +390,24 @@ export function validateItem(doc, refs) {
       if (doc.bagSlots === undefined) err(`bag needs a "bagSlots" count`);
       if (doc.armor !== undefined) err(`bag may not carry armor`);
     }
+    // A REVIVE item (GearDef.revive): USING it out of the bag wakes the hero's
+    // DOWNED companion. Marked on the def rather than named by id in the engine
+    // so a MOD's own bottle works; a marker rather than a value, because how
+    // far it wakes somebody is the shared `COMPANIONS.saltsHpFraction`.
+    if (doc.revive !== undefined) {
+      if (typeof doc.revive !== "boolean") err(`revive must be a boolean`);
+      // It is USED from the bag and consumed, so it can never be worn: a piece
+      // that both protected and revived would be a slot the player is punished
+      // for spending correctly, and a shield that vanished when tapped is a bug
+      // wearing a feature's clothes.
+      if (doc.slot !== "trinket")
+        err(
+          `revive is for a carried trinket (slot "${doc.slot}" is worn, and ` +
+            `using the piece consumes it)`,
+        );
+      if (doc.armor !== undefined || doc.bagSlots !== undefined)
+        err(`a revive item pays no armor and no bag cells — it is spent`);
+    }
     // The per-BASE difficulty drop gate (GearDef.minDifficulty): how a whole
     // item kind is held back for the deep ladder — rings from nightmare,
     // amulets from JESUS.
@@ -369,6 +426,18 @@ export function validateItem(doc, refs) {
       if (doc[f] === undefined) err(`missing required field "${f}"`);
     }
     str(doc.lore, "lore");
+    // …and the card draws it in the pixel font, so it answers to the same
+    // glyph map a base's `quote` does.
+    if (typeof doc.lore === "string") {
+      const missing = missingGlyphs(doc.lore);
+      if (missing.length > 0)
+        err(`lore uses ${missing.join(" ")} — the pixel font has no glyph`);
+    }
+    // A named item's `lore` IS the card's flavor line (`itemQuote`), so a
+    // second field for it would be two authored answers to one question — and
+    // the card can only print one of them.
+    if (doc.quote !== undefined)
+      err(`a named item's flavor line is its "lore" — drop the "quote"`);
     oneOf(doc.slot, EQUIP_SLOTS, "slot");
     num(doc.ilvl, "ilvl");
     // The D2 per-item drop weight (maps to UniqueDef.rarity — the YAML calls

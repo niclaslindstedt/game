@@ -490,9 +490,18 @@ export function itemPage(
       ${escapeHtml(item.base.description)}</p>`
             : ""
         }`
-      : item.description
-        ? `      <p class="flavor-plain">${escapeHtml(item.description)}</p>`
-        : "";
+      : [
+          // A base's own FLAVOR LINE reads in the same blockquote a named
+          // item's does — in the game they are one line on one card.
+          item.quote
+            ? `      <blockquote class="flavor"><p>${escapeHtml(item.quote)}</p></blockquote>`
+            : "",
+          item.description
+            ? `      <p class="flavor-plain">${escapeHtml(item.description)}</p>`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
 
   const durability =
     item.slot === "weapon" && item.stats.durability

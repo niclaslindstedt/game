@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 5;
 
 /**
  * The most clients one session seats, host included.
@@ -456,6 +456,7 @@ export const COMMANDS = [
   "discardFromInventory",
   "discardEquipped",
   "spendGateKey",
+  "spendReviveItem",
   "autoEquipBest",
   "scrapInferiorLoot",
   "discardHeldAbility",
@@ -472,6 +473,7 @@ export const COMMANDS = [
   "spendCleanSlate",
   "equipCompanionFromInventory",
   "unequipCompanionToInventory",
+  "healCompanionWithMedkit",
   "resolveChoice",
   "talkToQuestGiver",
   "pickQuestTopic",

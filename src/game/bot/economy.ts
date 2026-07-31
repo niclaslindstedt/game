@@ -43,8 +43,18 @@ import {
 } from "../merchant.ts";
 import { abilityBlocks, abilityDef } from "../defs/abilities.ts";
 import type { AbilityKind } from "../defs/abilities.ts";
+import {
+  healCompanionWithMedkit,
+  reviveTarget,
+  spendReviveItem,
+} from "../companions.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
-import { SIDEARM_DEF_ID, weaponDef } from "../defs/equipment.ts";
+import {
+  gearDef,
+  isGearDef,
+  SIDEARM_DEF_ID,
+  weaponDef,
+} from "../defs/equipment.ts";
 import { botPocketKeepIndices } from "./weapon-swap.ts";
 import type { Equipment, GameState, MerchantStock } from "../types/index.ts";
 
@@ -339,7 +349,42 @@ export function wantsMerchantVisit(state: GameState): boolean {
     const cost = repairAllCost(state);
     if (cost > 0 && state.player.coins >= cost) return true;
   }
+  // A FRIEND IS FACE-DOWN AND THE ANSWER IS ON THE COUNTER. The stall is the
+  // only source of SMELLING SALTS, so a downed companion with no bottle in the
+  // bag is a reason to walk over on its own — without this clause the bot plays
+  // the rest of the campaign a companion short, and every reason it HAD to
+  // visit (junk, a worn kit) clears itself long before it would think to.
+  if (needsRevive(state) && affordableRevive(state)) return true;
   return false;
+}
+
+/** Is a companion down with nothing in the bag to wake it? The bot's read of
+ * "I have lost a friend and have not fixed it yet" — pure, so `macro.ts` can
+ * steer the errand on it. */
+function needsRevive(state: GameState): boolean {
+  if (!state.companions.some((c) => c.downed)) return false;
+  return !state.player.inventory.some(
+    (item) => item !== null && reviveTarget(state, item) !== null,
+  );
+}
+
+/** The cheapest bottle on the stall the purse actually covers, or null. */
+function reviveRow(state: GameState): MerchantStock | null {
+  let best: MerchantStock | null = null;
+  for (const entry of state.merchant.stock) {
+    if (entry.kind !== "weapon" || entry.qty <= 0) continue;
+    if (!isGearDef(entry.equipment.defId)) continue;
+    if (!gearDef(entry.equipment.defId).revive) continue;
+    if (!best || entry.price < best.price) best = entry;
+  }
+  return best;
+}
+
+/** Can the purse cover a bottle right now? Read before the walk, so the bot
+ * never crosses a map to stand at a counter it cannot buy from. */
+function affordableRevive(state: GameState): boolean {
+  const row = reviveRow(state);
+  return row !== null && state.player.coins >= row.price;
 }
 
 /**
@@ -400,6 +445,16 @@ export function tradeAtMerchant(state: GameState): boolean {
       sellItem(state, i);
     }
   }
+  // WAKE THE FRIEND FIRST. A bottle of SMELLING SALTS outranks the weapon
+  // upgrade below it and the whole consumable shelf: those make the next fight
+  // a little better, this is the difference between fighting it with a
+  // companion and fighting it without one for the rest of the campaign. Bought
+  // ahead of the repair reserve too — a hero who cannot afford both a mend and
+  // his friend should come back with his friend.
+  if (needsRevive(state)) {
+    const bottle = reviveRow(state);
+    if (bottle && canBuyStock(state, bottle)) buyStock(state, bottle.id);
+  }
   // BUY the single best wieldable weapon upgrade the purse covers.
   let bestId = -1;
   let bestScore = weaponScore(state, state.player.equipment.weapon);
@@ -451,5 +506,56 @@ export function tradeAtMerchant(state: GameState): boolean {
   closeShop(state);
   // Wear the purchase (and anything freed by the mend) on the spot.
   autoEquipBest(state);
+  // Crack the bottle at the counter if one was just bought — the walk is over
+  // and the friend has been down the whole way here.
+  careForCompanion(state);
   return true;
 }
+
+/**
+ * KEEP THE FRIEND ON ITS FEET — the autopilot's half of the companion economy,
+ * run every tick by the harnesses that drive a botted run (the campaign
+ * simulator and the app's bot driver), beside `stepBotWeaponSwap`. Two moves,
+ * in the order a competent player makes them:
+ *
+ *   1. WAKE a downed companion with a bottle of SMELLING SALTS from the bag.
+ *      Immediately: it wakes at a sliver of health with the fight still on, but
+ *      a friend standing badly hurt fights, and one face-down does not.
+ *   2. MEND a hurt one with a medkit, but only once the pouch is DEEP enough
+ *      (`BOT_COMPANION_MEDKIT_RESERVE`) that the kit was not the hero's own way
+ *      out of a bad fight. There is no passive regen any more, so without this
+ *      the bot walks a permanently half-dead companion through the campaign —
+ *      and with a greedy version of it, it heals a scratch and dies at 15% hp
+ *      holding an empty pouch.
+ *
+ * A harness-side action (it mutates), like `tradeAtMerchant` above — never
+ * called from the pure `botAct`. Returns whether anything was spent, so a
+ * driver can bump its UI.
+ */
+export function careForCompanion(state: GameState): boolean {
+  if (state.phase !== "playing" || state.companions.length === 0) return false;
+  const bottleAt = state.player.inventory.findIndex(
+    (item) => item !== null && reviveTarget(state, item) !== null,
+  );
+  if (bottleAt >= 0 && spendReviveItem(state, bottleAt)) return true;
+  const kits = state.player.medkits.reduce((sum, n) => sum + (n ?? 0), 0);
+  if (kits < BOT_COMPANION_MEDKIT_RESERVE) return false;
+  for (const companion of state.companions) {
+    if (companion.hp >= companion.maxHp * BOT_COMPANION_HEAL_FRAC) continue;
+    if (healCompanionWithMedkit(state, companion.id)) return true;
+  }
+  return false;
+}
+
+/**
+ * Medkits the bot keeps for ITSELF before it will spend one on a companion.
+ * The hero's own emergency read (`HEAL_HP_FRAC` in supplies.ts) fires at under
+ * half health and expects something in the pouch when it does; a bot that
+ * bandaged its friend down to an empty stack would simply die instead.
+ */
+const BOT_COMPANION_MEDKIT_RESERVE = 3;
+
+/** How beaten a companion has to be before a kit is worth spending on it —
+ * well under the hero's own line, since a companion has no other way back and
+ * topping a scratch off is how a pouch empties without anything to show. */
+const BOT_COMPANION_HEAL_FRAC = 0.5;

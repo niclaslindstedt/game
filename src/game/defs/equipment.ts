@@ -146,6 +146,10 @@ export type WeaponDef = {
    * second module to put it in — hence optional here rather than gone.
    */
   description?: string;
+  /** FLAVOR TEXT — the gold line the item card prints at its foot, mid-run,
+   * with the piece under the player's thumb. See `GearDef.quote` for the whole
+   * rule and why it ships where `description` does not. */
+  quote?: string;
   /** Governs which stat scales it: melee=STR, ranged=DEX, magic=INT. */
   class: WeaponClass;
   /**
@@ -749,6 +753,22 @@ export function equipmentLevelReq(defId: string): number {
 /** The icon sprite of an equipment def. */
 export function equipmentIcon(defId: string): string {
   return isWeaponDef(defId) ? weaponDef(defId).icon : gearDef(defId).icon;
+}
+
+/**
+ * Every gear base marked as a REVIVE item (`GearDef.revive`) — the SMELLING
+ * SALTS, and whatever a MOD authors with the same marker. Read by the merchant
+ * to know what to put on the shelf, and by nothing else: the USE itself asks
+ * the piece's own def (`reviveTarget`), never this list.
+ *
+ * Scanned rather than memoized. It is asked once per merchant meeting, and a
+ * cached answer would go stale the moment `registerDefs` swapped a mod's
+ * catalog in — the exact bug shape a run-scoped mod makes easy to ship.
+ */
+export function reviveGearIds(): string[] {
+  return Object.values(activeGearDefs)
+    .filter((def) => def.revive)
+    .map((def) => def.id);
 }
 
 /**

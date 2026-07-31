@@ -61,8 +61,10 @@ import {
   closeCompanionPanel,
   COMPANION_SLOTS,
   equipCompanionFromInventory,
+  healCompanionWithMedkit,
   openCompanionPanel,
   resolveChoice,
+  spendReviveItem,
   unequipCompanionToInventory,
 } from "./companions.ts";
 import {
@@ -215,6 +217,7 @@ export const RUN_COMMAND_ARGS = {
   discardFromInventory: ["int"],
   discardEquipped: ["equipSlot"],
   spendGateKey: ["int"],
+  spendReviveItem: ["int"],
   autoEquipBest: [],
   scrapInferiorLoot: [],
   discardHeldAbility: ["int"],
@@ -237,6 +240,8 @@ export const RUN_COMMAND_ARGS = {
   // THE PARTY.
   equipCompanionFromInventory: ["int", "int"],
   unequipCompanionToInventory: ["int", "companionSlot"],
+  healCompanionWithMedkit: ["int"],
+
   resolveChoice: ["bool"],
 
   // THE ERRANDS.
@@ -428,6 +433,8 @@ export function applyRunCommand(
       return discardEquipped(state, str(a, 0) as EquipSlot);
     case "spendGateKey":
       return spendGateKey(state, num(a, 0));
+    case "spendReviveItem":
+      return spendReviveItem(state, num(a, 0));
     case "autoEquipBest":
       return autoEquipBest(state);
     case "scrapInferiorLoot":
@@ -462,6 +469,8 @@ export function applyRunCommand(
       return spendCleanSlate(state);
 
     // THE PARTY
+    case "healCompanionWithMedkit":
+      return healCompanionWithMedkit(state, num(a, 0));
     case "equipCompanionFromInventory":
       return equipCompanionFromInventory(state, num(a, 0), num(a, 1));
     case "unequipCompanionToInventory":

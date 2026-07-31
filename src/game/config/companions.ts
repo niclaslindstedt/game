@@ -1,15 +1,27 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The recruited party: formation, engagement, leveling, and revives.
+// The recruited party: the ONE companion, formation, engagement, leveling, and
+// what it costs to put a fallen one back on its feet.
 
 /**
  * COMPANIONS — the recruited party (see companions.ts). A spareable unique
  * (`EnemyDef.spareable`) beaten to 0 hp offers the SPARE-or-KILL choice;
  * spared, it joins the hero as a companion: follows him, fights with its own
  * equipped weapon, wears a helmet and chest piece (never legs or feet), and
- * rides the loadout to the next level. Companions are beaten DOWN, never
- * killed — at 0 hp one kneels out of the fight and recovers on its own.
+ * rides the loadout to the next level. At 0 hp it goes DOWN and STAYS down —
+ * nothing in the world stands it back up but a bottle of SMELLING SALTS off
+ * the trader's counter, and nothing mends it but the hero's own medkits.
  */
 export const COMPANIONS = {
+  /**
+   * How many companions the hero may keep — ONE, Diablo 2's mercenary rule.
+   * A party of four is a second hero rather than a friend: it out-damages the
+   * things it is meant to help with, and nothing that happens to any single
+   * member of it matters. With one, the recruit has a name the player learns,
+   * its death is an event, and the SPARE-or-KILL verdict is a real trade
+   * rather than a collection. Sparing a second one RETIRES the first
+   * (`recruitCompanion`) — the same swap hiring a new mercenary makes.
+   */
+  maxParty: 1,
   /** How far behind the hero the formation point sits (world px). */
   followDistance: 34,
   /** Sideways gap between companions in the follow formation (world px). */
@@ -69,32 +81,26 @@ export const COMPANIONS = {
   /** A companion levels up to here and no further — set high enough to read as
    * "indefinite" without risking an unbounded loop on a colossal XP grant. */
   maxLevel: 999,
-  /** Ms a downed companion kneels before getting back up on its own — but only
-   * counted down while OUT of combat (see `downedCombatRadius`). */
-  reviveMs: 12_000,
   /**
-   * A downed companion's revive count only ticks while the field around IT is
-   * clear: a live foe within this many world px freezes the count, so a
-   * companion beaten down in the middle of a swarm STAYS down until the area
-   * clears — or the hero speaks to a merchant, who stands the whole party back
-   * up (`reviveDownedCompanions`). A companion downed in a quick scrap still
-   * pops back up on its own once the mob is dead.
+   * The share of its bar a companion wakes with when the SMELLING SALTS are
+   * broken under its nose (`spendReviveItem`). Deliberately a sliver: waking
+   * is the expensive half of the errand, but a friend who came back at full
+   * strength would make the MEDKITS that top it up decoration. Groggy and
+   * standing is the state the heal exists to answer.
    */
-  downedCombatRadius: 140,
-  /** Fraction of max hp a companion stands back up with. */
-  reviveHpFraction: 0.5,
+  saltsHpFraction: 0.2,
   /**
-   * Out-of-combat healing: a companion that hasn't swung at a foe or taken a
-   * blow for `regenCalmMs` knits itself back up at `regenPerSec` of its max hp
-   * each second — the party mends between fights instead of bleeding down over
-   * a level with no way to recover short of a full down. Combat (a live target
-   * in the hero's engage bubble, or a contact hit) resets the calm timer; a
-   * downed companion recovers only via its kneel/revive, never this.
+   * The share of the companion's OWN bar one of the hero's medkits mends,
+   * scaled by that kit's quality (`MEDKIT.tiers[].healPct` — a LIGHT kit
+   * mends less than a SUPERIOR one, exactly as it does for the hero). Held
+   * under 1 so topping a badly-beaten friend up costs more than one kit: the
+   * bag's supply is the price of keeping it standing.
+   *
+   * There is no passive regen to fall back on. A companion that took a beating
+   * carries it until the hero spends something on it — which is what makes the
+   * party a resource he manages rather than a turret that mends itself.
    */
-  regenPerSec: 0.08,
-  /** Ms of quiet (no swing made, no hit taken) before out-of-combat regen
-   * begins — a companion mid-fight is not "out of combat". */
-  regenCalmMs: 3_000,
+  medkitHealFraction: 0.8,
   /** Chance a companion's kill floats one of its def's `killQuotes`. */
   quoteChance: 0.35,
   /** Minimum ms between one companion's quotes — banter, not a ticker. */

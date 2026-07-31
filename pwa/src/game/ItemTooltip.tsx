@@ -49,9 +49,10 @@ export function ItemTooltip({
   item: Equipment;
   anchor: DOMRect;
   /**
-   * Present only on a usable trinket in a place it works (a travel-gate key
-   * on its home level — see gateKeyTarget): renders a USE row on the card.
-   * The touch path to using it; desktop can also right-click the bag cell.
+   * Present only on a usable trinket in a place it works — a travel-gate key on
+   * its home level (`gateKeyTarget`), or SMELLING SALTS with a companion
+   * face-down (`reviveTarget`). Renders a USE row on the card: the touch path
+   * to using it, where desktop can also right-click the bag cell.
    */
   onUse?: () => void;
 }) {

@@ -2187,6 +2187,15 @@
       },
       "slot": "trinket"
     },
+    "smelling_salts": {
+      "bonuses": {},
+      "icon": "icon_smelling_salts",
+      "id": "smelling_salts",
+      "name": "SMELLING SALTS",
+      "quote": "SMELLS BAD. USE TO RESURRECT A FRIEND",
+      "revive": true,
+      "slot": "trinket"
+    },
     "sneakers": {
       "armor": 3,
       "armorType": "cloth",
@@ -6705,7 +6714,7 @@
       ],
       "id": "vermin_pelt",
       "ilvl": 16,
-      "lore": "DENTED CREAM PLATING. SHRUGS A BLOW; STOPS NOTHING CLEAN.",
+      "lore": "DENTED CREAM PLATING. SHRUGS A BLOW - STOPS NOTHING CLEAN.",
       "name": "SHIBA PLATING",
       "setId": "scavengers_hide",
       "slot": "chest",

@@ -14,6 +14,7 @@ import { type PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { medkitIconFor } from "../consumables.ts";
 import { synth } from "../audio.ts";
 import { Minimap } from "../Minimap.tsx";
 import { pauseMusic } from "../music/index.ts";
@@ -74,12 +75,31 @@ export function PlayingHud({
   userPausedRef: MutableRefObject<boolean>;
   bumpUi: () => void;
 }) {
-  const onOpenCompanion = (id: number) => {
-    if (state.phase === "playing") {
-      runCommand(state, "openCompanionPanel", id);
-      playUiSound(synth, "confirm");
-      bumpUi();
+  /**
+   * A press on the party portrait, and WHICH of its two jobs it does is a
+   * question the portrait has already answered on screen: a MEDKIT BADGE means
+   * the press MENDS the companion out of the hero's own pouch (`hud.canHeal` —
+   * it is hurt, standing, and there is a kit to spend), and a bare portrait
+   * means the press opens its equip screen.
+   *
+   * The badge is what makes that legible rather than moody: the player sees
+   * which press they are about to make before they make it, the way a quest
+   * giver's head mark says whether walking up takes work or hands it in. And
+   * the equip screen is never unreachable — a companion with nothing to heal,
+   * or a hero with an empty pouch, gets the panel on the first press.
+   */
+  const onPressCompanion = (id: number, canHeal: boolean) => {
+    if (state.phase !== "playing") return;
+    if (canHeal) {
+      if (runCommandOk(state, "healCompanionWithMedkit", id)) {
+        playUiSound(synth, "confirm");
+        bumpUi();
+      }
+      return;
     }
+    runCommand(state, "openCompanionPanel", id);
+    playUiSound(synth, "confirm");
+    bumpUi();
   };
   const onOpenMap = () => {
     if (state.phase === "playing") {
@@ -384,9 +404,12 @@ export function PlayingHud({
             </div>
           </div>
 
-          {/* The party rail: one clickable portrait per companion under the
-            hero's avatar — Diablo-2 style, tap one to open its equip
-            screen. A downed companion grays out; the sliver is its hp. */}
+          {/* The party rail: the companion's portrait under the hero's avatar,
+            Diablo-2 style. The sliver is its hp; a DOWNED one grays out and
+            wears the salts glyph (only the bottle wakes it — pressing does
+            nothing but open its screen). A hurt one wears a MEDKIT badge while
+            the pouch can mend it, and then the press spends a kit instead of
+            opening anything — see `onPressCompanion`. */}
           {hud.companions.length > 0 && (
             <div className="companion-portraits">
               {hud.companions.map((companion) => {
@@ -394,19 +417,43 @@ export function PlayingHud({
                   assets.sprites,
                   `${companion.sprite}_0`,
                 );
+                // The corner glyph says what this portrait wants: a medkit
+                // while a press would spend one, the salts bottle while it is
+                // down and only a bag item can help. Nothing when it is whole.
+                const badge = companion.downed
+                  ? "icon_smelling_salts"
+                  : companion.canHeal
+                    ? medkitIconFor(hud.medkitTier)
+                    : null;
+                const badgeSrc = badge
+                  ? spriteDataUrl(assets.sprites, badge)
+                  : null;
                 return (
                   <button
                     key={companion.id}
                     type="button"
                     className={`companion-portrait${companion.downed ? " downed" : ""}`}
-                    aria-label={`open-companion-${companion.defId}`}
-                    onClick={() => onOpenCompanion(companion.id)}
+                    aria-label={
+                      companion.canHeal
+                        ? `heal-companion-${companion.defId}`
+                        : `open-companion-${companion.defId}`
+                    }
+                    onClick={() =>
+                      onPressCompanion(companion.id, companion.canHeal)
+                    }
                   >
                     {src ? (
                       <img
                         src={src}
                         alt=""
                         className="pixel-img companion-portrait-img"
+                      />
+                    ) : null}
+                    {badgeSrc ? (
+                      <img
+                        src={badgeSrc}
+                        alt=""
+                        className="pixel-img companion-portrait-badge"
                       />
                     ) : null}
                     <span className="companion-portrait-hp">

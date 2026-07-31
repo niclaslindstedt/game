@@ -37,6 +37,20 @@ export type GearDef = {
    * second module to put it in — hence optional here rather than gone.
    */
   description?: string;
+  /**
+   * FLAVOR TEXT — the one line the item card prints in its own gold, under
+   * everything the piece DOES (see `ItemCardBody`). WoW's italic quote at the
+   * foot of a tooltip: a joke, a warning, or an instruction the stats cannot
+   * give ("SMELLS BAD. USE TO RESURRECT A FRIEND").
+   *
+   * Distinct from `description`, and the difference is who reads it and where.
+   * A `description` is a paragraph for the LIBRARY — stripped off the shipped
+   * def entirely, because nothing in the running game shows it. A `quote` is
+   * one short line for the PLAYER, mid-run, with an item under their thumb, so
+   * it ships. Keep it to a handful of words: it is drawn in the pixel font,
+   * wrapped to the card's own narrow column.
+   */
+  quote?: string;
   slot: Exclude<ItemSlot, "weapon">;
   /**
    * Lowest difficulty this base may randomly DROP on — the same gate
@@ -131,6 +145,19 @@ export type GearDef = {
    * armor piece grows its points, so room is a bag's chase stat.
    */
   bagSlots?: number;
+  /**
+   * A REVIVE item: USING this piece out of the bag wakes the hero's DOWNED
+   * companion (`spendReviveItem` — the SMELLING SALTS). The marker lives on the
+   * def rather than the engine naming an id, for the reason the gate keys'
+   * `opensWith` does: a MOD's own bottle has to work, and an engine that
+   * checked for `"smelling_salts"` could only ever wake a friend with the
+   * shipped one.
+   *
+   * A marker, not a value — how far it wakes a companion is the shared
+   * `COMPANIONS.saltsHpFraction`, so a piece either brings somebody round or
+   * it doesn't. Absent on everything else.
+   */
+  revive?: boolean;
   /**
    * Merchant material, same scale as a weapon's (see WeaponDef.material):
    * metal sells for double, precious for four times. Omitted = base value.

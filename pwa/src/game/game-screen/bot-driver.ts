@@ -17,6 +17,7 @@ import {
   cullWorstLoot,
   gateKeyTarget,
   sortBotInventory,
+  careForCompanion,
   stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
@@ -203,6 +204,14 @@ export function createBotDriver(deps: {
         ? demoDirector.stepWeaponSwap(drivingBot, dtMs)
         : stepBotWeaponSwap(drivingBot, state);
       if (swapped) bumpUi();
+      // KEEP THE FRIEND ON ITS FEET — the same call the campaign sim makes, in
+      // the same place, for both bot seats: a downed companion is woken with a
+      // bought bottle of SMELLING SALTS and a badly hurt one gets a spare
+      // medkit. It sits here rather than in the AUTO PILOT-only block below
+      // (with the gate-key ritual) because the developer BOT VIEW is where this
+      // gets measured, and a bot that plays the companion rules only when a
+      // player is paying for it measures nothing.
+      if (careForCompanion(state)) bumpUi();
       if (
         wantsMerchantVisit(state) &&
         state.stats.timeMs - botShopMsRef.current >= BOT_SHOP_COOLDOWN_MS &&

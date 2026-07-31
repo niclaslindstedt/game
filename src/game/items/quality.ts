@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Make quality (the BROKEN→PERFECT craftsmanship axis) and instance naming:
 // the quality accessors and rolls every mint and durability read shares, the
-// Diablo-style display name, and the generic weighted pick the loot rolls use.
+// Diablo-style display name, the card's flavor line, and the generic weighted
+// pick the loot rolls use.
 
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
@@ -16,6 +17,7 @@ import {
   QUALITY_PREFIX,
   weaponDef,
 } from "../defs/equipment.ts";
+import { uniqueDef } from "../defs/uniques.ts";
 import type { Equipment, Quality } from "../types/index.ts";
 
 /**
@@ -42,6 +44,28 @@ export function equipmentName(equipment: Equipment): string {
   // the craftsmanship is the first thing a scavenger sees.
   const quality = QUALITY_PREFIX[qualityOf(equipment)].trim();
   return [quality, prefix, base, suffix].filter(Boolean).join(" ");
+}
+
+/**
+ * The instance's FLAVOR LINE — the single sentence the item card prints in its
+ * own gold beneath everything the piece does, WoW's italic quote at the foot of
+ * a tooltip. Null for the great majority of items, which say nothing.
+ *
+ * ONE accessor over TWO authored fields, because the two catalogs already
+ * answered this question in their own words and a third field would have been a
+ * third answer: a NAMED item's line is its `UniqueDef.lore` (authored as "one-
+ * line flavor for the item card" since the chase roster shipped, and printed
+ * nowhere in the running game until now), a plain base's is `quote` on its own
+ * def. A base's `description` is deliberately NOT a candidate — that is a
+ * library paragraph, stripped off the shipped def entirely, and printing it
+ * here would put a wall of prose under a bag icon.
+ */
+export function itemQuote(equipment: Equipment): string | null {
+  if (equipment.uniqueId) return uniqueDef(equipment.uniqueId).lore || null;
+  const def = isWeaponDef(equipment.defId)
+    ? weaponDef(equipment.defId)
+    : gearDef(equipment.defId);
+  return def.quote || null;
 }
 
 // ---- Make quality --------------------------------------------------------------

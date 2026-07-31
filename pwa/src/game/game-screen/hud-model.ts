@@ -6,6 +6,7 @@
 
 import {
   bestMedkitTier,
+  canHealCompanion,
   companionDef,
   equipmentIcon,
   equipmentMaxDurability,
@@ -92,9 +93,12 @@ export type Hud = {
   /** Player sprite family (`playerAppearance`) for the inventory avatar. */
   appearance: string;
   /**
-   * The recruited party, join order — one clickable portrait per companion
-   * below the hero's avatar (tapping one opens its equip screen). `hpFrac`
-   * drives the sliver bar; a DOWNED companion's portrait grays out.
+   * The recruited party — ONE companion (`COMPANIONS.maxParty`), still a list
+   * because a MOD's rules or a later mode could raise the cap and the rail
+   * costs nothing to keep general. `hpFrac` drives the sliver bar; a DOWNED
+   * companion's portrait grays out; `canHeal` says a press would spend one of
+   * the hero's medkits rather than open the equip screen, which is exactly what
+   * the portrait's medkit badge announces before the press lands.
    */
   companions: {
     id: number;
@@ -102,6 +106,7 @@ export type Hud = {
     sprite: string;
     hpFrac: number;
     downed: boolean;
+    canHeal: boolean;
   }[];
   stats: GameStats;
 };
@@ -253,11 +258,14 @@ export function buildHud(
     .join(",");
   const stage = menaceStage(state);
   // The party portraits re-render on membership, coarse health (tenths
-  // — the sliver bar's resolution), and the downed flag.
+  // — the sliver bar's resolution), the downed flag, and whether a press would
+  // spend a medkit. That last one is what puts the heal badge on and off: it
+  // turns on a full pouch as much as on the companion's own bar, and both sides
+  // of it move without anything else in the key noticing.
   const party = state.companions
     .map(
       (c) =>
-        `${c.id}:${Math.ceil((10 * c.hp) / Math.max(1, c.maxHp))}:${c.downedMs !== undefined ? 1 : 0}`,
+        `${c.id}:${Math.ceil((10 * c.hp) / Math.max(1, c.maxHp))}:${c.downed ? 1 : 0}:${canHealCompanion(state, c.id) >= 0 ? 1 : 0}`,
     )
     .join(",");
   // The prelude scene's id is part of the key: a chained prelude swaps
@@ -316,7 +324,8 @@ export function buildHud(
         defId: c.defId,
         sprite: companionDef(c.defId).sprite,
         hpFrac: c.maxHp > 0 ? c.hp / c.maxHp : 0,
-        downed: c.downedMs !== undefined,
+        downed: c.downed === true,
+        canHeal: canHealCompanion(state, c.id) >= 0,
       })),
       stats: { ...state.stats },
     },
