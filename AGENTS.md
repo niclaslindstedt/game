@@ -3046,8 +3046,10 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   a new glyph reaches both.
 - **THE LIBRARY is generated, and its pages are never edited by hand.** The
   reference site at `/library/` (`pwa/scripts/library/`, see
-  `docs/architecture.md`) is eight sections —
-  **bestiary** (one page per monster), **arsenal** (one per named relic and one
+  `docs/architecture.md`) is nine sections —
+  **bestiary** (one page per monster), **allies** (one page per companion —
+  who to spare to recruit it, what it brings, and what every rank of its
+  signature power comes to), **arsenal** (one per named relic and one
   per base item; a generated grade variant has no page of its own, it is
   described on the ancestor it was generated from), **talents** (one per passive
   talent, plus the three trees and the point economy on the index), **powers**
@@ -3083,7 +3085,7 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   Change a page by changing a generator — and when a catalog gains a field,
   DECLARE it in the matching coverage map (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
   `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`, `POWER_FIELDS`,
-  `TALENT_FIELDS`, `STORY_ITEM_FIELDS`,
+  `TALENT_FIELDS`, `COMPANION_FIELDS`, `STORY_ITEM_FIELDS`,
   `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`, `ACHIEVEMENT_FIELDS`), because the
   build fails on an authored field no page renders (the alternative is hundreds of pages silently
   going incomplete). **The STORY section takes its prose from `docs/story.md`

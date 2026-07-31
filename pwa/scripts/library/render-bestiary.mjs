@@ -337,9 +337,15 @@ function storySection(enemy, base) {
       </blockquote>`
       : "";
 
+  // The ally it gets up as is a LINK: it has its own page now, carrying what it
+  // fields, what its signature power comes to rank by rank, and what it says.
+  // Naming it and stopping was the bestiary pointing at a room with no door.
+  const becomes = spareable?.path
+    ? `<a href="${base}library/${spareable.path}/">${escapeHtml(spareable.name)}</a>`
+    : escapeHtml(spareable?.name ?? "");
   const spare = spareable
     ? `      <p>Beaten, it kneels rather than dies, and the run stops for your
-      verdict. Spare it and ${escapeHtml(spareable.name)} fights at your side for
+      verdict. Spare it and ${becomes} fights at your side for
       the rest of the campaign, handing over its story items but keeping its own
       kit. Kill it and the withheld blow lands.</p>`
     : "";
@@ -601,6 +607,7 @@ export function landing(model, { base, groundFor }) {
   const canonical = `${SITE_URL}${base}library/`;
   const total =
     model.enemies.length +
+    model.allies.allies.length +
     model.items.length +
     model.powers.powers.length +
     model.talents.talents.length +
@@ -698,6 +705,16 @@ ${reveal({
   label: "WHAT ENDS EACH VENUE",
   body: rack(bosses, () => "role-boss"),
 })}
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="allies">The allies</h2>
+        <p>The ${model.allies.allies.length} figures you can choose not to kill.
+        Beat one down and the run stops for a verdict; spare it and it fights
+        beside you for the rest of the campaign, levelling off its own kills.
+        What each brings, what every rank of its signature power comes to, and
+        the rules the whole party plays by.</p>
+        <p><a href="${base}library/allies/">Open the allies</a></p>
+${rack(model.allies.allies, () => "")}
       </section>
       <section class="panel pixel-panel">
         <h2 id="arsenal">The arsenal</h2>

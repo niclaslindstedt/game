@@ -73,6 +73,7 @@ import {
 import { talentCardSpec, talentPage, talentsIndex } from "./render-talents.mjs";
 import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
 import { achievementsIndex, categoryPage } from "./render-achievements.mjs";
+import { alliesIndex, allyCardSpec, allyPage } from "./render-allies.mjs";
 import { libraryCss } from "./styles.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -275,6 +276,10 @@ function spritesUsed(model) {
       if (objective.escort) sprites.add(objective.escort.sprite);
     }
   }
+  // Every ally's portrait — the same sprite family its elite twin is drawn
+  // with, which the bestiary has already gathered, but gathered again here so
+  // the section does not silently depend on its own recruit still existing.
+  for (const ally of model.allies.allies) sprites.add(ally.sprite);
   // A badge's own sprite, which the catalog picks out of the same atlas
   // everything else here draws from — a relic's icon for a relic's trophy, a
   // companion's weapon for an ally, a skull for the body count.
@@ -378,6 +383,10 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   for (const enemy of model.enemies) {
     writePage(enemy.path, enemyPage(enemy, context));
   }
+  writePage("allies", alliesIndex(model.allies, context));
+  for (const ally of model.allies.allies) {
+    writePage(ally.path, allyPage(ally, model.allies, context));
+  }
   writePage("arsenal", arsenalIndex(model, context));
   for (const item of model.items) {
     writePage(item.path, itemPage(item, context));
@@ -420,6 +429,7 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   return {
     pages:
       model.enemies.length +
+      model.allies.allies.length +
       model.items.length +
       model.powers.powers.length +
       model.talents.talents.length +
@@ -428,7 +438,7 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
       model.quests.givers.length +
       model.achievements.categories.length +
       chapters.length +
-      9,
+      10,
     sprites: spritesUsed(model).size,
     maps: maps.size,
     cards: imageCount,
@@ -455,6 +465,14 @@ async function buildImages({ cacheDir, dir, model, home }) {
       kind: "mob",
       spec: enemyCardSpec(enemy),
       venueId: enemy.home?.id ?? home,
+    })),
+    // AN ALLY IS A MOB, photographed as one: it is standing on that map, in
+    // that fight, at the moment the offer is made. The only thing the picture
+    // cannot show is which side it ends up on.
+    ...model.allies.allies.map((ally) => ({
+      kind: "mob",
+      spec: allyCardSpec(ally),
+      venueId: ally.recruit?.venue?.id ?? home,
     })),
     ...model.items.map((item) => ({
       kind: "item",

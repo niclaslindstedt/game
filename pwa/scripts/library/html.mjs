@@ -278,6 +278,7 @@ ${jsonLd(graphFor(dated, crumbs))}
         <nav class="site-nav" aria-label="Library">
 ${[
   "bestiary",
+  "allies",
   "arsenal",
   "talents",
   "powers",

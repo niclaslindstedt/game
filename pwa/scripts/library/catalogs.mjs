@@ -59,6 +59,8 @@ const [
   thoughts,
   quests,
   questRewards,
+  companionStats,
+  party,
 ] = await Promise.all([
   engine("game/defs/enemies/index.ts"),
   engine("game/defs/levels/index.ts"),
@@ -89,6 +91,8 @@ const [
   engine("game/defs/thoughts.ts"),
   engine("game/defs/quests.ts"),
   engine("game/quests/rewards.ts"),
+  engine("game/companion-stats.ts"),
+  engine("game/companions.ts"),
 ]);
 
 // How an affix WORDS itself is the app's, not the engine's — and it lives in
@@ -117,6 +121,39 @@ export const GEAR_DEFS = gear.GEAR_DEFS;
 export const UNIQUE_DEFS = uniques.UNIQUE_DEFS;
 export const STORY_ITEM_DEFS = story.STORY_ITEM_DEFS;
 export const COMPANION_DEFS = companions.COMPANION_DEFS;
+
+// ---- the party ----------------------------------------------------------------
+
+/** The recruited party's knobs (`config/companions.ts`) — the formation, the
+ * engagement bubble, the damage damper, the leveling curve, the kneel and the
+ * banter cadence. Every rule on the allies index is one of these. */
+export const COMPANIONS = config.COMPANIONS;
+/** Engine: a companion's max hp at its OWN level. */
+export const companionMaxHp = companionStats.companionMaxHp;
+/** Engine: the XP a companion needs to cross out of `level`. */
+export const companionXpToLevelUp = companionStats.companionXpToLevelUp;
+/** Engine: the XP one reference-mob kill pays at a level — the unit the curve
+ * above is authored in, so a page can print the ladder in KILLS (which is what
+ * a reader can act on) rather than in an XP figure that means nothing alone. */
+export const referenceMobXp = leveling.referenceMobXp;
+/** Engine: which POWER RANK a companion of `level` has reached. */
+export const companionPowerRank = companionStats.companionPowerRank;
+/** Engine: the extra pellets / chain arcs / pierce a ranked power adds. */
+export const companionProjectileBonus = companionStats.companionProjectileBonus;
+/** Engine: the frost nova's blast radius, widened by rank. */
+export const companionNovaRadius = companionStats.companionNovaRadius;
+/** Engine: the party MAGIC FIND aura at a level, base plus rank. */
+export const companionAuraMagicFind = companionStats.companionAuraMagicFind;
+/** Engine: a companion's per-hit weapon damage — the catalog figure through the
+ * party damper and its own training. NOT the same number the arsenal quotes for
+ * the hero swinging the same weapon, which is exactly why it is asked for. */
+export const companionWeaponDamage = party.companionWeaponDamage;
+/** Engine: the ms between its blows (the weapon's cadence verbatim — a
+ * companion has no speed stat to quicken it). */
+export const companionWeaponCooldown = party.companionWeaponCooldown;
+/** Engine: what one frost-nova pulse bites for at a level. */
+export const companionNovaDamage = party.companionNovaDamage;
+
 export const ABILITY_DEFS = abilities.ABILITY_DEFS;
 /** Engine: the effect blocks a power actually carries, in catalog order. The
  * ONE accessor for "what does this power do" — `kind` is a label that names
@@ -402,6 +439,41 @@ export function withTalent(id, rank, read) {
     player.talents = owned;
     player.hp = hp;
     player.evasionBurstMs = burstMs;
+  }
+}
+
+/**
+ * THE REFERENCE COMPANION — a real recruit at `level`, handed to `read`.
+ *
+ * The talents' reference hero one catalog over, for the same reason: three of
+ * the figures an ally's page prints (what its blow lands for, how often, what a
+ * nova pulse bites) are reads off a live `Companion`, not off the def. Printing
+ * the weapon's catalog damage instead would be the arsenal's own trap in a new
+ * place — a companion swings through the party damper (`COMPANIONS.damageMult`,
+ * a HALVING) and its own training curve, so the catalog figure is one a player
+ * never sees on this side of the party.
+ *
+ * It is the ENGINE that mints it: `recruitCompanion` is the one function that
+ * knows a signature weapon is unbreakable, minted at regular tier with no
+ * affixes and no make quality. Rebuilding that shape here would be a second
+ * definition of a recruit, free to drift the first time one gains a field.
+ *
+ * The recruit joins at the HERO's level, so `level` is stamped on afterwards —
+ * a companion earns its own levels from its own kills and the page tables what
+ * each one comes to. It is popped off the reference state on the way out, so no
+ * readout can leak into the next.
+ */
+export function withCompanion(defId, level, read) {
+  const companion = party.recruitCompanion(referenceState, defId, {
+    x: 0,
+    y: 0,
+  });
+  companion.level = Math.max(1, level);
+  try {
+    return read(companion);
+  } finally {
+    referenceState.companions.pop();
+    referenceState.events.length = 0;
   }
 }
 
