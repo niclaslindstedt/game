@@ -183,9 +183,8 @@ const extras =
   (speed && Number(speed) > 1 ? `&speed=${encodeURIComponent(speed)}` : "");
 await page.goto(`${url}/?debug&bot=${strategy}${extras}`);
 // The app opens on the Doom-style title menu. Wait for it (asset load) before
-// shooting the splash, then NEW GAME opens the character create form. The play
-// verbs sit on the front door itself — there is no PLAY submenu to open first.
-await page.getByRole("button", { name: "main-new-game" }).waitFor();
+// shooting the splash, then PLAY → NEW GAME opens the character create form.
+await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.screenshot({ path: `${shotDir}/title.png` });
 // The MODS, in load order, before any run exists: `applyMods` swaps the engine's
 // active catalogs and merges the sprites, so the level picked below — and
@@ -204,7 +203,7 @@ if (modBundles.length > 0) {
     `PLAYTEST: playing with ${modBundles.map((b) => `${b.name} ${b.version}`).join(", ")}`,
   );
 }
-await page.getByRole("button", { name: "main-new-game" }).click();
+await page.getByRole("button", { name: "new-game" }).click();
 // A fresh browser has no heroes, so the create form is shown: name one and
 // CREATE it (softcore by default) to drop straight into the difficulty ladder.
 await page.getByRole("textbox", { name: "character-name" }).waitFor();

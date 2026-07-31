@@ -179,6 +179,67 @@ type LibraryQuests = {
   tuning: Record<string, number>;
 };
 
+/** One badge, as a category page draws it. Loose past the fields the test
+ * actually asserts on, for the same reason every other model here is. */
+type LibraryBadge = {
+  id: string;
+  slug: string;
+  category: string;
+  name: string;
+  ask: string;
+  icon: string;
+  tier: string;
+  points: number;
+  goal: number | null;
+  platform: boolean;
+  platformPoints: number | null;
+  subject: {
+    kind: string;
+    id: string;
+    name: string;
+    path: string | null;
+  } | null;
+};
+
+/** One category of the shelf — a page, and the blocks it lays its badges out
+ * in (a list of rows, or a rack of one repeated condition's subjects). */
+type LibraryBadgeCategory = {
+  id: string;
+  slug: string;
+  label: string;
+  path: string;
+  badges: LibraryBadge[];
+  blocks: Array<{
+    kind: "rows" | "rack";
+    badges: LibraryBadge[];
+    ask?: string;
+    subjectKind?: string;
+    tier?: string | null;
+  }>;
+  count: number;
+  points: number;
+  platformCount: number;
+  sourceFiles: string[];
+};
+
+/** The whole achievements section: every badge, the categories they are filed
+ * under, and the two economies that decide what one is worth. */
+type LibraryAchievements = {
+  badges: LibraryBadge[];
+  categories: LibraryBadgeCategory[];
+  total: number;
+  points: number;
+  tiers: Array<{ id: string; points: number; count: number }>;
+  platform: {
+    count: number;
+    limit: number;
+    budget: number;
+    local: LibraryBadge[];
+    steam: { count: number; whole: boolean };
+  };
+  sourceFiles: string[];
+};
+
 type LibraryModel = {
   enemies: LibraryEnemy[];
   venues: Array<{ id: string; slug: string; name: string }>;
@@ -190,6 +251,7 @@ type LibraryModel = {
   powers: LibraryPowers;
   talents: LibraryTalents;
   quests: LibraryQuests;
+  achievements: LibraryAchievements;
   story: {
     premise: string;
     chapters: LibraryChapter[];
@@ -317,6 +379,28 @@ declare module "*/library/render-quests.mjs" {
   ): string;
   export function questsIndex(
     model: LibraryQuests,
+    context: LibraryContext,
+  ): string;
+}
+
+declare module "*/library/model-achievements.mjs" {
+  export const ACHIEVEMENT_FIELDS: Record<string, string>;
+  export function achievementsModel(): LibraryAchievements;
+  export function achievementCategoryPath(category: string): string;
+}
+
+declare module "*/library/prose-achievements.mjs" {
+  export const CATEGORY_BLURB: Record<string, string>;
+}
+
+declare module "*/library/render-achievements.mjs" {
+  export function categoryPage(
+    category: LibraryBadgeCategory,
+    model: LibraryAchievements,
+    context: LibraryContext,
+  ): string;
+  export function achievementsIndex(
+    model: LibraryAchievements,
     context: LibraryContext,
   ): string;
 }

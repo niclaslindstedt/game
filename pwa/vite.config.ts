@@ -103,6 +103,7 @@ export default defineConfig({
       { find: "@game/core", replacement: here("../src/index.ts") },
       { find: "@game/menu", replacement: here("../src/menu.ts") },
       { find: "@game/lib", replacement: here("../src/lib") },
+      { find: "@game/wire", replacement: here("../server/wire") },
       { find: "@ui/lib", replacement: here("./src/lib") },
     ],
   },

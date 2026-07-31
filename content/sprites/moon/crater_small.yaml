@@ -1,35 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: crater_small
 family: moon
 size: [16, 16]
 description: >
-  A small impact crater in the grey regolith: a round dark pit with a pale dusted rim.
+  A small impact crater punched into the regolith: a black pit under a bright
+  ejecta rim lit from the top-left, with a dusted apron thrown down and right.
 subject:
   kind: prop
-  build: a small round impact crater, a dark pit with a pale dusted rim
-  accent: desaturated regolith grey
-  flavor: a minor gap to jump across
+  build: a round impact crater filling most of its tile, a black pit inside a raised rim
+  features: a bright ejecta rim on the lit side, a dark inner slope, and a dusted apron on the shadow side
+  accent: the pale ejecta rim against the desaturated regolith
+  flavor: a minor gap to jump across, and the mark the meteor rain leaves where it lands
 palette:
   A: "#8d9196" # rim mid-grey
-  F: "#a2a4ad" # rim highlight
-  O: "#1a1c2c" # dark pit shadow
-  a: "#d6dce4" # bright rim edge
+  F: "#a2a4ad" # apron highlight
+  O: "#1a1c2c" # the pit
+  a: "#d6dce4" # bright ejecta rim
   d: "#676972" # inner slope grey
-  e: "#4e4f56" # pit-wall shadow
-  f: "#888a96" # base regolith grey
+  e: "#4e4f56" # inner slope shadow
+  f: "#888a96" # regolith the apron fades into
 grid: |
   ................
+  ....aaaaaaaa....
+  ..aaaeeeeeaaa...
+  ..aaeOOOOOeedA..
+  .aeOOOOOOOOedA..
+  .aeOOOOOOOOOeA..
+  .aeOOOOOOOOOeA..
+  .AeeOOOOOOOeeA..
+  .AAeeeeeeeeeAA..
+  .FAAeeeeeeeAAF..
+  ..fFAAAAAAAAFf..
+  ...ffFFFFFFff...
   ................
-  ................
-  ................
-  ....aaaaaaaF....
-  ...aaeeeeeeFf...
-  ..aaeeeOOedAdd..
-  ..aeeOOOOeeAFd..
-  .aaeeOOOOeeFFdd.
-  ..aeeOeeeeeFFd..
-  ..aFedAeeFFFdd..
-  ...FfAAFFFFdd...
-  ....dddddddd....
   ................
   ................
   ................

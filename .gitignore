@@ -30,6 +30,12 @@ pwa/assets-preview/
 # Generated docs
 docs/_build/
 
+# The engine's Node ship target: the staged sources and the compiled server
+# (scripts/build-server.mjs). Build output like src/generated/ — regenerated on
+# every desktop build, never committed.
+electron/server-src/
+electron/server-dist/
+
 # Node
 node_modules/
 dist/

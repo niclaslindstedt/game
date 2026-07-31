@@ -324,22 +324,21 @@ function levelEntries(def) {
   };
 
   add("hero", "the hero");
-  // EVERY way a level names a mob, not just the opening scatter: a breed that
-  // only ever arrives in a placed pack, out of a spawn point, as a rare roll or
-  // through a lair door is still art the player meets, and a survey that leaves
-  // it off reports the level as cleaner than it is.
+  // EVERY door the level puts a mob on screen through — the pinned set pieces
+  // AND the ambient horde. A level using `spawners`/`packs` for its horde (the
+  // finite local model) keeps its rank and file NOWHERE ELSE, so collecting
+  // only `spawns`/`waves` silently drops the mobs the player sees most and the
+  // survey sheet reads as if the map were empty between its elites.
   for (const spec of [
     ...def.spawns,
     ...(def.waves?.budget ?? []),
+    ...(def.spawners ?? []).flatMap((s) => s.members ?? []),
+    ...(def.packs ?? []).flatMap((p) => p.members ?? []),
+    ...(def.lairs ?? []).flatMap((l) => [l, ...(l.escort ?? [])]),
+    ...Object.values(def.rareSpawns ?? {})
+      .flat()
+      .map((enemy) => ({ enemy })),
     ...(def.openingStrike ? [def.openingStrike] : []),
-    ...(def.packs ?? []).flatMap((p) => p.members),
-    ...(def.spawners ?? []).flatMap((s) => s.members),
-    ...(def.rareSpawns?.rare ?? []).map((enemy) => ({ enemy })),
-    ...(def.rareSpawns?.unique ?? []).map((enemy) => ({ enemy })),
-    ...(def.lairs ?? []).flatMap((l) => [
-      { enemy: l.enemy },
-      ...(l.escort ?? []),
-    ]),
   ]) {
     const enemy = ENEMY_DEFS[spec.enemy];
     if (!enemy) continue;
@@ -347,6 +346,10 @@ function levelEntries(def) {
     // smaller than a squishy one) are visible on the survey sheet itself,
     // not only after hand-reading the enemy defs.
     add(enemy.sprite, `${enemy.name} (${enemy.role}, ${enemy.hp}hp)`);
+  }
+  for (const lair of def.lairs ?? []) {
+    add(lair.sprite, "lair door");
+    add(lair.openSprite, "lair door (open)");
   }
   add(def.merchant?.sprite ?? "merchant", "the merchant");
 
@@ -370,10 +373,6 @@ function levelEntries(def) {
   for (const wall of def.walls ?? []) add(wall.sprite ?? wall.kind, "wall");
   if (def.doors?.length) add("door_locked", "locked door");
   for (const d of def.decor) add(d.sprite ?? d.kind, "decor");
-  for (const lair of def.lairs ?? []) {
-    add(lair.sprite, "lair door (shut)");
-    add(lair.openSprite, "lair door (open)");
-  }
   // The canopy drifts BETWEEN the eye and the ground, blurred and faint by
   // design — flagged as such so the rubric isn't applied to it as if it were a
   // sprite meant to read sharply.

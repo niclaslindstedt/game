@@ -36,6 +36,12 @@ import {
   type CloudRequest,
 } from "./cloud-save";
 import {
+  createNetBridge,
+  type NetBridge,
+  type NetEvent,
+  type NetRequest,
+} from "./net";
+import {
   createModsBridge,
   type ModsBridge,
   type ModsEvent,
@@ -78,6 +84,7 @@ type BridgeMessage = {
   __gisAchievements?: boolean;
   __gisScores?: boolean;
   __gisMods?: boolean;
+  __gisNet?: boolean;
   __gisQuit?: boolean;
 };
 
@@ -138,6 +145,7 @@ let cloud: CloudBridge | null = null;
 let achievements: AchievementsBridge | null = null;
 let scores: ScoresBridge | null = null;
 let mods: ModsBridge | null = null;
+let net: NetBridge | null = null;
 
 /**
  * Call one of the page's `window.__gis*Event(...)` callbacks.
@@ -196,6 +204,17 @@ function routeMessage(window: BrowserWindow, raw: string): void {
       emit(window, "__gisModsEvent", event),
     );
     mods.handle(data as ModsRequest);
+  }
+  if (data.__gisNet) {
+    // The FIFTH bridge, and the only one that needs the window itself rather
+    // than just a way to emit into it: hosting hands the renderer one end of a
+    // `MessagePort` pair, and a port is transferred over `webContents`, not
+    // injected as JavaScript. See net.ts for why the game traffic deliberately
+    // does not travel down this channel at all.
+    net ??= createNetBridge(window, (event: NetEvent) =>
+      emit(window, "__gisNetEvent", event),
+    );
+    net.handle(data as NetRequest);
   }
   if (data.__gisQuit) {
     // The main menu's QUIT row (pwa/src/app/quit-bridge.ts). No reply and no
@@ -362,6 +381,11 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   cloud?.stop();
   cloud = null;
+  // A session server outliving the window it was forked for is an orphan
+  // holding a whole level in memory, and on a `dir` install nothing else will
+  // ever reap it.
+  net?.shutdown();
+  net = null;
 });
 
 function describe(err: unknown): string {

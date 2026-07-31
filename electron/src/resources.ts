@@ -38,3 +38,29 @@ export function modToolsPath(file: string): string {
     : path.join(__dirname, "..", "..", "mod", "tools");
   return path.join(root, file);
 }
+
+/**
+ * The session server's entry point — what `utilityProcess.fork` is given.
+ *
+ * The SECOND thing outside the asar, and it is here for a different reason
+ * from the mod toolchain: not because it is shared with a CLI, but because it
+ * is a separate PROCESS. A `utilityProcess` is a real Node child, so its entry
+ * has to be a real file on disk — the same rule that forces `steamworks.js`'s
+ * native binding to be unpacked.
+ *
+ * Two layouts again, and unlike the toolchain's they are not the same tree in
+ * two places: the compiled output lives beside the shell in a checkout
+ * (`electron/server-dist/`, written by `scripts/build-server.mjs`) and under
+ * the resources root when packaged. `app.isPackaged` is the only honest way to
+ * tell them apart, exactly as above.
+ *
+ * The compiled tree is self-contained ESM with its own `package.json`, so
+ * nothing here has to resolve anything inside it — the one path is the entry,
+ * and Node finds the rest by relative import from there.
+ */
+export function serverEntryPath(): string {
+  const root = app.isPackaged
+    ? path.join(process.resourcesPath, "server")
+    : path.join(__dirname, "..", "server-dist");
+  return path.join(root, "server", "main.js");
+}
