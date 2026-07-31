@@ -1129,7 +1129,7 @@ watching and the strip sat on a stale count.
 ## MULTIPLAYER — the simulation moves out of the renderer
 
 **Steam builds only.** PRs 1, 2, 1.5, 1.75, 2.5, **PR 3's §3.1** and **PR 4's
-§4.2-abandoned-hero + §4.3** of the eight in `docs/multiplayer-plan.md` have
+§4.2-abandoned-hero + §4.3** of the nine in `docs/multiplayer-plan.md` have
 landed: a session server, the wire, the fifth bridge, two transports, a challenge
 handshake, chat, `/players N`, a closed list of 69 named commands covering
 everything the app DOES to a run, the three doors a player walks through (HOST
@@ -1251,8 +1251,8 @@ reads `state.players[0]` at 164 sites across `src/game/bot/` and `botAct` has no
 notion of WHICH hero it steers. The rules above are therefore STRUCTURE with
 their reasoning stated and unit-level proof (`tests/engine/coop_rules_test.ts`),
 not tuned numbers — do not record them as measured. Parameterizing the bot on a
-`Player` is the prerequisite and is the next thing PR 4 owes, BEFORE the hub or
-the party HUD; then `XP_SHARE.partyBonusPerHero` and the `/players N` pairing are
+`Player` is the prerequisite and is the next thing PR 4 owes, BEFORE the party
+HUD; then `XP_SHARE.partyBonusPerHero` and the `/players N` pairing are
 the levers. §4.2's corpse and respawn are BLOCKED on §3.2's per-player `dying`
 screen. See the plan's §4.7.
 

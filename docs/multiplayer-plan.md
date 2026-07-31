@@ -141,21 +141,32 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 
 ---
 
-## 1. The eight pull requests
+## 1. The nine pull requests
 
-| PR                     | Ships                                                                                                                                        | Playable at the end                                          | Estimate | State                         |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ----------------------------- |
-| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6   |
-| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7   |
-| **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
-| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4       |
-| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4        |
-| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6     |
-| **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
-| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                               |
+| PR                     | Ships                                                                                                                                    | Playable at the end                                          | Estimate | State                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ------------------------------------------ |
+| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                          | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6                |
+| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**               | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7                |
+| **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4              |
+| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                    |
+| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                     |
+| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6                  |
+| **4 — THE CO-OP GAME** | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7 |
+| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                | Shippable                                                    |  5–7 wks |                                            |
+| **6 — THE GARAGE**     | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks |                                            |
 
-**≈ 34–49 weeks.** The band is wide because PR 3 is a design exercise wearing a
+**≈ 36–53 weeks.** The band is wide because PR 3 is a design exercise wearing a
 refactor's clothes (see §PR 3), and its uncertainty dominates everything.
+
+**PR 6 SORTS LAST AND THAT IS A DECISION, not a leftover.** The garage was PR 4's
+§4.1 and has been lifted out whole, for two reasons. It is not co-op arithmetic —
+it is a level, a new level-swap mechanism, a parked merchant and a story-chain
+change, which is a different kind of work from "whose is this kill's XP". And it
+is the one piece here that is worth shipping AFTER the mode is stable rather than
+before: a hub is what makes co-op pleasant, and PR 5 is what makes it work at
+all. The cost of that order is stated in PR 6's own goal and must not be
+discovered later — until it lands, a joiner arrives in the middle of somebody
+else's boss fight.
 
 **The three inserted PRs are not new work, they are work the earlier ones
 deferred**, so the total grew by their estimates rather than by a re-plan. Note also what the
@@ -1319,8 +1330,8 @@ until last is how PR 4's `/players N` pass ends up guessed anyway.
 **Goal: the campaign, played co-op, start to finish.** PR 3 makes eight heroes
 possible; PR 4 makes eight heroes a game.
 
-> **§4.2's ABANDONED HERO AND §4.3's RULES HAVE LANDED; §4.1, §4.4, §4.5 AND
-> §4.2's CORPSE HAVE NOT.** The split is along the same seam every earlier one
+> **§4.2's ABANDONED HERO AND §4.3's RULES HAVE LANDED; §4.4, §4.5 AND §4.2's
+> CORPSE HAVE NOT — AND §4.1's HUB IS NOW ITS OWN PR (PR 6).** The split is along the same seam every earlier one
 > was: making the run's ARITHMETIC party-aware — whose the XP is, whose the loot
 > is, what heats the meter, what a body nobody is steering means — is one job,
 > and it is a prerequisite of the fixtures (a hub, a party HUD, banking) that
@@ -1328,107 +1339,25 @@ possible; PR 4 makes eight heroes a game.
 > deliberately did not do, and the one thing that turned out to be a
 > prerequisite nobody had scheduled.
 
-### 4.1 The town — the fixture this game has never had
+### 4.1 The town — MOVED TO PR 6
 
-D2's whole social loop is town ↔ wilderness: meet, vendor, stash, regroup, chat,
-portal out together. This game has **no hub**. The merchant _wanders the field_
-and is discovered by proximity; there is nowhere safe to stand; "start a game,
-people join" has nowhere to land.
+**The hub is no longer PR 4's**, and the section that was here has been lifted
+whole into **PR 6 — THE GARAGE**. Two reasons, and neither is that it stopped
+mattering:
 
-**The fix is authored content, not engine work**, which is the good news: a
-`LevelDef` in the existing `content/levels/<id>.yaml` format with no spawners,
-the merchant parked at a counter, the quest givers present, safe zones (which
-already exist) over the whole floor, and level select as a set of portals. The
-`level-design` skill's checker battery applies unchanged.
+- **It is not co-op arithmetic.** Everything else in PR 4 answers a question of
+  the form "with eight heroes, whose is this / what does this mean" — the XP,
+  the loot, the meter, a body nobody is steering. The hub is a level, a new
+  level-swap mechanism, a parked merchant and a change to the story chain. Those
+  share nothing but a PR number.
+- **It turned out not to be authored content.** The claim that it was is what
+  made it look small enough to sit inside PR 4; three findings against the real
+  tree say otherwise (they travel with it — see PR 6's §6.3).
 
-Two things it does drag in:
-
-- **Party travel.** Everyone must arrive on the same map with their own
-  loadout. The host chooses; the session tears down its level and builds the
-  next from a new seed, with each player's `Loadout` re-applied. The existing
-  per-level handoff (`arrival.ts`, `applyLoadout`) is the mechanism; what is new
-  is that there are eight of them and they must all be banked before the switch.
-- **The story chain applies.** If the hub has a single spoken line — a
-  greeting, a sign, a named NPC — then `docs/story.md` is edited first, then
-  `docs/manuscript.md`, then the content, **and the manuscript edit needs the
-  user's confirmation before it is written**. A silent line in a level YAML with
-  a stale manuscript is exactly the drift the chain exists to prevent. Use the
-  `update-story` skill.
-
-#### 4.1.1 "AUTHORED CONTENT, NOT ENGINE WORK" IS WRONG — three findings
-
-The paragraph above is optimistic, and the tree says so. Checked against the
-current engine, a hub drags in at least three pieces of real work, and whoever
-picks this up should budget for them rather than discovering them on day two:
-
-- **`LevelDef.objective` IS REQUIRED, and a hub has none.** The union is
-  `killBoss | clearAll | reachExit`, and a hub is never "cleared" — it is a
-  place you come back to. So it needs either a new objective kind or an abuse
-  of `reachExit`, and the second drags the whole victory → outro → bank chain
-  along behind it, which is precisely what must NOT fire when somebody walks
-  past the workbench.
-- **"LEVEL SELECT AS A SET OF PORTALS" DOES NOT EXIST.** The nearest mechanic
-  is the elevator, and `src/game/elevator.ts` rules itself out in its own
-  header: _"Nothing here is pathing, streaming or level-swapping — the
-  destination is a real place in the same level."_ Every level transition today
-  is APP-driven off a victory. A portal that starts a different level from
-  inside a run is new mechanism, and it is the same mechanism §4.1's "party
-  travel" bullet needs, so the two are one job rather than two.
-- **THE MERCHANT WANDERS BY CONSTRUCTION.** `merchant.ts` strolls him along
-  wander legs on his own seeded rng stream until he is met. "Parked at a
-  counter" is a new authored mode on him, not a placement — and it is worth
-  doing properly, because it is also the answer to §3.1's table entry for him.
-
-#### 4.1.2 THE PROPOSED SHAPE: THE GARAGE, AND THE RIFT DOOR IN IT
-
-> **PROPOSED, NOT YET IN THE CHAIN.** `docs/story.md` and `docs/manuscript.md`
-> are UNTOUCHED by this section and must stay that way until it is confirmed —
-> this is an engineering plan recording a direction, not a story tier. When it
-> IS confirmed, it goes into `story.md` first and the manuscript edit needs its
-> own explicit confirmation, per the rule above.
-
-**The hub should be the hero's GARAGE, and the level select should be a RIFT
-DOOR standing in it.** The reasoning is that the game already has this fixture
-and has simply never let the player stand in it:
-
-- **The garage is the most established place in the story and the only one that
-  is HIS.** Ten years of weekends building the ship; the LAUNCH cutscene is set
-  there at night; the starting weapon comes off the wall of the room next to it;
-  and it is what ELON MOSQUE calls him by — _"KEEP THE RIFT, GARAGE MAN."_ A hub
-  is a place you return to between missions, and this campaign is about a man
-  trying to get home. Inventing a neutral town beside that would be building a
-  worse version of something the story already has.
-- **A trinket that tears open the way to a level IS ALREADY IN THE GAME.**
-  RASPUTIN drops THE SEVERED HAND — "a junk-looking trinket that secretly tears
-  open the way to the secret BUNKER level". So the mechanic the rift door needs
-  is not a new idea in the fiction, it is the SECOND instance of one that ships;
-  and the fiction has already established that a rift can be TORN by somebody
-  who wants one (Mosque tears his own rather than lose).
-- **It solves the multiplayer problem the section exists for.** "Start a game,
-  people join" lands them in a room with the merchant, the stash, the quest
-  givers and a door — instead of in the middle of somebody else's boss fight.
-
-**THE ONE PROBLEM TO SOLVE BEFORE IT IS WRITTEN DOWN, and it is an ORDERING
-problem rather than a story one.** The rift is level 4 of 5. If the door is the
-thing the hero brings back OUT of the rift, the hub does not exist for the first
-three missions — which is most of the campaign, and exactly the stretch a new
-player and a new party spend the most time in. Two ways out, and this is the
-decision to take:
-
-1. **The garage is the hub from the FIRST run, and what changes is the DOOR.**
-   Early on the way out of it is the SHIP — which is already how he reaches
-   SpaceZ, the moon and Mars, and already has its own travel cutscenes (THE
-   LAUNCH, THE VOYAGE). The rift door then REPLACES the ship after level 4 and
-   opens everything at once, which reads as the campaign's own progression
-   rather than as a retcon. This is the recommended one: it fights none of the
-   existing cutscene chain and gives the artefact a job the player will feel.
-2. **The hub unlocks after the rift.** Cheaper, and it leaves multiplayer
-   without a landing place for three fifths of the campaign — which is the
-   problem §4.1 exists to fix.
-
-Either way, MULTIPLAYER MUST NOT REQUIRE CAMPAIGN PROGRESS to have a hub: a
-session hosted by a fresh character needs somewhere to put four joiners on day
-one. If option 1 is taken, that falls out for free.
+What PR 4 keeps is the consequence: **until PR 6 lands there is nowhere to put a
+joiner**, so a session hosted mid-campaign drops them into somebody else's boss
+fight. That is a stated cost of the ordering rather than an oversight, and PR 6's
+goal says so in its own words.
 
 ### 4.2 Death, the corpse, and the respawn
 
@@ -1530,7 +1459,6 @@ the common case on Steam:
 - The `--verdict` line passes at 1, 2, 4 and 8 players on every difficulty.
 - Deaths, corpses and respawns work; one death never ends anyone else's game.
 - Every player's character is correctly banked after a level and after a quit.
-- `docs/game-content.md` covers the hub; the story chain is intact if it speaks.
 
 ### 4.7 What the first half actually shipped — and the instrument it could not use
 
@@ -1602,7 +1530,7 @@ proof of each claim (`tests/engine/coop_rules_test.ts`): the meter reads a party
 of eight's summed output as identical to one hero's, the XP splits 20:60 the way
 it says it does. That is not the same as a campaign measured at four players, and
 it must not be recorded as if it were. So the next thing PR 4 owes, BEFORE the
-hub or the HUD, is the bot parameterized on a `Player` — the same mechanical
+party HUD, is the bot parameterized on a `Player` — the same mechanical
 refactor §3.1 did to the engine, one file at a time — and then the numbers.
 
 Two knobs are the levers when that happens, and both are deliberately shipped at
@@ -1626,6 +1554,19 @@ window.
 
 **Goal: shippable.** Everything between "it works with friends" and "it works
 with strangers, at scale, forever".
+
+> **PR 5 IS NO LONGER LAST, AND "SHIPPABLE" IS THE WORD TO READ CAREFULLY.** The
+> garage (PR 6) sorts after it, so the mode ships WITHOUT A HUB: a joiner lands
+> in the middle of whatever mission the host is on. That is a deliberate order —
+> PR 5 is what makes co-op work, PR 6 is what makes it pleasant — and it is
+> stated at both ends so nobody reads this section's title as "and then we are
+> done". If the missing hub turns out to be the first complaint, PR 6 moves up;
+> nothing in PR 5 depends on it.
+>
+> **TWO OF THIS PR'S RULES ARE ALREADY DEBTS RATHER THAN FUTURE WORK** — see the
+> box at §5.3. They should be the FIRST commits here, ahead of the trade window,
+> because both are open in the tree today rather than at some point when this PR
+> starts.
 
 ### 5.1 Stash and trade
 
@@ -1739,9 +1680,172 @@ and it should be a few hundred lines.
 - Store: the Steam listing's multiplayer categories, the depot's launch options,
   and store screenshots showing a party — `store-shots` skill.
 
+### 5.7 Done when
+
+- The two debts at §5.3 are paid: a co-op run is stamped and kept off every
+  leaderboard, and a joiner's loadout is validated on arrival (honestly
+  described as a speed bump, not a wall).
+- Trade moves an item in one server-side transaction or not at all, and the
+  anti-dupe rules have a test each.
+- The decoder survives a fuzz pass without throwing or over-reading.
+- An 8-player session soaks for hours without leaks, drift or snapshot growth,
+  and stays playable at 150 ms / 2% loss injected at the transport seam.
+- The dedicated server runs from a config file with no Steam dependency, out of
+  the same file the utility process uses.
+- `docs/multiplayer.md`, `docs/configuration.md`, `docs/troubleshooting.md` and
+  the README describe what actually shipped — including, plainly, that there is
+  no hub yet and where a joiner lands without one.
+
 ---
 
-## 6. Decisions register
+## PR 6 — THE GARAGE
+
+**Goal: somewhere to stand, and somewhere to land a joiner.** This was PR 4's
+§4.1 and is its own PR because it is a different kind of work: a level, a new
+level-swap mechanism, a parked merchant, party travel, and a change to the story
+chain — none of which is co-op arithmetic.
+
+**IT SORTS LAST ON PURPOSE, AND THE COST OF THAT IS STATED HERE RATHER THAN
+DISCOVERED.** A hub is what makes co-op PLEASANT; PR 5 is what makes it WORK.
+Until this lands, HOST GAME drops a joiner into the middle of somebody else's
+boss fight, which is a real and felt shortcoming of every session shipped before
+it — not a hypothetical. If that becomes the thing people complain about first,
+this PR moves up the order, and moving it is cheap because nothing else depends
+on it.
+
+### 6.1 The fixture: the hero's GARAGE
+
+D2's whole social loop is town ↔ wilderness: meet, vendor, stash, regroup, chat,
+portal out together. This game has **no hub**. The merchant _wanders the field_
+and is discovered by proximity; there is nowhere safe to stand; "start a game,
+people join" has nowhere to land.
+
+**The hub is the hero's GARAGE, and it should never have been a neutral town.**
+The garage is the most established place in this story and the only one that is
+HIS: ten years of weekends building the ship, the LAUNCH cutscene set there at
+night, the starting weapon coming off the wall of the room beside it, and it is
+what ELON MOSQUE calls him by — _"KEEP THE RIFT, GARAGE MAN."_ A hub is a place
+you come back to between missions, and this campaign is a man trying to get home.
+Inventing a town beside that would be building a worse version of a fixture the
+game already has.
+
+What stands in it: the **workbench** (the stash, when PR 5's §5.1 lands — until
+then the lost-and-found vault the AUTO PILOT already fills), the **merchant** at
+a counter, the **quest givers** present rather than scattered, a whole-floor
+**safe zone** (which already exists), and the **door** (§6.2). No spawners.
+
+### 6.2 The RIFT DOOR — the level select, and the one ordering decision
+
+**Level select is a rift door standing in the garage**, and the fiction needs no
+new idea for it, because a portable artefact that tears open the way to a LEVEL
+already ships: RASPUTIN drops **THE SEVERED HAND**, "a junk-looking trinket that
+secretly tears open the way to the secret BUNKER level". The rift door is the
+second instance of that mechanic, not the first. The fiction has also already
+established that a rift can be MADE by somebody who wants one — MOSQUE tears his
+own rather than lose.
+
+**THE ORDERING PROBLEM IS THE ONLY HARD QUESTION HERE, and it is not a story
+problem.** The rift is level 4 of 5. If the door is what the hero brings back OUT
+of the rift, the hub does not exist for the first three missions — which is most
+of the campaign, and precisely the stretch a new player and a new party spend the
+most time in. Two answers:
+
+1. **RECOMMENDED — the garage is the hub from the FIRST run, and what changes is
+   the DOOR.** Early on the way out is the SHIP, which is already how he reaches
+   SpaceZ, the moon and Mars and already has its own travel cutscenes (THE
+   LAUNCH, THE VOYAGE). The rift door then REPLACES the ship after level 4 and
+   opens everything at once. This fights none of the existing cutscene chain, and
+   it gives the artefact a job the player will feel rather than a retcon they
+   have to accept.
+2. The hub unlocks after the rift. Cheaper, and it leaves multiplayer without a
+   landing place for three fifths of the campaign — which is the problem this PR
+   exists to fix.
+
+**Either way, MULTIPLAYER MUST NOT REQUIRE CAMPAIGN PROGRESS TO HAVE A HUB.** A
+session hosted by a brand-new character needs somewhere to put four joiners on
+day one. Under (1) that falls out for free; under (2) it needs a second rule, and
+a second rule is how a hub ends up with two behaviours nobody can explain.
+
+### 6.3 What it actually costs in the engine — three findings
+
+**"The fix is authored content, not engine work" was the original claim, and it
+does not survive contact with the tree.** Checked against the current engine;
+budget for all three rather than discovering them on day two.
+
+- **`LevelDef.objective` IS REQUIRED, and a hub satisfies none of its kinds.**
+  The union is `killBoss | clearAll | reachExit`, and a hub is never "cleared" —
+  it is a place you return to. So it needs either a new objective kind or an
+  abuse of `reachExit`, and the second drags the whole victory → outro → bank
+  chain along behind it, which is exactly what must NOT fire when somebody walks
+  past the workbench.
+- **"LEVEL SELECT AS A SET OF PORTALS" DOES NOT EXIST.** The nearest mechanic is
+  the elevator, and `src/game/elevator.ts` rules itself out in its own header:
+  _"Nothing here is pathing, streaming or level-swapping — the destination is a
+  real place in the same level."_ Every level transition today is APP-driven off
+  a victory. A door that starts a DIFFERENT level from inside a run is new
+  mechanism — and it is the same mechanism §6.4's party travel needs, so the two
+  are one job rather than two.
+- **THE MERCHANT WANDERS BY CONSTRUCTION.** `merchant.ts` strolls him along
+  wander legs on his own seeded rng stream until he is met. "Parked at a counter"
+  is a new authored mode on him rather than a placement — and it is worth doing
+  properly, because it is also the answer PR 3's §3.1 table left open for him
+  ("whom does he follow?" stops being a question when he stops following).
+
+### 6.4 Party travel
+
+Everyone must arrive on the same map with their own loadout. The host chooses at
+the door; the session tears down its level and builds the next from a new seed,
+with each player's `Loadout` re-applied. The existing per-level handoff
+(`arrival.ts`, `applyLoadout`) is the mechanism; what is new is that there are
+eight of them and **they must all be banked before the switch** — which is the
+same banking PR 4's §4.5 owes, so whichever lands second inherits it rather than
+writing it twice.
+
+### 6.5 The story chain — and the confirmation it still needs
+
+**The direction in §6.2 is RECORDED HERE AND NOWHERE ELSE.** `docs/story.md` and
+`docs/manuscript.md` are deliberately untouched by it: this is an engineering
+plan noting a decision, not a story tier, and the chain runs downward from
+`story.md` or it does not run at all.
+
+So the FIRST commit of this PR is the story one, in this order and no other:
+`docs/story.md` (the gist — the garage as the place he comes back to, and what
+the door is), then `docs/manuscript.md`, then the content. **The manuscript edit
+needs the user's explicit confirmation before it is written** — the general rule
+for any story change, and it has not been given for this one; confirming the
+DIRECTION is not confirming the LINES. Use the `update-story` skill.
+
+Everything the hub says is in scope: a sign, a greeting, whatever the merchant
+says when he is standing at a counter instead of found in a field, and whatever
+the hero thinks the first time the door opens on somewhere he has already been.
+
+### 6.6 Done when
+
+- A party of four can be hosted from a fresh character, land in the garage
+  together, kit out, and leave through the door onto the same map.
+- The hub raises no objective, no victory, no outro and no bank — a player can
+  stand in it indefinitely and the run does not end.
+- The merchant is at his counter, the quest givers are present, and the
+  whole-floor safe zone holds: nothing hostile can be spawned or lured in.
+- The `level-design` skill's checker battery passes on the hub level unchanged.
+- `docs/game-content.md` covers the hub, and the story chain is intact —
+  `story.md`, then the manuscript, then the content, with the manuscript's own
+  confirmation on the record.
+
+### 6.7 Risks
+
+- **The level-swap mechanism is the real work and it is shared.** It is also
+  §6.4's, so a mistake in it is a mistake in party travel. Build it once, behind
+  one seam, and test it with one player before eight.
+- **A hub is where a "harmless" objective bug becomes unbearable.** The failure
+  mode is a victory or an outro firing in the one place the player is meant to
+  idle. Prefer a new objective kind over an abuse of `reachExit`.
+- **Scope creep toward a town.** The garage is one room. A hub with districts is
+  a different game and a different PR.
+
+---
+
+## 7. Decisions register
 
 Answers this plan recommends but does not have authority to make. Each should be
 settled before the PR that needs it, not during.
@@ -1768,7 +1872,7 @@ settled before the PR that needs it, not during.
 
 ---
 
-## 7. What this plan deliberately does not build
+## 8. What this plan deliberately does not build
 
 - **Lockstep / rollback netcode.** The rng is bit-exact (integer `Math.imul`),
   but the 159 transcendental calls under `src/` are not IEEE-mandated to agree
@@ -1792,7 +1896,7 @@ settled before the PR that needs it, not during.
 
 ---
 
-## 8. Working notes for whoever picks this up
+## 9. Working notes for whoever picks this up
 
 - **Every PR carries a `.changes/unreleased/` fragment.** The mode is
   user-visible; CI's `changeset` job enforces it.
