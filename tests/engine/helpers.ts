@@ -23,6 +23,7 @@ export {
   stopWaves,
   clearStage,
   run,
+  settleBossRite,
   equipBlaster,
   heroSpeedMult,
   mobSpeedMult,

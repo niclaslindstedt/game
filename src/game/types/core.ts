@@ -39,6 +39,16 @@ export type GamePhase =
   | "companion"
   | "outro"
   | "dying"
+  // The BOSS DEATH RITE — the scripted send-off played over a felled boss
+  // before its last words (`boss-death.ts`). A GLOBAL phase, and deliberately
+  // so: `docs/multiplayer-plan.md` §3.2 makes the eleven per-player UI phases
+  // into `Player.screen`s but keeps the group beats — a boss's arrival
+  // dialogue, a cutscene — global, played for everyone, advanced by anyone,
+  // with the world frozen for the beat. A boss's DEATH is that same kind of
+  // beat, so it belongs on the global side of that split and must not become a
+  // per-player screen: half the party watching a finisher while the other half
+  // keeps fighting is neither.
+  | "bossDeath"
   | "victory"
   | "defeat";
 

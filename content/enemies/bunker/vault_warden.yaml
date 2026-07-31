@@ -28,6 +28,13 @@ dialogue:
   - hero:
       - THEN I'LL MAKE MY OWN EXIT. MOVE, OR BE MOVED.
   - - REQUEST DENIED. LIQUIDATING VISITOR.
+# THE DEATH RITE — It does not chase, it SCANS — so it dies by its own scan, cut in half along the arc it had locked.
+death: last_sweep
+
+# THE HERO'S LINE as its own beam goes through it.
+deathBark:
+  - YOU WERE NEVER GUARDING ANYTHING. YOU WERE A LOCK.
+
 lastWords:
   - ACCOUNT... ...CLOSED...
 mechanics:

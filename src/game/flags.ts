@@ -51,6 +51,43 @@ export function areCutscenesEnabled(): boolean {
   return cutscenesEnabled;
 }
 
+// -- DEATH SCENES (pwa setting `deathScenes`) ---------------------------------
+//
+// Whether the game's two scripted DEATH CINEMATICS play: the BOSS DEATH RITE
+// (the finisher over a felled boss — boss-death.ts) and the hero's own DEATH
+// SCENE (the tableau the horde gathers for — death-scene.ts). One switch for
+// both, because they are one feature seen from either end and a player who does
+// not want to watch a finisher does not want to watch a funeral either.
+//
+// ON by default: they are the shipped experience, not an opt-in. What OFF buys
+// is the pacing a replayer wants — a boss dies where it stood and speaks its
+// last words immediately, and a fallen hero goes straight to the YOU DIED
+// modal. Both are the exact paths a DIALOGUE-MUTED run already takes, so `off`
+// adds no third behaviour to keep working.
+//
+// IT IS NOT A GORE SWITCH, and must never be confused for one. The viscera has
+// its own gate — the device's MATURE CONTENT policy and the player's EXTRA GORE
+// row, folded into `bloodAmount()` app-side. This one is about whether the game
+// stops to show you something; that one is about what it shows. Turning this
+// off leaves a boss dying in full colour, and turning gore off leaves the
+// cinematic playing with nothing graphic in it.
+let deathScenesEnabled = true;
+
+/**
+ * Toggle the scripted death cinematics — the boss death rite and the hero's
+ * death tableau (a player setting, SETTINGS → GAMEPLAY). Off, a boss dies on
+ * the spot and a fallen hero goes straight to the modal.
+ */
+export function setDeathScenesEnabled(enabled: boolean): void {
+  deathScenesEnabled = enabled;
+}
+
+/** Whether the scripted death cinematics play (read by `loot.ts` when a boss
+ * falls and by the step pipeline when the hero does). */
+export function areDeathScenesEnabled(): boolean {
+  return deathScenesEnabled;
+}
+
 // -- Auto-equip on pickup (pwa setting `autoEquip`) ---------------------------
 //
 // Whether a picked-up piece that out-scores the worn one is EQUIPPED ON THE SPOT

@@ -58,6 +58,21 @@ export type ExhibitCtx = {
    * effect draws on top of a mob still standing there. Null on an empty stage.
    */
   kill: () => Enemy | null;
+  /**
+   * Take the mob nearest the hero off the field and open its real DEATH RITE
+   * through the engine (`enterBossDeath`). Returns the body it felled, or null
+   * on an empty stage.
+   *
+   * THE ENGINE STAGES IT, and that is the whole point of having this rather
+   * than an exhibit that emits the rite's three events by hand. A rite is a
+   * PHASE with a three-beat clock, a held horde, a scripted hero and a pose
+   * drawn off live scene state — an exhibit that faked the events would show
+   * the wreckage and none of the scene, and would go on showing it long after
+   * the real rite had been retimed. This way the diorama runs the shipped
+   * `stepBossDeath` and can never drift from it, exactly as `emit` keeps the
+   * one-shot effects honest.
+   */
+  fell: () => Enemy | null;
   /** The staged mobs, nearest the hero first. */
   mobs: readonly Enemy[];
   /**

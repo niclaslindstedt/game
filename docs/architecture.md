@@ -253,6 +253,52 @@ escort.ts` walks the people an escort errand puts on the field, and
   the loot-grab countdown, and the countdown then lands in the `outro`
   phase (the same black-screen paged monologue, turned by
   `advanceOutro`/`skipOutro`) before the `victory` splash.
+- **`src/game/boss-death.ts` + `src/game/death-rites/`** — the BOSS DEATH RITE,
+  the death scene's mirror image: there the horde gathers over the fallen hero,
+  here the hero stands over the fallen boss. Felling a boss drops the run into
+  the `bossDeath` phase (`stepBossDeath`, run ahead of the `playing` gate like
+  `stepDeathScene`) for three beats — **STAGGER** (the boss on its knees and not
+  yet dead, the horde held outside `BOSS_DEATH.ringRadius`, sim time dilated to
+  `BOSS_DEATH.timeScale` and the camera leaning in), **ACT** (the hero's
+  scripted approach on the REAL jump system, so the dust at both ends and the
+  doll's squash come free, then the blow) and **AFTERMATH** (what is left
+  settles). `bossDefeated`, the landmark corpse and the boss's `lastWords` all
+  fire at the END of that beat rather than on the tick of the blow — putting the
+  last words over the wreckage is the whole reason the beat exists — while the
+  kill's XP and drops are paid out immediately, because a cinematic standing
+  between the player and what they earned would be the feature taxing the win.
+  A press past `BOSS_DEATH.skipGraceMs` skips it (`skipBossDeath`, a run command
+  like every other scene-advance verb).
+  - **WHICH send-off is a CATALOG entry, not a `switch`** — `death:` in the
+    boss's YAML names a `DeathRiteDef` (`death-rites/catalog.ts`), mirroring the
+    boss ABILITY catalog for the same reason: eleven bosses each dying by their
+    own branch is eleven permutations of whatever the first one did. A boss that
+    names none still gets the full beat, because the default reads the victim's
+    own GORE FAMILY and so is already right for a body, a machine, a haunting
+    and a rift-thing alike.
+  - **A FLIGHT rite is the same machinery pointed the other way.** A boss with
+    `flees:` (ELON MOSQUE, twice) does not die: it reels, tears its exit open a
+    few strides off — the landmark appears as the RUN starts, so the player
+    watches him decide rather than being told where he is going — bolts for it
+    with its back to the hero, and is spun out of existence at the mouth. It
+    books `bossFled` and leaves no corpse. The ENDING picks the rite (`riteFor`),
+    never the authored id alone: a finisher staged over a boss that was supposed
+    to run has nobody left to finish.
+  - **The gore gate is the app's, and the rite is not gated.** The choreography
+    is identical either way; only the wreckage is mature content. The engine
+    states an intent on `bossRiteStruck` and
+    `pwa/src/game/game-screen/boss-rite.ts` asks `bloodAmount()`, downgrading to
+    an ordinary corpse on a refusal — the same fallback shape the incinerate
+    gate takes, and for the same reason.
+  - **It is a GLOBAL phase and must stay one.** `docs/multiplayer-plan.md` §3.2
+    turns the per-player UI phases into `Player.screen`s but keeps the group
+    beats global; a boss's death is one of those, so it must not become a
+    per-player screen.
+  - **SETTINGS → GAMEPLAY → DEATH SCENES** (`deathScenes`, on by default) turns
+    the rite AND the hero's own tableau off together, via
+    `setDeathScenesEnabled` in the engine's import-free `flags.ts` leaf. Not a
+    gore switch: it decides whether the game STOPS to show you, never what it
+    shows.
 - **`src/game/death-scene.ts`** — the DEATH SCENE that mirrors the victory
   flow on the losing side. When the hero's hp hits 0 the run drops into the
   `dying` phase instead of straight to `defeat`: a dramatic tableau

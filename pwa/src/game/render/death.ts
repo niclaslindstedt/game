@@ -14,7 +14,7 @@
 // clock stops) —
 // so the tableau isn't played behind a wall of frozen damage numbers.
 
-import { DEATH_SCENE, type GameState } from "@game/core";
+import { bossRiteDurationMs, DEATH_SCENE, type GameState } from "@game/core";
 
 import { clamp01, fract, type ViewSize } from "./shared.ts";
 
@@ -41,6 +41,18 @@ export const COMBAT_NOISE_FADE_MS = 320;
  */
 export function combatNoiseFade(state: GameState): number {
   if (state.phase === "defeat") return 0;
+  // THE BOSS RITE DELIBERATELY DOES NOT FADE, and this is the one place the two
+  // scenes must not be treated alike. A death scene is ABOUT the absence of the
+  // fight, so clearing its leftovers is the effect; a boss rite's whole
+  // spectacle — the wreckage, the spray, the dust off the hero's leap — IS the
+  // transient effect layer, so fading it to nothing hides exactly what the beat
+  // exists to show. (Shipped that way for one build: the boss vanished at the
+  // strike and the finisher played over an empty patch of floor.)
+  //
+  // Nothing hangs frozen instead, because the OTHER half of this pair already
+  // covers it: `effectsClockMs` carries the layer on the scene's own clock, so
+  // the killing blow's fat gold crit rises, lapses and is dropped by
+  // `expireEffects` exactly as it would in play.
   if (state.phase !== "dying") return 1;
   const ms = state.deathScene?.ms ?? COMBAT_NOISE_FADE_MS;
   return 1 - clamp01(ms / COMBAT_NOISE_FADE_MS);
@@ -55,7 +67,14 @@ export function combatNoiseFade(state: GameState): number {
  * fade above takes it out.
  */
 export function effectsClockMs(state: GameState): number {
-  return state.stats.timeMs + (state.deathScene?.ms ?? 0);
+  // Both scenes freeze the sim clock, so both add their own on top — otherwise
+  // every effect the rite spawns (the wreckage, the dust, the twirl) would sit
+  // at the exact frame it was born on for the whole beat.
+  return (
+    state.stats.timeMs +
+    (state.deathScene?.ms ?? 0) +
+    (state.bossDeath?.ms ?? 0)
+  );
 }
 
 /**
@@ -65,6 +84,13 @@ export function effectsClockMs(state: GameState): number {
  * pushing the ring of mourners off the screen edges.
  */
 const DEATH_ZOOM_MAX = 1.45;
+
+/** How far the BOSS RITE's camera leans in. Deliberately under the death
+ * scene's: the rite is over in seconds and the pixel art is nearest-neighbour
+ * scaled, so a big push turns the one moment the whole feature exists for into
+ * a chunky mess. Enough to say "look at this", not enough to resample it into
+ * mud. */
+const RITE_ZOOM_MAX = 1.3;
 
 /**
  * The DEATH SCENE's slow PUSH-IN — the camera crawling toward the fallen hero
@@ -82,6 +108,22 @@ const DEATH_ZOOM_MAX = 1.45;
  * are all untouched, and the push-in costs nothing per frame.
  */
 export function deathZoom(state: GameState): number {
+  // THE RITE'S OWN PUSH-IN. Shallower and much faster than the death scene's:
+  // that one crawls for eight seconds toward a modal, this one has to arrive
+  // before the blow lands. It also EASES BACK OUT over the aftermath, which the
+  // death scene deliberately does not — the run continues here, and a camera
+  // left leaning on the wreckage would hand the player back a zoomed field to
+  // pick the loot up in.
+  if (state.phase === "bossDeath") {
+    const scene = state.bossDeath;
+    if (!scene) return 1;
+    const total = Math.max(1, bossRiteDurationMs(scene.rite));
+    const prog = clamp01(scene.ms / total);
+    // In over the first two thirds, out over the last: a triangle, smoothed.
+    const lean = prog < 0.66 ? prog / 0.66 : 1 - (prog - 0.66) / 0.34;
+    const eased = lean * lean * (3 - 2 * lean);
+    return 1 + (RITE_ZOOM_MAX - 1) * eased;
+  }
   if (state.phase !== "dying" && state.phase !== "defeat") return 1;
   const scene = state.deathScene;
   const prog = scene ? clamp01(scene.ms / DEATH_SCENE.durationMs) : 1;

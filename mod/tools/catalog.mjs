@@ -67,6 +67,8 @@ const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
   engine("src/game/defs/uniques.ts")
 );
 const { SET_DEFS } = await import(engine("src/game/defs/sets.ts"));
+const { deathRites } = await import(engine("src/game/death-rites/catalog.ts"));
+const DEATH_RITES = deathRites();
 const { DIFFICULTY_DEFS } = await import(
   engine("src/game/defs/difficulties.ts")
 );
@@ -267,6 +269,15 @@ const catalog = {
   // elite's `regions`). Names rather than a parser, because the compiler runs
   // where the engine's parser cannot — see `regionNames`.
   regions: regionNames(),
+  // The DEATH RITES a boss's `death:` may name — the scripted send-off it gets
+  // when it leaves the field (`src/game/death-rites/catalog.ts`). Split by
+  // ENDING, because the two are not interchangeable: a boss that `flees:` needs
+  // a flight rite and one that dies needs a death rite, and a mismatch is a
+  // scene that could never play. Snapshotted like every other id set, for the
+  // reason the compass grammar is — the compiler runs in the shipped app's main
+  // process, where the engine's own catalog cannot be imported.
+  deathRites: sorted(DEATH_RITES.filter((r) => !r.flight).map((r) => r.id)),
+  flightRites: sorted(DEATH_RITES.filter((r) => r.flight).map((r) => r.id)),
   sprites: shippedSpriteNames(),
   // The elements a weapon's signature look may name (see `WeaponFx`).
   elements: sorted(

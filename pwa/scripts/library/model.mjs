@@ -21,6 +21,7 @@ import {
   hardMobHpScale,
   killXp,
   mobContactScaleFor,
+  riteFor,
 } from "./catalogs.mjs";
 import { achievementsModel } from "./model-achievements.mjs";
 import { arsenalModel } from "./model-arsenal.mjs";
@@ -74,6 +75,8 @@ export const ENEMY_FIELDS = {
   conversation: "the NEUTRAL note — that this one will talk to you",
   structure: "the STRUCTURE note",
   flees: "the COWARD note",
+  death: "the HOW IT ENDS note — the scripted send-off this boss gets",
+  deathBark: "the HOW IT ENDS note — what the hero says as the rite lands",
   ranged: "the opening line and the shot section",
   shieldedBy: "the opening line",
   spareable: "the SPAREABLE note and the story section",
@@ -488,6 +491,15 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
       talks: !!def.conversation,
       structure: !!def.structure,
       flees: def.flees ?? null,
+      // THE SCRIPTED SEND-OFF. Resolved through the engine's own `riteFor`
+      // rather than read off `def.death`, so the page describes the rite the
+      // boss ACTUALLY gets — a boss that names none still has one, and a
+      // fleeing boss gets the flight default rather than the death one.
+      death:
+        def.role === "boss"
+          ? riteFor(def.death, def.flees !== undefined)
+          : null,
+      deathBark: def.deathBark ?? null,
       spareable: def.spareable
         ? {
             ...def.spareable,

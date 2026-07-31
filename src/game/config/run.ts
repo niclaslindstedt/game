@@ -56,6 +56,53 @@ export const DEATH_SCENE = {
 } as const;
 
 /**
+ * The BOSS DEATH RITE — the scripted send-off a boss gets instead of merely
+ * toppling over (see `boss-death.ts`). The mirror image of the DEATH SCENE
+ * above, and deliberately built to the same shape: the engine owns the beats,
+ * the choreography and the timer, the app owns the picture, and a press past
+ * the grace window skips it.
+ *
+ * THE BEATS ARE FIXED AND NEVER ROLLED, exactly as a boss ability's `windupMs`
+ * is: a finisher whose timing varies is a finisher the player cannot watch. A
+ * rite may lengthen any beat (`DeathRiteDef`), never shorten one below these —
+ * see `death-rites/catalog.ts`.
+ */
+export const BOSS_DEATH = {
+  /** The STAGGER: the boss is on its knees and not yet dead, the horde is held
+   * off, the camera leans in. The "finish him" beat — what makes the execution
+   * read as a decision rather than as a glitch. */
+  staggerMs: 800,
+  /** The ACT: the hero's scripted approach and the blow on a DEATH rite — and,
+   * on a FLIGHT rite, the coward's run for the exit he has just torn open.
+   * Neutrally named because a rite covers both ways a boss leaves the field. */
+  actMs: 1100,
+  /** The AFTERMATH: what is left of the boss settles, the horde is released,
+   * and the last words open over the wreck. */
+  aftermathMs: 1200,
+  /** How long the rite is UNSKIPPABLE (ms). Same reason `DEATH_SCENE.
+   * skipGraceMs` exists: the boss dies mid-fight with a finger already pressed
+   * and a hand on the keys, so without a grace window the press that was
+   * steering throws the rite away and nobody ever sees one. */
+  skipGraceMs: 700,
+  /**
+   * How far SIM TIME is dilated across the stagger and the execution — the hard
+   * hit-stop the design asks for. Every pass the rite steps reads the scaled
+   * dt, so the held horde, the hero's leap and the effect clock all stretch
+   * together; the scene's OWN clock runs at real time, so the beats above are
+   * real milliseconds and a rite is always the same length of wall time.
+   */
+  timeScale: 0.125,
+  /** The radius (world px) the held horde is kept outside of while the rite
+   * plays — the ring of witnesses. Wider than the death scene's own ring: the
+   * hero needs room to land, and the boss is the thing being looked at. */
+  ringRadius: 52,
+  /** How fast a mob inside the ring backs off to its place on the rim (world
+   * px/s) — an ABSOLUTE pace like `DEATH_SCENE.gatherSpeed`, so a shambler and
+   * a sprinter clear the floor together and the ring reads deliberate. */
+  yieldSpeed: 90,
+} as const;
+
+/**
  * The DERIVED arrival loadout (`deriveArrivalLoadout` in arrival.ts): the
  * realistic stand-in used when a mid-campaign level starts with nothing
  * banked — dev `?level=` jumps, playtest bots, wiped storage. In the real

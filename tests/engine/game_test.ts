@@ -36,6 +36,7 @@ import {
   makeEnemy,
   run,
   SEED,
+  settleBossRite,
   startGame,
   steerTo,
   stopWaves,
@@ -677,14 +678,23 @@ describe("win and lose", () => {
 
     run(state, idle, 500, (s) => s.enemies.length === 0);
     expect(state.enemies).toHaveLength(0);
+    // The boss's DEATH RITE plays before anything resolves (boss-death.ts) —
+    // the countdown deliberately does NOT arm underneath it, or the loot-grab
+    // window would be running out while the finisher was still on screen.
+    expect(state.phase).toBe("bossDeath");
+    expect(state.victoryCountdownMs).toBeNull();
+    settleBossRite(state);
     expect(state.phase).not.toBe("victory"); // grace period first
-    expect(state.victoryCountdownMs).toBeGreaterThan(RUN.victoryDelayMs - 100);
 
     // The boss gasps his last words as he falls: tap through the death scene,
     // then spend the level-ups the kill banked, so time can resume.
     while (state.phase === "dialogue") advanceDialogue(state);
     while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
     expect(state.phase).toBe("playing");
+    // …and only now, with the rite done and the box tapped through, does the
+    // loot-grab countdown arm.
+    run(state, idle, 2, (s) => s.victoryCountdownMs !== null);
+    expect(state.victoryCountdownMs).toBeGreaterThan(RUN.victoryDelayMs - 100);
     run(
       state,
       idle,

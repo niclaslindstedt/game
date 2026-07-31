@@ -794,6 +794,88 @@ const FIELD_EXHIBITS: Exhibit[] = [
   // The shelf that did not exist, for effects that mostly did not either: three
   // of these events were emitted by the engine and drawn by nobody, so a boss's
   // slam landed for more than its contact damage with nothing on screen at all.
+  // ── THE DEATH RITES ──────────────────────────────────────────────────────
+  // The scripted send-offs (src/game/boss-death.ts). Every one of these is the
+  // REAL scene: `ctx.fell()` hands the boss to the engine's own
+  // `enterBossDeath` and the shipped `stepBossDeath` runs the three beats over
+  // the diorama, so what the shelf shows is what the game does — and it stays
+  // that way when a rite is retimed. The show is sized past the whole rite so
+  // the loop never cuts the aftermath off, and each is staged over its own
+  // boss's venue with its own boss standing in it.
+  {
+    id: "rite-execution",
+    icon: "spell_execute",
+    label: "EXECUTION",
+    blurb: "THE ONE BOSS WHO BLEEDS - THE BLADE GOES DOWN THROUGH THE SKULL",
+    group: "BOSSES",
+    keywords: [
+      "boss",
+      "death",
+      "rite",
+      "finisher",
+      "cleave",
+      "mosque",
+      "blood",
+    ],
+    levelId: "eastworld",
+    stage: { spawns: horde(1, 34, 34, "elon_mosque_eastworld") },
+    showMs: 5200,
+    fire: (ctx) => ctx.fell(),
+  },
+  {
+    id: "rite-unmaking",
+    icon: "spell_rending_strike",
+    label: "THE UNMAKING",
+    blurb: "IT HOVERS, SO THE BLADE GOES UP - AND THE EMPTY SUIT FALLS",
+    group: "BOSSES",
+    keywords: [
+      "boss",
+      "death",
+      "rite",
+      "finisher",
+      "armstrong",
+      "ecto",
+      "moon",
+    ],
+    levelId: "moon",
+    stage: { spawns: horde(1, 34, 34, "armstrong") },
+    showMs: 5600,
+    fire: (ctx) => ctx.fell(),
+  },
+  {
+    id: "rite-override",
+    icon: "spell_cleave",
+    label: "THE OVERRIDE",
+    blurb: "A MACHINE COMES APART AS A MACHINE - THE CORE TAKEN OUT WHOLE",
+    group: "BOSSES",
+    keywords: ["boss", "death", "rite", "finisher", "gib", "doge", "sparks"],
+    levelId: "spacez_hq",
+    stage: { spawns: horde(1, 34, 34, "doge_1") },
+    showMs: 5200,
+    fire: (ctx) => ctx.fell(),
+  },
+  {
+    id: "rite-bolt",
+    icon: "spell_void_lance",
+    label: "THE COWARD'S EXIT",
+    blurb: "HE TEARS THE RIFT OPEN, RUNS FOR IT, AND SPINS OUT OF EXISTENCE",
+    group: "BOSSES",
+    keywords: [
+      "boss",
+      "death",
+      "rite",
+      "flee",
+      "flight",
+      "mosque",
+      "rift",
+      "twirl",
+      "escape",
+    ],
+    levelId: "mars",
+    stage: { spawns: horde(1, 34, 34, "elon_mosque") },
+    showMs: 5000,
+    fire: (ctx) => ctx.fell(),
+  },
   {
     id: "boss-slam",
     icon: "spell_ground_slam",

@@ -11,6 +11,7 @@ import {
   setAutoStatGainsEnabled,
   setBalanceTuning,
   setCutscenesEnabled,
+  setDeathScenesEnabled,
   setDialogueEnabled,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
@@ -219,6 +220,19 @@ export type DialogueScenes = "on" | "off";
  * presentation gate only. */
 export type Cutscenes = "on" | "off";
 
+/** DEATH SCENES: a gameplay preference (SETTINGS → GAMEPLAY) for the game's two
+ * scripted death cinematics — the BOSS DEATH RITE played over a felled boss
+ * (the finisher: it goes to its knees, the horde is held off, the hero closes
+ * and ends it) and the hero's own DEATH SCENE (the tableau the horde gathers
+ * for before the YOU DIED modal). `on` (the default) plays both; `off` sends a
+ * boss straight to its last words and a fallen hero straight to the modal.
+ * Applied to the engine via `setDeathScenesEnabled`.
+ *
+ * NOT A GORE SWITCH. What is graphic about a death has its own gate — the
+ * device's MATURE CONTENT policy and the player's EXTRA GORE row, folded into
+ * `bloodAmount()`. This one only decides whether the game STOPS to show you. */
+export type DeathScenes = "on" | "off";
+
 /** GAME SPEED: how fast a run plays. The whole simulation is fast-forwarded by
  * running MORE fixed game-loop steps per frame — never bigger steps — so `1` is
  * real time and `2`/`4`/`8` run the run that many times as fast while staying
@@ -324,6 +338,9 @@ export type GameSettings = {
   dialogue: DialogueScenes;
   /** Display preference: prelude cutscenes that open a level (see Cutscenes). */
   cutscenes: Cutscenes;
+  /** Gameplay preference: the scripted death cinematics — the boss finisher and
+   * the hero's death tableau (see DeathScenes). */
+  deathScenes: DeathScenes;
   /** Developer fast-forward: how fast a run plays, real time (1) up to 8×,
    * chosen in the DEVELOPER → BOT VIEW flow (see GameSpeed). */
   gameSpeed: GameSpeed;
@@ -459,6 +476,10 @@ function defaults(): GameSettings {
     // talking turns dialogue and/or cutscenes off.
     dialogue: "on",
     cutscenes: "on",
+    // The finisher and the death tableau both play out of the box — they are
+    // the shipped experience. A player replaying a map they have cleared five
+    // times turns them off to keep the pace up.
+    deathScenes: "on",
     // Runs play at real time; only a developer changes this, from the BOT VIEW
     // flow, to fast-forward the autopilot (a normal player never sees it).
     gameSpeed: 1,
@@ -800,6 +821,10 @@ function load(): GameSettings {
         stored.cutscenes === "on" || stored.cutscenes === "off"
           ? stored.cutscenes
           : base.cutscenes,
+      deathScenes:
+        stored.deathScenes === "on" || stored.deathScenes === "off"
+          ? stored.deathScenes
+          : base.deathScenes,
       gameSpeed: clampGameSpeed(stored.gameSpeed),
       botViewSpec: isBotViewSpecId(stored.botViewSpec)
         ? stored.botViewSpec
@@ -854,6 +879,7 @@ setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
 setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
+setDeathScenesEnabled(settings.deathScenes === "on");
 setStoreForced(settings.storeForce === "on");
 setGeneratedMapsEnabled(settings.generatedMaps === "on");
 setGeneratedMapSize(settings.generatedMapSize);
@@ -882,6 +908,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setAutoEquipEnabled(settings.autoEquip === "on");
   setDialogueEnabled(settings.dialogue === "on");
   setCutscenesEnabled(settings.cutscenes === "on");
+  setDeathScenesEnabled(settings.deathScenes === "on");
   setStoreForced(settings.storeForce === "on");
   setGeneratedMapsEnabled(settings.generatedMaps === "on");
   setGeneratedMapSize(settings.generatedMapSize);

@@ -430,6 +430,41 @@ export type EnemyDef = {
    * story death lands harder than a nameless minion's. One string per line.
    */
   lastWords?: string[];
+  /**
+   * WHICH DEATH RITE this boss dies by — the scripted send-off played over it
+   * before its last words (`death-rites/catalog.ts`, `boss-death.ts`). Named
+   * rather than described, exactly as a set-piece ability is: the rite is a
+   * catalog entry, so a boss says which end it gets and never how it works.
+   *
+   * OPTIONAL, AND A MISSING ONE IS NOT A BOSS WITHOUT A SEND-OFF. It falls back
+   * to `dismantle`, which reads the victim's own GORE FAMILY and so is already
+   * correct for a body, a machine, a haunting and a rift-thing alike — so a
+   * boss (a MOD's included) gets the full three beats for free and `death:` is
+   * an upgrade it earns. Same bargain the authored cast poses strike.
+   *
+   * MEANINGLESS ON ANYTHING BUT A BOSS: an elite is on the ordinary gore
+   * ladder, and the build refuses a `death:` on a non-boss rather than letting
+   * it sit there looking as though it does something.
+   */
+  death?: string;
+  /**
+   * WHAT THE HERO SAYS as the rite resolves — the line over the blow, or over
+   * the coward going through his own exit.
+   *
+   * A BARK, not dialogue, and the distinction is the whole reason it exists as
+   * its own field: every other spoken line in the game freezes the run into the
+   * `dialogue` phase, which is exactly wrong for a line whose job is to land ON
+   * a moment the player is watching. It floats over the hero and play never
+   * stops — the same rule `BossAbility.bark` follows, and the same event.
+   *
+   * It is the HERO's, so it answers the boss rather than describing the move:
+   * he has just spent a level being lectured by this person, and this is the
+   * only place he gets to reply. Manuscript-governed like every other line.
+   *
+   * Boss-only, and optional: a boss without one simply finishes in silence,
+   * which is right for the ones that were never talking to him.
+   */
+  deathBark?: string[];
   ai: {
     /** Wakes and chases when the player gets this close. */
     aggroRadius: number;

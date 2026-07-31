@@ -117,6 +117,7 @@ export function buildGameplayMenu(ctx: MenuContext): MenuEntry[] {
       ),
       dialogue: onOffRow(ctx, "gameplay", "dialogue", "dialogue"),
       cutscenes: onOffRow(ctx, "gameplay", "cutscenes", "cutscenes"),
+      "death-scenes": onOffRow(ctx, "gameplay", "death-scenes", "deathScenes"),
     }),
     backRow(ctx, "gameplay"),
   ];

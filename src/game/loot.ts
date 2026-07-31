@@ -83,6 +83,8 @@ import {
   mobLevelTierBonus,
   overkillEfficiency,
 } from "./menace.ts";
+import { enterBossDeath } from "./boss-death.ts";
+import { areDeathScenesEnabled } from "./flags.ts";
 import { equippedProcs } from "./spells.ts";
 import {
   maybeCapThought,
@@ -706,17 +708,33 @@ export function hitEnemy(
   // pays its guaranteed drops in the scramble, and gasps its parting words
   // through the same death-scene box. XP still flows: the fight was won.
   if (def.flees) {
-    state.landmarks.push({
-      kind: def.flees.landmark,
-      sprite: def.flees.landmark,
-      anchor: "center",
-      pos: { ...enemy.pos },
-    });
-    state.events.push({
-      type: "bossFled",
-      pos: { ...enemy.pos },
-      defId: enemy.defId,
-    });
+    // THE FLIGHT RITE (boss-death.ts): rather than blinking out where he stood
+    // with the rift appearing under him, the coward reels, tears his way out a
+    // few strides off, BOLTS for it with his back to the hero, and is drawn
+    // through it spinning. The landmark and the `bossFled` event move to the
+    // end of that beat — the exit has to open where he is running TO, and the
+    // rout is not booked until he is actually gone.
+    //
+    // Muted and death-scenes-off runs keep the instant escape below, which is
+    // the same bargain the death rite strikes: a headless campaign simulation
+    // must not spend seconds per boss watching a man run away.
+    const rite =
+      !state.dialogueMuted && areDeathScenesEnabled() && def.role === "boss";
+    if (rite) {
+      enterBossDeath(state, enemy, def.death);
+    } else {
+      state.landmarks.push({
+        kind: def.flees.landmark,
+        sprite: def.flees.landmark,
+        anchor: "center",
+        pos: { ...enemy.pos },
+      });
+      state.events.push({
+        type: "bossFled",
+        pos: { ...enemy.pos },
+        defId: enemy.defId,
+      });
+    }
     // The fight was won where it fled: the map remembers it like a kill.
     addMapMarker(
       state,
@@ -740,7 +758,11 @@ export function hitEnemy(
       ),
     );
     if (def.loot) dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
-    startDeathWords(state, enemy.defId);
+    // His parting words go over the rift he just went through, not over the
+    // spot he was standing on when he decided to run — so the rite defers them
+    // exactly as the death rite does. `finishBossDeath` calls this very
+    // function once he is gone.
+    if (!rite) startDeathWords(state, enemy.defId);
     return;
   }
 
@@ -1040,27 +1062,55 @@ export function killEnemy(
   // on EVERY kill once the hero out-levels a first campaign pass (see function).
   maybeDropWorldUnique(state, def, enemy);
 
-  if (def.role === "boss") {
+  // A BOSS gets the scripted send-off — the DEATH RITE (boss-death.ts): it
+  // goes to its knees, the horde is held off, the hero closes and finishes it,
+  // and only then does it speak. The two things that used to fire right here —
+  // `bossDefeated` and the landmark corpse — now fire at the END of the rite,
+  // over the wreckage it leaves, which is the whole reason the beat exists.
+  //
+  // The DROPS above are deliberately paid out first and unchanged: the loot is
+  // the player's the instant the blow lands, and a rite that held it back would
+  // be a cinematic standing between them and what they earned.
+  //
+  // A DIALOGUE-MUTED run (the autopilot's bot runs, the headless simulator, a
+  // `?scenario=` stage) skips the rite exactly as it skips every other scene: a
+  // campaign simulation must not spend seconds per boss watching a finisher
+  // nobody is looking at, and `simulate-run.mjs` plays whole campaigns.
+  const rite =
+    def.role === "boss" && !state.dialogueMuted && areDeathScenesEnabled();
+  if (rite) {
+    enterBossDeath(state, enemy, def.death);
+  } else if (def.role === "boss") {
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
-    // Remember where it fell: if the player chooses to STAY on the cleared
-    // field (the victory menu), this becomes the corpse they tap to re-open
-    // the menu and finally move on (see step/ / render).
     state.bossCorpse = { pos: { ...enemy.pos }, sprite: def.sprite };
   }
 
   // A unique mob's send-off: reuse the dialogue box to gasp its last words
   // (elites and bosses). Comes after XP and drops so a level-up earned by
   // the killing blow simply waits its turn behind the death scene.
-  startDeathWords(state, enemy.defId);
+  //
+  // A boss running its RITE speaks at the END of it instead — `finishBossDeath`
+  // calls this very function over the wreck. Calling it here as well would open
+  // the death scene behind the rite and hand the player a text box to tap
+  // through before the finisher had played.
+  if (!rite) startDeathWords(state, enemy.defId);
 
   // A story beat pinned to this kill: the first of its kind on this level
   // stops the run for the hero's own read on it (once per run).
-  maybeFirstKillThought(state, def.id, runLevelDef(state).firstKillThoughts);
-  // The recurring cap-farm mutter: if the hero has out-levelled this map, every
-  // so often he grumbles that the fights are pathetic and he should hurry to
-  // find Ada. Repeats on a cooldown (see maybeCapThought); yields if the pinned
-  // beat above already put a scene up.
-  maybeCapThought(state);
+  //
+  // Deferred with the last words for a boss running its rite, and it MUST be:
+  // both of these raise a scene by setting `phase`, and their only guard is
+  // `state.dialogue !== null` — which a rite does not set. Left here they would
+  // clobber `bossDeath` on the very tick it opened and the finisher would never
+  // play at all.
+  if (!rite) {
+    maybeFirstKillThought(state, def.id, runLevelDef(state).firstKillThoughts);
+    // The recurring cap-farm mutter: if the hero has out-levelled this map,
+    // every so often he grumbles that the fights are pathetic and he should
+    // hurry to find Ada. Repeats on a cooldown (see maybeCapThought); yields if
+    // the pinned beat above already put a scene up.
+    maybeCapThought(state);
+  }
 }
 
 /**

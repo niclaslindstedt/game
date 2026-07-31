@@ -428,7 +428,8 @@ type OnOffKey =
   | "extraGore"
   | "healthBars"
   | "dialogue"
-  | "cutscenes";
+  | "cutscenes"
+  | "deathScenes";
 
 /**
  * A boolean settings row: the tree's label plus a pixel switch (see

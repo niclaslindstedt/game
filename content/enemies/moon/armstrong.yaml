@@ -31,6 +31,14 @@ dialogue:
       - MARS? THEN THE CRATES - THEY CARRIED A GIRL THROUGH HERE LAST NIGHT. DID YOU SEE HER?
   - - SNEAKERS. LOUD. SHE BIT TWO OF THEM. THEY CRATED HER FOR THE MARS RUN WITH ALL THEY OWN.
   - - YOU WANT TO FOLLOW? THEN TAKE THE WATCH FROM ME, EARTHLING. I ONLY EVER LOSE TO THE WORTHY.
+# THE DEATH RITE — It floats: there is nothing to pin and nothing to stand on, so the blade goes UP through it and the suit vents what was inside.
+death: unmaking
+
+# THE HERO'S LINE as the rite lands (see EnemyDef.deathBark) — a bark,
+# floated over him while play continues, never a box.
+deathBark:
+  - FIRST MAN UP HERE. SOMEBODY SHOULD HAVE COME BACK FOR YOU.
+
 lastWords:
   - THE WATCH... HHH... IT'S... YOURS... NOW...
 mechanics:

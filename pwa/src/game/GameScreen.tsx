@@ -670,7 +670,14 @@ export function GameScreen({
         // so each of them keeps full controller navigation, and only live play
         // gives it up. Set every tick rather than on transitions so no path out
         // of a phase can leave it stuck.
-        setGamepadKeysSuspended(state.phase === "playing");
+        // `bossDeath` joins `playing` on the FIELD side of that split, and it is
+        // the one phase where that is not obvious: it puts no menu up, the run
+        // is still simulating, and the only press it wants is "get on with it"
+        // (handled in controls.ts). Left out, the arrow keys would start driving
+        // menus in the middle of a finisher.
+        setGamepadKeysSuspended(
+          state.phase === "playing" || state.phase === "bossDeath",
+        );
         // The driving seat: the developer BOT VIEW / `?bot=` playtest bot, or
         // the paid AUTO PILOT's own bot while its engine meter runs.
         const drivingBot = botDriver.resolveDrivingBot();
