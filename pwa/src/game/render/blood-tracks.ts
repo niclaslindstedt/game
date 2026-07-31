@@ -40,7 +40,7 @@
 import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
-import { bloodAmount } from "../game-screen/blood-hit.ts";
+import { bloodTrackAmount } from "../game-screen/gore-gate.ts";
 import { syncHeroGear, wadeHero } from "../game-screen/hero-soak.ts";
 import { bloodAt } from "./blood-ground.ts";
 import { RUNG_AT } from "./blood-rungs.ts";
@@ -174,7 +174,7 @@ function ensureRun(state: GameState): boolean {
 export function stepBloodTracks(state: GameState): void {
   const first = !ensureRun(state);
   syncHeroGear(state);
-  const amount = bloodAmount();
+  const amount = bloodTrackAmount();
   const pos = state.player.pos;
   const nowMs = state.stats.timeMs;
   const dtMs = Math.max(0, nowMs - lastMs);
@@ -297,9 +297,10 @@ export function drawBloodTracks(
   // The trail is not drawn at all once the gore gate is shut — and this is NOT
   // the draw-time gate the blood system forbids. Nothing has been RECORDED while
   // it was shut (`stepBloodTracks` stops at the same check), so there is no
-  // hidden pile to hand back; a player who turns EXTRA GORE off mid-run gets a
-  // clean floor immediately and, turning it back on, exactly the trail he had.
-  if (bloodAmount() == null) return;
+  // hidden pile to hand back; a player who turns BOOTPRINTS (or HUMAN GORE itself)
+  // off mid-run gets a clean floor immediately and, turning it back on, exactly
+  // the trail he had.
+  if (bloodTrackAmount() == null) return;
   const tx0 = Math.max(0, Math.floor(camera.x / TILE) - 1);
   const ty0 = Math.max(0, Math.floor(camera.y / TILE) - 1);
   const tx1 = Math.min(

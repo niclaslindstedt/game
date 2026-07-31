@@ -10,8 +10,9 @@
 //  - the FLOOR marks his boots on its own, and stops at the knees;
 //  - a zone is a GEAR SLOT, so a swap cleans exactly what was swapped and
 //    nothing else — the only way any of it ever gets cleaner;
-//  - EXTRA GORE off means nothing is recorded AND nothing is read back, so the
-//    switch can't hide a mess it hands over the moment it goes on again.
+//  - BLOODY HERO (or HUMAN GORE itself) off means nothing is recorded AND nothing is
+//    read back, so the switch can't hide a mess it hands over the moment it
+//    goes on again.
 
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -35,6 +36,7 @@ import {
 } from "../pwa/src/game/render/soak-ladder.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
 import { startGame } from "./helpers.ts";
+import { ALL_GORE_ON } from "./gore-settings.ts";
 
 const MINION_HP = 100;
 
@@ -46,7 +48,7 @@ function blow(bars = 1): BloodBlow {
 /** A fresh run with the soak wiped, and the hero parked at a known spot. */
 function fresh() {
   resetHeroSoak();
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({ ...ALL_GORE_ON, blood: 1 });
   const state = startGame();
   state.player.pos = { x: 400, y: 400 };
   syncHeroGear(state);
@@ -80,7 +82,7 @@ function wade(state: ReturnType<typeof fresh>, wetness: number, ms: number) {
 
 beforeEach(() => {
   resetHeroSoak();
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({ ...ALL_GORE_ON, blood: 1 });
 });
 
 describe("soakHero", () => {
@@ -222,25 +224,36 @@ describe("syncHeroGear", () => {
 });
 
 describe("the gore gate", () => {
-  it("records nothing and reads back nothing with EXTRA GORE off", () => {
+  it("records nothing and reads back nothing with BLOODY HERO off", () => {
     const state = fresh();
     land(state, 4, 20);
     expect(heroSoak(state).chest).toBeGreaterThan(0);
-    updateSettings({ extraGore: "off" });
+    updateSettings({ goreSoak: "off" });
     // Read back clean…
     expect(heroSoak(state).chest).toBe(0);
     // …and nothing accumulates while it is shut, which is what makes reading
     // the gate at the top of `heroSoak` honest rather than a hidden pile.
     const shut = fresh();
-    updateSettings({ extraGore: "off" });
+    updateSettings({ goreSoak: "off" });
     soakHero(shut, bloodBlow(100, 100, "minion", true) ?? blow(), {
       x: shut.player.pos.x,
       y: shut.player.pos.y,
     });
     wadeHero(shut, 1, 5000);
-    updateSettings({ extraGore: "on" });
+    updateSettings(ALL_GORE_ON);
     expect(heroSoak(shut).chest).toBe(0);
     expect(heroSoak(shut).feet).toBe(0);
+  });
+
+  it("washes clean when HUMAN GORE itself goes off", () => {
+    // The soak is blood art in blood's colours: HUMAN GORE off takes it with it
+    // however BLOODY HERO is set, which is what the LOCKED row on the GORE page
+    // is telling the player.
+    const state = fresh();
+    land(state, 4, 20);
+    expect(heroSoak(state).chest).toBeGreaterThan(0);
+    updateSettings({ goreBlood: "off", goreSoak: "on" });
+    expect(heroSoak(state).chest).toBe(0);
   });
 
   it("goes dry at a BLOOD amount of zero", () => {

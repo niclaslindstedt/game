@@ -68,8 +68,9 @@
 // the SATURATION is the running total either way, because a tile with blood and
 // oil on it is a dirtier tile whichever one you can see.
 //
-// The whole feature is gated on the EXTRA GORE setting, checked by the caller
-// (`bloodBlow`) before anything reaches here.
+// The whole feature is gated on the victim's own GORE switch, checked by the
+// caller (`bloodBlow`, through game-screen/gore-gate.ts) before anything
+// reaches here.
 
 import { type GameState } from "@game/core";
 

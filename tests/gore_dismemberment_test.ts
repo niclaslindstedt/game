@@ -37,6 +37,7 @@ import {
   type KillBlow,
 } from "../pwa/src/game/game-screen/kill-presentation.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
+import { ALL_GORE_ON } from "./gore-settings.ts";
 
 const HERO = { x: 500, y: 500 };
 const VICTIM = { x: 900, y: 500 };
@@ -66,7 +67,7 @@ function death(over: Partial<KillBlow> = {}) {
 
 beforeEach(() => {
   setDevicePolicyForTest(null); // unmanaged: everything allowed
-  updateSettings({ knockback: 1, extraGore: "on", blood: 1 });
+  updateSettings({ knockback: 1, ...ALL_GORE_ON, blood: 1 });
 });
 
 describe("what a killing blow leaves of the body", () => {
@@ -214,11 +215,35 @@ describe("the mature-content gate on it", () => {
     expect(censored.launch!.dist).toBeGreaterThan(0);
   });
 
-  it("obeys the player's own EXTRA GORE row under the device switch", () => {
-    updateSettings({ extraGore: "off" });
+  it("obeys the victim's own family switch under the device one", () => {
+    updateSettings({ goreBlood: "off" });
     expect(death({ edged: true, damage: 400 }).gore).toBeNull();
-    updateSettings({ extraGore: "on" });
+    // …and only that family's: a machine still comes apart.
+    expect(
+      death({ edged: true, damage: 400, family: "sparks" }).gore,
+    ).not.toBeNull();
+    updateSettings(ALL_GORE_ON);
     expect(death({ edged: true, damage: 400 }).gore).not.toBeNull();
+  });
+
+  it("obeys the two KIND switches, one without the other", () => {
+    // CLEAVES and GIBS are separate rows because they are separate sights: a
+    // blade opening a body and a mass bursting it are not the same request.
+    updateSettings({ goreCleaves: "off" });
+    expect(death({ edged: true, damage: 400 }).gore).toBeNull();
+    expect(death({ edged: false, damage: 400 }).gore?.kind).toBe("gib");
+    updateSettings({ goreCleaves: "on", goreGibs: "off" });
+    expect(death({ edged: false, damage: 400 }).gore).toBeNull();
+    expect(death({ edged: true, damage: 400 }).gore?.kind).toBe("cleave");
+  });
+
+  it("falls back to the ordinary death, never to the other kind", () => {
+    // The tempting bug: a switched-off cleave that bursts the body instead,
+    // which hands a player who asked for LESS the more graphic of the two.
+    updateSettings({ goreCleaves: "off" });
+    const cut = death({ edged: true, damage: 400 });
+    expect(cut.gore).toBeNull();
+    expect(cut.launch).not.toBeNull();
   });
 
   it("obeys the developer BLOOD amount at zero", () => {

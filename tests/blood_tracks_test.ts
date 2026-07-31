@@ -27,6 +27,7 @@ import {
 } from "../pwa/src/game/render/blood-tracks.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
 import { startGame } from "./helpers.ts";
+import { ALL_GORE_ON } from "./gore-settings.ts";
 
 /** How far apart two frames put him, in world px. Under the tracker's teleport
  * threshold, so every one of these is a stride rather than a warp. */
@@ -37,7 +38,7 @@ function fresh() {
   resetBloodGround();
   resetBloodTracks();
   resetHeroSoak();
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({ ...ALL_GORE_ON, blood: 1 });
   const state = startGame();
   state.player.pos = { x: 400, y: 400 };
   // One frame to adopt the run — the tracker measures every step from the last
@@ -68,7 +69,7 @@ function walk(state: ReturnType<typeof fresh>, steps: number) {
 }
 
 beforeEach(() => {
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({ ...ALL_GORE_ON, blood: 1 });
 });
 
 describe("stepBloodTracks", () => {
@@ -135,10 +136,21 @@ describe("stepBloodTracks", () => {
     expect(last).toBeLessThan(60);
   });
 
-  it("lays nothing at all with EXTRA GORE off", () => {
+  it("lays nothing at all with BOOTPRINTS off", () => {
     const state = fresh();
     pool(state);
-    updateSettings({ extraGore: "off" });
+    updateSettings({ goreTracks: "off" });
+    walk(state, 40);
+    expect(bloodPrintCount()).toBe(0);
+  });
+
+  it("lays nothing at all with HUMAN GORE off either", () => {
+    // The trail is blood art in blood's colours, so HUMAN GORE off takes it with
+    // it whatever its own row says — which is why that row is shown LOCKED on the
+    // GORE page rather than as a switch that has stopped doing anything.
+    const state = fresh();
+    pool(state);
+    updateSettings({ goreBlood: "off", goreTracks: "on" });
     walk(state, 40);
     expect(bloodPrintCount()).toBe(0);
   });

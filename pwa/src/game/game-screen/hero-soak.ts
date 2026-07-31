@@ -58,7 +58,8 @@ import type { GameState } from "@game/core";
 import { clamp01 } from "@game/lib/vec.ts";
 
 import { NO_SOAK, SOAK_ZONES, type HeroSoak } from "../render/soak-ladder.ts";
-import { bloodAmount, type BloodBlow } from "./blood-hit.ts";
+import type { BloodBlow } from "./blood-hit.ts";
+import { heroSoakAmount } from "./gore-gate.ts";
 
 /** Local shorthand for the ladder's zone union. */
 type Zone = (typeof SOAK_ZONES)[number];
@@ -202,7 +203,7 @@ export function heroSoak(state: GameState): HeroSoak {
   // while it is shut (`soakHero` and `wadeHero` stop at the same check), so
   // there is no hidden mess waiting to be handed back — switching it on again
   // returns him to exactly what he was wearing when it went off.
-  if (bloodAmount() == null) return CLEAN;
+  if (heroSoakAmount() == null) return CLEAN;
   return soak;
 }
 
@@ -239,7 +240,7 @@ export function soakHero(
   blow: BloodBlow,
   at: { x: number; y: number },
 ): void {
-  const amount = bloodAmount();
+  const amount = heroSoakAmount();
   if (amount == null) return;
   ensureRun(state);
   const dist = Math.hypot(at.x - state.player.pos.x, at.y - state.player.pos.y);
@@ -273,7 +274,7 @@ export function wadeHero(
   wetness: number,
   dtMs: number,
 ): void {
-  const amount = bloodAmount();
+  const amount = heroSoakAmount();
   if (amount == null || wetness <= 0 || dtMs <= 0) return;
   ensureRun(state);
   const dt = Math.min(dtMs, WADE_MAX_STEP_MS) / 1000;

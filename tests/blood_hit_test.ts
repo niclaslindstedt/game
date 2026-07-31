@@ -5,8 +5,8 @@
 // its result, so both are testable without a canvas. What is pinned here is the
 // promise the feature makes: the blood SCALES WITH THE DAMAGE, it is priced in
 // the victim's own healthbars rather than in raw numbers (so it holds across the
-// campaign), and EXTRA GORE off means nothing is produced at all — not merely
-// nothing drawn.
+// campaign), and a family's GORE switch off means nothing is produced at all —
+// not merely nothing drawn — for that family and no other.
 
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -20,11 +20,12 @@ import {
   RUNG_AT,
 } from "../pwa/src/game/render/blood-rungs.ts";
 import { getSettings, updateSettings } from "../pwa/src/game/settings.ts";
+import { ALL_GORE_ON } from "./gore-settings.ts";
 
 const MINION_HP = 100;
 
 beforeEach(() => {
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({ ...ALL_GORE_ON, blood: 1 });
 });
 
 /** A blow taking `bars` of a minion's own health. */
@@ -142,10 +143,24 @@ describe("bloodBlow", () => {
     expect(bloodBlow(1, 100_000, "elite", true)!.pool).toBe(1);
   });
 
-  it("produces nothing at all with EXTRA GORE off", () => {
-    updateSettings({ extraGore: "off" });
+  it("produces nothing at all with that kind of body switched off", () => {
+    updateSettings({ goreBlood: "off" });
     expect(blow(1, true)).toBeNull();
-    expect(getSettings().extraGore).toBe("off");
+    expect(getSettings().goreBlood).toBe("off");
+  });
+
+  it("switches one family off without touching the other three", () => {
+    // The whole reason the one EXTRA GORE switch became a page: a player who
+    // does not want to watch a PERSON bleed is not asking a rover to stop
+    // throwing sparks.
+    updateSettings({ goreBlood: "off" });
+    expect(bloodBlow(MINION_HP, MINION_HP, "minion", true, "blood")).toBeNull();
+    for (const family of ["ecto", "sparks", "cosmic"] as const) {
+      expect(
+        bloodBlow(MINION_HP, MINION_HP, "minion", true, family),
+        `${family} stopped spilling when BLOOD went off`,
+      ).not.toBeNull();
+    }
   });
 
   it("produces nothing at all with the developer amount at zero", () => {

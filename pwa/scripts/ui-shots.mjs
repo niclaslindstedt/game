@@ -230,6 +230,14 @@ for (const vp of VIEWPORTS) {
       await shot(`settings-${page_}`);
       await page.keyboard.press("Escape");
     }
+    // VIDEO's child: the GORE page. Eight switches and a reset make it the
+    // longest settings page in the game, so it is the one most likely to
+    // overflow a short viewport — which is exactly why it is swept.
+    await click("settings-video");
+    await click("video-gore");
+    await shot("settings-gore");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
     await click("settings-developer");
     await shot("developer");
     await click("developer-balance");
