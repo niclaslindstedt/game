@@ -13,7 +13,7 @@ import { cacheIdForBase } from "./src/app/pwa.ts";
 import {
   IDENTITY,
   FULL_TITLE,
-  SEO_TITLE,
+  SOCIAL_TITLE,
   SEO_DESCRIPTION,
 } from "./src/identity.ts";
 
@@ -114,9 +114,10 @@ function fillIdentityTokens(html: string, appVersion: string): string {
     FULL_TITLE: escapeHtml(FULL_TITLE),
     TAGLINE: escapeHtml(IDENTITY.tagline),
     DESCRIPTION: escapeHtml(IDENTITY.description),
-    // Search voice, not brand voice — these feed the title tag, the meta
-    // description and the social cards. See `GameIdentity.seo`.
-    SEO_TITLE: escapeHtml(SEO_TITLE),
+    // Search voice, not brand voice — these feed the meta description and the
+    // social cards. See `GameIdentity.seo`. The `<title>` takes plain `TITLE`:
+    // a tab has no room for a suffix (see `SOCIAL_TITLE`).
+    SOCIAL_TITLE: escapeHtml(SOCIAL_TITLE),
     SEO_DESCRIPTION: escapeHtml(SEO_DESCRIPTION),
     SITE_URL: IDENTITY.siteUrl,
     REPO_URL: IDENTITY.repoUrl,
