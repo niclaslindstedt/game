@@ -25,6 +25,16 @@
 // preserves INSERTION order, so two structurally equal worlds assembled by two
 // code paths can stringify differently and the difference would read as a
 // change.
+//
+// **AND IT IS CHECKED ON A RUN, NOT ONLY ON A LEVEL — which is the check that
+// was missing.** `createGame` was always deterministic; a RUN was not the same
+// thing as a `createGame`, because the app performed several more mutations
+// before the first tick (the campaign chain, the purse, the thoughts already
+// read, an opening already watched, a bot run's dialogue mute). A suite that
+// only ever compared bare levels would have gone on passing while a session and
+// its client disagreed about every one of them. So the parameters below are a
+// REAL run's, and the assertion is that the run — not the terrain — is the same
+// on both sides. See `src/game/session-setup.ts`.
 
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -32,8 +42,13 @@ import { fileURLToPath } from "node:url";
 import { canonicalJson } from "@ui/lib/canonical-json.ts";
 import { describe, expect, it } from "vitest";
 
-import { createGame, type GameState } from "@game/core";
+import {
+  createGame,
+  createRunFromParams,
+  type GameState,
+} from "@game/core";
 import { STATIC_FIELDS } from "@game/wire/split.ts";
+import type { SessionParams } from "@game/wire/protocol.ts";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -53,6 +68,99 @@ function staticWorld(state: GameState): string {
   world.playerSpawn = record.playerSpawn;
   return canonicalJson(world);
 }
+
+/**
+ * A run with every parameter set to something OTHER than its default.
+ *
+ * That is the whole point: a parameter left at its default cannot fail this
+ * test, so a field that one side applies and the other does not would sail
+ * through a fixture built from the plain arguments. Written as a
+ * `SessionParams` and passed straight to `createRunFromParams` — the two shapes
+ * are meant to be the same shape, and this is where that stops being a claim.
+ */
+const RUN: SessionParams = {
+  seed: 20260801,
+  levelId: "moon",
+  difficulty: "hard",
+  loadout: null,
+  respec: false,
+  clearedLevels: ["spacez_hq"],
+  merchantDiscovered: true,
+  campaignQuests: null,
+  coins: 4242,
+  seenThoughts: ["moon_arrival"],
+  openingSkip: "story",
+  muteDialogue: true,
+  generatedMaps: false,
+  generatedMapSize: "random",
+};
+
+/** Everything a run holds that both sides must agree on, hashed as one string.
+ * Wider than `staticWorld` on purpose: this is the check that a PARAMETER
+ * landed, and the parameters mostly land on the hero and the run's flags. */
+function runWorld(state: GameState): string {
+  const record = state as unknown as Record<string, unknown>;
+  return canonicalJson({
+    world: staticWorld(state),
+    phase: record.phase,
+    dialogueMuted: record.dialogueMuted,
+    thoughtsSeen: record.thoughtsSeen,
+    quests: record.quests,
+    player: record.player,
+  });
+}
+
+describe("a run built from its parameters", () => {
+  it("is the same run twice", () => {
+    expect(runWorld(createRunFromParams(RUN))).toBe(
+      runWorld(createRunFromParams(RUN)),
+    );
+  });
+
+  it("applies every parameter it was given", () => {
+    // The guard on the guard, and the one that would have caught the original
+    // bug: a builder that quietly ignored a field would still be deterministic.
+    const state = createRunFromParams(RUN);
+    expect(state.player.coins).toBe(4242);
+    expect(state.thoughtsSeen).toContain("moon_arrival");
+    expect(state.dialogueMuted).toBe(true);
+    // `story` skips the prelude, the monologue and the opening strike, and
+    // leaves the hero armed rather than disarmed for a beat he has read before.
+    expect(state.phase).toBe("playing");
+    expect(state.player.disarmed).toBe(false);
+  });
+
+  it("skips exactly as much of the opening as it was told to", () => {
+    // The three states are three different landings, and conflating them is
+    // how a developer warp-in ends up sitting on a title card nobody asked
+    // for. `none` leaves the run on its prelude; `story` and `all` both reach
+    // play, by different routes.
+    const none = createRunFromParams({ ...RUN, openingSkip: "none" });
+    expect(none.phase).toBe("cutscene");
+    const all = createRunFromParams({ ...RUN, openingSkip: "all" });
+    expect(all.phase).toBe("playing");
+    // An unknown name is read as `none` rather than trusted: this parameter
+    // arrives from a wire, where it is a claim rather than a fact.
+    const junk = createRunFromParams({ ...RUN, openingSkip: "everything" });
+    expect(junk.phase).toBe("cutscene");
+  });
+
+  it("is NOT the same run as one built from the bare arguments", () => {
+    // The assertion that gives this file its point. `createGame` with the same
+    // seed, level and difficulty is what the client used to build, and it is a
+    // DIFFERENT run — an unmuted hero with an empty purse sitting on his
+    // prelude. Every one of those differences used to be a "correction" on the
+    // first delta.
+    const bare = createGame(RUN.seed, RUN.levelId, "hard");
+    expect(runWorld(createRunFromParams(RUN))).not.toBe(runWorld(bare));
+  });
+
+  it("builds the same run in a SECOND PROCESS", () => {
+    expect(buildRunInChildProcess(RUN)).toBe(
+      runWorld(createRunFromParams(RUN)),
+    );
+  });
+});
 
 describe("same-seed determinism", () => {
   it("builds an identical world twice in one process", () => {
@@ -93,6 +201,43 @@ describe("same-seed determinism", () => {
  * uses — so this is genuinely a second process with its own module graph and
  * its own catalogs, not a second call in this one.
  */
+/**
+ * Build the same RUN in a fresh `node` and hash it the same way.
+ *
+ * The parameters are serialized rather than re-typed, so the child cannot
+ * silently disagree about them — which is the failure this whole file exists
+ * to catch, one level up.
+ */
+function buildRunInChildProcess(params: SessionParams): string {
+  const source = `
+    import { register } from "node:module";
+    register("./scripts/game-alias-loader.mjs", "file://${repoRoot}");
+    const { createRunFromParams } = await import("./src/index.ts");
+    const { STATIC_FIELDS } = await import("./server/wire/split.ts");
+    const { canonicalJson } = await import("./pwa/src/lib/canonical-json.ts");
+    const state = createRunFromParams(${JSON.stringify(params)});
+    const world = {};
+    for (const field of STATIC_FIELDS) world[field] = state[field];
+    world.obstacles = state.obstacles;
+    world.spawners = state.spawners;
+    world.packs = state.packs;
+    world.playerSpawn = state.playerSpawn;
+    process.stdout.write(canonicalJson({
+      world: canonicalJson(world),
+      phase: state.phase,
+      dialogueMuted: state.dialogueMuted,
+      thoughtsSeen: state.thoughtsSeen,
+      quests: state.quests,
+      player: state.player,
+    }));
+  `;
+  return execFileSync(process.execPath, ["--input-type=module", "-e", source], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+}
+
 function buildInChildProcess(
   seed: number,
   levelId: string,

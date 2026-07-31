@@ -27,15 +27,16 @@
 // `@game/menu` and the import-free `@game/wire/*` leaves alone. `pwa/scripts/
 // check-seo.mjs` is what catches the mistake; do not raise the number.
 
-import { createGame, type GameState, type GameInput } from "@game/core";
+import {
+  createRunFromParams,
+  type GameState,
+  type GameInput,
+} from "@game/core";
 import {
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
-  type BuildSnapshot,
   type CommandArg,
-  type Difficulty,
   type GeneratedMapSizeSetting,
-  type Loadout,
 } from "@game/core";
 
 import { decodeFrame, encodeFrame } from "@game/wire/codec.ts";
@@ -284,33 +285,23 @@ export function createNetClient(options: NetClientOptions): NetClient {
 }
 
 /**
- * Build the level locally from the session parameters.
+ * Build the RUN locally from the session parameters.
  *
- * The generated-maps pair are engine FLAGS rather than `createGame` arguments,
- * so they are applied first — a client that carved with the host's seed but its
- * own map-size setting would build a different world and then spend the whole
- * run being corrected by deltas about geometry it should never have had.
+ * The generated-maps pair are engine FLAGS rather than arguments, so they are
+ * applied first — a client that carved with the host's seed but its own
+ * map-size setting would build a different world and then spend the whole run
+ * being corrected by deltas about geometry it should never have had.
+ *
+ * Everything else goes through `createRunFromParams`, the SAME function the
+ * session used. That is the whole of why the first delta is empty: not that the
+ * two happen to agree, but that one function built both. A field applied here
+ * and not there (or there and not here) is sent as a "change" on the very first
+ * publish, for a run whose entire design is that the two start identical.
  */
 export function buildLocalState(params: SessionParams): GameState {
   setGeneratedMapsEnabled(params.generatedMaps);
   setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
-  const state = createGame(
-    params.seed,
-    params.levelId,
-    params.difficulty as Difficulty,
-    (params.loadout as Loadout | null) ?? undefined,
-    params.respec,
-    params.clearedLevels,
-    params.merchantDiscovered,
-  );
-  // Stamped exactly as the session stamps it, and for the delta's sake as much
-  // as the ride's: the client's fresh state IS its first baseline, so a field
-  // the server set at creation and this one did not would be sent as a change
-  // on the very first publish — for a run whose whole design is that the two
-  // start identical.
-  state.autopilot.build =
-    (params.autopilotBuild as BuildSnapshot | null) ?? null;
-  return state;
+  return createRunFromParams(params);
 }
 
 /** The refusal, in the terms the JOIN screen puts on screen. Both numbers are

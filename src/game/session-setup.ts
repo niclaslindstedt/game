@@ -1,0 +1,181 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// A RUN IS NOT `createGame(params)` — and this module is the correction.
+//
+// The whole STATIC replication tier rests on one claim: the client's own
+// `createGame` produces the same world the server's did, so the first delta is
+// nearly empty. That claim is TRUE of `createGame` and was FALSE of a RUN,
+// because the app performed several more mutations before the first tick — it
+// seeded the hero's campaign quest chain, funded his purse from his whole
+// banked wealth, marked the inner monologues he had already read, skipped an
+// opening he had already watched on this difficulty, and muted the dialogue for
+// a bot run. None of those could be expressed as session parameters, so a
+// session built from them would have held a hero with no campaign chain, an
+// empty purse, unread thoughts made unread again, and an opening the player has
+// sat through four times playing a fifth — and the client's first delta would
+// have carried every one of those as a "correction" to a run that was right to
+// begin with.
+//
+// **THE RULE THIS MODULE EXISTS TO ENFORCE: ANYTHING THE APP DOES TO A RUN
+// BEFORE ITS FIRST TICK IS A SESSION PARAMETER, NOT APP CODE.** A field added to
+// the app's run setup and not to `RunParams` is a desync, and it will present as
+// a replication bug three rooms into a level rather than as the missing line it
+// is. That is why this is ONE function called by all three: the app builds a
+// fresh run with it, the session server builds its authoritative run with it,
+// and an arriving client rebuilds the same run with it.
+//
+// **WHAT DELIBERATELY DOES NOT LIVE HERE.** A `?scenario=` is a developer
+// staging hook applied to a local run and never travels (a session that could be
+// handed an arbitrary scenario is a session a client could stage). And a PARKED
+// RUN or a CHECKPOINT RESTORE is not built from parameters at all — it ADOPTS an
+// arbitrary `GameState`, which is a different door into the session and is
+// written up as its own piece of work (see `docs/multiplayer-plan.md` §1.75.2).
+
+import { createGame } from "./create.ts";
+import { dismissIntro, skipCutscene, skipStoryOpening } from "./items/flow.ts";
+import { seedCampaignQuests } from "./quests/campaign.ts";
+import { markThoughtsSeen, muteDialogue } from "./story.ts";
+import type { CampaignQuestSave } from "./quests/campaign-save.ts";
+import type {
+  BuildSnapshot,
+  Difficulty,
+  GameState,
+  Loadout,
+} from "./types/index.ts";
+
+/**
+ * How much of a run's opening to skip before the first tick.
+ *
+ * Three states rather than a boolean, because the two skips are different
+ * verbs with different landing places and conflating them is how a warp-in ends
+ * up sitting on a title card nobody asked for.
+ */
+export type OpeningSkip =
+  /** Play the whole thing — the prelude, the monologue, the scripted strike. */
+  | "none"
+  /** The hero has already watched this level's opening on this difficulty (a
+   * die-and-retry loop): skip the prelude, the monologue and the opening
+   * strike, arming him, and land in play. */
+  | "story"
+  /** A developer warp-in: bail the prelude and dismiss the intro straight into
+   * the run. */
+  | "all";
+
+/**
+ * Everything a run is built from — the arguments AND the six things the app
+ * used to do afterwards.
+ *
+ * `server/wire/protocol.ts`'s `SessionParams` is structurally this plus the two
+ * generated-map FLAGS, which are applied by the caller rather than here because
+ * they are process-global engine toggles rather than arguments (see
+ * `setGeneratedMapsEnabled`).
+ *
+ * **IT IS WRITTEN IN THE WIRE'S TERMS ON PURPOSE** — `difficulty` a string,
+ * `loadout` and `campaignQuests` opaque, `openingSkip` a string — so a
+ * `SessionParams` is assignable to it with no conversion at all. The wire leaf
+ * may not import the engine, so a conversion would be a THIRD copy of this
+ * shape maintained by hand, and the field somebody forgets to copy is exactly
+ * the desync this module exists to prevent. The casts happen once, below.
+ */
+export type RunParams = {
+  /** The run's seed. Every rng stream in the level is derived from it. */
+  seed: number;
+  levelId: string;
+  /** The run's difficulty id (`easy` … `jesus`). */
+  difficulty: string;
+  /** The arriving hero's carry-over, or null for the authored fresh start. */
+  loadout?: unknown | null;
+  /** A LEVEL TOKEN respec is owed at the run's start. */
+  respec?: boolean;
+  /** Level ids the hero has already cleared on this difficulty — the engine
+   * gates drops on them (the bunker key stays latent until Eastworld falls). */
+  clearedLevels?: readonly string[];
+  /** The hero has already met this level's merchant on this difficulty, so the
+   * trader is set up at the door from the start. */
+  merchantDiscovered?: boolean;
+  /**
+   * The CAMPAIGN chain the hero carries (`quests/campaign.ts`), or null.
+   *
+   * Seeded before anything reads the quest log, so a chain's gate, a giver's
+   * head mark and the tracker are all correct on the first frame.
+   */
+  campaignQuests?: unknown | null;
+  /**
+   * The hero's whole banked wealth, or null to keep whatever the loadout gave.
+   *
+   * A real run's purse is funded from the banked coins PLUS any store credit
+   * still held as `pendingCoins`, which `applyLoadout` does not restore — a
+   * synthetic run (BOT VIEW, the demo) flies a loadout rather than a purse and
+   * passes null.
+   */
+  coins?: number | null;
+  /** The inner monologues this hero has already read on this difficulty. We die
+   * and replay a lot; an already-read thought is not read again. */
+  seenThoughts?: readonly string[];
+  /** How much of the opening to skip (an `OpeningSkip` name; anything else is
+   * read as `none`, because a parameter that arrives from a wire is a claim
+   * rather than a fact). */
+  openingSkip?: string;
+  /** Mute the in-world dialogue: with a bot steering there is nobody to tap
+   * through the arrival scenes, so un-muted they would freeze the run in the
+   * `dialogue` phase and flash a page per tick. */
+  muteDialogue?: boolean;
+  /**
+   * The build an AUTO PILOT flight already in progress engaged on.
+   *
+   * A FLIGHT outlives a run — the ride crosses levels — so the refund it owes
+   * when it stops must revert to the build the player had before the FIRST
+   * level. `startAutopilot` only stamps a run that has no baseline yet, which
+   * is what keeps this one authoritative.
+   */
+  autopilotBuild?: unknown | null;
+};
+
+/**
+ * Build a run.
+ *
+ * The order is the app's own and is load-bearing in two places: the campaign
+ * chain is seeded before anything reads the quest log, and the opening is
+ * skipped LAST, after the thoughts are marked, so a skipped opening cannot
+ * replay a beat the hero has already read.
+ */
+export function createRunFromParams(params: RunParams): GameState {
+  const state = createGame(
+    params.seed,
+    params.levelId,
+    params.difficulty as Difficulty,
+    (params.loadout as Loadout | null) ?? undefined,
+    params.respec ?? false,
+    params.clearedLevels ? [...params.clearedLevels] : [],
+    params.merchantDiscovered ?? false,
+  );
+  seedCampaignQuests(
+    state,
+    (params.campaignQuests as CampaignQuestSave | null) ?? undefined,
+  );
+  if (typeof params.coins === "number") state.player.coins = params.coins;
+  if (params.seenThoughts?.length) {
+    markThoughtsSeen(state, params.seenThoughts);
+  }
+  state.autopilot.build = (params.autopilotBuild as BuildSnapshot) ?? null;
+  if (params.muteDialogue) muteDialogue(state);
+  applyOpeningSkip(state, params.openingSkip);
+  return state;
+}
+
+/**
+ * Skip as much of the opening as the parameters ask for.
+ *
+ * `all` is two verbs rather than one because `skipCutscene` lands the prelude
+ * on the level's TITLE card — it is `dismissIntro` that carries it into play,
+ * which is the same two-step the keyboard and the headless bot take.
+ */
+function applyOpeningSkip(state: GameState, skip: string | undefined): void {
+  if (skip === "story") {
+    skipStoryOpening(state);
+    return;
+  }
+  if (skip === "all") {
+    if (state.phase === "cutscene") skipCutscene(state);
+    dismissIntro(state);
+  }
+}
