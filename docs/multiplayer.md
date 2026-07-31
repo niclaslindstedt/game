@@ -332,23 +332,25 @@ compiler.
 
 ## What is tested
 
-| Suite                                  | What it holds                                                                 |
-| -------------------------------------- | ----------------------------------------------------------------------------- |
-| `tests/engine/wire_codec_test.ts`      | Framing round trips, and every refusal a decoder on an open port must make    |
-| `tests/engine/wire_delta_test.ts`      | `patch(prev, diff(prev, next)) === next`, and each strategy separately        |
-| `tests/engine/net_determinism_test.ts` | The same arguments build the same world — in a real second process            |
-| `tests/engine/run_commands_test.ts`    | The two closed lists agreeing, and every argument a stranger may send         |
-| `tests/engine/net_session_test.ts`     | A real session and a real client, hashed against each other after 600 ticks   |
-| `tests/engine/wire_handshake_test.ts`  | The cookie's epoch window, the proof, and the ORDER the refusals come in      |
-| `tests/engine/wire_chat_test.ts`       | The slash grammar, and that hp and XP scale together                          |
-| `tests/engine/wire_address_test.ts`    | Every form a player may type, IPv6 brackets included                          |
-| `tests/engine/net_reliability_test.ts` | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link              |
-| `tests/engine/net_udp_test.ts`         | The port walk, and that `bound` is what the socket GOT                        |
-| `tests/engine/net_hub_test.ts`         | Mostly what does NOT happen: the unpadded probe, the flood, the stranger      |
-| `tests/engine/net_spectators_test.ts`  | Several clients, no bag on the wire, and the host's commands being the host's |
-| `tests/content/server_deps_test.ts`    | The ship target's dependency manifest, and that it reaches nothing outside it |
-| `electron/tests/session-host_test.ts`  | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
-| `electron/tests/net-lobby_test.ts`     | The metadata round trip through the short keys, and degrading without Steam   |
+| Suite                                    | What it holds                                                                 |
+| ---------------------------------------- | ----------------------------------------------------------------------------- |
+| `tests/engine/wire_codec_test.ts`        | Framing round trips, and every refusal a decoder on an open port must make    |
+| `tests/engine/wire_delta_test.ts`        | `patch(prev, diff(prev, next)) === next`, and each strategy separately        |
+| `tests/engine/net_determinism_test.ts`   | The same arguments build the same world — in a real second process            |
+| `tests/engine/run_commands_test.ts`      | The two closed lists agreeing, and every argument a stranger may send         |
+| `tests/engine/run_params_test.ts`        | `RunParams` and `SessionParams` naming the same fields                        |
+| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine — and the cutover's own tripwire     |
+| `tests/engine/net_session_test.ts`       | A real session and a real client, hashed against each other after 600 ticks   |
+| `tests/engine/wire_handshake_test.ts`    | The cookie's epoch window, the proof, and the ORDER the refusals come in      |
+| `tests/engine/wire_chat_test.ts`         | The slash grammar, and that hp and XP scale together                          |
+| `tests/engine/wire_address_test.ts`      | Every form a player may type, IPv6 brackets included                          |
+| `tests/engine/net_reliability_test.ts`   | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link              |
+| `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                        |
+| `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger      |
+| `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's |
+| `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it |
+| `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
+| `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam   |
 
 ## What is NOT here yet
 
