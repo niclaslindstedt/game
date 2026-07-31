@@ -7,12 +7,21 @@
 //                 `executeJavaScript`, exactly as the other four bridges are)
 //
 // The protocol (mirrored by electron/src/net.ts — keep the two in step):
-//   → { action: "host", requestId, params }     start a session
+//   → { action: "host", requestId, params, password?, maxClients?, mods? }
+//   → { action: "listen", requestId, port?, udp?, steam?, publicListing?, name? }
 //   → { action: "stop", requestId }             end it
-//   → { action: "status", requestId }           one line for the HOST screen
+//   → { action: "status", requestId }           the HOST screen's status rows
+//   → { action: "browse", requestId }           the server browser
+//   → { action: "join", requestId, lobbyId }    join a Steam lobby
+//   → { action: "firewall" | "allow-firewall", requestId, port }
 //   ← { event: "hosted", requestId, ok, levelId?, reason? }
+//   ← { event: "listening", requestId, ok, bound, steam, lobbyId, reason? }
 //   ← { event: "stopped", requestId, ok }
-//   ← { event: "status", requestId, ok, tick, phase, enemies }
+//   ← { event: "status", requestId, ok, tick, phase, enemies, clients,
+//       bound, mapping, roster }
+//   ← { event: "browse", requestId, ok, rows }
+//   ← { event: "joined", requestId, ok, hostId?, row?, reason? }
+//   ← { event: "firewall", requestId, ok, state }
 //   ← { event: "port" }                         the snapshot channel is up
 //
 // **ONE THING MUST NOT BE COPIED FROM THE OTHER FOUR BRIDGES: THE VOLUME.**
@@ -48,12 +57,96 @@ const CONTROL_TIMEOUT_MS = 20_000;
 export type HostResult =
   { ok: true; levelId: string } | { ok: false; reason: string };
 
+/** Where the socket ACTUALLY ended up. The HOST screen prints this and never
+ * the port that was requested — a host reading 27015 off a settings page while
+ * the socket is on 27016 is the exact bug that makes "direct connect doesn't
+ * work" unanswerable. */
+export type BoundAddress = { address: string; port: number };
+
+/** The ROUTER row. */
+export type MappingStatus =
+  | { status: "idle" }
+  | { status: "mapping" }
+  | {
+      status: "mapped";
+      method: "nat-pmp" | "upnp";
+      externalAddress: string | null;
+      externalPort: number;
+    }
+  | { status: "failed"; detail: string };
+
+/** The FIREWALL row. */
+export type FirewallStatus =
+  | { status: "not-needed"; detail: string }
+  | { status: "allowed" }
+  | { status: "blocked"; manual: string }
+  | { status: "unknown"; detail: string; manual?: string };
+
+/** One seat, as everybody else may see it. */
+export type SeatEntry = {
+  slot: number;
+  name: string;
+  playing: boolean;
+  /** -1 when nothing can measure it — the host's own renderer, or a Steam
+   * peer whose route Valve owns. Printed as such rather than as a flattering
+   * zero. */
+  ping: number;
+};
+
+/** One row in the server browser. Everything in it is what the host CLAIMED;
+ * the handshake is what settles it. */
+export type BrowserRow = {
+  id: string;
+  name: string;
+  host: string;
+  level: string;
+  difficulty: string;
+  players: number;
+  maxPlayers: number;
+  protocol: number;
+  build: string;
+  needsPassword: boolean;
+  mods: string[];
+  address: string | null;
+};
+
 /** What the HOST screen shows about a running session. */
 export type SessionStatus = {
   running: boolean;
   tick: number;
   phase: string;
   enemies: number;
+  clients: number;
+  bound: BoundAddress | null;
+  mapping: MappingStatus;
+  roster: SeatEntry[];
+};
+
+/** What opening the doors produced. */
+export type ListenResult = {
+  ok: boolean;
+  bound: BoundAddress | null;
+  steam: boolean;
+  lobbyId: string | null;
+  reason?: string;
+};
+
+/** What a host is publishing. */
+export type HostOptions = {
+  params: SessionParams;
+  password?: string;
+  maxClients?: number;
+  mods?: string[];
+};
+
+/** Which doors to open. Both by default: Steam friends get the frictionless
+ * path and everybody else gets an address. */
+export type ListenOptions = {
+  port?: number;
+  udp?: boolean;
+  steam?: boolean;
+  publicListing?: boolean;
+  name?: string;
 };
 
 let nextRequestId = 1;
@@ -102,14 +195,50 @@ export function onSessionPort(listener: (port: MessagePort) => void): void {
 }
 
 /** Start a session. The shell forks the server and hands back a port. */
-export async function hostSession(params: SessionParams): Promise<HostResult> {
-  const reply = (await request({ action: "host", params })) as {
-    ok?: boolean;
-    levelId?: string;
-    reason?: string;
-  } | null;
+export async function hostSession(
+  options: HostOptions | SessionParams,
+): Promise<HostResult> {
+  // A bare `SessionParams` is still accepted, because most callers have
+  // nothing to say about passwords or seats and should not have to wrap one
+  // field in an object to say nothing.
+  const opts: HostOptions =
+    "params" in options ? options : { params: options as SessionParams };
+  const reply = (await request({
+    action: "host",
+    params: opts.params,
+    password: opts.password,
+    maxClients: opts.maxClients,
+    mods: opts.mods,
+  })) as { ok?: boolean; levelId?: string; reason?: string } | null;
   if (reply?.ok && reply.levelId) return { ok: true, levelId: reply.levelId };
   return { ok: false, reason: reply?.reason ?? "no reply" };
+}
+
+/**
+ * Open the doors, and report which of them actually opened.
+ *
+ * Separate from `hostSession` on purpose: a session that simulates is a
+ * different thing from a session that anybody can reach, and the HOST screen
+ * has to be able to show the first while the second is still being negotiated
+ * with a router. It is also what lets a purely local run — every single-player
+ * game — never bind a socket at all.
+ */
+export async function listenSession(
+  options: ListenOptions = {},
+): Promise<ListenResult> {
+  const reply = (await request({
+    action: "listen",
+    ...options,
+  })) as (ListenResult & { ok?: boolean }) | null;
+  return (
+    reply ?? {
+      ok: false,
+      bound: null,
+      steam: false,
+      lobbyId: null,
+      reason: "no reply",
+    }
+  );
 }
 
 /** End the running session and kill its process. */
@@ -122,6 +251,54 @@ export async function sessionStatus(): Promise<SessionStatus | null> {
   const reply = (await request({ action: "status" })) as
     (SessionStatus & { ok?: boolean }) | null;
   return reply?.ok ? reply : null;
+}
+
+/**
+ * The server browser: every lobby this Steam account can see.
+ *
+ * Rows this build cannot join are NOT filtered out by the shell, deliberately.
+ * A player whose friend is on a newer build and whose list is simply empty
+ * concludes the feature is broken; one who sees the session greyed with
+ * "BUILD 1.4.2" goes and updates. The screen decides, with the reason in hand.
+ */
+export async function browseSessions(): Promise<BrowserRow[]> {
+  const reply = (await request({ action: "browse" })) as {
+    ok?: boolean;
+    rows?: BrowserRow[];
+  } | null;
+  return reply?.ok ? (reply.rows ?? []) : [];
+}
+
+/** Join a lobby by id. Hands back the host's Steam id, which is the peer key
+ * the relayed transport addresses. */
+export async function joinSession(
+  lobbyId: string,
+): Promise<{ hostId: string; row: BrowserRow } | null> {
+  const reply = (await request({ action: "join", lobbyId })) as {
+    ok?: boolean;
+    hostId?: string;
+    row?: BrowserRow;
+  } | null;
+  if (!reply?.ok || !reply.hostId || !reply.row) return null;
+  return { hostId: reply.hostId, row: reply.row };
+}
+
+/**
+ * Is UDP `port` allowed in, and — with `allow` — one press to ask for it.
+ *
+ * The remedy returns the VERIFICATION's answer rather than whether the command
+ * exited zero: a green "opened" that is not open is worse than a red one,
+ * because it sends the player looking in the wrong place.
+ */
+export async function firewallStatus(
+  port: number,
+  allow = false,
+): Promise<FirewallStatus | null> {
+  const reply = (await request({
+    action: allow ? "allow-firewall" : "firewall",
+    port,
+  })) as { ok?: boolean; state?: FirewallStatus } | null;
+  return reply?.ok ? (reply.state ?? null) : null;
 }
 
 /**

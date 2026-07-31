@@ -47,9 +47,13 @@ import {
   PROTOCOL_VERSION,
   refuseHandshake,
   type ByePayload,
+  type ChatLine,
+  type ChatPayload,
   type CommandName,
   type Handshake,
   type RefusalReason,
+  type RosterEntry,
+  type RosterPayload,
   type SessionParams,
   type WelcomePayload,
 } from "@game/wire/protocol.ts";
@@ -74,10 +78,20 @@ export type NetClientOptions = {
   /** The run is live: the state is built and the first snapshot has landed. */
   onReady?: (state: GameState, params: SessionParams) => void;
   /** The session ended, or the join was refused. */
-  onClosed?: (
-    reason: RefusalReason | "host-left" | "shutdown" | "error",
-    detail?: string,
-  ) => void;
+  onClosed?: (reason: ByePayload["reason"], detail?: string) => void;
+  /**
+   * Lines were said.
+   *
+   * APPENDED, never replacing — the server sends the whole log once, on
+   * arrival, and single lines after that. A consumer that treated every frame
+   * as the full log would show a spectator the backlog and then, one line
+   * later, nothing but the newest thing anybody said.
+   */
+  onChat?: (lines: ChatLine[]) => void;
+  /** Who is in the session. This one IS the whole list every time: a roster is
+   * a state rather than a stream, and merging one would leave a player who
+   * quit on the party frames for ever. */
+  onRoster?: (entries: RosterEntry[]) => void;
 };
 
 export type NetClient = {
@@ -101,6 +115,10 @@ export type NetClient = {
    * the channel can never widen into "call any engine function".
    */
   sendCommand(name: CommandName): void;
+  /** Say something, or run a slash command. The parse and every decision about
+   * what it may DO are the server's — see `server/wire/chat.ts` for why the
+   * client is not entitled to an opinion about `/kick`. */
+  sendChat(text: string): void;
   dispose(): void;
 };
 
@@ -130,6 +148,16 @@ export function createNetClient(options: NetClientOptions): NetClient {
     if (frame.type === FRAME.bye) {
       const bye = (frame.payload ?? {}) as ByePayload;
       options.onClosed?.(bye.reason ?? "shutdown", bye.detail);
+      return;
+    }
+    if (frame.type === FRAME.chat) {
+      const lines = (frame.payload as ChatPayload | null)?.lines;
+      if (Array.isArray(lines) && lines.length) options.onChat?.(lines);
+      return;
+    }
+    if (frame.type === FRAME.roster) {
+      const entries = (frame.payload as RosterPayload | null)?.entries;
+      if (Array.isArray(entries)) options.onRoster?.(entries);
       return;
     }
     if (!state || !baseline) return; // nothing to apply it to yet
@@ -220,6 +248,20 @@ export function createNetClient(options: NetClientOptions): NetClient {
         encodeFrame(
           { type: FRAME.command, seq: ++inputSeq, ack: acked, tick },
           { name },
+        ),
+      );
+    },
+    sendChat(text) {
+      // Deliberately NOT gated on `state`: a spectator refused at the
+      // handshake, or one still waiting for a level to build, may still be in
+      // the chat — which is most of what makes a session feel occupied while
+      // somebody is loading.
+      if (disposed) return;
+      const payload: ChatPayload = { text };
+      transport.send(
+        encodeFrame(
+          { type: FRAME.chat, seq: ++inputSeq, ack: acked, tick },
+          payload,
         ),
       );
     },

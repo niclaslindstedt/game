@@ -43,6 +43,7 @@ import {
   advanceOutro,
   createGame,
   dismissIntro,
+  setBalanceTuning,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
   skipCutscene,
@@ -59,7 +60,9 @@ import {
   type Loadout,
 } from "@game/core";
 
+import { createChatRoom, type ChatRoom } from "./chat-room.ts";
 import { encodeFrame, encodeFrameJson } from "./wire/codec.ts";
+import { playerScaling } from "./wire/players.ts";
 import {
   diffState,
   patchState,
@@ -69,10 +72,15 @@ import {
 import {
   FRAME,
   isCommand,
+  MAX_CLIENTS,
   PROTOCOL_VERSION,
   SNAPSHOT_EVERY_TICKS,
   TICK_MS,
+  type ChatLine,
+  type ChatPayload,
   type CommandName,
+  type RosterEntry,
+  type RosterPayload,
   type SessionParams,
   type WelcomePayload,
 } from "./wire/protocol.ts";
@@ -96,6 +104,9 @@ type Sent =
 type Client = {
   id: number;
   slot: number;
+  /** What the roster and the chat log call them. Sanitized by the hub before
+   * it ever reaches here — a name arrives from a stranger. */
+  name: string;
   send: SendFrame;
   recipient: Recipient;
   /**
@@ -126,6 +137,23 @@ type Client = {
  */
 const MAX_UNACKED = 60;
 
+/**
+ * What the session may ask of the layer that owns the peers.
+ *
+ * All three are things the session decides and cannot do: it knows a chat line
+ * said `/kick`, and the hub is the only thing holding a socket to kick with.
+ * Every one has a no-op default, so a session with no networking under it —
+ * PR 1's, and every test's — still runs the whole chat path.
+ */
+export type SessionPeers = {
+  /** Remove a client. The session has already decided it should happen. */
+  kick(clientId: number, reason: string): void;
+  /** Open the platform's invite panel. False when this build has none. */
+  invite(): boolean;
+  /** Round trip in ms, or -1 when nothing can measure one. */
+  ping(clientId: number): number;
+};
+
 /** What the session was told to build. */
 export type SessionOptions = {
   params: SessionParams;
@@ -133,6 +161,9 @@ export type SessionOptions = {
   build: string;
   /** The session's mod ids, in load order. */
   mods?: string[];
+  /** Seats, host included. */
+  maxClients?: number;
+  peers?: Partial<SessionPeers>;
 };
 
 export type Session = {
@@ -144,12 +175,21 @@ export type Session = {
   /** Owe the simulation `ms` of wall clock and run the whole `TICK_MS` slices
    * it buys. Returns how many ticks actually ran. */
   advance(ms: number): number;
+  /** Seats taken, host included. */
+  readonly clientCount: number;
   /** Attach a client. Sends it a `welcome` immediately; it is baselined on the
    * world at tick 0 and receives a delta from there at the next publish. */
-  addClient(id: number, send: SendFrame, ownsPlayer: boolean): void;
+  addClient(
+    id: number,
+    send: SendFrame,
+    ownsPlayer: boolean,
+    name?: string,
+  ): void;
   removeClient(id: number): void;
   /** One decoded frame from a client. */
   receive(id: number, type: number, seq: number, payload: unknown): void;
+  /** Everyone seated, as everybody else may see them. */
+  roster(): RosterEntry[];
   /** Tell every client the session is over, then drop them. */
   close(reason: string, detail?: string): void;
 };
@@ -213,6 +253,103 @@ export function createSession(options: SessionOptions): Session {
   let seq = 0;
   let sinceSnapshot = 0;
   let closed = false;
+
+  const maxClients = options.maxClients ?? MAX_CLIENTS;
+  /** What the session may ask of whatever owns the sockets. Every one has a
+   * no-op default, so a session with no networking under it — PR 1's, and
+   * every engine test's — still runs the whole chat path rather than a
+   * second, less-tested copy of it. */
+  const peers: SessionPeers = {
+    kick: options.peers?.kick ?? (() => {}),
+    invite: options.peers?.invite ?? (() => false),
+    ping: options.peers?.ping ?? (() => -1),
+  };
+
+  /**
+   * The lowest free seat.
+   *
+   * `clients.size` was the PR 1 answer and it is wrong the moment anybody
+   * leaves: with slots 0, 1 and 2 taken, slot 1 quitting and a fourth person
+   * joining, the size is 2 and the newcomer is seated on top of slot 2 — two
+   * clients sharing a seat, two roster rows with one number, and (from PR 3)
+   * two heroes steered by one input. A seat is a position, not a count.
+   */
+  function nextSlot(): number {
+    const taken = new Set([...clients.values()].map((client) => client.slot));
+    for (let slot = 0; slot < maxClients; slot++) {
+      if (!taken.has(slot)) return slot;
+    }
+    return maxClients;
+  }
+
+  function rosterEntries(): RosterEntry[] {
+    return [...clients.values()]
+      .sort((a, b) => a.slot - b.slot)
+      .map((client) => ({
+        slot: client.slot,
+        name: client.name,
+        playing: client.recipient.ownsPlayer,
+        // The host's own renderer reaches this process over a MessagePort
+        // inside the same machine; there is no wire to time, and -1 is the
+        // seam's word for that rather than a flattering 0.
+        ping: client.recipient.ownsPlayer ? -1 : peers.ping(client.id),
+      }));
+  }
+
+  /**
+   * Remove a client by display name, on the host's say-so.
+   *
+   * The owner cannot be kicked — a host kicking themselves out of their own
+   * session is not a command, it is a way to lose a run — and the match is on
+   * the name as it is DRAWN, because that is the only string the person typing
+   * it can see.
+   */
+  function kickByName(name: string): string | null {
+    const wanted = name.trim().toUpperCase();
+    for (const client of clients.values()) {
+      if (client.recipient.ownsPlayer) continue;
+      if (client.name.toUpperCase() !== wanted) continue;
+      peers.kick(client.id, "kicked by the host");
+      clients.delete(client.id);
+      return client.name;
+    }
+    return null;
+  }
+
+  const chat: ChatRoom = createChatRoom({
+    roster: rosterEntries,
+    setPlayers(n) {
+      const scale = playerScaling(n);
+      // BOTH knobs, always. Kill XP here is level-based, so a hp-scaled mob is
+      // tougher and pays exactly the same XP for its level; scaling `mobHp`
+      // alone would make `/players 8` strictly punishing rather than the
+      // risk/reward trade it is meant to be. See `wire/players.ts`.
+      setBalanceTuning(scale);
+      return scale.mobHp;
+    },
+    kick: kickByName,
+    invite: () => peers.invite(),
+  });
+
+  function chatFrame(lines: ChatLine[]): ArrayBuffer {
+    const payload: ChatPayload = { lines };
+    return encodeFrame({ type: FRAME.chat, seq, ack: 0, tick }, payload);
+  }
+
+  function broadcastChat(lines: ChatLine[]): void {
+    if (!lines.length) return;
+    const frame = chatFrame(lines);
+    for (const client of clients.values()) client.send(frame);
+  }
+
+  function broadcastRoster(): void {
+    const payload: RosterPayload = { entries: rosterEntries() };
+    const frame = encodeFrame(
+      { type: FRAME.roster, seq, ack: 0, tick },
+      payload,
+    );
+    for (const client of clients.values()) client.send(frame);
+  }
 
   function stepOnce(): void {
     // PR 1 simulates one hero, so there is one input and it is the owner's.
@@ -292,11 +429,17 @@ export function createSession(options: SessionOptions): Session {
       return owed;
     },
 
-    addClient(id, send, ownsPlayer) {
+    get clientCount() {
+      return clients.size;
+    },
+
+    addClient(id, send, ownsPlayer, name) {
       const recipient: Recipient = { ownsPlayer };
+      const slot = ownsPlayer ? 0 : nextSlot();
       const client: Client = {
         id,
-        slot: ownsPlayer ? 0 : clients.size,
+        slot,
+        name: name?.trim() || (ownsPlayer ? "HOST" : `PLAYER ${slot + 1}`),
         send,
         recipient,
         // THE GENESIS BASELINE, cut for this recipient. The client builds
@@ -322,10 +465,27 @@ export function createSession(options: SessionOptions): Session {
         ownsPlayer,
       };
       send(encodeFrame({ type: FRAME.welcome, seq, ack: 0, tick }, welcome));
+      // The log is handed over WHOLE, and only to the arriving client: a
+      // spectator who joins an hour in and sees an empty chat box has no way
+      // to tell a quiet session from a broken one. It is bounded for exactly
+      // this reason — see `MAX_CHAT_LOG`.
+      if (chat.log.length) send(chatFrame([...chat.log]));
+      // The arrival is announced AFTER the welcome, so the newcomer sees their
+      // own arrival in the same order everybody else does.
+      broadcastChat([chat.announce(`${client.name} JOINED`)]);
+      broadcastRoster();
     },
 
     removeClient(id) {
+      const client = clients.get(id);
+      if (!client) return;
       clients.delete(id);
+      // The host leaving is the session ending, and `close` says so in its own
+      // words; announcing "HOST LEFT" first would put a chat line in front of
+      // a bye nobody will be around to read.
+      if (client.recipient.ownsPlayer) return;
+      broadcastChat([chat.announce(`${client.name} LEFT`)]);
+      broadcastRoster();
     },
 
     receive(id, type, frameSeq, payload) {
@@ -350,6 +510,27 @@ export function createSession(options: SessionOptions): Session {
         }
         return;
       }
+      if (type === FRAME.chat) {
+        // CHAT IS THE ONE THING A SPECTATOR MAY DO, and it is the whole point
+        // of shipping it in this PR rather than in PR 4: eight people watching
+        // a hardcore run in silence are eight people watching a video. What
+        // any one of them may CHANGE is still nothing — the room refuses a
+        // spectator's `/players`, `/kick` and `/invite` by name.
+        const reply = chat.say(
+          {
+            slot: client.slot,
+            name: client.name,
+            isHost: client.recipient.ownsPlayer,
+          },
+          (payload as { text?: unknown } | null)?.text,
+        );
+        broadcastChat(reply.broadcast);
+        if (reply.toSpeaker.length) client.send(chatFrame(reply.toSpeaker));
+        // A `/kick` or a `/players` may have changed who is here and what they
+        // are standing in; the roster is what the party frames read.
+        if (reply.broadcast.length) broadcastRoster();
+        return;
+      }
       // Only the hero's owner may steer him or act for him. A spectator
       // driving somebody else's character is the cheapest possible griefing,
       // and the check belongs HERE — the one place a client cannot argue with
@@ -363,6 +544,8 @@ export function createSession(options: SessionOptions): Session {
         runCommand(state, (payload as { name?: unknown } | null)?.name);
       }
     },
+
+    roster: rosterEntries,
 
     close(reason, detail) {
       if (closed) return;
