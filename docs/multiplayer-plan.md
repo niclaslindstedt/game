@@ -25,9 +25,31 @@ the OS firewall rule needs elevation exactly once and is offered as one button
 with a verified result and a copyable manual fallback. §PR 2 is unsparing about
 which half of that is genuinely automatic.
 
-**This is a plan of five pull requests.** Each is large, each is useful on its
-own, and each ends at a state the game can be played in. At the end of PR 5 the
-desktop build has production multiplayer.
+**This is a plan of seven pull requests.** Each is large and each is useful on
+its own. At the end of PR 5 the desktop build has production multiplayer.
+
+> **AMENDED AFTER PR 2.** This plan was written as five PRs, each promising to
+> "end at a state the game can be played in". The first two falsified that
+> promise in the same way, and the cause was structural rather than accidental:
+> **its PR boundaries are drawn along ARCHITECTURAL LAYERS while that promise
+> needs boundaries drawn along USER-VISIBLE SLICES.** Both PRs shipped their
+> layer whole and deferred the cutover and the UI that would have made it
+> reachable, because those are a different shape of work.
+>
+> Worse, the original cut contained a **circular dependency**: PR 1's remaining
+> cutover needs the inventory / shop / level-up / talent verbs to travel as
+> commands, and PR 3 was the PR that owned them. PR 1 therefore could not finish
+> before PR 3 started, while PR 3's prediction work assumes the run already goes
+> through the server. The cycle dissolves once you notice the plan had conflated
+> two different jobs on the same verbs — **making them TRAVEL** (a prerequisite,
+> with today's blocking semantics untouched) and **making them NON-BLOCKING
+> per-player** (genuinely PR 3).
+>
+> So **PR 1.5 (THE CUTOVER)** and **PR 2.5 (THE SCREENS)** are inserted below,
+> carrying exactly the work PRs 1 and 2 deferred. They are numbered as halves
+> rather than renumbered to 3 and 4, so that every reference to "PR 3" and
+> "PR 5" in this document, in `docs/multiplayer.md`, in `AGENTS.md` and in the
+> comments throughout `server/` still names what it always named.
 
 ---
 
@@ -36,23 +58,28 @@ desktop build has production multiplayer.
 Everything below was counted against the tree at the time of writing. The plan
 leans on these numbers; re-measure before trusting a stale one.
 
-| Fact                             | Measurement                                                                                                                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The simulation is deterministic  | `Math.random`, `Date.now`, `performance.now`: **zero** occurrences under `src/`. Every roll is seeded mulberry32 (`src/lib/rng.ts`) with `rngState` freeze/thaw                       |
-| The loop is fixed-timestep       | `pwa/src/lib/game-loop.ts`, 1000/60; the fast-forward multiplier scales the step **count**, never the step **size**                                                                   |
-| `GameState` is plain JSON        | apart from the `rng` closure, which `saved-run.ts` already snapshots beside it through a v12+ migration ladder                                                                        |
-| The engine already runs headless | `src/sim/simulate.ts` drives real `step()` calls from Node                                                                                                                            |
-| Cross-engine float safety        | **159** calls to `Math.sin/cos/atan2/hypot/pow/exp/log/tan` under `src/` — none IEEE-mandated. 17 `Math.sqrt` (which _is_ correctly rounded). Lockstep is out                         |
-| `state.player` in the engine     | **538** occurrences across **75** files — but **103** are `const player = state.player;` at a function head                                                                           |
-| `state.player` in the app        | **220** occurrences across **49** files                                                                                                                                               |
-| What those reads actually want   | `pos` **186**, `equipment` 50, `level` 53, `inventory` 33, `coins` 20 — i.e. one third geometry, the rest private bag                                                                 |
-| `GamePhase` members              | **19**. `step()` early-returns on `phase !== "playing"` after the `cutscene` and `dying` passes                                                                                       |
-| Process-global engine state      | **36** module-level mutable bindings: 19 `activeXDefs` catalogs, 6 flags (`src/game/flags.ts`), the `BALANCE` tuning object, plus memo/grid caches                                    |
-| `Item` ownership                 | The `Item` union has **no owner field** — free-for-all loot is the free default                                                                                                       |
-| Levels shipped                   | **6** (`content/levels/`), **no hub/town**                                                                                                                                            |
-| Desktop packaging target         | **`dir`**, not an installer — Steam uploads a directory to a depot and its client installs it. **There is no elevated install step**                                                  |
-| Electron / Node                  | Electron ^43 (so `utilityProcess` is available); root `engines.node >= 24`; imports carry `.ts` extensions; `scripts/game-alias-loader.mjs` already maps the aliases for plain `node` |
-| Critical-path budget             | **170 KB gzipped**, enforced by `pwa/scripts/check-seo.mjs`                                                                                                                           |
+Two of these were re-measured after PR 2 and are annotated with both readings.
+Nothing has drifted enough to change a decision, which is itself worth knowing —
+the engine's shape is stable on the axes this plan leans on.
+
+| Fact                             | Measurement                                                                                                                                                                                                                                                                                                          |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The simulation is deterministic  | `Math.random`, `Date.now`, `performance.now`: **zero** occurrences under `src/` (re-measured after PR 2: still zero). Every roll is seeded mulberry32 (`src/lib/rng.ts`) with `rngState` freeze/thaw                                                                                                                 |
+| The loop is fixed-timestep       | `pwa/src/lib/game-loop.ts`, 1000/60; the fast-forward multiplier scales the step **count**, never the step **size**                                                                                                                                                                                                  |
+| `GameState` is plain JSON        | apart from the `rng` closure, which `saved-run.ts` already snapshots beside it through a v12+ migration ladder                                                                                                                                                                                                       |
+| The engine already runs headless | `src/sim/simulate.ts` drives real `step()` calls from Node                                                                                                                                                                                                                                                           |
+| Cross-engine float safety        | **159** calls to `Math.sin/cos/atan2/hypot/pow/exp/log/tan` under `src/` — none IEEE-mandated. 17 `Math.sqrt` (which _is_ correctly rounded). Lockstep is out                                                                                                                                                        |
+| `state.player` in the engine     | **538** occurrences across **75** files — but **103** are `const player = state.player;` at a function head (re-measured after PR 2: **533** across the same **75**)                                                                                                                                                 |
+| `state.player` in the app        | **220** occurrences across **49** files (re-measured after PR 2: **199**)                                                                                                                                                                                                                                            |
+| Engine mutators the APP calls    | **~50** distinct value imports from `@game/core` that mutate a `GameState` — `openInventory`, `equipFromInventory`, `buyStock`, `sellItem`, `allocateStat`, `spendTalentPoint`, `pickTalkChoice`, `openShop`, `openMap`… **This is PR 1.5's whole size**, and it is larger than the "~40" PR 1's own notes estimated |
+| What those reads actually want   | `pos` **186**, `equipment` 50, `level` 53, `inventory` 33, `coins` 20 — i.e. one third geometry, the rest private bag                                                                                                                                                                                                |
+| `GamePhase` members              | **19**. `step()` early-returns on `phase !== "playing"` after the `cutscene` and `dying` passes                                                                                                                                                                                                                      |
+| Process-global engine state      | **36** module-level mutable bindings: 19 `activeXDefs` catalogs, 6 flags (`src/game/flags.ts`), the `BALANCE` tuning object, plus memo/grid caches                                                                                                                                                                   |
+| `Item` ownership                 | The `Item` union has **no owner field** — free-for-all loot is the free default                                                                                                                                                                                                                                      |
+| Levels shipped                   | **6** (`content/levels/`), **no hub/town**                                                                                                                                                                                                                                                                           |
+| Desktop packaging target         | **`dir`**, not an installer — Steam uploads a directory to a depot and its client installs it. **There is no elevated install step**                                                                                                                                                                                 |
+| Electron / Node                  | Electron ^43 (so `utilityProcess` is available); root `engines.node >= 24`; imports carry `.ts` extensions; `scripts/game-alias-loader.mjs` already maps the aliases for plain `node`                                                                                                                                |
+| Critical-path budget             | **170 KB gzipped**, enforced by `pwa/scripts/check-seo.mjs`                                                                                                                                                                                                                                                          |
 
 ### The Steam binding is narrower than it looks — verify before leaning
 
@@ -98,18 +125,26 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 
 ---
 
-## 1. The five pull requests
+## 1. The seven pull requests
 
-| PR                     | Ships                                                                                                                                                       | Playable at the end                                          | Estimate |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: |
-| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec, and the host's renderer becomes a client   | Identical single-player, over loopback. Zero networking      |  4–6 wks |
-| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), lobbies, invites, the server browser, join-by-address, port binding/reveal, UPnP + firewall, chat, **spectators** | Eight people in one session; one plays, seven watch and chat |  5–7 wks |
-| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                                 | Eight heroes actually playing one map together               | 8–11 wks |
-| **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation                | The whole campaign, co-op, start to finish                   |  6–8 wks |
-| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                                   | Shippable                                                    |  5–7 wks |
+| PR                     | Ships                                                                                                                                        | Playable at the end                                          | Estimate | State                       |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | --------------------------- |
+| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6 |
+| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7 |
+| **1.5 — THE CUTOVER**  | The app's ~50 direct engine mutations become commands; `GameScreen` drives the net client instead of owning the loop                         | Identical single-player, over loopback. Zero networking      |  3–5 wks | **Next**                    |
+| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks |                             |
+| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                             |
+| **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                             |
+| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                             |
 
-**≈ 28–39 weeks.** The band is wide because PR 3 is a design exercise wearing a
+**≈ 33–48 weeks.** The band is wide because PR 3 is a design exercise wearing a
 refactor's clothes (see §PR 3), and its uncertainty dominates everything.
+
+**The two inserted PRs are not new work, they are work the first two deferred**,
+so the total grew by their estimates rather than by a re-plan. Note also what the
+"playable at the end" column now says for PRs 1 and 2: **nothing changes.** That
+is the honest reading of what shipped, and leaving the old claim in place is what
+would have let the next PR inherit the same mistake.
 
 Each PR carries its own `.changes/unreleased/` fragment, keeps every new source
 file under the 1000-line cap, and must leave `make lint` and `make test` at zero
@@ -197,6 +232,14 @@ electron/src/net-transport.ts ← the transport SEAM                     (main)
 server/                       ← the simulation host                    (utility)
 ```
 
+**AS BUILT, the transport seam is NOT in that list, and the departure was
+deliberate** — see §2.1's own amendment. `electron/src/net-transport.ts` does not
+exist; the seam, the reliability layer and the UDP transport are
+`server/net/{transport,reliability,udp}.ts`, because §5.5 of this same plan says
+the dedicated server "is the same file" as the session server minus Electron, and
+a transport living in the shell is a transport that server does not have. Only
+Steam stayed in the main process, where the client is.
+
 **One thing must not be copied from the four existing bridges: the volume.**
 Those move a handful of JSON round trips per session; this one moves a snapshot
 20–30 times a second. Snapshots therefore travel on their **own** `MessagePort`
@@ -235,6 +278,17 @@ where hand-rolled binary packing is the right call: the shapes are known at
 compile time, the vocabulary is small, and a schema library would cost bytes on
 the client for nothing.
 
+**AS BUILT, that last paragraph was overruled, and the reasoning is worth
+keeping.** PR 1 shipped a binary ENVELOPE — a fixed 16-byte header, validated
+before anything is read — with a **JSON payload** behind the `codec.ts` seam. The
+shapes are indeed known at compile time, but there are ~120 of them, they are the
+engine's own live types, and a hand-written packer per type is a second
+definition of every one whose failure mode is silence: a def grows a field, the
+packer does not, and the field stops replicating with every test still green.
+Swapping the payload encoding touches two functions and neither end's protocol,
+so this is a deferral rather than a refusal — **measure first (§1.7's
+snapshot-rate risk), then pack what the measurement says is expensive.**
+
 **Events replicate too.** `state.events` is how the app plays sounds and flashes
 effects, and it is already a per-tick array of plain records — so it rides the
 snapshot as-is, filtered per recipient. That is the single cheapest thing in
@@ -255,18 +309,25 @@ reaches `@game/core` must be lazy — the same rule that keeps the level catalog
 off the startup path. Expect `pwa/scripts/check-seo.mjs` to be the thing that
 catches the mistake, and do not raise the number.
 
-### 1.6 Done when
+### 1.6 Done when — and what PR 1 actually met
 
-- A run started from the title menu plays identically to today, with the
-  simulation in a utility process and the renderer receiving snapshots.
-- `tests/engine/` gains: wire codec round-trips, snapshot/delta correctness
-  against a replayed reference run, and the same-seed determinism test above.
-- `npm run electron:test` gains the session lifecycle: spawn, tick, orderly
-  shutdown, crash-and-report, and the utility process outliving a renderer
-  reload.
-- A parked run still resumes (`saved-run.ts`), a checkpoint still restores, and
-  the autopilot still flies — all three now through the server.
-- `make test`, `make lint`, `npm run electron:test` green. Budget check passes.
+Recorded honestly, because an unamended "done when" is how a plan starts lying
+about its own state. **Two of the five were not met, and they are the two that
+made the feature reachable**; they are now PR 1.5.
+
+| Criterion                                                                                                                                                     | PR 1 (#783)                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A run started from the title menu plays identically to today, with the simulation in a utility process                                                        | ❌ **Not met.** `GameScreen` still owns the loop; `pwa/src/game/net/` is unreachable from any shipped code                                                                         |
+| `tests/engine/` gains wire codec round-trips, snapshot/delta correctness, and the same-seed determinism test                                                  | ✅ Met — and the determinism test runs in a real second `node` process                                                                                                             |
+| `npm run electron:test` gains the session lifecycle: spawn, tick, orderly shutdown, crash-and-report, **and the utility process outliving a renderer reload** | ⚠️ **Four of five.** Spawn, port handover, orderly stop, forced kill, crash-vs-stop and restart are covered; the renderer-reload case is not, because the test rig has no renderer |
+| A parked run still resumes, a checkpoint still restores, and the autopilot still flies — all three **through the server**                                     | ❌ **Not met**, and it follows from the first row rather than being a second omission                                                                                              |
+| `make test`, `make lint`, `npm run electron:test` green; budget check passes                                                                                  | ✅ Met — critical path 163.7 KB gzipped against the 170 KB budget                                                                                                                  |
+
+One more thing PR 1 flagged rather than claimed, and it is still outstanding:
+**the packaged desktop path was never launched.** The `extraResources` entry, the
+`MessagePortMain` handover and a real `utilityProcess.fork` are covered by stubs
+and reasoning, not by a running app. PR 1.5 is the natural place to pay that off,
+because it is the first PR whose work cannot be believed without launching one.
 
 ### 1.7 Risks
 
@@ -314,11 +375,29 @@ A host may listen on **both at once**, and should by default: Steam friends get
 the frictionless path, everyone else gets an address. A joiner picks whichever
 the lobby entry offers.
 
-- **`net-transport-steam.ts`** — `matchmaking.createLobby` for the session
+**AS BUILT, THE SEAM MOVED OUT OF THE SHELL, and this is the one deliberate
+departure from the plan's file list.** §5.5 below says the dedicated server "is
+the same file" as the session server, minus Electron — and that cannot be true of
+a transport that lives in `electron/src/`. So:
+
+| Planned                               | As built                                                | Why                                                                                                                                               |
+| ------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `electron/src/net-transport.ts`       | `server/net/transport.ts`                               | The seam ships with the session, so PR 5 inherits it                                                                                              |
+| —                                     | `server/net/reliability.ts`                             | Split out; one instance per peer                                                                                                                  |
+| `electron/src/net-transport-udp.ts`   | `server/net/udp.ts`                                     | Its packets never touch the main process's event loop                                                                                             |
+| `electron/src/net-transport-steam.ts` | `electron/src/net-steam-p2p.ts` + `server/net/relay.ts` | `steamworks.init()` is a global handshake the main process owns; its packets are RELAYED into a transport the session cannot tell from the socket |
+| —                                     | `server/net/hub.ts`                                     | Admission had no home in the original list                                                                                                        |
+
+Each half lives where the resource it needs lives, and the session's view of the
+two is identical — which is the whole point of having a seam.
+
+- **The Steam half** — `matchmaking.createLobby` for the session
   record, `networking.sendP2PPacket` / `isP2PPacketAvailable` / `readP2PPacket`
   for the traffic, `acceptP2PSession` on the accept path. Reliability comes from
-  `SendType`; the server pumps the receive queue on its own tick.
-- **`net-transport-udp.ts`** — `node:dgram`, with our own tiny sequencing layer:
+  `SendType`; the shell pumps the receive queue on its own tick. **It adds no
+  reliability of its own** — layering a reliable protocol over a reliable one
+  makes the connection worse the more it is helped.
+- **The UDP half** — `node:dgram`, with our own tiny sequencing layer:
   a sequence number, an ack bitfield, and reliable-message retransmission on the
   control channel only. Snapshots go **unreliable with redundancy** (each
   snapshot delta is coded against the last _acknowledged_ snapshot, so a lost
@@ -446,7 +525,23 @@ crashes", so the handshake is strict and its refusals are legible:
    different catalogs and immediate divergence. PR 2 refuses a mismatch outright
    and names the missing mods; PR 4 makes it reconcile.
 4. **Password**, if set, and only then does the connection reach the server.
-5. **Character** — the joiner's `Loadout`, validated (see PR 5's trust rules).
+5. ~~**Character** — the joiner's `Loadout`, validated (see PR 5's trust rules).~~
+   **Moved to PR 3.** It is unbuildable here and was mis-scheduled rather than
+   skipped: a PR 2 joiner is a SPECTATOR and carries no loadout, because there is
+   no second hero for one to belong to. It becomes a real step the moment PR 3
+   seats one, which is also the first moment PR 5's trust rules have anything to
+   check.
+
+**AS BUILT, the order above is implemented literally, plus one step in front of
+it that the plan did not have.** Before any of the five, a peer must echo a
+CHALLENGE COOKIE derived from the session secret, its own address and the current
+epoch. §5.2 asked for this and filed it under PR 5 hardening; it turned out to be
+cheaper to build now than to retrofit, because it is what lets the host store
+NOTHING between a probe and a join and therefore have no half-open table for a
+flood to exhaust. The refusal order as shipped is **protocol → build → mods →
+challenge → password → seats**: cheapest and most fundamental first, so garbage
+costs the host almost nothing AND the message names the thing the player can
+actually fix.
 
 ### 2.6 Chat
 
@@ -472,19 +567,172 @@ alone makes `/players 8` strictly punishing rather than the risk/reward trade D2
 intends. `xpGain` must be raised deliberately alongside it. The real tuning pass
 is PR 4's; PR 2 ships the command and the honest pairing.
 
-### 2.7 Done when
+### 2.7 Done when — and what PR 2 actually met
 
-- Eight machines join one session over Steam, and eight join one over a typed
-  address, and both work through a NAT.
-- The HOST screen's three status rows each independently report true, and each
-  remedy button leaves a verified result.
-- A UPnP mapping is created on host and released on quit — checked on a real
-  router.
-- Killing the host closes every client with a stated reason; killing a client
-  leaves the session running.
-- Chat and `/players N` work; spectators see the run in sync.
-- `npm run electron:test` covers the handshake refusals, the UDP reliability
-  layer's ack/retransmit under simulated loss, and the port-walk on `EADDRINUSE`.
+**None of the six was fully met**, and the pattern is the same as PR 1's: the
+machinery is there and nothing can reach it. Three need the screens, two need
+hardware, and one was met somewhere the plan did not expect.
+
+| Criterion                                                                                                                                             | PR 2 (#788)                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eight machines over Steam, eight over a typed address, both through a NAT                                                                             | ❌ **Unverifiable as shipped** — there is no screen to host or join from, and no second machine in CI. Moves to PR 2.5                                                                |
+| The HOST screen's three status rows each report true, each remedy button leaves a verified result                                                     | ❌ **No HOST screen.** Every value it needs — the bound address, the router row, the firewall row, the roster — is on the bridge already                                              |
+| A UPnP mapping created on host and released on quit, checked on a real router                                                                         | ⚠️ **Built, unverified.** Needs a router; CI has none. The lease (renewed at a third of it) is what makes a leak self-heal meanwhile                                                  |
+| Killing the host closes every client with a stated reason; killing a client leaves the session running                                                | ⚠️ **Implemented, not proven over a wire** — `close()` sends a `bye`, `removeClient` frees the seat, but no test drives two processes                                                 |
+| Chat and `/players N` work; spectators see the run in sync                                                                                            | ⚠️ **Half.** Chat and the scaling are tested at the session; "in sync" cannot be shown until PR 1.5 makes a run go through the server                                                 |
+| `npm run electron:test` covers the handshake refusals, the reliability layer's ack/retransmit under simulated loss, and the port-walk on `EADDRINUSE` | ✅ **All three covered — in `tests/engine/`**, not the shell suite, because the transport moved to `server/net/` (see §2.1). The criterion named the wrong runner, not the wrong test |
+
+Also specified in §2 above and **not built**, all of it moving to PR 2.5: the
+three menu screens (§2.4), the chat UI (§2.6), the port setting (§2.2's
+"configurable in SETTINGS"), and the invite launch arguments — `+connect_lobby
+<id>` and `--connect <addr>` (§2.4). Nothing under `electron/src/` reads
+`process.argv` today, so **a friend accepting a Steam invite while the game is
+closed currently lands nowhere.**
+
+---
+
+## PR 1.5 — THE CUTOVER
+
+**Goal: the machinery built in PR 1 stops being unreachable.** A run started
+from the title menu plays identically to today, with the simulation in the
+utility process and the renderer applying snapshots. Nobody notices anything.
+
+That is PR 1's own §1.6 headline, unmet, and it is numbered 1.5 rather than
+folded back into PR 1 because it is genuinely large — **~50 distinct engine
+mutators**, plus taking the loop away from a 1,000-line `GameScreen`.
+
+### 1.5.1 The verbs have to travel before the loop can move
+
+This is the dependency that made the original plan circular. The app does not
+merely READ the state; it acts on it — `openInventory`, `equipFromInventory`,
+`buyStock`, `sellItem`, `allocateStat`, `spendTalentPoint`, `pickTalkChoice`,
+`openShop`, `openMap`, `openQuestLog`, and forty-odd more. Every one of them is a
+direct call on a local `GameState`, and once the state lives in another process
+every one of them has to become a `COMMANDS` entry, a `switch` case, and a
+`sendCommand` at the call site.
+
+**PR 3 was originally given this work, and that was the mistake.** The plan
+conflated two different jobs on the same verbs:
+
+- **Making them TRAVEL** — mechanical, semantics untouched, and a hard
+  prerequisite for moving the loop. **That is this PR.**
+- **Making them NON-BLOCKING per-player** — `state.phase` splits from
+  `Player.screen`, the level-up chooser stops freezing the world, a player in
+  their bag can still be killed. **That stays PR 3** (§3.2), and it is a design
+  exercise rather than a rename.
+
+Ship them here with **today's blocking semantics exactly preserved**. A command
+that opens the inventory still halts the simulation, because that is what it does
+now and this PR is not allowed to change how the game feels.
+
+**Each verb is a question, not a rename**, which is why the estimate is not
+"mechanical, therefore fast": does the caller need a reply, or may it fire and
+forget? Does it touch state the client does not receive (the PRIVATE tier), so
+the app cannot predict the outcome and must wait? Is it safe to apply
+optimistically? Sort them into those three buckets first; the sort is most of the
+work and the code falls out of it.
+
+### 1.5.2 The loop moves
+
+`GameScreen` stops calling `createGame` and driving `step()`, and drives
+`pwa/src/game/net/client.ts` instead — which already exists, already hands back a
+`GameState`-shaped object the renderer reads unchanged, and is today unreachable
+dead code. `render.ts`, the HUD model, the effects, the overlays and the sound
+bus should not need to change at all; if one of them does, that is a finding
+worth writing down rather than patching past.
+
+Three paths need to come with it, and each is a place the single-player game
+could regress silently: **the parked run** (`saved-run.ts`), **the checkpoint
+restore**, and **the autopilot**.
+
+### 1.5.3 And the packaged app gets launched, for the first time
+
+PR 1 flagged this rather than claiming it, and it is still outstanding: the
+`extraResources` entry, the `MessagePortMain` handover and a real
+`utilityProcess.fork` are covered by stubs and reasoning, not by a running app.
+This is the first PR whose work cannot be believed without launching one, so it
+is where that debt is paid.
+
+### 1.5.4 Done when
+
+- A run started from the title menu plays identically to today, through the
+  server. **Measured, not eyeballed**: an autopilot campaign through
+  `scripts/simulate-run.mjs` and a `pwa/scripts/playtest.mjs` run, compared
+  against the same seeds before the cutover.
+- A parked run resumes, a checkpoint restores, and the autopilot flies — all
+  three through the server.
+- `npm run electron` launches the packaged path and plays.
+- `make test`, `make lint`, `npm run electron:test` green; the 170 KB budget
+  still passes (the net client must stay lazy).
+
+### 1.5.5 Risks
+
+**This is the change most likely to cause a silent single-player regression**,
+and the mitigation is the one §3.5 already prescribes for PR 3: **land it as a
+commit series, not one commit.** The mutator conversions in reviewable batches,
+each leaving the game playable, and the loop move last. A regression found at the
+end of an unbisectable branch costs more than the whole PR.
+
+---
+
+## PR 2.5 — THE SCREENS
+
+**Goal: a player can open a door to the session PR 2 built.** Everything here was
+specified in §2 and deferred, and none of it was deferred for lack of a
+foundation — the bound address, the router and firewall rows, the roster and the
+browser rows are all on the `__gisNet` bridge already.
+
+**It depends on PR 1.5 and cannot go first.** A JOIN screen in front of a run
+that still simulates in the renderer is a door into a session nothing plays
+through — which is precisely why PR 2 held it.
+
+### 2.5.1 What it ships
+
+- **The three screens of §2.4** — HOST GAME, JOIN GAME (the browser), and JOIN BY
+  ADDRESS. Authored in `content/mainmenu.yaml`, because **the menu tree is
+  content**: a screen that is not in the file does not exist, and `assembleRows`
+  throws for a row id no builder answers — so the rows and their builders land in
+  the same commit.
+- **The HOST screen's status panel** of §2.2, live, with each row reporting on
+  one of the three independent things that can block an inbound connection, and
+  each with its own remedy. **The row shows the port the socket ACTUALLY got.**
+- **The chat overlay of §2.6** — `PixelText` for the log, the `.pixel-input`
+  widget for the field (it already carries the hard-won iOS predictive-text
+  handling in `pwa/src/game/hero-name.ts`), and a scrollback that does not steal
+  the steering thumb's third of the screen.
+- **The port setting** of §2.2, in SETTINGS.
+- **The invite launch arguments** of §2.4 — `+connect_lobby <id>` when a friend
+  accepts a Steam invite while the game is closed, and `--connect <addr>` for a
+  shareable direct link. Both arrive in `main.ts` before the window exists and
+  have to be **parked until the page is up**. Nothing reads `process.argv` today.
+
+### 2.5.2 Two rules carried over from §2
+
+**THE 170 KB CRITICAL-PATH BUDGET IS THE LIVE HAZARD OF THIS PR**, more than of
+any other. These are TITLE MENU screens, i.e. the app's startup path. They may
+import `@game/menu` and the import-free `@game/wire/*` leaves — never
+`pwa/src/game/net/`, which reaches `@game/core` and would drag the whole
+simulation into every player's first download. `pwa/scripts/check-seo.mjs` is
+what catches it; do not raise the number.
+
+**A browser row this build cannot join is shown, not hidden.** A player whose
+friend is on a newer build and whose list is simply empty concludes the feature
+is broken; one who sees the session greyed with "BUILD 1.4.2" goes and updates.
+
+### 2.5.3 Done when
+
+This is where PR 2's own §2.7 finally gets answered, so its six criteria are
+inherited verbatim — eight machines over each transport through a NAT, the three
+status rows each independently true with verified remedies, a UPnP mapping
+created and released **on a real router**, a killed host closing every client
+with a stated reason, and spectators seeing the run in sync.
+
+Plus, of this PR's own:
+
+- A `+connect_lobby` launch from a cold start reaches the right session.
+- The `ui-review` skill's screenshot audit passes at all nine reference
+  viewports, chat overlay included.
+- The budget check still passes.
 
 ---
 
@@ -554,6 +802,11 @@ Eleven of them are per-player UI that must stop freezing the world: `paused`,
 `levelup`, `respec`, `inventory`, `map`, `questLog`, `shop`, `quest`, `talk`,
 `choice`, `companion`. D2 explicitly wants one player shopping while another
 fights.
+
+**The verbs that raise those phases already TRAVEL by the time this PR starts —
+PR 1.5 made them commands.** What is left here is the half that was always the
+design exercise: changing what they MEAN. Do not re-do the plumbing; read
+`COMMANDS` in `server/wire/protocol.ts` and change the semantics behind it.
 
 The change is to split the concept in two:
 
@@ -853,23 +1106,24 @@ and it should be a few hundred lines.
 Answers this plan recommends but does not have authority to make. Each should be
 settled before the PR that needs it, not during.
 
-| #   | Question                                                 | Recommendation                                                    | Needed by |
-| --- | -------------------------------------------------------- | ----------------------------------------------------------------- | --------- |
-| 1   | Max party size                                           | 8, matching D2 and the `/players` scale                           | PR 1      |
-| 2   | Default direct port                                      | UDP 27015, walking to 27030, always revealing the bound one       | PR 2      |
-| 3   | Steam-only or dual transport                             | **Dual**, both offered by default                                 | PR 2      |
-| 4   | Level-up: blocking chooser or banked points              | Banked + non-blocking chooser (changes single-player too)         | PR 3      |
-| 5   | Fog of war: shared or per-player                         | Shared                                                            | PR 3      |
-| 6   | Spare-or-kill: who decides                               | The killing blow's owner, shown to all                            | PR 3      |
-| 7   | Loot: FFA or allocated                                   | FFA default, host toggle for allocated                            | PR 4      |
-| 8   | XP: D2's proximity + level weighting                     | Yes, then measure across the level range                          | PR 4      |
-| 9   | Hardcore heroes in others' sessions                      | Only hardcore hosts, same difficulty, enforced at handshake       | PR 4      |
-| 10  | Host migration                                           | **No.** Host leaves, session ends, everyone banks                 | PR 4      |
-| 11  | Leaderboards from co-op runs                             | Excluded, marked with a `PartyStamp`                              | PR 5      |
-| 12  | Achievements from co-op runs                             | Count for everyone present                                        | PR 5      |
-| 13  | Browser PWA as a **joiner**                              | Out of scope. WebRTC + a signalling service is a separate project | —         |
-| 14  | Mobile as a joiner                                       | Out of scope for the same reason                                  | —         |
-| 15  | Licence (`PolyForm-Noncommercial-1.0.0`) and hosted play | Confirm what it permits before a dedicated server ships           | PR 5      |
+| #   | Question                                                 | Recommendation                                                                                                                                                                                                                                                                                                                      | Needed by |
+| --- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| 1   | Max party size                                           | 8, matching D2 and the `/players` scale                                                                                                                                                                                                                                                                                             | PR 1      |
+| 2   | Default direct port                                      | UDP 27015, walking to 27030, always revealing the bound one                                                                                                                                                                                                                                                                         | PR 2      |
+| 3   | Steam-only or dual transport                             | **Dual**, both offered by default                                                                                                                                                                                                                                                                                                   | PR 2      |
+| 3a  | Do the deferred cutover and screens land as one PR?      | **No — two.** See PR 1.5's §1.5.5: the cutover is the change most likely to regress single-player silently, it is provable on its own (an autopilot campaign against the same seeds), and the screens are verified by a different loop entirely. Combining them puts the same seam through one PR that PRs 1 and 2 both split along | PR 1.5    |
+| 4   | Level-up: blocking chooser or banked points              | Banked + non-blocking chooser (changes single-player too)                                                                                                                                                                                                                                                                           | PR 3      |
+| 5   | Fog of war: shared or per-player                         | Shared                                                                                                                                                                                                                                                                                                                              | PR 3      |
+| 6   | Spare-or-kill: who decides                               | The killing blow's owner, shown to all                                                                                                                                                                                                                                                                                              | PR 3      |
+| 7   | Loot: FFA or allocated                                   | FFA default, host toggle for allocated                                                                                                                                                                                                                                                                                              | PR 4      |
+| 8   | XP: D2's proximity + level weighting                     | Yes, then measure across the level range                                                                                                                                                                                                                                                                                            | PR 4      |
+| 9   | Hardcore heroes in others' sessions                      | Only hardcore hosts, same difficulty, enforced at handshake                                                                                                                                                                                                                                                                         | PR 4      |
+| 10  | Host migration                                           | **No.** Host leaves, session ends, everyone banks                                                                                                                                                                                                                                                                                   | PR 4      |
+| 11  | Leaderboards from co-op runs                             | Excluded, marked with a `PartyStamp`                                                                                                                                                                                                                                                                                                | PR 5      |
+| 12  | Achievements from co-op runs                             | Count for everyone present                                                                                                                                                                                                                                                                                                          | PR 5      |
+| 13  | Browser PWA as a **joiner**                              | Out of scope. WebRTC + a signalling service is a separate project                                                                                                                                                                                                                                                                   | —         |
+| 14  | Mobile as a joiner                                       | Out of scope for the same reason                                                                                                                                                                                                                                                                                                    | —         |
+| 15  | Licence (`PolyForm-Noncommercial-1.0.0`) and hosted play | Confirm what it permits before a dedicated server ships                                                                                                                                                                                                                                                                             | PR 5      |
 
 ---
 
@@ -920,3 +1174,16 @@ settled before the PR that needs it, not during.
   `--verdict` line exist precisely so that the balance questions in PR 4 have
   numbers attached. Multi-player support in the simulator is scoped into PR 3
   for that reason.
+- **AMEND THIS DOCUMENT IN THE PR THAT FALSIFIES IT.** The lesson of PRs 1 and 2
+  is not that they deferred work — sometimes that is right — but that their
+  "Done when" lists were left standing as if met, so the plan quietly stopped
+  describing the repo. If a PR ships something the plan did not ask for, or
+  leaves something it did, say so **in the plan, in that PR**, with the reason.
+  Both amendments above were written weeks late, from a `grep` rather than from
+  memory, and the reconstruction cost more than the note would have.
+- **A DEFERRED HALF IS A PR, NOT A FOOTNOTE.** The specific way this plan went
+  wrong is worth naming so it is not repeated in PRs 3–5, which are each larger
+  than either PR that has landed: a big change made of two different KINDS of
+  work — a layer, and the cutover or UI that makes it reachable — will ship the
+  layer and defer the other half. Either cut the PR along that seam up front, or
+  expect to be back here.

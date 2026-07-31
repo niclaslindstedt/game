@@ -357,9 +357,17 @@ export type InputPayload = {
  * validation would put that back in the box.
  *
  * PR 1 ships exactly the scene-advance verbs a single-player run needs to get
- * from the prelude to the field and out the other side. The inventory, the
- * shop, the level-up chooser and the talent picker join them in PR 3, when
- * they stop freezing the world for everybody.
+ * from the prelude to the field and out the other side.
+ *
+ * **THE INVENTORY, THE SHOP, THE LEVEL-UP CHOOSER AND THE TALENT PICKER JOIN
+ * THEM IN PR 1.5, NOT PR 3** — the plan originally said PR 3 and that was a
+ * circular dependency, since the run loop cannot move into the server until
+ * every verb it calls can travel. The two halves are separate jobs on the same
+ * names: PR 1.5 makes them TRAVEL with today's blocking semantics exactly
+ * preserved, and PR 3 makes them NON-BLOCKING per player. Anyone widening this
+ * list for the first reason must not quietly do the second at the same time —
+ * a command that stopped freezing the world would change how single-player
+ * feels, which is the one thing the cutover may not do.
  */
 export const COMMANDS = [
   "advanceIntro",
