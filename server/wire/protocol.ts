@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 /**
  * The most clients one session seats, host included.
@@ -95,6 +95,17 @@ export type SessionParams = {
   /** The arriving hero's carry-over, or null for the authored fresh start.
    * Opaque here on purpose: the wire moves it, the engine reads it. */
   loadout: unknown | null;
+  /**
+   * The build an AUTO PILOT flight already in progress engaged on, or null.
+   *
+   * Opaque here for the same reason `loadout` is: the wire moves it, the engine
+   * reads it. It travels because a FLIGHT outlives a run — the ride crosses
+   * levels and each level is a fresh session — and the refund owed when it
+   * stops must revert to the build the player had before the FIRST level.
+   * Held app-side alone (as it was before the cutover) it could not survive the
+   * simulation moving out of the renderer.
+   */
+  autopilotBuild?: unknown | null;
   /** A LEVEL TOKEN respec is owed at the run's start. */
   respec: boolean;
   /** Level ids the hero has already cleared on this difficulty. */
@@ -356,18 +367,29 @@ export type InputPayload = {
  * `killEnemy` — the day PR 2 opens a UDP port, and no amount of later
  * validation would put that back in the box.
  *
- * PR 1 ships exactly the scene-advance verbs a single-player run needs to get
- * from the prelude to the field and out the other side.
+ * PR 1 shipped exactly the scene-advance verbs a single-player run needs to get
+ * from the prelude to the field and out the other side. **PR 1.5 added the
+ * rest** — the screens, the bag, the counter, the build, the party, the errands,
+ * the vault and the ride — because the run loop cannot move into the server
+ * until every verb it calls can travel. (The plan first gave that work to PR 3,
+ * which was a circular dependency: PR 3's prediction assumes the run already
+ * goes through the server.)
  *
- * **THE INVENTORY, THE SHOP, THE LEVEL-UP CHOOSER AND THE TALENT PICKER JOIN
- * THEM IN PR 1.5, NOT PR 3** — the plan originally said PR 3 and that was a
- * circular dependency, since the run loop cannot move into the server until
- * every verb it calls can travel. The two halves are separate jobs on the same
- * names: PR 1.5 makes them TRAVEL with today's blocking semantics exactly
- * preserved, and PR 3 makes them NON-BLOCKING per player. Anyone widening this
- * list for the first reason must not quietly do the second at the same time —
- * a command that stopped freezing the world would change how single-player
- * feels, which is the one thing the cutover may not do.
+ * The two halves are separate jobs on the same names: **PR 1.5 makes them
+ * TRAVEL** with today's blocking semantics exactly preserved, and **PR 3 makes
+ * them NON-BLOCKING** per player. Anyone widening this list for the first
+ * reason must not quietly do the second at the same time — a command that
+ * stopped freezing the world would change how single-player feels, which is the
+ * one thing the cutover may not do.
+ *
+ * **THIS IS A COPY, AND THE COPY IS DELIBERATE.** What each verb DOES lives in
+ * the engine (`src/game/commands.ts`), which this leaf may not import: the page
+ * reads this module from screens on the app's startup path, where the 170 KB
+ * critical-path budget forbids reaching `@game/core`. So the names are
+ * snapshotted here for the allow-list and `tests/engine/run_commands_test.ts`
+ * fails the build when the two lists disagree — the same shape `mod/catalog.json`
+ * and the Game Center manifests already use. Never re-derive the list at
+ * runtime; that import IS the budget bug.
  */
 export const COMMANDS = [
   "advanceIntro",
@@ -379,13 +401,90 @@ export const COMMANDS = [
   "tapCutscene",
   "skipStoryOpening",
   "skipDeathScene",
+  "advanceDialogue",
+  "muteDialogue",
+  "unmuteDialogue",
+  "openInventory",
+  "closeInventory",
+  "openShop",
+  "closeShop",
+  "openMap",
+  "closeMap",
+  "openQuestLog",
+  "closeQuestLog",
+  "openCompanionPanel",
+  "closeCompanionPanel",
+  "promptPendingPoints",
+  "pauseGame",
+  "resumeGame",
+  "stayOnField",
+  "reopenVictoryChoice",
+  "equipFromInventory",
+  "equipFromInventoryInto",
+  "unequipToInventory",
+  "moveInventoryItem",
+  "discardFromInventory",
+  "discardEquipped",
+  "spendGateKey",
+  "autoEquipBest",
+  "scrapInferiorLoot",
+  "discardHeldAbility",
+  "buyStock",
+  "sellItem",
+  "repairGear",
+  "buyQuestPiece",
+  "sellQuestPiece",
+  "allocateStat",
+  "deallocateStat",
+  "spendTalentPoint",
+  "beginRespec",
+  "confirmRespec",
+  "spendCleanSlate",
+  "equipCompanionFromInventory",
+  "unequipCompanionToInventory",
+  "resolveChoice",
+  "talkToQuestGiver",
+  "pickQuestTopic",
+  "acceptQuest",
+  "declineQuest",
+  "turnInQuest",
+  "advanceQuestDialogue",
+  "closeQuestDialogue",
+  "talkToEnemy",
+  "advanceTalk",
+  "pickTalkChoice",
+  "closeTalk",
+  "reclaimVaultItem",
+  "clearVault",
+  "startAutopilot",
+  "stopAutopilot",
+  "setAutopilotSpeed",
+  "creditAutopilotPurse",
+  "refundAutopilotBuild",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
 
-/** One command frame's payload. */
+/**
+ * What a command argument may be — scalars, and only scalars.
+ *
+ * That is the point rather than a limitation. A verb whose payload is a
+ * STRUCTURE is a verb whose payload a stranger gets to shape, and the thing
+ * this channel exists to prevent is a client handing the host something the
+ * host then walks. Everything the app actually has to say — an inventory
+ * index, a slot name, a stat, a quest id, a speed rung — is already a scalar,
+ * and the one thing that was not (the AUTO PILOT's build baseline) was moved
+ * onto the run instead, where it belonged anyway.
+ */
+export type CommandArgValue = number | string | boolean;
+
+/** One command frame's payload. The arity and the type of each argument are
+ * declared by the ENGINE beside the verb (`RUN_COMMAND_ARGS`) and checked
+ * there before anything is dispatched — this leaf carries them, it does not
+ * judge them. */
 export type CommandPayload = {
   name: CommandName;
+  args?: CommandArgValue[];
 };
 
 /** True when `value` looks like a frame header this build can act on. Used at

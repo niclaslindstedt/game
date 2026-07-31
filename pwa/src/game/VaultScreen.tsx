@@ -28,7 +28,6 @@ import {
   createGame,
   equipmentName,
   reclaimCost,
-  reclaimVaultItem,
   vaultContents,
   type Equipment,
   type GameState,
@@ -52,6 +51,8 @@ import { playUiSound } from "./sfx/ui.ts";
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 import { useHelpWrapRem } from "./title-screen/use-title-layout.ts";
+
+import { runCommand } from "./run-commands.ts";
 
 /** Uppercase slot label for a list row's sub-line (WEAPON, HEAD, CHARM, …). */
 const SLOT_LABEL: Record<Equipment["slot"], string> = {
@@ -576,7 +577,11 @@ export function RunVaultScreen({
       warning="TRASHED THE MOMENT THIS RIDE STARTS"
       overlayClass="run-vault"
       onReclaim={(item) => {
-        const refused = reclaimVaultItem(state, item.id);
+        const refused = runCommand(
+          state,
+          "reclaimVaultItem",
+          item.id,
+        ) as VaultRefusal | null;
         if (!refused) {
           bump();
           onChange();

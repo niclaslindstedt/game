@@ -24,7 +24,6 @@ import {
 } from "react";
 
 import {
-  spendTalentPoint,
   talentRank,
   talentIcon,
   talentsForTree,
@@ -38,6 +37,8 @@ import { useArmDelay } from "@ui/lib/use-arm-delay.ts";
 
 import { spriteDataUrl, type Sprites } from "../assets.ts";
 import { TREE_LOOK } from "../talent-look.ts";
+
+import { runCommandOk } from "../run-commands.ts";
 
 // Kept in sync with the CSS `talent-arming` fill — the rows stay inert this long
 // after the picker reveals.
@@ -130,7 +131,7 @@ export function TalentPickerOverlay({
         const def = talents[cursor];
         if (!def) return;
         event.preventDefault();
-        if (spendTalentPoint(state, def.id)) onChange();
+        if (runCommandOk(state, "spendTalentPoint", def.id)) onChange();
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -196,7 +197,8 @@ export function TalentPickerOverlay({
                 onClick={() => {
                   if (!armed || maxed) return;
                   setCursor(i);
-                  if (spendTalentPoint(state, def.id)) onChange();
+                  if (runCommandOk(state, "spendTalentPoint", def.id))
+                    onChange();
                 }}
               >
                 {icon && (

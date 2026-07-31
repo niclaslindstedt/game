@@ -22,27 +22,11 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import {
-  discardHeldAbility,
-  dismissIntro,
-  acceptQuest,
-  advanceQuestDialogue,
-  advanceTalk,
-  closeTalk,
-  pickTalkChoice,
-  closeQuestDialogue,
-  declineQuest,
-  pickQuestTopic,
   runLevelDef,
-  turnInQuest,
   canOpenInventory,
-  openInventory,
-  openQuestLog,
   debugDetonateNuke,
   debugLevelUpFx,
   error,
-  pauseGame,
-  resumeGame,
-  stayOnField,
   step,
   type Difficulty,
   type GameInput,
@@ -148,6 +132,8 @@ import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays, type CharTab } from "./game-screen/SceneOverlays.tsx";
 import { DemoChrome, ScreenChrome } from "./game-screen/ScreenChrome.tsx";
 import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
+
+import { runCommand, runCommandOk } from "./run-commands.ts";
 
 export function GameScreen({
   character,
@@ -522,14 +508,14 @@ export function GameScreen({
       // A hand-opened pause latches so the bot's input loop won't clear it (an
       // auto-pause from tab blur passes userInitiated=false and stays clearable).
       if (userInitiated) userPausedRef.current = true;
-      pauseGame(state);
+      runCommand(state, "pauseGame");
       pauseMusic();
       bumpUi();
     };
     const resumeRun = () => {
       if (state.phase !== "paused") return;
       userPausedRef.current = false;
-      resumeGame(state);
+      runCommand(state, "resumeGame");
       resumeMusic();
       bumpUi();
     };
@@ -921,7 +907,7 @@ export function GameScreen({
     if (!state || !canOpenInventory(state)) return;
     setWeaponMenuOpen(false);
     setCharTab(tab);
-    openInventory(state);
+    runCommand(state, "openInventory");
     playUiSound(synth, "confirm");
     bumpUi();
   };
@@ -1009,7 +995,7 @@ export function GameScreen({
           onOpenQuestLog={() => {
             if (state.phase !== "playing") return;
             setWeaponMenuOpen(false);
-            openQuestLog(state);
+            runCommand(state, "openQuestLog");
             playUiSound(synth, "confirm");
             bumpUi();
           }}
@@ -1053,7 +1039,7 @@ export function GameScreen({
         dockRef={powerupDockRef}
         onSpend={queues.queueDockSpend}
         onDiscard={(index) => {
-          if (state && discardHeldAbility(state, index)) {
+          if (state && runCommand(state, "discardHeldAbility", index)) {
             playUiSound(synth, "back");
             return true;
           }
@@ -1150,7 +1136,7 @@ export function GameScreen({
           onBeginRun={() => {
             // Leave the level-name card and drop into the run — the level
             // music rolls the moment play begins.
-            dismissIntro(state);
+            runCommand(state, "dismissIntro");
             playLevelMusic(runLevelDef(state).music);
             bumpUi();
           }}
@@ -1168,12 +1154,12 @@ export function GameScreen({
           assets={assets}
           font={font}
           onAdvance={() => {
-            advanceTalk(state);
+            runCommand(state, "advanceTalk");
             playUiSound(synth, "move");
             bumpUi();
           }}
           onPick={(index) => {
-            pickTalkChoice(state, index);
+            runCommandOk(state, "pickTalkChoice", index);
             playUiSound(synth, "confirm");
             bumpUi();
           }}
@@ -1182,7 +1168,7 @@ export function GameScreen({
             playTypewriterHaptic();
           }}
           onClose={() => {
-            closeTalk(state);
+            runCommand(state, "closeTalk");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -1199,27 +1185,27 @@ export function GameScreen({
           assets={assets}
           font={font}
           onAdvance={() => {
-            advanceQuestDialogue(state);
+            runCommand(state, "advanceQuestDialogue");
             playUiSound(synth, "move");
             bumpUi();
           }}
           onAccept={() => {
-            acceptQuest(state);
+            runCommandOk(state, "acceptQuest");
             playUiSound(synth, "confirm");
             bumpUi();
           }}
           onDecline={() => {
-            declineQuest(state);
+            runCommandOk(state, "declineQuest");
             playUiSound(synth, "back");
             bumpUi();
           }}
           onTurnIn={() => {
-            turnInQuest(state);
+            runCommand(state, "turnInQuest");
             playUiSound(synth, "confirm");
             bumpUi();
           }}
           onPick={(questId) => {
-            pickQuestTopic(state, questId);
+            runCommandOk(state, "pickQuestTopic", questId);
             playUiSound(synth, "confirm");
             bumpUi();
           }}
@@ -1228,7 +1214,7 @@ export function GameScreen({
             playTypewriterHaptic();
           }}
           onClose={() => {
-            closeQuestDialogue(state);
+            runCommand(state, "closeQuestDialogue");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -1281,7 +1267,7 @@ export function GameScreen({
             setRunId((id) => id + 1);
           }}
           onStay={() => {
-            if (state && stayOnField(state)) {
+            if (state && runCommandOk(state, "stayOnField")) {
               setHud(null);
               playLevelMusic(runLevelDef(state).music);
             }

@@ -177,9 +177,37 @@ export type PackState = {
  * game-second — disengaging itself (with an `autopilotStopped` event) the
  * moment the coins run out.
  */
+/**
+ * The hero's CHOSEN build, frozen — what an AUTO PILOT flight is measured
+ * against and reverted to (see `refundAutopilotBuild`).
+ *
+ * It lives with the types rather than beside the function that reads it because
+ * a FLIGHT outlives a run: the ride crosses levels, each level is a fresh
+ * `GameState`, and the baseline therefore has to travel — as `autopilot.build`
+ * on the run, seeded from `SessionParams.autopilotBuild` exactly as the hero's
+ * gear is seeded from `loadout`. Held app-side alone, it could not survive the
+ * simulation moving into the session server.
+ */
+export type BuildSnapshot = {
+  stats: Record<StatName, number>;
+  spentStats: Record<StatName, number>;
+  talents: Record<string, number>;
+};
+
 export type AutopilotState = {
   /** The autopilot is flying the hero (and the meter is running). */
   active: boolean;
+  /**
+   * The build the FLIGHT engaged on, or null when no ride is in progress.
+   *
+   * Stamped by `startAutopilot` when the run does not already carry one, and
+   * cleared by `refundAutopilotBuild` once the points are handed back. A run
+   * the ride crosses INTO is handed the flight's original baseline through the
+   * session parameters, so a stamp is never overwritten mid-flight — the refund
+   * must revert to the build the player had before the FIRST level, not before
+   * the last one.
+   */
+  build?: BuildSnapshot | null;
   /** The engaged speed rung (config `AUTOPILOT.speeds`) — scales both the
    * app's fast-forward and the per-game-second price. */
   speed: number;

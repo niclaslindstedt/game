@@ -16,7 +16,6 @@ import {
   createBot,
   createGame,
   debug,
-  dismissIntro,
   runLevelDef,
   hasLevel,
   markThoughtsSeen,
@@ -49,6 +48,8 @@ import { buildBotViewLoadout } from "../seed-characters.ts";
 import { getSettings } from "../settings.ts";
 import type { PlayerAction } from "../render.ts";
 import type { RunCheckpoint } from "./run-progress.ts";
+
+import { runCommand } from "../run-commands.ts";
 
 // Fast-forward ceiling: the most the `?speed=` param / `__speed` debug hook may
 // crank the sim clock. High enough to blitz a bot playtest, capped so a single
@@ -274,7 +275,9 @@ export function createRunSession(deps: {
   // The run's music: the level theme rolls once the intro is dismissed and
   // stops for the end-of-run jingles (victory/defeat events).
   const beginRun = () => {
-    dismissIntro(state);
+    // A LIVE verb, so it travels: the title card is tapped while the run is
+    // already going, unlike the two construction-time skips below.
+    runCommand(state, "dismissIntro");
     playLevelMusic(runLevelDef(state).music);
   };
 
@@ -354,6 +357,10 @@ export function createRunSession(deps: {
     // drop straight into play. skipCutscene lands the prelude on the level
     // `title` card, then beginRun's dismissIntro carries it into `playing` —
     // the same shortcut the keyboard and headless bot use, done up front.
+    // CONSTRUCTION, not play: these two run before the loop exists, on a state
+    // nothing else is holding yet, so they are direct engine calls rather than
+    // commands. On the net path the session applies its own opening skips at
+    // creation, from the same session parameters.
     if (state.phase === "cutscene") skipCutscene(state);
     beginRun();
   } else if (openingSeen) {

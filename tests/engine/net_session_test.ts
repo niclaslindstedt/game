@@ -192,6 +192,35 @@ describe("a session and its client", () => {
     expect(rig.session.state.player.xp).toBe(before);
   });
 
+  it("carries a command's ARGUMENTS to the authoritative state", () => {
+    // PR 1's verbs took no arguments; PR 1.5's mostly do — a bag cell, a slot,
+    // a stat, a merchant row. What this proves is the whole round trip: the
+    // argument survives the encode, the decode and the dispatch, and lands on
+    // the SERVER's hero rather than on the client's copy of him.
+    const rig = connect();
+    takeTheField(rig);
+    rig.session.state.player.pendingStatPoints = 2;
+    const before = rig.session.state.player.stats.luck;
+    rig.client.sendCommand("allocateStat", ["luck"]);
+    play(rig, 6);
+    expect(rig.session.state.player.stats.luck).toBe(before + 1);
+    expect(rig.client.state!.player.stats.luck).toBe(before + 1);
+  });
+
+  it("ignores an argument of the wrong shape rather than throwing", () => {
+    // These bytes come from a stranger on an open UDP port from PR 2 on. A
+    // stat that is not a stat must be a refusal the host does not notice, not
+    // a write with an attacker's key on it.
+    const rig = connect();
+    takeTheField(rig);
+    rig.session.state.player.pendingStatPoints = 2;
+    rig.client.sendCommand("allocateStat", ["__proto__" as never]);
+    rig.client.sendCommand("allocateStat", [{} as never]);
+    rig.client.sendCommand("allocateStat");
+    play(rig, 6);
+    expect(rig.session.state.player.pendingStatPoints).toBe(2);
+  });
+
   it("holds the same world as the server after a run", () => {
     const rig = connect();
     takeTheField(rig);

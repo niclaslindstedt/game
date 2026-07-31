@@ -16,13 +16,7 @@ import {
   extractLoadout,
   runLevelDef,
   LEVEL_ORDER,
-  muteDialogue,
-  promptPendingPoints,
-  refundAutopilotBuild,
-  startAutopilot,
   STAT_NAMES,
-  stopAutopilot,
-  unmuteDialogue,
   type Bot,
   type BuildSnapshot,
   type Difficulty,
@@ -41,6 +35,8 @@ import {
 import { TIER_COLORS, TIER_RANK } from "../tiers.ts";
 import type { Hud } from "./hud-model.ts";
 import type { RunCheckpoint } from "./run-progress.ts";
+
+import { runCommand, runCommandOk } from "../run-commands.ts";
 
 // AUTO PILOT (src/game/autopilot.ts): the endgame FARM level the ride grinds
 // once the campaign difficulty is beaten — the level that hosts the bunker
@@ -198,7 +194,7 @@ export function finishAutopilotRide(deps: {
   const wasRiding =
     snapshot !== null || state.autopilot.active || session.engaged;
   if (!wasRiding) return false;
-  stopAutopilot(state);
+  runCommandOk(state, "stopAutopilot");
   session.engaged = false;
   session.specSnapshot = null;
   let prompted = false;
@@ -206,7 +202,12 @@ export function finishAutopilotRide(deps: {
     // Revert the ride's stat/talent picks into unspent points, then bank the
     // clean build so a quit-to-title can't strand the bot's allocations on the
     // character.
-    refundAutopilotBuild(state, snapshot);
+    // No argument: the ride's baseline lives on the RUN
+    // (`state.autopilot.build`, stamped when the flight engaged and carried
+    // into each level it crosses through the session parameters), because a
+    // caller-supplied snapshot is a structure and the command channel carries
+    // scalars only. The session's copy is authoritative on the net path.
+    runCommand(state, "refundAutopilotBuild");
     // The ride runs inside a real run whose purse was funded from the hero's
     // whole wealth at start (run-setup.ts) — the pending credit is already in
     // state.player.coins, so bank it as-is (don't fold pendingCoins twice).
@@ -215,9 +216,9 @@ export function finishAutopilotRide(deps: {
       extractLoadout(state),
       true,
     );
-    prompted = promptPendingPoints(state);
+    prompted = runCommandOk(state, "promptPendingPoints");
   }
-  unmuteDialogue(state);
+  runCommand(state, "unmuteDialogue");
   syncView();
   return prompted;
 }
@@ -332,14 +333,14 @@ export function createAutopilotDirector(deps: {
   const pilot = sessionRef.current;
   let brokeAtDoor = false;
   if (!demo && pilot.engaged) {
-    if (startAutopilot(state, pilot.speed)) {
-      muteDialogue(state);
+    if (runCommandOk(state, "startAutopilot", pilot.speed)) {
+      runCommand(state, "muteDialogue");
     } else {
       pilot.engaged = false;
       brokeAtDoor = true;
     }
   } else if (state.autopilot.active) {
-    stopAutopilot(state);
+    runCommandOk(state, "stopAutopilot");
   }
 
   const consumeBrokeAtDoor = () => {
@@ -455,7 +456,7 @@ export function createAutopilotDirector(deps: {
       } else if (characterRef.current.hardcore) {
         // A hardcore hero is retired for good — there is no spec left to hand
         // back, so the ride just ends (no refund); drop the snapshot with it.
-        stopAutopilot(state);
+        runCommandOk(state, "stopAutopilot");
         pilot.engaged = false;
         pilot.specSnapshot = null;
         bumpUi();

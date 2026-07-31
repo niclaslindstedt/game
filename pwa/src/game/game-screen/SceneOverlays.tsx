@@ -12,24 +12,7 @@
 
 import type { MutableRefObject, ReactNode } from "react";
 
-import {
-  advanceDialogue,
-  advanceIntro,
-  advanceOutro,
-  canOpenInventory,
-  closeCompanionPanel,
-  closeInventory,
-  closeMap,
-  closeQuestLog,
-  closeShop,
-  confirmRespec,
-  muteDialogue,
-  skipCutscene,
-  skipIntro,
-  skipOutro,
-  tapCutscene,
-  type GameState,
-} from "@game/core";
+import { canOpenInventory, type GameState } from "@game/core";
 
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -58,6 +41,8 @@ import { ShopPanel } from "../ShopPanel.tsx";
 import { TalentPickerOverlay } from "../overlays/TalentPickerOverlay.tsx";
 import { TitleCard } from "../TitleCard.tsx";
 import type { Hud } from "./hud-model.ts";
+
+import { runCommand, runCommandOk } from "../run-commands.ts";
 
 /** Which half of the character screen the app is showing — see the pair of
  * overlays below. */
@@ -127,11 +112,11 @@ export function SceneOverlays({
             playTypewriterHaptic();
           }}
           onTap={() => {
-            tapCutscene(state);
+            runCommand(state, "tapCutscene");
             playUiSound(synth, "move");
           }}
           onSkip={() => {
-            skipCutscene(state);
+            runCommand(state, "skipCutscene");
             playUiSound(synth, "back");
           }}
         />
@@ -148,12 +133,12 @@ export function SceneOverlays({
             playTypewriterHaptic();
           }}
           onAdvance={() => {
-            advanceIntro(state);
+            runCommand(state, "advanceIntro");
             playUiSound(synth, "move");
             bumpUi();
           }}
           onSkip={() => {
-            skipIntro(state);
+            runCommand(state, "skipIntro");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -172,12 +157,12 @@ export function SceneOverlays({
             playTypewriterHaptic();
           }}
           onAdvance={() => {
-            advanceOutro(state);
+            runCommand(state, "advanceOutro");
             playUiSound(synth, "move");
             bumpUi();
           }}
           onSkip={() => {
-            skipOutro(state);
+            runCommand(state, "skipOutro");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -199,12 +184,12 @@ export function SceneOverlays({
             playTypewriterHaptic();
           }}
           onAdvance={() => {
-            advanceDialogue(state);
+            runCommand(state, "advanceDialogue");
             playUiSound(synth, "move");
             bumpUi();
           }}
           onMute={() => {
-            muteDialogue(state);
+            runCommand(state, "muteDialogue");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -240,7 +225,7 @@ export function SceneOverlays({
           sprites={assets.sprites}
           onChange={bumpUi}
           onClose={() => {
-            closeCompanionPanel(state);
+            runCommand(state, "closeCompanionPanel");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -278,7 +263,7 @@ export function SceneOverlays({
           sprites={assets.sprites}
           onChange={bumpUi}
           onConfirm={() => {
-            if (confirmRespec(state)) {
+            if (runCommandOk(state, "confirmRespec")) {
               playUiSound(synth, "start");
               bumpUi();
             }
@@ -298,7 +283,7 @@ export function SceneOverlays({
           sprites={assets.sprites}
           onChange={bumpUi}
           onClose={() => {
-            closeInventory(state);
+            runCommand(state, "closeInventory");
             bumpUi();
           }}
         />
@@ -314,7 +299,7 @@ export function SceneOverlays({
           difficulty={state.difficulty}
           onOpenBag={() => onCharTab("bag")}
           onClose={() => {
-            closeInventory(state);
+            runCommand(state, "closeInventory");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -329,7 +314,7 @@ export function SceneOverlays({
           sprites={assets.sprites}
           onChange={bumpUi}
           onClose={() => {
-            closeShop(state);
+            runCommand(state, "closeShop");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -342,7 +327,7 @@ export function SceneOverlays({
           assets={assets}
           font={font}
           onClose={() => {
-            closeMap(state);
+            runCommand(state, "closeMap");
             playUiSound(synth, "back");
             bumpUi();
           }}
@@ -357,7 +342,7 @@ export function SceneOverlays({
           assets={assets}
           font={font}
           onClose={() => {
-            closeQuestLog(state);
+            runCommand(state, "closeQuestLog");
             playUiSound(synth, "back");
             bumpUi();
           }}

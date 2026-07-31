@@ -7,7 +7,6 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import {
-  equipFromInventory,
   equipmentIcon,
   itemLevelReq,
   type GameState,
@@ -26,6 +25,8 @@ import {
 } from "../PickupModal.tsx";
 import { playUiSound } from "../sfx/ui.ts";
 import { TIER_COLORS } from "../tiers.ts";
+
+import { runCommandOk } from "../run-commands.ts";
 
 // At most this many pickup lines show at once; older ones drop off the top so
 // a loot flood never buries the screen.
@@ -185,7 +186,7 @@ export function createPickupCardQueue(deps: {
           const index = state.player.inventory.findIndex(
             (it) => it?.id === itemId,
           );
-          if (index >= 0 && equipFromInventory(state, index)) {
+          if (index >= 0 && runCommandOk(state, "equipFromInventory", index)) {
             playUiSound(synth, "equip");
             bumpUi();
             // Flip the live card to its worn state — the find is now equipped,

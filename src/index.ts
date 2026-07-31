@@ -589,6 +589,21 @@ export {
 export type { AutopilotRoute } from "./game/autopilot.ts";
 export type { AutopilotState } from "./game/types/index.ts";
 
+// THE RUN'S VERBS — the closed list of everything the app may DO to a run, and
+// the one dispatch behind it (see commands.ts). Multiplayer moves the
+// simulation into another process, so every act the app performs on the state
+// has to be something that can travel; this is that list, and the app reaches
+// it through `pwa/src/game/run-commands.ts` rather than calling the verbs by
+// hand.
+export {
+  applyRunCommand,
+  checkRunCommandArgs,
+  isRunCommand,
+  RUN_COMMAND_ARGS,
+  RUN_COMMAND_NAMES,
+} from "./game/commands.ts";
+export type { CommandArg, RunCommandName } from "./game/commands.ts";
+
 // Developer balance tuning: the runtime multipliers the hidden DEVELOPER →
 // BALANCE menu applies over the shipped config (see tuning.ts).
 export {

@@ -10,7 +10,7 @@
 
 import { useState } from "react";
 
-import { allocateStat, deallocateStat, type GameState } from "@game/core";
+import { type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -22,6 +22,8 @@ import {
   StatGlyph,
   StatInfoPanel,
 } from "../stat-choices.tsx";
+
+import { runCommandOk } from "../run-commands.ts";
 
 export function RespecOverlay({
   state,
@@ -97,7 +99,8 @@ export function RespecOverlay({
                       aria-label={`respec-minus-${stat}`}
                       disabled={!canRemove}
                       onClick={() => {
-                        if (deallocateStat(state, stat)) onChange();
+                        if (runCommandOk(state, "deallocateStat", stat))
+                          onChange();
                       }}
                     >
                       <PixelText
@@ -113,7 +116,8 @@ export function RespecOverlay({
                       aria-label={`respec-plus-${stat}`}
                       disabled={!canAdd}
                       onClick={() => {
-                        if (allocateStat(state, stat)) onChange();
+                        if (runCommandOk(state, "allocateStat", stat))
+                          onChange();
                       }}
                     >
                       <PixelText

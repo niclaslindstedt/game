@@ -15,6 +15,7 @@
 // the balance lever that keeps 16× from being strictly correct.
 
 import { AUTOPILOT } from "./config/index.ts";
+import { captureBuildSnapshot } from "./items/stat-points.ts";
 import type { Difficulty, GameState } from "./types/index.ts";
 
 /** Snap a requested speed to the closest offered rung (config `speeds`). */
@@ -45,6 +46,13 @@ export function startAutopilot(state: GameState, speed = 1): boolean {
   state.autopilot.active = true;
   state.autopilot.speed = snapped;
   state.autopilot.drainCarry = 0;
+  // THE FLIGHT'S BASELINE, stamped once and never overwritten. A ride crosses
+  // levels and every level is a fresh `GameState`, so a run the flight arrives
+  // INTO is handed the original baseline through `SessionParams.autopilotBuild`
+  // — re-stamping here would quietly re-baseline the refund on the build the
+  // BOT had already grown, and the player would get back only the last level's
+  // points. `refundAutopilotBuild` clears it when the ride is settled.
+  state.autopilot.build ??= captureBuildSnapshot(state);
   return true;
 }
 

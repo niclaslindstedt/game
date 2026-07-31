@@ -10,7 +10,7 @@ import {
   resumeAfterLevelup,
   talentStatFloor,
 } from "../talents.ts";
-import type { GameState, StatName } from "../types/index.ts";
+import type { BuildSnapshot, GameState, StatName } from "../types/index.ts";
 import { recomputeMaxHp, recomputeMaxStamina } from "./derived.ts";
 import { syncInventoryCapacity } from "./inventory.ts";
 
@@ -65,11 +65,7 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
  * Everything else (level, xp, gear, coins, the party) is the ride's REWARD and
  * is kept.
  */
-export type BuildSnapshot = {
-  stats: Record<StatName, number>;
-  spentStats: Record<StatName, number>;
-  talents: Record<string, number>;
-};
+export type { BuildSnapshot };
 
 /** Snapshot the hero's chosen build (see {@link BuildSnapshot}) — a deep copy
  * safe to hold across the whole ride and diff against later. */
@@ -98,8 +94,13 @@ export function captureBuildSnapshot(state: GameState): BuildSnapshot {
  */
 export function refundAutopilotBuild(
   state: GameState,
-  snapshot: BuildSnapshot,
+  snapshot: BuildSnapshot | null | undefined = state.autopilot.build,
 ): void {
+  // NO BASELINE, NOTHING TO GIVE BACK. The stamp is what says a ride was ever
+  // engaged (see `AutopilotState.build`), so its absence is the same "already
+  // wrapped up" no-op a second call is — which is what lets this be a verb the
+  // app may send without first asking whether it applies.
+  if (!snapshot) return;
   const player = state.player;
   // The points the ride ADDED to the chosen pool — measured as a delta against
   // the snapshot (plus any it left unspent) — are exactly what becomes pending.
@@ -131,6 +132,9 @@ export function refundAutopilotBuild(
   syncInventoryCapacity(state);
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
+  // The flight is settled: drop the baseline so a second call is a no-op and a
+  // later ride starts from the build the player has just placed.
+  state.autopilot.build = null;
 }
 
 // ---- Respec (LEVEL TOKEN reallocation) ----------------------------------------

@@ -19,7 +19,7 @@
 
 import { useEffect, useState } from "react";
 
-import { allocateStat, type GameState } from "@game/core";
+import { type GameState } from "@game/core";
 
 import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
@@ -33,6 +33,8 @@ import {
   StatGlyph,
   StatInfoPanel,
 } from "../stat-choices.tsx";
+
+import { runCommandOk } from "../run-commands.ts";
 
 // How long the chooser stays inert after it reveals, so an accidental
 // hold-over tap from steering can't spend a point. Kept in sync with the CSS
@@ -127,7 +129,7 @@ export function LevelUpOverlay({
         const choice = CHOICES[cursor];
         if (!choice) return;
         event.preventDefault();
-        allocateStat(state, choice.stat);
+        runCommandOk(state, "allocateStat", choice.stat);
         onChange();
       }
     };
@@ -217,7 +219,7 @@ export function LevelUpOverlay({
                     // the lockout lifts even if a click slips through.
                     if (!armed) return;
                     setCursor(i);
-                    allocateStat(state, stat);
+                    runCommandOk(state, "allocateStat", stat);
                     onChange();
                   }}
                 >

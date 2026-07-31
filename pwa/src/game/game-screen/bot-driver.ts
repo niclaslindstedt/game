@@ -8,29 +8,15 @@
 import type { MutableRefObject } from "react";
 
 import {
-  acceptQuest,
-  advanceDialogue,
-  closeQuestDialogue,
   giverTopics,
-  pickQuestTopic,
-  turnInQuest,
-  allocateStat,
   botAct,
   botAllocate,
   botAutoEquip,
   botPickTalent,
-  confirmRespec,
   createBot,
   cullWorstLoot,
   gateKeyTarget,
-  resolveChoice,
-  resumeGame,
-  skipCutscene,
-  skipIntro,
-  skipOutro,
   sortBotInventory,
-  spendGateKey,
-  spendTalentPoint,
   stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
@@ -40,6 +26,8 @@ import {
 } from "@game/core";
 
 import type { DemoDirector } from "./demo-director.ts";
+
+import { runCommand, runCommandOk } from "../run-commands.ts";
 
 // Autoplay economy: the least sim ms between the bot's merchant counter visits
 // (`tradeAtMerchant`), so a stall it can't afford anything at isn't re-opened
@@ -110,14 +98,14 @@ export function createBotDriver(deps: {
     // watched run actually pauses it instead of playing on in the
     // background.
     if (state.phase === "paused" && !userPausedRef.current) {
-      resumeGame(state);
+      runCommand(state, "resumeGame");
     }
-    if (state.phase === "cutscene") skipCutscene(state);
-    if (state.phase === "intro") skipIntro(state);
-    if (state.phase === "outro") skipOutro(state);
+    if (state.phase === "cutscene") runCommand(state, "skipCutscene");
+    if (state.phase === "intro") runCommand(state, "skipIntro");
+    if (state.phase === "outro") runCommand(state, "skipOutro");
     if (state.phase === "title") beginRun();
     if (state.phase === "dialogue") {
-      advanceDialogue(state);
+      runCommand(state, "advanceDialogue");
       bumpUi();
     }
     // AN ERRAND IS WHAT THE RIDE IS FOR, so the bot takes it. An unattended
@@ -134,17 +122,17 @@ export function createBotDriver(deps: {
         // them top-down (finished work first, then fresh work — `giverTopics`
         // already orders it that way), one per frame.
         const first = giverTopics(state, offer.giverId)[0];
-        if (first) pickQuestTopic(state, first.questId);
-        else closeQuestDialogue(state);
-      } else if (offer?.kind === "offer") acceptQuest(state);
-      else if (offer?.kind === "complete") turnInQuest(state);
-      else closeQuestDialogue(state);
+        if (first) runCommandOk(state, "pickQuestTopic", first.questId);
+        else runCommand(state, "closeQuestDialogue");
+      } else if (offer?.kind === "offer") runCommandOk(state, "acceptQuest");
+      else if (offer?.kind === "complete") runCommand(state, "turnInQuest");
+      else runCommand(state, "closeQuestDialogue");
       bumpUi();
     }
     // The bot always SPARES a kneeling unique — autoplay runs exercise
     // the companion systems, and a party beats a lone bot anyway.
     if (state.phase === "choice") {
-      resolveChoice(state, true);
+      runCommandOk(state, "resolveChoice", true);
       bumpUi();
     }
     if (state.phase === "levelup") {
@@ -153,7 +141,7 @@ export function createBotDriver(deps: {
       if (demo) {
         demoDirector.stepLevelup(dtMs);
       } else {
-        allocateStat(state, botAllocate(drivingBot, state));
+        runCommandOk(state, "allocateStat", botAllocate(drivingBot, state));
         bumpUi();
       }
     } else if (demo) {
@@ -162,9 +150,9 @@ export function createBotDriver(deps: {
     if (state.phase === "respec") {
       // Spend the refunded pool point-by-point, then commit and drop in.
       if (state.player.pendingStatPoints > 0) {
-        allocateStat(state, botAllocate(drivingBot, state));
+        runCommandOk(state, "allocateStat", botAllocate(drivingBot, state));
       } else {
-        confirmRespec(state);
+        runCommandOk(state, "confirmRespec");
       }
       bumpUi();
     }
@@ -183,7 +171,7 @@ export function createBotDriver(deps: {
         let picked = false;
         while (state.pendingTalentPoints.length > 0) {
           const id = botPickTalent(drivingBot, state);
-          if (!id || !spendTalentPoint(state, id)) break;
+          if (!id || !runCommandOk(state, "spendTalentPoint", id)) break;
           picked = true;
         }
         if (picked) bumpUi();
@@ -234,7 +222,7 @@ export function createBotDriver(deps: {
         const keyAt = bag.findIndex(
           (it) => it != null && gateKeyTarget(state, it) != null,
         );
-        if (keyAt >= 0 && spendGateKey(state, keyAt)) bumpUi();
+        if (keyAt >= 0 && runCommandOk(state, "spendGateKey", keyAt)) bumpUi();
       }
     }
     const decided = botAct(drivingBot, state);
