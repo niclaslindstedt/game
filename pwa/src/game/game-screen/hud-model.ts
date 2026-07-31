@@ -153,7 +153,9 @@ export function weaponAlternatives(
         item,
         index: e.index,
         dmg: Math.round(
-          byDps ? weaponDps(state, item) : weaponDamageFor(state, item),
+          byDps
+            ? weaponDps(state, state.players[0], item)
+            : weaponDamageFor(state, state.players[0], item),
         ),
       };
     })
@@ -230,7 +232,7 @@ export function buildHud(
   // The consumable dock: the best-quality medkit held (and its stack
   // depth), the stamina-potion count, and the repair-kit count. All feed
   // the change-key so the slots re-render as kits are grabbed and spent.
-  const medkitTier = bestMedkitTier(state);
+  const medkitTier = bestMedkitTier(state, state.players[0]);
   const medkitCount =
     medkitTier >= 0 ? (state.players[0].medkits[medkitTier] ?? 0) : 0;
   const staminaPotions = state.players[0].staminaPotions;

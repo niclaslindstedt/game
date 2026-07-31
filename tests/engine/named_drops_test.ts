@@ -70,7 +70,7 @@ function rollMany(
   const ids = new Set<string>();
   const tiers: Record<string, number> = {};
   for (let i = 0; i < n; i++) {
-    const e = rollEquipment(state);
+    const e = rollEquipment(state, state.players[0]);
     tiers[e.tier] = (tiers[e.tier] ?? 0) + 1;
     if (e.uniqueId) ids.add(e.uniqueId);
   }

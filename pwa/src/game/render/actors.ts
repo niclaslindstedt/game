@@ -171,7 +171,7 @@ export function drawAbilities(
   // it just never expires.
   for (const spell of player.itemSpells) {
     if (spell.spell === "orbit") {
-      const params = orbitSpellBlock(state, spell.rank);
+      const params = orbitSpellBlock(state, player, spell.rank);
       const sprite =
         spriteByName(assets.sprites, params.sprite) ?? assets.sprites.fireball;
       // Each orb stands where its own arc has carried it. The RING they trace
@@ -185,7 +185,7 @@ export function drawAbilities(
       }
     }
     if (spell.spell === "stasis") {
-      const params = stasisSpellParams(state, spell.rank);
+      const params = stasisSpellParams(state, player, spell.rank);
       const pulse = 0.18 + 0.08 * Math.sin(timeMs / 220);
       ctx.strokeStyle = `rgba(140, 205, 215, ${pulse})`;
       ctx.beginPath();
@@ -206,7 +206,7 @@ export function drawAbilities(
         ctx,
         state,
         camera,
-        immolationSpellBlock(state, spell.rank).radius,
+        immolationSpellBlock(state, player, spell.rank).radius,
         timeMs,
       );
     }

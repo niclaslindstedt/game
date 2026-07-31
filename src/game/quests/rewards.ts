@@ -90,7 +90,7 @@ export function payQuestReward(
 
   if (reward.loot) {
     for (let i = 0; i < reward.loot.count; i++) {
-      const equipment = rollEquipment(state, {
+      const equipment = rollEquipment(state, state.players[0], {
         ...(reward.loot.slot === "weapon" || reward.loot.slot === "gear"
           ? { slot: reward.loot.slot }
           : {}),
@@ -106,7 +106,7 @@ export function payQuestReward(
   // `Player.cleanSlates` for why a thing that must never be lost does not live
   // in a container the player empties.
   if (reward.cleanSlates) {
-    grantCleanSlate(state, reward.cleanSlates);
+    grantCleanSlate(state, state.players[0], reward.cleanSlates);
     payout.cleanSlates = reward.cleanSlates;
   }
 
@@ -114,7 +114,8 @@ export function payQuestReward(
   // cap — there is nowhere else to put one, and dropping it on the floor
   // beside a full dock would be a pickup the player cannot take either.
   for (const id of reward.abilities ?? []) {
-    if (canBankAbility(state, id)) state.players[0].heldAbilities.push(id);
+    if (canBankAbility(state, state.players[0], id))
+      state.players[0].heldAbilities.push(id);
   }
 
   return payout;
@@ -122,7 +123,7 @@ export function payQuestReward(
 
 /** Into the bag if it fits; onto the ground (thrown, like any drop) if not. */
 function handOver(state: GameState, equipment: Equipment, at: Vec2): Equipment {
-  if (!addToInventory(state, equipment)) {
+  if (!addToInventory(state, state.players[0], equipment)) {
     dropItem(
       state,
       { id: state.nextId++, kind: "equipment", pos: { ...at }, equipment },

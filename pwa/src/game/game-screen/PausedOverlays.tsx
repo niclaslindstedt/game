@@ -207,7 +207,7 @@ export function RunPausedOverlay({
                     )
                       ? state.level.id
                       : null,
-                    captureBuildSnapshot(state),
+                    captureBuildSnapshot(state, state.players[0]),
                     state.players[0].level,
                   );
                   autopilot.setHistoryOpen(false);

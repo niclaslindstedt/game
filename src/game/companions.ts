@@ -422,7 +422,7 @@ function stepCompanion(
     playerGap > COMPANIONS.leashRadius || companion.following
       ? undefined
       : pickTarget(state);
-  const catchUp = Math.max(def.speed, playerSpeed(state) * 1.1) * dt;
+  const catchUp = Math.max(def.speed, playerSpeed(state, player) * 1.1) * dt;
 
   if (playerGap > COMPANIONS.leashRadius || companion.following) {
     // Regroup at whatever it takes to keep up with a stat-built hero — the
@@ -797,7 +797,7 @@ export function equipCompanionFromInventory(
   if (item.slot !== "weapon" && item.slot !== "head" && item.slot !== "chest") {
     return false;
   }
-  if (!meetsLevelReq(state, item)) return false;
+  if (!meetsLevelReq(state, state.players[0], item)) return false;
   const slot = item.slot as CompanionSlot;
   const previous = companion.equipment[slot];
   state.players[0].inventory[index] = previous ?? null;

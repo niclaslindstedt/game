@@ -309,7 +309,7 @@ export function ShopPanel({
   // reads as an upgrade and a sale shows what's being let go. Never compare a
   // piece to itself.
   const compareFor = (item: Equipment): Equipment | null => {
-    const worn = wornCounterpart(state, item);
+    const worn = wornCounterpart(state, player, item);
     return worn && worn.id !== item.id ? worn : null;
   };
 
@@ -319,7 +319,7 @@ export function ShopPanel({
     .map((item, index) => ({ item, index }))
     .filter(
       (e): e is { item: Equipment; index: number } =>
-        e.item !== null && isScrappableLoot(state, e.item),
+        e.item !== null && isScrappableLoot(state, player, e.item),
     );
   const junkTotal = junk.reduce((sum, e) => sum + sellValue(e.item), 0);
 
@@ -333,7 +333,7 @@ export function ShopPanel({
 
   // REPAIR ALL: the coins to mend the worn weapon, worn armor, and every
   // breakable bag piece back to full (0 when the whole kit is already whole).
-  const repairTotal = repairAllCost(state);
+  const repairTotal = repairAllCost(state, player);
 
   const doRepair = () => {
     if (runCommand(state, "repairGear") !== null) {

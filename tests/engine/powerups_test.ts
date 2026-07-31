@@ -346,7 +346,7 @@ describe("the screen nuke", () => {
       state.players[0].hp = state.players[0].maxHp;
       step(state, idle, DT);
       while (state.players[0].pendingStatPoints > 0)
-        allocateStat(state, "stamina");
+        allocateStat(state, state.players[0], "stamina");
     }
     step(state, useItem, DT);
     expect(state.nukeCalmMs).toBeGreaterThan(0);
@@ -554,7 +554,7 @@ describe("the item magnet", () => {
   it("pulls only items inside its radius", () => {
     const state = startGame();
     clearStage(state); // the parked boss keeps the objective open
-    grantAbility(state, "test_magnet");
+    grantAbility(state, state.players[0], "test_magnet");
     const def = abilityDef("test_magnet");
     const caught: Item = {
       id: 1,
@@ -583,8 +583,10 @@ describe("the item magnet", () => {
   it("INTELLIGENCE widens the pull radius", () => {
     const state = startGame();
     const def = abilityDef("test_magnet");
-    const base = magnetRadius(state, def);
+    const base = magnetRadius(state, state.players[0], def);
     state.players[0].stats.intelligence = 5;
-    expect(magnetRadius(state, def)).toBe(base + 5 * def.magnet!.radiusPerInt);
+    expect(magnetRadius(state, state.players[0], def)).toBe(
+      base + 5 * def.magnet!.radiusPerInt,
+    );
   });
 });

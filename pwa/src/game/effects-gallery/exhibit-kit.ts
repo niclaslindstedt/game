@@ -346,8 +346,8 @@ export function swingEvent(ctx: ExhibitCtx): GameEvent {
     type: "swing",
     pos: hero,
     dir,
-    range: weaponRangeFor(state, weapon),
-    arc: 2 * weaponSweepHalfAngle(state, weapon),
+    range: weaponRangeFor(state, state.players[0], weapon),
+    arc: 2 * weaponSweepHalfAngle(state, state.players[0], weapon),
     targets: ctx.mobs.length,
   };
 }

@@ -130,7 +130,7 @@ function mintPiece(
   tier: Equipment["tier"],
   mlvl: number,
 ): Equipment {
-  return rollEquipment(state, { defId, tier, mlvl });
+  return rollEquipment(state, state.players[0], { defId, tier, mlvl });
 }
 
 /** Spend a hero-of-`level`'s worth of trainable points through `build`'s

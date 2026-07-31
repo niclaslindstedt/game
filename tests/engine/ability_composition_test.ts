@@ -102,7 +102,7 @@ describe("a power's blocks all run", () => {
         maxHp: 100_000,
       });
       state.enemies.push(victim);
-      grantAbility(state, defId);
+      grantAbility(state, state.players[0], defId);
       idleFor(state, 1000);
       return 100_000 - victim.hp;
     };
@@ -125,7 +125,7 @@ describe("each block keeps its own clock", () => {
       }),
     );
 
-    grantAbility(state, "test_composed");
+    grantAbility(state, state.players[0], "test_composed");
     idleFor(state, DT);
 
     const running = state.players[0].abilities.find(

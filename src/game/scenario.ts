@@ -341,9 +341,9 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
 
   // Derived pools follow the build described above; the explicit hp/stamina
   // land last so "2 hp" survives the recompute.
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  syncInventoryCapacity(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  syncInventoryCapacity(state, player);
   if (spec.hp !== undefined) {
     player.hp = clamp(Math.round(spec.hp), 1, player.maxHp);
   }
@@ -366,7 +366,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
       warn(`scenario: '${defId}' is instant — nothing to run`);
       continue;
     }
-    grantAbility(state, defId);
+    grantAbility(state, player, defId);
   }
   if (spec.medkits) {
     player.medkits = new Array<number>(MEDKIT.tiers.length)
@@ -619,7 +619,7 @@ function mintDrop(
       id: state.nextId++,
       kind: "equipment",
       pos,
-      equipment: rollEquipment(state, {
+      equipment: rollEquipment(state, state.players[0], {
         defId: id,
         tier: drop.tier ?? "regular",
         quality: "normal",

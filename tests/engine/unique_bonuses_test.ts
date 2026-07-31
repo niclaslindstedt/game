@@ -19,8 +19,8 @@ describe("scaling unique bonuses", () => {
   it("statPct multiplies the hero's OWN total for that stat", () => {
     const state = startGame();
     state.players[0].stats.strength = 10;
-    const base = effectiveStat(state, "strength");
-    const dexBefore = effectiveStat(state, "dexterity");
+    const base = effectiveStat(state, state.players[0], "strength");
+    const dexBefore = effectiveStat(state, state.players[0], "dexterity");
     state.players[0].equipment.amulet = {
       id: 778,
       defId: "test_amulet",
@@ -30,9 +30,11 @@ describe("scaling unique bonuses", () => {
       affixes: [{ kind: "statPct", stat: "strength", value: 0.5 }],
     };
     // +50% of the whole strength total (chosen + auto), not a flat add.
-    expect(effectiveStat(state, "strength")).toBe(Math.round(base * 1.5));
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
+      Math.round(base * 1.5),
+    );
     // It only touches its own stat.
-    expect(effectiveStat(state, "dexterity")).toBe(dexBefore);
+    expect(effectiveStat(state, state.players[0], "dexterity")).toBe(dexBefore);
   });
 
   it("statPct stacks additively with a flat +N stat on the same piece", () => {
@@ -53,12 +55,14 @@ describe("scaling unique bonuses", () => {
       ],
     };
     // (20 base + 5 flat) × 1.1
-    expect(effectiveStat(state, "strength")).toBe(Math.round(25 * 1.1));
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
+      Math.round(25 * 1.1),
+    );
   });
 
   it("maxHpPct multiplies the whole health pool", () => {
     const state = startGame();
-    const base = computeMaxHp(state);
+    const base = computeMaxHp(state, state.players[0]);
     state.players[0].equipment.amulet = {
       id: 780,
       defId: "test_amulet",
@@ -67,14 +71,14 @@ describe("scaling unique bonuses", () => {
       ilvl: 20,
       affixes: [{ kind: "maxHpPct", value: 0.2 }],
     };
-    expect(computeMaxHp(state)).toBe(Math.round(base * 1.2));
+    expect(computeMaxHp(state, state.players[0])).toBe(Math.round(base * 1.2));
   });
 
   it("a scaling bonus is worth more the more the hero has grown", () => {
     const grew = (strength: number): number => {
       const state = startGame();
       state.players[0].stats.strength = strength;
-      const flat = effectiveStat(state, "strength");
+      const flat = effectiveStat(state, state.players[0], "strength");
       const amulet: Equipment = {
         id: 781,
         defId: "test_amulet",
@@ -84,7 +88,7 @@ describe("scaling unique bonuses", () => {
         affixes: [{ kind: "statPct", stat: "strength", value: 0.1 }],
       };
       state.players[0].equipment.amulet = amulet;
-      return effectiveStat(state, "strength") - flat;
+      return effectiveStat(state, state.players[0], "strength") - flat;
     };
     // +10% yields a bigger absolute gain on a stronger hero.
     expect(grew(100)).toBeGreaterThan(grew(10));

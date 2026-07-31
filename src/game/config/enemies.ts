@@ -62,6 +62,19 @@ export const ENEMY_AI = {
   /** The flank rotation at full distance (degrees off the direct bearing). */
   flankAngleDeg: 35,
   /**
+   * AGGRO HYSTERESIS (multiplayer): how much nearer a rival hero must be
+   * before a mob turns off the one it is already chasing, as a fraction of
+   * the distance to its current quarry. 0.15 means "15% closer".
+   *
+   * It exists because "chase the nearest hero" is a coin flip between two
+   * players standing a pixel apart, re-tossed sixty times a second — the mob
+   * judders between them, its flank offset is re-picked every tick, and a
+   * pack's envelope dissolves into noise. Below about 0.05 the judder comes
+   * back; far above 0.25 a mob stops answering a player who has plainly
+   * stepped in front of it. Inert in single player, which has one hero.
+   */
+  quarrySwitchMargin: 0.15,
+  /**
    * The DORMANT "AT WORK" stroll (`EnemyDef.ai.idle === "work"` — see
    * working.ts): instead of standing frozen at its post, an unaggroed mob
    * potters around its `home` — walk a short leg, stand a beat, walk again —

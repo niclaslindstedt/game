@@ -84,45 +84,55 @@ describe("set bonuses", () => {
   it("grant nothing below the 2-piece threshold", () => {
     const state = startGame();
     wearPieces(state, 1);
-    expect(wornSetCount(state, SET_ID)).toBe(1);
-    expect(setBonusAffixes(state)).toEqual([]);
+    expect(wornSetCount(state, state.players[0], SET_ID)).toBe(1);
+    expect(setBonusAffixes(state, state.players[0])).toEqual([]);
   });
 
   it("apply cumulatively as more pieces are worn", () => {
     const state = startGame();
-    const baseStr = effectiveStat(state, "strength");
-    const baseCrit = playerCritChance(state);
-    const baseHp = computeMaxHp(state);
+    const baseStr = effectiveStat(state, state.players[0], "strength");
+    const baseCrit = playerCritChance(state, state.players[0]);
+    const baseHp = computeMaxHp(state, state.players[0]);
 
     // 2 pieces → +5 STR only.
     wearPieces(state, 2);
-    expect(wornSetCount(state, SET_ID)).toBe(2);
-    expect(effectiveStat(state, "strength")).toBe(baseStr + 5);
-    expect(playerCritChance(state)).toBe(baseCrit);
+    expect(wornSetCount(state, state.players[0], SET_ID)).toBe(2);
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
+      baseStr + 5,
+    );
+    expect(playerCritChance(state, state.players[0])).toBe(baseCrit);
 
     // 3 pieces → +5 STR and +10% CRIT.
     wearPieces(state, 3);
-    expect(effectiveStat(state, "strength")).toBe(baseStr + 5);
-    expect(playerCritChance(state)).toBeGreaterThan(baseCrit);
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
+      baseStr + 5,
+    );
+    expect(playerCritChance(state, state.players[0])).toBeGreaterThan(baseCrit);
 
     // 4 pieces → the capstone: +100 MAX HP and sure-strike, STR still lifted.
     wearPieces(state, 4);
-    expect(effectiveStat(state, "strength")).toBe(baseStr + 5);
-    expect(computeMaxHp(state)).toBeGreaterThan(baseHp);
-    const affixKinds = activeEquippedAffixes(state).map((a) => a.kind);
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
+      baseStr + 5,
+    );
+    expect(computeMaxHp(state, state.players[0])).toBeGreaterThan(baseHp);
+    const affixKinds = activeEquippedAffixes(state, state.players[0]).map(
+      (a) => a.kind,
+    );
     expect(affixKinds).toContain("sureStrike");
   });
 
   it("go quiet when a set piece breaks (inactive armor drops out)", () => {
     const state = startGame();
     wearPieces(state, 4);
-    expect(wornSetCount(state, SET_ID)).toBe(4);
+    expect(wornSetCount(state, state.players[0], SET_ID)).toBe(4);
     // Break the feet piece: durability 0 makes it inactive, so the count and
     // the capstone fall back to the 3-piece tier.
     const feet = state.players[0].equipment.feet;
     if (feet) feet.durability = 0;
-    expect(wornSetCount(state, SET_ID)).toBe(3);
-    const affixKinds = activeEquippedAffixes(state).map((a) => a.kind);
+    expect(wornSetCount(state, state.players[0], SET_ID)).toBe(3);
+    const affixKinds = activeEquippedAffixes(state, state.players[0]).map(
+      (a) => a.kind,
+    );
     expect(affixKinds).not.toContain("sureStrike");
   });
 });

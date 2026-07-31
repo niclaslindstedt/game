@@ -32,7 +32,10 @@ describe("abilityPowerScale", () => {
     // that lets weapons deal their catalog damage). Both sides moved together,
     // so `content/powerups.yaml`'s contract — "damage: 45 is one reference
     // minion per tick" — reads exactly as it always did.
-    expect(abilityPowerScale(state)).toBeCloseTo(MENACE.mobHpBase, 5);
+    expect(abilityPowerScale(state, state.players[0])).toBeCloseTo(
+      MENACE.mobHpBase,
+      5,
+    );
   });
 
   it("tracks the minion healthbar's growth, so a powerup keeps its bite", () => {
@@ -42,7 +45,7 @@ describe("abilityPowerScale", () => {
     // ability damage to a level-appropriate healthbar stays constant.
     for (const level of [1, 10, 30, 55]) {
       state.players[0].level = level;
-      const scale = abilityPowerScale(state);
+      const scale = abilityPowerScale(state, state.players[0]);
       const bar = mobHpLevelFactor(level) * autoPowerScale(level);
       // The INT term contributes the auto-stat INT... none is automatic
       // (only stamina/strength/dexterity are), so with 0 chosen INT the
@@ -55,9 +58,11 @@ describe("abilityPowerScale", () => {
     const state = startGame();
     state.players[0].level = 5;
     state.players[0].stats.intelligence = 0;
-    const plain = abilityPowerScale(state);
+    const plain = abilityPowerScale(state, state.players[0]);
     state.players[0].stats.intelligence = 10;
-    expect(abilityPowerScale(state)).toBeGreaterThan(plain * 1.3);
+    expect(abilityPowerScale(state, state.players[0])).toBeGreaterThan(
+      plain * 1.3,
+    );
   });
 
   it("INT widens the stasis field, never its slow", () => {
@@ -65,9 +70,9 @@ describe("abilityPowerScale", () => {
     const def = abilityDef("test_stasis");
     if (!def.stasis) throw new Error("fixture stasis missing");
     state.players[0].stats.intelligence = 0;
-    const base = stasisRadius(state, def);
+    const base = stasisRadius(state, state.players[0], def);
     state.players[0].stats.intelligence = 10;
-    expect(stasisRadius(state, def)).toBeGreaterThan(base);
+    expect(stasisRadius(state, state.players[0], def)).toBeGreaterThan(base);
     expect(def.stasis.slowFactor).toBeLessThan(1); // authored, untouched
   });
 });

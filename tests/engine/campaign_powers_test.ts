@@ -32,7 +32,7 @@ import {
  * player-damage site does, and report what gets through — the one choke point
  * the barrier, the ward, and the shroud all hang off. */
 function absorb(state: GameState, damage: number): number {
-  return absorbPlayerDamage(state, damage);
+  return absorbPlayerDamage(state, state.players[0], damage);
 }
 
 /** A run with an empty field: no waves, no horde, nothing but what a test
@@ -77,7 +77,7 @@ function mobAt(state: GameState, dx: number, dy = 0, hp = 45_000) {
 describe("ION WAKE (trail)", () => {
   it("lays burning patches behind a hero who moves, and only where he moved", () => {
     const state = emptyRun();
-    grantAbility(state, "test_trail");
+    grantAbility(state, state.players[0], "test_trail");
     const ability = state.players[0].abilities[0]!;
     // Standing still keeps ONE fire under his boots, however long he waits.
     run(state, idle, 60);
@@ -94,14 +94,14 @@ describe("ION WAKE (trail)", () => {
   it("scorches whatever stands in a patch", () => {
     const state = emptyRun();
     const victim = mobAt(state, 0, 0);
-    grantAbility(state, "test_trail");
+    grantAbility(state, state.players[0], "test_trail");
     run(state, idle, 40);
     expect(victim.hp).toBeLessThan(victim.maxHp);
   });
 
   it("goes out with the wake that laid it", () => {
     const state = emptyRun();
-    grantAbility(state, "test_trail");
+    grantAbility(state, state.players[0], "test_trail");
     const def = abilityDef("test_trail");
     run(state, idle, Math.ceil(def.durationMs / DT) + 10);
     expect(state.players[0].abilities).toHaveLength(0);
@@ -111,7 +111,7 @@ describe("ION WAKE (trail)", () => {
 describe("BLAST SHIELD (barrier)", () => {
   it("banks a pool sized off the hero's healthbar", () => {
     const state = emptyRun();
-    grantAbility(state, "test_barrier");
+    grantAbility(state, state.players[0], "test_barrier");
     expect(state.players[0].abilities[0]?.pool).toBeCloseTo(
       0.5 * state.players[0].maxHp,
     );
@@ -119,7 +119,7 @@ describe("BLAST SHIELD (barrier)", () => {
 
   it("eats damage instead of the hero, and shatters when the pool runs out", () => {
     const state = emptyRun();
-    grantAbility(state, "test_barrier");
+    grantAbility(state, state.players[0], "test_barrier");
     const ability = state.players[0].abilities[0]!;
     const before = state.players[0].hp;
     // A blow well inside the pool: the shell takes all of it.
@@ -146,7 +146,7 @@ describe("MOONFALL (rain)", () => {
   it("drops rocks on the fight and craters what they land on", () => {
     const state = emptyRun();
     const victim = mobAt(state, 40);
-    grantAbility(state, "test_rain");
+    grantAbility(state, state.players[0], "test_rain");
     const events = collect(state, idle, 60);
     expect(events).toContainEqual(
       expect.objectContaining({ type: "meteorFall" }),
@@ -156,7 +156,7 @@ describe("MOONFALL (rain)", () => {
 
   it("still falls with the field empty (it scatters around the hero)", () => {
     const state = emptyRun();
-    grantAbility(state, "test_rain");
+    grantAbility(state, state.players[0], "test_rain");
     expect(collect(state, idle, 60)).toContainEqual(
       expect.objectContaining({ type: "meteorFall" }),
     );
@@ -168,7 +168,7 @@ describe("PALE SHROUD (phase)", () => {
     const state = emptyRun();
     // A mob pressed right against him, ready to swing.
     mobAt(state, 6);
-    grantAbility(state, "test_phase");
+    grantAbility(state, state.players[0], "test_phase");
     const before = state.players[0].hp;
     const events = collect(state, idle, 60);
     expect(state.players[0].hp).toBe(before);
@@ -180,7 +180,7 @@ describe("PALE SHROUD (phase)", () => {
   it("lets the horde hurt him again the moment it lapses", () => {
     const state = emptyRun();
     mobAt(state, 6);
-    grantAbility(state, "test_phase");
+    grantAbility(state, state.players[0], "test_phase");
     const def = abilityDef("test_phase");
     run(state, idle, Math.ceil(def.durationMs / DT) + 2);
     expect(state.players[0].abilities).toHaveLength(0);
@@ -194,7 +194,7 @@ describe("EVENT HORIZON / DUST DEVIL (well)", () => {
   it("opens where it was spent and hauls the horde into it", () => {
     const state = emptyRun();
     const victim = mobAt(state, 70);
-    grantAbility(state, "test_well");
+    grantAbility(state, state.players[0], "test_well");
     const core = state.players[0].abilities[0]?.pos;
     expect(core).toEqual({ ...state.players[0].pos });
     const before = Math.abs(victim.pos.x - state.players[0].pos.x);
@@ -207,7 +207,7 @@ describe("EVENT HORIZON / DUST DEVIL (well)", () => {
 
   it("holds its ground while the hero walks off (chase 0)", () => {
     const state = emptyRun();
-    grantAbility(state, "test_well");
+    grantAbility(state, state.players[0], "test_well");
     const core = { ...(state.players[0].abilities[0]!.pos ?? { x: 0, y: 0 }) };
     run(
       state,
@@ -220,7 +220,7 @@ describe("EVENT HORIZON / DUST DEVIL (well)", () => {
   it("a ROAMING core walks itself to the nearest body", () => {
     const state = emptyRun();
     const prey = mobAt(state, 160);
-    grantAbility(state, "test_cyclone");
+    grantAbility(state, state.players[0], "test_cyclone");
     const start = state.players[0].abilities[0]!.pos!.x;
     run(state, idle, 30);
     const now = state.players[0].abilities[0]!.pos!.x;
@@ -232,12 +232,12 @@ describe("EVENT HORIZON / DUST DEVIL (well)", () => {
 describe("REACTOR SURGE (surge)", () => {
   it("pumps the hero's own weapon while it burns, and only while it burns", () => {
     const state = emptyRun();
-    const plain = weaponDamage(state);
-    grantAbility(state, "test_surge");
-    expect(weaponDamage(state)).toBeCloseTo(plain * 2);
+    const plain = weaponDamage(state, state.players[0]);
+    grantAbility(state, state.players[0], "test_surge");
+    expect(weaponDamage(state, state.players[0])).toBeCloseTo(plain * 2);
     const def = abilityDef("test_surge");
     run(state, idle, Math.ceil(def.durationMs / DT) + 2);
-    expect(weaponDamage(state)).toBeCloseTo(plain);
+    expect(weaponDamage(state, state.players[0])).toBeCloseTo(plain);
   });
 });
 
@@ -245,7 +245,7 @@ describe("THE UNMAKING (pulse)", () => {
   it("washes a ring out of the hero that bills and shoves what it catches", () => {
     const state = emptyRun();
     const victim = mobAt(state, 60);
-    grantAbility(state, "test_pulse");
+    grantAbility(state, state.players[0], "test_pulse");
     const events = collect(state, idle, 60);
     expect(events).toContainEqual(
       expect.objectContaining({ type: "voidWave" }),
@@ -258,7 +258,7 @@ describe("THE UNMAKING (pulse)", () => {
   it("leaves foes outside its reach alone", () => {
     const state = emptyRun();
     const far = mobAt(state, 400);
-    grantAbility(state, "test_pulse");
+    grantAbility(state, state.players[0], "test_pulse");
     run(state, idle, 60);
     expect(far.hp).toBe(far.maxHp);
   });
@@ -268,7 +268,7 @@ describe("DEAD MAN'S HAND / IRON STAMPEDE (volley)", () => {
   it("looses its own shots at the nearest body", () => {
     const state = emptyRun();
     mobAt(state, 120);
-    grantAbility(state, "test_volley");
+    grantAbility(state, state.players[0], "test_volley");
     run(state, idle, 40);
     expect(state.projectiles.length).toBeGreaterThan(0);
   });
@@ -276,7 +276,7 @@ describe("DEAD MAN'S HAND / IRON STAMPEDE (volley)", () => {
   it("holds its fire — and its clock — with nothing in reach", () => {
     const state = emptyRun();
     mobAt(state, 600); // well past the fixture's 240px range
-    grantAbility(state, "test_volley");
+    grantAbility(state, state.players[0], "test_volley");
     run(state, idle, 60);
     expect(state.projectiles).toHaveLength(0);
   });
@@ -285,7 +285,7 @@ describe("DEAD MAN'S HAND / IRON STAMPEDE (volley)", () => {
 describe("SENTRY GRID (turret)", () => {
   it("plants its guns on a ring around the spend point", () => {
     const state = emptyRun();
-    grantAbility(state, "test_turret");
+    grantAbility(state, state.players[0], "test_turret");
     const nodes = state.players[0].abilities[0]?.nodes ?? [];
     expect(nodes).toHaveLength(4);
     for (const node of nodes) {
@@ -297,7 +297,7 @@ describe("SENTRY GRID (turret)", () => {
 
   it("keeps firing from where it stands after the hero walks away", () => {
     const state = emptyRun();
-    grantAbility(state, "test_turret");
+    grantAbility(state, state.players[0], "test_turret");
     const planted = state.players[0].abilities[0]!.nodes!.map((n) => ({
       ...n.pos,
     }));
@@ -317,7 +317,7 @@ describe("SENTRY GRID (turret)", () => {
 describe("CONTINUITY PROTOCOL (ward)", () => {
   it("refuses the killing blow, leaving the hero standing on the floor hp", () => {
     const state = emptyRun();
-    grantAbility(state, "test_ward");
+    grantAbility(state, state.players[0], "test_ward");
     state.players[0].hp = 30;
     const through = absorb(state, 500);
     expect(through).toBe(29); // clipped to leave `ward.floor` = 1
@@ -328,14 +328,14 @@ describe("CONTINUITY PROTOCOL (ward)", () => {
 
   it("does not soften a blow that wasn't going to kill", () => {
     const state = emptyRun();
-    grantAbility(state, "test_ward");
+    grantAbility(state, state.players[0], "test_ward");
     state.players[0].hp = 30;
     expect(absorb(state, 10)).toBe(10);
   });
 
   it("buys a window, not a life — the next blow after it lapses kills", () => {
     const state = emptyRun();
-    grantAbility(state, "test_ward");
+    grantAbility(state, state.players[0], "test_ward");
     const def = abilityDef("test_ward");
     run(state, idle, Math.ceil(def.durationMs / DT) + 2);
     state.players[0].hp = 30;

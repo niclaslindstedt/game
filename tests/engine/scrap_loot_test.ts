@@ -47,7 +47,7 @@ describe("scrapInferiorLoot", () => {
     const junk = weapon("test_pistol");
     stock(state, [junk]);
 
-    const scrapped = scrapInferiorLoot(state);
+    const scrapped = scrapInferiorLoot(state, state.players[0]);
 
     expect(scrapped.map((i) => i.id)).toEqual([junk.id]);
     expect(bagItems(state)).toHaveLength(0);
@@ -59,7 +59,7 @@ describe("scrapInferiorLoot", () => {
     const upgrade = weapon("test_wrench");
     stock(state, [upgrade]);
 
-    expect(scrapInferiorLoot(state)).toEqual([]);
+    expect(scrapInferiorLoot(state, state.players[0])).toEqual([]);
     expect(bagItems(state).map((i) => i.id)).toEqual([upgrade.id]);
   });
 
@@ -69,7 +69,7 @@ describe("scrapInferiorLoot", () => {
     const amulet = gear("test_amulet", "amulet");
     stock(state, [amulet]);
 
-    expect(scrapInferiorLoot(state)).toEqual([]);
+    expect(scrapInferiorLoot(state, state.players[0])).toEqual([]);
     expect(bagItems(state).map((i) => i.id)).toEqual([amulet.id]);
   });
 
@@ -80,7 +80,7 @@ describe("scrapInferiorLoot", () => {
     const smallBag = gear("test_bag", "bag");
     stock(state, [smallBag]);
 
-    const scrapped = scrapInferiorLoot(state);
+    const scrapped = scrapInferiorLoot(state, state.players[0]);
 
     expect(scrapped.map((i) => i.id)).toEqual([smallBag.id]);
     expect(bagItems(state)).toHaveLength(0);
@@ -94,7 +94,7 @@ describe("scrapInferiorLoot", () => {
     const sideGrade = gear("test_amulet", "amulet");
     stock(state, [sideGrade]);
 
-    expect(scrapInferiorLoot(state)).toEqual([]);
+    expect(scrapInferiorLoot(state, state.players[0])).toEqual([]);
     expect(bagItems(state).map((i) => i.id)).toEqual([sideGrade.id]);
   });
 
@@ -109,7 +109,7 @@ describe("scrapInferiorLoot", () => {
     const plainJunk = weapon("test_pistol");
     stock(state, [trinket, uniqueBlade, legendaryBlade, plainJunk]);
 
-    const scrapped = scrapInferiorLoot(state);
+    const scrapped = scrapInferiorLoot(state, state.players[0]);
 
     expect(scrapped.map((i) => i.id)).toEqual([plainJunk.id]);
     expect(bagItems(state).map((i) => i.id)).toEqual([
@@ -134,8 +134,8 @@ describe("scrapInferiorLoot", () => {
     const keeper = weapon("test_hammer"); // higher damage → out-scores wrench
     stock(state, [junk, keeper]);
 
-    expect(isScrappableLoot(state, junk)).toBe(true);
-    expect(isScrappableLoot(state, keeper)).toBe(false);
+    expect(isScrappableLoot(state, state.players[0], junk)).toBe(true);
+    expect(isScrappableLoot(state, state.players[0], keeper)).toBe(false);
   });
 
   it("is a no-op on a bag of keepers", () => {
@@ -145,7 +145,7 @@ describe("scrapInferiorLoot", () => {
     const trinket = gear("test_chip", "trinket");
     stock(state, [upgrade, trinket]);
 
-    expect(scrapInferiorLoot(state)).toEqual([]);
+    expect(scrapInferiorLoot(state, state.players[0])).toEqual([]);
     expect(bagItems(state)).toHaveLength(2);
   });
 });

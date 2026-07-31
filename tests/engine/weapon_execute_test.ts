@@ -223,24 +223,31 @@ describe("a rigid weapon's shape is the tool's, not the wielder's", () => {
       durability: 120,
     };
 
-    const bareSawReach = weaponRangeFor(state, saw);
-    const bareSawArc = weaponSweepHalfAngle(state, saw);
-    const bareBladeReach = weaponRangeFor(state, blade);
-    const bareBladeArc = weaponSweepHalfAngle(state, blade);
+    const bareSawReach = weaponRangeFor(state, state.players[0], saw);
+    const bareSawArc = weaponSweepHalfAngle(state, state.players[0], saw);
+    const bareBladeReach = weaponRangeFor(state, state.players[0], blade);
+    const bareBladeArc = weaponSweepHalfAngle(state, state.players[0], blade);
 
     // A deep melee build: STRENGTH drives a swing further, INTELLIGENCE reads
     // a wider arc. Both should move the blade and neither should move the bar.
     state.players[0].stats.strength = 80;
     state.players[0].stats.intelligence = 80;
 
-    expect(weaponRangeFor(state, blade)).toBeGreaterThan(bareBladeReach);
-    expect(weaponSweepHalfAngle(state, blade)).toBeGreaterThan(bareBladeArc);
+    expect(weaponRangeFor(state, state.players[0], blade)).toBeGreaterThan(
+      bareBladeReach,
+    );
+    expect(
+      weaponSweepHalfAngle(state, state.players[0], blade),
+    ).toBeGreaterThan(bareBladeArc);
 
-    expect(weaponRangeFor(state, saw)).toBe(bareSawReach);
-    expect(weaponSweepHalfAngle(state, saw)).toBe(bareSawArc);
+    expect(weaponRangeFor(state, state.players[0], saw)).toBe(bareSawReach);
+    expect(weaponSweepHalfAngle(state, state.players[0], saw)).toBe(bareSawArc);
     // And it is exactly the catalog's own shape: 30px, a half circle.
-    expect(weaponRangeFor(state, saw)).toBe(30);
-    expect(weaponSweepHalfAngle(state, saw)).toBeCloseTo(Math.PI / 2, 6);
+    expect(weaponRangeFor(state, state.players[0], saw)).toBe(30);
+    expect(weaponSweepHalfAngle(state, state.players[0], saw)).toBeCloseTo(
+      Math.PI / 2,
+      6,
+    );
   });
 
   it("is priced at the geometry it actually has", () => {

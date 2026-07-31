@@ -173,7 +173,7 @@ describe("the SPARE-or-KILL verdict", () => {
     resolveChoice(state, true);
     advanceDialogue(state);
     while (state.players[0].pendingStatPoints > 0)
-      allocateStat(state, "strength");
+      allocateStat(state, state.players[0], "strength");
 
     // A second copy of the same spareable def walks in and is beaten.
     stageSpareable(state);
@@ -553,10 +553,16 @@ describe("companions in the field", () => {
     // 0.20 sits between the base magic chance (0.16) and the Magic-Find-widened
     // one (0.16 × 1.5 = 0.24): plain without LUCKY's kin, magic with it.
     state.rng = () => 0.2;
-    const before = rollEquipment(state, { defId: "test_wrench", mlvl: 3 });
+    const before = rollEquipment(state, state.players[0], {
+      defId: "test_wrench",
+      mlvl: 3,
+    });
     expect(before.tier).toBe("regular");
     recruitCompanion(state, "test_companion", { x: 30, y: 30 });
-    const after = rollEquipment(state, { defId: "test_wrench", mlvl: 3 });
+    const after = rollEquipment(state, state.players[0], {
+      defId: "test_wrench",
+      mlvl: 3,
+    });
     expect(after.tier).toBe("magic");
   });
 });

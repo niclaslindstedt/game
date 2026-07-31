@@ -58,11 +58,11 @@ describe("stacked medkits", () => {
   it("stacks only within a quality and caps each stack at stackCap", () => {
     const state = startGame();
     for (let i = 0; i < CONSUMABLES.stackCap + 2; i++) {
-      bankMedkit(state, 0);
+      bankMedkit(state, state.players[0], 0);
     }
     expect(state.players[0].medkits[0]).toBe(CONSUMABLES.stackCap);
     // A different quality banks into its own stack, unblocked by the full one.
-    expect(bankMedkit(state, 2)).toBe(true);
+    expect(bankMedkit(state, state.players[0], 2)).toBe(true);
     expect(state.players[0].medkits[2]).toBe(1);
   });
 
@@ -81,13 +81,13 @@ describe("stacked medkits", () => {
     state.players[0].hp = 100;
     state.players[0].medkits[0] = 2; // LIGHT
     state.players[0].medkits[2] = 1; // LARGE (bigger heal)
-    expect(bestMedkitTier(state)).toBe(2);
+    expect(bestMedkitTier(state, state.players[0])).toBe(2);
     const before = state.players[0].hp;
     // Percentage-of-max heal: LARGE (tier 2) mends 75% of the 1000 hp bar.
     const largeHeal = Math.round(
       state.players[0].maxHp * MEDKIT.tiers[2]!.healPct,
     );
-    expect(consumeMedkit(state)).toBe(true);
+    expect(consumeMedkit(state, state.players[0])).toBe(true);
     expect(state.players[0].hp).toBe(before + largeHeal);
     // The LARGE stack drained; the LIGHT reserve is untouched.
     expect(state.players[0].medkits[2]).toBe(0);
@@ -100,15 +100,15 @@ describe("stacked medkits", () => {
     const state = startGame();
     state.players[0].hp = state.players[0].maxHp;
     state.players[0].medkits[0] = 3;
-    expect(consumeMedkit(state)).toBe(false);
+    expect(consumeMedkit(state, state.players[0])).toBe(false);
     expect(state.players[0].medkits[0]).toBe(3);
   });
 
   it("is a no-op with an empty medkit inventory", () => {
     const state = startGame();
     state.players[0].hp = 1;
-    expect(bestMedkitTier(state)).toBe(-1);
-    expect(consumeMedkit(state)).toBe(false);
+    expect(bestMedkitTier(state, state.players[0])).toBe(-1);
+    expect(consumeMedkit(state, state.players[0])).toBe(false);
   });
 
   it("heals through the useMedkit input edge", () => {
@@ -142,7 +142,8 @@ describe("stacked stamina potions", () => {
 
   it("caps the stamina stack and overflows to the ground", () => {
     const state = startGame();
-    for (let i = 0; i < CONSUMABLES.stackCap + 1; i++) bankStaminaPotion(state);
+    for (let i = 0; i < CONSUMABLES.stackCap + 1; i++)
+      bankStaminaPotion(state, state.players[0]);
     expect(state.players[0].staminaPotions).toBe(CONSUMABLES.stackCap);
     dropAtHero(state, { kind: "drink" });
     step(state, idle, DT);
@@ -153,11 +154,11 @@ describe("stacked stamina potions", () => {
     const state = startGame();
     state.players[0].staminaPotions = 2;
     state.players[0].stamina = 0;
-    expect(consumeStaminaPotion(state)).toBe(true);
+    expect(consumeStaminaPotion(state, state.players[0])).toBe(true);
     expect(state.players[0].stamina).toBe(state.players[0].maxStamina);
     expect(state.players[0].staminaPotions).toBe(1);
     // Rested now — the second sip is refused, keeping the potion.
-    expect(consumeStaminaPotion(state)).toBe(false);
+    expect(consumeStaminaPotion(state, state.players[0])).toBe(false);
     expect(state.players[0].staminaPotions).toBe(1);
   });
 });

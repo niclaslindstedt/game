@@ -66,16 +66,16 @@ describe("the offhand slot's vocabulary", () => {
   it("a shield lands in the offhand and displaces the bag that was there", () => {
     const state = startGame();
     state.players[0].inventory[0] = bag(1);
-    expect(equipFromInventory(state, 0)).toBe(true);
-    expect(equippedBagSlots(state)).toBe(2);
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(true);
+    expect(equippedBagSlots(state, state.players[0])).toBe(2);
 
     state.players[0].inventory[1] = shield(2);
-    expect(equipFromInventory(state, 1)).toBe(true);
+    expect(equipFromInventory(state, state.players[0], 1)).toBe(true);
     expect(state.players[0].equipment.offhand?.defId).toBe("test_shield");
     // The bag swapped back into the cell the shield came out of…
     expect(state.players[0].inventory[1]?.defId).toBe("test_bag");
     // …and the cells it was paying for are gone. That IS the trade.
-    expect(equippedBagSlots(state)).toBe(0);
+    expect(equippedBagSlots(state, state.players[0])).toBe(0);
   });
 });
 
@@ -99,10 +99,14 @@ describe("the shield's STRENGTH floor", () => {
 
     state.players[0].stats.strength = 0;
     state.players[0].stats.intelligence = 60;
-    expect(canEquip(state, shield(1, "test_heavy_shield"))).toBe(false);
+    expect(
+      canEquip(state, state.players[0], shield(1, "test_heavy_shield")),
+    ).toBe(false);
 
     state.players[0].stats.strength = (req?.amount ?? 0) + 1;
-    expect(canEquip(state, shield(1, "test_heavy_shield"))).toBe(true);
+    expect(
+      canEquip(state, state.players[0], shield(1, "test_heavy_shield")),
+    ).toBe(true);
   });
 });
 
@@ -118,11 +122,11 @@ describe("the two-handed rule", () => {
     const state = startGame();
     state.players[0].stats.strength = 20; // room in the bag for the swap
     state.players[0].inventory[0] = shield(1);
-    equipFromInventory(state, 0);
+    equipFromInventory(state, state.players[0], 0);
     expect(state.players[0].equipment.offhand?.defId).toBe("test_shield");
 
     state.players[0].inventory[1] = greatsword(2);
-    expect(equipFromInventory(state, 1)).toBe(true);
+    expect(equipFromInventory(state, state.players[0], 1)).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_greatsword");
     expect(state.players[0].equipment.offhand).toBeNull();
     // The shield is in the bag, not destroyed.
@@ -136,7 +140,7 @@ describe("the two-handed rule", () => {
     const state = startGame();
     state.players[0].stats.strength = 20;
     state.players[0].inventory[0] = greatsword(1);
-    equipFromInventory(state, 0);
+    equipFromInventory(state, state.players[0], 0);
     expect(state.players[0].equipment.weapon.defId).toBe("test_greatsword");
 
     // Equipping the greatsword banked the hero's own opening blade; taking the
@@ -147,7 +151,7 @@ describe("the two-handed rule", () => {
     )?.defId;
     expect(shed).toBeDefined();
     state.players[0].inventory[1] = shield(2);
-    expect(equipFromInventory(state, 1)).toBe(true);
+    expect(equipFromInventory(state, state.players[0], 1)).toBe(true);
     expect(state.players[0].equipment.offhand?.defId).toBe("test_shield");
     expect(state.players[0].equipment.weapon.defId).toBe(shed);
     expect(
@@ -161,7 +165,7 @@ describe("the two-handed rule", () => {
     const state = startGame();
     state.players[0].stats.strength = 20;
     state.players[0].inventory[0] = greatsword(1);
-    equipFromInventory(state, 0);
+    equipFromInventory(state, state.players[0], 0);
     // Strip every banked weapon, including the blade the swap above shed, so
     // the hero has nothing left but the greatsword he is about to put away —
     // and another greatsword, which is not a legal answer either.
@@ -172,7 +176,7 @@ describe("the two-handed rule", () => {
     state.players[0].inventory[0] = greatsword(2);
     state.players[0].inventory[1] = shield(3);
 
-    expect(equipFromInventory(state, 1)).toBe(true);
+    expect(equipFromInventory(state, state.players[0], 1)).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe(SIDEARM_DEF_ID);
     expect(state.players[0].equipment.offhand?.defId).toBe("test_shield");
   });
@@ -181,14 +185,14 @@ describe("the two-handed rule", () => {
     const state = startGame();
     // The bag is at its floor, and every cell but the shield's is spoken for.
     state.players[0].inventory[0] = shield(1);
-    equipFromInventory(state, 0);
+    equipFromInventory(state, state.players[0], 0);
     state.players[0].inventory[0] = greatsword(2);
     for (let i = 1; i < state.players[0].inventory.length; i++) {
       state.players[0].inventory[i] = piece(10 + i, "test_charm", "trinket");
     }
     expect(state.players[0].inventory.length).toBe(LOOT.baseInventorySize);
 
-    expect(equipFromInventory(state, 0)).toBe(false);
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(false);
     // Nothing moved: the greatsword is still in its cell and the shield is
     // still worn, which is what "refused whole" has to mean.
     expect(state.players[0].inventory[0]?.defId).toBe("test_greatsword");
@@ -199,9 +203,11 @@ describe("the two-handed rule", () => {
     const state = startGame();
     state.players[0].stats.strength = 20;
     state.players[0].inventory[0] = shield(1);
-    equipFromInventory(state, 0);
+    equipFromInventory(state, state.players[0], 0);
     state.players[0].inventory[1] = greatsword(2);
-    expect(equipFromInventoryInto(state, 1, "weapon")).toBe(true);
+    expect(equipFromInventoryInto(state, state.players[0], 1, "weapon")).toBe(
+      true,
+    );
     expect(state.players[0].equipment.offhand).toBeNull();
   });
 
@@ -210,7 +216,7 @@ describe("the two-handed rule", () => {
     state.players[0].stats.strength = 20;
     state.players[0].inventory[0] = greatsword(1);
     state.players[0].inventory[1] = shield(2);
-    autoEquipBest(state);
+    autoEquipBest(state, state.players[0]);
     // The hand is decided first and wins — the sweep does not then hand the
     // shield to an arm the greatsword is using, which would just bank the
     // greatsword one line later and flap forever.
@@ -224,12 +230,12 @@ describe("a bag's room grows with its item level", () => {
     const state = startGame();
     // Same base, two depths, through the engine's own mint — the stamp is what
     // makes an old satchel worth picking back up out of a NIGHTMARE boss.
-    const early = rollEquipment(state, {
+    const early = rollEquipment(state, state.players[0], {
       defId: "test_bag",
       tier: "regular",
       mlvl: 1,
     });
-    const deep = rollEquipment(state, {
+    const deep = rollEquipment(state, state.players[0], {
       defId: "test_bag",
       tier: "regular",
       mlvl: 70,
@@ -239,14 +245,14 @@ describe("a bag's room grows with its item level", () => {
 
     // …and the stamp is what the worn slot actually pays out, not the catalog.
     state.players[0].inventory[0] = deep;
-    equipFromInventory(state, 0);
-    expect(equippedBagSlots(state)).toBe(deep.bagSlots);
+    equipFromInventory(state, state.players[0], 0);
+    expect(equippedBagSlots(state, state.players[0])).toBe(deep.bagSlots);
   });
 
   it("a shield in the same slot pays no cells at all", () => {
     const state = startGame();
     state.players[0].inventory[0] = shield(1);
-    equipFromInventory(state, 0);
-    expect(equippedBagSlots(state)).toBe(0);
+    equipFromInventory(state, state.players[0], 0);
+    expect(equippedBagSlots(state, state.players[0])).toBe(0);
   });
 });

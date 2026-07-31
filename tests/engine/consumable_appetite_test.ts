@@ -70,14 +70,14 @@ function stagedRun(): GameState {
 describe("consumable appetite — supply", () => {
   it("pays the full rate while the pouch has real room", () => {
     const state = stagedRun();
-    expect(consumableAppetite(state, "drink")).toBe(1);
-    expect(medkitAppetite(state, DEEP_MLVL)).toBe(1);
+    expect(consumableAppetite(state, state.players[0], "drink")).toBe(1);
+    expect(medkitAppetite(state, state.players[0], DEEP_MLVL)).toBe(1);
 
     // Up to `appetiteStart` of the stack the rain is untouched.
     state.players[0].staminaPotions = Math.floor(
       CONSUMABLES.stackCap * CONSUMABLES.appetiteStart,
     );
-    expect(consumableAppetite(state, "drink")).toBe(1);
+    expect(consumableAppetite(state, state.players[0], "drink")).toBe(1);
   });
 
   it("fades over the top of the stack, bottoming out at the floor", () => {
@@ -85,16 +85,20 @@ describe("consumable appetite — supply", () => {
     const cap = CONSUMABLES.stackCap;
 
     state.players[0].staminaPotions = cap - 1;
-    const nearlyFull = consumableAppetite(state, "drink");
+    const nearlyFull = consumableAppetite(state, state.players[0], "drink");
     expect(nearlyFull).toBeGreaterThan(CONSUMABLES.appetiteFloor);
     expect(nearlyFull).toBeLessThan(1);
 
     // A full pouch keeps the FLOOR, never zero — a drop it can't bank is still
     // ground bait worth planning a dive (or a sprint) around.
     state.players[0].staminaPotions = cap;
-    expect(consumableAppetite(state, "drink")).toBe(CONSUMABLES.appetiteFloor);
+    expect(consumableAppetite(state, state.players[0], "drink")).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
     state.players[0].repairKits = cap;
-    expect(consumableAppetite(state, "repair")).toBe(CONSUMABLES.appetiteFloor);
+    expect(consumableAppetite(state, state.players[0], "repair")).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
   });
 
   it("weighs the medkit pouch by the tiers a kill could actually pay", () => {
@@ -104,19 +108,21 @@ describe("consumable appetite — supply", () => {
     // A full LIGHT stack is irrelevant to a deep kill — it pays the top two
     // qualities, and both of those stacks are empty.
     state.players[0].medkits[0] = CONSUMABLES.stackCap;
-    expect(medkitAppetite(state, DEEP_MLVL)).toBe(1);
+    expect(medkitAppetite(state, state.players[0], DEEP_MLVL)).toBe(1);
 
     // A full TOP stack, on the other hand, kills most of the appetite even
     // with the tier under it empty: three drops in four would be refused.
     state.players[0].medkits[0] = 0;
     state.players[0].medkits[top] = CONSUMABLES.stackCap;
-    const topFull = medkitAppetite(state, DEEP_MLVL);
+    const topFull = medkitAppetite(state, state.players[0], DEEP_MLVL);
     expect(topFull).toBeGreaterThan(CONSUMABLES.appetiteFloor);
     expect(topFull).toBeLessThan(0.6);
 
     // Every droppable stack full: down to the bait floor.
     state.players[0].medkits[top - 1] = CONSUMABLES.stackCap;
-    expect(medkitAppetite(state, DEEP_MLVL)).toBe(CONSUMABLES.appetiteFloor);
+    expect(medkitAppetite(state, state.players[0], DEEP_MLVL)).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
   });
 
   it("reads only the one unlocked stack in the opening game", () => {
@@ -124,7 +130,9 @@ describe("consumable appetite — supply", () => {
     // Below every tier gate but the first, only LIGHT kits drop — so a full
     // LIGHT stack alone takes the slice to its floor.
     state.players[0].medkits[0] = CONSUMABLES.stackCap;
-    expect(medkitAppetite(state, 1)).toBe(CONSUMABLES.appetiteFloor);
+    expect(medkitAppetite(state, state.players[0], 1)).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
   });
 });
 
@@ -136,26 +144,26 @@ describe("consumable appetite — need", () => {
     const dying = stagedRun();
     dying.players[0].hp = 1;
 
-    expect(medkitAppetite(hurt, DEEP_MLVL)).toBeGreaterThan(
-      medkitAppetite(full, DEEP_MLVL),
+    expect(medkitAppetite(hurt, hurt.players[0], DEEP_MLVL)).toBeGreaterThan(
+      medkitAppetite(full, full.players[0], DEEP_MLVL),
     );
-    expect(medkitAppetite(dying, DEEP_MLVL)).toBeGreaterThan(
-      medkitAppetite(hurt, DEEP_MLVL),
+    expect(medkitAppetite(dying, dying.players[0], DEEP_MLVL)).toBeGreaterThan(
+      medkitAppetite(hurt, hurt.players[0], DEEP_MLVL),
     );
     // A gentle lean, not a mercy rope: a bone-dry pool pays at most the
     // configured bonus on top.
-    expect(medkitAppetite(dying, DEEP_MLVL)).toBeLessThanOrEqual(
-      1 + CONSUMABLES.appetiteNeedBonus,
-    );
+    expect(
+      medkitAppetite(dying, dying.players[0], DEEP_MLVL),
+    ).toBeLessThanOrEqual(1 + CONSUMABLES.appetiteNeedBonus);
   });
 
   it("leans the drink slice up as the sprint pool drains", () => {
     const rested = stagedRun();
     const winded = stagedRun();
     winded.players[0].stamina = 0;
-    expect(consumableAppetite(winded, "drink")).toBeGreaterThan(
-      consumableAppetite(rested, "drink"),
-    );
+    expect(
+      consumableAppetite(winded, winded.players[0], "drink"),
+    ).toBeGreaterThan(consumableAppetite(rested, rested.players[0], "drink"));
   });
 
   it("leans the repair slice up as the kit wears down", () => {
@@ -163,17 +171,19 @@ describe("consumable appetite — need", () => {
     const worn = stagedRun();
     const weapon = worn.players[0].equipment.weapon;
     if (weapon.durability !== undefined) weapon.durability = 1;
-    expect(consumableAppetite(worn, "repair")).toBeGreaterThan(
-      consumableAppetite(pristine, "repair"),
+    expect(consumableAppetite(worn, worn.players[0], "repair")).toBeGreaterThan(
+      consumableAppetite(pristine, pristine.players[0], "repair"),
     );
   });
 
   it("still leans on need with the pouch full — the floor is a floor", () => {
     const state = stagedRun();
     state.players[0].staminaPotions = CONSUMABLES.stackCap;
-    const rested = consumableAppetite(state, "drink");
+    const rested = consumableAppetite(state, state.players[0], "drink");
     state.players[0].stamina = 0;
-    expect(consumableAppetite(state, "drink")).toBeGreaterThan(rested);
+    expect(
+      consumableAppetite(state, state.players[0], "drink"),
+    ).toBeGreaterThan(rested);
   });
 });
 

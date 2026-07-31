@@ -86,7 +86,7 @@ export function characterStatGroups(state: GameState): StatGroup[] {
       stat,
       STAT_LABELS[stat],
       state,
-      (s) => effectiveStat(s, stat),
+      (s) => effectiveStat(s, s.players[0], stat),
       whole,
       NEUTRAL,
       `icon_stat_${stat}`,
@@ -95,7 +95,11 @@ export function characterStatGroups(state: GameState): StatGroup[] {
 
   // The damage RANGE, not the average: the average is what the engine rolls
   // around, and a player sizing up a weapon wants the spread.
-  const damage = weaponDamageRange(state, state.players[0].equipment.weapon);
+  const damage = weaponDamageRange(
+    state,
+    state.players[0],
+    state.players[0].equipment.weapon,
+  );
   const offense: StatReadout[] = [
     {
       key: "damage",
@@ -113,20 +117,20 @@ export function characterStatGroups(state: GameState): StatGroup[] {
       "reach",
       "REACH",
       state,
-      (s) => weaponRangeFor(s, s.players[0].equipment.weapon),
+      (s) => weaponRangeFor(s, s.players[0], s.players[0].equipment.weapon),
       whole,
       OFFENSE,
     ),
   ];
 
   const mobLevel = currentMobLevel(state);
-  const worn = totalArmor(state);
+  const worn = totalArmor(state, state.players[0]);
   const defense: StatReadout[] = [
     row("hp", "MAX HP", state, computeMaxHp, formatCompact, DEFENSE),
     {
       key: "armor",
       label: "ARMOR",
-      value: `${worn} (-${Math.round(armorReduction(state, mobLevel) * 100)}%)`,
+      value: `${worn} (-${Math.round(armorReduction(state, state.players[0], mobLevel) * 100)}%)`,
       color: DEFENSE,
     },
     row("dodge", "DODGE", state, playerDodgeChance, percent, DEFENSE),
@@ -155,7 +159,8 @@ export function characterStatGroups(state: GameState): StatGroup[] {
       (s) => {
         const balance = getBalanceTuning();
         return (
-          playerSpeed(s) / (PLAYER.speed * balance.tempo * balance.playerSpeed)
+          playerSpeed(s, s.players[0]) /
+          (PLAYER.speed * balance.tempo * balance.playerSpeed)
         );
       },
       percent,

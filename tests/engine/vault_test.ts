@@ -110,10 +110,18 @@ describe("banking a thrown-away find (vaultItem)", () => {
       true,
     );
     expect(
-      vaultItem(state, piece(state, "test_hammer", "weapon", "regular")),
+      vaultItem(
+        state,
+        state.players[0],
+        piece(state, "test_hammer", "weapon", "regular"),
+      ),
     ).toBe(false);
     expect(
-      vaultItem(state, piece(state, "test_hammer", "weapon", "magic")),
+      vaultItem(
+        state,
+        state.players[0],
+        piece(state, "test_hammer", "weapon", "magic"),
+      ),
     ).toBe(true);
     expect(state.players[0].vault).toHaveLength(1);
   });
@@ -121,19 +129,23 @@ describe("banking a thrown-away find (vaultItem)", () => {
   it("evicts the LEAST precious at capacity, and refuses a find that can't beat it", () => {
     const state = startGame();
     for (let i = 0; i < VAULT.capacity; i++) {
-      vaultItem(state, piece(state, "test_hammer", "weapon", "rare"));
+      vaultItem(
+        state,
+        state.players[0],
+        piece(state, "test_hammer", "weapon", "rare"),
+      );
     }
     expect(state.players[0].vault).toHaveLength(VAULT.capacity);
     // A legendary displaces one of the rares — the vault keeps the treasure.
     const legendary = piece(state, "test_hammer", "weapon", "legendary");
-    expect(vaultItem(state, legendary)).toBe(true);
+    expect(vaultItem(state, state.players[0], legendary)).toBe(true);
     expect(state.players[0].vault).toHaveLength(VAULT.capacity);
     expect(state.players[0].vault.some((p) => p.id === legendary.id)).toBe(
       true,
     );
     // A magic can't out-rank a vault full of rares: it isn't banked at all.
     const magic = piece(state, "test_hammer", "weapon", "magic");
-    expect(vaultItem(state, magic)).toBe(false);
+    expect(vaultItem(state, state.players[0], magic)).toBe(false);
     expect(state.players[0].vault.some((p) => p.id === magic.id)).toBe(false);
   });
 
@@ -141,8 +153,8 @@ describe("banking a thrown-away find (vaultItem)", () => {
     const state = startGame();
     const magicDeep = piece(state, "test_hammer", "weapon", "magic", 90);
     const unique = piece(state, "test_hammer", "weapon", "unique", 1);
-    vaultItem(state, magicDeep);
-    vaultItem(state, unique);
+    vaultItem(state, state.players[0], magicDeep);
+    vaultItem(state, state.players[0], unique);
     // The ilvl-90 blue sells for more per point, but a UNIQUE outranks it
     // absolutely — the whole reason the ordering isn't plain sellValue.
     expect(vaultWorth(unique)).toBeGreaterThan(vaultWorth(magicDeep));
@@ -224,10 +236,10 @@ describe("buying a piece back mid-run (reclaimVaultItem)", () => {
     const state = startGame();
     clearStage(state);
     const banked = piece(state, "test_hammer", "weapon", "unique");
-    vaultItem(state, banked);
+    vaultItem(state, state.players[0], banked);
     const price = reclaimCost(banked);
     state.players[0].coins = price + 5;
-    expect(reclaimVaultItem(state, banked.id)).toBe(null);
+    expect(reclaimVaultItem(state, state.players[0], banked.id)).toBe(null);
     expect(state.players[0].coins).toBe(5);
     expect(state.players[0].vault).toHaveLength(0);
     expect(state.players[0].inventory.some((c) => c?.id === banked.id)).toBe(
@@ -239,19 +251,19 @@ describe("buying a piece back mid-run (reclaimVaultItem)", () => {
     const state = startGame();
     clearStage(state);
     const banked = piece(state, "test_hammer", "weapon", "unique");
-    vaultItem(state, banked);
+    vaultItem(state, state.players[0], banked);
     state.players[0].coins = reclaimCost(banked) - 1;
-    expect(reclaimVaultItem(state, banked.id)).toBe("coins");
+    expect(reclaimVaultItem(state, state.players[0], banked.id)).toBe("coins");
     // Nothing moved on a refusal — the piece is still banked, the purse whole.
     expect(state.players[0].vault).toHaveLength(1);
     expect(state.players[0].coins).toBe(reclaimCost(banked) - 1);
 
     state.players[0].coins = reclaimCost(banked);
     fillBag(state, "unique");
-    expect(reclaimVaultItem(state, banked.id)).toBe("bag");
+    expect(reclaimVaultItem(state, state.players[0], banked.id)).toBe("bag");
     expect(state.players[0].coins).toBe(reclaimCost(banked));
 
-    expect(reclaimVaultItem(state, -1)).toBe("gone");
+    expect(reclaimVaultItem(state, state.players[0], -1)).toBe("gone");
   });
 });
 
@@ -260,7 +272,7 @@ describe("the vault rides the loadout and expires (clearVault)", () => {
     const state = startGame();
     clearStage(state);
     const banked = piece(state, "test_hammer", "weapon", "legendary");
-    vaultItem(state, banked);
+    vaultItem(state, state.players[0], banked);
     const next = startGame();
     applyLoadout(next, extractLoadout(state));
     expect(next.players[0].vault).toHaveLength(1);
@@ -269,9 +281,17 @@ describe("the vault rides the loadout and expires (clearVault)", () => {
 
   it("is emptied for good when the next ride engages", () => {
     const state = startGame();
-    vaultItem(state, piece(state, "test_hammer", "weapon", "legendary"));
-    vaultItem(state, piece(state, "test_hammer", "weapon", "unique"));
-    expect(clearVault(state)).toBe(2);
+    vaultItem(
+      state,
+      state.players[0],
+      piece(state, "test_hammer", "weapon", "legendary"),
+    );
+    vaultItem(
+      state,
+      state.players[0],
+      piece(state, "test_hammer", "weapon", "unique"),
+    );
+    expect(clearVault(state, state.players[0])).toBe(2);
     expect(state.players[0].vault).toHaveLength(0);
   });
 });

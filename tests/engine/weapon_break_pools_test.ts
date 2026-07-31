@@ -42,7 +42,7 @@ describe("weapon break re-derives the stat pools", () => {
     // Equip a +10 STAMINA blade through the real bag path — the pools grow.
     const bonus = 10;
     state.players[0].inventory[0] = staminaSword(bonus);
-    expect(equipFromInventory(state, 0)).toBe(true);
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(true);
     expect(state.players[0].maxStamina).toBe(
       bareMaxStamina + bonus * STAMINA.maxPerPoint,
     );
@@ -55,7 +55,7 @@ describe("weapon break re-derives the stat pools", () => {
     state.players[0].hp = state.players[0].maxHp;
     state.players[0].inventory.fill(null);
     state.players[0].equipment.weapon.durability = 1;
-    wearEquippedWeapon(state);
+    wearEquippedWeapon(state, state.players[0]);
 
     // The blade is gone (swapped for the sidearm), so its bonus is too — the
     // pools are re-derived to the bare stats, not left at the broken weapon's.

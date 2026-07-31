@@ -75,7 +75,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   // per-mob `stasisFactorAt` re-derived each field's INT-widened radius (a
   // full gear walk) for every enemy every tick. No stat-changing pass runs
   // between here and the movement below, so the hoist is exact.
-  const stasisFields = activeStasisFields(state);
+  const stasisFields = activeStasisFields(state, player);
 
   // On the gentle rungs the plain horde loses its legs the moment the player is
   // in an actual FIGHT with an elite or boss, so he can push through the swarm
@@ -213,21 +213,21 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // him. Checked before the dodge roll (there is nothing to dodge) and
       // before the blow is priced, so a phased hero costs the horde nothing but
       // its swing; the float names why nothing landed.
-      if (isPhased(state)) {
+      if (isPhased(state, player)) {
         state.events.push({ type: "playerPhased", pos: { ...player.pos } });
         continue;
       }
       // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.
       // DEXTERITY drives it, LUCK nudges it (see `playerDodgeChance`).
-      if (state.rng() < playerDodgeChance(state)) {
+      if (state.rng() < playerDodgeChance(state, player)) {
         // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart
         // away). 0 when the mastery isn't owned, so nothing is armed.
-        const burst = talentEvasionBurstMs(state);
+        const burst = talentEvasionBurstMs(state, player);
         if (burst > 0) player.evasionBurstMs = burst;
         state.events.push({ type: "playerDodge", pos: { ...player.pos } });
         continue;
       }
-      const crit = state.rng() < enemyCritChance(state, def.critChance);
+      const crit = state.rng() < enemyCritChance(state, player, def.critChance);
       // A boss backed into its last stand hits like a cornered animal.
       const lastStand =
         def.role === "boss" && enemy.hp <= enemy.maxHp * LAST_STAND.hpFraction;
@@ -247,7 +247,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // no struck procs. At rank 5 it RIPOSTES, billing a share of the blow back
       // at the attacker (queued like Retribution — `pendingReflects` — and
       // resolved after the enemy pass so it never splices the list mid-loop).
-      const parry = talentParry(state);
+      const parry = talentParry(state, player);
       if (parry && state.rng() < parry.chance) {
         state.events.push({ type: "parry", pos: { ...player.pos } });
         if (parry.riposteFrac > 0) {
@@ -263,12 +263,12 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // wears every worn piece a point, whether or not it turned much.
       const hpDamage = Math.max(
         0,
-        Math.round(damage * (1 - armorReduction(state, enemy.mlvl))),
+        Math.round(damage * (1 - armorReduction(state, player, enemy.mlvl))),
       );
-      wearWornArmor(state);
+      wearWornArmor(state, player);
       // The talent mitigation (Ironhide + Mage Armor) soaks its share first —
       // see `absorbPlayerDamage`.
-      player.hp -= absorbPlayerDamage(state, hpDamage);
+      player.hp -= absorbPlayerDamage(state, player, hpDamage);
       player.hurtFlashMs = 250;
       state.stats.damageTaken += damage;
       state.events.push({ type: "playerHurt", crit, cause: enemy.defId });
@@ -292,7 +292,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
 function applyFrostNova(state: GameState): void {
   const player = state.players[0];
   if ((player.frostNovaCooldownMs ?? 0) > 0) return;
-  const fn = talentFrostNova(state);
+  const fn = talentFrostNova(state, player);
   if (!fn) return;
   player.frostNovaCooldownMs = fn.cooldownMs;
   state.events.push({
@@ -320,7 +320,7 @@ function applyRetribution(
   attacker: Enemy,
   damage: number,
 ): void {
-  const frac = talentReflectFrac(state);
+  const frac = talentReflectFrac(state, state.players[0]);
   if (frac <= 0 || damage <= 0) return;
   // `??=` guards a run parked before this field existed (thaws undefined); the
   // queue is empty at every save boundary, so it needs no SAVE_VERSION bump.

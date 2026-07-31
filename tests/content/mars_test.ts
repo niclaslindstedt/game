@@ -147,7 +147,7 @@ describe("MARS level def", () => {
     const state = createGame(SEED, "mars", "medium", loadout!);
     expect(state.players[0].level).toBe(loadout!.level);
     expect(state.players[0].hp).toBe(state.players[0].maxHp);
-    expect(totalArmor(state)).toBeGreaterThan(0);
+    expect(totalArmor(state, state.players[0])).toBeGreaterThan(0);
   });
 });
 

@@ -164,7 +164,7 @@ describe("fleeing uniques", () => {
     advanceDialogue(state); // tap through the parting words
     // Spend any level-up the escape's XP just banked, so play resumes.
     while (state.players[0].pendingStatPoints > 0)
-      allocateStat(state, "strength");
+      allocateStat(state, state.players[0], "strength");
 
     // The victory countdown runs out with no boss left on the board.
     run(state, idle, 1000, (s) => s.phase === "victory");

@@ -41,7 +41,7 @@ function stepThrough(state: GameState, steps: number): void {
     state.campMs = 0;
     step(state, idle, DT);
     while (state.players[0].pendingStatPoints > 0)
-      allocateStat(state, "stamina");
+      allocateStat(state, state.players[0], "stamina");
   }
 }
 

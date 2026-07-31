@@ -70,7 +70,7 @@ describe("magic crit blob — the queue gate", () => {
 /** The blob's reach and target count for the current INT, mirroring
  * `stepMagicCritBlobs`. */
 const blobShape = (state: ReturnType<typeof startGame>) => {
-  const int = effectiveStat(state, "intelligence");
+  const int = effectiveStat(state, state.players[0], "intelligence");
   return {
     radius: Math.min(
       MAGIC_CRIT.blobRadiusMax,

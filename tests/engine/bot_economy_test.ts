@@ -48,7 +48,9 @@ describe("bot bag discipline (cullWorstLoot)", () => {
     for (let i = 0; i < inv.length; i++) {
       inv[i] = junkBlaster(state, i === 0 ? 30 : 1);
     }
-    expect(isScrappableLoot(state, inv[0] as Equipment)).toBe(true);
+    expect(isScrappableLoot(state, state.players[0], inv[0] as Equipment)).toBe(
+      true,
+    );
     const dropped = cullWorstLoot(state);
     // Exactly one drop — the cheapest — and a cell is now open.
     expect(dropped.length).toBe(1);

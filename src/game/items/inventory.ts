@@ -8,9 +8,10 @@ import { GATES, LOOT, STATS } from "../config/index.ts";
 import { gearDef, isWeaponDef } from "../defs/equipment.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import type {
-  Equipment,
   EquipSlot,
+  Equipment,
   GameState,
+  Player,
   RingSlot,
 } from "../types/index.ts";
 import {
@@ -31,8 +32,8 @@ import { gearScore } from "./weapon-math.ts";
  * it actually beats instead of always clobbering `ring1`. The displaced ring
  * is what the caller swaps back into the bag.
  */
-export function ringSlotFor(state: GameState): RingSlot {
-  const equipment = state.players[0].equipment;
+export function ringSlotFor(state: GameState, player: Player): RingSlot {
+  const equipment = player.equipment;
   for (const slot of RING_SLOTS) if (!equipment[slot]) return slot;
   const [first, second] = RING_SLOTS;
   return gearScore(equipment[second] as Equipment) <
@@ -50,10 +51,11 @@ export function ringSlotFor(state: GameState): RingSlot {
  */
 export function wearSlotFor(
   state: GameState,
+  player: Player,
   piece: Equipment,
 ): EquipSlot | null {
   if (piece.slot === "trinket") return null;
-  if (piece.slot === "ring") return ringSlotFor(state);
+  if (piece.slot === "ring") return ringSlotFor(state, player);
   return equipSlotForItem(piece.slot);
 }
 
@@ -69,10 +71,11 @@ export function wearSlotFor(
  */
 export function wornCounterpart(
   state: GameState,
+  player: Player,
   piece: Equipment,
 ): Equipment | null {
-  const slot = wearSlotFor(state, piece);
-  return slot ? state.players[0].equipment[slot] : null;
+  const slot = wearSlotFor(state, player, piece);
+  return slot ? player.equipment[slot] : null;
 }
 
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
@@ -83,8 +86,8 @@ export function wornCounterpart(
  * A bag only pays out from the slot — one sitting in a cell is just loot until
  * it's equipped, and a hero who chose the shield chose the smaller carry.
  */
-export function equippedBagSlots(state: GameState): number {
-  const bag = state.players[0].equipment.offhand;
+export function equippedBagSlots(state: GameState, player: Player): number {
+  const bag = player.equipment.offhand;
   // The second arm may be holding a SHIELD instead, which carries no cells.
   if (!bag || bag.slot !== "bag" || isWeaponDef(bag.defId)) return 0;
   // The INSTANCE stamp first — the ilvl-grown count `rollEquipment` froze at
@@ -107,11 +110,13 @@ export function equippedBagSlots(state: GameState): number {
  * (affixes folded in, via `effectiveStat`) plus whatever a worn BAG adds. A STR
  * build and a roomy bag are both ways to earn the room to hoard loot.
  */
-export function inventoryCapacity(state: GameState): number {
+export function inventoryCapacity(state: GameState, player: Player): number {
   return (
     LOOT.baseInventorySize +
-    Math.floor(effectiveStat(state, "strength") * STATS.bagSlotsPerStr) +
-    equippedBagSlots(state)
+    Math.floor(
+      effectiveStat(state, player, "strength") * STATS.bagSlotsPerStr,
+    ) +
+    equippedBagSlots(state, player)
   );
 }
 
@@ -121,9 +126,9 @@ export function inventoryCapacity(state: GameState): number {
  * the bag never shrinks below what it already holds, so dropping a
  * STRENGTH-boosting charm can never strand or discard a carried item.
  */
-export function syncInventoryCapacity(state: GameState): void {
-  const inv = state.players[0].inventory;
-  const want = inventoryCapacity(state);
+export function syncInventoryCapacity(state: GameState, player: Player): void {
+  const inv = player.inventory;
+  const want = inventoryCapacity(state, player);
   while (inv.length < want) inv.push(null);
 }
 
@@ -133,21 +138,24 @@ export function syncInventoryCapacity(state: GameState): void {
  * Equip the item in inventory cell `index`, swapping whatever occupied its
  * slot back into that cell. Returns false on an empty cell.
  */
-export function equipFromInventory(state: GameState, index: number): boolean {
-  const player = state.players[0];
+export function equipFromInventory(
+  state: GameState,
+  player: Player,
+  index: number,
+): boolean {
   const item = player.inventory[index];
   if (!item) return false;
   // The equip gates hold in the bag too: an under-leveled or under-statted
   // find stays banked until the hero grows into it.
-  if (!canEquip(state, item)) return false;
+  if (!canEquip(state, player, item)) return false;
   // A TRINKET has no slot to move to — it already works from the cell it sits
   // in, so "equipping" one is a no-op rather than a failure.
-  const slot = wearSlotFor(state, item);
+  const slot = wearSlotFor(state, player, item);
   if (!slot) return false;
   // THE TWO-HANDED RULE: a greatsword needs the second arm, and a shield or
   // bag needs the hand a greatsword is holding. Refused whole when the bag has
   // no room for what would come off (items/hands.ts).
-  if (!freeHandsFor(state, item, index)) return false;
+  if (!freeHandsFor(state, player, item, index)) return false;
   const previous = player.equipment[slot];
   player.inventory[index] = previous ?? null;
   if (slot === "weapon") {
@@ -156,11 +164,11 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   } else {
     player.equipment[slot] = item;
   }
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
   // A +STRENGTH piece can widen the bag; grow it so the swap has somewhere
   // to land (grow-only — see syncInventoryCapacity).
-  syncInventoryCapacity(state);
+  syncInventoryCapacity(state, player);
   return true;
 }
 
@@ -175,15 +183,15 @@ export function equipFromInventory(state: GameState, index: number): boolean {
  */
 export function equipFromInventoryInto(
   state: GameState,
+  player: Player,
   index: number,
   slot: EquipSlot,
 ): boolean {
-  const player = state.players[0];
   const item = player.inventory[index];
   if (!item) return false;
   if (!fitsEquipSlot(item.slot, slot)) return false;
-  if (!canEquip(state, item)) return false;
-  if (!freeHandsFor(state, item, index)) return false;
+  if (!canEquip(state, player, item)) return false;
+  if (!freeHandsFor(state, player, item, index)) return false;
   const previous = player.equipment[slot];
   player.inventory[index] = previous ?? null;
   if (slot === "weapon") {
@@ -192,9 +200,9 @@ export function equipFromInventoryInto(
   } else {
     player.equipment[slot] = item;
   }
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  syncInventoryCapacity(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  syncInventoryCapacity(state, player);
   return true;
 }
 
@@ -203,27 +211,31 @@ export function equipFromInventoryInto(
  * slot can never be emptied — the character always fights with something —
  * so weapons only leave via an `equipFromInventory` swap.
  */
-export function unequipToInventory(state: GameState, slot: EquipSlot): boolean {
+export function unequipToInventory(
+  state: GameState,
+  player: Player,
+  slot: EquipSlot,
+): boolean {
   if (slot === "weapon") return false;
-  const player = state.players[0];
   const item = player.equipment[slot];
   if (!item) return false;
   const free = player.inventory.indexOf(null);
   if (free === -1) return false;
   player.inventory[free] = item;
   player.equipment[slot] = null;
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
   return true;
 }
 
 /** Swap two inventory cells (drag-to-rearrange). */
 export function moveInventoryItem(
   state: GameState,
+  player: Player,
   from: number,
   to: number,
 ): void {
-  const inv = state.players[0].inventory;
+  const inv = player.inventory;
   if (from === to || !(from in inv) || !(to in inv)) return;
   const a = inv[from] ?? null;
   inv[from] = inv[to] ?? null;
@@ -231,10 +243,14 @@ export function moveInventoryItem(
 }
 
 /** Add loot to the first free cell; false (and no mutation) when full. */
-export function addToInventory(state: GameState, item: Equipment): boolean {
-  const free = state.players[0].inventory.indexOf(null);
+export function addToInventory(
+  state: GameState,
+  player: Player,
+  item: Equipment,
+): boolean {
+  const free = player.inventory.indexOf(null);
   if (free === -1) return false;
-  state.players[0].inventory[free] = item;
+  player.inventory[free] = item;
   return true;
 }
 
@@ -264,18 +280,22 @@ export function gateKeyTarget(
  * false (and consumes nothing) when the cell holds no key for this level or
  * the gate already stands.
  */
-export function spendGateKey(state: GameState, index: number): boolean {
-  const item = state.players[0].inventory[index] ?? null;
+export function spendGateKey(
+  state: GameState,
+  player: Player,
+  index: number,
+): boolean {
+  const item = player.inventory[index] ?? null;
   if (!item) return false;
   const gate = gateKeyTarget(state, item);
   if (!gate) return false;
   const def = runLevelDef(state);
   const gateDef = (def.gates ?? []).find((g) => g.id === gate.id);
   if (!gateDef) return false;
-  state.players[0].inventory[index] = null;
+  player.inventory[index] = null;
   const pos = {
-    x: clamp(state.players[0].pos.x + GATES.summonDistance, 24, def.width - 24),
-    y: clamp(state.players[0].pos.y, 24, def.height - 24),
+    x: clamp(player.pos.x + GATES.summonDistance, 24, def.width - 24),
+    y: clamp(player.pos.y, 24, def.height - 24),
   };
   state.gates.push({ id: gate.id, to: gate.to, pos, entered: false });
   state.landmarks.push({
@@ -296,9 +316,10 @@ export function spendGateKey(state: GameState, index: number): boolean {
  */
 export function discardFromInventory(
   state: GameState,
+  player: Player,
   index: number,
 ): Equipment | null {
-  const inv = state.players[0].inventory;
+  const inv = player.inventory;
   const item = inv[index] ?? null;
   if (!item) return null;
   inv[index] = null;
@@ -314,14 +335,14 @@ export function discardFromInventory(
  */
 export function discardEquipped(
   state: GameState,
+  player: Player,
   slot: EquipSlot,
 ): Equipment | null {
   if (slot === "weapon") return null;
-  const player = state.players[0];
   const item = player.equipment[slot];
   if (!item) return null;
   player.equipment[slot] = null;
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
   return item;
 }

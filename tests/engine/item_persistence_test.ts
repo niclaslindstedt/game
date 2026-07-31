@@ -42,20 +42,22 @@ function reload(wrenchDamage: number | null): void {
 describe("item version immunity", () => {
   it("mints every drop with a frozen snapshot of its def", () => {
     const state = startGame();
-    const weapon = rollEquipment(state, { defId: "test_wrench" });
+    const weapon = rollEquipment(state, state.players[0], {
+      defId: "test_wrench",
+    });
     expect(weapon.def).toEqual(weaponDef("test_wrench"));
-    const gear = rollEquipment(state, { defId: "test_vest" });
+    const gear = rollEquipment(state, state.players[0], { defId: "test_vest" });
     expect(gear.def).toBeDefined();
     expect(gear.def).toEqual(VEST);
   });
 
   it("keeps a dropped item's stats when its base is nerfed; new drops feel it", () => {
     const state = startGame();
-    const kept = rollEquipment(state, {
+    const kept = rollEquipment(state, state.players[0], {
       defId: "test_wrench",
       tier: "regular",
     });
-    const before = weaponDamageFor(state, kept);
+    const before = weaponDamageFor(state, state.players[0], kept);
 
     // We halve the wrench's catalog damage in a later build.
     reload(WRENCH.damage / 2);
@@ -63,30 +65,38 @@ describe("item version immunity", () => {
     // The kept item, adopted on load, deals exactly what it dropped with.
     const adopted = adoptEquipment(kept);
     expect(adopted).not.toBeNull();
-    expect(weaponDamageFor(state, adopted!)).toBeCloseTo(before, 5);
+    expect(weaponDamageFor(state, state.players[0], adopted!)).toBeCloseTo(
+      before,
+      5,
+    );
 
     // A fresh roll of the same base is nerfed — the change lands on new loot.
-    const fresh = rollEquipment(state, {
+    const fresh = rollEquipment(state, state.players[0], {
       defId: "test_wrench",
       tier: "regular",
     });
-    expect(weaponDamageFor(state, fresh)).toBeLessThan(before);
+    expect(weaponDamageFor(state, state.players[0], fresh)).toBeLessThan(
+      before,
+    );
   });
 
   it("keeps a dropped item usable after its base is deleted from the catalog", () => {
     const state = startGame();
-    const kept = rollEquipment(state, {
+    const kept = rollEquipment(state, state.players[0], {
       defId: "test_wrench",
       tier: "regular",
     });
-    const before = weaponDamageFor(state, kept);
+    const before = weaponDamageFor(state, state.players[0], kept);
 
     reload(null); // the base no longer exists in the live catalog
 
     const adopted = adoptEquipment(kept);
     expect(adopted).not.toBeNull();
     // Its stats, name, level gate, and weapon-ness all still resolve.
-    expect(weaponDamageFor(state, adopted!)).toBeCloseTo(before, 5);
+    expect(weaponDamageFor(state, state.players[0], adopted!)).toBeCloseTo(
+      before,
+      5,
+    );
     expect(equipmentBaseName(adopted!.defId)).toBe(WRENCH.name);
     expect(equipmentLevelReq(adopted!.defId)).toBe(WRENCH.levelReq);
     expect(isWeaponDef(adopted!.defId)).toBe(true);
@@ -96,7 +106,7 @@ describe("item version immunity", () => {
 
   it("re-adoption is idempotent — the frozen id is stable across loads", () => {
     const state = startGame();
-    const kept = rollEquipment(state, { defId: "test_pipe" });
+    const kept = rollEquipment(state, state.players[0], { defId: "test_pipe" });
     reload(null);
     const once = adoptEquipment(kept)!;
     const twice = adoptEquipment(once)!;

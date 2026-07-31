@@ -228,11 +228,11 @@ export function CompanionPanel({
             const usable =
               item !== null &&
               fitsCompanion(item) &&
-              meetsLevelReq(state, item);
+              meetsLevelReq(state, state.players[0], item);
             const lowLevel =
               item !== null &&
               fitsCompanion(item) &&
-              !meetsLevelReq(state, item);
+              !meetsLevelReq(state, state.players[0], item);
             return (
               <button
                 key={index}

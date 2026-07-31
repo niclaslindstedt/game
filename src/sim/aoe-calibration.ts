@@ -497,15 +497,17 @@ function advanceUntilStep(
       case "levelup": {
         // Spend the point (prefer the bot's pick; else any stat with room) so
         // the ding resolves.
-        if (!allocateStat(state, botAllocate(bot, state))) {
-          for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
+        if (!allocateStat(state, state.players[0], botAllocate(bot, state))) {
+          for (const s of STAT_NAMES)
+            if (allocateStat(state, state.players[0], s)) break;
         }
         // A ×10 tree milestone earns a passive TALENT point that holds the same
         // level-up pause; spend it per the bot's build so the ding resolves (see
         // allocateStat/resumeAfterLevelup).
         while (state.pendingTalentPoints.length > 0) {
           const talentId = botPickTalent(bot, state);
-          if (!talentId || !spendTalentPoint(state, talentId)) break;
+          if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
+            break;
         }
         break;
       }

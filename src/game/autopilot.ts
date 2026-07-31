@@ -52,7 +52,7 @@ export function startAutopilot(state: GameState, speed = 1): boolean {
   // — re-stamping here would quietly re-baseline the refund on the build the
   // BOT had already grown, and the player would get back only the last level's
   // points. `refundAutopilotBuild` clears it when the ride is settled.
-  state.autopilot.build ??= captureBuildSnapshot(state);
+  state.autopilot.build ??= captureBuildSnapshot(state, state.players[0]);
   return true;
 }
 

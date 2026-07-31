@@ -77,7 +77,7 @@ function heroWithStats(
   state.players[0].spentStats.strength = str;
   state.players[0].spentStats.dexterity = dex;
   state.players[0].spentStats.intelligence = int;
-  reconcileTalentPoints(state);
+  reconcileTalentPoints(state, state.players[0]);
   return state;
 }
 
@@ -120,40 +120,46 @@ describe("the talent point economy", () => {
       earnedTalentPoints(state.players[0].spentStats, "intelligence"),
     ).toBe(25);
     // All 25 earned points fit — none stranded.
-    expect(availableTalentPoints(state, "intelligence")).toBe(25);
+    expect(availableTalentPoints(state, state.players[0], "intelligence")).toBe(
+      25,
+    );
     expect(state.pendingTalentPoints.length).toBe(25);
   });
 
   it("spends a point, ranking the talent up and shrinking the queue", () => {
     const state = heroWithStats({ str: 20 });
     expect(state.pendingTalentPoints.length).toBe(2);
-    expect(spendTalentPoint(state, "executioner")).toBe(true);
-    expect(talentRank(state, "executioner")).toBe(1);
+    expect(spendTalentPoint(state, state.players[0], "executioner")).toBe(true);
+    expect(talentRank(state, state.players[0], "executioner")).toBe(1);
     expect(state.pendingTalentPoints.length).toBe(1);
     // A second point ranks it again.
-    expect(spendTalentPoint(state, "executioner")).toBe(true);
-    expect(talentRank(state, "executioner")).toBe(2);
+    expect(spendTalentPoint(state, state.players[0], "executioner")).toBe(true);
+    expect(talentRank(state, state.players[0], "executioner")).toBe(2);
     expect(hasPendingTalentPoint(state)).toBe(false);
   });
 
   it("refuses to overspend, to rank a maxed talent, or an unknown id", () => {
     const state = heroWithStats({ str: 10 }); // one melee point
-    expect(spendTalentPoint(state, "not_a_talent")).toBe(false);
-    expect(spendTalentPoint(state, "deadeye")).toBe(false); // ranged, no point
-    expect(spendTalentPoint(state, "executioner")).toBe(true);
+    expect(spendTalentPoint(state, state.players[0], "not_a_talent")).toBe(
+      false,
+    );
+    expect(spendTalentPoint(state, state.players[0], "deadeye")).toBe(false); // ranged, no point
+    expect(spendTalentPoint(state, state.players[0], "executioner")).toBe(true);
     // The single point is gone — a second spend fails.
-    expect(spendTalentPoint(state, "executioner")).toBe(false);
-    expect(talentRank(state, "executioner")).toBe(1);
+    expect(spendTalentPoint(state, state.players[0], "executioner")).toBe(
+      false,
+    );
+    expect(talentRank(state, state.players[0], "executioner")).toBe(1);
   });
 
   it("won't rank a talent past its maxRank", () => {
     const state = heroWithStats({ str: 250 });
     for (let i = 0; i < 5; i++) {
-      expect(spendTalentPoint(state, "bulwark")).toBe(true);
+      expect(spendTalentPoint(state, state.players[0], "bulwark")).toBe(true);
     }
-    expect(talentRank(state, "bulwark")).toBe(5);
+    expect(talentRank(state, state.players[0], "bulwark")).toBe(5);
     // A 6th spend on the maxed talent fails even with points still available.
-    expect(spendTalentPoint(state, "bulwark")).toBe(false);
+    expect(spendTalentPoint(state, state.players[0], "bulwark")).toBe(false);
   });
 });
 
@@ -165,7 +171,7 @@ describe("the level-up pause holds behind the talent picker", () => {
     state.players[0].spentStats.strength = 9;
     state.players[0].pendingStatPoints = 1;
     state.phase = "levelup";
-    allocateStat(state, "strength"); // 9 → 10: crosses the first STR milestone
+    allocateStat(state, state.players[0], "strength"); // 9 → 10: crosses the first STR milestone
     expect(state.players[0].pendingStatPoints).toBe(0);
     expect(state.pendingTalentPoints).toEqual(["strength"]);
     // The point is spent, but the picker holds the run frozen.
@@ -179,9 +185,9 @@ describe("the level-up pause holds behind the talent picker", () => {
     state.players[0].spentStats.strength = 9;
     state.players[0].pendingStatPoints = 1;
     state.phase = "levelup";
-    allocateStat(state, "strength");
+    allocateStat(state, state.players[0], "strength");
     expect(state.phase).toBe("levelup");
-    expect(spendTalentPoint(state, "ironhide")).toBe(true);
+    expect(spendTalentPoint(state, state.players[0], "ironhide")).toBe(true);
     expect(state.phase).toBe("playing");
   });
 
@@ -193,11 +199,11 @@ describe("the level-up pause holds behind the talent picker", () => {
     // The point the first 10 STR already earned is spent (rank 1), so nothing
     // is pending going in — a realistic mid-decade hero.
     state.players[0].talents.executioner = 1;
-    reconcileTalentPoints(state);
+    reconcileTalentPoints(state, state.players[0]);
     expect(hasPendingTalentPoint(state)).toBe(false);
     state.players[0].pendingStatPoints = 1;
     state.phase = "levelup";
-    allocateStat(state, "strength");
+    allocateStat(state, state.players[0], "strength");
     expect(state.pendingTalentPoints).toHaveLength(0);
     expect(state.phase).toBe("playing");
   });
@@ -212,8 +218,8 @@ describe("the level-up pause holds behind the talent picker", () => {
     state.players[0].spentStats.intelligence = 9;
     state.players[0].pendingStatPoints = 2;
     state.phase = "levelup";
-    allocateStat(state, "strength"); // earns a STR (melee) point
-    allocateStat(state, "intelligence"); // earns an INT (magic) point
+    allocateStat(state, state.players[0], "strength"); // earns a STR (melee) point
+    allocateStat(state, state.players[0], "intelligence"); // earns an INT (magic) point
     expect(state.pendingTalentPoints).toEqual(["strength", "intelligence"]);
   });
 });
@@ -221,8 +227,8 @@ describe("the level-up pause holds behind the talent picker", () => {
 describe("the respec floor locks a spent talent's earning stat", () => {
   it("reports 10 × ranks spent in the tree as the floor", () => {
     const state = heroWithStats({ str: 30 });
-    spendTalentPoint(state, "executioner");
-    spendTalentPoint(state, "bulwark");
+    spendTalentPoint(state, state.players[0], "executioner");
+    spendTalentPoint(state, state.players[0], "bulwark");
     expect(talentStatFloor(state, "strength")).toBe(20); // 2 ranks × 10
     expect(talentStatFloor(state, "dexterity")).toBe(0);
     // A non-tree stat never floors.
@@ -231,33 +237,33 @@ describe("the respec floor locks a spent talent's earning stat", () => {
 
   it("beginRespec keeps the floor placed and refunds only the surplus", () => {
     const state = heroWithStats({ str: 30 });
-    spendTalentPoint(state, "executioner"); // 1 rank → floor 10
+    spendTalentPoint(state, state.players[0], "executioner"); // 1 rank → floor 10
     const before = state.players[0].pendingStatPoints;
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
     // STR can't drop below the floor; the surplus (30 − 10) returns to the pool.
     expect(state.players[0].stats.strength).toBe(10);
     expect(state.players[0].spentStats.strength).toBe(10);
     expect(state.players[0].pendingStatPoints).toBe(before + 20);
     // The spent rank survives, and its point is not re-owed.
-    expect(talentRank(state, "executioner")).toBe(1);
-    expect(availableTalentPoints(state, "strength")).toBe(0);
+    expect(talentRank(state, state.players[0], "executioner")).toBe(1);
+    expect(availableTalentPoints(state, state.players[0], "strength")).toBe(0);
   });
 
   it("deallocateStat refuses to drop a tree stat below its floor", () => {
     const state = heroWithStats({ str: 30 });
-    spendTalentPoint(state, "executioner"); // floor 10
-    beginRespec(state); // STR now sits at its floor of 10
-    expect(deallocateStat(state, "strength")).toBe(false);
+    spendTalentPoint(state, state.players[0], "executioner"); // floor 10
+    beginRespec(state, state.players[0]); // STR now sits at its floor of 10
+    expect(deallocateStat(state, state.players[0], "strength")).toBe(false);
     expect(state.players[0].stats.strength).toBe(10);
   });
 
   it("revokes an UNSPENT point when a respec drops below its milestone", () => {
     const state = heroWithStats({ str: 20 }); // 2 earned, 0 spent
-    spendTalentPoint(state, "executioner"); // 1 spent, 1 still pending
-    expect(availableTalentPoints(state, "strength")).toBe(1);
-    beginRespec(state); // keeps only the floor (10) — the 2nd milestone is gone
+    spendTalentPoint(state, state.players[0], "executioner"); // 1 spent, 1 still pending
+    expect(availableTalentPoints(state, state.players[0], "strength")).toBe(1);
+    beginRespec(state, state.players[0]); // keeps only the floor (10) — the 2nd milestone is gone
     expect(state.players[0].stats.strength).toBe(10);
-    expect(availableTalentPoints(state, "strength")).toBe(0);
+    expect(availableTalentPoints(state, state.players[0], "strength")).toBe(0);
   });
 });
 
@@ -280,11 +286,11 @@ describe("veteran conversion on load", () => {
 
   it("round-trips owned ranks and only owes the remainder", () => {
     const donor = heroWithStats({ str: 30 });
-    spendTalentPoint(donor, "executioner"); // 1 of 3 spent
+    spendTalentPoint(donor, donor.players[0], "executioner"); // 1 of 3 spent
     const loadout = extractLoadout(donor);
     const fresh = startGame();
     applyLoadout(fresh, loadout);
-    expect(talentRank(fresh, "executioner")).toBe(1);
+    expect(talentRank(fresh, fresh.players[0], "executioner")).toBe(1);
     expect(fresh.pendingTalentPoints).toHaveLength(2); // 3 earned − 1 spent
   });
 });
@@ -296,7 +302,7 @@ describe("the autopilot spends talent points", () => {
     const id = botPickTalent(bot, state);
     // The melee build leads with executioner.
     expect(id).toBe("executioner");
-    expect(spendTalentPoint(state, id!)).toBe(true);
+    expect(spendTalentPoint(state, state.players[0], id!)).toBe(true);
   });
 
   it("only ever picks a talent in the front point's tree", () => {
@@ -311,76 +317,89 @@ describe("the autopilot spends talent points", () => {
 describe("stat-modifier effect reads", () => {
   it("BULWARK deepens the max-hp pool per rank", () => {
     const base = heroWithStats({ str: 50 });
-    const baseHp = computeMaxHp(base);
-    spendTalentPoint(base, "bulwark"); // +5% per rank
-    expect(computeMaxHp(base)).toBeGreaterThan(baseHp);
+    const baseHp = computeMaxHp(base, base.players[0]);
+    spendTalentPoint(base, base.players[0], "bulwark"); // +5% per rank
+    expect(computeMaxHp(base, base.players[0])).toBeGreaterThan(baseHp);
   });
 
   it("WIND RUNNER quickens the walk per rank", () => {
     const state = heroWithStats({ dex: 50 });
-    const baseSpeed = playerSpeed(state);
-    spendTalentPoint(state, "wind_runner");
-    expect(playerSpeed(state)).toBeGreaterThan(baseSpeed);
+    const baseSpeed = playerSpeed(state, state.players[0]);
+    spendTalentPoint(state, state.players[0], "wind_runner");
+    expect(playerSpeed(state, state.players[0])).toBeGreaterThan(baseSpeed);
   });
 
   it("EVASION lifts dodge chance per rank", () => {
     const state = heroWithStats({ dex: 50 });
-    const baseDodge = playerDodgeChance(state);
-    spendTalentPoint(state, "evasion");
-    expect(playerDodgeChance(state)).toBeGreaterThan(baseDodge);
+    const baseDodge = playerDodgeChance(state, state.players[0]);
+    spendTalentPoint(state, state.players[0], "evasion");
+    expect(playerDodgeChance(state, state.players[0])).toBeGreaterThan(
+      baseDodge,
+    );
   });
 
   it("EXECUTIONER lifts crit only for MELEE, DEADEYE only for RANGED", () => {
     const state = heroWithStats({ str: 50, dex: 50 });
-    const meleeBefore = playerCritChance(state, "melee");
-    const rangedBefore = playerCritChance(state, "ranged");
-    spendTalentPoint(state, "executioner"); // melee tree
-    expect(playerCritChance(state, "melee")).toBeGreaterThan(meleeBefore);
+    const meleeBefore = playerCritChance(state, state.players[0], "melee");
+    const rangedBefore = playerCritChance(state, state.players[0], "ranged");
+    spendTalentPoint(state, state.players[0], "executioner"); // melee tree
+    expect(playerCritChance(state, state.players[0], "melee")).toBeGreaterThan(
+      meleeBefore,
+    );
     // The melee talent leaves the ranged crit untouched.
-    expect(playerCritChance(state, "ranged")).toBeCloseTo(rangedBefore, 5);
+    expect(playerCritChance(state, state.players[0], "ranged")).toBeCloseTo(
+      rangedBefore,
+      5,
+    );
   });
 
   it("IRONHIDE + MAGE ARMOR cut incoming damage at the choke point", () => {
     const state = heroWithStats({ str: 50, int: 50 });
-    expect(talentDamageReduction(state)).toBe(0);
-    spendTalentPoint(state, "ironhide"); // +3%
-    spendTalentPoint(state, "mage_armor"); // +3%
-    expect(talentDamageReduction(state)).toBeCloseTo(0.06, 5);
+    expect(talentDamageReduction(state, state.players[0])).toBe(0);
+    spendTalentPoint(state, state.players[0], "ironhide"); // +3%
+    spendTalentPoint(state, state.players[0], "mage_armor"); // +3%
+    expect(talentDamageReduction(state, state.players[0])).toBeCloseTo(0.06, 5);
   });
 
   it("BERSERKER RAGE scales weapon damage with MISSING hp", () => {
     const state = heroWithStats({ str: 50 });
-    spendTalentPoint(state, "berserker_rage"); // +10% at 0 hp, rank 1
+    spendTalentPoint(state, state.players[0], "berserker_rage"); // +10% at 0 hp, rank 1
     state.players[0].maxHp = 100;
     state.players[0].hp = 100; // full → no bonus
-    expect(talentBerserkMult(state)).toBeCloseTo(1, 5);
+    expect(talentBerserkMult(state, state.players[0])).toBeCloseTo(1, 5);
     state.players[0].hp = 50; // half → half the bonus
-    expect(talentBerserkMult(state)).toBeCloseTo(1.05, 5);
+    expect(talentBerserkMult(state, state.players[0])).toBeCloseTo(1.05, 5);
     state.players[0].hp = 0; // dead-ish → full bonus
-    expect(talentBerserkMult(state)).toBeCloseTo(1.1, 5);
+    expect(talentBerserkMult(state, state.players[0])).toBeCloseTo(1.1, 5);
   });
 });
 
 describe("magic CONJURATION talents feed the granted-spell machinery", () => {
   it("an untrained hero conjures nothing", () => {
     const state = heroWithStats({ int: 50 });
-    expect(talentSpellRanks(state)).toEqual({});
-    expect(grantedSpellRanks(state)).toEqual({});
+    expect(talentSpellRanks(state, state.players[0])).toEqual({});
+    expect(grantedSpellRanks(state, state.players[0])).toEqual({});
   });
 
   it("ORBITING FLAMES / STORM CALL feed the orbit / storm spell at their rank", () => {
     const state = heroWithStats({ int: 50 }); // 5 magic points
-    spendTalentPoint(state, "orbiting_flames");
-    spendTalentPoint(state, "orbiting_flames"); // rank 2
-    spendTalentPoint(state, "storm_call"); // rank 1
-    expect(talentSpellRanks(state)).toEqual({ orbit: 2, storm: 1 });
+    spendTalentPoint(state, state.players[0], "orbiting_flames");
+    spendTalentPoint(state, state.players[0], "orbiting_flames"); // rank 2
+    spendTalentPoint(state, state.players[0], "storm_call"); // rank 1
+    expect(talentSpellRanks(state, state.players[0])).toEqual({
+      orbit: 2,
+      storm: 1,
+    });
     // The derivation the always-on spell step reads sees the same ranks.
-    expect(grantedSpellRanks(state)).toEqual({ orbit: 2, storm: 1 });
+    expect(grantedSpellRanks(state, state.players[0])).toEqual({
+      orbit: 2,
+      storm: 1,
+    });
   });
 
   it("talent ranks STACK on top of a worn item that grants the same spell", () => {
     const state = heroWithStats({ int: 50 });
-    spendTalentPoint(state, "orbiting_flames"); // talent rank 1
+    spendTalentPoint(state, state.players[0], "orbiting_flames"); // talent rank 1
     const amulet: Equipment = {
       id: 8001,
       defId: "test_amulet",
@@ -391,12 +410,12 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
     };
     state.players[0].equipment.amulet = amulet;
     // 1 (talent) + 2 (item) → one rank-3 orbit spell.
-    expect(grantedSpellRanks(state)).toEqual({ orbit: 3 });
+    expect(grantedSpellRanks(state, state.players[0])).toEqual({ orbit: 3 });
   });
 
   it("a trained ORBITING FLAMES actually burns a foe through the live step", () => {
     const state = heroWithStats({ int: 50 });
-    spendTalentPoint(state, "orbiting_flames"); // rank 1: one orb on the ring
+    spendTalentPoint(state, state.players[0], "orbiting_flames"); // rank 1: one orb on the ring
     // A quiet arena: no waves, the hero holstered, a pinned rng, one mob sitting
     // on the orbit ring so an orb sweeps through it. Any damage is the talent's.
     stopWaves(state);
@@ -422,16 +441,16 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
 
   it("SEEKER ORBS / IMMOLATION / SINGULARITY feed their own spell at their rank", () => {
     const state = heroWithStats({ int: 50 });
-    spendTalentPoint(state, "seeker_orbs");
-    spendTalentPoint(state, "immolation_aura");
-    spendTalentPoint(state, "immolation_aura"); // rank 2
-    spendTalentPoint(state, "arcane_singularity");
-    expect(talentSpellRanks(state)).toEqual({
+    spendTalentPoint(state, state.players[0], "seeker_orbs");
+    spendTalentPoint(state, state.players[0], "immolation_aura");
+    spendTalentPoint(state, state.players[0], "immolation_aura"); // rank 2
+    spendTalentPoint(state, state.players[0], "arcane_singularity");
+    expect(talentSpellRanks(state, state.players[0])).toEqual({
       seeker: 1,
       immolation: 2,
       singularity: 1,
     });
-    expect(grantedSpellRanks(state)).toEqual({
+    expect(grantedSpellRanks(state, state.players[0])).toEqual({
       seeker: 1,
       immolation: 2,
       singularity: 1,
@@ -443,7 +462,8 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
  * arena with a pinned rng — any damage a mob takes is the talent's. */
 function conjurerArena(talentId: string, ranks = 1): GameState {
   const state = heroWithStats({ int: 50 });
-  for (let i = 0; i < ranks; i++) spendTalentPoint(state, talentId);
+  for (let i = 0; i < ranks; i++)
+    spendTalentPoint(state, state.players[0], talentId);
   stopWaves(state);
   state.players[0].disarmed = true;
   state.rng = () => 0.99;
@@ -510,14 +530,14 @@ describe("the new magic conjurations kill through the live step", () => {
 describe("the magic tree's STRUCK defenses", () => {
   it("FROST NOVA scales its ring, freeze, and cooldown with rank", () => {
     const state = heroWithStats({ int: 50 });
-    expect(talentFrostNova(state)).toBeNull(); // untrained
-    spendTalentPoint(state, "frost_nova"); // rank 1
-    const r1 = talentFrostNova(state)!;
-    spendTalentPoint(state, "frost_nova");
-    spendTalentPoint(state, "frost_nova");
-    spendTalentPoint(state, "frost_nova");
-    spendTalentPoint(state, "frost_nova"); // rank 5
-    const r5 = talentFrostNova(state)!;
+    expect(talentFrostNova(state, state.players[0])).toBeNull(); // untrained
+    spendTalentPoint(state, state.players[0], "frost_nova"); // rank 1
+    const r1 = talentFrostNova(state, state.players[0])!;
+    spendTalentPoint(state, state.players[0], "frost_nova");
+    spendTalentPoint(state, state.players[0], "frost_nova");
+    spendTalentPoint(state, state.players[0], "frost_nova");
+    spendTalentPoint(state, state.players[0], "frost_nova"); // rank 5
+    const r5 = talentFrostNova(state, state.players[0])!;
     expect(r5.radius).toBeGreaterThan(r1.radius);
     expect(r5.freezeMs).toBeGreaterThan(r1.freezeMs);
     // Rank shortens the internal cooldown, never below the floor.
@@ -527,7 +547,7 @@ describe("the magic tree's STRUCK defenses", () => {
 
   it("FROST NOVA freezes the swarm when the hero is struck, then goes on cooldown", () => {
     const state = heroWithStats({ int: 50 });
-    spendTalentPoint(state, "frost_nova");
+    spendTalentPoint(state, state.players[0], "frost_nova");
     stopWaves(state);
     state.players[0].disarmed = false;
     state.players[0].maxHp = 1e6;
@@ -547,12 +567,18 @@ describe("the magic tree's STRUCK defenses", () => {
   });
 
   it("ARCANE RETRIBUTION reflects a share of every blow back at the attacker", () => {
-    expect(talentReflectFrac(heroWithStats({ int: 50 }))).toBe(0); // untrained
+    expect(
+      talentReflectFrac(
+        heroWithStats({ int: 50 }),
+        heroWithStats({ int: 50 }).players[0],
+      ),
+    ).toBe(0); // untrained
     // Two identical struck runs — one with Retribution, one without: the
     // reflected bite makes the attacker lose strictly more hp.
     const stage = (reflect: boolean): number => {
       const state = heroWithStats({ int: 50 });
-      if (reflect) spendTalentPoint(state, "arcane_retribution");
+      if (reflect)
+        spendTalentPoint(state, state.players[0], "arcane_retribution");
       stopWaves(state);
       state.players[0].disarmed = false;
       state.players[0].maxHp = 1e6;
@@ -575,19 +601,19 @@ describe("the magic tree's STRUCK defenses", () => {
 
 /** Rank a talent up `ranks` times (each spend takes one point in its tree). */
 function trained(state: GameState, id: string, ranks: number): GameState {
-  for (let i = 0; i < ranks; i++) spendTalentPoint(state, id);
+  for (let i = 0; i < ranks; i++) spendTalentPoint(state, state.players[0], id);
   return state;
 }
 
 describe("the melee tree's proc talents", () => {
   it("TWIN STRIKE scales its chance (capped) and echo (full at rank 5)", () => {
     const state = heroWithStats({ str: 50 });
-    expect(talentTwinStrike(state)).toBeNull(); // untrained
+    expect(talentTwinStrike(state, state.players[0])).toBeNull(); // untrained
     trained(state, "twin_strike", 1);
-    const r1 = talentTwinStrike(state)!;
+    const r1 = talentTwinStrike(state, state.players[0])!;
     expect(r1.echoFrac).toBeCloseTo(0.5, 5); // half-damage echo below rank 5
     trained(state, "twin_strike", 4); // → rank 5
-    const r5 = talentTwinStrike(state)!;
+    const r5 = talentTwinStrike(state, state.players[0])!;
     expect(r5.chance).toBeGreaterThan(r1.chance);
     expect(r5.chance).toBeLessThanOrEqual(0.5); // chance cap
     expect(r5.echoFrac).toBeCloseTo(1, 5); // full-damage echo at rank 5
@@ -618,22 +644,22 @@ describe("the melee tree's proc talents", () => {
 
   it("CLEAVING ECHO scales its chance (capped) and extra targets (+2 from rank 4)", () => {
     const state = heroWithStats({ str: 50 });
-    expect(talentCleavingEcho(state)).toBeNull();
+    expect(talentCleavingEcho(state, state.players[0])).toBeNull();
     trained(state, "cleaving_echo", 1);
-    expect(talentCleavingEcho(state)!.extraTargets).toBe(1);
+    expect(talentCleavingEcho(state, state.players[0])!.extraTargets).toBe(1);
     trained(state, "cleaving_echo", 3); // → rank 4
-    const r4 = talentCleavingEcho(state)!;
+    const r4 = talentCleavingEcho(state, state.players[0])!;
     expect(r4.extraTargets).toBe(2);
     expect(r4.chance).toBeLessThanOrEqual(0.55); // chance cap
   });
 
   it("PARRY scales its chance (capped) and only ripostes at rank 5", () => {
     const state = heroWithStats({ str: 50 });
-    expect(talentParry(state)).toBeNull();
+    expect(talentParry(state, state.players[0])).toBeNull();
     trained(state, "parry", 1);
-    expect(talentParry(state)!.riposteFrac).toBe(0); // no riposte below rank 5
+    expect(talentParry(state, state.players[0])!.riposteFrac).toBe(0); // no riposte below rank 5
     trained(state, "parry", 4); // → rank 5
-    const r5 = talentParry(state)!;
+    const r5 = talentParry(state, state.players[0])!;
     expect(r5.chance).toBeLessThanOrEqual(0.4); // chance cap
     expect(r5.riposteFrac).toBeGreaterThan(0); // riposte unlocks at rank 5
   });
@@ -670,11 +696,11 @@ describe("the melee tree's proc talents", () => {
 
   it("SEISMIC LANDING scales its radius and damage with rank", () => {
     const state = heroWithStats({ str: 50 });
-    expect(talentSeismic(state)).toBeNull();
+    expect(talentSeismic(state, state.players[0])).toBeNull();
     trained(state, "seismic_landing", 1);
-    const r1 = talentSeismic(state)!;
+    const r1 = talentSeismic(state, state.players[0])!;
     trained(state, "seismic_landing", 4); // → rank 5
-    const r5 = talentSeismic(state)!;
+    const r5 = talentSeismic(state, state.players[0])!;
     expect(r5.radius).toBeGreaterThan(r1.radius);
     expect(r5.damage).toBeGreaterThan(r1.damage);
   });
@@ -708,12 +734,12 @@ describe("the melee tree's proc talents", () => {
 describe("the ranged tree's proc talents", () => {
   it("PIERCING SHOT scales its pierce count and softens the falloff with rank", () => {
     const state = heroWithStats({ dex: 50 });
-    expect(talentPiercing(state)).toBeNull();
+    expect(talentPiercing(state, state.players[0])).toBeNull();
     trained(state, "piercing_shot", 1);
-    const r1 = talentPiercing(state)!;
+    const r1 = talentPiercing(state, state.players[0])!;
     expect(r1.pierce).toBe(1);
     trained(state, "piercing_shot", 4); // → rank 5
-    const r5 = talentPiercing(state)!;
+    const r5 = talentPiercing(state, state.players[0])!;
     expect(r5.pierce).toBe(5);
     expect(r5.retain).toBeGreaterThan(r1.retain); // rank softens the falloff
   });
@@ -746,11 +772,11 @@ describe("the ranged tree's proc talents", () => {
 
   it("CONCUSSIVE ROUNDS scales its chance (capped) and shove distance", () => {
     const state = heroWithStats({ dex: 50 });
-    expect(talentConcussive(state)).toBeNull();
+    expect(talentConcussive(state, state.players[0])).toBeNull();
     trained(state, "concussive_rounds", 1);
-    const r1 = talentConcussive(state)!;
+    const r1 = talentConcussive(state, state.players[0])!;
     trained(state, "concussive_rounds", 4);
-    const r5 = talentConcussive(state)!;
+    const r5 = talentConcussive(state, state.players[0])!;
     expect(r5.chance).toBeLessThanOrEqual(0.65);
     expect(r5.distance).toBeGreaterThan(r1.distance);
   });
@@ -777,9 +803,9 @@ describe("the ranged tree's proc talents", () => {
 
   it("CRIPPLING SHOT slows a struck foe (the chill fields)", () => {
     const state = heroWithStats({ dex: 50 });
-    expect(talentCrippling(state)).toBeNull();
+    expect(talentCrippling(state, state.players[0])).toBeNull();
     trained(state, "crippling_shot", 5);
-    const c = talentCrippling(state)!;
+    const c = talentCrippling(state, state.players[0])!;
     expect(c.chance).toBeLessThanOrEqual(0.75);
     equipBlaster(state);
     stopWaves(state);
@@ -799,11 +825,11 @@ describe("the ranged tree's proc talents", () => {
 
   it("VOLLEY scales its chance (capped) and extra shots (+4 from rank 4)", () => {
     const state = heroWithStats({ dex: 50 });
-    expect(talentVolley(state)).toBeNull();
+    expect(talentVolley(state, state.players[0])).toBeNull();
     trained(state, "volley", 1);
-    expect(talentVolley(state)!.extra).toBe(2);
+    expect(talentVolley(state, state.players[0])!.extra).toBe(2);
     trained(state, "volley", 3); // → rank 4
-    const r4 = talentVolley(state)!;
+    const r4 = talentVolley(state, state.players[0])!;
     expect(r4.extra).toBe(4);
     expect(r4.chance).toBeLessThanOrEqual(0.5);
   });
@@ -831,15 +857,15 @@ describe("the ranged tree's proc talents", () => {
 describe("the ranged tree's mobility kickers", () => {
   it("SPRING HEELS lifts the takeoff and (at rank 5) cheapens the hop", () => {
     const state = heroWithStats({ dex: 50 });
-    const untrained = talentJumpMods(state);
+    const untrained = talentJumpMods(state, state.players[0]);
     expect(untrained.velocityMult).toBe(1);
     expect(untrained.costMult).toBe(1);
     trained(state, "spring_heels", 1);
-    const r1 = talentJumpMods(state);
+    const r1 = talentJumpMods(state, state.players[0]);
     expect(r1.velocityMult).toBeGreaterThan(1);
     expect(r1.costMult).toBe(1); // cost only drops at rank 5
     trained(state, "spring_heels", 4); // → rank 5
-    const r5 = talentJumpMods(state);
+    const r5 = talentJumpMods(state, state.players[0]);
     expect(r5.velocityMult).toBeGreaterThan(r1.velocityMult);
     expect(r5.costMult).toBeLessThan(1);
   });
@@ -864,16 +890,16 @@ describe("the ranged tree's mobility kickers", () => {
   it("EVASION's rank-5 burst arms only at rank 5 and speeds the walk", () => {
     const state = heroWithStats({ dex: 50 });
     trained(state, "evasion", 4); // rank 4: no burst yet
-    expect(talentEvasionBurstMs(state)).toBe(0);
-    expect(talentEvasionBurstMult(state)).toBe(1);
+    expect(talentEvasionBurstMs(state, state.players[0])).toBe(0);
+    expect(talentEvasionBurstMult(state, state.players[0])).toBe(1);
     trained(state, "evasion", 1); // → rank 5
-    expect(talentEvasionBurstMs(state)).toBeGreaterThan(0);
+    expect(talentEvasionBurstMs(state, state.players[0])).toBeGreaterThan(0);
     // Untriggered, the multiplier is still 1 (no live burst window).
-    expect(talentEvasionBurstMult(state)).toBe(1);
-    const base = playerSpeed(state);
+    expect(talentEvasionBurstMult(state, state.players[0])).toBe(1);
+    const base = playerSpeed(state, state.players[0]);
     state.players[0].evasionBurstMs = 500; // arm the window
-    expect(talentEvasionBurstMult(state)).toBeGreaterThan(1);
-    expect(playerSpeed(state)).toBeGreaterThan(base);
+    expect(talentEvasionBurstMult(state, state.players[0])).toBeGreaterThan(1);
+    expect(playerSpeed(state, state.players[0])).toBeGreaterThan(base);
   });
 
   it("EVASION rank 5 arms the speed burst on a dodge in the struck path", () => {
@@ -904,41 +930,44 @@ describe("the TALENT POWER developer dial (BALANCE.talentPower)", () => {
     const state = heroWithStats({ str: 50, int: 50 });
     trained(state, "ironhide", 1); // +3%
     trained(state, "mage_armor", 1); // +3%
-    const base = talentDamageReduction(state);
+    const base = talentDamageReduction(state, state.players[0]);
     expect(base).toBeCloseTo(0.06, 5);
 
     setBalanceTuning({ talentPower: 2 });
-    expect(talentDamageReduction(state)).toBeCloseTo(base * 2, 5);
+    expect(talentDamageReduction(state, state.players[0])).toBeCloseTo(
+      base * 2,
+      5,
+    );
 
     // 0× turns the passive stat layer off entirely.
     setBalanceTuning({ talentPower: 0 });
-    expect(talentDamageReduction(state)).toBe(0);
+    expect(talentDamageReduction(state, state.players[0])).toBe(0);
   });
 
   it("scales an offensive proc RATE below its cap", () => {
     const state = heroWithStats({ str: 50 });
     trained(state, "twin_strike", 1); // one rank, well under the chance cap
-    const base = talentTwinStrike(state)!.chance;
+    const base = talentTwinStrike(state, state.players[0])!.chance;
     expect(base).toBeGreaterThan(0);
 
     setBalanceTuning({ talentPower: 2 });
-    const doubled = talentTwinStrike(state)!;
+    const doubled = talentTwinStrike(state, state.players[0])!;
     expect(doubled.chance).toBeCloseTo(base * 2, 5);
     // The echo's damage share is SHAPE, not power — the dial leaves it at its
     // rank-1 half regardless.
     expect(doubled.echoFrac).toBeCloseTo(0.5, 5);
 
     setBalanceTuning({ talentPower: 0 });
-    expect(talentTwinStrike(state)!.chance).toBe(0);
+    expect(talentTwinStrike(state, state.players[0])!.chance).toBe(0);
   });
 
   it("scales the seismic-landing blast but not its radius", () => {
     const state = heroWithStats({ str: 50 });
     trained(state, "seismic_landing", 2);
-    const base = talentSeismic(state)!;
+    const base = talentSeismic(state, state.players[0])!;
 
     setBalanceTuning({ talentPower: 3 });
-    const strong = talentSeismic(state)!;
+    const strong = talentSeismic(state, state.players[0])!;
     expect(strong.damage).toBeCloseTo(base.damage * 3, 5);
     // Radius and knockback are SHAPE — fixed regardless of the dial.
     expect(strong.radius).toBe(base.radius);
@@ -948,10 +977,10 @@ describe("the TALENT POWER developer dial (BALANCE.talentPower)", () => {
   it("leaves the conjuration ranks (abilityPowerScale's domain) untouched", () => {
     const state = heroWithStats({ int: 50 });
     trained(state, "orbiting_flames", 2);
-    const base = { ...talentSpellRanks(state) };
+    const base = { ...talentSpellRanks(state, state.players[0]) };
 
     setBalanceTuning({ talentPower: 0 });
     // The dial governs the stat/proc layer, not the granted-spell rank source.
-    expect(talentSpellRanks(state)).toEqual(base);
+    expect(talentSpellRanks(state, state.players[0])).toEqual(base);
   });
 });

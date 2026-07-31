@@ -329,10 +329,10 @@ function maybeGreetReturn(state: GameState, merchant: Merchant): void {
  */
 export function repairGear(state: GameState): number | null {
   if (state.phase !== "shop") return null;
-  const cost = repairAllCost(state);
+  const cost = repairAllCost(state, state.players[0]);
   if (cost <= 0) return null; // nothing to mend
   if (state.players[0].coins < cost) return null; // can't afford it
-  repairAll(state);
+  repairAll(state, state.players[0]);
   state.players[0].coins -= cost;
   state.events.push({ type: "gearRepaired", paid: cost });
   return cost;
@@ -466,7 +466,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
   state.rng = merchantRng;
   try {
     for (let i = 0; i < MERCHANT.stockWeapons; i++) {
-      const equipment = rollEquipment(state, {
+      const equipment = rollEquipment(state, state.players[0], {
         slot: "weapon",
         tierBonus: MERCHANT.stockTierBonus,
         // Stocked against the hero himself — his level is the stall's mlvl.
@@ -621,7 +621,7 @@ export function sellItem(state: GameState, index: number): number | null {
 function canCarryStock(state: GameState, entry: MerchantStock): boolean {
   switch (entry.kind) {
     case "ability":
-      return canBankAbility(state, entry.defId);
+      return canBankAbility(state, state.players[0], entry.defId);
     case "weapon":
       return state.players[0].inventory.includes(null);
     case "consumable":
@@ -650,7 +650,7 @@ export function buyStock(state: GameState, stockId: number): boolean {
   if (state.players[0].coins < entry.price) return false;
   switch (entry.kind) {
     case "ability":
-      if (!canBankAbility(state, entry.defId)) return false;
+      if (!canBankAbility(state, state.players[0], entry.defId)) return false;
       state.players[0].heldAbilities.push(entry.defId);
       break;
     case "weapon": {
@@ -660,14 +660,14 @@ export function buyStock(state: GameState, stockId: number): boolean {
       // and one object would sit in two bag cells at once, sharing an id, a
       // durability counter and a destroy.
       const piece = { ...structuredClone(entry.equipment), id: state.nextId++ };
-      if (!addToInventory(state, piece)) return false;
+      if (!addToInventory(state, state.players[0], piece)) return false;
       break;
     }
     case "consumable": {
       const banked =
         entry.item === "medkit"
-          ? bankMedkit(state, entry.tier)
-          : bankConsumable(state, entry.item);
+          ? bankMedkit(state, state.players[0], entry.tier)
+          : bankConsumable(state, state.players[0], entry.item);
       if (!banked) return false;
       break;
     }

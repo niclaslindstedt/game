@@ -120,7 +120,7 @@ describe("loadout carry-over", () => {
     // He arrives rested: full (grown) health, full sprint, armor worn.
     expect(player.maxHp).toBeGreaterThan(PLAYER.maxHp);
     expect(player.hp).toBe(player.maxHp);
-    expect(totalArmor(state)).toBeGreaterThan(0);
+    expect(totalArmor(state, player)).toBeGreaterThan(0);
   });
 
   it("refunds points a legacy loadout spent into the retired SPEED stat", () => {

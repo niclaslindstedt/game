@@ -209,11 +209,11 @@ export function resolveHostileHit(
   // PALE SHROUD: the hero is spectral — the round passes clean through him.
   // The shot is still SPENT (it hit where he was standing), it just finds
   // nothing there to hurt.
-  if (isPhased(state)) {
+  if (isPhased(state, player)) {
     state.events.push({ type: "playerPhased", pos: { ...player.pos } });
     return true;
   }
-  if (state.rng() < playerDodgeChance(state)) {
+  if (state.rng() < playerDodgeChance(state, player)) {
     state.events.push({ type: "playerDodge", pos: { ...player.pos } });
     return true;
   }
@@ -223,11 +223,11 @@ export function resolveHostileHit(
   const hpDamage = Math.max(
     0,
     Math.round(
-      damage * (1 - armorReduction(state, projectile.sourceMlvl ?? 1)),
+      damage * (1 - armorReduction(state, player, projectile.sourceMlvl ?? 1)),
     ),
   );
-  wearWornArmor(state);
-  player.hp -= absorbPlayerDamage(state, hpDamage);
+  wearWornArmor(state, player);
+  player.hp -= absorbPlayerDamage(state, player, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({

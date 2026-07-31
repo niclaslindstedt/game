@@ -50,7 +50,7 @@ function drive(
     if (done?.(state)) return i;
     step(state, botAct(bot, state), DT);
     while (state.players[0].pendingStatPoints > 0) {
-      allocateStat(state, botAllocate(bot, state));
+      allocateStat(state, state.players[0], botAllocate(bot, state));
     }
   }
   return maxSteps;
@@ -302,7 +302,11 @@ describe("bot strategies", () => {
       foes.push(foe);
     }
     drive(state, createBot("balanced"), 200);
-    const reach = weaponRangeFor(state, state.players[0].equipment.weapon);
+    const reach = weaponRangeFor(
+      state,
+      state.players[0],
+      state.players[0].equipment.weapon,
+    );
     const nearest = Math.min(
       ...foes.map((e) => dist(state.players[0].pos, e.pos)),
     );
@@ -699,7 +703,11 @@ describe("bot jump discipline", () => {
       // boss-ready rush posture.
       state.enemies.find((e) => enemyDef(e.defId).role === "boss")!.mlvl = 20;
       state.players[0].disarmed = false;
-      const reach = weaponRangeFor(state, state.players[0].equipment.weapon);
+      const reach = weaponRangeFor(
+        state,
+        state.players[0],
+        state.players[0].equipment.weapon,
+      );
       state.enemies.push(
         makeEnemy({
           pos: {

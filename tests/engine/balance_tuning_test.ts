@@ -108,9 +108,9 @@ describe("weapon damage", () => {
     // game's pushback on the MOB side only, so nothing here may change what
     // the hero's own weapon is worth.
     const state = startGame();
-    const base = weaponDamage(state);
+    const base = weaponDamage(state, state.players[0]);
     setBalanceTuning({ mobHp: 2, mobDamage: 2, mobArmor: 2 });
-    expect(weaponDamage(state)).toBeCloseTo(base, 6);
+    expect(weaponDamage(state, state.players[0])).toBeCloseTo(base, 6);
   });
 });
 
@@ -175,9 +175,9 @@ describe("hordeSize", () => {
 describe("dropRate", () => {
   it("scales the per-kill drop chance", () => {
     const state = startGame();
-    const base = dropChance(state);
+    const base = dropChance(state, state.players[0]);
     setBalanceTuning({ dropRate: 3 });
-    expect(dropChance(state)).toBeCloseTo(base * 3, 6);
+    expect(dropChance(state, state.players[0])).toBeCloseTo(base * 3, 6);
   });
 });
 
@@ -269,7 +269,7 @@ describe("gearQuality", () => {
     const rich = startGame();
     const richAboveWhite = Array.from(
       { length: N },
-      () => rollEquipment(rich, { mlvl: 99 }).tier,
+      () => rollEquipment(rich, rich.players[0], { mlvl: 99 }).tier,
     ).filter((tier) => tier !== "regular").length;
 
     // Neutral odds off the same seed keep the roll honest — whites still turn
@@ -278,7 +278,7 @@ describe("gearQuality", () => {
     const plain = startGame();
     const plainAboveWhite = Array.from(
       { length: N },
-      () => rollEquipment(plain, { mlvl: 99 }).tier,
+      () => rollEquipment(plain, plain.players[0], { mlvl: 99 }).tier,
     ).filter((tier) => tier !== "regular").length;
 
     expect(richAboveWhite).toBeGreaterThan(plainAboveWhite);

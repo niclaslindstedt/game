@@ -88,7 +88,7 @@ function enemiesWithin(
 export function stepPowerups(state: GameState, dt: number, dtMs: number): void {
   const player = state.players[0];
   if (player.abilities.length === 0) return;
-  const power = abilityPowerScale(state);
+  const power = abilityPowerScale(state, player);
 
   for (const ability of player.abilities) {
     const def = abilityDef(ability.defId);
@@ -321,7 +321,7 @@ function stepVolley(
   const volley = def.volley;
   if (!volley) return;
   const scratch = abilityScratch(ability, "volley", dtMs);
-  applyVolley(state, volley, scratch, power);
+  applyVolley(state, state.players[0], volley, scratch, power);
   commitAbilityScratch(ability, "volley", scratch);
 }
 
@@ -342,7 +342,14 @@ function stepSingularity(
   const singularity = def.singularity;
   if (!singularity) return;
   const scratch = abilityScratch(ability, "singularity", dtMs);
-  applySingularity(state, singularity, scratch, power, powerupBilling);
+  applySingularity(
+    state,
+    state.players[0],
+    singularity,
+    scratch,
+    power,
+    powerupBilling,
+  );
   commitAbilityScratch(ability, "singularity", scratch);
 }
 
@@ -362,7 +369,14 @@ function stepImmolation(
   const immolation = def.immolation;
   if (!immolation) return;
   const scratch = abilityScratch(ability, "immolation", dtMs);
-  applyImmolation(state, immolation, scratch, power, powerupBilling);
+  applyImmolation(
+    state,
+    state.players[0],
+    immolation,
+    scratch,
+    power,
+    powerupBilling,
+  );
   commitAbilityScratch(ability, "immolation", scratch);
 }
 

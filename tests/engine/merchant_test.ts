@@ -456,7 +456,7 @@ describe("repair", () => {
     state.players[0].inventory[0] = worn();
     state.players[0].coins = 100_000;
     openShop(state);
-    const quote = repairAllCost(state);
+    const quote = repairAllCost(state, state.players[0]);
     expect(quote).toBeGreaterThan(0);
     const before = state.players[0].coins;
     const paid = repairGear(state);
@@ -482,7 +482,7 @@ describe("repair", () => {
     // Open, but broke.
     state.players[0].coins = 0;
     openShop(state);
-    expect(repairAllCost(state)).toBeGreaterThan(0);
+    expect(repairAllCost(state, state.players[0])).toBeGreaterThan(0);
     expect(repairGear(state)).toBeNull();
     expect(state.players[0].inventory[0]?.durability).toBe(1); // untouched
   });

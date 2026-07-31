@@ -67,9 +67,9 @@ function midRideHero() {
   p.level = 10;
   p.stats.strength = 10;
   p.spentStats.strength = 10;
-  reconcileTalentPoints(state);
-  expect(spendTalentPoint(state, "executioner")).toBe(true);
-  const snapshot = captureBuildSnapshot(state);
+  reconcileTalentPoints(state, state.players[0]);
+  expect(spendTalentPoint(state, state.players[0], "executioner")).toBe(true);
+  const snapshot = captureBuildSnapshot(state, state.players[0]);
 
   // The ride flies to 20 and the bot pours every earned point into STR,
   // ranking EXECUTIONER up and buying TWIN STRIKE.
@@ -79,14 +79,14 @@ function midRideHero() {
   p.talents.executioner = 2;
   p.talents.twin_strike = 1;
   p.pendingStatPoints = 0;
-  reconcileTalentPoints(state);
+  reconcileTalentPoints(state, state.players[0]);
   return { state, snapshot };
 }
 
 describe("refundAutopilotBuild", () => {
   it("reverts the chosen spec to the pre-ride snapshot", () => {
     const { state, snapshot } = midRideHero();
-    refundAutopilotBuild(state, snapshot);
+    refundAutopilotBuild(state, state.players[0], snapshot);
     const p = state.players[0];
     expect(p.stats.strength).toBe(10);
     expect(p.spentStats.strength).toBe(10);
@@ -95,20 +95,20 @@ describe("refundAutopilotBuild", () => {
 
   it("hands every point earned across the ride back as unspent", () => {
     const { state, snapshot } = midRideHero();
-    refundAutopilotBuild(state, snapshot);
+    refundAutopilotBuild(state, state.players[0], snapshot);
     // Exactly the points the ride spent across levels 10 → 20.
     expect(state.players[0].pendingStatPoints).toBe(RIDE_POINTS);
     // The talent queue is empty for now — the reverted 10 STR still just
     // supports the single EXECUTIONER rank; it re-mints as the points are placed.
     expect(state.pendingTalentPoints).toEqual([]);
-    expect(hasPendingPoints(state)).toBe(true);
+    expect(hasPendingPoints(state, state.players[0])).toBe(true);
   });
 
   it("keeps the level, xp and gear the ride actually won", () => {
     const { state, snapshot } = midRideHero();
     const weapon = state.players[0].equipment.weapon;
     state.players[0].xp = 123;
-    refundAutopilotBuild(state, snapshot);
+    refundAutopilotBuild(state, state.players[0], snapshot);
     expect(state.players[0].level).toBe(20);
     expect(state.players[0].xp).toBe(123);
     expect(state.players[0].equipment.weapon).toBe(weapon);
@@ -125,27 +125,27 @@ describe("refundAutopilotBuild", () => {
     p.level = 30;
     p.stats.strength = 50; // 50 chosen (head-start-inflated), above the curve
     p.spentStats.strength = 50;
-    reconcileTalentPoints(state);
-    const snapshot = captureBuildSnapshot(state);
+    reconcileTalentPoints(state, state.players[0]);
+    const snapshot = captureBuildSnapshot(state, state.players[0]);
 
     // The ride adds a modest 7 points.
     p.stats.strength = 57;
     p.spentStats.strength = 57;
-    reconcileTalentPoints(state);
+    reconcileTalentPoints(state, state.players[0]);
 
-    refundAutopilotBuild(state, snapshot);
+    refundAutopilotBuild(state, state.players[0], snapshot);
     expect(state.players[0].pendingStatPoints).toBe(7);
     expect(state.players[0].spentStats.strength).toBe(50);
   });
 
   it("lets the player rebuild the whole spec down a different lane", () => {
     const { state, snapshot } = midRideHero();
-    refundAutopilotBuild(state, snapshot);
+    refundAutopilotBuild(state, state.players[0], snapshot);
     const owed = state.players[0].pendingStatPoints;
     // The bot flew MELEE (STR); the player pours it all into DEXTERITY instead —
     // the ride decided nothing, the spec is entirely the player's.
     for (let i = 0; i < owed; i++)
-      expect(allocateStat(state, "dexterity")).toBe(true);
+      expect(allocateStat(state, state.players[0], "dexterity")).toBe(true);
     expect(state.players[0].pendingStatPoints).toBe(0);
     expect(state.players[0].spentStats.dexterity).toBe(owed);
     // Crossing DEX milestones minted the player fresh RANGED talent points.
@@ -154,14 +154,14 @@ describe("refundAutopilotBuild", () => {
     );
     expect(state.pendingTalentPoints.length).toBeGreaterThan(0);
     // The melee pick the player brought to the ride is untouched.
-    expect(talentRank(state, "executioner")).toBe(1);
+    expect(talentRank(state, state.players[0], "executioner")).toBe(1);
   });
 });
 
 describe("carrying the refund across a bank + fresh run", () => {
   it("extractLoadout carries the handed-back points, applyLoadout restores them", () => {
     const { state, snapshot } = midRideHero();
-    refundAutopilotBuild(state, snapshot);
+    refundAutopilotBuild(state, state.players[0], snapshot);
     const owed = state.players[0].pendingStatPoints;
     expect(owed).toBeGreaterThan(0);
 
@@ -172,12 +172,12 @@ describe("carrying the refund across a bank + fresh run", () => {
     const next = createGame(1, "test_level", "medium", loadout);
     expect(next.players[0].pendingStatPoints).toBe(owed);
     // The pre-ride talent rank rode along, unspent points and all.
-    expect(talentRank(next, "executioner")).toBe(1);
+    expect(talentRank(next, next.players[0], "executioner")).toBe(1);
   });
 
   it("the run's opener greets the chooser when the hero owes points", () => {
     const { state, snapshot } = midRideHero();
-    refundAutopilotBuild(state, snapshot);
+    refundAutopilotBuild(state, state.players[0], snapshot);
     const loadout = extractLoadout(state);
 
     const next = createGame(1, "test_level", "medium", loadout);
@@ -204,19 +204,19 @@ describe("promptPendingPoints / resumeGame diversion", () => {
   it("opens the chooser mid-play when points are owed", () => {
     const state = startGame();
     state.players[0].pendingStatPoints = 3;
-    expect(promptPendingPoints(state)).toBe(true);
+    expect(promptPendingPoints(state, state.players[0])).toBe(true);
     expect(state.phase).toBe("levelup");
   });
 
   it("is a no-op with nothing owed, or from a non-playing phase", () => {
     const state = startGame();
-    expect(promptPendingPoints(state)).toBe(false);
+    expect(promptPendingPoints(state, state.players[0])).toBe(false);
     expect(state.phase).toBe("playing");
     // From the pause screen it does NOT divert — a resume handles that path
     // (so the music resumes with it); the point owed just waits.
     pauseGame(state);
     state.players[0].pendingStatPoints = 5;
-    expect(promptPendingPoints(state)).toBe(false);
+    expect(promptPendingPoints(state, state.players[0])).toBe(false);
     expect(state.phase).toBe("paused");
   });
 

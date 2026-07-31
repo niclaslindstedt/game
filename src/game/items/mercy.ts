@@ -7,7 +7,7 @@ import { distance } from "@game/lib/vec.ts";
 import { MERCY } from "../config/index.ts";
 import { NUKE_DEF_ID } from "../defs/abilities.ts";
 import { gearDef } from "../defs/equipment.ts";
-import type { GameState, Item } from "../types/index.ts";
+import type { GameState, Item, Player } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import { equipmentMaxDurability } from "./quality.ts";
 
@@ -31,8 +31,8 @@ export function desperationRamp(
 /** How close to death the hero is, as a 0→1 mercy-drop desperation (see
  * `desperationRamp`): 0 above `MERCY.lowHealthStart` of max hp, 1 at/under
  * `MERCY.lowHealthFull`. Drives the low-health medkit and armor boosts. */
-export function lowHealthDesperation(state: GameState): number {
-  const { hp, maxHp } = state.players[0];
+export function lowHealthDesperation(state: GameState, player: Player): number {
+  const { hp, maxHp } = player;
   if (maxHp <= 0) return 0;
   return desperationRamp(hp / maxHp, MERCY.lowHealthStart, MERCY.lowHealthFull);
 }
@@ -44,11 +44,11 @@ export function lowHealthDesperation(state: GameState): number {
  * reads pristine. The raw gauge behind both repair-drop rules: the mercy
  * desperation ramp below and the drop ladder's gentler NEED lean
  * (`consumableAppetite`). */
-export function worstKitDurability(state: GameState): number {
+export function worstKitDurability(state: GameState, player: Player): number {
   let worst = 1;
   const pieces = [
-    state.players[0].equipment.weapon,
-    ...ARMOR_SLOTS.map((slot) => state.players[0].equipment[slot]),
+    player.equipment.weapon,
+    ...ARMOR_SLOTS.map((slot) => player.equipment[slot]),
   ];
   for (const piece of pieces) {
     if (!piece || piece.durability === undefined) continue;
@@ -65,9 +65,12 @@ export function worstKitDurability(state: GameState): number {
  * `MERCY.lowDurabilityStart` and `MERCY.lowDurabilityFull`. Drives the
  * low-durability repair boost — a repair kit mends weapon and wardrobe alike,
  * so either running dry may call one in. */
-export function lowDurabilityDesperation(state: GameState): number {
+export function lowDurabilityDesperation(
+  state: GameState,
+  player: Player,
+): number {
   return desperationRamp(
-    worstKitDurability(state),
+    worstKitDurability(state, player),
     MERCY.lowDurabilityStart,
     MERCY.lowDurabilityFull,
   );
@@ -105,11 +108,12 @@ function answersMercy(item: Item, rescue: MercyRescue): boolean {
  */
 export function mercyRescueWaiting(
   state: GameState,
+  player: Player,
   rescue: MercyRescue,
 ): boolean {
   return state.items.some(
     (item) =>
       answersMercy(item, rescue) &&
-      distance(item.pos, state.players[0].pos) <= MERCY.rescueRadius,
+      distance(item.pos, player.pos) <= MERCY.rescueRadius,
   );
 }

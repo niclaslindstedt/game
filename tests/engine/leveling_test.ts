@@ -142,7 +142,7 @@ describe("xp", () => {
     step(state, idle, DT);
     expect(state.stats.timeMs).toBe(time);
 
-    allocateStat(state, "luck");
+    allocateStat(state, state.players[0], "luck");
     expect(state.phase).toBe("playing");
     expect(state.players[0].stats.luck).toBe(1);
     expect(state.players[0].pendingStatPoints).toBe(0);
@@ -157,9 +157,9 @@ describe("xp", () => {
     expect(state.players[0].pendingStatPoints).toBe(2);
     runUntilChooser(state); // burn the celebration down
     expect(state.phase).toBe("levelup");
-    allocateStat(state, "stamina");
+    allocateStat(state, state.players[0], "stamina");
     expect(state.phase).toBe("levelup"); // one point still pending
-    allocateStat(state, "dexterity");
+    allocateStat(state, state.players[0], "dexterity");
     expect(state.phase).toBe("playing");
   });
 });
@@ -336,25 +336,31 @@ describe("the ding: automatic base gains and the celebration window", () => {
     // The chosen-points record is untouched — the growth is derived…
     expect(state.players[0].stats.stamina).toBe(0);
     // …but the effective stat carries it.
-    expect(effectiveStat(state, "stamina")).toBe(baseStatBonus(2, "stamina"));
+    expect(effectiveStat(state, state.players[0], "stamina")).toBe(
+      baseStatBonus(2, "stamina"),
+    );
     // The deeper pools landed with the ding (and the ding heals to full).
     expect(state.players[0].maxHp).toBe(
-      PLAYER.maxHp + effectiveStat(state, "stamina") * STAMINA.hpPerPoint,
+      PLAYER.maxHp +
+        effectiveStat(state, state.players[0], "stamina") * STAMINA.hpPerPoint,
     );
     expect(state.players[0].hp).toBe(state.players[0].maxHp);
     expect(state.players[0].maxStamina).toBe(
-      STAMINA.base + effectiveStat(state, "stamina") * STAMINA.maxPerPoint,
+      STAMINA.base +
+        effectiveStat(state, state.players[0], "stamina") * STAMINA.maxPerPoint,
     );
   });
 
   it("a respec refunds only the CHOSEN points — never the automatic growth", () => {
     const state = dingToLevel2(); // 1 pending point
     runUntilChooser(state);
-    allocateStat(state, "luck");
-    beginRespec(state);
+    allocateStat(state, state.players[0], "luck");
+    beginRespec(state, state.players[0]);
     // The pool holds exactly the chosen point; the auto gains stay derived.
     expect(state.players[0].pendingStatPoints).toBe(1);
-    expect(effectiveStat(state, "stamina")).toBe(baseStatBonus(2, "stamina"));
+    expect(effectiveStat(state, state.players[0], "stamina")).toBe(
+      baseStatBonus(2, "stamina"),
+    );
   });
 
   it("the horde's hp answers the free damage growth — no one-hit-kill drift", () => {
@@ -362,7 +368,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
     const hitsToKill = (level: number) => {
       state.players[0].level = level;
       const mobHp = 20 * mobHpScaleFor(level, state.difficulty);
-      return Math.ceil(mobHp / weaponDamage(state));
+      return Math.ceil(mobHp / weaponDamage(state, state.players[0]));
     };
     // The automatic gains alone never shrink the hits a mob takes: the hp
     // scale rides the same curve (autoPowerScale) the free stats produce.
@@ -387,7 +393,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
       expect(levelStatGains(5)).toEqual([]);
       // …the hero's effective stat is just his chosen points…
       const state = dingToLevel2(); // ding to level 2
-      expect(effectiveStat(state, "stamina")).toBe(
+      expect(effectiveStat(state, state.players[0], "stamina")).toBe(
         state.players[0].stats.stamina,
       );
       // …and the horde's hp scale drops the compensating curve in lockstep, so
@@ -423,7 +429,7 @@ describe("stats", () => {
     const beforeStamina = state.players[0].maxStamina;
     const beforeHp = state.players[0].maxHp;
     const beforeCurHp = state.players[0].hp;
-    allocateStat(state, "stamina");
+    allocateStat(state, state.players[0], "stamina");
     expect(state.players[0].maxStamina).toBe(
       beforeStamina + STAMINA.maxPerPoint,
     );
@@ -436,7 +442,7 @@ describe("stats", () => {
 
   it("STRENGTH scales physical (melee + ranged) damage; DEX and INT do not", () => {
     const state = startGame(); // default crude sword: melee (STR-scaled)
-    const base = weaponDamage(state);
+    const base = weaponDamage(state, state.players[0]);
     // A zero-stat hero swings the weapon's CATALOG damage, verbatim: no global
     // damper, no item-level growth, no balance knob sits between the two.
     expect(base).toBe(weaponDef("crude_sword").damage);
@@ -444,12 +450,12 @@ describe("stats", () => {
     // DEX (a speed stat now) and INT (magic/range) leave physical damage alone.
     state.players[0].stats.dexterity = 5;
     state.players[0].stats.intelligence = 5;
-    expect(weaponDamage(state)).toBe(base);
+    expect(weaponDamage(state, state.players[0])).toBe(base);
 
     // STRENGTH scales the damage of physical weapons — ranged here, and melee —
     // by its own (steeper) per-point slope.
     state.players[0].stats.strength = 2;
-    expect(weaponDamage(state)).toBeCloseTo(
+    expect(weaponDamage(state, state.players[0])).toBeCloseTo(
       base * (1 + 2 * STATS.damageBonusPerPoint.strength),
     );
   });
@@ -472,21 +478,21 @@ describe("stats", () => {
       durability: wandDef.durability,
     };
 
-    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
+    expect(weaponDamageFor(state, state.players[0], wand)).toBe(wandDef.damage);
 
     // DEX (the equipped blaster's stat) must NOT move the magic wand.
     state.players[0].stats.dexterity = 4;
-    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
+    expect(weaponDamageFor(state, state.players[0], wand)).toBe(wandDef.damage);
 
     // INT (the wand's own class stat) does, by INT's per-point slope.
     state.players[0].stats.intelligence = 3;
-    expect(weaponDamageFor(state, wand)).toBeCloseTo(
+    expect(weaponDamageFor(state, state.players[0], wand)).toBeCloseTo(
       wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint.intelligence),
     );
 
     // A damagePct affix stacks into the same multiplier.
     wand.affixes = [{ kind: "damagePct", value: 0.5 }];
-    expect(weaponDamageFor(state, wand)).toBeCloseTo(
+    expect(weaponDamageFor(state, state.players[0], wand)).toBeCloseTo(
       wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint.intelligence + 0.5),
     );
   });
@@ -494,18 +500,18 @@ describe("stats", () => {
   it("DEXTERITY quickens physical fire; STRENGTH and INTELLIGENCE do not", () => {
     const state = startGame(); // default crude sword: melee (DEX-quickened)
     const weapon = state.players[0].equipment.weapon;
-    const base = weaponCooldownFor(state, weapon);
+    const base = weaponCooldownFor(state, state.players[0], weapon);
     // The catalog cadence, verbatim — no global cadence lever any more.
     expect(base).toBeCloseTo(weaponDef("crude_sword").cooldownMs);
 
     // The off-class stats leave the sidearm's cadence untouched.
     state.players[0].stats.strength = 5;
     state.players[0].stats.intelligence = 5;
-    expect(weaponCooldownFor(state, weapon)).toBe(base);
+    expect(weaponCooldownFor(state, state.players[0], weapon)).toBe(base);
 
     // DEX divides the cooldown by (1 + points × attackSpeedPerStat).
     state.players[0].stats.dexterity = 4;
-    expect(weaponCooldownFor(state, weapon)).toBeCloseTo(
+    expect(weaponCooldownFor(state, state.players[0], weapon)).toBeCloseTo(
       base / (1 + 4 * STATS.attackSpeedPerStat),
     );
   });
@@ -523,16 +529,20 @@ describe("stats", () => {
       durability: wandDef.durability,
     };
     const wandBase = wandDef.cooldownMs;
-    expect(weaponCooldownFor(state, wand)).toBeCloseTo(wandBase);
+    expect(weaponCooldownFor(state, state.players[0], wand)).toBeCloseTo(
+      wandBase,
+    );
 
     // DEX (the equipped blaster's stat) must NOT move the magic wand.
     state.players[0].stats.dexterity = 4;
-    expect(weaponCooldownFor(state, wand)).toBeCloseTo(wandBase);
+    expect(weaponCooldownFor(state, state.players[0], wand)).toBeCloseTo(
+      wandBase,
+    );
 
     // INT (the wand's own class stat) does — at the discounted MAGIC rate
     // (magicAttackSpeedPerStat), since INT already scales a caster's damage/crit.
     state.players[0].stats.intelligence = 3;
-    expect(weaponCooldownFor(state, wand)).toBeCloseTo(
+    expect(weaponCooldownFor(state, state.players[0], wand)).toBeCloseTo(
       wandBase / (1 + 3 * STATS.magicAttackSpeedPerStat),
     );
   });
@@ -584,7 +594,9 @@ describe("stats", () => {
   it("DEXTERITY lands physical crits, INTELLIGENCE lands magic crits, LUCK nudges both", () => {
     // Crude sword is melee → its crit rides DEXTERITY. Bare base first.
     const state = startGame();
-    expect(playerCritChance(state)).toBeCloseTo(STATS.baseCritChance);
+    expect(playerCritChance(state, state.players[0])).toBeCloseTo(
+      STATS.baseCritChance,
+    );
 
     // DEX raises the melee/ranged crit; INT does NOT touch a physical swing.
     // The raw stat sum bends toward `critCap` via `saturateToward`, so the
@@ -592,21 +604,21 @@ describe("stats", () => {
     state.players[0].stats.dexterity = 4;
     state.players[0].stats.intelligence = 7;
     const crit = (linear: number) => saturateToward(linear, STATS.critCap);
-    expect(playerCritChance(state, "melee")).toBeCloseTo(
+    expect(playerCritChance(state, state.players[0], "melee")).toBeCloseTo(
       crit(STATS.baseCritChance + 4 * STATS.critChancePerStat),
     );
-    expect(playerCritChance(state, "ranged")).toBeCloseTo(
+    expect(playerCritChance(state, state.players[0], "ranged")).toBeCloseTo(
       crit(STATS.baseCritChance + 4 * STATS.critChancePerStat),
     );
     // A magic swing rides INT instead (DEX leaves it alone).
-    expect(playerCritChance(state, "magic")).toBeCloseTo(
+    expect(playerCritChance(state, state.players[0], "magic")).toBeCloseTo(
       crit(STATS.baseCritChance + 7 * STATS.critChancePerStat),
     );
 
     // LUCK adds a MARGINAL crit on top of whichever stat governs — a quarter
     // of a primary point, so it never replaces the class stat.
     state.players[0].stats.luck = 3;
-    expect(playerCritChance(state, "melee")).toBeCloseTo(
+    expect(playerCritChance(state, state.players[0], "melee")).toBeCloseTo(
       crit(
         STATS.baseCritChance +
           4 * STATS.critChancePerStat +
@@ -642,7 +654,11 @@ describe("stats", () => {
     expect(state.stats.damageDealt).toBe(
       Math.round(
         weaponDef("blaster").damage *
-          weaponCritMult(state, state.players[0].equipment.weapon),
+          weaponCritMult(
+            state,
+            state.players[0],
+            state.players[0].equipment.weapon,
+          ),
       ),
     );
   });
@@ -661,13 +677,13 @@ describe("stats", () => {
 
   it("DEXTERITY and LUCK raise the dodge chance off its base", () => {
     const state = startGame();
-    expect(playerDodgeChance(state)).toBeCloseTo(DODGE.base);
+    expect(playerDodgeChance(state, state.players[0])).toBeCloseTo(DODGE.base);
     // DEX sharpens the sidestep; LUCK nudges it MARGINALLY (a quarter of DEX).
     // The linear inputs bend toward `DODGE.max` via `saturateToward`, so the
     // expected value runs through the same saturation the getter applies.
     state.players[0].stats.dexterity = 4;
     state.players[0].stats.luck = 6;
-    expect(playerDodgeChance(state)).toBeCloseTo(
+    expect(playerDodgeChance(state, state.players[0])).toBeCloseTo(
       saturateToward(
         DODGE.base + 4 * DODGE.perDex + 6 * DODGE.perLuck,
         DODGE.max,
@@ -677,7 +693,7 @@ describe("stats", () => {
     // Saturates toward the cap so no build becomes untouchable: a huge DEX pile
     // crawls right up to `DODGE.max` but never reaches (let alone exceeds) it.
     state.players[0].stats.dexterity = 1000;
-    const maxed = playerDodgeChance(state);
+    const maxed = playerDodgeChance(state, state.players[0]);
     expect(maxed).toBeLessThan(DODGE.max);
     expect(maxed).toBeGreaterThan(DODGE.max * 0.9);
   });
@@ -712,15 +728,17 @@ describe("stats", () => {
     const state = startGame();
     // A fresh run starts at the STRENGTH-0 floor.
     expect(state.players[0].inventory.length).toBe(LOOT.baseInventorySize);
-    expect(inventoryCapacity(state)).toBe(LOOT.baseInventorySize);
+    expect(inventoryCapacity(state, state.players[0])).toBe(
+      LOOT.baseInventorySize,
+    );
 
     // Each allocated STRENGTH point adds bagSlotsPerStr cells.
     state.players[0].pendingStatPoints = 3;
-    allocateStat(state, "strength");
-    allocateStat(state, "strength");
-    allocateStat(state, "strength");
+    allocateStat(state, state.players[0], "strength");
+    allocateStat(state, state.players[0], "strength");
+    allocateStat(state, state.players[0], "strength");
     const expected = LOOT.baseInventorySize + 3 * STATS.bagSlotsPerStr;
-    expect(inventoryCapacity(state)).toBe(expected);
+    expect(inventoryCapacity(state, state.players[0])).toBe(expected);
     expect(state.players[0].inventory.length).toBe(expected);
     // The extra cells are empty and ready to catch loot.
     expect(state.players[0].inventory.every((c) => c === null)).toBe(true);
@@ -729,14 +747,14 @@ describe("stats", () => {
   it("the bag only grows — a lost STRENGTH source never strands items", () => {
     const state = startGame();
     state.players[0].stats.strength = 4; // bag grown to the floor + 4
-    syncInventoryCapacity(state);
+    syncInventoryCapacity(state, state.players[0]);
     const grown = state.players[0].inventory.length;
     expect(grown).toBe(LOOT.baseInventorySize + 4 * STATS.bagSlotsPerStr);
 
     // Dropping the STRENGTH would lower the target capacity, but the physical
     // bag must not shrink (grow-only), so nothing carried can be discarded.
     state.players[0].stats.strength = 0;
-    syncInventoryCapacity(state);
+    syncInventoryCapacity(state, state.players[0]);
     expect(state.players[0].inventory.length).toBe(grown);
   });
 
@@ -752,7 +770,7 @@ describe("stats", () => {
       affixes: [{ kind: "stat", stat: "strength", value: 2 }],
     };
     state.players[0].inventory[0] = charm;
-    expect(equipFromInventory(state, 0)).toBe(true);
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(true);
     expect(state.players[0].inventory.length).toBe(
       before + 2 * STATS.bagSlotsPerStr,
     );

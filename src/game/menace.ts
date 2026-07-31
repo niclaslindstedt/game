@@ -228,7 +228,11 @@ export function heroGearLevel(state: GameState): number {
  * `heroPowerLevel`). It survives purely for the analytic readout (`src/sim`).
  */
 export function heroDamageLevel(state: GameState): number {
-  const dps = weaponDps(state, state.players[0].equipment.weapon);
+  const dps = weaponDps(
+    state,
+    state.players[0],
+    state.players[0].equipment.weapon,
+  );
   // One typical healthbar at ramp 1: what the reference minion carries at
   // this hero's autoPowerScale (the free-stat growth cancels out — it sits
   // in the hero's output AND in every spawned bar).

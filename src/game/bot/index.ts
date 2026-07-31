@@ -392,7 +392,11 @@ function strategyInput(bot: Bot, state: GameState, tune: BotTuning): GameInput {
       // lets it cut the chord; the orbit is for a boss/set-piece the hero is
       // committed to DPSing (pushBoss / the survive boss-lock).
       think(bot, "KITE");
-      const reach = weaponRangeFor(state, state.players[0].equipment.weapon);
+      const reach = weaponRangeFor(
+        state,
+        state.players[0],
+        state.players[0].equipment.weapon,
+      );
       return steer(state, holdOff(state, foe.pos, reach * 0.7));
     }
     case "boss":
@@ -691,7 +695,7 @@ function postDecision(
     dingArrowNearby(bot, state, ARROW_SAVE_REACH) !== undefined;
   decided.useMedkit =
     player.hp < player.maxHp * HEAL_HP_FRAC &&
-    bestMedkitTier(state) >= 0 &&
+    bestMedkitTier(state, player) >= 0 &&
     !dingHeal;
   const threatNear = threatCountWithin(state, THREAT_RADIUS) > 0;
   decided.useStaminaPotion =
@@ -730,7 +734,7 @@ function postDecision(
         const tier = medkitTierIndex(item.tier);
         fired =
           (player.medkits[tier] ?? 0) >= CONSUMABLES.stackCap &&
-          tier === bestMedkitTier(state) &&
+          tier === bestMedkitTier(state, player) &&
           player.hp < player.maxHp * TOP_OFF_HP_FRAC;
         if (fired) decided.useMedkit = true;
       } else if (item.kind === "drink") {
@@ -808,12 +812,17 @@ export function botPickTalent(bot: Bot, state: GameState): string | null {
   const priority = BUILD_TALENTS[botBuild(bot, state)];
   for (const id of priority) {
     const def = talentDefs()[id];
-    if (def?.tree === tree && talentRank(state, id) < def.maxRank) return id;
+    if (
+      def?.tree === tree &&
+      talentRank(state, state.players[0], id) < def.maxRank
+    )
+      return id;
   }
   // Fallback: any not-maxed talent in the tree, in catalog order — keeps the
   // point spendable even if a build's priority list misses a talent.
   for (const def of talentsForTree(tree)) {
-    if (talentRank(state, def.id) < def.maxRank) return def.id;
+    if (talentRank(state, state.players[0], def.id) < def.maxRank)
+      return def.id;
   }
   return null;
 }
@@ -832,5 +841,5 @@ export function botPickTalent(bot: Bot, state: GameState): string | null {
 function botLane(state: GameState): WeaponClass {
   // Shared with the auto-equip's on-lane preference (`weaponScore`), so the
   // lane the bot spends points on and the lane its gear favours are ONE rule.
-  return committedLane(state);
+  return committedLane(state, state.players[0]);
 }

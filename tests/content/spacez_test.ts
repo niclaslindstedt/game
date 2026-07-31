@@ -201,7 +201,7 @@ describe("SPACEZ HQ level def", () => {
       for (let i = 0; i < 40_000 && state.enemies.length > 1; i++) {
         step(state, idle, DT);
         while (state.players[0].pendingStatPoints > 0) {
-          allocateStat(state, "stamina");
+          allocateStat(state, state.players[0], "stamina");
         }
       }
       return state.items.length;

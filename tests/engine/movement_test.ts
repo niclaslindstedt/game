@@ -29,7 +29,7 @@ describe("walk throttle", () => {
   it("defaults to full speed when the input omits a throttle", () => {
     const state = startGame();
     expect(stepDistance(undefined)).toBeCloseTo(
-      (playerSpeed(state) * DT) / 1000,
+      (playerSpeed(state, state.players[0]) * DT) / 1000,
       5,
     );
   });

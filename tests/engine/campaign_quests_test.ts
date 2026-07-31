@@ -109,7 +109,7 @@ describe("spendCleanSlate", () => {
     state.players[0].cleanSlates = 1;
     state.players[0].stats.strength = 4;
 
-    expect(spendCleanSlate(state)).toBe(true);
+    expect(spendCleanSlate(state, state.players[0])).toBe(true);
     expect(state.players[0].cleanSlates).toBe(0);
     expect(state.phase).toBe("respec");
     // It is the SAME respec a level jump ran: the build is refunded into a
@@ -121,7 +121,7 @@ describe("spendCleanSlate", () => {
 
   it("refuses when the hero carries none, leaving the run alone", () => {
     const state = startGame();
-    expect(spendCleanSlate(state)).toBe(false);
+    expect(spendCleanSlate(state, state.players[0])).toBe(false);
     expect(state.phase).toBe("playing");
   });
 
@@ -129,7 +129,7 @@ describe("spendCleanSlate", () => {
     const state = startGame();
     state.players[0].cleanSlates = 1;
     state.phase = "dying";
-    expect(spendCleanSlate(state)).toBe(false);
+    expect(spendCleanSlate(state, state.players[0])).toBe(false);
     // The charge is NOT spent — a refusal that ate it would be the worst
     // possible bug on the rarest reward in the game.
     expect(state.players[0].cleanSlates).toBe(1);

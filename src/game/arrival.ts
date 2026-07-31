@@ -235,7 +235,9 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   }
   // The bag re-sizes to the carried STRENGTH and worn bag, then refills in
   // order; anything past the capacity (shrunken saves) stays behind.
-  player.inventory = new Array<Equipment | null>(inventoryCapacity(state))
+  player.inventory = new Array<Equipment | null>(
+    inventoryCapacity(state, player),
+  )
     .fill(null)
     .map((_, i) => stillWearable(mint(banked[i] ?? null)));
   // The LOST & FOUND carries across untouched but re-minted, capped like the
@@ -279,10 +281,10 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   // an adopted veteran converts for free: the points fall out of the stats the
   // loadout already carries, no bespoke migration code needed.
   player.talents = { ...(loadout.talents ?? {}) };
-  reconcileTalentPoints(state);
+  reconcileTalentPoints(state, player);
 
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
 

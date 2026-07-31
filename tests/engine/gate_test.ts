@@ -49,7 +49,7 @@ describe("travel gates", () => {
     const state = startWithKey();
     expect(state.gates).toEqual([]);
 
-    expect(spendGateKey(state, 0)).toBe(true);
+    expect(spendGateKey(state, state.players[0], 0)).toBe(true);
     // The key is spent, the gate stands a step ahead, and the renderer got
     // its landmark — all from one call.
     expect(state.players[0].inventory[0]).toBeNull();
@@ -70,10 +70,10 @@ describe("travel gates", () => {
 
   it("refuses a second opening and keys on the wrong level", () => {
     const state = startWithKey();
-    expect(spendGateKey(state, 0)).toBe(true);
+    expect(spendGateKey(state, state.players[0], 0)).toBe(true);
     // Same gate again: refused, nothing consumed.
     state.players[0].inventory[0] = gateKey(502);
-    expect(spendGateKey(state, 0)).toBe(false);
+    expect(spendGateKey(state, state.players[0], 0)).toBe(false);
     expect(state.players[0].inventory[0]).not.toBeNull();
 
     // On a level with no gate wired to the key, the trinket is inert.
@@ -83,7 +83,7 @@ describe("travel gates", () => {
     expect(
       gateKeyTarget(elsewhere, elsewhere.players[0].inventory[0]!),
     ).toBeNull();
-    expect(spendGateKey(elsewhere, 0)).toBe(false);
+    expect(spendGateKey(elsewhere, elsewhere.players[0], 0)).toBe(false);
     expect(elsewhere.players[0].inventory[0]).not.toBeNull();
   });
 
@@ -94,13 +94,13 @@ describe("travel gates", () => {
       id: "test_gate",
       to: "test_exit_level",
     });
-    spendGateKey(state, 0);
+    spendGateKey(state, state.players[0], 0);
     expect(gateKeyTarget(state, gateKey(504))).toBeNull();
   });
 
   it("books gateEntered exactly once when the hero steps in", () => {
     const state = startWithKey();
-    spendGateKey(state, 0);
+    spendGateKey(state, state.players[0], 0);
     const gate = state.gates[0]!;
 
     // Standing short of the doorstep: no crossing.
@@ -135,8 +135,8 @@ describe("travel gates", () => {
     };
     const key = state.players[0].inventory[0]!;
     expect(isSpecialItem(key)).toBe(true);
-    expect(isScrappableLoot(state, key)).toBe(false);
-    scrapInferiorLoot(state);
+    expect(isScrappableLoot(state, state.players[0], key)).toBe(false);
+    scrapInferiorLoot(state, state.players[0]);
     expect(state.players[0].inventory[0]).not.toBeNull();
   });
 });

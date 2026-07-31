@@ -87,14 +87,21 @@ export function drawRunningPowerups(
     const style = powerupStyle(ability.defId);
     if (def.orbit) drawOrbitRing(ctx, state, assets, ability, camera, timeMs);
     if (def.stasis) {
-      drawStasisDome(ctx, px, py, stasisRadius(state, def), style, timeMs);
+      drawStasisDome(
+        ctx,
+        px,
+        py,
+        stasisRadius(state, player, def),
+        style,
+        timeMs,
+      );
     }
     if (def.magnet) {
       drawMagnetField(
         ctx,
         state,
         camera,
-        magnetRadius(state, def),
+        magnetRadius(state, player, def),
         style,
         timeMs,
       );

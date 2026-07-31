@@ -371,13 +371,14 @@ export function InventoryPanel({
   // spares). Drives the button's count and its disabled state so it never
   // destroys anything when there's nothing junk to cull.
   const scrapCount = player.inventory.filter(
-    (item): item is Equipment => item !== null && isScrappableLoot(state, item),
+    (item): item is Equipment =>
+      item !== null && isScrappableLoot(state, player, item),
   ).length;
   // How many slots AUTO-EQUIP would improve right now — drives the button's
   // count and its disabled state so it never runs on an already-optimal
   // loadout (the sweep folds the hero's build into the weapon pick, so a melee
   // hero lands a melee weapon and a mage a wand).
-  const autoCount = autoEquipUpgradeCount(state);
+  const autoCount = autoEquipUpgradeCount(state, player);
   // The backdrop is the "ground": releasing a bag item over it destroys the
   // item. The panel itself absorbs drops (data-drop="none") so a miss between
   // cells is a harmless no-op, never a discard; only a release out beyond the
@@ -479,7 +480,7 @@ export function InventoryPanel({
                     item &&
                     !isArmorBroken(item) &&
                     !isWeaponBroken(item) &&
-                    wouldUpgradeSlot(state, item)
+                    wouldUpgradeSlot(state, player, item)
                       ? " upgrade"
                       : ""
                   }${item ? tierGlowClass(item.tier) : ""}`}

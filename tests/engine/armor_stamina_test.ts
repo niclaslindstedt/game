@@ -69,7 +69,7 @@ function dressFully(state: ReturnType<typeof startGame>): void {
   ];
   for (const [defId, slot, id] of pieces) {
     state.players[0].inventory[0] = fixtureArmor(defId, slot, id);
-    equipFromInventory(state, 0);
+    equipFromInventory(state, state.players[0], 0);
   }
 }
 
@@ -92,12 +92,12 @@ describe("armor", () => {
     state.players[0].stats.luck = 100;
     state.rng = () => 0.99;
     dressFully(state);
-    expect(totalArmor(state)).toBe(10 + 16 + 10 + 8);
+    expect(totalArmor(state, state.players[0])).toBe(10 + 16 + 10 + 8);
     const maxHp = state.players[0].maxHp;
 
     // Against a level-1 attacker: k = kBase + kPerLevel, 44/(44+52) ≈ 0.458.
     const expected = 44 / (44 + ARMOR.kBase + ARMOR.kPerLevel);
-    expect(armorReduction(state, 1)).toBeCloseTo(expected, 6);
+    expect(armorReduction(state, state.players[0], 1)).toBeCloseTo(expected, 6);
 
     bruteOnTop(state, 1);
     step(state, idle, DT);
@@ -107,16 +107,20 @@ describe("armor", () => {
   it("turns less of a higher-level attacker's blow — armor decays as the horde outlevels it", () => {
     const state = startGame();
     dressFully(state);
-    expect(armorReduction(state, 10)).toBeLessThan(armorReduction(state, 1));
+    expect(armorReduction(state, state.players[0], 10)).toBeLessThan(
+      armorReduction(state, state.players[0], 1),
+    );
     // And never past the cap, however small the attacker.
-    expect(armorReduction(state, 1)).toBeLessThanOrEqual(ARMOR.maxReduction);
+    expect(armorReduction(state, state.players[0], 1)).toBeLessThanOrEqual(
+      ARMOR.maxReduction,
+    );
   });
 
   it("a bare hero takes the whole blow in HP", () => {
     const state = startGame();
     state.players[0].stats.luck = 100;
     state.rng = () => 0.99; // pin dodge (and crit) off
-    expect(totalArmor(state)).toBe(0);
+    expect(totalArmor(state, state.players[0])).toBe(0);
     const maxHp = state.players[0].maxHp;
     bruteOnTop(state);
     step(state, idle, DT);
@@ -153,7 +157,7 @@ describe("armor", () => {
     state.players[0].stats.luck = 100;
     state.rng = () => 0.99;
     dressFully(state);
-    const armored = totalArmor(state);
+    const armored = totalArmor(state, state.players[0]);
     const maxHp = state.players[0].maxHp; // includes the vest's +20
 
     // One hit from breaking: the next landed blow snaps the vest.
@@ -165,7 +169,7 @@ describe("armor", () => {
     expect(vest.durability).toBe(0);
     expect(isArmorBroken(vest)).toBe(true);
     expect(armorValueOf(vest)).toBe(0);
-    expect(totalArmor(state)).toBe(armored - 16);
+    expect(totalArmor(state, state.players[0])).toBe(armored - 16);
     // The broken vest's +20 maxHp went silent with it.
     expect(state.players[0].maxHp).toBe(maxHp - 20);
     expect(state.events.some((e) => e.type === "armorBroke")).toBe(true);
@@ -173,13 +177,13 @@ describe("armor", () => {
     expect(state.players[0].equipment.chest?.defId).toBe("test_vest");
 
     // The repair kit mends the whole wardrobe and revives the vest.
-    expect(repairWornArmor(state)).toBe(true);
+    expect(repairWornArmor(state, state.players[0])).toBe(true);
     expect(vest.durability).toBe(FIX_GEAR.test_vest!.durability);
     expect(isArmorBroken(vest)).toBe(false);
-    expect(totalArmor(state)).toBe(armored);
+    expect(totalArmor(state, state.players[0])).toBe(armored);
     expect(state.players[0].maxHp).toBe(maxHp);
     // Nothing left to mend: a second kit would stay on the ground.
-    expect(repairWornArmor(state)).toBe(false);
+    expect(repairWornArmor(state, state.players[0])).toBe(false);
   });
 
   it("rolls bigger armor the deeper it drops (ilvl growth), stamped on the instance", () => {
@@ -187,7 +191,7 @@ describe("armor", () => {
     const base = FIX_GEAR.test_vest!.armor!;
     // Pin the make quality so the growth rule is measured alone (a rolled
     // BROKEN/PERFECT make would scale the stamp — the quality suite's beat).
-    const deep = rollEquipment(state, {
+    const deep = rollEquipment(state, state.players[0], {
       defId: "test_vest",
       tier: "regular",
       quality: "normal",
@@ -206,7 +210,10 @@ describe("armor", () => {
 
   it("mints unique+ armor unbreakable, like unique weapons", () => {
     const state = startGame();
-    const trophy = rollEquipment(state, { defId: "test_vest", tier: "unique" });
+    const trophy = rollEquipment(state, state.players[0], {
+      defId: "test_vest",
+      tier: "unique",
+    });
     expect(trophy.durability).toBeUndefined();
   });
 
@@ -224,11 +231,11 @@ describe("armor", () => {
     // leaving `lootIlvlBonus` as the only difference.
     const lootLevel = 12;
     const common = { defId: "test_vest", tier: "regular" } as const;
-    const plain = rollEquipment(medium, {
+    const plain = rollEquipment(medium, medium.players[0], {
       ...common,
       mlvl: lootLevel + FIX_DIFFICULTIES.medium!.mobLevelOffset,
     });
-    const hard = rollEquipment(jesus, {
+    const hard = rollEquipment(jesus, jesus.players[0], {
       ...common,
       mlvl: lootLevel + FIX_DIFFICULTIES.jesus!.mobLevelOffset,
     });
@@ -258,7 +265,7 @@ describe("armor", () => {
         FIX_GEAR.test_vest!.durability,
       );
       expect(state.players[0].equipment.feet?.defId).toBe("test_boots");
-      expect(totalArmor(state)).toBe(
+      expect(totalArmor(state, state.players[0])).toBe(
         FIX_GEAR.test_vest!.armor! + FIX_GEAR.test_boots!.armor!,
       );
     } finally {

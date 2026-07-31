@@ -172,7 +172,7 @@ export function TalentPickerOverlay({
         </div>
         <div className="talent-rows" ref={rowsRef}>
           {talents.map((def, i) => {
-            const rank = talentRank(state, def.id);
+            const rank = talentRank(state, state.players[0], def.id);
             const maxed = rank >= def.maxRank;
             // The demo's bot-focus highlight overrides the cursor/hover one so
             // the picked talent lights up as the autopilot taps it.

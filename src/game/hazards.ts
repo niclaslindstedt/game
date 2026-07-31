@@ -89,10 +89,12 @@ function hurtPlayer(state: GameState, damage: number, cause: string): void {
   const player = state.players[0];
   const hpDamage = Math.max(
     0,
-    Math.round(damage * (1 - armorReduction(state, currentMobLevel(state)))),
+    Math.round(
+      damage * (1 - armorReduction(state, player, currentMobLevel(state))),
+    ),
   );
-  wearWornArmor(state);
-  player.hp -= absorbPlayerDamage(state, hpDamage);
+  wearWornArmor(state, player);
+  player.hp -= absorbPlayerDamage(state, player, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({ type: "playerHurt", crit: false, cause });
@@ -1115,10 +1117,12 @@ export function stepScorches(state: GameState, dtMs: number): void {
   const cause = `hazard:scorch:${hottest.defId}`;
   const hpDamage = Math.max(
     0,
-    Math.round(damage * (1 - armorReduction(state, currentMobLevel(state)))),
+    Math.round(
+      damage * (1 - armorReduction(state, player, currentMobLevel(state))),
+    ),
   );
-  wearWornArmor(state);
-  player.hp -= absorbPlayerDamage(state, hpDamage);
+  wearWornArmor(state, player);
+  player.hp -= absorbPlayerDamage(state, player, hpDamage);
   player.hurtFlashMs = 200;
   state.stats.damageTaken += damage;
   state.events.push({ type: "playerHurt", crit: false, cause });

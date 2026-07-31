@@ -55,13 +55,15 @@ describe("weapon durability", () => {
     // a band a copy lands — scale the wear budget (the quality suite's beat);
     // this asserts the plain def carry-over at neutral make.
     state.fxRng = () => 0.5;
-    const rolled = rollEquipment(state, {
+    const rolled = rollEquipment(state, state.players[0], {
       defId: "test_pipe",
       quality: "normal",
     });
     expect(rolled.durability).toBe(weaponDef("test_pipe").durability);
     // Charms never wear; armor carries its own durability (armor suite).
-    const charm = rollEquipment(state, { defId: "test_charm" });
+    const charm = rollEquipment(state, state.players[0], {
+      defId: "test_charm",
+    });
     expect(charm.durability).toBeUndefined();
   });
 
@@ -142,7 +144,7 @@ describe("weapon durability", () => {
     clearStage(state);
     const broken = weapon(50, "test_hammer", 0); // durability 0 = broken
     state.players[0].inventory[0] = broken;
-    expect(isBetterEquipment(state, broken)).toBe(false);
+    expect(isBetterEquipment(state, state.players[0], broken)).toBe(false);
   });
 });
 
@@ -152,12 +154,20 @@ describe("same-weapon pickups refresh durability", () => {
     const full = weaponDef("test_hammer").durability;
     state.players[0].equipment.weapon = weapon(50, "test_hammer", 3); // worn
     // A pristine identical weapon beats the worn one on durability alone…
-    expect(isBetterEquipment(state, weapon(60, "test_hammer", full))).toBe(
-      true,
-    );
+    expect(
+      isBetterEquipment(
+        state,
+        state.players[0],
+        weapon(60, "test_hammer", full),
+      ),
+    ).toBe(true);
     // …but an equally-worn or more-worn copy is not worth the swap.
-    expect(isBetterEquipment(state, weapon(61, "test_hammer", 3))).toBe(false);
-    expect(isBetterEquipment(state, weapon(62, "test_hammer", 1))).toBe(false);
+    expect(
+      isBetterEquipment(state, state.players[0], weapon(61, "test_hammer", 3)),
+    ).toBe(false);
+    expect(
+      isBetterEquipment(state, state.players[0], weapon(62, "test_hammer", 1)),
+    ).toBe(false);
   });
 
   it("picking up the same weapon swaps it in and banks the worn copy", () => {
@@ -215,7 +225,7 @@ describe("same-weapon pickups refresh durability", () => {
     expect(state.players[0].equipment.weapon.defId).toBe("blaster");
     expect(state.players[0].equipment.weapon.durability).toBeUndefined();
     const looted = weapon(60, "blaster", weaponDef("blaster").durability);
-    expect(isBetterEquipment(state, looted)).toBe(false);
+    expect(isBetterEquipment(state, state.players[0], looted)).toBe(false);
   });
 });
 

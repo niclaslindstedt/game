@@ -1722,7 +1722,10 @@ const FIELD_EXHIBITS: Exhibit[] = [
           id: ctx.state.nextId++,
           kind: "equipment",
           pos: { x: at.x + (i - (ladder.length - 1) / 2) * 30, y: at.y + 34 },
-          equipment: rollEquipment(ctx.state, { defId: "gladius", tier }),
+          equipment: rollEquipment(ctx.state, ctx.state.players[0], {
+            defId: "gladius",
+            tier,
+          }),
         });
       });
     },
@@ -1777,7 +1780,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
               x: from.x + Math.cos(angle) * 46,
               y: from.y + Math.sin(angle) * 30,
             },
-            equipment: rollEquipment(ctx.state, {
+            equipment: rollEquipment(ctx.state, ctx.state.players[0], {
               defId: entry.defId,
               tier: entry.tier,
             }),

@@ -36,7 +36,7 @@ describe("beginRespec", () => {
     state.players[0].stats.luck = 2;
     state.players[0].pendingStatPoints = 1; // an unspent level-up folds in too
 
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
 
     expect(state.phase).toBe("respec");
     expect(state.players[0].pendingStatPoints).toBe(6); // 3 + 2 + 1
@@ -47,13 +47,13 @@ describe("beginRespec", () => {
   it("shrinks the derived pools with the refund without over-filling bars", () => {
     const state = startGame();
     state.players[0].pendingStatPoints = 4;
-    allocateStat(state, "stamina");
-    allocateStat(state, "stamina");
-    allocateStat(state, "strength");
-    allocateStat(state, "strength");
+    allocateStat(state, state.players[0], "stamina");
+    allocateStat(state, state.players[0], "stamina");
+    allocateStat(state, state.players[0], "strength");
+    allocateStat(state, state.players[0], "strength");
     const maxHpWithStamina = state.players[0].maxHp;
 
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
 
     // STAMINA fed max hp; refunding it drops the ceiling and hp stays inside it.
     expect(state.players[0].maxHp).toBeLessThan(maxHpWithStamina);
@@ -68,11 +68,11 @@ describe("respec allocation", () => {
   it("does not auto-close when the last point lands (unlike a level-up)", () => {
     const state = startGame();
     state.players[0].stats.luck = 2;
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
     expect(state.players[0].pendingStatPoints).toBe(2);
 
-    allocateStat(state, "strength");
-    allocateStat(state, "strength");
+    allocateStat(state, state.players[0], "strength");
+    allocateStat(state, state.players[0], "strength");
 
     // Pool is empty, but the chooser stays open for fine-tuning.
     expect(state.players[0].pendingStatPoints).toBe(0);
@@ -82,15 +82,15 @@ describe("respec allocation", () => {
   it("deallocateStat puts a point back, floored at zero and respec-only", () => {
     const state = startGame();
     state.players[0].stats.dexterity = 1;
-    beginRespec(state);
-    allocateStat(state, "strength"); // pool 1 -> 0, strength 1
+    beginRespec(state, state.players[0]);
+    allocateStat(state, state.players[0], "strength"); // pool 1 -> 0, strength 1
 
-    expect(deallocateStat(state, "strength")).toBe(true);
+    expect(deallocateStat(state, state.players[0], "strength")).toBe(true);
     expect(state.players[0].stats.strength).toBe(0);
     expect(state.players[0].pendingStatPoints).toBe(1);
 
     // Nothing left in strength to refund.
-    expect(deallocateStat(state, "strength")).toBe(false);
+    expect(deallocateStat(state, state.players[0], "strength")).toBe(false);
     expect(state.players[0].pendingStatPoints).toBe(1);
   });
 
@@ -98,7 +98,7 @@ describe("respec allocation", () => {
     const state = startGame();
     state.players[0].stats.luck = 3;
     expect(state.phase).toBe("playing");
-    expect(deallocateStat(state, "luck")).toBe(false);
+    expect(deallocateStat(state, state.players[0], "luck")).toBe(false);
     expect(state.players[0].stats.luck).toBe(3);
   });
 });
@@ -107,15 +107,15 @@ describe("confirmRespec", () => {
   it("commits only once the whole pool is spent, then drops into play", () => {
     const state = startGame();
     state.players[0].stats.luck = 2;
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
 
     // A point still owed: the confirm is refused.
-    allocateStat(state, "stamina");
-    expect(confirmRespec(state)).toBe(false);
+    allocateStat(state, state.players[0], "stamina");
+    expect(confirmRespec(state, state.players[0])).toBe(false);
     expect(state.phase).toBe("respec");
 
-    allocateStat(state, "stamina");
-    expect(confirmRespec(state)).toBe(true);
+    allocateStat(state, state.players[0], "stamina");
+    expect(confirmRespec(state, state.players[0])).toBe(true);
     expect(state.phase).toBe("playing");
     // The commit lands rested, like any fresh drop.
     expect(state.players[0].hp).toBe(state.players[0].maxHp);
@@ -124,7 +124,7 @@ describe("confirmRespec", () => {
 
   it("is inert outside the respec phase", () => {
     const state = startGame();
-    expect(confirmRespec(state)).toBe(false);
+    expect(confirmRespec(state, state.players[0])).toBe(false);
   });
 });
 

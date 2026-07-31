@@ -109,7 +109,7 @@ describe("bot weapon swap (stepBotWeaponSwap)", () => {
     expect(wand.defId).toBe("test_wand");
     // The carried wait clamps to the wand's own full cooldown — never zero
     // (the juggle must not mint a free shot).
-    const full = weaponCooldownFor(state, wand);
+    const full = weaponCooldownFor(state, state.players[0], wand);
     expect(state.players[0].weaponCooldownMs).toBeGreaterThan(0);
     expect(state.players[0].weaponCooldownMs).toBeLessThanOrEqual(full);
   });

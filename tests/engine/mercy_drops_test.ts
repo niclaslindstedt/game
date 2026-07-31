@@ -74,16 +74,16 @@ describe("low-health desperation (medkits & armor)", () => {
     const state = startOn("medium");
     state.players[0].maxHp = 100;
     state.players[0].hp = 100;
-    expect(lowHealthDesperation(state)).toBe(0);
+    expect(lowHealthDesperation(state, state.players[0])).toBe(0);
     state.players[0].hp = 10; // under MERCY.lowHealthFull (15%)
-    expect(lowHealthDesperation(state)).toBe(1);
+    expect(lowHealthDesperation(state, state.players[0])).toBe(1);
   });
 
   it("guards a zero max-hp state instead of dividing by it", () => {
     const state = startOn("medium");
     state.players[0].maxHp = 0;
     state.players[0].hp = 0;
-    expect(lowHealthDesperation(state)).toBe(0);
+    expect(lowHealthDesperation(state, state.players[0])).toBe(0);
   });
 });
 
@@ -92,15 +92,15 @@ describe("low-durability desperation (repairs)", () => {
     const state = startOn("medium"); // crude_sword, durability 120
     const weapon = state.players[0].equipment.weapon;
     weapon.durability = 120;
-    expect(lowDurabilityDesperation(state)).toBe(0);
+    expect(lowDurabilityDesperation(state, state.players[0])).toBe(0);
     weapon.durability = 6; // under MERCY.lowDurabilityFull (10% of 120 = 12)
-    expect(lowDurabilityDesperation(state)).toBe(1);
+    expect(lowDurabilityDesperation(state, state.players[0])).toBe(1);
   });
 
   it("never triggers on the unbreakable sidearm", () => {
     const state = startOn("medium");
     state.players[0].equipment.weapon.durability = undefined; // sidearm-like
-    expect(lowDurabilityDesperation(state)).toBe(0);
+    expect(lowDurabilityDesperation(state, state.players[0])).toBe(0);
   });
 });
 
@@ -307,7 +307,7 @@ describe("armor pull toward armor pieces when hurt (easy)", () => {
     state.players[0].hp = hp;
     // gear (0.7 >= 0.6), pool pick charm (floor(0.7 * 2) = 1), then `extra`.
     scriptRng(state, [0.7, 0.7, ...extra]);
-    return rollEquipment(state).defId;
+    return rollEquipment(state, state.players[0]).defId;
   };
 
   it("swaps an armorless gear pick for an armor piece at low health", () => {
@@ -483,7 +483,7 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
     // gear (0.7 >= 0.6), pool pick charm; with the pull held no extra roll is
     // drawn (the 0.99 fallback would defeat it anyway) and the charm stands.
     scriptRng(state, [0.7, 0.7]);
-    expect(rollEquipment(state).defId).toBe("test_charm");
+    expect(rollEquipment(state, state.players[0]).defId).toBe("test_charm");
   });
 });
 

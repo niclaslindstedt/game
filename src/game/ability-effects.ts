@@ -41,7 +41,7 @@ import {
 } from "./abilities.ts";
 import { hitEnemy } from "./loot.ts";
 import { nearestEnemy } from "./step/weapon.ts";
-import type { ActiveAbility, Enemy, GameState } from "./types/index.ts";
+import type { ActiveAbility, Enemy, GameState, Player } from "./types/index.ts";
 import { inert, inertEnemy } from "./disposition.ts";
 
 /** The two scratch fields every timed effect keeps between ticks. A carrier
@@ -165,6 +165,7 @@ export const plainBilling: EffectBilling = () => undefined;
  */
 export function applyOrbit(
   state: GameState,
+  player: Player,
   orbit: NonNullable<AbilityDef["orbit"]>,
   scratch: EffectScratch,
   dt: number,
@@ -173,8 +174,6 @@ export function applyOrbit(
 ): void {
   scratch.angle += orbit.angularSpeed * dt;
   if (scratch.cooldownMs > 0) return;
-
-  const player = state.players[0];
   const candidates = enemiesInReach(
     state,
     player.pos,
@@ -215,13 +214,14 @@ export function applyOrbit(
  */
 export function applyStorm(
   state: GameState,
+  player: Player,
   storm: NonNullable<AbilityDef["storm"]>,
   scratch: EffectScratch,
   power: number,
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const victim = nearestEnemy(state.enemies, state.players[0].pos, storm.range);
+  const victim = nearestEnemy(state.enemies, player.pos, storm.range);
   if (!victim) return;
   scratch.cooldownMs = storm.intervalMs;
   state.events.push({ type: "lightning", pos: { ...victim.pos } });
@@ -240,12 +240,12 @@ export function applyStorm(
  */
 export function applyVolley(
   state: GameState,
+  player: Player,
   volley: NonNullable<AbilityDef["volley"]>,
   scratch: EffectScratch,
   power: number,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const player = state.players[0];
   const mark = nearestEnemy(state.enemies, player.pos, volley.range);
   if (!mark) return;
   scratch.cooldownMs = volley.intervalMs;
@@ -287,17 +287,14 @@ export function applyVolley(
  */
 export function applySingularity(
   state: GameState,
+  player: Player,
   singularity: NonNullable<AbilityDef["singularity"]>,
   scratch: EffectScratch,
   power: number,
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const seed = nearestEnemy(
-    state.enemies,
-    state.players[0].pos,
-    singularity.range,
-  );
+  const seed = nearestEnemy(state.enemies, player.pos, singularity.range);
   if (!seed) return;
   scratch.cooldownMs = singularity.intervalMs;
 
@@ -328,6 +325,7 @@ export function applySingularity(
  */
 export function applyImmolation(
   state: GameState,
+  player: Player,
   immolation: NonNullable<AbilityDef["immolation"]>,
   scratch: EffectScratch,
   power: number,
@@ -338,7 +336,7 @@ export function applyImmolation(
   const options = bill(state);
   const caught = enemiesInReach(
     state,
-    state.players[0].pos,
+    player.pos,
     immolation.radius,
     reachScratch,
   );

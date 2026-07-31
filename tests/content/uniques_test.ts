@@ -79,8 +79,8 @@ describe("mintUnique", () => {
     // The spread shows up in the actual per-hit damage — and it is a REAL
     // chase, not a rounding difference: the ceiling roll hits meaningfully
     // harder than the floor one on the very same named weapon.
-    expect(weaponDamageFor(state, strong)).toBeGreaterThan(
-      weaponDamageFor(state, weak) * 1.2,
+    expect(weaponDamageFor(state, state.players[0], strong)).toBeGreaterThan(
+      weaponDamageFor(state, state.players[0], weak) * 1.2,
     );
     // …but the fixed bonuses are the same on both copies.
     expect(strong.affixes).toEqual(weak.affixes);
@@ -110,7 +110,7 @@ describe("mintUnique", () => {
     // The ilvl scales power, not the requirement — wearable far below it.
     expect(baseReq).toBeLessThan(uniqueDef("walled_garden").ilvl);
     state.players[0].level = baseReq;
-    expect(meetsLevelReq(state, item)).toBe(true);
+    expect(meetsLevelReq(state, state.players[0], item)).toBe(true);
   });
 
   it("an ARTIFACT requires the level cap (min(maxLevel, ilvl)), not its base", () => {
@@ -124,15 +124,15 @@ describe("mintUnique", () => {
     expect(itemLevelReq(artifact)).toBe(cap);
     // One level short of the cap it cannot be worn; at the cap it can.
     state.players[0].level = cap - 1;
-    expect(meetsLevelReq(state, artifact)).toBe(false);
+    expect(meetsLevelReq(state, state.players[0], artifact)).toBe(false);
     state.players[0].level = cap;
-    expect(meetsLevelReq(state, artifact)).toBe(true);
+    expect(meetsLevelReq(state, state.players[0], artifact)).toBe(true);
   });
 
   it("a scaling unique bonus reaches the hero's effective stat once worn", () => {
     const state = startGame();
     state.players[0].stats.intelligence = 20;
-    const before = effectiveStat(state, "intelligence");
+    const before = effectiveStat(state, state.players[0], "intelligence");
     // THE PANOPTICON carries +2% INTELLIGENCE (a scaling bonus, at the
     // UNIQUE.scalingPctCap ceiling).
     const panopticon: Equipment = mintUnique(
@@ -140,7 +140,7 @@ describe("mintUnique", () => {
       "the_panopticon",
     );
     state.players[0].equipment.head = panopticon;
-    expect(effectiveStat(state, "intelligence")).toBe(
+    expect(effectiveStat(state, state.players[0], "intelligence")).toBe(
       Math.round(before * 1.02),
     );
   });

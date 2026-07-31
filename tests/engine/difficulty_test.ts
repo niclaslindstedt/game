@@ -262,8 +262,9 @@ describe("difficulty scaling in a run", () => {
   it("raises the drop chance with difficulty", () => {
     const medium = startOn("medium");
     const jesus = startOn("jesus");
-    expect(dropChance(jesus)).toBeCloseTo(
-      dropChance(medium) + difficultyDef("jesus").dropChanceBonus,
+    expect(dropChance(jesus, jesus.players[0])).toBeCloseTo(
+      dropChance(medium, medium.players[0]) +
+        difficultyDef("jesus").dropChanceBonus,
       10,
     );
   });
@@ -283,8 +284,8 @@ describe("difficulty scaling in a run", () => {
     let mediumTop = 0;
     let jesusTop = 0;
     for (let i = 0; i < 800; i++) {
-      if (isRolled(rollEquipment(medium).tier)) mediumTop++;
-      if (isRolled(rollEquipment(jesus).tier)) jesusTop++;
+      if (isRolled(rollEquipment(medium, medium.players[0]).tier)) mediumTop++;
+      if (isRolled(rollEquipment(jesus, jesus.players[0]).tier)) jesusTop++;
     }
     expect(jesusTop).toBeGreaterThan(0);
     expect(jesusTop).toBeGreaterThan(mediumTop);
@@ -328,7 +329,7 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       affixes: [],
       durability: 10,
     };
-    expect(isBetterEquipment(easy, weak)).toBe(false);
+    expect(isBetterEquipment(easy, easy.players[0], weak)).toBe(false);
     const strong = {
       id: 998,
       defId: "test_hammer", // 34 dmg / 640 ms — clearly out-scores the wand
@@ -338,7 +339,7 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       affixes: [],
       durability: 120,
     };
-    expect(isBetterEquipment(easy, strong)).toBe(true);
+    expect(isBetterEquipment(easy, easy.players[0], strong)).toBe(true);
   });
 
   it("banks the difficulty's stat head-start and recomputes the pools", () => {
@@ -370,17 +371,21 @@ describe("dodge and miss (playerDodgeMult / playerMissMult / enemyDodgeMult)", (
     // Cancel EASY's stat head start so only the multipliers differ.
     easy.players[0].stats.dexterity = 0;
     // The hero slips fewer enemy blows on the harder rungs…
-    expect(playerDodgeChance(easy)).toBeGreaterThan(playerDodgeChance(jesus));
+    expect(playerDodgeChance(easy, easy.players[0])).toBeGreaterThan(
+      playerDodgeChance(jesus, jesus.players[0]),
+    );
     // …whiffs his own swings more…
-    expect(playerMissChance(easy)).toBeLessThan(playerMissChance(jesus));
-    expect(playerMissChance(jesus)).toBeCloseTo(
-      playerMissChance(startOn("medium")) *
+    expect(playerMissChance(easy, easy.players[0])).toBeLessThan(
+      playerMissChance(jesus, jesus.players[0]),
+    );
+    expect(playerMissChance(jesus, jesus.players[0])).toBeCloseTo(
+      playerMissChance(startOn("medium"), startOn("medium").players[0]) *
         difficultyDef("jesus").playerMissMult,
       10,
     );
     // …and faces slipperier monsters.
-    expect(enemyDodgeChance(easy, 0.05)).toBeLessThan(
-      enemyDodgeChance(jesus, 0.05),
+    expect(enemyDodgeChance(easy, easy.players[0], 0.05)).toBeLessThan(
+      enemyDodgeChance(jesus, jesus.players[0], 0.05),
     );
   });
 });

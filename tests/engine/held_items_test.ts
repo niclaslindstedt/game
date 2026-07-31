@@ -237,7 +237,7 @@ describe("discarding banked abilities", () => {
 
     // Drag the middle slot out to the ground: it is gone (never activated) and
     // the row closes up oldest-first.
-    expect(discardHeldAbility(state, 1)).toBe("test_storm");
+    expect(discardHeldAbility(state, state.players[0], 1)).toBe("test_storm");
     expect(state.players[0].heldAbilities).toEqual([
       "test_orbit",
       "test_stasis",
@@ -256,7 +256,7 @@ describe("discarding banked abilities", () => {
     ];
     step(state, idle, DT); // bank three, one left grounded
 
-    discardHeldAbility(state, 0); // trash the oldest → a slot opens
+    discardHeldAbility(state, state.players[0], 0); // trash the oldest → a slot opens
     step(state, idle, DT); // overflow pickup now banks
     expect(state.items).toHaveLength(0);
     expect(state.players[0].heldAbilities).toEqual([
@@ -272,8 +272,8 @@ describe("discarding banked abilities", () => {
     state.items = [abilityAt(state, 500, "test_storm")];
     step(state, idle, DT);
 
-    expect(discardHeldAbility(state, 5)).toBeNull();
-    expect(discardHeldAbility(state, -1)).toBeNull();
+    expect(discardHeldAbility(state, state.players[0], 5)).toBeNull();
+    expect(discardHeldAbility(state, state.players[0], -1)).toBeNull();
     expect(state.players[0].heldAbilities).toEqual(["test_storm"]);
   });
 
@@ -287,7 +287,7 @@ describe("discarding banked abilities", () => {
     // The pickup is already spent, so dropping its slot loses nothing: the
     // running copy merely unlinks (it counts its duration out like a scripted
     // grant) and the dock slot frees for new loot at once.
-    expect(discardHeldAbility(state, 0)).toBe("test_storm");
+    expect(discardHeldAbility(state, state.players[0], 0)).toBe("test_storm");
     expect(state.players[0].heldAbilities).toEqual([]);
     expect(state.players[0].abilities).toHaveLength(1);
     expect(state.players[0].abilities[0]!.slot).toBeUndefined();

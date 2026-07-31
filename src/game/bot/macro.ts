@@ -523,7 +523,9 @@ export function unstuckInput(
     // making progress, not wedged.
     const minDisp = Math.min(
       UNSTUCK_MIN_DISP,
-      playerSpeed(state) * (elapsed / 1000) * UNSTUCK_SPEED_FRAC,
+      playerSpeed(state, state.players[0]) *
+        (elapsed / 1000) *
+        UNSTUCK_SPEED_FRAC,
     );
     const moved = distance(p, nav.lastPos);
     if (moved >= minDisp || hasReachableFoe(state)) nav.stuckMs = 0;

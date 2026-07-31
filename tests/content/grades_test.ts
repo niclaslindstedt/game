@@ -150,7 +150,10 @@ describe("grades in the loot roll", () => {
     const state = startGame();
     const grades = new Set<string>();
     for (let i = 0; i < 300; i++) {
-      const piece = rollEquipment(state, { slot: "weapon", mlvl: 100 });
+      const piece = rollEquipment(state, state.players[0], {
+        slot: "weapon",
+        mlvl: 100,
+      });
       const def = weaponDef(piece.defId);
       if (def.grade) grades.add(def.grade);
     }
@@ -162,7 +165,10 @@ describe("grades in the loot roll", () => {
   it("low-level monsters never drop them (the levelReq gate holds)", () => {
     const state = startGame();
     for (let i = 0; i < 200; i++) {
-      const piece = rollEquipment(state, { slot: "weapon", mlvl: 10 });
+      const piece = rollEquipment(state, state.players[0], {
+        slot: "weapon",
+        mlvl: 10,
+      });
       expect(weaponDef(piece.defId).grade).toBeUndefined();
     }
   });

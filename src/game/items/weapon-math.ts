@@ -15,15 +15,15 @@ import {
   type WeaponDef,
 } from "../defs/equipment.ts";
 import { talentBerserkMult } from "../talent-effects.ts";
-import type { Equipment, GameState } from "../types/index.ts";
+import type { Equipment, GameState, Player } from "../types/index.ts";
 import { committedLane, DAMAGE_STAT, SPEED_STAT } from "./class-stats.ts";
 import { playerCritChance, weaponCritMult } from "./combat-stats.ts";
 import { effectiveStat, weaponScoreCaches } from "./derived.ts";
 import { qualityMult } from "./quality.ts";
 
 /** The equipped weapon's per-hit damage before the crit roll. */
-export function weaponDamage(state: GameState): number {
-  return weaponDamageFor(state, state.players[0].equipment.weapon);
+export function weaponDamage(state: GameState, player: Player): number {
+  return weaponDamageFor(state, player, player.equipment.weapon);
 }
 
 /**
@@ -42,10 +42,14 @@ export function weaponDamage(state: GameState): number {
  * that wants the game to push back harder belongs on the MOB side (see
  * `WEAPON`'s header note).
  */
-export function weaponDamageFor(state: GameState, weapon: Equipment): number {
+export function weaponDamageFor(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
   const def = weaponDef(weapon.defId);
   const damageStat = DAMAGE_STAT[def.class];
-  const stat = effectiveStat(state, damageStat);
+  const stat = effectiveStat(state, player, damageStat);
   // STRENGTH scales physical weapons harder than INTELLIGENCE scales magic ones
   // (see STATS.damageBonusPerPoint) — a bruiser's damage is their one payoff,
   // while a mage's INT is already buying reach, cleave, cadence, and crit.
@@ -76,7 +80,7 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     multiplier *
     enhanced *
     qualityMult(weapon) *
-    abilitySurge(state).damage
+    abilitySurge(state, player).damage
   );
 }
 
@@ -90,7 +94,7 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
  * keeps using the deterministic average so a weapon still reads as one number.
  */
 export function rollWeaponDamage(state: GameState, weapon: Equipment): number {
-  return rollWeaponHit(state, weapon).damage;
+  return rollWeaponHit(state, state.players[0], weapon).damage;
 }
 
 /**
@@ -104,6 +108,7 @@ export function rollWeaponDamage(state: GameState, weapon: Equipment): number {
  */
 export function rollWeaponHit(
   state: GameState,
+  player: Player,
   weapon: Equipment,
 ): { damage: number; roll: number } {
   const v = weaponDamageVariance(weaponDef(weapon.defId));
@@ -114,7 +119,10 @@ export function rollWeaponHit(
   // auto-equip readouts keep showing the neutral full-health damage instead of
   // an hp-dependent figure that would jitter every hit.
   return {
-    damage: weaponDamageFor(state, weapon) * factor * talentBerserkMult(state),
+    damage:
+      weaponDamageFor(state, player, weapon) *
+      factor *
+      talentBerserkMult(state, player),
     roll,
   };
 }
@@ -126,9 +134,10 @@ export function rollWeaponHit(
  */
 export function weaponDamageRange(
   state: GameState,
+  player: Player,
   weapon: Equipment,
 ): { min: number; max: number } {
-  const avg = weaponDamageFor(state, weapon);
+  const avg = weaponDamageFor(state, player, weapon);
   const v = weaponDamageVariance(weaponDef(weapon.defId));
   return { min: Math.round(avg * (1 - v)), max: Math.round(avg * (1 + v)) };
 }
@@ -145,13 +154,17 @@ export function weaponDamageRange(
  * A RIGID weapon (`WeaponDef.rigid`) opts out entirely: its reach is the tool's
  * own, at every level and for every build — a bar cuts where the bar is.
  */
-export function weaponRangeFor(state: GameState, weapon: Equipment): number {
+export function weaponRangeFor(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
   const def = weaponDef(weapon.defId);
   if (def.rigid) return def.range;
   const reachBonus =
     def.class === "melee"
-      ? effectiveStat(state, "strength") * STATS.rangePerStr
-      : effectiveStat(state, "intelligence") * STATS.rangePerInt;
+      ? effectiveStat(state, player, "strength") * STATS.rangePerStr
+      : effectiveStat(state, player, "intelligence") * STATS.rangePerInt;
   return def.range * (1 + reachBonus);
 }
 
@@ -165,9 +178,13 @@ export function weaponRangeFor(state: GameState, weapon: Equipment): number {
  * both route through it, so a build's faster attacks raise every surface
  * consistently.
  */
-export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
+export function weaponCooldownFor(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
   const def = weaponDef(weapon.defId);
-  const stat = effectiveStat(state, SPEED_STAT[def.class]);
+  const stat = effectiveStat(state, player, SPEED_STAT[def.class]);
   // Magic's speed stat is the same INT that scales its damage/crit, so it uses a
   // discounted per-point rate (see STATS.magicAttackSpeedPerStat) to stop the
   // damage×speed compounding from running a deep-INT mage away from the field.
@@ -178,7 +195,10 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   // A running SURGE powerup (REACTOR SURGE) shortens the cadence too — the
   // other half of the overcharge, applied at the one source of truth for fire
   // rate so combat and every DPS readout quicken together.
-  return (def.cooldownMs * abilitySurge(state).cooldown) / (1 + stat * perStat);
+  return (
+    (def.cooldownMs * abilitySurge(state, player).cooldown) /
+    (1 + stat * perStat)
+  );
 }
 
 /**
@@ -196,6 +216,7 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
  */
 export function weaponSweepHalfAngle(
   state: GameState,
+  player: Player,
   weapon: Equipment,
 ): number {
   const def = weaponDef(weapon.defId);
@@ -203,7 +224,7 @@ export function weaponSweepHalfAngle(
   const base = (deg * Math.PI) / 360;
   if (def.rigid) return Math.min(STATS.aoeMaxHalfAngle, base);
   const widened =
-    base * (1 + effectiveStat(state, "intelligence") * STATS.aoePerInt);
+    base * (1 + effectiveStat(state, player, "intelligence") * STATS.aoePerInt);
   // Saturate at a HALF circle (STATS.aoeMaxHalfAngle = π/2): even extreme INT
   // sweeps at most a 180° arc, never wraps toward a full 360° disc.
   return Math.min(STATS.aoeMaxHalfAngle, widened);
@@ -220,12 +241,12 @@ export function weaponSweepHalfAngle(
  * per-hit damage (see weaponAssumedTargets): they start deliberately weak
  * and grow into their assumption.
  */
-export function maxMeleeTargets(state: GameState): number {
+export function maxMeleeTargets(state: GameState, player: Player): number {
   return Math.max(
     1,
     Math.floor(
       MELEE.baseAoeTargets +
-        effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
+        effectiveStat(state, player, "intelligence") * STATS.aoeTargetsPerInt,
     ),
   );
 }
@@ -241,20 +262,29 @@ export function maxMeleeTargets(state: GameState): number {
  * same math the balance budget is authored in, so "better" here matches the
  * design's intent.
  */
-export function weaponScore(state: GameState, weapon: Equipment): number {
-  const cache = weaponScoreCaches(state).score;
+export function weaponScore(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
+  const cache = weaponScoreCaches(state, player).score;
   const cached = cache.get(weapon);
   if (cached !== undefined) return cached;
-  const value = computeWeaponScore(state, weapon);
+  const value = computeWeaponScore(state, player, weapon);
   cache.set(weapon, value);
   return value;
 }
 
-function computeWeaponScore(state: GameState, weapon: Equipment): number {
+function computeWeaponScore(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
   const def = weaponDef(weapon.defId);
   const critLift =
     1 +
-    playerCritChance(state, def.class) * (weaponCritMult(state, weapon) - 1);
+    playerCritChance(state, player, def.class) *
+      (weaponCritMult(state, player, weapon) - 1);
   // AoE is credited at its CALIBRATED realized count (measured, not the old
   // over-optimistic ceiling — `WEAPON.meleeAoe` / `rangedAoe`), so auto-equip
   // ranks a weapon by the crowd it really lands on and never swaps a reliable
@@ -270,20 +300,20 @@ function computeWeaponScore(state: GameState, weapon: Equipment): number {
     ? rangedRankTargets(def)
     : Math.min(
         meleeRealizedTargets(
-          weaponSweepHalfAngle(state, weapon),
-          weaponRangeFor(state, weapon),
+          weaponSweepHalfAngle(state, player, weapon),
+          weaponRangeFor(state, player, weapon),
         ),
-        maxMeleeTargets(state),
+        maxMeleeTargets(state, player),
       );
   // ON-LANE PREFERENCE: a weapon of the hero's committed lane (`committedLane`)
   // is worth more to HIM than its raw budget — it rides his deepened attribute
   // and keeps his build coherent — so it out-ranks a marginally stronger
   // off-lane find rather than yanking him off his spec. See `WEAPON.laneAffinity`.
   const laneBonus =
-    def.class === committedLane(state) ? WEAPON.laneAffinity : 1;
+    def.class === committedLane(state, player) ? WEAPON.laneAffinity : 1;
   return (
-    ((weaponDamageFor(state, weapon) * 1000) /
-      weaponCooldownFor(state, weapon)) *
+    ((weaponDamageFor(state, player, weapon) * 1000) /
+      weaponCooldownFor(state, player, weapon)) *
     targets *
     critLift *
     laneBonus *
@@ -316,22 +346,31 @@ function weaponArmorPen(weapon: Equipment): number {
  * AoE weapon reads low here and earns it back across the crowd (see
  * `weaponAssumedTargets`).
  */
-export function weaponDps(state: GameState, weapon: Equipment): number {
-  const cache = weaponScoreCaches(state).dps;
+export function weaponDps(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
+  const cache = weaponScoreCaches(state, player).dps;
   const cached = cache.get(weapon);
   if (cached !== undefined) return cached;
-  const value = computeWeaponDps(state, weapon);
+  const value = computeWeaponDps(state, player, weapon);
   cache.set(weapon, value);
   return value;
 }
 
-function computeWeaponDps(state: GameState, weapon: Equipment): number {
+function computeWeaponDps(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
   const def = weaponDef(weapon.defId);
-  const perHit = weaponDamageFor(state, weapon);
-  const attacksPerSec = 1000 / weaponCooldownFor(state, weapon);
+  const perHit = weaponDamageFor(state, player, weapon);
+  const attacksPerSec = 1000 / weaponCooldownFor(state, player, weapon);
   const critLift =
     1 +
-    playerCritChance(state, def.class) * (weaponCritMult(state, weapon) - 1);
+    playerCritChance(state, player, def.class) *
+      (weaponCritMult(state, player, weapon) - 1);
   return perHit * attacksPerSec * critLift;
 }
 

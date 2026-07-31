@@ -157,10 +157,12 @@ describe("weapon stat requirements", () => {
       state.players[0].level = REQ;
 
       state.players[0].stats.strength = CHOSEN_PART - 1; // one point shy
-      expect(canEquip(state, weapon("req_blade"))).toBe(false);
+      expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(
+        false,
+      );
 
       state.players[0].stats.strength = CHOSEN_PART; // exactly enough
-      expect(canEquip(state, weapon("req_blade"))).toBe(true);
+      expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(true);
     }
   });
 
@@ -174,12 +176,16 @@ describe("weapon stat requirements", () => {
     // over-leveled — it banks.
     state.players[0].stats.strength = 0;
     setAutoStatGainsEnabled(false); // no auto STRENGTH to lean on
-    expect(meetsStatReq(state, weapon("req_blade"))).toBe(false);
-    expect(canEquip(state, weapon("req_blade"))).toBe(false);
+    expect(meetsStatReq(state, state.players[0], weapon("req_blade"))).toBe(
+      false,
+    );
+    expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(false);
 
     // Invest enough STRENGTH and the same find equips.
     state.players[0].stats.strength = need;
-    expect(meetsStatReq(state, weapon("req_blade"))).toBe(true);
-    expect(canEquip(state, weapon("req_blade"))).toBe(true);
+    expect(meetsStatReq(state, state.players[0], weapon("req_blade"))).toBe(
+      true,
+    );
+    expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(true);
   });
 });

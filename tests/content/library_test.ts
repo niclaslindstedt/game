@@ -756,7 +756,7 @@ describe("library numbers are the engine's", () => {
     const state = createGame(1, LEVEL_ORDER[0] as string);
     for (const row of hobble.ranks) {
       state.players[0].talents = { crippling_shot: row.rank };
-      const live = talentCrippling(state);
+      const live = talentCrippling(state, state.players[0]);
       expect(row.values.chance, `rank ${row.rank}`).toBeCloseTo(
         live!.chance,
         12,

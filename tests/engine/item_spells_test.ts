@@ -110,7 +110,7 @@ describe("granted spells (the `spell` affix)", () => {
   it("a worn stasis field slows foes inside its ring, not outside", () => {
     const state = startGame();
     wearCharm(state, [{ kind: "spell", spell: "stasis", rank: 1 }]);
-    syncItemSpells(state);
+    syncItemSpells(state, state.players[0]);
     const near = {
       x: state.players[0].pos.x + SPELL.stasis.radius - 10,
       y: state.players[0].pos.y,
@@ -119,19 +119,23 @@ describe("granted spells (the `spell` affix)", () => {
       x: state.players[0].pos.x + SPELL.stasis.radius + 200,
       y: state.players[0].pos.y,
     };
-    expect(stasisFactorAt(state, near)).toBe(SPELL.stasis.slowFactor);
-    expect(stasisFactorAt(state, far)).toBe(1);
+    expect(stasisFactorAt(state, state.players[0], near)).toBe(
+      SPELL.stasis.slowFactor,
+    );
+    expect(stasisFactorAt(state, state.players[0], far)).toBe(1);
   });
 
   it("INTELLIGENCE shortens the granted intervals, floored", () => {
     const state = startGame();
-    const base = stormSpellBlock(state, 1).intervalMs;
+    const base = stormSpellBlock(state, state.players[0], 1).intervalMs;
     state.players[0].stats.intelligence = 20;
-    const quicker = stormSpellBlock(state, 1).intervalMs;
+    const quicker = stormSpellBlock(state, state.players[0], 1).intervalMs;
     expect(quicker).toBeLessThan(base);
     // A tower of INT can halve the cadence, never abolish it.
     state.players[0].stats.intelligence = 10_000;
-    expect(spellIntervalScale(state)).toBe(SPELL.intervalFloor);
+    expect(spellIntervalScale(state, state.players[0])).toBe(
+      SPELL.intervalFloor,
+    );
   });
 
   it("ranks from multiple worn sources ADD into one stronger spell", () => {
@@ -145,7 +149,7 @@ describe("granted spells (the `spell` affix)", () => {
       ilvl: 50,
       affixes: [{ kind: "spell", spell: "orbit", rank: 2 }],
     };
-    syncItemSpells(state);
+    syncItemSpells(state, state.players[0]);
     expect(state.players[0].itemSpells).toEqual([
       expect.objectContaining({ spell: "orbit", rank: 3 }),
     ]);
@@ -254,11 +258,11 @@ describe("procs (the `proc` affix)", () => {
 describe("sure strike", () => {
   it("zeroes the hero's innate miss chance while worn", () => {
     const state = startGame();
-    expect(playerMissChance(state)).toBeGreaterThan(0);
+    expect(playerMissChance(state, state.players[0])).toBeGreaterThan(0);
     wearCharm(state, [{ kind: "sureStrike" }]);
-    expect(playerMissChance(state)).toBe(0);
+    expect(playerMissChance(state, state.players[0])).toBe(0);
     state.players[0].equipment.amulet = null;
-    expect(playerMissChance(state)).toBeGreaterThan(0);
+    expect(playerMissChance(state, state.players[0])).toBeGreaterThan(0);
   });
 });
 

@@ -165,7 +165,7 @@ function holdsNuke(state: GameState): boolean {
  */
 export function canDropNuke(state: GameState): boolean {
   if (holdsNuke(state)) return false;
-  return !mercyRescueWaiting(state, "bomb");
+  return !mercyRescueWaiting(state, state.players[0], "bomb");
 }
 
 /**
@@ -265,7 +265,7 @@ export function staminaDrinkChance(state: GameState): number {
   if (state.players[0].stamina > 0) return 0;
   // One rope at a time: while an un-collected drink already waits in view,
   // the stranded hero is not thrown another (see mercyRescueWaiting).
-  if (mercyRescueWaiting(state, "drink")) return 0;
+  if (mercyRescueWaiting(state, state.players[0], "drink")) return 0;
   // Nor is a hero with a full pouch thrown one: the way out of the winded jog
   // is already in his pocket, and the rope would only be refused on touch. (The
   // ORDINARY rain still trickles drinks onto the ground at the appetite floor —
@@ -295,7 +295,7 @@ function applyKnockback(
   weaponClass?: WeaponClass,
 ): void {
   if (weaponClass !== "melee" && weaponClass !== "ranged") return;
-  if (!heroHasKnockback(state)) return;
+  if (!heroHasKnockback(state, state.players[0])) return;
   const def = enemyDef(enemy.defId);
   const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
   if (scale <= 0) return;
@@ -330,7 +330,7 @@ function applyRangedShotProcs(
   weaponClass?: WeaponClass,
 ): void {
   if (weaponClass !== "ranged") return;
-  const knock = talentConcussive(state);
+  const knock = talentConcussive(state, state.players[0]);
   if (knock && state.rng() < knock.chance) {
     const def = enemyDef(enemy.defId);
     const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
@@ -350,7 +350,7 @@ function applyRangedShotProcs(
       resolveObstacles(state, enemy.pos, def.radius);
     }
   }
-  const slow = talentCrippling(state);
+  const slow = talentCrippling(state, state.players[0]);
   if (slow && state.rng() < slow.chance) {
     // Keep the longest slow if a foe is re-crippled mid-hobble.
     enemy.chillMs = Math.max(enemy.chillMs ?? 0, slow.slowMs);
@@ -514,7 +514,7 @@ export function hitEnemy(
   // foe's DODGE. Either spends the swing and deals nothing. Rolled only for
   // weapon attacks; abilities skip it (`rollAccuracy` unset) and always hit.
   if (opts?.rollAccuracy) {
-    if (state.rng() < playerMissChance(state)) {
+    if (state.rng() < playerMissChance(state, state.players[0])) {
       state.events.push({
         type: "enemyMiss",
         pos: { ...enemy.pos },
@@ -524,7 +524,11 @@ export function hitEnemy(
     }
     if (
       state.rng() <
-      enemyDodgeChance(state, def.dodgeChance ?? ACCURACY.enemyDodge)
+      enemyDodgeChance(
+        state,
+        state.players[0],
+        def.dodgeChance ?? ACCURACY.enemyDodge,
+      )
     ) {
       state.events.push({
         type: "enemyDodge",
@@ -541,7 +545,7 @@ export function hitEnemy(
   // crit false, so nothing downstream flashes a crit popup over a figure the
   // crit multiplier had no part in.
   const crit =
-    state.rng() < playerCritChance(state, weaponClass) &&
+    state.rng() < playerCritChance(state, state.players[0], weaponClass) &&
     opts?.executeBars === undefined;
   // MOB ARMOR shaves a PHYSICAL blow (melee/ranged weapon); magic weapons,
   // powerups, procs and environmental hits (no melee/ranged class) ignore it —
@@ -555,7 +559,9 @@ export function hitEnemy(
   // armor a physical blow ignores — but only the hero's OWN weapon blow; a
   // powerup or companion attack doesn't wield the hero's relics.
   const gearPen =
-    opts?.noMenace || opts?.companionId !== undefined ? 0 : heroArmorPen(state);
+    opts?.noMenace || opts?.companionId !== undefined
+      ? 0
+      : heroArmorPen(state, state.players[0]);
   // AN EXECUTION IS NOT DAMAGE (`items/execute.ts`): it is priced in the body's
   // own health and passes both the armor shave and the crit multiplier by —
   // armor would quietly drop it under the app's burst ladder at depth, and
@@ -794,7 +800,7 @@ function queueWeaponProcs(
   enemy: Enemy,
   trigger: ProcTrigger,
 ): void {
-  const procs = equippedProcs(state, trigger);
+  const procs = equippedProcs(state, state.players[0], trigger);
   for (const proc of procs) {
     if (state.rng() >= proc.chance) continue;
     state.pendingProcs.push({
@@ -817,7 +823,7 @@ function queueWeaponProcs(
  * procs guarantee as the weapon triggers.
  */
 export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
-  const procs = equippedProcs(state, "struck");
+  const procs = equippedProcs(state, state.players[0], "struck");
   for (const proc of procs) {
     if (state.rng() >= proc.chance) continue;
     state.pendingProcs.push({
@@ -1147,7 +1153,7 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
           // Scripted story drops arrive exactly as tuned — the make-quality
           // roll would let a BROKEN one undercut the opening the schedule
           // promises (HQ's baton on kill 2), so it is pinned to normal.
-          equipment: rollEquipment(state, {
+          equipment: rollEquipment(state, state.players[0], {
             defId: entry.weapon,
             quality: "normal",
           }),
@@ -1170,7 +1176,7 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
           id: state.nextId++,
           kind: "equipment",
           pos,
-          equipment: rollEquipment(state, {
+          equipment: rollEquipment(state, state.players[0], {
             defId: entry.gear,
             quality: "normal",
           }),
@@ -1256,7 +1262,7 @@ function dropMinionLoot(
         id: state.nextId++,
         kind: "equipment",
         pos,
-        equipment: rollEquipment(state, {
+        equipment: rollEquipment(state, state.players[0], {
           defId: trophy,
           tierBonus: LOOT.allClearTierBonus,
           mlvl,
@@ -1312,7 +1318,8 @@ function dropMinionLoot(
   // each full 1.0 of the product is a guaranteed run of the drop ladder and
   // the remainder the chance of one more, capped so LUCK stacking can't
   // carpet the field. The rng draw order for an ordinary mob is unchanged.
-  const baseChance = (dropChance(state) + dropBonus) * efficiency;
+  const baseChance =
+    (dropChance(state, state.players[0]) + dropBonus) * efficiency;
   // A HELLBORN kill pays in WHOLE PAYOUTS like a rare mob's, but its multiplier
   // GROWS with the rampage (`dropMult + stages × dropMultPerStage`) — the farm
   // the gates exist to be. A hellborn that also carries a rarity takes the
@@ -1360,12 +1367,13 @@ function dropMinionLoot(
   // boost holds fire while the rescue it already threw waits un-collected in
   // view (mercyRescueWaiting), so a signal keeps at most one rope on the
   // ground however long the player sits on it.
-  const medkitBoost = mercyRescueWaiting(state, "medkit")
+  const medkitBoost = mercyRescueWaiting(state, state.players[0], "medkit")
     ? 0
-    : lowHealthDesperation(state) * diff.mercy.medkitBonus;
-  const repairBoost = mercyRescueWaiting(state, "repair")
+    : lowHealthDesperation(state, state.players[0]) * diff.mercy.medkitBonus;
+  const repairBoost = mercyRescueWaiting(state, state.players[0], "repair")
     ? 0
-    : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
+    : lowDurabilityDesperation(state, state.players[0]) *
+      diff.mercy.repairBonus;
   // APPETITE (see `medkitAppetite` / `consumableAppetite`): each stacked
   // consumable's slice is scaled by how stocked its pouch is (SUPPLY) against
   // how far down the pool it refills has fallen (NEED). A full pouch keeps only
@@ -1380,13 +1388,14 @@ function dropMinionLoot(
     LOOT.medkitShare *
     diff.medkitDropMult *
     (1 + medkitBoost) *
-    medkitAppetite(state, mlvl);
+    medkitAppetite(state, state.players[0], mlvl);
   const wantedRepair =
     LOOT.repairShare *
     BALANCE.repairDrops *
     (1 + repairBoost) *
-    consumableAppetite(state, "repair");
-  const wantedDrink = LOOT.drinkShare * consumableAppetite(state, "drink");
+    consumableAppetite(state, state.players[0], "repair");
+  const wantedDrink =
+    LOOT.drinkShare * consumableAppetite(state, state.players[0], "drink");
   // FIT THE LADDER UNDER ONE ROLL. The bands are cumulative against a single
   // `rng()` in [0,1), so a boosted consumable slice that pushes the total past 1
   // silently kills every band BELOW it — the drinks and the arrow tail would go
@@ -1453,7 +1462,7 @@ function dropMinionLoot(
           // A RARE/UNIQUE mob's payouts share the elite named-tier bonus and
           // skip the plain-minion penalty (see `rollTier`); plain trash rolls
           // named tiers at a fraction of the odds.
-          equipment: rollEquipment(state, {
+          equipment: rollEquipment(state, state.players[0], {
             tierBonus,
             mlvl,
             mobRarity: def.rarity,
@@ -1642,7 +1651,7 @@ function dropGuaranteedLoot(
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(),
-        equipment: rollEquipment(state, {
+        equipment: rollEquipment(state, state.players[0], {
           defId: spec.defId,
           tier: spec.tier,
           tierBonus: loot.tierBonus,
@@ -1692,7 +1701,7 @@ function dropGuaranteedLoot(
           id: state.nextId++,
           kind: "equipment",
           pos: scatter(),
-          equipment: rollEquipment(state, { tier, mlvl }),
+          equipment: rollEquipment(state, state.players[0], { tier, mlvl }),
         },
         at,
       );
@@ -1709,7 +1718,7 @@ function dropGuaranteedLoot(
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(),
-        equipment: rollEquipment(state, {
+        equipment: rollEquipment(state, state.players[0], {
           slot,
           tierBonus: loot.tierBonus,
           mlvl,
@@ -1843,9 +1852,9 @@ export function grantXp(state: GameState, amount: number): void {
     // The automatic base gains land with the level itself (they derive from
     // `player.level` — see leveling.ts), so re-derive everything they feed:
     // the hp/stamina pools (STAMINA) and the carry bag (STRENGTH).
-    recomputeMaxHp(state);
-    recomputeMaxStamina(state);
-    syncInventoryCapacity(state);
+    recomputeMaxHp(state, player);
+    recomputeMaxStamina(state, player);
+    syncInventoryCapacity(state, player);
     // A new level starts at full strength: the ding is also the heal, and it
     // tops off the sprint pool too.
     player.hp = player.maxHp;

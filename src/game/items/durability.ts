@@ -6,7 +6,12 @@
 
 import { ARMOR, ARMOR_TYPES, ECONOMY } from "../config/index.ts";
 import { gearDef, isWeaponDef } from "../defs/equipment.ts";
-import type { ArmorType, Equipment, GameState } from "../types/index.ts";
+import type {
+  ArmorType,
+  Equipment,
+  GameState,
+  Player,
+} from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import {
   equippedPieces,
@@ -64,13 +69,14 @@ export function armorValueOf(piece: Equipment): number {
  * (see `armorValueOf` — broken pieces count zero). The single number the
  * damage reduction, the stat panel, and gear comparisons read.
  */
-export function totalArmor(state: GameState): number {
+export function totalArmor(state: GameState, player: Player): number {
   // Read per hit taken at horde scale — memoized on the loadout (armor values
   // hang off piece identity + the broken bit, both in the memo's snapshot).
-  const memo = heroLoadoutMemo(state);
+  const memo = heroLoadoutMemo(state, player);
   if (memo.totalArmor !== undefined) return memo.totalArmor;
   let total = 0;
-  for (const piece of equippedPieces(state)) total += armorValueOf(piece);
+  for (const piece of equippedPieces(state, player))
+    total += armorValueOf(piece);
   memo.totalArmor = total;
   return total;
 }
@@ -87,9 +93,10 @@ export function totalArmor(state: GameState): number {
  */
 export function armorReduction(
   state: GameState,
+  player: Player,
   attackerLevel: number,
 ): number {
-  const armor = totalArmor(state);
+  const armor = totalArmor(state, player);
   if (armor <= 0) return 0;
   const k = ARMOR.kBase + ARMOR.kPerLevel * Math.max(1, attackerLevel);
   return Math.min(ARMOR.maxReduction, armor / (armor + k));
@@ -102,10 +109,10 @@ export function armorReduction(
  * see `isArmorBroken`) and announces itself with an `armorBroke` event; the
  * derived stats are re-derived since its bonuses just went silent.
  */
-export function wearWornArmor(state: GameState): void {
+export function wearWornArmor(state: GameState, player: Player): void {
   let broke = false;
   for (const slot of ARMOR_SLOTS) {
-    const piece = state.players[0].equipment[slot];
+    const piece = player.equipment[slot];
     if (!piece || piece.durability === undefined || piece.durability <= 0) {
       continue;
     }
@@ -116,8 +123,8 @@ export function wearWornArmor(state: GameState): void {
     }
   }
   if (broke) {
-    recomputeMaxHp(state);
-    recomputeMaxStamina(state);
+    recomputeMaxHp(state, player);
+    recomputeMaxStamina(state, player);
   }
 }
 
@@ -127,11 +134,11 @@ export function wearWornArmor(state: GameState): void {
  * False when there is nothing to mend (no worn piece is short) so the kit
  * isn't spent on an intact set.
  */
-export function repairWornArmor(state: GameState): boolean {
+export function repairWornArmor(state: GameState, player: Player): boolean {
   let mended = false;
   let revived = false;
   for (const slot of ARMOR_SLOTS) {
-    const piece = state.players[0].equipment[slot];
+    const piece = player.equipment[slot];
     if (!piece || piece.durability === undefined) continue;
     const max = equipmentMaxDurability(piece);
     if (piece.durability >= max) continue;
@@ -141,8 +148,8 @@ export function repairWornArmor(state: GameState): boolean {
   }
   // A revived piece's bonuses just came back online.
   if (revived) {
-    recomputeMaxHp(state);
-    recomputeMaxStamina(state);
+    recomputeMaxHp(state, player);
+    recomputeMaxStamina(state, player);
   }
   return mended;
 }
@@ -175,8 +182,8 @@ export function repairCost(piece: Equipment): number {
  * every breakable piece riding in the bag — each priced by `repairCost`. The
  * quote the merchant's REPAIR action charges; 0 when nothing needs mending.
  */
-export function repairAllCost(state: GameState): number {
-  const p = state.players[0];
+export function repairAllCost(state: GameState, player: Player): number {
+  const p = player;
   let total = repairCost(p.equipment.weapon);
   for (const slot of ARMOR_SLOTS) {
     const piece = p.equipment[slot];
@@ -195,8 +202,8 @@ export function repairAllCost(state: GameState): number {
  * ground repair kit or a scripted mend can reuse it. Returns whether anything
  * changed.
  */
-export function repairAll(state: GameState): boolean {
-  const p = state.players[0];
+export function repairAll(state: GameState, player: Player): boolean {
+  const p = player;
   let mended = false;
   let wornArmorRevived = false;
   const mend = (piece: Equipment | null, wornArmor: boolean): void => {
@@ -212,8 +219,8 @@ export function repairAll(state: GameState): boolean {
   for (const cell of p.inventory) mend(cell, false);
   // A revived worn piece's bonuses just came back online.
   if (wornArmorRevived) {
-    recomputeMaxHp(state);
-    recomputeMaxStamina(state);
+    recomputeMaxHp(state, player);
+    recomputeMaxStamina(state, player);
   }
   // Re-equip the weapons durability booted from the hand, in the ORDER they
   // were shed: the earliest-shed (the hero's main before the break cascade)
@@ -228,7 +235,7 @@ export function repairAll(state: GameState): boolean {
   }
   booted.sort((a, b) => a.seq - b.seq);
   for (const { index } of booted) {
-    if (equipFromInventory(state, index)) break;
+    if (equipFromInventory(state, player, index)) break;
   }
   // The whole kit is whole again: drop every shed marker (worn weapon and every
   // bagged weapon) so a later break starts the ordering fresh.
@@ -250,15 +257,15 @@ export function repairAll(state: GameState): boolean {
  * a repair can re-equip them in that order (`repairAll`) — see `Equipment.
  * unequippedAt`.
  */
-function nextUnequipSeq(state: GameState): number {
+function nextUnequipSeq(state: GameState, player: Player): number {
   let max = -1;
   const consider = (piece: Equipment | null): void => {
     if (piece && piece.unequippedAt !== undefined && piece.unequippedAt > max) {
       max = piece.unequippedAt;
     }
   };
-  consider(state.players[0].equipment.weapon);
-  for (const cell of state.players[0].inventory) consider(cell);
+  consider(player.equipment.weapon);
+  for (const cell of player.inventory) consider(cell);
   return max + 1;
 }
 
@@ -279,8 +286,11 @@ function nextUnequipSeq(state: GameState): number {
  * however deep the cleave went: the break happens exactly once, on the blow
  * that reached the bottom.
  */
-export function wearEquippedWeapon(state: GameState, times = 1): void {
-  const player = state.players[0];
+export function wearEquippedWeapon(
+  state: GameState,
+  player: Player,
+  times = 1,
+): void {
   const weapon = player.equipment.weapon;
   if (weapon.durability === undefined) return; // the unbreakable sidearm
   weapon.durability = Math.max(0, weapon.durability - Math.max(1, times));
@@ -291,11 +301,11 @@ export function wearEquippedWeapon(state: GameState, times = 1): void {
   // Stamp the shed order BEFORE picking the replacement, then choose the best
   // survivor from the bag (the just-broken blade is excluded — it isn't in the
   // bag yet, and `canEquip` would refuse it anyway).
-  weapon.unequippedAt = nextUnequipSeq(state);
-  const replacement = takeBestBagWeapon(state);
+  weapon.unequippedAt = nextUnequipSeq(state, player);
+  const replacement = takeBestBagWeapon(state, player);
   // Stow the broken weapon so it can be repaired later; a full bag drops it on
   // the ground rather than letting it vanish — a broken weapon is never lost.
-  if (!addToInventory(state, weapon)) {
+  if (!addToInventory(state, player, weapon)) {
     dropItem(
       state,
       {
@@ -315,9 +325,9 @@ export function wearEquippedWeapon(state: GameState, times = 1): void {
   // Skipping it here left the hp/stamina bars sized to the broken weapon's
   // stats until the next recompute (a level-up, a stat spend), so a drink or
   // heal could top off to a stale max. Grow-only for the bag (STRENGTH).
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  syncInventoryCapacity(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  syncInventoryCapacity(state, player);
   state.events.push({
     type: "autoEquipped",
     defId: player.equipment.weapon.defId,
@@ -329,8 +339,11 @@ export function wearEquippedWeapon(state: GameState, times = 1): void {
  * False when there is nothing to repair — unbreakable or already pristine —
  * so the kit can stay on the ground for later.
  */
-export function repairEquippedWeapon(state: GameState): boolean {
-  const weapon = state.players[0].equipment.weapon;
+export function repairEquippedWeapon(
+  state: GameState,
+  player: Player,
+): boolean {
+  const weapon = player.equipment.weapon;
   if (weapon.durability === undefined) return false;
   const max = equipmentMaxDurability(weapon);
   if (weapon.durability >= max) return false;

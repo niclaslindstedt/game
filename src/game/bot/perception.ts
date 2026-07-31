@@ -457,7 +457,11 @@ export function bestEscapeTarget(
  * a clear line? While there is, standing still is FIGHTING, not being wedged, so
  * the stall detector holds off (a boss/pack brawl never trips the unstuck). */
 export function hasReachableFoe(state: GameState): boolean {
-  const range = weaponRangeFor(state, state.players[0].equipment.weapon);
+  const range = weaponRangeFor(
+    state,
+    state.players[0],
+    state.players[0].equipment.weapon,
+  );
   const rangeSq = range * range;
   const r = PLAYER.radius;
   const scan = scanThreats(state);

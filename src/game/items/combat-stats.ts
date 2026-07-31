@@ -26,7 +26,12 @@ import {
   talentSpeedMult,
 } from "../talent-effects.ts";
 import { BALANCE } from "../tuning.ts";
-import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
+import type {
+  Equipment,
+  GameState,
+  Player,
+  WeaponClass,
+} from "../types/index.ts";
 import { CRIT_STAT } from "./class-stats.ts";
 import {
   contributingPieces,
@@ -44,26 +49,30 @@ import {
  * BARRIER's pool → the WARD's lethal clip. Returns the hp damage that GETS
  * THROUGH.
  */
-export function absorbPlayerDamage(state: GameState, hpDamage: number): number {
+export function absorbPlayerDamage(
+  state: GameState,
+  player: Player,
+  hpDamage: number,
+): number {
   // PALE SHROUD: while the hero is spectral nothing reaches him. The contact
   // loop and the hostile-shot path already turn their blows away before they
   // get here — this is the catch-all for every other damage source, so a
   // phased hero can never be hurt through a path that forgot to ask.
-  if (isPhased(state)) return 0;
+  if (isPhased(state, player)) return 0;
   // TALENT flat mitigation (Ironhide + Mage Armor) cuts a share of every blow
   // that reaches the hero — applied here, the one choke point every player-
   // damage path funnels through, after worn armor. Clamped well under 1 so no
   // stack of ranks can make the hero immune.
-  const reduction = talentDamageReduction(state);
+  const reduction = talentDamageReduction(state, player);
   if (reduction > 0) hpDamage *= 1 - Math.min(0.9, reduction);
   // BLAST SHIELD: the shell eats what it can and shatters when its pool runs
   // out — after mitigation, so the plating spends its budget on the damage
   // that would actually have landed.
-  hpDamage = absorbWithBarriers(state, hpDamage);
+  hpDamage = absorbWithBarriers(state, player, hpDamage);
   // CONTINUITY PROTOCOL: last of all, a blow that would kill is clipped to
   // leave the hero standing. Last on purpose — the ward is the floor under
   // everything else, not a substitute for it.
-  return clipLethalDamage(state, hpDamage);
+  return clipLethalDamage(state, player, hpDamage);
 }
 
 /**
@@ -77,14 +86,18 @@ export function absorbPlayerDamage(state: GameState, hpDamage: number): number {
  * step.ts, the DPS readouts, auto-equip scoring); the budget model prices off
  * the stat-independent floor.
  */
-export function weaponCritMult(state: GameState, weapon: Equipment): number {
+export function weaponCritMult(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
   const def = weaponDef(weapon.defId);
   const mult =
     baseCritMult(def) +
-    effectiveStat(state, "dexterity") * STATS.critDamagePerDex +
+    effectiveStat(state, player, "dexterity") * STATS.critDamagePerDex +
     // Executioner (melee tree) / Deadeye (ranged tree) deepen the crit blow of
     // their own weapon class; magic has no crit talent, so this is 0 there.
-    talentCritDamageBonus(state, def.class);
+    talentCritDamageBonus(state, player, def.class);
   if (def.class === "magic") return Math.min(mult, STATS.magicCritCap);
   return mult;
 }
@@ -109,20 +122,22 @@ export function saturateToward(x: number, cap: number): number {
 
 export function playerCritChance(
   state: GameState,
+  player: Player,
   weaponClass: WeaponClass = weaponDef(state.players[0].equipment.weapon.defId)
     .class,
 ): number {
   let chance =
     STATS.baseCritChance +
-    effectiveStat(state, CRIT_STAT[weaponClass]) * STATS.critChancePerStat +
-    effectiveStat(state, "luck") * STATS.critChancePerLuck;
+    effectiveStat(state, player, CRIT_STAT[weaponClass]) *
+      STATS.critChancePerStat +
+    effectiveStat(state, player, "luck") * STATS.critChancePerLuck;
   // The gear/affix/set crit sum only moves with the loadout — memoized, since
   // this is rolled per weapon blow at horde scale.
-  const memo = heroLoadoutMemo(state);
+  const memo = heroLoadoutMemo(state, player);
   let critBonus = memo.critBonus;
   if (critBonus === undefined) {
     critBonus = 0;
-    for (const piece of contributingPieces(state)) {
+    for (const piece of contributingPieces(state, player)) {
       if (!isWeaponDef(piece.defId)) {
         critBonus += gearDef(piece.defId).bonuses.critChance ?? 0;
       }
@@ -131,7 +146,7 @@ export function playerCritChance(
       }
     }
     // SET BONUSES add their `crit` (several sets reward the full kit with it).
-    for (const affix of setBonusAffixes(state)) {
+    for (const affix of setBonusAffixes(state, player)) {
       if (affix.kind === "crit") critBonus += affix.value;
     }
     memo.critBonus = critBonus;
@@ -139,7 +154,7 @@ export function playerCritChance(
   chance += critBonus;
   // Executioner (melee) / Deadeye (ranged) add crit chance to their own weapon
   // class — the same weapon-class gating as the crit-damage half above.
-  chance += talentCritChanceBonus(state, weaponClass);
+  chance += talentCritChanceBonus(state, player, weaponClass);
   // Saturate toward the ceiling — high crit-stat/affix builds approach but never
   // reach `critCap`, with the last points crawling (see `saturateToward`).
   return saturateToward(chance, STATS.critCap);
@@ -152,16 +167,16 @@ export function playerCritChance(
  * rungs fewer) and capped at `DODGE.max` so no build becomes untouchable.
  * Rolled in the contact-damage path (step.ts) and surfaced on the stat panel.
  */
-export function playerDodgeChance(state: GameState): number {
+export function playerDodgeChance(state: GameState, player: Player): number {
   // Saturate toward `DODGE.max` (well below 1.0) rather than hard-clamp, so DEX
   // past the old clamp point keeps buying a little dodge with a steep, expensive
   // top — no build becomes untouchable even at the raised stat cap.
   const linear =
     (DODGE.base +
-      effectiveStat(state, "dexterity") * DODGE.perDex +
-      effectiveStat(state, "luck") * DODGE.perLuck +
+      effectiveStat(state, player, "dexterity") * DODGE.perDex +
+      effectiveStat(state, player, "luck") * DODGE.perLuck +
       // EVASION (ranged tree) sharpens the sidestep on top of DEX's reflexes.
-      talentDodgeBonus(state)) *
+      talentDodgeBonus(state, player)) *
     difficultyDef(state.difficulty).playerDodgeMult;
   return saturateToward(linear, DODGE.max);
 }
@@ -173,16 +188,17 @@ export function playerDodgeChance(state: GameState): number {
  * the hero's own accuracy — independent of the target — and is surfaced on the
  * stat panel (as HIT rate) and rolled in `hitEnemy` for weapon attacks.
  */
-export function playerMissChance(state: GameState): number {
+export function playerMissChance(state: GameState, player: Player): number {
   // SURE STRIKE (a legendary affix): the weapon simply never whiffs on its
   // own — the innate miss reads zero, floor and difficulty notwithstanding.
   // The foe's DODGE is still its own move (see `enemyDodgeChance`).
-  if (hasActiveAffix(state, "sureStrike")) {
+  if (hasActiveAffix(state, player, "sureStrike")) {
     return 0;
   }
   return Math.max(
     ACCURACY.minMiss,
-    (ACCURACY.baseMiss - effectiveStat(state, "dexterity") * ACCURACY.perDex) *
+    (ACCURACY.baseMiss -
+      effectiveStat(state, player, "dexterity") * ACCURACY.perDex) *
       difficultyDef(state.difficulty).playerMissMult,
   );
 }
@@ -195,10 +211,14 @@ export function playerMissChance(state: GameState): number {
  * in `hitEnemy` after the miss check, so a build that pumps DEX both whiffs
  * and gets dodged less. Mirror of `enemyCritChance`'s LUCK-avoidance shape.
  */
-export function enemyDodgeChance(state: GameState, base: number): number {
+export function enemyDodgeChance(
+  state: GameState,
+  player: Player,
+  base: number,
+): number {
   return Math.max(
     0,
-    (base - effectiveStat(state, "dexterity") * ACCURACY.perDex) *
+    (base - effectiveStat(state, player, "dexterity") * ACCURACY.perDex) *
       difficultyDef(state.difficulty).enemyDodgeMult,
   );
 }
@@ -216,10 +236,10 @@ export { playerAppearance, playerSuited } from "./appearance.ts";
  * (in the talent era) DEXTERITY. A glass-cannon bruiser still gives up some
  * mobility for its firepower rather than getting both.
  */
-export function playerSpeed(state: GameState): number {
+export function playerSpeed(state: GameState, player: Player): number {
   const burden = Math.max(
     STATS.strengthSlowFloor,
-    1 - effectiveStat(state, "strength") * STATS.strengthSlowPerPoint,
+    1 - effectiveStat(state, player, "strength") * STATS.strengthSlowPerPoint,
   );
   // WIND RUNNER (ranged tree) is the always-on mobility that succeeds the SPEED
   // stat.
@@ -232,23 +252,27 @@ export function playerSpeed(state: GameState): number {
     BALANCE.tempo *
     BALANCE.playerSpeed *
     burden *
-    talentSpeedMult(state) *
+    talentSpeedMult(state, player) *
     // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart away).
-    talentEvasionBurstMult(state) *
+    talentEvasionBurstMult(state, player) *
     // PALE SHROUD: a hero with nothing solid left to drag drifts faster.
-    abilitySpeedMult(state) *
+    abilitySpeedMult(state, player) *
     // A SNARE FIELD underfoot (the elite tier's `snare_field`). Applied at this
     // one site, which owns the hero's pace, so the sprint pool, the winded jog
     // and every talent above ride the hold instead of fighting it. Already
     // resolved for this tick by `stepScorches` — see `Player.snareFactor`.
-    (state.players[0].snareFactor ?? 1)
+    (player.snareFactor ?? 1)
   );
 }
 
 /** Enemy crit chance against the player, after LUCK's avoidance. */
-export function enemyCritChance(state: GameState, base: number): number {
+export function enemyCritChance(
+  state: GameState,
+  player: Player,
+  base: number,
+): number {
   return Math.max(
     0,
-    base - effectiveStat(state, "luck") * STATS.critAvoidPerLuck,
+    base - effectiveStat(state, player, "luck") * STATS.critAvoidPerLuck,
   );
 }

@@ -35,7 +35,7 @@ import { hitEnemy } from "../loot.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
 import { talentJumpMods, talentSeismic } from "../talent-effects.ts";
 import { BALANCE } from "../tuning.ts";
-import type { GameInput, GameState } from "../types/index.ts";
+import type { GameInput, GameState, Player } from "../types/index.ts";
 import { inert, inertEnemy } from "../disposition.ts";
 
 export function stepPlayer(
@@ -89,7 +89,7 @@ export function stepPlayer(
     distance(player.pos, input.target) > PLAYER.arriveRadius
   ) {
     const before = player.pos;
-    intendedStep = playerSpeed(state) * throttle * staminaFactor * dt;
+    intendedStep = playerSpeed(state, player) * throttle * staminaFactor * dt;
     const next = moveToward(player.pos, input.target, intendedStep);
     if (dt > 0) {
       player.vel.x = (next.x - before.x) / dt;
@@ -118,11 +118,11 @@ export function stepPlayer(
   // draining pace or jump that bottoms it out freezes regen until the hero
   // has stood dead still for the RUNG's lockout uninterrupted (moving re-arms
   // the wait) — only after that stand does even the walk regain again.
-  const staminaStat = effectiveStat(state, "stamina");
+  const staminaStat = effectiveStat(state, player, "stamina");
   // SPRING HEELS (ranged tree): higher, longer jumps, and at rank 5 a cheaper
   // takeoff. `velocityMult` lifts the launch speed; `costMult` (< 1 only at
   // rank 5) trims the stamina a hop spends. Both 1 when untrained.
-  const jumpMods = talentJumpMods(state);
+  const jumpMods = talentJumpMods(state, player);
   const jumpCost = STAMINA.jumpCost * jumpMods.costMult;
   // A jump only fires from the ground AND only when the sprint pool can cover
   // its takeoff cost — a winded hero (too little stamina to pay `jumpCost`)
@@ -165,7 +165,7 @@ export function stepPlayer(
       });
       // SEISMIC LANDING (melee tree): a trained warlord's touchdown slams the
       // ground — AoE damage + knockback (fired only when the talent is owned).
-      applySeismicLanding(state);
+      applySeismicLanding(state, player);
     }
   }
 
@@ -264,7 +264,7 @@ export function stepPlayer(
     // The breather rate is the RUNG's: `staminaRegenPerSec` turns the ladder's
     // authored refill SECONDS into points per second (the STAMINA stat folded
     // in), so a harder rung stands the hero still for longer.
-    const regen = rate * staminaRegenPerSec(state);
+    const regen = rate * staminaRegenPerSec(state, player);
     player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
   // The lockout is a STANDSTILL debt: it only runs down while the hero stands
@@ -295,16 +295,15 @@ export function stepPlayer(
  * `noMenace`). Victims are snapshotted before hitEnemy splices the slain. A
  * no-op when the talent isn't owned (fires only on a `land` where it's trained).
  */
-function applySeismicLanding(state: GameState): void {
-  const seismic = talentSeismic(state);
+function applySeismicLanding(state: GameState, player: Player): void {
+  const seismic = talentSeismic(state, player);
   if (!seismic) return;
-  const player = state.players[0];
   state.events.push({
     type: "seismicLanding",
     pos: { ...player.pos },
     radius: seismic.radius,
   });
-  const power = abilityPowerScale(state);
+  const power = abilityPowerScale(state, player);
   const reachSq = seismic.radius * seismic.radius;
   const victims = state.enemies.filter(
     (e) => !inertEnemy(e) && distanceSq(e.pos, player.pos) <= reachSq,
@@ -356,10 +355,15 @@ export function stepUseItem(state: GameState, input: GameInput): void {
   // (`dropItemIndex` — a banked pickup is destroyed, a running slot merely
   // unlinks and frees), then the spend below.
   if (input.moveItem) {
-    moveHeldSlot(state, input.moveItem.from, input.moveItem.to);
+    moveHeldSlot(
+      state,
+      state.players[0],
+      input.moveItem.from,
+      input.moveItem.to,
+    );
   }
   if (input.dropItemIndex !== undefined) {
-    discardHeldAbility(state, input.dropItemIndex);
+    discardHeldAbility(state, state.players[0], input.dropItemIndex);
   }
   if (!input.useItem) return;
   const held = state.players[0].heldAbilities;
@@ -368,23 +372,23 @@ export function stepUseItem(state: GameState, input: GameInput): void {
     wanted !== undefined &&
     wanted >= 0 &&
     wanted < held.length &&
-    !isSlotActive(state, wanted);
+    !isSlotActive(state, state.players[0], wanted);
   const index = usable
     ? wanted
-    : held.findIndex((_, i) => !isSlotActive(state, i));
+    : held.findIndex((_, i) => !isSlotActive(state, state.players[0], i));
   if (index < 0) return;
   const defId = held[index];
   if (!defId) return;
   const def = abilityDef(defId);
   if (def.nuke) {
-    removeHeldSlot(state, index);
+    removeHeldSlot(state, state.players[0], index);
     detonateNuke(state, def.nuke.radius);
     return;
   }
   // The slot keeps its powerup while the copy runs; grantAbility links the copy
   // to `index`. A refused re-activation (a running non-stackable power) starts
   // nothing and leaves the slot as it was.
-  grantAbility(state, defId, index);
+  grantAbility(state, state.players[0], defId, index);
 }
 
 /**
@@ -396,9 +400,9 @@ export function stepUseItem(state: GameState, input: GameInput): void {
  * never wastes a kit.
  */
 export function stepUseConsumables(state: GameState, input: GameInput): void {
-  if (input.useMedkit) consumeMedkit(state);
-  if (input.useStaminaPotion) consumeStaminaPotion(state);
-  if (input.useRepairKit) consumeRepairKit(state);
+  if (input.useMedkit) consumeMedkit(state, state.players[0]);
+  if (input.useStaminaPotion) consumeStaminaPotion(state, state.players[0]);
+  if (input.useRepairKit) consumeRepairKit(state, state.players[0]);
 }
 
 /**

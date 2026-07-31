@@ -50,7 +50,9 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
     dingToChooser(state);
     // Leveling handed STAMINA free growth the effective stat now carries…
     expect(baseStatBonus(2, "stamina")).toBeGreaterThan(0);
-    expect(effectiveStat(state, "stamina")).toBe(baseStatBonus(2, "stamina"));
+    expect(effectiveStat(state, state.players[0], "stamina")).toBe(
+      baseStatBonus(2, "stamina"),
+    );
     // …but the chooser's tally shows none of it — the player hasn't picked yet.
     expect(state.players[0].spentStats.stamina).toBe(0);
     expect(spentTotal(state)).toBe(0);
@@ -67,7 +69,7 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
   it("allocating a point records it as the player's own pick", () => {
     const state = startGame();
     dingToChooser(state);
-    allocateStat(state, "strength");
+    allocateStat(state, state.players[0], "strength");
     expect(state.players[0].spentStats.strength).toBe(1);
     expect(state.players[0].stats.strength).toBe(1);
   });
@@ -75,27 +77,27 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
   it("a respec zeroes the tally, then it grows back as points are re-placed", () => {
     const state = startGame();
     state.players[0].pendingStatPoints = 2;
-    allocateStat(state, "luck");
-    allocateStat(state, "luck");
+    allocateStat(state, state.players[0], "luck");
+    allocateStat(state, state.players[0], "luck");
     expect(state.players[0].spentStats.luck).toBe(2);
 
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
     // The whole refunded pool is re-placed from scratch — spent restarts at 0.
     expect(spentTotal(state)).toBe(0);
 
-    allocateStat(state, "stamina");
+    allocateStat(state, state.players[0], "stamina");
     expect(state.players[0].spentStats.stamina).toBe(1);
-    deallocateStat(state, "stamina");
+    deallocateStat(state, state.players[0], "stamina");
     expect(state.players[0].spentStats.stamina).toBe(0);
     // Floored — a spurious refund never drives the tally negative.
-    deallocateStat(state, "stamina");
+    deallocateStat(state, state.players[0], "stamina");
     expect(state.players[0].spentStats.stamina).toBe(0);
   });
 
   it("a loadout carries the spent tally to the next level", () => {
     const state = startGame();
     dingToChooser(state);
-    allocateStat(state, "dexterity");
+    allocateStat(state, state.players[0], "dexterity");
 
     const carried = extractLoadout(state);
     expect(carried.spentStats?.dexterity).toBe(1);

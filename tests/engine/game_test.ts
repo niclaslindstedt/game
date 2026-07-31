@@ -489,21 +489,35 @@ describe("weapon reach, cadence, and AoE", () => {
 
     // No stats: the plain catalog numbers, cadence included.
     const baseCadence = base.cooldownMs;
-    expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
-    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
+    expect(weaponRangeFor(state, state.players[0], weapon())).toBeCloseTo(
+      base.range,
+    );
+    expect(weaponCooldownFor(state, state.players[0], weapon())).toBeCloseTo(
+      baseCadence,
+    );
 
     // INTELLIGENCE does NOT lengthen a MELEE blade's reach (that is STRENGTH's;
     // INT owns the cone's WIDTH and target count instead) — nor is it a speed stat.
     state.players[0].stats.intelligence = 20;
-    expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
-    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
+    expect(weaponRangeFor(state, state.players[0], weapon())).toBeCloseTo(
+      base.range,
+    );
+    expect(weaponCooldownFor(state, state.players[0], weapon())).toBeCloseTo(
+      baseCadence,
+    );
 
     // STRENGTH lengthens the melee reach; DEXTERITY quickens the swing.
     state.players[0].stats.strength = 20;
-    expect(weaponRangeFor(state, weapon())).toBeGreaterThan(base.range);
-    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence); // STR is not a speed stat
+    expect(weaponRangeFor(state, state.players[0], weapon())).toBeGreaterThan(
+      base.range,
+    );
+    expect(weaponCooldownFor(state, state.players[0], weapon())).toBeCloseTo(
+      baseCadence,
+    ); // STR is not a speed stat
     state.players[0].stats.dexterity = 20;
-    expect(weaponCooldownFor(state, weapon())).toBeLessThan(base.cooldownMs);
+    expect(weaponCooldownFor(state, state.players[0], weapon())).toBeLessThan(
+      base.cooldownMs,
+    );
 
     // A RANGED weapon's reach grows with INT (not STR) and its cadence with DEX.
     const ranged = {
@@ -514,10 +528,10 @@ describe("weapon reach, cadence, and AoE", () => {
       ilvl: 1,
       affixes: [],
     };
-    expect(weaponRangeFor(state, ranged)).toBeGreaterThan(
+    expect(weaponRangeFor(state, state.players[0], ranged)).toBeGreaterThan(
       weaponDef("blaster").range,
     );
-    expect(weaponCooldownFor(state, ranged)).toBeLessThan(
+    expect(weaponCooldownFor(state, state.players[0], ranged)).toBeLessThan(
       weaponDef("blaster").cooldownMs,
     );
   });
@@ -711,7 +725,7 @@ describe("win and lose", () => {
     // then spend the level-ups the kill banked, so time can resume.
     while (state.phase === "dialogue") advanceDialogue(state);
     while (state.players[0].pendingStatPoints > 0)
-      allocateStat(state, "stamina");
+      allocateStat(state, state.players[0], "stamina");
     expect(state.phase).toBe("playing");
     // …and only now, with the rite done and the box tapped through, does the
     // loot-grab countdown arm.

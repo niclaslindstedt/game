@@ -101,12 +101,12 @@ describe("effectiveStat routes the flat total through the level-aware curve", ()
     const cap = statCap(40);
     const over = cap + 60;
     state.players[0].stats.strength = over;
-    expect(effectiveStat(state, "strength")).toBe(
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
       Math.round(diminishStat(over, 40)),
     );
     // Below the cap nothing changes.
     state.players[0].stats.strength = 5;
-    expect(effectiveStat(state, "strength")).toBe(5);
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(5);
   });
 });
 
@@ -116,12 +116,12 @@ describe("allocateStat — the chooser hard-walls placement at the cap", () => {
     state.players[0].level = 99; // cap === 250
     state.players[0].pendingStatPoints = 5;
     state.players[0].stats.strength = statCap(99);
-    expect(allocateStat(state, "strength")).toBe(false);
+    expect(allocateStat(state, state.players[0], "strength")).toBe(false);
     // The point is untouched — still spendable elsewhere.
     expect(state.players[0].pendingStatPoints).toBe(5);
     // A stat with room still takes it.
     state.players[0].stats.dexterity = 0;
-    expect(allocateStat(state, "dexterity")).toBe(true);
+    expect(allocateStat(state, state.players[0], "dexterity")).toBe(true);
     expect(state.players[0].pendingStatPoints).toBe(4);
   });
 });
@@ -138,7 +138,7 @@ describe("derived probability channels saturate below 1.0", () => {
       "luck",
     ] as const)
       state.players[0].stats[stat] = 100_000;
-    const crit = playerCritChance(state, undefined);
+    const crit = playerCritChance(state, state.players[0], undefined);
     expect(crit).toBeLessThan(STATS.critCap);
     // …but heavy investment does climb most of the way there (an expensive top,
     // not a wasted stat).
@@ -150,7 +150,7 @@ describe("derived probability channels saturate below 1.0", () => {
     state.players[0].level = 99;
     state.players[0].stats.dexterity = 100_000;
     state.players[0].stats.luck = 100_000;
-    const dodge = playerDodgeChance(state);
+    const dodge = playerDodgeChance(state, state.players[0]);
     expect(dodge).toBeLessThan(DODGE.max);
     expect(dodge).toBeGreaterThan(DODGE.max * 0.5);
   });
@@ -159,7 +159,9 @@ describe("derived probability channels saturate below 1.0", () => {
     const state = startGame();
     // Even against a level-1 attacker (the smallest k, the most favourable
     // reduction), the clamp holds.
-    expect(armorReduction(state, 1)).toBeLessThanOrEqual(ARMOR.maxReduction);
+    expect(armorReduction(state, state.players[0], 1)).toBeLessThanOrEqual(
+      ARMOR.maxReduction,
+    );
   });
 });
 

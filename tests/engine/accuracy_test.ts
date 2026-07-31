@@ -40,31 +40,35 @@ function swingAndCollect(state: GameState, steps: number): GameEvent[] {
 describe("player miss chance", () => {
   it("starts at the innate whiff and DEXTERITY trims it to the floor", () => {
     const state = startGame();
-    expect(effectiveStat(state, "dexterity")).toBe(0);
-    expect(playerMissChance(state)).toBeCloseTo(ACCURACY.baseMiss);
+    expect(effectiveStat(state, state.players[0], "dexterity")).toBe(0);
+    expect(playerMissChance(state, state.players[0])).toBeCloseTo(
+      ACCURACY.baseMiss,
+    );
 
     state.players[0].stats.dexterity = 1;
-    expect(playerMissChance(state)).toBeCloseTo(
+    expect(playerMissChance(state, state.players[0])).toBeCloseTo(
       ACCURACY.baseMiss - ACCURACY.perDex,
     );
 
     // Enough DEX zeroes the whiff — it never goes below the floor.
     state.players[0].stats.dexterity = 100;
-    expect(playerMissChance(state)).toBe(ACCURACY.minMiss);
+    expect(playerMissChance(state, state.players[0])).toBe(ACCURACY.minMiss);
   });
 });
 
 describe("enemy dodge chance", () => {
   it("is the enemy's base evasion, trimmed by DEXTERITY toward zero", () => {
     const state = startGame();
-    expect(enemyDodgeChance(state, 0.4)).toBeCloseTo(0.4);
+    expect(enemyDodgeChance(state, state.players[0], 0.4)).toBeCloseTo(0.4);
 
     state.players[0].stats.dexterity = 5;
-    expect(enemyDodgeChance(state, 0.4)).toBeCloseTo(0.4 - 5 * ACCURACY.perDex);
+    expect(enemyDodgeChance(state, state.players[0], 0.4)).toBeCloseTo(
+      0.4 - 5 * ACCURACY.perDex,
+    );
 
     // Never negative: a nimble hero against a clumsy foe simply never misses.
     state.players[0].stats.dexterity = 100;
-    expect(enemyDodgeChance(state, 0.4)).toBe(0);
+    expect(enemyDodgeChance(state, state.players[0], 0.4)).toBe(0);
   });
 });
 
@@ -114,9 +118,9 @@ describe("weapon accuracy in combat", () => {
     // DEX high enough to zero the hero's own whiff, so the only way the blow
     // comes to nothing is the dodger's own evasion.
     state.players[0].stats.dexterity = 3;
-    expect(playerMissChance(state)).toBe(0);
+    expect(playerMissChance(state, state.players[0])).toBe(0);
     const target = placeTarget(state, "test_dodger");
-    expect(enemyDodgeChance(state, 0.9)).toBeGreaterThan(0.5);
+    expect(enemyDodgeChance(state, state.players[0], 0.9)).toBeGreaterThan(0.5);
     state.rng = () => 0.5; // clears the (zeroed) miss, trips the dodge
 
     const events = swingAndCollect(state, 40);
@@ -130,7 +134,7 @@ describe("weapon accuracy in combat", () => {
     stopWaves(state);
     // Enough hit rate to trim even a 0.9 base dodge to nothing.
     state.players[0].stats.dexterity = 100;
-    expect(enemyDodgeChance(state, 0.9)).toBe(0);
+    expect(enemyDodgeChance(state, state.players[0], 0.9)).toBe(0);
     const target = placeTarget(state, "test_dodger");
     state.rng = () => 0.5; // same roll as the dodge case, now a clean hit
 

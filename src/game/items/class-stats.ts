@@ -7,6 +7,7 @@ import { weaponDef } from "../defs/equipment.ts";
 import type {
   ArmorSlot,
   GameState,
+  Player,
   StatName,
   WeaponClass,
 } from "../types/index.ts";
@@ -75,9 +76,9 @@ export const REQ_STAT: Record<WeaponClass, StatName> = {
  * stranded on an off-lane starter upgrades to his lane the moment one drops.
  * This is the single source of truth the autopilot's `botLane` also reads.
  */
-export function committedLane(state: GameState): WeaponClass {
-  const stats = state.players[0].stats;
-  const held = weaponDef(state.players[0].equipment.weapon.defId).class;
+export function committedLane(state: GameState, player: Player): WeaponClass {
+  const stats = player.stats;
+  const held = weaponDef(player.equipment.weapon.defId).class;
   let lane: WeaponClass = held;
   let best = stats[REQ_STAT[held]];
   for (const c of ["melee", "ranged", "magic"] as const) {

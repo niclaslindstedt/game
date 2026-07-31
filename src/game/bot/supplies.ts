@@ -51,7 +51,8 @@ export function topOffReach(state: GameState): number {
   let reach = TOP_OFF_REACH;
   for (const ability of state.players[0].abilities) {
     const def = abilityDef(ability.defId);
-    if (def.magnet) reach = Math.max(reach, magnetRadius(state, def));
+    if (def.magnet)
+      reach = Math.max(reach, magnetRadius(state, state.players[0], def));
   }
   return reach;
 }
@@ -130,7 +131,7 @@ export function braveryScore(bot: Bot, state: GameState): number {
   const meanBar = barN > 0 ? barSum / barN : 0;
   let killPower = 1; // an empty field — nothing to fear
   if (meanBar > 0) {
-    const blow = weaponDamageFor(state, player.equipment.weapon);
+    const blow = weaponDamageFor(state, player, player.equipment.weapon);
     const blowPower = clamp(blow / (meanBar * BRAVE_BLOW_BAR_FRAC), 0, 1);
     let recentPower = 0;
     const samples = bot.bravery?.samples ?? [];
@@ -262,7 +263,7 @@ function canBankPickup(state: GameState, item: Item): boolean {
     case "drink":
       return player.staminaPotions < CONSUMABLES.stackCap;
     case "ability":
-      return canBankAbility(state, item.defId);
+      return canBankAbility(state, player, item.defId);
     default:
       return true;
   }
@@ -291,7 +292,7 @@ export function nearestWantedItem(state: GameState): Item | undefined {
     if (insideWellPull(state, item.pos)) continue;
     if (
       item.kind === "equipment" &&
-      !canCollectEquipment(state, item.equipment)
+      !canCollectEquipment(state, state.players[0], item.equipment)
     )
       continue;
     if (!canBankPickup(state, item)) continue;

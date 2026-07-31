@@ -183,7 +183,7 @@ describe("map markers", () => {
         id: state.nextId++,
         kind: "equipment",
         pos: { ...at },
-        equipment: rollEquipment(state, {
+        equipment: rollEquipment(state, state.players[0], {
           defId: "test_hammer",
           tier: "unique",
           mlvl: 99,
@@ -207,7 +207,7 @@ describe("map markers", () => {
       id: state.nextId++,
       kind: "equipment",
       pos: { ...state.players[0].pos },
-      equipment: rollEquipment(state, {
+      equipment: rollEquipment(state, state.players[0], {
         defId: "test_hammer",
         tier: "regular",
         mlvl: 99,

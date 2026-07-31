@@ -151,13 +151,15 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
       player.spentStats[stat]++;
     }
   }
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
   // The bag re-sizes to the carried STRENGTH — the fresh game sized it at level
   // 1, so grow it now or the rolls below have nowhere to land.
-  player.inventory = new Array<null>(inventoryCapacity(state)).fill(null);
+  player.inventory = new Array<null>(inventoryCapacity(state, player)).fill(
+    null,
+  );
 
   // Roll a real kit off the loot pool at the requested tiers, at THIS hero's
   // horde level so the ilvls track him, then let the auto-equip wear the best
@@ -165,15 +167,15 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
   // (attribute gate) is simply left in the bag and cleared below.
   const mlvl = target + difficultyDef(difficulty).mobLevelOffset;
   const roll = (family: "weapon" | "gear", tier: Tier) => {
-    const piece = rollEquipment(state, { slot: family, tier, mlvl });
-    if (!addToInventory(state, piece)) {
-      autoEquipBest(state); // bag full → wear the upgrades, free the cells
-      addToInventory(state, piece);
+    const piece = rollEquipment(state, player, { slot: family, tier, mlvl });
+    if (!addToInventory(state, player, piece)) {
+      autoEquipBest(state, player); // bag full → wear the upgrades, free the cells
+      addToInventory(state, player, piece);
     }
   };
   for (let i = 0; i < WEAPON_ROLLS; i++) roll("weapon", weaponTier);
   for (let i = 0; i < GEAR_ROLLS; i++) roll("gear", gearTier);
-  autoEquipBest(state);
+  autoEquipBest(state, player);
 
   // Arrive with the WORN kit only — a bag stuffed with dozens of spare rares
   // would hand the auto-shop a fortune and distort the run.

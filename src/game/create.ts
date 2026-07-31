@@ -907,12 +907,12 @@ export function createGame(
     if (def.armor !== undefined) piece.armor = def.armor;
     if (def.durability !== undefined) piece.durability = def.durability;
     // Rings resolve to a free finger; everything else names its own slot.
-    const slot = wearSlotFor(state, piece);
+    const slot = wearSlotFor(state, state.players[0], piece);
     if (slot) state.players[0].equipment[slot] = piece;
   }
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  syncInventoryCapacity(state);
+  recomputeMaxHp(state, state.players[0]);
+  recomputeMaxStamina(state, state.players[0]);
+  syncInventoryCapacity(state, state.players[0]);
   state.players[0].hp = state.players[0].maxHp;
   state.players[0].stamina = state.players[0].maxStamina;
 
@@ -1006,7 +1006,9 @@ function placeItem(
       id,
       kind: "equipment",
       pos,
-      equipment: rollEquipment(state, { defId: placed.defId }),
+      equipment: rollEquipment(state, state.players[0], {
+        defId: placed.defId,
+      }),
     };
   }
   if (placed.kind === "story") {

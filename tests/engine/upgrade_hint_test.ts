@@ -48,7 +48,9 @@ describe("wouldUpgradeSlot", () => {
     // The medium starter is `crude_sword` (damage 20); `test_hammer` (34) is a
     // clear firepower upgrade.
     expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
-    expect(wouldUpgradeSlot(state, weapon(1, "test_hammer"))).toBe(true);
+    expect(
+      wouldUpgradeSlot(state, state.players[0], weapon(1, "test_hammer")),
+    ).toBe(true);
   });
 
   it("does not flag a weaker weapon as an upgrade", () => {
@@ -56,7 +58,9 @@ describe("wouldUpgradeSlot", () => {
     // Wear the heavy `test_hammer` (damage 34), then the puny `blaster`
     // (damage 8) is a clear downgrade — no upgrade to tap.
     state.players[0].equipment.weapon = weapon(1, "test_hammer");
-    expect(wouldUpgradeSlot(state, weapon(2, "blaster"))).toBe(false);
+    expect(
+      wouldUpgradeSlot(state, state.players[0], weapon(2, "blaster")),
+    ).toBe(false);
   });
 
   it("flags a passive trinket the auto-equip rule leaves in the bag", () => {
@@ -64,13 +68,21 @@ describe("wouldUpgradeSlot", () => {
     // `test_chip` is a passive trinket: never worn at all (it pays out from
     // the bag), so it always banks — yet it is still worth KEEPING, and the
     // card says so rather than reading as junk.
-    expect(wouldUpgradeSlot(state, gear(1, "test_chip", "trinket"))).toBe(true);
+    expect(
+      wouldUpgradeSlot(
+        state,
+        state.players[0],
+        gear(1, "test_chip", "trinket"),
+      ),
+    ).toBe(true);
   });
 
   it("an empty non-weapon slot is always an upgrade to fill", () => {
     const state = startGame();
     expect(state.players[0].equipment.chest).toBeNull();
-    expect(wouldUpgradeSlot(state, gear(1, "test_vest", "chest"))).toBe(true);
+    expect(
+      wouldUpgradeSlot(state, state.players[0], gear(1, "test_vest", "chest")),
+    ).toBe(true);
   });
 
   it("weighs a +STAT find by the hero's spec", () => {
@@ -85,14 +97,14 @@ describe("wouldUpgradeSlot", () => {
     const intAmulet = gear(2, "test_amulet", "amulet", [
       statAffix("intelligence", 5),
     ]);
-    expect(wouldUpgradeSlot(state, intAmulet)).toBe(true);
+    expect(wouldUpgradeSlot(state, state.players[0], intAmulet)).toBe(true);
     // The mirror: swapping the worn INT amulet for the same-size STR one is a
     // downgrade for this spec, so it flags neither upgrade nor tap.
     state.players[0].equipment.amulet = intAmulet;
     const strAmulet = gear(3, "test_amulet", "amulet", [
       statAffix("strength", 5),
     ]);
-    expect(wouldUpgradeSlot(state, strAmulet)).toBe(false);
+    expect(wouldUpgradeSlot(state, state.players[0], strAmulet)).toBe(false);
   });
 });
 

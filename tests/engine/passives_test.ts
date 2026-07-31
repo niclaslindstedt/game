@@ -19,7 +19,10 @@ import type { Equipment, GameState } from "@game/core";
 import { clearStage, DT, idle, startGame, stopWaves } from "./helpers.ts";
 
 function makeChip(state: GameState): Equipment {
-  return rollEquipment(state, { defId: "test_chip", tier: "regular" });
+  return rollEquipment(state, state.players[0], {
+    defId: "test_chip",
+    tier: "regular",
+  });
 }
 
 /** Every def id the hero is WEARING right now — the check that a trinket
@@ -41,11 +44,13 @@ describe("passive trinkets", () => {
 
   it("raises the stat by +1 while riding in the bag", () => {
     const state = startGame();
-    const before = effectiveStat(state, "intelligence");
+    const before = effectiveStat(state, state.players[0], "intelligence");
     state.players[0].inventory[0] = makeChip(state);
-    expect(effectiveStat(state, "intelligence")).toBe(before + 1);
+    expect(effectiveStat(state, state.players[0], "intelligence")).toBe(
+      before + 1,
+    );
     // Only the one stat moves.
-    expect(effectiveStat(state, "strength")).toBe(
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
       state.players[0].stats.strength,
     );
   });
@@ -63,22 +68,28 @@ describe("passive trinkets", () => {
       affixes: [],
     };
     state.players[0].equipment.weapon = ranged;
-    const reachBefore = weaponRangeFor(state, ranged);
+    const reachBefore = weaponRangeFor(state, state.players[0], ranged);
     state.players[0].inventory[0] = makeChip(state);
-    expect(weaponRangeFor(state, ranged)).toBeGreaterThan(reachBefore);
+    expect(weaponRangeFor(state, state.players[0], ranged)).toBeGreaterThan(
+      reachBefore,
+    );
   });
 
   it("cannot be worn at all — the bag IS where it works", () => {
     const state = startGame();
-    const base = effectiveStat(state, "intelligence");
+    const base = effectiveStat(state, state.players[0], "intelligence");
     state.players[0].inventory[0] = makeChip(state);
-    expect(effectiveStat(state, "intelligence")).toBe(base + 1);
+    expect(effectiveStat(state, state.players[0], "intelligence")).toBe(
+      base + 1,
+    );
     // There is no slot to drag it to: a trinket pays out from the cell it
     // sits in, so the equip is refused and the piece stays put — still +1,
     // never +2, and never stranded.
-    expect(equipFromInventory(state, 0)).toBe(false);
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(false);
     expect(state.players[0].inventory[0]?.defId).toBe("test_chip");
-    expect(effectiveStat(state, "intelligence")).toBe(base + 1);
+    expect(effectiveStat(state, state.players[0], "intelligence")).toBe(
+      base + 1,
+    );
   });
 
   it("is never auto-equipped — it banks in the bag", () => {
@@ -86,7 +97,7 @@ describe("passive trinkets", () => {
     // A passive trinket is not "better" to wear anywhere: it works from the
     // bag, and there is no trinket slot to spend on it.
     const chip = makeChip(state);
-    expect(isBetterEquipment(state, chip)).toBe(false);
+    expect(isBetterEquipment(state, state.players[0], chip)).toBe(false);
     expect(wornDefIds(state)).not.toContain("test_chip");
   });
 
@@ -106,7 +117,7 @@ describe("passive trinkets", () => {
       state.players[0].inventory.some((c) => c?.defId === "test_chip"),
     ).toBe(true);
     // And the mind is sharper for carrying it.
-    expect(effectiveStat(state, "intelligence")).toBe(
+    expect(effectiveStat(state, state.players[0], "intelligence")).toBe(
       state.players[0].stats.intelligence + 1,
     );
   });

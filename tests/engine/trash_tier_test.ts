@@ -55,14 +55,14 @@ describe("the TRASH tier", () => {
 
   it("mints with zero affixes and sells for next to nothing", () => {
     const state = startGame();
-    const trash = rollEquipment(state, {
+    const trash = rollEquipment(state, state.players[0], {
       defId: "test_pipe",
       tier: "trash",
       mlvl: 30,
     });
     expect(trash.tier).toBe("trash");
     expect(trash.affixes).toHaveLength(0);
-    const regular = rollEquipment(state, {
+    const regular = rollEquipment(state, state.players[0], {
       defId: "test_pipe",
       tier: "regular",
       quality: "normal",

@@ -1000,7 +1000,7 @@ function playRun(args: {
     boss.heroLevel = state.players[0].level;
     boss.heroHpFrac = round3(state.players[0].hp / state.players[0].maxHp);
     boss.heroWeapon = equipmentName(weapon);
-    boss.heroDps = round1(weaponDps(state, weapon));
+    boss.heroDps = round1(weaponDps(state, state.players[0], weapon));
   };
   const weaponTimeline: WeaponSwap[] = [];
   const levelUps: { atMs: number; level: number; kills: number }[] = [];
@@ -1204,7 +1204,7 @@ function playRun(args: {
   // spinning at the counter (else a level-gated stall spams tens of thousands
   // of visits).
   const recoverAtMerchant = (): boolean => {
-    autoEquipBest(state); // a decent bag weapon may end the starve for free
+    autoEquipBest(state, state.players[0]); // a decent bag weapon may end the starve for free
     if (!weaponStarved() && !wantsMerchantVisit(state)) return false;
     if (!tradeAtMerchant(state)) return false;
     shopVisits++;
@@ -1281,9 +1281,11 @@ function playRun(args: {
       level: state.players[0].level,
       hp: Math.round(state.players[0].hp),
       maxHp: state.players[0].maxHp,
-      dps: round1(weaponDps(state, weapon)),
-      armorReduction: round3(armorReduction(state, currentMobLevel(state))),
-      armor: totalArmor(state),
+      dps: round1(weaponDps(state, state.players[0], weapon)),
+      armorReduction: round3(
+        armorReduction(state, state.players[0], currentMobLevel(state)),
+      ),
+      armor: totalArmor(state, state.players[0]),
       kills: state.stats.kills,
       menaceStage: menaceStage(state),
     });
@@ -1372,8 +1374,9 @@ function playRun(args: {
       case "levelup": {
         // If the bot's pick is at the level-scaled cap it won't take; dump the
         // point into any stat that still has room so the ding always resolves.
-        if (!allocateStat(state, botAllocate(bot, state))) {
-          for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
+        if (!allocateStat(state, state.players[0], botAllocate(bot, state))) {
+          for (const s of STAT_NAMES)
+            if (allocateStat(state, state.players[0], s)) break;
         }
         // A ×10 TREE milestone earns a passive TALENT point that holds the
         // level-up pause (see allocateStat/resumeAfterLevelup); spend it per the
@@ -1383,7 +1386,8 @@ function playRun(args: {
         // pick.
         while (state.pendingTalentPoints.length > 0) {
           const talentId = botPickTalent(bot, state);
-          if (!talentId || !spendTalentPoint(state, talentId)) break;
+          if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
+            break;
         }
         guardPhase(++phaseAdvances);
         continue;
@@ -1619,7 +1623,7 @@ function playRun(args: {
               if (delta <= -APPROP_BAND) ilvlBelow++;
               else if (delta >= APPROP_BAND) ilvlAbove++;
               else ilvlOn++;
-              if (canEquip(state, piece)) equippableNow++;
+              if (canEquip(state, state.players[0], piece)) equippableNow++;
               if (state.players[0].level < itemLevelReq(piece)) {
                 levelGated++;
               }
@@ -1700,7 +1704,7 @@ function playRun(args: {
         from: last?.to ?? "(start)",
         to: equipmentName(weapon),
         fromDps: last?.toDps ?? 0,
-        toDps: round1(weaponDps(state, weapon)),
+        toDps: round1(weaponDps(state, state.players[0], weapon)),
         tier: weapon.tier,
       });
       prevWeaponId = weapon.id;
@@ -1848,7 +1852,7 @@ function playRun(args: {
     "intelligence",
     "luck",
   ] as StatName[]) {
-    stats[stat] = effectiveStat(state, stat);
+    stats[stat] = effectiveStat(state, state.players[0], stat);
   }
 
   // Finalize boss encounters: read blows-to-kill off the mob accumulator, then
@@ -1910,12 +1914,14 @@ function playRun(args: {
       levelEnd: state.players[0].level,
       xpGained: totals.xpGained,
       maxHp: state.players[0].maxHp,
-      armor: totalArmor(state),
-      armorReduction: round3(armorReduction(state, currentMobLevel(state))),
+      armor: totalArmor(state, state.players[0]),
+      armorReduction: round3(
+        armorReduction(state, state.players[0], currentMobLevel(state)),
+      ),
       weapon: {
         name: equipmentName(weapon),
         tier: weapon.tier,
-        dps: round1(weaponDps(state, weapon)),
+        dps: round1(weaponDps(state, state.players[0], weapon)),
       },
       stats,
       coins: state.players[0].coins,

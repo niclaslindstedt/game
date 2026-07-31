@@ -400,7 +400,7 @@ function allocatePoints(
         best = stat;
       }
     }
-    if (!allocateStat(state, best)) break;
+    if (!allocateStat(state, state.players[0], best)) break;
     spent[best]++;
   }
 }
@@ -489,8 +489,8 @@ function collectDrops(
 ): void {
   for (const eq of dropped) {
     if (excludeTiers?.has(eq.tier)) continue;
-    if (!isBetterEquipment(state, eq)) continue;
-    const slot = wearSlotFor(state, eq);
+    if (!isBetterEquipment(state, state.players[0], eq)) continue;
+    const slot = wearSlotFor(state, state.players[0], eq);
     if (!slot) continue;
     if (slot === "weapon") {
       state.players[0].equipment.weapon = eq;
@@ -498,9 +498,9 @@ function collectDrops(
     } else {
       state.players[0].equipment[slot] = eq;
     }
-    recomputeMaxHp(state);
-    recomputeMaxStamina(state);
-    syncInventoryCapacity(state);
+    recomputeMaxHp(state, state.players[0]);
+    recomputeMaxStamina(state, state.players[0]);
+    syncInventoryCapacity(state, state.players[0]);
   }
 }
 
@@ -539,10 +539,11 @@ function snapshot(
   const player = state.players[0];
   const weapon = player.equipment.weapon;
   const stats = {} as Record<StatName, number>;
-  for (const stat of STAT_NAMES) stats[stat] = effectiveStat(state, stat);
+  for (const stat of STAT_NAMES)
+    stats[stat] = effectiveStat(state, player, stat);
 
   // ---- The mob-side + menace read, measured against the last real minion bar.
-  const dps = weaponDps(state, weapon);
+  const dps = weaponDps(state, player, weapon);
   // HORDE-effective DPS: single-target dps × the weapon's AoE assumption × the
   // mob-armor multiplier this class actually faces (class + gear pierce folded
   // in). Folds crit (already in dps), reach, and armor into one comparable read.
@@ -554,18 +555,19 @@ function snapshot(
       currentMobLevel(state),
       difficulty,
       wdef.class,
-      heroArmorPen(state),
+      heroArmorPen(state, player),
     );
-  const perHit = weaponDamageFor(state, weapon);
+  const perHit = weaponDamageFor(state, player, weapon);
   // The expected KILLING BLOW: one landed hit, crit folded in as its average
   // lift — what the menace ratchet weighs its overkill against.
   const critLift =
     1 +
-    playerCritChance(state, undefined) * (weaponCritMult(state, weapon) - 1);
+    playerCritChance(state, player, undefined) *
+      (weaponCritMult(state, player, weapon) - 1);
   const heroBlow = perHit * critLift;
   const mobHp = ref?.maxHp ?? 0;
   const mobDamage = ref?.contact ?? 0;
-  const reduction = ref ? armorReduction(state, ref.mlvl) : 0;
+  const reduction = ref ? armorReduction(state, player, ref.mlvl) : 0;
   const incoming = Math.max(1, mobDamage * (1 - reduction));
   const overkillRatio = mobHp > 0 ? heroBlow / mobHp : 0;
   // Evolution hp is LINEAR in stage (evolutionHpMult), so the stage where a
@@ -585,13 +587,15 @@ function snapshot(
     heroLevel: player.level,
     hp: Math.round(player.hp),
     maxHp: player.maxHp,
-    perHit: round1(weaponDamageFor(state, weapon)),
-    dps: round1(weaponDps(state, weapon)),
+    perHit: round1(weaponDamageFor(state, player, weapon)),
+    dps: round1(weaponDps(state, player, weapon)),
     hordeDps: round1(hordeDps),
-    critChance: round3(playerCritChance(state, undefined)),
-    critMult: round2(weaponCritMult(state, weapon)),
-    armor: totalArmor(state),
-    armorReduction: round3(armorReduction(state, currentMobLevel(state))),
+    critChance: round3(playerCritChance(state, player, undefined)),
+    critMult: round2(weaponCritMult(state, player, weapon)),
+    armor: totalArmor(state, player),
+    armorReduction: round3(
+      armorReduction(state, player, currentMobLevel(state)),
+    ),
     powerLevel: round1(heroPowerLevel(state)),
     gearLevel: round1(heroGearLevel(state)),
     damageLevel: round1(heroDamageLevel(state)),
@@ -606,7 +610,7 @@ function snapshot(
     coins: player.coins,
     weapon: equipmentName(weapon),
     weaponTier: weapon.tier,
-    weaponDps: round1(weaponDps(state, weapon)),
+    weaponDps: round1(weaponDps(state, player, weapon)),
     xp: player.xp,
     xpToNext: player.xpToNext,
     xpCap: xpLevelCap(levelId, difficulty),

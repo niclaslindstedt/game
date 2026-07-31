@@ -88,10 +88,10 @@ describe("auto-equip-on-pickup setting", () => {
     const upgrade = weapon(60, "test_hammer");
     // The find still RANKS as better — the setting gates only the pickup path.
     setAutoEquipEnabled(false);
-    expect(isBetterEquipment(state, upgrade)).toBe(true);
+    expect(isBetterEquipment(state, state.players[0], upgrade)).toBe(true);
     // And the manual AUTO-EQUIP button still wears it from the bag.
     state.players[0].inventory[0] = upgrade;
-    expect(autoEquipBest(state)).toBe(1);
+    expect(autoEquipBest(state, state.players[0])).toBe(1);
     expect(state.players[0].equipment.weapon.id).toBe(60);
   });
 });
