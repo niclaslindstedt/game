@@ -2002,14 +2002,27 @@ order, beside the chain above.
   merge depends on precisely that. Its twin is that a joiner still plays the
   THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster —
   the same job from the other end, and it should land with it.
-- **Decision 3b's other half — the bot's five housekeeping mutators.** It is
-  the SAME work as §7.2.5's adapter, reached from the other end: the bot's
-  output becomes `{ input, commands }` so that everything it does is an INTENT,
-  and the adapter decides whether an intent is applied in-process or sent. Two
-  of the five are already in `COMMANDS` (`autoEquipBest`, `scrapInferiorLoot`);
-  the fifth (`stepBotWeaponSwap`) carries the bot's own swap memory, and the
-  plan already recommends moving that memory onto the run rather than moving
-  the bot. Land it with §7.2.5 rather than beside it.
+- **Decision 3b's other half — the bot's five housekeeping mutators. THE VERBS
+  ARE DONE; THE ADAPTER IS NOT.** All five can now travel: `autoEquipBest` and
+  `scrapInferiorLoot` always could, `careForCompanion`'s two actions
+  (`spendReviveItem`, `healCompanionWithMedkit`) were already on the list, and
+  the two that were not are now — `swapHand` and `sortInventory`, both moved out
+  of `bot/` into `items/inventory.ts`, because in each case the DECISION was the
+  bot's and the ACTION was the hero's, and a run command may not reach into the
+  autopilot for its implementation. `stepBotWeaponSwap` was the one that forced
+  the question, exactly as predicted: it carried the bot's own anti-juggle
+  memory, and moving that memory onto the run (`Player.lastSwapMs`) was the
+  cheaper answer than moving the bot. `tests/engine/bot_intent_test.ts` is the
+  guard, and it writes the five out by hand rather than deriving them from the
+  code.
+
+  **WHAT IS LEFT IS THE ADAPTER ITSELF**: `botAct` still returns a bare
+  `GameInput` and the five calls are still made directly by each host (the
+  simulator, `bot-driver.ts`). The output becomes `{ input, commands }` and the
+  adapter decides whether an intent is applied in-process or sent — which is now
+  a mechanical change rather than a design one, since every destination exists.
+  Land it with §7.2.5's bot client rather than beside it.
+
 - **§5.6's STORE SURFACES** — the Steam listing's multiplayer categories, the
   depot's launch options, and store screenshots showing a party (`store-shots`
   skill). Not code, but it is on phase 5's list and nobody is holding it.
