@@ -31,25 +31,81 @@
 
 import { engineVersion } from "@game/core";
 
+import { createPeerHub, type PeerHub } from "./net/hub.ts";
+import { createRelayTransport, type RelayTransport } from "./net/relay.ts";
+import type { Bound, SendMode } from "./net/transport.ts";
+import { createUdpTransport } from "./net/udp.ts";
+import {
+  behindNat,
+  createPortMapper,
+  type MappingState,
+  type PortMapper,
+} from "./net/upnp.ts";
 import { createSession, type Session } from "./session.ts";
 import { decodeFrame } from "./wire/codec.ts";
 import {
+  MAX_CLIENTS,
   PROTOCOL_VERSION,
   TICK_MS,
+  type RosterEntry,
   type SessionParams,
 } from "./wire/protocol.ts";
 
 /** A message from the main process, down the control channel. */
 type ControlMessage =
-  | { kind: "start"; params: SessionParams; mods?: string[] }
+  | {
+      kind: "start";
+      params: SessionParams;
+      mods?: string[];
+      password?: string;
+      maxClients?: number;
+    }
   | { kind: "stop" }
-  | { kind: "status" };
+  | { kind: "status" }
+  /** Open the doors. `port` is what to TRY; what was got comes back in the
+   * reply, and the two are not the same thing — see `net/udp.ts`. */
+  | { kind: "listen"; port?: number; udp?: boolean; steam?: boolean }
+  /** One packet the shell pumped off the Steam P2P queue. */
+  | { kind: "peer"; from: string; data: ArrayBuffer | Uint8Array | number[] }
+  /** The shell says a relayed peer has gone. */
+  | { kind: "peer-lost"; from: string; reason: string };
 
 /** A message back up it. */
 type ControlReply =
   | { kind: "ready"; protocol: number }
   | { kind: "started"; levelId: string }
-  | { kind: "status"; tick: number; phase: string; enemies: number }
+  | {
+      kind: "status";
+      tick: number;
+      phase: string;
+      enemies: number;
+      clients: number;
+      /** Where the socket ACTUALLY ended up, or null when it never bound.
+       * The HOST screen prints this and never the requested port. */
+      bound: Bound | null;
+      mapping: MappingState;
+      roster: RosterEntry[];
+    }
+  | {
+      kind: "listening";
+      bound: Bound | null;
+      steam: boolean;
+      /** What a lobby row must advertise, sent from the one process that has
+       * actually loaded the engine it is describing — the shell holds neither
+       * number and must not invent either. */
+      protocol: number;
+      build: string;
+      detail?: string;
+    }
+  /** One packet for the shell to put on the Steam P2P queue. */
+  | { kind: "peer-send"; to: string; data: number[]; mode: SendMode }
+  /** The session asked for the platform's invite panel. */
+  | { kind: "invite" }
+  /** One line for the host's own log. Its OWN kind rather than an `error`,
+   * because the bridge above matches replies to waiters by order and a chatty
+   * log would otherwise settle whatever request happened to be in flight with
+   * a refusal. */
+  | { kind: "log"; line: string }
   | { kind: "stopped"; reason: string }
   | { kind: "error"; detail: string };
 
@@ -80,6 +136,24 @@ let session: Session | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
 let clientPort: ClientPort | null = null;
 let lastAdvanceMs = 0;
+let hub: PeerHub | null = null;
+let relay: RelayTransport | null = null;
+let mapper: PortMapper | null = null;
+let bound: Bound | null = null;
+let steamOpen = false;
+
+/**
+ * The session's challenge secret, minted once per process.
+ *
+ * Here rather than in `wire/handshake.ts` because that module is a leaf with
+ * no randomness of its own — which is what lets a test drive the whole cookie
+ * scheme across an epoch boundary deterministically. This is the one place
+ * that has to actually roll a number, and it is emphatically NOT the engine's
+ * seeded rng: that stream is the simulation's, every draw from it is
+ * load-bearing for a replay, and a security secret taken from a seed a client
+ * was told is not a secret.
+ */
+const CHALLENGE_SECRET = (Math.random() * 0xffffffff) >>> 0;
 
 const parent = (process as unknown as { parentPort?: ParentPort }).parentPort;
 
@@ -128,6 +202,14 @@ function joinHost(): void {
   );
 }
 
+/** Send something nobody asked for — an outbound relayed packet, an invite
+ * request. The request/reply queue in `electron/src/net.ts` matches replies to
+ * waiters by ORDER, so an unsolicited message must never wear a kind that
+ * anything is waiting on. */
+function post(event: ControlReply): void {
+  parent?.postMessage(event);
+}
+
 function handleControl(
   message: ControlMessage | undefined,
   reply: (event: ControlReply) => void,
@@ -136,6 +218,8 @@ function handleControl(
   try {
     if (message.kind === "start") {
       stop("restarted");
+      const password = message.password ?? "";
+      const maxClients = message.maxClients ?? MAX_CLIENTS;
       session = createSession({
         params: message.params,
         // The BUILD the handshake compares is the engine's own version, read
@@ -144,10 +228,49 @@ function handleControl(
         // that has actually loaded the engine it is describing.
         build: engineVersion,
         mods: message.mods,
+        maxClients,
+        peers: {
+          kick: (clientId, reason) => hub?.kick(clientId, reason),
+          // The invite panel is the SHELL's — only the main process holds the
+          // Steam client. The answer has to be synchronous for the chat reply
+          // that quotes it, so what is returned is whether a Steam door is
+          // open at all, and the panel itself is asked for on the way past.
+          invite: () => {
+            if (!steamOpen) return false;
+            post({ kind: "invite" });
+            return true;
+          },
+          ping: (clientId) => hub?.pingOf(clientId) ?? -1,
+        },
+      });
+      hub = createPeerHub({
+        session,
+        handshake: {
+          protocol: PROTOCOL_VERSION,
+          build: engineVersion,
+          mods: message.mods ?? [],
+        },
+        password,
+        maxClients,
+        secret: CHALLENGE_SECRET,
+        now,
+        log: (line) => post({ kind: "log", line }),
       });
       if (clientPort) joinHost();
       startClock();
       reply({ kind: "started", levelId: message.params.levelId });
+      return;
+    }
+    if (message.kind === "listen") {
+      void openDoors(message, reply);
+      return;
+    }
+    if (message.kind === "peer") {
+      relay?.accept({ from: message.from, data: toBytes(message.data) });
+      return;
+    }
+    if (message.kind === "peer-lost") {
+      relay?.lost(message.from, message.reason);
       return;
     }
     if (message.kind === "stop") {
@@ -161,11 +284,77 @@ function handleControl(
         tick: session?.tick ?? 0,
         phase: session ? session.state.phase : "idle",
         enemies: session ? session.state.enemies.length : 0,
+        clients: session?.clientCount ?? 0,
+        bound,
+        mapping: mapper?.state ?? { status: "idle" },
+        roster: session?.roster() ?? [],
       });
     }
   } catch (err) {
     reply({ kind: "error", detail: String(err) });
   }
+}
+
+/**
+ * Bind the socket, open the relay, and ask the router — in that order, because
+ * only the first of the three can fail in a way that stops a session.
+ *
+ * The router mapping is asked for AFTER the reply is sent, deliberately: it
+ * takes up to two seconds against an unresponsive gateway, and a HOST screen
+ * that showed nothing at all for two seconds while a discovery timed out would
+ * read as a game that had hung. The ROUTER row starts as MAPPING and updates
+ * itself on the next status poll, which is what a status row is for.
+ */
+async function openDoors(
+  message: ControlMessage & { kind: "listen" },
+  reply: (event: ControlReply) => void,
+): Promise<void> {
+  if (!hub) {
+    reply({
+      kind: "listening",
+      bound: null,
+      steam: false,
+      protocol: PROTOCOL_VERSION,
+      build: engineVersion,
+      detail: "no session",
+    });
+    return;
+  }
+  if (message.steam) {
+    relay = createRelayTransport((to, data, mode) => {
+      // `postMessage` structured-clones, and a `Uint8Array` over a shared
+      // buffer would clone the WHOLE buffer; a plain array of bytes is what
+      // survives the trip predictably for the handful of small control-plane
+      // packets the relay carries.
+      post({ kind: "peer-send", to, data: [...data], mode });
+    });
+    await hub.add(relay);
+    steamOpen = true;
+  }
+  if (message.udp !== false) {
+    const udp = createUdpTransport({ port: message.port, now });
+    await hub.add(udp);
+    bound = udp.bound;
+  }
+  reply({
+    kind: "listening",
+    bound,
+    steam: steamOpen,
+    protocol: PROTOCOL_VERSION,
+    build: engineVersion,
+    detail: bound ? undefined : "could not bind a UDP port",
+  });
+  if (bound && behindNat()) {
+    mapper = createPortMapper();
+    await mapper.map(bound.port);
+  }
+}
+
+/** Bytes, whatever shape they survived the structured clone in. */
+function toBytes(data: ArrayBuffer | Uint8Array | number[]): Uint8Array {
+  if (data instanceof Uint8Array) return data;
+  if (Array.isArray(data)) return Uint8Array.from(data);
+  return new Uint8Array(data);
 }
 
 /**
@@ -188,6 +377,11 @@ function startClock(): void {
     // callback, which is what keeps the timestep fixed.
     const ran = session?.advance(elapsed) ?? 0;
     lastAdvanceMs += ran * TICK_MS;
+    // The transports' retransmits, the rate limiter's expiry and the router
+    // lease all hang off this one call. Nothing below the session owns a timer
+    // — see `net/transport.ts`'s `tick` for why.
+    hub?.tick();
+    mapper?.renew(Date.now());
     // A very long stall (a suspended laptop) would otherwise leave a debt the
     // session refuses to pay in one go and never catches up on, so the clock
     // is re-seated once the backlog passes what one advance can run.
@@ -204,6 +398,16 @@ function stop(reason: string): void {
   stopClock();
   session?.close(reason);
   session = null;
+  hub?.close();
+  hub = null;
+  relay = null;
+  steamOpen = false;
+  bound = null;
+  // RELEASED, not merely forgotten. A mapping left behind is a port open on
+  // the player's router for as long as its lease runs, and a game that leaks
+  // one every time it is played is a game that quietly opens a machine up.
+  void mapper?.release();
+  mapper = null;
 }
 
 /** Monotonic ms. `performance.now()` where it exists (it does in Electron's

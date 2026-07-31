@@ -23,7 +23,32 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
+
+/**
+ * The most clients one session seats, host included.
+ *
+ * Eight, matching Diablo 2 and the `/players` scale it is measured against
+ * (decision 1 in the plan's register). It is a HARD cap rather than a
+ * preference: it bounds the host's memory, the per-tick publish cost and — the
+ * reason it lives in the wire rather than in the shell — how many peers an open
+ * UDP socket may hold half-open at once.
+ */
+export const MAX_CLIENTS = 8;
+
+/**
+ * The smallest a connectionless `hello` may be, in whole bytes.
+ *
+ * THIS IS THE ANTI-REFLECTION RULE, and it is the reason the number exists at
+ * all. An open UDP port answers strangers, and a stranger who spoofs a victim's
+ * source address turns every host into an amplifier — so §5.2's rule is that a
+ * connectionless request must never be answered with more bytes than it
+ * contained. The `challenge` reply is ~80 bytes; padding the request past that
+ * makes the amplification factor less than one, which is what makes the whole
+ * mechanism safe rather than merely authenticated. Quake and Source pad their
+ * connectionless requests for exactly this reason.
+ */
+export const HELLO_MIN_BYTES = 128;
 
 /**
  * How often the server publishes a snapshot, in simulation ticks. The
@@ -104,7 +129,29 @@ export type RefusalReason =
   | "build-mismatch"
   | "mod-mismatch"
   | "session-full"
-  | "no-session";
+  | "no-session"
+  | "bad-password"
+  | "bad-challenge"
+  | "rate-limited";
+
+/**
+ * What the JOIN screen prints for each refusal.
+ *
+ * Here rather than in the app because both ends need it: the server writes it
+ * into the `bye` it sends, and a client refused before it ever reached a
+ * session has nothing but the reason code to word. Wording a refusal twice is
+ * how the two copies come to disagree about what "build-mismatch" means.
+ */
+export const REFUSAL_TEXT: Record<RefusalReason, string> = {
+  "protocol-mismatch": "THIS GAME SPEAKS A DIFFERENT VERSION OF THE PROTOCOL",
+  "build-mismatch": "ONE OF YOU NEEDS TO UPDATE - THE BUILDS DISAGREE",
+  "mod-mismatch": "THE HOST IS PLAYING WITH DIFFERENT MODS",
+  "session-full": "THAT SESSION IS FULL",
+  "no-session": "NOBODY IS HOSTING AT THAT ADDRESS",
+  "bad-password": "WRONG PASSWORD",
+  "bad-challenge": "THE HANDSHAKE EXPIRED - TRY AGAIN",
+  "rate-limited": "TOO MANY ATTEMPTS - WAIT A MOMENT",
+};
 
 // ---------------------------------------------------------------------------
 // The frames themselves
@@ -128,6 +175,24 @@ export const FRAME = {
   bye: 6,
   /** client → server: one named command (see `CommandPayload`). */
   command: 7,
+  /**
+   * client → server, CONNECTIONLESS: "are you there, and what must I prove?"
+   *
+   * The first packet a stranger sends, and the only one answered before
+   * anything is known about them. It must be at least `HELLO_MIN_BYTES` long —
+   * see that constant for why the padding is the security property.
+   */
+  hello: 8,
+  /** server → client, CONNECTIONLESS: a cookie to echo, and what else is
+   * needed. Deliberately tiny; see `HELLO_MIN_BYTES`. */
+  challenge: 9,
+  /** client → server: the cookie echoed, the handshake, and the password
+   * proof. The first frame that may reach a session. */
+  join: 10,
+  /** both ways: one line of chat, or the session's answer to a slash command. */
+  chat: 11,
+  /** server → client: who is in the session, and what they are doing. */
+  roster: 12,
 } as const;
 
 export type FrameType = (typeof FRAME)[keyof typeof FRAME];
@@ -170,8 +235,97 @@ export type WelcomePayload = {
 
 /** The payload of a `bye`. */
 export type ByePayload = {
-  reason: RefusalReason | "host-left" | "shutdown" | "error";
+  reason: RefusalReason | "host-left" | "shutdown" | "error" | "kicked";
   detail?: string;
+};
+
+/**
+ * The payload of a `hello` — the connectionless probe.
+ *
+ * `pad` is not a field with a meaning; it is the padding `HELLO_MIN_BYTES`
+ * demands, carried IN the payload so the rule can be enforced on the decoded
+ * frame rather than on a datagram length the transport may have already
+ * reframed. A client fills it with whatever it likes; the server only measures.
+ */
+export type HelloPayload = {
+  protocol: number;
+  pad?: string;
+};
+
+/**
+ * The payload of a `challenge` — the tiny reply, and the whole of what a
+ * stranger learns before proving anything.
+ *
+ * It names the session's protocol and build so a JOIN screen can refuse a skew
+ * without a round trip through a password prompt, and says WHETHER a password
+ * is wanted — never anything about it. `cookie` is what the join must echo.
+ */
+export type ChallengePayload = {
+  cookie: number;
+  protocol: number;
+  build: string;
+  needsPassword: boolean;
+  /** Seats taken and seats there are, so a browser row can read `3/8` off a
+   * probe rather than off metadata a host could have set to anything. */
+  players: number;
+  maxPlayers: number;
+};
+
+/**
+ * The payload of a `join`.
+ *
+ * `proof` is the password's, and it is a proof rather than the password: the
+ * client hashes the password together with the cookie it was just handed, so
+ * what crosses the wire is useless on any other connection. That is a speed
+ * bump and the doc says so — a listen server's host can read the password out
+ * of their own memory either way — but it costs nothing and keeps a session
+ * password out of a packet capture.
+ */
+export type JoinPayload = {
+  cookie: number;
+  handshake: Handshake;
+  proof: number;
+  /** What this player is called in the roster and in chat. Trimmed and capped
+   * by the server; never trusted for anything but display. */
+  name: string;
+};
+
+/** One line in the session's chat log. */
+export type ChatLine = {
+  /** The slot that said it, or -1 for the session itself. */
+  slot: number;
+  /** The speaker's display name, already resolved — a client that joined after
+   * the line was said has no other way to know who slot 3 was. */
+  name: string;
+  text: string;
+  kind: "say" | "emote" | "system";
+};
+
+/** A `chat` frame. Client → server carries `text` alone; server → client
+ * carries `lines`. Both directions in one shape so the frame tag stays one
+ * tag — the alternative is two, and two tags for one conversation is how a
+ * decoder ends up with a branch nobody tests. */
+export type ChatPayload = {
+  text?: string;
+  lines?: ChatLine[];
+};
+
+/** One seat, as everybody else may see it. Public by construction: it carries
+ * no bag, no purse and no build — the private tier never leaves its owner. */
+export type RosterEntry = {
+  slot: number;
+  name: string;
+  /** False for a spectator. PR 3 seats a second hero; until then exactly one
+   * entry is ever true. */
+  playing: boolean;
+  /** Round trip in ms as the server last measured it, or -1 for the host's own
+   * renderer, which has no wire to measure. */
+  ping: number;
+};
+
+/** A `roster` frame. */
+export type RosterPayload = {
+  entries: RosterEntry[];
 };
 
 /**
@@ -236,7 +390,12 @@ export function isFrameType(value: number): value is FrameType {
     value === FRAME.input ||
     value === FRAME.ack ||
     value === FRAME.bye ||
-    value === FRAME.command
+    value === FRAME.command ||
+    value === FRAME.hello ||
+    value === FRAME.challenge ||
+    value === FRAME.join ||
+    value === FRAME.chat ||
+    value === FRAME.roster
   );
 }
 

@@ -49,6 +49,39 @@ export type SteamClient = {
   utils: {
     isSteamRunningOnSteamDeck(): boolean;
   };
+  /**
+   * The LEGACY `ISteamNetworking` P2P API — and nothing else, which is the
+   * fact the whole transport seam is shaped around.
+   *
+   * `steamworks.js` ^0.4.0 binds no `ISteamNetworkingSockets` and no
+   * `ISteamNetworkingMessages`, so there are no sockets, no callbacks and no
+   * channels: the queue is POLLED. That is why `server/net/transport.ts` is
+   * packet-shaped and pumped rather than stream-shaped — a seam designed
+   * around the richer API could not have accommodated this one.
+   *
+   * Valve has deprecated it, and its reliability guarantees are thinner than
+   * SDR's. It still relays and still punches NAT, which is what is needed; if
+   * it proves flaky under load the fallback is landing the newer interface
+   * upstream or writing an N-API addon, and the latter costs the prebuilt
+   * binaries that make this shell installable without a Rust toolchain. The
+   * direct UDP path is the insurance policy on exactly that risk.
+   */
+  networking: {
+    sendP2PPacket(steamId64: bigint, sendType: number, data: Buffer): boolean;
+    isP2PPacketAvailable(): number;
+    readP2PPacket(size: number): {
+      data: Buffer;
+      steamId: { steamId64: bigint };
+    };
+    acceptP2PSession(steamId64: bigint): void;
+  };
+  /** Steam matchmaking (ISteamMatchmaking) — the lobby IS the game list.
+   * See `net-lobby.ts`. */
+  matchmaking: {
+    createLobby(lobbyType: number, maxMembers: number): Promise<SteamLobby>;
+    joinLobby(lobbyId: bigint): Promise<SteamLobby>;
+    getLobbies(): Promise<SteamLobby[]>;
+  };
   /** Steam Workshop (ISteamUGC) — how a player's mods arrive and how an
    * author's mod leaves. See `workshop.ts`. */
   workshop: {
@@ -76,6 +109,34 @@ export type SteamClient = {
     ): Promise<{ itemId: bigint; needsToAcceptAgreement: boolean }>;
   };
 };
+
+/** One matchmaking lobby, narrowed to what the server browser needs. Declared
+ * structurally for the same reason `SteamClient` is: this module has to stay
+ * loadable on a machine the native binding has no binary for. */
+export type SteamLobby = {
+  id: bigint;
+  getOwner(): { steamId64: bigint };
+  getMembers(): { steamId64: bigint }[];
+  getData(key: string): string | null;
+  setData(key: string, value: string): boolean;
+  getFullData(): Record<string, string>;
+  setJoinable(joinable: boolean): boolean;
+  openInviteDialog(): void;
+  leave(): void;
+};
+
+/** `SendType` from ISteamNetworking. `reliable` is what the transport seam's
+ * `"reliable"` mode means on this path; `unreliable` is a plain datagram, which
+ * is right for a snapshot that is already coded against an acknowledged
+ * baseline. Mirrored as constants so the enum needn't be imported from a module
+ * that may not load. */
+export const SEND_TYPE_UNRELIABLE = 0;
+export const SEND_TYPE_RELIABLE = 2;
+
+/** `ELobbyType.Public` — the value a lobby the server browser can find is
+ * created with. `FriendsOnly` is 1; the HOST screen chooses. */
+export const LOBBY_TYPE_PUBLIC = 2;
+export const LOBBY_TYPE_FRIENDS_ONLY = 1;
 
 /** `EItemState` bits from ISteamUGC, mirrored so the enum needn't be imported
  * from a module that may not load. Only the two the shell acts on. */

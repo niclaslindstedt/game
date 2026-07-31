@@ -29,20 +29,96 @@ import {
 import { output } from "./output";
 import { serverEntryPath } from "./resources";
 
+/** Where a socket ACTUALLY ended up. Never the port that was requested — see
+ * `server/net/udp.ts` for why that distinction is a rule rather than a detail. */
+export type ServerBound = { address: string; port: number };
+
+/** What the ROUTER row on the HOST screen reads. Mirrors `MappingState` in
+ * `server/net/upnp.ts`. */
+export type ServerMapping =
+  | { status: "idle" }
+  | { status: "mapping" }
+  | {
+      status: "mapped";
+      method: "nat-pmp" | "upnp";
+      externalAddress: string | null;
+      externalPort: number;
+    }
+  | { status: "failed"; detail: string };
+
+/** One seat, as everybody else may see it. Mirrors `RosterEntry` in
+ * `server/wire/protocol.ts`. */
+export type ServerRosterEntry = {
+  slot: number;
+  name: string;
+  playing: boolean;
+  ping: number;
+};
+
 /** A message down the control channel to the server. Mirrors `ControlMessage`
  * in `server/main.ts` — keep the two in step. */
 export type ServerControl =
-  | { kind: "start"; params: unknown; mods?: string[] }
+  | {
+      kind: "start";
+      params: unknown;
+      mods?: string[];
+      password?: string;
+      maxClients?: number;
+    }
   | { kind: "stop" }
-  | { kind: "status" };
+  | { kind: "status" }
+  | { kind: "listen"; port?: number; udp?: boolean; steam?: boolean }
+  | { kind: "peer"; from: string; data: number[] }
+  | { kind: "peer-lost"; from: string; reason: string };
 
 /** A message back up it. Mirrors `ControlReply` in `server/main.ts`. */
 export type ServerReply =
   | { kind: "ready"; protocol: number }
   | { kind: "started"; levelId: string }
-  | { kind: "status"; tick: number; phase: string; enemies: number }
+  | {
+      kind: "status";
+      tick: number;
+      phase: string;
+      enemies: number;
+      clients: number;
+      bound: ServerBound | null;
+      mapping: ServerMapping;
+      roster: ServerRosterEntry[];
+    }
+  | {
+      kind: "listening";
+      bound: ServerBound | null;
+      steam: boolean;
+      protocol: number;
+      build: string;
+      detail?: string;
+    }
+  | {
+      kind: "peer-send";
+      to: string;
+      data: number[];
+      mode: "reliable" | "unreliable";
+    }
+  | { kind: "invite" }
+  | { kind: "log"; line: string }
   | { kind: "stopped"; reason: string }
   | { kind: "error"; detail: string };
+
+/**
+ * The replies nothing is ever WAITING on.
+ *
+ * The bridge above matches replies to requests by ORDER — the server answers in
+ * order, so a queue is enough and no correlation id has to cross. That only
+ * holds if unsolicited messages are excluded, and getting this list wrong is
+ * silent: a log line would settle whatever request happened to be in flight,
+ * and the HOST screen would report a refusal it was never sent.
+ */
+export const UNSOLICITED: ReadonlySet<ServerReply["kind"]> = new Set([
+  "ready",
+  "peer-send",
+  "invite",
+  "log",
+]);
 
 export type SessionHostOptions = {
   /** Every reply the server sends, in order. */
