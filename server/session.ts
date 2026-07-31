@@ -29,7 +29,7 @@
 //     older baseline it still holds, so a loss costs one frame of smoothness
 //     and can never desync — and every publish between two acks re-sends the
 //     same ground, which is the redundancy that makes an unreliable transport
-//     safe in PR 2.
+//     safe in phase 2.
 //
 //  3. **A client's FIRST baseline is the world at tick 0**, not an empty
 //     state. The client built exactly that for itself from the SessionParams,
@@ -92,8 +92,8 @@ import {
 } from "./wire/snapshot.ts";
 
 /** How a session hands bytes to one client. The transport is somebody else's
- * problem — a `MessagePort` in PR 1, a Steam P2P packet or a UDP datagram in
- * PR 2 — and this signature is the whole of what they have to satisfy. */
+ * problem — a `MessagePort` in phase 1, a Steam P2P packet or a UDP datagram in
+ * phase 2 — and this signature is the whole of what they have to satisfy. */
 export type SendFrame = (frame: ArrayBuffer) => void;
 
 /** What was sent at one sequence, kept so an ack can advance the baseline to
@@ -153,7 +153,7 @@ const MAX_UNACKED = 60;
  * All three are things the session decides and cannot do: it knows a chat line
  * said `/kick`, and the hub is the only thing holding a socket to kick with.
  * Every one has a no-op default, so a session with no networking under it —
- * PR 1's, and every test's — still runs the whole chat path.
+ * phase 1's, and every test's — still runs the whole chat path.
  */
 export type SessionPeers = {
   /** Remove a client. The session has already decided it should happen. */
@@ -405,7 +405,7 @@ export function createSession(options: SessionOptions): Session {
 
   const maxClients = options.maxClients ?? MAX_CLIENTS;
   /** What the session may ask of whatever owns the sockets. Every one has a
-   * no-op default, so a session with no networking under it — PR 1's, and
+   * no-op default, so a session with no networking under it — phase 1's, and
    * every engine test's — still runs the whole chat path rather than a
    * second, less-tested copy of it. */
   const peers: SessionPeers = {
@@ -417,10 +417,10 @@ export function createSession(options: SessionOptions): Session {
   /**
    * The lowest free seat.
    *
-   * `clients.size` was the PR 1 answer and it is wrong the moment anybody
+   * `clients.size` was the phase 1 answer and it is wrong the moment anybody
    * leaves: with slots 0, 1 and 2 taken, slot 1 quitting and a fourth person
    * joining, the size is 2 and the newcomer is seated on top of slot 2 — two
-   * clients sharing a seat, two roster rows with one number, and (from PR 3)
+   * clients sharing a seat, two roster rows with one number, and (from phase 3)
    * two heroes steered by one input. A seat is a position, not a count.
    */
   function nextSlot(): number {
@@ -859,7 +859,7 @@ export function createSession(options: SessionOptions): Session {
       }
       if (type === FRAME.chat) {
         // CHAT IS THE ONE THING A SPECTATOR MAY DO, and it is the whole point
-        // of shipping it in this PR rather than in PR 4: eight people watching
+        // of shipping it in this PR rather than in phase 4: eight people watching
         // a hardcore run in silence are eight people watching a video. What
         // any one of them may CHANGE is still nothing — the room refuses a
         // spectator's `/players`, `/kick` and `/invite` by name.
@@ -922,7 +922,7 @@ export function createSession(options: SessionOptions): Session {
 }
 
 /** What the simulation is handed when nobody is steering — a hero standing
- * still, which is what a client with a screen open contributes from PR 3 on. */
+ * still, which is what a client with a screen open contributes from phase 3 on. */
 const IDLE_INPUT: GameInput = {
   steering: false,
   target: { x: 0, y: 0 },
@@ -935,7 +935,7 @@ const IDLE_INPUT: GameInput = {
  *
  * The wire carries a plain record, so this is where it becomes a `GameInput`
  * — and it is the ONE place a client's bytes reach the simulation, which is
- * what makes it the natural home for PR 5's validation. What it enforces today
+ * what makes it the natural home for phase 5's validation. What it enforces today
  * is only the shape: an input that is not an object is dropped rather than
  * spread onto the slot, because a `null` here would be a crash inside `step`
  * on the host's own machine.

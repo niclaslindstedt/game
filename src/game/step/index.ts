@@ -216,7 +216,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // A DOWNED hero is skipped whole. Nothing of his ticks — he is not steering,
   // shooting, casting or picking anything up — but he is still on the field and
   // still in `state.players`, because the horde walking over a corpse is what
-  // makes a party death mean something (PR 4's §4.2 owns the corpse and the
+  // makes a party death mean something (phase 4's §4.2 owns the corpse and the
   // respawn; it waits on the per-player `dying` screen).
   //
   // A DEPARTED hero is skipped for the same reason and a different one: nobody
@@ -378,7 +378,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   if (!state.freeze) stepQuests(state, dt, dtMs);
 
   // THE RUN ENDS WHEN THE PARTY FALLS, NOT WHEN A HERO DOES. One player going
-  // down in a co-op run is a setback the rest fight through (PR 4 owns the
+  // down in a co-op run is a setback the rest fight through (phase 4 owns the
   // corpse and the respawn); it is only when the LAST of them is down that the
   // run is over. In single player that is the same tick it always was.
   if (partyWiped(state)) {

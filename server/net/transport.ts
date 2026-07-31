@@ -10,7 +10,7 @@
 // richer shape could not accommodate that, and the whole point of having a
 // seam is that both paths ride it: the Steam friend list is the frictionless
 // door, and a typed address is the one that works on a LAN, on a Steam Deck
-// with no internet, and — from PR 5 — against a headless dedicated server.
+// with no internet, and — from phase 5 — against a headless dedicated server.
 //
 // **IT LIVES IN `server/`, NOT IN `electron/src/`, and that is a deliberate
 // departure from the plan's own file list.** The plan sketched
@@ -72,7 +72,7 @@ export type TransportEvents = {
    *
    * The layer above has to hear it rather than discover it: a spectator whose
    * laptop shut its lid is a seat still taken, a roster entry still drawn, and
-   * — once PR 3 seats heroes — a body still standing on the field. The
+   * — once phase 3 seats heroes — a body still standing on the field. The
    * transport is what knows, because it is what was waiting for the packet
    * that never came.
    */

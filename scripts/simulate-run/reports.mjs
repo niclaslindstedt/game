@@ -332,7 +332,7 @@ export function renderSingleCampaign(
 // ---- THE PARTY — one row per seat, and the per-capita read ----------------------
 
 // The `--party N` report (multiplayer plan §7.2): who was on the floor, what
-// each seat came away with, and the per-capita rates PR 4's §4.3 tuning pass is
+// each seat came away with, and the per-capita rates phase 4's §4.3 tuning pass is
 // read off.
 //
 // **IT PRINTS BOTH NUMBERS IN THE HEADING ON PURPOSE.** `--party N` is how many

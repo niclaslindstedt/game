@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // CHAT, AND THE SLASH COMMANDS THAT RIDE IT — a pure parser and nothing else.
 //
-// Chat is small, and it is built here rather than in PR 4 because it is what
+// Chat is small, and it is built here rather than in phase 4 because it is what
 // makes a spectator session feel like a game rather than a stream: eight people
 // watching a hardcore run in silence are eight people watching a video.
 //

@@ -12,7 +12,7 @@
 //   …    payload
 //
 // THE HEADER IS FIXED-SIZE AND VALIDATED BEFORE ANYTHING IS READ, and that is
-// a security property rather than a style: PR 2 opens a UDP socket, which means
+// a security property rather than a style: phase 2 opens a UDP socket, which means
 // these bytes eventually arrive from strangers. A decoder that reads a length
 // out of the payload before checking the buffer is long enough is the classic
 // over-read, and it is much easier to never write than to find later. So

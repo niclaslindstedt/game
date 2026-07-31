@@ -11,7 +11,7 @@
 // check — the same shape `mod/catalog.json` and the Game Center manifests use.
 //
 // The argument suite is not paperwork. These arguments arrive from an open UDP
-// port from PR 2 on: an index that is really an object, a stat called "luckk",
+// port from phase 2 on: an index that is really an object, a stat called "luckk",
 // a `NaN` speed and a missing argument are all things a stranger may send, and
 // every one of them has to be a refusal rather than a host-side throw.
 

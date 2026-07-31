@@ -4,7 +4,7 @@
 //
 // **THE RUN LOOP MUST REACH IT.** The plan was amended twice for the same
 // failure: a LAYER ships and the CUTOVER that would make it reachable does not
-// (PR 1 and PR 2 both, see `docs/multiplayer-plan.md`'s amendments). Both times
+// (phase 1 and phase 2 both, see `docs/multiplayer-plan.md`'s amendments). Both times
 // the corrective was more prose, and prose was nought for two. So this began as
 // a TRIPWIRE — an assertion that the loop did NOT reach the client, green while
 // the machinery was orphaned and failing the moment somebody wired it up — and
@@ -18,7 +18,7 @@
 // `@game/core`, so a static edge to it from the app's first download drags the
 // whole simulation along. `pwa/scripts/check-seo.mjs` measures the built bytes;
 // this says WHICH IMPORT would have caused it, which is the half a size number
-// cannot tell you — and it is the rule PR 2.5's title-menu screens will be
+// cannot tell you — and it is the rule phase 2.5's title-menu screens will be
 // tempted to break.
 
 import { readFileSync } from "node:fs";
@@ -171,7 +171,7 @@ describe("the app's startup path", () => {
     // imports `@game/core`; a static edge from the startup path to it puts the
     // whole simulation — the catalogs, the step pipeline, the loot roller, the
     // carve — into every player's first download. The HAND and JOIN screens of
-    // PR 2.5 are title-menu screens and are exactly where this will be tempting:
+    // phase 2.5 are title-menu screens and are exactly where this will be tempting:
     // they may reach `@game/menu` and the import-free `@game/wire/*` leaves,
     // never this.
     expect(startup.has(NET_CLIENT)).toBe(false);

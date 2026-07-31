@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE SESSION HOST — the utilityProcess's whole lifecycle, and nothing else.
 //
-// One process per SESSION, not per app. PR 5's dedicated server runs several,
+// One process per SESSION, not per app. phase 5's dedicated server runs several,
 // and one process per session is what makes that free; it is also what keeps
 // the engine's 36 process-global mutable bindings — the `BALANCE` tuning
 // object, the six flags in `src/game/flags.ts`, every `activeXDefs` catalog

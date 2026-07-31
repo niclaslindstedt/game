@@ -26,7 +26,7 @@
 // leaves exactly one code path, because the host's renderer becomes just
 // another client.
 //
-// ONE PROCESS PER SESSION, not per app: PR 5's dedicated server runs several,
+// ONE PROCESS PER SESSION, not per app: phase 5's dedicated server runs several,
 // and one process per session is what makes that free.
 //
 // **AND IT HAS TWO ROLES, WHICH IS ONE FORK AND ONE PORT EITHER WAY.** `start`
@@ -174,7 +174,7 @@ type ClientPort = {
   close?(): void;
 };
 
-/** The one client of PR 1: the host's own renderer, which owns the hero. */
+/** The one client of phase 1: the host's own renderer, which owns the hero. */
 const HOST_CLIENT = 1;
 
 /**
@@ -251,7 +251,7 @@ function attachClient(port: ClientPort): void {
     }
     // Client → server. Nothing here reaches the simulation directly: the frame
     // is decoded, refused if it is not one, and handed to the session, which
-    // owns what an input may do. That layering is what PR 5's hardening hangs
+    // owns what an input may do. That layering is what phase 5's hardening hangs
     // off — an open UDP port eventually delivers bytes from strangers to this
     // same decoder.
     const frame = decodeFrame(event.data as ArrayBuffer);

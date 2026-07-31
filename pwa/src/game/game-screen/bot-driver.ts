@@ -17,7 +17,7 @@ import {
   createBot,
   cullWorstLoot,
   gateKeyTarget,
-  sortBotInventory,
+  sortInventory,
   careForCompanion,
   stepBotWeaponSwap,
   tradeAtMerchant,
@@ -304,7 +304,7 @@ export function createBotDriver(deps: {
     if (drivingBot && state.phase === "playing") {
       if (botAutoEquip(state, localHero(state))) bumpUi();
       cullWorstLoot(state, localHero(state));
-      if (sortBotInventory(state, localHero(state))) bumpUi();
+      if (sortInventory(state, localHero(state))) bumpUi();
     }
   };
 

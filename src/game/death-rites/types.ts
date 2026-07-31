@@ -22,7 +22,7 @@
 // the camera, collision, the minimap, the pointer's `toWorld` hit-testing and
 // the autopilot all read `player.pos`. An app-side animation would put the
 // picture and the world in different places. It also has to travel: the run is
-// moving into the session server (docs/multiplayer-plan.md PR 1.75), so a
+// moving into the session server (docs/multiplayer-plan.md phase 1.75), so a
 // cinematic living in the renderer would show a spectator the boss simply
 // vanishing. In the engine it replicates as ordinary dynamic state for free.
 

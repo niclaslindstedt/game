@@ -15,7 +15,7 @@
 // The PRIVATE tier is simultaneously three things, and only the first is
 // obvious: a bandwidth win, a privacy win, and **the anti-cheat boundary** —
 // a client that never receives another player's bag cannot manipulate it. It
-// is also what makes PR 5's trade window honest. So the rule is a WITHHOLDING
+// is also what makes phase 5's trade window honest. So the rule is a WITHHOLDING
 // rather than an optimization: a private field is deleted from the snapshot
 // before it is coded, not merely skipped when it happens not to have changed.
 //
@@ -103,7 +103,7 @@ export const UNSENT_FIELDS: readonly string[] = ["rng", "fxRng", "view"];
  * These are the reads the plan measured as the private two thirds of
  * `state.players[0]`: the bag, the purse, the build. A spectator or a second hero
  * gets the hero's `pos`, `hp` and `equipment` (they can SEE those) and nothing
- * that would let them enumerate — or, past PR 5's trade window, assert
+ * that would let them enumerate — or, past phase 5's trade window, assert
  * anything about — what is in his pockets.
  */
 export const PRIVATE_PLAYER_FIELDS: readonly string[] = [

@@ -2,7 +2,7 @@
 // SPECTATORS AND CHAT — one session, several clients, and the line between
 // what a watcher may SAY and what they may CHANGE.
 //
-// PR 2's milestone is deliberately "eight machines, one hero": it puts real
+// phase 2's milestone is deliberately "eight machines, one hero": it puts real
 // latency, real loss and eight real seats under the replication layer while the
 // thing being replicated is still something known to work. So the properties
 // worth pinning are the ones that make that milestone honest — a spectator's
@@ -125,7 +125,7 @@ describe("seating", () => {
   it("never sends a spectator anybody's bag", () => {
     // The anti-cheat boundary, and it is a WITHHOLDING rather than an
     // omission: a client that never RECEIVES another player's bag cannot
-    // manipulate it, which is what will make PR 5's trade window honest.
+    // manipulate it, which is what will make phase 5's trade window honest.
     const { live } = session();
     const { watchers } = seat(live, 1);
     live.advance(100);
@@ -138,8 +138,8 @@ describe("seating", () => {
   });
 
   it("seats a leaver's slot again rather than doubling up on the last one", () => {
-    // `clients.size` was the PR 1 answer and it is wrong the moment anybody
-    // leaves: two clients would share a seat, and (from PR 3) two heroes would
+    // `clients.size` was the phase 1 answer and it is wrong the moment anybody
+    // leaves: two clients would share a seat, and (from phase 3) two heroes would
     // be steered by one input.
     const { live } = session();
     seat(live, 2);
@@ -189,7 +189,7 @@ describe("seating", () => {
 
 describe("what a spectator may do", () => {
   it("may talk", () => {
-    // The whole reason chat ships in this PR rather than in PR 4: eight people
+    // The whole reason chat ships in this PR rather than in phase 4: eight people
     // watching a hardcore run in silence are eight people watching a video.
     const { live } = session();
     const { host, watchers } = seat(live, 1);

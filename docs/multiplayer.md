@@ -1,8 +1,8 @@
 # Multiplayer — the shipped architecture
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
-describes what actually exists. **PR 1, PR 2, PR 1.5, PR 1.75, PR 2.5 and the
-first half of PR 3 have landed.** The simulation runs in its own process, the
+describes what actually exists. **phase 1, phase 2, phase 1.5, phase 1.75, phase 2.5 and the
+first half of phase 3 have landed.** The simulation runs in its own process, the
 run loop drives it, the wire between it and a renderer is complete and tested,
 the desktop shell forks and supervises a session, a session can open a UDP
 socket and a Steam lobby and admit remote clients behind a challenge handshake,
@@ -11,7 +11,7 @@ GAME**, the **server browser**, **JOIN BY ADDRESS**) — and a run now carries a
 **PARTY** rather than a hero, so an admitted player is seated with a character
 of their own.
 
-What is NOT here yet is the half of PR 3 that makes eight heroes comfortable
+What is NOT here yet is the half of phase 3 that makes eight heroes comfortable
 rather than merely possible: a screen one player opens still stops the world for
 everybody, and a client still shows its hero where the last snapshot put him
 rather than predicting his own steering. See **What is NOT here yet** at the
@@ -87,7 +87,7 @@ is the run's one stream, so spending a draw there moves every seeded
 measurement, replay and test in the repo.
 
 **The run ends when the party falls, not when a hero does** (`partyWiped`). One
-player going down is a setback the rest fight through; PR 4's §4.2 owns the
+player going down is a setback the rest fight through; phase 4's §4.2 owns the
 corpse and the respawn, and waits on the per-player `dying` screen.
 
 **A seat is appended, never inserted, and never spliced out.** Every command and
@@ -149,7 +149,7 @@ pwa/src/game/title-screen/    the three doors (menus-net.ts, use-sessions.ts)
 
 The JOINER's half of the wire is `server/net/connect.ts`, and it lives beside
 the hub rather than in the shell or in the page for the two reasons the seam
-itself moved here: a page cannot open a UDP socket at all, and PR 5's dedicated
+itself moved here: a page cannot open a UDP socket at all, and phase 5's dedicated
 server has no shell to put one in. The session process therefore has **two
 roles** — `start` makes it a HOST (it simulates, and the renderer is its first
 client), `connect` makes it a JOINER (nothing simulates, a socket is opened
@@ -203,11 +203,11 @@ why nothing in this feature has an "and also, when you are the host…" clause.
 - **DYNAMIC — snapshotted every third tick** (20 Hz), as a delta against the
   last snapshot the client ACKNOWLEDGED. A lost frame therefore costs one frame
   of smoothness and can never desync, which is what makes an unreliable
-  transport safe in PR 2.
+  transport safe in phase 2.
 - **PRIVATE — to its owner alone.** The bag, the purse, the stats, the talents.
   This is simultaneously a bandwidth win, a privacy win and **the anti-cheat
   boundary**: a client that never receives another player's bag cannot
-  manipulate it, which is what will make PR 5's trade window honest. It is a
+  manipulate it, which is what will make phase 5's trade window honest. It is a
   WITHHOLDING, not an omission — the fields are deleted before the snapshot is
   coded, and a spectator's client deletes the ones its own `createGame`
   invented.
@@ -286,10 +286,10 @@ Two things, and both are narrow on purpose:
   process every one of those calls has to travel. They travel as names from a
   fixed union, dispatched through an explicit `switch`. A channel that resolved
   a function name dynamically would hand a client `grantXp` and `mintUnique`
-  the day PR 2 opens a UDP port.
+  the day phase 2 opens a UDP port.
 
-  **THE ARGUMENTS ARE PART OF THAT MODEL AND ARE SCALARS ONLY.** PR 1's nine
-  verbs took none; PR 1.5's sixty-nine mostly do. A verb whose payload is a
+  **THE ARGUMENTS ARE PART OF THAT MODEL AND ARE SCALARS ONLY.** phase 1's nine
+  verbs took none; phase 1.5's sixty-nine mostly do. A verb whose payload is a
   STRUCTURE is a verb whose payload a stranger gets to shape, so what crosses is
   a number, a string or a boolean — an index, a slot name, a stat, a quest id, a
   speed rung — and each verb's arity and argument types are declared beside it in
@@ -310,10 +310,10 @@ Two things, and both are narrow on purpose:
   dispatch the server does, so a verb cannot behave one way in single-player and
   another in a session; when a run driver installs a sink it applies locally AND
   sends, so the call sites that read what a verb returned still get an answer and
-  the server's next snapshot corrects it. That is NOT the input prediction PR 3
+  the server's next snapshot corrects it. That is NOT the input prediction phase 3
   owns — there is no rollback and no replay, only a UI verb applied twice.
 
-- **CHAT**, added by PR 2 — one line of text, parsed by the server
+- **CHAT**, added by phase 2 — one line of text, parsed by the server
   (`server/wire/chat.ts`) into one of six names from a **second** closed list,
   for exactly the same reason: a chat box that handed the session an arbitrary
   verb would undo the command channel's allow-list beside it. It is the ONE
@@ -321,15 +321,15 @@ Two things, and both are narrow on purpose:
   `/kick` and `/invite` **by name** rather than ignoring them — a command that
   silently does nothing is indistinguishable from one that is broken.
 
-PR 1 shipped the nine scene-advance verbs. **PR 1.5 added the other sixty** —
+phase 1 shipped the nine scene-advance verbs. **phase 1.5 added the other sixty** —
 the screens, the run's own flow, the bag, the counter, the build, the party, the
-errands, the conversations, the vault and the AUTO PILOT ride — not PR 3, as the
+errands, the conversations, the vault and the AUTO PILOT ride — not phase 3, as the
 plan originally said, which was a circular dependency: the run loop cannot move
 into the server until every verb it calls can travel. The two halves are
-separate jobs on the same names. **PR 1.5 makes them TRAVEL**, with today's
+separate jobs on the same names. **phase 1.5 makes them TRAVEL**, with today's
 blocking semantics exactly preserved — opening the inventory still freezes the
 run, because that is what it does now and the cutover may not change how the
-game feels; **PR 3 makes them NON-BLOCKING** per player, which is the design
+game feels; **phase 3 makes them NON-BLOCKING** per player, which is the design
 exercise.
 
 One thing moved out of the app to make that possible, and it is worth knowing
@@ -358,7 +358,7 @@ server "is the same file" as this one, minus Electron. Both cannot be true — a
 transport in the shell is a transport the standalone server does not have. So:
 
 - **UDP lives in the session process** (`server/net/udp.ts`). Its packets never
-  touch the main process's event loop, and PR 5's dedicated server inherits the
+  touch the main process's event loop, and phase 5's dedicated server inherits the
   whole path with no shell at all.
 - **Steam lives in the shell** (`electron/src/net-steam-p2p.ts`), because
   `steamworks.init()` is a single global handshake `steam.ts` owns and the
@@ -786,10 +786,10 @@ could before multiplayer existed.
 
 ## What has landed, and what is still owed
 
-PRs 1, 2, 1.5, 1.75, 2.5, **PR 3's §3.1**, **PR 4's §4.2-abandoned-hero and
-§4.3** and **PR 5** of the ten in `docs/multiplayer-plan.md` have landed.
+phases 1, 2, 1.5, 1.75, 2.5, **phase 3's §3.1**, **phase 4's §4.2-abandoned-hero and
+§4.3** and **phase 5** of the ten in `docs/multiplayer-plan.md` have landed.
 
-The deferred work is inventoried in the plan's **PR 5.5 — "THE REMAINDER"**, and
+The deferred work is inventoried in the plan's **phase 5.5 — "THE REMAINDER"**, and
 that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered across
 eleven PR sections is how a debt stops being anybody's. §5.5 collects them, says
 which are BLOCKED and on what, and gives the order they unblock each other in —
@@ -832,7 +832,7 @@ still stops the world for everybody (`Player.screen` and the non-blocking
 level-up are §3.2, and the level-up is a real single-player behaviour change that
 owes the changelog its own line); nothing is predicted, so a client shows its
 hero where the last snapshot put him (§3.3); and a joiner still plays on the
-THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster (PR 4's
+THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster (phase 4's
 §4.5). A client's run commands travel but are NOT applied locally
 (`setCommandSink(…, { optimistic: false })`) — the server is authoritative over
 the result, so an optimistic apply would draw an outcome the next snapshot may
@@ -854,11 +854,11 @@ and is a real design question.
   `companion`) that in co-op must not freeze the other seven. Splitting the
   concept — `state.phase` keeping only what is genuinely global, a new
   `Player.screen` carrying what one player is looking at, with that player still
-  standing on the field and still killable — is PR 3's §3.2 and has NOT landed.
-  The verbs that raise those phases already travel (PR 1.5); what is left is
+  standing on the field and still killable — is phase 3's §3.2 and has NOT landed.
+  The verbs that raise those phases already travel (phase 1.5); what is left is
   changing what they MEAN.
 - **Nothing is predicted.** A client shows its own hero where the last snapshot
-  put him, so its steering costs a round trip of felt latency. PR 3's §3.3 is
+  put him, so its steering costs a round trip of felt latency. phase 3's §3.3 is
   the fix: input frames with a sequence number, the LOCAL hero's movement
   predicted by replaying unacknowledged input, everybody else interpolated one
   interval behind — and combat deliberately NOT predicted, because that is a
@@ -867,7 +867,7 @@ and is a real design question.
 - **A joiner's run is not banked.** The spectator's THROWAWAY character
   (`spectatorCharacter`) is still what a joining client plays on, so nothing a
   seated player earns reaches their own roster. Banking eight characters is
-  PR 4's §4.5.
+  phase 4's §4.5.
 - **The co-op tuning is STRUCTURAL, not measured.** The XP share, the loot
   allocation and the menace meter's per-capita read are each shaped correctly
   and each an exact no-op at one hero, but the two knobs that decide how they
@@ -876,7 +876,7 @@ and is a real design question.
   (a multi-player headless campaign, the plan's §3.4) does not exist: the
   autopilot reads seat 0 throughout, so `scripts/simulate-run.mjs` can only fly
   one hero. Parameterizing the bot on a `Player` is the prerequisite, and it is
-  the next thing PR 4 owes — it is PR 7's §7.1–§7.2, which is owed earlier than
+  the next thing phase 4 owes — it is phase 7's §7.1–§7.2, which is owed earlier than
   its number because nothing else can measure this. See the plan's §4.7.
 - **Trade has no window yet.** The engine, the five verbs and the anti-dupe
   rules are all here and tested; what is missing is the SCREEN — a trade is

@@ -15,7 +15,7 @@
 // same machine; there is no address to verify, no version skew possible, and
 // no password a player should have to type to play their own game. It is a
 // different DOOR, not a privileged client — it is seated by `server/main.ts`
-// exactly as it was in PR 1, and everything below this line is about the door
+// exactly as it was in phase 1, and everything below this line is about the door
 // that faces the internet.
 //
 // FOUR BOUNDS, EACH ANSWERING A DIFFERENT ABUSE:

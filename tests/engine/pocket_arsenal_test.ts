@@ -14,7 +14,7 @@ import {
   botWeaponSwapTarget,
   cullWorstLoot,
   hasPocketShooter,
-  sortBotInventory,
+  sortInventory,
   stepBotWeaponSwap,
   weaponCooldownFor,
   type Equipment,
@@ -365,7 +365,7 @@ describe("pocket keepers (cullWorstLoot)", () => {
   });
 });
 
-describe("bag order (sortBotInventory)", () => {
+describe("bag order (sortInventory)", () => {
   it("pockets up front (ranged, magic), then loot by preciousness, gaps packed", () => {
     const state = bladeHero();
     const inv = state.players[0].inventory;
@@ -375,7 +375,7 @@ describe("bag order (sortBotInventory)", () => {
     inv[4] = weapon(state, "test_pistol", { ilvl: 5 }); // best ranged
     inv[5] = weapon(state, "test_wand", { ilvl: 5 }); // best (only) magic
     inv[6] = weapon(state, "test_pipe", { ilvl: 9 }); // metal — out-sells the blaster
-    expect(sortBotInventory(state, state.players[0])).toBe(true);
+    expect(sortInventory(state, state.players[0])).toBe(true);
     expect(inv[0]?.defId).toBe("test_pistol");
     expect(inv[1]?.defId).toBe("test_wand");
     // Then preciousness: the legendary tops the sell ladder, metal beats
@@ -386,6 +386,6 @@ describe("bag order (sortBotInventory)", () => {
     expect(inv[4]?.defId).toBe("blaster");
     expect(inv[5]).toBeNull();
     // Idempotent: an already-sorted bag doesn't move.
-    expect(sortBotInventory(state, state.players[0])).toBe(false);
+    expect(sortInventory(state, state.players[0])).toBe(false);
   });
 });

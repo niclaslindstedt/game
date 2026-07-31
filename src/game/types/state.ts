@@ -329,7 +329,7 @@ export type BossDeathState = {
    * assumed for the reason `docs/multiplayer-plan.md` §3.2 gives for the
    * spare-or-kill `choice`: in co-op the player who landed the killing blow is
    * the one who acts, with the scene shown to everybody. Resolving it through
-   * `bossDeathExecutioner` keeps PR 3's `state.players[0]` → `state.players[]`
+   * `bossDeathExecutioner` keeps phase 3's `state.players[0]` → `state.players[]`
    * rename to one site instead of one per read.
    */
   executioner: number;
@@ -728,7 +728,7 @@ export type GameState = {
    * `Player` as a PARAMETER wherever a pass is about one specific hero.
    *
    * A seat is never empty and never reordered while a run lives: a player who
-   * leaves keeps their hero standing (PR 4 owns what happens to it), because
+   * leaves keeps their hero standing (phase 4 owns what happens to it), because
    * splicing the list would renumber everybody else's seat and every command in
    * flight names a seat.
    *
