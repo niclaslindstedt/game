@@ -18,6 +18,7 @@ import type {
   MenuEntry,
   MenuScreen,
 } from "../../pwa/src/game/title-screen/menu-model.ts";
+import type { Character } from "../../pwa/src/game/characters.ts";
 import { buildMenu } from "../../pwa/src/game/title-screen/menus.ts";
 import { setDevicePolicyForTest } from "../../pwa/src/app/device-policy.ts";
 import { updateSettings } from "../../pwa/src/game/settings.ts";
@@ -64,6 +65,20 @@ const UNION: MenuScreen[] = [
   "sessions",
   "address",
 ];
+
+/** A saved hero, for the screens whose rows depend on the roster having one. */
+const HERO: Character = {
+  id: "hero",
+  name: "ADA",
+  hardcore: false,
+  createdAt: 0,
+  dead: false,
+  loadout: null,
+  clears: [],
+  beaten: [],
+  storySeen: [],
+  merchantsMet: [],
+};
 
 /**
  * A MenuContext with every field a builder might read, wired to nothing.
@@ -241,7 +256,9 @@ describe("the title menu tree", () => {
     // The one screen worth pinning row by row: it is the game's first
     // impression, and the order is the design (play block, then the shelf, then
     // the settings, then the way out).
-    const rows = buildMenu("main", ctxFor()).map((row) => row.aria);
+    const rows = buildMenu("main", ctxFor({ roster: [HERO] })).map(
+      (row) => row.aria,
+    );
     expect(rows).toEqual([
       "main-resume",
       "main-new-game",
@@ -266,6 +283,7 @@ describe("the title menu tree", () => {
         modsOpen: false,
         netOpen: false,
         canQuit: false,
+        roster: [HERO],
       }),
     ).map((row) => row.aria);
     expect(rows).toEqual([
@@ -275,6 +293,15 @@ describe("the title menu tree", () => {
       "main-extras",
       "main-settings",
     ]);
+  });
+
+  it("hides LOAD GAME until there is a hero to load", () => {
+    // ABSENT, not greyed: a dead row owes the player a line explaining its
+    // grey, and that line hangs a second row of text off the centred front
+    // door. A first launch has nothing to load and NEW GAME says what to do.
+    const rows = buildMenu("main", ctxFor({ roster: [] }));
+    expect(rows.map((row) => row.aria)).not.toContain("main-load-game");
+    expect(rows.every((row) => !row.blurb)).toBe(true);
   });
 
   it("takes the whole GORE page away when the DEVICE says no", () => {

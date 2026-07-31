@@ -42,29 +42,19 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
       playUiSound(synth, "confirm");
       ctx.onNewGame();
     }),
-    // Greyed and inert with an empty roster — there is no saved hero to load,
-    // so mint one via NEW GAME first (mirrors a locked level row). The help
-    // line shows only then: it is the one thing explaining the grey.
-    "load-game": ((): MenuEntry => {
-      const hasRoster = ctx.roster.length > 0;
-      return actionRow(
-        "main",
-        "load-game",
-        () => {
-          if (!hasRoster) {
-            playUiSound(synth, "back");
-            return;
-          }
-          playUiSound(synth, "confirm");
-          ctx.onLoadGame();
-        },
-        {
-          color: hasRoster ? undefined : "#5a6068",
-          locked: !hasRoster,
-          state: hasRoster ? undefined : "empty",
-        },
-      );
-    })(),
+    // ABSENT until there is a hero to load, rather than greyed out. A dead row
+    // needs a help line to explain its grey, and a help line under a front-door
+    // row is a second, longer line of text hanging off a centred column — which
+    // reads as the menu being ragged rather than as the row being disabled. A
+    // first launch has nothing to load and NEW GAME above says what to do, so
+    // the row has nothing to add until it works.
+    "load-game":
+      ctx.roster.length > 0
+        ? actionRow("main", "load-game", () => {
+            playUiSound(synth, "confirm");
+            ctx.onLoadGame();
+          })
+        : null,
     "how-to-play": actionRow("main", "how-to-play", () => {
       playUiSound(synth, "start");
       ctx.onHowToPlay();

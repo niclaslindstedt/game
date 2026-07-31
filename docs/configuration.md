@@ -121,7 +121,7 @@ class-correct weapon, and a stock of consumables; the seed's deep lane stat also
 banks a pile of unspent talent points to pour into that tree on first load. A
 seed is stamped as having beaten every difficulty up to its tier, so its
 level picker is open; re-seeding a tier refreshes its specimens rather than
-piling up duplicates. The heroes appear under **PLAY → LOAD GAME**.
+piling up duplicates. The heroes appear under **LOAD GAME**.
 
 Desktop keyboard controls (when **Keys** is set to WASD): the shipped scheme is
 **WASD** steer, **Shift** walks, **Space** jumps, **Q** opens the weapon
@@ -151,7 +151,8 @@ scene.
 Progress belongs to **characters** — named, persistent heroes
 (`pwa/src/game/characters.ts`), stored under `<storagePrefix>:characters`
 with the active one at `<storagePrefix>:active-character`. The app opens on the
-title menu; **PLAY** opens a submenu with **NEW GAME** and **LOAD GAME**. NEW
+title menu, whose front door leads with **NEW GAME** and — once the roster holds
+a hero at all, and absent until then — **LOAD GAME**. NEW
 GAME opens the roster straight on the create form (name the hero and choose
 **HARDCORE** at creation — the choice belongs to the character, not a global
 setting); LOAD GAME opens the hero list to pick a saved hero (or retire the
