@@ -59,3 +59,41 @@ way to exercise it is the test suite —
 `tests/engine/net_session_test.ts` drives a real session and a real client over
 a loopback pair and compares the two states — or the desktop app, which is what
 `electron/src/session-host.ts` forks.
+
+## Running it standalone — the dedicated server
+
+The utility-process server and the standalone one are the same code: everything
+that makes a session (the simulation, the admission desk, the sockets, the
+router mapping and the one fixed-timestep clock) is `host.ts`, and `main.ts`
+picks its entry from whether anybody forked it. With a `parentPort` it is the
+game's own session server; without one it hands over to `dedicated.ts`.
+
+```sh
+npm run server:start                       # build, then run with the defaults
+npm run server:start -- --port 27015       # …on a chosen port
+npm run server:start -- server.config.json # …from a config file
+```
+
+Every flag has a config-file twin; see `server.config.example.json` and
+`DedicatedConfig` for the full list. Flags win over the file.
+
+Four things about it are worth knowing before running one:
+
+- **NOBODY OWNS IT.** Seat 0 stands empty until somebody joins, and the first
+  arrival is dressed in the hero THEY brought rather than in the run's default.
+  An empty server does not simulate at all, so it costs nothing while idle.
+- **A RUN ON IT IS A PARTY RUN** and banks no leaderboard record, for the reason
+  every co-op run does: whoever operates the machine controls the simulation.
+- **NO STEAM.** `steamworks.init()` is a single global handshake the desktop
+  shell owns, so the relay transport is something the SHELL adds to a host. A
+  dedicated server has only the direct UDP path — which is the transport that
+  already carries the whole protocol, and the only one that works on a LAN with
+  the internet off.
+- **REACHABILITY CANNOT BE SELF-TESTED.** It prints the port it actually bound
+  (never the one it asked for) and whether the router accepted a mapping; past
+  that, the first joiner is the only proof.
+
+The licence question is open and is not this code's to settle: decision 15 in
+`docs/multiplayer-plan.md` asks what `PolyForm-Noncommercial-1.0.0` permits for
+somebody running a server for other people, and it should be confirmed before a
+binary ships.

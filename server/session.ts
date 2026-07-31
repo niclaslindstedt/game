@@ -174,6 +174,33 @@ export type SessionOptions = {
   /** Seats, host included. */
   maxClients?: number;
   peers?: Partial<SessionPeers>;
+  /**
+   * NOBODY OWNS THIS SESSION — it is a DEDICATED SERVER's (plan §5.5), standing
+   * empty until players connect to it, rather than a game somebody is playing.
+   *
+   * **THE BUG THIS EXISTS FOR IS SUBTLE AND WAS FOUND BY RUNNING ONE.** The
+   * host is identified below by being the FIRST client to ask for a seat, which
+   * is true only because in the shipped topology the host's own renderer always
+   * connects first, over a `MessagePort`, before any socket is open. A dedicated
+   * server has no such renderer — so the first person to join over the network
+   * was mistaken for the host, seated on the run's existing seat-0 hero, and
+   * handed a DEFAULT character instead of the one they brought.
+   *
+   * Three things follow, and each is a rule rather than a workaround:
+   *
+   *  1. **No client is the host.** Seat 0 starts DEPARTED, so `nextFreeSeat`
+   *     offers it to the first arrival like any other seat and `seatHero`
+   *     dresses it in their own loadout.
+   *  2. **An empty server does not simulate.** With seat 0 departed and nobody
+   *     in, every hero is out of play and `partyWiped` would end a run nobody
+   *     has played. It also happens to be right on its own terms: a server with
+   *     nobody on it should cost nothing.
+   *  3. **The run is a PARTY run from the first tick** (§5.3). The operator of
+   *     a machine you connect to has exactly the standing a listen server's
+   *     host has — full control of the simulation — so a record set on one is
+   *     worth what a record set on the other is.
+   */
+  ownerless?: boolean;
   /** A line for the host's own log. Optional, and every caller inside a test
    * omits it — the same shape `net/hub.ts` uses. */
   log?(message: string): void;
@@ -292,6 +319,15 @@ export function createSession(options: SessionOptions): Session {
   // describes. The client cannot rebuild it, so it gets a full snapshot.
   const adopted = options.adopt ?? null;
   const state = adopted ? adoptRun(adopted) : createRunFromParams(params);
+  const ownerless = options.ownerless === true;
+  if (ownerless) {
+    // Seat 0 is a body nobody is behind until somebody joins — see
+    // `SessionOptions.ownerless`. `seatZero` is passed because THIS is the
+    // session the seat-0 rule was written to exclude: there is no host here to
+    // lose, so seat 0 is an ordinary seat.
+    departHero(state, 0, { seatZero: true });
+    state.party = { seats: state.party?.seats ?? state.players.length };
+  }
 
   /**
    * The world at tick 0, frozen — the state every client's first delta is
@@ -607,6 +643,15 @@ export function createSession(options: SessionOptions): Session {
 
     advance(ms) {
       if (closed || !Number.isFinite(ms) || ms <= 0) return 0;
+      // AN EMPTY DEDICATED SERVER DOES NOT SIMULATE. Seat 0 is departed until
+      // somebody joins, so a step would find every hero out of play and end a
+      // run nobody has played — and a machine with nobody on it should cost
+      // nothing anyway. The reconnect sweep still runs below, because a held
+      // seat has to lapse whether or not anybody is watching.
+      if (ownerless && clients.size === 0) {
+        sweepHeldSeats();
+        return 0;
+      }
       // Held seats lapse on the session's own clock rather than on a timer of
       // their own — nothing below the session owns a timer, the same rule the
       // transport seam follows.
@@ -635,7 +680,10 @@ export function createSession(options: SessionOptions): Session {
       // exists. Everybody else takes the lowest free roster slot, and a player
       // among them is SEATED: a hero of their own is appended to the party,
       // and the index they land on IS their seat.
-      const host = wants.play && clients.size === 0;
+      // A DEDICATED SERVER HAS NO HOST, so the arrival-order heuristic below is
+      // switched off for one: every player is seated with the hero they
+      // brought, and the first of them takes the departed seat 0.
+      const host = !ownerless && wants.play && clients.size === 0;
       const slot = host ? 0 : nextSlot();
       // THE SEAT IS THE SERVER'S ANSWER: a seated client steers
       // `state.players[seat]` and nobody else, and a spectator has no seat at
@@ -768,7 +816,11 @@ export function createSession(options: SessionOptions): Session {
       tickets.delete(id);
       if (client.recipient.seat !== null) {
         inputs.set(client.recipient.seat, { ...IDLE_INPUT });
-        departHero(state, client.recipient.seat, ticket !== undefined);
+        departHero(state, client.recipient.seat, {
+          hold: ticket !== undefined,
+          // Only an ownerless session may empty seat 0 — see `DepartOptions`.
+          seatZero: ownerless,
+        });
         if (ticket !== undefined) {
           held.set(ticket, {
             seat: client.recipient.seat,

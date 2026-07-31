@@ -129,6 +129,30 @@ export function nextFreeSeat(state: GameState): number {
   return seat >= 0 ? seat : state.players.length;
 }
 
+/** What kind of departure this is. */
+export type DepartOptions = {
+  /**
+   * KEEP THE SEAT for the person who left it (plan §5.4). A dropped connection
+   * and a player quitting look identical from a socket, so the caller has to
+   * say which it is treating this as.
+   */
+  hold?: boolean;
+  /**
+   * PERMIT SEAT 0 TO DEPART.
+   *
+   * Refused by default, and that is a rule rather than a guard: in the shipped
+   * topology seat 0 is the HOST's, the host leaving ENDS the session (there is
+   * no host migration — see the plan's §4.2), and a run whose seat 0 had
+   * quietly departed would keep simulating with nobody entitled to it.
+   *
+   * A DEDICATED SERVER has no host, so that reasoning does not apply to it and
+   * this is how it says so: seat 0 there is an ordinary seat, empty until
+   * somebody joins and empty again when they go. Only an ownerless session may
+   * pass true — see `server/session.ts`.
+   */
+  seatZero?: boolean;
+};
+
 /**
  * The player in this seat has left the session; their hero is no longer
  * anybody's.
@@ -146,9 +170,10 @@ export function nextFreeSeat(state: GameState): number {
 export function departHero(
   state: GameState,
   seat: number,
-  hold = false,
+  options: DepartOptions = {},
 ): boolean {
-  if (seat <= 0) return false;
+  if (seat < 0) return false;
+  if (seat === 0 && !options.seatZero) return false;
   const hero = state.players[seat];
   if (!hero || hero.departed) return false;
   hero.departed = true;
@@ -156,7 +181,7 @@ export function departHero(
   // quitting, so the seat is kept for them — see `Player.held` and
   // `resumeHero`. The two look identical from a socket, which is the whole
   // reason the caller has to say which it is.
-  if (hold) hero.held = true;
+  if (options.hold) hero.held = true;
   return true;
 }
 

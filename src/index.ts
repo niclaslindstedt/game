@@ -93,6 +93,7 @@ export {
   releaseSeat,
   resumeHero,
   seatHero,
+  type DepartOptions,
 } from "./game/seating.ts";
 export { validateLoadout, type LoadoutCheck } from "./game/loadout-check.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away

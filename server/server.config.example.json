@@ -1,0 +1,9 @@
+{
+  "level": "moon",
+  "difficulty": "medium",
+  "port": 27015,
+  "maxPlayers": 8,
+  "password": "",
+  "generatedMaps": false,
+  "statusEverySec": 30
+}

@@ -249,14 +249,14 @@ describe("the engine's half", () => {
 
   it("skips a held seat when handing one out", () => {
     const state = seated(3);
-    departHero(state, 1, true); // dropped — might be back
+    departHero(state, 1, { hold: true }); // dropped — might be back
     departHero(state, 2); // quit — gone for good
     expect(nextFreeSeat(state)).toBe(2);
   });
 
   it("hands out a held seat again once it is released", () => {
     const state = seated(2);
-    departHero(state, 1, true);
+    departHero(state, 1, { hold: true });
     expect(nextFreeSeat(state)).toBe(2);
     releaseSeat(state, 1);
     expect(nextFreeSeat(state)).toBe(1);
@@ -281,7 +281,7 @@ describe("the engine's half", () => {
     // §5.3's mark never clears — a run two people played stays one, however
     // the room looks now.
     const state = seated(2);
-    departHero(state, 1, true);
+    departHero(state, 1, { hold: true });
     expect(state.party).not.toBeNull();
     resumeHero(state, 1);
     expect(state.party?.seats).toBe(2);

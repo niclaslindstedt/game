@@ -65,7 +65,14 @@ export function createUdpTransport(
 ): Transport {
   const now = options.now ?? monotonic;
   const first = options.port ?? DEFAULT_PORT;
-  const last = options.maxPort ?? MAX_PORT;
+  // THE WALK MUST COVER THE PORT IT WAS ASKED FOR, whatever the range says.
+  // `MAX_PORT` bounds the well-known range so a SECOND copy of the game can
+  // start beside the first; it is not a ceiling on what a caller may name, and
+  // reading it as one meant an operator asking for 27099 got a loop that never
+  // ran and the message "no free UDP port between 27099 and 27030" — a refusal
+  // to bind a port nothing had ever tried. A named port outside the range is
+  // simply tried once, which is what naming one means.
+  const last = Math.max(first, options.maxPort ?? MAX_PORT);
   let socket: Socket | null = null;
   let bound: Bound | null = null;
   let events: TransportEvents | null = null;
@@ -141,7 +148,10 @@ export function createUdpTransport(
         }
       }
       handlers.onError(
-        `no free UDP port between ${first} and ${last} — is the game already running?`,
+        first === last
+          ? `UDP port ${first} is already in use`
+          : `no free UDP port between ${first} and ${last} — ` +
+              "is the game already running?",
       );
       return null;
     },
