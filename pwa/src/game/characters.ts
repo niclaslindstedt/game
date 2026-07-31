@@ -170,6 +170,17 @@ export type CampaignTally = {
   combatMs: number;
   peakMenace: number;
   levels: number;
+  /**
+   * ANY LEG OF THIS CAMPAIGN WAS PLAYED IN COMPANY (`PartyStamp`, multiplayer
+   * plan §5.3) — so the whole campaign is off the two hardcore boards, however
+   * the remaining maps were played.
+   *
+   * It latches on the first co-op map and is only cleared with the tally
+   * itself, because a campaign is one record: a party carrying the hero through
+   * the hardest venue and the player finishing the last two alone is not a solo
+   * campaign, and asking per-map would rank exactly that.
+   */
+  party?: boolean;
 };
 
 const ROSTER_KEY = storageKey("characters");
@@ -849,7 +860,7 @@ export function campaignTally(
 export function accrueCampaign(
   character: Character,
   difficulty: Difficulty,
-  run: { kills: number; combatMs: number; peakMenace: number },
+  run: { kills: number; combatMs: number; peakMenace: number; party?: boolean },
 ): Character {
   const prev = campaignTally(character, difficulty);
   const next: CampaignTally = {
@@ -857,6 +868,8 @@ export function accrueCampaign(
     combatMs: prev.combatMs + Math.max(0, run.combatMs),
     peakMenace: Math.max(prev.peakMenace, Math.max(0, run.peakMenace)),
     levels: prev.levels + 1,
+    // Latched, never lowered — see `CampaignTally.party`.
+    party: prev.party || run.party === true,
   };
   const updated: Character = {
     ...character,

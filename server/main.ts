@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE SESSION SERVER'S ENTRY POINT — what Electron's `utilityProcess` forks,
-// and (past PR 5) what the standalone dedicated server runs unchanged.
+// and what the standalone dedicated server runs unchanged.
+//
+// **TWO ENTRIES, ONE SERVER, AND THE FORK IS THE ONLY THING THAT TELLS THEM
+// APART.** With a `parentPort` this process is the game's own session server,
+// driven down a control channel. Without one, nobody forked it — so it is a
+// person at a terminal, and it hands over to `dedicated.ts`. Everything that
+// makes a session (the simulation, the admission desk, the sockets, the router
+// mapping and the one fixed-timestep clock) is `host.ts`, used identically by
+// both, which is what makes the plan's §5.5 "it is the same file" true rather
+// than aspirational.
 //
 // It is deliberately thin. Everything interesting is in `session.ts`; this file
 // is the process's edges: the control channel in, the `MessagePort` that
@@ -42,22 +51,16 @@ import { lookup } from "node:dns/promises";
 import { engineVersion, type FrozenRun } from "@game/core";
 
 import { createJoinLink, type JoinLink } from "./net/connect.ts";
-import { createPeerHub, type PeerHub } from "./net/hub.ts";
+import { main as dedicated } from "./dedicated.ts";
+import { createHost, type Host } from "./host.ts";
 import { createRelayTransport, type RelayTransport } from "./net/relay.ts";
 import type { Bound, SendMode } from "./net/transport.ts";
 import { createUdpTransport, keyFor } from "./net/udp.ts";
-import {
-  behindNat,
-  createPortMapper,
-  type MappingState,
-  type PortMapper,
-} from "./net/upnp.ts";
-import { createSession, type Session } from "./session.ts";
+import type { MappingState } from "./net/upnp.ts";
 import { parseAddress } from "./wire/address.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
 import {
   FRAME,
-  MAX_CLIENTS,
   PROTOCOL_VERSION,
   TICK_MS,
   type ByePayload,
@@ -174,14 +177,18 @@ type ClientPort = {
 /** The one client of PR 1: the host's own renderer, which owns the hero. */
 const HOST_CLIENT = 1;
 
-let session: Session | null = null;
-let timer: ReturnType<typeof setInterval> | null = null;
+/**
+ * THE HOSTED SESSION, when this process is a HOST.
+ *
+ * The session, the admission desk, the sockets, the router mapping and the one
+ * clock that drives them are all `host.ts`'s — which is what makes the plan's
+ * §5.5 claim true rather than aspirational: the dedicated server is that same
+ * module with a different entry on top of it, and the fixed-timestep loop
+ * exists once. What is left here is this process's own edges.
+ */
+let host: Host | null = null;
 let clientPort: ClientPort | null = null;
-let lastAdvanceMs = 0;
-let hub: PeerHub | null = null;
 let relay: RelayTransport | null = null;
-let mapper: PortMapper | null = null;
-let bound: Bound | null = null;
 let steamOpen = false;
 /** Set only in the JOINER role, and mutually exclusive with `session`: this
  * process either simulates a run or carries somebody else's, never both. */
@@ -190,17 +197,16 @@ let linkTimer: ReturnType<typeof setInterval> | null = null;
 let admitted = false;
 
 /**
- * The session's challenge secret, minted once per process.
+ * THE RECONNECT TICKET LAST HANDED OUT BY EACH HOST WE JOINED (plan §5.4),
+ * keyed by peer.
  *
- * Here rather than in `wire/handshake.ts` because that module is a leaf with
- * no randomness of its own — which is what lets a test drive the whole cookie
- * scheme across an epoch boundary deterministically. This is the one place
- * that has to actually roll a number, and it is emphatically NOT the engine's
- * seeded rng: that stream is the simulation's, every draw from it is
- * load-bearing for a replay, and a security secret taken from a seed a client
- * was told is not a secret.
+ * In memory and for the life of this process alone, which is the span the
+ * feature is about: the case it exists for is a connection dropping inside one
+ * sitting, and a ticket written to disk would be a credential for a session
+ * that has almost certainly ended. Bounded by how many distinct hosts one
+ * process joins, which is a handful.
  */
-const CHALLENGE_SECRET = (Math.random() * 0xffffffff) >>> 0;
+const resumeTickets = new Map<string, string>();
 
 const parent = (process as unknown as { parentPort?: ParentPort }).parentPort;
 
@@ -213,6 +219,14 @@ if (parent) {
     );
   });
   parent.postMessage({ kind: "ready", protocol: PROTOCOL_VERSION });
+} else {
+  // NO PARENT MEANS NOBODY FORKED US, so this is a person running the server
+  // from a terminal — the plan's §5.5 dedicated server. It is the same process
+  // over the same `host.ts`; what differs is only where the instructions come
+  // from (a config file and a signal, rather than a control channel) and where
+  // the log goes. Making it the same ENTRY as well as the same code is what
+  // stops the two drifting: there is no second binary to forget to update.
+  void dedicated(process.argv.slice(2));
 }
 
 /**
@@ -241,17 +255,17 @@ function attachClient(port: ClientPort): void {
     // off — an open UDP port eventually delivers bytes from strangers to this
     // same decoder.
     const frame = decodeFrame(event.data as ArrayBuffer);
-    if (!frame || !session) return;
-    session.receive(HOST_CLIENT, frame.type, frame.seq, frame.payload);
+    if (!frame || !host) return;
+    host.session.receive(HOST_CLIENT, frame.type, frame.seq, frame.payload);
   });
   port.start?.();
-  if (session) joinHost();
+  if (host) joinHost();
 }
 
 function joinHost(): void {
   const port = clientPort;
-  if (!session || !port) return;
-  session.addClient(
+  if (!host || !port) return;
+  host.session.addClient(
     HOST_CLIENT,
     (frame) => port.postMessage(frame, [frame]),
     true,
@@ -274,20 +288,14 @@ function handleControl(
   try {
     if (message.kind === "start") {
       stop("restarted");
-      const password = message.password ?? "";
-      const maxClients = message.maxClients ?? MAX_CLIENTS;
-      session = createSession({
+      host = createHost({
         params: message.params,
         adopt: message.adopt,
-        // The BUILD the handshake compares is the engine's own version, read
-        // here rather than passed in by the shell: two places holding the same
-        // string is two places that can disagree, and this one is the only one
-        // that has actually loaded the engine it is describing.
-        build: engineVersion,
         mods: message.mods,
-        maxClients,
+        password: message.password,
+        maxClients: message.maxClients,
         peers: {
-          kick: (clientId, reason) => hub?.kick(clientId, reason),
+          kick: (clientId, reason) => host?.hub.kick(clientId, reason),
           // The invite panel is the SHELL's — only the main process holds the
           // Steam client. The answer has to be synchronous for the chat reply
           // that quotes it, so what is returned is whether a Steam door is
@@ -297,24 +305,13 @@ function handleControl(
             post({ kind: "invite" });
             return true;
           },
-          ping: (clientId) => hub?.pingOf(clientId) ?? -1,
+          ping: (clientId) => host?.hub.pingOf(clientId) ?? -1,
         },
-      });
-      hub = createPeerHub({
-        session,
-        handshake: {
-          protocol: PROTOCOL_VERSION,
-          build: engineVersion,
-          mods: message.mods ?? [],
-        },
-        password,
-        maxClients,
-        secret: CHALLENGE_SECRET,
-        now,
         log: (line) => post({ kind: "log", line }),
+        now,
       });
       if (clientPort) joinHost();
-      startClock();
+      host.start();
       reply({ kind: "started", levelId: message.params.levelId });
       return;
     }
@@ -342,13 +339,13 @@ function handleControl(
     if (message.kind === "status") {
       reply({
         kind: "status",
-        tick: session?.tick ?? 0,
-        phase: session ? session.state.phase : "idle",
-        enemies: session ? session.state.enemies.length : 0,
-        clients: session?.clientCount ?? 0,
-        bound,
-        mapping: mapper?.state ?? { status: "idle" },
-        roster: session?.roster() ?? [],
+        tick: host?.session.tick ?? 0,
+        phase: host ? host.session.state.phase : "idle",
+        enemies: host ? host.session.state.enemies.length : 0,
+        clients: host?.session.clientCount ?? 0,
+        bound: host?.bound ?? null,
+        mapping: host?.mapping ?? { status: "idle" },
+        roster: host?.session.roster() ?? [],
       });
     }
   } catch (err) {
@@ -370,7 +367,8 @@ async function openDoors(
   message: ControlMessage & { kind: "listen" },
   reply: (event: ControlReply) => void,
 ): Promise<void> {
-  if (!hub) {
+  const open = host;
+  if (!open) {
     reply({
       kind: "listening",
       bound: null,
@@ -389,26 +387,19 @@ async function openDoors(
       // packets the relay carries.
       post({ kind: "peer-send", to, data: [...data], mode });
     });
-    await hub.add(relay);
+    await open.addTransport(relay);
     steamOpen = true;
   }
-  if (message.udp !== false) {
-    const udp = createUdpTransport({ port: message.port, now });
-    await hub.add(udp);
-    bound = udp.bound;
-  }
+  if (message.udp !== false) await open.openUdp(message.port);
   reply({
     kind: "listening",
-    bound,
+    bound: open.bound,
     steam: steamOpen,
     protocol: PROTOCOL_VERSION,
     build: engineVersion,
-    detail: bound ? undefined : "could not bind a UDP port",
+    detail: open.bound ? undefined : "could not bind a UDP port",
   });
-  if (bound && behindNat()) {
-    mapper = createPortMapper();
-    await mapper.map(bound.port);
-  }
+  await open.mapPort();
 }
 
 /**
@@ -481,6 +472,12 @@ async function joinSession(
     },
     name: message.name,
     password: message.password,
+    // THE TICKET BACK INTO THE SEAT WE LAST HELD AT THIS ADDRESS (plan §5.4).
+    // Held per host for the life of this process, which is exactly the span
+    // that matters: the case the grace window exists for is a wifi hiccup
+    // inside one sitting, and a ticket that outlived the app would be a
+    // credential on disk for a session that no longer exists.
+    resume: resumeTickets.get(peerKey),
     now,
     deliver: (frame) => {
       // A COPY, because the renderer's end takes ownership: the buffer is
@@ -489,8 +486,12 @@ async function joinSession(
       const copy = frame.slice().buffer;
       clientPort?.postMessage(copy, [copy]);
     },
-    onAdmitted: () => {
+    onAdmitted: (resume) => {
       admitted = true;
+      // Every welcome issues a FRESH ticket and spends the one that got us in,
+      // so this is a replacement rather than an addition.
+      if (resume) resumeTickets.set(peerKey, resume);
+      else resumeTickets.delete(peerKey);
       settle({ kind: "connected", ok: true });
     },
     onClosed: (reason, detail) => {
@@ -544,45 +545,7 @@ function toBytes(data: ArrayBuffer | Uint8Array | number[]): Uint8Array {
   return new Uint8Array(data);
 }
 
-/**
- * The wall clock, and the one place a timer exists.
- *
- * `setInterval` at the tick period, with the session paying for the REAL time
- * elapsed rather than for one tick per callback. A timer that fires late (and
- * they all do, under load) would otherwise run the simulation slow — the run
- * would still be internally consistent, but it would drift away from every
- * clock the player can see, and on the direct path away from the other seven
- * players too.
- */
-function startClock(): void {
-  stopClock();
-  lastAdvanceMs = now();
-  timer = setInterval(() => {
-    const at = now();
-    const elapsed = at - lastAdvanceMs;
-    // Whole ticks only — the remainder is left on the clock and paid next
-    // callback, which is what keeps the timestep fixed.
-    const ran = session?.advance(elapsed) ?? 0;
-    lastAdvanceMs += ran * TICK_MS;
-    // The transports' retransmits, the rate limiter's expiry and the router
-    // lease all hang off this one call. Nothing below the session owns a timer
-    // — see `net/transport.ts`'s `tick` for why.
-    hub?.tick();
-    mapper?.renew(Date.now());
-    // A very long stall (a suspended laptop) would otherwise leave a debt the
-    // session refuses to pay in one go and never catches up on, so the clock
-    // is re-seated once the backlog passes what one advance can run.
-    if (at - lastAdvanceMs > 1000) lastAdvanceMs = at;
-  }, TICK_MS);
-}
-
-function stopClock(): void {
-  if (timer) clearInterval(timer);
-  timer = null;
-}
-
 function stop(reason: string): void {
-  stopClock();
   stopLinkClock();
   // A joiner's link is closed WITHOUT a bye to the page: this path is the page
   // asking, and answering its own request with a refusal would put "the session
@@ -590,18 +553,15 @@ function stop(reason: string): void {
   link?.close();
   link = null;
   admitted = false;
-  session?.close(reason);
-  session = null;
-  hub?.close();
-  hub = null;
+  // The session, the hub, the clock and the ROUTER MAPPING all go together —
+  // `host.close` releases the mapping rather than merely forgetting it, since a
+  // mapping left behind is a port open on the player's router for as long as
+  // its lease runs, and a game that leaks one every time it is played is a game
+  // that quietly opens a machine up.
+  void host?.close(reason);
+  host = null;
   relay = null;
   steamOpen = false;
-  bound = null;
-  // RELEASED, not merely forgotten. A mapping left behind is a port open on
-  // the player's router for as long as its lease runs, and a game that leaks
-  // one every time it is played is a game that quietly opens a machine up.
-  void mapper?.release();
-  mapper = null;
 }
 
 /** Monotonic ms. `performance.now()` where it exists (it does in Electron's

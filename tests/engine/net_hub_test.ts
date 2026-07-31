@@ -351,6 +351,73 @@ describe("what an unadmitted peer may do", () => {
   });
 });
 
+describe("what an admitted peer may send, and how fast", () => {
+  /** A hub with one peer already in, and a chat frame to spend budget with. */
+  async function seated() {
+    const net = await harness();
+    net.arrive({
+      from: PEER,
+      data: join({ cookie: net.cookie, handshake: HOST, proof: 0 }),
+    });
+    net.received.length = 0;
+    net.sent.length = 0;
+    return net;
+  }
+
+  const chatter = new Uint8Array(
+    encodeFrame({ type: FRAME.chat, seq: 1, ack: 0, tick: 0 }, { text: "hi" }),
+  );
+
+  it("carries an honest client's whole traffic without throttling it", async () => {
+    // Sized off what a client legitimately sends — an input per tick (60/s), an
+    // ack per publish (20/s), chat and commands between them. A second of that
+    // must pass untouched, or the defence is a bug report.
+    const net = await seated();
+    for (let i = 0; i < 100; i++) {
+      net.advance(10); // 100 packets across a second
+      net.arrive({ from: PEER, data: chatter });
+    }
+    expect(net.received).toHaveLength(100);
+  });
+
+  it("drops what a flood sends past the allowance, in silence", async () => {
+    // Dropping is the same answer the reliability layer already gives a lost
+    // datagram, and the game is built to recover from exactly that.
+    const net = await seated();
+    for (let i = 0; i < 1_000; i++) net.arrive({ from: PEER, data: chatter });
+    expect(net.received.length).toBeLessThan(1_000);
+    expect(net.removed).toHaveLength(0); // a burst is not a kick
+    expect(net.sent).toHaveLength(0); // …and never answered
+  });
+
+  it("forgives a burst once the clock has paid it back", async () => {
+    // The case that must NOT be a kick: a client whose connection stalled
+    // delivers everything the reliability layer was holding the instant it
+    // recovers, and throttling exactly that is throttling the recovery.
+    const net = await seated();
+    for (let i = 0; i < 400; i++) net.arrive({ from: PEER, data: chatter });
+    expect(net.removed).toHaveLength(0);
+    net.advance(5_000);
+    net.received.length = 0;
+    net.arrive({ from: PEER, data: chatter });
+    expect(net.received).toHaveLength(1);
+  });
+
+  it("drops a peer that keeps flooding, with a bye that says why", async () => {
+    // The other half: a burst dips the bucket and the refill pays it back,
+    // while a sustained flood drives the debt down without limit. Treating the
+    // two alike either kicks a friend or tolerates an attacker.
+    const net = await seated();
+    for (let i = 0; i < 5_000; i++) net.arrive({ from: PEER, data: chatter });
+    expect(net.removed).toEqual([net.added[0]!.id]);
+    expect(net.last()?.payload).toMatchObject({ reason: "rate-limited" });
+    // And it is genuinely gone: nothing it sends afterwards is parsed at all.
+    net.received.length = 0;
+    net.arrive({ from: PEER, data: chatter });
+    expect(net.received).toHaveLength(0);
+  });
+});
+
 describe("leaving", () => {
   it("frees the seat when a peer times out", async () => {
     const net = await harness();

@@ -25,6 +25,7 @@ import type {
   StatName,
 } from "./core.ts";
 import type { GameEvent, GameStats } from "./events.ts";
+import type { Trade } from "../trade.ts";
 import type {
   Asteroid,
   BaitCharge,
@@ -51,6 +52,7 @@ import type {
   MapMarker,
   Merchant,
   Obstacle,
+  PartyStamp,
   CanopyPiece,
   TileSpec,
 } from "./world.ts";
@@ -430,6 +432,25 @@ export type GameState = {
    * untouched, and no pickup in the campaign changes.
    */
   lootMode?: LootMode;
+  /**
+   * MORE THAN ONE PERSON HAS PLAYED THIS RUN (`PartyStamp`, multiplayer plan
+   * §5.3) — so it banks no leaderboard record, for the reasons written on the
+   * type. Null (and absent, on every run created before this existed) means a
+   * solo run, which is what the whole shipped campaign is.
+   *
+   * Latched by `seatHero` when the second hero is seated, never cleared.
+   */
+  party?: PartyStamp | null;
+  /**
+   * OPEN TRADES (`src/game/trade.ts`, multiplayer plan §5.1) — at most one per
+   * seat, and absent on every single-player run, which is what makes this cost
+   * the shipped campaign nothing.
+   *
+   * It is RUN state rather than per-player state because a trade is a fact
+   * about two heroes at once: holding half of one on each side is how the two
+   * halves come to disagree about what is on the table.
+   */
+  trades?: Trade[];
   /**
    * The escalation meter (see config MENACE). Heated by the player's rolling
    * combat output (`combatDps` / `combatKillRate`) and jolted by overpowered

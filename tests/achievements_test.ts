@@ -25,11 +25,13 @@ import {
 } from "../pwa/src/game/achievement-defs.ts";
 import {
   applyEventsToTotals,
+  applyKillRate,
   applyRunStart,
   applyWornEquipment,
   emptyTotals,
   EQUIP_SLOTS,
   maxLevelRuns,
+  migrateSoloTotals,
   SPEED_CLEAR_MS,
 } from "../pwa/src/game/achievement-totals.ts";
 import { pendingReports } from "../pwa/src/game/achievement-sync.ts";
@@ -290,6 +292,51 @@ describe("lifetime totals reducer", () => {
       })),
     );
     expect(totals.outfitRank).toBe(2);
+  });
+
+  it("books a party run for the badges and not for the boards", () => {
+    // §5.3's two rules, which genuinely disagree: a party kill counts for
+    // everyone present (or half the badges are unearnable in the mode the
+    // player is enjoying), and a party run reaches no ranking at all.
+    const totals = emptyTotals();
+    const party = { ...CTX, party: true };
+    applyEventsToTotals(totals, [kill(idByRole("minion"))], party);
+    expect(totals.kills).toBe(1);
+    expect(totals.solo.kills).toBe(0);
+    // The two maxima follow the same split.
+    expect(totals.maxBurstDamage).toBe(1);
+    expect(totals.solo.maxBurstDamage).toBe(0);
+    applyKillRate(totals, 42, true);
+    expect(totals.bestKillRate).toBe(42);
+    expect(totals.solo.bestKillRate).toBe(0);
+    // …and a solo run afterwards books both halves.
+    applyEventsToTotals(totals, [kill(idByRole("minion"))], CTX);
+    applyKillRate(totals, 43, false);
+    expect(totals.solo.kills).toBe(1);
+    expect(totals.solo.bestKillRate).toBe(43);
+  });
+
+  it("seeds the solo record from a save written before co-op existed", () => {
+    // Every run such a save holds WAS solo — multiplayer had not shipped — so
+    // the lifetime figures ARE the solo figures. Starting the player at zero
+    // would silently retire the standing they already have on all four boards.
+    const totals = emptyTotals();
+    totals.kills = 900;
+    totals.maxBurstDamage = 77;
+    totals.bestKillRate = 12;
+    migrateSoloTotals(totals, { kills: 900 });
+    expect(totals.solo).toEqual({
+      kills: 900,
+      maxBurstDamage: 77,
+      bestKillRate: 12,
+    });
+    // A save that already carries one is left exactly as it is.
+    const fresh = emptyTotals();
+    fresh.kills = 5;
+    migrateSoloTotals(fresh, {
+      solo: { kills: 1, maxBurstDamage: 2, bestKillRate: 3 },
+    });
+    expect(fresh.solo.kills).toBe(0);
   });
 
   it("counts runs per level for the farming badges", () => {

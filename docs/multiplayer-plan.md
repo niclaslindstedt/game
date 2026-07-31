@@ -1679,6 +1679,19 @@ and it should be a few hundred lines.
 - Simulated adversity: latency, jitter and loss injected at the transport seam
   (which is why the seam is where it is), with the game held to playable at
   150 ms / 2% loss.
+
+  > **THESE TWO HAD NO INSTRUMENT, AND THAT IS THIS PLAN'S OWN RECURRING
+  > FAILURE IN ITS FIFTH FORM.** As written they need eight machines and eight
+  > bored humans, so neither could be run — and a done-when that cannot be run
+  > is a done-when that gets ticked. The instrument is **§7.2.5's BOT CLIENT**:
+  > a headless process that joins over the real transport and plays with
+  > `botAct` off the replicated state. It is owed EARLIER than its number, like
+  > §7.1 and §7.2 before it, and it is blocked on the same §7.1
+  > parameterization — so the honest ordering is §7.1 → §7.2 → §7.2.5 → this
+  > soak. Beside making the soak runnable it proves the one claim nothing else
+  > tests: that what `split.ts` sends is ENOUGH TO PLAY FROM. Read §7.2.5 for
+  > what it deliberately does not prove.
+
 - Diagnostics: a net graph behind DEBUG MODE — round trip, snapshot size, packet
   loss, prediction error — since the FPS meter is already the precedent for
   "the first probe for performance regressions".
@@ -1698,12 +1711,68 @@ and it should be a few hundred lines.
   anti-dupe rules have a test each.
 - The decoder survives a fuzz pass without throwing or over-reading.
 - An 8-player session soaks for hours without leaks, drift or snapshot growth,
-  and stays playable at 150 ms / 2% loss injected at the transport seam.
+  and stays playable at 150 ms / 2% loss injected at the transport seam —
+  driven by §7.2.5's bot clients, not by eight people, and therefore runnable
+  again on every later change rather than once.
 - The dedicated server runs from a config file with no Steam dependency, out of
   the same file the utility process uses.
 - `docs/multiplayer.md`, `docs/configuration.md`, `docs/troubleshooting.md` and
   the README describe what actually shipped — including, plainly, that there is
   no hub yet and where a joiner lands without one.
+
+### 5.8 What PR 5 actually shipped — and the three things it did not
+
+**LANDED.**
+
+- **§5.3's two debts, first, as the box said.** A run more than one person has
+  played carries a `PartyStamp` and reaches no ranking; a joiner's loadout is
+  weighed on arrival. The stamp is **latched in `seatHero` rather than seeded
+  from `SessionParams`**, which is a deliberate departure from §5.3's own
+  sketch: a run is marked by what HAPPENED to it (a host playing alone with the
+  door open is playing solo), a parameter is a thing one of three builders can
+  forget, and as ordinary DYNAMIC state the latch replicates for free. The two
+  readers genuinely disagree — a party kill counts for everyone on the badges,
+  and for nobody on the boards — so the ledger keeps board-facing figures in
+  `LifetimeTotals.solo`, and a pre-co-op save seeds them from the lifetime
+  figures they used to be.
+- **§5.2's hardening.** A per-session packet budget for the peer who got IN
+  (dropped over the allowance, kicked only on a real debt), and a seeded fuzz
+  pass over every decoder. The fuzz found four real ones, **all in the delta
+  applier and all reachable by a malicious HOST** — the direction nobody thinks
+  of, since a joiner applies whatever it is sent.
+- **§5.4's reconnect**, with the engine holding a flag and the session owning
+  the window, because the engine has no clock and a grace window counted in
+  ticks would run at the speed of the simulation.
+- **§5.5's dedicated server**, and `server/host.ts` is what makes "it is the
+  same file" true rather than aspirational. Running one immediately found the
+  bug it exists to find: the host is identified by being the FIRST client to ask
+  for a seat, which holds only because the shipped topology always seats a
+  renderer over a `MessagePort` first — so on a dedicated server the first
+  network joiner was mistaken for the host and handed a DEFAULT hero.
+  `SessionOptions.ownerless` is the answer and three rules follow from it.
+- **§5.1's trade**, engine side, with a test per anti-dupe rule. It needed
+  **§3.6's seat debt paid first** — `applyRunCommand` dispatched all 69 verbs
+  against `state.players[0]`, so a joiner's every private verb acted on the
+  host's hero. Twenty sites, seat 0 as the identity default, and the acting hero
+  comes from the seat the session admitted the client into rather than from any
+  field on the frame.
+
+**NOT LANDED, and the reasons differ.**
+
+- **The trade WINDOW.** The engine, the five verbs and the rules are here and
+  tested; the screen is not, so a trade is currently something only a command
+  can start. Ordinary app work of the shape `QuestOverlay` already is.
+- **§5.6's net graph.** Every number it wants is already measured
+  (`Reliability.stats`, `.rtt`, the roster's ping); it is a readout rather than
+  an instrument, and it did not fit.
+- **§5.6's SOAK AND ADVERSITY PASS, AND THAT ONE IS THE FINDING** — the same
+  shape §4.7 hit. Neither could be run, because neither had an instrument: as
+  written they need eight machines and eight bored humans. That is what §7.2.5
+  now exists for, and the honest ordering is §7.1 → §7.2 → §7.2.5 → this soak.
+  What DID land is `tests/engine/net_dedicated_test.ts`, which drives a real
+  session behind a real admission desk over a real UDP socket and proves the
+  stack CONNECTS — a strictly weaker claim, and it must not be recorded as the
+  soak.
 
 ---
 
@@ -1862,14 +1931,20 @@ INSTRUMENT PR 4 needs and does not have, BOTS IN A LOCAL GAME so a player can
 have a party without four friends online, and a bot that plays like somebody in a
 party rather than like a soloist who happens to be standing near you.
 
-> **§7.1 AND §7.2 ARE OWED EARLIER THAN THIS NUMBER SUGGESTS.** They are the
-> instrument PR 4's §4.3 tuning is blocked on, and §4.7 says so — the co-op
-> rules ship as STRUCTURE with unit-level proof precisely because the simulator
-> can only fly one hero. So the number says where the work is DESCRIBED, not
-> when it happens: the first half is pulled forward and done whenever PR 4's
-> measured pass is done. This is the same treatment §3.7 gave the seat on the
-> command channel, and for the same reason — a label that lied about the order
-> would be worse than no label.
+> **§7.1, §7.2 AND §7.2.5 ARE OWED EARLIER THAN THIS NUMBER SUGGESTS.** They are
+> the instruments two other PRs are blocked on. §7.1–§7.2 are what PR 4's §4.3
+> tuning needs, and §4.7 says so — the co-op rules ship as STRUCTURE with
+> unit-level proof precisely because the simulator can only fly one hero. §7.2.5
+> is what PR 5's §5.6 soak and adversity pass need, and they name no instrument
+> at all without it. So the number says where the work is DESCRIBED, not when it
+> happens: all three are pulled forward, in that order, whenever the PR they
+> unblock is done. This is the same treatment §3.7 gave the seat on the command
+> channel, and for the same reason — a label that lied about the order would be
+> worse than no label.
+>
+> **THE THIRD PAYOFF IS THEREFORE A FOURTH.** One refactor, four payoffs: the
+> measuring instrument (§7.2), the NETWORK instrument (§7.2.5), bots in a local
+> game (§7.3), and a bot that plays like a party member (§7.4–§7.5).
 
 ### 7.1 The parameterization — `botAct(bot, state, hero)`
 
@@ -1927,6 +2002,93 @@ state.players[0])` all describe one hero. The interesting readouts for a party
   difficulty, and the two levers `XP_SHARE.partyBonusPerHero` and the
   `/players N` pairing moved on evidence.
 
+### 7.2.5 THE BOT AS A CLIENT — the instrument PR 5 asks for and does not name
+
+**A fractional number for the reason PRs 1.5, 1.75 and 2.5 have one:** this was
+found after the numbering, and renumbering §7.3–§7.7 would break every reference
+to them in `AGENTS.md` and in the tree.
+
+**THE HOLE THIS FILLS IS PR 5's, NOT PR 7's.** §5.6 asks for "an 8-player session
+left running for hours, watched for leaks, drift and snapshot growth" and for
+latency, jitter and loss injected at the transport seam with the game held
+playable at 150 ms / 2% loss. §5.7 makes both a done-when. **Neither names an
+instrument**, and as written they need eight machines and eight bored humans —
+so they are requirements that cannot be run, which is this plan's own recurring
+failure in its FIFTH form (a layer ships and the thing that was supposed to
+exercise it does not; §4.7 caught the fourth and said so in as many words).
+
+The instrument is a **BOT CLIENT**: a headless process that JOINS a session over
+the real transport, receives real snapshots, and steers its hero with `botAct`
+off the replicated state — the same `Bot` §7.1 parameterizes, hosted somewhere
+else. It is the same shape §5.5's dedicated server is (`server/net/connect.ts`
+already IS the joiner role: a socket opened outward, somebody else's frames
+carried to a consumer), minus the renderer, plus the autopilot. So it belongs
+beside `connect.ts` rather than under `pwa/`, driven by a script.
+
+**WHAT IT VALIDATES THAT NOTHING ELSE CAN — and this is the reason to build it,
+ahead of the soak it makes possible.** `split.ts` declares what travels. Nothing
+anywhere proves that **what travels is ENOUGH TO PLAY FROM**. Every existing
+test asserts that a field which changed arrived; none asserts that the set of
+fields a client HAS is sufficient to make a decision with. That gap fails
+silently and in exactly the direction the whole generic differ was built to
+avoid: a read moves behind a field the split withholds, every test stays green,
+and a joiner's screen is subtly wrong in a way only a human playing it would
+notice. A bot playing off a client's view cannot paper over it — it stops
+fighting, walks into a wall, or fails to swap a weapon, and it does so in CI.
+
+Beside that, it makes four things measurable that are currently opinions:
+
+- **§5.6's soak and adversity, unattended.** Eight bot clients, hours, loss and
+  latency injected at the seam, watched for leaks and snapshot growth.
+- **§5.4's reconnect.** Drop a bot client mid-fight, reconnect it inside the
+  grace window, assert it resumed the same hero rather than a fresh one.
+- **§3.3's prediction error**, once there is prediction — a number rather than
+  "it feels fine on a LAN".
+- **The command channel under real arguments.** The bot buys, repairs, allocates,
+  swaps and picks talents, so a soak drives most of the 69 verbs with values
+  nobody typed into a test.
+
+**IT DOES NOT REPLACE §7.3's RULE, AND READING IT THAT WAY WOULD BE A CHEAT
+VECTOR.** A bot filling a player's party is steered IN THE SESSION, for the two
+reasons §7.3 gives. This is a SECOND HOST for the same `Bot`, existing to prove
+the network, and the two are wanted at once: a soak worth running has bot clients
+on the wire AND session-side bots in the party.
+
+**THREE HONEST LIMITS, because the temptation is to claim this proves more than
+it does.**
+
+1. **IT IS NOT A DETERMINISM TEST.** The client does not simulate — it applies
+   snapshots. It cannot detect two simulations diverging, and that stays
+   `tests/engine/net_determinism_test.ts`'s job. A bot client that plays fine
+   proves the wire, not the physics.
+2. **IT IS NOT THE INSTRUMENT FOR §7.2's NUMBERS.** A client bot acts on a
+   snapshot up to three ticks stale with no prediction under it, so its dps, its
+   deaths and its clear time are partly a measurement of the NETWORK. PR 4's
+   §4.3 tuning is read off the SIMULATOR's in-session party (§7.2) and nowhere
+   else; running the tuning pass over bot clients would move the levers to
+   compensate for latency, which is the worst possible outcome for both.
+3. **IT TESTS ONE TRANSPORT AT A TIME.** The seam is the seam, so it runs over
+   UDP or over the Steam relay — but only over whichever it was pointed at, and
+   §1.75.4's still-owed real-NAT matrix is unaffected by any of this.
+
+**TWO THINGS FALL OUT OF IT, AND BOTH ARE WHY IT SITS HERE RATHER THAN IN PR 5.**
+
+- **IT DEPENDS ON §7.1.** A client's seat is never 0, so a bot that reads
+  `state.players[0]` at 164 sites steers the host's hero from a joiner's
+  process. The parameterization is the prerequisite, exactly as it is for §7.2 —
+  which is convenient, since a client legitimately HOLDS the private fields the
+  bot needs (the bag, the purse, the build) for its OWN seat and no other: the
+  private tier goes to its owner, so the one hero a bot client can read in full
+  is precisely the one it is steering.
+- **IT FORCES THE REST OF DECISION 3b.** Five of the bot's housekeeping calls
+  still mutate the state directly. In the renderer that is merely untidy; in a
+  CLIENT it is wrong — the write lands on a replicated state and the next
+  snapshot erases it, so the bot's stat spend, repair or swap silently does not
+  happen. Four are plain verbs and travel as commands unchanged; the fifth
+  (`stepBotWeaponSwap`) carries the bot's own swap memory, and 3b already
+  recommends moving that memory onto the run rather than moving the bot. This is
+  the thing that makes that a requirement rather than a preference.
+
 ### 7.3 BOTS IN A LOCAL GAME
 
 A player should be able to fill their own party with bots, without four friends
@@ -1941,6 +2103,17 @@ Four decisions, and the last one is the sharp one:
   bot is a client nothing is authoritative over. That keeps the one code path
   PR 1's §1.2 exists to protect, and it is what makes a bot seat identical to a
   human one everywhere downstream.
+
+  **THIS IS NOT IN TENSION WITH §7.2.5, and the difference is the JOB rather
+  than the machinery.** A bot filling a player's party is a FEATURE: it should
+  cost no socket, no serialization and no lost packets, and it must be something
+  the server is authoritative over. A bot CLIENT is an INSTRUMENT, and its whole
+  value is the wire it is deliberately made to cross. Same `Bot`, two hosts,
+  wanted at the same time — a soak worth running has bot clients on the wire and
+  session-side bots in the party. What would be a mistake is shipping the
+  player-facing feature over a loopback client because the harness already
+  existed.
+
 - **A BOT YIELDS ITS SEAT TO A PERSON.** A session with three bots and a spare
   seat should let a fourth human in; a session that is full of bots should drop
   one rather than refuse them. `nextFreeSeat` already recycles a departed seat,
@@ -2026,7 +2199,14 @@ What it should learn, in the order it is worth learning:
 - `--party N` runs a real party headlessly; the same seed replays identically at
   every N, and the order the bots are polled provably does not matter.
 - `--verdict` reports per-seat and per-capita, and PR 4's §4.3 tuning is done
-  ON EVIDENCE, with the two levers moved and the numbers written into §4.7.
+  ON EVIDENCE, with the two levers moved and the numbers written into §4.7 —
+  measured on the SIMULATOR's in-session party, never on bot clients (§7.2.5's
+  second limit).
+- A bot CLIENT joins a real session over a real transport and plays from the
+  replicated state alone, so PR 5's §5.6 soak and adversity pass are things a
+  machine runs rather than things eight people do once. The bot's five
+  housekeeping mutators travel as commands by then (decision 3b's other half),
+  because on a client a direct write is erased by the next snapshot.
 - A player can start a local game with bots, they hold formation, split packs,
   stay inside the share radius and help with an errand already taken.
 - A bot yields its seat to a joining human, banks nothing, and the run carries
@@ -2049,6 +2229,18 @@ What it should learn, in the order it is worth learning:
   §7.5 changes what the simulator measures. Land §7.1–§7.2, take the PR 4
   numbers, and only then start changing how the bot plays — or the tuning pass
   is measuring a moving target.
+- **A BOT CLIENT WILL PLAY WORSE THAN A SESSION BOT, AND THAT IS THE POINT
+  RATHER THAN A BUG.** It acts on a snapshot up to three ticks stale with no
+  prediction under it, so it dies more and clears slower. The hazard is reading
+  that as a bot regression and "fixing" it — by tuning the bot, by widening a
+  dodge margin, or worst of all by moving a balance lever. The gap between a
+  session bot and a client bot on the same seed IS the network's cost, and it is
+  a readout to watch rather than a defect to close.
+- **A HARNESS THAT PROVES THE WIRE MUST NOT BECOME THE WIRE.** §7.3's local bots
+  stay session-side. The day somebody notices the bot client already works and
+  ships the player-facing feature on top of it, every bot in a local game
+  becomes a peer the host is not authoritative over — which is the one property
+  PR 1's §1.2 topology exists to guarantee.
 
 ---
 
@@ -2126,6 +2318,14 @@ settled before the PR that needs it, not during.
   `--verdict` line exist precisely so that the balance questions in PR 4 have
   numbers attached. Multi-player support in the simulator is scoped into PR 3
   for that reason.
+- **AND EVERY "DONE WHEN" NEEDS AN INSTRUMENT NAMED BESIDE IT.** The failure
+  above has a twin that is easier to miss: not a deferred half, but a
+  requirement nobody can run. PR 5's soak and adversity lines asked for eight
+  players and hours of wall clock with nothing to drive them, so they would have
+  been ticked from a LAN session and a good feeling — which is how §4.3's tuning
+  came to be recorded as measured when the simulator could fly one hero. Before
+  writing a done-when, name the thing that runs it; if there isn't one, that is
+  the work, and §7.2.5 is what came of asking.
 - **AMEND THIS DOCUMENT IN THE PR THAT FALSIFIES IT.** The lesson of PRs 1 and 2
   is not that they deferred work — sometimes that is right — but that their
   "Done when" lists were left standing as if met, so the plan quietly stopped

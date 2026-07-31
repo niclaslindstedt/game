@@ -37,6 +37,7 @@ import {
   applyRunStart,
   applyWornEquipment,
   emptyTotals,
+  migrateSoloTotals,
   type LifetimeTotals,
   type RunContext,
   type WornPiece,
@@ -74,8 +75,14 @@ function load(): AchievementsSave {
           : base.unlocked,
       unseen: Array.isArray(stored.unseen) ? stored.unseen : base.unseen,
       // Field-wise merge so a save from before a new counter shipped starts
-      // that counter at zero instead of undefined.
-      totals: { ...base.totals, ...(stored.totals ?? {}) },
+      // that counter at zero instead of undefined — then the one counter that
+      // must NOT start at zero is seeded from the lifetime figures it used to
+      // be (`migrateSoloTotals`, which reads the STORED record rather than the
+      // merged one: the merge has already supplied an empty `solo`).
+      totals: migrateSoloTotals(
+        { ...base.totals, ...(stored.totals ?? {}) },
+        stored.totals,
+      ),
       meta:
         stored.meta && typeof stored.meta === "object"
           ? stored.meta
@@ -190,8 +197,8 @@ export function recordWornEquipment(worn: readonly WornPiece[]): string[] {
  * KILL RATE leaderboard's value, and the lifetime ledger is where the app's
  * account-wide records already live (and already survive a reload).
  */
-export function recordKillRate(rate: number): void {
-  if (!applyKillRate(save.totals, rate)) return;
+export function recordKillRate(rate: number, party = false): void {
+  if (!applyKillRate(save.totals, rate, party)) return;
   unlockSatisfied();
   persist();
 }

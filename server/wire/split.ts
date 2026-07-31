@@ -132,6 +132,24 @@ export const PRIVATE_RUN_FIELDS: readonly string[] = [
   "companionFocus",
 ];
 
+/**
+ * **`trades` IS DELIBERATELY NOT ON THAT LIST, and the reasoning is worth
+ * stating because the instinct is the other way.**
+ *
+ * A trade is a fact about TWO seats, so a per-owner rule cannot describe one:
+ * withheld from anybody but its owner, each side would see its own offer and
+ * not the other's, which is not a trade window. Withholding it per-TRADE
+ * instead would mean this table learning to filter a list by which seat is
+ * looking — machinery it has none of, and the first thing in it that is not a
+ * field name.
+ *
+ * What sending it to everybody actually exposes is small and bounded: who is
+ * trading with whom, and a COPY of the two pieces on the table
+ * (`TradeSide.item`). No bag is enumerable from it, which is the boundary the
+ * private tier exists to hold — and the copy is presentation, so a client that
+ * altered one would change a picture rather than a swap.
+ */
+
 const STATIC = new Set(STATIC_FIELDS);
 const UNSENT = new Set(UNSENT_FIELDS);
 const BYTES = new Set(BYTE_ARRAY_FIELDS);

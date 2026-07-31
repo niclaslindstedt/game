@@ -8,7 +8,7 @@
 // `step()` — before render, before anything else can consume it.
 
 import { localHero } from "../local-seat.ts";
-import type { Difficulty, GameState } from "@game/core";
+import { isPartyRun, type Difficulty, type GameState } from "@game/core";
 
 import {
   recordAchievementEvents,
@@ -95,6 +95,11 @@ export function createTickReactions(deps: {
         levelId: state.level.id,
         difficulty,
         stats: state.stats,
+        // A PARTY KILL COUNTS FOR EVERYONE PRESENT — so the badges book a
+        // co-op run exactly as they book a solo one — but nothing it produces
+        // may reach a ranking (plan §5.3). The ledger keeps both, off this one
+        // flag; see `LifetimeTotals.solo`.
+        party: isPartyRun(state),
       }),
     );
     // …and the hero's outfit for the wardrobe feats. The identity gate checks
@@ -113,7 +118,10 @@ export function createTickReactions(deps: {
     for (const event of state.events) {
       if (event.type === "enemyKilled") killsThisTick++;
     }
-    recordKillRate(killRate.note(state.stats.combatMs, killsThisTick));
+    recordKillRate(
+      killRate.note(state.stats.combatMs, killsThisTick),
+      isPartyRun(state),
+    );
   };
   return { consume };
 }
