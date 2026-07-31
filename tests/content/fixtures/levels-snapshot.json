@@ -1851,7 +1851,7 @@
           "hp": [300, 450, 690, 1800]
         },
         {
-          "enemy": "armstrong",
+          "enemy": "the_flagbearer",
           "at": {
             "x": 2130,
             "y": 260
@@ -6880,7 +6880,7 @@
           "hp": [380, 570, 874, 2280]
         },
         {
-          "enemy": "the_sysadmin",
+          "enemy": "the_root",
           "at": {
             "x": 2340,
             "y": 1300

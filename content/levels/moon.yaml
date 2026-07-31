@@ -1,5 +1,5 @@
 description: |-
-  LEVEL 2 - THE MOON. Ada's beacon dies near the old Apollo flag; ARMSTRONG
+  LEVEL 2 - THE MOON. Ada's beacon dies near the old Apollo flag; THE FLAGBEARER
   haunts the far side. THE READ: an open lunar plain broken into FOUR BASINS by
   three rock RIDGES with OFFSET gaps that ALTERNATE low, high, low - a SERPENTINE
   SWEEP from the lander to the flag, threaded through the gaps (down the opening
@@ -15,7 +15,7 @@ description: |-
   where THE THIRTEENTH MAN keeps his own. Each is a quiet cul-de-sac (no ambient
   horde) holding a chest and its lone guardian. TEMPO: a gentle floaty-steering
   opener, a swell through the mid basins, a breather at the STILL POINT by the
-  flag where the salvage merchant trades, then a final surge as ARMSTRONG wakes.
+  flag where the salvage merchant trades, then a final surge as THE FLAGBEARER wakes.
 campaign: true
 id: moon
 index: 2
@@ -80,7 +80,7 @@ asteroids:
     - crater_small
     - crater_big
 # THE INTENDED PATH: the SERPENTINE SWEEP through the alternating ridge gaps
-# from the lander to ARMSTRONG. The autopilot follows it (so it rounds the
+# from the lander to THE FLAGBEARER. The autopilot follows it (so it rounds the
 # ridges instead of wedging) and the app points its "go this way" arrow along
 # it. Each leg threads the next basin's offset gap: LOW out of the lander (past
 # the CRASHED LANDER dip), UP the full height of basin two, back DOWN through
@@ -170,7 +170,7 @@ spawns:
       y: 1440
     ramp: endgame
     hp: 300
-  - enemy: armstrong
+  - enemy: the_flagbearer
     at:
       x: 2130
       y: 260
@@ -179,7 +179,7 @@ spawns:
 safeZones:
   # THE STILL POINT: a calm nook on the last climb to the flag, so the horde is
   # repelled off the boss approach and the hero (and the autopilot) walks in
-  # clean. A breather + the salvage merchant before ARMSTRONG (who haunts the
+  # clean. A breather + the salvage merchant before THE FLAGBEARER (who haunts the
   # flag ~410px north-east, well outside the zone).
   - shape: circle
     pos:
@@ -222,7 +222,7 @@ chests:
 tempo:
   # Build-and-release over the serpentine: a gentle floaty-steering opener, a
   # swell through the mid basins, a breather at the STILL POINT / shop beat,
-  # then a surge for ARMSTRONG.
+  # then a surge for THE FLAGBEARER.
   - at: 0
     intensity: 0.5
   - at: 0.16
@@ -335,10 +335,10 @@ spawners:
         count: 10
       - enemy: successor
         count: 4
-  # --- The boss basin's climb: a last surge as ARMSTRONG stirs. Pinned on the
+  # --- The boss basin's climb: a last surge as THE FLAGBEARER stirs. Pinned on the
   # APPROACH below the STILL POINT (not on the flag) and kept LIGHT, so the hero
   # clears it climbing, breathes at the shop, then walks into the boss CLEAN —
-  # the surge thickens the road to ARMSTRONG instead of a horde that floods the
+  # the surge thickens the road to THE FLAGBEARER instead of a horde that floods the
   # boss melee and kites the hero off him. ---
   - id: bay
     at: { x: 1980, y: 820 }

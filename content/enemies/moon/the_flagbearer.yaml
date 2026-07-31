@@ -1,13 +1,13 @@
-id: armstrong
-name: ARMSTRONG
+id: the_flagbearer
+name: THE FLAGBEARER
 lore: >-
-  The real first man on the moon, who planted the flag, learned what it was
+  The first man to walk here, who planted the flag, learned what it was
   planted on, and never went home — while a copy grown in a tank on the ride
   back shook hands and cut ribbons for forty years. He has kept the watch
   alone ever since, and he only ever loses to the worthy.
 role: boss
 levelBonus: 5
-sprite: armstrong
+sprite: the_flagbearer
 locomotion: float
 gore: ecto
 phasing: true
@@ -20,8 +20,8 @@ contactCooldownMs: 900
 dialogue:
   - - YOU SMELL LIKE EARTH. RAIN AND CUT GRASS AND TELEVISION. GO HOME.
   - hero:
-      - NOT WITHOUT ADA. YOU'RE HIM, AREN'T YOU? THE FIRST MAN ON THE MOON. NEVER WENT HOME.
-  - - I PLANTED THIS FLAG. ONE SMALL STEP. THEN A WRECK TURNED UP UNDER MY BOOTS. ALL THEATER.
+      - NOT WITHOUT ADA. YOU'RE HIM, AREN'T YOU? FIRST BOOTS IN THIS DUST. NEVER WENT HOME.
+  - - I PLANTED THIS FLAG. FIRST BOOTS DOWN. THEN A WRECK TURNED UP UNDER THEM. ALL THEATER.
   - - THEY GREW A SMILING COPY OF ME. HE SHOOK HANDS, CUT RIBBONS AND DIED IN BED. LUCKY HIM.
   - hero:
       - AND YOU'VE BEEN UP HERE ALONE EVER SINCE? FIFTY YEARS? GUARDING WHAT?

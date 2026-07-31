@@ -94,7 +94,7 @@ describe("bot strategies", () => {
     expect(state.stats.shotsFired).toBeGreaterThan(0);
   });
 
-  it("boss strategy crosses the map and engages ARMSTRONG", () => {
+  it("boss strategy crosses the map and engages THE FLAGBEARER", () => {
     // Kiting the boss across the map is a ranged tactic; the melee default
     // would have to shove through the ridge terrain to touch him.
     const state = equipBlaster(startGame());

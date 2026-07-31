@@ -447,7 +447,7 @@ export type SeekerVolleyAbility = AbilityBase & {
  *
  * It rides `state.scorches` — the same burning floor LASER EYES lays, so the
  * hazard, its tick rule and its ground art all came free, and a player who has
- * met ARMSTRONG reads it instantly.
+ * met THE FLAGBEARER reads it instantly.
  */
 export type EmberTrailAbility = AbilityBase & {
   id: "ember_trail";

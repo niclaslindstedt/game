@@ -2,19 +2,19 @@ name: the_moderator_1
 family: bunker
 size: [24, 24]
 description: >
-  THE MODERATOR mid-step — the pale, unblinking figure with dark curly hair
+  THE MODERATOR mid-step — the pale, blank-faced figure with dark cropped hair
   in a plain grey tee and blue jeans, legs shifted from the standing pose.
 subject:
   kind: elite
   name: THE MODERATOR
   build: a tall, upright figure with arms held stiffly out
-  attire: plain grey tee and blue jeans
-  features: pale, unblinking face under dark curly hair
+  attire: a plain grey tee and blue jeans, aggressively unremarkable
+  features: a pale, blank face under dark cropped hair
   accent: blue jeans
   pose: caught mid-step, the legs shifted from the standing pose, arms stiffly out
   flavor: the platform landlord performing humanity, insisting he is extremely normal and human — not quite convincing
 palette:
-  K: "#0c0b12" # dark curly hair and pupils
+  K: "#0c0b12" # dark cropped hair and pupils
   N: "#3a3846" # grey tee
   O: "#1a1c2c" # navy outline
   W: "#f4f4f4" # white eye-whites and sneakers

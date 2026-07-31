@@ -24,7 +24,7 @@ COMBAT KNIFE on HARD, BRASS KNUCKLES on NIGHTMARE, and A STICK on JESUS
 CHRIST!. Every later level opens on a **travel cutscene** of its own
 (`LevelDef.prelude`, which accepts a single scene or a CHAIN played
 back-to-back): the moon on the garage `launch` then the `voyage_moon` transit
-(Earth shrinking behind the ship he built), Mars on ARMSTRONG's `moon_depart`
+(Earth shrinking behind the ship he built), Mars on THE FLAGBEARER's `moon_depart`
 send-off then `voyage_mars`, the rift on `rift_entry` (walking into the tear
 THE FOUNDER left on Mars), and Boot Hill on `rift_exit` (the far door with the
 western's daylight leaking through). Each level then opens on the hero's
@@ -105,7 +105,7 @@ names its in-run music with an optional `music` id (a key into the app's
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
   soar). Three long **rock ridges** with offset pass-gaps break the open
-  regolith into a handful of BASINS, so the climb from the lander to ARMSTRONG
+  regolith into a handful of BASINS, so the climb from the lander to THE FLAGBEARER
   sweeps low, then up, then up again across most of the moon (an authored
   `path` threads the gaps) rather than cutting one straight diagonal — clearing
   the finite ridge-gap `spawners` (wisps → ghosts → wraiths → SUCCESSOR) on the
@@ -479,7 +479,7 @@ attribute lifts at the **2-** and **3-piece** thresholds, then a thematic
 or never-miss (`setBonusAffixes` folds them into the same stat/affix reads a
 worn piece uses; the item card shows the set, your collection progress, and
 which bonuses are live). The catalog rolls out **melee-first**: PAYLOAD-1 (GOODCO)
-and ARMSTRONG (Moon) drop **melee** sets, THE FOUNDER on Mars and in the Rift
+and THE FLAGBEARER (Moon) drop **melee** sets, THE FOUNDER on Mars and in the Rift
 drop **ranged** sets, and BRO OMEGA drops the **magic** set. On top of its set,
 every boss also drops **one on-theme signature UNIQUE weapon** of its class (the
 build-defining chase — PROTOTYPE FANG, THE FALLEN STANDARD, WRATHFLAME,
@@ -929,7 +929,7 @@ telegraphed shoulder-charges and ground slams (the windup roots the mob and
 the ground marks the danger — sidestep the charge, jump the slam), enrage turns
 below an hp threshold, summoned reinforcements, and boss PHASES that swap the
 active moves at hp breakpoints (PAYLOAD-1 calls in ASSEMBLER bots at half health,
-ARMSTRONG's moon-quake fury, the THE FOUNDER bosses ship reinforcements off the
+THE FLAGBEARER's moon-quake fury, the THE FOUNDER bosses ship reinforcements off the
 line, BRO OMEGA pounces, THE BRO SUPERCORE doubles production once its
 shield falls). From HARD up the rank and file get smarter too: minions flank
 instead of forming a single-file conga, and shooters lead a running target.
@@ -948,7 +948,7 @@ which is how NIGHTMARE and JESUS add a move to a fight the player already knows
 instead of only multiplying its numbers, and its own `windupFloorMs`, which lets
 a known move get faster on the top rungs without ever dropping under a reaction.
 
-ARMSTRONG carries both of the catalog's first two. **LASER EYES** lights his
+THE FLAGBEARER carries both of the catalog's first two. **LASER EYES** lights his
 hollow sockets, locks the bearing on wherever the hero was standing when they
 lit, and sweeps a beam one way across that arc — leaving the regolith it crossed
 **on fire** (`state.scorches`), so a fight that runs long costs the player the
@@ -1007,14 +1007,14 @@ over-head health bar, and the loot are the whole encounter.
 - **Level 2** ships wisp → moon ghost → wraith and the SUCCESSOR robots GOODCO
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE
-  PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus ARMSTRONG, the giant
+  PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus THE FLAGBEARER, the giant
   astronaut ghost guarding the flag (the boss). The haunting reads in two
   ordered player thoughts — sighting the first wisp, then downing one (the
   kill beat's `after` gate holds it until the sighting has played) — and the
   first SUCCESSOR kill is its own beat (`firstSightThoughts` /
   `firstKillThoughts` → `THOUGHT_DEFS`, played through the dialogue box in
   the hero's own voice).
-  ARMSTRONG's boss scene ends the moon pointing at Mars: the moon was GOODCO's
+  THE FLAGBEARER's boss scene ends the moon pointing at Mars: the moon was GOODCO's
   disastrous mistake, and everything rides the red freight run out.
 - **Level 3** ships the colony's machines — scout rover (fodder) → servo unit
   → FEMBOT (the quick, high-crit companion line) → mining rover (the outdoor
@@ -1068,7 +1068,7 @@ over-head health bar, and the loot are the whole encounter.
   to act his way out of the fight; drops the BOTTOMLESS CARAFE), and
   **THE LEAK** (the whistleblower in exile, posted under the water
   tower: the archive he leaked is the corpus the SUPERCORE was trained on.
-  The game's first ranged ELITE — after his scene he fights like the GROKs,
+  The game's first ranged ELITE — after his scene he fights like the BROs,
   shooting from cover (`takesCover`); drops the DEAD MAN'S SWITCH trinket and
   THE SNOW ARCHIVE story item). **THE FOUNDER
   THE FOUNDER finally DIES here** (`the_founder_boot_hill`, role boss, no
@@ -1095,7 +1095,7 @@ over-head health bar, and the loot are the whole encounter.
   in the campaign (1600–2600 hp, `levelBonus` 6): THE STRONGMAN — the
   backup ("CHECK THE OTHER FREEZERS"; drops another THE CHRONOGRAPH),
   THE MODERATOR (fast, `dodgeChance` 0.3 of rehearsed humanity),
-  THE SYSADMIN and THE SAFETY OFFICER (ranged, `takesCover` — the audit and the
+  THE ROOT and THE SAFETY OFFICER (ranged, `takesCover` — the audit and the
   aligned bolt), THE FULFILLER (the fastest, hardest-hitting rusher), and
   THE DEVELOPER (radius 15, speed 10, the hardest single touch in the game,
   never dodges). No boss — the exit door ends it. Sight thoughts fire for

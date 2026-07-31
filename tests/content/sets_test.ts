@@ -23,8 +23,8 @@ const ARMOR_SLOTS = ["head", "chest", "legs", "feet"];
 // (Melee first, then ranged, then magic across the campaign — see the request.)
 const SET_HOME: Record<string, { boss: string; signature: string }> = {
   scavengers_hide: { boss: "payload_1", signature: "prototype_fang" },
-  sentinels_vigil: { boss: "armstrong", signature: "the_fallen_standard" },
-  mosque_brand: { boss: "the_founder", signature: "wrathflame" },
+  sentinels_vigil: { boss: "the_flagbearer", signature: "the_fallen_standard" },
+  founder_brand: { boss: "the_founder", signature: "wrathflame" },
   exiles_flight: { boss: "the_founder_rift", signature: "riftmaw" },
   walled_garden_set: { boss: "bro_omega", signature: "the_jailbreak" },
 };

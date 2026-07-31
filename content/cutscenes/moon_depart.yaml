@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # THE MOON LETS GO — between the moon and Mars, part one. The landing site after
-# the fight: ARMSTRONG beaten and satisfied, the hero suited and boarding, the
+# the fight: THE FLAGBEARER beaten and satisfied, the hero suited and boarding, the
 # flag still standing. The ghost's send-off is the bridge to Mars.
 id: moon_depart
 stage:
@@ -19,7 +19,12 @@ stage:
     - { sprite: flag, at: { x: 30, y: 88 } }
 actors:
   # The first man on the moon, seeing the second one off.
-  - { id: armstrong, name: ARMSTRONG, sprite: armstrong, at: { x: 56, y: 96 } }
+  - {
+      id: the_flagbearer,
+      name: THE FLAGBEARER,
+      sprite: the_flagbearer,
+      at: { x: 56, y: 96 },
+    }
   - { id: hero, name: ME, sprite: hero_suit, at: { x: 96, y: 96 } }
   - { id: ship, sprite: ship, at: { x: 178, y: 100 } }
 beats:
@@ -29,11 +34,11 @@ beats:
     text:
       - THE GHOST KEPT HIS WORD.
   - kind: say
-    actor: armstrong
+    actor: the_flagbearer
     text:
       - TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. BRING HER HOME.
   - kind: say
-    actor: armstrong
+    actor: the_flagbearer
     text:
       - AND WHEN YOU SEE THE COMPANY MEN... TELL THEM THE MOON REMEMBERS.
   - kind: say
@@ -51,7 +56,7 @@ beats:
   - { kind: shake, actor: ship, amp: 1 }
   - { kind: wait, ms: 1200 }
   - { kind: move, actor: ship, to: { x: 178, y: 46 }, speed: 42 }
-  - { kind: exit, actor: armstrong }
+  - { kind: exit, actor: the_flagbearer }
   - { kind: pan, by: { x: 0, y: 180 }, ms: 3200 }
   - kind: caption
     text:

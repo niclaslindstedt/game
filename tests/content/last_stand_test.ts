@@ -55,7 +55,7 @@ describe("boss last stand", () => {
     boss.hp = boss.maxHp * LAST_STAND.hpFraction;
     const hpBefore = state.players[0].hp;
     step(state, idle, DT);
-    // ARMSTRONG's dying-phase ENRAGE (defs mechanics) stacks with the global
+    // THE FLAGBEARER's dying-phase ENRAGE (defs mechanics) stacks with the global
     // last stand — at a tenth hp his phase's fury multiplier is active too.
     const enrage = activeMechanics(boss, enemyDef(boss.defId))?.enrage;
     expect(hpBefore - state.players[0].hp).toBe(

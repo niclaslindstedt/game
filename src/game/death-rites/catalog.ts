@@ -57,7 +57,7 @@ const RITES: readonly DeathRiteDef[] = [
     standoff: 0.35,
     force: 6,
   },
-  // ARMSTRONG. It floats, so there is nothing to pin and nothing to stand on:
+  // THE FLAGBEARER. It floats, so there is nothing to pin and nothing to stand on:
   // the blade goes UP through it, the suit fails, and what was inside vents
   // out of the breach. The empty suit is what falls, and what stays.
   {

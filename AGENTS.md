@@ -315,7 +315,7 @@ unlit.
 **AND ITS THRESHOLD IS MEASURED AGAINST THE GAME'S OWN FLOORS, NOT EYEBALLED.**
 The bloom decides what counts as light with one luminance knee, and the thing
 that makes that hard here is that the ground is not a minority of a frame, it IS
-the frame — the moon's regolith (0.554) and SpaceZ HQ's deck (0.701) are each the
+the frame — the moon's regolith (0.554) and GOODCO HQ's deck (0.701) are each the
 50th AND the 90th percentile of their own picture, while the lights live in the
 top half-percent. A knee below them classes the floor as a light and adds it back
 over itself, which is haze rather than bloom: shipped that way once, it lifted
@@ -734,7 +734,7 @@ Three more rules shape what the districts CONTAIN:
 - **`once` makes a district singular.** Weights cannot say "there is A town": low
   odds give runs with none, high odds give runs with five, and either way the map
   reads as suburbs. A `once` area is withdrawn from the palette the first time it
-  wins a seed, so eastworld grows exactly one town in a rolled corner of a big
+  wins a seed, so boot_hill grows exactly one town in a rolled corner of a big
   empty country — and finding it is worth something.
 - **`blocks` lays a MAIN STREET.** What makes a town read as a town is alignment,
   not density: two rows of frontages facing each other across a lane. An area with
@@ -763,7 +763,7 @@ and it could be in any of thirty rooms. Two details carry it: the annex joins th
 grid as a real chamber with an EMPTY neighbour list (so every dressing pass treats
 it as the district it is, with no special cases — only the wall pass knows, and
 gives it a sealed box), and `widthFrac` sizes it off the map so the band it costs
-stays mostly room at all three sizes. Eastworld ends in the buried ZAI CONTROL
+stays mostly room at all three sizes. Boot Hill ends in the buried ZAI CONTROL
 ROOM; the bunker's vault is below its floor, because you do not walk to a vault.
 
 **FAUNA is the canopy's twin on the ground plane.** A level whose only moving
@@ -792,7 +792,7 @@ reads the catalog for its own level.
 **THE LANDING IS QUIET, NOT SAFE — and the opening beat's cast lands with the
 hero.** A SAFE zone does not merely keep the horde from spawning in it, it REPELS
 every minion out and holds them at its edge, so one centred on the hero is a
-bubble he can stand in untouched all run. It also froze spacez_hq's opening beat
+bubble he can stand in untouched all run. It also froze goodco_hq's opening beat
 solid: `openingStrike` is a two-parter held in order by `after` (the hero reads
 the crowd, THEN the lone rusher breaks from the pack and its harmless touch draws
 his blade), and the rusher was shoved straight back out of the pad it was placed
@@ -884,7 +884,7 @@ quest itself defines, dropped by breeds or lying on the floor), and `escort`.
 Five rules are load-bearing:
 
 1. **THE REWARD'S XP IS A SHARE OF THE HERO'S OWN BAR, NEVER A NUMBER.** A flat
-   figure authored against SpaceZ HQ is a rounding error by Eastworld and an
+   figure authored against GOODCO HQ is a rounding error by Boot Hill and an
    instant ding on JESUS, so `xpShare: 0.25` means "a quarter of the level you
    are on" and prices itself correctly at every rung for free. Coins are flat
    (the purse is a flat economy) and the LOOT is rolled through the ordinary
@@ -2060,7 +2060,7 @@ wall it cannot see — it routes straight through and grinds. Anything that adds
 or removes an obstacle must bump that counter; `ensureRoute` rebuilds when it
 moves. Any future dynamic obstacle inherits the fix.
 
-ARMSTRONG carries the catalog's first two. **LASER EYES** sweeps a beam one way
+THE FLAGBEARER carries the catalog's first two. **LASER EYES** sweeps a beam one way
 across a locked arc and leaves the regolith it crossed ON FIRE (`state.scorches`,
 stepped in `hazards.ts`): the beam is one dodge, but the floor it leaves is what
 makes a long fight cost the player their room. Two rules keep it honest — the
@@ -2883,7 +2883,7 @@ companions — a boss swap re-homes that boss's drops).
 - If a change you make to the game conflicts with what the manuscript says, the
   manuscript must be updated too — but **only after the user confirms the
   manuscript change**. The user may grant that confirmation ahead of time (e.g.
-  "rewrite ARMSTRONG's speech and update the manuscript" pre-approves the
+  "rewrite THE FLAGBEARER's speech and update the manuscript" pre-approves the
   manuscript edit); otherwise, ask before rewriting it.
 - Never silently edit story/dialogue in the data files and leave the manuscript
   stale, and never rewrite the manuscript without that confirmation. A PR that

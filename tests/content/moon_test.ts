@@ -20,10 +20,10 @@ describe("THE MOON level def", () => {
     expect(state.level.biome).toBe("moon");
   });
 
-  it("fields ARMSTRONG at the flag as the boss", () => {
+  it("fields THE FLAGBEARER at the flag as the boss", () => {
     const state = startGame(SEED, "moon");
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-    expect(boss.defId).toBe("armstrong");
+    expect(boss.defId).toBe("the_flagbearer");
     const flag = state.landmarks.find((l) => l.kind === "flag")!;
     expect(dist(boss.pos, flag.pos)).toBeLessThan(200);
   });

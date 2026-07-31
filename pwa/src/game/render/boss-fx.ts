@@ -88,7 +88,7 @@ export function drawScorches(
     // repeat and costs nothing, and it keeps the blot pixel-aligned.
     ctx.rotate((Math.PI / 2) * (patch.seed % 4));
     // A patch laid by an ELITE's trail carries its caster's own kit and is
-    // re-hued onto it; ARMSTRONG's beam authors none and keeps the char-and-
+    // re-hued onto it; THE FLAGBEARER's beam authors none and keeps the char-and-
     // cyan look this pass shipped with. One hazard, two casters, no branch
     // anywhere but here.
     ctx.drawImage(

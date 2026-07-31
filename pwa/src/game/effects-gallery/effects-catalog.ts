@@ -834,12 +834,12 @@ const FIELD_EXHIBITS: Exhibit[] = [
       "death",
       "rite",
       "finisher",
-      "armstrong",
+      "the_flagbearer",
       "ecto",
       "moon",
     ],
     levelId: "moon",
-    stage: { spawns: horde(1, 34, 34, "armstrong") },
+    stage: { spawns: horde(1, 34, 34, "the_flagbearer") },
     showMs: 5600,
     fire: (ctx) => ctx.fell(),
   },
@@ -892,7 +892,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
         type: "enemySlam",
         pos: heroPos(ctx.state),
         radius: 78,
-        defId: "armstrong",
+        defId: "the_flagbearer",
       }),
   },
   {
@@ -910,7 +910,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       ctx.emit({
         type: "enemyEnraged",
         pos: mob ? { ...mob.pos } : heroPos(ctx.state),
-        defId: "armstrong",
+        defId: "the_flagbearer",
       });
     },
   },
@@ -929,7 +929,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       ctx.emit({
         type: "enemySummoned",
         pos: mob ? { ...mob.pos } : heroPos(ctx.state),
-        defId: "armstrong",
+        defId: "the_flagbearer",
         count: 3,
       });
     },
@@ -942,13 +942,21 @@ const FIELD_EXHIBITS: Exhibit[] = [
     // the event would show the flash and no beam. Thawing the stage is the
     // honest fix: what plays here is the engine's own cast, windup and all.
     id: "boss-laser-eyes",
-    icon: "armstrong_cast_1",
+    icon: "the_flagbearer_cast_1",
     label: "LASER EYES",
     blurb: "THE EYES LIGHT, THE BEARING LOCKS, AND THE FLOOR GOES UP",
     group: "BOSSES",
-    keywords: ["boss", "laser", "beam", "eyes", "armstrong", "burn", "sweep"],
+    keywords: [
+      "boss",
+      "laser",
+      "beam",
+      "eyes",
+      "the_flagbearer",
+      "burn",
+      "sweep",
+    ],
     levelId: "moon",
-    // The hero is put in front of the level's OWN ARMSTRONG rather than beside
+    // The hero is put in front of the level's OWN THE FLAGBEARER rather than beside
     // a second one spawned for the occasion: `clearEnemies` deliberately keeps
     // a level's boss (deleting the objective would end the run), so a staged
     // copy just means two bosses casting two beams across each other.
@@ -983,7 +991,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
           tickMs: 500,
           intervalMs: 700,
           damage: 0,
-          defId: "armstrong",
+          defId: "the_flagbearer",
           seed: i * 37,
         });
       }
@@ -995,7 +1003,14 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "FLAG PLANT",
     blurb: "THE FLAG GOES IN, AND THE GRAVE IT WAS PLANTED ON ANSWERS",
     group: "BOSSES",
-    keywords: ["boss", "flag", "plant", "summon", "armstrong", "structure"],
+    keywords: [
+      "boss",
+      "flag",
+      "plant",
+      "summon",
+      "the_flagbearer",
+      "structure",
+    ],
     levelId: "moon",
     stage: {
       spawns: [
@@ -1014,7 +1029,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       ctx.emit({
         type: "bossFlagPlanted",
         pos: flag ? { ...flag.pos } : heroPos(ctx.state),
-        defId: "armstrong",
+        defId: "the_flagbearer",
         flagDefId: "the_planted_flag",
       });
     },

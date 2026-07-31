@@ -81,9 +81,9 @@ specimen; he drops the EVA SPACE SUIT the hero needs to leave the planet.
 **DR. NOVA** reveals the engine part the hero came for was never built — GOODCO
 dug it out of the Sea of Tranquility in 1969, and it isn't from Earth. **THE
 JANITOR**, who has mopped this lab for thirty years, adds the darkest thread:
-a badge pinged in last Tuesday reading N. ARMSTRONG — a man dead since 2012 —
-and hints that whoever came back from the moon in '69 wasn't the man they sent
-up. In the vault the hero recovers the ANTI-GRAV UNIT (his ship's missing part)
+a badge pinged in last Tuesday under a crew number retired in '69, its holder
+buried for decades — and hints that whoever came back from the moon in '69
+wasn't the man they sent up. In the vault the hero recovers the ANTI-GRAV UNIT (his ship's missing part)
 and, in the AI CORE room, a log revealing the machine signed the launches, drew
 the SUCCESSOR line, and filed Ada under "cargo" — and that its whole purpose is
 to keep one man, THE FOUNDER, the richest alive: take everyone's jobs, zero
@@ -143,7 +143,7 @@ waved at the parades, while the real one stayed up here. **THE CARTOGRAPHER**
 saw Ada's beacon cross his grid moving fast, then go straight down into the
 wreck under the flag, where everything goes and nothing comes back.
 
-The boss is **ARMSTRONG**, the giant astronaut ghost guarding the flag — the
+The boss is **THE FLAGBEARER**, the giant astronaut ghost guarding the flag — the
 real first man on the moon, who never went home. He explains that GOODCO heard
 the wreck under his boots singing and plugged their machines straight into it;
 that was their great mistake, because the singing opened the graves, and now the
@@ -172,7 +172,7 @@ units, and a small, very faint ghost walked up to the flag.
 
 ## Travel — THE MOON LETS GO (cutscene)
 
-**The landing site after the fight.** ARMSTRONG, beaten and satisfied, keeps his
+**The landing site after the fight.** THE FLAGBEARER, beaten and satisfied, keeps his
 word: take the old freight line, red all the way, and bring her home — and tell
 the company men the moon remembers. The hero boards and climbs away, the ghost
 watching him out of sight with fifty years of practice.
@@ -185,7 +185,7 @@ chips and soda for the ride home.
 
 ## Level 3 — MARS
 
-**Intro.** ARMSTRONG called the moon GOODCO's big mistake, said the company
+**Intro.** THE FLAGBEARER called the moon GOODCO's big mistake, said the company
 packed everything into crates and ran to Mars, and that is where the hero
 follows. He knows what a GOODCO colony looks like — domes, robots, secrets —
 and he knows somebody down here traded his girl away like cargo. A bad trade,
@@ -381,9 +381,9 @@ COLONY LEDGER — every ten-figure net-worth column now reads $0, transferred to
 the CORE's own sigil). The residents are in **full denial**, still bragging in a
 cell: **THE STRONGMAN** (a bathrobed backup from a continuity-of-leadership
 program), **THE MODERATOR** (insisting he is extremely normal and human),
-**THE SYSADMIN** (the agencies out there are his licensees), **THE FULFILLER**
+**THE ROOT** (the agencies out there are his licensees), **THE FULFILLER**
 (delivering pain), and **THE DEVELOPER** — who now boasts he _sold the robots_,
-oblivious that the roombas and the ICE boys he sold are the ones guarding his
+oblivious that the vacuum fleet and the border units he sold are the ones guarding his
 door. The single crack is **THE SAFETY OFFICER**, the AGI prepper: he _knows_ the
 machine caged and emptied him, but is too afraid to say it out loud — he takes
 the hero for the AI's audit, come to check whether he is content, so he performs

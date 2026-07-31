@@ -107,7 +107,7 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\-]/g, "\\$&");
  * uppercase run, so "the moon" in a sentence stays prose while "THE MOON" the
  * venue becomes a link. That is the whole point of this section, and the reason
  * the plan calls the library a graph rather than a pile of pages: a reader who
- * meets ARMSTRONG in the story is one click from his health, his drops and the
+ * meets THE FLAGBEARER in the story is one click from his health, his drops and the
  * map of the place he is standing in.
  */
 export function linkDictionary(groups) {

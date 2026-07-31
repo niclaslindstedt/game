@@ -268,7 +268,7 @@ elites:
         count: 3
         ramp: savage
         hp: 380
-  - enemy: the_sysadmin
+  - enemy: the_root
     ramp: savage
     hp: 1800
     escort:

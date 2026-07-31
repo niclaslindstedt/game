@@ -30,7 +30,7 @@ animations:
   one_armed_bandit_walk:
     { frames: [one_armed_bandit_0, one_armed_bandit_1], delayMs: 300 }
   longhorn_walk: { frames: [longhorn_0, longhorn_1], delayMs: 340 }
-  mosque_beach_walk:
+  founder_beach_walk:
     { frames: [the_founder_beach_0, the_founder_beach_1], delayMs: 340 }
   supercore_pulse: { frames: [bro_supercore_0, bro_supercore_1], delayMs: 420 }
   hay_ball_roll: { frames: [hay_ball_0, hay_ball_1], delayMs: 120 }

@@ -6,7 +6,7 @@
 // It rides `state.scorches`, the SAME burning floor LASER EYES lays, and that
 // reuse is the point rather than a saving: the hazard, its once-per-cadence
 // bite rule, its ageing, its wire replication and its ground art all came free,
-// and a player who has met ARMSTRONG already knows not to stand in it. What
+// and a player who has met THE FLAGBEARER already knows not to stand in it. What
 // makes it read as a different move is the `look` kit the patches carry out
 // with them — the same primitive laid in the caster's own colours.
 //

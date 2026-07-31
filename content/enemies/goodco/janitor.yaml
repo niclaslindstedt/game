@@ -3,7 +3,7 @@ name: THE JANITOR
 lore: >-
   Thirty years of mopping the same lab floor, which is thirty years of
   reading things nobody thought to hide from the cleaner. He is the one who
-  noticed a badge ping in last Tuesday reading N. ARMSTRONG — a man dead
+  noticed a badge ping in last Tuesday reading N. THE FLAGBEARER — a man dead
   since 2012.
 role: elite
 levelBonus: 3
@@ -18,9 +18,9 @@ dialogue:
   - - MIND THE FLOOR. I JUST DID IT. THIRTY YEARS MOPPING THIS LAB. YOU LEARN THINGS, MOPPING.
   - hero:
       - THEN YOU SEE EVERYTHING THAT GOES ON HERE. WHAT'S GOT THE WHOLE PLACE UP AT MIDNIGHT?
-  - - "SOMETHING UP ON THE MOON. ONE BADGE PINGED: N. ARMSTRONG. DEAD SINCE 2012. FUNNY THING."
+  - - "SOMETHING UP ON THE MOON. ONE BADGE PINGED: FIRST CREW, RETIRED '69. LONG BURIED. FUNNY THING."
   - hero:
-      - ARMSTRONG? THE FIRST MAN ON THE MOON? SOMEBODY'S JUST USING HIS OLD BADGE.
+      - FIRST CREW? THE ONES WHO PLANTED THE FLAG? SOMEBODY'S JUST USING AN OLD BADGE.
   - - OR WHOEVER CAME BACK FROM THE MOON IN '69 WASN'T THE FELLA THEY SENT UP. NOW DROP IT.
 lastWords:
   - AND I JUST... URGH... ...DID THIS FLOOR...

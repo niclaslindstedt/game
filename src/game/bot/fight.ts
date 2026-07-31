@@ -415,7 +415,7 @@ export function survive(
   const contentErrand = bot.content?.target != null;
   // The lock normally waits for boss-readiness — an under-levelled hero who
   // strays into an awake boss should farm up first, not chain himself to the
-  // fight (measured: forcing the lock at L42 on ARMSTRONG cost a moon run 6
+  // fight (measured: forcing the lock at L42 on THE FLAGBEARER cost a moon run 6
   // deaths). On a HOPELESS-parity rung (JESUS) that wait never ends, so
   // there an awake boss locks at once: the fight has started, and drifting
   // back to the swarm between exchanges is how an engaged JESUS boss

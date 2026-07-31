@@ -32,7 +32,7 @@ const HAZARD_KILLERS: Record<string, string> = {
 };
 
 /** The scorched-floor cause prefix — `hazard:scorch:<boss defId>`, so the fire
- * is credited to whoever laid it down (ARMSTRONG's laser sweep). */
+ * is credited to whoever laid it down (THE FLAGBEARER's laser sweep). */
 const SCORCH_PREFIX = "hazard:scorch:";
 
 /**

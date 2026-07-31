@@ -1,7 +1,7 @@
 id: guard_ledger
 name: LEDGER ENFORCER
 lore: >-
-  THE SYSADMIN's detail, licensed on the same terms as his databases. Each
+  THE ROOT's detail, licensed on the same terms as his databases. Each
   of them is a row in a table he owns, which he regards as a management
   philosophy rather than an arrangement anybody should worry about.
 role: minion

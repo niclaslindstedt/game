@@ -191,9 +191,9 @@
             "x": 56,
             "y": 96
           },
-          "id": "armstrong",
-          "name": "ARMSTRONG",
-          "sprite": "armstrong"
+          "id": "the_flagbearer",
+          "name": "THE FLAGBEARER",
+          "sprite": "the_flagbearer"
         },
         {
           "at": {
@@ -229,14 +229,14 @@
           "text": ["THE GHOST KEPT HIS WORD."]
         },
         {
-          "actor": "armstrong",
+          "actor": "the_flagbearer",
           "kind": "say",
           "text": [
             "TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. BRING HER HOME."
           ]
         },
         {
-          "actor": "armstrong",
+          "actor": "the_flagbearer",
           "kind": "say",
           "text": [
             "AND WHEN YOU SEE THE COMPANY MEN... TELL THEM THE MOON REMEMBERS."
@@ -292,7 +292,7 @@
           }
         },
         {
-          "actor": "armstrong",
+          "actor": "the_flagbearer",
           "kind": "exit"
         },
         {
@@ -2076,7 +2076,7 @@
       "id": "clone_dossier",
       "lore": [
         [
-          "A FILE: 'PROJECT SECOND MAN'. CHARTS FOR N. ARMSTRONG. TWO SETS. IDENTICAL. ALMOST."
+          "A FILE: 'PROJECT SECOND MAN'. CHARTS FOR THE FIRST CREWMAN. TWO SETS. IDENTICAL. ALMOST."
         ],
         [
           "'ORIGINAL DECLINED TO RETURN. REPLACEMENT GREW NICELY IN TRANSIT. WAVED ON CUE.'"
