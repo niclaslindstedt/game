@@ -211,7 +211,7 @@ export function createBotDriver(deps: {
       // commits it silently.
       const swapped = demo
         ? demoDirector.stepWeaponSwap(drivingBot, dtMs)
-        : stepBotWeaponSwap(drivingBot, state, localHero(state));
+        : stepBotWeaponSwap(state, localHero(state));
       if (swapped) bumpUi();
       // KEEP THE FRIEND ON ITS FEET — the same call the campaign sim makes, in
       // the same place, for both bot seats: a downed companion is woken with a

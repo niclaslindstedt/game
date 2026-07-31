@@ -587,7 +587,6 @@ export {
   botWeaponSwapTarget,
   hasPocketShooter,
   stepBotWeaponSwap,
-  type SwapMemory,
 } from "./game/bot/weapon-swap.ts";
 
 // The menace meter: the escalation the app reads to draw the rampage gauge

@@ -16,7 +16,6 @@ import {
   stepBotWeaponSwap,
   type Equipment,
   type GameState,
-  type SwapMemory,
 } from "@game/core";
 import { clearStage, makeEnemy, startGame } from "./helpers.ts";
 
@@ -90,7 +89,6 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     const state = startGame();
     clearStage(state);
     state.players[0].stats.strength += 12;
-    const bot: SwapMemory = {};
     state.players[0].inventory[0] = weapon(state, "test_wand");
     // The swap system draws the pocket wand at pot-shot range, banking the
     // blade. A sweep that also re-drew the strongest weapon would rip it back
@@ -100,7 +98,7 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
         pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     );
-    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
+    expect(stepBotWeaponSwap(state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
 
     expect(botAutoEquip(state, state.players[0])).toBe(false);
@@ -159,7 +157,6 @@ describe("a shooter build draws its banked main (stepBotWeaponSwap)", () => {
     const state = startGame();
     clearStage(state);
     setAutoEquipEnabled(false);
-    const bot: SwapMemory = {};
     // The hero holds the starter blade with a far better gun in the bag —
     // exactly what the app's default (bank everything) produces. The
     // shooter-build early return used to fire on the BANKED gun and leave him
@@ -172,10 +169,10 @@ describe("a shooter build draws its banked main (stepBotWeaponSwap)", () => {
       }),
     );
 
-    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(true);
+    expect(stepBotWeaponSwap(state, state.players[0])).toBe(true);
     expect(state.players[0].equipment.weapon.id).toBe(gun.id);
     // And once it is in hand the shooter build settles — no per-tick juggling.
     state.stats.timeMs += 5000;
-    expect(stepBotWeaponSwap(bot, state, state.players[0])).toBe(false);
+    expect(stepBotWeaponSwap(state, state.players[0])).toBe(false);
   });
 });
