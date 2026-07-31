@@ -48,11 +48,7 @@ import {
   spendReviveItem,
 } from "../companions.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
-import {
-  gearDef,
-  isGearDef,
-  SIDEARM_DEF_ID,
-} from "../defs/equipment.ts";
+import { gearDef, isGearDef, SIDEARM_DEF_ID } from "../defs/equipment.ts";
 import { botPocketKeepIndices } from "./weapon-swap.ts";
 import type {
   Equipment,
