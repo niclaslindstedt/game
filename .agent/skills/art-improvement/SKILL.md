@@ -112,6 +112,18 @@ not from memory:
 - **Noise** — orphan pixels, dithering soup, ragged edges.
 - **Scale/hierarchy lies** — an elite that reads smaller or quieter than
   a minion; a boss without visual weight; decor louder than threats.
+- **Footprint mismatch** _(props/buildings)_ — the sprite's `size:` disagrees
+  with the FOOTPRINT the content places it at, so the player collides with a
+  box the art does not fill (or the art overhangs a hitbox that isn't there).
+  This one never shows on a survey sheet — every sprite is drawn alone, at its
+  own size, on its own swatch — so it has to be looked up: check a candidate's
+  `size:` against its `w`/`h` in `content/maps/<id>.yaml` (a `type: building`
+  entry) and against the `radius` on its `content/levels/<id>.yaml` obstacle
+  line. Eastworld's `storefront` was a 16×16 sprite declared as a 48×40
+  building — a shed you bumped into three tiles early, standing beside a 60×60
+  saloon — and its own `subject.kind` still said "wall tile" from an earlier
+  life. A mismatch is usually a sprite whose USE changed without its art
+  following, so fix the words (Phase 4 step 1) as well as the pixels.
 - **Identity collision** — two or more sprites in the family share a
   silhouette and a palette, so the player cannot tell an elite from a minion
   at a glance. This one is invisible sprite-by-sprite: it only shows when you
