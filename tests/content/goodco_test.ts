@@ -397,6 +397,77 @@ describe("GOODCO HQ level def", () => {
   });
 });
 
+describe("THE ATTRITION FLAMETHROWER never leaves the building", () => {
+  // A gimmick with nine seconds of fuel is a thing you meet on ONE map. Every
+  // other base in GOODCO's pool is repeated by the later venues' pools — that
+  // is how the campaign's arsenal accumulates — and this one deliberately is
+  // not, which is a promise no schema enforces. The `weaponPool` is the only
+  // door a random drop comes through (`eligibleBases`), so naming it nowhere
+  // else is what makes the weapon a GOODCO find.
+  const FLAMETHROWER = "attrition_flamethrower";
+
+  it("is in GOODCO's weapon pool and in no other level's", () => {
+    expect(LEVELS.goodco_hq!.loot.weaponPool).toContain(FLAMETHROWER);
+    for (const id of [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]) {
+      if (id === "goodco_hq") continue;
+      expect(LEVELS[id]!.loot.weaponPool).not.toContain(FLAMETHROWER);
+    }
+  });
+
+  it("is a rigid two-handed burner whose tank is its whole gimmick", () => {
+    const def = weaponDef(FLAMETHROWER);
+    expect(def.burn).toBe(true);
+    expect(def.class).toBe("melee");
+    // The reach and arc are the TANK's, so a late build never turns nine
+    // seconds of fuel into a room-clearing sweep.
+    expect(def.rigid).toBe(true);
+    expect(def.twoHanded).toBe(true);
+    // It empties fast, and "fast" has to mean something against the catalog:
+    // well under the leanest ordinary plain drop rather than merely low.
+    const ordinary = LEVELS.goodco_hq!.loot.weaponPool.filter(
+      (id) => id !== FLAMETHROWER,
+    ).map((id) => weaponDef(id).durability);
+    const mean = ordinary.reduce((a, b) => a + b, 0) / ordinary.length;
+    expect(def.durability).toBeLessThan(mean / 2);
+  });
+});
+
+describe("the vending banks pay the sprint pool", () => {
+  // The machines have always been breakable — a `loot` block makes a prop
+  // breakable on its own (mapgen/place.ts) — but restricted to the `floor`
+  // district they were priced over a carved area that swings run to run, and a
+  // fair share of carves stood a whole shift with no vending machine anywhere.
+  // A prop that is absent on some runs is a prop the player never learns the
+  // rules of, so the floor of that spread is what this pins, on every SIZE
+  // rather than on one: the zero came from a district being small, and only the
+  // small maps can get that small.
+  it("stands smashable, stamina-paying machines on every carve", () => {
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const carved = resolveLevelDef("goodco_hq", seed);
+      const line = carved.obstacles.find((o) => o.kind === "vending");
+      expect(line, `seed ${seed} carved no vending line`).toBeDefined();
+      expect(line!.count).toBeGreaterThan(0);
+      expect(line!.breakable).toBe(true);
+      // A coin flip, and what it pays is a stamina drink — the one resource
+      // this map's own merchant sells and its sprint economy runs on.
+      expect(line!.loot?.chance).toBe(0.5);
+      expect(Object.keys(line!.loot?.drop ?? {})).toEqual(["stamina"]);
+    }
+  });
+
+  it("mints them with live break hp and their spill odds", () => {
+    const state = startGame(SEED, "goodco_hq");
+    const machines = state.obstacles.filter((o) => o.kind === "vending");
+    expect(machines.length).toBeGreaterThan(0);
+    for (const machine of machines) {
+      expect(machine.breakable).toBe(true);
+      expect(machine.hp).toBeGreaterThan(0);
+      expect(machine.lootChance).toBe(0.5);
+      expect(machine.lootDrop).toEqual({ stamina: 1 });
+    }
+  });
+});
+
 describe("the off-path detour lockers", () => {
   it("places a GOODCO locker at each dead end, all breakable containers", () => {
     const state = startGame(SEED, "goodco_hq");

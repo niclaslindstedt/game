@@ -302,6 +302,17 @@ export function validateItem(doc, refs) {
       if (doc.class !== "melee")
         err(`rigid is melee-only (class "${doc.class}" has no swung reach)`);
     }
+    // BURN (`WeaponDef.burn`, src/game/items/burn.ts): the weapon is FIRE, so
+    // every body it drops is burned up into a charred skeleton instead of being
+    // thrown as a corpse — the screen-nuke's own picture, pointed at a new
+    // author. Melee only, because a burn happens where the weapon IS; a shot
+    // carries no weapon identity for the hit path to read this off, so a ranged
+    // def claiming it would author a promise nothing could keep.
+    if (doc.burn !== undefined) {
+      if (typeof doc.burn !== "boolean") err(`burn must be a boolean`);
+      if (doc.class !== "melee")
+        err(`burn is melee-only (class "${doc.class}" does not reach a body)`);
+    }
     // EXECUTE (`WeaponDef.execute`, src/game/items/execute.ts): the blow is
     // priced in the VICTIM's own healthbars instead of in the weapon's damage,
     // so it kills whatever it reaches short of a boss. Melee only, for the same

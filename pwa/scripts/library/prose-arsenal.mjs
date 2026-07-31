@@ -247,9 +247,18 @@ export function weaponShapeNotes(stats) {
       "It takes the off hand as well, so you carry no shield and no bag while it is drawn. That is what the extra damage is paying for — a two-hander is forged above the budget line every one-hander sits on, because the alternative to carrying one is carrying a fifth piece of armour.",
     ]);
   }
+  // FIRE. Stated ahead of the edge note below because it OUTRANKS it: what a
+  // burner kills does not have a shape to fall in.
+  if (stats.burn) {
+    notes.push([
+      "BURNS",
+      "What it kills it burns. There is no body afterwards — the thing goes up where it stood and what is left smoulders on the floor a moment and then is not there either, the same end the bombs give a crowd. It is the only thing about this weapon that is purely a sight: not a point of damage moves either way, and what it pays you in experience and in loot is what any other weapon of its level pays.",
+    ]);
+  }
   // What it LEAVES of what it kills. No number moves either way — this is the
   // shape of the corpse, and it is the one reason to prefer a blade over a
-  // maul of the same damage.
+  // maul of the same damage. On a burner this is what you see when there is
+  // nothing left to burn — see BURNS above.
   if (stats.edge != null) {
     const EDGE_NOTE = {
       sharp: [

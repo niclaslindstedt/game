@@ -13,6 +13,7 @@ import {
   contactRange,
   isEdgedWeapon,
   maxMeleeTargets,
+  weaponBurns,
   weaponExecuteBars,
   rollWeaponHit,
   weaponCooldownFor,
@@ -314,6 +315,13 @@ function meleeSweep(
   // the edge above. Undefined for every weapon in the game but the chainsaw,
   // and the branch below is the only thing that changes when it isn't.
   const execBars = weaponExecuteBars(weapon.defId);
+  // Is this weapon FIRE (items/burn.ts)? Read once for the swing, like the edge
+  // above — a gout of flame consumes every body it drops, not a chosen few — and
+  // carried out on each kill event so the app burns the body up into a charred
+  // skeleton instead of throwing a corpse. Presentation only: it is deliberately
+  // NOT the screen-nuke's other two rules, so a burn kill still pays loot and
+  // still heats the menace meter like any other blow of the hero's own.
+  const burns = weaponBurns(weapon.defId);
   // TWIN STRIKE (melee tree): a chance each blow echoes for a second hit. Read
   // once for the swing; the per-hit roll is gated on it so untrained draws no rng.
   const twin = talentTwinStrike(state, player);
@@ -343,6 +351,7 @@ function meleeSweep(
       damageRoll: roll,
       attack,
       edged,
+      incinerated: burns || undefined,
       executeBars: bars,
     });
     // A tooth is spent per body TAKEN, so a swing that missed (the accuracy
@@ -357,6 +366,7 @@ function meleeSweep(
         critMult,
         attack,
         edged,
+        incinerated: burns || undefined,
         executeBars: bars,
       });
     }

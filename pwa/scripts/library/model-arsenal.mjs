@@ -75,6 +75,7 @@ export const WEAPON_FIELDS = {
   rigid: "the FIXED REACH note — that no stat grows its reach or its arc",
   motion: "the NOT SWUNG note — a tool leaned into a body rather than swung",
   execute: "the EXECUTES note — that it takes a body rather than damaging it",
+  burn: "the BURNS note — that what it kills is burned up rather than left",
   edge: "the EDGE row — whether the weapon cuts a body open or bursts it",
   twoHanded: "the BOTH HANDS note, and the empty off-hand slot it implies",
   projectile: "the shot section",
@@ -352,6 +353,9 @@ function baseStats(family, def) {
       // this weapon's own damage figure.
       rigid: def.rigid === true,
       executeBars: def.execute?.bars ?? null,
+      // Whether the weapon is FIRE — what it LEAVES of what it kills, beside
+      // `edge` below rather than among the numbers, because it moves none.
+      burn: def.burn === true,
       // How it is WORKED — omitted reads as a swing, which is all but one of
       // them, so only the odd tool has anything to say here.
       motion: def.motion ?? null,

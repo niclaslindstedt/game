@@ -7032,6 +7032,24 @@
       },
       "range": 290
     },
+    "attrition_flamethrower": {
+      "burn": true,
+      "class": "melee",
+      "cooldownMs": 150,
+      "damage": 6,
+      "durability": 60,
+      "edge": "blunt",
+      "icon": "icon_attrition_flamethrower",
+      "id": "attrition_flamethrower",
+      "levelReq": 6,
+      "material": "metal",
+      "motion": "shake",
+      "name": "THE ATTRITION FLAMETHROWER",
+      "range": 72,
+      "rigid": true,
+      "sweepDeg": 90,
+      "twoHanded": true
+    },
     "austerity_chainsaw": {
       "class": "melee",
       "cooldownMs": 450,
@@ -8713,6 +8731,26 @@
       "range": 46,
       "sweepDeg": 130
     },
+    "redundancy_torch": {
+      "burn": true,
+      "class": "melee",
+      "cooldownMs": 150,
+      "damage": 16,
+      "durability": 75,
+      "edge": "blunt",
+      "grade": "exceptional",
+      "gradeBase": "attrition_flamethrower",
+      "icon": "icon_attrition_flamethrower",
+      "id": "redundancy_torch",
+      "levelReq": 30,
+      "material": "metal",
+      "motion": "shake",
+      "name": "THE REDUNDANCY TORCH",
+      "range": 72,
+      "rigid": true,
+      "sweepDeg": 90,
+      "twoHanded": true
+    },
     "retro_raygun": {
       "class": "magic",
       "cooldownMs": 600,
@@ -8817,6 +8855,26 @@
       },
       "range": 160,
       "sfx": "shot_sawed_off"
+    },
+    "scorched_earth_policy": {
+      "burn": true,
+      "class": "melee",
+      "cooldownMs": 150,
+      "damage": 27,
+      "durability": 90,
+      "edge": "blunt",
+      "grade": "elite",
+      "gradeBase": "attrition_flamethrower",
+      "icon": "icon_attrition_flamethrower",
+      "id": "scorched_earth_policy",
+      "levelReq": 56,
+      "material": "metal",
+      "motion": "shake",
+      "name": "THE SCORCHED EARTH POLICY",
+      "range": 72,
+      "rigid": true,
+      "sweepDeg": 90,
+      "twoHanded": true
     },
     "scout_rifle": {
       "class": "ranged",

@@ -223,15 +223,31 @@ objects:
     areas: [lab, bay]
 
   # ── THE OPEN FLOOR ───────────────────────────────────────────────────────
+  # THE SODA MACHINES, and they are meant to be SMASHED — the sprint pool's own
+  # supply line on the one map whose merchant sells drinks for a living. A `loot`
+  # block already makes a prop breakable (see place.ts), so the machines have
+  # always broken; what they had not always been is PRESENT. Restricted to the
+  # `floor` district they were priced over a district whose carved area swings
+  # wildly run to run, and measured over 36 carves FOUR of them stood a whole
+  # shift with no vending machine anywhere on the map — a prop the player cannot
+  # learn the rules of, because on a fair share of runs it is not there. Adding
+  # the BAYS prices it over the two districts that between them are always most
+  # of the building, which takes the floor of that spread off zero without
+  # touching the density (small 5-20, medium 7-37, large 21-62), and a bank of
+  # machines on the line is where a night shift would put one anyway.
+  #
+  # The spill is a straight coin flip. `stamina: 3` was a weight rather than a
+  # count and the only entry in its own table, so it always meant "a stamina
+  # drink"; written as 1 it says so.
   - id: vending
     type: obstacle
     radius: 8
     density: 6
-    areas: [floor]
+    areas: [floor, bay]
     loot:
-      chance: 0.6
+      chance: 0.5
       drop:
-        stamina: 3
+        stamina: 1
   - id: desk
     type: crate
     radius: 8

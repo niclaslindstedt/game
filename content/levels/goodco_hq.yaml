@@ -129,6 +129,14 @@ loot:
     - prototype_laser
     - microwave_emitter
     - pump_shotgun
+    # THE ONE WEAPON THAT NEVER LEAVES THE BUILDING. Every other base in this
+    # pool is repeated by the later venues' pools, which is how the campaign's
+    # arsenal accumulates; this one is deliberately not, so the flamethrower is
+    # a GOODCO find and nothing else — a facilities tool that was never issued
+    # off the campus, and a gimmick the player meets exactly where the story
+    # says it lives. Six seconds of fuel is also not a thing to hand somebody
+    # for the rest of a campaign.
+    - attrition_flamethrower
   gearPool:
     - baseball_cap
     - hard_hat

@@ -55,6 +55,7 @@ import {
   armorValueOf,
   dropItem,
   isEdgedWeapon,
+  weaponBurns,
   medkitTierIndex,
   meetsLevelReq,
   playerSpeed,
@@ -642,11 +643,16 @@ function companionAttack(
         // fight is not the hero being too strong (see `noMenace` in hitEnemy).
         // `companionId` credits the kill's XP to this companion (loot.ts).
         // `edged` says whether ITS signature weapon cuts — a recruit swinging a
-        // blade opens a body exactly as the hero's does (items/edge.ts).
+        // blade opens a body exactly as the hero's does (items/edge.ts) — and
+        // `incinerated` whether that weapon is FIRE, so a recruit handed a
+        // flamethrower burns what it drops exactly as the hero does
+        // (items/burn.ts). Both are the weapon's, not the wielder's.
         {
           noMenace: true,
           companionId: companion.id,
           edged: isEdgedWeapon(companion.equipment.weapon.defId),
+          incinerated:
+            weaponBurns(companion.equipment.weapon.defId) || undefined,
         },
       );
     }
