@@ -493,6 +493,11 @@ function levelEntries(def) {
   for (const wall of def.walls ?? []) add(wall.sprite ?? wall.kind, "wall");
   if (def.doors?.length) add("door_locked", "locked door");
   for (const d of def.decor) add(d.sprite ?? d.kind, "decor");
+  // The canopy drifts BETWEEN the eye and the ground, blurred and faint by
+  // design — flagged as such so the rubric isn't applied to it as if it were a
+  // sprite meant to read sharply.
+  for (const c of def.canopy ?? [])
+    add(c.sprite ?? c.kind, "canopy (drawn blurred + faint)");
   return entries;
 }
 
