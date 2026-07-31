@@ -1,25 +1,25 @@
 ---
 type: Changed
-title: EASTWORLD's worst-reading art redrawn
+title: EASTWORLD's town architecture redrawn
 ---
 
-The knockoff robot western got an art pass over the twelve sprites that read
-worst on the field.
+The knockoff robot western's buildings got an art pass.
 
-The town is the biggest change: the three houses that line main street were the
-same flat plank rectangle at three widths, and are now three distinct frontages
-— a one-room cabin under a chimney, a two-storey house shuttered upstairs, and
-a big house with a covered porch — with LIT windows rather than black holes.
-The storefront was a 16×16 sprite standing in a 48×40 collision box and is now
-a full-size western false front. The water tower reads as a tower instead of a
-stool, and the ZAI control center — the building Ada's beacon points at — is no
-longer a flat grey slab but a timber false front with the machine rising behind
-and above it.
+The three houses that line main street were the same flat plank rectangle at
+three widths, and are now three distinct frontages — a one-room cabin under a
+stone chimney, a two-storey house shuttered upstairs and lit down, and a big
+house with a full-width covered porch — all with LIT windows rather than black
+holes, so a street of twenty stops reading as one building stamped twenty
+times.
 
-The celebrity staff were built from one torso template and read as the same
-blob in different colours. STEVEN SEAGULL has a face and the ponytail he drops,
-VLADIMIR PUTAIN is in the tracksuit and the judo stance his own description
-always promised, and EDWARD SNOW has his hood up with the dead man's switch in
-his hand. The haywire greeter's arms now form the welcoming V instead of being
-1px stubs, the saloon brawler's fists are attached to its arms, and the wagon
-has four wheels and a plank bed.
+The storefront was a 16×16 sprite standing in a 48×40 collision box, so the
+player bumped into it three tiles before reaching it; it is now a full-size
+western false front, with the parapet signboard and striped awning that the
+houses deliberately do not have.
+
+The water tower reads as a tower instead of a stool — a round staved tank under
+a shingled cone on splayed, cross-braced legs. And the ZAI control center, the
+building Ada's beacon points at, is no longer a flat grey slab shorter than the
+water tower down the street: it is a timber false front with the machine rising
+behind and above it, and cold steel blast doors punched through the middle of
+the wooden frontage.
