@@ -141,23 +141,26 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 
 ---
 
-## 1. The ten pull requests
+## 1. The eleven pull requests
 
-| PR                     | Ships                                                                                                                                    | Playable at the end                                          | Estimate | State                                      |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ------------------------------------------ |
-| **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                          | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6                |
-| **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**               | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7                |
-| **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4              |
-| **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                    |
-| **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                     |
-| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6                  |
-| **4 — THE CO-OP GAME** | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7 |
-| **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                | Shippable                                                    |  5–7 wks |                                            |
-| **6 — THE GARAGE**     | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks |                                            |
-| **7 — THE PARTY BOT**  | `botAct` takes the hero it steers; the simulator flies a party; BOTS IN A LOCAL GAME; the bot plays like somebody in a party             | A party without four friends online — and PR 4 measured      |  3–5 wks | **§7.1–§7.2 owed EARLY**, see PR 7         |
+| PR                      | Ships                                                                                                                                    | Playable at the end                                          | Estimate | State                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ------------------------------------------- |
+| **1 — THE SERVER**      | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                          | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6                 |
+| **2 — THE WIRE**        | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**               | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7                 |
+| **1.5 — THE VERBS**     | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4               |
+| **1.75 — THE LOOP**     | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                     |
+| **2.5 — THE SCREENS**   | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                      |
+| **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6                   |
+| **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7  |
+| **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                 |
+| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three PR 7 halves that were always owed early       | Nothing new — the mode stops owing anything                  |  6–9 wks |                                             |
+| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks |                                             |
+| **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | Its three instrument halves moved to PR 5.5 |
 
-**≈ 39–58 weeks.** The band is wide because PR 3 is a design exercise wearing a
-refactor's clothes (see §PR 3), and its uncertainty dominates everything.
+**≈ 44–65 weeks.** The band is wide because PR 3 is a design exercise wearing a
+refactor's clothes (see §PR 3), and its uncertainty dominates everything. It
+grew when PR 5.5 was written down: the work was always owed, and a total that
+did not count it was a total that quietly assumed somebody else would.
 
 **PR 6 SORTS LAST AND THAT IS A DECISION, not a leftover.** The garage was PR 4's
 §4.1 and has been lifted out whole, for two reasons. It is not co-op arithmetic —
@@ -169,15 +172,19 @@ all. The cost of that order is stated in PR 6's own goal and must not be
 discovered later — until it lands, a joiner arrives in the middle of somebody
 else's boss fight.
 
-**PR 7's FIRST HALF IS OWED EARLIER THAN ITS NUMBER.** §7.1 (the bot takes the
-hero it steers) and §7.2 (the simulator flies a party) are the instrument PR 4's
-§4.3 tuning is blocked on — the co-op rules shipped as STRUCTURE precisely
-because they could not be measured. The number says where the work is DESCRIBED;
-the first half happens whenever PR 4's measured pass does. Same treatment §3.7
-gave the seat on the command channel, same reason.
+**PR 7's INSTRUMENT HALVES HAVE MOVED TO PR 5.5, AND THAT REPLACES A NOTE THAT
+LIED ABOUT THE ORDER.** §7.1 (the bot takes the hero it steers), §7.2 (the
+simulator flies a party) and §7.2.5 (the bot as a client) are the instruments PR
+4's §4.3 tuning and PR 5's §5.6 soak are blocked on — the co-op rules shipped as
+STRUCTURE precisely because they could not be measured. This plan said three
+separate times that they were "owed earlier than their number", which is a label
+contradicting its own position; they are now written where they happen. PR 7
+keeps what is genuinely about how a bot PLAYS.
 
-**The three inserted PRs are not new work, they are work the earlier ones
-deferred**, so the total grew by their estimates rather than by a re-plan. Note also what the
+**The four inserted PRs are not new work, they are work the earlier ones
+deferred**, so the total grew by their estimates rather than by a re-plan. PR
+5.5 is the largest of them and the most honest: it exists because a dozen
+"NOT LANDED" boxes with no single index is how a debt stops being anybody's. Note also what the
 "playable at the end" column now says for PRs 1 and 2: **nothing changes.** That
 is the honest reading of what shipped, and leaving the old claim in place is what
 would have let the next PR inherit the same mistake.
@@ -864,7 +871,7 @@ conversion — either that memory moves onto the run, or the bot runs server-sid
 **Answer it deliberately; it is the last thing in this PR that is a design
 question rather than a rename.**
 
-### 1.75.4 And the packaged app gets launched, for the first time — **STILL OWED**
+### 1.75.4 And the packaged app gets launched, for the first time — **STILL OWED** (PR 5.5's §5.5.1)
 
 PR 1 flagged this, PR 1.5 did not reach it, and it is still outstanding: the
 `extraResources` entry, the `MessagePortMain` handover and a real
@@ -1042,7 +1049,9 @@ is why joining cost one module rather than a second client.
    rather than as three front-door rows, which would have run a landscape phone
    to eleven rows again — the exact length EXTRAS exists to avoid.
 
-**What could not be verified here, and is still owed:** the eight-machine runs
+**What could not be verified here, and is still owed** — all of it now listed in
+PR 5.5's §5.5.1, which is the one place that says these need HARDWARE rather
+than a diff: the eight-machine runs
 over each transport through a NAT, the UPnP mapping against a real router, the
 firewall remedies on each OS, and the packaged `npm run electron` launch (still
 §1.75.4's debt). None of them can be met in CI, and none of them are met by
@@ -1265,6 +1274,10 @@ each leaving single player byte-identical.
   autopilot, the headless simulator and the analytic readouts still fly seat 0 —
   which is correct for what they measure and is what §3.4's "multi-player
   campaign headlessly" line will change.
+
+**§3.2, §3.3 AND THE BANKING ARE NOW PR 5.5's**, inventoried and sequenced in
+§5.5.2 and §5.5.3. The third item above — the command channel's missing SEAT —
+was PAID by PR 5, which needed it before trade could be correct.
 
 ### 3.7 The order the remainder has to be done in — and why there is no PR 3.5
 
@@ -1548,7 +1561,12 @@ bigger a shared pot is than a solo one — read the per-CAPITA XP rate off a
 multi-player run, never the per-kill share, because a party also clears faster
 and the two effects only show up together) and the `/players N` pairing itself.
 
-**AND TWO OF PR 5's RULES ARE ALREADY OWED — see the box at the head of §5.3.**
+**BOTH OF THE DEBTS BELOW WERE PAID BY PR 5** (see §5.8), and everything §4.7
+records as NOT LANDED — the corpse, the mods, the party HUD, the banking and the
+measured tuning pass — is now inventoried and sequenced in **PR 5.5** rather than
+left in this box.
+
+**AND TWO OF PR 5's RULES WERE ALREADY OWED — see the box at the head of §5.3.**
 A co-op run currently banks its records to the leaderboards exactly as a solo
 run does (there is no `PartyStamp`, and §5.3 says there must be), and a joiner's
 loadout is accepted verbatim off the wire (there is no validation, and §5.3 says
@@ -1768,11 +1786,165 @@ and it should be a few hundred lines.
 - **§5.6's SOAK AND ADVERSITY PASS, AND THAT ONE IS THE FINDING** — the same
   shape §4.7 hit. Neither could be run, because neither had an instrument: as
   written they need eight machines and eight bored humans. That is what §7.2.5
-  now exists for, and the honest ordering is §7.1 → §7.2 → §7.2.5 → this soak.
+  now exists for, and the honest ordering is §7.1 → §7.2 → §7.2.5 → this soak —
+  **all four of which are now PR 5.5's, sequenced in §5.5.2.**
   What DID land is `tests/engine/net_dedicated_test.ts`, which drives a real
   session behind a real admission desk over a real UDP socket and proves the
   stack CONNECTS — a strictly weaker claim, and it must not be recorded as the
   soak.
+
+---
+
+## PR 5.5 — THE REMAINDER
+
+**Goal: nothing is owed that nobody is holding.** Every PR from 1 onward
+deferred something, and each deferral was recorded in its own section — which is
+right, and is also how a dozen separate debts come to exist with no single place
+that lists them. This is that place. It designs nothing new: it is the
+inventory, the ORDER, and — for four items — the honest statement that they
+cannot be closed by writing code at all.
+
+**IT SORTS HERE, DIRECTLY AFTER THE DEBTS IT COLLECTS, AND THAT RESOLVES
+SOMETHING THE PLAN HAS BEEN CARRYING AWKWARDLY.** Three separate boxes already
+say that §7.1, §7.2 and §7.2.5 are "owed EARLIER than their number" — the
+instruments PR 4's tuning and PR 5's soak are blocked on. A note that a section
+happens somewhere other than where it sits is a label that lies about the order,
+and the plan says so itself. So those three MOVE HERE, and PR 7 keeps only what
+is genuinely about how a bot PLAYS: bots in a local game, party behaviour, and
+quest awareness. Nothing is re-planned by that; the same work is written in the
+order it actually happens.
+
+**AND IT IS A CHECKLIST RATHER THAN A DESIGN.** Everything here was designed in
+the section that deferred it. What this adds is the sequencing and the reason
+each item is still open, so whoever picks it up does not reconstruct either from
+a dozen scattered "NOT LANDED" boxes.
+
+### 5.5.1 The four things code cannot close
+
+**These are not tasks, they are ACCEPTANCES**, and they need a human with
+hardware. Writing them as work items is how they get ticked from a diff, which
+is exactly what §1.75.4 and §2.5.4 were written to stop.
+
+| Owed since | What                                                                                                    | Why no diff can close it                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| §1.75.4    | A PACKAGED launch — `npm run electron`, a real `utilityProcess.fork`, a real `MessagePortMain` handover | The `extraResources` entry and the port handover are covered by stubs and reasoning. #790 tried and could not fetch the Electron binary in a sandbox. |
+| §2.5.3     | EIGHT MACHINES over each transport, through a real NAT                                                  | There is no eighth machine in CI, and a loopback socket cannot fail the way a carrier-grade NAT does.                                                 |
+| §2.5.3     | The UPnP mapping against a REAL router                                                                  | `net/upnp.ts` is exercised against its own protocol encoding; the router is the thing being tested.                                                   |
+| §2.5.3     | The firewall remedies on each OS                                                                        | Each is an elevation prompt on a machine somebody owns.                                                                                               |
+
+The `ui-review` screenshot audit of the HOST / JOIN screens is a fifth of the
+same kind: the harness drives a BROWSER, and every one of those screens is
+deliberately absent from a browser build.
+
+### 5.5.2 The order the rest has to be done in
+
+Three of these dependencies are non-obvious, so the order is stated once rather
+than rediscovered:
+
+1. **§7.1 — `botAct(bot, state, hero)`.** 164 sites across 14 files, the same
+   mechanical refactor §3.1 did to the engine, single player byte-identical at
+   every commit. **It sorts first because it unblocks the most** — four of the
+   items below wait on it — and because it is the one large item that is a
+   rename rather than a design. The hard half is already done: `Bot` owns all
+   its own memory and `step()` already takes a `PartyInput`.
+2. **§7.2 — the simulator flies a party.** `--party N` for how many bots, never
+   `--players N`, which already means the hp/XP scaling and is the collision
+   most worth avoiding. The report is seat-0 shaped and has to grow.
+3. **§4.3's MEASURED TUNING PASS** — the thing §4.7 says shipped as STRUCTURE
+   with its reasoning stated, and which must not be recorded as measured. Read
+   the per-CAPITA XP rate off multi-player runs at 1/2/4/8 across the ladder,
+   and move `XP_SHARE.partyBonusPerHero` and the `/players N` pairing on
+   evidence.
+4. **§7.2.5 — the bot CLIENT**, blocked on (1) for the same reason (2) is: a
+   client's seat is never 0. It also forces decision 3b's other half, since on
+   a client a direct write is erased by the next snapshot.
+5. **§5.6's SOAK AND ADVERSITY PASS**, blocked on (4). Eight bot clients for
+   hours, watched for leaks, drift and snapshot growth; 150 ms and 2% loss
+   injected at the transport seam. §5.8 records that this could not be run, and
+   it must not be ticked from a green unit suite.
+6. **§3.2 — the per-player screens.** `state.phase` loses eleven members to a
+   new `Player.screen`. This is the design exercise rather than the plumbing:
+   the non-blocking level-up is a real SINGLE-PLAYER behaviour change that owes
+   the changelog its own line, and `dialogue`, `cutscene` and `choice` each need
+   a GROUP protocol rather than a per-player one. Its own prerequisite — the
+   seat on the command channel — **is paid** (PR 5), so nothing blocks it; it
+   sorts after the instruments because it is the first item here that changes
+   how the game feels, and it should land against a mode that can be measured.
+7. **§4.2's corpse and respawn**, which §4.7 records as BLOCKED on §3.2 and
+   which unblocks the moment (6) lands: there is no per-player death to give a
+   corpse to until `dying` is a `Player.screen`.
+8. **§3.3 — prediction and reconciliation.** Deliberately last: it is the item
+   that changes what a player FEELS on a GOOD connection, so it wants a mode
+   that is otherwise finished. Input frames carry a sequence, the LOCAL hero
+   replays unacknowledged input, everybody else interpolates one interval
+   behind — and COMBAT is deliberately not predicted, because that is a rollback
+   problem this codebase has no machinery for and a player would experience as
+   monsters un-dying.
+
+### 5.5.3 The independent items
+
+None of these blocks anything and none is blocked. They can be done in any
+order, beside the chain above.
+
+- **§5.1's TRADE WINDOW.** The engine, the five verbs and all four anti-dupe
+  rules landed in PR 5 and are tested; the SCREEN did not, so a trade is
+  currently something only a command can start. App work of the shape
+  `QuestOverlay` already is, and the engine side it reads (`tradeOf`,
+  `tradePartner`, `TradeSide.item`) is deliberately shaped for it.
+- **§5.6's NET GRAPH** behind DEBUG MODE — round trip, snapshot size, packet
+  loss, prediction error, with the FPS meter as the precedent. Every number is
+  already measured (`Reliability.stats`, `.rtt`, the roster's ping), so this is
+  a readout rather than an instrument.
+- **§4.4 — mods and versions reconciled.** PR 2 refuses a mismatch; this makes
+  it WORK, which is the common case on Steam. The host's set is the session's, a
+  joiner subscribed to the same mods applies them through `registerDefs`, and a
+  joiner MISSING one is offered the Workshop page and refused until they have
+  it — auto-downloading a stranger's content on join is a decision nobody asked
+  us to make on their behalf.
+- **§4.5 — the party HUD, and banking eight characters.** Frames down one edge,
+  off the steering thumb's third; portraits through the existing paper-doll
+  compositor. The banking half is the sharp one: every player's character banks
+  on their OWN device through their own `saveCharacters`, and `updatedAt` must
+  stay stamped only for heroes a save actually changed, because cloud save's
+  merge depends on precisely that. Its twin is that a joiner still plays the
+  THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster —
+  the same job from the other end, and it should land with it.
+- **Decision 3b's other half — the bot's five housekeeping mutators.** Four are
+  plain verbs and travel unchanged; the fifth (`stepBotWeaponSwap`) carries the
+  bot's own swap memory, and the plan already recommends moving that memory onto
+  the run rather than moving the bot.
+- **§5.6's STORE SURFACES** — the Steam listing's multiplayer categories, the
+  depot's launch options, and store screenshots showing a party (`store-shots`
+  skill). Not code, but it is on PR 5's list and nobody is holding it.
+
+### 5.5.4 The two open decisions
+
+Neither is the plan's to make, and both should be settled before the thing that
+needs them rather than during it:
+
+- **Decision 15 — the LICENCE.** `PolyForm-Noncommercial-1.0.0` and hosted play:
+  what it permits for somebody running a server for other people. Running one
+  yourself for your friends is plainly inside it; a paid hosting business is
+  plainly not; the middle is unsettled, and PR 5 shipped a dedicated server
+  saying so in its own header rather than answering it.
+- **PR 6's story chain.** If the garage speaks a single line that is a
+  manuscript change, and the manuscript may not be rewritten without the user's
+  confirmation first (see AGENTS.md's story chain). It is a conversation rather
+  than a commit, and PR 6 should open with it rather than discover it.
+
+### 5.5.5 Done when
+
+- Every row of §5.5.1 has been performed by a human on real hardware and the
+  result recorded — **including a FAILURE**, if that is what happens, because
+  the point of the list is that these were never verified rather than that they
+  were assumed to pass.
+- §5.5.2's chain has landed in order, with §4.3's tuning numbers written into
+  §4.7 and §5.6's soak result into §5.8 — in both cases REPLACING the paragraph
+  that says it could not be run.
+- §5.5.3 is empty.
+- Both decisions in §5.5.4 are answered in the register.
+- **And this section is deleted rather than ticked.** A remainder list that
+  survives its own completion is the next plan's stale inheritance.
 
 ---
 
@@ -1931,20 +2103,22 @@ INSTRUMENT PR 4 needs and does not have, BOTS IN A LOCAL GAME so a player can
 have a party without four friends online, and a bot that plays like somebody in a
 party rather than like a soloist who happens to be standing near you.
 
-> **§7.1, §7.2 AND §7.2.5 ARE OWED EARLIER THAN THIS NUMBER SUGGESTS.** They are
-> the instruments two other PRs are blocked on. §7.1–§7.2 are what PR 4's §4.3
-> tuning needs, and §4.7 says so — the co-op rules ship as STRUCTURE with
-> unit-level proof precisely because the simulator can only fly one hero. §7.2.5
-> is what PR 5's §5.6 soak and adversity pass need, and they name no instrument
-> at all without it. So the number says where the work is DESCRIBED, not when it
-> happens: all three are pulled forward, in that order, whenever the PR they
-> unblock is done. This is the same treatment §3.7 gave the seat on the command
-> channel, and for the same reason — a label that lied about the order would be
-> worse than no label.
+> **§7.1, §7.2 AND §7.2.5 ARE PR 5.5's WORK, AND THIS IS ONLY WHERE THEY ARE
+> DESCRIBED.** They are the instruments two other PRs are blocked on: §7.1–§7.2
+> are what PR 4's §4.3 tuning needs (§4.7 says so — the co-op rules shipped as
+> STRUCTURE precisely because the simulator can only fly one hero), and §7.2.5
+> is what PR 5's §5.6 soak needs, which named no instrument at all without it.
+> This plan said three separate times that they were "owed earlier than their
+> number", which is a note contradicting its own position; **PR 5.5 now owns
+> them and sequences them** (§5.5.2, items 1, 2 and 4).
 >
-> **THE THIRD PAYOFF IS THEREFORE A FOURTH.** One refactor, four payoffs: the
-> measuring instrument (§7.2), the NETWORK instrument (§7.2.5), bots in a local
-> game (§7.3), and a bot that plays like a party member (§7.4–§7.5).
+> They stay written HERE because this is where the bot is explained, and
+> splitting a refactor's rationale from the thing it refactors helps nobody.
+> What must not happen again is a reader taking the number as the schedule.
+>
+> **SO PR 7 IS THE SMALLER HALF: how a bot PLAYS.** Bots in a local game
+> (§7.3), a bot that behaves like a party member rather than a soloist standing
+> near you (§7.4), and quest awareness (§7.5).
 
 ### 7.1 The parameterization — `botAct(bot, state, hero)`
 
@@ -2194,19 +2368,23 @@ What it should learn, in the order it is worth learning:
 
 ### 7.6 Done when
 
-- `botAct` takes the hero it steers; single player is byte-identical and the
-  existing bot suites pass unchanged.
-- `--party N` runs a real party headlessly; the same seed replays identically at
-  every N, and the order the bots are polled provably does not matter.
-- `--verdict` reports per-seat and per-capita, and PR 4's §4.3 tuning is done
-  ON EVIDENCE, with the two levers moved and the numbers written into §4.7 —
-  measured on the SIMULATOR's in-session party, never on bot clients (§7.2.5's
-  second limit).
-- A bot CLIENT joins a real session over a real transport and plays from the
-  replicated state alone, so PR 5's §5.6 soak and adversity pass are things a
-  machine runs rather than things eight people do once. The bot's five
-  housekeeping mutators travel as commands by then (decision 3b's other half),
-  because on a client a direct write is erased by the next snapshot.
+The first four bullets belong to **PR 5.5** (§5.5.2) and are listed there; they
+are repeated here only so this section's own done-when is readable.
+
+- _(PR 5.5)_ `botAct` takes the hero it steers; single player is byte-identical
+  and the existing bot suites pass unchanged.
+- _(PR 5.5)_ `--party N` runs a real party headlessly; the same seed replays
+  identically at every N, and the order the bots are polled provably does not
+  matter.
+- _(PR 5.5)_ `--verdict` reports per-seat and per-capita, and PR 4's §4.3 tuning
+  is done ON EVIDENCE, with the two levers moved and the numbers written into
+  §4.7 — measured on the SIMULATOR's in-session party, never on bot clients
+  (§7.2.5's second limit).
+- _(PR 5.5)_ A bot CLIENT joins a real session over a real transport and plays
+  from the replicated state alone, so §5.6's soak is a thing a machine runs
+  rather than a thing eight people do once. The bot's five housekeeping mutators
+  travel as commands by then (decision 3b's other half), because on a client a
+  direct write is erased by the next snapshot.
 - A player can start a local game with bots, they hold formation, split packs,
   stay inside the share radius and help with an errand already taken.
 - A bot yields its seat to a joining human, banks nothing, and the run carries
