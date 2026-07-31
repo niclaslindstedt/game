@@ -1598,10 +1598,19 @@ and the two effects only show up together) and the `/players N` pairing itself.
 > pass at `/players 2/4/8` is worth running the same way once it is — the harness
 > takes `--players` and prints it beside the party size for exactly that.
 >
-> One caveat the harness prints and this table inherits: the spread is wide
+> **A SECOND VENUE SAYS THE SAME THING, and that is what the conclusion rests
+> on.** On `goodco_hq` at MEDIUM (3 seeds × 6 min, fresh heroes) the per-capita
+> XP reads 1× / 0.4× / 0.2× / 0.2× at party 1/2/4/8 — and the per-capita KILL
+> RATE reads 62 / 21 / 9.8 / 7.6, which is the same curve. The two falling
+> together is the whole argument: a party shortchanged by the SPLIT would keep
+> its kill rate and lose only the XP, and that is not what either map shows.
+>
+> Two caveats the harness prints and this table inherits. The spread is wide
 > (8.9k–14.5k at party 1), so these are directional numbers over a handful of
-> seeds rather than a tuned constant. Anything that would MOVE a knob wants more
-> seeds than two.
+> seeds rather than a tuned constant — anything that would MOVE a knob wants more
+> seeds than two. And the deep rungs are only measurable WITH `--start-level`: a
+> fresh party on nightmare reads 0 xp/min at every size including party 1, which
+> is not a co-op result at all.
 
 **BOTH OF THE DEBTS BELOW WERE PAID BY PR 5** (see §5.8), and everything §4.7
 records as NOT LANDED — the corpse, the mods, the party HUD, the banking and the
