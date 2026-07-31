@@ -10,6 +10,20 @@
 // keeps for itself, so a board can be added or retired without touching a
 // counter, and no ranking can ever disagree with what the game shows the player
 // about their own play.
+//
+// **AND EVERY ONE OF THEM IS A SOLO RECORD** (multiplayer plan §5.3). The host
+// of a session is a player, so the host can cheat — that is the accepted cost of
+// a listen server, fine among friends and fatal for a ranking — and seven people
+// helping inflates all four of these without anybody having to cheat at all. So
+// a run more than one person has played is MARKED (`PartyStamp`), the ledger
+// keeps the board-facing figures for solo play alone (`LifetimeTotals.solo`),
+// and `highscores.ts` refuses a campaign any leg of which was played in company.
+// The badges are the opposite and deliberately so: a party kill counts for
+// everyone present.
+//
+// The honesty this rule owes: it stops a co-op run reaching a board, and it is
+// not an anti-cheat. A determined host can still forge a solo record, exactly as
+// they could before multiplayer existed.
 
 import { type Difficulty } from "@game/menu";
 
@@ -33,9 +47,9 @@ const CAMPAIGN_BOARD_DIFFICULTY: Difficulty = "jesus";
  * (a count, a rate per minute, or milliseconds — the format's scale converts).
  * Exhaustive over `LeaderboardKey`, so a new board cannot ship without one. */
 const BOARD_VALUE: Record<LeaderboardKey, () => number> = {
-  hardest_blow: () => getAchievements().totals.maxBurstDamage,
-  foes_felled: () => getAchievements().totals.kills,
-  kill_rate: () => getAchievements().totals.bestKillRate,
+  hardest_blow: () => getAchievements().totals.solo.maxBurstDamage,
+  foes_felled: () => getAchievements().totals.solo.kills,
+  kill_rate: () => getAchievements().totals.solo.bestKillRate,
   jesus_survival: () => bestCampaign("time")?.combatMs ?? 0,
   jesus_kills: () => bestCampaign("kills")?.kills ?? 0,
 };

@@ -9,7 +9,7 @@
 import { localHero } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
-import { bankCampaignQuests } from "@game/core";
+import { bankCampaignQuests, isPartyRun } from "@game/core";
 import {
   extractLoadout,
   type Difficulty,
@@ -199,6 +199,10 @@ export function createRunProgress(deps: {
             kills: state.stats.kills,
             combatMs: state.stats.combatMs,
             peakMenace: state.stats.peakMenace,
+            // ONE CO-OP LEG TAINTS THE WHOLE CAMPAIGN, and the mark is kept on
+            // the tally rather than asked at the end: by the time the campaign
+            // is banked, the run that had a party in it is three venues back.
+            party: isPartyRun(state),
           },
         );
         // Beating the LAST level completes the campaign (recordVictory
@@ -210,7 +214,11 @@ export function createRunProgress(deps: {
           characterRef.current.beaten.includes(difficulty);
         if (completed) {
           const tally = campaignTally(characterRef.current, difficulty);
+          // A CAMPAIGN ANY LEG OF WHICH WAS PLAYED IN COMPANY IS OFF THE BOARD
+          // (plan §5.3). The tally is still cleared below, so a tainted
+          // campaign ends rather than lingering to be re-banked.
           if (
+            !tally.party &&
             recordCampaign(difficulty, {
               name: characterRef.current.name,
               kills: tally.kills,
@@ -244,7 +252,12 @@ export function createRunProgress(deps: {
         // on a replay of an already-conquered campaign scores nothing).
         if (!characterRef.current.beaten.includes(difficulty)) {
           const tally = campaignTally(characterRef.current, difficulty);
+          // Off the board if ANY leg was played in company — the cleared maps
+          // (the tally's own latch) or this fatal one, which is never accrued
+          // into the tally and so has to be asked separately.
           if (
+            !tally.party &&
+            !isPartyRun(state) &&
             recordCampaign(difficulty, {
               name: characterRef.current.name,
               kills: tally.kills + state.stats.kills,

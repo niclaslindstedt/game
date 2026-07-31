@@ -548,3 +548,42 @@ export type Merchant = {
  * trade window's problem (PR 5) rather than a floor drop's.
  */
 export type LootMode = "free" | "allocated";
+
+/**
+ * THE MARK A RUN CARRIES ONCE MORE THAN ONE PERSON HAS PLAYED IT
+ * (`GameState.party`, multiplayer plan §5.3).
+ *
+ * **THE HOST IS A PLAYER, SO THE HOST CAN CHEAT** — that is the accepted cost
+ * of a listen server, fine for playing with friends and fatal for a ranking. So
+ * a run that more than one person has been in is MARKED, exactly as a modded
+ * run's hero carries a `ModStamp`, and the boards refuse it: the four platform
+ * boards rank lifetime kills, the hardest single blow, the best sustained kill
+ * rate and a hardcore campaign, and every one of those is inflated by seven
+ * other people helping without anybody having to cheat at all.
+ *
+ * **IT IS LATCHED, NOT PARAMETERIZED, AND THAT IS A DEPARTURE FROM THE PLAN'S
+ * OWN SKETCH.** §5.3 says "seeded from `SessionParams` like every other run
+ * parameter", and a parameter is the wrong shape here for three reasons. A run
+ * is stamped by what HAPPENED to it, not by how it was opened — a host who
+ * plays alone with the door open is playing solo, and a parameter set at
+ * `createGame` would rank their whole session as co-op. It has three builders
+ * (the app, the session, an arriving client) and a parameter is a thing one of
+ * them can forget. And because it is ordinary DYNAMIC state, the latch
+ * replicates for free: the server marks the run when it seats the second hero
+ * and every client's next snapshot carries the mark, with no wire field, no
+ * `SessionParams` row and no protocol bump.
+ *
+ * **IT NEVER CLEARS.** The party emptying out does not give the run its
+ * records back — the same "progress only ever climbs" rule the campaign quest
+ * chain follows, and for the same reason: the alternative silently hands the
+ * board a run that was played by four people.
+ */
+export type PartyStamp = {
+  /**
+   * The most seats this run has ever held at once, host included — a fact
+   * about the run worth keeping rather than a rule anything reads. Never
+   * decreases: a session people have come and gone from is remembered at its
+   * fullest.
+   */
+  seats: number;
+};

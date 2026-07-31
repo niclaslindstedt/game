@@ -86,7 +86,13 @@ export { quarryFor, quarryOf } from "./game/aggro.ts";
 // PARTY XP — how a kill's payout is divided (the plan's §4.3). The rule is a
 // leaf so the wire, the tests and the headless simulator can all read it.
 export { partyXpBonus, splitXp, type XpCut } from "./game/xp-share.ts";
-export { departHero, nextFreeSeat, seatHero } from "./game/seating.ts";
+export {
+  departHero,
+  isPartyRun,
+  nextFreeSeat,
+  seatHero,
+} from "./game/seating.ts";
+export { validateLoadout, type LoadoutCheck } from "./game/loadout-check.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
 export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";
@@ -1070,6 +1076,7 @@ export type {
   MerchantStock,
   Obstacle,
   PackState,
+  PartyStamp,
   PendingProc,
   Player,
   ProcSpell,

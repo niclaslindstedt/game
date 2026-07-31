@@ -51,6 +51,7 @@ import {
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
   step,
+  validateLoadout,
   type GameInput,
   type GameState,
   type FrozenRun,
@@ -169,6 +170,9 @@ export type SessionOptions = {
   /** Seats, host included. */
   maxClients?: number;
   peers?: Partial<SessionPeers>;
+  /** A line for the host's own log. Optional, and every caller inside a test
+   * omits it — the same shape `net/hub.ts` uses. */
+  log?(message: string): void;
   /**
    * A run to ADOPT instead of building one from `params` — a parked run, or a
    * checkpoint the player just retried into.
@@ -544,9 +548,25 @@ export function createSession(options: SessionOptions): Session {
         // in flight names one by index — but a seat somebody has LEFT is handed
         // out again (see `game/seating.ts`), so a session people have come and
         // gone from is not eventually full of bodies nobody is behind.
+        //
+        // AND THE HERO THEY BRING IS A CLAIM FROM A STRANGER, so it is weighed
+        // before the simulation is handed it (plan §5.3): the level is held
+        // inside the ladder, every stat block inside what that level pays for,
+        // and every piece checked against the catalogs — an id nothing has
+        // heard of is a crash on the HOST's machine from one packet. It is a
+        // speed bump rather than a wall and `loadout-check.ts` says so at
+        // length. What it corrected is logged HERE and not sent back: telling
+        // a joiner which field failed is telling an attacker which field to fix.
+        const checked = validateLoadout(wants.loadout);
+        if (checked?.problems.length) {
+          options.log?.(
+            `net: loadout corrected for slot ${slot} — ` +
+              checked.problems.join("; "),
+          );
+        }
         seat = seatOf(
           state,
-          seatHero(state, (wants.loadout as Loadout | null) ?? null),
+          seatHero(state, (checked?.loadout as Loadout | null) ?? null),
         );
       }
       const recipient: Recipient = { seat };

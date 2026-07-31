@@ -31,6 +31,12 @@
 //     that scales the fight, and it is deliberately separate from how many
 //     people are connected (see `server/wire/players.ts`) — so seating somebody
 //     does not silently change the difficulty of a run in progress.
+//
+//  4. **SEATING IS WHERE A RUN BECOMES A PARTY RUN.** This is the one function
+//     that grows a party, so it is the one place `GameState.party` is stamped
+//     (see `PartyStamp` for why the mark is latched here rather than passed in
+//     as a session parameter). It is what keeps the run off every leaderboard
+//     from this moment on, and it never clears.
 
 import { PLAYER } from "./config/index.ts";
 import { createHero } from "./create.ts";
@@ -69,7 +75,33 @@ export function seatHero(state: GameState, loadout: Loadout | null): Player {
   if (seat < state.players.length) state.players[seat] = hero;
   else state.players.push(hero);
   if (loadout) applyLoadout(state, hero, loadout);
+  stampParty(state);
   return hero;
+}
+
+/**
+ * Mark the run as one more than one person has played (`PartyStamp`).
+ *
+ * Counted over the WHOLE party rather than over the heroes still in play: a
+ * player who leaves does not give the run its leaderboard records back, so the
+ * seat count is a high-water mark and the stamp, once set, is never cleared.
+ */
+function stampParty(state: GameState): void {
+  const seats = state.players.length;
+  if (seats < 2) return;
+  state.party = { seats: Math.max(seats, state.party?.seats ?? 0) };
+}
+
+/**
+ * MORE THAN ONE PERSON HAS PLAYED THIS RUN, so nothing it produces may reach a
+ * ranking — the ONE predicate every board-facing record asks (see `PartyStamp`).
+ *
+ * It is deliberately not `state.players.length > 1`: that answers a question
+ * about right now, and the run of a party whose second player quit an hour ago
+ * is still a run two people played.
+ */
+export function isPartyRun(state: GameState): boolean {
+  return state.party != null;
 }
 
 /**

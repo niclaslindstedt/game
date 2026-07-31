@@ -299,6 +299,7 @@ function handleControl(
           },
           ping: (clientId) => hub?.pingOf(clientId) ?? -1,
         },
+        log: (line) => post({ kind: "log", line }),
       });
       hub = createPeerHub({
         session,
