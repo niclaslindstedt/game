@@ -287,7 +287,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   - **The gore gate is the app's, and the rite is not gated.** The choreography
     is identical either way; only the wreckage is mature content. The engine
     states an intent on `bossRiteStruck` and
-    `pwa/src/game/game-screen/boss-rite.ts` asks `bloodAmount()`, downgrading to
+    `pwa/src/game/game-screen/boss-rite.ts` asks the gore gate on both its axes
+    (the family's own row AND whether that KIND of dismemberment is permitted),
+    downgrading to
     an ordinary corpse on a refusal — the same fallback shape the incinerate
     gate takes, and for the same reason.
   - **It is a GLOBAL phase and must stay one.** `docs/multiplayer-plan.md` §3.2
@@ -1461,7 +1463,7 @@ against the real import graph by `tests/content/server_deps_test.ts`. See
 
 A fourth thing ships inside every slot: **the library**, a set of static
 reference documents at `/library/` compiled from the same content the game is
-compiled from. Eight sections, ~550 pages, plus the landing page that leads them:
+compiled from. Nine sections, ~560 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its authored `lore` paragraph (what the thing IS — in the open,
@@ -1474,6 +1476,22 @@ compiled from. Eight sections, ~550 pages, plus the landing page that leads them
   a drop line naming who hands an item over — it carries the qualifier that
   tells it from its namesakes (`nameApart`), because ELON MOSQUE is three
   different bosses on three different maps;
+- the **allies** — an index and a page per COMPANION, the one section whose
+  subject is on the hero's side: how each is recruited (beat a named elite down
+  and the run stops for a SPARE-or-KILL verdict), what it brings, and what every
+  rank of its signature power comes to. The training table's COLUMNS are derived
+  from what the def carries — the blunderbuss grows pellets and the coil grows
+  arcs, so a fixed column set would print an empty column on three of four
+  pages — and every figure on it comes back from a real recruit
+  (`withCompanion`, the reference hero's twin) rather than off the def: a
+  companion swings through the party damper and its own training curve, so the
+  weapon's catalog damage is a number no player ever sees on this side of the
+  party. The index carries what is true of ALL of them and visible from inside
+  the game only by inference: the formation, the engage and leash radii, the
+  damper, the kneel whose count freezes while a foe is near, and the
+  out-of-combat mend. What sits behind a cover is only the JOIN and the banter —
+  an ally's numbers are not a spoiler, and the elite it is until you spare it
+  keeps that fight's story covered on its own bestiary page;
 - the **arsenal** — an index by rarity and by slot, one page per named chase
   relic (its authored bonus block, its set, the odds its tier rolls at) and one
   per base item (the figures the in-game card shows, the BROKEN-to-PERFECT
@@ -1547,13 +1565,14 @@ compiled from. Eight sections, ~550 pages, plus the landing page that leads them
   lore — all of it behind covers, with one switch at the top of the page that
   lifts them all.
 
-The eight cross-link: a monster links to what it drops and to the venue it lives
-on, an item links back to everything that pays it out, a power links to the
+The nine cross-link: a monster links to what it drops, to the venue it lives on
+and — when it kneels rather than dies — to the ally it becomes, an item links back to everything that pays it out, a power links to the
 venues whose pools carry it and a mission's pool links back to each power it
 hands out, a conjuration talent links to the pickup that puts the same thing on
 the field, an errand links to the breed it sends you at and the person who asked
 while a mission page names both of its givers, a badge links to the relic,
-mission or ally it is for, a mission links to all of them,
+mission or ally it is for, an ally links back to the elite it was and to the
+weapon it fights with, a mission links to all of them,
 and a chapter links to the rest —
 every game name in its prose is a link to that thing's page. That graph is what lets a crawler reach four hundred pages
 from one entry point, and what makes the library worth reading rather than a

@@ -49,8 +49,8 @@ line, played in several moods whenever he over-farms a map.
 soda and steps out for five minutes, telling the hero to keep her spot warm.
 She takes the jacket he fixed the zipper on. Two hours later she still hasn't
 come back, and the room is quiet. He takes the weapon down off the back wall —
-which one depends on the difficulty (a FIRE EXTINGUISHER, a MEDIEVAL SWORD, a
-COMBAT KNIFE, BRASS KNUCKLES, or just A STICK) — and resolves to bring her
+which one depends on the difficulty (his GRANDFATHER'S SAWED-OFF SHOTGUN, a
+MEDIEVAL SWORD, a COMBAT KNIFE, BRASS KNUCKLES, or just A STICK) — and resolves to bring her
 home. It becomes the weapon he starts the whole run with.
 
 ## Level 1 — SPACEZ HQ

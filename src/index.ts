@@ -619,8 +619,16 @@ export type { AutopilotState } from "./game/types/index.ts";
 // BUILDING A RUN FROM PARAMETERS — the one function the app, the session server
 // and an arriving client all call, so that "the same arguments build the same
 // world" is true of a RUN and not merely of `createGame` (see session-setup.ts).
-export { createRunFromParams } from "./game/session-setup.ts";
-export type { OpeningSkip, RunParams } from "./game/session-setup.ts";
+export {
+  adoptRun,
+  createRunFromParams,
+  freezeRun,
+} from "./game/session-setup.ts";
+export type {
+  FrozenRun,
+  OpeningSkip,
+  RunParams,
+} from "./game/session-setup.ts";
 
 // THE RUN'S VERBS — the closed list of everything the app may DO to a run, and
 // the one dispatch behind it (see commands.ts). Multiplayer moves the

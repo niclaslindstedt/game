@@ -240,6 +240,59 @@ type LibraryAchievements = {
   sourceFiles: string[];
 };
 
+type LibraryAlly = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  sprite: string;
+  recruit: {
+    enemy: { id: string; name: string; path: string; lore: string };
+    venue: { id: string; slug: string; name: string } | null;
+  } | null;
+  weapon: {
+    id: string;
+    name: string;
+    path: string;
+    class: string;
+    range: number;
+    sweepDeg: number | null;
+    pellets: number | null;
+    chain: number | null;
+    throws: boolean;
+  };
+  base: {
+    hp: number;
+    speed: number;
+    radius: number;
+    damage: number;
+    cooldownMs: number;
+  };
+  power: { name: string; blurb: string; everyLevels: number } | null;
+  nova: Record<string, number> | null;
+  aura: { magicFind: number } | null;
+  training: {
+    measures: Array<{ key: string; label: string; unit?: string }>;
+    step: number | null;
+    rows: Array<{
+      rank: number;
+      level: number;
+      hp: number;
+      damage: number;
+      kills: number;
+      values: Record<string, number>;
+    }>;
+  };
+  story: { joinWords: string[][]; killQuotes: string[] };
+  sourceFiles: string[];
+};
+
+type LibraryAllies = {
+  allies: LibraryAlly[];
+  tuning: Record<string, number>;
+  sourceFiles: string[];
+};
+
 type LibraryModel = {
   enemies: LibraryEnemy[];
   venues: Array<{ id: string; slug: string; name: string }>;
@@ -252,6 +305,7 @@ type LibraryModel = {
   talents: LibraryTalents;
   quests: LibraryQuests;
   achievements: LibraryAchievements;
+  allies: LibraryAllies;
   story: {
     premise: string;
     chapters: LibraryChapter[];
@@ -282,6 +336,23 @@ declare module "*/library/model.mjs" {
   export function libraryRoutes(): Array<{ path: string; sources: string[] }>;
   export function slugFor(id: string): string;
   export function enemyPath(id: string): string;
+}
+
+declare module "*/library/model-allies.mjs" {
+  export const COMPANION_FIELDS: Record<string, string>;
+  export function allyPath(id: string): string;
+}
+
+declare module "*/library/render-allies.mjs" {
+  export function allyPage(
+    ally: LibraryAlly,
+    model: LibraryAllies,
+    context: LibraryContext,
+  ): string;
+  export function alliesIndex(
+    model: LibraryAllies,
+    context: LibraryContext,
+  ): string;
 }
 
 declare module "*/library/model-arsenal.mjs" {

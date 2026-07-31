@@ -261,7 +261,7 @@ describe("lifetime totals reducer", () => {
     ).toBe(false);
     expect(
       applyWornEquipment(totals, [
-        { slot: "weapon", tier: "regular", defId: "fire_extinguisher" },
+        { slot: "weapon", tier: "regular", defId: "sawed_off_shotgun" },
       ]),
     ).toBe(false);
     expect(totals.slotsWorn).toEqual([]);

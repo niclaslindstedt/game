@@ -222,6 +222,8 @@ screens:
         label: GAMEPLAY
         icon: icon_swords
         opens: gameplay
+      # Absent where the page behind it would be blank — a touch device with no
+      # vibration motor has nothing on CONTROLS at all (see below).
       - id: controls
         label: CONTROLS
         icon: icon_menu_controls
@@ -297,7 +299,10 @@ screens:
   # -------------------------------------------------------------------------
   # SETTINGS -> CONTROLS — the mouse/keys rows are desktop-only (touch always
   # steers by holding and dragging), and VIBRATION shows only where a buzz can
-  # land, so this screen is a different length on every device.
+  # land, so this screen is a different length on every device — down to NO
+  # ROWS AT ALL on a touch device with no motor (iOS in a browser or an
+  # installed PWA). The SETTINGS index drops its own CONTROLS row when that
+  # happens, so nobody is ever walked to a page holding nothing but BACK.
   # -------------------------------------------------------------------------
   controls:
     title: CONTROLS
@@ -398,26 +403,24 @@ screens:
   # which is exactly why they are one page: this is where a player goes when the
   # phone is warm.
   #
-  # EXTRA GORE leads, because it is the one row on the page somebody might be
-  # looking for on purpose. It is dropped entirely where the DEVICE says no
-  # mature content — a parental control the game still offers to defeat is not
-  # one.
+  # The four knobs and their RESET come first because they are what the page is
+  # FOR; GORE sits at the bottom, past the reset, because it is the one row here
+  # that opens somewhere rather than moving a number — and because RESET ALL
+  # puts the four knobs above it back, never a player's considered answer about
+  # how much of a body they want to watch come apart. It is dropped entirely
+  # where the DEVICE says no mature content — a parental control the game still
+  # offers to defeat is not one.
   # -------------------------------------------------------------------------
   video:
     title: VIDEO
     parent: settings
     tone: player
     form: settings
-    # Six knobs and a reset: the one settings page long enough to want capping
-    # on a short viewport, so the header and the help line stay put while the
-    # rows scroll under them.
+    # Four knobs, a reset and the way through to GORE: long enough on a short
+    # viewport to want capping, so the header and the help line stay put while
+    # the rows scroll under them.
     scroll: true
     rows:
-      - id: extra-gore
-        label: EXTRA GORE
-        help:
-          on: WOUNDS SPRAY WITH THE BLOW AND THE FLOOR STAYS RED
-          off: A SMALL SPLASH ON EACH HIT AND A CLEAN FLOOR AFTER
       - id: bloom
         label: BLOOM
         help:
@@ -441,6 +444,90 @@ screens:
       - id: reset
         label: RESET ALL
         help: PUT EVERY VISUAL BACK THE WAY THE GAME SHIPPED
+      # A PAGE rather than the one EXTRA GORE switch it replaced: "is this too
+      # much" is not one question, and the single switch made a player who did
+      # not want to watch a PERSON opened up turn off the machines' sparks and
+      # the ghosts' ectoplasm along with it. Absent where the DEVICE says no
+      # mature content — the row behind it would have nothing left on it.
+      - id: gore
+        label: GORE
+        help: CHOOSE WHICH KINDS OF GORE THE FIGHT SHOWS
+        opens: gore
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> VIDEO -> GORE — one switch per kind, because "is this too much"
+  # is not one question. Three groups, in the order a player thinks about them:
+  #
+  #   WHOSE GORE         one row per gore FAMILY (game-screen/gore.ts). A player
+  #                      who does not want to see a PERSON come apart is not
+  #                      asking for a rover to stop throwing sparks, and the one
+  #                      EXTRA GORE switch this replaced gave them no way to say
+  #                      so. HUMAN GORE off with the other three on is exactly
+  #                      that.
+  #   WHAT A KILL DOES   the two ways a body comes apart. They cross every
+  #                      family: a machine cut in two is still a body cut in two.
+  #   WHAT IT LEAVES     blood on the hero and the trail his boots carry out.
+  #                      Both are blood's own art in blood's own colours, so both
+  #                      are meaningless with HUMAN GORE off — shown LOCKED there
+  #                      rather than hidden, the way the KEYS row shows where the
+  #                      movement went.
+  # -------------------------------------------------------------------------
+  gore:
+    title: GORE
+    parent: video
+    tone: player
+    form: settings
+    # Eight switches and a reset — longer than VIDEO itself, so it caps and
+    # scrolls under a header and help line that stay put.
+    scroll: true
+    rows:
+      - id: blood
+        label: HUMAN GORE
+        help:
+          on: PEOPLE BLEED WITH THE BLOW AND THE FLOOR STAYS RED
+          off: PEOPLE TAKE A SMALL SPLASH AND LEAVE A CLEAN FLOOR
+      - id: ecto
+        label: GHOST GORE
+        help:
+          on: HAUNTINGS BURST IN COLD GREEN ECTOPLASM
+          off: HAUNTINGS TAKE A SMALL SPLASH AND NOTHING MORE
+      - id: sparks
+        label: ROBOTIC GORE
+        help:
+          on: MACHINES THROW OIL, SPARKS AND SMOKE
+          off: MACHINES TAKE A SMALL SPLASH AND NOTHING MORE
+      - id: cosmic
+        label: COSMIC GORE
+        help:
+          on: RIFT THINGS COME APART IN COLD LIGHT THAT GOES OUT
+          off: RIFT THINGS TAKE A SMALL SPLASH AND NOTHING MORE
+      - id: cleaves
+        label: CLEAVES
+        help:
+          on: A BLADE FAR PAST WHAT A BODY HOLDS CUTS IT IN TWO
+          off: BODIES A BLADE OVERKILLS TOPPLE IN ONE PIECE
+      - id: gibs
+        label: GIBS
+        help:
+          on: A HUGE BLUNT BLOW BURSTS THE BODY INTO PIECES
+          off: BODIES A BLUNT BLOW OVERKILLS TOPPLE IN ONE PIECE
+      - id: hero-soak
+        label: BLOODY HERO
+        help:
+          on: WHAT SPRAYS BACK STAYS ON THE GEAR YOU ARE WEARING
+          off: YOUR GEAR STAYS CLEAN NO MATTER WHAT YOU KILL
+          # The two states BLOOD off leaves them in — the row is greyed, and its
+          # line says where the setting went rather than what it does.
+          locked: NOTHING TO WEAR WHILE HUMAN GORE IS OFF
+      - id: bootprints
+        label: BOOTPRINTS
+        help:
+          on: YOUR BOOTS TRACK BLOOD OUT ONTO CLEAN GROUND
+          off: YOUR BOOTS LEAVE NOTHING BEHIND THEM
+          locked: NOTHING TO TRACK WHILE HUMAN GORE IS OFF
+      - id: reset
+        label: RESET ALL
+        help: PUT EVERY KIND OF GORE BACK THE WAY THE GAME SHIPPED
 
   # -------------------------------------------------------------------------
   # SETTINGS -> AUDIO — MUTE on top as a straight switch (it silences everything

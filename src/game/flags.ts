@@ -66,8 +66,8 @@ export function areCutscenesEnabled(): boolean {
 // adds no third behaviour to keep working.
 //
 // IT IS NOT A GORE SWITCH, and must never be confused for one. The viscera has
-// its own gate — the device's MATURE CONTENT policy and the player's EXTRA GORE
-// row, folded into `bloodAmount()` app-side. This one is about whether the game
+// its own gate — the device's MATURE CONTENT policy and the player's own GORE
+// page, asked app-side through `gore-gate.ts`. This one is about whether the game
 // stops to show you something; that one is about what it shows. Turning this
 // off leaves a boss dying in full colour, and turning gore off leaves the
 // cinematic playing with nothing graphic in it.

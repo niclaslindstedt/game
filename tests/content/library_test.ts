@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ABILITY_DEFS,
+  COMPANION_DEFS,
   CUTSCENE_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
@@ -37,8 +38,13 @@ import {
   enemyDef,
   pickAbility,
   questXpReward,
+  companionDef,
+  companionMaxHp,
+  companionPowerRank,
+  companionWeaponDamage,
   createGame,
   qualityOdds,
+  recruitCompanion,
   talentCrippling,
   talentDef,
 } from "@game/core";
@@ -55,6 +61,11 @@ import {
   UNIQUE_FIELDS,
   WEAPON_FIELDS,
 } from "../../pwa/scripts/library/model-arsenal.mjs";
+import { COMPANION_FIELDS } from "../../pwa/scripts/library/model-allies.mjs";
+import {
+  alliesIndex,
+  allyPage,
+} from "../../pwa/scripts/library/render-allies.mjs";
 import { LEVEL_FIELDS } from "../../pwa/scripts/library/model-missions.mjs";
 import { POWER_FIELDS } from "../../pwa/scripts/library/model-powers.mjs";
 import { TALENT_FIELDS } from "../../pwa/scripts/library/model-talents.mjs";
@@ -161,6 +172,12 @@ const missionById = (id: string) => {
   return mission;
 };
 
+const allyById = (id: string) => {
+  const ally = model.allies.allies.find((a: { id: string }) => a.id === id);
+  if (!ally) throw new Error(`no library model for companion "${id}"`);
+  return ally;
+};
+
 const byId = (id: string) => {
   const enemy = model.enemies.find((e) => e.id === id);
   if (!enemy) throw new Error(`no library model for "${id}"`);
@@ -179,6 +196,28 @@ describe("library coverage", () => {
     const paged = new Set(model.enemies.map((enemy) => enemy.id));
     const missing = Object.keys(ENEMY_DEFS).filter((id) => !paged.has(id));
     expect(missing).toEqual([]);
+  });
+
+  it("gives every COMPANION a page, and every page a recruit", () => {
+    // The roster is four entries and a fifth is one YAML block away, which is
+    // exactly the size of catalog that gets added to without anyone thinking
+    // about the library.
+    const paged = new Set(
+      model.allies.allies.map((ally: { id: string }) => ally.id),
+    );
+    expect(
+      [...Object.keys(COMPANION_DEFS)].filter((id) => !paged.has(id)),
+    ).toEqual([]);
+    // And the other direction, which is the one that would ship quietly: an
+    // ally page whose whole opening paragraph is about being spared by somebody
+    // is a page about nothing if no elite names it.
+    for (const ally of model.allies.allies) {
+      const from = ally.recruit?.enemy.id;
+      expect(from, ally.id).toBeTruthy();
+      expect(enemyDef(from as string).spareable?.companion, ally.id).toBe(
+        ally.id,
+      );
+    }
   });
 
   it("gives every ITEM in the catalogs a page, or a page that speaks for it", () => {
@@ -337,6 +376,7 @@ describe("library coverage", () => {
     for (const index of [
       "",
       "bestiary",
+      "allies",
       "arsenal",
       "talents",
       "powers",
@@ -349,6 +389,7 @@ describe("library coverage", () => {
     }
     expect(routes.length).toBe(
       Object.keys(ENEMY_DEFS).length +
+        model.allies.allies.length +
         model.items.length +
         model.powers.powers.length +
         model.talents.talents.length +
@@ -357,7 +398,7 @@ describe("library coverage", () => {
         model.quests.givers.length +
         model.achievements.categories.length +
         model.story.chapters.length +
-        9,
+        10,
     );
   });
 
@@ -426,6 +467,45 @@ describe("library field coverage", () => {
       expect([...undeclared]).toEqual([]);
     },
   );
+
+  it("declares every field the shipped companion roster carries", () => {
+    const undeclared = new Set<string>();
+    for (const def of Object.values(COMPANION_DEFS)) {
+      for (const key of Object.keys(def)) {
+        if (!(key in COMPANION_FIELDS)) undeclared.add(key);
+      }
+    }
+    expect([...undeclared]).toEqual([]);
+  });
+
+  it("refuses to build a page for a companion carrying an unknown field", () => {
+    // The roster had no coverage map at all until the allies section existed,
+    // so this is the guard that stops it going back to being the one catalog
+    // that can grow a field into silence.
+    const def = companionDef("lucky") as unknown as Record<string, unknown>;
+    def.somethingNobodyRenders = true;
+    try {
+      expect(() => libraryModel()).toThrow(/somethingNobodyRenders/);
+    } finally {
+      delete def.somethingNobodyRenders;
+    }
+  });
+
+  it("refuses to build a page for a companion whose POWER grew a field", () => {
+    // Each `*PerRank` entry is also a COLUMN in the training table, so an
+    // undeclared one is a rank ladder missing the very thing the rank buys —
+    // on the page whose entire subject is what a rank buys.
+    const power = companionDef("lucky").power as unknown as Record<
+      string,
+      unknown
+    >;
+    power.somethingPerRank = 3;
+    try {
+      expect(() => libraryModel()).toThrow(/power\.somethingPerRank/);
+    } finally {
+      delete power.somethingPerRank;
+    }
+  });
 
   it("refuses to build a page for an errand whose OBJECTIVE grew a field", () => {
     // An errand is authored in six nested shapes, and the nested ones are where
@@ -744,6 +824,55 @@ describe("library numbers are the engine's", () => {
     }
   });
 
+  it("prints the training figures a real recruit actually gets", () => {
+    // The trap this exists for is the arsenal's own, one catalog over: a
+    // companion swings through the party damper (a HALVING) and its own
+    // training curve, so the weapon's catalog damage is a number no player
+    // ever sees on this side of the party. The page must quote the recruit.
+    const ally = allyById("grigori_rasputin");
+    const state = createGame(1, LEVEL_ORDER[0] as string);
+    for (const row of ally.training.rows) {
+      const companion = recruitCompanion(state, "grigori_rasputin", {
+        x: 0,
+        y: 0,
+      });
+      companion.level = row.level;
+      expect(row.hp, `rank ${row.rank} health`).toBe(
+        companionMaxHp(companionDef("grigori_rasputin"), row.level),
+      );
+      expect(row.damage, `rank ${row.rank} damage`).toBe(
+        Math.round(companionWeaponDamage(companion)),
+      );
+      expect(row.rank).toBe(
+        companionPowerRank(companionDef("grigori_rasputin"), row.level),
+      );
+      state.companions.pop();
+    }
+    // And the figure really is the damped one, not the catalog's — the
+    // assertion above would pass just as happily against a page that had
+    // quoted the weapon def, since both sides would be wrong together.
+    expect(ally.training.rows[0]?.damage).toBeLessThan(
+      WEAPON_DEFS[ally.weapon.id]?.damage ?? 0,
+    );
+  });
+
+  it("tables only the measures a companion's power actually carries", () => {
+    // The columns are DERIVED from the def: a fixed set would print an empty
+    // PELLETS column on three of the four pages, and — the failure that would
+    // actually mislead — would go on printing one for a power that had stopped
+    // granting pellets at all.
+    const measures = (id: string) =>
+      allyById(id).training.measures.map((m: { key: string }) => m.key);
+    expect(measures("nikola_tesla")).toEqual(["chain"]);
+    expect(measures("amelia_earhart")).toEqual(["pellets"]);
+    expect(measures("lucky")).toEqual(["magicFind"]);
+    // The nova pair is asked of the NOVA rather than of the power, because the
+    // bite grows with training at every level while the reach only moves on a
+    // rank — a table showing the reach alone reports a signature power as flat
+    // between rank-ups.
+    expect(measures("grigori_rasputin")).toEqual(["novaDamage", "novaRadius"]);
+  });
+
   it("leaves JESUS off the field tables", () => {
     // It is the one rung that scales to the hero instead of to an authored
     // number, so it has no fixed figure to state.
@@ -843,6 +972,21 @@ describe("library pages", () => {
     context,
   );
   const badges = achievementsIndex(model.achievements, context);
+  // One of every SHAPE of ally page — a nova carrier (two derived columns), an
+  // aura carrier (the only one whose contribution is loot rather than damage),
+  // and a volley grower — plus the section index.
+  const novaAlly = allyPage(
+    allyById("grigori_rasputin"),
+    model.allies,
+    context,
+  );
+  const auraAlly = allyPage(allyById("lucky"), model.allies, context);
+  const volleyAlly = allyPage(
+    allyById("amelia_earhart"),
+    model.allies,
+    context,
+  );
+  const allies = alliesIndex(model.allies, context);
   const chapter = chapterPage(chapterById("moon"), context, 2, 7);
   const hellborn = chapterPage(chapterById("the-hellborn"), context, 7, 7);
   const story = storyIndex(model, context);
@@ -867,6 +1011,10 @@ describe("library pages", () => {
     escortQuest,
     giver,
     errands,
+    novaAlly,
+    auraAlly,
+    volleyAlly,
+    allies,
     combatBadges,
     relicBadges,
     partyBadges,
@@ -924,6 +1072,36 @@ describe("library pages", () => {
     expect(boss).toContain('class="reveal-body"');
     expect(boss).not.toContain("display: none");
     expect(boss).not.toContain("display:none");
+  });
+
+  it("covers an ally's own lines but leaves its numbers in the open", () => {
+    // The cover is deliberately smaller here than anywhere else: an ally's
+    // numbers are not a spoiler, and its JOIN is — it is the payoff of a
+    // verdict the game stops the run to ask for.
+    const join = companionDef("lucky").joinWords?.[0]?.[0];
+    const banter = companionDef("lucky").killQuotes[0];
+    expect(join).toBeTruthy();
+    expect(auraAlly).toContain(escapeHtml(join as string));
+    expect(auraAlly).toContain(escapeHtml(banter as string));
+    expect(auraAlly).toContain('class="reveal-body"');
+    expect(auraAlly).not.toContain("display:none");
+    // The training table is NOT behind it — split on the reveal and the
+    // figures have to be on the visible side.
+    const open = auraAlly.split('class="reveal-body"')[0] as string;
+    expect(open).toContain("What training comes to");
+    expect(open).toContain(`${allyById("lucky").base.hp}`);
+  });
+
+  it("takes a spared elite to the ally it becomes", () => {
+    // The bestiary named the companion and stopped, which is the site pointing
+    // at a room with no door — and the badge for recruiting one used to link
+    // to the page about killing them.
+    const tesla = enemyPage(byId("nikola_tesla"), context);
+    expect(tesla).toContain('href="/library/allies/nikola-tesla/"');
+    const badge = model.achievements.badges.find(
+      (b) => b.subject?.kind === "companion" && b.subject.id === "nikola_tesla",
+    );
+    expect(badge?.subject?.path).toBe("allies/nikola-tesla");
   });
 
   it("prints what a monster IS, in the open, on every page", () => {
@@ -1195,10 +1373,11 @@ describe("library pages", () => {
 
   it("links a badge to the thing it is about, and back into the shelf", () => {
     // The section is only worth generating as a graph: a relic's trophy is one
-    // click from the relic, an ally's from the elite you have to spare, and a
-    // mission's from the mission.
+    // click from the relic, an ally's from the ALLY (it used to be from the
+    // elite you spare, which pointed a recruit-somebody badge at the page
+    // about killing them), and a mission's from the mission.
     expect(relicBadges).toMatch(/href="\/library\/arsenal\/[a-z0-9-]+\/"/);
-    expect(partyBadges).toMatch(/href="\/library\/bestiary\/[a-z0-9-]+\/"/);
+    expect(partyBadges).toMatch(/href="\/library\/allies\/[a-z0-9-]+\/"/);
     expect(
       categoryPage(categoryById("story"), model.achievements, context),
     ).toMatch(/href="\/library\/missions\/[a-z0-9-]+\/"/);

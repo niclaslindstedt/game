@@ -43,9 +43,10 @@
 // identical whether or not the player has blood switched on — the hero leaps,
 // the boss dies, the beats run the same length — and it is only what is LEFT on
 // the floor that is mature content. So the rite states its INTENT on
-// `bossRiteStruck` and the app asks `bloodAmount()` (which folds in the
-// device's MATURE CONTENT switch, the player's EXTRA GORE row and the developer
-// BLOOD amount) when it reads the event, downgrading the remains to an ordinary
+// `bossRiteStruck` and the app asks the gore gate (`gore-gate.ts` — the device's
+// MATURE CONTENT switch, the family's own GORE row, whether that KIND of
+// dismemberment is permitted, and the developer BLOOD amount) when it reads the
+// event, downgrading the remains to an ordinary
 // punt-and-topple corpse when the answer is no. Gating the CHOREOGRAPHY instead
 // would make a censored boss simply cease to exist, which is the exact failure
 // the incinerate gate is shaped to avoid.

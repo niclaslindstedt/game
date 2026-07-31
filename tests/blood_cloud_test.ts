@@ -26,12 +26,13 @@ import { bloodBlow } from "../pwa/src/game/game-screen/blood-hit.ts";
 import { cloudPuffRadius } from "../pwa/src/game/render/blood.ts";
 import { glowSize } from "../pwa/src/game/render/caches.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
+import { ALL_GORE_ON } from "./gore-settings.ts";
 
 const MINION_HP = 100;
 
 /** A blow taking `bars` of a minion's own health. */
 function blow(bars: number) {
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({ ...ALL_GORE_ON, blood: 1 });
   return bloodBlow(MINION_HP * bars, MINION_HP, "minion", true)!;
 }
 

@@ -7,7 +7,7 @@
 //                 `executeJavaScript`, exactly as the other four bridges are)
 //
 // The protocol (mirrored by electron/src/net.ts — keep the two in step):
-//   → { action: "host", requestId, params, password?, maxClients?, mods? }
+//   → { action: "host", requestId, params, adopt?, password?, maxClients?, mods? }
 //   → { action: "listen", requestId, port?, udp?, steam?, publicListing?, name? }
 //   → { action: "stop", requestId }             end it
 //   → { action: "status", requestId }           the HOST screen's status rows
@@ -137,6 +137,17 @@ export type HostOptions = {
   password?: string;
   maxClients?: number;
   mods?: string[];
+  /**
+   * A run to ADOPT rather than build from `params` — a parked run, or a
+   * checkpoint the player just retried into, neither of which any set of
+   * parameters describes.
+   *
+   * Opaque here for the reason everything in this module is: the bridge moves
+   * JSON and never learns what a run is. It costs the static tier (every client
+   * is then sent a full first snapshot), so pass one only when there is no
+   * alternative — see `SessionOptions.adopt` in `server/session.ts`.
+   */
+  adopt?: unknown;
 };
 
 /** Which doors to open. Both by default: Steam friends get the frictionless
@@ -206,6 +217,7 @@ export async function hostSession(
   const reply = (await request({
     action: "host",
     params: opts.params,
+    adopt: opts.adopt,
     password: opts.password,
     maxClients: opts.maxClients,
     mods: opts.mods,

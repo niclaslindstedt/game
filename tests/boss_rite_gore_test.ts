@@ -5,9 +5,9 @@
 // The rite itself is never gated — the hero still leaps, the boss still dies,
 // the beats run the same length — and it is only the WRECKAGE that is graphic.
 // So the engine states an INTENT on `bossRiteStruck` and this leaf decides what
-// actually happens, asking the very same `bloodAmount()` the blood and the gore
-// ladder ask: the device's MATURE CONTENT switch, the player's EXTRA GORE row,
-// and the developer BLOOD amount.
+// actually happens, asking the very same two-axis gate the kill path asks
+// (`gore-gate.ts`): may a body of this KIND make a mess (`goreAmount`), and may
+// a body come apart THIS WAY at all (`dismemberAllowed`).
 //
 // What a refusal falls back to is the point of the suite. A censored boss whose
 // body ceases to exist reads as a BUG, not as a gentler game — the same failure
@@ -36,7 +36,15 @@ function struck(over: Partial<BossRiteBlow> = {}) {
 
 beforeEach(() => {
   setDevicePolicyForTest(null); // unmanaged: everything allowed
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({
+    blood: 1,
+    goreBlood: "on",
+    goreEcto: "on",
+    goreSparks: "on",
+    goreCosmic: "on",
+    goreCleaves: "on",
+    goreGibs: "on",
+  });
 });
 
 describe("what a finisher leaves", () => {
@@ -87,12 +95,28 @@ describe("the mature-content gate on it", () => {
     expect(censored.corpse).toBe(true);
   });
 
-  it("obeys the player's own EXTRA GORE row under the device switch", () => {
-    updateSettings({ extraGore: "off" });
+  it("obeys the FAMILY's own gore row under the device switch", () => {
+    updateSettings({ goreBlood: "off" });
     expect(struck().gore).toBeNull();
     expect(struck().corpse).toBe(true);
-    updateSettings({ extraGore: "on" });
+    updateSettings({ goreBlood: "on" });
     expect(struck().gore).not.toBeNull();
+  });
+
+  it("obeys the KIND's row too, across every family", () => {
+    // The two axes answer different questions and both have to say yes: a
+    // machine cut in two is still a body cut in two, so turning CLEAVES off has
+    // to stop it whatever the boss is made of — and turning ROBOTIC GORE off
+    // has to stop a rover bursting even with GIBS still on.
+    updateSettings({ goreCleaves: "off" });
+    expect(struck({ remains: "cleave" }).gore).toBeNull();
+    expect(struck({ remains: "gib" }).gore).not.toBeNull();
+    updateSettings({ goreCleaves: "on", goreGibs: "off" });
+    expect(struck({ remains: "gib" }).gore).toBeNull();
+    expect(struck({ remains: "cleave" }).gore).not.toBeNull();
+    updateSettings({ goreGibs: "on", goreSparks: "off" });
+    expect(struck({ remains: "gib", family: "sparks" }).gore).toBeNull();
+    expect(struck({ remains: "gib", family: "blood" }).gore).not.toBeNull();
   });
 
   it("obeys the developer BLOOD amount at zero", () => {

@@ -32,17 +32,23 @@
 // an app-side list of which weapon names sound like hammers, could never
 // include a mod's.
 //
-// THE GATE IS `bloodAmount()`, THE SAME ONE THE BLOOD ASKS, and it is checked
+// THE GATE IS `gore-gate.ts`, THE SAME ONE THE BLOOD ASKS, and it is checked
 // HERE rather than in the renderer. Coming apart is the most graphic thing in
 // the game, so it hangs off the device's MATURE CONTENT switch like everything
 // else that is not for children (see app/device-policy.ts) — and off the
-// player's own EXTRA GORE row under it, because a player who turned the blood
-// off has already said what they want. What a refused cleave or gib falls back
-// to is the ORDINARY death, launch included; that shape is the point, and it is
-// the same one the incinerate gate takes. Suppress the EFFECT alone and a
-// censored blow kills things whose bodies simply cease to exist, which reads as
-// a bug rather than as a gentler game — which is what
-// `tests/nuke_incineration_test.ts` and `tests/gore_dismemberment_test.ts` pin.
+// player's own switches under it, of which TWO have to agree: the victim's
+// FAMILY must be bleeding at all (a player who turned ROBOTIC GORE off is not
+// watching a rover burst either) and the KIND must be permitted (CLEAVES and
+// GIBS are separate rows, because a blade opening a body and a mass bursting it
+// are different sights and a player may well want one and not the other).
+// What a refused cleave or gib falls back to is the ORDINARY death, launch
+// included; that shape is the point, and it is the same one the incinerate gate
+// takes. Suppress the EFFECT alone and a censored blow kills things whose bodies
+// simply cease to exist, which reads as a bug rather than as a gentler game —
+// which is what `tests/nuke_incineration_test.ts` and
+// `tests/gore_dismemberment_test.ts` pin. A refusal never falls back to the
+// OTHER kind either: turning cleaves off must not start bursting the bodies a
+// blade would have opened.
 //
 // EVERY KIND OF BODY COMES APART, AND EACH COMES APART AS ITSELF. A wisp has no
 // intestines, but it does have goo and a cold light at the middle of it; a rover
@@ -57,7 +63,7 @@
 
 import { nsfwAllowed } from "../../app/device-policy.ts";
 
-import { bloodAmount } from "./blood-hit.ts";
+import { dismemberAllowed, goreAmount } from "./gore-gate.ts";
 import { corpseLaunch, type CorpseLaunch } from "./corpse-launch.ts";
 import type { GoreFamilyId } from "./gore.ts";
 import { goreBurst, type Anatomy, type GoreBurst } from "./gore-burst.ts";
@@ -140,9 +146,10 @@ export function killPresentation(blow: KillBlow): KillPresentation {
 /** Whether this blow takes the body apart, and into what. */
 function goreFor(blow: KillBlow): GoreBurst | null {
   // The one gate, asked exactly where the blood asks it: the device's MATURE
-  // CONTENT switch, the player's EXTRA GORE row, and the developer BLOOD
-  // amount. Refused, the kill falls all the way back to the ordinary death.
-  if (bloodAmount() == null) return null;
+  // CONTENT switch, this family's own GORE row, and the developer BLOOD amount.
+  // Refused, the kill falls all the way back to the ordinary death.
+  const family = blow.family ?? "blood";
+  if (goreAmount(family) == null) return null;
   // THE OVERKILL, not the blow: how far past zero the body was driven, in its
   // own healthbars. A chip finish has none of it however big the number on it
   // was, because the health it went through is subtracted first. The ladder it
@@ -150,7 +157,10 @@ function goreFor(blow: KillBlow): GoreBurst | null {
   // the campaign-wide rate probe reads the numbers that ship.
   const overkill = overkillBars(blow.damage, blow.hpBefore, blow.maxHp);
   const kind = goreKind(overkill, blow.role, blow.edged === true);
-  if (kind == null) return null;
+  // …and the kind's own row. Checked AFTER the ladder rather than instead of it,
+  // so a body a blade would have opened topples whole instead of bursting: the
+  // fallback for a switched-off kind is the ordinary death, never the other kind.
+  if (kind == null || !dismemberAllowed(kind)) return null;
   // The blow's bearing: away from whoever landed it. The cut runs along it (the
   // blade went in that way and out the other side) and the burst throws its
   // longest pieces down it.
@@ -169,6 +179,6 @@ function goreFor(blow: KillBlow): GoreBurst | null {
     blow.body ?? 1,
     blow.anatomy,
     blow.seed,
-    blow.family ?? "blood",
+    family,
   );
 }

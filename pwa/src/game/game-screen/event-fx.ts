@@ -20,7 +20,6 @@ import { distance } from "@game/lib/vec.ts";
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
-import { nsfwAllowed } from "../../app/device-policy.ts";
 import { type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
 import { powerupStyle } from "../powerup-fx.ts";
@@ -49,6 +48,7 @@ import { bloodBlow, bloodSpills } from "./blood-hit.ts";
 import { bossRitePresentation } from "./boss-rite.ts";
 import { goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
+import { splashOnly } from "./gore-gate.ts";
 import { soakHero } from "./hero-soak.ts";
 import { killPresentation } from "./kill-presentation.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
@@ -419,7 +419,13 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // after, and whether the floor keeps it: all three off the family catalog
     // (game-screen/gore.ts), none of them a fork here.
     const family = goreFamily(def.gore);
-    const blow = bloodBlow(event.damage, event.maxHp, def.role, kill);
+    const blow = bloodBlow(
+      event.damage,
+      event.maxHp,
+      def.role,
+      kill,
+      family.id,
+    );
     // One seed for the whole kill: the spray, the stains and the pieces are all
     // scattered off it, which is what puts a gib on its own spatter.
     const seed = Math.floor(Math.random() * 997);
@@ -520,13 +526,13 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         // is blood art in blood's colours, and a hero streaked in four different
         // hues reads as a man who fell in some paint.
         if (family.id === "blood") soakHero(state, blow, event.pos);
-      } else if (!nsfwAllowed() || getSettings().extraGore !== "on") {
+      } else if (splashOnly(family.id)) {
         // The plain two-frame splash, for the two cases that are NOT the gore
-        // system: a player who turned EXTRA GORE off, and a device whose MATURE
-        // CONTENT switch is off — both of whom still need a landed blow to
-        // register as one. A blow that fell through because the DEVELOPER amount
-        // is at zero lands dry on purpose: that switch exists to get a clean
-        // field for a screenshot.
+        // system: a player who turned this KIND OF BODY off on the GORE page,
+        // and a device whose MATURE CONTENT switch is off — both of whom still
+        // need a landed blow to register as one. A blow that fell through
+        // because the DEVELOPER amount is at zero lands dry on purpose: that
+        // switch exists to get a clean field for a screenshot.
         effects.push({
           kind: "splash",
           pos: {
@@ -1320,7 +1326,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     const def = enemyDef(event.defId);
     const family = goreFamily(def.gore);
     // THE GATE, asked in one place (boss-rite.ts): the device's MATURE CONTENT
-    // switch, the player's EXTRA GORE row and the developer BLOOD amount. A
+    // switch, the family's own GORE row, the KIND's row, and the BLOOD amount. A
     // refusal comes back as a whole body, and — because the answer is read HERE
     // rather than at the draw — nothing below records anything either.
     const left = bossRitePresentation({

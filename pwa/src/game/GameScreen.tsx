@@ -27,7 +27,6 @@ import {
   debugDetonateNuke,
   debugLevelUpFx,
   error,
-  step,
   type Difficulty,
   type GameInput,
   type GameState,
@@ -128,6 +127,7 @@ import {
 } from "./game-screen/run-progress.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
+import { createRunDriver } from "./game-screen/run-driver.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays, type CharTab } from "./game-screen/SceneOverlays.tsx";
@@ -407,6 +407,12 @@ export function GameScreen({
       runId,
     });
     const { state, runLevelId, bot, tuning, beginRun } = session;
+    // WHO ADVANCES THIS RUN. A local driver steps it here, exactly as this
+    // screen always did; a net driver hands the input to a session server and
+    // applies what comes back. Which one is decided once, at the top of the
+    // run, and nothing below this line knows the difference — see
+    // ./game-screen/run-driver.ts.
+    const driver = createRunDriver(session);
     setState(state);
     setNewRecord(false);
     setKilledBy(null);
@@ -718,7 +724,7 @@ export function GameScreen({
         const hpBeforeStep = state.player.hp;
         // `timeScale` (?debug `window.__timeScale`) slows the whole run for
         // animation tuning — a neutral 1 in normal play.
-        step(state, input, dtMs * tuning.timeScale);
+        driver.advance(input, dtMs * tuning.timeScale);
         botDriver.postStep(drivingBot);
         // HOW TO PLAY: offer the AMBIENT lessons this tick made true — the
         // sprint pool run low under a standing hero, a worn weapon, a pack
@@ -844,6 +850,11 @@ export function GameScreen({
         // spectral wash, a hot rim, a gilded frame — and can never outlive
         // the power that raised them (the sync is a no-op when nothing moved).
         powerupAura.sync(state);
+        // EVERY CONSUMER OF THIS TICK'S EVENTS HAS NOW RUN. On the local path
+        // that is all this is; on the net path it is where the list is emptied,
+        // because `step()` — which does it here — is running in another
+        // process. See run-driver.ts for what leaving it in place sounds like.
+        driver.endTick();
       },
       render,
       // A frame that throws no longer takes the run down with it (see
@@ -857,6 +868,7 @@ export function GameScreen({
 
     return () => {
       stop();
+      driver.dispose();
       stopMusic();
       controls.detach();
       observer.disconnect();

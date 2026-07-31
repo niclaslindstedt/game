@@ -19,6 +19,9 @@ import type {
   MenuScreen,
 } from "../../pwa/src/game/title-screen/menu-model.ts";
 import { buildMenu } from "../../pwa/src/game/title-screen/menus.ts";
+import { setDevicePolicyForTest } from "../../pwa/src/app/device-policy.ts";
+import { updateSettings } from "../../pwa/src/game/settings.ts";
+import { ALL_GORE_ON } from "../gore-settings.ts";
 
 const SCREENS = Object.keys(MENU_SCREENS) as MenuScreen[];
 
@@ -38,6 +41,7 @@ const UNION: MenuScreen[] = [
   "keybindings",
   "interface",
   "video",
+  "gore",
   "audio",
   "data",
   "export",
@@ -238,6 +242,71 @@ describe("the title menu tree", () => {
       "main-extras",
       "main-settings",
     ]);
+  });
+
+  it("takes the whole GORE page away when the DEVICE says no", () => {
+    // The guardian's switch outranks every row behind it (app/device-policy.ts),
+    // so the way in is absent rather than opening a page of controls that
+    // visibly do nothing — the same call the row made when it was one switch.
+    try {
+      setDevicePolicyForTest({ nsfw: false, store: true });
+      expect(buildMenu("video", ctxFor()).map((row) => row.aria)).not.toContain(
+        "video-gore",
+      );
+      setDevicePolicyForTest(null);
+      expect(buildMenu("video", ctxFor()).map((row) => row.aria)).toContain(
+        "video-gore",
+      );
+    } finally {
+      setDevicePolicyForTest(null);
+    }
+  });
+
+  it("locks the two blood-only GORE rows instead of hiding them", () => {
+    // BLOODY HERO and BOOTPRINTS are blood's own art in blood's own colours, so
+    // HUMAN GORE off leaves them nothing to do. They stay on the page, greyed: a row
+    // that vanishes leaves a player hunting for a setting they remember.
+    const ids = ["gore-hero-soak", "gore-bootprints"];
+    try {
+      updateSettings({ ...ALL_GORE_ON });
+      const on = buildMenu("gore", ctxFor());
+      for (const id of ids) {
+        const row = on.find((entry) => entry.aria === id);
+        expect(
+          row?.toggle,
+          `${id} is not a switch with HUMAN GORE on`,
+        ).toBeTruthy();
+        expect(row?.locked).toBeFalsy();
+      }
+      updateSettings({ goreBlood: "off" });
+      const off = buildMenu("gore", ctxFor());
+      for (const id of ids) {
+        const row = off.find((entry) => entry.aria === id);
+        expect(row, `${id} vanished with HUMAN GORE off`).toBeTruthy();
+        expect(row?.locked, `${id} is not locked with HUMAN GORE off`).toBe(
+          true,
+        );
+        expect(row?.toggle).toBeUndefined();
+      }
+    } finally {
+      updateSettings({ ...ALL_GORE_ON });
+    }
+  });
+
+  it("never offers CONTROLS when the page behind it would be blank", () => {
+    // Every scheme row on CONTROLS is desktop-only and the one row that is not
+    // needs a motor, so a touch device with neither reaches a page holding
+    // nothing but BACK. Both halves are pinned: a phone that CAN buzz still has
+    // VIBRATION to configure and keeps the row.
+    const touch = { hasFinePointer: false } as const;
+    const bare = buildMenu("settings", ctxFor({ ...touch, canBuzz: false }));
+    expect(buildMenu("controls", ctxFor({ ...touch, canBuzz: false }))).toEqual(
+      [expect.objectContaining({ label: "BACK" })],
+    );
+    expect(bare.map((row) => row.aria)).not.toContain("settings-controls");
+
+    const phone = buildMenu("settings", ctxFor({ ...touch, canBuzz: true }));
+    expect(phone.map((row) => row.aria)).toContain("settings-controls");
   });
 
   it("resolves a BACK cursor by row id, not by position", () => {

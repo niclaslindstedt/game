@@ -7501,27 +7501,6 @@
       "range": 40,
       "sweepDeg": 70
     },
-    "fire_extinguisher": {
-      "class": "ranged",
-      "cooldownMs": 500,
-      "damage": 10,
-      "damageVariance": 0.2,
-      "durability": 300,
-      "icon": "icon_fire_extinguisher",
-      "id": "fire_extinguisher",
-      "levelReq": 1,
-      "material": "metal",
-      "name": "FIRE EXTINGUISHER",
-      "projectile": {
-        "count": 6,
-        "lifetimeMs": 380,
-        "radius": 5,
-        "speed": 250,
-        "spreadDeg": 58,
-        "sprite": "spark"
-      },
-      "range": 165
-    },
     "flamberge": {
       "class": "melee",
       "cooldownMs": 1000,
@@ -8807,6 +8786,28 @@
       "range": 52,
       "sweepDeg": 150,
       "twoHanded": true
+    },
+    "sawed_off_shotgun": {
+      "class": "ranged",
+      "cooldownMs": 800,
+      "damage": 5,
+      "damageVariance": 0.25,
+      "durability": 300,
+      "icon": "icon_sawed_off_shotgun",
+      "id": "sawed_off_shotgun",
+      "levelReq": 1,
+      "material": "metal",
+      "name": "SAWED-OFF SHOTGUN",
+      "projectile": {
+        "count": 6,
+        "lifetimeMs": 430,
+        "radius": 3,
+        "speed": 380,
+        "spreadDeg": 44,
+        "sprite": "pellet"
+      },
+      "range": 160,
+      "sfx": "shot_sawed_off"
     },
     "scout_rifle": {
       "class": "ranged",

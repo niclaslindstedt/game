@@ -29,7 +29,7 @@
 // directly, with the `ArrayBuffer` transferred rather than copied. The control
 // channel carries only lifecycle: start, stop, status.
 
-import { engineVersion } from "@game/core";
+import { engineVersion, type FrozenRun } from "@game/core";
 
 import { createPeerHub, type PeerHub } from "./net/hub.ts";
 import { createRelayTransport, type RelayTransport } from "./net/relay.ts";
@@ -59,6 +59,10 @@ type ControlMessage =
       mods?: string[];
       password?: string;
       maxClients?: number;
+      /** A run to ADOPT rather than build — a parked run or a checkpoint the
+       * player just retried into (see `SessionOptions.adopt`). Opaque on this
+       * hop; the session is what reads it. */
+      adopt?: FrozenRun | null;
     }
   | { kind: "stop" }
   | { kind: "status" }
@@ -222,6 +226,7 @@ function handleControl(
       const maxClients = message.maxClients ?? MAX_CLIENTS;
       session = createSession({
         params: message.params,
+        adopt: message.adopt,
         // The BUILD the handshake compares is the engine's own version, read
         // here rather than passed in by the shell: two places holding the same
         // string is two places that can disagree, and this one is the only one

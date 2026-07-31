@@ -28,10 +28,11 @@ import {
 import { bloodBlow } from "../pwa/src/game/game-screen/blood-hit.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
 import { coinStoreAvailable, setStoreForced } from "../pwa/src/game/store.ts";
+import { ALL_GORE_ON } from "./gore-settings.ts";
 
 beforeEach(() => {
   setDevicePolicyForTest(null); // unmanaged: the browser/PWA case
-  updateSettings({ extraGore: "on", blood: 1 });
+  updateSettings({ ...ALL_GORE_ON, blood: 1 });
   setStoreForced(false);
 });
 
@@ -81,8 +82,8 @@ describe("MATURE CONTENT off", () => {
     expect(bloodBlow(100, 100, "minion", true)).toBeNull();
   });
 
-  it("outranks the in-game EXTRA GORE switch", () => {
-    updateSettings({ extraGore: "on" });
+  it("outranks every in-game GORE switch", () => {
+    updateSettings(ALL_GORE_ON);
     setDevicePolicyForTest({ nsfw: false, store: true });
     expect(bloodBlow(100, 100, "minion", true)).toBeNull();
   });

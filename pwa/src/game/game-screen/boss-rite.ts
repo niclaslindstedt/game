@@ -28,7 +28,7 @@
 // draw call leaves the saturation grid filling up invisibly and hands the
 // player everything it was hiding the moment they switch it back on.
 
-import { bloodAmount } from "./blood-hit.ts";
+import { dismemberAllowed, goreAmount } from "./gore-gate.ts";
 import { goreBurst, type Anatomy, type GoreBurst } from "./gore-burst.ts";
 import type { GoreFamilyId } from "./gore.ts";
 
@@ -71,11 +71,24 @@ export type BossRitePresentation = {
  * cannot reach.
  */
 export function bossRitePresentation(blow: BossRiteBlow): BossRitePresentation {
-  // The one gate, asked exactly where the blood asks it: the device's MATURE
-  // CONTENT switch, the player's EXTRA GORE row, and the developer BLOOD
-  // amount, all folded into `bloodAmount()`. Refused, the rite falls all the
-  // way back to a whole body.
-  if (bloodAmount() == null || blow.remains === "corpse") {
+  // A rite that never meant to take the body apart needs no permission to
+  // leave it whole — THE UNMAKING wants the empty suit to fall.
+  if (blow.remains === "corpse") return { gore: null, corpse: true };
+  // THE GATE, asked exactly where the kill path asks it (`kill-presentation.ts`)
+  // and on BOTH its axes, because they answer different questions:
+  //
+  //   `goreAmount(family)` — may a body of THIS KIND make a mess at all (the
+  //     device's MATURE CONTENT switch, the family's own GORE row, and the
+  //     developer BLOOD amount);
+  //   `dismemberAllowed(kind)` — may a body come apart THIS WAY at all, across
+  //     every family, because a machine cut in two is still a body cut in two.
+  //
+  // Both have to say yes. Turning ROBOTIC GORE off has to stop DOGE-1 bursting
+  // even with GIBS on, and turning GIBS off has to stop it bursting whatever it
+  // is made of — a finisher is exactly where a player would notice the switch
+  // they set being ignored.
+  const family = blow.family ?? "blood";
+  if (goreAmount(family) == null || !dismemberAllowed(blow.remains)) {
     return { gore: null, corpse: true };
   }
   return {
@@ -86,7 +99,7 @@ export function bossRitePresentation(blow: BossRiteBlow): BossRitePresentation {
       1,
       blow.anatomy,
       blow.seed,
-      blow.family ?? "blood",
+      family,
     ),
     corpse: false,
   };

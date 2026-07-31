@@ -78,6 +78,18 @@ for (const rarity of ["set", "unique", "legendary", "artifact"]) {
 
 const levels = new Set(stems(engine("content/levels")));
 
+// HOW BIG EACH MAP IS, so every authored coordinate can be checked against the
+// venue it names. Cheap here (the level YAML is already on disk) and impossible
+// anywhere else in this pipeline, which otherwise only ever learns that a level
+// ID exists.
+const levelSizes = new Map();
+for (const id of levels) {
+  const def = parse(readFileSync(engine(`content/levels/${id}.yaml`), "utf8"));
+  if (typeof def?.width === "number" && typeof def?.height === "number") {
+    levelSizes.set(id, { width: def.width, height: def.height });
+  }
+}
+
 const powerups = parse(readFileSync(engine("content/powerups.yaml"), "utf8"));
 const abilities = new Set(Object.keys(powerups?.powerups ?? {}));
 
@@ -118,6 +130,7 @@ const refs = {
   quests: new Set(Object.keys(quests)),
   conversations: new Set(Object.keys(conversations)),
   maxHeroLevel,
+  levelSizes,
   // questId → the pieces some conversation branch hands over, so a piece that
   // is given rather than found is not reported as one nothing produces.
   givenPieces: collectGivenPieces(conversations),

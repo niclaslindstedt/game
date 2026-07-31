@@ -1,0 +1,35 @@
+name: wall_sawed_off_shotgun
+family: prelude
+size: [16, 12]
+description: >
+  A sawed-off double-barrelled shotgun laid level across two dark wall pegs —
+  "grandpa's, off the wall," the EASY-difficulty starting weapon. It hangs
+  HORIZONTALLY where its four siblings hang point-down, and deliberately: a gun
+  is a long object read end to end, so stood upright its twin barrels collapse
+  into one nondescript post and the cut stock shrinks to a nub.
+subject:
+  kind: prop, wall-mounted weapon
+  build: a short double-barrelled shotgun resting level on two small pegs, twin barrels running left to the cut muzzle and a chopped stock squared off at the right
+  features: twin steel barrels, the upper one catching the light and the lower one in shadow, a brown wooden stock, two dark iron pegs beneath
+  accent: steel barrel sheen
+  flavor: the old family gun that has hung over the garage door for a decade
+palette:
+  B: "#92643e" # wooden stock
+  E: "#5d4028" # stock shadow
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey steel, lower barrel
+  a: "#d6dce4" # bright steel, upper barrel
+  b: "#3f4553" # dark iron wall peg
+grid: |
+  ................
+  ................
+  .OOOOOOOOOOOO...
+  OaaaaaaaaaaVVOO.
+  OOOOOOOOOOOVVBBO
+  OVVVVVVVVVVVVEBO
+  .OOOOOOOOOOOOEEO
+  ....Ob...Ob.OEEO
+  ....OO...OO.OOOO
+  ................
+  ................
+  ................
