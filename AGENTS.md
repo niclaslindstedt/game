@@ -1066,15 +1066,19 @@ watching and the strip sat on a stale count.
 
 ## MULTIPLAYER — the simulation moves out of the renderer
 
-**Steam builds only.** PR 1 of the five in `docs/multiplayer-plan.md` and the
-NETWORKING half of PR 2 have landed: a session server, the wire, the fifth
-bridge — and now two transports, a challenge handshake, remote SPECTATORS, chat
-and `/players N`. There is still no second player (PR 3) and no HOST / JOIN
-screen, the latter deliberately: the run still simulates in the renderer, so a
-JOIN screen would be a door into a session nothing plays through, and the menu
-tree is content whose rows and builders land in one commit.
-`docs/multiplayer.md` is the shipped architecture; the plan is the roadmap.
-Nine rules are load-bearing:
+**Steam builds only.** PRs 1 and 2 of the seven in `docs/multiplayer-plan.md`
+have landed: a session server, the wire, the fifth bridge, two transports, a
+challenge handshake, remote SPECTATORS, chat and `/players N`.
+
+**NONE OF IT IS REACHABLE YET, and knowing why is the first thing to know here.**
+The run still simulates in the renderer — `pwa/src/game/net/` is dead code — so
+there is no HOST or JOIN screen either, because a door into a session nothing
+plays through is worse than no door. Both PRs shipped a LAYER and deferred the
+cutover and the UI that would make it reachable, which is the same omission twice
+and is now recorded in the plan as **PR 1.5 (THE CUTOVER)** and **PR 2.5 (THE
+SCREENS)**. Do not build on top of this expecting a running multiplayer game;
+build PR 1.5. `docs/multiplayer.md` is the shipped architecture; the plan is the
+roadmap and carries the amendment. Nine rules are load-bearing:
 
 1. **ONE PROCESS PER SESSION, AND THE HOST IS JUST ANOTHER CLIENT.** The
    simulation runs in a `utilityProcess` (`server/main.ts`, forked by
@@ -1133,10 +1137,14 @@ Nine rules are load-bearing:
    `switch`. A channel that resolved a function name dynamically would hand a
    client `grantXp` and `mintUnique` the day PR 2 opens a UDP port. PR 1 ships
    the scene-advance verbs; the inventory, shop, level-up and talent picker join
-   them in PR 3, when they stop freezing the world for everybody. PR 2 adds
-   CHAT, whose slash commands are a SECOND closed list (`server/wire/chat.ts`)
-   for exactly the same reason — a chat box that handed the session an
-   arbitrary verb would undo the command channel's allow-list beside it.
+   them in **PR 1.5** — the plan first said PR 3, which was circular, since the
+   run loop cannot move into the server until every verb it calls can travel.
+   Those are two jobs on the same names: PR 1.5 makes them TRAVEL with today's
+   blocking semantics exactly preserved, PR 3 makes them NON-BLOCKING per
+   player. PR 2 adds CHAT, whose slash commands are a SECOND closed list
+   (`server/wire/chat.ts`) for exactly the same reason — a chat box that handed
+   the session an arbitrary verb would undo the command channel's allow-list
+   beside it.
 
 7. **THE TRANSPORT SEAM LIVES IN `server/net/`, NOT IN THE SHELL — and that is
    a deliberate departure from the plan's own file list.** The plan sketched

@@ -124,8 +124,12 @@ Two things, and both are narrow on purpose:
   silently does nothing is indistinguishable from one that is broken.
 
 PR 1 ships the scene-advance verbs. The inventory, the shop, the level-up
-chooser and the talent picker join them in PR 3, when they stop freezing the
-world for everybody.
+chooser and the talent picker join them in **PR 1.5** — not PR 3, as the plan
+originally said, which was a circular dependency: the run loop cannot move into
+the server until every verb it calls can travel. The two halves are separate
+jobs on the same names. **PR 1.5 makes them TRAVEL**, with today's blocking
+semantics exactly preserved; **PR 3 makes them NON-BLOCKING** per player, which
+is the design exercise.
 
 ## The two doors
 
