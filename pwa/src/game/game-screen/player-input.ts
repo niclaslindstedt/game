@@ -10,13 +10,9 @@ import type { MutableRefObject } from "react";
 
 import {
   MERCHANT,
-  openShop,
   QUESTS,
   enemyDef,
   isNeutral,
-  talkToEnemy,
-  talkToQuestGiver,
-  reopenVictoryChoice,
   STAMINA,
   type Bot,
   type GameInput,
@@ -38,6 +34,8 @@ import { screenDirToWorld } from "../render/tilt.ts";
 import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { moveVectorForCode } from "../keybindings.ts";
+
+import { runCommandOk } from "../run-commands.ts";
 
 /** The face button that swings the weapon in GAMEPAD steering — the pad's
  * primary action, where every console's confirm/attack lives. Bottom face
@@ -413,7 +411,7 @@ export function handleFieldTaps(
     const m = state.merchant.pos;
     if (
       Math.hypot(wx - m.x, wy - m.y) <= MERCHANT.radius * 2.5 &&
-      openShop(state)
+      runCommandOk(state, "openShop")
     ) {
       input.jump = false;
       input.useItem = false;
@@ -433,7 +431,7 @@ export function handleFieldTaps(
       if (Math.hypot(wx - giver.pos.x, wy - giver.pos.y) > QUESTS.radius * 3) {
         continue;
       }
-      if (!talkToQuestGiver(state, giver.id)) continue;
+      if (!runCommandOk(state, "talkToQuestGiver", giver.id)) continue;
       input.jump = false;
       input.useItem = false;
       playUiSound(synth, "confirm");
@@ -455,7 +453,7 @@ export function handleFieldTaps(
       if (Math.hypot(wx - enemy.pos.x, wy - enemy.pos.y) > def.radius * 3) {
         continue;
       }
-      if (!talkToEnemy(state, enemy.id)) continue;
+      if (!runCommandOk(state, "talkToEnemy", enemy.id)) continue;
       input.jump = false;
       input.useItem = false;
       playUiSound(synth, "confirm");
@@ -474,7 +472,10 @@ export function handleFieldTaps(
   ) {
     const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
     const c = state.bossCorpse.pos;
-    if (Math.hypot(wx - c.x, wy - c.y) <= 22 && reopenVictoryChoice(state)) {
+    if (
+      Math.hypot(wx - c.x, wy - c.y) <= 22 &&
+      runCommandOk(state, "reopenVictoryChoice")
+    ) {
       input.jump = false;
       input.useItem = false;
       stopMusic();

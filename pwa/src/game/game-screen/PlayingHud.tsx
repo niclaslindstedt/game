@@ -7,14 +7,7 @@
 
 import type { MutableRefObject, ReactNode, RefObject } from "react";
 
-import {
-  equipFromInventory,
-  openCompanionPanel,
-  openMap,
-  pauseGame,
-  weaponDef,
-  type GameState,
-} from "@game/core";
+import { weaponDef, type GameState } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
@@ -27,6 +20,8 @@ import { pauseMusic } from "../music/index.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { WEAPON_CLASS_COLORS } from "../tiers.ts";
 import { formatTime, weaponAlternatives, type Hud } from "./hud-model.ts";
+
+import { runCommand, runCommandOk } from "../run-commands.ts";
 
 export function PlayingHud({
   hud,
@@ -81,7 +76,7 @@ export function PlayingHud({
 }) {
   const onOpenCompanion = (id: number) => {
     if (state.phase === "playing") {
-      openCompanionPanel(state, id);
+      runCommand(state, "openCompanionPanel", id);
       playUiSound(synth, "confirm");
       bumpUi();
     }
@@ -89,7 +84,7 @@ export function PlayingHud({
   const onOpenMap = () => {
     if (state.phase === "playing") {
       onToggleWeaponMenu(false);
-      openMap(state);
+      runCommand(state, "openMap");
       playUiSound(synth, "confirm");
       bumpUi();
     }
@@ -99,7 +94,7 @@ export function PlayingHud({
       // Latch it as viewer-initiated so BOT VIEW's autopilot won't clear the
       // pause before the menu can show (see the sim loop).
       userPausedRef.current = true;
-      pauseGame(state);
+      runCommand(state, "pauseGame");
       pauseMusic();
       playUiSound(synth, "confirm");
       bumpUi();
@@ -277,7 +272,13 @@ export function PlayingHud({
                                   background: color.bg,
                                 }}
                                 onClick={() => {
-                                  if (equipFromInventory(state, index)) {
+                                  if (
+                                    runCommandOk(
+                                      state,
+                                      "equipFromInventory",
+                                      index,
+                                    )
+                                  ) {
                                     playUiSound(synth, "equip");
                                     onToggleWeaponMenu(false);
                                     bumpUi();

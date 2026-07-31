@@ -4,7 +4,7 @@
 // rung change or a STOP updates both the engine meter and the session intent.
 // PlayingHud mounts it under the minimap while the engine meter runs.
 
-import { AUTOPILOT, setAutopilotSpeed, type GameState } from "@game/core";
+import { AUTOPILOT, type GameState } from "@game/core";
 
 import type { MutableRefObject } from "react";
 
@@ -21,6 +21,8 @@ import {
   finishAutopilotRide,
   type useAutopilotSession,
 } from "./autopilot-director.ts";
+
+import { runCommandOk } from "../run-commands.ts";
 
 export function AutopilotPanel({
   state,
@@ -54,7 +56,7 @@ export function AutopilotPanel({
         const speeds = AUTOPILOT.speeds as readonly number[];
         const at = speeds.indexOf(state.autopilot.speed);
         const next = speeds[(at + 1) % speeds.length] ?? 1;
-        if (setAutopilotSpeed(state, next)) {
+        if (runCommandOk(state, "setAutopilotSpeed", next)) {
           autopilot.setSpeed(next);
           bumpUi();
         }

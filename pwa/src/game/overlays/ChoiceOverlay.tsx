@@ -5,12 +5,14 @@
 // (its joining scene follows through the dialogue overlay); KILL lands the
 // withheld blow through the ordinary kill rails. One tap, one fate.
 
-import { enemyDef, resolveChoice, type GameState } from "@game/core";
+import { enemyDef, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
+
+import { runCommandOk } from "../run-commands.ts";
 
 export function ChoiceOverlay({
   state,
@@ -51,7 +53,7 @@ export function ChoiceOverlay({
             className="pixel-button choice-button choice-spare"
             aria-label="spare"
             onClick={() => {
-              if (resolveChoice(state, true)) onResolve(true);
+              if (runCommandOk(state, "resolveChoice", true)) onResolve(true);
             }}
           >
             <PixelText font={font} text="SPARE" scale={3} color="#0b0d10" />
@@ -67,7 +69,7 @@ export function ChoiceOverlay({
             className="pixel-button choice-button choice-kill"
             aria-label="kill"
             onClick={() => {
-              if (resolveChoice(state, false)) onResolve(false);
+              if (runCommandOk(state, "resolveChoice", false)) onResolve(false);
             }}
           >
             <PixelText font={font} text="KILL" scale={3} color="#0b0d10" />

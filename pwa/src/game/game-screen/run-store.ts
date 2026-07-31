@@ -12,7 +12,7 @@
 
 import type { MutableRefObject } from "react";
 
-import { creditAutopilotPurse, type GameState } from "@game/core";
+import { type GameState } from "@game/core";
 
 import { loadCharacters, type Character } from "../characters.ts";
 import { scheduleCloudSync } from "../cloud-save.ts";
@@ -21,6 +21,8 @@ import {
   type CoinPack,
   type RunPurchaseResult,
 } from "../store.ts";
+
+import { runCommand } from "../run-commands.ts";
 
 /** Buy a pack for the hero flying this run; resolves with what reached them. */
 export type RunBuy = (pack: CoinPack) => Promise<RunPurchaseResult>;
@@ -43,7 +45,7 @@ export function useRunStore({
     // The persisted purse already took the credit — mirror it into the run so
     // the AUTO PILOT picker can afford a rung right away. The bank at the end
     // of the level writes this same number back, so it counts once.
-    creditAutopilotPurse(state, result.coins);
+    runCommand(state, "creditAutopilotPurse", result.coins);
     // Re-read the hero: the credit landed in storage, and a stale ref would
     // write the pre-purchase wealth back over it on the next persist.
     const fresh = loadCharacters().find((hero) => hero.id === heroId);

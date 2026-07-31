@@ -7,7 +7,7 @@
 
 import type { MutableRefObject, RefObject } from "react";
 
-import { pauseGame, type GameState } from "@game/core";
+import { type GameState } from "@game/core";
 
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -16,6 +16,8 @@ import { DemoTip, type DemoTipState } from "../DemoTip.tsx";
 import { pauseMusic } from "../music/index.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import type { Hud } from "./hud-model.ts";
+
+import { runCommand } from "../run-commands.ts";
 
 export function ScreenChrome({
   dpadRef,
@@ -131,7 +133,7 @@ export function DemoChrome({
       return;
     }
     userPausedRef.current = true;
-    pauseGame(state);
+    runCommand(state, "pauseGame");
     pauseMusic();
     // Drop any leftover tip (and its read-freeze) so KEEP WATCHING resumes to
     // live play at once.

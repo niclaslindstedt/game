@@ -1,18 +1,19 @@
 # Multiplayer — the shipped architecture
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
-describes what actually exists. **PR 1 and the NETWORKING half of PR 2 have
-landed.** The simulation runs in its own process, the wire between it and a
-renderer is complete and tested, the desktop shell forks and supervises a
-session — and a session can now open a UDP socket and a Steam lobby, admit
-remote clients behind a challenge handshake, seat them as spectators, and carry
-chat and `/players N` between them.
+describes what actually exists. **PR 1, the NETWORKING half of PR 2, and the
+VERBS half of PR 1.5 have landed.** The simulation runs in its own process, the
+wire between it and a renderer is complete and tested, the desktop shell forks
+and supervises a session — a session can open a UDP socket and a Steam lobby,
+admit remote clients behind a challenge handshake, seat them as spectators, and
+carry chat and `/players N` between them — and everything the app DOES to a run
+now travels as a named command rather than as a direct call on a local state.
 
 What is NOT here is the half a player would SEE: the HOST, JOIN and server-
 browser screens, and the in-run chat overlay. That is deliberate rather than
 abandoned — see [What is NOT here yet](#what-is-not-here-yet) — because the run
 still simulates in the renderer, so a JOIN screen would be a door into a session
-nothing plays through. The screens land with PR 1's remaining cutover.
+nothing plays through. Moving the loop is **PR 1.75**; the screens are PR 2.5.
 
 ## The topology
 
@@ -108,12 +109,38 @@ Two things, and both are narrow on purpose:
   The client sends input, never positions: a client that sends positions is a
   client that can teleport.
 - **COMMANDS from a closed list** (`COMMANDS` in `server/wire/protocol.ts`) —
-  the run loop also _acts_ on the state (turning a page of the opening
-  monologue, skipping a cutscene, ending the death tableau), and once the state
-  lives in another process those calls have to travel. They travel as names
-  from a fixed union, dispatched through an explicit `switch`. A channel that
-  resolved a function name dynamically would hand a client `grantXp` and
-  `mintUnique` the day PR 2 opens a UDP port.
+  the app does not merely READ the run, it _acts_ on it: it turns a page of the
+  opening monologue, equips the sword in bag cell 4, buys the merchant's third
+  row, places a stat point, takes an errand. Once the state lives in another
+  process every one of those calls has to travel. They travel as names from a
+  fixed union, dispatched through an explicit `switch`. A channel that resolved
+  a function name dynamically would hand a client `grantXp` and `mintUnique`
+  the day PR 2 opens a UDP port.
+
+  **THE ARGUMENTS ARE PART OF THAT MODEL AND ARE SCALARS ONLY.** PR 1's nine
+  verbs took none; PR 1.5's sixty-nine mostly do. A verb whose payload is a
+  STRUCTURE is a verb whose payload a stranger gets to shape, so what crosses is
+  a number, a string or a boolean — an index, a slot name, a stat, a quest id, a
+  speed rung — and each verb's arity and argument types are declared beside it in
+  the ENGINE (`RUN_COMMAND_ARGS` in `src/game/commands.ts`) and checked before
+  anything is dispatched. A string that names one of the engine's own unions is
+  checked against that union's runtime list rather than against `typeof
+"string"`: a host must not be crashable by a stranger sending `"luckk"`.
+
+  **THE LIST EXISTS TWICE, AND THAT IS DELIBERATE.** The engine owns what each
+  verb DOES; `server/wire/protocol.ts` keeps a literal copy of the NAMES for its
+  allow-list, because that leaf is read by the page from screens on the app's
+  startup path where the 170 KB budget forbids reaching `@game/core`.
+  `tests/engine/run_commands_test.ts` fails the build when the two disagree —
+  the same snapshot-and-drift-test shape `mod/catalog.json` uses.
+
+  **THE APP HAS ONE DOOR ONTO THE LIST**, `pwa/src/game/run-commands.ts`, and
+  every one of the ~110 call sites goes through it. It applies through the SAME
+  dispatch the server does, so a verb cannot behave one way in single-player and
+  another in a session; when a run driver installs a sink it applies locally AND
+  sends, so the call sites that read what a verb returned still get an answer and
+  the server's next snapshot corrects it. That is NOT the input prediction PR 3
+  owns — there is no rollback and no replay, only a UI verb applied twice.
 
 - **CHAT**, added by PR 2 — one line of text, parsed by the server
   (`server/wire/chat.ts`) into one of six names from a **second** closed list,
@@ -123,13 +150,25 @@ Two things, and both are narrow on purpose:
   `/kick` and `/invite` **by name** rather than ignoring them — a command that
   silently does nothing is indistinguishable from one that is broken.
 
-PR 1 ships the scene-advance verbs. The inventory, the shop, the level-up
-chooser and the talent picker join them in **PR 1.5** — not PR 3, as the plan
-originally said, which was a circular dependency: the run loop cannot move into
-the server until every verb it calls can travel. The two halves are separate
-jobs on the same names. **PR 1.5 makes them TRAVEL**, with today's blocking
-semantics exactly preserved; **PR 3 makes them NON-BLOCKING** per player, which
-is the design exercise.
+PR 1 shipped the nine scene-advance verbs. **PR 1.5 added the other sixty** —
+the screens, the run's own flow, the bag, the counter, the build, the party, the
+errands, the conversations, the vault and the AUTO PILOT ride — not PR 3, as the
+plan originally said, which was a circular dependency: the run loop cannot move
+into the server until every verb it calls can travel. The two halves are
+separate jobs on the same names. **PR 1.5 makes them TRAVEL**, with today's
+blocking semantics exactly preserved — opening the inventory still freezes the
+run, because that is what it does now and the cutover may not change how the
+game feels; **PR 3 makes them NON-BLOCKING** per player, which is the design
+exercise.
+
+One thing moved out of the app to make that possible, and it is worth knowing
+because it looks like an unrelated change: **the AUTO PILOT flight's build
+baseline now lives on the run** (`state.autopilot.build`, stamped by
+`startAutopilot` and seeded from `SessionParams.autopilotBuild`) rather than in
+the app's autopilot session. A FLIGHT outlives a run — the ride crosses levels,
+and each level is a fresh session — so the refund it owes when it stops has to
+survive the simulation moving out of the renderer, and it was the one verb whose
+argument was a structure rather than a scalar.
 
 ## The two doors
 
@@ -280,6 +319,7 @@ compiler.
 | `tests/engine/wire_codec_test.ts`      | Framing round trips, and every refusal a decoder on an open port must make    |
 | `tests/engine/wire_delta_test.ts`      | `patch(prev, diff(prev, next)) === next`, and each strategy separately        |
 | `tests/engine/net_determinism_test.ts` | The same arguments build the same world — in a real second process            |
+| `tests/engine/run_commands_test.ts`    | The two closed lists agreeing, and every argument a stranger may send         |
 | `tests/engine/net_session_test.ts`     | A real session and a real client, hashed against each other after 600 ticks   |
 | `tests/engine/wire_handshake_test.ts`  | The cookie's epoch window, the proof, and the ORDER the refusals come in      |
 | `tests/engine/wire_chat_test.ts`       | The slash grammar, and that hp and XP scale together                          |
@@ -296,9 +336,28 @@ compiler.
 
 - **The run still simulates in the renderer.** `GameScreen` owns the loop as it
   always has; nothing in the shipped game reaches `pwa/src/game/net/` yet. The
-  cutover is the rest of PR 1: the app performs around forty direct engine
-  mutations (equip, buy, allocate, pause, respec…) and each has to become a
-  command before the loop can be moved.
+  verbs it calls all travel now, so the blocker that made this circular is gone
+  — what is left is **PR 1.75 (THE LOOP MOVES)**, and one thing the plan had not
+  measured stands in the way of it: **a run is not `createGame(params)`.**
+  `createRunSession` (`pwa/src/game/game-screen/run-setup.ts`) performs six
+  further mutations before the first tick — it seeds the hero's campaign quest
+  chain, funds the purse from the character's whole banked wealth, marks the
+  thoughts this hero has already read, applies a `?scenario=`, skips an opening
+  already watched on this difficulty, and mutes the dialogue for a bot run — and
+  the `SessionParams` cannot express any of them. So the session would build a
+  DIFFERENT world from the one the app built, and the client's first delta,
+  which is supposed to be nearly empty, would carry the difference as
+  "corrections" to a run that was right to begin with.
+
+  Five of the six are plain data and belong in `SessionParams` beside `loadout`
+  (which is already opaque there for exactly this reason); the sixth is dev-only
+  and does not travel. The **parked run** and the **checkpoint restore** are the
+  harder half of the same problem: both adopt an arbitrary `GameState` rather
+  than building one, so the session needs a way to ADOPT a state and send the
+  arriving client a full snapshot instead of a delta against a genesis it does
+  not share. `server/session.ts` already has the `Sent.full` shape for that and
+  nothing has ever used it.
+
 - **No screens.** HOST, JOIN, the server browser, JOIN BY ADDRESS and the chat
   overlay are not authored yet, so nothing in the title menu reaches any of the
   above. This is the reason they were held rather than an oversight: the menu

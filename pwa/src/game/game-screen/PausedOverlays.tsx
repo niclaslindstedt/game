@@ -5,18 +5,13 @@
 // wiring reaches into music, the autopilot session, and the character — the
 // scene overlays proper (SceneOverlays.tsx) stay free of all that.
 
-import { spendCleanSlate } from "@game/core";
 import { useState, type MutableRefObject } from "react";
 
 import {
   AUTOPILOT,
   autopilotDrainPerSecond,
   captureBuildSnapshot,
-  clearVault,
   equipmentName,
-  muteDialogue,
-  resumeGame,
-  startAutopilot,
   vaultContents,
   type Difficulty,
   type GameState,
@@ -36,6 +31,8 @@ import {
   type useAutopilotSession,
 } from "./autopilot-director.ts";
 import { useRunStore } from "./run-store.ts";
+
+import { runCommand, runCommandOk } from "../run-commands.ts";
 
 export function RunPausedOverlay({
   state,
@@ -91,7 +88,7 @@ export function RunPausedOverlay({
     // A hero carrying unspent points (an AUTO PILOT ride stopped from here hands
     // its allocations back as pending) drops into the level-up chooser instead
     // of straight into play — resumeGame routes it.
-    resumeGame(state);
+    runCommand(state, "resumeGame");
     resumeMusic();
     bumpUi();
   };
@@ -139,7 +136,7 @@ export function RunPausedOverlay({
           // the player then has to re-place, and it cannot be committed until
           // every point is back down. There is nothing to warn about that the
           // next screen does not say better.
-          if (spendCleanSlate(state)) bumpUi();
+          if (runCommandOk(state, "spendCleanSlate")) bumpUi();
         }}
         // AUTO PILOT (src/game/autopilot.ts): engage the coin-metered
         // self-play from here — starting also resumes the run so the
@@ -179,12 +176,12 @@ export function RunPausedOverlay({
                 }),
                 onStart: (speed: number) => {
                   if (state.phase !== "paused") return;
-                  if (!startAutopilot(state, speed)) return;
+                  if (!runCommandOk(state, "startAutopilot", speed)) return;
                   // A NEW flight, a new LOST & FOUND: whatever the last one threw
                   // away and the player never bought back is trashed here, for
                   // good (items/vault.ts `clearVault`). The vault is a holding
                   // pen for one flight's discards, never a second stash.
-                  clearVault(state);
+                  runCommand(state, "clearVault");
                   // Remember the chosen rung on the session so the in-HUD panel
                   // shows it and the next lap re-arms the meter at that speed.
                   autopilot.setSpeed(speed);
@@ -205,9 +202,9 @@ export function RunPausedOverlay({
                     state.player.level,
                   );
                   autopilot.setHistoryOpen(false);
-                  muteDialogue(state);
+                  runCommand(state, "muteDialogue");
                   userPausedRef.current = false;
-                  resumeGame(state);
+                  runCommand(state, "resumeGame");
                   resumeMusic();
                   bumpUi();
                 },

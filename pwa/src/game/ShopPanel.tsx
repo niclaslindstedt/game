@@ -18,20 +18,15 @@ import { useCallback, useEffect, useState, type PointerEvent } from "react";
 
 import {
   abilityDef,
-  buyStock,
-  buyQuestPiece,
   canAffordStallRow,
   canBuyStock,
   questStallRows,
-  sellQuestPiece,
   type QuestStallRow,
   equipmentIcon,
   isScrappableLoot,
   medkitTierIndex,
   merchantName,
   repairAllCost,
-  repairGear,
-  sellItem,
   sellValue,
   wornCounterpart,
   type Equipment,
@@ -54,6 +49,8 @@ import { playUiSound } from "./sfx/ui.ts";
 import { POWERUP_BLUE, ShopDealCard } from "./ShopDealCard.tsx";
 import { portraitSrc, SpritePortrait } from "./SpritePortrait.tsx";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
+
+import { runCommand, runCommandOk } from "./run-commands.ts";
 
 /** What the player has tapped, plus the cell rect the card anchors to. Held
  * together because they change together: a selection with a stale anchor would
@@ -253,8 +250,8 @@ export function ShopPanel({
   const onErrandRow = (row: QuestStallRow) => {
     const ok =
       row.kind === "sell"
-        ? sellQuestPiece(state, row.questId, row.item)
-        : buyQuestPiece(state, row.questId, row.item);
+        ? runCommandOk(state, "sellQuestPiece", row.questId, row.item)
+        : runCommandOk(state, "buyQuestPiece", row.questId, row.item);
     if (ok) onChange();
   };
 
@@ -339,7 +336,7 @@ export function ShopPanel({
   const repairTotal = repairAllCost(state);
 
   const doRepair = () => {
-    if (repairGear(state) !== null) {
+    if (runCommand(state, "repairGear") !== null) {
       playUiSound(synth, "confirm");
       onChange();
     } else {
@@ -348,7 +345,7 @@ export function ShopPanel({
   };
 
   const doSell = (index: number) => {
-    if (sellItem(state, index) !== null) {
+    if (runCommand(state, "sellItem", index) !== null) {
       playUiSound(synth, "confirm");
       setSelected(null);
       onChange();
@@ -356,7 +353,7 @@ export function ShopPanel({
   };
 
   const doBuy = (entry: MerchantStock) => {
-    if (buyStock(state, entry.id)) {
+    if (runCommandOk(state, "buyStock", entry.id)) {
       playUiSound(synth, "equip");
       // Nothing on the stall restocks, so a purchase that empties the entry
       // leaves a dead row selected — drop the card rather than offering a
@@ -579,7 +576,8 @@ export function ShopPanel({
               total={junkTotal}
               count={junk.length}
               onSell={() => {
-                for (const { index } of junk) sellItem(state, index);
+                for (const { index } of junk)
+                  runCommand(state, "sellItem", index);
                 playUiSound(synth, "confirm");
                 setSelected(null);
                 onChange();
@@ -595,7 +593,8 @@ export function ShopPanel({
               total={bagTotal}
               count={bag.length}
               onSell={() => {
-                for (const { index } of bag) sellItem(state, index);
+                for (const { index } of bag)
+                  runCommand(state, "sellItem", index);
                 playUiSound(synth, "confirm");
                 setSelected(null);
                 onChange();

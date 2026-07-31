@@ -31,6 +31,8 @@ import { createGame, type GameState, type GameInput } from "@game/core";
 import {
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
+  type BuildSnapshot,
+  type CommandArg,
   type Difficulty,
   type GeneratedMapSizeSetting,
   type Loadout,
@@ -50,6 +52,7 @@ import {
   type ChatLine,
   type ChatPayload,
   type CommandName,
+  type CommandPayload,
   type Handshake,
   type RefusalReason,
   type RosterEntry,
@@ -108,13 +111,18 @@ export type NetClient = {
   sendInput(input: GameInput): void;
   /**
    * Ask the server to run one named command — turning a page of the opening
-   * monologue, skipping a cutscene, ending the death tableau.
+   * monologue, equipping the sword in bag cell 4, buying the merchant's third
+   * row, placing a stat point.
    *
-   * The run loop used to call these straight onto a local `GameState`. Now
-   * they travel, and they travel as names from a closed list (`COMMANDS`) so
-   * the channel can never widen into "call any engine function".
+   * The run loop used to call these straight onto a local `GameState`. Now they
+   * travel, and they travel as names from a closed list (`COMMANDS`) with
+   * SCALAR arguments whose shapes the engine declares beside each verb, so the
+   * channel can never widen into "call any engine function with anything".
+   *
+   * Fire and forget: there is no reply and no acknowledgement. What the command
+   * did shows up in the next snapshot, like everything else the server decides.
    */
-  sendCommand(name: CommandName): void;
+  sendCommand(name: CommandName, args?: readonly CommandArg[]): void;
   /** Say something, or run a slash command. The parse and every decision about
    * what it may DO are the server's — see `server/wire/chat.ts` for why the
    * client is not entitled to an opinion about `/kick`. */
@@ -242,12 +250,14 @@ export function createNetClient(options: NetClientOptions): NetClient {
         ),
       );
     },
-    sendCommand(name) {
+    sendCommand(name, args) {
       if (disposed || !state) return;
+      const payload: CommandPayload = { name };
+      if (args?.length) payload.args = [...args];
       transport.send(
         encodeFrame(
           { type: FRAME.command, seq: ++inputSeq, ack: acked, tick },
-          { name },
+          payload,
         ),
       );
     },
@@ -284,7 +294,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
 export function buildLocalState(params: SessionParams): GameState {
   setGeneratedMapsEnabled(params.generatedMaps);
   setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
-  return createGame(
+  const state = createGame(
     params.seed,
     params.levelId,
     params.difficulty as Difficulty,
@@ -293,6 +303,14 @@ export function buildLocalState(params: SessionParams): GameState {
     params.clearedLevels,
     params.merchantDiscovered,
   );
+  // Stamped exactly as the session stamps it, and for the delta's sake as much
+  // as the ride's: the client's fresh state IS its first baseline, so a field
+  // the server set at creation and this one did not would be sent as a change
+  // on the very first publish — for a run whose whole design is that the two
+  // start identical.
+  state.autopilot.build =
+    (params.autopilotBuild as BuildSnapshot | null) ?? null;
+  return state;
 }
 
 /** The refusal, in the terms the JOIN screen puts on screen. Both numbers are

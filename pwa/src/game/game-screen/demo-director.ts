@@ -13,12 +13,10 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import {
-  allocateStat,
   botAllocate,
   botPickTalent,
   botWeaponSwapTarget,
   PLAYER,
-  spendTalentPoint,
   stepBotWeaponSwap,
   type Bot,
   type GameInput,
@@ -36,6 +34,8 @@ import {
   type StandstillMemory,
 } from "./demo-lessons.ts";
 import { weaponAlternatives } from "./hud-model.ts";
+
+import { runCommandOk } from "../run-commands.ts";
 
 // How long a HOW TO PLAY teaching tooltip lingers before it fades (ms). Long
 // enough to read the one line, short enough that it clears well before the next
@@ -421,7 +421,7 @@ export function createDemoDirector(deps: {
     }
     refs.demoLevelupTapMsRef.current = DEMO_LEVELUP_TAP_MS;
     tapFx.rippleOnEl(btn); // bloom the "tap" on the button it lands on
-    allocateStat(state, stat);
+    runCommandOk(state, "allocateStat", stat);
     bumpUi();
   };
 
@@ -450,7 +450,7 @@ export function createDemoDirector(deps: {
     if (!id) {
       while (state.pendingTalentPoints.length > 0) {
         const next = botPickTalent(bot, state);
-        if (!next || !spendTalentPoint(state, next)) break;
+        if (!next || !runCommandOk(state, "spendTalentPoint", next)) break;
       }
       bumpUi();
       return;
@@ -486,7 +486,7 @@ export function createDemoDirector(deps: {
     }
     refs.demoTalentTapMsRef.current = DEMO_TALENT_TAP_MS;
     tapFx.rippleOnEl(row);
-    if (!spendTalentPoint(state, id)) return;
+    if (!runCommandOk(state, "spendTalentPoint", id)) return;
     bumpUi();
   };
 

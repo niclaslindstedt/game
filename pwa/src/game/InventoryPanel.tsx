@@ -25,21 +25,12 @@ import {
 } from "react";
 
 import {
-  autoEquipBest,
   autoEquipUpgradeCount,
-  discardEquipped,
-  discardFromInventory,
-  equipFromInventory,
-  equipFromInventoryInto,
   equipmentName,
   gateKeyTarget,
-  spendGateKey,
   isArmorBroken,
   isWeaponBroken,
   isScrappableLoot,
-  scrapInferiorLoot,
-  moveInventoryItem,
-  unequipToInventory,
   wouldUpgradeSlot,
   type EquipSlot,
   type Equipment,
@@ -63,6 +54,8 @@ import { ItemTooltip } from "./ItemTooltip.tsx";
 import { PaperDoll } from "./PaperDoll.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
+
+import { runCommand, runCommandOk } from "./run-commands.ts";
 
 type DragSource =
   { type: "inv"; index: number } | { type: "slot"; slot: EquipSlot };
@@ -211,22 +204,29 @@ export function InventoryPanel({
             setPendingDestroy({ item: d.item, from: d.from });
           }
         } else if (d.from.type === "inv" && kind === "inv") {
-          moveInventoryItem(state, d.from.index, Number(arg));
+          runCommand(state, "moveInventoryItem", d.from.index, Number(arg));
         } else if (d.from.type === "inv" && kind === "slot") {
           // Equip into the slot the player AIMED at, not whichever one the
           // engine would pick — with two ring fingers those differ, and the
           // drop gesture is an explicit choice of finger.
-          if (equipFromInventoryInto(state, d.from.index, arg as EquipSlot)) {
+          if (
+            runCommandOk(
+              state,
+              "equipFromInventoryInto",
+              d.from.index,
+              arg as EquipSlot,
+            )
+          ) {
             playUiSound(synth, "equip");
           }
         } else if (d.from.type === "slot" && kind === "inv") {
-          if (unequipToInventory(state, d.from.slot)) {
+          if (runCommandOk(state, "unequipToInventory", d.from.slot)) {
             const landed = state.player.inventory.findIndex(
               (i) => i?.id === d.item.id,
             );
             const wanted = Number(arg);
             if (landed >= 0 && state.player.inventory[wanted] === null) {
-              moveInventoryItem(state, landed, wanted);
+              runCommand(state, "moveInventoryItem", landed, wanted);
             }
           }
         }
@@ -257,8 +257,8 @@ export function InventoryPanel({
         if (commit) {
           const swapped =
             d.from.type === "inv"
-              ? equipFromInventory(state, d.from.index)
-              : unequipToInventory(state, d.from.slot);
+              ? runCommandOk(state, "equipFromInventory", d.from.index)
+              : runCommandOk(state, "unequipToInventory", d.from.slot);
           if (swapped) {
             playUiSound(synth, "equip");
             playEquipHaptic();
@@ -300,7 +300,7 @@ export function InventoryPanel({
   // cell (desktop) — the quiet, cow-level-ritual gesture.
   const activateKeyItem = (item: Equipment) => {
     const index = state.player.inventory.findIndex((i) => i?.id === item.id);
-    if (index < 0 || !spendGateKey(state, index)) return;
+    if (index < 0 || !runCommandOk(state, "spendGateKey", index)) return;
     playUiSound(synth, "confirm");
     setInspect(null);
     onChange();
@@ -314,8 +314,8 @@ export function InventoryPanel({
     if (!pending) return;
     const trashed =
       pending.from.type === "inv"
-        ? discardFromInventory(state, pending.from.index)
-        : discardEquipped(state, pending.from.slot);
+        ? runCommandOk(state, "discardFromInventory", pending.from.index)
+        : runCommandOk(state, "discardEquipped", pending.from.slot);
     if (trashed) {
       playUiSound(synth, "back");
     }
@@ -420,7 +420,7 @@ export function InventoryPanel({
                   icon="icon_swords"
                   count={autoCount}
                   onRun={() => {
-                    if (autoEquipBest(state) > 0) {
+                    if ((runCommand(state, "autoEquipBest") as number) > 0) {
                       playUiSound(synth, "equip");
                       setInspect(null);
                       onChange();
@@ -435,7 +435,10 @@ export function InventoryPanel({
                   icon="icon_trash"
                   count={scrapCount}
                   onRun={() => {
-                    if (scrapInferiorLoot(state).length > 0) {
+                    if (
+                      (runCommand(state, "scrapInferiorLoot") as unknown[])
+                        .length > 0
+                    ) {
                       playUiSound(synth, "back");
                       setInspect(null);
                       onChange();

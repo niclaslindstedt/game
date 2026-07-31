@@ -39,20 +39,14 @@
 //     ever sent in ordinary operation.
 
 import {
-  advanceIntro,
-  advanceOutro,
+  applyRunCommand,
   createGame,
-  dismissIntro,
+  isRunCommand,
   setBalanceTuning,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
-  skipCutscene,
-  skipDeathScene,
-  skipIntro,
-  skipOutro,
-  skipStoryOpening,
   step,
-  tapCutscene,
+  type BuildSnapshot,
   type Difficulty,
   type GameInput,
   type GameState,
@@ -71,14 +65,12 @@ import {
 } from "./wire/delta.ts";
 import {
   FRAME,
-  isCommand,
   MAX_CLIENTS,
   PROTOCOL_VERSION,
   SNAPSHOT_EVERY_TICKS,
   TICK_MS,
   type ChatLine,
   type ChatPayload,
-  type CommandName,
   type RosterEntry,
   type RosterPayload,
   type SessionParams,
@@ -223,6 +215,14 @@ export function createSession(options: SessionOptions): Session {
     params.clearedLevels,
     params.merchantDiscovered,
   );
+  // AN AUTO PILOT FLIGHT ALREADY IN PROGRESS arrives carrying the build it
+  // engaged on, exactly as the hero arrives carrying his gear. A ride crosses
+  // levels and every level is a new session, so without this the refund owed
+  // when it stops would revert to the build the BOT had already grown rather
+  // than the one the player left behind. `startAutopilot` only stamps a run
+  // that has no baseline yet, which is what keeps this one authoritative.
+  state.autopilot.build =
+    (params.autopilotBuild as BuildSnapshot | null) ?? null;
 
   /**
    * The world at tick 0, frozen — the state every client's first delta is
@@ -541,7 +541,8 @@ export function createSession(options: SessionOptions): Session {
         return;
       }
       if (type === FRAME.command) {
-        runCommand(state, (payload as { name?: unknown } | null)?.name);
+        const frame = payload as { name?: unknown; args?: unknown } | null;
+        runCommand(state, frame?.name, frame?.args);
       }
     },
 
@@ -597,45 +598,25 @@ function applyInput(
 /**
  * Run one named command against the run.
  *
- * The name is checked against the closed `COMMANDS` list before anything is
- * dispatched, and the dispatch itself is a `switch` over that union rather
- * than a lookup in a table of functions. Both halves matter: the list keeps a
- * client from naming an engine function nobody offered it, and the explicit
- * switch keeps a future refactor from quietly widening the list by making some
- * module's exports reachable.
+ * TWO CLOSED LISTS, ONE BEHIND THE OTHER, and both are load-bearing. The name
+ * is checked here against the ENGINE's table (`isRunCommand`) before anything
+ * is dispatched, and the dispatch itself — `applyRunCommand` — is an explicit
+ * `switch` over that union rather than a lookup in a table of functions, so no
+ * future refactor can widen the channel by making some module's exports
+ * reachable. The ARGUMENTS are checked the same way, against the arity and
+ * types declared beside each verb: a client on an open UDP port gets to choose
+ * them, and "an index" that arrives as an object is how a host is crashed by a
+ * stranger.
+ *
+ * Nothing is done with the return value, deliberately. A command is
+ * fire-and-forget on the wire and every caller is written to that contract —
+ * see the dispatcher's note in `pwa/src/game/run-commands.ts` about why the
+ * app may not depend on the difference between "refused" and "returned
+ * nothing".
  */
-function runCommand(state: GameState, name: unknown): void {
-  if (!isCommand(name)) return;
-  const command: CommandName = name;
-  switch (command) {
-    case "advanceIntro":
-      advanceIntro(state);
-      return;
-    case "skipIntro":
-      skipIntro(state);
-      return;
-    case "dismissIntro":
-      dismissIntro(state);
-      return;
-    case "advanceOutro":
-      advanceOutro(state);
-      return;
-    case "skipOutro":
-      skipOutro(state);
-      return;
-    case "skipCutscene":
-      skipCutscene(state);
-      return;
-    case "tapCutscene":
-      tapCutscene(state);
-      return;
-    case "skipStoryOpening":
-      skipStoryOpening(state);
-      return;
-    case "skipDeathScene":
-      skipDeathScene(state);
-      return;
-  }
+function runCommand(state: GameState, name: unknown, args: unknown): void {
+  if (!isRunCommand(name)) return;
+  applyRunCommand(state, name, Array.isArray(args) ? args : []);
 }
 
 /** Clear the one-shot edges after the tick that consumed them. */

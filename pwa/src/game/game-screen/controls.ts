@@ -7,26 +7,7 @@
 
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
-import {
-  advanceDialogue,
-  advanceIntro,
-  advanceOutro,
-  canOpenInventory,
-  closeInventory,
-  closeMap,
-  closeQuestLog,
-  closeShop,
-  equipFromInventory,
-  openInventory,
-  openMap,
-  skipCutscene,
-  skipDeathScene,
-  skipIntro,
-  skipOutro,
-  tapCutscene,
-  type Bot,
-  type GameState,
-} from "@game/core";
+import { canOpenInventory, type Bot, type GameState } from "@game/core";
 
 import { trackPointer, type PointerTracker } from "@ui/lib/pointer.ts";
 
@@ -46,6 +27,8 @@ import { playUiSound } from "../sfx/ui.ts";
 import { weaponAlternatives } from "./hud-model.ts";
 import type { CharTab } from "./SceneOverlays.tsx";
 import type { InputQueues } from "./player-input.ts";
+
+import { runCommand, runCommandOk } from "../run-commands.ts";
 
 export type Controls = {
   pointer: PointerTracker;
@@ -128,7 +111,7 @@ export function createControls(deps: {
       // refuses the skip inside its opening grace window). Either way the tap
       // is spent here — nothing else acts while the hero lies dead.
       if (state.phase === "dying") {
-        skipDeathScene(state);
+        runCommandOk(state, "skipDeathScene");
         return;
       }
       // Remember where the tap landed (CSS px): the sim loop checks it
@@ -174,7 +157,7 @@ export function createControls(deps: {
       // onTap) — pressing anywhere brings up the modal, once the engine's
       // grace window has passed.
       if (state.phase === "dying") {
-        skipDeathScene(state);
+        runCommandOk(state, "skipDeathScene");
         return;
       }
       if (pointerType === "mouse" && getSettings().steering === "hover") {
@@ -207,10 +190,10 @@ export function createControls(deps: {
         // gate) — the stare-down is when a fitting weapon gets equipped.
         if (canOpenInventory(state)) {
           setCharTab("bag");
-          openInventory(state);
+          runCommand(state, "openInventory");
           playUiSound(synth, "confirm");
         } else if (state.phase === "inventory") {
-          closeInventory(state);
+          runCommand(state, "closeInventory");
           playUiSound(synth, "back");
         }
         bumpUi();
@@ -218,11 +201,11 @@ export function createControls(deps: {
       case "map":
         // Toggles the fog-of-war level map (same freeze as the bag).
         if (state.phase === "playing") {
-          openMap(state);
+          runCommand(state, "openMap");
           playUiSound(synth, "confirm");
           bumpUi();
         } else if (state.phase === "map") {
-          closeMap(state);
+          runCommand(state, "closeMap");
           playUiSound(synth, "back");
           bumpUi();
         }
@@ -301,7 +284,7 @@ export function createControls(deps: {
         if (!cutsceneRevealRef.current.done) {
           cutsceneRevealRef.current.skip();
         } else {
-          tapCutscene(state);
+          runCommand(state, "tapCutscene");
         }
       } else if (state.phase === "intro") {
         // Two-step like the dialogue crawl: finish the reveal, then turn the
@@ -309,7 +292,7 @@ export function createControls(deps: {
         if (!introRevealRef.current.done) {
           introRevealRef.current.skip();
         } else {
-          advanceIntro(state);
+          runCommand(state, "advanceIntro");
           playUiSound(synth, "move");
         }
         bumpUi();
@@ -319,7 +302,7 @@ export function createControls(deps: {
         if (!introRevealRef.current.done) {
           introRevealRef.current.skip();
         } else {
-          advanceOutro(state);
+          runCommand(state, "advanceOutro");
           playUiSound(synth, "move");
         }
         bumpUi();
@@ -330,7 +313,7 @@ export function createControls(deps: {
         if (!dialogueRevealRef.current.done) {
           dialogueRevealRef.current.skip();
         } else {
-          advanceDialogue(state);
+          runCommand(state, "advanceDialogue");
           playUiSound(synth, "move");
         }
         bumpUi();
@@ -340,30 +323,30 @@ export function createControls(deps: {
       // scene, closes an open overlay, and pauses/resumes the live run — the
       // one control a rebind can never steal.
       if (state.phase === "cutscene") {
-        skipCutscene(state);
+        runCommand(state, "skipCutscene");
         playUiSound(synth, "back");
       } else if (state.phase === "intro") {
-        skipIntro(state);
+        runCommand(state, "skipIntro");
         playUiSound(synth, "back");
         bumpUi();
       } else if (state.phase === "outro") {
-        skipOutro(state);
+        runCommand(state, "skipOutro");
         playUiSound(synth, "back");
         bumpUi();
       } else if (state.phase === "inventory") {
-        closeInventory(state);
+        runCommand(state, "closeInventory");
         playUiSound(synth, "back");
         bumpUi();
       } else if (state.phase === "shop") {
-        closeShop(state);
+        runCommand(state, "closeShop");
         playUiSound(synth, "back");
         bumpUi();
       } else if (state.phase === "map") {
-        closeMap(state);
+        runCommand(state, "closeMap");
         playUiSound(synth, "back");
         bumpUi();
       } else if (state.phase === "questLog") {
-        closeQuestLog(state);
+        runCommand(state, "closeQuestLog");
         playUiSound(synth, "back");
         bumpUi();
       } else if (state.phase === "playing") {
@@ -384,7 +367,7 @@ export function createControls(deps: {
       const n = Number(event.key) - 1;
       if (weaponMenuOpenRef.current) {
         const alt = weaponAlternatives(state)[n];
-        if (alt && equipFromInventory(state, alt.index)) {
+        if (alt && runCommandOk(state, "equipFromInventory", alt.index)) {
           playUiSound(synth, "equip");
           setWeaponMenuOpen(false);
           bumpUi();

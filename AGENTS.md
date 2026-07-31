@@ -1067,18 +1067,45 @@ watching and the strip sat on a stale count.
 ## MULTIPLAYER — the simulation moves out of the renderer
 
 **Steam builds only.** PRs 1 and 2 of the seven in `docs/multiplayer-plan.md`
-have landed: a session server, the wire, the fifth bridge, two transports, a
-challenge handshake, remote SPECTATORS, chat and `/players N`.
+have landed, plus the VERBS half of PR 1.5: a session server, the wire, the fifth
+bridge, two transports, a challenge handshake, remote SPECTATORS, chat,
+`/players N` — and a closed list of 69 named commands covering everything the app
+DOES to a run.
 
 **NONE OF IT IS REACHABLE YET, and knowing why is the first thing to know here.**
 The run still simulates in the renderer — `pwa/src/game/net/` is dead code — so
 there is no HOST or JOIN screen either, because a door into a session nothing
-plays through is worse than no door. Both PRs shipped a LAYER and deferred the
-cutover and the UI that would make it reachable, which is the same omission twice
-and is now recorded in the plan as **PR 1.5 (THE CUTOVER)** and **PR 2.5 (THE
-SCREENS)**. Do not build on top of this expecting a running multiplayer game;
-build PR 1.5. `docs/multiplayer.md` is the shipped architecture; the plan is the
-roadmap and carries the amendment. Nine rules are load-bearing:
+plays through is worse than no door. PRs 1 and 2 both shipped a LAYER and
+deferred the cutover and the UI that would make it reachable, which is the same
+omission twice and is now recorded in the plan as **PR 1.5 (THE VERBS)**,
+**PR 1.75 (THE LOOP MOVES)** and **PR 2.5 (THE SCREENS)**. Do not build on top of this expecting a running
+multiplayer game; the loop move is **PR 1.75 (THE LOOP MOVES)**, and it is the
+next thing to build.
+
+**WHAT PR 1.75 TURNS ON IS ONE MEASUREMENT NOBODY HAD MADE: A RUN IS NOT
+`createGame(params)`.** `createRunSession` performs six mutations after
+`createGame` that the `SessionParams` cannot express — it seeds the hero's
+campaign quest chain, funds the purse from his whole banked wealth, marks the
+thoughts he has already read, applies a `?scenario=`, skips an opening already
+watched on this difficulty, and mutes the dialogue for a bot run. A session built
+from today's parameters therefore holds a DIFFERENT world from the one the app
+built, and the client's first delta — the one whose emptiness the whole static
+tier rests on — would carry the difference as corrections to a run that was right
+to begin with. Five of the six are plain data and belong on `SessionParams`
+beside `loadout` (opaque there for exactly this reason); the sixth is dev-only.
+The parked run and the checkpoint restore are the same finding one step harder:
+both ADOPT an arbitrary `GameState`, so the session needs to be handed one and to
+answer the arriving client with a FULL snapshot rather than a delta against a
+genesis it does not share (`Sent.full` in `session.ts` exists for it and has
+never been used). Three smaller things ride along with it, all written up in the
+plan's §1.75: the loop's state arrives ASYNCHRONOUSLY on the net path where
+`createRunSession` hands it back synchronously today, `state.events` is cleared
+by `step()` on the local path and by NOBODY on the net one (so a driver that does
+not clear it replays every sound and gore burst three times), and five of the
+autoplay bot's housekeeping calls still mutate the state directly — four are
+plain verbs, and the fifth carries the bot's own swap memory and is a real
+design question. `docs/multiplayer.md` is the shipped architecture; the plan is
+the roadmap and carries the amendment. Nine rules are load-bearing:
 
 1. **ONE PROCESS PER SESSION, AND THE HOST IS JUST ANOTHER CLIENT.** The
    simulation runs in a `utilityProcess` (`server/main.ts`, forked by
@@ -1135,13 +1162,37 @@ roadmap and carries the amendment. Nine rules are load-bearing:
    by calling the engine directly travels as a COMMAND whose name must be in
    `COMMANDS` (`server/wire/protocol.ts`) and is dispatched through an explicit
    `switch`. A channel that resolved a function name dynamically would hand a
-   client `grantXp` and `mintUnique` the day PR 2 opens a UDP port. PR 1 ships
-   the scene-advance verbs; the inventory, shop, level-up and talent picker join
-   them in **PR 1.5** — the plan first said PR 3, which was circular, since the
-   run loop cannot move into the server until every verb it calls can travel.
-   Those are two jobs on the same names: PR 1.5 makes them TRAVEL with today's
-   blocking semantics exactly preserved, PR 3 makes them NON-BLOCKING per
-   player. PR 2 adds CHAT, whose slash commands are a SECOND closed list
+   client `grantXp` and `mintUnique` the day PR 2 opens a UDP port. PR 1 shipped
+   the nine scene-advance verbs; **PR 1.5 added the other sixty** — the screens,
+   the run's flow, the bag, the counter, the build, the party, the errands, the
+   conversations, the vault and the ride (the plan first said PR 3, which was
+   circular, since the run loop cannot move into the server until every verb it
+   calls can travel). Those are two jobs on the same names: PR 1.5 makes them
+   TRAVEL with today's blocking semantics exactly preserved, PR 3 makes them
+   NON-BLOCKING per player.
+
+   **THE ARGUMENTS ARE PART OF THE SAME MODEL AND ARE SCALARS ONLY** — a number,
+   a string or a boolean, never a structure, because a verb whose payload is a
+   structure is a verb whose payload a stranger gets to shape. Each verb's arity
+   and argument types are declared beside it in the ENGINE
+   (`RUN_COMMAND_ARGS`/`applyRunCommand`, `src/game/commands.ts`) and checked
+   before anything dispatches, with a string that names one of the engine's own
+   unions checked against that union's runtime list rather than against `typeof
+"string"`. **The names exist TWICE and the drift test is what keeps them
+   honest**: the engine owns what a verb does, `server/wire/protocol.ts` keeps a
+   literal copy for its allow-list because that leaf is read from the app's
+   startup path where the 170 KB budget forbids `@game/core`, and
+   `tests/engine/run_commands_test.ts` fails the build when the two disagree.
+   **The app has ONE door onto the list** (`pwa/src/game/run-commands.ts`) and
+   every call site goes through it; it applies through the same dispatch the
+   server uses, so a verb cannot behave one way in single-player and another in a
+   session. The one verb whose argument was NOT a scalar is why the AUTO PILOT's
+   build baseline now lives on the run (`state.autopilot.build`, seeded from
+   `SessionParams.autopilotBuild`) rather than on the app's flight session: a
+   flight outlives a run, so the refund it owes has to survive the simulation
+   moving out of the renderer.
+
+   PR 2 adds CHAT, whose slash commands are a SECOND closed list
    (`server/wire/chat.ts`) for exactly the same reason — a chat box that handed
    the session an arbitrary verb would undo the command channel's allow-list
    beside it.
@@ -2554,6 +2605,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Native-only concern (haptics, audio session, store build)      | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                                                                                                                                                |
 | Desktop/Steam-only concern (window, Steam Cloud, overlay)      | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                                                                                                                                              |
 | The MOD SDK (format, compiler, examples, modder docs)          | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                                                                                                                                            |
+| MULTIPLAYER: a new VERB the app may run against a run          | `src/game/commands.ts` (the arg shapes + the `case`) **and** `COMMANDS` in `server/wire/protocol.ts` (the literal copy the allow-list reads) — the drift test enforces the pair — then bump `PROTOCOL_VERSION`. Call it from the app through `pwa/src/game/run-commands.ts`, never by importing the engine function    |
 | MULTIPLAYER: the session server, or the wire either end speaks | `server/...` — engine code compiled for Node (`npm run server:build`). `server/wire/*` imports NOTHING, because the page reads it from the startup path; `server/session.ts` may import `@game/core`. Never anything under `pwa/`. See `docs/multiplayer.md`                                                           |
 | MULTIPLAYER: a transport, admission, the router mapping        | `server/net/...` — the seam, the reliability layer, the UDP socket, the relay, the hub, UPnP. Node builtins only; it ships with the session, which is what makes PR 5's dedicated server the same file. See `docs/multiplayer.md`                                                                                      |
 | MULTIPLAYER: the shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts` — the fifth bridge, over `__gisNet`; the page's control half is `pwa/src/app/net-bridge.ts` and the run driver is `pwa/src/game/net/`. STEAM-only concerns (`net-steam-p2p.ts`, `net-lobby.ts`) and the OS firewall live here because the client and the elevation prompt do |

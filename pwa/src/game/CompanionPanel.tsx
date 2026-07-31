@@ -14,12 +14,10 @@ import {
   companionDef,
   companionPowerRank,
   companionWeaponDamage,
-  equipCompanionFromInventory,
   equipmentIcon,
   itemLevelReq,
   equipmentName,
   meetsLevelReq,
-  unequipCompanionToInventory,
   weaponDef,
   type CompanionSlot,
   type Equipment,
@@ -34,6 +32,8 @@ import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
+
+import { runCommandOk } from "./run-commands.ts";
 
 const SLOT_LABELS: Record<CompanionSlot, string> = {
   weapon: "WEAPON",
@@ -184,7 +184,12 @@ export function CompanionPanel({
                     // Worn armor comes back to the bag; the weapon only swaps.
                     if (slot === "weapon" || !item) return;
                     if (
-                      unequipCompanionToInventory(state, companion.id, slot)
+                      runCommandOk(
+                        state,
+                        "unequipCompanionToInventory",
+                        companion.id,
+                        slot,
+                      )
                     ) {
                       playUiSound(synth, "confirm");
                       onChange();
@@ -243,7 +248,14 @@ export function CompanionPanel({
                 }
                 onClick={() => {
                   if (!item || !usable) return;
-                  if (equipCompanionFromInventory(state, companion.id, index)) {
+                  if (
+                    runCommandOk(
+                      state,
+                      "equipCompanionFromInventory",
+                      companion.id,
+                      index,
+                    )
+                  ) {
                     playUiSound(synth, "confirm");
                     onChange();
                   }
