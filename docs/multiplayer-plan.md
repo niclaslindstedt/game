@@ -62,24 +62,25 @@ Two of these were re-measured after PR 2 and are annotated with both readings.
 Nothing has drifted enough to change a decision, which is itself worth knowing —
 the engine's shape is stable on the axes this plan leans on.
 
-| Fact                             | Measurement                                                                                                                                                                                                                                                                                                          |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The simulation is deterministic  | `Math.random`, `Date.now`, `performance.now`: **zero** occurrences under `src/` (re-measured after PR 2: still zero). Every roll is seeded mulberry32 (`src/lib/rng.ts`) with `rngState` freeze/thaw                                                                                                                 |
-| The loop is fixed-timestep       | `pwa/src/lib/game-loop.ts`, 1000/60; the fast-forward multiplier scales the step **count**, never the step **size**                                                                                                                                                                                                  |
-| `GameState` is plain JSON        | apart from the `rng` closure, which `saved-run.ts` already snapshots beside it through a v12+ migration ladder                                                                                                                                                                                                       |
-| The engine already runs headless | `src/sim/simulate.ts` drives real `step()` calls from Node                                                                                                                                                                                                                                                           |
-| Cross-engine float safety        | **159** calls to `Math.sin/cos/atan2/hypot/pow/exp/log/tan` under `src/` — none IEEE-mandated. 17 `Math.sqrt` (which _is_ correctly rounded). Lockstep is out                                                                                                                                                        |
-| `state.player` in the engine     | **538** occurrences across **75** files — but **103** are `const player = state.player;` at a function head (re-measured after PR 2: **533** across the same **75**)                                                                                                                                                 |
-| `state.player` in the app        | **220** occurrences across **49** files (re-measured after PR 2: **199**)                                                                                                                                                                                                                                            |
-| Engine mutators the APP calls    | **~50** distinct value imports from `@game/core` that mutate a `GameState` — `openInventory`, `equipFromInventory`, `buyStock`, `sellItem`, `allocateStat`, `spendTalentPoint`, `pickTalkChoice`, `openShop`, `openMap`… **This is PR 1.5's whole size**, and it is larger than the "~40" PR 1's own notes estimated |
-| What those reads actually want   | `pos` **186**, `equipment` 50, `level` 53, `inventory` 33, `coins` 20 — i.e. one third geometry, the rest private bag                                                                                                                                                                                                |
-| `GamePhase` members              | **19**. `step()` early-returns on `phase !== "playing"` after the `cutscene` and `dying` passes                                                                                                                                                                                                                      |
-| Process-global engine state      | **36** module-level mutable bindings: 19 `activeXDefs` catalogs, 6 flags (`src/game/flags.ts`), the `BALANCE` tuning object, plus memo/grid caches                                                                                                                                                                   |
-| `Item` ownership                 | The `Item` union has **no owner field** — free-for-all loot is the free default                                                                                                                                                                                                                                      |
-| Levels shipped                   | **6** (`content/levels/`), **no hub/town**                                                                                                                                                                                                                                                                           |
-| Desktop packaging target         | **`dir`**, not an installer — Steam uploads a directory to a depot and its client installs it. **There is no elevated install step**                                                                                                                                                                                 |
-| Electron / Node                  | Electron ^43 (so `utilityProcess` is available); root `engines.node >= 24`; imports carry `.ts` extensions; `scripts/game-alias-loader.mjs` already maps the aliases for plain `node`                                                                                                                                |
-| Critical-path budget             | **170 KB gzipped**, enforced by `pwa/scripts/check-seo.mjs`                                                                                                                                                                                                                                                          |
+| Fact                             | Measurement                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The simulation is deterministic  | `Math.random`, `Date.now`, `performance.now`: **zero** occurrences under `src/` (re-measured after PR 2: still zero). Every roll is seeded mulberry32 (`src/lib/rng.ts`) with `rngState` freeze/thaw                                                                                                                                                                                                                  |
+| The loop is fixed-timestep       | `pwa/src/lib/game-loop.ts`, 1000/60; the fast-forward multiplier scales the step **count**, never the step **size**                                                                                                                                                                                                                                                                                                   |
+| `GameState` is plain JSON        | apart from the `rng` closure, which `saved-run.ts` already snapshots beside it through a v12+ migration ladder                                                                                                                                                                                                                                                                                                        |
+| The engine already runs headless | `src/sim/simulate.ts` drives real `step()` calls from Node                                                                                                                                                                                                                                                                                                                                                            |
+| Cross-engine float safety        | **159** calls to `Math.sin/cos/atan2/hypot/pow/exp/log/tan` under `src/` — none IEEE-mandated. 17 `Math.sqrt` (which _is_ correctly rounded). Lockstep is out                                                                                                                                                                                                                                                         |
+| `state.player` in the engine     | **538** occurrences across **75** files — but **103** are `const player = state.player;` at a function head (re-measured after PR 2: **533** across the same **75**)                                                                                                                                                                                                                                                  |
+| `state.player` in the app        | **220** occurrences across **49** files (re-measured after PR 2: **199**)                                                                                                                                                                                                                                                                                                                                             |
+| Engine mutators the APP calls    | **~50** distinct value imports from `@game/core` that mutate a `GameState` — `openInventory`, `equipFromInventory`, `buyStock`, `sellItem`, `allocateStat`, `spendTalentPoint`, `pickTalkChoice`, `openShop`, `openMap`… **This is PR 1.5's whole size**, and it is larger than the "~40" PR 1's own notes estimated. **Counted exactly when PR 1.5 did the conversion: 69 verbs over ~110 call sites in 22 modules** |
+| What a run's creation does       | `createRunSession` performs **six** mutations AFTER `createGame` that the `SessionParams` cannot express — the campaign quest chain, the purse, the seen thoughts, a `?scenario=`, an opening already watched, and a bot run's dialogue mute. Measured while doing §1.5.1; it is what §1.5.2 turns out to rest on                                                                                                     |
+| What those reads actually want   | `pos` **186**, `equipment` 50, `level` 53, `inventory` 33, `coins` 20 — i.e. one third geometry, the rest private bag                                                                                                                                                                                                                                                                                                 |
+| `GamePhase` members              | **19**. `step()` early-returns on `phase !== "playing"` after the `cutscene` and `dying` passes                                                                                                                                                                                                                                                                                                                       |
+| Process-global engine state      | **36** module-level mutable bindings: 19 `activeXDefs` catalogs, 6 flags (`src/game/flags.ts`), the `BALANCE` tuning object, plus memo/grid caches                                                                                                                                                                                                                                                                    |
+| `Item` ownership                 | The `Item` union has **no owner field** — free-for-all loot is the free default                                                                                                                                                                                                                                                                                                                                       |
+| Levels shipped                   | **6** (`content/levels/`), **no hub/town**                                                                                                                                                                                                                                                                                                                                                                            |
+| Desktop packaging target         | **`dir`**, not an installer — Steam uploads a directory to a depot and its client installs it. **There is no elevated install step**                                                                                                                                                                                                                                                                                  |
+| Electron / Node                  | Electron ^43 (so `utilityProcess` is available); root `engines.node >= 24`; imports carry `.ts` extensions; `scripts/game-alias-loader.mjs` already maps the aliases for plain `node`                                                                                                                                                                                                                                 |
+| Critical-path budget             | **170 KB gzipped**, enforced by `pwa/scripts/check-seo.mjs`                                                                                                                                                                                                                                                                                                                                                           |
 
 ### The Steam binding is narrower than it looks — verify before leaning
 
@@ -131,7 +132,7 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | --------------------------- |
 | **1 — THE SERVER**     | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                              | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6 |
 | **2 — THE WIRE**       | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**                   | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7 |
-| **1.5 — THE CUTOVER**  | The app's ~50 direct engine mutations become commands; `GameScreen` drives the net client instead of owning the loop                         | Identical single-player, over loopback. Zero networking      |  3–5 wks | **Next**                    |
+| **1.5 — THE CUTOVER**  | The app's ~50 direct engine mutations become commands; `GameScreen` drives the net client instead of owning the loop                         | Identical single-player, over loopback. Zero networking      |  3–5 wks | **Half landed**, see §1.5.4 |
 | **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks |                             |
 | **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                             |
 | **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                             |
@@ -653,7 +654,7 @@ PR 1 flagged this rather than claiming it, and it is still outstanding: the
 This is the first PR whose work cannot be believed without launching one, so it
 is where that debt is paid.
 
-### 1.5.4 Done when
+### 1.5.4 Done when — and what the first half actually met
 
 - A run started from the title menu plays identically to today, through the
   server. **Measured, not eyeballed**: an autopilot campaign through
@@ -664,6 +665,39 @@ is where that debt is paid.
 - `npm run electron` launches the packaged path and plays.
 - `make test`, `make lint`, `npm run electron:test` green; the 170 KB budget
   still passes (the net client must stay lazy).
+
+**§1.5.1 LANDED; §1.5.2 AND §1.5.3 DID NOT.** The verbs travel — 69 of them,
+over ~110 call sites in 22 modules, with scalar arguments the engine declares
+and checks, one dispatch shared by the server and the app, and a drift test
+holding the wire's copy of the names to the engine's table. The routing was
+proved behaviour-preserving the way this section asks: the same `--seed 4242`
+`moon` run through `pwa/scripts/playtest.mjs` and through
+`scripts/simulate-run.mjs` produces byte-identical reports either side of the
+change (kills, damage, XP, drops, deaths, sim minutes).
+
+The loop did not move, and the reason is a measurement §0 did not have when this
+was planned: **a run is not `createGame(params)`.** `createRunSession` performs
+six further mutations before the first tick (see the ground-truth table), so a
+session built from today's `SessionParams` would hold a different world from the
+one the app built — a hero with no campaign chain, an empty purse, unread
+thoughts already unread again, and an opening the player has watched four times
+playing a fifth. Five of the six are plain data and belong in `SessionParams`
+beside `loadout`, which is already opaque there for exactly this reason; the
+sixth (`?scenario=`) is dev-only and does not travel.
+
+The **parked run** and the **checkpoint restore** are the harder half of the
+same finding, and they are why "three paths need to come with it" was an
+understatement: both ADOPT an arbitrary `GameState` rather than building one, so
+the session needs a way to be handed a state and to send an arriving client a
+FULL snapshot instead of a delta against a genesis it does not share.
+`server/session.ts` already carries the `Sent.full` shape for that and nothing
+has ever used it.
+
+§1.5.3 is unchanged and still outstanding: the packaged path has never been
+launched.
+
+So what is left of this PR is: the five `SessionParams` fields, the adopt-a-state
+start, the run-driver seam in `GameScreen`, and a real `npm run electron`.
 
 ### 1.5.5 Risks
 
