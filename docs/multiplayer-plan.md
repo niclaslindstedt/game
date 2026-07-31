@@ -1240,14 +1240,77 @@ each leaving single player byte-identical.
 - **§3.3, prediction and reconciliation.** Untouched. A client still shows its
   hero where the last snapshot put him.
 - **The command channel carries no SEAT.** A shop, an equip or a stat spend
-  arriving from a joiner is dispatched against seat 0. `applyRunCommand` is
-  where the seat has to arrive; it is one field on the command frame plus the
-  seat the session already knows, and it belongs with §3.2 because the two touch
-  the same verbs.
+  arriving from a joiner is dispatched against seat 0. See §3.7 — it is the next
+  thing to do, and it comes BEFORE §3.2 rather than after it.
 - **A joiner's run is still not banked** to their roster (PR 4's §4.5), and the
   autopilot, the headless simulator and the analytic readouts still fly seat 0 —
   which is correct for what they measure and is what §3.4's "multi-player
   campaign headlessly" line will change.
+
+### 3.7 The order the remainder has to be done in — and why there is no PR 3.5
+
+Two things were found while §3.1 was being built that this plan did not have a
+place for. Neither should become a numbered half, and the reasons are different
+in each case; both are written down here so the next session inherits them
+instead of rediscovering them.
+
+**THE SEAT ON THE COMMAND CHANNEL IS A PREREQUISITE OF §3.2, NOT A SUCCESSOR OF
+PR 3.** Measured against the tree §3.1 left: **20 of the 72 verbs in
+`applyRunCommand` spell `state.players[0]`** — `equipFromInventory`,
+`equipFromInventoryInto`, `unequipToInventory`, `moveInventoryItem`,
+`discardFromInventory`, `discardEquipped`, `autoEquipBest`, `scrapInferiorLoot`,
+`discardHeldAbility`, `spendGateKey`, `allocateStat`, `deallocateStat`,
+`spendTalentPoint`, `beginRespec`, `confirmRespec`, `spendCleanSlate`,
+`promptPendingPoints`, `reclaimVaultItem`, `clearVault`,
+`refundAutopilotBuild`. They are spelled out rather than hidden ON PURPOSE — the
+parameterization left the seat visible at every call site precisely so this list
+could be produced by grep rather than by reading — and a joiner's equip currently
+lands on the host's hero.
+
+It has the exact shape the plan's halves exist for: PR 1.5 made the verbs
+TRAVEL, and nothing made them travel to the right HERO. That is the same
+layer-without-its-cutover failure the amendments were written for, and it is its
+fourth instance.
+
+**But it cannot be numbered 3.5, because a 3.5 sorts after 3 and this has to
+happen before §3.2.** `openInventory` cannot be made non-blocking per player
+until it knows WHICH player; the screen and the verb are the same decision seen
+from two ends. So it is the OPENING commit series of PR 3's remainder — one
+field on the command frame, the seat the session already knows, and a `Player`
+argument through `applyRunCommand`'s dispatch — and §3.2 follows it. A number
+that implied otherwise would be a label that lies about the order, which is worse
+than no number at all.
+
+**WHAT AN ABANDONED HERO MEANS IS NOBODY'S — AND IT SHOULD BE PR 4'S.** §3.1's
+rule that a seat is appended and never spliced out is right and must stay (every
+command and input frame in flight names a seat by index). Its consequence is that
+a player who leaves has a body left standing on the map, and NOTHING in this plan
+says what that body is. The acute bug is fixed — a departing player's last input
+frame is cleared, so the hero stops walking rather than continuing toward
+wherever they were last steering for the rest of the run — but the POLICY is
+open, and four separate rules currently answer it by accident:
+
+- it still holds a seat, so the party cannot grow past it;
+- it still counts in `partyLevel`, so a departed level-90 can hold the horde's
+  level up over a party of level-20s;
+- it still draws aggro and still soaks a share of the horde's attention;
+- it still counts as alive, so `partyWiped` can never fire while it stands and
+  the remaining party can never lose the run.
+
+That last one is the sharp end: a group whose fourth player quit cannot be
+defeated. It belongs in **PR 4** rather than in a half of its own, because it is
+a question about what a body on the field MEANS — the same question §4.2 answers
+for a corpse and a respawn — and answering it beside them is how the two stay
+consistent. PR 5's §5.4 (reconnect) is the adjacent case and not the same one:
+reconnect is about somebody who IS coming back.
+
+**AND THE MEASURING INSTRUMENT SHOULD NOT GO LAST.** §3.4's done-when includes
+`scripts/simulate-run.mjs` running a multi-player campaign headlessly, on the
+stated grounds that it is "what makes PR 4's tuning measurable instead of
+guessed". It is independent of §3.2 and §3.3 — it needs a party, which now
+exists — so it can be built in parallel with them rather than after. Every
+instrument this repo has was built before the thing it measures; leaving this one
+until last is how PR 4's `/players N` pass ends up guessed anyway.
 
 ---
 
@@ -1308,6 +1371,18 @@ What ships:
   a betrayal.
 - **A session ends when the host leaves.** There is no host migration; D2 didn't
   have it either. Everyone's progress banks first (see 4.5).
+- **AND WHAT AN ABANDONED HERO IS — the question §3.1 created and nobody owns.**
+  A seat is appended and never spliced out (every command and input frame in
+  flight names one by index), so a player who leaves has a body left standing on
+  the map, and four separate rules currently answer for it by accident: it holds
+  a seat so the party cannot grow past it, it counts in `partyLevel` so a
+  departed level-90 holds the horde's level up over a party of level-20s, it
+  draws aggro, and it counts as alive — so **`partyWiped` can never fire while it
+  stands, and a group whose fourth player quit cannot lose the run.** That last
+  one is the sharp end. It belongs here rather than in a PR of its own because it
+  is the same question this section already answers for a corpse: what does a
+  body on the field MEAN. Reconnect (§5.4) is the adjacent case and NOT the same
+  one — that is somebody who is coming back. See §3.7.
 
 ### 4.3 XP, loot and the meter
 

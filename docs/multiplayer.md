@@ -538,8 +538,17 @@ an invite left parked would re-join the same session on every reload.
   PR 4's §4.5.
 - **A hero's private verbs still name seat 0.** The command channel carries no
   seat, so a shop, an equip or a stat spend arriving from a joiner is applied to
-  the host's hero. The dispatch (`applyRunCommand`) is where the seat has to
-  arrive, and it is the next thing to do after §3.2.
+  the host's hero — 20 of the 72 verbs in `applyRunCommand`, and they are spelled
+  `state.players[0]` on purpose so the list is a grep rather than a read. The
+  dispatch is where the seat has to arrive, and it comes BEFORE the per-player
+  screens rather than after them: `openInventory` cannot be made non-blocking per
+  player until it knows which player. See the plan's §3.7.
+- **An abandoned hero is nobody's yet.** A seat is never spliced out, so a player
+  who leaves has a body left standing. It stops walking (their last input frame
+  is cleared), but it still holds a seat, still counts in `partyLevel`, still
+  draws aggro, and still counts as ALIVE — so a group whose fourth player quit
+  cannot lose the run. The policy belongs with PR 4's corpse and respawn, and is
+  written up at both ends (plan §3.7 and §4.2).
 - **Nothing has been proven on eight machines through a real NAT**, and it
   cannot be from CI: that criterion, the UPnP mapping against a real router, and
   the packaged `npm run electron` launch all need hardware this repo's checks do
