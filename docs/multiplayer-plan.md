@@ -1561,6 +1561,48 @@ bigger a shared pot is than a solo one — read the per-CAPITA XP rate off a
 multi-player run, never the per-kill share, because a party also clears faster
 and the two effects only show up together) and the `/players N` pairing itself.
 
+> **THE PASS HAS NOW BEEN RUN, AND THE ANSWER IS THAT NEITHER LEVER MOVES.**
+> §7.2 built the party; `scripts/coop-tuning.mjs` is the harness, and it reads
+> exactly what this paragraph asked for — per-capita XP per minute at 1/2/4/8,
+> medianed over seeds with the spread printed beside it, and `--start-level` to
+> mint the hero the campaign implies rather than measuring a deep rung with a
+> naked rookie (the first read had EVERY party and the soloist finish nightmare
+> with zero kills, which is a rookie result rather than a co-op one).
+>
+> On the moon at NIGHTMARE, from a level-50 rare-geared arrival, 2 seeds × 4 min:
+>
+> | party | per-capita xp/min | vs solo  | per-capita kills/min |
+> | ----- | ----------------- | -------- | -------------------- |
+> | 1     | 11702             | 1×       | 69.3                 |
+> | 2     | 12913             | **1.1×** | 66.7                 |
+> | 4     | 5375              | 0.5×     | 17.7                 |
+>
+> **At party 2 grouping is neutral-to-slightly-positive, which is exactly what
+> the rule was designed to be** — the pot bonus and the level weighting land
+> where the reasoning said they would, and the shipped 0.1 needs no correction.
+>
+> **The drop at party 4 is NOT the XP rule and must not be tuned as if it were.**
+> The per-capita KILL RATE falls with it, from 69 to 18 — the party is banking a
+> third of the XP because it is landing a quarter of the kills, not because the
+> split shortchanged it. If the sharing were the problem the kill rate would have
+> stayed flat and only the XP would have moved. What actually collapses is the
+> bot's play in a crowd: four autopilots converge on the same bodies and stand
+> inside each other, which is §7.4's SPACING and PACK-SPLITTING rules, neither of
+> which has landed. Lifting `partyBonusPerHero` to make that column read 1× would
+> be re-tuning the game's XP economy to cover a bot deficiency — the same error
+> §7.2.5's second limit names in its own domain, and it would then have to be
+> undone the day §7.4 lands.
+>
+> So: **both levers stay where they are, on evidence**, and the remaining half of
+> this measurement is blocked on §7.4 rather than on an instrument. A scaling
+> pass at `/players 2/4/8` is worth running the same way once it is — the harness
+> takes `--players` and prints it beside the party size for exactly that.
+>
+> One caveat the harness prints and this table inherits: the spread is wide
+> (8.9k–14.5k at party 1), so these are directional numbers over a handful of
+> seeds rather than a tuned constant. Anything that would MOVE a knob wants more
+> seeds than two.
+
 **BOTH OF THE DEBTS BELOW WERE PAID BY PR 5** (see §5.8), and everything §4.7
 records as NOT LANDED — the corpse, the mods, the party HUD, the banking and the
 measured tuning pass — is now inventoried and sequenced in **PR 5.5** rather than
@@ -1876,11 +1918,15 @@ than rediscovered:
    measurement, the `hazardFocus` fix, and the one piece of §7.4 (the LEASH) that
    had to come with it for the instrument to be measuring co-op rather than N
    soloists.
-3. **§4.3's MEASURED TUNING PASS** — the thing §4.7 says shipped as STRUCTURE
-   with its reasoning stated, and which must not be recorded as measured. Read
-   the per-CAPITA XP rate off multi-player runs at 1/2/4/8 across the ladder,
-   and move `XP_SHARE.partyBonusPerHero` and the `/players N` pairing on
-   evidence.
+3. **§4.3's MEASURED TUNING PASS — RUN, and the answer is that neither lever
+   moves.** `scripts/coop-tuning.mjs` reads per-capita XP per minute at 1/2/4/8,
+   medianed over seeds, with `--start-level` minting the hero a deep rung
+   implies. At party 2 grouping measures **1.1× solo** — neutral-to-positive,
+   exactly what the rule was designed to be. The fall at party 4 tracks a fall in
+   the per-capita KILL RATE (69 → 18), so it is §7.4's missing SPACING and
+   PACK-SPLITTING rather than the XP split, and lifting the bonus to hide it
+   would be re-tuning the economy to cover a bot deficiency. The numbers are in
+   §4.7; the remaining half is blocked on §7.4, not on an instrument.
 4. **§7.2.5 — BOTS ARE CLIENTS**, blocked on (1) for the same reason (2) is: a
    client's seat is never 0. Amended since it was written — this is now the
    SHIPPED shape rather than a test harness beside it (see §7.2.5), so it lands

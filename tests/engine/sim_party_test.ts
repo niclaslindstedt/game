@@ -140,3 +140,32 @@ describe("a simulated party", () => {
     expect(grew).toBe(true);
   });
 });
+
+describe("every seat in a simulated party is immortal", () => {
+  // THE CALIBRATION HERO HAS NEVER BEEN ALLOWED TO STAY DOWN — his death is
+  // booked as a pressure gauge and the measurement marches on. Nothing extended
+  // that to the OTHER seats, and nothing could have caught it: seat 0's revive
+  // hangs off the `dying` PHASE, and `dying` fires on `partyWiped`, so a party
+  // that loses one member never reaches it. The result is a party of N that is
+  // really a party of one, with every per-capita figure still divided by N — a
+  // bot that died reported as a balance result.
+  it("stands its casualties back up and books the deaths against their seats", () => {
+    const report = simulateLevel({
+      levelId: "moon",
+      difficulty: "nightmare",
+      seed: 3,
+      party: 4,
+      maxMinutes: 0.8,
+      realisticPacing: false,
+    });
+    const seats = report.party!.seats;
+    // Nightmare from level 1 kills a fresh party; what matters is that nobody is
+    // left lying there at the end.
+    expect(seats.every((s) => s.alive)).toBe(true);
+    // …and that the deaths were BOOKED rather than swallowed, per seat, so a
+    // reader can tell a party that cruised from one that was resurrected forty
+    // times into the same per-capita number.
+    expect(seats.every((s) => s.deaths >= 0)).toBe(true);
+    expect(seats.reduce((n, s) => n + s.deaths, 0)).toBeGreaterThan(0);
+  }, 60_000);
+});

@@ -597,6 +597,12 @@ export type PartyReport = {
     xpGained: number;
     /** Still standing at the end — a departed or dead seat says so. */
     alive: boolean;
+    /** How many times this seat went down. Every seat is IMMORTAL in a
+     * non-mortal run, exactly as seat 0 always has been, so a death is a
+     * pressure gauge rather than the end of the measurement — a party whose
+     * casualties stayed down would be a party of one with the per-capita
+     * figures still divided by N. */
+    deaths: number;
     weapon: string;
     coins: number;
   }[];
@@ -1110,6 +1116,9 @@ function playRun(args: {
     level: hero.level,
     xp: hero.xp,
   }));
+  /** How many times each seat has been stood back up. Seat 0's deaths are the
+   * report's own `deaths` ledger; these are everybody else's. */
+  const seatDeaths: number[] = [];
   /** Reused across ticks: one slot per seat, so the per-tick input array is not
    * a fresh allocation at 60 Hz — the same reason `server/session.ts` keeps
    * one. */
@@ -1679,6 +1688,47 @@ function playRun(args: {
     botAutoEquip(state, state.players[0]);
     cullWorstLoot(state, state.players[0]);
     sortBotInventory(state, state.players[0]);
+    // EVERY SEAT RUNS THE SAME BAG DISCIPLINE, and every seat is IMMORTAL.
+    //
+    // The second half is the one that would silently ruin a measurement. Seat 0
+    // has never been allowed to stay down — the calibration hero's death is
+    // booked as a pressure gauge and the run marches on — but nothing stood the
+    // OTHER seats back up, because a single dead joiner does not wipe the party
+    // and so never reaches the `dying` phase the revive hangs off. A party of
+    // four that loses two is a party of TWO from then on, with every per-capita
+    // figure still divided by four: a bot that died reported as a balance
+    // result. So a downed seat is stood back up here, on the same rule and away
+    // from the swarm, and its death is booked against its seat.
+    //
+    // **SEAT 0 IS SWEPT HERE TOO, AND THAT IS THE HALF THAT BIT.** Seat 0's
+    // revive has always hung off the `dying` PHASE, and `dying` fires on
+    // `partyWiped` — the whole party — so a host who fell while three joiners
+    // were still standing simply lay there for the rest of the run. Every
+    // headline figure in the report describes seat 0, so the run read as a
+    // total collapse when what had happened was one early death nothing stood
+    // back up. In a party the revive is a per-SEAT rule; the phase path below
+    // still owns the wipe (and every single-player run, which is unchanged).
+    if (bots.length > 1) {
+      for (let seat = 0; seat < state.players.length; seat++) {
+        const hero = state.players[seat];
+        if (!hero) continue;
+        if (seat > 0) {
+          // Seat 0's bag discipline already ran above, in the order the
+          // single-player path has always used.
+          botAutoEquip(state, hero);
+          cullWorstLoot(state, hero);
+          sortBotInventory(state, hero);
+        }
+        if (hero.hp > 0 || hero.departed) continue;
+        if (seat === 0) bookDeath();
+        else seatDeaths[seat] = (seatDeaths[seat] ?? 0) + 1;
+        if (args.mortal) {
+          restartLevel();
+          break;
+        }
+        reviveHero(state, hero);
+      }
+    }
 
     // STAMINA: sample the pool this tick left behind. An empty is counted on
     // the CROSSING into zero, and the dwell counters carry the ms the hero
@@ -2125,6 +2175,8 @@ function playRun(args: {
                 levelEnd: hero.level,
                 xpGained: xpBetween(from, hero, args.difficulty),
                 alive: heroInPlay(hero),
+                deaths:
+                  seat === 0 ? deathEvents.length : (seatDeaths[seat] ?? 0),
                 weapon: equipmentName(hero.equipment.weapon),
                 coins: Math.round(hero.coins),
               };

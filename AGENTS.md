@@ -1382,16 +1382,22 @@ landed: `botAct(bot, state, hero)` (164 sites, byte-identical on two full seeded
 campaigns) and **`--party N`**, the simulator flying one bot per seat with a
 `PartyReport` whose PER-CAPITA rate is the read to trust — never the per-kill
 share, because a party also clears faster and only dividing by both the head
-count and the clock shows which effect won. `XP_SHARE.partyBonusPerHero` and the
-`/players N` pairing are the levers, and they are still UNMOVED. §4.2's corpse
-and respawn are BLOCKED on §3.2's per-player `dying` screen.
+count and the clock shows which effect won. **The pass has been RUN
+(`scripts/coop-tuning.mjs`) and the answer is that neither lever moves**: at
+party 2 grouping measures 1.1× solo per capita — neutral-to-positive, which is
+what the rule was designed to be — and the fall at party 4 tracks a fall in the
+per-capita KILL RATE (69 → 18), so it is the autopilot's missing SPACING and
+PACK-SPLITTING (§7.4) rather than the XP split. Lifting
+`XP_SHARE.partyBonusPerHero` to hide that would be re-tuning the game's economy
+to cover a bot deficiency, and would have to be undone the day §7.4 lands. §4.2's
+corpse and respawn are BLOCKED on §3.2's per-player `dying` screen.
 
 **EVERY ONE OF THOSE IS NOW INVENTORIED IN THE PLAN'S PR 5.5 — "THE REMAINDER" —
 AND THAT IS THE ONE PLACE TO LOOK.** A dozen "NOT LANDED" boxes scattered across
 eleven PR sections is how a debt stops being anybody's, so §5.5 collects them,
 says which are BLOCKED and on what, and gives the order they unblock each other
-in: **§7.1 (landed)** → **§7.2 (landed)** → §4.3's measured pass → §7.2.5 →
-§5.6's soak → §3.2 → §4.2's corpse → §3.3.
+in: **§7.1 (landed)** → **§7.2 (landed)** → **§4.3's measured pass (run — see
+above)** → §7.2.5 → §5.6's soak → §3.2 → §4.2's corpse → §3.3.
 
 **THE BOT TAKES THE HERO IT STEERS — `botAct(bot, state, hero)`.** Nothing under
 `src/game/bot/` reads `state.players[0]` any more, and a new one is a

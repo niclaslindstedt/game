@@ -355,6 +355,7 @@ export function renderParty(taggedRuns) {
     pad("hero", 8) +
     pad("xp", 9) +
     pad("coins", 8) +
+    pad("deaths", 8) +
     pad("alive", 7) +
     "  weapon";
   console.log(header);
@@ -369,6 +370,7 @@ export function renderParty(taggedRuns) {
           pad(`${seat.levelStart}→${seat.levelEnd}`, 8) +
           pad(seat.xpGained, 9) +
           pad(seat.coins, 8) +
+          pad(seat.deaths, 8) +
           pad(seat.alive ? "yes" : "no", 7) +
           `  ${seat.weapon}`,
       );

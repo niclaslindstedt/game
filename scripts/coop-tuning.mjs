@@ -5,6 +5,7 @@
 //
 //   node scripts/coop-tuning.mjs [--levels moon,goodco_hq] [--difficulties medium,hard]
 //     [--party 1,2,4,8] [--players 1] [--minutes 6] [--seeds 3] [--seed 4242]
+//     [--start-level 50] [--gear-tier rare]
 //
 // **THE ONE READ THIS EXISTS TO PRODUCE IS PER-CAPITA XP PER MINUTE, and the
 // reason is the whole difficulty of tuning co-op.** A party shares each kill AND
@@ -53,6 +54,9 @@ const { simulateLevel } = await import(path.join(root, "src/sim/simulate.ts"));
 const { playerScaling } = await import(
   path.join(root, "server/wire/players.ts")
 );
+const { synthesizeArrival } = await import(
+  path.join(root, "src/sim/arrival.ts")
+);
 
 // ---- Flags -----------------------------------------------------------------------
 
@@ -74,6 +78,17 @@ const players = nums("players", "1");
 const minutes = Number(opt("minutes", "6"));
 const seedCount = Math.max(1, Number(opt("seeds", "3")));
 const seed0 = Number(opt("seed", "4242"));
+// THE DEEP RUNGS NEED A HERO WHO EARNED HIS WAY THERE. The campaign is played in
+// ORDER, so measuring NIGHTMARE with a fresh level-1 party measures nothing: the
+// first read of this matrix had every party AND the soloist finish nightmare
+// with zero kills, which is not a co-op result, it is a naked rookie result.
+// `--start-level` mints the hero the campaign implies (spun up, stat points
+// spent, dressed in real rolled gear of the rung below) — the same
+// `synthesizeArrival` the campaign simulator uses — and hands the SAME loadout
+// to every seat, because a party whose members arrived at different strengths
+// would make the per-capita read a measurement of who got the good kit.
+const startLevel = opt("start-level", "");
+const gearTier = opt("gear-tier", "rare");
 
 // ---- Measure ---------------------------------------------------------------------
 
@@ -97,10 +112,20 @@ const padE = (v, w) => String(v).padEnd(w);
 function measure(levelId, difficulty, party, playersN) {
   const rows = [];
   for (let i = 0; i < seedCount; i++) {
+    const loadout = startLevel
+      ? synthesizeArrival({
+          difficulty,
+          level: Number(startLevel),
+          seed: seed0,
+          weaponTier: gearTier,
+          gearTier,
+        })
+      : null;
     const report = simulateLevel({
       levelId,
       difficulty,
       seed: (seed0 + i * 104_729) >>> 0,
+      ...(loadout ? { loadout } : {}),
       party,
       players: playersN,
       // `/players N` is applied as the balance pair it IS. The engine may never

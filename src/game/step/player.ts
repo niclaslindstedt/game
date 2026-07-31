@@ -33,6 +33,7 @@ import {
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
+import { heroesInPlay } from "../party.ts";
 import { talentJumpMods, talentSeismic } from "../talent-effects.ts";
 import { BALANCE } from "../tuning.ts";
 import type { GameInput, GameState, Player } from "../types/index.ts";
@@ -102,7 +103,21 @@ export function stepPlayer(
       player.faceLeft = player.facing.x < 0;
     }
     // Walking stirs the horde: bank the distance for the wave spawner.
-    state.moveSpawnCredit += distance(before, next);
+    //
+    // **PER CAPITA, because the counter is the RUN's and the legs are each
+    // hero's.** This pass runs once per seat, so eight players walking together
+    // banked eight times the movement pressure and the horde streamed in eight
+    // times as fast — for a party doing nothing but travelling. The budget was
+    // tuned against one hero's legs, and the honest reading of "walking stirs
+    // the horde" is about the GROUND A GROUP COVERS rather than about how many
+    // sets of boots crossed it. Measured on the moon at `/players 1`, where the
+    // horde is not re-priced at all: a party of four landed 2 kills against the
+    // same seed's solo 208.
+    //
+    // It is the menace meter's rule one layer down (`tickMenace` divides the
+    // party's summed output by the head count for exactly this reason), and it
+    // is an exact identity at one hero — a division by 1, not a rounding of one.
+    state.moveSpawnCredit += distance(before, next) / heroesInPlay(state);
     player.pos = next;
     player.moving = true;
   }
