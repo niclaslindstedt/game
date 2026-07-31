@@ -1,0 +1,33 @@
+name: shaft_rock_0
+family: boot_hill
+size: [16, 16]
+description: >
+  The rock the control room was cut into - near-black stone with a coarse
+  chipped grain, lit only in flecks; evenly tiling dead ground.
+subject:
+  kind: "ground tile"
+  build: "coarse near-black cut stone, evenly tiling"
+  features: "chipped grain flecks in two shades over a dark base"
+  accent: "faint highlights on a nearly black face"
+  flavor: "the bedrock past the map, around the lift's room"
+palette:
+  k: "#2a2622" # cut rock
+  b: "#3a352f" # rock highlight
+  K: "#171512" # rock shadow
+grid: |
+  kkkKkkkkbkKkkkkk
+  kbkkkbKKkkKbkkkb
+  KKkbbKkKkkkKKkkK
+  kbKkkkkKkkkkkbkk
+  kkbkKkkkkkkbKkKb
+  bkkkkbbkKbbkkkbK
+  kkKkbkkkkKkkkbkk
+  KkbkkkkkkkkkkkkK
+  KkkkkkkKkkkkkkkk
+  kkkkbkkkkkkkKkkk
+  KKKkkkkkKKkKkkbk
+  kkKbbkkkbKkkkKkk
+  kkkkkKkkkkkkkkkk
+  kkkKkKkkkkkkkKkk
+  kkkKkkKbKkkbkbkk
+  kkkkkKKbkkkbkkkk

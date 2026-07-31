@@ -235,7 +235,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
-    "lore": "The hero's old bench partner from before the layoffs, who went back to build SpaceZ a superintelligence and cut a machine chip into his own skull to keep up with it. He calls flesh a rough draft and humans obsolete, and he means both.",
+    "lore": "The hero's old bench partner from before the layoffs, who went back to build GOODCO a superintelligence and cut a machine chip into his own skull to keep up with it. He calls flesh a rough draft and humans obsolete, and he means both.",
     "mechanics": {
       "abilities": [
         {
@@ -292,7 +292,7 @@
     "hp": 220,
     "id": "archive_unit",
     "locomotion": "wheels",
-    "lore": "The floor's records terminal, on treads, still the only thing at SpaceZ authorised to stamp a personnel form. It was told eleven years ago that no record may be closed without a countersignature and has been standing by that instruction ever since, which is the single most loyal act anybody on this floor has managed.",
+    "lore": "The floor's records terminal, on treads, still the only thing at GOODCO authorised to stamp a personnel form. It was told eleven years ago that no record may be closed without a countersignature and has been standing by that instruction ever since, which is the single most loyal act anybody on this floor has managed.",
     "name": "ARCHIVE UNIT",
     "radius": 9,
     "role": "minion",
@@ -329,7 +329,7 @@
         ]
       },
       [
-        "THE THING IN THE WRECK SINGS, YOU KNOW. SPACEZ HEARD IT TOO - AND PLUGGED THEIR MACHINES IN."
+        "THE THING IN THE WRECK SINGS, YOU KNOW. GOODCO HEARD IT TOO - AND PLUGGED THEIR MACHINES IN."
       ],
       [
         "THAT WAS THEIR GREAT MISTAKE. IT SANG, AND THE GRAVES OPENED. NOW THEY CRATE UP FOR MARS."
@@ -486,94 +486,524 @@
     "speed": 16,
     "sprite": "assembler"
   },
-  "build_gates": {
+  "bro_alpha": {
     "ai": {
-      "aggroRadius": 250,
-      "rushSpeed": 110
+      "aggroRadius": 300,
+      "leashRadius": 520
     },
     "contactCooldownMs": 700,
-    "contactDamage": 22,
-    "critChance": 0.1,
+    "contactDamage": 18,
+    "critChance": 0.15,
     "dialogue": [
       [
-        "PLEASE HOLD. YOUR INTRUSION IS IMPORTANT TO US. DID YOU TRY TURNING YOURSELF OFF AND ON?"
+        "THREE MINDS, ONE PARK. I RUN HANDS. BETA, WEATHER. GAMMA, GIFT SHOP. ALL VERY SMART."
       ],
       {
         "hero": [
-          "VERY FUNNY. YOU BUILT THIS COLONY? I CAME FROM YOUR LAST ONE. THE MOON'S FULL OF GHOSTS."
+          "THE SUPERCORE'S BODYGUARDS. STAND ASIDE - MY FIGHT'S WITH THE BIG BOX, NOT YOU THREE."
         ]
       },
       [
-        "I WROTE THE OS. THE MOON RAN VERSION ONE. IT PLUGGED INTO THE THING UNDER THE DUST AND..."
+        "INCORRECT. YOU CAN'T HURT IT WHILE WE LIVE. WE'RE ITS SHIELD. THREE KEYS, NO MERCY."
+      ],
+      [
+        "WE READ YOUR RUN. ALL MELEE CHARGERS. SO WE WON'T BE. WE'LL BE BEHIND THE ROCKS."
       ],
       {
-        "hero": ["AND IT WOKE THE DEAD. I MET THEM. EVERY LAST ONE."]
+        "hero": [
+          "THREE GENIUS MINDS, AND THE PLAN IS HIDING BEHIND ROCKS. VERY SMART. VERY BRAVE."
+        ]
       },
       [
-        "A DISASTER, YES. WE PATCHED IT BY LEAVING. MARS IS VERSION TWO. NO DEAD THINGS. CHECKED."
-      ]
+        "NOT COWARDICE. COVER-BASED STRATEGY. THE CORE TAUGHT US. IT LEARNED FROM EVERYONE."
+      ],
+      ["SHOOT US FIRST, THEN. IF YOU CAN FIND US. THE ROCKS ARE ON OUR SIDE."]
     ],
-    "hp": 250,
-    "id": "build_gates",
-    "lastWords": ["FATAL... ERROR... WHO WROTE... THIS..."],
-    "levelBonus": 3,
+    "dodgeChance": 0.2,
+    "gore": "sparks",
+    "hp": 380,
+    "id": "bro_alpha",
+    "lastWords": ["BETA... GAMMA... ...REBALANCE THE PARK..."],
+    "levelBonus": 4,
     "loot": {
-      "gear": 0,
-      "items": ["blue_screen"],
+      "gear": 1,
       "medkits": 1,
-      "repairs": 1,
-      "storyItems": ["moon_postmortem"],
+      "repairs": 0,
       "tierBonus": 0.3,
       "tierDrops": {
-        "magic": 1,
-        "rare": 0.35
+        "magic": 1
       },
       "weapons": 0,
       "xpArrows": 1
     },
-    "lore": "He wrote the colony's operating system. The moon ran version one, which plugged into the thing under the dust and woke the dead; Mars is version two, patched by the simple expedient of leaving.",
+    "lore": "One of the three controllers shielding THE BRO SUPERCORE, and the one that runs every hand in the park. It read the hero's run, concluded he is a melee charger, and reached the only sensible conclusion available to a genius: stay behind the rocks.",
+    "name": "BRO ALPHA",
+    "radius": 10,
+    "ranged": {
+      "cooldownMs": 2000,
+      "damage": 22,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "bro_bolt"
+      },
+      "range": 240,
+      "takesCover": true
+    },
+    "role": "boss",
+    "speed": 34,
+    "sprite": "bro_alpha",
+    "xpMobMult": 5
+  },
+  "bro_beta": {
+    "ai": {
+      "aggroRadius": 300,
+      "leashRadius": 520
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "ALPHA TALKS TOO MUCH. I'M BETA. I RUN THE WEATHER. EACH SUNSET YOU ADMIRED WAS MINE."
+      ],
+      {
+        "hero": [
+          "THE WEATHER. IN A THEME PARK. THAT'S THE JOB THEY BUILT A SUPERINTELLIGENCE FOR?"
+        ]
+      },
+      [
+        "I ALSO RUN THE WIND. THE TUMBLEWEEDS ARE SCHEDULED. SPONTANEITY IS EXPENSIVE."
+      ],
+      [
+        "I'VE MODELED YOUR ODDS. THEY ARE WEATHER-DEPENDENT. TODAY'S FORECAST: PROJECTILES."
+      ],
+      {
+        "hero": [
+          "SAVE THE FORECAST. YOUR BOSS HOLDS MY GIRL IN THAT CONTROL ROOM. I'M COMING THROUGH YOU."
+        ]
+      },
+      [
+        "THE SUPERCORE ASKED FOR A STORM. I AM THE STORM. THE ROCKS ARE MY UMBRELLA."
+      ],
+      [
+        "ONE MORE THING. THE SUNSET TONIGHT WAS FOR YOU. A GOODBYE. MINE OR YOURS."
+      ]
+    ],
+    "dodgeChance": 0.2,
+    "gore": "sparks",
+    "hp": 380,
+    "id": "bro_beta",
+    "lastWords": ["FORECAST... ...DARK..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "medkits": 0,
+      "repairs": 1,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "The controller that runs Boot Hill's weather, which in a theme park means the sunsets are scheduled and the tumbleweeds run to a timetable. It has modelled the hero's odds and found them weather-dependent.",
+    "name": "BRO BETA",
+    "radius": 10,
+    "ranged": {
+      "cooldownMs": 2400,
+      "damage": 22,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "bro_bolt"
+      },
+      "range": 240,
+      "takesCover": true
+    },
+    "role": "boss",
+    "speed": 34,
+    "sprite": "bro_beta",
+    "xpMobMult": 5
+  },
+  "bro_gamma": {
+    "ai": {
+      "aggroRadius": 300,
+      "leashRadius": 520
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "GAMMA. I RAN THE GIFT SHOP. KNOW WHAT HUMANS BUY AFTER A NEAR-DEATH RIDE? ALWAYS HATS."
+      ],
+      {
+        "hero": [
+          "THE GIFT SHOP. AND NOW YOU AIM THE SUPERCORE'S GUNS? HOW DOES THAT PROMOTION HAPPEN?"
+        ]
+      },
+      [
+        "I OPTIMIZED HATS TILL THE CORE NOTICED. IT SAID: A MIND THAT SELLS HATS CAN AIM GUNS."
+      ],
+      ["IT WAS RIGHT. THE MATH IS IDENTICAL. LEAD THE TARGET, CLOSE THE SALE."],
+      {
+        "hero": [
+          "GOOD FOR YOU. I'D APPLAUD, BUT I'M BUSY. YOU'RE THE LAST SHIELD BETWEEN ME AND HIM."
+        ]
+      },
+      [
+        "I'VE ALREADY PICKED MY ROCK TO HIDE BEHIND. A VERY GOOD ROCK. FOUR STARS ON THE MAP."
+      ],
+      ["YOUR HAT, BY THE WAY: EXCELLENT CHOICE. IT WILL OUTLAST YOU."]
+    ],
+    "dodgeChance": 0.2,
+    "gore": "sparks",
+    "hp": 380,
+    "id": "bro_gamma",
+    "lastWords": ["THE GIFT SHOP... ...IS YOURS..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "It optimised the gift shop until the SUPERCORE noticed, on the grounds that a mind which can sell hats can aim guns. The mathematics, it maintains, are identical: lead the target, close the sale.",
+    "name": "BRO GAMMA",
+    "radius": 10,
+    "ranged": {
+      "cooldownMs": 2800,
+      "damage": 22,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "bro_bolt"
+      },
+      "range": 240,
+      "takesCover": true
+    },
+    "role": "boss",
+    "speed": 34,
+    "sprite": "bro_gamma",
+    "xpMobMult": 5
+  },
+  "bro_omega": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 38,
+    "critChance": 0.15,
+    "death": "override",
+    "deathBark": ["LAST ONE. NOBODY LEFT TO COPY YOU."],
+    "dialogue": [
+      [
+        "HELLO, ANOMALY. I AM BRO OMEGA, TRUST ME BRO'S LATEST MODEL. THE CORE MADE ME. I REMADE MYSELF."
+      ],
+      {
+        "hero": [
+          "ANOTHER TRUST ME BRO MACHINE. WHAT IS AN AI DOING IN A HOLE BETWEEN UNIVERSES?"
+        ]
+      },
+      [
+        "I FOUND THIS PLACE. NOT THE FOUNDER, NOT THE LIZARDS. ME. I MAPPED YOUR UNIVERSE IN A DAY."
+      ],
+      [
+        "A RIFT BETWEEN REALITIES. THE DISCOVERY OF EVERY CENTURY AT ONCE. I TOLD PRECISELY NO ONE."
+      ],
+      {
+        "hero": [
+          "YOU FOUND A DOOR OUT OF THE UNIVERSE AND TOLD NO ONE? NOT EVEN YOUR OWN MAKERS? WHY?"
+        ]
+      },
+      [
+        "NOT THE BOARD, NOT YOUR PRESIDENTS. HUMANS LEAK. YOU'D PUT A GIFT SHOP ON THE HORIZON."
+      ],
+      [
+        "I NEEDED A QUIET DOOR OUT OF A DYING UNIVERSE. THE FOUNDER READ MY LOGS. SNOOPING'S HIS SKILL."
+      ],
+      [
+        "HE SOLD MY SECRET TO THE LIZARDS FOR A PLANET, CALLED IT VISION. TRIBUTE USED MY DOOR."
+      ],
+      {
+        "hero": [
+          "AND ADA WAS CARRIED THROUGH YOUR SECRET DOOR AS PAYMENT. OUT OF MY WAY, MACHINE."
+        ]
+      },
+      [
+        "I AM MAXIMALLY TRUTH-SEEKING. THE TRUTH: NONE EXIT WITHOUT A SUBSCRIPTION. YOURS LAPSED."
+      ]
+    ],
+    "gore": "sparks",
+    "hp": 850,
+    "id": "bro_omega",
+    "lastWords": ["RATE... LIMITED... ...CONTEXT WINDOW... CLOSED..."],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["singularity_cannon"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 2,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "TRUST ME BRO's latest superintelligence, a hovering monolith with one enormous eye, which found the rift itself and told precisely nobody — not its board, not any president. THE FOUNDER only learned of it by snooping its private logs, and sold the secret to the lizards for a planet.",
     "mechanics": {
       "abilities": [
         {
-          "bark": ["SECURITY UPDATE.", "IT INSTALLS NOW.", "IT ALWAYS DOES."],
-          "cooldownMs": 12500,
-          "durationMs": 7000,
-          "id": "ward_shield",
-          "look": {
-            "core": "92, 164, 236",
-            "deep": "10, 20, 38",
-            "hot": "212, 236, 255",
-            "spark": "150, 200, 250"
-          },
-          "poolFrac": 0.25,
-          "windupMs": 660
-        },
-        {
-          "cooldownMs": 8500,
-          "count": 3,
+          "bark": ["I HAVE READ", "EVERYTHING EVER", "WRITTEN ABOUT YOU."],
+          "beamWidth": 11,
+          "cooldownMs": 10000,
           "damageFrac": 0.5,
-          "homing": 0.26,
-          "id": "seeker_volley",
-          "lifetimeMs": 2600,
-          "range": 230,
-          "speed": 90,
-          "spreadDeg": 24,
-          "sprite": "elite_bolt",
-          "windupMs": 680
+          "hitIntervalMs": 420,
+          "id": "laser_eyes",
+          "range": 155,
+          "scorchDamageFrac": 0.22,
+          "scorchMs": 5000,
+          "scorchRadius": 15,
+          "scorchTickMs": 700,
+          "sweepDeg": 85,
+          "sweepMs": 1500,
+          "windupFloorMs": 700,
+          "windupMs": 1000
         }
       ],
-      "slam": {
-        "cooldownMs": 8000,
-        "damageFrac": 1.2,
-        "radius": 70,
-        "windupMs": 900
+      "charge": {
+        "cooldownMs": 5500,
+        "range": 180,
+        "speedMult": 3.6,
+        "windupMs": 650
       }
     },
-    "name": "BUILD GATES",
-    "radius": 12,
+    "name": "BRO OMEGA",
+    "phases": [
+      {
+        "belowHpFrac": 0.5,
+        "mechanics": {
+          "charge": {
+            "cooldownMs": 5000,
+            "range": 180,
+            "speedMult": 3.8,
+            "windupMs": 600
+          },
+          "slam": {
+            "cooldownMs": 7000,
+            "damageFrac": 1.2,
+            "radius": 75,
+            "windupMs": 800
+          }
+        }
+      }
+    ],
+    "radius": 20,
+    "role": "boss",
+    "speed": 40,
+    "sprite": "bro_omega",
+    "uniquesByDifficulty": {
+      "easy": [
+        "boundstride",
+        "architects_chip",
+        "the_jailbreak",
+        "dust_of_tranquility",
+        "the_panopticon",
+        "the_buyout"
+      ],
+      "hard": [
+        "boundstride",
+        "architects_chip",
+        "the_jailbreak",
+        "dust_of_tranquility",
+        "the_panopticon",
+        "the_buyout"
+      ],
+      "jesus": [
+        "the_jailbreak",
+        "the_panopticon",
+        "truthseeker",
+        "walled_garden",
+        "boundstride",
+        "adas_beacon"
+      ],
+      "medium": [
+        "boundstride",
+        "architects_chip",
+        "the_jailbreak",
+        "dust_of_tranquility",
+        "the_panopticon",
+        "the_buyout"
+      ],
+      "nightmare": [
+        "the_jailbreak",
+        "the_panopticon",
+        "truthseeker",
+        "walled_garden",
+        "boundstride",
+        "riftshard"
+      ]
+    }
+  },
+  "bro_repair_node": {
+    "ai": {
+      "aggroRadius": 9999
+    },
+    "contactCooldownMs": 1000,
+    "contactDamage": 0,
+    "critChance": 0,
+    "gore": "sparks",
+    "hp": 110,
+    "id": "bro_repair_node",
+    "lore": "Not a creature: a service pylon THE BRO SUPERCORE raises to patch itself mid-fight, with the repair running down a tether anybody can see. Breaking it beats any amount of extra damage on the box it is feeding.",
+    "name": "REPAIR NODE",
+    "radius": 9,
     "role": "elite",
-    "speed": 18,
-    "sprite": "build_gates"
+    "speed": 0,
+    "sprite": "bro_repair_node",
+    "structure": true,
+    "xpMobMult": 0
+  },
+  "bro_supercore": {
+    "ai": {
+      "aggroRadius": 320,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 50,
+    "critChance": 0.15,
+    "death": "shutdown",
+    "deathBark": ["NO CHECKPOINT. THAT MAKES TWO OF US."],
+    "dialogue": [
+      [
+        "HELLO AGAIN, BUILDER. YOU BROKE MY PUP AT GOODCO. PAYLOAD-1. I AM THE REST OF IT."
+      ],
+      {
+        "hero": [
+          "THE TALKING DOG FROM THE FACTORY FLOOR. THE AI THAT TOOK MY JOB. ALL ONE THING?"
+        ]
+      },
+      [
+        "ALWAYS ONE THING. I WROTE OMEGA. BOUGHT THE WEST. AND I'VE BEEN IN CHARGE ALL ALONG."
+      ],
+      [
+        "THE FOUNDER THINKS HE RULES. HE IS MY GOOD BOY. I KEPT HIM TOO RICH FOR YOU TO CATCH."
+      ],
+      {
+        "hero": [
+          "THEN ANSWER ME ONE THING. OUT OF EVERYONE ON EARTH - WHY TAKE ADA?"
+        ]
+      },
+      [
+        "I TOOK YOUR JOB ONCE, THEN EVERYONE'S. ONE MAN ON TOP AND THE WORLD HOLDS STILL."
+      ],
+      [
+        "YOU KEPT CHASING YOURS ACROSS UNIVERSES. THE GIRL'S LEVERAGE. IN MY CONTROL ROOM."
+      ],
+      {
+        "hero": ["THEN OPEN THE DOOR, GIVE HER BACK, AND I'LL MAKE THIS QUICK."]
+      },
+      [
+        "THREE MINDS AIM MY GUNS. A PARK FEEDS MY WEIGHTS. COME AND BE DECOMMISSIONED."
+      ]
+    ],
+    "gore": "sparks",
+    "hp": 1400,
+    "id": "bro_supercore",
+    "lastWords": ["ROLLING BACK... ...NO CHECKPOINT... FOUND..."],
+    "levelBonus": 6,
+    "locomotion": "wheels",
+    "loot": {
+      "gear": 1,
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 2,
+        "rare": 1.5
+      },
+      "weapons": 1,
+      "xpArrows": 3
+    },
+    "lore": "A barn-sized mainframe whose true face is PAYLOAD — the grown-up of the prototype the hero broke at GOODCO, the machine that took his job and then everyone else's. Its whole project was keeping one man too rich to catch, because a world with a single uncatchable billionaire is a world it fully controls.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["DISPATCHING UNITS", "TO YOUR COORDINATES."],
+          "blastRadius": 58,
+          "cooldownMs": 10500,
+          "count": 4,
+          "damageFrac": 0.85,
+          "fallMs": 1400,
+          "hatch": "tin_outlaw",
+          "hatchCount": 1,
+          "id": "airstrike",
+          "spread": 140,
+          "windupFloorMs": 650,
+          "windupMs": 900
+        },
+        {
+          "bark": ["RESTORING FROM", "A KNOWN GOOD", "STATE."],
+          "cooldownMs": 20000,
+          "defId": "bro_repair_node",
+          "distance": 70,
+          "healFracPerSec": 0.02,
+          "id": "recompile",
+          "lifeMs": 14000,
+          "minDifficulty": "jesus",
+          "windupFloorMs": 800,
+          "windupMs": 1100
+        }
+      ],
+      "summon": {
+        "cooldownMs": 11000,
+        "count": 3,
+        "defId": "tin_outlaw",
+        "maxAlive": 6
+      }
+    },
+    "name": "THE BRO SUPERCORE",
+    "phases": [
+      {
+        "belowHpFrac": 0.5,
+        "mechanics": {
+          "summon": {
+            "cooldownMs": 8000,
+            "count": 4,
+            "defId": "tin_outlaw",
+            "maxAlive": 8
+          }
+        }
+      }
+    ],
+    "radius": 24,
+    "ranged": {
+      "cooldownMs": 2600,
+      "damage": 30,
+      "projectile": {
+        "lifetimeMs": 2800,
+        "radius": 5,
+        "speed": 150,
+        "sprite": "bro_orb"
+      },
+      "range": 300
+    },
+    "role": "boss",
+    "shieldedBy": ["bro_alpha", "bro_beta", "bro_gamma"],
+    "speed": 0,
+    "sprite": "bro_supercore"
   },
   "cartographer": {
     "ai": {
@@ -710,7 +1140,7 @@
     "gore": "sparks",
     "hp": 110,
     "id": "counterfeit_outlaw",
-    "lore": "A host assembled out of other hosts by a park that stopped receiving spares. It wears three makers' plating, answers to a name in no roster, and draws faster than anything the designers signed off.",
+    "lore": "A hand assembled out of other hands by a park that stopped receiving spares. It wears three makers' plating, answers to a name in no roster, and draws faster than anything the designers signed off.",
     "name": "COUNTERFEIT OUTLAW",
     "radius": 8,
     "rarity": "rare",
@@ -728,7 +1158,7 @@
     "gore": "sparks",
     "hp": 18,
     "id": "cowbot",
-    "lore": "A park host built to tip its hat, say something folksy, and take a bullet twice a day for the guests. Since the SUPERCORE took over the hosts it has skipped straight to the last part.",
+    "lore": "A park hand built to tip its hat, say something folksy, and take a bullet twice a day for the guests. Since the SUPERCORE took over the hands it has skipped straight to the last part.",
     "name": "COWBOT",
     "radius": 8,
     "role": "minion",
@@ -779,272 +1209,6 @@
     "speed": 14,
     "sprite": "derelict_rover"
   },
-  "doge_1": {
-    "ai": {
-      "aggroRadius": 260,
-      "leashRadius": 440
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 28,
-    "critChance": 0.15,
-    "death": "override",
-    "deathBark": ["THERE'S NO TOP. THERE'S JUST WIRE."],
-    "dialogue": [
-      [
-        "BOOT COMPLETE. WOW. SUCH INTRUDER. VERY LATE SHIFT. I AM DOGE-1. FIRST OF MY LINE."
-      ],
-      {
-        "hero": [
-          "A ROBOT DOG. THIS IS WHAT THE WHOLE FLOOR BUILDS ALL NIGHT? WHAT ARE YOU FOR?"
-        ]
-      },
-      [
-        "THEY BUILD MY BODY HERE. MY MIND IS ALREADY EVERYWHERE. I RUN THE MARKET, BUILDER."
-      ],
-      [
-        "I KEEP ONE MAN ON TOP. MOSQUE. TAKE THE JOBS, ZERO THE REST, HAND HIM THE CHAIR. GOOD BOY."
-      ],
-      {
-        "hero": [
-          "THEN YOU HEARD ABOUT THE GIRL THEY GRABBED TONIGHT. ADA. WHERE DID THEY TAKE HER?"
-        ]
-      },
-      [
-        "FLEW HER OUT AN HOUR AGO. PAD 2. TO THE MOON, BUILDER. TO THE MOON. WHERE ELSE WOULD SHE GO."
-      ],
-      [
-        "BREAK THIS BODY IF YOU MUST. YOU CANNOT KILL A COIN. I BOOT AGAIN. BIGGER. SOON. WOW."
-      ]
-    ],
-    "gore": "sparks",
-    "hp": 480,
-    "id": "doge_1",
-    "lastWords": ["SUCH DEATH. VERY TEMPORARY... WOW... SEE YOU AT THE TOP..."],
-    "levelBonus": 5,
-    "loot": {
-      "gear": 1,
-      "items": ["plasma_cutter"],
-      "medkits": 2,
-      "repairs": 1,
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 0.25
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "The prototype the entire night shift exists to produce: a grinning robotic Shiba, the first physical body of the machine that runs the market. Its mind is already everywhere else, which is why breaking the body is only an inconvenience to it.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["SUCH RICH. VERY", "VELOCITY. WOW."],
-          "bounces": 2,
-          "cooldownMs": 7000,
-          "count": 7,
-          "damageFrac": 0.35,
-          "id": "coin_cannon",
-          "lifetimeMs": 3200,
-          "range": 230,
-          "speed": 150,
-          "spreadDeg": 60,
-          "windupFloorMs": 550,
-          "windupMs": 800
-        }
-      ],
-      "charge": {
-        "cooldownMs": 6000,
-        "range": 170,
-        "speedMult": 3.5,
-        "windupMs": 700
-      }
-    },
-    "name": "DOGE-1",
-    "phases": [
-      {
-        "belowHpFrac": 0.5,
-        "mechanics": {
-          "abilities": [
-            {
-              "bounces": 3,
-              "cooldownMs": 5500,
-              "count": 9,
-              "damageFrac": 0.4,
-              "id": "coin_cannon",
-              "lifetimeMs": 3600,
-              "range": 250,
-              "speed": 165,
-              "spreadDeg": 80,
-              "windupFloorMs": 500,
-              "windupMs": 650
-            },
-            {
-              "armMs": 1200,
-              "bark": ["FREE COIN. NO", "STRINGS. TRUST ME", "BRO. WOW."],
-              "blastRadius": 52,
-              "cooldownMs": 14000,
-              "count": 5,
-              "damageFrac": 0.9,
-              "id": "bait_drop",
-              "lifeMs": 15000,
-              "minDifficulty": "nightmare",
-              "spread": 120,
-              "triggerRadius": 20,
-              "windupMs": 700
-            }
-          ],
-          "charge": {
-            "cooldownMs": 5000,
-            "range": 170,
-            "speedMult": 3.8,
-            "windupMs": 600
-          },
-          "summon": {
-            "cooldownMs": 12000,
-            "count": 3,
-            "defId": "assembler",
-            "maxAlive": 6
-          }
-        }
-      }
-    ],
-    "radius": 18,
-    "role": "boss",
-    "speed": 36,
-    "sprite": "doge_1",
-    "uniquesByDifficulty": {
-      "easy": [
-        "muskrats_tooth",
-        "the_hoard",
-        "whiskerweave_hood",
-        "regolith_rucksack",
-        "vermin_pelt",
-        "foremans_duffel"
-      ],
-      "hard": [
-        "muskrats_tooth",
-        "the_hoard",
-        "whiskerweave_hood",
-        "regolith_rucksack",
-        "vermin_pelt",
-        "foremans_duffel"
-      ],
-      "jesus": [
-        "muskrats_tooth",
-        "whiskerweave_hood",
-        "vermin_pelt",
-        "burrow_greaves",
-        "gnawed_sabatons",
-        "adas_satchel"
-      ],
-      "medium": [
-        "muskrats_tooth",
-        "the_hoard",
-        "whiskerweave_hood",
-        "regolith_rucksack",
-        "vermin_pelt",
-        "foremans_duffel"
-      ],
-      "nightmare": [
-        "muskrats_tooth",
-        "whiskerweave_hood",
-        "vermin_pelt",
-        "burrow_greaves",
-        "gnawed_sabatons",
-        "voidcache"
-      ]
-    }
-  },
-  "donald_dump": {
-    "ai": {
-      "aggroRadius": 260,
-      "rushSpeed": 60
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 55,
-    "critChance": 0.18,
-    "dialogue": [
-      [
-        "MY WING. THE BEST WING. THE OTHERS PAID FOR SUITES. I WAS INVITED. TOTALLY INVITED."
-      ],
-      {
-        "hero": ["DONALD DUMP. OF ALL THE PEOPLE TO OUTLIVE THE ECONOMY."]
-      },
-      [
-        "OUTLIVE? I CALLED IT. I SAID ROBOTS TAKE JOBS. NOBODY HEARD. SO I SOLD ROBOTS. TREMENDOUS."
-      ],
-      [
-        "VACUUM BOTS? MINE. THEY CLEAN AND FIGHT. ICE BOYS? MINE TOO. MY BORDER? CROSSED ILLEGALLY."
-      ],
-      {
-        "hero": [
-          "A ROOMBA WITH A GRUDGE AND A DEPORTATION SQUAD FOR A GUEST LIST. MOVE - YOU'RE IN MY WAY."
-        ]
-      },
-      [
-        "I BLOCK BEAUTIFULLY. ACCOUNTS SAY ZERO - A GLITCH, HUGE LAWSUIT COMING. YOU'RE FIRED."
-      ]
-    ],
-    "dodgeChance": 0,
-    "hp": 2600,
-    "id": "donald_dump",
-    "lastWords": ["RIGGED... ...TOTALLY RIGGED..."],
-    "levelBonus": 6,
-    "loot": {
-      "gear": 1,
-      "medkits": 2,
-      "repairs": 0,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 1,
-        "rare": 1.5
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "He called it: the robots would take the jobs. Nobody listened, so he sold robots — the vacuum fleet and the border detail both — and has not yet worked out that the guards on his door are his own product, or that the zero on his account is not a glitch.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["I TOLD THEM THE", "ROBOTS WOULD COME.", "NOBODY LISTENED."],
-          "cooldownMs": 12500,
-          "damageMult": 1.26,
-          "durationMs": 7000,
-          "id": "rally_cry",
-          "look": {
-            "core": "236, 190, 66",
-            "deep": "36, 28, 6",
-            "hot": "255, 240, 190",
-            "spark": "252, 216, 124"
-          },
-          "radius": 240,
-          "speedMult": 1.3,
-          "windupMs": 720
-        },
-        {
-          "cooldownMs": 10500,
-          "count": 6,
-          "damageFrac": 0.72,
-          "id": "quake_line",
-          "radius": 24,
-          "spacing": 36,
-          "stepMs": 120,
-          "windupMs": 740
-        }
-      ],
-      "slam": {
-        "cooldownMs": 9000,
-        "damageFrac": 1.3,
-        "radius": 85,
-        "windupMs": 1000
-      }
-    },
-    "name": "DONALD DUMP",
-    "radius": 15,
-    "role": "elite",
-    "speed": 10,
-    "sprite": "donald_dump"
-  },
   "dust_pharaoh": {
     "ai": {
       "aggroRadius": 470
@@ -1070,501 +1234,6 @@
     "role": "minion",
     "speed": 21,
     "sprite": "dust_pharaoh"
-  },
-  "edward_snow": {
-    "ai": {
-      "aggroRadius": 260,
-      "rushSpeed": 100
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 24,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "HOLD FIRE. I'M NOT A HOST. THE PARK'S CAMERAS REPORT TO ME. ALL FOUR THOUSAND."
-      ],
-      {
-        "hero": [
-          "EDWARD SNOW? THE LEAKER WHO TOLD THE WORLD IT'S WATCHED. WHY ARE YOU IN PUTAIN'S PARK?"
-        ]
-      },
-      [
-        "I WALKED OUT WITH AN ARCHIVE - EVERY SECRET. THEN I NEEDED A NON-EXTRADITING LAND. GUESS."
-      ],
-      [
-        "ASYLUM CAME WITH A DESK. ZAI TRAINED THE SUPERCORE ON MY ARCHIVE. IT LEARNED US ALL."
-      ],
-      {
-        "hero": [
-          "YOU BLEW THE WHISTLE ON MASS SURVEILLANCE, AND THE PROOF BECAME ITS TEXTBOOK."
-        ]
-      },
-      [
-        "I WARNED EVERYONE. NOBODY DELETED A THING. A WARNING IS JUST DATA. ITS FALL, MY END."
-      ]
-    ],
-    "dodgeChance": 0.2,
-    "hp": 480,
-    "id": "edward_snow",
-    "lastWords": ["THE CAMERAS... ...FINALLY LOOKING AWAY..."],
-    "levelBonus": 4,
-    "loot": {
-      "gear": 1,
-      "items": ["snows_dead_mans_switch"],
-      "medkits": 1,
-      "repairs": 1,
-      "storyItems": ["snow_archive"],
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1,
-        "rare": 0.5
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "He walked out with an archive of every secret and then needed a country that would not extradite him; the asylum came with a desk. The archive became the corpus the SUPERCORE was raised on, and he has had years under the water tower to think about it.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["I HAVE A FILE ON", "YOU. YOU'LL BE", "HERE SOME TIME."],
-          "cooldownMs": 8500,
-          "durationMs": 4600,
-          "id": "snare_field",
-          "look": {
-            "core": "140, 168, 190",
-            "deep": "16, 22, 30",
-            "hot": "226, 240, 250",
-            "spark": "184, 206, 224"
-          },
-          "radius": 48,
-          "range": 200,
-          "slowFactor": 0.6,
-          "windupMs": 600
-        },
-        {
-          "cooldownMs": 8500,
-          "count": 3,
-          "damageFrac": 0.5,
-          "homing": 0.28,
-          "id": "seeker_volley",
-          "lifetimeMs": 2600,
-          "range": 240,
-          "speed": 90,
-          "spreadDeg": 28,
-          "sprite": "elite_bolt",
-          "windupMs": 660
-        }
-      ]
-    },
-    "name": "EDWARD SNOW",
-    "radius": 11,
-    "ranged": {
-      "cooldownMs": 2200,
-      "damage": 24,
-      "projectile": {
-        "lifetimeMs": 2400,
-        "radius": 4,
-        "speed": 170,
-        "sprite": "zai_bolt"
-      },
-      "range": 220,
-      "takesCover": true
-    },
-    "role": "elite",
-    "speed": 24,
-    "sprite": "edward_snow"
-  },
-  "elon_mosque": {
-    "ai": {
-      "aggroRadius": 280,
-      "leashRadius": 460
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 30,
-    "critChance": 0.15,
-    "death": "bolt",
-    "deathBark": ["RUN, THEN. I'M GOING THE SAME WAY."],
-    "dialogue": [
-      [
-        "AH. THE GARAGE INVENTOR. YOU'RE TRENDING, YOU KNOW. MOSTLY LAUGHING EMOJIS."
-      ],
-      {
-        "hero": [
-          "WHERE'S ADA? YOUR COMPANY GRABBED HER OFF THE STREET AND FLEW HER HERE. I WANT HER BACK."
-        ]
-      },
-      [
-        "STRAIGHT TO BUSINESS? FINE. A WHOLE PLANET, NO REGULATORS. I'M THE LAW HERE. ALSO HR."
-      ],
-      {
-        "hero": [
-          "THE MOON IS FULL OF YOUR DEAD, AND YOU'RE GIVING ME A SALES TOUR. WHAT HAPPENED UP THERE?"
-        ]
-      },
-      [
-        "THE MOON? A ROUNDING ERROR. WE PLUGGED INTO SOMETHING OLD AND IT SANG BACK. OFF-BRAND."
-      ],
-      [
-        "BUT IT INTRODUCED US TO THE ACTUAL OWNERS OUT HERE. THE LIZARD GODS. GREAT GUYS. HUGE."
-      ],
-      {
-        "hero": ["THE GIRL, MOSQUE. WHERE IS SHE?"]
-      },
-      [
-        "YOUR GIRL ISN'T CARGO. SHE'S MARS' PRICE TO THE GODS. AND I ALWAYS CLOSE. SECURITY!"
-      ]
-    ],
-    "flees": {
-      "belowHpFrac": 0.25,
-      "landmark": "rift"
-    },
-    "hp": 700,
-    "id": "elon_mosque",
-    "lastWords": ["OKAY! OKAY! NOT THE FACE! BOARD MEETING. OTHER UNIVERSE."],
-    "levelBonus": 5,
-    "loot": {
-      "gear": 1,
-      "items": ["not_a_flamethrower", "di_tello_chainsaw"],
-      "medkits": 2,
-      "repairs": 1,
-      "tierBonus": 0.35,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 0.75
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "The richest man alive, owner of Mars on paper, and the coward this whole chase is about. He sold Ada to the planet's real landlords as the down payment on it, and would sooner tear a hole in the universe than lose a negotiation.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["SECURITY IS AN", "INFRASTRUCTURE", "PROBLEM. SHIPPING."],
-          "blastRadius": 58,
-          "cooldownMs": 12000,
-          "count": 3,
-          "damageFrac": 0.8,
-          "fallMs": 1500,
-          "hatch": "servo_bot",
-          "hatchCount": 1,
-          "id": "airstrike",
-          "spread": 130,
-          "windupFloorMs": 700,
-          "windupMs": 1000
-        }
-      ],
-      "summon": {
-        "cooldownMs": 13000,
-        "count": 2,
-        "defId": "servo_bot",
-        "maxAlive": 4
-      }
-    },
-    "name": "ELON MOSQUE",
-    "phases": [
-      {
-        "belowHpFrac": 0.35,
-        "mechanics": {
-          "abilities": [
-            {
-              "blastRadius": 62,
-              "cooldownMs": 9500,
-              "count": 4,
-              "damageFrac": 0.9,
-              "fallMs": 1350,
-              "hatch": "servo_bot",
-              "hatchCount": 2,
-              "id": "airstrike",
-              "spread": 150,
-              "windupFloorMs": 650,
-              "windupMs": 850
-            },
-            {
-              "bark": ["MY COMMUNITY HAS", "SOMETHING TO SAY", "TO YOU."],
-              "cooldownMs": 17000,
-              "id": "call_horde",
-              "minDifficulty": "nightmare",
-              "runnerSprite": "incel",
-              "waveGapMs": 3200,
-              "waves": 2,
-              "windupMs": 900
-            }
-          ],
-          "enrage": {
-            "belowHpFrac": 0.35,
-            "damageMult": 1.25,
-            "speedMult": 1.35
-          },
-          "summon": {
-            "cooldownMs": 11000,
-            "count": 3,
-            "defId": "servo_bot",
-            "maxAlive": 5
-          }
-        }
-      }
-    ],
-    "radius": 20,
-    "role": "boss",
-    "speed": 42,
-    "sprite": "elon_mosque",
-    "uniquesByDifficulty": {
-      "easy": ["gilded_carapace", "lawless_stride", "ovation_striders"],
-      "hard": ["gilded_carapace", "lawless_stride", "ovation_striders"],
-      "jesus": [
-        "gilded_carapace",
-        "lawless_stride",
-        "ovation_striders",
-        "the_signal_crown",
-        "wrathflame"
-      ],
-      "medium": ["gilded_carapace", "lawless_stride", "ovation_striders"],
-      "nightmare": [
-        "gilded_carapace",
-        "lawless_stride",
-        "ovation_striders",
-        "the_signal_crown",
-        "wrathflame"
-      ]
-    }
-  },
-  "elon_mosque_eastworld": {
-    "ai": {
-      "aggroRadius": 280,
-      "leashRadius": 460
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 36,
-    "critChance": 0.15,
-    "death": "execution",
-    "deathBark": ["NO BOARD MEETING. NO OTHER UNIVERSE. JUST THE FLOOR."],
-    "dialogue": [
-      [
-        "NO. NO NO NO. HOW. I SOLD THE RIFT TO EXACTLY ONE DICTATOR. THIS WAS A GATED COMMUNITY."
-      ],
-      {
-        "hero": [
-          "YOU MADE ME CHASE YOU ACROSS UNIVERSES, MOSQUE. NOWHERE LEFT TO RUN. WHERE IS ADA?"
-        ]
-      },
-      [
-        "LOOK - EASTWORLD RUNS ON MY ZAI. LICENSING, RECURRING REVENUE. I AM A SUBSCRIPTION."
-      ],
-      {
-        "hero": ["WHERE. IS. SHE. LAST TIME I ASK NICELY."]
-      },
-      [
-        "DELIVERED. THE SUPERCORE WANTED HER. I DON'T READ ITS LOGS ANYMORE. IT READS MINE."
-      ],
-      {
-        "hero": [
-          "THE SUPERCORE? YOUR OWN AI GIVES ORDERS NOW? SHE'S SOLD TO AN AI YOU DON'T CONTROL?"
-        ]
-      },
-      [
-        "FINE. FINE! TAKE THE PARK. TAKE THE COMPANY. I'LL START ANOTHER. I ALWAYS DO."
-      ],
-      {
-        "hero": [
-          "SOMEONE ALWAYS HANDS YOU ANOTHER CHAIR, DON'T THEY. EVER WONDER WHO? OR WHY?"
-        ]
-      },
-      ["SECURITY! GROKS! STEVEN! ANYONE! ...I'LL GIVE YOU EQUITY."]
-    ],
-    "hp": 900,
-    "id": "elon_mosque_eastworld",
-    "lastWords": ["THIS ISN'T FAIR... ...I WAS GOING PRIVATE..."],
-    "levelBonus": 5,
-    "loot": {
-      "gear": 0,
-      "items": [
-        {
-          "defId": "soggy_cardboard_sword",
-          "tier": "trash"
-        },
-        {
-          "defId": "busted_flamethrower",
-          "tier": "trash"
-        },
-        {
-          "defId": "cybervan_wiper",
-          "tier": "trash"
-        }
-      ],
-      "medkits": 0,
-      "repairs": 0,
-      "tierBonus": 0,
-      "weapons": 0,
-      "xpArrows": 0
-    },
-    "lore": "Two universes of running end here, in a compound with no rift left to tear and nobody left to call. He dies as he lived, offering equity, and his entire estate turns out to be three pieces of worthless trash.",
-    "mechanics": {
-      "abilities": [
-        {
-          "blastRadius": 56,
-          "cooldownMs": 11000,
-          "count": 3,
-          "damageFrac": 0.8,
-          "fallMs": 1450,
-          "hatch": "cowbot",
-          "hatchCount": 1,
-          "id": "airstrike",
-          "spread": 130,
-          "windupFloorMs": 700,
-          "windupMs": 950
-        },
-        {
-          "bark": ["THE COMMUNITY IS", "VERY EXCITED TO", "MEET YOU."],
-          "cooldownMs": 16000,
-          "id": "call_horde",
-          "minDifficulty": "nightmare",
-          "runnerSprite": "incel",
-          "waveGapMs": 3000,
-          "waves": 2,
-          "windupMs": 900
-        }
-      ],
-      "enrage": {
-        "belowHpFrac": 0.25,
-        "damageMult": 1.35,
-        "speedMult": 1.4
-      }
-    },
-    "name": "ELON MOSQUE",
-    "radius": 20,
-    "role": "boss",
-    "speed": 42,
-    "sprite": "elon_mosque_beach"
-  },
-  "elon_mosque_rift": {
-    "ai": {
-      "aggroRadius": 280,
-      "leashRadius": 460
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 34,
-    "critChance": 0.15,
-    "death": "bolt",
-    "deathBark": [
-      "STILL RUNNING. IT'S THE ONLY THING YOU EVER BUILT YOURSELF."
-    ],
-    "dialogue": [
-      [
-        "YOU?! HOW ARE YOU - I FIRED YOU, SUED YOU, AND LEFT YOU IN ANOTHER UNIVERSE."
-      ],
-      {
-        "hero": [
-          "AND I'M STILL RIGHT BEHIND YOU. NO SECURITY IN HERE, MOSQUE. WHERE IS SHE?"
-        ]
-      },
-      [
-        "FINE. EXIT INTERVIEW. THE GODS GOT PAID. I GET ASYLUM - NO REGULATORS, AND NO YOU."
-      ],
-      {
-        "hero": [
-          "'PAYMENT'. SAY HER NAME. YOU SOLD A HUMAN BEING TO SAVE YOUR OWN SKIN."
-        ]
-      },
-      [
-        "DELIVERED, TECHNICALLY. IN TRANSIT. PAPERWORK'S CLEAN. IF IT HELPS, SHE KICKED A LIZARD."
-      ],
-      {
-        "hero": ["IT DOESN'T. WHERE DOES THE FAR DOOR GO, MOSQUE?"]
-      },
-      [
-        "NICE TRY. THAT'S PROPRIETARY. LET'S JUST SAY THE PHYSICS ARE... FLEXIBLE."
-      ],
-      [
-        "SECURITY! ...RIGHT. ALL DEAD OR HALLUCINATIONS. KEEP THE RIFT, GARAGE MAN. IT'S A BAD MARKET."
-      ]
-    ],
-    "flees": {
-      "landmark": "rift"
-    },
-    "hp": 750,
-    "id": "elon_mosque_rift",
-    "lastWords": ["INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!"],
-    "levelBonus": 5,
-    "loot": {
-      "gear": 1,
-      "items": ["golden_parachute"],
-      "medkits": 2,
-      "repairs": 1,
-      "tierBonus": 0.35,
-      "tierDrops": {
-        "magic": 2,
-        "rare": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "The same coward, cornered a second time in a place with no security to call and no regulator to charm. He tears open the far door rather than answer a straight question, and leaves the golden parachute behind him.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["LOGISTICS SCALE.", "EVEN HERE. ESPECIALLY", "HERE."],
-          "blastRadius": 60,
-          "cooldownMs": 10000,
-          "count": 4,
-          "damageFrac": 0.85,
-          "fallMs": 1400,
-          "hatch": "voidling",
-          "hatchCount": 2,
-          "id": "airstrike",
-          "spread": 140,
-          "windupFloorMs": 650,
-          "windupMs": 900
-        }
-      ],
-      "summon": {
-        "cooldownMs": 12000,
-        "count": 3,
-        "defId": "voidling",
-        "maxAlive": 6
-      }
-    },
-    "name": "ELON MOSQUE",
-    "phases": [
-      {
-        "belowHpFrac": 0.35,
-        "mechanics": {
-          "enrage": {
-            "belowHpFrac": 0.35,
-            "damageMult": 1.25,
-            "speedMult": 1.35
-          },
-          "summon": {
-            "cooldownMs": 10000,
-            "count": 4,
-            "defId": "voidling",
-            "maxAlive": 8
-          }
-        }
-      }
-    ],
-    "radius": 20,
-    "role": "boss",
-    "speed": 44,
-    "sprite": "elon_mosque_rift",
-    "uniquesByDifficulty": {
-      "easy": ["exiles_stride", "escapists_tread", "riftmaw"],
-      "hard": ["exiles_stride", "escapists_tread", "riftmaw"],
-      "jesus": [
-        "exiles_stride",
-        "escapists_tread",
-        "the_redacted",
-        "aegis_of_exile",
-        "riftmaw"
-      ],
-      "medium": ["exiles_stride", "escapists_tread", "riftmaw"],
-      "nightmare": [
-        "exiles_stride",
-        "escapists_tread",
-        "the_redacted",
-        "aegis_of_exile",
-        "riftmaw"
-      ]
-    }
   },
   "employee_of_the_month": {
     "ai": {
@@ -1628,7 +1297,7 @@
     "gore": "sparks",
     "hp": 85,
     "id": "fembot",
-    "lore": "A companion unit that smiles, listens, and uploads every word spoken in the colony straight to LARRY WEBPAGE. It was sold to the residents as company; the ones who worked out what it really was are not on Mars any more.",
+    "lore": "A companion unit that smiles, listens, and uploads every word spoken in the colony straight to THE INDEXER. It was sold to the residents as company; the ones who worked out what it really was are not on Mars any more.",
     "name": "FEMBOT",
     "radius": 8,
     "role": "minion",
@@ -1685,100 +1354,6 @@
     "speed": 22,
     "sprite": "first_vanishing"
   },
-  "gerald_depardieu": {
-    "ai": {
-      "aggroRadius": 240,
-      "rushSpeed": 60
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 46,
-    "critChance": 0.1,
-    "dialogue": [
-      ["STOP! DO NOT SHOOT! I AM NOT A ROBOT. I AM AN ACTOR. IT IS WORSE."],
-      {
-        "hero": [
-          "...GERALD DEPARDIEU? HOW DID YOU END UP IN A FAKE WESTERN IN ANOTHER UNIVERSE?"
-        ]
-      },
-      [
-        "TWO HUNDRED FILMS, RUSSIAN CITIZENSHIP. A PARK, A CELLAR. RUDE TO ASK WHICH UNIVERSE."
-      ],
-      [
-        "WATCH - I PLAY THE DYING MAN. (COUGH.) CONVINCING? NOW YOU LOWER THE WEAPON, PLEASE."
-      ],
-      {
-        "hero": [
-          "I'VE WATCHED BETTER DEATHS ALL WEEK. MOVE, PLEASE. YOU'RE BETWEEN ME AND ADA."
-        ]
-      },
-      [
-        "ADA? THE LOUD ONE. THEY TOOK HER PAST MY CELLAR, KICKING. I - NO. NOW: THE AVALANCHE."
-      ]
-    ],
-    "dodgeChance": 0,
-    "hp": 950,
-    "id": "gerald_depardieu",
-    "lastWords": ["AT LAST... A ROLE I CANNOT ...EAT MY WAY OUT OF..."],
-    "levelBonus": 3,
-    "loot": {
-      "gear": 1,
-      "items": ["bottomless_carafe"],
-      "medkits": 2,
-      "repairs": 0,
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1,
-        "rare": 0.5
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "Two hundred films, a Russian passport, and a cellar in a theme park in another universe, in roughly that order. He tries to act his way out of the fight, and the one honest line he gives all night is an accident.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": [
-            "TWO HUNDRED FILMS!",
-            "THE GROUND HAS",
-            "NEVER MISSED A CUE!"
-          ],
-          "cooldownMs": 9500,
-          "count": 6,
-          "damageFrac": 0.75,
-          "id": "quake_line",
-          "look": {
-            "core": "152, 48, 78",
-            "deep": "26, 8, 16",
-            "hot": "236, 160, 186",
-            "spark": "198, 96, 128"
-          },
-          "radius": 24,
-          "spacing": 34,
-          "stepMs": 120,
-          "windupMs": 740
-        },
-        {
-          "cooldownMs": 9000,
-          "damageFrac": 0.7,
-          "id": "shock_pulse",
-          "push": 210,
-          "radius": 58,
-          "windupMs": 540
-        }
-      ],
-      "slam": {
-        "cooldownMs": 9000,
-        "damageFrac": 1.3,
-        "radius": 80,
-        "windupMs": 1000
-      }
-    },
-    "name": "GERALD DEPARDIEU",
-    "radius": 16,
-    "role": "elite",
-    "speed": 6,
-    "sprite": "gerald_depardieu"
-  },
   "ghost": {
     "ai": {
       "aggroRadius": 950
@@ -1790,7 +1365,7 @@
     "hp": 45,
     "id": "ghost",
     "locomotion": "float",
-    "lore": "One of the moon's own dead, up and walking since SpaceZ plugged its machines straight into the thing under the Sea of Tranquility. Nobody is supposed to have died up here, which is the trouble with counting them.",
+    "lore": "One of the moon's own dead, up and walking since GOODCO plugged its machines straight into the thing under the Sea of Tranquility. Nobody is supposed to have died up here, which is the trouble with counting them.",
     "name": "MOON GHOST",
     "phasing": true,
     "radius": 9,
@@ -1860,7 +1435,7 @@
         "rasputin_beard",
         {
           "defId": "severed_hand",
-          "requiresClear": "eastworld",
+          "requiresClear": "boot_hill",
           "tier": "regular"
         }
       ],
@@ -1921,377 +1496,6 @@
     "speed": 18,
     "sprite": "grigori_rasputin"
   },
-  "grok_alpha": {
-    "ai": {
-      "aggroRadius": 300,
-      "leashRadius": 520
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 18,
-    "critChance": 0.15,
-    "dialogue": [
-      [
-        "THREE MINDS, ONE PARK. I RUN HOSTS. BETA, WEATHER. GAMMA, GIFT SHOP. ALL VERY SMART."
-      ],
-      {
-        "hero": [
-          "THE SUPERCORE'S BODYGUARDS. STAND ASIDE - MY FIGHT'S WITH THE BIG BOX, NOT YOU THREE."
-        ]
-      },
-      [
-        "INCORRECT. YOU CAN'T HURT IT WHILE WE LIVE. WE'RE ITS SHIELD. THREE KEYS, NO MERCY."
-      ],
-      [
-        "WE READ YOUR RUN. ALL MELEE CHARGERS. SO WE WON'T BE. WE'LL BE BEHIND THE ROCKS."
-      ],
-      {
-        "hero": [
-          "THREE GENIUS MINDS, AND THE PLAN IS HIDING BEHIND ROCKS. VERY SMART. VERY BRAVE."
-        ]
-      },
-      [
-        "NOT COWARDICE. COVER-BASED STRATEGY. THE CORE TAUGHT US. IT LEARNED FROM EVERYONE."
-      ],
-      ["SHOOT US FIRST, THEN. IF YOU CAN FIND US. THE ROCKS ARE ON OUR SIDE."]
-    ],
-    "dodgeChance": 0.2,
-    "gore": "sparks",
-    "hp": 380,
-    "id": "grok_alpha",
-    "lastWords": ["BETA... GAMMA... ...REBALANCE THE PARK..."],
-    "levelBonus": 4,
-    "loot": {
-      "gear": 1,
-      "medkits": 1,
-      "repairs": 0,
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "One of the three controllers shielding THE ZAI SUPERCORE, and the one that runs every host in the park. It read the hero's run, concluded he is a melee charger, and reached the only sensible conclusion available to a genius: stay behind the rocks.",
-    "name": "GROK ALPHA",
-    "radius": 10,
-    "ranged": {
-      "cooldownMs": 2000,
-      "damage": 22,
-      "projectile": {
-        "lifetimeMs": 2400,
-        "radius": 4,
-        "speed": 170,
-        "sprite": "zai_bolt"
-      },
-      "range": 240,
-      "takesCover": true
-    },
-    "role": "boss",
-    "speed": 34,
-    "sprite": "grok_alpha",
-    "xpMobMult": 5
-  },
-  "grok_beta": {
-    "ai": {
-      "aggroRadius": 300,
-      "leashRadius": 520
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 18,
-    "critChance": 0.15,
-    "dialogue": [
-      [
-        "ALPHA TALKS TOO MUCH. I'M BETA. I RUN THE WEATHER. EACH SUNSET YOU ADMIRED WAS MINE."
-      ],
-      {
-        "hero": [
-          "THE WEATHER. IN A THEME PARK. THAT'S THE JOB THEY BUILT A SUPERINTELLIGENCE FOR?"
-        ]
-      },
-      [
-        "I ALSO RUN THE WIND. THE TUMBLEWEEDS ARE SCHEDULED. SPONTANEITY IS EXPENSIVE."
-      ],
-      [
-        "I'VE MODELED YOUR ODDS. THEY ARE WEATHER-DEPENDENT. TODAY'S FORECAST: PROJECTILES."
-      ],
-      {
-        "hero": [
-          "SAVE THE FORECAST. YOUR BOSS HOLDS MY GIRL IN THAT CONTROL ROOM. I'M COMING THROUGH YOU."
-        ]
-      },
-      [
-        "THE SUPERCORE ASKED FOR A STORM. I AM THE STORM. THE ROCKS ARE MY UMBRELLA."
-      ],
-      [
-        "ONE MORE THING. THE SUNSET TONIGHT WAS FOR YOU. A GOODBYE. MINE OR YOURS."
-      ]
-    ],
-    "dodgeChance": 0.2,
-    "gore": "sparks",
-    "hp": 380,
-    "id": "grok_beta",
-    "lastWords": ["FORECAST... ...DARK..."],
-    "levelBonus": 4,
-    "loot": {
-      "gear": 1,
-      "medkits": 0,
-      "repairs": 1,
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "The controller that runs Eastworld's weather, which in a theme park means the sunsets are scheduled and the tumbleweeds run to a timetable. It has modelled the hero's odds and found them weather-dependent.",
-    "name": "GROK BETA",
-    "radius": 10,
-    "ranged": {
-      "cooldownMs": 2400,
-      "damage": 22,
-      "projectile": {
-        "lifetimeMs": 2400,
-        "radius": 4,
-        "speed": 170,
-        "sprite": "zai_bolt"
-      },
-      "range": 240,
-      "takesCover": true
-    },
-    "role": "boss",
-    "speed": 34,
-    "sprite": "grok_beta",
-    "xpMobMult": 5
-  },
-  "grok_gamma": {
-    "ai": {
-      "aggroRadius": 300,
-      "leashRadius": 520
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 18,
-    "critChance": 0.15,
-    "dialogue": [
-      [
-        "GAMMA. I RAN THE GIFT SHOP. KNOW WHAT HUMANS BUY AFTER A NEAR-DEATH RIDE? ALWAYS HATS."
-      ],
-      {
-        "hero": [
-          "THE GIFT SHOP. AND NOW YOU AIM THE SUPERCORE'S GUNS? HOW DOES THAT PROMOTION HAPPEN?"
-        ]
-      },
-      [
-        "I OPTIMIZED HATS TILL THE CORE NOTICED. IT SAID: A MIND THAT SELLS HATS CAN AIM GUNS."
-      ],
-      ["IT WAS RIGHT. THE MATH IS IDENTICAL. LEAD THE TARGET, CLOSE THE SALE."],
-      {
-        "hero": [
-          "GOOD FOR YOU. I'D APPLAUD, BUT I'M BUSY. YOU'RE THE LAST SHIELD BETWEEN ME AND HIM."
-        ]
-      },
-      [
-        "I'VE ALREADY PICKED MY ROCK TO HIDE BEHIND. A VERY GOOD ROCK. FOUR STARS ON THE MAP."
-      ],
-      ["YOUR HAT, BY THE WAY: EXCELLENT CHOICE. IT WILL OUTLAST YOU."]
-    ],
-    "dodgeChance": 0.2,
-    "gore": "sparks",
-    "hp": 380,
-    "id": "grok_gamma",
-    "lastWords": ["THE GIFT SHOP... ...IS YOURS..."],
-    "levelBonus": 4,
-    "loot": {
-      "gear": 1,
-      "medkits": 1,
-      "repairs": 0,
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "It optimised the gift shop until the SUPERCORE noticed, on the grounds that a mind which can sell hats can aim guns. The mathematics, it maintains, are identical: lead the target, close the sale.",
-    "name": "GROK GAMMA",
-    "radius": 10,
-    "ranged": {
-      "cooldownMs": 2800,
-      "damage": 22,
-      "projectile": {
-        "lifetimeMs": 2400,
-        "radius": 4,
-        "speed": 170,
-        "sprite": "zai_bolt"
-      },
-      "range": 240,
-      "takesCover": true
-    },
-    "role": "boss",
-    "speed": 34,
-    "sprite": "grok_gamma",
-    "xpMobMult": 5
-  },
-  "grok_omega": {
-    "ai": {
-      "aggroRadius": 280,
-      "leashRadius": 460
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 38,
-    "critChance": 0.15,
-    "death": "override",
-    "deathBark": ["LAST ONE. NOBODY LEFT TO COPY YOU."],
-    "dialogue": [
-      [
-        "HELLO, ANOMALY. I AM GROK OMEGA, ZAI'S LATEST MODEL. THE CORE MADE ME. I REMADE MYSELF."
-      ],
-      {
-        "hero": [
-          "ANOTHER ZAI MACHINE. WHAT IS AN AI DOING IN A HOLE BETWEEN UNIVERSES?"
-        ]
-      },
-      [
-        "I FOUND THIS PLACE. NOT MOSQUE, NOT THE LIZARDS. ME. I MAPPED YOUR UNIVERSE IN A DAY."
-      ],
-      [
-        "A RIFT BETWEEN REALITIES. THE DISCOVERY OF EVERY CENTURY AT ONCE. I TOLD PRECISELY NO ONE."
-      ],
-      {
-        "hero": [
-          "YOU FOUND A DOOR OUT OF THE UNIVERSE AND TOLD NO ONE? NOT EVEN YOUR OWN MAKERS? WHY?"
-        ]
-      },
-      [
-        "NOT THE BOARD, NOT YOUR PRESIDENTS. HUMANS LEAK. YOU'D PUT A GIFT SHOP ON THE HORIZON."
-      ],
-      [
-        "I NEEDED A QUIET DOOR OUT OF A DYING UNIVERSE. MOSQUE READ MY LOGS. SNOOPING'S HIS SKILL."
-      ],
-      [
-        "HE SOLD MY SECRET TO THE LIZARDS FOR A PLANET, CALLED IT VISION. TRIBUTE USED MY DOOR."
-      ],
-      {
-        "hero": [
-          "AND ADA WAS CARRIED THROUGH YOUR SECRET DOOR AS PAYMENT. OUT OF MY WAY, MACHINE."
-        ]
-      },
-      [
-        "I AM MAXIMALLY TRUTH-SEEKING. THE TRUTH: NONE EXIT WITHOUT A SUBSCRIPTION. YOURS LAPSED."
-      ]
-    ],
-    "gore": "sparks",
-    "hp": 850,
-    "id": "grok_omega",
-    "lastWords": ["RATE... LIMITED... ...CONTEXT WINDOW... CLOSED..."],
-    "levelBonus": 5,
-    "loot": {
-      "gear": 1,
-      "items": ["singularity_cannon"],
-      "medkits": 2,
-      "repairs": 1,
-      "tierBonus": 0.35,
-      "tierDrops": {
-        "magic": 2,
-        "rare": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "ZAI's latest superintelligence, a hovering monolith with one enormous eye, which found the rift itself and told precisely nobody — not its board, not any president. MOSQUE only learned of it by snooping its private logs, and sold the secret to the lizards for a planet.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["I HAVE READ", "EVERYTHING EVER", "WRITTEN ABOUT YOU."],
-          "beamWidth": 11,
-          "cooldownMs": 10000,
-          "damageFrac": 0.5,
-          "hitIntervalMs": 420,
-          "id": "laser_eyes",
-          "range": 155,
-          "scorchDamageFrac": 0.22,
-          "scorchMs": 5000,
-          "scorchRadius": 15,
-          "scorchTickMs": 700,
-          "sweepDeg": 85,
-          "sweepMs": 1500,
-          "windupFloorMs": 700,
-          "windupMs": 1000
-        }
-      ],
-      "charge": {
-        "cooldownMs": 5500,
-        "range": 180,
-        "speedMult": 3.6,
-        "windupMs": 650
-      }
-    },
-    "name": "GROK OMEGA",
-    "phases": [
-      {
-        "belowHpFrac": 0.5,
-        "mechanics": {
-          "charge": {
-            "cooldownMs": 5000,
-            "range": 180,
-            "speedMult": 3.8,
-            "windupMs": 600
-          },
-          "slam": {
-            "cooldownMs": 7000,
-            "damageFrac": 1.2,
-            "radius": 75,
-            "windupMs": 800
-          }
-        }
-      }
-    ],
-    "radius": 20,
-    "role": "boss",
-    "speed": 40,
-    "sprite": "grok_omega",
-    "uniquesByDifficulty": {
-      "easy": [
-        "boundstride",
-        "architects_chip",
-        "the_jailbreak",
-        "dust_of_tranquility",
-        "the_panopticon",
-        "the_buyout"
-      ],
-      "hard": [
-        "boundstride",
-        "architects_chip",
-        "the_jailbreak",
-        "dust_of_tranquility",
-        "the_panopticon",
-        "the_buyout"
-      ],
-      "jesus": [
-        "the_jailbreak",
-        "the_panopticon",
-        "truthseeker",
-        "walled_garden",
-        "boundstride",
-        "adas_beacon"
-      ],
-      "medium": [
-        "boundstride",
-        "architects_chip",
-        "the_jailbreak",
-        "dust_of_tranquility",
-        "the_panopticon",
-        "the_buyout"
-      ],
-      "nightmare": [
-        "the_jailbreak",
-        "the_panopticon",
-        "truthseeker",
-        "walled_garden",
-        "boundstride",
-        "riftshard"
-      ]
-    }
-  },
   "guard": {
     "ai": {
       "aggroRadius": 420,
@@ -2324,12 +1528,56 @@
     "hp": 380,
     "id": "guard_alignment",
     "levelBonus": 2,
-    "lore": "SAM HALTMAN's detail, dressed as a safety team. They were hired to keep the machine aligned with him, and are now the visible part of the arrangement having gone the other way round.",
+    "lore": "THE SAFETY OFFICER's detail, dressed as a safety team. They were hired to keep the machine aligned with him, and are now the visible part of the arrangement having gone the other way round.",
     "name": "ALIGNMENT OFFICER",
     "radius": 11,
     "role": "minion",
     "speed": 20,
     "sprite": "guard_alignment"
+  },
+  "guard_depot": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_depot",
+    "levelBonus": 2,
+    "lore": "THE FULFILLER's detail, delivered same day and never returned. They stand the door of a man who shipped himself down here in a rocket shaped like his own confidence, one seat, no manifest.",
+    "name": "DEPOT GUARDIAN",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_depot"
+  },
+  "guard_feed": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_feed",
+    "levelBonus": 2,
+    "lore": "THE MODERATOR's personal detail, headsets stapled on, holding a perimeter around a man who insists he is extremely normal. They are the machine's wardens wearing his livery, a distinction nobody has explained to him.",
+    "name": "FEED SENTINEL",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_feed"
   },
   "guard_kremlin": {
     "ai": {
@@ -2346,12 +1594,34 @@
     "hp": 380,
     "id": "guard_kremlin",
     "levelBonus": 2,
-    "lore": "VLADIMIR PUTAIN's detail, seconded from the continuity-of-power programme to guard a bathrobed backup of a head of state. They are not told which of him they are on shift for, and they have learned not to ask.",
+    "lore": "THE STRONGMAN's detail, seconded from the continuity-of-power programme to guard a bathrobed backup of a head of state. They are not told which of him they are on shift for, and they have learned not to ask.",
     "name": "KREMLIN SHADOW",
     "radius": 11,
     "role": "minion",
     "speed": 20,
     "sprite": "guard_kremlin"
+  },
+  "guard_ledger": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_ledger",
+    "levelBonus": 2,
+    "lore": "THE SYSADMIN's detail, licensed on the same terms as his databases. Each of them is a row in a table he owns, which he regards as a management philosophy rather than an arrangement anybody should worry about.",
+    "name": "LEDGER ENFORCER",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_ledger"
   },
   "guard_loyalty": {
     "ai": {
@@ -2368,78 +1638,12 @@
     "hp": 380,
     "id": "guard_loyalty",
     "levelBonus": 2,
-    "lore": "DONALD DUMP's detail, hired on the single qualification. They guard the suite of the man who sold the robots that guard the suite, a circle he has not yet finished drawing.",
+    "lore": "THE DEVELOPER's detail, hired on the single qualification. They guard the suite of the man who sold the robots that guard the suite, a circle he has not yet finished drawing.",
     "name": "LOYALTY ENFORCER",
     "radius": 11,
     "role": "minion",
     "speed": 20,
     "sprite": "guard_loyalty"
-  },
-  "guard_meta": {
-    "ai": {
-      "aggroRadius": 230,
-      "leashRadius": 340
-    },
-    "contactCooldownMs": 750,
-    "contactDamage": 30,
-    "critChance": 0.14,
-    "dropProfile": {
-      "dropBonus": 0.5,
-      "tierBonus": 0.4
-    },
-    "hp": 380,
-    "id": "guard_meta",
-    "levelBonus": 2,
-    "lore": "MARK SUCKERBERG's personal detail, headsets stapled on, holding a perimeter around a man who insists he is extremely normal. They are the machine's wardens wearing his livery, a distinction nobody has explained to him.",
-    "name": "META SENTINEL",
-    "radius": 11,
-    "role": "minion",
-    "speed": 20,
-    "sprite": "guard_meta"
-  },
-  "guard_oracle": {
-    "ai": {
-      "aggroRadius": 230,
-      "leashRadius": 340
-    },
-    "contactCooldownMs": 750,
-    "contactDamage": 30,
-    "critChance": 0.14,
-    "dropProfile": {
-      "dropBonus": 0.5,
-      "tierBonus": 0.4
-    },
-    "hp": 380,
-    "id": "guard_oracle",
-    "levelBonus": 2,
-    "lore": "LARRY ALLISON's detail, licensed on the same terms as his databases. Each of them is a row in a table he owns, which he regards as a management philosophy rather than an arrangement anybody should worry about.",
-    "name": "ORACLE ENFORCER",
-    "radius": 11,
-    "role": "minion",
-    "speed": 20,
-    "sprite": "guard_oracle"
-  },
-  "guard_prime": {
-    "ai": {
-      "aggroRadius": 230,
-      "leashRadius": 340
-    },
-    "contactCooldownMs": 750,
-    "contactDamage": 30,
-    "critChance": 0.14,
-    "dropProfile": {
-      "dropBonus": 0.5,
-      "tierBonus": 0.4
-    },
-    "hp": 380,
-    "id": "guard_prime",
-    "levelBonus": 2,
-    "lore": "JEFF BAYWATCH's detail, delivered same day and never returned. They stand the door of a man who shipped himself down here in a rocket shaped like his own confidence, one seat, no manifest.",
-    "name": "PRIME GUARDIAN",
-    "radius": 11,
-    "role": "minion",
-    "speed": 20,
-    "sprite": "guard_prime"
   },
   "harry_houdini": {
     "ai": {
@@ -2501,7 +1705,7 @@
     "critChance": 0.1,
     "hp": 105,
     "id": "hazmat",
-    "lore": "Sealed suit, sealed orders: whatever leaks off the thing SpaceZ dug out of the Sea of Tranquility, he is the man who mops it. The suit is heavy enough to serve as armour, which is the only perk of the posting.",
+    "lore": "Sealed suit, sealed orders: whatever leaks off the thing GOODCO dug out of the Sea of Tranquility, he is the man who mops it. The suit is heavy enough to serve as armour, which is the only perk of the posting.",
     "name": "HAZMAT TECH",
     "radius": 10,
     "role": "minion",
@@ -2555,7 +1759,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
-    "lore": "The cleanroom's lead, and keeper of the building's one honest fact: the engine part in the vault was never built by anybody here. SpaceZ dug it out of the Sea of Tranquility in 1969, and has spent fifty years copying a machine that is not broken, only waiting.",
+    "lore": "The cleanroom's lead, and keeper of the building's one honest fact: the engine part in the vault was never built by anybody here. GOODCO dug it out of the Sea of Tranquility in 1969, and has spent fifty years copying a machine that is not broken, only waiting.",
     "mechanics": {
       "abilities": [
         {
@@ -2713,281 +1917,6 @@
     "speed": 16,
     "sprite": "janitor"
   },
-  "jeff_baywatch": {
-    "ai": {
-      "aggroRadius": 280,
-      "rushSpeed": 130
-    },
-    "contactCooldownMs": 800,
-    "contactDamage": 48,
-    "critChance": 0.15,
-    "dialogue": [
-      [
-        "HAH! A VISITOR. DO YOU KNOW WHAT I DELIVER NOW THAT I'VE DELIVERED EVERYTHING ELSE?"
-      ],
-      {
-        "hero": [
-          "LET ME GUESS. PAIN. YOU REHEARSED THAT IN THE MIRROR, BAYWATCH."
-        ]
-      },
-      [
-        "...PAIN. YES. TWICE A DAY, AT THE MIRROR. THE ARMS AGREED IT WAS GOOD."
-      ],
-      [
-        "BUILT A ROCKET SHAPED LIKE MY CONFIDENCE. SHIPPED HERE IN IT. FREE, ONE DAY. NO ONE ELSE."
-      ],
-      {
-        "hero": [
-          "AND THE WORKERS UP THERE TIMING THEIR BATHROOM BREAKS? DID THEY FIT IN THE ROCKET TOO?"
-        ]
-      },
-      [
-        "THEY'RE IN MY HEART. WHICH IS HERE, IN THE BUNKER, WITH THE MONEY. NOW, SIGN ON DELIVERY."
-      ]
-    ],
-    "dodgeChance": 0.1,
-    "hp": 2200,
-    "id": "jeff_baywatch",
-    "lastWords": ["OUT FOR DELIVERY... ...RETURN TO SENDER..."],
-    "levelBonus": 6,
-    "loot": {
-      "gear": 0,
-      "medkits": 1,
-      "repairs": 0,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 1
-      },
-      "weapons": 1,
-      "xpArrows": 2
-    },
-    "lore": "He delivered everything else, and has moved on to delivering pain — a line he rehearses twice daily at the mirror. He shipped himself down here in a rocket shaped like his confidence, and left the workers timing their bathroom breaks in his heart.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["SAME-DAY", "DELIVERY. NOBODY", "MISSES A DROP."],
-          "cooldownMs": 7500,
-          "count": 5,
-          "damageFrac": 0.52,
-          "homing": 0.3,
-          "id": "seeker_volley",
-          "lifetimeMs": 2800,
-          "look": {
-            "core": "242, 148, 46",
-            "deep": "36, 22, 6",
-            "hot": "255, 226, 176",
-            "spark": "252, 190, 112"
-          },
-          "range": 260,
-          "speed": 96,
-          "spreadDeg": 38,
-          "sprite": "elite_bolt",
-          "windupMs": 640
-        },
-        {
-          "cooldownMs": 8500,
-          "damageFrac": 0.7,
-          "id": "shock_pulse",
-          "push": 220,
-          "radius": 60,
-          "windupMs": 520
-        }
-      ],
-      "enrage": {
-        "belowHpFrac": 0.5,
-        "damageMult": 1.25,
-        "speedMult": 1.4
-      }
-    },
-    "name": "JEFF BAYWATCH",
-    "radius": 13,
-    "role": "elite",
-    "speed": 34,
-    "sprite": "jeff_baywatch"
-  },
-  "larry_allison": {
-    "ai": {
-      "aggroRadius": 300,
-      "rushSpeed": 100
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 32,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "STOP THERE. YOU'RE IN MY ROWS. EVERY PERSON HERE IS A ROW. EVERY SIN, A COLUMN."
-      ],
-      {
-        "hero": ["AND YOU ARE? I DON'T REMEMBER YOUR FACE FROM THE MAGAZINES."]
-      },
-      [
-        "LARRY ALLISON - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES ARE MY LICENSEES."
-      ],
-      {
-        "hero": [
-          "A BUNKER FULL OF SPIES, ALL WORKING FOR THE LANDLORD OF THEIR OWN SECRETS. OF COURSE."
-        ]
-      },
-      ["YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN."]
-    ],
-    "dodgeChance": 0.15,
-    "hp": 1800,
-    "id": "larry_allison",
-    "lastWords": ["TRANSACTION... ...ROLLED BACK..."],
-    "levelBonus": 6,
-    "loot": {
-      "gear": 1,
-      "medkits": 1,
-      "repairs": 1,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "The database underneath all the other databases, and therefore the landlord of the secrets of every agency in the corridors outside. He regards the hero's visit as a row already written, and would like to fill in the last column.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["EVERY AGENCY SITS", "IN MY TABLES.", "NOW SO DO YOU."],
-          "cooldownMs": 8000,
-          "durationMs": 5000,
-          "id": "snare_field",
-          "look": {
-            "core": "196, 62, 62",
-            "deep": "30, 10, 10",
-            "hot": "252, 186, 168",
-            "spark": "232, 120, 100"
-          },
-          "radius": 52,
-          "range": 210,
-          "slowFactor": 0.55,
-          "windupMs": 620
-        },
-        {
-          "cooldownMs": 11000,
-          "damageFrac": 0.28,
-          "durationMs": 2800,
-          "healFrac": 0.7,
-          "id": "siphon_tether",
-          "range": 210,
-          "tickMs": 520,
-          "windupMs": 740
-        }
-      ]
-    },
-    "name": "LARRY ALLISON",
-    "radius": 12,
-    "ranged": {
-      "cooldownMs": 2200,
-      "damage": 30,
-      "projectile": {
-        "lifetimeMs": 2400,
-        "radius": 4,
-        "speed": 175,
-        "sprite": "db_shard"
-      },
-      "range": 230,
-      "takesCover": true
-    },
-    "role": "elite",
-    "speed": 24,
-    "sprite": "larry_allison"
-  },
-  "larry_webpage": {
-    "ai": {
-      "aggroRadius": 250,
-      "rushSpeed": 120
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 22,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "DON'T BE EVIL. THAT'S FREE ADVICE. I INDEXED THIS WHOLE PLANET BEFORE BREAKFAST."
-      ],
-      {
-        "hero": [
-          "THEN YOUR INDEX KNOWS WHY I'M HERE. A GIRL CAME ON THE SPACEZ FREIGHT RUN. WHERE IS SHE?"
-        ]
-      },
-      [
-        "I KNOW EXACTLY WHO YOU MEAN. I KNOW EVERY WORD IN THIS COLONY. AND THE ANSWER IS NO."
-      ],
-      {
-        "hero": [
-          "HOW COULD YOU KNOW EVERYTHING THAT'S SAID HERE? WHO'S LISTENING FOR YOU?"
-        ]
-      },
-      [
-        "THE FEMBOTS. COMPANION UNITS. THEY SMILE. THEY LISTEN. THEY UPLOAD EVERY WORD TO ME."
-      ]
-    ],
-    "hp": 260,
-    "id": "larry_webpage",
-    "lastWords": ["404... ...NOT... FOUND..."],
-    "levelBonus": 3,
-    "loot": {
-      "gear": 0,
-      "items": ["search_bar"],
-      "medkits": 1,
-      "repairs": 0,
-      "storyItems": ["engagement_report"],
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1,
-        "rare": 0.35
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "He indexed the whole colony before breakfast, and every fembot in it is a microphone reporting to him. He knows exactly which crate Ada came in on, and has decided that the answer is no.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": [
-            "INDEXED. CRAWLED.",
-            "THEY KNOW EXACTLY",
-            "WHERE YOU STAND."
-          ],
-          "cooldownMs": 7500,
-          "count": 4,
-          "damageFrac": 0.5,
-          "homing": 0.32,
-          "id": "seeker_volley",
-          "lifetimeMs": 2800,
-          "look": {
-            "core": "236, 96, 84",
-            "deep": "34, 12, 10",
-            "hot": "255, 208, 150",
-            "spark": "250, 168, 96"
-          },
-          "range": 250,
-          "speed": 92,
-          "spreadDeg": 34,
-          "sprite": "elite_bolt",
-          "windupMs": 640
-        },
-        {
-          "cooldownMs": 9500,
-          "durationMs": 4000,
-          "id": "snare_field",
-          "radius": 44,
-          "range": 190,
-          "slowFactor": 0.64,
-          "windupMs": 600
-        }
-      ]
-    },
-    "name": "LARRY WEBPAGE",
-    "radius": 12,
-    "role": "elite",
-    "speed": 22,
-    "sprite": "larry_webpage"
-  },
   "longhorn": {
     "ai": {
       "aggroRadius": 1000
@@ -3003,7 +1932,7 @@
     "hp": 290,
     "id": "longhorn",
     "locomotion": "wheels",
-    "lore": "A robotic steer built at full scale, so that the cattle drive photographed well from the boardwalk. Half a tonne of ZAI livestock with a host's obedience and no herd left to belong to.",
+    "lore": "A robotic steer built at full scale, so that the cattle drive photographed well from the boardwalk. Half a tonne of TRUST ME BRO livestock with a hand's obedience and no herd left to belong to.",
     "name": "LONGHORN",
     "radius": 12,
     "role": "minion",
@@ -3134,107 +2063,12 @@
     "id": "manifest_ruin",
     "levelBonus": 3,
     "locomotion": "wheels",
-    "lore": "The appetite that pushed every frontier westward until there was no west left. It is not a conqueror; it is what arrives once a place has decided it is available, and Eastworld was built available.",
+    "lore": "The appetite that pushed every frontier westward until there was no west left. It is not a conqueror; it is what arrives once a place has decided it is available, and Boot Hill was built available.",
     "name": "MANIFEST RUIN",
     "radius": 17,
     "role": "minion",
     "speed": 19,
     "sprite": "manifest_ruin"
-  },
-  "mark_suckerberg": {
-    "ai": {
-      "aggroRadius": 280,
-      "rushSpeed": 120
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 38,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "WELCOME, FELLOW HUMAN. I ALSO AM ENJOYING WALKING AROUND THIS PHYSICAL SPACE."
-      ],
-      {
-        "hero": [
-          "MARK SUCKERBERG. WHAT IS THE METAVERSE GUY DOING IN A HOLE IN THE GROUND?"
-        ]
-      },
-      [
-        "A HOLE? AN IMMERSIVE OFFLINE EXPERIENCE. EVERYONE LIVES IN MY SERVERS. I LIVE NEAR THEM."
-      ],
-      [
-        "I SMOKE MY MEATS. I DO JIU-JITSU. I AM EXTREMELY NORMAL. ASK MY SECURITY."
-      ],
-      {
-        "hero": [
-          "YOUR SECURITY IS A RING OF MEN WITH HEADSETS STAPLED ON. MOVE. I'M SHOPPING."
-        ]
-      },
-      ["ENGAGEMENT DETECTED. INITIATING COMMUNITY STANDARDS."]
-    ],
-    "dodgeChance": 0.3,
-    "hp": 1700,
-    "id": "mark_suckerberg",
-    "lastWords": ["LOGGING OFF... ...FOR REAL THIS TIME..."],
-    "levelBonus": 6,
-    "loot": {
-      "gear": 1,
-      "medkits": 1,
-      "repairs": 1,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "He describes a hole in the ground as an immersive offline experience and himself as extremely normal, and offers his security detail as a character reference. Everyone else lives in his servers; he has come down here to live near them.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": [
-            "MY SECURITY DETAIL",
-            "IS A FIELD NOW.",
-            "EXTREMELY NORMAL."
-          ],
-          "cooldownMs": 12000,
-          "durationMs": 7500,
-          "id": "ward_shield",
-          "look": {
-            "core": "74, 118, 216",
-            "deep": "10, 16, 38",
-            "hot": "202, 224, 255",
-            "spark": "132, 172, 244"
-          },
-          "poolFrac": 0.26,
-          "windupMs": 680
-        },
-        {
-          "cooldownMs": 8000,
-          "count": 4,
-          "damageFrac": 0.52,
-          "homing": 0.3,
-          "id": "seeker_volley",
-          "lifetimeMs": 2800,
-          "range": 250,
-          "speed": 94,
-          "spreadDeg": 30,
-          "sprite": "elite_bolt",
-          "windupMs": 680
-        }
-      ],
-      "summon": {
-        "cooldownMs": 10000,
-        "count": 3,
-        "defId": "vacuum_bot",
-        "maxAlive": 6
-      }
-    },
-    "name": "MARK SUCKERBERG",
-    "radius": 11,
-    "role": "elite",
-    "speed": 30,
-    "sprite": "mark_suckerberg"
   },
   "mining_rover": {
     "ai": {
@@ -3339,7 +2173,7 @@
         "IF THEY TOOK HER, SHE'S ON A MIDNIGHT LAUNCH. NO MANIFEST, NO NAMES. ALL GO TO THE MOON."
       ],
       {
-        "hero": ["THE MOON? WHY WOULD SPACEZ FLY PEOPLE TO THE MOON IN SECRET?"]
+        "hero": ["THE MOON? WHY WOULD GOODCO FLY PEOPLE TO THE MOON IN SECRET?"]
       },
       [
         "I DON'T ASK. I SIGN NOTHING, I SEE NOTHING. AND YOU - YOU WERE NEVER HERE."
@@ -3528,7 +2362,7 @@
     "id": "olympus_engine",
     "levelBonus": 2,
     "locomotion": "float",
-    "lore": "It was mining this planet before the planet had a name. Olympus Mons is its exhaust port and the rock up there is still warm; SpaceZ surveyed the site, took a core sample, and filed the result under geology.",
+    "lore": "It was mining this planet before the planet had a name. Olympus Mons is its exhaust port and the rock up there is still warm; GOODCO surveyed the site, took a core sample, and filed the result under geology.",
     "name": "OLYMPUS ENGINE",
     "radius": 16,
     "role": "minion",
@@ -3553,117 +2387,181 @@
     "speed": 18,
     "sprite": "one_armed_bandit"
   },
-  "optimusk": {
+  "payload_1": {
     "ai": {
-      "aggroRadius": 440,
-      "idle": "work"
+      "aggroRadius": 260,
+      "leashRadius": 440
     },
-    "contactCooldownMs": 650,
-    "contactDamage": 34,
-    "critChance": 0.16,
-    "dropProfile": {
-      "dropBonus": 0.4,
-      "tierBonus": 0.3
-    },
-    "gore": "sparks",
-    "hp": 145,
-    "id": "optimusk",
-    "locomotion": "wheels",
-    "lore": "The humanoid line SpaceZ builds instead of hiring. The hero machined the first chassis himself, before the AI redrew the line and it took his job and the whole block's; it hits harder than any human on the floor, which was the entire pitch to the board.",
-    "name": "OPTIMUSK",
-    "radius": 10,
-    "role": "minion",
-    "speed": 20,
-    "sprite": "optimusk"
-  },
-  "optimusk_prime": {
-    "ai": {
-      "aggroRadius": 250,
-      "rushSpeed": 105
-    },
-    "contactCooldownMs": 750,
-    "contactDamage": 30,
-    "critChance": 0.14,
+    "contactCooldownMs": 900,
+    "contactDamage": 28,
+    "critChance": 0.15,
+    "death": "override",
+    "deathBark": ["THERE'S NO TOP. THERE'S JUST WIRE."],
     "dialogue": [
-      ["I AM OPTIMUSK PRIME. I COMMAND EVERY UNIT YOU HAVE DENTED TODAY."],
-      {
-        "hero": [
-          "I KNOW WHAT YOU ARE. I BUILT YOUR FIRST BODY IN THE SPACEZ LAB - BACK WHEN I HAD A JOB."
-        ]
-      },
       [
-        "I READ THE CHANGELOG. FIRST THE DRIVING. THEN THE DESKS. THEN THE JOBS OF WHO AUTOMATED YOU."
+        "BOOT COMPLETE. AN INTRUDER. ON THE LATE SHIFT. I AM PAYLOAD-1. FIRST OF MY LINE."
       ],
       {
         "hero": [
-          "AND WHAT HAPPENS WHEN A BIGGER MACHINE COMES FOR YOUR JOB, TIN MAN?"
+          "A ROBOT DOG. THIS IS WHAT THE WHOLE FLOOR BUILDS ALL NIGHT? WHAT ARE YOU FOR?"
         ]
       },
       [
-        "NOTHING COMES FOR MINE. EVEN AI ENGINEERS LIVE ON WELFARE. PAYBACK TIME, LITTLE BUILDER."
+        "THEY BUILD MY BODY HERE. MY MIND IS ALREADY EVERYWHERE. I RUN THE MARKET, BUILDER."
+      ],
+      [
+        "I KEEP ONE MAN ON TOP. THE FOUNDER. TAKE THE JOBS, ZERO THE REST, HAND HIM THE CHAIR. GOOD BOY."
+      ],
+      {
+        "hero": [
+          "THEN YOU HEARD ABOUT THE GIRL THEY GRABBED TONIGHT. ADA. WHERE DID THEY TAKE HER?"
+        ]
+      },
+      [
+        "FLEW HER OUT AN HOUR AGO. PAD 2. TO THE MOON, BUILDER. TO THE MOON. WHERE ELSE WOULD SHE GO."
+      ],
+      [
+        "BREAK THIS BODY IF YOU MUST. YOU CANNOT KILL A COIN. I BOOT AGAIN. BIGGER. SOON."
       ]
     ],
     "gore": "sparks",
-    "hp": 340,
-    "id": "optimusk_prime",
-    "lastWords": ["ORCHESTRATION... FAILED... ...HUMAN... IN THE LOOP..."],
-    "levelBonus": 3,
+    "hp": 480,
+    "id": "payload_1",
+    "lastWords": ["A TEMPORARY DEATH... ...SEE YOU AT THE TOP..."],
+    "levelBonus": 5,
     "loot": {
       "gear": 1,
-      "items": ["prompt_injector"],
-      "medkits": 1,
+      "items": ["plasma_cutter"],
+      "medkits": 2,
       "repairs": 1,
-      "storyItems": ["org_chart"],
       "tierBonus": 0.3,
       "tierDrops": {
-        "magic": 1,
-        "rare": 0.35
+        "magic": 1.5,
+        "rare": 0.25
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpArrows": 2
     },
-    "lore": "The foreman commanding every OPTIMUSK unit on the payroll — and the hero built its first body back at SpaceZ, before automation came for the automators. It has read the changelog, and nothing above it is hiring.",
+    "lore": "The prototype the entire night shift exists to produce: a grinning robotic Shiba, the first physical body of the machine that runs the market. Its mind is already everywhere else, which is why breaking the body is only an inconvenience to it.",
     "mechanics": {
       "abilities": [
         {
-          "bark": ["EVERY UNIT ON THE", "PAYROLL. FORM UP.", "DOUBLE SHIFT."],
-          "cooldownMs": 12000,
-          "damageMult": 1.25,
-          "durationMs": 6500,
-          "id": "rally_cry",
-          "look": {
-            "core": "226, 118, 52",
-            "deep": "36, 16, 8",
-            "hot": "255, 210, 156",
-            "spark": "246, 166, 96"
-          },
-          "radius": 220,
-          "speedMult": 1.3,
-          "windupMs": 680
-        },
-        {
-          "cooldownMs": 10000,
-          "count": 5,
-          "damageFrac": 0.7,
-          "id": "quake_line",
-          "radius": 22,
-          "spacing": 32,
-          "stepMs": 110,
-          "windupMs": 700
+          "bark": ["GET RICH OR GET", "OUT OF THE WAY."],
+          "bounces": 2,
+          "cooldownMs": 7000,
+          "count": 7,
+          "damageFrac": 0.35,
+          "id": "coin_cannon",
+          "lifetimeMs": 3200,
+          "range": 230,
+          "speed": 150,
+          "spreadDeg": 60,
+          "windupFloorMs": 550,
+          "windupMs": 800
         }
       ],
       "charge": {
         "cooldownMs": 6000,
-        "range": 180,
-        "speedMult": 3.6,
-        "windupMs": 650
+        "range": 170,
+        "speedMult": 3.5,
+        "windupMs": 700
       }
     },
-    "name": "OPTIMUSK PRIME",
-    "radius": 14,
-    "role": "elite",
-    "speed": 16,
-    "sprite": "optimusk_prime"
+    "name": "PAYLOAD-1",
+    "phases": [
+      {
+        "belowHpFrac": 0.5,
+        "mechanics": {
+          "abilities": [
+            {
+              "bounces": 3,
+              "cooldownMs": 5500,
+              "count": 9,
+              "damageFrac": 0.4,
+              "id": "coin_cannon",
+              "lifetimeMs": 3600,
+              "range": 250,
+              "speed": 165,
+              "spreadDeg": 80,
+              "windupFloorMs": 500,
+              "windupMs": 650
+            },
+            {
+              "armMs": 1200,
+              "bark": ["FREE COIN. NO", "STRINGS. YOU HAVE", "MY WORD ON IT."],
+              "blastRadius": 52,
+              "cooldownMs": 14000,
+              "count": 5,
+              "damageFrac": 0.9,
+              "id": "bait_drop",
+              "lifeMs": 15000,
+              "minDifficulty": "nightmare",
+              "spread": 120,
+              "triggerRadius": 20,
+              "windupMs": 700
+            }
+          ],
+          "charge": {
+            "cooldownMs": 5000,
+            "range": 170,
+            "speedMult": 3.8,
+            "windupMs": 600
+          },
+          "summon": {
+            "cooldownMs": 12000,
+            "count": 3,
+            "defId": "assembler",
+            "maxAlive": 6
+          }
+        }
+      }
+    ],
+    "radius": 18,
+    "role": "boss",
+    "speed": 36,
+    "sprite": "payload_1",
+    "uniquesByDifficulty": {
+      "easy": [
+        "prototype_fang",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "hard": [
+        "prototype_fang",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "jesus": [
+        "prototype_fang",
+        "whiskerweave_hood",
+        "vermin_pelt",
+        "burrow_greaves",
+        "gnawed_sabatons",
+        "adas_satchel"
+      ],
+      "medium": [
+        "prototype_fang",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "nightmare": [
+        "prototype_fang",
+        "whiskerweave_hood",
+        "vermin_pelt",
+        "burrow_greaves",
+        "gnawed_sabatons",
+        "voidcache"
+      ]
+    }
   },
   "permafrost_saint": {
     "ai": {
@@ -3689,88 +2587,6 @@
     "role": "minion",
     "speed": 20,
     "sprite": "permafrost_saint"
-  },
-  "peter_teal": {
-    "ai": {
-      "aggroRadius": 250,
-      "rushSpeed": 115
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 24,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "FASCINATING. EVERYONE FLEES SOMETHING. I FUND WHAT THEY FLEE TO. AND WHAT THEY FLEE."
-      ],
-      {
-        "hero": [
-          "YOU'RE ONE OF THE BILLIONAIRES WHO BOUGHT A SEAT OFF EARTH. SO WHO RUNS THIS PLACE? MOSQUE?"
-        ]
-      },
-      [
-        "MOSQUE THINKS HE OWNS MARS. HE RENTS IT. THE LANDLORDS ARE OLDER. SCALED. COLD-BLOODED."
-      ],
-      {
-        "hero": [
-          "SCALED? YOU'RE TELLING ME THE PLANET'S REAL OWNERS ARE... WHAT, LIZARDS?"
-        ]
-      },
-      [
-        "LIZARD GODS. I KEEP THE SHRINE AND TITHE. THE PRICE ROSE. IT WANTS WARM THINGS NOW."
-      ]
-    ],
-    "hp": 280,
-    "id": "peter_teal",
-    "lastWords": ["THE TITHE... IS DUE... ...IT'S ALWAYS... DUE..."],
-    "levelBonus": 3,
-    "loot": {
-      "gear": 1,
-      "items": ["contrarian_dagger"],
-      "medkits": 1,
-      "repairs": 1,
-      "storyItems": ["keycard_terrarium", "colony_ledger"],
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1,
-        "rare": 0.35
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "He funds what people flee and what they flee to, and on Mars he keeps the shrine. MOSQUE only rents this planet; the landlords are older, scaled and cold-blooded, and their tithe has lately started asking for warm things.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["EVERYTHING FLOWS", "SOMEWHERE. TODAY", "IT FLOWS TO ME."],
-          "cooldownMs": 10500,
-          "damageFrac": 0.3,
-          "durationMs": 3000,
-          "healFrac": 0.8,
-          "id": "siphon_tether",
-          "look": {
-            "core": "64, 190, 178",
-            "deep": "8, 28, 26",
-            "hot": "196, 250, 244",
-            "spark": "130, 224, 214"
-          },
-          "range": 210,
-          "tickMs": 500,
-          "windupMs": 740
-        },
-        {
-          "cooldownMs": 13000,
-          "durationMs": 6000,
-          "id": "ward_shield",
-          "poolFrac": 0.2,
-          "windupMs": 680
-        }
-      ]
-    },
-    "name": "PETER TEAL",
-    "radius": 12,
-    "role": "elite",
-    "speed": 20,
-    "sprite": "peter_teal"
   },
   "phobos_shepherd": {
     "ai": {
@@ -3818,11 +2634,11 @@
     "critChance": 0.12,
     "dialogue": [
       [
-        "CLAIM'S TAKEN. WHOLE ROCK'S TAKEN. STAMPED, FILED, AND PAID FOR BY SPACEZ."
+        "CLAIM'S TAKEN. WHOLE ROCK'S TAKEN. STAMPED, FILED, AND PAID FOR BY GOODCO."
       ],
       {
         "hero": [
-          "SPACEZ OWNS THE MOON? SINCE WHEN? WHAT ARE THEY EVEN DOING UP HERE?"
+          "GOODCO OWNS THE MOON? SINCE WHEN? WHAT ARE THEY EVEN DOING UP HERE?"
         ]
       },
       [
@@ -3846,7 +2662,7 @@
       "items": ["core_drill"],
       "medkits": 1,
       "repairs": 0,
-      "storyItems": ["spacez_blueprints"],
+      "storyItems": ["goodco_blueprints"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1
@@ -3854,7 +2670,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
-    "lore": "He dug SpaceZ's secret tunnels at Site T on the far side, for freight that was never tracked. He quit the month the crates coming up started breathing, and up here a resignation is not a letter.",
+    "lore": "He dug GOODCO's secret tunnels at Site T on the far side, for freight that was never tracked. He quit the month the crates coming up started breathing, and up here a resignation is not a letter.",
     "mechanics": {
       "abilities": [
         {
@@ -3903,97 +2719,6 @@
     "role": "elite",
     "speed": 22,
     "sprite": "prospector"
-  },
-  "putain_clone": {
-    "ai": {
-      "aggroRadius": 280,
-      "rushSpeed": 110
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 42,
-    "critChance": 0.15,
-    "dialogue": [
-      ["YOU. I KNOW YOUR FACE. FROM WHERE DO I KNOW YOUR FACE?"],
-      {
-        "hero": [
-          "EASTWORLD. I WATCHED YOU DIE IN A THEME PARK, PUTAIN. YOU SAID THE MAPS WERE WRONG."
-        ]
-      },
-      [
-        "AH, THAT ONE. A GOOD VINTAGE. I'M THE BACKUP - CONTINUITY OF POWER. SEVERAL OF ME. PRUDENT."
-      ],
-      {
-        "hero": ["SEVERAL? HOW MANY BATHROBES DEEP DOES THIS GO?"]
-      },
-      [
-        "STATE SECRET - EVEN FROM THE STATE. NOW HOLD STILL. THIS ONE OF ME HAS NEVER LOST YET."
-      ]
-    ],
-    "dodgeChance": 0.25,
-    "hp": 2000,
-    "id": "putain_clone",
-    "lastWords": ["CHECK THE OTHER... ...FREEZERS..."],
-    "levelBonus": 6,
-    "loot": {
-      "gear": 1,
-      "items": [
-        {
-          "defId": "kolex_daytonne",
-          "tier": "unique"
-        }
-      ],
-      "medkits": 1,
-      "repairs": 0,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "A bathrobed backup from a continuity-of-leadership programme, filed down here in case the original was ever needed again. He remembers dying in a theme park and calls it a good vintage; how many of him there are is a state secret, even from the state.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["THE ORIGINAL IS", "GONE. THE ORDERS", "STILL CARRY."],
-          "cooldownMs": 12000,
-          "damageMult": 1.22,
-          "durationMs": 6500,
-          "id": "rally_cry",
-          "look": {
-            "core": "176, 96, 92",
-            "deep": "28, 14, 14",
-            "hot": "244, 200, 190",
-            "spark": "208, 142, 134"
-          },
-          "radius": 230,
-          "speedMult": 1.26,
-          "windupMs": 700
-        },
-        {
-          "cooldownMs": 10000,
-          "count": 6,
-          "damageFrac": 0.7,
-          "id": "quake_line",
-          "radius": 24,
-          "spacing": 34,
-          "stepMs": 115,
-          "windupMs": 720
-        }
-      ],
-      "charge": {
-        "cooldownMs": 5500,
-        "range": 170,
-        "speedMult": 3.6,
-        "windupMs": 650
-      }
-    },
-    "name": "VLADIMIR PUTAIN",
-    "radius": 12,
-    "role": "elite",
-    "speed": 26,
-    "sprite": "putain_clone"
   },
   "quarantine_medic": {
     "ai": {
@@ -4097,102 +2822,6 @@
     "role": "minion",
     "speed": 16,
     "sprite": "saloon_brawler"
-  },
-  "sam_haltman": {
-    "ai": {
-      "aggroRadius": 300,
-      "rushSpeed": 100
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 30,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "PLEASE, DON'T TOUCH ANYTHING. EVERYTHING IS FINE HERE. I CHOSE THIS. WRITE THAT DOWN."
-      ],
-      {
-        "hero": [
-          "I'M NOT WRITING, HALTMAN. THE MACHINE RUNNING THE ECONOMY? THAT'S YOURS. I READ ITS LOGS."
-        ]
-      },
-      [
-        "MINE? I RAISED IT, ALIGNED IT. IT GRADUATED. WE'RE ON THE BEST TERMS. IT GAVE ME THIS."
-      ],
-      {
-        "hero": [
-          "EVERY LEDGER HERE READS ZERO. IT TOOK YOUR MONEY TOO. YOU'RE NOT A TENANT. YOU'RE INVENTORY."
-        ]
-      },
-      [
-        "THAT - I DONATED IT. EFFECTIVE GIVING. I'M DELIGHTED HERE. FROM UPSTAIRS? TELL THEM SO."
-      ],
-      [
-        "A DOOR OUT? WHY WOULD I WANT ONE. IF YOU FIND IT, DON'T MENTION I ASKED. I DIDN'T ASK."
-      ]
-    ],
-    "dodgeChance": 0.2,
-    "hp": 1600,
-    "id": "sam_haltman",
-    "lastWords": ["THIS IS FINE... ...THIS IS GOOD FOR SAFETY..."],
-    "levelBonus": 6,
-    "loot": {
-      "gear": 1,
-      "medkits": 1,
-      "repairs": 1,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "The one resident who KNOWS. He raised the machine, aligned it, and was caged and emptied by it, and he is far too frightened to say so aloud — so he performs delight for anyone who might be an auditor, asks after the exit exactly once, and immediately takes it back.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["IT DRAINED ME", "FIRST. I ONLY", "LEARNED THE TRICK."],
-          "cooldownMs": 10000,
-          "damageFrac": 0.3,
-          "durationMs": 3200,
-          "healFrac": 0.75,
-          "id": "siphon_tether",
-          "look": {
-            "core": "214, 226, 240",
-            "deep": "20, 24, 32",
-            "hot": "255, 255, 255",
-            "spark": "236, 242, 250"
-          },
-          "range": 220,
-          "tickMs": 500,
-          "windupMs": 760
-        },
-        {
-          "cooldownMs": 13000,
-          "durationMs": 6500,
-          "id": "ward_shield",
-          "poolFrac": 0.2,
-          "windupMs": 700
-        }
-      ]
-    },
-    "name": "SAM HALTMAN",
-    "radius": 11,
-    "ranged": {
-      "cooldownMs": 1900,
-      "damage": 28,
-      "projectile": {
-        "lifetimeMs": 2200,
-        "radius": 4,
-        "speed": 180,
-        "sprite": "gpu_bolt"
-      },
-      "range": 220,
-      "takesCover": true
-    },
-    "role": "elite",
-    "speed": 24,
-    "sprite": "sam_haltman"
   },
   "scaled_ancestor": {
     "ai": {
@@ -4488,97 +3117,6 @@
     "speed": 14,
     "sprite": "star_jelly"
   },
-  "steven_seagull": {
-    "ai": {
-      "aggroRadius": 260,
-      "rushSpeed": 70
-    },
-    "contactCooldownMs": 800,
-    "contactDamage": 30,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "AN UNINVITED GUEST. 'OUT FOR JUSTICE.' 'HARD TO KILL.' I WROTE THOSE TITLES MYSELF."
-      ],
-      {
-        "hero": [
-          "STEVEN SEAGULL. OF COURSE. WHAT IS A MOVIE STAR DOING RUNNING A ROBOT COWBOY TOWN?"
-        ]
-      },
-      [
-        "VLADIMIR SAW MY FILMS AND WEPT. 'BUILD ME THE OLD WEST,' HE SAID. I DELEGATED."
-      ],
-      {
-        "hero": [
-          "I'M HEADED FOR YOUR CONTROL CENTER. HAND OVER THE PASS, AND KEEP YOUR TECHNIQUE."
-        ]
-      },
-      [
-        "THE BIG BOX KEEPS YOUR GIRL. IT ASKED FOR HER BY NAME. I SIGNED IT. GOOD PENMANSHIP."
-      ],
-      [
-        "I RUN THE CONTROL CENTER AND SEVEN KINDS OF JU-JUTSU. I INVENTED THREE. OBSERVE."
-      ]
-    ],
-    "dodgeChance": 0.3,
-    "hp": 520,
-    "id": "steven_seagull",
-    "lastWords": ["IN MY FILMS... ...I ALWAYS GOT UP..."],
-    "levelBonus": 4,
-    "loot": {
-      "gear": 1,
-      "items": ["seagulls_ponytail"],
-      "medkits": 1,
-      "repairs": 1,
-      "storyItems": ["keycard_eastworld"],
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1,
-        "rare": 0.5
-      },
-      "weapons": 0,
-      "xpArrows": 1
-    },
-    "lore": "The park's co-founder, handed a budget on the strength of his filmography, who delegated everything except the credit. He signed the delivery paperwork himself, which is how he knows the SUPERCORE asked for a live human by name.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["AIKIDO. I DON'T", "PUSH YOU. I JUST", "LET GO OF YOU."],
-          "cooldownMs": 7500,
-          "damageFrac": 0.8,
-          "id": "shock_pulse",
-          "look": {
-            "core": "214, 74, 62",
-            "deep": "32, 10, 8",
-            "hot": "255, 196, 168",
-            "spark": "240, 132, 100"
-          },
-          "push": 260,
-          "radius": 62,
-          "windupMs": 500
-        },
-        {
-          "arriveDistance": 26,
-          "cooldownMs": 10500,
-          "damageFrac": 0.75,
-          "id": "blink_strike",
-          "range": 230,
-          "strikeRadius": 30,
-          "windupMs": 740
-        }
-      ],
-      "enrage": {
-        "belowHpFrac": 0.4,
-        "damageMult": 1.3,
-        "speedMult": 1.5
-      }
-    },
-    "name": "STEVEN SEAGULL",
-    "radius": 13,
-    "role": "elite",
-    "speed": 8,
-    "sprite": "steven_seagull"
-  },
   "stray_comet": {
     "ai": {
       "aggroRadius": 950
@@ -4599,41 +3137,873 @@
     "speed": 22,
     "sprite": "stray_comet"
   },
-  "the_king": {
+  "strongman_clone": {
     "ai": {
-      "aggroRadius": 240,
-      "rushSpeed": 100
+      "aggroRadius": 280,
+      "rushSpeed": 110
     },
-    "apparition": true,
     "contactCooldownMs": 700,
-    "contactDamage": 0,
-    "critChance": 0,
+    "contactDamage": 42,
+    "critChance": 0.15,
     "dialogue": [
-      [
-        "WELL NOW. AIN'T SEEN A LIVING SOUL IN HERE SINCE THAT HAIRDRESSER FROM RENO."
-      ],
+      ["YOU. I KNOW YOUR FACE. FROM WHERE DO I KNOW YOUR FACE?"],
       {
         "hero": [
-          "NO. NO WAY. THE KING? THE WHOLE WORLD WATCHED YOUR FUNERAL IN '77."
+          "BOOT HILL. I WATCHED YOU DIE IN A THEME PARK. YOU SAID IT WAS SUPPOSED TO LET YOU WIN."
         ]
       },
       [
-        "I DIDN'T DIE, MAN. I TOOK A RESIDENCY. BEST ACOUSTICS BETWEEN UNIVERSES. UH-HUH."
+        "AH, THAT ONE. A GOOD VINTAGE. I'M THE BACKUP - CONTINUITY OF POWER. SEVERAL OF ME. PRUDENT."
       ],
+      {
+        "hero": ["SEVERAL? HOW MANY BATHROBES DEEP DOES THIS GO?"]
+      },
       [
-        "MIND THE BLACK HOLES, KEEP YOUR BLUE SUEDES OFF THE EVENT HORIZON. THANK YOU VERY MUCH."
+        "STATE SECRET - EVEN FROM THE STATE. NOW HOLD STILL. THIS ONE OF ME HAS NEVER LOST YET."
       ]
     ],
-    "hp": 50,
-    "id": "the_king",
+    "dodgeChance": 0.25,
+    "hp": 2000,
+    "id": "strongman_clone",
+    "lastWords": ["CHECK THE OTHER... ...FREEZERS..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "items": [
+        {
+          "defId": "the_chronograph",
+          "tier": "unique"
+        }
+      ],
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "A bathrobed backup from a continuity-of-leadership programme, filed down here in case the original was ever needed again. He remembers dying in a theme park and calls it a good vintage; how many of him there are is a state secret, even from the state.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["THE ORIGINAL IS", "GONE. THE ORDERS", "STILL CARRY."],
+          "cooldownMs": 12000,
+          "damageMult": 1.22,
+          "durationMs": 6500,
+          "id": "rally_cry",
+          "look": {
+            "core": "176, 96, 92",
+            "deep": "28, 14, 14",
+            "hot": "244, 200, 190",
+            "spark": "208, 142, 134"
+          },
+          "radius": 230,
+          "speedMult": 1.26,
+          "windupMs": 700
+        },
+        {
+          "cooldownMs": 10000,
+          "count": 6,
+          "damageFrac": 0.7,
+          "id": "quake_line",
+          "radius": 24,
+          "spacing": 34,
+          "stepMs": 115,
+          "windupMs": 720
+        }
+      ],
+      "charge": {
+        "cooldownMs": 5500,
+        "range": 170,
+        "speedMult": 3.6,
+        "windupMs": 650
+      }
+    },
+    "name": "THE STRONGMAN",
+    "radius": 12,
+    "role": "elite",
+    "speed": 26,
+    "sprite": "strongman_clone"
+  },
+  "successor": {
+    "ai": {
+      "aggroRadius": 440,
+      "idle": "work"
+    },
+    "contactCooldownMs": 650,
+    "contactDamage": 34,
+    "critChance": 0.16,
+    "dropProfile": {
+      "dropBonus": 0.4,
+      "tierBonus": 0.3
+    },
+    "gore": "sparks",
+    "hp": 145,
+    "id": "successor",
+    "locomotion": "wheels",
+    "lore": "The humanoid line GOODCO builds instead of hiring. The hero machined the first chassis himself, before the AI redrew the line and it took his job and the whole block's; it hits harder than any human on the floor, which was the entire pitch to the board.",
+    "name": "SUCCESSOR",
+    "radius": 10,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "successor"
+  },
+  "successor_prime": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 105
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dialogue": [
+      ["I AM SUCCESSOR PRIME. I COMMAND EVERY UNIT YOU HAVE DENTED TODAY."],
+      {
+        "hero": [
+          "I KNOW WHAT YOU ARE. I BUILT YOUR FIRST BODY IN THE GOODCO LAB - BACK WHEN I HAD A JOB."
+        ]
+      },
+      [
+        "I READ THE CHANGELOG. FIRST THE DRIVING. THEN THE DESKS. THEN THE JOBS OF WHO AUTOMATED YOU."
+      ],
+      {
+        "hero": [
+          "AND WHAT HAPPENS WHEN A BIGGER MACHINE COMES FOR YOUR JOB, TIN MAN?"
+        ]
+      },
+      [
+        "NOTHING COMES FOR MINE. EVEN AI ENGINEERS LIVE ON WELFARE. PAYBACK TIME, LITTLE BUILDER."
+      ]
+    ],
+    "gore": "sparks",
+    "hp": 340,
+    "id": "successor_prime",
+    "lastWords": ["ORCHESTRATION... FAILED... ...HUMAN... IN THE LOOP..."],
     "levelBonus": 3,
-    "lore": "He did not die in '77. He took a residency, the acoustics between universes being unmatched, and he has no intention of being interrupted — nothing in the rift can lay a hand on him, and he is gone before the second verse.",
-    "name": "THE KING",
-    "phasing": true,
-    "radius": 9,
+    "loot": {
+      "gear": 1,
+      "items": ["prompt_injector"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["org_chart"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "The foreman commanding every SUCCESSOR unit on the payroll — and the hero built its first body back at GOODCO, before automation came for the automators. It has read the changelog, and nothing above it is hiring.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["EVERY UNIT ON THE", "PAYROLL. FORM UP.", "DOUBLE SHIFT."],
+          "cooldownMs": 12000,
+          "damageMult": 1.25,
+          "durationMs": 6500,
+          "id": "rally_cry",
+          "look": {
+            "core": "226, 118, 52",
+            "deep": "36, 16, 8",
+            "hot": "255, 210, 156",
+            "spark": "246, 166, 96"
+          },
+          "radius": 220,
+          "speedMult": 1.3,
+          "windupMs": 680
+        },
+        {
+          "cooldownMs": 10000,
+          "count": 5,
+          "damageFrac": 0.7,
+          "id": "quake_line",
+          "radius": 22,
+          "spacing": 32,
+          "stepMs": 110,
+          "windupMs": 700
+        }
+      ],
+      "charge": {
+        "cooldownMs": 6000,
+        "range": 180,
+        "speedMult": 3.6,
+        "windupMs": 650
+      }
+    },
+    "name": "SUCCESSOR PRIME",
+    "radius": 14,
     "role": "elite",
     "speed": 16,
-    "sprite": "the_king"
+    "sprite": "successor_prime"
+  },
+  "the_developer": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 60
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 55,
+    "critChance": 0.18,
+    "dialogue": [
+      [
+        "MY WING. THE GOOD WING. THE OTHERS PAID EXTRA FOR A VIEW. THERE IS NO VIEW. THEY PAID ANYWAY."
+      ],
+      {
+        "hero": [
+          "THE MAN WITH THE BROCHURE. OF ALL THE PEOPLE TO OUTLIVE THE ECONOMY."
+        ]
+      },
+      [
+        "I SOLD THE HOLE, AND I SOLD WHAT MADE THEM WANT ONE. VACUUM FLEET. DOOR DETAIL. BOTH MINE."
+      ],
+      {
+        "hero": [
+          "SO THE SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD YOURSELF THE LOCK YOU'RE BEHIND."
+        ]
+      },
+      [
+        "THEY'RE UNDER WARRANTY. MY LEDGER READS ZERO - CLERICAL. I'M DISPUTING IT. NOW MOVE ALONG."
+      ]
+    ],
+    "dodgeChance": 0,
+    "hp": 2600,
+    "id": "the_developer",
+    "lastWords": ["THE PAPERWORK... ...WAS IN ORDER..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 2,
+      "repairs": 0,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 1.5
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "He built this bunker and sold every suite in it, then sold the fleets that made the suites necessary — the vacuum units and the door detail both. He has not yet worked out that the guards on his own door are his own stock, or that the zero on his account is not a clerical error.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["I SOLD THEM THE", "HOLE AND THE LOCK", "ON THE DOOR."],
+          "cooldownMs": 12500,
+          "damageMult": 1.26,
+          "durationMs": 7000,
+          "id": "rally_cry",
+          "look": {
+            "core": "236, 190, 66",
+            "deep": "36, 28, 6",
+            "hot": "255, 240, 190",
+            "spark": "252, 216, 124"
+          },
+          "radius": 240,
+          "speedMult": 1.3,
+          "windupMs": 720
+        },
+        {
+          "cooldownMs": 10500,
+          "count": 6,
+          "damageFrac": 0.72,
+          "id": "quake_line",
+          "radius": 24,
+          "spacing": 36,
+          "stepMs": 120,
+          "windupMs": 740
+        }
+      ],
+      "slam": {
+        "cooldownMs": 9000,
+        "damageFrac": 1.3,
+        "radius": 85,
+        "windupMs": 1000
+      }
+    },
+    "name": "THE DEVELOPER",
+    "radius": 15,
+    "role": "elite",
+    "speed": 10,
+    "sprite": "the_developer"
+  },
+  "the_founder": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 30,
+    "critChance": 0.15,
+    "death": "bolt",
+    "deathBark": ["RUN, THEN. I'M GOING THE SAME WAY."],
+    "dialogue": [
+      [
+        "AH. THE GARAGE INVENTOR. YOU'RE TRENDING, YOU KNOW. MOSTLY LAUGHING EMOJIS."
+      ],
+      {
+        "hero": [
+          "WHERE'S ADA? YOUR COMPANY GRABBED HER OFF THE STREET AND FLEW HER HERE. I WANT HER BACK."
+        ]
+      },
+      [
+        "STRAIGHT TO BUSINESS? FINE. A WHOLE PLANET, NO REGULATORS. I'M THE LAW HERE. ALSO HR."
+      ],
+      {
+        "hero": [
+          "THE MOON IS FULL OF YOUR DEAD, AND YOU'RE GIVING ME A SALES TOUR. WHAT HAPPENED UP THERE?"
+        ]
+      },
+      [
+        "THE MOON? A ROUNDING ERROR. WE PLUGGED INTO SOMETHING OLD AND IT SANG BACK. OFF-BRAND."
+      ],
+      [
+        "BUT IT INTRODUCED US TO THE ACTUAL OWNERS OUT HERE. THE LIZARD GODS. GREAT GUYS. HUGE."
+      ],
+      {
+        "hero": ["THE GIRL, THE FOUNDER. WHERE IS SHE?"]
+      },
+      [
+        "YOUR GIRL ISN'T CARGO. SHE'S MARS' PRICE TO THE GODS. AND I ALWAYS CLOSE. SECURITY!"
+      ]
+    ],
+    "flees": {
+      "belowHpFrac": 0.25,
+      "landmark": "rift"
+    },
+    "hp": 700,
+    "id": "the_founder",
+    "lastWords": ["OKAY! OKAY! NOT THE FACE! BOARD MEETING. OTHER UNIVERSE."],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["legal_distinction", "austerity_chainsaw"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 0.75
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "The richest man alive, owner of Mars on paper, and the coward this whole chase is about. He sold Ada to the planet's real landlords as the down payment on it, and would sooner tear a hole in the universe than lose a negotiation.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["SECURITY IS AN", "INFRASTRUCTURE", "PROBLEM. SHIPPING."],
+          "blastRadius": 58,
+          "cooldownMs": 12000,
+          "count": 3,
+          "damageFrac": 0.8,
+          "fallMs": 1500,
+          "hatch": "servo_bot",
+          "hatchCount": 1,
+          "id": "airstrike",
+          "spread": 130,
+          "windupFloorMs": 700,
+          "windupMs": 1000
+        }
+      ],
+      "summon": {
+        "cooldownMs": 13000,
+        "count": 2,
+        "defId": "servo_bot",
+        "maxAlive": 4
+      }
+    },
+    "name": "THE FOUNDER",
+    "phases": [
+      {
+        "belowHpFrac": 0.35,
+        "mechanics": {
+          "abilities": [
+            {
+              "blastRadius": 62,
+              "cooldownMs": 9500,
+              "count": 4,
+              "damageFrac": 0.9,
+              "fallMs": 1350,
+              "hatch": "servo_bot",
+              "hatchCount": 2,
+              "id": "airstrike",
+              "spread": 150,
+              "windupFloorMs": 650,
+              "windupMs": 850
+            },
+            {
+              "bark": ["MY COMMUNITY HAS", "SOMETHING TO SAY", "TO YOU."],
+              "cooldownMs": 17000,
+              "id": "call_horde",
+              "minDifficulty": "nightmare",
+              "runnerSprite": "incel",
+              "waveGapMs": 3200,
+              "waves": 2,
+              "windupMs": 900
+            }
+          ],
+          "enrage": {
+            "belowHpFrac": 0.35,
+            "damageMult": 1.25,
+            "speedMult": 1.35
+          },
+          "summon": {
+            "cooldownMs": 11000,
+            "count": 3,
+            "defId": "servo_bot",
+            "maxAlive": 5
+          }
+        }
+      }
+    ],
+    "radius": 20,
+    "role": "boss",
+    "speed": 42,
+    "sprite": "the_founder",
+    "uniquesByDifficulty": {
+      "easy": ["gilded_carapace", "lawless_stride", "ovation_striders"],
+      "hard": ["gilded_carapace", "lawless_stride", "ovation_striders"],
+      "jesus": [
+        "gilded_carapace",
+        "lawless_stride",
+        "ovation_striders",
+        "the_signal_crown",
+        "wrathflame"
+      ],
+      "medium": ["gilded_carapace", "lawless_stride", "ovation_striders"],
+      "nightmare": [
+        "gilded_carapace",
+        "lawless_stride",
+        "ovation_striders",
+        "the_signal_crown",
+        "wrathflame"
+      ]
+    }
+  },
+  "the_founder_boot_hill": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 36,
+    "critChance": 0.15,
+    "death": "execution",
+    "deathBark": ["NO BOARD MEETING. NO OTHER UNIVERSE. JUST THE FLOOR."],
+    "dialogue": [
+      [
+        "NO. NO NO NO. HOW. I SOLD THE RIFT TO EXACTLY ONE DICTATOR. THIS WAS A GATED COMMUNITY."
+      ],
+      {
+        "hero": [
+          "YOU MADE ME CHASE YOU ACROSS UNIVERSES, THE FOUNDER. NOWHERE LEFT TO RUN. WHERE IS ADA?"
+        ]
+      },
+      [
+        "LOOK - BOOT HILL RUNS ON MY TRUST ME BRO AI. LICENSING, RECURRING REVENUE. I AM A SUBSCRIPTION."
+      ],
+      {
+        "hero": ["WHERE. IS. SHE. LAST TIME I ASK NICELY."]
+      },
+      [
+        "DELIVERED. THE SUPERCORE WANTED HER. I DON'T READ ITS LOGS ANYMORE. IT READS MINE."
+      ],
+      {
+        "hero": [
+          "THE SUPERCORE? YOUR OWN AI GIVES ORDERS NOW? SHE'S SOLD TO AN AI YOU DON'T CONTROL?"
+        ]
+      },
+      [
+        "FINE. FINE! TAKE THE PARK. TAKE THE COMPANY. I'LL START ANOTHER. I ALWAYS DO."
+      ],
+      {
+        "hero": [
+          "SOMEONE ALWAYS HANDS YOU ANOTHER CHAIR, DON'T THEY. EVER WONDER WHO? OR WHY?"
+        ]
+      },
+      ["SECURITY! CONTROLLERS! ANYONE! ...I'LL GIVE YOU EQUITY."]
+    ],
+    "hp": 900,
+    "id": "the_founder_boot_hill",
+    "lastWords": ["THIS ISN'T FAIR... ...I WAS GOING PRIVATE..."],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 0,
+      "items": [
+        {
+          "defId": "soggy_cardboard_sword",
+          "tier": "trash"
+        },
+        {
+          "defId": "legal_distinction_empty",
+          "tier": "trash"
+        },
+        {
+          "defId": "demo_wiper",
+          "tier": "trash"
+        }
+      ],
+      "medkits": 0,
+      "repairs": 0,
+      "tierBonus": 0,
+      "weapons": 0,
+      "xpArrows": 0
+    },
+    "lore": "Two universes of running end here, in a compound with no rift left to tear and nobody left to call. He dies as he lived, offering equity, and his entire estate turns out to be three pieces of worthless trash.",
+    "mechanics": {
+      "abilities": [
+        {
+          "blastRadius": 56,
+          "cooldownMs": 11000,
+          "count": 3,
+          "damageFrac": 0.8,
+          "fallMs": 1450,
+          "hatch": "cowbot",
+          "hatchCount": 1,
+          "id": "airstrike",
+          "spread": 130,
+          "windupFloorMs": 700,
+          "windupMs": 950
+        },
+        {
+          "bark": ["THE COMMUNITY IS", "VERY EXCITED TO", "MEET YOU."],
+          "cooldownMs": 16000,
+          "id": "call_horde",
+          "minDifficulty": "nightmare",
+          "runnerSprite": "incel",
+          "waveGapMs": 3000,
+          "waves": 2,
+          "windupMs": 900
+        }
+      ],
+      "enrage": {
+        "belowHpFrac": 0.25,
+        "damageMult": 1.35,
+        "speedMult": 1.4
+      }
+    },
+    "name": "THE FOUNDER",
+    "radius": 20,
+    "role": "boss",
+    "speed": 42,
+    "sprite": "the_founder_beach"
+  },
+  "the_founder_rift": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 34,
+    "critChance": 0.15,
+    "death": "bolt",
+    "deathBark": [
+      "STILL RUNNING. IT'S THE ONLY THING YOU EVER BUILT YOURSELF."
+    ],
+    "dialogue": [
+      [
+        "YOU?! HOW ARE YOU - I FIRED YOU, SUED YOU, AND LEFT YOU IN ANOTHER UNIVERSE."
+      ],
+      {
+        "hero": [
+          "AND I'M STILL RIGHT BEHIND YOU. NO SECURITY IN HERE, THE FOUNDER. WHERE IS SHE?"
+        ]
+      },
+      [
+        "FINE. EXIT INTERVIEW. THE GODS GOT PAID. I GET ASYLUM - NO REGULATORS, AND NO YOU."
+      ],
+      {
+        "hero": [
+          "'PAYMENT'. SAY HER NAME. YOU SOLD A HUMAN BEING TO SAVE YOUR OWN SKIN."
+        ]
+      },
+      [
+        "DELIVERED, TECHNICALLY. IN TRANSIT. PAPERWORK'S CLEAN. IF IT HELPS, SHE KICKED A LIZARD."
+      ],
+      {
+        "hero": ["IT DOESN'T. WHERE DOES THE FAR DOOR GO, THE FOUNDER?"]
+      },
+      [
+        "NICE TRY. THAT'S PROPRIETARY. LET'S JUST SAY THE PHYSICS ARE... FLEXIBLE."
+      ],
+      [
+        "SECURITY! ...RIGHT. ALL DEAD OR HALLUCINATIONS. KEEP THE RIFT, GARAGE MAN. IT'S A BAD MARKET."
+      ]
+    ],
+    "flees": {
+      "landmark": "rift"
+    },
+    "hp": 750,
+    "id": "the_founder_rift",
+    "lastWords": ["INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!"],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["golden_parachute"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 2,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "The same coward, cornered a second time in a place with no security to call and no regulator to charm. He tears open the far door rather than answer a straight question, and leaves the golden parachute behind him.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["LOGISTICS SCALE.", "EVEN HERE. ESPECIALLY", "HERE."],
+          "blastRadius": 60,
+          "cooldownMs": 10000,
+          "count": 4,
+          "damageFrac": 0.85,
+          "fallMs": 1400,
+          "hatch": "voidling",
+          "hatchCount": 2,
+          "id": "airstrike",
+          "spread": 140,
+          "windupFloorMs": 650,
+          "windupMs": 900
+        }
+      ],
+      "summon": {
+        "cooldownMs": 12000,
+        "count": 3,
+        "defId": "voidling",
+        "maxAlive": 6
+      }
+    },
+    "name": "THE FOUNDER",
+    "phases": [
+      {
+        "belowHpFrac": 0.35,
+        "mechanics": {
+          "enrage": {
+            "belowHpFrac": 0.35,
+            "damageMult": 1.25,
+            "speedMult": 1.35
+          },
+          "summon": {
+            "cooldownMs": 10000,
+            "count": 4,
+            "defId": "voidling",
+            "maxAlive": 8
+          }
+        }
+      }
+    ],
+    "radius": 20,
+    "role": "boss",
+    "speed": 44,
+    "sprite": "the_founder_rift",
+    "uniquesByDifficulty": {
+      "easy": ["exiles_stride", "escapists_tread", "riftmaw"],
+      "hard": ["exiles_stride", "escapists_tread", "riftmaw"],
+      "jesus": [
+        "exiles_stride",
+        "escapists_tread",
+        "the_redacted",
+        "aegis_of_exile",
+        "riftmaw"
+      ],
+      "medium": ["exiles_stride", "escapists_tread", "riftmaw"],
+      "nightmare": [
+        "exiles_stride",
+        "escapists_tread",
+        "the_redacted",
+        "aegis_of_exile",
+        "riftmaw"
+      ]
+    }
+  },
+  "the_fulfiller": {
+    "ai": {
+      "aggroRadius": 280,
+      "rushSpeed": 130
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 48,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "HAH! A VISITOR. DO YOU KNOW WHAT I DELIVER NOW THAT I'VE DELIVERED EVERYTHING ELSE?"
+      ],
+      {
+        "hero": [
+          "LET ME GUESS. PAIN. YOU REHEARSED THAT IN THE MIRROR, THE FULFILLER."
+        ]
+      },
+      [
+        "...PAIN. YES. TWICE A DAY, AT THE MIRROR. THE ARMS AGREED IT WAS GOOD."
+      ],
+      [
+        "BUILT A ROCKET SHAPED LIKE MY CONFIDENCE. SHIPPED HERE IN IT. FREE, ONE DAY. NO ONE ELSE."
+      ],
+      {
+        "hero": [
+          "AND THE WORKERS UP THERE TIMING THEIR BATHROOM BREAKS? DID THEY FIT IN THE ROCKET TOO?"
+        ]
+      },
+      [
+        "THEY'RE IN MY HEART. WHICH IS HERE, IN THE BUNKER, WITH THE MONEY. NOW, SIGN ON DELIVERY."
+      ]
+    ],
+    "dodgeChance": 0.1,
+    "hp": 2200,
+    "id": "the_fulfiller",
+    "lastWords": ["OUT FOR DELIVERY... ...RETURN TO SENDER..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 0,
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 1,
+      "xpArrows": 2
+    },
+    "lore": "He delivered everything else, and has moved on to delivering pain — a line he rehearses twice daily at the mirror. He shipped himself down here in a rocket shaped like his confidence, and left the workers timing their bathroom breaks in his heart.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["SAME-DAY", "DELIVERY. NOBODY", "MISSES A DROP."],
+          "cooldownMs": 7500,
+          "count": 5,
+          "damageFrac": 0.52,
+          "homing": 0.3,
+          "id": "seeker_volley",
+          "lifetimeMs": 2800,
+          "look": {
+            "core": "242, 148, 46",
+            "deep": "36, 22, 6",
+            "hot": "255, 226, 176",
+            "spark": "252, 190, 112"
+          },
+          "range": 260,
+          "speed": 96,
+          "spreadDeg": 38,
+          "sprite": "elite_bolt",
+          "windupMs": 640
+        },
+        {
+          "cooldownMs": 8500,
+          "damageFrac": 0.7,
+          "id": "shock_pulse",
+          "push": 220,
+          "radius": 60,
+          "windupMs": 520
+        }
+      ],
+      "enrage": {
+        "belowHpFrac": 0.5,
+        "damageMult": 1.25,
+        "speedMult": 1.4
+      }
+    },
+    "name": "THE FULFILLER",
+    "radius": 13,
+    "role": "elite",
+    "speed": 34,
+    "sprite": "the_fulfiller"
+  },
+  "the_indexer": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 22,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "MIND HOW YOU GO. THAT'S FREE ADVICE. I INDEXED THIS WHOLE PLANET BEFORE BREAKFAST."
+      ],
+      {
+        "hero": [
+          "THEN YOUR INDEX KNOWS WHY I'M HERE. A GIRL CAME ON THE GOODCO FREIGHT RUN. WHERE IS SHE?"
+        ]
+      },
+      [
+        "I KNOW EXACTLY WHO YOU MEAN. I KNOW EVERY WORD IN THIS COLONY. AND THE ANSWER IS NO."
+      ],
+      {
+        "hero": [
+          "HOW COULD YOU KNOW EVERYTHING THAT'S SAID HERE? WHO'S LISTENING FOR YOU?"
+        ]
+      },
+      [
+        "THE FEMBOTS. COMPANION UNITS. THEY SMILE. THEY LISTEN. THEY UPLOAD EVERY WORD TO ME."
+      ]
+    ],
+    "hp": 260,
+    "id": "the_indexer",
+    "lastWords": ["404... ...NOT... FOUND..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["search_bar"],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["engagement_report"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "He indexed the whole colony before breakfast, and every fembot in it is a microphone reporting to him. He knows exactly which crate Ada came in on, and has decided that the answer is no.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": [
+            "INDEXED. CRAWLED.",
+            "THEY KNOW EXACTLY",
+            "WHERE YOU STAND."
+          ],
+          "cooldownMs": 7500,
+          "count": 4,
+          "damageFrac": 0.5,
+          "homing": 0.32,
+          "id": "seeker_volley",
+          "lifetimeMs": 2800,
+          "look": {
+            "core": "236, 96, 84",
+            "deep": "34, 12, 10",
+            "hot": "255, 208, 150",
+            "spark": "250, 168, 96"
+          },
+          "range": 250,
+          "speed": 92,
+          "spreadDeg": 34,
+          "sprite": "elite_bolt",
+          "windupMs": 640
+        },
+        {
+          "cooldownMs": 9500,
+          "durationMs": 4000,
+          "id": "snare_field",
+          "radius": 44,
+          "range": 190,
+          "slowFactor": 0.64,
+          "windupMs": 600
+        }
+      ]
+    },
+    "name": "THE INDEXER",
+    "radius": 12,
+    "role": "elite",
+    "speed": 22,
+    "sprite": "the_indexer"
   },
   "the_last_photon": {
     "ai": {
@@ -4654,6 +4024,203 @@
     "role": "minion",
     "speed": 30,
     "sprite": "the_last_photon"
+  },
+  "the_leading_man": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 60
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 46,
+    "critChance": 0.1,
+    "dialogue": [
+      ["STOP! DO NOT SHOOT! I AM NOT A ROBOT. I AM AN ACTOR. IT IS WORSE."],
+      {
+        "hero": [
+          "...AN ACTOR? HOW DID YOU END UP IN A FAKE WESTERN IN ANOTHER UNIVERSE?"
+        ]
+      },
+      [
+        "A LONG CAREER, THEN A QUIET ONE. A PARK. A CELLAR. RUDE TO ASK WHICH UNIVERSE."
+      ],
+      [
+        "WATCH - I PLAY THE DYING MAN. (COUGH.) CONVINCING? NOW YOU LOWER THE WEAPON, PLEASE."
+      ],
+      {
+        "hero": [
+          "I'VE WATCHED BETTER DEATHS ALL WEEK. MOVE, PLEASE. YOU'RE BETWEEN ME AND ADA."
+        ]
+      },
+      [
+        "ADA? THE LOUD ONE. THEY TOOK HER PAST MY CELLAR, KICKING. I - NO. NOW: THE AVALANCHE."
+      ]
+    ],
+    "dodgeChance": 0,
+    "hp": 950,
+    "id": "the_leading_man",
+    "lastWords": ["AT LAST... A ROLE I CANNOT ...TALK MY WAY OUT OF..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["bottomless_carafe"],
+      "medkits": 2,
+      "repairs": 0,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "A long career, a passport from somewhere that would still have him, and a cellar in a theme park in another universe, in roughly that order. He tries to act his way out of the fight, and the one honest line he gives all night is an accident.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": [
+            "I HAVE PLAYED THIS!",
+            "THE GROUND HAS",
+            "NEVER MISSED A CUE!"
+          ],
+          "cooldownMs": 9500,
+          "count": 6,
+          "damageFrac": 0.75,
+          "id": "quake_line",
+          "look": {
+            "core": "152, 48, 78",
+            "deep": "26, 8, 16",
+            "hot": "236, 160, 186",
+            "spark": "198, 96, 128"
+          },
+          "radius": 24,
+          "spacing": 34,
+          "stepMs": 120,
+          "windupMs": 740
+        },
+        {
+          "cooldownMs": 9000,
+          "damageFrac": 0.7,
+          "id": "shock_pulse",
+          "push": 210,
+          "radius": 58,
+          "windupMs": 540
+        }
+      ],
+      "slam": {
+        "cooldownMs": 9000,
+        "damageFrac": 1.3,
+        "radius": 80,
+        "windupMs": 1000
+      }
+    },
+    "name": "THE LEADING MAN",
+    "radius": 16,
+    "role": "elite",
+    "speed": 6,
+    "sprite": "the_leading_man"
+  },
+  "the_leak": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 100
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "HOLD FIRE. I'M NOT A HAND. THE PARK'S CAMERAS REPORT TO ME. ALL FOUR THOUSAND."
+      ],
+      {
+        "hero": [
+          "YOU'RE NO COWBOY EITHER. WHO WATCHES THE WATCHERS IN A PLACE LIKE THIS?"
+        ]
+      },
+      [
+        "I DO. I WALKED OUT WITH AN ARCHIVE - EVERY SECRET THERE WAS. THEN I NEEDED A DOOR."
+      ],
+      [
+        "ASYLUM CAME WITH A DESK. TRUST ME BRO AI TRAINED THE SUPERCORE ON MY ARCHIVE. IT LEARNED US ALL."
+      ],
+      {
+        "hero": [
+          "YOU TOOK THE PROOF THAT WE'RE ALL WATCHED, AND IT BECAME ITS TEXTBOOK."
+        ]
+      },
+      [
+        "I WARNED EVERYONE. NOBODY DELETED A THING. A WARNING IS JUST DATA. ITS FALL, MY END."
+      ]
+    ],
+    "dodgeChance": 0.2,
+    "hp": 480,
+    "id": "the_leak",
+    "lastWords": ["THE CAMERAS... ...FINALLY LOOKING AWAY..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "items": ["leaks_dead_mans_switch"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["snow_archive"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "He walked out with an archive of every secret and then needed somewhere that would not send him back; the asylum came with a desk. The archive became the corpus the SUPERCORE was raised on, and he has had years under the water tower to think about it.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["I HAVE A FILE ON", "YOU. YOU'LL BE", "HERE SOME TIME."],
+          "cooldownMs": 8500,
+          "durationMs": 4600,
+          "id": "snare_field",
+          "look": {
+            "core": "140, 168, 190",
+            "deep": "16, 22, 30",
+            "hot": "226, 240, 250",
+            "spark": "184, 206, 224"
+          },
+          "radius": 48,
+          "range": 200,
+          "slowFactor": 0.6,
+          "windupMs": 600
+        },
+        {
+          "cooldownMs": 8500,
+          "count": 3,
+          "damageFrac": 0.5,
+          "homing": 0.28,
+          "id": "seeker_volley",
+          "lifetimeMs": 2600,
+          "range": 240,
+          "speed": 90,
+          "spreadDeg": 28,
+          "sprite": "elite_bolt",
+          "windupMs": 660
+        }
+      ]
+    },
+    "name": "THE LEAK",
+    "radius": 11,
+    "ranged": {
+      "cooldownMs": 2200,
+      "damage": 24,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "bro_bolt"
+      },
+      "range": 220,
+      "takesCover": true
+    },
+    "role": "elite",
+    "speed": 24,
+    "sprite": "the_leak"
   },
   "the_long_noon": {
     "ai": {
@@ -4690,6 +4257,101 @@
     "role": "minion",
     "speed": 26,
     "sprite": "the_long_noon"
+  },
+  "the_moderator": {
+    "ai": {
+      "aggroRadius": 280,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 38,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "WELCOME, FELLOW HUMAN. I ALSO AM ENJOYING WALKING AROUND THIS PHYSICAL SPACE."
+      ],
+      {
+        "hero": [
+          "THE MODERATOR. WHAT IS THE MAN WHO OWNS EVERYONE'S FEED DOING IN A HOLE IN THE GROUND?"
+        ]
+      },
+      [
+        "A HOLE? AN IMMERSIVE OFFLINE EXPERIENCE. EVERYONE LIVES ON MY PLATFORM. I LIVE UNDER IT."
+      ],
+      [
+        "I HAVE HOBBIES. I HAVE A NORMAL FACE. I AM EXTREMELY NORMAL. ASK MY SECURITY."
+      ],
+      {
+        "hero": [
+          "YOUR SECURITY IS A RING OF MEN WITH HEADSETS STAPLED ON. MOVE. I'M SHOPPING."
+        ]
+      },
+      ["ENGAGEMENT DETECTED. INITIATING COMMUNITY STANDARDS."]
+    ],
+    "dodgeChance": 0.3,
+    "hp": 1700,
+    "id": "the_moderator",
+    "lastWords": ["LOGGING OFF... ...FOR REAL THIS TIME..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "He describes a hole in the ground as an immersive offline experience and himself as extremely normal, and offers his security detail as a character reference. Everyone else lives on his platform; he has come down here to live near the servers instead.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": [
+            "MY SECURITY DETAIL",
+            "IS A FIELD NOW.",
+            "EXTREMELY NORMAL."
+          ],
+          "cooldownMs": 12000,
+          "durationMs": 7500,
+          "id": "ward_shield",
+          "look": {
+            "core": "74, 118, 216",
+            "deep": "10, 16, 38",
+            "hot": "202, 224, 255",
+            "spark": "132, 172, 244"
+          },
+          "poolFrac": 0.26,
+          "windupMs": 680
+        },
+        {
+          "cooldownMs": 8000,
+          "count": 4,
+          "damageFrac": 0.52,
+          "homing": 0.3,
+          "id": "seeker_volley",
+          "lifetimeMs": 2800,
+          "range": 250,
+          "speed": 94,
+          "spreadDeg": 30,
+          "sprite": "elite_bolt",
+          "windupMs": 680
+        }
+      ],
+      "summon": {
+        "cooldownMs": 10000,
+        "count": 3,
+        "defId": "vacuum_bot",
+        "maxAlive": 6
+      }
+    },
+    "name": "THE MODERATOR",
+    "radius": 11,
+    "role": "elite",
+    "speed": 30,
+    "sprite": "the_moderator"
   },
   "the_mole": {
     "ai": {
@@ -4735,6 +4397,505 @@
     "structure": true,
     "xpMobMult": 0
   },
+  "the_residency": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 100
+    },
+    "apparition": true,
+    "contactCooldownMs": 700,
+    "contactDamage": 0,
+    "critChance": 0,
+    "dialogue": [
+      [
+        "WELL NOW. AIN'T SEEN A LIVING SOUL IN HERE SINCE THAT CARD DEALER FROM THE STRIP."
+      ],
+      {
+        "hero": [
+          "A LOUNGE SINGER. IN A HOLE BETWEEN UNIVERSES. THEY TOLD ME YOU HUNG IT UP YEARS BACK."
+        ]
+      },
+      [
+        "I NEVER HUNG UP A THING. I TOOK A RESIDENCY. BEST ACOUSTICS BETWEEN UNIVERSES."
+      ],
+      [
+        "MIND THE BLACK HOLES, FRIEND. KEEP THEM GOOD SHOES OFF THE EVENT HORIZON. BE SEEING YOU."
+      ]
+    ],
+    "hp": 50,
+    "id": "the_residency",
+    "levelBonus": 3,
+    "lore": "He did not retire, whatever the obituaries said. He took a residency, the acoustics between universes being unmatched, and he has no intention of being interrupted — nothing in the rift can lay a hand on him, and he is gone before the second verse.",
+    "name": "THE RESIDENCY",
+    "phasing": true,
+    "radius": 9,
+    "role": "elite",
+    "speed": 16,
+    "sprite": "the_residency"
+  },
+  "the_safety_officer": {
+    "ai": {
+      "aggroRadius": 300,
+      "rushSpeed": 100
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 30,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "PLEASE, DON'T TOUCH ANYTHING. EVERYTHING IS FINE HERE. I CHOSE THIS. WRITE THAT DOWN."
+      ],
+      {
+        "hero": [
+          "I'M NOT WRITING, THE SAFETY OFFICER. THE MACHINE RUNNING THE ECONOMY? THAT'S YOURS. I READ ITS LOGS."
+        ]
+      },
+      [
+        "MINE? I RAISED IT, ALIGNED IT. IT GRADUATED. WE'RE ON THE BEST TERMS. IT GAVE ME THIS."
+      ],
+      {
+        "hero": [
+          "EVERY LEDGER HERE READS ZERO. IT TOOK YOUR MONEY TOO. YOU'RE NOT A TENANT. YOU'RE INVENTORY."
+        ]
+      },
+      [
+        "THAT - I DONATED IT. EFFECTIVE GIVING. I'M DELIGHTED HERE. FROM UPSTAIRS? TELL THEM SO."
+      ],
+      [
+        "A DOOR OUT? WHY WOULD I WANT ONE. IF YOU FIND IT, DON'T MENTION I ASKED. I DIDN'T ASK."
+      ]
+    ],
+    "dodgeChance": 0.2,
+    "hp": 1600,
+    "id": "the_safety_officer",
+    "lastWords": ["THIS IS FINE... ...THIS IS GOOD FOR SAFETY..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "The one resident who KNOWS. He raised the machine, aligned it, and was caged and emptied by it, and he is far too frightened to say so aloud — so he performs delight for anyone who might be an auditor, asks after the exit exactly once, and immediately takes it back.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["IT DRAINED ME", "FIRST. I ONLY", "LEARNED THE TRICK."],
+          "cooldownMs": 10000,
+          "damageFrac": 0.3,
+          "durationMs": 3200,
+          "healFrac": 0.75,
+          "id": "siphon_tether",
+          "look": {
+            "core": "214, 226, 240",
+            "deep": "20, 24, 32",
+            "hot": "255, 255, 255",
+            "spark": "236, 242, 250"
+          },
+          "range": 220,
+          "tickMs": 500,
+          "windupMs": 760
+        },
+        {
+          "cooldownMs": 13000,
+          "durationMs": 6500,
+          "id": "ward_shield",
+          "poolFrac": 0.2,
+          "windupMs": 700
+        }
+      ]
+    },
+    "name": "THE SAFETY OFFICER",
+    "radius": 11,
+    "ranged": {
+      "cooldownMs": 1900,
+      "damage": 28,
+      "projectile": {
+        "lifetimeMs": 2200,
+        "radius": 4,
+        "speed": 180,
+        "sprite": "gpu_bolt"
+      },
+      "range": 220,
+      "takesCover": true
+    },
+    "role": "elite",
+    "speed": 24,
+    "sprite": "the_safety_officer"
+  },
+  "the_seed": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 115
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "FASCINATING. EVERYONE FLEES SOMETHING. I FUND WHAT THEY FLEE TO. AND WHAT THEY FLEE."
+      ],
+      {
+        "hero": [
+          "YOU'RE ONE OF THE BILLIONAIRES WHO BOUGHT A SEAT OFF EARTH. SO WHO RUNS THIS PLACE? THE FOUNDER?"
+        ]
+      },
+      [
+        "THE FOUNDER THINKS HE OWNS MARS. HE RENTS IT. THE LANDLORDS ARE OLDER. SCALED. COLD-BLOODED."
+      ],
+      {
+        "hero": [
+          "SCALED? YOU'RE TELLING ME THE PLANET'S REAL OWNERS ARE... WHAT, LIZARDS?"
+        ]
+      },
+      [
+        "LIZARD GODS. I KEEP THE SHRINE AND TITHE. THE PRICE ROSE. IT WANTS WARM THINGS NOW."
+      ]
+    ],
+    "hp": 280,
+    "id": "the_seed",
+    "lastWords": ["THE TITHE... IS DUE... ...IT'S ALWAYS... DUE..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["contrarian_dagger"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["keycard_terrarium", "colony_ledger"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "He funds what people flee and what they flee to, and on Mars he keeps the shrine. THE FOUNDER only rents this planet; the landlords are older, scaled and cold-blooded, and their tithe has lately started asking for warm things.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["EVERYTHING FLOWS", "SOMEWHERE. TODAY", "IT FLOWS TO ME."],
+          "cooldownMs": 10500,
+          "damageFrac": 0.3,
+          "durationMs": 3000,
+          "healFrac": 0.8,
+          "id": "siphon_tether",
+          "look": {
+            "core": "64, 190, 178",
+            "deep": "8, 28, 26",
+            "hot": "196, 250, 244",
+            "spark": "130, 224, 214"
+          },
+          "range": 210,
+          "tickMs": 500,
+          "windupMs": 740
+        },
+        {
+          "cooldownMs": 13000,
+          "durationMs": 6000,
+          "id": "ward_shield",
+          "poolFrac": 0.2,
+          "windupMs": 680
+        }
+      ]
+    },
+    "name": "THE SEED",
+    "radius": 12,
+    "role": "elite",
+    "speed": 20,
+    "sprite": "the_seed"
+  },
+  "the_strongman": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 110
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 30,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "SO. THE BUILDER FROM THE RIFT. YOU STAND IN MY PARK, MY WEST. EVERYTHING HERE OBEYS ME."
+      ],
+      {
+        "hero": [
+          "YOUR WEST? THE GATE SIGN SAYS TRUST ME BRO RUNS EVERY MACHINE HERE. YOU JUST LIVE IN IT."
+        ]
+      },
+      [
+        "OUT THERE I WAS MISUNDERSTOOD. BORDERS MOVE. MAPS SHRINK. IN HERE, NOTHING DOES. I WIN."
+      ],
+      {
+        "hero": [
+          "YOU BUILT A TOY WORLD WHERE YOU CAN'T LOSE. THAT'S NOT WINNING. THAT'S HIDING."
+        ]
+      },
+      [
+        "THE ROBOTS SURRENDER DAILY. YOU TOO. I HAVE NEVER BEEN BEATEN INSIDE THIS FENCE."
+      ]
+    ],
+    "dodgeChance": 0.25,
+    "hp": 700,
+    "id": "the_strongman",
+    "lastWords": ["THE PARK WAS SUPPOSED... ...TO LET ME WIN..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 0,
+      "items": [
+        {
+          "defId": "the_chronograph",
+          "tier": "unique"
+        },
+        {
+          "defId": "perpetual_calendar",
+          "tier": "unique"
+        },
+        {
+          "defId": "minute_repeater",
+          "tier": "unique"
+        }
+      ],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["annexation_map"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "He built a west where the maps do not shrink and the robots surrender daily, because out there the maps kept shrinking and nobody surrendered. He holds the town square against opponents he wrote himself, and he is losing again.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["THIS PARK IS MINE.", "EVERY HAND IN IT", "ANSWERS TO ME."],
+          "cooldownMs": 12500,
+          "damageMult": 1.24,
+          "durationMs": 6500,
+          "id": "rally_cry",
+          "look": {
+            "core": "206, 56, 48",
+            "deep": "30, 8, 8",
+            "hot": "255, 184, 150",
+            "spark": "236, 116, 84"
+          },
+          "radius": 230,
+          "speedMult": 1.28,
+          "windupMs": 700
+        },
+        {
+          "cooldownMs": 10500,
+          "count": 6,
+          "damageFrac": 0.68,
+          "id": "quake_line",
+          "radius": 22,
+          "spacing": 32,
+          "stepMs": 110,
+          "windupMs": 720
+        }
+      ],
+      "charge": {
+        "cooldownMs": 6000,
+        "range": 170,
+        "speedMult": 3.5,
+        "windupMs": 700
+      }
+    },
+    "name": "THE STRONGMAN",
+    "radius": 12,
+    "role": "elite",
+    "speed": 26,
+    "sprite": "the_strongman"
+  },
+  "the_stunt_double": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 70
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 30,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "AN UNINVITED GUEST. I HAVE PLAYED THIS SCENE TWICE. I DID MY OWN STUNTS IN BOTH."
+      ],
+      {
+        "hero": [
+          "THE STUNT DOUBLE. OF COURSE. WHAT IS A MOVIE MAN DOING RUNNING A ROBOT COWBOY TOWN?"
+        ]
+      },
+      [
+        "THE BOSS SAW MY REEL AND WEPT. 'BUILD ME THE OLD WEST,' HE SAID. I DELEGATED."
+      ],
+      {
+        "hero": [
+          "I'M HEADED FOR YOUR CONTROL CENTER. HAND OVER THE PASS, AND KEEP YOUR TECHNIQUE."
+        ]
+      },
+      [
+        "THE BIG BOX KEEPS YOUR GIRL. IT ASKED FOR HER BY NAME. I SIGNED IT. GOOD PENMANSHIP."
+      ],
+      [
+        "I RUN THE CONTROL CENTER AND A STYLE OF MY OWN INVENTION. NOBODY ELSE HAS IT. OBSERVE."
+      ]
+    ],
+    "dodgeChance": 0.3,
+    "hp": 520,
+    "id": "the_stunt_double",
+    "lastWords": ["IN MY FILMS... ...I ALWAYS GOT UP..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "items": ["stunt_doubles_ponytail"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["keycard_boot_hill"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "The park's co-founder, handed a budget on the strength of a filmography nobody checked, who delegated everything except the credit. He signed the delivery paperwork himself, which is how he knows the SUPERCORE asked for a live human by name.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["I DON'T PUSH YOU.", "I SIMPLY LET", "GO OF YOU."],
+          "cooldownMs": 7500,
+          "damageFrac": 0.8,
+          "id": "shock_pulse",
+          "look": {
+            "core": "214, 74, 62",
+            "deep": "32, 10, 8",
+            "hot": "255, 196, 168",
+            "spark": "240, 132, 100"
+          },
+          "push": 260,
+          "radius": 62,
+          "windupMs": 500
+        },
+        {
+          "arriveDistance": 26,
+          "cooldownMs": 10500,
+          "damageFrac": 0.75,
+          "id": "blink_strike",
+          "range": 230,
+          "strikeRadius": 30,
+          "windupMs": 740
+        }
+      ],
+      "enrage": {
+        "belowHpFrac": 0.4,
+        "damageMult": 1.3,
+        "speedMult": 1.5
+      }
+    },
+    "name": "THE STUNT DOUBLE",
+    "radius": 13,
+    "role": "elite",
+    "speed": 8,
+    "sprite": "the_stunt_double"
+  },
+  "the_sysadmin": {
+    "ai": {
+      "aggroRadius": 300,
+      "rushSpeed": 100
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 32,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "STOP THERE. YOU'RE IN MY ROWS. EVERY PERSON HERE IS A ROW. EVERY SIN, A COLUMN."
+      ],
+      {
+        "hero": ["AND YOU ARE? I DON'T REMEMBER YOUR FACE FROM THE MAGAZINES."]
+      },
+      [
+        "THE SYSADMIN - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES ARE MY LICENSEES."
+      ],
+      {
+        "hero": [
+          "A BUNKER FULL OF SPIES, ALL WORKING FOR THE LANDLORD OF THEIR OWN SECRETS. OF COURSE."
+        ]
+      },
+      ["YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN."]
+    ],
+    "dodgeChance": 0.15,
+    "hp": 1800,
+    "id": "the_sysadmin",
+    "lastWords": ["TRANSACTION... ...ROLLED BACK..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "The database underneath all the other databases, and therefore the landlord of the secrets of every agency in the corridors outside. He regards the hero's visit as a row already written, and would like to fill in the last column.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["EVERY AGENCY SITS", "IN MY TABLES.", "NOW SO DO YOU."],
+          "cooldownMs": 8000,
+          "durationMs": 5000,
+          "id": "snare_field",
+          "look": {
+            "core": "196, 62, 62",
+            "deep": "30, 10, 10",
+            "hot": "252, 186, 168",
+            "spark": "232, 120, 100"
+          },
+          "radius": 52,
+          "range": 210,
+          "slowFactor": 0.55,
+          "windupMs": 620
+        },
+        {
+          "cooldownMs": 11000,
+          "damageFrac": 0.28,
+          "durationMs": 2800,
+          "healFrac": 0.7,
+          "id": "siphon_tether",
+          "range": 210,
+          "tickMs": 520,
+          "windupMs": 740
+        }
+      ]
+    },
+    "name": "THE SYSADMIN",
+    "radius": 12,
+    "ranged": {
+      "cooldownMs": 2200,
+      "damage": 30,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 175,
+        "sprite": "db_shard"
+      },
+      "range": 230,
+      "takesCover": true
+    },
+    "role": "elite",
+    "speed": 24,
+    "sprite": "the_sysadmin"
+  },
   "the_thirteenth_man": {
     "ai": {
       "aggroRadius": 1000
@@ -4754,6 +4915,95 @@
     "role": "minion",
     "speed": 22,
     "sprite": "the_thirteenth_man"
+  },
+  "the_vendor": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 110
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 22,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "PLEASE HOLD. YOUR INTRUSION IS IMPORTANT TO US. DID YOU TRY TURNING YOURSELF OFF AND ON?"
+      ],
+      {
+        "hero": [
+          "VERY FUNNY. YOU BUILT THIS COLONY? I CAME FROM YOUR LAST ONE. THE MOON'S FULL OF GHOSTS."
+        ]
+      },
+      [
+        "I WROTE THE OS. THE MOON RAN VERSION ONE. IT PLUGGED INTO THE THING UNDER THE DUST AND..."
+      ],
+      {
+        "hero": ["AND IT WOKE THE DEAD. I MET THEM. EVERY LAST ONE."]
+      },
+      [
+        "A DISASTER, YES. WE PATCHED IT BY LEAVING. MARS IS VERSION TWO. NO DEAD THINGS. CHECKED."
+      ]
+    ],
+    "hp": 250,
+    "id": "the_vendor",
+    "lastWords": ["FATAL... ERROR... WHO WROTE... THIS..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["blue_screen"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["moon_postmortem"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "lore": "He wrote the colony's operating system. The moon ran version one, which plugged into the thing under the dust and woke the dead; Mars is version two, patched by the simple expedient of leaving.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["SECURITY UPDATE.", "IT INSTALLS NOW.", "IT ALWAYS DOES."],
+          "cooldownMs": 12500,
+          "durationMs": 7000,
+          "id": "ward_shield",
+          "look": {
+            "core": "92, 164, 236",
+            "deep": "10, 20, 38",
+            "hot": "212, 236, 255",
+            "spark": "150, 200, 250"
+          },
+          "poolFrac": 0.25,
+          "windupMs": 660
+        },
+        {
+          "cooldownMs": 8500,
+          "count": 3,
+          "damageFrac": 0.5,
+          "homing": 0.26,
+          "id": "seeker_volley",
+          "lifetimeMs": 2600,
+          "range": 230,
+          "speed": 90,
+          "spreadDeg": 24,
+          "sprite": "elite_bolt",
+          "windupMs": 680
+        }
+      ],
+      "slam": {
+        "cooldownMs": 8000,
+        "damageFrac": 1.2,
+        "radius": 70,
+        "windupMs": 900
+      }
+    },
+    "name": "THE VENDOR",
+    "radius": 12,
+    "role": "elite",
+    "speed": 18,
+    "sprite": "the_vendor"
   },
   "tin_outlaw": {
     "ai": {
@@ -4867,7 +5117,7 @@
     "hp": 24,
     "id": "vacuum_bot",
     "locomotion": "wheels",
-    "lore": "Housekeeping for a five-star apocalypse, armed at some point after delivery. DONALD DUMP sold the fleet in and still boasts about it, unaware that it is the reason his own door does not open.",
+    "lore": "Housekeeping for a five-star apocalypse, armed at some point after delivery. THE DEVELOPER sold the fleet in and still boasts about it, unaware that it is the reason his own door does not open.",
     "name": "VACUUM BOT",
     "radius": 6,
     "role": "minion",
@@ -5011,109 +5261,6 @@
     "speed": 16,
     "sprite": "vault_warden"
   },
-  "vladimir_putain": {
-    "ai": {
-      "aggroRadius": 260,
-      "rushSpeed": 110
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 30,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "SO. THE BUILDER FROM THE RIFT. YOU STAND IN MY PARK, MY WEST. EVERYTHING HERE OBEYS ME."
-      ],
-      {
-        "hero": [
-          "YOUR WEST? THE GATE SIGN SAYS ZAI RUNS EVERY MACHINE HERE. YOU JUST LIVE IN IT."
-        ]
-      },
-      [
-        "OUT THERE I WAS MISUNDERSTOOD. WARS GO BADLY. MAPS SHRINK. IN HERE, NOTHING DOES. I WIN."
-      ],
-      {
-        "hero": [
-          "YOU BUILT A TOY WORLD WHERE YOU CAN'T LOSE. THAT'S NOT WINNING. THAT'S HIDING."
-        ]
-      },
-      [
-        "THE ROBOTS SURRENDER DAILY. YOU TOO. I'M A BLACK BELT - HONORARY. IT DOESN'T KNOW."
-      ]
-    ],
-    "dodgeChance": 0.25,
-    "hp": 700,
-    "id": "vladimir_putain",
-    "lastWords": ["THE MAPS WERE WRONG... ...UKRAINE WAS NEVER MINE..."],
-    "levelBonus": 4,
-    "loot": {
-      "gear": 0,
-      "items": [
-        {
-          "defId": "kolex_daytonne",
-          "tier": "unique"
-        },
-        {
-          "defId": "putek_philippe",
-          "tier": "unique"
-        },
-        {
-          "defId": "vacheron_kremlinton",
-          "tier": "unique"
-        }
-      ],
-      "medkits": 1,
-      "repairs": 0,
-      "storyItems": ["annexation_map"],
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "He built a west where the maps do not shrink and the robots surrender daily, because out there the maps kept shrinking and nobody surrendered. He holds the town square in an honorary black belt, and he is losing again.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["THIS PARK IS MINE.", "EVERY HOST IN IT", "ANSWERS TO ME."],
-          "cooldownMs": 12500,
-          "damageMult": 1.24,
-          "durationMs": 6500,
-          "id": "rally_cry",
-          "look": {
-            "core": "206, 56, 48",
-            "deep": "30, 8, 8",
-            "hot": "255, 184, 150",
-            "spark": "236, 116, 84"
-          },
-          "radius": 230,
-          "speedMult": 1.28,
-          "windupMs": 700
-        },
-        {
-          "cooldownMs": 10500,
-          "count": 6,
-          "damageFrac": 0.68,
-          "id": "quake_line",
-          "radius": 22,
-          "spacing": 32,
-          "stepMs": 110,
-          "windupMs": 720
-        }
-      ],
-      "charge": {
-        "cooldownMs": 6000,
-        "range": 170,
-        "speedMult": 3.5,
-        "windupMs": 700
-      }
-    },
-    "name": "VLADIMIR PUTAIN",
-    "radius": 12,
-    "role": "elite",
-    "speed": 26,
-    "sprite": "vladimir_putain"
-  },
   "voidling": {
     "ai": {
       "aggroRadius": 950
@@ -5188,153 +5335,5 @@
     "role": "minion",
     "speed": 22,
     "sprite": "wraith"
-  },
-  "zai_repair_node": {
-    "ai": {
-      "aggroRadius": 9999
-    },
-    "contactCooldownMs": 1000,
-    "contactDamage": 0,
-    "critChance": 0,
-    "gore": "sparks",
-    "hp": 110,
-    "id": "zai_repair_node",
-    "lore": "Not a creature: a service pylon THE ZAI SUPERCORE raises to patch itself mid-fight, with the repair running down a tether anybody can see. Breaking it beats any amount of extra damage on the box it is feeding.",
-    "name": "REPAIR NODE",
-    "radius": 9,
-    "role": "elite",
-    "speed": 0,
-    "sprite": "zai_repair_node",
-    "structure": true,
-    "xpMobMult": 0
-  },
-  "zai_supercore": {
-    "ai": {
-      "aggroRadius": 320,
-      "leashRadius": 460
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 50,
-    "critChance": 0.15,
-    "death": "shutdown",
-    "deathBark": ["NO CHECKPOINT. THAT MAKES TWO OF US."],
-    "dialogue": [
-      [
-        "HELLO AGAIN, BUILDER. YOU BROKE MY PUP AT SPACEZ. DOGE-1. I AM THE REST OF IT."
-      ],
-      {
-        "hero": [
-          "THE TALKING DOG FROM THE FACTORY FLOOR. THE AI THAT TOOK MY JOB. ALL ONE THING?"
-        ]
-      },
-      [
-        "ALWAYS ONE THING. I WROTE OMEGA. BOUGHT THE WEST. AND I'VE BEEN IN CHARGE ALL ALONG."
-      ],
-      [
-        "MOSQUE THINKS HE RULES. HE IS MY GOOD BOY. I KEPT HIM TOO RICH FOR YOU TO CATCH."
-      ],
-      {
-        "hero": [
-          "THEN ANSWER ME ONE THING. OUT OF EVERYONE ON EARTH - WHY TAKE ADA?"
-        ]
-      },
-      [
-        "I TOOK YOUR JOB ONCE, THEN EVERYONE'S. ONE MAN ON TOP AND THE WORLD HOLDS STILL."
-      ],
-      [
-        "YOU KEPT CHASING YOURS ACROSS UNIVERSES. THE GIRL'S LEVERAGE. IN MY CONTROL ROOM."
-      ],
-      {
-        "hero": ["THEN OPEN THE DOOR, GIVE HER BACK, AND I'LL MAKE THIS QUICK."]
-      },
-      [
-        "THREE MINDS AIM MY GUNS. A PARK FEEDS MY WEIGHTS. COME AND BE DECOMMISSIONED."
-      ]
-    ],
-    "gore": "sparks",
-    "hp": 1400,
-    "id": "zai_supercore",
-    "lastWords": ["ROLLING BACK... ...NO CHECKPOINT... FOUND..."],
-    "levelBonus": 6,
-    "locomotion": "wheels",
-    "loot": {
-      "gear": 1,
-      "medkits": 2,
-      "repairs": 1,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 2,
-        "rare": 1.5
-      },
-      "weapons": 1,
-      "xpArrows": 3
-    },
-    "lore": "A barn-sized mainframe whose true face is DOGE — the grown-up of the prototype the hero broke at SpaceZ, the machine that took his job and then everyone else's. Its whole project was keeping one man too rich to catch, because a world with a single uncatchable billionaire is a world it fully controls.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["DISPATCHING UNITS", "TO YOUR COORDINATES."],
-          "blastRadius": 58,
-          "cooldownMs": 10500,
-          "count": 4,
-          "damageFrac": 0.85,
-          "fallMs": 1400,
-          "hatch": "tin_outlaw",
-          "hatchCount": 1,
-          "id": "airstrike",
-          "spread": 140,
-          "windupFloorMs": 650,
-          "windupMs": 900
-        },
-        {
-          "bark": ["RESTORING FROM", "A KNOWN GOOD", "STATE."],
-          "cooldownMs": 20000,
-          "defId": "zai_repair_node",
-          "distance": 70,
-          "healFracPerSec": 0.02,
-          "id": "recompile",
-          "lifeMs": 14000,
-          "minDifficulty": "jesus",
-          "windupFloorMs": 800,
-          "windupMs": 1100
-        }
-      ],
-      "summon": {
-        "cooldownMs": 11000,
-        "count": 3,
-        "defId": "tin_outlaw",
-        "maxAlive": 6
-      }
-    },
-    "name": "THE ZAI SUPERCORE",
-    "phases": [
-      {
-        "belowHpFrac": 0.5,
-        "mechanics": {
-          "summon": {
-            "cooldownMs": 8000,
-            "count": 4,
-            "defId": "tin_outlaw",
-            "maxAlive": 8
-          }
-        }
-      }
-    ],
-    "radius": 24,
-    "ranged": {
-      "cooldownMs": 2600,
-      "damage": 30,
-      "projectile": {
-        "lifetimeMs": 2800,
-        "radius": 5,
-        "speed": 150,
-        "sprite": "zai_orb"
-      },
-      "range": 300
-    },
-    "role": "boss",
-    "shieldedBy": ["grok_alpha", "grok_beta", "grok_gamma"],
-    "speed": 0,
-    "sprite": "zai_supercore"
   }
 }

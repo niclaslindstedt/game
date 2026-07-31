@@ -61,7 +61,7 @@ export const CAST_RIM_CHAR = "%";
  *
  * A hot AMBER rather than the near-white this started as, and the reason is
  * worth keeping: a pale rim is invisible against pale art (the janitor's grey
- * coveralls, SpaceZ's deck plate, the moon's own regolith), and "the tell is
+ * coveralls, GOODCO's deck plate, the moon's own regolith), and "the tell is
  * only readable on dark maps" is indistinguishable from "there is no tell" for
  * the third of the campaign that is lit. Amber carries on both, and it is
  * already the game's own colour for a thing charging up.

@@ -2,7 +2,7 @@
 description: |-
   GENERATED THE RIFT — the tear between universes, rebuilt out of physics instead
   of terrain. THE READ: open void broken by DRIFTS of crystallized somewhere-else
-  and knotted into CAGES where space froze solid, and ELON MOSQUE is cowering in
+  and knotted into CAGES where space froze solid, and THE FOUNDER is cowering in
   one of them. WHICH one is rolled per run out of the six outer thirds, so the far
   door is never where it was last time and the only way to him is to walk the void
   drift by drift, reading the fog-of-war minimap as it fills in.
@@ -20,7 +20,7 @@ level: the_rift
 # WHAT THE TEAR IS MADE OF. Three kinds of nothing, and the barriers between them
 # fall out of the pairing: two VOIDS flow into each other with nothing between
 # them, a DRIFT is fenced off behind frozen crystal with a broad gap through it,
-# and a CAGE is sealed behind a baffle curtain with one gate. ELON MOSQUE is only
+# and a CAGE is sealed behind a baffle curtain with one gate. THE FOUNDER is only
 # ever found in a CAGE — he tore his way in here and pulled it shut — and the hero
 # always arrives in open void.
 #
@@ -241,7 +241,7 @@ elites:
   - enemy: lucky
     ramp: merciless
     hp: 300
-  - enemy: the_king
+  - enemy: the_residency
     ramp: merciless
     hp: 50
   - enemy: amelia_earhart
@@ -268,14 +268,14 @@ hellborn:
       count: 4
       minDifficulty: jesus
 
-# ELON MOSQUE, cornered in a cage in one of the SIX OUTER THIRDS, with GROK OMEGA
+# THE FOUNDER, cornered in a cage in one of the SIX OUTER THIRDS, with BRO OMEGA
 # standing over him — the pair the authored rift ends on, kept together.
 boss:
-  enemy: elon_mosque_rift
+  enemy: the_founder_rift
   ramp: apex
   hp: 750
   escort:
-    - enemy: grok_omega
+    - enemy: bro_omega
       count: 1
       ramp: apex
       hp: 850

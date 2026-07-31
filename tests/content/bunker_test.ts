@@ -102,7 +102,7 @@ describe("the bunker", () => {
         (i) => typeof i !== "string" && i.defId === "severed_hand",
       ),
     ).toBe(true);
-    // …and that drop is gated on the campaign: it names EASTWORLD as its
+    // …and that drop is gated on the campaign: it names BOOT HILL as its
     // `requiresClear`, so a first pass (which reaches the Rift first) can't
     // stumble into the bunker early.
     expect(
@@ -110,16 +110,16 @@ describe("the bunker", () => {
         (i) =>
           typeof i !== "string" &&
           i.defId === "severed_hand" &&
-          i.requiresClear === "eastworld",
+          i.requiresClear === "boot_hill",
       ),
     ).toBe(true);
   });
 
-  it("holds the SEVERED HAND until EASTWORLD is cleared, then drops it", () => {
-    // A first-pass Rift run (Eastworld not yet beaten): the hand stays latent.
+  it("holds the SEVERED HAND until BOOT HILL is cleared, then drops it", () => {
+    // A first-pass Rift run (Boot Hill not yet beaten): the hand stays latent.
     expect(droppedSeveredHand(killRasputinInRift([]))).toBe(false);
-    // A post-campaign replay (Eastworld cleared at this difficulty): it drops.
-    expect(droppedSeveredHand(killRasputinInRift(["eastworld"]))).toBe(true);
+    // A post-campaign replay (Boot Hill cleared at this difficulty): it drops.
+    expect(droppedSeveredHand(killRasputinInRift(["boot_hill"]))).toBe(true);
   });
 
   it("crescendos at THE VAULT WARDEN, the machine's gate on the exit", () => {

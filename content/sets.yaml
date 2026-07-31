@@ -14,9 +14,9 @@
 # and never rolled: a set piece drops only from its boss
 # (`EnemyDef.uniquesByDifficulty`).
 #
-# The catalog rolls out melee-first across the campaign: DOGE-1 (SpaceZ) and
-# ARMSTRONG (Moon) drop MELEE sets, ELON MOSQUE on Mars and in the Rift drop
-# RANGED sets, and GROK OMEGA drops the MAGIC set.
+# The catalog rolls out melee-first across the campaign: PAYLOAD-1 (GOODCO) and
+# ARMSTRONG (Moon) drop MELEE sets, THE FOUNDER on Mars and in the Rift drop
+# RANGED sets, and BRO OMEGA drops the MAGIC set.
 #
 # THE MEMBERSHIP HERE IS THE SOURCE OF TRUTH, and each member item carries a
 # matching `setId` back-reference — the compile step fails when the two
@@ -24,7 +24,7 @@
 # pieces, or when a threshold asks for more pieces than the set has.
 
 sets:
-  # DOGE-1 (SpaceZ) — the memecoin prototype boss. A MELEE crit/agility kit:
+  # PAYLOAD-1 (GOODCO) — the memecoin prototype boss. A MELEE crit/agility kit:
   # the scavenger who never stops moving and never misses a bite.
   scavengers_hide:
     name: THE GOOD BOY
@@ -69,10 +69,10 @@ sets:
         bonuses:
           - { kind: proc, trigger: struck, spell: nova, chance: 0.15, rank: 2 }
 
-  # ELON MOSQUE (Mars) — the baron who sold Ada. A RANGED glass-cannon kit: all
+  # THE FOUNDER (Mars) — the baron who sold Ada. A RANGED glass-cannon kit: all
   # output, no padding — the brand that tests well and burns hot.
   mosque_brand:
-    name: THE MOSQUE BRAND
+    name: THE FOUNDER BRAND
     weaponClass: ranged
     members:
       - the_signal_crown
@@ -91,7 +91,7 @@ sets:
         bonuses:
           - { kind: proc, trigger: hit, spell: nova, chance: 0.12, rank: 2 }
 
-  # ELON MOSQUE (Rift) — the same man, in exile. A RANGED mobility kit: packed
+  # THE FOUNDER (Rift) — the same man, in exile. A RANGED mobility kit: packed
   # light, always already through the next door, a parting shot on the way out.
   exiles_flight:
     name: THE EXILE'S FLIGHT
@@ -113,7 +113,7 @@ sets:
         bonuses:
           - { kind: proc, trigger: hit, spell: bolt, chance: 0.15, rank: 2 }
 
-  # GROK OMEGA (Rift) — the model that mapped the rift. A MAGIC INT/crit kit: it
+  # BRO OMEGA (Rift) — the model that mapped the rift. A MAGIC INT/crit kit: it
   # holds the whole battlefield at once and calls the lightning down on it.
   walled_garden_set:
     name: THE WALLED GARDEN

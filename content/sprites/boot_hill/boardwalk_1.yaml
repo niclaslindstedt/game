@@ -1,0 +1,34 @@
+name: boardwalk_1
+family: boot_hill
+size: [16, 16]
+description: >
+  Worn boardwalk - the same plank street with a board split down the
+  middle and heavier weathering; the rare variant of the town surface.
+subject:
+  kind: "ground tile"
+  build: "four horizontal boards, one split, separated by dark seams"
+  features: "heavier grain shadow and a cracked board"
+  accent: "a dark split running through one plank"
+  flavor: "the worn stretch of the town's plank street"
+palette:
+  B: "#a9784a" # sun-bleached board
+  E: "#7b5432" # board shadow
+  S: "#c39a6c" # worn board highlight
+  k: "#4e3720" # plank seam
+grid: |
+  BBBEBBBEEBEBSEBB
+  BBBSBBBBBBBBBBBE
+  BBBBBEkkBEEESEBB
+  kkkkkkkkkkkkkkkk
+  BBEBBBEEBBBEBBBB
+  EBSBSBBBBBBBBBBB
+  ESBEBBkkBEBBEBBB
+  kkkkkkkkkkkkkkkk
+  BBBBBBBBBEEBBBBB
+  EBBBBEBSBBEBBBBS
+  BBEBEBkkBEBBBBBB
+  kkkkkkkkkkkkkkkk
+  EBEBBBBBBEBBBBBB
+  BBBBEEEEEBBEBEBB
+  BEBEBBkkEBEBEBBB
+  kkkkkkkkkkkkkkkk

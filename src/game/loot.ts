@@ -1641,7 +1641,7 @@ function dropGuaranteedLoot(
   for (const entry of loot.items ?? []) {
     const spec = typeof entry === "string" ? { defId: entry } : entry;
     // Campaign-gated drop (the bunker key): stays latent until the run has the
-    // required level cleared. A first pass reaches the Rift before Eastworld,
+    // required level cleared. A first pass reaches the Rift before Boot Hill,
     // so the hand only drops on a post-campaign Rift replay.
     if (spec.requiresClear && !state.clearedLevels.includes(spec.requiresClear))
       continue;

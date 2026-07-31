@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// COIN CANNON — DOGE-1 rears back and fires a fan of coins that come off the
+// COIN CANNON — PAYLOAD-1 rears back and fires a fan of coins that come off the
 // walls.
 //
 // Every hostile shot in the game until now travelled in a straight line and

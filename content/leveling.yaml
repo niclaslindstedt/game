@@ -30,7 +30,7 @@
 #                    carries its `levelBonus`, so a big elite pays more)
 #   bossXpMobMult  — a boss pays ×N its own mob-level XP
 # A def may still override with a flat `xp:` or its own `xpMobMult:` (the
-# shielded grok trio pay ×4 each, a three-part gauntlet summing past one boss).
+# shielded bro trio pay ×4 each, a three-part gauntlet summing past one boss).
 #
 # The `# ~N kills` comment on every row is the IN-PLAY design target — what a
 # player actually grinds on the critical path (medium → nightmare → jesus),

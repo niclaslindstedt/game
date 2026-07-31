@@ -7,7 +7,7 @@ subject:
   kind: weapon icon
   features: a rectangular screen filled with rows of error text on a blue field
   accent: crash-blue with white text
-  flavor: BUILD GATES's crash-everything tablet (a blue-screen-of-death panel)
+  flavor: THE VENDOR's crash-everything tablet (a blue-screen-of-death panel)
 palette:
   O: "#1a1c2c" # dark outline
   e: "#5ab4ff" # crash-blue screen

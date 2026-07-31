@@ -1,0 +1,30 @@
+name: chicken_1
+family: boot_hill
+size: [10, 10]
+description: >
+  The same yard chicken mid-step with one foot lifted - the walk-cycle
+  partner frame of the homestead birds.
+subject:
+  kind: "critter - chicken"
+  build: "a plump chicken seen from above, head to the left, one foot lifted"
+  features: "a red comb, a yellow beak, a fanned tail, yellow feet"
+  accent: "a red comb over white plumage"
+  flavor: "the birds pecking round a homestead yard"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white feather
+  T: "#c8ccd4" # feather shadow
+  r: "#d83a3a" # comb and wattle
+  y: "#ffb02e" # beak and legs
+  K: "#0c0b12" # eye
+grid: |
+  ..........
+  ..OrO.....
+  .OrrO.....
+  OyKWWOOOO.
+  OyWWWWWWTO
+  .OWWWWWTWO
+  .OWWWWWTWO
+  ..OWWWWOO.
+  ..OyO.OyO.
+  ...O...O..

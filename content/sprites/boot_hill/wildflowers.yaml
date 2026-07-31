@@ -1,0 +1,37 @@
+name: wildflowers
+family: boot_hill
+size: [16, 14]
+description: >
+  A patch of prairie wildflowers - three upright stems of different
+  heights over a low spread of leaves, each topped with a round bloom in
+  yellow, pink and white.
+subject:
+  kind: "prop - wildflowers"
+  build: "three upright stems of stepped heights over a low leaf spread"
+  features: "round blooms with darker hearts, paired leaves up each stem"
+  accent: "bright petals over range green"
+  flavor: "the range in bloom"
+palette:
+  O: "#1a1c2c" # outline
+  G: "#5b8a37" # stem green
+  g: "#456d29" # leaf shadow
+  l: "#78a84b" # sunlit leaf
+  y: "#ffd447" # yellow bloom
+  p: "#e88ec4" # pink bloom
+  W: "#f4f4f4" # white bloom
+  h: "#e2c640" # bloom heart
+grid: |
+  ................
+  ....OOO.........
+  ...OyyyO........
+  ...OyhyO..OOO...
+  ...OyyyO.OpppO..
+  OOO.OGO..OphpO..
+  OWWWOGO..OpppO..
+  OWhWOGOlO.OGO...
+  OWWWOGlGO.OGO...
+  .OGOOGOgO.OGO...
+  .OGlOGOOOOOGO...
+  .OGGlGGlGGlGGO..
+  ..OGGgGGGgGGO...
+  ...OOOOOOOOO....

@@ -175,7 +175,7 @@ NOT abstract mob tiers. The campaign is meant to level the hero along this ladde
 
 **Mob levels track the hero.** Slice each rung's start→finish across the five
 campaign maps and author every map's `mobLevels` to the hero's intended level
-band ON that map (spacez ≈ easy 1–7 / nightmare 40–43; eastworld ≈ easy 26–32 /
+band ON that map (goodco ≈ easy 1–7 / nightmare 40–43; boot_hill ≈ easy 26–32 /
 nightmare 53–56). Mobs near the hero's level make the WoW-style con system
 (`levelDiffXpMult`, config `LEVELING.xpAbove/BelowPlayerPerLevel`) self-regulate:
 fighting up pays a bonus, fighting down decays to a grey-mob pittance, so the
@@ -273,7 +273,7 @@ enforcing the tuples is `level-schema.mjs`.
       `arrowCapByDifficulty` + `XP_CAP` bands land where runs end.
 - [ ] `scripts/weapon-stats.mjs --coverage` clean, `LEVEL_MLVL_BANDS` +
       `CAMPAIGN_LANDINGS` entries added.
-- [ ] `node scripts/unique-check.mjs` clean if the map hosts world uniques.
+- [ ] `node scripts/unique-check.mjs` clean if the map hands world uniques.
 - [ ] `make assets` + family sheet looked at; music track registered.
 - [ ] Design map + `--heatmap` rendered and read (path, zones, tempo, coverage).
 - [ ] `docs/game-content.md` walkthrough entry; `docs/manuscript.md` transcribes

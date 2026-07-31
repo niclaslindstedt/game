@@ -36,7 +36,7 @@ Four findings from making the bot spell-aware (mana-thrift casting):
   arms of an A/B byte-identical), `--farm` outlevel runs are noise-dominated
   (per-seed kill spread exceeds the A/B delta) and unrepresentative, and
   nightmare/JESUS balance is not yet tuned — don't gauge against it. The
-  clean bed: `--difficulty hard --level eastworld --start-level 35` (the
+  clean bed: `--difficulty hard --level boot_hill --start-level 35` (the
   ladder's hero level, mobs 31–38) across seeds; read
   `stats.spellsCast`/`manaSpent` from `--json` next to kills and dmgIn.
   (Measured there: the thrift rework spent 40% less mana for +6% kills and

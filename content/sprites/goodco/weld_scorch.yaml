@@ -1,0 +1,30 @@
+name: weld_scorch
+family: goodco
+plane: floor
+size: [14, 10]
+description: >
+  An irregular scorch smeared across the deck plate, charred black at its heart
+  and thinning to ash along a ragged tail, with amber and white-hot spark flecks
+  thrown clear of it.
+subject:
+  kind: ground decor prop
+  build: an irregular dark scorch smeared across the floor panel, thinning to ash along one ragged tail
+  features: a scatter of tiny white-hot and amber spark flecks thrown clear of the burn
+  accent: charred plating with live weld sparks
+  flavor: where a welder-bot was working the hull a moment ago
+palette:
+  b: "#3f4553" # scorch smear
+  k: "#342c26" # charred heart of the burn
+  x: "#c5e6ebe1" # white-hot spark
+  y: "#ffb02e" # amber spark
+grid: |
+  ..............
+  .....y........
+  ...bbbb.by....
+  ..bbkkbbb.....
+  ..bbkkkbbbb...
+  ...bbkbbbbbx..
+  ...y.bbb.b....
+  ......x.......
+  ..............
+  ..............

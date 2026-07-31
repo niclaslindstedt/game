@@ -1,0 +1,21 @@
+id: guard_depot
+name: DEPOT GUARDIAN
+lore: >-
+  THE FULFILLER's detail, delivered same day and never returned. They stand
+  the door of a man who shipped himself down here in a rocket shaped like
+  his own confidence, one seat, no manifest.
+role: minion
+sprite: guard_depot
+hp: 380
+levelBonus: 2
+speed: 20
+radius: 11
+contactDamage: 30
+critChance: 0.14
+contactCooldownMs: 750
+ai:
+  aggroRadius: 230
+  leashRadius: 340
+dropProfile:
+  dropBonus: 0.5
+  tierBonus: 0.4

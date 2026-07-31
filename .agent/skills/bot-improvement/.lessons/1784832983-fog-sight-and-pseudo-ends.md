@@ -31,7 +31,7 @@ Two lessons from making the bot trace walls by fog-of-war knowledge (#p86h1j):
   (fog glimpsed through the wall doesn't count — sweep-check the frontier),
   side-latched on `bot.trace` against flip-flop. A side already explored out
   to the level edge yields null — the "wall must end the other way" deduction.
-  Measured (spacez_hq easy, seeds 1-10, portrait + landscape cameras):
+  Measured (goodco_hq easy, seeds 1-10, portrait + landscape cameras):
   portrait deaths 14→4, damage taken −34%, kills +11%, stuck penalties 2→1
   (the survivor a single loiter, no wedge); landscape deaths within per-seed
   noise with 2 boss kills gained. Immortal-mode death totals scatter with ANY

@@ -23,7 +23,7 @@
 # see mod/FORMAT.md.)
 
 storyItems:
-  # ---- SpaceZ HQ ------------------------------------------------------------
+  # ---- GOODCO HQ ------------------------------------------------------------
   # ADA'S TRAIL — a found-lore thread, one trace per campaign level. Ada is
   # never on screen but never passive: the traces escalate from scared to
   # defiant to sabotage, so the hero follows a person, not a beacon (see
@@ -79,12 +79,12 @@ storyItems:
     icon: icon_corelog
     lore:
       - - A WARM TERMINAL. THE CORE HE BUILT HUMS HERE - A MILLION VOICES, NONE OF THEM HIS.
-      - - IT SIGNED THE NIGHT LAUNCHES. IT DREW THE OPTIMUSK LINE. IT FILED ADA UNDER 'CARGO'.
+      - - IT SIGNED THE NIGHT LAUNCHES. IT DREW THE SUCCESSOR LINE. IT FILED ADA UNDER 'CARGO'.
       # The reveal the whole conspiracy hangs off, and the one docs/story.md
       # names outright: the machine's purpose is to keep ONE man on top — take
       # everyone's jobs, zero their net worth, hand him every chair. It pays off
       # four levels later in the bunker's zeroed ledger.
-      - - "AND ONE STANDING ORDER, ON EVERY PAGE: KEEP MOSQUE THE RICHEST MAN ALIVE. FOREVER."
+      - - "AND ONE STANDING ORDER, ON EVERY PAGE: KEEP THE FOUNDER THE RICHEST MAN ALIVE. FOREVER."
   # ---- The moon ---------------------------------------------------------------
   # ADA'S TRAIL (2/5): she kicked free and marked the way down into the wreck.
   ada_sneaker:
@@ -100,11 +100,11 @@ storyItems:
       - - A FLIGHT LOG, VACUUM-CRISP. JULY 1969. HALF THE LINES ARE BLACKED OUT WITH GREASE PENCIL.
       - - "'...THE SEA OF TRANQUILITY IS NOT EMPTY. STRUCTURE UNDER THE DUST. IT WAS HERE FIRST.'"
       - - "'HOUSTON SAYS PLANT THE FLAG ON TOP OF IT AND SMILE.'"
-  spacez_blueprints:
-    name: SPACEZ BLUEPRINTS
+  goodco_blueprints:
+    name: GOODCO BLUEPRINTS
     icon: icon_blueprint
     lore:
-      - - "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED SPACEZ, DATED YEARS AGO."
+      - - "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED GOODCO, DATED YEARS AGO."
       - - EVERY CORRIDOR DRAINS INTO THE OLD WRECK. THE BASE ISN'T ON THE MOON. IT'S PLUGGED IN.
   clone_dossier:
     name: SECOND MAN DOSSIER
@@ -150,7 +150,7 @@ storyItems:
     icon: icon_orgchart
     lore:
       - - AN ORG CHART, AUTO-GENERATED THIS MORNING. EVERY BOX IS A ROBOT. HUMANS ARE A FOOTNOTE.
-      - - "AT THE TOP: OPTIMUSK PRIME. REPORTS TO: NOBODY. DOTTED LINE TO: 'THE CORE'."
+      - - "AT THE TOP: SUCCESSOR PRIME. REPORTS TO: NOBODY. DOTTED LINE TO: 'THE CORE'."
       - - THE MIND MY OLD FRIEND BUILT IS STILL RUNNING THE SHOP. ALL THE WAY FROM EARTH.
   keycard_terrarium:
     name: TERRARIUM KEYCARD
@@ -181,33 +181,33 @@ storyItems:
     lore:
       - - A NOTEBOOK OF LIGHTNING. THE RIFT AS A POWER PLANT. 'FREE ENERGY FOR ALL', UNDERLINED.
       - - "A SHAKIER PAGE: 'A MACHINE SITS AT THE DOOR. NEVER BLINKS. IT SIGNS ITS NAME IN ZEROES.'"
-  zai_probe:
-    name: ZAI PROBE
+  bro_probe:
+    name: TRUST ME BRO AI PROBE
     icon: icon_probe
     lore:
-      - - "A BURNT PROBE, STAMPED ZAI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
+      - - "A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
       - - "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
-  # ---- Eastworld ------------------------------------------------------------
+  # ---- Boot Hill ------------------------------------------------------------
   # ADA'S TRAIL (5/5): sabotage from inside the control room — the setup for
   # the reunion's "nice hat" (see the epilogue in docs/manuscript.md).
   ada_host:
-    name: JAMMED HOST
+    name: JAMMED HAND
     icon: icon_ada_host
     lore:
-      - - A PARK HOST, DEAD IN THE STREET - ITS OWN HAT JAMMED DOWN INTO ITS WORKS.
+      - - A PARK HAND, DEAD IN THE STREET - ITS OWN HAT JAMMED DOWN INTO ITS WORKS.
       - - SHE'S IN THE CONTROL ROOM, AND SHE'S BREAKING THINGS. HANG ON, ADA. ALMOST THERE.
   park_brochure:
-    name: EASTWORLD BROCHURE
+    name: BOOT HILL BROCHURE
     icon: icon_brochure
     lore:
-      - - "'EASTWORLD! THE WEST, BUT EAST. BUILT BY V. PUTAIN & S. SEAGULL. INTELLIGENCE BY ZAI.'"
+      - - "'BOOT HILL! THE WEST, BUT EAST. BUILT BY THE STRONGMAN & THE STUNT DOUBLE. INTELLIGENCE BY TRUST ME BRO AI.'"
       - - THE MASCOT IS A BEAR IN A COWBOY HAT. THE FINE PRINT WAIVES YOUR ORGANS.
-  keycard_eastworld:
+  keycard_boot_hill:
     name: ALL-ACCESS PASS
     icon: icon_pass
     unlocks: control
     lore:
-      - - SEAGULL'S ALL-ACCESS PASS. LAMINATED. AUTOGRAPHED BY HIMSELF, TO HIMSELF.
+      - - THE STUNT DOUBLE'S ALL-ACCESS PASS. LAMINATED. AUTOGRAPHED BY HIMSELF, TO HIMSELF.
       - - IT OPENS THE CONTROL CENTER. ADA'S BEACON POINTS STRAIGHT THROUGH THAT DOOR.
   snow_archive:
     name: THE SNOW ARCHIVE
@@ -219,7 +219,7 @@ storyItems:
     name: THE ANNEXATION MAP
     icon: icon_annex_map
     lore:
-      - - "A MAP OF EASTWORLD, RELABELED IN PEN: EACH BUILDING A CITY HE NEVER TOOK OUT THERE."
+      - - "A MAP OF BOOT HILL, RELABELED IN PEN: EACH BUILDING A CITY HE NEVER TOOK OUT THERE."
       - - "IN HERE THE FLAGS NEVER ARGUE BACK. THAT'S ALL THIS PLACE WAS: A SANDBOX FOR A MAN WHO LOST."
   # ---- The Bunker (secret) ----------------------------------------------------
   # The capstone reveal, delivered as a find, not exposition: the vault is a

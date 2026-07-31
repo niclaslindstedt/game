@@ -9,7 +9,7 @@ change. It is not: `survive()` derives `engageDist` from the **held** weapon's
 range, so every swap moves where the hero STANDS. Trading a 240-reach gun for a
 160-reach spread walks him 80px deeper into the pack for the rest of the fight.
 
-Measured on `spacez_hq` easy, balanced, 10 seeds × 8 min, class `ranged`:
+Measured on `goodco_hq` easy, balanced, 10 seeds × 8 min, class `ranged`:
 
 - Context re-picks with no reach rule: kills −1%, damage taken +6%, **deaths
   15 → 26**. The hero kept trading down into short-range crowd guns.

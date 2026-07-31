@@ -30,7 +30,7 @@ swapping to a banked ranged/magic weapon. Lessons from landing it:
 - **The "airborne melee is dead weight" hop gates (commitHop's ranged-only
   press hops) open up** for a blade hero with a pocket banked
   (`hasPocketShooter`) — the swap draws the gun at the top of the hop.
-- Measured (spacez_hq easy, melee class, seed 1, 8 min sim A/B):
+- Measured (goodco_hq easy, melee class, seed 1, 8 min sim A/B):
   kills 403 → 426, damage taken slightly down; the app playtest's melee
   profile often ends holding a gun anyway (auto-equip prefers guns for STR
   builds), in which case the system is correctly inert and runs are

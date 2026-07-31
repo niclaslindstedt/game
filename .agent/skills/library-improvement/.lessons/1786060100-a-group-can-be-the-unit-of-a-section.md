@@ -12,7 +12,7 @@ those would have been `unique_excalibur` saying "FIND EXCALIBUR" one click from
 the arsenal page that already describes EXCALIBUR at length. That is textbook
 thin, near-duplicate content — the exact thing that makes a crawler consolidate
 a set of pages and drop the rest, which the section already has a comment about
-for the three monsters named ELON MOSQUE.
+for the three monsters named THE FOUNDER.
 
 The precedent for the other answer was already in the repo twice, and both are
 worth reaching for before adding a route: a story CHAPTER is the unit of the

@@ -2,7 +2,7 @@
 // Level 2 — THE MOON: the ridge-and-basin layout, the two off-path detour
 // caches with their pinned guardians, and the loot table. The generic catalog
 // integrity rules (pools resolve, wall chains leave no slip-through gaps) live
-// in spacez_test.ts and run over every level.
+// in goodco_test.ts and run over every level.
 
 import { describe, expect, it } from "vitest";
 

@@ -551,15 +551,15 @@ function sourcesFor(def) {
  * On the monster's own page that reads fine: the heading has a venue chip under
  * it and a whole page of numbers around it. Anywhere the name travels ALONE it
  * does not, and the site does that in three places at once — a search result
- * (three pages titled `ELON MOSQUE` are three pages Google consolidates into
+ * (three pages titled `THE FOUNDER` are three pages Google consolidates into
  * one and drops the rest of, and the two `LAB SCIENTIST` pages came out
  * byte-identical), a flat rack of monsters, and a drop line that says who hands
  * an item over. All three want the same string.
  *
  * So a shared name takes a qualifier, and the qualifier is a fact the reader
  * came for: the VENUE, which is what actually separates the two Putains and the
- * three Mosques. When the venue ties as well — both lab scientists work at
- * SPACEZ HQ — fall back to whatever the ids do NOT have in common, so
+ * three Founders. When the venue ties as well — both lab scientists work at
+ * GOODCO HQ — fall back to whatever the ids do NOT have in common, so
  * `vanguard_scientist` beside `scientist` yields `VANGUARD`. Whichever one has
  * nothing left over keeps the bare name, which is what makes the set unique
  * rather than uniformly suffixed.

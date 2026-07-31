@@ -2,7 +2,7 @@ name: guard_alignment_0
 family: bunker
 size: [20, 20]
 description: >
-  ALIGNMENT OFFICER — Sam Haltman's personal detail: a heavyset black-suited wall
+  ALIGNMENT OFFICER — The Safety Officer's personal detail: a heavyset black-suited wall
   behind a mint-green visor, with the same mint-green on his armband and
   his tie. One of six identical wardens, told apart only by livery.
 subject:
@@ -13,7 +13,7 @@ subject:
   features: a mint-green visor across the eyes and a mint-green armband at the bicep
   accent: mint-green tie
   pose: arms held out from the bulk, planted immovably, hands showing
-  flavor: Sam Haltman's personal detail — and, though nobody in the suite knows it yet, the machine's warden
+  flavor: The Safety Officer's personal detail — and, though nobody in the suite knows it yet, the machine's warden
 palette:
   U: "#78eb8c" # mint-green livery
   K: "#0c0b12" # near-black suit and hair

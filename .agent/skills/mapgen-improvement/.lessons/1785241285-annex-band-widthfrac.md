@@ -6,7 +6,7 @@ date: 2026-07-28
 An `annex` adds a band to the level rect that is the room's height plus its
 margins — and that band is as wide as the MAP, whether the room is or not. A
 fixed-width control room therefore leaves a bigger and bigger apron of dead rock
-either side of it as the carve scales up: on eastworld LARGE a 900px room sat in
+either side of it as the carve scales up: on boot_hill LARGE a 900px room sat in
 a 4800px band, and the minimap showed a wide empty strip that reads as "half my
 map failed to load".
 

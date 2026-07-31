@@ -28,7 +28,7 @@ export type StoryItemDef = {
   /**
    * Picking this up dresses the hero as the ASTRONAUT for the rest of the
    * run: the EVA suit is worn OVER his clothes and armor — plot gear with no
-   * equip slot and no stats (see `playerSuited`). Only SpaceZ HQ's recovered
+   * equip slot and no stats (see `playerSuited`). Only GOODCO HQ's recovered
    * space suit sets it.
    */
   suitsHero?: boolean;

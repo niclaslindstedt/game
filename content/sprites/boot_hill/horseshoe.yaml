@@ -1,0 +1,23 @@
+name: horseshoe
+family: boot_hill
+plane: floor
+size: [8, 8]
+description: >
+  A single iron horseshoe lying in the dust; tiny good-luck ground decor.
+subject:
+  kind: ground decor — horseshoe
+  build: a grey U-shaped metal arc with small nail holes
+  accent: dull grey iron
+  flavor: a tiny good-luck token in the dust
+palette:
+  O: "#1a1c2c" # outline
+  v: "#60687e" # grey iron
+grid: |
+  ........
+  .OO..OO.
+  .OvO.OvO
+  .OvO.OvO
+  .OvO.OvO
+  .OvvOvvO
+  ..OvvvO.
+  ...OOO..

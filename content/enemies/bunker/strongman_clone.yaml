@@ -1,0 +1,74 @@
+id: strongman_clone
+name: THE STRONGMAN
+lore: >-
+  A bathrobed backup from a continuity-of-leadership programme, filed down
+  here in case the original was ever needed again. He remembers dying in a
+  theme park and calls it a good vintage; how many of him there are is a
+  state secret, even from the state.
+role: elite
+levelBonus: 6
+sprite: strongman_clone
+hp: 2000
+speed: 26
+radius: 12
+contactDamage: 42
+critChance: 0.15
+dodgeChance: 0.25
+contactCooldownMs: 700
+dialogue:
+  - - YOU. I KNOW YOUR FACE. FROM WHERE DO I KNOW YOUR FACE?
+  - hero:
+      - BOOT HILL. I WATCHED YOU DIE IN A THEME PARK. YOU SAID IT WAS SUPPOSED TO LET YOU WIN.
+  - - AH, THAT ONE. A GOOD VINTAGE. I'M THE BACKUP - CONTINUITY OF POWER. SEVERAL OF ME. PRUDENT.
+  - hero:
+      - SEVERAL? HOW MANY BATHROBES DEEP DOES THIS GO?
+  - - STATE SECRET - EVEN FROM THE STATE. NOW HOLD STILL. THIS ONE OF ME HAS NEVER LOST YET.
+lastWords:
+  - CHECK THE OTHER... ...FREEZERS...
+mechanics:
+  abilities:
+    - id: rally_cry
+      bark:
+        - THE ORIGINAL IS
+        - GONE. THE ORDERS
+        - STILL CARRY.
+      windupMs: 700
+      cooldownMs: 12000
+      radius: 230
+      durationMs: 6500
+      speedMult: 1.26
+      damageMult: 1.22
+      look:
+        core: "176, 96, 92"
+        hot: "244, 200, 190"
+        deep: "28, 14, 14"
+        spark: "208, 142, 134"
+    - id: quake_line
+      windupMs: 720
+      cooldownMs: 10000
+      count: 6
+      spacing: 34
+      radius: 24
+      damageFrac: 0.7
+      stepMs: 115
+  charge:
+    windupMs: 650
+    speedMult: 3.6
+    range: 170
+    cooldownMs: 5500
+ai:
+  aggroRadius: 280
+  rushSpeed: 110
+loot:
+  items:
+    - defId: the_chronograph
+      tier: unique
+  tierDrops:
+    rare: 1
+    magic: 1.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.4

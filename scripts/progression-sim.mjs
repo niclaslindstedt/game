@@ -9,7 +9,7 @@
 // The engine side is src/sim/analytic.ts.
 //
 //   node scripts/progression-sim.mjs                              # full game → L99
-//   node scripts/progression-sim.mjs --difficulty easy --level spacez_hq
+//   node scripts/progression-sim.mjs --difficulty easy --level goodco_hq
 //   node scripts/progression-sim.mjs --stats strength=3,stamina=1 # a STR build
 //   node scripts/progression-sim.mjs --batch 25 --full            # every checkpoint
 //   node scripts/progression-sim.mjs --json out.json --html out.html
@@ -74,7 +74,7 @@ const flag = (name) => argv.includes(`--${name}`);
 if (flag("help")) {
   console.log(
     "usage: node scripts/progression-sim.mjs " +
-      "[--difficulty all|easy[,medium,…]] [--level all|spacez_hq[,…]] " +
+      "[--difficulty all|easy[,medium,…]] [--level all|goodco_hq[,…]] " +
       "[--seed N] [--class all|melee,ranged,magic,balanced] " +
       "[--stats str=2,sta=1,dex=1] [--batch 25] " +
       "[--target-level 99] [--fresh] [--no-rares] [--auto] [--full] " +

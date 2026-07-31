@@ -15,7 +15,7 @@ import type { Difficulty } from "@game/menu";
 export const DEMO_DIFFICULTY: Difficulty = "medium";
 
 /** The level the demo showcases (the HQ mission). */
-export const DEMO_LEVEL_ID = "spacez_hq";
+export const DEMO_LEVEL_ID = "goodco_hq";
 
 /** The BOT VIEW spec (bot-view-specs.ts) the demo forces: blades up close. */
 export const DEMO_BOT_SPEC = "melee";

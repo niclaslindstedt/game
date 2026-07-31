@@ -344,7 +344,7 @@ player unlocks) key on it.
 **The catalog shape (this game).** 35 uniques as a slot Latin square: five
 bosses × five difficulties, each difficulty the home of one full
 weapon+armor set (a weapon + head/chest/legs/feet, one per boss), plus a BAG
-from MUSKRAT and a CHARM from GROK on each rung. Which boss drops which at
+from PROTOTYPE and a CHARM from TRUST ME BRO on each rung. Which boss drops which at
 which rung is wired on the enemy def (`EnemyDef.uniquesByDifficulty`), gated
 to the rung — an easy unique only drops on easy. Each is rolled at
 `UNIQUE.dropChance × mlvl/ilvl` (capped) on the kill (`maybeDropBossUnique` in

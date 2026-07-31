@@ -14,7 +14,7 @@
 // thing to build was already there, pointed slightly the wrong way.
 //
 // The answer is the one the stampede has already taught anybody who has played
-// Eastworld: get out of the lane. A move that reuses an answer the player
+// Boot Hill: get out of the lane. A move that reuses an answer the player
 // already owns is a move they can beat the first time they see it, which is
 // exactly what a NIGHTMARE-gated addition should be.
 

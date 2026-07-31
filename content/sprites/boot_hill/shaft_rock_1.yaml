@@ -1,0 +1,33 @@
+name: shaft_rock_1
+family: boot_hill
+size: [16, 16]
+description: >
+  The same cut rock with deeper fissures running through it; the rare
+  variant of the bedrock around the control room.
+subject:
+  kind: "ground tile"
+  build: "coarse near-black cut stone split by short fissures"
+  features: "chipped grain plus two dark fissure runs"
+  accent: "black fissures in an already dark face"
+  flavor: "the bedrock past the map, around the lift's room"
+palette:
+  k: "#2a2622" # cut rock
+  b: "#3a352f" # rock highlight
+  K: "#171512" # rock shadow
+grid: |
+  kkkKkkkkbkKkkkkk
+  kbkkkbKKkkKbkkkb
+  KKkbbKkKkkkKKkkK
+  kbKkKKkKkkkkkbkk
+  kkbkKKkkkkkbKkKb
+  bkkkkKKkKbbkkkbK
+  kkKkbkkkkKkkkbkk
+  KkbkkkkkkkkkkkkK
+  KkkkkkkKkkkkkkkk
+  kkkkbkkkkkkkKkkk
+  KKKkkkkkKKkKKkbk
+  kkKbbkkkbKkKKKkk
+  kkkkkKkkkkKKkkkk
+  kkkKkKkkkkkkkKkk
+  kkkKkkKbKkkbkbkk
+  kkkkkKKbkkkbkkkk

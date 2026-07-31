@@ -1,0 +1,34 @@
+name: crate
+family: goodco
+plane: floor
+size: [14, 12]
+description: >
+  A tan cardboard shipping crate seen from above, banded across the lid with
+  packing tape in both directions, its lit far lip and shaded near side giving
+  it height on the deck.
+subject:
+  kind: breakable obstacle prop
+  build: a boxy cardboard shipping crate seen from above, its lit and shaded sides showing under the lid
+  features: packing tape banded across the lid in both directions, meeting at a lit join
+  accent: gold-tan cardboard
+  flavor: GOODCO freight; the company crates up everything and ships it out
+palette:
+  O: "#1a1c2c" # outline
+  S: "#b39378" # packing tape
+  h: "#e2c640" # lit far lip and left side
+  o: "#d6a842" # gold-tan cardboard
+  q: "#96762e" # shaded near side
+  w: "#c6c6c6" # lit tape join
+grid: |
+  .OOOOOOOOOOOO.
+  .OhhhhSShhhqO.
+  .OhoooSSoooqO.
+  .OhoooSSoooqO.
+  .OhoooSSoooqO.
+  .OSSSSwwSSSSO.
+  .OSSSSSSSSSSO.
+  .OhoooSSoooqO.
+  .OhoooSSoooqO.
+  .OhoooSSoooqO.
+  .OqqqqSSqqqqO.
+  .OOOOOOOOOOOO.

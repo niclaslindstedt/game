@@ -1,0 +1,28 @@
+name: grass_tuft
+family: boot_hill
+size: [12, 10]
+description: >
+  A tuft of prairie grass - a small fan of upright blades, sunlit on one
+  side and shaded on the other; flat decor the hero walks over.
+subject:
+  kind: "prop - grass tuft"
+  build: "a small fan of upright blades rising from a common base"
+  features: "blades of three lengths splayed from the root"
+  accent: "sunlit blade tips over a shaded root"
+  flavor: "the range grass underfoot"
+palette:
+  O: "#1a1c2c" # outline
+  G: "#8a9445" # leaf green
+  g: "#6b7538" # shaded green
+  l: "#a7b061" # sunlit green
+grid: |
+  ............
+  .....OO.....
+  ..OO.OlO.OO.
+  ..OlOOlGOlO.
+  ..OGlOlGOlO.
+  ..OGGllGGGO.
+  ...OGGGGGO..
+  ....OGgGO...
+  .....OOO....
+  ............

@@ -243,7 +243,7 @@ export function dodgeBait(state: GameState): GameInput | null {
 }
 
 /**
- * A sidestep input when a bouncing HAY BALL (`state.hayBalls`, Eastworld) is
+ * A sidestep input when a bouncing HAY BALL (`state.hayBalls`, Boot Hill) is
  * bearing down the hero's lane — else null. Bales roll straight LEFT at a fixed
  * `y`, so a body in the same lane gets shoved back down the street; the human
  * read is to step PERPENDICULAR (up/down) out of the lane before it arrives.
@@ -339,7 +339,7 @@ export function dodgeSandstorm(
 }
 
 /**
- * A JUMP input when an employee stampede (`state.stampedes`, SpaceZ HQ) is about
+ * A JUMP input when an employee stampede (`state.stampedes`, GOODCO HQ) is about
  * to trample the grounded hero — else null. A herd charges a straight, fast line
  * to the LEFT, and being caught means a ~20% bite AND a 2-second knockdown in the
  * horde — but a jump sails clean over the whole wall (z above JUMP.dodgeHeight).

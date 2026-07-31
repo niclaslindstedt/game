@@ -1,0 +1,40 @@
+name: conveyor_3
+family: goodco
+plane: floor
+size: [20, 16]
+description: >
+  Belt-scroll frame 3/5 of the assembly-line conveyor (base sprite:
+  conveyor). The steel roller ribs sit one pixel further down the belt each
+  frame (the pattern repeats every 5 px), so cycling the five frames in order
+  rolls the belt southward while the chrome side rails and their amber hazard
+  ticks hold still. Flat ground decor, tiled end-to-end like the base sprite.
+subject:
+  kind: ground decor prop
+  build: a straight conveyor-belt section seen from above, chrome side rails framing a dark belt
+  features: steel roller ribs stepping across the belt, amber hazard ticks painted on the rails
+  accent: steel roller ribs on a dark belt between chrome rails
+  flavor: the line the half-built ships ride down as the plant assembles them
+palette:
+  O: "#1a1c2c" # outline and roller shadow
+  V: "#9095a5" # chrome rail top
+  b: "#2b2f3a" # dark belt
+  f: "#888a96" # steel roller rib
+  v: "#60687e" # rail flank in shadow
+  y: "#ffb02e" # amber hazard tick on the rail
+grid: |
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OyvObbbbbbbbbbbbOvyO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OyvOffffffffffffOvyO
+  OVvOOOOOOOOOOOOOOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvOffffffffffffOvVO

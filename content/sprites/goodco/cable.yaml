@@ -1,0 +1,20 @@
+name: cable
+family: goodco
+plane: floor
+size: [14, 5]
+description: >
+  A loose black power/data cable coiled and snaking across the polished lab floor.
+subject:
+  kind: ground decor prop
+  build: a thin cable snaking in loose coils across the floor
+  features: a small connector at one end
+  accent: charcoal-slate cabling
+  flavor: low, flat clutter of a lab where the night shift stopped tidying
+palette:
+  b: "#3f4553" # charcoal-slate cable
+grid: |
+  ..............
+  .bb...bbb.....
+  ..bb.bb.bb.bb.
+  ...bbb...bbb..
+  ..............

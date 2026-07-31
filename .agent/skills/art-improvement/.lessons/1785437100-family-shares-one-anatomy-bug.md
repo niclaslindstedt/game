@@ -6,7 +6,7 @@ date: 2026-07-30
 Two defects that are invisible sprite-by-sprite and obvious the moment the
 family is lined up together.
 
-**Identity collision.** Five of SPACEZ HQ's humans (guard, security chief,
+**Identity collision.** Five of GOODCO HQ's humans (guard, security chief,
 engineer, night manager, architect) were built from the same torso template, in
 which the ARMS are the same char as the torso with no seam between them. Every
 one of them therefore read as a blob, and the four in navy or grey read as the
@@ -28,7 +28,7 @@ shadow — copying that structure fixed all three at once.
 **Hierarchy.** `art-audit.mjs level <id>` prints `(role, Nhp)` in its legend, so
 read it and make sure the drawing sorts the way the numbers do. The classic
 offender is a tanky mob drawn *smaller and quieter* than a squishy minion, which
-the eye alone misses: SPACEZ had an 80hp named minion on a 16² canvas while a
+the eye alone misses: GOODCO had an 80hp named minion on a 16² canvas while a
 55hp one sat on 20². Moving him to 18² (between the 16² rank and file and the
 20² heavies) fixed the lie without touching `radius` or any balance number. The
 defs also give speed, `gore` and dialogue — the raw material for the Phase 4

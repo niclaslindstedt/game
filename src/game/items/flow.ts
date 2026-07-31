@@ -140,7 +140,7 @@ export function skipCutscene(state: GameState): void {
  * opening on this difficulty (see the per-character story ledger in
  * characters.ts): a die-and-retry loop shouldn't sit through the cutscene, the
  * briefing, or the scripted "draw your weapon" strike every single time.
- * Arming here is what lets a level that opens holstered (SpaceZ HQ's
+ * Arming here is what lets a level that opens holstered (GOODCO HQ's
  * `openingStrike`) skip that beat cleanly — its thought is marked seen, so
  * `stepOpeningStrike` never fires to arm him, and he would stand defenceless
  * otherwise. A harmless no-op on a run already in play (a resumed or

@@ -2,7 +2,7 @@ id: the_black_market
 kind: unique
 rarity: legendary
 name: THE BLACK MARKET
-base: ducci_holdall
+base: monogram_holdall
 slot: bag
 ilvl: 101
 bagSlots: 16

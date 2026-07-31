@@ -51,7 +51,7 @@ export const LEVELING = {
    * `content/leveling.yaml` (`eliteXpMobMult` / `bossXpMobMult`, compiled into
    * `XP_TUNING`) — never a share of the hero's level bar. Mob-pricing every
    * faucet is what keeps the leveling table's kills-per-level TRUE in play; a
-   * def may override with `EnemyDef.xpMobMult` (the shielded grok trio) or a
+   * def may override with `EnemyDef.xpMobMult` (the shielded bro trio) or a
    * flat `xp`. Applied in `enemyKillXp` (loot.ts).
    */
   /**

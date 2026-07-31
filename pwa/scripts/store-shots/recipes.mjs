@@ -316,9 +316,9 @@ export const SHOTS = [
   {
     id: "powers",
     caption: "STACK THE POWERS YOU FIND",
-    // EASTWORLD — the knockoff western — so the set isn't four purple fields.
+    // BOOT HILL — the knockoff western — so the set isn't four purple fields.
     // The bunker staging swept weak for the same reason `nightmare` did.
-    level: "eastworld",
+    level: "boot_hill",
     difficulty: "nightmare",
     seed: 44,
     scenario: {

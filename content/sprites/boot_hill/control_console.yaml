@@ -1,0 +1,41 @@
+name: control_console
+family: boot_hill
+plane: floor
+size: [26, 18]
+description: >
+  A TRUST ME BRO control console - a wide steel desk with two black screens
+  trailing mint readout lines, a row of warning lamps and a lit top edge.
+subject:
+  kind: "obstacle - control console"
+  build: "a wide steel desk with two recessed screens, seen top-down"
+  features: "mint readout traces on black glass, a lamp row, a lit top bevel"
+  accent: "mint traces and a red alarm lamp on cold steel"
+  flavor: "where somebody drives the whole park"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#59617a" # console shell
+  b: "#333a48" # shell shadow
+  T: "#7b8499" # lit shell edge
+  K: "#0c0b12" # screen glass
+  Q: "#60f0d0" # readout trace
+  y: "#ffd447" # warning lamp
+  r: "#d83a3a" # alarm lamp
+grid: |
+  ..........................
+  .OOOOOOOOOOOOOOOOOOOOOOOO.
+  OTTTTTTTTTTTTTTTTTTTTTTTTO
+  OTAAAAAAAAAAAAAAAAAAAAAATO
+  OAOOOOOOOOOOAAOOOOOOOOOOAO
+  OAOKKKKKKKKOAAOKKKKKKKKOAO
+  OAOKQQKKKQQKOAOKQKKQQKKOAO
+  OAOKKQQQKKKKOAOKQQKKQQKOAO
+  OAOKQQKKQQKKOAOKKQQKKKQOAO
+  OAOKKKKKKKKOAAOKKKKKKKKOAO
+  OAOOOOOOOOOOAAOOOOOOOOOOAO
+  OAAAAAAAAAAAAAAAAAAAAAAAAO
+  OAAOyyOAAOrrOAAOyyOAAOyyAO
+  OAAOyyOAAOrrOAAOyyOAAOyyAO
+  OAAAAAAAAAAAAAAAAAAAAAAAAO
+  ObAAAAAAAAAAAAAAAAAAAAAAbO
+  .ObbbbbbbbbbbbbbbbbbbbbbO.
+  ..........................

@@ -282,7 +282,7 @@ export type ModOrderEntry = { id: string; on: boolean };
  * screen is opened, because a player with a dozen subscriptions must not pay
  * for validating a folder of YAML per mod on a launch where they only wanted
  * RESUME. So at launch there is nothing to ask — and a conversion that opened
- * under its own name yesterday and under GONE IN SPACE today would read as a
+ * under its own name yesterday and under ADA'S TRAIL today would read as a
  * bug. `modId` is carried so the memory can be dropped the moment that mod
  * stops being the enabled one.
  */

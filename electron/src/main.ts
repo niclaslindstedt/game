@@ -254,7 +254,7 @@ function createWindow(): BrowserWindow {
     // of the mobile shell holding its splash until the WebView's first frame.
     show: false,
     autoHideMenuBar: true,
-    title: "Gone in Space",
+    title: "Ada's Trail",
     webPreferences: {
       preload: `${__dirname}/preload.js`,
       // The renderer is the game — a large web app. It gets no Node, no

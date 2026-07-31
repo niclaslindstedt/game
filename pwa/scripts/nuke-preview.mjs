@@ -11,7 +11,7 @@
 // Usage (from pwa/, dev server on :5199 with assets built):
 //   npx vite --port 5199 &
 //   node scripts/nuke-preview.mjs [--url http://localhost:5199]
-//     [--level spacez_hq] [--seed 42] [--out DIR]
+//     [--level goodco_hq] [--seed 42] [--out DIR]
 //
 // Writes numbered frames + a strip.html contact sheet under
 // pwa/assets-preview/nuke/. Playwright is installed ephemerally:
@@ -31,7 +31,7 @@ const opt = (name, fallback) => {
   return i >= 0 ? args[i + 1] : fallback;
 };
 const url = opt("url", "http://localhost:5199");
-const level = opt("level", "spacez_hq");
+const level = opt("level", "goodco_hq");
 const seed = opt("seed", "7");
 // A ring of mobs staged around the hero so the blast has bodies to burn into
 // charred skeletons (see the incineration FX). Forwarded as `?scenario=`.

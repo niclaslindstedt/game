@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
 
-# Gone in Space — native app
+# Ada's Trail — native app
 
 The App Store / Play Store wrapper around the game. It is a thin
 [Expo](https://expo.dev) / React Native shell whose entire content is a
@@ -194,7 +194,7 @@ On top of the web game it adds the things a browser can't give iOS:
   table. Nothing else changes.
 
 - **Parental controls, in iOS Settings rather than in the game.** The app gets
-  its own page in **Settings → Gone in Space** with two switches, **both ON by
+  its own page in **Settings → Ada's Trail** with two switches, **both ON by
   default** (`plugins/with-settings-bundle.js` draws it,
   `modules/device-settings/` reads it, `src/device-settings.ts` hands it to the
   game):

@@ -4,7 +4,7 @@ date: 2026-07-21
 ---
 
 Adding the map's elites to the content sweep (`nearestContent`) looks like one
-filter, but four traps bit in sequence — each measured on `spacez_hq` easy:
+filter, but four traps bit in sequence — each measured on `goodco_hq` easy:
 
 - **Gate the pool on `readyForBoss`.** Under-levelled cross-map elite marches
   replace the tuned early flow (spawner farm → directional fog down the
@@ -32,7 +32,7 @@ filter, but four traps bit in sequence — each measured on `spacez_hq` easy:
 Still open: a wall-notch livelock on the weave maps (hero pinned between a
 scatter rock and an aisle wall, UNSTICK ↔ router ping-pong with no foe in
 reach) — it predates these changes and decides most 8-minute timeouts on
-`spacez_hq` for baseline and candidate alike. Also: routing the RETREAT bias
+`goodco_hq` for baseline and candidate alike. Also: routing the RETREAT bias
 (`travelHeading`) through `routeTarget` instead of the beeline sounds right
 but measurably tanked runs AND tripled sim wall time (A* replans every tick
 under combat stray) — leave the retreat bias as the crow flies.

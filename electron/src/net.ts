@@ -481,7 +481,7 @@ export function createNetBridge(
     const bound = listening?.bound ?? null;
     if (steam) {
       lobby = await hostLobby({
-        name: request.name ?? "GONE IN SPACE",
+        name: request.name ?? "ADA'S TRAIL",
         level: readString(request.params ?? started, "levelId"),
         difficulty: readString(request.params ?? started, "difficulty"),
         players: 1,

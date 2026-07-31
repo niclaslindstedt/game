@@ -13,8 +13,8 @@ repo root before any build so that bundle exists.
 
 Store identities are wired in [`app.config.js`](app.config.js):
 
-- iOS `ios.bundleIdentifier` — `se.niclaslindstedt.goneinspace`
-- Android `android.package` — `se.niclaslindstedt.goneinspace`
+- iOS `ios.bundleIdentifier` — `se.niclaslindstedt.adastrail`
+- Android `android.package` — `se.niclaslindstedt.adastrail`
 
 > **Licence note.** The repo is `PolyForm-Noncommercial-1.0.0`, which forbids
 > _others_ commercial use; as the sole copyright holder you are not bound by

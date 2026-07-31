@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-level: eastworld
+level: boot_hill
 giver: east_clem
 order: 1
 name: LAST CALL
 lore: >
-  The barkeep knows every host in town by the serial plate under its jaw,
+  The barkeep knows every hand in town by the serial plate under its jaw,
   and some of them are not them anymore. Four plates is enough to say which
   ones were reflashed — all four the same night, by the same hand, which is
   what the errand was really asking and what it is careful not to say.
 offer:
-  - - I KNOW EVERY HOST IN THIS TOWN BY SERIAL. SOME OF THEM AREN'T THEM ANYMORE.
+  - - I KNOW EVERY HAND IN THIS TOWN BY SERIAL. SOME OF THEM AREN'T THEM ANYMORE.
   - - BRING ME FOUR PLATES AND I'LL TELL YOU WHICH ONES GOT DRIVEN.
 incomplete:
   - FOUR PLATES, STRANGER. THE NUMBER'S UNDER THE JAW.
@@ -22,7 +22,7 @@ objectives:
     count: 4
 items:
   - id: host_serial
-    name: HOST SERIAL PLATE
+    name: HAND SERIAL PLATE
     icon: icon_quest_serial
     dropFrom: [cowbot, tin_outlaw]
 reward:

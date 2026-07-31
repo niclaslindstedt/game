@@ -26,7 +26,7 @@ animations:
   unraveler_glitch: { frames: [unraveler_0, unraveler_1], delayMs: 200 }
   graviton_orbit: { frames: [graviton_0, graviton_1], delayMs: 260 }
   lucky_jig: { frames: [lucky_0, lucky_1], delayMs: 280 }
-  grok_omega_hum: { frames: [grok_omega_0, grok_omega_1], delayMs: 380 }
+  bro_omega_hum: { frames: [bro_omega_0, bro_omega_1], delayMs: 380 }
   blackhole_spin: { frames: [blackhole_0, blackhole_1], delayMs: 240 }
   asteroid_tumble: { frames: [asteroid_0, asteroid_1], delayMs: 220 }
   first_vanishing_flicker:

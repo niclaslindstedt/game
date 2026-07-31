@@ -125,13 +125,13 @@ for (const levelId of LEVEL_ORDER) {
 const pooledOrBase = (def) => pooled.has(def.gradeBase ?? def.id);
 // Exempt: the difficulty ladder's wall weapons (its calibration), the
 // engine's unbreakable fallback sidearm (deliberately under budget), and the
-// TRASH class — MOSQUE's zero-damage joke drops, which owe the budget
-// nothing on purpose (they only mint via his scripted Eastworld estate).
+// TRASH class — THE FOUNDER's zero-damage joke drops, which owe the budget
+// nothing on purpose (they only mint via his scripted Boot Hill estate).
 const exempt = new Set([
   "blaster",
   "soggy_cardboard_sword",
-  "busted_flamethrower",
-  "cybervan_wiper",
+  "legal_distinction_empty",
+  "demo_wiper",
   ...Object.values(DIFFICULTY_DEFS).map((d) => d.startingWeapon),
 ]);
 

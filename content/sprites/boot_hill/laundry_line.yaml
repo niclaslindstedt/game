@@ -1,0 +1,39 @@
+name: laundry_line
+family: boot_hill
+size: [28, 18]
+description: >
+  A laundry line - a rope between two leaning posts with a white sheet, a
+  blue work shirt and a faded red shirt pegged out to dry.
+subject:
+  kind: "prop - laundry line"
+  build: "a rope strung between two posts with washing pegged to it"
+  features: "a hanging sheet, a blue shirt and a red shirt with shadowed folds"
+  accent: "bright white washing against the dust"
+  flavor: "somebody still lives here"
+palette:
+  O: "#1a1c2c" # outline
+  E: "#5d4028" # line post
+  A: "#8d9196" # clothes line
+  W: "#f4f4f4" # white sheet
+  T: "#c0c5cf" # sheet shadow
+  J: "#2d3b84" # blue work shirt
+  X: "#963c46" # faded red shirt
+grid: |
+  ............................
+  .OO......................OO.
+  OEEOAAAAAAAAAAAAAAAAAAAAOEEO
+  OEEOOOOOOOOOOOOOOOOOOOOOOEEO
+  OEEOWWWWWOOJJJJOOXXXXXOOOEEO
+  OEEOWWWWWOOJJJJOOXXXXXOOOEEO
+  OEEOWWTWWOOJJTJOOXXXTXOOOEEO
+  OEEOWWWWWOOJJJJOOXXXXXOOOEEO
+  OEEOWWWTWOOJTJJOOXXTXXOOOEEO
+  OEEOWWWWWOOJJJJOOXXXXXOOOEEO
+  OEEOWTWWWOOOJJOOOXTXXXOOOEEO
+  OEEOWWWWWO.OJJO..OXXXXOOOEEO
+  OEEOOWWWOO.OOOO..OOXXOOO.OEO
+  OEEO.OOOO.........OOOO...OEO
+  OEEO.....................OEO
+  OEEO.....................OEO
+  .OO.......................O.
+  ............................

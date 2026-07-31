@@ -1,0 +1,12 @@
+id: the_chronograph
+kind: gear
+rarity: regular
+name: THE CHRONOGRAPH
+description:
+  "One of THE STRONGMAN's collectible brand watches: a chronograph that is a
+  tribute to a tribute. Accurate twice a day, and priceless exactly once — at
+  the barkeep's counter."
+material: precious
+slot: trinket
+bonuses: {}
+icon: icon_watch_gold

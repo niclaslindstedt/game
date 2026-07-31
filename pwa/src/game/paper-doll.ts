@@ -177,7 +177,7 @@ export const DOLL_SIZE = { width: DOLL_WIDTH, height: DOLL_HEIGHT };
  * Only the WIDTH grows. An icon is anchored by its grip and drawn upward from
  * there, so a TALLER one would need the body pushed down the canvas — which
  * moves the hero inside the portrait box. Oversized weapons are therefore
- * authored long rather than tall (see `icon_di_tello_chainsaw`).
+ * authored long rather than tall (see `icon_austerity_chainsaw`).
  */
 export function dollSizeFor(
   sprites: Sprites,

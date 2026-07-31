@@ -52,7 +52,7 @@ export function hasClearedLevel(
 /**
  * The level ids this character has cleared on `difficulty`, fed to the engine
  * (`createGame`'s `clearedLevels`) so campaign-gated drops know the run's
- * progress — chiefly the bunker key, latent until "eastworld" is cleared.
+ * progress — chiefly the bunker key, latent until "boot_hill" is cleared.
  */
 export function clearedLevelsFor(
   character: Character,

@@ -1,0 +1,32 @@
+name: jackrabbit_0
+family: boot_hill
+size: [16, 12]
+description: >
+  A jackrabbit crouched flat - sandy fur, two long ears laid back along
+  its spine, a pale flank and a white scut.
+subject:
+  kind: "critter - jackrabbit"
+  build: "a hare seen from above, head to the left, crouched flat"
+  features: "two long ears laid back, a pale flank, a white scut"
+  accent: "a white scut against sandy fur"
+  flavor: "the hares that bolt from under the hero's boots"
+palette:
+  O: "#1a1c2c" # outline
+  s: "#c48e6c" # sandy fur
+  k: "#8a6448" # fur shadow
+  u: "#e2c494" # pale flank
+  W: "#f4f4f4" # white scut
+  K: "#0c0b12" # eye
+grid: |
+  ................
+  ...OOO..........
+  ..OuuuOOO.......
+  ..OuuuuuuOOOO...
+  .OKssssssssssOO.
+  OussskssssskssWO
+  OusssssssskssWWO
+  .OusssssssssskWO
+  ..OOssOOOssOOOO.
+  ...OO....OO.....
+  ................
+  ................

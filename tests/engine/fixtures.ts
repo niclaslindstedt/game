@@ -139,7 +139,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 1000 },
   },
-  // A WORKING minion (mirrors the SpaceZ staff): non-phasing, a modest aggro
+  // A WORKING minion (mirrors the GOODCO staff): non-phasing, a modest aggro
   // radius, and the dormant "at work" stroll (`ai.idle: "work"`, config
   // ENEMY_AI.work) — it potters around its `home` until woken.
   test_worker: {
@@ -275,7 +275,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     dialogue: [["TEST APPARITION LINE ONE."], ["TEST APPARITION LINE TWO."]],
     ai: { aggroRadius: 250, rushSpeed: 110 },
   },
-  // A FLEEING unique (mirrors a boss like the shipped ELON MOSQUE): beaten to
+  // A FLEEING unique (mirrors a boss like the shipped THE FOUNDER): beaten to
   // 0 hp it escapes through a rift instead of dying — `flees` books a
   // `bossFled` (never a kill) and leaves the named landmark behind.
   test_coward: {
@@ -303,7 +303,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0,
     },
   },
-  // A THRESHOLD-FLEE unique (mirrors ELON MOSQUE's `belowHpFrac`): the coward
+  // A THRESHOLD-FLEE unique (mirrors THE FOUNDER's `belowHpFrac`): the coward
   // bolts the instant his health crosses 75% of maxHp instead of grinding to 0,
   // so the fight resolves early. Set high so the test reads unambiguously — a
   // plain flee-at-0 would have to eat the whole 100 hp bar.
@@ -371,7 +371,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   },
 };
 
-// A SHOOTER elite (mirrors the Eastworld GROK controllers): fires hostile
+// A SHOOTER elite (mirrors the Boot Hill TRUST ME BRO controllers): fires hostile
 // projectiles at the player and hides behind obstacles between shots. No
 // dialogue, so it never rushes — the ranged suite gets the pure behavior.
 FIX_ENEMIES.test_gunner = {
@@ -396,7 +396,7 @@ FIX_ENEMIES.test_gunner = {
   },
 };
 
-// A GUARDED boss (mirrors THE ZAI SUPERCORE): it cannot be hurt while its
+// A GUARDED boss (mirrors THE BRO SUPERCORE): it cannot be hurt while its
 // named guardian lives (`shieldedBy`), and it shoots — a stationary turret.
 FIX_ENEMIES.test_shielded_boss = {
   id: "test_shielded_boss",
@@ -1585,7 +1585,7 @@ export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
   },
 );
 
-// A level with an OUTRO epilogue (mirrors Eastworld): killing the boss arms
+// A level with an OUTRO epilogue (mirrors Boot Hill): killing the boss arms
 // the victory quake, and the countdown ends in the `outro` phase instead of
 // the splash. Bare arena so the kill is surgical.
 export const FIX_OUTRO_LEVEL: LevelDef = hazardLevel("test_outro_level", {
@@ -1602,8 +1602,8 @@ export const FIX_RANGED_LEVEL: LevelDef = hazardLevel("test_ranged_level", {
   ],
 });
 
-// A fixture UNIQUE for the merchant-stall rules (mirrors the Eastworld
-// PUTAIN stall): a plain trinket relic the stall may roll into stock.
+// A fixture UNIQUE for the merchant-stall rules (mirrors the Boot Hill
+// THE STRONGMAN stall): a plain trinket relic the stall may roll into stock.
 export const FIX_UNIQUES: Record<string, UniqueDef> = {
   test_relic: {
     id: "test_relic",

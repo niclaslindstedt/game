@@ -1,4 +1,4 @@
-# Game content — _Gone in Space_
+# Game content — _Ada's Trail_
 
 This document describes the **content** of the current game: its story,
 levels, and enemy roster. It sits beside [`architecture.md`](./architecture.md),
@@ -10,8 +10,8 @@ file wholesale** — none of it is engine, all of it is data under
 
 Ada went out for chips and soda on movie night and never came back — the
 tracking beacon sewn into her jacket points off-planet. The hero, a
-spaceship builder who once worked at SpaceZ until an AI replaced him — so he
-knows the building cold — raids SpaceZ for the one engine part his
+spaceship builder who once worked at GOODCO until an AI replaced him — so he
+knows the building cold — raids GOODCO for the one engine part his
 garage-built ship still needs, then follows
 the beacon to the moon, where something is not dead enough. The prelude
 cutscene (`content/cutscenes/prelude.yaml`) sets up that night — the weapon hanging on
@@ -19,14 +19,14 @@ the living-room wall is the one thing he takes off it to go after her, and it
 is the weapon he starts the game with. WHICH weapon hangs there is the chosen
 difficulty's call (`DifficultyDef.startingWeapon`, mirrored by a
 per-difficulty prelude variant so the wall always shows the run's actual
-starter): HAIRY POTTER'S WAND on EASY, the MEDIEVAL SWORD on MEDIUM, the
+starter): THE LICENSED REPLICA on EASY, the MEDIEVAL SWORD on MEDIUM, the
 COMBAT KNIFE on HARD, BRASS KNUCKLES on NIGHTMARE, and A STICK on JESUS
 CHRIST!. Every later level opens on a **travel cutscene** of its own
 (`LevelDef.prelude`, which accepts a single scene or a CHAIN played
 back-to-back): the moon on the garage `launch` then the `voyage_moon` transit
 (Earth shrinking behind the ship he built), Mars on ARMSTRONG's `moon_depart`
 send-off then `voyage_mars`, the rift on `rift_entry` (walking into the tear
-MOSQUE left on Mars), and Eastworld on `rift_exit` (the far door with the
+THE FOUNDER left on Mars), and Boot Hill on `rift_exit` (the far door with the
 western's daylight leaking through). Each level then opens on the hero's
 `intro` monologue (a black-screen dialogue, one page at a time, the hero
 standing above the box) before the level-name card drops the run in, and its
@@ -43,8 +43,8 @@ merged and ordered by `levels/index.ts` (which owns `LEVEL_ORDER`). A level
 names its in-run music with an optional `music` id (a key into the app's
 `LEVEL_TRACKS` registry; omitted falls back to the default theme).
 
-- **Level 1 — SPACEZ HQ** (`levels/spacez_hq.ts`). A cleanroom raid for the
-  ship engine's one missing part. `spacez` biome (polished lab
+- **Level 1 — GOODCO HQ** (`levels/goodco_hq.ts`). A cleanroom raid for the
+  ship engine's one missing part. `goodco` biome (polished lab
   tiles + floor vents), ~800 px/s² gravity (hoppable desks, and CRATES the
   hero's weapon smashes for guaranteed loot — mostly health/stamina, sometimes
   gear, a unique likelier than a plain kill; the same breakable crates appear
@@ -55,9 +55,9 @@ names its in-run music with an optional `music` id (a key into the app's
   **desk** occasionally drops a drawer stash — a gamble, never the crate's
   guaranteed haul. The assembly floor is laid out like an
   **assembly line**: a serpentine of five fuselage-jig `walls` with alternating
-  end-gaps herds the hero up and down the whole floor toward DOGE-1's bay, so
+  end-gaps herds the hero up and down the whole floor toward PAYLOAD-1's bay, so
   clearing the level walks almost every square. **Four off-path detour lockers**
-  reward exploring a dead-end (`chests`, the SpaceZ locker sprite spilling a
+  reward exploring a dead-end (`chests`, the GOODCO locker sprite spilling a
   Diablo-2 haul — an 80% marquee item plus guaranteed supplies): the STOCK ROOM,
   the BREAK ROOM (guarded by the EMPLOYEE OF THE MONTH unique), and one in each
   of the CORE LAB and CLEANROOM keycard vaults, sweetening the story dips.
@@ -65,7 +65,7 @@ names its in-run music with an optional `music` id (a key into the app's
   ARCHITECT's keycard opens the last) still gate the corner story vaults. The
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
   here. **Employee stampedes** (`LevelDef.stampedes` → the engine's herd
-  hazard): once the hero is halfway to DOGE-1 (`afterProgress: 0.5` — the
+  hazard): once the hero is halfway to PAYLOAD-1 (`afterProgress: 0.5` — the
   opening aisles, where a new player is still learning to steer and jump, stay
   clear of the herd), every 20–37 s a wall of five panicked staffers charges
   across the aisles right-to-left at a steady, heavy pace, a dust cloud boiling
@@ -94,9 +94,9 @@ names its in-run music with an optional `music` id (a key into the app's
   while dormant (`SpawnSpec.patrol` routes, ping-ponged at `ENEMY_AI.patrol`
   pace by `stepPatrol`): the NIGHT MANAGER paces his aisle, the CHIEF OF
   SECURITY and THE JANITOR walk their beats, and an errand intern, a bay
-  guard, and two roaming OPTIMUSK units sweep the build bays. **Alarm
+  guard, and two roaming SUCCESSOR units sweep the build bays. **Alarm
   sentries** (`SpawnSpec.alarms` → `raiseAlarm`, config
-  `SPAWNERS.alarmWindowMs`): the guard, both OPTIMUSK sweeps, and one foreman
+  `SPAWNERS.alarmWindowMs`): the guard, both SUCCESSOR sweeps, and one foreman
   per far belt are wired to their bay's spawn point — woken, each activates it
   at once and it pours an answering squad at the hero for the alarm window
   (falling back dormant if he never comes), so dodging a point's trigger
@@ -108,7 +108,7 @@ names its in-run music with an optional `music` id (a key into the app's
   regolith into a handful of BASINS, so the climb from the lander to ARMSTRONG
   sweeps low, then up, then up again across most of the moon (an authored
   `path` threads the gaps) rather than cutting one straight diagonal — clearing
-  the finite ridge-gap `spawners` (wisps → ghosts → wraiths → OPTIMUSK) on the
+  the finite ridge-gap `spawners` (wisps → ghosts → wraiths → SUCCESSOR) on the
   way. **Two off-path detours** reward exploring a dead pocket: the CRASHED
   LANDER, a walled wreck where the LOST COSMONAUT guards a chest, and THE
   THIRTEENTH GRAVE, a deep crater where THE THIRTEENTH MAN guards his own — each
@@ -118,7 +118,7 @@ names its in-run music with an optional `music` id (a key into the app's
   standard guaranteed spill. A STILL POINT safe nook by the flag
   lets the moon salvage merchant trade before the boss. Scattered **moonrock**
   slabs (1×1/1×2/2×2 rectangular obstacles) wall off sight, shots and even a
-  nuke's blast — cover against SpaceZ's grounded robots, useless against the
+  nuke's blast — cover against GOODCO's grounded robots, useless against the
   phasing dead — while jumpable **craters** are gaps the player hops (landing on
   the near lip when short) but the horde must route around. The airless plain
   also draws **meteor strikes** (`LevelDef.asteroids`, config `ASTEROIDS`): on a
@@ -128,14 +128,14 @@ names its in-run music with an optional `music` id (a key into the app's
   distance-scaled bite of hp, and punching a fresh crater into the regolith (the
   moon is pocked with them for a reason). A rare, dodgeable spectacle, not a
   barrage. Music: `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
-- **Level 3 — MARS** (`levels/mars.ts`). The trail from the moon: SpaceZ wrote
+- **Level 3 — MARS** (`levels/mars.ts`). The trail from the moon: GOODCO wrote
   the moon off as a disaster and moved everything — Ada included — to a secret
   colony. `mars` biome, ~520 px/s² gravity. The level TRANSITIONS mid-map: red
   regolith with oxide-gravel patches on the western desert half, and the first
   use of **tile zones** (`TileSpec.zones`) swaps everything east of the dome
   wall to the base's deck plating. The dome wall (two airlock gaps) and an
   interior divider carve the base into chambers; the **TERRARIUM** — a locked
-  lizard-shrine room in the SE corner — opens with PETER TEAL's keycard and
+  lizard-shrine room in the SE corner — opens with THE SEED's keycard and
   holds the TRIBUTE SCHEDULE (and its chest); a second cache sits in the dead
   SW flats, the detour across empty regolith its price. Scattered **marsrock**
   slabs and red craters mirror the moon's cover rules. **Sand storms** (`LevelDef.sandstorms` → the
@@ -143,11 +143,11 @@ names its in-run music with an optional `music` id (a key into the app's
   cadence and sweep the hero's surroundings SLOW enough to walk clear of —
   but a storm that catches him on the ground takes a difficulty-scaled bite of
   his health AND knocks him out, leaving him prone and helpless for two seconds
-  while it passes over him and fades. The boss doesn't die: ELON MOSQUE
+  while it passes over him and fades. The boss doesn't die: THE FOUNDER
   **flees** at 0 hp (the engine's `EnemyDef.flees`), leaving a **rift** landmark
   where he vanished — the doorway the story follows next. Music: `red_dust`
   ("RED DUST", a galloping desert-western drive).
-- **Level 4 — THE RIFT** (`levels/rift.ts`). The hero follows MOSQUE through
+- **Level 4 — THE RIFT** (`levels/rift.ts`). The hero follows THE FOUNDER through
   the tear: a hallucinatory space between universes. `rift` biome — void
   tiles (star-flecked indigo nothing) with nebula patches; there is no
   ground, the boots just grip something that isn't there. ~200 px/s² gravity
@@ -175,20 +175,20 @@ names its in-run music with an optional `music` id (a key into the app's
   wreck); lost TVs and floating rocks decorate the nothing. Beside the EDDY's
   guarded chest, a second cache skirts the first NW gravity well — swing wide
   of the pull or pay the toll. The far door — a second rift at the east end — is where the
-  tribute went and where MOSQUE flees again. Music: `rift_drift` ("RIFT
+  tribute went and where THE FOUNDER flees again. Music: `rift_drift` ("RIFT
   DRIFT", a weightless lydian float).
-- **Level 5 — EASTWORLD** (`levels/eastworld.ts`). The rift's far side: a
-  knockoff wild-west theme park built in Russia by VLADIMIR PUTAIN and STEVEN
-  SEAGULL, run on robotics and intelligence licensed from ZAI — the reality
-  PUTAIN retreated into to escape the one where he loses. `eastworld` biome
+- **Level 5 — BOOT HILL** (`levels/boot_hill.ts`). The rift's far side: a
+  knockoff wild-west theme park built in Russia by THE STRONGMAN and STEVEN
+  THE STUNT DOUBLE, run on robotics and intelligence licensed from TRUST ME BRO — the reality
+  THE STRONGMAN retreated into to escape the one where he loses. `boot_hill` biome
   (sun-baked hardpan + dry-scrub patches; the control-center compound swaps
-  to ZAI deck plating via a tile zone), ~700 px/s² gravity. The town is the
+  to TRUST ME BRO deck plating via a tile zone), ~700 px/s² gravity. The town is the
   level's signature: **building-sized `house` obstacles** (the game's largest
   footprints — 3×2 up to 5×3 cells at 16 px/cell) plus two `storefront` wall
   rows squeeze main street into tight corridors, so escaping the horde is
   genuinely hard. A fenced CONTROL CENTER compound walls off the east end
-  behind a locked door (`control`) that SEAGULL's ALL-ACCESS PASS opens;
-  inside, a hand-placed rock garden gives the GROK controllers their cover.
+  behind a locked door (`control`) that THE STUNT DOUBLE's ALL-ACCESS PASS opens;
+  inside, a hand-placed rock garden gives the TRUST ME BRO controllers their cover.
   The park's signature environmental hazard is the **spinning hay balls**
   (`LevelDef.hayBalls`, config `HAY_BALLS`): golden bales roll in from the east
   and bounce straight down main street to the west, spinning as they go. A bale
@@ -200,7 +200,7 @@ names its in-run music with an optional `music` id (a key into the app's
   chance at what they were kegging (health/stamina) and abandoned **wagons**
   crack open with a gear-leaning freight roll — both chance-based prop spills,
   not supply crates. Two chests reward the south detours: the fenced CORRAL's
-  payoff and a strongbox stashed in GERALD DEPARDIEU's shadow, his duel the
+  payoff and a strongbox stashed in THE LEADING MAN's shadow, his duel the
   toll.
   Beating the boss arms the **victory quake** (the whole park shakes through
   the loot-grab window) and plays the campaign's **outro epilogue**
@@ -212,11 +212,11 @@ names its in-run music with an optional `music` id (a key into the app's
   chain, no NEXT LEVEL slot, no mission-select row): the only way in is a
   ritual the game never explains, and one gated behind the whole campaign.
   RASPUTIN in the rift drops **THE SEVERED HAND** — a zero-stat trinket that
-  reads as junk — but only **once EASTWORLD is cleared** on that difficulty
-  (the drop carries `requiresClear: "eastworld"`, checked against the run's
+  reads as junk — but only **once BOOT HILL is cleared** on that difficulty
+  (the drop carries `requiresClear: "boot_hill"`, checked against the run's
   `GameState.clearedLevels`, which the app seeds from the character's clears
   via `clearedLevelsFor`). On a first pass the hero reaches the Rift _before_
-  Eastworld, so the hand never drops then — the bunker is strictly a
+  Boot Hill, so the hand never drops then — the bunker is strictly a
   post-campaign bonus, farmed on Rift replays. USING the hand while standing
   in the rift (a `USE` row on its item card, or a desktop right-click;
   `LevelDef.gates` + `spendGateKey`) tears open a blast door beside the hero.
@@ -231,14 +231,14 @@ names its in-run music with an optional `music` id (a key into the app's
   corridor from fixed emplacements while soldiers, ICE and FBI agents press in,
   baffle walls forcing a zigzag under fire. **(3) The SUITES WING** — the
   optional farm: six marble suites off a central boulevard, each holding a
-  **resident** — VLADIMIR PUTAIN (a clone? the backup), MARK SUCKERBERG, LARRY
-  ALLISON, JEFF BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far tougher than
+  **resident** — THE STRONGMAN (a clone? the backup), THE MODERATOR, LARRY
+  ALLISON, THE FULFILLER, THE SAFETY OFFICER, THE DEVELOPER — every one far tougher than
   any campaign elite and ringed by his **personal bodyguards** (one drawing, six
   liveries, a size up from the crew); the con ramps up west-to-east, the two
   toughest residents in the easternmost suites. **(4) The TREASURY** — the
   climax. The level's real reveal — delivered through a found **ZEROED LEDGER** (a
   callback to Mars's COLONY LEDGER, every net-worth column now transferred to the
-  CORE) and two residents (a knows-but-terrified SAM HALTMAN, an oblivious DONALD
+  CORE) and two residents (a knows-but-terrified THE SAFETY OFFICER, an oblivious DONALD
   DUMP) — is that the vault is a **prison**: the CORE already took the residents'
   money and bolted the door, so the guards are its wardens and the residents are
   in denial. The finale makes that twist physical: **THE VAULT WARDEN**, a hulking
@@ -291,7 +291,7 @@ level with the same carry-over.
 The **loot is Diablo-shaped, and each level introduces its own base
 weapons** (`LevelDef.loot.weaponPool`, six per level at stepped level
 requirements — two melee, two ranged, two magic, so a melee, ranged, or
-caster build all find a steady climb): SpaceZ HQ scavenges earthly arms
+caster build all find a steady climb): GOODCO HQ scavenges earthly arms
 (BOX CUTTER, SECURITY BATON, 9MM PISTOL, PROTOTYPE LASER, MICROWAVE
 EMITTER, PUMP SHOTGUN), the moon yields the 70s hardware the space race
 ferried up (LUNAR WRENCH, SERVICE REVOLVER, GEOLOGY HAMMER, SURPLUS
@@ -300,7 +300,7 @@ PISTOL with homing darts, PLASMA BLADE, piercing RAILGUN, chain-lightning
 ARC PROJECTOR, GRAVITON MAW, GRAVITY MAUL), the rift rains history and
 fantasy (GLADIUS, LONGBOW, BLUNDERBUSS, EXECUTIONER'S AXE, SORCERER'S
 STAFF, EMBER WAND — plus the rift-only fantasy gear: LUCKY CLOVER, CRYSTAL
-ORB, GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK), and Eastworld's control
+ORB, GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK), and Boot Hill's control
 center fabricates hybrid frontier arms at the normal band's top rungs
 (MONO-WIRE LARIAT, PLASMA PEACEMAKER, PLASMA BRANDING IRON, MAGLEV
 REPEATER, SNAKE-OIL SPRAYER, HIGH NOON — with the PRAIRIE IRON revolver as
@@ -309,12 +309,12 @@ the SPUR-JET BOOTS).
 
 Below regular sits the **TRASH tier** — the joke class: weapons with ZERO
 damage and no stats (grey card, worth pocket lint at the counter). It never
-rolls; it exists only for scripted story drops — ELON MOSQUE's final estate
-on Eastworld is its debut (SOGGY CARDBOARD SWORD, NOT-A-FLAMETHROWER
-(EMPTY), CYBERVAN WIPER BLADE).
+rolls; it exists only for scripted story drops — THE FOUNDER's final estate
+on Boot Hill is its debut (SOGGY CARDBOARD SWORD, THE LEGAL DISTINCTION
+(EMPTY), THE DEMO WIPER BLADE).
 
-Off to one side of the ladder entirely sits the **DI TELLO CHAINSAW** — a
-GIMMICK weapon, dropped by ELON MOSQUE on Mars beside the NOT-A-FLAMETHROWER,
+Off to one side of the ladder entirely sits the **THE AUSTERITY CHAINSAW** — a
+GIMMICK weapon, dropped by THE FOUNDER on Mars beside the THE LEGAL DISTINCTION,
 and the only thing in the game that does not kill by damage. It EXECUTES
 (`WeaponDef.execute`, `src/game/items/execute.ts`): a body it is TOUCHING takes
 six times whatever it was holding, past its armor and past the crit roll, so it
@@ -478,16 +478,16 @@ attribute lifts at the **2-** and **3-piece** thresholds, then a thematic
 **capstone** at the full **4-piece** set: a granted spell, a retaliation proc,
 or never-miss (`setBonusAffixes` folds them into the same stat/affix reads a
 worn piece uses; the item card shows the set, your collection progress, and
-which bonuses are live). The catalog rolls out **melee-first**: DOGE-1 (SpaceZ)
-and ARMSTRONG (Moon) drop **melee** sets, ELON MOSQUE on Mars and in the Rift
-drop **ranged** sets, and GROK OMEGA drops the **magic** set. On top of its set,
+which bonuses are live). The catalog rolls out **melee-first**: PAYLOAD-1 (GOODCO)
+and ARMSTRONG (Moon) drop **melee** sets, THE FOUNDER on Mars and in the Rift
+drop **ranged** sets, and BRO OMEGA drops the **magic** set. On top of its set,
 every boss also drops **one on-theme signature UNIQUE weapon** of its class (the
-build-defining chase — DOGE'S FANG, THE FALLEN STANDARD, WRATHFLAME,
+build-defining chase — PROTOTYPE FANG, THE FALLEN STANDARD, WRATHFLAME,
 RIFTMAW, THE JAILBREAK). Like uniques, sets are AUTHORED, never rolled: a set
 piece drops only from its boss. The campaign rungs (easy/medium/hard) pay a
 low-ilvl taste of the set; the **endgame rungs (nightmare/jesus) open the whole
 set + signature**, so a nightmare/jesus boss grind completes a set from one
-boss. DOGE-1 additionally drops that stage's roomier **bag** and GROK OMEGA its
+boss. PAYLOAD-1 additionally drops that stage's roomier **bag** and BRO OMEGA its
 **trinket** (a separate accessory axis of ordinary uniques).
 
 **The named-item chase (the endgame drop economy).** Uniques, legendaries,
@@ -541,17 +541,17 @@ they cover the same band; nightmare 52, jesus 63; see
 `leveling-curve.mjs --by-level`), so trash relics can only be farmed by
 RETURNING once you've out-levelled the run. The bottom-tier batch (shared across
 the three starting lanes) gathers relics themed to their levels
-— **THE FIRST DRAFT** (SpaceZ HQ, the prototype-GROK neural crown), **THE PALE
+— **THE FIRST DRAFT** (GOODCO HQ, the prototype-TRUST ME BRO neural crown), **THE PALE
 COVENANT** (the Moon, the last moonwalker's sealed plate), **DEADSTAR** (the
 Moon, the pulsar-rod heart of a star that died screaming), **DUSTBORN** (Mars,
-storm-runner boots), **PALE RIDER** (Eastworld, the pale horseman's revolver on
+storm-runner boots), **PALE RIDER** (Boot Hill, the pale horseman's revolver on
 the park's own PRAIRIE IRON) — plus two on the Rift, which, being a tear in
 history, coughs up **EXCALIBUR** and **THE TRINITY SHARD** (trinitite glass).
 
 The MEDIUM rung adds a mid-campaign batch, a notch stronger: **DEADSPRINT**
-(SpaceZ HQ, up-or-out glass-cannon leggings), **MARECREST** (the Moon, the
+(GOODCO HQ, up-or-out glass-cannon leggings), **MARECREST** (the Moon, the
 vigil-helm that outlasted the silence), **REDWIND** (Mars, the frontier raygun
-that drinks the red storm), Eastworld's two melee relics — **HERDBREAKER** (the
+that drinks the red storm), Boot Hill's two melee relics — **HERDBREAKER** (the
 cattle bench's master brand) and **THE LAST ROUNDUP** (the wrangler's monowire
 lariat, thrown wide) — and three more from the Rift's deeper haul:
 **WISHBANE** (a cursed-wish trinket), **GORGONSCALE** (Athena's gorgon-faced
@@ -563,9 +563,9 @@ into best-in-slot.
 
 The HARD rung's batch (see `docs/item-plan.md`, phase 2) completes per-spec
 coverage for the hard climb — the rung's boss set already fields the magic
-RIFTMAW and a full armor loadout, so the relics add **OATHBRAND** (Eastworld,
+RIFTMAW and a full armor loadout, so the relics add **OATHBRAND** (Boot Hill,
 the last honest lawman's monomolecular blade — the melee anchor),
-**LONGWATCH** (SpaceZ HQ, the perimeter marksman's rifle), **HUNTSMAN'S
+**LONGWATCH** (GOODCO HQ, the perimeter marksman's rifle), **HUNTSMAN'S
 COWL** (the Moon, the moon-huntress's visor: DEX/crit head), **COLOSSUS
 PLATE** (Mars, terraformer plating that trades a step of speed for a wall),
 and the rung's LEGENDARY, **THE INEVITABLE** (the Rift) — the pistol that has
@@ -584,16 +584,16 @@ astronomically rarer than the modest ones.
 
 The NIGHTMARE rung's batch (phase 3) doubles the coverage — a SECOND set per
 spec for the climb where the horde matches the hero level for level:
-**HORDEBANE** (Eastworld, the axe made for too many) and **GRAVEMAKER** (the
-Rift, the burying maul) for melee, **DRAGON'S BREATH** (Eastworld, the park's
+**HORDEBANE** (Boot Hill, the axe made for too many) and **GRAVEMAKER** (the
+Rift, the burying maul) for melee, **DRAGON'S BREATH** (Boot Hill, the park's
 monster-of-legend scattergun) for ranged, **PYRELIGHT** (Mars, the
-forge-heart wand) and **STORMLASH** (SpaceZ HQ, the lab-broken storm) for
+forge-heart wand) and **STORMLASH** (GOODCO HQ, the lab-broken storm) for
 magic, plus four spec-leaning armor relics — **OMENSIGHT** (head),
 **FALCONMAIL** (chest), **IRONROOT GREAVES** (legs), **VEILWALKERS** (feet).
 Its three LEGENDARIES, one per spec, all carry forever powers: **THE
 RECKONING** (the Rift — the cursed blade: never whiffs, answers every blow
 taken with lightning — the game's first when-struck proc — and takes its
-price in blood), **SKYBREAKER** (Eastworld — on-hit lightning revolver), and
+price in blood), **SKYBREAKER** (Boot Hill — on-hit lightning revolver), and
 **SUNWREATH** (the Rift — the dead star's crown, ringing its bearer in
 permanent circling flame).
 
@@ -614,12 +614,12 @@ A JESUS **endgame gap-fill** batch (twelve more world-drop uniques, ilvls
 79–99) widens the 60→99 chase where the roster ran thin — the slots the
 pre-99 sets barely touched. Charm and bag had **no** relic above ilvl 53/49
 before the artifacts; four trinkets now bridge that gap — **THE LAST ANTE**
-(Eastworld, the un-coverable bet), **THE STILL POINT** (the Rift, the one
+(Boot Hill, the un-coverable bet), **THE STILL POINT** (the Rift, the one
 place that will not move), **THE EMBER HOUR** (Mars, the red world's hottest
 hour), and **THE FIXED STAR** (the Rift, the star that never falls), each a
 scaling keeper — and three bags carry the endgame's first unique carryalls:
-**THE SEVERANCE** (SpaceZ HQ), **THE MOTHERLODE** (Mars), and **THE KING'S
-RANSOM** (Eastworld). The thin armor slots gain **THE LAST WORD** (SpaceZ HQ,
+**THE SEVERANCE** (GOODCO HQ), **THE MOTHERLODE** (Mars), and **THE KING'S
+RANSOM** (Boot Hill). The thin armor slots gain **THE LAST WORD** (GOODCO HQ,
 head), **THE BULWARK** (Mars) and **THE WORLDSHELL** (the Moon) for chest,
 **THE LONG MARCH** (the Moon, legs), and **THE FAR SHORE** (the Rift, feet).
 All hang on the JESUS rungs, so they farm in the same rift → bunker loop and
@@ -648,7 +648,7 @@ rarer than the commonest artifact). Combined a rift → bunker run pays an
 artifact roughly once per hundred runs (`scripts/drop-rate.mjs`).
 
 Between the boss sets and the world relics, EASY, MEDIUM, HARD, and
-NIGHTMARE each now cover every **build**: easy fields melee (DOGE'S
+NIGHTMARE each now cover every **build**: easy fields melee (PAYLOAD'S
 FANG, EXCALIBUR), ranged (PALE RIDER), and magic (DEADSTAR); medium fields
 magic (THE JAILBREAK), ranged (REDWIND), and three melee choices
 (HERDBREAKER, THE LAST ROUNDUP, MJÖLNIR); hard fields melee (OATHBRAND),
@@ -672,7 +672,7 @@ its own armor curve (roughly a second breastplate), behind a STRENGTH floor
 (`SHIELD.strReqFraction`) pitched above a weapon's own gate, so only a bruiser
 can heft one: HATCH COVER and RIOT SHIELD out of the HQ, the moon's WHIPPLE-
 layered MICROMETEOROID SHIELD, Mars's sintered REGOLITH PAVISE and snapped-off
-SOLAR WING, Eastworld's BOILER PLATE and WANTED BOARD, the rift's BUCKLER,
+SOLAR WING, Boot Hill's BOILER PLATE and WANTED BOARD, the rift's BUCKLER,
 HEATER SHIELD and TOWER SHIELD, and the bunker's BLAST BULKHEAD. A **BAG** is
 the light build's answer: no armor at all, a dusting of DEXTERITY/INTELLIGENCE,
 and CELLS — from the plain BAG's two up to the PILGRIM'S PACK's ten, with a deep
@@ -810,7 +810,7 @@ levels and the endgame becomes the hunt for cap-level gear.
 Because we die and replay a lot, a level's **story is shown only once per
 difficulty**. The first time a character reaches combat on a level (on a given
 difficulty), its opening — the prelude cutscene and the hero's intro monologue —
-and every pinned inner monologue read that run (the SpaceZ scientist, the Mars
+and every pinned inner monologue read that run (the GOODCO scientist, the Mars
 rover, and the rest) are banked onto the character; every later replay on that
 difficulty skips the opening and pre-marks those thoughts as seen, dropping the
 hero straight into the fight (`skipStoryOpening`/`markThoughtsSeen`, driven by
@@ -831,11 +831,11 @@ new venue announces itself in the dock as well as on the ground:
 
 | Map                 | Debuts                                             | What they do                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SPACEZ HQ           | the four classics + **ION WAKE**, **BLAST SHIELD** | The classics are FIRE ORBS (a ring of flame that mangles what it touches), STORM CELL (bolts on the nearest foe), STASIS FIELD (everything inside crawls) and the MAGNET (loot flies to the hero). ION WAKE drags burning engine wash behind him — the power is MOVEMENT, so you run the horde over your own exhaust. BLAST SHIELD eats a chunk of his healthbar in incoming damage and then SHATTERS: the one powerup you spend before the hit, not after. |
+| GOODCO HQ           | the four classics + **ION WAKE**, **BLAST SHIELD** | The classics are FIRE ORBS (a ring of flame that mangles what it touches), STORM CELL (bolts on the nearest foe), STASIS FIELD (everything inside crawls) and the MAGNET (loot flies to the hero). ION WAKE drags burning engine wash behind him — the power is MOVEMENT, so you run the horde over your own exhaust. BLAST SHIELD eats a chunk of his healthbar in incoming damage and then SHATTERS: the one powerup you spend before the hit, not after. |
 | THE MOON            | **MOONFALL**, **PALE SHROUD**                      | MOONFALL drops struck regolith on the fight in twos, cratering where it lands — the only power that reaches past his own body, so it clears the pack he is running FROM. PALE SHROUD makes him as dead as the things chasing him: their hands go straight through for a few seconds. The escape hatch.                                                                                                                                                      |
 | MARS                | **DUST DEVIL**, **REACTOR SURGE**                  | DUST DEVIL cuts a rover-scale cyclone loose that HUNTS — it walks itself to the nearest body and grinds what it drags in, while the hero fights on somewhere else. REACTOR SURGE taps the colony's fusion stack: nothing is conjured, his OWN weapon just swings harder and comes around faster.                                                                                                                                                            |
 | THE RIFT            | **EVENT HORIZON**, **THE UNMAKING**                | EVENT HORIZON tears one of the road's black holes open where he stands and LEAVES it there, hauling everything near into the throat — drop it in a doorway and the doorway stops being one. THE UNMAKING washes rings of nothing out of him on a beat, unwriting what they touch and throwing the rest clear: the crowd-breaker.                                                                                                                            |
-| EASTWORLD           | **DEAD MAN'S HAND**, **IRON STAMPEDE**             | DEAD MAN'S HAND is a host gunslinger's last draw, still loaded: phantom rounds crack off on their own at the nearest body whatever he has in his hands. IRON STAMPEDE points the park's LONGHORN line the other way — three tonnes of licensed robotics that does not stop at the first thing it hits.                                                                                                                                                      |
+| BOOT HILL           | **DEAD MAN'S HAND**, **IRON STAMPEDE**             | DEAD MAN'S HAND is a hand gunslinger's last draw, still loaded: phantom rounds crack off on their own at the nearest body whatever he has in his hands. IRON STAMPEDE points the park's LONGHORN line the other way — three tonnes of licensed robotics that does not stop at the first thing it hits.                                                                                                                                                      |
 | THE BUNKER (secret) | **CONTINUITY PROTOCOL**, **SENTRY GRID**           | CONTINUITY PROTOCOL is what the residents actually bought: while it holds, the killing blow is not permitted — a lethal hit leaves him standing on one hp instead. It buys a window, never a life. SENTRY GRID bolts four of the VAULT WARDEN's guns to the floor where it was spent; it holds GROUND, not the hero.                                                                                                                                        |
 
 The NUKE is the exception no pool names: it arrives as a mercy drop for a hero
@@ -865,10 +865,10 @@ what he stocks and to price it.
 
 Every level has a **WANDERING MERCHANT** (`src/game/merchant.ts`, config
 `MERCHANT`/`ECONOMY`) — the same impossible trader in a different costume per
-venue (`LevelDef.merchant`): the vending-machine man at SpaceZ HQ, the '76
+venue (`LevelDef.merchant`): the vending-machine man at GOODCO HQ, the '76
 salvage-run trader on the moon, the colony commissary keeper on Mars, the
 hooded trader between universes in the rift, where he admits every market he
-ever ran fell through eventually, and the BARKEEP of Eastworld's saloon (his
+ever ran fell through eventually, and the BARKEEP of Boot Hill's saloon (his
 lines are in [`manuscript.md`](./manuscript.md)). The horde ignores him and his ward keeps
 mobs two body-widths off his stall. He roams the level until the hero first
 walks up to him: the **meeting** roots him to the spot for the rest of the
@@ -909,8 +909,8 @@ A level may also list **stall UNIQUES**
 (`LevelDef.merchant.stockUniques`): named uniques the trader fences, each
 ROLLED into stock at the standing boss-unique odds when the stall stocks —
 the same rarity as a boss's unique drop, landing on the counter instead of a
-corpse. Eastworld's barkeep carries the PUTAIN estate this way (PUTAIN'S
-TRACKSUIT, THE KREMLIN USHANKA, HONORARY BLACK BELT), and PUTAIN's own
+corpse. Boot Hill's barkeep carries the THE STRONGMAN estate this way (THE STRONGMAN'S
+TRACKSUIT, THE KREMLIN USHANKA, THE HONORARY RANK), and THE STRONGMAN's own
 brand-watch valuables — precious, statless, minted at unique tier — are the
 intended purse. The shop's SELL JUNK button clears every outgrown
 piece (the inventory's scrap rule) in one tap; SELL ALL empties the whole bag
@@ -920,7 +920,7 @@ ride the loadout between levels like everything else the hero carries.
 ## Enemy roster (`src/game/defs/enemies/`)
 
 The roster is split one file per level/biome under `src/game/defs/enemies/`
-(`spacez.ts`, `moon.ts`, …), merged into `ENEMY_DEFS` by `enemies/index.ts`
+(`goodco.ts`, `moon.ts`, …), merged into `ENEMY_DEFS` by `enemies/index.ts`
 (which throws on a duplicate id).
 
 Named elites and bosses fight with **set-piece mechanics**
@@ -928,9 +928,9 @@ Named elites and bosses fight with **set-piece mechanics**
 telegraphed shoulder-charges and ground slams (the windup roots the mob and
 the ground marks the danger — sidestep the charge, jump the slam), enrage turns
 below an hp threshold, summoned reinforcements, and boss PHASES that swap the
-active moves at hp breakpoints (DOGE-1 calls in ASSEMBLER bots at half health,
-ARMSTRONG's moon-quake fury, the MOSQUE bosses ship reinforcements off the
-line, GROK OMEGA pounces, THE ZAI SUPERCORE doubles production once its
+active moves at hp breakpoints (PAYLOAD-1 calls in ASSEMBLER bots at half health,
+ARMSTRONG's moon-quake fury, the THE FOUNDER bosses ship reinforcements off the
+line, BRO OMEGA pounces, THE BRO SUPERCORE doubles production once its
 shield falls). From HARD up the rank and file get smarter too: minions flank
 instead of forming a single-file conga, and shooters lead a running target.
 
@@ -976,14 +976,14 @@ dialogue: the recolored sprite (a per-biome palette variant of a base mob),
 a pulsing rarity aura (cool blue for rares, radiant gold for uniques), an
 over-head health bar, and the loot are the whole encounter.
 
-- **Level 1** ships the SpaceZ night shift (intern → lab scientist →
-  propulsion engineer → security guard → hazmat tech) reinforced by OPTIMUSK
+- **Level 1** ships the GOODCO night shift (intern → lab scientist →
+  propulsion engineer → security guard → hazmat tech) reinforced by SUCCESSOR
   units — humanoid robots that are not story uniques but hit far harder and
   tank far more than any of the staff, and pay out a sweetened drop roll
   (`dropProfile`) when downed; five elites who know too much (THE NIGHT
   MANAGER, THE ARCHITECT, CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus
-  DOGE-1, the memecoin prototype robot booting up in the launch bay (the boss). THE ARCHITECT
-  is the hero's old bench partner, now brainwashed into building SpaceZ's
+  PAYLOAD-1, the memecoin prototype robot booting up in the launch bay (the boss). THE ARCHITECT
+  is the hero's old bench partner, now brainwashed into building GOODCO's
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
@@ -1002,27 +1002,27 @@ over-head health bar, and the loot are the whole encounter.
   SEES plays that arrival read on a building fully staffed at midnight, pinned
   to a **wide, drop-in `radius`** so it lands the instant the packed opening
   ring is on screen (and gates the vanguard's rush via `openingStrike.after`);
-  the first OPTIMUSK he SEES plays the personal one — he helped build the first
+  the first SUCCESSOR he SEES plays the personal one — he helped build the first
   unit before the AI redrew the line and it took everyone's jobs, his included.
-- **Level 2** ships wisp → moon ghost → wraith and the OPTIMUSK robots SpaceZ
+- **Level 2** ships wisp → moon ghost → wraith and the SUCCESSOR robots GOODCO
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE
   PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus ARMSTRONG, the giant
   astronaut ghost guarding the flag (the boss). The haunting reads in two
   ordered player thoughts — sighting the first wisp, then downing one (the
   kill beat's `after` gate holds it until the sighting has played) — and the
-  first OPTIMUSK kill is its own beat (`firstSightThoughts` /
+  first SUCCESSOR kill is its own beat (`firstSightThoughts` /
   `firstKillThoughts` → `THOUGHT_DEFS`, played through the dialogue box in
   the hero's own voice).
-  ARMSTRONG's boss scene ends the moon pointing at Mars: the moon was SpaceZ's
+  ARMSTRONG's boss scene ends the moon pointing at Mars: the moon was GOODCO's
   disastrous mistake, and everything rides the red freight run out.
 - **Level 3** ships the colony's machines — scout rover (fodder) → servo unit
   → FEMBOT (the quick, high-crit companion line) → mining rover (the outdoor
-  heavy with a sweetened `dropProfile`), plus the OPTIMUSK garrison carried
-  over — four elites: three tech billionaires (LARRY WEBPAGE, BUILD GATES,
-  PETER TEAL) and OPTIMUSK PRIME, the robot foreman orchestrating the
-  OPTIMUSK line (it drops the PROMPT INJECTOR and the ORG CHART, whose
-  dotted line points back to the level-1 CORE), and ELON MOSQUE, the boss
+  heavy with a sweetened `dropProfile`), plus the SUCCESSOR garrison carried
+  over — four elites: three tech billionaires (THE INDEXER, THE VENDOR,
+  THE SEED) and SUCCESSOR PRIME, the robot foreman orchestrating the
+  SUCCESSOR line (it drops the PROMPT INJECTOR and the ORG CHART, whose
+  dotted line points back to the level-1 CORE), and THE FOUNDER, the boss
   who **flees instead of dying**
   (`EnemyDef.flees`): at 0 hp he still pays XP and his guaranteed drops and
   gasps his parting words, but the engine books a `bossFled` event (never a
@@ -1045,59 +1045,59 @@ over-head health bar, and the loot are the whole encounter.
   **APPARITIONS** (`EnemyDef.apparition`): HARRY
   HOUDINI and THE KING are dialogue-only figures nothing can hit, whose
   touch is cold air, and who walk off and dissolve after their scene
-  (`apparitionVanished`). The finale is a double bill: **GROK OMEGA** — ZAI's
+  (`apparitionVanished`). The finale is a double bill: **BRO OMEGA** — TRUST ME BRO's
   latest superintelligence, a hovering monolith with one enormous eye — is
   the level's reveal (IT found the rift, in secret, and told precisely no
-  one: not the board, not the world's presidents; MOSQUE only knew from
+  one: not the board, not the world's presidents; THE FOUNDER only knew from
   snooping its logs, and sold the secret to his lizards for a planet). It
-  dies for real and drops the SINGULARITY CANNON. Then at the far door ELON
-  MOSQUE, beaten a second time, **flees again** (`elon_mosque_rift`, same
+  dies for real and drops the SINGULARITY CANNON. Then at the far door THE FOUNDER
+  THE FOUNDER, beaten a second time, **flees again** (`the_founder_rift`, same
   sprite, same coward) through the rift's far side — destination unknown
   until the next level — dropping the GOLDEN PARACHUTE. The objective needs
   BOTH bosses off the board. First-sight/kill thoughts fire for the voidling
   (the walking-on-nothing arrival read) and the graviton.
-- **Level 5** ships the park's HOSTS — COWBOT (fodder greeters) → SALOON
+- **Level 5** ships the park's HANDS — COWBOT (fodder greeters) → SALOON
   BRAWLER → TIN OUTLAW (the quick-draw high-crit line) → LONGHORN (the
-  robotic-steer heavy with a sweetened `dropProfile`) — and the celebrity
-  staff as elites: **STEVEN SEAGULL** (slow as advertised, `dodgeChance`
+  robotic-steer heavy with a sweetened `dropProfile`) — and the named
+  staff as elites: **THE STUNT DOUBLE** (slow as advertised, `dodgeChance`
   0.3 of pure ju-jutsu; drops his PONYTAIL and the compound's ALL-ACCESS
-  PASS), **VLADIMIR PUTAIN** (the owner; drops three unique-tier brand
+  PASS), **THE STRONGMAN** (the owner; drops three unique-tier brand
   watches — pure precious valuables — and THE ANNEXATION MAP, and dies
-  facing the war he retreated from), **GERALD DEPARDIEU** (the biggest,
+  facing the war he retreated from), **THE LEADING MAN** (the biggest,
   slowest elite in the game — radius 16, speed 6, cannot dodge — who tries
   to act his way out of the fight; drops the BOTTOMLESS CARAFE), and
-  **EDWARD SNOW** (the whistleblower in exile, posted under the water
+  **THE LEAK** (the whistleblower in exile, posted under the water
   tower: the archive he leaked is the corpus the SUPERCORE was trained on.
   The game's first ranged ELITE — after his scene he fights like the GROKs,
   shooting from cover (`takesCover`); drops the DEAD MAN'S SWITCH trinket and
-  THE SNOW ARCHIVE story item). **ELON
-  MOSQUE finally DIES here** (`elon_mosque_eastworld`, role boss, no
+  THE SNOW ARCHIVE story item). **THE FOUNDER
+  THE FOUNDER finally DIES here** (`the_founder_boot_hill`, role boss, no
   `flees`) — wimping, and dropping nothing but the TRASH tier's debut. The
-  finale is **THE ZAI SUPERCORE** — the level-1 CORE several promotions
+  finale is **THE BRO SUPERCORE** — the level-1 CORE several promotions
   later, a stationary 48×48 mainframe with a ranged attack — **shielded by
-  the three GROK controllers** (`EnemyDef.shieldedBy`): ALPHA, BETA and
+  the three TRUST ME BRO controllers** (`EnemyDef.shieldedBy`): ALPHA, BETA and
   GAMMA are boss-role SHOOTERS (`EnemyDef.ranged`) that genuinely play the
   map — they hold their distance, fire, and hide behind the compound's
   rocks while they reload (`takesCover`) — and all three must fall before
   the SUPERCORE can be hurt (blows bounce with a "SHIELDED" cue until
   then). The `killBoss` objective needs all five bosses off the board.
   First-sight/kill thoughts fire for the cowbot (the arrival read, then the
-  ZAI-hosts read).
+  TRUST ME BRO-hands read).
 - **THE BUNKER** (secret) ships the privatized security state — CIA AGENT
   (suit fodder) → VACUUM BOT (fast, cheap, sparks; armed housekeeping) →
   ICE AGENT (the grabby border detail) → FBI AGENT (quick, `dodgeChance`
   0.1) → SOLDIER (the horde's rank-and-file SHOOTER: rifles from range,
   reloads behind the furniture) — plus six per-resident **bodyguard**
-  liveries (KREMLIN SHADOW, META SENTINEL, ORACLE ENFORCER, PRIME GUARDIAN,
+  liveries (KREMLIN SHADOW, FEED SENTINEL, LEDGER ENFORCER, DEPOT GUARDIAN,
   ALIGNMENT OFFICER, LOYALTY ENFORCER: one 20 px body, six accent swaps,
   380 hp with a leash that keeps each detail on post and a sweetened
   `dropProfile`). The six **residents** are elites a class above anything
-  in the campaign (1600–2600 hp, `levelBonus` 6): VLADIMIR PUTAIN — the
-  backup ("CHECK THE OTHER FREEZERS"; drops another KOLEX DAYTONNE),
-  MARK SUCKERBERG (fast, `dodgeChance` 0.3 of rehearsed humanity),
-  LARRY ALLISON and SAM HALTMAN (ranged, `takesCover` — the audit and the
-  aligned bolt), JEFF BAYWATCH (the fastest, hardest-hitting rusher), and
-  DONALD DUMP (radius 15, speed 10, the hardest single touch in the game,
+  in the campaign (1600–2600 hp, `levelBonus` 6): THE STRONGMAN — the
+  backup ("CHECK THE OTHER FREEZERS"; drops another THE CHRONOGRAPH),
+  THE MODERATOR (fast, `dodgeChance` 0.3 of rehearsed humanity),
+  THE SYSADMIN and THE SAFETY OFFICER (ranged, `takesCover` — the audit and the
+  aligned bolt), THE FULFILLER (the fastest, hardest-hitting rusher), and
+  THE DEVELOPER (radius 15, speed 10, the hardest single touch in the game,
   never dodges). No boss — the exit door ends it. Sight thoughts fire for
   the cia agent (arrival), the vacuum bot, and the ice agent (the hero
   really is the illegal immigrant here).
@@ -1107,7 +1107,7 @@ Every unique mob (elite/boss) carries `dialogue` played on arrival and
 each level's `waves` spawner. **Nameless is not anonymous, though: every
 monster in the roster — all 106, the fodder tier included — also carries a
 `lore` paragraph** saying what the thing is and how it came to be standing
-there (a cowbot is a decommissioned park host that used to take a bullet twice
+there (a cowbot is a decommissioned park hand that used to take a bullet twice
 a day for the guests; a wisp is the thinnest thing the singing wreck woke).
 The simulation never reads it; it exists so the horde reads as a place's
 inhabitants rather than as a texture, and the library's bestiary prints it
@@ -1138,11 +1138,11 @@ ready to open again.
 
 They are **unique per map, two apiece** — the one NIGHTMARE meets, and a worse
 one only JESUS does (a per-member `minDifficulty` on the gate's second line):
-**TUNGUSKA WALKER** / **THE FIRST INVESTOR** at SpaceZ HQ, **DUST PHARAOH** /
+**TUNGUSKA WALKER** / **THE FIRST INVESTOR** at GOODCO HQ, **DUST PHARAOH** /
 **THE DROWNED OF SELENE** on the moon, **OLYMPUS ENGINE** / **PHOBOS SHEPHERD**
 (a rock-throwing ranged attacker) on Mars, **THE FIRST VANISHING** / **THE
 SCALED ANCESTOR** in the rift, **THE LONG NOON** (a duelist that shoots and
-takes cover) / **MANIFEST RUIN** in Eastworld, and **THE PERMAFROST SAINT** /
+takes cover) / **MANIFEST RUIN** in Boot Hill, and **THE PERMAFROST SAINT** /
 **THE DEAD HAND** in the bunker. All are minion-role but authored at **elite
 size and weight** (radius 15–17, 320–700 base hp, `levelBonus` 2–3 on the
 `hellborn` ladder ramp — above even the map's boss rung), wear a violet rift
@@ -1258,8 +1258,8 @@ One story-item thread runs the whole campaign: **ADA'S TRAIL** — a placed
 found-lore trace on each of the five campaign levels (`ada_soda`, `ada_sneaker`,
 `ada_message`, `ada_jacket`, `ada_host`), escalating from scared to defiant to
 sabotage so Ada reads as a person fighting her way forward rather than a beacon.
-The rift's jacket scrap pays off the prelude's fixed zipper, and Eastworld's
-hat-jammed host sets up the epilogue's "nice hat". The bunker's own find, the
+The rift's jacket scrap pays off the prelude's fixed zipper, and Boot Hill's
+hat-jammed hand sets up the epilogue's "nice hat". The bunker's own find, the
 **ZEROED LEDGER** (`bunker_ledger`), is the capstone reveal — every resident's
 fortune transferred to the CORE, the proof the vault is a prison (see the
 manuscript for the full text).

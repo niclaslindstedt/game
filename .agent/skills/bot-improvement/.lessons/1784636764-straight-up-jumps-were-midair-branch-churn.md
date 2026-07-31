@@ -31,8 +31,8 @@ The fix shape (mirrors a human's "decide why you're jumping, then commit"):
   contact range), so the gates are mostly future-proofing — the real melee
   waste was the churn above.
 
-Measured (spacez_hq easy, balanced/auto, seed 1 ×5 reruns, 8 min): named-foe
-engagements 0 → 6 (one run now reaches and fights DOGE-1), kills 338 → 382,
+Measured (goodco_hq easy, balanced/auto, seed 1 ×5 reruns, 8 min): named-foe
+engagements 0 → 6 (one run now reaches and fights PAYLOAD-1), kills 338 → 382,
 jumps 8 → 10 (flat — the change fixes jump QUALITY, not the budget).
 
 Test gotcha: `bot.lastThought` after `botAct` is the RESOLVED thought, and

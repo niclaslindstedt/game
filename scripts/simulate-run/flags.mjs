@@ -33,7 +33,7 @@ export function parseFlags(args, deps) {
   if (flag("help")) {
     console.log(
       "usage: node scripts/simulate-run.mjs [--difficulty all|easy[,medium,…]] " +
-        "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] " +
+        "[--level all|goodco_hq[,…]] [--rerun N] [--seed N] " +
         "[--strategy all|aggro,balanced,flee|survivor|rush|kite|boss] " +
         "[--class all|melee,ranged,magic,balanced|auto] " +
         "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-arrow-xp] " +

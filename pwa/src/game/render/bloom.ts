@@ -53,7 +53,7 @@ const BLUR_PX = 3;
  * THAT NUMBER IS NOT A TASTE SETTING; it is measured against the game's own
  * floors. Sample any frame and the ordinary ground is not a minority of the
  * picture, it IS the picture: the moon's regolith sits at 0.554 luminance and
- * SpaceZ HQ's deck at 0.701 — each of them the 50th AND the 90th percentile of
+ * GOODCO HQ's deck at 0.701 — each of them the 50th AND the 90th percentile of
  * its own frame. The lights this exists for live in the top half-percent, at
  * 0.85 and up. So the knee has to clear the brightest ordinary FLOOR with margin
  * and still sit under the dimmest LIGHT, and 0.795 is the middle of that gap.
@@ -62,7 +62,7 @@ const BLUR_PX = 3;
  * knee is at 0.49 — BELOW the floor of every venue in the game. So better than
  * nine tenths of every frame was classed as light and added back over itself:
  * measured on real frames, it lifted the mean luminance of the whole picture by
- * 14–24%, which is why the moon came out a milky lavender and SpaceZ HQ's deck
+ * 14–24%, which is why the moon came out a milky lavender and GOODCO HQ's deck
  * came out bleached with its tile grid gone. That is haze, not bloom, and this
  * number is the whole difference between the two.
  */

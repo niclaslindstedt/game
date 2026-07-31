@@ -40,7 +40,7 @@ Status legend: `[ ]` not started · `[x]` done.
 
 - 53 uniques: the 35-piece boss Latin square (each rung one full
   weapon+armor set + bag + charm), EASY + MEDIUM world-drop batches, and the
-  Eastworld merchant stall. The HARD / NIGHTMARE / JESUS world-drop columns
+  Boot Hill merchant stall. The HARD / NIGHTMARE / JESUS world-drop columns
   are **empty**.
 - Exactly **one legendary** ships: MJÖLNIR (medium rung world drop, ilvl 57).
 - Per-rung weapon coverage is one spec each: HARD has a magic weapon
@@ -287,7 +287,7 @@ roster (subject to a naming pass at implementation):
 - [x] Campaign sets attainable / legendaries rare pre-99
       (`progression-sim.mjs --difficulty jesus`): the JESUS pass reaches L99,
       uniques drop every rung, and LEGENDARIES surface only on the deep
-      endgame passes (the Rift/Eastworld) — never in the early campaign.
+      endgame passes (the Rift/Boot Hill) — never in the early campaign.
 - [x] Cap-level JESUS farm (`scripts/drop-rate.mjs --hero 99`, 800 runs): at
       the cap a rift+bunker loop pays ≈ 1 unique/run, a legendary every ~13–19
       runs, and an artifact every ~110–133 — and only common-band legendaries

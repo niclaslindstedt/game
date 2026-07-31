@@ -1,0 +1,30 @@
+# THE BRO SUPERCORE's repair node — the address its healing comes from.
+#
+# Like ARMSTRONG's planted flag this is a STRUCTURE, not a creature: it stands
+# where it was raised, it never strikes, and it is worth no experience. Its only
+# job is to be visibly responsible for the boss's bar going back up, so that
+# breaking it is a better play than any amount of extra damage on the boss.
+#
+# It pays NO XP and drops nothing: the core raises another whenever its cooldown
+# is up, so any reward at all would turn the fight into a farm.
+id: bro_repair_node
+name: REPAIR NODE
+lore: >-
+  Not a creature: a service pylon THE BRO SUPERCORE raises to patch itself
+  mid-fight, with the repair running down a tether anybody can see. Breaking
+  it beats any amount of extra damage on the box it is feeding.
+role: elite
+structure: true
+sprite: bro_repair_node
+gore: sparks
+speed: 0
+radius: 9
+contactDamage: 0
+critChance: 0
+contactCooldownMs: 1000
+# Breakable in a couple of seconds of committed fire — long enough that ignoring
+# it costs you the fight, short enough that noticing it is a real save.
+hp: 110
+xpMobMult: 0
+ai:
+  aggroRadius: 9999

@@ -3,7 +3,7 @@ title: Check `plane:` before judging a building — a floor-plane sprite is a PL
 date: 2026-07-30
 ---
 
-Eastworld's houses, `storefront`, `lair_house` and `wagon` all carry
+Boot Hill's houses, `storefront`, `lair_house` and `wagon` all carry
 `plane: floor`, so they are authored TOP-DOWN and the renderer lays them flat
 through the projection. Read one as an elevation and every judgement is wrong:
 "a plank shed with a black door slot" is actually a roof band over a plan view,

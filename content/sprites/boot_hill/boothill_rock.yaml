@@ -1,0 +1,34 @@
+name: boothill_rock
+family: boot_hill
+size: [16, 16]
+description: >
+  A rounded sandy-tan desert boulder; solid cover that stops sight, shots, and
+  blasts.
+subject:
+  kind: cover prop — boulder
+  build: a rounded chunky rock, lit sandy-tan on top fading to a shaded underside
+  accent: pale sand highlight over a darker shaded base
+  flavor: solid cover that stops sight, shots, and blasts
+palette:
+  O: "#1a1c2c" # outline
+  Z: "#b08e60" # mid sandy-tan rock
+  d: "#665c34" # shaded underside
+  e: "#8a7e46" # olive-tan mottling
+  u: "#e2c494" # pale lit sandstone
+grid: |
+  ................
+  ...OOOOOO.......
+  .OOuuuuZZOOO....
+  .OuuuuZZZZZZOO..
+  OuuuuZZZZZZZZdO.
+  OuuuZZZZZZZZddO.
+  OuuZZZZZZeZddddO
+  OZZZZZZZZeOddddO
+  OZZZZZZZddeOddO.
+  OZZZZZZdddeOddO.
+  OZZZZZdddddeddO.
+  .OZZZddddddddO..
+  .OZZddddddddeO..
+  ..OOdddddddOO...
+  ....OOOOOOO.....
+  ................

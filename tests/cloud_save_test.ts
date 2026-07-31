@@ -42,7 +42,7 @@ import {
 } from "../pwa/src/game/store.ts";
 
 /** The localStorage namespace every key sits under (game.config.json). */
-const PREFIX = "gone-in-space";
+const PREFIX = "adas-trail";
 
 // One device's localStorage. Swapping the map (and clearing the memoized
 // device id) is how these tests "pick up the other phone".
@@ -286,7 +286,7 @@ describe("roster merge", () => {
   it("keeps the more recently played copy of the same hero", () => {
     const stale = hero("a", 10, { clears: ["easy:landing"] });
     const fresh = hero("a", 20, {
-      clears: ["easy:landing", "easy:eastworld"],
+      clears: ["easy:landing", "easy:boot_hill"],
       loadout: sampleLoadout(500, 12),
     });
     for (const [x, y] of [

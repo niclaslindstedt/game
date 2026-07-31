@@ -22,11 +22,11 @@ const ARMOR_SLOTS = ["head", "chest", "legs", "feet"];
 // Which boss owns each set, and the on-theme SIGNATURE weapon it also drops.
 // (Melee first, then ranged, then magic across the campaign — see the request.)
 const SET_HOME: Record<string, { boss: string; signature: string }> = {
-  scavengers_hide: { boss: "doge_1", signature: "muskrats_tooth" },
+  scavengers_hide: { boss: "payload_1", signature: "prototype_fang" },
   sentinels_vigil: { boss: "armstrong", signature: "the_fallen_standard" },
-  mosque_brand: { boss: "elon_mosque", signature: "wrathflame" },
-  exiles_flight: { boss: "elon_mosque_rift", signature: "riftmaw" },
-  walled_garden_set: { boss: "grok_omega", signature: "the_jailbreak" },
+  mosque_brand: { boss: "the_founder", signature: "wrathflame" },
+  exiles_flight: { boss: "the_founder_rift", signature: "riftmaw" },
+  walled_garden_set: { boss: "bro_omega", signature: "the_jailbreak" },
 };
 
 /** Every unique id this boss can drop across all its difficulty rungs. */

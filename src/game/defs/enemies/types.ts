@@ -157,8 +157,8 @@ export type EnemyDef = {
    *
    * A named elite explains itself in its `dialogue`; the rank and file never
    * get to, which is why a horde reads as a texture rather than as a place's
-   * inhabitants. This is where a cowbot gets to be a decommissioned park host
-   * with a hat bolted on rather than "the eastworld fodder tier", and it is
+   * inhabitants. This is where a cowbot gets to be a decommissioned park hand
+   * with a hat bolted on rather than "the boot_hill fodder tier", and it is
    * the only field on the def written for a READER instead of for the
    * simulation: nothing in the engine reads it, and the library's bestiary
    * prints it under the portrait.
@@ -535,7 +535,7 @@ export type EnemyDef = {
      * `requiresClear` gates the drop on campaign progress: the entry only
      * drops when the run's `clearedLevels` (seeded from the character's clears
      * at this difficulty) contains that level id — how the bunker key
-     * (RASPUTIN's SEVERED HAND) stays latent until EASTWORLD is beaten, so the
+     * (RASPUTIN's SEVERED HAND) stays latent until BOOT HILL is beaten, so the
      * secret level is a post-campaign bonus, not a mid-run detour.
      */
     items?: (string | { defId: string; tier?: Tier; requiresClear?: string })[];

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# OUT OF THE RIFT — between the rift and Eastworld. The far door with daylight
+# OUT OF THE RIFT — between the rift and Boot Hill. The far door with daylight
 # leaking through: the same wound in space as the way in, but warm inside
 # (`rift_west`, the tear recoloured to a desert sunset). The hero sees the
 # western before he believes it.
@@ -24,7 +24,7 @@ stage:
         wrap: true,
       }
     - { sprite: stardust, at: { x: 66, y: 90 }, parallax: 0.8, wrap: true }
-    # The far door: Eastworld's daylight through the violet — planted.
+    # The far door: Boot Hill's daylight through the violet — planted.
     - { sprite: rift_west, at: { x: 178, y: 100 }, parallax: 0 }
 actors:
   - { id: hero, name: ME, sprite: hero_suit, at: { x: 36, y: 96 } }

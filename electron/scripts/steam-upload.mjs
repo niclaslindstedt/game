@@ -120,7 +120,7 @@ const vdf = buildAppVdf({
   depotId: config.depots[platform],
   contentRoot,
   outputDir,
-  description: `Gone in Space ${version} (${platform})`,
+  description: `Ada's Trail ${version} (${platform})`,
   branch,
 });
 const vdfPath = join(outputDir, `app_build_${platform}.vdf`);
@@ -218,7 +218,7 @@ function checkPayload(root) {
 function webrootAssetsPath() {
   return platform === "macos"
     ? [
-        "Gone in Space.app",
+        "Ada's Trail.app",
         "Contents",
         "Resources",
         "app.asar.unpacked",

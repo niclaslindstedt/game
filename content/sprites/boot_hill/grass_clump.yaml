@@ -1,0 +1,30 @@
+name: grass_clump
+family: boot_hill
+size: [14, 12]
+description: >
+  A broad clump of range grass - a wider spray of blades bending apart,
+  denser and taller than a single tuft; flat decor.
+subject:
+  kind: "prop - grass clump"
+  build: "a wide spray of bending blades from one root"
+  features: "blades leaning left and right, longest in the middle"
+  accent: "lit blade edges against a dark core"
+  flavor: "a thicker stand of grass on the range"
+palette:
+  O: "#1a1c2c" # outline
+  G: "#8a9445" # leaf green
+  g: "#6b7538" # shaded green
+  l: "#a7b061" # sunlit green
+grid: |
+  ..............
+  ......OO......
+  .OO...OlO..OO.
+  .OlO.OOlOO.OlO
+  .OlOOOllGOOOlO
+  .OGlOlGlGlOlGO
+  ..OGlGGlGGlGO.
+  ..OGGGGGGGGGO.
+  ...OGGgGgGGO..
+  ....OGgGgGO...
+  .....OOOOO....
+  ..............

@@ -1,9 +1,9 @@
-// Recipe generator for EASTWORLD town buildings. Emits one self-describing
-// sprite YAML per building into content/sprites/eastworld/. Deterministic
+// Recipe generator for BOOT HILL town buildings. Emits one self-describing
+// sprite YAML per building into content/sprites/boot_hill/. Deterministic
 // (no RNG): the grids only change when this recipe does, so the atlas stays
-// diff-stable. Run: `node scripts/gen-eastworld-buildings.mjs`.
+// diff-stable. Run: `node scripts/gen-boot_hill-buildings.mjs`.
 //
-// The eastworld building look is an OBLIQUE structure seen from front-above: a
+// The boot_hill building look is an OBLIQUE structure seen from front-above: a
 // ridge highlight, a shingle/tin roof band with vertical seams, an eave shadow,
 // then a plank/adobe/stone facade carrying amber windows and a dark door, all
 // wrapped in a dark (not black) outline. This file composes that look into a
@@ -19,7 +19,7 @@ const OUT = join(
   "..",
   "content",
   "sprites",
-  "eastworld",
+  "boot_hill",
 );
 
 // ── grid helpers ────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ const toYaml = ({ name, size, description, subject, palette, grid }) => {
       "\n"
     : "";
   return `name: ${name}
-family: eastworld
+family: boot_hill
 size: [${size[0]}, ${size[1]}]
 description: >
   ${description}

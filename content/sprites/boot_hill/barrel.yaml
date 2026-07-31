@@ -1,0 +1,34 @@
+name: barrel
+family: boot_hill
+plane: floor
+size: [16, 16]
+description: >
+  A short wooden saloon barrel, top-down; a hoppable piece of frontier-town
+  street furniture.
+subject:
+  kind: prop — saloon barrel
+  build: a short squat cask seen top-down, vertical staves bound by hoop bands, a lid on top
+  accent: darker hoop bands ringing the pale lid
+  flavor: hoppable frontier-town street furniture
+palette:
+  B: "#92643e" # brown stave
+  E: "#5d4028" # dark hoop band
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale lid and stave highlight
+grid: |
+  ................
+  ................
+  ....OOOOOOOO....
+  ...OBSSBBSBBO...
+  ...OEEEEEEEEO...
+  ..OBBSBBBBSBBO..
+  ..OBBBBBBBBBBO..
+  ..OEEEEEEEEEEO..
+  ..OBBBBSBBBBBO..
+  ..OBSBBBBBBSBO..
+  ..OEEEEEEEEEEO..
+  ...OBBBBSBBBO...
+  ...OBBBBBBBBO...
+  ....OOOOOOOO....
+  ................
+  ................

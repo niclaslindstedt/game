@@ -1,4 +1,4 @@
-# Art style — the house style for _Gone in Space_
+# Art style — the house style for _Ada's Trail_
 
 > The single prose source for **how this game's art looks and why**. It sits
 > above the machine-readable style anchors (which the tools actually consume)
@@ -14,7 +14,7 @@ the pass/fail checklist — live in the [`pixel-assets` skill](../.agent/skills/
 
 ## The feel
 
-_Gone in Space_ is **grounded, working-man sci-fi**. The hero is a laid-off
+_Ada's Trail_ is **grounded, working-man sci-fi**. The hero is a laid-off
 shipbuilder in a salvaged EVA suit chasing his girlfriend across the moon,
 Mars, a rift between universes, and a knockoff western — an ordinary man in
 hostile places, not a chrome space marine. The art carries that: **flat 16-bit
@@ -38,11 +38,11 @@ The families are the authority on their own color world:
 | Family                          | The mood, in a line                                                                                 |
 | ------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `hero`                          | Grounded working-man look; practical clothes and gear, muted realistic colors, no fantasy flourish. |
-| `spacez`                        | Corporate HQ: sleek brand whites and chrome, cool blue accents, clean product-design surfaces.      |
+| `goodco`                        | Corporate HQ: sleek brand whites and chrome, cool blue accents, clean product-design surfaces.      |
 | `moon`                          | Desaturated regolith greys, hard black shadow, cold vacuum light.                                   |
 | `mars`                          | Rust-red oxide and dust, riveted weathered metal, thin cold light.                                  |
 | `rift`                          | Void blacks shot through with unnatural violet and teal glow, nothing quite solid.                  |
-| `eastworld`                     | Knockoff robot western: dusty sun-bleached tans, weathered wood and tin, a synthetic sheen.         |
+| `boot_hill`                     | Knockoff robot western: dusty sun-bleached tans, weathered wood and tin, a synthetic sheen.         |
 | `earth` / `merchant` / `scenes` | The warm bracket: domestic greens and browns, lantern tones, cinematic domestic staging.            |
 | `effects` / `icons` / `markers` | Function over material: pure light for VFX, one clean pictogram for items, bold UI signage for nav. |
 
@@ -166,7 +166,7 @@ Families also make new content **cheap**, and the existing ones show the paths:
 - **Recolor a sibling biome.** `mars` builds its rocks and craters as
   `swapPalette` calls over the `moon` grids — a red desert cost zero terrain
   redraws.
-- **One chassis, many accents.** The `eastworld` GROK controllers are one drawn
+- **One chassis, many accents.** The `boot_hill` TRUST ME BRO controllers are one drawn
   body with palette-swapped accent colors for the variants.
 - **One body, many costumes.** The `merchant` and `hero` costumes share a single
   16×16 body plan and foot anchor, so a costume swap is new grids only — no

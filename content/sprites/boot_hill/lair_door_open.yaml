@@ -1,0 +1,42 @@
+name: lair_door_open
+family: boot_hill
+size: [18, 20]
+description: >
+  The same frontier door standing open - one leaf swung wide against the
+  frame and a black interior gaping behind it; the open frame of an
+  occupied house, left that way.
+subject:
+  kind: "prop - lair door, open"
+  build: "a tall plank door swung open against its frame"
+  features: "a painted lintel, one leaf folded to the left, a black interior"
+  accent: "a black opening where the timber was"
+  flavor: "whatever was inside has come out"
+palette:
+  O: "#1a1c2c" # outline
+  E: "#553a22" # door frame
+  B: "#8a5a36" # door plank
+  S: "#ab8460" # lit door plank
+  U: "#f0c658" # brass handle
+  K: "#0c0b12" # dark interior
+  X: "#963c46" # painted lintel
+grid: |
+  ..................
+  .OOOOOOOOOOOOOOOO.
+  .OXXXXXXXXXXXXXXO.
+  .OEEEEEEEEEEEEEEO.
+  .OEBSEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBSEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBSEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEBSEKKKKKKKKKEO.
+  .OEBBEKKKKKKKKKEO.
+  .OEEEEEEEEEEEEEEO.
+  .OOOOOOOOOOOOOOOO.
+  ..................

@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gantry
+family: goodco
+size: [16, 11]
+description: >
+  A service gantry frame beside the line — GOODCO factory floor
+  hardware in the campus's brand whites, chrome and cool blues.
+subject:
+  kind: "solid obstacle prop"
+  build: "a service gantry frame beside the line"
+  features: "clean product-design surfaces, amber hazard trim, live status lights"
+  accent: "corporate white and chrome with cold blue indicators"
+  flavor: "the floor that builds the rockets and runs the mind — dense, aligned, and working"
+palette:
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # mid metal
+  b: "#3f4553" # dark metal
+  y: "#ffb02e" # hazard amber
+grid: |
+  OOOOOOOOOOOOOOOO
+  OyybyybyybyybyyO
+  ObbbbbbbbbbbbbbO
+  OVOOVVOOVVOOVVVO
+  OVOOVVOOVVOOVVVO
+  ObbbbbbbbbbbbbbO
+  OVVVOOVVOOVVOOVO
+  OVVVOOVVOOVVOOVO
+  ObbbbbbbbbbbbbbO
+  OyybyybyybyybyyO
+  OOOOOOOOOOOOOOOO

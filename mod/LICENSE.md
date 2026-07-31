@@ -1,4 +1,4 @@
-# Licence for the Gone in Space Mod SDK
+# Licence for the Ada's Trail Mod SDK
 
 Copyright 2026 Niclas Lindstedt (<https://github.com/niclaslindstedt/game>)
 
@@ -14,7 +14,7 @@ the **toolchain** is licensed only for making mods for this game.
 
 ## 1. Definitions
 
-- **The Game** — _Gone in Space_, the software in this repository, and any
+- **The Game** — _Ada's Trail_, the software in this repository, and any
   version of it published by the copyright holder.
 - **The SDK** — [`tools/`](tools) and [`catalog.json`](catalog.json).
 - **The Samples** — [`examples/`](examples), [`README.md`](README.md) and

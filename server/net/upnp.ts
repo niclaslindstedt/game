@@ -263,7 +263,7 @@ async function upnpMap(
       `<NewInternalPort>${port}</NewInternalPort>` +
       `<NewInternalClient>${internal}</NewInternalClient>` +
       `<NewEnabled>1</NewEnabled>` +
-      `<NewPortMappingDescription>GONE IN SPACE</NewPortMappingDescription>` +
+      `<NewPortMappingDescription>ADA'S TRAIL</NewPortMappingDescription>` +
       `<NewLeaseDuration>${MAPPING_LEASE_SEC}</NewLeaseDuration>`,
   );
   if (!ok) return null;

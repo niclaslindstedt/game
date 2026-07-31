@@ -15,14 +15,14 @@
 //   node scripts/art-audit.mjs items
 //   node scripts/art-audit.mjs equipped
 //   node scripts/art-audit.mjs equipped icon_medieval_sword icon_tshirt
-//   node scripts/art-audit.mjs sheet wraith optimusk icon_stick
+//   node scripts/art-audit.mjs sheet wraith successor icon_stick
 //   node scripts/art-audit.mjs field mars mars_0 rust_0
 //   node scripts/art-audit.mjs variants wraith boulder
-//   node scripts/art-audit.mjs snapshot wraith optimusk
+//   node scripts/art-audit.mjs snapshot wraith successor
 //   node scripts/art-audit.mjs concepts /path/to/concepts.mjs
-//   node scripts/art-audit.mjs before-after wraith optimusk
+//   node scripts/art-audit.mjs before-after wraith successor
 //   node scripts/art-audit.mjs names "^icon_"
-//   node scripts/art-audit.mjs palette spacez
+//   node scripts/art-audit.mjs palette goodco
 //
 // Flags: --out <png>  --scale <n>  --cols <n>  --chunk <n>
 //
@@ -790,7 +790,7 @@ switch (cmd) {
   case "palette": {
     // The char -> color map a redraw draws with, so Phase 4 sketches don't
     // require hand-reading core.mjs + the family module. Accepts a family
-    // name (`spacez`) or any sprite in it (`optimusk`); "*" marks a
+    // name (`goodco`) or any sprite in it (`successor`); "*" marks a
     // family-local char, the rest come from the shared core.
     const arg = args[0];
     const names = FAMILIES.map((f) => f.name).join(", ");

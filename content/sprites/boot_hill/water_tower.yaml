@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: water_tower
+family: boot_hill
+size: [32, 40]
+description: >
+  The town water tower - a round staved tank bound with iron hoops under a
+  shingled conical roof, raised on tall splayed timber legs with cross
+  bracing, a downspout running down one leg and water dripping beneath.
+subject:
+  kind: "landmark - water tower"
+  build: "a round planked tank raised high on four splayed, cross-braced timber legs"
+  features: "a shingled conical roof with a tin vent cap, vertical plank staves, two iron hoops, a downspout"
+  accent: "the tank lit down its left side and falling into shadow round its right, with pale water drips beneath"
+  flavor: "a tall landmark over main street and The Leak's sightline"
+palette:
+  A: "#8d9196" # tin vent cap / downspout
+  B: "#92643e" # tank plank brown
+  D: "#5c3e28" # deep shadow on the tank's far curve
+  E: "#5d4028" # shaded stave / timber brace
+  N: "#3a3644" # roof shingle
+  O: "#1a1c2c" # outline
+  S: "#b39378" # sunlit stave
+  b: "#3f4553" # eave shadow
+  f: "#888a96" # spout mouth
+  v: "#60687e" # shingle course / iron hoop
+  x: "#c5e6ebe1" # water drip
+grid: |
+  ...............AA...............
+  ...............vN...............
+  ............NNvNNNNv............
+  .........NNNNvNNNNvNNNN.........
+  ......NvNNNNvNNNNvNNNNvNNN......
+  ...NNNvNNNNvNNNNvNNNNvNNNNvNN...
+  ..vvvvvvvvvvvvvvvvvvvvvvvvvvvv..
+  ..NNNNNNNNNNNNNNNNNNNNNNNNNNNN..
+  ...bbbOOOOOOOOOOOOOOOOOOOObbb...
+  .....OSSSBBBBBBBBBBEEEEEEDO.....
+  ...OSSSSSBBBBBBBBBBEEEEEEDDDO...
+  ..OSSESSSEBBBEBBBEBEEEEEEEDDDO..
+  ..OSvvvvvvvvvvvvvvvvvvvvvvvvDO..
+  ..OSSESSSEBBBEBBBEBEEEEEEEDDDO..
+  ..OSSESSSEBBBEBBBEBEEEEEEEDDDO..
+  ..OSSESSSEBBBEBBBEBEEEEEEEDDDO..
+  ..OSSESSSEBBBEBBBEBEEEEEEEDDDO..
+  ..OSvvvvvvvvvvvvvvvvvvvvvvvvDO..
+  ..OSSESSSEBBBEBBBEBEEEEEEEDDDO..
+  ...OSSSSSBBBBBBBBBBEEEEEEDDDO...
+  .....OSSSBBBBBBBBBBEEEEEEDO.....
+  .....EBEOOOOOOEBEOOOOOOOEBEA....
+  .....EBE......EBE.......EBEA....
+  .....EBE...x..EBE........EBEA...
+  ....EBE....x..EBE........EBEA...
+  ....EBE.......EBE........EBEA...
+  ....EBEEE.....EEEEE......EEEA...
+  ....EBE.EE.x..EEE.EE....EEEBEA..
+  ...EBE...EEx.EEBE..EE..EE.EBEA..
+  ...EBE....EEEEEBE...EEEE..EBEA..
+  ...EBE.....EE.EBE....EE...EBEA..
+  ...EBE....EEEEEBE...EEEE...EBEA.
+  ..EBE....EE..EEBE..EE..EE..EBEf.
+  ..EBE...EE....EEE.EE....EE.EBE..
+  ..EBE..EE.....EEEEE......EExBE..
+  ..EBE.........EBE..........xEBE.
+  .EBE..........EBE...........EBE.
+  .EBE..........EBE...........EBE.
+  .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.
+  ................................

@@ -103,7 +103,7 @@ export const TEMPO = {
 export const CHESTS = {
   /** Break hp as a multiple of a crate's (a chest is a tougher nut). */
   hpMult: 2,
-  /** Default sprite when a chest names none (the SpaceZ staff locker). */
+  /** Default sprite when a chest names none (the GOODCO staff locker). */
   sprite: "locker",
   /**
    * Collision/cover radius (world px). Larger than a crate — a chest is a
@@ -120,7 +120,7 @@ export const CHESTS = {
    * Chance the chest spills its MARQUEE equipment item — a Diablo-2 chest: the
    * prize drops most of the time (rolled hot enough to reach rare/unique), and
    * on the rare miss the container still gives up its guaranteed supplies. This
-   * is the "80% item guarantee" a SpaceZ locker advertises.
+   * is the "80% item guarantee" a GOODCO locker advertises.
    */
   itemChance: 0.8,
   /**

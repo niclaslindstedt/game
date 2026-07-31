@@ -170,7 +170,7 @@ describe("the app's startup path", () => {
     // rather than as the number that would report it. `pwa/src/game/net/`
     // imports `@game/core`; a static edge from the startup path to it puts the
     // whole simulation — the catalogs, the step pipeline, the loot roller, the
-    // carve — into every player's first download. The HOST and JOIN screens of
+    // carve — into every player's first download. The HAND and JOIN screens of
     // PR 2.5 are title-menu screens and are exactly where this will be tempting:
     // they may reach `@game/menu` and the import-free `@game/wire/*` leaves,
     // never this.

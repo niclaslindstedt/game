@@ -43,7 +43,7 @@ const SOURCE_REQ_MAX = 23;
 // elite band deliberately OVERLAPS it (43…100, the D2 shape: elite work
 // starts dropping in late NIGHTMARE, not only at the endgame). The overlap is
 // what keeps every map's drop window alive on its high-rung revisits: a map
-// whose normal sources sit low (spacez, reqs 1–8) maps its exceptionals onto
+// whose normal sources sit low (goodco, reqs 1–8) maps its exceptionals onto
 // 24–33 only, and without the overlap nothing could carry reqs 34–52 there —
 // a dry rung entry at nightmare. With elite from 43, every cumulative pool
 // (see the level defs' "…plus every earlier stage's arsenal") covers the

@@ -1,0 +1,33 @@
+name: vent_0
+family: goodco
+size: [16, 16]
+description: >
+  An assembly-bay deck plate — a warm graphite checker-plate floor section with
+  a raised diamond tread, marking out the build bays across the cold lab floor;
+  a ground patch tile.
+subject:
+  kind: ground tile
+  build: a square steel deck plate with a raised diamond-tread pattern
+  accent: warm graphite checker plate against the cool lab floor
+  flavor: the heavy deck plating the ships are assembled over
+palette:
+  q: "#5f5a50" # warm plate shadow / seam
+  G: "#7c766a" # warm steel plate
+  H: "#938c7c" # warm tread highlight
+grid: |
+  qGGGGGGGGGGGGGGG
+  qGHHGGGGHHGGGGHH
+  qGHGGGGGHGGGGGHG
+  qGGGGGGGGGGGGGGG
+  qGGGGHHGGGGHHGGG
+  qGGGGHGGGGGHGGGG
+  qGGGGGGGGGGGGGGG
+  qGHHGGGGHHGGGGHH
+  qGHGGGGGHGGGGGHG
+  qGGGGGGGGGGGGGGG
+  qGGGGHHGGGGHHGGG
+  qGGGGHGGGGGHGGGG
+  qGGGGGGGGGGGGGGG
+  qGHHGGGGHHGGGGHH
+  qGHGGGGGHGGGGGHG
+  qGGGGGGGGGGGGGGG

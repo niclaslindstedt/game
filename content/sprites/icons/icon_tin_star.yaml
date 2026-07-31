@@ -7,7 +7,7 @@ subject:
   kind: armor icon
   features: a rounded breastplate with a raised five-point star riveted to the center
   accent: tin-star silver
-  flavor: the sheriff-host breastplate where the star is the armor
+  flavor: the sheriff-hand breastplate where the star is the armor
 palette:
   O: "#1a1c2c" # dark outline
   a: "#d6dce4" # bright tin star

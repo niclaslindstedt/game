@@ -1,0 +1,35 @@
+name: boardwalk_0
+family: boot_hill
+size: [16, 16]
+description: >
+  Town boardwalk - wide sun-bleached planks running crosswise with dark
+  seams between them and iron nail heads at the ends; the street surface
+  of the frontier town.
+subject:
+  kind: "ground tile"
+  build: "four horizontal boards separated by dark seams, evenly tiling"
+  features: "grain flecks along each board and paired nail heads"
+  accent: "pale worn highlights on sun-bleached timber"
+  flavor: "the plank street the town block is laid over"
+palette:
+  B: "#a9784a" # sun-bleached board
+  E: "#7b5432" # board shadow
+  S: "#c39a6c" # worn board highlight
+  k: "#4e3720" # plank seam
+grid: |
+  BEBSBBSBSBSSBBEB
+  BkkBBSBBEEBBEkkB
+  BSSEBBBBBBBBBBBB
+  kkkkkkkkkkkkkkkk
+  BBBEBBEBSBBBBBBB
+  BkkBBBSBBBBBBkkB
+  EESBEBBBSBBBBBBB
+  kkkkkkkkkkkkkkkk
+  BBBEEBBBBBSBBBBB
+  BkkSBBBBBBEBSkkE
+  BSSEEBSBBEBBBEBB
+  kkkkkkkkkkkkkkkk
+  BBSEBBBESBBEBSBB
+  BkkBEBBBBBBBBkkB
+  BBBSSBBBBBBBBBBB
+  kkkkkkkkkkkkkkkk

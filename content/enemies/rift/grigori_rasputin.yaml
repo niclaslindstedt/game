@@ -63,7 +63,7 @@ loot:
     - rasputin_beard
     - defId: severed_hand
       tier: regular
-      requiresClear: eastworld
+      requiresClear: boot_hill
   tierDrops:
     magic: 1
     rare: 0.5

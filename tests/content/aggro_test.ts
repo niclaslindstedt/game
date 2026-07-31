@@ -58,7 +58,7 @@ describe("aggro through walls", () => {
 
     run(state, idle, 200);
     expect(mob.awake).toBeFalsy();
-    // Never gave chase: the SpaceZ guard potters around his post (the "at
+    // Never gave chase: the GOODCO guard potters around his post (the "at
     // work" dormant stroll, `ai.idle: "work"`) but stays on his patch.
     expect(dist(mob.pos, post)).toBeLessThanOrEqual(ENEMY_AI.work.range[1]);
   });

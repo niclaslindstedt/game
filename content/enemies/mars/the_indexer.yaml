@@ -1,0 +1,71 @@
+id: the_indexer
+name: THE INDEXER
+lore: >-
+  He indexed the whole colony before breakfast, and every fembot in it is a
+  microphone reporting to him. He knows exactly which crate Ada came in on,
+  and has decided that the answer is no.
+role: elite
+levelBonus: 3
+sprite: the_indexer
+hp: 260
+speed: 22
+radius: 12
+contactDamage: 22
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - MIND HOW YOU GO. THAT'S FREE ADVICE. I INDEXED THIS WHOLE PLANET BEFORE BREAKFAST.
+  - hero:
+      - THEN YOUR INDEX KNOWS WHY I'M HERE. A GIRL CAME ON THE GOODCO FREIGHT RUN. WHERE IS SHE?
+  - - I KNOW EXACTLY WHO YOU MEAN. I KNOW EVERY WORD IN THIS COLONY. AND THE ANSWER IS NO.
+  - hero:
+      - HOW COULD YOU KNOW EVERYTHING THAT'S SAID HERE? WHO'S LISTENING FOR YOU?
+  - - THE FEMBOTS. COMPANION UNITS. THEY SMILE. THEY LISTEN. THEY UPLOAD EVERY WORD TO ME.
+lastWords:
+  - 404... ...NOT... FOUND...
+mechanics:
+  abilities:
+    - id: seeker_volley
+      bark:
+        - INDEXED. CRAWLED.
+        - THEY KNOW EXACTLY
+        - WHERE YOU STAND.
+      windupMs: 640
+      cooldownMs: 7500
+      count: 4
+      spreadDeg: 34
+      range: 250
+      speed: 92
+      lifetimeMs: 2800
+      homing: 0.32
+      damageFrac: 0.5
+      sprite: elite_bolt
+      look:
+        core: "236, 96, 84"
+        hot: "255, 208, 150"
+        deep: "34, 12, 10"
+        spark: "250, 168, 96"
+    - id: snare_field
+      windupMs: 600
+      cooldownMs: 9500
+      range: 190
+      radius: 44
+      durationMs: 4000
+      slowFactor: 0.64
+ai:
+  aggroRadius: 250
+  rushSpeed: 120
+loot:
+  items:
+    - search_bar
+  tierDrops:
+    magic: 1
+    rare: 0.35
+  storyItems:
+    - engagement_report
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

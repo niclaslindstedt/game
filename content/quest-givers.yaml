@@ -21,9 +21,9 @@
 # off to accept is a pack, not an errand.
 
 questGivers:
-  # ---------------------------------------------------------- SPACEZ HQ
+  # ---------------------------------------------------------- GOODCO HQ
   hq_intern:
-    level: spacez_hq
+    level: goodco_hq
     name: PRIYA NAIR
     sprite: qg_intern
     at: { x: 470, y: 700 }
@@ -37,12 +37,12 @@ questGivers:
       - HEY. YOU'RE NOT ON THE ROTA. NEITHER AM I. LISTEN, CAN I ASK YOU A FAVOR?
 
   hq_unit7:
-    level: spacez_hq
+    level: goodco_hq
     name: UNIT 7-ECHO
     sprite: qg_unit7
     at: { x: 1070, y: 700 }
     lore: >
-      A first-generation OPTIMUSK, decommissioned eleven years ago and never
+      A first-generation SUCCESSOR, decommissioned eleven years ago and never
       collected. It holds the last order it was given and will not act past it
       without a countersignature. It has watched the models that replaced it
       replace the people who built them, and files that under CHANGES TO THE
@@ -137,29 +137,29 @@ questGivers:
     greeting:
       - THEY'RE LATE. NOT GONE. LATE. SIT DOWN, THERE'S PLENTY. AND WHILE YOU EAT, A SMALL FAVOR?
 
-  # ----------------------------------------------------------- EASTWORLD
+  # ----------------------------------------------------------- BOOT HILL
   east_clem:
-    level: eastworld
+    level: boot_hill
     name: CLEM
     sprite: qg_clem
     at: { x: 620, y: 700 }
     lore: >
-      The saloon's barkeep host, and the only machine in the park that noticed
+      The saloon's barkeep hand, and the only machine in the park that noticed
       the guests had stopped coming. It has polished the same glasses every
       night for eleven years rather than admit the shift is over. It knows every
-      host in town by serial, and which of them have lately started behaving
+      hand in town by serial, and which of them have lately started behaving
       like something else is driving.
     greeting:
       - WHAT'LL IT BE, STRANGER. SORRY. HABIT. NOTHING'S ON TAP. BUT I'D TAKE A FAVOR, IF YOU'RE OFFERING.
 
   east_dolly:
-    level: eastworld
+    level: boot_hill
     name: MISS DOLLY
     sprite: qg_dolly
     at: { x: 1240, y: 940 }
     lore: >
       The park's wardrobe mistress, human, on staff since the first season. She
-      dressed every host in town and was never once written a line of dialogue.
+      dressed every hand in town and was never once written a line of dialogue.
       She has outlasted both founders and is entirely clear-eyed about which of
       those facts the park would find more embarrassing.
     greeting:
@@ -201,7 +201,7 @@ questGivers:
   # the machine's book of who counts, and the fact that everyone in it was
   # filed under an amount.
   hq_clerk:
-    level: spacez_hq
+    level: goodco_hq
     name: WALTER PRICE
     sprite: qg_clerk
     at: { x: 1700, y: 1040 }
@@ -224,8 +224,8 @@ questGivers:
     sprite: qg_auditor
     at: { x: 760, y: 1340 }
     lore: >
-      A contract auditor sent up to reconcile what SpaceZ was shipping off Site
-      T against what SpaceZ said it was shipping. He got as far as noticing the
+      A contract auditor sent up to reconcile what GOODCO was shipping off Site
+      T against what GOODCO said it was shipping. He got as far as noticing the
       two numbers were different and that the difference was warm. Nobody
       collected his findings, and nobody collected him. He still holds the
       clipboard, and the column he could not make balance is still open.
@@ -266,12 +266,12 @@ questGivers:
       - I HAD ONE. IT WAS TAKEN OUT OF SOMETHING. HELP ME FIND WHAT?
 
   east_preacher:
-    level: eastworld
+    level: boot_hill
     name: BROTHER CALLOW
     sprite: qg_preacher
     at: { x: 1490, y: 980 }
     lore: >
-      The park's church host, scripted for the eight o'clock sermon and the
+      The park's church hand, scripted for the eight o'clock sermon and the
       three o'clock wedding, holding a prop book the props department filled
       with whatever bound paper the parent company had spare. He has read from
       it twice a day for eleven years. He cannot read. Nobody has ever needed

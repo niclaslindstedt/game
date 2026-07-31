@@ -1,0 +1,39 @@
+name: stone_well
+family: boot_hill
+size: [18, 18]
+description: >
+  A field-stone well - a round drystone ring under a small shingled roof
+  on two posts, the shaft black inside; a homestead landmark prop.
+subject:
+  kind: "prop - stone well"
+  build: "a round drystone ring under a peaked roof on two posts"
+  features: "irregular stone courses, a shingled roof, a black shaft"
+  accent: "lit stone tops against a black opening"
+  flavor: "the well at the centre of a homestead yard"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#8d9196" # field stone
+  b: "#3f4553" # stone shadow
+  T: "#c0c5cf" # lit stone
+  E: "#5d4028" # roof timber
+  B: "#92643e" # shingle
+  K: "#0c0b12" # well shaft
+grid: |
+  ..................
+  .......OOO........
+  .....OOBBBOO......
+  ...OOBBBBBBBOO....
+  .OOBBBBBBBBBBBOO..
+  OEEOOOOOOOOOOOEEO.
+  OEO...........OEO.
+  OEO...........OEO.
+  OEO..OOOOOOO..OEO.
+  OEOOOTAAbAATOOOEO.
+  OEOATOKKKKKOTAOEO.
+  OOOAbOKKKKKObAOOO.
+  ..OTAOKKKKKOATO...
+  ..OAbOOOOOOObAO...
+  ..OTAAbATAAbAATO..
+  ..OAbTAAbAATAbAO..
+  ..OOOOOOOOOOOOOO..
+  ..................

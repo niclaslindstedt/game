@@ -98,7 +98,7 @@ if (pitch || yaw) {
   // load exactly as it would be for a developer who moved the sliders.
   await page.addInitScript(
     ([camPitch, camYaw]) => {
-      const KEY = "gone-in-space:settings";
+      const KEY = "adas-trail:settings";
       let stored;
       try {
         stored = JSON.parse(localStorage.getItem(KEY) ?? "{}");

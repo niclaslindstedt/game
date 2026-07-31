@@ -342,9 +342,9 @@ function searchIds() {
 function whereToPutIt() {
   console.log(
     `Put your mod folder here and the game lists it under MODS on the next launch:\n\n` +
-      `  Windows  %APPDATA%\\Gone in Space\\mods\\\n` +
-      `  macOS    ~/Library/Application Support/Gone in Space/mods/\n` +
-      `  Linux    ~/.config/Gone in Space/mods/\n\n` +
+      `  Windows  %APPDATA%\\Ada's Trail\\mods\\\n` +
+      `  macOS    ~/Library/Application Support/Ada's Trail/mods/\n` +
+      `  Linux    ~/.config/Ada's Trail/mods/\n\n` +
       `A mod there is a LOCAL mod: the only kind the game offers a PUBLISH row\n` +
       `for, and it sorts last in the load order so the one you are working on\n` +
       `wins its clashes while you iterate.`,
@@ -353,11 +353,11 @@ function whereToPutIt() {
 
 /** The one-line version, for the `new` hint. */
 function localModsHint() {
-  if (process.platform === "win32") return "%APPDATA%\\Gone in Space\\mods\\";
+  if (process.platform === "win32") return "%APPDATA%\\Ada's Trail\\mods\\";
   if (process.platform === "darwin") {
-    return "~/Library/Application Support/Gone in Space/mods/";
+    return "~/Library/Application Support/Ada's Trail/mods/";
   }
-  return "~/.config/Gone in Space/mods/";
+  return "~/.config/Ada's Trail/mods/";
 }
 
 function fail(message) {

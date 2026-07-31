@@ -2,8 +2,8 @@ id: prairie_iron
 kind: weapon
 rarity: regular
 name: PRAIRIE IRON
-description: A stage prop off the first host down, loaded with live rounds
-  nobody told the actors about. The park's safety board was also a host.
+description: A stage prop off the first hand down, loaded with live rounds
+  nobody told the actors about. The park's safety board was also a hand.
 material: metal
 class: ranged
 levelReq: 17

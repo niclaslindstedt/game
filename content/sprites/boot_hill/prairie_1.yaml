@@ -1,0 +1,35 @@
+name: prairie_1
+family: boot_hill
+size: [16, 16]
+description: >
+  Prairie grass in bloom - the same green mat broken by small clusters of
+  yellow and pink wildflowers; the rare variant of the range floor.
+subject:
+  kind: "ground tile"
+  build: "a mat of short grass with a few flower clusters, evenly tiling"
+  features: "two-pixel blade marks plus paired flower petals"
+  accent: "yellow and pink petals against deep green"
+  flavor: "the range in bloom, scattered every few tiles"
+palette:
+  G: "#5b8a37" # prairie grass base
+  g: "#456d29" # shaded grass blade
+  l: "#78a84b" # sunlit grass blade
+  y: "#ffd447" # wildflower petal
+  p: "#e88ec4" # pink wildflower petal
+grid: |
+  GGGGGGGGGGGGGgGG
+  GgGGGGGGGgGgGgGG
+  GgGGGGGGGgGgGGGG
+  GGGGyyGGGGGGGGGG
+  GGGGGgGGGGGGGlGG
+  GGgGGGGGGGGGGlGg
+  GGgGGGGGGGGgGGGl
+  GGGGGGgGGGGgGGGl
+  GGGGGGlGlGGGGGGl
+  GGGGGGlGllGppGGl
+  GGGGGGGGGlGGGlgG
+  GGGGGGGGGGGGGlgG
+  GGyylGGgGlGGGlGG
+  GGGGlGGlGlGGGlGG
+  GGGGGGGlGGGGGgGG
+  GGGGGGGGGGGGGGGG

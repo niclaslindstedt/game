@@ -160,7 +160,7 @@ default:
   # over-levels first. (Coverage still commits him to the boss if he tops out
   # under the boss's level.)
   bossEngageMargin: 1
-  # HAY BALLS (Eastworld): step out of a rolling bale's lane before it shoves the
+  # HAY BALLS (Boot Hill): step out of a rolling bale's lane before it shoves the
   # hero back down the street. `hayBallDodgeDist` is how far ahead (px, along the
   # roll) a bale triggers the sidestep; `hayBallLaneMargin` is the slack added to
   # the hero+bale radii when judging whether it shares his lane. 0 dist disables.
@@ -174,7 +174,7 @@ default:
   # distant gust that may drift wide, then peels once it's genuinely on his line).
   sandstormClearance: 30
   sandstormReactSec: 1.6
-  # EMPLOYEE STAMPEDES (SpaceZ HQ): a wall of five staffers charges fast right-to-
+  # EMPLOYEE STAMPEDES (GOODCO HQ): a wall of five staffers charges fast right-to-
   # left and a jump sails clean over the whole herd, so the hero HOPS it rather
   # than eating the ~20% bite + 2-second knockdown. `stampedeDodgeDist` is how far
   # ahead (px, along the charge) the herd's near edge trips the hop — timed so
@@ -271,10 +271,10 @@ default:
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:
-  # SpaceZ HQ opens DISARMED: a scripted vanguard scientist must rush the hero
+  # GOODCO HQ opens DISARMED: a scripted vanguard scientist must rush the hero
   # to draw his blade, but it only breaks from the pack once the hero is within
-  # ~200px of a scientist (the `spacez_staff` first-sight beat). Hold at the
+  # ~200px of a scientist (the `goodco_staff` first-sight beat). Hold at the
   # pack's edge — inside that trigger range, outside the swarm — so the beat
   # fires and the rusher comes to him instead of the hero diving in unarmed.
-  spacez_hq:
+  goodco_hq:
     armApproachStandoff: 150

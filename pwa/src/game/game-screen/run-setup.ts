@@ -273,7 +273,7 @@ export function createRunSession(deps: {
     loadout: botViewLoadout ?? characterRef.current.loadout ?? null,
     respec: false,
     // Campaign progress the engine gates drops on (the bunker key stays latent
-    // until Eastworld is cleared on this difficulty).
+    // until Boot Hill is cleared on this difficulty).
     clearedLevels: clearedLevelsFor(characterRef.current, difficulty),
     // Met the trader here before? He's set up at the door from the start, so a
     // restart-after-death can walk over and repair.

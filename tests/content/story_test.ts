@@ -288,7 +288,7 @@ describe("story items", () => {
   });
 
   it("places the anti-grav unit inside the level-1 vault", () => {
-    const state = startGame(SEED, "spacez_hq");
+    const state = startGame(SEED, "goodco_hq");
     const unit = state.items.find(
       (i) => i.kind === "story" && i.defId === "antigrav_unit",
     );
@@ -296,7 +296,7 @@ describe("story items", () => {
   });
 
   it("locks the AI CORE's log behind THE ARCHITECT's keycard", () => {
-    const state = startGame(SEED, "spacez_hq");
+    const state = startGame(SEED, "goodco_hq");
     // The payoff sits inside the CORE room…
     const log = state.items.find(
       (i) => i.kind === "story" && i.defId === "core_log",
@@ -313,7 +313,7 @@ describe("story items", () => {
 
 describe("locked doors", () => {
   it("stays shut without the key, opens for its key, and only its own", () => {
-    const state = startGame(SEED, "spacez_hq");
+    const state = startGame(SEED, "goodco_hq");
     stopWaves(state);
     state.enemies = state.enemies.filter(
       (e) => enemyDef(e.defId).role === "boss",
@@ -348,7 +348,7 @@ describe("locked doors", () => {
   });
 
   it("builds every level-1 door as a solid, unjumpable chain", () => {
-    const state = startGame(SEED, "spacez_hq");
+    const state = startGame(SEED, "goodco_hq");
     expect(state.doors).toHaveLength(3);
     for (const door of state.doors) {
       const chain = state.obstacles.filter((o) =>
@@ -485,11 +485,11 @@ describe("catalog integrity", () => {
       );
     };
     const bossTrophies: Record<string, string[]> = {
-      spacez_hq: ["plasma_cutter"],
+      goodco_hq: ["plasma_cutter"],
       moon: ["machete"],
     };
     const eliteDrops: Record<string, string[]> = {
-      spacez_hq: ["executive_putter", "wet_floor_sign"],
+      goodco_hq: ["executive_putter", "wet_floor_sign"],
       moon: ["core_drill", "surveyors_pick"],
     };
     for (const level of Object.keys(bossTrophies)) {

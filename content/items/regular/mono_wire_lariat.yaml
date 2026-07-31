@@ -2,9 +2,9 @@ id: mono_wire_lariat
 kind: weapon
 rarity: regular
 name: MONO-WIRE LARIAT
-description: A monomolecular lasso off the host-wrangling bench — the widest
+description: A monomolecular lasso off the hand-wrangling bench — the widest
   rope in the west. The park used it to catch malfunctioning cattle, and
-  everything in Eastworld is cattle eventually.
+  everything in Boot Hill is cattle eventually.
 material: metal
 class: melee
 levelReq: 18

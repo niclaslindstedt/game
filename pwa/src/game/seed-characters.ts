@@ -227,9 +227,9 @@ function buildSeedLoadout(build: StatBuild, tier: SeedTier): Loadout {
  * a band reads low or is missing:
  *   • JESUS is player-relative (no authored band) — arrive at a late ceiling.
  *   • NIGHTMARE opens HIGH — a grind gate, mobs ~40 even on map 1 — so never < 40.
- *   • Every map past SPACEZ (campaign index 1) must arrive LEVELED: never a
+ *   • Every map past GOODCO (campaign index 1) must arrive LEVELED: never a
  *     level-1 hero on a mid/late map, so the level floors by campaign position.
- * SPACEZ on easy/medium/hard is the one map that legitimately starts at level 1. */
+ * GOODCO on easy/medium/hard is the one map that legitimately starts at level 1. */
 function arrivalLevelFor(levelId: string, difficulty: Difficulty): number {
   if (difficulty === "jesus") return 58;
   const order: Difficulty[] = ["easy", "medium", "hard", "nightmare"];

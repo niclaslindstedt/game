@@ -1,0 +1,79 @@
+id: the_strongman
+name: THE STRONGMAN
+lore: >-
+  He built a west where the maps do not shrink and the robots surrender
+  daily, because out there the maps kept shrinking and nobody surrendered.
+  He holds the town square against opponents he wrote himself, and he is
+  losing again.
+role: elite
+levelBonus: 4
+sprite: the_strongman
+hp: 700
+speed: 26
+radius: 12
+contactDamage: 30
+critChance: 0.12
+dodgeChance: 0.25
+contactCooldownMs: 700
+dialogue:
+  - - SO. THE BUILDER FROM THE RIFT. YOU STAND IN MY PARK, MY WEST. EVERYTHING HERE OBEYS ME.
+  - hero:
+      - YOUR WEST? THE GATE SIGN SAYS TRUST ME BRO RUNS EVERY MACHINE HERE. YOU JUST LIVE IN IT.
+  - - OUT THERE I WAS MISUNDERSTOOD. BORDERS MOVE. MAPS SHRINK. IN HERE, NOTHING DOES. I WIN.
+  - hero:
+      - YOU BUILT A TOY WORLD WHERE YOU CAN'T LOSE. THAT'S NOT WINNING. THAT'S HIDING.
+  - - THE ROBOTS SURRENDER DAILY. YOU TOO. I HAVE NEVER BEEN BEATEN INSIDE THIS FENCE.
+lastWords:
+  - THE PARK WAS SUPPOSED... ...TO LET ME WIN...
+mechanics:
+  abilities:
+    - id: rally_cry
+      bark:
+        - THIS PARK IS MINE.
+        - EVERY HAND IN IT
+        - ANSWERS TO ME.
+      windupMs: 700
+      cooldownMs: 12500
+      radius: 230
+      durationMs: 6500
+      speedMult: 1.28
+      damageMult: 1.24
+      look:
+        core: "206, 56, 48"
+        hot: "255, 184, 150"
+        deep: "30, 8, 8"
+        spark: "236, 116, 84"
+    - id: quake_line
+      windupMs: 720
+      cooldownMs: 10500
+      count: 6
+      spacing: 32
+      radius: 22
+      damageFrac: 0.68
+      stepMs: 110
+  charge:
+    windupMs: 700
+    speedMult: 3.5
+    range: 170
+    cooldownMs: 6000
+ai:
+  aggroRadius: 260
+  rushSpeed: 110
+loot:
+  items:
+    - defId: the_chronograph
+      tier: unique
+    - defId: perpetual_calendar
+      tier: unique
+    - defId: minute_repeater
+      tier: unique
+  storyItems:
+    - annexation_map
+  tierDrops:
+    magic: 1
+  weapons: 0
+  gear: 0
+  xpArrows: 2
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

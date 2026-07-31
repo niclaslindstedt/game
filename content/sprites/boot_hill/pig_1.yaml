@@ -1,0 +1,33 @@
+name: pig_1
+family: boot_hill
+size: [18, 13]
+description: >
+  The same pig with its snout to the ground and its trotters mid-step -
+  the walk-cycle partner frame of the pen pigs.
+subject:
+  kind: "critter - pig"
+  build: "a round-bodied pig seen from above, snout down, mid-stride"
+  features: "upright ears, a blunt snout, a curled tail, four trotters"
+  accent: "a pale lit back over shaded pink flanks"
+  flavor: "the pigs in a homestead pen"
+palette:
+  O: "#1a1c2c" # outline
+  p: "#e8b394" # pink hide
+  k: "#b8805f" # hide shadow
+  K: "#0c0b12" # eye and trotter
+  W: "#f7ded0" # lit back
+  i: "#8d5a41" # snout and ear shadow
+grid: |
+  ..................
+  ..OO....OO........
+  .OppO..OppOOOOO...
+  OiipOOOppppppppOO.
+  OiipppppWWWWppppkO
+  OiippppWWWWWWpppkO
+  .OppppWWWWWWWpppkO
+  .OpppppppppppppkkO
+  ..OpppppppppppkkO.
+  ..OKOOKKOOKOOKKOO.
+  ...OKKO.OKKO.OKKO.
+  ....OO...OO...OO..
+  ..................

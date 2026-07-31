@@ -110,8 +110,8 @@ const DAMAGE_STAT = {
 const EXEMPT_BASES = new Set([
   "blaster",
   "soggy_cardboard_sword",
-  "busted_flamethrower",
-  "cybervan_wiper",
+  "legal_distinction_empty",
+  "demo_wiper",
   ...Object.values(DIFFICULTY_DEFS).map((d) => d.startingWeapon),
 ]);
 

@@ -1,4 +1,4 @@
-level: eastworld
+level: boot_hill
 giver: east_preacher
 name: THE LAST PAGE
 campaign: true
@@ -7,7 +7,7 @@ requires:
   - sev_binder
 minDifficulty: jesus
 lore: >
-  The book the machine files people in, held eleven years by a park host who
+  The book the machine files people in, held eleven years by a park hand who
   cannot read a word of it, opened at last with the needle that bound it. Every
   name the CORE wrote off is in here, priced; the hero's is in here twice. It
   will not take a new entry off a man it cannot price, and it prices a man by
