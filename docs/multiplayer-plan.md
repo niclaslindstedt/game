@@ -1720,6 +1720,60 @@ and it should be a few hundred lines.
   the README describe what actually shipped — including, plainly, that there is
   no hub yet and where a joiner lands without one.
 
+### 5.8 What PR 5 actually shipped — and the three things it did not
+
+**LANDED.**
+
+- **§5.3's two debts, first, as the box said.** A run more than one person has
+  played carries a `PartyStamp` and reaches no ranking; a joiner's loadout is
+  weighed on arrival. The stamp is **latched in `seatHero` rather than seeded
+  from `SessionParams`**, which is a deliberate departure from §5.3's own
+  sketch: a run is marked by what HAPPENED to it (a host playing alone with the
+  door open is playing solo), a parameter is a thing one of three builders can
+  forget, and as ordinary DYNAMIC state the latch replicates for free. The two
+  readers genuinely disagree — a party kill counts for everyone on the badges,
+  and for nobody on the boards — so the ledger keeps board-facing figures in
+  `LifetimeTotals.solo`, and a pre-co-op save seeds them from the lifetime
+  figures they used to be.
+- **§5.2's hardening.** A per-session packet budget for the peer who got IN
+  (dropped over the allowance, kicked only on a real debt), and a seeded fuzz
+  pass over every decoder. The fuzz found four real ones, **all in the delta
+  applier and all reachable by a malicious HOST** — the direction nobody thinks
+  of, since a joiner applies whatever it is sent.
+- **§5.4's reconnect**, with the engine holding a flag and the session owning
+  the window, because the engine has no clock and a grace window counted in
+  ticks would run at the speed of the simulation.
+- **§5.5's dedicated server**, and `server/host.ts` is what makes "it is the
+  same file" true rather than aspirational. Running one immediately found the
+  bug it exists to find: the host is identified by being the FIRST client to ask
+  for a seat, which holds only because the shipped topology always seats a
+  renderer over a `MessagePort` first — so on a dedicated server the first
+  network joiner was mistaken for the host and handed a DEFAULT hero.
+  `SessionOptions.ownerless` is the answer and three rules follow from it.
+- **§5.1's trade**, engine side, with a test per anti-dupe rule. It needed
+  **§3.6's seat debt paid first** — `applyRunCommand` dispatched all 69 verbs
+  against `state.players[0]`, so a joiner's every private verb acted on the
+  host's hero. Twenty sites, seat 0 as the identity default, and the acting hero
+  comes from the seat the session admitted the client into rather than from any
+  field on the frame.
+
+**NOT LANDED, and the reasons differ.**
+
+- **The trade WINDOW.** The engine, the five verbs and the rules are here and
+  tested; the screen is not, so a trade is currently something only a command
+  can start. Ordinary app work of the shape `QuestOverlay` already is.
+- **§5.6's net graph.** Every number it wants is already measured
+  (`Reliability.stats`, `.rtt`, the roster's ping); it is a readout rather than
+  an instrument, and it did not fit.
+- **§5.6's SOAK AND ADVERSITY PASS, AND THAT ONE IS THE FINDING** — the same
+  shape §4.7 hit. Neither could be run, because neither had an instrument: as
+  written they need eight machines and eight bored humans. That is what §7.2.5
+  now exists for, and the honest ordering is §7.1 → §7.2 → §7.2.5 → this soak.
+  What DID land is `tests/engine/net_dedicated_test.ts`, which drives a real
+  session behind a real admission desk over a real UDP socket and proves the
+  stack CONNECTS — a strictly weaker claim, and it must not be recorded as the
+  soak.
+
 ---
 
 ## PR 6 — THE GARAGE

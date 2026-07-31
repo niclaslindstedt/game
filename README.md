@@ -277,6 +277,7 @@ make build         # typecheck everything and produce pwa/dist
 | `make assets`                         | Regenerate in-game pixel assets (sprite atlas, tiles, UI font) + previews from `content/sprites/` |
 | `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages into `pwa/dist/` (part of `make build`)                   |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                |
+| `npm run server:start`                | Run the standalone session server for co-op (see `docs/configuration.md`)                         |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                    |
 | `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                            |
 
@@ -333,6 +334,7 @@ for how to add new _mechanics_ (not just new content).
 - [Story](docs/story.md) — the plot in prose; the top of the story source-of-truth chain
 - [Manuscript](docs/manuscript.md) — the verbatim script (every line), extrapolated from the story
 - [Art style](docs/art-style.md) — the house style for the game's pixel art: the feel, the shared look, and the design best practices
+- [Multiplayer](docs/multiplayer.md) — the shipped co-op architecture, and what is not in it yet
 - [Configuration](docs/configuration.md)
 - [Troubleshooting](docs/troubleshooting.md)
 

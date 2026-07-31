@@ -1128,15 +1128,77 @@ watching and the strip sat on a stale count.
 
 ## MULTIPLAYER — the simulation moves out of the renderer
 
-**Steam builds only.** PRs 1, 2, 1.5, 1.75, 2.5, **PR 3's §3.1** and **PR 4's
-§4.2-abandoned-hero + §4.3** of the ten in `docs/multiplayer-plan.md` have
-landed: a session server, the wire, the fifth bridge, two transports, a challenge
-handshake, chat, `/players N`, a closed list of 69 named commands covering
-everything the app DOES to a run, the three doors a player walks through (HOST
-GAME, the server browser, JOIN BY ADDRESS), the in-run chat, the live session
-panel, the invite launch arguments — from PR 3, a run that carries a **PARTY** —
-and from PR 4, the **CO-OP RULES**: whose the XP is, whose the loot is, what
-heats the meter, and what a body nobody is steering means.
+**Steam builds only, except the DEDICATED SERVER, which is plain Node.** PRs 1,
+2, 1.5, 1.75, 2.5, **PR 3's §3.1**, **PR 4's §4.2-abandoned-hero + §4.3** and
+**PR 5** of the ten in `docs/multiplayer-plan.md` have landed: a session server,
+the wire, the fifth bridge, two transports, a challenge handshake, chat,
+`/players N`, a closed list of 74 named commands covering everything the app
+DOES to a run, the three doors a player walks through (HOST GAME, the server
+browser, JOIN BY ADDRESS), the in-run chat, the live session panel, the invite
+launch arguments — from PR 3, a run that carries a **PARTY** — from PR 4, the
+**CO-OP RULES** (whose the XP is, whose the loot is, what heats the meter, and
+what a body nobody is steering means) — and from PR 5, **PRODUCTION**: the party
+stamp, the joiner's loadout check, the packet budget and the fuzzed decoders,
+RECONNECT, TRADE, and a standalone dedicated server.
+
+**FIVE PR 5 RULES, AND EACH IS A DIFFERENT KIND OF TRUST.**
+
+1. **A CO-OP RUN BANKS NO RECORD — `GameState.party`, a `PartyStamp`.** The host
+   is a player, so the host can cheat, and seven people helping inflates every
+   board-facing figure without anybody having to. It is LATCHED in `seatHero`
+   rather than passed in as a session parameter, deliberately: a run is marked
+   by what HAPPENED to it (a host playing alone with the door open is playing
+   solo), a parameter is a thing one of three builders can forget, and as
+   ordinary DYNAMIC state the latch replicates for free. It never clears. The
+   two readers genuinely disagree, so the ledger keeps both — a party kill
+   counts for everyone on the BADGES, and for nobody on the BOARDS, which read
+   `LifetimeTotals.solo`.
+2. **A JOINER'S HERO IS A CLAIM — `validateLoadout`.** Level inside the ladder,
+   each stat inside the level's own `statCap`, every item mintable from the
+   catalogs. That last one is the CRASH rather than the cheat: `gearDef` throws
+   on an id it does not hold and is called from the damage pass and the paper
+   doll. It SANITIZES rather than refuses (the case it fires on most often is an
+   older save with a retired id), logs host-side only, and is **a speed bump,
+   not a wall** — everything it checks is something a real hero could have.
+3. **A SEAT IS A LICENCE TO BE HEARD, NOT AT ANY RATE.** The hub's three older
+   bounds stop a stranger; the packet budget covers the peer who got IN. Over
+   the allowance a packet is DROPPED (what the reliability layer already does to
+   a lost datagram); only a real DEBT is a kick. And **every decoder is fuzzed**
+   — which found four crashes in the DELTA APPLIER, reachable by a malicious
+   HOST rather than a client, since a joiner applies whatever it is sent.
+4. **A DROPPED PLAYER COMES BACK TO THEIR OWN HERO.** The seat is HELD for
+   thirty seconds and the person who left holds the only ticket. The ENGINE only
+   honours a flag (`Player.held`) because it has no clock; the SESSION owns the
+   window. A resume IGNORES the loadout on the join — the hero on the field is
+   the authority — and an unknown ticket is an ordinary arrival, never a refusal.
+5. **A TRADE IS ONE TRANSACTION OR IT DOES NOT HAPPEN — `src/game/trade.ts`.**
+   An offer names a CELL and an ID and the cell is re-read at settlement (a cell
+   alone may have changed; an id alone would have to be searched for, which is
+   how a trade hands over something nobody put on the table). Any change clears
+   both acceptances. An offered piece may not be equipped, discarded or moved. A
+   departing seat's trade goes with it. There is deliberately **no shared
+   stash** — that is account-shaped state with a migration ladder, and what
+   players mean by "trade" is handing a friend the sword you just found.
+
+**AND `applyRunCommand` TAKES THE ACTING HERO** (PR 3's §3.6 debt, paid because
+trade could not be correct without it). It dispatched all 69 verbs against
+`state.players[0]`, so a joiner's shop, equip and stat spend acted on the host's
+hero. The hero comes from **the seat the session admitted that client into** and
+never from a field on the frame: letting a client name a seat would hand a
+stranger somebody else's inventory in one field. Seat 0 is the default, so
+single player is unchanged.
+
+**THE DEDICATED SERVER IS THE SAME CODE, AND `server/host.ts` IS WHY.** It owns
+the session, the admission desk, the sockets, the router mapping and the one
+fixed-timestep loop; `main.ts` picks its entry from whether anybody forked it
+(`parentPort` → the game's session server, none → `dedicated.ts`). Running one
+found the bug it exists to find: the host is identified by being the FIRST
+client to ask for a seat, which holds only because the shipped topology always
+seats a renderer over a `MessagePort` first — so the first network joiner was
+mistaken for the host and handed a DEFAULT hero. `SessionOptions.ownerless` is
+the answer, and three rules follow: seat 0 starts DEPARTED so the first arrival
+takes it with their own loadout, an empty server does not simulate at all, and
+the run is a PARTY run from the first tick.
 
 **THE RUN IS A PARTY, AND `game/party.ts` IS THE ONE MODULE ALLOWED TO ASK IT A
 QUESTION.** `GameState.players` is a NON-EMPTY tuple of heroes in SEAT order
@@ -1260,10 +1322,10 @@ screen. See the plan's §4.7.
 still stops the world for everybody (`Player.screen` and the non-blocking
 level-up are §3.2, and the level-up is a real single-player behaviour change that
 owes the changelog its own line); nothing is predicted, so a client shows its
-hero where the last snapshot put him (§3.3); the command channel carries no SEAT,
-so a joiner's shop or stat spend still dispatches against seat 0; and a joiner
+hero where the last snapshot put him (§3.3); and a joiner
 still plays on the THROWAWAY `spectatorCharacter`, so nothing they earn reaches
-their roster (PR 4's §4.5). Their run commands travel but are NOT applied locally
+their roster (PR 4's §4.5). The command channel's missing SEAT was the third of
+these and is PAID — see the rule above. Their run commands travel but are NOT applied locally
 (`setCommandSink(…, { optimistic: false })`) — the server is authoritative over
 the result, so an optimistic apply would draw an outcome the next snapshot may
 not agree with.
@@ -2847,6 +2909,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | MULTIPLAYER: a read of "the hero" inside the engine               | ASK WHICH KIND IT IS. A PRIVATE read (bag, purse, build, worn kit) is a `Player` PARAMETER beside the run — never a lookup. A GEOMETRY read goes through `src/game/party.ts` (`nearestHero` / `anyHeroWithin` / `heroesWithin` / `partyCentroid` / `partyLevel`), and a mob's own target through `src/game/aggro.ts` (`quarryFor` / `quarryOf`). "Is this hero somebody the world should react to" is `heroInPlay` — never `hp > 0`, which misses a DEPARTED seat. `state.players[0]` left in engine code is an un-migrated site, not an answer |
 | MULTIPLAYER: a payout, a drop, or anything else a kill produces   | A KILL's XP is the party's and goes through `shareXp(state, amount, pos)`; every other award has an owner and goes through `grantXp(state, hero, amount)`. A DROP goes through `dropItem` like every other drop, which stamps `Item.owner` on its own in an allocated session — never roll an owner at a call site, and never spend a `state.rng()` draw on presentation (use the item's hash, as the toss does)                                                                                                                                |
 | MULTIPLAYER: anything the app does to a RUN before its first tick | `src/game/session-setup.ts` — a field on `RunParams` and a line in `createRunFromParams`, plus the matching field on `SessionParams` (`server/wire/protocol.ts`). Never a mutation in `createRunSession` alone: the session and the client build the same run from the same parameters, and a field only one of them applies is a desync that reads as a replication bug                                                                                                                                                                        |
+| MULTIPLAYER: a rule about who may take, keep or move an item      | `src/game/trade.ts` when TWO players are involved — the swap is ONE transaction, and `isOfferedInTrade` is the predicate every verb that could spend a bag cell must ask; `items/` otherwise                                                                                                                                                                                                                                                                                                                                                    |
 | MULTIPLAYER: a new VERB the app may run against a run             | `src/game/commands.ts` (the arg shapes + the `case`) **and** `COMMANDS` in `server/wire/protocol.ts` (the literal copy the allow-list reads) — the drift test enforces the pair — then bump `PROTOCOL_VERSION`. Call it from the app through `pwa/src/game/run-commands.ts`, never by importing the engine function                                                                                                                                                                                                                             |
 | MULTIPLAYER: the session server, or the wire either end speaks    | `server/...` — engine code compiled for Node (`npm run server:build`). `server/wire/*` imports NOTHING, because the page reads it from the startup path; `server/session.ts` may import `@game/core`. Never anything under `pwa/`. See `docs/multiplayer.md`                                                                                                                                                                                                                                                                                    |
 | MULTIPLAYER: a transport, admission, the router mapping           | `server/net/...` — the seam, the reliability layer, the UDP socket, the relay, the hub, UPnP. Node builtins only; it ships with the session, which is what makes PR 5's dedicated server the same file. See `docs/multiplayer.md`                                                                                                                                                                                                                                                                                                               |
