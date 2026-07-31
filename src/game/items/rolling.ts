@@ -132,7 +132,7 @@ function pickStat(rng: Rng, weights?: Record<StatName, number>): StatName {
 export function magicFindBonus(state: GameState): number {
   let bonus = 0;
   for (const companion of state.companions) {
-    if (companion.downedMs !== undefined) continue;
+    if (companion.downed) continue;
     bonus += companionAuraMagicFind(
       companionDef(companion.defId),
       companion.level,

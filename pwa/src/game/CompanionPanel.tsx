@@ -85,7 +85,7 @@ export function CompanionPanel({
   if (!companion) return null;
   const def = companionDef(companion.defId);
   const portrait = spriteDataUrl(sprites, `${def.sprite}_0`);
-  const downed = companion.downedMs !== undefined;
+  const downed = companion.downed === true;
   // The XP bar toward the next level, clamped for a clean fill.
   const xpFrac =
     companion.xpToNext > 0 ? clamp01(companion.xp / companion.xpToNext) : 0;
@@ -121,7 +121,7 @@ export function CompanionPanel({
               font={font}
               text={
                 downed
-                  ? "DOWN - GETTING BACK UP"
+                  ? "DOWN - USE SMELLING SALTS"
                   : `HP ${Math.ceil(companion.hp)}/${companion.maxHp}`
               }
               scale={2}

@@ -705,12 +705,20 @@ escort.ts` walks the people an escort errand puts on the field, and
   its OWN levels from its OWN kills (credited on the `companionId` tag in
   `killEnemy`), decoupled from the hero, and its hp/damage and signature `power`
   grow with that level — the level and XP ride the loadout, so the party levels
-  up forever across every level and difficulty. A companion beaten down in a
-  swarm STAYS down (`COMPANIONS.downedCombatRadius` freezes the revive count
-  while a foe is on it) until the field clears or the hero speaks to the
-  wandering merchant, who stands the whole party back up
-  (`reviveDownedCompanions`, called on merchant discovery / return greeting /
-  shop-open — so it works in hardcore too). A spared companion's
+  up forever across every level and difficulty.
+  **THE PARTY IS ONE, AND DOWN IS DOWN** (`COMPANIONS.maxParty`): sparing a
+  second spareable RETIRES the incumbent (its borrowed armor goes back to the
+  bag, `companionDismissed`), and at 0 hp a companion sets `Companion.downed` —
+  a flag NOTHING in the simulation ever clears. No self-revive count, no
+  out-of-combat regen, no mercy at the merchant's counter, and the loadout
+  carries it (`Loadout.companions[].downed`) so the walk to the next venue is
+  not a free revive either. What wakes it is a bottle of SMELLING SALTS bought
+  off the stall and USED from the bag (`GearDef.revive` marks the piece so a
+  MOD's own works; `reviveTarget`/`spendReviveItem` are the probe and the verb,
+  shaped exactly like the travel-gate key beside them), which stands it up at
+  `COMPANIONS.saltsHpFraction` back at the hero's side. Filling the bar is the
+  hero's own MEDKITS (`healCompanionWithMedkit` / `canHealCompanion`), spent by
+  pressing the party portrait. A spared companion's
   enemy twin is also held off the board while it rides the party (create.ts),
   so a replay never pits the hero against his own ally. The UI's
   mutators are `equipCompanionFromInventory` / `unequipCompanionToInventory`

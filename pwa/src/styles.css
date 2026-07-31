@@ -7111,6 +7111,7 @@ canvas.tier-artifact {
 
 .companion-portrait {
   appearance: none;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -7139,6 +7140,23 @@ canvas.tier-artifact {
   width: 1.8rem;
   height: 1.8rem;
   object-fit: contain;
+}
+
+/* The corner glyph that says what a press would DO — a medkit while the pouch
+   can mend this companion (the press spends one), the salts bottle while it is
+   down (only the bag item wakes it). Hung off the portrait's top-right corner
+   and NOT dimmed with the rest of a downed portrait: the whole job of the badge
+   is to stay legible on the portrait that most needs reading. Tap-transparent,
+   so the press it describes lands on the button underneath rather than on it. */
+.companion-portrait-badge {
+  position: absolute;
+  top: -0.22rem;
+  right: -0.22rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(11, 13, 16, 0.9));
 }
 
 .companion-portrait-hp {

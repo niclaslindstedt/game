@@ -33,6 +33,7 @@ import {
   skipCutscene,
   type Equipment,
   type GameState,
+  type MerchantStock,
   type Tier,
 } from "@game/core";
 import { clearStage, idle, makeEnemy, run, startGame } from "./helpers.ts";
@@ -256,7 +257,12 @@ describe("the shop", () => {
     const state = startGame();
     meet(state);
     const abilities = state.merchant.stock.filter((s) => s.kind === "ability");
-    const weapons = state.merchant.stock.filter((s) => s.kind === "weapon");
+    // `kind: "weapon"` is the stall's EQUIPMENT row, not necessarily an arm —
+    // a stocked unique may be armor, and the SMELLING SALTS shelf is a trinket
+    // — so the rolled-weapon assertions below filter on the piece's own slot.
+    const weapons = state.merchant.stock.filter(
+      (s) => s.kind === "weapon" && s.equipment.slot === "weapon",
+    );
     expect(abilities.length).toBeGreaterThan(0);
     expect(weapons).toHaveLength(MERCHANT.stockWeapons);
     for (const entry of abilities) {
@@ -387,14 +393,19 @@ describe("the shop", () => {
     meet(state);
     state.player.pos = { ...state.merchant.pos };
     openShop(state);
-    const entry = state.merchant.stock.find((s) => s.kind === "weapon")!;
+    const entry = state.merchant.stock.find(
+      (s) => s.kind === "weapon" && s.equipment.slot === "weapon",
+    ) as Extract<MerchantStock, { kind: "weapon" }>;
     state.player.coins = entry.price * 2;
     expect(buyStock(state, entry.id)).toBe(true);
-    expect(
-      state.player.inventory.some(
-        (i) => entry.kind === "weapon" && i?.id === entry.equipment.id,
-      ),
-    ).toBe(true);
+    // The piece that lands is the row's own roll, handed over as a FRESH
+    // instance: a row may hold several units (the salts shelf), so the same
+    // object must never end up in two bag cells sharing an id.
+    const bought = state.player.inventory.find(
+      (i) => i?.defId === entry.equipment.defId,
+    );
+    expect(bought).toBeDefined();
+    expect(bought!.id).not.toBe(entry.equipment.id);
     expect(state.player.coins).toBe(entry.price);
     // Sold out: the entry refuses a second purchase.
     expect(buyStock(state, entry.id)).toBe(false);

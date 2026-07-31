@@ -829,11 +829,22 @@ export type GameEvent =
   /** A spared unique joined the party as a companion (`defId` keys
    * COMPANION_DEFS). The app can toast the recruitment. */
   | { type: "companionJoined"; defId: string; pos: Vec2 }
-  /** A companion was beaten down (0 hp): it kneels out of the fight until
-   * `COMPANIONS.reviveMs` runs out. Its aura goes silent meanwhile. */
+  /**
+   * The hero already had a friend and took on another, so the incumbent was
+   * RETIRED (`COMPANIONS.maxParty` is one — see `recruitCompanion`). Announced
+   * rather than done quietly: a party that silently swapped members would read
+   * as the game having lost one.
+   */
+  | { type: "companionDismissed"; defId: string; pos: Vec2 }
+  /** A companion was beaten down (0 hp): it kneels out of the fight, aura
+   * silent, and STAYS there — only SMELLING SALTS stand it back up. */
   | { type: "companionDowned"; defId: string; pos: Vec2 }
-  /** A downed companion got back up (at `COMPANIONS.reviveHpFraction`). */
+  /** SMELLING SALTS woke a downed companion (at `COMPANIONS.saltsHpFraction`,
+   * back at the hero's side — see `spendReviveItem`). */
   | { type: "companionRevived"; defId: string; pos: Vec2 }
+  /** One of the hero's medkits was spent on a hurt companion
+   * (`healCompanionWithMedkit`); `amount` is the hp it actually put back. */
+  | { type: "companionHealed"; defId: string; amount: number; pos: Vec2 }
   /**
    * A companion earned a level from its own kills (`companion-stats.ts`): the
    * app floats a "LVL n" tag off its head and, on a power rank-up, cues the

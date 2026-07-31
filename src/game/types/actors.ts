@@ -234,9 +234,9 @@ export type CompanionSlot = "weapon" | "head" | "chest";
  * A recruited COMPANION (see companions.ts): a spareable unique the player
  * chose to SPARE joins the party, follows the hero, and fights with whatever
  * is in its weapon slot. `defId` keys COMPANION_DEFS (name, sprite, starting
- * weapon, aura, kill quotes). Companions are never killed — at 0 hp one goes
- * DOWN (kneels out of the fight, aura silent) and stands back up on its own
- * after `COMPANIONS.reviveMs`.
+ * weapon, aura, kill quotes). The hero keeps exactly ONE
+ * (`COMPANIONS.maxParty`), and at 0 hp it goes DOWN and stays there until the
+ * player breaks a bottle of SMELLING SALTS over it (`spendReviveItem`).
  */
 export type Companion = {
   id: number;
@@ -263,12 +263,15 @@ export type Companion = {
   moving: boolean;
   /** Remaining ms until its weapon may strike again. */
   weaponCooldownMs: number;
-  /** Combat-heat timer (ms): set to `COMPANIONS.regenCalmMs` whenever the
-   * companion has a live target or takes a hit, counting down otherwise. Out-of-
-   * combat regen (see stepCompanion) kicks in only once it reaches 0. */
-  combatMs?: number;
-  /** Ms left kneeling; undefined while up and fighting. See COMPANIONS. */
-  downedMs?: number;
+  /**
+   * DOWN: beaten to 0 hp, kneeling out of the fight with its aura silent.
+   *
+   * A FLAG rather than a countdown, and that is the whole rule: nothing in the
+   * simulation ever clears it. Not a quiet field, not a level transition, not
+   * the merchant's goodwill — only the player spending a bottle of SMELLING
+   * SALTS on it (`spendReviveItem`). Absent while up and fighting.
+   */
+  downed?: boolean;
   /**
    * True while the companion is in screen-edge FOLLOW mode: the hero moved far
    * enough that it drifted to the camera's edge, so it drops the fight and

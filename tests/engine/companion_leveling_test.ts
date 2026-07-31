@@ -4,8 +4,8 @@
 // decoupled from the hero; its hp/damage and its signature power (more pellets,
 // chain arcs, a wider frost nova, a swelling luck aura) grow with that level;
 // the level/xp ride the loadout so it persists across levels and difficulties;
-// a companion beaten down in a swarm STAYS down until the field clears or the
-// hero speaks to a merchant, who stands the whole party back up.
+// and a companion beaten down STAYS down — the merchant no longer stands the
+// party back up for free, he SELLS the bottle of smelling salts that does.
 
 import { describe, expect, it } from "vitest";
 
@@ -21,11 +21,12 @@ import {
   extractLoadout,
   magicFindBonus,
   recruitCompanion,
-  reviveDownedCompanions,
+  buyStock,
+  openShop,
   step,
 } from "@game/core";
 import type { Companion, GameEvent, GameState } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, startGame } from "./helpers.ts";
 
 const SEED_NEXT = 4242;
 
@@ -211,62 +212,79 @@ describe("the level and XP ride the loadout across runs", () => {
   });
 });
 
-describe("a merchant revives the party", () => {
-  it("reviveDownedCompanions stands a downed companion up at full hp", () => {
+describe("the merchant no longer revives the party — he SELLS the cure", () => {
+  it("meeting him leaves a downed companion exactly where it fell", () => {
     const state = startGame();
     const companion = withCompanion(state);
-    companion.downedMs = 5_000;
+    companion.downed = true;
     companion.hp = 0;
     expect(magicFindBonus(state)).toBe(0); // aura silent while down
-
-    const revived = reviveDownedCompanions(state);
-    expect(revived).toBe(1);
-    expect(companion.downedMs).toBeUndefined();
-    expect(companion.hp).toBe(companion.maxHp);
-    expect(state.events.some((e) => e.type === "companionRevived")).toBe(true);
-    expect(magicFindBonus(state)).toBeCloseTo(0.5); // aura back up
-  });
-
-  it("meeting the wandering merchant stands the party back up", () => {
-    const state = startGame();
-    const companion = withCompanion(state);
-    companion.downedMs = 8_000;
-    companion.hp = 0;
     // Plant the (undiscovered) merchant right on top of the hero so the next
     // step discovers him.
     state.merchant.discovered = false;
     state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
-    const events: GameEvent[] = [];
     for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
       step(state, idle, DT);
-      events.push(...state.events);
     }
     expect(state.merchant.discovered).toBe(true);
-    expect(companion.downedMs).toBeUndefined();
-    expect(companion.hp).toBe(companion.maxHp);
+    // The mercy that used to be free is now a purchase: he stocked the bottle,
+    // he did not hand one over.
+    expect(companion.downed).toBe(true);
+    expect(companion.hp).toBe(0);
+    expect(magicFindBonus(state)).toBe(0);
   });
-});
 
-describe("downed in a swarm: the count freezes until the field clears", () => {
-  it("a foe nearby holds a downed companion down; clearing it lets it rise", () => {
+  it("opening his stall does not mend a hurt companion either", () => {
     const state = startGame();
     const companion = withCompanion(state);
-    companion.downedMs = 200; // a sliver left on the count
-    companion.hp = 0;
-    // A live foe right beside the fallen companion freezes its revive count.
-    const foe = makeEnemy(
-      { id: 7100, pos: { x: companion.pos.x + 10, y: companion.pos.y } },
-      "test_minion",
-    );
-    state.enemies.push(foe);
-    run(state, idle, 60); // well past the 200ms count
-    expect(companion.downedMs).toBe(200); // never ticked — a foe is on it
-    expect(companion.hp).toBe(0);
+    companion.hp = 1;
+    state.merchant.discovered = false;
+    state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
+    for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
+      step(state, idle, DT);
+    }
+    openShop(state);
+    expect(companion.hp).toBe(1);
+  });
 
-    // Clear the field: the count runs out and it stands back up on its own.
-    state.enemies = state.enemies.filter((e) => e.id !== 7100);
-    run(state, idle, 40);
-    expect(companion.downedMs).toBeUndefined();
-    expect(companion.hp).toBeGreaterThan(0);
+  it("stocks a bottle of the revive item on every stall, met or not", () => {
+    const state = startGame();
+    withCompanion(state);
+    state.merchant.discovered = false;
+    state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
+    for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
+      step(state, idle, DT);
+    }
+    const bottles = state.merchant.stock.filter(
+      (row) => row.kind === "weapon" && row.equipment.defId === "test_salts",
+    );
+    expect(bottles).toHaveLength(1);
+    expect(bottles[0]!.qty).toBeGreaterThan(0);
+  });
+
+  it("hands over a DISTINCT bottle per purchase — one row, several units", () => {
+    const state = startGame();
+    withCompanion(state);
+    state.merchant.discovered = false;
+    state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
+    for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
+      step(state, idle, DT);
+    }
+    const row = state.merchant.stock.find(
+      (r) => r.kind === "weapon" && r.equipment.defId === "test_salts",
+    )!;
+    state.player.coins = row.price * 4;
+    // Empty the bag so both purchases have somewhere to land.
+    state.player.inventory.fill(null);
+    openShop(state);
+    expect(buyStock(state, row.id)).toBe(true);
+    expect(buyStock(state, row.id)).toBe(true);
+    const held = state.player.inventory.filter(
+      (item) => item?.defId === "test_salts",
+    );
+    expect(held).toHaveLength(2);
+    // Two bottles, two identities: handing the same instance out twice would
+    // put one item in two cells, sharing an id and a destroy.
+    expect(held[0]!.id).not.toBe(held[1]!.id);
   });
 });

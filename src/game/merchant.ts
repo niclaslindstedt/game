@@ -16,7 +16,6 @@ import {
 } from "@game/lib/rng.ts";
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { canBankAbility } from "./abilities.ts";
-import { reviveDownedCompanions } from "./companions.ts";
 import {
   CONSUMABLES,
   ECONOMY,
@@ -30,6 +29,7 @@ import {
   abilityRarity,
   pickAbility,
 } from "./defs/abilities.ts";
+import { gearDef, reviveGearIds } from "./defs/equipment.ts";
 import { levelDef, runLevelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
@@ -205,9 +205,6 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
       type: "merchantDiscovered",
       pos: { ...merchant.pos },
     });
-    // Speaking to the merchant brings the party back: any companion beaten
-    // down is stood up and the whole party mended (works in hardcore too).
-    reviveDownedCompanions(state);
     // The meeting scene: his own story for being here, and the sales pitch —
     // played once, through the ordinary dialogue box. It yields to any scene
     // already on stage (the meeting still happened; only the line is lost).
@@ -306,9 +303,6 @@ function maybeGreetReturn(state: GameState, merchant: Merchant): void {
   if (!lineOfSight(state, state.player.pos, merchant.pos)) return;
   merchant.greetedReturn = true;
   merchant.faceLeft = state.player.pos.x < merchant.pos.x;
-  // The welcome-back also revives the party — the same mercy the first meeting
-  // paid, so a companion downed since is stood back up on the return visit.
-  reviveDownedCompanions(state);
   if (state.dialogueMuted) return;
   state.dialogue = {
     source: {
@@ -440,6 +434,30 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
       qty: Math.min(MERCHANT.stockConsumableQty, CONSUMABLES.stackCap),
     });
   }
+  // SMELLING SALTS: the one cure for a downed companion, and the only reason
+  // losing a friend is a setback rather than an ending. Stocked on every stall
+  // — see `MERCHANT.stockRevives` for why it does not wait until the hero
+  // actually has somebody to wake. Rolled through no dice at all: a staple, not
+  // a find, exactly like the medkit shelf above it.
+  for (const defId of reviveGearIds()) {
+    stock.push({
+      id: state.nextId++,
+      kind: "weapon",
+      equipment: {
+        id: state.nextId++,
+        defId,
+        slot: gearDef(defId).slot,
+        tier: "regular",
+        ilvl: Math.max(1, state.player.level),
+        affixes: [],
+      },
+      price: Math.round(
+        ECONOMY.revivePrice.base +
+          ECONOMY.revivePrice.perLevel * state.player.level,
+      ),
+      qty: MERCHANT.stockRevives,
+    });
+  }
   // The weapon rolls ride the ordinary loot pipeline (level pool, levelReq
   // gates, tiers, affixes) — on the merchant's dice, not the run's: swap a
   // generator built at his parked state in for the rolls, park it back after.
@@ -561,10 +579,6 @@ export function openShop(state: GameState): boolean {
   if (distance(state.player.pos, merchant.pos) > MERCHANT.tradeRadius) {
     return false;
   }
-  // At the counter again: mend and revive the party. A companion downed after
-  // the merchant was first met (so no fresh greeting fires) still comes back
-  // the moment the hero opens the stall.
-  reviveDownedCompanions(state);
   state.phase = "shop";
   return true;
 }
@@ -639,9 +653,16 @@ export function buyStock(state: GameState, stockId: number): boolean {
       if (!canBankAbility(state, entry.defId)) return false;
       state.player.heldAbilities.push(entry.defId);
       break;
-    case "weapon":
-      if (!addToInventory(state, entry.equipment)) return false;
+    case "weapon": {
+      // A stall row may hold SEVERAL of one thing (the salts shelf), so every
+      // purchase hands over its own fresh instance. Passing `entry.equipment`
+      // itself was safe only while every such row was `qty: 1`: buy a second
+      // and one object would sit in two bag cells at once, sharing an id, a
+      // durability counter and a destroy.
+      const piece = { ...structuredClone(entry.equipment), id: state.nextId++ };
+      if (!addToInventory(state, piece)) return false;
       break;
+    }
     case "consumable": {
       const banked =
         entry.item === "medkit"

@@ -49,6 +49,7 @@ import {
   botAutoEquip,
   cullWorstLoot,
   sortBotInventory,
+  careForCompanion,
   tradeAtMerchant,
   wantsMerchantVisit,
   weaponStarved as heroWeaponStarved,
@@ -1450,6 +1451,12 @@ function playRun(args: {
     // out of reach and through every airborne frame (see bot/economy.ts
     // stepBotWeaponSwap).
     stepBotWeaponSwap(bot, state);
+    // KEEP THE FRIEND ON ITS FEET: crack a bought bottle of salts over a downed
+    // companion, and spend a spare medkit on a badly hurt one. Nothing mends a
+    // companion on its own any more, so a run that never did this would play
+    // every level after the first loss a party member short — and report that
+    // as balance rather than as the bot not knowing the rules.
+    careForCompanion(state);
     const input = botAct(bot, state);
     // The camera the simulated player watches through: player-centred and
     // clamped to the level, the same rect the app stamps from its canvas

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE ALLIES — the four figures the campaign lets you keep, as pages waiting to
+// THE ALLIES — the figures the campaign lets you recruit (one at a time), as pages waiting to
 // be rendered.
 //
 // The bestiary's twin, and the only section whose subject is somebody on the
@@ -17,6 +17,7 @@ import {
   COMPANIONS,
   COMPANION_DEFS,
   ENEMY_DEFS,
+  GEAR_DEFS,
   LEVELS,
   LEVEL_ORDER,
   SECRET_LEVEL_ORDER,
@@ -33,6 +34,7 @@ import {
   referenceMobXp,
   withCompanion,
 } from "./catalogs.mjs";
+import { itemPath } from "./model-arsenal.mjs";
 
 /**
  * EVERY AUTHORED FIELD REACHES A PAGE — or the build stops. The rule
@@ -341,6 +343,17 @@ function allyModel(def, venueById) {
   };
 }
 
+/**
+ * The REVIVE item's name and page — the one thing outside the roster the party
+ * rules have to point at, since a reader just told their friend never gets up
+ * on its own is owed the answer in one click. Null if no base carries the
+ * marker, so a game without one simply prints no note.
+ */
+function reviveItemModel() {
+  const def = Object.values(GEAR_DEFS).find((gear) => gear.revive);
+  return def ? { name: def.name, path: itemPath(def.id) } : null;
+}
+
 /** The whole roster, plus the party rules that are true of all of them. */
 export function alliesModel(venueList) {
   const venueById = new Map(venueList.map((venue) => [venue.id, venue]));
@@ -351,10 +364,16 @@ export function alliesModel(venueList) {
   return {
     allies,
     // The knobs every ally obeys — the formation, the bubble they fight in, the
-    // damper that keeps a party from doing the hero's job, the kneel, and how
-    // they mend. None of it is visible from inside the game, and none of it
-    // belongs on one ally's page, which is what the index is for.
+    // damper that keeps a party from doing the hero's job, how many of them you
+    // may keep, and what it costs to wake and mend one. None of it is visible
+    // from inside the game, and none of it belongs on one ally's page, which is
+    // what the index is for.
     tuning: COMPANIONS,
+    // The bottle that wakes a downed companion, for the index's cross-link.
+    // Found by the `revive` MARKER rather than by id — the engine finds it the
+    // same way (`reviveGearIds`), so a total conversion that renames the thing
+    // still links to its own rather than to a page that isn't there.
+    reviveItem: reviveItemModel(),
     sourceFiles: ["content/companions.yaml", "src/game/config/companions.ts"],
   };
 }

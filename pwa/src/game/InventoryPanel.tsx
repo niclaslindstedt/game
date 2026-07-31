@@ -31,6 +31,7 @@ import {
   isArmorBroken,
   isWeaponBroken,
   isScrappableLoot,
+  reviveTarget,
   wouldUpgradeSlot,
   type EquipSlot,
   type Equipment,
@@ -294,13 +295,26 @@ export function InventoryPanel({
     if (e.pointerType !== "touch" && !dragRef.current) setInspect(null);
   };
 
-  // USE a usable trinket (a travel-gate key on its home level): consume it,
-  // tear the gate open, and close the panel so the player sees it happen.
-  // Reached from the tooltip's USE row (touch) or a right-click on the bag
-  // cell (desktop) — the quiet, cow-level-ritual gesture.
-  const activateKeyItem = (item: Equipment) => {
+  // WHICH VERB a bag piece offers right now, or null when it is inert here —
+  // the one probe the USE row, the right-click and the activation all read, so
+  // the affordance the card shows and the command the tap runs can never
+  // disagree. Two pieces answer today and both are zero-stat trinkets whose
+  // whole worth is what they DO: a travel-gate key on its home level (the
+  // cow-level ritual), and SMELLING SALTS while a companion is face-down.
+  const bagVerb = (item: Equipment) => {
+    if (gateKeyTarget(state, item)) return "spendGateKey" as const;
+    if (reviveTarget(state, item)) return "spendReviveItem" as const;
+    return null;
+  };
+
+  // USE that piece: consume it, run its verb, and close the panel so the player
+  // watches it land — the gate tearing open a step ahead, or a friend coming
+  // round. Reached from the tooltip's USE row (touch) or a right-click on the
+  // bag cell (desktop).
+  const activateItem = (item: Equipment) => {
+    const verb = bagVerb(item);
     const index = state.player.inventory.findIndex((i) => i?.id === item.id);
-    if (index < 0 || !runCommandOk(state, "spendGateKey", index)) return;
+    if (!verb || index < 0 || !runCommandOk(state, verb, index)) return;
     playUiSound(synth, "confirm");
     setInspect(null);
     onChange();
@@ -477,12 +491,13 @@ export function InventoryPanel({
                   onPointerEnter={item ? inspectItem(item) : undefined}
                   onPointerLeave={leaveItem}
                   // Desktop's quiet ritual: right-clicking a usable trinket
-                  // (a travel-gate key on its home level) uses it in place.
+                  // (a gate key on its home level, a bottle of salts with a
+                  // friend down) uses it in place.
                   onContextMenu={
-                    item && gateKeyTarget(state, item)
+                    item && bagVerb(item)
                       ? (e) => {
                           e.preventDefault();
-                          activateKeyItem(item);
+                          activateItem(item);
                         }
                       : undefined
                   }
@@ -562,9 +577,7 @@ export function InventoryPanel({
           item={inspect.item}
           anchor={inspect.anchor}
           onUse={
-            gateKeyTarget(state, inspect.item)
-              ? () => activateKeyItem(inspect.item)
-              : undefined
+            bagVerb(inspect.item) ? () => activateItem(inspect.item) : undefined
           }
         />
       )}

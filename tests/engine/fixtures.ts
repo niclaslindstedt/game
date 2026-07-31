@@ -792,6 +792,18 @@ export const FIX_GEAR: Record<string, GearDef> = {
     durability: 80,
     icon: "icon_leather_boots",
   },
+  // A REVIVE item (`GearDef.revive`): the engine's stand-in for a bottle of
+  // SMELLING SALTS, so the companion-waking rules can be exercised without
+  // naming the shipped `smelling_salts`. Zero stats, like the real one — its
+  // whole worth is the verb it carries.
+  test_salts: {
+    id: "test_salts",
+    name: "TEST SALTS",
+    slot: "trinket",
+    bonuses: {},
+    revive: true,
+    icon: "icon_smelling_salts",
+  },
   // A carried TRINKET (the old charm): it is never worn — its bonus pays out
   // from the bag, so the engine's carried-contribution rule has a
   // content-agnostic piece to exercise.

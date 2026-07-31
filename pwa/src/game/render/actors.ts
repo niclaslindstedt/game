@@ -5,7 +5,6 @@
 
 import {
   abilityDef,
-  COMPANIONS,
   companionDef,
   immolationSpellBlock,
   itemSpellOrbPositions,
@@ -97,7 +96,7 @@ export function drawCompanions(
     if (!inView(companion.pos.x, companion.pos.y, 48)) continue;
     beginBillboard(ctx, companion.pos.x, companion.pos.y, camera.x, camera.y);
     const def = companionDef(companion.defId);
-    const downed = companion.downedMs !== undefined;
+    const downed = companion.downed === true;
     // A companion walks on the hero's terms (gait.ts) — and a DOWNED one is
     // kneeling, so it neither steps nor tips: it lies as still as the sprite.
     const gait = walkGait(`c${companion.id}`, companion.pos, timeMs);
@@ -121,17 +120,18 @@ export function drawCompanions(
     );
     ctx.restore();
 
-    // The readout above the head: recovery while down, health while hurt.
+    // The readout above the head: health while hurt. A DOWNED companion shows
+    // an EMPTY bar rather than a recovery meter — there is nothing counting
+    // down any more, and a bar that filled would promise a revive that is not
+    // coming (the salts are, and they are in the player's bag).
     const barWidth = 16;
     const bx = Math.round(companion.pos.x - barWidth / 2 - camera.x);
     const by = y - 6;
     if (downed) {
-      const frac =
-        1 - Math.min(1, (companion.downedMs ?? 0) / COMPANIONS.reviveMs);
       ctx.fillStyle = "#0b0d10";
       ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
-      ctx.fillStyle = "#9aa3ad";
-      ctx.fillRect(bx, by, Math.round(barWidth * frac), 3);
+      ctx.fillStyle = "#4a1d1d";
+      ctx.fillRect(bx, by, barWidth, 3);
     } else if (companion.hp < companion.maxHp) {
       ctx.fillStyle = "#0b0d10";
       ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);

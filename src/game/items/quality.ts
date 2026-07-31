@@ -2,6 +2,13 @@
 // Make quality (the BROKEN→PERFECT craftsmanship axis) and instance naming:
 // the quality accessors and rolls every mint and durability read shares, the
 // Diablo-style display name, and the generic weighted pick the loot rolls use.
+//
+// THIS MODULE IS ON THE APP'S STARTUP PATH (the roster and the saved-hero math
+// name worn gear through `equipmentName`), so what it IMPORTS is load-bearing:
+// an import of `defs/uniques.ts` here puts all 149 named chase items in the
+// title screen's first download. That is why the card's flavor line lives in
+// its own leaf next door (`items/quote.ts`) rather than beside the name it is
+// printed under — see the note there, and the 170 KB budget in CLAUDE.md.
 
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";

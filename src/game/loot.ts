@@ -857,7 +857,7 @@ function creditCompanionKill(
   enemy: Enemy,
 ): void {
   const companion = state.companions.find((c) => c.id === companionId);
-  if (!companion || companion.downedMs !== undefined) return;
+  if (!companion || companion.downed) return;
   companion.xp += Math.max(1, Math.round(enemyKillXp(state, def, enemy)));
   let leveled = false;
   while (

@@ -78,6 +78,7 @@ export const WEAPON_FIELDS = {
   edge: "the EDGE row — whether the weapon cuts a body open or bursts it",
   twoHanded: "the BOTH HANDS note, and the empty off-hand slot it implies",
   projectile: "the shot section",
+  quote: "the flavor line under the stat block",
   icon: "the portrait",
   sfx: "not reader-facing: the sound the app fires for it in place of its class's — a page cannot be listened to",
 };
@@ -87,6 +88,8 @@ export const GEAR_FIELDS = {
   name: "the heading",
   description:
     "the lore paragraph (see WEAPON_FIELDS — read through `baseLore`)",
+  quote: "the flavor line under the stat block",
+  revive: "the WAKES A FRIEND note — what USING it out of the bag does",
   slot: "the slot chip and the opening line",
   levelReq: "the REQUIRES LEVEL row",
   dropWeight: "the COMMON/SCARCE note",
@@ -376,6 +379,7 @@ function baseStats(family, def) {
     durability: def.durability ?? null,
     passive: def.passive ?? null,
     bagSlots: def.bagSlots ?? null,
+    revive: def.revive ?? false,
     slot: def.slot,
   };
 }
@@ -424,6 +428,12 @@ function baseModel(family, def, sources) {
     dropWeight: equipmentDropWeight(def.id),
     material: def.material ?? null,
     description: baseLore(def.id) ?? def.description ?? null,
+    // The one-line FLAVOR the item card prints in gold mid-run (`GearDef.quote`
+    // / `WeaponDef.quote`). It renders here in the same blockquote a NAMED
+    // item's `lore` gets, because on the card they are literally the same line
+    // — see `itemQuote`. Distinct from `description` above it, which is the
+    // library-only paragraph the running game never shows.
+    quote: def.quote ?? null,
     sidearm: def.id === SIDEARM_DEF_ID,
     stats,
     ladder,

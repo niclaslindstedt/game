@@ -1,0 +1,14 @@
+id: smelling_salts
+kind: gear
+rarity: regular
+name: SMELLING SALTS
+description: >
+  Ammonia inhalant in a screw-top vial, the sort a cornerman cracks under a
+  fighter who has stopped answering the bell. Every trader from the moon to the
+  rift keeps a crate of them behind the counter, which tells you something about
+  how these expeditions usually go.
+quote: SMELLS BAD. USE TO RESURRECT A FRIEND
+slot: trinket
+bonuses: {}
+revive: true
+icon: icon_smelling_salts

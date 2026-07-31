@@ -183,10 +183,11 @@ export type Loadout = {
   /**
    * The recruited party rides along between levels AND difficulties: each
    * companion's def, its earned LEVEL and XP (so a companion levels up forever
-   * across the whole save), and its worn equipment. They arrive rested — hp
-   * re-derives from the carried level on apply. Optional so loadouts banked
-   * before companions shipped load as an empty party; `level`/`xp` are optional
-   * so a loadout banked before companion leveling loads at the hero's level.
+   * across the whole save), whether it is DOWN, and its worn equipment. A
+   * standing companion arrives rested — hp re-derives from the carried level on
+   * apply. Optional so loadouts banked before companions shipped load as an
+   * empty party; `level`/`xp` are optional so a loadout banked before companion
+   * leveling loads at the hero's level.
    */
   companions?: {
     defId: string;
@@ -194,6 +195,14 @@ export type Loadout = {
     level?: number;
     /** XP banked toward the next level (defaults to 0 on an old save). */
     xp?: number;
+    /**
+     * Carried DOWN, so a friend beaten down on the moon is still face-down when
+     * the hero lands on Mars. Without it the walk between levels would be a
+     * free revive — and the SMELLING SALTS the player was about to buy would be
+     * a purchase for the patient only. Absent on an old loadout, which loads a
+     * standing companion exactly as it always did.
+     */
+    downed?: boolean;
     equipment: {
       weapon: Equipment;
       head: Equipment | null;

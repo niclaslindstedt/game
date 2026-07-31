@@ -57,9 +57,10 @@ export function allyLead(ally, tuning) {
       say`Beat ${recruit.enemy.name} down${
         recruit.venue ? ` on ${recruit.venue.name}` : ""
       } and it kneels instead of dying: the run stops and asks you for a
-      verdict. Spare it and this is who gets up — the same figure, on your side
-      for the rest of the campaign, handing over its story items but keeping
-      its own kit.`,
+      verdict. Spare it and this is who gets up — the same figure, at your side
+      from here, handing over its story items but keeping its own kit. It is
+      the only companion you get to keep, and sparing anybody else later
+      retires it.`,
     );
   } else {
     // Reached only if a companion is authored that no elite names. Saying so is
@@ -155,10 +156,11 @@ export function auraProse(ally, tuning) {
   if (!ally.aura) return [];
   return [
     say`Everything that dies while it is standing rolls its loot tier at
-    ${percent(1 + ally.aura.magicFind)} of the normal chance — a party-wide
-    MAGIC FIND aura over the whole run's drops, not just over its own kills. It
-    goes silent while the ally is down, which makes keeping this one on its feet
-    worth real loot rather than just a second body.`,
+    ${percent(1 + ally.aura.magicFind)} of the normal chance — a MAGIC FIND aura
+    over the whole run's drops, not just over its own kills. It goes silent the
+    moment this one goes down and stays silent until you spend a bottle of salts
+    on it, so every fight you finish with it face-down is a fight paying plain
+    loot. Of the roster this is the one whose upkeep pays for itself.`,
     say`It is also why this one is worth carrying through a farm rung even when
     the fight does not need the help: at ${percent(tuning.damageMult)} weapon
     damage a companion is never the reason a pack died, and this is the
@@ -249,15 +251,22 @@ export function partyProse(model) {
     whole design — a party that could carry a fight would be answering the game
     for you — and the menace meter deliberately ignores companion damage for
     the same reason: a party doing well is not the hero being too strong.`,
-    say`They are beaten DOWN rather than killed. At 0 health one kneels, then
-    stands back up on its own with ${percent(t.reviveHpFraction)} of its health
-    after ${seconds(t.reviveMs)} s — but that count only runs while the ground
-    within ${t.downedCombatRadius} px of IT is clear, so one dropped in the
-    middle of a swarm stays down until you deal with the swarm. A merchant
-    stands the whole party up on the spot.`,
-    say`Out of combat they mend themselves: ${percent(t.regenPerSec)} of their
-    health a second, starting ${seconds(t.regenCalmMs)} s after the last blow
-    they threw or took. Nothing you can carry heals them, and nothing else does.`,
+    say`The party is ${t.maxParty === 1 ? "ONE" : plural(t.maxParty, "strong")}.
+    Spare a second figure and the one you had is retired on the spot — whatever
+    armor you had lent it comes back to your bag, and everything else about it
+    is gone, including every level it earned. Choosing who walks with you is
+    the point; collecting them is not.`,
+    say`They are beaten DOWN rather than killed, and DOWN is where they stay.
+    Nothing in the world stands one back up: not time, not clearing the room it
+    fell in, not the merchant, not the walk to the next venue. What wakes it is
+    a bottle of SMELLING SALTS off the trader's shelf, USED out of your bag,
+    and it comes round groggy on ${percent(t.saltsHpFraction)} of its health.`,
+    say`Nor do they mend themselves — there is no regeneration at all. The only
+    thing that fills a companion's bar back up is one of YOUR medkits, spent by
+    pressing its portrait: a kit puts back ${percent(t.medkitHealFraction)} of
+    the companion's health scaled by that kit's own quality, so a light one is
+    a patch and a superior one nearly whole. A friend is a supply line. Budget
+    for it before a boss.`,
     say`They talk. A companion's own kill floats one of its lines about
     ${percent(t.quoteChance)} of the time, never more than once every
     ${seconds(t.quoteCooldownMs)} s — banter rather than a ticker. Every line

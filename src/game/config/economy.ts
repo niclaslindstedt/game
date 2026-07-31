@@ -77,6 +77,18 @@ export const MERCHANT = {
   /** Tier-roll bonus on the stall's weapons: merchant stock skews magic+,
    * like Diablo 2's gamble screen. */
   stockTierBonus: 0.35,
+  /**
+   * Bottles of SMELLING SALTS on the shelf (`GearDef.revive`) — the ONLY thing
+   * in the game that puts a downed companion back on its feet.
+   *
+   * Stocked on EVERY stall, whether or not the hero has a friend at the time
+   * the stall is rolled, and that is deliberate rather than lazy: nothing here
+   * restocks, so a shelf that only appeared for a hero who already had a
+   * companion would strand the one who recruited his AFTER meeting the trader
+   * — dead until the next map, with the answer visibly absent from the counter
+   * he is standing at. A curiosity on a solo run is the cheaper mistake.
+   */
+  stockRevives: 2,
 } as const;
 
 /**
@@ -156,6 +168,16 @@ export const ECONOMY = {
     "medkit" | "repair" | "drink",
     { base: number; perLevel: number }
   >,
+  /**
+   * A bottle of SMELLING SALTS, priced on the same `base + perLevel × level`
+   * line the consumables ride. Dearest of the lot per unit, and it should be:
+   * it is the only cure for the only permanent loss in a softcore run, and a
+   * cheap one would make a companion's death a formality rather than a blow.
+   * Still well under a stall weapon — the answer must be affordable on the
+   * takings of one sell-run, or a player who loses a friend early is simply
+   * without one for the rest of the campaign.
+   */
+  revivePrice: { base: 60, perLevel: 10 },
   /**
    * REPAIR pricing at the merchant (see items/durability.ts `repairCost`): mending one
    * worn piece to full costs `(base + perReqLevel × the piece's required level)

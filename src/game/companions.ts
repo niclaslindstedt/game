@@ -1,21 +1,32 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The COMPANION system: recruited allies and the SPARE-or-KILL verdict that
-// creates them. A spareable unique (`EnemyDef.spareable`) beaten to 0 hp
+// The COMPANION system: the ONE recruited ally and the SPARE-or-KILL verdict
+// that creates it. A spareable unique (`EnemyDef.spareable`) beaten to 0 hp
 // kneels and pauses the run in the `choice` phase (see hitEnemy in loot.ts);
 // `resolveChoice` lands the player's call — KILL books the withheld blow
 // through the normal kill rails, SPARE recruits the figure into the party.
-// Companions follow the hero in a loose formation, fight autonomously with
-// whatever is in their weapon slot (helmet and chest piece on top — never
-// legs or feet), radiate their def's aura (LUCKY's +50% magic find), float
-// their kill-quote banter, and go DOWN instead of dying — a beaten companion
-// kneels out of the fight. It stands back up on its own ONCE THE FIELD IS
-// CLEAR (a foe beside it freezes the count, `COMPANIONS.downedCombatRadius`),
-// so one downed in a swarm stays down until the hero speaks to a merchant
-// (`reviveDownedCompanions`, wired from merchant.ts) — which works in hardcore
-// too. Companions also LEVEL UP on their own kills (their level/power math is
+// A companion follows the hero in a loose formation, fights autonomously with
+// whatever is in its weapon slot (helmet and chest piece on top — never legs
+// or feet), radiates its def's aura (LUCKY's +50% magic find), floats its
+// kill-quote banter, and LEVELS UP on its own kills (the level/power math is
 // in companion-stats.ts; the kill is credited in loot.ts on the `companionId`
-// tag), and the party — level, XP, kit and all — rides the loadout between
-// levels AND difficulties (see arrival.ts), so a companion levels up forever.
+// tag). Level, XP, kit and all rides the loadout between levels AND
+// difficulties (see arrival.ts), so a companion levels up forever.
+//
+// THE PARTY IS ONE FRIEND, AND LOSING IT COSTS SOMETHING. Two rules do all
+// the work, and both are the opposite of what shipped first:
+//
+//   • ONE (`COMPANIONS.maxParty`). Four companions is a second hero — it
+//     out-damages the fight it was meant to help with, and nothing that
+//     happens to any single member of it registers. Sparing a second
+//     spareable RETIRES the first, D2's hire-a-new-mercenary swap.
+//   • DOWN IS DOWN. At 0 hp a companion kneels with `downed` set, and NOTHING
+//     in the simulation ever clears that flag — no self-revive count, no
+//     out-of-combat regen, no mercy at the merchant's counter, not even the
+//     walk to the next level. The player buys SMELLING SALTS from the trader
+//     and breaks them over it (`spendReviveItem`), which wakes it groggy at
+//     `COMPANIONS.saltsHpFraction`; the hero's own MEDKITS
+//     (`healCompanionWithMedkit`) are the only thing that fills the bar back
+//     up. A friend is a supply line, not a turret.
 //
 // Staying WITH the hero comes before clearing the horde: while he moves, a
 // companion holds formation instead of peeling off after a mob (it still
@@ -36,14 +47,15 @@ import {
   companionProjectileBonus,
   companionXpToLevelUp,
 } from "./companion-stats.ts";
-import { ARMOR, COMPANIONS, MELEE } from "./config/index.ts";
+import { ARMOR, COMPANIONS, MEDKIT, MELEE } from "./config/index.ts";
 import { companionDef, type CompanionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponDef } from "./defs/equipment.ts";
+import { isGearDef, gearDef, weaponDef } from "./defs/equipment.ts";
 import {
   armorValueOf,
   dropItem,
   isEdgedWeapon,
+  medkitTierIndex,
   meetsLevelReq,
   playerSpeed,
   qualityMult,
@@ -162,12 +174,36 @@ function mintCompanionWeapon(state: GameState, weaponId: string): Equipment {
  * Recruit `defId` into the party at `pos`: full health at the hero's level,
  * its signature weapon in hand, helmet and chest bare (the hero dresses it
  * from his own bag — see `equipCompanionFromInventory`).
+ *
+ * THE PARTY IS ONE (`COMPANIONS.maxParty`), so a recruit past the cap RETIRES
+ * whoever has been there longest — D2's rule that hiring a mercenary dismisses
+ * the one you had. The retirement is announced (`companionDismissed`) rather
+ * than done quietly: the outgoing friend may have been carrying the hero's own
+ * helmet and chest piece and a dozen of its own levels, and a party that
+ * silently swapped members would read as the game losing one.
+ *
+ * The retired companion's WORN KIT goes back to the hero's bag where there is
+ * room for it — its own signature weapon stays with it (that piece was never
+ * the hero's), but the armor he lent it is his.
  */
 export function recruitCompanion(
   state: GameState,
   defId: string,
   pos: { x: number; y: number },
 ): Companion {
+  while (state.companions.length >= COMPANIONS.maxParty) {
+    const outgoing = state.companions.shift() as Companion;
+    for (const slot of ["head", "chest"] as const) {
+      const piece = outgoing.equipment[slot];
+      const free = piece ? state.player.inventory.indexOf(null) : -1;
+      if (piece && free >= 0) state.player.inventory[free] = piece;
+    }
+    state.events.push({
+      type: "companionDismissed",
+      defId: outgoing.defId,
+      pos: { ...outgoing.pos },
+    });
+  }
   const def = companionDef(defId);
   // Recruited TRAINED to the hero — it joins as an equal, then earns its own
   // levels from here (its XP bar starts fresh at that level).
@@ -354,29 +390,12 @@ function stepCompanion(
   companion.moving = false;
   companion.quoteCooldownMs = Math.max(0, companion.quoteCooldownMs - dtMs);
   companion.weaponCooldownMs = Math.max(0, companion.weaponCooldownMs - dtMs);
-  companion.combatMs = Math.max(0, (companion.combatMs ?? 0) - dtMs);
 
-  // Downed: kneel out the count, then stand back up on your own — but the
-  // count only ticks while the field around IT is clear. Beaten down in the
-  // middle of a swarm, a companion STAYS down until the area empties or the
-  // hero speaks to a merchant (`reviveDownedCompanions`); a clean scrap still
-  // lets it pop back up on its own once the mob is dead.
-  if (companion.downedMs !== undefined) {
-    if (!foeNear(state, companion.pos, COMPANIONS.downedCombatRadius)) {
-      companion.downedMs = Math.max(0, companion.downedMs - dtMs);
-    }
-    if (companion.downedMs > 0) return;
-    delete companion.downedMs;
-    companion.hp = Math.max(
-      1,
-      Math.round(companion.maxHp * COMPANIONS.reviveHpFraction),
-    );
-    state.events.push({
-      type: "companionRevived",
-      defId: companion.defId,
-      pos: { ...companion.pos },
-    });
-  }
+  // DOWN IS DOWN. A beaten companion lies where it fell and does nothing at
+  // all — it neither fights, follows, regroups, nor recovers. The ONLY thing
+  // that clears the flag is the player breaking SMELLING SALTS over it
+  // (`spendReviveItem`), so the whole pass simply stops here.
+  if (companion.downed) return;
 
   // Fallen far behind (a jump chase, a teleporting fight): slip through the
   // noise and rejoin — a companion is a party member, never an escort quest.
@@ -414,9 +433,6 @@ function stepCompanion(
       : player.pos;
     moveCompanion(state, companion, spot, catchUp);
   } else if (target) {
-    // A foe in the hero's engage bubble means the party is fighting — hold
-    // off regen until the field is quiet again.
-    companion.combatMs = COMPANIONS.regenCalmMs;
     const gap = distance(companion.pos, target.pos);
     const hold = weapon.range * COMPANIONS.holdFraction;
     // Prioritise moving with the hero over closing on the mob: only step
@@ -475,9 +491,6 @@ function stepCompanion(
     const reach = edef.radius + def.radius;
     if (distanceSq(enemy.pos, companion.pos) > reach * reach) continue;
     enemy.contactCooldownMs = edef.contactCooldownMs;
-    // A blow lands the party in the fight — reset the calm timer either way,
-    // even if armor turned it to nothing.
-    companion.combatMs = COMPANIONS.regenCalmMs;
     const raw = edef.contactDamage * (enemy.contactMult ?? 1);
     const hpDamage = Math.max(
       0,
@@ -486,7 +499,9 @@ function stepCompanion(
     companion.hp -= hpDamage;
     if (companion.hp <= 0) {
       companion.hp = 0;
-      companion.downedMs = COMPANIONS.reviveMs;
+      // DOWN, and down for good: nothing in the simulation clears this. It
+      // waits where it fell for a bottle of salts (`spendReviveItem`).
+      companion.downed = true;
       state.events.push({
         type: "companionDowned",
         defId: companion.defId,
@@ -495,31 +510,6 @@ function stepCompanion(
       return;
     }
   }
-
-  // Out of combat (no live target, no blow taken for `regenCalmMs`): knit the
-  // party back up at `regenPerSec` of the bar each second, so a hurt companion
-  // recovers between fights instead of limping the rest of the level. A downed
-  // one never reaches here — it returned at the top of the tick.
-  if (companion.combatMs === 0 && companion.hp < companion.maxHp) {
-    companion.hp = Math.min(
-      companion.maxHp,
-      companion.hp + companion.maxHp * COMPANIONS.regenPerSec * dt,
-    );
-  }
-}
-
-/** Is any live (non-apparition) foe within `radius` of `pos`? The
- * downed-companion revive gate reads it around the fallen companion: a foe this
- * close keeps it pinned down. */
-function foeNear(
-  state: GameState,
-  pos: { x: number; y: number },
-  radius: number,
-): boolean {
-  const rSq = radius * radius;
-  return state.enemies.some(
-    (e) => !inertEnemy(e) && distanceSq(e.pos, pos) <= rSq,
-  );
 }
 
 /** The nearest fightable foe inside the hero's engagement bubble — the party
@@ -744,8 +734,6 @@ function companionNova(
   if (victims.length === 0) return; // hold the charge until a foe is in reach
 
   companion.novaCooldownMs = nova.everyMs;
-  // A pulse is combat: hold off out-of-combat regen the same as a swing does.
-  companion.combatMs = COMPANIONS.regenCalmMs;
   state.events.push({
     type: "nova",
     pos: { ...companion.pos },
@@ -841,37 +829,120 @@ export function unequipCompanionToInventory(
   return true;
 }
 
-// ---- Merchant revival --------------------------------------------------------------
+// ---- Waking and mending the fallen ------------------------------------------------
+//
+// The two verbs that replaced the free revive the merchant used to hand out at
+// his counter. Both are things the PLAYER SPENDS: a bottle of SMELLING SALTS
+// bought off the stall, and a medkit out of his own pouch. Neither is a timer
+// and neither happens on its own — which is the whole point of a friend who can
+// actually be lost.
 
 /**
- * Stand the whole party back up and mend it — the WANDERING MERCHANT's mercy,
- * paid the moment the hero speaks to him (see `merchant.ts`). Every DOWNED
- * companion returns to its feet at FULL health (a beaten one that stayed down
- * through a long fight is brought back), and every hurt-but-standing companion
- * is topped off too. Emits a `companionRevived` per companion stood up so the
- * app can float the cue. Works no matter the mode — hardcore heroes get their
- * party back from the counter exactly like softcore ones. Returns how many were
- * revived/mended (0 if the party is already whole), so the app can stay quiet
- * when nothing changed. Safe to call from the app outside `step()`.
+ * The downed companion this bag piece would WAKE — the USE-affordance probe the
+ * inventory card asks per item, shaped exactly like `gateKeyTarget` beside it.
+ * Non-null only when the piece is a REVIVE item (`GearDef.revive` — the
+ * SMELLING SALTS, and whatever a mod authors with the same marker) and the
+ * party actually holds someone face-down. Everywhere else the bottle is inert,
+ * so the card offers no USE row on a run whose friend is on its feet.
  */
-export function reviveDownedCompanions(state: GameState): number {
-  let touched = 0;
-  for (const companion of state.companions) {
-    const wasDown = companion.downedMs !== undefined;
-    const hurt = companion.hp < companion.maxHp;
-    if (!wasDown && !hurt) continue;
-    delete companion.downedMs;
-    companion.hp = companion.maxHp;
-    touched++;
-    if (wasDown) {
-      state.events.push({
-        type: "companionRevived",
-        defId: companion.defId,
-        pos: { ...companion.pos },
-      });
-    }
-  }
-  return touched;
+export function reviveTarget(
+  state: GameState,
+  item: Equipment,
+): Companion | null {
+  if (!isGearDef(item.defId) || !gearDef(item.defId).revive) return null;
+  return state.companions.find((c) => c.downed) ?? null;
+}
+
+/**
+ * USE a REVIVE item from bag cell `index`: the bottle is consumed and the
+ * downed companion wakes at `COMPANIONS.saltsHpFraction` of its bar, back on
+ * its feet AT THE HERO'S SIDE rather than wherever it happened to fall — the
+ * same formation snap `catchUpDistance` already makes, and the reason a friend
+ * beaten down three rooms back is not an errand to walk. Returns false (and
+ * consumes nothing) when the cell holds no such piece or nobody is down, so a
+ * mistap can never cost the player a bottle.
+ */
+export function spendReviveItem(state: GameState, index: number): boolean {
+  const item = state.player.inventory[index] ?? null;
+  if (!item) return false;
+  const companion = reviveTarget(state, item);
+  if (!companion) return false;
+  state.player.inventory[index] = null;
+  const seat = state.companions.indexOf(companion);
+  delete companion.downed;
+  companion.hp = Math.max(
+    1,
+    Math.round(companion.maxHp * COMPANIONS.saltsHpFraction),
+  );
+  companion.pos = {
+    ...formationSpot(state, Math.max(0, seat), state.companions.length),
+  };
+  state.events.push({
+    type: "companionRevived",
+    defId: companion.defId,
+    pos: { ...companion.pos },
+  });
+  return true;
+}
+
+/**
+ * Can one of the hero's medkits do this companion any good right now? The
+ * affordance the HUD's party portrait reads to decide whether a press MENDS or
+ * opens the equip screen — and to show the medkit badge that says which, before
+ * the press rather than after it. False for a DOWNED companion: a corpse does
+ * not want a bandage, it wants the salts.
+ */
+export function canHealCompanion(
+  state: GameState,
+  companionId: number,
+): number {
+  const companion = companionById(state, companionId);
+  if (!companion || companion.downed) return -1;
+  if (companion.hp >= companion.maxHp) return -1;
+  return state.player.medkits.findIndex((count) => (count ?? 0) > 0);
+}
+
+/**
+ * Spend ONE of the hero's medkits on the companion — the party portrait's
+ * press. It mends `COMPANIONS.medkitHealFraction` of the companion's own bar
+ * scaled by the kit's quality, so a LIGHT kit is a patch and a SUPERIOR one
+ * nearly whole; there is no other way to heal a companion at all.
+ *
+ * The LIGHTEST kit in the pouch is the one spent, deliberately: the hero's own
+ * emergencies want his best bandages, and a portrait tap that quietly burned a
+ * SUPERIOR to top a friend up by a sliver would be a tap players learn to fear.
+ * Refuses (spending nothing) on a full companion, a downed one, or an empty
+ * pouch. Safe to call from the app outside `step()`.
+ */
+export function healCompanionWithMedkit(
+  state: GameState,
+  companionId: number,
+): boolean {
+  const tier = canHealCompanion(state, companionId);
+  if (tier < 0) return false;
+  const companion = companionById(state, companionId) as Companion;
+  const medkits = state.player.medkits;
+  medkits[tier] = (medkits[tier] ?? 0) - 1;
+  const quality = MEDKIT.tiers[medkitTierIndex(tier)];
+  const healed = Math.min(
+    companion.maxHp - companion.hp,
+    Math.max(
+      1,
+      Math.round(
+        companion.maxHp *
+          COMPANIONS.medkitHealFraction *
+          (quality?.healPct ?? 1),
+      ),
+    ),
+  );
+  companion.hp += healed;
+  state.events.push({
+    type: "companionHealed",
+    defId: companion.defId,
+    amount: healed,
+    pos: { ...companion.pos },
+  });
+  return true;
 }
 
 // ---- Phase toggles (called by the app's UI) --------------------------------------

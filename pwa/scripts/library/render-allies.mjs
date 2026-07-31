@@ -301,6 +301,24 @@ ${reveal({ id: "reveal-ally-said", label: "WHAT IT SAYS", body: said })}`
   });
 }
 
+/**
+ * The one CROSS-LINK the party rules owe: the bottle that wakes a downed
+ * companion is a real item with a page of its own, and a reader who has just
+ * been told their friend never gets up on its own should be one click from what
+ * does get it up. It lives in the renderer rather than in `partyProse` because
+ * the prose is escaped whole — every link on these pages is built here.
+ *
+ * The item is found by its `revive` marker rather than by id, so a total
+ * conversion that renames the bottle still links to its own.
+ */
+function reviveNote(model, base) {
+  const item = model.reviveItem;
+  if (!item) return "";
+  return `      <p class="note">The bottle in question is
+      <a href="${base}library/${item.path}/">${escapeHtml(item.name)}</a> — every
+      trader stocks it, and it is the only thing in the game that does this.</p>`;
+}
+
 /** A rack of ally links, each with its portrait and what it grows into. */
 function rack(allies, base) {
   return `      <ul class="roster allies">
@@ -323,10 +341,10 @@ ${allies
  * The allies index: the roster, then the rules the party plays by.
  *
  * The rules are the reason this is an index rather than four loose pages. None
- * of them is visible from inside the game — a player can watch a companion
- * kneel for twelve seconds without ever learning that the count freezes while a
- * foe is near it — and none of them belongs on any ONE ally's page, because
- * every one is true of all of them.
+ * of them is visible from inside the game — a player can watch a companion go
+ * down and spend a whole venue waiting for it to get back up before working out
+ * that nothing is ever going to — and none of them belongs on any ONE ally's
+ * page, because every one is true of all of them.
  */
 export function alliesIndex(model, { base, groundFor }) {
   const canonical = `${SITE_URL}${base}library/allies/`;
@@ -353,9 +371,10 @@ export function alliesIndex(model, { base, groundFor }) {
     ground: groundFor(model.allies[0]?.recruit?.venue?.id ?? null),
     body: `      <p class="lede">The ${total} figures in ${escapeHtml(TITLE)} you can
       choose not to kill. Beat one of them down and the run stops for a verdict;
-      spare it and it fights beside you for the rest of the campaign, levelling
-      off its own kills and growing a signature power you never get to use
-      yourself.</p>
+      spare it and it fights beside you, levelling off its own kills and growing
+      a signature power you never get to use yourself. You keep
+      ${model.tuning.maxParty === 1 ? "one at a time" : `${model.tuning.maxParty} at a time`},
+      and you can lose it for good.</p>
       <h2 id="roster">The roster</h2>
       <p>All ${total} of them are named elites${
         venues.length === 1 ? ` on ${escapeHtml(venues[0])}` : ""
@@ -365,6 +384,7 @@ ${rack(model.allies, base)}
       <section class="panel pixel-panel">
       <h2 id="party">How the party works</h2>
 ${paragraphs(partyProse(model)).replace(/^ {8}/gm, "      ")}
+${reviveNote(model, base)}
       </section>`,
     schema: pageSchema({
       type: "CollectionPage",

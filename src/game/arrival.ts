@@ -118,12 +118,15 @@ export function extractLoadout(state: GameState): Loadout {
     cleanSlates: player.cleanSlates,
     coins: player.coins,
     // The party rides along: each companion's def, its EARNED level and XP (so
-    // it keeps leveling across every level and difficulty), and its worn kit.
-    // Health re-derives on apply — companions arrive rested like the hero.
+    // it keeps leveling across every level and difficulty), whether it is DOWN,
+    // and its worn kit. A standing companion's health re-derives on apply —
+    // it arrives rested like the hero. A DOWNED one arrives exactly as it fell:
+    // the walk to the next venue is not a revive, and only the salts are.
     companions: state.companions.map((companion) => ({
       defId: companion.defId,
       level: companion.level,
       xp: companion.xp,
+      ...(companion.downed ? { downed: true as const } : {}),
       equipment: {
         weapon: copyPiece(companion.equipment.weapon) as Equipment,
         head: copyPiece(companion.equipment.head),
@@ -285,10 +288,12 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
 
   // The party walks in with him: each carried companion re-minted at the
   // hero's side, rested (full hp at its OWN earned level), wearing its carried
-  // kit. Its level and XP ride along so it keeps climbing across levels AND
-  // difficulties; a loadout banked before companion leveling carries no level
-  // (falls back to the hero's) and no XP (a fresh bar). A since-deleted
-  // companion def is simply left behind, like legacy gear.
+  // kit — unless it is DOWN, in which case it arrives face-down at 0 hp,
+  // waiting for the salts exactly as it was. Its level and XP ride along so it
+  // keeps climbing across levels AND difficulties; a loadout banked before
+  // companion leveling carries no level (falls back to the hero's) and no XP (a
+  // fresh bar). A since-deleted companion def is simply left behind, like
+  // legacy gear.
   state.companions = [];
   for (const carried of loadout.companions ?? []) {
     if (!isCompanionDef(carried.defId)) continue;
@@ -311,8 +316,9 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
         x: state.playerSpawn.x - 20 - index * 14,
         y: state.playerSpawn.y + 14,
       },
-      hp: maxHp,
+      hp: carried.downed ? 0 : maxHp,
       maxHp,
+      ...(carried.downed ? { downed: true } : {}),
       level,
       xp: Math.max(0, carried.xp ?? 0),
       xpToNext: companionXpToLevelUp(level),

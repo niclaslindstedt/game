@@ -112,16 +112,26 @@ export function itemLead(item, sources) {
         ? ` ${CLASS_STAT[item.weaponClass]} is the stat that scales it.`
         : ""),
   );
-  lines.push(
-    `The requirement cuts both ways: nothing below level ${item.levelReq} ever drops one, and a hero below it banks the find rather than wearing it.`,
-  );
+  if (!item.stats.revive) {
+    lines.push(
+      `The requirement cuts both ways: nothing below level ${item.levelReq} ever drops one, and a hero below it banks the find rather than wearing it.`,
+    );
+  }
 
   if (item.ladder.length > 0) {
     lines.push(
       `It is a pool base, so it climbs: the same shape returns later in the campaign as ${list(item.ladder.map((rung) => rung.name))}, at requirements the endgame can actually meet.`,
     );
   }
-  if (sources.length === 0) {
+  if (item.stats.revive) {
+    // A REVIVE item is a STAPLE, not a find: no venue pools it and no monster
+    // pays it out, so the generic "nothing is authored to pay it out" line
+    // below would read as "you can barely get one" about the single most
+    // reliably available object in the game. Every trader has a crate.
+    lines.push(
+      `It is not a find. No monster drops one and no venue's pool carries it — every merchant simply stocks it, on every map, at a price that climbs with your level, and that is the only way to get one.`,
+    );
+  } else if (sources.length === 0) {
     lines.push(
       "Nothing in the campaign is authored to pay it out, so it turns up only where the loot rules reach it on their own.",
     );
@@ -323,6 +333,12 @@ export function gearShapeNotes(item) {
     notes.push([
       "PAYS IN THE BAG",
       `${list(parts)} — the effect rides in the pocket, so it works without an equip slot.`,
+    ]);
+  }
+  if (stats.revive) {
+    notes.push([
+      "WAKES A FRIEND",
+      "USE it out of the bag and your downed companion comes round — groggy, on a sliver of health, but back on its feet. It is spent doing so, and it is the only thing in the game that does this: nothing else revives a companion, not time, not the merchant, not the walk to the next venue.",
     ]);
   }
   if (stats.bagSlots) {

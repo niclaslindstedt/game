@@ -195,9 +195,11 @@ export function canCollectEquipment(
  * so a plain stat comparison misses its worth), a top-tier find (a SET green
  * and everything above it — the hand-authored drops, kept as trophies, for
  * their fat affix rolls, and because a set piece is worth banking until its
- * siblings turn up), or a travel-gate key (a zero-stat trinket whose worth is
- * the door it opens — see LevelDef.gates). Everything else is ordinary loot the
- * sweep may cull.
+ * siblings turn up), a travel-gate key (a zero-stat trinket whose worth is
+ * the door it opens — see LevelDef.gates), or a REVIVE item (a zero-stat
+ * trinket the player PAID for, and the only thing in the game that puts a
+ * downed companion back on its feet — see `GearDef.revive`). Everything else is
+ * ordinary loot the sweep may cull.
  */
 export function isSpecialItem(item: Equipment): boolean {
   // Everything from SET up — the authored chase tiers. Keyed off the ladder
@@ -207,6 +209,10 @@ export function isSpecialItem(item: Equipment): boolean {
   if (gateKeyIds().includes(item.defId)) return true;
   if (isWeaponDef(item.defId)) return false;
   const def = gearDef(item.defId);
+  // Both of the zero-stat "the worth is what it DOES" trinkets read the same
+  // way here: a stat comparison prices them at nothing, so the sweep would sell
+  // the bottle of salts the hero bought two rooms ago for exactly this.
+  if (def.revive) return true;
   return def.passive !== undefined;
 }
 
