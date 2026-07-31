@@ -152,7 +152,11 @@ export function drawFrame(
   // the mob cull (drawEnemies) and the fog draw (bottom): a mob is only drawn
   // on ground the hero has actually uncovered, never through the frontier
   // stipple.
-  const field = ensureFogField(state);
+  // Takes the render clock because the frontier EASES toward where it really is
+  // rather than snapping (render/fog.ts): the explored grid is 32 px cells and
+  // the band is only 48 px wide, so an un-eased frontier lurches a third of a
+  // band every time a cell flips.
+  const field = ensureFogField(state, timeMs);
 
   // Letterbox backdrop (visible when the view outgrows the level).
   ctx.fillStyle = "#0b0d10";
