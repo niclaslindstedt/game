@@ -41,11 +41,11 @@ node scripts/skill-lessons.mjs weapon-system
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
 | Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
 | Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step/` (`weapon.ts`, `projectiles.ts`) |
-| Icons (12×12) | one YAML per icon in `scripts/sprites/icons/` |
-| Projectile sprites (8×8) | one YAML per sprite in `scripts/sprites/effects/` |
+| Icons (12×12) | one YAML per icon in `content/sprites/icons/` |
+| Projectile sprites (8×8) | one YAML per sprite in `content/sprites/effects/` |
 | Field-hero held weapon art + its swing/recoil/cast animation | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `pwa/scripts/weapon-swing.mjs` |
 | Tier colors, item tooltip (ilvl, level req) | `pwa/src/game/tiers.ts`, `InventoryPanel.tsx` |
-| Keepsakes / hardcore rules (app-side permanence) | `pwa/src/game/progress.ts`, `settings.ts` |
+| Keepsakes / hardcore rules (app-side permanence) | `pwa/src/game/characters.ts`, `settings.ts` |
 | NAMED-WEAPON population analyzer (scatter charts + tier-anomaly report) | `scripts/weapon-scatter.mjs` (see below) |
 | Engine rule tests | `tests/engine/loot_diablo_test.ts`, `tests/engine/projectile_behavior_test.ts` |
 
@@ -531,6 +531,51 @@ The power model, and WHY it flags what it flags:
 This is a REPORTING tool (no `--strict` gate) — read the charts, decide whether
 an outlier is intended. The budget knobs (`BASE`/`PER_LEVEL`/`SPECIAL_PREMIUM`/
 `REF_CRIT`) mirror `weapon-budget.mjs`; keep them in lockstep.
+
+## The second arm — one slot, two answers
+
+**THE SECOND ARM IS ONE SLOT AND TWO ANSWERS — `EquipSlot.offhand`.** It used
+to hold a bag and nothing else, which made it a slot rather than a decision. It
+now holds a **SHIELD** or a **BAG**, and a **TWO-HANDED** weapon
+(`WeaponDef.twoHanded`) says neither — so every build spends the arm on exactly
+one of survivability, room, or damage. Four rules hold it up:
+
+1. **THE TWO KINDS ARE DEFINED BY WHAT THEY PAY, and the schema refuses a piece
+   that pays neither.** A shield owes `armor` + `armorType` and may carry no
+   cells; a bag owes `bagSlots` and may carry no armor. That is what keeps the
+   choice a choice: a bag that protected, or a shield with pockets, would make
+   the arm free.
+2. **WHAT SEPARATES THE LANES IS THE STRENGTH FLOOR, not a class check.** A
+   shield derives its gate the same way heavy armor does — a fraction of the
+   hero's banked points, never authored per item — with a FLOOR under the
+   material's own rate (`SHIELD.strReqFraction`, above a weapon's own 0.4), so a
+   bruiser clears every shield with his own points and an archer or caster
+   clears none. Bags are ungated, which is precisely why they are the light
+   build's answer, and their stat block leans DEX/INT to say so. A bag's growth
+   axis is ROOM: `LOOT.bagSlotsPerIlvl` stamps an ilvl-grown cell count at mint,
+   exactly as `ARMOR.armorPerIlvl` stamps armor.
+3. **THE CONFLICT IS RESOLVED IN ONE PLACE — `items/hands.ts`.** Every door a
+   piece comes through (the bag's tap, a drag onto a named slot, both auto-equip
+   sweeps, a loadout arriving from the last level) calls `freeHandsFor`, which
+   either clears the arms or refuses the equip WHOLE. The awkward half is that
+   the weapon slot is never empty, so taking a two-hander off is a REPLACEMENT:
+   the same best-remaining-weapon pick the on-break swap makes lives there too,
+   which is why it is not in `durability.ts` (that module is downstream of the
+   bag and cannot be reached from it). The auto-equip sweep decides the HAND
+   first and lets it win — `weaponScore` already prices a two-hander's premium,
+   and there is no honest exchange rate between that and a shield's armor, so
+   guessing one would just flap the build on whatever the horde dropped last.
+4. **A TWO-HANDER IS PAID FOR IN THE CATALOG, NOT WAIVED.** It is forged at
+   `TWO_HANDED_PREMIUM` (1.4) over the budget line every one-hander sits on
+   (`scripts/weapon-budget.mjs`, mirrored in `defs/grades.ts` so a grade variant
+   inherits it), because what it competes with is a fifth armor piece. A melee
+   two-hander additionally swings a WIDER `sweepDeg` — and that costs nothing
+   extra, because a wider arc raises the weapon's assumed targets and so lowers
+   the per-hit damage the same premium hands back.
+
+The RENDER half (the generated worn overlays, the two-hander pose, the
+off-hand soak zone) is `docs/rendering.md`; the gore that lands on it is the
+`gore-system` skill.
 
 ## After you're done — the checklist
 

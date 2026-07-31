@@ -331,10 +331,13 @@ for how to add new _mechanics_ (not just new content).
 
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
+- [Rendering](docs/rendering.md) — how the picture is made: the world projection, the post effects, the canvas and its scale tiers
+- [The content pipeline](docs/content-pipeline.md) — every catalog is compiled from YAML; the generator order and the parity rules
 - [Game content](docs/game-content.md) — this game's story, levels, and roster
 - [Story](docs/story.md) — the plot in prose; the top of the story source-of-truth chain
 - [Manuscript](docs/manuscript.md) — the verbatim script (every line), extrapolated from the story
 - [Art style](docs/art-style.md) — the house style for the game's pixel art: the feel, the shared look, and the design best practices
+- [Naming](docs/naming.md) — why nothing here is named after a real person, company or franchise, and how to name things instead
 - [Multiplayer](docs/multiplayer.md) — the shipped co-op architecture, and what is not in it yet
 - [Configuration](docs/configuration.md)
 - [Troubleshooting](docs/troubleshooting.md)

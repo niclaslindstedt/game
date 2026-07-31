@@ -18,12 +18,12 @@ the map wiring, `weapon-system` for named drops.
 
 | Piece | File |
 | --- | --- |
-| The def | `scripts/enemies/<biome>/<id>.yaml` (one YAML file per mob, file stem == id) — compiled to `src/generated/enemies.ts` by `scripts/generate-enemies.mjs` (gitignored, regenerated on build; a bad field / dangling cross-ref / duplicate id fails there), read by `enemies/index.ts` |
+| The def | `content/enemies/<biome>/<id>.yaml` (one YAML file per mob, file stem == id) — compiled to `src/generated/enemies.ts` by `scripts/generate-enemies.mjs` (gitignored, regenerated on build; a bad field / dangling cross-ref / duplicate id fails there), read by `enemies/index.ts` |
 | Field reference | `src/game/defs/enemies/types.ts` — the `EnemyDef` contract the YAML fills, every field documented at the type |
 | Pipeline | loader `scripts/enemy-data/load-yaml.mjs`, schema `scripts/asset-tools/enemy-schema.mjs`, generator `generate-enemies.mjs`; regenerate with `make levels` (or `make assets`) |
-| Sprites | one YAML per frame in `scripts/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
+| Sprites | one YAML per frame in `content/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
 | Wound stages | **Auto-derived** by `sprite-data/index.mjs` from `role` (minion `hurt`; elite +`wrecked`; boss +`dying`) and `gore` (`blood`/`ecto`/`sparks`); a family `wounds` override only when the default splat can't contrast the body |
-| Mechanics engine | `src/game/mechanics.ts` — `charge`, `slam`, `enrage`, `summon`; `phases` (hp-gated mechanic swaps) |
+| Mechanics engine | `src/game/mechanics/` — one module per set-piece move, registered in `catalog.ts`; the four originals (`charge`, `slam`, `enrage`, `summon`) stay named fields. `phases` are hp-gated mechanic swaps. **Adding a move: the `boss-abilities` skill** |
 | Companions (spareable elites) | `content/companions.yaml` (compiled to `COMPANION_DEFS`); resolution in `src/game/companions.ts` |
 | Inner monologues | `content/thoughts.yaml` + a `firstKillThoughts`/`firstSightThoughts` pin on the level |
 | Scaling | `src/game/create.ts` (`spawnEnemy` stamps hp/mlvl/contact), `src/game/menace.ts` (`mobLevelFor`, `maybePowerScale` re-stamp on elite/boss engagement) |
@@ -98,9 +98,73 @@ empirically: `node scripts/simulate-run.mjs --full` prints, per mob type,
 average hp, monster level, contact damage, the hero's average blow, and
 blows-to-kill.
 
+## Presentation fields, and the trap they share
+
+Four fields on the def are read only by the app and change nothing in the
+simulation — `gore` (which family a body comes apart as), `anatomy`, `locomotion`
+(which gait), and `disposition` (whether it is fighting anybody at all). They are
+free to add, with ONE trap: `canonicalEnemyDef` (`defs/enemies/index.ts`)
+rebuilds every def through a fixed field list for V8 monomorphism, **so a new
+`EnemyDef` field must be added THERE too** or it silently reads `undefined` with
+every check still green.
+
+**ONLY A PERSON LOSES A FACE.** `EnemyDef.anatomy` (`humanoid` by default, since
+nearly everything on this roster that BLEEDS is a person; `beast` on the giant
+lizard and the thing on wheels) decides whether the head, hands, feet, arms and
+shins are in the pool at all. It is presentation only, like `gore` and
+`locomotion` — and, like them, a new `EnemyDef` field has to be added to
+`canonicalEnemyDef` or it silently reads `undefined` with every check green.
+
+The gore art is `content/sprites/effects/gib_*` (a skull, a brain, a ribcage, a
+heart, a liver, a kidney, two lengths of gut, a bone shard, two meat slabs — all
+of them bloody, all of them things that were on the INSIDE) plus `cleave_wound`,
+the cut face drawn in the gap a cleaved body opens. That one is
+deliberately the DARKEST gore in the game: a bright band between two halves
+reads as a light source rather than as an inside.
+
+**NEUTRAL MOBS — `EnemyDef.disposition`, and `src/game/disposition.ts` is the ONE
+predicate.** A bystander is not fighting anybody: `inert` excuses it from every
+damage pass, every AoE gather, every target search and the level's foe tally —
+the same predicate an apparition rides, because a quest mob the player can
+cleave in half while swinging at the horde behind it is a chain that dead-ends
+with no error to explain it. It is not mist, though: `provokeEnemy` latches
+`Enemy.hostile` and the same body is an ordinary monster from that tick on,
+which costs the combat code nothing precisely because every site already asks
+one predicate. `ai.idle: "roam"` walks one across the WHOLE map rather than
+around a post, so a quest can ask for somebody who has to be FOUND.
+
+The gore families themselves, and what each one's body is made of, are the
+`gore-system` skill; the gait is `docs/rendering.md`.
+
+## A boss's last act — `death:` and the death rite
+
+A boss does not merely stop moving. `death:` in the enemy YAML names a **death
+rite** — the scripted send-off played over it before its last words. The catalog
+(`src/game/death-rites/catalog.ts`) mirrors `mechanics/catalog.ts` field for
+field, is stepped from `src/game/boss-death.ts`, drawn by
+`pwa/src/game/render/boss-rite.ts`, and covered by
+`tests/engine/boss_death_test.ts`. Four rules:
+
+- **The rite is NAMED, never described.** A boss says which end it gets and
+  never how it works — the same bargain a set-piece ability strikes, so the
+  `boss-abilities` skill is the closest map for adding one.
+- **THE DEFAULT IS A REAL RITE, NOT A NO-OP.** A boss naming none — a MOD's
+  included, whose author never read the file — still gets the full three beats,
+  because `dismantle` reads the victim's own GORE FAMILY and so is already
+  correct for a body, a machine, a haunting and a rift-thing alike. `death:` is
+  an UPGRADE a boss earns, never a field it is broken without.
+- **THE ENDING DECIDES THE DEFAULT; the def only refines it.** A FLEEING boss
+  (`EnemyDef.flees`) falls back to `bolt` instead, and the bug that rule exists
+  for is worth remembering: resolving a fleeing boss to the DEATH default played
+  a finisher's choreography over a mob that was supposed to run, tore no exit
+  open, and booked `bossDefeated` for one that had escaped.
+- **It is meaningless on anything but a boss** — an elite is on the ordinary
+  gore ladder — and the build refuses a `death:` on a non-boss rather than
+  letting it sit there looking as though it does something.
+
 ## Workflow
 
-1. **Write the def** as a YAML file at `scripts/enemies/<biome>/<id>.yaml`
+1. **Write the def** as a YAML file at `content/enemies/<biome>/<id>.yaml`
    (file stem == the enemy `id`; the biome directory is organizational only).
    Run `make levels` to compile + validate it into `src/generated/enemies.ts`.
    Reference it from the level's `spawns`/`waves` (`level-design` skill) —

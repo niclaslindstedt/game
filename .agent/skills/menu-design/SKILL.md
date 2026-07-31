@@ -200,6 +200,178 @@ arrow/Enter/Escape `keydown` events on `window`, mounted once in `App.tsx`. A
 new menu surface is navigable by pad automatically as long as it listens on
 `window` — never teach a menu to read a pad.
 
+## The developer menu, and the gesture that unlocks it
+
+## Developer menu (hidden)
+
+The title screen hides a **DEVELOPER menu** behind a gesture in TWO MOVEMENTS,
+and the split is deliberate: the first is a SECRET, the second is a TEST.
+**Seven quick taps on the sun** (`SUN_TAPS`, `TAP_WINDOW_MS` — 0.9 s between
+taps — in `pwa/src/game/title-screen/use-sun-charge.ts`) no longer unlock
+anything; they ARM the star. Holding it then costs something — see **THE CLICK
+RACE** below — and only the race's top detonates the sun and latches
+`developerUnlocked` in the persisted settings (`pwa/src/game/settings.ts`),
+after which the gesture disarms. The BUILD-UP is
+half the secret: `sunChargeIntensity` maps the taps banked so far onto one 0..1
+`--sun-charge` (registered with `@property` so it TWEENS, which is what makes the
+charge swell in and ebb back out), and each layer in `styles.css` ramps off it
+with its OWN threshold — tap 1 shows nothing at all, tap 2 is a breath of extra
+glare, and only from tap 3 does the star plainly throw fire, shake and burn
+hotter. Stop tapping and the burst lapses. The gesture is a plain **window
+listener that hit-tests the press against the sun's rect** — not a button on the
+sun: the sun is decoration the sky driver sizes and places each frame, and a
+transparent target parked over it would swallow presses meant for whatever menu
+row sits under it (a press on any real control is ignored outright).
+`TitleBackdrop.tsx` owns the charge layers and plays the blast off its `detonate`
+prop, reporting back when it's done. Every piece of the blast rests at
+`opacity: 0` — they are all animation-driven, so a frame that paints one without
+its animation applied would dump an opaque disc (or a white screen) over the
+menu. The blast is anchored on the sun's STATIC seat (`SUN_X`/`SUN_Y` in
+`title-sky.ts`, mirrored by `.sun-boom` in `styles.css` — keep the two in step)
+rather than a per-frame custom property: writing one onto the shared parent
+dirties the style of every node under it, sixty times a second. The detonation
+does nothing else — the player then opens SETTINGS on their own,
+where a **DEVELOPER** row now appears (it stays available across launches once
+unlocked).
+
+**THE CLICK RACE — the second movement, and the reason the sun is the meter.**
+Seven taps is a secret you can be TOLD; once told, it costs nothing, which is
+exactly the wrong price for a switch that turns on level warping and the
+balance knobs. So the arming tap starts a race
+(`pwa/src/game/title-screen/sun-race.ts`, a pure leaf over a clock): a press at
+least every `RACE_BEAT_MS` (250 ms) is ON TEMPO and banks REAL TIME into
+`heldMs`; drop the beat and the bank drains at `RACE_DECAY` (1.5×) the rate it
+filled. `RACE_HOLD_MS` (5 s) banked and the star lets go — the same detonation
+the seventh tap used to fire. Sit at empty for `RACE_LAPSE_MS` and the race
+gives up, the star cools, and the gesture rearms at seven taps. Four rules:
+
+1. **THE BANK IS FILLED BY TIME, NOT BY PRESSES.** A press is a promise about
+   the next 250 ms, not a deposit — so mashing at 20 Hz buys nothing beyond
+   never missing the beat, and the five seconds are five real seconds however
+   hard the player hammers. Counting presses instead would make the target a
+   number to game rather than a tempo to hold.
+2. **THE DECAY IS ABOVE 1 ON PURPOSE.** At parity a lost beat costs exactly
+   what it saves, so the race becomes an endurance test you may pause in the
+   middle of. At 1.5× a slip SETS YOU BACK, which is what makes holding the
+   tempo the thing being tested. (Worked example: 4 s banked, 1 s dropped
+   leaves 2.5 s, so 2.5 s more are owed — not 1.5.)
+3. **THE SUN IS THE METER — there is no bar, no counter and no number.**
+   `--sun-race` (0..1) swells the disc to ~2.7× and burns it toward white;
+   `--sun-tempo` cools it back toward red as the beat slips. Both are written
+   STRAIGHT ONTO the sun and the glare by the hook's own rAF loop and are NOT
+   tweened by CSS: the JS already owns the curve, and a transition over a
+   per-frame write would lag the disc a quarter-second behind the thumb — which
+   on a 250 ms beat is the whole game. Routing them through React state would
+   re-render ten flame spans and eight embers sixty times a second to move one
+   number. (`--sun-charge`, which IS tweened, is the opposite case: it steps
+   once per tap.)
+4. **THE SCALE IS FOLDED INTO THE SHAKE'S KEYFRAMES.** An element has one
+   transform, so a `scale()` in a rule beside `sun-race-shake` would REPLACE the
+   shake rather than compose with it. Same trap as the charge shake above it.
+
+The growing disc is also its own growing TARGET — the hit test measures the
+sun's live rect, transform included — so the race gets kinder to the thumb
+exactly as it gets harder to sustain. Under `prefers-reduced-motion` the growth
+stays (it is the meter) and the buzz goes. That screen offers **SELECT LEVEL** (the warp picker: pick any
+difficulty and mission regardless of unlock state, skipping the intro), **VIEW
+ARSENAL** (`ArsenalScreen.tsx` — a
+scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
+via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
+inventory tooltip reuses so the two never drift), **VIEW EFFECTS** (the EFFECTS
+GALLERY — see below), a **BALANCE** subpage (see
+below), a **DEBUG MODE** toggle
+(`debug: "on" | "off"`, also persisted), a **FORCE STORE** switch
+(`storeForce`, persisted — surfaces the coin store in any build with packs
+granted FREE; see `pwa/src/game/store.ts`), a **MAP SIZE** row
+(`generatedMapSize`, persisted: SMALL/MEDIUM/LARGE/RANDOM — every mission is
+carved from its blueprint, so the size is the one knob left over the generator;
+the `mapgen-improvement` skill), a
+**VISUALS** subpage (the KNOCKBACK and BLOOD amounts, plus the **CAMERA PITCH**
+and **CAMERA YAW** sliders that dial the whole world projection live —
+`docs/rendering.md`), and
+a feature flag. DEBUG MODE
+shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
+the render loop — the first probe for performance regressions) and is the hook
+further developer diagnostics wire to via `getSettings().debug`. Keep it
+distinct from the `?debug` URL param (console verbosity, `window.__game` /
+`window.__scenario`, and the same FPS meter forced on — see
+`docs/configuration.md`).
+
+**NONE OF IT SHIPS IN THE STORE BUILD — and "does not ship" means the code is
+gone, not hidden.** The reveal, the whole DEVELOPER tree, and the commit hash
+beside the version in the title footer are gated on `__DEV_TOOLS__`, a
+build-time literal `pwa/vite.config.ts` sets from `VITE_DEV_TOOLS`. It is TRUE
+everywhere a human might want the tooling — the website, the installed PWA, the
+`/preview/` and `/branch/` slots, local dev, and the native `preview` and
+`testflight` apps — and FALSE for exactly one build: the `production` EAS
+profile, the binary uploaded to the App Store / Play Store, whose embedded site
+`native/scripts/bundle-web.mjs` builds with `VITE_DEV_TOOLS=off`. Because the
+flag folds to a literal, Rollup drops `menus-developer.ts` and the arsenal /
+effects-gallery chunks out of that bundle entirely. So a NEW developer surface
+must hang off an entry point that is already gated (a DEVELOPER row, a screen in
+`buildMenu`) or take its own `__DEV_TOOLS__ &&` guard — and a new persisted
+developer SETTING must be reset in `stripDeveloperState` (`settings.ts`), which
+scrubs the developer-owned settings on load so a TestFlight tester's unlocked
+menu, FORCE STORE, or BALANCE multipliers can't survive into the store build on
+the same device.
+
+The **EFFECTS GALLERY** (`pwa/src/game/effects-gallery/`, also reachable at
+`?effects[=<id>]`) is the FX iteration loop's front door: every visual effect the
+game ships, one per screen, each staged as a REAL fullscreen game situation and
+replayed on a loop — browse with the side buttons / ←→ (↑↓ jump a whole shelf),
+narrow the catalog with the search box, a tap on the field (or `Enter`) runs the
+show again, **`S` (or the SPEED chip) steps the diorama down through `1X` →
+`1/8X` SLOW MOTION** (it scales SIM time, so the effect and the loop's own
+show/replay rhythm stretch together — the only way to judge a burst that is over
+in a fifth of a second), `H` hides the gallery's chrome for a clean look. Nothing is parked
+in the middle of the frame — an effect detonates on the hero, so a button there
+would be watched through. Two rules keep it honest. **The staging is the
+engine's own scenario system**: an exhibit is a `ScenarioSpec` (the display-case
+fields `reveal` / `muteDialogue` / `noVictory` / `runAbilities` exist for it), so
+adding one is data, not a harness. **The firing goes through the engine EVENT
+stream**: an exhibit pushes the same `GameEvent` a real fight would and the run's
+own consumers (`applyEventFx`, the full-screen CSS bursts, the sfx bus) draw it —
+so an exhibit can never drift from what ships, the way the ARSENAL reads items
+through the in-game `ItemCard`. The MELEE, SHOTS and TALENTS shelves are
+GENERATED from `weapon-fx.ts` and the talent catalog (`weapon-exhibits.ts`,
+`talent-exhibits.ts`), so a new signature weapon or talent appears in the gallery
+on the next build; `tests/content/effects_gallery_test.ts` fails the build when
+one doesn't, when an exhibit's icon is missing from the atlas, or when it stages
+an id that no longer exists. `pwa/scripts/effects-gallery.mjs` drives the same
+deep link (`?effects=<id>&speed=…`) to write a numbered contact sheet of the
+whole catalog: `--strip N` spreads N frames evenly across an exhibit's own show
+(a filmstrip of the WHOLE effect rather than two moments of it), `--speed`
+shoots it in slow motion, and every run composites into a single `sheet.png` —
+a row per exhibit, frames left to right — which is what a review actually
+reads.
+
+The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
+mob strength, loot percentages, …) so the game's balance can be probed without
+editing `src/game/config/` and rebuilding. The engine side is
+`src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults — except the world's
+shipped PACE, which the HERO SPEED / MOB SPEED pair carries at 0.8 so TEMPO stays
+a free lever at 1 — values clamped to
+`[0, 100]`); each knob is applied at the ONE read site that owns its rule
+(`grantXp`, `weaponDamageFor`, `spawnEnemy`, the drop ladder, `rollTier`,
+`menaceSensitivity`, …), so it moves every surface of that rule together. Each
+row is a **slider** (drag, tap the track, or steer with ←/→) spanning **0×
+(system off) to 100×** the engine's authored value, where **1× is that value** —
+never a percentage. The track is exponential: its four quarters cover 0→1, 1→2, 2→10,
+10→100, so the useful low end gets most of the travel. The mapping
+(`sliderToBalance`/`balanceToSlider`), the snap grid, the `×` readout, and the
+knob catalog (labels, blurbs) live in `pwa/src/game/balance-knobs.ts`; the
+drag track is the shared `@ui/lib/PixelSlider.tsx`. The values persist in the
+settings (`balance` in `settings.ts`, applied on load like the other engine
+flags) and a RESET ALL row restores the shipped 1× tuning. Keep the page around
+ten knobs — one lever per system, not a config editor.
+
+**Settings controls share three reusable pixel widgets** (generic React/UI, in
+`pwa/src/lib/`, imported via `@ui/lib/*` for eventual extraction to
+
+The DEVELOPER page's own inventory (what each row does) is
+`docs/configuration.md`; the BALANCE knobs as a MEASURING instrument are the
+`simulate-run` skill's `--balance`.
+
 ## What the compiler refuses
 
 `make levels` fails on any of these, so most menu mistakes never reach a test:
@@ -266,7 +438,7 @@ that doesn't.
 - A row's wording, a page name, or the tree's shape: `docs/architecture.md` and
   `docs/configuration.md` describe the menu in prose — check for a stale
   sentence naming the row you moved.
-- `AGENTS.md`'s **THE TITLE MENU IS CONTENT** section is the architectural
+- `AGENTS.md`'s router and `docs/architecture.md` carry the architectural
   summary; update it when a RULE changes, not when a row does.
 - Menu labels and help lines are UI copy, not story — they answer to no
   manuscript chain. A menu row that quotes a character does; load `update-story`

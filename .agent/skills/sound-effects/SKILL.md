@@ -90,6 +90,27 @@ breakdown that builds back up) but write original melodies — nothing
 sampled or transcribed. Keep music volumes well under SFX (lead ~0.03,
 bass ~0.055, pads ~0.009, hats ~0.011).
 
+## What a landing sounds like is what it is MADE OF
+
+  (seeded runs, the simulator's A/B, every `rollEquipment` stream), so a
+  presentational hop that consumed one would shift every roll after it.
+- **THE LANDING IS WHAT MAKES THE NOISE, and what a thing sounds like is what
+  it is MADE OF.** `stepItems` emits `itemLanded` carrying the item's MATERIAL
+  (`itemVoice`: blade / gun / wand / plate / mail / leather / cloth / trinket /
+  flask / scrap / spark / relic) — mail jingles, cloth flumps, plate clangs,
+  glass clinks — and the app kicks a puff of dust in the FLOOR's own colour
+  (`groundColorAt`, exactly as a jump does). A magic-or-better find rings a
+  SECOND event over the top (`lootShine`, carrying the tier), which is the whole
+  reason rarity and material don't multiply: layering two events is 12 + 6
+  sounds where one combined event would have been 72. The old `itemDropped`
+  event went with it — it fired once per SPILL rather than once per item, at
+  the moment of minting rather than the moment of arrival, and after the sound
+  moved to the landing nothing consumed it at all.
+- **THE STANDING AURA is the app's, and it is a LADDER**
+  (`pwa/src/game/render/loot-aura.ts`). Each layer switches on at its own rank
+  and every one is lit in the tier's own colour (`TIER_RGB` — the colour the
+
+
 ## Iteration cycle
 
 1. Edit the YAML — `content/sounds/<id>.yaml` for a sound (a new one needs an

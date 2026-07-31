@@ -70,6 +70,22 @@ The single-victim hazards stay single BY DESIGN: `struck` is a fact about the
 gust or the herd, not about the party, so a wall of them cannot flatten a group
 in one pass.
 
+**And the WEATHER is aimed at a HERO, not at the middle of the party** —
+`hazardFocus` (`src/game/hazards.ts`) is the ONE answer for all of it: the meteor
+rain, the sand storms, the stampede's lane, the hay. It is the wave ring's rule
+one level down, and the same trap caught every hazard in the game at once,
+because each was written against `partyCentroid` with a TRUE comment beside it
+saying single player was untouched (with one hero the centroid IS that hero) —
+so nobody could read the party case until the simulator grew one. A blast bills
+EVERY hero in range, so aiming at the centroid drops it in the middle of a tight
+party, caught by every rock where a soloist is caught only by the ones he
+misses; while a SPREAD party's centroid is empty floor and the hazard stops
+existing at all. Measured on the moon: a party of two landed 2 kills in three
+minutes against the same seed's solo 128, and 145 once the rain was aimed at
+somebody. **The roll is SKIPPED at one hero rather than answered** — `state.rng`
+is the run's one stream, so spending a draw there moves every seeded
+measurement, replay and test in the repo.
+
 **The run ends when the party falls, not when a hero does** (`partyWiped`). One
 player going down is a setback the rest fight through; PR 4's §4.2 owns the
 corpse and the respawn, and waits on the per-player `dying` screen.
@@ -767,6 +783,64 @@ The two readers genuinely disagree, so the ledger keeps both:
 The honesty this owes: it stops a co-op run reaching a board, and it is not an
 anti-cheat. A determined host can still forge a solo record, exactly as they
 could before multiplayer existed.
+
+## What has landed, and what is still owed
+
+PRs 1, 2, 1.5, 1.75, 2.5, **PR 3's §3.1**, **PR 4's §4.2-abandoned-hero and
+§4.3** and **PR 5** of the ten in `docs/multiplayer-plan.md` have landed.
+
+The deferred work is inventoried in the plan's **PR 5.5 — "THE REMAINDER"**, and
+that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered across
+eleven PR sections is how a debt stops being anybody's. §5.5 collects them, says
+which are BLOCKED and on what, and gives the order they unblock each other in —
+**§7.1 (landed)** → **§7.2 (landed)** → **§4.3's measured pass (run — see
+below)** → §7.2.5 → §5.6's soak → §3.2 → §4.2's corpse → §3.3. It also separates out the FOUR that no diff can close (a
+packaged Electron launch, eight machines through a real NAT, a real router, the
+per-OS firewall prompts): those need a human with hardware, and writing them as
+work items is how they get ticked from a diff.
+
+**§4.3's MEASURED PASS HAS BEEN RUN, AND THE ANSWER IS THAT NEITHER LEVER
+MOVES.** Both prerequisites landed first: `botAct(bot, state, hero)` (164 sites,
+byte-identical on two full seeded campaigns) and **`--party N`**, the simulator
+flying one bot per seat with a `PartyReport` whose **PER-CAPITA rate is the read
+to trust** — never the per-kill share, because a party also clears faster and
+only dividing by both the head count and the clock shows which effect won.
+`scripts/coop-tuning.mjs` runs it. At party 2, grouping measures **1.1× solo per
+capita** — neutral-to-positive, which is exactly what the rule was designed to
+be — and the fall at party 4 tracks a fall in the per-capita KILL RATE (69 → 18),
+so it is the autopilot's missing SPACING and PACK-SPLITTING (§7.4) rather than
+the XP split. **Lifting `XP_SHARE.partyBonusPerHero` to hide that would be
+re-tuning the game's economy to cover a bot deficiency**, and would have to be
+undone the day §7.4 lands. §4.2's corpse and respawn are still BLOCKED on §3.2's
+per-player `dying` screen.
+
+**THE BOT KNOWS ONE THING ABOUT THE PARTY: DON'T LEAVE IT**
+(`src/game/bot/party-play.ts`). The rest of §7.4 — spacing, splitting the packs,
+`Item.owner`, covering a hero who is down, group travel — is about how a bot
+party PLAYS and waits until somebody can watch one. The LEASH came early because
+§7.2's simulator is what §4.3's tuning is read off, and an instrument measuring
+N SOLOISTS SHARING A SEED cannot tune co-op. Its number is DERIVED, not typed:
+`XP_SHARE.radius` is where a hero stops sharing in a kill, so past it a bot is
+spending the party's payout rather than merely standing badly. It latches with
+hysteresis (pull at 0.9 of the ring, release at 0.5) or a hero oscillates on the
+boundary all run; it walks to the NEAREST teammate rather than the centroid,
+which is a spot on the floor where nobody is standing; and it is null in single
+player, which is what keeps every existing measurement byte-identical.
+
+**WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** A screen one player opens
+still stops the world for everybody (`Player.screen` and the non-blocking
+level-up are §3.2, and the level-up is a real single-player behaviour change that
+owes the changelog its own line); nothing is predicted, so a client shows its
+hero where the last snapshot put him (§3.3); and a joiner still plays on the
+THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster (PR 4's
+§4.5). A client's run commands travel but are NOT applied locally
+(`setCommandSink(…, { optimistic: false })`) — the server is authoritative over
+the result, so an optimistic apply would draw an outcome the next snapshot may
+not agree with.
+
+Five of the autoplay bot's housekeeping calls also still mutate the state
+directly: four are plain verbs, and the fifth carries the bot's own swap memory
+and is a real design question.
 
 ## What is NOT here yet
 

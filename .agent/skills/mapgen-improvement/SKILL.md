@@ -161,6 +161,104 @@ Hard-won, in rough order of impact:
   `def.obstacles.reduce((n,l)=>n+l.count,0)` and compare against a hand-authored
   map before deciding it "looks about right".
 
+## Capabilities a blueprint can ask for
+
+**A KEYCARD OPENS A ROOM THE CARVE PICKED — `lock:` on an area, `locks:` on the
+blueprint.** The campaign's keycards were lore for as long as a carve had no way
+to say "this district is sealed": a blueprint names a `lock: true` AREA (the kind
+of place worth locking — GoodCo's vault, Mars's shrine) and a `locks:` list of
+STORY ITEM ids, and the carve hangs one door per key on the borders of the
+deepest district it can afford to seal. Five rules make it a room rather than a
+soft-lock:
+
+- **A ROOM IS A DISTRICT, NOT A CELL.** Adjacent lockable cells are grouped into
+  one room first; hanging a door per cell would put a second lock inside the
+  room the first key already opened.
+- **SEALING IT MUST NOT CUT THE MAP IN HALF** (`survivesWithout`). A district
+  can grow across the map's waist, and a door there locks the boss away behind a
+  key that is also behind it. A candidate whose removal disconnects the carve is
+  refused and the next one tried.
+- **NOTHING THE RUN NEEDS GOES INSIDE.** The landing, the objective, the boss's
+  home, every set piece, bystander, placed item and well are excluded from the
+  vault cells (`openCells`, `offMap`), so the key is always somewhere the hero
+  can reach without it.
+- **A LOCKABLE DISTRICT DOES NOT SPREAD** (`areas.ts`). Seeded like any other, it
+  would swallow a small map; it stays the cell it was seeded on, and one seed per
+  key is `promised` to `carveChambers` so a declared key always has a room.
+- **THE ROOM PAYS FOR THE WALK.** Each vault gets its own cache and keeps its
+  knot: what is worth locking up is worth standing over.
+
+The ANNEX takes the same treatment through `annex.lock` — a keyed ELEVATOR
+(`ElevatorState.opensWith`), refused in `elevator.ts` with an `elevatorLocked`
+event rather than silently, so the app can answer with a locked call light and
+the key's name.
+
+**AND THE SENTRIES WALK A BEAT — `patrol: true` on an elite set piece.** A route
+is DERIVED, never authored: `patrolBeat` sweeps the pinned elite down the long
+axis of its own cell, inset off the walls, so the beat fits whatever room the
+carve grew it in. One waypoint is the whole route (the engine walks `at →
+patrol[0]` and back), and it deliberately avoids the cell's centre, which is
+where the furniture stands — a patroller wedged on a crate is a patroller
+standing still.
+
+**THE ENDING IS NOT ON THE MAP: the ELEVATOR and the ANNEX.** The search worked,
+but its last stretch did not — the fog-of-war minimap fills in as the hero walks,
+and a walled compound with a doorway is SHAPED like the end of a mission, so the
+player read the answer off the minimap a district or two early. An **annex**
+(`MapAnnex`) fixes it by putting the boss somewhere the floor plan does not reach:
+a sealed room in a band of its own past the carved rectangle, with no border to any
+cell, so nothing adjoins it and the minimap has nothing at all to show where it is
+until the hero has stood in it. The only way in is an **elevator** pad
+(`LevelDef.elevators`, `src/game/elevator.ts`) standing in the carved cell the
+boss's compass regions picked — so the last thing to FIND is the way to the boss,
+and it could be in any of thirty rooms. Two details carry it: the annex joins the
+grid as a real chamber with an EMPTY neighbour list (so every dressing pass treats
+it as the district it is, with no special cases — only the wall pass knows, and
+gives it a sealed box), and `widthFrac` sizes it off the map so the band it costs
+stays mostly room at all three sizes. Boot Hill ends in the buried ZAI CONTROL
+ROOM; the bunker's vault is below its floor, because you do not walk to a vault.
+
+**FAUNA is the canopy's twin on the ground plane.** A level whose only moving
+things are trying to kill the hero reads as an arena with a texture on it; a field
+with cattle standing in it was a field before he arrived — and on a map built
+around SEARCHING that matters, because the player is looking at a lot of ground he
+has no fight in. `LevelDef.fauna` places critters; the wander is a closed-form
+function of the render clock (two incommensurate sines per axis — a Lissajous path
+that never repeats), so a herd of forty costs the simulation nothing, cannot desync
+a replay, and is not an actor: it collides with nothing, cannot be hurt, and never
+blocks a shot.
+
+**THE LANDING IS QUIET, NOT SAFE — and the opening beat's cast lands with the
+hero.** A SAFE zone does not merely keep the horde from spawning in it, it REPELS
+every minion out and holds them at its edge, so one centred on the hero is a
+bubble he can stand in untouched all run. It also froze goodco_hq's opening beat
+solid: `openingStrike` is held in order by `after` (the hero reads the crowd,
+THEN the lone rusher breaks from the pack and starts swinging at him), and the
+rusher was shoved straight back out of the pad it was placed in. A QUIET zone
+gives the breather the landing wants — no ambient horde placed in it — without
+the wall; the safe zone is spent on the trader's stall instead. The gate's other
+half is distance: the
+carve pins a few of the `firstSightThoughts` breed the `after` thought names
+around the landing, inside that pin's own radius, because a crowd carved a
+district away leaves the gate shut and the hero walking the map holstered.
+
+**THE HORDE IS A DENSITY, and it is priced over the floor that may HOLD it.** One
+knot per CELL is a count wearing a density's clothes: the carve grows its cells
+with the map, so the horde thinned out exactly as the search got longer —
+measured, 0.8–1.2 spawn points per million px² against the authored campaign's
+1.6–3.8, which played as "no mobs on the map, just the elites and the boss".
+`KNOT_DENSITY` (generate.ts) is the map's allowance in knots per million px², and
+it is spread over the cells that may hold a horde rather than over the map,
+because a third of the floor is quiet by design (the boss's cell, the caches, the
+trader's) and pricing it per cell hands that third back as emptiness. A cell takes
+as many knots as its floor is worth, cut into bands along its long axis so a hall
+gets a fight at either end; the first keeps the cell's plain `k<id>` name for an
+elite's `alarms` link. The horde's DEPTH axis is rescaled the same way — over the
+knot-bearing cells, not the carve — or the deepest ramps of the ladder (and the
+breed authored for `[0.8, 1]`) are never reached, because the deepest cells are
+precisely the quiet ones.
+
+
 ## Verification — and the trap that makes a green check meaningless
 
 `tests/content/generated_maps_test.ts` is the guard. Two things about it matter

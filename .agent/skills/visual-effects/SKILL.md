@@ -153,6 +153,17 @@ can trigger an arrival `dialogue` that parks the run, so drive with
 and screenshot latency (~40ms) drifts early frames later than their label, so
 lean on the mid/late frames to judge fast stages.
 
+## Neighbouring catalogs — use their skill, not this one
+
+| Effect | Skill / doc |
+| --- | --- |
+| Blood, the floor it soaks, the hero's coat and bootprints, a cleave, a gib, a gore FAMILY | `gore-system` |
+| A weapon's signature slash or muzzle (`weapon-fx.ts`, the eleven elements) | `weapon-system` |
+| A passive talent's always-on look and its proc bursts | `talent-fx` |
+| A boss's set-piece tell, marker and ground art | `boss-abilities` |
+| The loot toss, the landing puff, the rarity AURA ladder | `docs/rendering.md` |
+| The projection every world-anchored effect is drawn through, and the postfx over all of it | `docs/rendering.md` |
+
 ## Craft rules — what makes it spectacular, not muddy
 
 - **Multi-stage timeline.** A flat fade reads cheap. Drive distinct beats off

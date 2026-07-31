@@ -3,7 +3,7 @@ title: intendedLevel and the ladder bands are BALANCE knobs, not ground truth �
 date: 2026-07-18
 ---
 
-`scripts/ladder.yaml` (the per-difficulty × per-map `hero:` / `mob:`
+`content/ladder.yaml` (the per-difficulty × per-map `hero:` / `mob:`
 bands) and the resulting `intendedLevel` stamped on each level def are NOT facts
 to reason FROM — they are themselves part of the balancing act and can be wrong.
 When something downstream (a boss that's too hard/easy, a bot that can't reach
