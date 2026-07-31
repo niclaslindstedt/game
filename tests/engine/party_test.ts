@@ -11,8 +11,12 @@
 
 import { describe, expect, it } from "vitest";
 
+import { createSession } from "../../server/session.ts";
+import { FRAME } from "../../server/wire/protocol.ts";
+
 import {
   anyHeroWithin,
+  engineVersion,
   distanceToParty,
   heroesWithin,
   nearestHero,
@@ -261,5 +265,54 @@ describe("the world answers to any hero", () => {
     // happened to read first.
     expect(a.hp).toBeLessThan(hpA);
     expect(b.hp).toBeLessThan(hpB);
+  });
+});
+
+describe("a seat outlives the player in it", () => {
+  /** A live session on the fixture level, host plus one joiner seated. */
+  function hosted() {
+    const live = createSession({
+      params: {
+        seed: 1,
+        levelId: "test_level",
+        difficulty: "medium",
+        loadout: null,
+        respec: false,
+        clearedLevels: [],
+        merchantDiscovered: false,
+        generatedMaps: false,
+        generatedMapSize: "medium",
+      },
+      build: engineVersion,
+    });
+    live.addClient(1, () => {}, true, "HOST");
+    live.addClient(2, () => {}, { play: true, loadout: null }, "ZOE");
+    live.state.phase = "playing";
+    return live;
+  }
+
+  it("stops a departing player's hero, and does not renumber the party", () => {
+    const live = hosted();
+    const hero = live.state.players[1]!;
+    hero.pos = { x: 300, y: 300 };
+    hero.disarmed = false;
+    // They walk off east, then quit mid-stride.
+    live.receive(2, FRAME.input, 1, {
+      input: { steering: true, target: { x: 900, y: 300 } },
+    });
+    live.advance(200);
+    const walked = hero.pos.x;
+    expect(walked).toBeGreaterThan(300);
+
+    live.removeClient(2);
+    live.advance(1000);
+    // The body stays standing where it was left. Without clearing the seat's
+    // input the last frame they sent lives on, and the abandoned hero walks
+    // toward wherever they were last steering for the rest of the run.
+    expect(hero.pos.x).toBeCloseTo(walked, 5);
+    // And the seat is still theirs: splicing it out would renumber every seat
+    // above it, and every command and input frame in flight names one by index.
+    expect(live.state.players).toHaveLength(2);
+    expect(live.state.players[1]).toBe(hero);
   });
 });

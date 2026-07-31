@@ -597,6 +597,16 @@ export function createSession(options: SessionOptions): Session {
       const client = clients.get(id);
       if (!client) return;
       clients.delete(id);
+      // A DEPARTING PLAYER'S HERO STOPS WALKING. The seat is NOT spliced out —
+      // every command and input frame in flight names a seat by index, so
+      // renumbering the party would deliver somebody else's steering to the
+      // wrong hero — but the last frame they sent has to go, or the body they
+      // left behind keeps walking toward wherever they were last steering for
+      // the rest of the run. The seat then contributes IDLE, exactly as a seat
+      // whose owner has a screen open does.
+      if (client.recipient.seat !== null) {
+        inputs.set(client.recipient.seat, { ...IDLE_INPUT });
+      }
       // The host leaving is the session ending, and `close` says so in its own
       // words; announcing "HOST LEFT" first would put a chat line in front of
       // a bye nobody will be around to read.
