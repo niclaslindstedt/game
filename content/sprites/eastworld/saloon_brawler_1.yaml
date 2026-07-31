@@ -1,43 +1,43 @@
-# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: saloon_brawler_1
 family: eastworld
 size: [16, 16]
 description: >
-  A bar-fight host android - a dark robotic body in a red-and-white
-  striped shirt under a derby with a red band, shoulders hunched up round its
-  head and both steel fists raised, squared for a punch-up.
+  A bar-fight host android in a red-and-white striped shirt, both fists raised;
+  built to lose a punch-up convincingly, patched to win one — fists on the
+  alternate swing.
 subject:
-  kind: "minion - brawler host"
-  build: "a dark robotic body with hunched shoulders and both fists raised to guard height"
-  attire: "a red-and-white vertically striped shirt and a dark derby with a red band"
-  features: "a dark head with two lit optics, and thick grey arms rooted at the shoulders"
-  accent: "red-and-white striped shirt with a stray gold stud"
-  pose: "fists raised, shoulders up, squared for a punch-up"
-  flavor: "built to lose a bar fight convincingly, patched to win one"
+  kind: minion — brawler host
+  build: a dark robotic body with grey fists raised out to its sides
+  attire: a red-and-white vertically striped shirt
+  features: a dark head with a red brim
+  accent: red-and-white striped shirt with a stray gold stud
+  pose: raised fists on the alternate swing
+  flavor: built to lose a bar fight convincingly, patched to win one
 palette:
-  A: "#8d9196" # raised steel fist
-  K: "#0c0b12" # boots
-  N: "#3a3644" # dark derby / chassis / legs
+  A: "#8d9196" # fist / arm metal
+  N: "#3a3644" # dark head
   O: "#1a1c2c" # outline
-  V: "#9095a5" # lit optic
-  o: "#d6a842" # stray gold shirt stud
-  r: "#d83a3a" # red hatband and shirt stripe
+  R: "#ff5252" # bright red hat brim
+  V: "#9095a5" # arm highlight
+  X: "#963c46" # maroon shirt stripe
+  o: "#d6a842" # gold shirt stud
+  r: "#d83a3a" # red shirt stripe
   v: "#60687e" # grey shoulder
   w: "#c6c6c6" # white shirt stripe
 grid: |
   ......OOOO......
-  ......NNNN......
-  ......rrrr......
-  ....NNNNNNNNOO..
-  ..OOOOOOOOOOAA..
-  .OAAONNNNNNOAAO.
-  .OAAONVNNVNOvvO.
-  .OvvONNNNNNOvvO.
-  .OvvOOOOOOOOvvO.
-  ..OOOrrwwrrOOO..
-  ....OrrworrO....
-  ....OrrwwrrO....
-  ....OOOOOOOO....
-  .....NN..NN.....
-  .....NN..NN.....
-  .....KK..KK.....
+  ......ONNO......
+  ......ORRO......
+  ......OOOO......
+  .OOOOOOOOOOOOOO.
+  .OvOOOOOOOOOOvO.
+  ..v.OXXwwXXr.v..
+  ..v.OXXowXXO.v..
+  OOOOOXXwwXXOOOOO
+  OVAOrXXwwXXOOAVO
+  OAAOOXXwwXXOOAAO
+  OOOOOOOOOOOOOOOO
+  ....OO....OO....
+  ....OO....OO....
+  ....OO....OO....
+  ................
