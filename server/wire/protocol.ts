@@ -431,6 +431,7 @@ export const COMMANDS = [
   "tapCutscene",
   "skipStoryOpening",
   "skipDeathScene",
+  "skipBossDeath",
   "advanceDialogue",
   "muteDialogue",
   "unmuteDialogue",

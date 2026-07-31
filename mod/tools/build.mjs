@@ -398,6 +398,16 @@ export function buildMod(modDir, catalog) {
     companions: union(catalog.companions, Object.keys(modCompanions)),
     uniques: refs.uniques,
     storyItems: refs.storyItems,
+    // The scripted send-off a mod's boss may name (`death:`). SHIPPED ONLY, and
+    // deliberately: a rite is engine behaviour rather than content — there is a
+    // module behind each one — so a mod picks from the catalog and cannot
+    // declare a new one. Split by ENDING so the schema can refuse a finisher on
+    // a boss that flees, and name the alternatives when it does.
+    deathRites: new Set([
+      ...(catalog.deathRites ?? []),
+      ...(catalog.flightRites ?? []),
+    ]),
+    flightRites: new Set(catalog.flightRites ?? []),
     // Base ∪ mod, like everything else. `refs.weapons`/`refs.gear` already carry
     // this mod's own — reading `catalog.*` here instead meant a mod's monster
     // could not drop a weapon the SAME MOD ships, which is rule 2 of this file

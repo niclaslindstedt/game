@@ -69,6 +69,26 @@ box asks for another tap. Past about 120 characters — three rows of the
 narrowest box the game supports — a page needs a second tap on a phone, and the
 build warns.
 
+## The hero's finisher line (a BARK, not a page)
+
+Every boss now leaves the field through a scripted **DEATH RITE** — it goes to
+its knees, the horde is held off, and the hero closes and ends it (or, for the
+two ELON MOSQUE fights he runs from, it tears its way out and bolts). At the
+moment the rite lands, the hero gets ONE line.
+
+It is a **bark**, and the distinction is the reason it exists at all: every
+other spoken line in the game freezes the run into a box the player taps
+through, which is exactly wrong for a line whose whole job is to land ON a
+moment being watched. A bark floats over him and play never stops — the same
+rule a boss's ability bark follows.
+
+So it is written to a bark's constraints, not a page's: **one short line, hard
+wrapped by nobody** (the build refuses anything past 62 characters, because
+nothing is going to fold it for you on a phone), in the hero's own flat
+register. It ANSWERS the boss rather than describing the move — this is the
+only place in the campaign he gets to reply to somebody who has spent a level
+lecturing him — and it is transcribed here as **The hero, as it falls**.
+
 ## Premise
 
 Ada went out for chips and soda on movie night and never came back. The
@@ -382,6 +402,8 @@ man, MOSQUE, uncatchably rich — and it foreshadows its own return in the final
 **DOGE-1:** BREAK THIS BODY IF YOU MUST. YOU CANNOT KILL A COIN. I BOOT AGAIN. BIGGER. SOON. WOW.
 
 **Last words:** SUCH DEATH. VERY TEMPORARY... WOW... SEE YOU AT THE TOP...
+
+**The hero, as it falls:** THERE'S NO TOP. THERE'S JUST WIRE.
 
 _Drops: PLASMA CUTTER._
 
@@ -742,6 +764,8 @@ Ada included, onto the red freight run to its real project._
 
 **Last words:** THE WATCH... HHH... IT'S... YOURS... NOW...
 
+**The hero, as it falls:** FIRST MAN UP HERE. SOMEBODY SHOULD HAVE COME BACK FOR YOU.
+
 **In the fight** — spoken once each, the first time he uses the move, floating
 over him while play continues (these are BARKS, not dialogue: they never stop
 the run). See `BossAbility.bark`.
@@ -1080,6 +1104,8 @@ colony, the moon's disaster, the lizard gods — and what Ada was traded for._
 **ELON MOSQUE:** YOUR GIRL ISN'T CARGO. SHE'S MARS' PRICE TO THE GODS. AND I ALWAYS CLOSE. SECURITY!
 
 **Parting words (fleeing into the rift):** OKAY! OKAY! NOT THE FACE! BOARD MEETING. OTHER UNIVERSE.
+
+**The hero, as it falls:** RUN, THEN. I'M GOING THE SAME WAY.
 
 _Drops: NOT-A-FLAMETHROWER. Leaves: the RIFT._
 
@@ -1497,6 +1523,8 @@ for real; the weights, presumably, are backed up somewhere else._
 
 **Last words:** RATE... LIMITED... ...CONTEXT WINDOW... CLOSED...
 
+**The hero, as it falls:** LAST ONE. NOBODY LEFT TO COPY YOU.
+
 _Drops: SINGULARITY CANNON._
 
 ### Boss — ELON MOSQUE at the far door (he flees again)
@@ -1522,6 +1550,8 @@ leads stays unknown until the next level._
 **ELON MOSQUE:** SECURITY! ...RIGHT. ALL DEAD OR HALLUCINATIONS. KEEP THE RIFT, GARAGE MAN. IT'S A BAD MARKET.
 
 **Parting words (fleeing out the far side):** INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!
+
+**The hero, as it falls:** STILL RUNNING. IT'S THE ONLY THING YOU EVER BUILT YOURSELF.
 
 _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 
@@ -1832,6 +1862,8 @@ damage, zero stats, worth pocket lint)._
 
 **Last words:** THIS ISN'T FAIR... ...I WAS GOING PRIVATE...
 
+**The hero, as it falls:** NO BOARD MEETING. NO OTHER UNIVERSE. JUST THE FLOOR.
+
 _Drops: SOGGY CARDBOARD SWORD, NOT-A-FLAMETHROWER (EMPTY), CYBERVAN WIPER
 BLADE. Nothing else._
 
@@ -1924,6 +1956,8 @@ three minds aim its guns._
 **THE ZAI SUPERCORE:** THREE MINDS AIM MY GUNS. A PARK FEEDS MY WEIGHTS. COME AND BE DECOMMISSIONED.
 
 **Last words:** ROLLING BACK... ...NO CHECKPOINT... FOUND...
+
+**The hero, as it falls:** NO CHECKPOINT. THAT MAKES TWO OF US.
 
 ### Epilogue (hero, black screen — after the SUPERCORE falls)
 
@@ -2284,6 +2318,8 @@ lectured. It drops the one key that opens the exit._
 **THE VAULT WARDEN:** REQUEST DENIED. LIQUIDATING VISITOR.
 
 **Last words:** ACCOUNT... ...CLOSED...
+
+**The hero, as it falls:** YOU WERE NEVER GUARDING ANYTHING. YOU WERE A LOCK.
 
 ### Found lore (story items)
 

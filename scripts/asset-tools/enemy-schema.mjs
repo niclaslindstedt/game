@@ -143,6 +143,11 @@ const LORE_MIN_CHARS = 80;
  * refusal — the odd elite genuinely needs the room). */
 const LORE_WARN_CHARS = 420;
 
+/** The longest a floated BARK may be. Measured against the reference phone's
+ * ~422 world-unit view in the pixel font — past this the line runs off the
+ * side, and unlike a dialogue page nothing is going to wrap it. */
+const BARK_MAX_CHARS = 62;
+
 const GORES = new Set(["blood", "ecto", "sparks", "cosmic"]);
 /** What a body is built of, for the one moment a blunt blow bursts it — a
  * `humanoid` loses a head among the meat, a `beast` does not. Omitted reads
@@ -210,6 +215,60 @@ export function validateEnemy(def, refs) {
     err(
       `anatomy is meaningless on a "${def.gore}" body (it never comes apart)`,
     );
+  // THE DEATH RITE — the scripted send-off a boss dies by. Checked against the
+  // engine's own catalog (passed in `refs`), never against a copy kept here.
+  if (def.death !== undefined) {
+    if (def.role !== "boss")
+      err(
+        `death rite "${def.death}" on a ${def.role ?? "minion"} — only a boss ` +
+          `gets one (everything else is on the ordinary gore ladder)`,
+      );
+    else if (refs?.deathRites && !refs.deathRites.has(def.death))
+      err(
+        `unknown death rite "${def.death}" (valid: ` +
+          `${[...refs.deathRites].join(", ")})`,
+      );
+    // THE RITE HAS TO MATCH THE ENDING. A boss with `flees:` never dies — it
+    // escapes at 0 hp (or at `belowHpFrac`) with a `bossFled` event in place of
+    // the kill — so a DEATH rite on one would never play, and a FLIGHT rite on
+    // a boss that actually dies has no exit to run to. Either way the line is
+    // dead config wearing the look of a feature, which is exactly the shape the
+    // `anatomy` check above refuses and for the same reason: an author who
+    // believes they changed something.
+    else if (refs?.flightRites) {
+      const flight = refs.flightRites.has(def.death);
+      if (def.flees && !flight)
+        err(
+          `death rite "${def.death}" on a boss that FLEES — it escapes instead ` +
+            `of dying, so it needs a FLIGHT rite (${[...refs.flightRites].join(", ")})`,
+        );
+      if (!def.flees && flight)
+        err(
+          `flight rite "${def.death}" on a boss that DIES — a flight rite runs ` +
+            `to the exit named by \`flees:\`, and this boss has none`,
+        );
+    }
+  }
+  // THE HERO'S FINISHER LINE. A BARK, so it is held to a bark's rules rather
+  // than a page's: it floats over the field instead of flowing into a box, so
+  // nothing wraps it and a long line runs off the side of a phone.
+  if (def.deathBark !== undefined) {
+    if (def.role !== "boss")
+      err(`deathBark on a ${def.role ?? "minion"} — only a boss gets a rite`);
+    if (!Array.isArray(def.deathBark) || def.deathBark.length === 0)
+      err(`deathBark must be a non-empty list of lines`);
+    else
+      for (const line of def.deathBark) {
+        if (typeof line !== "string" || line.trim().length === 0)
+          err(`deathBark line must be a non-empty string`);
+        else if (line.length > BARK_MAX_CHARS)
+          err(
+            `deathBark line is ${line.length} characters — a bark FLOATS over ` +
+              `the field and nothing wraps it, so it must fit a phone ` +
+              `(max ${BARK_MAX_CHARS})`,
+          );
+      }
+  }
   if (def.rarity !== undefined && !RARITIES.has(def.rarity))
     err(`unknown rarity "${def.rarity}" (valid: ${[...RARITIES].join(", ")})`);
   if (def.locomotion !== undefined && !LOCOMOTIONS.has(def.locomotion))

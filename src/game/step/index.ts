@@ -21,6 +21,7 @@
 import { stepCutscene } from "@game/lib/cutscene.ts";
 import { distance } from "@game/lib/vec.ts";
 import { stepAutopilot } from "../autopilot.ts";
+import { stepBossDeath } from "../boss-death.ts";
 import { enterDeathScene, stepDeathScene } from "../death-scene.ts";
 import { stepElevators } from "../elevator.ts";
 import { stepLairs } from "../lairs.ts";
@@ -99,6 +100,16 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // modal (see death-scene.ts). Its own `defeat` transition ends it.
   if (state.phase === "dying") {
     stepDeathScene(state, dtMs);
+    return;
+  }
+
+  // The BOSS DEATH RITE — the scripted send-off over a felled boss
+  // (boss-death.ts). Sits beside the death scene for the same reason: it is a
+  // REDUCED pass rather than a halted one (the horde is choreographed, the hero
+  // is moved, the clock runs), so it has to be stepped ahead of the `playing`
+  // gate below rather than be caught by it.
+  if (state.phase === "bossDeath") {
+    stepBossDeath(state, dtMs);
     return;
   }
 
@@ -309,7 +320,13 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // the loot. Once the player has chosen to STAY (the win already banked),
   // the countdown never re-arms — the still-cleared objective must not yank
   // the victory menu back up; the boss-corpse tap re-opens it instead.
+  // The `playing` gate at the top of this function passed BEFORE the combat
+  // passes ran, so a boss felled this very tick has already flipped the phase
+  // to `bossDeath` underneath us. Without this guard the countdown arms and the
+  // outro's quake starts UNDERNEATH the finisher — the five-second loot window
+  // running out while the player is still watching the blow land.
   if (
+    state.phase === "playing" &&
     !state.staying &&
     state.victoryCountdownMs === null &&
     objectiveCleared(state)

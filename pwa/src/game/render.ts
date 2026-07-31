@@ -30,6 +30,7 @@ import {
   drawTethers,
 } from "./render/boss-fx.ts";
 import { drawEliteAuras } from "./render/elite-fx.ts";
+import { drawBossRite } from "./render/boss-rite.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
@@ -219,6 +220,9 @@ export function drawFrame(
   drawItems(ctx, state, sprites, camera, inView, timeMs);
   drawProjectiles(ctx, state, sprites, camera, inView, noiseFade);
   drawEnemies(ctx, state, sprites, camera, inView, timeMs, field, noiseFade);
+  // The boss mid-RITE — the one body not in `state.enemies` (the kill spliced it
+  // out). Drawn with the actors so it sorts among them rather than over them.
+  drawBossRite(ctx, state, sprites, camera, timeMs);
 
   // The friendly cast, then the hero himself. The ding burn wraps the hero:
   // the pillar and ground ring glow behind the sprite, the rising embers float

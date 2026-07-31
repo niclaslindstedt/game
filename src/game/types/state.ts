@@ -2,6 +2,7 @@
 // The run's mutable state: level info, spawner/pack runtimes, the autopilot
 // scratchpad, and the GameState root that step() advances.
 
+import type { DeathRiteBeat, DeathRiteId } from "../death-rites/types.ts";
 import type { DifficultyMobLevels, LevelDef } from "../defs/levels/types.ts";
 import type { CutsceneState } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
@@ -251,6 +252,92 @@ export type DeathSceneState = {
   spawnCooldownMs: number;
   /** Latched by a tap (`skipDeathScene`) to end the tableau early — the next
    * `dying` tick drops straight to the defeat splash. */
+  skip: boolean;
+};
+
+/**
+ * The running BOSS DEATH RITE while `phase === "bossDeath"` — the scripted
+ * send-off a boss gets instead of toppling over (see `boss-death.ts`). Null in
+ * every other phase. The mirror of `DeathSceneState` above, and shaped the same
+ * way on purpose.
+ *
+ * WHY THE BOSS TRAVELS ON THE SCENE RATHER THAN STAYING IN `state.enemies`:
+ * `killEnemy` splices a dead enemy out before anything downstream runs, and
+ * leaving a corpse in the live list would put it back in front of every aggro
+ * search, contact pass and AoE gather for the length of the rite. So the rite
+ * carries what it needs to POSE the body and nothing else — which is also what
+ * makes it replicate as a handful of numbers rather than as an actor.
+ */
+export type BossDeathState = {
+  /** Ms elapsed since the killing blow — the scene's own clock.
+   *
+   * REAL TIME, NOT DILATED. The rite dilates the sim (`BOSS_DEATH.timeScale`)
+   * so the held horde, the hero's leap and the effect layer all stretch
+   * together, but this clock advances at wall rate — so a rite is always the
+   * same length of real time and its beats are the real milliseconds the
+   * catalog authored. Driving both off one clock makes every rite eight times
+   * longer than it reads and is the easiest thing here to get wrong. */
+  ms: number;
+  /** Which beat is running. Latched rather than derived purely so the step can
+   * fire each transition's event exactly once. */
+  beat: DeathRiteBeat;
+  /** The rite being performed (`DeathRiteDef.id`). */
+  rite: DeathRiteId;
+  /**
+   * WHICH ENDING this is. A `death` rite finishes the boss where it knelt; a
+   * `flight` rite is the coward's exit (`EnemyDef.flees`) — it tears a way out,
+   * bolts for it, and is drawn through spinning.
+   *
+   * Carried on the scene rather than re-derived from the rite def because the
+   * app reads it every frame to decide WHO it is drawing moving, and a lookup
+   * per frame to answer a question the scene already knows is waste.
+   */
+  kind: "death" | "flight";
+  /**
+   * WHERE THE BOSS IS RIGHT NOW. Equal to `center` for the whole of a death
+   * rite (the body does not move once it is on its knees) and live for a
+   * flight, where the boss runs from `center` to `exit`.
+   */
+  bossPos: Vec2;
+  /**
+   * FLIGHT ONLY: the mouth of the exit it tore open — where it is running to,
+   * and where it spins out of existence. Null on a death rite.
+   */
+  exit: Vec2 | null;
+  /** The boss's def id — the app resolves its gore family and anatomy from
+   * this, exactly as it does for any other body. */
+  defId: string;
+  /** The boss's SPRITE FAMILY (`EnemyDef.sprite`), carried rather than derived:
+   * a def id is not a sprite name and the two only coincide for some bosses, so
+   * building `<defId>_kneel` silently drew nothing for the rest. `bossCorpse`
+   * carries its sprite for the same reason. */
+  sprite: string;
+  /** Where the boss fell: the rite's anchor, the ring's centre, and where the
+   * camera holds. */
+  center: Vec2;
+  /** The boss's collision radius, so the hero's standoff is sized against the
+   * body he is actually standing over rather than against a constant. */
+  radius: number;
+  /**
+   * WHICH PLAYER is performing the rite, as an index into the party.
+   *
+   * Always 0 today, because there is one hero — but it is stored rather than
+   * assumed for the reason `docs/multiplayer-plan.md` §3.2 gives for the
+   * spare-or-kill `choice`: in co-op the player who landed the killing blow is
+   * the one who acts, with the scene shown to everybody. Resolving it through
+   * `bossDeathExecutioner` keeps PR 3's `state.player` → `state.players[]`
+   * rename to one site instead of one per read.
+   */
+  executioner: number;
+  /** Where the executioner stood when the blow landed — his scripted approach
+   * runs from here to the standoff, so it is a real path rather than a
+   * teleport. */
+  from: Vec2;
+  /** The bearing the blow runs along (radians, hero → boss). The cut opens
+   * along it and the wreckage is thrown down it. */
+  heading: number;
+  /** Latched by a press past `BOSS_DEATH.skipGraceMs` — the next tick runs the
+   * rite out and hands over to the last words. */
   skip: boolean;
 };
 
@@ -684,6 +771,12 @@ export type GameState = {
    * `death-scene.ts`). Null in every other phase.
    */
   deathScene: DeathSceneState | null;
+  /**
+   * The running BOSS DEATH RITE while `phase === "bossDeath"` — the scripted
+   * send-off played over the boss the moment it falls, before its last words
+   * (see `boss-death.ts`). Null in every other phase.
+   */
+  bossDeath: BossDeathState | null;
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**

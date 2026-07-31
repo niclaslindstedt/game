@@ -65,7 +65,23 @@ export {
 export { step } from "./game/step/index.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
+export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";
 export { skipDeathScene } from "./game/death-scene.ts";
+// The BOSS DEATH RITE (boss-death.ts): its skip, the executioner accessor the
+// app's camera and pose passes read, and how long a rite runs so the push-in
+// can be shaped against it.
+export {
+  bossDeathExecutioner,
+  bossRiteDurationMs,
+  enterBossDeath,
+  skipBossDeath,
+} from "./game/boss-death.ts";
+export { deathRite, deathRites, riteFor } from "./game/death-rites/catalog.ts";
+export type {
+  DeathRiteBeat,
+  DeathRiteDef,
+  DeathRiteId,
+} from "./game/death-rites/types.ts";
 // ?debug FX preview only — set off a screen-nuke at the hero (see GameScreen's
 // `window.__nuke()` hook); not a gameplay entry point.
 export { debugDetonateNuke } from "./game/step/player.ts";
@@ -932,6 +948,7 @@ export {
   DOORS,
   ECONOMY,
   DEATH_SCENE,
+  BOSS_DEATH,
   ENEMY_AI,
   GATES,
   HAY_BALLS,
@@ -990,6 +1007,7 @@ export type {
   Difficulty,
   DoorState,
   ElevatorState,
+  BossDeathState,
   Enemy,
   EquipSlot,
   Equipment,

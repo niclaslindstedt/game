@@ -34,6 +34,13 @@ dialogue:
   - hero:
       - THEN OPEN THE DOOR, GIVE HER BACK, AND I'LL MAKE THIS QUICK.
   - - THREE MINDS AIM MY GUNS. A PARK FEEDS MY WEIGHTS. COME AND BE DECOMMISSIONED.
+# THE DEATH RITE — The hero opens the housing and puts a blade in the core; the core does the rest. He is not the one who finishes this.
+death: shutdown
+
+# THE HERO'S LINE as he puts the blade into the core.
+deathBark:
+  - NO CHECKPOINT. THAT MAKES TWO OF US.
+
 lastWords:
   - ROLLING BACK... ...NO CHECKPOINT... FOUND...
 mechanics:

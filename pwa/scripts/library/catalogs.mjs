@@ -59,6 +59,7 @@ const [
   thoughts,
   quests,
   questRewards,
+  deathRites,
   companionStats,
   party,
 ] = await Promise.all([
@@ -91,6 +92,7 @@ const [
   engine("game/defs/thoughts.ts"),
   engine("game/defs/quests.ts"),
   engine("game/quests/rewards.ts"),
+  engine("game/death-rites/catalog.ts"),
   engine("game/companion-stats.ts"),
   engine("game/companions.ts"),
 ]);
@@ -104,6 +106,9 @@ const affixText = await import(
 );
 
 export const ENEMY_DEFS = enemies.ENEMY_DEFS;
+/** The scripted send-off a boss gets, resolved the way the engine resolves it
+ * (the ENDING decides the default — see `riteFor`). */
+export const riteFor = deathRites.riteFor;
 export const LEVELS = levels.LEVELS;
 export const LEVEL_ORDER = levels.LEVEL_ORDER;
 export const SECRET_LEVEL_ORDER = levels.SECRET_LEVEL_ORDER;

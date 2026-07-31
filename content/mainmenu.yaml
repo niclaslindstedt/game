@@ -294,6 +294,15 @@ screens:
         help:
           on: THE PRELUDE SCENES PLAY BEFORE A LEVEL
           off: A LEVEL STARTS STRAIGHT AWAY - NO PRELUDE
+      # Sits under CUTSCENES because it is the same kind of answer — whether the
+      # game stops to show you something. Deliberately NOT beside the blood
+      # knobs on VIDEO: those decide what a death LOOKS like, this decides
+      # whether there is a scene at all.
+      - id: death-scenes
+        label: DEATH SCENES
+        help:
+          on: BOSSES DIE ON THEIR KNEES - YOUR OWN DEATH GETS A SEND-OFF
+          off: A BOSS DIES WHERE IT STOOD - DEATH GOES STRAIGHT TO THE SPLASH
 
   # -------------------------------------------------------------------------
   # SETTINGS -> CONTROLS — the mouse/keys rows are desktop-only (touch always

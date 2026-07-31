@@ -25,6 +25,14 @@ dialogue:
       - IT DOESN'T. WHERE DOES THE FAR DOOR GO, MOSQUE?
   - - NICE TRY. THAT'S PROPRIETARY. LET'S JUST SAY THE PHYSICS ARE... FLEXIBLE.
   - - SECURITY! ...RIGHT. ALL DEAD OR HALLUCINATIONS. KEEP THE RIFT, GARAGE MAN. IT'S A BAD MARKET.
+# THE FLIGHT RITE — he does not die here, he RUNS: tears the rift open,
+# bolts for it with his back turned, and is spun out of existence.
+death: bolt
+
+# THE HERO'S LINE as he bolts a second time.
+deathBark:
+  - STILL RUNNING. IT'S THE ONLY THING YOU EVER BUILT YOURSELF.
+
 lastWords:
   - INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!
 flees:

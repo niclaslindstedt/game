@@ -21,6 +21,7 @@ import {
   idle,
   makeEnemy,
   run,
+  settleBossRite,
   startGame,
 } from "./helpers.ts";
 
@@ -46,13 +47,23 @@ function stageCoward(state: GameState): void {
   equipBlaster(state);
 }
 
-/** Step until the coward is off the board, collecting every event seen. */
+/**
+ * Step until the coward is off the board AND its escape has actually played
+ * out, collecting every event seen.
+ *
+ * The two are no longer the same moment: at 0 hp the body is spliced out and
+ * the FLIGHT RITE opens (`src/game/boss-death.ts`) — he tears the rift open,
+ * bolts for it, and is spun out of existence — and `bossFled`, the landmark and
+ * the parting words all land at the END of that beat. Stopping at the empty
+ * enemy list would sample the run mid-scene, before any of it.
+ */
 function runUntilFled(state: GameState): GameEvent[] {
   const seen: GameEvent[] = [];
   for (let i = 0; i < 500 && state.enemies.length > 0; i++) {
     step(state, idle, DT);
     seen.push(...state.events);
   }
+  seen.push(...settleBossRite(state));
   return seen;
 }
 
@@ -80,9 +91,15 @@ describe("fleeing uniques", () => {
     const rift = state.landmarks.find((l) => l.kind === "test_rift");
     expect(rift).toBeDefined();
     expect(rift!.sprite).toBe("test_rift");
-    // Torn open at the spot it fled from — inside the little arena staged
-    // around the player, not at some default corner.
-    expect(Math.abs(rift!.pos.x - state.player.pos.x)).toBeLessThan(120);
+    // Torn open AHEAD of him, not under his feet: the FLIGHT RITE has him rip
+    // the way out a few strides off and RUN for it, so the landmark sits past
+    // where he was beaten, on the far side of him from the hero. That bearing
+    // is the whole read of the beat — a coward running away rather than
+    // stepping sideways into a hole — so it is what this pins.
+    const bossX = state.player.pos.x + 80; // where stageCoward parked him
+    expect(rift!.pos.x).toBeGreaterThan(bossX);
+    // Still in the staged arena rather than off at some default corner.
+    expect(Math.abs(rift!.pos.x - state.player.pos.x)).toBeLessThan(260);
     expect(Math.abs(rift!.pos.y - state.player.pos.y)).toBeLessThan(120);
   });
 

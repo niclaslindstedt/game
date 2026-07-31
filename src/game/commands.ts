@@ -120,6 +120,7 @@ import {
   talkToQuestGiver,
   turnInQuest,
 } from "./quests/index.ts";
+import { skipBossDeath } from "./boss-death.ts";
 import { skipDeathScene } from "./death-scene.ts";
 import { advanceDialogue, muteDialogue, unmuteDialogue } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
@@ -179,6 +180,11 @@ export const RUN_COMMAND_ARGS = {
   tapCutscene: [],
   skipStoryOpening: [],
   skipDeathScene: [],
+  // A press past the rite's grace window gets on with it. A GROUP verb like
+  // every other scene-advance: docs/multiplayer-plan.md §3.2 keeps a boss's
+  // beat global and lets ANYONE advance it, so this is deliberately not gated
+  // on being the executioner.
+  skipBossDeath: [],
   advanceDialogue: [],
   // MUTING is a run verb rather than a setting: it latches on the state so the
   // arrival scenes, last words and thoughts never enter the stage at all. The
@@ -377,6 +383,8 @@ export function applyRunCommand(
       return skipStoryOpening(state);
     case "skipDeathScene":
       return skipDeathScene(state);
+    case "skipBossDeath":
+      return skipBossDeath(state);
     case "advanceDialogue":
       return advanceDialogue(state);
     case "muteDialogue":

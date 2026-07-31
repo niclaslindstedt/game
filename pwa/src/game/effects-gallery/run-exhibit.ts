@@ -19,6 +19,8 @@ import type { RefObject } from "react";
 import {
   applyScenario,
   createGame,
+  enemyDef,
+  enterBossDeath,
   error,
   step,
   type GameEvent,
@@ -77,6 +79,10 @@ const SEED = 20250725;
  * fresh `createGame` every few seconds.
  */
 const REBUILD_PHASES = new Set([
+  // A running DEATH RITE, like a death scene: a scenario can re-shape a live
+  // run but it cannot rewind a scene that is mid-beat, so a replay takes a
+  // fresh run rather than restaging underneath the finisher.
+  "bossDeath",
   "dying",
   "defeat",
   "victory",
@@ -202,12 +208,18 @@ export function runExhibit(deps: {
         __gallery?: {
           exhibit: Exhibit;
           state: () => GameState;
+          /** The live transient EFFECT layer — what the diorama is actually
+           * drawing this frame. The one thing `state` cannot answer: an effect
+           * that was pushed but never drawn and an effect that was never
+           * pushed look identical from the engine side. */
+          effects: () => readonly unknown[];
           replay: () => void;
         };
       }
     ).__gallery = {
       exhibit,
       state: () => state,
+      effects: () => shared.effects,
       replay: () => {
         firePending = true;
       },
@@ -234,6 +246,16 @@ export function runExhibit(deps: {
         const mob = sortedMobs(state)[0];
         if (!mob) return null;
         state.enemies = state.enemies.filter((e) => e.id !== mob.id);
+        return mob;
+      },
+      fell: () => {
+        const mob = sortedMobs(state)[0];
+        if (!mob) return null;
+        // Off the board first, exactly as `killEnemy` does it — the rite poses
+        // the body from its own scene state, and a copy left standing in the
+        // live list would be drawn beside the one being finished.
+        state.enemies = state.enemies.filter((e) => e.id !== mob.id);
+        enterBossDeath(state, mob, enemyDef(mob.defId).death);
         return mob;
       },
       mobs,

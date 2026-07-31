@@ -45,6 +45,7 @@ import {
 } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
+import { bossRitePresentation } from "./boss-rite.ts";
 import { goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
 import { splashOnly } from "./gore-gate.ts";
@@ -75,6 +76,13 @@ const BAG_FULL_HINT_MS = 4000;
  * mess. */
 const GIB_SPILL_AMOUNT = 0.22;
 const GIB_SPILL_RADIUS = 9;
+
+/** How much wider a BOSS's wreckage wets the floor than an ordinary body's.
+ * An ordinary kill scales its spill by the victim's own build (`blow.body`),
+ * which a rite has no equivalent of — the rite's force is scripted, not
+ * measured. This is the stand-in, and it is deliberately modest: the landmark
+ * should read as the end of a big fight, not as a floor nobody can see. */
+const BOSS_SPILL_SCALE = 1.6;
 
 const XP_MERGE_MIN_KILLS = 3;
 const XP_MERGE_SLACK_PX = 16;
@@ -1298,6 +1306,82 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       });
     }
     kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.2, 180);
+  }
+
+  // ── THE DEATH RITE ───────────────────────────────────────────────────────
+  // The scripted send-off over a felled boss (src/game/boss-death.ts). The
+  // engine owns the choreography — the boss on its knees, the horde held off,
+  // the hero's leap, the timing — and the three events below are the picture:
+  // the beat opening, the blow landing, and the wreck settling.
+
+  // THE RITE OPENS: the boss drops to a knee. A low jolt rather than a bang —
+  // the bang is the blow, and spending it here would flatten the beat that
+  // exists to make the blow land.
+  if (event.type === "bossRiteBegan") {
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.8, 300);
+  }
+
+  // THE BLOW LANDS — the one frame the whole rite is about.
+  if (event.type === "bossRiteStruck") {
+    const def = enemyDef(event.defId);
+    const family = goreFamily(def.gore);
+    // THE GATE, asked in one place (boss-rite.ts): the device's MATURE CONTENT
+    // switch, the family's own GORE row, the KIND's row, and the BLOOD amount. A
+    // refusal comes back as a whole body, and — because the answer is read HERE
+    // rather than at the draw — nothing below records anything either.
+    const left = bossRitePresentation({
+      remains: event.remains,
+      heading: event.heading,
+      force: event.force,
+      family: family.id,
+      anatomy: def.anatomy ?? "humanoid",
+      seed: event.seed,
+    });
+    // A boss's remains are the level's LANDMARK: they stay for the rest of the
+    // run, exactly as its corpse used to. A day of run clock outlives any level
+    // and `persist` keeps them from blinking out.
+    const lifeMs = 86_400_000;
+    if (left.gore) {
+      effects.push({
+        kind: left.gore.kind,
+        pos: { ...event.pos },
+        untilMs: state.stats.timeMs + lifeMs,
+        durationMs: lifeMs,
+        sprite: def.sprite,
+        gib: left.gore,
+        persist: true,
+      });
+      // What the wreckage lands on STAYS — soaked into the floor's own
+      // saturation grid, one byte per tile, in the boss's own family's colour.
+      // Inside the gate, so a censored rite wets nothing at all. `stains` is
+      // asked because a rift-thing is LIGHT and marks no floor, exactly as it
+      // does not on an ordinary kill.
+      if (family.stains) {
+        spillBlood(
+          state,
+          landingSpots(left.gore).map((spot, i) => ({
+            x: event.pos.x + spot.x,
+            y: event.pos.y + spot.y,
+            radius: GIB_SPILL_RADIUS * BOSS_SPILL_SCALE,
+            amount: GIB_SPILL_AMOUNT * (i === 0 ? 2 : 1),
+          })),
+          family.id,
+        );
+      }
+    } else {
+      effects.push({
+        kind: "corpse",
+        pos: { ...event.pos },
+        untilMs: state.stats.timeMs + lifeMs,
+        durationMs: lifeMs,
+        sprite: def.sprite,
+        angle: (event.seed % 2 === 0 ? -1 : 1) * (Math.PI / 2),
+        persist: true,
+      });
+    }
+    // The hardest jolt the game lands, and it is the right place for it: this
+    // is the one blow in the fight that was never in doubt.
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 4.5, 460);
   }
 
   // THE BEAM OPENS. The sweep itself is drawn from live state (render/boss-fx.ts

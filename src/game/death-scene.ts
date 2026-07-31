@@ -16,6 +16,7 @@ import { DEATH_SCENE } from "./config/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import { areDeathScenesEnabled } from "./flags.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import { applyDeathXpPenalty } from "./loot.ts";
 import { revealRect } from "./map.ts";
@@ -56,6 +57,12 @@ export function enterDeathScene(state: GameState): void {
     skip: false,
   };
   state.events.push({ type: "playerDeath", pos: { ...player.pos } });
+  // DEATH SCENES switched off (SETTINGS → GAMEPLAY): straight to the modal.
+  // The toll is already booked and `playerDeath` has already gone out, so the
+  // app still lands its death sting, haptic and camera kick — what is skipped
+  // is the eight seconds of tableau between them and the splash, which is
+  // exactly what the setting promises.
+  if (!areDeathScenesEnabled()) enterDefeat(state, xpLost);
 }
 
 /**

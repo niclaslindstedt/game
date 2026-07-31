@@ -11,7 +11,7 @@ import {
   skipCutscene,
   step,
 } from "@game/core";
-import type { Enemy, GameInput, GameState } from "@game/core";
+import type { Enemy, GameEvent, GameInput, GameState } from "@game/core";
 
 export const SEED = 42;
 export const DT = 16;
@@ -142,6 +142,30 @@ export function run(
     step(state, input, DT);
   }
   return maxSteps;
+}
+
+/**
+ * Play a running BOSS DEATH RITE out to its end.
+ *
+ * Felling a boss no longer resolves on the tick of the blow: the run drops into
+ * the `bossDeath` phase and the scripted send-off plays (see
+ * `src/game/boss-death.ts`), and only when it ends do `bossDefeated` /
+ * `bossFled`, the landmark corpse and the last words arrive. So any test that
+ * kills a boss and then asserts on the aftermath has to get through the scene
+ * first — this is that step, and it collects the events the rite emits on the
+ * way so a caller watching for `bossFled` still sees it.
+ *
+ * A no-op when no rite is running, so it is safe to call unconditionally.
+ */
+export function settleBossRite(state: GameState): GameEvent[] {
+  const seen: GameEvent[] = [];
+  // Generous cap: the longest shipped rite is a shade over three seconds, and a
+  // hung scene should fail the test rather than hang the suite.
+  for (let i = 0; i < 600 && state.phase === "bossDeath"; i++) {
+    step(state, idle, DT);
+    seen.push(...state.events);
+  }
+  return seen;
 }
 
 /**

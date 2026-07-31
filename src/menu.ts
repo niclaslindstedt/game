@@ -71,6 +71,7 @@ export {
   setAutoEquipEnabled,
   setAutoStatGainsEnabled,
   setCutscenesEnabled,
+  setDeathScenesEnabled,
   setDialogueEnabled,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,

@@ -19,7 +19,15 @@ import {
 } from "@game/core";
 import type { GameState } from "@game/core";
 
-import { clearStage, DT, idle, run, SEED, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  idle,
+  run,
+  SEED,
+  settleBossRite,
+  startGame,
+} from "./helpers.ts";
 
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
 
@@ -30,6 +38,11 @@ function reachVictory(state: GameState): { x: number; y: number } {
   boss.spoke = true; // skip his arrival/death scene noise: this is the menu flow
   const pos = { ...boss.pos };
   killEnemy(state, boss, 9999, false);
+  // Felling a boss opens the DEATH RITE (boss-death.ts) rather than resolving
+  // on the tick of the blow: the corpse, `bossDefeated` and the death-words box
+  // all land at the END of that scene. Play it out first — this suite is about
+  // the victory menu, not the finisher.
+  settleBossRite(state);
   // The kill can open the death-words box and bank level-ups; clear both so
   // time can resume and the countdown can run out.
   while (state.phase === "dialogue") advanceDialogue(state);

@@ -821,6 +821,7 @@ export function createGame(
     deathScene: null,
     victoryCountdownMs: null,
     bossCorpse: null,
+    bossDeath: null,
     staying: false,
     // The AUTO PILOT meter opens disengaged; the app re-arms it on the next
     // run when a session spans levels (see autopilot.ts).

@@ -68,6 +68,8 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
     xpMobMult: d.xpMobMult,
     dialogue: d.dialogue,
     lastWords: d.lastWords,
+    death: d.death,
+    deathBark: d.deathBark,
     ai: {
       aggroRadius: ai.aggroRadius,
       idle: ai.idle,

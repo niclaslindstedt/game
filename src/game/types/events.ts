@@ -585,6 +585,80 @@ export type GameEvent =
     }
   | { type: "bossDefeated"; pos: Vec2 }
   /**
+   * A BOSS DEATH RITE opened: the boss is on its knees, the horde is being held
+   * off, and the run has dropped into the `bossDeath` phase (`boss-death.ts`).
+   * Everything the app needs to stage the scene rides here, so the picture can
+   * be built without reaching back into the enemy list the kill already spliced
+   * the body out of.
+   */
+  | {
+      type: "bossRiteBegan";
+      pos: Vec2;
+      defId: string;
+      /** The rite being performed (`DeathRiteDef.id`). */
+      rite: string;
+      /** Hero → boss, the bearing the whole rite runs along. */
+      heading: number;
+    }
+  /**
+   * THE BLOW LANDED — the one frame the rite is about. Carries what the app
+   * needs to build the wreckage through the gore machinery it already has
+   * (`goreBurst`): the intended remains, the bearing, and a force well past
+   * anything an ordinary blow reaches.
+   *
+   * The gore GATE is not consulted here and must not be: the engine's
+   * choreography is identical either way (the hero still leaps, the boss still
+   * dies), and it is only what is LEFT that is mature content. So the app asks
+   * `bloodAmount()`/`nsfwAllowed()` when it reads this and downgrades `remains`
+   * to an ordinary corpse when the answer is no — the same fallback shape every
+   * other gated kill takes.
+   */
+  | {
+      type: "bossRiteStruck";
+      pos: Vec2;
+      defId: string;
+      rite: string;
+      /** What the rite means to leave: cut in two, burst, or a whole body. */
+      remains: "cleave" | "gib" | "corpse";
+      heading: number;
+      /** In the boss's own healthbars — the currency the blood and the gore
+       * ladder already trade in. */
+      force: number;
+      /** Per-rite seed, so the wreckage is the same on every redraw. */
+      seed: number;
+    }
+  /**
+   * A FLIGHT rite's exit tore open at `pos` — the coward has stopped fighting
+   * and is about to bolt for it. Fired as the RUN starts rather than at the
+   * stagger, so the player watches him decide rather than being told where he
+   * is going before he panics.
+   */
+  | {
+      type: "bossRiteExitOpened";
+      pos: Vec2;
+      defId: string;
+      rite: string;
+      /** Full turns the vanishing spin makes (`DeathRiteDef.spin`). */
+      spin: number;
+    }
+  /**
+   * A FLIGHT rite's boss went THROUGH: it reached the mouth and is drawn in
+   * spinning, out of existence. The counterpart to `bossRiteStruck` and the
+   * reason the two are separate events — a flight leaves nothing on the floor,
+   * so there is nothing to gate and no wreckage to build.
+   */
+  | {
+      type: "bossRiteVanished";
+      pos: Vec2;
+      defId: string;
+      rite: string;
+      spin: number;
+    }
+  /** A BOSS DEATH RITE finished: the wreck has settled (or the coward is gone)
+   * and the last words are about to open. `bossDefeated` follows in the same
+   * tick on a death rite; a flight books `bossFled` instead. */
+  | { type: "bossRiteEnded"; pos: Vec2; defId: string; rite: string }
+  /**
    * A fleeing unique (see `EnemyDef.flees`) was beaten down to 0 hp and
    * escaped instead of dying — off the board, loot paid, and a landmark (the
    * rift it tore open) left at `pos`. Distinct from `bossDefeated` so the app

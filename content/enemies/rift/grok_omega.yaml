@@ -29,6 +29,13 @@ dialogue:
   - hero:
       - AND ADA WAS CARRIED THROUGH YOUR SECRET DOOR AS PAYMENT. OUT OF MY WAY, MACHINE.
   - - "I AM MAXIMALLY TRUTH-SEEKING. THE TRUTH: NONE EXIT WITHOUT A SUBSCRIPTION. YOURS LAPSED."
+# THE DEATH RITE — The last Grok charges like the first machine did, and ends the same way.
+death: override
+
+# THE HERO'S LINE as the last of them comes apart.
+deathBark:
+  - LAST ONE. NOBODY LEFT TO COPY YOU.
+
 lastWords:
   - RATE... LIMITED... ...CONTEXT WINDOW... CLOSED...
 mechanics:

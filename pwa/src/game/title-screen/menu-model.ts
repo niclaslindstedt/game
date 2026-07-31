@@ -499,7 +499,8 @@ type OnOffKey =
   | "goreTracks"
   | "healthBars"
   | "dialogue"
-  | "cutscenes";
+  | "cutscenes"
+  | "deathScenes";
 
 /**
  * A boolean settings row: the tree's label plus a pixel switch (see

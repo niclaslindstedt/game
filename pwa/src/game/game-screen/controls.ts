@@ -114,6 +114,14 @@ export function createControls(deps: {
         runCommandOk(state, "skipDeathScene");
         return;
       }
+      // THE BOSS DEATH RITE: the same bargain. A tap gets on with it, and the
+      // engine refuses the skip inside its own grace window — which is what
+      // stops the finger that was steering when the boss fell from throwing the
+      // finisher away before it has played a frame.
+      if (state.phase === "bossDeath") {
+        runCommandOk(state, "skipBossDeath");
+        return;
+      }
       // Remember where the tap landed (CSS px): the sim loop checks it
       // against the merchant before letting it act as a jump.
       queues.shopTapRef.current = { x: pointer.state.x, y: pointer.state.y };
@@ -158,6 +166,10 @@ export function createControls(deps: {
       // grace window has passed.
       if (state.phase === "dying") {
         runCommandOk(state, "skipDeathScene");
+        return;
+      }
+      if (state.phase === "bossDeath") {
+        runCommandOk(state, "skipBossDeath");
         return;
       }
       if (pointerType === "mouse" && getSettings().steering === "hover") {

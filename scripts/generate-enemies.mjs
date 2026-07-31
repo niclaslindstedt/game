@@ -39,6 +39,10 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
+const { deathRites: loadDeathRites } = await import(
+  engine("src/game/death-rites/catalog.ts")
+);
+const RITE_DEFS = loadDeathRites();
 
 const { enemies, entries } = loadEnemies();
 
@@ -56,6 +60,18 @@ const refs = {
   // does not need is one bootstrap cycle away from a broken build.
   storyItems: new Set(Object.keys(loadStoryItems().storyItems)),
   items: new Set([...Object.keys(WEAPON_DEFS), ...Object.keys(GEAR_DEFS)]),
+  // The DEATH RITES a boss's `death:` may name, read off the engine's own
+  // catalog rather than copied into the schema. Same discipline the region
+  // grammar follows: there is one list of what is valid, and a validator that
+  // keeps a second copy of it is a validator that eventually disagrees with the
+  // thing it is validating. `death-rites/catalog.ts` is an import-free leaf, so
+  // it loads under plain node like the def catalogs above it.
+  deathRites: new Set(RITE_DEFS.map((r) => r.id)),
+  // Which of them are FLIGHT rites — the coward's exit rather than a finisher.
+  // A separate set rather than a predicate so the error can NAME the valid
+  // alternatives, which is the difference between a message an author can act
+  // on and one they have to go and read the catalog to understand.
+  flightRites: new Set(RITE_DEFS.filter((r) => r.flight).map((r) => r.id)),
 };
 
 const errors = [];

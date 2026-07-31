@@ -25,6 +25,13 @@ dialogue:
       - THEN YOU HEARD ABOUT THE GIRL THEY GRABBED TONIGHT. ADA. WHERE DID THEY TAKE HER?
   - - FLEW HER OUT AN HOUR AGO. PAD 2. TO THE MOON, BUILDER. TO THE MOON. WHERE ELSE WOULD SHE GO.
   - - BREAK THIS BODY IF YOU MUST. YOU CANNOT KILL A COIN. I BOOT AGAIN. BIGGER. SOON. WOW.
+# THE DEATH RITE — It charges, so it is caught rather than dodged — the core comes out and it runs on for a beat without one.
+death: override
+
+# THE HERO'S LINE as the core comes out.
+deathBark:
+  - THERE'S NO TOP. THERE'S JUST WIRE.
+
 lastWords:
   - SUCH DEATH. VERY TEMPORARY... WOW... SEE YOU AT THE TOP...
 mechanics:

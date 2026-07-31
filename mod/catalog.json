@@ -1108,6 +1108,17 @@
     "west-north",
     "west-south"
   ],
+  "deathRites": [
+    "dismantle",
+    "execution",
+    "last_sweep",
+    "override",
+    "shutdown",
+    "unmaking"
+  ],
+  "flightRites": [
+    "bolt"
+  ],
   "sprites": [
     "ada_0",
     "ada_1",
@@ -2986,6 +2997,11 @@
     "bossLockdown",
     "bossLockdownLifted",
     "bossRecompile",
+    "bossRiteBegan",
+    "bossRiteEnded",
+    "bossRiteExitOpened",
+    "bossRiteStruck",
+    "bossRiteVanished",
     "bossVolley",
     "cleanSlateUsed",
     "companionDismissed",
