@@ -196,7 +196,8 @@ export type RefusalReason =
   | "no-session"
   | "bad-password"
   | "bad-challenge"
-  | "rate-limited";
+  | "rate-limited"
+  | "unlicensed";
 
 /**
  * What the JOIN screen prints for each refusal.
@@ -215,6 +216,7 @@ export const REFUSAL_TEXT: Record<RefusalReason, string> = {
   "bad-password": "WRONG PASSWORD",
   "bad-challenge": "THE HANDSHAKE EXPIRED - TRY AGAIN",
   "rate-limited": "TOO MANY ATTEMPTS - WAIT A MOMENT",
+  unlicensed: "MULTIPLAYER IS PLAYED THROUGH STEAM",
 };
 
 // ---------------------------------------------------------------------------
