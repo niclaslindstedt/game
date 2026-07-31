@@ -2,34 +2,34 @@ name: crater_red_small
 family: mars
 size: [16, 16]
 description: >
-  A small jumpable crater in the red regolith.
+  An old impact crater worn into the regolith — a low raised rim of oxide dust
+  around a funnel that darkens to a shadowed throat.
 subject:
-  kind: jumpable crater (ground obstacle)
-  build: a dark oxide-brown pit ringed by a raised lighter rim, the smaller crater size
-  features: a shadowed gap to hop across
-  flavor: a pit the hero hops and rovers pile against
+  kind: crater (obstacle)
+  build: a small round impact crater sunk into the dust, its outline wobbled off true
+  features: the rim's outward slope lit where it faces the sun and dark where it turns away, the near inner wall falling away into shadow that deepens toward the throat, and the far wall catching the light as it turns back up
+  flavor: an old scar, softened by the air and the dust the way nothing on the moon ever is
 palette:
-  A: "#8d9196" # grey inner-rim rock
-  O: "#1a1c2c" # shadowed pit
-  a: "#d6dce4" # bright rim highlight
-  d: "#80482d" # oxide-brown rim
-  e: "#623722" # dark pit floor
-  f: "#888a96" # grey rim shade
-  u: "#c38668" # dusty tan rim
+  p: "#deaa86" # sun-caught rim crest
+  u: "#c38668" # far inner wall, turned back toward the light
+  t: "#b2643e" # dust on the lit side of the funnel
+  d: "#80482d" # wall between the lit and shadowed sides
+  e: "#623722" # shadowed wall
+  k: "#342c26" # the funnel's throat
 grid: |
-  ................
-  ................
-  ................
-  ................
-  ....aaaaaaau....
-  ...aaeeeeeeuf...
-  ..aaeeeOOedAdd..
-  ..aeeOOOOeeAud..
-  .aaeeOOOOeeuudd.
-  ..aeeOeeeeeuud..
-  ..auedAeeuuudd..
-  ...ufAAuuuudd...
-  ....dddddddd....
-  ................
-  ................
+  .......ppp......
+  .....pppppp.....
+  ...pppkkkkpu....
+  ..pppkkkkkkuu...
+  ..ppkkkkkkddud..
+  ..pkkkeeeeddudd.
+  .ppkkeeeedduudd.
+  .ppkkeeedttuuud.
+  .ppkkeedtttuuud.
+  .ppkkedtttuuuud.
+  .ppkdddttuuuudd.
+  .puddduuuuuudd..
+  ..uuduuuuuuddd..
+  ..uuddddddddd...
+  ....ddddddd.....
   ................
