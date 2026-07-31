@@ -1355,6 +1355,81 @@ Two things it does drag in:
   a stale manuscript is exactly the drift the chain exists to prevent. Use the
   `update-story` skill.
 
+#### 4.1.1 "AUTHORED CONTENT, NOT ENGINE WORK" IS WRONG — three findings
+
+The paragraph above is optimistic, and the tree says so. Checked against the
+current engine, a hub drags in at least three pieces of real work, and whoever
+picks this up should budget for them rather than discovering them on day two:
+
+- **`LevelDef.objective` IS REQUIRED, and a hub has none.** The union is
+  `killBoss | clearAll | reachExit`, and a hub is never "cleared" — it is a
+  place you come back to. So it needs either a new objective kind or an abuse
+  of `reachExit`, and the second drags the whole victory → outro → bank chain
+  along behind it, which is precisely what must NOT fire when somebody walks
+  past the workbench.
+- **"LEVEL SELECT AS A SET OF PORTALS" DOES NOT EXIST.** The nearest mechanic
+  is the elevator, and `src/game/elevator.ts` rules itself out in its own
+  header: _"Nothing here is pathing, streaming or level-swapping — the
+  destination is a real place in the same level."_ Every level transition today
+  is APP-driven off a victory. A portal that starts a different level from
+  inside a run is new mechanism, and it is the same mechanism §4.1's "party
+  travel" bullet needs, so the two are one job rather than two.
+- **THE MERCHANT WANDERS BY CONSTRUCTION.** `merchant.ts` strolls him along
+  wander legs on his own seeded rng stream until he is met. "Parked at a
+  counter" is a new authored mode on him, not a placement — and it is worth
+  doing properly, because it is also the answer to §3.1's table entry for him.
+
+#### 4.1.2 THE PROPOSED SHAPE: THE GARAGE, AND THE RIFT DOOR IN IT
+
+> **PROPOSED, NOT YET IN THE CHAIN.** `docs/story.md` and `docs/manuscript.md`
+> are UNTOUCHED by this section and must stay that way until it is confirmed —
+> this is an engineering plan recording a direction, not a story tier. When it
+> IS confirmed, it goes into `story.md` first and the manuscript edit needs its
+> own explicit confirmation, per the rule above.
+
+**The hub should be the hero's GARAGE, and the level select should be a RIFT
+DOOR standing in it.** The reasoning is that the game already has this fixture
+and has simply never let the player stand in it:
+
+- **The garage is the most established place in the story and the only one that
+  is HIS.** Ten years of weekends building the ship; the LAUNCH cutscene is set
+  there at night; the starting weapon comes off the wall of the room next to it;
+  and it is what ELON MOSQUE calls him by — _"KEEP THE RIFT, GARAGE MAN."_ A hub
+  is a place you return to between missions, and this campaign is about a man
+  trying to get home. Inventing a neutral town beside that would be building a
+  worse version of something the story already has.
+- **A trinket that tears open the way to a level IS ALREADY IN THE GAME.**
+  RASPUTIN drops THE SEVERED HAND — "a junk-looking trinket that secretly tears
+  open the way to the secret BUNKER level". So the mechanic the rift door needs
+  is not a new idea in the fiction, it is the SECOND instance of one that ships;
+  and the fiction has already established that a rift can be TORN by somebody
+  who wants one (Mosque tears his own rather than lose).
+- **It solves the multiplayer problem the section exists for.** "Start a game,
+  people join" lands them in a room with the merchant, the stash, the quest
+  givers and a door — instead of in the middle of somebody else's boss fight.
+
+**THE ONE PROBLEM TO SOLVE BEFORE IT IS WRITTEN DOWN, and it is an ORDERING
+problem rather than a story one.** The rift is level 4 of 5. If the door is the
+thing the hero brings back OUT of the rift, the hub does not exist for the first
+three missions — which is most of the campaign, and exactly the stretch a new
+player and a new party spend the most time in. Two ways out, and this is the
+decision to take:
+
+1. **The garage is the hub from the FIRST run, and what changes is the DOOR.**
+   Early on the way out of it is the SHIP — which is already how he reaches
+   SpaceZ, the moon and Mars, and already has its own travel cutscenes (THE
+   LAUNCH, THE VOYAGE). The rift door then REPLACES the ship after level 4 and
+   opens everything at once, which reads as the campaign's own progression
+   rather than as a retcon. This is the recommended one: it fights none of the
+   existing cutscene chain and gives the artefact a job the player will feel.
+2. **The hub unlocks after the rift.** Cheaper, and it leaves multiplayer
+   without a landing place for three fifths of the campaign — which is the
+   problem §4.1 exists to fix.
+
+Either way, MULTIPLAYER MUST NOT REQUIRE CAMPAIGN PROGRESS to have a hub: a
+session hosted by a fresh character needs somewhere to put four joiners on day
+one. If option 1 is taken, that falls out for free.
+
 ### 4.2 Death, the corpse, and the respawn
 
 Today: `enterDeathScene` → `phase = "dying"` → `defeat`. Softcore takes the 10%
@@ -1536,6 +1611,15 @@ bigger a shared pot is than a solo one — read the per-CAPITA XP rate off a
 multi-player run, never the per-kill share, because a party also clears faster
 and the two effects only show up together) and the `/players N` pairing itself.
 
+**AND TWO OF PR 5's RULES ARE ALREADY OWED — see the box at the head of §5.3.**
+A co-op run currently banks its records to the leaderboards exactly as a solo
+run does (there is no `PartyStamp`, and §5.3 says there must be), and a joiner's
+loadout is accepted verbatim off the wire (there is no validation, and §5.3 says
+there must be). Both became reachable when PR 2.5 opened the doors, which is a
+PR earlier than the section that owns them — so they are debts now rather than
+future work, and they belong at the front of PR 5 rather than beside the trade
+window.
+
 ---
 
 ## PR 5 — PRODUCTION
@@ -1573,6 +1657,33 @@ internet. Non-negotiable:
   that throws random bytes at it and asserts it never throws or over-reads.
 
 ### 5.3 The trust model, stated plainly
+
+> **TWO OF THIS SECTION'S RULES ARE ALREADY OWED — they became REACHABLE a PR
+> early, and neither is written.** This is the plan's recurring failure in its
+> fourth form: a layer ships and the rule that was supposed to arrive with it
+> does not. PR 2.5 opened the doors and PR 3 started seating real heroes off the
+> wire, so both of the gaps below are open in the tree TODAY, on the direct-UDP
+> path, rather than at some future point when PR 5 starts.
+>
+> 1. **THERE IS NO `PartyStamp`, so a co-op run banks records like a solo one.**
+>    The rule below says a multiplayer run must not contribute to leaderboards,
+>    and nothing anywhere marks a run as a session run — grep finds no stamp, no
+>    flag, no reader. The boards rank lifetime kills, the hardest single blow and
+>    the best kill rate SUSTAINED over ten minutes of combat clock, and every one
+>    of those is inflated by seven other people helping without anybody having to
+>    cheat at all. It is small — a flag on the run, seeded from `SessionParams`
+>    like every other run parameter, read where `ModStamp` is already read — and
+>    it should be done at the FRONT of PR 5 rather than beside the trade window.
+> 2. **A JOINER'S LOADOUT IS TAKEN VERBATIM.** `server/session.ts` passes
+>    `wants.loadout` — a claim that arrived from a stranger — straight into
+>    `seatHero`, and there is no `validateLoadout` in the tree. The rule below
+>    asks for level-within-range, items mintable from the catalogs, and stat
+>    points summing to what the level allows. Note the honesty the rule itself
+>    demands: it is a speed bump, not a wall, and whatever ships must say so.
+>
+> Both are recorded HERE rather than in PR 4's §4.7 on purpose: they are PR 5's
+> rules, and moving them would be renumbering a decision instead of noting a
+> debt. What §4.7 owes them is a pointer, which it has.
 
 **The host is a player, so the host can cheat.** This is precisely why Open
 Battle.net was a cheat-fest, and it is an accepted cost of a listen server —
