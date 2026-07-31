@@ -76,6 +76,9 @@ export type NetRequest = {
   password?: string;
   maxClients?: number;
   mods?: string[];
+  /** `host`: a run to ADOPT rather than build from `params` — a parked run or
+   * a checkpoint. Forwarded untouched; only the session knows what it is. */
+  adopt?: unknown;
   /** `listen`: which doors to open, and which port to try first. */
   port?: number;
   udp?: boolean;
@@ -320,6 +323,7 @@ export function createNetBridge(
       running.givePort(channel.port1, {
         kind: "start",
         params,
+        adopt: request.adopt,
         mods: request.mods,
         password: request.password,
         maxClients: request.maxClients,

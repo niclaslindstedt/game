@@ -118,6 +118,16 @@ export type RunSession = {
    * shared by the title card, the keyboard advance, and the bot. */
   beginRun: () => void;
   seed: number;
+  /**
+   * WHAT THIS RUN WAS BUILT FROM — the description a session server would need
+   * to build the same one.
+   *
+   * Null when the run was ADOPTED rather than built: a parked run resumed from
+   * the menu, or a checkpoint a RETRY dropped back into. Neither is describable
+   * by parameters, so a session hosting one has to be handed the state itself
+   * (see `freezeRun` and `SessionOptions.adopt`).
+   */
+  params: RunParams | null;
 };
 
 export function createRunSession(deps: {
@@ -488,5 +498,10 @@ export function createRunSession(deps: {
     tuning,
     beginRun,
     seed,
+    // The parameters describe a run that was BUILT. An adopted one is not
+    // described by them and must not pretend to be: handing a session the
+    // parameters of a run it is not simulating is a client carving one map and
+    // playing on another.
+    params: resumed || checkpoint ? null : runParams,
   };
 }
