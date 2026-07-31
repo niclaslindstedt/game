@@ -199,7 +199,8 @@ run against synthetic fixtures with no shipped content (see
   exactly as the story catalogs are, and a MOD's quests arrive through the same
   `registerDefs` seam. `quests/index.ts` is the orchestrator — it stands the
   givers up at level creation, derives the `!` / `?` mark over each head fresh
-  every tick, opens the conversation (the WoW-style PICK LIST when a giver has
+  every tick, opens the conversation when the player TAPS somebody — never on
+  approach, which merely MEETS them (the WoW-style PICK LIST when a giver has
   more than one thing to say), keeps the tallies, and pays out; `quests/
 escort.ts` walks the people an escort errand puts on the field, and
   `quests/rewards.ts` pays through the ordinary `grantXp` / `rollEquipment` /

@@ -1156,8 +1156,8 @@ questGivers:
     at: { x: 640, y: 420 } # where they stand (world px)
     lore: > # a paragraph, printed under their name
       Six years of tending a crop nobody has come to collect.
-    greeting: # spoken on walking up / atop their errand list
-      - YOU'RE THE FIRST IN A WHILE.
+    greeting: # spoken when TAPPED / atop their errand list
+      - YOU'RE THE FIRST IN A WHILE. CAN I ASK YOU A FAVOR?
     farewell: # optional, once everything of theirs is done
       - MIND THE TRAYS ON YOUR WAY OUT.
 ```

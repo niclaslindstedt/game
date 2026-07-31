@@ -1358,6 +1358,11 @@ export function GameScreen({
             playUiSound(synth, "confirm");
             bumpUi();
           }}
+          onChooseReward={(index) => {
+            runCommandOk(state, "chooseQuestReward", index);
+            playUiSound(synth, "move");
+            bumpUi();
+          }}
           onBlip={() => {
             playUiSound(synth, "blip");
             playTypewriterHaptic();

@@ -669,6 +669,8 @@ export function createGame(
     // moved between runs could not be walked back to.
     questGivers: createQuestGivers(def.id, blocked),
     quests: {},
+    // Minted lazily, once per errand, the first time its conversation opens.
+    questRewards: {},
     questOffer: null,
     talk: null,
     questFlags: {},

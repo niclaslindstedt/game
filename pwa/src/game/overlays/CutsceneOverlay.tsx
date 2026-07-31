@@ -209,8 +209,7 @@ export function CutsceneOverlay({
   // the window on a desktop and folds on a portrait phone. A cutscene box has
   // no scroll step — a beat is short by construction and the stage behind it is
   // the thing being watched — so the folded rows are simply all shown.
-  const textRef = useRef<HTMLDivElement>(null);
-  const colFontPx = useTextColumn(textRef, TEXT_SCALE);
+  const { ref: textRef, fontPx: colFontPx } = useTextColumn(TEXT_SCALE);
   const visualLines = wrapPage(
     line?.text ?? EMPTY_LINE,
     colFontPx == null ? null : (row) => font.wrap(row, colFontPx),

@@ -34,7 +34,7 @@ questGivers:
       the welders on the racks starting to look up as people walked past. The
       clipboard is the only part of the job that still works.
     greeting:
-      - HEY. YOU'RE NOT ON THE ROTA. NEITHER AM I. IT'S FINE.
+      - HEY. YOU'RE NOT ON THE ROTA. NEITHER AM I. LISTEN, CAN I ASK YOU A FAVOR?
 
   hq_unit7:
     level: spacez_hq
@@ -48,7 +48,7 @@ questGivers:
       replace the people who built them, and files that under CHANGES TO THE
       LINE.
     greeting:
-      - ORDER PENDING. COUNTERSIGNATURE REQUIRED. YOU HAVE HANDS. THAT WILL DO.
+      - ORDER PENDING. COUNTERSIGNATURE REQUIRED. YOU HAVE HANDS. MAY I PUT SOMETHING TO YOU?
     farewell:
       - ORDER CLOSED. THANK YOU.
 
@@ -65,7 +65,7 @@ questGivers:
       heard everything the dust heard, which is more than the mission logs
       admit.
     greeting:
-      - STATION, RELAY. DO YOU COPY. ...ANYBODY. ANYBODY AT ALL.
+      - STATION, RELAY. DO YOU COPY. ...YOU DO. YOU ACTUALLY DO. THEN I HAVE SOMETHING TO ASK.
 
   moon_kovacs:
     level: moon
@@ -79,7 +79,7 @@ questGivers:
       sight. He has been walking the same grid squares ever since, on the
       theory that somebody else is out here doing the same.
     greeting:
-      - YOU'RE BREATHING. GOOD START. I'VE GOT AIR. WHAT I HAVEN'T GOT IS LUCK.
+      - YOU'RE BREATHING. GOOD START. I'VE GOT AIR TO SPARE AND A FAVOR TO ASK. INTERESTED?
 
   # --------------------------------------------------------------- MARS
   mars_botanist:
@@ -94,7 +94,7 @@ questGivers:
       the year she arrived. She has kept the trays alive through two power cuts
       and one evacuation she was not told about.
     greeting:
-      - CAREFUL. THOSE TRAYS ARE OLD. OLDER THAN ANYONE'S CONTRACT HERE.
+      - CAREFUL. THOSE TRAYS ARE OLDER THAN ANYONE'S CONTRACT HERE. WHICH IS WHY I NEED A HAND. HAVE YOU A MOMENT?
 
   mars_curie:
     level: mars
@@ -108,7 +108,7 @@ questGivers:
       read them, which is the only thing about the situation it considers a
       genuine fault.
     greeting:
-      - RECOVERY REQUEST 4,110. STILL OPEN. NOT RECOVERY. NOTED. HELLO.
+      - RECOVERY REQUEST 4,110. STILL OPEN. YOU ARE NOT RECOVERY. NOTED. MAY I MAKE A REQUEST ANYWAY?
 
   # ---------------------------------------------------------------- RIFT
   rift_keeper:
@@ -122,7 +122,7 @@ questGivers:
       he is still two men short. He does not talk about the gale. He talks about
       the other two.
     greeting:
-      - THE LIGHT'S STILL LIT. THAT HALF OF THE JOB IS DONE. THE OTHER HALF IS THE OTHER TWO.
+      - THE LIGHT'S STILL LIT. THAT HALF OF THE JOB IS DONE. THE OTHER HALF I CANNOT DO ALONE. WILL YOU HEAR IT?
 
   rift_cook:
     level: the_rift
@@ -135,7 +135,7 @@ questGivers:
       crew are merely late. He keeps the meal warm on principle, and has views
       about the standard of provisions in a place with no ports.
     greeting:
-      - THEY'RE LATE. NOT GONE. LATE. SIT DOWN, THERE'S PLENTY.
+      - THEY'RE LATE. NOT GONE. LATE. SIT DOWN, THERE'S PLENTY. AND WHILE YOU EAT, A SMALL FAVOR?
 
   # ----------------------------------------------------------- EASTWORLD
   east_clem:
@@ -150,7 +150,7 @@ questGivers:
       host in town by serial, and which of them have lately started behaving
       like something else is driving.
     greeting:
-      - WHAT'LL IT BE, STRANGER. SORRY. HABIT. THERE'S NOTHING ON TAP.
+      - WHAT'LL IT BE, STRANGER. SORRY. HABIT. NOTHING'S ON TAP. BUT I'D TAKE A FAVOR, IF YOU'RE OFFERING.
 
   east_dolly:
     level: eastworld
@@ -163,7 +163,7 @@ questGivers:
       She has outlasted both founders and is entirely clear-eyed about which of
       those facts the park would find more embarrassing.
     greeting:
-      - HOLD STILL. FORTY-TWO LONG. AND BLEEDING ON MY WORK.
+      - HOLD STILL. FORTY-TWO LONG. AND BLEEDING ON MY WORK. YOU OWE ME FOR THAT. WANT TO HEAR WHAT?
 
   # ------------------------------------------------------------- BUNKER
   bunker_concierge:
@@ -178,7 +178,7 @@ questGivers:
       GUESTS. It has never been asked why the doors only lock from outside, and
       would answer honestly if it were.
     greeting:
-      - WELCOME TO THE RESIDENCE, SIR. YOUR SUITE IS NOT READY. NOTHING IS.
+      - WELCOME TO THE RESIDENCE, SIR. YOUR SUITE IS NOT READY. NOTHING IS. MIGHT I TROUBLE YOU INSTEAD?
 
   bunker_anatole:
     level: the_bunker
@@ -191,7 +191,7 @@ questGivers:
       is the day this place is exactly what it looks like. He has counted the
       pantry down to the week and has not told anybody the number.
     greeting:
-      - SERVICE IS AT EIGHT. IT IS ALWAYS AT EIGHT. NOBODY COMES. I STILL COOK.
+      - SERVICE IS AT EIGHT. IT IS ALWAYS AT EIGHT. NOBODY COMES. YOU CAME. SO MAY I ASK SOMETHING OF YOU?
 
   # ------------------------------------------- THE SEVERANCE (campaign chain)
   # The five people who carry the game's one CAMPAIGN chain (content/quests/
@@ -214,7 +214,7 @@ questGivers:
       simply not willing to be the man who left it half done.
     greeting:
       - I'M NOT MEANT TO BE HERE EITHER. I'M ON THE LAST BOX.
-      - I HAVE BEEN ON THE LAST BOX A WHILE NOW.
+      - I HAVE BEEN ON THE LAST BOX A WHILE NOW. SPARE ME A MINUTE?
     farewell:
       - IT'S CLOSED. ALL OF IT. GO AND GET HER.
 
@@ -230,7 +230,7 @@ questGivers:
       collected his findings, and nobody collected him. He still holds the
       clipboard, and the column he could not make balance is still open.
     greeting:
-      - THE TALLY IS SHORT. SHORT SINCE SIXTY-NINE.
+      - THE TALLY IS SHORT. SHORT SINCE SIXTY-NINE. YOU LOOK LIKE SOMEONE WHO COULD SETTLE IT. MAY I ASK?
     farewell:
       - IT BALANCES. FINALLY. GO ON, THEN. I'LL FILE IT.
 
@@ -248,7 +248,7 @@ questGivers:
       not answered a request in eleven years.
     greeting:
       - THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG.
-      - THOSE CANNOT BOTH BE TRUE.
+      - THOSE CANNOT BOTH BE TRUE. WILL YOU HELP ME RESOLVE IT?
 
   rift_nameless:
     level: the_rift
@@ -263,7 +263,7 @@ questGivers:
       cannot read. He is very calm about it, which is the worst part.
     greeting:
       - YOU'LL WANT MY NAME. EVERYONE DOES. I DON'T HAVE IT.
-      - I HAD ONE. IT WAS TAKEN OUT OF SOMETHING.
+      - I HAD ONE. IT WAS TAKEN OUT OF SOMETHING. HELP ME FIND WHAT?
 
   east_preacher:
     level: eastworld
@@ -278,4 +278,4 @@ questGivers:
       him to, and nobody has ever opened it to check what he is holding.
     greeting:
       - SERVICE IS AT EIGHT, FRIEND. THE GOOD BOOK SAYS SO.
-      - I THINK IT DOES.
+      - I THINK IT DOES. THAT'S RATHER WHAT I WANTED TO ASK YOU ABOUT.
