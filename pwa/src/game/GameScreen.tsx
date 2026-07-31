@@ -18,6 +18,7 @@
 // render-frame draws and writes the per-frame DOM, and the JSX surfaces
 // (PlayingHud, docks, SceneOverlays, EndSplash) render from the HUD snapshot.
 
+import { localHero } from "./local-seat.ts";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
@@ -799,12 +800,12 @@ export function GameScreen({
         });
         // The fill level BEFORE this step, so a kill that starts a fresh streak
         // can anchor the bright slice at the XP the hero already had.
-        const xpBeforeStep = state.players[0].xp;
+        const xpBeforeStep = localHero(state).xp;
         // The hp BEFORE this step, so the damage haptic below can weigh the
         // buzz by how big a bite the tick actually took out of the bar (a shield
         // may absorb part of a blow, so the felt loss is the true hp delta, not
         // the raw damage the engine rolled).
-        const hpBeforeStep = state.players[0].hp;
+        const hpBeforeStep = localHero(state).hp;
         // `timeScale` (?debug `window.__timeScale`) slows the whole run for
         // animation tuning — a neutral 1 in normal play.
         driver.advance(input, dtMs * tuning.timeScale);
@@ -820,8 +821,8 @@ export function GameScreen({
           // the rect read only happens on the tick a lesson is actually due.
           const cr = canvas.getBoundingClientRect();
           const at = viewport.toCss(
-            state.players[0].pos.x,
-            state.players[0].pos.y,
+            localHero(state).pos.x,
+            localHero(state).pos.y,
             camera,
           );
           return { x: cr.left + at.x, y: cr.top + at.y };
@@ -903,8 +904,8 @@ export function GameScreen({
           if (event.type === "levelUp") {
             const cr = canvas.getBoundingClientRect();
             const at = viewport.toCss(
-              state.players[0].pos.x,
-              state.players[0].pos.y,
+              localHero(state).pos.x,
+              localHero(state).pos.y,
               camera,
             );
             levelUpFx.fire(

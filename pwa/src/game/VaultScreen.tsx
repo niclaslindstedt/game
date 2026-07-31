@@ -21,6 +21,7 @@
 // beneath it instead — the price you are about to pay directly under the piece
 // it pays for — and the footer keeps only the way out.
 
+import { localHero } from "./local-seat.ts";
 import { Fragment, useEffect, useMemo, useReducer, useState } from "react";
 
 import {
@@ -514,7 +515,7 @@ export function VaultScreen({
   const state = useMemo(() => {
     const state = createGame(1);
     if (character.loadout)
-      applyLoadout(state, state.players[0], character.loadout);
+      applyLoadout(state, localHero(state), character.loadout);
     return state;
   }, [character.loadout]);
 
@@ -565,7 +566,7 @@ export function RunVaultScreen({
   // The run is mutated IN PLACE, so nothing about `state` changes identity to
   // re-render on: bump a counter of our own and read the live vault fresh.
   const [, bump] = useReducer((n: number) => n + 1, 0);
-  const items = vaultContents(state.players[0].vault);
+  const items = vaultContents(localHero(state).vault);
   return (
     <VaultBrowser
       font={font}
@@ -573,8 +574,8 @@ export function RunVaultScreen({
       sprites={sprites}
       state={state}
       items={items}
-      purse={state.players[0].coins}
-      bagFull={state.players[0].inventory.every((c) => c !== null)}
+      purse={localHero(state).coins}
+      bagFull={localHero(state).inventory.every((c) => c !== null)}
       warning="TRASHED THE MOMENT THIS RIDE STARTS"
       overlayClass="run-vault"
       onReclaim={(item) => {

@@ -335,6 +335,20 @@ export type JoinPayload = {
   /** What this player is called in the roster and in chat. Trimmed and capped
    * by the server; never trusted for anything but display. */
   name: string;
+  /**
+   * The arriving player's own carry-over — the hero they are bringing.
+   *
+   * Opaque here for the reason `SessionParams.loadout` is: the wire moves it,
+   * the engine reads it. Null asks for the authored fresh start, which is what
+   * a brand-new character joining a friend's game gets.
+   *
+   * IT IS A REQUEST, NOT A GRANT. The host builds the hero from it, so a
+   * stranger's loadout is a stranger's claim about their own character and PR
+   * 5's hardening is where it stops being taken at face value. What it can
+   * never do is name a SEAT: the seat is the server's answer and travels back
+   * in the `welcome`.
+   */
+  loadout?: unknown | null;
 };
 
 /** One line in the session's chat log. */

@@ -16,6 +16,7 @@
 // stats, so this file is pure layout: adding a figure to the hero's page is a
 // row in that model, never markup here.
 
+import { localHero } from "./local-seat.ts";
 import { xpToLevelUp, type Difficulty, type GameState } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
@@ -91,7 +92,7 @@ export function CharacterSheet({
   onOpenBag: () => void;
   onClose: () => void;
 }) {
-  const player = state.players[0];
+  const player = localHero(state);
   const groups = characterStatGroups(state);
   const toNext = xpToLevelUp(player.level, difficulty);
   const into = Math.max(0, toNext - player.xpToNext);

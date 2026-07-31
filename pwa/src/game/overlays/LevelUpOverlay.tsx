@@ -17,6 +17,7 @@
 // overlay while the `levelup` phase is up, so these keys never leak to steering
 // or the jump.
 
+import { localHero } from "../local-seat.ts";
 import { useEffect, useState } from "react";
 
 import { type GameState } from "@game/core";
@@ -70,7 +71,7 @@ export function LevelUpOverlay({
   // life of the overlay, so spending a second banked point is instant (the
   // wait already happened) — only a brand-new level-up (a fresh mount) re-arms.
   const armed = useArmDelay(LEVELUP_ARM_MS);
-  const points = state.players[0].pendingStatPoints;
+  const points = localHero(state).pendingStatPoints;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -153,7 +154,7 @@ export function LevelUpOverlay({
           <PixelText font={font} text="LEVEL UP!" scale={5} color="#ffd75e" />
           <PixelText
             font={font}
-            text={`LEVEL ${state.players[0].level}`}
+            text={`LEVEL ${localHero(state).level}`}
             scale={3}
             color="#7ef0c8"
           />
@@ -191,7 +192,7 @@ export function LevelUpOverlay({
               // `spentStats`) — the head-start, automatic per-level growth, and
               // gear bonuses folded into the effective stat are deliberately
               // left off so the chooser shows the player's own picks alone.
-              const spent = state.players[0].spentStats[stat];
+              const spent = localHero(state).spentStats[stat];
               // The demo's bot-focus highlight overrides the cursor/hover one so
               // the picked stat lights up as the autopilot taps it.
               const highlighted =

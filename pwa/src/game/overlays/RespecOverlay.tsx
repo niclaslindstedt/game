@@ -8,6 +8,7 @@
 // until the build is committed. Shares the stat catalog + (i) breakdown with
 // the level-up chooser (stat-choices.tsx).
 
+import { localHero } from "../local-seat.ts";
 import { useState } from "react";
 
 import { type GameState } from "@game/core";
@@ -39,7 +40,7 @@ export function RespecOverlay({
   onConfirm: () => void;
 }) {
   const [showInfo, setShowInfo] = useState(false);
-  const points = state.players[0].pendingStatPoints;
+  const points = localHero(state).pendingStatPoints;
   const ready = points === 0;
   return (
     <div
@@ -72,9 +73,9 @@ export function RespecOverlay({
               // Only the points re-placed during this respec (see
               // `spentStats`) — `beginRespec` zeroes the tally, so it grows
               // from zero as the player rebuilds, matching the level-up chooser.
-              const value = state.players[0].spentStats[stat];
+              const value = localHero(state).spentStats[stat];
               const canAdd = points > 0;
-              const canRemove = state.players[0].stats[stat] > 0;
+              const canRemove = localHero(state).stats[stat] > 0;
               return (
                 <div key={stat} className="respec-row">
                   <StatGlyph sprites={sprites} icon={icon} />

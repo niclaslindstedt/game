@@ -14,6 +14,7 @@
 // show runs, a beat of quiet follows so the aftermath settles and the eye
 // resets, and it runs again. PLAY (or a tap on the field) restarts it early.
 
+import { localHero } from "../local-seat.ts";
 import type { RefObject } from "react";
 
 import {
@@ -184,8 +185,8 @@ export function runExhibit(deps: {
       clearCameraShake(shared.cameraShake);
     }
     // A walking exhibit laps around wherever the staging just put him.
-    walkCentre.x = state.players[0].pos.x;
-    walkCentre.y = state.players[0].pos.y;
+    walkCentre.x = localHero(state).pos.x;
+    walkCentre.y = localHero(state).pos.y;
   };
   stage();
 
@@ -365,8 +366,8 @@ export function runExhibit(deps: {
         }
         if (event.type === "levelUp") {
           const at = toPage(
-            state.players[0].pos.x,
-            state.players[0].pos.y,
+            localHero(state).pos.x,
+            localHero(state).pos.y,
             camera,
           );
           levelUpFx.fire(at.x, at.y, levelUpIntensity(event.level));

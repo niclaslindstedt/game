@@ -3,6 +3,7 @@
 // companions, and the running ability visuals (stasis rings, orbiting orbs,
 // the magnet's reach).
 
+import { localHero } from "../local-seat.ts";
 import {
   abilityDef,
   companionDef,
@@ -161,7 +162,7 @@ export function drawAbilities(
   camera: Camera,
   timeMs: number,
 ): void {
-  const player = state.players[0];
+  const player = localHero(state);
   drawRunningPowerups(ctx, state, assets, camera, timeMs);
 
   // GRANTED forever spells (the `spell` affix on worn gear) draw off the
@@ -235,8 +236,8 @@ function drawImmolationRing(
   radius: number,
   timeMs: number,
 ): void {
-  const cx = Math.round(state.players[0].pos.x - camera.x);
-  const cy = Math.round(state.players[0].pos.y - camera.y);
+  const cx = Math.round(localHero(state).pos.x - camera.x);
+  const cy = Math.round(localHero(state).pos.y - camera.y);
   const flicker = 0.32 + 0.12 * Math.sin(timeMs / 90);
   ctx.strokeStyle = `rgba(255, 150, 60, ${flicker})`;
   ctx.lineWidth = 2;

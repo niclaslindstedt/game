@@ -14,6 +14,7 @@
 // — a wobble is a hash of the thing's own index, so the picture is stable
 // across frames and identical between runs.
 
+import { localHero } from "../local-seat.ts";
 import {
   abilityDef,
   magnetRadius,
@@ -77,7 +78,7 @@ export function drawRunningPowerups(
   camera: Camera,
   timeMs: number,
 ): void {
-  const player = state.players[0];
+  const player = localHero(state);
   if (player.abilities.length === 0) return;
   const px = Math.round(player.pos.x - camera.x);
   const py = Math.round(player.pos.y - camera.y);
@@ -160,7 +161,7 @@ function drawOrbitRing(
   const style = powerupStyle(ability.defId);
   const sprite =
     spriteByName(assets.sprites, orbit.sprite) ?? assets.sprites.fireball;
-  const player = state.players[0];
+  const player = localHero(state);
 
   ctx.save();
   // NO scorch ring: a drawn circle on the floor reads as a decal someone
@@ -321,7 +322,7 @@ function drawMagnetField(
   style: PowerupStyle,
   timeMs: number,
 ): void {
-  const player = state.players[0];
+  const player = localHero(state);
   const px = Math.round(player.pos.x - camera.x);
   const py = Math.round(player.pos.y - camera.y);
   ctx.save();

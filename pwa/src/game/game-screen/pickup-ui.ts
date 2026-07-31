@@ -4,6 +4,7 @@
 // loot flood never flash-replaces itself). Both are effect-scoped factories —
 // GameScreen builds them per run and disposes them with the run effect.
 
+import { localHero } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import {
@@ -173,17 +174,17 @@ export function createPickupCardQueue(deps: {
     // base req.
     const bagged =
       itemId != null
-        ? (state.players[0].inventory.find((it) => it?.id === itemId) ?? null)
+        ? (localHero(state).inventory.find((it) => it?.id === itemId) ?? null)
         : null;
     const canEquip =
       upgrade &&
       !equipped &&
       defId != null &&
       bagged != null &&
-      state.players[0].level >= itemLevelReq(bagged);
+      localHero(state).level >= itemLevelReq(bagged);
     const onEquip = canEquip
       ? () => {
-          const index = state.players[0].inventory.findIndex(
+          const index = localHero(state).inventory.findIndex(
             (it) => it?.id === itemId,
           );
           if (index >= 0 && runCommandOk(state, "equipFromInventory", index)) {

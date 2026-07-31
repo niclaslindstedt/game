@@ -14,6 +14,7 @@
 // Keyboard: up/down move a cursor over the trainable talents, Enter/Space spends
 // on the highlighted one. GameScreen cedes the keyboard while `levelup` is up.
 
+import { localHero } from "../local-seat.ts";
 import {
   useEffect,
   useLayoutEffect,
@@ -172,7 +173,7 @@ export function TalentPickerOverlay({
         </div>
         <div className="talent-rows" ref={rowsRef}>
           {talents.map((def, i) => {
-            const rank = talentRank(state, state.players[0], def.id);
+            const rank = talentRank(state, localHero(state), def.id);
             const maxed = rank >= def.maxRank;
             // The demo's bot-focus highlight overrides the cursor/hover one so
             // the picked talent lights up as the autopilot taps it.

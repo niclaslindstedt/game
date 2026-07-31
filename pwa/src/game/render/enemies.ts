@@ -3,6 +3,7 @@
 // rarity auras, telegraphs, enrage/last-stand tells, and the two-pass health
 // bars drawn over the whole crowd.
 
+import { localHero } from "../local-seat.ts";
 import {
   activeMechanics,
   APPARITION,
@@ -111,7 +112,7 @@ export function drawEnemies(
     // genuinely cannot see through, the same solids that eat his shots — is not
     // drawn until it steps into view (a peeking silhouette still shows). Runs
     // after the cheap view/fog culls so only on-screen mobs pay for the query.
-    if (!enemyVisible(state, state.players[0].pos, enemy.pos, def.radius))
+    if (!enemyVisible(state, localHero(state).pos, enemy.pos, def.radius))
       continue;
     // A BODY STANDS UP out of the tilted floor (render/tilt.ts): every screen
     // coordinate below is written as if the camera still looked straight down,

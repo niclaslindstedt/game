@@ -14,6 +14,7 @@
 // mutations go through the engine's shop API (sellItem/buyStock) and `onChange`
 // re-renders.
 
+import { localHero } from "./local-seat.ts";
 import { useCallback, useEffect, useState, type PointerEvent } from "react";
 
 import {
@@ -240,7 +241,7 @@ export function ShopPanel({
 }) {
   const [selected, setSelected] = useState<Selection | null>(null);
   const merchant = state.merchant;
-  const player = state.players[0];
+  const player = localHero(state);
 
   // Derived per render, never stored: a row goes stale the instant a flag
   // three rooms away unlocks or spends it (see quests/merchant.ts).

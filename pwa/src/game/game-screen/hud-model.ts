@@ -4,6 +4,7 @@
 // publishes it to React when the change-key differs (see buildHud), so the
 // DOM UI re-renders on real changes, not sixty times a second.
 
+import { localHero } from "../local-seat.ts";
 import {
   bestMedkitTier,
   canHealCompanion,
@@ -137,7 +138,7 @@ export function weaponAlternatives(
   order: WeaponSwitchOrder = getSettings().weaponSwitchOrder,
 ): { item: Equipment; index: number; dmg: number }[] {
   const byDps = order === "dps";
-  return state.players[0].inventory
+  return localHero(state).inventory
     .map((item, index) => ({ item, index }))
     .filter(
       (e) =>
@@ -154,8 +155,8 @@ export function weaponAlternatives(
         index: e.index,
         dmg: Math.round(
           byDps
-            ? weaponDps(state, state.players[0], item)
-            : weaponDamageFor(state, state.players[0], item),
+            ? weaponDps(state, localHero(state), item)
+            : weaponDamageFor(state, localHero(state), item),
         ),
       };
     })
@@ -181,14 +182,14 @@ export function buildHud(
   state: GameState,
   bagFullHint: boolean,
 ): { key: string; hud: Hud } {
-  const bagCount = state.players[0].inventory.filter(Boolean).length;
+  const bagCount = localHero(state).inventory.filter(Boolean).length;
   // Empty cells: the capacity (which grows with STRENGTH / a worn bag)
   // minus what's carried — shown on the avatar badge, red at 0.
-  const bagFree = state.players[0].inventory.length - bagCount;
+  const bagFree = localHero(state).inventory.length - bagCount;
   // The worn bag's own icon (the default carry-all when none is worn, or when
   // the second arm is holding a SHIELD) — drawn on the minimap-corner bag badge
   // so the pouch matches the gear.
-  const offhand = state.players[0].equipment.offhand;
+  const offhand = localHero(state).equipment.offhand;
   const wornBag = offhand?.slot === "bag" ? offhand : null;
   const bagIcon =
     wornBag && !isWeaponDef(wornBag.defId)
@@ -219,12 +220,12 @@ export function buildHud(
   }
   const questLog: Hud["questLog"] =
     state.questGivers.length === 0 ? "hidden" : questTaken ? "alert" : "quiet";
-  const held = state.players[0].heldAbilities.join(",");
+  const held = localHero(state).heldAbilities.join(",");
   // Only *which* slots are banked vs running mounts/unmounts dock chrome;
   // the ticking timer itself is animated straight on the DOM, so it stays
   // out of the change-key (which would otherwise thrash React state every
   // frame).
-  const active = state.players[0].abilities
+  const active = localHero(state).abilities
     .map((a) => a.slot)
     .filter((s) => s !== undefined)
     .sort((a, b) => a - b)
@@ -232,21 +233,21 @@ export function buildHud(
   // The consumable dock: the best-quality medkit held (and its stack
   // depth), the stamina-potion count, and the repair-kit count. All feed
   // the change-key so the slots re-render as kits are grabbed and spent.
-  const medkitTier = bestMedkitTier(state, state.players[0]);
+  const medkitTier = bestMedkitTier(state, localHero(state));
   const medkitCount =
-    medkitTier >= 0 ? (state.players[0].medkits[medkitTier] ?? 0) : 0;
-  const staminaPotions = state.players[0].staminaPotions;
-  const repairKits = state.players[0].repairKits;
+    medkitTier >= 0 ? (localHero(state).medkits[medkitTier] ?? 0) : 0;
+  const staminaPotions = localHero(state).staminaPotions;
+  const repairKits = localHero(state).repairKits;
   // The talent-picker queue + the hero's owned ranks — the picker reads both to
   // show the earning tree and its filled pips. Keyed so a spent point (rank up,
   // queue shrinks) re-renders the overlay.
   const talentPoints = [...state.pendingTalentPoints];
-  const talents = { ...state.players[0].talents };
+  const talents = { ...localHero(state).talents };
   const talentKey = `${talentPoints.join(",")}/${Object.entries(talents)
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([k, v]) => `${k}:${v}`)
     .join(",")}`;
-  const weapon = state.players[0].equipment.weapon;
+  const weapon = localHero(state).equipment.weapon;
   const weaponWear =
     weapon.durability === undefined
       ? null
@@ -254,7 +255,7 @@ export function buildHud(
   const appearance = playerAppearance(state);
   // The worn armor pieces, so the avatar portrait re-renders when the
   // outfit changes (the weapon is already keyed via `weapon.defId`).
-  const { head, chest, legs, feet } = state.players[0].equipment;
+  const { head, chest, legs, feet } = localHero(state).equipment;
   const outfit = [head, chest, legs, feet]
     .map((piece) => piece?.defId ?? "")
     .join(",");
@@ -283,34 +284,34 @@ export function buildHud(
   // with zero React churn — and a maxStamina change always rides an event
   // the key already carries (level-up, outfit, weapon).
   const hpKey =
-    state.players[0].hp <= 0
+    localHero(state).hp <= 0
       ? 0
       : Math.ceil(
-          (200 * state.players[0].hp) / Math.max(1, state.players[0].maxHp),
+          (200 * localHero(state).hp) / Math.max(1, localHero(state).maxHp),
         );
   const xpKey = Math.floor(
-    (1000 * state.players[0].xp) / Math.max(1, state.players[0].xpToNext),
+    (1000 * localHero(state).xp) / Math.max(1, localHero(state).xpToNext),
   );
-  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${state.players[0].level}/${state.players[0].pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.players[0].coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
+  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
       phase: state.phase,
-      hp: state.players[0].hp,
-      maxHp: state.players[0].maxHp,
-      stamina: state.players[0].stamina,
-      maxStamina: state.players[0].maxStamina,
-      level: state.players[0].level,
-      xp: state.players[0].xp,
-      xpToNext: state.players[0].xpToNext,
+      hp: localHero(state).hp,
+      maxHp: localHero(state).maxHp,
+      stamina: localHero(state).stamina,
+      maxStamina: localHero(state).maxStamina,
+      level: localHero(state).level,
+      xp: localHero(state).xp,
+      xpToNext: localHero(state).xpToNext,
       enemiesLeft: state.enemies.length,
       menaceStage: stage,
       bagFree,
       bagIcon,
       bagFullHint,
       questLog,
-      heldAbilities: [...state.players[0].heldAbilities],
-      activeSlots: state.players[0].abilities
+      heldAbilities: [...localHero(state).heldAbilities],
+      activeSlots: localHero(state).abilities
         .map((a) => a.slot)
         .filter((s): s is number => s !== undefined),
       medkitTier,
@@ -321,7 +322,7 @@ export function buildHud(
       talents,
       weaponDefId: weapon.defId,
       weaponWear,
-      coins: state.players[0].coins,
+      coins: localHero(state).coins,
       appearance,
       companions: state.companions.map((c) => ({
         id: c.id,

@@ -43,6 +43,7 @@ import {
   applyRunCommand,
   createRunFromParams,
   isRunCommand,
+  seatHero,
   setBalanceTuning,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
@@ -50,6 +51,7 @@ import {
   type GameInput,
   type GameState,
   type FrozenRun,
+  type Loadout,
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
@@ -195,12 +197,20 @@ export type Session = {
   advance(ms: number): number;
   /** Seats taken, host included. */
   readonly clientCount: number;
-  /** Attach a client. Sends it a `welcome` immediately; it is baselined on the
-   * world at tick 0 and receives a delta from there at the next publish. */
+  /**
+   * Attach a client. Sends it a `welcome` immediately; it is baselined on the
+   * world at tick 0 and receives a delta from there at the next publish.
+   *
+   * `seat` decides whether this client STEERS a hero or only watches. A player
+   * gets a seat of their own — a whole `Player` built by the same function seat
+   * 0 was, dressed in the `loadout` they brought — and the seat number is the
+   * server's answer, never a claim the client made. A spectator gets `false`
+   * and no hero at all.
+   */
   addClient(
     id: number,
     send: SendFrame,
-    ownsPlayer: boolean,
+    seat: boolean | { play: boolean; loadout?: unknown },
     name?: string,
   ): void;
   removeClient(id: number): void;
@@ -397,18 +407,28 @@ export function createSession(options: SessionOptions): Session {
     for (const client of clients.values()) client.send(frame);
   }
 
+  /** Reused across ticks: one slot per seat, so the per-tick input array is not
+   * a fresh allocation sixty times a second. */
+  const frame: GameInput[] = [];
+
   function stepOnce(): void {
-    // PR 1 simulates one hero, so there is one input and it is the owner's.
-    // PR 3 turns this into a loop over the party; the shape is already right.
-    const input = inputs.get(0) ?? IDLE_INPUT;
-    step(state, input, TICK_MS);
+    // ONE FRAME PER SEAT, index-aligned with `state.players` — which is exactly
+    // what `PartyInput` is. A seat whose owner has sent nothing (a player with a
+    // screen open, a dropped packet, an empty chair) contributes IDLE rather
+    // than repeating its last frame: a lost packet must not leave a hero
+    // walking into the horde until the next one arrives.
+    frame.length = state.players.length;
+    for (let seat = 0; seat < frame.length; seat++) {
+      frame[seat] = inputs.get(seat) ?? IDLE_INPUT;
+    }
+    step(state, frame, TICK_MS);
     tick++;
     if (state.events.length) pendingEvents.push(...state.events);
     // A discrete edge is consumed by the tick it was sampled for. Left set, a
     // single tap would jump on every tick until the next input frame arrived —
     // which at 60 Hz simulation and (say) 30 Hz input is a double jump the
     // player never asked for.
-    clearEdges(input);
+    for (const seated of inputs.values()) clearEdges(seated);
   }
 
   function publish(): void {
@@ -497,17 +517,36 @@ export function createSession(options: SessionOptions): Session {
       return clients.size;
     },
 
-    addClient(id, send, ownsPlayer, name) {
-      const slot = ownsPlayer ? 0 : nextSlot();
-      // THE SEAT IS THE SERVER'S ANSWER, and it is the roster slot: a seated
-      // client steers `state.players[slot]` and nobody else. A spectator has no
-      // seat at all, which is what every privacy and authority check below
-      // reads — never a claim the client made about itself.
-      const recipient: Recipient = { seat: ownsPlayer ? slot : null };
+    addClient(id, send, seatRequest, name) {
+      const wants =
+        typeof seatRequest === "boolean"
+          ? { play: seatRequest, loadout: undefined as unknown }
+          : seatRequest;
+      // The HOST is always slot 0 and seat 0 — they are the run that already
+      // exists. Everybody else takes the lowest free roster slot, and a player
+      // among them is SEATED: a hero of their own is appended to the party,
+      // and the index they land on IS their seat.
+      const host = wants.play && clients.size === 0;
+      const slot = host ? 0 : nextSlot();
+      // THE SEAT IS THE SERVER'S ANSWER: a seated client steers
+      // `state.players[seat]` and nobody else, and a spectator has no seat at
+      // all — which is what every privacy and authority check below reads,
+      // never a claim the client made about itself.
+      let seat: number | null = null;
+      if (host) {
+        seat = 0;
+      } else if (wants.play && state.players.length < maxClients) {
+        // A joiner arrives beside the party with their OWN bag, purse and
+        // build. The seat is appended, never inserted: every command and input
+        // frame in flight names a seat by index (see `game/seating.ts`).
+        seatHero(state, (wants.loadout as Loadout | null) ?? null);
+        seat = state.players.length - 1;
+      }
+      const recipient: Recipient = { seat };
       const client: Client = {
         id,
         slot,
-        name: name?.trim() || (ownsPlayer ? "HOST" : `PLAYER ${slot + 1}`),
+        name: name?.trim() || (host ? "HOST" : `PLAYER ${slot + 1}`),
         send,
         recipient,
         // THE GENESIS BASELINE, cut for this recipient. The client builds
@@ -522,7 +561,16 @@ export function createSession(options: SessionOptions): Session {
         history: new Map(),
       };
       clients.set(id, client);
-      if (ownsPlayer) inputs.set(0, { ...IDLE_INPUT });
+      if (seat !== null) inputs.set(seat, { ...IDLE_INPUT });
+      // A HERO SEATED MID-RUN CHANGES THE WORLD, and every other client's
+      // baseline predates them. A delta would carry the new hero correctly —
+      // the differ handles a grown list — but the ARRIVING client's own
+      // `createRunFromParams` built a one-hero party, so it has no way to know
+      // about the seats already standing. Everybody gets a full snapshot on the
+      // next publish rather than a delta against a party that changed shape.
+      if (seat !== null && seat > 0) {
+        for (const other of clients.values()) other.needsFull = true;
+      }
       const welcome: WelcomePayload = {
         handshake: {
           protocol: PROTOCOL_VERSION,

@@ -9,6 +9,7 @@
 // Everything is static while the map is up, so the canvas draws once per
 // open — no animation loop.
 
+import { localHero } from "../local-seat.ts";
 import { useEffect, useRef } from "react";
 
 import {
@@ -330,7 +331,7 @@ export function MapOverlay({
               className="pixel-img map-marker is-you"
               src={iconUrl(PLAYER_SPRITE)}
               alt=""
-              style={at(state.players[0].pos)}
+              style={at(localHero(state).pos)}
             />
           </div>
         </div>

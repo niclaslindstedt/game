@@ -5,6 +5,7 @@
 // wiring reaches into music, the autopilot session, and the character — the
 // scene overlays proper (SceneOverlays.tsx) stay free of all that.
 
+import { localHero } from "../local-seat.ts";
 import { useState, type MutableRefObject } from "react";
 
 import {
@@ -112,7 +113,7 @@ export function RunPausedOverlay({
   };
   // What engaging a ride would bin, most precious first — the last-call
   // confirm's numbers. Read live so a buy-back shrinks it under the confirm.
-  const banked = vaultContents(state.players[0].vault);
+  const banked = vaultContents(localHero(state).vault);
   const best = banked[0];
   // HOW TO PLAY: the demo's exit confirm stands in for the pause menu —
   // KEEP WATCHING resumes where it froze; MAIN MENU drops the demo.
@@ -139,7 +140,7 @@ export function RunPausedOverlay({
         }
         onResume={resumeRun}
         onExit={exitToMenu}
-        cleanSlates={state.players[0].cleanSlates}
+        cleanSlates={localHero(state).cleanSlates}
         onUseCleanSlate={() => {
           // The chooser IS the confirmation: `beginRespec` refunds into a pool
           // the player then has to re-place, and it cannot be committed until
@@ -161,7 +162,7 @@ export function RunPausedOverlay({
             ? undefined
             : {
                 active: state.autopilot.active,
-                coins: state.players[0].coins,
+                coins: localHero(state).coins,
                 // The LAST CALL before the ride bins the vault: what it holds,
                 // and the way out (BUY BACK opens the run's LOST & FOUND).
                 vault: {
@@ -179,8 +180,8 @@ export function RunPausedOverlay({
                   return {
                     speed,
                     cost,
-                    gameSeconds: Math.floor(state.players[0].coins / cost),
-                    affordable: state.players[0].coins >= cost,
+                    gameSeconds: Math.floor(localHero(state).coins / cost),
+                    affordable: localHero(state).coins >= cost,
                   };
                 }),
                 onStart: (speed: number) => {
@@ -207,8 +208,8 @@ export function RunPausedOverlay({
                     )
                       ? state.level.id
                       : null,
-                    captureBuildSnapshot(state, state.players[0]),
-                    state.players[0].level,
+                    captureBuildSnapshot(state, localHero(state)),
+                    localHero(state).level,
                   );
                   autopilot.setHistoryOpen(false);
                   runCommand(state, "muteDialogue");

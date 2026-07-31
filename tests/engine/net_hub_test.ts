@@ -38,11 +38,16 @@ const PEER = "203.0.113.7:27015";
  * taking a structural `HubSession` rather than the real one — the alternative
  * is a test that has to build a level to check a password. */
 function stubSession() {
-  const added: { id: number; owns: boolean; name?: string }[] = [];
+  const added: { id: number; plays: boolean; name?: string }[] = [];
   const removed: number[] = [];
   const received: { id: number; type: number }[] = [];
   const session: HubSession = {
-    addClient: (id, _send, owns, name) => added.push({ id, owns, name }),
+    addClient: (id, _send, seat, name) =>
+      added.push({
+        id,
+        plays: typeof seat === "boolean" ? seat : seat.play,
+        name,
+      }),
     removeClient: (id) => removed.push(id),
     receive: (id, type) => received.push({ id, type }),
     get clientCount() {
@@ -213,9 +218,10 @@ describe("admission", () => {
     });
     // The NAME travels with the seat: without it the roster and every chat
     // line would fall back to "PLAYER N" for somebody who told us what they
-    // are called, and the fallback would look like the feature.
+    // are called, and the fallback would look like the feature. And the joiner
+    // is SEATED — they arrive to play, not to watch (PR 3).
     expect(net.added).toEqual([
-      { id: expect.any(Number), owns: false, name: "ZOE" },
+      { id: expect.any(Number), plays: true, name: "ZOE" },
     ]);
     expect(net.hub.nameOf(net.added[0]!.id)).toBe("ZOE");
     expect(net.hub.pingOf(net.added[0]!.id)).toBe(42);

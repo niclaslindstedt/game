@@ -5,6 +5,7 @@
 // and the field taps that open the merchant's shop or re-open the victory
 // menu on the fallen boss. The BOT's input lives in bot-driver.ts.
 
+import { localHero } from "../local-seat.ts";
 import { useMemo, useRef } from "react";
 import type { MutableRefObject } from "react";
 
@@ -244,8 +245,8 @@ export function readHumanInput(
     // `screenDirToWorld`.
     const dir = screenDirToWorld(stick.x, stick.y);
     input.steering = true;
-    input.target.x = state.players[0].pos.x + dir.x * DPAD_STEER_DISTANCE;
-    input.target.y = state.players[0].pos.y + dir.y * DPAD_STEER_DISTANCE;
+    input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
+    input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
     // The gentlest push still creeps rather than standing still, matching the
     // touch dpad's floor — the deadzone already removed the resting noise, so
     // everything past it is deliberate.
@@ -260,8 +261,8 @@ export function readHumanInput(
     input.steering = n.len >= DPAD_DEADZONE_PX;
     if (input.steering) {
       const dir = screenDirToWorld(n.x, n.y);
-      input.target.x = state.players[0].pos.x + dir.x * DPAD_STEER_DISTANCE;
-      input.target.y = state.players[0].pos.y + dir.y * DPAD_STEER_DISTANCE;
+      input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
+      input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
       // How far the thumb sits from the dpad center sets the pace: a
       // nudge past the deadzone creeps, a full push to the ring runs.
       input.throttle = dpadThrottle(n.len);
@@ -301,8 +302,8 @@ export function readHumanInput(
       // push — see `screenDirToWorld`.
       const dir = screenDirToWorld(key.x, key.y);
       input.steering = true;
-      input.target.x = state.players[0].pos.x + dir.x * DPAD_STEER_DISTANCE;
-      input.target.y = state.players[0].pos.y + dir.y * DPAD_STEER_DISTANCE;
+      input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
+      input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
       input.throttle = queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
     } else if (settings.steering === "aim" || settings.steering === "gamepad") {
       // AIM & SHOOT: the mouse never steers — with no movement key
@@ -328,7 +329,7 @@ export function readHumanInput(
       // Divide the desktop 2× zoom out of the full-speed distance so the
       // sprint threshold stays fixed in CSS px, not doubled by the zoom.
       input.throttle = cursorThrottle(
-        distance(input.target, state.players[0].pos),
+        distance(input.target, localHero(state).pos),
         CURSOR_FULL_SPEED_PX / viewport.uiScale,
       );
     }
@@ -363,7 +364,7 @@ export function readHumanInput(
   // exactly that powerup; everything else spends the oldest.
   input.useItem =
     queues.useItemQueuedRef.current ||
-    (settings.itemUse === "auto" && state.players[0].heldAbilities.length > 0);
+    (settings.itemUse === "auto" && localHero(state).heldAbilities.length > 0);
   input.useItemIndex = queues.useItemIndexRef.current ?? undefined;
   queues.useItemQueuedRef.current = false;
   queues.useItemIndexRef.current = null;

@@ -14,6 +14,7 @@
 // the standstill tracker the stamina lesson reads. Nothing here touches the
 // DOM or the engine, so it all tests headlessly.
 
+import { localHero } from "../local-seat.ts";
 import {
   equipmentMaxDurability,
   menaceStage,
@@ -128,7 +129,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     key: "stamina",
     anchor: ".vital-st",
     ready: (state, ctx) => {
-      const { stamina, maxStamina } = state.players[0];
+      const { stamina, maxStamina } = localHero(state);
       return (
         maxStamina > 0 &&
         stamina <= maxStamina * STAMINA_LOW_FRAC &&
@@ -141,7 +142,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     key: "repair",
     anchor: '[aria-label="switch-weapon"]',
     ready: (state) => {
-      const weapon = state.players[0].equipment.weapon;
+      const weapon = localHero(state).equipment.weapon;
       if (weapon.durability === undefined) return false; // unbreakable
       const max = equipmentMaxDurability(weapon);
       return max > 0 && weapon.durability <= max * WEAPON_WORN_FRAC;
@@ -152,7 +153,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     key: "bag",
     anchor: ".hud-bag-slot",
     ready: (state) =>
-      state.players[0].inventory.filter(Boolean).length >= BAG_TAUGHT_AT,
+      localHero(state).inventory.filter(Boolean).length >= BAG_TAUGHT_AT,
   },
   {
     // A recruited ally's portrait on the party rail. Deep into a campaign, so

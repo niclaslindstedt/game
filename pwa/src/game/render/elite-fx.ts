@@ -37,6 +37,7 @@
 // colour away, which is what lets ONE mote sprite be a survey drone, a
 // guttering candle and a shard of something that should not exist.
 
+import { localHero } from "../local-seat.ts";
 import {
   activeMechanics,
   enemyDef,
@@ -373,8 +374,8 @@ function drawTether(
   if (!ability || ability.id !== "siphon_tether") return;
   const look = ability.look ?? DEFAULT_ELITE_LOOK;
 
-  const dx = state.players[0].pos.x - enemy.pos.x;
-  const dy = state.players[0].pos.y - enemy.pos.y;
+  const dx = localHero(state).pos.x - enemy.pos.x;
+  const dy = localHero(state).pos.y - enemy.pos.y;
   const len = Math.hypot(dx, dy);
   if (len < 1) return;
   const beam = beamSprite(look.core, 6, Math.round(len));

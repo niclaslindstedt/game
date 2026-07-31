@@ -3,6 +3,7 @@
 // Renders through the shared ItemCard so the tooltip and the arsenal viewer
 // never drift.
 
+import { localHero } from "./local-seat.ts";
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -68,7 +69,7 @@ export function ItemTooltip({
   // `wornCounterpart` resolves a RING to the finger the piece would actually
   // land on (the weaker of the two), so the comparison shown is the trade the
   // player would really be making.
-  const equipped = wornCounterpart(state, state.players[0], item);
+  const equipped = wornCounterpart(state, localHero(state), item);
   const isWorn = equipped?.id === item.id;
   const compareTo = equipped && !isWorn ? equipped : null;
 

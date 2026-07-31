@@ -37,6 +37,7 @@
 // fringe uses. Rotating a boot print to an arbitrary bearing would resample the
 // art, and the world is drawn square-on anyway.
 
+import { localHero } from "../local-seat.ts";
 import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
@@ -154,8 +155,8 @@ function ensureRun(state: GameState): boolean {
   carry = 0;
   sinceStep = 0;
   leftFoot = false;
-  lastX = state.players[0].pos.x;
-  lastY = state.players[0].pos.y;
+  lastX = localHero(state).pos.x;
+  lastY = localHero(state).pos.y;
   lastMs = state.stats.timeMs;
   return false;
 }
@@ -175,7 +176,7 @@ export function stepBloodTracks(state: GameState): void {
   const first = !ensureRun(state);
   syncHeroGear(state);
   const amount = bloodTrackAmount();
-  const pos = state.players[0].pos;
+  const pos = localHero(state).pos;
   const nowMs = state.stats.timeMs;
   const dtMs = Math.max(0, nowMs - lastMs);
   const dx = pos.x - lastX;

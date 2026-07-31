@@ -27,6 +27,7 @@
 // `@game/menu` and the import-free `@game/wire/*` leaves alone. `pwa/scripts/
 // check-seo.mjs` is what catches the mistake; do not raise the number.
 
+import { setLocalSeat } from "../local-seat.ts";
 import {
   createRunFromParams,
   type GameState,
@@ -221,6 +222,11 @@ export function createNetClient(options: NetClientOptions): NetClient {
     }
     state = options.adopt ?? buildLocalState(welcome.params);
     const recipient = { seat: welcome.seat };
+    // WHICH HERO THIS SCREEN IS ABOUT. The seat is the server's answer and
+    // arrives here; everything the app draws about "the hero" — the camera, the
+    // health bar, the bag, the paper doll — reads it through `localHero`. A
+    // spectator has no seat and watches the host's (see local-seat.ts).
+    setLocalSeat(welcome.seat);
     // A CLIENT THAT MAY NOT SEE THE BAG MUST NOT INVENT ONE. Its own
     // `createGame` just built a whole private hero — an empty inventory, a
     // starting purse, a fresh stat block — and none of that is real: the
@@ -294,6 +300,9 @@ export function createNetClient(options: NetClientOptions): NetClient {
     dispose() {
       if (disposed) return;
       disposed = true;
+      // A stale seat outlives its session otherwise, and the next run — a
+      // one-hero party — would point its camera at a seat that is not there.
+      setLocalSeat(null);
       transport.close();
     },
   };

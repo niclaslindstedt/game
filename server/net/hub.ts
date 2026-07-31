@@ -77,7 +77,7 @@ export type HubSession = {
   addClient(
     id: number,
     send: (frame: ArrayBuffer) => void,
-    owns: boolean,
+    seat: boolean | { play: boolean; loadout?: unknown },
     name?: string,
   ): void;
   removeClient(id: number): void;
@@ -275,16 +275,19 @@ export function createPeerHub(options: HubOptions): PeerHub {
     };
     byKey.set(key, peer);
     byId.set(id, peer);
-    // A JOINER IS A SPECTATOR. PR 2 replicates one hero to eight machines;
-    // seating a second is PR 3's whole subject, and handing this one the
-    // owner's flag would let it steer somebody else's character today.
+    // A JOINER IS SEATED. They arrive with the hero they brought — the
+    // `loadout` on their own join frame — and the session appends a seat for
+    // it and answers with the seat number in the `welcome`. The client never
+    // names its own seat, which is what stops a stranger claiming somebody
+    // else's character; a party already at the cap simply watches instead.
+    //
     // The NAME travels with the seat. Without it the roster and every chat
     // line would fall back to "PLAYER N" for somebody who told us what they
     // are called, and the fallback would look like the feature.
     options.session.addClient(
       id,
       (frame) => sendTo(peer, frame),
-      false,
+      { play: true, loadout: join.loadout ?? null },
       peer.name,
     );
     options.log?.(`net: ${peer.name} joined from ${key}`);

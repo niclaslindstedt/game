@@ -6,6 +6,7 @@
 // Progress banking (characters, scores) is NOT here — see run-progress.ts; the
 // AUTO PILOT's reactions live in autopilot-director.ts.
 
+import { localHero } from "../local-seat.ts";
 import {
   companionDef,
   enemyDef,
@@ -195,9 +196,9 @@ export function mergePackKillXp(
  */
 export function heroGoreThisTick(state: GameState) {
   return state.events.some(
-    (e) => e.type === "swing" && isHeroAttack(e.pos, state.players[0].pos),
+    (e) => e.type === "swing" && isHeroAttack(e.pos, localHero(state).pos),
   )
-    ? goreStyleFor(state.players[0].equipment.weapon.uniqueId)
+    ? goreStyleFor(localHero(state).equipment.weapon.uniqueId)
     : null;
 }
 
@@ -253,7 +254,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       speed: event.speed,
       // He faces where he MOVES, so his own facing is the heading the cloud
       // smears along — the direction he actually carried into the jump.
-      angle: Math.atan2(state.players[0].facing.y, state.players[0].facing.x),
+      angle: Math.atan2(localHero(state).facing.y, localHero(state).facing.x),
       seed: state.stats.timeMs,
     });
     shared.heroImpact = {
@@ -315,7 +316,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // two-handed grip rather than off one shoulder, and the drawn motion runs
     // longer than a one-hander's (`meleeSwingMs`). The cone the engine hit with
     // is unchanged: this is entirely how it LOOKS.
-    const heavy = isTwoHandedDef(state.players[0].equipment.weapon.defId);
+    const heavy = isTwoHandedDef(localHero(state).equipment.weapon.defId);
     const swingMs = meleeSwingMs(heavy);
     // A SHAKEN weapon (`WeaponMotion`) covers no ground on its way anywhere: it
     // is held against a body and juddering. The wedge is the picture of a blade
@@ -329,7 +330,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         // These blows leave the hero's hands, so lift the arc by his
         // current jump height (player.z) — otherwise a swing thrown
         // mid-air draws down at his grounded feet, not up where he is.
-        pos: { x: event.pos.x, y: event.pos.y - state.players[0].z },
+        pos: { x: event.pos.x, y: event.pos.y - localHero(state).z },
         angle: Math.atan2(event.dir.y, event.dir.x),
         radius: event.range,
         arc: event.arc,
@@ -345,7 +346,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // arms the animation. Hand the weapon's cone (`event.arc`) to the
     // pose so the blade's sweep matches this weapon's reach and arc, and its
     // MOTION so a tool that is not swung judders instead.
-    if (isHeroAttack(event.pos, state.players[0].pos)) {
+    if (isHeroAttack(event.pos, localHero(state).pos)) {
       shared.heroAction = {
         kind: "swing",
         weaponClass: "melee",
@@ -360,12 +361,12 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // A shot flashes at the muzzle — a hot burst for guns, a cool cast
   // bloom for wands — oriented along the aim.
   if (event.type === "shot") {
-    const heroShot = isHeroAttack(event.pos, state.players[0].pos);
+    const heroShot = isHeroAttack(event.pos, localHero(state).pos);
     effects.push({
       kind: "muzzle",
       // Lift to the hero's airborne height so the muzzle flash fires
       // from the weapon in his hands, not from the ground below him.
-      pos: { x: event.pos.x, y: event.pos.y - state.players[0].z },
+      pos: { x: event.pos.x, y: event.pos.y - localHero(state).z },
       angle: Math.atan2(event.dir.y, event.dir.x),
       weaponClass: event.weaponClass,
       untilMs: state.stats.timeMs + 110,
@@ -375,13 +376,13 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       fx:
         heroShot && event.weaponClass !== "melee"
           ? shotStyleFor(
-              state.players[0].equipment.weapon.uniqueId,
+              localHero(state).equipment.weapon.uniqueId,
               event.weaponClass,
             )
           : undefined,
       // Pin the hero's flash to the barrel's side (his facing) so a shot
       // at a foe BEHIND him still flashes at the weapon, not off his back.
-      faceLeft: heroShot ? state.players[0].faceLeft : undefined,
+      faceLeft: heroShot ? localHero(state).faceLeft : undefined,
     });
     // Kick/cast the hero's own weapon to match the muzzle flash — a gun
     // recoils, a wand thrusts — but not a companion's shot.
@@ -393,7 +394,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         durationMs: event.weaponClass === "magic" ? 220 : 150,
         // A braced long gun and a two-handed staff answer differently to the
         // same impulse (see `weaponPose`).
-        twoHanded: isTwoHandedDef(state.players[0].equipment.weapon.defId),
+        twoHanded: isTwoHandedDef(localHero(state).equipment.weapon.defId),
       };
     }
   }
@@ -432,8 +433,8 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // Blood comes off the side the blow landed on — away from the hero — and so
     // does everything the body comes apart into.
     const heading = Math.atan2(
-      event.pos.y - state.players[0].pos.y,
-      event.pos.x - state.players[0].pos.x,
+      event.pos.y - localHero(state).pos.y,
+      event.pos.x - localHero(state).pos.x,
     );
     // How this death presents — burned up, cut in two, burst into pieces, or
     // thrown and toppled (see kill-presentation.ts, which owns the rule and the
@@ -453,7 +454,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
             damage: event.damage,
             maxHp: event.maxHp,
             hpBefore: event.hpBefore,
-            heroPos: state.players[0].pos,
+            heroPos: localHero(state).pos,
             pos: event.pos,
             role: def.role,
             family: family.id,
@@ -935,8 +936,8 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "levelup",
       pos: {
-        x: state.players[0].pos.x,
-        y: state.players[0].pos.y - state.players[0].z,
+        x: localHero(state).pos.x,
+        y: localHero(state).pos.y - localHero(state).z,
       },
       untilMs: state.stats.timeMs + 900,
       durationMs: 900,
@@ -946,8 +947,8 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "text",
       pos: {
-        x: state.players[0].pos.x,
-        y: state.players[0].pos.y - PLAYER.radius - 8,
+        x: localHero(state).pos.x,
+        y: localHero(state).pos.y - PLAYER.radius - 8,
       },
       untilMs: state.stats.timeMs + 1100,
       durationMs: 1100,
@@ -1098,8 +1099,8 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "text",
       pos: {
-        x: state.players[0].pos.x,
-        y: state.players[0].pos.y - PLAYER.radius - 12,
+        x: localHero(state).pos.x,
+        y: localHero(state).pos.y - PLAYER.radius - 12,
       },
       untilMs: state.stats.timeMs + 1100,
       durationMs: 1100,

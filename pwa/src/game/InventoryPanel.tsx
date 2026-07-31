@@ -17,6 +17,7 @@
 // beside it (see ItemTooltip). A strip repeating four of those totals was a
 // second, weaker copy of a comparison the tooltip already makes better.
 
+import { localHero } from "./local-seat.ts";
 import {
   useEffect,
   useRef,
@@ -222,11 +223,11 @@ export function InventoryPanel({
           }
         } else if (d.from.type === "slot" && kind === "inv") {
           if (runCommandOk(state, "unequipToInventory", d.from.slot)) {
-            const landed = state.players[0].inventory.findIndex(
+            const landed = localHero(state).inventory.findIndex(
               (i) => i?.id === d.item.id,
             );
             const wanted = Number(arg);
-            if (landed >= 0 && state.players[0].inventory[wanted] === null) {
+            if (landed >= 0 && localHero(state).inventory[wanted] === null) {
               runCommand(state, "moveInventoryItem", landed, wanted);
             }
           }
@@ -313,7 +314,7 @@ export function InventoryPanel({
   // bag cell (desktop).
   const activateItem = (item: Equipment) => {
     const verb = bagVerb(item);
-    const index = state.players[0].inventory.findIndex(
+    const index = localHero(state).inventory.findIndex(
       (i) => i?.id === item.id,
     );
     if (!verb || index < 0 || !runCommandOk(state, verb, index)) return;
@@ -365,7 +366,7 @@ export function InventoryPanel({
       setDrag(dragRef.current);
     };
 
-  const player = state.players[0];
+  const player = localHero(state);
   // How many bag pieces the SCRAP sweep would clear right now — loot the hero
   // has outgrown (worse than what's worn, and not a trinket/trophy the engine
   // spares). Drives the button's count and its disabled state so it never

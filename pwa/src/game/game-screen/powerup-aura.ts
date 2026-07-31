@@ -17,6 +17,7 @@
 // appended, animated, self-removing, the same imperative shape as createTapFx.
 // Driven from the sim loop's event pass, never through React.
 
+import { localHero } from "../local-seat.ts";
 import type { RefObject } from "react";
 
 import { abilityBlocks, abilityDef, type GameState } from "@game/core";
@@ -73,7 +74,7 @@ export function createPowerupAura(
     // the frame because it is a hole in the world); a DUST DEVIL is weather and
     // stays on the field, so it is filtered out here by its own `chase`.
     const classes = new Set<string>();
-    for (const ability of state.players[0].abilities) {
+    for (const ability of localHero(state).abilities) {
       const def = abilityDef(ability.defId);
       for (const block of abilityBlocks(def)) {
         const aura = AURA_FOR_BLOCK[block];
