@@ -30,6 +30,8 @@
 // arbitrary `GameState`, which is a different door into the session and is
 // written up as its own piece of work (see `docs/multiplayer-plan.md` §1.75.2).
 
+import { createRngFromState, rngState } from "@game/lib/rng.ts";
+
 import { createGame } from "./create.ts";
 import { dismissIntro, skipCutscene, skipStoryOpening } from "./items/flow.ts";
 import { seedCampaignQuests } from "./quests/campaign.ts";
@@ -178,4 +180,82 @@ function applyOpeningSkip(state: GameState, skip: string | undefined): void {
     if (state.phase === "cutscene") skipCutscene(state);
     dismissIntro(state);
   }
+}
+
+// ---------------------------------------------------------------------------
+// THE SECOND DOOR — adopting a run instead of building one
+// ---------------------------------------------------------------------------
+//
+// Not every run is built from parameters. A PARKED RUN (the player left to the
+// menu mid-level) and a CHECKPOINT RESTORE (RETRY after a death drops back into
+// the fight rather than replaying the opening) both ADOPT an arbitrary
+// `GameState` — there is no set of arguments that describes "the world exactly
+// as it stood when he walked away", and there never will be.
+//
+// So a session can be handed one, and the pair below is how it crosses a
+// process boundary: a `GameState` is plain JSON apart from its two rng
+// CLOSURES, which are frozen as their stream positions and rebuilt on the far
+// side — the same trick `pwa/src/game/checkpoint.ts` uses to clone a run in
+// memory and `saved-run.ts` uses to write one to storage.
+//
+// **THIS IS NOT `saved-run.ts` AND MUST NOT BECOME IT.** That module carries a
+// migration ladder because a run written to a player's disk has to survive the
+// next release. Nothing here does: both ends of a wire are the same build, and
+// the handshake refuses a mismatch by name before a single game byte is
+// exchanged. A version ladder here would be machinery guarding against a case
+// the protocol has already made impossible.
+//
+// **AND ADOPTING COSTS THE STATIC TIER, WHICH IS WHY IT IS THE SECOND DOOR
+// RATHER THAN THE ONLY ONE.** A client rebuilds the terrain from the parameters
+// and is sent only what differs; a client whose server ADOPTED a state cannot
+// rebuild anything, so it has to be sent a FULL first snapshot. Host with
+// parameters whenever there are parameters — see `server/session.ts`.
+
+/**
+ * A run frozen for travel: everything but the rng closures, plus their stream
+ * positions and the fog grid as a plain array.
+ *
+ * Deliberately opaque. Nothing outside `adoptRun` should read a field off one:
+ * it is a `GameState` in transit, and code that reached into it would be code
+ * that has to be updated whenever the state grows a member — which is the
+ * hand-written-packer failure the whole wire is designed around.
+ */
+export type FrozenRun = Record<string, unknown> & {
+  rngState: number;
+  fxRngState: number;
+};
+
+/**
+ * Freeze a run so it can cross a process boundary.
+ *
+ * `explored` becomes a plain array because it is the one TYPED array on the
+ * state: `JSON.stringify` turns a `Uint8Array` into an object keyed by every
+ * index, which survives the trip looking like data and arrives as something
+ * `step()` cannot write a byte into.
+ */
+export function freezeRun(state: GameState): FrozenRun {
+  const { rng, fxRng, explored, ...rest } = state;
+  return {
+    ...(structuredClone(rest) as Record<string, unknown>),
+    // Transient per-step chatter, blanked rather than carried: a frozen run
+    // must replay no stale sounds or gore on the far side. Overridden after
+    // the clone rather than destructured away, because dropping it from
+    // `rest` and re-adding it here says the same thing twice.
+    events: [],
+    explored: Array.from(explored),
+    rngState: rngState(rng),
+    fxRngState: rngState(fxRng),
+  };
+}
+
+/** Thaw a frozen run back into something `step()` can advance. */
+export function adoptRun(frozen: FrozenRun): GameState {
+  const { rngState: seedState, fxRngState, explored, ...rest } = frozen;
+  return {
+    ...(rest as unknown as GameState),
+    explored: Uint8Array.from((explored as number[] | undefined) ?? []),
+    events: [],
+    rng: createRngFromState(seedState),
+    fxRng: createRngFromState(fxRngState),
+  };
 }

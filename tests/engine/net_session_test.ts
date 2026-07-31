@@ -20,7 +20,14 @@
 import { canonicalJson } from "@ui/lib/canonical-json.ts";
 import { describe, expect, it } from "vitest";
 
-import { engineVersion, type GameInput, type GameState } from "@game/core";
+import {
+  createRunFromParams,
+  engineVersion,
+  freezeRun,
+  type FrozenRun,
+  type GameInput,
+  type GameState,
+} from "@game/core";
 import { decodeFrame } from "@game/wire/codec.ts";
 import { FRAME, TICK_MS, type SessionParams } from "@game/wire/protocol.ts";
 import { PRIVATE_PLAYER_FIELDS, UNSENT_FIELDS } from "@game/wire/split.ts";
@@ -69,11 +76,15 @@ function connect(
     ownsPlayer?: boolean;
     hostBuild?: string;
     clientBuild?: string;
+    /** Hand the session a run to ADOPT rather than build — a parked run or a
+     * checkpoint restore, which no set of parameters describes. */
+    adopt?: FrozenRun;
   } = {},
 ): Rig {
   const session = createSession({
     params: PARAMS,
     build: options.hostBuild ?? engineVersion,
+    adopt: options.adopt,
   });
   const sent: NonNullable<ReturnType<typeof decodeFrame>>[] = [];
   const rig = { session, sent, closed: null } as Rig;
@@ -317,6 +328,69 @@ describe("a session and its client", () => {
     play(rig, 30);
     rig.session.close("host-left");
     expect(rig.closed).toEqual({ reason: "host-left", detail: undefined });
+  });
+});
+
+describe("a session that ADOPTED its run", () => {
+  /**
+   * A run that has already been played for a while — which is the whole point:
+   * a parked run and a checkpoint restore are worlds no parameters describe,
+   * so what is being tested is that a client which CANNOT rebuild the world is
+   * given it instead.
+   */
+  function playedRun(): FrozenRun {
+    const state = createRunFromParams({ ...PARAMS, openingSkip: "story" });
+    state.player.pos.x += 137;
+    state.player.hp = 42;
+    state.player.coins = 999;
+    return freezeRun(state);
+  }
+
+  it("simulates the state it was handed, not one built from the params", () => {
+    const rig = connect({ adopt: playedRun() });
+    expect(rig.session.state.player.hp).toBe(42);
+    expect(rig.session.state.player.coins).toBe(999);
+    // …and it is a LIVE state rather than a frozen record: the rng closures
+    // were rebuilt from their stream positions, so it can actually be stepped.
+    expect(() => play(rig, 30)).not.toThrow();
+  });
+
+  it("sends its client a FULL snapshot rather than a delta", () => {
+    // The one branch `Sent.full` exists for, and which nothing had ever taken.
+    const rig = connect({ adopt: playedRun() });
+    play(rig, 6);
+    const first = rig.sent.find(
+      (frame) => frame.type === FRAME.snapshot || frame.type === FRAME.delta,
+    );
+    expect(first?.type).toBe(FRAME.snapshot);
+  });
+
+  it("leaves the client holding the same world after a run", () => {
+    // The assertion that matters: a client whose own `createRunFromParams`
+    // built a DIFFERENT world still converges, because it was sent all of it.
+    const rig = connect({ adopt: playedRun() });
+    play(rig, 300);
+    expect(worldOf(rig.client.state!)).toBe(worldOf(rig.session.state));
+  });
+
+  it("goes back to deltas once the world has been handed over", () => {
+    // The full snapshot is a ONE-OFF. A session that kept sending whole worlds
+    // at 20 Hz would work perfectly and cost ~100 KB a frame, which is the
+    // kind of bug that only ever shows up as somebody's bandwidth bill.
+    const rig = connect({ adopt: playedRun() });
+    play(rig, 60);
+    const fulls = rig.sent.filter((frame) => frame.type === FRAME.snapshot);
+    expect(fulls).toHaveLength(1);
+  });
+
+  it("refuses a run that belongs to a different level", () => {
+    // Nothing could ever correct this: the terrain is the STATIC tier and is
+    // never sent, so a client would carve one map and walk around inside
+    // another for the whole run.
+    const elsewhere = freezeRun(
+      createRunFromParams({ ...PARAMS, levelId: "mars" }),
+    );
+    expect(() => connect({ adopt: elsewhere })).toThrow(/mars/);
   });
 });
 
