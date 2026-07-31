@@ -23,7 +23,7 @@ function meetBoss(): GameState {
   clearStage(state);
   state.enemies.push(
     makeEnemy(
-      { pos: { x: state.player.pos.x + 40, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y } },
       "test_boss",
     ),
   );
@@ -57,7 +57,7 @@ describe("inventory access during dialogue", () => {
 
   it("keeps a pending level-up waiting for the scene to end", () => {
     const state = meetBoss();
-    state.player.pendingStatPoints = 1;
+    state.players[0].pendingStatPoints = 1;
     openInventory(state);
     closeInventory(state);
     // The speaker keeps the stage; the chooser gets its turn after the scene.
@@ -70,7 +70,7 @@ describe("inventory access during dialogue", () => {
   it("stays read-only in every other scene", () => {
     const state = startGame();
     clearStage(state);
-    collectStoryItem(state, "test_key", { ...state.player.pos });
+    collectStoryItem(state, "test_key", { ...state.players[0].pos });
     expect(state.phase).toBe("dialogue");
     expect(state.dialogue?.source.kind).toBe("story");
     expect(canOpenInventory(state)).toBe(false);

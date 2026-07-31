@@ -88,27 +88,30 @@ const EFFECT_SLOPES = {
     unit: "plusPct",
     // Gated by tree: a melee-tree talent lifts melee crits only, which is
     // exactly why the tree is passed in rather than assumed.
-    read: (state, def) => TALENT_READS.talentCritChanceBonus(state, def.tree),
+    read: (state, def) =>
+      TALENT_READS.talentCritChanceBonus(state, state.players[0], def.tree),
   },
   critDamagePerRank: {
     label: "CRIT DAMAGE",
     unit: "plusMult",
-    read: (state, def) => TALENT_READS.talentCritDamageBonus(state, def.tree),
+    read: (state, def) =>
+      TALENT_READS.talentCritDamageBonus(state, state.players[0], def.tree),
   },
   moveSpeedPerRank: {
     label: "MOVE SPEED",
     unit: "mult",
-    read: (state) => TALENT_READS.talentSpeedMult(state),
+    read: (state) => TALENT_READS.talentSpeedMult(state, state.players[0]),
   },
   dodgePerRank: {
     label: "DODGE CHANCE",
     unit: "plusPct",
-    read: (state) => TALENT_READS.talentDodgeBonus(state),
+    read: (state) => TALENT_READS.talentDodgeBonus(state, state.players[0]),
   },
   damageReductionPerRank: {
     label: "EVERY BLOW YOU TAKE, CUT BY",
     unit: "pct",
-    read: (state) => TALENT_READS.talentDamageReduction(state),
+    read: (state) =>
+      TALENT_READS.talentDamageReduction(state, state.players[0]),
   },
   magicReductionPerRank: {
     label: "EVERY BLOW YOU TAKE, CUT BY",
@@ -116,17 +119,18 @@ const EFFECT_SLOPES = {
     // The martial cut and the magic ward fold into one flat reduction at the
     // player-damage choke point, so this is the same accessor — and reports
     // this talent alone, because only this talent is trained.
-    read: (state) => TALENT_READS.talentDamageReduction(state),
+    read: (state) =>
+      TALENT_READS.talentDamageReduction(state, state.players[0]),
   },
   reflectPerRank: {
     label: "SENT BACK AT THE ATTACKER",
     unit: "pct",
-    read: (state) => TALENT_READS.talentReflectFrac(state),
+    read: (state) => TALENT_READS.talentReflectFrac(state, state.players[0]),
   },
   maxHpPerRank: {
     label: "MAX HEALTH",
     unit: "plusPct",
-    read: (state) => TALENT_READS.talentMaxHpPct(state),
+    read: (state) => TALENT_READS.talentMaxHpPct(state, state.players[0]),
   },
   berserkPerRank: {
     label: "WEAPON DAMAGE, NEARLY DEAD",
@@ -134,8 +138,8 @@ const EFFECT_SLOPES = {
     // The enrage is the boost at ZERO health, fading linearly to nothing at
     // full — so the figure worth printing is the one at the bottom of the bar.
     read: (state) => {
-      state.player.hp = 0;
-      return TALENT_READS.talentBerserkMult(state);
+      state.players[0].hp = 0;
+      return TALENT_READS.talentBerserkMult(state, state.players[0]);
     },
   },
   conjure: {
@@ -162,7 +166,7 @@ const PROC_READOUTS = {
       { key: "chance", label: "CHANCE PER SWING", unit: "pct", cap: true },
       { key: "extraTargets", label: "EXTRA FOES STRUCK", unit: "n" },
     ],
-    read: (state) => TALENT_READS.talentCleavingEcho(state),
+    read: (state) => TALENT_READS.talentCleavingEcho(state, state.players[0]),
     fields: {
       chancePerRank: "folds into CHANCE PER SWING",
       chanceCap: "the ceiling that roll is clamped to",
@@ -177,7 +181,7 @@ const PROC_READOUTS = {
       { key: "chance", label: "CHANCE PER BLOW", unit: "pct", cap: true },
       { key: "echoFrac", label: "THE ECHO LANDS FOR", unit: "pct" },
     ],
-    read: (state) => TALENT_READS.talentTwinStrike(state),
+    read: (state) => TALENT_READS.talentTwinStrike(state, state.players[0]),
     fields: {
       chancePerRank: "folds into CHANCE PER BLOW",
       chanceCap: "the ceiling that roll is clamped to",
@@ -200,7 +204,7 @@ const PROC_READOUTS = {
         unit: "pct",
       },
     ],
-    read: (state) => TALENT_READS.talentParry(state),
+    read: (state) => TALENT_READS.talentParry(state, state.players[0]),
     fields: {
       chancePerRank: "folds into CHANCE TO TURN A BLOW ASIDE",
       chanceCap: "the ceiling that roll is clamped to",
@@ -215,7 +219,7 @@ const PROC_READOUTS = {
       { key: "damage", label: "DAMAGE", unit: "dmg" },
       { key: "knockback", label: "FLINGS THEM BACK", unit: "px" },
     ],
-    read: (state) => TALENT_READS.talentSeismic(state),
+    read: (state) => TALENT_READS.talentSeismic(state, state.players[0]),
     fields: {
       radius: "folds into SHAKES THE GROUND FOR",
       radiusPerRank: "folds into SHAKES THE GROUND FOR",
@@ -230,7 +234,7 @@ const PROC_READOUTS = {
       { key: "pierce", label: "EXTRA BODIES PUNCHED THROUGH", unit: "n" },
       { key: "retain", label: "DAMAGE KEPT PER BODY", unit: "pct" },
     ],
-    read: (state) => TALENT_READS.talentPiercing(state),
+    read: (state) => TALENT_READS.talentPiercing(state, state.players[0]),
     fields: {
       piercePerRank: "folds into EXTRA BODIES PUNCHED THROUGH",
       retainBase: "folds into DAMAGE KEPT PER BODY",
@@ -244,7 +248,7 @@ const PROC_READOUTS = {
       { key: "chance", label: "CHANCE PER HIT", unit: "pct", cap: true },
       { key: "distance", label: "SHOVED BACK", unit: "px" },
     ],
-    read: (state) => TALENT_READS.talentConcussive(state),
+    read: (state) => TALENT_READS.talentConcussive(state, state.players[0]),
     fields: {
       chancePerRank: "folds into CHANCE PER HIT",
       chanceCap: "the ceiling that roll is clamped to",
@@ -259,7 +263,7 @@ const PROC_READOUTS = {
       { key: "slowFactor", label: "SPEED WHILE HOBBLED", unit: "pct" },
       { key: "slowMs", label: "HOBBLED FOR", unit: "sec" },
     ],
-    read: (state) => TALENT_READS.talentCrippling(state),
+    read: (state) => TALENT_READS.talentCrippling(state, state.players[0]),
     fields: {
       chancePerRank: "folds into CHANCE PER HIT",
       chanceCap: "the ceiling that roll is clamped to",
@@ -275,7 +279,7 @@ const PROC_READOUTS = {
       { key: "extra", label: "EXTRA SHOTS", unit: "n" },
       { key: "spreadDeg", label: "FANNED ACROSS", unit: "deg" },
     ],
-    read: (state) => TALENT_READS.talentVolley(state),
+    read: (state) => TALENT_READS.talentVolley(state, state.players[0]),
     fields: {
       chancePerRank: "folds into CHANCE PER PULL",
       chanceCap: "the ceiling that roll is clamped to",
@@ -291,7 +295,7 @@ const PROC_READOUTS = {
       { key: "velocityMult", label: "TAKEOFF SPEED", unit: "mult" },
       { key: "costMult", label: "STAMINA A HOP COSTS", unit: "mult" },
     ],
-    read: (state) => TALENT_READS.talentJumpMods(state),
+    read: (state) => TALENT_READS.talentJumpMods(state, state.players[0]),
     fields: {
       velocityPerRank: "folds into TAKEOFF SPEED",
       jumpCostReduction: "folds into STAMINA A HOP COSTS",
@@ -310,14 +314,14 @@ const PROC_READOUTS = {
     // a dodge ever opens one. Reading the multiplier alone would print a 1.35×
     // against every rank, including the four where nothing ever happens.
     read: (state) => {
-      const ms = TALENT_READS.talentEvasionBurstMs(state);
+      const ms = TALENT_READS.talentEvasionBurstMs(state, state.players[0]);
       // Nothing at all below the mastery rank, and `null` rather than `1×` and
       // `0 S`: the multiplier is real at every rank, but no dodge ever opens a
       // window for it to apply in, and printing it would say the opposite.
       if (ms <= 0) return { speedMult: null, ms: null };
-      state.player.evasionBurstMs = ms;
+      state.players[0].evasionBurstMs = ms;
       return {
-        speedMult: TALENT_READS.talentEvasionBurstMult(state),
+        speedMult: TALENT_READS.talentEvasionBurstMult(state, state.players[0]),
         ms,
       };
     },
@@ -335,7 +339,7 @@ const PROC_READOUTS = {
       { key: "slowFactor", label: "SPEED WHILE FROZEN", unit: "pct" },
       { key: "cooldownMs", label: "CANNOT FIRE AGAIN FOR", unit: "sec" },
     ],
-    read: (state) => TALENT_READS.talentFrostNova(state),
+    read: (state) => TALENT_READS.talentFrostNova(state, state.players[0]),
     fields: {
       radius: "folds into FREEZES EVERYTHING WITHIN",
       radiusPerRank: "folds into FREEZES EVERYTHING WITHIN",

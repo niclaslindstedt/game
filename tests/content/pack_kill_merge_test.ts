@@ -21,7 +21,7 @@ const XP_MERGE_SLACK_PX = 16;
 function nukePackedWisps(count: number, gap: number): GameEvent[] {
   const state = startGame();
   clearStage(state);
-  const { x: px, y: py } = state.player.pos;
+  const { x: px, y: py } = state.players[0].pos;
   const cols = 6;
   let id = 5000;
   for (let i = 0; i < count; i++) {
@@ -40,7 +40,7 @@ function nukePackedWisps(count: number, gap: number): GameEvent[] {
       ),
     );
   }
-  state.player.heldAbilities = ["screen_nuke"];
+  state.players[0].heldAbilities = ["screen_nuke"];
   step(state, { ...idle, useItem: true, useItemIndex: 0 }, 16);
   return state.events;
 }

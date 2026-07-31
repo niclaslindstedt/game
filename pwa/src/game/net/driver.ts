@@ -193,7 +193,7 @@ export type JoinDriverOptions = ConnectOptions & {
 };
 
 /**
- * JOIN a session and watch it — the driver a spectator runs.
+ * JOIN a session — the driver a joining PLAYER runs.
  *
  * It is the host driver with two things removed and one added. Removed: the
  * `hostSession` call (somebody else is simulating) and the `adopt` (there is no
@@ -202,11 +202,12 @@ export type JoinDriverOptions = ConnectOptions & {
  * Added: the state has to be handed OUT, because nothing in this process built
  * it.
  *
- * The command sink is installed NON-OPTIMISTICALLY. A spectator's verbs are
- * refused by the session (`session.receive` — the one place a client cannot
- * argue), so applying them to the local replica would edit somebody else's hero
- * on this screen alone. They still travel, because the day PR 3 seats a second
- * hero they stop being refused.
+ * The command sink is installed NON-OPTIMISTICALLY, and it stays that way now
+ * that a joiner has a seat. The reason changed but the answer did not: a
+ * spectator's verbs are refused outright by the session, and a SEATED player's
+ * are accepted — but the server is authoritative over the result, so applying
+ * one locally would draw an outcome the next snapshot may not agree with. The
+ * verb travels; the correction comes back.
  */
 export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
   if (!netBridgeAvailable()) return null;
@@ -257,9 +258,10 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
   return {
     session: link.link,
     advance(input) {
-      // Sent even though the session refuses it today: a spectator's steering
-      // is dropped at the one place that may drop it, and the day PR 3 seats a
-      // second hero this line is already right.
+      // The session decides whether this steering counts: a seated player's is
+      // applied to THEIR hero, a spectator's is dropped at the one place that
+      // may drop it. Sending it either way keeps that judgement in the one
+      // process entitled to make it.
       if (!live) return;
       client?.sendInput(input);
     },

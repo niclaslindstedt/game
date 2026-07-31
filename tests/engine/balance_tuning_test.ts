@@ -69,35 +69,35 @@ describe("xpGain", () => {
 describe("deathXpLoss (death toll)", () => {
   it("takes 10% of the current level's bar on death", () => {
     const state = startGame();
-    const bar = state.player.xpToNext;
-    state.player.xp = bar; // a full level's worth banked toward the next
+    const bar = state.players[0].xpToNext;
+    state.players[0].xp = bar; // a full level's worth banked toward the next
     const lost = applyDeathXpPenalty(state);
     expect(lost).toBe(Math.round(bar * 0.1));
-    expect(state.player.xp).toBe(bar - lost);
+    expect(state.players[0].xp).toBe(bar - lost);
     expect(state.stats.xpLost).toBe(lost);
   });
 
   it("never de-levels — a near-empty bar forfeits only what's on it", () => {
     const state = startGame();
-    state.player.xp = 5; // less than 10% of the bar
-    const level = state.player.level;
+    state.players[0].xp = 5; // less than 10% of the bar
+    const level = state.players[0].level;
     expect(applyDeathXpPenalty(state)).toBe(5);
-    expect(state.player.xp).toBe(0);
-    expect(state.player.level).toBe(level);
+    expect(state.players[0].xp).toBe(0);
+    expect(state.players[0].level).toBe(level);
   });
 
   it("scales the toll, and 0× turns the penalty off entirely", () => {
     const harsh = startGame();
-    const bar = harsh.player.xpToNext;
-    harsh.player.xp = bar;
+    const bar = harsh.players[0].xpToNext;
+    harsh.players[0].xp = bar;
     setBalanceTuning({ deathXpLoss: 2 });
     expect(applyDeathXpPenalty(harsh)).toBe(Math.round(bar * 0.2));
 
     const off = startGame();
-    off.player.xp = off.player.xpToNext;
+    off.players[0].xp = off.players[0].xpToNext;
     setBalanceTuning({ deathXpLoss: 0 });
     expect(applyDeathXpPenalty(off)).toBe(0);
-    expect(off.player.xp).toBe(off.player.xpToNext); // bar untouched
+    expect(off.players[0].xp).toBe(off.players[0].xpToNext); // bar untouched
     expect(off.stats.xpLost).toBe(0);
   });
 });
@@ -108,9 +108,9 @@ describe("weapon damage", () => {
     // game's pushback on the MOB side only, so nothing here may change what
     // the hero's own weapon is worth.
     const state = startGame();
-    const base = weaponDamage(state);
+    const base = weaponDamage(state, state.players[0]);
     setBalanceTuning({ mobHp: 2, mobDamage: 2, mobArmor: 2 });
-    expect(weaponDamage(state)).toBeCloseTo(base, 6);
+    expect(weaponDamage(state, state.players[0])).toBeCloseTo(base, 6);
   });
 });
 
@@ -141,7 +141,7 @@ describe("mobDamage", () => {
     // matter how the hero swings back.
     state.enemies.push(
       makeEnemy({
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         hp: 1_000_000,
         maxHp: 1_000_000,
       }),
@@ -175,9 +175,9 @@ describe("hordeSize", () => {
 describe("dropRate", () => {
   it("scales the per-kill drop chance", () => {
     const state = startGame();
-    const base = dropChance(state);
+    const base = dropChance(state, state.players[0]);
     setBalanceTuning({ dropRate: 3 });
-    expect(dropChance(state)).toBeCloseTo(base * 3, 6);
+    expect(dropChance(state, state.players[0])).toBeCloseTo(base * 3, 6);
   });
 });
 
@@ -190,7 +190,7 @@ describe("equipmentShare", () => {
     for (let i = 0; i < 10; i++) {
       const enemy = makeEnemy({
         id: 9000 + i,
-        pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
         hp: 45,
         maxHp: 200,
       });
@@ -231,7 +231,7 @@ describe("repairDrops", () => {
     for (let i = 0; i < 10; i++) {
       const enemy = makeEnemy({
         id: 9000 + i,
-        pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
         hp: 45,
         maxHp: 200,
       });
@@ -269,7 +269,7 @@ describe("gearQuality", () => {
     const rich = startGame();
     const richAboveWhite = Array.from(
       { length: N },
-      () => rollEquipment(rich, { mlvl: 99 }).tier,
+      () => rollEquipment(rich, rich.players[0], { mlvl: 99 }).tier,
     ).filter((tier) => tier !== "regular").length;
 
     // Neutral odds off the same seed keep the roll honest — whites still turn
@@ -278,7 +278,7 @@ describe("gearQuality", () => {
     const plain = startGame();
     const plainAboveWhite = Array.from(
       { length: N },
-      () => rollEquipment(plain, { mlvl: 99 }).tier,
+      () => rollEquipment(plain, plain.players[0], { mlvl: 99 }).tier,
     ).filter((tier) => tier !== "regular").length;
 
     expect(richAboveWhite).toBeGreaterThan(plainAboveWhite);
@@ -300,15 +300,18 @@ describe("menaceGain", () => {
 describe("hero power level — character level only", () => {
   it("weapon damage and gear never toughen the horde", () => {
     const state = startGame();
-    const char = state.player.level;
+    const char = state.players[0].level;
     // An absurd damage roll runs the DIAGNOSTIC damage level well above the
     // character level, but the horde no longer follows it at all.
-    state.player.equipment.weapon.affixes.push({ kind: "damagePct", value: 9 });
-    expect(heroDamageLevel(state)).toBeGreaterThan(char);
+    state.players[0].equipment.weapon.affixes.push({
+      kind: "damagePct",
+      value: 9,
+    });
+    expect(heroDamageLevel(state, state.players[0])).toBeGreaterThan(char);
     expect(heroPowerLevel(state)).toBe(char);
     // A twink rack is likewise ignored — power is the character level, period.
-    state.player.equipment.weapon.affixes.pop();
-    state.player.equipment.weapon.ilvl = 70;
+    state.players[0].equipment.weapon.affixes.pop();
+    state.players[0].equipment.weapon.ilvl = 70;
     expect(heroPowerLevel(state)).toBe(char);
   });
 });

@@ -70,7 +70,7 @@ function rollMany(
   const ids = new Set<string>();
   const tiers: Record<string, number> = {};
   for (let i = 0; i < n; i++) {
-    const e = rollEquipment(state);
+    const e = rollEquipment(state, state.players[0]);
     tiers[e.tier] = (tiers[e.tier] ?? 0) + 1;
     if (e.uniqueId) ids.add(e.uniqueId);
   }
@@ -83,7 +83,7 @@ describe("named-item drop gates", () => {
       installNamed();
       const state = startGame(7, "test_level");
       state.difficulty = difficulty;
-      state.player.level = 60;
+      state.players[0].level = 60;
       const { tiers } = rollMany(state, 20_000);
       expect(tiers.legendary ?? 0).toBe(0);
       expect(tiers.artifact ?? 0).toBe(0);
@@ -94,7 +94,7 @@ describe("named-item drop gates", () => {
     installNamed();
     const state = startGame(7, "test_level");
     state.difficulty = "jesus";
-    state.player.level = 60;
+    state.players[0].level = 60;
     const { tiers } = rollMany(state, 30_000);
     expect(tiers.legendary ?? 0).toBeGreaterThan(0);
   });
@@ -105,7 +105,7 @@ describe("named-item drop gates", () => {
     installNamed();
     const hi = startGame(7, "test_level");
     hi.difficulty = "jesus";
-    hi.player.level = 99;
+    hi.players[0].level = 99;
     const { ids: hiIds } = rollMany(hi, 40_000);
     expect(hiIds.has("test_leg_cap")).toBe(true);
     expect(hiIds.has("test_leg_low")).toBe(false);
@@ -115,7 +115,7 @@ describe("named-item drop gates", () => {
     installNamed();
     const lo = startGame(7, "test_level");
     lo.difficulty = "hard";
-    lo.player.level = 45;
+    lo.players[0].level = 45;
     const { ids: loIds } = rollMany(lo, 40_000);
     expect(loIds.has("test_leg_low")).toBe(true);
   });
@@ -124,7 +124,7 @@ describe("named-item drop gates", () => {
     installNamed();
     const art = startGame(7, "test_level");
     art.difficulty = "jesus";
-    art.player.level = 99;
+    art.players[0].level = 99;
     const { tiers } = rollMany(art, 120_000);
     expect(tiers.artifact ?? 0).toBeGreaterThan(0);
   });
@@ -137,7 +137,7 @@ describe("named-item drop gates", () => {
     installNamed();
     const state = startGame(7, "test_level");
     state.difficulty = "jesus";
-    state.player.level = LEVELING.maxLevel - 1;
+    state.players[0].level = LEVELING.maxLevel - 1;
     const { tiers } = rollMany(state, 120_000);
     expect(tiers.artifact ?? 0).toBe(0);
     expect(tiers.legendary ?? 0).toBeGreaterThan(0);

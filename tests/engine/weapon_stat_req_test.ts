@@ -154,32 +154,38 @@ describe("weapon stat requirements", () => {
     for (const auto of [true, false]) {
       setAutoStatGainsEnabled(auto);
       const state: GameState = startGame();
-      state.player.level = REQ;
+      state.players[0].level = REQ;
 
-      state.player.stats.strength = CHOSEN_PART - 1; // one point shy
-      expect(canEquip(state, weapon("req_blade"))).toBe(false);
+      state.players[0].stats.strength = CHOSEN_PART - 1; // one point shy
+      expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(
+        false,
+      );
 
-      state.player.stats.strength = CHOSEN_PART; // exactly enough
-      expect(canEquip(state, weapon("req_blade"))).toBe(true);
+      state.players[0].stats.strength = CHOSEN_PART; // exactly enough
+      expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(true);
     }
   });
 
   it("banks a weapon the build is too weak to wield, wields it once the stat is met", () => {
     installReqFixtures();
     const state: GameState = startGame();
-    state.player.level = 40; // well past the level gate, so only the stat bites
+    state.players[0].level = 40; // well past the level gate, so only the stat bites
     const need = statRequirement("req_blade")!.amount;
 
     // A hero who dumped nothing into STRENGTH can't heft the melee blade even
     // over-leveled — it banks.
-    state.player.stats.strength = 0;
+    state.players[0].stats.strength = 0;
     setAutoStatGainsEnabled(false); // no auto STRENGTH to lean on
-    expect(meetsStatReq(state, weapon("req_blade"))).toBe(false);
-    expect(canEquip(state, weapon("req_blade"))).toBe(false);
+    expect(meetsStatReq(state, state.players[0], weapon("req_blade"))).toBe(
+      false,
+    );
+    expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(false);
 
     // Invest enough STRENGTH and the same find equips.
-    state.player.stats.strength = need;
-    expect(meetsStatReq(state, weapon("req_blade"))).toBe(true);
-    expect(canEquip(state, weapon("req_blade"))).toBe(true);
+    state.players[0].stats.strength = need;
+    expect(meetsStatReq(state, state.players[0], weapon("req_blade"))).toBe(
+      true,
+    );
+    expect(canEquip(state, state.players[0], weapon("req_blade"))).toBe(true);
   });
 });

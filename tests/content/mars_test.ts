@@ -145,9 +145,9 @@ describe("MARS level def", () => {
 
     // And a run dressed in it arrives rested, armor worn.
     const state = createGame(SEED, "mars", "medium", loadout!);
-    expect(state.player.level).toBe(loadout!.level);
-    expect(state.player.hp).toBe(state.player.maxHp);
-    expect(totalArmor(state)).toBeGreaterThan(0);
+    expect(state.players[0].level).toBe(loadout!.level);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
+    expect(totalArmor(state, state.players[0])).toBeGreaterThan(0);
   });
 });
 
@@ -178,7 +178,7 @@ describe("ELON MOSQUE flees", () => {
     state.enemies.push(
       makeEnemy(
         {
-          pos: { x: state.player.pos.x + 30, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 30, y: state.players[0].pos.y },
           hp: 1,
           maxHp: 700,
           powerScaled: true,
@@ -214,7 +214,7 @@ describe("ELON MOSQUE flees", () => {
       (i) =>
         i.kind === "equipment" && i.equipment.defId === "not_a_flamethrower",
     );
-    const carried = state.player.inventory.some(
+    const carried = state.players[0].inventory.some(
       (e) => e?.defId === "not_a_flamethrower",
     );
     expect(onGround || carried).toBe(true);

@@ -132,7 +132,7 @@ function stubSession() {
           generatedMapSize: "medium",
         },
         slot: 1,
-        ownsPlayer: false,
+        seat: null,
       };
       send(
         encodeFrame({ type: FRAME.welcome, seq: 1, ack: 0, tick: 0 }, welcome),

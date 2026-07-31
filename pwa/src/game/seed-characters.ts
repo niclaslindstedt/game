@@ -12,6 +12,7 @@
 // realistic drops and `BUILD_ROTATION` for the point spend — so a seeded hero
 // is indistinguishable from one the app itself would have produced.
 
+import { localHero } from "./local-seat.ts";
 import {
   BUILD_ROTATION,
   DIFFICULTY_ORDER,
@@ -130,7 +131,7 @@ function mintPiece(
   tier: Equipment["tier"],
   mlvl: number,
 ): Equipment {
-  return rollEquipment(state, { defId, tier, mlvl });
+  return rollEquipment(state, localHero(state), { defId, tier, mlvl });
 }
 
 /** Spend a hero-of-`level`'s worth of trainable points through `build`'s
@@ -267,7 +268,10 @@ export function buildBotViewLoadout(
     STARTING_DIFFICULTIES.includes(difficulty)
   ) {
     const seed = Math.floor(Math.random() * 1e9);
-    return extractLoadout(createGame(seed, levelId, difficulty));
+    return extractLoadout(
+      createGame(seed, levelId, difficulty),
+      localHero(createGame(seed, levelId, difficulty)),
+    );
   }
   return buildSeedLoadout(build, {
     id: "botview",

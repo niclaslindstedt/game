@@ -97,39 +97,39 @@ describe("diminishStat — linear to the cap, diminishing tail past it", () => {
 describe("effectiveStat routes the flat total through the level-aware curve", () => {
   it("diminishes gear past the hero's current cap", () => {
     const state = startGame();
-    state.player.level = 40;
+    state.players[0].level = 40;
     const cap = statCap(40);
     const over = cap + 60;
-    state.player.stats.strength = over;
-    expect(effectiveStat(state, "strength")).toBe(
+    state.players[0].stats.strength = over;
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(
       Math.round(diminishStat(over, 40)),
     );
     // Below the cap nothing changes.
-    state.player.stats.strength = 5;
-    expect(effectiveStat(state, "strength")).toBe(5);
+    state.players[0].stats.strength = 5;
+    expect(effectiveStat(state, state.players[0], "strength")).toBe(5);
   });
 });
 
 describe("allocateStat — the chooser hard-walls placement at the cap", () => {
   it("refuses to place a chosen point once the stat is at statCap(level)", () => {
     const state = startGame();
-    state.player.level = 99; // cap === 250
-    state.player.pendingStatPoints = 5;
-    state.player.stats.strength = statCap(99);
-    expect(allocateStat(state, "strength")).toBe(false);
+    state.players[0].level = 99; // cap === 250
+    state.players[0].pendingStatPoints = 5;
+    state.players[0].stats.strength = statCap(99);
+    expect(allocateStat(state, state.players[0], "strength")).toBe(false);
     // The point is untouched — still spendable elsewhere.
-    expect(state.player.pendingStatPoints).toBe(5);
+    expect(state.players[0].pendingStatPoints).toBe(5);
     // A stat with room still takes it.
-    state.player.stats.dexterity = 0;
-    expect(allocateStat(state, "dexterity")).toBe(true);
-    expect(state.player.pendingStatPoints).toBe(4);
+    state.players[0].stats.dexterity = 0;
+    expect(allocateStat(state, state.players[0], "dexterity")).toBe(true);
+    expect(state.players[0].pendingStatPoints).toBe(4);
   });
 });
 
 describe("derived probability channels saturate below 1.0", () => {
   it("crit chance approaches but never reaches critCap, even maxed", () => {
     const state = startGame();
-    state.player.level = 99;
+    state.players[0].level = 99;
     // A degenerate crit build: every stat slammed to the roof.
     for (const stat of [
       "strength",
@@ -137,8 +137,8 @@ describe("derived probability channels saturate below 1.0", () => {
       "intelligence",
       "luck",
     ] as const)
-      state.player.stats[stat] = 100_000;
-    const crit = playerCritChance(state, undefined);
+      state.players[0].stats[stat] = 100_000;
+    const crit = playerCritChance(state, state.players[0], undefined);
     expect(crit).toBeLessThan(STATS.critCap);
     // …but heavy investment does climb most of the way there (an expensive top,
     // not a wasted stat).
@@ -147,10 +147,10 @@ describe("derived probability channels saturate below 1.0", () => {
 
   it("dodge approaches but never reaches DODGE.max, even maxed", () => {
     const state = startGame();
-    state.player.level = 99;
-    state.player.stats.dexterity = 100_000;
-    state.player.stats.luck = 100_000;
-    const dodge = playerDodgeChance(state);
+    state.players[0].level = 99;
+    state.players[0].stats.dexterity = 100_000;
+    state.players[0].stats.luck = 100_000;
+    const dodge = playerDodgeChance(state, state.players[0]);
     expect(dodge).toBeLessThan(DODGE.max);
     expect(dodge).toBeGreaterThan(DODGE.max * 0.5);
   });
@@ -159,7 +159,9 @@ describe("derived probability channels saturate below 1.0", () => {
     const state = startGame();
     // Even against a level-1 attacker (the smallest k, the most favourable
     // reduction), the clamp holds.
-    expect(armorReduction(state, 1)).toBeLessThanOrEqual(ARMOR.maxReduction);
+    expect(armorReduction(state, state.players[0], 1)).toBeLessThanOrEqual(
+      ARMOR.maxReduction,
+    );
   });
 });
 

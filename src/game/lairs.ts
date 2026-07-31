@@ -19,13 +19,14 @@
 // stays open afterwards because the point of the beat is that the hero can see
 // where the thing came from.
 
-import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
+import { vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyAuthoredScaling, spawnEnemy } from "./create.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { menaceStage } from "./menace.ts";
+import { anyHeroWithin, nearestHero, partyLevel } from "./party.ts";
 import type { GameState, LairState } from "./types/index.ts";
 
 /** One authored lair, as the level def carries it. */
@@ -53,14 +54,18 @@ export function stepLairs(state: GameState): void {
   for (let i = 0; i < lairs.length; i++) {
     const lair = lairs[i] as LairState;
     if (lair.open) continue;
-    if (distance(state.player.pos, lair.pos) > lair.triggerRadius) continue;
+    // ANY hero walking up opens it, for the same reason any hero wakes a pack.
+    if (!anyHeroWithin(state, lair.pos, lair.triggerRadius)) continue;
     const spec = specs[i];
     if (!spec) continue;
     lair.open = true;
     lair.sprite = lair.openSprite;
     // The occupant steps out TOWARD the hero, so it clears the doorway it came
     // through instead of standing in it.
-    const out = stepOut(lair.pos, state.player.pos);
+    // Out toward whoever knocked — the NEAREST hero, so the occupant clears
+    // its own doorway rather than walking into the frame.
+    const knocker = nearestHero(state, lair.pos) ?? state.players[0];
+    const out = stepOut(lair.pos, knocker.pos);
     mint(state, spec.enemy, out, spec.level, spec.hp);
     for (const guard of spec.escort ?? []) {
       for (let n = 0; n < guard.count; n++) {
@@ -111,7 +116,7 @@ function mint(
       1,
       menaceStage(state),
       difficultyDef(state.difficulty).menaceEffectMult,
-      state.player.level,
+      partyLevel(state),
     ),
     level,
     hp,

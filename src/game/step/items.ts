@@ -33,7 +33,7 @@ import { collectStoryItem } from "../story.ts";
 import type { EquipSlot, GameState, Item } from "../types/index.ts";
 
 export function stepItems(state: GameState, dtMs: number): void {
-  const player = state.player;
+  const player = state.players[0];
   // Pieces displaced by an auto-equip with a full bag fall back to the
   // ground — collected here so the filter pass isn't mutated mid-flight.
   const displaced: Item[] = [];
@@ -93,7 +93,7 @@ export function stepItems(state: GameState, dtMs: number): void {
       // the kit away — it stays on the ground. Untiered items (minted before
       // tiers shipped) read as the lightest kit.
       const tierIndex = medkitTierIndex(item.tier);
-      if (!bankMedkit(state, tierIndex)) return true;
+      if (!bankMedkit(state, player, tierIndex)) return true;
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
@@ -135,7 +135,7 @@ export function stepItems(state: GameState, dtMs: number): void {
     // on his own call (useRepairKit / useStaminaPotion). A full stack turns the
     // pickup away: it stays on the ground.
     if (item.kind === "repair" || item.kind === "drink") {
-      if (!bankConsumable(state, item.kind)) return true;
+      if (!bankConsumable(state, player, item.kind)) return true;
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
@@ -172,8 +172,8 @@ export function stepItems(state: GameState, dtMs: number): void {
     // at the carry cap — or a second `uniqueHeld` power like the NUKE while
     // one is already docked — they stay on the ground like an overflowing drop.
     if (item.kind === "ability") {
-      if (!canBankAbility(state, item.defId)) return true;
-      state.player.heldAbilities.push(item.defId);
+      if (!canBankAbility(state, player, item.defId)) return true;
+      state.players[0].heldAbilities.push(item.defId);
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
@@ -188,10 +188,13 @@ export function stepItems(state: GameState, dtMs: number): void {
     // finds go into the bag, staying grounded when it's full. When the player
     // has turned auto-equip off (a setting), even a genuine upgrade banks to
     // the bag instead — the card still flags it so they can equip it by hand.
-    if (isAutoEquipEnabled() && isBetterEquipment(state, item.equipment)) {
+    if (
+      isAutoEquipEnabled() &&
+      isBetterEquipment(state, player, item.equipment)
+    ) {
       // Never null here: `isBetterEquipment` already refused the trinket (it
       // pays out from the bag, so it is never worn).
-      const slot = wearSlotFor(state, item.equipment) as EquipSlot;
+      const slot = wearSlotFor(state, player, item.equipment) as EquipSlot;
       const previous = player.equipment[slot];
       if (slot === "weapon") {
         player.equipment.weapon = item.equipment;
@@ -199,12 +202,12 @@ export function stepItems(state: GameState, dtMs: number): void {
       } else {
         player.equipment[slot] = item.equipment;
       }
-      recomputeMaxHp(state);
-      recomputeMaxStamina(state);
+      recomputeMaxHp(state, player);
+      recomputeMaxStamina(state, player);
       // A +STRENGTH piece can widen the bag, so grow it to match (mirrors
       // `equipFromInventory`).
-      syncInventoryCapacity(state);
-      if (previous && !addToInventory(state, previous)) {
+      syncInventoryCapacity(state, player);
+      if (previous && !addToInventory(state, player, previous)) {
         displaced.push({
           id: state.nextId++,
           kind: "equipment",
@@ -233,8 +236,8 @@ export function stepItems(state: GameState, dtMs: number): void {
     // A bagged find might still out-score the worn piece (a passive charm the
     // auto-equip rule leaves alone) — probe before it lands so the card can
     // flag it as an upgrade to tap.
-    const bagUpgrade = wouldUpgradeSlot(state, item.equipment);
-    if (!addToInventory(state, item.equipment)) {
+    const bagUpgrade = wouldUpgradeSlot(state, player, item.equipment);
+    if (!addToInventory(state, player, item.equipment)) {
       // Bag full: the piece stays grounded. Nudge the player to make room —
       // a thought over the hero and a pulse on the bag button — throttled so
       // standing on the loot doesn't fire it every tick.

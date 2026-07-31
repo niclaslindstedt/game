@@ -30,7 +30,7 @@ import {
 } from "./defs/talents/index.ts";
 import { recomputeMaxHp } from "./items/derived.ts";
 import { spentTalentRanks, talentRank } from "./talent-effects.ts";
-import type { GameState, StatName } from "./types/index.ts";
+import type { GameState, Player, StatName } from "./types/index.ts";
 
 /**
  * Lift the `levelup` pause and drop back into play — but only once the banked
@@ -42,10 +42,10 @@ import type { GameState, StatName } from "./types/index.ts";
  * (`spendTalentPoint`), so whichever finishes last is the one that resumes. A
  * no-op outside `levelup` (a respec never auto-closes; play stays play).
  */
-export function resumeAfterLevelup(state: GameState): void {
+export function resumeAfterLevelup(state: GameState, player: Player): void {
   if (
     state.phase === "levelup" &&
-    state.player.pendingStatPoints === 0 &&
+    player.pendingStatPoints === 0 &&
     state.pendingTalentPoints.length === 0
   ) {
     state.phase = "playing";
@@ -68,12 +68,13 @@ export function earnedTalentPoints(
  * for a non-tree stat (stamina/luck). */
 export function availableTalentPoints(
   state: GameState,
+  player: Player,
   stat: StatName,
 ): number {
   const tree = TALENT_STAT_CLASS[stat];
   if (!tree) return 0;
-  const earned = earnedTalentPoints(state.player.spentStats, stat);
-  const spent = spentTalentRanks(state, tree);
+  const earned = earnedTalentPoints(player.spentStats, stat);
+  const spent = spentTalentRanks(state, player, tree);
   const room = treeCapacity(tree) - spent;
   return Math.max(0, Math.min(earned - spent, room));
 }
@@ -85,10 +86,10 @@ export function availableTalentPoints(
  * surfaces trees in a stable sequence. Idempotent; call after any change to
  * `spentStats` or `talents` (allocate/deallocate/respec/load/spend).
  */
-export function reconcileTalentPoints(state: GameState): void {
+export function reconcileTalentPoints(state: GameState, player: Player): void {
   const queue: StatName[] = [];
   for (const stat of TALENT_STATS) {
-    const n = availableTalentPoints(state, stat);
+    const n = availableTalentPoints(state, player, stat);
     for (let i = 0; i < n; i++) queue.push(stat);
   }
   state.pendingTalentPoints = queue;
@@ -109,19 +110,23 @@ export function hasPendingTalentPoint(state: GameState): boolean {
  * queue, and lifts the level-up pause once the queue empties — the picker's
  * counterpart to the stat chooser's last-point resume.
  */
-export function spendTalentPoint(state: GameState, talentId: string): boolean {
+export function spendTalentPoint(
+  state: GameState,
+  player: Player,
+  talentId: string,
+): boolean {
   const defs = talentDefs();
   const def = defs[talentId];
   if (!def) return false;
-  const rank = talentRank(state, talentId);
+  const rank = talentRank(state, player, talentId);
   if (rank >= def.maxRank) return false;
-  if (availableTalentPoints(state, TALENT_CLASS_STAT[def.tree]) <= 0) {
+  if (availableTalentPoints(state, player, TALENT_CLASS_STAT[def.tree]) <= 0) {
     return false;
   }
-  state.player.talents[talentId] = rank + 1;
-  recomputeMaxHp(state);
-  reconcileTalentPoints(state);
-  resumeAfterLevelup(state);
+  player.talents[talentId] = rank + 1;
+  recomputeMaxHp(state, player);
+  reconcileTalentPoints(state, player);
+  resumeAfterLevelup(state, player);
   return true;
 }
 
@@ -134,7 +139,7 @@ export function spendTalentPoint(state: GameState, talentId: string): boolean {
 export function talentStatFloor(state: GameState, stat: StatName): number {
   const tree = TALENT_STAT_CLASS[stat];
   if (!tree) return 0;
-  return TALENT_UNLOCK_STEP * spentTalentRanks(state, tree);
+  return TALENT_UNLOCK_STEP * spentTalentRanks(state, state.players[0], tree);
 }
 
 /** Total talent points a build has earned across all three trees — reporting

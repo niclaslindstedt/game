@@ -12,7 +12,7 @@ import {
   weaponDef,
 } from "../defs/equipment.ts";
 import { baseStatBonus, chosenStatPointsThrough } from "../leveling.ts";
-import type { Equipment, GameState, StatName } from "../types/index.ts";
+import type { Equipment, GameState, Player, StatName } from "../types/index.ts";
 import { REQ_STAT } from "./class-stats.ts";
 import { isWeaponBroken, rawStat } from "./derived.ts";
 
@@ -49,8 +49,12 @@ export function itemLevelReq(equipment: Equipment): number {
  * artifact. Auto-equip skips a piece the hero can't wear, the bag refuses to
  * equip it, and the UI paints the requirement red until the hero grows into it.
  */
-export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
-  return state.player.level >= itemLevelReq(equipment);
+export function meetsLevelReq(
+  state: GameState,
+  player: Player,
+  equipment: Equipment,
+): boolean {
+  return player.level >= itemLevelReq(equipment);
 }
 
 /**
@@ -129,10 +133,14 @@ export function statRequirement(
  * would break the gate at high levels. Worn `+stat` gear counts toward the
  * requirement, so a "OF THE OX" find helps heft a heavier weapon.
  */
-export function meetsStatReq(state: GameState, equipment: Equipment): boolean {
+export function meetsStatReq(
+  state: GameState,
+  player: Player,
+  equipment: Equipment,
+): boolean {
   const req = statRequirement(equipment.defId);
   if (!req) return true;
-  return rawStat(state, req.stat) >= req.amount;
+  return rawStat(state, player, req.stat) >= req.amount;
 }
 
 /**
@@ -143,9 +151,16 @@ export function meetsStatReq(state: GameState, equipment: Equipment): boolean {
  * banked, never worn. The drop side is unaffected — a base still drops on
  * `levelReq` vs monster level; only the hero's hands are gated by attributes.
  */
-export function canEquip(state: GameState, equipment: Equipment): boolean {
+export function canEquip(
+  state: GameState,
+  player: Player,
+  equipment: Equipment,
+): boolean {
   // A weapon worn out to zero durability is unequippable until a repair kit
   // mends it — it rides in the bag as a broken spare, never worn.
   if (isWeaponBroken(equipment)) return false;
-  return meetsLevelReq(state, equipment) && meetsStatReq(state, equipment);
+  return (
+    meetsLevelReq(state, player, equipment) &&
+    meetsStatReq(state, player, equipment)
+  );
 }

@@ -47,7 +47,8 @@ function herdBite(state: GameState): number {
   return Math.max(
     1,
     Math.round(
-      state.player.maxHp * difficultyDef(state.difficulty).stampedeDamageFrac,
+      state.players[0].maxHp *
+        difficultyDef(state.difficulty).stampedeDamageFrac,
     ),
   );
 }
@@ -67,7 +68,7 @@ function makeStampede(
 
 /** Drop a herd right on top of the hero. */
 function herdOnHero(state: GameState): Stampede {
-  const herd = makeStampede({ pos: { ...state.player.pos } });
+  const herd = makeStampede({ pos: { ...state.players[0].pos } });
   state.stampedes.push(herd);
   return herd;
 }
@@ -94,14 +95,14 @@ describe("stampedes — spawning", () => {
 describe("stampedes — the trample of the hero", () => {
   it("catches the grounded hero: a bite AND a knockdown", () => {
     const state = startStampedes();
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     const bite = herdBite(state);
     herdOnHero(state);
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore - bite);
+    expect(state.players[0].hp).toBe(hpBefore - bite);
     // The hazard pass runs AFTER the player's knockout tick-down, so the timer
     // is set full this tick and only starts draining next tick.
-    expect(state.player.knockoutMs).toBe(STAMPEDES.knockdownMs);
+    expect(state.players[0].knockoutMs).toBe(STAMPEDES.knockdownMs);
     expect(state.events.some((e) => e.type === "stampedeHit")).toBe(true);
   });
 
@@ -115,57 +116,57 @@ describe("stampedes — the trample of the hero", () => {
     ];
     for (const [difficulty, frac] of rungs) {
       const state = startStampedes(difficulty);
-      const hpBefore = state.player.hp;
+      const hpBefore = state.players[0].hp;
       herdOnHero(state);
       step(state, idle, DT);
-      const expected = Math.max(1, Math.round(state.player.maxHp * frac));
-      expect(hpBefore - state.player.hp, difficulty).toBe(expected);
+      const expected = Math.max(1, Math.round(state.players[0].maxHp * frac));
+      expect(hpBefore - state.players[0].hp, difficulty).toBe(expected);
     }
   });
 
   it("a jumping hero sails over the whole wall — no strike, no knockdown", () => {
     const state = startStampedes();
-    state.player.z = JUMP.dodgeHeight + 30;
-    state.player.vz = 100;
-    const hpBefore = state.player.hp;
+    state.players[0].z = JUMP.dodgeHeight + 30;
+    state.players[0].vz = 100;
+    const hpBefore = state.players[0].hp;
     herdOnHero(state);
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore);
-    expect(state.player.knockoutMs).toBe(0);
+    expect(state.players[0].hp).toBe(hpBefore);
+    expect(state.players[0].knockoutMs).toBe(0);
   });
 
   it("never tramples a hero already down — no chain-lock", () => {
     const state = startStampedes();
-    state.player.knockoutMs = 400;
-    const hpBefore = state.player.hp;
+    state.players[0].knockoutMs = 400;
+    const hpBefore = state.players[0].hp;
     herdOnHero(state);
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore);
-    expect(state.player.knockoutMs).toBeLessThan(400);
+    expect(state.players[0].hp).toBe(hpBefore);
+    expect(state.players[0].knockoutMs).toBeLessThan(400);
   });
 
   it("strikes only once per herd, even as it charges over him", () => {
     const state = startStampedes();
     const herd = makeStampede({
-      pos: { x: state.player.pos.x + 30, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 30, y: state.players[0].pos.y },
       speed: 200,
     });
     state.stampedes.push(herd);
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     // Let it charge across the hero over several ticks.
     run(state, idle, 8);
     // One bite only (the knockdown makes further ticks no-ops anyway).
-    expect(hpBefore - state.player.hp).toBe(herdBite(state));
+    expect(hpBefore - state.players[0].hp).toBe(herdBite(state));
   });
 });
 
 describe("stampedes — bowling the horde over", () => {
   it("knocks a minion out instead of killing it — flung, stunned, alive, no farm", () => {
     const state = startStampedes();
-    state.player.pos = { x: 400, y: 400 };
+    state.players[0].pos = { x: 400, y: 400 };
     const minion = makeEnemy({ pos: { x: 1200, y: 800 } });
     state.enemies.push(minion);
-    const xpBefore = state.player.xp;
+    const xpBefore = state.players[0].xp;
     const killsBefore = state.stats.kills;
     const itemsBefore = state.items.length;
     const hpBefore = minion.hp;
@@ -179,14 +180,14 @@ describe("stampedes — bowling the horde over", () => {
     expect(minion.knockVel).toBeDefined();
     expect(state.events.some((e) => e.type === "stampedeTrample")).toBe(true);
     // No farm: nothing credited to the player.
-    expect(state.player.xp).toBe(xpBefore);
+    expect(state.players[0].xp).toBe(xpBefore);
     expect(state.stats.kills).toBe(killsBefore);
     expect(state.items.length).toBe(itemsBefore);
   });
 
   it("does not re-stun a minion already knocked down (one knockdown per pass)", () => {
     const state = startStampedes();
-    state.player.pos = { x: 400, y: 400 };
+    state.players[0].pos = { x: 400, y: 400 };
     const minion = makeEnemy({ pos: { x: 1200, y: 800 } });
     state.enemies.push(minion);
     // A parked herd (speed 0) sitting on the minion, so it stays in the band.
@@ -206,7 +207,7 @@ describe("stampedes — bowling the horde over", () => {
 
   it("shoves an elite/boss out of the band without killing it", () => {
     const state = startStampedes();
-    state.player.pos = { x: 400, y: 400 };
+    state.players[0].pos = { x: 400, y: 400 };
     const boss = makeEnemy(
       { pos: { x: 1200, y: 800 }, hp: 500, maxHp: 500 },
       "test_boss",
@@ -262,12 +263,14 @@ describe("stampedes — the approach is heard before it is seen", () => {
     const near = startStampedes();
     near.stampedes.push(
       makeStampede({
-        pos: { x: near.player.pos.x + 30, y: near.player.pos.y },
+        pos: { x: near.players[0].pos.x + 30, y: near.players[0].pos.y },
       }),
     );
     const far = startStampedes();
     far.stampedes.push(
-      makeStampede({ pos: { x: far.player.pos.x + 500, y: far.player.pos.y } }),
+      makeStampede({
+        pos: { x: far.players[0].pos.x + 500, y: far.players[0].pos.y },
+      }),
     );
     const nearRumble = collectRumbles(near, 1)[0];
     const farRumble = collectRumbles(far, 1)[0];
@@ -276,7 +279,7 @@ describe("stampedes — the approach is heard before it is seen", () => {
 
   it("emits grains on a cadence, not every tick", () => {
     const state = startStampedes();
-    state.stampedes.push(makeStampede({ pos: { ...state.player.pos } }));
+    state.stampedes.push(makeStampede({ pos: { ...state.players[0].pos } }));
     // 5 ticks (80ms) is under one rumble cadence (rumbleEveryMs) — one grain.
     expect(collectRumbles(state, 5)).toHaveLength(1);
   });
@@ -334,7 +337,7 @@ describe("stampedes — the approach is SEEN before it arrives (dust telegraph)"
 describe("stampedes — charging off the stage", () => {
   it("despawns a herd that has charged clear of the player", () => {
     const state = startStampedes();
-    state.player.pos = { x: 400, y: 400 };
+    state.players[0].pos = { x: 400, y: 400 };
     state.stampedes.push(
       makeStampede({
         pos: { x: 400 - STAMPEDES.despawnDistance - 20, y: 400 },
@@ -349,18 +352,18 @@ describe("stampedes — charging off the stage", () => {
 describe("stampedes — the hero lies helpless after a trample", () => {
   it("freezes the trampled hero, then he gets up when the timer lapses", () => {
     const state = startStampedes();
-    state.player.pos = { x: 400, y: 400 };
+    state.players[0].pos = { x: 400, y: 400 };
     herdOnHero(state);
     step(state, idle, DT); // trampled — now down
-    expect(state.player.knockoutMs).toBeGreaterThan(0);
+    expect(state.players[0].knockoutMs).toBeGreaterThan(0);
     // Steering does nothing while he's down.
-    const at = { ...state.player.pos };
+    const at = { ...state.players[0].pos };
     step(state, steerTo(at.x + 400, at.y), DT);
-    expect(state.player.pos).toEqual(at);
+    expect(state.players[0].pos).toEqual(at);
     // Ride out the knockdown; he recovers and moves again.
     run(state, idle, Math.ceil(STAMPEDES.knockdownMs / DT) + 2);
-    expect(state.player.knockoutMs).toBe(0);
+    expect(state.players[0].knockoutMs).toBe(0);
     step(state, steerTo(at.x + 400, at.y), DT);
-    expect(state.player.pos.x).toBeGreaterThan(at.x);
+    expect(state.players[0].pos.x).toBeGreaterThan(at.x);
   });
 });

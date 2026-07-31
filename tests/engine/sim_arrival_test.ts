@@ -29,18 +29,18 @@ describe("synthesizeArrival", () => {
     // authored level-1 start, and his combat stats carry the spent points.
     const geared = createGame(1, "test_level", "medium", loadout);
     const fresh = createGame(1, "test_level", "medium");
-    expect(geared.player.level).toBe(20);
-    expect(geared.player.maxHp).toBeGreaterThan(fresh.player.maxHp);
+    expect(geared.players[0].level).toBe(20);
+    expect(geared.players[0].maxHp).toBeGreaterThan(fresh.players[0].maxHp);
     const spent =
-      geared.player.stats.strength +
-      geared.player.stats.dexterity +
-      geared.player.stats.intelligence +
-      geared.player.stats.stamina;
+      geared.players[0].stats.strength +
+      geared.players[0].stats.dexterity +
+      geared.players[0].stats.intelligence +
+      geared.players[0].stats.stamina;
     expect(spent).toBeGreaterThan(
-      fresh.player.stats.strength +
-        fresh.player.stats.dexterity +
-        fresh.player.stats.intelligence +
-        fresh.player.stats.stamina,
+      fresh.players[0].stats.strength +
+        fresh.players[0].stats.dexterity +
+        fresh.players[0].stats.intelligence +
+        fresh.players[0].stats.stamina,
     );
     // The bag is left empty — only the worn kit rides along (no fortune of
     // spare rares for the auto-shop to bank).
@@ -91,22 +91,22 @@ describe("reviveHero", () => {
         }),
       );
     }
-    state.player.pos = { ...spawn };
-    state.player.hp = 0;
+    state.players[0].pos = { ...spawn };
+    state.players[0].hp = 0;
     state.phase = "defeat";
     const nearestBefore = Math.min(
-      ...state.enemies.map((e) => dist(e.pos, state.player.pos)),
+      ...state.enemies.map((e) => dist(e.pos, state.players[0].pos)),
     );
 
     reviveHero(state);
 
     expect(state.phase).toBe("playing");
-    expect(state.player.hp).toBe(state.player.maxHp);
-    expect(state.player.z).toBe(0);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
+    expect(state.players[0].z).toBe(0);
     // He no longer stands inside the pack — the safest open point is further
     // from the nearest body than the spawn was.
     const nearestAfter = Math.min(
-      ...state.enemies.map((e) => dist(e.pos, state.player.pos)),
+      ...state.enemies.map((e) => dist(e.pos, state.players[0].pos)),
     );
     expect(nearestAfter).toBeGreaterThan(nearestBefore);
   });

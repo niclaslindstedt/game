@@ -10,7 +10,12 @@ import {
   resumeAfterLevelup,
   talentStatFloor,
 } from "../talents.ts";
-import type { BuildSnapshot, GameState, StatName } from "../types/index.ts";
+import type {
+  BuildSnapshot,
+  GameState,
+  Player,
+  StatName,
+} from "../types/index.ts";
 import { recomputeMaxHp, recomputeMaxStamina } from "./derived.ts";
 import { syncInventoryCapacity } from "./inventory.ts";
 
@@ -20,8 +25,11 @@ import { syncInventoryCapacity } from "./inventory.ts";
  * Spend one pending stat point. When the last point is spent the `levelup`
  * pause lifts and play resumes.
  */
-export function allocateStat(state: GameState, stat: StatName): boolean {
-  const player = state.player;
+export function allocateStat(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): boolean {
   if (player.pendingStatPoints <= 0) return false;
   // The level-scaled cap: chosen points can't be placed past `statCap` (they'd
   // realize nothing — that region is the diminished GEAR tail). Below ~L66 the
@@ -34,15 +42,15 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   // is also what earns TALENT points (10 per tree stat), so bump it first.
   player.spentStats[stat]++;
   player.pendingStatPoints--;
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
   // Every 10 CHOSEN points in a STR/DEX/INT tree earns a talent point; rederive
   // the picker queue from the new tally (a no-op for off-tree stats, and during
   // a respec it silently tracks the re-placement — the picker only surfaces once
   // the respec is confirmed).
-  reconcileTalentPoints(state);
+  reconcileTalentPoints(state, player);
   // STRENGTH also widens the carry bag — grow it as the point lands.
-  if (stat === "strength") syncInventoryCapacity(state);
+  if (stat === "strength") syncInventoryCapacity(state, player);
   // A level-up resumes the moment its last point lands — UNLESS that point just
   // earned a talent point: its picker modal sits over the (now point-less)
   // chooser, and the run must stay frozen behind it until the talent is chosen,
@@ -51,7 +59,7 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   // queue are empty; `spendTalentPoint` finishes the job on the pick. A respec
   // never auto-closes — the chooser stays open (points move back and forth)
   // until the player confirms the build (`confirmRespec`).
-  resumeAfterLevelup(state);
+  resumeAfterLevelup(state, player);
   return true;
 }
 
@@ -69,8 +77,10 @@ export type { BuildSnapshot };
 
 /** Snapshot the hero's chosen build (see {@link BuildSnapshot}) — a deep copy
  * safe to hold across the whole ride and diff against later. */
-export function captureBuildSnapshot(state: GameState): BuildSnapshot {
-  const player = state.player;
+export function captureBuildSnapshot(
+  state: GameState,
+  player: Player,
+): BuildSnapshot {
   return {
     stats: { ...player.stats },
     spentStats: { ...player.spentStats },
@@ -94,6 +104,7 @@ export function captureBuildSnapshot(state: GameState): BuildSnapshot {
  */
 export function refundAutopilotBuild(
   state: GameState,
+  player: Player,
   snapshot: BuildSnapshot | null | undefined = state.autopilot.build,
 ): void {
   // NO BASELINE, NOTHING TO GIVE BACK. The stamp is what says a ride was ever
@@ -101,7 +112,6 @@ export function refundAutopilotBuild(
   // wrapped up" no-op a second call is — which is what lets this be a verb the
   // app may send without first asking whether it applies.
   if (!snapshot) return;
-  const player = state.player;
   // The points the ride ADDED to the chosen pool — measured as a delta against
   // the snapshot (plus any it left unspent) — are exactly what becomes pending.
   // A delta, not a level-based total, so a prior LEVEL-TOKEN respec that folded
@@ -126,10 +136,10 @@ export function refundAutopilotBuild(
   // Rebuild the talent queue from the reverted spend (0 pending now — the ranks
   // and their earning stats came back together) and re-derive the hp/stamina
   // pools and bag the reverted STRENGTH sizes.
-  reconcileTalentPoints(state);
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  syncInventoryCapacity(state);
+  reconcileTalentPoints(state, player);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  syncInventoryCapacity(state, player);
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
   // The flight is settled: drop the baseline so a second call is a no-op and a
@@ -148,8 +158,7 @@ export function refundAutopilotBuild(
  * chooser. The refunded total is the hero's carried-in level (plus any
  * difficulty head-start already folded into his stats).
  */
-export function beginRespec(state: GameState): void {
-  const player = state.player;
+export function beginRespec(state: GameState, player: Player): void {
   state.respecPending = false;
   let pool = player.pendingStatPoints;
   for (const stat of STAT_NAMES) {
@@ -166,10 +175,10 @@ export function beginRespec(state: GameState): void {
   player.pendingStatPoints = pool;
   // The floor exactly supports the ranks already spent, so no talent point is
   // pending yet; re-placing above a milestone mints them back (see allocateStat).
-  reconcileTalentPoints(state);
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  syncInventoryCapacity(state);
+  reconcileTalentPoints(state, player);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  syncInventoryCapacity(state, player);
   // Refunding STRENGTH shrinks the bag; keep current hp/stamina inside the
   // freshly-zeroed pools so the readouts never show an over-full bar.
   player.hp = Math.min(player.hp, player.maxHp);
@@ -194,8 +203,7 @@ export function beginRespec(state: GameState): void {
  * player would naturally be looking at their build from. A charge spent during
  * a cutscene or a death would open a chooser nobody could see.
  */
-export function spendCleanSlate(state: GameState): boolean {
-  const player = state.player;
+export function spendCleanSlate(state: GameState, player: Player): boolean {
   if (player.cleanSlates <= 0) return false;
   if (
     state.phase !== "playing" &&
@@ -206,7 +214,7 @@ export function spendCleanSlate(state: GameState): boolean {
   }
   player.cleanSlates--;
   state.events.push({ type: "cleanSlateUsed", pos: { ...player.pos } });
-  beginRespec(state);
+  beginRespec(state, player);
   return true;
 }
 
@@ -214,8 +222,12 @@ export function spendCleanSlate(state: GameState): boolean {
  * Hand the hero a clean slate — the payout of an errand that promised one.
  * Uncapped for the reason the arrival is (a chase reward, not a floor pickup).
  */
-export function grantCleanSlate(state: GameState, count = 1): void {
-  state.player.cleanSlates += Math.max(0, Math.floor(count));
+export function grantCleanSlate(
+  state: GameState,
+  player: Player,
+  count = 1,
+): void {
+  player.cleanSlates += Math.max(0, Math.floor(count));
 }
 
 /**
@@ -226,19 +238,22 @@ export function grantCleanSlate(state: GameState, count = 1): void {
  * earning stat. Returns false when the stat is already at its floor (nothing to
  * refund) or the run is not respeccing.
  */
-export function deallocateStat(state: GameState, stat: StatName): boolean {
+export function deallocateStat(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): boolean {
   if (state.phase !== "respec") return false;
-  const player = state.player;
   if (player.stats[stat] <= talentStatFloor(state, stat)) return false;
   player.stats[stat]--;
   player.spentStats[stat] = Math.max(0, player.spentStats[stat] - 1);
   player.pendingStatPoints++;
   // Dropping below a milestone revokes its un-spent talent point (the floor
   // guard above guarantees a SPENT one is never touched).
-  reconcileTalentPoints(state);
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  if (stat === "strength") syncInventoryCapacity(state);
+  reconcileTalentPoints(state, player);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  if (stat === "strength") syncInventoryCapacity(state, player);
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
   return true;
@@ -251,8 +266,7 @@ export function deallocateStat(state: GameState, stat: StatName): boolean {
  * pool over the newly-chosen stats. False (nothing happens) while points
  * remain or the run is not respeccing.
  */
-export function confirmRespec(state: GameState): boolean {
-  const player = state.player;
+export function confirmRespec(state: GameState, player: Player): boolean {
   if (state.phase !== "respec" || player.pendingStatPoints > 0) return false;
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;

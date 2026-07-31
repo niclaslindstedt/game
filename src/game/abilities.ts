@@ -27,11 +27,11 @@ import type { ActiveAbility, GameState, Player } from "./types/index.ts";
  */
 export function grantAbility(
   state: GameState,
+  player: Player,
   defId: string,
   slot?: number,
 ): boolean {
   const def = abilityDef(defId);
-  const player = state.player;
   const running = player.abilities.filter((a) => a.defId === defId);
   if (running.length > 0 && !def.stackable) return false;
   const ability: ActiveAbility = {
@@ -120,8 +120,12 @@ export function tickAbilityClock(
  * (buyStock/canBuyStock) — so all of them refuse for the same reasons and a
  * refused pickup stays where it was instead of being consumed.
  */
-export function canBankAbility(state: GameState, defId: string): boolean {
-  const held = state.player.heldAbilities;
+export function canBankAbility(
+  state: GameState,
+  player: Player,
+  defId: string,
+): boolean {
+  const held = player.heldAbilities;
   if (held.length >= HELD_ITEMS.cap) return false;
   return !(abilityDef(defId).uniqueHeld && held.includes(defId));
 }
@@ -133,19 +137,27 @@ export function canBankAbility(state: GameState, defId: string): boolean {
  * out of range). The one place `heldAbilities` shrinks — a lapsed power, a
  * spent nuke, or a discard all route through here so the links never drift.
  */
-export function removeHeldSlot(state: GameState, index: number): string | null {
-  const held = state.player.heldAbilities;
+export function removeHeldSlot(
+  state: GameState,
+  player: Player,
+  index: number,
+): string | null {
+  const held = player.heldAbilities;
   if (index < 0 || index >= held.length) return null;
   const [defId] = held.splice(index, 1);
-  for (const ability of state.player.abilities) {
+  for (const ability of player.abilities) {
     if (ability.slot !== undefined && ability.slot > index) ability.slot -= 1;
   }
   return defId ?? null;
 }
 
 /** Whether the dock slot at `index` is holding a power that is running now. */
-export function isSlotActive(state: GameState, index: number): boolean {
-  return state.player.abilities.some((a) => a.slot === index);
+export function isSlotActive(
+  state: GameState,
+  player: Player,
+  index: number,
+): boolean {
+  return player.abilities.some((a) => a.slot === index);
 }
 
 /**
@@ -163,12 +175,13 @@ export function isSlotActive(state: GameState, index: number): boolean {
  */
 export function discardHeldAbility(
   state: GameState,
+  player: Player,
   index: number,
 ): string | null {
-  for (const ability of state.player.abilities) {
+  for (const ability of player.abilities) {
     if (ability.slot === index) ability.slot = undefined;
   }
-  return removeHeldSlot(state, index);
+  return removeHeldSlot(state, player, index);
 }
 
 /**
@@ -182,17 +195,18 @@ export function discardHeldAbility(
  */
 export function moveHeldSlot(
   state: GameState,
+  player: Player,
   from: number,
   to: number,
 ): boolean {
-  const held = state.player.heldAbilities;
+  const held = player.heldAbilities;
   if (from === to) return false;
   if (from < 0 || from >= held.length || to < 0 || to >= held.length) {
     return false;
   }
   const [defId] = held.splice(from, 1);
   held.splice(to, 0, defId!);
-  for (const ability of state.player.abilities) {
+  for (const ability of player.abilities) {
     const s = ability.slot;
     if (s === undefined) continue;
     if (s === from) ability.slot = to;
@@ -216,12 +230,13 @@ export function moveHeldSlot(
  * (binary minion wipe) and the MAGNET (no damage) have nothing to scale.
  * (`LEVELING.maxLevel` never matters here — mob bars use the same L.)
  */
-export function abilityPowerScale(state: GameState): number {
-  const level = Math.max(1, state.player.level);
+export function abilityPowerScale(state: GameState, player: Player): number {
+  const level = Math.max(1, player.level);
   return (
     mobHpLevelFactor(level) *
     autoPowerScale(level) *
-    (1 + effectiveStat(state, "intelligence") * ABILITY.intDamagePerPoint)
+    (1 +
+      effectiveStat(state, player, "intelligence") * ABILITY.intDamagePerPoint)
   );
 }
 
@@ -232,8 +247,8 @@ export function abilityPowerScale(state: GameState): number {
  * that reaches it anyway. Read at every player-damage site rather than stamped
  * onto the player, so it can never outlive the power that granted it.
  */
-export function isPhased(state: GameState): boolean {
-  return state.player.abilities.some((a) => abilityDef(a.defId).phase);
+export function isPhased(state: GameState, player: Player): boolean {
+  return player.abilities.some((a) => abilityDef(a.defId).phase);
 }
 
 /**
@@ -241,9 +256,9 @@ export function isPhased(state: GameState): boolean {
  * untethered drift) — 1 when none is up. Multiplies with the talent/gear speed
  * factors at the one `playerSpeed` read.
  */
-export function abilitySpeedMult(state: GameState): number {
+export function abilitySpeedMult(state: GameState, player: Player): number {
   let mult = 1;
-  for (const ability of state.player.abilities) {
+  for (const ability of player.abilities) {
     const phase = abilityDef(ability.defId).phase;
     if (phase) mult *= phase.speedMult;
   }
@@ -257,13 +272,16 @@ export function abilitySpeedMult(state: GameState): number {
  * hero's output, so the fight and every readout move together while it burns.
  * Copies MULTIPLY, but the kind is non-stackable so at most one can be up.
  */
-export function abilitySurge(state: GameState): {
+export function abilitySurge(
+  state: GameState,
+  player: Player,
+): {
   damage: number;
   cooldown: number;
 } {
   let damage = 1;
   let cooldown = 1;
-  for (const ability of state.player.abilities) {
+  for (const ability of player.abilities) {
     const surge = abilityDef(ability.defId).surge;
     if (!surge) continue;
     damage *= surge.damageMult;
@@ -280,9 +298,12 @@ export function abilitySurge(state: GameState): {
  * `barrierBroke` cue fires. Called from `absorbPlayerDamage`, the one choke
  * point every player-damage path funnels through.
  */
-export function absorbWithBarriers(state: GameState, damage: number): number {
+export function absorbWithBarriers(
+  state: GameState,
+  player: Player,
+  damage: number,
+): number {
   if (damage <= 0) return damage;
-  const player = state.player;
   for (let i = player.abilities.length - 1; i >= 0; i--) {
     const ability = player.abilities[i] as ActiveAbility;
     if (ability.pool === undefined || ability.pool <= 0) continue;
@@ -318,8 +339,11 @@ export function absorbWithBarriers(state: GameState, damage: number): number {
  * life — it keeps clipping for as long as it runs, and the moment it lapses
  * the next blow kills like any other.
  */
-export function clipLethalDamage(state: GameState, damage: number): number {
-  const player = state.player;
+export function clipLethalDamage(
+  state: GameState,
+  player: Player,
+  damage: number,
+): number {
   if (damage < player.hp) return damage;
   let floor: number | null = null;
   // The DEEPEST ward answers, and the cue is drawn in ITS colours — whichever
@@ -348,11 +372,15 @@ export function clipLethalDamage(state: GameState, damage: number): number {
  * by INTELLIGENCE (`ABILITY.stasisRadiusPerInt`), mirroring the magnet. The
  * slow factor itself never scales — a stronger slow would trivialize kiting.
  */
-export function stasisRadius(state: GameState, def: AbilityDef): number {
+export function stasisRadius(
+  state: GameState,
+  player: Player,
+  def: AbilityDef,
+): number {
   if (!def.stasis) return 0;
   return (
     def.stasis.radius +
-    effectiveStat(state, "intelligence") * ABILITY.stasisRadiusPerInt
+    effectiveStat(state, player, "intelligence") * ABILITY.stasisRadiusPerInt
   );
 }
 
@@ -392,11 +420,15 @@ export function orbPositions(player: Player, ability: ActiveAbility): Vec2[] {
  * widened by INTELLIGENCE. Shared by the item-pull step and the renderer's
  * field ring.
  */
-export function magnetRadius(state: GameState, def: AbilityDef): number {
+export function magnetRadius(
+  state: GameState,
+  player: Player,
+  def: AbilityDef,
+): number {
   if (!def.magnet) return 0;
   return (
     def.magnet.radius +
-    effectiveStat(state, "intelligence") * def.magnet.radiusPerInt
+    effectiveStat(state, player, "intelligence") * def.magnet.radiusPerInt
   );
 }
 
@@ -406,8 +438,12 @@ export function magnetRadius(state: GameState, def: AbilityDef): number {
  * is the INT-widened `stasisRadius`, so a scholarly build casts a broader
  * field; the slow itself stays the authored factor.
  */
-export function stasisFactorAt(state: GameState, pos: Vec2): number {
-  return stasisFactorFrom(activeStasisFields(state), state.player.pos, pos);
+export function stasisFactorAt(
+  state: GameState,
+  player: Player,
+  pos: Vec2,
+): number {
+  return stasisFactorFrom(activeStasisFields(state), player.pos, pos);
 }
 
 /** One live stasis field, resolved for this player: its INT-widened reach
@@ -426,24 +462,29 @@ const NO_STASIS: readonly StasisField[] = Object.freeze([]);
  * radii (a full gear walk each) for every enemy every tick.
  */
 export function activeStasisFields(state: GameState): readonly StasisField[] {
-  const player = state.player;
   let fields: StasisField[] | null = null;
-  for (const ability of player.abilities) {
-    const def = abilityDef(ability.defId);
-    if (!def.stasis) continue;
-    const radius = stasisRadius(state, def);
-    (fields ??= []).push({
-      radiusSq: radius * radius,
-      slowFactor: def.stasis.slowFactor,
-    });
-  }
-  for (const spell of player.itemSpells) {
-    if (spell.spell !== "stasis") continue;
-    const params = stasisSpellParams(state, spell.rank);
-    (fields ??= []).push({
-      radiusSq: params.radius * params.radius,
-      slowFactor: params.slowFactor,
-    });
+  // EVERY hero's fields, not one's: a stasis ring is a patch of slowed ground
+  // and it slows the horde for whoever is standing in it. Hoisted once per tick
+  // for the whole horde (see `stepEnemies`), which is why it gathers the party
+  // here rather than being asked per mob per hero.
+  for (const player of state.players) {
+    for (const ability of player.abilities) {
+      const def = abilityDef(ability.defId);
+      if (!def.stasis) continue;
+      const radius = stasisRadius(state, player, def);
+      (fields ??= []).push({
+        radiusSq: radius * radius,
+        slowFactor: def.stasis.slowFactor,
+      });
+    }
+    for (const spell of player.itemSpells) {
+      if (spell.spell !== "stasis") continue;
+      const params = stasisSpellParams(state, player, spell.rank);
+      (fields ??= []).push({
+        radiusSq: params.radius * params.radius,
+        slowFactor: params.slowFactor,
+      });
+    }
   }
   return fields ?? NO_STASIS;
 }

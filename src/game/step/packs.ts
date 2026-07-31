@@ -2,7 +2,7 @@
 // Placed packs — the movement-driven designed encounters (see stepPacks's doc
 // comment). Part of the step pipeline (see ./index.ts).
 
-import { clamp, distance, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, type Vec2 } from "@game/lib/vec.ts";
 import { PACKS } from "../config/index.ts";
 import { spawnEnemy } from "../create.ts";
 import { difficultyDef, resolvePackCount } from "../defs/difficulties.ts";
@@ -14,6 +14,7 @@ import {
   mobLevelScale,
   resolveMobScaling,
 } from "../menace.ts";
+import { anyHeroWithin, partyLevel } from "../party.ts";
 import { insideObstacle } from "../obstacles.ts";
 import type { GameState, PackState } from "../types/index.ts";
 import { insideNoSpawnZone } from "./spawner.ts";
@@ -47,10 +48,10 @@ export function stepPacks(state: GameState): void {
   for (let i = 0; i < packs.length; i++) {
     const pack = packs[i] as PackState;
     if (pack.status === "dormant") {
-      if (
-        canWake &&
-        distance(state.player.pos, pack.at) <= pack.triggerRadius
-      ) {
+      // ANY hero wakes it. A pack half the party has walked past is a pack
+      // that never fights — and one that woke only for the host would ambush
+      // whoever was NOT there to trip it.
+      if (canWake && anyHeroWithin(state, pack.at, pack.triggerRadius)) {
         wakePack(state, pack, specs[i] as PackSpec);
       }
     } else if (pack.status === "active") {
@@ -87,7 +88,7 @@ function wakePack(state: GameState, pack: PackState, spec: PackSpec): void {
       const psc = resolveMobScaling(
         runLevelDef(state).mobLevels,
         state.difficulty,
-        state.player.level,
+        partyLevel(state),
         state.rng,
         mobLevelScale(state),
         currentMobLevel(state),

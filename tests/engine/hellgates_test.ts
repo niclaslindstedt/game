@@ -28,7 +28,7 @@ import { DT, idle, makeEnemy, run } from "./helpers.ts";
 function hellgateRun(difficulty = "nightmare"): GameState {
   const state = createGame(7, "test_hellgate_level", difficulty);
   dismissIntro(state);
-  state.player.pos = { x: 560, y: 1320 };
+  state.players[0].pos = { x: 560, y: 1320 };
   return state;
 }
 

@@ -890,7 +890,7 @@ export function resetCampaign(
  * pending credit: a real run funds its purse from the whole character purse
  * (banked coins + pendingCoins) at run start — see `characterPurse` and
  * run-setup.ts — so a brand-new hero can actually SPEND store-bought coins
- * before their first bank (the AUTO PILOT reads `state.player.coins`).
+ * before their first bank (the AUTO PILOT reads `state.players[0].coins`).
  * The run's end-of-run loadout.coins then already carries the pending, and
  * folding it again would double it — so we bank the loadout as-is and only
  * clear the pending marker. It stays `false` (fold) for callers that bank a

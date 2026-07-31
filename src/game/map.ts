@@ -169,5 +169,5 @@ export function openMap(state: GameState): void {
 /** Close the map and resume (pending level-ups take priority). */
 export function closeMap(state: GameState): void {
   if (state.phase !== "map") return;
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
 }

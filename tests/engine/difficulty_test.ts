@@ -251,7 +251,7 @@ describe("difficulty scaling in a run", () => {
   it("stretches the live cap so the harder horde actually crowds in", () => {
     const state = startOn("jesus");
     state.stats.timeMs = WAVES.rampDurationMs; // the whole budget is due
-    state.player.z = 100; // untouchable, so the run can't end mid-check
+    state.players[0].z = 100; // untouchable, so the run can't end mid-check
     step(state, idle, DT);
     const minions = state.enemies.filter((e) => isMinion(e.defId)).length;
     expect(minions).toBe(
@@ -262,8 +262,9 @@ describe("difficulty scaling in a run", () => {
   it("raises the drop chance with difficulty", () => {
     const medium = startOn("medium");
     const jesus = startOn("jesus");
-    expect(dropChance(jesus)).toBeCloseTo(
-      dropChance(medium) + difficultyDef("jesus").dropChanceBonus,
+    expect(dropChance(jesus, jesus.players[0])).toBeCloseTo(
+      dropChance(medium, medium.players[0]) +
+        difficultyDef("jesus").dropChanceBonus,
       10,
     );
   });
@@ -274,8 +275,8 @@ describe("difficulty scaling in a run", () => {
     // Past every loot-level gate on BOTH rungs (the offset-strip means the
     // hero's level, not the mob's, opens the gates), so the roll is purely
     // about the chances — the gates have their own suite.
-    medium.player.level = 50;
-    jesus.player.level = 50;
+    medium.players[0].level = 50;
+    jesus.players[0].level = 50;
     // The difficulty `tierChanceBonus` lifts the ROLLED tiers (magic/rare);
     // the named CHASE tiers ignore it (they're their own economy — see
     // `rollTier`), so this measures the rolled-tier reward.
@@ -283,8 +284,8 @@ describe("difficulty scaling in a run", () => {
     let mediumTop = 0;
     let jesusTop = 0;
     for (let i = 0; i < 800; i++) {
-      if (isRolled(rollEquipment(medium).tier)) mediumTop++;
-      if (isRolled(rollEquipment(jesus).tier)) jesusTop++;
+      if (isRolled(rollEquipment(medium, medium.players[0]).tier)) mediumTop++;
+      if (isRolled(rollEquipment(jesus, jesus.players[0]).tier)) jesusTop++;
     }
     expect(jesusTop).toBeGreaterThan(0);
     expect(jesusTop).toBeGreaterThan(mediumTop);
@@ -302,14 +303,14 @@ describe("difficulty scaling in a run", () => {
 describe("the opening kit (startingWeapon / startingStats)", () => {
   it("mints the difficulty's starting weapon, breakable, in hand", () => {
     const easy = startOn("easy");
-    expect(easy.player.equipment.weapon.defId).toBe(
+    expect(easy.players[0].equipment.weapon.defId).toBe(
       difficultyDef("easy").startingWeapon,
     );
-    expect(easy.player.equipment.weapon.durability).toBe(
+    expect(easy.players[0].equipment.weapon.durability).toBe(
       weaponDef(difficultyDef("easy").startingWeapon).durability,
     );
     const medium = startOn("medium");
-    expect(medium.player.equipment.weapon.defId).toBe(
+    expect(medium.players[0].equipment.weapon.defId).toBe(
       difficultyDef("medium").startingWeapon,
     );
   });
@@ -328,7 +329,7 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       affixes: [],
       durability: 10,
     };
-    expect(isBetterEquipment(easy, weak)).toBe(false);
+    expect(isBetterEquipment(easy, easy.players[0], weak)).toBe(false);
     const strong = {
       id: 998,
       defId: "test_hammer", // 34 dmg / 640 ms — clearly out-scores the wand
@@ -338,12 +339,12 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       affixes: [],
       durability: 120,
     };
-    expect(isBetterEquipment(easy, strong)).toBe(true);
+    expect(isBetterEquipment(easy, easy.players[0], strong)).toBe(true);
   });
 
   it("banks the difficulty's stat head-start and recomputes the pools", () => {
     const easy = startOn("easy");
-    expect(easy.player.stats).toEqual({
+    expect(easy.players[0].stats).toEqual({
       stamina: 1,
       strength: 1,
       dexterity: 1,
@@ -351,15 +352,15 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       luck: 0,
     });
     // STAMINA's point deepens both pools; STRENGTH's widens the bag.
-    expect(easy.player.maxHp).toBe(PLAYER.maxHp + STAMINA.hpPerPoint);
-    expect(easy.player.hp).toBe(easy.player.maxHp);
-    expect(easy.player.maxStamina).toBe(STAMINA.base + STAMINA.maxPerPoint);
-    expect(easy.player.stamina).toBe(easy.player.maxStamina);
-    expect(easy.player.inventory.length).toBe(4);
+    expect(easy.players[0].maxHp).toBe(PLAYER.maxHp + STAMINA.hpPerPoint);
+    expect(easy.players[0].hp).toBe(easy.players[0].maxHp);
+    expect(easy.players[0].maxStamina).toBe(STAMINA.base + STAMINA.maxPerPoint);
+    expect(easy.players[0].stamina).toBe(easy.players[0].maxStamina);
+    expect(easy.players[0].inventory.length).toBe(4);
 
     const medium = startOn("medium");
-    expect(medium.player.stats.stamina).toBe(0);
-    expect(medium.player.maxHp).toBe(PLAYER.maxHp);
+    expect(medium.players[0].stats.stamina).toBe(0);
+    expect(medium.players[0].maxHp).toBe(PLAYER.maxHp);
   });
 });
 
@@ -368,19 +369,23 @@ describe("dodge and miss (playerDodgeMult / playerMissMult / enemyDodgeMult)", (
     const easy = startOn("easy");
     const jesus = startOn("jesus");
     // Cancel EASY's stat head start so only the multipliers differ.
-    easy.player.stats.dexterity = 0;
+    easy.players[0].stats.dexterity = 0;
     // The hero slips fewer enemy blows on the harder rungs…
-    expect(playerDodgeChance(easy)).toBeGreaterThan(playerDodgeChance(jesus));
+    expect(playerDodgeChance(easy, easy.players[0])).toBeGreaterThan(
+      playerDodgeChance(jesus, jesus.players[0]),
+    );
     // …whiffs his own swings more…
-    expect(playerMissChance(easy)).toBeLessThan(playerMissChance(jesus));
-    expect(playerMissChance(jesus)).toBeCloseTo(
-      playerMissChance(startOn("medium")) *
+    expect(playerMissChance(easy, easy.players[0])).toBeLessThan(
+      playerMissChance(jesus, jesus.players[0]),
+    );
+    expect(playerMissChance(jesus, jesus.players[0])).toBeCloseTo(
+      playerMissChance(startOn("medium"), startOn("medium").players[0]) *
         difficultyDef("jesus").playerMissMult,
       10,
     );
     // …and faces slipperier monsters.
-    expect(enemyDodgeChance(easy, 0.05)).toBeLessThan(
-      enemyDodgeChance(jesus, 0.05),
+    expect(enemyDodgeChance(easy, easy.players[0], 0.05)).toBeLessThan(
+      enemyDodgeChance(jesus, jesus.players[0], 0.05),
     );
   });
 });
@@ -392,13 +397,17 @@ describe("stamina burn (staminaDrainMult)", () => {
     clearStage(state);
     state.waveSpawned = state.waveSpawned.map(() => 1e9); // truly quiet
     // Cancel EASY's head start so only the drain multiplier differs.
-    state.player.stats.stamina = 0;
-    state.player.maxStamina = STAMINA.base;
-    state.player.stamina = STAMINA.base;
+    state.players[0].stats.stamina = 0;
+    state.players[0].maxStamina = STAMINA.base;
+    state.players[0].stamina = STAMINA.base;
     for (let i = 0; i < 60; i++) {
-      step(state, steerTo(state.player.pos.x + 500, state.player.pos.y), DT);
+      step(
+        state,
+        steerTo(state.players[0].pos.x + 500, state.players[0].pos.y),
+        DT,
+      );
     }
-    return state.player.stamina;
+    return state.players[0].stamina;
   };
 
   it("drains the sprint faster on the harder rungs", () => {
@@ -448,8 +457,8 @@ describe("the drop economy (medkit/powerup mults)", () => {
     const victim = {
       id: 9000,
       defId: "test_minion",
-      pos: { x: state.player.pos.x + 20, y: state.player.pos.y },
-      home: { x: state.player.pos.x + 20, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 20, y: state.players[0].pos.y },
+      home: { x: state.players[0].pos.x + 20, y: state.players[0].pos.y },
       hp: 1,
       maxHp: 45,
       mlvl: 99,
@@ -457,7 +466,7 @@ describe("the drop economy (medkit/powerup mults)", () => {
       contactCooldownMs: 0,
     };
     state.enemies.push(victim);
-    state.player.weaponCooldownMs = 0;
+    state.players[0].weaponCooldownMs = 0;
     scriptRng(state, rolls);
     step(state, idle, DT);
     expect(state.enemies.find((e) => e.id === 9000)).toBeUndefined();
@@ -550,7 +559,7 @@ describe("difficulty-gated content (minDifficulty)", () => {
       dismissIntro(state);
       for (let i = 0; i < gatedIdx; i++) state.waveSpawned[i] = 1e9;
       state.stats.timeMs = WAVES.rampDurationMs; // the gated line is due
-      state.player.z = 100; // untouchable, so the run can't end mid-check
+      state.players[0].z = 100; // untouchable, so the run can't end mid-check
       step(state, idle, DT);
       return state;
     };
@@ -575,7 +584,7 @@ describe("horde pursuit near a set piece (mobPursuitNearElite)", () => {
     boss.pos = { x: 2000, y: 200 };
     boss.home = { x: 2000, y: 200 };
     if (engaged) boss.hp = boss.maxHp - 1; // the fight has been joined
-    state.player.pos = { x: 600, y: 800 };
+    state.players[0].pos = { x: 600, y: 800 };
     const minion = makeEnemy(
       { pos: { x: 600, y: 700 }, speed: 100, awake: true },
       "test_minion",
@@ -618,7 +627,7 @@ describe("horde pursuit near a set piece (mobPursuitNearElite)", () => {
     const boss = state.enemies.find((e) => isBoss(e.defId))!;
     const def = enemyDef(boss.defId);
     boss.spoke = true; // no dialogue stop-the-world
-    state.player.pos = { x: 600, y: 800 };
+    state.players[0].pos = { x: 600, y: 800 };
     // Boss parked well inside its own aggro radius of the hero but far out of
     // contact reach; its crawl (speed 40) can't close that gap in one tick, so
     // no blow lands — pure proximity, full hp, `engaged` never set.
@@ -646,9 +655,9 @@ describe("horde pursuit near a set piece (mobPursuitNearElite)", () => {
     clearStage(state);
     const boss = state.enemies.find((e) => isBoss(e.defId))!;
     boss.spoke = true; // skip the stare-down so the boss just fights
-    state.player.disarmed = false;
-    state.player.z = 0;
-    state.player.pos = { x: 600, y: 800 };
+    state.players[0].disarmed = false;
+    state.players[0].z = 0;
+    state.players[0].pos = { x: 600, y: 800 };
     // Boss set right on top of the hero, inside contact reach, ready to swing.
     boss.pos = { x: 600, y: 815 };
     boss.home = { ...boss.pos };

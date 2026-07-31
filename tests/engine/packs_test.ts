@@ -122,7 +122,7 @@ describe("placed packs", () => {
 
     // Move to the far pack (teleport past the obstacle field — this exercises
     // the objective rule, not pathfinding) and wipe it too.
-    state.player.pos = { x: FAR.x - 150, y: FAR.y };
+    state.players[0].pos = { x: FAR.x - 150, y: FAR.y };
     run(state, idle, 3, (s) => s.packs[1]!.status === "active");
     expect(state.packs[1]!.status).toBe("active");
     expect(state.packs[1]!.memberIds.length).toBeGreaterThan(0);

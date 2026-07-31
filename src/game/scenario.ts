@@ -269,7 +269,7 @@ const SPAWN_ATTEMPTS = 24;
  * to a mid-flight run works but tramples whatever the run had done.
  */
 export function applyScenario(state: GameState, spec: ScenarioSpec): void {
-  const player = state.player;
+  const player = state.players[0];
 
   if (spec.skipOpening !== false) skipStoryOpening(state);
   if (spec.freeze !== undefined) state.freeze = spec.freeze;
@@ -341,9 +341,9 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
 
   // Derived pools follow the build described above; the explicit hp/stamina
   // land last so "2 hp" survives the recompute.
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
-  syncInventoryCapacity(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
+  syncInventoryCapacity(state, player);
   if (spec.hp !== undefined) {
     player.hp = clamp(Math.round(spec.hp), 1, player.maxHp);
   }
@@ -366,7 +366,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
       warn(`scenario: '${defId}' is instant — nothing to run`);
       continue;
     }
-    grantAbility(state, defId);
+    grantAbility(state, player, defId);
   }
   if (spec.medkits) {
     player.medkits = new Array<number>(MEDKIT.tiers.length)
@@ -487,7 +487,7 @@ function placePlayer(
   state: GameState,
   place: "boss" | "merchant" | Vec2,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   let target: Vec2;
   if (place === "boss") {
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
@@ -545,7 +545,7 @@ function spawnRing(state: GameState, spawn: ScenarioSpawn): void {
   const max = Math.max(min, spawn.maxDistance ?? min + 160);
   const mlvl = spawn.mlvl ?? currentMobLevel(state);
   const hpMult = mobLevelScale(state) * (spawn.hpMult ?? 1);
-  const center = state.player.pos;
+  const center = state.players[0].pos;
 
   for (let i = 0; i < count; i++) {
     const pos =
@@ -577,7 +577,7 @@ function dropRing(state: GameState, drop: ScenarioDrop): void {
   const count = Math.max(1, Math.floor(drop.count ?? 1));
   const min = Math.max(0, drop.minDistance ?? 30);
   const max = Math.max(min, drop.maxDistance ?? min + 90);
-  const center = state.player.pos;
+  const center = state.players[0].pos;
   for (let i = 0; i < count; i++) {
     const pos =
       drop.at !== undefined
@@ -619,7 +619,7 @@ function mintDrop(
       id: state.nextId++,
       kind: "equipment",
       pos,
-      equipment: rollEquipment(state, {
+      equipment: rollEquipment(state, state.players[0], {
         defId: id,
         tier: drop.tier ?? "regular",
         quality: "normal",

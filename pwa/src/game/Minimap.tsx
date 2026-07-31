@@ -13,6 +13,7 @@
 // or a close-up window hovering over the hero, drawn from a higher-resolution
 // terrain layer so the ground sprites read clearly at that zoom.
 
+import { localHero } from "./local-seat.ts";
 import { useEffect, useRef, type RefObject } from "react";
 
 import {
@@ -399,8 +400,8 @@ export function drawMinimap(
     const scale = bw / (FOLLOW_VIEW_CELLS * MAP.cellSize);
     const viewW = bw / scale;
     const viewH = bh / scale;
-    const vx = state.player.pos.x - viewW / 2;
-    const vy = state.player.pos.y - viewH / 2;
+    const vx = localHero(state).pos.x - viewW / 2;
+    const vy = localHero(state).pos.y - viewH / 2;
     const src = cellPx / MAP.cellSize;
     const wx0 = Math.max(0, vx);
     const wy0 = Math.max(0, vy);
@@ -451,8 +452,8 @@ export function drawMinimap(
   }
   // The hero's own pin: a bright green dot ringed dark so it reads over any
   // terrain, always shown.
-  const px = toX(state.player.pos.x);
-  const py = toY(state.player.pos.y);
+  const px = toX(localHero(state).pos.x);
+  const py = toY(localHero(state).pos.y);
   ctx.fillStyle = "rgba(11,13,16,0.9)";
   ctx.beginPath();
   ctx.arc(px, py, 3.2 * dpr, 0, Math.PI * 2);

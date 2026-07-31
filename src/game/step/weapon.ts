@@ -35,6 +35,7 @@ import type {
   Equipment,
   GameInput,
   GameState,
+  Player,
   WeaponClass,
 } from "../types/index.ts";
 import { inert, inertEnemy } from "../disposition.ts";
@@ -47,10 +48,10 @@ import { inert, inertEnemy } from "../disposition.ts";
  */
 export function stepWeapon(
   state: GameState,
+  player: Player,
   input: GameInput,
   dtMs: number,
 ): void {
-  const player = state.player;
   // Holstered on levels with a scripted opening strike: the auto-attack sits
   // out entirely until the vanguard's first swing draws the blade (story.ts).
   if (player.disarmed) return;
@@ -75,7 +76,7 @@ export function stepWeapon(
   // No target through a wall: the character never wastes a swing or a shot
   // on a monster it can't actually reach. INTELLIGENCE widens every weapon's
   // reach, so a high-INT build strikes from a touch further out.
-  const range = weaponRangeFor(state, equipped);
+  const range = weaponRangeFor(state, player, equipped);
   // A desktop mouse tilts the pick toward whatever the cursor points at (a unit
   // bearing from the hero); a pointer resting on the hero has no bearing, so the
   // zero vector below falls straight back to the nearest foe.
@@ -107,14 +108,14 @@ export function stepWeapon(
 
   // The speed stat quickens the cadence: DEX (melee & ranged) and INT (magic)
   // each drop the effective cooldown as they rise.
-  player.weaponCooldownMs = weaponCooldownFor(state, equipped);
+  player.weaponCooldownMs = weaponCooldownFor(state, player, equipped);
   const dir = direction(player.pos, targetPos);
   if (!weapon.projectile) {
     // A swing cleaves a cone: the nearest monster is the aim, and every other
     // monster within reach and inside the weapon's arc is struck in the same
     // blow — but only the nearest `maxMeleeTargets` of them (INT raises that
     // cap). A blade sweeps a wide slash; a spear thrusts a narrow cone far.
-    const half = weaponSweepHalfAngle(state, equipped);
+    const half = weaponSweepHalfAngle(state, player, equipped);
     const swingEvent = {
       type: "swing" as const,
       pos: { ...player.pos },
@@ -131,8 +132,8 @@ export function stepWeapon(
     state.events.push(swingEvent);
     // CLEAVING ECHO (melee tree): a chance for this swing to cleave EXTRA foes
     // past the weapon's cap. One roll per swing; untrained draws no rng.
-    let cap = maxMeleeTargets(state);
-    const cleave = talentCleavingEcho(state);
+    let cap = maxMeleeTargets(state, player);
+    const cleave = talentCleavingEcho(state, player);
     if (cleave && state.rng() < cleave.chance) cap += cleave.extraTargets;
     // AN EXECUTIONER CANNOT TAKE MORE BODIES THAN IT HAS TEETH LEFT
     // (`items/execute.ts`): its durability IS its body count, so the last swing
@@ -152,14 +153,14 @@ export function stepWeapon(
       equipped,
       cap,
       weapon.class,
-      weaponCritMult(state, equipped),
+      weaponCritMult(state, player, equipped),
     );
     swingEvent.targets = sweep.eligible;
     // The same swing smashes any breakable crate inside its cone — free
     // collateral in a fight, and the whole point of a swing aimed at a crate.
     // Each box rolls its own weapon blow, exactly like a cleaved mob.
     for (const crate of cratesInCone(state, player.pos, dir, range, half)) {
-      damageCrate(state, crate, rollWeaponHit(state, equipped).damage);
+      damageCrate(state, crate, rollWeaponHit(state, player, equipped).damage);
     }
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     //
@@ -168,7 +169,7 @@ export function stepWeapon(
     // stay true however many the cone caught at once. Every other weapon in the
     // game spends exactly one, which is the `Math.max(1, …)` — a swing that
     // whiffed, or one that only met a boss, still cost the edge something.
-    wearEquippedWeapon(state, Math.max(1, sweep.executed));
+    wearEquippedWeapon(state, player, Math.max(1, sweep.executed));
     return;
   }
 
@@ -185,7 +186,7 @@ export function stepWeapon(
   // projectiles in a spread — even a single-shot weapon fans them. One roll per
   // pull; untrained draws no rng.
   if (weapon.class === "ranged") {
-    const vol = talentVolley(state);
+    const vol = talentVolley(state, player);
     if (vol && state.rng() < vol.chance) {
       count += vol.extra;
       spread = Math.max(spread, (vol.spreadDeg * Math.PI) / 180);
@@ -193,7 +194,8 @@ export function stepWeapon(
   }
   // PIERCING SHOT (ranged tree): the hero's shots punch through extra bodies at
   // a rank-softened falloff (applied per body in stepProjectiles).
-  const pierce = weapon.class === "ranged" ? talentPiercing(state) : null;
+  const pierce =
+    weapon.class === "ranged" ? talentPiercing(state, player) : null;
   // One id for the whole trigger pull: every pellet shares it, so the ranged AoE
   // calibration can group a volley's hits and count the DISTINCT foes it reached
   // (see each hit's `enemyHit.fromVolley`). Marks the hero's shots only.
@@ -206,7 +208,7 @@ export function stepWeapon(
       x: dir.x * cos - dir.y * sin,
       y: dir.x * sin + dir.y * cos,
     };
-    const hit = rollWeaponHit(state, equipped);
+    const hit = rollWeaponHit(state, player, equipped);
     // Native pierce plus any PIERCING SHOT talent pierce; the talent also
     // softens the shot per body it punches through (`pierceFalloff`).
     const pierceLeft = (spec.pierce || 0) + (pierce?.pierce ?? 0) || undefined;
@@ -228,7 +230,7 @@ export function stepWeapon(
       pierceFalloff: pierce?.retain,
       homing: spec.homing || undefined,
       chain: spec.chain || undefined,
-      critMult: weaponCritMult(state, equipped),
+      critMult: weaponCritMult(state, player, equipped),
     });
     state.projectiles.push(projectile);
   }
@@ -240,7 +242,7 @@ export function stepWeapon(
     dir,
     ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
   });
-  wearEquippedWeapon(state);
+  wearEquippedWeapon(state, player);
 }
 
 /**
@@ -270,7 +272,7 @@ function meleeSweep(
   weaponClass: WeaponClass,
   critMult: number,
 ): { eligible: number; executed: number } {
-  const player = state.player;
+  const player = state.players[0];
   const rangeSq = range * range;
   const cosHalf = Math.cos(halfAngle);
   // Gather every foe the cone can reach, then strike only the `maxTargets`
@@ -314,11 +316,11 @@ function meleeSweep(
   const execBars = weaponExecuteBars(weapon.defId);
   // TWIN STRIKE (melee tree): a chance each blow echoes for a second hit. Read
   // once for the swing; the per-hit roll is gated on it so untrained draws no rng.
-  const twin = talentTwinStrike(state);
+  const twin = talentTwinStrike(state, player);
   let executed = 0;
   for (let i = 0; i < eligible.length && i < maxTargets; i++) {
     // Roll each body's blow on its own so a cleave lands a spread of numbers.
-    const { damage, roll } = rollWeaponHit(state, weapon);
+    const { damage, roll } = rollWeaponHit(state, player, weapon);
     const entry = eligible[i] as (typeof eligible)[number];
     const target = entry.enemy;
     // An execution takes this body only if it is one the weapon may take — a

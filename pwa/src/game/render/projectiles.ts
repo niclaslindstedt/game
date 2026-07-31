@@ -2,6 +2,7 @@
 // In-flight projectiles: each weapon's own shot sprite, plus the hero's
 // signature glow trail riding his own rounds (weapon-fx.ts).
 
+import { localHero } from "../local-seat.ts";
 import { type GameState } from "@game/core";
 
 import { drawFaded } from "@ui/lib/canvas-fade.ts";
@@ -63,7 +64,7 @@ function drawProjectilePass(
         py,
         projectile.dir,
         shotStyleFor(
-          state.player.equipment.weapon.uniqueId,
+          localHero(state).equipment.weapon.uniqueId,
           projectile.weaponClass === "magic" ? "magic" : "ranged",
         ),
       );

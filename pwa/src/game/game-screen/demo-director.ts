@@ -9,6 +9,7 @@
 // demo input only — the bot's own decisions, and every non-demo run, are
 // untouched.
 
+import { localHero } from "../local-seat.ts";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
@@ -377,7 +378,7 @@ export function createDemoDirector(deps: {
   const statButton = (stat: string) =>
     screenRef.current?.querySelector(`[aria-label="stat-${stat}"]`) ?? null;
   const stepLevelup = (dtMs: number) => {
-    if (!bot || state.player.pendingStatPoints <= 0) return;
+    if (!bot || localHero(state).pendingStatPoints <= 0) return;
     const stat = botAllocate(bot, state);
     const btn = statButton(stat);
     // The modal paints one render frame after the phase flips; hold off until
@@ -558,7 +559,7 @@ export function createDemoDirector(deps: {
     heroAt: () => { x: number; y: number },
   ) => {
     if (!demo || state.phase !== "playing") return;
-    trackStandstill(refs.demoStillRef.current, state.player.pos, dtMs);
+    trackStandstill(refs.demoStillRef.current, localHero(state).pos, dtMs);
     if (refs.demoLessonGapMsRef.current > 0) {
       refs.demoLessonGapMsRef.current -= dtMs;
       return;
@@ -606,17 +607,17 @@ export function createDemoDirector(deps: {
     {
       flag: "useMedkit",
       slot: "medkit",
-      held: (s: GameState) => s.player.medkits.reduce((n, c) => n + c, 0),
+      held: (s: GameState) => localHero(s).medkits.reduce((n, c) => n + c, 0),
     },
     {
       flag: "useStaminaPotion",
       slot: "stamina",
-      held: (s: GameState) => s.player.staminaPotions,
+      held: (s: GameState) => localHero(s).staminaPotions,
     },
     {
       flag: "useRepairKit",
       slot: "repair",
-      held: (s: GameState) => s.player.repairKits,
+      held: (s: GameState) => localHero(s).repairKits,
     },
   ] as const;
   const holdItemUse = (input: GameInput) => {
@@ -644,7 +645,12 @@ export function createDemoDirector(deps: {
   // VIEW shows the raw steer).
   const dampFlicker = (input: GameInput, dtMs: number) => {
     if (demo)
-      dampDemoFlicker(input, state.player.pos, refs.demoFaceRef.current, dtMs);
+      dampDemoFlicker(
+        input,
+        localHero(state).pos,
+        refs.demoFaceRef.current,
+        dtMs,
+      );
   };
 
   // The anchor is a THUNK so the caller (the render loop, every frame while

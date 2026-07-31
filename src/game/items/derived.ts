@@ -78,8 +78,11 @@ export type HeroLoadoutMemo = {
 const loadoutMemos = new WeakMap<Player, HeroLoadoutMemo>();
 
 /** Append everything the derived reads depend on, as plain numbers. */
-function writeLoadoutSnapshot(state: GameState, out: number[]): void {
-  const player = state.player;
+function writeLoadoutSnapshot(
+  state: GameState,
+  player: Player,
+  out: number[],
+): void {
   out.push(player.level, autoStatGainsOn() ? 1 : 0, setsEpoch());
   for (const stat of STAT_NAMES) out.push(player.stats[stat]);
   const equipment = player.equipment;
@@ -97,11 +100,14 @@ function writeLoadoutSnapshot(state: GameState, out: number[]): void {
  * (`previewEquipped`), saves, and parallel headless states never collide.
  * The hit path walks-and-compares in place — no allocation, no writes.
  */
-export function heroLoadoutMemo(state: GameState): HeroLoadoutMemo {
-  const cached = loadoutMemos.get(state.player);
-  if (cached && snapshotMatches(state, cached.snapshot)) return cached;
+export function heroLoadoutMemo(
+  state: GameState,
+  player: Player,
+): HeroLoadoutMemo {
+  const cached = loadoutMemos.get(player);
+  if (cached && snapshotMatches(state, player, cached.snapshot)) return cached;
   const snapshot: number[] = [];
-  writeLoadoutSnapshot(state, snapshot);
+  writeLoadoutSnapshot(state, player, snapshot);
   const memo: HeroLoadoutMemo = {
     snapshot,
     parts: {},
@@ -109,14 +115,17 @@ export function heroLoadoutMemo(state: GameState): HeroLoadoutMemo {
     hasAffix: {},
     procs: {},
   };
-  loadoutMemos.set(state.player, memo);
+  loadoutMemos.set(player, memo);
   return memo;
 }
 
 /** Does `snap` still describe this player's loadout exactly? The mirror of
  * `writeLoadoutSnapshot`, walked without building anything. */
-function snapshotMatches(state: GameState, snap: number[]): boolean {
-  const player = state.player;
+function snapshotMatches(
+  state: GameState,
+  player: Player,
+  snap: number[],
+): boolean {
   let i = 0;
   if (snap[i++] !== player.level) return false;
   if (snap[i++] !== (autoStatGainsOn() ? 1 : 0)) return false;
@@ -145,11 +154,14 @@ function snapshotMatches(state: GameState, snap: number[]): boolean {
  * the memo's whole life. Weapon-math.ts reads/writes them keyed by the weapon
  * instance. See {@link HeroLoadoutMemo.weaponScores}.
  */
-export function weaponScoreCaches(state: GameState): {
+export function weaponScoreCaches(
+  state: GameState,
+  player: Player,
+): {
   score: Map<Equipment, number>;
   dps: Map<Equipment, number>;
 } {
-  const memo = heroLoadoutMemo(state);
+  const memo = heroLoadoutMemo(state, player);
   if (!memo.weaponScores || !memo.weaponDpsById) {
     memo.weaponScores = new Map();
     memo.weaponDpsById = new Map();
@@ -157,9 +169,9 @@ export function weaponScoreCaches(state: GameState): {
   return { score: memo.weaponScores, dps: memo.weaponDpsById };
 }
 
-export function equippedPieces(state: GameState): Equipment[] {
+export function equippedPieces(state: GameState, player: Player): Equipment[] {
   const { weapon, head, chest, legs, feet, amulet, ring1, ring2, offhand } =
-    state.player.equipment;
+    player.equipment;
   return [
     weapon,
     head,
@@ -188,9 +200,9 @@ export function isTrinket(piece: Equipment): boolean {
  * effective loadout. A trinket in the bag is "on": nothing breaks it and no
  * slot gates it, so unlike worn armor there is no active/inactive split here.
  */
-export function carriedTrinkets(state: GameState): Equipment[] {
+export function carriedTrinkets(state: GameState, player: Player): Equipment[] {
   const out: Equipment[] = [];
-  for (const piece of state.player.inventory) {
+  for (const piece of player.inventory) {
     if (piece && isTrinket(piece)) out.push(piece);
   }
   return out;
@@ -202,9 +214,12 @@ export function carriedTrinkets(state: GameState): Equipment[] {
  * the reach every derived-stat read shares, so a trinket pays out exactly
  * like a worn piece without ever occupying a slot.
  */
-export function contributingPieces(state: GameState): Equipment[] {
-  const pieces = activePieces(state);
-  for (const piece of carriedTrinkets(state)) pieces.push(piece);
+export function contributingPieces(
+  state: GameState,
+  player: Player,
+): Equipment[] {
+  const pieces = activePieces(state, player);
+  for (const piece of carriedTrinkets(state, player)) pieces.push(piece);
   return pieces;
 }
 
@@ -232,11 +247,11 @@ export function isArmorBroken(piece: Equipment): boolean {
  * hero's uniques/legendaries deepen how much of the armored endgame their
  * blows punch through. The whole late-game ranged (and melee) chase stat.
  */
-export function heroArmorPen(state: GameState): number {
-  const memo = heroLoadoutMemo(state);
+export function heroArmorPen(state: GameState, player: Player): number {
+  const memo = heroLoadoutMemo(state, player);
   if (memo.armorPen !== undefined) return memo.armorPen;
   let pen = 0;
-  for (const piece of contributingPieces(state)) {
+  for (const piece of contributingPieces(state, player)) {
     for (const affix of piece.affixes) {
       if (affix.kind === "armorPen") pen += affix.value;
     }
@@ -253,8 +268,8 @@ export function heroArmorPen(state: GameState): number {
  * most builds never knock back at all. A marker affix, so this reads as a
  * boolean — the magnitude is the shared `KNOCKBACK.distance`.
  */
-export function heroHasKnockback(state: GameState): boolean {
-  return hasActiveAffix(state, "knockback");
+export function heroHasKnockback(state: GameState, player: Player): boolean {
+  return hasActiveAffix(state, player, "knockback");
 }
 
 /**
@@ -272,8 +287,8 @@ export function isWeaponBroken(piece: Equipment): boolean {
 /** The worn pieces whose bonuses/affixes actually apply right now — everything
  * equipped minus broken armor. Every derived-stat read routes through this so
  * a worn-out piece goes silent the moment it breaks. */
-export function activePieces(state: GameState): Equipment[] {
-  return equippedPieces(state).filter((piece) => !isArmorBroken(piece));
+export function activePieces(state: GameState, player: Player): Equipment[] {
+  return equippedPieces(state, player).filter((piece) => !isArmorBroken(piece));
 }
 
 /**
@@ -282,12 +297,16 @@ export function activePieces(state: GameState): Equipment[] {
  * share, so a broken armor piece silences its forever spell exactly as it
  * silences its stats.
  */
-export function activeEquippedAffixes(state: GameState): readonly Affix[] {
-  const memo = heroLoadoutMemo(state);
+export function activeEquippedAffixes(
+  state: GameState,
+  player: Player,
+): readonly Affix[] {
+  const memo = heroLoadoutMemo(state, player);
   if (memo.activeAffixes) return memo.activeAffixes;
   const affixes: Affix[] = [];
-  for (const piece of contributingPieces(state)) affixes.push(...piece.affixes);
-  affixes.push(...setBonusAffixes(state));
+  for (const piece of contributingPieces(state, player))
+    affixes.push(...piece.affixes);
+  affixes.push(...setBonusAffixes(state, player));
   memo.activeAffixes = affixes;
   return affixes;
 }
@@ -298,12 +317,16 @@ export function activeEquippedAffixes(state: GameState): readonly Affix[] {
  * boolean marker checks that run per hit (sure-strike, knockback) — at horde
  * scale the flattened-array form was measurable GC pressure.
  */
-export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
-  const memo = heroLoadoutMemo(state);
+export function hasActiveAffix(
+  state: GameState,
+  player: Player,
+  kind: Affix["kind"],
+): boolean {
+  const memo = heroLoadoutMemo(state, player);
   const cached = memo.hasAffix[kind];
   if (cached !== undefined) return cached;
   let found = false;
-  const equipment = state.player.equipment;
+  const equipment = player.equipment;
   outer: for (const slot of EQUIP_SLOTS) {
     const piece = equipment[slot];
     if (!piece || isArmorBroken(piece)) continue;
@@ -317,7 +340,7 @@ export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
   // Carried trinkets carry their affixes too — walked in place, like the
   // worn slots above, so this stays allocation-free on the per-hit path.
   if (!found) {
-    outer2: for (const piece of state.player.inventory) {
+    outer2: for (const piece of player.inventory) {
       if (!piece || !isTrinket(piece)) continue;
       for (const affix of piece.affixes) {
         if (affix.kind === kind) {
@@ -328,7 +351,7 @@ export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
     }
   }
   if (!found) {
-    for (const affix of setBonusAffixes(state)) {
+    for (const affix of setBonusAffixes(state, player)) {
       if (affix.kind === kind) {
         found = true;
         break;
@@ -344,9 +367,13 @@ export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
  * slot (broken pieces don't count — a set bonus goes quiet with its piece).
  * The item card reads it to highlight which set thresholds are live.
  */
-export function wornSetCount(state: GameState, setId: string): number {
+export function wornSetCount(
+  state: GameState,
+  player: Player,
+  setId: string,
+): number {
   let count = 0;
-  for (const piece of activePieces(state)) {
+  for (const piece of activePieces(state, player)) {
     if (!piece.uniqueId) continue;
     const set = setForItem(piece.uniqueId);
     if (set?.id === setId) count++;
@@ -369,16 +396,22 @@ export function wornSetCount(state: GameState, setId: string): number {
 // set scan below exits with this shared empty result before allocating.
 const NO_AFFIXES: readonly Affix[] = Object.freeze([]);
 
-export function setBonusAffixes(state: GameState): readonly Affix[] {
-  const memo = heroLoadoutMemo(state);
+export function setBonusAffixes(
+  state: GameState,
+  player: Player,
+): readonly Affix[] {
+  const memo = heroLoadoutMemo(state, player);
   if (memo.setAffixes) return memo.setAffixes;
-  const affixes = computeSetBonusAffixes(state);
+  const affixes = computeSetBonusAffixes(state, player);
   memo.setAffixes = affixes;
   return affixes;
 }
 
-function computeSetBonusAffixes(state: GameState): readonly Affix[] {
-  const equipment = state.player.equipment;
+function computeSetBonusAffixes(
+  state: GameState,
+  player: Player,
+): readonly Affix[] {
+  const equipment = player.equipment;
   // Count worn named pieces first — with fewer than two, no set can reach its
   // 2-piece threshold and the whole scan (and its allocations) is skipped.
   let named = 0;
@@ -417,9 +450,9 @@ export function previewEquipped(
   state: GameState,
   candidate: Equipment,
 ): GameState {
-  const player = state.player;
+  const player = state.players[0];
   const equipment = { ...player.equipment, [candidate.slot]: candidate };
-  return { ...state, player: { ...player, equipment } };
+  return { ...state, players: [{ ...player, equipment }] };
 }
 
 /**
@@ -433,26 +466,34 @@ export function previewEquipped(
  * carried trinkets (`contributingPieces`), so a broken armor piece's bonus
  * goes quiet with the rest of it and a bagged trinket's still lands.
  */
-function gearStatBonus(state: GameState, stat: StatName): number {
+function gearStatBonus(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): number {
   let total = 0;
-  for (const piece of contributingPieces(state)) {
+  for (const piece of contributingPieces(state, player)) {
     if (isWeaponDef(piece.defId)) continue;
     total += gearDef(piece.defId).bonuses.stats?.[stat] ?? 0;
   }
   return total;
 }
 
-function passiveStatBonus(state: GameState, stat: StatName): number {
+function passiveStatBonus(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): number {
   // The worn slots and the bag cells, walked in place — the same reach
   // `carriedPieces` flattens, minus its per-call array allocations.
   let total = 0;
-  const equipment = state.player.equipment;
+  const equipment = player.equipment;
   for (const slot of EQUIP_SLOTS) {
     const piece = equipment[slot];
     if (!piece || isWeaponDef(piece.defId)) continue;
     total += gearDef(piece.defId).passive?.[stat] ?? 0;
   }
-  for (const piece of state.player.inventory) {
+  for (const piece of player.inventory) {
     if (!piece || isWeaponDef(piece.defId)) continue;
     total += gearDef(piece.defId).passive?.[stat] ?? 0;
   }
@@ -480,14 +521,16 @@ export function isPassiveItem(defId: string): boolean {
  * compounding forever (the horde's compensation rides the same curve — see
  * `autoPowerScale`).
  */
-export function effectiveStat(state: GameState, stat: StatName): number {
-  const memo = heroLoadoutMemo(state);
+export function effectiveStat(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): number {
+  const memo = heroLoadoutMemo(state, player);
   const cached = memo.effective[stat];
   if (cached !== undefined) return cached;
-  const { value, pct } = statParts(state, stat);
-  const result = Math.round(
-    diminishStat(value, state.player.level) * (1 + pct),
-  );
+  const { value, pct } = statParts(state, player, stat);
+  const result = Math.round(diminishStat(value, player.level) * (1 + pct));
   memo.effective[stat] = result;
   return result;
 }
@@ -500,22 +543,29 @@ export function effectiveStat(state: GameState, stat: StatName): number {
  * the diminish to recover the honest points-invested figure. Shared so the two
  * never drift.
  */
-function statParts(state: GameState, stat: StatName): StatParts {
-  const memo = heroLoadoutMemo(state);
+function statParts(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): StatParts {
+  const memo = heroLoadoutMemo(state, player);
   const cached = memo.parts[stat];
   if (cached) return cached;
-  const parts = computeStatParts(state, stat);
+  const parts = computeStatParts(state, player, stat);
   memo.parts[stat] = parts;
   return parts;
 }
 
-function computeStatParts(state: GameState, stat: StatName): StatParts {
-  let value =
-    state.player.stats[stat] + baseStatBonus(state.player.level, stat);
+function computeStatParts(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): StatParts {
+  let value = player.stats[stat] + baseStatBonus(player.level, stat);
   // Scaling `statPct` bonuses (uniques) multiply the whole total, so they grow
   // with the hero — a +2% STRENGTH is worth more the stronger you are.
   let pct = 0;
-  const equipment = state.player.equipment;
+  const equipment = player.equipment;
   for (const slot of EQUIP_SLOTS) {
     const piece = equipment[slot];
     if (!piece || isArmorBroken(piece)) continue;
@@ -527,7 +577,7 @@ function computeStatParts(state: GameState, stat: StatName): StatParts {
   }
   // Carried TRINKETS pay their affixes from the bag, exactly like a worn
   // piece — the whole point of the charm rule.
-  for (const piece of state.player.inventory) {
+  for (const piece of player.inventory) {
     if (!piece || !isTrinket(piece)) continue;
     for (const affix of piece.affixes) {
       if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
@@ -538,14 +588,14 @@ function computeStatParts(state: GameState, stat: StatName): StatParts {
   // A gear base's OWN flat stat bonus (`GearDef.bonuses.stats`) — jewellery's
   // whole identity, and the ENGAGEMENT BAND's +1 LUCK. Counted once per piece,
   // worn or carried, exactly like the `passive` sum below.
-  value += gearStatBonus(state, stat);
+  value += gearStatBonus(state, player, stat);
   // SET BONUSES contribute stat/statPct just like a worn piece's own affixes.
-  for (const affix of setBonusAffixes(state)) {
+  for (const affix of setBonusAffixes(state, player)) {
     if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
     else if (affix.kind === "statPct" && affix.stat === stat)
       pct += affix.value;
   }
-  value += passiveStatBonus(state, stat);
+  value += passiveStatBonus(state, player, stat);
   return { value, pct };
 }
 
@@ -559,20 +609,25 @@ function computeStatParts(state: GameState, stat: StatName): StatParts {
  * ever DISPLAY — while the raw total still rises point-for-point, keeping the
  * "invest a fraction of your chosen points" contract exact at every level.
  */
-export function rawStat(state: GameState, stat: StatName): number {
-  const { value, pct } = statParts(state, stat);
+export function rawStat(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): number {
+  const { value, pct } = statParts(state, player, stat);
   return value * (1 + pct);
 }
 
 /** Max hp from the base pool + the STAMINA stat + gear bonuses and affixes.
  * STAMINA now feeds BOTH the sprint pool (see `computeMaxStamina`) and the
  * health bar — a hardy sprinter is a sturdier hero. */
-export function computeMaxHp(state: GameState): number {
-  let max = PLAYER.maxHp + effectiveStat(state, "stamina") * STAMINA.hpPerPoint;
+export function computeMaxHp(state: GameState, player: Player): number {
+  let max =
+    PLAYER.maxHp + effectiveStat(state, player, "stamina") * STAMINA.hpPerPoint;
   // BULWARK (melee tree) deepens the whole pool by a flat % per rank, alongside
   // the maxHpPct affixes below.
-  let pct = talentMaxHpPct(state);
-  for (const piece of contributingPieces(state)) {
+  let pct = talentMaxHpPct(state, player);
+  for (const piece of contributingPieces(state, player)) {
     if (!isWeaponDef(piece.defId)) {
       max += gearDef(piece.defId).bonuses.maxHp ?? 0;
     }
@@ -583,7 +638,7 @@ export function computeMaxHp(state: GameState): number {
     }
   }
   // SET BONUSES add their maxHp/maxHpPct on top (e.g. the Sentinel's Vigil).
-  for (const affix of setBonusAffixes(state)) {
+  for (const affix of setBonusAffixes(state, player)) {
     if (affix.kind === "maxHp") max += affix.value;
     else if (affix.kind === "maxHpPct") pct += affix.value;
   }
@@ -595,17 +650,18 @@ export function computeMaxHp(state: GameState): number {
  * current hp by the same amount (a level-up or a fresh suit feels good);
  * losing it only clamps.
  */
-export function recomputeMaxHp(state: GameState): void {
-  const player = state.player;
-  const next = computeMaxHp(state);
+export function recomputeMaxHp(state: GameState, player: Player): void {
+  const next = computeMaxHp(state, player);
   const delta = next - player.maxHp;
   player.maxHp = next;
   player.hp = delta > 0 ? player.hp + delta : Math.min(player.hp, next);
 }
 
 /** Max stamina from the base pool + the STAMINA stat (affixes folded in). */
-export function computeMaxStamina(state: GameState): number {
-  return STAMINA.base + effectiveStat(state, "stamina") * STAMINA.maxPerPoint;
+export function computeMaxStamina(state: GameState, player: Player): number {
+  return (
+    STAMINA.base + effectiveStat(state, player, "stamina") * STAMINA.maxPerPoint
+  );
 }
 
 /**
@@ -620,9 +676,10 @@ export function computeMaxStamina(state: GameState): number {
  * STAMINA stat then quickens it exactly as it quickens nothing else about the
  * refill, so a hero with a deeper pool never waits longer to fill it.
  */
-export function staminaRegenPerSec(state: GameState): number {
+export function staminaRegenPerSec(state: GameState, player: Player): number {
   const refillSec = difficultyDef(state.difficulty).staminaRefillSec;
-  const perPoint = 1 + effectiveStat(state, "stamina") * STAMINA.regenPerPoint;
+  const perPoint =
+    1 + effectiveStat(state, player, "stamina") * STAMINA.regenPerPoint;
   return (STAMINA.base / refillSec) * perPoint;
 }
 
@@ -643,9 +700,8 @@ export function staminaEmptyLockMs(state: GameState): number {
  * current reserve by the same amount (a level-up feels good); a shallower one
  * only clamps.
  */
-export function recomputeMaxStamina(state: GameState): void {
-  const player = state.player;
-  const next = computeMaxStamina(state);
+export function recomputeMaxStamina(state: GameState, player: Player): void {
+  const next = computeMaxStamina(state, player);
   const delta = next - player.maxStamina;
   player.maxStamina = next;
   player.stamina =

@@ -168,7 +168,7 @@ export function stepEnemyMechanics(
   const mechanics = activeMechanics(enemy, def);
   if (!mechanics || def.role === "minion" || def.apparition) return false;
   const mech = (enemy.mech ??= {});
-  const player = state.player;
+  const player = state.players[0];
 
   // Cooldown clocks burn down whatever else happens.
   if (mech.chargeCooldownMs) {
@@ -396,7 +396,8 @@ function resolveSlamHit(
 ): void {
   // A jump sails clean over it, exactly like contact — the readable answer.
   if (!groundMoveCanTouch(state)) return;
-  if (distance(state.player.pos, enemy.pos) > radius + PLAYER.radius) return;
+  if (distance(state.players[0].pos, enemy.pos) > radius + PLAYER.radius)
+    return;
   const def = enemyDef(enemy.defId);
   landHostileBlow(
     state,
@@ -458,7 +459,7 @@ function startReadyAbility(
     if (!handler) continue;
     if (!handler.ready(ability as never, ctx as never)) continue;
     const ms = abilityWindupMs(ability, state.difficulty);
-    const dir = direction(enemy.pos, state.player.pos);
+    const dir = direction(enemy.pos, state.players[0].pos);
     // The bearing AND the range are both locked here — see `AbilityCtx`.
     mech.telegraph = {
       kind: ability.id,

@@ -5,6 +5,7 @@
 // minimap hub column (timer/kills/rampage + the AUTO PILOT panel slot). The
 // bottom docks live in their own components (ConsumableDock, PowerupDock).
 
+import { localHero } from "../local-seat.ts";
 import type { MutableRefObject, ReactNode, RefObject } from "react";
 
 import { weaponDef, type GameState } from "@game/core";
@@ -191,7 +192,7 @@ export function PlayingHud({
                   wears, and reads a full teal ring for the unbreakable
                   sidearm. Tapping it opens the weapon switcher (Q). */}
               {(() => {
-                const equipped = state.player.equipment.weapon;
+                const equipped = localHero(state).equipment.weapon;
                 const equippedColor =
                   WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
                 const icon = spriteDataUrl(

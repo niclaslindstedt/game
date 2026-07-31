@@ -42,13 +42,15 @@ function junkBlaster(state: GameState, ilvl: number): Equipment {
 describe("bot bag discipline (cullWorstLoot)", () => {
   it("keeps one cell open by dropping the CHEAPEST junk, hoarding the valuable junk to sell", () => {
     const state = startGame();
-    const inv = state.player.inventory;
+    const inv = state.players[0].inventory;
     // Pack the bag full of junk: one valuable piece (high ilvl → high sell
     // value) among worthless ones.
     for (let i = 0; i < inv.length; i++) {
       inv[i] = junkBlaster(state, i === 0 ? 30 : 1);
     }
-    expect(isScrappableLoot(state, inv[0] as Equipment)).toBe(true);
+    expect(isScrappableLoot(state, state.players[0], inv[0] as Equipment)).toBe(
+      true,
+    );
     const dropped = cullWorstLoot(state);
     // Exactly one drop — the cheapest — and a cell is now open.
     expect(dropped.length).toBe(1);
@@ -62,7 +64,7 @@ describe("bot bag discipline (cullWorstLoot)", () => {
 
   it("sheds a keeper only when the whole bag is keepers — and BANKS it", () => {
     const state = startGame();
-    const inv = state.player.inventory;
+    const inv = state.players[0].inventory;
     for (let i = 0; i < inv.length; i++) {
       inv[i] = { ...junkBlaster(state, 1), tier: "unique" };
     }
@@ -74,7 +76,7 @@ describe("bot bag discipline (cullWorstLoot)", () => {
     const dropped = cullWorstLoot(state);
     expect(dropped.length).toBe(1);
     expect(inv.filter((c) => c === null).length).toBe(1);
-    expect(state.player.vault.map((p) => p.id)).toEqual([
+    expect(state.players[0].vault.map((p) => p.id)).toEqual([
       (dropped[0] as Equipment).id,
     ]);
   });
@@ -87,7 +89,7 @@ describe("bot merchant errand", () => {
     state.merchant.discovered = true; // met earlier in the run
     // Nothing to do yet → no errand.
     expect(wantsMerchantVisit(state)).toBe(false);
-    const inv = state.player.inventory;
+    const inv = state.players[0].inventory;
     // FOUR junk pieces: one blaster (ranged) is banked as the blade hero's
     // pocket shot — spared from every sell/junk read — so three still count.
     inv[0] = junkBlaster(state, 5);
@@ -98,16 +100,19 @@ describe("bot merchant errand", () => {
     expect(wantsMerchantVisit(state)).toBe(true);
     // Away from the counter the trade is refused (openShop is proximity-gated).
     state.merchant.pos = {
-      x: state.player.pos.x + 500,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + 500,
+      y: state.players[0].pos.y,
     };
     expect(tradeAtMerchant(state)).toBe(false);
     // At the stall: the junk is banked for coins, the shop closed behind him,
     // and the errand resolves itself so the walk can't loop.
-    state.merchant.pos = { x: state.player.pos.x + 20, y: state.player.pos.y };
-    const coins = state.player.coins;
+    state.merchant.pos = {
+      x: state.players[0].pos.x + 20,
+      y: state.players[0].pos.y,
+    };
+    const coins = state.players[0].coins;
     expect(tradeAtMerchant(state)).toBe(true);
-    expect(state.player.coins).toBeGreaterThan(coins);
+    expect(state.players[0].coins).toBeGreaterThan(coins);
     expect(sellableJunkCount(state)).toBe(0);
     expect(state.phase).toBe("playing");
     expect(wantsMerchantVisit(state)).toBe(false);
@@ -120,21 +125,21 @@ describe("bot merchant errand", () => {
     state.obstacles = state.obstacles.filter((o) => !o.chest);
     state.merchant.discovered = true;
     state.merchant.pos = {
-      x: state.player.pos.x + 400,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + 400,
+      y: state.players[0].pos.y,
     };
-    const inv = state.player.inventory;
+    const inv = state.players[0].inventory;
     // Four again: one blaster is the spared pocket shot (see above).
     inv[0] = junkBlaster(state, 5);
     inv[1] = junkBlaster(state, 5);
     inv[2] = junkBlaster(state, 5);
     inv[3] = junkBlaster(state, 5);
-    const before = dist(state.player.pos, state.merchant.pos);
+    const before = dist(state.players[0].pos, state.merchant.pos);
     const bot = createBot("balanced");
     for (let i = 0; i < 400; i++) {
       step(state, botAct(bot, state), DT);
     }
-    expect(dist(state.player.pos, state.merchant.pos)).toBeLessThan(
+    expect(dist(state.players[0].pos, state.merchant.pos)).toBeLessThan(
       before - 150,
     );
   });

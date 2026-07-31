@@ -87,9 +87,9 @@ export function talkPrompt(state: GameState): Enemy | null {
     const def = enemyDef(enemy.defId);
     if (!def.conversation || !isNeutral(def, enemy)) continue;
     if (!hasConversation(def.conversation)) continue;
-    const d = distance(state.player.pos, enemy.pos);
+    const d = distance(state.players[0].pos, enemy.pos);
     if (d > bestDist) continue;
-    if (!lineOfSight(state, state.player.pos, enemy.pos)) continue;
+    if (!lineOfSight(state, state.players[0].pos, enemy.pos)) continue;
     best = enemy;
     bestDist = d;
   }
@@ -109,7 +109,8 @@ export function talkToEnemy(state: GameState, enemyId: number): boolean {
   if (!enemy) return false;
   const def = enemyDef(enemy.defId);
   if (!def.conversation || !isNeutral(def, enemy)) return false;
-  if (distance(state.player.pos, enemy.pos) > QUESTS.tapRadius) return false;
+  if (distance(state.players[0].pos, enemy.pos) > QUESTS.tapRadius)
+    return false;
   return openConversation(state, def.conversation, {
     kind: "enemy",
     id: enemy.id,
@@ -244,7 +245,7 @@ export function pickTalkChoice(state: GameState, index: number): boolean {
 export function closeTalk(state: GameState): void {
   if (state.phase !== "talk") return;
   state.talk = null;
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
 }
 
 /**
@@ -262,10 +263,10 @@ function giveQuestPiece(state: GameState, questId: string, item: string): void {
     {
       id: state.nextId++,
       kind: "quest",
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       questId,
       defId: item,
     },
-    state.player.pos,
+    state.players[0].pos,
   );
 }

@@ -15,7 +15,7 @@
 
 import { ECONOMY, VAULT } from "../config/index.ts";
 import { tierRank } from "../defs/equipment.ts";
-import type { Equipment, GameState, Tier } from "../types/index.ts";
+import type { Equipment, GameState, Player, Tier } from "../types/index.ts";
 import { sellValue } from "./worth.ts";
 
 /**
@@ -62,9 +62,13 @@ export function vaultWorth(item: Equipment): number {
  *
  * Returns whether the piece was banked.
  */
-export function vaultItem(state: GameState, item: Equipment): boolean {
+export function vaultItem(
+  state: GameState,
+  player: Player,
+  item: Equipment,
+): boolean {
   if (!isVaultWorthy(item)) return false;
-  const vault = state.player.vault;
+  const vault = player.vault;
   if (vault.length < VAULT.capacity) {
     vault.push(item);
     return true;
@@ -114,9 +118,9 @@ export type VaultRefusal = "gone" | "coins" | "bag";
  */
 export function reclaimVaultItem(
   state: GameState,
+  player: Player,
   itemId: number,
 ): VaultRefusal | null {
-  const player = state.player;
   const at = player.vault.findIndex((piece) => piece.id === itemId);
   if (at < 0) return "gone";
   const item = player.vault[at] as Equipment;
@@ -141,8 +145,8 @@ export function reclaimVaultItem(
  * nothing if the offer never expired. Returns how many pieces were binned, so
  * the caller can say so.
  */
-export function clearVault(state: GameState): number {
-  const binned = state.player.vault.length;
-  state.player.vault.length = 0;
+export function clearVault(state: GameState, player: Player): number {
+  const binned = player.vault.length;
+  player.vault.length = 0;
   return binned;
 }

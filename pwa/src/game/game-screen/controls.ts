@@ -5,6 +5,7 @@
 // and the blur/visibility auto-pause. GameScreen builds one per run effect;
 // detach() unwires everything on teardown.
 
+import { localHero } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { canOpenInventory, type Bot, type GameState } from "@game/core";
@@ -386,8 +387,8 @@ export function createControls(deps: {
         }
       } else if (
         n <= 2 &&
-        state.player.heldAbilities[n] &&
-        !state.player.abilities.some((a) => a.slot === n)
+        localHero(state).heldAbilities[n] &&
+        !localHero(state).abilities.some((a) => a.slot === n)
       ) {
         // A slot already counting down a running power isn't spendable.
         queues.useItemQueuedRef.current = true;

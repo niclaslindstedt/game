@@ -894,7 +894,7 @@ export function runLevel(options: SimulateLevelOptions): {
       stuckLimit,
       view,
     });
-    return { report, loadout: extractLoadout(state) };
+    return { report, loadout: extractLoadout(state, state.players[0]) };
   } finally {
     if (balance) setBalanceTuning(priorBalance);
     if (!arrowXp) setArrowXpEnabled(true);
@@ -916,8 +916,8 @@ function simCamera(
       ? Math.round((level - span) / 2)
       : Math.round(Math.min(Math.max(center - span / 2, 0), level - span));
   return {
-    x: clampAxis(state.player.pos.x, view.width, state.level.width),
-    y: clampAxis(state.player.pos.y, view.height, state.level.height),
+    x: clampAxis(state.players[0].pos.x, view.width, state.level.width),
+    y: clampAxis(state.players[0].pos.y, view.height, state.level.height),
     width: view.width,
     height: view.height,
   };
@@ -973,7 +973,7 @@ function playRun(args: {
   const def = levelDef(args.levelId);
   const cap = xpLevelCap(args.levelId, args.difficulty);
 
-  const levelStart = state.player.level;
+  const levelStart = state.players[0].level;
   const mobs = new Map<string, MobAccumulator>();
   const seenEnemies = new Set<number>();
   const seenItems = new Set<number>();
@@ -994,13 +994,13 @@ function playRun(args: {
   const engageBoss = (defId: string) => {
     const boss = bosses.get(defId);
     if (!boss || boss.engaged) return;
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     boss.engaged = true;
     boss.metAtMs = now();
-    boss.heroLevel = state.player.level;
-    boss.heroHpFrac = round3(state.player.hp / state.player.maxHp);
+    boss.heroLevel = state.players[0].level;
+    boss.heroHpFrac = round3(state.players[0].hp / state.players[0].maxHp);
     boss.heroWeapon = equipmentName(weapon);
-    boss.heroDps = round1(weaponDps(state, weapon));
+    boss.heroDps = round1(weaponDps(state, state.players[0], weapon));
   };
   const weaponTimeline: WeaponSwap[] = [];
   const levelUps: { atMs: number; level: number; kills: number }[] = [];
@@ -1020,7 +1020,7 @@ function playRun(args: {
   // Find a just-collected piece by its stable id (worn slot or bag cell) so its
   // ilvl / level requirement can be judged against the hero at pickup.
   const findEquipment = (id: number): Equipment | null => {
-    const worn = state.player.equipment;
+    const worn = state.players[0].equipment;
     for (const piece of [
       worn.weapon,
       worn.head,
@@ -1034,7 +1034,7 @@ function playRun(args: {
     ]) {
       if (piece && piece.id === id) return piece;
     }
-    for (const cell of state.player.inventory) {
+    for (const cell of state.players[0].inventory) {
       if (cell && cell.id === id) return cell;
     }
     return null;
@@ -1071,7 +1071,7 @@ function playRun(args: {
   let lastProgressMs = 0;
   let lastKills = 0;
   let lastDamage = 0;
-  let progressPos = { x: state.player.pos.x, y: state.player.pos.y };
+  let progressPos = { x: state.players[0].pos.x, y: state.players[0].pos.y };
 
   // ---- The stuck-penalty ledger (see `stuckLimit`) -------------------------
   // Every no-progress moment books a penalty at the hero's position; events
@@ -1128,8 +1128,8 @@ function playRun(args: {
   const deathAreas: DeathArea[] = [];
   let lastHurtCause: { cause: string; atMs: number } | null = null;
   const bookDeath = (): void => {
-    const x = Math.round(state.player.pos.x);
-    const y = Math.round(state.player.pos.y);
+    const x = Math.round(state.players[0].pos.x);
+    const y = Math.round(state.players[0].pos.y);
     const cause =
       lastHurtCause && now() - lastHurtCause.atMs <= DEATH_CAUSE_WINDOW_MS
         ? lastHurtCause.cause
@@ -1138,7 +1138,7 @@ function playRun(args: {
       x,
       y,
       atMs: now(),
-      heroLevel: state.player.level,
+      heroLevel: state.players[0].level,
       cause,
     });
     let area: DeathArea | null = null;
@@ -1204,7 +1204,7 @@ function playRun(args: {
   // spinning at the counter (else a level-gated stall spams tens of thousands
   // of visits).
   const recoverAtMerchant = (): boolean => {
-    autoEquipBest(state); // a decent bag weapon may end the starve for free
+    autoEquipBest(state, state.players[0]); // a decent bag weapon may end the starve for free
     if (!weaponStarved() && !wantsMerchantVisit(state)) return false;
     if (!tradeAtMerchant(state)) return false;
     shopVisits++;
@@ -1275,15 +1275,17 @@ function playRun(args: {
   };
 
   const takeSnapshot = () => {
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     snapshots.push({
       atMs: now(),
-      level: state.player.level,
-      hp: Math.round(state.player.hp),
-      maxHp: state.player.maxHp,
-      dps: round1(weaponDps(state, weapon)),
-      armorReduction: round3(armorReduction(state, currentMobLevel(state))),
-      armor: totalArmor(state),
+      level: state.players[0].level,
+      hp: Math.round(state.players[0].hp),
+      maxHp: state.players[0].maxHp,
+      dps: round1(weaponDps(state, state.players[0], weapon)),
+      armorReduction: round3(
+        armorReduction(state, state.players[0], currentMobLevel(state)),
+      ),
+      armor: totalArmor(state, state.players[0]),
       kills: state.stats.kills,
       menaceStage: menaceStage(state),
     });
@@ -1306,7 +1308,7 @@ function playRun(args: {
   const maxTimeMs = args.maxMinutes * 60_000;
   let outcome: LevelReport["outcome"] = "timeout";
   let phaseAdvances = 0;
-  let prevWeaponId = state.player.equipment.weapon.id;
+  let prevWeaponId = state.players[0].equipment.weapon.id;
 
   // MORTAL restart: a death starts the level OVER — a fresh map from a new
   // attempt seed (a retry that rolls differently; the same seed would replay
@@ -1335,13 +1337,13 @@ function playRun(args: {
     // would collide with the new game's counter and hide them from the books).
     seenEnemies.clear();
     seenItems.clear();
-    prevWeaponId = state.player.equipment.weapon.id;
+    prevWeaponId = state.players[0].equipment.weapon.id;
     // Re-anchor every no-progress detector to the new attempt's zeroed stats,
     // so the stall-breaker doesn't read the reset as fifteen silent seconds.
     lastKills = 0;
     lastDamage = 0;
     lastProgressMs = now();
-    progressPos = { x: state.player.pos.x, y: state.player.pos.y };
+    progressPos = { x: state.players[0].pos.x, y: state.players[0].pos.y };
     resetLoiter();
     lastShopMs = -Infinity;
     lastHurtCause = null;
@@ -1372,8 +1374,9 @@ function playRun(args: {
       case "levelup": {
         // If the bot's pick is at the level-scaled cap it won't take; dump the
         // point into any stat that still has room so the ding always resolves.
-        if (!allocateStat(state, botAllocate(bot, state))) {
-          for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
+        if (!allocateStat(state, state.players[0], botAllocate(bot, state))) {
+          for (const s of STAT_NAMES)
+            if (allocateStat(state, state.players[0], s)) break;
         }
         // A ×10 TREE milestone earns a passive TALENT point that holds the
         // level-up pause (see allocateStat/resumeAfterLevelup); spend it per the
@@ -1383,7 +1386,8 @@ function playRun(args: {
         // pick.
         while (state.pendingTalentPoints.length > 0) {
           const talentId = botPickTalent(bot, state);
-          if (!talentId || !spendTalentPoint(state, talentId)) break;
+          if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
+            break;
         }
         guardPhase(++phaseAdvances);
         continue;
@@ -1481,7 +1485,7 @@ function playRun(args: {
     // the CROSSING into zero, and the dwell counters carry the ms the hero
     // spent winded (at zero), locked out of regen, and on fumes (≤ a tenth).
     {
-      const { stamina, maxStamina } = state.player;
+      const { stamina, maxStamina } = state.players[0];
       const fill = maxStamina > 0 ? stamina / maxStamina : 0;
       staminaFillSum += fill;
       staminaSamples++;
@@ -1504,7 +1508,7 @@ function playRun(args: {
       // hero as moving once he's outside `arriveRadius`, so read `moving` for
       // stand-vs-go and the input's throttle for run-vs-walk (the same
       // `walkThrottle` line the drain itself is judged on).
-      if (state.player.moving) {
+      if (state.players[0].moving) {
         if ((input.throttle ?? 1) > STAMINA.walkThrottle) paceRunTicks++;
         else paceWalkTicks++;
       }
@@ -1514,13 +1518,15 @@ function playRun(args: {
     // horde's positions on a fixed cadence (dwell time = how long he lingered
     // where; mob density = where the horde formed and moved).
     if (args.trace) {
-      coverageCells.add(coverIdx(state.player.pos.x, state.player.pos.y));
+      coverageCells.add(
+        coverIdx(state.players[0].pos.x, state.players[0].pos.y),
+      );
       traceAccumMs += args.dtMs;
       if (traceAccumMs >= TRACE_SAMPLE_MS) {
         traceAccumMs -= TRACE_SAMPLE_MS;
         tracePath.push({
-          x: Math.round(state.player.pos.x),
-          y: Math.round(state.player.pos.y),
+          x: Math.round(state.players[0].pos.x),
+          y: Math.round(state.players[0].pos.y),
         });
         for (const enemy of state.enemies) {
           if (enemyDef(enemy.defId).apparition) continue;
@@ -1572,7 +1578,7 @@ function playRun(args: {
               y: Math.round(event.pos.y),
             });
           args.onKill?.({
-            heroLevel: state.player.level,
+            heroLevel: state.players[0].level,
             difficulty: args.difficulty,
             levelId: args.levelId,
             isBoss: enemyDef(event.defId).role !== "minion",
@@ -1612,13 +1618,13 @@ function playRun(args: {
               event.itemId != null ? findEquipment(event.itemId) : null;
             if (piece) {
               equipTotal++;
-              const delta = piece.ilvl - state.player.level;
+              const delta = piece.ilvl - state.players[0].level;
               ilvlDeltaSum += delta;
               if (delta <= -APPROP_BAND) ilvlBelow++;
               else if (delta >= APPROP_BAND) ilvlAbove++;
               else ilvlOn++;
-              if (canEquip(state, piece)) equippableNow++;
-              if (state.player.level < itemLevelReq(piece)) {
+              if (canEquip(state, state.players[0], piece)) equippableNow++;
+              if (state.players[0].level < itemLevelReq(piece)) {
                 levelGated++;
               }
             }
@@ -1659,7 +1665,7 @@ function playRun(args: {
     // Realistic pacing: reached the level a normal clear leaves us at — a real
     // player moves on, so end the run here (the hero carries this level forward)
     // instead of farming the rest to the cap.
-    if (state.player.level >= pacingLevel) {
+    if (state.players[0].level >= pacingLevel) {
       outcome = "cleared";
       takeSnapshot();
       break simulation;
@@ -1670,7 +1676,7 @@ function playRun(args: {
     // `XP_CAP.floor` (never zero — the ~1/100 trickle past the cap), so a grant
     // always lands and the ratio recovers the pre-cap total; the zero-mult
     // branch is kept only as a guard for a hypothetical floor of 0.
-    const capMult = xpCapMultiplier(state.player.level, cap);
+    const capMult = xpCapMultiplier(state.players[0].level, cap);
     if (capMult < 1) {
       const landed = state.stats.xpGained - beforeXpGained;
       if (capMult > 0) {
@@ -1685,12 +1691,12 @@ function playRun(args: {
         }
       }
     }
-    if (reachedAtMs === null && state.player.level >= cap) {
+    if (reachedAtMs === null && state.players[0].level >= cap) {
       reachedAtMs = now();
     }
 
     // Auto-equip swaps: the weapon in hand changed without the bot asking.
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     if (weapon.id !== prevWeaponId) {
       const last = weaponTimeline[weaponTimeline.length - 1];
       weaponTimeline.push({
@@ -1698,7 +1704,7 @@ function playRun(args: {
         from: last?.to ?? "(start)",
         to: equipmentName(weapon),
         fromDps: last?.toDps ?? 0,
-        toDps: round1(weaponDps(state, weapon)),
+        toDps: round1(weaponDps(state, state.players[0], weapon)),
         tier: weapon.tier,
       });
       prevWeaponId = weapon.id;
@@ -1734,10 +1740,13 @@ function playRun(args: {
         // inside the trade radius. An ordinary sell-run gets no drag — the bot
         // walks the errand itself (`wantsMerchantVisit` in macroTarget).
         const m = state.merchant.pos;
-        const n = normalize(m.x - state.player.pos.x, m.y - state.player.pos.y);
+        const n = normalize(
+          m.x - state.players[0].pos.x,
+          m.y - state.players[0].pos.y,
+        );
         const hop = Math.min(NUDGE_DISTANCE, Math.max(0, n.len - 40));
-        state.player.pos.x += n.x * hop;
-        state.player.pos.y += n.y * hop;
+        state.players[0].pos.x += n.x * hop;
+        state.players[0].pos.y += n.y * hop;
       }
     }
 
@@ -1756,7 +1765,10 @@ function playRun(args: {
       ) {
         resetLoiter();
       } else {
-        loiterSamples.push({ x: state.player.pos.x, y: state.player.pos.y });
+        loiterSamples.push({
+          x: state.players[0].pos.x,
+          y: state.players[0].pos.y,
+        });
         const windowFull =
           loiterSamples.length >= LOITER_WINDOW_MS / LOITER_SAMPLE_MS;
         if (windowFull) {
@@ -1792,7 +1804,7 @@ function playRun(args: {
     // furthest landmark) and march on. The movement gate matters: a kiting
     // bot also deals no damage for stretches, and nudging a kiter into the
     // pack would just feed it to the horde.
-    const moved = distance(state.player.pos, progressPos);
+    const moved = distance(state.players[0].pos, progressPos);
     if (
       state.stats.kills > lastKills ||
       state.stats.damageDealt > lastDamage ||
@@ -1801,12 +1813,12 @@ function playRun(args: {
       lastKills = state.stats.kills;
       lastDamage = state.stats.damageDealt;
       lastProgressMs = now();
-      progressPos = { x: state.player.pos.x, y: state.player.pos.y };
+      progressPos = { x: state.players[0].pos.x, y: state.players[0].pos.y };
     } else if (args.unstick && now() - lastProgressMs > STALL_TIMEOUT_MS) {
       // A wedge: book the penalty where the bot froze, then nudge as before.
       // The nudge teleport would poison the loiter window, and the wedge
       // already covers this moment — reset it so one failure books once.
-      bookStuck("wedge", state.player.pos.x, state.player.pos.y);
+      bookStuck("wedge", state.players[0].pos.x, state.players[0].pos.y);
       resetLoiter();
       if (args.stuckLimit > 0 && stuckPenalty >= args.stuckLimit) {
         outcome = "stuck";
@@ -1815,22 +1827,22 @@ function playRun(args: {
       const target = nudgeTarget(state);
       if (target) {
         const n = normalize(
-          target.x - state.player.pos.x,
-          target.y - state.player.pos.y,
+          target.x - state.players[0].pos.x,
+          target.y - state.players[0].pos.y,
         );
         const hop = Math.min(NUDGE_DISTANCE, Math.max(0, n.len - 24));
-        state.player.pos.x += n.x * hop;
-        state.player.pos.y += n.y * hop;
+        state.players[0].pos.x += n.x * hop;
+        state.players[0].pos.y += n.y * hop;
         unstuckNudges++;
       }
       lastProgressMs = now();
-      progressPos = { x: state.player.pos.x, y: state.player.pos.y };
+      progressPos = { x: state.players[0].pos.x, y: state.players[0].pos.y };
     }
   }
 
   takeSnapshot();
 
-  const weapon = state.player.equipment.weapon;
+  const weapon = state.players[0].equipment.weapon;
   const timeSec = Math.max(1, now() / 1000);
   const stats = {} as Record<StatName, number>;
   for (const stat of [
@@ -1840,7 +1852,7 @@ function playRun(args: {
     "intelligence",
     "luck",
   ] as StatName[]) {
-    stats[stat] = effectiveStat(state, stat);
+    stats[stat] = effectiveStat(state, state.players[0], stat);
   }
 
   // Finalize boss encounters: read blows-to-kill off the mob accumulator, then
@@ -1899,18 +1911,20 @@ function playRun(args: {
     timeMs: now(),
     hero: {
       levelStart,
-      levelEnd: state.player.level,
+      levelEnd: state.players[0].level,
       xpGained: totals.xpGained,
-      maxHp: state.player.maxHp,
-      armor: totalArmor(state),
-      armorReduction: round3(armorReduction(state, currentMobLevel(state))),
+      maxHp: state.players[0].maxHp,
+      armor: totalArmor(state, state.players[0]),
+      armorReduction: round3(
+        armorReduction(state, state.players[0], currentMobLevel(state)),
+      ),
       weapon: {
         name: equipmentName(weapon),
         tier: weapon.tier,
-        dps: round1(weaponDps(state, weapon)),
+        dps: round1(weaponDps(state, state.players[0], weapon)),
       },
       stats,
-      coins: state.player.coins,
+      coins: state.players[0].coins,
     },
     combat: {
       kills: totals.kills,
@@ -1956,9 +1970,9 @@ function playRun(args: {
       chestsLooted: chestsTotal - state.obstacles.filter((o) => o.chest).length,
     },
     talents: {
-      earned: talentPointsEarned(state.player.spentStats),
-      spent: Object.values(state.player.talents).reduce((n, r) => n + r, 0),
-      ranks: Object.entries(state.player.talents)
+      earned: talentPointsEarned(state.players[0].spentStats),
+      spent: Object.values(state.players[0].talents).reduce((n, r) => n + r, 0),
+      ranks: Object.entries(state.players[0].talents)
         .map(([id, rank]) => {
           const d = talentDef(id);
           return { id, name: d.name, tree: d.tree, rank };
@@ -2151,7 +2165,7 @@ function nudgeTarget(state: GameState): { x: number; y: number } | null {
   let bestD = Infinity;
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).apparition) continue;
-    const d = distance(enemy.pos, state.player.pos);
+    const d = distance(enemy.pos, state.players[0].pos);
     if (d < bestD) {
       best = enemy.pos;
       bestD = d;

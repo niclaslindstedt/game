@@ -32,7 +32,7 @@ import type { Asteroid, GameInput, GameState } from "../types/index.ts";
  * `survive`), and it left the hero winded for the next real pinch.
  */
 export function dodgeTelegraph(state: GameState): GameInput | null {
-  const player = state.player;
+  const player = state.players[0];
   for (const e of state.enemies) {
     const mech = e.mech;
     if (!mech) continue;
@@ -132,7 +132,7 @@ function dodgeBeam(state: GameState, e: GameState["enemies"][number]) {
     reach = spec.range;
   }
 
-  const player = state.player;
+  const player = state.players[0];
   const dx = player.pos.x - e.pos.x;
   const dy = player.pos.y - e.pos.y;
   const dist = Math.hypot(dx, dy);
@@ -170,7 +170,7 @@ function dodgeBeam(state: GameState, e: GameState["enemies"][number]) {
  */
 export function dodgeScorch(state: GameState): GameInput | null {
   if (state.scorches.length === 0) return null;
-  const player = state.player;
+  const player = state.players[0];
   let inFire = false;
   // The summed outward push of every patch he is standing in: the way out of a
   // band is the way its own weight is not.
@@ -214,7 +214,7 @@ export function dodgeScorch(state: GameState): GameInput | null {
  */
 export function dodgeBait(state: GameState): GameInput | null {
   if (state.baits.length === 0) return null;
-  const player = state.player;
+  const player = state.players[0];
   let awayX = 0;
   let awayY = 0;
   let threatened = false;
@@ -258,7 +258,7 @@ export function dodgeHayBall(
   tune: BotTuning,
 ): GameInput | null {
   if (state.hayBalls.length === 0 || tune.hayBallDodgeDist <= 0) return null;
-  const player = state.player;
+  const player = state.players[0];
   const midY = state.level.height / 2;
   let threat: (typeof state.hayBalls)[number] | null = null;
   let best = Infinity;
@@ -299,7 +299,7 @@ export function dodgeSandstorm(
   state: GameState,
   tune: BotTuning,
 ): GameInput | null {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   for (const storm of state.sandstorms) {
     if (storm.struck) continue;
     const dir = storm.dir;
@@ -355,7 +355,7 @@ export function dodgeStampede(
   tune: BotTuning,
 ): GameInput | null {
   if (state.stampedes.length === 0 || tune.stampedeDodgeDist <= 0) return null;
-  const player = state.player;
+  const player = state.players[0];
   if (player.z > 0) return null; // already airborne — the current hop clears it
   const laneReach =
     STAMPEDES.bandHalfHeight + PLAYER.radius + tune.stampedeLaneMargin;
@@ -394,7 +394,7 @@ const WELL_DODGE_TANGENT = 0.55;
  * into the pull, eyes on the fight), so this preempts every combat branch.
  */
 export function dodgeWell(state: GameState): GameInput | null {
-  const player = state.player;
+  const player = state.players[0];
   for (const well of state.wells) {
     const n = normalize(player.pos.x - well.pos.x, player.pos.y - well.pos.y);
     const danger = wellDangerRadius(well);
@@ -464,7 +464,7 @@ const ASTEROID_DODGE_LEAD_MS = 1100;
  */
 export function dodgeAsteroid(state: GameState): GameInput | null {
   if (state.asteroids.length === 0) return null;
-  const player = state.player;
+  const player = state.players[0];
   let threat: Asteroid | null = null;
   let soonest = Infinity;
   for (const rock of state.asteroids) {

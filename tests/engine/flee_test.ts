@@ -32,7 +32,7 @@ function stageCoward(state: GameState): void {
   state.enemies.push(
     makeEnemy(
       {
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
         hp: 10,
         maxHp: 100,
         // Latch the power-match so the staged hp stays exactly as written.
@@ -96,11 +96,11 @@ describe("fleeing uniques", () => {
     // where he was beaten, on the far side of him from the hero. That bearing
     // is the whole read of the beat — a coward running away rather than
     // stepping sideways into a hole — so it is what this pins.
-    const bossX = state.player.pos.x + 80; // where stageCoward parked him
+    const bossX = state.players[0].pos.x + 80; // where stageCoward parked him
     expect(rift!.pos.x).toBeGreaterThan(bossX);
     // Still in the staged arena rather than off at some default corner.
-    expect(Math.abs(rift!.pos.x - state.player.pos.x)).toBeLessThan(260);
-    expect(Math.abs(rift!.pos.y - state.player.pos.y)).toBeLessThan(120);
+    expect(Math.abs(rift!.pos.x - state.players[0].pos.x)).toBeLessThan(260);
+    expect(Math.abs(rift!.pos.y - state.players[0].pos.y)).toBeLessThan(120);
   });
 
   it("still pays XP and its guaranteed drops on the way out", () => {
@@ -135,7 +135,7 @@ describe("fleeing uniques", () => {
     state.enemies.push(
       makeEnemy(
         {
-          pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
           hp: 100,
           maxHp: 100,
           powerScaled: true,
@@ -163,7 +163,8 @@ describe("fleeing uniques", () => {
     runUntilFled(state);
     advanceDialogue(state); // tap through the parting words
     // Spend any level-up the escape's XP just banked, so play resumes.
-    while (state.player.pendingStatPoints > 0) allocateStat(state, "strength");
+    while (state.players[0].pendingStatPoints > 0)
+      allocateStat(state, state.players[0], "strength");
 
     // The victory countdown runs out with no boss left on the board.
     run(state, idle, 1000, (s) => s.phase === "victory");

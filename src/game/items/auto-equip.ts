@@ -11,9 +11,10 @@ import {
 } from "../defs/equipment.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
 import type {
-  Equipment,
   EquipSlot,
+  Equipment,
   GameState,
+  Player,
   StatName,
 } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
@@ -34,21 +35,22 @@ export { isAutoEquipEnabled, setAutoEquipEnabled } from "../flags.ts";
 /** Is `candidate` strictly better than the piece occupying its slot? */
 export function isBetterEquipment(
   state: GameState,
+  player: Player,
   candidate: Equipment,
 ): boolean {
   // An under-leveled OR under-statted find is never worn, however strong — it
   // banks until the hero grows the level and the attribute to wield it.
-  if (!canEquip(state, candidate)) return false;
+  if (!canEquip(state, player, candidate)) return false;
   if (candidate.slot === "weapon") {
-    const current = state.player.equipment.weapon;
+    const current = player.equipment.weapon;
     // No starter special case anymore: weaponScore speaks the damage-budget
     // model (AoE targets + crit weight folded in), so the wall weapon holds
     // its slot until a find genuinely out-scores it — a budget-normalized
     // cone cleaver is a DOWNGRADE in a sparse field, and force-equipping it
     // (the old "pickup floor" rule) collapsed early runs. The starter still
     // leaves the story soon enough: it wears out.
-    const candidateScore = weaponScore(state, candidate);
-    const currentScore = weaponScore(state, current);
+    const candidateScore = weaponScore(state, player, candidate);
+    const currentScore = weaponScore(state, player, current);
     if (candidateScore !== currentScore) return candidateScore > currentScore;
     // Equal firepower: picking up the same weapon you already wield is worth
     // swapping to when the fresh copy has more durability left — it refreshes
@@ -71,10 +73,10 @@ export function isBetterEquipment(
   // two-hander is drawn.
   if (
     isOffhandItem(candidate.slot) &&
-    isTwoHandedWeapon(state.player.equipment.weapon)
+    isTwoHandedWeapon(player.equipment.weapon)
   )
     return false;
-  const current = wornRival(state, candidate);
+  const current = wornRival(state, player, candidate);
   if (current === undefined) return false;
   return current === null || gearScore(candidate) > gearScore(current);
 }
@@ -89,11 +91,12 @@ export function isBetterEquipment(
  */
 function wornRival(
   state: GameState,
+  player: Player,
   candidate: Equipment,
 ): Equipment | null | undefined {
-  const slot = wearSlotFor(state, candidate);
+  const slot = wearSlotFor(state, player, candidate);
   if (!slot) return undefined;
-  return state.player.equipment[slot];
+  return player.equipment[slot];
 }
 
 /**
@@ -108,8 +111,12 @@ function wornRival(
  * un-invested hero (flat stats) weights every stat at ~1, i.e. the old
  * stat-agnostic behaviour.
  */
-function specStatWeight(state: GameState, stat: StatName): number {
-  const stats = state.player.stats;
+function specStatWeight(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): number {
+  const stats = player.stats;
   let total = 0;
   for (const s of STAT_NAMES) total += stats[s];
   if (total <= 0) return 1;
@@ -125,15 +132,21 @@ function specStatWeight(state: GameState, stat: StatName): number {
  * upgrade read — NOT by the auto-equip rule (`isBetterEquipment`/`gearScore`),
  * which stays stat-agnostic so the balance sims read one stable ranking.
  */
-function specGearScore(state: GameState, gear: Equipment): number {
+function specGearScore(
+  state: GameState,
+  player: Player,
+  gear: Equipment,
+): number {
   let score = gearScore(gear);
   for (const affix of gear.affixes) {
     // gearScore counted these at their flat worth; re-weight only the stat
     // portion by the hero's spec (a bonus of value×15, a %-bonus of value×600).
     if (affix.kind === "stat") {
-      score += affix.value * 15 * (specStatWeight(state, affix.stat) - 1);
+      score +=
+        affix.value * 15 * (specStatWeight(state, player, affix.stat) - 1);
     } else if (affix.kind === "statPct") {
-      score += affix.value * 600 * (specStatWeight(state, affix.stat) - 1);
+      score +=
+        affix.value * 600 * (specStatWeight(state, player, affix.stat) - 1);
     }
   }
   return score;
@@ -152,23 +165,25 @@ function specGearScore(state: GameState, gear: Equipment): number {
  */
 export function wouldUpgradeSlot(
   state: GameState,
+  player: Player,
   candidate: Equipment,
 ): boolean {
-  if (!canEquip(state, candidate)) return false;
+  if (!canEquip(state, player, candidate)) return false;
   if (candidate.slot === "weapon") {
     return (
-      weaponScore(state, candidate) >
-      weaponScore(state, state.player.equipment.weapon)
+      weaponScore(state, player, candidate) >
+      weaponScore(state, player, player.equipment.weapon)
     );
   }
-  const current = wornRival(state, candidate);
+  const current = wornRival(state, player, candidate);
   // A trinket is never worn, but a stronger one still READS as an upgrade —
   // the marker drops the auto-equip exclusions on purpose. With no slot to
   // compare against, judge it against nothing: it is always worth keeping.
   if (current === undefined) return true;
   return (
     current === null ||
-    specGearScore(state, candidate) > specGearScore(state, current)
+    specGearScore(state, player, candidate) >
+      specGearScore(state, player, current)
   );
 }
 
@@ -181,10 +196,12 @@ export function wouldUpgradeSlot(
  */
 export function canCollectEquipment(
   state: GameState,
+  player: Player,
   item: Equipment,
 ): boolean {
-  if (isAutoEquipEnabled() && isBetterEquipment(state, item)) return true;
-  return state.player.inventory.indexOf(null) !== -1;
+  if (isAutoEquipEnabled() && isBetterEquipment(state, player, item))
+    return true;
+  return player.inventory.indexOf(null) !== -1;
 }
 
 // ---- Bulk scrap (the "clear out junk" sweep) -----------------------------------
@@ -224,14 +241,18 @@ export function isSpecialItem(item: Equipment): boolean {
  * side-grade or a spare of the same weapon (a durability refresh) is not "worse
  * than equipped".
  */
-function isAtLeastAsGoodAsEquipped(state: GameState, item: Equipment): boolean {
+function isAtLeastAsGoodAsEquipped(
+  state: GameState,
+  player: Player,
+  item: Equipment,
+): boolean {
   if (item.slot === "weapon") {
     return (
-      weaponScore(state, item) >=
-      weaponScore(state, state.player.equipment.weapon)
+      weaponScore(state, player, item) >=
+      weaponScore(state, player, player.equipment.weapon)
     );
   }
-  const current = wornRival(state, item);
+  const current = wornRival(state, player, item);
   // A TRINKET has no worn rival to be outgrown by — it works from the bag, so
   // it is always a keeper and the scrap sweep never touches it.
   if (current === undefined || current === null) return true;
@@ -244,8 +265,14 @@ function isAtLeastAsGoodAsEquipped(state: GameState, item: Equipment): boolean {
  * (see `isAtLeastAsGoodAsEquipped`) — the loot the hero has outgrown. The UI
  * reads this to count the cull and enable the SCRAP button.
  */
-export function isScrappableLoot(state: GameState, item: Equipment): boolean {
-  return !isSpecialItem(item) && !isAtLeastAsGoodAsEquipped(state, item);
+export function isScrappableLoot(
+  state: GameState,
+  player: Player,
+  item: Equipment,
+): boolean {
+  return (
+    !isSpecialItem(item) && !isAtLeastAsGoodAsEquipped(state, player, item)
+  );
 }
 
 /**
@@ -256,12 +283,15 @@ export function isScrappableLoot(state: GameState, item: Equipment): boolean {
  * pieces (empty when nothing was junk) so the UI can announce the count; there
  * is no undo, exactly like a single `discardFromInventory`.
  */
-export function scrapInferiorLoot(state: GameState): Equipment[] {
-  const inv = state.player.inventory;
+export function scrapInferiorLoot(
+  state: GameState,
+  player: Player,
+): Equipment[] {
+  const inv = player.inventory;
   const scrapped: Equipment[] = [];
   for (let i = 0; i < inv.length; i++) {
     const item = inv[i];
-    if (!item || !isScrappableLoot(state, item)) continue;
+    if (!item || !isScrappableLoot(state, player, item)) continue;
     inv[i] = null;
     scrapped.push(item);
   }
@@ -299,9 +329,9 @@ const GEAR_SLOTS: readonly Exclude<EquipSlot, "weapon">[] = [
  */
 function planAutoEquip(
   state: GameState,
+  player: Player,
   opts: { weapon?: boolean } = {},
 ): number[] {
-  const player = state.player;
   const inv = player.inventory;
   const plan: number[] = [];
   let twoHandedPlanned: boolean;
@@ -309,13 +339,13 @@ function planAutoEquip(
   // Weapon: the bag weapon that most out-scores what's held for this build.
   if (opts.weapon !== false) {
     let bestWeapon = -1;
-    let bestWeaponScore = weaponScore(state, player.equipment.weapon);
+    let bestWeaponScore = weaponScore(state, player, player.equipment.weapon);
     for (let i = 0; i < inv.length; i++) {
       const item = inv[i];
       if (!item || item.slot !== "weapon") continue;
       if (item.durability !== undefined && item.durability <= 0) continue;
-      if (!canEquip(state, item)) continue;
-      const score = weaponScore(state, item);
+      if (!canEquip(state, player, item)) continue;
+      const score = weaponScore(state, player, item);
       if (score > bestWeaponScore) {
         bestWeaponScore = score;
         bestWeapon = i;
@@ -352,7 +382,7 @@ function planAutoEquip(
       const item = inv[i];
       if (!item || claimed.has(i)) continue;
       if (!fitsEquipSlot(item.slot, slot)) continue;
-      if (!canEquip(state, item)) continue;
+      if (!canEquip(state, player, item)) continue;
       // A passive trinket earns its bonus just by riding in the bag, so it is
       // never worn — no slot is spent on it.
       if (isPassiveItem(item.defId)) continue;
@@ -380,10 +410,10 @@ function planAutoEquip(
  * Returns how many slots actually changed, so the UI can stay quiet when the
  * loadout was already optimal.
  */
-export function autoEquipBest(state: GameState): number {
+export function autoEquipBest(state: GameState, player: Player): number {
   let changed = 0;
-  for (const index of planAutoEquip(state)) {
-    if (equipFromInventory(state, index)) changed++;
+  for (const index of planAutoEquip(state, player)) {
+    if (equipFromInventory(state, player, index)) changed++;
   }
   return changed;
 }
@@ -396,10 +426,12 @@ export function autoEquipBest(state: GameState): number {
  * the moment, so a sweep that also re-drew the strongest weapon every tick
  * would fight it. Returns how many slots changed, like `autoEquipBest`.
  */
-export function autoEquipGear(state: GameState): number {
+export function autoEquipGear(state: GameState, player: Player): number {
   let changed = 0;
-  for (const index of planAutoEquip(state, { weapon: false })) {
-    if (equipFromInventory(state, index)) changed++;
+  for (const index of planAutoEquip(state, player, {
+    weapon: false,
+  })) {
+    if (equipFromInventory(state, player, index)) changed++;
   }
   return changed;
 }
@@ -410,6 +442,9 @@ export function autoEquipGear(state: GameState): number {
  * an already-optimal loadout. Mirrors `autoEquipBest` exactly (it plans the same
  * swaps), so the badge never promises a change the sweep won't make.
  */
-export function autoEquipUpgradeCount(state: GameState): number {
-  return planAutoEquip(state).length;
+export function autoEquipUpgradeCount(
+  state: GameState,
+  player: Player,
+): number {
+  return planAutoEquip(state, player).length;
 }

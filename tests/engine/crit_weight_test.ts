@@ -49,16 +49,23 @@ describe("class-based crit weight", () => {
 
   it("deepens crit damage with DEXTERITY for every class", () => {
     const state = startGame();
-    const ranged = { ...state.player.equipment.weapon, defId: "test_pistol" };
-    const melee = { ...state.player.equipment.weapon, defId: "crude_sword" };
-    state.player.stats.dexterity = 80;
+    const ranged = {
+      ...state.players[0].equipment.weapon,
+      defId: "test_pistol",
+    };
+    const melee = {
+      ...state.players[0].equipment.weapon,
+      defId: "crude_sword",
+    };
+    state.players[0].stats.dexterity = 80;
     for (const [w, cls] of [
       [ranged, "ranged"],
       [melee, "melee"],
     ] as const) {
-      expect(weaponCritMult(state, w)).toBeCloseTo(
+      expect(weaponCritMult(state, state.players[0], w)).toBeCloseTo(
         STATS.critMultByClass[cls] +
-          effectiveStat(state, "dexterity") * STATS.critDamagePerDex,
+          effectiveStat(state, state.players[0], "dexterity") *
+            STATS.critDamagePerDex,
         6,
       );
     }
@@ -66,28 +73,37 @@ describe("class-based crit weight", () => {
 
   it("makes a DEX-max ranged build crit harder than a low-DEX melee build", () => {
     const state = startGame();
-    const ranged = { ...state.player.equipment.weapon, defId: "test_pistol" };
-    const melee = { ...state.player.equipment.weapon, defId: "crude_sword" };
-    state.player.stats.dexterity = 200; // the marksman's precision
-    const rangedCrit = weaponCritMult(state, ranged);
-    state.player.stats.dexterity = 30; // a bruiser barely invests DEX
-    const meleeCrit = weaponCritMult(state, melee);
+    const ranged = {
+      ...state.players[0].equipment.weapon,
+      defId: "test_pistol",
+    };
+    const melee = {
+      ...state.players[0].equipment.weapon,
+      defId: "crude_sword",
+    };
+    state.players[0].stats.dexterity = 200; // the marksman's precision
+    const rangedCrit = weaponCritMult(state, state.players[0], ranged);
+    state.players[0].stats.dexterity = 30; // a bruiser barely invests DEX
+    const meleeCrit = weaponCritMult(state, state.players[0], melee);
     expect(rangedCrit).toBeGreaterThan(meleeCrit);
   });
 
   it("HARD-CAPS a magic crit so a DEX-stacking mage never out-crits melee", () => {
     const state = startGame();
-    const magic = { ...state.player.equipment.weapon, defId: "test_wand" };
-    const melee = { ...state.player.equipment.weapon, defId: "crude_sword" };
-    state.player.stats.dexterity = 250; // absurd for a caster, but gear could
+    const magic = { ...state.players[0].equipment.weapon, defId: "test_wand" };
+    const melee = {
+      ...state.players[0].equipment.weapon,
+      defId: "crude_sword",
+    };
+    state.players[0].stats.dexterity = 250; // absurd for a caster, but gear could
     // The invariant: a magic crit never exceeds the cap, which sits at/under
     // melee's floor — so magic can never out-crit a bruiser at ANY dexterity.
-    expect(weaponCritMult(state, magic)).toBeLessThanOrEqual(
+    expect(weaponCritMult(state, state.players[0], magic)).toBeLessThanOrEqual(
       STATS.magicCritCap,
     );
     expect(STATS.magicCritCap).toBeLessThanOrEqual(STATS.critMultByClass.melee);
-    expect(weaponCritMult(state, magic)).toBeLessThanOrEqual(
-      weaponCritMult(state, melee),
+    expect(weaponCritMult(state, state.players[0], magic)).toBeLessThanOrEqual(
+      weaponCritMult(state, state.players[0], melee),
     );
   });
 
@@ -124,18 +140,22 @@ describe("class-based crit weight", () => {
 
   it("stamps the firing weapon's DEX-scaled weight onto its projectiles", () => {
     const state = equipBlaster(startGame()); // ranged: the shot carries it
-    state.player.stats.dexterity = 60;
+    state.players[0].stats.dexterity = 60;
     state.enemies = [
       makeEnemy({
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     ];
     state.rng = () => 0.99;
-    state.player.weaponCooldownMs = 0;
+    state.players[0].weaponCooldownMs = 0;
     step(state, { steering: false, target: { x: 0, y: 0 }, jump: false }, 16);
     expect(state.projectiles.length).toBeGreaterThan(0);
     expect(state.projectiles[0]?.critMult).toBeCloseTo(
-      weaponCritMult(state, state.player.equipment.weapon),
+      weaponCritMult(
+        state,
+        state.players[0],
+        state.players[0].equipment.weapon,
+      ),
       6,
     );
   });

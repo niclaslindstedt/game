@@ -17,6 +17,7 @@
 // beside it (see ItemTooltip). A strip repeating four of those totals was a
 // second, weaker copy of a comparison the tooltip already makes better.
 
+import { localHero } from "./local-seat.ts";
 import {
   useEffect,
   useRef,
@@ -222,11 +223,11 @@ export function InventoryPanel({
           }
         } else if (d.from.type === "slot" && kind === "inv") {
           if (runCommandOk(state, "unequipToInventory", d.from.slot)) {
-            const landed = state.player.inventory.findIndex(
+            const landed = localHero(state).inventory.findIndex(
               (i) => i?.id === d.item.id,
             );
             const wanted = Number(arg);
-            if (landed >= 0 && state.player.inventory[wanted] === null) {
+            if (landed >= 0 && localHero(state).inventory[wanted] === null) {
               runCommand(state, "moveInventoryItem", landed, wanted);
             }
           }
@@ -313,7 +314,9 @@ export function InventoryPanel({
   // bag cell (desktop).
   const activateItem = (item: Equipment) => {
     const verb = bagVerb(item);
-    const index = state.player.inventory.findIndex((i) => i?.id === item.id);
+    const index = localHero(state).inventory.findIndex(
+      (i) => i?.id === item.id,
+    );
     if (!verb || index < 0 || !runCommandOk(state, verb, index)) return;
     playUiSound(synth, "confirm");
     setInspect(null);
@@ -363,19 +366,20 @@ export function InventoryPanel({
       setDrag(dragRef.current);
     };
 
-  const player = state.player;
+  const player = localHero(state);
   // How many bag pieces the SCRAP sweep would clear right now — loot the hero
   // has outgrown (worse than what's worn, and not a trinket/trophy the engine
   // spares). Drives the button's count and its disabled state so it never
   // destroys anything when there's nothing junk to cull.
   const scrapCount = player.inventory.filter(
-    (item): item is Equipment => item !== null && isScrappableLoot(state, item),
+    (item): item is Equipment =>
+      item !== null && isScrappableLoot(state, player, item),
   ).length;
   // How many slots AUTO-EQUIP would improve right now — drives the button's
   // count and its disabled state so it never runs on an already-optimal
   // loadout (the sweep folds the hero's build into the weapon pick, so a melee
   // hero lands a melee weapon and a mage a wand).
-  const autoCount = autoEquipUpgradeCount(state);
+  const autoCount = autoEquipUpgradeCount(state, player);
   // The backdrop is the "ground": releasing a bag item over it destroys the
   // item. The panel itself absorbs drops (data-drop="none") so a miss between
   // cells is a harmless no-op, never a discard; only a release out beyond the
@@ -477,7 +481,7 @@ export function InventoryPanel({
                     item &&
                     !isArmorBroken(item) &&
                     !isWeaponBroken(item) &&
-                    wouldUpgradeSlot(state, item)
+                    wouldUpgradeSlot(state, player, item)
                       ? " upgrade"
                       : ""
                   }${item ? tierGlowClass(item.tier) : ""}`}

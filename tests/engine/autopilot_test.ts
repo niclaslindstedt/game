@@ -31,7 +31,7 @@ function quietGame(coins: number): GameState {
   const state = startGame();
   stopWaves(state);
   clearStage(state);
-  state.player.coins = coins;
+  state.players[0].coins = coins;
   return state;
 }
 
@@ -65,7 +65,7 @@ describe("engaging", () => {
     expect(state.autopilot.active).toBe(false);
 
     // One second at 1× is affordable; the same purse can't fund 8×.
-    state.player.coins = AUTOPILOT.coinsPerSecond;
+    state.players[0].coins = AUTOPILOT.coinsPerSecond;
     expect(startAutopilot(state, 8)).toBe(false);
     expect(startAutopilot(state, 1)).toBe(true);
     expect(state.autopilot.active).toBe(true);
@@ -92,7 +92,7 @@ describe("the meter", () => {
     const state = quietGame(1000);
     startAutopilot(state, 1);
     run(state, idle, 125); // 125 × 16ms = 2000ms of game time
-    expect(state.player.coins).toBe(1000 - 2 * AUTOPILOT.coinsPerSecond);
+    expect(state.players[0].coins).toBe(1000 - 2 * AUTOPILOT.coinsPerSecond);
     expect(state.autopilot.coinsSpent).toBe(2 * AUTOPILOT.coinsPerSecond);
   });
 
@@ -100,7 +100,7 @@ describe("the meter", () => {
     const state = quietGame(10_000);
     startAutopilot(state, 8);
     run(state, idle, 125); // 2000ms of game time
-    expect(state.player.coins).toBe(10_000 - 16 * AUTOPILOT.coinsPerSecond);
+    expect(state.players[0].coins).toBe(10_000 - 16 * AUTOPILOT.coinsPerSecond);
   });
 
   it("holds the meter while the run is paused", () => {
@@ -108,7 +108,7 @@ describe("the meter", () => {
     startAutopilot(state, 1);
     pauseGame(state);
     run(state, idle, 125);
-    expect(state.player.coins).toBe(1000);
+    expect(state.players[0].coins).toBe(1000);
     expect(state.autopilot.active).toBe(true);
   });
 
@@ -117,9 +117,9 @@ describe("the meter", () => {
     startAutopilot(state, 1);
     run(state, idle, 63); // ~1s → ~100 coins burned
     expect(stopAutopilot(state)).toBe(true);
-    const left = state.player.coins;
+    const left = state.players[0].coins;
     run(state, idle, 125);
-    expect(state.player.coins).toBe(left);
+    expect(state.players[0].coins).toBe(left);
   });
 
   it("disengages with an autopilotStopped event when the purse runs dry", () => {
@@ -133,7 +133,7 @@ describe("the meter", () => {
       );
     }
     expect(stopped).toBe(true);
-    expect(state.player.coins).toBe(0);
+    expect(state.players[0].coins).toBe(0);
     expect(state.autopilot.active).toBe(false);
     // The run itself carries on — only the autopilot let go.
     expect(state.phase).toBe("playing");
@@ -148,18 +148,18 @@ describe("crediting the purse", () => {
     expect(creditAutopilotPurse(state, AUTOPILOT.coinsPerSecond)).toBe(
       AUTOPILOT.coinsPerSecond,
     );
-    expect(state.player.coins).toBe(AUTOPILOT.coinsPerSecond);
+    expect(state.players[0].coins).toBe(AUTOPILOT.coinsPerSecond);
     expect(startAutopilot(state, 1)).toBe(true);
   });
 
   it("adds to an existing purse in whole coins and ignores nothing amounts", () => {
     const state = quietGame(500);
     expect(creditAutopilotPurse(state, 250.9)).toBe(250);
-    expect(state.player.coins).toBe(750);
+    expect(state.players[0].coins).toBe(750);
     expect(creditAutopilotPurse(state, 0)).toBe(0);
     expect(creditAutopilotPurse(state, -100)).toBe(0);
     expect(creditAutopilotPurse(state, Number.NaN)).toBe(0);
-    expect(state.player.coins).toBe(750);
+    expect(state.players[0].coins).toBe(750);
   });
 });
 
@@ -170,8 +170,8 @@ describe("the takings meter (coinsEarned)", () => {
     const state = quietGame(coins);
     state.obstacles = []; // nothing between hero and stall — the meeting needs sight
     state.merchant.discovered = true;
-    state.player.pos = { ...state.merchant.pos };
-    state.player.inventory[0] = {
+    state.players[0].pos = { ...state.merchant.pos };
+    state.players[0].inventory[0] = {
       id: 1,
       defId: "blaster",
       slot: "weapon",

@@ -36,7 +36,7 @@ import {
   stormSpellBlock,
   syncItemSpells,
 } from "../spells.ts";
-import type { GameState } from "../types/index.ts";
+import type { GameState, Player } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
 import { inertEnemy } from "../disposition.ts";
 
@@ -48,16 +48,16 @@ import { inertEnemy } from "../disposition.ts";
  */
 export function stepAbilities(
   state: GameState,
+  player: Player,
   dt: number,
   dtMs: number,
 ): void {
-  const player = state.player;
   if (player.abilities.length === 0) return;
 
   // The conjured powers' damage scale (level ramp × INT — abilityPowerScale):
   // catalog numbers are level-1 values; this keeps a powerup meaning the same
   // fraction of a level-appropriate healthbar all campaign.
-  const power = abilityPowerScale(state);
+  const power = abilityPowerScale(state, player);
 
   for (const ability of player.abilities) {
     ability.remainingMs -= dtMs;
@@ -70,20 +70,20 @@ export function stepAbilities(
     // (`noMenace`): a pickup is not the hero's own strength.
     if (def.orbit) {
       const scratch = abilityScratch(ability, "orbit", dtMs);
-      applyOrbit(state, def.orbit, scratch, dt, power, powerupBilling);
+      applyOrbit(state, player, def.orbit, scratch, dt, power, powerupBilling);
       commitAbilityScratch(ability, "orbit", scratch);
     }
 
     if (def.storm) {
       const scratch = abilityScratch(ability, "storm", dtMs);
-      applyStorm(state, def.storm, scratch, power, powerupBilling);
+      applyStorm(state, player, def.storm, scratch, power, powerupBilling);
       commitAbilityScratch(ability, "storm", scratch);
     }
 
     // The magnet: drops caught in the field fly at the player. Actual
     // pickup stays stepItems' job once they arrive within reach.
     if (def.magnet) {
-      const reach = magnetRadius(state, def);
+      const reach = magnetRadius(state, player, def);
       const reachSq = reach * reach;
       const pull = def.magnet.pullSpeed * dt;
       for (const item of state.items) {
@@ -99,7 +99,7 @@ export function stepAbilities(
         // uncollectable loot at his feet (stepItems turns it away on arrival).
         if (
           item.kind === "equipment" &&
-          !canCollectEquipment(state, item.equipment)
+          !canCollectEquipment(state, player, item.equipment)
         )
           continue;
         if (distanceSq(item.pos, player.pos) > reachSq) continue;
@@ -121,7 +121,7 @@ export function stepAbilities(
     });
     // The power is done: free its dock slot at last, closing the row up so the
     // rest shift down (and keeping every other running copy's slot link true).
-    if (ability.slot !== undefined) removeHeldSlot(state, ability.slot);
+    if (ability.slot !== undefined) removeHeldSlot(state, player, ability.slot);
   }
 }
 
@@ -137,14 +137,14 @@ export function stepAbilities(
  */
 export function stepItemSpells(
   state: GameState,
+  player: Player,
   dt: number,
   dtMs: number,
 ): void {
-  syncItemSpells(state);
-  const player = state.player;
+  syncItemSpells(state, player);
   if (player.itemSpells.length === 0) return;
 
-  const power = abilityPowerScale(state);
+  const power = abilityPowerScale(state, player);
 
   for (const spell of player.itemSpells) {
     spell.cooldownMs = Math.max(0, spell.cooldownMs - dtMs);
@@ -155,7 +155,8 @@ export function stepItemSpells(
     if (spell.spell === "orbit") {
       applyOrbit(
         state,
-        orbitSpellBlock(state, spell.rank),
+        player,
+        orbitSpellBlock(state, player, spell.rank),
         spell,
         dt,
         power,
@@ -166,7 +167,8 @@ export function stepItemSpells(
     if (spell.spell === "storm") {
       applyStorm(
         state,
-        stormSpellBlock(state, spell.rank),
+        player,
+        stormSpellBlock(state, player, spell.rank),
         spell,
         power,
         plainBilling,
@@ -174,13 +176,20 @@ export function stepItemSpells(
     }
 
     if (spell.spell === "seeker") {
-      applyVolley(state, seekerSpellBlock(state, spell.rank), spell, power);
+      applyVolley(
+        state,
+        player,
+        seekerSpellBlock(state, player, spell.rank),
+        spell,
+        power,
+      );
     }
 
     if (spell.spell === "singularity") {
       applySingularity(
         state,
-        singularitySpellBlock(state, spell.rank),
+        player,
+        singularitySpellBlock(state, player, spell.rank),
         spell,
         power,
         spellBilling,
@@ -190,7 +199,8 @@ export function stepItemSpells(
     if (spell.spell === "immolation") {
       applyImmolation(
         state,
-        immolationSpellBlock(state, spell.rank),
+        player,
+        immolationSpellBlock(state, player, spell.rank),
         spell,
         power,
         spellBilling,
@@ -232,7 +242,7 @@ export function stepProcs(state: GameState): void {
   if (state.pendingProcs.length === 0) return;
   const queue = state.pendingProcs;
   state.pendingProcs = [];
-  const power = abilityPowerScale(state);
+  const power = abilityPowerScale(state, state.players[0]);
 
   for (const proc of queue) {
     if (proc.spell === "bolt") {
@@ -279,7 +289,7 @@ export function stepMagicCritBlobs(state: GameState): void {
   if (state.pendingCritBlobs.length === 0) return;
   const queue = state.pendingCritBlobs;
   state.pendingCritBlobs = [];
-  const int = effectiveStat(state, "intelligence");
+  const int = effectiveStat(state, state.players[0], "intelligence");
   const radius = Math.min(
     MAGIC_CRIT.blobRadiusMax,
     MAGIC_CRIT.blobRadius + int * MAGIC_CRIT.blobRadiusPerInt,

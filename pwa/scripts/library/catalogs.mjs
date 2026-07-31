@@ -268,7 +268,7 @@ export const QUESTS = config.QUESTS;
  */
 export function questXp(reward, level, difficultyId) {
   return questRewards.questXpReward(
-    { player: { level }, difficulty: difficultyId },
+    { players: [{ level }], difficulty: difficultyId },
     reward,
   );
 }
@@ -433,7 +433,7 @@ const referenceState = createGame(1, LEVEL_ORDER[0]);
  * the talent whose page is being built rather than the pair.
  */
 export function withTalent(id, rank, read) {
-  const player = referenceState.player;
+  const player = referenceState.players[0];
   const owned = player.talents;
   const hp = player.hp;
   const burstMs = player.evasionBurstMs;
@@ -504,12 +504,36 @@ export const TALENT_READS = talentEffects;
  * `AbilityDef` block shape comes back (the SEEKER's is a `volley`).
  */
 export const SPELL_BLOCKS = {
-  orbit: { block: "orbit", read: spells.orbitSpellBlock },
-  storm: { block: "storm", read: spells.stormSpellBlock },
-  stasis: { block: "stasis", read: spells.stasisSpellParams },
-  seeker: { block: "volley", read: spells.seekerSpellBlock },
-  singularity: { block: "singularity", read: spells.singularitySpellBlock },
-  immolation: { block: "immolation", read: spells.immolationSpellBlock },
+  orbit: {
+    block: "orbit",
+    read: (state, rank) =>
+      spells.orbitSpellBlock(state, state.players[0], rank),
+  },
+  storm: {
+    block: "storm",
+    read: (state, rank) =>
+      spells.stormSpellBlock(state, state.players[0], rank),
+  },
+  stasis: {
+    block: "stasis",
+    read: (state, rank) =>
+      spells.stasisSpellParams(state, state.players[0], rank),
+  },
+  seeker: {
+    block: "volley",
+    read: (state, rank) =>
+      spells.seekerSpellBlock(state, state.players[0], rank),
+  },
+  singularity: {
+    block: "singularity",
+    read: (state, rank) =>
+      spells.singularitySpellBlock(state, state.players[0], rank),
+  },
+  immolation: {
+    block: "immolation",
+    read: (state, rank) =>
+      spells.immolationSpellBlock(state, state.players[0], rank),
+  },
 };
 
 /**
@@ -538,22 +562,40 @@ function freshDrop(defId) {
 
 /** Engine: a fresh drop's per-hit damage band, as the item card prints it. */
 export function weaponDropDamage(defId) {
-  return weaponMath.weaponDamageRange(referenceState, freshDrop(defId));
+  return weaponMath.weaponDamageRange(
+    referenceState,
+    referenceState.players[0],
+    freshDrop(defId),
+  );
 }
 
 /** Engine: a fresh drop's damage per second, as the item card prints it. */
 export function weaponDropDps(defId) {
-  return weaponMath.weaponDps(referenceState, freshDrop(defId));
+  return weaponMath.weaponDps(
+    referenceState,
+    referenceState.players[0],
+    freshDrop(defId),
+  );
 }
 
 /** Engine: a fresh drop's reach, as the item card prints it. */
 export function weaponDropRange(defId) {
-  return weaponMath.weaponRangeFor(referenceState, freshDrop(defId));
+  return weaponMath.weaponRangeFor(
+    referenceState,
+    referenceState.players[0],
+    freshDrop(defId),
+  );
 }
 
 /** Engine: the seconds a fresh drop takes between blows, card-side. */
 export function weaponDropCadence(defId) {
-  return weaponMath.weaponCooldownFor(referenceState, freshDrop(defId)) / 1000;
+  return (
+    weaponMath.weaponCooldownFor(
+      referenceState,
+      referenceState.players[0],
+      freshDrop(defId),
+    ) / 1000
+  );
 }
 
 /** Engine: the armor points a fresh drop of an armor piece contributes worn. */
@@ -612,7 +654,7 @@ export const mobLevelXp = leveling.mobLevelXp;
  * whole state, and the reward rule stays the engine's rather than a copy.
  */
 export function killXp(def, mlvl, heroLevel) {
-  return loot.enemyKillXp({ player: { level: heroLevel } }, def, { mlvl });
+  return loot.enemyKillXp({ players: [{ level: heroLevel }] }, def, { mlvl });
 }
 
 /** An equipment/unique/story/companion id resolved to its display name. */

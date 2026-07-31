@@ -94,11 +94,11 @@ describe("rare & unique mob encounters", () => {
   it("power-matches the hero on engagement, like a set piece", () => {
     const state = startGame(42, "test_rare_level");
     const rare = makeEnemy(
-      { pos: { ...state.player.pos }, hp: 225, maxHp: 225, mlvl: 3 },
+      { pos: { ...state.players[0].pos }, hp: 225, maxHp: 225, mlvl: 3 },
       "test_rare",
     );
     state.enemies.push(rare);
-    state.player.level = 20;
+    state.players[0].level = 20;
     hitEnemy(state, rare, 1);
     expect(rare.powerScaled).toBe(true);
     expect(rare.mlvl).toBe(

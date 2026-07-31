@@ -21,17 +21,17 @@ describe("level-up light shockwave", () => {
     const state = startGame();
     clearStage(state);
     const at = {
-      x: state.player.pos.x + 40,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + 40,
+      y: state.players[0].pos.y,
     };
     const enemy = makeEnemy({ pos: { ...at } });
     state.enemies.push(enemy);
     const hpBefore = enemy.hp;
-    const distBefore = distance(state.player.pos, enemy.pos);
+    const distBefore = distance(state.players[0].pos, enemy.pos);
 
     // Ding: crossing the threshold arms the shockwave (see grantXp).
     grantXp(state, xpToLevelUp(1));
-    expect(state.player.level).toBe(2);
+    expect(state.players[0].level).toBe(2);
     // The light armed an outward impulse — but hasn't coasted it yet.
     expect(enemy.knockMs).toBe(LEVELING.shockwave.knockbackMs);
     expect(enemy.knockVel).toBeDefined();
@@ -44,9 +44,11 @@ describe("level-up light shockwave", () => {
     // Coast a few ticks: the mob visibly sails outward and is still alive.
     // Disarm the hero first so his own weapon can't chip the mob during the
     // coast — the point here is the SHOCKWAVE's shove, not combat.
-    state.player.disarmed = true;
+    state.players[0].disarmed = true;
     for (let i = 0; i < 12; i++) step(state, idle, DT);
-    expect(distance(state.player.pos, enemy.pos)).toBeGreaterThan(distBefore);
+    expect(distance(state.players[0].pos, enemy.pos)).toBeGreaterThan(
+      distBefore,
+    );
     expect(enemy.hp).toBe(hpBefore);
     expect(state.enemies).toContain(enemy);
   });
@@ -55,13 +57,13 @@ describe("level-up light shockwave", () => {
     const state = startGame();
     clearStage(state);
     const near = makeEnemy({
-      pos: { x: state.player.pos.x + 30, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 30, y: state.players[0].pos.y },
     });
     // Well beyond the shockwave's reach — the light never reaches it.
     const far = makeEnemy({
       pos: {
-        x: state.player.pos.x + LEVELING.shockwave.radius + 200,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + LEVELING.shockwave.radius + 200,
+        y: state.players[0].pos.y,
       },
     });
     state.enemies.push(near, far);

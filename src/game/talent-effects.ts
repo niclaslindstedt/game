@@ -22,7 +22,12 @@ import {
   type TalentEffect,
 } from "./defs/talents/index.ts";
 import { BALANCE } from "./tuning.ts";
-import type { GameState, SpellKind, WeaponClass } from "./types/index.ts";
+import type {
+  GameState,
+  Player,
+  SpellKind,
+  WeaponClass,
+} from "./types/index.ts";
 
 /**
  * The developer TALENT POWER dial (`BALANCE.talentPower`, neutral 1). Every
@@ -38,14 +43,23 @@ function talentPower(): number {
 }
 
 /** The rank the hero owns in a talent (0 when untrained). */
-export function talentRank(state: GameState, id: string): number {
-  return state.player.talents[id] ?? 0;
+export function talentRank(
+  state: GameState,
+  player: Player,
+  id: string,
+): number {
+  return player.talents[id] ?? 0;
 }
 
 /** Total ranks the hero has spent across `tree`'s talents. */
-export function spentTalentRanks(state: GameState, tree: TalentClass): number {
+export function spentTalentRanks(
+  state: GameState,
+  player: Player,
+  tree: TalentClass,
+): number {
   let sum = 0;
-  for (const def of talentsForTree(tree)) sum += talentRank(state, def.id);
+  for (const def of talentsForTree(tree))
+    sum += talentRank(state, player, def.id);
   return sum;
 }
 
@@ -69,12 +83,13 @@ type TrainedProc<K extends TalentBlockName> = {
  */
 function procTalent<K extends TalentBlockName>(
   state: GameState,
+  player: Player,
   name: K,
 ): TrainedProc<K> | null {
   for (const def of Object.values(talentDefs())) {
     const block = def[name];
     if (block === undefined) continue;
-    const rank = talentRank(state, def.id);
+    const rank = talentRank(state, player, def.id);
     if (rank > 0) return { rank, block: block as NonNullable<TalentDef[K]> };
   }
   return null;
@@ -92,6 +107,7 @@ type NumericEffectField = {
  * to one tree. Cheap: the catalog is a handful of defs. */
 function sumEffect(
   state: GameState,
+  player: Player,
   field: NumericEffectField,
   tree?: TalentClass,
 ): number {
@@ -99,7 +115,7 @@ function sumEffect(
   for (const def of Object.values(talentDefs())) {
     if (tree && def.tree !== tree) continue;
     const per = def.effect?.[field];
-    if (per) total += talentRank(state, def.id) * per;
+    if (per) total += talentRank(state, player, def.id) * per;
   }
   // The TALENT POWER dial scales every summed always-on bonus at once (crit,
   // dodge, max-hp, move-speed, damage reduction, berserker, retribution).
@@ -110,41 +126,46 @@ function sumEffect(
  * melee, Deadeye for ranged; magic has none). */
 export function talentCritChanceBonus(
   state: GameState,
+  player: Player,
   weaponClass: WeaponClass,
 ): number {
-  return sumEffect(state, "critChancePerRank", weaponClass);
+  return sumEffect(state, player, "critChancePerRank", weaponClass);
 }
 
 /** +crit-damage multiplier from the weapon class's tree. */
 export function talentCritDamageBonus(
   state: GameState,
+  player: Player,
   weaponClass: WeaponClass,
 ): number {
-  return sumEffect(state, "critDamagePerRank", weaponClass);
+  return sumEffect(state, player, "critDamagePerRank", weaponClass);
 }
 
 /** Move-speed MULTIPLIER from Wind Runner (1 when untrained). */
-export function talentSpeedMult(state: GameState): number {
-  return 1 + sumEffect(state, "moveSpeedPerRank");
+export function talentSpeedMult(state: GameState, player: Player): number {
+  return 1 + sumEffect(state, player, "moveSpeedPerRank");
 }
 
 /** +dodge chance from Evasion. */
-export function talentDodgeBonus(state: GameState): number {
-  return sumEffect(state, "dodgePerRank");
+export function talentDodgeBonus(state: GameState, player: Player): number {
+  return sumEffect(state, player, "dodgePerRank");
 }
 
 /** +max-hp fraction from Bulwark. */
-export function talentMaxHpPct(state: GameState): number {
-  return sumEffect(state, "maxHpPerRank");
+export function talentMaxHpPct(state: GameState, player: Player): number {
+  return sumEffect(state, player, "maxHpPerRank");
 }
 
 /** Flat incoming-damage reduction fraction — Ironhide (martial) + Mage Armor
  * (magic ward) combined, since both apply as one flat cut at the player-damage
  * choke point today. */
-export function talentDamageReduction(state: GameState): number {
+export function talentDamageReduction(
+  state: GameState,
+  player: Player,
+): number {
   return (
-    sumEffect(state, "damageReductionPerRank") +
-    sumEffect(state, "magicReductionPerRank")
+    sumEffect(state, player, "damageReductionPerRank") +
+    sumEffect(state, player, "magicReductionPerRank")
   );
 }
 
@@ -158,12 +179,13 @@ export function talentDamageReduction(state: GameState): number {
  */
 export function talentSpellRanks(
   state: GameState,
+  player: Player,
 ): Partial<Record<SpellKind, number>> {
   const ranks: Partial<Record<SpellKind, number>> = {};
   for (const def of Object.values(talentDefs())) {
     const spell = def.effect?.conjure;
     if (!spell) continue;
-    const rank = talentRank(state, def.id);
+    const rank = talentRank(state, player, def.id);
     if (rank > 0) ranks[spell] = (ranks[spell] ?? 0) + rank;
   }
   return ranks;
@@ -171,21 +193,24 @@ export function talentSpellRanks(
 
 /** ARCANE RETRIBUTION: the fraction of an enemy blow reflected back at the
  * attacker (0 when untrained). */
-export function talentReflectFrac(state: GameState): number {
-  return sumEffect(state, "reflectPerRank");
+export function talentReflectFrac(state: GameState, player: Player): number {
+  return sumEffect(state, player, "reflectPerRank");
 }
 
 /** FROST NOVA's live numbers for this hero, or null when untrained. Rank widens
  * the freeze ring, lengthens the freeze, and shortens the internal cooldown
  * (the carrier's `frostNova` block) — read through the block rather than the
  * additive effect bag, since it's a structured proc, not a summed stat term. */
-export function talentFrostNova(state: GameState): {
+export function talentFrostNova(
+  state: GameState,
+  player: Player,
+): {
   radius: number;
   freezeMs: number;
   slowFactor: number;
   cooldownMs: number;
 } | null {
-  const proc = procTalent(state, "frostNova");
+  const proc = procTalent(state, player, "frostNova");
   if (!proc) return null;
   const c = proc.block;
   const steps = proc.rank - 1;
@@ -202,10 +227,9 @@ export function talentFrostNova(state: GameState): {
 
 /** Weapon-damage MULTIPLIER from Berserker Rage: `1 + rank×slope × missing-hp
  * fraction`, so it peaks near death and is 1 at full hp (or untrained). */
-export function talentBerserkMult(state: GameState): number {
-  const per = sumEffect(state, "berserkPerRank");
+export function talentBerserkMult(state: GameState, player: Player): number {
+  const per = sumEffect(state, player, "berserkPerRank");
   if (per <= 0) return 1;
-  const player = state.player;
   const missing =
     player.maxHp > 0 ? Math.max(0, 1 - player.hp / player.maxHp) : 0;
   return 1 + per * missing;
@@ -217,8 +241,9 @@ export function talentBerserkMult(state: GameState): number {
  * once per hit in `meleeSweep`. */
 export function talentTwinStrike(
   state: GameState,
+  player: Player,
 ): { chance: number; echoFrac: number } | null {
-  const proc = procTalent(state, "twinStrike");
+  const proc = procTalent(state, player, "twinStrike");
   if (!proc) return null;
   const c = proc.block;
   return {
@@ -233,8 +258,9 @@ export function talentTwinStrike(
  * bigger figure from `bonusFromRank`). Read once per swing in `stepWeapon`. */
 export function talentCleavingEcho(
   state: GameState,
+  player: Player,
 ): { chance: number; extraTargets: number } | null {
-  const proc = procTalent(state, "cleavingEcho");
+  const proc = procTalent(state, player, "cleavingEcho");
   if (!proc) return null;
   const c = proc.block;
   return {
@@ -250,8 +276,9 @@ export function talentCleavingEcho(
  * back at the attacker. Read in the struck path (`applyParry`). */
 export function talentParry(
   state: GameState,
+  player: Player,
 ): { chance: number; riposteFrac: number } | null {
-  const proc = procTalent(state, "parry");
+  const proc = procTalent(state, player, "parry");
   if (!proc) return null;
   const c = proc.block;
   return {
@@ -266,8 +293,9 @@ export function talentParry(
  * on the `land` event (`applySeismicLanding`). */
 export function talentSeismic(
   state: GameState,
+  player: Player,
 ): { radius: number; damage: number; knockback: number } | null {
-  const proc = procTalent(state, "seismic");
+  const proc = procTalent(state, player, "seismic");
   if (!proc) return null;
   const c = proc.block;
   const steps = proc.rank - 1;
@@ -284,8 +312,9 @@ export function talentSeismic(
  * falloff, capped). Read in `stepWeapon` (stamped on the hero's shots). */
 export function talentPiercing(
   state: GameState,
+  player: Player,
 ): { pierce: number; retain: number } | null {
-  const proc = procTalent(state, "piercing");
+  const proc = procTalent(state, player, "piercing");
   if (!proc) return null;
   const c = proc.block;
   return {
@@ -303,8 +332,9 @@ export function talentPiercing(
  * hero's surviving ranged hits (`applyRangedShotProcs`). */
 export function talentConcussive(
   state: GameState,
+  player: Player,
 ): { chance: number; distance: number } | null {
-  const proc = procTalent(state, "concussive");
+  const proc = procTalent(state, player, "concussive");
   if (!proc) return null;
   const c = proc.block;
   return {
@@ -319,8 +349,9 @@ export function talentConcussive(
  * lengthens it). Read on the hero's ranged hits (`applyRangedShotProcs`). */
 export function talentCrippling(
   state: GameState,
+  player: Player,
 ): { chance: number; slowFactor: number; slowMs: number } | null {
-  const proc = procTalent(state, "crippling");
+  const proc = procTalent(state, player, "crippling");
   if (!proc) return null;
   const c = proc.block;
   return {
@@ -336,8 +367,9 @@ export function talentCrippling(
  * `spreadDeg` fans them. Read once per pull in `stepWeapon`. */
 export function talentVolley(
   state: GameState,
+  player: Player,
 ): { chance: number; extra: number; spreadDeg: number } | null {
-  const proc = procTalent(state, "volley");
+  const proc = procTalent(state, player, "volley");
   if (!proc) return null;
   const c = proc.block;
   return {
@@ -350,11 +382,14 @@ export function talentVolley(
 /** SPRING HEELS' jump modifiers (the carrier's `springHeels` block): a
  * takeoff-speed MULTIPLIER (1 when untrained) and a jump-cost MULTIPLIER (< 1
  * only from `costReductionRank`). Read in `stepPlayer`. */
-export function talentJumpMods(state: GameState): {
+export function talentJumpMods(
+  state: GameState,
+  player: Player,
+): {
   velocityMult: number;
   costMult: number;
 } {
-  const proc = procTalent(state, "springHeels");
+  const proc = procTalent(state, player, "springHeels");
   if (!proc) return { velocityMult: 1, costMult: 1 };
   const c = proc.block;
   return {
@@ -366,16 +401,19 @@ export function talentJumpMods(state: GameState): {
 /** EVASION's mastery speed-burst MULTIPLIER while the burst window is live (the
  * carrier's `evasionBurst` block; `player.evasionBurstMs > 0`), 1 otherwise.
  * Read in `playerSpeed`; the window is armed on a dodge in the struck path. */
-export function talentEvasionBurstMult(state: GameState): number {
-  if ((state.player.evasionBurstMs ?? 0) <= 0) return 1;
-  return procTalent(state, "evasionBurst")?.block.speedMult ?? 1;
+export function talentEvasionBurstMult(
+  state: GameState,
+  player: Player,
+): number {
+  if ((player.evasionBurstMs ?? 0) <= 0) return 1;
+  return procTalent(state, player, "evasionBurst")?.block.speedMult ?? 1;
 }
 
 /** EVASION's mastery burst duration (ms), or 0 when the mastery rank isn't
  * owned — armed on a dodge in the struck path (the carrier's `evasionBurst`
  * block). */
-export function talentEvasionBurstMs(state: GameState): number {
-  const proc = procTalent(state, "evasionBurst");
+export function talentEvasionBurstMs(state: GameState, player: Player): number {
+  const proc = procTalent(state, player, "evasionBurst");
   if (!proc) return 0;
   return proc.rank >= proc.block.rank ? proc.block.ms : 0;
 }

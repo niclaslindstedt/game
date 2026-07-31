@@ -97,12 +97,12 @@ type Owned = { index: number; item: Equipment };
  * the blades. */
 function bagWeapons(state: GameState, kind?: "shot" | "melee"): Owned[] {
   const out: Owned[] = [];
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   for (let index = 0; index < inv.length; index++) {
     const item = inv[index];
     if (!item || item.slot !== "weapon") continue;
     if (kind && weaponKind(item) !== kind) continue;
-    if (!canEquip(state, item)) continue;
+    if (!canEquip(state, state.players[0], item)) continue;
     out.push({ index, item });
   }
   return out;
@@ -135,7 +135,7 @@ type Body = { dist: number; inPack: boolean };
 type FieldRead = { bodies: Body[]; bossDist: number };
 
 function fieldRead(state: GameState): FieldRead {
-  const player = state.player;
+  const player = state.players[0];
   const bodies: Body[] = [];
   let bossDist = Infinity;
   let aim: Vec2 | null = null;
@@ -183,7 +183,7 @@ function weaponMomentValue(
   const def = weaponDef(item.defId);
   const melee = def.projectile === undefined;
   if (melee && airborne) return -1;
-  const range = weaponRangeFor(state, item);
+  const range = weaponRangeFor(state, state.players[0], item);
   let inRange = 0;
   let pack = 0;
   for (const body of read.bodies) {
@@ -195,12 +195,15 @@ function weaponMomentValue(
   const shape = def.projectile
     ? rangedShotTargets(def.projectile)
     : Math.min(
-        meleeRealizedTargets(weaponSweepHalfAngle(state, item), range),
-        maxMeleeTargets(state),
+        meleeRealizedTargets(
+          weaponSweepHalfAngle(state, state.players[0], item),
+          range,
+        ),
+        maxMeleeTargets(state, state.players[0]),
       );
   const bigBody = read.bossDist <= Math.min(POCKET_BOSS_RADIUS, range);
   const targets = bigBody ? 1 : Math.min(shape, Math.max(1, pack));
-  return weaponDps(state, item) * targets;
+  return weaponDps(state, state.players[0], item) * targets;
 }
 
 /** The banked weapon of `kind` the moment values most, or null when none of
@@ -230,7 +233,7 @@ function bestBagDraw(
  * nothing in range is churn, not damage.
  */
 export function botPocketShooterIndex(state: GameState): number {
-  const airborne = state.player.z > JUMP.dodgeHeight;
+  const airborne = state.players[0].z > JUMP.dodgeHeight;
   const pick = bestBagDraw(state, fieldRead(state), airborne, "shot");
   return pick ? pick.index : -1;
 }
@@ -254,7 +257,7 @@ const bestWeaponByLoadout = new WeakMap<object, Owned>();
 const pocketKeepByLoadout = new WeakMap<object, number[]>();
 
 export function bestOwnedWeapon(state: GameState): Owned {
-  const memo = heroLoadoutMemo(state);
+  const memo = heroLoadoutMemo(state, state.players[0]);
   const hit = bestWeaponByLoadout.get(memo);
   if (hit) return hit;
   const result = computeBestOwnedWeapon(state);
@@ -263,14 +266,19 @@ export function bestOwnedWeapon(state: GameState): Owned {
 }
 
 function computeBestOwnedWeapon(state: GameState): Owned {
-  const inv = state.player.inventory;
-  let item = state.player.equipment.weapon;
+  const inv = state.players[0].inventory;
+  let item = state.players[0].equipment.weapon;
   let index = -1;
-  let bestScore = weaponScore(state, item);
+  let bestScore = weaponScore(state, state.players[0], item);
   for (let i = 0; i < inv.length; i++) {
     const cell = inv[i];
-    if (!cell || cell.slot !== "weapon" || !canEquip(state, cell)) continue;
-    const score = weaponScore(state, cell);
+    if (
+      !cell ||
+      cell.slot !== "weapon" ||
+      !canEquip(state, state.players[0], cell)
+    )
+      continue;
+    const score = weaponScore(state, state.players[0], cell);
     if (score > bestScore) {
       bestScore = score;
       item = cell;
@@ -287,10 +295,10 @@ function weaponShape(state: GameState, item: Equipment): number {
   if (def.projectile) return rangedShotTargets(def.projectile);
   return Math.min(
     meleeRealizedTargets(
-      weaponSweepHalfAngle(state, item),
-      weaponRangeFor(state, item),
+      weaponSweepHalfAngle(state, state.players[0], item),
+      weaponRangeFor(state, state.players[0], item),
     ),
-    maxMeleeTargets(state),
+    maxMeleeTargets(state, state.players[0]),
   );
 }
 
@@ -321,7 +329,7 @@ type Role = { index: number; lane: WeaponClass };
  * can free.
  */
 export function botPocketKeepIndices(state: GameState): number[] {
-  const memo = heroLoadoutMemo(state);
+  const memo = heroLoadoutMemo(state, state.players[0]);
   const hit = pocketKeepByLoadout.get(memo);
   if (hit) return hit;
   const result = computePocketKeepIndices(state);
@@ -334,22 +342,26 @@ function computePocketKeepIndices(state: GameState): number[] {
   const main = bestOwnedWeapon(state);
   if (main.index >= 0) keep.add(main.index); // the stashed main, mid-swap
   const owned: Owned[] = [
-    { index: -1, item: state.player.equipment.weapon },
+    { index: -1, item: state.players[0].equipment.weapon },
     ...bagWeapons(state),
   ];
   // The four jobs, each won by the best weapon the hero owns for it.
   const round = (kind: "shot" | "melee"): Role | null =>
-    bestRole(state, owned, kind, (item) => weaponDps(state, item));
+    bestRole(state, owned, kind, (item) =>
+      weaponDps(state, state.players[0], item),
+    );
   const spray = (kind: "shot" | "melee"): Role | null =>
     bestRole(state, owned, kind, (item) => {
       const shape = weaponShape(state, item);
-      return shape > 1 ? weaponDps(state, item) * shape : -1;
+      return shape > 1 ? weaponDps(state, state.players[0], item) * shape : -1;
     });
   const byClass = (cls: WeaponClass): Role | null =>
     bestRole(state, owned, undefined, (item) =>
-      weaponDef(item.defId).class === cls ? weaponScore(state, item) : -1,
+      weaponDef(item.defId).class === cls
+        ? weaponScore(state, state.players[0], item)
+        : -1,
     );
-  const lane = committedLane(state);
+  const lane = committedLane(state, state.players[0]);
   const rest = [
     round("melee"),
     spray("melee"),
@@ -365,7 +377,7 @@ function computePocketKeepIndices(state: GameState): number[] {
     ...rest.filter((r) => r && r.lane !== lane),
   ];
   // Never spare so much that the cull can't free the bot's open cell.
-  const cap = Math.min(POCKET_KEEP_MAX, state.player.inventory.length - 1);
+  const cap = Math.min(POCKET_KEEP_MAX, state.players[0].inventory.length - 1);
   let spent = 0;
   for (const role of roles) {
     if (spent >= cap) break;
@@ -411,12 +423,12 @@ export type SwapMemory = { lastSwapMs?: number };
  * `equipFromInventory` zeroes it — instant gratification for a hand-picked
  * swap; the bot, swapping every fight, plays fair). */
 function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
-  const player = state.player;
+  const player = state.players[0];
   const carried = player.weaponCooldownMs;
-  if (!equipFromInventory(state, index)) return false;
+  if (!equipFromInventory(state, player, index)) return false;
   player.weaponCooldownMs = Math.min(
     carried,
-    weaponCooldownFor(state, player.equipment.weapon),
+    weaponCooldownFor(state, player, player.equipment.weapon),
   );
   bot.lastSwapMs = state.stats.timeMs;
   return true;
@@ -437,7 +449,7 @@ function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
  */
 export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
   if (state.phase !== "playing") return -1;
-  const player = state.player;
+  const player = state.players[0];
   if (player.disarmed) return -1;
   const held = player.equipment.weapon;
   const main = bestOwnedWeapon(state);
@@ -472,10 +484,11 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
     // same margin — is worth the ground too: that is how a fresh find gets
     // worn instead of riding the bag.
     const keepsReach =
-      weaponRangeFor(state, pick.item) >= weaponRangeFor(state, held);
+      weaponRangeFor(state, player, pick.item) >=
+      weaponRangeFor(state, player, held);
     const upgrade =
-      weaponScore(state, pick.item) >
-      weaponScore(state, held) * SWAP_GAIN_MARGIN;
+      weaponScore(state, player, pick.item) >
+      weaponScore(state, player, held) * SWAP_GAIN_MARGIN;
     const bar = keepsReach || upgrade ? 1 : SWAP_GAIN_MARGIN;
     return pick.value > mine * bar ? pick.index : -1;
   };
@@ -502,7 +515,7 @@ export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
   // sticky exit band so a foe orbiting the boundary can't start a juggle.
   let nearest = Infinity;
   for (const body of read.bodies) nearest = Math.min(nearest, body.dist);
-  const reach = weaponRangeFor(state, main.item);
+  const reach = weaponRangeFor(state, player, main.item);
   const wantBlade =
     !airborne && nearest <= reach * (heldShot ? 1 : MELEE_STICK);
   if (wantBlade) {

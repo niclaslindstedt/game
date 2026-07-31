@@ -14,6 +14,7 @@
 // mutations go through the engine's shop API (sellItem/buyStock) and `onChange`
 // re-renders.
 
+import { localHero } from "./local-seat.ts";
 import { useCallback, useEffect, useState, type PointerEvent } from "react";
 
 import {
@@ -240,7 +241,7 @@ export function ShopPanel({
 }) {
   const [selected, setSelected] = useState<Selection | null>(null);
   const merchant = state.merchant;
-  const player = state.player;
+  const player = localHero(state);
 
   // Derived per render, never stored: a row goes stale the instant a flag
   // three rooms away unlocks or spends it (see quests/merchant.ts).
@@ -309,7 +310,7 @@ export function ShopPanel({
   // reads as an upgrade and a sale shows what's being let go. Never compare a
   // piece to itself.
   const compareFor = (item: Equipment): Equipment | null => {
-    const worn = wornCounterpart(state, item);
+    const worn = wornCounterpart(state, player, item);
     return worn && worn.id !== item.id ? worn : null;
   };
 
@@ -319,7 +320,7 @@ export function ShopPanel({
     .map((item, index) => ({ item, index }))
     .filter(
       (e): e is { item: Equipment; index: number } =>
-        e.item !== null && isScrappableLoot(state, e.item),
+        e.item !== null && isScrappableLoot(state, player, e.item),
     );
   const junkTotal = junk.reduce((sum, e) => sum + sellValue(e.item), 0);
 
@@ -333,7 +334,7 @@ export function ShopPanel({
 
   // REPAIR ALL: the coins to mend the worn weapon, worn armor, and every
   // breakable bag piece back to full (0 when the whole kit is already whole).
-  const repairTotal = repairAllCost(state);
+  const repairTotal = repairAllCost(state, player);
 
   const doRepair = () => {
     if (runCommand(state, "repairGear") !== null) {

@@ -178,7 +178,10 @@ function startAt(): GameState {
 }
 
 function plant(state: GameState, defId: string, dx = 60, dy = 0): Enemy {
-  const pos = { x: state.player.pos.x + dx, y: state.player.pos.y + dy };
+  const pos = {
+    x: state.players[0].pos.x + dx,
+    y: state.players[0].pos.y + dy,
+  };
   const enemy: Enemy = {
     id: state.nextId++,
     defId,
@@ -323,9 +326,9 @@ describe("the numbers whose sign is the whole mechanic", () => {
     const snare = state.scorches.find((p) => p.field === "snare");
     expect(snare).toBeDefined();
     expect(snare?.damage).toBe(0); // it hurts nobody — that IS the design
-    expect(state.player.snareFactor).toBe(0.5);
+    expect(state.players[0].snareFactor).toBe(0.5);
     run(state, idle, steps(4200));
-    expect(state.player.snareFactor).toBeUndefined();
+    expect(state.players[0].snareFactor).toBeUndefined();
   });
 
   it("a blink arrives at the range LOCKED at the tell, not the one now", () => {
@@ -335,11 +338,11 @@ describe("the numbers whose sign is the whole mechanic", () => {
     expect(mob.mech?.telegraph?.kind).toBe("blink_strike");
     // The hero runs FURTHER AWAY mid-tell. A move that re-measured would follow
     // him; one that honours its own windup lands where he was.
-    state.player.pos.x -= 300;
+    state.players[0].pos.x -= 300;
     run(state, idle, steps(360));
     // It travelled the locked distance (200 − 30), so it is now well short of
     // the hero rather than on top of him.
-    const gap = Math.abs(mob.pos.x - state.player.pos.x);
+    const gap = Math.abs(mob.pos.x - state.players[0].pos.x);
     expect(gap).toBeGreaterThan(200);
   });
 });
@@ -348,13 +351,13 @@ describe("a jump answers the ground moves, exactly as it answers a slam", () => 
   it("a pulse cannot touch an airborne hero", () => {
     const state = startAt();
     plant(state, "test_pulse", 30);
-    const hp = state.player.hp;
+    const hp = state.players[0].hp;
     // Held above the dodge height for the whole windup and the cast.
     for (let i = 0; i < steps(500); i++) {
-      state.player.z = 40;
+      state.players[0].z = 40;
       step(state, idle, DT);
     }
-    expect(state.player.hp).toBe(hp);
+    expect(state.players[0].hp).toBe(hp);
   });
 });
 

@@ -75,12 +75,14 @@ describe("HOW TO PLAY teaching copy (DEMO_TIPS)", () => {
 function healthyRun(): Parameters<(typeof DEMO_LESSONS)[number]["ready"]>[0] {
   return {
     phase: "playing",
-    player: {
-      stamina: 100,
-      maxStamina: 100,
-      inventory: [null, null, null, null],
-      equipment: { weapon: { defId: "blaster" } },
-    },
+    players: [
+      {
+        stamina: 100,
+        maxStamina: 100,
+        inventory: [null, null, null, null],
+        equipment: { weapon: { defId: "blaster" } },
+      },
+    ],
     companions: [],
     stats: { combatMs: 0 },
     menace: 0,
@@ -107,7 +109,7 @@ describe("ambient lessons (DEMO_LESSONS)", () => {
     const stamina = lesson("stamina");
     // Full pool, standing still: nothing to teach.
     expect(stamina.ready(state, ctx({ stillMs: 5000 }))).toBe(false);
-    state.player.stamina = 10;
+    state.players[0].stamina = 10;
     // Low pool but still moving — the line would describe nothing on screen.
     expect(stamina.ready(state, ctx())).toBe(false);
     expect(stamina.ready(state, ctx({ stillMs: 5000 }))).toBe(true);
@@ -117,9 +119,9 @@ describe("ambient lessons (DEMO_LESSONS)", () => {
     const state = healthyRun();
     const bag = lesson("bag");
     expect(bag.ready(state, ctx())).toBe(false);
-    state.player.inventory[0] = { defId: "crude_sword" } as never;
+    state.players[0].inventory[0] = { defId: "crude_sword" } as never;
     expect(bag.ready(state, ctx())).toBe(false);
-    state.player.inventory[1] = { defId: "crude_sword" } as never;
+    state.players[0].inventory[1] = { defId: "crude_sword" } as never;
     expect(bag.ready(state, ctx())).toBe(true);
   });
 

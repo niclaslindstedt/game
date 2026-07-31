@@ -29,7 +29,7 @@ describe("pause phase", () => {
     const state = startGame();
     clearStage(state);
     const enemy = makeEnemy({
-      pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
       speed: 40,
     });
     state.enemies.push(enemy);

@@ -22,12 +22,12 @@ import { clearStage, idle, makeEnemy, run, startGame } from "./helpers.ts";
 describe("fog of war", () => {
   it("starts with the spawn surroundings revealed and the far field fogged", () => {
     const state = startGame();
-    expect(isExplored(state, state.player.pos)).toBe(true);
+    expect(isExplored(state, state.players[0].pos)).toBe(true);
     // Just inside the reveal radius: lit.
     expect(
       isExplored(state, {
-        x: state.player.pos.x + MAP.revealRadius - MAP.cellSize,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + MAP.revealRadius - MAP.cellSize,
+        y: state.players[0].pos.y,
       }),
     ).toBe(true);
     // The boss's far corner: still under fog.
@@ -37,14 +37,17 @@ describe("fog of war", () => {
   it("walking lifts the fog along the way, and it stays lifted", () => {
     const state = startGame();
     clearStage(state);
-    const there = { x: state.player.pos.x + 600, y: state.player.pos.y };
+    const there = {
+      x: state.players[0].pos.x + 600,
+      y: state.players[0].pos.y,
+    };
     expect(isExplored(state, there)).toBe(false);
     // Teleport-and-step: the reveal reads the hero's live position each tick.
-    state.player.pos = { ...there };
+    state.players[0].pos = { ...there };
     run(state, idle, 1);
     expect(isExplored(state, there)).toBe(true);
     // Walk away again — explored ground never re-fogs.
-    state.player.pos = { x: there.x - 600, y: there.y };
+    state.players[0].pos = { x: there.x - 600, y: there.y };
     run(state, idle, 1);
     expect(isExplored(state, there)).toBe(true);
   });
@@ -55,8 +58,8 @@ describe("fog of war", () => {
     // A corner of the on-screen camera view, well OUTSIDE the reveal circle:
     // visible on screen, but the circular reveal must leave it fogged.
     const view = {
-      x: state.player.pos.x - 220,
-      y: state.player.pos.y - 110,
+      x: state.players[0].pos.x - 220,
+      y: state.players[0].pos.y - 110,
       width: 440,
       height: 220,
     };
@@ -66,15 +69,17 @@ describe("fog of war", () => {
     // A point just inside the reveal circle IS lifted.
     expect(
       isExplored(state, {
-        x: state.player.pos.x + MAP.revealRadius - MAP.cellSize,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + MAP.revealRadius - MAP.cellSize,
+        y: state.players[0].pos.y,
       }),
     ).toBe(true);
   });
 
   it("out-of-bounds positions read as unexplored instead of wrapping", () => {
     const state = startGame();
-    expect(isExplored(state, { x: -10, y: state.player.pos.y })).toBe(false);
+    expect(isExplored(state, { x: -10, y: state.players[0].pos.y })).toBe(
+      false,
+    );
     expect(isExplored(state, { x: state.level.width + 10, y: 10 })).toBe(false);
   });
 });
@@ -84,7 +89,7 @@ describe("exploredRay", () => {
     const state = startGame();
     // Only the spawn's seed circle is uncovered: an eastward ray leaves known
     // ground near the reveal circle's rim.
-    const ray = exploredRay(state, state.player.pos, 0, 2000);
+    const ray = exploredRay(state, state.players[0].pos, 0, 2000);
     expect(ray.fog).toBe(true);
     expect(ray.dist).toBeGreaterThan(MAP.revealRadius - 2 * MAP.cellSize);
     expect(ray.dist).toBeLessThan(MAP.revealRadius + 2 * MAP.cellSize);
@@ -102,7 +107,7 @@ describe("exploredRay", () => {
   it("caps at maxDist without flagging fog", () => {
     const state = startGame();
     state.explored.fill(1);
-    expect(exploredRay(state, state.player.pos, 0, 50)).toEqual({
+    expect(exploredRay(state, state.players[0].pos, 0, 50)).toEqual({
       dist: 50,
       fog: false,
     });
@@ -128,7 +133,7 @@ describe("map phase", () => {
     expect(state.phase).toBe("paused");
     state.phase = "playing";
     openMap(state);
-    state.player.pendingStatPoints = 1;
+    state.players[0].pendingStatPoints = 1;
     closeMap(state);
     expect(state.phase).toBe("levelup");
   });
@@ -171,14 +176,14 @@ describe("map markers", () => {
   it("pins a story item where it was picked up, but never a loot find", () => {
     const state = startGame();
     clearStage(state);
-    const at = { x: state.player.pos.x, y: state.player.pos.y };
+    const at = { x: state.players[0].pos.x, y: state.players[0].pos.y };
     state.items.push(
       { id: state.nextId++, kind: "story", pos: { ...at }, defId: "test_key" },
       {
         id: state.nextId++,
         kind: "equipment",
         pos: { ...at },
-        equipment: rollEquipment(state, {
+        equipment: rollEquipment(state, state.players[0], {
           defId: "test_hammer",
           tier: "unique",
           mlvl: 99,
@@ -201,8 +206,8 @@ describe("map markers", () => {
     state.items.push({
       id: state.nextId++,
       kind: "equipment",
-      pos: { ...state.player.pos },
-      equipment: rollEquipment(state, {
+      pos: { ...state.players[0].pos },
+      equipment: rollEquipment(state, state.players[0], {
         defId: "test_hammer",
         tier: "regular",
         mlvl: 99,

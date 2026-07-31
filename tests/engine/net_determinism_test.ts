@@ -102,7 +102,7 @@ function runWorld(state: GameState): string {
     dialogueMuted: record.dialogueMuted,
     thoughtsSeen: record.thoughtsSeen,
     quests: record.quests,
-    player: record.player,
+    player: (record.players as unknown[])[0],
   });
 }
 
@@ -117,13 +117,13 @@ describe("a run built from its parameters", () => {
     // The guard on the guard, and the one that would have caught the original
     // bug: a builder that quietly ignored a field would still be deterministic.
     const state = createRunFromParams(RUN);
-    expect(state.player.coins).toBe(4242);
+    expect(state.players[0].coins).toBe(4242);
     expect(state.thoughtsSeen).toContain("moon_arrival");
     expect(state.dialogueMuted).toBe(true);
     // `story` skips the prelude, the monologue and the opening strike, and
     // leaves the hero armed rather than disarmed for a beat he has read before.
     expect(state.phase).toBe("playing");
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
   });
 
   it("skips exactly as much of the opening as it was told to", () => {
@@ -224,7 +224,7 @@ function buildRunInChildProcess(params: SessionParams): string {
       dialogueMuted: state.dialogueMuted,
       thoughtsSeen: state.thoughtsSeen,
       quests: state.quests,
-      player: state.player,
+      player: state.players[0],
     }));
   `;
   return execFileSync(process.execPath, ["--input-type=module", "-e", source], {

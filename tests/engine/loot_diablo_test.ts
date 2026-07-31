@@ -123,7 +123,9 @@ function weaponTiersAtLoot(
   const tiers = new Set<Tier>();
   const mlvl = mobForLoot(state, lootLevel);
   for (let i = 0; i < n; i++) {
-    tiers.add(rollEquipment(state, { slot: "weapon", mlvl }).tier);
+    tiers.add(
+      rollEquipment(state, state.players[0], { slot: "weapon", mlvl }).tier,
+    );
   }
   return tiers;
 }
@@ -131,7 +133,7 @@ function weaponTiersAtLoot(
 describe("tier gates by loot level", () => {
   it("drops only regular below the magic gate, whatever the luck", () => {
     const state = startGame();
-    state.player.stats.luck = 100; // heavy Magic Find, still gated out
+    state.players[0].stats.luck = 100; // heavy Magic Find, still gated out
     expect(weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.magic - 1)).toEqual(
       new Set(["regular"]),
     );
@@ -139,7 +141,7 @@ describe("tier gates by loot level", () => {
 
   it("opens magic at its gate and rare at its own, in order", () => {
     const state = startGame();
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     const atMagic = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.magic);
     expect(atMagic.has("magic")).toBe(true);
     expect(atMagic.has("rare")).toBe(false);
@@ -154,7 +156,7 @@ describe("tier gates by loot level", () => {
     // roll that lands the tier folds one of the fixture weapon uniques.
     const state = startGame(42, "test_level");
     state.difficulty = "jesus" as Difficulty;
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     const below = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.unique - 1);
     expect(below.has("unique")).toBe(false);
     const at = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.unique);
@@ -175,7 +177,7 @@ describe("item level", () => {
     for (let i = 0; i < 400; i++) {
       // Force regular so the sample measures the ilvl DEFICIT band — magic/rare
       // roll a margin ABOVE loot, and a folded named item has a static ilvl.
-      const ilvl = rollEquipment(state, {
+      const ilvl = rollEquipment(state, state.players[0], {
         mlvl: mobForLoot(state, lootLevel),
         tier: "regular",
       }).ilvl;
@@ -197,7 +199,10 @@ describe("item level", () => {
     const state = startGame();
     // A kill shallower than the offset floors the loot level (and ilvl) at 1.
     for (let i = 0; i < 50; i++) {
-      expect(rollEquipment(state, { mlvl: mobForLoot(state, 1) }).ilvl).toBe(1);
+      expect(
+        rollEquipment(state, state.players[0], { mlvl: mobForLoot(state, 1) })
+          .ilvl,
+      ).toBe(1);
     }
   });
 
@@ -209,7 +214,7 @@ describe("item level", () => {
     const lo = lootLevel + bonus + base;
     const hi = lootLevel + bonus + base + weights.length - 1;
     for (let i = 0; i < 100; i++) {
-      const ilvl = rollEquipment(state, {
+      const ilvl = rollEquipment(state, state.players[0], {
         mlvl: mobForLoot(state, lootLevel),
         tier: "magic",
       }).ilvl;
@@ -230,7 +235,7 @@ describe("item level", () => {
       LOOT.ilvlMarginMagic.base + LOOT.ilvlMarginMagic.weights.length - 1,
     );
     for (let i = 0; i < 100; i++) {
-      const ilvl = rollEquipment(state, {
+      const ilvl = rollEquipment(state, state.players[0], {
         mlvl: mobForLoot(state, lootLevel),
         tier: "rare",
       }).ilvl;
@@ -250,7 +255,10 @@ describe("ilvl-gated affix brackets", () => {
       // (stat 8–12, damagePct 0.19–0.28); the roll may also pay the ilvl-10
       // generation under it (stat 4–7, damagePct 0.11–0.18) — never the
       // ilvl-36 one above, and never the ilvl-1 floor two rungs down.
-      const piece = rollEquipment(state, { mlvl: 30, tier: "magic" });
+      const piece = rollEquipment(state, state.players[0], {
+        mlvl: 30,
+        tier: "magic",
+      });
       for (const affix of piece.affixes) {
         if (affix.kind === "stat") {
           statSeen++;
@@ -272,7 +280,10 @@ describe("ilvl-gated affix brackets", () => {
     const state = startGame();
     for (let i = 0; i < 200; i++) {
       // ilvl 1 items only know the first generation.
-      const shallow = rollEquipment(state, { mlvl: 1, tier: "magic" });
+      const shallow = rollEquipment(state, state.players[0], {
+        mlvl: 1,
+        tier: "magic",
+      });
       for (const affix of shallow.affixes) {
         if (affix.kind === "stat") expect(affix.value).toBeLessThanOrEqual(3);
         if (affix.kind === "maxHp") expect(affix.value).toBeLessThanOrEqual(12);
@@ -281,7 +292,10 @@ describe("ilvl-gated affix brackets", () => {
     // A deep rare (mlvl 60 → ilvl 59–60) reaches the ilvl-52 generation.
     let sawTopStat = false;
     for (let i = 0; i < 400 && !sawTopStat; i++) {
-      const deep = rollEquipment(state, { mlvl: 60, tier: "rare" });
+      const deep = rollEquipment(state, state.players[0], {
+        mlvl: 60,
+        tier: "rare",
+      });
       for (const affix of deep.affixes) {
         if (affix.kind === "stat" && affix.value >= 19) sawTopStat = true;
         // The ceiling rule: no stat affix ever exceeds the top band (25).
@@ -296,7 +310,7 @@ describe("level requirements", () => {
   it("keeps a base out of the pool until the loot level reaches it", () => {
     const state = startGame();
     for (let i = 0; i < 60; i++) {
-      const piece = rollEquipment(state, {
+      const piece = rollEquipment(state, state.players[0], {
         slot: "weapon",
         mlvl: mobForLoot(state, RELIC.levelReq - 1),
       });
@@ -305,7 +319,7 @@ describe("level requirements", () => {
     const deep = new Set<string>();
     for (let i = 0; i < 60; i++) {
       deep.add(
-        rollEquipment(state, {
+        rollEquipment(state, state.players[0], {
           slot: "weapon",
           mlvl: mobForLoot(state, RELIC.levelReq),
         }).defId,
@@ -327,9 +341,9 @@ describe("level requirements", () => {
       gear: FIX_GEAR,
     });
     const state = startGame();
-    expect(rollEquipment(state, { slot: "weapon", mlvl: 1 }).defId).toBe(
-      "test_relic",
-    );
+    expect(
+      rollEquipment(state, state.players[0], { slot: "weapon", mlvl: 1 }).defId,
+    ).toBe("test_relic");
     installLootFixtures(); // restore this suite's catalogs
   });
 
@@ -346,36 +360,36 @@ describe("level requirements", () => {
     };
     // Level 1: never auto-equipped (despite out-damaging everything), never
     // equippable from the bag.
-    expect(meetsLevelReq(state, relic)).toBe(false);
-    expect(isBetterEquipment(state, relic)).toBe(false);
-    state.player.inventory[0] = relic;
-    expect(equipFromInventory(state, 0)).toBe(false);
-    expect(state.player.equipment.weapon.defId).not.toBe("test_relic");
+    expect(meetsLevelReq(state, state.players[0], relic)).toBe(false);
+    expect(isBetterEquipment(state, state.players[0], relic)).toBe(false);
+    state.players[0].inventory[0] = relic;
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(false);
+    expect(state.players[0].equipment.weapon.defId).not.toBe("test_relic");
 
     // Grown into it: at the required level AND with the STRENGTH the melee
     // relic demands, the same find equips.
-    state.player.level = RELIC.levelReq;
-    state.player.stats.strength = 40;
-    expect(meetsLevelReq(state, relic)).toBe(true);
-    expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.weapon.defId).toBe("test_relic");
+    state.players[0].level = RELIC.levelReq;
+    state.players[0].stats.strength = 40;
+    expect(meetsLevelReq(state, state.players[0], relic)).toBe(true);
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(true);
+    expect(state.players[0].equipment.weapon.defId).toBe("test_relic");
   });
 });
 
 describe("unique/legendary build quality", () => {
   it("mints unique and legendary weapons without durability — they never break", () => {
     const state = startGame();
-    const uniquePiece = rollEquipment(state, {
+    const uniquePiece = rollEquipment(state, state.players[0], {
       slot: "weapon",
       tier: "unique",
       mlvl: 20,
     });
-    const legendaryPiece = rollEquipment(state, {
+    const legendaryPiece = rollEquipment(state, state.players[0], {
       slot: "weapon",
       tier: "legendary",
       mlvl: 30,
     });
-    const rarePiece = rollEquipment(state, {
+    const rarePiece = rollEquipment(state, state.players[0], {
       slot: "weapon",
       tier: "rare",
       mlvl: 20,

@@ -42,7 +42,7 @@ export function moveRangedEnemy(
   const def = enemyDef(enemy.defId);
   const ranged = def.ranged;
   if (!ranged) return;
-  const player = state.player;
+  const player = state.players[0];
   const hold = ranged.range * ENEMY_RANGED.holdRangeFraction;
   const dist = distance(enemy.pos, player.pos);
   const reloading =
@@ -95,7 +95,7 @@ export function moveRangedEnemy(
  */
 function coverPoint(state: GameState, enemy: Enemy): Vec2 | null {
   const def = enemyDef(enemy.defId);
-  const player = state.player;
+  const player = state.players[0];
   let best: { pos: Vec2; radius: number } | null = null;
   let bestDist: number = ENEMY_RANGED.coverSearchRadius;
   for (const obstacle of state.obstacles) {
@@ -122,7 +122,7 @@ function coverPoint(state: GameState, enemy: Enemy): Vec2 | null {
  * The reload clock ticks here for every shooter, hidden or not.
  */
 export function stepRangedAttacks(state: GameState, dtMs: number): void {
-  const player = state.player;
+  const player = state.players[0];
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
     const ranged = def.ranged;
@@ -200,7 +200,7 @@ export function resolveHostileHit(
   state: GameState,
   projectile: Projectile,
 ): boolean {
-  const player = state.player;
+  const player = state.players[0];
   if (player.z > JUMP.dodgeHeight) return false;
   const reach = projectile.radius + PLAYER.radius;
   const dx = player.pos.x - projectile.pos.x;
@@ -209,11 +209,11 @@ export function resolveHostileHit(
   // PALE SHROUD: the hero is spectral — the round passes clean through him.
   // The shot is still SPENT (it hit where he was standing), it just finds
   // nothing there to hurt.
-  if (isPhased(state)) {
+  if (isPhased(state, player)) {
     state.events.push({ type: "playerPhased", pos: { ...player.pos } });
     return true;
   }
-  if (state.rng() < playerDodgeChance(state)) {
+  if (state.rng() < playerDodgeChance(state, player)) {
     state.events.push({ type: "playerDodge", pos: { ...player.pos } });
     return true;
   }
@@ -223,11 +223,11 @@ export function resolveHostileHit(
   const hpDamage = Math.max(
     0,
     Math.round(
-      damage * (1 - armorReduction(state, projectile.sourceMlvl ?? 1)),
+      damage * (1 - armorReduction(state, player, projectile.sourceMlvl ?? 1)),
     ),
   );
-  wearWornArmor(state);
-  player.hp -= absorbPlayerDamage(state, hpDamage);
+  wearWornArmor(state, player);
+  player.hp -= absorbPlayerDamage(state, player, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({

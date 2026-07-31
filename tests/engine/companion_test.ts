@@ -55,7 +55,7 @@ function stageSpareable(state: GameState, hp = 10): void {
     makeEnemy(
       {
         id: state.nextId++,
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
         hp,
         maxHp: 150,
         // Latch the power-match so the staged hp stays exactly as written,
@@ -88,8 +88,8 @@ function bagItem(
   defId: string,
   slot: Equipment["slot"],
 ): number {
-  const index = state.player.inventory.indexOf(null);
-  state.player.inventory[index] = {
+  const index = state.players[0].inventory.indexOf(null);
+  state.players[0].inventory[index] = {
     id: state.nextId++,
     defId,
     slot,
@@ -172,7 +172,8 @@ describe("the SPARE-or-KILL verdict", () => {
     runUntilChoice(state);
     resolveChoice(state, true);
     advanceDialogue(state);
-    while (state.player.pendingStatPoints > 0) allocateStat(state, "strength");
+    while (state.players[0].pendingStatPoints > 0)
+      allocateStat(state, state.players[0], "strength");
 
     // A second copy of the same spareable def walks in and is beaten.
     stageSpareable(state);
@@ -193,8 +194,8 @@ describe("companions in the field", () => {
   function withCompanion(state: GameState) {
     clearStage(state);
     const companion = recruitCompanion(state, "test_companion", {
-      x: state.player.pos.x + 60,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + 60,
+      y: state.players[0].pos.y,
     });
     state.events = [];
     return companion;
@@ -204,13 +205,13 @@ describe("companions in the field", () => {
     const state = startGame();
     clearStage(state);
     const companion = recruitCompanion(state, "test_companion", {
-      x: state.player.pos.x + 200,
-      y: state.player.pos.y + 100,
+      x: state.players[0].pos.x + 200,
+      y: state.players[0].pos.y + 100,
     });
     run(state, idle, 200);
     const gap = Math.hypot(
-      companion.pos.x - state.player.pos.x,
-      companion.pos.y - state.player.pos.y,
+      companion.pos.x - state.players[0].pos.x,
+      companion.pos.y - state.players[0].pos.y,
     );
     expect(gap).toBeLessThan(80);
   });
@@ -230,21 +231,21 @@ describe("companions in the field", () => {
     const state = startGame();
     const companion = withCompanion(state);
     companion.hp = 1;
-    state.player.medkits = [2, 0, 0, 0];
+    state.players[0].medkits = [2, 0, 0, 0];
 
     expect(healCompanionWithMedkit(state, companion.id)).toBe(true);
     expect(companion.hp).toBeGreaterThan(1);
-    expect(state.player.medkits[0]).toBe(1); // exactly one kit spent
+    expect(state.players[0].medkits[0]).toBe(1); // exactly one kit spent
     expect(state.events.some((e) => e.type === "companionHealed")).toBe(true);
 
     // Topped right up, a further press buys nothing and costs nothing.
     companion.hp = companion.maxHp;
     expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
-    expect(state.player.medkits[0]).toBe(1);
+    expect(state.players[0].medkits[0]).toBe(1);
 
     // …and neither does an empty pouch.
     companion.hp = 1;
-    state.player.medkits = [0, 0, 0, 0];
+    state.players[0].medkits = [0, 0, 0, 0];
     expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
     expect(companion.hp).toBe(1);
   });
@@ -253,10 +254,10 @@ describe("companions in the field", () => {
     const state = startGame();
     const companion = withCompanion(state);
     companion.hp = 1;
-    state.player.medkits = [1, 0, 0, 1]; // one LIGHT, one SUPERIOR
+    state.players[0].medkits = [1, 0, 0, 1]; // one LIGHT, one SUPERIOR
     expect(healCompanionWithMedkit(state, companion.id)).toBe(true);
-    expect(state.player.medkits[0]).toBe(0);
-    expect(state.player.medkits[3]).toBe(1);
+    expect(state.players[0].medkits[0]).toBe(0);
+    expect(state.players[0].medkits[3]).toBe(1);
   });
 
   it("refuses a medkit to a DOWNED companion — that wants the salts", () => {
@@ -264,10 +265,10 @@ describe("companions in the field", () => {
     const companion = withCompanion(state);
     companion.hp = 0;
     companion.downed = true;
-    state.player.medkits = [5, 0, 0, 0];
+    state.players[0].medkits = [5, 0, 0, 0];
     expect(canHealCompanion(state, companion.id)).toBeLessThan(0);
     expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
-    expect(state.player.medkits[0]).toBe(5);
+    expect(state.players[0].medkits[0]).toBe(5);
   });
 
   it("fights on its own: kills a nearby mob and may float its quote", () => {
@@ -354,7 +355,10 @@ describe("companions in the field", () => {
       companion.downed = true;
       companion.hp = 0;
       // Face-down clear across the map from where the hero ended up.
-      companion.pos = { x: state.player.pos.x + 600, y: state.player.pos.y };
+      companion.pos = {
+        x: state.players[0].pos.x + 600,
+        y: state.players[0].pos.y,
+      };
       const at = giveSalts(state);
 
       expect(spendReviveItem(state, at)).toBe(true);
@@ -362,15 +366,15 @@ describe("companions in the field", () => {
       expect(companion.hp).toBe(
         Math.round(companion.maxHp * COMPANIONS.saltsHpFraction),
       );
-      expect(state.player.inventory[at]).toBeNull(); // consumed
+      expect(state.players[0].inventory[at]).toBeNull(); // consumed
       expect(state.events.some((e) => e.type === "companionRevived")).toBe(
         true,
       );
       // Back at the hero's side rather than where it fell — the party is never
       // an errand to walk back for.
       const gap = Math.hypot(
-        companion.pos.x - state.player.pos.x,
-        companion.pos.y - state.player.pos.y,
+        companion.pos.x - state.players[0].pos.x,
+        companion.pos.y - state.players[0].pos.y,
       );
       expect(gap).toBeLessThan(80);
       // Groggy, not whole: the medkits are what fills the rest of the bar.
@@ -381,11 +385,11 @@ describe("companions in the field", () => {
       const state = startGame();
       const companion = withCompanion(state);
       const at = giveSalts(state);
-      const bottle = state.player.inventory[at] as Equipment;
+      const bottle = state.players[0].inventory[at] as Equipment;
       expect(companion.downed).toBeUndefined();
       expect(reviveTarget(state, bottle)).toBeNull();
       expect(spendReviveItem(state, at)).toBe(false);
-      expect(state.player.inventory[at]).toBe(bottle); // not consumed
+      expect(state.players[0].inventory[at]).toBe(bottle); // not consumed
     });
 
     it("offers itself only for a piece that actually revives", () => {
@@ -393,9 +397,9 @@ describe("companions in the field", () => {
       const companion = withCompanion(state);
       companion.downed = true;
       const at = bagItem(state, "test_helmet", "head");
-      expect(reviveTarget(state, state.player.inventory[at] as Equipment)).toBe(
-        null,
-      );
+      expect(
+        reviveTarget(state, state.players[0].inventory[at] as Equipment),
+      ).toBe(null);
       expect(spendReviveItem(state, at)).toBe(false);
     });
 
@@ -409,7 +413,7 @@ describe("companions in the field", () => {
         SEED_NEXT,
         "test_level_2",
         "medium",
-        extractLoadout(state),
+        extractLoadout(state, state.players[0]),
       );
       expect(next.companions).toHaveLength(1);
       expect(next.companions[0]?.downed).toBe(true);
@@ -424,17 +428,17 @@ describe("companions in the field", () => {
       const state = startGame();
       clearStage(state);
       const first = recruitCompanion(state, "test_companion", {
-        ...state.player.pos,
+        ...state.players[0].pos,
       });
       // The hero lent it a helmet out of his own bag.
       const at = bagItem(state, "test_helmet", "head");
-      const helmet = state.player.inventory[at] as Equipment;
+      const helmet = state.players[0].inventory[at] as Equipment;
       expect(equipCompanionFromInventory(state, first.id, at)).toBe(true);
       expect(first.equipment.head).toBe(helmet);
       state.events = [];
 
       const second = recruitCompanion(state, "test_companion", {
-        ...state.player.pos,
+        ...state.players[0].pos,
       });
       expect(state.companions).toHaveLength(COMPANIONS.maxParty);
       expect(state.companions).toEqual([second]);
@@ -444,7 +448,7 @@ describe("companions in the field", () => {
       );
       // …and the hero's own helmet came back to his bag rather than walking off
       // with somebody who is no longer in the party.
-      expect(state.player.inventory).toContain(helmet);
+      expect(state.players[0].inventory).toContain(helmet);
     });
   });
 
@@ -461,9 +465,9 @@ describe("companions in the field", () => {
     function marchRight(state: GameState): GameInput {
       return {
         steering: true,
-        target: { x: state.player.pos.x + 600, y: state.player.pos.y },
+        target: { x: state.players[0].pos.x + 600, y: state.players[0].pos.y },
         jump: false,
-        view: viewAround(state.player.pos),
+        view: viewAround(state.players[0].pos),
       };
     }
 
@@ -472,8 +476,8 @@ describe("companions in the field", () => {
       clearStage(state);
       // A companion lagging at the camera's left edge...
       const companion = recruitCompanion(state, "test_companion", {
-        x: state.player.pos.x - 195,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x - 195,
+        y: state.players[0].pos.y,
       });
       // ...sitting right on a mob it would otherwise fight.
       state.enemies.push(
@@ -503,8 +507,8 @@ describe("companions in the field", () => {
       const state = startGame();
       clearStage(state);
       const companion = recruitCompanion(state, "test_companion", {
-        x: state.player.pos.x - 195,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x - 195,
+        y: state.players[0].pos.y,
       });
       step(state, marchRight(state), DT);
       expect(companion.following).toBe(true);
@@ -518,15 +522,15 @@ describe("companions in the field", () => {
       clearStage(state);
       // A companion at its formation spot (not at the screen edge), keeping up.
       const companion = recruitCompanion(state, "test_companion", {
-        x: state.player.pos.x - 34,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x - 34,
+        y: state.players[0].pos.y,
       });
       // A stationary mob to the LEFT — inside the hero's engage bubble, but
       // out of wrench reach. Chasing it would drag the companion left.
       const mob = makeEnemy(
         {
           id: state.nextId++,
-          pos: { x: state.player.pos.x - 120, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x - 120, y: state.players[0].pos.y },
         },
         "test_minion",
       );
@@ -549,10 +553,16 @@ describe("companions in the field", () => {
     // 0.20 sits between the base magic chance (0.16) and the Magic-Find-widened
     // one (0.16 × 1.5 = 0.24): plain without LUCKY's kin, magic with it.
     state.rng = () => 0.2;
-    const before = rollEquipment(state, { defId: "test_wrench", mlvl: 3 });
+    const before = rollEquipment(state, state.players[0], {
+      defId: "test_wrench",
+      mlvl: 3,
+    });
     expect(before.tier).toBe("regular");
     recruitCompanion(state, "test_companion", { x: 30, y: 30 });
-    const after = rollEquipment(state, { defId: "test_wrench", mlvl: 3 });
+    const after = rollEquipment(state, state.players[0], {
+      defId: "test_wrench",
+      mlvl: 3,
+    });
     expect(after.tier).toBe("magic");
   });
 });
@@ -569,19 +579,19 @@ describe("companion equipment", () => {
     const helmet = bagItem(state, "test_helmet", "head");
     expect(equipCompanionFromInventory(state, companion.id, helmet)).toBe(true);
     expect(companion.equipment.head?.defId).toBe("test_helmet");
-    expect(state.player.inventory[helmet]).toBeNull();
+    expect(state.players[0].inventory[helmet]).toBeNull();
 
     const greaves = bagItem(state, "test_greaves", "legs");
     expect(equipCompanionFromInventory(state, companion.id, greaves)).toBe(
       false,
     );
-    expect(state.player.inventory[greaves]?.defId).toBe("test_greaves");
+    expect(state.players[0].inventory[greaves]?.defId).toBe("test_greaves");
 
     // A weapon swaps: the signature wrench comes back to the bag cell.
     const pistol = bagItem(state, "test_pistol", "weapon");
     expect(equipCompanionFromInventory(state, companion.id, pistol)).toBe(true);
     expect(companion.equipment.weapon.defId).toBe("test_pistol");
-    expect(state.player.inventory[pistol]?.defId).toBe("test_wrench");
+    expect(state.players[0].inventory[pistol]?.defId).toBe("test_wrench");
 
     // Armor unequips back to the bag; the weapon slot never empties.
     expect(unequipCompanionToInventory(state, companion.id, "head")).toBe(true);
@@ -617,8 +627,8 @@ describe("the frost nova", () => {
   function withFrost(state: GameState) {
     clearStage(state);
     const companion = recruitCompanion(state, "test_frost", {
-      x: state.player.pos.x + 60,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + 60,
+      y: state.players[0].pos.y,
     });
     state.events = [];
     return companion;
@@ -677,8 +687,8 @@ describe("the frost nova", () => {
   it("chills the horde: a caught mob crawls at the frost factor", () => {
     const state = startGame();
     clearStage(state);
-    const px = state.player.pos.x;
-    const py = state.player.pos.y;
+    const px = state.players[0].pos.x;
+    const py = state.players[0].pos.y;
     // Two identical minions charging the hero from the same range; one chilled.
     const charger = (id: number, dy: number, chilled: boolean) => {
       const enemy = makeEnemy(
@@ -722,7 +732,7 @@ describe("a spared companion's twin stays off the board", () => {
     const first = startGame();
     clearStage(first);
     recruitCompanion(first, "test_companion", { x: 30, y: 30 });
-    const loadout = extractLoadout(first);
+    const loadout = extractLoadout(first, first.players[0]);
     const next = createGame(SEED_NEXT, "test_recruit_level", "medium", loadout);
 
     // The companion walked in at the hero's side; its enemy twin did not spawn.
@@ -745,7 +755,7 @@ describe("the party rides the loadout", () => {
     equipCompanionFromInventory(state, companion.id, helmet);
     companion.hp = 3; // beaten up — the next level greets him rested
 
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
     const next = createGame(SEED_NEXT, "test_level_2", "medium", loadout);
     expect(next.companions).toHaveLength(1);
     const carried = next.companions[0]!;
@@ -757,7 +767,7 @@ describe("the party rides the loadout", () => {
 
   it("a loadout from before companions shipped loads an empty party", () => {
     const state = startGame();
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
     delete (loadout as { companions?: unknown }).companions;
     const next = createGame(SEED_NEXT, "test_level_2", "medium", loadout);
     expect(next.companions).toHaveLength(0);

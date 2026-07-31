@@ -31,7 +31,7 @@ export function advancePath(state: GameState): void {
   const path = pathOf(state);
   if (!path) return;
   const reachSq = PATH.reachRadius * PATH.reachRadius;
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   while (state.pathIndex < path.length) {
     const cur = path[state.pathIndex]!;
     // Reached the node → retire it.

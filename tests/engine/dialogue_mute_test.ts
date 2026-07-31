@@ -17,7 +17,7 @@ function meetBoss(): GameState {
   clearStage(state);
   state.enemies.push(
     makeEnemy(
-      { pos: { x: state.player.pos.x + 40, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y } },
       "test_boss",
     ),
   );
@@ -37,7 +37,7 @@ describe("muteDialogue", () => {
 
   it("routes a pending level-up to the chooser as it dismisses", () => {
     const state = meetBoss();
-    state.player.pendingStatPoints = 1;
+    state.players[0].pendingStatPoints = 1;
     muteDialogue(state);
     expect(state.dialogue).toBeNull();
     expect(state.phase).toBe("levelup");
@@ -49,7 +49,7 @@ describe("muteDialogue", () => {
     // A fresh speaker walks into speak range: its scene is forfeited (marked
     // spoke on the step path) and the run never leaves play.
     const next = makeEnemy(
-      { pos: { x: state.player.pos.x + 40, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y } },
       "test_boss",
     );
     state.enemies.push(next);
@@ -63,7 +63,7 @@ describe("muteDialogue", () => {
     const state = startGame();
     clearStage(state);
     state.dialogueMuted = true;
-    collectStoryItem(state, "test_key", { ...state.player.pos });
+    collectStoryItem(state, "test_key", { ...state.players[0].pos });
     // The plot item is collected; only its lore box is silenced.
     expect(state.storyItems).toContain("test_key");
     expect(state.dialogue).toBeNull();

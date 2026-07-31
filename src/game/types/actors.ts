@@ -491,6 +491,20 @@ export type Enemy = {
    */
   knockMs?: number;
   knockVel?: Vec2;
+  /**
+   * WHICH HERO THIS MOB IS AFTER — a seat into `state.players`.
+   *
+   * It lives on the MOB rather than being recomputed from the party each time
+   * it is asked, because the answer has to be STICKY: two heroes standing a
+   * pixel apart would otherwise have the mob flipping between them every tick,
+   * which reads on screen as a monster having a seizure and makes the pack's
+   * envelope meaningless. `quarryFor` (aggro.ts) owns the switching rule.
+   *
+   * Absent until the mob first looks for somebody, and re-resolved every tick
+   * thereafter — a seat that has fallen, or one that has walked out of sight
+   * while another hero is plainly closer, is given up.
+   */
+  quarry?: number;
 };
 
 /** Runtime state of one enemy's set-piece mechanics (see `Enemy.mech`). */

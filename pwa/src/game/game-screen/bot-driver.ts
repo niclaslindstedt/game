@@ -5,6 +5,7 @@
 // click through, spends level-ups, runs the merchant economy, and adopts the
 // bot's decided steer/aim/casts into the frame's GameInput.
 
+import { localHero } from "../local-seat.ts";
 import type { MutableRefObject } from "react";
 
 import {
@@ -150,7 +151,7 @@ export function createBotDriver(deps: {
     }
     if (state.phase === "respec") {
       // Spend the refunded pool point-by-point, then commit and drop in.
-      if (state.player.pendingStatPoints > 0) {
+      if (localHero(state).pendingStatPoints > 0) {
         runCommandOk(state, "allocateStat", botAllocate(drivingBot, state));
       } else {
         runCommandOk(state, "confirmRespec");
@@ -227,7 +228,7 @@ export function createBotDriver(deps: {
     if (!bot && state.autopilot.active) {
       autopilotKeyTick = (autopilotKeyTick + 1) % AUTOPILOT_KEY_SCAN_TICKS;
       if (autopilotKeyTick === 0 && state.phase === "playing") {
-        const bag = state.player.inventory;
+        const bag = localHero(state).inventory;
         const keyAt = bag.findIndex(
           (it) => it != null && gateKeyTarget(state, it) != null,
         );

@@ -41,12 +41,12 @@ function killRasputinInRift(clearedLevels: string[]): GameState {
   );
   skipCutscene(state);
   dismissIntro(state);
-  state.player.disarmed = false;
+  state.players[0].disarmed = false;
   clearStage(state);
   state.enemies = [
     makeEnemy(
       {
-        pos: { x: state.player.pos.x + 26, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 26, y: state.players[0].pos.y },
         hp: 1,
         maxHp: 360,
         powerScaled: true,

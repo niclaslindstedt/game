@@ -38,7 +38,7 @@ const ready = (): boolean => true;
 function cast(ability: AirstrikeAbility, ctx: AbilityCtx): void {
   const { state, enemy, def } = ctx;
   const damage = mobBlowDamage(enemy, def.contactDamage, ability.damageFrac);
-  const hero = state.player.pos;
+  const hero = state.players[0].pos;
   for (let i = 0; i < ability.count; i++) {
     // Bracketed around him on an even ring, with the ring's phase rolled so a
     // second strike never lands on the first one's marks.

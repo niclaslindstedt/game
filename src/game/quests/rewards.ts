@@ -49,7 +49,7 @@ export function questXpReward(state: GameState, reward?: QuestReward): number {
   return Math.max(
     1,
     Math.round(
-      xpToLevelUp(state.player.level, state.difficulty) * reward.xpShare,
+      xpToLevelUp(state.players[0].level, state.difficulty) * reward.xpShare,
     ),
   );
 }
@@ -83,7 +83,7 @@ export function payQuestReward(
   }
 
   if (reward.coins) {
-    state.player.coins += reward.coins;
+    state.players[0].coins += reward.coins;
     payout.coins = reward.coins;
   }
 
@@ -109,11 +109,11 @@ export function payQuestReward(
         payout.items.push(
           handOver(
             state,
-            rollEquipment(state, {
+            rollEquipment(state, state.players[0], {
               defId: chosen.defId,
               tier: chosen.tier,
               quality: chosen.quality,
-              mlvl: state.player.level,
+              mlvl: state.players[0].level,
             }),
             at,
           ),
@@ -126,7 +126,7 @@ export function payQuestReward(
   // `Player.cleanSlates` for why a thing that must never be lost does not live
   // in a container the player empties.
   if (reward.cleanSlates) {
-    grantCleanSlate(state, reward.cleanSlates);
+    grantCleanSlate(state, state.players[0], reward.cleanSlates);
     payout.cleanSlates = reward.cleanSlates;
   }
 
@@ -134,7 +134,8 @@ export function payQuestReward(
   // cap — there is nowhere else to put one, and dropping it on the floor
   // beside a full dock would be a pickup the player cannot take either.
   for (const id of reward.abilities ?? []) {
-    if (canBankAbility(state, id)) state.player.heldAbilities.push(id);
+    if (canBankAbility(state, state.players[0], id))
+      state.players[0].heldAbilities.push(id);
   }
 
   return payout;
@@ -142,7 +143,7 @@ export function payQuestReward(
 
 /** Into the bag if it fits; onto the ground (thrown, like any drop) if not. */
 function handOver(state: GameState, equipment: Equipment, at: Vec2): Equipment {
-  if (!addToInventory(state, equipment)) {
+  if (!addToInventory(state, state.players[0], equipment)) {
     dropItem(
       state,
       { id: state.nextId++, kind: "equipment", pos: { ...at }, equipment },

@@ -4,12 +4,14 @@
 // `step`, before the combat passes read them: both clocks count down so the next
 // struck-frame can freeze the swarm again and a dodge's dart fades out.
 
-import type { GameState } from "./types/index.ts";
+import type { GameState, Player } from "./types/index.ts";
 
 /** Advance the talent timers one tick (see module note). */
-export function stepTimers(state: GameState, dtMs: number): void {
-  const player = state.player;
-
+export function stepTimers(
+  state: GameState,
+  player: Player,
+  dtMs: number,
+): void {
   // FROST NOVA's internal cooldown (magic-tree talent) ebbs each tick so the
   // next blow the hero takes can freeze the swarm again.
   if (player.frostNovaCooldownMs && player.frostNovaCooldownMs > 0) {

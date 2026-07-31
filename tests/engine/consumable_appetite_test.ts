@@ -59,8 +59,8 @@ function stagedRun(): GameState {
   const state = startGame(1234);
   state.enemies = [];
   state.items = [];
-  state.player.hp = state.player.maxHp;
-  state.player.stamina = state.player.maxStamina;
+  state.players[0].hp = state.players[0].maxHp;
+  state.players[0].stamina = state.players[0].maxStamina;
   // The all-clear pity rule forces equipment when the level's guaranteed
   // minimum is unmet — book it as already paid so the ladder rolls freely.
   state.minionEquipmentDrops = 99;
@@ -70,31 +70,35 @@ function stagedRun(): GameState {
 describe("consumable appetite — supply", () => {
   it("pays the full rate while the pouch has real room", () => {
     const state = stagedRun();
-    expect(consumableAppetite(state, "drink")).toBe(1);
-    expect(medkitAppetite(state, DEEP_MLVL)).toBe(1);
+    expect(consumableAppetite(state, state.players[0], "drink")).toBe(1);
+    expect(medkitAppetite(state, state.players[0], DEEP_MLVL)).toBe(1);
 
     // Up to `appetiteStart` of the stack the rain is untouched.
-    state.player.staminaPotions = Math.floor(
+    state.players[0].staminaPotions = Math.floor(
       CONSUMABLES.stackCap * CONSUMABLES.appetiteStart,
     );
-    expect(consumableAppetite(state, "drink")).toBe(1);
+    expect(consumableAppetite(state, state.players[0], "drink")).toBe(1);
   });
 
   it("fades over the top of the stack, bottoming out at the floor", () => {
     const state = stagedRun();
     const cap = CONSUMABLES.stackCap;
 
-    state.player.staminaPotions = cap - 1;
-    const nearlyFull = consumableAppetite(state, "drink");
+    state.players[0].staminaPotions = cap - 1;
+    const nearlyFull = consumableAppetite(state, state.players[0], "drink");
     expect(nearlyFull).toBeGreaterThan(CONSUMABLES.appetiteFloor);
     expect(nearlyFull).toBeLessThan(1);
 
     // A full pouch keeps the FLOOR, never zero — a drop it can't bank is still
     // ground bait worth planning a dive (or a sprint) around.
-    state.player.staminaPotions = cap;
-    expect(consumableAppetite(state, "drink")).toBe(CONSUMABLES.appetiteFloor);
-    state.player.repairKits = cap;
-    expect(consumableAppetite(state, "repair")).toBe(CONSUMABLES.appetiteFloor);
+    state.players[0].staminaPotions = cap;
+    expect(consumableAppetite(state, state.players[0], "drink")).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
+    state.players[0].repairKits = cap;
+    expect(consumableAppetite(state, state.players[0], "repair")).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
   });
 
   it("weighs the medkit pouch by the tiers a kill could actually pay", () => {
@@ -103,28 +107,32 @@ describe("consumable appetite — supply", () => {
 
     // A full LIGHT stack is irrelevant to a deep kill — it pays the top two
     // qualities, and both of those stacks are empty.
-    state.player.medkits[0] = CONSUMABLES.stackCap;
-    expect(medkitAppetite(state, DEEP_MLVL)).toBe(1);
+    state.players[0].medkits[0] = CONSUMABLES.stackCap;
+    expect(medkitAppetite(state, state.players[0], DEEP_MLVL)).toBe(1);
 
     // A full TOP stack, on the other hand, kills most of the appetite even
     // with the tier under it empty: three drops in four would be refused.
-    state.player.medkits[0] = 0;
-    state.player.medkits[top] = CONSUMABLES.stackCap;
-    const topFull = medkitAppetite(state, DEEP_MLVL);
+    state.players[0].medkits[0] = 0;
+    state.players[0].medkits[top] = CONSUMABLES.stackCap;
+    const topFull = medkitAppetite(state, state.players[0], DEEP_MLVL);
     expect(topFull).toBeGreaterThan(CONSUMABLES.appetiteFloor);
     expect(topFull).toBeLessThan(0.6);
 
     // Every droppable stack full: down to the bait floor.
-    state.player.medkits[top - 1] = CONSUMABLES.stackCap;
-    expect(medkitAppetite(state, DEEP_MLVL)).toBe(CONSUMABLES.appetiteFloor);
+    state.players[0].medkits[top - 1] = CONSUMABLES.stackCap;
+    expect(medkitAppetite(state, state.players[0], DEEP_MLVL)).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
   });
 
   it("reads only the one unlocked stack in the opening game", () => {
     const state = stagedRun();
     // Below every tier gate but the first, only LIGHT kits drop — so a full
     // LIGHT stack alone takes the slice to its floor.
-    state.player.medkits[0] = CONSUMABLES.stackCap;
-    expect(medkitAppetite(state, 1)).toBe(CONSUMABLES.appetiteFloor);
+    state.players[0].medkits[0] = CONSUMABLES.stackCap;
+    expect(medkitAppetite(state, state.players[0], 1)).toBe(
+      CONSUMABLES.appetiteFloor,
+    );
   });
 });
 
@@ -132,48 +140,50 @@ describe("consumable appetite — need", () => {
   it("leans the medkit slice up as health drops", () => {
     const full = stagedRun();
     const hurt = stagedRun();
-    hurt.player.hp = hurt.player.maxHp / 2;
+    hurt.players[0].hp = hurt.players[0].maxHp / 2;
     const dying = stagedRun();
-    dying.player.hp = 1;
+    dying.players[0].hp = 1;
 
-    expect(medkitAppetite(hurt, DEEP_MLVL)).toBeGreaterThan(
-      medkitAppetite(full, DEEP_MLVL),
+    expect(medkitAppetite(hurt, hurt.players[0], DEEP_MLVL)).toBeGreaterThan(
+      medkitAppetite(full, full.players[0], DEEP_MLVL),
     );
-    expect(medkitAppetite(dying, DEEP_MLVL)).toBeGreaterThan(
-      medkitAppetite(hurt, DEEP_MLVL),
+    expect(medkitAppetite(dying, dying.players[0], DEEP_MLVL)).toBeGreaterThan(
+      medkitAppetite(hurt, hurt.players[0], DEEP_MLVL),
     );
     // A gentle lean, not a mercy rope: a bone-dry pool pays at most the
     // configured bonus on top.
-    expect(medkitAppetite(dying, DEEP_MLVL)).toBeLessThanOrEqual(
-      1 + CONSUMABLES.appetiteNeedBonus,
-    );
+    expect(
+      medkitAppetite(dying, dying.players[0], DEEP_MLVL),
+    ).toBeLessThanOrEqual(1 + CONSUMABLES.appetiteNeedBonus);
   });
 
   it("leans the drink slice up as the sprint pool drains", () => {
     const rested = stagedRun();
     const winded = stagedRun();
-    winded.player.stamina = 0;
-    expect(consumableAppetite(winded, "drink")).toBeGreaterThan(
-      consumableAppetite(rested, "drink"),
-    );
+    winded.players[0].stamina = 0;
+    expect(
+      consumableAppetite(winded, winded.players[0], "drink"),
+    ).toBeGreaterThan(consumableAppetite(rested, rested.players[0], "drink"));
   });
 
   it("leans the repair slice up as the kit wears down", () => {
     const pristine = stagedRun();
     const worn = stagedRun();
-    const weapon = worn.player.equipment.weapon;
+    const weapon = worn.players[0].equipment.weapon;
     if (weapon.durability !== undefined) weapon.durability = 1;
-    expect(consumableAppetite(worn, "repair")).toBeGreaterThan(
-      consumableAppetite(pristine, "repair"),
+    expect(consumableAppetite(worn, worn.players[0], "repair")).toBeGreaterThan(
+      consumableAppetite(pristine, pristine.players[0], "repair"),
     );
   });
 
   it("still leans on need with the pouch full — the floor is a floor", () => {
     const state = stagedRun();
-    state.player.staminaPotions = CONSUMABLES.stackCap;
-    const rested = consumableAppetite(state, "drink");
-    state.player.stamina = 0;
-    expect(consumableAppetite(state, "drink")).toBeGreaterThan(rested);
+    state.players[0].staminaPotions = CONSUMABLES.stackCap;
+    const rested = consumableAppetite(state, state.players[0], "drink");
+    state.players[0].stamina = 0;
+    expect(
+      consumableAppetite(state, state.players[0], "drink"),
+    ).toBeGreaterThan(rested);
   });
 });
 
@@ -188,7 +198,7 @@ describe("consumable appetite — the drop ladder", () => {
     const empty = stagedRun();
     const stuffed = stagedRun();
     for (let i = 0; i < MEDKIT.tiers.length; i++) {
-      stuffed.player.medkits[i] = CONSUMABLES.stackCap;
+      stuffed.players[0].medkits[i] = CONSUMABLES.stackCap;
     }
     const full = tallyDrops(stuffed, 12000);
     // Still SOME — a grounded kit is bait a player can plan a dive around.
@@ -202,8 +212,8 @@ describe("consumable appetite — the drop ladder", () => {
   it("thins drinks and repair kits the same way on a full stack", () => {
     const empty = stagedRun();
     const stuffed = stagedRun();
-    stuffed.player.staminaPotions = CONSUMABLES.stackCap;
-    stuffed.player.repairKits = CONSUMABLES.stackCap;
+    stuffed.players[0].staminaPotions = CONSUMABLES.stackCap;
+    stuffed.players[0].repairKits = CONSUMABLES.stackCap;
     const full = tallyDrops(stuffed, 12000);
     const bare = tallyDrops(empty, 12000);
     expect(full.drink ?? 0).toBeGreaterThan(0);
@@ -215,10 +225,10 @@ describe("consumable appetite — the drop ladder", () => {
     // The whole point of the gate: it thins a hoard, not the supply. A pouch
     // held at the appetite mark sees the authored rate.
     const stocked = stagedRun();
-    stocked.player.medkits[MEDKIT.tiers.length - 1] = 1;
+    stocked.players[0].medkits[MEDKIT.tiers.length - 1] = 1;
     const hoarder = stagedRun();
     for (let i = 0; i < MEDKIT.tiers.length; i++) {
-      hoarder.player.medkits[i] = CONSUMABLES.stackCap - 1;
+      hoarder.players[0].medkits[i] = CONSUMABLES.stackCap - 1;
     }
     expect(tallyDrops(stocked, 6000).medkit ?? 0).toBeGreaterThan(
       tallyDrops(hoarder, 6000).medkit ?? 0,
@@ -227,7 +237,7 @@ describe("consumable appetite — the drop ladder", () => {
 
   it("rains more medkits on a hurt hero than a healthy one", () => {
     const hurt = (s: GameState) => {
-      s.player.hp = 1; // the need lean and the mercy ramp, pulling together
+      s.players[0].hp = 1; // the need lean and the mercy ramp, pulling together
     };
     expect(tallyDrops(stagedRun(), 12000, hurt).medkit ?? 0).toBeGreaterThan(
       tallyDrops(stagedRun(), 12000).medkit ?? 0,
@@ -240,9 +250,9 @@ describe("consumable appetite — the drop ladder", () => {
     // must still fit under one roll, so the drink and arrow bands below the
     // widened medkit slice keep firing.
     const drops = tallyDrops(stagedRun(), 12000, (s) => {
-      s.player.hp = 1;
-      s.player.stamina = 0;
-      const weapon = s.player.equipment.weapon;
+      s.players[0].hp = 1;
+      s.players[0].stamina = 0;
+      const weapon = s.players[0].equipment.weapon;
       if (weapon.durability !== undefined) weapon.durability = 1;
     });
     expect(drops.medkit ?? 0).toBeGreaterThan(0);

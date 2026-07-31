@@ -292,7 +292,7 @@ export function createRunSession(deps: {
     // `characterPurse`). `applyLoadout` restores only `loadout.coins`, so
     // without this the store-bought credit — shown as the hero's PURSE on the
     // coin-store screen — is unspendable in the run: AUTO PILOT reads
-    // `state.player.coins` and would show 0 / "CAN'T AFFORD" while the menu
+    // `state.players[0].coins` and would show 0 / "CAN'T AFFORD" while the menu
     // shows billions. The end-of-run bank already includes the pending (see
     // `recordVictory`/`bankLoadout`'s `coinsIncludePending`), so it is not
     // folded in a second time. BOT VIEW / demo fly a synthetic loadout rather

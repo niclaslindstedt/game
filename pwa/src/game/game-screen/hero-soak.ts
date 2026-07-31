@@ -53,6 +53,7 @@
 // a saved hero on the app's STARTUP PATH, need the ladder. See that file's
 // header.
 
+import { localHero } from "../local-seat.ts";
 import type { GameState } from "@game/core";
 
 import { clamp01 } from "@game/lib/vec.ts";
@@ -221,7 +222,7 @@ export function heroSoak(state: GameState): HeroSoak {
 export function syncHeroGear(state: GameState): void {
   ensureRun(state);
   for (const zone of SOAK_ZONES) {
-    const id = state.player.equipment[zone]?.id ?? null;
+    const id = localHero(state).equipment[zone]?.id ?? null;
     if (worn[zone] === id) continue;
     worn[zone] = id;
     soak[zone] = 0;
@@ -243,7 +244,10 @@ export function soakHero(
   const amount = heroSoakAmount();
   if (amount == null) return;
   ensureRun(state);
-  const dist = Math.hypot(at.x - state.player.pos.x, at.y - state.player.pos.y);
+  const dist = Math.hypot(
+    at.x - localHero(state).pos.x,
+    at.y - localHero(state).pos.y,
+  );
   // CONTACT range, widened a little by how violently this particular body came
   // apart and capped so it stays contact range. Everything past it lands on the
   // floor and on nobody.

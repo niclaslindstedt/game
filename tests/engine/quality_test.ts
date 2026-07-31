@@ -54,13 +54,13 @@ describe("the quality roll", () => {
 
   it("stamps the rolled quality on plain weapon and armor drops", () => {
     const state = startGame();
-    const weapon = rollEquipment(state, {
+    const weapon = rollEquipment(state, state.players[0], {
       defId: "test_pipe",
       tier: "regular",
       mlvl: 20,
     });
     expect(weapon.quality).toBeDefined();
-    const vest = rollEquipment(state, {
+    const vest = rollEquipment(state, state.players[0], {
       defId: "test_vest",
       tier: "regular",
       mlvl: 20,
@@ -70,9 +70,15 @@ describe("the quality roll", () => {
 
   it("charms and bags never roll one — nothing to scale", () => {
     const state = startGame();
-    const charm = rollEquipment(state, { defId: "test_charm", mlvl: 99 });
+    const charm = rollEquipment(state, state.players[0], {
+      defId: "test_charm",
+      mlvl: 99,
+    });
     expect(qualityOf(charm)).toBe("normal");
-    const bag = rollEquipment(state, { defId: "test_bag", mlvl: 99 });
+    const bag = rollEquipment(state, state.players[0], {
+      defId: "test_bag",
+      mlvl: 99,
+    });
     expect(qualityOf(bag)).toBe("normal");
   });
 
@@ -80,7 +86,7 @@ describe("the quality roll", () => {
     const state = startGame();
     const tiers = ["magic", "rare", "unique", "legendary"] as const;
     for (let i = 0; i < 80; i++) {
-      const piece = rollEquipment(state, {
+      const piece = rollEquipment(state, state.players[0], {
         defId: "test_pipe",
         tier: tiers[i % tiers.length],
         mlvl: 99,
@@ -91,7 +97,7 @@ describe("the quality roll", () => {
 
   it("a caller can pin the quality (scripted story drops arrive as tuned)", () => {
     const state = startGame();
-    const piece = rollEquipment(state, {
+    const piece = rollEquipment(state, state.players[0], {
       defId: "test_pipe",
       quality: "perfect",
       mlvl: 1,
@@ -102,7 +108,7 @@ describe("the quality roll", () => {
   it("pieces from before quality shipped read as normal", () => {
     const state = startGame();
     // The hand-minted starter carries no quality field — the old-save shape.
-    const starter = state.player.equipment.weapon;
+    const starter = state.players[0].equipment.weapon;
     expect(starter.quality).toBeUndefined();
     expect(qualityOf(starter)).toBe("normal");
     expect(qualityMult(starter)).toBe(1);
@@ -119,7 +125,11 @@ describe("what quality is worth", () => {
     // and a 0.5 draw lands on each band's MIDPOINT — i.e. `QUALITY.mults` — so
     // the test reads what a quality is worth on average, not a random copy.
     state.fxRng = () => 0.5;
-    return rollEquipment(state, { defId: "test_pipe", quality, mlvl: 1 });
+    return rollEquipment(state, state.players[0], {
+      defId: "test_pipe",
+      quality,
+      mlvl: 1,
+    });
   }
 
   it("scales a weapon's damage through the one damage source", () => {
@@ -127,12 +137,12 @@ describe("what quality is worth", () => {
     const broken = pipeAt(state, "broken");
     const normal = pipeAt(state, "normal");
     const perfect = pipeAt(state, "perfect");
-    const base = weaponDamageFor(state, normal);
-    expect(weaponDamageFor(state, broken)).toBeCloseTo(
+    const base = weaponDamageFor(state, state.players[0], normal);
+    expect(weaponDamageFor(state, state.players[0], broken)).toBeCloseTo(
       base * QUALITY.mults.broken,
       6,
     );
-    expect(weaponDamageFor(state, perfect)).toBeCloseTo(
+    expect(weaponDamageFor(state, state.players[0], perfect)).toBeCloseTo(
       base * QUALITY.mults.perfect,
       6,
     );
@@ -145,8 +155,14 @@ describe("what quality is worth", () => {
     // flavor stream so each quality rolls its band MIDPOINT (`QUALITY.mults`).
     state.rng = () => 0.5;
     state.fxRng = () => 0.5;
-    const normal = rollEquipment(state, { ...opts, quality: "normal" });
-    const perfect = rollEquipment(state, { ...opts, quality: "perfect" });
+    const normal = rollEquipment(state, state.players[0], {
+      ...opts,
+      quality: "normal",
+    });
+    const perfect = rollEquipment(state, state.players[0], {
+      ...opts,
+      quality: "perfect",
+    });
     expect(normal.ilvl).toBe(perfect.ilvl);
     // Both share one ilvl, so perfect is normal scaled by the make mult —
     // within a point of rounding (each stamps round(raw × mult) independently).
@@ -157,7 +173,7 @@ describe("what quality is worth", () => {
 
   it("sizes the wear budget, and repair kits refill to it — not past it", () => {
     const state = startGame();
-    const crude = rollEquipment(state, {
+    const crude = rollEquipment(state, state.players[0], {
       defId: "test_pipe",
       quality: "crude",
       mlvl: 10,
@@ -175,9 +191,9 @@ describe("what quality is worth", () => {
       }),
     );
     // Wear it, mend it: the kit restores the CRUDE maximum, never the def's.
-    state.player.equipment.weapon = crude;
+    state.players[0].equipment.weapon = crude;
     crude.durability = 1;
-    expect(repairEquippedWeapon(state)).toBe(true);
+    expect(repairEquippedWeapon(state, state.players[0])).toBe(true);
     expect(crude.durability).toBe(full);
   });
 
@@ -185,8 +201,14 @@ describe("what quality is worth", () => {
     const state = startGame();
     const opts = { defId: "test_pipe", tier: "regular", mlvl: 10 } as const;
     state.rng = () => 0.5;
-    const normal = rollEquipment(state, { ...opts, quality: "normal" });
-    const perfect = rollEquipment(state, { ...opts, quality: "perfect" });
+    const normal = rollEquipment(state, state.players[0], {
+      ...opts,
+      quality: "normal",
+    });
+    const perfect = rollEquipment(state, state.players[0], {
+      ...opts,
+      quality: "perfect",
+    });
     expect(sellValue(perfect)).toBeGreaterThan(sellValue(normal));
   });
 
@@ -196,7 +218,7 @@ describe("what quality is worth", () => {
       if (quality === "normal") continue; // covered by the spread below
       const band = QUALITY.ranges[quality];
       for (let i = 0; i < 40; i++) {
-        const piece = rollEquipment(state, {
+        const piece = rollEquipment(state, state.players[0], {
           defId: "test_pipe",
           quality,
           mlvl: 10,
@@ -216,12 +238,14 @@ describe("what quality is worth", () => {
     state.rng = () => 0.5;
     const damages = new Set<number>();
     for (let i = 0; i < 20; i++) {
-      const copy = rollEquipment(state, {
+      const copy = rollEquipment(state, state.players[0], {
         defId: "test_pipe",
         quality: "superior",
         mlvl: 10,
       });
-      damages.add(Math.round(weaponDamageFor(state, copy) * 1000));
+      damages.add(
+        Math.round(weaponDamageFor(state, state.players[0], copy) * 1000),
+      );
     }
     // The fixed loot stream would collapse to one number under the old flat
     // multiplier; the make-quality range roll spreads it across many.
@@ -243,7 +267,7 @@ describe("what quality is worth", () => {
   it("magic-or-better finds carry no range roll — always flat normal make", () => {
     const state = startGame();
     for (let i = 0; i < 20; i++) {
-      const magic = rollEquipment(state, {
+      const magic = rollEquipment(state, state.players[0], {
         defId: "test_pipe",
         tier: "magic",
         mlvl: 40,

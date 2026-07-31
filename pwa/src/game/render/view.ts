@@ -2,6 +2,7 @@
 // View scale and camera: how many CSS px a world unit spans, and where the
 // player-centered (level-clamped) view rect sits.
 
+import { localHero } from "../local-seat.ts";
 import { type GameState } from "@game/menu";
 
 import { worldViewRect } from "./tilt.ts";
@@ -111,8 +112,8 @@ export function computeCamera(
   const centerOn = (center: number, offset: number, view: number) =>
     Math.round(center - view / 2 - offset);
   const camera = {
-    x: centerOn(state.player.pos.x, rect.x, rect.width),
-    y: centerOn(state.player.pos.y, rect.y, rect.height),
+    x: centerOn(localHero(state).pos.x, rect.x, rect.width),
+    y: centerOn(localHero(state).pos.y, rect.y, rect.height),
   };
   // Only the drawing pass passes a clock — the simulate pass's view rect
   // (enemy targeting) stays rock steady through the quake.

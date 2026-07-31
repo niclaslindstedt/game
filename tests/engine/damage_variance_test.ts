@@ -21,8 +21,8 @@ import { equipBlaster, startGame } from "./helpers.ts";
 describe("damage variance", () => {
   it("keeps every roll inside the weapon's variance band", () => {
     const state = equipBlaster(startGame());
-    const weapon = state.player.equipment.weapon;
-    const avg = weaponDamageFor(state, weapon);
+    const weapon = state.players[0].equipment.weapon;
+    const avg = weaponDamageFor(state, state.players[0], weapon);
     const v = WEAPON.damageVariance; // the fixture blaster takes the default
     const lo = avg * (1 - v);
     const hi = avg * (1 + v);
@@ -35,8 +35,8 @@ describe("damage variance", () => {
 
   it("centres on the average and actually varies", () => {
     const state = equipBlaster(startGame());
-    const weapon = state.player.equipment.weapon;
-    const avg = weaponDamageFor(state, weapon);
+    const weapon = state.players[0].equipment.weapon;
+    const avg = weaponDamageFor(state, state.players[0], weapon);
     let sum = 0;
     const seen = new Set<number>();
     const N = 2000;
@@ -53,9 +53,9 @@ describe("damage variance", () => {
 
   it("reports a min/max range straddling the average", () => {
     const state = equipBlaster(startGame());
-    const weapon = state.player.equipment.weapon;
-    const avg = weaponDamageFor(state, weapon);
-    const { min, max } = weaponDamageRange(state, weapon);
+    const weapon = state.players[0].equipment.weapon;
+    const avg = weaponDamageFor(state, state.players[0], weapon);
+    const { min, max } = weaponDamageRange(state, state.players[0], weapon);
     expect(min).toBeLessThan(avg);
     expect(max).toBeGreaterThan(avg);
     expect(min).toBeLessThan(max);
@@ -63,7 +63,7 @@ describe("damage variance", () => {
 
   it("never advances the loot stream", () => {
     const state = equipBlaster(startGame());
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     const before = rngState(state.rng);
     for (let i = 0; i < 100; i++) rollWeaponDamage(state, weapon);
     // The flavor roll draws off fxRng alone — the loot/crit stream is untouched.

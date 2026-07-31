@@ -42,7 +42,7 @@ export function autopilotDrainPerSecond(speed: number): number {
 export function startAutopilot(state: GameState, speed = 1): boolean {
   if (state.phase === "victory" || state.phase === "defeat") return false;
   const snapped = normalizeAutopilotSpeed(speed);
-  if (state.player.coins < autopilotDrainPerSecond(snapped)) return false;
+  if (state.players[0].coins < autopilotDrainPerSecond(snapped)) return false;
   state.autopilot.active = true;
   state.autopilot.speed = snapped;
   state.autopilot.drainCarry = 0;
@@ -52,7 +52,7 @@ export function startAutopilot(state: GameState, speed = 1): boolean {
   // — re-stamping here would quietly re-baseline the refund on the build the
   // BOT had already grown, and the player would get back only the last level's
   // points. `refundAutopilotBuild` clears it when the ride is settled.
-  state.autopilot.build ??= captureBuildSnapshot(state);
+  state.autopilot.build ??= captureBuildSnapshot(state, state.players[0]);
   return true;
 }
 
@@ -80,7 +80,7 @@ export function setAutopilotSpeed(state: GameState, speed: number): boolean {
 export function creditAutopilotPurse(state: GameState, coins: number): number {
   const credit = Math.floor(coins);
   if (!(credit > 0)) return 0;
-  state.player.coins += credit;
+  state.players[0].coins += credit;
   return credit;
 }
 
@@ -98,11 +98,11 @@ export function stepAutopilot(state: GameState, dtMs: number): void {
   const owed = Math.floor(ap.drainCarry);
   if (owed <= 0) return;
   ap.drainCarry -= owed;
-  const paid = Math.min(owed, state.player.coins);
-  state.player.coins -= paid;
+  const paid = Math.min(owed, state.players[0].coins);
+  state.players[0].coins -= paid;
   ap.coinsSpent += paid;
-  if (state.player.coins <= 0) {
-    state.player.coins = 0;
+  if (state.players[0].coins <= 0) {
+    state.players[0].coins = 0;
     ap.active = false;
     ap.drainCarry = 0;
     state.events.push({ type: "autopilotStopped", reason: "coins" });

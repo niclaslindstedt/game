@@ -121,8 +121,8 @@ describe("grantXp obeys the per-map cap", () => {
     const state = startGame(); // test_level on medium → cap = band.first
     clearStage(state);
     const cap = xpLevelCap("test_level", "medium");
-    state.player.level = cap;
-    state.player.xpToNext = xpToLevelUp(cap);
+    state.players[0].level = cap;
+    state.players[0].xpToNext = xpToLevelUp(cap);
     grantXp(state, 100_000);
     const expected = Math.round(100_000 * xpCapMultiplier(cap, cap));
     expect(expected).toBeGreaterThan(0);
@@ -133,8 +133,8 @@ describe("grantXp obeys the per-map cap", () => {
     const state = startGame();
     clearStage(state);
     const cap = xpLevelCap("test_level", "medium");
-    state.player.level = cap + 20; // deep in the trickle
-    state.player.xpToNext = xpToLevelUp(state.player.level);
+    state.players[0].level = cap + 20; // deep in the trickle
+    state.players[0].xpToNext = xpToLevelUp(state.players[0].level);
     grantXp(state, 100_000);
     expect(state.stats.xpGained).toBe(Math.round(100_000 * XP_CAP.floor));
     expect(state.stats.xpGained).toBeGreaterThan(0);
@@ -144,14 +144,14 @@ describe("grantXp obeys the per-map cap", () => {
     const state = startGame();
     clearStage(state);
     const cap = xpLevelCap("test_level", "medium");
-    state.player.level = cap + 5; // well past the cap, on the floor trickle
-    state.player.xpToNext = xpToLevelUp(state.player.level);
+    state.players[0].level = cap + 5; // well past the cap, on the floor trickle
+    state.players[0].xpToNext = xpToLevelUp(state.players[0].level);
     // A firehose of XP: at the ~1/100 floor it lands slowly, but it DOES land —
     // the hero still climbs, there is no hard stop short of the global max.
-    const before = state.player.level;
+    const before = state.players[0].level;
     for (let i = 0; i < 200; i++) grantXp(state, 1_000_000);
-    expect(state.player.level).toBeGreaterThan(before);
-    expect(state.player.level).toBeLessThan(LEVELING.maxLevel);
+    expect(state.players[0].level).toBeGreaterThan(before);
+    expect(state.players[0].level).toBeLessThan(LEVELING.maxLevel);
   });
 
   it("a hero inside the fade band gains a diminished grant", () => {
@@ -159,10 +159,10 @@ describe("grantXp obeys the per-map cap", () => {
     clearStage(state);
     const cap = xpLevelCap("test_level", "medium");
     const level = cap - 1; // deepest fade rung above zero
-    state.player.level = level;
-    state.player.xpToNext = xpToLevelUp(level);
+    state.players[0].level = level;
+    state.players[0].xpToNext = xpToLevelUp(level);
     grantXp(state, 1000);
-    expect(state.player.xp).toBe(
+    expect(state.players[0].xp).toBe(
       Math.round(1000 * xpCapMultiplier(level, cap)),
     );
   });
@@ -171,7 +171,7 @@ describe("grantXp obeys the per-map cap", () => {
     const state = startGame();
     clearStage(state);
     grantXp(state, 50); // level 1 (cap is 14): far below the fade band
-    expect(state.player.xp).toBe(50);
+    expect(state.players[0].xp).toBe(50);
   });
 });
 
@@ -186,7 +186,7 @@ function tapThrough(state: GameState): void {
 function killOne(state: GameState): void {
   const mob = makeEnemy(
     {
-      pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       hp: 1,
       maxHp: 10,
       speed: 0,
@@ -209,8 +209,8 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     const state = startGame(); // test_level on medium → cap 14
     clearStage(state);
     equipBlaster(state); // down mobs at range
-    state.player.level = xpLevelCap("test_level", "medium");
-    state.player.xpToNext = 1_000_000; // keep an incidental level-up out of the way
+    state.players[0].level = xpLevelCap("test_level", "medium");
+    state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
 
     killOne(state);
@@ -229,8 +229,8 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     const state = startGame();
     clearStage(state);
     equipBlaster(state);
-    state.player.level = xpLevelCap("test_level", "medium") - 1; // one short
-    state.player.xpToNext = 1_000_000; // keep an incidental level-up out of the way
+    state.players[0].level = xpLevelCap("test_level", "medium") - 1; // one short
+    state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
 
     killOne(state);
@@ -245,8 +245,8 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     state.difficulty = "jesus";
     clearStage(state);
     equipBlaster(state);
-    state.player.level = xpLevelCap("test_level", "jesus");
-    state.player.xpToNext = 1_000_000; // keep an incidental level-up out of the way
+    state.players[0].level = xpLevelCap("test_level", "jesus");
+    state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
     // Evolve the horde past the ceiling: at this menace stage the mobs carry
     // stacked evolution hp and are demonstrably no longer pathetic. Pin the
@@ -270,8 +270,8 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     const state = startGame();
     clearStage(state);
     equipBlaster(state);
-    state.player.level = xpLevelCap("test_level", "medium");
-    state.player.xpToNext = 1_000_000; // keep an incidental level-up out of the way
+    state.players[0].level = xpLevelCap("test_level", "medium");
+    state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
     // Right at the ceiling the horde hasn't out-evolved the line yet.
     state.menace = DIALOGUE.capThoughtMenaceStageCeiling * MENACE.perStage;
@@ -286,8 +286,8 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     const state = startGame();
     clearStage(state);
     equipBlaster(state);
-    state.player.level = xpLevelCap("test_level", "medium");
-    state.player.xpToNext = 1_000_000; // keep an incidental level-up out of the way
+    state.players[0].level = xpLevelCap("test_level", "medium");
+    state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
 
     killOne(state);
@@ -330,8 +330,8 @@ describe("the cap-farm rotation, when the thought catalog is replaced", () => {
     const state = startGame();
     clearStage(state);
     equipBlaster(state);
-    state.player.level = xpLevelCap("test_level", "medium");
-    state.player.xpToNext = 1_000_000;
+    state.players[0].level = xpLevelCap("test_level", "medium");
+    state.players[0].xpToNext = 1_000_000;
     state.capThoughtMs = 0;
     return state;
   };

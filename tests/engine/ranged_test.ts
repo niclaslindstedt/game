@@ -37,7 +37,7 @@ describe("shooters (EnemyDef.ranged)", () => {
   it("fires a hostile projectile at the player once awake, in range and in sight", () => {
     const state = stage();
     const gunner = makeEnemy(
-      { pos: { x: state.player.pos.x + 150, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y } },
       "test_gunner",
     );
     gunner.awake = true;
@@ -56,26 +56,26 @@ describe("shooters (EnemyDef.ranged)", () => {
   it("holds fire without line of sight", () => {
     const state = stage();
     const gunner = makeEnemy(
-      { pos: { x: state.player.pos.x + 150, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y } },
       "test_gunner",
     );
     gunner.awake = true;
     state.enemies.push(gunner);
     // A wall dead between them.
-    addRock(state, state.player.pos.x + 75, state.player.pos.y);
+    addRock(state, state.players[0].pos.x + 75, state.players[0].pos.y);
     step(state, idle, 16);
     expect(state.projectiles.filter((p) => p.hostile)).toHaveLength(0);
   });
 
   it("a hostile shot hurts the grounded player and is spent on contact", () => {
     const state = stage();
-    const before = state.player.hp;
+    const before = state.players[0].hp;
     // Never dodge: DEX 0 hero, but the roll still draws — pin the rng so the
     // dodge branch can't fire.
     state.rng = () => 0.99;
     state.projectiles.push({
       id: state.nextId++,
-      pos: { x: state.player.pos.x - 20, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x - 20, y: state.players[0].pos.y },
       dir: { x: 1, y: 0 },
       speed: 200,
       radius: 4,
@@ -88,19 +88,19 @@ describe("shooters (EnemyDef.ranged)", () => {
       z: 0,
     });
     run(state, idle, 12);
-    expect(state.player.hp).toBeLessThan(before);
+    expect(state.players[0].hp).toBeLessThan(before);
     expect(state.projectiles.filter((p) => p.hostile)).toHaveLength(0);
   });
 
   it("a jumping hero sails clean over a hostile shot", () => {
     const state = stage();
-    const before = state.player.hp;
+    const before = state.players[0].hp;
     state.rng = () => 0.99;
-    state.player.z = JUMP.dodgeHeight + 10;
-    state.player.vz = 0;
+    state.players[0].z = JUMP.dodgeHeight + 10;
+    state.players[0].vz = 0;
     state.projectiles.push({
       id: state.nextId++,
-      pos: { x: state.player.pos.x - 8, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x - 8, y: state.players[0].pos.y },
       dir: { x: 1, y: 0 },
       speed: 200,
       radius: 4,
@@ -114,14 +114,14 @@ describe("shooters (EnemyDef.ranged)", () => {
     });
     // One tick: the shot passes under him (gravity would land him later).
     step(state, idle, 16);
-    expect(state.player.hp).toBe(before);
+    expect(state.players[0].hp).toBe(before);
   });
 
   it("hostile shots never touch the horde", () => {
     const state = stage();
     state.rng = () => 0.99;
     const bystander = makeEnemy(
-      { pos: { x: state.player.pos.x - 60, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x - 60, y: state.players[0].pos.y } },
       "test_guard",
     );
     bystander.hp = 60;
@@ -129,7 +129,7 @@ describe("shooters (EnemyDef.ranged)", () => {
     // A shot flying straight through the bystander toward the player.
     state.projectiles.push({
       id: state.nextId++,
-      pos: { x: state.player.pos.x - 100, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x - 100, y: state.players[0].pos.y },
       dir: { x: 1, y: 0 },
       speed: 200,
       radius: 4,
@@ -149,7 +149,7 @@ describe("shooters (EnemyDef.ranged)", () => {
     const state = stage();
     const gunner = makeEnemy(
       {
-        pos: { x: state.player.pos.x + 120, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 120, y: state.players[0].pos.y },
         speed: 60,
       },
       "test_gunner",
@@ -159,14 +159,18 @@ describe("shooters (EnemyDef.ranged)", () => {
     gunner.rangedCooldownMs = 1500;
     state.enemies.push(gunner);
     // A rock beside it — the far side is the hideout.
-    const rock = addRock(state, state.player.pos.x + 180, state.player.pos.y);
+    const rock = addRock(
+      state,
+      state.players[0].pos.x + 180,
+      state.players[0].pos.y,
+    );
     const beyond = () => gunner.pos.x - rock.pos.x;
     const before = beyond();
     run(state, idle, 30);
     // It moved toward (or past) the rock's far side — strictly away from the
     // player relative to the rock.
     expect(beyond()).toBeGreaterThan(before - 1);
-    expect(gunner.pos.x).toBeGreaterThan(state.player.pos.x + 130);
+    expect(gunner.pos.x).toBeGreaterThan(state.players[0].pos.x + 130);
   });
 });
 

@@ -154,7 +154,7 @@ export function createRunFromParams(params: RunParams): GameState {
     state,
     (params.campaignQuests as CampaignQuestSave | null) ?? undefined,
   );
-  if (typeof params.coins === "number") state.player.coins = params.coins;
+  if (typeof params.coins === "number") state.players[0].coins = params.coins;
   if (params.seenThoughts?.length) {
     markThoughtsSeen(state, params.seenThoughts);
   }

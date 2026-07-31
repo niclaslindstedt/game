@@ -6,6 +6,7 @@
 // rolling the per-run coin meter into the session, ending the ride on a dry
 // purse, and routing the next lap after a clear or a death.
 
+import { localHero } from "../local-seat.ts";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
@@ -210,10 +211,10 @@ export function finishAutopilotRide(deps: {
     runCommand(state, "refundAutopilotBuild");
     // The ride runs inside a real run whose purse was funded from the hero's
     // whole wealth at start (run-setup.ts) — the pending credit is already in
-    // state.player.coins, so bank it as-is (don't fold pendingCoins twice).
+    // state.players[0].coins, so bank it as-is (don't fold pendingCoins twice).
     characterRef.current = bankLoadout(
       characterRef.current,
-      extractLoadout(state),
+      extractLoadout(state, localHero(state)),
       true,
     );
     prompted = runCommandOk(state, "promptPendingPoints");
@@ -236,7 +237,7 @@ export function autopilotRideGains(
 ): { levels: number; stats: number; talents: number } {
   const snap = session.specSnapshot;
   if (!snap) return { levels: 0, stats: 0, talents: 0 };
-  const player = state.player;
+  const player = localHero(state);
   const levels = Math.max(0, player.level - session.startLevel);
   // Stat points EARNED = the growth in the chosen-point tally since engage plus
   // anything still unspent — the same delta `refundAutopilotBuild` hands back.

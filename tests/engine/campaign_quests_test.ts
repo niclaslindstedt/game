@@ -106,32 +106,32 @@ describe("objectiveNeed", () => {
 describe("spendCleanSlate", () => {
   it("spends a charge and opens the respec", () => {
     const state = startGame();
-    state.player.cleanSlates = 1;
-    state.player.stats.strength = 4;
+    state.players[0].cleanSlates = 1;
+    state.players[0].stats.strength = 4;
 
-    expect(spendCleanSlate(state)).toBe(true);
-    expect(state.player.cleanSlates).toBe(0);
+    expect(spendCleanSlate(state, state.players[0])).toBe(true);
+    expect(state.players[0].cleanSlates).toBe(0);
     expect(state.phase).toBe("respec");
     // It is the SAME respec a level jump ran: the build is refunded into a
     // pool that has to be re-placed before play resumes.
-    expect(state.player.pendingStatPoints).toBeGreaterThanOrEqual(4);
-    expect(state.player.stats.strength).toBe(0);
+    expect(state.players[0].pendingStatPoints).toBeGreaterThanOrEqual(4);
+    expect(state.players[0].stats.strength).toBe(0);
     expect(state.events.some((e) => e.type === "cleanSlateUsed")).toBe(true);
   });
 
   it("refuses when the hero carries none, leaving the run alone", () => {
     const state = startGame();
-    expect(spendCleanSlate(state)).toBe(false);
+    expect(spendCleanSlate(state, state.players[0])).toBe(false);
     expect(state.phase).toBe("playing");
   });
 
   it("refuses from a phase nobody could see the chooser in", () => {
     const state = startGame();
-    state.player.cleanSlates = 1;
+    state.players[0].cleanSlates = 1;
     state.phase = "dying";
-    expect(spendCleanSlate(state)).toBe(false);
+    expect(spendCleanSlate(state, state.players[0])).toBe(false);
     // The charge is NOT spent — a refusal that ate it would be the worst
     // possible bug on the rarest reward in the game.
-    expect(state.player.cleanSlates).toBe(1);
+    expect(state.players[0].cleanSlates).toBe(1);
   });
 });

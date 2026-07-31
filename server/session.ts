@@ -43,6 +43,7 @@ import {
   applyRunCommand,
   createRunFromParams,
   isRunCommand,
+  seatHero,
   setBalanceTuning,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
@@ -50,6 +51,7 @@ import {
   type GameInput,
   type GameState,
   type FrozenRun,
+  type Loadout,
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
@@ -195,12 +197,20 @@ export type Session = {
   advance(ms: number): number;
   /** Seats taken, host included. */
   readonly clientCount: number;
-  /** Attach a client. Sends it a `welcome` immediately; it is baselined on the
-   * world at tick 0 and receives a delta from there at the next publish. */
+  /**
+   * Attach a client. Sends it a `welcome` immediately; it is baselined on the
+   * world at tick 0 and receives a delta from there at the next publish.
+   *
+   * `seat` decides whether this client STEERS a hero or only watches. A player
+   * gets a seat of their own — a whole `Player` built by the same function seat
+   * 0 was, dressed in the `loadout` they brought — and the seat number is the
+   * server's answer, never a claim the client made. A spectator gets `false`
+   * and no hero at all.
+   */
   addClient(
     id: number,
     send: SendFrame,
-    ownsPlayer: boolean,
+    seat: boolean | { play: boolean; loadout?: unknown },
     name?: string,
   ): void;
   removeClient(id: number): void;
@@ -262,7 +272,7 @@ export function createSession(options: SessionOptions): Session {
     JSON.stringify(
       captureSnapshot(
         state as unknown as Record<string, unknown>,
-        { ownsPlayer: true },
+        { seat: 0 },
         [],
       ),
     ),
@@ -334,11 +344,11 @@ export function createSession(options: SessionOptions): Session {
       .map((client) => ({
         slot: client.slot,
         name: client.name,
-        playing: client.recipient.ownsPlayer,
+        playing: client.recipient.seat !== null,
         // The host's own renderer reaches this process over a MessagePort
         // inside the same machine; there is no wire to time, and -1 is the
         // seam's word for that rather than a flattering 0.
-        ping: client.recipient.ownsPlayer ? -1 : peers.ping(client.id),
+        ping: client.slot === 0 ? -1 : peers.ping(client.id),
       }));
   }
 
@@ -353,7 +363,7 @@ export function createSession(options: SessionOptions): Session {
   function kickByName(name: string): string | null {
     const wanted = name.trim().toUpperCase();
     for (const client of clients.values()) {
-      if (client.recipient.ownsPlayer) continue;
+      if (client.slot === 0) continue;
       if (client.name.toUpperCase() !== wanted) continue;
       peers.kick(client.id, "kicked by the host");
       clients.delete(client.id);
@@ -397,18 +407,28 @@ export function createSession(options: SessionOptions): Session {
     for (const client of clients.values()) client.send(frame);
   }
 
+  /** Reused across ticks: one slot per seat, so the per-tick input array is not
+   * a fresh allocation sixty times a second. */
+  const frame: GameInput[] = [];
+
   function stepOnce(): void {
-    // PR 1 simulates one hero, so there is one input and it is the owner's.
-    // PR 3 turns this into a loop over the party; the shape is already right.
-    const input = inputs.get(0) ?? IDLE_INPUT;
-    step(state, input, TICK_MS);
+    // ONE FRAME PER SEAT, index-aligned with `state.players` — which is exactly
+    // what `PartyInput` is. A seat whose owner has sent nothing (a player with a
+    // screen open, a dropped packet, an empty chair) contributes IDLE rather
+    // than repeating its last frame: a lost packet must not leave a hero
+    // walking into the horde until the next one arrives.
+    frame.length = state.players.length;
+    for (let seat = 0; seat < frame.length; seat++) {
+      frame[seat] = inputs.get(seat) ?? IDLE_INPUT;
+    }
+    step(state, frame, TICK_MS);
     tick++;
     if (state.events.length) pendingEvents.push(...state.events);
     // A discrete edge is consumed by the tick it was sampled for. Left set, a
     // single tap would jump on every tick until the next input frame arrived —
     // which at 60 Hz simulation and (say) 30 Hz input is a double jump the
     // player never asked for.
-    clearEdges(input);
+    for (const seated of inputs.values()) clearEdges(seated);
   }
 
   function publish(): void {
@@ -497,13 +517,36 @@ export function createSession(options: SessionOptions): Session {
       return clients.size;
     },
 
-    addClient(id, send, ownsPlayer, name) {
-      const recipient: Recipient = { ownsPlayer };
-      const slot = ownsPlayer ? 0 : nextSlot();
+    addClient(id, send, seatRequest, name) {
+      const wants =
+        typeof seatRequest === "boolean"
+          ? { play: seatRequest, loadout: undefined as unknown }
+          : seatRequest;
+      // The HOST is always slot 0 and seat 0 — they are the run that already
+      // exists. Everybody else takes the lowest free roster slot, and a player
+      // among them is SEATED: a hero of their own is appended to the party,
+      // and the index they land on IS their seat.
+      const host = wants.play && clients.size === 0;
+      const slot = host ? 0 : nextSlot();
+      // THE SEAT IS THE SERVER'S ANSWER: a seated client steers
+      // `state.players[seat]` and nobody else, and a spectator has no seat at
+      // all — which is what every privacy and authority check below reads,
+      // never a claim the client made about itself.
+      let seat: number | null = null;
+      if (host) {
+        seat = 0;
+      } else if (wants.play && state.players.length < maxClients) {
+        // A joiner arrives beside the party with their OWN bag, purse and
+        // build. The seat is appended, never inserted: every command and input
+        // frame in flight names a seat by index (see `game/seating.ts`).
+        seatHero(state, (wants.loadout as Loadout | null) ?? null);
+        seat = state.players.length - 1;
+      }
+      const recipient: Recipient = { seat };
       const client: Client = {
         id,
         slot,
-        name: name?.trim() || (ownsPlayer ? "HOST" : `PLAYER ${slot + 1}`),
+        name: name?.trim() || (host ? "HOST" : `PLAYER ${slot + 1}`),
         send,
         recipient,
         // THE GENESIS BASELINE, cut for this recipient. The client builds
@@ -518,7 +561,16 @@ export function createSession(options: SessionOptions): Session {
         history: new Map(),
       };
       clients.set(id, client);
-      if (ownsPlayer) inputs.set(0, { ...IDLE_INPUT });
+      if (seat !== null) inputs.set(seat, { ...IDLE_INPUT });
+      // A HERO SEATED MID-RUN CHANGES THE WORLD, and every other client's
+      // baseline predates them. A delta would carry the new hero correctly —
+      // the differ handles a grown list — but the ARRIVING client's own
+      // `createRunFromParams` built a one-hero party, so it has no way to know
+      // about the seats already standing. Everybody gets a full snapshot on the
+      // next publish rather than a delta against a party that changed shape.
+      if (seat !== null && seat > 0) {
+        for (const other of clients.values()) other.needsFull = true;
+      }
       const welcome: WelcomePayload = {
         handshake: {
           protocol: PROTOCOL_VERSION,
@@ -527,7 +579,7 @@ export function createSession(options: SessionOptions): Session {
         },
         params,
         slot: client.slot,
-        ownsPlayer,
+        seat: recipient.seat,
       };
       send(encodeFrame({ type: FRAME.welcome, seq, ack: 0, tick }, welcome));
       // The log is handed over WHOLE, and only to the arriving client: a
@@ -545,10 +597,20 @@ export function createSession(options: SessionOptions): Session {
       const client = clients.get(id);
       if (!client) return;
       clients.delete(id);
+      // A DEPARTING PLAYER'S HERO STOPS WALKING. The seat is NOT spliced out —
+      // every command and input frame in flight names a seat by index, so
+      // renumbering the party would deliver somebody else's steering to the
+      // wrong hero — but the last frame they sent has to go, or the body they
+      // left behind keeps walking toward wherever they were last steering for
+      // the rest of the run. The seat then contributes IDLE, exactly as a seat
+      // whose owner has a screen open does.
+      if (client.recipient.seat !== null) {
+        inputs.set(client.recipient.seat, { ...IDLE_INPUT });
+      }
       // The host leaving is the session ending, and `close` says so in its own
       // words; announcing "HOST LEFT" first would put a chat line in front of
       // a bye nobody will be around to read.
-      if (client.recipient.ownsPlayer) return;
+      if (client.slot === 0) return;
       broadcastChat([chat.announce(`${client.name} LEFT`)]);
       broadcastRoster();
     },
@@ -585,7 +647,7 @@ export function createSession(options: SessionOptions): Session {
           {
             slot: client.slot,
             name: client.name,
-            isHost: client.recipient.ownsPlayer,
+            isHost: client.slot === 0,
           },
           (payload as { text?: unknown } | null)?.text,
         );
@@ -600,9 +662,9 @@ export function createSession(options: SessionOptions): Session {
       // driving somebody else's character is the cheapest possible griefing,
       // and the check belongs HERE — the one place a client cannot argue with
       // it.
-      if (!client.recipient.ownsPlayer) return;
+      if (client.recipient.seat === null) return;
       if (type === FRAME.input) {
-        applyInput(inputs, client.slot, payload);
+        applyInput(inputs, client.recipient.seat, payload);
         return;
       }
       if (type === FRAME.command) {

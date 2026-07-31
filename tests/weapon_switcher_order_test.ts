@@ -36,7 +36,7 @@ function weapon(
  * feeble sidearm first, the heavy hitter last. */
 function stagedBag() {
   const state = startGame();
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   for (let i = 0; i < inv.length; i++) inv[i] = null;
   inv[0] = weapon(state, "blaster"); // the last-resort sidearm
   inv[1] = weapon(state, "box_cutter");
@@ -51,20 +51,24 @@ describe("quick-draw order (weaponAlternatives)", () => {
     expect(weaponAlternatives(state).map((a) => a.index)).toEqual([0, 1, 2]);
     // ...and each slot shows what one blow of it lands.
     for (const alt of weaponAlternatives(state)) {
-      expect(alt.dmg).toBe(Math.round(weaponDamageFor(state, alt.item)));
+      expect(alt.dmg).toBe(
+        Math.round(weaponDamageFor(state, state.players[0], alt.item)),
+      );
     }
   });
 
   it("ranks BEST FIRST for this hero when asked to", () => {
     const state = stagedBag();
     const ranked = weaponAlternatives(state, "dps");
-    const dps = ranked.map((a) => weaponDps(state, a.item));
+    const dps = ranked.map((a) => weaponDps(state, state.players[0], a.item));
     // Descending, and the number each slot shows is the one it ranks by.
     for (let i = 1; i < dps.length; i++) {
       expect(dps[i - 1]!).toBeGreaterThanOrEqual(dps[i]!);
     }
     for (const alt of ranked) {
-      expect(alt.dmg).toBe(Math.round(weaponDps(state, alt.item)));
+      expect(alt.dmg).toBe(
+        Math.round(weaponDps(state, state.players[0], alt.item)),
+      );
     }
     // The bag order stayed a different answer — otherwise this proves nothing.
     expect(ranked.map((a) => a.index)).not.toEqual([0, 1, 2]);
@@ -86,7 +90,7 @@ describe("quick-draw order (weaponAlternatives)", () => {
 
   it("never offers a broken weapon in either order", () => {
     const state = stagedBag();
-    state.player.inventory[2]!.durability = 0;
+    state.players[0].inventory[2]!.durability = 0;
     for (const order of ["bag", "dps"] as const) {
       expect(weaponAlternatives(state, order).some((a) => a.index === 2)).toBe(
         false,

@@ -22,6 +22,7 @@
 //     competing with the loot — so the doll reads without the column of labels
 //     the old strip needed.
 
+import { localHero } from "./local-seat.ts";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
 import {
@@ -141,7 +142,7 @@ export function PaperDoll({
   onSlotEnter: (item: Equipment) => (e: ReactPointerEvent) => void;
   onSlotLeave: (e: ReactPointerEvent) => void;
 }) {
-  const equipment = state.player.equipment;
+  const equipment = localHero(state).equipment;
 
   return (
     <div className="paper-doll">

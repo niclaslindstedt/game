@@ -11,6 +11,7 @@
 // module under `render/` (view/camera, caches, world plane, items,
 // projectiles, enemies, actors, hazards, guidance, fog, player, effects).
 
+import { localHero } from "./local-seat.ts";
 import { type GameState } from "@game/core";
 
 import { type GameAssets } from "./assets.ts";
@@ -289,8 +290,8 @@ export function drawFrame(
   drawDeathClouds(ctx, state, view, timeMs);
 
   // Red flash while recently hurt.
-  if (state.player.hurtFlashMs > 0) {
-    ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
+  if (localHero(state).hurtFlashMs > 0) {
+    ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * localHero(state).hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
   }
 }

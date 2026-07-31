@@ -150,7 +150,7 @@ and the host's direct address, and `getLobbies()` **is** D2's game list.
 | **1.5 — THE VERBS**    | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server     | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4 |
 | **1.75 — THE LOOP**    | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop              | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4       |
 | **2.5 — THE SCREENS**  | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                          | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4        |
-| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks |                               |
+| **3 — THE PARTY**      | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                                  | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6     |
 | **4 — THE CO-OP GAME** | Town hub, per-player death/corpse/respawn, party travel, XP share, loot rules, `/players N` balance, party HUD, mod + version reconciliation | The whole campaign, co-op, start to finish                   |  6–8 wks |                               |
 | **5 — PRODUCTION**     | Stash + trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                    | Shippable                                                    |  5–7 wks |                               |
 
@@ -1037,6 +1037,13 @@ drives a browser, where every one of these screens is deliberately absent.
 **Goal: eight heroes, not one.** This is the mountain, and it is a design
 exercise wearing a refactor's clothes.
 
+> **§3.1 HAS LANDED; §3.2 AND §3.3 HAVE NOT.** The party model, the
+> parameterization, every shared read in the table below and the session seating
+> are in the tree — see **§3.6** for exactly what that means and what it does
+> not. The split is along the same seam §1.5 was split on, and for the same
+> reason: making the simulation PARTY-AWARE and making a party COMFORTABLE are
+> two jobs, and the first is a prerequisite that leaves single player untouched.
+
 ### 3.1 `state.player` → `state.players[]`
 
 The mechanical rename is perhaps two weeks. The cost is that **each of those 538
@@ -1179,6 +1186,132 @@ whole way — every commit in this PR should leave a playable single-player game
 because a single-player regression discovered at the end of an 11-week branch is
 unbisectable.
 
+### 3.6 What §3.1 actually shipped — and the two things it deliberately did not
+
+The sequencing §3.5 asks for is what was followed, and it is what makes the
+split honest: four commits, each leaving `make lint` and `make test` at zero,
+each leaving single player byte-identical.
+
+**LANDED.**
+
+- **`GameState.players`**, a NON-EMPTY tuple (`[Player, ...Player[]]`) in seat
+  order. The type states the invariant the rest rests on: `players[0]` reads as
+  a `Player` while `players[seat]` — an index that may have come from a
+  stranger's command — reads as `Player | undefined` and has to be checked.
+- **The private reads became a parameter.** 285 declarations, ~1200 call sites:
+  every derived-stat, item, talent, spell and consumable accessor takes the
+  `Player` it is about beside the run it is in. The 103 sites that opened with
+  `const player = state.player;` had that line become the signature. The loadout
+  memo needed nothing — it was already keyed by the Player OBJECT in a WeakMap,
+  so a second hero gets a second memo for free.
+- **Every shared read in §3.1's table**, each with a test in
+  `tests/engine/party_test.ts` that would pass trivially with one hero: aggro
+  (nearest visible, hysteresis on `Enemy.quarry`, sight outranking the
+  hysteresis), the spawner (centroid budget, per-hero placement, party level),
+  packs and lairs and spawn points and the exit (ANY hero), hazards (a blast
+  bills everybody; a gust keeps its single victim by design), the merchant
+  (whoever finds him finds him for everybody), the fog (shared, one grid), and
+  the menace meter (scaled to the party's highest level).
+- **`step()` takes per-seat input.** A plain `GameInput` still means seat 0, so
+  no caller changed; an ARRAY is index-aligned with the party. A seat with no
+  frame contributes `IDLE_INPUT` rather than repeating its last one.
+- **The run ends when the PARTY falls** (`partyWiped`), not when a hero does.
+- **`createHero` is lifted out of `createGame`** so seat 0 and every later
+  arrival are built by one function, and **`seatHero`** appends a joiner beside
+  the party with their own bag, purse and build.
+- **The session seats every admitted player.** `addClient` takes a seat request;
+  the seat is the SERVER's answer and travels back in the `welcome`; the join
+  frame carries the arriving player's loadout. `Recipient` is a seat rather than
+  a boolean, so seat 3 sees seat 3's bag and nobody else's.
+- **The app knows which hero it is about.** `localHero(state)` replaced the 257
+  places that read seat 0; the seat comes from the welcome and is cleared on
+  dispose. 167.4 KB critical path, inside the budget.
+
+**NOT LANDED, and each is a job rather than a loose end.**
+
+- **§3.2, the per-player screens.** This is the design exercise, and it is
+  bigger than the plumbing it sits on: `state.phase` has to lose eleven members
+  to a new `Player.screen`, the non-blocking level-up is a real single-player
+  BEHAVIOUR change that owes the changelog a line of its own, and `dialogue`,
+  `cutscene` and `choice` each need a group protocol rather than a per-player
+  one. Nothing about it is blocked — the verbs already travel — but it changes
+  how the game feels for a single player, which is why it is not smuggled in
+  beside a refactor that changes nothing.
+- **§3.3, prediction and reconciliation.** Untouched. A client still shows its
+  hero where the last snapshot put him.
+- **The command channel carries no SEAT.** A shop, an equip or a stat spend
+  arriving from a joiner is dispatched against seat 0. See §3.7 — it is the next
+  thing to do, and it comes BEFORE §3.2 rather than after it.
+- **A joiner's run is still not banked** to their roster (PR 4's §4.5), and the
+  autopilot, the headless simulator and the analytic readouts still fly seat 0 —
+  which is correct for what they measure and is what §3.4's "multi-player
+  campaign headlessly" line will change.
+
+### 3.7 The order the remainder has to be done in — and why there is no PR 3.5
+
+Two things were found while §3.1 was being built that this plan did not have a
+place for. Neither should become a numbered half, and the reasons are different
+in each case; both are written down here so the next session inherits them
+instead of rediscovering them.
+
+**THE SEAT ON THE COMMAND CHANNEL IS A PREREQUISITE OF §3.2, NOT A SUCCESSOR OF
+PR 3.** Measured against the tree §3.1 left: **20 of the 72 verbs in
+`applyRunCommand` spell `state.players[0]`** — `equipFromInventory`,
+`equipFromInventoryInto`, `unequipToInventory`, `moveInventoryItem`,
+`discardFromInventory`, `discardEquipped`, `autoEquipBest`, `scrapInferiorLoot`,
+`discardHeldAbility`, `spendGateKey`, `allocateStat`, `deallocateStat`,
+`spendTalentPoint`, `beginRespec`, `confirmRespec`, `spendCleanSlate`,
+`promptPendingPoints`, `reclaimVaultItem`, `clearVault`,
+`refundAutopilotBuild`. They are spelled out rather than hidden ON PURPOSE — the
+parameterization left the seat visible at every call site precisely so this list
+could be produced by grep rather than by reading — and a joiner's equip currently
+lands on the host's hero.
+
+It has the exact shape the plan's halves exist for: PR 1.5 made the verbs
+TRAVEL, and nothing made them travel to the right HERO. That is the same
+layer-without-its-cutover failure the amendments were written for, and it is its
+fourth instance.
+
+**But it cannot be numbered 3.5, because a 3.5 sorts after 3 and this has to
+happen before §3.2.** `openInventory` cannot be made non-blocking per player
+until it knows WHICH player; the screen and the verb are the same decision seen
+from two ends. So it is the OPENING commit series of PR 3's remainder — one
+field on the command frame, the seat the session already knows, and a `Player`
+argument through `applyRunCommand`'s dispatch — and §3.2 follows it. A number
+that implied otherwise would be a label that lies about the order, which is worse
+than no number at all.
+
+**WHAT AN ABANDONED HERO MEANS IS NOBODY'S — AND IT SHOULD BE PR 4'S.** §3.1's
+rule that a seat is appended and never spliced out is right and must stay (every
+command and input frame in flight names a seat by index). Its consequence is that
+a player who leaves has a body left standing on the map, and NOTHING in this plan
+says what that body is. The acute bug is fixed — a departing player's last input
+frame is cleared, so the hero stops walking rather than continuing toward
+wherever they were last steering for the rest of the run — but the POLICY is
+open, and four separate rules currently answer it by accident:
+
+- it still holds a seat, so the party cannot grow past it;
+- it still counts in `partyLevel`, so a departed level-90 can hold the horde's
+  level up over a party of level-20s;
+- it still draws aggro and still soaks a share of the horde's attention;
+- it still counts as alive, so `partyWiped` can never fire while it stands and
+  the remaining party can never lose the run.
+
+That last one is the sharp end: a group whose fourth player quit cannot be
+defeated. It belongs in **PR 4** rather than in a half of its own, because it is
+a question about what a body on the field MEANS — the same question §4.2 answers
+for a corpse and a respawn — and answering it beside them is how the two stay
+consistent. PR 5's §5.4 (reconnect) is the adjacent case and not the same one:
+reconnect is about somebody who IS coming back.
+
+**AND THE MEASURING INSTRUMENT SHOULD NOT GO LAST.** §3.4's done-when includes
+`scripts/simulate-run.mjs` running a multi-player campaign headlessly, on the
+stated grounds that it is "what makes PR 4's tuning measurable instead of
+guessed". It is independent of §3.2 and §3.3 — it needs a party, which now
+exists — so it can be built in parallel with them rather than after. Every
+instrument this repo has was built before the thing it measures; leaving this one
+until last is how PR 4's `/players N` pass ends up guessed anyway.
+
 ---
 
 ## PR 4 — THE CO-OP GAME
@@ -1238,6 +1371,18 @@ What ships:
   a betrayal.
 - **A session ends when the host leaves.** There is no host migration; D2 didn't
   have it either. Everyone's progress banks first (see 4.5).
+- **AND WHAT AN ABANDONED HERO IS — the question §3.1 created and nobody owns.**
+  A seat is appended and never spliced out (every command and input frame in
+  flight names one by index), so a player who leaves has a body left standing on
+  the map, and four separate rules currently answer for it by accident: it holds
+  a seat so the party cannot grow past it, it counts in `partyLevel` so a
+  departed level-90 holds the horde's level up over a party of level-20s, it
+  draws aggro, and it counts as alive — so **`partyWiped` can never fire while it
+  stands, and a group whose fourth player quit cannot lose the run.** That last
+  one is the sharp end. It belongs here rather than in a PR of its own because it
+  is the same question this section already answers for a corpse: what does a
+  body on the field MEAN. Reconnect (§5.4) is the adjacent case and NOT the same
+  one — that is somebody who is coming back. See §3.7.
 
 ### 4.3 XP, loot and the meter
 

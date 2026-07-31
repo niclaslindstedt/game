@@ -144,7 +144,10 @@ function startAt(
 
 /** Plant a mechanic-carrying mob near the player, awake and engaged. */
 function plant(state: GameState, defId: string, dx = 100, dy = 0): Enemy {
-  const pos = { x: state.player.pos.x + dx, y: state.player.pos.y + dy };
+  const pos = {
+    x: state.players[0].pos.x + dx,
+    y: state.players[0].pos.y + dy,
+  };
   const enemy: Enemy = {
     id: state.nextId++,
     defId,
@@ -176,11 +179,19 @@ describe("telegraphed charge", () => {
     expect(lockedDir).toBeDefined();
     const rootedX = charger.pos.x;
     // Rooted while winding up — even as the player walks away sideways.
-    run(state, steerTo(state.player.pos.x, state.player.pos.y + 200), 3);
+    run(
+      state,
+      steerTo(state.players[0].pos.x, state.players[0].pos.y + 200),
+      3,
+    );
     expect(charger.pos.x).toBeCloseTo(rootedX, 5);
     // After the windup it dashes along the LOCKED bearing (toward where the
     // player WAS — negative x from the charger), not toward the new position.
-    run(state, steerTo(state.player.pos.x, state.player.pos.y + 200), 30);
+    run(
+      state,
+      steerTo(state.players[0].pos.x, state.players[0].pos.y + 200),
+      30,
+    );
     expect(charger.mech?.dashMs ?? 0).toBeGreaterThanOrEqual(0);
     expect(charger.pos.x).toBeLessThan(rootedX); // rode -x, no re-aim
   });
@@ -191,18 +202,18 @@ describe("telegraphed slam", () => {
     const state = startAt();
     state.rng = () => 0.99; // no crits, no dodges anywhere
     plant(state, "test_slammer", 40, 0);
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     // Windup 300ms ≈ 19 steps at 16ms; run past it.
     run(state, idle, 30, (s) => s.events.some((e) => e.type === "enemySlam"));
     expect(state.events.some((e) => e.type === "enemySlam")).toBe(true);
-    expect(state.player.hp).toBeLessThan(hpBefore);
+    expect(state.players[0].hp).toBeLessThan(hpBefore);
   });
 
   it("a jumping hero sails clean over it", () => {
     const state = startAt();
     state.rng = () => 0.99;
     plant(state, "test_slammer", 40, 0);
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     let slammed = false;
     for (let i = 0; i < 40 && !slammed; i++) {
       // Keep the hero airborne through the whole windup with repeated jumps.
@@ -210,7 +221,7 @@ describe("telegraphed slam", () => {
       slammed = state.events.some((e) => e.type === "enemySlam");
     }
     expect(slammed).toBe(true);
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].hp).toBe(hpBefore);
   });
 });
 
@@ -285,7 +296,7 @@ describe("difficulty-gated smarts", () => {
    * heading angle off the direct west bearing (radians). */
   function chaseHeading(difficulty: "medium" | "hard"): number {
     const state = startAt(difficulty);
-    const pos = { x: state.player.pos.x + 200, y: state.player.pos.y };
+    const pos = { x: state.players[0].pos.x + 200, y: state.players[0].pos.y };
     const enemy: Enemy = {
       id: 9002, // even id → deterministic flank side
       defId: "test_minion",
@@ -317,7 +328,10 @@ describe("difficulty-gated smarts", () => {
     } {
       const state = startAt(difficulty);
       // A shooter due east, the hero running due north (positive vel.y).
-      const pos = { x: state.player.pos.x + 150, y: state.player.pos.y };
+      const pos = {
+        x: state.players[0].pos.x + 150,
+        y: state.players[0].pos.y,
+      };
       const enemy: Enemy = {
         id: 9003,
         defId: "test_gunner",
@@ -331,7 +345,10 @@ describe("difficulty-gated smarts", () => {
         awake: true,
       };
       state.enemies.push(enemy);
-      const north = steerTo(state.player.pos.x, state.player.pos.y - 400);
+      const north = steerTo(
+        state.players[0].pos.x,
+        state.players[0].pos.y - 400,
+      );
       let shot = state.events.find((e) => e.type === "enemyShot");
       for (let i = 0; i < 60 && !shot; i++) {
         step(state, north, DT);

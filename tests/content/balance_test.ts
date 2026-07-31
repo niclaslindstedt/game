@@ -54,7 +54,8 @@ function timeToDeathMs(
   ) {
     // A stat point can drop mid-run; spend it so the sim resumes. LUCK is the
     // least survival-relevant sink, keeping the benchmark honest.
-    while (state.player.pendingStatPoints > 0) allocateStat(state, "luck");
+    while (state.players[0].pendingStatPoints > 0)
+      allocateStat(state, state.players[0], "luck");
     // A first-kill thought can open mid-run (the auto-swinging sword downs a
     // pinned minion); tap it closed so the pause doesn't read as survival.
     while (state.dialogue) advanceDialogue(state);

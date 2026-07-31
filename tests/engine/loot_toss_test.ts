@@ -101,7 +101,7 @@ describe("what airborne loot may not do", () => {
     const state = stage();
     // Dropped right on top of the hero: without the flight gate the very next
     // tick would collect it.
-    const from = { ...state.player.pos };
+    const from = { ...state.players[0].pos };
     tossAt(state, medkit(state, { ...from }), from);
     step(state, idle, 16);
     expect(state.items).toHaveLength(1);
@@ -132,7 +132,9 @@ describe("the landing", () => {
         id: state.nextId++,
         kind: "equipment",
         pos: { x: 240, y: 200 },
-        equipment: rollEquipment(state, { defId: "test_hammer" }),
+        equipment: rollEquipment(state, state.players[0], {
+          defId: "test_hammer",
+        }),
       },
       from,
     );
@@ -159,7 +161,10 @@ describe("the landing", () => {
           id: state.nextId++,
           kind: "equipment",
           pos: { x: 240, y: 200 },
-          equipment: rollEquipment(state, { defId: "test_hammer", tier }),
+          equipment: rollEquipment(state, state.players[0], {
+            defId: "test_hammer",
+            tier,
+          }),
         },
         from,
       );
@@ -193,7 +198,7 @@ describe("what a drop sounds like", () => {
         id: 1,
         kind: "equipment",
         pos: { x: 0, y: 0 },
-        equipment: rollEquipment(state, { defId }),
+        equipment: rollEquipment(state, state.players[0], { defId }),
       });
     // A weapon rings by CLASS; the fixture ladder carries one of each.
     expect(voice("test_hammer")).toBe("blade");

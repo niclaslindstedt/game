@@ -5,7 +5,7 @@
 // Two ledgers have to agree. `buyCoinPackForHero` banks the pack and sends it
 // onto the playing hero's PERSISTED purse (so the pack survives quitting or
 // dying before the next bank — money-safety rule 1); this hook then tops up
-// the LIVE run purse (`state.player.coins`, what the AUTO PILOT meter bills)
+// the LIVE run purse (`state.players[0].coins`, what the AUTO PILOT meter bills)
 // by the same amount and re-reads the hero, because the run's end-of-level
 // bank overwrites `loadout.coins` with the run's purse — a stale character ref
 // would write the pre-purchase wealth back over the credit.

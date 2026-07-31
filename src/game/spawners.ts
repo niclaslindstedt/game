@@ -47,12 +47,18 @@
 // through is `hellborn` — elite-sized, map-unique, and the one crop whose drops
 // get BETTER with the rampage instead of worse (see `dropMinionLoot`).
 
-import { clamp, distance, distanceSq, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, distance, type Vec2 } from "@game/lib/vec.ts";
 import { HELLGATES, SPAWNERS } from "./config/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
+import {
+  anyHeroWithin,
+  distanceSqToParty,
+  nearestHero,
+  partyLevel,
+} from "./party.ts";
 import {
   currentMobLevel,
   menaceStage,
@@ -184,7 +190,10 @@ function emitPos(
 ): Vec2 {
   const { width, height } = state.level;
   const def = runLevelDef(state);
-  const player = state.player.pos;
+  // Around the hero NEAREST the point: a summon is a squad running in on
+  // whoever tripped the alarm, and a ring drawn on the party's middle would
+  // deliver it into the floor between two players standing apart.
+  const player = (nearestHero(state, spawner.at) ?? state.players[0]).pos;
   const dx = spawner.at.x - player.x;
   const dy = spawner.at.y - player.y;
   // Bearing from the hero toward the point; if he is basically ON it, a summon
@@ -240,7 +249,7 @@ function emitBatch(
     const sc = resolveMobScaling(
       spawner.mobLevels ?? levelDefault,
       state.difficulty,
-      state.player.level,
+      partyLevel(state),
       state.rng,
       mobLevelScale(state),
       currentMobLevel(state),
@@ -345,9 +354,14 @@ function armEligibleSpawners(state: GameState, now: number): void {
     const gate = isHellgate(spawner);
     // A hellgate is simply not there until the rampage reaches its threshold.
     if (gate && stagesOver(state, spawner) < 0) continue;
-    const dist = distance(state.player.pos, spawner.at);
+    // ANY hero trips a spawn point, and the DISTANCE that orders the eligible
+    // list is the party's nearest — a point somebody is standing on top of
+    // fills its budget before one the group has only glimpsed.
+    const near = nearestHero(state, spawner.at);
+    if (!near) continue;
+    const dist = distance(near.pos, spawner.at);
     if (dist > spawner.triggerRadius) continue;
-    if (!lineOfSight(state, state.player.pos, spawner.at)) continue;
+    if (!lineOfSight(state, near.pos, spawner.at)) continue;
     if (!chainReady(spawner, spawners, now)) continue;
     eligible.push({ spawner, dist, gate });
   }
@@ -466,8 +480,7 @@ export function stepSpawners(state: GameState, view?: ViewSize): void {
       // whole queue at once. It pauses when its live members hit `maxAlive`
       // or the hero walks out of range, and summons again as a slot frees or
       // he returns.
-      const nearPoint =
-        distance(state.player.pos, spawner.at) <= spawner.triggerRadius;
+      const nearPoint = anyHeroWithin(state, spawner.at, spawner.triggerRadius);
       if (nearPoint) {
         // He arrived — the alarm has done its job; from here this is an
         // ordinary active point.
@@ -501,7 +514,7 @@ export function stepSpawners(state: GameState, view?: ViewSize): void {
         let live = 0;
         for (const id of spawner.memberIds) {
           const e = enemyById.get(id);
-          if (e && distanceSq(e.pos, state.player.pos) <= countRadiusSq) {
+          if (e && distanceSqToParty(state, e.pos) <= countRadiusSq) {
             live++;
           }
         }

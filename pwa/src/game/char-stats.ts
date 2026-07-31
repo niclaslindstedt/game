@@ -10,6 +10,7 @@
 // which is a better answer than restating four totals somewhere else on the
 // screen.
 
+import { localHero } from "./local-seat.ts";
 import {
   armorReduction,
   computeMaxHp,
@@ -27,6 +28,7 @@ import {
   weaponDamageRange,
   weaponRangeFor,
   type GameState,
+  type Player,
   type StatName,
 } from "@game/core";
 
@@ -55,17 +57,30 @@ const OFFENSE = "#7ef0c8";
 const DEFENSE = "#7ecbff";
 const BODY = "#ffd75e";
 
-/** A row read straight off the state — the shape every row below shares. */
+/**
+ * One row, read off the LOCAL hero.
+ *
+ * The reader takes the run AND the hero it is about — the engine's whole
+ * derived-stat family does, since a party has a stat sheet per player — and
+ * every row on this screen is about the hero whose sheet is open, which is
+ * this client's own.
+ */
 function row(
   key: string,
   label: string,
   state: GameState,
-  read: (s: GameState) => number,
+  read: (s: GameState, hero: Player) => number,
   format: (n: number) => string,
   color?: string,
   icon?: string,
 ): StatReadout {
-  return { key, label, value: format(read(state)), color, icon };
+  return {
+    key,
+    label,
+    value: format(read(state, localHero(state))),
+    color,
+    icon,
+  };
 }
 
 const whole = (n: number) => String(Math.round(n));
@@ -86,7 +101,7 @@ export function characterStatGroups(state: GameState): StatGroup[] {
       stat,
       STAT_LABELS[stat],
       state,
-      (s) => effectiveStat(s, stat),
+      (s) => effectiveStat(s, localHero(s), stat),
       whole,
       NEUTRAL,
       `icon_stat_${stat}`,
@@ -95,7 +110,11 @@ export function characterStatGroups(state: GameState): StatGroup[] {
 
   // The damage RANGE, not the average: the average is what the engine rolls
   // around, and a player sizing up a weapon wants the spread.
-  const damage = weaponDamageRange(state, state.player.equipment.weapon);
+  const damage = weaponDamageRange(
+    state,
+    localHero(state),
+    localHero(state).equipment.weapon,
+  );
   const offense: StatReadout[] = [
     {
       key: "damage",
@@ -113,20 +132,20 @@ export function characterStatGroups(state: GameState): StatGroup[] {
       "reach",
       "REACH",
       state,
-      (s) => weaponRangeFor(s, s.player.equipment.weapon),
+      (s) => weaponRangeFor(s, localHero(s), localHero(s).equipment.weapon),
       whole,
       OFFENSE,
     ),
   ];
 
   const mobLevel = currentMobLevel(state);
-  const worn = totalArmor(state);
+  const worn = totalArmor(state, localHero(state));
   const defense: StatReadout[] = [
     row("hp", "MAX HP", state, computeMaxHp, formatCompact, DEFENSE),
     {
       key: "armor",
       label: "ARMOR",
-      value: `${worn} (-${Math.round(armorReduction(state, mobLevel) * 100)}%)`,
+      value: `${worn} (-${Math.round(armorReduction(state, localHero(state), mobLevel) * 100)}%)`,
       color: DEFENSE,
     },
     row("dodge", "DODGE", state, playerDodgeChance, percent, DEFENSE),
@@ -155,7 +174,8 @@ export function characterStatGroups(state: GameState): StatGroup[] {
       (s) => {
         const balance = getBalanceTuning();
         return (
-          playerSpeed(s) / (PLAYER.speed * balance.tempo * balance.playerSpeed)
+          playerSpeed(s, localHero(s)) /
+          (PLAYER.speed * balance.tempo * balance.playerSpeed)
         );
       },
       percent,

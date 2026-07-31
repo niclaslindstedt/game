@@ -53,7 +53,7 @@ function killAndCheckRelic(
 ): boolean {
   installWorld();
   const state: GameState = startGame(42, "test_world_level");
-  state.player.level = heroLevel;
+  state.players[0].level = heroLevel;
   const mob = makeEnemy({ pos: { x: 500, y: 500 }, hp: 1, mlvl: 50 }, defId);
   mob.powerScaled = true; // keep the staged mlvl — no re-stamp on engage
   state.enemies = [mob];
@@ -151,7 +151,7 @@ describe("world drops — role-scaled, minion-gated", () => {
       uniques: { test_world_relic: WORLD_RELIC },
     });
     const state = startGame(42, "test_plain_level");
-    state.player.level = 50;
+    state.players[0].level = 50;
     const boss = makeEnemy(
       { pos: { x: 500, y: 500 }, hp: 1, mlvl: 50 },
       "test_boss",

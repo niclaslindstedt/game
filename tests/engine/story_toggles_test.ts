@@ -64,7 +64,7 @@ describe("dialogue display toggle", () => {
       // A speaker walks into range: its scene is silenced (marked spoke on the
       // step path) and the run never leaves play.
       const boss = makeEnemy(
-        { pos: { x: state.player.pos.x + 40, y: state.player.pos.y } },
+        { pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y } },
         "test_boss",
       );
       state.enemies.push(boss);

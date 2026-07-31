@@ -74,8 +74,8 @@ function withBystander(): { state: GameState; id: number } {
   const enemy = {
     id: state.nextId++,
     defId: BYSTANDER.id,
-    pos: { ...state.player.pos },
-    home: { ...state.player.pos },
+    pos: { ...state.players[0].pos },
+    home: { ...state.players[0].pos },
     hp: 100,
     maxHp: 100,
     mlvl: 1,

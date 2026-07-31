@@ -6,6 +6,7 @@
 // Pure feedback (effects, toasts) lives in event-fx.ts; the AUTO PILOT's
 // route decisions live in autopilot-director.ts.
 
+import { localHero } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { bankCampaignQuests } from "@game/core";
@@ -89,7 +90,7 @@ export function createRunProgress(deps: {
       captureEnabled &&
       checkpointRef.current?.levelId !== runLevelId &&
       state.phase === "playing" &&
-      !state.player.disarmed
+      !localHero(state).disarmed
     ) {
       checkpointRef.current = {
         levelId: runLevelId,
@@ -186,7 +187,7 @@ export function createRunProgress(deps: {
         before,
         state.level.id,
         difficulty,
-        extractLoadout(state),
+        extractLoadout(state, localHero(state)),
         coinsIncludePending,
       );
       if (scores) {
@@ -264,7 +265,7 @@ export function createRunProgress(deps: {
         // pocketed powerups are spent — a RETRY rebuilds the level from
         // this build and starts it with an empty dock, so a hoarded stack
         // can't be replayed through the same fight over and over.
-        const banked = extractLoadout(state);
+        const banked = extractLoadout(state, localHero(state));
         banked.heldAbilities = [];
         characterRef.current = bankLoadout(
           characterRef.current,
@@ -282,7 +283,7 @@ export function createRunProgress(deps: {
     if (event.type === "gateEntered") {
       characterRef.current = bankLoadout(
         characterRef.current,
-        extractLoadout(state),
+        extractLoadout(state, localHero(state)),
         coinsIncludePending,
       );
       characterRef.current = markStorySeen(
@@ -342,7 +343,7 @@ const WORN_SLOTS = [
  * weapon plus every filled armor / jewellery / offhand slot.
  */
 export function wornEquipment(state: GameState): WornPiece[] {
-  const eq = state.player.equipment;
+  const eq = localHero(state).equipment;
   const worn: WornPiece[] = [];
   for (const slot of WORN_SLOTS) {
     const piece = eq[slot];
@@ -366,7 +367,7 @@ export function makeWornEquipmentGate(): (state: GameState) => boolean {
   const seen: unknown[] = WORN_SLOTS.map(() => undefined);
   let primed = false;
   return (state) => {
-    const eq = state.player.equipment;
+    const eq = localHero(state).equipment;
     let changed = !primed;
     primed = true;
     for (let i = 0; i < WORN_SLOTS.length; i++) {

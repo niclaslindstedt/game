@@ -53,7 +53,7 @@ const LAY_SPACING = 2.2;
 function ready(ability: LaserEyesAbility, ctx: AbilityCtx): boolean {
   if (ctx.mech.beam) return false;
   if (ctx.distance > ability.range * 0.95) return false;
-  return lineOfSight(ctx.state, ctx.enemy.pos, ctx.state.player.pos);
+  return lineOfSight(ctx.state, ctx.enemy.pos, ctx.state.players[0].pos);
 }
 
 /**
@@ -63,7 +63,7 @@ function ready(ability: LaserEyesAbility, ctx: AbilityCtx): boolean {
  */
 function cast(ability: LaserEyesAbility, ctx: AbilityCtx): void {
   const { state, enemy, def, mech } = ctx;
-  const locked = ctx.lockedDir ?? direction(enemy.pos, state.player.pos);
+  const locked = ctx.lockedDir ?? direction(enemy.pos, state.players[0].pos);
   const angle = Math.atan2(locked.y, locked.x);
   const sweep = (ability.sweepDeg * Math.PI) / 180;
   mech.beam = {
@@ -123,15 +123,15 @@ function step(ability: LaserEyesAbility, ctx: AbilityCtx): boolean {
   // BURN WHAT IT CROSSES: the hero's offset resolved into the beam's own frame
   // — how far along the lane, and how far off its centreline.
   if (beam.hitCooldownMs <= 0 && groundMoveCanTouch(state)) {
-    const dx = state.player.pos.x - enemy.pos.x;
-    const dy = state.player.pos.y - enemy.pos.y;
+    const dx = state.players[0].pos.x - enemy.pos.x;
+    const dy = state.players[0].pos.y - enemy.pos.y;
     const along = dx * cos + dy * sin;
     const off = Math.abs(-dx * sin + dy * cos);
     if (
       along >= 0 &&
       along <= beam.range &&
       off <= beam.width + PLAYER.radius &&
-      lineOfSight(state, enemy.pos, state.player.pos)
+      lineOfSight(state, enemy.pos, state.players[0].pos)
     ) {
       landHostileBlow(
         state,

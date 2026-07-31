@@ -22,7 +22,7 @@ import { makeEnemy, startGame } from "./helpers.ts";
 
 /** Park `count` monsters in a line marching away from the hero, nearest first. */
 function lineUp(state: ReturnType<typeof startGame>, count: number): Enemy[] {
-  const { x, y } = state.player.pos;
+  const { x, y } = state.players[0].pos;
   const enemies: Enemy[] = [];
   for (let i = 0; i < count; i++) {
     enemies.push(makeEnemy({ id: 100 + i, pos: { x: x + 20 * (i + 1), y } }));
@@ -50,7 +50,7 @@ describe("the autopilot threat scan", () => {
 
   it("sorts nearest first", () => {
     const state = startGame();
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     state.enemies.length = 0;
     state.enemies.push(
       makeEnemy({ id: 1, pos: { x: x + 300, y } }),
@@ -86,13 +86,13 @@ describe("the autopilot threat scan", () => {
 
   it("re-reads the field when the hero moves within one tick", () => {
     const state = startGame();
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     state.enemies.length = 0;
     state.enemies.push(makeEnemy({ id: 7, pos: { x: x + 200, y } }));
     expect(threatCountWithin(state, 100)).toBe(0);
     // The scan keys on the hero's position as well as the clock, so a step
     // toward the foe is seen at once rather than on the next tick.
-    state.player.pos.x += 150;
+    state.players[0].pos.x += 150;
     expect(threatCountWithin(state, 100)).toBe(1);
   });
 });

@@ -194,8 +194,8 @@ function pickConsumableKind(
   state: GameState,
   mlvl: number,
 ): "health" | "stamina" {
-  const health = medkitAppetite(state, mlvl);
-  const stamina = consumableAppetite(state, "drink");
+  const health = medkitAppetite(state, state.players[0], mlvl);
+  const stamina = consumableAppetite(state, state.players[0], "drink");
   return state.rng() * (health + stamina) < health ? "health" : "stamina";
 }
 
@@ -251,8 +251,9 @@ function dropCrateLoot(
   // leans toward gear — or the other consumable — for a hero already carrying
   // all he can. The appetite floor keeps the lean from ever becoming a lockout,
   // so a themed prop that pays ONLY consumables still spills in character.
-  const health = authoredHealth * medkitAppetite(state, mlvl);
-  const stamina = authoredStamina * consumableAppetite(state, "drink");
+  const health = authoredHealth * medkitAppetite(state, state.players[0], mlvl);
+  const stamina =
+    authoredStamina * consumableAppetite(state, state.players[0], "drink");
   const total = health + stamina + gear;
   if (total <= 0) return;
   const roll = state.rng() * total;
@@ -267,7 +268,7 @@ function dropCrateLoot(
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(state, at),
-        equipment: rollEquipment(state, {
+        equipment: rollEquipment(state, state.players[0], {
           tierBonus: CRATES.gearTierBonus,
           mlvl,
         }),
@@ -301,7 +302,7 @@ function dropChestLoot(state: GameState, at: Vec2): void {
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(state, at),
-        equipment: rollEquipment(state, {
+        equipment: rollEquipment(state, state.players[0], {
           tierBonus: CHESTS.gearTierBonus,
           mlvl,
         }),

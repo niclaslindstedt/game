@@ -85,8 +85,8 @@ function equip(state: GameState, defId: string): void {
     ilvl: 5,
     affixes: [],
   };
-  state.player.equipment.weapon = weapon;
-  state.player.weaponCooldownMs = 0;
+  state.players[0].equipment.weapon = weapon;
+  state.players[0].weaponCooldownMs = 0;
 }
 
 /** Strip to just the far boss and clear obstacles for surgical arrangements. */
@@ -117,9 +117,9 @@ describe("menace — the meter", () => {
   it("an overpowered kill jolts the meter and lures the horde in", () => {
     const state = startGame();
     bareStage(state);
-    state.player.level = 6; // past the early-game warmup so the jolt isn't damped
+    state.players[0].level = 6; // past the early-game warmup so the jolt isn't damped
     equip(state, "test_hammer"); // melee, 34 dmg, reach 44
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     // One 10-hp fodder in reach: a 34-damage swing overkills it by ≥ 24, so the
     // OVERKILL still triggers the meter on top of the rolling output.
     state.enemies.push(
@@ -144,9 +144,9 @@ describe("menace — the meter", () => {
     const kill = (hp: number, maxHp: number) => {
       const state = startGame();
       bareStage(state);
-      state.player.level = 6; // warmed up so any overkill lands at full weight
+      state.players[0].level = 6; // warmed up so any overkill lands at full weight
       equip(state, "test_hammer"); // ~34 dmg — far under a 500-hp bar
-      const { x, y } = state.player.pos;
+      const { x, y } = state.players[0].pos;
       state.enemies.push(
         makeEnemy({ pos: { x: x + 20, y }, hp, maxHp }, "test_fodder"),
       );
@@ -171,9 +171,9 @@ describe("menace — the meter", () => {
   it("an overkill crossing a stage boundary emits menaceRose", () => {
     const state = startGame();
     bareStage(state);
-    state.player.level = 6; // warmed up so the overkill jolt lands at full weight
+    state.players[0].level = 6; // warmed up so the overkill jolt lands at full weight
     equip(state, "test_hammer");
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     state.enemies.push(
       makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
     );
@@ -198,7 +198,7 @@ describe("menace — the meter", () => {
     const heat = (killRate: number, spawnRate: number): number => {
       const state = startOn("jesus");
       bareStage(state);
-      state.player.level = 8;
+      state.players[0].level = 8;
       equip(state, "test_hammer");
       state.menace = 0;
       // Pin identical output and the chosen clearance rates every tick (a real
@@ -276,15 +276,15 @@ describe("menace — difficulty and warmup gate the heat", () => {
   function joltOn(difficulty: string, level: number): number {
     const state = startOn(difficulty);
     bareStage(state);
-    state.player.level = level;
+    state.players[0].level = level;
     equip(state, "test_hammer");
     // An OVERPOWERED build: enough STRENGTH that the hammer roughly triples its
     // ~34 base (well under the ratchet's 6-healthbar threshold) so the overkill
     // is unambiguous. Auto-stat growth is off by default now, so the hero can't
     // lean on free per-level STR — spell it out, or even EASY's tiny jolt is
     // eaten by the per-step menace decay.
-    state.player.stats.strength = 8;
-    const { x, y } = state.player.pos;
+    state.players[0].stats.strength = 8;
+    const { x, y } = state.players[0].pos;
     state.enemies.push(
       // Level-1 fodder → ~no armor, so the overkill (and its jolt) is the pure
       // formula rather than an armor-shaved remainder.
@@ -324,11 +324,13 @@ describe("menace — difficulty and warmup gate the heat", () => {
     // the player has grown into their power.
     expect(joltOn("medium", 1)).toBeLessThan(joltOn("medium", 8));
     // The warmup eases from the floor at level 1 up to 1.0 by 1 + warmupLevels.
-    expect(menaceWarmup({ player: { level: 1 } } as GameState)).toBeCloseTo(
-      MENACE.warmupFloor,
-    );
     expect(
-      menaceWarmup({ player: { level: 1 + MENACE.warmupLevels } } as GameState),
+      menaceWarmup({ players: [{ level: 1 }] } as unknown as GameState),
+    ).toBeCloseTo(MENACE.warmupFloor);
+    expect(
+      menaceWarmup({
+        players: [{ level: 1 + MENACE.warmupLevels }],
+      } as unknown as GameState),
     ).toBeCloseTo(1);
   });
 
@@ -336,7 +338,7 @@ describe("menace — difficulty and warmup gate the heat", () => {
     // A maxed hero clearing a whole warmed-up run on EASY stays cool: the
     // difficulty's menaceMult keeps gain below the decay floor.
     const state = startOn("easy");
-    state.player.level = 20;
+    state.players[0].level = 20;
     for (let i = 0; i < 20 * 60; i++) {
       // Feed the meter a brutal, sustained overkill stream by hand.
       state.combatDps = 800;
@@ -408,7 +410,7 @@ describe("menace — evolution of the horde", () => {
         const enemy = makeEnemy(
           {
             id: state.nextId++,
-            pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+            pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
             hp: 45,
             maxHp: 45,
           },
@@ -455,11 +457,11 @@ describe("menace — the evolution ratchet (no breaks)", () => {
   function warmedStage(difficulty = "medium"): GameState {
     const state = startOn(difficulty);
     bareStage(state);
-    state.player.level = 8; // fully past the warmup damping
+    state.players[0].level = 8; // fully past the warmup damping
     // Sync the bar to the pinned level: kills now pay real (level-based) xp, so
     // a stale level-1 threshold would ding mid-test and freeze the run in the
     // levelup phase — stalling the ratchet cooldown these tests measure.
-    state.player.xpToNext = xpToLevelUp(state.player.level);
+    state.players[0].xpToNext = xpToLevelUp(state.players[0].level);
     state.rng = () => 0.99;
     return state;
   }
@@ -467,7 +469,7 @@ describe("menace — the evolution ratchet (no breaks)", () => {
   /** One-shot a staged 10-hp mob of evolution stage `evo` with a 40-damage
    * blow — 3 healthbars of overkill banked toward the ratchet per kill. */
   function oneShot(state: GameState, evo: number): void {
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     const enemy = makeEnemy(
       { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
       "test_fodder",
@@ -517,7 +519,7 @@ describe("menace — the evolution ratchet (no breaks)", () => {
     // …and three honest kills (a finisher within the bar — no overkill)
     // refund it back to zero: trash one-shots alone can't evolve a horde
     // whose heavies still take real fights.
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     for (let i = 0; i < 3; i++) {
       const heavy = makeEnemy(
         { id: state.nextId++, pos: { x: x + 30, y }, hp: 40, maxHp: 400 },
@@ -570,7 +572,7 @@ describe("menace — the evolution ratchet (no breaks)", () => {
 
   it("the early-game warmup damps the ratchet for a fresh hero", () => {
     const state = warmedStage();
-    state.player.level = 1; // warmupFloor (0.12) damps the proof
+    state.players[0].level = 1; // warmupFloor (0.12) damps the proof
     oneShot(state, 0);
     oneShot(state, 0);
     expect(menaceFloorStage(state)).toBe(0);
@@ -584,8 +586,8 @@ describe("menace — one judgment per hero attack", () => {
   function stage(): GameState {
     const state = startGame();
     bareStage(state);
-    state.player.level = 8; // fully past the warmup damping
-    state.player.xpToNext = xpToLevelUp(state.player.level);
+    state.players[0].level = 8; // fully past the warmup damping
+    state.players[0].xpToNext = xpToLevelUp(state.players[0].level);
     state.rng = () => 0.99;
     return state;
   }
@@ -593,7 +595,7 @@ describe("menace — one judgment per hero attack", () => {
   /** One-shot a fresh 10-hp fodder with a 40-damage blow (3 healthbars of
    * overkill), tagged with `attack` (or untagged when omitted). */
   function oneShotAs(state: GameState, attack?: number): void {
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     const enemy = makeEnemy(
       { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
       "test_fodder",
@@ -662,9 +664,9 @@ describe("menace — one judgment per hero attack", () => {
     // a single attack — the meter, lure, and proof read as ONE kill's worth.
     const swingAt = (count: number): GameState => {
       const state = stage();
-      state.player.stats.intelligence = 5; // cleave cap comfortably ≥ 3
+      state.players[0].stats.intelligence = 5; // cleave cap comfortably ≥ 3
       equip(state, "test_hammer");
-      const { x, y } = state.player.pos;
+      const { x, y } = state.players[0].pos;
       for (let i = 0; i < count; i++) {
         state.enemies.push(
           makeEnemy(
@@ -695,7 +697,7 @@ describe("menace — one judgment per hero attack", () => {
     // in one hit; the jolt now crosses at most one stage boundary per
     // judgment (the ratchet may add its own floor step on its cooldown).
     const state = stage();
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     const enemy = makeEnemy(
       { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
       "test_fodder",
@@ -708,7 +710,7 @@ describe("menace — one judgment per hero attack", () => {
   it("menaceRose carries the victim's position and the overkill cause", () => {
     const state = stage();
     state.menace = MENACE.perStage - 0.5; // park just below stage 1
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     const enemy = makeEnemy(
       { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
       "test_fodder",
@@ -732,7 +734,7 @@ describe("menace — difficulty caps the peak", () => {
    * floor climbs one rung per call until the cap halts it. */
   function ratchetOnce(state: GameState): void {
     state.evoRatchetMs = 0; // ignore the cooldown; we're driving the floor up
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     const enemy = makeEnemy(
       { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
       "test_fodder",
@@ -770,7 +772,7 @@ describe("menace — difficulty caps the peak", () => {
     // climbs to stage 3 and then holds, no matter how long the one-shots last.
     const state = startOn("easy");
     bareStage(state);
-    state.player.level = 8; // past the warmup damping
+    state.players[0].level = 8; // past the warmup damping
     state.rng = () => 0.99; // no crits/dodges/drops — clean overkill each blow
     for (let i = 0; i < 40; i++) ratchetOnce(state);
     expect(menaceFloorStage(state)).toBe(3);
@@ -782,7 +784,7 @@ describe("menace — difficulty caps the peak", () => {
   it("JESUS is uncapped — the horde evolves without a roof", () => {
     const state = startOn("jesus");
     bareStage(state);
-    state.player.level = 8;
+    state.players[0].level = 8;
     state.rng = () => 0.99;
     // The same relentless steamroll ratchets far past any finite rung's peak.
     for (let i = 0; i < 150; i++) ratchetOnce(state);
@@ -796,13 +798,13 @@ describe("hero power level — character level only", () => {
     const state = startGame();
     // The fresh rack (wall weapon + street clothes, all ilvl 1-ish) reads
     // well under the character level.
-    expect(heroGearLevel(state)).toBeLessThan(1);
-    expect(heroPowerLevel(state)).toBe(state.player.level);
+    expect(heroGearLevel(state, state.players[0])).toBeLessThan(1);
+    expect(heroPowerLevel(state)).toBe(state.players[0].level);
     // Deck the hero out: a 70-ilvl weapon averages gear level 10 — but the
     // horde no longer follows gear at all, so power stays the character level.
-    state.player.equipment.weapon.ilvl = 70;
-    expect(heroGearLevel(state)).toBe(10);
-    expect(heroPowerLevel(state)).toBe(state.player.level);
+    state.players[0].equipment.weapon.ilvl = 70;
+    expect(heroGearLevel(state, state.players[0])).toBe(10);
+    expect(heroPowerLevel(state)).toBe(state.players[0].level);
   });
 
   it("gear and weapon damage never toughen the horde", () => {
@@ -813,10 +815,15 @@ describe("hero power level — character level only", () => {
     // A twink rack AND an absurd +900% damage affix — the old power-match would
     // have toughened the horde to both. Now neither moves minion hp or the
     // set-piece power-match.
-    state.player.equipment.weapon.ilvl = 70;
-    state.player.equipment.weapon.affixes.push({ kind: "damagePct", value: 9 });
-    expect(heroDamageLevel(state)).toBeGreaterThan(state.player.level);
-    expect(heroPowerLevel(state)).toBe(state.player.level);
+    state.players[0].equipment.weapon.ilvl = 70;
+    state.players[0].equipment.weapon.affixes.push({
+      kind: "damagePct",
+      value: 9,
+    });
+    expect(heroDamageLevel(state, state.players[0])).toBeGreaterThan(
+      state.players[0].level,
+    );
+    expect(heroPowerLevel(state)).toBe(state.players[0].level);
     expect(mobLevelScale(state)).toBe(hpScaleBefore);
     expect(enemyPowerScale(state)).toBe(bossScaleBefore);
     // …and the loot-facing monster level stays on the character sheet too.
@@ -827,7 +834,7 @@ describe("hero power level — character level only", () => {
     const state = startGame();
     const mlvlBefore = currentMobLevel(state);
     const hpScaleBefore = mobLevelScale(state);
-    state.player.level = 10;
+    state.players[0].level = 10;
     expect(heroPowerLevel(state)).toBe(10);
     expect(mobLevelScale(state)).toBeGreaterThan(hpScaleBefore);
     expect(currentMobLevel(state)).toBeGreaterThan(mlvlBefore);
@@ -838,18 +845,18 @@ describe("hero power level — character level only", () => {
     const state = startGame();
     // The mapping still computes the weapon's sustained output as a level; it
     // simply no longer feeds heroPowerLevel.
-    const fair = heroDamageLevel(state);
+    const fair = heroDamageLevel(state, state.players[0]);
     // A stronger weapon reads as a higher damage level. Items are immutable
     // after minting (the derived-stat memo keys on the piece's mint id), so a
     // real upgrade arrives as a distinct instance, not an in-place affix poke.
-    const worn = state.player.equipment.weapon;
-    state.player.equipment.weapon = {
+    const worn = state.players[0].equipment.weapon;
+    state.players[0].equipment.weapon = {
       ...worn,
       id: worn.id + 1_000_000,
       affixes: [...worn.affixes, { kind: "damagePct", value: 9 }],
     };
-    expect(heroDamageLevel(state)).toBeGreaterThan(fair);
-    expect(heroPowerLevel(state)).toBe(state.player.level);
+    expect(heroDamageLevel(state, state.players[0])).toBeGreaterThan(fair);
+    expect(heroPowerLevel(state)).toBe(state.players[0].level);
   });
 });
 
@@ -861,14 +868,14 @@ describe("menace — powerups don't trigger it", () => {
   function powerupStage(): GameState {
     const state = startGame();
     bareStage(state);
-    state.player.level = 8; // past the warmup, so a real kill WOULD escalate
-    state.player.weaponCooldownMs = 1_000_000; // the hero swings nothing himself
+    state.players[0].level = 8; // past the warmup, so a real kill WOULD escalate
+    state.players[0].weaponCooldownMs = 1_000_000; // the hero swings nothing himself
     return state;
   }
 
   /** Drop `count` overkillable fodder in blast range of the hero. */
   function seedFodder(state: GameState, count: number): void {
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     for (let i = 0; i < count; i++) {
       state.enemies.push(
         makeEnemy(
@@ -882,7 +889,7 @@ describe("menace — powerups don't trigger it", () => {
   it("a screen-nuke bomb clears the pack without heating the meter", () => {
     const state = powerupStage();
     seedFodder(state, 6);
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     const creditBefore = state.moveSpawnCredit;
 
     step(state, useItem, DT);
@@ -906,7 +913,7 @@ describe("menace — powerups don't trigger it", () => {
     const state = powerupStage();
     state.rng = () => 0; // force the crit so each blast overkills its target
     seedFodder(state, 4);
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     const creditBefore = state.moveSpawnCredit;
 
     step(state, useItem, DT);
@@ -922,12 +929,12 @@ describe("menace — powerups don't trigger it", () => {
 
   it("damage powerups (storm) deal damage without feeding the meter", () => {
     const state = powerupStage();
-    state.player.heldAbilities = ["test_storm"];
+    state.players[0].heldAbilities = ["test_storm"];
     step(state, useItem, DT); // start the storm running
     state.enemies.push(
       makeEnemy(
         {
-          pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y },
           hp: 1_000_000,
           maxHp: 1_000_000,
         },
@@ -950,9 +957,9 @@ describe("menace — powerups don't trigger it", () => {
     // bomb: the meter and the lure both react, proving nothing global changed.
     const state = startGame();
     bareStage(state);
-    state.player.level = 8;
+    state.players[0].level = 8;
     equip(state, "test_hammer"); // ~34 dmg vs a 10-hp bar → real overkill
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     state.enemies.push(
       makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
     );
@@ -972,8 +979,8 @@ describe("menace — companions don't trigger it", () => {
    * while the hero swings nothing. */
   function partyStage(state: GameState): void {
     bareStage(state);
-    state.player.level = 8; // past the warmup, so a real hero kill WOULD escalate
-    state.player.weaponCooldownMs = 1_000_000; // the hero swings nothing himself
+    state.players[0].level = 8; // past the warmup, so a real hero kill WOULD escalate
+    state.players[0].weaponCooldownMs = 1_000_000; // the hero swings nothing himself
   }
 
   it("a companion clears the pack without heating the meter", () => {
@@ -982,8 +989,8 @@ describe("menace — companions don't trigger it", () => {
     // Recruit the fixture companion (melee wrench) a short way off, with
     // overkillable fodder pressed right against it so its blows land.
     const companion = recruitCompanion(state, "test_companion", {
-      x: state.player.pos.x + 120,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + 120,
+      y: state.players[0].pos.y,
     });
     state.events = [];
     for (let i = 0; i < 4; i++) {
@@ -1033,7 +1040,7 @@ describe("menace — elites and bosses match the player", () => {
     const boss = findBoss(state);
     const base = boss.maxHp;
     // Stand on the boss so it engages this step.
-    state.player.pos = { x: boss.pos.x + 40, y: boss.pos.y };
+    state.players[0].pos = { x: boss.pos.x + 40, y: boss.pos.y };
     expect(enemyPowerScale(state)).toBe(1);
 
     step(state, idle, DT);
@@ -1048,14 +1055,14 @@ describe("menace — elites and bosses match the player", () => {
     stopWaves(state);
     const boss = findBoss(state);
     const base = boss.maxHp;
-    state.player.level = 10; // a leveled hero
+    state.players[0].level = 10; // a leveled hero
     const scale = enemyPowerScale(state); // (1 + 9·bossLevelWeight) × autoPowerScale
     expect(scale).toBeGreaterThan(1);
     // Contact rides only the LEVEL term (never autoPowerScale — nothing in
     // the hero's survivability grows with the auto-stat curve) times the
     // horde's gentle per-level damage ramp.
     const levelTerm = enemyPowerLevelTerm(state);
-    state.player.pos = { x: boss.pos.x + 40, y: boss.pos.y };
+    state.players[0].pos = { x: boss.pos.x + 40, y: boss.pos.y };
 
     step(state, idle, DT);
 
@@ -1071,13 +1078,13 @@ describe("menace — elites and bosses match the player", () => {
     const state = startGame();
     stopWaves(state);
     const boss = findBoss(state);
-    state.player.level = 10;
-    state.player.pos = { x: boss.pos.x + 40, y: boss.pos.y };
+    state.players[0].level = 10;
+    state.players[0].pos = { x: boss.pos.x + 40, y: boss.pos.y };
     step(state, idle, DT);
     const scaled = boss.maxHp;
 
     // Level up mid-fight; the already-engaged boss must NOT re-scale.
-    state.player.level = 20;
+    state.players[0].level = 20;
     run(state, idle, 5);
     expect(boss.maxHp).toBe(scaled);
   });

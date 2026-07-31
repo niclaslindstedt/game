@@ -3,6 +3,7 @@
 // knockout pose; the held weapon's swing/recoil/cast animation and the slash
 // streak riding the blade; and the level-up burn wreathing him on a ding.
 
+import { localHero } from "../local-seat.ts";
 import {
   DEATH_SCENE,
   isWeaponDef,
@@ -458,8 +459,8 @@ export function drawPlayer(
 ): void {
   billboard(
     ctx,
-    state.player.pos.x,
-    state.player.pos.y,
+    localHero(state).pos.x,
+    localHero(state).pos.y,
     camera.x,
     camera.y,
     () => drawHero(ctx, state, assets, camera, timeMs, action, impact),
@@ -475,7 +476,7 @@ function drawHero(
   action: PlayerAction | undefined,
   impact: HeroImpact | undefined,
 ): void {
-  const player = state.player;
+  const player = localHero(state);
   const airborne = player.z > 0;
   // The paper-doll owns the costume: body sprite (from `playerAppearance`),
   // worn-armor overlays, and the held weapon, as one ordered layer stack
@@ -560,7 +561,7 @@ function drawHero(
   const pose = weaponPose(
     action,
     state.stats.timeMs,
-    heldTwoHanded(state.player.equipment.weapon.defId),
+    heldTwoHanded(localHero(state).equipment.weapon.defId),
   );
   // The whole figure — costume, armor, weapon and the slash it throws — is posed
   // as one about his FEET, outside the facing flip, so both beats read the same
@@ -638,7 +639,7 @@ function drawDressedHero(
   pose: WeaponPose,
   action: PlayerAction | undefined,
 ): void {
-  const player = state.player;
+  const player = localHero(state);
   ctx.save();
   if (player.faceLeft) {
     ctx.translate(x + TILE, y);
@@ -745,8 +746,8 @@ function drawDeadHero(
   // The scene's own clock in ms — the pool and spray ride THIS, not the sim
   // clock, which is frozen while `dying`. Held past the end behind the modal.
   const sceneMs = scene ? scene.ms : DEATH_SCENE.durationMs;
-  const cx = Math.round(state.player.pos.x - camera.x);
-  const cy = Math.round(state.player.pos.y - camera.y + 5); // the ground line
+  const cx = Math.round(localHero(state).pos.x - camera.x);
+  const cy = Math.round(localHero(state).pos.y - camera.y + 5); // the ground line
 
   // The blood, under the body (the body lies IN the pool): the growing puddle,
   // the rivulets creeping outward, and the welling droplets.
@@ -1022,12 +1023,12 @@ export function drawLevelUpBurn(
   if (left <= 0) return;
   const duration = LEVELING.dingCelebrationMs;
   const t = 1 - left / duration; // 0 → 1 across the celebration
-  const x = Math.round(state.player.pos.x - camera.x);
-  const y = Math.round(state.player.pos.y - camera.y - state.player.z);
+  const x = Math.round(localHero(state).pos.x - camera.x);
+  const y = Math.round(localHero(state).pos.y - camera.y - localHero(state).z);
   // The burn is sized to the level just reached, like the rest of the ding
   // (levelup-intensity.ts): a modest early wreath, a towering pillar at the
   // cap. It folds into `fade`, so every layer below dims together.
-  const power = levelUpIntensity(state.player.level);
+  const power = levelUpIntensity(localHero(state).level);
   // Snap in fast, hold, fade over the last quarter — the modal takes the
   // stage the moment this dies down.
   const fade = Math.min(1, t / 0.12) * Math.min(1, (1 - t) / 0.25) * power;
@@ -1038,8 +1039,8 @@ export function drawLevelUpBurn(
   // one at this pitch.
   beginBillboard(
     ctx,
-    state.player.pos.x,
-    state.player.pos.y,
+    localHero(state).pos.x,
+    localHero(state).pos.y,
     camera.x,
     camera.y,
   );

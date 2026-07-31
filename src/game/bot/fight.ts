@@ -95,8 +95,10 @@ export function pushBoss(
     think(bot, "IDLE");
     return idleInput();
   }
-  const d = distance(state.player.pos, target);
-  const hold = weaponRangeFor(state, state.player.equipment.weapon) * 0.7;
+  const d = distance(state.players[0].pos, target);
+  const hold =
+    weaponRangeFor(state, state.players[0], state.players[0].equipment.weapon) *
+    0.7;
   // Far from the boss → follow a global A* route to him, so the runner rounds
   // every wall on the way instead of beelining through them. Close enough →
   // circle-strafe at weapon range and fight (a moving orbit slips his fire).
@@ -136,7 +138,7 @@ function topUpBeforeFight(
   tune: BotTuning,
 ): GameInput | null {
   if (tune.topUpSpotDist <= 0) return null;
-  const player = state.player;
+  const player = state.players[0];
   // The rested bar slides with BRAVERY: a timid rookie tops to 100% before
   // engaging, a kitted shredder settles for ~70% (TOPUP_BRAVE_MIN_FRAC) —
   // idling for the last drops before an easy fight is its own waste.
@@ -150,7 +152,7 @@ function topUpBeforeFight(
   if (d > tune.topUpSpotDist) return null; // nothing spotted — open field
   // The rung's own breather rate (the ladder's refill seconds, STAMINA stat
   // folded in) — the same number the pool actually regains at.
-  const regen = staminaRegenPerSec(state);
+  const regen = staminaRegenPerSec(state, player);
   const walkRefillS =
     (target - player.stamina) / (regen * STAMINA.walkRegenFactor);
   // Closing speed if he walks at them: their pace plus his walk. An
@@ -201,7 +203,7 @@ function commitHop(
   flee: boolean,
   tune: BotTuning,
 ): boolean {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   const n = normalize(target.x - pos.x, target.y - pos.y);
   // No ground to gain — a hop in place is a loser move.
   if (n.len < 1) return false;
@@ -241,7 +243,7 @@ export function survive(
   posture: Posture,
   tune: BotTuning,
 ): GameInput {
-  const player = state.player;
+  const player = state.players[0];
   let pt = tune.postures[posture];
   // RUSH THE OBJECTIVE: leveled for this map's named foes (readyForBoss — the
   // bossEngageMargin knob, e.g. committed from one level below) and marching
@@ -278,7 +280,7 @@ export function survive(
     const chest = nearestChestNearby(state, tune);
     if (chest) {
       think(bot, "CRACK CHEST");
-      const reach = weaponRangeFor(state, player.equipment.weapon);
+      const reach = weaponRangeFor(state, player, player.equipment.weapon);
       const d = distance(player.pos, chest.pos);
       // Close enough that the weapon connects (or the body is right up against
       // the box — a short blade smashes from arm's length): stand and smash.
@@ -495,7 +497,7 @@ export function survive(
     // Circle-strafe the boss at the hero's ACTUAL reach rather than planting on
     // the hold point — a moving target slips his shots between the telegraphs the
     // dedicated dodge already reads.
-    const reach = weaponRangeFor(state, player.equipment.weapon);
+    const reach = weaponRangeFor(state, player, player.equipment.weapon);
     const hold = orbitHold(
       bot,
       state,
@@ -576,7 +578,11 @@ export function survive(
         bot.content.target.y === chest.pos.y;
       if (chestD < nearestD || committed) {
         think(bot, "CRACK CHEST");
-        const smashReach = weaponRangeFor(state, player.equipment.weapon);
+        const smashReach = weaponRangeFor(
+          state,
+          player,
+          player.equipment.weapon,
+        );
         const touch = chest.radius + PLAYER.radius + 8;
         if (chestD <= Math.max(smashReach * 0.9, touch)) {
           return {
@@ -684,7 +690,7 @@ export function survive(
   // and, with a wide `flee` standoff, ANY ranged one — standing BEYOND where its
   // shots land, skirmishing a pack it could never hit. Reading the real reach is
   // what makes the hold range-aware.
-  const reach = weaponRangeFor(state, player.equipment.weapon);
+  const reach = weaponRangeFor(state, player, player.equipment.weapon);
   // TWO distances, so the hero fights from a spot he can actually HIT from:
   //  • dangerDist — a body THIS close is a real threat: give ground hard. Small,
   //    so full retreat only fires when something breaches his bubble, not merely

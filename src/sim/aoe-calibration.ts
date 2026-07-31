@@ -497,15 +497,17 @@ function advanceUntilStep(
       case "levelup": {
         // Spend the point (prefer the bot's pick; else any stat with room) so
         // the ding resolves.
-        if (!allocateStat(state, botAllocate(bot, state))) {
-          for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
+        if (!allocateStat(state, state.players[0], botAllocate(bot, state))) {
+          for (const s of STAT_NAMES)
+            if (allocateStat(state, state.players[0], s)) break;
         }
         // A ×10 tree milestone earns a passive TALENT point that holds the same
         // level-up pause; spend it per the bot's build so the ding resolves (see
         // allocateStat/resumeAfterLevelup).
         while (state.pendingTalentPoints.length > 0) {
           const talentId = botPickTalent(bot, state);
-          if (!talentId || !spendTalentPoint(state, talentId)) break;
+          if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
+            break;
         }
         break;
       }
@@ -543,7 +545,7 @@ function runOne(
   const state = createGame(seed, levelId, difficulty);
   const bot = createBot(o.strategy, o.profile);
   // Pin the probe as the hero's weapon (auto-equip is off, so it stays).
-  state.player.equipment.weapon = { ...probe };
+  state.players[0].equipment.weapon = { ...probe };
 
   const rangeSq = o.probeRange * o.probeRange;
 
@@ -552,8 +554,8 @@ function runOne(
 
     // Re-pin the probe in case anything swapped the slot (defensive; auto-equip
     // is off). Cheap and keeps the measured weapon honest.
-    if (state.player.equipment.weapon.defId !== probe.defId) {
-      state.player.equipment.weapon = { ...probe };
+    if (state.players[0].equipment.weapon.defId !== probe.defId) {
+      state.players[0].equipment.weapon = { ...probe };
     }
 
     // Crowd within reach BEFORE the step — the pool the cone drew from, counted
@@ -562,8 +564,8 @@ function runOne(
     // this position is the swing's to within a pixel.
     let crowdBefore = 0;
     for (const enemy of state.enemies) {
-      const ex = enemy.pos.x - state.player.pos.x;
-      const ey = enemy.pos.y - state.player.pos.y;
+      const ex = enemy.pos.x - state.players[0].pos.x;
+      const ey = enemy.pos.y - state.players[0].pos.y;
       if (ex * ex + ey * ey <= rangeSq) crowdBefore++;
     }
 
@@ -573,8 +575,8 @@ function runOne(
     // too, but from their own position; gate on proximity to the player).
     for (const event of state.events) {
       if (event.type !== "swing") continue;
-      const dx = event.pos.x - state.player.pos.x;
-      const dy = event.pos.y - state.player.pos.y;
+      const dx = event.pos.x - state.players[0].pos.x;
+      const dy = event.pos.y - state.players[0].pos.y;
       if (dx * dx + dy * dy > 4) continue; // not the hero's own swing
       onSwing((event.arc * 180) / Math.PI, event.targets, crowdBefore);
     }
@@ -781,7 +783,7 @@ function runRangedOne(
     ilvl: 1,
     affixes: [],
   };
-  state.player.equipment.weapon = { ...weapon };
+  state.players[0].equipment.weapon = { ...weapon };
 
   // A volley's hits land over several ticks; accumulate distinct foes per volley
   // id and flush a volley to the sample list once it stops taking new hits.
@@ -798,8 +800,8 @@ function runRangedOne(
 
   while (state.stats.timeMs < maxTimeMsOf(o)) {
     if (!advanceUntilStep(state, bot)) break;
-    if (state.player.equipment.weapon.defId !== defId) {
-      state.player.equipment.weapon = { ...weapon };
+    if (state.players[0].equipment.weapon.defId !== defId) {
+      state.players[0].equipment.weapon = { ...weapon };
     }
     step(state, botAct(bot, state), o.dtMs);
 

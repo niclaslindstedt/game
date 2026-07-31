@@ -8,6 +8,7 @@
 // (paused) engine state through the companion API and calls `onChange` so
 // React re-reads it.
 
+import { localHero } from "./local-seat.ts";
 import {
   COMPANION_SLOTS,
   companionById,
@@ -224,15 +225,15 @@ export function CompanionPanel({
           />
         </div>
         <div className="inv-grid companion-bag">
-          {state.player.inventory.map((item, index) => {
+          {localHero(state).inventory.map((item, index) => {
             const usable =
               item !== null &&
               fitsCompanion(item) &&
-              meetsLevelReq(state, item);
+              meetsLevelReq(state, localHero(state), item);
             const lowLevel =
               item !== null &&
               fitsCompanion(item) &&
-              !meetsLevelReq(state, item);
+              !meetsLevelReq(state, localHero(state), item);
             return (
               <button
                 key={index}

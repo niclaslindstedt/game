@@ -197,10 +197,10 @@ describe("a session and its client", () => {
     // dynamically would hand a client `grantXp` and `mintUnique` the day PR 2
     // opens a UDP port.
     const rig = connect();
-    const before = rig.session.state.player.xp;
+    const before = rig.session.state.players[0].xp;
     rig.client.sendCommand("grantXp" as never);
     play(rig, 6);
-    expect(rig.session.state.player.xp).toBe(before);
+    expect(rig.session.state.players[0].xp).toBe(before);
   });
 
   it("carries a command's ARGUMENTS to the authoritative state", () => {
@@ -210,12 +210,12 @@ describe("a session and its client", () => {
     // the SERVER's hero rather than on the client's copy of him.
     const rig = connect();
     takeTheField(rig);
-    rig.session.state.player.pendingStatPoints = 2;
-    const before = rig.session.state.player.stats.luck;
+    rig.session.state.players[0].pendingStatPoints = 2;
+    const before = rig.session.state.players[0].stats.luck;
     rig.client.sendCommand("allocateStat", ["luck"]);
     play(rig, 6);
-    expect(rig.session.state.player.stats.luck).toBe(before + 1);
-    expect(rig.client.state!.player.stats.luck).toBe(before + 1);
+    expect(rig.session.state.players[0].stats.luck).toBe(before + 1);
+    expect(rig.client.state!.players[0].stats.luck).toBe(before + 1);
   });
 
   it("ignores an argument of the wrong shape rather than throwing", () => {
@@ -224,12 +224,12 @@ describe("a session and its client", () => {
     // a write with an attacker's key on it.
     const rig = connect();
     takeTheField(rig);
-    rig.session.state.player.pendingStatPoints = 2;
+    rig.session.state.players[0].pendingStatPoints = 2;
     rig.client.sendCommand("allocateStat", ["__proto__" as never]);
     rig.client.sendCommand("allocateStat", [{} as never]);
     rig.client.sendCommand("allocateStat");
     play(rig, 6);
-    expect(rig.session.state.player.pendingStatPoints).toBe(2);
+    expect(rig.session.state.players[0].pendingStatPoints).toBe(2);
   });
 
   it("holds the same world as the server after a run", () => {
@@ -253,7 +253,7 @@ describe("a session and its client", () => {
     // The hero actually went somewhere — otherwise this asserts that two
     // identical idle worlds are identical, which proves nothing.
     const start = rig.session.state.playerSpawn;
-    const at = rig.session.state.player.pos;
+    const at = rig.session.state.players[0].pos;
     expect(Math.hypot(at.x - start.x, at.y - start.y)).toBeGreaterThan(20);
     expect(worldOf(rig.client.state!)).toBe(worldOf(rig.session.state));
   });
@@ -340,16 +340,16 @@ describe("a session that ADOPTED its run", () => {
    */
   function playedRun(): FrozenRun {
     const state = createRunFromParams({ ...PARAMS, openingSkip: "story" });
-    state.player.pos.x += 137;
-    state.player.hp = 42;
-    state.player.coins = 999;
+    state.players[0].pos.x += 137;
+    state.players[0].hp = 42;
+    state.players[0].coins = 999;
     return freezeRun(state);
   }
 
   it("simulates the state it was handed, not one built from the params", () => {
     const rig = connect({ adopt: playedRun() });
-    expect(rig.session.state.player.hp).toBe(42);
-    expect(rig.session.state.player.coins).toBe(999);
+    expect(rig.session.state.players[0].hp).toBe(42);
+    expect(rig.session.state.players[0].coins).toBe(999);
     // …and it is a LIVE state rather than a frozen record: the rng closures
     // were rebuilt from their stream positions, so it can actually be stepped.
     expect(() => play(rig, 30)).not.toThrow();
@@ -401,7 +401,7 @@ describe("the private split", () => {
     // manipulate it. A spectator is the first thing that tests it.
     const rig = connect({ ownsPlayer: false });
     play(rig, 300);
-    const player = rig.client.state!.player as unknown as Record<
+    const player = rig.client.state!.players[0] as unknown as Record<
       string,
       unknown
     >;
@@ -410,10 +410,14 @@ describe("the private split", () => {
     }
     // What a spectator CAN see is what they could see by looking: where he is,
     // how hurt he is, and what he is wearing.
-    expect(rig.client.state!.player.pos).toEqual(rig.session.state.player.pos);
-    expect(rig.client.state!.player.hp).toBe(rig.session.state.player.hp);
-    expect(rig.client.state!.player.equipment.weapon).toEqual(
-      rig.session.state.player.equipment.weapon,
+    expect(rig.client.state!.players[0].pos).toEqual(
+      rig.session.state.players[0].pos,
+    );
+    expect(rig.client.state!.players[0].hp).toBe(
+      rig.session.state.players[0].hp,
+    );
+    expect(rig.client.state!.players[0].equipment.weapon).toEqual(
+      rig.session.state.players[0].equipment.weapon,
     );
   });
 
@@ -421,10 +425,12 @@ describe("the private split", () => {
     const rig = connect({ ownsPlayer: true });
     takeTheField(rig);
     play(rig, 120);
-    expect(rig.client.state!.player.inventory).toEqual(
-      rig.session.state.player.inventory,
+    expect(rig.client.state!.players[0].inventory).toEqual(
+      rig.session.state.players[0].inventory,
     );
-    expect(rig.client.state!.player.coins).toBe(rig.session.state.player.coins);
+    expect(rig.client.state!.players[0].coins).toBe(
+      rig.session.state.players[0].coins,
+    );
   });
 
   it("ignores input from a client that does not own the hero", () => {
@@ -439,7 +445,7 @@ describe("the private split", () => {
       useItem: false,
     });
     const start = rig.session.state.playerSpawn;
-    const at = rig.session.state.player.pos;
+    const at = rig.session.state.players[0].pos;
     expect(Math.hypot(at.x - start.x, at.y - start.y)).toBeLessThan(1);
   });
 });

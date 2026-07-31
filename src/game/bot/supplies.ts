@@ -49,9 +49,10 @@ const TOP_OFF_REACH = 56;
  * pull is about to land. Pure read of the running abilities. */
 export function topOffReach(state: GameState): number {
   let reach = TOP_OFF_REACH;
-  for (const ability of state.player.abilities) {
+  for (const ability of state.players[0].abilities) {
     const def = abilityDef(ability.defId);
-    if (def.magnet) reach = Math.max(reach, magnetRadius(state, def));
+    if (def.magnet)
+      reach = Math.max(reach, magnetRadius(state, state.players[0], def));
   }
   return reach;
 }
@@ -119,7 +120,7 @@ export function trackBravery(bot: Bot, state: GameState): void {
  * Pure (state + the bot's own trail), so determinism holds.
  */
 export function braveryScore(bot: Bot, state: GameState): number {
-  const player = state.player;
+  const player = state.players[0];
   let barSum = 0;
   let barN = 0;
   for (const enemy of state.enemies) {
@@ -130,7 +131,7 @@ export function braveryScore(bot: Bot, state: GameState): number {
   const meanBar = barN > 0 ? barSum / barN : 0;
   let killPower = 1; // an empty field — nothing to fear
   if (meanBar > 0) {
-    const blow = weaponDamageFor(state, player.equipment.weapon);
+    const blow = weaponDamageFor(state, player, player.equipment.weapon);
     const blowPower = clamp(blow / (meanBar * BRAVE_BLOW_BAR_FRAC), 0, 1);
     let recentPower = 0;
     const samples = bot.bravery?.samples ?? [];
@@ -175,7 +176,7 @@ const REPAIR_SEEK_FRAC = 0.45;
 /** Is a spent weapon (durability 0) sitting in the bag, shed there when it broke
  * out of the hand — waiting on a repair kit to wake it? */
 function hasBrokenBagWeapon(state: GameState): boolean {
-  return state.player.inventory.some(
+  return state.players[0].inventory.some(
     (cell) => cell !== null && isWeaponBroken(cell),
   );
 }
@@ -184,7 +185,7 @@ function hasBrokenBagWeapon(state: GameState): boolean {
  * 0 = about to break), or 1 for the unbreakable sidearm — the "how spent is my
  * blade" gauge the repair heuristics read. */
 function weaponWearFrac(state: GameState): number {
-  const weapon = state.player.equipment.weapon;
+  const weapon = state.players[0].equipment.weapon;
   if (weapon.durability === undefined) return 1; // unbreakable sidearm
   const max = equipmentMaxDurability(weapon);
   return max > 0 ? weapon.durability / max : 1;
@@ -203,7 +204,7 @@ export function needsRepair(state: GameState): boolean {
  * pass-over TOP-OFF's gate, where a free refill is on the ground and even
  * light wear makes the spend worthwhile. Mirrors what `repairAll` touches. */
 export function hasWear(state: GameState): boolean {
-  const p = state.player;
+  const p = state.players[0];
   const worn = (piece: Equipment | null): boolean => {
     if (!piece || piece.durability === undefined) return false;
     const max = equipmentMaxDurability(piece);
@@ -225,7 +226,7 @@ export function hasWear(state: GameState): boolean {
  * thin or a broken spare waits in the bag — the "stock a kit before the blade
  * gives out" read that makes the downgrade → repair → re-equip cycle work. */
 export function wantsRepairKitPickup(state: GameState): boolean {
-  if (state.player.repairKits > 0) return false;
+  if (state.players[0].repairKits > 0) return false;
   return hasBrokenBagWeapon(state) || weaponWearFrac(state) <= REPAIR_SEEK_FRAC;
 }
 
@@ -236,7 +237,7 @@ export function nearestRepairKit(state: GameState): Item | undefined {
   let bestD = Infinity;
   for (const item of state.items) {
     if (item.kind !== "repair") continue;
-    const d = distance(item.pos, state.player.pos);
+    const d = distance(item.pos, state.players[0].pos);
     if (d < bestD) {
       best = item;
       bestD = d;
@@ -251,7 +252,7 @@ export function nearestRepairKit(state: GameState): Item | undefined {
  * an item he can never collect, standing there forever (measured: the
  * full-pockets stall). A capped kind is simply not wanted until one is spent. */
 function canBankPickup(state: GameState, item: Item): boolean {
-  const player = state.player;
+  const player = state.players[0];
   switch (item.kind) {
     case "medkit":
       return (
@@ -262,7 +263,7 @@ function canBankPickup(state: GameState, item: Item): boolean {
     case "drink":
       return player.staminaPotions < CONSUMABLES.stackCap;
     case "ability":
-      return canBankAbility(state, item.defId);
+      return canBankAbility(state, player, item.defId);
     default:
       return true;
   }
@@ -291,13 +292,13 @@ export function nearestWantedItem(state: GameState): Item | undefined {
     if (insideWellPull(state, item.pos)) continue;
     if (
       item.kind === "equipment" &&
-      !canCollectEquipment(state, item.equipment)
+      !canCollectEquipment(state, state.players[0], item.equipment)
     )
       continue;
     if (!canBankPickup(state, item)) continue;
-    const d = distance(item.pos, state.player.pos);
+    const d = distance(item.pos, state.players[0].pos);
     if (d >= bestD) continue;
-    if (blockedByObstacle(state, state.player.pos, item.pos, PLAYER.radius))
+    if (blockedByObstacle(state, state.players[0].pos, item.pos, PLAYER.radius))
       continue;
     best = item;
     bestD = d;
@@ -312,7 +313,7 @@ export function nearestWantedItem(state: GameState): Item | undefined {
  * ordinary loot. A rung with no cap entry never goes cold. */
 function arrowsWarm(state: GameState): boolean {
   const cap = runLevelDef(state).loot.arrowCapByDifficulty?.[state.difficulty];
-  return cap === undefined || state.player.level < cap;
+  return cap === undefined || state.players[0].level < cap;
 }
 
 /** The nearest collectable GOLDEN ARROW within `reach` the body can
@@ -327,9 +328,9 @@ function nearestXpArrow(
   for (const item of state.items) {
     if (item.kind !== "xp") continue;
     if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
-    const d = distance(item.pos, state.player.pos);
+    const d = distance(item.pos, state.players[0].pos);
     if (d >= bestD) continue;
-    if (blockedByObstacle(state, state.player.pos, item.pos, PLAYER.radius))
+    if (blockedByObstacle(state, state.players[0].pos, item.pos, PLAYER.radius))
       continue;
     best = item;
     bestD = d;
@@ -354,10 +355,10 @@ export function trackArrowXp(bot: Bot, state: GameState): void {
     }
   }
   if (award === undefined) return;
-  const share = award / Math.max(1, state.player.xpToNext);
+  const share = award / Math.max(1, state.players[0].xpToNext);
   bot.arrowXp = {
     pct: clamp(Math.round(share * 20) / 20, 0, 1),
-    level: state.player.level,
+    level: state.players[0].level,
   };
 }
 
@@ -378,7 +379,7 @@ export function dingArrowNearby(
   const learned = bot.arrowXp;
   if (!learned || learned.pct <= 0) return undefined;
   if (!arrowsWarm(state)) return undefined;
-  const player = state.player;
+  const player = state.players[0];
   if (player.xpToNext - player.xp > learned.pct * player.xpToNext)
     return undefined; // an arrow would not tip the bar
   return nearestXpArrow(state, reach);
@@ -416,14 +417,14 @@ export function wantedItemNearby(
   }
   const item = nearestWantedItem(state);
   if (!item) return undefined;
-  const d = distance(item.pos, state.player.pos);
+  const d = distance(item.pos, state.players[0].pos);
   if (d > ITEM_REACH) return undefined;
   if (d <= ITEM_CLOSE_REACH) return item;
   if (item.kind === "equipment" || item.kind === "story") return item;
   const heading = travelHeading(bot, state, tune);
   if (!heading) return item;
-  const ax = (item.pos.x - state.player.pos.x) / d;
-  const ay = (item.pos.y - state.player.pos.y) / d;
+  const ax = (item.pos.x - state.players[0].pos.x) / d;
+  const ay = (item.pos.y - state.players[0].pos.y) / d;
   const along = ax * heading.x + ay * heading.y;
   return along >= ITEM_DETOUR_MIN_ALONG ? item : undefined;
 }

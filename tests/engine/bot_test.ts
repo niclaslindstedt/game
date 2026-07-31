@@ -49,8 +49,8 @@ function drive(
   for (let i = 0; i < maxSteps; i++) {
     if (done?.(state)) return i;
     step(state, botAct(bot, state), DT);
-    while (state.player.pendingStatPoints > 0) {
-      allocateStat(state, botAllocate(bot, state));
+    while (state.players[0].pendingStatPoints > 0) {
+      allocateStat(state, state.players[0], botAllocate(bot, state));
     }
   }
   return maxSteps;
@@ -61,14 +61,14 @@ describe("bot strategies", () => {
     const state = startGame();
     clearStage(state);
     const ghost = makeEnemy({
-      pos: { x: state.player.pos.x + 220, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 220, y: state.players[0].pos.y },
       hp: 1_000_000,
       maxHp: 1_000_000,
     });
     state.enemies.push(ghost);
-    const before = dist(state.player.pos, ghost.pos);
+    const before = dist(state.players[0].pos, ghost.pos);
     drive(state, createBot("rush"), 60);
-    expect(dist(state.player.pos, ghost.pos)).toBeLessThan(before - 50);
+    expect(dist(state.players[0].pos, ghost.pos)).toBeLessThan(before - 50);
   });
 
   it("kite settles inside weapon range but outside the pack's grasp", () => {
@@ -78,7 +78,7 @@ describe("bot strategies", () => {
     clearStage(state);
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 220, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 220, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
@@ -87,7 +87,7 @@ describe("bot strategies", () => {
     );
     drive(state, createBot("kite"), 400);
     const ghost = state.enemies.find((e) => enemyDef(e.defId).role !== "boss")!;
-    const d = dist(state.player.pos, ghost.pos);
+    const d = dist(state.players[0].pos, ghost.pos);
     expect(d).toBeLessThanOrEqual(weaponDef("blaster").range);
     expect(d).toBeGreaterThan(60);
     expect(state.stats.damageTaken).toBe(0);
@@ -107,7 +107,7 @@ describe("bot strategies", () => {
       (s) => s.stats.damageDealt > 0 || s.enemies.length === 0,
     );
     expect(steps).toBeLessThan(6000);
-    expect(dist(state.player.pos, boss.home)).toBeLessThan(400);
+    expect(dist(state.players[0].pos, boss.home)).toBeLessThan(400);
   });
 
   it("survivor scoops a nearby pickup", () => {
@@ -117,7 +117,7 @@ describe("bot strategies", () => {
       {
         id: 9001,
         kind: "medkit",
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       },
     ];
     drive(state, createBot("survivor"), 300, (s) => s.items.length === 0);
@@ -127,15 +127,15 @@ describe("bot strategies", () => {
   it("survivor pushes for the boss once levelled and the map is discovered", () => {
     const state = startGame();
     clearStage(state);
-    state.player.level = 6;
+    state.players[0].level = 6;
     // The bot now DISCOVERS its side of the map before the boss (coverage-gated
     // exploration). Reveal the whole map so there is nothing left to uncover —
     // then the levelled hero commits to the boss, the contract this asserts.
     state.explored.fill(1);
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-    const before = dist(state.player.pos, boss.home);
+    const before = dist(state.players[0].pos, boss.home);
     drive(state, createBot("survivor"), 600);
-    expect(dist(state.player.pos, boss.home)).toBeLessThan(before - 300);
+    expect(dist(state.players[0].pos, boss.home)).toBeLessThan(before - 300);
   });
 
   it("explores its own side of the map before heading for the boss", () => {
@@ -164,13 +164,13 @@ describe("bot strategies", () => {
     // …via the directional fog sweep, not a boss beeline…
     expect(bot.lastThought).toBe("EXPLORE FOG");
     // …and it kept to its OWN side — nowhere near the boss's corner yet.
-    expect(state.player.pos.x).toBeLessThan(boss.home.x - 600);
+    expect(state.players[0].pos.x).toBeLessThan(boss.home.x - 600);
   });
 
   it("survivor punches out the gap when surrounded", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
-    const c = { ...state.player.pos };
+    const c = { ...state.players[0].pos };
     // Ring the hero with fast chasers, leaving a clear GAP on the +x side.
     for (let deg = 0; deg < 360; deg += 30) {
       if (deg < 45 || deg > 315) continue; // the open lane, to the right
@@ -187,7 +187,7 @@ describe("bot strategies", () => {
     }
     drive(state, createBot("survivor"), 120);
     // He fled toward the open side (+x), not into the wall of bodies.
-    expect(state.player.pos.x).toBeGreaterThan(c.x + 40);
+    expect(state.players[0].pos.x).toBeGreaterThan(c.x + 40);
   });
 
   it("idle never steers", () => {
@@ -202,7 +202,7 @@ describe("bot strategies", () => {
     const b = startGame();
     drive(a, createBot("survivor"), 500);
     drive(b, createBot("balanced"), 500);
-    expect(a.player.pos).toEqual(b.player.pos);
+    expect(a.players[0].pos).toEqual(b.players[0].pos);
     expect(a.stats).toEqual(b.stats);
   });
 
@@ -213,7 +213,7 @@ describe("bot strategies", () => {
     const distToCluster = (posture: "aggro" | "flee") => {
       const state = equipBlaster(startGame());
       clearStage(state);
-      const c = { ...state.player.pos };
+      const c = { ...state.players[0].pos };
       const foes = [];
       for (let i = 0; i < 4; i++) {
         const foe = makeEnemy({
@@ -229,7 +229,7 @@ describe("bot strategies", () => {
       drive(state, createBot(posture), 150);
       const cx = foes.reduce((s, e) => s + e.pos.x, 0) / foes.length;
       const cy = foes.reduce((s, e) => s + e.pos.y, 0) / foes.length;
-      return dist(state.player.pos, { x: cx, y: cy });
+      return dist(state.players[0].pos, { x: cx, y: cy });
     };
     expect(distToCluster("flee")).toBeGreaterThan(distToCluster("aggro"));
   });
@@ -251,8 +251,8 @@ describe("bot strategies", () => {
       for (let i = 0; i < 5; i++) {
         const foe = makeEnemy({
           pos: {
-            x: state.player.pos.x + 130 + i * 8,
-            y: state.player.pos.y - 32 + i * 16,
+            x: state.players[0].pos.x + 130 + i * 8,
+            y: state.players[0].pos.y - 32 + i * 16,
           },
           hp: 1_000_000,
           maxHp: 1_000_000,
@@ -264,7 +264,7 @@ describe("bot strategies", () => {
       }
       drive(state, createBot("balanced"), 200);
       const nearest = Math.min(
-        ...foes.map((e) => dist(state.player.pos, e.pos)),
+        ...foes.map((e) => dist(state.players[0].pos, e.pos)),
       );
       return { nearest, dmg: state.stats.damageTaken };
     };
@@ -290,8 +290,8 @@ describe("bot strategies", () => {
     for (let i = 0; i < 5; i++) {
       const foe = makeEnemy({
         pos: {
-          x: state.player.pos.x + 120 + i * 8,
-          y: state.player.pos.y - 32 + i * 16,
+          x: state.players[0].pos.x + 120 + i * 8,
+          y: state.players[0].pos.y - 32 + i * 16,
         },
         hp: 1_000_000,
         maxHp: 1_000_000,
@@ -302,8 +302,14 @@ describe("bot strategies", () => {
       foes.push(foe);
     }
     drive(state, createBot("balanced"), 200);
-    const reach = weaponRangeFor(state, state.player.equipment.weapon);
-    const nearest = Math.min(...foes.map((e) => dist(state.player.pos, e.pos)));
+    const reach = weaponRangeFor(
+      state,
+      state.players[0],
+      state.players[0].equipment.weapon,
+    );
+    const nearest = Math.min(
+      ...foes.map((e) => dist(state.players[0].pos, e.pos)),
+    );
     // He closed to within his blade's reach (so the swing lands) …
     expect(nearest).toBeLessThanOrEqual(reach);
     // … and actually connected — the whole point is the blade grinds the pack.
@@ -319,13 +325,13 @@ describe("bot objective awareness", () => {
   it("hunts a far elite as a prioritized macro objective", () => {
     const state = startGame();
     clearStage(state); // just the parked boss
-    state.player.level = 6;
-    state.player.maxHp = state.player.hp = 10_000;
+    state.players[0].level = 6;
+    state.players[0].maxHp = state.players[0].hp = 10_000;
     state.explored.fill(1); // nothing left to discover — isolate the hunt read
     const elite = makeEnemy(
       {
         id: 9100,
-        pos: { x: state.player.pos.x + 700, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 700, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 5, // at parity — huntable
@@ -333,26 +339,26 @@ describe("bot objective awareness", () => {
       "test_elite",
     );
     state.enemies.push(elite);
-    const before = dist(state.player.pos, elite.pos);
+    const before = dist(state.players[0].pos, elite.pos);
     const bot = createBot("survivor");
     drive(state, bot, 120);
     // Mid-march the thought names the errand…
     expect(bot.lastThought).toBe("HUNT ELITE");
     // …and he closes on the elite, not the (also-live) boss across the map.
     drive(state, bot, 400);
-    expect(dist(state.player.pos, elite.pos)).toBeLessThan(before - 250);
+    expect(dist(state.players[0].pos, elite.pos)).toBeLessThan(before - 250);
   });
 
   it("leaves an elite far above his level for later", () => {
     const state = startGame();
     clearStage(state);
-    state.player.level = 6;
+    state.players[0].level = 6;
     state.explored.fill(1);
     state.enemies.push(
       makeEnemy(
         {
           id: 9100,
-          pos: { x: state.player.pos.x + 700, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 700, y: state.players[0].pos.y },
           hp: 1_000_000,
           maxHp: 1_000_000,
           mlvl: 40, // far out of his class — not huntable yet
@@ -376,7 +382,7 @@ describe("bot objective awareness", () => {
     boss.mlvl = 20; // under-levelled → the plan explores rather than TO BOSS
     const straggler = makeEnemy({
       id: 9101,
-      pos: { x: state.player.pos.x + 560, y: state.player.pos.y + 230 },
+      pos: { x: state.players[0].pos.x + 560, y: state.players[0].pos.y + 230 },
     });
     state.enemies.push(straggler);
     const bot = createBot("survivor");
@@ -393,11 +399,11 @@ describe("bot objective awareness", () => {
   it("keeps a foe-ward march — the boss push — over chasing stragglers", () => {
     const state = startGame();
     clearStage(state); // the parked boss stays — the macro plan marches on it
-    state.player.level = 20; // boss-ready, nothing else to do → TO BOSS
+    state.players[0].level = 20; // boss-ready, nothing else to do → TO BOSS
     state.explored.fill(1);
     const straggler = makeEnemy({
       id: 9101,
-      pos: { x: state.player.pos.x + 560, y: state.player.pos.y + 230 },
+      pos: { x: state.players[0].pos.x + 560, y: state.players[0].pos.y + 230 },
     });
     state.enemies.push(straggler);
     const bot = createBot("survivor");
@@ -417,7 +423,7 @@ describe("bot strategic aim", () => {
   it("finishes the most wounded foe in range with a single-target gun", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.enemies.push(
       makeEnemy({
         id: 9100,
@@ -441,7 +447,7 @@ describe("bot strategic aim", () => {
   it("shoots the body about to bite over a far wounded one", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.enemies.push(
       makeEnemy({
         id: 9100,
@@ -464,7 +470,7 @@ describe("bot strategic aim", () => {
   it("aims a spread gun into the densest cluster", () => {
     const state = startGame();
     clearStage(state);
-    state.player.equipment.weapon = {
+    state.players[0].equipment.weapon = {
       id: state.nextId++,
       defId: "test_scattergun", // 4 pellets over a 24° fan
       slot: "weapon",
@@ -472,7 +478,7 @@ describe("bot strategic aim", () => {
       ilvl: 1,
       affixes: [],
     };
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     // A lone foe left, a three-body cluster right — same distance both ways.
     state.enemies.push(
       makeEnemy({ id: 9100, pos: { x: p.x - 120, y: p.y } }),
@@ -496,12 +502,12 @@ describe("bot safe-direction kiting", () => {
     clearStage(state);
     // Boss-ready and fully discovered, so the macro goal is unambiguously the
     // BOSS (forward) — the daring drift has one direction to show.
-    state.player.level = 99;
+    state.players[0].level = 99;
     state.explored.fill(1);
     state.obstacles = state.obstacles.filter((o) => !o.chest);
     // Chewed below the caution line (but above the emergency fleeHp bail).
-    state.player.hp = Math.round(state.player.maxHp * 0.5);
-    if (nuke) state.player.heldAbilities.push("screen_nuke");
+    state.players[0].hp = Math.round(state.players[0].maxHp * 0.5);
+    if (nuke) state.players[0].heldAbilities.push("screen_nuke");
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     // Stand mid-axis (ground behind to give), outside the boss lock.
     const sx = state.playerSpawn.x;
@@ -511,7 +517,7 @@ describe("bot safe-direction kiting", () => {
     const am = Math.hypot(ax, ay) || 1;
     ax /= am;
     ay /= am;
-    state.player.pos = { x: sx + ax * (am / 2), y: sy + ay * (am / 2) };
+    state.players[0].pos = { x: sx + ax * (am / 2), y: sy + ay * (am / 2) };
     // A real pack breaching the danger bubble PERPENDICULAR to the axis, so
     // the give-ground bearing along the axis is decided by the bias alone.
     for (const [i, off] of [50, 70, 90].entries()) {
@@ -519,8 +525,8 @@ describe("bot safe-direction kiting", () => {
         makeEnemy({
           id: 9100 + i,
           pos: {
-            x: state.player.pos.x - ay * off,
-            y: state.player.pos.y + ax * off,
+            x: state.players[0].pos.x - ay * off,
+            y: state.players[0].pos.y + ax * off,
           },
           hp: 1_000_000,
           maxHp: 1_000_000,
@@ -529,8 +535,8 @@ describe("bot safe-direction kiting", () => {
     }
     const input = botAct(createBot("balanced"), state);
     return (
-      (input.target.x - state.player.pos.x) * ax +
-      (input.target.y - state.player.pos.y) * ay
+      (input.target.x - state.players[0].pos.x) * ax +
+      (input.target.y - state.players[0].pos.y) * ay
     );
   };
 
@@ -549,7 +555,7 @@ describe("bot jump discipline", () => {
   // then only spends one when a body is about to bite, running the rest of the way
   // out on foot so it never winds itself into the jog-capped death spiral.
   function ringHero(state: GameState, radius: number, n = 12): void {
-    const c = { ...state.player.pos };
+    const c = { ...state.players[0].pos };
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2;
       state.enemies.push(
@@ -588,7 +594,7 @@ describe("bot jump discipline", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
     ringHero(state, 40); // a body biting — would hop with a full pool
-    state.player.stamina = state.player.maxStamina * 0.2; // …but the pool is low
+    state.players[0].stamina = state.players[0].maxStamina * 0.2; // …but the pool is low
     const bot = createBot("survivor");
     const input = botAct(bot, state);
     expect(bot.lastThought).toBe("PUNCH OUT");
@@ -602,7 +608,7 @@ describe("bot jump discipline", () => {
     clearStage(state);
     // A charging elite locked onto the hero, mid-dash straight at him.
     const foe = makeEnemy({
-      pos: { x: state.player.pos.x - 60, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x - 60, y: state.players[0].pos.y },
       hp: 1_000_000,
       maxHp: 1_000_000,
     });
@@ -619,11 +625,11 @@ describe("bot jump discipline", () => {
     // airborne frames — the hero doesn't have to be fully ringed to hop out.
     const state = equipBlaster(startGame());
     clearStage(state);
-    state.player.hp = state.player.maxHp * 0.45; // below the ~half hop threshold
-    state.player.hurtFlashMs = 250; // the bite just landed
+    state.players[0].hp = state.players[0].maxHp * 0.45; // below the ~half hop threshold
+    state.players[0].hurtFlashMs = 250; // the bite just landed
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 38, y: state.player.pos.y }, // biting
+        pos: { x: state.players[0].pos.x + 38, y: state.players[0].pos.y }, // biting
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
@@ -640,10 +646,10 @@ describe("bot jump discipline", () => {
     // hero re-hopped on every cooldown for as long as a body shadowed him.
     const state = equipBlaster(startGame());
     clearStage(state);
-    state.player.hp = state.player.maxHp * 0.45;
+    state.players[0].hp = state.players[0].maxHp * 0.45;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 38, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 38, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
@@ -676,7 +682,7 @@ describe("bot jump discipline", () => {
     clearStage(state);
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 38, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 38, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
@@ -696,11 +702,18 @@ describe("bot jump discipline", () => {
       // Under-leveled vs the parked boss — probe the classic hold, not the
       // boss-ready rush posture.
       state.enemies.find((e) => enemyDef(e.defId).role === "boss")!.mlvl = 20;
-      state.player.disarmed = false;
-      const reach = weaponRangeFor(state, state.player.equipment.weapon);
+      state.players[0].disarmed = false;
+      const reach = weaponRangeFor(
+        state,
+        state.players[0],
+        state.players[0].equipment.weapon,
+      );
       state.enemies.push(
         makeEnemy({
-          pos: { x: state.player.pos.x + reach * 0.75, y: state.player.pos.y },
+          pos: {
+            x: state.players[0].pos.x + reach * 0.75,
+            y: state.players[0].pos.y,
+          },
           hp: 1_000_000,
           maxHp: 1_000_000,
           mlvl: 1,
@@ -716,7 +729,7 @@ describe("bot jump discipline", () => {
 
     // Just bitten: the widened danger bubble now covers that same foe → give ground.
     const hurt = stage();
-    hurt.player.hurtFlashMs = 200;
+    hurt.players[0].hurtFlashMs = 200;
     const hurtBot = createBot("balanced");
     const input = botAct(hurtBot, hurt);
     expect(hurtBot.lastThought).toBe("GIVE GROUND");
@@ -732,7 +745,7 @@ describe("bot hop commitment", () => {
   // into a calmer branch, and the "escape" degenerates into a straight-up
   // bounce that spends 10% of the pool and repositions nothing.
   function ringHero(state: GameState, radius: number, n = 12): void {
-    const c = { ...state.player.pos };
+    const c = { ...state.players[0].pos };
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2;
       state.enemies.push(
@@ -758,14 +771,14 @@ describe("bot hop commitment", () => {
     const plan = bot.hopPlan!;
     // Airborne the next tick: the re-decide must NOT dissolve the jump — the
     // bot keeps steering at the committed escape ground until he lands.
-    state.player.z = 20;
+    state.players[0].z = 20;
     state.stats.timeMs = 100;
     const flight = botAct(bot, state);
     expect(flight.steering).toBe(true);
     expect(flight.jump).toBe(false); // one takeoff per decision, no re-request
     expect(dist(flight.target, plan.target)).toBeLessThan(25);
     // Landed: the jump's purpose is spent — the plan clears, the read resumes.
-    state.player.z = 0;
+    state.players[0].z = 0;
     state.stats.timeMs = 200;
     botAct(bot, state);
     expect(bot.hopPlan).toBeFalsy();
@@ -778,7 +791,7 @@ describe("bot hop commitment", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
     ringHero(state, 40); // the same ring that earns a hop on open ground
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.obstacles = [
       ...state.obstacles,
       {
@@ -832,7 +845,7 @@ describe("bot hop commitment", () => {
     // survive the loadout gates on the forward-press branches.
     const state = startGame(); // default melee sword
     clearStage(state);
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     ringHero(state, 40);
     const bot = createBot("survivor");
     const input = botAct(bot, state);
@@ -853,16 +866,16 @@ describe("bot pickup discipline", () => {
       {
         id: 9001,
         kind: "repair",
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       },
     ];
-    state.player.repairKits = CONSUMABLES.stackCap;
+    state.players[0].repairKits = CONSUMABLES.stackCap;
     const bot = createBot("survivor");
     botAct(bot, state);
     expect(bot.lastThought).not.toBe("GRAB ITEM");
 
     // The same kit with pocket room IS wanted — the filter is the stack cap.
-    state.player.repairKits = 0;
+    state.players[0].repairKits = 0;
     const wanting = createBot("survivor");
     botAct(wanting, state);
     expect(wanting.lastThought).toBe("GRAB ITEM");
@@ -877,18 +890,18 @@ describe("bot pickup discipline", () => {
       {
         id: 9001,
         kind: "medkit",
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       },
       {
         id: 9002,
         kind: "xp",
-        pos: { x: state.player.pos.x - 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x - 150, y: state.players[0].pos.y },
       },
     ];
     const bot = createBot("survivor");
     const input = botAct(bot, state);
     expect(bot.lastThought).toBe("GRAB ITEM");
-    expect(input.target.x).toBeLessThan(state.player.pos.x); // toward the arrow
+    expect(input.target.x).toBeLessThan(state.players[0].pos.x); // toward the arrow
   });
 });
 
@@ -900,9 +913,11 @@ describe("bot consumable top-off", () => {
   it("drinks a stamina potion in passing to make room for the one underfoot", () => {
     const state = startGame();
     clearStage(state);
-    state.player.staminaPotions = CONSUMABLES.stackCap;
-    state.player.stamina = state.player.maxStamina * 0.5;
-    state.items = [{ id: 9001, kind: "drink", pos: { ...state.player.pos } }];
+    state.players[0].staminaPotions = CONSUMABLES.stackCap;
+    state.players[0].stamina = state.players[0].maxStamina * 0.5;
+    state.items = [
+      { id: 9001, kind: "drink", pos: { ...state.players[0].pos } },
+    ];
     const input = botAct(createBot("survivor"), state);
     expect(input.useStaminaPotion).toBe(true);
   });
@@ -910,9 +925,11 @@ describe("bot consumable top-off", () => {
   it("keeps the stack corked when the pool is basically full", () => {
     const state = startGame();
     clearStage(state);
-    state.player.staminaPotions = CONSUMABLES.stackCap;
-    state.player.stamina = state.player.maxStamina; // nothing to top off
-    state.items = [{ id: 9001, kind: "drink", pos: { ...state.player.pos } }];
+    state.players[0].staminaPotions = CONSUMABLES.stackCap;
+    state.players[0].stamina = state.players[0].maxStamina; // nothing to top off
+    state.items = [
+      { id: 9001, kind: "drink", pos: { ...state.players[0].pos } },
+    ];
     const input = botAct(createBot("survivor"), state);
     expect(input.useStaminaPotion).toBe(false);
   });
@@ -920,9 +937,11 @@ describe("bot consumable top-off", () => {
   it("mends in passing when a kit lies underfoot and the loadout carries wear", () => {
     const state = startGame();
     clearStage(state);
-    state.player.repairKits = CONSUMABLES.stackCap;
-    state.player.equipment.weapon.durability = 60; // worn, far from breaking
-    state.items = [{ id: 9001, kind: "repair", pos: { ...state.player.pos } }];
+    state.players[0].repairKits = CONSUMABLES.stackCap;
+    state.players[0].equipment.weapon.durability = 60; // worn, far from breaking
+    state.items = [
+      { id: 9001, kind: "repair", pos: { ...state.players[0].pos } },
+    ];
     const input = botAct(createBot("survivor"), state);
     expect(input.useRepairKit).toBe(true);
   });
@@ -930,9 +949,11 @@ describe("bot consumable top-off", () => {
   it("rate-limits the top-off so a kit-littered field is not a crawl", () => {
     const state = startGame();
     clearStage(state);
-    state.player.repairKits = CONSUMABLES.stackCap;
-    state.player.equipment.weapon.durability = 60;
-    state.items = [{ id: 9001, kind: "repair", pos: { ...state.player.pos } }];
+    state.players[0].repairKits = CONSUMABLES.stackCap;
+    state.players[0].equipment.weapon.durability = 60;
+    state.items = [
+      { id: 9001, kind: "repair", pos: { ...state.players[0].pos } },
+    ];
     const bot = createBot("survivor");
     expect(botAct(bot, state).useRepairKit).toBe(true); // first switch fires
     state.stats.timeMs = 5000; // inside the 10s cooldown
@@ -949,7 +970,7 @@ describe("bot arrow strategy", () => {
   it("learns an arrow's XP share from the collection event", () => {
     const state = startGame();
     clearStage(state);
-    state.player.xpToNext = 100;
+    state.players[0].xpToNext = 100;
     state.events.push({
       type: "itemCollected",
       kind: "xp",
@@ -964,7 +985,7 @@ describe("bot arrow strategy", () => {
   it("holds the medkit when a dinging arrow is in reach", () => {
     const state = startGame();
     clearStage(state);
-    const player = state.player;
+    const player = state.players[0];
     player.medkits[0] = 2;
     player.hp = player.maxHp * 0.45; // would normally pop a kit (< 55%)
     player.xpToNext = 100;
@@ -988,7 +1009,7 @@ describe("bot arrow strategy", () => {
   it("grabs the dinging arrow over a medkit when bleeding", () => {
     const state = startGame();
     clearStage(state);
-    const player = state.player;
+    const player = state.players[0];
     // Below even the aggro fleeHp bail (0.28) — the boss-ready fixture run
     // flips the balanced posture to its rush/aggro row.
     player.hp = player.maxHp * 0.25;
@@ -1030,7 +1051,7 @@ describe("bot chest cracking", () => {
         id: 9500,
         kind: "chest",
         sprite: "locker",
-        pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
         radius: 9,
         jumpable: true,
         breakable: true,
@@ -1098,9 +1119,9 @@ describe("bot turn rate limit", () => {
   function press(): { state: GameState; bot: Bot; foe: Enemy } {
     const state = equipBlaster(startGame());
     clearStage(state);
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     const foe = makeEnemy({
-      pos: { x: state.player.pos.x + 300, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 300, y: state.players[0].pos.y },
       hp: 1_000_000,
       maxHp: 1_000_000,
       speed: 0,
@@ -1115,35 +1136,35 @@ describe("bot turn rate limit", () => {
     const { state, bot, foe } = press();
     // The body lunges inside his hold: the kite now wants him to back-pedal
     // WEST — a full about-face, moments after he committed east.
-    foe.pos = { x: state.player.pos.x + 40, y: state.player.pos.y };
+    foe.pos = { x: state.players[0].pos.x + 40, y: state.players[0].pos.y };
     expect(botAct(bot, state).steering).toBe(false); // plants instead
-    const at = { ...state.player.pos };
+    const at = { ...state.players[0].pos };
     for (let i = 0; i < 12; i++) {
       // ~200ms — still inside the beat (the body holds its ground on him)
       step(state, botAct(bot, state), DT);
       foe.pos = { x: at.x + 40, y: at.y };
     }
-    expect(dist(state.player.pos, at)).toBeLessThan(2); // he really stood
+    expect(dist(state.players[0].pos, at)).toBeLessThan(2); // he really stood
     for (let i = 0; i < 30; i++) {
       step(state, botAct(bot, state), DT); // past the beat — the retreat is his
       foe.pos = { x: at.x + 40, y: at.y };
     }
-    expect(state.player.pos.x).toBeLessThan(at.x - 10);
+    expect(state.players[0].pos.x).toBeLessThan(at.x - 10);
   });
 
   it("takes an ordinary turn at once — only an about-face waits", () => {
     const { state, bot, foe } = press(); // committed east
     // The body reappears due NORTH: a 90° turn is a legitimate change of
     // direction, not a reversal, so he swings onto it the same tick.
-    foe.pos = { x: state.player.pos.x, y: state.player.pos.y - 300 };
+    foe.pos = { x: state.players[0].pos.x, y: state.players[0].pos.y - 300 };
     const input = botAct(bot, state);
     expect(input.steering).toBe(true);
-    expect(input.target.y).toBeLessThan(state.player.pos.y - 10);
+    expect(input.target.y).toBeLessThan(state.players[0].pos.y - 10);
   });
 
   it("never holds back a reflex — a telegraph is dodged on the spot", () => {
     const { state, bot, foe } = press(); // committed east
-    foe.pos = { x: state.player.pos.x + 40, y: state.player.pos.y };
+    foe.pos = { x: state.players[0].pos.x + 40, y: state.players[0].pos.y };
     expect(botAct(bot, state).steering).toBe(false); // mid-wait, standing
     // …and now a charge winds up. An evasion is worthless a beat late, so the
     // reflex preempts the wait however recently he turned.
@@ -1160,16 +1181,16 @@ describe("bot winded pacing", () => {
   function stage(foeDist: number, frac: number, speed = 0): GameState {
     const state = startGame();
     clearStage(state);
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + foeDist, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + foeDist, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         speed,
       }),
     );
-    state.player.stamina = state.player.maxStamina * frac;
+    state.players[0].stamina = state.players[0].maxStamina * frac;
     return state;
   }
 
@@ -1222,9 +1243,9 @@ describe("bot winded pacing", () => {
     const state = stage(900, 0.4);
     const bot = createBot("balanced");
     botAct(bot, state); // the quiet-field breather latches
-    state.player.stamina = state.player.maxStamina * 0.8; // past the threshold
+    state.players[0].stamina = state.players[0].maxStamina * 0.8; // past the threshold
     expect(botAct(bot, state).steering).toBe(false);
-    state.player.stamina = state.player.maxStamina; // topped off — march on
+    state.players[0].stamina = state.players[0].maxStamina; // topped off — march on
     const input = botAct(bot, state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
@@ -1238,7 +1259,7 @@ describe("bot winded pacing", () => {
     expect(botAct(bot, state).steering).toBe(false);
     expect(bot.resting).toBe(true);
     const foe = state.enemies[state.enemies.length - 1] as Enemy;
-    foe.pos = { x: state.player.pos.x + 400, y: state.player.pos.y };
+    foe.pos = { x: state.players[0].pos.x + 400, y: state.players[0].pos.y };
     botAct(bot, state);
     expect(bot.resting).toBe(false);
     expect(bot.lastThought).toBe("BREATHER");
@@ -1283,11 +1304,11 @@ describe("bot winded pacing", () => {
     botAct(bot, state); // bone-dry — the winded stand latches
     // Half a pool back is still below the run threshold: keep standing (the
     // full breather beats the walk's trickle ten to one).
-    state.player.stamina = state.player.maxStamina * 0.5;
+    state.players[0].stamina = state.players[0].maxStamina * 0.5;
     expect(botAct(bot, state).steering).toBe(false);
     expect(bot.lastThought).toBe("CATCH BREATH");
     // At the run threshold the pool counts as recovered — up and running.
-    state.player.stamina = state.player.maxStamina * 0.8;
+    state.players[0].stamina = state.players[0].maxStamina * 0.8;
     const input = botAct(bot, state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
@@ -1321,9 +1342,9 @@ describe("bot winded pacing", () => {
     const state = stage(520, 0.6);
     const bot = createBot("balanced");
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // dipped
-    state.player.stamina = state.player.maxStamina * 0.72;
+    state.players[0].stamina = state.players[0].maxStamina * 0.72;
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // recovering
-    state.player.stamina = state.player.maxStamina * 0.8;
+    state.players[0].stamina = state.players[0].maxStamina * 0.8;
     expect(botAct(bot, state).throttle).toBeUndefined(); // recovered — run
   });
 });
@@ -1337,16 +1358,16 @@ describe("bot bone-dry dig-in", () => {
   function spent(foeDist: number, speed: number): GameState {
     const state = startGame();
     clearStage(state);
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + foeDist, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + foeDist, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         speed,
       }),
     );
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     state.staminaRegenLockMs = staminaEmptyLockMs(state);
     return state;
   }
@@ -1391,13 +1412,13 @@ describe("bot bone-dry dig-in", () => {
     const nearlyPaid = Math.floor((staminaEmptyLockMs(state) * 0.9) / DT);
     drive(state, bot, nearlyPaid);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
     expect(botAct(bot, state).steering).toBe(false);
     expect(bot.lastThought).toBe("DIG IN");
     // Paid off: regen thaws and the hero marches on at the recovery walk.
     drive(state, bot, Math.ceil(400 / DT));
     expect(state.staminaRegenLockMs).toBe(0);
-    expect(state.player.stamina).toBeGreaterThan(0);
+    expect(state.players[0].stamina).toBeGreaterThan(0);
     const input = botAct(bot, state);
     expect(bot.digIn).toBe(false);
     expect(input.steering).toBe(true);
@@ -1413,27 +1434,27 @@ describe("bot bravery", () => {
   function march(frac: number): GameState {
     const state = equipBlaster(startGame());
     clearStage(state);
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     // A distant tank keeps the field non-empty (the bot marches, not idles) —
     // parked just inside the clear-field line, so the march is a WALK rather
     // than the stand an empty field would earn.
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 520, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 520, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
         speed: 0,
       }),
     );
-    state.player.stamina = state.player.maxStamina * frac;
+    state.players[0].stamina = state.players[0].maxStamina * frac;
     return state;
   }
 
   function kitOut(state: GameState): void {
-    state.player.medkits[0] = 3;
-    state.player.staminaPotions = 3;
-    state.player.heldAbilities = ["test_nuke", "test_storm"];
+    state.players[0].medkits[0] = 3;
+    state.players[0].staminaPotions = 3;
+    state.players[0].heldAbilities = ["test_nuke", "test_storm"];
   }
 
   it("full pockets never override the run threshold — the discipline is absolute", () => {
@@ -1459,17 +1480,17 @@ describe("bot bravery", () => {
     const spotPack = (): GameState => {
       const state = equipBlaster(startGame());
       clearStage(state);
-      state.player.disarmed = false;
+      state.players[0].disarmed = false;
       state.enemies.push(
         makeEnemy({
-          pos: { x: state.player.pos.x + 400, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 400, y: state.players[0].pos.y },
           hp: 5,
           maxHp: 5,
           mlvl: 1,
           speed: 60,
         }),
       );
-      state.player.stamina = state.player.maxStamina * 0.9;
+      state.players[0].stamina = state.players[0].maxStamina * 0.9;
       return state;
     };
 
@@ -1495,17 +1516,17 @@ describe("bot pre-fight top-up", () => {
   function spot(foeDist: number, foeSpeed: number, frac: number): GameState {
     const state = equipBlaster(startGame());
     clearStage(state);
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + foeDist, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + foeDist, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
         speed: foeSpeed,
       }),
     );
-    state.player.stamina = state.player.maxStamina * frac;
+    state.players[0].stamina = state.players[0].maxStamina * frac;
     return state;
   }
 
@@ -1553,7 +1574,7 @@ describe("bot travel discipline", () => {
   function quietMarch(): GameState {
     const state = equipBlaster(startGame());
     clearStage(state); // just the parked boss, far away — a quiet field
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     return state;
   }
 
@@ -1566,19 +1587,19 @@ describe("bot travel discipline", () => {
 
   it("keeps the stamina potion corked with no threat around", () => {
     const state = quietMarch();
-    state.player.staminaPotions = 5;
-    state.player.stamina = 0; // bone-dry mid-march — jog it off, don't drink
+    state.players[0].staminaPotions = 5;
+    state.players[0].stamina = 0; // bone-dry mid-march — jog it off, don't drink
     const input = botAct(createBot("survivor"), state);
     expect(input.useStaminaPotion).toBeFalsy();
   });
 
   it("drinks the stamina potion winded with a threat pressing", () => {
     const state = quietMarch();
-    state.player.staminaPotions = 5;
-    state.player.stamina = state.player.maxStamina * 0.1;
+    state.players[0].staminaPotions = 5;
+    state.players[0].stamina = state.players[0].maxStamina * 0.1;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
@@ -1597,13 +1618,13 @@ describe("bot powerup strategy", () => {
   function stage(): GameState {
     const state = equipBlaster(startGame());
     clearStage(state);
-    state.player.disarmed = false;
+    state.players[0].disarmed = false;
     return state;
   }
 
   /** Ring `n` slow tanks around the hero, inside the surround ring. */
   function pack(state: GameState, n: number, radius = 100): void {
-    const c = state.player.pos;
+    const c = state.players[0].pos;
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2;
       state.enemies.push(
@@ -1621,14 +1642,14 @@ describe("bot powerup strategy", () => {
 
   it("saves the nuke through a sizeable fight — it waits for the flood", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     pack(state, 10);
     expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
   });
 
   it("spends the nuke into an overwhelming flood", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     pack(state, 22, 120); // a real flood, inside the blast radius
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
@@ -1637,7 +1658,7 @@ describe("bot powerup strategy", () => {
 
   it("hands the flood to the most precious power, not the oldest slot", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_stasis", "test_nuke"];
+    state.players[0].heldAbilities = ["test_stasis", "test_nuke"];
     pack(state, 22, 120);
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
@@ -1646,7 +1667,7 @@ describe("bot powerup strategy", () => {
 
   it("times a combat power for a decent fight", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_storm"];
+    state.players[0].heldAbilities = ["test_storm"];
     pack(state, 3);
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
@@ -1655,9 +1676,9 @@ describe("bot powerup strategy", () => {
 
   it("pops the stasis when cornered — winded, bleeding, a pack hunting", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_stasis"];
-    state.player.stamina = state.player.maxStamina * 0.1; // can't outrun them
-    state.player.hp = state.player.maxHp * 0.4; // bleeding under half
+    state.players[0].heldAbilities = ["test_stasis"];
+    state.players[0].stamina = state.players[0].maxStamina * 0.1; // can't outrun them
+    state.players[0].hp = state.players[0].maxHp * 0.4; // bleeding under half
     pack(state, 5, 200); // five hunters inside the threat ring
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
@@ -1666,15 +1687,15 @@ describe("bot powerup strategy", () => {
 
   it("keeps the stasis banked while healthy — even against the same pack", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_stasis"];
+    state.players[0].heldAbilities = ["test_stasis"];
     pack(state, 5, 200); // same hunters, but rested and unhurt
     expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
   });
 
   it("pops the magnet over a lootable spill", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_magnet"];
-    const p = state.player.pos;
+    state.players[0].heldAbilities = ["test_magnet"];
+    const p = state.players[0].pos;
     state.items = [0, 1, 2].map((i) => ({
       id: 9300 + i,
       kind: "medkit" as const,
@@ -1689,7 +1710,7 @@ describe("bot powerup strategy", () => {
     const state = stage();
     // Two of three slots taken, no fight and no loot anywhere — the magnet
     // still burns so a slot keeps cycling free for the next strong pickup.
-    state.player.heldAbilities = ["test_magnet", "test_storm"];
+    state.players[0].heldAbilities = ["test_magnet", "test_storm"];
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(0);
@@ -1697,7 +1718,7 @@ describe("bot powerup strategy", () => {
 
   it("with a full dock burns the cheapest power — never the nuke", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_nuke", "test_storm", "test_stasis"];
+    state.players[0].heldAbilities = ["test_nuke", "test_storm", "test_stasis"];
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(2); // the stasis — cheapest on the shelf
@@ -1705,7 +1726,7 @@ describe("bot powerup strategy", () => {
 
   it("holds a full dock of combat powers with nobody around to hit", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_storm", "test_storm", "test_storm"];
+    state.players[0].heldAbilities = ["test_storm", "test_storm", "test_storm"];
     expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
   });
 
@@ -1713,13 +1734,16 @@ describe("bot powerup strategy", () => {
     // The viewer-facing ranking: the bot walks the row into best-first order
     // (nuke ahead of stasis) so the dock on screen reads how it values them.
     const state = stage();
-    state.player.heldAbilities = ["test_stasis", "test_nuke"];
+    state.players[0].heldAbilities = ["test_stasis", "test_nuke"];
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBeFalsy();
     expect(input.moveItem).toEqual({ from: 1, to: 0 });
     // Applying the move settles the dock; the next tick has nothing to sort.
     step(state, input, DT);
-    expect(state.player.heldAbilities).toEqual(["test_nuke", "test_stasis"]);
+    expect(state.players[0].heldAbilities).toEqual([
+      "test_nuke",
+      "test_stasis",
+    ]);
     expect(botAct(createBot("survivor"), state).moveItem).toBeUndefined();
   });
 
@@ -1727,13 +1751,17 @@ describe("bot powerup strategy", () => {
     // Dock full of lesser powers, a NUKE lying in reach: toss the magnet (the
     // cheapest — never a trade DOWN) so the walk-over can bank the find.
     const state = stage();
-    state.player.heldAbilities = ["test_magnet", "test_storm", "test_storm"];
+    state.players[0].heldAbilities = [
+      "test_magnet",
+      "test_storm",
+      "test_storm",
+    ];
     state.items = [
       {
         id: 9400,
         kind: "ability",
         defId: "test_nuke",
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       },
     ];
     const input = botAct(createBot("survivor"), state);
@@ -1742,10 +1770,10 @@ describe("bot powerup strategy", () => {
 
   it("prefers freeing a RUNNING slot — already spent, the drop costs nothing", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_storm", "test_storm", "test_storm"];
+    state.players[0].heldAbilities = ["test_storm", "test_storm", "test_storm"];
     // Slot 0 is running in place; even a lowly magnet find justifies freeing
     // it, since the storm keeps striking either way.
-    state.player.abilities.push({
+    state.players[0].abilities.push({
       defId: "test_storm",
       remainingMs: 5000,
       angle: 0,
@@ -1757,7 +1785,7 @@ describe("bot powerup strategy", () => {
         id: 9401,
         kind: "ability",
         defId: "test_magnet",
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       },
     ];
     const input = botAct(createBot("survivor"), state);
@@ -1766,13 +1794,13 @@ describe("bot powerup strategy", () => {
 
   it("won't trade a banked power DOWN for a lesser ground find", () => {
     const state = stage();
-    state.player.heldAbilities = ["test_storm", "test_storm", "test_storm"];
+    state.players[0].heldAbilities = ["test_storm", "test_storm", "test_storm"];
     state.items = [
       {
         id: 9402,
         kind: "ability",
         defId: "test_magnet",
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       },
     ];
     const input = botAct(createBot("survivor"), state);
@@ -1791,7 +1819,7 @@ describe("bot profiles", () => {
     for (let i = 0; i < n; i++) {
       const stat = botAllocate(bot, state);
       counts[stat] = (counts[stat] ?? 0) + 1;
-      state.player.spentStats[stat]++;
+      state.players[0].spentStats[stat]++;
     }
     return counts;
   };
@@ -1842,7 +1870,7 @@ describe("bot profiles", () => {
     // opens its lane's rotation on its primary — STR for melee, INT for magic.
     const laneStat = (level: number): string => {
       const state = startGame();
-      state.player.level = level;
+      state.players[0].level = level;
       return botAllocate(createBot("survivor"), state); // default meta
     };
     expect(laneStat(5)).toBe("strength"); // early melee
@@ -1855,10 +1883,10 @@ describe("bot profiles", () => {
     // INT even after it levels into the endgame band — spent points can't be
     // reallocated, so the lane is decided once, not re-evaluated per level.
     const state = startGame();
-    state.player.level = 50; // constructed mid-game → magic
+    state.players[0].level = 50; // constructed mid-game → magic
     const bot = createBot("survivor");
     expect(botAllocate(bot, state)).toBe("intelligence");
-    state.player.level = 99; // now at the cap — lane stays put
+    state.players[0].level = 99; // now at the cap — lane stays put
     expect(botAllocate(bot, state)).toBe("intelligence");
     expect(bot.metaLaneChoice).toBe("magic");
   });
@@ -1881,35 +1909,35 @@ describe("bot repair awareness", () => {
   it("detours to a repair kit when the blade is wearing thin and it holds none", () => {
     const state = startGame();
     clearStage(state);
-    state.player.repairKits = 0;
-    state.player.equipment.weapon = wornWeapon(1); // nearly spent
+    state.players[0].repairKits = 0;
+    state.players[0].equipment.weapon = wornWeapon(1); // nearly spent
     // A threat present but well beyond the danger bubble, so the hero is free to
     // scoop the kit rather than give ground.
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
       }),
     );
     // A repair kit on the ground within detour reach.
     state.items.push({
       id: 8001,
       kind: "repair",
-      pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 100, y: state.players[0].pos.y },
     });
     const bot = createBot("survivor");
     const input = botAct(bot, state);
     expect(bot.lastThought).toBe("GET REPAIR");
-    expect(input.target.x).toBeGreaterThan(state.player.pos.x); // toward the kit
+    expect(input.target.x).toBeGreaterThan(state.players[0].pos.x); // toward the kit
   });
 
   it("spends a held repair kit once the weapon is nearly spent", () => {
     const state = startGame();
     clearStage(state);
-    state.player.repairKits = 1;
-    state.player.equipment.weapon = wornWeapon(1);
+    state.players[0].repairKits = 1;
+    state.players[0].equipment.weapon = wornWeapon(1);
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
       }),
     );
     const input = botAct(createBot("survivor"), state);
@@ -1919,13 +1947,13 @@ describe("bot repair awareness", () => {
   it("holds the kit while the blade is still healthy", () => {
     const state = startGame();
     clearStage(state);
-    state.player.repairKits = 1;
-    state.player.equipment.weapon = wornWeapon(
+    state.players[0].repairKits = 1;
+    state.players[0].equipment.weapon = wornWeapon(
       weaponDef("test_pipe").durability, // fresh
     );
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
       }),
     );
     const input = botAct(createBot("survivor"), state);
@@ -1937,7 +1965,7 @@ describe("bot repair awareness", () => {
     const b = startGame();
     drive(a, createBot("survivor"), 1200);
     drive(b, createBot("survivor"), 1200);
-    expect(a.player.pos).toEqual(b.player.pos);
+    expect(a.players[0].pos).toEqual(b.players[0].pos);
     expect(a.enemies.map((e) => e.pos)).toEqual(b.enemies.map((e) => e.pos));
     expect(a.stats).toEqual(b.stats);
   });
@@ -1973,7 +2001,7 @@ describe("bot hay-ball awareness", () => {
 
   it("sidesteps out of the lane of a bale bearing down on it", () => {
     const state = stageHayLevel();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     // A bale just ahead (up-street) and a touch below the hero's lane.
     state.hayBalls.push(bale({ x: p.x + 40, y: p.y + 20 }));
     const bot = createBot("survivor");
@@ -1987,7 +2015,7 @@ describe("bot hay-ball awareness", () => {
 
   it("ignores a bale rolling down a different lane", () => {
     const state = stageHayLevel();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.hayBalls.push(bale({ x: p.x + 40, y: p.y + 300 }));
     const bot = createBot("survivor");
     botAct(bot, state);
@@ -1996,7 +2024,7 @@ describe("bot hay-ball awareness", () => {
 
   it("ignores a bale that has already rolled past it", () => {
     const state = stageHayLevel();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.hayBalls.push(bale({ x: p.x - 100, y: p.y }));
     const bot = createBot("survivor");
     botAct(bot, state);
@@ -2018,7 +2046,7 @@ describe("bot sand-storm avoidance", () => {
   ): void {
     state.sandstorms.push({
       id: state.nextId++,
-      pos: overrides.pos ?? { ...state.player.pos },
+      pos: overrides.pos ?? { ...state.players[0].pos },
       dir: overrides.dir ?? { x: 1, y: 0 },
       speed: overrides.speed ?? 60,
       radius: overrides.radius ?? 34,
@@ -2033,7 +2061,7 @@ describe("bot sand-storm avoidance", () => {
   function distantFoe(state: GameState): void {
     state.enemies = [
       makeEnemy({
-        pos: { x: state.player.pos.x + 900, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 900, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
       }),
@@ -2044,7 +2072,7 @@ describe("bot sand-storm avoidance", () => {
     const state = startGame();
     clearStage(state);
     distantFoe(state);
-    const at = { ...state.player.pos };
+    const at = { ...state.players[0].pos };
     // A storm 100px behind him, drifting straight at him along +x: he sits dead
     // on its centreline and it's closing — he must step off the line (in ±y).
     pushStorm(state, { pos: { x: at.x - 100, y: at.y }, dir: { x: 1, y: 0 } });
@@ -2063,7 +2091,7 @@ describe("bot sand-storm avoidance", () => {
     const state = startGame();
     clearStage(state);
     state.enemies = []; // nothing to fight — the loop would otherwise idle
-    const at = { ...state.player.pos };
+    const at = { ...state.players[0].pos };
     pushStorm(state, { pos: { x: at.x - 100, y: at.y }, dir: { x: 1, y: 0 } });
     const bot = createBot("survivor");
     expect(botAct(bot, state).steering).toBe(true);
@@ -2075,7 +2103,7 @@ describe("bot sand-storm avoidance", () => {
     clearStage(state);
     distantFoe(state);
     pushStorm(state, {
-      pos: { x: state.player.pos.x - 40, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x - 40, y: state.players[0].pos.y },
       dir: { x: 1, y: 0 },
       struck: true,
     });
@@ -2090,7 +2118,7 @@ describe("bot sand-storm avoidance", () => {
     distantFoe(state);
     // Same approach, but offset far to the side — well outside the corridor.
     pushStorm(state, {
-      pos: { x: state.player.pos.x - 100, y: state.player.pos.y + 300 },
+      pos: { x: state.players[0].pos.x - 100, y: state.players[0].pos.y + 300 },
       dir: { x: 1, y: 0 },
     });
     const bot = createBot("survivor");
@@ -2104,7 +2132,7 @@ describe("bot sand-storm avoidance", () => {
     distantFoe(state);
     // Storm ahead of him, drifting further away (+x) — it's leaving, not coming.
     pushStorm(state, {
-      pos: { x: state.player.pos.x + 120, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 120, y: state.players[0].pos.y },
       dir: { x: 1, y: 0 },
     });
     const bot = createBot("survivor");
@@ -2135,7 +2163,7 @@ describe("bot stampede awareness", () => {
   function distantFoe(state: GameState): void {
     state.enemies = [
       makeEnemy({
-        pos: { x: state.player.pos.x + 900, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 900, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
       }),
@@ -2145,7 +2173,7 @@ describe("bot stampede awareness", () => {
   it("HOPS a herd bearing down its lane", () => {
     const state = stageStampedeLevel();
     distantFoe(state);
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
     const bot = createBot("survivor");
     const input = botAct(bot, state);
@@ -2156,7 +2184,7 @@ describe("bot stampede awareness", () => {
   it("hops a herd even on a clear field, before it can idle him into one", () => {
     const state = stageStampedeLevel();
     state.enemies = []; // nothing to fight — the loop would otherwise idle
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
     const bot = createBot("survivor");
     const input = botAct(bot, state);
@@ -2167,7 +2195,7 @@ describe("bot stampede awareness", () => {
   it("ignores a herd charging down a different lane", () => {
     const state = stageStampedeLevel();
     distantFoe(state);
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y + 300 }));
     const bot = createBot("survivor");
     botAct(bot, state);
@@ -2177,7 +2205,7 @@ describe("bot stampede awareness", () => {
   it("ignores a herd that has already charged past it", () => {
     const state = stageStampedeLevel();
     distantFoe(state);
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.stampedes.push(herd({ x: p.x - 200, y: p.y }));
     const bot = createBot("survivor");
     botAct(bot, state);
@@ -2187,8 +2215,8 @@ describe("bot stampede awareness", () => {
   it("does not re-hop while already airborne over a herd", () => {
     const state = stageStampedeLevel();
     distantFoe(state);
-    const p = state.player.pos;
-    state.player.z = JUMP.dodgeHeight + 10;
+    const p = state.players[0].pos;
+    state.players[0].z = JUMP.dodgeHeight + 10;
     state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
     const bot = createBot("survivor");
     botAct(bot, state);
@@ -2219,7 +2247,7 @@ describe("bot meteor awareness", () => {
 
   it("steps off an impact mark about to land on it", () => {
     const state = stageAsteroidLevel();
-    const p = { ...state.player.pos };
+    const p = { ...state.players[0].pos };
     // A rock landing right on the hero in 600ms — inside the lead window.
     state.asteroids.push(rock({ x: p.x + 8, y: p.y }, 600));
     const bot = createBot("survivor");
@@ -2232,7 +2260,7 @@ describe("bot meteor awareness", () => {
 
   it("ignores a strike landing well away from it", () => {
     const state = stageAsteroidLevel();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     state.asteroids.push(rock({ x: p.x + 300, y: p.y }, 600));
     const bot = createBot("survivor");
     botAct(bot, state);
@@ -2241,7 +2269,7 @@ describe("bot meteor awareness", () => {
 
   it("does not flinch at a rock still high in the sky", () => {
     const state = stageAsteroidLevel();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     // Aimed at him, but a full 1.4s from impact — too early to bother yet.
     state.asteroids.push(rock({ x: p.x, y: p.y }, 1400));
     const bot = createBot("survivor");
@@ -2301,12 +2329,12 @@ describe("the lift is a DISCOVERY, not a given", () => {
         radius: 800,
       },
     ] as unknown as GameState["obstacles"];
-    state.player.pos = { x: 300, y: 800 };
+    state.players[0].pos = { x: 300, y: 800 };
     state.playerSpawn = { x: 300, y: 800 };
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     boss.pos = { x: 2100, y: 800 };
     boss.mlvl = 1; // boss-ready, so nothing but the geometry gates the push
-    state.player.level = 20;
+    state.players[0].level = 20;
     state.elevators = [
       {
         id: "lift_down",
@@ -2328,17 +2356,17 @@ describe("the lift is a DISCOVERY, not a given", () => {
     const state = sealedAnnex();
     const bot = createBot("balanced");
     // Reveal only the hero's immediate surroundings — the pad stays in the dark.
-    revealAround(state, state.player.pos, 200);
+    revealAround(state, state.players[0].pos, 200);
     let covered = 0;
-    let prev = { ...state.player.pos };
+    let prev = { ...state.players[0].pos };
     for (let i = 0; i < 12; i++) {
       drive(state, bot, 50);
-      covered += dist(prev, state.player.pos);
-      prev = { ...state.player.pos };
+      covered += dist(prev, state.players[0].pos);
+      prev = { ...state.players[0].pos };
     }
     // He never crossed: with no known way through, the boss's side stays out of
     // reach for as long as the pad is undiscovered.
-    expect(state.player.pos.x).toBeLessThan(WALL_X);
+    expect(state.players[0].pos.x).toBeLessThan(WALL_X);
     // And he spent the time COVERING GROUND on his own half — searching — not
     // pressed against the wall the boss is behind.
     expect(covered).toBeGreaterThan(400);
@@ -2351,7 +2379,7 @@ describe("the lift is a DISCOVERY, not a given", () => {
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     drive(state, bot, 1600);
     // He walked to the pad, rode it, and is now fighting on the far side.
-    expect(state.player.pos.x).toBeGreaterThan(WALL_X);
-    expect(dist(state.player.pos, boss.pos)).toBeLessThan(400);
+    expect(state.players[0].pos.x).toBeGreaterThan(WALL_X);
+    expect(dist(state.players[0].pos, boss.pos)).toBeLessThan(400);
   });
 });

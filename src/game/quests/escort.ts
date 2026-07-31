@@ -93,13 +93,13 @@ export function stepEscorts(
     // "bring them along", so the hero's route is the route, and a follower
     // that pathed to the goal on its own would simply solve the quest by
     // itself while he fought somewhere else.
-    const toHero = distance(escort.pos, state.player.pos);
+    const toHero = distance(escort.pos, state.players[0].pos);
     escort.waiting = toHero > QUESTS.escortLeashDistance;
     if (!escort.waiting && toHero > QUESTS.escortFollowDistance) {
       const before = escort.pos;
       escort.pos = moveToward(
         escort.pos,
-        state.player.pos,
+        state.players[0].pos,
         QUESTS.escortSpeed * dt,
       );
       const dx = escort.pos.x - before.x;

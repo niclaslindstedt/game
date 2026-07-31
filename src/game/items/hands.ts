@@ -26,7 +26,7 @@
 // which is downstream of the bag and cannot be reached from it.
 
 import { isWeaponDef, SIDEARM_DEF_ID, weaponDef } from "../defs/equipment.ts";
-import type { Equipment, GameState } from "../types/index.ts";
+import type { Equipment, GameState, Player } from "../types/index.ts";
 import { canEquip } from "./requirements.ts";
 import { isOffhandItem } from "./slots.ts";
 import { weaponScore } from "./weapon-math.ts";
@@ -61,17 +61,18 @@ export function isTwoHandedWeapon(
  */
 export function takeBestBagWeapon(
   state: GameState,
+  player: Player,
   opts: { skipTwoHanded?: boolean } = {},
 ): Equipment | null {
-  const inv = state.player.inventory;
+  const inv = player.inventory;
   let bestIndex = -1;
   let bestScore = -Infinity;
   for (let i = 0; i < inv.length; i++) {
     const item = inv[i];
     if (!item || item.slot !== "weapon") continue;
     if (opts.skipTwoHanded && isTwoHandedWeapon(item)) continue;
-    if (!canEquip(state, item)) continue;
-    const score = weaponScore(state, item);
+    if (!canEquip(state, player, item)) continue;
+    const score = weaponScore(state, player, item);
     if (score > bestScore) {
       bestScore = score;
       bestIndex = i;
@@ -98,8 +99,8 @@ export function drawSidearm(state: GameState): Equipment {
 
 /** The first free bag cell, ignoring `except` (the cell the incoming piece is
  * being lifted out of — it is about to be free, but is not yet). */
-function freeCell(state: GameState, except: number): number {
-  const inv = state.player.inventory;
+function freeCell(state: GameState, player: Player, except: number): number {
+  const inv = player.inventory;
   for (let i = 0; i < inv.length; i++) {
     if (i !== except && inv[i] === null) return i;
   }
@@ -130,29 +131,30 @@ function freeCell(state: GameState, except: number): number {
  */
 export function freeHandsFor(
   state: GameState,
+  player: Player,
   piece: Equipment,
   cell: number,
 ): boolean {
-  const player = state.player;
   const equipment = player.equipment;
   if (isTwoHandedWeapon(piece)) {
     const held = equipment.offhand;
     if (!held) return true;
-    const free = freeCell(state, cell);
+    const free = freeCell(state, player, cell);
     if (free < 0) return false;
     player.inventory[free] = held;
     equipment.offhand = null;
     return true;
   }
   if (isOffhandItem(piece.slot) && isTwoHandedWeapon(equipment.weapon)) {
-    const free = freeCell(state, cell);
+    const free = freeCell(state, player, cell);
     if (free < 0) return false;
     const shed = equipment.weapon;
     // Pick the replacement BEFORE the two-hander is banked, so it can't pick
     // the very weapon it is replacing — and never another two-hander, which
     // would take the arm straight back off him.
     const replacement =
-      takeBestBagWeapon(state, { skipTwoHanded: true }) ?? drawSidearm(state);
+      takeBestBagWeapon(state, player, { skipTwoHanded: true }) ??
+      drawSidearm(state);
     player.inventory[free] = shed;
     equipment.weapon = replacement;
     player.weaponCooldownMs = 0;

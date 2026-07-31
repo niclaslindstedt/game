@@ -9,6 +9,7 @@
 // rebuilding the generator on load so a resumed run picks up the exact same
 // stream (proven in tests/engine/persistence_test.ts).
 
+import { localHero } from "./local-seat.ts";
 import {
   adoptEquipment,
   hasLevel,
@@ -91,7 +92,11 @@ const KEY = storageKey("current-run");
 // and the stall grew a consumable shelf. A v21 snapshot would thaw a counter
 // whose every entry reads `qty: undefined`, which `buyStock` refuses outright —
 // a shop that silently sells nothing.
-const SAVE_VERSION = 22;
+// v23: THE PARTY — the run carries `players`, a list of heroes, in place of the
+// single `player`. A v22 snapshot would thaw a run with no party at all, and
+// every pass in the pipeline reads seat 0 on its first line; there is nothing
+// left to resume.
+const SAVE_VERSION = 23;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
@@ -160,7 +165,7 @@ function fallbackWeapon(): Equipment {
  * be resolved (a legacy piece whose base is gone) is simply cleared/removed.
  */
 function adoptRunEquipment(state: GameState): void {
-  const equip = state.player.equipment;
+  const equip = localHero(state).equipment;
   equip.weapon = adoptEquipment(equip.weapon) ?? fallbackWeapon();
   // A pre-revamp run may carry a kind this build has no home for (the old
   // `suit` slot) — adopt what still exists, leave the rest behind. Note the
@@ -189,12 +194,12 @@ function adoptRunEquipment(state: GameState): void {
     (equip as { charm?: Equipment | null }).charm ?? null,
   );
   delete (equip as { charm?: Equipment | null }).charm;
-  state.player.inventory = state.player.inventory.map((cell) =>
+  localHero(state).inventory = localHero(state).inventory.map((cell) =>
     cell && isLiveItemSlot(cell.slot) ? adoptEquipment(cell) : null,
   );
   if (legacyCharm) {
-    const free = state.player.inventory.indexOf(null);
-    if (free !== -1) state.player.inventory[free] = legacyCharm;
+    const free = localHero(state).inventory.indexOf(null);
+    if (free !== -1) localHero(state).inventory[free] = legacyCharm;
   }
   state.items = state.items.filter((item) => {
     if (item.kind !== "equipment") return true;

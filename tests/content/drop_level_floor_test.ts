@@ -20,7 +20,7 @@ describe("base-level drop floor", () => {
       // Force regular so the sample measures the base-POOL floor, not a folded
       // unique's own (possibly low-req) base. The offset-strip lifts the loot
       // level above `mlvl`, so the real floor is at least `mlvl − window`.
-      const item = rollEquipment(state, {
+      const item = rollEquipment(state, state.players[0], {
         slot: "weapon",
         mlvl,
         tier: "regular",
@@ -36,7 +36,10 @@ describe("base-level drop floor", () => {
     expect(8 - LOOT.dropLevelWindow).toBeLessThan(1);
     let sawLowBase = false;
     for (let i = 0; i < 40; i++) {
-      const item = rollEquipment(state, { slot: "weapon", mlvl: 8 });
+      const item = rollEquipment(state, state.players[0], {
+        slot: "weapon",
+        mlvl: 8,
+      });
       if (equipmentLevelReq(item.defId) <= 8) sawLowBase = true;
     }
     expect(sawLowBase).toBe(true);

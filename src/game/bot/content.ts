@@ -82,9 +82,9 @@ export function nearestChestNearby(
     if (!o.chest) continue;
     // A well-guarded chest is not worth the detour — see chestTargets.
     if (insideWellPull(state, o.pos)) continue;
-    const d = distance(o.pos, state.player.pos);
+    const d = distance(o.pos, state.players[0].pos);
     if (d >= bestD) continue;
-    if (blockedByObstacle(state, state.player.pos, o.pos, PLAYER.radius))
+    if (blockedByObstacle(state, state.players[0].pos, o.pos, PLAYER.radius))
       continue;
     best = o;
     bestD = d;
@@ -131,7 +131,7 @@ function eliteTargets(
     if (def.role !== "elite" || inert(def, e)) continue;
     if (
       !committed &&
-      state.player.level < Math.max(1, e.mlvl - tune.bossEngageMargin)
+      state.players[0].level < Math.max(1, e.mlvl - tune.bossEngageMargin)
     )
       continue;
     out.push({ id: e.id, pos: roughPos(e.pos) });
@@ -205,7 +205,7 @@ export function trackContentAbandon(bot: Bot, state: GameState): void {
   if (!c || !c.target || !rc) return;
   // Only gauge while the cached route actually leads to this target.
   if (distance(rc.goal, c.target) > ROUTE_REPLAN_GOAL) return;
-  const rem = remainingRoute(rc, state.player.pos);
+  const rem = remainingRoute(rc, state.players[0].pos);
   const remSq = rem * rem;
   let headway = false;
   if (rem <= CONTENT_ENGAGE_ROUTE) {
@@ -269,7 +269,7 @@ export function nearestContent(
     bot.content.sig !== sig ||
     bot.content.target === null; // abandoned → re-pick, excluding the skip set
   if (needPick) {
-    const from = state.player.pos;
+    const from = state.players[0].pos;
     const skip =
       bot.contentSkip && bot.contentSkip.levelId === state.level.id
         ? bot.contentSkip.keys
@@ -470,7 +470,7 @@ function pickFogPocket(
   // whole map is in scope however far the next dark pocket lies.
   const walk = navDistanceField(
     rc.grid,
-    state.player.pos,
+    state.players[0].pos,
     wholeMap ? Infinity : tune.exploreReach,
   );
   const nav = rc.grid;

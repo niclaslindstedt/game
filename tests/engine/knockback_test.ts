@@ -39,15 +39,15 @@ function rig(
   state.obstacles = [];
   // Never miss, never get dodged — the blow always lands, so the knockback is
   // deterministic (its magnitude carries no rng of its own).
-  state.player.stats.dexterity = 1000;
+  state.players[0].stats.dexterity = 1000;
   // Only a weapon carrying the knockback affix shoves — grant the signature to
   // the held weapon so the blow pushes (a plain weapon leaves it off).
   if (knockback) {
-    state.player.equipment.weapon?.affixes.push({ kind: "knockback" });
+    state.players[0].equipment.weapon?.affixes.push({ kind: "knockback" });
   }
   const enemy = makeEnemy(
     {
-      pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
       hp: 1_000_000,
       maxHp: 1_000_000,
     },

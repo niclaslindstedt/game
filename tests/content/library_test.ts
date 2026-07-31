@@ -755,8 +755,8 @@ describe("library numbers are the engine's", () => {
     );
     const state = createGame(1, LEVEL_ORDER[0] as string);
     for (const row of hobble.ranks) {
-      state.player.talents = { crippling_shot: row.rank };
-      const live = talentCrippling(state);
+      state.players[0].talents = { crippling_shot: row.rank };
+      const live = talentCrippling(state, state.players[0]);
       expect(row.values.chance, `rank ${row.rank}`).toBeCloseTo(
         live!.chance,
         12,
@@ -1421,7 +1421,7 @@ describe("library pages", () => {
     expect(quest.reward.xp.length).toBeGreaterThan(0);
     for (const rung of quest.reward.xp) {
       const state = {
-        player: { level: rung.heroLevel },
+        players: [{ level: rung.heroLevel }],
         difficulty: rung.difficulty,
       } as unknown as Parameters<typeof questXpReward>[0];
       expect(rung.xp, rung.difficulty).toBe(questXpReward(state, reward));

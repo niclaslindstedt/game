@@ -10,6 +10,7 @@
 // id. Purely cosmetic; it reads the same labeled safe/quiet zones the map
 // preview draws and the engine's zone geometry.
 
+import { localHero } from "./local-seat.ts";
 import { runLevelDef, zoneContains, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
@@ -25,7 +26,8 @@ export function currentAreaLabel(state: GameState): string | null {
   const def = runLevelDef(state);
   const zones = [...(def.safeZones ?? []), ...(def.quietZones ?? [])];
   for (const zone of zones) {
-    if (zone.label && zoneContains(zone, state.player.pos)) return zone.label;
+    if (zone.label && zoneContains(zone, localHero(state).pos))
+      return zone.label;
   }
   return null;
 }

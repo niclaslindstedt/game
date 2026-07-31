@@ -23,103 +23,108 @@ import { startGame } from "./helpers.ts";
 
 /** Sum of the six trainable stats' allocated (base) points. */
 function statTotal(state: GameState): number {
-  return STAT_NAMES.reduce((sum, stat) => sum + state.player.stats[stat], 0);
+  return STAT_NAMES.reduce(
+    (sum, stat) => sum + state.players[0].stats[stat],
+    0,
+  );
 }
 
 describe("beginRespec", () => {
   it("refunds every banked point into the pool and zeros the stats", () => {
     const state = startGame();
-    state.player.stats.strength = 3;
-    state.player.stats.luck = 2;
-    state.player.pendingStatPoints = 1; // an unspent level-up folds in too
+    state.players[0].stats.strength = 3;
+    state.players[0].stats.luck = 2;
+    state.players[0].pendingStatPoints = 1; // an unspent level-up folds in too
 
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
 
     expect(state.phase).toBe("respec");
-    expect(state.player.pendingStatPoints).toBe(6); // 3 + 2 + 1
+    expect(state.players[0].pendingStatPoints).toBe(6); // 3 + 2 + 1
     expect(statTotal(state)).toBe(0);
     expect(state.respecPending).toBe(false);
   });
 
   it("shrinks the derived pools with the refund without over-filling bars", () => {
     const state = startGame();
-    state.player.pendingStatPoints = 4;
-    allocateStat(state, "stamina");
-    allocateStat(state, "stamina");
-    allocateStat(state, "strength");
-    allocateStat(state, "strength");
-    const maxHpWithStamina = state.player.maxHp;
+    state.players[0].pendingStatPoints = 4;
+    allocateStat(state, state.players[0], "stamina");
+    allocateStat(state, state.players[0], "stamina");
+    allocateStat(state, state.players[0], "strength");
+    allocateStat(state, state.players[0], "strength");
+    const maxHpWithStamina = state.players[0].maxHp;
 
-    beginRespec(state);
+    beginRespec(state, state.players[0]);
 
     // STAMINA fed max hp; refunding it drops the ceiling and hp stays inside it.
-    expect(state.player.maxHp).toBeLessThan(maxHpWithStamina);
-    expect(state.player.hp).toBeLessThanOrEqual(state.player.maxHp);
-    expect(state.player.stamina).toBeLessThanOrEqual(state.player.maxStamina);
+    expect(state.players[0].maxHp).toBeLessThan(maxHpWithStamina);
+    expect(state.players[0].hp).toBeLessThanOrEqual(state.players[0].maxHp);
+    expect(state.players[0].stamina).toBeLessThanOrEqual(
+      state.players[0].maxStamina,
+    );
   });
 });
 
 describe("respec allocation", () => {
   it("does not auto-close when the last point lands (unlike a level-up)", () => {
     const state = startGame();
-    state.player.stats.luck = 2;
-    beginRespec(state);
-    expect(state.player.pendingStatPoints).toBe(2);
+    state.players[0].stats.luck = 2;
+    beginRespec(state, state.players[0]);
+    expect(state.players[0].pendingStatPoints).toBe(2);
 
-    allocateStat(state, "strength");
-    allocateStat(state, "strength");
+    allocateStat(state, state.players[0], "strength");
+    allocateStat(state, state.players[0], "strength");
 
     // Pool is empty, but the chooser stays open for fine-tuning.
-    expect(state.player.pendingStatPoints).toBe(0);
+    expect(state.players[0].pendingStatPoints).toBe(0);
     expect(state.phase).toBe("respec");
   });
 
   it("deallocateStat puts a point back, floored at zero and respec-only", () => {
     const state = startGame();
-    state.player.stats.dexterity = 1;
-    beginRespec(state);
-    allocateStat(state, "strength"); // pool 1 -> 0, strength 1
+    state.players[0].stats.dexterity = 1;
+    beginRespec(state, state.players[0]);
+    allocateStat(state, state.players[0], "strength"); // pool 1 -> 0, strength 1
 
-    expect(deallocateStat(state, "strength")).toBe(true);
-    expect(state.player.stats.strength).toBe(0);
-    expect(state.player.pendingStatPoints).toBe(1);
+    expect(deallocateStat(state, state.players[0], "strength")).toBe(true);
+    expect(state.players[0].stats.strength).toBe(0);
+    expect(state.players[0].pendingStatPoints).toBe(1);
 
     // Nothing left in strength to refund.
-    expect(deallocateStat(state, "strength")).toBe(false);
-    expect(state.player.pendingStatPoints).toBe(1);
+    expect(deallocateStat(state, state.players[0], "strength")).toBe(false);
+    expect(state.players[0].pendingStatPoints).toBe(1);
   });
 
   it("deallocateStat is inert outside the respec phase", () => {
     const state = startGame();
-    state.player.stats.luck = 3;
+    state.players[0].stats.luck = 3;
     expect(state.phase).toBe("playing");
-    expect(deallocateStat(state, "luck")).toBe(false);
-    expect(state.player.stats.luck).toBe(3);
+    expect(deallocateStat(state, state.players[0], "luck")).toBe(false);
+    expect(state.players[0].stats.luck).toBe(3);
   });
 });
 
 describe("confirmRespec", () => {
   it("commits only once the whole pool is spent, then drops into play", () => {
     const state = startGame();
-    state.player.stats.luck = 2;
-    beginRespec(state);
+    state.players[0].stats.luck = 2;
+    beginRespec(state, state.players[0]);
 
     // A point still owed: the confirm is refused.
-    allocateStat(state, "stamina");
-    expect(confirmRespec(state)).toBe(false);
+    allocateStat(state, state.players[0], "stamina");
+    expect(confirmRespec(state, state.players[0])).toBe(false);
     expect(state.phase).toBe("respec");
 
-    allocateStat(state, "stamina");
-    expect(confirmRespec(state)).toBe(true);
+    allocateStat(state, state.players[0], "stamina");
+    expect(confirmRespec(state, state.players[0])).toBe(true);
     expect(state.phase).toBe("playing");
     // The commit lands rested, like any fresh drop.
-    expect(state.player.hp).toBe(state.player.maxHp);
-    expect(state.player.stamina).toBe(state.player.maxStamina);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
+    expect(state.players[0].stamina).toBe(state.players[0].maxStamina);
   });
 
   it("is inert outside the respec phase", () => {
     const state = startGame();
-    expect(confirmRespec(state)).toBe(false);
+    expect(confirmRespec(state, state.players[0])).toBe(false);
   });
 });
 
@@ -134,7 +139,7 @@ describe("the token-jump arming path", () => {
     dismissIntro(state);
 
     expect(state.phase).toBe("respec");
-    expect(state.player.pendingStatPoints).toBe(4);
+    expect(state.players[0].pendingStatPoints).toBe(4);
     expect(statTotal(state)).toBe(0);
   });
 

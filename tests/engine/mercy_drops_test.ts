@@ -41,7 +41,7 @@ const scriptRng = (state: GameState, values: number[], fallback = 0.99) => {
 // count as "on screen" (inside ENEMY_AI.nearRadius = 340) but well outside any
 // melee reach, so a swing only ever fells the adjacent victim.
 const packField = (state: GameState, n: number, offset = 120): void => {
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   for (let i = 0; i < n; i++) {
     state.enemies.push(
       makeEnemy({
@@ -72,35 +72,35 @@ describe("the desperation ramp (shared mercy-drop shape)", () => {
 describe("low-health desperation (medkits & armor)", () => {
   it("is zero at full health and one near death", () => {
     const state = startOn("medium");
-    state.player.maxHp = 100;
-    state.player.hp = 100;
-    expect(lowHealthDesperation(state)).toBe(0);
-    state.player.hp = 10; // under MERCY.lowHealthFull (15%)
-    expect(lowHealthDesperation(state)).toBe(1);
+    state.players[0].maxHp = 100;
+    state.players[0].hp = 100;
+    expect(lowHealthDesperation(state, state.players[0])).toBe(0);
+    state.players[0].hp = 10; // under MERCY.lowHealthFull (15%)
+    expect(lowHealthDesperation(state, state.players[0])).toBe(1);
   });
 
   it("guards a zero max-hp state instead of dividing by it", () => {
     const state = startOn("medium");
-    state.player.maxHp = 0;
-    state.player.hp = 0;
-    expect(lowHealthDesperation(state)).toBe(0);
+    state.players[0].maxHp = 0;
+    state.players[0].hp = 0;
+    expect(lowHealthDesperation(state, state.players[0])).toBe(0);
   });
 });
 
 describe("low-durability desperation (repairs)", () => {
   it("climbs as the equipped weapon nears breaking", () => {
     const state = startOn("medium"); // crude_sword, durability 120
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     weapon.durability = 120;
-    expect(lowDurabilityDesperation(state)).toBe(0);
+    expect(lowDurabilityDesperation(state, state.players[0])).toBe(0);
     weapon.durability = 6; // under MERCY.lowDurabilityFull (10% of 120 = 12)
-    expect(lowDurabilityDesperation(state)).toBe(1);
+    expect(lowDurabilityDesperation(state, state.players[0])).toBe(1);
   });
 
   it("never triggers on the unbreakable sidearm", () => {
     const state = startOn("medium");
-    state.player.equipment.weapon.durability = undefined; // sidearm-like
-    expect(lowDurabilityDesperation(state)).toBe(0);
+    state.players[0].equipment.weapon.durability = undefined; // sidearm-like
+    expect(lowDurabilityDesperation(state, state.players[0])).toBe(0);
   });
 });
 
@@ -153,13 +153,13 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
   it("stays at zero while any stamina is left, however low", () => {
     const state = startOn("easy");
     state.staminaEmptyMs = 1e9; // even long-stranded time can't fire it…
-    state.player.stamina = 1; // …because the pool is not bone-dry
+    state.players[0].stamina = 1; // …because the pool is not bone-dry
     expect(staminaDrinkChance(state)).toBe(0);
   });
 
   it("is still zero the instant the pool empties, then ramps over time", () => {
     const state = startOn("easy");
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     state.staminaEmptyMs = 0; // just hit empty this frame
     expect(staminaDrinkChance(state)).toBe(0);
     // Halfway through the ramp window → half the rung's cap.
@@ -169,7 +169,7 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
 
   it("tops out at 15% on easy and 10% on medium once fully stranded", () => {
     const easy = startOn("easy");
-    easy.player.stamina = 0;
+    easy.players[0].stamina = 0;
     easy.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
     expect(staminaDrinkChance(easy)).toBeCloseTo(0.15, 5);
     // Past the window it holds the cap, never climbing beyond it.
@@ -177,7 +177,7 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
     expect(staminaDrinkChance(easy)).toBeCloseTo(0.15, 5);
 
     const medium = startOn("medium");
-    medium.player.stamina = 0;
+    medium.players[0].stamina = 0;
     medium.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
     expect(staminaDrinkChance(medium)).toBeCloseTo(0.1, 5);
   });
@@ -185,7 +185,7 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
   it("gives no stamina drink from hard up, however long stranded", () => {
     for (const rung of ["hard", "nightmare", "jesus"] as Difficulty[]) {
       const state = startOn(rung);
-      state.player.stamina = 0;
+      state.players[0].stamina = 0;
       state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs * 5;
       expect(staminaDrinkChance(state)).toBe(0);
     }
@@ -194,12 +194,12 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
   it("accrues empty time while winded and resets the moment stamina returns", () => {
     const state = startOn("easy");
     clearStage(state);
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     // A running step (throttle 1, decisively steering) keeps the pool empty and
     // banks empty time.
     step(
       state,
-      { ...steerTo(state.player.pos.x + 400, state.player.pos.y) },
+      { ...steerTo(state.players[0].pos.x + 400, state.players[0].pos.y) },
       DT,
     );
     expect(state.staminaEmptyMs).toBe(DT);
@@ -208,7 +208,7 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
     state.staminaRegenLockMs = 0;
     // Standing still recovers stamina, which zeroes the accumulator again.
     step(state, idle, DT);
-    expect(state.player.stamina).toBeGreaterThan(0);
+    expect(state.players[0].stamina).toBeGreaterThan(0);
     expect(state.staminaEmptyMs).toBe(0);
   });
 });
@@ -233,7 +233,7 @@ const killForItems = (
   if (opts.crowd) packField(state, opts.crowd);
   // …plus four far minions so the equipment pity rule stays out of the way
   // (owed <= remaining) when there is no crowd.
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   for (let i = 0; i < 4; i++) {
     state.enemies.push(
       makeEnemy({ id: 9100 + i, pos: { x: p.x + 5000, y: p.y + i * 30 } }),
@@ -249,12 +249,12 @@ const killForItems = (
     mlvl: 1,
   });
   state.enemies.push(victim);
-  if (opts.hp !== undefined) state.player.hp = opts.hp;
+  if (opts.hp !== undefined) state.players[0].hp = opts.hp;
   if (opts.durability !== undefined) {
-    state.player.equipment.weapon.durability = opts.durability;
+    state.players[0].equipment.weapon.durability = opts.durability;
   }
   opts.arrange?.(state);
-  state.player.weaponCooldownMs = 0;
+  state.players[0].weaponCooldownMs = 0;
   scriptRng(state, rolls);
   step(state, idle, DT);
   expect(state.enemies.find((e) => e.id === 9000)).toBeUndefined();
@@ -303,11 +303,11 @@ describe("armor pull toward armor pieces when hurt (easy)", () => {
   // keeps the charm. Later rolls (tier/ilvl/affixes) fall through to 0.99.
   const rollGear = (hp: number, extra: number[] = []): string => {
     const state = startOn("easy");
-    state.player.maxHp = 100;
-    state.player.hp = hp;
+    state.players[0].maxHp = 100;
+    state.players[0].hp = hp;
     // gear (0.7 >= 0.6), pool pick charm (floor(0.7 * 2) = 1), then `extra`.
     scriptRng(state, [0.7, 0.7, ...extra]);
-    return rollEquipment(state).defId;
+    return rollEquipment(state, state.players[0]).defId;
   };
 
   it("swaps an armorless gear pick for an armor piece at low health", () => {
@@ -328,7 +328,7 @@ describe("the energy drink drop and pickup", () => {
     clearStage(state);
     state.waveSpawned = state.waveSpawned.map(() => 1e9);
     state.items = [];
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     // Four far minions so the equipment pity rule stays out of the way.
     for (let i = 0; i < 4; i++) {
       state.enemies.push(
@@ -348,14 +348,14 @@ describe("the energy drink drop and pickup", () => {
     );
     // Bone-dry and long stranded → the full 10% cap; running through the kill
     // keeps stepPlayer from refilling the pool before the drop rolls.
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
-    state.player.weaponCooldownMs = 0;
+    state.players[0].weaponCooldownMs = 0;
     // rolls: miss no, dodge no, crit no, drink YES (the pre-gate mercy roll).
     scriptRng(state, [0.9, 0.9, 0.9, 0.0]);
     step(state, steerTo(p.x + 20, p.y), DT);
     expect(state.enemies.find((e) => e.id === 9000)).toBeUndefined();
-    expect(state.player.stamina).toBe(0); // still winded after the kill
+    expect(state.players[0].stamina).toBe(0); // still winded after the kill
     expect(state.items.some((i) => i.kind === "drink")).toBe(true);
   });
 
@@ -364,13 +364,13 @@ describe("the energy drink drop and pickup", () => {
     clearStage(state);
     state.waveSpawned = state.waveSpawned.map(() => 1e9);
     state.items = [
-      { id: state.nextId++, kind: "drink", pos: { ...state.player.pos } },
+      { id: state.nextId++, kind: "drink", pos: { ...state.players[0].pos } },
     ];
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     step(state, idle, DT);
     // Stashed, not drunk: the pool isn't slammed to full on contact.
-    expect(state.player.stamina).toBeLessThan(state.player.maxStamina);
-    expect(state.player.staminaPotions).toBe(1);
+    expect(state.players[0].stamina).toBeLessThan(state.players[0].maxStamina);
+    expect(state.players[0].staminaPotions).toBe(1);
     expect(state.items.some((i) => i.kind === "drink")).toBe(false);
     expect(
       state.events.some(
@@ -379,21 +379,21 @@ describe("the energy drink drop and pickup", () => {
     ).toBe(true);
     // Spending it on the input edge fills the sprint pool.
     step(state, { ...idle, useStaminaPotion: true }, DT);
-    expect(state.player.stamina).toBe(state.player.maxStamina);
-    expect(state.player.staminaPotions).toBe(0);
+    expect(state.players[0].stamina).toBe(state.players[0].maxStamina);
+    expect(state.players[0].staminaPotions).toBe(0);
   });
 
   it("banks a drink even for a rested hero (it's a carried reserve now)", () => {
     const state = startOn("easy");
     clearStage(state);
     state.waveSpawned = state.waveSpawned.map(() => 1e9);
-    state.player.stamina = state.player.maxStamina;
+    state.players[0].stamina = state.players[0].maxStamina;
     state.items = [
-      { id: state.nextId++, kind: "drink", pos: { ...state.player.pos } },
+      { id: state.nextId++, kind: "drink", pos: { ...state.players[0].pos } },
     ];
     step(state, idle, DT);
     expect(state.items.some((i) => i.kind === "drink")).toBe(false);
-    expect(state.player.staminaPotions).toBe(1);
+    expect(state.players[0].staminaPotions).toBe(1);
   });
 });
 
@@ -407,7 +407,7 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
   ): void => {
     state.items.push({
       id: state.nextId++,
-      pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
       ...item,
     } as Item);
   };
@@ -434,7 +434,7 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
 
   it("holds the stamina drink while one waits — but not for other kinds", () => {
     const state = startOn("easy");
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
     groundItem(state, { kind: "drink" });
     expect(staminaDrinkChance(state)).toBe(0);
@@ -467,8 +467,8 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
 
   it("holds the armor pull while an armor piece waits in view", () => {
     const state = startOn("easy");
-    state.player.maxHp = 100;
-    state.player.hp = 1; // full desperation — the pull would fire…
+    state.players[0].maxHp = 100;
+    state.players[0].hp = 1; // full desperation — the pull would fire…
     groundItem(state, {
       kind: "equipment",
       equipment: {
@@ -483,7 +483,7 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
     // gear (0.7 >= 0.6), pool pick charm; with the pull held no extra roll is
     // drawn (the 0.99 fallback would defeat it anyway) and the charm stands.
     scriptRng(state, [0.7, 0.7]);
-    expect(rollEquipment(state).defId).toBe("test_charm");
+    expect(rollEquipment(state, state.players[0]).defId).toBe("test_charm");
   });
 });
 
@@ -507,7 +507,7 @@ describe("the mercy angel's delivery window", () => {
     clearStage(state);
     state.waveSpawned = state.waveSpawned.map(() => 1e9);
     state.items = [];
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     for (let i = 0; i < 4; i++) {
       state.enemies.push(
         makeEnemy({ id: 9100 + i, pos: { x: p.x + 5000, y: p.y + i * 30 } }),
@@ -524,9 +524,9 @@ describe("the mercy angel's delivery window", () => {
         mlvl: 1,
       }),
     );
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
-    state.player.weaponCooldownMs = 0;
+    state.players[0].weaponCooldownMs = 0;
     scriptRng(state, [0.9, 0.9, 0.9, 0.0]); // miss, dodge, crit no; drink YES
     step(state, steerTo(p.x + 20, p.y), DT);
 
@@ -543,12 +543,12 @@ describe("the mercy angel's delivery window", () => {
   it("can't be grabbed mid-air, then lands and is collected within the window", () => {
     const state = startOn("medium");
     clearStage(state);
-    state.player.maxHp = 100;
-    state.player.hp = 1;
+    state.players[0].maxHp = 100;
+    state.players[0].hp = 1;
     const gift: Item = {
       id: state.nextId++,
       kind: "medkit",
-      pos: { ...state.player.pos }, // hero standing right on the landing spot
+      pos: { ...state.players[0].pos }, // hero standing right on the landing spot
       deliverMs: MERCY.angelDeliverMs,
     };
     state.items = [gift];
@@ -556,7 +556,7 @@ describe("the mercy angel's delivery window", () => {
     // One step: still airborne — the gift hangs in the angel's hands, ungrabbed.
     step(state, idle, DT);
     expect(state.items).toHaveLength(1);
-    expect(state.player.medkits.reduce((a, b) => a + b, 0)).toBe(0);
+    expect(state.players[0].medkits.reduce((a, b) => a + b, 0)).toBe(0);
 
     // Run the clock through the delivery window: it lands and is banked.
     let ms = DT;
@@ -565,20 +565,20 @@ describe("the mercy angel's delivery window", () => {
       ms += DT;
     }
     expect(state.items).toHaveLength(0);
-    expect(state.player.medkits.reduce((a, b) => a + b, 0)).toBe(1);
+    expect(state.players[0].medkits.reduce((a, b) => a + b, 0)).toBe(1);
   });
 
   it("leaves ordinary drops grounded from birth (no angel, grabbed at once)", () => {
     const state = startOn("medium");
     clearStage(state);
-    state.player.maxHp = 100;
-    state.player.hp = 1;
+    state.players[0].maxHp = 100;
+    state.players[0].hp = 1;
     // A plain medkit with no deliverMs is on the ground under the hero.
     state.items = [
-      { id: state.nextId++, kind: "medkit", pos: { ...state.player.pos } },
+      { id: state.nextId++, kind: "medkit", pos: { ...state.players[0].pos } },
     ];
     step(state, idle, DT);
     expect(state.items).toHaveLength(0); // collected immediately
-    expect(state.player.medkits.reduce((a, b) => a + b, 0)).toBe(1);
+    expect(state.players[0].medkits.reduce((a, b) => a + b, 0)).toBe(1);
   });
 });

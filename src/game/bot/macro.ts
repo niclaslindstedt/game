@@ -64,7 +64,7 @@ export function travelHeading(
   tune: BotTuning,
 ): Vec2 | null {
   const goal = macroTarget(bot, state, tune);
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   // NO PLAN, NO PULL: with nothing to travel to (the goal is where he already
   // stands) there is no heading, and the callers fall back to their own reads.
   // Asked of the GOAL, never of the route step below — a turning point can sit
@@ -140,15 +140,15 @@ export function trackEngagement(
   }
   const seek = bot.seek;
   const engaged =
-    state.player.disarmed ||
-    state.player.hurtFlashMs > 0 ||
+    state.players[0].disarmed ||
+    state.players[0].hurtFlashMs > 0 ||
     threatCountWithin(state, THREAT_RADIUS) > 0;
   if (engaged) seek.lastEngagedMs = now;
   if (seek.targetId !== null) {
     const foe = state.enemies.find((e) => e.id === seek.targetId);
     // Headway gauge: the hunt is healthy while the gap keeps shrinking.
     if (foe) {
-      const d = distance(state.player.pos, foe.pos);
+      const d = distance(state.players[0].pos, foe.pos);
       if (d < seek.bestD - SEEK_PROGRESS_EPS) {
         seek.bestD = d;
         seek.bestMs = now;
@@ -156,7 +156,7 @@ export function trackEngagement(
     }
     if (
       !foe ||
-      state.player.hurtFlashMs > 0 ||
+      state.players[0].hurtFlashMs > 0 ||
       now - seek.bestMs > SEEK_STALL_MS
     ) {
       seek.targetId = null;
@@ -172,7 +172,7 @@ export function trackEngagement(
     const foe = nearestEnemy(state);
     if (foe) {
       seek.targetId = foe.id;
-      seek.bestD = distance(state.player.pos, foe.pos);
+      seek.bestD = distance(state.players[0].pos, foe.pos);
       seek.bestMs = now;
     }
   }
@@ -353,8 +353,8 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // that ends in a sealed annex puts a landmark INSIDE it (the control room,
   // the vault), and marching at that one parks him against the dead rock for
   // the rest of the run — measured as five minutes of UNSTICK at one spot.
-  if (noWayYet) return reachableLandmark(bot, state) ?? state.player.pos;
-  return objective ?? furthestLandmark(state) ?? state.player.pos;
+  if (noWayYet) return reachableLandmark(bot, state) ?? state.players[0].pos;
+  return objective ?? furthestLandmark(state) ?? state.players[0].pos;
 }
 
 /** The furthest landmark from the spawn the hero can actually route to — the
@@ -368,7 +368,7 @@ function reachableLandmark(bot: Bot, state: GameState): Vec2 | null {
   for (const landmark of state.landmarks) {
     const d = distance(landmark.pos, state.playerSpawn);
     if (d <= bestD) continue;
-    if (!routeReachable(rc.grid, portals, state.player.pos, landmark.pos))
+    if (!routeReachable(rc.grid, portals, state.players[0].pos, landmark.pos))
       continue;
     best = landmark.pos;
     bestD = d;
@@ -383,7 +383,12 @@ function bossReachable(bot: Bot, state: GameState): boolean {
   const boss = bossPos(state);
   if (!boss) return true;
   const rc = ensureRoute(bot, state);
-  return routeReachable(rc.grid, knownPortals(state), state.player.pos, boss);
+  return routeReachable(
+    rc.grid,
+    knownPortals(state),
+    state.players[0].pos,
+    boss,
+  );
 }
 
 /** The short label for the macro goal `macroTarget` returned, for the BOT VIEW
@@ -494,7 +499,7 @@ export function unstuckInput(
   // map with walls in it (see `navigatesWalls`). A genuinely open field never
   // wedged the old bot, so leave it untouched.
   if (!navigatesWalls(state)) return null;
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   const now = state.stats.timeMs;
   if (!bot.nav) {
     bot.nav = {
@@ -518,7 +523,9 @@ export function unstuckInput(
     // making progress, not wedged.
     const minDisp = Math.min(
       UNSTUCK_MIN_DISP,
-      playerSpeed(state) * (elapsed / 1000) * UNSTUCK_SPEED_FRAC,
+      playerSpeed(state, state.players[0]) *
+        (elapsed / 1000) *
+        UNSTUCK_SPEED_FRAC,
     );
     const moved = distance(p, nav.lastPos);
     if (moved >= minDisp || hasReachableFoe(state)) nav.stuckMs = 0;
@@ -622,5 +629,5 @@ export function unstuckInput(
   // hop bounce-hopped the hero across the moon's low-g field and wound him out.
   const pinned =
     threatCountWithin(state, CONTACT_DODGE_RADIUS) > 0 || allBlocked;
-  return steer(state, target, pinned && state.player.z === 0);
+  return steer(state, target, pinned && state.players[0].z === 0);
 }

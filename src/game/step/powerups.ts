@@ -40,7 +40,12 @@ import { abilityDef, type AbilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { knockEnemyBack } from "../hazards.ts";
 import { hitEnemy } from "../loot.ts";
-import type { ActiveAbility, Enemy, GameState } from "../types/index.ts";
+import type {
+  ActiveAbility,
+  Enemy,
+  GameState,
+  Player,
+} from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
 import { inert } from "../disposition.ts";
 
@@ -85,10 +90,14 @@ function enemiesWithin(
  * has NOT run yet — a power that ends here (a shattered barrier) is retired on
  * the next tick's sweep like any other.
  */
-export function stepPowerups(state: GameState, dt: number, dtMs: number): void {
-  const player = state.player;
+export function stepPowerups(
+  state: GameState,
+  player: Player,
+  dt: number,
+  dtMs: number,
+): void {
   if (player.abilities.length === 0) return;
-  const power = abilityPowerScale(state);
+  const power = abilityPowerScale(state, player);
 
   for (const ability of player.abilities) {
     const def = abilityDef(ability.defId);
@@ -120,7 +129,7 @@ function stepTrail(
   const trail = def.trail;
   if (!trail) return;
   const patches = (ability.patches ??= []);
-  const player = state.player;
+  const player = state.players[0];
 
   if (tickAbilityClock(ability, "trail", dtMs) <= 0) {
     setAbilityClock(ability, "trail", trail.dropMs);
@@ -179,7 +188,7 @@ function stepRain(
   if (tickAbilityClock(ability, "rain", dtMs) > 0) return;
   setAbilityClock(ability, "rain", rain.intervalMs);
 
-  const player = state.player;
+  const player = state.players[0];
   const marks = enemiesWithin(state, player.pos, rain.range).slice();
   for (let i = 0; i < rain.count; i++) {
     let target: Vec2;
@@ -234,7 +243,7 @@ function stepWell(
 ): void {
   const well = def.well;
   if (!well) return;
-  const core = (ability.pos ??= { ...state.player.pos });
+  const core = (ability.pos ??= { ...state.players[0].pos });
 
   if (well.chase > 0) {
     const prey = nearestEnemy(state.enemies, core, WELL_HUNT_RANGE);
@@ -280,7 +289,7 @@ function stepPulse(
   if (tickAbilityClock(ability, "pulse", dtMs) > 0) return;
   setAbilityClock(ability, "pulse", pulse.intervalMs);
 
-  const origin = { ...state.player.pos };
+  const origin = { ...state.players[0].pos };
   state.events.push({
     type: "voidWave",
     pos: origin,
@@ -321,7 +330,7 @@ function stepVolley(
   const volley = def.volley;
   if (!volley) return;
   const scratch = abilityScratch(ability, "volley", dtMs);
-  applyVolley(state, volley, scratch, power);
+  applyVolley(state, state.players[0], volley, scratch, power);
   commitAbilityScratch(ability, "volley", scratch);
 }
 
@@ -342,7 +351,14 @@ function stepSingularity(
   const singularity = def.singularity;
   if (!singularity) return;
   const scratch = abilityScratch(ability, "singularity", dtMs);
-  applySingularity(state, singularity, scratch, power, powerupBilling);
+  applySingularity(
+    state,
+    state.players[0],
+    singularity,
+    scratch,
+    power,
+    powerupBilling,
+  );
   commitAbilityScratch(ability, "singularity", scratch);
 }
 
@@ -362,7 +378,14 @@ function stepImmolation(
   const immolation = def.immolation;
   if (!immolation) return;
   const scratch = abilityScratch(ability, "immolation", dtMs);
-  applyImmolation(state, immolation, scratch, power, powerupBilling);
+  applyImmolation(
+    state,
+    state.players[0],
+    immolation,
+    scratch,
+    power,
+    powerupBilling,
+  );
   commitAbilityScratch(ability, "immolation", scratch);
 }
 

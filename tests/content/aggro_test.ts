@@ -25,7 +25,7 @@ function placeObstacle(
     id: 8000,
     kind,
     sprite: kind,
-    pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+    pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
     radius: 12,
     jumpable,
   };
@@ -37,7 +37,7 @@ function placeObstacle(
 function placeStalker(state: GameState, dx: number) {
   const mob = makeEnemy(
     {
-      pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
       speed: 40,
       hp: 1_000_000, // survives the auto-blaster for the whole run
       maxHp: 1_000_000,
@@ -71,7 +71,7 @@ describe("aggro through walls", () => {
 
     run(state, idle, 20);
     expect(mob.awake).toBe(true);
-    expect(mob.pos.x).toBeLessThan(state.player.pos.x + 100); // closing in
+    expect(mob.pos.x).toBeLessThan(state.players[0].pos.x + 100); // closing in
   });
 
   it("a low, jumpable rock hides nothing", () => {
@@ -106,7 +106,7 @@ describe("aggro through walls", () => {
     const mob = placeStalker(state, 120);
     run(state, idle, 10); // acquires the player in the open
     expect(mob.awake).toBe(true);
-    const acquired = dist(mob.pos, state.player.pos);
+    const acquired = dist(mob.pos, state.players[0].pos);
     expect(acquired).toBeLessThan(120); // was closing in
 
     // The player ducks behind stone — the sightline breaks, so the chase stops
@@ -130,7 +130,7 @@ describe("aggro through walls", () => {
 
     // Teleport the player out of range: the latch releases and the mob
     // needs a fresh line of sight to wake again.
-    state.player.pos = { x: mob.pos.x + 1200, y: mob.pos.y };
+    state.players[0].pos = { x: mob.pos.x + 1200, y: mob.pos.y };
     step(state, idle, DT);
     expect(mob.awake).toBe(false);
   });
@@ -140,7 +140,7 @@ describe("aggro through walls", () => {
     clearStage(state);
     placeObstacle(state, 50, false);
     const ghost = makeEnemy({
-      pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 100, y: state.players[0].pos.y },
       speed: 40,
       hp: 1_000_000,
       maxHp: 1_000_000,
@@ -149,7 +149,7 @@ describe("aggro through walls", () => {
 
     run(state, idle, 20);
     expect(ghost.awake).toBe(true);
-    expect(ghost.pos.x).toBeLessThan(state.player.pos.x + 100); // closing in
+    expect(ghost.pos.x).toBeLessThan(state.players[0].pos.x + 100); // closing in
   });
 });
 
@@ -160,7 +160,10 @@ describe("pack overlap", () => {
     state.obstacles = [];
     // Two sleeping ghosts stacked nearly on top of each other, far from
     // the player so nothing else moves them.
-    const spot = { x: state.player.pos.x + 1200, y: state.player.pos.y };
+    const spot = {
+      x: state.players[0].pos.x + 1200,
+      y: state.players[0].pos.y,
+    };
     const a = makeEnemy({ id: 1, pos: { ...spot } });
     const b = makeEnemy({ id: 2, pos: { x: spot.x + 4, y: spot.y } });
     state.enemies.push(a, b);

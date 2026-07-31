@@ -34,10 +34,10 @@ import type {
  * INTELLIGENCE trims the authored cooldown/interval by `SPELL.intervalPerInt`,
  * floored at `SPELL.intervalFloor` — the "improvable by INT" cadence lever.
  */
-export function spellIntervalScale(state: GameState): number {
+export function spellIntervalScale(state: GameState, player: Player): number {
   return Math.max(
     SPELL.intervalFloor,
-    1 - effectiveStat(state, "intelligence") * SPELL.intervalPerInt,
+    1 - effectiveStat(state, player, "intelligence") * SPELL.intervalPerInt,
   );
 }
 
@@ -47,13 +47,14 @@ export function spellIntervalScale(state: GameState): number {
  * a legendary grants (and a hero wearing both gets the sum). */
 export function grantedSpellRanks(
   state: GameState,
+  player: Player,
 ): Partial<Record<SpellKind, number>> {
   const ranks: Partial<Record<SpellKind, number>> = {};
-  for (const affix of activeEquippedAffixes(state)) {
+  for (const affix of activeEquippedAffixes(state, player)) {
     if (affix.kind !== "spell") continue;
     ranks[affix.spell] = (ranks[affix.spell] ?? 0) + affix.rank;
   }
-  const fromTalents = talentSpellRanks(state);
+  const fromTalents = talentSpellRanks(state, player);
   for (const spell of Object.keys(fromTalents) as SpellKind[]) {
     ranks[spell] = (ranks[spell] ?? 0) + (fromTalents[spell] as number);
   }
@@ -67,9 +68,8 @@ export function grantedSpellRanks(
  * away with the piece that granted them. Cheap enough to run every tick —
  * equipment is seven slots deep.
  */
-export function syncItemSpells(state: GameState): void {
-  const ranks = grantedSpellRanks(state);
-  const player = state.player;
+export function syncItemSpells(state: GameState, player: Player): void {
+  const ranks = grantedSpellRanks(state, player);
   const kept: ItemSpell[] = [];
   for (const spell of Object.keys(ranks) as SpellKind[]) {
     const rank = ranks[spell] as number;
@@ -100,6 +100,7 @@ export function syncItemSpells(state: GameState): void {
  * rank grows the ring and the bite, INT quickens the tick. */
 export function orbitSpellBlock(
   state: GameState,
+  player: Player,
   rank: number,
 ): NonNullable<AbilityDef["orbit"]> {
   const o = SPELL.orbit;
@@ -109,7 +110,7 @@ export function orbitSpellBlock(
     damage: o.damage + o.damagePerRank * steps,
     radius: o.radius,
     angularSpeed: o.angularSpeed,
-    hitCooldownMs: o.hitCooldownMs * spellIntervalScale(state),
+    hitCooldownMs: o.hitCooldownMs * spellIntervalScale(state, player),
     orbRadius: o.orbRadius,
     sprite: o.sprite,
   };
@@ -119,6 +120,7 @@ export function orbitSpellBlock(
  * quickens the strikes; INT quickens them further. */
 export function stormSpellBlock(
   state: GameState,
+  player: Player,
   rank: number,
 ): NonNullable<AbilityDef["storm"]> {
   const s = SPELL.storm;
@@ -127,7 +129,7 @@ export function stormSpellBlock(
     intervalMs:
       s.intervalMs *
       Math.pow(s.intervalPerRankMult, steps) *
-      spellIntervalScale(state),
+      spellIntervalScale(state, player),
     damage: s.damage + s.damagePerRank * steps,
     range: s.range,
   };
@@ -137,6 +139,7 @@ export function stormSpellBlock(
  * deepens (floored), INT widens further — the same lever the pickup has. */
 export function stasisSpellParams(
   state: GameState,
+  player: Player,
   rank: number,
 ): { radius: number; slowFactor: number } {
   const s = SPELL.stasis;
@@ -145,7 +148,7 @@ export function stasisSpellParams(
     radius:
       s.radius +
       s.radiusPerRank * steps +
-      effectiveStat(state, "intelligence") * ABILITY.stasisRadiusPerInt,
+      effectiveStat(state, player, "intelligence") * ABILITY.stasisRadiusPerInt,
     slowFactor: Math.max(
       s.slowFactorMin,
       s.slowFactor + s.slowFactorPerRank * steps,
@@ -158,6 +161,7 @@ export function stasisSpellParams(
  * orbs (`ceil(rank/2)`). */
 export function seekerSpellBlock(
   state: GameState,
+  player: Player,
   rank: number,
 ): NonNullable<AbilityDef["volley"]> {
   const s = SPELL.seeker;
@@ -166,7 +170,7 @@ export function seekerSpellBlock(
     intervalMs:
       s.intervalMs *
       Math.pow(s.intervalPerRankMult, steps) *
-      spellIntervalScale(state),
+      spellIntervalScale(state, player),
     damage: s.damage + s.damagePerRank * steps,
     burst: s.burstRadius + s.burstRadiusPerRank * steps,
     count: Math.ceil(rank / 2),
@@ -192,6 +196,7 @@ const SEEKER_SPREAD = 0.6;
  * the reach and the pull. */
 export function singularitySpellBlock(
   state: GameState,
+  player: Player,
   rank: number,
 ): NonNullable<AbilityDef["singularity"]> {
   const s = SPELL.singularity;
@@ -200,7 +205,7 @@ export function singularitySpellBlock(
     intervalMs:
       s.intervalMs *
       Math.pow(s.intervalPerRankMult, steps) *
-      spellIntervalScale(state),
+      spellIntervalScale(state, player),
     damage: s.damage + s.damagePerRank * steps,
     radius: s.radius + s.radiusPerRank * steps,
     pull: s.pull + s.pullPerRank * steps,
@@ -212,6 +217,7 @@ export function singularitySpellBlock(
  * ring and deepens the per-tick burn; INT quickens the tick. */
 export function immolationSpellBlock(
   state: GameState,
+  player: Player,
   rank: number,
 ): NonNullable<AbilityDef["immolation"]> {
   const s = SPELL.immolation;
@@ -219,7 +225,7 @@ export function immolationSpellBlock(
   return {
     radius: s.radius + s.radiusPerRank * steps,
     damage: s.damage + s.damagePerRank * steps,
-    tickMs: s.tickMs * spellIntervalScale(state),
+    tickMs: s.tickMs * spellIntervalScale(state, player),
   };
 }
 
@@ -249,7 +255,7 @@ export function itemSpellOrbPositions(
   spell: ItemSpell,
 ): Vec2[] {
   if (spell.spell !== "orbit") return [];
-  const orbit = orbitSpellBlock(state, spell.rank);
+  const orbit = orbitSpellBlock(state, player, spell.rank);
   return orbRingPositions(player, spell.angle, orbit.count, orbit.radius);
 }
 
@@ -257,15 +263,16 @@ export function itemSpellOrbPositions(
  * `hitEnemy` rolls when the hero's own weapon blow lands/kills. */
 export function equippedProcs(
   state: GameState,
+  player: Player,
   trigger: ProcTrigger,
 ): { spell: ProcSpell; chance: number; rank: number }[] {
   // Read on every landed weapon blow — memoized on the loadout so a horde
   // fight doesn't rebuild the same list hundreds of times a second.
-  const memo = heroLoadoutMemo(state);
+  const memo = heroLoadoutMemo(state, player);
   const cached = memo.procs[trigger];
   if (cached) return cached;
   const procs: { spell: ProcSpell; chance: number; rank: number }[] = [];
-  for (const affix of activeEquippedAffixes(state)) {
+  for (const affix of activeEquippedAffixes(state, player)) {
     if (affix.kind === "proc" && affix.trigger === trigger) {
       procs.push({
         spell: affix.spell,

@@ -2,7 +2,7 @@
 // The wave spawner — the escalating ambient horde (see stepSpawner's doc
 // comment for the pressure model). Part of the step pipeline (see ./index.ts).
 
-import { clamp, distance, distanceSq, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, distance, type Vec2 } from "@game/lib/vec.ts";
 import { CAMPING, ENEMY_AI, NUKE, TEMPO } from "../config/index.ts";
 import { spawnEnemy } from "../create.ts";
 import {
@@ -21,6 +21,14 @@ import {
   resolveMobScaling,
 } from "../menace.ts";
 import { insideObstacle } from "../obstacles.ts";
+import {
+  distanceSqToParty,
+  distanceToParty,
+  livingHeroes,
+  nearestHero,
+  partyCentroid,
+  partyLevel,
+} from "../party.ts";
 import { BALANCE } from "../tuning.ts";
 import type { GameState } from "../types/index.ts";
 import { anyZoneContains } from "../zones.ts";
@@ -50,11 +58,17 @@ export function stepSpawner(state: GameState, dtMs: number): void {
   const waves = runLevelDef(state).waves;
   if (!waves) return;
 
-  // The camp clock: staying inside campRadius of where the player last
+  // The camp clock: staying inside campRadius of where the party last
   // settled counts up; stepping out re-anchors and resets. Starvation eases
   // 0→1 across the fade window once the grace runs out.
-  if (distance(state.player.pos, state.campAnchor) > CAMPING.campRadius) {
-    state.campAnchor = { ...state.player.pos };
+  //
+  // THE ANCHOR TRACKS THE PARTY'S CENTROID, not one hero. Anchored on seat 0 a
+  // group could farm forever by leaving one player parked while the rest
+  // worked a corner — the camp clock would read "he has not moved" and starve
+  // the stream for everybody.
+  const anchor = partyCentroid(state);
+  if (distance(anchor, state.campAnchor) > CAMPING.campRadius) {
+    state.campAnchor = { ...anchor };
     state.campMs = 0;
   } else {
     state.campMs += dtMs;
@@ -122,7 +136,10 @@ export function stepSpawner(state: GameState, dtMs: number): void {
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).role !== "minion") continue;
     alive++;
-    if (distanceSq(enemy.pos, state.player.pos) <= nearRadiusSq) near++;
+    // "On screen" means on ANYBODY's screen — the wave floor exists so the
+    // party has something in front of it, and a pack nobody can see does not
+    // satisfy that for the seven players it is not near.
+    if (distanceSqToParty(state, enemy.pos) <= nearRadiusSq) near++;
   }
 
   // A fully-starved camper also pauses the timed stream — the horde loses
@@ -213,13 +230,13 @@ function spawnGoal(state: GameState): Vec2 | null {
     const def = enemyDef(enemy.defId);
     if (inert(def, enemy)) continue;
     if (def.role === "boss") {
-      const d = distanceSq(enemy.pos, state.player.pos);
+      const d = distanceSqToParty(state, enemy.pos);
       if (d < bossDistSq) {
         bossDistSq = d;
         boss = enemy.pos;
       }
     } else if (def.role === "elite") {
-      const d = distanceSq(enemy.pos, state.player.pos);
+      const d = distanceSqToParty(state, enemy.pos);
       if (d < eliteDistSq) {
         eliteDistSq = d;
         elite = enemy.pos;
@@ -328,30 +345,46 @@ function spawnWaveEnemy(
   toward: Vec2 | null = null,
 ): boolean {
   const def = enemyDef(defId);
+  // PLACED AROUND A HERO, BUDGETED AROUND THE PARTY. The ring is drawn on one
+  // player — the one nearest the set piece the stream is leaning toward, or
+  // else a hero picked off the run's own rng so a spread-out party is worked
+  // over evenly rather than having the whole stream land on seat 0. A ring
+  // round the CENTROID would deliver the horde into the empty floor between
+  // two players standing at opposite ends of a hall.
+  const standing = livingHeroes(state);
+  // The draw is taken ONLY when there is a choice to make. Rolling
+  // unconditionally would consume a number from the run's rng stream on every
+  // single-player spawn, shifting every roll after it — a determinism break
+  // that presents as "the loot changed" rather than as a spawner bug.
+  const host =
+    (toward ? nearestHero(state, toward) : null) ??
+    (standing.length > 1
+      ? standing[Math.floor(state.rng() * standing.length)]
+      : standing[0]) ??
+    state.players[0];
   for (let attempts = 0; attempts < 8; attempts++) {
     const angle =
       toward && attempts < 5
-        ? Math.atan2(
-            toward.y - state.player.pos.y,
-            toward.x - state.player.pos.x,
-          ) +
+        ? Math.atan2(toward.y - host.pos.y, toward.x - host.pos.x) +
           (state.rng() * 2 - 1) * ((CAMPING.directionSpreadDeg * Math.PI) / 180)
         : state.rng() * Math.PI * 2;
     const ring =
       ENEMY_AI.minSpawnDistance + state.rng() * ENEMY_AI.spawnRingWidth;
     const pos = {
       x: clamp(
-        state.player.pos.x + Math.cos(angle) * ring,
+        host.pos.x + Math.cos(angle) * ring,
         def.radius,
         state.level.width - def.radius,
       ),
       y: clamp(
-        state.player.pos.y + Math.sin(angle) * ring,
+        host.pos.y + Math.sin(angle) * ring,
         def.radius,
         state.level.height - def.radius,
       ),
     };
-    if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
+    // Never in anybody's lap — the minimum is measured against the whole party,
+    // not just the hero the ring was drawn on.
+    if (distanceToParty(state, pos) < ENEMY_AI.minSpawnDistance) continue;
     if (insideObstacle(state, pos, def.radius)) continue;
     // Never stream the horde into a safe or quiet region (see zones.ts).
     if (insideNoSpawnZone(state, pos)) continue;
@@ -366,7 +399,7 @@ function spawnWaveEnemy(
     const wsc = resolveMobScaling(
       runLevelDef(state).mobLevels,
       state.difficulty,
-      state.player.level,
+      partyLevel(state),
       state.rng,
       mobLevelScale(state),
       currentMobLevel(state),

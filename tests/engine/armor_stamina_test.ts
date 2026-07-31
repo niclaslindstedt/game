@@ -68,8 +68,8 @@ function dressFully(state: ReturnType<typeof startGame>): void {
     ["test_boots", "feet", 74],
   ];
   for (const [defId, slot, id] of pieces) {
-    state.player.inventory[0] = fixtureArmor(defId, slot, id);
-    equipFromInventory(state, 0);
+    state.players[0].inventory[0] = fixtureArmor(defId, slot, id);
+    equipFromInventory(state, state.players[0], 0);
   }
 }
 
@@ -77,7 +77,7 @@ function dressFully(state: ReturnType<typeof startGame>): void {
 function bruteOnTop(state: ReturnType<typeof startGame>, mlvl = 1): void {
   state.enemies = [
     makeEnemy(
-      { pos: { ...state.player.pos }, contactCooldownMs: 0, mlvl },
+      { pos: { ...state.players[0].pos }, contactCooldownMs: 0, mlvl },
       "test_brute",
     ),
   ];
@@ -89,97 +89,101 @@ describe("armor", () => {
     // A big LUCK pool zeroes the enemy's crit chance, so the hit is exactly
     // the brute's contact damage (20) with no doubling. Pin the RNG high so
     // the hero's dodge (which LUCK also feeds) can't swallow the blow.
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     state.rng = () => 0.99;
     dressFully(state);
-    expect(totalArmor(state)).toBe(10 + 16 + 10 + 8);
-    const maxHp = state.player.maxHp;
+    expect(totalArmor(state, state.players[0])).toBe(10 + 16 + 10 + 8);
+    const maxHp = state.players[0].maxHp;
 
     // Against a level-1 attacker: k = kBase + kPerLevel, 44/(44+52) ≈ 0.458.
     const expected = 44 / (44 + ARMOR.kBase + ARMOR.kPerLevel);
-    expect(armorReduction(state, 1)).toBeCloseTo(expected, 6);
+    expect(armorReduction(state, state.players[0], 1)).toBeCloseTo(expected, 6);
 
     bruteOnTop(state, 1);
     step(state, idle, DT);
-    expect(state.player.hp).toBe(maxHp - Math.round(20 * (1 - expected)));
+    expect(state.players[0].hp).toBe(maxHp - Math.round(20 * (1 - expected)));
   });
 
   it("turns less of a higher-level attacker's blow — armor decays as the horde outlevels it", () => {
     const state = startGame();
     dressFully(state);
-    expect(armorReduction(state, 10)).toBeLessThan(armorReduction(state, 1));
+    expect(armorReduction(state, state.players[0], 10)).toBeLessThan(
+      armorReduction(state, state.players[0], 1),
+    );
     // And never past the cap, however small the attacker.
-    expect(armorReduction(state, 1)).toBeLessThanOrEqual(ARMOR.maxReduction);
+    expect(armorReduction(state, state.players[0], 1)).toBeLessThanOrEqual(
+      ARMOR.maxReduction,
+    );
   });
 
   it("a bare hero takes the whole blow in HP", () => {
     const state = startGame();
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     state.rng = () => 0.99; // pin dodge (and crit) off
-    expect(totalArmor(state)).toBe(0);
-    const maxHp = state.player.maxHp;
+    expect(totalArmor(state, state.players[0])).toBe(0);
+    const maxHp = state.players[0].maxHp;
     bruteOnTop(state);
     step(state, idle, DT);
-    expect(state.player.hp).toBe(maxHp - 20);
+    expect(state.players[0].hp).toBe(maxHp - 20);
   });
 
   it("wears every worn piece a point per landed hit; a dodged blow costs nothing", () => {
     const state = startGame();
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     state.rng = () => 0.99;
     dressFully(state);
     bruteOnTop(state);
     step(state, idle, DT);
-    expect(state.player.equipment.head?.durability).toBe(
+    expect(state.players[0].equipment.head?.durability).toBe(
       FIX_GEAR.test_helmet!.durability! - 1,
     );
-    expect(state.player.equipment.chest?.durability).toBe(
+    expect(state.players[0].equipment.chest?.durability).toBe(
       FIX_GEAR.test_vest!.durability! - 1,
     );
 
     // A dodged hit (rng under the dodge chance) never touches the wardrobe.
-    const hp = state.player.hp;
+    const hp = state.players[0].hp;
     state.rng = () => 0;
     state.enemies[0]!.contactCooldownMs = 0;
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hp);
-    expect(state.player.equipment.head?.durability).toBe(
+    expect(state.players[0].hp).toBe(hp);
+    expect(state.players[0].equipment.head?.durability).toBe(
       FIX_GEAR.test_helmet!.durability! - 1,
     );
   });
 
   it("goes INACTIVE at zero durability — no armor, no bonuses — and wakes on repair", () => {
     const state = startGame();
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     state.rng = () => 0.99;
     dressFully(state);
-    const armored = totalArmor(state);
-    const maxHp = state.player.maxHp; // includes the vest's +20
+    const armored = totalArmor(state, state.players[0]);
+    const maxHp = state.players[0].maxHp; // includes the vest's +20
 
     // One hit from breaking: the next landed blow snaps the vest.
-    state.player.equipment.chest!.durability = 1;
+    state.players[0].equipment.chest!.durability = 1;
     bruteOnTop(state);
     step(state, idle, DT);
 
-    const vest = state.player.equipment.chest!;
+    const vest = state.players[0].equipment.chest!;
     expect(vest.durability).toBe(0);
     expect(isArmorBroken(vest)).toBe(true);
     expect(armorValueOf(vest)).toBe(0);
-    expect(totalArmor(state)).toBe(armored - 16);
+    expect(totalArmor(state, state.players[0])).toBe(armored - 16);
     // The broken vest's +20 maxHp went silent with it.
-    expect(state.player.maxHp).toBe(maxHp - 20);
+    expect(state.players[0].maxHp).toBe(maxHp - 20);
     expect(state.events.some((e) => e.type === "armorBroke")).toBe(true);
     // Broken armor stays WORN — never discarded.
-    expect(state.player.equipment.chest?.defId).toBe("test_vest");
+    expect(state.players[0].equipment.chest?.defId).toBe("test_vest");
 
     // The repair kit mends the whole wardrobe and revives the vest.
-    expect(repairWornArmor(state)).toBe(true);
+    expect(repairWornArmor(state, state.players[0])).toBe(true);
     expect(vest.durability).toBe(FIX_GEAR.test_vest!.durability);
     expect(isArmorBroken(vest)).toBe(false);
-    expect(totalArmor(state)).toBe(armored);
-    expect(state.player.maxHp).toBe(maxHp);
+    expect(totalArmor(state, state.players[0])).toBe(armored);
+    expect(state.players[0].maxHp).toBe(maxHp);
     // Nothing left to mend: a second kit would stay on the ground.
-    expect(repairWornArmor(state)).toBe(false);
+    expect(repairWornArmor(state, state.players[0])).toBe(false);
   });
 
   it("rolls bigger armor the deeper it drops (ilvl growth), stamped on the instance", () => {
@@ -187,7 +191,7 @@ describe("armor", () => {
     const base = FIX_GEAR.test_vest!.armor!;
     // Pin the make quality so the growth rule is measured alone (a rolled
     // BROKEN/PERFECT make would scale the stamp — the quality suite's beat).
-    const deep = rollEquipment(state, {
+    const deep = rollEquipment(state, state.players[0], {
       defId: "test_vest",
       tier: "regular",
       quality: "normal",
@@ -206,7 +210,10 @@ describe("armor", () => {
 
   it("mints unique+ armor unbreakable, like unique weapons", () => {
     const state = startGame();
-    const trophy = rollEquipment(state, { defId: "test_vest", tier: "unique" });
+    const trophy = rollEquipment(state, state.players[0], {
+      defId: "test_vest",
+      tier: "unique",
+    });
     expect(trophy.durability).toBeUndefined();
   });
 
@@ -224,11 +231,11 @@ describe("armor", () => {
     // leaving `lootIlvlBonus` as the only difference.
     const lootLevel = 12;
     const common = { defId: "test_vest", tier: "regular" } as const;
-    const plain = rollEquipment(medium, {
+    const plain = rollEquipment(medium, medium.players[0], {
       ...common,
       mlvl: lootLevel + FIX_DIFFICULTIES.medium!.mobLevelOffset,
     });
-    const hard = rollEquipment(jesus, {
+    const hard = rollEquipment(jesus, jesus.players[0], {
       ...common,
       mlvl: lootLevel + FIX_DIFFICULTIES.jesus!.mobLevelOffset,
     });
@@ -252,13 +259,13 @@ describe("armor", () => {
     });
     try {
       const state = startGame();
-      expect(state.player.equipment.head).toBeNull();
-      expect(state.player.equipment.chest?.defId).toBe("test_vest");
-      expect(state.player.equipment.chest?.durability).toBe(
+      expect(state.players[0].equipment.head).toBeNull();
+      expect(state.players[0].equipment.chest?.defId).toBe("test_vest");
+      expect(state.players[0].equipment.chest?.durability).toBe(
         FIX_GEAR.test_vest!.durability,
       );
-      expect(state.player.equipment.feet?.defId).toBe("test_boots");
-      expect(totalArmor(state)).toBe(
+      expect(state.players[0].equipment.feet?.defId).toBe("test_boots");
+      expect(totalArmor(state, state.players[0])).toBe(
         FIX_GEAR.test_vest!.armor! + FIX_GEAR.test_boots!.armor!,
       );
     } finally {
@@ -275,9 +282,10 @@ describe("armor", () => {
  */
 function runPoolDry(state: ReturnType<typeof startGame>): void {
   const cap =
-    Math.ceil((state.player.maxStamina / STAMINA.drainPerSec) * (1000 / DT)) *
-    3;
-  run(state, steerTo(5000, 5000), cap, (s) => s.player.stamina <= 0);
+    Math.ceil(
+      (state.players[0].maxStamina / STAMINA.drainPerSec) * (1000 / DT),
+    ) * 3;
+  run(state, steerTo(5000, 5000), cap, (s) => s.players[0].stamina <= 0);
 }
 
 describe("stamina", () => {
@@ -288,15 +296,15 @@ describe("stamina", () => {
     // stamina math, not a combat scenario).
     clearStage(state);
     state.obstacles = []; // a clear lane so the run never stalls on a rock
-    expect(state.player.stamina).toBe(state.player.maxStamina);
+    expect(state.players[0].stamina).toBe(state.players[0].maxStamina);
 
     runPoolDry(state);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
 
     // Idle back: the empty-pool lockout has to lapse first, then the breather
     // rate puts stamina back on the bar.
     run(state, idle, Math.ceil(staminaEmptyLockMs(state) / DT) + 60);
-    expect(state.player.stamina).toBeGreaterThan(0);
+    expect(state.players[0].stamina).toBeGreaterThan(0);
   });
 
   it("regains the pool at a walk — a breather on the move, slower than idle", () => {
@@ -307,25 +315,25 @@ describe("stamina", () => {
     // the pool REGAINS at walkRegenFactor of the standstill rate.
     const walk = { ...steerTo(5000, 5000), throttle: STAMINA.walkThrottle };
 
-    state.player.stamina = state.player.maxStamina / 2;
-    const before = state.player.stamina;
+    state.players[0].stamina = state.players[0].maxStamina / 2;
+    const before = state.players[0].stamina;
     run(state, walk, 60);
-    const walkGain = state.player.stamina - before;
+    const walkGain = state.players[0].stamina - before;
     expect(walkGain).toBeGreaterThan(0); // a walk refills…
 
     const fresh = startGame();
     clearStage(fresh);
     fresh.obstacles = [];
-    fresh.player.stamina = fresh.player.maxStamina / 2;
+    fresh.players[0].stamina = fresh.players[0].maxStamina / 2;
     run(fresh, idle, 60);
-    const idleGain = fresh.player.stamina - fresh.player.maxStamina / 2;
+    const idleGain = fresh.players[0].stamina - fresh.players[0].maxStamina / 2;
     expect(idleGain).toBeGreaterThan(walkGain); // …but standing still is faster
 
     // The empty-pool lockout gates the walk's regen exactly like the idle's.
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
     state.staminaRegenLockMs = 1_000_000;
     run(state, walk, 60);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
   });
 
   it("drains any running pace at the FULL rate; the walk anchor is the regen edge", () => {
@@ -338,10 +346,10 @@ describe("stamina", () => {
       state.obstacles = [];
       // Start mid-pool so a drain has depth and any regain has headroom — the
       // delta reads the true signed rate either way.
-      state.player.stamina = state.player.maxStamina / 2;
-      const before = state.player.stamina;
+      state.players[0].stamina = state.players[0].maxStamina / 2;
+      const before = state.players[0].stamina;
       run(state, input, 60);
-      return state.player.stamina - before; // + regained, − spent
+      return state.players[0].stamina - before; // + regained, − spent
     };
 
     const idle60 = measure(idle);
@@ -375,9 +383,9 @@ describe("stamina", () => {
       const state = startGame();
       clearStage(state); // isolate the pool from combat XP/level-up refills
       state.obstacles = []; // a clear lane so the run never stalls on a rock
-      const before = state.player.stamina;
+      const before = state.players[0].stamina;
       run(state, steerTo(5000, 5000), 60);
-      return before - state.player.stamina;
+      return before - state.players[0].stamina;
     };
 
     const shipped = spent(1);
@@ -395,21 +403,21 @@ describe("stamina", () => {
     const target = steerTo(5000, 5000);
 
     // A full-pool step covers the full stride (one step barely dents stamina).
-    state.player.stamina = state.player.maxStamina;
-    const fullBefore = { ...state.player.pos };
+    state.players[0].stamina = state.players[0].maxStamina;
+    const fullBefore = { ...state.players[0].pos };
     step(state, target, DT);
     const full = Math.hypot(
-      state.player.pos.x - fullBefore.x,
-      state.player.pos.y - fullBefore.y,
+      state.players[0].pos.x - fullBefore.x,
+      state.players[0].pos.y - fullBefore.y,
     );
 
     // An empty pool covers only its winded fraction of the same stride.
-    state.player.stamina = 0;
-    const emptyBefore = { ...state.player.pos };
+    state.players[0].stamina = 0;
+    const emptyBefore = { ...state.players[0].pos };
     step(state, target, DT);
     const empty = Math.hypot(
-      state.player.pos.x - emptyBefore.x,
-      state.player.pos.y - emptyBefore.y,
+      state.players[0].pos.x - emptyBefore.x,
+      state.players[0].pos.y - emptyBefore.y,
     );
 
     expect(empty).toBeCloseTo(full * STAMINA.emptySpeedFactor, 2);
@@ -419,13 +427,13 @@ describe("stamina", () => {
     const state = startGame();
     clearStage(state); // isolate the pool from combat XP/level-up refills
     state.obstacles = [];
-    state.player.stamina = state.player.maxStamina;
-    const before = state.player.stamina;
+    state.players[0].stamina = state.players[0].maxStamina;
+    const before = state.players[0].stamina;
 
     step(state, jumpOnce, DT);
     expect(state.events.some((e) => e.type === "jump")).toBe(true);
-    expect(state.player.stamina).toBeCloseTo(
-      before - STAMINA.jumpCost * state.player.maxStamina,
+    expect(state.players[0].stamina).toBeCloseTo(
+      before - STAMINA.jumpCost * state.players[0].maxStamina,
       4,
     );
   });
@@ -437,17 +445,17 @@ describe("stamina", () => {
 
     // Empty the pool with a sustained run: the lockout arms as it hits zero.
     runPoolDry(state);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
 
     // Standing still INSIDE the lockout window regains nothing.
     const locked = state.staminaRegenLockMs;
     run(state, idle, Math.floor(locked / DT) - 1);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
 
     // Once the lockout lapses, standing still refills again.
     run(state, idle, 4);
-    expect(state.player.stamina).toBeGreaterThan(0);
+    expect(state.players[0].stamina).toBeGreaterThan(0);
   });
 
   it("the empty-pool lockout only runs down standing still — moving re-arms it", () => {
@@ -457,14 +465,14 @@ describe("stamina", () => {
 
     // Bottom the pool out: the standstill debt arms.
     runPoolDry(state);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
     expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
 
     // WALKING through the whole window regains nothing and never pays the
     // debt down — the lockout stays pinned at the full window.
     const walk = { ...steerTo(5000, 5000), throttle: STAMINA.walkThrottle };
     run(state, walk, Math.ceil(staminaEmptyLockMs(state) / DT) + 10);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
     expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
 
     // Standing MOST of the window, then taking one step, restarts the wait.
@@ -472,15 +480,15 @@ describe("stamina", () => {
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
     run(state, walk, 1);
     expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
 
     // Only a FULL uninterrupted stand pays it off — then the pool comes back,
     // and a walk regains again too.
     run(state, idle, Math.ceil(staminaEmptyLockMs(state) / DT) + 4);
-    expect(state.player.stamina).toBeGreaterThan(0);
-    const after = state.player.stamina;
+    expect(state.players[0].stamina).toBeGreaterThan(0);
+    const after = state.players[0].stamina;
     run(state, walk, 10);
-    expect(state.player.stamina).toBeGreaterThan(after);
+    expect(state.players[0].stamina).toBeGreaterThan(after);
   });
 
   it("a jump that empties the pool trips the same regen lockout", () => {
@@ -489,18 +497,18 @@ describe("stamina", () => {
     state.obstacles = [];
     // Leave EXACTLY one hop's worth so the takeoff bottoms the pool out — any
     // less and the hop no longer fires (a winded hero can't jump).
-    state.player.stamina = STAMINA.jumpCost * state.player.maxStamina;
+    state.players[0].stamina = STAMINA.jumpCost * state.players[0].maxStamina;
 
     step(state, jumpOnce, DT);
     expect(state.events.some((e) => e.type === "jump")).toBe(true);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBe(0);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
 
     // A jump with pool to spare leaves regen unlocked.
     const fresh = startGame();
     clearStage(fresh);
     fresh.obstacles = [];
-    fresh.player.stamina = fresh.player.maxStamina;
+    fresh.players[0].stamina = fresh.players[0].maxStamina;
     step(fresh, jumpOnce, DT);
     expect(fresh.staminaRegenLockMs).toBe(0);
   });
@@ -510,24 +518,25 @@ describe("stamina", () => {
     clearStage(state);
     state.obstacles = [];
     // A winded hero — less than one hop's worth in the pool — stays grounded.
-    state.player.stamina = STAMINA.jumpCost * state.player.maxStamina * 0.5;
-    const before = state.player.stamina;
+    state.players[0].stamina =
+      STAMINA.jumpCost * state.players[0].maxStamina * 0.5;
+    const before = state.players[0].stamina;
 
     step(state, jumpOnce, DT);
     expect(state.events.some((e) => e.type === "jump")).toBe(false);
-    expect(state.player.z).toBe(0);
+    expect(state.players[0].z).toBe(0);
     // The refused hop spends nothing — standing still, the reserve only regens.
-    expect(state.player.stamina).toBeGreaterThanOrEqual(before);
+    expect(state.players[0].stamina).toBeGreaterThanOrEqual(before);
   });
 
   it("won't hop on a bone-dry pool", () => {
     const state = startGame();
     clearStage(state);
     state.obstacles = [];
-    state.player.stamina = 0;
+    state.players[0].stamina = 0;
 
     step(state, jumpOnce, DT);
     expect(state.events.some((e) => e.type === "jump")).toBe(false);
-    expect(state.player.z).toBe(0);
+    expect(state.players[0].z).toBe(0);
   });
 });

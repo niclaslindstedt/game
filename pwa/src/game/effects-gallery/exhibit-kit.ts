@@ -9,6 +9,7 @@
 // `weapon-exhibits.ts` / `talent-exhibits.ts` (generated from the FX and talent
 // catalogs, so they cannot fall behind them).
 
+import { localHero } from "../local-seat.ts";
 import {
   activeMechanics,
   enemyDef,
@@ -210,8 +211,8 @@ export function horde(
  * events (a mid-jump effect must not draw at his grounded feet). */
 export function heroPos(state: GameState): { x: number; y: number } {
   return {
-    x: state.player.pos.x,
-    y: state.player.pos.y - state.player.z,
+    x: localHero(state).pos.x,
+    y: localHero(state).pos.y - localHero(state).z,
   };
 }
 
@@ -333,21 +334,21 @@ export function killEvent(
  */
 export function swingEvent(ctx: ExhibitCtx): GameEvent {
   const { state } = ctx;
-  const weapon = state.player.equipment.weapon;
+  const weapon = localHero(state).equipment.weapon;
   const hero = heroPos(state);
   const target = ctx.mobs[0];
   const to = target
     ? { x: target.pos.x - hero.x, y: target.pos.y - hero.y }
-    : { x: state.player.faceLeft ? -1 : 1, y: 0 };
+    : { x: localHero(state).faceLeft ? -1 : 1, y: 0 };
   const len = Math.hypot(to.x, to.y) || 1;
   const dir = { x: to.x / len, y: to.y / len };
-  state.player.faceLeft = dir.x < 0;
+  localHero(state).faceLeft = dir.x < 0;
   return {
     type: "swing",
     pos: hero,
     dir,
-    range: weaponRangeFor(state, weapon),
-    arc: 2 * weaponSweepHalfAngle(state, weapon),
+    range: weaponRangeFor(state, localHero(state), weapon),
+    arc: 2 * weaponSweepHalfAngle(state, localHero(state), weapon),
     targets: ctx.mobs.length,
   };
 }
@@ -364,7 +365,7 @@ export function strike(
 /** The staged mobs, nearest the hero first (apparitions left out — they are
  * scene figures, not targets). */
 export function sortedMobs(state: GameState): Enemy[] {
-  const hero = state.player.pos;
+  const hero = localHero(state).pos;
   const dist = (mob: Enemy) =>
     (mob.pos.x - hero.x) ** 2 + (mob.pos.y - hero.y) ** 2;
   return [...state.enemies]

@@ -6,7 +6,7 @@ import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import { advanceCutsceneChain } from "../story.ts";
-import type { GameState } from "../types/index.ts";
+import type { GameState, Player } from "../types/index.ts";
 import { beginRespec } from "./stat-points.ts";
 
 // ---- Phase toggles (called by the app's UI) -----------------------------------
@@ -19,10 +19,8 @@ import { beginRespec } from "./stat-points.ts";
  * handed-back allocations) are placed by the player before play, never left
  * silently on the table.
  */
-export function hasPendingPoints(state: GameState): boolean {
-  return (
-    state.player.pendingStatPoints > 0 || state.pendingTalentPoints.length > 0
-  );
+export function hasPendingPoints(state: GameState, player: Player): boolean {
+  return player.pendingStatPoints > 0 || state.pendingTalentPoints.length > 0;
 }
 
 /**
@@ -33,8 +31,9 @@ export function hasPendingPoints(state: GameState): boolean {
  * menu or an end-of-run splash; a resume from `paused` routes through
  * `resumeGame` instead. Returns whether it diverted.
  */
-export function promptPendingPoints(state: GameState): boolean {
-  if (state.phase !== "playing" || !hasPendingPoints(state)) return false;
+export function promptPendingPoints(state: GameState, player: Player): boolean {
+  if (state.phase !== "playing" || !hasPendingPoints(state, player))
+    return false;
   state.phase = "levelup";
   return true;
 }
@@ -69,8 +68,8 @@ export function dismissIntro(state: GameState): void {
     // A LEVEL TOKEN jump owes a respec before the first step: open the
     // reallocation chooser in place of dropping straight into play.
     if (state.respecPending) {
-      beginRespec(state);
-    } else if (hasPendingPoints(state)) {
+      beginRespec(state, state.players[0]);
+    } else if (hasPendingPoints(state, state.players[0])) {
       // The hero starts the run owing the chooser: an adopted veteran whose
       // loadout implies talent points (see `applyLoadout`), or a build the AUTO
       // PILOT refund handed its allocations back as pending stat points (see
@@ -150,7 +149,7 @@ export function skipCutscene(state: GameState): void {
 export function skipStoryOpening(state: GameState): void {
   if (state.phase === "cutscene") skipCutscene(state);
   dismissIntro(state);
-  state.player.disarmed = false;
+  state.players[0].disarmed = false;
 }
 
 /**
@@ -182,7 +181,9 @@ export function closeInventory(state: GameState): void {
     state.phase = "dialogue";
     return;
   }
-  state.phase = hasPendingPoints(state) ? "levelup" : "playing";
+  state.phase = hasPendingPoints(state, state.players[0])
+    ? "levelup"
+    : "playing";
 }
 
 /** Freeze the run into the pause screen. Only possible mid-run — end-of-run
@@ -200,7 +201,9 @@ export function pauseGame(state: GameState): void {
  */
 export function resumeGame(state: GameState): void {
   if (state.phase !== "paused") return;
-  state.phase = hasPendingPoints(state) ? "levelup" : "playing";
+  state.phase = hasPendingPoints(state, state.players[0])
+    ? "levelup"
+    : "playing";
 }
 
 /**

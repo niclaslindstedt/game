@@ -12,6 +12,7 @@
 // `ItemCardModal` — the same box centered as a pop-up over a backdrop (the
 // arsenal's narrow-phone tap-to-inspect), dismissed by the backdrop or ESC.
 
+import { localHero } from "./local-seat.ts";
 import {
   useEffect,
   type CSSProperties,
@@ -101,8 +102,8 @@ export const VALUE_COLOR = "#9aa3ad";
  */
 export function hitRate(state: GameState): number {
   return (
-    (1 - playerMissChance(state)) *
-    (1 - enemyDodgeChance(state, ACCURACY.enemyDodge))
+    (1 - playerMissChance(state, localHero(state))) *
+    (1 - enemyDodgeChance(state, localHero(state), ACCURACY.enemyDodge))
   );
 }
 
@@ -254,7 +255,10 @@ export function requirementLines(
   // The attribute gate (STR/DEX/INT) reads first, in red, as a hard "you can't
   // wield this yet" warning — but only when unmet; a met gate is dropped.
   const statReq = statRequirement(item.defId);
-  if (statReq && rawStat(state, statReq.stat) < statReq.amount) {
+  if (
+    statReq &&
+    rawStat(state, localHero(state), statReq.stat) < statReq.amount
+  ) {
     lines.push({
       text: `REQUIRES ${statReq.amount} ${statReq.stat.toUpperCase()}`,
       color: "#e06a6a",
@@ -265,7 +269,7 @@ export function requirementLines(
   if (req > 1) {
     lines.push({
       text: `REQUIRES LEVEL ${req}`,
-      color: levelReqColor(state.player.level, req),
+      color: levelReqColor(localHero(state).level, req),
     });
   }
   return lines;
@@ -294,7 +298,9 @@ export function itemLines(
     // blue `+N` for how much the hero's build lifts it (stats/ilvl/affixes) —
     // base and lift shown side by side so they visibly SUM to the real hit,
     // rather than one pre-summed number with a confusing parenthetical.
-    const effective = Math.round(weaponDamageFor(state, item));
+    const effective = Math.round(
+      weaponDamageFor(state, localHero(state), item),
+    );
     const dmgLift = effective - def.damage;
     lines.push({
       text: `DAMAGE ${formatCompact(def.damage)}`,
@@ -308,7 +314,10 @@ export function itemLines(
             }
           : null,
       delta: eq
-        ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
+        ? compareChip(
+            effective -
+              Math.round(weaponDamageFor(state, localHero(state), eq)),
+          )
         : null,
     });
     // ENHANCED DAMAGE rides directly under the base it multiplies — D2's
@@ -333,19 +342,23 @@ export function itemLines(
     // weapon and a quick light one compare at a glance. Carried to one decimal
     // so two close weapons still separate. Tinted the same accent as the
     // character sheet's derived combat stats.
-    const dps = weaponDps(state, item);
+    const dps = weaponDps(state, localHero(state), item);
     const dpsValue = dps.toFixed(1);
     lines.push({
       text: `DPS ${dpsValue}`,
       label: "DPS",
       value: dpsValue,
-      delta: eq ? compareChip(dps - weaponDps(state, eq), { digits: 1 }) : null,
+      delta: eq
+        ? compareChip(dps - weaponDps(state, localHero(state), eq), {
+            digits: 1,
+          })
+        : null,
     });
     // Attack speed as plain seconds between attacks (lower is faster), the unit
     // left off — the two decimals already read as a time. Shown as the weapon's
     // BASE cadence plus a blue `-N` for the time the hero's speed stat shaves
     // off, so base and lift sum to the real cadence (same read as DAMAGE).
-    const secs = weaponCooldownFor(state, item) / 1000;
+    const secs = weaponCooldownFor(state, localHero(state), item) / 1000;
     const spdBase = def.cooldownMs / 1000;
     const spdSaved = spdBase - secs;
     lines.push({
@@ -358,10 +371,13 @@ export function itemLines(
           : null,
       // Shorter cadence is faster, so a smaller number is the upgrade.
       delta: eq
-        ? compareChip(secs - weaponCooldownFor(state, eq) / 1000, {
-            lowerBetter: true,
-            digits: 2,
-          })
+        ? compareChip(
+            secs - weaponCooldownFor(state, localHero(state), eq) / 1000,
+            {
+              lowerBetter: true,
+              digits: 2,
+            },
+          )
         : null,
     });
     // The MULTI-TARGET line, in AoE cyan — and PIERCES/PELLETS (ranged) and
@@ -385,7 +401,7 @@ export function itemLines(
       if (label) lines.push({ text: label, color: "#7ecbff" });
     } else {
       const baseHits = Math.max(1, Math.floor(MELEE.baseAoeTargets));
-      const intBonus = maxMeleeTargets(state) - baseHits;
+      const intBonus = maxMeleeTargets(state, localHero(state)) - baseHits;
       lines.push({
         text: `HITS ${baseHits}`,
         color: "#7ecbff",
@@ -571,8 +587,8 @@ function SetBlock({
 }) {
   const set = setForItem(uniqueId);
   if (!set) return null;
-  const worn = wornSetCount(state, set.id);
-  const equipment = state.player.equipment;
+  const worn = wornSetCount(state, localHero(state), set.id);
+  const equipment = localHero(state).equipment;
   const wornIds = new Set<string>();
   for (const slot of ["head", "chest", "legs", "feet"] as const) {
     const piece = equipment[slot];

@@ -98,7 +98,7 @@ describe("the autopilot spends points by the shared build catalog", () => {
     for (let i = 0; i < n; i++) {
       const stat = botAllocate(bot, state);
       counts[stat] = (counts[stat] ?? 0) + 1;
-      state.player.spentStats[stat]++;
+      state.players[0].spentStats[stat]++;
     }
     return counts;
   };

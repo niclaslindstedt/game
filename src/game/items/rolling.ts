@@ -45,6 +45,7 @@ import { BALANCE } from "../tuning.ts";
 import type {
   Affix,
   Equipment,
+  Player,
   GameState,
   ItemSlot,
   Quality,
@@ -155,9 +156,9 @@ export function magicFindBonus(state: GameState): number {
  * point, the aura adds its flat share. Fed through the per-tier SATURATION
  * curve in `rollTier`, so the top tiers see diminishing returns as it stacks.
  */
-export function magicFind(state: GameState): number {
+export function magicFind(state: GameState, player: Player): number {
   return (
-    effectiveStat(state, "luck") * STATS.tierChancePerLuck +
+    effectiveStat(state, player, "luck") * STATS.tierChancePerLuck +
     magicFindBonus(state)
   );
 }
@@ -190,13 +191,14 @@ function magicFindFactor(
  */
 function rollTier(
   state: GameState,
+  player: Player,
   lootLevel: number,
   tierBonus: number,
   role: EnemyRole = "minion",
   mobRarity?: "rare" | "unique",
 ): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
-  const mf = magicFind(state);
+  const mf = magicFind(state, player);
   // The EXPLICIT set-piece boost on named tiers: bosses get the boss bonus;
   // elites AND rare/unique MOBS share the elite bonus, so a special find is a
   // real named-item source, not trash odds.
@@ -225,7 +227,7 @@ function rollTier(
   // grind). Every shipped artifact requires level 99 to wear (`itemLevelReq`),
   // so this pins the drop to exactly where it becomes wearable — no relic ever
   // falls into a hand too low to use it. Gates the whole artifact tier below.
-  const atCap = state.player.level >= LEVELING.maxLevel;
+  const atCap = player.level >= LEVELING.maxLevel;
   // The ARTIFACT tier stays INERT while no artifact is authored — no phantom
   // roll consumes rng, so seeded drop streams don't shift until the roster
   // ships. (`pickUniqueForDrop` would downgrade an empty artifact roll to a
@@ -487,6 +489,7 @@ export function lootLevelFor(state: GameState, mlvl: number): number {
 
 export function rollEquipment(
   state: GameState,
+  player: Player,
   opts: {
     slot?: "weapon" | "gear";
     tierBonus?: number;
@@ -559,9 +562,9 @@ export function rollEquipment(
     // spent at full health (desperation 0), so the baseline stream is intact.
     // One rope at a time: while an armor piece already waits un-collected in
     // view, the pull holds fire (see mercyRescueWaiting).
-    const armorPull = mercyRescueWaiting(state, "armor")
+    const armorPull = mercyRescueWaiting(state, player, "armor")
       ? 0
-      : lowHealthDesperation(state) * diff.mercy.armorBonus;
+      : lowHealthDesperation(state, player) * diff.mercy.armorBonus;
     if (picked !== undefined) {
       // Harder rungs find fewer armor pieces: a landed-on-armor pick re-rolls
       // to a non-armor piece at `1 - armorDropMult`.
@@ -582,7 +585,14 @@ export function rollEquipment(
 
   let tier =
     opts.tier ??
-    rollTier(state, lootLevel, opts.tierBonus ?? 0, opts.role, opts.mobRarity);
+    rollTier(
+      state,
+      player,
+      lootLevel,
+      opts.tierBonus ?? 0,
+      opts.role,
+      opts.mobRarity,
+    );
   // STAGE 3 — the D2 FOLD: a NATURALLY-rolled unique/legendary becomes a NAMED
   // item, chosen among those eligible for this slot by its per-item `rarity`
   // weight (`pickUniqueForDrop`). Only when the tier was ROLLED (not a
@@ -793,13 +803,13 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
 export { adoptEquipment } from "./adopt.ts";
 
 /** Chance a regular monster drops loot, after LUCK and difficulty. */
-export function dropChance(state: GameState): number {
+export function dropChance(state: GameState, player: Player): number {
   // The developer drop-rate knob scales the whole per-kill chance — base,
   // difficulty bonus, and LUCK alike — so the rain thickens uniformly.
   return (
     (LOOT.dropChance +
       difficultyDef(state.difficulty).dropChanceBonus +
-      effectiveStat(state, "luck") * STATS.dropChancePerLuck) *
+      effectiveStat(state, player, "luck") * STATS.dropChancePerLuck) *
     BALANCE.dropRate
   );
 }

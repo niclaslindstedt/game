@@ -55,7 +55,7 @@ function killTheBoss(state: GameState): void {
   boss.hp = 1;
   // Parked at the blaster's reach: the kill lands, but the scattered loot
   // (±45 px) can never fall inside the player's pickup radius.
-  boss.pos = { x: state.player.pos.x + 200, y: state.player.pos.y };
+  boss.pos = { x: state.players[0].pos.x + 200, y: state.players[0].pos.y };
   boss.speed = 0;
   run(state, idle, 500, (s) => s.enemies.length === 0);
 }
@@ -114,8 +114,8 @@ describe("boss loot", () => {
     let cleared = -1;
     for (const seed of seeds) {
       const candidate = startGame(seed);
-      candidate.player.level = 7;
-      candidate.player.stats.luck = 30;
+      candidate.players[0].level = 7;
+      candidate.players[0].stats.luck = 30;
       candidate.items = [];
       killTheBoss(candidate);
       const rolled = candidate.items.find(
@@ -164,15 +164,18 @@ describe("boss loot", () => {
     // affix roll). Past every gate, with heavy Magic Find, the top tiers turn
     // up — and each carries a unique's fixed name, not a rolled one.
     const state = startGame();
-    state.player.level = 60;
-    state.player.stats.luck = 100;
+    state.players[0].level = 60;
+    state.players[0].stats.luck = 100;
     let sawTop = false;
     for (let i = 0; i < 600; i++) {
       // A DEEP mob (nightmare/jesus depth) — past every mlvl gate, so chance is
       // the only lock. On the bottom lanes the horde level now HARD-CAPS (medium
       // 36), which strips loot below the legendary gate on purpose, so the fold
       // is tested against a killer that actually reaches the top tiers.
-      const rolled = rollEquipment(state, { mlvl: 60, role: "boss" });
+      const rolled = rollEquipment(state, state.players[0], {
+        mlvl: 60,
+        role: "boss",
+      });
       if (rolled.tier === "unique" || rolled.tier === "legendary") {
         sawTop = true;
         expect(rolled.name).toBeTruthy(); // a named item, folded in
@@ -185,11 +188,13 @@ describe("boss loot", () => {
 describe("ghost drops", () => {
   it("max LUCK guarantees a drop from a regular ghost", () => {
     const state = equipBlaster(startGame()); // drop-rate test: kill at range
-    state.player.stats.luck = 100; // dropChance ≥ 1
+    state.players[0].stats.luck = 100; // dropChance ≥ 1
     state.items = [];
     clearStage(state);
     state.enemies.push(
-      makeEnemy({ pos: { x: state.player.pos.x + 60, y: state.player.pos.y } }),
+      makeEnemy({
+        pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
+      }),
     );
     run(state, idle, 2000, (s) => s.enemies.length === 1);
     expect(state.items.length).toBeGreaterThan(0);
@@ -206,7 +211,10 @@ describe("ghost drops", () => {
         state.enemies.push(
           makeEnemy({
             id: 9000 + i,
-            pos: { x: state.player.pos.x + 40 + i * 12, y: state.player.pos.y },
+            pos: {
+              x: state.players[0].pos.x + 40 + i * 12,
+              y: state.players[0].pos.y,
+            },
             hp: 1,
             maxHp: 1,
             // Low mlvl → trivial (level-based) kill xp, so clearing the three
@@ -233,7 +241,9 @@ describe("the scripted opening drops", () => {
     state.items = [];
     state.stats.kills = atKills - 1;
     state.enemies.push(
-      makeEnemy({ pos: { x: state.player.pos.x + 60, y: state.player.pos.y } }),
+      makeEnemy({
+        pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
+      }),
     );
     run(state, idle, 2000, (s) => s.enemies.length === 1);
   }
@@ -267,8 +277,8 @@ describe("auto-equip on pickup", () => {
   it("equips a picked-up weapon that out-scores the held one", () => {
     const state = startGame(); // default medieval sword: melee, short cleave
     clearStage(state);
-    state.player.level = 8; // grown into the hammer's level requirement
-    state.player.stats.strength = 20; // …and its STRENGTH requirement
+    state.players[0].level = 8; // grown into the hammer's level requirement
+    state.players[0].stats.strength = 20; // …and its STRENGTH requirement
     const hammer: Equipment = {
       id: 61,
       defId: "geology_hammer", // 38 dmg — out-scores the sword's cleave
@@ -282,15 +292,15 @@ describe("auto-equip on pickup", () => {
       {
         id: 1,
         kind: "equipment",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         equipment: hammer,
       },
     ];
     step(state, idle, DT);
-    expect(state.player.equipment.weapon.id).toBe(61);
+    expect(state.players[0].equipment.weapon.id).toBe(61);
     // The old starting weapon went into the bag, not into the void.
     expect(
-      state.player.inventory.some((i) => i?.defId === "medieval_sword"),
+      state.players[0].inventory.some((i) => i?.defId === "medieval_sword"),
     ).toBe(true);
     expect(state.events).toContainEqual({
       type: "autoEquipped",
@@ -313,7 +323,7 @@ describe("auto-equip on pickup", () => {
       affixes: [],
       durability: WEAPON_DEFS.box_cutter!.durability,
     };
-    state.player.equipment.weapon = {
+    state.players[0].equipment.weapon = {
       id: 63,
       defId: "geology_hammer",
       slot: "weapon",
@@ -326,24 +336,24 @@ describe("auto-equip on pickup", () => {
       {
         id: 1,
         kind: "equipment",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         equipment: cutter,
       },
     ];
     step(state, idle, DT);
-    expect(state.player.equipment.weapon.id).toBe(63); // hammer stays
-    expect(state.player.inventory.some((i) => i?.id === 62)).toBe(true);
+    expect(state.players[0].equipment.weapon.id).toBe(63); // hammer stays
+    expect(state.players[0].inventory.some((i) => i?.id === 62)).toBe(true);
   });
 
   it("drops the displaced piece on the ground when the bag is full", () => {
     const state = startGame();
     clearStage(state);
-    state.player.level = 8;
-    state.player.stats.strength = 20; // clear the hammer's STRENGTH requirement
+    state.players[0].level = 8;
+    state.players[0].stats.strength = 20; // clear the hammer's STRENGTH requirement
     // Level 8 brings automatic STRENGTH gains that widen the bag — grow it
     // first, then fill EVERY slot so the bag is genuinely full.
-    syncInventoryCapacity(state);
-    state.player.inventory = state.player.inventory.map((_, i) =>
+    syncInventoryCapacity(state, state.players[0]);
+    state.players[0].inventory = state.players[0].inventory.map((_, i) =>
       makeVest(100 + i),
     );
     const hammer: Equipment = {
@@ -359,12 +369,12 @@ describe("auto-equip on pickup", () => {
       {
         id: 1,
         kind: "equipment",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         equipment: hammer,
       },
     ];
     step(state, idle, DT);
-    expect(state.player.equipment.weapon.id).toBe(64);
+    expect(state.players[0].equipment.weapon.id).toBe(64);
     // The medieval sword had nowhere to go: it lies at the player's feet.
     expect(
       state.items.some(
@@ -378,21 +388,21 @@ describe("inventory", () => {
   it("auto-equips armor picked up over the starter clothes", () => {
     const state = startGame();
     state.enemies = [];
-    state.player.level = 5; // grown into the vest's requirement
-    state.player.stats.strength = 20; // …and its LEATHER strength requirement
+    state.players[0].level = 5; // grown into the vest's requirement
+    state.players[0].stats.strength = 20; // …and its LEATHER strength requirement
     state.items = [
       {
         id: 1,
         kind: "equipment",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         equipment: makeVest(2), // out-armors the starting T-SHIRT
       },
     ];
     step(state, idle, DT);
     expect(state.items).toHaveLength(0);
-    expect(state.player.equipment.chest?.id).toBe(2);
+    expect(state.players[0].equipment.chest?.id).toBe(2);
     // The displaced tee went into the bag, not into the void.
-    expect(state.player.inventory.some((i) => i?.defId === "t_shirt")).toBe(
+    expect(state.players[0].inventory.some((i) => i?.defId === "t_shirt")).toBe(
       true,
     );
   });
@@ -400,34 +410,34 @@ describe("inventory", () => {
   it("bags gear that is worse than what is worn", () => {
     const state = startGame();
     state.enemies = [];
-    state.player.level = 5;
-    state.player.equipment.chest = makeVest(90, "magic"); // +20 hp affix
+    state.players[0].level = 5;
+    state.players[0].equipment.chest = makeVest(90, "magic"); // +20 hp affix
     state.items = [
       {
         id: 1,
         kind: "equipment",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         equipment: makeVest(2), // plain — strictly worse
       },
     ];
     step(state, idle, DT);
-    expect(state.player.equipment.chest?.id).toBe(90);
-    expect(state.player.inventory[0]?.id).toBe(2);
+    expect(state.players[0].equipment.chest?.id).toBe(90);
+    expect(state.players[0].inventory[0]?.id).toBe(2);
   });
 
   it("leaves lesser loot on the ground when the bag is full", () => {
     const state = startGame();
     state.enemies = [];
-    state.player.level = 5;
-    state.player.equipment.chest = makeVest(90, "magic");
-    state.player.inventory = state.player.inventory.map((_, i) =>
+    state.players[0].level = 5;
+    state.players[0].equipment.chest = makeVest(90, "magic");
+    state.players[0].inventory = state.players[0].inventory.map((_, i) =>
       makeVest(100 + i),
     );
     state.items = [
       {
         id: 1,
         kind: "equipment",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         equipment: makeVest(2),
       },
     ];
@@ -442,16 +452,16 @@ describe("inventory", () => {
     // during which an armed moon spawner would otherwise emit a mob into the
     // staged field and perturb the pickup probe.
     stopWaves(state);
-    state.player.level = 5;
-    state.player.equipment.chest = makeVest(90, "magic");
-    state.player.inventory = state.player.inventory.map((_, i) =>
+    state.players[0].level = 5;
+    state.players[0].equipment.chest = makeVest(90, "magic");
+    state.players[0].inventory = state.players[0].inventory.map((_, i) =>
       makeVest(100 + i),
     );
     state.items = [
       {
         id: 1,
         kind: "equipment",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         equipment: makeVest(2),
       },
     ];
@@ -473,28 +483,28 @@ describe("inventory", () => {
 
   it("equips gear from the bag and applies its bonuses", () => {
     const state = startGame();
-    state.player.level = 5;
-    state.player.stats.strength = 20; // heft the LEATHER vest's strength gate
+    state.players[0].level = 5;
+    state.players[0].stats.strength = 20; // heft the LEATHER vest's strength gate
     // Bare the chest first so the swap math below is a plain add/remove.
-    discardEquipped(state, "chest");
-    const before = state.player.maxHp;
+    discardEquipped(state, state.players[0], "chest");
+    const before = state.players[0].maxHp;
     const vestBase = GEAR_DEFS.kevlar_vest!.bonuses.maxHp ?? 0;
-    state.player.inventory[3] = makeVest(50, "magic"); // +20 affix
-    expect(equipFromInventory(state, 3)).toBe(true);
-    expect(state.player.equipment.chest?.id).toBe(50);
-    expect(state.player.inventory[3]).toBeNull();
-    expect(state.player.maxHp).toBe(before + vestBase + 20);
-    expect(state.player.hp).toBe(state.player.maxHp); // gains heal along
+    state.players[0].inventory[3] = makeVest(50, "magic"); // +20 affix
+    expect(equipFromInventory(state, state.players[0], 3)).toBe(true);
+    expect(state.players[0].equipment.chest?.id).toBe(50);
+    expect(state.players[0].inventory[3]).toBeNull();
+    expect(state.players[0].maxHp).toBe(before + vestBase + 20);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp); // gains heal along
     // The worn vest counts its armor into the total.
-    expect(totalArmor(state)).toBeGreaterThanOrEqual(
+    expect(totalArmor(state, state.players[0])).toBeGreaterThanOrEqual(
       GEAR_DEFS.kevlar_vest!.armor!,
     );
 
     // Unequip: bonuses come back off, hp clamps.
-    expect(unequipToInventory(state, "chest")).toBe(true);
-    expect(state.player.maxHp).toBe(before);
-    expect(state.player.hp).toBe(before);
-    expect(state.player.equipment.chest).toBeNull();
+    expect(unequipToInventory(state, state.players[0], "chest")).toBe(true);
+    expect(state.players[0].maxHp).toBe(before);
+    expect(state.players[0].hp).toBe(before);
+    expect(state.players[0].equipment.chest).toBeNull();
   });
 
   it("swaps weapons — the weapon slot is never empty", () => {
@@ -507,61 +517,61 @@ describe("inventory", () => {
       ilvl: 5,
       affixes: [],
     };
-    state.player.inventory[0] = cutter;
-    expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.weapon.defId).toBe("box_cutter");
-    expect(state.player.inventory[0]?.defId).toBe("medieval_sword"); // swapped back
+    state.players[0].inventory[0] = cutter;
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(true);
+    expect(state.players[0].equipment.weapon.defId).toBe("box_cutter");
+    expect(state.players[0].inventory[0]?.defId).toBe("medieval_sword"); // swapped back
 
     // The equipped weapon can never be parked in the bag.
-    expect(unequipToInventory(state, "weapon")).toBe(false);
-    expect(state.player.equipment.weapon.defId).toBe("box_cutter");
+    expect(unequipToInventory(state, state.players[0], "weapon")).toBe(false);
+    expect(state.players[0].equipment.weapon.defId).toBe("box_cutter");
   });
 
   it("rearranges bag cells by swapping", () => {
     const state = startGame();
-    state.player.inventory[0] = makeVest(70);
-    moveInventoryItem(state, 0, 2);
-    expect(state.player.inventory[0]).toBeNull();
-    expect(state.player.inventory[2]?.id).toBe(70);
+    state.players[0].inventory[0] = makeVest(70);
+    moveInventoryItem(state, state.players[0], 0, 2);
+    expect(state.players[0].inventory[0]).toBeNull();
+    expect(state.players[0].inventory[2]?.id).toBe(70);
   });
 
   it("discards a bag item for good — no ground drop", () => {
     const state = startGame();
     state.items = [];
-    state.player.inventory[2] = makeVest(77);
-    const removed = discardFromInventory(state, 2);
+    state.players[0].inventory[2] = makeVest(77);
+    const removed = discardFromInventory(state, state.players[0], 2);
     expect(removed?.id).toBe(77);
-    expect(state.player.inventory[2]).toBeNull();
+    expect(state.players[0].inventory[2]).toBeNull();
     // Destroyed, not dropped: nothing lands on the ground to pick back up.
     expect(state.items.some((i) => i.kind === "equipment")).toBe(false);
   });
 
   it("discarding an empty cell is a no-op", () => {
     const state = startGame();
-    state.player.inventory[1] = null;
-    expect(discardFromInventory(state, 1)).toBeNull();
+    state.players[0].inventory[1] = null;
+    expect(discardFromInventory(state, state.players[0], 1)).toBeNull();
   });
 
   it("discards worn armor — strips it off the body, armor total drops", () => {
     const state = startGame();
-    state.player.level = 5;
-    state.player.stats.strength = 20; // heft the LEATHER vest's strength gate
-    state.player.inventory[0] = makeVest(88);
-    expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.chest?.id).toBe(88);
-    const armored = totalArmor(state);
+    state.players[0].level = 5;
+    state.players[0].stats.strength = 20; // heft the LEATHER vest's strength gate
+    state.players[0].inventory[0] = makeVest(88);
+    expect(equipFromInventory(state, state.players[0], 0)).toBe(true);
+    expect(state.players[0].equipment.chest?.id).toBe(88);
+    const armored = totalArmor(state, state.players[0]);
     expect(armored).toBeGreaterThanOrEqual(GEAR_DEFS.kevlar_vest!.armor!);
-    const removed = discardEquipped(state, "chest");
+    const removed = discardEquipped(state, state.players[0], "chest");
     expect(removed?.id).toBe(88);
-    expect(state.player.equipment.chest).toBeNull();
-    expect(totalArmor(state)).toBeLessThan(armored); // the vest's points left
+    expect(state.players[0].equipment.chest).toBeNull();
+    expect(totalArmor(state, state.players[0])).toBeLessThan(armored); // the vest's points left
   });
 
   it("never discards the equipped weapon — the holster is never empty", () => {
     const state = startGame();
-    const held = state.player.equipment.weapon;
-    expect(discardEquipped(state, "weapon")).toBeNull();
-    expect(state.player.equipment.weapon).toBe(held);
+    const held = state.players[0].equipment.weapon;
+    expect(discardEquipped(state, state.players[0], "weapon")).toBeNull();
+    expect(state.players[0].equipment.weapon).toBe(held);
   });
 });
 

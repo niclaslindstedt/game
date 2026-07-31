@@ -49,7 +49,7 @@ export function startGame(seed: number = SEED, levelId = "moon"): GameState {
   // content-rule suites assume a hero who can already fight, so arm him here;
   // the opening-strike beat has its own suite (openingStrike_test.ts) that
   // stages from `createGame` to exercise the disarmed state directly.
-  state.player.disarmed = false;
+  state.players[0].disarmed = false;
   return state;
 }
 
@@ -62,7 +62,7 @@ export function startGame(seed: number = SEED, levelId = "moon"): GameState {
  * durability, exactly as `drawSidearm` mints it in a real run.
  */
 export function equipBlaster(state: GameState): GameState {
-  state.player.equipment.weapon = {
+  state.players[0].equipment.weapon = {
     id: state.nextId++,
     defId: "blaster",
     slot: "weapon",
@@ -72,7 +72,7 @@ export function equipBlaster(state: GameState): GameState {
     ilvl: 1,
     affixes: [],
   };
-  state.player.weaponCooldownMs = 0;
+  state.players[0].weaponCooldownMs = 0;
   return state;
 }
 
@@ -133,7 +133,7 @@ export function makeEnemy(
 /** Step repeatedly until `done` or the safety cap trips. */
 export function run(
   state: GameState,
-  input: GameInput,
+  input: GameInput | readonly GameInput[],
   maxSteps: number,
   done?: (s: GameState) => boolean,
 ): number {

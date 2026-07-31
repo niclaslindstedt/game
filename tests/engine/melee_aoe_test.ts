@@ -15,7 +15,7 @@ describe("melee AoE damage", () => {
     const state = startGame(); // default melee weapon (crude_sword, variance 0.2)
     // Two foes on top of the hero: both inside reach and always in the cone, so
     // the swing (baseAoeTargets = 2) catches exactly both in one blow.
-    const at = { x: state.player.pos.x, y: state.player.pos.y };
+    const at = { x: state.players[0].pos.x, y: state.players[0].pos.y };
     state.enemies = [
       makeEnemy({ id: 1, pos: { ...at }, hp: 200, maxHp: 200 }),
       makeEnemy({ id: 2, pos: { ...at }, hp: 200, maxHp: 200 }),
@@ -23,8 +23,8 @@ describe("melee AoE damage", () => {
     // Every accuracy/crit roll comes up high: no miss, no dodge, no crit — so
     // the only thing separating the two numbers is the per-body damage roll.
     state.rng = () => 0.99;
-    state.player.disarmed = false;
-    state.player.weaponCooldownMs = 0;
+    state.players[0].disarmed = false;
+    state.players[0].weaponCooldownMs = 0;
     step(state, { steering: false, target: { x: 0, y: 0 }, jump: false }, 16);
 
     const hits = state.events.filter((e) => e.type === "enemyHit");

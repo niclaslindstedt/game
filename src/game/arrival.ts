@@ -48,6 +48,7 @@ import type {
   Equipment,
   GameState,
   Loadout,
+  Player,
   StatName,
 } from "./types/index.ts";
 
@@ -84,8 +85,7 @@ function copyPiece(piece: Equipment | null): Equipment | null {
  * hands to the next one. The app banks this on victory and passes it back
  * into `createGame` when the following level starts.
  */
-export function extractLoadout(state: GameState): Loadout {
-  const player = state.player;
+export function extractLoadout(state: GameState, player: Player): Loadout {
   return {
     level: player.level,
     xp: player.xp,
@@ -143,8 +143,11 @@ export function extractLoadout(state: GameState): Loadout {
  * pocketed — and the hero arrives rested: full health, full sprint, plating
  * fastened. Called from createGame when a loadout is passed.
  */
-export function applyLoadout(state: GameState, loadout: Loadout): void {
-  const player = state.player;
+export function applyLoadout(
+  state: GameState,
+  player: Player,
+  loadout: Loadout,
+): void {
   player.level = Math.max(1, loadout.level);
   player.xpToNext = xpToNextAt(player.level, state.difficulty);
   player.xp = clamp(loadout.xp, 0, player.xpToNext - 1);
@@ -235,7 +238,9 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   }
   // The bag re-sizes to the carried STRENGTH and worn bag, then refills in
   // order; anything past the capacity (shrunken saves) stays behind.
-  player.inventory = new Array<Equipment | null>(inventoryCapacity(state))
+  player.inventory = new Array<Equipment | null>(
+    inventoryCapacity(state, player),
+  )
     .fill(null)
     .map((_, i) => stillWearable(mint(banked[i] ?? null)));
   // The LOST & FOUND carries across untouched but re-minted, capped like the
@@ -279,10 +284,10 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   // an adopted veteran converts for free: the points fall out of the stats the
   // loadout already carries, no bespoke migration code needed.
   player.talents = { ...(loadout.talents ?? {}) };
-  reconcileTalentPoints(state);
+  reconcileTalentPoints(state, player);
 
-  recomputeMaxHp(state);
-  recomputeMaxStamina(state);
+  recomputeMaxHp(state, player);
+  recomputeMaxStamina(state, player);
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
 

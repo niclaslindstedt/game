@@ -7,6 +7,7 @@
 // The event list is cleared by the NEXT step, so this runs immediately after
 // `step()` — before render, before anything else can consume it.
 
+import { localHero } from "../local-seat.ts";
 import type { Difficulty, GameState } from "@game/core";
 
 import {
@@ -60,10 +61,12 @@ export function createTickReactions(deps: {
     // so only real hits buzz; the magnitude is the true hp delta so a
     // shield-softened blow reads lighter than the damage the engine rolled.
     if (
-      state.player.maxHp > 0 &&
+      localHero(state).maxHp > 0 &&
       state.events.some((e) => e.type === "playerHurt")
     ) {
-      playDamageHaptic((hpBeforeStep - state.player.hp) / state.player.maxHp);
+      playDamageHaptic(
+        (hpBeforeStep - localHero(state).hp) / localHero(state).maxHp,
+      );
     }
     // Feel the field FX too: a nuke HAMMERS the motor (once, even if it clears
     // a crowd), and a lightning strike flicks it — paired with the camera kick

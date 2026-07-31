@@ -37,7 +37,7 @@ function ready(ability: QuakeLineAbility, ctx: AbilityCtx): boolean {
 
 function cast(ability: QuakeLineAbility, ctx: AbilityCtx): void {
   const { state, enemy } = ctx;
-  const dir = ctx.lockedDir ?? direction(enemy.pos, state.player.pos);
+  const dir = ctx.lockedDir ?? direction(enemy.pos, state.players[0].pos);
   ctx.mech.quake = {
     from: { ...enemy.pos },
     dir: { ...dir },
@@ -82,7 +82,7 @@ function step(ability: QuakeLineAbility, ctx: AbilityCtx): boolean {
   // A jump clears it — the ground opening is a ground move like every other.
   if (
     groundMoveCanTouch(state) &&
-    distance(state.player.pos, at) <= ability.radius + PLAYER.radius
+    distance(state.players[0].pos, at) <= ability.radius + PLAYER.radius
   ) {
     landHostileBlow(
       state,

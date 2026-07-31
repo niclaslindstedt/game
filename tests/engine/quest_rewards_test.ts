@@ -63,7 +63,7 @@ function install(): void {
 function run(): GameState {
   install();
   const state = startGame();
-  state.player.pos = { x: GIVER_AT.x - 20, y: GIVER_AT.y };
+  state.players[0].pos = { x: GIVER_AT.x - 20, y: GIVER_AT.y };
   // Walk into reach so the giver is MET; the conversation still needs a tap.
   for (let i = 0; i < 20 && state.phase === "playing"; i++) {
     step(state, idle, DT);

@@ -50,7 +50,7 @@ function fresh() {
   resetHeroSoak();
   updateSettings({ ...ALL_GORE_ON, blood: 1 });
   const state = startGame();
-  state.player.pos = { x: 400, y: 400 };
+  state.players[0].pos = { x: 400, y: 400 };
   syncHeroGear(state);
   return state;
 }
@@ -64,8 +64,8 @@ function land(
 ) {
   for (let i = 0; i < count; i++) {
     soakHero(state, blow(bars), {
-      x: state.player.pos.x + dist,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + dist,
+      y: state.players[0].pos.y,
     });
   }
   // A SNAPSHOT: `heroSoak` hands back the module's live record, and the module
@@ -185,8 +185,8 @@ describe("syncHeroGear", () => {
     expect(before.feet).toBeGreaterThan(0);
     // A different pair of boots — compared on the piece's INSTANCE id, so
     // swapping one pair for an identical pair still counts. They are clean.
-    state.player.equipment.feet = {
-      ...state.player.equipment.chest!,
+    state.players[0].equipment.feet = {
+      ...state.players[0].equipment.chest!,
       id: 9_999_001,
     };
     syncHeroGear(state);
@@ -200,8 +200,8 @@ describe("syncHeroGear", () => {
     const state = fresh();
     land(state, 6, 12);
     expect(heroSoak(state).weapon).toBeGreaterThan(0);
-    state.player.equipment.weapon = {
-      ...state.player.equipment.weapon,
+    state.players[0].equipment.weapon = {
+      ...state.players[0].equipment.weapon,
       id: 9_999_002,
     };
     syncHeroGear(state);
@@ -210,12 +210,12 @@ describe("syncHeroGear", () => {
 
   it("cleans an empty slot the moment something goes into it", () => {
     const state = fresh();
-    state.player.equipment.head = null;
+    state.players[0].equipment.head = null;
     syncHeroGear(state);
     land(state, 6, 12);
     expect(heroSoak(state).head).toBeGreaterThan(0);
-    state.player.equipment.head = {
-      ...state.player.equipment.chest!,
+    state.players[0].equipment.head = {
+      ...state.players[0].equipment.chest!,
       id: 9_999_003,
     };
     syncHeroGear(state);
@@ -236,8 +236,8 @@ describe("the gore gate", () => {
     const shut = fresh();
     updateSettings({ goreSoak: "off" });
     soakHero(shut, bloodBlow(100, 100, "minion", true) ?? blow(), {
-      x: shut.player.pos.x,
-      y: shut.player.pos.y,
+      x: shut.players[0].pos.x,
+      y: shut.players[0].pos.y,
     });
     wadeHero(shut, 1, 5000);
     updateSettings(ALL_GORE_ON);
@@ -281,7 +281,7 @@ describe("a new run", () => {
     land(first, 4, 20);
     expect(heroSoak(first).chest).toBeGreaterThan(0);
     const second = startGame();
-    second.player.pos = { x: 400, y: 400 };
+    second.players[0].pos = { x: 400, y: 400 };
     for (const zone of SOAK_ZONES) expect(heroSoak(second)[zone]).toBe(0);
   });
 });

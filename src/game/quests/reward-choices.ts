@@ -117,10 +117,10 @@ function mintChoices(state: GameState, questId: string): Equipment[] {
   // are the same roll wearing a different base.
   const slot =
     loot.slot === "weapon" || loot.slot === "gear" ? loot.slot : undefined;
-  const anchor = rollEquipment(state, {
+  const anchor = rollEquipment(state, state.players[0], {
     ...(slot ? { slot } : {}),
     ...(loot.tierBonus ? { tierBonus: loot.tierBonus } : {}),
-    mlvl: state.player.level,
+    mlvl: state.players[0].level,
   });
 
   const lanes = laneBases(state, anchor);
@@ -134,11 +134,11 @@ function mintChoices(state: GameState, questId: string): Equipment[] {
   return lanes.map((defId) =>
     defId === anchor.defId
       ? anchor
-      : rollEquipment(state, {
+      : rollEquipment(state, state.players[0], {
           defId,
           tier: anchor.tier,
           quality: anchor.quality,
-          mlvl: state.player.level,
+          mlvl: state.players[0].level,
         }),
   );
 }
@@ -149,7 +149,7 @@ function mintChoices(state: GameState, questId: string): Equipment[] {
  * the ordinary pipeline picked is genuinely on the table.
  */
 function laneBases(state: GameState, anchor: Equipment): string[] {
-  const lootLevel = lootLevelFor(state, state.player.level);
+  const lootLevel = lootLevelFor(state, state.players[0].level);
   if (isWeaponDef(anchor.defId)) {
     const pool = eligibleBases(state, "weapon", lootLevel);
     return LANE_WEAPON_CLASSES.map((weaponClass) => {

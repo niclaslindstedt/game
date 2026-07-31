@@ -36,7 +36,7 @@ function placeObstacle(
     id: 8000,
     kind,
     sprite: kind,
-    pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+    pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
     radius,
     jumpable,
   };
@@ -49,9 +49,13 @@ describe("obstacle collision", () => {
     const state = startGame();
     clearStage(state);
     const obstacle = placeObstacle(state, 40, false);
-    run(state, steerTo(state.player.pos.x + 200, state.player.pos.y), 300);
+    run(
+      state,
+      steerTo(state.players[0].pos.x + 200, state.players[0].pos.y),
+      300,
+    );
     // Pinned against the near edge, never inside or past it.
-    expect(state.player.pos.x).toBeLessThanOrEqual(
+    expect(state.players[0].pos.x).toBeLessThanOrEqual(
       obstacle.pos.x - obstacle.radius - PLAYER.radius + 0.001,
     );
   });
@@ -60,14 +64,17 @@ describe("obstacle collision", () => {
     const state = startGame();
     clearStage(state);
     const obstacle = placeObstacle(state, 40, true);
-    const target = { x: state.player.pos.x + 200, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 200,
+      y: state.players[0].pos.y,
+    };
     // Hold the player airborne above the clear height while crossing.
-    for (let i = 0; i < 400 && state.player.pos.x < target.x - 10; i++) {
-      state.player.z = OBSTACLES.clearHeight + 10;
-      state.player.vz = 0;
+    for (let i = 0; i < 400 && state.players[0].pos.x < target.x - 10; i++) {
+      state.players[0].z = OBSTACLES.clearHeight + 10;
+      state.players[0].vz = 0;
       step(state, steerTo(target.x, target.y), DT);
     }
-    expect(state.player.pos.x).toBeGreaterThan(
+    expect(state.players[0].pos.x).toBeGreaterThan(
       obstacle.pos.x + obstacle.radius,
     );
   });
@@ -76,13 +83,16 @@ describe("obstacle collision", () => {
     const state = startGame();
     clearStage(state);
     const obstacle = placeObstacle(state, 40, false);
-    const target = { x: state.player.pos.x + 200, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 200,
+      y: state.players[0].pos.y,
+    };
     for (let i = 0; i < 300; i++) {
-      state.player.z = OBSTACLES.clearHeight + 10;
-      state.player.vz = 0;
+      state.players[0].z = OBSTACLES.clearHeight + 10;
+      state.players[0].vz = 0;
       step(state, steerTo(target.x, target.y), DT);
     }
-    expect(state.player.pos.x).toBeLessThanOrEqual(
+    expect(state.players[0].pos.x).toBeLessThanOrEqual(
       obstacle.pos.x - obstacle.radius - PLAYER.radius + 0.001,
     );
   });
@@ -141,7 +151,7 @@ describe("rectangular rocks", () => {
       id: 8500,
       kind: "moonrock",
       sprite: "moonrock_2x2",
-      pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
       radius: Math.hypot(half.x, half.y),
       half,
       jumpable: false,
@@ -155,13 +165,17 @@ describe("rectangular rocks", () => {
     clearStage(state);
     const half = { x: 20, y: 20 };
     const rock = placeRock(state, 60, half);
-    run(state, steerTo(state.player.pos.x + 300, state.player.pos.y), 400);
+    run(
+      state,
+      steerTo(state.players[0].pos.x + 300, state.players[0].pos.y),
+      400,
+    );
     // Pinned against the flat left face (pos.x - half.x), not the circumcircle
     // — a square rock is walkable right up to its edge.
-    expect(state.player.pos.x).toBeLessThanOrEqual(
+    expect(state.players[0].pos.x).toBeLessThanOrEqual(
       rock.pos.x - half.x - PLAYER.radius + 0.001,
     );
-    expect(state.player.pos.x).toBeGreaterThan(
+    expect(state.players[0].pos.x).toBeGreaterThan(
       rock.pos.x - rock.radius - PLAYER.radius,
     );
   });
@@ -178,7 +192,7 @@ describe("rectangular rocks", () => {
     state.enemies.push(victim);
     state.projectiles.push({
       id: 7100,
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       dir: { x: 1, y: 0 },
       speed: 400,
       radius: 2,
@@ -230,7 +244,7 @@ describe("walls block shots", () => {
     state.enemies.push(victim);
     state.projectiles.push({
       id: 7000,
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       dir: { x: 1, y: 0 },
       speed: 400, // fast enough that only the swept check can catch the wall
       radius: 2,
@@ -257,7 +271,7 @@ describe("walls block shots", () => {
     state.enemies.push(victim);
     state.projectiles.push({
       id: 7000,
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       dir: { x: 1, y: 0 },
       speed: 400,
       radius: 2,
@@ -308,7 +322,7 @@ describe("lineOfSight (the render cull query)", () => {
     clearStage(state);
     const wall = placeObstacle(state, 40, false);
     const behind = { x: wall.pos.x + 40, y: wall.pos.y };
-    expect(lineOfSight(state, state.player.pos, behind)).toBe(false);
+    expect(lineOfSight(state, state.players[0].pos, behind)).toBe(false);
   });
 
   it("sees straight over a jumpable low obstacle", () => {
@@ -316,7 +330,7 @@ describe("lineOfSight (the render cull query)", () => {
     clearStage(state);
     const rock = placeObstacle(state, 40, true);
     const behind = { x: rock.pos.x + 40, y: rock.pos.y };
-    expect(lineOfSight(state, state.player.pos, behind)).toBe(true);
+    expect(lineOfSight(state, state.players[0].pos, behind)).toBe(true);
   });
 
   it("sees a target beside the obstacle, past its edge", () => {
@@ -325,7 +339,7 @@ describe("lineOfSight (the render cull query)", () => {
     const wall = placeObstacle(state, 40, false, 12);
     // Well clear of the wall's footprint on the y-axis: an unobstructed line.
     const beside = { x: wall.pos.x, y: wall.pos.y + 80 };
-    expect(lineOfSight(state, state.player.pos, beside)).toBe(true);
+    expect(lineOfSight(state, state.players[0].pos, beside)).toBe(true);
   });
 });
 

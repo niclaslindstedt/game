@@ -9,6 +9,7 @@
 // bare `Loadout`) and have no business downloading a map to do it. The shared
 // geometry and the data-URL cache stay in `paper-doll.ts`.
 
+import { localHero } from "./local-seat.ts";
 import {
   type GameState,
   gearDef,
@@ -46,7 +47,7 @@ export function playerDollLayers(
   const layers: DollLayer[] = [
     { sprite: `${playerAppearance(state)}_${frame}`, dx: 0, dy: 0 },
   ];
-  const equipment = state.player.equipment;
+  const equipment = localHero(state).equipment;
   for (const slot of WORN_ORDER) {
     const piece = equipment[slot];
     if (!piece) continue;

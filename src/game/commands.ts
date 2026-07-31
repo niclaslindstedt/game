@@ -416,7 +416,7 @@ export function applyRunCommand(
     case "closeCompanionPanel":
       return closeCompanionPanel(state);
     case "promptPendingPoints":
-      return promptPendingPoints(state);
+      return promptPendingPoints(state, state.players[0]);
 
     // THE RUN'S OWN FLOW
     case "pauseGame":
@@ -430,27 +430,36 @@ export function applyRunCommand(
 
     // THE BAG
     case "equipFromInventory":
-      return equipFromInventory(state, num(a, 0));
+      return equipFromInventory(state, state.players[0], num(a, 0));
     case "equipFromInventoryInto":
-      return equipFromInventoryInto(state, num(a, 0), str(a, 1) as EquipSlot);
+      return equipFromInventoryInto(
+        state,
+        state.players[0],
+        num(a, 0),
+        str(a, 1) as EquipSlot,
+      );
     case "unequipToInventory":
-      return unequipToInventory(state, str(a, 0) as EquipSlot);
+      return unequipToInventory(
+        state,
+        state.players[0],
+        str(a, 0) as EquipSlot,
+      );
     case "moveInventoryItem":
-      return moveInventoryItem(state, num(a, 0), num(a, 1));
+      return moveInventoryItem(state, state.players[0], num(a, 0), num(a, 1));
     case "discardFromInventory":
-      return discardFromInventory(state, num(a, 0));
+      return discardFromInventory(state, state.players[0], num(a, 0));
     case "discardEquipped":
-      return discardEquipped(state, str(a, 0) as EquipSlot);
+      return discardEquipped(state, state.players[0], str(a, 0) as EquipSlot);
     case "spendGateKey":
-      return spendGateKey(state, num(a, 0));
+      return spendGateKey(state, state.players[0], num(a, 0));
     case "spendReviveItem":
       return spendReviveItem(state, num(a, 0));
     case "autoEquipBest":
-      return autoEquipBest(state);
+      return autoEquipBest(state, state.players[0]);
     case "scrapInferiorLoot":
-      return scrapInferiorLoot(state);
+      return scrapInferiorLoot(state, state.players[0]);
     case "discardHeldAbility":
-      return discardHeldAbility(state, num(a, 0));
+      return discardHeldAbility(state, state.players[0], num(a, 0));
 
     // THE COUNTER
     case "buyStock":
@@ -466,17 +475,17 @@ export function applyRunCommand(
 
     // THE BUILD
     case "allocateStat":
-      return allocateStat(state, str(a, 0) as StatName);
+      return allocateStat(state, state.players[0], str(a, 0) as StatName);
     case "deallocateStat":
-      return deallocateStat(state, str(a, 0) as StatName);
+      return deallocateStat(state, state.players[0], str(a, 0) as StatName);
     case "spendTalentPoint":
-      return spendTalentPoint(state, str(a, 0));
+      return spendTalentPoint(state, state.players[0], str(a, 0));
     case "beginRespec":
-      return beginRespec(state);
+      return beginRespec(state, state.players[0]);
     case "confirmRespec":
-      return confirmRespec(state);
+      return confirmRespec(state, state.players[0]);
     case "spendCleanSlate":
-      return spendCleanSlate(state);
+      return spendCleanSlate(state, state.players[0]);
 
     // THE PARTY
     case "healCompanionWithMedkit":
@@ -522,9 +531,9 @@ export function applyRunCommand(
 
     // THE LOST & FOUND
     case "reclaimVaultItem":
-      return reclaimVaultItem(state, num(a, 0));
+      return reclaimVaultItem(state, state.players[0], num(a, 0));
     case "clearVault":
-      return clearVault(state);
+      return clearVault(state, state.players[0]);
 
     // THE RIDE
     case "startAutopilot":
@@ -536,7 +545,7 @@ export function applyRunCommand(
     case "creditAutopilotPurse":
       return creditAutopilotPurse(state, num(a, 0));
     case "refundAutopilotBuild":
-      return refundAutopilotBuild(state);
+      return refundAutopilotBuild(state, state.players[0]);
   }
 }
 

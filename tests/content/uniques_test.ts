@@ -79,8 +79,8 @@ describe("mintUnique", () => {
     // The spread shows up in the actual per-hit damage — and it is a REAL
     // chase, not a rounding difference: the ceiling roll hits meaningfully
     // harder than the floor one on the very same named weapon.
-    expect(weaponDamageFor(state, strong)).toBeGreaterThan(
-      weaponDamageFor(state, weak) * 1.2,
+    expect(weaponDamageFor(state, state.players[0], strong)).toBeGreaterThan(
+      weaponDamageFor(state, state.players[0], weak) * 1.2,
     );
     // …but the fixed bonuses are the same on both copies.
     expect(strong.affixes).toEqual(weak.affixes);
@@ -109,8 +109,8 @@ describe("mintUnique", () => {
     const baseReq = equipmentLevelReq("fluted_greaves");
     // The ilvl scales power, not the requirement — wearable far below it.
     expect(baseReq).toBeLessThan(uniqueDef("walled_garden").ilvl);
-    state.player.level = baseReq;
-    expect(meetsLevelReq(state, item)).toBe(true);
+    state.players[0].level = baseReq;
+    expect(meetsLevelReq(state, state.players[0], item)).toBe(true);
   });
 
   it("an ARTIFACT requires the level cap (min(maxLevel, ilvl)), not its base", () => {
@@ -123,24 +123,24 @@ describe("mintUnique", () => {
     expect(itemLevelReq(artifact)).toBe(Math.min(cap, artifact.ilvl));
     expect(itemLevelReq(artifact)).toBe(cap);
     // One level short of the cap it cannot be worn; at the cap it can.
-    state.player.level = cap - 1;
-    expect(meetsLevelReq(state, artifact)).toBe(false);
-    state.player.level = cap;
-    expect(meetsLevelReq(state, artifact)).toBe(true);
+    state.players[0].level = cap - 1;
+    expect(meetsLevelReq(state, state.players[0], artifact)).toBe(false);
+    state.players[0].level = cap;
+    expect(meetsLevelReq(state, state.players[0], artifact)).toBe(true);
   });
 
   it("a scaling unique bonus reaches the hero's effective stat once worn", () => {
     const state = startGame();
-    state.player.stats.intelligence = 20;
-    const before = effectiveStat(state, "intelligence");
+    state.players[0].stats.intelligence = 20;
+    const before = effectiveStat(state, state.players[0], "intelligence");
     // THE PANOPTICON carries +2% INTELLIGENCE (a scaling bonus, at the
     // UNIQUE.scalingPctCap ceiling).
     const panopticon: Equipment = mintUnique(
       { ...state, rng: () => 0.5 } as typeof state,
       "the_panopticon",
     );
-    state.player.equipment.head = panopticon;
-    expect(effectiveStat(state, "intelligence")).toBe(
+    state.players[0].equipment.head = panopticon;
+    expect(effectiveStat(state, state.players[0], "intelligence")).toBe(
       Math.round(before * 1.02),
     );
   });
