@@ -133,7 +133,7 @@ export function makeEnemy(
 /** Step repeatedly until `done` or the safety cap trips. */
 export function run(
   state: GameState,
-  input: GameInput,
+  input: GameInput | readonly GameInput[],
   maxSteps: number,
   done?: (s: GameState) => boolean,
 ): number {

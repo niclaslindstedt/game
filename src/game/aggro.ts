@@ -71,11 +71,18 @@ export function quarryFor(
   // a single-player run is exactly one call, the same as before the party.
   let best: Player | null = null;
   let bestD = Infinity;
+  // Whether the mob can still see the hero it is already after. A quarry it has
+  // LOST is given up outright, however near it still is: the horde's own aggro
+  // already breaks when a wall comes between it and the hero, and a hysteresis
+  // that outranked sight would leave a mob grinding into that wall while a
+  // second hero stood beside it in the open.
+  let holdsSight = false;
   for (const hero of party) {
     if (!heroAlive(hero)) continue;
+    if (!sees(hero)) continue;
+    if (hero === current) holdsSight = true;
     const d = distanceSq(hero.pos, enemy.pos);
     if (d >= bestD) continue;
-    if (!sees(hero)) continue;
     bestD = d;
     best = hero;
   }
@@ -86,7 +93,7 @@ export function quarryFor(
     enemy.quarry = party.indexOf(fallback);
     return fallback;
   }
-  if (!current || current === best) {
+  if (!current || current === best || !holdsSight) {
     enemy.quarry = party.indexOf(best);
     return best;
   }

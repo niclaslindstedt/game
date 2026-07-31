@@ -185,7 +185,7 @@ describe("the level and XP ride the loadout across runs", () => {
       SEED_NEXT,
       "test_level_2",
       "medium",
-      extractLoadout(state),
+      extractLoadout(state, state.players[0]),
     );
     const carried = next.companions[0]!;
     expect(carried.level).toBe(6);
@@ -199,7 +199,7 @@ describe("the level and XP ride the loadout across runs", () => {
   it("a pre-leveling loadout loads at the hero's level with a fresh bar", () => {
     const state = startGame();
     withCompanion(state, "test_gunner");
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
     // Strip the new fields, as a loadout banked before companion leveling would.
     for (const c of loadout.companions ?? []) {
       delete (c as { level?: number }).level;

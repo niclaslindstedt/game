@@ -307,7 +307,7 @@ describe("hero power level — character level only", () => {
       kind: "damagePct",
       value: 9,
     });
-    expect(heroDamageLevel(state)).toBeGreaterThan(char);
+    expect(heroDamageLevel(state, state.players[0])).toBeGreaterThan(char);
     expect(heroPowerLevel(state)).toBe(char);
     // A twink rack is likewise ignored — power is the character level, period.
     state.players[0].equipment.weapon.affixes.pop();

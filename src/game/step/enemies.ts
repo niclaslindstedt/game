@@ -56,17 +56,18 @@ import { maybePowerScale } from "../menace.ts";
 import { repelFromMerchant } from "../merchant.ts";
 import { repelFromQuestGivers } from "../quests/index.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
+import { quarryFor } from "../aggro.ts";
+import { nearestHeroWhere } from "../party.ts";
 import { moveRangedEnemy } from "../ranged.ts";
 import { raiseAlarm } from "../spawners.ts";
 import { startEnemyDialogue, wantsDialogue } from "../story.ts";
 import { BALANCE } from "../tuning.ts";
-import type { Enemy, GameState } from "../types/index.ts";
+import type { Enemy, GameState, Player } from "../types/index.ts";
 import { roamTheMap, stepPatrol, strollAtWork } from "../working.ts";
 import { repelFromZones } from "../zones.ts";
 import { inert, inertEnemy, isNeutral } from "../disposition.ts";
 
 export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
-  const player = state.players[0];
   // Per-tick catalog lookups hoisted out of the per-enemy loops — at horde
   // scale (hundreds alive) even a cheap record probe per enemy adds up.
   const difficulty = difficultyDef(state.difficulty);
@@ -75,7 +76,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   // per-mob `stasisFactorAt` re-derived each field's INT-widened radius (a
   // full gear walk) for every enemy every tick. No stat-changing pass runs
   // between here and the movement below, so the hoist is exact.
-  const stasisFields = activeStasisFields(state, player);
+  const stasisFields = activeStasisFields(state);
 
   // On the gentle rungs the plain horde loses its legs the moment the player is
   // in an actual FIGHT with an elite or boss, so he can push through the swarm
@@ -182,15 +183,35 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     // bystander is not swinging at anybody. No contact damage, ever.
     if (inert(def, enemy)) continue;
 
+    // WHOM IT BITES IS WHOM IT IS TOUCHING, not whom it is chasing. A mob
+    // shoving past one hero to reach another still hurts the one it walked
+    // through, which is the whole reason a party spreads out — and the nearest
+    // of several in reach, because one body can only swing at one person.
+    //
     // Monsters drift along the ground — a player at the top of a moon jump
     // sails clean over their grasp. The reach is pulled in a little under the
     // bodies' touching distance (contactReachMult), so a foe must press into
     // the hero to bite — a last-instant sidestep is a clean escape, not a graze.
     const touchReach = (def.radius + PLAYER.radius) * PLAYER.contactReachMult;
+    const victim =
+      enemy.contactCooldownMs > 0
+        ? null
+        : nearestHeroWhere(
+            state,
+            enemy.pos,
+            (hero) =>
+              hero.z <= JUMP.dodgeHeight &&
+              distanceSq(enemy.pos, hero.pos) <= touchReach * touchReach,
+          );
+    // `nearestHeroWhere` falls back to the plain nearest when nobody passes the
+    // predicate — right for a chase, wrong for a blow — so the reach is
+    // re-checked on what came back.
     const touching =
-      player.z <= JUMP.dodgeHeight &&
-      distanceSq(enemy.pos, player.pos) <= touchReach * touchReach;
-    if (touching && enemy.contactCooldownMs <= 0) {
+      victim !== null &&
+      victim.z <= JUMP.dodgeHeight &&
+      distanceSq(enemy.pos, victim.pos) <= touchReach * touchReach;
+    if (touching && victim) {
+      const player = victim;
       // The swing is spent whether it lands or is dodged, so the same foe
       // can't re-swing next frame after a sidestep.
       enemy.contactCooldownMs = def.contactCooldownMs;
@@ -276,8 +297,8 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // magic tree's own struck defenses: FROST NOVA freezes the swarm, ARCANE
       // RETRIBUTION bills the attacker back its share of the blow.
       queueStruckProcs(state, enemy);
-      applyFrostNova(state);
-      applyRetribution(state, enemy, damage);
+      applyFrostNova(state, player);
+      applyRetribution(state, player, enemy, damage);
     }
   }
 }
@@ -289,8 +310,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
  * every move site), emits an icy `nova` cue, and arms the cooldown. No enemy
  * list mutation, so it's safe to run inline in the contact loop.
  */
-function applyFrostNova(state: GameState): void {
-  const player = state.players[0];
+function applyFrostNova(state: GameState, player: Player): void {
   if ((player.frostNovaCooldownMs ?? 0) > 0) return;
   const fn = talentFrostNova(state, player);
   if (!fn) return;
@@ -317,10 +337,11 @@ function applyFrostNova(state: GameState): void {
  */
 function applyRetribution(
   state: GameState,
+  player: Player,
   attacker: Enemy,
   damage: number,
 ): void {
-  const frac = talentReflectFrac(state, state.players[0]);
+  const frac = talentReflectFrac(state, player);
   if (frac <= 0 || damage <= 0) return;
   // `??=` guards a run parked before this field existed (thaws undefined); the
   // queue is empty at every save boundary, so it needs no SAVE_VERSION bump.
@@ -451,7 +472,14 @@ function moveEnemy(
   level: LevelDef,
   stasisFields: readonly StasisField[],
 ): void {
-  const player = state.players[0];
+  // WHOM THIS MOB IS AFTER — resolved once, here, and remembered on the mob so
+  // every pass downstream this tick (its reach, its ranged lead, a mechanic's
+  // locked bearing) aims at the same person. A phasing mob sees through walls,
+  // so its sight test is a constant; everything else needs a clear line. See
+  // aggro.ts for why the answer is sticky.
+  const player = quarryFor(state, enemy, (hero) =>
+    def.phasing === true ? true : lineOfSight(state, enemy.pos, hero.pos),
+  );
   // A meteor blast flung this mob: while the launch coasts (stepKnockback owns
   // the movement) the AI sits out, so the fling reads as a fling instead of the
   // chase immediately fighting it back.
@@ -464,7 +492,7 @@ function moveEnemy(
   const speed =
     enemy.speed *
     mobBalanceSpeed() *
-    stasisFactorFrom(stasisFields, state.players[0].pos, enemy.pos) *
+    stasisFactorFrom(stasisFields, player.pos, enemy.pos) *
     chillFactorFor(enemy) *
     mechSpeedMult(enemy, def);
   const senses = () =>
@@ -587,7 +615,7 @@ function moveEnemy(
     const rushSpeed =
       mobRushSpeed(def) *
       mobBalanceSpeed() *
-      stasisFactorFrom(stasisFields, state.players[0].pos, enemy.pos) *
+      stasisFactorFrom(stasisFields, player.pos, enemy.pos) *
       chillFactorFor(enemy);
     enemy.pos = moveToward(
       enemy.pos,
@@ -620,7 +648,7 @@ function moveEnemy(
     const rushSpeed =
       mobRushSpeed(def) *
       mobBalanceSpeed() *
-      stasisFactorFrom(stasisFields, state.players[0].pos, enemy.pos) *
+      stasisFactorFrom(stasisFields, player.pos, enemy.pos) *
       chillFactorFor(enemy);
     // Close to the same tightened contact distance the damage test uses, so a
     // rusher settles exactly where it can actually bite (not a hair short of it).
@@ -668,7 +696,7 @@ function moveEnemy(
     const pursuit = setPieceEngaged ? (difficulty.mobPursuitNearElite ?? 1) : 1;
     enemy.pos = moveToward(
       enemy.pos,
-      flankTarget(state, enemy, difficulty),
+      flankTarget(player, enemy, difficulty),
       speed * pursuit * dt,
     );
   } else if (enemy.patrol) {
@@ -698,11 +726,10 @@ function moveEnemy(
  * The gentle rungs keep the honest straight-line conga.
  */
 function flankTarget(
-  state: GameState,
+  player: Player,
   enemy: Enemy,
   difficulty: DifficultyDef,
 ): Vec2 {
-  const player = state.players[0];
   if (difficulty.index < ENEMY_AI.flankFromIndex) {
     return player.pos;
   }

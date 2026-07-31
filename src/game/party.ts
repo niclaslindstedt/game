@@ -121,6 +121,19 @@ export function distanceToParty(state: GameState, pos: Vec2): number {
   return hero ? distance(hero.pos, pos) : Infinity;
 }
 
+/** `distanceToParty` squared, without the square root — the form the per-mob
+ * loops want, since they compare against a squared radius anyway and run once
+ * per enemy per tick. */
+export function distanceSqToParty(state: GameState, pos: Vec2): number {
+  let best = Infinity;
+  for (const hero of state.players) {
+    if (!heroAlive(hero)) continue;
+    const d = distanceSq(hero.pos, pos);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
 /**
  * True when ANY living hero is within `radius` of `pos`.
  *
@@ -176,6 +189,26 @@ export function partyCentroid(state: GameState): Vec2 {
   }
   if (n === 0) return { ...state.players[0].pos };
   return { x: x / n, y: y / n };
+}
+
+/**
+ * THE PARTY'S LEVEL — the highest any living hero has reached.
+ *
+ * What the horde is scaled and priced against (`resolveMobScaling`,
+ * `mobLevelScale`, the drop ladder), and the highest rather than the average or
+ * seat 0's for the reason Diablo 2 scales an area off the party: an average lets
+ * a group carry a level-1 alt through a level-90 map by arithmetic, and seat 0's
+ * makes the whole difficulty of a run depend on who happened to press HOST.
+ *
+ * Falls back to seat 0 with the party wiped, so a death mid-tick cannot make the
+ * horde level 0.
+ */
+export function partyLevel(state: GameState): number {
+  let best = 0;
+  for (const hero of state.players) {
+    if (heroAlive(hero) && hero.level > best) best = hero.level;
+  }
+  return best || state.players[0].level;
 }
 
 /** The seat a hero is sitting in, or -1 for a hero not in this run. Events and

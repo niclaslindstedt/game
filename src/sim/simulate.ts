@@ -894,7 +894,7 @@ export function runLevel(options: SimulateLevelOptions): {
       stuckLimit,
       view,
     });
-    return { report, loadout: extractLoadout(state) };
+    return { report, loadout: extractLoadout(state, state.players[0]) };
   } finally {
     if (balance) setBalanceTuning(priorBalance);
     if (!arrowXp) setArrowXpEnabled(true);

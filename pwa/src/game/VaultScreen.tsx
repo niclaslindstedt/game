@@ -513,7 +513,8 @@ export function VaultScreen({
   // vault either, so the plain fresh state is enough.
   const state = useMemo(() => {
     const state = createGame(1);
-    if (character.loadout) applyLoadout(state, character.loadout);
+    if (character.loadout)
+      applyLoadout(state, state.players[0], character.loadout);
     return state;
   }, [character.loadout]);
 

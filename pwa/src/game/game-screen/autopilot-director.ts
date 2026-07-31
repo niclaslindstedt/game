@@ -213,7 +213,7 @@ export function finishAutopilotRide(deps: {
     // state.players[0].coins, so bank it as-is (don't fold pendingCoins twice).
     characterRef.current = bankLoadout(
       characterRef.current,
-      extractLoadout(state),
+      extractLoadout(state, state.players[0]),
       true,
     );
     prompted = runCommandOk(state, "promptPendingPoints");

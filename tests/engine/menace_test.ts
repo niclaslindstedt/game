@@ -798,12 +798,12 @@ describe("hero power level — character level only", () => {
     const state = startGame();
     // The fresh rack (wall weapon + street clothes, all ilvl 1-ish) reads
     // well under the character level.
-    expect(heroGearLevel(state)).toBeLessThan(1);
+    expect(heroGearLevel(state, state.players[0])).toBeLessThan(1);
     expect(heroPowerLevel(state)).toBe(state.players[0].level);
     // Deck the hero out: a 70-ilvl weapon averages gear level 10 — but the
     // horde no longer follows gear at all, so power stays the character level.
     state.players[0].equipment.weapon.ilvl = 70;
-    expect(heroGearLevel(state)).toBe(10);
+    expect(heroGearLevel(state, state.players[0])).toBe(10);
     expect(heroPowerLevel(state)).toBe(state.players[0].level);
   });
 
@@ -820,7 +820,9 @@ describe("hero power level — character level only", () => {
       kind: "damagePct",
       value: 9,
     });
-    expect(heroDamageLevel(state)).toBeGreaterThan(state.players[0].level);
+    expect(heroDamageLevel(state, state.players[0])).toBeGreaterThan(
+      state.players[0].level,
+    );
     expect(heroPowerLevel(state)).toBe(state.players[0].level);
     expect(mobLevelScale(state)).toBe(hpScaleBefore);
     expect(enemyPowerScale(state)).toBe(bossScaleBefore);
@@ -843,7 +845,7 @@ describe("hero power level — character level only", () => {
     const state = startGame();
     // The mapping still computes the weapon's sustained output as a level; it
     // simply no longer feeds heroPowerLevel.
-    const fair = heroDamageLevel(state);
+    const fair = heroDamageLevel(state, state.players[0]);
     // A stronger weapon reads as a higher damage level. Items are immutable
     // after minting (the derived-stat memo keys on the piece's mint id), so a
     // real upgrade arrives as a distinct instance, not an in-place affix poke.
@@ -853,7 +855,7 @@ describe("hero power level — character level only", () => {
       id: worn.id + 1_000_000,
       affixes: [...worn.affixes, { kind: "damagePct", value: 9 }],
     };
-    expect(heroDamageLevel(state)).toBeGreaterThan(fair);
+    expect(heroDamageLevel(state, state.players[0])).toBeGreaterThan(fair);
     expect(heroPowerLevel(state)).toBe(state.players[0].level);
   });
 });

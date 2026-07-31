@@ -62,7 +62,28 @@ export {
   type MapObjectType,
   type MapSizeName,
 } from "./game/mapgen/index.ts";
-export { step } from "./game/step/index.ts";
+export { IDLE_INPUT, step, type PartyInput } from "./game/step/index.ts";
+// THE PARTY — the run's heroes, and the questions the simulation may ask about
+// them as a group (see `game/party.ts`; the plan's §3.1). A hero's own reads are
+// a PARAMETER rather than a lookup and are deliberately absent from this list.
+export {
+  anyHeroWithin,
+  distanceToParty,
+  heroAlive,
+  heroAt,
+  heroes,
+  heroesWithin,
+  livingHeroes,
+  nearestHero,
+  nearestHeroWhere,
+  partyCentroid,
+  partyLevel,
+  partyWiped,
+  primaryHero,
+  seatOf,
+} from "./game/party.ts";
+export { quarryFor, quarryOf } from "./game/aggro.ts";
+export { seatHero } from "./game/seating.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
 export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";

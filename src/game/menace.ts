@@ -35,8 +35,9 @@ import type { Vec2 } from "@game/lib/vec.ts";
 // during module evaluation, so ESM resolves it safely.
 import { weaponDps } from "./items/index.ts";
 import { autoPowerScale } from "./leveling.ts";
+import { partyCentroid, partyLevel } from "./party.ts";
 import { BALANCE } from "./tuning.ts";
-import type { Enemy, GameState } from "./types/index.ts";
+import type { Enemy, GameState, Player } from "./types/index.ts";
 
 /** The current evolution stage: menace bucketed by `perStage`. The horde keeps
  * toughening as long as the player's output keeps proving it too easy (see the
@@ -83,7 +84,7 @@ export function menaceCeiling(state: GameState): number {
 export function menaceWarmup(state: GameState): number {
   const t = Math.min(
     1,
-    Math.max(0, (state.players[0].level - 1) / MENACE.warmupLevels),
+    Math.max(0, (partyLevel(state) - 1) / MENACE.warmupLevels),
   );
   return MENACE.warmupFloor + (1 - MENACE.warmupFloor) * t;
 }
@@ -195,8 +196,8 @@ const GEAR_SLOT_COUNT = 7;
  * campaign is underway — a decked-out twink hits far above his character
  * level, a naked max-level hero far below it.
  */
-export function heroGearLevel(state: GameState): number {
-  const eq = state.players[0].equipment;
+export function heroGearLevel(state: GameState, player: Player): number {
+  const eq = player.equipment;
   const total =
     eq.weapon.ilvl +
     (eq.head?.ilvl ?? 0) +
@@ -227,16 +228,12 @@ export function heroGearLevel(state: GameState): number {
  * mob's hp, level, or xp — the horde keys to the CHARACTER level alone (see
  * `heroPowerLevel`). It survives purely for the analytic readout (`src/sim`).
  */
-export function heroDamageLevel(state: GameState): number {
-  const dps = weaponDps(
-    state,
-    state.players[0],
-    state.players[0].equipment.weapon,
-  );
+export function heroDamageLevel(state: GameState, player: Player): number {
+  const dps = weaponDps(state, player, player.equipment.weapon);
   // One typical healthbar at ramp 1: what the reference minion carries at
   // this hero's autoPowerScale (the free-stat growth cancels out — it sits
   // in the hero's output AND in every spawned bar).
-  const bar = LEVELING.refMobHp * autoPowerScale(state.players[0].level);
+  const bar = LEVELING.refMobHp * autoPowerScale(player.level);
   if (bar <= 0) return 1;
   // Invert `mobHpLevelFactor` (geometric below the knee): the level whose bar
   // this dps would fell in `damageLevelKillSec`. Diagnostic only, so the
@@ -262,7 +259,7 @@ export function heroDamageLevel(state: GameState): number {
  * longer feeding any spawned mob's hp, level, or xp.
  */
 export function heroPowerLevel(state: GameState): number {
-  return state.players[0].level;
+  return partyLevel(state);
 }
 
 /**
@@ -282,7 +279,7 @@ export function mobLevelScale(state: GameState): number {
   return Math.max(
     MENACE.mobHpScaleFloor,
     mobHpLevelFactor(mobLevel) *
-      autoPowerScale(state.players[0].level) *
+      autoPowerScale(partyLevel(state)) *
       d.mobHpMult,
   );
 }
@@ -328,7 +325,7 @@ export function currentMobLevel(state: GameState): number {
     runLevelDef(state).mobLevels,
     state.difficulty,
   );
-  return authored ?? mobLevelFor(state.players[0].level, state.difficulty);
+  return authored ?? mobLevelFor(partyLevel(state), state.difficulty);
 }
 
 // === HARD-CODED MOB LEVELS (level-spec `mobLevels` / spawner override) ===
@@ -442,7 +439,7 @@ export function resolveMobScaling(
 export function mobLevelTierBonus(state: GameState): number {
   return Math.min(
     MENACE.tierBonusLevelCap,
-    Math.max(0, state.players[0].level - 1) * MENACE.tierBonusPerLevel,
+    Math.max(0, partyLevel(state) - 1) * MENACE.tierBonusPerLevel,
   );
 }
 
@@ -601,7 +598,7 @@ export function bankOverkill(
     state.events.push({
       type: "menaceRose",
       stage: after,
-      pos: { ...(ctx?.pos ?? state.players[0].pos) },
+      pos: { ...(ctx?.pos ?? partyCentroid(state)) },
       cause: ratcheted ? "ratchet" : "overkill",
     });
   }
@@ -707,7 +704,7 @@ export function tickMenace(
   const bar =
     LEVELING.refMobHp *
     mobHpLevelFactor(Math.max(1, currentMobLevel(state))) *
-    autoPowerScale(state.players[0].level) *
+    autoPowerScale(partyLevel(state)) *
     diff.mobHpMult *
     evolutionHpMult(before, effectMult);
   // The rolling heat only fires through the clearance gate: sustained DPS and
@@ -738,7 +735,7 @@ export function tickMenace(
     state.events.push({
       type: "menaceRose",
       stage: after,
-      pos: { ...state.players[0].pos },
+      pos: partyCentroid(state),
       cause: "heat",
     });
   }
@@ -754,7 +751,7 @@ export function enemyPowerScale(state: GameState): number {
   // Like the rank and file (`mobLevelScale`), the set pieces also ride the
   // automatic stat-gain damage curve, so a boss met at level 12 doesn't melt
   // under growth the player never chose.
-  return enemyPowerLevelTerm(state) * autoPowerScale(state.players[0].level);
+  return enemyPowerLevelTerm(state) * autoPowerScale(partyLevel(state));
 }
 
 /**

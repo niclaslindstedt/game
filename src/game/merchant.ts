@@ -48,6 +48,7 @@ import {
 } from "./items/index.ts";
 import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
+import { nearestHeroWhere, partyLevel } from "./party.ts";
 import type {
   GameState,
   Merchant,
@@ -189,16 +190,25 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
   }
 
   // The meeting: close enough to see each other, and nothing in the way.
+  // WHOEVER FINDS HIM FINDS HIM FOR EVERYBODY — the stall is a fixture of the
+  // run, not a private acquaintance, and a merchant seven players could not
+  // trade with because the eighth walked past first would be a bug nobody
+  // could diagnose from the field. (PR 4 retires the question outright by
+  // standing him in the town hub.)
+  const finder = nearestHeroWhere(state, merchant.pos, (hero) =>
+    lineOfSight(state, hero.pos, merchant.pos),
+  );
   if (
-    distance(state.players[0].pos, merchant.pos) <= MERCHANT.discoverRadius &&
-    lineOfSight(state, state.players[0].pos, merchant.pos)
+    finder &&
+    distance(finder.pos, merchant.pos) <= MERCHANT.discoverRadius &&
+    lineOfSight(state, finder.pos, merchant.pos)
   ) {
     merchant.discovered = true;
     // Met live — the first-meeting scene IS his greeting, so he owes no
     // separate "welcome back" on this run.
     merchant.greetedReturn = true;
     merchant.wanderTarget = null;
-    merchant.faceLeft = state.players[0].pos.x < merchant.pos.x;
+    merchant.faceLeft = finder.pos.x < merchant.pos.x;
     merchant.stock = rollStock(state, merchant);
     addMapMarker(state, "merchant", merchant.pos, "merchant");
     state.events.push({
@@ -298,11 +308,14 @@ export function revealMerchant(state: GameState): void {
  */
 function maybeGreetReturn(state: GameState, merchant: Merchant): void {
   if (merchant.greetedReturn || state.phase !== "playing") return;
-  if (distance(state.players[0].pos, merchant.pos) > MERCHANT.discoverRadius)
-    return;
-  if (!lineOfSight(state, state.players[0].pos, merchant.pos)) return;
+  const finder = nearestHeroWhere(state, merchant.pos, (hero) =>
+    lineOfSight(state, hero.pos, merchant.pos),
+  );
+  if (!finder) return;
+  if (distance(finder.pos, merchant.pos) > MERCHANT.discoverRadius) return;
+  if (!lineOfSight(state, finder.pos, merchant.pos)) return;
   merchant.greetedReturn = true;
-  merchant.faceLeft = state.players[0].pos.x < merchant.pos.x;
+  merchant.faceLeft = finder.pos.x < merchant.pos.x;
   if (state.dialogueMuted) return;
   state.dialogue = {
     source: {
@@ -419,7 +432,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
   // for the customer in front of him), a repair kit, an energy drink. No roll:
   // these are the shop's staples, and a trader who sometimes had no bandages
   // would just be a trader you learn not to visit.
-  const medkitTier = topMedkitTier(state.players[0].level);
+  const medkitTier = topMedkitTier(partyLevel(state));
   const shelf: MerchantConsumable[] = ["medkit", "repair", "drink"];
   for (const item of shelf.slice(0, MERCHANT.stockConsumables)) {
     const tier = item === "medkit" ? medkitTier : undefined;
@@ -448,7 +461,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         defId,
         slot: gearDef(defId).slot,
         tier: "regular",
-        ilvl: Math.max(1, state.players[0].level),
+        ilvl: Math.max(1, partyLevel(state)),
         affixes: [],
       },
       price: Math.round(
@@ -470,7 +483,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         slot: "weapon",
         tierBonus: MERCHANT.stockTierBonus,
         // Stocked against the hero himself — his level is the stall's mlvl.
-        mlvl: state.players[0].level,
+        mlvl: partyLevel(state),
       });
       stock.push({
         id: state.nextId++,
@@ -491,7 +504,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
       const ilvl = Math.max(1, uniqueDef(id).ilvl);
       const chance = Math.min(
         UNIQUE.dropChanceCap,
-        UNIQUE.dropChance * (state.players[0].level / ilvl),
+        UNIQUE.dropChance * (partyLevel(state) / ilvl),
       );
       if (state.rng() >= chance) continue;
       const equipment = mintUnique(state, id);
@@ -576,6 +589,9 @@ export function openShop(state: GameState): boolean {
   if (state.phase !== "playing") return false;
   const merchant = state.merchant;
   if (!merchant.discovered) return false;
+  // The SHOPPER has to be at the counter — this one is emphatically not "any
+  // hero", or a player across the map would find the stall open in front of
+  // them because somebody else walked up to it.
   if (distance(state.players[0].pos, merchant.pos) > MERCHANT.tradeRadius) {
     return false;
   }

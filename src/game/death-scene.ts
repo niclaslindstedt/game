@@ -27,6 +27,7 @@ import {
   resolveMobScaling,
 } from "./menace.ts";
 import { insideObstacle } from "./obstacles.ts";
+import { partyLevel } from "./party.ts";
 import { separateEnemies } from "./step/enemies.ts";
 import type { GameState } from "./types/index.ts";
 import { inert, inertEnemy } from "./disposition.ts";
@@ -41,6 +42,10 @@ import { inert, inertEnemy } from "./disposition.ts";
  * (contact, hazard, a black-hole swallow) routes through the same scene.
  */
 export function enterDeathScene(state: GameState): void {
+  // THE TABLEAU IS CENTRED ON THE LAST HERO TO FALL — the one the camera is on
+  // and the one the horde has just closed over. `partyWiped` is what got us
+  // here, so every seat is down; seat 0's corpse is the one the scene has
+  // always framed and it stays the frame in single player.
   const player = state.players[0];
   player.hp = 0;
   // No lingering post-hit blink over the corpse — the death pose owns the
@@ -246,7 +251,7 @@ function spawnCrowdMob(state: GameState, center: Vec2): void {
   const sc = resolveMobScaling(
     runLevelDef(state).mobLevels,
     state.difficulty,
-    state.players[0].level,
+    partyLevel(state),
     state.rng,
     mobLevelScale(state),
     currentMobLevel(state),

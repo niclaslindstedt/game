@@ -37,6 +37,7 @@ import {
 } from "./items/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
+import { distanceToParty, nearestHeroWhere, partyCentroid } from "./party.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { startPlayerThought } from "./story.ts";
 import type {
@@ -85,8 +86,12 @@ function lootPullAt(well: GravityWell, d: number): number {
  * crit, no dodge and no last-stand math; a hazard is impartial. Used by the
  * asteroid strike (the well core is instant death, not a scaled bite).
  */
-function hurtPlayer(state: GameState, damage: number, cause: string): void {
-  const player = state.players[0];
+function hurtPlayer(
+  state: GameState,
+  player: Player,
+  damage: number,
+  cause: string,
+): void {
   const hpDamage = Math.max(
     0,
     Math.round(
@@ -113,38 +118,41 @@ function hurtPlayer(state: GameState, damage: number, cause: string): void {
  */
 export function stepWells(state: GameState, dt: number): void {
   if (state.wells.length === 0) return;
-  const player = state.players[0];
-  const airborne = player.z > JUMP.dodgeHeight;
 
   for (const well of state.wells) {
-    // A hole already claimed the hero this tick: the run is dropping to
-    // `defeat`, so leave the corpse where it fell and skip the rest.
-    if (player.hp <= 0) break;
-    const d = distance(player.pos, well.pos);
-    if (airborne) {
-      // Over the hole: still tugged toward the core (weaker than grounded)
-      // and the hole's gravity drags the jump back down early. No swallow —
-      // he floats above it.
-      if (d < well.pullRadius) {
-        const frac = 1 - d / well.pullRadius;
-        player.pos = moveToward(
-          player.pos,
-          well.pos,
-          pullAt(well, d) * WELLS.airPullFraction * dt,
-        );
-        player.vz -= WELLS.jumpGravity * frac * dt;
-      }
-    } else {
-      // The player: dragged while grounded, DEVOURED at the core — instant
-      // death. Getting stuck in a black hole is the price of a loot dash gone
-      // wrong; the defeat check downstream this same tick ends the run.
-      if (d < well.pullRadius) {
-        player.pos = moveToward(player.pos, well.pos, pullAt(well, d) * dt);
-        if (distance(player.pos, well.pos) <= well.coreRadius) {
-          player.hp = 0;
-          player.hurtFlashMs = 250;
-          state.events.push({ type: "wellDeath", pos: { ...well.pos } });
-          break;
+    // EVERY hero is dragged, and each can be swallowed on their own account —
+    // a hole is a piece of the map, not an encounter with one person. A hero
+    // it already claimed is skipped rather than breaking the loop, so a second
+    // player standing on a different hole is still pulled this tick.
+    for (const player of state.players) {
+      const airborne = player.z > JUMP.dodgeHeight;
+      if (player.hp <= 0) continue;
+      const d = distance(player.pos, well.pos);
+      if (airborne) {
+        // Over the hole: still tugged toward the core (weaker than grounded)
+        // and the hole's gravity drags the jump back down early. No swallow —
+        // he floats above it.
+        if (d < well.pullRadius) {
+          const frac = 1 - d / well.pullRadius;
+          player.pos = moveToward(
+            player.pos,
+            well.pos,
+            pullAt(well, d) * WELLS.airPullFraction * dt,
+          );
+          player.vz -= WELLS.jumpGravity * frac * dt;
+        }
+      } else {
+        // The player: dragged while grounded, DEVOURED at the core — instant
+        // death. Getting stuck in a black hole is the price of a loot dash gone
+        // wrong; the defeat check downstream this same tick ends the run.
+        if (d < well.pullRadius) {
+          player.pos = moveToward(player.pos, well.pos, pullAt(well, d) * dt);
+          if (distance(player.pos, well.pos) <= well.coreRadius) {
+            player.hp = 0;
+            player.hurtFlashMs = 250;
+            state.events.push({ type: "wellDeath", pos: { ...well.pos } });
+            continue;
+          }
         }
       }
     }
@@ -283,34 +291,41 @@ function explodeAsteroid(
     });
   }
 
-  // The grounded hero: a bite scaled by how near the centre he stood, plus the
-  // same outward fling. A jump at the moment of impact sails clear of it all.
-  const player = state.players[0];
-  const dp = distance(center, player.pos);
-  if (player.z <= JUMP.dodgeHeight && dp <= rock.blastRadius + PLAYER.radius) {
-    const falloff = Math.max(0, 1 - dp / (rock.blastRadius + PLAYER.radius));
-    // A CALLED strike (an ORBITAL DELIVERY pod) carries its own damage, priced
-    // off the boss that called it; the sky's own rain is priced off the hero's
-    // health by the difficulty rung. Same blast, two authors.
-    const damage =
-      rock.damage !== undefined
-        ? Math.max(1, Math.round(rock.damage * falloff))
-        : Math.max(
-            1,
-            Math.round(
-              player.maxHp *
-                difficultyDef(state.difficulty).asteroidDamageFrac *
-                falloff,
-            ),
-          );
-    hurtPlayer(
-      state,
-      damage,
-      rock.sourceDefId ? `hazard:pod:${rock.sourceDefId}` : "hazard:asteroid",
-    );
-    launchPlayer(player, center, ASTEROIDS.knockbackSpeed * falloff);
-    // First blast to catch the hero this run pauses for the "watch out" read.
-    maybeHazardThought(state, struckThought);
+  // EVERY grounded hero in the blast: a bite scaled by how near the centre he
+  // stood, plus the same outward fling. A jump at the moment of impact sails
+  // clear of it all. A blast is a blast — it does not pick a favourite.
+  for (const player of state.players) {
+    if (player.hp <= 0) continue;
+    const dp = distance(center, player.pos);
+    if (
+      player.z <= JUMP.dodgeHeight &&
+      dp <= rock.blastRadius + PLAYER.radius
+    ) {
+      const falloff = Math.max(0, 1 - dp / (rock.blastRadius + PLAYER.radius));
+      // A CALLED strike (an ORBITAL DELIVERY pod) carries its own damage, priced
+      // off the boss that called it; the sky's own rain is priced off the hero's
+      // health by the difficulty rung. Same blast, two authors.
+      const damage =
+        rock.damage !== undefined
+          ? Math.max(1, Math.round(rock.damage * falloff))
+          : Math.max(
+              1,
+              Math.round(
+                player.maxHp *
+                  difficultyDef(state.difficulty).asteroidDamageFrac *
+                  falloff,
+              ),
+            );
+      hurtPlayer(
+        state,
+        player,
+        damage,
+        rock.sourceDefId ? `hazard:pod:${rock.sourceDefId}` : "hazard:asteroid",
+      );
+      launchPlayer(player, center, ASTEROIDS.knockbackSpeed * falloff);
+      // First blast to catch a hero this run pauses for the "watch out" read.
+      maybeHazardThought(state, struckThought);
+    }
   }
 
   spawnCrater(state, rock);
@@ -443,25 +458,26 @@ export function stepKnockback(
   dtMs: number,
 ): void {
   const decay = Math.exp(-dtMs / ASTEROIDS.knockbackTauMs);
-  const player = state.players[0];
-  if (player.knockMs > 0) {
-    player.pos.x = clamp(
-      player.pos.x + player.knockVel.x * dt,
-      PLAYER.radius,
-      state.level.width - PLAYER.radius,
-    );
-    player.pos.y = clamp(
-      player.pos.y + player.knockVel.y * dt,
-      PLAYER.radius,
-      state.level.height - PLAYER.radius,
-    );
-    resolveObstacles(state, player.pos, PLAYER.radius);
-    player.knockVel.x *= decay;
-    player.knockVel.y *= decay;
-    player.knockMs = Math.max(0, player.knockMs - dtMs);
-    if (player.knockMs === 0) {
-      player.knockVel.x = 0;
-      player.knockVel.y = 0;
+  for (const player of state.players) {
+    if (player.knockMs > 0) {
+      player.pos.x = clamp(
+        player.pos.x + player.knockVel.x * dt,
+        PLAYER.radius,
+        state.level.width - PLAYER.radius,
+      );
+      player.pos.y = clamp(
+        player.pos.y + player.knockVel.y * dt,
+        PLAYER.radius,
+        state.level.height - PLAYER.radius,
+      );
+      resolveObstacles(state, player.pos, PLAYER.radius);
+      player.knockVel.x *= decay;
+      player.knockVel.y *= decay;
+      player.knockMs = Math.max(0, player.knockMs - dtMs);
+      if (player.knockMs === 0) {
+        player.knockVel.x = 0;
+        player.knockVel.y = 0;
+      }
     }
   }
 
@@ -545,20 +561,21 @@ export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
   }
   if (state.hayBalls.length === 0) return;
 
-  const player = state.players[0];
-  const grounded = player.z <= JUMP.dodgeHeight;
   const survivors: HayBall[] = [];
   for (const ball of state.hayBalls) {
     ball.pos.x -= ball.speed * dt;
 
-    // Contact: while the grounded hero overlaps a bale it SHOVES him left every
+    // Contact: while a grounded hero overlaps a bale it SHOVES him left every
     // tick (so a bale caught in the lane drags him back down the street), and
     // nicks a very slight flat hp the FIRST time — one bite per bale. Stepping
     // out of the lane, or jumping the bale, is the only way to stop the push.
-    if (
-      grounded &&
-      distance(ball.pos, player.pos) <= ball.radius + PLAYER.radius
-    ) {
+    //
+    // EVERY hero in the lane is shoved; the one BITE the bale carries goes to
+    // whoever it reached first, because `struck` is a fact about the bale.
+    for (const player of state.players) {
+      if (player.hp <= 0 || player.z > JUMP.dodgeHeight) continue;
+      if (distance(ball.pos, player.pos) > ball.radius + PLAYER.radius)
+        continue;
       player.pos.x = Math.max(
         PLAYER.radius,
         player.pos.x - HAY_BALLS.knockback * dt,
@@ -585,7 +602,9 @@ export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
       enemy.pos.y += push.y * (gap - d);
     }
 
-    if (distance(ball.pos, player.pos) <= HAY_BALLS.despawnDistance) {
+    // A bale is kept while it is still near ANYBODY — one that rolled past the
+    // host but is bearing down on a player further up the street has to stay.
+    if (distanceToParty(state, ball.pos) <= HAY_BALLS.despawnDistance) {
       survivors.push(ball);
     }
   }
@@ -594,9 +613,13 @@ export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
 
 /** Mint one hay bale just past the right screen edge, in its own lane. */
 function spawnHayBall(state: GameState): void {
+  // THE WEATHER ROLLS ACROSS THE FIELD, so it is placed relative to the
+  // party's middle rather than to one hero. With one hero the centroid IS that
+  // hero, so single player is untouched.
+  const around = partyCentroid(state);
   const pos = vec(
-    state.players[0].pos.x + HAY_BALLS.spawnDistance,
-    state.players[0].pos.y +
+    around.x + HAY_BALLS.spawnDistance,
+    around.y +
       randomRange(state.rng, -HAY_BALLS.laneJitter, HAY_BALLS.laneJitter),
   );
   state.hayBalls.push({
@@ -617,15 +640,16 @@ function spawnHayBall(state: GameState): void {
  * `entry`/`target`/`ageMs` to draw the slant and the firming ground shadow.
  */
 function spawnAsteroid(state: GameState): void {
+  const around = partyCentroid(state);
   const target = vec(
     clamp(
-      state.players[0].pos.x +
+      around.x +
         randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
       0,
       state.level.width,
     ),
     clamp(
-      state.players[0].pos.y +
+      around.y +
         randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
       0,
       state.level.height,
@@ -691,32 +715,40 @@ export function stepSandstorms(
   }
   if (state.sandstorms.length === 0) return;
 
-  const player = state.players[0];
   const survivors: SandStorm[] = [];
   for (const storm of state.sandstorms) {
     storm.pos.x += storm.dir.x * storm.speed * dt;
     storm.pos.y += storm.dir.y * storm.speed * dt;
 
-    // Catch the grounded hero once. A jump (z above dodgeHeight) rides over the
-    // gust like a rock, and a hero already down is left where he lies — one
+    // Catch each grounded hero once. A jump (z above dodgeHeight) rides over
+    // the gust like a rock, and a hero already down is left where he lies — one
     // storm can't chain-lock him, and neither can a second gust piling on.
-    if (
-      !storm.struck &&
-      player.knockoutMs <= 0 &&
-      player.z <= JUMP.dodgeHeight &&
-      distance(storm.pos, player.pos) <= storm.radius + PLAYER.radius
-    ) {
+    //
+    // `struck` is a fact about the STORM, so a gust that has already caught
+    // somebody rolls harmlessly over the rest of the party: one gust, one
+    // victim, which is what keeps a wall of them from wiping a group at once.
+    for (const player of state.players) {
+      if (
+        storm.struck ||
+        player.hp <= 0 ||
+        player.knockoutMs > 0 ||
+        player.z > JUMP.dodgeHeight ||
+        distance(storm.pos, player.pos) > storm.radius + PLAYER.radius
+      ) {
+        continue;
+      }
       storm.struck = true;
       storm.fadeMs = SANDSTORMS.fadeMs;
       const frac = difficultyDef(state.difficulty).sandstormDamageFrac;
       hurtPlayer(
         state,
+        player,
         Math.max(1, Math.round(player.maxHp * frac)),
         "hazard:sandstorm",
       );
       player.knockoutMs = SANDSTORMS.knockoutMs;
       state.events.push({ type: "sandstormHit", pos: { ...player.pos } });
-      // First storm to down the hero this run pauses for the "watch out" read.
+      // First storm to down a hero this run pauses for the "watch out" read.
       maybeHazardThought(state, spec?.struckThought);
     }
 
@@ -739,7 +771,7 @@ export function stepSandstorms(
       storm.fadeMs -= dtMs;
       if (storm.fadeMs <= 0) continue;
     }
-    if (distance(storm.pos, player.pos) <= SANDSTORMS.despawnDistance) {
+    if (distanceToParty(state, storm.pos) <= SANDSTORMS.despawnDistance) {
       survivors.push(storm);
     }
   }
@@ -749,14 +781,15 @@ export function stepSandstorms(
 /** Mint one storm on the spawn ring, aimed across the player with scatter. */
 function spawnSandstorm(state: GameState): void {
   const angle = state.rng() * Math.PI * 2;
+  const around = partyCentroid(state);
   const pos = vec(
-    state.players[0].pos.x + Math.cos(angle) * SANDSTORMS.ringDistance,
-    state.players[0].pos.y + Math.sin(angle) * SANDSTORMS.ringDistance,
+    around.x + Math.cos(angle) * SANDSTORMS.ringDistance,
+    around.y + Math.sin(angle) * SANDSTORMS.ringDistance,
   );
   const target = vec(
-    state.players[0].pos.x +
+    around.x +
       randomRange(state.rng, -SANDSTORMS.targetJitter, SANDSTORMS.targetJitter),
-    state.players[0].pos.y +
+    around.y +
       randomRange(state.rng, -SANDSTORMS.targetJitter, SANDSTORMS.targetJitter),
   );
   state.sandstorms.push({
@@ -796,7 +829,7 @@ function stampedeRumbleIntensity(state: GameState, hasSpec: boolean): number {
   if (state.stampedes.length > 0) {
     let nearest = Infinity;
     for (const herd of state.stampedes) {
-      nearest = Math.min(nearest, distance(herd.pos, state.players[0].pos));
+      nearest = Math.min(nearest, distanceToParty(state, herd.pos));
     }
     return clamp(1 - nearest / STAMPEDES.rumbleRange, 0, 1);
   }
@@ -831,7 +864,7 @@ function heroRunProgress(state: GameState): number {
   const targetX = boss && "at" in boss ? boss.at.x : def.width;
   const span = targetX - spawnX;
   if (span <= 0) return 1;
-  return clamp((state.players[0].pos.x - spawnX) / span, 0, 1);
+  return clamp((partyCentroid(state).x - spawnX) / span, 0, 1);
 }
 
 /**
@@ -879,7 +912,7 @@ export function stepStampedes(
     ) {
       state.stampedeWarn = {
         y:
-          state.players[0].pos.y +
+          partyCentroid(state).y +
           randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
         leadMs,
         ageMs: 0,
@@ -923,25 +956,30 @@ export function stepStampedes(
 
   if (state.stampedes.length === 0) return;
 
-  const player = state.players[0];
-  const grounded = player.z <= JUMP.dodgeHeight;
   const survivors: Stampede[] = [];
   for (const herd of state.stampedes) {
     herd.pos.x -= herd.speed * dt;
 
-    // Trample the grounded hero once: a flat bite of his max hp AND a knockdown
-    // (prone for `knockdownMs`). A jump clears the whole wall, and a hero
-    // already down is left where he lies — one herd can't chain-lock him.
-    if (
-      !herd.struck &&
-      grounded &&
-      player.knockoutMs <= 0 &&
-      inHerdBand(herd, player.pos, PLAYER.radius)
-    ) {
+    // Trample each grounded hero once: a flat bite of his max hp AND a
+    // knockdown (prone for `knockdownMs`). A jump clears the whole wall, and a
+    // hero already down is left where he lies — one herd can't chain-lock him,
+    // and (`struck` being a fact about the HERD) it takes exactly one of the
+    // party with it rather than flattening the group in one pass.
+    for (const player of state.players) {
+      if (
+        herd.struck ||
+        player.hp <= 0 ||
+        player.z > JUMP.dodgeHeight ||
+        player.knockoutMs > 0 ||
+        !inHerdBand(herd, player.pos, PLAYER.radius)
+      ) {
+        continue;
+      }
       herd.struck = true;
       const frac = difficultyDef(state.difficulty).stampedeDamageFrac;
       hurtPlayer(
         state,
+        player,
         Math.max(1, Math.round(player.maxHp * frac)),
         "hazard:stampede",
       );
@@ -984,7 +1022,7 @@ export function stepStampedes(
       }
     }
 
-    if (distance(herd.pos, player.pos) <= STAMPEDES.despawnDistance) {
+    if (distanceToParty(state, herd.pos) <= STAMPEDES.despawnDistance) {
       survivors.push(herd);
     }
   }
@@ -1000,12 +1038,13 @@ function spawnStampede(
   laneY?: number,
   runnerSprite?: string,
 ): void {
+  const around = partyCentroid(state);
   const pos = vec(
-    state.players[0].pos.x + STAMPEDES.spawnDistance,
+    around.x + STAMPEDES.spawnDistance,
     // The telegraphed lane (locked when the dust lit) if there is one, else a
     // fresh roll — so the wall arrives exactly where the approach-dust warned.
     laneY ??
-      state.players[0].pos.y +
+      around.y +
         randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
   );
   const runners: StampedeRunner[] = [];
@@ -1073,21 +1112,11 @@ export function spawnCalledHerd(state: GameState, runnerSprite?: string): void {
 export function stepScorches(state: GameState, dtMs: number): void {
   const scorches = state.scorches;
   if (scorches.length === 0) return;
-  const player = state.players[0];
-  // A jump clears fire exactly like it clears a slam and a bite; the pre-combat
-  // grace holds here too.
-  const canBurn = player.z <= JUMP.dodgeHeight && !player.disarmed;
 
-  let hottest: (typeof scorches)[number] | null = null;
-  const standing: (typeof scorches)[number][] = [];
-  // THE SNARE's hold, recomputed from scratch every tick (see
-  // `Player.snareFactor`): this loop is already walking the whole patch list to
-  // decide what is biting him, so the pace costs one comparison rather than a
-  // second scan inside `playerSpeed`. Overlapping fields take the STRONGEST
-  // rather than multiplying — two snares laid on one spot should not compound
-  // into a hero who cannot move at all, which is the one state a slow must
-  // never reach.
-  let snare = 1;
+  // AGE THE FLOOR ONCE, then ask it about each hero. The two used to be one
+  // loop, which was right while there was one hero and wrong the moment there
+  // were eight: patches would have been aged once per player and burnt out
+  // eight times as fast.
   for (let i = scorches.length - 1; i >= 0; i--) {
     const patch = scorches[i] as (typeof scorches)[number];
     patch.remainingMs -= dtMs;
@@ -1096,42 +1125,70 @@ export function stepScorches(state: GameState, dtMs: number): void {
       continue;
     }
     if (patch.tickMs > 0) patch.tickMs = Math.max(0, patch.tickMs - dtMs);
-    const inside =
-      distance(player.pos, patch.pos) <= patch.radius + PLAYER.radius;
-    // A SNARE is ground, so a JUMP clears it exactly as it clears fire — the
-    // one answer the player carries from move to move.
-    if (patch.field === "snare") {
-      if (inside && canBurn) snare = Math.min(snare, patch.slowFactor ?? 1);
-      continue;
-    }
-    if (!canBurn || !inside) continue;
-    standing.push(patch);
-    if (!hottest || patch.damage > hottest.damage) hottest = patch;
   }
-  player.snareFactor = snare < 1 ? snare : undefined;
-  // A patch that deals nothing cannot be the hottest thing standing — it would
-  // report a `playerHurt` of zero damage and flash him for free.
-  if (!hottest || hottest.damage <= 0 || hottest.tickMs > 0) return;
 
-  const damage = hottest.damage;
-  const cause = `hazard:scorch:${hottest.defId}`;
-  const hpDamage = Math.max(
-    0,
-    Math.round(
-      damage * (1 - armorReduction(state, player, currentMobLevel(state))),
-    ),
-  );
-  wearWornArmor(state, player);
-  player.hp -= absorbPlayerDamage(state, player, hpDamage);
-  player.hurtFlashMs = 200;
-  state.stats.damageTaken += damage;
-  state.events.push({ type: "playerHurt", crit: false, cause });
-  state.events.push({
-    type: "scorchBurn",
-    pos: { ...player.pos },
-    defId: hottest.defId,
-  });
-  for (const patch of standing) patch.tickMs = patch.intervalMs;
+  // The patches whose cadence came round and caught somebody, collected across
+  // the whole party and reset together at the end: a patch of fire PULSES, and
+  // everybody standing in it when it pulses burns. Resetting it inside the
+  // per-hero loop would let the first hero in seat order absorb the pulse and
+  // leave the rest standing in fire for free.
+  let fired: Set<(typeof scorches)[number]> | null = null;
+
+  for (const player of state.players) {
+    if (player.hp <= 0) continue;
+    // A jump clears fire exactly like it clears a slam and a bite; the
+    // pre-combat grace holds here too.
+    const canBurn = player.z <= JUMP.dodgeHeight && !player.disarmed;
+
+    let hottest: (typeof scorches)[number] | null = null;
+    const standing: (typeof scorches)[number][] = [];
+    // THE SNARE's hold, recomputed from scratch every tick (see
+    // `Player.snareFactor`): this loop is already walking the whole patch list
+    // to decide what is biting him, so the pace costs one comparison rather
+    // than a second scan inside `playerSpeed`. Overlapping fields take the
+    // STRONGEST rather than multiplying — two snares laid on one spot should
+    // not compound into a hero who cannot move at all, which is the one state a
+    // slow must never reach.
+    let snare = 1;
+    for (const patch of scorches) {
+      const inside =
+        distance(player.pos, patch.pos) <= patch.radius + PLAYER.radius;
+      // A SNARE is ground, so a JUMP clears it exactly as it clears fire — the
+      // one answer the player carries from move to move.
+      if (patch.field === "snare") {
+        if (inside && canBurn) snare = Math.min(snare, patch.slowFactor ?? 1);
+        continue;
+      }
+      if (!canBurn || !inside) continue;
+      standing.push(patch);
+      if (!hottest || patch.damage > hottest.damage) hottest = patch;
+    }
+    player.snareFactor = snare < 1 ? snare : undefined;
+    // A patch that deals nothing cannot be the hottest thing standing — it
+    // would report a `playerHurt` of zero damage and flash him for free.
+    if (!hottest || hottest.damage <= 0 || hottest.tickMs > 0) continue;
+
+    const damage = hottest.damage;
+    const cause = `hazard:scorch:${hottest.defId}`;
+    const hpDamage = Math.max(
+      0,
+      Math.round(
+        damage * (1 - armorReduction(state, player, currentMobLevel(state))),
+      ),
+    );
+    wearWornArmor(state, player);
+    player.hp -= absorbPlayerDamage(state, player, hpDamage);
+    player.hurtFlashMs = 200;
+    state.stats.damageTaken += damage;
+    state.events.push({ type: "playerHurt", crit: false, cause });
+    state.events.push({
+      type: "scorchBurn",
+      pos: { ...player.pos },
+      defId: hottest.defId,
+    });
+    for (const patch of standing) (fired ??= new Set()).add(patch);
+  }
+  if (fired) for (const patch of fired) patch.tickMs = patch.intervalMs;
 }
 
 /**
@@ -1152,8 +1209,18 @@ export function stepScorches(state: GameState, dtMs: number): void {
 export function stepBaits(state: GameState, dtMs: number): void {
   const baits = state.baits;
   if (baits.length === 0) return;
-  const player = state.players[0];
-  const canTrigger = player.z <= JUMP.dodgeHeight && !player.disarmed;
+  /** Whoever went for it: the nearest hero standing on the pile with a drawn
+   * blade. A pile ANY player can set off is what makes a scatter a group
+   * hazard rather than a private one. */
+  const tripper = (bait: { pos: Vec2; triggerRadius: number }) =>
+    nearestHeroWhere(
+      state,
+      bait.pos,
+      (hero) =>
+        hero.z <= JUMP.dodgeHeight &&
+        !hero.disarmed &&
+        distance(hero.pos, bait.pos) <= bait.triggerRadius + PLAYER.radius,
+    );
 
   for (let i = baits.length - 1; i >= 0; i--) {
     const bait = baits[i] as (typeof baits)[number];
@@ -1165,8 +1232,14 @@ export function stepBaits(state: GameState, dtMs: number): void {
       baits.splice(i, 1);
       continue;
     }
-    if (!canTrigger || bait.armMs > 0) continue;
-    if (distance(player.pos, bait.pos) > bait.triggerRadius + PLAYER.radius) {
+    if (bait.armMs > 0) continue;
+    const goer = tripper(bait);
+    if (
+      !goer ||
+      goer.z > JUMP.dodgeHeight ||
+      goer.disarmed ||
+      distance(goer.pos, bait.pos) > bait.triggerRadius + PLAYER.radius
+    ) {
       continue;
     }
 
@@ -1177,12 +1250,19 @@ export function stepBaits(state: GameState, dtMs: number): void {
       radius: bait.blastRadius,
       defId: bait.defId,
     });
-    const d = distance(player.pos, bait.pos);
+    // A BLAST IS A BLAST: everybody inside the radius pays, scaled by how near
+    // the middle they stood. This one is emphatically not "the first hero it
+    // finds" — a bomb that only ever hurt one of eight people standing on it
+    // would make the whole trap free to walk into as a group.
     const reach = bait.blastRadius + PLAYER.radius;
-    if (d <= reach) {
+    for (const player of state.players) {
+      if (player.hp <= 0) continue;
+      const d = distance(player.pos, bait.pos);
+      if (d > reach) continue;
       const falloff = Math.max(0, 1 - d / reach);
       hurtPlayer(
         state,
+        player,
         Math.max(1, Math.round(bait.damage * falloff)),
         `hazard:bait:${bait.defId}`,
       );

@@ -597,8 +597,8 @@ function snapshot(
       armorReduction(state, player, currentMobLevel(state)),
     ),
     powerLevel: round1(heroPowerLevel(state)),
-    gearLevel: round1(heroGearLevel(state)),
-    damageLevel: round1(heroDamageLevel(state)),
+    gearLevel: round1(heroGearLevel(state, state.players[0])),
+    damageLevel: round1(heroDamageLevel(state, state.players[0])),
     mobHp: Math.round(mobHp),
     mobDamage: round1(mobDamage),
     ttkSec: dps > 0 ? round2(mobHp / dps) : 0,
@@ -804,7 +804,7 @@ export function simulateProgression(
     totalKills += result.mobsKilled;
     levelResults.push(result);
     allCheckpoints.push(...result.checkpoints);
-    if (carryLoadout) loadout = extractLoadout(state);
+    if (carryLoadout) loadout = extractLoadout(state, state.players[0]);
     runIndex++;
   };
 

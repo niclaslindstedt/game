@@ -35,6 +35,7 @@ import type {
   Equipment,
   GameInput,
   GameState,
+  Player,
   WeaponClass,
 } from "../types/index.ts";
 import { inert, inertEnemy } from "../disposition.ts";
@@ -47,10 +48,10 @@ import { inert, inertEnemy } from "../disposition.ts";
  */
 export function stepWeapon(
   state: GameState,
+  player: Player,
   input: GameInput,
   dtMs: number,
 ): void {
-  const player = state.players[0];
   // Holstered on levels with a scripted opening strike: the auto-attack sits
   // out entirely until the vanguard's first swing draws the blade (story.ts).
   if (player.disarmed) return;

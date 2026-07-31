@@ -181,7 +181,7 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
   // would hand the auto-shop a fortune and distort the run.
   player.inventory = player.inventory.map(() => null);
 
-  return extractLoadout(state);
+  return extractLoadout(state, player);
 }
 
 /**

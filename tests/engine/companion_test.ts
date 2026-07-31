@@ -413,7 +413,7 @@ describe("companions in the field", () => {
         SEED_NEXT,
         "test_level_2",
         "medium",
-        extractLoadout(state),
+        extractLoadout(state, state.players[0]),
       );
       expect(next.companions).toHaveLength(1);
       expect(next.companions[0]?.downed).toBe(true);
@@ -732,7 +732,7 @@ describe("a spared companion's twin stays off the board", () => {
     const first = startGame();
     clearStage(first);
     recruitCompanion(first, "test_companion", { x: 30, y: 30 });
-    const loadout = extractLoadout(first);
+    const loadout = extractLoadout(first, first.players[0]);
     const next = createGame(SEED_NEXT, "test_recruit_level", "medium", loadout);
 
     // The companion walked in at the hero's side; its enemy twin did not spawn.
@@ -755,7 +755,7 @@ describe("the party rides the loadout", () => {
     equipCompanionFromInventory(state, companion.id, helmet);
     companion.hp = 3; // beaten up — the next level greets him rested
 
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
     const next = createGame(SEED_NEXT, "test_level_2", "medium", loadout);
     expect(next.companions).toHaveLength(1);
     const carried = next.companions[0]!;
@@ -767,7 +767,7 @@ describe("the party rides the loadout", () => {
 
   it("a loadout from before companions shipped loads an empty party", () => {
     const state = startGame();
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
     delete (loadout as { companions?: unknown }).companions;
     const next = createGame(SEED_NEXT, "test_level_2", "medium", loadout);
     expect(next.companions).toHaveLength(0);

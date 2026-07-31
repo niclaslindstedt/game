@@ -165,7 +165,7 @@ describe("carrying the refund across a bank + fresh run", () => {
     const owed = state.players[0].pendingStatPoints;
     expect(owed).toBeGreaterThan(0);
 
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
     expect(loadout.pendingStatPoints).toBe(owed);
 
     // Dress a fresh run in the banked (refunded) build.
@@ -178,7 +178,7 @@ describe("carrying the refund across a bank + fresh run", () => {
   it("the run's opener greets the chooser when the hero owes points", () => {
     const { state, snapshot } = midRideHero();
     refundAutopilotBuild(state, state.players[0], snapshot);
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
 
     const next = createGame(1, "test_level", "medium", loadout);
     skipCutscene(next);
@@ -191,7 +191,7 @@ describe("carrying the refund across a bank + fresh run", () => {
   it("drops straight into play when nothing is owed (an ordinary carry)", () => {
     const carrier = startGame();
     carrier.players[0].level = 8;
-    const loadout = extractLoadout(carrier);
+    const loadout = extractLoadout(carrier, carrier.players[0]);
     expect(loadout.pendingStatPoints).toBe(0);
     const next = createGame(1, "test_level", "medium", loadout);
     skipCutscene(next);

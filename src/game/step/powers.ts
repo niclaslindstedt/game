@@ -36,7 +36,7 @@ import {
   stormSpellBlock,
   syncItemSpells,
 } from "../spells.ts";
-import type { GameState } from "../types/index.ts";
+import type { GameState, Player } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
 import { inertEnemy } from "../disposition.ts";
 
@@ -48,10 +48,10 @@ import { inertEnemy } from "../disposition.ts";
  */
 export function stepAbilities(
   state: GameState,
+  player: Player,
   dt: number,
   dtMs: number,
 ): void {
-  const player = state.players[0];
   if (player.abilities.length === 0) return;
 
   // The conjured powers' damage scale (level ramp × INT — abilityPowerScale):
@@ -137,10 +137,10 @@ export function stepAbilities(
  */
 export function stepItemSpells(
   state: GameState,
+  player: Player,
   dt: number,
   dtMs: number,
 ): void {
-  const player = state.players[0];
   syncItemSpells(state, player);
   if (player.itemSpells.length === 0) return;
 

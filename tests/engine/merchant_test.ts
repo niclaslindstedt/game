@@ -417,15 +417,15 @@ describe("the purse", () => {
   it("carries over through the loadout, defaulting old saves to empty", () => {
     const state = startGame();
     state.players[0].coins = 321;
-    const loadout = extractLoadout(state);
+    const loadout = extractLoadout(state, state.players[0]);
     expect(loadout.coins).toBe(321);
     const next = startGame(43);
-    applyLoadout(next, loadout);
+    applyLoadout(next, next.players[0], loadout);
     expect(next.players[0].coins).toBe(321);
     // A loadout banked before the economy shipped has no purse field.
     delete loadout.coins;
     const legacy = startGame(44);
-    applyLoadout(legacy, loadout);
+    applyLoadout(legacy, legacy.players[0], loadout);
     expect(legacy.players[0].coins).toBe(0);
   });
 });

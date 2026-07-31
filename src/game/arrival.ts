@@ -48,6 +48,7 @@ import type {
   Equipment,
   GameState,
   Loadout,
+  Player,
   StatName,
 } from "./types/index.ts";
 
@@ -84,8 +85,7 @@ function copyPiece(piece: Equipment | null): Equipment | null {
  * hands to the next one. The app banks this on victory and passes it back
  * into `createGame` when the following level starts.
  */
-export function extractLoadout(state: GameState): Loadout {
-  const player = state.players[0];
+export function extractLoadout(state: GameState, player: Player): Loadout {
   return {
     level: player.level,
     xp: player.xp,
@@ -143,8 +143,11 @@ export function extractLoadout(state: GameState): Loadout {
  * pocketed — and the hero arrives rested: full health, full sprint, plating
  * fastened. Called from createGame when a loadout is passed.
  */
-export function applyLoadout(state: GameState, loadout: Loadout): void {
-  const player = state.players[0];
+export function applyLoadout(
+  state: GameState,
+  player: Player,
+  loadout: Loadout,
+): void {
   player.level = Math.max(1, loadout.level);
   player.xpToNext = xpToNextAt(player.level, state.difficulty);
   player.xp = clamp(loadout.xp, 0, player.xpToNext - 1);

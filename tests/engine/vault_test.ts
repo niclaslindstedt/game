@@ -274,7 +274,11 @@ describe("the vault rides the loadout and expires (clearVault)", () => {
     const banked = piece(state, "test_hammer", "weapon", "legendary");
     vaultItem(state, state.players[0], banked);
     const next = startGame();
-    applyLoadout(next, extractLoadout(state));
+    applyLoadout(
+      next,
+      next.players[0],
+      extractLoadout(state, state.players[0]),
+    );
     expect(next.players[0].vault).toHaveLength(1);
     expect(next.players[0].vault[0]?.defId).toBe("test_hammer");
   });

@@ -270,11 +270,11 @@ describe("the respec floor locks a spent talent's earning stat", () => {
 describe("veteran conversion on load", () => {
   it("mints talent points from a legacy loadout's chosen stats", () => {
     const donor = heroWithStats({ str: 30, dex: 10 });
-    const loadout = extractLoadout(donor);
+    const loadout = extractLoadout(donor, donor.players[0]);
     // Simulate a save banked before talents existed.
     delete (loadout as { talents?: unknown }).talents;
     const fresh = startGame();
-    applyLoadout(fresh, loadout);
+    applyLoadout(fresh, fresh.players[0], loadout);
     // 3 STR + 1 DEX earned points, none spent — all pending after load.
     expect(fresh.pendingTalentPoints).toEqual([
       "strength",
@@ -287,9 +287,9 @@ describe("veteran conversion on load", () => {
   it("round-trips owned ranks and only owes the remainder", () => {
     const donor = heroWithStats({ str: 30 });
     spendTalentPoint(donor, donor.players[0], "executioner"); // 1 of 3 spent
-    const loadout = extractLoadout(donor);
+    const loadout = extractLoadout(donor, donor.players[0]);
     const fresh = startGame();
-    applyLoadout(fresh, loadout);
+    applyLoadout(fresh, fresh.players[0], loadout);
     expect(talentRank(fresh, fresh.players[0], "executioner")).toBe(1);
     expect(fresh.pendingTalentPoints).toHaveLength(2); // 3 earned − 1 spent
   });

@@ -267,7 +267,10 @@ export function buildBotViewLoadout(
     STARTING_DIFFICULTIES.includes(difficulty)
   ) {
     const seed = Math.floor(Math.random() * 1e9);
-    return extractLoadout(createGame(seed, levelId, difficulty));
+    return extractLoadout(
+      createGame(seed, levelId, difficulty),
+      createGame(seed, levelId, difficulty).players[0],
+    );
   }
   return buildSeedLoadout(build, {
     id: "botview",

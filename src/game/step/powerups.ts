@@ -40,7 +40,12 @@ import { abilityDef, type AbilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { knockEnemyBack } from "../hazards.ts";
 import { hitEnemy } from "../loot.ts";
-import type { ActiveAbility, Enemy, GameState } from "../types/index.ts";
+import type {
+  ActiveAbility,
+  Enemy,
+  GameState,
+  Player,
+} from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
 import { inert } from "../disposition.ts";
 
@@ -85,8 +90,12 @@ function enemiesWithin(
  * has NOT run yet — a power that ends here (a shattered barrier) is retired on
  * the next tick's sweep like any other.
  */
-export function stepPowerups(state: GameState, dt: number, dtMs: number): void {
-  const player = state.players[0];
+export function stepPowerups(
+  state: GameState,
+  player: Player,
+  dt: number,
+  dtMs: number,
+): void {
   if (player.abilities.length === 0) return;
   const power = abilityPowerScale(state, player);
 

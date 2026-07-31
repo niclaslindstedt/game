@@ -186,7 +186,7 @@ export function createRunProgress(deps: {
         before,
         state.level.id,
         difficulty,
-        extractLoadout(state),
+        extractLoadout(state, state.players[0]),
         coinsIncludePending,
       );
       if (scores) {
@@ -264,7 +264,7 @@ export function createRunProgress(deps: {
         // pocketed powerups are spent — a RETRY rebuilds the level from
         // this build and starts it with an empty dock, so a hoarded stack
         // can't be replayed through the same fight over and over.
-        const banked = extractLoadout(state);
+        const banked = extractLoadout(state, state.players[0]);
         banked.heldAbilities = [];
         characterRef.current = bankLoadout(
           characterRef.current,
@@ -282,7 +282,7 @@ export function createRunProgress(deps: {
     if (event.type === "gateEntered") {
       characterRef.current = bankLoadout(
         characterRef.current,
-        extractLoadout(state),
+        extractLoadout(state, state.players[0]),
         coinsIncludePending,
       );
       characterRef.current = markStorySeen(

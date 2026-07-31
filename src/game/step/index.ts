@@ -19,7 +19,7 @@
 // ./projectiles.ts, ./enemies.ts, ./spawner.ts, ./packs.ts, ./items.ts).
 
 import { stepCutscene } from "@game/lib/cutscene.ts";
-import { distance } from "@game/lib/vec.ts";
+
 import { stepAutopilot } from "../autopilot.ts";
 import { stepBossDeath } from "../boss-death.ts";
 import { enterDeathScene, stepDeathScene } from "../death-scene.ts";
@@ -43,6 +43,7 @@ import {
 } from "../hazards.ts";
 import { packsCleared, unspawnedMinions } from "../loot.ts";
 import { revealAround } from "../map.ts";
+import { anyHeroWithin, partyWiped } from "../party.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
 import { advancePath } from "../path.ts";
@@ -57,7 +58,7 @@ import {
   stepOpeningStrike,
   stepSightThoughts,
 } from "../story.ts";
-import type { GameInput, GameState } from "../types/index.ts";
+import type { GameInput, GameState, Player } from "../types/index.ts";
 import { stepEnemies } from "./enemies.ts";
 import { stepItems } from "./items.ts";
 import { stepPacks } from "./packs.ts";
@@ -75,13 +76,55 @@ import { stepSpawner } from "./spawner.ts";
 import { stepWeapon } from "./weapon.ts";
 import { inertEnemy } from "../disposition.ts";
 
+/**
+ * ONE TICK'S INTENT — either one hero's, or the whole party's by SEAT.
+ *
+ * A plain `GameInput` is the single-player (and every headless caller's) shape
+ * and means seat 0; an ARRAY is index-aligned with `state.players`, so seat 3's
+ * steering is `input[3]`. The two are told apart by `Array.isArray`, which is
+ * exact — a `GameInput` is never an array — so no caller had to change when the
+ * party arrived.
+ *
+ * A seat with no frame this tick contributes `IDLE_INPUT`: a hero standing
+ * still, which is what a player with a screen open or a dropped packet gives.
+ * It is deliberately NOT "keep last tick's input": a lost frame would otherwise
+ * leave a hero walking into the horde until the next one arrived.
+ */
+export type PartyInput = GameInput | readonly GameInput[];
+
+/**
+ * What a seat contributes when nobody is steering it.
+ *
+ * Frozen, and never handed to a pass that writes input (nothing does — the
+ * edges are cleared by the CALLER, on its own copy), so one shared object
+ * serves every idle seat without allocating per tick.
+ */
+export const IDLE_INPUT: GameInput = Object.freeze({
+  steering: false,
+  target: Object.freeze({ x: 0, y: 0 }),
+  jump: false,
+  useItem: false,
+}) as GameInput;
+
+/** This seat's intent for the tick. */
+function inputFor(input: PartyInput, seat: number): GameInput {
+  if (!Array.isArray(input))
+    return seat === 0 ? (input as GameInput) : IDLE_INPUT;
+  return (input as readonly GameInput[])[seat] ?? IDLE_INPUT;
+}
+
 /** Advance the simulation by `dtMs` milliseconds. */
-export function step(state: GameState, input: GameInput, dtMs: number): void {
+export function step(state: GameState, input: PartyInput, dtMs: number): void {
   state.events = [];
-  // Remember the camera rect the app reported, so state-readers (the
-  // autopilot's wall-end sense) know what the player can currently see.
+  // THE VIEW IS SEAT 0's, and it is the one place the party model keeps a
+  // single answer to a per-client question. Eight clients have eight cameras;
+  // what reads `state.view` is the summon geometry (mobs must run in from off
+  // screen) and the autopilot's wall-end sense, and both want "a screenful",
+  // not a specific screen. The passes that genuinely care WHOSE screen — the
+  // weapon's targeting gate — read the seat's own `input.view` instead.
   // Copied, never aliased — the app reuses its input object across frames.
-  if (input.view) state.view = { ...input.view };
+  const hostInput = inputFor(input, 0);
+  if (hostInput.view) state.view = { ...hostInput.view };
 
   // The prelude scenes run on the same clock as the sim (deterministic,
   // headless-testable); the world stays frozen until the chain plays out.
@@ -160,17 +203,62 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const exemptDamageBefore = state.menaceExemptDamage;
   const exemptKillsBefore = state.menaceExemptKills;
 
-  stepPlayer(state, input, dt, dtMs);
+  // ── THE PARTY'S OWN TICK ────────────────────────────────────────────────
+  //
+  // Every pass in this block is about ONE hero, so it runs once per SEAT with
+  // that seat's own intent. The order WITHIN a hero is the order it always was
+  // — steer, then act, then fight — and the order BETWEEN heroes is seat order,
+  // which is what keeps the simulation deterministic with eight of them: two
+  // heroes reaching the same dropped item on the same tick must resolve the
+  // same way on every machine, and seat order is the only tiebreak that
+  // survives the wire.
+  //
+  // A DOWNED hero is skipped whole. Nothing of his ticks — he is not steering,
+  // shooting, casting or picking anything up — but he is still on the field and
+  // still in `state.players`, because the horde walking over a corpse is what
+  // makes a party death mean something (PR 4 owns the corpse and the respawn).
+  for (let seat = 0; seat < state.players.length; seat++) {
+    const player = state.players[seat] as Player;
+    if (player.hp <= 0) continue;
+    const seatInput = inputFor(input, seat);
+    stepPlayer(state, player, seatInput, dt, dtMs);
+    // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
+    // (Warcraft-style, no re-fogging): a `MAP.revealRadius` disc around him is
+    // uncovered every tick, so the map (and minimap) show exactly where he has
+    // walked, not the whole camera view. Everything uncovered reads fully clear
+    // in the main view; only the exploration frontier stipples (see render.ts /
+    // MAP.fogBand).
+    //
+    // THE FOG IS SHARED — one grid on the run, lifted by whoever walks. The
+    // party is meant to explore together, and per-player fog would cost a grid
+    // and a minimap per player for something Diablo 2 never had.
+    revealAround(state, player.pos);
+    // A KNOCKED-OUT hero (a sand storm downed him) can take no action: no
+    // spending a held power, no potions/kits. His health still regens and his
+    // already-running powers still tick below — only the player-DRIVEN passes
+    // sit out. `stepPlayer` (above) has already frozen his movement and ticked
+    // the timer; the flag it reads is the same `knockoutMs`.
+    if (player.knockoutMs <= 0) {
+      stepUseItem(state, player, seatInput);
+      stepUseConsumables(state, player, seatInput);
+    }
+    // The talent timers (Frost Nova's cooldown, Evasion's speed-burst) tick
+    // here — every playing frame, before the combat passes read them.
+    stepTimers(state, player, dtMs);
+    stepWeapon(state, player, seatInput, dtMs);
+    stepAbilities(state, player, dt, dtMs);
+    // The powers the later maps introduce (the wake, the barrage, the wells,
+    // the wave, the volleys, the gun grid) tick on the same frame as the
+    // classics — see ./powerups.ts. The purely passive ones (barrier, ward,
+    // phase, surge) have no tick: they are read where they bite.
+    stepPowerups(state, player, dt, dtMs);
+    // The forever spells worn gear grants (the `spell` affix) tick beside the
+    // timed powers — same rails, no expiry.
+    stepItemSpells(state, player, dt, dtMs);
+  }
   // Mark off the intended-path waypoints the hero just reached, so the autopilot
   // and the guidance arrow both target the next leg (harmless with no path).
   advancePath(state);
-  // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
-  // (Warcraft-style, no re-fogging): a `MAP.revealRadius` disc around him is
-  // uncovered every tick, so the map (and minimap) show exactly where he has
-  // walked, not the whole camera view. Everything uncovered reads fully clear
-  // in the main view; only the exploration frontier stipples (see render.ts /
-  // MAP.fogBand).
-  revealAround(state, state.players[0].pos);
   // The wandering merchant strolls (and may be MET) on this tick's player
   // position — right after the hero moves, so the meeting judges what the
   // player actually sees. A scenario FREEZE (state.freeze — the developer
@@ -178,29 +266,6 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // wandering (and can't be discovered mid-pose), the horde neither moves,
   // strikes, nor fires — while the hero stays fully playable.
   if (!state.freeze) stepMerchant(state, dt, dtMs);
-  // A KNOCKED-OUT hero (a sand storm downed him) can take no action: no
-  // spending a held power, no potions/kits. His health still regens and his
-  // already-running powers still tick below — only the player-DRIVEN passes sit
-  // out. `stepPlayer` (above) has already frozen his movement and ticked the
-  // timer; the flag it reads is the same `knockoutMs`.
-  const incapacitated = state.players[0].knockoutMs > 0;
-  if (!incapacitated) {
-    stepUseItem(state, input);
-    stepUseConsumables(state, input);
-  }
-  // The talent timers (Frost Nova's cooldown, Evasion's speed-burst) tick here
-  // — every playing frame, before the combat passes read them.
-  stepTimers(state, dtMs);
-  stepWeapon(state, input, dtMs);
-  stepAbilities(state, dt, dtMs);
-  // The powers the later maps introduce (the wake, the barrage, the wells, the
-  // wave, the volleys, the gun grid) tick on the same frame as the classics —
-  // see ./powerups.ts. The purely passive ones (barrier, ward, phase, surge)
-  // have no tick: they are read where they bite.
-  stepPowerups(state, dt, dtMs);
-  // The forever spells worn gear grants (the `spell` affix) tick beside the
-  // timed powers — same rails, no expiry.
-  stepItemSpells(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   if (!state.freeze) {
     stepEnemies(state, dt, dtMs);
@@ -211,7 +276,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // The party acts on the tick's final enemy positions: regroup, fight,
   // soak contact blows, stand back up (see companions.ts). A freeze poses
   // the party with the rest of the world's actors.
-  if (!state.freeze) stepCompanions(state, input, dt, dtMs);
+  if (!state.freeze) stepCompanions(state, hostInput, dt, dtMs);
   // Procs queued by this tick's combat — the hero's weapon blows (melee
   // sweep, his projectiles) AND the blows that landed ON him (contact,
   // mechanic slams, hostile shots — the "when struck" trigger) — resolve
@@ -277,7 +342,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // The camera rect sizes the approach circle and the off-screen summon distance
   // so mobs run into view instead of popping on screen; headless callers have no
   // view and fall back to the phone baseline (see summonGeometry).
-  stepSpawners(state, input.view);
+  stepSpawners(state, hostInput.view);
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
   stepDoors(state);
@@ -306,8 +371,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // A scenario FREEZE holds the whole pass, like the merchant's stroll.
   if (!state.freeze) stepQuests(state, dt, dtMs);
 
-  if (state.players[0].hp <= 0) {
-    // The hero fell: drop into the DEATH SCENE (the dramatic tableau — the
+  // THE RUN ENDS WHEN THE PARTY FALLS, NOT WHEN A HERO DOES. One player going
+  // down in a co-op run is a setback the rest fight through (PR 4 owns the
+  // corpse and the respawn); it is only when the LAST of them is down that the
+  // run is over. In single player that is the same tick it always was.
+  if (partyWiped(state)) {
+    // The party fell: drop into the DEATH SCENE (the dramatic tableau — the
     // horde rings the corpse, clouds roll in) rather than straight to the
     // modal. It books the DEATH TOLL (the `deathXpLoss` XP forfeit) and emits
     // `playerDeath` now; the `defeat` event that raises the splash fires when
@@ -365,9 +434,12 @@ function objectiveCleared(state: GameState): boolean {
   if (objective.type === "reachExit") {
     // The bossless form: standing at the exit door ends the level. Deliberate
     // contact — the radius is a doorstep, not a drive-by.
-    return (
-      distance(state.players[0].pos, objective.at) <=
-      (objective.radius ?? GATES.exitRadius)
+    // ANY hero on the doorstep clears it — a party does not have to file
+    // through the exit one at a time to finish a mission together.
+    return anyHeroWithin(
+      state,
+      objective.at,
+      objective.radius ?? GATES.exitRadius,
     );
   }
   if (objective.type === "clearAll") {

@@ -99,7 +99,7 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
     dingToChooser(state);
     allocateStat(state, state.players[0], "dexterity");
 
-    const carried = extractLoadout(state);
+    const carried = extractLoadout(state, state.players[0]);
     expect(carried.spentStats?.dexterity).toBe(1);
 
     const next = createGame(11, "test_level", "medium", carried);
@@ -107,7 +107,7 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
   });
 
   it("a pre-spentStats loadout falls back to its carried stats", () => {
-    const legacy = extractLoadout(startGame());
+    const legacy = extractLoadout(startGame(), startGame().players[0]);
     legacy.stats = {
       stamina: 3,
       strength: 2,

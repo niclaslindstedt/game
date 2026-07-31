@@ -443,7 +443,7 @@ export function stasisFactorAt(
   player: Player,
   pos: Vec2,
 ): number {
-  return stasisFactorFrom(activeStasisFields(state, player), player.pos, pos);
+  return stasisFactorFrom(activeStasisFields(state), player.pos, pos);
 }
 
 /** One live stasis field, resolved for this player: its INT-widened reach
@@ -461,27 +461,30 @@ const NO_STASIS: readonly StasisField[] = Object.freeze([]);
  * `stasisFactorFrom`; the old per-mob `stasisFactorAt` walk re-derived the
  * radii (a full gear walk each) for every enemy every tick.
  */
-export function activeStasisFields(
-  state: GameState,
-  player: Player,
-): readonly StasisField[] {
+export function activeStasisFields(state: GameState): readonly StasisField[] {
   let fields: StasisField[] | null = null;
-  for (const ability of player.abilities) {
-    const def = abilityDef(ability.defId);
-    if (!def.stasis) continue;
-    const radius = stasisRadius(state, player, def);
-    (fields ??= []).push({
-      radiusSq: radius * radius,
-      slowFactor: def.stasis.slowFactor,
-    });
-  }
-  for (const spell of player.itemSpells) {
-    if (spell.spell !== "stasis") continue;
-    const params = stasisSpellParams(state, player, spell.rank);
-    (fields ??= []).push({
-      radiusSq: params.radius * params.radius,
-      slowFactor: params.slowFactor,
-    });
+  // EVERY hero's fields, not one's: a stasis ring is a patch of slowed ground
+  // and it slows the horde for whoever is standing in it. Hoisted once per tick
+  // for the whole horde (see `stepEnemies`), which is why it gathers the party
+  // here rather than being asked per mob per hero.
+  for (const player of state.players) {
+    for (const ability of player.abilities) {
+      const def = abilityDef(ability.defId);
+      if (!def.stasis) continue;
+      const radius = stasisRadius(state, player, def);
+      (fields ??= []).push({
+        radiusSq: radius * radius,
+        slowFactor: def.stasis.slowFactor,
+      });
+    }
+    for (const spell of player.itemSpells) {
+      if (spell.spell !== "stasis") continue;
+      const params = stasisSpellParams(state, player, spell.rank);
+      (fields ??= []).push({
+        radiusSq: params.radius * params.radius,
+        slowFactor: params.slowFactor,
+      });
+    }
   }
   return fields ?? NO_STASIS;
 }

@@ -40,11 +40,11 @@ import { inert, inertEnemy } from "../disposition.ts";
 
 export function stepPlayer(
   state: GameState,
+  player: Player,
   input: GameInput,
   dt: number,
   dtMs: number,
 ): void {
-  const player = state.players[0];
   player.hurtFlashMs = Math.max(0, player.hurtFlashMs - dtMs);
   player.moving = false;
 
@@ -349,46 +349,45 @@ function applySeismicLanding(state: GameState, player: Player): void {
  * non-stackable power already running refuses to re-activate (grantAbility
  * returns false), leaving its pickup banked rather than wasted.
  */
-export function stepUseItem(state: GameState, input: GameInput): void {
+export function stepUseItem(
+  state: GameState,
+  player: Player,
+  input: GameInput,
+): void {
   // Dock housekeeping first, so a spend in the same step names the dock as it
   // stands AFTER the move/drop: reorder (`moveItem`), then discard
   // (`dropItemIndex` — a banked pickup is destroyed, a running slot merely
   // unlinks and frees), then the spend below.
   if (input.moveItem) {
-    moveHeldSlot(
-      state,
-      state.players[0],
-      input.moveItem.from,
-      input.moveItem.to,
-    );
+    moveHeldSlot(state, player, input.moveItem.from, input.moveItem.to);
   }
   if (input.dropItemIndex !== undefined) {
-    discardHeldAbility(state, state.players[0], input.dropItemIndex);
+    discardHeldAbility(state, player, input.dropItemIndex);
   }
   if (!input.useItem) return;
-  const held = state.players[0].heldAbilities;
+  const held = player.heldAbilities;
   const wanted = input.useItemIndex;
   const usable =
     wanted !== undefined &&
     wanted >= 0 &&
     wanted < held.length &&
-    !isSlotActive(state, state.players[0], wanted);
+    !isSlotActive(state, player, wanted);
   const index = usable
     ? wanted
-    : held.findIndex((_, i) => !isSlotActive(state, state.players[0], i));
+    : held.findIndex((_, i) => !isSlotActive(state, player, i));
   if (index < 0) return;
   const defId = held[index];
   if (!defId) return;
   const def = abilityDef(defId);
   if (def.nuke) {
-    removeHeldSlot(state, state.players[0], index);
-    detonateNuke(state, def.nuke.radius);
+    removeHeldSlot(state, player, index);
+    detonateNuke(state, player, def.nuke.radius);
     return;
   }
   // The slot keeps its powerup while the copy runs; grantAbility links the copy
   // to `index`. A refused re-activation (a running non-stackable power) starts
   // nothing and leaves the slot as it was.
-  grantAbility(state, state.players[0], defId, index);
+  grantAbility(state, player, defId, index);
 }
 
 /**
@@ -399,10 +398,14 @@ export function stepUseItem(state: GameState, input: GameInput): void {
  * (see consumeMedkit / consumeStaminaPotion / consumeRepairKit), so a mistap
  * never wastes a kit.
  */
-export function stepUseConsumables(state: GameState, input: GameInput): void {
-  if (input.useMedkit) consumeMedkit(state, state.players[0]);
-  if (input.useStaminaPotion) consumeStaminaPotion(state, state.players[0]);
-  if (input.useRepairKit) consumeRepairKit(state, state.players[0]);
+export function stepUseConsumables(
+  state: GameState,
+  player: Player,
+  input: GameInput,
+): void {
+  if (input.useMedkit) consumeMedkit(state, player);
+  if (input.useStaminaPotion) consumeStaminaPotion(state, player);
+  if (input.useRepairKit) consumeRepairKit(state, player);
 }
 
 /**
@@ -425,18 +428,22 @@ export function stepUseConsumables(state: GameState, input: GameInput): void {
  * kills). Not reachable in normal play.
  */
 export function debugDetonateNuke(state: GameState): void {
-  detonateNuke(state, abilityDef(NUKE_DEF_ID).nuke?.radius ?? 240);
+  detonateNuke(
+    state,
+    state.players[0],
+    abilityDef(NUKE_DEF_ID).nuke?.radius ?? 240,
+  );
 }
 
-function detonateNuke(state: GameState, radius: number): void {
-  state.events.push({ type: "nuke", pos: { ...state.players[0].pos } });
+function detonateNuke(state: GameState, player: Player, radius: number): void {
+  state.events.push({ type: "nuke", pos: { ...player.pos } });
   const radiusSq = radius * radius;
   const caught = state.enemies.filter((enemy) => {
     const def = enemyDef(enemy.defId);
     return (
       !inert(def, enemy) &&
-      distanceSq(enemy.pos, state.players[0].pos) <= radiusSq &&
-      lineOfSight(state, state.players[0].pos, enemy.pos)
+      distanceSq(enemy.pos, player.pos) <= radiusSq &&
+      lineOfSight(state, player.pos, enemy.pos)
     );
   });
   // Flat blast damage: NUKE.meanHpDamageMult (200%) of the MEAN current hp of

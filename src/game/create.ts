@@ -35,6 +35,7 @@ import {
   scaledAliveCap,
   scaledMobCount,
 } from "./defs/difficulties.ts";
+import type { DifficultyDef } from "./defs/difficulties.ts";
 import { enemyDef, mobSpeed } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import {
@@ -87,6 +88,7 @@ import type {
   Loadout,
   Obstacle,
   PackState,
+  Player,
   SpawnerRuntime,
   StatName,
 } from "./types/index.ts";
@@ -676,111 +678,7 @@ export function createGame(
     explored: createExplored(def),
     mapMarkers: [],
     pathIndex: 0,
-    players: [
-      {
-        pos: { ...playerSpawn },
-        z: 0,
-        vz: 0,
-        hp: PLAYER.maxHp,
-        maxHp: PLAYER.maxHp,
-        // The sprint pool starts full at its STAMINA-0 base.
-        stamina: STAMINA.base,
-        maxStamina: STAMINA.base,
-        facing: vec(1, 0),
-        vel: vec(0, 0),
-        faceLeft: false,
-        abilities: [],
-        // Granted forever spells re-derive from the worn loadout on the first
-        // tick (`syncItemSpells`) — nothing to seed here.
-        itemSpells: [],
-        heldAbilities: [],
-        // One empty medkit stack per quality; stamina potions and repair kits
-        // each share one stack.
-        medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
-        staminaPotions: 0,
-        repairKits: 0,
-        cleanSlates: 0,
-        moving: false,
-        weaponCooldownMs: 0,
-        // Levels with a scripted opening strike (SpaceZ HQ) start the hero with
-        // his weapon holstered — the vanguard's first swing draws it. Every
-        // other level opens armed.
-        disarmed: def.openingStrike !== undefined,
-        hurtFlashMs: 0,
-        knockoutMs: 0,
-        knockMs: 0,
-        knockVel: vec(0, 0),
-        level: 1,
-        xp: 0,
-        xpToNext: xpToLevelUp(1, difficulty),
-        pendingStatPoints: 0,
-        // The purse opens empty — coins come from selling loot to the merchant
-        // (a carried loadout restores its banked purse below).
-        coins: 0,
-        stats: {
-          stamina: 0,
-          strength: 0,
-          dexterity: 0,
-          intelligence: 0,
-          luck: 0,
-        },
-        // Only the points the player spends on the chooser (see `spentStats`).
-        // The difficulty head-start folded into `stats` below is deliberately
-        // NOT counted here — it isn't the player's own pick.
-        spentStats: {
-          stamina: 0,
-          strength: 0,
-          dexterity: 0,
-          intelligence: 0,
-          luck: 0,
-        },
-        // No talents trained yet — a carried loadout restores them, and an
-        // adopted veteran's converted points reconcile in after the loadout
-        // applies (see `applyLoadout` / `reconcileTalentPoints`).
-        talents: {},
-        equipment: {
-          // The starting weapon: whatever the DIFFICULTY hangs on the hero's
-          // wall (an heirloom wand down the ladder, a bare stick at the top) —
-          // the one thing he grabs to go after Ada. FINITE: minted with its
-          // catalog durability so it wears out and has to be replaced by
-          // whatever the run yields (see wearEquippedWeapon). When it finally
-          // shatters with an empty bag the engine draws the unbreakable
-          // blaster fallback.
-          weapon: {
-            id: nextId++,
-            defId: diff.startingWeapon,
-            slot: "weapon",
-            tier: "regular",
-            ilvl: 1,
-            affixes: [],
-            durability: weaponDef(diff.startingWeapon).durability,
-          },
-          // The clothes on his back (DifficultyDef.startingGear): a t-shirt,
-          // jeans and worn boots — no bonuses, a whisper of armor, honest
-          // cotton durability. Filled in below; the head stays bare.
-          head: null,
-          chest: null,
-          legs: null,
-          feet: null,
-          // The neck is bare: amulets are a JESUS-only find. The ENGAGEMENT BAND
-          // fills a ring finger below, from `startingGear` — the one piece of
-          // jewellery the hero owns before the ladder pays out any of its own.
-          amulet: null,
-          ring1: null,
-          ring2: null,
-          // Nothing in the second arm to start: no bag (the base carry is all
-          // the hero has until he loots one — see inventoryCapacity) and no
-          // shield either.
-          offhand: null,
-        },
-        // The bag starts at its STRENGTH-0 floor; allocating STRENGTH grows it
-        // (see inventoryCapacity / syncInventoryCapacity).
-        inventory: new Array<null>(LOOT.baseInventorySize).fill(null),
-        // The LOST & FOUND starts empty; only a paid AUTO PILOT ride fills it
-        // (see items/vault.ts), and `applyLoadout` carries it across.
-        vault: [],
-      },
-    ],
+    players: [createHero(playerSpawn, def, difficulty, diff, () => nextId++)],
     enemies,
     projectiles: [],
     items: [],
@@ -924,7 +822,7 @@ export function createGame(
 
   // Dress the run in the carried-over progress, when there is any: level,
   // stats, equipment, bag, and powerups from the previous level's clear.
-  if (loadout) applyLoadout(state, loadout);
+  if (loadout) applyLoadout(state, state.players[0], loadout);
 
   // A merchant met here before is set up at the door from the outset — revealed
   // now (after the loadout, so his stall prices off the arriving hero's level).
@@ -1692,4 +1590,125 @@ function scatterDecor(rng: Rng, def: LevelDef): Decor[] {
     }
   }
   return decor;
+}
+
+/**
+ * ONE FRESH HERO, at the spawn — the shape every seat starts as.
+ *
+ * Lifted out of `createGame`'s state literal because a run now has a PARTY:
+ * seat 0 is built here at creation, and `seatHero` builds every later arrival
+ * from the same function. Two literals would be two definitions of what a hero
+ * IS, free to drift the day one of them grows a field — and the drift would
+ * present as a joiner whose build quietly behaves differently from the host's.
+ */
+export function createHero(
+  playerSpawn: Vec2,
+  def: LevelDef,
+  difficulty: Difficulty,
+  diff: DifficultyDef,
+  mintId: () => number,
+): Player {
+  return {
+    pos: { ...playerSpawn },
+    z: 0,
+    vz: 0,
+    hp: PLAYER.maxHp,
+    maxHp: PLAYER.maxHp,
+    // The sprint pool starts full at its STAMINA-0 base.
+    stamina: STAMINA.base,
+    maxStamina: STAMINA.base,
+    facing: vec(1, 0),
+    vel: vec(0, 0),
+    faceLeft: false,
+    abilities: [],
+    // Granted forever spells re-derive from the worn loadout on the first
+    // tick (`syncItemSpells`) — nothing to seed here.
+    itemSpells: [],
+    heldAbilities: [],
+    // One empty medkit stack per quality; stamina potions and repair kits
+    // each share one stack.
+    medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
+    staminaPotions: 0,
+    repairKits: 0,
+    cleanSlates: 0,
+    moving: false,
+    weaponCooldownMs: 0,
+    // Levels with a scripted opening strike (SpaceZ HQ) start the hero with
+    // his weapon holstered — the vanguard's first swing draws it. Every
+    // other level opens armed.
+    disarmed: def.openingStrike !== undefined,
+    hurtFlashMs: 0,
+    knockoutMs: 0,
+    knockMs: 0,
+    knockVel: vec(0, 0),
+    level: 1,
+    xp: 0,
+    xpToNext: xpToLevelUp(1, difficulty),
+    pendingStatPoints: 0,
+    // The purse opens empty — coins come from selling loot to the merchant
+    // (a carried loadout restores its banked purse below).
+    coins: 0,
+    stats: {
+      stamina: 0,
+      strength: 0,
+      dexterity: 0,
+      intelligence: 0,
+      luck: 0,
+    },
+    // Only the points the player spends on the chooser (see `spentStats`).
+    // The difficulty head-start folded into `stats` below is deliberately
+    // NOT counted here — it isn't the player's own pick.
+    spentStats: {
+      stamina: 0,
+      strength: 0,
+      dexterity: 0,
+      intelligence: 0,
+      luck: 0,
+    },
+    // No talents trained yet — a carried loadout restores them, and an
+    // adopted veteran's converted points reconcile in after the loadout
+    // applies (see `applyLoadout` / `reconcileTalentPoints`).
+    talents: {},
+    equipment: {
+      // The starting weapon: whatever the DIFFICULTY hangs on the hero's
+      // wall (an heirloom wand down the ladder, a bare stick at the top) —
+      // the one thing he grabs to go after Ada. FINITE: minted with its
+      // catalog durability so it wears out and has to be replaced by
+      // whatever the run yields (see wearEquippedWeapon). When it finally
+      // shatters with an empty bag the engine draws the unbreakable
+      // blaster fallback.
+      weapon: {
+        id: mintId(),
+        defId: diff.startingWeapon,
+        slot: "weapon",
+        tier: "regular",
+        ilvl: 1,
+        affixes: [],
+        durability: weaponDef(diff.startingWeapon).durability,
+      },
+      // The clothes on his back (DifficultyDef.startingGear): a t-shirt,
+      // jeans and worn boots — no bonuses, a whisper of armor, honest
+      // cotton durability. Filled in below; the head stays bare.
+      head: null,
+      chest: null,
+      legs: null,
+      feet: null,
+      // The neck is bare: amulets are a JESUS-only find. The ENGAGEMENT BAND
+      // fills a ring finger below, from `startingGear` — the one piece of
+      // jewellery the hero owns before the ladder pays out any of its own.
+      amulet: null,
+      ring1: null,
+      ring2: null,
+      // Nothing in the second arm to start: no bag (the base carry is all
+      // the hero has until he loots one — see inventoryCapacity) and no
+      // shield either.
+      offhand: null,
+    },
+    // The bag starts at its STRENGTH-0 floor; allocating STRENGTH grows it
+    // (see inventoryCapacity / syncInventoryCapacity).
+    inventory: new Array<null>(LOOT.baseInventorySize).fill(null),
+    // The LOST & FOUND starts empty; only a paid AUTO PILOT ride fills it
+    // (see items/vault.ts), and `applyLoadout` carries it across.
+    vault: [],
+  };
 }

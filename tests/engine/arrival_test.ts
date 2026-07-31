@@ -178,7 +178,7 @@ describe("loadout carry-over", () => {
     const first = createGame(SEED, "test_level", "medium", sampleLoadout());
     first.players[0].xp = 12; // some progress made during the run
     first.players[0].repairKits = 3; // a hoarded stack of repair kits
-    const carried = extractLoadout(first);
+    const carried = extractLoadout(first, first.players[0]);
     const next = createGame(SEED + 1, "test_level_2", "medium", carried);
     expect(next.players[0].level).toBe(first.players[0].level);
     expect(next.players[0].stats).toEqual(first.players[0].stats);
