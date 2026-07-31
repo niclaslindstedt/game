@@ -3,7 +3,8 @@ type: Changed
 title: THE BUNKER redrawn
 ---
 
-THE BUNKER's cast is redrawn: every human on the floor has arms instead of
-being a barrel with legs, the six personal details wear liveries you can
-actually tell apart, the residents are sized to the threat they are, and the
-vacuum bot finally carries the taser it has always been described with.
+THE BUNKER's rank and file is redrawn: the agents and the six personal details
+have arms instead of being a barrel with legs, each agency reads by silhouette
+rather than by a chest stripe, the six guard liveries are now colours you can
+actually tell apart, and the vacuum bot finally carries the taser it has
+always been described with.
