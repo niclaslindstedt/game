@@ -324,9 +324,20 @@ function levelEntries(def) {
   };
 
   add("hero", "the hero");
+  // EVERY door the level puts a mob on screen through — the pinned set pieces
+  // AND the ambient horde. A level using `spawners`/`packs` for its horde (the
+  // finite local model) keeps its rank and file NOWHERE ELSE, so collecting
+  // only `spawns`/`waves` silently drops the mobs the player sees most and the
+  // survey sheet reads as if the map were empty between its elites.
   for (const spec of [
     ...def.spawns,
     ...(def.waves?.budget ?? []),
+    ...(def.spawners ?? []).flatMap((s) => s.members ?? []),
+    ...(def.packs ?? []).flatMap((p) => p.members ?? []),
+    ...(def.lairs ?? []).flatMap((l) => [l, ...(l.escort ?? [])]),
+    ...Object.values(def.rareSpawns ?? {})
+      .flat()
+      .map((enemy) => ({ enemy })),
     ...(def.openingStrike ? [def.openingStrike] : []),
   ]) {
     const enemy = ENEMY_DEFS[spec.enemy];
@@ -335,6 +346,10 @@ function levelEntries(def) {
     // smaller than a squishy one) are visible on the survey sheet itself,
     // not only after hand-reading the enemy defs.
     add(enemy.sprite, `${enemy.name} (${enemy.role}, ${enemy.hp}hp)`);
+  }
+  for (const lair of def.lairs ?? []) {
+    add(lair.sprite, "lair door");
+    add(lair.openSprite, "lair door (open)");
   }
   add(def.merchant?.sprite ?? "merchant", "the merchant");
 

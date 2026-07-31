@@ -354,9 +354,8 @@ export async function stageRun(page, shot, url) {
 
   // Make a hero first (the warp picker still needs one to run as).
   await page
-    .getByRole("button", { name: "play", exact: true })
+    .getByRole("button", { name: "new-game" })
     .waitFor({ timeout: 20000 });
-  await page.getByRole("button", { name: "play", exact: true }).click();
   await page.getByRole("button", { name: "new-game" }).click();
   await page.getByRole("textbox", { name: "character-name" }).fill("ADA");
   await page.getByRole("button", { name: "character-create" }).click();

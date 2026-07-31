@@ -33,8 +33,7 @@ await page.goto(
 );
 
 // Menu flow (mirrors playtest.mjs): play → new-game → name → create → easy.
-await page.getByRole("button", { name: "play", exact: true }).waitFor();
-await page.getByRole("button", { name: "play", exact: true }).click();
+await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.getByRole("button", { name: "new-game" }).click();
 await page.getByRole("textbox", { name: "character-name" }).fill("BOT");
 await page.getByRole("button", { name: "character-create" }).click();
