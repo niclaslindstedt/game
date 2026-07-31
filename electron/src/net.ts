@@ -22,7 +22,7 @@
 // presents them to the session as an ordinary transport. UDP peers do not: that
 // socket is bound inside the session process itself, so the direct path — the
 // one that carries the bulk of any real session — never touches this event
-// loop, and PR 5's dedicated server inherits it with no shell at all.
+// loop, and phase 5's dedicated server inherits it with no shell at all.
 //
 // **The port is minted here and immediately given away.** `MessageChannelMain`
 // is a main-process object; one end goes to the server with the message that

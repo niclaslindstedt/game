@@ -1536,7 +1536,7 @@ snapshot twenty times a second, so `__gisNet` carries only control traffic and
 the game frames get their own channel.
 
 Like `mod/`, it is at the repo's top level rather than inside `electron/`,
-because it is engine code rather than shell code — and, from PR 5, the same
+because it is engine code rather than shell code — and, from phase 5, the same
 file is the standalone dedicated server. `scripts/build-server.mjs` is its ship
 target and `server/package.json` declares its runtime dependencies, checked
 against the real import graph by `tests/content/server_deps_test.ts`. See

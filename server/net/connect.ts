@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE JOINER'S SIDE OF THE DOOR — the one thing PR 2 built no half of.
+// THE JOINER'S SIDE OF THE DOOR — the one thing phase 2 built no half of.
 //
 // `hub.ts` is the host's admission desk: it answers a padded `hello` with a
 // challenge and turns a `join` into a seat. Nothing anywhere spoke the OTHER
-// side of that conversation, because PR 2 shipped the wire and PR 2.5 is where
+// side of that conversation, because phase 2 shipped the wire and phase 2.5 is where
 // a player first gets to walk through it. This is that side, and it is
 // deliberately the SMALLEST thing that can be: a state machine with three
 // states, no game knowledge at all, and one job past admission — carry bytes.
 //
 // **IT LIVES BESIDE THE HUB, NOT IN THE SHELL OR IN THE PAGE**, for the two
 // reasons the seam itself moved here (§2.1). The page cannot open a UDP socket
-// at all, and PR 5's dedicated server has no shell to put one in — so the
+// at all, and phase 5's dedicated server has no shell to put one in — so the
 // connector sits with the transport it drives, in the process that already
 // holds one, and the renderer reaches it down the same `MessagePort` a HOST's
 // renderer already uses. That is what makes the page's `NetClient` identical on

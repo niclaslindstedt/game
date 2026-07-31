@@ -5,7 +5,7 @@
 
 import { clamp } from "@game/lib/vec.ts";
 import { GATES, LOOT, STATS } from "../config/index.ts";
-import { gearDef, isWeaponDef } from "../defs/equipment.ts";
+import { gearDef, isWeaponDef, weaponDef } from "../defs/equipment.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import type {
   EquipSlot,
@@ -23,7 +23,9 @@ import { isOfferedInTrade } from "../trade.ts";
 import { freeHandsFor } from "./hands.ts";
 import { equipSlotForItem, fitsEquipSlot, RING_SLOTS } from "./slots.ts";
 import { canEquip } from "./requirements.ts";
-import { gearScore, weaponCooldownFor } from "./weapon-math.ts";
+import { heroLoadoutMemo } from "./derived.ts";
+import { gearScore, weaponCooldownFor, weaponScore } from "./weapon-math.ts";
+import { sellValue } from "./worth.ts";
 
 // ---- Where a piece is worn ----------------------------------------------------
 
@@ -177,6 +179,76 @@ export function equipFromInventory(
   // to land (grow-only — see syncInventoryCapacity).
   syncInventoryCapacity(state, player);
   return true;
+}
+
+/**
+ * SORT THE BAG the way the powerup dock sorts its slots — so a glance (or a
+ * bag hotkey) always finds the good stuff in the same place: the pocket
+ * RANGED weapon in slot 1 and the pocket MAGIC weapon in slot 2 (each class's
+ * best banked piece, wieldable first), then every other item ordered by
+ * PRECIOUSNESS — descending `sellValue`, which folds the tier ladder
+ * (artifact → legendary → unique → set → rare …) above ilvl and quality —
+ * with the empty cells packed to the tail. A harness-side action like the
+ * cull (the bot tidies as it plays; a hand-sorting player is left alone).
+ * Ties keep mint order (`Equipment.id`) so the sort is stable and
+ * deterministic. Returns whether anything moved.
+ */
+const sortedLoadouts = new WeakSet<object>();
+
+export function sortInventory(state: GameState, hero: Player): boolean {
+  // Called EVERY tick by the harness, but the desired order is a pure function
+  // of the loadout (the head picks by `weaponScore`/`canEquip`, the tail by
+  // `sellValue`/mint id) — all captured by the loadout memo, which the bag's
+  // own slot order feeds into. Once a given loadout is sorted the bag stays
+  // sorted until something moves (which mints a fresh memo), so a memo already
+  // marked sorted short-circuits the whole walk+sort — the common quiet tick.
+  const memo = heroLoadoutMemo(state, hero);
+  if (sortedLoadouts.has(memo)) return false;
+  const inv = hero.inventory;
+  const items = inv.filter((cell): cell is Equipment => cell !== null);
+  if (items.length === 0) {
+    sortedLoadouts.add(memo);
+    return false;
+  }
+  const head: Equipment[] = [];
+  for (const cls of ["ranged", "magic"] as const) {
+    let best: Equipment | null = null;
+    let bestKey = -Infinity;
+    let bestWieldable = false;
+    for (const item of items) {
+      if (item.slot !== "weapon" || head.includes(item)) continue;
+      const def = weaponDef(item.defId);
+      if (def.class !== cls || !def.projectile) continue;
+      const wieldable = canEquip(state, hero, item);
+      const key = weaponScore(state, hero, item);
+      if (
+        (wieldable && !bestWieldable) ||
+        (wieldable === bestWieldable && key > bestKey)
+      ) {
+        best = item;
+        bestKey = key;
+        bestWieldable = wieldable;
+      }
+    }
+    if (best) head.push(best);
+  }
+  const rest = items
+    .filter((item) => !head.includes(item))
+    .sort((a, b) => sellValue(b) - sellValue(a) || a.id - b.id);
+  const next = [...head, ...rest];
+  let changed = false;
+  for (let i = 0; i < inv.length; i++) {
+    const want = next[i] ?? null;
+    if (inv[i] !== want) {
+      inv[i] = want;
+      changed = true;
+    }
+  }
+  // Mark the resulting arrangement sorted — a reorder minted a fresh memo that
+  // reflects the new slot order; a no-op keeps the same one. Either way the next
+  // quiet tick short-circuits until a pickup/drop/equip changes the loadout.
+  sortedLoadouts.add(heroLoadoutMemo(state, hero));
+  return changed;
 }
 
 /**

@@ -4,10 +4,10 @@
 //
 // **THIS IS NOT THE REST OF §7.4, AND THE SPLIT IS DELIBERATE.** Spacing,
 // splitting the packs, respecting `Item.owner`, covering a hero who is down and
-// travelling to the boss as a group are all PR 7's — they are about how a bot
+// travelling to the boss as a group are all phase 7's — they are about how a bot
 // party PLAYS, and they can be judged only once somebody watches one play. The
-// leash is here, one PR early, because §7.2's simulator is the instrument PR 4's
-// §4.3 tuning is read off, and an instrument that measures N SOLOISTS SHARING A
+// leash is here, one phase early, because §7.2's simulator is the instrument phase
+// 4's §4.3 tuning is read off, and an instrument that measures N SOLOISTS SHARING
 // SEED cannot be used to tune co-op at all.
 //
 // **AND THAT WAS MEASURED, NOT ASSUMED.** Flying a party of two on the moon,

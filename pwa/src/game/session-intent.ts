@@ -3,7 +3,7 @@
 // run driver and written by the HOST screen.
 //
 // **WHY IT IS NOT A PROP.** Every Steam run already hosts a session (that is
-// PR 1.75's cutover: the simulation lives in the utility process either way).
+// phase 1.75's cutover: the simulation lives in the utility process either way).
 // What HOST GAME adds is one bit — OPEN THE DOORS — plus the four values a door
 // needs, and threading those from a title-menu row through `App`, `GameScreen`,
 // `createRunSession` and `createRunDriver` would be five signatures widened to

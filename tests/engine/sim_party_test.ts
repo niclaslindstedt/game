@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE SIMULATOR FLIES A PARTY (multiplayer plan §7.2) — the instrument PR 4's
+// THE SIMULATOR FLIES A PARTY (multiplayer plan §7.2) — the instrument phase 4's
 // §4.3 tuning is blocked on, and the reason its co-op rules shipped as
 // structure rather than as measured numbers.
 //

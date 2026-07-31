@@ -49,7 +49,6 @@ import {
 import {
   botAutoEquip,
   cullWorstLoot,
-  sortBotInventory,
   careForCompanion,
   tradeAtMerchant,
   wantsMerchantVisit,
@@ -58,6 +57,7 @@ import {
 import { stepBotWeaponSwap } from "../game/bot/weapon-swap.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
+import { sortInventory } from "../game/items/inventory.ts";
 import { seatHero } from "../game/seating.ts";
 import { heroInPlay } from "../game/party.ts";
 import { STAT_BUILDS } from "../game/builds.ts";
@@ -1687,7 +1687,7 @@ function playRun(args: {
     // way the powerup dock sorts its slots.
     botAutoEquip(state, state.players[0]);
     cullWorstLoot(state, state.players[0]);
-    sortBotInventory(state, state.players[0]);
+    sortInventory(state, state.players[0]);
     // EVERY SEAT RUNS THE SAME BAG DISCIPLINE, and every seat is IMMORTAL.
     //
     // The second half is the one that would silently ruin a measurement. Seat 0
@@ -1717,7 +1717,7 @@ function playRun(args: {
           // single-player path has always used.
           botAutoEquip(state, hero);
           cullWorstLoot(state, hero);
-          sortBotInventory(state, hero);
+          sortInventory(state, hero);
         }
         if (hero.hp > 0 || hero.departed) continue;
         if (seat === 0) bookDeath();

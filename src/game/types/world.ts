@@ -548,7 +548,7 @@ export type Merchant = {
  * Two answers and deliberately no third. A "need before greed" roll — the
  * third answer every MMO eventually grows — needs a modal, a timer, and a
  * quorum, all of which stop a fight the whole party is standing in; that is a
- * trade window's problem (PR 5) rather than a floor drop's.
+ * trade window's problem (phase 5) rather than a floor drop's.
  */
 export type LootMode = "free" | "allocated";
 

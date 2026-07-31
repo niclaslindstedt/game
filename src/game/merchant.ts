@@ -200,7 +200,7 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
   // WHOEVER FINDS HIM FINDS HIM FOR EVERYBODY — the stall is a fixture of the
   // run, not a private acquaintance, and a merchant seven players could not
   // trade with because the eighth walked past first would be a bug nobody
-  // could diagnose from the field. (PR 4 retires the question outright by
+  // could diagnose from the field. (phase 4 retires the question outright by
   // standing him in the town hub.)
   const finder = nearestHeroWhere(state, merchant.pos, (hero) =>
     lineOfSight(state, hero.pos, merchant.pos),

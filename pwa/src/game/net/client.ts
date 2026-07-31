@@ -63,8 +63,8 @@ import {
 } from "@game/wire/protocol.ts";
 import { baselineFor, stripPrivate } from "@game/wire/snapshot.ts";
 
-/** The pipe, whatever it is. A `MessagePort` in PR 1; a Steam P2P peer or a
- * UDP connection in PR 2. The client knows nothing else about it — which is
+/** The pipe, whatever it is. A `MessagePort` in phase 1; a Steam P2P peer or a
+ * UDP connection in phase 2. The client knows nothing else about it — which is
  * the point of writing the seam here rather than inside the transport. */
 export type ClientTransport = {
   send(frame: ArrayBuffer): void;

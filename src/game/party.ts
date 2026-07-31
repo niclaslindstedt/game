@@ -3,7 +3,7 @@
 // allowed to ask about them as a group.
 //
 // `GameState.players` is a LIST because a run may hold up to `MAX_CLIENTS`
-// heroes (multiplayer PR 3). Single player is the one-element case and nothing
+// heroes (multiplayer phase 3). Single player is the one-element case and nothing
 // in the engine treats it specially — which is the whole point: a pass that
 // works for a party works for one hero, while a pass written against one hero
 // silently means "seat 0" the day a second player arrives.

@@ -137,7 +137,7 @@ const TOP_OFF_STAMINA_FRAC = 0.75;
  * **`hero` IS WHICH HERO THIS BOT STEERS, and it is a PARAMETER rather than a
  * lookup** (multiplayer plan §7.1). Every read under `src/game/bot/` used to
  * spell `state.players[0]` — 164 of them — which is why the headless simulator
- * could fly exactly one hero and why PR 4's co-op tuning shipped as structure
+ * could fly exactly one hero and why phase 4's co-op tuning shipped as structure
  * rather than as measured numbers. The bot's own memory was never the obstacle:
  * `Bot` already owns all of it (the stall detector, the wall trace, the A*
  * route, the pinned waypoint, the thought resolver), so N bots are N instances

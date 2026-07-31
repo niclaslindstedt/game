@@ -212,7 +212,7 @@ describe("the connectionless probe", () => {
 
 describe("admission", () => {
   it("seats a matching joiner as a SPECTATOR", async () => {
-    // PR 2 replicates one hero to eight machines; seating a second is PR 3's
+    // phase 2 replicates one hero to eight machines; seating a second is phase 3's
     // whole subject, and handing this one the owner's flag would let it steer
     // somebody else's character today.
     const net = await harness();
@@ -228,7 +228,7 @@ describe("admission", () => {
     // The NAME travels with the seat: without it the roster and every chat
     // line would fall back to "PLAYER N" for somebody who told us what they
     // are called, and the fallback would look like the feature. And the joiner
-    // is SEATED — they arrive to play, not to watch (PR 3).
+    // is SEATED — they arrive to play, not to watch (phase 3).
     expect(net.added).toEqual([
       { id: expect.any(Number), plays: true, name: "ZOE" },
     ]);

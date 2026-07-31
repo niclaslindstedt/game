@@ -12,7 +12,7 @@
 //
 // **THE LIST IS THE SECURITY MODEL, AND SO ARE THE ARGUMENTS.** A channel that
 // resolved a function name dynamically would hand a client `grantXp`,
-// `mintUnique` and `killEnemy` the moment PR 2's UDP port opened, and no amount
+// `mintUnique` and `killEnemy` the moment phase 2's UDP port opened, and no amount
 // of later validation would put that back in the box. So a command is a NAME
 // FROM A CLOSED LIST dispatched through an explicit `switch`, and its arguments
 // are SCALARS whose shapes are declared beside the name and checked before the
@@ -35,7 +35,7 @@
 // command that opens the inventory still halts the simulation, because that is
 // what it does today and the cutover is not allowed to change how the game
 // feels. Splitting `state.phase` from a per-player screen — so a player in
-// their bag can still be killed — is PR 3's design exercise (§3.2 of the plan).
+// their bag can still be killed — is phase 3's design exercise (§3.2 of the plan).
 // Anyone widening this list must not quietly do the second job at the same
 // time.
 
@@ -75,7 +75,7 @@ import {
 } from "./conversation.ts";
 import { STAT_NAMES } from "./defs/equipment.ts";
 import { autoEquipBest, scrapInferiorLoot } from "./items/auto-equip.ts";
-import { swapHand } from "./items/inventory.ts";
+import { sortInventory, swapHand } from "./items/inventory.ts";
 import {
   discardEquipped,
   discardFromInventory,
@@ -180,7 +180,7 @@ type ArgKind =
  */
 export const RUN_COMMAND_ARGS = {
   // THE SCENE — turning a page of the opening monologue, skipping a cutscene,
-  // ending the death tableau. The nine PR 1 shipped.
+  // ending the death tableau. The nine phase 1 shipped.
   advanceIntro: [],
   skipIntro: [],
   dismissIntro: [],
@@ -228,6 +228,7 @@ export const RUN_COMMAND_ARGS = {
   // server can check, an item would be a thing the client asserts exists.
   equipFromInventory: ["int"],
   swapHand: ["int"],
+  sortInventory: [],
   equipFromInventoryInto: ["int", "equipSlot"],
   unequipToInventory: ["equipSlot"],
   moveInventoryItem: ["int", "int"],
@@ -473,6 +474,12 @@ export function applyRunCommand(
     // exactly the kind of thing a closed list exists to keep off it.
     case "swapHand":
       return swapHand(state, hero, num(a, 0));
+    // The last of the autopilot's five housekeeping mutators to become an
+    // INTENT (multiplayer plan §7.2.5, decision 3b). The bag's order is a pure
+    // function of the loadout, so nothing about it is an opinion the bot holds —
+    // only the decision to tidy is, and that stays the bot's.
+    case "sortInventory":
+      return sortInventory(state, hero);
     case "equipFromInventoryInto":
       return equipFromInventoryInto(
         state,

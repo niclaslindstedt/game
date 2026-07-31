@@ -381,7 +381,7 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                             |
 
 Everything multiplayer: **`docs/multiplayer.md`** (shipped architecture) and
-`docs/multiplayer-plan.md` (the roadmap, and PR 5.5 for every open debt).
+`docs/multiplayer-plan.md` (the roadmap, and phase 5.5 for every open debt).
 
 ## The content pipelines
 

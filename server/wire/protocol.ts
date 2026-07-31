@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 11;
+export const PROTOCOL_VERSION = 12;
 
 /**
  * The most clients one session seats, host included.
@@ -176,7 +176,7 @@ export type SessionParams = {
  * What the two ends compare before a single game byte is exchanged.
  *
  * `build` is the engine version rather than a git hash because that is what
- * both ends can honestly know about themselves; PR 2 replaces it with a real
+ * both ends can honestly know about themselves; phase 2 replaces it with a real
  * build hash once the client is a different machine and a different download.
  */
 export type Handshake = {
@@ -431,7 +431,7 @@ export type ChatPayload = {
 export type RosterEntry = {
   slot: number;
   name: string;
-  /** False for a spectator. PR 3 seats a second hero; until then exactly one
+  /** False for a spectator. phase 3 seats a second hero; until then exactly one
    * entry is ever true. */
   playing: boolean;
   /** Round trip in ms as the server last measured it, or -1 for the host's own
@@ -450,7 +450,7 @@ export type RosterPayload = {
  * tick it was sampled on.
  *
  * The client sends INPUT, never positions. A client that sends positions is a
- * client that can teleport, and PR 5's trust rules would have nothing to check.
+ * client that can teleport, and phase 5's trust rules would have nothing to check.
  */
 export type InputPayload = {
   seq: number;
@@ -469,19 +469,19 @@ export type InputPayload = {
  * They travel as NAMES FROM A CLOSED LIST, never as anything the server
  * resolves dynamically. A command channel that took a function name and looked
  * it up would hand a client the whole engine surface — `grantXp`, `mintUnique`,
- * `killEnemy` — the day PR 2 opens a UDP port, and no amount of later
+ * `killEnemy` — the day phase 2 opens a UDP port, and no amount of later
  * validation would put that back in the box.
  *
- * PR 1 shipped exactly the scene-advance verbs a single-player run needs to get
- * from the prelude to the field and out the other side. **PR 1.5 added the
+ * phase 1 shipped exactly the scene-advance verbs a single-player run needs to get
+ * from the prelude to the field and out the other side. **phase 1.5 added the
  * rest** — the screens, the bag, the counter, the build, the party, the errands,
  * the vault and the ride — because the run loop cannot move into the server
- * until every verb it calls can travel. (The plan first gave that work to PR 3,
- * which was a circular dependency: PR 3's prediction assumes the run already
+ * until every verb it calls can travel. (The plan first gave that work to phase 3,
+ * which was a circular dependency: phase 3's prediction assumes the run already
  * goes through the server.)
  *
- * The two halves are separate jobs on the same names: **PR 1.5 makes them
- * TRAVEL** with today's blocking semantics exactly preserved, and **PR 3 makes
+ * The two halves are separate jobs on the same names: **phase 1.5 makes them
+ * TRAVEL** with today's blocking semantics exactly preserved, and **phase 3 makes
  * them NON-BLOCKING** per player. Anyone widening this list for the first
  * reason must not quietly do the second at the same time — a command that
  * stopped freezing the world would change how single-player feels, which is the
@@ -527,6 +527,7 @@ export const COMMANDS = [
   "reopenVictoryChoice",
   "equipFromInventory",
   "swapHand",
+  "sortInventory",
   "equipFromInventoryInto",
   "unequipToInventory",
   "moveInventoryItem",

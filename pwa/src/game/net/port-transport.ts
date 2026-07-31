@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE LOOPBACK TRANSPORT — a `MessagePort` dressed as a `ClientTransport`.
 //
-// This is the whole of PR 1's networking, and there is deliberately none of it:
+// This is the whole of phase 1's networking, and there is deliberately none of it:
 // the host's renderer and the session server are two processes on one machine,
 // so the "wire" is a port the main process handed over. Real transports (Steam
-// P2P, direct UDP) arrive in PR 2 behind the same three-method shape, which is
+// P2P, direct UDP) arrive in phase 2 behind the same three-method shape, which is
 // the only reason this file is worth having as its own module rather than as
 // four lines inside the run driver.
 //

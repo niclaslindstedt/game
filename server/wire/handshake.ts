@@ -25,7 +25,7 @@
 // source address from reaching the session at all. It does not authenticate a
 // person, and the password proof beside it is a speed bump rather than a wall:
 // a listen server's host can read the password out of their own memory, and
-// PR 5's trust model already says the host is a player and the host can cheat.
+// phase 5's trust model already says the host is a player and the host can cheat.
 // What both are for is keeping a session between the people invited to it.
 
 import type { Handshake, RefusalReason } from "./protocol.ts";

@@ -7,7 +7,7 @@
 // is landing `ISteamNetworkingSockets` upstream or writing an N-API addon — the
 // latter costing the prebuilt binaries that make the desktop shell installable
 // without a Rust toolchain. It is also, on its own, the feature that makes a
-// LAN party, a Steam Deck with the internet off, and PR 5's headless dedicated
+// LAN party, a Steam Deck with the internet off, and phase 5's headless dedicated
 // server all work with no Steam client on either end.
 //
 // **THE BOUND PORT IS NOT THE REQUESTED PORT, AND THE DIFFERENCE IS A RULE.**
