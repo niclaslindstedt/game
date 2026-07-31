@@ -24,6 +24,25 @@ dialogue:
   - - WE SPENT FIFTY YEARS COPYING A MACHINE THAT ISN'T BROKEN. IT'S WAITING. TO GO HOME.
 lastWords:
   - IT'S STILL... HHH... STILL... HUMMING...
+mechanics:
+  abilities:
+    - id: ward_shield
+      windupMs: 640
+      cooldownMs: 12000
+      durationMs: 7000
+      poolFrac: 0.22
+      look:
+        core: "120, 226, 232"
+        hot: "232, 252, 255"
+        deep: "10, 26, 30"
+        spark: "180, 240, 246"
+    - id: snare_field
+      windupMs: 620
+      cooldownMs: 10000
+      range: 170
+      radius: 40
+      durationMs: 3600
+      slowFactor: 0.7
 ai:
   aggroRadius: 240
   idle: work

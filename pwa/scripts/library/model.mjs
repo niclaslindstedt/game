@@ -109,6 +109,7 @@ const MECHANIC_KINDS = ["charge", "slam", "enrage", "summon", "abilities"];
  * printing a boss's signature move as nothing at all.
  */
 const ABILITY_IDS = [
+  // Boss tier — set pieces that reshape the arena.
   "laser_eyes",
   "flag_plant",
   "coin_cannon",
@@ -117,6 +118,17 @@ const ABILITY_IDS = [
   "call_horde",
   "recompile",
   "lockdown",
+  // Elite tier — personal moves, the hero's own kit turned around.
+  "orbit_guard",
+  "seeker_volley",
+  "ember_trail",
+  "shock_pulse",
+  "blink_strike",
+  "rally_cry",
+  "snare_field",
+  "siphon_tether",
+  "ward_shield",
+  "quake_line",
 ];
 
 /**

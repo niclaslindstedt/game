@@ -25,6 +25,28 @@ dialogue:
   - - YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN.
 lastWords:
   - TRANSACTION... ...ROLLED BACK...
+mechanics:
+  abilities:
+    - id: snare_field
+      windupMs: 620
+      cooldownMs: 8000
+      range: 210
+      radius: 52
+      durationMs: 5000
+      slowFactor: 0.55
+      look:
+        core: "196, 62, 62"
+        hot: "252, 186, 168"
+        deep: "30, 10, 10"
+        spark: "232, 120, 100"
+    - id: siphon_tether
+      windupMs: 740
+      cooldownMs: 11000
+      range: 210
+      durationMs: 2800
+      damageFrac: 0.28
+      tickMs: 520
+      healFrac: 0.7
 ai:
   aggroRadius: 300
   rushSpeed: 100

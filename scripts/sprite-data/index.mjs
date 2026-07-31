@@ -20,6 +20,12 @@
 // grids are in (see `deriveWounds` / `deriveWorn` below).
 import { GENERATED_ENEMIES } from "../../src/generated/enemies.ts";
 import { GENERATED_GEAR } from "../../src/generated/items.ts";
+import {
+  CAST_RIM_CHAR,
+  CAST_RIM_RGBA,
+  castFrames,
+  castsAnything,
+} from "../asset-tools/cast.mjs";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { woundVisibility } from "../asset-tools/lint.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
@@ -184,6 +190,53 @@ export function deriveWounds(defs) {
 }
 
 deriveWounds(GENERATED_ENEMIES);
+
+// ---- Cast poses -------------------------------------------------------------
+// The wind-up frames a mob wears while a telegraphed move is coming
+// (asset-tools/cast.mjs) — derived, never hand-drawn, for the same reason the
+// wounds are: 27 elites is 54 frames, and a MOD's elite would otherwise have no
+// tell at all. AUTHORED FRAMES ALWAYS WIN; see below.
+
+/**
+ * Derive the cast frames for a roster of enemies, over whatever sprites are
+ * currently loaded. A FUNCTION for the same reason `deriveWounds` is one — a
+ * mod's monsters are merged into these maps afterwards and earn the identical
+ * treatment (`scripts/mod-support.mjs`).
+ */
+export function deriveCastPoses(defs) {
+  // Two defs may share one sprite, and only one of them may be the caster —
+  // deriving per unique SPRITE is what keeps the second one from throwing on a
+  // name that is already registered.
+  const seen = new Set();
+  for (const def of Object.values(defs)) {
+    if (!castsAnything(def) || seen.has(def.sprite)) continue;
+    seen.add(def.sprite);
+    // AUTHORED WINS. A boss that ships its own hand-drawn wind-up keeps it —
+    // this derivation is the floor for everything nobody has drawn, never a
+    // replacement for what somebody did.
+    if (`${def.sprite}_cast_0` in SPRITES) continue;
+    const frames = [SPRITES[`${def.sprite}_0`], SPRITES[`${def.sprite}_1`]];
+    if (!frames[0] || !frames[1]) continue;
+    const family = FAMILIES.find(
+      (f) => f.name === SPRITE_FAMILY[`${def.sprite}_0`],
+    );
+    if (!family) continue;
+    // The pose is the base frames with a rim laid around them, so it renders in
+    // the base sprite's OWN palette — plus the rim char, which no family backs
+    // (the same escape hatch the gore styles take above, and needed here for
+    // the same reason: a MOD's family has no scope at all).
+    const palette = {
+      ...family.palette,
+      ...SPRITE_PALETTES[`${def.sprite}_0`],
+      [CAST_RIM_CHAR]: CAST_RIM_RGBA,
+    };
+    for (const [name, grid] of Object.entries(castFrames(def.sprite, frames))) {
+      register(family, name, grid, palette);
+    }
+  }
+}
+
+deriveCastPoses(GENERATED_ENEMIES);
 
 // ---- Worn-gear overlays -----------------------------------------------------
 // On-body looks generated from the gear catalog (asset-tools/worn.mjs) —

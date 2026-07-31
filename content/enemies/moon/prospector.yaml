@@ -27,6 +27,29 @@ dialogue:
 lastWords:
   - THE CLAIM'S... URGH... ...YOURS NOW, KID...
 mechanics:
+  abilities:
+    - id: quake_line
+      windupMs: 720
+      cooldownMs: 9500
+      count: 5
+      spacing: 30
+      radius: 20
+      damageFrac: 0.7
+      stepMs: 110
+      look:
+        core: "198, 148, 74"
+        hot: "250, 224, 170"
+        deep: "32, 22, 10"
+        spark: "228, 188, 122"
+    - id: ember_trail
+      windupMs: 560
+      cooldownMs: 13000
+      radius: 22
+      durationMs: 5000
+      dropMs: 420
+      patchMs: 3600
+      damageFrac: 0.3
+      tickMs: 600
   charge:
     windupMs: 700
     speedMult: 3.5

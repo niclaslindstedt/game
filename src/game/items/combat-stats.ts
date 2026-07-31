@@ -236,7 +236,12 @@ export function playerSpeed(state: GameState): number {
     // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart away).
     talentEvasionBurstMult(state) *
     // PALE SHROUD: a hero with nothing solid left to drag drifts faster.
-    abilitySpeedMult(state)
+    abilitySpeedMult(state) *
+    // A SNARE FIELD underfoot (the elite tier's `snare_field`). Applied at this
+    // one site, which owns the hero's pace, so the sprint pool, the winded jog
+    // and every talent above ride the hold instead of fighting it. Already
+    // resolved for this tick by `stepScorches` — see `Player.snareFactor`.
+    (state.player.snareFactor ?? 1)
   );
 }
 

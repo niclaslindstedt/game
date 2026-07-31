@@ -1,0 +1,38 @@
+name: elite_snare_1
+family: effects
+plane: floor
+size: [16, 16]
+description: >
+  A patch of an elite's SNARE FIELD letting go: the lattice has slackened, most
+  of its knots have gone and the threads left are half there. The second half of
+  the pair — a snare fades by COMING APART rather than by going transparent, so
+  the last second of it says "this is releasing you" instead of "the artist
+  turned the opacity down".
+subject:
+  kind: effect
+  build: a sparse, broken lattice over a square of ground
+  features: a few slack threads, one or two knots left, wide gaps
+  accent: what is left of the knots
+  pose: slackening, about to let go
+  flavor: it lets go a moment before you believe it has
+palette:
+  m: "#d6dbe8f0" # thread, what is left taut
+  n: "#aab2c4a8" # thread, slack
+  s: "#8790a460" # fraying away
+grid: |
+  ................
+  ....s.....s.....
+  .s....n......s..
+  ....n...m.......
+  s.....m....n....
+  ...m.....s...s..
+  .s.....n........
+  .....m.....m....
+  ..n.......s...s.
+  ......s......n..
+  .s.......m......
+  ....n........s..
+  ........s.......
+  ..s.......n.....
+  .....s..........
+  ................

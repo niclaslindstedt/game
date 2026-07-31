@@ -26,6 +26,31 @@ lastWords:
   - FINALLY... ...A RUNWAY...
 spareable:
   companion: amelia_earhart
+mechanics:
+  abilities:
+    - id: blink_strike
+      windupMs: 760
+      cooldownMs: 9000
+      range: 280
+      arriveDistance: 30
+      strikeRadius: 32
+      damageFrac: 0.72
+      look:
+        core: "186, 206, 226"
+        hot: "248, 252, 255"
+        deep: "20, 26, 34"
+        spark: "216, 232, 246"
+    - id: seeker_volley
+      windupMs: 660
+      cooldownMs: 9000
+      count: 3
+      spreadDeg: 26
+      range: 240
+      speed: 92
+      lifetimeMs: 2600
+      homing: 0.28
+      damageFrac: 0.5
+      sprite: elite_bolt
 ai:
   aggroRadius: 250
   rushSpeed: 120

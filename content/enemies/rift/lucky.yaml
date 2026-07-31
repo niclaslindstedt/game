@@ -25,6 +25,31 @@ lastWords:
   - AH WELL... ...LUCK ALWAYS RUNS OUT...
 spareable:
   companion: lucky
+mechanics:
+  abilities:
+    - id: orbit_guard
+      windupMs: 580
+      cooldownMs: 10500
+      count: 5
+      radius: 32
+      angularSpeed: 2.2
+      orbRadius: 5
+      durationMs: 7000
+      damageFrac: 0.5
+      hitIntervalMs: 680
+      sprite: elite_mote
+      look:
+        core: "74, 200, 118"
+        hot: "230, 255, 214"
+        deep: "8, 26, 14"
+        spark: "246, 214, 96"
+    - id: snare_field
+      windupMs: 600
+      cooldownMs: 9000
+      range: 190
+      radius: 46
+      durationMs: 4400
+      slowFactor: 0.6
 ai:
   aggroRadius: 250
   rushSpeed: 120

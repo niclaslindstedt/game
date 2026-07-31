@@ -162,6 +162,85 @@ in it. Only a body that bleeds is ever asked, so a `sparks` monster authoring an
 
 Full reference: [`../content/enemies/`](../content/enemies).
 
+### `mechanics:` — the set-piece moves
+
+An `elite` or a `boss` may carry telegraphed moves. (A `minion` may not: it is
+turned away at the top of the mechanics step, so authoring them there is dead
+weight rather than an error.) They go under `mechanics:`, and there are two
+ways in.
+
+The four **originals** are named fields — `charge`, `slam`, `enrage`, `summon`.
+They are the game's oldest vocabulary and a lot of content authors them:
+
+```yaml
+mechanics:
+  charge:
+    windupMs: 700
+    speedMult: 3.5
+    range: 160
+    cooldownMs: 6500
+```
+
+The **ability catalog** is the one to reach for now. It is a LIST, and every
+entry names a primitive from `enemyAbilities` in
+[`catalog.json`](catalog.json) — ten of them are BOSS TIER (they reshape the
+arena: a beam that sets the floor alight, shutters that grow around the hero,
+pods out of the sky) and ten are ELITE TIER (they reshape the next four
+seconds: a ring of motes, a slow underfoot, a drain that holds while you stand
+in it). Nothing checks which tier a role uses — an elite may carry a boss's
+move and frequently should not.
+
+Every entry owes `windupMs` and `cooldownMs`, plus that primitive's own fields;
+the compiler names anything missing rather than letting a half-written move
+quietly never fire. Optional on any of them: `minDifficulty` (the move appears
+only at that rung and above — this is how a top rung gets to be categorically
+harder rather than merely statier), `windupFloorMs` (a floor the top rungs
+squeeze the tell toward, never below), and `bark` (one line, spoken the FIRST
+time this mob casts it, over the fight rather than in a dialogue box).
+
+```yaml
+mechanics:
+  abilities:
+    - id: orbit_guard
+      windupMs: 580
+      cooldownMs: 10500
+      count: 5
+      radius: 32
+      angularSpeed: 2.2
+      orbRadius: 5
+      damageFrac: 0.5
+      hitIntervalMs: 680
+      durationMs: 7000
+      sprite: elite_mote
+      look: # ← what makes it YOURS
+        core: "74, 200, 118"
+        hot: "230, 255, 214"
+        deep: "8, 26, 14"
+        spark: "246, 214, 96"
+```
+
+Authored order is CAST order, so put the move you want the mob to lead with
+first.
+
+#### `look:` — why your elite does not look like ours
+
+The primitive is shared; the **colours are yours**. `look:` is the same
+four-stop kit a powerup carries — `core` (the move's own hue), `hot` (its
+bright inner light), `deep` (the dark that grounds it) and `spark` (its motes)
+— written as `"r, g, b"` triples. The renderer re-hues the shared art onto it,
+so one `orbit_guard` is a ring of survey drones on one mob and a ring of
+guttering candles on another.
+
+Omit it and the move draws in a neutral arcane blue-violet — it will work, it
+just will not look like itself yet. Author a PARTIAL kit and the compiler
+refuses it, because a kit missing a stop falls back silently and the only
+person who would ever notice is somebody who already knew what it should have
+looked like.
+
+`damageFrac` and friends are fractions of the mob's own `contactDamage`, so a
+move scales with whatever you tuned the monster to — you never restate a
+damage figure.
+
 ## `companions.yaml` — who a spared elite joins you as
 
 One file at your mod's root, a `companions:` mapping of id → companion. The KEY

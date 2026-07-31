@@ -24,6 +24,28 @@ dialogue:
 lastWords:
   - FATAL... ERROR... WHO WROTE... THIS...
 mechanics:
+  abilities:
+    - id: ward_shield
+      windupMs: 660
+      cooldownMs: 12500
+      durationMs: 7000
+      poolFrac: 0.25
+      look:
+        core: "92, 164, 236"
+        hot: "212, 236, 255"
+        deep: "10, 20, 38"
+        spark: "150, 200, 250"
+    - id: seeker_volley
+      windupMs: 680
+      cooldownMs: 8500
+      count: 3
+      spreadDeg: 24
+      range: 230
+      speed: 90
+      lifetimeMs: 2600
+      homing: 0.26
+      damageFrac: 0.5
+      sprite: elite_bolt
   slam:
     windupMs: 900
     radius: 70

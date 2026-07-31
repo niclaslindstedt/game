@@ -22,6 +22,7 @@ export function ScreenChrome({
   botDpadRef,
   tapFxRef,
   nukeFxRef,
+  eliteFxRef,
   levelUpFxRef,
   powerupAuraRef,
   fpsRef,
@@ -31,6 +32,7 @@ export function ScreenChrome({
   botDpadRef: RefObject<HTMLDivElement | null>;
   tapFxRef: RefObject<HTMLDivElement | null>;
   nukeFxRef: RefObject<HTMLDivElement | null>;
+  eliteFxRef: RefObject<HTMLDivElement | null>;
   levelUpFxRef: RefObject<HTMLDivElement | null>;
   powerupAuraRef: RefObject<HTMLDivElement | null>;
   fpsRef: RefObject<HTMLDivElement | null>;
@@ -71,6 +73,9 @@ export function ScreenChrome({
           bomb goes off. Washes over the field + HUD for one beat; pointer-events
           off so it never eats input. */}
       <div ref={nukeFxRef} className="nuke-fx-layer" aria-hidden="true" />
+      {/* THE ELITE TIER's one screen-space moment — a ward breaking. Shares the
+          nuke layer's stacking so it washes the field and not the HUD. */}
+      <div ref={eliteFxRef} className="nuke-fx-layer" aria-hidden="true" />
 
       {/* The LEVEL-UP light explosion's full-screen burst (createLevelUpFx): a
           blinding white flash, an expanding holy-gold light bloom + god-rays, a

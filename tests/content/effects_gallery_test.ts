@@ -35,6 +35,7 @@ const SHELVES = [
   "POWERS",
   "TALENTS",
   "BOSSES",
+  "ELITES",
   "WORLD",
 ];
 

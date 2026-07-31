@@ -24,6 +24,25 @@ dialogue:
   - - I DON'T ASK. I SIGN NOTHING, I SEE NOTHING. AND YOU - YOU WERE NEVER HERE.
 lastWords:
   - HHK... TELL THEM... I WAS NEVER... HERE...
+mechanics:
+  abilities:
+    - id: snare_field
+      windupMs: 620
+      cooldownMs: 9000
+      range: 190
+      radius: 44
+      durationMs: 4200
+      slowFactor: 0.62
+      look:
+        core: "86, 104, 84"
+        hot: "196, 214, 186"
+        deep: "12, 18, 12"
+        spark: "150, 176, 140"
+    - id: ward_shield
+      windupMs: 700
+      cooldownMs: 14000
+      durationMs: 6000
+      poolFrac: 0.16
 ai:
   aggroRadius: 240
   idle: work

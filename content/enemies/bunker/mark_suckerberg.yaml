@@ -27,6 +27,28 @@ dialogue:
 lastWords:
   - LOGGING OFF... ...FOR REAL THIS TIME...
 mechanics:
+  abilities:
+    - id: ward_shield
+      windupMs: 680
+      cooldownMs: 12000
+      durationMs: 7500
+      poolFrac: 0.26
+      look:
+        core: "74, 118, 216"
+        hot: "202, 224, 255"
+        deep: "10, 16, 38"
+        spark: "132, 172, 244"
+    - id: seeker_volley
+      windupMs: 680
+      cooldownMs: 8000
+      count: 4
+      spreadDeg: 30
+      range: 250
+      speed: 94
+      lifetimeMs: 2800
+      homing: 0.3
+      damageFrac: 0.52
+      sprite: elite_bolt
   summon:
     defId: vacuum_bot
     count: 3

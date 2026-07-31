@@ -375,6 +375,125 @@ function abilityProse(ability) {
       summons: a.defId,
     };
   }
+
+  // ── THE ELITE TIER ────────────────────────────────────────────────────────
+  // The same bargain as above, one branch apiece. These read shorter than the
+  // boss entries on purpose: a boss's set piece is a fight the reader came to
+  // this page to solve, while an elite's move is one of two dozen they will
+  // meet in an afternoon, and the answer to each is a sentence.
+  if (ability.id === "orbit_guard") {
+    const a = ability;
+    return {
+      title: "ORBIT GUARD",
+      text:
+        `${tell}, then ${count(a.count)} motes come up and turn around it at ${a.radius} out, for ${seconds(a.durationMs)}. ` +
+        `Anything the ring sweeps through takes ${percent(a.damageFrac)} of its contact damage, no more than once every ${seconds(a.hitIntervalMs)} however many motes pass at once. ` +
+        `The ring does not chase — it only means the last stride into contact costs something. Time the gaps, or fight it from outside. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "seeker_volley") {
+    const a = ability;
+    return {
+      title: "SEEKER VOLLEY",
+      text:
+        `${tell} — the bearing LOCKS on where you were standing — then ${count(a.count)} bolts leave in a ${Math.round(a.spreadDeg)}° fan, reaching ${a.range} at ${a.speed} a second, ` +
+        `each carrying ${percent(a.damageFrac)} of its contact damage. ` +
+        `They STEER after you, which is what makes them different from every other shot in the game: standing still does not work and neither does a sidestep. ` +
+        `They turn slowly enough to be outrun, and a wall between you and them ends it. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "ember_trail") {
+    const a = ability;
+    return {
+      title: "EMBER TRAIL",
+      text:
+        `${tell}, and then for ${seconds(a.durationMs)} it leaves burning ground behind it as it hunts — a patch every ${seconds(a.dropMs)}, ` +
+        `each ${a.radius} across, alight for ${seconds(a.patchMs)} and biting ${percent(a.damageFrac)} of its contact damage every ${seconds(a.tickMs)} you stand in it. ` +
+        `It is not aimed anywhere: it paints whatever path YOU walk it down. Kite it in circles and the room fills up; kite it in a straight line and it costs you nothing. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "shock_pulse") {
+    const a = ability;
+    return {
+      title: "SHOCK PULSE",
+      text:
+        `${tell}, then throws a ring ${a.radius} out from itself: ${percent(a.damageFrac)} of its contact damage` +
+        (a.push > 0
+          ? `, and a shove hard enough to put you back out at range. The shove is the point rather than the damage — it is answering the habit of standing on top of it and trading. `
+          : `. `) +
+        `A jump clears it, exactly like a slam. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "blink_strike") {
+    const a = ability;
+    return {
+      title: "BLINK STRIKE",
+      text:
+        `${tell} — the longest tell it has — and then it is not where it was. It arrives ${a.arriveDistance} from where you were standing WHEN THE TELL STARTED, already swinging for ${percent(a.damageFrac)} of its contact damage across ${a.strikeRadius}. ` +
+        `It will do this from as far out as ${a.range}. Because the spot is fixed at the tell rather than at the arrival, a hero who keeps moving is met by a mob swinging at empty floor. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "rally_cry") {
+    const a = ability;
+    return {
+      title: "RALLY CRY",
+      text:
+        `${tell}, and then it shouts. Everything hostile within ${a.radius} comes at you ${percent(a.speedMult - 1)} faster and hits ${percent(a.damageMult - 1)} harder for ${seconds(a.durationMs)} — ` +
+        `and wakes up, if it was not already. ` +
+        `It does nothing to you at all, which is exactly why it is dangerous: the answer is not a dodge, it is deciding to kill the one doing the shouting first. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "snare_field") {
+    const a = ability;
+    return {
+      title: "SNARE FIELD",
+      text:
+        `${tell}, then lays a field ${a.radius} across on the ground where you were standing, from as far out as ${a.range}. ` +
+        `It lies there for ${seconds(a.durationMs)} and cuts your pace to ${percent(a.slowFactor)} while you are in it. ` +
+        `It deals NO damage whatsoever — its whole strength is what else is on the field while it has hold of you. Walk out of it; a jump clears it too. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "siphon_tether") {
+    const a = ability;
+    return {
+      title: "SIPHON TETHER",
+      text:
+        `${tell}, then opens a drain onto you and holds still to drink: ${percent(a.damageFrac)} of its contact damage every ${seconds(a.tickMs)} for up to ${seconds(a.durationMs)}, ` +
+        `and it keeps ${percent(a.healFrac)} of everything it takes as health. ` +
+        `The reach is ${a.range} and the line is checked every moment it holds — step out of range or put something solid between you and it and the tether drops on the spot. ` +
+        `It cannot move while it drinks, so it is also a stationary target for as long as you let it. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "ward_shield") {
+    const a = ability;
+    return {
+      title: "WARD SHIELD",
+      text:
+        `Once it has been hurt, ${tell.charAt(0).toLowerCase() + tell.slice(1)} and raises a shell over itself worth ${percent(a.poolFrac)} of its full health. ` +
+        `The shell EATS damage until that budget is spent, and whatever overflows still lands — so a saved cooldown breaks it AND hurts, while chipping at it merely feeds it. ` +
+        `It fades on its own after ${seconds(a.durationMs)} if you leave it alone. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "quake_line") {
+    const a = ability;
+    return {
+      title: "QUAKE LINE",
+      text:
+        `${tell} — the bearing LOCKS — then the ground splits away from it along that line: ${count(a.count)} fissures, one every ${a.spacing}, ` +
+        `opening ${seconds(a.stepMs)} apart in order, each biting ${percent(a.damageFrac)} of its contact damage within ${a.radius}. ` +
+        `Nothing travels — it stays where it is and the floor does the walking. A step SIDEWAYS is the whole answer, and the further out you are the longer you have to take it. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
   return null;
 }
 

@@ -29,6 +29,7 @@ import {
   drawScorches,
   drawTethers,
 } from "./render/boss-fx.ts";
+import { drawEliteAuras } from "./render/elite-fx.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
@@ -242,6 +243,12 @@ export function drawFrame(
   // THE REPAIR TETHER — over the actors like the beam, and for the same reason:
   // it is light running between two bodies, and it has to be seen.
   drawTethers(ctx, state, sprites, camera, inView, timeMs);
+  // THE ELITE TIER's LIVE AURAS — the ring of motes turning, the shell that is
+  // up, the drain that is holding (see render/elite-fx.ts). Over the actors
+  // with the beam and the repair tether, and for the identical reason: all
+  // three are light standing about a body, and light that a body occluded
+  // would be a mechanic the player could not see coming.
+  drawEliteAuras(ctx, state, sprites, camera, inView, timeMs);
 
   drawAsteroids(ctx, state, sprites, camera, inView, timeMs);
   drawHayBalls(ctx, state, sprites, camera, inView, timeMs);

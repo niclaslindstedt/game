@@ -26,6 +26,30 @@ dialogue:
   - - THE COPY, GROWN IN A TANK ON THE RIDE HOME. THE REAL ONE'S STILL HERE. HE'S JUST AHEAD.
 lastWords:
   - TWO CHARTS... HHH... ONE STILL... BEAT...
+mechanics:
+  abilities:
+    - id: ember_trail
+      windupMs: 580
+      cooldownMs: 12000
+      radius: 24
+      durationMs: 6000
+      dropMs: 380
+      patchMs: 4200
+      damageFrac: 0.32
+      tickMs: 560
+      look:
+        core: "124, 210, 96"
+        hot: "216, 255, 190"
+        deep: "10, 28, 10"
+        spark: "170, 236, 140"
+    - id: siphon_tether
+      windupMs: 700
+      cooldownMs: 11000
+      range: 190
+      durationMs: 2600
+      damageFrac: 0.28
+      tickMs: 520
+      healFrac: 0.7
 ai:
   aggroRadius: 250
   rushSpeed: 115

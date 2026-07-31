@@ -27,6 +27,29 @@ dialogue:
 lastWords:
   - OUT FOR DELIVERY... ...RETURN TO SENDER...
 mechanics:
+  abilities:
+    - id: seeker_volley
+      windupMs: 640
+      cooldownMs: 7500
+      count: 5
+      spreadDeg: 38
+      range: 260
+      speed: 96
+      lifetimeMs: 2800
+      homing: 0.3
+      damageFrac: 0.52
+      sprite: elite_bolt
+      look:
+        core: "242, 148, 46"
+        hot: "255, 226, 176"
+        deep: "36, 22, 6"
+        spark: "252, 190, 112"
+    - id: shock_pulse
+      windupMs: 520
+      cooldownMs: 8500
+      radius: 60
+      damageFrac: 0.7
+      push: 220
   enrage:
     belowHpFrac: 0.5
     speedMult: 1.4

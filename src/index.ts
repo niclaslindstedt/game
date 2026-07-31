@@ -545,6 +545,17 @@ export {
 // the app reads the active set to draw windup tells and danger circles.
 export { activeMechanics } from "./game/mechanics/index.ts";
 export type { EnemyMechanics, EnemyPhase } from "./game/defs/enemies/types.ts";
+// THE ELITE TIER's two shared readings. `orbitMotePositions` is exported so the
+// renderer draws the ring from the SAME arithmetic that bites with it — a ring
+// whose drawn motes sat anywhere but where the biting ones are would have the
+// player dodging a picture. `wardUp` is the question ("is the shell up?")
+// without the bookkeeping, asked by the renderer and the bot alike.
+export { orbitMotePositions } from "./game/mechanics/orbit-guard.ts";
+export { wardUp } from "./game/mechanics/ward-pool.ts";
+export type {
+  BossAbility,
+  BossAbilityId,
+} from "./game/defs/enemies/abilities.ts";
 
 // Automatic per-level base-attribute growth (the WoW-style ding gains): the
 // derived bonuses the app can read to break "base + chosen" apart, and the

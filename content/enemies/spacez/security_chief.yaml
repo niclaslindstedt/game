@@ -24,6 +24,25 @@ dialogue:
 lastWords:
   - UGH... PAD 2... SHE'S ON... PAD... 2...
 mechanics:
+  abilities:
+    - id: rally_cry
+      windupMs: 700
+      cooldownMs: 13000
+      radius: 200
+      durationMs: 6000
+      speedMult: 1.25
+      damageMult: 1.2
+      look:
+        core: "240, 176, 60"
+        hot: "255, 236, 180"
+        deep: "36, 20, 6"
+        spark: "255, 206, 120"
+    - id: shock_pulse
+      windupMs: 520
+      cooldownMs: 8500
+      radius: 54
+      damageFrac: 0.65
+      push: 200
   charge:
     windupMs: 700
     speedMult: 3.5

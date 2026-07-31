@@ -23,6 +23,31 @@ dialogue:
   - - THE FEMBOTS. COMPANION UNITS. THEY SMILE. THEY LISTEN. THEY UPLOAD EVERY WORD TO ME.
 lastWords:
   - 404... ...NOT... FOUND...
+mechanics:
+  abilities:
+    - id: seeker_volley
+      windupMs: 640
+      cooldownMs: 7500
+      count: 4
+      spreadDeg: 34
+      range: 250
+      speed: 92
+      lifetimeMs: 2800
+      homing: 0.32
+      damageFrac: 0.5
+      sprite: elite_bolt
+      look:
+        core: "236, 96, 84"
+        hot: "255, 208, 150"
+        deep: "34, 12, 10"
+        spark: "250, 168, 96"
+    - id: snare_field
+      windupMs: 600
+      cooldownMs: 9500
+      range: 190
+      radius: 44
+      durationMs: 4000
+      slowFactor: 0.64
 ai:
   aggroRadius: 250
   rushSpeed: 120

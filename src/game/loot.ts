@@ -98,6 +98,7 @@ import type {
   WeaponClass,
 } from "./types/index.ts";
 import { inert } from "./disposition.ts";
+import { spendWard } from "./mechanics/ward-pool.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
  * clamps at zero so an over-counted line (tests exhaust budgets by maxing
@@ -565,7 +566,7 @@ export function hitEnemy(
   // same blow whether that body is fresh or already half spent — so its picture
   // must not quietly shrink to a plain corpse just because the hero shot it
   // first. `hpBefore` below still reports honestly what it had to get through.
-  const damage =
+  const dealt =
     opts?.executeBars !== undefined
       ? Math.round(enemy.maxHp * opts.executeBars)
       : Math.round(
@@ -573,6 +574,26 @@ export function hitEnemy(
             (crit ? (opts?.critMult ?? STATS.spellCritMult) : 1) *
             mobArmorMult(enemy.mlvl, state.difficulty, weaponClass, gearPen),
         );
+  // THE WARD eats first (`ward_shield`, mechanics/ward-pool.ts). An EXECUTION
+  // passes it by, exactly as it passes armor and the crit roll by — a shell is
+  // something a blow has to get through, and an execution is not a blow.
+  // Whatever overflows the shell still lands, so a saved burst breaks it AND
+  // hurts; the break is announced because a shell that went quietly is one the
+  // player never learns to break.
+  const ward =
+    opts?.executeBars !== undefined
+      ? { damage: dealt, broke: false }
+      : spendWard(enemy, dealt);
+  const damage = ward.damage;
+  if (ward.broke) {
+    state.events.push({
+      type: "eliteCast",
+      kind: "ward_shield",
+      phase: "end",
+      pos: { ...enemy.pos },
+      defId: enemy.defId,
+    });
+  }
   // The health this blow actually had to get through, captured before it is
   // spent: `damage - hpBefore` is the OVERKILL the app cuts and bursts bodies
   // off (see `enemyKilled.hpBefore`). Read it here or not at all — a step later

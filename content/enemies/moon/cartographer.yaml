@@ -27,6 +27,31 @@ dialogue:
   - - YOU DON'T, FRIEND. EVERYTHING GOES BELOW. NOTHING COMES BACK UP. NOBODY MAPS BELOW.
 lastWords:
   - SHE WENT... STRAIGHT... ...DOWN... OFF MY MAP...
+mechanics:
+  abilities:
+    - id: blink_strike
+      windupMs: 780
+      cooldownMs: 9500
+      range: 260
+      arriveDistance: 28
+      strikeRadius: 32
+      damageFrac: 0.75
+      look:
+        core: "214, 178, 116"
+        hot: "252, 236, 206"
+        deep: "34, 26, 14"
+        spark: "236, 210, 164"
+    - id: seeker_volley
+      windupMs: 660
+      cooldownMs: 9000
+      count: 2
+      spreadDeg: 20
+      range: 220
+      speed: 84
+      lifetimeMs: 2600
+      homing: 0.25
+      damageFrac: 0.5
+      sprite: elite_bolt
 ai:
   aggroRadius: 250
   rushSpeed: 125

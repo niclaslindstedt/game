@@ -43,7 +43,7 @@ import { synth } from "../audio.ts";
 import { LoadingScreen } from "../LoadingScreen.tsx";
 import { playUiSound } from "../sfx/ui.ts";
 import { effectsCatalog, searchExhibits } from "./effects-catalog.ts";
-import type { Exhibit } from "./exhibit-kit.ts";
+import { pinEliteCaster, type Exhibit } from "./exhibit-kit.ts";
 import {
   EXHIBIT_SPEEDS,
   runExhibit,
@@ -131,6 +131,7 @@ function GallerySearch({
 
 export function EffectsGallery({
   initialId,
+  caster,
   initialSpeed,
   onClose,
 }: {
@@ -140,6 +141,14 @@ export function EffectsGallery({
   /** Open at this playback speed (the `?speed=` deep-link param) — what the
    * contact-sheet script sets so a whole catalog can be shot in slow motion. */
   initialSpeed?: number;
+  /**
+   * Restage the ELITE exhibits in this mob's own authored colours (the
+   * `?caster=<enemy id>` deep-link param, driven by
+   * scripts/elite-abilities.mjs). The elite tier's whole claim is that one
+   * shared primitive reads as a different move in a different mob's hands, and
+   * this is what lets that be judged side by side instead of one at a time.
+   */
+  caster?: string;
   /** Leave the gallery (the BACK button and ESC). */
   onClose: () => void;
 }) {
@@ -283,6 +292,10 @@ export function EffectsGallery({
     if (!canvas || !exhibit || !assets) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // Pinned BEFORE the run is staged, because an exhibit's `fire` reads the
+    // caster's kit as it builds the event. Cleared by `runExhibit`'s own
+    // teardown, beside the cleave pin.
+    pinEliteCaster(caster);
     const run = runExhibit({
       exhibit,
       canvas,
@@ -301,7 +314,7 @@ export function EffectsGallery({
     // live run (below) instead of tearing the diorama down and re-staging it,
     // so slowing an effect down mid-show keeps the show.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exhibit, assets]);
+  }, [exhibit, assets, caster]);
 
   useEffect(() => {
     runRef.current?.setSpeed(speed);
