@@ -199,7 +199,7 @@ export const SANDSTORMS = {
 } as const;
 
 /**
- * Employee stampedes — the "asteroid" beat of SpaceZ HQ (a level turns them on
+ * Employee stampedes — the "asteroid" beat of GOODCO HQ (a level turns them on
  * with LevelDef.stampedes). Every `everyMs` a HERD of `runnerCount` panicked
  * staffers mints just past the RIGHT screen edge in a vertical wall and
  * charges straight to the LEFT at a steady, heavy pace, a churning dust cloud

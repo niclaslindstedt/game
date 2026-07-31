@@ -9,7 +9,7 @@
 //
 //   node scripts/aoe-calibration.mjs                       # default sweep
 //   node scripts/aoe-calibration.mjs --degs 40,90,120,180  # custom angles
-//   node scripts/aoe-calibration.mjs --levels spacez_hq,moon --difficulty medium
+//   node scripts/aoe-calibration.mjs --levels goodco_hq,moon --difficulty medium
 //   node scripts/aoe-calibration.mjs --minutes 4 --seeds 1,2,3,4
 //   node scripts/aoe-calibration.mjs --json out.json
 //

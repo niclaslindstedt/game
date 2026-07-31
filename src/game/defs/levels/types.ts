@@ -86,7 +86,7 @@ export type SpawnSpec =
       hp?: DifficultyHp;
       /**
        * PATROL ROUTE (WoW-style): waypoints this mob WALKS while dormant —
-       * the roaming OPTIMUSK unit sweeping a build bay, the manager pacing
+       * the roaming SUCCESSOR unit sweeping a build bay, the manager pacing
        * his floor. The route is `at → patrol[0] → … → last`, walked back and
        * forth (ping-pong) at `ENEMY_AI.patrol.speedFactor` of its speed;
        * author every leg through open floor (the walker follows straight
@@ -331,7 +331,7 @@ export type LevelDef = {
   tiles: TileSpec;
   /**
    * Whether the hero already wears the EVA suit when the level opens. The
-   * story starts him in plain clothes at SpaceZ HQ (`false`) — he only
+   * story starts him in plain clothes at GOODCO HQ (`false`) — he only
    * becomes the astronaut once he loots the space suit — the space levels
    * pick up mid-mission with the suit on, and a habitable venue (Eastworld's
    * theme park) stows it again. Omitted = suited.
@@ -719,7 +719,7 @@ export type LevelDef = {
    * hero it catches takes a difficulty-scaled bite of his max hp
    * (DifficultyDef.stampedeDamageFrac) AND a knockdown (prone for
    * STAMPEDES.knockdownMs). Jumping sails clean over it,
-   * and stepping out of the lane clears it. SpaceZ HQ's "asteroid" beat.
+   * and stepping out of the lane clears it. GOODCO HQ's "asteroid" beat.
    * `struckThought` (a THOUGHT_DEFS id) fires a one-time inner monologue the
    * first time a herd downs the hero this run, tracked in the same
    * `thoughtsSeen` ledger.

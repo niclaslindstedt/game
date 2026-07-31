@@ -615,7 +615,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 1600,
   },
 
-  // ── The TWO POWERS EACH MAP INTRODUCES past SPACEZ HQ's classics (see
+  // ── The TWO POWERS EACH MAP INTRODUCES past GOODCO HQ's classics (see
   // content/powerups.yaml). Every one of them stages itself the same way the
   // classics do — `runAbilities` starts it ALREADY RUNNING — so what the shelf
   // shows is the live power ticking, not a mock-up of it. Each is staged over
@@ -627,7 +627,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "ION WAKE",
     blurb: "BURNING ENGINE WASH LAID BEHIND A HERO WHO KEEPS MOVING",
     group: "POWERS",
-    keywords: ["powerup", "trail", "fire", "wake", "thruster", "spacez"],
+    keywords: ["powerup", "trail", "fire", "wake", "thruster", "goodco"],
     stage: { runAbilities: ["ion_wake"], spawns: horde(12, 40, 120) },
     // The one power that is ABOUT movement: the hero laps the diorama so the
     // wake has somewhere to be laid (a standing hero would show one pool).
@@ -640,7 +640,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "BLAST SHIELD",
     blurb: "THE PLATED SHELL, AND THE BLUE CRACK WHEN ITS POOL RUNS OUT",
     group: "POWERS",
-    keywords: ["powerup", "barrier", "shield", "absorb", "shatter", "spacez"],
+    keywords: ["powerup", "barrier", "shield", "absorb", "shatter", "goodco"],
     stage: { runAbilities: ["blast_shield"], spawns: horde(8, 46, 120) },
     showMs: 1800,
     // The shell holds for the first beat of the show, then the pool is spent —
@@ -814,11 +814,11 @@ const FIELD_EXHIBITS: Exhibit[] = [
       "rite",
       "finisher",
       "cleave",
-      "mosque",
+      "founder",
       "blood",
     ],
     levelId: "eastworld",
-    stage: { spawns: horde(1, 34, 34, "elon_mosque_eastworld") },
+    stage: { spawns: horde(1, 34, 34, "the_founder_eastworld") },
     showMs: 5200,
     fire: (ctx) => ctx.fell(),
   },
@@ -848,9 +848,9 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "THE OVERRIDE",
     blurb: "A MACHINE COMES APART AS A MACHINE - THE CORE TAKEN OUT WHOLE",
     group: "BOSSES",
-    keywords: ["boss", "death", "rite", "finisher", "gib", "doge", "sparks"],
-    levelId: "spacez_hq",
-    stage: { spawns: horde(1, 34, 34, "doge_1") },
+    keywords: ["boss", "death", "rite", "finisher", "gib", "payload", "sparks"],
+    levelId: "goodco_hq",
+    stage: { spawns: horde(1, 34, 34, "payload_1") },
     showMs: 5200,
     fire: (ctx) => ctx.fell(),
   },
@@ -866,13 +866,13 @@ const FIELD_EXHIBITS: Exhibit[] = [
       "rite",
       "flee",
       "flight",
-      "mosque",
+      "founder",
       "rift",
       "twirl",
       "escape",
     ],
     levelId: "mars",
-    stage: { spawns: horde(1, 34, 34, "elon_mosque") },
+    stage: { spawns: horde(1, 34, 34, "the_founder") },
     showMs: 5000,
     fire: (ctx) => ctx.fell(),
   },
@@ -1025,9 +1025,9 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "COIN CANNON",
     blurb: "A FAN OF COINS THAT COME OFF THE WALLS INSTEAD OF DYING ON THEM",
     group: "BOSSES",
-    keywords: ["boss", "coin", "doge", "ricochet", "bounce", "fan", "volley"],
-    levelId: "spacez_hq",
-    // Unfrozen and put in front of the real DOGE-1, for the same reason the
+    keywords: ["boss", "coin", "payload", "ricochet", "bounce", "fan", "volley"],
+    levelId: "goodco_hq",
+    // Unfrozen and put in front of the real PAYLOAD-1, for the same reason the
     // beam exhibit is: the ricochet only means anything against the level's
     // OWN walls, and a staged copy in open floor would show a straight line.
     stage: { freeze: false, place: "boss" },
@@ -1040,8 +1040,8 @@ const FIELD_EXHIBITS: Exhibit[] = [
     blurb:
       "COINS ON THE FLOOR THAT LOOK EXACTLY LIKE LOOT, BECAUSE THAT IS THE POINT",
     group: "BOSSES",
-    keywords: ["boss", "bait", "coin", "trap", "mine", "doge", "loot"],
-    levelId: "spacez_hq",
+    keywords: ["boss", "bait", "coin", "trap", "mine", "payload", "loot"],
+    levelId: "goodco_hq",
     stage: {},
     showMs: 3600,
     fire: (ctx) => {
@@ -1064,7 +1064,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
           triggerRadius: 20,
           blastRadius: 52,
           damage: 0,
-          defId: "doge_1",
+          defId: "payload_1",
           seed: i * 41,
         });
       }
@@ -1080,7 +1080,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       "boss",
       "airstrike",
       "pod",
-      "mosque",
+      "founder",
       "drop",
       "strike",
       "meteor",
@@ -1109,7 +1109,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
           spin: 0,
           sprite: "drop_pod",
           damage: 0,
-          sourceDefId: "elon_mosque",
+          sourceDefId: "the_founder",
           hatch: { defId: "servo_bot", count: 1 },
         });
       }
@@ -1117,7 +1117,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
         type: "bossAirstrike",
         pos: heroPos(ctx.state),
         count: 3,
-        defId: "elon_mosque",
+        defId: "the_founder",
       });
     },
   },
@@ -1133,7 +1133,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       "horde",
       "stampede",
       "incel",
-      "mosque",
+      "founder",
       "charge",
       "lane",
     ],
@@ -1144,7 +1144,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       ctx.emit({
         type: "bossHorde",
         pos: heroPos(ctx.state),
-        defId: "elon_mosque",
+        defId: "the_founder",
       });
       // The herd itself comes from the engine's own hazard, so what plays is
       // the real approach dust, the real wall and the real trample.
@@ -1154,11 +1154,11 @@ const FIELD_EXHIBITS: Exhibit[] = [
 
   {
     id: "boss-recompile",
-    icon: "zai_repair_node_1",
+    icon: "bro_repair_node_1",
     label: "RECOMPILE",
     blurb: "THE BAR CLIMBING, AND THE THING IN THE ROOM IT IS CLIMBING FROM",
     group: "BOSSES",
-    keywords: ["boss", "heal", "node", "tether", "zai", "repair", "recompile"],
+    keywords: ["boss", "heal", "node", "tether", "bro", "repair", "recompile"],
     levelId: "eastworld",
     // Put the camera on the level's OWN supercore and raise the node beside it:
     // a tether is a link between two things, so an exhibit that framed only one
@@ -1167,7 +1167,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       place: "boss",
       spawns: [
         {
-          enemy: "zai_repair_node",
+          enemy: "bro_repair_node",
           count: 1,
           minDistance: 60,
           maxDistance: 70,
@@ -1179,8 +1179,8 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // The tether is drawn from live state, so the exhibit stages the actual
       // link: a wounded boss and a node, tied together the way the ability
       // ties them. What plays is the real renderer, not a mock-up of it.
-      const node = ctx.mobs.find((m) => m.defId === "zai_repair_node");
-      const boss = ctx.state.enemies.find((e) => e.defId === "zai_supercore");
+      const node = ctx.mobs.find((m) => m.defId === "bro_repair_node");
+      const boss = ctx.state.enemies.find((e) => e.defId === "bro_supercore");
       if (node && boss) {
         boss.hp = boss.maxHp * 0.4;
         (boss.mech ??= {}).nodeId = node.id;
@@ -1189,8 +1189,8 @@ const FIELD_EXHIBITS: Exhibit[] = [
         type: "bossRecompile",
         pos: boss ? { ...boss.pos } : heroPos(ctx.state),
         nodePos: node ? { ...node.pos } : heroPos(ctx.state),
-        defId: "zai_supercore",
-        nodeDefId: "zai_repair_node",
+        defId: "bro_supercore",
+        nodeDefId: "bro_repair_node",
       });
     },
   },
@@ -1316,7 +1316,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     stage: {
       spawns: [
         {
-          enemy: "jeff_baywatch",
+          enemy: "the_fulfiller",
           count: 1,
           minDistance: 120,
           maxDistance: 140,
@@ -1325,13 +1325,13 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
     showMs: 3200,
     fire: (ctx) => {
-      const mob = ctx.mobs.find((m) => m.defId === "jeff_baywatch");
+      const mob = ctx.mobs.find((m) => m.defId === "the_fulfiller");
       const from = mob ? { ...mob.pos } : heroPos(ctx.state);
       ctx.emit({
         type: "eliteCast",
         kind: "seeker_volley",
         pos: from,
-        defId: "jeff_baywatch",
+        defId: "the_fulfiller",
         angle: Math.atan2(
           ctx.state.player.pos.y - from.y,
           ctx.state.player.pos.x - from.x,
@@ -1551,7 +1551,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
   },
   {
     id: "elite-ward-shield",
-    icon: "mark_suckerberg_1",
+    icon: "the_moderator_1",
     label: "WARD SHIELD",
     blurb: "A BUDGET, NOT A TIMER — SPEND EVERYTHING NOW",
     group: "ELITES",
@@ -1561,14 +1561,14 @@ const FIELD_EXHIBITS: Exhibit[] = [
       "shield",
       "shell",
       "barrier",
-      "suckerberg",
+      "moderator",
       "bunker",
     ],
     levelId: "the_bunker",
     stage: {
       spawns: [
         {
-          enemy: "mark_suckerberg",
+          enemy: "the_moderator",
           count: 1,
           minDistance: 56,
           maxDistance: 66,
@@ -1577,7 +1577,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
     showMs: 4200,
     fire: (ctx) => {
-      const mob = ctx.mobs.find((m) => m.defId === "mark_suckerberg");
+      const mob = ctx.mobs.find((m) => m.defId === "the_moderator");
       if (mob) {
         const mech = (mob.mech ??= {});
         mob.hp = mob.maxHp * 0.7;
@@ -1588,7 +1588,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
         type: "eliteCast",
         kind: "ward_shield",
         pos: mob ? { ...mob.pos } : heroPos(ctx.state),
-        defId: "mark_suckerberg",
+        defId: "the_moderator",
         ms: 4200,
       });
     },

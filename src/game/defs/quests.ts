@@ -17,7 +17,7 @@
 // chain link (`requires`), a reward and a tracker row all need to name one.
 //
 // THE REWARD'S XP IS A SHARE OF THE HERO'S OWN BAR, NEVER A NUMBER. A flat
-// figure authored against SpaceZ HQ is a rounding error by Eastworld and an
+// figure authored against GOODCO HQ is a rounding error by Eastworld and an
 // instant ding on JESUS, so `xpShare: 0.25` means "a quarter of the level you
 // are on" and prices itself correctly at every rung of the campaign for free
 // (see `questXpReward`). Coins are flat — the purse is a flat economy — and

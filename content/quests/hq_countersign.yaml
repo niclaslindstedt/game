@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-level: spacez_hq
+level: goodco_hq
 giver: hq_unit7
 order: 1
 name: COUNTERSIGNATURE
@@ -18,7 +18,7 @@ complete:
   - - I WAS ISSUED A TOOLKIT IN 2019. IT IS YOURS.
 objectives:
   - kind: kill
-    enemy: optimusk
+    enemy: successor
     count: 6
 reward:
   xpShare: 0.4

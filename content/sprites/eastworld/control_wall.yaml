@@ -11,7 +11,7 @@ subject:
   build: "a square riveted steel wall panel seen top-down"
   features: "a lit top bevel, a dark base shadow, a small status pip"
   accent: "a single mint pip on cold steel"
-  flavor: "the sealed shell of the ZAI control room"
+  flavor: "the sealed shell of the TRUST ME BRO control room"
 palette:
   O: "#1a1c2c" # outline
   A: "#59617a" # wall panel

@@ -11,7 +11,7 @@ Two lessons from making the bot finish JESUS boss fights (#580):
   applied the awake-boss lock, the open elite pool, and the skip-the-farm read
   to any big level gap (gap ≥ 8), which re-created exactly what the parity
   gate prevents on authored rungs: under-leveled forced boss holds and
-  cross-map elite marches (measured: nightmare spacez/rift runs cancelled, a
+  cross-map elite marches (measured: nightmare goodco/rift runs cancelled, a
   6-death moon). The gap heuristic also misfires on the engine fixtures
   (fixture bosses sit ~19 levels over a L1 hero BY DESIGN — that's the
   leveling window, not a deadlock). Hopelessness is a property of the RUNG,

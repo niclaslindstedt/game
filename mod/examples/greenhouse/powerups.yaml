@@ -35,7 +35,7 @@ powerups:
     durationMs: 11000
     stackable: true
     icon: icon_ion_wake
-    # Sickly bioluminescent green: the vault's own light, not SpaceZ's.
+    # Sickly bioluminescent green: the vault's own light, not GOODCO's.
     look:
       core: "126, 220, 118"
       hot: "226, 255, 206"

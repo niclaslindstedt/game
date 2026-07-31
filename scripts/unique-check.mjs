@@ -79,7 +79,7 @@ await applyMods(mods);
 const strict = argv.includes("--strict");
 
 // Set pieces sit in the weapon+armor Latin square; bags/charms ride along as
-// the rung's trinket (MUSKRAT's bag, GROK's trinket).
+// the rung's trinket (PROTOTYPE's bag, TRUST ME BRO's trinket).
 const SET_SLOTS = ["weapon", "head", "chest", "legs", "feet"];
 const TRINKET_SLOTS = ["bag", "trinket", "amulet", "ring"];
 
@@ -374,7 +374,7 @@ for (const def of Object.values(LEVELS)) {
 }
 
 // Merchant-stall placements: uniques a level's trader SELLS instead of any
-// mob dropping them (`LevelDef.merchant.stockUniques` — Eastworld's PUTAIN
+// mob dropping them (`LevelDef.merchant.stockUniques` — Eastworld's THE STRONGMAN
 // estate). The third home kind; still exactly one home per unique.
 const stallPlacements = [];
 for (const def of Object.values(LEVELS)) {

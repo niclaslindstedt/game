@@ -100,7 +100,7 @@ function titleSize(title) {
  * The largest listed size at which the subtitle fits on ONE line.
  *
  * One line, not two: the subtitle is a label ("LEGENDARY · LEVEL 16", "BOSS ·
- * SPACEZ HQ"), and a label that folds reads as a sentence that ran out of room.
+ * GOODCO HQ"), and a label that folds reads as a sentence that ran out of room.
  * So the size gives way instead — a long one sits smaller rather than wrapping.
  */
 function subtitleSize(subtitle) {

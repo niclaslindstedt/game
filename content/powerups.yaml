@@ -10,7 +10,7 @@
 # what came before, so the dock's vocabulary grows the whole way down and each
 # new venue is announced by two powers that could only have come from THERE:
 #
-#   SPACEZ HQ   the classics + ION WAKE, BLAST SHIELD,
+#   GOODCO HQ   the classics + ION WAKE, BLAST SHIELD,
 #               OVERPRESSURE                                 (the launch pad)
 #   THE MOON    MOONFALL, PALE SHROUD                        (rock and ghosts)
 #   MARS        DUST DEVIL, REACTOR SURGE                    (the red colony)
@@ -64,7 +64,7 @@
 # picked is a content bug, not a tuning number — drop it from the pool instead.
 
 powerups:
-  # ── THE CLASSICS (SPACEZ HQ) ──────────────────────────────────────────────
+  # ── THE CLASSICS (GOODCO HQ) ──────────────────────────────────────────────
   fire_orbs:
     name: FIRE ORBS
     lore: >-
@@ -167,7 +167,7 @@ powerups:
       radiusPerInt: 8
       pullSpeed: 200
 
-  # ── SPACEZ HQ: the assembly floor's own two ───────────────────────────────
+  # ── GOODCO HQ: the assembly floor's own two ───────────────────────────────
   ion_wake:
     name: ION WAKE
     lore: >-

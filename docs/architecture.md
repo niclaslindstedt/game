@@ -278,7 +278,7 @@ escort.ts` walks the people an escort errand puts on the field, and
     own GORE FAMILY and so is already right for a body, a machine, a haunting
     and a rift-thing alike.
   - **A FLIGHT rite is the same machinery pointed the other way.** A boss with
-    `flees:` (ELON MOSQUE, twice) does not die: it reels, tears its exit open a
+    `flees:` (THE FOUNDER, twice) does not die: it reels, tears its exit open a
     few strides off — the landmark appears as the RUN starts, so the player
     watches him decide rather than being told where he is going — bolts for it
     with its back to the hero, and is spun out of existence at the mouth. It
@@ -400,7 +400,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   gitignored + regenerated, with a snapshot test pinning the compile. The
   campaign introduces **two new powers per map** and every map's pool keeps
   what came before, so the dock's vocabulary grows the whole way down: the
-  classics at SPACEZ HQ (orbiting fire orbs, storm strikes, stasis slow fields,
+  classics at GOODCO HQ (orbiting fire orbs, storm strikes, stasis slow fields,
   the item magnet whose pull radius grows with INTELLIGENCE — and which only
   reels in gear the hero can actually keep, leaving loot a full bag has no room
   for where it lies), then ION WAKE and BLAST SHIELD, MOONFALL and PALE SHROUD
@@ -1131,7 +1131,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   synthesized 16-bit-palette sounds, organized by domain: `ui.ts`,
   `combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts` behind `index.ts`),
   `music/` (one score file per track — `title.ts`, `level.ts`,
-  `spacez.ts` — each holding all instruments + notes as tracker-style
+  `goodco.ts` — each holding all instruments + notes as tracker-style
   pattern data, arranged to loop at ~2 minutes; `index.ts` owns the single
   player and a `LEVEL_TRACKS` registry, so a level's `music` id selects its
   theme and `playLevelMusic(trackId)` switches cleanly between levels),
@@ -1483,7 +1483,7 @@ compiled from. Nine sections, ~560 pages, plus the landing page that leads them:
   the same — WHO ends a venue is the biggest spoiler the site holds. Where a
   monster's name travels without its venue around it — a flat rack, a `<title>`,
   a drop line naming who hands an item over — it carries the qualifier that
-  tells it from its namesakes (`nameApart`), because ELON MOSQUE is three
+  tells it from its namesakes (`nameApart`), because THE FOUNDER is three
   different bosses on three different maps;
 - the **allies** — an index and a page per COMPANION, the one section whose
   subject is on the hero's side: how each is recruited (beat a named elite down

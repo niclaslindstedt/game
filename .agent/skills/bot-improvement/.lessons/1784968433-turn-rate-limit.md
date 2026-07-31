@@ -6,7 +6,7 @@ date: 2026-07-25
 Killing the autopilot's left/right/up/down jitter (`limitTurnRate` in
 `src/game/bot/nav.ts`: choosing a direction starts a `turnCooldownMs` clock and
 an about-face has to wait it out, standing still meanwhile) has two traps, both
-measured on `spacez_hq` easy, seeds 1–5:
+measured on `goodco_hq` easy, seeds 1–5:
 
 - **Hold back too WIDE a band and survival craters.** Gating every swing past
   120° cost deaths 8 → 16 and dmgIn/min 202 → 255 vs baseline: a genuine

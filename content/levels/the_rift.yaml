@@ -1,6 +1,6 @@
 description: |
   LEVEL 4 - THE RIFT. A hallucinatory void between universes, walked LEFT to
-  RIGHT toward the far door MOSQUE fled through. There is no floor and no north:
+  RIGHT toward the far door THE FOUNDER fled through. There is no floor and no north:
   the road is defined by the BLACK HOLES strewn across it - a gauntlet of gravity
   wells FLANKING the winding corridor the hero threads, denser and hungrier the
   deeper he goes. The feel is DREAD and DISORIENTATION on a rising tide - the
@@ -10,8 +10,8 @@ description: |
   HOUDINI and TESLA early, LUCKY on a southern dare, THE KING beside a black hole
   (his own tutorial), EARHART on Ada's trail, RASPUTIN the doorman barring the
   deep end. An EYE of calm (the merchant) sits just off the mid-road; a
-  black-hole-guarded EDDY in the SE hides a chest. GROK OMEGA guards the deep end
-  and spills the reveal; ELON MOSQUE flees a second time at the far door. A travel
+  black-hole-guarded EDDY in the SE hides a chest. BRO OMEGA guards the deep end
+  and spills the reveal; THE FOUNDER flees a second time at the far door. A travel
   gate to the secret bunker opens here.
 campaign: true
 id: the_rift
@@ -67,7 +67,7 @@ landmarks:
 # THE INTENDED ROUTE - a left-to-right serpentine that WEAVES up and down the
 # void (no north, so the road disorients), threading the corridors BETWEEN the
 # flanking black holes. It passes the ghosts in walking order, dips up to the EYE
-# (merchant), and closes on RASPUTIN's gate, GROK's arena, and the far door.
+# (merchant), and closes on RASPUTIN's gate, BRO OMEGA's arena, and the far door.
 path:
   - x: 300
     y: 800
@@ -105,7 +105,7 @@ gates:
 # BLACK HOLES STREWN ACROSS THE ROAD - the void's real geometry, FLANKING the
 # winding corridor (never sitting ON it: a core devours on contact, so the safe
 # path threads BETWEEN the holes). They alternate north/south along the road and
-# grow DENSER and HUNGRIER (bigger pull) toward the deep end - one flanks GROK's
+# grow DENSER and HUNGRIER (bigger pull) toward the deep end - one flanks BRO OMEGA's
 # arena and one guards the SE chest EDDY, a dare the greedy dash past.
 wells:
   # --- early: small, sparse, flanking the mouth of the road ---
@@ -140,7 +140,7 @@ wells:
       x: 2380
       y: 1150
     pullRadius: 160
-  # Flanks GROK's arena from the north - the deep end's hungriest hole.
+  # Flanks BRO OMEGA's arena from the north - the deep end's hungriest hole.
   - pos:
       x: 2650
       y: 560
@@ -199,7 +199,7 @@ spawns:
     hp: 300
   # THE KING (apparition) - stands beside a black hole and teaches it: "keep
   # your blue suedes off the event horizon". His tutorial well looms just north.
-  - enemy: the_king
+  - enemy: the_residency
     at:
       x: 1380
       y: 700
@@ -221,13 +221,13 @@ spawns:
     ramp: endgame
     hp: 360
   # THE DEEP END - the reveal, then the second escape.
-  - enemy: grok_omega
+  - enemy: bro_omega
     at:
       x: 2470
       y: 780
     ramp: apex
     hp: 850
-  - enemy: elon_mosque_rift
+  - enemy: the_founder_rift
     at:
       x: 2860
       y: 800
@@ -325,7 +325,7 @@ spawners:
         count: 18
       - enemy: graviton
         count: 8
-  # The last knot sits ~300px SHORT of GROK so his arena stays a duel: clear this
+  # The last knot sits ~300px SHORT of BRO OMEGA so his arena stays a duel: clear this
   # then close on the boss with room to trade blows.
   - id: p7
     at: { x: 2320, y: 1000 }
@@ -481,11 +481,11 @@ placedItems:
     pos:
       x: 1820
       y: 580
-  # THE ZAI PROBE on the boss approach - the machine-mind reveal made physical,
+  # THE TRUST ME BRO AI PROBE on the boss approach - the machine-mind reveal made physical,
   # caught in the pull of the north-flank black hole (2100,400): the paper trail
   # snagged on an event horizon, a dash-past-the-hole grab.
   - kind: story
-    defId: zai_probe
+    defId: bro_probe
     pos:
       x: 2100
       y: 490

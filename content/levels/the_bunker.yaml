@@ -17,7 +17,7 @@ description: |
   3. THE SUITES WING (x 1400-3300) - the heart and the farm: six marble suites
      off a central boulevard, three north and three south, each resident ringed
      by his personal bodyguards. Con ramps up west-to-east, the two toughest
-     residents (JEFF BAYWATCH, DONALD DUMP) in the easternmost suites just before
+     residents (THE FULFILLER, THE DEVELOPER) in the easternmost suites just before
      the vault. Build-and-release; the ZEROED LEDGER is found mid-wing.
   4. THE TREASURY / VAULT (x 3300-4200) - the CLIMAX: THE VAULT WARDEN, the
      machine's head warden bolted to the treasury door, deploys a sentry-gun
@@ -176,33 +176,33 @@ spawns:
     ramp: fierce
     hp: 150
   # ---- THE SUITES WING: six residents, con ramping west-to-east ----
-  # North suite 1 (west) - MARK SUCKERBERG
-  - enemy: mark_suckerberg
+  # North suite 1 (west) - THE MODERATOR
+  - enemy: the_moderator
     at:
       x: 1720
       y: 400
     ramp: savage
     hp: 1700
-  - enemy: guard_meta
+  - enemy: guard_feed
     at:
       x: 1650
       y: 390
     ramp: savage
     hp: 380
-  - enemy: guard_meta
+  - enemy: guard_feed
     at:
       x: 1790
       y: 345
     ramp: savage
     hp: 380
-  - enemy: guard_meta
+  - enemy: guard_feed
     at:
       x: 1720
       y: 475
     ramp: savage
     hp: 380
-  # South suite 1 (west) - SAM HALTMAN
-  - enemy: sam_haltman
+  # South suite 1 (west) - THE SAFETY OFFICER
+  - enemy: the_safety_officer
     at:
       x: 1720
       y: 1300
@@ -226,8 +226,8 @@ spawns:
       y: 1375
     ramp: savage
     hp: 380
-  # North suite 2 (mid) - VLADIMIR PUTAIN
-  - enemy: putain_clone
+  # North suite 2 (mid) - THE STRONGMAN
+  - enemy: strongman_clone
     at:
       x: 2340
       y: 400
@@ -251,58 +251,58 @@ spawns:
       y: 475
     ramp: savage
     hp: 380
-  # South suite 2 (mid) - LARRY ALLISON
-  - enemy: larry_allison
+  # South suite 2 (mid) - THE SYSADMIN
+  - enemy: the_sysadmin
     at:
       x: 2340
       y: 1300
     ramp: savage
     hp: 1800
-  - enemy: guard_oracle
+  - enemy: guard_ledger
     at:
       x: 2270
       y: 1290
     ramp: savage
     hp: 380
-  - enemy: guard_oracle
+  - enemy: guard_ledger
     at:
       x: 2410
       y: 1245
     ramp: savage
     hp: 380
-  - enemy: guard_oracle
+  - enemy: guard_ledger
     at:
       x: 2340
       y: 1375
     ramp: savage
     hp: 380
-  # North suite 3 (east) - JEFF BAYWATCH
-  - enemy: jeff_baywatch
+  # North suite 3 (east) - THE FULFILLER
+  - enemy: the_fulfiller
     at:
       x: 2960
       y: 400
     ramp: brutal
     hp: 2200
-  - enemy: guard_prime
+  - enemy: guard_depot
     at:
       x: 2890
       y: 390
     ramp: brutal
     hp: 400
-  - enemy: guard_prime
+  - enemy: guard_depot
     at:
       x: 3030
       y: 345
     ramp: brutal
     hp: 400
-  - enemy: guard_prime
+  - enemy: guard_depot
     at:
       x: 2960
       y: 475
     ramp: brutal
     hp: 400
-  # South suite 3 (east) - DONALD DUMP
-  - enemy: donald_dump
+  # South suite 3 (east) - THE DEVELOPER
+  - enemy: the_developer
     at:
       x: 2960
       y: 1300

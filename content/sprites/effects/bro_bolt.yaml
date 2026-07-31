@@ -1,0 +1,23 @@
+name: bro_bolt
+family: effects
+size: [8, 8]
+description: >
+  Energy bolt fired by TRUST ME BRO's Eastworld robots and the BRO controllers.
+subject:
+  kind: projectile
+  build: a four-pointed cyan-teal spark with a bright white core, dark outline
+  accent: cold cyan-teal glow
+  flavor: the machine faction's cold signature shot
+palette:
+  O: "#1a1c2c" # dark outline
+  Q: "#60f0d0" # cyan-teal spark
+  s: "#d6f0ff" # bright white core
+grid: |
+  ........
+  ...O....
+  ..OQO...
+  .OQsQO..
+  ..OQO...
+  ...O....
+  ........
+  ........

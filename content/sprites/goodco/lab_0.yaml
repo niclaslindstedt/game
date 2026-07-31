@@ -1,0 +1,32 @@
+name: lab_0
+family: goodco
+size: [16, 16]
+description: >
+  The common ground tile of GOODCO HQ — a polished light-grey lab floor panel
+  with faint seams and specks.
+subject:
+  kind: ground tile
+  build: a flat floor panel with a shaded left seam and a scatter of faint specks
+  accent: polished light-grey
+  flavor: the clean, cold floor the whole facility is tiled with
+palette:
+  T: "#c0c5cf" # pale speck highlights
+  s: "#818690" # grey seam shadow
+  t: "#aab0be" # light-grey floor field
+grid: |
+  ssssssssssssssss
+  sttttttttttttttt
+  sttttttttttttttt
+  sttttttttTtttttt
+  sttttttttttttttt
+  stttTttttttttttt
+  sttttttttttttttt
+  sttttttttttttstt
+  sttttttttttttttt
+  sttttttttttttttt
+  stttttTttttttttt
+  sttttttttttttttt
+  stttttttttttTttt
+  sttttttttttttttt
+  sttstttttttttttt
+  sttttttttttttttt

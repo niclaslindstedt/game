@@ -39,7 +39,7 @@ export const DEFAULT_RITE: DeathRiteId = "dismantle";
 export const DEFAULT_FLIGHT_RITE: DeathRiteId = "bolt";
 
 const RITES: readonly DeathRiteDef[] = [
-  // ELON MOSQUE, on all three of the venues he is met on. The brief's own
+  // THE FOUNDER, on all three of the venues he is met on. The brief's own
   // example, and the only rite in the catalog whose victim BLEEDS: the hero
   // leaps, lands astride him, and drives the blade down through the skull.
   // The long aftermath is the point — he holds it there, then wrenches it
@@ -72,7 +72,7 @@ const RITES: readonly DeathRiteDef[] = [
     standoff: 1.15,
     force: 4,
   },
-  // DOGE-1 and GROK OMEGA — the two that CHARGE. The hero catches the charge
+  // PAYLOAD-1 and BRO OMEGA — the two that CHARGE. The hero catches the charge
   // rather than dodging it: he rides it, plants a foot, and takes the core out.
   // The short execution is deliberate; this one is over in a movement.
   {
@@ -102,7 +102,7 @@ const RITES: readonly DeathRiteDef[] = [
     standoff: 1.3,
     force: 7,
   },
-  // THE ZAI SUPERCORE. The hero climbs it and puts the blade into the core;
+  // THE BRO SUPERCORE. The hero climbs it and puts the blade into the core;
   // the core does the rest. He is not the one who finishes this, which is why
   // the aftermath is the longest here and the execution barely exists.
   {
@@ -117,7 +117,7 @@ const RITES: readonly DeathRiteDef[] = [
     standoff: 0.4,
     force: 12,
   },
-  // ELON MOSQUE, on Mars and again at the rift — and every OTHER boss that
+  // THE FOUNDER, on Mars and again at the rift — and every OTHER boss that
   // escapes rather than dying. He does not fight to the end: he tears his way
   // out, bolts for it with his back to the hero, and is drawn through spinning
   // — a coward leaving at speed, and legible as one from across the field. The
@@ -141,7 +141,7 @@ const RITES: readonly DeathRiteDef[] = [
     exitDistance: 96,
     spin: 4,
   },
-  // GROK ALPHA / BETA / GAMMA, and every boss that names nothing. It comes
+  // BRO ALPHA / BETA / GAMMA, and every boss that names nothing. It comes
   // apart into what it is made of. THE VARIETY IS NOT AUTHORED: the cut itself
   // is rolled (`cleaveCut`, an unbounded family × a continuous offset), so the
   // eastworld trilogy never plays the same end twice and nobody had to write

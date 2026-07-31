@@ -199,7 +199,7 @@ entering nightmare as someone who played just one (`--full` shows it).
    counts, and its per-rung hero `start→end` levels ARE the campaign
    progression the calculator only predicts):
    ```sh
-   node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
+   node scripts/simulate-run.mjs --difficulty easy --level goodco_hq --full
    node scripts/simulate-run.mjs               # the full campaign, easy → JESUS
    node scripts/simulate-run.mjs --verdict     # PASS/WARN/FAIL, incl. boss-level-vs-intended
    node scripts/simulate-run.mjs --no-arrow-xp # the pure kill grind (isolate the arrow levers)

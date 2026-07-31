@@ -703,7 +703,7 @@ export function createGame(
       cleanSlates: 0,
       moving: false,
       weaponCooldownMs: 0,
-      // Levels with a scripted opening strike (SpaceZ HQ) start the hero with
+      // Levels with a scripted opening strike (GOODCO HQ) start the hero with
       // his weapon holstered — the vanguard's first swing draws it. Every
       // other level opens armed.
       disarmed: def.openingStrike !== undefined,

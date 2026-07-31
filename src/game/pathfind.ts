@@ -136,7 +136,7 @@ function clearanceAt(p: Vec2, near: Obstacle[] | undefined): number {
  * The blocking is then REFINED: any-overlap blocking over 40px cells cannot
  * represent a doorway narrower than about two cells — the wall ends flanking a
  * 60px gap each bleed into the gap's cells and seal a pocket a body walks
- * through easily (measured: spacez_hq's break/stock rooms read UNREACHABLE, so
+ * through easily (measured: goodco_hq's break/stock rooms read UNREACHABLE, so
  * the sweep never cracked their chests). A blocked cell the hero's body still
  * FITS somewhere inside is re-opened, and the point it fits at becomes the
  * cell's {@link NavGrid.anchorX} — the route passes through the gap rather

@@ -175,7 +175,7 @@ await page.getByRole("button", { name: "difficulty-easy" }).waitFor();
 await page.getByRole("button", { name: "difficulty-easy" }).click();
 try {
   await page
-    .getByRole("button", { name: "level-spacez_hq" })
+    .getByRole("button", { name: "level-goodco_hq" })
     .click({ timeout: 3000 });
 } catch {
   /* a fresh hero walks straight into the first level */

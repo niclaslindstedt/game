@@ -1,0 +1,38 @@
+name: conveyor
+family: goodco
+plane: floor
+size: [20, 16]
+description: >
+  A straight section of the assembly-line conveyor seen from above: chrome side
+  rails with amber hazard ticks, and steel roller ribs stepping across the dark
+  belt between them. Tiled end-to-end down a build bay.
+subject:
+  kind: ground decor prop
+  build: a straight conveyor-belt section seen from above, chrome side rails framing a dark belt
+  features: steel roller ribs stepping across the belt, amber hazard ticks painted on the rails
+  accent: steel roller ribs on a dark belt between chrome rails
+  flavor: the line the half-built ships ride down as the plant assembles them
+palette:
+  O: "#1a1c2c" # outline and roller shadow
+  V: "#9095a5" # chrome rail top
+  b: "#2b2f3a" # dark belt
+  f: "#888a96" # steel roller rib
+  v: "#60687e" # rail flank in shadow
+  y: "#ffb02e" # amber hazard tick on the rail
+grid: |
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OyvObbbbbbbbbbbbOvyO
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OyvObbbbbbbbbbbbOvyO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OVvObbbbbbbbbbbbOvVO

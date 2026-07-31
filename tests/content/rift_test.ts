@@ -2,8 +2,8 @@
 // Level 4 — THE RIFT: the hallucinatory space between universes. No ground,
 // soft gravity, black holes and asteroid rain (the hazards engine), aliens
 // for a horde, history's missing for elites — plus the game's first
-// dialogue-only APPARITIONS — and a double finale: GROK OMEGA (ZAI's secret
-// superintelligence, the level's reveal) and ELON MOSQUE fleeing a second
+// dialogue-only APPARITIONS — and a double finale: BRO OMEGA (TRUST ME BRO's secret
+// superintelligence, the level's reveal) and THE FOUNDER fleeing a second
 // time through the far door.
 
 import { describe, expect, it } from "vitest";
@@ -83,31 +83,31 @@ describe("THE RIFT level def", () => {
       .filter((d) => d.apparition)
       .map((d) => d.id)
       .sort();
-    expect(apparitions).toEqual(["harry_houdini", "the_king"]);
+    expect(apparitions).toEqual(["harry_houdini", "the_residency"]);
   });
 
-  it("stages the double finale: GROK OMEGA and a fleeing MOSQUE", () => {
+  it("stages the double finale: BRO OMEGA and a fleeing THE FOUNDER", () => {
     const bosses = RIFT.spawns
       .filter((s) => "at" in s && enemyDef(s.enemy).role === "boss")
       .map((s) => s.enemy)
       .sort();
-    expect(bosses).toEqual(["elon_mosque_rift", "grok_omega"]);
+    expect(bosses).toEqual(["the_founder_rift", "bro_omega"]);
     // The second encounter is the same coward — but NOT in the same clothes.
     // He turns up on the far side of the tear in an all-black suit and a black
     // campaign cap, so the two meetings read as two different nights rather
     // than as the same art pasted onto a second map.
-    expect(enemyDef("elon_mosque_rift").sprite).toBe("elon_mosque_rift");
-    expect(enemyDef("elon_mosque_rift").sprite).not.toBe(
-      enemyDef("elon_mosque").sprite,
+    expect(enemyDef("the_founder_rift").sprite).toBe("the_founder_rift");
+    expect(enemyDef("the_founder_rift").sprite).not.toBe(
+      enemyDef("the_founder").sprite,
     );
     // …and he escapes again, out the far side of the rift.
-    expect(enemyDef("elon_mosque_rift").flees).toEqual({ landmark: "rift" });
-    // GROK OMEGA dies for real — no flight for a terminated instance.
-    expect(enemyDef("grok_omega").flees).toBeUndefined();
+    expect(enemyDef("the_founder_rift").flees).toEqual({ landmark: "rift" });
+    // BRO OMEGA dies for real — no flight for a terminated instance.
+    expect(enemyDef("bro_omega").flees).toBeUndefined();
   });
 
-  it("makes the reveal GROK OMEGA's scene: found in secret, told no one", () => {
-    const pages = enemyDef("grok_omega").dialogue!;
+  it("makes the reveal BRO OMEGA's scene: found in secret, told no one", () => {
+    const pages = enemyDef("bro_omega").dialogue!;
     const text = pages
       .flatMap((p) => (Array.isArray(p) ? p : p.hero))
       .join(" ");
@@ -167,9 +167,9 @@ describe("THE RIFT level def", () => {
     expect(state.thoughtsSeen).toContain("rift_asteroid");
   });
 
-  it("parks the ZAI probe — the reveal's paper trail — inside a well's pull", () => {
+  it("parks the TRUST ME BRO probe — the reveal's paper trail — inside a well's pull", () => {
     const probe = RIFT.placedItems!.find(
-      (p) => p.kind === "story" && p.defId === "zai_probe",
+      (p) => p.kind === "story" && p.defId === "bro_probe",
     );
     expect(probe).toBeDefined();
     const nearWell = RIFT.wells!.some(
@@ -238,13 +238,13 @@ describe("THE RIFT level def", () => {
   });
 });
 
-describe("ELON MOSQUE flees again", () => {
-  /** Step until the rift MOSQUE is off the board, collecting every event. */
+describe("THE FOUNDER flees again", () => {
+  /** Step until the rift THE FOUNDER is off the board, collecting every event. */
   function beatMosque(state: GameState): GameEvent[] {
     const seen: GameEvent[] = [];
     for (
       let i = 0;
-      i < 300 && state.enemies.some((e) => e.defId === "elon_mosque_rift");
+      i < 300 && state.enemies.some((e) => e.defId === "the_founder_rift");
       i++
     ) {
       step(state, idle, DT);
@@ -261,7 +261,7 @@ describe("ELON MOSQUE flees again", () => {
   it("escapes out the far side, dropping the GOLDEN PARACHUTE", () => {
     const state = startGame(SEED, "the_rift");
     clearStage(state);
-    state.enemies = state.enemies.filter((e) => e.defId === "grok_omega");
+    state.enemies = state.enemies.filter((e) => e.defId === "bro_omega");
     state.enemies.push(
       makeEnemy(
         {
@@ -271,7 +271,7 @@ describe("ELON MOSQUE flees again", () => {
           powerScaled: true,
           spoke: true, // arrival scene already played; the exit is under test
         },
-        "elon_mosque_rift",
+        "the_founder_rift",
       ),
     );
 
@@ -285,16 +285,16 @@ describe("ELON MOSQUE flees again", () => {
     // The coward's second exit plays through the death-scene box.
     expect(state.dialogue?.source).toEqual({
       kind: "enemyDeath",
-      defId: "elon_mosque_rift",
+      defId: "the_founder_rift",
     });
     expect(dialogueContent(state.dialogue!).pages).toEqual([
-      enemyDef("elon_mosque_rift").lastWords,
+      enemyDef("the_founder_rift").lastWords,
     ]);
 
     // The exit package deploys on the way out — dropped on the ground, or (when
     // the autonomous hero is standing right on the drop, as here) picked
     // straight up. The parachute is a TRINKET, so "picked up" means banked in
-    // the bag, which is where a trinket pays out. Either way it left MOSQUE's
+    // the bag, which is where a trinket pays out. Either way it left THE FOUNDER's
     // corpse, which is the beat this guards.
     const parachuteDeployed =
       state.items.some(
@@ -307,7 +307,7 @@ describe("ELON MOSQUE flees again", () => {
       );
     expect(parachuteDeployed).toBe(true);
 
-    // GROK OMEGA still stands, so the objective hasn't cleared yet — the
+    // BRO OMEGA still stands, so the objective hasn't cleared yet — the
     // rift needs BOTH bosses gone.
     expect(state.victoryCountdownMs).toBeNull();
   });

@@ -1,0 +1,49 @@
+name: employee_of_the_month_0
+family: goodco
+size: [18, 18]
+description: >
+  EMPLOYEE OF THE MONTH — a balding lifer in a gold-beige office suit, chest
+  thrust out, a gold badge with a red centre pinned over his heart and a red
+  tie down the shirt; drawn a size above the rank and file he outlasted.
+subject:
+  kind: elite minion
+  name: EMPLOYEE OF THE MONTH
+  build: a heavyset office worker puffed up with pride, chest thrust out
+  attire: gold-beige office suit over a white shirt and a red tie, dark slacks
+  features: a comb-over and moustache over dead eyes; a gold badge with a red centre pinned to the chest
+  accent: polished gold badge
+  pose: standing proud, arms held out clear of the sides
+  flavor: guards the break room as if it were his by right
+palette:
+  B: "#92643e" # scalp through the comb-over
+  E: "#5d4028" # dark brown hair
+  O: "#1a1c2c" # outline
+  S: "#b39378" # moustache and jaw shadow
+  W: "#f4f4f4" # white shirt
+  b: "#3f4553" # dark slacks
+  h: "#e2c640" # lit shoulder of the suit
+  i: "#772020" # deep red tie shadow
+  o: "#d6a842" # gold-beige suit
+  p: "#deaa86" # skin
+  q: "#96762e" # shaded suit and sleeves
+  r: "#d83a3a" # red tie and badge centre
+  y: "#ffb02e" # gold badge
+grid: |
+  ..................
+  .....OOOOOOOO.....
+  .....OEEEBEEO.....
+  .....OSpppppO.....
+  .....OpOppOpO.....
+  .....OppSSpSO.....
+  ..OOOOOOOOOOOOOO..
+  ..OoOhhoWWoooOoO..
+  ..OqOOyoWWooqOqO..
+  ..OqOyrorWooqOqO..
+  ..OqOoOOroooqOqO..
+  ..OpOoooiooqqOpO..
+  ...OOObbOObbOOO...
+  .....ObbOObbO.....
+  .....ObbOObbO.....
+  .....ObbOObbO.....
+  .....OOOOOOOO.....
+  ..................

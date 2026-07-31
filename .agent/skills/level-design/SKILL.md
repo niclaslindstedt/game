@@ -175,7 +175,7 @@ NOT abstract mob tiers. The campaign is meant to level the hero along this ladde
 
 **Mob levels track the hero.** Slice each rung's start→finish across the five
 campaign maps and author every map's `mobLevels` to the hero's intended level
-band ON that map (spacez ≈ easy 1–7 / nightmare 40–43; eastworld ≈ easy 26–32 /
+band ON that map (goodco ≈ easy 1–7 / nightmare 40–43; eastworld ≈ easy 26–32 /
 nightmare 53–56). Mobs near the hero's level make the WoW-style con system
 (`levelDiffXpMult`, config `LEVELING.xpAbove/BelowPlayerPerLevel`) self-regulate:
 fighting up pays a bonus, fighting down decays to a grey-mob pittance, so the

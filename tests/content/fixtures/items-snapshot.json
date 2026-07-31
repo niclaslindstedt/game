@@ -2070,13 +2070,13 @@
       "name": "SAMPLE CASE",
       "slot": "bag"
     },
-    "seagulls_ponytail": {
+    "stunt_doubles_ponytail": {
       "bonuses": {
         "maxHp": 30
       },
       "icon": "icon_ponytail",
-      "id": "seagulls_ponytail",
-      "name": "SEAGULL'S PONYTAIL",
+      "id": "stunt_doubles_ponytail",
+      "name": "THE STUNT DOUBLE'S PONYTAIL",
       "slot": "trinket"
     },
     "servo_greaves": {
@@ -2206,12 +2206,12 @@
       "name": "SNEAKERS",
       "slot": "feet"
     },
-    "snows_dead_mans_switch": {
+    "leaks_dead_mans_switch": {
       "bonuses": {
         "maxHp": 35
       },
       "icon": "icon_dead_switch",
-      "id": "snows_dead_mans_switch",
+      "id": "leaks_dead_mans_switch",
       "name": "DEAD MAN'S SWITCH",
       "slot": "trinket"
     },
@@ -4328,7 +4328,7 @@
       "slot": "weapon",
       "tier": "artifact"
     },
-    "muskrats_tooth": {
+    "prototype_fang": {
       "base": "combat_knife",
       "bonuses": [
         {
@@ -4350,11 +4350,11 @@
         "core": "#eaf1ff",
         "particle": "spark"
       },
-      "id": "muskrats_tooth",
+      "id": "prototype_fang",
       "ilvl": 16,
       "keeper": true,
-      "lore": "A CHROME CANINE PRIED FROM DOGE-1'S JAW, STILL WARM FROM THE CORE.",
-      "name": "DOGE'S FANG",
+      "lore": "A CHROME CANINE PRIED FROM PAYLOAD-1'S JAW, STILL WARM FROM THE CORE.",
+      "name": "PROTOTYPE FANG",
       "slot": "weapon",
       "tier": "unique"
     },
@@ -4578,7 +4578,7 @@
       "tier": "legendary",
       "world": true
     },
-    "putains_tracksuit": {
+    "strongmans_tracksuit": {
       "base": "tin_star_cuirass",
       "bonuses": [
         {
@@ -4592,10 +4592,10 @@
           "value": 4
         }
       ],
-      "id": "putains_tracksuit",
+      "id": "strongmans_tracksuit",
       "ilvl": 32,
       "lore": "STRIPES DOWN THE ARMS. AUTHORITY DOWN THE SPINE. RUNS FROM NOTHING, OFFICIALLY.",
-      "name": "PUTAIN'S TRACKSUIT",
+      "name": "THE STRONGMAN'S TRACKSUIT",
       "slot": "chest",
       "tier": "unique"
     },
@@ -5718,7 +5718,7 @@
       "slot": "weapon",
       "tier": "unique"
     },
-    "the_kings_ransom": {
+    "the_residencys_ransom": {
       "bagSlots": 5,
       "base": "bag",
       "bonuses": [
@@ -5752,7 +5752,7 @@
           "value": 10
         }
       ],
-      "id": "the_kings_ransom",
+      "id": "the_residencys_ransom",
       "ilvl": 93,
       "lore": "ENOUGH TO BUY BACK A CROWN. THE CROWN WAS NEVER WORTH IT.",
       "name": "THE KING'S RANSOM",
@@ -6824,7 +6824,7 @@
       ],
       "id": "whiskerweave_hood",
       "ilvl": 16,
-      "lore": "DOGE-1'S ANTENNA EARS. YOU HEAR THE WHOLE FLOOR BREATHE.",
+      "lore": "PAYLOAD-1'S ANTENNA EARS. YOU HEAR THE WHOLE FLOOR BREATHE.",
       "name": "SATELLITE EARS",
       "setId": "scavengers_hide",
       "slot": "head",

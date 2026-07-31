@@ -237,7 +237,7 @@ describe("routing (autopilotNextLevel)", () => {
   });
 
   it("a session pinned to a replayed level farms that level, never advancing", () => {
-    // Engaged on already-cleared ground (a spacez/mars farm): every clear
+    // Engaged on already-cleared ground (a goodco/mars farm): every clear
     // restarts the pinned level — even with the difficulty beaten, and even
     // though the campaign has a next level to offer.
     const pinned = { ...route, pinned: "lvl_a" };

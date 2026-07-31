@@ -20,7 +20,7 @@ import { FIX_ENEMIES } from "./fixtures.ts";
 import { makeEnemy, startGame } from "./helpers.ts";
 
 // A boss whose estate is one forced-TRASH weapon plus a guaranteed named
-// unique (mirrors ELON MOSQUE's garbage and PUTAIN's watches in one def).
+// unique (mirrors THE FOUNDER's garbage and THE STRONGMAN's watches in one def).
 const TEST_HOARDER: EnemyDef = {
   id: "test_hoarder",
   name: "TEST HOARDER",

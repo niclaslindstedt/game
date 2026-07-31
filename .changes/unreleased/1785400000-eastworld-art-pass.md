@@ -18,7 +18,7 @@ western false front, with the parapet signboard and striped awning that the
 houses deliberately do not have.
 
 The water tower reads as a tower instead of a stool — a round staved tank under
-a shingled cone on splayed, cross-braced legs. And the ZAI control center, the
+a shingled cone on splayed, cross-braced legs. And the TRUST ME BRO control center, the
 building Ada's beacon points at, is no longer a flat grey slab shorter than the
 water tower down the street: it is a timber false front with the machine rising
 behind and above it, and cold steel blast doors punched through the middle of

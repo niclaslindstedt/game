@@ -243,7 +243,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, runLevelDef(state).firstSightThoughts);
-  // The scripted vanguard's proximity draws the blade (SpaceZ HQ's
+  // The scripted vanguard's proximity draws the blade (GOODCO HQ's
   // `openingStrike`) — judged after the horde has moved and after the sighting
   // beat above, so the "look at this place" read always lands first.
   stepOpeningStrike(state);

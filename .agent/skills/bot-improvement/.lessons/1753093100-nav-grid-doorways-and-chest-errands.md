@@ -3,12 +3,12 @@ title: The nav grid's any-overlap blocking seals door-width gaps, and chest erra
 date: 2026-07-21
 ---
 
-Two clusters of findings from making the bot "always open chests" (spacez_hq
+Two clusters of findings from making the bot "always open chests" (goodco_hq
 baseline: 0/2 chests on every seed).
 
 **A 60px doorway does not survive a 40px any-overlap nav grid.** `buildNavGrid`
 blocked a cell if ANY inflated obstacle overlapped it, so the wall ends flanking
-a door-width gap (spacez_hq's break/stock rooms) bled into both gap cells and
+a door-width gap (goodco_hq's break/stock rooms) bled into both gap cells and
 sealed the pocket — `findPath` returned NULL, `nearestContent` re-picked to
 `target: null` every tick, and both chests read as unreachable forever. The
 diagnostic signature: a live chest on the field while `bot.content` shows

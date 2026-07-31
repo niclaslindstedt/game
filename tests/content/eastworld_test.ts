@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Level 5 — EASTWORLD: the rift's far side, a knockoff wild-west theme park
-// run on ZAI robotics. The town is TIGHT (house-sized obstacles + storefront
-// wall rows), the CONTROL CENTER compound is locked behind SEAGULL's pass,
-// ELON MOSQUE finally dies (dropping the TRASH tier's debut), PUTAIN drops
-// brand-watch valuables that fund the merchant's rolled PUTAIN stall, and
-// the finale is THE ZAI SUPERCORE — shielded by three GROK controllers who
+// run on TRUST ME BRO robotics. The town is TIGHT (house-sized obstacles + storefront
+// wall rows), the CONTROL CENTER compound is locked behind THE STUNT DOUBLE's pass,
+// THE FOUNDER finally dies (dropping the TRASH tier's debut), THE STRONGMAN drops
+// brand-watch valuables that fund the merchant's rolled THE STRONGMAN stall, and
+// the finale is THE BRO SUPERCORE — shielded by three TRUST ME BRO controllers who
 // shoot from behind the compound's rocks. Beating it plays the campaign's
 // outro epilogue under a victory quake.
 
@@ -65,11 +65,11 @@ describe("EASTWORLD level def", () => {
     expect(built.every((o) => o.half !== undefined && !o.jumpable)).toBe(true);
   });
 
-  it("locks the control center behind SEAGULL's all-access pass", () => {
+  it("locks the control center behind THE STUNT DOUBLE's all-access pass", () => {
     expect(EASTWORLD.doors?.map((d) => d.id)).toEqual(["control"]);
     expect(STORY_ITEM_DEFS.keycard_eastworld?.unlocks).toBe("control");
-    const seagull = enemyDef("steven_seagull");
-    expect(seagull.loot?.storyItems).toContain("keycard_eastworld");
+    const stunt double = enemyDef("the_stunt_double");
+    expect(stunt double.loot?.storyItems).toContain("keycard_eastworld");
   });
 
   it("plays the arrival read on sight, then the hosts read on the first kill", () => {
@@ -89,8 +89,8 @@ describe("EASTWORLD level def", () => {
 });
 
 describe("the celebrity staff", () => {
-  it("STEVEN SEAGULL moves slow and redirects half your swings", () => {
-    const def = enemyDef("steven_seagull");
+  it("THE STUNT DOUBLE moves slow and redirects half your swings", () => {
+    const def = enemyDef("the_stunt_double");
     expect(def.role).toBe("elite");
     expect(def.speed).toBeLessThanOrEqual(10);
     expect(def.dodgeChance).toBeGreaterThanOrEqual(0.25);
@@ -98,8 +98,8 @@ describe("the celebrity staff", () => {
     expect(def.lastWords?.length ?? 0).toBeGreaterThan(0);
   });
 
-  it("VLADIMIR PUTAIN drops three unique-tier brand watches and the map", () => {
-    const def = enemyDef("vladimir_putain");
+  it("THE STRONGMAN drops three unique-tier brand watches and the map", () => {
+    const def = enemyDef("the_strongman");
     const items = (def.loot?.items ?? []).map((e) =>
       typeof e === "string" ? { defId: e, tier: undefined } : e,
     );
@@ -115,16 +115,16 @@ describe("the celebrity staff", () => {
     expect(def.lastWords?.join(" ")).toContain("UKRAINE");
   });
 
-  it("GERALD DEPARDIEU is enormous, glacial, and cannot dodge", () => {
-    const def = enemyDef("gerald_depardieu");
+  it("THE LEADING MAN is enormous, glacial, and cannot dodge", () => {
+    const def = enemyDef("the_leading_man");
     expect(def.radius).toBeGreaterThanOrEqual(15);
     expect(def.speed).toBeLessThanOrEqual(8);
     expect(def.dodgeChance).toBe(0);
-    expect(def.hp).toBeGreaterThan(enemyDef("vladimir_putain").hp);
+    expect(def.hp).toBeGreaterThan(enemyDef("the_strongman").hp);
   });
 
-  it("EDWARD SNOW is the game's first ranged elite and drops the archive", () => {
-    const def = enemyDef("edward_snow");
+  it("THE LEAK is the game's first ranged elite and drops the archive", () => {
+    const def = enemyDef("the_leak");
     expect(def.role).toBe("elite");
     // The leaker fights from cover, like the GROKs his archive trained.
     expect(def.ranged?.takesCover).toBe(true);
@@ -132,21 +132,21 @@ describe("the celebrity staff", () => {
     expect(def.lastWords?.length ?? 0).toBeGreaterThan(0);
     // The plot payload: the SUPERCORE's training set, plus his insurance.
     expect(def.loot?.storyItems).toContain("snow_archive");
-    expect(def.loot?.items).toContain("snows_dead_mans_switch");
+    expect(def.loot?.items).toContain("leaks_dead_mans_switch");
     expect(STORY_ITEM_DEFS.snow_archive).toBeDefined();
   });
 });
 
-describe("ELON MOSQUE's last stand — the TRASH estate", () => {
+describe("THE FOUNDER's last stand — the TRASH estate", () => {
   it("finally DIES here: no flee on the Eastworld def", () => {
-    const def = enemyDef("elon_mosque_eastworld");
+    const def = enemyDef("the_founder_eastworld");
     expect(def.role).toBe("boss");
     expect(def.flees).toBeUndefined();
     expect(def.lastWords?.length ?? 0).toBeGreaterThan(0);
   });
 
   it("drops nothing but three zero-damage TRASH weapons", () => {
-    const def = enemyDef("elon_mosque_eastworld");
+    const def = enemyDef("the_founder_eastworld");
     const items = (def.loot?.items ?? []).map((e) =>
       typeof e === "string" ? { defId: e, tier: undefined } : e,
     );
@@ -164,14 +164,14 @@ describe("ELON MOSQUE's last stand — the TRASH estate", () => {
   });
 });
 
-describe("THE ZAI SUPERCORE and its controllers", () => {
-  it("is shielded by exactly the three GROK controllers", () => {
-    const def = enemyDef("zai_supercore");
+describe("THE BRO SUPERCORE and its controllers", () => {
+  it("is shielded by exactly the three TRUST ME BRO controllers", () => {
+    const def = enemyDef("bro_supercore");
     expect(def.role).toBe("boss");
     expect(def.shieldedBy?.sort()).toEqual([
-      "grok_alpha",
-      "grok_beta",
-      "grok_gamma",
+      "bro_alpha",
+      "bro_beta",
+      "bro_gamma",
     ]);
     // A mainframe does not walk.
     expect(def.speed).toBe(0);
@@ -179,7 +179,7 @@ describe("THE ZAI SUPERCORE and its controllers", () => {
   });
 
   it("the controllers are cover-taking shooters that must die for the objective", () => {
-    for (const id of ["grok_alpha", "grok_beta", "grok_gamma"]) {
+    for (const id of ["bro_alpha", "bro_beta", "bro_gamma"]) {
       const def = enemyDef(id);
       // Boss role: the killBoss objective needs all three off the board.
       expect(def.role).toBe("boss");
@@ -192,7 +192,7 @@ describe("THE ZAI SUPERCORE and its controllers", () => {
 
   it("the shield holds in play: the SUPERCORE can't be hurt until the GROKs fall", () => {
     const state = startGame(SEED, "eastworld");
-    const boss = state.enemies.find((e) => e.defId === "zai_supercore")!;
+    const boss = state.enemies.find((e) => e.defId === "bro_supercore")!;
     expect(boss).toBeDefined();
     boss.powerScaled = true;
     const before = boss.hp;
@@ -207,12 +207,12 @@ describe("THE ZAI SUPERCORE and its controllers", () => {
   });
 });
 
-describe("the barkeep's PUTAIN stall", () => {
+describe("the barkeep's THE STRONGMAN stall", () => {
   it("lists the estate as rolled stall uniques, all real", () => {
     const ids = EASTWORLD.merchant?.stockUniques ?? [];
     expect(ids.sort()).toEqual([
       "honorary_black_belt",
-      "putains_tracksuit",
+      "strongmans_tracksuit",
       "the_kremlin_ushanka",
     ]);
     for (const id of ids) expect(UNIQUE_DEFS[id]).toBeDefined();

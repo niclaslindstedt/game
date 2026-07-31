@@ -1,12 +1,12 @@
 description: |-
-  LEVEL 3 - MARS. A two-act assault on SpaceZ's secret colony, read left to
+  LEVEL 3 - MARS. A two-act assault on GOODCO's secret colony, read left to
   right. ACT 1 is the open red desert: a low-pressure scramble over rover-worked
-  dust that RISES to LARRY WEBPAGE, the fembot foreman guarding the dome airlock
+  dust that RISES to THE INDEXER, the fembot foreman guarding the dome airlock
   - the desert earns its size before you're let inside. A breather + the colony
   merchant wait at the airlock threshold. ACT 2 is the colony proper: deck
   plating, the servo and fembot lines, and a con that CLIMBS hard through a tight
-  serpentine (BUILD GATES at the entry, OPTIMUSK PRIME mid, PETER TEAL on the
-  approach) to ELON MOSQUE at the far north-east - the man who owns the planet,
+  serpentine (THE VENDOR at the entry, SUCCESSOR PRIME mid, THE SEED on the
+  approach) to THE FOUNDER at the far north-east - the man who owns the planet,
   who doesn't die but flees into a rift. Two airlock gaps funnel the horde. The
   TERRARIUM is an OPTIONAL keycard detour locked in the SE corner: grab the green
   keycard off the main line, dip south for a chest and the shrine, rejoin. The
@@ -21,8 +21,8 @@ prelude:
   - voyage_mars
 music: red_dust
 intro:
-  - - HE SAID THE MOON WAS SPACEZ'S BIG MISTAKE - THE COMPANY PACKED IT ALL INTO CRATES AND RAN. TO MARS.
-  - - I KNOW WHAT A SPACEZ COLONY LOOKS LIKE - I REBUILT THEIR LANDER ONCE. DOMES. ROBOTS. SECRETS.
+  - - HE SAID THE MOON WAS GOODCO'S BIG MISTAKE - THE COMPANY PACKED IT ALL INTO CRATES AND RAN. TO MARS.
+  - - I KNOW WHAT A GOODCO COLONY LOOKS LIKE - I REBUILT THEIR LANDER ONCE. DOMES. ROBOTS. SECRETS.
   - - SOMEBODY DOWN HERE TRADED MY GIRL AWAY LIKE CARGO. BAD TRADE. FOR THEM.
 width: 2800
 height: 1500
@@ -95,8 +95,8 @@ landmarks:
 objective:
   type: killBoss
 # THE INTENDED ROUTE - a left-to-right serpentine. ACT 1 sweeps the desert low
-# then climbs to LARRY at the airlock; ACT 2 threads the two wall gaps in an S
-# (up to OPTIMUSK, down through the inner gap, along to PETER, up to the boss).
+# then climbs to THE INDEXER at the airlock; ACT 2 threads the two wall gaps in an S
+# (up to SUCCESSOR, down through the inner gap, along to THE SEED, up to the boss).
 # The optional TERRARIUM detour is deliberately NOT on this line.
 path:
   - x: 300
@@ -162,27 +162,27 @@ spawns:
     band:
       - 0.6
       - 1
-  - enemy: optimusk
+  - enemy: successor
     count: 4
     band:
       - 0.5
       - 1
   # ACT 1 gate - the fembot foreman at the dome airlock. A step above the desert
   # fodder, not a wall (fierce ramp), read yellow-orange against a green field.
-  - enemy: larry_webpage
+  - enemy: the_indexer
     at:
       x: 1200
       y: 540
     ramp: fierce
     hp: 260
   # ACT 2 elites, climbing the colony serpentine toward the boss.
-  - enemy: build_gates
+  - enemy: the_vendor
     at:
       x: 1740
       y: 820
     ramp: brutal
     hp: 250
-  - enemy: optimusk_prime
+  - enemy: successor_prime
     at:
       x: 1980
       y: 470
@@ -190,13 +190,13 @@ spawns:
     hp: 340
   # Moved OUT of the SE terrarium cul-de-sac onto the open colony approach, so
   # the fight no longer pins the hero (and the bot) in a concave dead end.
-  - enemy: peter_teal
+  - enemy: the_seed
     at:
       x: 2360
       y: 580
     ramp: endgame
     hp: 280
-  - enemy: elon_mosque
+  - enemy: the_founder
     at:
       x: 2640
       y: 760
@@ -283,7 +283,7 @@ spawners:
         count: 32
       - enemy: servo_bot
         count: 28
-  # The last knot sits ~280px SHORT of the boss so ELON MOSQUE's arena stays a
+  # The last knot sits ~280px SHORT of the boss so THE FOUNDER's arena stays a
   # duel: clear this then close on the boss with room to trade blows, instead of
   # being pinned against him by a swarm spawning on his doorstep.
   - id: p6
@@ -293,10 +293,10 @@ spawners:
     members:
       - enemy: fembot
         count: 26
-      - enemy: optimusk
+      - enemy: successor
         count: 14
-  # BUILD-AND-RELEASE: a floaty desert opener, a swell at the LARRY gate, a
-  # breather at the airlock / merchant, then a hard climb to the surge at MOSQUE.
+  # BUILD-AND-RELEASE: a floaty desert opener, a swell at THE INDEXER gate, a
+  # breather at the airlock / merchant, then a hard climb to the surge at THE FOUNDER.
 
   # ─── HELLGATES (config HELLGATES / src/game/spawners.ts) ─────────────────────
   # Rampage-only spawn points, laced right across the map. They are INVISIBLE
@@ -404,7 +404,7 @@ tempo:
 safeZones:
   # THE AIRLOCK: the calm threshold between the desert and the colony. The horde
   # is repelled off the approach so the breather + the merchant read clean before
-  # ACT 2. LARRY haunts the gate ~230px north-west, well outside the zone.
+  # ACT 2. THE INDEXER haunts the gate ~230px north-west, well outside the zone.
   - shape: circle
     pos:
       x: 1410
@@ -723,7 +723,7 @@ loot:
     jesus: 70
   earlyDrops:
     # A guaranteed RANGED sidearm within the first handful of kills: the colony
-    # boss (ELON) is fast and summons, so a hero needs a kiting tool, not just
+    # boss (THE FOUNDER) is fast and summons, so a hero needs a kiting tool, not just
     # the melee bases the elites drop. cyber_katana still lands later as a
     # flavor melee option for those who want it.
     - atKills:

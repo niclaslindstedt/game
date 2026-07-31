@@ -2095,10 +2095,10 @@
           "A WARM TERMINAL. THE CORE HE BUILT HUMS HERE - A MILLION VOICES, NONE OF THEM HIS."
         ],
         [
-          "IT SIGNED THE NIGHT LAUNCHES. IT DREW THE OPTIMUSK LINE. IT FILED ADA UNDER 'CARGO'."
+          "IT SIGNED THE NIGHT LAUNCHES. IT DREW THE SUCCESSOR LINE. IT FILED ADA UNDER 'CARGO'."
         ],
         [
-          "AND ONE STANDING ORDER, ON EVERY PAGE: KEEP MOSQUE THE RICHEST MAN ALIVE. FOREVER."
+          "AND ONE STANDING ORDER, ON EVERY PAGE: KEEP THE FOUNDER THE RICHEST MAN ALIVE. FOREVER."
         ]
       ],
       "name": "CORE LOG"
@@ -2134,7 +2134,7 @@
       "id": "keycard_eastworld",
       "lore": [
         [
-          "SEAGULL'S ALL-ACCESS PASS. LAMINATED. AUTOGRAPHED BY HIMSELF, TO HIMSELF."
+          "THE STUNT DOUBLE'S ALL-ACCESS PASS. LAMINATED. AUTOGRAPHED BY HIMSELF, TO HIMSELF."
         ],
         [
           "IT OPENS THE CONTROL CENTER. ADA'S BEACON POINTS STRAIGHT THROUGH THAT DOOR."
@@ -2212,7 +2212,7 @@
           "AN ORG CHART, AUTO-GENERATED THIS MORNING. EVERY BOX IS A ROBOT. HUMANS ARE A FOOTNOTE."
         ],
         [
-          "AT THE TOP: OPTIMUSK PRIME. REPORTS TO: NOBODY. DOTTED LINE TO: 'THE CORE'."
+          "AT THE TOP: SUCCESSOR PRIME. REPORTS TO: NOBODY. DOTTED LINE TO: 'THE CORE'."
         ],
         [
           "THE MIND MY OLD FRIEND BUILT IS STILL RUNNING THE SHOP. ALL THE WAY FROM EARTH."
@@ -2225,7 +2225,7 @@
       "id": "park_brochure",
       "lore": [
         [
-          "'EASTWORLD! THE WEST, BUT EAST. BUILT BY V. PUTAIN & S. SEAGULL. INTELLIGENCE BY ZAI.'"
+          "'EASTWORLD! THE WEST, BUT EAST. BUILT BY V. THE STRONGMAN & S. THE STUNT DOUBLE. INTELLIGENCE BY TRUST ME BRO.'"
         ],
         [
           "THE MASCOT IS A BEAR IN A COWBOY HAT. THE FINE PRINT WAIVES YOUR ORGANS."
@@ -2258,18 +2258,18 @@
       "name": "SPACE SUIT",
       "suitsHero": true
     },
-    "spacez_blueprints": {
+    "goodco_blueprints": {
       "icon": "icon_blueprint",
-      "id": "spacez_blueprints",
+      "id": "goodco_blueprints",
       "lore": [
         [
-          "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED SPACEZ, DATED YEARS AGO."
+          "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED GOODCO, DATED YEARS AGO."
         ],
         [
           "EVERY CORRIDOR DRAINS INTO THE OLD WRECK. THE BASE ISN'T ON THE MOON. IT'S PLUGGED IN."
         ]
       ],
-      "name": "SPACEZ BLUEPRINTS"
+      "name": "GOODCO BLUEPRINTS"
     },
     "tribute_schedule": {
       "icon": "icon_tablet",
@@ -2311,18 +2311,18 @@
       ],
       "name": "WARDENCLYFFE NOTES"
     },
-    "zai_probe": {
+    "bro_probe": {
       "icon": "icon_probe",
-      "id": "zai_probe",
+      "id": "bro_probe",
       "lore": [
         [
-          "A BURNT PROBE, STAMPED ZAI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
+          "A BURNT PROBE, STAMPED TRUST ME BRO. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
         ],
         [
           "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
         ]
       ],
-      "name": "ZAI PROBE"
+      "name": "TRUST ME BRO PROBE"
     }
   },
   "thoughts": {
@@ -2428,7 +2428,7 @@
       "pages": [
         ["IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'"],
         [
-          "ZAI HOSTS. THE SAME BRAIN THAT TOOK MY JOB, NOW IN SPURS. GOOD. NO GUILT, THEN."
+          "TRUST ME BRO HOSTS. THE SAME BRAIN THAT TOOK MY JOB, NOW IN SPURS. GOOD. NO GUILT, THEN."
         ]
       ],
       "portrait": "hero",
@@ -2505,7 +2505,7 @@
     "hellborn_olympus": {
       "id": "hellborn_olympus",
       "pages": [
-        ["WHAT THE HELL IS THIS. THAT'S NOT SPACEZ. THAT'S NOT ANYBODY'S."],
+        ["WHAT THE HELL IS THIS. THAT'S NOT GOODCO. THAT'S NOT ANYBODY'S."],
         ["IT'S BEEN DIGGING THIS PLANET SINCE BEFORE THE PLANET HAD A NAME."],
         ["OLYMPUS MONS ISN'T A VOLCANO. IT'S THE EXHAUST. AND IT'S STILL WARM."]
       ],
@@ -2619,17 +2619,17 @@
           "A ROVER. FRESH PAINT, WORN WHEELS. AND THE DUST IS FULL OF TIRE TRACKS. YEARS OF THEM."
         ],
         [
-          "THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF SPACEZ. FIGURES."
+          "THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. FIGURES."
         ]
       ],
       "portrait": "player",
       "speaker": "ME"
     },
-    "moon_optimusk": {
-      "id": "moon_optimusk",
+    "moon_successor": {
+      "id": "moon_successor",
       "pages": [
         [
-          "A SPACEZ UNIT. UP HERE. SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST."
+          "A GOODCO UNIT. UP HERE. SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST."
         ],
         [
           "THEY DIDN'T JUST SHIP HER UP. THEY BUILT A STAFF TO MEET HER. COMPANY METAL GUARDS THE PIT."
@@ -2689,8 +2689,8 @@
       "portrait": "player",
       "speaker": "ME"
     },
-    "spacez_armed": {
-      "id": "spacez_armed",
+    "goodco_armed": {
+      "id": "goodco_armed",
       "pages": [
         [
           "A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID."
@@ -2700,11 +2700,11 @@
       "portrait": "hero",
       "speaker": "ME"
     },
-    "spacez_optimusk": {
-      "id": "spacez_optimusk",
+    "goodco_successor": {
+      "id": "goodco_successor",
       "pages": [
         [
-          "AN OPTIMUSK. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE."
+          "AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE."
         ],
         [
           "THEN THE AI REDREW IT, AND THE LINE STARTED WALKING EVERYONE'S JOBS OUT THE DOOR."
@@ -2714,8 +2714,8 @@
       "portrait": "hero",
       "speaker": "ME"
     },
-    "spacez_staff": {
-      "id": "spacez_staff",
+    "goodco_staff": {
+      "id": "goodco_staff",
       "pages": [
         [
           "LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT."

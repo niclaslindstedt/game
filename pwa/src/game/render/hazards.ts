@@ -235,7 +235,7 @@ function drawHerdDust(
       Math.cos(churn * 1.3 + i) * 8;
     const r = (1 - depth) * 15 + 6;
     // A warm, dusty churn — darker body puffs with lighter kicked-up motes on
-    // top — pitched to read against the pale SpaceZ floor.
+    // top — pitched to read against the pale GOODCO floor.
     ctx.globalAlpha = (1 - depth) * 0.5;
     ctx.fillStyle =
       i % 3 === 0 ? "#efe7d4" : i % 3 === 1 ? "#b0a892" : "#8f8874";

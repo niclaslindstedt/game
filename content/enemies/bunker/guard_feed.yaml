@@ -1,0 +1,22 @@
+id: guard_feed
+name: FEED SENTINEL
+lore: >-
+  THE MODERATOR's personal detail, headsets stapled on, holding a
+  perimeter around a man who insists he is extremely normal. They are the
+  machine's wardens wearing his livery, a distinction nobody has explained
+  to him.
+role: minion
+sprite: guard_feed
+hp: 380
+levelBonus: 2
+speed: 20
+radius: 11
+contactDamage: 30
+critChance: 0.14
+contactCooldownMs: 750
+ai:
+  aggroRadius: 230
+  leashRadius: 340
+dropProfile:
+  dropBonus: 0.5
+  tierBonus: 0.4

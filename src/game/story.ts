@@ -395,7 +395,7 @@ export function stepSightThoughts(
  * and the pinned vanguard closing to within `openingStrike.radius` (falling
  * back to `DIALOGUE.strikeRadius`) draws his weapon. Levels tune that radius to
  * a CONTACT gap — the vanguard reaches the hero and swings when it's on top of
- * him, not half a screen away (see spacez_hq). That works because the rusher
+ * him, not half a screen away (see goodco_hq). That works because the rusher
  * outruns the hero (its `rushSpeed` sits above PLAYER.speed), so a fleeing hero
  * still gets run down rather than kiting the beat into a permanent stall.
  * Called from step() after the enemies

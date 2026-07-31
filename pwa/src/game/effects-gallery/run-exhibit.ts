@@ -144,7 +144,7 @@ export function runExhibit(deps: {
   // of restarting the show under the viewer.
   let speed = deps.speed ?? 1;
   const spec = stageSpec(exhibit);
-  const levelId = exhibit.levelId ?? "spacez_hq";
+  const levelId = exhibit.levelId ?? "goodco_hq";
   const build = () => createGame(SEED, levelId, "medium");
   // Replaced outright when an exhibit ENDS its run — see `stage()`. Every read
   // below goes through this binding, so the loop picks the new run up on the

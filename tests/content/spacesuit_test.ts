@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The SpaceZ space suit: STORY gear, not equipment. The hero starts in plain
+// The GOODCO space suit: STORY gear, not equipment. The hero starts in plain
 // clothes at HQ, becomes the astronaut the moment he picks the suit up off
 // the CHIEF OF SECURITY (a `suitsHero` story item worn OVER his clothes and
 // armor — no slot, no stats), and is suited by default on every later level.
@@ -19,16 +19,16 @@ import {
 
 import { SEED } from "../helpers.ts";
 
-function spacez() {
-  const state = createGame(SEED, "spacez_hq");
+function goodco() {
+  const state = createGame(SEED, "goodco_hq");
   skipCutscene(state);
   dismissIntro(state);
   return state;
 }
 
 describe("space suit", () => {
-  it("leaves the hero unsuited at SpaceZ HQ until he picks it up", () => {
-    const state = spacez();
+  it("leaves the hero unsuited at GOODCO HQ until he picks it up", () => {
+    const state = goodco();
     expect(playerSuited(state)).toBe(false);
     expect(playerAppearance(state)).toBe("hero"); // plain clothes
 
@@ -38,7 +38,7 @@ describe("space suit", () => {
   });
 
   it("banks as a story item and plays its lore, never entering the bag", () => {
-    const state = spacez();
+    const state = goodco();
     const bagBefore = state.player.inventory.filter(Boolean).length;
     collectStoryItem(state, "space_suit", { ...state.player.pos });
     expect(state.storyItems).toContain("space_suit");

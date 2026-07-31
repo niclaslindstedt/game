@@ -102,7 +102,7 @@ export type Exhibit = {
   icon: string;
   /** Extra search terms beyond the label/blurb/group words. */
   keywords?: string[];
-  /** The level whose ground the effect is staged over. Default `spacez_hq`. */
+  /** The level whose ground the effect is staged over. Default `goodco_hq`. */
   levelId?: string;
   /**
    * How the stage is set. Merged over `STAGE_BASE` and re-applied before every

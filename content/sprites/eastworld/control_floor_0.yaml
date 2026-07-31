@@ -9,7 +9,7 @@ subject:
   build: "square steel deck plates on a dark seam grid, evenly tiling"
   features: "a lit bevel along two sides of every plate"
   accent: "cold blue-grey steel under a dark seam"
-  flavor: "the deck of the ZAI control room"
+  flavor: "the deck of the TRUST ME BRO control room"
 palette:
   A: "#4b5364" # control floor plate
   b: "#333a48" # plate seam

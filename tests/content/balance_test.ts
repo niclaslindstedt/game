@@ -64,10 +64,10 @@ function timeToDeathMs(
   return state.phase === "defeat" ? state.stats.timeMs : capMs;
 }
 
-// Both shipped levels must honor the benchmark: spacez_hq is where the game
+// Both shipped levels must honor the benchmark: goodco_hq is where the game
 // starts (a dense opening now crowds the spawn), moon is the reference level
 // the engine suites calibrate against.
-describe.each(["spacez_hq", "moon"])(
+describe.each(["goodco_hq", "moon"])(
   "standing-still lethality — %s",
   (level) => {
     // The window an idle run must die inside on the intended fight and up. Held

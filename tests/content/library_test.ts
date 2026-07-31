@@ -1159,19 +1159,19 @@ describe("library pages", () => {
   });
 
   it("says which of three same-named monsters a rack row means", () => {
-    // ELON MOSQUE is three different bosses on three different maps. Inside a
+    // THE FOUNDER is three different bosses on three different maps. Inside a
     // venue's own section the heading has already said which; anywhere the name
     // travels alone — a flat rack, a `<title>`, a drop line — it has to say so
     // itself, or the row is a coin toss.
-    const mosques = model.enemies.filter(
-      (e: { name: string }) => e.name === "ELON MOSQUE",
+    const founders = model.enemies.filter(
+      (e: { name: string }) => e.name === "THE FOUNDER",
     );
-    expect(mosques.length).toBeGreaterThan(1);
-    for (const mosque of mosques) {
-      const venue = mosque.home?.name;
+    expect(founders.length).toBeGreaterThan(1);
+    for (const founder of founders) {
+      const venue = founder.home?.name;
       expect(venue).toBeTruthy();
-      expect(mosque.nameQualifier).toBe(venue);
-      expect(mosque.distinctName).toBe(`ELON MOSQUE (${venue})`);
+      expect(founder.nameQualifier).toBe(venue);
+      expect(founder.distinctName).toBe(`THE FOUNDER (${venue})`);
       // The front door's rack is flat, so it prints the qualifier…
       expect(front).toContain(`<span class="where">${venue}</span></span>`);
     }
@@ -1294,12 +1294,12 @@ describe("library pages", () => {
   });
 
   it("links the copy of a name the chapter is actually about", () => {
-    // ELON MOSQUE is three monsters, one per venue he is cornered in. A chapter
+    // THE FOUNDER is three monsters, one per venue he is cornered in. A chapter
     // linking the wrong one is a link that spoils by itself.
     const mars = chapterPage(chapterById("mars"), context, 3, 7);
-    expect(mars).toContain('href="/library/bestiary/elon-mosque/"');
+    expect(mars).toContain('href="/library/bestiary/the-founder/"');
     expect(mars).not.toContain(
-      'href="/library/bestiary/elon-mosque-eastworld/"',
+      'href="/library/bestiary/the-founder-eastworld/"',
     );
   });
 
@@ -1480,7 +1480,7 @@ describe("library pages", () => {
     // chain are all pages, and all of them are one click away.
     expect(fetchQuest).toContain("/library/bestiary/intern/");
     expect(fetchQuest).toContain("/library/errands/who/hq-intern/");
-    expect(fetchQuest).toContain("/library/missions/spacez-hq/");
+    expect(fetchQuest).toContain("/library/missions/goodco-hq/");
     expect(fetchQuest).toContain("/library/errands/hq-walk-out/");
     // …and the mission page names the people standing on it.
     expect(mission).toContain("/library/errands/who/moon-radio/");

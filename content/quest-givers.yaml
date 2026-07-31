@@ -21,9 +21,9 @@
 # off to accept is a pack, not an errand.
 
 questGivers:
-  # ---------------------------------------------------------- SPACEZ HQ
+  # ---------------------------------------------------------- GOODCO HQ
   hq_intern:
-    level: spacez_hq
+    level: goodco_hq
     name: PRIYA NAIR
     sprite: qg_intern
     at: { x: 470, y: 700 }
@@ -37,12 +37,12 @@ questGivers:
       - HEY. YOU'RE NOT ON THE ROTA. NEITHER AM I. LISTEN, CAN I ASK YOU A FAVOR?
 
   hq_unit7:
-    level: spacez_hq
+    level: goodco_hq
     name: UNIT 7-ECHO
     sprite: qg_unit7
     at: { x: 1070, y: 700 }
     lore: >
-      A first-generation OPTIMUSK, decommissioned eleven years ago and never
+      A first-generation SUCCESSOR, decommissioned eleven years ago and never
       collected. It holds the last order it was given and will not act past it
       without a countersignature. It has watched the models that replaced it
       replace the people who built them, and files that under CHANGES TO THE
@@ -201,7 +201,7 @@ questGivers:
   # the machine's book of who counts, and the fact that everyone in it was
   # filed under an amount.
   hq_clerk:
-    level: spacez_hq
+    level: goodco_hq
     name: WALTER PRICE
     sprite: qg_clerk
     at: { x: 1700, y: 1040 }
@@ -224,8 +224,8 @@ questGivers:
     sprite: qg_auditor
     at: { x: 760, y: 1340 }
     lore: >
-      A contract auditor sent up to reconcile what SpaceZ was shipping off Site
-      T against what SpaceZ said it was shipping. He got as far as noticing the
+      A contract auditor sent up to reconcile what GOODCO was shipping off Site
+      T against what GOODCO said it was shipping. He got as far as noticing the
       two numbers were different and that the difference was warm. Nobody
       collected his findings, and nobody collected him. He still holds the
       clipboard, and the column he could not make balance is still open.

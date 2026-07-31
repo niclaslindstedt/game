@@ -79,7 +79,7 @@ export function createRunProgress(deps: {
   } = deps;
 
   // The first instant the run is truly in the player's hands — armed and
-  // playing, past the prelude, the intro monologue, and (on SpaceZ HQ)
+  // playing, past the prelude, the intro monologue, and (on GOODCO HQ)
   // the scripted opening strike that draws the blade. Snapshot it once so
   // a later RETRY drops the hero back HERE, into the action, instead of
   // replaying the whole opening. NEXT LEVEL runs this on its own fresh

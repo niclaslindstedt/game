@@ -5,7 +5,7 @@
 // is LIGHT. That decision is one luminance knee, and it only means "light" for
 // as long as it sits ABOVE the ordinary ground — because the ground is not a
 // minority of a frame here, it IS the frame: sample any moment of play and the
-// moon's regolith (0.554) and SpaceZ HQ's deck (0.701) are each the 50th AND the
+// moon's regolith (0.554) and GOODCO HQ's deck (0.701) are each the 50th AND the
 // 90th percentile of their own picture.
 //
 // Ship a knee under them and the floor is classed as a light source and added

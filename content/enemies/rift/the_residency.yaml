@@ -1,0 +1,27 @@
+id: the_residency
+name: THE RESIDENCY
+lore: >-
+  He did not retire, whatever the obituaries said. He took a residency, the
+  acoustics between universes being unmatched, and he has no intention of
+  being interrupted — nothing in the rift can lay a hand on him, and he is
+  gone before the second verse.
+role: elite
+levelBonus: 3
+sprite: the_residency
+apparition: true
+phasing: true
+hp: 50
+speed: 16
+radius: 9
+contactDamage: 0
+critChance: 0
+contactCooldownMs: 700
+dialogue:
+  - - WELL NOW. AIN'T SEEN A LIVING SOUL IN HERE SINCE THAT CARD DEALER FROM THE STRIP.
+  - hero:
+      - A LOUNGE SINGER. IN A HOLE BETWEEN UNIVERSES. THEY TOLD ME YOU HUNG IT UP YEARS BACK.
+  - - I NEVER HUNG UP A THING. I TOOK A RESIDENCY. BEST ACOUSTICS BETWEEN UNIVERSES.
+  - - MIND THE BLACK HOLES, FRIEND. KEEP THEM GOOD SHOES OFF THE EVENT HORIZON. BE SEEING YOU.
+ai:
+  aggroRadius: 240
+  rushSpeed: 100

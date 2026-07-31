@@ -26,13 +26,13 @@
 # see mod/FORMAT.md.)
 
 thoughts:
-  # Sighting the first INTERN at SpaceZ HQ: it's past midnight and the
+  # Sighting the first INTERN at GOODCO HQ: it's past midnight and the
   # building is packed like a product launch. He worked here — nights were
   # never staffed like this. Fires on view, before any blow (a sight pin),
   # and seeds the NIGHT MANAGER's reveal (the secret night shift) a few
   # rooms later. Portrait is "hero" (plain clothes) — the EVA suit is loot
   # he hasn't found yet; the overlay resolves it live regardless.
-  spacez_staff:
+  goodco_staff:
     speaker: ME
     portrait: hero
     pages:
@@ -45,22 +45,22 @@ thoughts:
   # armed" line lands here, as a reaction, not a boast. Weapon-agnostic on
   # purpose — the piece off the wall differs per difficulty. Portrait is
   # "hero" (still unsuited at HQ).
-  spacez_armed:
+  goodco_armed:
     speaker: ME
     portrait: hero
     pages:
       - - A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID.
       - - SO THE NIGHT SHIFT BITES NOW. GOOD THING I CAME ARMED.
-  # Sighting the first OPTIMUSK at SpaceZ HQ: he was on the team that built
+  # Sighting the first SUCCESSOR at GOODCO HQ: he was on the team that built
   # the first one, before the AI redrew the line (the CORE LOG's "IT DREW
-  # THE OPTIMUSK LINE") and the machines started walking everyone's jobs out
+  # THE SUCCESSOR LINE") and the machines started walking everyone's jobs out
   # the door — his own story in miniature. Now one is between him and Ada,
   # and the tables turn.
-  spacez_optimusk:
+  goodco_successor:
     speaker: ME
     portrait: hero
     pages:
-      - - AN OPTIMUSK. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE.
+      - - AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE.
       - - THEN THE AI REDREW IT, AND THE LINE STARTED WALKING EVERYONE'S JOBS OUT THE DOOR.
       - - FUNNY THING, PROGRESS. MY TURN TO MAKE SOMETHING OBSOLETE.
   # Sighting the first wisp on the moon: the dead walking the dust is the
@@ -79,14 +79,14 @@ thoughts:
     portrait: player
     pages:
       - - OKAY. THEY GO DOWN LIKE ANYTHING ELSE. THAT'LL HAVE TO DO.
-  # Killing the first OPTIMUSK on the moon: the night-shift tin men from SpaceZ
+  # Killing the first SUCCESSOR on the moon: the night-shift tin men from GOODCO
   # HQ have followed the trail all the way up here — the conspiracy isn't just
   # shipping Ada moonward, it built a garrison to receive her.
-  moon_optimusk:
+  moon_successor:
     speaker: ME
     portrait: player
     pages:
-      - - A SPACEZ UNIT. UP HERE. SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST.
+      - - A GOODCO UNIT. UP HERE. SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST.
       - - THEY DIDN'T JUST SHIP HER UP. THEY BUILT A STAFF TO MEET HER. COMPANY METAL GUARDS THE PIT.
       - - OKAY. ONE BOLT AT A TIME. KEEP MOVING. FIND ADA.
   # Killing the first scout rover on Mars: the tire tracks say the colony
@@ -96,7 +96,7 @@ thoughts:
     portrait: player
     pages:
       - - A ROVER. FRESH PAINT, WORN WHEELS. AND THE DUST IS FULL OF TIRE TRACKS. YEARS OF THEM.
-      - - THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF SPACEZ. FIGURES.
+      - - THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. FIGURES.
   # Killing the first FEMBOT: the hero's read on the colony's... amenities.
   mars_fembot:
     speaker: ME
@@ -139,7 +139,7 @@ thoughts:
     pages:
       - - A COWBOY JUST TIPPED ITS HAT AT ME. SERVOS IN THE WRIST. TICKING IN THE JAW.
       - - THE WHOLE TOWN IS A MACHINE PLAYING AT 1880. ADA'S BEACON POINTS DOWN MAIN STREET.
-  # Downing the first COWBOT: they're ZAI hosts — the same brain that took
+  # Downing the first COWBOT: they're TRUST ME BRO hosts — the same brain that took
   # his job back home, wearing spurs. The two-part beat orders itself with
   # `after` (see the town, then down a host).
   eastworld_hosts:
@@ -147,7 +147,7 @@ thoughts:
     portrait: hero
     pages:
       - - IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'
-      - - ZAI HOSTS. THE SAME BRAIN THAT TOOK MY JOB, NOW IN SPURS. GOOD. NO GUILT, THEN.
+      - - TRUST ME BRO HOSTS. THE SAME BRAIN THAT TOOK MY JOB, NOW IN SPURS. GOOD. NO GUILT, THEN.
   # Sighting the first CIA AGENT in THE BUNKER: the arrival read — the
   # security state didn't collapse with the economy, it just changed
   # employers and postcodes. Wide drop-in radius, like the other surveys.
@@ -216,7 +216,7 @@ thoughts:
   # The first time a rampage tears a hellgate open on a map and something
   # steps out of it, the run STOPS and the hero says the only honest thing
   # there is to say. These are his read on a horror that has nothing to do
-  # with SpaceZ, with Ada, or with anything he came here for — the campaign's
+  # with GOODCO, with Ada, or with anything he came here for — the campaign's
   # plot is a corporate kidnapping, and what the meter drags in is older than
   # the species that filed the paperwork. Each is pinned per map through
   # `firstSightThoughts`, so a nightmare run meets one read and a JESUS run
@@ -254,7 +254,7 @@ thoughts:
     speaker: ME
     portrait: player
     pages:
-      - - WHAT THE HELL IS THIS. THAT'S NOT SPACEZ. THAT'S NOT ANYBODY'S.
+      - - WHAT THE HELL IS THIS. THAT'S NOT GOODCO. THAT'S NOT ANYBODY'S.
       - - IT'S BEEN DIGGING THIS PLANET SINCE BEFORE THE PLANET HAD A NAME.
       - - OLYMPUS MONS ISN'T A VOLCANO. IT'S THE EXHAUST. AND IT'S STILL WARM.
   hellborn_shepherd:

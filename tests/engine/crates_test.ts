@@ -223,7 +223,7 @@ describe("chance-based prop loot", () => {
   });
 });
 
-/** Drop a fresh CHEST (a SpaceZ locker) onto the field — a breakable that
+/** Drop a fresh CHEST (a GOODCO locker) onto the field — a breakable that
  * carries the `chest` flag so it spills the richer D2-style haul. */
 function addChest(
   state: GameState,

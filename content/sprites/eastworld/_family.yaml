@@ -31,8 +31,8 @@ animations:
     { frames: [one_armed_bandit_0, one_armed_bandit_1], delayMs: 300 }
   longhorn_walk: { frames: [longhorn_0, longhorn_1], delayMs: 340 }
   mosque_beach_walk:
-    { frames: [elon_mosque_beach_0, elon_mosque_beach_1], delayMs: 340 }
-  supercore_pulse: { frames: [zai_supercore_0, zai_supercore_1], delayMs: 420 }
+    { frames: [the_founder_beach_0, the_founder_beach_1], delayMs: 340 }
+  supercore_pulse: { frames: [bro_supercore_0, bro_supercore_1], delayMs: 420 }
   hay_ball_roll: { frames: [hay_ball_0, hay_ball_1], delayMs: 120 }
   the_long_noon_step:
     { frames: [the_long_noon_0, the_long_noon_1], delayMs: 300 }

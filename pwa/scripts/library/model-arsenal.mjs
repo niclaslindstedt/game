@@ -198,7 +198,7 @@ const link = (id, name, path) => ({ id, name, path });
  *
  * `enemyName` is the bestiary's own answer to "what do I call this monster when
  * its name is travelling alone" (`nameApart` in model.mjs). A drop line is
- * exactly that case — "ELON MOSQUE always hands it over" is three different
+ * exactly that case — "THE FOUNDER always hands it over" is three different
  * bosses on three different maps — so the caller passes the resolver rather
  * than this file re-deriving which names are shared.
  */

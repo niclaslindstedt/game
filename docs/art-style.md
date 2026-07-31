@@ -38,7 +38,7 @@ The families are the authority on their own color world:
 | Family                          | The mood, in a line                                                                                 |
 | ------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `hero`                          | Grounded working-man look; practical clothes and gear, muted realistic colors, no fantasy flourish. |
-| `spacez`                        | Corporate HQ: sleek brand whites and chrome, cool blue accents, clean product-design surfaces.      |
+| `goodco`                        | Corporate HQ: sleek brand whites and chrome, cool blue accents, clean product-design surfaces.      |
 | `moon`                          | Desaturated regolith greys, hard black shadow, cold vacuum light.                                   |
 | `mars`                          | Rust-red oxide and dust, riveted weathered metal, thin cold light.                                  |
 | `rift`                          | Void blacks shot through with unnatural violet and teal glow, nothing quite solid.                  |
@@ -166,7 +166,7 @@ Families also make new content **cheap**, and the existing ones show the paths:
 - **Recolor a sibling biome.** `mars` builds its rocks and craters as
   `swapPalette` calls over the `moon` grids — a red desert cost zero terrain
   redraws.
-- **One chassis, many accents.** The `eastworld` GROK controllers are one drawn
+- **One chassis, many accents.** The `eastworld` TRUST ME BRO controllers are one drawn
   body with palette-swapped accent colors for the variants.
 - **One body, many costumes.** The `merchant` and `hero` costumes share a single
   16×16 body plan and foot anchor, so a costume swap is new grids only — no

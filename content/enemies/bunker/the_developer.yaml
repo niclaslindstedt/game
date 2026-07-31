@@ -1,0 +1,71 @@
+id: the_developer
+name: THE DEVELOPER
+lore: >-
+  He built this bunker and sold every suite in it, then sold the fleets that
+  made the suites necessary — the vacuum units and the door detail both. He
+  has not yet worked out that the guards on his own door are his own stock,
+  or that the zero on his account is not a clerical error.
+role: elite
+levelBonus: 6
+sprite: the_developer
+hp: 2600
+speed: 10
+radius: 15
+contactDamage: 55
+critChance: 0.18
+dodgeChance: 0
+contactCooldownMs: 900
+dialogue:
+  - - MY WING. THE GOOD WING. THE OTHERS PAID EXTRA FOR A VIEW. THERE IS NO VIEW. THEY PAID ANYWAY.
+  - hero:
+      - THE MAN WITH THE BROCHURE. OF ALL THE PEOPLE TO OUTLIVE THE ECONOMY.
+  - - I SOLD THE HOLE, AND I SOLD WHAT MADE THEM WANT ONE. VACUUM FLEET. DOOR DETAIL. BOTH MINE.
+  - hero:
+      - SO THE SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD YOURSELF THE LOCK YOU'RE BEHIND.
+  - - THEY'RE UNDER WARRANTY. MY LEDGER READS ZERO - CLERICAL. I'M DISPUTING IT. NOW MOVE ALONG.
+lastWords:
+  - THE PAPERWORK... ...WAS IN ORDER...
+mechanics:
+  abilities:
+    - id: rally_cry
+      bark:
+        - I SOLD THEM THE
+        - HOLE AND THE LOCK
+        - ON THE DOOR.
+      windupMs: 720
+      cooldownMs: 12500
+      radius: 240
+      durationMs: 7000
+      speedMult: 1.3
+      damageMult: 1.26
+      look:
+        core: "236, 190, 66"
+        hot: "255, 240, 190"
+        deep: "36, 28, 6"
+        spark: "252, 216, 124"
+    - id: quake_line
+      windupMs: 740
+      cooldownMs: 10500
+      count: 6
+      spacing: 36
+      radius: 24
+      damageFrac: 0.72
+      stepMs: 120
+  slam:
+    windupMs: 1000
+    radius: 85
+    damageFrac: 1.3
+    cooldownMs: 9000
+ai:
+  aggroRadius: 260
+  rushSpeed: 60
+loot:
+  tierDrops:
+    rare: 1.5
+    magic: 1
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 0
+  medkits: 2
+  tierBonus: 0.4

@@ -1,7 +1,7 @@
 id: prospector
 name: THE PROSPECTOR
 lore: >-
-  He dug SpaceZ's secret tunnels at Site T on the far side, for freight that
+  He dug GOODCO's secret tunnels at Site T on the far side, for freight that
   was never tracked. He quit the month the crates coming up started
   breathing, and up here a resignation is not a letter.
 role: elite
@@ -17,9 +17,9 @@ contactDamage: 24
 critChance: 0.12
 contactCooldownMs: 700
 dialogue:
-  - - CLAIM'S TAKEN. WHOLE ROCK'S TAKEN. STAMPED, FILED, AND PAID FOR BY SPACEZ.
+  - - CLAIM'S TAKEN. WHOLE ROCK'S TAKEN. STAMPED, FILED, AND PAID FOR BY GOODCO.
   - hero:
-      - SPACEZ OWNS THE MOON? SINCE WHEN? WHAT ARE THEY EVEN DOING UP HERE?
+      - GOODCO OWNS THE MOON? SINCE WHEN? WHAT ARE THEY EVEN DOING UP HERE?
   - - BUILDING. I DUG THEIR TUNNELS AT SITE T, ON THE FAR SIDE. SECRET FREIGHT, NEVER TRACKED.
   - hero:
       - FREIGHT. WOULD THAT FREIGHT EVER INCLUDE PEOPLE?
@@ -68,7 +68,7 @@ loot:
   tierDrops:
     magic: 1
   storyItems:
-    - spacez_blueprints
+    - goodco_blueprints
   weapons: 0
   gear: 1
   xpArrows: 1

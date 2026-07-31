@@ -13,7 +13,7 @@ fix, not just the XP curve / mob hp / drops.
 
 The coupling that makes it delicate: the hero carries level + gear FORWARD between
 maps, so each map's band assumes an arrival level from the previous one (easy:
-`spacez_hq 6 → moon 10 → mars 18 → the_rift 25 → eastworld 31 → the_bunker 28`).
+`goodco_hq 6 → moon 10 → mars 18 → the_rift 25 → eastworld 31 → the_bunker 28`).
 Change one map's intended/boss level and every following map is entered off-level
 — so re-flow the change through all maps AND all difficulty columns, then
 re-verify with a carry-over campaign `simulate-run` (easy→JESUS) that the chain

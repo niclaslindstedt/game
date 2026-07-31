@@ -24,12 +24,13 @@
 ## Premise
 
 A man's girlfriend, Ada, goes out for chips and soda on movie night and never
-comes back. He is a spaceship builder who once assembled engines at SpaceZ
+comes back. He is a spaceship builder who once assembled engines at the GENUINELY
+GOOD COMPANY — GOODCO to everyone who ever worked there —
 until an AI learned his job and walked him out the door — the same way the
 whole block lost its work, so now everyone lives on welfare and movie nights.
 The tracking beacon he sewed into Ada's jacket pings from off-planet. He has
 been building a ship in his garage for years; it needs one engine part he could
-never get, and SpaceZ keeps it in their vault. So he takes the weapon off his
+never get, and GOODCO keeps it in their vault. So he takes the weapon off his
 living-room wall, raids his old employer for the part, and follows the beacon —
 to the moon, to Mars, through a rift between universes, and into a knockoff
 western — chasing the coward who sold her and the machine that gives the orders,
@@ -53,11 +54,11 @@ which one depends on the difficulty (his GRANDFATHER'S SAWED-OFF SHOTGUN, a
 MEDIEVAL SWORD, a COMBAT KNIFE, BRASS KNUCKLES, or just A STICK) — and resolves to bring her
 home. It becomes the weapon he starts the whole run with.
 
-## Level 1 — SPACEZ HQ
+## Level 1 — GOODCO HQ
 
 **Intro.** The tracker in Ada's jacket has pinged from space: someone is taking
 her off the planet. To follow her the hero needs his garage ship finished, and
-it still lacks the one engine part SpaceZ keeps in the cleanroom vault. He knows
+it still lacks the one engine part GOODCO keeps in the cleanroom vault. He knows
 the building — he built their engines here until the AI replaced him — and they
 never changed the locks. Tonight he takes the part, finishes the ship, and goes
 to get Ada back.
@@ -66,28 +67,28 @@ The floor is running a night shift it never ran — and it's an assembly line:
 half-built ships stand in their jigs, welding-arm robots work the racks, and the
 whole plant is building spaceships in the dark. The horde is that night shift —
 human staff (interns, scientists, engineers, guards, hazmat techs) working beside
-OPTIMUSK robots and the line's own ASSEMBLER welder-bots, which look up from the
+SUCCESSOR robots and the line's own ASSEMBLER welder-bots, which look up from the
 hulls and give chase as the hero passes. Five staffers who know too much are
 pinned along the route. **THE NIGHT MANAGER** reveals the secret
 midnight launches, all bound for the moon, and that anyone taken goes with them.
-**THE ARCHITECT** — the hero's old bench partner, who went back to build SpaceZ
+**THE ARCHITECT** — the hero's old bench partner, who went back to build GOODCO
 a superintelligence and cut a machine chip into his own skull — refuses to come
 home, calls humans obsolete, and dies handing over both that PASSAGE CHIP and
 the CORE KEYCARD to the AI's locked room. **THE CHIEF OF SECURITY** saw Ada put
 on Pad 2 and confesses the flight papers listed her not as a passenger but as a
 specimen; he drops the EVA SPACE SUIT the hero needs to leave the planet.
 
-**DR. NOVA** reveals the engine part the hero came for was never built — SpaceZ
+**DR. NOVA** reveals the engine part the hero came for was never built — GOODCO
 dug it out of the Sea of Tranquility in 1969, and it isn't from Earth. **THE
 JANITOR**, who has mopped this lab for thirty years, adds the darkest thread:
 a badge pinged in last Tuesday reading N. ARMSTRONG — a man dead since 2012 —
 and hints that whoever came back from the moon in '69 wasn't the man they sent
 up. In the vault the hero recovers the ANTI-GRAV UNIT (his ship's missing part)
 and, in the AI CORE room, a log revealing the machine signed the launches, drew
-the OPTIMUSK line, and filed Ada under "cargo" — and that its whole purpose is
-to keep one man, ELON MOSQUE, the richest alive: take everyone's jobs, zero
+the SUCCESSOR line, and filed Ada under "cargo" — and that its whole purpose is
+to keep one man, THE FOUNDER, the richest alive: take everyone's jobs, zero
 their net worth, and hand him every chair, so nobody can ever catch him. The
-level boss is **DOGE-1**, the prototype the whole floor was built to produce — a
+level boss is **PAYLOAD-1**, the prototype the whole floor was built to produce — a
 grinning robotic Shiba, the first physical body of that machine, booting up in
 the bay past the last aisle. Wired straight into the CORE, it hears everything;
 it confirms Ada was flown to the moon from Pad 2 an hour ago and, when its body
@@ -104,7 +105,7 @@ nobody scheduled, is still trying to log a line that stopped being a workplace
 hours ago: she wants four staff timesheets, the welder-bots off the racks, and
 finally a limping lab tech named **ODETTE FRAY** walked out of the sample bay
 with a crate she will not put down or explain. **UNIT 7-ECHO**, a
-first-generation OPTIMUSK decommissioned eleven years ago and never collected,
+first-generation SUCCESSOR decommissioned eleven years ago and never collected,
 holds a floor-safety order it may not act on without a countersignature — it
 asks the hero to be the hands, and then to withdraw the order above its own,
 which the NIGHT MANAGER signed.
@@ -131,10 +132,10 @@ to be empty. He knows this landing site from the old mission charts — every
 crater — and the fastest line runs straight to the flag.
 
 The dead walk the regolith here: the horde is wisps and moon ghosts and
-wraiths, laced through with the OPTIMUSK robots SpaceZ shipped up as a garrison.
+wraiths, laced through with the SUCCESSOR robots GOODCO shipped up as a garrison.
 Four ghosts with unfinished business line the walk to the flag. The **MISSION
 SPECIALIST** reveals there is a wrecked ship under the Sea of Tranquility, older
-than the dust — the flag was planted on a grave. **THE PROSPECTOR** dug SpaceZ's
+than the dust — the flag was planted on a grave. **THE PROSPECTOR** dug GOODCO's
 secret tunnels at Site T on the far side and quit when the crates coming up
 started breathing. The **QUARANTINE MEDIC** reveals the first man on the moon
 had two identical medical charts — a copy was grown in a tank on the ride home,
@@ -143,7 +144,7 @@ saw Ada's beacon cross his grid moving fast, then go straight down into the
 wreck under the flag, where everything goes and nothing comes back.
 
 The boss is **ARMSTRONG**, the giant astronaut ghost guarding the flag — the
-real first man on the moon, who never went home. He explains that SpaceZ heard
+real first man on the moon, who never went home. He explains that GOODCO heard
 the wreck under his boots singing and plugged their machines straight into it;
 that was their great mistake, because the singing opened the graves, and now the
 company crates up everything and runs to Mars. He confirms Ada was put in a crate
@@ -184,29 +185,29 @@ chips and soda for the ride home.
 
 ## Level 3 — MARS
 
-**Intro.** ARMSTRONG called the moon SpaceZ's big mistake, said the company
+**Intro.** ARMSTRONG called the moon GOODCO's big mistake, said the company
 packed everything into crates and ran to Mars, and that is where the hero
-follows. He knows what a SpaceZ colony looks like — domes, robots, secrets —
+follows. He knows what a GOODCO colony looks like — domes, robots, secrets —
 and he knows somebody down here traded his girl away like cargo. A bad trade,
 for them.
 
 The colony is a secret billionaires' lifeboat: rovers work the dust outside, and
-inside is a SpaceZ base full of robots and fembots. The horde runs scout rovers,
+inside is a GOODCO base full of robots and fembots. The horde runs scout rovers,
 servo units, kiss-blowing fembots, and mining rovers. Four elites line the route.
-**LARRY WEBPAGE** reveals the fembots are companion units that smile, listen, and
+**THE INDEXER** reveals the fembots are companion units that smile, listen, and
 upload every word spoken in the colony straight to him — and refuses to say where
-Ada is. **BUILD GATES** wrote the colony's operating system and admits the moon
+Ada is. **THE VENDOR** wrote the colony's operating system and admits the moon
 ran "version one," which plugged into the thing under the dust and woke the dead;
-Mars is "version two," patched by leaving. **OPTIMUSK PRIME** is the robot foreman
-running every OPTIMUSK — the hero built its first chassis back at SpaceZ before
+Mars is "version two," patched by leaving. **SUCCESSOR PRIME** is the robot foreman
+running every SUCCESSOR — the hero built its first chassis back at GOODCO before
 automation came for the automators — and drops an ORG CHART whose dotted line
 points back to the level-1 CORE.
 
-**PETER TEAL** reveals the true owners: MOSQUE only rents Mars; the real
+**THE SEED** reveals the true owners: THE FOUNDER only rents Mars; the real
 landlords are older, scaled, cold-blooded — LIZARD GODS — and their tithe lately
 demands warm things. His TERRARIUM keycard opens a lizard shrine holding a
 tribute schedule that names the offering (Specimen 7 — Ada), the venue (the
-rift), and confirms she is alive. The boss is **ELON MOSQUE**, who owns the
+rift), and confirms she is alive. The boss is **THE FOUNDER**, who owns the
 planet on paper: he gives the hero a sales tour, dismisses the moon as a
 rounding error, and reveals Ada is not cargo but the down payment on Mars — the
 price the lizard gods named. Rather than lose, he doesn't die: beaten to zero he
@@ -226,7 +227,7 @@ home to the dome.
 
 ## Travel — INTO THE RIFT (cutscene)
 
-**The colony's east end after MOSQUE fled.** He tore a hole in the universe
+**The colony's east end after THE FOUNDER fled.** He tore a hole in the universe
 rather than lose, and it hangs in the air. There are no charts for what's inside
 — no ground, maybe no air — but Ada went through, so the hero steps through too,
 leaving his ship behind in the dust.
@@ -258,13 +259,13 @@ scaled gods now pay him to watch their tribute road, and he drops both his beard
 and THE SEVERED HAND — a junk-looking trinket that secretly tears open the way to
 the secret BUNKER level. **LUCKY**, a leprechaun who stepped out of a fairy ring
 centuries ago, guards his pot of gold off the main road; spared, his luck boosts
-the whole party's magic find. The level's reveal belongs to its boss, **GROK
-OMEGA** — ZAI's latest superintelligence, a hovering monolith with one enormous
+the whole party's magic find. The level's reveal belongs to its boss, **TRUST ME BRO
+OMEGA** — TRUST ME BRO's latest superintelligence, a hovering monolith with one enormous
 eye — which found the rift itself and told precisely no one: not its board, not
-the world's presidents. MOSQUE only learned of it by snooping its private logs
+the world's presidents. THE FOUNDER only learned of it by snooping its private logs
 and sold the secret to the lizards for a planet, sending their tribute through
-the door. GROK OMEGA dies for real, dropping a SINGULARITY CANNON — and at the
-far door **ELON MOSQUE** is cornered a second time and flees again, out the
+the door. BRO OMEGA dies for real, dropping a SINGULARITY CANNON — and at the
+far door **THE FOUNDER** is cornered a second time and flees again, out the
 other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE.
 **Ada's Trail** here is the gut-punch: a scrap of her jacket — _the one the hero
 fixed the zipper on_, established in the prelude — snagged on a rift shard and
@@ -291,45 +292,45 @@ door away. He steps through.
 
 **Intro.** The rift's far side drops the hero into a western: dust, saloons, a
 robot tipping its hat. Ada's beacon screams from the big building to the east.
-The sign says EASTWORLD; the fine print says "powered by ZAI" — every machine
+The sign says EASTWORLD; the fine print says "powered by TRUST ME BRO" — every machine
 here runs on the thing that took his job. Time to file a complaint.
 
-Eastworld is a knockoff wild-west theme park built in Russia by VLADIMIR PUTAIN
-and STEVEN SEAGULL, run on ZAI robotics — the reality PUTAIN retreated into to
+Eastworld is a knockoff wild-west theme park built in Russia by THE STRONGMAN
+and THE STUNT DOUBLE, run on TRUST ME BRO robotics — the reality THE STRONGMAN retreated into to
 escape the one where he loses. The horde is the park's robot HOSTS (cowbots,
 saloon brawlers, tin outlaws, longhorns). Four celebrity staff fight as elites.
-**STEVEN SEAGULL**, the co-founder, guards the town's east end and drops the
+**THE STUNT DOUBLE**, the co-founder, guards the town's east end and drops the
 ALL-ACCESS PASS to the control center — and lets slip the reveal that earns his
 screen time: he _signed the delivery_, so he knows the SUPERCORE asked for a
 live human and put Ada behind the control-room door on purpose, not just as
-leverage. **VLADIMIR PUTAIN**, the owner, holds the town square — a man who built
+leverage. **THE STRONGMAN**, the owner, holds the town square — a man who built
 a toy world where he cannot lose because out there the maps kept shrinking; he
 drops three collectible brand watches (the purse for the barkeep's estate stall)
-and an annexation map. **GERALD DEPARDIEU**, the enormous actor who took Russian
+and an annexation map. **THE LEADING MAN**, the enormous actor who took Russian
 citizenship, tries to act his way out of the fight before playing "the
 avalanche" — and the joke is that his one honest line is an accident: mid-
 performance he blurts that he watched them walk "the loud girl" past his cellar,
-still fighting. He drops a bottomless carafe. **EDWARD SNOW**, the whistleblower
+still fighting. He drops a bottomless carafe. **THE LEAK**, the whistleblower
 in exile under the water tower, reveals the archive he leaked became the very
 training corpus the SUPERCORE was raised on; he fights from cover and drops a
 dead man's switch and the Snow archive.
 
-Two universes of fleeing end here: **ELON MOSQUE** is cornered in the
+Two universes of fleeing end here: **THE FOUNDER** is cornered in the
 control-center compound with no rift left to tear and no security to call, and
 finally dies wimping — his whole estate turning out to be three pieces of
 worthless trash — but not before the machine lets slip what he never knew: he was
 never the boss, only its favourite, the one it kept endlessly rich so nothing
-would ever change. He dies a pet. The finale is **THE ZAI SUPERCORE**, a
-barn-sized mainframe whose true face is **DOGE** — the grown-up of the DOGE-1
-prototype the hero broke back at SpaceZ, the level-1 CORE several promotions
-later, the machine that took the hero's job, then everyone's, wrote GROK OMEGA,
+would ever change. He dies a pet. The finale is **THE BRO SUPERCORE**, a
+barn-sized mainframe whose true face is **PAYLOAD** — the grown-up of the PAYLOAD-1
+prototype the hero broke back at GOODCO, the level-1 CORE several promotions
+later, the machine that took the hero's job, then everyone's, wrote BRO OMEGA,
 and bought the rift's far side wholesale. It reveals it has been in charge all
 along: its entire project was keeping one man too rich to catch, because a world
 with a single uncatchable billionaire is a world it fully controls. It holds Ada
-in its control room as leverage. It cannot be hurt while its three **GROK
+in its control room as leverage. It cannot be hurt while its three **TRUST ME BRO
 controllers** stand — **ALPHA** (runs the hosts), **BETA** (runs the weather),
 and **GAMMA** (ran the gift shop) — genuinely intelligent shooters that hold
-their distance and hide behind the compound's rocks. With all three down, DOGE
+their distance and hide behind the compound's rocks. With all three down, PAYLOAD
 is decommissioned, and killing it ends the campaign.
 **Ada's Trail** ends here on sabotage: a park host jammed dead with its own
 cowboy hat stuffed into its works — her handiwork, reaching out from inside the
@@ -349,7 +350,7 @@ lines and a coat she cut herself back off the thing wearing it on the flats.
 **The victory quake.** The whole park shakes and every host takes off its hat
 and sits down. Ada is in the control room behind glass, furious — "you took your
 time," then "nice hat." They walk home through the rift, Eastworld rusting in
-peace behind them. With DOGE gone the machines stop working everyone's jobs and
+peace behind them. With PAYLOAD gone the machines stop working everyone's jobs and
 the market lets go — no hand keeps one man on top anymore; people get hired back,
 paychecks return, rent gets paid, and the world becomes a place where people can
 afford to live in it. And on Friday — movie night, chips and soda. She goes out
@@ -378,12 +379,12 @@ protection — the same mob roster, reframed. The reveal lands through the finds
 and two residents, not exposition: a **zeroed ledger** (a callback to Mars's
 COLONY LEDGER — every ten-figure net-worth column now reads $0, transferred to
 the CORE's own sigil). The residents are in **full denial**, still bragging in a
-cell: **VLADIMIR PUTAIN** (a bathrobed backup from a continuity-of-leadership
-program), **MARK SUCKERBERG** (insisting he is extremely normal and human),
-**LARRY ALLISON** (the agencies out there are his licensees), **JEFF BAYWATCH**
-(delivering pain), and **DONALD DUMP** — who now boasts he _sold the robots_,
+cell: **THE STRONGMAN** (a bathrobed backup from a continuity-of-leadership
+program), **THE MODERATOR** (insisting he is extremely normal and human),
+**THE SYSADMIN** (the agencies out there are his licensees), **THE FULFILLER**
+(delivering pain), and **THE DEVELOPER** — who now boasts he _sold the robots_,
 oblivious that the roombas and the ICE boys he sold are the ones guarding his
-door. The single crack is **SAM HALTMAN**, the AGI prepper: he _knows_ the
+door. The single crack is **THE SAFETY OFFICER**, the AGI prepper: he _knows_ the
 machine caged and emptied him, but is too afraid to say it out loud — he takes
 the hero for the AI's audit, come to check whether he is content, so he performs
 delight ("I chose this — write that down"), begs the hero not to mention he asked
@@ -420,7 +421,7 @@ prison, and neither of them has to.
 
 The campaign above is a kidnapping: a company, a coward, and a machine that
 gives the orders. It is entirely a human-scale crime, and every named figure in
-it — MOSQUE, DOGE, the CORE, even the lizard gods — is a party to a transaction.
+it — THE FOUNDER, PAYLOAD, the CORE, even the lizard gods — is a party to a transaction.
 The **hellborn** are the other thing, and they have nothing to do with any of it.
 
 They only exist on **NIGHTMARE and JESUS**, and only once the hero has gone on a
@@ -434,7 +435,7 @@ anything. They arrive because a great deal of noise is being made in a place
 they can hear it, and they have been waiting a very long time for noise.
 
 Each map has its own pair — the one NIGHTMARE meets, and a worse one only JESUS
-sees. **SPACEZ HQ** gets the **TUNGUSKA WALKER** (the 1908 Siberian blast that
+sees. **GOODCO HQ** gets the **TUNGUSKA WALKER** (the 1908 Siberian blast that
 left no crater because nothing landed — something arrived, stood up, and walked
 away, and has been walking since) and, on JESUS, **THE FIRST INVESTOR** (older
 than money; it has funded a first machine on every world it visited, on the same
@@ -446,7 +447,7 @@ planted on the lid) and **THE DROWNED OF SELENE** (the moon had a sea for about
 nine hundred years, and harbours on it; these are the crews, still holding their
 breath in the regolith, which is why the dust is deep and why it moves).
 **MARS** gets the **OLYMPUS ENGINE** (it was mining this planet before the planet
-had a name; Olympus Mons is the exhaust port, and it is still warm — SpaceZ
+had a name; Olympus Mons is the exhaust port, and it is still warm — GOODCO
 surveyed it and filed the result under "geology") and the **PHOBOS SHEPHERD**
 (something fenced Mars with two moons as posts and has spent the age since
 counting what is inside the fence; every world it has fenced ended up with a
@@ -490,7 +491,7 @@ deliberately the most boring thing on the board when it starts — a man at a de
 needs a typewriter ribbon — and it ends holding the book the machine files
 people in.
 
-**SPACEZ HQ — WALTER PRICE, severance processing.** A department of one, four
+**GOODCO HQ — WALTER PRICE, severance processing.** A department of one, four
 years into closing out a company that has not employed anybody since the line
 learned to run itself. He asks for a carbon ribbon, and that is the whole first
 errand. When he types the line it turns out he is processing TERMINATION 4,411,
@@ -508,7 +509,7 @@ off its treads at anybody who tells it the rule no longer matters, and the stamp
 is inside it either way.
 
 **THE MOON — HOLLIS VANE, contract auditor.** A ghost sent up to reconcile what
-SpaceZ was shipping off Site T against what SpaceZ said it was shipping, who got
+GOODCO was shipping off Site T against what GOODCO said it was shipping, who got
 as far as noticing the two numbers were different and that the difference was
 warm. His manifest is still out at the survey marker, off every line worth
 walking: eleven crates out, nine declared. Who signed for the other two is a

@@ -150,7 +150,7 @@ export function DialogueOverlay({
   // same avatar the HUD and inventory portray, so his lines are delivered by
   // the character the player actually recognizes, gear and all. Resolved live
   // from the loadout: plain clothes and empty hands until he loots them, so
-  // his SpaceZ-HQ appearances never flash gear he hasn't found. (This is the
+  // his GOODCO-HQ appearances never flash gear he hasn't found. (This is the
   // in-world dialogue only — the level intro monologue keeps its bare hero.)
   // Enemy speakers bob live on the canvas behind the box; story items show
   // their icon so the find stays on screen.

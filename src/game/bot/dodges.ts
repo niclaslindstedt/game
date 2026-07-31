@@ -339,7 +339,7 @@ export function dodgeSandstorm(
 }
 
 /**
- * A JUMP input when an employee stampede (`state.stampedes`, SpaceZ HQ) is about
+ * A JUMP input when an employee stampede (`state.stampedes`, GOODCO HQ) is about
  * to trample the grounded hero — else null. A herd charges a straight, fast line
  * to the LEFT, and being caught means a ~20% bite AND a 2-second knockdown in the
  * horde — but a jump sails clean over the whole wall (z above JUMP.dodgeHeight).

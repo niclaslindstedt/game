@@ -7,7 +7,7 @@ subject:
   kind: item icon
   features: a document sheet with rows of white schematic lines and bars
   accent: engineering-drawing blue
-  flavor: the SpaceZ Site T moonbase plans
+  flavor: the GOODCO Site T moonbase plans
 palette:
   O: "#1a1c2c" # dark outline
   W: "#f4f4f4" # white schematic lines

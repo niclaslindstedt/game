@@ -69,7 +69,7 @@ ${pages
  * stitches the four sections into one graph: a chapter naming ARMSTRONG hands
  * the reader his stat block, one naming EXCALIBUR hands them its card.
  *
- * The order matters because a name is not always unique — ELON MOSQUE is three
+ * The order matters because a name is not always unique — THE FOUNDER is three
  * separate monsters, one per venue he is cornered in — so a chapter puts its
  * OWN cast at the front and links the copy the reader is actually reading
  * about. Beyond that, the earliest sighting wins: a name first met on the moon

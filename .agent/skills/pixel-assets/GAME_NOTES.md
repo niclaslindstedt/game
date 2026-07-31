@@ -12,7 +12,7 @@ and the design best practices). It is the _why_ behind this file's _what_.
 ## Families
 
 Discover the live set with `ls scripts/sprites/` (each directory is a
-family). As of 2026-07 this game ships: `hero`, `moon`, `spacez`, `prelude`,
+family). As of 2026-07 this game ships: `hero`, `moon`, `goodco`, `prelude`,
 `earth`, `effects`, `icons`, `markers`, `mars`, `rift`, `eastworld`,
 `bunker`, `merchant`, `scenes`. A new roster or biome is a new `<family>/`
 directory with a `_family.yaml`.
@@ -32,7 +32,7 @@ The `eastworld` family (2026-07) adds two more cheap paths: BUILDING-scale
 sprites (the town's 48–80 px houses) are generated from a recipe function
 inside the family module — plank rows, roof band, door and windows built by
 plain JS, deterministic so the atlas only diffs when the recipe does — and a
-same-chassis enemy trio (the GROK controllers) is one drawn body plus
+same-chassis enemy trio (the TRUST ME BRO controllers) is one drawn body plus
 `swapPalette` accent swaps (`Q` cyan → `I` magenta / `U` amber). Walk-frame
 lesson: keep the torso rows IDENTICAL across frames and animate only the
 legs (a whole-body one-row bob shrinks the wound generator's stable-pixel

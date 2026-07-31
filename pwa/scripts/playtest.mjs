@@ -15,7 +15,7 @@
 //     [--strategy aggro|balanced|flee|survivor|rush|kite|boss] \
 //     [--profile auto|melee|ranged|magic] [--timeout 120] \
 //     [--difficulty easy|medium|hard|nightmare|jesus] \
-//     [--level spacez_hq|moon|the_bunker|…] [--seed 42] [--speed 4] \
+//     [--level goodco_hq|moon|the_bunker|…] [--seed 42] [--speed 4] \
 //       (any catalog level, SECRET levels included — forced via ?level=)
 //     [--scenario '{"place":"boss","hp":2}'] [--pitch 0.5] [--yaw 45] \
 //     [--mod <dir>]
@@ -94,7 +94,7 @@ const timeoutMs = Number(opt("timeout", "120")) * 1000;
 const difficulty = opt("difficulty", "easy");
 // Which level to start on; the first level is always unlocked, so the bot
 // can reach any level regardless of saved progress via the level-select menu.
-const level = opt("level", "spacez_hq");
+const level = opt("level", "goodco_hq");
 // A test scenario (JSON ScenarioSpec) and a pinned layout seed, forwarded to
 // the app as `?scenario=` / `?seed=` (see docs/configuration.md).
 const scenario = opt("scenario", "");

@@ -10,12 +10,12 @@
 > **Status: four playable levels.** Pick a difficulty on the Doom-style
 > main menu and you drop straight into the story (the mission picker only
 > unlocks once you have cleared the campaign at that difficulty), sit through
-> the movie-night prelude (or hit SKIP, top right), raid SPACEZ HQ for the
-> drive ingredient MUSKRAT the mutant rat swallowed, take the fight to
+> the movie-night prelude (or hit SKIP, top right), raid GOODCO HQ for the
+> drive ingredient PROTOTYPE the mutant rat swallowed, take the fight to
 > the haunted moon and ARMSTRONG at the old flag, storm the secret Mars
-> colony ELON MOSQUE owns (he flees into a rift rather than lose), then
+> colony THE FOUNDER owns (he flees into a rift rather than lose), then
 > follow him into THE RIFT itself — a hallucinatory void of black holes,
-> asteroid rain, and history's missing, guarded by GROK OMEGA, ZAI's secret
+> asteroid rain, and history's missing, guarded by BRO OMEGA, TRUST ME BRO's secret
 > superintelligence — all to a chiptune soundtrack, looting gear and powers
 > while the auto-firing weapons thin the horde. Beat one of the rift's
 > legends (TESLA, EARHART, RASPUTIN — or LUCKY the leprechaun) and choose:
@@ -63,9 +63,9 @@ in.
 
 ### How to play
 
-Level 1 — SPACEZ HQ: Ada went out for chips and soda and never came back.
+Level 1 — GOODCO HQ: Ada went out for chips and soda and never came back.
 Her jacket's beacon points off-planet, and an interplanetary drive needs
-the one ingredient SpaceZ keeps in its cleanroom — the one MUSKRAT, a
+the one ingredient GOODCO keeps in its cleanroom — the one PROTOTYPE, a
 mutant lab rat, just ate. Fight through the night shift (interns,
 scientists, engineers, guards, hazmat techs), through walled offices and
 lab corridors, to his nest under the prototype rocket. Level 2 — THE MOON:
@@ -121,7 +121,7 @@ and something enormous haunts the old flag.
   you're playing without leaving the run.
 - **Obstacles** litter every level and nothing walks through them — desks,
   crates, and low rocks can be **jumped over**, and monsters can't jump: a
-  barrier the horde must flow around is your best friend. SPACEZ HQ's
+  barrier the horde must flow around is your best friend. GOODCO HQ's
   walls only pass at their doorways — the horde funnels; you decide where.
 - **Ability pickups** (fire orbs, storm cell, stasis field, the item
   magnet — and the rare screen-clearing NUKE) are carried with you and
@@ -198,7 +198,7 @@ and something enormous haunts the old flag.
 - **Unique mobs** wait at set spots on every level — larger, named
   characters (the NIGHT MANAGER, DR. NOVA, the ghost of an Apollo MISSION
   SPECIALIST…) that **rush into view and talk**: each scene reveals a
-  piece of the plot — what SPACEZ launches after midnight, what was under
+  piece of the plot — what GOODCO launches after midnight, what was under
   the flag in '69, who really came home. Kill one and it drops a
   **signature weapon** (better than the level's pool, shy of the boss's)
   plus **story items**: keycards that open **locked rooms** (spare parts,
@@ -215,7 +215,7 @@ and something enormous haunts the old flag.
   mobs it sends into tougher versions (marked by a glowing aura) that pay more
   XP and drop better gear, and scales elite mobs and bosses to your power so
   they can't be one-shot. Ease off and the meter cools.
-- **Kill the boss** — MUSKRAT under the rocket, ARMSTRONG at the flag — to
+- **Kill the boss** — PROTOTYPE under the rocket, ARMSTRONG at the flag — to
   clear the level; bosses have their own longer stare-down scenes before
   the fight. If your HP reaches zero the run ends with a stats screen and
   a retry button.
@@ -290,7 +290,7 @@ The game has no user-facing configuration yet. Build-time knobs:
 | `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                                                                                             |
 | `VITE_CHARACTER_SIGNING_KEY` | HMAC key that signs exported character archives so hand-edited saves fail to re-import; falls back to a committed default (see `docs/configuration.md`)                                                            |
 | `?debug` URL param           | Turns on debug-level console output (`src/output.ts`), exposes the live game state as `window.__game` for inspection and automated playtests, and shows the in-run FPS meter                                       |
-| `?level=<id>` URL param      | Starts runs on a specific catalog level (`spacez_hq`, `moon`, `mars`, `the_rift`, `eastworld`, secret `the_bunker`) instead of the story default                                                                   |
+| `?level=<id>` URL param      | Starts runs on a specific catalog level (`goodco_hq`, `moon`, `mars`, `the_rift`, `eastworld`, secret `the_bunker`) instead of the story default                                                                   |
 | `?seed=<n>` URL param        | Pins the run's layout seed so retries reproduce the same level layout                                                                                                                                              |
 | `?scenario=<json>` URL param | Stages a fresh run into an exact test situation — hero position, vitals, gear, spawned mobs (see `docs/configuration.md`)                                                                                          |
 | `?cutscene=<id>` URL param   | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                                                                                               |

@@ -6,7 +6,7 @@ description: |-
   gardens and their chickens, a fenced CORRAL here and there — and somewhere in
   all of it, exactly ONE TOWN: a plank main street with storefronts facing each
   other across it, which is where the shooting happens.
-  THE ENDING IS NOT ON THE MAP. The ZAI CONTROL ROOM is not a compound the hero
+  THE ENDING IS NOT ON THE MAP. The TRUST ME BRO CONTROL ROOM is not a compound the hero
   walks up to and reads off the minimap two districts early; it is underground,
   and the only way in is a steel ELEVATOR PAD standing somewhere out in the
   country. Which of the six outer thirds the lift is in is rolled per run, so the
@@ -89,7 +89,7 @@ areas:
     enclosure: hard
     weight: 0
     horde: 0
-    label: ZAI CONTROL ROOM
+    label: TRUST ME BRO CONTROL ROOM
     wall: control_wall
     ground: { common: control_floor_0, rare: control_floor_1, rareEvery: 37 }
 
@@ -486,7 +486,7 @@ objects:
     radius: 9
     density: 10
     areas: [control]
-  - id: zai_crate
+  - id: bro_crate
     type: crate
     radius: 8
     density: 16
@@ -535,21 +535,21 @@ horde:
       weight: 1
 
 # TWO OF THE FOUR LIVE HERE. SNOW leaks out of a shuttered marshal's house;
-# PUTAIN keeps a dacha on the street. Both look like scenery until the hero is
+# THE STRONGMAN keeps a dacha on the street. Both look like scenery until the hero is
 # close enough for the door to matter.
 elites:
-  - enemy: edward_snow
+  - enemy: the_leak
     ramp: savage
     hp: 480
     lair: marshal_house
-  - enemy: gerald_depardieu
+  - enemy: the_leading_man
     ramp: brutal
     hp: 950
-  - enemy: vladimir_putain
+  - enemy: the_strongman
     ramp: merciless
     hp: 700
     lair: dacha
-  - enemy: steven_seagull
+  - enemy: the_stunt_double
     ramp: endgame
     hp: 520
 
@@ -570,28 +570,28 @@ hellborn:
       count: 4
       minDifficulty: jesus
 
-# THE ZAI SUPERCORE, in the buried control room with the whole showdown standing
-# round it — MOSQUE's Eastworld body and the three GROK units, exactly the set
+# THE BRO SUPERCORE, in the buried control room with the whole showdown standing
+# round it — THE FOUNDER's Eastworld body and the three BRO units, exactly the set
 # piece the authored map ends on. The `regions` now place the LIFT rather than
 # the boss: which outer third the pad is standing in is what the run rolls.
 boss:
-  enemy: zai_supercore
+  enemy: bro_supercore
   ramp: apex
   hp: 1400
   escort:
-    - enemy: elon_mosque_eastworld
+    - enemy: the_founder_eastworld
       count: 1
       ramp: apex
       hp: 900
-    - enemy: grok_alpha
+    - enemy: bro_alpha
       count: 1
       ramp: apex
       hp: 380
-    - enemy: grok_beta
+    - enemy: bro_beta
       count: 1
       ramp: apex
       hp: 380
-    - enemy: grok_gamma
+    - enemy: bro_gamma
       count: 1
       ramp: apex
       hp: 380

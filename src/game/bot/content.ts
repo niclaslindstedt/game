@@ -122,7 +122,7 @@ function eliteTargets(
   // they will ever be, so the hunt opens at once and the per-elite level
   // bar is waived. Deliberately NOT extended to authored rungs: opening the
   // pool early there re-created exactly the wedges the gate guards against
-  // (measured: spacez/rift runs cancelled on under-levelled elite marches).
+  // (measured: goodco/rift runs cancelled on under-levelled elite marches).
   const committed = parityHopeless(state);
   if (!committed && !readyForBoss(state, tune)) return [];
   const out: { id: number; pos: Vec2 }[] = [];

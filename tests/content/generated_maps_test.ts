@@ -468,7 +468,7 @@ describe("the story on a generated map", () => {
     // A safe zone does not merely keep the horde from spawning in it — it REPELS
     // every minion out and holds them at its edge (stepEnemies). One centred on
     // the hero is therefore a bubble he can stand in untouched all run, and it
-    // froze spacez_hq's opening beat solid: the scripted rusher was shoved back
+    // froze goodco_hq's opening beat solid: the scripted rusher was shoved back
     // out of the pad it was placed in and could never land the touch that draws
     // his blade. No hand-authored map spends a safe zone on the landing.
     for (const id of MISSIONS)

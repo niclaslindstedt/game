@@ -76,7 +76,7 @@ const TILE = 16; // mirrors render.ts
 // ---- sprite surfaces (cached) ---------------------------------------------
 const surfCache = new Map();
 /** Resolve a sprite name to a rendered RGBA surface, or null if unknown.
- * Accepts a bare name (`papers`) or an animation stem (`doge_1` → `doge_1_0`). */
+ * Accepts a bare name (`papers`) or an animation stem (`payload_1` → `payload_1_0`). */
 function spriteSurface(name) {
   if (!name) return null;
   if (surfCache.has(name)) return surfCache.get(name);

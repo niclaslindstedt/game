@@ -360,7 +360,7 @@ export type AbilityDef = {
     /**
      * Sprite the renderer draws for the deployed GUN itself. Optional, and the
      * app falls back to the shipped `sentry_gun` — which is what it used to
-     * hardcode, so a mod's turret grid deployed SPACEZ hardware whatever its
+     * hardcode, so a mod's turret grid deployed GOODCO hardware whatever its
      * own art said.
      */
     gunSprite?: string;

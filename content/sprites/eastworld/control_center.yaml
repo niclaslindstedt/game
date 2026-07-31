@@ -3,15 +3,15 @@ name: control_center
 family: eastworld
 size: [76, 56]
 description: >
-  The ZAI control center - a timber western false front bolted across the
-  face of a machine, with dark steel rising behind and above it, a lit ZAI
+  The TRUST ME BRO control center - a timber western false front bolted across the
+  face of a machine, with dark steel rising behind and above it, a lit TRUST ME BRO
   sign band and rows of turquoise windows, and cold steel blast doors
   punched through the middle of the wooden frontage.
 subject:
-  kind: "landmark - the ZAI control center"
+  kind: "landmark - the TRUST ME BRO control center"
   build: "a tall dark steel building standing behind and above a timber western shopfront bolted across its face"
   features: "a painted signboard and striped awning at street level, lamp-lit plank wings either side, a lit sign band and grid of turquoise windows on the steel above, roof vents, and steel blast doors with a parting seam"
-  accent: "cold turquoise ZAI light everywhere the steel shows, against the warm timber and amber lamps of the frontage"
+  accent: "cold turquoise TRUST ME BRO light everywhere the steel shows, against the warm timber and amber lamps of the frontage"
   flavor: "the big building Ada's beacon points straight through the door of - the park's western dressing with the machine showing over the top of it"
 palette:
   B: "#92643e" # plank board brown
@@ -19,7 +19,7 @@ palette:
   K: "#0c0b12" # dark doorway
   N: "#3a3644" # dark steel frame
   O: "#1a1c2c" # outline
-  Q: "#60f0d0" # turquoise ZAI light
+  Q: "#60f0d0" # turquoise TRUST ME BRO light
   S: "#b39378" # sun-bleached plank
   U: "#f0c658" # amber lamp-lit window
   X: "#963c46" # painted sign board / awning stripe

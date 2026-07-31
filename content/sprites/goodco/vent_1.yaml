@@ -1,0 +1,33 @@
+name: vent_1
+family: goodco
+size: [16, 16]
+description: >
+  The bay-deck plate variant — the same warm checker-plate section stamped with
+  an amber bolt at each corner; a ground patch tile that clusters with vent_0.
+subject:
+  kind: ground tile
+  build: a steel deck plate with a raised diamond tread and amber corner bolts
+  accent: warm graphite plate with amber safety bolts
+  flavor: the bolted-down deck plating of a build bay
+palette:
+  q: "#5f5a50" # warm plate shadow / seam
+  G: "#7c766a" # warm steel plate
+  H: "#938c7c" # warm tread highlight
+  y: "#ffb02e" # amber corner bolt
+grid: |
+  qGGGGGGGGGGGGGGG
+  qyGGGGGGGGGGGGyG
+  qGGHHGGGGHHGGGGG
+  qGGHGGGGGHGGGGGG
+  qGGGGGGGGGGGGGGG
+  qGGGGGHHGGGGHHGG
+  qGGGGGHGGGGGHGGG
+  qGGGGGGGGGGGGGGG
+  qGGHHGGGGHHGGGGG
+  qGGHGGGGGHGGGGGG
+  qGGGGGGGGGGGGGGG
+  qGGGGGHHGGGGHHGG
+  qGGGGGHGGGGGHGGG
+  qGGGGGGGGGGGGGGG
+  qyGGGGGGGGGGGGyG
+  qGGGGGGGGGGGGGGG

@@ -2,13 +2,13 @@ name: compound_fence
 family: eastworld
 size: [16, 16]
 description: >
-  A control-center compound fence panel; an impassable ZAI-deck barrier.
+  A control-center compound fence panel; an impassable TRUST ME BRO-deck barrier.
 subject:
   kind: prop — fence panel
   build: a flat rectangular metal barrier segment
   features: a hazard-stripe band across the middle, small indicator lights near the top
   accent: yellow-and-black hazard stripe with turquoise indicator lights
-  flavor: an impassable ZAI-deck fence around the compound
+  flavor: an impassable TRUST ME BRO-deck fence around the compound
 palette:
   K: "#0c0b12" # black hazard bar
   O: "#1a1c2c" # outline
