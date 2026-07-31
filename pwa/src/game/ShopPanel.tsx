@@ -48,7 +48,7 @@ import {
 } from "./consumables.ts";
 import { playUiSound } from "./sfx/ui.ts";
 import { POWERUP_BLUE, ShopDealCard } from "./ShopDealCard.tsx";
-import { portraitSrc, SpritePortrait } from "./SpritePortrait.tsx";
+import { bustSrc, SpritePortrait } from "./SpritePortrait.tsx";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 import { runCommand, runCommandOk } from "./run-commands.ts";
@@ -376,7 +376,7 @@ export function ShopPanel({
             reads as a person rather than a vending machine. */}
         <div className="shop-header">
           <SpritePortrait
-            src={portraitSrc(sprites, merchant.sprite)}
+            src={bustSrc(sprites, merchant.sprite)}
             frameClass="shop-portrait-frame"
           />
           <PixelText

@@ -40,7 +40,7 @@ import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { type GameAssets } from "../assets.ts";
-import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
+import { bustSrc, SpritePortrait } from "../SpritePortrait.tsx";
 
 /** The scale every spoken and printed surface in the game shares. */
 const TEXT_SCALE = 2;
@@ -186,7 +186,7 @@ export function TalkOverlay({
           <div className="quest-content">
             <div className="quest-speaker">
               <SpritePortrait
-                src={portraitSrc(assets.sprites, talk.speaker.sprite)}
+                src={bustSrc(assets.sprites, talk.speaker.sprite)}
                 frameClass="quest-portrait-frame"
               />
               <PixelText

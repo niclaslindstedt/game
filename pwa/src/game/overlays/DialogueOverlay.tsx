@@ -32,7 +32,7 @@ import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import { heroSoak } from "../game-screen/hero-soak.ts";
 import { dollDataUrl } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
-import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
+import { bustSrc, portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
 
 /** The reveal state the overlay publishes so the app's keyboard/gamepad
  * advance can share the tap's semantics (finish, scroll, then turn). */
@@ -157,18 +157,25 @@ export function DialogueOverlay({
   // in-world dialogue only — the level intro monologue keeps its bare hero.)
   // Enemy speakers bob live on the canvas behind the box; story items show
   // their icon so the find stays on screen.
+  // A speaker is cropped to head and shoulders like every other portrait in the
+  // game; a STORY ITEM is not a speaker — it is the thing you just picked up,
+  // drawn whole, because an icon has no face to find.
+  const speakerArt = voice?.portrait ?? content.portrait;
   const portrait = heroSpeaks
     ? (dollDataUrl(
         assets.sprites,
         playerDollLayers(state, "0"),
         heroSoak(state),
+        { bust: true },
       ) ??
       spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
       null)
     : // A story item names an exact icon; a character names a walk-cycle
-      // family. `portraitSrc` tries the exact name first, so one call covers
-      // both (see SpritePortrait.tsx).
-      portraitSrc(assets.sprites, voice?.portrait ?? content.portrait);
+      // family. Both resolvers try the exact name first, so one call covers
+      // either (see SpritePortrait.tsx).
+      isStoryItem
+      ? portraitSrc(assets.sprites, speakerArt)
+      : bustSrc(assets.sprites, speakerArt);
 
   // Reserve a stable row count for the whole page (the tallest screen) so the
   // box never resizes as the speech scrolls; the last, short screen pads with

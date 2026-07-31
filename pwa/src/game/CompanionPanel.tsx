@@ -30,6 +30,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
+import { bustSrc } from "./SpritePortrait.tsx";
 import { synth } from "./audio.ts";
 import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
@@ -85,7 +86,7 @@ export function CompanionPanel({
       : undefined;
   if (!companion) return null;
   const def = companionDef(companion.defId);
-  const portrait = spriteDataUrl(sprites, `${def.sprite}_0`);
+  const portrait = bustSrc(sprites, def.sprite);
   const downed = companion.downed === true;
   // The XP bar toward the next level, clamped for a clean fill.
   const xpFrac =

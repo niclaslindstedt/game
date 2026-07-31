@@ -6,6 +6,7 @@
 // scripts/generate-assets.mjs — never edited by hand.
 
 import { bitmapDataUrl, monochromeDataUrl, sliceAtlas } from "@ui/lib/atlas.ts";
+import { bustDataUrl } from "@ui/lib/bust.ts";
 import { loadImages } from "@ui/lib/load-images.ts";
 import { createPixelFont, type PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -96,6 +97,30 @@ export function spriteDataUrl(
   if (!url) {
     url = bitmapDataUrl(sprite);
     dataUrls.set(name, url);
+  }
+  return url;
+}
+
+const bustUrls = new Map<string, string>();
+
+/**
+ * A sprite cropped to HEAD AND SHOULDERS, as a data URL — what every portrait
+ * frame in the game shows (see `SpritePortrait.tsx` and `@ui/lib/bust.ts`).
+ * Undefined for an unknown or empty sprite, so a caller falls back to the full
+ * art. Cached per name like the others; the crop reads pixels back off a
+ * canvas, so it must not be recomputed per render.
+ */
+export function spriteBustUrl(
+  sprites: Sprites,
+  name: string,
+): string | undefined {
+  const sprite = spriteByName(sprites, name);
+  if (!sprite) return undefined;
+  let url = bustUrls.get(name);
+  if (!url) {
+    url =
+      bustDataUrl(sprite, sprite.width, sprite.height) ?? bitmapDataUrl(sprite);
+    bustUrls.set(name, url);
   }
   return url;
 }

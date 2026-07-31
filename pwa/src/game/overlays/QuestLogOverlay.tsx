@@ -28,7 +28,8 @@ import {
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { type GameAssets } from "../assets.ts";
+import { bustSrc } from "../SpritePortrait.tsx";
 import { objectiveLine } from "../quest-text.ts";
 
 /** Status → the one word the row is headed with, and its colour. Failed is the
@@ -93,9 +94,9 @@ export function QuestLogOverlay({
           {tracked.map((progress) => {
             const quest = questDef(progress.id);
             const status = STATUS[progress.status];
-            const portrait = spriteDataUrl(
+            const portrait = bustSrc(
               assets.sprites,
-              `${giverSprite(state, quest.giver)}_0`,
+              giverSprite(state, quest.giver),
             );
             return (
               <div className="quest-log-row" key={progress.id}>
@@ -156,9 +157,7 @@ export function QuestLogOverlay({
               {untaken.map((giver) => (
                 <div className="quest-log-row" key={giver.id}>
                   <img
-                    src={
-                      spriteDataUrl(assets.sprites, `${giver.sprite}_0`) ?? ""
-                    }
+                    src={bustSrc(assets.sprites, giver.sprite) ?? ""}
                     alt=""
                     className="pixel-img quest-log-face"
                   />
