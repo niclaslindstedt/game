@@ -10,7 +10,6 @@
 // authored paragraph, which the page quotes and attributes instead.
 
 import { TITLE } from "./html.mjs";
-import { list } from "./prose.mjs";
 
 const percent = (frac) => `${Math.round(frac * 100)}%`;
 const seconds = (ms) => {
@@ -117,14 +116,18 @@ export function allyDescription(ally) {
   const recruit = ally.recruit;
   const where = recruit?.venue ? ` on ${recruit.venue.name}` : "";
   const how = !recruit
-    ? `${ally.name}, a companion`
+    ? "recruited by nothing in the game"
     : recruit.enemy.name === ally.name
-      ? `${ally.name} joins the party if you spare the elite of the same name${where}`
-      : `Spare ${recruit.enemy.name}${where} to recruit ${ally.name}`;
+      ? `spared${where} rather than finished`
+      : `spared from ${recruit.enemy.name}${where}`;
   const what = ally.power
-    ? `a rank of ${ally.power.name} every ${ally.power.everyLevels} levels`
-    : `its ${ally.weapon.name} and nothing else`;
-  return `${how} — one of the ${TITLE} companions: ${ally.base.hp} health, ${ally.weapon.name} in hand, ${what}, and what every rank of it actually comes to.`;
+    ? `${ally.power.name} every ${ally.power.everyLevels} levels`
+    : "no signature power";
+  // Held under Google's 160-character cut, which is what the whole shape is
+  // for: everything here is a fact a searcher can act on, in descending order
+  // of how likely they are to have searched for it, and the sentence stops
+  // rather than trailing into a clause the result page would cut mid-word.
+  return `${ally.name}, a ${TITLE} companion — ${how}. ${ally.base.hp} health, ${ally.weapon.name}, ${what}.`;
 }
 
 /**
@@ -262,8 +265,11 @@ export function partyProse(model) {
   ];
 }
 
-/** The index's own summary line. */
+/**
+ * The index's own summary line. It names no companions, deliberately: the four
+ * names cost 45 characters and push everything a searcher could act on past
+ * Google's 160-character cut, and the names are on the page they land on.
+ */
 export function alliesDescription(model) {
-  const names = list(model.allies.map((ally) => ally.name));
-  return `The ${model.allies.length} companions in ${TITLE} — ${names}: who to spare to recruit each one, what they field, and what every rank of their signature power comes to.`;
+  return `All ${model.allies.length} companions in ${TITLE}: who to spare to recruit each one, what they bring to a fight, and what every rank of their signature power comes to.`;
 }

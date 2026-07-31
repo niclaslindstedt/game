@@ -210,30 +210,38 @@ a:hover { color: var(--amber); }
 
 /* ---- the burger ------------------------------------------------------------ */
 
-/* SIX SECTION NAMES DO NOT FIT A PHONE, and wrapping them is not free: the
+/* THE SECTION NAMES DO NOT FIT A PHONE, and wrapping them is not free: the
    header is STICKY, so every row it costs is a row taken off every screenful of
    the page the reader actually came for — the nav alone was two of the four
    rows of chrome above the first sentence on a 390 px phone.
 
    So below 900 px the nav folds behind one control. The number is the file's
-   existing phone breakpoint and it is also where the nav genuinely stops
-   fitting: measured, the six names sit beside the brand on one line from about
-   915 px up, so the two regimes meet with nothing but a hair's band of the old
-   wrap fallback between them.
+   existing phone breakpoint, and it used to be where the nav genuinely stopped
+   fitting as well: with SIX names they sat beside the brand on one line from
+   about 915 px up.
+
+   THAT IS NO LONGER TRUE, and the honest record is worth more than the tidy
+   claim. There are NINE names now, and measured across 880-1700 px they never
+   fit one line at any width — the nav wraps to two right-aligned rows on every
+   desktop. That is the wrap fallback doing its job rather than a fault: nothing
+   clips, nothing scrolls, and the whole cost is 8 px of sticky header (56 to
+   64). A tenth name is where to look again, and the thing to check is whether
+   it pushes a THIRD row rather than whether it fits on the first.
 
    Three decisions in it are load-bearing:
 
    - IT IS A CHECKBOX (the same trick the spoiler panels use), because these
      pages run NO JavaScript. Nothing about the markup changes between the two
-     regimes; only which rules apply. A reader with CSS disabled sees the six
-     links, which is the honest degradation.
+     regimes; only which rules apply. A reader with CSS disabled sees every
+     link, which is the honest degradation.
    - THE PANEL IS ABSOLUTE, not another wrapped flex row. A panel in the flow
      grows the sticky header when it opens, which shoves the whole document down
      under the reader's thumb at the exact moment they are reaching for a link.
      Overlaying it leaves the page where they left it.
-   - IT NEVER GETS TALLER THAN THE SCREEN. Six rows do not need it today; a
-     seventh section must not be able to push a link off the bottom of a phone
-     into a panel that cannot scroll, so the panel carries its own max-height. */
+   - IT NEVER GETS TALLER THAN THE SCREEN. Nine rows do not need it on a phone
+     held upright; a tenth section must not be able to push a link off the
+     bottom of one held sideways into a panel that cannot scroll, so the panel
+     carries its own max-height. */
 .nav-toggle { position: absolute; opacity: 0; width: 0; height: 0; }
 .nav-burger { display: none; }
 
@@ -645,6 +653,12 @@ h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: 
    monster's venue uses carries what this one grows into instead. */
 .allies .ally-name { color: var(--mint); }
 .allies a:hover .ally-name { color: var(--amber); }
+/* Wider cells than the shared rack, for the badge wall's reason: these names
+   are two long words more often than a monster's (GRIGORI RASPUTIN, AMELIA
+   EARHART), and at the shared 11rem half a four-cell roster folds mid-name
+   while the row beside it does not — which reads as a broken grid rather than
+   as a roster. The grid still collapses to one column on a phone. */
+.roster.allies { grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); }
 
 /* A companion's BANTER: four or five one-liners it floats over its own kills.
    Not a 'speech' block, which is sized for a scene somebody stops to deliver —

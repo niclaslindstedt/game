@@ -113,7 +113,11 @@ function kitSection(ally, base) {
   const stats = [
     ["HEALTH", `${ally.base.hp}`],
     [ally.weapon.throws ? "PER SHOT" : "PER FOE", `${ally.base.damage}`],
-    ["HITS EVERY", `${ally.base.cooldownMs / 1000} S`],
+    // Two decimals and a space before the unit, both deliberate. The pixel
+    // font's S and 5 are a stroke apart, so a bare `1 S` reads as fifteen —
+    // the decimal point is what anchors the figure as a figure, and the space
+    // is the house answer to the same trap on every other unit here.
+    ["HITS EVERY", `${(ally.base.cooldownMs / 1000).toFixed(2)} S`],
     ["REACH", `${ally.weapon.range}`],
     ...(ally.weapon.sweepDeg ? [["ARC", `${ally.weapon.sweepDeg}°`]] : []),
     ...(ally.weapon.pellets > 1

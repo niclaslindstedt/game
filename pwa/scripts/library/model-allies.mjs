@@ -223,7 +223,13 @@ function trainingLadder(def) {
         cooldownMs: companionWeaponCooldown(companion),
       }));
       return {
-        rank,
+        // ASKED, not assumed. `levelForRank` is the inverse of the engine's own
+        // rule and exists only to pick which levels to sample; what the table
+        // then PRINTS as the rank is what `companionPowerRank` says a companion
+        // of that level has actually reached, so a change to how ranks land
+        // shows up in the table rather than being papered over by the
+        // arithmetic that chose the rows.
+        rank: companionPowerRank(def, level),
         level,
         hp: companionMaxHp(def, level),
         damage: Math.round(blow.damage),
