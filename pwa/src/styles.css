@@ -11363,6 +11363,28 @@ canvas.tier-artifact {
   background: rgba(6, 8, 12, 0.3);
 }
 
+/* A SECTION TITLE, AND IT HAS TO LOOK LIKE ONE. REWARD and CHOOSE ONE sat at
+   the block's own 0.15rem gap, flush against the first line under them, so they
+   read as another item in the list rather than as the label for it — the amber
+   alone was not enough separation. What makes a heading here is the same thing
+   that makes the title screen's headings: air beneath it and a hairline that
+   fades out, closing the label off from the rows it introduces. */
+.quest-reward-title {
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(255, 215, 94, 0.22);
+  /* The rule stops short of the right edge rather than running the full width:
+     a full-bleed line reads as a divider between two blocks, and this one
+     belongs to the title above it. */
+  mask-image: linear-gradient(90deg, #000 0%, #000 62%, transparent 100%);
+}
+
+/* CHOOSE ONE is a second heading INSIDE the same block, so it owes air above it
+   as well — without it the gear runs straight on from the coin line. */
+.quest-reward-title.spaced {
+  margin-top: 0.7rem;
+}
+
 /* ONE FACT PER LINE, each led by the sprite of the thing it counts where there
    is one (coins). The old strip laid them out in a wrapping ROW, which read as
    one sentence the eye had to cut into three before it could price any of them
@@ -11375,70 +11397,62 @@ canvas.tier-artifact {
   gap: 0.35rem;
 }
 
+/* The row says `align-items: center` and it is NOT enough on its own: the
+   blanket `.game-overlay canvas` rule below parks every `PixelText` canvas at
+   `align-self: flex-start`, and it has equal specificity but comes later in the
+   file, so it wins. The number then sat 1.8px above the centre of the coin
+   beside it (measured: a 13.6px icon against a 10px canvas, both tops flush).
+   An extra class outranks it — the same fix the map header and the map legend
+   already carry, for the same reason. */
+.quest-reward-line canvas {
+  align-self: center;
+}
+
 .quest-reward-icon {
   flex: 0 0 auto;
   width: 0.85rem;
   height: 0.85rem;
+  display: block;
   image-rendering: pixelated;
 }
 
-/* THE GEAR ON OFFER. A row per piece, one per build lane, each showing the
-   REAL minted item — so the player can price the errand before taking it. */
-.quest-reward-picks {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 0.3rem;
-  margin-top: 0.15rem;
-}
-
-.quest-pick {
+/* THE GEAR ON OFFER — BAG SLOTS, not a list of names. It began as a row per
+   piece with its name and every affix under it, which was three stacked
+   paragraphs inside a box that already carries a speech and a contract; the
+   icon says what the thing is faster than the words did, and the piece's own
+   card (the bag's, on press or hover) says the rest. Reuses `.inv-cell` so a
+   reward slot IS a bag cell — same frame, same tier glow. */
+.quest-reward-slots {
   display: flex;
   flex-direction: row;
-  /* Top-aligned for the same reason the pick list's rows are: a `PixelText`
-     with a `maxWidth` lays its lines out from the TOP of its box, so any slack
-     in a centred row splits and the icon sits half of it below the name. */
-  align-items: flex-start;
+  flex-wrap: wrap;
   min-width: 0;
   gap: 0.5rem;
-  padding: 0.5rem 0.6rem;
-  background: rgba(6, 8, 12, 0.45);
-  border: 2px solid rgba(255, 215, 94, 0.16);
-  border-radius: 4px;
-  text-align: left;
+  margin-top: 0.1rem;
+}
+
+.quest-reward-slot {
+  /* A press target, not a 16px sprite: sized against the pick-list rows and
+     the box's own buttons rather than against the art inside it. */
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
   font: inherit;
   color: inherit;
   appearance: none;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Only a row that is one of SEVERAL is pressable — a lone offered piece is
-   shown, not chosen, and must not look like a button that does nothing. */
-.quest-pick.pickable {
-  cursor: pointer;
+/* Only the HANDOVER's slots are chosen between, and the chosen one wears the
+   selection's amber — the same colour the pick list's selected row wears. */
+.quest-reward-slot.selected {
+  border-color: #ffd75e;
+  background: rgba(255, 215, 94, 0.16);
 }
 
-.quest-pick.pickable.selected {
-  background: rgba(255, 215, 94, 0.13);
-  border-color: rgba(255, 215, 94, 0.6);
-}
-
-.quest-pick.pickable:active {
+.quest-reward-slot:active {
   transform: translateY(1px);
-}
-
-.quest-pick-icon {
-  flex: 0 0 auto;
-  width: 1.5rem;
-  height: 1.5rem;
-  image-rendering: pixelated;
-}
-
-.quest-pick-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 0.1rem;
 }
 
 .quest-actions {

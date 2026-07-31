@@ -921,6 +921,19 @@ Five rules are load-bearing:
      while the player read it and mint an item id every frame. The pick is
      `chooseQuestReward` (a run command like every other verb) and rides the
      errand, so it survives walking away and coming back.
+   - **SHOWN AT THE ASK, CHOSEN AT THE HANDOVER.** The offer lists them under
+     ITEM REWARDS as a prospectus — what the job pays — and the slots are
+     viewable but not selectable there: choosing at the ask would make the
+     player commit at the one moment they know least about the build they will
+     have when they come back. The handover says CHOOSE ONE and the slots take
+     the press.
+   - **THEY ARE BAG SLOTS, AND THE CARD IS THE BAG'S.** A row per piece with its
+     name and every affix under it is three stacked paragraphs in a box that
+     already carries a speech and a contract, and the icon says what the thing
+     is faster than the words did. So the gear draws as `.inv-cell` slots with
+     no names, and a press (or a hover) opens the piece's own `ItemTooltip` —
+     the same card, with the same worn-piece comparison, that the player reads
+     every other piece of gear on.
 
 2. **THE LOG IS THE TRUTH; THE MARK IS DERIVED.** `giverMark` recomputes the
    `!` / `?` over a head from the quest log every time it is asked, and nothing
@@ -1063,7 +1076,12 @@ DECLINE would be); `pwa/src/game/overlays/QuestOverlay.tsx` is the gold parchmen
 one surface off the shared steel skin — after two of them, gold means "somebody
 is asking you for something"); its speech crawls on the same typewriter every
 other spoken line in the game uses, while the objectives and reward print
-instantly because they are a contract rather than a voice.
+instantly because they are a contract rather than a voice. **THE FOOTER IS THE
+DECISION, NEVER A `NEXT`** — ACCEPT/DECLINE on the ask, COMPLETE on the
+handover, shown from the first page rather than revealed on the last; a button
+that says NEXT names the mechanism instead of the choice and hides the fact
+that there is anything to decide. The remaining pages are turned by TAPPING THE
+SPEECH, which is the in-world dialogue box's own gesture.
 `QuestLogOverlay.tsx` is the full log, `QuestTracker.tsx` the on-screen strip
 over the fight, `QuestFlash.tsx` the centre announcement, and
 `render/quests.ts` draws the givers, their head marks and the escorts. The
