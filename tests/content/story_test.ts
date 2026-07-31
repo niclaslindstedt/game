@@ -236,7 +236,7 @@ describe("boss confrontations", () => {
     run(state, idle, 10, (s) => s.phase === "dialogue");
     expect(state.phase).toBe("dialogue");
     const content = dialogueContent(state.dialogue!);
-    expect(content.speaker).toBe("ARMSTRONG");
+    expect(content.speaker).toBe("THE FLAGBEARER");
 
     finishDialogue(state);
     expect(boss.spoke).toBe(true);

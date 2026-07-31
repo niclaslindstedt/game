@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Level 2 — THE MOON: the venue a carve of its blueprint delivers — the ridges
 // between its basins, the caches at the dead ends with their pinned keepers, and
-// the flag ARMSTRONG haunts. The generic catalog integrity rules (pools resolve,
+// the flag THE FLAGBEARER haunts. The generic catalog integrity rules (pools resolve,
 // wall chains leave no slip-through gaps) live in goodco_test.ts and run over
 // every level; the generator's own invariants live in generated_maps_test.ts.
 //
@@ -36,10 +36,10 @@ describe("THE MOON level def", () => {
     expect(state.level.biome).toBe("moon");
   });
 
-  it("fields ARMSTRONG at the flag as the boss", () => {
+  it("fields THE FLAGBEARER at the flag as the boss", () => {
     const state = startGame(SEED, "moon");
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-    expect(boss.defId).toBe("armstrong");
+    expect(boss.defId).toBe("the_flagbearer");
     // The flag is planted wherever the boss turned out to be (`at: goal` on the
     // blueprint's landmark), so the two travel together on every carve.
     const flag = state.landmarks.find((l) => l.kind === "flag")!;

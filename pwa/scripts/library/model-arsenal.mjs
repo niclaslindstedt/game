@@ -182,7 +182,7 @@ const link = (id, name, path) => ({ id, name, path });
 /**
  * WHERE EVERY ITEM COMES FROM, gathered once for the whole catalog. This is the
  * half of the arsenal that makes it worth reading: a stat block is a row, but
- * "ARMSTRONG hands this over on hard and above, and the moon scatters it from
+ * "THE FLAGBEARER hands this over on hard and above, and the moon scatters it from
  * level 34" is an answer.
  *
  * Eight ways an id can reach a player's hands, all of them authored:

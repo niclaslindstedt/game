@@ -25,7 +25,7 @@ corrupted. Print the lower rows of the grid first and put the cut in a band of
 repeated structure (a tread, a plinth, a leg stalk), never through a feature.
 
 **A body that cannot kneel needs a different verb.** A floater has no legs to
-fold (ARMSTRONG settles onto his own hem — delete the BOOTS, not the gap above
+fold (THE FLAGBEARER settles onto his own hem — delete the BOOTS, not the gap above
 them) and a wheeled chassis cannot compress at all (the BRO SUPERCORE reads as
 `drop: 2` plus a big shear — the TILT is the whole pose). Ask what this body
 does when it gives way before picking the numbers.

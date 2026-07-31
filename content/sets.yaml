@@ -15,7 +15,7 @@
 # (`EnemyDef.uniquesByDifficulty`).
 #
 # The catalog rolls out melee-first across the campaign: PAYLOAD-1 (GOODCO) and
-# ARMSTRONG (Moon) drop MELEE sets, THE FOUNDER on Mars and in the Rift drop
+# THE FLAGBEARER (Moon) drop MELEE sets, THE FOUNDER on Mars and in the Rift drop
 # RANGED sets, and BRO OMEGA drops the MAGIC set.
 #
 # THE MEMBERSHIP HERE IS THE SOURCE OF TRUTH, and each member item carries a
@@ -47,7 +47,7 @@ sets:
           # The rat always finds the soft spot — its bite never whiffs.
           - { kind: sureStrike }
 
-  # ARMSTRONG (Moon) — the Apollo ghost on his fifty-year vigil. A MELEE
+  # THE FLAGBEARER (Moon) — the Apollo ghost on his fifty-year vigil. A MELEE
   # endurance kit: the sentinel who outlasts everything and answers every blow.
   sentinels_vigil:
     name: THE SENTINEL'S VIGIL
@@ -71,7 +71,7 @@ sets:
 
   # THE FOUNDER (Mars) — the baron who sold Ada. A RANGED glass-cannon kit: all
   # output, no padding — the brand that tests well and burns hot.
-  mosque_brand:
+  founder_brand:
     name: THE FOUNDER BRAND
     weaponClass: ranged
     members:

@@ -85,9 +85,9 @@ describe("boss loot", () => {
         ),
       ).toBe(true);
       const arrows = state.items.filter((i) => i.kind === "xp").length;
-      expect(arrows).toBe(ENEMY_DEFS.armstrong!.loot!.xpArrows);
+      expect(arrows).toBe(ENEMY_DEFS.the_flagbearer!.loot!.xpArrows);
       const repairs = state.items.filter((i) => i.kind === "repair").length;
-      expect(repairs).toBe(ENEMY_DEFS.armstrong!.loot!.repairs);
+      expect(repairs).toBe(ENEMY_DEFS.the_flagbearer!.loot!.repairs);
     }
   });
 

@@ -240,7 +240,7 @@ The slots, in the order the prompt renders them:
 | Slot       | Carries                                          | Example                                              |
 | ---------- | ------------------------------------------------ | ---------------------------------------------------- |
 | `kind`     | what it is (drives the silhouette expectation)   | `elite bodyguard`, `boss`, `ground tile`             |
-| `name`     | proper noun, if a named character (optional)     | `ARMSTRONG`, `THE DEVELOPER`                           |
+| `name`     | proper noun, if a named character (optional)     | `THE FLAGBEARER`, `THE DEVELOPER`                           |
 | `build`    | body shape / overall form — the silhouette read  | `heavyset, a size larger than the rank-and-file`     |
 | `attire`   | clothing / covering                              | `matte-black suit over a white shirt`                |
 | `features` | head / face / distinguishing marks               | `a mop of dark brown hair over a pale face`          |

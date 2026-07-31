@@ -37,7 +37,7 @@ describe("service worker navigation denylist", () => {
     for (const path of [
       "/library/bestiary",
       "/library/bestiary/",
-      "/library/bestiary/armstrong/",
+      "/library/bestiary/the-flagbearer/",
       "/library/arsenal/excalibur/",
     ]) {
       expect(deniesNavigation(path, RELEASE_DENY), path).toBe(true);

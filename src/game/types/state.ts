@@ -47,6 +47,7 @@ import type {
   LairState,
   Item,
   Landmark,
+  LootMode,
   MapMarker,
   Merchant,
   Obstacle,
@@ -411,6 +412,23 @@ export type GameState = {
   carvedLevel?: LevelDef;
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;
+  /**
+   * WHO MAY PICK A DROP UP — the session's loot rule (multiplayer plan §4.3).
+   *
+   * `"free"` is free-for-all: anything on the floor goes to whoever reaches it,
+   * which is Diablo 2 classic and the shipped default, because friends-only
+   * sessions are the use case and the scramble for a legendary is most of what
+   * makes a party feel like a party. `"allocated"` stamps each drop with a seat
+   * (`Item.owner`) rolled among the heroes who were in the fight, and nobody
+   * else can take it.
+   *
+   * It is a RUN parameter rather than a setting because it has to be the same
+   * for everybody in a session and cannot change under a party mid-fight; the
+   * host chooses it when they open the game. Absent reads as `"free"`, so a
+   * single-player run — and every run created before this existed — is
+   * untouched, and no pickup in the campaign changes.
+   */
+  lootMode?: LootMode;
   /**
    * The escalation meter (see config MENACE). Heated by the player's rolling
    * combat output (`combatDps` / `combatKillRate`) and jolted by overpowered

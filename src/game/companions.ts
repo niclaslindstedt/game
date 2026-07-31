@@ -60,7 +60,7 @@ import {
   playerSpeed,
   qualityMult,
 } from "./items/index.ts";
-import { enemyKillXp, grantXp, hitEnemy, killEnemy } from "./loot.ts";
+import { enemyKillXp, hitEnemy, killEnemy, shareXp } from "./loot.ts";
 import { addMapMarker } from "./map.ts";
 import { startJoinWords } from "./story.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
@@ -280,7 +280,11 @@ export function resolveChoice(state: GameState, spare: boolean): boolean {
   if (def.spareable) {
     recruitCompanion(state, def.spareable.companion, enemy.pos);
   }
-  grantXp(state, Math.round(enemyKillXp(state, def, enemy)));
+  // A SPARED elite is a fight the party won, so its XP is shared exactly as a
+  // kill's is — through the same door, gated on the same distance from the same
+  // body. Paying only the person who happened to land the last blow would make
+  // sparing the one won fight in the game that shuts everybody else out.
+  shareXp(state, Math.round(enemyKillXp(state, def, enemy)), enemy.pos);
   // The joining scene — the thanks, the life owed — takes the stage last,
   // so a level-up earned by the fight waits its turn behind it, the same
   // ordering a death gasp gets.

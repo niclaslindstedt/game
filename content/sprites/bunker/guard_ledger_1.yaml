@@ -2,7 +2,7 @@ name: guard_ledger_1
 family: bunker
 size: [20, 20]
 description: >
-  LEDGER ENFORCER — The Sysadmin's personal detail: a heavyset black-suited wall
+  LEDGER ENFORCER — The Root's personal detail: a heavyset black-suited wall
   behind a amber-gold visor, with the same amber-gold on his armband and
   his tie. One of six identical wardens, told apart only by livery.
 subject:
@@ -13,7 +13,7 @@ subject:
   features: a amber-gold visor across the eyes and a amber-gold armband at the bicep
   accent: amber-gold tie
   pose: arms held out from the bulk, planted immovably, hands showing
-  flavor: The Sysadmin's personal detail — and, though nobody in the suite knows it yet, the machine's warden
+  flavor: The Root's personal detail — and, though nobody in the suite knows it yet, the machine's warden
 palette:
   y: "#ffb02e" # amber-gold livery
   K: "#0c0b12" # near-black suit and hair

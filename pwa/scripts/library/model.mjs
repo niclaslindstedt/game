@@ -557,7 +557,7 @@ function sourcesFor(def) {
  * an item over. All three want the same string.
  *
  * So a shared name takes a qualifier, and the qualifier is a fact the reader
- * came for: the VENUE, which is what actually separates the two Putains and the
+ * came for: the VENUE, which is what actually separates the two Strongmen and the
  * three Founders. When the venue ties as well — both lab scientists work at
  * GOODCO HQ — fall back to whatever the ids do NOT have in common, so
  * `vanguard_scientist` beside `scientist` yields `VANGUARD`. Whichever one has

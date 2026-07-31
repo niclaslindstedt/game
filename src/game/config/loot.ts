@@ -371,6 +371,17 @@ export const LOOT = {
    */
   bagFullHintCooldownMs: 2500,
   /**
+   * ALLOCATED LOOT: how near a drop (world px) a hero has to have been to be in
+   * the running for it (`GameState.lootMode === "allocated"`, `allocateLoot` in
+   * items/toss.ts). Inert in a free-for-all session and in single player.
+   *
+   * Held at the XP share's own radius on purpose: "who was in this fight" is
+   * one question, and a party that earns a share of a kill's XP but is cut out
+   * of the allocation for the thing it dropped would be answering it twice with
+   * two different answers.
+   */
+  allocationRadius: 700,
+  /**
    * THE TOSS — how a drop leaves the body it came out of (D2's loot pop). A
    * find that simply appears under a corpse is indistinguishable from the floor
    * texture; one that bursts out, arcs, and CLATTERS down a few paces away is

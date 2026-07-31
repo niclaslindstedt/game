@@ -1,13 +1,13 @@
-name: armstrong_kneel
+name: the_flagbearer_kneel
 family: moon
 size: [48, 48]
 description: >
-  ARMSTRONG beaten: the same translucent pale-green colossus, no longer
+  THE FLAGBEARER beaten: the same translucent pale-green colossus, no longer
   hovering level — it has settled onto its own hem with its legs gone from
   under it, the helmet sunk into its shoulders and the whole mass listing.
 subject:
   kind: boss
-  name: ARMSTRONG
+  name: THE FLAGBEARER
   build: a giant translucent astronaut colossus, broad round body on stubby limbs, looming over the field
   attire: a pale mint-green pressure suit
   features: two large dark hollow eyes in a domed helmet

@@ -12,7 +12,7 @@
 > unlocks once you have cleared the campaign at that difficulty), sit through
 > the movie-night prelude (or hit SKIP, top right), raid GOODCO HQ for the
 > drive ingredient PROTOTYPE the mutant rat swallowed, take the fight to
-> the haunted moon and ARMSTRONG at the old flag, storm the secret Mars
+> the haunted moon and THE FLAGBEARER at the old flag, storm the secret Mars
 > colony THE FOUNDER owns (he flees into a rift rather than lose), then
 > follow him into THE RIFT itself — a hallucinatory void of black holes,
 > asteroid rain, and history's missing, guarded by BRO OMEGA, TRUST ME BRO's secret
@@ -215,7 +215,7 @@ and something enormous haunts the old flag.
   mobs it sends into tougher versions (marked by a glowing aura) that pay more
   XP and drop better gear, and scales elite mobs and bosses to your power so
   they can't be one-shot. Ease off and the meter cools.
-- **Kill the boss** — PROTOTYPE under the rocket, ARMSTRONG at the flag — to
+- **Kill the boss** — PROTOTYPE under the rocket, THE FLAGBEARER at the flag — to
   clear the level; bosses have their own longer stare-down scenes before
   the fight. If your HP reaches zero the run ends with a stats screen and
   a retry button.

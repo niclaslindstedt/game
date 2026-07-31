@@ -34,7 +34,7 @@ function spentTotal(state: GameState): number {
 /** Ding to level 2 and idle to the open chooser (its first appearance). */
 function dingToChooser(state: GameState): void {
   clearStage(state);
-  grantXp(state, xpToLevelUp(1));
+  grantXp(state, state.players[0], xpToLevelUp(1));
   runUntilChooser(state);
 }
 

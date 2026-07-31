@@ -30,7 +30,7 @@ describe("level-up light shockwave", () => {
     const distBefore = distance(state.players[0].pos, enemy.pos);
 
     // Ding: crossing the threshold arms the shockwave (see grantXp).
-    grantXp(state, xpToLevelUp(1));
+    grantXp(state, state.players[0], xpToLevelUp(1));
     expect(state.players[0].level).toBe(2);
     // The light armed an outward impulse — but hasn't coasted it yet.
     expect(enemy.knockMs).toBe(LEVELING.shockwave.knockbackMs);

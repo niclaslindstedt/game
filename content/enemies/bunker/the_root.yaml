@@ -1,5 +1,5 @@
-id: the_sysadmin
-name: THE SYSADMIN
+id: the_root
+name: THE ROOT
 lore: >-
   The database underneath all the other databases, and therefore the
   landlord of the secrets of every agency in the corridors outside. He
@@ -7,7 +7,7 @@ lore: >-
   in the last column.
 role: elite
 levelBonus: 6
-sprite: the_sysadmin
+sprite: the_root
 hp: 1800
 speed: 24
 radius: 12
@@ -19,7 +19,7 @@ dialogue:
   - - STOP THERE. YOU'RE IN MY ROWS. EVERY PERSON HERE IS A ROW. EVERY SIN, A COLUMN.
   - hero:
       - AND YOU ARE? I DON'T REMEMBER YOUR FACE FROM THE MAGAZINES.
-  - - THE SYSADMIN - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES ARE MY LICENSEES.
+  - - THE ROOT - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES ARE MY LICENSEES.
   - hero:
       - A BUNKER FULL OF SPIES, ALL WORKING FOR THE LANDLORD OF THEIR OWN SECRETS. OF COURSE.
   - - YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN.

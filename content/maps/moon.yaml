@@ -2,7 +2,7 @@
 description: |-
   GENERATED THE MOON — the far side as a warren of CRATER BASINS instead of the
   authored serpentine. THE READ: the regolith is broken by rubble ridges into a
-  grid of walled basins joined by wide dust passes, and ARMSTRONG is haunting one
+  grid of walled basins joined by wide dust passes, and THE FLAGBEARER is haunting one
   of them. WHICH one is rolled per run out of the six outer thirds of the map, so
   the flag is never where it was last time and the only way to the boss is to
   walk the moon basin by basin, reading the fog-of-war minimap as it fills in.
@@ -27,7 +27,7 @@ level: moon
 # the wrecked hardware of the landings — is sealed, one doorway in. So the plain
 # is mostly walkable dust with ridges cutting across it and pressurized wrecks
 # knotted into it, which is a place; a uniform grid of boxes is a spreadsheet.
-# ARMSTRONG only ever haunts a STATION (`boss: true` there alone) — the flag is
+# THE FLAGBEARER only ever haunts a STATION (`boss: true` there alone) — the flag is
 # planted at a landing site, not out on bare regolith — and the hero always puts
 # down on open dust.
 #
@@ -284,11 +284,11 @@ hellborn:
       count: 4
       minDifficulty: jesus
 
-# ARMSTRONG haunts one of the SIX OUTER THIRDS — the four corners and the two
+# THE FLAGBEARER haunts one of the SIX OUTER THIRDS — the four corners and the two
 # middle flanks. Never the centre: a boss in the middle of the map is found by
 # accident on the way to somewhere else, which is the opposite of a search.
 boss:
-  enemy: armstrong
+  enemy: the_flagbearer
   ramp: endgame
   hp: 450
   regions:

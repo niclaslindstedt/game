@@ -156,7 +156,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 300, idle: "work" },
   },
-  // The objective boss (mirrors `armstrong`): far post, aggro + leash radii,
+  // The objective boss (mirrors `the_flagbearer`): far post, aggro + leash radii,
   // dialogue + last words, a guaranteed drop.
   test_boss: {
     id: "test_boss",

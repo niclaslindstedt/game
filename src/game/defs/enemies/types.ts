@@ -323,7 +323,7 @@ export type EnemyDef = {
   conversation?: string;
   /**
    * A STRUCTURE, not a character: a thing a boss puts on the field that has hp
-   * and can be broken, but has no voice and no inner life — ARMSTRONG's planted
+   * and can be broken, but has no voice and no inner life — THE FLAGBEARER's planted
    * flag (the `flag_plant` ability) is the first. It takes the `elite` role
    * because set-piece mechanics only run on elites and bosses, but it is not an
    * elite in any sense the story cares about, and the content suites that hold

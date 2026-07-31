@@ -19,7 +19,7 @@
 // per-monster art bill.
 //
 // AUTHORED FRAMES ALWAYS WIN. A sprite that ships its own `_cast_0/1` derives
-// nothing (see `deriveCastPoses`) — ARMSTRONG's hand-drawn wind-up is better
+// nothing (see `deriveCastPoses`) — THE FLAGBEARER's hand-drawn wind-up is better
 // than anything this file can compute, and the derivation is the FLOOR for
 // everything nobody has drawn yet, never a replacement for what somebody did.
 //

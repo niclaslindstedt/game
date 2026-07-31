@@ -49,21 +49,39 @@ export function primaryHero(state: GameState): Player {
   return state.players[0];
 }
 
-/** True while this hero is still on their feet (and therefore a target, a
- * pack's alarm clock, and a share of the horde's attention). */
-export function heroAlive(hero: Player): boolean {
-  return hero.hp > 0;
+/**
+ * True while this hero is still on their feet AND somebody is still steering
+ * them — and therefore a target, a pack's alarm clock, a share of the horde's
+ * attention, and a reason the run is not lost yet.
+ *
+ * THE TWO HALVES ARE DELIBERATELY ONE PREDICATE. A hero at 0 hp and a hero
+ * whose player quit are different things to the fiction and the same thing to
+ * every question below: neither is anybody the world should react to. Splitting
+ * them into two checks is how one of the eight sites quietly keeps answering
+ * for a body nobody is behind — which is precisely the bug `departed` exists to
+ * close (see `Player.departed`, and the plan's §4.2).
+ */
+export function heroInPlay(hero: Player): boolean {
+  return hero.hp > 0 && !hero.departed;
 }
 
-/** The heroes still standing. Empty when the party is wiped, which every
- * caller has to survive — a mob with nobody to chase simply idles. */
+/** The heroes still standing and still steered. Empty when the party is wiped,
+ * which every caller has to survive — a mob with nobody to chase simply idles. */
 export function livingHeroes(state: GameState): Player[] {
-  return state.players.filter(heroAlive);
+  return state.players.filter(heroInPlay);
 }
 
-/** True when the whole party is down — the run's defeat condition. */
+/**
+ * True when the whole party is down — the run's defeat condition.
+ *
+ * A DEPARTED seat does not hold this off. Before `departed` existed it did, and
+ * the result was a group whose fourth player quit that could not be defeated:
+ * the body stood there at full health for the rest of the run, and the three
+ * people still playing could be wiped over and over without the run ever
+ * ending.
+ */
 export function partyWiped(state: GameState): boolean {
-  return !state.players.some(heroAlive);
+  return !state.players.some(heroInPlay);
 }
 
 /**
@@ -78,7 +96,7 @@ export function nearestHero(state: GameState, pos: Vec2): Player | null {
   let best: Player | null = null;
   let bestD = Infinity;
   for (const hero of state.players) {
-    if (!heroAlive(hero)) continue;
+    if (!heroInPlay(hero)) continue;
     const d = distanceSq(hero.pos, pos);
     if (d < bestD) {
       bestD = d;
@@ -103,7 +121,7 @@ export function nearestHeroWhere(
   let best: Player | null = null;
   let bestD = Infinity;
   for (const hero of state.players) {
-    if (!heroAlive(hero) || !ok(hero)) continue;
+    if (!heroInPlay(hero) || !ok(hero)) continue;
     const d = distanceSq(hero.pos, pos);
     if (d < bestD) {
       bestD = d;
@@ -127,7 +145,7 @@ export function distanceToParty(state: GameState, pos: Vec2): number {
 export function distanceSqToParty(state: GameState, pos: Vec2): number {
   let best = Infinity;
   for (const hero of state.players) {
-    if (!heroAlive(hero)) continue;
+    if (!heroInPlay(hero)) continue;
     const d = distanceSq(hero.pos, pos);
     if (d < best) best = d;
   }
@@ -149,7 +167,7 @@ export function anyHeroWithin(
 ): boolean {
   const r2 = radius * radius;
   for (const hero of state.players) {
-    if (!heroAlive(hero)) continue;
+    if (!heroInPlay(hero)) continue;
     if (distanceSq(hero.pos, pos) <= r2) return true;
   }
   return false;
@@ -165,7 +183,7 @@ export function heroesWithin(
 ): Player[] {
   const r2 = radius * radius;
   return state.players.filter(
-    (hero) => heroAlive(hero) && distanceSq(hero.pos, pos) <= r2,
+    (hero) => heroInPlay(hero) && distanceSq(hero.pos, pos) <= r2,
   );
 }
 
@@ -182,7 +200,7 @@ export function partyCentroid(state: GameState): Vec2 {
   let y = 0;
   let n = 0;
   for (const hero of state.players) {
-    if (!heroAlive(hero)) continue;
+    if (!heroInPlay(hero)) continue;
     x += hero.pos.x;
     y += hero.pos.y;
     n += 1;
@@ -200,15 +218,23 @@ export function partyCentroid(state: GameState): Vec2 {
  * a group carry a level-1 alt through a level-90 map by arithmetic, and seat 0's
  * makes the whole difficulty of a run depend on who happened to press HOST.
  *
- * Falls back to seat 0 with the party wiped, so a death mid-tick cannot make the
- * horde level 0.
+ * A DEPARTED hero is not counted, and that is the difference between a fair
+ * fight and an unwinnable one: a level-90 who quits five minutes in would
+ * otherwise hold the horde's level over a party of level-20s for the rest of
+ * the run, from a body standing still in a corner.
+ *
+ * Falls back to the highest level in the party with nobody in play, so a wipe
+ * mid-tick cannot make the horde level 0 — the party's own level rather than
+ * seat 0's, since seat 0 may itself be the seat that emptied.
  */
 export function partyLevel(state: GameState): number {
   let best = 0;
+  let anyLevel = 0;
   for (const hero of state.players) {
-    if (heroAlive(hero) && hero.level > best) best = hero.level;
+    if (hero.level > anyLevel) anyLevel = hero.level;
+    if (heroInPlay(hero) && hero.level > best) best = hero.level;
   }
-  return best || state.players[0].level;
+  return best || anyLevel;
 }
 
 /** The seat a hero is sitting in, or -1 for a hero not in this run. Events and

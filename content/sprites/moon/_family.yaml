@@ -24,7 +24,8 @@ animations:
     { frames: [lost_cosmonaut_0, lost_cosmonaut_1], delayMs: 300 }
   the_thirteenth_man_float:
     { frames: [the_thirteenth_man_0, the_thirteenth_man_1], delayMs: 240 }
-  armstrong_loom: { frames: [armstrong_0, armstrong_1], delayMs: 420 }
+  the_flagbearer_loom:
+    { frames: [the_flagbearer_0, the_flagbearer_1], delayMs: 420 }
   apollo_ghost_float: { frames: [apollo_ghost_0, apollo_ghost_1], delayMs: 340 }
   prospector_float: { frames: [prospector_0, prospector_1], delayMs: 320 }
   quarantine_medic_float:
@@ -37,7 +38,7 @@ wounds:
   wisp: { splat: C }
   ghost: { splat: C }
   prospector: { splat: U, core: C }
-  armstrong: { splat: N }
+  the_flagbearer: { splat: N }
 contrastExempt:
   [
     moon_0,

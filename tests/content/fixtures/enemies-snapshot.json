@@ -300,170 +300,6 @@
     "sprite": "archive_unit",
     "xpMobMult": 1.4
   },
-  "armstrong": {
-    "ai": {
-      "aggroRadius": 280,
-      "leashRadius": 460
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 30,
-    "critChance": 0.15,
-    "death": "unmaking",
-    "deathBark": ["FIRST MAN UP HERE. SOMEBODY SHOULD HAVE COME BACK FOR YOU."],
-    "dialogue": [
-      ["YOU SMELL LIKE EARTH. RAIN AND CUT GRASS AND TELEVISION. GO HOME."],
-      {
-        "hero": [
-          "NOT WITHOUT ADA. YOU'RE HIM, AREN'T YOU? THE FIRST MAN ON THE MOON. NEVER WENT HOME."
-        ]
-      },
-      [
-        "I PLANTED THIS FLAG. ONE SMALL STEP. THEN A WRECK TURNED UP UNDER MY BOOTS. ALL THEATER."
-      ],
-      [
-        "THEY GREW A SMILING COPY OF ME. HE SHOOK HANDS, CUT RIBBONS AND DIED IN BED. LUCKY HIM."
-      ],
-      {
-        "hero": [
-          "AND YOU'VE BEEN UP HERE ALONE EVER SINCE? FIFTY YEARS? GUARDING WHAT?"
-        ]
-      },
-      [
-        "THE THING IN THE WRECK SINGS, YOU KNOW. GOODCO HEARD IT TOO - AND PLUGGED THEIR MACHINES IN."
-      ],
-      [
-        "THAT WAS THEIR GREAT MISTAKE. IT SANG, AND THE GRAVES OPENED. NOW THEY CRATE UP FOR MARS."
-      ],
-      {
-        "hero": [
-          "MARS? THEN THE CRATES - THEY CARRIED A GIRL THROUGH HERE LAST NIGHT. DID YOU SEE HER?"
-        ]
-      },
-      [
-        "SNEAKERS. LOUD. SHE BIT TWO OF THEM. THEY CRATED HER FOR THE MARS RUN WITH ALL THEY OWN."
-      ],
-      [
-        "YOU WANT TO FOLLOW? THEN TAKE THE WATCH FROM ME, EARTHLING. I ONLY EVER LOSE TO THE WORTHY."
-      ]
-    ],
-    "gore": "ecto",
-    "hp": 550,
-    "id": "armstrong",
-    "lastWords": ["THE WATCH... HHH... IT'S... YOURS... NOW..."],
-    "levelBonus": 5,
-    "locomotion": "float",
-    "loot": {
-      "gear": 1,
-      "items": ["machete"],
-      "medkits": 2,
-      "repairs": 1,
-      "tierBonus": 0.35,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 0.5
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "The real first man on the moon, who planted the flag, learned what it was planted on, and never went home — while a copy grown in a tank on the ride back shook hands and cut ribbons for forty years. He has kept the watch alone ever since, and he only ever loses to the worthy.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["I HAVE WATCHED", "THIS GROUND FOR", "FIFTY YEARS."],
-          "beamWidth": 11,
-          "cooldownMs": 11000,
-          "damageFrac": 0.5,
-          "hitIntervalMs": 420,
-          "id": "laser_eyes",
-          "range": 150,
-          "scorchDamageFrac": 0.22,
-          "scorchMs": 5000,
-          "scorchRadius": 15,
-          "scorchTickMs": 700,
-          "sweepDeg": 80,
-          "sweepMs": 1500,
-          "windupFloorMs": 700,
-          "windupMs": 1100
-        }
-      ],
-      "slam": {
-        "cooldownMs": 8000,
-        "damageFrac": 1.2,
-        "radius": 75,
-        "windupMs": 900
-      }
-    },
-    "name": "ARMSTRONG",
-    "phases": [
-      {
-        "belowHpFrac": 0.4,
-        "mechanics": {
-          "abilities": [
-            {
-              "beamWidth": 12,
-              "cooldownMs": 8500,
-              "damageFrac": 0.55,
-              "hitIntervalMs": 400,
-              "id": "laser_eyes",
-              "range": 175,
-              "scorchDamageFrac": 0.25,
-              "scorchMs": 6000,
-              "scorchRadius": 16,
-              "scorchTickMs": 700,
-              "sweepDeg": 105,
-              "sweepMs": 1600,
-              "windupFloorMs": 650,
-              "windupMs": 900
-            },
-            {
-              "bark": ["I PLANTED IT ON", "A GRAVE. LET THE", "GRAVE ANSWER."],
-              "cooldownMs": 16000,
-              "defId": "the_planted_flag",
-              "distance": 60,
-              "id": "flag_plant",
-              "lifeMs": 22000,
-              "minDifficulty": "nightmare",
-              "windupMs": 1000
-            }
-          ],
-          "enrage": {
-            "belowHpFrac": 0.4,
-            "damageMult": 1.25,
-            "speedMult": 1.4
-          },
-          "slam": {
-            "cooldownMs": 6000,
-            "damageFrac": 1.3,
-            "radius": 80,
-            "windupMs": 700
-          }
-        }
-      }
-    ],
-    "phasing": true,
-    "radius": 20,
-    "role": "boss",
-    "speed": 40,
-    "sprite": "armstrong",
-    "uniquesByDifficulty": {
-      "easy": ["the_long_vigil", "palegrave"],
-      "hard": ["the_long_vigil", "palegrave"],
-      "jesus": [
-        "the_long_vigil",
-        "palegrave",
-        "sentinels_greaves",
-        "marewalkers",
-        "the_fallen_standard"
-      ],
-      "medium": ["the_long_vigil", "palegrave"],
-      "nightmare": [
-        "the_long_vigil",
-        "palegrave",
-        "sentinels_greaves",
-        "marewalkers"
-      ]
-    }
-  },
   "assembler": {
     "ai": {
       "aggroRadius": 400,
@@ -1616,7 +1452,7 @@
     "hp": 380,
     "id": "guard_ledger",
     "levelBonus": 2,
-    "lore": "THE SYSADMIN's detail, licensed on the same terms as his databases. Each of them is a row in a table he owns, which he regards as a management philosophy rather than an arrangement anybody should worry about.",
+    "lore": "THE ROOT's detail, licensed on the same terms as his databases. Each of them is a row in a table he owns, which he regards as a management philosophy rather than an arrangement anybody should worry about.",
     "name": "LEDGER ENFORCER",
     "radius": 11,
     "role": "minion",
@@ -1849,11 +1685,11 @@
         ]
       },
       [
-        "SOMETHING UP ON THE MOON. ONE BADGE PINGED: N. ARMSTRONG. DEAD SINCE 2012. FUNNY THING."
+        "SOMETHING UP ON THE MOON. ONE BADGE PINGED: FIRST CREW, RETIRED '69. LONG BURIED. FUNNY THING."
       ],
       {
         "hero": [
-          "ARMSTRONG? THE FIRST MAN ON THE MOON? SOMEBODY'S JUST USING HIS OLD BADGE."
+          "FIRST CREW? THE ONES WHO PLANTED THE FLAG? SOMEBODY'S JUST USING AN OLD BADGE."
         ]
       },
       [
@@ -1876,7 +1712,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
-    "lore": "Thirty years of mopping the same lab floor, which is thirty years of reading things nobody thought to hide from the cleaner. He is the one who noticed a badge ping in last Tuesday reading N. ARMSTRONG — a man dead since 2012.",
+    "lore": "Thirty years of mopping the same lab floor, which is thirty years of reading things nobody thought to hide from the cleaner. He is the one who noticed a badge ping in last Tuesday reading N. THE FLAGBEARER — a man dead since 2012.",
     "mechanics": {
       "abilities": [
         {
@@ -3429,6 +3265,170 @@
     "speed": 10,
     "sprite": "the_developer"
   },
+  "the_flagbearer": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 30,
+    "critChance": 0.15,
+    "death": "unmaking",
+    "deathBark": ["FIRST MAN UP HERE. SOMEBODY SHOULD HAVE COME BACK FOR YOU."],
+    "dialogue": [
+      ["YOU SMELL LIKE EARTH. RAIN AND CUT GRASS AND TELEVISION. GO HOME."],
+      {
+        "hero": [
+          "NOT WITHOUT ADA. YOU'RE HIM, AREN'T YOU? FIRST BOOTS IN THIS DUST. NEVER WENT HOME."
+        ]
+      },
+      [
+        "I PLANTED THIS FLAG. FIRST BOOTS DOWN. THEN A WRECK TURNED UP UNDER THEM. ALL THEATER."
+      ],
+      [
+        "THEY GREW A SMILING COPY OF ME. HE SHOOK HANDS, CUT RIBBONS AND DIED IN BED. LUCKY HIM."
+      ],
+      {
+        "hero": [
+          "AND YOU'VE BEEN UP HERE ALONE EVER SINCE? FIFTY YEARS? GUARDING WHAT?"
+        ]
+      },
+      [
+        "THE THING IN THE WRECK SINGS, YOU KNOW. GOODCO HEARD IT TOO - AND PLUGGED THEIR MACHINES IN."
+      ],
+      [
+        "THAT WAS THEIR GREAT MISTAKE. IT SANG, AND THE GRAVES OPENED. NOW THEY CRATE UP FOR MARS."
+      ],
+      {
+        "hero": [
+          "MARS? THEN THE CRATES - THEY CARRIED A GIRL THROUGH HERE LAST NIGHT. DID YOU SEE HER?"
+        ]
+      },
+      [
+        "SNEAKERS. LOUD. SHE BIT TWO OF THEM. THEY CRATED HER FOR THE MARS RUN WITH ALL THEY OWN."
+      ],
+      [
+        "YOU WANT TO FOLLOW? THEN TAKE THE WATCH FROM ME, EARTHLING. I ONLY EVER LOSE TO THE WORTHY."
+      ]
+    ],
+    "gore": "ecto",
+    "hp": 550,
+    "id": "the_flagbearer",
+    "lastWords": ["THE WATCH... HHH... IT'S... YOURS... NOW..."],
+    "levelBonus": 5,
+    "locomotion": "float",
+    "loot": {
+      "gear": 1,
+      "items": ["machete"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "The first man to walk here, who planted the flag, learned what it was planted on, and never went home — while a copy grown in a tank on the ride back shook hands and cut ribbons for forty years. He has kept the watch alone ever since, and he only ever loses to the worthy.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["I HAVE WATCHED", "THIS GROUND FOR", "FIFTY YEARS."],
+          "beamWidth": 11,
+          "cooldownMs": 11000,
+          "damageFrac": 0.5,
+          "hitIntervalMs": 420,
+          "id": "laser_eyes",
+          "range": 150,
+          "scorchDamageFrac": 0.22,
+          "scorchMs": 5000,
+          "scorchRadius": 15,
+          "scorchTickMs": 700,
+          "sweepDeg": 80,
+          "sweepMs": 1500,
+          "windupFloorMs": 700,
+          "windupMs": 1100
+        }
+      ],
+      "slam": {
+        "cooldownMs": 8000,
+        "damageFrac": 1.2,
+        "radius": 75,
+        "windupMs": 900
+      }
+    },
+    "name": "THE FLAGBEARER",
+    "phases": [
+      {
+        "belowHpFrac": 0.4,
+        "mechanics": {
+          "abilities": [
+            {
+              "beamWidth": 12,
+              "cooldownMs": 8500,
+              "damageFrac": 0.55,
+              "hitIntervalMs": 400,
+              "id": "laser_eyes",
+              "range": 175,
+              "scorchDamageFrac": 0.25,
+              "scorchMs": 6000,
+              "scorchRadius": 16,
+              "scorchTickMs": 700,
+              "sweepDeg": 105,
+              "sweepMs": 1600,
+              "windupFloorMs": 650,
+              "windupMs": 900
+            },
+            {
+              "bark": ["I PLANTED IT ON", "A GRAVE. LET THE", "GRAVE ANSWER."],
+              "cooldownMs": 16000,
+              "defId": "the_planted_flag",
+              "distance": 60,
+              "id": "flag_plant",
+              "lifeMs": 22000,
+              "minDifficulty": "nightmare",
+              "windupMs": 1000
+            }
+          ],
+          "enrage": {
+            "belowHpFrac": 0.4,
+            "damageMult": 1.25,
+            "speedMult": 1.4
+          },
+          "slam": {
+            "cooldownMs": 6000,
+            "damageFrac": 1.3,
+            "radius": 80,
+            "windupMs": 700
+          }
+        }
+      }
+    ],
+    "phasing": true,
+    "radius": 20,
+    "role": "boss",
+    "speed": 40,
+    "sprite": "the_flagbearer",
+    "uniquesByDifficulty": {
+      "easy": ["the_long_vigil", "palegrave"],
+      "hard": ["the_long_vigil", "palegrave"],
+      "jesus": [
+        "the_long_vigil",
+        "palegrave",
+        "sentinels_greaves",
+        "marewalkers",
+        "the_fallen_standard"
+      ],
+      "medium": ["the_long_vigil", "palegrave"],
+      "nightmare": [
+        "the_long_vigil",
+        "palegrave",
+        "sentinels_greaves",
+        "marewalkers"
+      ]
+    }
+  },
   "the_founder": {
     "ai": {
       "aggroRadius": 280,
@@ -4380,7 +4380,7 @@
     "gore": "ecto",
     "hp": 130,
     "id": "the_planted_flag",
-    "lore": "Not a creature: the flag itself, driven back into the grave it was first planted on. ARMSTRONG raises it when the night turns against him, and whatever lies under the Sea of Tranquility answers a knock on the lid.",
+    "lore": "Not a creature: the flag itself, driven back into the grave it was first planted on. THE FLAGBEARER raises it when the night turns against him, and whatever lies under the Sea of Tranquility answers a knock on the lid.",
     "mechanics": {
       "summon": {
         "cooldownMs": 2800,
@@ -4432,6 +4432,97 @@
     "role": "elite",
     "speed": 16,
     "sprite": "the_residency"
+  },
+  "the_root": {
+    "ai": {
+      "aggroRadius": 300,
+      "rushSpeed": 100
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 32,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "STOP THERE. YOU'RE IN MY ROWS. EVERY PERSON HERE IS A ROW. EVERY SIN, A COLUMN."
+      ],
+      {
+        "hero": ["AND YOU ARE? I DON'T REMEMBER YOUR FACE FROM THE MAGAZINES."]
+      },
+      [
+        "THE ROOT - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES ARE MY LICENSEES."
+      ],
+      {
+        "hero": [
+          "A BUNKER FULL OF SPIES, ALL WORKING FOR THE LANDLORD OF THEIR OWN SECRETS. OF COURSE."
+        ]
+      },
+      ["YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN."]
+    ],
+    "dodgeChance": 0.15,
+    "hp": 1800,
+    "id": "the_root",
+    "lastWords": ["TRANSACTION... ...ROLLED BACK..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "lore": "The database underneath all the other databases, and therefore the landlord of the secrets of every agency in the corridors outside. He regards the hero's visit as a row already written, and would like to fill in the last column.",
+    "mechanics": {
+      "abilities": [
+        {
+          "bark": ["EVERY AGENCY SITS", "IN MY TABLES.", "NOW SO DO YOU."],
+          "cooldownMs": 8000,
+          "durationMs": 5000,
+          "id": "snare_field",
+          "look": {
+            "core": "196, 62, 62",
+            "deep": "30, 10, 10",
+            "hot": "252, 186, 168",
+            "spark": "232, 120, 100"
+          },
+          "radius": 52,
+          "range": 210,
+          "slowFactor": 0.55,
+          "windupMs": 620
+        },
+        {
+          "cooldownMs": 11000,
+          "damageFrac": 0.28,
+          "durationMs": 2800,
+          "healFrac": 0.7,
+          "id": "siphon_tether",
+          "range": 210,
+          "tickMs": 520,
+          "windupMs": 740
+        }
+      ]
+    },
+    "name": "THE ROOT",
+    "radius": 12,
+    "ranged": {
+      "cooldownMs": 2200,
+      "damage": 30,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 175,
+        "sprite": "db_shard"
+      },
+      "range": 230,
+      "takesCover": true
+    },
+    "role": "elite",
+    "speed": 24,
+    "sprite": "the_root"
   },
   "the_safety_officer": {
     "ai": {
@@ -4804,97 +4895,6 @@
     "role": "elite",
     "speed": 8,
     "sprite": "the_stunt_double"
-  },
-  "the_sysadmin": {
-    "ai": {
-      "aggroRadius": 300,
-      "rushSpeed": 100
-    },
-    "contactCooldownMs": 700,
-    "contactDamage": 32,
-    "critChance": 0.12,
-    "dialogue": [
-      [
-        "STOP THERE. YOU'RE IN MY ROWS. EVERY PERSON HERE IS A ROW. EVERY SIN, A COLUMN."
-      ],
-      {
-        "hero": ["AND YOU ARE? I DON'T REMEMBER YOUR FACE FROM THE MAGAZINES."]
-      },
-      [
-        "THE SYSADMIN - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES ARE MY LICENSEES."
-      ],
-      {
-        "hero": [
-          "A BUNKER FULL OF SPIES, ALL WORKING FOR THE LANDLORD OF THEIR OWN SECRETS. OF COURSE."
-        ]
-      },
-      ["YOUR VISIT IS ALREADY A ROW, FRIEND. LET'S FILL IN THE LAST COLUMN."]
-    ],
-    "dodgeChance": 0.15,
-    "hp": 1800,
-    "id": "the_sysadmin",
-    "lastWords": ["TRANSACTION... ...ROLLED BACK..."],
-    "levelBonus": 6,
-    "loot": {
-      "gear": 1,
-      "medkits": 1,
-      "repairs": 1,
-      "tierBonus": 0.4,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 1
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "lore": "The database underneath all the other databases, and therefore the landlord of the secrets of every agency in the corridors outside. He regards the hero's visit as a row already written, and would like to fill in the last column.",
-    "mechanics": {
-      "abilities": [
-        {
-          "bark": ["EVERY AGENCY SITS", "IN MY TABLES.", "NOW SO DO YOU."],
-          "cooldownMs": 8000,
-          "durationMs": 5000,
-          "id": "snare_field",
-          "look": {
-            "core": "196, 62, 62",
-            "deep": "30, 10, 10",
-            "hot": "252, 186, 168",
-            "spark": "232, 120, 100"
-          },
-          "radius": 52,
-          "range": 210,
-          "slowFactor": 0.55,
-          "windupMs": 620
-        },
-        {
-          "cooldownMs": 11000,
-          "damageFrac": 0.28,
-          "durationMs": 2800,
-          "healFrac": 0.7,
-          "id": "siphon_tether",
-          "range": 210,
-          "tickMs": 520,
-          "windupMs": 740
-        }
-      ]
-    },
-    "name": "THE SYSADMIN",
-    "radius": 12,
-    "ranged": {
-      "cooldownMs": 2200,
-      "damage": 30,
-      "projectile": {
-        "lifetimeMs": 2400,
-        "radius": 4,
-        "speed": 175,
-        "sprite": "db_shard"
-      },
-      "range": 230,
-      "takesCover": true
-    },
-    "role": "elite",
-    "speed": 24,
-    "sprite": "the_sysadmin"
   },
   "the_thirteenth_man": {
     "ai": {

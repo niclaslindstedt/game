@@ -3,15 +3,15 @@ family: boot_hill
 size: [24, 24]
 description: >
   THE STUNT DOUBLE, the movie-star co-founder — a broad man dressed all in black
-  with a dark ponytail, in a slow, heavy ju-jutsu guard; deadly and glacial.
+  with swept-back dark hair, in a slow, heavy fighting guard; deadly and glacial.
 subject:
   kind: elite
   name: THE STUNT DOUBLE
   build: a broad, heavy man
   attire: dressed all in black, a dark belt
-  features: a pale face and a dark ponytail
-  accent: all-black outfit against a pale face
-  pose: a slow, heavy ju-jutsu guard
+  features: a pale face under swept-back dark hair
+  accent: the all-black outfit against a pale face
+  pose: a slow, heavy fighting guard
   flavor: the movie-star co-founder — deadly and glacial
 palette:
   K: "#0c0b12" # black belt / dark accents

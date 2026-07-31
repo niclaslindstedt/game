@@ -315,7 +315,7 @@ unlit.
 **AND ITS THRESHOLD IS MEASURED AGAINST THE GAME'S OWN FLOORS, NOT EYEBALLED.**
 The bloom decides what counts as light with one luminance knee, and the thing
 that makes that hard here is that the ground is not a minority of a frame, it IS
-the frame — the moon's regolith (0.554) and SpaceZ HQ's deck (0.701) are each the
+the frame — the moon's regolith (0.554) and GOODCO HQ's deck (0.701) are each the
 50th AND the 90th percentile of their own picture, while the lights live in the
 top half-percent. A knee below them classes the floor as a light and adds it back
 over itself, which is haze rather than bloom: shipped that way once, it lifted
@@ -756,7 +756,7 @@ Three more rules shape what the districts CONTAIN:
 - **`once` makes a district singular.** Weights cannot say "there is A town": low
   odds give runs with none, high odds give runs with five, and either way the map
   reads as suburbs. A `once` area is withdrawn from the palette the first time it
-  wins a seed, so eastworld grows exactly one town in a rolled corner of a big
+  wins a seed, so boot_hill grows exactly one town in a rolled corner of a big
   empty country — and finding it is worth something.
 - **`blocks` lays a MAIN STREET.** What makes a town read as a town is alignment,
   not density: two rows of frontages facing each other across a lane. An area with
@@ -785,7 +785,7 @@ and it could be in any of thirty rooms. Two details carry it: the annex joins th
 grid as a real chamber with an EMPTY neighbour list (so every dressing pass treats
 it as the district it is, with no special cases — only the wall pass knows, and
 gives it a sealed box), and `widthFrac` sizes it off the map so the band it costs
-stays mostly room at all three sizes. Eastworld ends in the buried ZAI CONTROL
+stays mostly room at all three sizes. Boot Hill ends in the buried ZAI CONTROL
 ROOM; the bunker's vault is below its floor, because you do not walk to a vault.
 
 **FAUNA is the canopy's twin on the ground plane.** A level whose only moving
@@ -811,7 +811,7 @@ is flat — inside a run, nothing reads the catalog for its own level.
 **THE LANDING IS QUIET, NOT SAFE — and the opening beat's cast lands with the
 hero.** A SAFE zone does not merely keep the horde from spawning in it, it REPELS
 every minion out and holds them at its edge, so one centred on the hero is a
-bubble he can stand in untouched all run. It also froze spacez_hq's opening beat
+bubble he can stand in untouched all run. It also froze goodco_hq's opening beat
 solid: `openingStrike` is a two-parter held in order by `after` (the hero reads
 the crowd, THEN the lone rusher breaks from the pack and its harmless touch draws
 his blade), and the rusher was shoved straight back out of the pad it was placed
@@ -904,7 +904,7 @@ quest itself defines, dropped by breeds or lying on the floor), and `escort`.
 Five rules are load-bearing:
 
 1. **THE REWARD'S XP IS A SHARE OF THE HERO'S OWN BAR, NEVER A NUMBER.** A flat
-   figure authored against SpaceZ HQ is a rounding error by Eastworld and an
+   figure authored against GOODCO HQ is a rounding error by Boot Hill and an
    instant ding on JESUS, so `xpShare: 0.25` means "a quarter of the level you
    are on" and prices itself correctly at every rung for free. Coins are flat
    (the purse is a flat economy) and the LOOT is rolled through the ordinary
@@ -1148,13 +1148,15 @@ watching and the strip sat on a stale count.
 
 ## MULTIPLAYER — the simulation moves out of the renderer
 
-**Steam builds only.** PRs 1, 2, 1.5, 1.75, 2.5 and **PR 3's §3.1** of the eight
-in `docs/multiplayer-plan.md` have landed: a session server, the wire, the fifth
-bridge, two transports, a challenge handshake, chat, `/players N`, a closed list
-of 69 named commands covering everything the app DOES to a run, the three doors a
-player walks through (HOST GAME, the server browser, JOIN BY ADDRESS), the in-run
-chat, the live session panel, the invite launch arguments — and, from PR 3, a run
-that carries a **PARTY**.
+**Steam builds only.** PRs 1, 2, 1.5, 1.75, 2.5, **PR 3's §3.1** and **PR 4's
+§4.2-abandoned-hero + §4.3** of the ten in `docs/multiplayer-plan.md` have
+landed: a session server, the wire, the fifth bridge, two transports, a challenge
+handshake, chat, `/players N`, a closed list of 69 named commands covering
+everything the app DOES to a run, the three doors a player walks through (HOST
+GAME, the server browser, JOIN BY ADDRESS), the in-run chat, the live session
+panel, the invite launch arguments — from PR 3, a run that carries a **PARTY** —
+and from PR 4, the **CO-OP RULES**: whose the XP is, whose the loot is, what
+heats the meter, and what a body nobody is steering means.
 
 **THE RUN IS A PARTY, AND `game/party.ts` IS THE ONE MODULE ALLOWED TO ASK IT A
 QUESTION.** `GameState.players` is a NON-EMPTY tuple of heroes in SEAT order
@@ -1205,6 +1207,75 @@ brought; the seat is the SERVER's answer and travels back in the `welcome`. App
 side, `localHero(state)` (`pwa/src/game/local-seat.ts`) is which hero this screen
 is about — 0 offline and for the host, so single player never goes near it.
 
+**SO A PLAYER WHO LEAVES IS `departed`, AND `heroInPlay` IS THE ONE PREDICATE
+THAT SAYS WHAT THAT MEANS.** The body stays at the index it always had and the
+world stops answering for it: not chased, not in the centroid, not in
+`partyLevel`, not a pack's alarm clock, not a hazard's victim, not a share of the
+menace meter's per-capita read, not stepped at all — and NOT ALIVE, so
+`partyWiped` fires. That last one is the whole point: four separate rules used to
+answer for the body by accident, and the worst of them made a group whose fourth
+player quit UNDEFEATABLE — the abandoned hero stood at full health for the rest
+of the run while the three still playing were wiped over and over. The predicate
+folds "at 0 hp" and "nobody is steering this" into ONE check on purpose, because
+every question above has the same answer for both and splitting them is how one
+of the eight sites quietly keeps reacting to a body nobody is behind.
+`nextFreeSeat` then RE-USES the emptied seat, which is only safe because the
+departing player's commands and frames left with them — a seat vacated by
+anything else (a dead hero, a player in a menu) must never be recycled.
+
+**WHAT A KILL IS WORTH, AND WHOSE IT IS — three rules that are each an exact
+no-op at one hero, which is what makes them safe and is also the trap: a
+single-player test proves nothing about any of them.**
+
+1. **XP IS PROXIMITY-GATED AND LEVEL-WEIGHTED** (`src/game/xp-share.ts` —
+   D2's shape, and both halves are counter-intuitive in the same direction).
+   Without the GATE a party's optimal play is to scatter to four corners and farm
+   four fights at once, which is four solo runs sharing a lobby. Without the
+   WEIGHTING — i.e. with the even split that LOOKS generous — a level-90 running
+   a level-12 hands over half of every kill, so grouping with somebody below you
+   is a straight tax and nobody does it; weighted, the veteran keeps most of the
+   pot and the newcomer still gains far more than they could alone, because the
+   horde is priced against `partyLevel` and a sixth of a level-90 kill is a sixth
+   of something enormous. **Only a KILL is the party's**: an arrow, an errand and
+   a scripted award have an obvious owner and go through
+   `grantXp(state, hero, amount)` directly, since sharing one out is a gift from
+   the player who earned it to one who did not. The per-map XP cap reads the
+   RECIPIENT's level, so a level-90 in the party cannot throttle the level-20
+   beside them to an outgrown map's trickle.
+2. **LOOT IS FREE-FOR-ALL BY DEFAULT, WITH A HOST TOGGLE FOR ALLOCATED**
+   (`GameState.lootMode`, HOST GAME → LOOT) — decided deliberately rather than
+   inherited from `Item` having had no owner field. `Item.owner` is stamped ONCE,
+   in `dropItem` (the one funnel every drop goes through, which is why no call
+   site had to learn who killed anything), from the heroes who were in the fight,
+   and never re-decided. **The roll is off the ITEM'S HASH, never `state.rng()`**
+   — the same rule the toss scatter follows — or an allocated session would roll
+   DIFFERENT ITEMS from the same seed than a free-for-all one.
+3. **THE MENACE METER READS THE PARTY'S OUTPUT PER CAPITA** (`tickMenace`). What
+   it is handed is the RUN's summed damage and kills, and "is this too easy" with
+   eight people in the room honestly means "is it too easy FOR EACH OF THEM". Fed
+   the raw sum it reads eight times the DPS it was tuned against, saturates within
+   a minute, and — because the evolution ratchet is a PERMANENT floor within a run
+   — never comes back down: an untuned meter does not make co-op hard, it makes it
+   hard FOR EVER after the first minute.
+
+**AND `stepItems` IS TWO LOOPS, NOT ONE.** A toss's arc and a mercy angel's
+descent are facts about the ITEM (one dt each per tick); a pickup is a question
+each HERO asks. One loop over the party counts every arc down N times as fast, so
+every drop in the game lands in an eighth of its flight the day a second player
+joins. Heroes reach in SEAT order, which is the only tie-break that replicates.
+
+**WHAT IS STILL OWED HERE — and §4.3's measurement is the sharp one.** PR 4's
+"measured pass, not a guessed one" for the menace and `/players N` COULD NOT BE
+RUN: `scripts/simulate-run.mjs` flies exactly one hero, because the autopilot
+reads `state.players[0]` at 164 sites across `src/game/bot/` and `botAct` has no
+notion of WHICH hero it steers. The rules above are therefore STRUCTURE with
+their reasoning stated and unit-level proof (`tests/engine/coop_rules_test.ts`),
+not tuned numbers — do not record them as measured. Parameterizing the bot on a
+`Player` is the prerequisite and is the next thing PR 4 owes, BEFORE the party
+HUD (it is PR 7's §7.1–§7.2, owed earlier than its number); then
+`XP_SHARE.partyBonusPerHero` and the `/players N` pairing are the levers. §4.2's corpse and respawn are BLOCKED on §3.2's per-player `dying`
+screen. See the plan's §4.7.
+
 **WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** A screen one player opens
 still stops the world for everybody (`Player.screen` and the non-blocking
 level-up are §3.2, and the level-up is a real single-player behaviour change that
@@ -1212,7 +1283,7 @@ owes the changelog its own line); nothing is predicted, so a client shows its
 hero where the last snapshot put him (§3.3); the command channel carries no SEAT,
 so a joiner's shop or stat spend still dispatches against seat 0; and a joiner
 still plays on the THROWAWAY `spectatorCharacter`, so nothing they earn reaches
-their roster (PR 4). Their run commands travel but are NOT applied locally
+their roster (PR 4's §4.5). Their run commands travel but are NOT applied locally
 (`setCommandSink(…, { optimistic: false })`) — the server is authoritative over
 the result, so an optimistic apply would draw an outcome the next snapshot may
 not agree with.
@@ -2080,7 +2151,7 @@ wall it cannot see — it routes straight through and grinds. Anything that adds
 or removes an obstacle must bump that counter; `ensureRoute` rebuilds when it
 moves. Any future dynamic obstacle inherits the fix.
 
-ARMSTRONG carries the catalog's first two. **LASER EYES** sweeps a beam one way
+THE FLAGBEARER carries the catalog's first two. **LASER EYES** sweeps a beam one way
 across a locked arc and leaves the regolith it crossed ON FIRE (`state.scorches`,
 stepped in `hazards.ts`): the beam is one dodge, but the floor it leaves is what
 makes a long fight cost the player their room. Two rules keep it honest — the
@@ -2758,54 +2829,55 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Where new code goes
 
-| Change type                                                       | Goes in                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game                       | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                                                                                                                                                                   |
-| Authored sprite art                                               | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                                                                                                                                                                       |
-| The TITLE MENU's shape (a screen, a row, its order/icon/help)     | `content/mainmenu.yaml` — the whole menu tree, compiled to `pwa/src/generated/menu.ts` by `make levels`; the row's BEHAVIOUR goes in the `menus-*.ts` builder that owns its screen — see **THE TITLE MENU IS CONTENT**                                                                                                                                                                                                        |
-| A level (mission)                                                 | `content/levels/<id>.yaml` — the venue MINUS its floor plan (story, ladder rung, hazards, merchant, loot pools), compiled to `src/generated/levels.ts` by `make levels`; its geometry is `content/maps/<id>.yaml` — see the `level-design` skill                                                                                                                                                                              |
-| A GENERATED map (the "v2" blueprint for a mission)                | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                                                                                                                                                               |
-| The hero level curve (XP per level)                               | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                                                                                                                                                              |
-| A powerup (a timed pickup power)                                  | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS**                                                                                                                                               |
-| A new EFFECT a power can carry                                    | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                                                                                                                                                                 |
-| A passive TALENT (a rank the hero buys in a tree)                 | `content/talents.yaml` — the whole catalog in one file (id → talent), compiled to `src/generated/talents.ts` by `make levels`. A talent is what it CARRIES: an `effect:` bag of per-rank slopes, a `conjure:`, and/or a PROC BLOCK                                                                                                                                                                                            |
-| A new PROC a talent can fire                                      | a block type on `TalentDef` + its entry in `TALENT_BLOCKS` + one reader in `src/game/talent-effects.ts` + its entry in `PROC_BLOCKS` (`scripts/asset-tools/talent-schema.mjs`) — never a branch on a talent id                                                                                                                                                                                                                |
-| A new GORE PIECE a burst body throws                              | `content/sprites/effects/gib_<part>.yaml` (the art — it must be something that was INSIDE) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                                                                                                                                                              |
-| A new ORGAN a cut can spill                                       | `content/sprites/effects/gib_<organ>.yaml` + the `ANATOMY_BANDS` band it lives in (`pwa/src/game/game-screen/gore-burst.ts`), plus `BOUNCY` if it is dense. Every cut through that band spills it from then on                                                                                                                                                                                                                |
-| An enemy (minion/elite/boss)                                      | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                                                                                                                                                               |
-| A companion (who a spared elite joins you as)                     | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                                                                                                                                                                 |
-| An item SET (the kit a boss's green armor belongs to)             | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                                                                                                                                                                            |
-| A CONVERSATION (a talk the hero steers, with choices)             | `content/conversations/<id>.yaml` — a tree of what a speaker says and what the hero may say back, compiled to `src/generated/quests.ts` by `make levels` (the QUEST pipeline); named by `EnemyDef.conversation` or `QuestDef.conversation`                                                                                                                                                                                    |
-| An errand (a quest) and the person who hands it out               | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                                                                                                                                                                         |
-| An item (weapon/gear/named unique)                                | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                                                                                                                                                                   |
-| Item quality / rarity knobs                                       | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                                                                                                                                                                         |
-| A sound effect                                                    | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                                                                                                                                                                  |
-| A music track                                                     | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                                                                                                                                                                                                                                                      |
-| A cutscene (a between-level scene)                                | `content/cutscenes/<id>.yaml` — one scene per file (stage, cast, timeline; `variants:` swaps a labelled part per difficulty), compiled to `src/generated/cutscenes.ts` by `make levels`                                                                                                                                                                                                                                       |
-| The hero's inner monologues                                       | `content/thoughts.yaml` — the whole catalog in one file (id → monologue) plus the `capRotation` the cap-farm mutter cycles, compiled to `src/generated/thoughts.ts` by `make levels`                                                                                                                                                                                                                                          |
-| A story item (keycard, dossier, recovered hardware)               | `content/story-items.yaml` — the whole catalog in one file (id → plot piece and its `lore` pages), compiled to `src/generated/story-items.ts` by `make levels`                                                                                                                                                                                                                                                                |
-| Authored campaign/bot tuning                                      | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                                                                                                                                                                                                                                                  |
-| Generators, analyzers, previews, and maintenance commands         | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                                                                                                                                                                                                                                                          |
-| Generic engine code (usable by any game)                          | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                                                                                                                                                              |
-| App shell, rendering, PWA, game-specific UI                       | `pwa/src/...`                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Generic React/UI game components                                  | `pwa/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                                                                                                                                                            |
-| A library page's content, look, or wording                        | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                                                                                                                                                                                                                                                    |
-| Native-only concern (haptics, audio session, store build)         | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                                                                                                                                                                                                                                                       |
-| Desktop/Steam-only concern (window, Steam Cloud, overlay)         | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                                                                                                                                                                                                                                                     |
-| The MOD SDK (format, compiler, examples, modder docs)             | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                                                                                                                                                                                                                                                   |
-| MULTIPLAYER: a read of "the hero" inside the engine               | ASK WHICH KIND IT IS. A PRIVATE read (bag, purse, build, worn kit) is a `Player` PARAMETER beside the run — never a lookup. A GEOMETRY read goes through `src/game/party.ts` (`nearestHero` / `anyHeroWithin` / `heroesWithin` / `partyCentroid` / `partyLevel`), and a mob's own target through `src/game/aggro.ts` (`quarryFor` / `quarryOf`). `state.players[0]` left in engine code is an un-migrated site, not an answer |
-| MULTIPLAYER: anything the app does to a RUN before its first tick | `src/game/session-setup.ts` — a field on `RunParams` and a line in `createRunFromParams`, plus the matching field on `SessionParams` (`server/wire/protocol.ts`). Never a mutation in `createRunSession` alone: the session and the client build the same run from the same parameters, and a field only one of them applies is a desync that reads as a replication bug                                                      |
-| MULTIPLAYER: a new VERB the app may run against a run             | `src/game/commands.ts` (the arg shapes + the `case`) **and** `COMMANDS` in `server/wire/protocol.ts` (the literal copy the allow-list reads) — the drift test enforces the pair — then bump `PROTOCOL_VERSION`. Call it from the app through `pwa/src/game/run-commands.ts`, never by importing the engine function                                                                                                           |
-| MULTIPLAYER: the session server, or the wire either end speaks    | `server/...` — engine code compiled for Node (`npm run server:build`). `server/wire/*` imports NOTHING, because the page reads it from the startup path; `server/session.ts` may import `@game/core`. Never anything under `pwa/`. See `docs/multiplayer.md`                                                                                                                                                                  |
-| MULTIPLAYER: a transport, admission, the router mapping           | `server/net/...` — the seam, the reliability layer, the UDP socket, the relay, the hub, UPnP. Node builtins only; it ships with the session, which is what makes PR 5's dedicated server the same file. See `docs/multiplayer.md`                                                                                                                                                                                             |
-| MULTIPLAYER: the shell's half (fork, supervise, hand the port)    | `electron/src/net.ts` + `session-host.ts` — the fifth bridge, over `__gisNet`; the page's control half is `pwa/src/app/net-bridge.ts` and the run driver is `pwa/src/game/net/`. STEAM-only concerns (`net-steam-p2p.ts`, `net-lobby.ts`) and the OS firewall live here because the client and the elevation prompt do                                                                                                        |
-| MULTIPLAYER: a read of "the hero" inside the APP                  | `localHero(state)` (`pwa/src/game/local-seat.ts`) — which hero THIS screen is about. 0 offline and for the host; a joiner's seat comes from the `welcome`. Never `state.players[0]` in app code                                                                                                                                                                                                                               |
-| MULTIPLAYER: a HOST / JOIN screen, or anything they read          | `content/mainmenu.yaml` (the rows) + `pwa/src/game/title-screen/menus-net.ts` (the behaviour) + `use-sessions.ts` (the plumbing). STARTUP PATH: it may reach `pwa/src/app/net-bridge.ts`, `@game/menu` and the import-free `@game/wire/*` leaves — NEVER `pwa/src/game/net/`. A live status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`), because a session exists only while a run does                   |
-| Mature, playtested generic code                                   | extract into `oss-framework`, then import the package here                                                                                                                                                                                                                                                                                                                                                                    |
-| Tests                                                             | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                                                                                                                                                                                                                                                  |
-| Docs update                                                       | `docs/...`                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Examples                                                          | `examples/...`                                                                                                                                                                                                                                                                                                                                                                                                                |
-| LLM prompt                                                        | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                                                                                                                                                                                                                                                                         |
+| Change type                                                       | Goes in                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game                       | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                                                                                                                                                                                                                                                                                     |
+| Authored sprite art                                               | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                                                                                                                                                                                                                                                                                         |
+| The TITLE MENU's shape (a screen, a row, its order/icon/help)     | `content/mainmenu.yaml` — the whole menu tree, compiled to `pwa/src/generated/menu.ts` by `make levels`; the row's BEHAVIOUR goes in the `menus-*.ts` builder that owns its screen — see **THE TITLE MENU IS CONTENT**                                                                                                                                                                                                                                                                                                                          |
+| A level (mission)                                                 | `content/levels/<id>.yaml` — the venue MINUS its floor plan (story, ladder rung, hazards, merchant, loot pools), compiled to `src/generated/levels.ts` by `make levels`; its geometry is `content/maps/<id>.yaml` — see the `level-design` skill                                                                                                                                                                                                                                                                                                |
+| A GENERATED map (the "v2" blueprint for a mission)                | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                                                                                                                                                                                                                                                                                 |
+| The hero level curve (XP per level)                               | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                                                                                                                                                                                                                                                                                |
+| A powerup (a timed pickup power)                                  | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS**                                                                                                                                                                                                                                                                 |
+| A new EFFECT a power can carry                                    | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                                                                                                                                                                                                                                                                                   |
+| A passive TALENT (a rank the hero buys in a tree)                 | `content/talents.yaml` — the whole catalog in one file (id → talent), compiled to `src/generated/talents.ts` by `make levels`. A talent is what it CARRIES: an `effect:` bag of per-rank slopes, a `conjure:`, and/or a PROC BLOCK                                                                                                                                                                                                                                                                                                              |
+| A new PROC a talent can fire                                      | a block type on `TalentDef` + its entry in `TALENT_BLOCKS` + one reader in `src/game/talent-effects.ts` + its entry in `PROC_BLOCKS` (`scripts/asset-tools/talent-schema.mjs`) — never a branch on a talent id                                                                                                                                                                                                                                                                                                                                  |
+| A new GORE PIECE a burst body throws                              | `content/sprites/effects/gib_<part>.yaml` (the art — it must be something that was INSIDE) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                                                                                                                                                                                                                                                                                |
+| A new ORGAN a cut can spill                                       | `content/sprites/effects/gib_<organ>.yaml` + the `ANATOMY_BANDS` band it lives in (`pwa/src/game/game-screen/gore-burst.ts`), plus `BOUNCY` if it is dense. Every cut through that band spills it from then on                                                                                                                                                                                                                                                                                                                                  |
+| An enemy (minion/elite/boss)                                      | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                                                                                                                                                                                                                                                                                 |
+| A companion (who a spared elite joins you as)                     | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                                                                                                                                                                                                                                                                                   |
+| An item SET (the kit a boss's green armor belongs to)             | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                                                                                                                                                                                                                                                                                              |
+| A CONVERSATION (a talk the hero steers, with choices)             | `content/conversations/<id>.yaml` — a tree of what a speaker says and what the hero may say back, compiled to `src/generated/quests.ts` by `make levels` (the QUEST pipeline); named by `EnemyDef.conversation` or `QuestDef.conversation`                                                                                                                                                                                                                                                                                                      |
+| An errand (a quest) and the person who hands it out               | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                                                                                                                                                                                                                                                                                           |
+| An item (weapon/gear/named unique)                                | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                                                                                                                                                                                                                                                                                     |
+| Item quality / rarity knobs                                       | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A sound effect                                                    | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                                                                                                                                                                                                                                                                                    |
+| A music track                                                     | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                                                                                                                                                                                                                                                                                                                                                                        |
+| A cutscene (a between-level scene)                                | `content/cutscenes/<id>.yaml` — one scene per file (stage, cast, timeline; `variants:` swaps a labelled part per difficulty), compiled to `src/generated/cutscenes.ts` by `make levels`                                                                                                                                                                                                                                                                                                                                                         |
+| The hero's inner monologues                                       | `content/thoughts.yaml` — the whole catalog in one file (id → monologue) plus the `capRotation` the cap-farm mutter cycles, compiled to `src/generated/thoughts.ts` by `make levels`                                                                                                                                                                                                                                                                                                                                                            |
+| A story item (keycard, dossier, recovered hardware)               | `content/story-items.yaml` — the whole catalog in one file (id → plot piece and its `lore` pages), compiled to `src/generated/story-items.ts` by `make levels`                                                                                                                                                                                                                                                                                                                                                                                  |
+| Authored campaign/bot tuning                                      | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Generators, analyzers, previews, and maintenance commands         | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Generic engine code (usable by any game)                          | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| App shell, rendering, PWA, game-specific UI                       | `pwa/src/...`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Generic React/UI game components                                  | `pwa/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| A library page's content, look, or wording                        | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Native-only concern (haptics, audio session, store build)         | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Desktop/Steam-only concern (window, Steam Cloud, overlay)         | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| The MOD SDK (format, compiler, examples, modder docs)             | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| MULTIPLAYER: a read of "the hero" inside the engine               | ASK WHICH KIND IT IS. A PRIVATE read (bag, purse, build, worn kit) is a `Player` PARAMETER beside the run — never a lookup. A GEOMETRY read goes through `src/game/party.ts` (`nearestHero` / `anyHeroWithin` / `heroesWithin` / `partyCentroid` / `partyLevel`), and a mob's own target through `src/game/aggro.ts` (`quarryFor` / `quarryOf`). "Is this hero somebody the world should react to" is `heroInPlay` — never `hp > 0`, which misses a DEPARTED seat. `state.players[0]` left in engine code is an un-migrated site, not an answer |
+| MULTIPLAYER: a payout, a drop, or anything else a kill produces   | A KILL's XP is the party's and goes through `shareXp(state, amount, pos)`; every other award has an owner and goes through `grantXp(state, hero, amount)`. A DROP goes through `dropItem` like every other drop, which stamps `Item.owner` on its own in an allocated session — never roll an owner at a call site, and never spend a `state.rng()` draw on presentation (use the item's hash, as the toss does)                                                                                                                                |
+| MULTIPLAYER: anything the app does to a RUN before its first tick | `src/game/session-setup.ts` — a field on `RunParams` and a line in `createRunFromParams`, plus the matching field on `SessionParams` (`server/wire/protocol.ts`). Never a mutation in `createRunSession` alone: the session and the client build the same run from the same parameters, and a field only one of them applies is a desync that reads as a replication bug                                                                                                                                                                        |
+| MULTIPLAYER: a new VERB the app may run against a run             | `src/game/commands.ts` (the arg shapes + the `case`) **and** `COMMANDS` in `server/wire/protocol.ts` (the literal copy the allow-list reads) — the drift test enforces the pair — then bump `PROTOCOL_VERSION`. Call it from the app through `pwa/src/game/run-commands.ts`, never by importing the engine function                                                                                                                                                                                                                             |
+| MULTIPLAYER: the session server, or the wire either end speaks    | `server/...` — engine code compiled for Node (`npm run server:build`). `server/wire/*` imports NOTHING, because the page reads it from the startup path; `server/session.ts` may import `@game/core`. Never anything under `pwa/`. See `docs/multiplayer.md`                                                                                                                                                                                                                                                                                    |
+| MULTIPLAYER: a transport, admission, the router mapping           | `server/net/...` — the seam, the reliability layer, the UDP socket, the relay, the hub, UPnP. Node builtins only; it ships with the session, which is what makes PR 5's dedicated server the same file. See `docs/multiplayer.md`                                                                                                                                                                                                                                                                                                               |
+| MULTIPLAYER: the shell's half (fork, supervise, hand the port)    | `electron/src/net.ts` + `session-host.ts` — the fifth bridge, over `__gisNet`; the page's control half is `pwa/src/app/net-bridge.ts` and the run driver is `pwa/src/game/net/`. STEAM-only concerns (`net-steam-p2p.ts`, `net-lobby.ts`) and the OS firewall live here because the client and the elevation prompt do                                                                                                                                                                                                                          |
+| MULTIPLAYER: a read of "the hero" inside the APP                  | `localHero(state)` (`pwa/src/game/local-seat.ts`) — which hero THIS screen is about. 0 offline and for the host; a joiner's seat comes from the `welcome`. Never `state.players[0]` in app code                                                                                                                                                                                                                                                                                                                                                 |
+| MULTIPLAYER: a HOST / JOIN screen, or anything they read          | `content/mainmenu.yaml` (the rows) + `pwa/src/game/title-screen/menus-net.ts` (the behaviour) + `use-sessions.ts` (the plumbing). STARTUP PATH: it may reach `pwa/src/app/net-bridge.ts`, `@game/menu` and the import-free `@game/wire/*` leaves — NEVER `pwa/src/game/net/`. A live status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`), because a session exists only while a run does                                                                                                                                     |
+| Mature, playtested generic code                                   | extract into `oss-framework`, then import the package here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Tests                                                             | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Docs update                                                       | `docs/...`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Examples                                                          | `examples/...`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| LLM prompt                                                        | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ## Test conventions
 
@@ -2903,7 +2975,7 @@ companions — a boss swap re-homes that boss's drops).
 - If a change you make to the game conflicts with what the manuscript says, the
   manuscript must be updated too — but **only after the user confirms the
   manuscript change**. The user may grant that confirmation ahead of time (e.g.
-  "rewrite ARMSTRONG's speech and update the manuscript" pre-approves the
+  "rewrite THE FLAGBEARER's speech and update the manuscript" pre-approves the
   manuscript edit); otherwise, ask before rewriting it.
 - Never silently edit story/dialogue in the data files and leave the manuscript
   stale, and never rewrite the manuscript without that confirmation. A PR that
@@ -2938,6 +3010,104 @@ companions — a boss swap re-homes that boss's drops).
 
 The engine that plays these lines is `src/game/story.ts`; the overlays that
 render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`.
+
+## NAMING — invent it, don't borrow it
+
+**Nothing in this game is named after a real person, company, product or
+franchise — and that includes the near-miss pun.** The satire targets a
+PHENOMENON (automation taking people's work, the people it makes rich, the
+world it leaves behind) and never a nameable party. That is both the honest
+version of the joke and the only version that ships: an app store may refuse a
+game whose enemies are a real company on its own content guidelines, long
+before anybody's lawyer reads a word of it.
+
+**A NAME IS A QUARTER OF IT — this is the rule that gets missed.** A boss
+renamed off a real person, still speaking that person's verbal tics, is that
+person with a new nameplate. Four things carry identity and they move together
+or not at all:
+
+1. **THE NAME** — id, display name, file stem, sprite stem.
+2. **THE VOICE** — `dialogue`, `lastWords`, barks, `lore`. A catchphrase, a
+   signature insult, a manner of speaking, and any verifiable biographical fact
+   (a filmography, a citizenship, a war, a court case) are each identification
+   on their own.
+3. **THE ART** — the sprite grid AND its `subject` slots. A silhouette
+   identifies without a face: a stage costume, a distinctive hairline, the
+   uniform somebody actually wears every day. **Trade dress counts double** — a
+   brand's COLOUR SEQUENCE is protectable with no name attached, which is why
+   the search baron wears a barcode rather than four coloured bars. And never
+   trace a photograph: that puts a copyright question over the image on top of
+   the likeness question over the person.
+4. **THE DESCRIPTION** — `description`, every `subject.*` slot and the palette
+   comments all ship in the generated library AND drive the next regeneration,
+   so a cleaned grid with a dirty `subject` grows its likeness straight back.
+
+**NAME THE ROLE, NOT THE PERSON.** THE FOUNDER, THE MODERATOR, THE FULFILLER,
+THE SAFETY OFFICER, THE VENDOR, THE STRONGMAN, THE ROOT. The archetype is the
+funnier half anyway — it is the thing being satirized, where the celebrity was
+only ever one example of it — and it does not date. Read the shipped roster
+before adding to it; new content joins that register, and a name needing
+specialist knowledge to land at all (THE SUDOER) is off-register even when it
+is safe.
+
+What is SAFE, and generously so — most of this catalog already lives here:
+
+- **Myth, folklore and antiquity.** The whole artifact tier (MJÖLNIR,
+  EXCALIBUR, DRAUPNIR, GÁNDIVA, SAMPO) is public domain and always will be.
+- **Real technical, historical and trade vocabulary.** A Tesla coil, a boot
+  hill, a minute repeater, a perpetual calendar, a barcode, root access. These
+  are words, not brands.
+- **Historical EVENTS.** Alternate history is a genre. That the first landing
+  happened, and when, is free; who specifically walked is not.
+- **Long-dead figures — with the estate caveat.** TESLA (1943), HOUDINI (1926),
+  EARHART (1937) and RASPUTIN (1916) sit outside any post-mortem publicity
+  statute. A twentieth-century celebrity is a different thing: several states
+  run a post-mortem right for decades (Ohio 60 years, and Tennessee's exists
+  because of Elvis), and those estates enforce. "Dead" is not the test —
+  "dead long enough, and with nobody left to act" is.
+- **Invented brands.** GOODCO and TRUST ME BRO AI carry the whole corporate
+  satire precisely because they are ours.
+
+What to refuse, including the cases that do not feel like borrowing:
+
+- A real person, **living most of all** — a living subject adds defamation to
+  the publicity question, and depicting one committing a crime is the sharpest
+  form of it. Note the dead are not automatically safe here either: Sweden
+  prosecutes **förtal av avliden** where a claim about a deceased person wounds
+  surviving relatives, and this repo's author is Swedish.
+- A company or product name, **and the one-letter pun on it**. A swapped vowel
+  is not a different mark.
+- **A coined term from another fiction**, even where the premise is fair game.
+  "Robot western theme park" is an unprotectable idea; calling the robots
+  "hosts" borrows the expression. Premises are free, vocabulary is not.
+- **A title echoing a franchise's construction** — especially where the swapped
+  word is a SYNONYM rather than an opposite, since that is the same commercial
+  impression, which is the actual test. EAST/WEST are opposites and distinguish;
+  GONE/LOST are synonyms and do not.
+- Real logos, mascots, slogans and brand colour sequences in grids or palette
+  comments.
+
+**THE MECHANICAL TRAP, if a sweep is ever needed again — it defeated four
+consecutive passes that each looked exhaustive.** A regex word boundary does
+NOT fire before `_`, so `\bmosque\b` silently skips `mosque_brand` and
+`\bspacez\b` skips `spacez_armed`. Always follow a boundary pass with a
+prefix-aware one, then grep for `<old>_` and `_<old>` separately. Three
+neighbours of the same trap:
+
+- **A display name may also be a JavaScript identifier** (`const EASTWORLD`), so
+  a replacement containing a space breaks the parser rather than a test.
+- **Library slugs are hyphenated** (`the-flagbearer`), so an id rename that
+  writes `the_flagbearer` into a URL passes every type check and fails at
+  runtime.
+- **Scope content sweeps AWAY from `src/`, `server/` and `electron/`.** `host`
+  is the multiplayer vocabulary as well as a park robot, and `content/mainmenu.yaml`
+  carries the multiplayer HOST rows despite living under `content/`.
+- **Anything auditing a rename must exclude itself**, or the bulk pass rewrites
+  the list of names it was checking against and then reports clean.
+
+**This governs the SHIPPED campaign.** A mod's names are its author's business
+and answer to nobody — but `mod/examples/` is shipped content and follows the
+rule like everything else.
 
 ## Parity / cross-cutting rules
 
