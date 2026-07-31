@@ -493,10 +493,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     name: "EASY",
     tagline: "A GENTLE WARM-UP",
     color: "#7ef0c8",
-    // A short-range CONE spray off the garage wall — a crowd-clear tool, not a
-    // single-target wand, so the kindest rung teaches the AoE read from the
-    // opening knot (see WEAPON_DEFS.fire_extinguisher).
-    startingWeapon: "fire_extinguisher",
+    // Grandpa's, off the garage wall: a short-range SPREAD, so the kindest rung
+    // teaches the AoE read from the opening knot without handing the player a
+    // single-target wand (see WEAPON_DEFS.sawed_off_shotgun). It is slower and
+    // hits far harder per pull than the cone-spray this replaced — same
+    // sustained output, delivered in blows big enough that a point-blank blast
+    // takes a body apart, which is what a shotgun is FOR.
+    startingWeapon: "sawed_off_shotgun",
     // Four banked points — a broad head start, one in each combat stat.
     startingStats: { stamina: 1, strength: 1, dexterity: 1, intelligence: 1 },
     // The band comes with him: the one piece of jewellery he owns before the

@@ -528,7 +528,7 @@
           {
             "kind": "wall_medieval_sword",
             "pos": {
-              "x": 178,
+              "x": 104,
               "y": 54
             }
           },
@@ -702,7 +702,7 @@
         {
           "kind": "caption",
           "text": [
-            "THE OLD EXTINGUISHER OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
+            "GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
           ]
         },
         {
@@ -730,9 +730,9 @@
             }
           },
           {
-            "kind": "wall_fire_extinguisher",
+            "kind": "wall_sawed_off_shotgun",
             "pos": {
-              "x": 178,
+              "x": 104,
               "y": 54
             }
           },
@@ -934,7 +934,7 @@
           {
             "kind": "wall_combat_knife",
             "pos": {
-              "x": 178,
+              "x": 104,
               "y": 54
             }
           },
@@ -1136,7 +1136,7 @@
           {
             "kind": "wall_stick",
             "pos": {
-              "x": 178,
+              "x": 104,
               "y": 54
             }
           },
@@ -1338,7 +1338,7 @@
           {
             "kind": "wall_brass_knuckles",
             "pos": {
-              "x": 178,
+              "x": 104,
               "y": 54
             }
           },

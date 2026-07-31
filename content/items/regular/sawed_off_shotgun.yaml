@@ -1,0 +1,41 @@
+id: sawed_off_shotgun
+kind: weapon
+rarity: regular
+name: SAWED-OFF SHOTGUN
+description: Grandpa's twelve gauge, both barrels cut down to a stub the year
+  his eyes went. It hung over the garage door for a decade with a box of shells
+  taped to the stock. The night Ada didn't come back he took it down, loaded
+  both, and went looking for his old employer.
+material: metal
+class: ranged
+levelReq: 1
+# Deliberately ONE-HANDED, unlike the armory's pump and the blunderbuss: a
+# sawed-off is the shotgun you can work with one arm, and the kindest rung must
+# not open by denying a first-time player the bag in his second arm.
+# PRICED IN STARTING-MOB HEALTHBARS, NOT ON THE BUDGET LINE (a starter is
+# exempt — the difficulty ladder is calibrated on it). One pellet is ~31% of the
+# 16 hp an EASY intern opens with, so THREE landed pellets can kill and four
+# always do; a point-blank blast that lands five or six overkills by more than
+# the 0.4 healthbars `GIB_BARS` asks for and takes the body apart, which is the
+# whole reason the wall weapon is a shotgun. It is flat damage that never grows,
+# so the horde's own hp curve retires it within a few levels — see the FALLOFF
+# table in the PR. Re-measure with scripts/simulate-run.mjs if the ladder moves.
+damage: 5
+damageVariance: 0.25
+cooldownMs: 800
+range: 160
+durability: 300
+projectile:
+  # No `pierce`: a pellet spends itself on the first body it meets, so the
+  # blast's power is how many of the six land on ONE target at contact range
+  # rather than a line of mobs falling to a single trigger pull.
+  speed: 380
+  radius: 3
+  lifetimeMs: 430
+  sprite: pellet
+  count: 6
+  spreadDeg: 44
+icon: icon_sawed_off_shotgun
+# Its own voice: the class sound is a thin zap, and the whole point of the
+# opening weapon is that it lands like a door being kicked in.
+sfx: shot_sawed_off

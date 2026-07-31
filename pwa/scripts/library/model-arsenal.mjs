@@ -79,6 +79,7 @@ export const WEAPON_FIELDS = {
   twoHanded: "the BOTH HANDS note, and the empty off-hand slot it implies",
   projectile: "the shot section",
   icon: "the portrait",
+  sfx: "not reader-facing: the sound the app fires for it in place of its class's — a page cannot be listened to",
 };
 
 export const GEAR_FIELDS = {
