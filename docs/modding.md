@@ -69,7 +69,7 @@ their own dynamic `import()` and stay there.
 
 ### 3a. A mod's venue is CARVED, like every other
 
-`maps/<id>.yaml` is the map half of a venue (see **GENERATED MAPS** in
+`maps/<id>.yaml` is the map half of a venue (the `mapgen-improvement` skill in
 `AGENTS.md`): the mission's geometry is carved fresh from the run's own seed —
 the only way a venue gets a floor, for a mod exactly as for the shipped campaign
 — so the boss has to be found. A mod that ships a level therefore ships a

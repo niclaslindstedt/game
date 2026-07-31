@@ -67,7 +67,7 @@ run against synthetic fixtures with no shipped content (see
   registry importing the carve. Nothing outside a run imports this —
   the menus reach levels through `defs/levels/summary.ts`, and pulling the
   generator onto the startup path would put the whole level catalog in the
-  critical-path budget. See the GENERATED MAPS section of `AGENTS.md`.
+  critical-path budget. The generator itself is the `mapgen-improvement` skill.
 - **`src/game/config/`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), one module per system re-exported by an
   `index.ts` barrel, nothing hardcoded in logic.
@@ -508,7 +508,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   determine rarity", `UNIQUE.rarityBudgetRef`/`rarityBudgetExp`): the
   roster spans a vast authored power range and the strongest are
   astronomically rare.
-- **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
+- **`src/game/types/`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.
 - **`src/game/create.ts`** — seeded run setup from a level def: difficulty
@@ -1387,8 +1387,13 @@ seams a browser can't provide on iOS:
   relics recovered, trophy points) fills with players tied at the top and stops
   ranking anything — and nothing is tracked _for_ them: each value is a record
   the game already keeps (`achievement-totals.ts`, `highscores.ts`), published
-  when a run resolves and once at launch to backfill a new sign-in. The platform
-  keeps the best value it has ever been sent, so re-publishing is free.
+  when a run resolves and once at launch to backfill a new sign-in. A
+  leaderboard is a second READER of the player's own records, never a second
+  bookkeeper, so no ranking can disagree with what the game already shows him.
+  The one new counter, `bestKillRate`, is a lifetime total like any other, and
+  its rolling window (`pwa/src/game/kill-rate.ts` — app-layer, not engine) is
+  bucketed rather than a list of kill timestamps. The platform keeps the best
+  value it has ever been sent, so re-publishing is free.
 
   There is **no board UI**: HIGH SCORES → WORLD RANKINGS opens Game Center's own
   board. A board's portal FORMAT and the game's SCALE have to agree — a score is
@@ -1403,6 +1408,67 @@ re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build
 profiles. Builds are **manual only** — locally via `eas build`, or the
 dispatch-only `.github/workflows/native-build.yml` — so paid EAS build minutes are
 never spent on a push. See `native/README.md` for the full build/distribute flow.
+
+#### The device content switches — what the player's GUARDIAN owns
+
+**THE DEVICE CONTENT SWITCHES — the controls the PLAYER'S GUARDIAN owns, not the
+player.** Two switches on the app's own page in iOS Settings (native builds only;
+a browser has no such page, so every entry point reports UNMANAGED and the game
+plays whole): **MATURE CONTENT**, which gates the gore and the screen-nuke's
+burning dead, and **COIN STORE**, which decides whether this install has a store
+at all. Both default ON — the game ships as it was made, and a guardian turns
+things off. They live OUTSIDE the game on purpose: a control reachable from
+inside the thing it restricts is not a restriction, so there is no in-game row
+for either, and the device's answer OUTRANKS every in-game setting and developer
+flag (every GORE switch and FORCE STORE included). Same three-file seam as cloud save
+and the achievements — `native/src/device-settings.ts` (bridge) over
+`device-settings-provider.ts` (seam) and `device-settings-ios.ts` (Apple), backed
+by `native/modules/device-settings/` (Swift: `UserDefaults`) with the page itself
+written at prebuild by the local config plugin
+`native/plugins/with-settings-bundle.js` — so **Android support is one new file**
+plus wherever Android puts its own parental controls. Four rules:
+
+1. **NSFW IS THE UMBRELLA GATE FOR EVERYTHING "NOT SAFE FOR KIDS", and every new
+   such feature MUST hang off it.** The blood, the incinerated dead — and
+   whatever comes next: dismemberment, a decapitation, swearing in the dialogue,
+   drug or alcohol references, sexual content, an unusually cruel death
+   animation. The test is not "is this gore", it is "would a parent handing over
+   this phone want it off". Adding a second switch per new kind of content is how
+   a parental control rots: the guardian answered once, years ago, and every
+   feature shipped since defaults to showing them. So a new mature feature adds a
+   `nsfwAllowed()` check, never a new setting — and it belongs in the same review
+   as the feature, because a mature feature that ships ungated has already been
+   seen by the players the switch exists for.
+2. **THE GATE GOES WHERE THE THING IS DECIDED, NOT WHERE IT IS DRAWN.** `bloodBlow`
+   returns null and the floor's saturation grid never records the hit; the
+   `incinerated` flag is dropped at the top of the kill's fx so the blast falls
+   back to the ORDINARY corpse punt-and-topple, which is what makes a censored
+   nuke read as a bomb that hits hard rather than one whose victims vanish. A
+   gate at the draw call leaves the state filling up invisibly and hands the
+   player everything it was hiding the moment the switch comes back.
+3. **IT FAILS OPEN, ALWAYS.** No native module, an Android build, a malformed
+   payload, a browser: every one of those plays the full game. A guardian's
+   switch is a deliberate act, honoured exactly; the ABSENCE of an answer is not
+   one and must never be read as one. Note the trap this exists for: iOS does NOT
+   write a `Settings.bundle` `DefaultValue` into `UserDefaults` until the page is
+   visited, so the key is MISSING on every fresh install — read it as `false` and
+   every player gets the censored game.
+4. **THE POLICY IS IN THE PAGE BEFORE THE GAME'S FIRST FRAME.** It gates what may
+   be DRAWN and which rows may be OFFERED, so it is injected onto `window` before
+   the WebView loads a byte (`policyBootScript`) and read synchronously
+   (`pwa/src/app/device-policy.ts`) — never awaited. A round trip would flash a
+   STORE row at an install that has none. Only LATER changes travel as events,
+   and the title menu rebuilds on them through the same `bumpSettings` tick its
+   own settings use.
+
+Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
+`game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
+the highest
+`v*` tag (or `main` before the first release), `/preview/` serves every
+`main` push, `/branch/` serves a manually parked branch persisted in
+the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
+slots into a single Pages artifact; each slot gets its own service worker and
+a disjoint precache cache id (`pwa/src/app/pwa.ts`).
 
 ### `electron/` — the desktop shell (the fourth layer)
 
@@ -1459,7 +1525,7 @@ relevant push, and packages the depot directories dispatch-only. See
 
 The engine, compiled for Node and shipped inside the desktop app, so a
 multiplayer session can simulate in a process of its own rather than in the
-renderer. `electron/src/session-hand.ts` forks it as a `utilityProcess`,
+renderer. `electron/src/session-host.ts` forks it as a `utilityProcess`,
 `electron/src/net.ts` is its bridge, and the snapshots travel to the page on a
 `MessagePort` that bypasses the main process entirely.
 

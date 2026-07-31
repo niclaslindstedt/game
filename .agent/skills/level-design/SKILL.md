@@ -118,7 +118,7 @@ so they are read, not authored:
    `guardians`, `bystanders`, `boss`, `sizes`, `layout` — see
    `mapgen-improvement` and `mod/FORMAT.md`.
 
-## Mob levels come from the LADDER (`scripts/ladder.yaml`)
+## Mob levels come from the LADDER (`content/ladder.yaml`)
 
 Below JESUS, a mob's level is **authored, not floated off the player's level** —
 and the per-difficulty × per-map defaults live in ONE place: `ladder.yaml`. Each
@@ -251,6 +251,29 @@ enforcing the tuples is `level-schema.mjs`.
   Coverage must hold ≥4 weapons / ≥3 gear in-window.
 - **Dev-warp loadouts are derived** (`deriveArrivalLoadout`) — the derived floors
   in other maps' content tests can shift when the order changes.
+
+## Two import rules that bite
+
+**THE RUN READS ITS OWN MAP — `runLevelDef(state)`, never `levelDef(state.level.id)`.**
+`createGame` resolves the level once, but a run keeps ASKING the level questions
+for as long as it lasts: which zones suppress spawns, whose lair this door is,
+where the exit stands, what is scattered here. Every one of those used to go back
+to the CATALOG, which now holds a MISSION with no geometry on it at all — so
+those reads have nowhere to land, and the type system says so (`levelDef()`
+answers a `MissionDef`, whose geometry is optional). The carve travels on the
+state (`GameState.carvedLevel`) and `runLevelDef` is the ONE accessor; the rule
+is flat — inside a run, nothing reads the catalog for its own level.
+
+**Nothing outside a run may import `mapgen/`.** The menus reach levels through
+`defs/levels/summary.ts`; pulling the generator onto the startup path would put
+the whole level catalog and the carve in the app's critical-path budget.
+
+LOOK at a map rather than reading its JSON: `node scripts/level-render.mjs <id>
+--size large --seed 3 --dormant` draws one run's carve with the real sprites and
+the real horde standing in it, and `scripts/map-layout.mjs <id> --seed 3` gives
+the schematic with con colours. Both render a CARVE, because there is nothing
+else to render — change the seed to see another run's map.
+
 
 ## Workflow
 

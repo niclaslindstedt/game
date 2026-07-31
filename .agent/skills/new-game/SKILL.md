@@ -52,7 +52,7 @@ Delete or empty each of these — they are 100% this-game data:
       `LevelDef`, `levelDef`, `TileSpec`, `EnemyRole`, …); replace the
       **entries**. The engine references content only by id, so it compiles
       against an empty-but-typed catalog.
-- [ ] **`scripts/sprites/*`** — the sprite families. Keep
+- [ ] **`content/sprites/*`** — the sprite families. Keep
       `core.mjs` conventions and `index.mjs` wiring; replace the family
       modules. Then `make assets`.
 - [ ] **`content/sounds/*.yaml` and `content/music/*.yaml`** (every sound and

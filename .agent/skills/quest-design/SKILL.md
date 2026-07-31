@@ -224,6 +224,138 @@ reason:
    YAML.
 10. **Changeset:** `.changes/unreleased/$(date +%s)-<slug>.md`, `type: Added`.
 
+## The rules the surfaces rest on
+
+**AND THE GEAR IS DECIDED BEFORE THE PLAYER SAYS YES —
+`quests/reward-choices.ts`.** An errand used to promise "AN ITEM" and roll it
+at the handover, which is two problems wearing one sentence: the player could
+not tell whether the job was worth doing, and the piece that arrived had no
+relation to the build they were playing. The gear is now MINTED ONCE, when
+the conversation first opens (`GameState.questRewards`, keyed by quest id),
+and shown in full — real bases, real tier, real rolled affixes, drawn with
+the bag's own `affixLine` and tier colours. Four rules:
+- **IT IS THE ORDINARY PIPELINE, CALLED THREE TIMES.** Every row is a
+  `rollEquipment` off the level's own pool at the SAME tier and quality, so
+  the choice is about the build and never about which row rolled better.
+  `eligibleBases` is exported from `items/rolling.ts` for it rather than
+  re-derived, or the level gates, the material gates and the base-level floor
+  would exist twice.
+- **THE THREE ARE ONE PER CLASS, AND THE GAME ALREADY HAD THE THREE.** A
+  weapon reward offers a MELEE, a RANGED and a MAGIC base (`WeaponClass`); an
+  armor reward offers MAIL, LEATHER and CLOTH — and those materials already
+  lean STR/DEX/INT in their own `ARMOR_TYPES[…].statWeights`, so the class
+  flavour of the affixes falls out of picking the base and nothing reaches
+  into the affix roller. PLATE is deliberately not a lane (NIGHTMARE-gated,
+  so it would be empty for most of the campaign).
+- **SOMETHING EVERYONE WOULD WANT IS OFFERED ALONE.** A charm or a bag has no
+  material, no weapon class and an even affix spread, so there is no second
+  version of it to want instead — three copies of one piece is a menu with
+  one dish.
+- **MINTED AT THE CONVERSATION, NEVER AT THE RENDER.** The app is a pure
+  READER (`questRewardChoices`); minting per render would spin a slot machine
+  while the player read it and mint an item id every frame. The pick is
+  `chooseQuestReward` (a run command like every other verb) and rides the
+  errand, so it survives walking away and coming back.
+- **SHOWN AT THE ASK, CHOSEN AT THE HANDOVER.** The offer lists them under
+  ITEM REWARDS as a prospectus — what the job pays — and the slots are
+  viewable but not selectable there: choosing at the ask would make the
+  player commit at the one moment they know least about the build they will
+  have when they come back. The handover says CHOOSE ONE and the slots take
+  the press.
+- **THEY ARE BAG SLOTS, AND THE CARD IS THE BAG'S.** A row per piece with its
+  name and every affix under it is three stacked paragraphs in a box that
+  already carries a speech and a contract, and the icon says what the thing
+  is faster than the words did. So the gear draws as `.inv-cell` slots with
+  no names, and a press (or a hover) opens the piece's own `ItemTooltip` —
+  the same card, with the same worn-piece comparison, that the player reads
+  every other piece of gear on.
+
+2. **THE LOG IS THE TRUTH; THE MARK IS DERIVED.** `giverMark` recomputes the
+`!` / `?` over a head from the quest log every time it is asked, and nothing
+caches it — a stored mark goes stale the instant a kill three rooms away
+completes an objective, and a `?` that isn't there is a quest the player
+never hands in. The three states are WoW's: gold `!` (work to take), gold `?`
+(work to hand in), grey `?` (work running).
+3. **A CONVERSATION NEVER STARTS ITSELF, AND A TAP OPENS THE WHOLE SLATE.**
+Walking up MEETS somebody — discovered, pinned on the map, `!` over the head
+— and that is all it does; `talkToQuestGiver` is the only door in, and only a
+tap on the person calls it. It used to auto-open on approach, on the theory
+that a quest nobody notices is a quest nobody takes, and what that actually
+did was freeze the run into a modal the player had not asked for because
+they rounded the wrong crate mid-fight. The head mark carries the invitation
+instead — WoW has never needed more than one — which is also why the
+GREETING is written as an ASK ("CAN I ASK YOU A FAVOR?") rather than as a
+line of ambient character: it is now heard only by a player who deliberately
+walked up and pressed, so it has to pay for the press. A giver with more
+than one thing to say opens on the **PICK LIST** (WoW's gossip window)
+rather than handing back one errand at a time, because the one-at-a-time
+rule makes a second quest reachable only by refusing the first — which reads
+as the game losing track of what it already offered. Every exit from an
+errand returns to the slate, so taking three off one person costs one
+walk-up. With exactly one topic the list is skipped: a menu of one is a menu
+nobody wants. **A LIST ROW IS A BUTTON AND IS SIZED LIKE ONE** — the same
+vertical padding as `.pixel-button`, because a row at text height is a
+quarter of the tap target of the GOODBYE button sitting under it, and the
+row is the one the player came to press.
+4. **PROGRESS IS BOOKED WHERE IT HAPPENS, NOT SCANNED FOR.** `creditQuestKill`
+is called from `killEnemy` and `creditQuestPickup` from the item pass — the
+tally counts what the hero DID, not what is left standing.
+5. **THE ERRAND-GIVERS STEP LAST.** A quest conversation takes the stage by
+setting `phase = "quest"`; a sight-pinned thought, the opening strike and a
+lair's occupant all take it by setting `phase = "dialogue"`. Whichever runs
+LAST wins — and when the thought won it left the offer set behind a dialogue
+the player tapped away, so the offer never appeared and the giver was stuck
+mid-conversation for the rest of the run. `stepQuests` therefore runs after
+every other scene-raising pass in `step/index.ts`.
+6. **THE PERSON OWES A PARAGRAPH AND SO DOES THE JOB.** `QuestGiverDef.lore` and
+`QuestDef.lore` are both REQUIRED and both DESCRIBED rather than spoken, in
+the register of an item's `description` — the same rule `EnemyDef.lore`
+follows, and for the same reason: without them an errand's only prose is its
+offer dialogue, which is written to be heard while standing in front of
+somebody and which the library keeps behind a spoiler cover. Nothing in the
+simulation reads either; the library's ERRANDS section prints both in the
+open, and the manuscript governs them without transcribing them.
+
+**THE ERRANDS ARE ANSWERED ON THREE SURFACES, AND EACH ANSWERS A DIFFERENT
+QUESTION** — which is why none of them can be folded into another:
+
+- **THE TRACKER** (right of the field, under the minimap — WoW's objective
+  tracker) is "how many more", read without stopping. It shows only RUNNING and
+  finished-not-handed-in work, caps at three, and is tap-transparent, because
+  the right-hand third of a landscape phone is where the steering thumb lives.
+- **THE FLASH** (`QuestFlash.tsx`) is "that one counted", over the MIDDLE of the
+  field. The tracker is always right and nobody is looking at it: a player who
+  just killed the thing on their list is looking at the thing they just killed.
+  It rides the engine's `questProgress`, emitted from the ONE `bump` every kind
+  of progress goes through, so a kill off a list, a named elite going down, a
+  fetch piece walked over and an escort delivered are all announced without four
+  call sites — and it words itself with `objectiveLine`, so it can never
+  disagree with the strip it is announcing.
+- **THE LOG** is "what was I doing", read with the play stopped. It is raised by
+  the HUD's own `!` button (beside the bag pouch) and freezes the run in its own
+  **`questLog` phase**, exactly as the fog-of-war map does — a phase rather than
+  an app-side pause, so nothing else has to be told a screen is up and the pause
+  menu stays the pause menu. The button is GOLD once the run has taken an errand
+  and grey until then; an untaken OFFER deliberately does not light it, since
+  two givers stand on every map from the first frame and counting those would
+  leave it permanently gold and saying nothing (that offer is already announced
+  by the gold `!` over the person's own head). It used to hang off the pause
+  menu, which put the answer to "what was I doing" two presses deep behind a
+  screen about quitting.
+
+The wording those three share is the leaf `pwa/src/game/quest-text.ts`
+(`objectiveLine`), not the offer modal it used to live in: the run loop's event
+pass reaches it on every bump, and a wording helper inside a modal component
+would drag the modal into the loop to get at it. The tracker is kept live by the
+quest tally being folded into the HUD change-key (`hud-model.ts`) — it reads
+`state` directly, so without that a delivered escort moved nothing the key was
+watching and the strip sat on a stale count.
+
+The wording those three share is the leaf `pwa/src/game/quest-text.ts`
+(`objectiveLine`), not the offer modal it used to live in: the run loop's event
+pass reaches it on every bump, and a wording helper inside a modal component
+would drag the modal into the loop to get at it.
+
 ## What the build refuses
 
 Every one of these is silent at runtime — an errand that simply never completes,

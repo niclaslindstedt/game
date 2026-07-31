@@ -18,13 +18,13 @@ what makes every game rule unit-testable in plain Node.
 | A new level (geometry, gravity, intro, spawns, objective, loot table) | `src/game/defs/levels/<id>.ts` — one `LevelDef` module, registered in `levels/index.ts` (see the `level-design` skill) |
 | A new monster (stats, AI radii, role, guaranteed drops) | `src/game/defs/enemies/<roster>.ts` — one `EnemyDef` entry + sprites named after it (see the `enemy-design` skill) |
 | A new weapon/gear piece or affix | `content/items/<rarity>/<id>.yaml` (one YAML per item, compiled by `make levels`; affixes/types stay in `src/game/defs/equipment.ts`) — forge it via the `weapon-system` skill; add its id to level loot pools |
-| State shapes & events | `src/game/types.ts` (entities reference defs by id — keep it that way) |
+| State shapes & events | `src/game/types/` (one module per concern — entities reference defs by id, keep it that way) |
 | Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
 <<<<<<< HEAD
 | Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items/` (split by concern behind `index.ts`) — safe to call from UI outside `step()` |
-| Per-tick behavior | `src/game/step.ts` — one `stepX()` function per system, called in a fixed order documented at the top |
+| Per-tick behavior | `src/game/step/` — one `stepX()` function per system, called in a fixed order set by `step/index.ts` |
 =======
-| Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items.ts` — safe to call from UI outside `step()` |
+| Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items/` — safe to call from UI outside `step()`, but reach them through `src/game/commands.ts` (`applyRunCommand`) so a multiplayer client can run them too |
 | Per-tick behavior | `src/game/step/` — one `stepX()` function per system, each in its own module, called in a fixed order documented at the top of `index.ts` |
 >>>>>>> origin/main
 | Generic helpers (any game could use) | `src/lib/` — earmarked for oss-framework extraction |
@@ -40,7 +40,7 @@ what makes every game rule unit-testable in plain Node.
    `src/game/config/` (a new module for a new system, re-exported from the
    `index.ts` barrel), with units in the comments (world px, ms, hp). If you
    can't express the knob there, the design isn't ready.
-2. **Types.** Extend `src/game/types.ts`. Anything the app must react to
+2. **Types.** Extend `src/game/types/`. Anything the app must react to
    (sound, flash, particles) becomes a `GameEvent` variant — events are the
    ONLY channel from simulation to presentation. Events are cleared and
    refilled by every `step()`, so the app never misses or double-plays one.
@@ -61,6 +61,70 @@ what makes every game rule unit-testable in plain Node.
    skill; HUD numbers in `GameScreen.tsx`.
 7. **Playtest** with the `playtest` skill — numbers that look right in a
    test can still feel terrible at 60fps.
+
+## Composition — a power, and a talent's procs
+
+**A POWER IS A COMPOSITION OF EFFECTS, AND THE EFFECT LIBRARY HAS TWO
+CARRIERS.** `AbilityDef.kind` is a LABEL, never a dispatch key: it names the
+effect a power leads with (for the surfaces that need one word for a whole
+power — the dock, the bot's valuation, the ONE NUKE loot rule) while the engine
+steps and the app draws whichever effect BLOCKS are present. So a def carrying
+`trail` and `immolation` does both, and a mod can build a power the shipped
+catalog has no equivalent of without the engine growing a member per idea.
+Read `abilityBlocks(def)`, never `def.kind`, anywhere a power's BEHAVIOUR is
+being judged. Composition is why `ActiveAbility.clocks` is keyed per block: one
+shared cooldown was safe only while every def carried exactly one block, and
+the moment one carries two, an orbit's bite resets a storm's strike timer.
+
+The effects themselves live ONCE, in `src/game/ability-effects.ts`, because a
+powerup and a GRANTED SPELL (the `spell` affix on gear, and the magic tree's
+`conjure` talents) were two implementations of the same six things — same ring,
+same prefilter, same `hitEnemy` path, in two files drifting apart. A carrier
+supplies only what genuinely differs: where the numbers come from (a flat
+authored block vs a rank curve that INT quickens — `<kind>SpellBlock` returns
+the very block shape the YAML authors), the scratch, and the BILLING (a
+powerup's output is exempt from the menace meter; a granted spell's heats it
+like a weapon blow). Adding an effect means one function there plus a block on
+`AbilityDef` plus its entry in `KIND_BLOCKS` — and both carriers get it.
+
+**A POWER OWNS ITS LOOK AND ITS SOUND, because otherwise a mod's power can only
+look and sound like whichever shipped power shares its effect.** The colour kit
+is `AbilityDef.look` — authored in `content/powerups.yaml` beside the numbers it
+colours, not in the app — and it is what makes two powers sharing an effect read
+as different things (the DUST DEVIL and the EVENT HORIZON are both nothing but a
+`well`). `pwa/src/game/powerup-fx.ts` is now only the accessor and the neutral
+default an un-styled power falls back to. `AbilityDef.sfx` is the same idea for
+audio, on the same seam `WeaponDef.sfx` rides: the id travels on the event and
+the sound bus tries it before the event's own key. A burst carries its power's
+kit onto the `Effect` (via the event's `defId`), so a mod's rain lands in its own
+colours rather than in MOONFALL's grey.
+
+The Workshop itself is the same three-file seam as cloud save and the
+achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
+exists, `electron/src/mods.ts` is the bridge above it, and what is uploaded is
+the **authored folder**, not a compiled bundle, so a published mod stays
+readable and forkable the way the game's own content is. The BUILD SYSTEM travels too: the three passive TALENT trees are
+`content/talents.yaml`, so a conversion's hero no longer grows this game's
+Warlord / Windrunner / Archon — and, because a talent's structured PROCS carry
+their own numbers on the def and are found BY BLOCK rather than by id, a mod's
+talent can fire one with its own tuning (one carrier per proc, checked over
+base ∪ mod). Two things a mod may
+NOT author, and both refusals are deliberate: a `grades:` ladder (minted at
+engine load from a catalog compiled into the build, so there is no runtime seam
+to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` —
+a mod that moved the tier ladder would be rebalancing the campaign rather than
+adding to it). A CONVERSION may also rename the game itself on the title screen
+(`brand:` in its manifest) — the screen only, never the storage prefix, the
+precache id or any discovery surface, and never for an addon. **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
+the repo's layout under `resources/modtools/` (`extraResources` in
+`electron-builder.config.cjs`, resolved by `electron/src/resources.ts`): every
+module in it finds its neighbours by relative path, so a flattened copy resolves
+to nothing, and `yaml` has to travel with it because a package inside the asar
+is not resolvable from a module outside it. Every `scripts/` directory the
+compiler imports has to be listed there — a missing one is a mod that compiles in
+the repo and fails on a player's machine with a resolve error, which is what
+`tests/content/mod_toolchain_deps_test.ts` now walks the import graph to prove.
+
 
 ## Invariants to preserve
 

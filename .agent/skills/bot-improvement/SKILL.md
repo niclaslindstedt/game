@@ -65,7 +65,7 @@ So treat the labels as part of the logic, not decoration:
 
 ## The knobs: `bot.yaml`
 
-The positioning tunables live in `scripts/bot.yaml` — the hand-authored
+The positioning tunables live in `content/bot.yaml` — the hand-authored
 source of truth, compiled to `src/generated/botTuning.ts` by
 `scripts/generate-bot-tuning.mjs` (folded into `npm run levels` /
 `make assets`), and resolved per level in `src/game/bot/` via `botTuningFor(state.level.id)`.
@@ -115,6 +115,47 @@ on a dense floor; a run that never rolls a weapon upgrade stays on the weak
 starter and takes avoidable hits in the boss fight (a loot/economy interaction,
 not pure positioning).
 
+## The bot steers a HERO, not `players[0]`
+
+**THE BOT TAKES THE HERO IT STEERS — `botAct(bot, state, hero)`.** Nothing under
+`src/game/bot/` reads `state.players[0]` any more, and a new one is a
+regression: the app passes `localHero(state)`, the simulator passes the seat
+each of its bots was given, and a single-player caller passes seat 0, which is
+the identity case that let 164 sites move at once. `tests/engine/bot_party_test.ts`
+is the guard — every OTHER bot suite flies one hero and would pass with the
+refactor reverted. It also separates out the FOUR that no diff can close (a packaged
+Electron launch, eight machines through a real NAT, a real router, the per-OS
+firewall prompts) — those need a human with hardware, and writing them as work
+items is how they get ticked from a diff.
+
+
+## Flying a PARTY, and the one thing the bot knows about one
+
+`scripts/simulate-run.mjs --party N` flies one bot per seat. Read its
+`PartyReport` **per capita** — never the per-kill share: a party also clears
+faster, and only dividing by both the head count and the clock shows which
+effect won. `scripts/coop-tuning.mjs` is the tuning pass built on it.
+
+**The leash is the only party behaviour the bot has** (`src/game/bot/party-play.ts`).
+Spacing, splitting the packs, respecting `Item.owner`, covering a hero who is
+down and group travel are the plan's §7.4 and wait until somebody can watch a
+bot party play. Four rules on the leash, and each is the reason it works:
+
+- **Its number is DERIVED, not typed.** `XP_SHARE.radius` is where a hero stops
+  sharing in a kill, so past it a bot is spending the party's payout rather than
+  merely standing badly.
+- **It latches with hysteresis** — pull at 0.9 of the ring, release at 0.5 — or
+  a hero oscillates on the boundary all run.
+- **It walks to the NEAREST teammate, not the centroid**, which is a spot on the
+  floor where nobody is standing.
+- **It is null in single player**, which is what keeps every existing
+  measurement byte-identical.
+
+A measured co-op finding worth carrying: at party 4 the per-capita XP falls, and
+it tracks a fall in the per-capita KILL RATE (69 → 18) — that is a BOT
+deficiency (§7.4), not an XP-split one. Do not reach for
+`XP_SHARE.partyBonusPerHero` to cover it.
+
 ## The iterate loop
 
 1. **Reproduce.** Headless is fastest:
@@ -149,7 +190,7 @@ not pure positioning).
 | --- | --- |
 | `src/game/bot/index.ts` | The autopilot — `botAct`, `survive`, `pushBoss`, `dodgeTelegraph`, `botAllocate`. The one place decisions live |
 | `src/game/bot/tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
-| `scripts/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
+| `content/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
 | `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`GameScreen.tsx`) |
 | `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance`, `--stuck-limit` (STUCK AREAS: penalty-cancelled runs + failure coordinates) |
 | `scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |

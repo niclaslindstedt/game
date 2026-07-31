@@ -1,0 +1,452 @@
+# Rendering — how the picture is made
+
+The engine simulates a flat, square, top-down world and knows nothing about how
+it is drawn. Everything in this document lives in `pwa/src/game/render/` and is
+**presentation only**: change any of it and the simulation produces the same
+bytes. It is the reference half of the renderer — the projection, the post
+effects, the canvas and its scale tiers, how bodies carry themselves, and how
+loot announces itself.
+
+Task-shaped rendering work has its own skills, and they own their subject:
+`visual-effects` (a transient effect), `gore-system` (blood, cleaves, gibs),
+`talent-fx` (the always-on talent looks), `weapon-system` (a weapon's signature
+slash and muzzle), `pixel-assets` (the art itself), `ui-review` (the DOM UI at
+the nine reference viewports).
+
+## The world projection
+
+**THE WORLD PROJECTION — the simulation is square, the PICTURE is not.**
+`pwa/src/game/render/tilt.ts` is the one leaf that decides how the flat
+top-down world reaches the screen, and it has exactly two knobs. **PITCH** is
+how far the camera looks DOWN: the ground plane foreshortens, so a step north
+covers less screen than a step east and the floor rakes away from the eye
+(shipped at 0.75, a ~41° lean). **YAW** is how far it stands round from
+square-on — the half that turns a tiled floor into DIAMONDS, i.e. the thing
+people mean by isometric; 45° with pitch 0.5 is Diablo's 2:1 floor. Both are
+live sliders on DEVELOPER → VISUALS (persisted as `cameraPitch`/`cameraYaw`,
+stripped from a store build like every developer setting), because the answer to
+"how far down, how far round" is settled by dialling it on a real field, not by
+rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
+longer cover their axis-aligned collision boxes still read wrong under a turned
+camera, and a proper isometric look needs that structural art redrawn as iso
+pieces — which is an art project, not a render setting.
+
+The whole thing rests on one split, and getting it backwards is the only way to
+break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
+the ground — the baked ground layer, blood, burn scars, craters, AoE footprints
+— is drawn through the projection and takes it whole (a ground ring becoming an
+ellipse IS the effect, which is why none of those passes has a line about the
+tilt in it). Anything with a body — a character, a rock, a shot in flight, a
+floating damage number — is anchored at its projected spot and then drawn
+upright at FULL size through `billboard`, whose composite works out to exactly
+the identity at a whole-pixel offset so the pixel art stays crisp. Billboarding
+a pass is therefore a one-line wrap, never a rewrite of its arithmetic — which
+is how the yaw knob was added later without touching a single draw pass.
+
+**WHICH SIDE OF THAT SPLIT A PIECE OF FURNITURE FALLS ON IS THE ART'S CALL, NOT
+THE PASS'S — `plane:` on the sprite.** A boulder and a house front are drawn in
+elevation and have to stand; a wall panel, a painted lane marking, a hatch and a
+crate seen from above are drawn in PLAN and have to lie. Standing plan-view art
+up is loud: the panel comes out taller than the floor grid it is set into, and
+under a yaw a straight run of them staircases diagonally across a floor whose
+own seams run the other way. So `content/sprites/<family>/<id>.yaml` carries
+`plane: upright | floor` (**upright is the default**, so a sprite that says
+nothing keeps the look it has), the build emits the floor-plane names to
+`assets/sprite-planes.json`, and `render/plane.ts` is the ONE place that acts on
+it — read by the obstacles, the decor, the landmarks, the lair doors and the
+elevator pads, never by an actor. A floor-plane sprite is **baked through the
+projection once** (`flatSprite`) for exactly the reason the ground layer is:
+transforming pixel art per frame re-picks which rows the nearest-neighbour
+resample drops, and the wall boils as the camera pans.
+
+**A DISTANCE ACROSS THE FLOOR IS NOT A DISTANCE ACROSS THE SCREEN —
+`projectOffset`.** The billboarded EFFECTS layer projects its ANCHOR and draws
+everything else at full size in screen px, which is right for a thing happening
+in the AIR above a point (an explosion, a rising damage number, a muzzle flash)
+and wrong for anything that measures ground: a blood drop's travel, a jump's
+dust smear, a corpse punted along a bearing, the wedge of floor a swing sweeps.
+Those go through `projectOffset`, so they stay over the marks they leave — a
+spray whose drops flew along the screen while its own spatter landed on the
+turned floor was the tell. A VERTICAL is the exception and stays a true screen
+vertical: a drop's hop, a corpse's arc, dust drifting up. Beware the tempting
+shortcut this replaced — a hardcoded `FLATTEN` squash faking the foreshortening,
+which is wrong at every pitch but the one it was eyeballed at.
+
+**A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
+`screenDirToWorld`.** A destination goes through `toWorld`, but the controls that
+STEER rather than point (the touch dpad, the stick, the WASD cluster) have no
+destination to convert: they hand the simulation a direction. Passing the raw
+screen vector is the bug the pointer would have had without the inverse — under
+a yaw, down the screen is south AND west, so a hero told to walk "down" sets off
+45° from where the player pushed. Only the BEARING comes from the projection; the
+length is normalized away, because the caller's own magnitude is the PACE and the
+foreshortening would otherwise make walking north slower than walking east.
+
+**THE FOG IS COMPOSITED IN SCREEN SPACE, SO IT SNAPS TO A SCREEN PIXEL.** Its
+Bayer stipple is a rigid lattice on its own buffer, so the buffer has to be
+registered the way every other pass is: `fogGridAnchor` seats the camera on the
+PROJECTED ground grid, rounded to a whole pixel, exactly as the ground blit does,
+and the dither is indexed there. Snapping in WORLD units instead (what this did
+before the projection existed, when the two were the same thing) leaves the fog
+looking at a floor up to a whole world unit from the one under it — a
+fractional, continuously-varying number of screen pixels once the floor is
+foreshortened and turned. That misregistration is the crawl: the frontier band
+slides against the ground and the stipple re-phases as the hero walks.
+
+Three consequences to keep in mind. The ground layer is **baked already
+projected** (`groundLayer`, keyed on the projection so a knob change re-bakes):
+a nearest-neighbour resample picks which rows to drop from the destination
+offset, so transforming per frame re-picks them every time the camera moves a
+pixel and the floor visibly boils. **The hero is always at the middle of the
+screen** — `computeCamera` no longer clamps the view to the level, because a
+projected view is bigger than the canvas in world units and the old clamp bit on
+nearly every map, sliding him off toward a corner; the letterbox showing past a
+map edge is the cheaper price. And every screen↔world crossing OUTSIDE the
+renderer goes through the viewport's `toWorld`/`toCss` pair (GameScreen), which
+are functions rather than two scale factors because the projection is a matrix:
+where the player is pointing, which foe the cursor aims at, whether a tap hit the
+merchant, and where a floating DOM label pins itself all follow from that pair.
+
+**A BODY'S PIXEL GRID IS ITS OWN, NOT THE CAMERA'S — quantize the two ends
+SEPARATELY.** `beginBillboard` used to place a body at
+`round(project(world - camera))`, rounding the camera-relative offset in ONE
+go, so every body's rounding phase depended on where the camera was. Square-on
+that is exact in x (the projection is the identity there and `computeCamera`
+rounds to a whole world unit, so every body's rounding moves in lockstep) —
+which is exactly what hid the bug on one axis for as long as it existed. In y
+the pitch is a FRACTION, so a whole unit of camera travel is 0.75 of a screen
+pixel and each body crosses its own rounding boundary at its own moment: two
+static props 16.4 units apart measured 12 px apart on one frame and 13 on the
+next, and the whole field rippled as the hero walked north. Under a yaw there
+was no solid axis left at all. Floor tiles were exempt because the baked ground
+layer is a single rigid blit — which is what made the rest of the picture look
+like it was warping against a floor that wasn't.
+
+So the camera is quantized ONCE PER FRAME (`cameraAnchorX`/`cameraAnchorY`) and
+each body ONCE PER BODY (`bodyAnchorX`/`bodyAnchorY`). A body's own term then
+depends on nothing but where the body is, and panning moves the whole picture
+by the same whole number of pixels. `render/effects.ts` had the identical flaw
+in its billboarded anchor (corpses, blood, gore, floating damage numbers) and
+takes the same fix; `drawGround` steps by the same camera anchor with
+`bakeOrigin` made integral so the floor cannot drift against the cast, and
+`fogGridAnchor` was already this formula and now calls it rather than repeating
+it. `tests/world_tilt_test.ts` sweeps 36 projections (pitch 1 → 0.25 × yaw
+0° → 45°) asserting the screen distance between static bodies does not change
+as the camera pans — against the old math 35 of the 36 fail, every setting
+except the true no-op at pitch 1, yaw 0.
+
+**AND THE FRONTIER GLIDES RATHER THAN LURCHING, WHICH IS A DIFFERENT DEFECT
+FROM THE ONE ABOVE.** `state.explored` is one byte per `MAP.cellSize` (32 world
+px) cell, so the chamfer distance the band is built from advances a whole CELL
+at a time — while `MAP.fogBand` is only 48 px, barely more than one cell. A
+single cell flipping shifted the frontier by a third to a half of the entire
+band in ONE frame and redrew the whole stipple at once, which reads as the fog
+flashing as the hero walks. Measured walking a straight line at one world px
+per frame, the edge sat still for 20–30 px of travel and then jumped 16, with a
+period of exactly 32. The drawn distance now eases toward the real one
+(`FogField.shown`) so the frontier LINE glides outward, at the error over
+`FOG_EASE_MS` floored at `FOG_EASE_MIN` — an exponential alone never quite
+lands and would park the frontier a hair inside where it belongs for the rest of
+the run, and the floor sits just above the hero's own pace because the frontier
+advances at exactly the speed he walks. Easing UPWARD ONLY is a guarantee
+rather than an optimization: the fog can never crawl back over floor already
+uncovered. `fogDistanceAt` reads the drawn field, so the mob cull and the band
+stay the same frontier — a mob appears as the ground under it clears.
+
+Note the two defects only looked alike from outside: the warp above was
+sub-pixel rounding in the PROJECTION, this is whole-cell quantization in the
+EXPLORED GRID.
+
+## How the picture is presented
+
+**HOW THE PICTURE IS PRESENTED — SETTINGS → VIDEO, and the split that decides
+where each effect goes.** Four player-facing knobs (`render/postfx.ts`): BLOOM,
+COLOR GRADE, VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off. They
+are PLAYER settings, not developer ones — every one costs frames on a phone — so
+they are deliberately absent from `stripDeveloperState` and ship in the store
+build. **BLOOM ships at 0 and the other three ship on**, which is a judgement
+rather than an oversight: on pixel art at this size every luminance point a halo
+adds is a point of the artist's own shading it paints over, so the halo is
+offered rather than assumed. Do not "restore" it to 1 because the field looks
+unlit.
+
+**AND ITS THRESHOLD IS MEASURED AGAINST THE GAME'S OWN FLOORS, NOT EYEBALLED.**
+The bloom decides what counts as light with one luminance knee, and the thing
+that makes that hard here is that the ground is not a minority of a frame, it IS
+the frame — the moon's regolith (0.554) and GOODCO HQ's deck (0.701) are each the
+50th AND the 90th percentile of their own picture, while the lights live in the
+top half-percent. A knee below them classes the floor as a light and adds it back
+over itself, which is haze rather than bloom: shipped that way once, it lifted
+the whole picture's brightness 14–24% and the moon came out milky lavender.
+`tests/content/bloom_threshold_test.ts` holds the knee above every ground tile
+the campaign lays down, so a new pale floor says so instead of quietly starting
+to glow. The other half of that pass is the DOWNSCALE, and it is the one place a
+draw call cannot be saved: Canvas2D minification is a 2×2 bilinear tap with no
+mipmap, so it is an honest box filter at exactly ×0.5 and an undersample at
+anything smaller — a ×4 minify of a 4×4 with one white pixel returns 0 where the
+average is 16. Reaching the quarter-size buffer in one step therefore drops
+lights in and out as the camera pans a pixel at a time, and that pulsing IS the
+flicker. Two halvings, always.
+
+**THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT — NOT TASTE — DECIDES THE
+MECHANISM.** The canvas is sized in WORLD units (`viewScaleFor`) and CSS blows it
+up 2–3× with `image-rendering: pixelated`. So there are two places to put an
+effect and they are not interchangeable. **ON THE CANVAS** is chunky, at world
+resolution, in the same pixel grid as the art — where BLOOM belongs, because the
+light it blooms is the game's own baked glow art (`glowSprite`, `beamSprite`, the
+loot shafts, the muzzle flashes) living on that same grid; a bloom computed at
+device resolution is smoother than the light casting it, which reads as a photo
+filter over pixel art rather than as pixel art glowing. **IN CSS** is smooth, at
+device resolution, and per-frame FREE — where the GRADE, the VIGNETTE and the
+HAZE belong, because all three are broad low-frequency washes that on the canvas
+would cost a full-frame composite every frame to come out in 2–3 px staircase
+bands. The CSS half is three custom properties from `fxStyleVars` written on the
+GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on the canvas,
+which is the overlay's SIBLING and would never inherit them), and the overlay
+sits at `z-index: 0` directly after the canvas so every positioned HUD element
+after it paints on top: the corners of the SCREEN going dark is atmosphere, the
+corners of the HEALTH BAR going dark is a bug.
+
+**THERE IS NO SHADER PASS, and that is a conclusion rather than a gap.** A WebGL
+stage would have to own the whole present path — the world would move to an
+offscreen target and the visible canvas would become the GL one, touching every
+screen↔world crossing, the DOM overlay pinning, the screenshot tooling and the
+gallery — and for these four effects it buys nothing: three are strictly better
+in CSS and the fourth wants to be chunky. What a shader WOULD buy is CRT
+curvature, chromatic aberration and a real 3D LUT. That is the day to write it.
+
+**DEPTH OF FIELD IS THE ONE REQUEST TO REFUSE.** There is no depth to focus on —
+the whole field is ONE ground plane and the hero is always at the middle of it —
+so a distance blur would blur a mob standing beside him exactly as hard as one
+the same distance north, and hide half the horde while it was at it. DEPTH HAZE
+is the honest version: what reads as distance on a raked plane is losing contrast
+toward the horizon. It is scaled by the live PITCH (`fxStyleVars`), because a
+camera looking straight down has no horizon to fade toward.
+
+**ANTI-ALIASING IS THE OTHER ONE, EXCEPT AT ONE PLACE.** The whole renderer is
+built for crisp integer pixels — `imageSmoothingEnabled = false`, an INTEGER
+`VIEW_SCALE × uiScale`, `billboard` composing to the identity at a whole-pixel
+offset. The one place averaging is right is a PROJECTED BAKE, because it happens
+once: `flatSprite` bakes at `BAKE_SUPERSAMPLE`× and box-averages down, so a wall
+panel's turned edges come out antialiased instead of as a staircase of single
+pixels, and at yaw 0 / pitch 1 it is a no-op by construction (a square-on sprite
+downsampled from an integer upscale of itself is bit-identical). The GROUND LAYER
+is deliberately NOT supersampled, for two independent reasons either of which
+stands alone: the intermediate for a big map would be ~7200×3000 (~86 MB, and
+larger maps walk into the browser's canvas cap), and it would look WORSE anyway —
+a wall panel is a small outlined silhouette, but the floor is a texture covering
+the whole screen, and averaging its rotation softens every speckle and seam at
+once, which reads as the one surface in the game being out of focus. The
+staircase on a yawed floor seam is the honest cost of turning pixel art; the fix
+is iso-drawn tile art, not a filter.
+
+## Mobile-first, landscape — and the scale tiers
+
+**Mobile-first, landscape.** The reference device is a phone held
+horizontally: a ~844×390 CSS viewport (≈422×260 world units at the app's
+`VIEW_SCALE` of 2 and the shipped pitch — the projection makes the view taller
+in world units than the canvas is in pixels). Design every element — HUD,
+overlays, spawn distances, weapon ranges, anything sized against "the screen" —
+to fit and feel right at that size. Run playtests and visual checks at this
+viewport (the playtest harness defaults to it), not at a desktop size.
+
+Large screens render the whole presentation at **2× the phone baseline** so
+the phone-tuned HUD, text, and sprites stay legible instead of shrinking:
+`viewScaleFor` (render.ts) doubles the world zoom, and a `min-width/height:
+700px` media query doubles the root font-size (styles.css) so the rem-sized
+DOM UI — PixelText canvases included — scales in lockstep. Keep the two
+breakpoints in sync (`UI_SCALE_BREAKPOINT_PX`). A desktop still never sees
+_less_ moon than the phone; it just sees it at phone-sized zoom rather than
+zoomed out.
+
+**A THIRD tier at 1200 (`UI_SCALE_3X_BREAKPOINT_PX`) exists for a BALANCE
+reason, not a legibility one.** The view rect is the viewport divided by the
+zoom, so a fixed zoom hands a bigger monitor a bigger slice of the world — and
+in a game about being surrounded, seeing further is an advantage rather than a
+preference. Measured against the phone's ~422×195 world units: a 1440p monitor
+at the 2× tier saw **2.8×** the phone's map, and 4K saw 6.3×. The 3× tier pulls
+those to 1.24× and 2.8×. Keep every tier an INTEGER — `VIEW_SCALE × uiScale` is
+the sprite upscale factor and a fractional one resamples the pixel art — and
+keep each one's media query in styles.css in step, or the HUD and the field
+disagree about how big a pixel is. Note the tiers are deliberately not
+monotonic (1080p tops the 2× tier at 1.57× while 1440p starts the 3× at 1.24×);
+discrete tiers can't avoid that, and a test pins it so it stays a known oddity.
+Anything reading the scale should treat it as a NUMBER, never test for one tier
+(`=== 2`) — that is exactly what silently breaks when a tier is added.
+
+## Bodies in motion
+
+**EVERYTHING ON THE FIELD CARRIES ITSELF — `render/gait.ts`.** A body that
+slides across the floor at a fixed sprite rate reads as a token being dragged,
+so every actor the renderer draws (the hero, the horde, the companions, the
+merchant, the fauna) is animated by HOW IT MOVES. Two things make it work:
+
+- **The walk is driven by GROUND COVERED, not by the clock.** The stride phase
+  advances by `distance / STRIDE_PX`, measured frame to frame, so the tip and
+  the two-frame walk sprite BOTH keep pace with the walker for free — a nudged
+  stick creeps, a full push runs, a hero wedged against a wall stops walking on
+  the spot — with no notion anywhere of how fast anything is supposed to be
+  going. A walk is a soft tip about the FEET plus a rise on each step, and the
+  two peak together, because they are the same moment (a body vaults over the
+  planted foot) — ONE lean per step, alternating. The tip is SHARPENED (cubed,
+  `TILT_SHARPNESS`) so the body stands upright between steps and leans only
+  briefly over each one: a plain sine sits near an extreme most of the stride,
+  which reads as a slow drunken sway rather than as walking. Standing still, it
+  breathes instead, so a mob is visibly alive through its own dialogue.
+- **`EnemyDef.locomotion` says which gait.** `legs` (the default) walks;
+  `float` HOVERS a few px up on a slow drift over a ground SHADOW — ghosts,
+  wisps, drifting cores, anything with no legs; `wheels` does neither, because
+  a rover that rocked like a walker reads as a machine pretending to have legs.
+  Presentation only, like `gore` — but note `canonicalEnemyDef`
+  (`defs/enemies/index.ts`) rebuilds every def through a fixed field list for
+  V8 monomorphism, so a new `EnemyDef` field must be added THERE too or it
+  silently reads `undefined` with every check still green.
+
+**A JUMP HAS THREE BEATS: takeoff, flight, landing.** The engine's `jump`/`land`
+events carry the point, the `impact` (touchdown speed as a fraction of a
+standing hop, so a Spring Heels launch lands heavy) and the ground `speed`. The
+app answers with SQUASH AND STRETCH on the doll — he stretches off the floor and
+folds into the landing (`impactScaleY`, keeping his volume by taking the inverse
+scale across) — and with DUST at both ends (`render/dust.ts`): authored puff and
+gravel sprites (`dust_puff_0..2`, `ground_grit_0..1`) drawn in neutral greys and
+TINTED per landing to the colour of the floor he actually touched, sampled off
+the baked ground layer (`groundColorAt`). That last part is the point: the moon
+throws pale regolith, Mars rust, a base's deck plate grey — on carved maps and
+any venue added later, with nothing authored per level. Impact sizes the cloud;
+his ground speed smears it along his heading.
+
+## The hero doll, his kit and his weapon
+
+**AND ALL THREE SHOW ON THE HERO.** A build choice the player cannot see on his
+own character is one he has to open a screen to remember making. The two
+off-hand kinds ride the SAME generated-overlay machinery the worn armor does
+(`asset-tools/worn.mjs` → `worn_<defId>`, coloured from the piece's own icon), so
+a new shield or bag costs no art beyond its 12×12 icon: a shield draws raised
+and broad, a bag slung low and small, one glance apart. The overlay is the one
+worn template that hangs OFF the body silhouette, so it is the one that paints
+its own outline (the `4` char in `wornRamp`) — every sprite in this game is built
+on that near-black, and a shield without it reads as a smear. The off hand is a
+SOAK ZONE of its own (`SOAK_ZONES`, `blood_coat_offhand_0..2`) for the same
+reason every other zone is a gear slot: it is the piece held BETWEEN him and the
+work, it catches the most of what comes back, and swapping it is what cleans it.
+A **TWO-HANDER is posed differently** rather than redrawn (`render/player.ts`):
+it rests across the body, and its swing turns about the low central grip both
+hands are on — wound back past the cone's start edge and carried past its end,
+over a longer clock — so it comes ROUND the hero instead of off one shoulder. The
+cone the engine hit with is untouched; only the picture changes.
+The field hero **always shows and swings his held weapon** — these were the
+CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default
+look (no toggle). Both are pure render concerns:
+
+- **The held weapon draws on the field hero sprite.** `render.ts` passes
+  `{ weapon: true }` to `playerDollLayers` (`paper-doll.ts`) so the weapon layer
+  rides the paper-doll alongside the worn armor. The HUD avatar and inventory
+  portrait draw the weapon too, so every surface agrees.
+- **The held weapon animates on each attack** — a blade whips through its slash
+  arc, a gun recoils with the muzzle rising, a wand thrusts up on the cast —
+  pivoting the weapon layer about the **shoulder** (`paper-doll.ts`
+  `WEAPON_SHOULDER`, not the grip) so the whole implied arm sweeps. For a melee
+  swing the blade sweeps through its **cone**: it cocks to the cone's start
+  edge, whips through the full cone to the end edge, and folds home
+  (`weaponPose`), and its **slash is drawn ON the blade** — `drawBladeSlash`
+  fills the exact arc the blade carves, anchored to the same `WEAPON_SHOULDER`
+  pivot in the doll's own space (via the blade's tip/base points
+  `SLASH_REST_TIP`/`SLASH_REST_BASE`), so the effect rides the weapon instead of
+  fanning out of the hero's centre. The generic ground `swing` cone
+  (`drawEffects`) drops to a faint AoE footprint behind it (still the read for
+  companion swings). The cone widens with INTELLIGENCE (`weaponSweepHalfAngle`,
+  capped at a half circle — `STATS.aoeMaxHalfAngle`), so a max-INT slash swings
+  a full 180° arc; the swing is handed the weapon's cone via `PlayerAction.arc`.
+  GameScreen captures the hero's own `swing`/`shot` events into a `PlayerAction`
+  (matched to his position so a companion's blow is ignored), and `render.ts`
+  `drawPlayer` poses the weapon layer via `weaponPose`.
+
+  **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
+  look, and a UNIQUE gets its OWN, so a named weapon FEELS more powerful. **THE
+  WEAPON OWNS ITS LOOK** — `fx:` in its own YAML (`UniqueDef.fx`: an ELEMENT from
+  the shared vocabulary plus any channel it wants to tweak), for exactly the
+  reason a power owns its `look:`: while the mapping was a table in the app keyed
+  by shipped ids, a MOD's legendary could only ever swing the plain class look.
+  The kits live in the import-free leaf `weapon-elements.ts` (the item pipeline
+  reads the element names from it to check every authored `fx:`, and runs before
+  the catalog `weapon-fx.ts` reaches through `@game/core`); the drawing is
+  `weapon-fx.ts`, and the resolved style is memoized per weapon because a shot
+  style is asked for per projectile per frame. **Melee** (`SLASH_ELEMENTS` →
+  `SlashStyle` → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
+  `afterimages`) plus a `gore` `burst` (`drawBurst`) thrown over the plain splash
+  on the hero's own blows (GameScreen's `heroGore`) — Excalibur flares holy gold,
+  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_ELEMENTS` →
+  `ShotStyle` → `drawMuzzle` + `drawProjectileTrail`): a themed muzzle flash / cast
+  bloom at the tip AND a glow trail riding the hero's round/bolt in flight
+  (`render.ts`, gated to the hero's own shots via the projectile's
+  `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
+  shot. The hero faces where he MOVES, not where he shoots, so his flash pins to
+  the barrel's facing side (the muzzle effect's `faceLeft`) — a shot at a foe
+  behind him still fires at the weapon, not off his back. The PIXELS are the
+  app's and the engine draws none of it; what travels on the def is the weapon's
+  CHOICE. A weapon with no `fx:` keeps the plain class look, so the roster grows
+  one weapon at a time. The eleven elements (fire, holy, frost, storm, void,
+  blood, venom, cosmic, death, solar, tech) each have a slash kit AND a shot kit,
+  so one word means the same element on a blade and on a gun — an asymmetric
+  vocabulary would make `element: blood` mean nothing on a rifle. The engine's shared `nova` crit-AoE is NOT themed (it carries no
+  weapon attribution).
+
+  Tune and author all of it with the `weapon-swing` preview script
+  (`pwa/scripts/weapon-swing.mjs`): `poses <weapon>` pins the swing/shot frame
+  by frame, `live <weapon>` slows a real attack to show the slash + gore or the
+  cast + projectile trail, `uniques` / `shots` render contact sheets of every
+  melee slash / ranged-magic muzzle, and the debug `calibration_probe` weapon
+  (red tip/base markers) calibrates the blade geometry. It drives the `?debug`
+  `window.__swing` (pin the pose/muzzle, optionally
+  with a cone) and `window.__timeScale` (slow the run) hooks.
+
+## Loot presentation
+
+**LOOT IS THROWN, LANDS, AND THEN ADVERTISES ITSELF.** A drop that materialises
+under the corpse is indistinguishable from the floor texture, and a legendary
+that materialises the same way is the entire chase arriving with no more
+presence than a medkit. So a drop now has three beats, and each one is owned by
+exactly one place:
+
+- **THE TOSS is the engine's, and it is a TIMER, not a trajectory**
+  (`src/game/items/toss.ts`, `LOOT.toss`). Every drop in the game goes through
+  the one funnel — `dropItem(state, item, from)` — which is what made the
+  feature a two-line change at each of the twenty-odd sites that pay loot out.
+  `item.pos` is the LANDING spot from the moment the item is minted, so the
+  magnet, the pickup reach, the minimap and the bot's loot run all keep reading
+  a position and need no notion of flight; the renderer arcs the icon in from
+  `toss.from` over the countdown, tumbling it, with a shadow that stays on the
+  ground. Airborne loot cannot be grabbed and the magnet leaves it alone — the
+  same gate the angel delivery already used. **The scatter is HASH-DERIVED off
+  the item's id, never `state.rng()`**: the drop ladder's draws are load-bearing
+  (seeded runs, the simulator's A/B, every `rollEquipment` stream), so a
+  presentational hop that consumed one would shift every roll after it.
+- **THE LANDING IS WHAT MAKES THE NOISE, and what a thing sounds like is what
+  it is MADE OF.** `stepItems` emits `itemLanded` carrying the item's MATERIAL
+  (`itemVoice`: blade / gun / wand / plate / mail / leather / cloth / trinket /
+  flask / scrap / spark / relic) — mail jingles, cloth flumps, plate clangs,
+  glass clinks — and the app kicks a puff of dust in the FLOOR's own colour
+  (`groundColorAt`, exactly as a jump does). A magic-or-better find rings a
+  SECOND event over the top (`lootShine`, carrying the tier), which is the whole
+  reason rarity and material don't multiply: layering two events is 12 + 6
+  sounds where one combined event would have been 72. The old `itemDropped`
+  event went with it — it fired once per SPILL rather than once per item, at
+  the moment of minting rather than the moment of arrival, and after the sound
+  moved to the landing nothing consumed it at all.
+- **THE STANDING AURA is the app's, and it is a LADDER**
+  (`pwa/src/game/render/loot-aura.ts`). Each layer switches on at its own rank
+  and every one is lit in the tier's own colour (`TIER_RGB` — the colour the
+  item's NAME is written in): regular keeps the plain warm halo, magic takes the
+  tier colour and lights a pool on the floor, rare starts SMOKING, set thickens
+  it, unique stands a LIGHT SHAFT over the piece (drawn twice — a wide soft
+  flare with a narrow bright core, because one column cannot be both), legendary
+  adds orbiting motes, and artifact pulses a ring out across the ground. It is
+  closed-form off the render clock and the item's id, like the canopy and the
+  fauna, so a floor covered in loot costs the simulation nothing and allocates
+  nothing per frame; the light itself is BAKED (`glowSprite`, `beamSprite`),
+  because building a gradient per item per frame is the most expensive thing a
+  loot-covered floor can do. The four corner glint pixels this replaced are
+  gone. Judge it in the EFFECTS GALLERY's WORLD shelf — `loot-rarity` stands the
+  whole ladder side by side on the moon's dark regolith (a pale deck plate
+  flatters every tier equally, which is the one thing a comparison must not do)
+  and `loot-toss` runs a whole spill.

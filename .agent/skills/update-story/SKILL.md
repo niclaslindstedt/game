@@ -133,6 +133,60 @@ A boss/elite swap is the most far-reaching story change — it ripples across
 5. **Achievements & tests** derive from the live registries, so run the content
    test battery (below) to catch anything the swap orphaned.
 
+## How a page is written
+
+**A PAGE IS A PARAGRAPH, AND THE BOX BREAKS IT — THE AUTHOR DOES NOT.** Every
+surface that speaks (the opening/closing monologue, the in-world dialogue box,
+a cutscene caption, the merchant, a quest giver's ask) measures the text column
+it ACTUALLY has on the device it is being read on and flows the page into it:
+`useTextColumn` (`@ui/lib/use-text-column.ts`) + `wrapPage`
+(`@ui/lib/text-pager.ts`), then `paginateLines` windows the folded rows into
+tap-to-scroll screens. So where a row ends is the renderer's business, and an
+authored line is a whole thought. The habit this replaced — typing three
+~34-character lines against a fixed box — printed a ragged half-width column
+with the right half of the window empty on anything wider than the phone it was
+measured on, and folded into a mess on anything narrower.
+
+A page is therefore authored as ONE entry, in `content/` and in the manuscript
+alike. A SECOND entry is an **explicit line break**, and it has to earn itself:
+a punchline held back, a second hand on the same note, a pause the punctuation
+cannot carry (the typewriter already holds 260–440 ms on a full stop, so most
+"beats" need no break at all). The whole shipped campaign spends FIVE — they are
+tabled in the manuscript's "How a page is written". What the author still owns
+is the PAGE: past ~120 characters, three rows of the narrowest box the game
+supports, it costs the player a second tap, and the build warns
+(`PAGE_WARN_CHARS` / `MAX_PAGE_LINES` in the story, quest and companion
+schemas). A BARK is the exception on both counts — it floats over a boss's head
+on the open field rather than in a box, so its lines stay hard rows.
+
+When two tiers of the CAMPAIGN's chain disagree, the **higher tier wins**:
+`story.md` beats the manuscript, the manuscript beats the data — correct the
+lower tier to match.
+
+**A SPOKEN BEAT IS NOT ALWAYS A MONOLOGUE — `ThoughtDef.voice` AND `them:`
+PAGES.** A pinned beat is the hero alone by default, and nearly all of them
+stay that way. A few need somebody talking back — a shove answered with "we
+have our orders" — so a def may name a second `voice: { speaker, portrait }`
+and tag a page `{ them: [...] }`. It is the exact MIRROR of an arrival scene's
+`{ hero: [...] }`: there the mob owns the scene and his replies are tagged,
+here he owns it and theirs are. Both resolve through `dialogueContent` into one
+`voices` array parallel to `pages`, so the dialogue box draws either without
+knowing which kind of scene it is in — which is why adding the second voice
+changed no renderer arithmetic. Reach for this rather than `EnemyDef.dialogue`
+when a line has to land INSIDE a scripted beat: an arrival scene fires on its
+own proximity trigger and cannot be sequenced with one. The scene kind is still
+called `playerThought` — a MECHANISM name, since the pinned-beat machinery, the
+read ledger and the `openingStrike` hook all key on it — so call the thing an
+EXCHANGE everywhere a reader sees it and leave the key alone.
+
+## Naming
+
+A name is story too, and the rule is its own document:
+**`docs/naming.md`** — nothing in this game is named after a real person,
+company, product or franchise, and a name is only a QUARTER of an identity (the
+voice, the art and the description carry the rest). Read it before naming
+anything, and before retoning a character whose voice is doing the identifying.
+
 ## Update checklist
 
 - [ ] Read baseline from `.last-updated`; run `git log` / `git diff --name-only`

@@ -8,7 +8,7 @@ description: "Use when creating or changing pixel-art sprites for the game. Driv
 All in-game pixel graphics — sprites, tiles, the palette, even the UI font —
 are **generated, never hand-drawn binaries**. The source of truth is a tree
 of **one self-describing YAML file per base sprite** under
-`scripts/sprites/` (a `grid` block scalar — one line per pixel row,
+`content/sprites/` (a `grid` block scalar — one line per pixel row,
 one character per pixel — plus a concrete-hex `palette`; `.` is transparent).
 The YAML tree is the committed source of truth; the asset pipeline renders it
 into ONE sprite atlas (PNG + JSON source rects) that the app slices at load
@@ -53,9 +53,9 @@ per-family specifics.
 
 | File | Role |
 | --- | --- |
-| `scripts/sprites/<family>/<name>.yaml` | Source of truth: one file per base sprite — `name`, `family`, `size` `[w,h]`, `description` (+ optional structured `subject`), the `palette` keys it uses (concrete hex), and its `grid`. Discover the families dynamically — `ls scripts/sprites/` — rather than assuming a fixed roster; this game's families and per-family learnings are in [`GAME_NOTES.md`](./GAME_NOTES.md) |
-| `scripts/sprites/<family>/_family.yaml` | Family orchestration: `ground` tile, LOCAL `palette` chars, `animations`, wound-style overrides, and lint `contrastExempt` names |
-| `scripts/sprites/_core.yaml` | The shared palette core (outline, gore chars, common materials) every family merges under its local scope |
+| `content/sprites/<family>/<name>.yaml` | Source of truth: one file per base sprite — `name`, `family`, `size` `[w,h]`, `description` (+ optional structured `subject`), the `palette` keys it uses (concrete hex), and its `grid`. Discover the families dynamically — `ls content/sprites/` — rather than assuming a fixed roster; this game's families and per-family learnings are in [`GAME_NOTES.md`](./GAME_NOTES.md) |
+| `content/sprites/<family>/_family.yaml` | Family orchestration: `ground` tile, LOCAL `palette` chars, `animations`, wound-style overrides, and lint `contrastExempt` names |
+| `content/sprites/_core.yaml` | The shared palette core (outline, gore chars, common materials) every family merges under its local scope |
 | `scripts/sprite-data/load-yaml.mjs` | Globs the `sprites/` tree into the in-memory sprite maps; validates each file against the schema (`asset-tools/sprite-schema.mjs`) |
 | `scripts/sprite-data/index.mjs` | Loads the base sprites, then derives battle-damage + worn-gear variants from the enemy/gear catalogs |
 | `scripts/generate-assets.mjs` | The pipeline: grids + font → `pwa/src/game/assets/` (`atlas.png` + `atlas.json`, font atlas + metrics) + previews + contrast lint |
@@ -270,7 +270,7 @@ and `sprites/hero/hero_0.yaml` for the canonical shape.
 ## Improving one named sprite
 
 When asked to improve a specific sprite ("let's improve the `fembot` sprite"),
-first locate its YAML (`grep -rl "name: <sprite>" scripts/sprites/`) and
+first locate its YAML (`grep -rl "name: <sprite>" content/sprites/`) and
 read its `description`. If the description is empty or thin, **write/sharpen it
 first** — it is the acceptance target both paths below are judged against, and
 the manuscript (`docs/manuscript.md`) / `docs/story.md` are the authority on
@@ -281,7 +281,7 @@ picks:
   `node scripts/sprite-author.mjs prompt <sprite>` and hand the printed
   prompt to the user to paste into an image tool. When they return the image,
   save it and run `analyze <image> --name <sprite> --family <family> --size WxH
-  --out scripts/sprites/<family>/<sprite>.yaml` (record provenance with
+  --out content/sprites/<family>/<sprite>.yaml` (record provenance with
   `--model`/`--seed`/`--prompt-file`), then drop into the refine loop below to
   clean up the trace against the description.
 - **Iterate-in-place path (no image).** Skip the image entirely: edit the
