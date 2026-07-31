@@ -144,6 +144,56 @@ export function unprojectY(sx: number, sy: number): number {
 }
 
 /**
+ * THE CAMERA'S SEAT ON THE PROJECTED GROUND GRID, in whole screen px — and
+ * WHERE A BODY STANDING ON THAT GRID SITS RELATIVE TO IT.
+ *
+ * Every pass in the game that puts something on a whole pixel has to quantize
+ * SOMEWHERE, and the only rule that survives a moving camera is to quantize the
+ * two ends SEPARATELY: the camera once per frame, each body once per body. A
+ * body's own term then depends on nothing but where the body is, so panning the
+ * camera moves the entire picture by the same whole number of pixels and the
+ * scene is RIGID.
+ *
+ * Rounding the camera-relative offset instead — `round(project(world - camera))`
+ * — is the bug this exists to prevent, and it is invisible on one axis and
+ * glaring on the other. Square-on, x projects through the identity and the
+ * camera is a whole world unit (`computeCamera` rounds), so every body's
+ * rounding moves in lockstep and the picture is solid east-west. In y the pitch
+ * is a FRACTION, so a whole world unit of camera travel is 0.75 of a screen
+ * pixel: each body crosses its own rounding boundary at its own moment, and two
+ * props 16.4 units apart sit 12 px apart on one frame and 13 on the next. The
+ * whole field visibly squeezes and stretches as the hero walks north, while the
+ * baked floor — one rigid blit — sits still underneath and gives it away.
+ *
+ * The camera half is also what the fog's dither lattice registers against
+ * (`fogGridAnchor`) and what the ground layer's blit steps by, so all three sit
+ * on ONE lattice and shift together, one whole pixel at a time.
+ */
+export function cameraAnchorX(cameraX: number, cameraY: number): number {
+  return Math.round(projectX(cameraX, cameraY));
+}
+export function cameraAnchorY(cameraX: number, cameraY: number): number {
+  return Math.round(projectY(cameraX, cameraY));
+}
+
+export function bodyAnchorX(
+  worldX: number,
+  worldY: number,
+  cameraX: number,
+  cameraY: number,
+): number {
+  return Math.round(projectX(worldX, worldY)) - cameraAnchorX(cameraX, cameraY);
+}
+export function bodyAnchorY(
+  worldX: number,
+  worldY: number,
+  cameraX: number,
+  cameraY: number,
+): number {
+  return Math.round(projectY(worldX, worldY)) - cameraAnchorY(cameraX, cameraY);
+}
+
+/**
  * A WORLD OFFSET ACROSS THE GROUND, as the screen offset it comes out as.
  *
  * This is `projectX`/`projectY` under a name that says what it is for, and it
@@ -333,8 +383,14 @@ export function beginBillboard(
   // How far the body's projected place sits from where an unprojected draw
   // would have put it — a WHOLE number of pixels on each axis, which is what
   // keeps an integer coordinate inside landing on an integer device pixel.
-  const shiftX = Math.round(projectX(relX, relY)) - Math.round(relX);
-  const shiftY = Math.round(projectY(relX, relY)) - Math.round(relY);
+  //
+  // The projected place comes from `bodyAnchor*`, which quantizes the body and
+  // the camera separately: rounding `project(rel)` in one go is what made the
+  // whole field ripple as the hero walked north (see the comment there).
+  const shiftX =
+    bodyAnchorX(worldX, worldY, cameraX, cameraY) - Math.round(relX);
+  const shiftY =
+    bodyAnchorY(worldX, worldY, cameraX, cameraY) - Math.round(relY);
   ctx.save();
   ctx.translate(unprojectX(shiftX, shiftY), unprojectY(shiftX, shiftY));
   ctx.transform(ia, ib, ic, id, 0, 0);

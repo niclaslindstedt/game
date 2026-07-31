@@ -10,9 +10,9 @@ import { MAP, mapCols, type GameState } from "@game/core";
 import { type Camera } from "./view.ts";
 import { type ViewSize } from "./shared.ts";
 import {
+  cameraAnchorX,
+  cameraAnchorY,
   projectionKey,
-  projectX,
-  projectY,
   unprojectX,
   unprojectY,
 } from "./tilt.ts";
@@ -192,9 +192,12 @@ export function fogGridAnchor(camera: { x: number; y: number }): {
   x: number;
   y: number;
 } {
+  // The shared lattice (render/tilt.ts): the baked ground layer's blit and every
+  // standing body register against this same seat, so nothing drifts against
+  // anything else as the camera pans.
   return {
-    x: Math.round(projectX(camera.x, camera.y)),
-    y: Math.round(projectY(camera.x, camera.y)),
+    x: cameraAnchorX(camera.x, camera.y),
+    y: cameraAnchorY(camera.x, camera.y),
   };
 }
 

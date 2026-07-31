@@ -36,9 +36,9 @@ import type { PowerupStyle } from "../powerup-fx.ts";
 import { clamp01, fract } from "./shared.ts";
 import {
   applyWorldProjection,
+  bodyAnchorX,
+  bodyAnchorY,
   projectOffset,
-  projectX,
-  projectY,
 } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -237,9 +237,6 @@ function drawEffectPass(
     // A delayed float (e.g. the XP popup trailing its damage number) stays
     // hidden until its start tick, then animates from t=0 as usual.
     if (effect.startMs != null && timeMs < effect.startMs) continue;
-    const relX = effect.pos.x - camera.x;
-    const relY = effect.pos.y - camera.y;
-    const x = Math.round(projectX(relX, relY));
     // THE WHOLE LAYER IS BILLBOARDED, and projecting the anchor is all it takes:
     // this pass runs in screen space (the run's loop calls it after `drawFrame`
     // has closed the world projection), and every effect below is drawn relative
@@ -248,7 +245,14 @@ function drawEffectPass(
     // full size, which is what an explosion, a rising damage number, a launched
     // corpse and a muzzle flash all want: they happen in the air above a point,
     // not on the ground at it (render/tilt.ts).
-    const groundY = Math.round(projectY(relX, relY));
+    //
+    // Through `bodyAnchor*` rather than a rounded `project(pos - camera)`, which
+    // is the SAME whole-pixel seat every standing body takes — so a corpse, the
+    // blood under it and the mob still fighting over it all step together when
+    // the camera pans, instead of each crossing its own rounding boundary at its
+    // own moment.
+    const x = bodyAnchorX(effect.pos.x, effect.pos.y, camera.x, camera.y);
+    const groundY = bodyAnchorY(effect.pos.x, effect.pos.y, camera.x, camera.y);
     // Off-screen cull: a corpse felled two screens back (epic bodies persist
     // for the whole level) or a fight's leftovers beyond the rim must not
     // keep paying draw calls every frame. The margin covers each effect's

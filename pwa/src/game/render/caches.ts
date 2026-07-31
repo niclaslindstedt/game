@@ -45,7 +45,15 @@ let groundCache: {
 
 /** Where world (0, 0) sits on a baked layer of a level this size. The projected
  * level is a diamond under a yaw, and its western corner runs to negative x —
- * this is the shove that brings the whole thing back onto the canvas. */
+ * this is the shove that brings the whole thing back onto the canvas.
+ *
+ * A WHOLE number of pixels, and that is load-bearing rather than tidy: the
+ * per-frame blit lands the layer at `round(origin + project(camera))`, while
+ * every body standing on it lands at `project(body) - round(project(camera))`
+ * (`bodyAnchor*`, render/tilt.ts). Those two agree — the floor and the horde
+ * step together, one whole pixel at a time — only while the origin adds nothing
+ * of its own to the rounding. A fractional one leaves the entire cast sliding a
+ * pixel back and forth over a floor that is sitting still. */
 function bakeOrigin(width: number, height: number): { x: number; y: number } {
   const xs = [
     projectX(0, 0),
@@ -59,7 +67,9 @@ function bakeOrigin(width: number, height: number): { x: number; y: number } {
     projectY(0, height),
     projectY(width, height),
   ];
-  return { x: -Math.min(...xs), y: -Math.min(...ys) };
+  // Ceil rather than round: the shove has to be at least far enough to bring
+  // the diamond's western and northern corners onto the canvas.
+  return { x: Math.ceil(-Math.min(...xs)), y: Math.ceil(-Math.min(...ys)) };
 }
 
 /** Where a world point lands on the baked ground layer. */

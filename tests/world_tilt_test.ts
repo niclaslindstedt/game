@@ -17,6 +17,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { fogGridAnchor } from "../pwa/src/game/render/fog.ts";
 import {
   beginBillboard,
+  cameraAnchorX,
+  cameraAnchorY,
   canvasToWorld,
   DEFAULT_PITCH,
   DEFAULT_YAW,
@@ -371,8 +373,11 @@ describe("billboard", () => {
           cam.y,
         );
         // The local point an unprojected pass would have drawn the body's centre
-        // at must land where that world point actually projects to.
-        const drawn = ctx.at(wx - cam.x, wy - cam.y);
+        // at must land where that world point actually projects to. Rounded,
+        // because that is what every pass in the game actually hands the canvas
+        // (`spriteTopLeft` and friends round the camera-relative offset) — and
+        // the whole-pixel grid is the thing keeping the art crisp.
+        const drawn = ctx.at(Math.round(wx - cam.x), Math.round(wy - cam.y));
         expect(
           Math.abs(drawn.x - projectX(wx - cam.x, wy - cam.y)),
         ).toBeLessThanOrEqual(1);
@@ -380,6 +385,115 @@ describe("billboard", () => {
           Math.abs(drawn.y - projectY(wx - cam.x, wy - cam.y)),
         ).toBeLessThanOrEqual(1);
         ctx.restore();
+      }
+    },
+  );
+
+  // THE WARP, pinned — and swept across the WHOLE range both knobs can reach
+  // rather than sampled at the shipped camera, because the failure is a
+  // property of the projection's ARITHMETIC and every setting has its own
+  // rounding phase. A yawed camera is the case that has to be swept: it turns
+  // BOTH screen axes into fractional combinations of the two world ones, so the
+  // asymmetry that hid this bug at yaw 0 (x exact, y foreshortened) is gone and
+  // an isometric picture ripples in every direction at once.
+  const RIGIDITY_SWEEP: { pitch: number; yaw: number; name: string }[] = [];
+  for (const pitch of [1, 0.75, 0.6, 0.5, 0.4, 0.25]) {
+    for (const yaw of [0, 5, 15, 22, 30, 45]) {
+      RIGIDITY_SWEEP.push({ pitch, yaw, name: `pitch ${pitch}, yaw ${yaw}°` });
+    }
+  }
+
+  it.each(RIGIDITY_SWEEP)(
+    "holds the whole field rigid as the camera pans — $name",
+    (p) => {
+      // Two props do not move relative to each other because the hero walked
+      // past them, and the picture must say so: whatever the camera does, the
+      // screen distance between two static bodies is a CONSTANT.
+      //
+      // What broke it was rounding the camera-relative projection in one go
+      // (`round(project(world - camera))`). Square-on that is exact in x — the
+      // projection is the identity there and `computeCamera` rounds to a whole
+      // world unit — so east-west travel was solid and hid the bug. In y the
+      // pitch is a fraction, so a whole unit of camera travel is 0.75 of a
+      // screen pixel and every body crossed its own rounding boundary at its own
+      // moment: the gap between two props measured 12 px on one frame and 13 on
+      // the next, and the whole field rippled while the baked floor sat still
+      // underneath. Under a yaw there is no solid axis left to walk along.
+      setWorldProjection(p);
+      const props = [
+        { x: 300, y: 300 },
+        { x: 316.4, y: 316.4 },
+        { x: 287.25, y: 341.5 },
+      ] as const;
+      // Driven through `beginBillboard` rather than the anchor helpers, so what
+      // is pinned is where a pass's own `Math.round(pos - camera)` draw actually
+      // lands — the real path, not a stand-in for it.
+      const ctx = transformProbe();
+      const drawnAt = (
+        prop: { x: number; y: number },
+        cam: { x: number; y: number },
+      ) => {
+        ctx.save();
+        beginBillboard(
+          ctx as unknown as CanvasRenderingContext2D,
+          prop.x,
+          prop.y,
+          cam.x,
+          cam.y,
+        );
+        const at = ctx.at(
+          Math.round(prop.x - cam.x),
+          Math.round(prop.y - cam.y),
+        );
+        ctx.restore();
+        return at;
+      };
+      const gapAt = (cam: { x: number; y: number }) => {
+        const first = drawnAt(props[0], cam);
+        return props.map((prop) => {
+          const at = drawnAt(prop, cam);
+          // Rounded past the float noise a yawed matrix's compose-then-invert
+          // leaves behind (~1e-14) — the claim is about whole pixels. The `+ 0`
+          // folds the -0 a rounded negative epsilon produces back to 0, which a
+          // deep equality otherwise reports as a difference.
+          return {
+            x: Math.round(at.x - first.x) + 0,
+            y: Math.round(at.y - first.y) + 0,
+          };
+        });
+      };
+      // Walking north, then east, then diagonally — a whole world unit at a
+      // time, which is the step `computeCamera` hands the renderer.
+      const base = gapAt({ x: 200, y: 200 });
+      for (let step = 0; step < 24; step++) {
+        expect(gapAt({ x: 200, y: 200 + step })).toEqual(base);
+        expect(gapAt({ x: 200 + step, y: 200 })).toEqual(base);
+        expect(gapAt({ x: 200 + step, y: 200 + step })).toEqual(base);
+      }
+    },
+  );
+
+  it.each(PROJECTIONS)(
+    "steps the whole picture by whole pixels — $name",
+    (p) => {
+      // …and the camera's own seat may only move in whole screen pixels, or the
+      // rigid scene above would land on half a pixel and resample every sprite
+      // in it. This is the lattice the baked ground layer's blit and the fog's
+      // dither register against too.
+      setWorldProjection(p);
+      const base = { x: cameraAnchorX(200, 200), y: cameraAnchorY(200, 200) };
+      for (const cam of [
+        { x: 201, y: 200 },
+        { x: 200, y: 213 },
+        { x: 200.5, y: 200.25 },
+        { x: -37.4, y: 1211.6 },
+      ]) {
+        const seat = {
+          x: cameraAnchorX(cam.x, cam.y),
+          y: cameraAnchorY(cam.x, cam.y),
+        };
+        expect(Number.isInteger(seat.x - base.x)).toBe(true);
+        expect(Number.isInteger(seat.y - base.y)).toBe(true);
       }
     },
   );

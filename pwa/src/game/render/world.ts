@@ -12,10 +12,10 @@ import {
   funnelSprite,
   groundLayer,
   groundLayerOrigin,
-  groundLayerPoint,
 } from "./caches.ts";
 import { drawWorldSprite } from "./plane.ts";
 import { drawSpriteCentered, type ViewSize } from "./shared.ts";
+import { cameraAnchorX, cameraAnchorY } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -41,10 +41,16 @@ export function drawGround(
   // Which pixel of the baked layer the screen's top-left corner is looking at.
   // Both the layer and the screen are in PROJECTED space, so the two differ by
   // a translation and nothing else — the copy is 1:1, at any pitch or yaw.
+  //
+  // The translation is the CAMERA'S SEAT ON THE PROJECTED GRID (render/tilt.ts),
+  // which is the same whole-pixel lattice the standing bodies and the fog's
+  // dither register against — so the floor, the horde and the fog all step
+  // together rather than sliding against each other as the hero walks. The
+  // origin is a whole number (see `bakeOrigin`), so this stays an integer and
+  // the blit stays a 1:1 copy.
   const origin = groundLayerOrigin();
-  const at = groundLayerPoint(origin, camera.x, camera.y);
-  const left = Math.round(at.x);
-  const top = Math.round(at.y);
+  const left = origin.x + cameraAnchorX(camera.x, camera.y);
+  const top = origin.y + cameraAnchorY(camera.x, camera.y);
   // Clip the copy to the layer: past the level's projected edge there is
   // nothing to draw and the letterbox behind it shows through, which is what
   // the corners of a turned map look like.
