@@ -110,38 +110,27 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
         "autoLevelStats",
       ),
       "force-store": onOffRow(ctx, "developer", "force-store", "storeForce"),
-      "generated-maps": onOffRow(
-        ctx,
+      // Every map is carved, so the size is the one knob left over the
+      // generator. A label-cycling row, not a switch: four choices are not an
+      // on/off.
+      "map-size": actionRow(
         "developer",
-        "generated-maps",
-        "generatedMaps",
+        "map-size",
+        () => {
+          playUiSound(synth, "confirm");
+          const at = MAP_SIZE_ORDER.indexOf(getSettings().generatedMapSize);
+          updateSettings({
+            generatedMapSize: MAP_SIZE_ORDER[
+              (at + 1) % MAP_SIZE_ORDER.length
+            ] as GeneratedMapSize,
+          });
+          ctx.bumpSettings();
+        },
+        {
+          value: MAP_SIZE_LABEL[s.generatedMapSize],
+          state: s.generatedMapSize,
+        },
       ),
-      // The size only means anything while the generator is on, so it appears
-      // with it rather than sitting greyed out under a switch that is off. A
-      // label-cycling row, not a switch: four choices are not an on/off.
-      "map-size":
-        s.generatedMaps === "on"
-          ? actionRow(
-              "developer",
-              "map-size",
-              () => {
-                playUiSound(synth, "confirm");
-                const at = MAP_SIZE_ORDER.indexOf(
-                  getSettings().generatedMapSize,
-                );
-                updateSettings({
-                  generatedMapSize: MAP_SIZE_ORDER[
-                    (at + 1) % MAP_SIZE_ORDER.length
-                  ] as GeneratedMapSize,
-                });
-                ctx.bumpSettings();
-              },
-              {
-                value: MAP_SIZE_LABEL[s.generatedMapSize],
-                state: s.generatedMapSize,
-              },
-            )
-          : null,
     }),
     backRow(ctx, "developer"),
   ];

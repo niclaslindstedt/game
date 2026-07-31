@@ -74,7 +74,6 @@ export {
   setDeathScenesEnabled,
   setDialogueEnabled,
   setGeneratedMapSize,
-  setGeneratedMapsEnabled,
   type GeneratedMapSizeSetting,
   type MapSizeName,
 } from "./game/flags.ts";

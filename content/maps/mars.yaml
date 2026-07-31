@@ -335,6 +335,12 @@ horde:
     - enemy: scout_rover
       window: [0, 0.5]
       weight: 4
+    # The mining units work the mid dust — and an errand on this map asks the
+    # hero for six of them (content/quests/mars_recovery.yaml), so the colony
+    # has to actually field them.
+    - enemy: mining_rover
+      window: [0.2, 0.6]
+      weight: 2
     - enemy: servo_bot
       window: [0.25, 0.85]
       weight: 4
@@ -361,6 +367,13 @@ elites:
   - enemy: the_seed
     ramp: endgame
     hp: 280
+
+# THE TITHE ASSESSOR — the campaign chain's non-combatant on the colony. It
+# works its own roaming round and stays neutral unless the hero deliberately
+# talks it into an argument it cannot lose politely
+# (content/conversations/tithe_assessor).
+bystanders:
+  - enemy: tithe_assessor
 
 # The cache keepers, cycled across the dead-end districts.
 guardians:

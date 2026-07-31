@@ -88,6 +88,20 @@ objects:
   # by parts lying about at random: the fuselage sections queue down the bay in a
   # line, the gantries flank it, and the aisle between them is where the fight
   # happens. Every rank is broken in the middle so the bay keeps a cross-corridor.
+  # The BELT itself: a flat rank the hero walks straight over, dense enough to
+  # read as one continuous run down the bay (the sprite animates on five frames,
+  # so a line of them is a moving belt). It is what makes a bay read as a
+  # STATION rather than as a room with hardware in it, and the ranks below queue
+  # their parts along it.
+  - id: conveyor
+    type: row
+    areas: [bay]
+    chance: 0.75
+    spacing: 16
+    gap: 420
+    bank: 1
+    aisle: 420
+    coverage: 0.85
   - id: fuselage_section
     type: row
     areas: [bay]
@@ -310,6 +324,13 @@ elites:
   - enemy: architect
     ramp: savage
     hp: 190
+
+# THE ARCHIVE UNIT — the campaign chain's non-combatant on the floor. It is the
+# records terminal, it is not fighting anybody, and it holds the only
+# countersignature left in the building
+# (content/conversations/archive_unit).
+bystanders:
+  - enemy: archive_unit
 
 guardians:
   - enemy: employee_of_the_month

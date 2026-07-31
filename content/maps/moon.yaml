@@ -256,6 +256,14 @@ elites:
     ramp: endgame
     hp: 220
 
+# THE SURVEY GHOST — the campaign chain's non-combatant out here. He walks the
+# WHOLE grid rather than haunting a spot (`ai.idle: roam`), so he is genuinely
+# hard to find and the pin on the minimap records where he WAS. Neutral: he is
+# not fighting anybody, and how the hero opens the conversation decides whether
+# there is one (content/conversations/site_surveyor).
+bystanders:
+  - enemy: site_surveyor
+
 # The cache keepers, cycled across the dead-end basins.
 guardians:
   - enemy: lost_cosmonaut

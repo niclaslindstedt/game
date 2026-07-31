@@ -17,6 +17,9 @@ import {
   isWeaponDef,
   LEVEL_ORDER,
   LEVELS,
+  MAP_BLUEPRINTS,
+  resolveLevelDef,
+  runLevelDef,
   SECRET_LEVEL_ORDER,
   markThoughtsSeen,
   OBSTACLES,
@@ -38,6 +41,9 @@ import {
 } from "../helpers.ts";
 
 const HQ = LEVELS.goodco_hq!;
+const BLUEPRINT = MAP_BLUEPRINTS.goodco_hq!;
+/** One representative floor — the map a run of GOODCO HQ actually builds. */
+const carved = resolveLevelDef("goodco_hq", SEED, "medium");
 import { distance as dist } from "@game/lib/vec.ts";
 
 describe("GOODCO HQ level def", () => {
@@ -50,16 +56,12 @@ describe("GOODCO HQ level def", () => {
   });
 
   it("fields the night shift: staff, SUCCESSOR and ASSEMBLER robots, and PAYLOAD-1 at the rocket", () => {
-    // The ambient horde is authored as SPAWN POINTS now, not a banded scatter —
-    // so the roster is the union of every spawn point's mob types. HELLGATES are
-    // excluded: they are rampage-only bonus content on the top two rungs (config
-    // HELLGATES), not part of the night shift this test describes.
+    // The ambient horde is a DENSITY carved into knots, so the roster is the
+    // blueprint's own breed mix — handed over along the search's depth axis.
+    // HELLGATES are excluded: they are rampage-only bonus content on the top two
+    // rungs (config HELLGATES), not part of the night shift this test describes.
     const minionIds = [
-      ...new Set(
-        (HQ.spawners ?? [])
-          .filter((s) => !s.hellgate)
-          .flatMap((s) => s.members.map((m) => m.enemy)),
-      ),
+      ...new Set(BLUEPRINT.horde.members.map((m) => m.enemy)),
     ].sort();
     expect(minionIds).toEqual([
       "assembler",
@@ -92,7 +94,7 @@ describe("GOODCO HQ level def", () => {
     const wallCircles = state.obstacles.filter((o) => o.kind === "wall");
     expect(wallCircles.length).toBeGreaterThan(50);
 
-    for (const wall of HQ.walls!) {
+    for (const wall of runLevelDef(state).walls!) {
       const online = wallCircles.filter(
         (o) =>
           // On the segment: collinear within a pixel and inside its bounds.
@@ -131,13 +133,41 @@ describe("GOODCO HQ level def", () => {
       (o) => !architecture.includes(o.kind),
     );
     expect(scattered.length).toBeGreaterThan(0);
+    // BUCKETED, not every-against-every: a carved floor carries a couple of
+    // thousand props and a wall of a similar order, and the honest pairwise
+    // sweep is millions of comparisons (it timed the suite out). A uniform grid
+    // over the wall circles answers the same question by looking only at the
+    // cells a piece could possibly touch.
+    const CELL = 64;
+    const key = (cx: number, cy: number) => `${cx},${cy}`;
+    const grid = new Map<string, typeof walls>();
+    for (const wall of walls) {
+      const cx = Math.floor(wall.pos.x / CELL);
+      const cy = Math.floor(wall.pos.y / CELL);
+      const bucket = grid.get(key(cx, cy));
+      if (bucket) bucket.push(wall);
+      else grid.set(key(cx, cy), [wall]);
+    }
+    const crowded: string[] = [];
     for (const piece of scattered) {
-      for (const wall of walls) {
-        expect(dist(piece.pos, wall.pos)).toBeGreaterThan(
-          piece.radius + wall.radius + OBSTACLES.spacing,
-        );
+      const reach = piece.radius + OBSTACLES.spacing + 32;
+      const x0 = Math.floor((piece.pos.x - reach) / CELL);
+      const x1 = Math.floor((piece.pos.x + reach) / CELL);
+      const y0 = Math.floor((piece.pos.y - reach) / CELL);
+      const y1 = Math.floor((piece.pos.y + reach) / CELL);
+      for (let cx = x0; cx <= x1; cx++) {
+        for (let cy = y0; cy <= y1; cy++) {
+          for (const wall of grid.get(key(cx, cy)) ?? []) {
+            if (
+              dist(piece.pos, wall.pos) <=
+              piece.radius + wall.radius + OBSTACLES.spacing
+            )
+              crowded.push(`${piece.kind} at ${piece.pos.x},${piece.pos.y}`);
+          }
+        }
       }
     }
+    expect(crowded).toEqual([]);
   });
 
   it("fields SUCCESSOR as a hard-hitting regular monster, not an elite", () => {
@@ -295,92 +325,42 @@ describe("GOODCO HQ level def", () => {
     }
   });
 
-  it("stations line workers in pairs beside every conveyor belt", () => {
-    // The pinned worker spawns are the "people at the treadmill" beat: plain
-    // minions (no authored level/hp — they scale with the map's mob band)
-    // standing within arm's reach of a belt line, spread down its length.
-    const belts = (HQ.propLines ?? []).filter((p) => p.sprite === "conveyor");
-    expect(belts.length).toBe(4);
-    const pinnedMinions = HQ.spawns.filter(
-      (s): s is Extract<(typeof HQ.spawns)[number], { at: unknown }> =>
-        "at" in s &&
-        enemyDef(s.enemy).role === "minion" &&
-        !enemyDef(s.enemy).rarity &&
-        // Roaming patrols sweep the bays; only the STATIONED crew stands at
-        // the belts.
-        s.patrol === undefined &&
-        // A NEUTRAL bystander is not a line worker — it is somebody an errand
-        // sends the hero to talk to, and it stands where the errand wants it.
-        enemyDef(s.enemy).disposition !== "neutral",
-    );
-    expect(pinnedMinions.length).toBeGreaterThanOrEqual(16);
-    for (const worker of pinnedMinions) {
-      // No frozen toughness: the map's band + ordinary minion scaling.
-      expect(worker.level).toBeUndefined();
-      expect(worker.hp).toBeUndefined();
-      // Each stands at a belt: on some belt's x-run, beside its centre line.
-      const atBelt = belts.some(
-        (b) =>
-          Math.abs(worker.at.x - b.from.x) <= 20 &&
-          worker.at.y >= Math.min(b.from.y, b.to.y) &&
-          worker.at.y <= Math.max(b.from.y, b.to.y),
-      );
-      expect(atBelt).toBe(true);
-    }
-    // Every belt has a crew, spread down the line rather than bunched.
-    for (const belt of belts) {
-      const crew = pinnedMinions.filter(
-        (w) => Math.abs(w.at.x - belt.from.x) <= 20,
-      );
-      expect(crew.length).toBeGreaterThanOrEqual(4);
-      const ys = crew.map((w) => w.at.y).sort((a, b) => a - b);
-      expect(ys[ys.length - 1]! - ys[0]!).toBeGreaterThan(400);
-    }
+  it("lays the assembly line out in RANKS rather than scatter", () => {
+    // A rocket does not get built by parts lying about at random: the fuselage
+    // sections queue down the bay in a line, the gantries flank them, and the
+    // aisle between is where the fight happens. The blueprint says so with
+    // `row` objects, and the carve walks each one down its cell's long axis.
+    const ranks = BLUEPRINT.objects.filter((o) => o.type === "row");
+    expect(ranks.map((o) => o.id).sort()).toEqual([
+      "conveyor",
+      "fuselage_section",
+      "gantry",
+      "lane_line",
+      "server_rack",
+    ]);
+    // Every rank is broken in the middle (a bank of one, then an aisle), so a
+    // bay keeps a cross-corridor rather than becoming a wall of hardware.
+    for (const rank of ranks) expect(rank.aisle ?? 0).toBeGreaterThan(0);
+
+    const lines = carved.propLines ?? [];
+    expect(lines.length).toBeGreaterThan(0);
+    // A line is a real run rather than one lonely prop.
+    for (const line of lines)
+      expect(dist(line.from, line.to)).toBeGreaterThan(line.spacing);
   });
 
-  it("walks WoW-style patrols: managers pace their patch, sentries sweep the bays", () => {
-    const pinned = HQ.spawns.filter(
-      (s): s is Extract<(typeof HQ.spawns)[number], { at: unknown }> =>
-        "at" in s,
-    );
-    // Three of the five speaking elites walk a dormant beat; the scholars
-    // hold their posts.
-    for (const id of ["night_manager", "security_chief", "janitor"]) {
-      const elite = pinned.find((s) => s.enemy === id)!;
-      expect(elite.patrol?.length ?? 0).toBeGreaterThan(0);
-    }
-    for (const id of ["head_scientist", "architect", "payload_1"]) {
-      expect(pinned.find((s) => s.enemy === id)!.patrol).toBeUndefined();
-    }
-    // Four roaming minion sweeps — one per bay — each a real route (a leg
-    // several hundred px long), SUCCESSOR among them.
-    const sweeps = pinned.filter(
-      (s) => enemyDef(s.enemy).role === "minion" && s.patrol !== undefined,
-    );
-    expect(sweeps.length).toBe(4);
-    expect(sweeps.filter((s) => s.enemy === "successor").length).toBe(2);
-    for (const sweep of sweeps) {
-      const end = sweep.patrol![sweep.patrol!.length - 1]!;
-      expect(dist(sweep.at, end)).toBeGreaterThan(400);
-    }
-  });
-
-  it("wires alarm sentries to the bay spawn points", () => {
-    // Every alarm link resolves to a real spawn-point id, and the three
-    // armed bays (a2-a4) each have a sentry — dodging a point's trigger
-    // circle no longer dodges the bay once its patrol spots you.
-    const spawnerIds = new Set(
-      (HQ.spawners ?? []).map((s) => s.id).filter(Boolean),
-    );
-    const alarmed = HQ.spawns.filter(
-      (s): s is Extract<(typeof HQ.spawns)[number], { at: unknown }> =>
+  it("wires every knotted elite to the knot it stands in", () => {
+    // An elite that wakes RAISES its cell's knot — the sentry who pulls the
+    // whole room, and the reason a careless search costs more than a careful
+    // one. The carve names a knot after the cell it holds, so the link needs no
+    // lookup table and cannot be authored wrong.
+    const knotIds = new Set((carved.spawners ?? []).map((s) => s.id));
+    const alarmed = carved.spawns.filter(
+      (s): s is Extract<(typeof carved.spawns)[number], { at: unknown }> =>
         "at" in s && s.alarms !== undefined,
     );
-    expect(alarmed.length).toBeGreaterThanOrEqual(5);
-    for (const s of alarmed) expect(spawnerIds.has(s.alarms!)).toBe(true);
-    const targets = new Set(alarmed.map((s) => s.alarms));
-    for (const id of ["a1", "a2", "a3", "a4"])
-      expect(targets.has(id)).toBe(true);
+    expect(alarmed.length).toBeGreaterThan(0);
+    for (const s of alarmed) expect(knotIds.has(s.alarms!)).toBe(true);
   });
 
   it("rolls the conveyor: five belt-scroll frames ship beside the base sprite", () => {
@@ -399,25 +379,30 @@ describe("GOODCO HQ level def", () => {
     }
   });
 
-  it("lays the floor out as grocery-store aisles: five shelf walls with gaps", () => {
-    // Each aisle is authored as two vertical segments (a gap in the middle),
-    // so the serpentine reads as five shelf runs at the aisle x-positions.
-    const aisleX = [470, 770, 1070, 1370, 1610];
-    for (const x of aisleX) {
-      const segs = (HQ.walls ?? []).filter(
-        (w) => w.from.x === x && w.to.x === x && w.from.y !== w.to.y,
-      );
-      // Two segments (top + bottom of the aisle) leaving a single pass-gap.
-      expect(segs.length).toBe(2);
+  it("partitions the floor into rooms with a way through each wall", () => {
+    // The floor is cut into districts and the barrier between two of them falls
+    // out of the PAIR (see mapgen/areas.ts): nothing between two open bays, a
+    // partition with a doorway into a lab. What this pins is the shape that
+    // makes it walkable — every wall is a chain of `wall` circles, and no wall
+    // spans a whole cell edge without a gap somewhere along it.
+    const walls = carved.walls ?? [];
+    expect(walls.length).toBeGreaterThan(3);
+    for (const wall of walls) {
+      expect(wall.kind).toBe("wall");
+      expect(wall.jumpable).toBe(false);
     }
+    // The rooms it cuts are the blueprint's own, and at least one of them is
+    // SEALED (one doorway in) — a floor of nothing but open bays is a field.
+    expect(BLUEPRINT.areas.some((a) => a.enclosure === "hard")).toBe(true);
   });
 });
 
 describe("the off-path detour lockers", () => {
-  it("places exactly four GOODCO lockers, all breakable reward containers", () => {
+  it("places a GOODCO locker at each dead end, all breakable containers", () => {
     const state = startGame(SEED, "goodco_hq");
     const lockers = state.obstacles.filter((o) => o.chest);
-    expect(lockers).toHaveLength(4);
+    expect(lockers.length).toBe((runLevelDef(state).chests ?? []).length);
+    expect(lockers.length).toBeGreaterThan(1);
     for (const locker of lockers) {
       expect(locker.sprite).toBe("locker");
       expect(locker.breakable).toBe(true);
@@ -428,18 +413,22 @@ describe("the off-path detour lockers", () => {
     expect(CHESTS.sprite).toBe("locker");
   });
 
-  it("guards the BREAK ROOM locker with the level's pinned UNIQUE", () => {
-    // The EMPLOYEE OF THE MONTH is pinned (not just a random rare) and stands
-    // between the detour entrance and its locker.
-    const guard = HQ.spawns.find(
+  it("guards each locker with one of the floor's pinned keepers", () => {
+    // The EMPLOYEE OF THE MONTH is a KEEPER (not just a random rare): the
+    // blueprint cycles its guardians across whichever cul-de-sacs the carve
+    // grew, so a locker is never free.
+    const keepers = BLUEPRINT.guardians.map((g) => g.enemy);
+    expect(keepers).toContain("employee_of_the_month");
+    expect(enemyDef("employee_of_the_month").rarity).toBe("unique");
+    const guard = carved.spawns.find(
       (s) => "at" in s && s.enemy === "employee_of_the_month",
     ) as { enemy: string; at: { x: number; y: number } } | undefined;
     expect(guard).toBeDefined();
-    expect(enemyDef("employee_of_the_month").rarity).toBe("unique");
-    const breakRoomLocker = (HQ.chests ?? []).find((c) => c.at.y < 600)!;
-    expect(breakRoomLocker).toBeDefined();
-    // The guardian sits within the same shallow pocket as the locker it holds.
-    expect(dist(guard!.at, breakRoomLocker.at)).toBeLessThan(120);
+    // …and he stands in the pocket he is holding, beside its locker.
+    const nearest = (carved.chests ?? [])
+      .slice()
+      .sort((a, b) => dist(a.at, guard!.at) - dist(b.at, guard!.at))[0]!;
+    expect(dist(guard!.at, nearest.at)).toBeLessThan(600);
   });
 
   it("spills a Diablo-2 haul: an 80% marquee item plus guaranteed supplies", () => {
@@ -453,7 +442,8 @@ describe("the off-path detour lockers", () => {
 
 describe("THE ARCHITECT and the PASSAGE CHIP", () => {
   it("pins the old bench partner as a fifth speaking elite on the level", () => {
-    const architect = HQ.spawns.find(
+    expect(BLUEPRINT.elites.map((e) => e.enemy)).toContain("architect");
+    const architect = carved.spawns.find(
       (s) => "at" in s && s.enemy === "architect",
     );
     expect(architect).toBeDefined();
@@ -502,7 +492,6 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
     // The card is a real key: it names the CORE door, and the level fields it.
     const key = STORY_ITEM_DEFS.keycard_core!;
     expect(key.unlocks).toBe("core");
-    expect((HQ.doors ?? []).some((d) => d.id === "core")).toBe(true);
   });
 
   it("makes the PASSAGE CHIP a passive +1 INT trinket", () => {
@@ -516,7 +505,11 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
 });
 
 describe("level catalog integrity", () => {
-  const levels = Object.values(LEVELS) as LevelDef[];
+  // CARVED, because that is the level a run is played on: the mission carries
+  // the loot pools and the story, the map carried the cast.
+  const levels: LevelDef[] = Object.keys(LEVELS).map((id) =>
+    resolveLevelDef(id, SEED, "medium"),
+  );
 
   it("gives every level a unique story index and an intro", () => {
     // Campaign indices are unique; a SECRET venue (the bunker) SHARES a

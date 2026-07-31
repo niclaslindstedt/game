@@ -19,7 +19,7 @@
 import { randomRange, type Rng } from "@game/lib/rng.ts";
 import { vec, type Vec2 } from "@game/lib/vec.ts";
 import type { TileSpec } from "../types/index.ts";
-import type { LevelDef } from "../defs/levels/types.ts";
+import type { LevelDef, MissionDef } from "../defs/levels/types.ts";
 import type { Zone } from "../zones.ts";
 import type { Chamber, ChamberGrid, WallRun } from "./rooms.ts";
 import { areaById } from "./areas.ts";
@@ -304,7 +304,7 @@ function raggedRects(c: Chamber, rng: Rng): Rect[] {
  * `content/maps/moon.yaml`, which deliberately declines it.
  */
 export function buildTiles(
-  base: LevelDef,
+  base: MissionDef,
   bp: MapBlueprint,
   grid: ChamberGrid,
   width: number,
@@ -787,7 +787,7 @@ export function buildRows(
  * are scattered through the cells between.
  */
 export function buildPlacedItems(
-  base: LevelDef,
+  base: MissionDef,
   grid: ChamberGrid,
   depth: number[],
   exclude: Set<number>,
@@ -820,7 +820,7 @@ export function buildPlacedItems(
 /** Re-anchor the gravity wells (the rift's black holes) into carved cells,
  * keeping their authored pull geometry. */
 export function buildWells(
-  base: LevelDef,
+  base: MissionDef,
   grid: ChamberGrid,
   exclude: Set<number>,
   rng: Rng,

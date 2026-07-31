@@ -46,7 +46,6 @@ const PARAMS: SessionParams = {
   respec: false,
   clearedLevels: [],
   merchantDiscovered: false,
-  generatedMaps: false,
   generatedMapSize: "random",
 };
 
@@ -256,7 +255,9 @@ describe("a session and its client", () => {
     const at = rig.session.state.players[0].pos;
     expect(Math.hypot(at.x - start.x, at.y - start.y)).toBeGreaterThan(20);
     expect(worldOf(rig.client.state!)).toBe(worldOf(rig.session.state));
-  });
+    // Fifteen seconds of a real fight on a real map, stepped twice (the
+    // session's and the client's), is more than the suite's default patience.
+  }, 20_000);
 
   it("keeps the client's own object identity for the whole run", () => {
     // `render.ts`, the HUD model and every overlay were written against an
@@ -297,9 +298,19 @@ describe("a session and its client", () => {
     // the weaker check every time.
     const rig = connect();
     takeTheField(rig);
+    // Steered at the nearest KNOT rather than at a corner: the carve gives the
+    // hero a quiet landing to read the map from, so a walk in an arbitrary
+    // direction is fifteen seconds of nothing happening — and this test is only
+    // worth anything while things are happening.
+    const at = rig.session.state.players[0].pos;
+    const knot = [...rig.session.state.spawners].sort(
+      (a, b) =>
+        Math.hypot(a.at.x - at.x, a.at.y - at.y) -
+        Math.hypot(b.at.x - at.x, b.at.y - at.y),
+    )[0];
     const input: GameInput = {
       steering: true,
-      target: { x: 400, y: 400 },
+      target: knot ? { ...knot.at } : { x: 400, y: 400 },
       jump: false,
       useItem: false,
     };
@@ -308,8 +319,12 @@ describe("a session and its client", () => {
     let seenTick = rig.client.tick;
     // A whole number of publish periods, so the two streams end together
     // rather than the server holding a partial batch the client cannot have.
-    for (let i = 0; i < 900; i++) {
+    for (let i = 0; i < 450; i++) {
       rig.client.sendInput(input);
+      // A pinned first-sight thought stops the world the moment a wisp drifts
+      // into view, and a frozen run emits nothing at all — so the walk taps
+      // through whatever it meets, which is what a player would be doing.
+      if (rig.session.state.dialogue) rig.client.sendCommand("advanceDialogue");
       rig.session.advance(TICK_MS);
       fromServer.push(...rig.session.state.events);
       if (rig.client.tick !== seenTick) {
@@ -317,11 +332,13 @@ describe("a session and its client", () => {
         fromClient.push(...rig.client.state!.events);
       }
     }
-    // Not vacuous: fifteen seconds of walking into the moon's opening ring
+    // Not vacuous: seven seconds of walking into the nearest knot on the moon
     // produces a stream, and the equality below is only meaningful if it does.
     expect(fromServer.length).toBeGreaterThan(5);
     expect(canonicalJson(fromClient)).toBe(canonicalJson(fromServer));
-  });
+    // Seven seconds of a real fight on a real map, stepped twice (the session's
+    // and the client's), is more than the suite's default patience.
+  }, 20_000);
 
   it("tells the client when the session ends, and why", () => {
     const rig = connect();

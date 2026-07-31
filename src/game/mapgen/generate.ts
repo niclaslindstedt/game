@@ -31,7 +31,12 @@ import { createRng, type Rng } from "@game/lib/rng.ts";
 import { vec, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import type { LevelDef, SpawnerSpec, SpawnSpec } from "../defs/levels/types.ts";
+import type {
+  LevelDef,
+  MissionDef,
+  SpawnerSpec,
+  SpawnSpec,
+} from "../defs/levels/types.ts";
 import type { Zone } from "../zones.ts";
 import { areaById, type MapArea } from "./areas.ts";
 import {
@@ -90,7 +95,7 @@ const DROPPED_ON_CARVE = [
   "doors",
   "propLines",
   "packs",
-] as const satisfies readonly (keyof LevelDef)[];
+] as const satisfies readonly (keyof MissionDef)[];
 
 /** The area an id names, for a cell. */
 function areaOf(areas: MapArea[], c: Chamber): MapArea {
@@ -566,7 +571,7 @@ export function resolveMapSize(
  */
 export function generateLevel(
   bp: MapBlueprint,
-  base: LevelDef,
+  base: MissionDef,
   seed: number,
   size: MapSizeName,
 ): LevelDef {
@@ -792,7 +797,15 @@ export function generateLevel(
   // it, the way every hand-authored map treats its stall (PIT STOP, AIRLOCK,
   // SALOON).
   const safeZones: Zone[] = [
-    { shape: "circle", pos: merchantAt, radius: 190, label: "TRADING POST" },
+    {
+      shape: "circle",
+      // A COPY of the stall's point rather than the point itself: two fields of
+      // one def sharing a mutable vector is a trap waiting for the first thing
+      // that writes to either.
+      pos: { x: merchantAt.x, y: merchantAt.y },
+      radius: 190,
+      label: "TRADING POST",
+    },
   ];
   // THE LANDING IS QUIET, NOT SAFE. It is a breather — the opening cell should be
   // somewhere to read the map from rather than somewhere to be ambushed in — and a
@@ -811,16 +824,13 @@ export function generateLevel(
   });
 
   // --- The errand cast ------------------------------------------------------
-  // A carve replaces the authored spawn list wholesale, which is right for the
-  // HORDE (the cell knots are this map's horde) and wrong for the handful of
-  // NEUTRAL mobs an errand sends the hero to talk to: drop those and a campaign
-  // chain simply cannot be finished on a generated map, with nothing on screen
-  // to say why. They are re-homed rather than kept at their authored spot — a
-  // bystander in a wall is no better than a missing one — into a knot-bearing
-  // cell picked off the carve's own stream, so the map still has to be searched
-  // for them. Everything about them beyond the position is the authored def.
-  for (const spawn of base.spawns ?? []) {
-    if (!("at" in spawn) || spawn.at === undefined) continue;
+  // The blueprint's NON-COMBATANTS: the handful of neutral mobs an errand sends
+  // the hero to talk to. They are cast rather than horde, so they are named one
+  // by one (`bystanders`) instead of falling out of a knot's breed mix — and
+  // they are dropped into a knot-bearing cell picked off the carve's own
+  // stream, so the map still has to be searched for them. Everything about one
+  // beyond where it stands is its own def.
+  for (const spawn of bp.bystanders ?? []) {
     if (enemyDef(spawn.enemy).disposition !== "neutral") continue;
     // A cell the horde stands in, so the bystander is somewhere the player has
     // a reason to walk — never the boss's cell, the trader's or a cache's,
@@ -853,7 +863,10 @@ export function generateLevel(
   // cell knots are this map's horde, and a level uses one model or the other —
   // as do the authored `doors`, `propLines` and `packs`, whose coordinates mean
   // nothing on geometry they were not drawn for.
-  const inherited: LevelDef = { ...base };
+  // The two lists the carve RE-HOMES rather than inherits are left behind
+  // here: a mission says WHAT it leaves lying around and the carve says WHERE,
+  // so `placedItems` and `wells` are rebuilt with positions further down.
+  const inherited: Omit<MissionDef, "placedItems" | "wells"> = { ...base };
   for (const key of DROPPED_ON_CARVE) delete inherited[key];
   // Two exclusion sets, and the difference matters. Nothing STRUCTURAL goes in
   // the hero's landing cell or the lift's cell. The annex joins that list only

@@ -369,6 +369,20 @@ export type MapBlueprint = {
   elites: MapSetPiece[];
   /** Dead-end guardians — the chest rooms' lone keepers. */
   guardians: MapSetPiece[];
+  /**
+   * THE NON-COMBATANTS: neutral mobs an errand sends the hero to talk to (see
+   * `EnemyDef.disposition`). They are cast rather than horde — one archive
+   * terminal, one surveyor, one assessor — so they are named here and dropped
+   * into knot-bearing cells off the carve's own stream, which means the map
+   * still has to be searched for them. Everything about one beyond where it
+   * stands is its own def.
+   *
+   * They belong to the BLUEPRINT rather than to the mission for the same reason
+   * the elites do: the mission has no map to stand them on. Without them a
+   * campaign chain simply cannot be finished, with nothing on screen to say why
+   * — which is exactly why the build refuses a non-neutral id here.
+   */
+  bystanders?: { enemy: string }[];
   hellborn?: MapHellborn;
   /** The boss; null on a `reachExit` mission that ends at a door instead. */
   boss: MapBoss | null;

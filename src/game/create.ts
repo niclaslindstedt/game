@@ -40,7 +40,6 @@ import { enemyDef, mobSpeed } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import {
   LEVEL_ORDER,
-  levelDef,
   levelPosition,
   type LevelDef,
 } from "./defs/levels/index.ts";
@@ -117,9 +116,8 @@ export function createGame(
   // straight to the counter to repair — and greets the hero back on approach.
   merchantDiscovered = false,
 ): GameState {
-  // The hand-authored map, or a chamber grid carved from the mission's blueprint
-  // when the GENERATED MAPS developer flag is on (see `mapgen/`). Everything
-  // below reads a plain `LevelDef` either way.
+  // This run's map: a chamber grid carved from the mission's blueprint on the
+  // run's own seed (see `mapgen/`). Everything below reads a plain `LevelDef`.
   const def = resolveLevelDef(levelId, seed);
   const diff = difficultyDef(difficulty);
   // Every monster spawns at the horde's RELATIVE level (player level + the
@@ -611,11 +609,10 @@ export function createGame(
       tiles: def.tiles,
       foes: def.foes,
     },
-    // A CARVED map travels WITH the run (see `runLevelDef`): the catalog still
-    // holds this mission's hand-authored layout, so anything that asks the
-    // catalog mid-run gets another map's geometry. Absent on an ordinary run,
-    // where the catalog def is the one we just built the world from.
-    ...(def === levelDef(levelId) ? {} : { carvedLevel: def }),
+    // THE MAP TRAVELS WITH THE RUN (see `runLevelDef`): the catalog holds only
+    // the MISSION — the story, the ladder, the loot pools — and has no geometry
+    // on it at all, so anything that asks the catalog mid-run gets no answer.
+    carvedLevel: def,
     playerSpawn,
     landmarks: def.landmarks.map((l) => ({
       kind: l.kind,

@@ -67,6 +67,8 @@ import {
   allyPage,
 } from "../../pwa/scripts/library/render-allies.mjs";
 import { LEVEL_FIELDS } from "../../pwa/scripts/library/model-missions.mjs";
+// @ts-expect-error — the library's own compiled catalogs are plain JS tooling.
+import { LEVELS as LIBRARY_LEVELS } from "../../pwa/scripts/library/catalogs.mjs";
 import { POWER_FIELDS } from "../../pwa/scripts/library/model-powers.mjs";
 import { TALENT_FIELDS } from "../../pwa/scripts/library/model-talents.mjs";
 import {
@@ -452,7 +454,7 @@ describe("library field coverage", () => {
     ["weapon", WEAPON_DEFS, WEAPON_FIELDS],
     ["gear", GEAR_DEFS, GEAR_FIELDS],
     ["unique", UNIQUE_DEFS, UNIQUE_FIELDS],
-    ["level", LEVELS, LEVEL_FIELDS],
+    ["level", LIBRARY_LEVELS, LEVEL_FIELDS],
     ["powerup", ABILITY_DEFS, POWER_FIELDS],
     ["talent", TALENT_DEFS, TALENT_FIELDS],
   ])(
@@ -652,7 +654,10 @@ describe("library field coverage", () => {
   });
 
   it("refuses to build a page for a level carrying an unknown field", () => {
-    const def = LEVELS.moon as unknown as Record<string, unknown>;
+    // The library reads a CARVE of each mission rather than the mission itself
+    // (see catalogs.mjs), and the carve is taken once at load — so the field has
+    // to be planted on the def the pages are actually compiled from.
+    const def = LIBRARY_LEVELS.moon as unknown as Record<string, unknown>;
     def.somethingNobodyRenders = true;
     try {
       expect(() => libraryModel()).toThrow(/no library page renders/);

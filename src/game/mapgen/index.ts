@@ -4,11 +4,9 @@
 // recipes in without importing the carve.)
 //
 // `createGame` used to read `levelDef(levelId)` directly. It now asks
-// `resolveLevelDef`, which answers with the hand-authored map unless the
-// developer flag is on AND the mission ships a blueprint — in which case it
-// carves a fresh one from the run's own seed. That is the whole integration: one
-// call site, one flag, and every system downstream keeps reading a plain
-// `LevelDef` with no idea which kind it got.
+// `resolveLevelDef`, which carves the mission's map fresh from its blueprint on
+// the run's own seed. That is the whole integration: one call site, and every
+// system downstream reads a plain `LevelDef` with no idea where it came from.
 //
 // The compiled blueprints live in `src/generated/map-blueprints.ts` (gitignored,
 // regenerated on build from `content/maps/*.yaml` by
@@ -16,13 +14,9 @@
 // the title menu reaches levels through `defs/levels/summary.ts`, so the
 // generator's bytes stay off the app's critical path.
 
-import { levelDef } from "../defs/levels/index.ts";
+import { handAuthoredLevel, levelDef } from "../defs/levels/index.ts";
 import type { LevelDef } from "../defs/levels/types.ts";
-import {
-  generatedMapSizeSetting,
-  isGeneratedMapsEnabled,
-  type MapSizeName,
-} from "../flags.ts";
+import { generatedMapSizeSetting, type MapSizeName } from "../flags.ts";
 import { mapBlueprint } from "./blueprints.ts";
 import { generateLevel, resolveMapSize } from "./generate.ts";
 
@@ -47,12 +41,17 @@ export type {
 } from "./types.ts";
 
 /**
- * The level a run should be built from: the hand-authored map, or a chamber grid
- * carved from the mission's blueprint when GENERATED MAPS is on.
+ * The level a run is built from: a chamber grid carved from the mission's
+ * blueprint, on the run's own seed.
  *
  * The seed is the run's own, so the map and the run replay together — a bug
- * found on a generated map is reproducible from `?seed=` exactly like one found
- * on an authored map.
+ * found on a carve is reproducible from `?seed=` exactly like one found on a
+ * hand-drawn map used to be.
+ *
+ * A mission with NO blueprint is answered with itself, and that is the narrow
+ * door rather than a fallback: only a synthetic catalog installed through
+ * `registerDefs` (the engine fixtures, a mod that hand-draws a venue) can be
+ * one, and `handAuthoredLevel` refuses it if it has no map either.
  *
  * @param levelId the mission
  * @param seed    the run seed `createGame` was handed
@@ -64,9 +63,8 @@ export function resolveLevelDef(
   size?: MapSizeName,
 ): LevelDef {
   const base = levelDef(levelId);
-  if (size === undefined && !isGeneratedMapsEnabled()) return base;
   const blueprint = mapBlueprint(levelId);
-  if (!blueprint) return base;
+  if (!blueprint) return handAuthoredLevel(base);
   const carved =
     size ?? resolveMapSize(blueprint, generatedMapSizeSetting(), seed);
   return generateLevel(blueprint, base, seed, carved);

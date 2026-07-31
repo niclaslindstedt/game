@@ -23,6 +23,7 @@ import {
   mobRushSpeed,
   muteDialogue,
   PLAYER,
+  runLevelDef,
   skipCutscene,
   step,
   type Enemy,
@@ -132,13 +133,25 @@ describe("GOODCO HQ opening strike", () => {
     tapThrough(state);
     expect(state.players[0].disarmed).toBe(false);
     // Now it chases like any minion: one tick advances at most its plain
-    // snapshot `speed`, nowhere near the opening rushSpeed. Place it a clear
-    // stretch away in the open lobby and measure a single tick's travel.
+    // snapshot `speed`, nowhere near the opening rushSpeed. The floor is carved
+    // fresh per run, so the stretch it is placed on is cleared first — a body
+    // shoved out of a crate it was dropped inside travels a great deal further
+    // than it walks, and this measures WALKING.
+    state.obstacles = [];
+    // …and of the trader's SAFE pocket, which shoves a minion out of it at a
+    // pace that has nothing to do with walking.
+    runLevelDef(state).safeZones = [];
     v.awake = true;
-    v.pos = { x: state.players[0].pos.x + 300, y: state.players[0].pos.y };
+    // Placed toward the middle of the map rather than blindly east: the hero
+    // lands wherever the carve put him, and a body pushed back off the world's
+    // edge would travel further in one tick than any mob can walk.
+    const hero = state.players[0].pos;
+    const dir = hero.x < state.level.width / 2 ? 1 : -1;
+    v.pos = { x: hero.x + 300 * dir, y: hero.y };
     const before = v.pos.x;
     step(state, idle, DT);
-    const moved = before - v.pos.x; // travelled toward the hero (leftward)
+    // Travelled toward the hero, whichever side it was put on.
+    const moved = (before - v.pos.x) * dir;
     expect(moved).toBeGreaterThan(0);
     expect(moved).toBeLessThanOrEqual(v.speed * (DT / 1000) + 0.01);
     // …and unmistakably below what the opening sprint would have covered.

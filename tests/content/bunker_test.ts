@@ -14,6 +14,8 @@ import {
   gearDef,
   LEVEL_ORDER,
   LEVELS,
+  MAP_BLUEPRINTS,
+  resolveLevelDef,
   resolveChoice,
   SECRET_LEVEL_ORDER,
   skipCutscene,
@@ -26,6 +28,9 @@ import {
 import { clearStage, DT, idle, makeEnemy, SEED } from "../helpers.ts";
 
 const bunker = LEVELS.the_bunker!;
+const BLUEPRINT = MAP_BLUEPRINTS.the_bunker!;
+/** One representative vault — the map a run of the bunker actually builds. */
+const carved = resolveLevelDef("the_bunker", SEED, "medium");
 const rift = LEVELS.the_rift!;
 
 /** A rift run built with `clearedLevels`, armed, staged down to one RASPUTIN
@@ -122,26 +127,26 @@ describe("the bunker", () => {
     expect(droppedSeveredHand(killRasputinInRift(["boot_hill"]))).toBe(true);
   });
 
-  it("crescendos at THE VAULT WARDEN, the machine's gate on the exit", () => {
-    // The redesign adds a single finale boss — the ONE boss on the map, pinned
-    // in the vault. (The residents stay elites; the horde stays minions.)
-    const bosses = bunker.spawns.filter(
+  it("crescendos at THE VAULT WARDEN, standing on the exit", () => {
+    // The ONE boss on the map, and the carve puts him where the run ends: the
+    // exit stands at the goal cell's centre and he is posted beside it, so the
+    // way out is through him. (The residents stay elites; the horde stays
+    // minions.)
+    expect(BLUEPRINT.boss?.enemy).toBe("vault_warden");
+    expect(enemyDef("vault_warden").role).toBe("boss");
+    const bosses = carved.spawns.filter(
       (s) => enemyDef(s.enemy).role === "boss",
     );
     expect(bosses.map((s) => s.enemy)).toEqual(["vault_warden"]);
-
-    // It GATES the exit: a locked door whose key the warden drops, so the
-    // finale is mandatory — no key, no way out.
-    const door = (bunker.doors ?? []).find((d) => d.id === "vault_exit");
-    expect(door, "vault_exit door").toBeDefined();
     expect(enemyDef("vault_warden").loot?.storyItems).toContain("warden_key");
     expect(storyItemDef("warden_key").unlocks).toBe("vault_exit");
 
-    // The objective is still to REACH the exit door, which leads to the rift.
-    expect(bunker.objective.type).toBe("reachExit");
-    if (bunker.objective.type === "reachExit") {
-      const exit = bunker.landmarks.find((l) => l.kind === "bunker_exit")!;
-      expect(exit.pos).toEqual(bunker.objective.at);
+    // The objective is still to REACH the exit door, which leads to the rift,
+    // and the door is drawn where the objective stands.
+    expect(carved.objective.type).toBe("reachExit");
+    if (carved.objective.type === "reachExit") {
+      const exit = carved.landmarks.find((l) => l.kind === "bunker_exit")!;
+      expect(exit.pos).toEqual(carved.objective.at);
     }
     // The closing monologue exists, and the way out leads back to the rift.
     expect(bunker.outro?.length ?? 0).toBeGreaterThan(0);
@@ -156,19 +161,17 @@ describe("the bunker", () => {
       "soldier",
       "vacuum_bot",
     ];
+    const horde = BLUEPRINT.horde.members.map((m) => m.enemy);
     for (const id of factions) {
       expect(ENEMY_DEFS[id]?.role, id).toBe("minion");
-      expect(
-        bunker.waves?.budget.some((line) => line.enemy === id),
-        id,
-      ).toBe(true);
+      expect(horde, id).toContain(id);
     }
-    // The automated wardens: bolted SENTRY GUNS pinned through the checkpoint,
-    // and deployed by the warden's defence grid.
+    // The automated wardens: bolted SENTRY GUNS, deployed by the warden's own
+    // defence grid rather than standing on the map waiting to be found.
     expect(ENEMY_DEFS.sentry_gun?.role).toBe("minion");
     expect(
-      bunker.spawns.some((s) => s.enemy === "sentry_gun"),
-      "sentry_gun pinned in spawns",
-    ).toBe(true);
+      ENEMY_DEFS.vault_warden?.mechanics?.summon?.defId,
+      "sentry_gun deployed by the warden",
+    ).toBe("sentry_gun");
   });
 });

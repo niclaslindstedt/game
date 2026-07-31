@@ -87,7 +87,6 @@ const RUN: SessionParams = {
   seenThoughts: ["moon_arrival"],
   openingSkip: "story",
   muteDialogue: true,
-  generatedMaps: false,
   generatedMapSize: "random",
 };
 

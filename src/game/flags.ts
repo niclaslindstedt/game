@@ -141,47 +141,30 @@ export function autoStatGainsOn(): boolean {
   return autoStatGainsEnabled;
 }
 
-// -- GENERATED MAPS (pwa developer flag `generatedMaps`) ----------------------
+// -- MAP SIZE (pwa developer flag `generatedMapSize`) -------------------------
 //
-// The three chamber-grid sizes a generated map may be carved at (see
-// `mapgen/`). The names are the whole vocabulary: a blueprint prices each one
-// (`sizes` in `content/maps/<id>.yaml`) with its own world dimensions and
-// chamber count, so LARGE is a genuinely longer search rather than the same map
-// stretched.
+// The three chamber-grid sizes a map may be carved at (see `mapgen/`). The
+// names are the whole vocabulary: a blueprint prices each one (`sizes` in
+// `content/maps/<id>.yaml`) with its own world dimensions and chamber count, so
+// LARGE is a genuinely longer search rather than the same map stretched.
 export type MapSizeName = "small" | "medium" | "large";
 
 /**
- * What the GENERATED MAPS setting asks for: one of the three sizes, or `random`
- * — rolled per run off the run's own seed, so consecutive runs of the same
+ * What the MAP SIZE setting asks for: one of the three sizes, or `random` —
+ * rolled per run off the run's own seed, so consecutive runs of the same
  * mission differ in scale as well as layout.
  */
 export type GeneratedMapSizeSetting = MapSizeName | "random";
 
-// Whether the level a run builds is CARVED from the mission's blueprint
-// (`content/maps/<id>.yaml`) instead of read from its hand-authored layout, and
-// at which size. Both are read once, at level build (mapgen/resolve.ts), so a
-// change takes effect on the next run — like the story-display preferences
-// above. The default is OFF: the shipped campaign is the hand-authored one, and
-// the generator is a developer-gated feature (see `stripDeveloperState` in the
-// app's settings.ts, which scrubs both so a store build can never carry them).
-let generatedMapsEnabled = false;
+// The size every run's map is carved at. Read once, at level build
+// (`mapgen/index.ts`), so a change takes effect on the next run — like the
+// story-display preferences above. The shipped answer is MEDIUM; the other
+// sizes are a developer row (see `stripDeveloperState` in the app's
+// settings.ts, which scrubs it so a store build can never carry one).
 let generatedMapSize: GeneratedMapSizeSetting = "medium";
 
-/** Toggle GENERATED MAPS (a developer flag). On, a run of a mission that ships
- * a blueprint carves a fresh chamber grid from it instead of loading the
- * hand-authored layout; off restores the shipped map. */
-export function setGeneratedMapsEnabled(enabled: boolean): void {
-  generatedMapsEnabled = enabled;
-}
-
-/** Whether generated maps are active (read at level build — see
- * `mapgen/resolve.ts`). */
-export function isGeneratedMapsEnabled(): boolean {
-  return generatedMapsEnabled;
-}
-
-/** Choose the size generated maps are carved at, or `random` to roll it per
- * run from the seed. */
+/** Choose the size maps are carved at, or `random` to roll it per run from the
+ * seed. */
 export function setGeneratedMapSize(size: GeneratedMapSizeSetting): void {
   generatedMapSize = size;
 }

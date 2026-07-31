@@ -128,7 +128,6 @@ function stubSession() {
           respec: false,
           clearedLevels: [],
           merchantDiscovered: false,
-          generatedMaps: false,
           generatedMapSize: "medium",
         },
         slot: 1,

@@ -74,7 +74,15 @@ describe.each(["goodco_hq", "moon"])(
     // The window an idle run must die inside on the intended fight and up. Held
     // generous on purpose — this is the "doing nothing eventually loses" line,
     // not the felt-difficulty target (that's a playtest call, printed below).
-    const OVERRUN_CAP_MS = 30_000;
+    //
+    // It went from 30s to 45s when the campaign moved onto CARVED maps, and the
+    // reason is a deliberate one rather than a slipped number: the hero lands in
+    // a QUIET cell (no ambient horde placed in it — somewhere to read the map
+    // from), and the knots that hold this map's horde arm as he walks into them.
+    // So the horde has to come to a man who never moves, which takes longer on
+    // the open moon than the hand-drawn opening ring around his feet ever did.
+    // The promise is unchanged and still measured on every rung: he dies.
+    const OVERRUN_CAP_MS = 45_000;
 
     // One measurement per difficulty, shared across the assertions below.
     const ttd = {

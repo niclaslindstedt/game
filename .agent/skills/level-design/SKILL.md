@@ -1,28 +1,39 @@
 ---
 name: level-design
-description: "Use when adding a new level/mission to the game or substantially reworking one — the YAML level format and its compile pipeline, the annotated map renderer for reading a map's design, the design-zone systems (safe/quiet zones, tempo, chests, merchant spawns), campaign registration and unlock order, spawn/wave/pack budgets, the cumulative loot-pool rule, XP/arrow-cap pacing wiring, and the checker + test battery a new map must pass before it ships."
+description: "Use when adding a new level/mission to the game or substantially reworking one — the TWO files a venue is (the mission's YAML and the blueprint its map is carved from), their compile pipeline, the renderers for reading a carve, campaign registration and unlock order, the cumulative loot-pool rule, XP/arrow-cap pacing wiring, and the checker + test battery a new venue must pass before it ships."
 ---
 
 # Designing a Level
 
-A level is **data**: one YAML file under `scripts/levels/<id>.yaml`,
-compiled into the engine's `LevelDef` catalog (the map/atlas equivalent for
-levels — like the sprite YAML tree compiles to the atlas). The def itself is
-easy; what makes a level *correct* is the cross-cutting wiring — pacing caps,
-drop windows, checker tables, tests — that every other map already participates
-in. This skill is the map of that wiring. Load the `enemy-design` skill for the
-roster, `pixel-assets` for tiles/sprites, `weapon-system` for loot, and
-`sound-effects` for the score. To improve an EXISTING map's feel (rather than
-add one), use the **`map-improvement`** skill — it confirms the intended feel
-with the user first, then iterates render → evaluate → improve.
+A venue is **two files, and they answer different questions**:
+
+- `content/levels/<id>.yaml` — the **MISSION**: who is here, why, what it pays.
+  Its name, story, ladder rung, hazards, merchant, loot pools, thought pins. It
+  has **no geometry at all** — a mission that authors a wall, a spawn, a prop, a
+  zone or any coordinate fails the build, and the message names the field that
+  replaces it.
+- `content/maps/<id>.yaml` — the **BLUEPRINT** its map is carved from, fresh on
+  every run's own seed. Areas, an object palette, the horde's density and
+  breeds, the cast, three sizes, the compass regions the boss may hide in.
+
+So the geometry half of designing a level is a blueprint, and its own skill is
+**`mapgen-improvement`** (the carve, the area rules, the render → crop → judge
+loop). THIS skill is the rest: the mission file, and the cross-cutting wiring —
+pacing caps, drop windows, checker tables, tests — that every other venue already
+participates in. Load the `enemy-design` skill for the roster, `pixel-assets`
+for tiles/sprites, `weapon-system` for loot, and `sound-effects` for the score.
+To improve an EXISTING venue's feel (rather than add one), use the
+**`map-improvement`** skill — it confirms the intended feel with the user first,
+then iterates render → evaluate → improve.
 
 **Before starting, read past lessons:** `node scripts/skill-lessons.mjs level-design`.
 
 ## The YAML format + compile pipeline
 
-- **Author** a level as `scripts/levels/<id>.yaml` (the file stem MUST
-  equal the level `id`). It carries every `LevelDef` field (documented at the
-  type, `src/game/defs/levels/types.ts`) plus three authoring keys:
+- **Author** a mission as `content/levels/<id>.yaml` (the file stem MUST
+  equal the level `id`). It carries every `MissionDef` field (documented at the
+  type, `src/game/defs/levels/types.ts` — `LevelDef` minus the geometry) plus
+  three authoring keys:
   - `description:` free-text design intent (documentation + the map renderer).
   - `campaign: true` → joins the ordered campaign (`LEVEL_ORDER`), or
     `secret: true` → an off-campaign venue (`SECRET_LEVEL_ORDER`). Exactly one.
@@ -67,49 +78,45 @@ map LEVEL=<id>`). LOOK at it — it's the fastest way to judge how a level plays
   and moved), **spawns**, and **kills**, plus a `COVERAGE: N% of map` readout —
   the direct read for "is the whole map used, or is there dead space?".
 
-## The design-zone systems (the feel levers)
+## The feel levers belong to the CARVE now
 
-Optional `LevelDef` fields (all neutral when omitted; see `src/game/zones.ts`):
+The breather pockets, the pressure envelope, the caches and the trader's pitch
+are all decided per run by the generator, from the blueprint's own vocabulary —
+so they are read, not authored:
 
-- **`safeZones`** (rect/circle): no procedural spawns inside AND the minion horde
-  is repelled out — a genuine breather pocket (rest spot, merchant nook, the calm
-  before the boss). Author clear of pinned set pieces (they aren't repelled).
-- **`quietZones`** (dead areas): no ambient wave/pack spawns, but authored content
-  still lives there (a `chest`, a pinned rare/unique). The reward for exploring
-  off the main line, without going soft.
-- **`tempo`**: keyframes `{ at (0..1 of the wave ramp), intensity }` that scale
-  the wave pressure envelope over the run — build and release pressure instead of
-  a flat ramp (1 = baseline; config `TEMPO` clamps it).
-- **`chests`**: placed breakable containers that spill a richer, guaranteed haul
-  than a scattered crate (config `CHESTS`) — the payoff that makes a dead zone
-  worth the detour.
-- **breakable props** (`obstacles[].breakable` + `loot`): scenery the hero can
-  smash for a CHANCE-BASED, themed spill — `loot.chance` (0..1) gates whether a
-  break pays at all and `loot.drop` weights the categories
-  (health/stamina/gear), so a vending machine leans stamina drinks and a
-  wine rack healing. Without `loot` a breakable is a supply crate (guaranteed
-  spill, config `CRATES`).
-- **`merchantSpawns`**: authored points the wandering trader first appears at.
+- **A SAFE pocket** is the trader's stall (the horde is repelled out of it), and
+  the **LANDING is QUIET rather than safe** — no ambient horde placed in it, but
+  no wall either, so a hero who stands still is still found. Both are the carve's.
+- **A CACHE** is a `chest` object dropped at a dead end with one of the
+  blueprint's `guardians` on it — the reward that makes a detour worth walking.
+- **PRESSURE** is a density: each cell takes as many knots as its floor is worth
+  (`KNOT_DENSITY`), cut into bands so a hall gets a fight at either end. There is
+  no authored tempo curve.
+- **Breakable props** are still authored, but on the blueprint's object: a
+  `crate`-type object with `loot.chance` (0..1) and `loot.drop` weights
+  (health/stamina/gear), so a vending machine leans stamina drinks and a wine
+  rack healing. Without `loot` a breakable is a supply crate (guaranteed spill,
+  config `CRATES`).
 
-## The def, in authoring order
+## The mission, in authoring order
 
-1. **Identity & world**: `id`, `index`, `name`, `campaign`/`secret`,
-   `width`/`height`, `gravity` (the feel lever), `biome`, `tiles`
-   (common/rare + optional `zones` for split terrain), `heroSuited`.
-2. **Layout**: `playerSpawn`, `landmarks`, `obstacles`, `walls` (the path-formers
-   — verify with the renderer), `doors` (locked by a story-item key), `wells`,
-   `gates`, `decor`, plus the new `safeZones`/`quietZones`/`chests`/`merchantSpawns`.
-3. **Population**: `spawns` (banded or pinned `at`; `minDifficulty` gates),
-   `waves` (ramp/caps/budget windows), `packs` (dormant clusters woken by
-   proximity — build a map to be CLEARED BY MOVING through its packs; on a
-   `clearAll` level every pack must be reached and wiped), `objective`,
-   `openingStrike`, `tempo`.
-4. **Story beats**: `intro`/`outro`/`prelude`, `firstKillThoughts`/
-   `firstSightThoughts`, the per-level `merchant` persona, `placedItems`.
-5. **Loot**: `weaponPool`/`gearPool`/`abilityPool`, `earlyDrops`,
+1. **Identity & world**: `id`, `index`, `name`, `campaign`/`secret`, `gravity`
+   (the feel lever), `biome`, `tiles` (the venue's own ground — a DISTRICT's
+   floor is the blueprint's), `heroSuited`, `music`.
+2. **Rules of the place**: `objective` (its TYPE — where the exit stands is the
+   carve's), `gates`, `exitTo`, the hazards (`asteroids`, `sandstorms`,
+   `hayBalls`, `stampedes`), `canopy`, `decorClearance`.
+3. **Story beats**: `intro`/`outro`/`prelude`, `firstKillThoughts`/
+   `firstSightThoughts`, the per-level `merchant` persona, `openingStrike` (the
+   beat, not its spot), `placedItems` and `wells` (WHAT the venue leaves lying
+   around and how hard its holes pull — the carve decides where).
+4. **Loot**: `weaponPool`/`gearPool`/`abilityPool`, `earlyDrops`,
    `allClearWeapon`, `worldUniques`, `arrowCapByDifficulty`. **The
    cumulative-pool rule (the bunker idiom): later maps re-list every earlier
    stage's bases.** Forge any new base via `weapon-system`.
+5. **The map**, in `content/maps/<id>.yaml`: areas, objects, `horde`, `elites`,
+   `guardians`, `bystanders`, `boss`, `sizes`, `layout` — see
+   `mapgen-improvement` and `mod/FORMAT.md`.
 
 ## Mob levels come from the LADDER (`scripts/ladder.yaml`)
 
@@ -133,16 +140,17 @@ NIGHTMARE is still level 42+):
 - **Wave tiers** `meek`→`bold`→`fierce`→`savage`→`brutal`→`merciless`→`monstrous`
   climb off the band **start** (`fromStart: 0..6`). **Boss-room ranks** `endgame`
   (band end) and `apex` (end + 2) sit off the band **end**.
-- **Spawn-point override (`spawners:`):** a point names a `ramp:` to RAMP within
-  the map (rolling the two-wide band `[start+off, start+off+1]`) — see the con-ramp
-  rule below. A point without a `ramp` rolls the map's whole default band. A level
-  MUST NOT declare a top-level `mobLevels`/`intendedLevel`, or a spawner
-  `mobLevels` (the loader errors); those belong to the ladder's ramps.
-- **Pinned elites/bosses (`spawns` with `at`) name a `ramp:` + a single base
-  `hp`** (the easy value). The loader expands the ramp into the pinned `level`
-  (single per difficulty → the `mlvl`, loot tier + con) and scales the base hp
-  across the four rungs by the map's `hpCurves` entry (`pinnedHp` picks
-  `standard`/`gentle`). Do NOT hard-code a per-difficulty `level`/`hp` tuple.
+- **The blueprint's horde names its ramps** (`horde.ramps`, shallow → deep): the
+  carve hands them out along its own DEPTH axis, so a knot near the landing runs
+  the first rung and one out by the boss the last. A mission MUST NOT declare a
+  top-level `mobLevels`/`intendedLevel` (the loader errors); those belong to the
+  ladder.
+- **A blueprint's set pieces (`elites`, `guardians`, `boss`) name a `ramp:` + a
+  single base `hp`** (the easy value). The map loader expands the ramp into the
+  pinned `level` (single per difficulty → the `mlvl`, loot tier + con) and scales
+  the base hp across the four rungs by the map's `hpCurves` entry (`pinnedHp`
+  picks `standard`/`gentle`). Do NOT hard-code a per-difficulty `level`/`hp`
+  tuple.
 
 ### RAMP THE CON UP along the path (green → yellow → red)
 
@@ -246,12 +254,14 @@ enforcing the tuples is `level-schema.mjs`.
 
 ## Workflow
 
-1. **Place it in the campaign**: pick `index`, write the YAML, set
+1. **Place it in the campaign**: pick `index`, write the MISSION yaml, set
    `campaign`/`secret`. `make levels` validates every referenced id; `catalog_test.ts`
    asserts they resolve.
 2. **Roster** — the `enemy-design` skill.
-3. **Author layout + population**, keeping the mobile viewport in mind
-   (≈422×195 world units visible). **Render the design view and LOOK at it.**
+3. **Write the BLUEPRINT** (`content/maps/<id>.yaml`): the areas the venue is
+   made of, the object palette, the horde's density and breeds, the cast, the
+   three sizes. Keep the mobile viewport in mind (≈422×195 world units visible).
+   **Render a carve and LOOK at it** — see `mapgen-improvement`.
 4. **Loot pools** — cumulative, plus the map's own new bases; `earlyDrops`.
 5. **Pacing wiring** — the caps/checker tables above.
 6. **Presentation** — sprite family + tiles (`pixel-assets`), the score
@@ -267,7 +277,9 @@ enforcing the tuples is `level-schema.mjs`.
 
 ## After you're done — the checklist
 
-- [ ] YAML compiles clean (`make levels`); `catalog_test.ts` green.
+- [ ] Both YAMLs compile clean (`make levels`); `catalog_test.ts` green.
+- [ ] The venue ships a blueprint — a mission with none cannot be played
+      (`generated_maps_test.ts` asserts one per mission).
 - [ ] `yaml_roundtrip_test.ts` green (or snapshot intentionally updated).
 - [ ] `node scripts/leveling-curve.mjs --by-level` re-read →
       `arrowCapByDifficulty` + `XP_CAP` bands land where runs end.
@@ -275,7 +287,8 @@ enforcing the tuples is `level-schema.mjs`.
       `CAMPAIGN_LANDINGS` entries added.
 - [ ] `node scripts/unique-check.mjs` clean if the map hands world uniques.
 - [ ] `make assets` + family sheet looked at; music track registered.
-- [ ] Design map + `--heatmap` rendered and read (path, zones, tempo, coverage).
+- [ ] A carve rendered at every size and read (`--seed`, `--size`), plus
+      `--heatmap` for coverage.
 - [ ] `docs/game-content.md` walkthrough entry; `docs/manuscript.md` transcribes
       new lines (user-confirmed).
 - [ ] Per-level content test written; `make test`, `make lint` green.

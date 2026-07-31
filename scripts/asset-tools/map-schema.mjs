@@ -637,6 +637,25 @@ export function validateMap(bp, refs, description = "") {
   if (bp.guardians !== undefined && bp.guardians.length === 0)
     err("guardians must not be empty — the chest rooms need a keeper");
 
+  // ---- the non-combatants ---------------------------------------------------
+  // The errand cast: named one by one, because they are cast rather than horde.
+  // A hostile id here is the failure worth catching at build time — the mob
+  // would be cleaved in half mid-swing and the chain it carries would dead-end
+  // with nothing on screen to explain it.
+  for (const [i, who] of (bp.bystanders ?? []).entries()) {
+    const where = `bystanders[${i}]`;
+    enemy(who?.enemy, where);
+    if (
+      who?.enemy !== undefined &&
+      refs.neutrals !== undefined &&
+      refs.enemies.has(who.enemy) &&
+      !refs.neutrals.has(who.enemy)
+    )
+      err(
+        `${where}: "${who.enemy}" is not neutral — a bystander must carry \`disposition: neutral\``,
+      );
+  }
+
   if (bp.hellborn !== undefined) {
     ramp(bp.hellborn.ramp, "hellborn");
     if (!Array.isArray(bp.hellborn.members) || bp.hellborn.members.length === 0)

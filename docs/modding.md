@@ -67,12 +67,14 @@ module, since the shell compiled them, which is the one place a mod's content
 does not travel the same road as the game's: the shipped scores are each behind
 their own dynamic `import()` and stay there.
 
-### 3a. A mod's venue may be CARVED, not only drawn
+### 3a. A mod's venue is CARVED, like every other
 
-`maps/<id>.yaml` is the recipe half of a venue (see **GENERATED MAPS** in
-`AGENTS.md`): with the flag on, the mission's geometry is carved fresh from the
-run's own seed instead of loading its hand-drawn layout, so the boss has to be
-found. A mod ships one beside its level and gets the same treatment — the loader
+`maps/<id>.yaml` is the map half of a venue (see **GENERATED MAPS** in
+`AGENTS.md`): the mission's geometry is carved fresh from the run's own seed —
+the only way a venue gets a floor, for a mod exactly as for the shipped campaign
+— so the boss has to be found. A mod that ships a level therefore ships a
+blueprint beside it; a level on its own compiles, but no run can be built from
+it. The treatment is identical to the game's own — the loader
 (`scripts/map-data/load-yaml.mjs`) takes a directory like every other, the schema
 is `validateMap`, and the ramp names expand against the shipped `ladder.yaml`
 using the mod's own rows for its own venue.

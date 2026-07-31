@@ -41,8 +41,8 @@ comment on every field explaining why it is there.
 my-mod/
   mod.yaml                     the manifest — id, name, version, author, kind
   ladder.yaml                  where your levels sit on the difficulty ladder
-  levels/<id>.yaml             one venue each
-  maps/<id>.yaml               a venue's carve recipe — GENERATED MAPS
+  levels/<id>.yaml             one MISSION each — a venue minus its floor plan
+  maps/<id>.yaml               that venue's map, carved fresh every run
   enemies/<biome>/<id>.yaml    one monster each
   items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each

@@ -1,26 +1,32 @@
 ---
 name: map-improvement
-description: "Use when improving the DESIGN and FEEL of an existing level (not adding a new one) — the iterative render → evaluate → improve loop. It first CONFIRMS the map's intended feel with the user (the auto-generated YAML descriptions may be wrong!), rewrites the description to match, then reads the annotated map + played heatmap, judges it against that intent, edits the YAML, re-renders, and loops — presenting before/after maps for sign-off before shipping."
+description: "Use when improving the DESIGN and FEEL of an existing venue (not adding a new one) — the iterative render → evaluate → improve loop. It first CONFIRMS the venue's intended feel with the user (the YAML descriptions may be wrong!), rewrites the description to match, then reads a rendered CARVE + played heatmap, judges it against that intent, edits the venue's blueprint and mission, re-renders, and loops — presenting before/after maps for sign-off before shipping."
 ---
 
 # Improving a Map's Design
 
 The sibling of `art-improvement` (which hunts the worst art) — this one improves
-how a level *plays and feels*. A level is data (`scripts/levels/<id>.yaml`,
-compiled by `make levels`). Two renderers make it legible:
+how a venue *plays and feels*. A venue is two data files: the MISSION
+(`content/levels/<id>.yaml` — story, ladder rung, hazards, loot) and the
+BLUEPRINT its map is carved from per run (`content/maps/<id>.yaml`), both
+compiled by `make levels`. **There is no hand-drawn layout to edit**, so a
+geometry fix lands in the blueprint's areas, object palette and horde — and a
+render shows ONE run's carve, so judge across seeds and sizes rather than off a
+single picture. Two renderers make it legible:
 
 - **`map-layout.mjs` — the VISUAL OVERVIEW.** A clean, high-res, top-down
-  picture of the AUTHORED layout: a labelled coordinate grid for orientation
-  (world x/y you read straight off for editing), every wall + gap, the numbered
-  hero path, the zones, and every placed thing as a DISTINCT SHAPE (star=boss,
+  picture of one carve: a labelled coordinate grid for orientation
+  (world x/y), every wall + gap, the zones, and every placed thing as a
+  DISTINCT SHAPE (star=boss,
   diamond=elite, triangle=rare/unique, circle=spawn knot, cluster=pack,
   square=chest, …). Spawn points are **CON CIRCLES** — area ∝ mob count, colour
   = con (mob level vs the map's `intendedLevel` on the chosen difficulty:
   grey→green→yellow→orange→red), so an over/under-tuned difficulty ramp reads at
   a glance. It shows only what benefits from being SEEN; the numbers stay in the
   YAML. **Do BOTH before touching anything, every session:** read the level's
-  YAML AND `make map-layout LEVEL=<id>` and study the image — the picture gives
-  you the spatial/difficulty read, the YAML gives you the exact values.
+  two YAMLs AND `make map-layout LEVEL=<id>` (add `--seed N` / `--size large`
+  for other carves) and study the images — the pictures give you the
+  spatial/difficulty read, the YAMLs give you the exact values.
 - **`map-preview.mjs` — the ANALYSIS view.** The design view (trigger rings,
   authored mob-density smear, derived path, tempo strip) plus `--actual` (the
   real scattered layout) and `--heatmap` (how the map actually PLAYS — dwell,
@@ -39,10 +45,12 @@ demands it, a real fix — up to a **complete redesign** — is expected, and ev
 lever below is fair game. Reach for the sibling skill when you cross into its
 domain:
 
-- **Geometry** — move, add, remove, or reshape walls/ridges/gaps; re-cut the
-  basins; re-route or re-author the `path`; add/remove safe & quiet zones, chests,
-  merchant spawns, landmarks. Reshaping the *space* is the highest-leverage fix
-  for a traversal/pacing problem.
+- **Geometry** — the blueprint's AREAS and `layout`: what kinds of place the
+  venue is made of, how big a chamber is, how wide a doorway, how many loops,
+  how coherent a district, which enclosure seals what. Reshaping the *space* is
+  the highest-leverage fix for a traversal/pacing problem, and here it is done by
+  changing the RULES the carve follows — see `mapgen-improvement` when the fix
+  needs the generator itself to learn something new.
 - **Enemies** (`enemy-design`) — add or rework minions/elites/bosses: their **hp,
   contact damage, level ranges, mechanics/phases, and capabilities**. A map that
   is unbeatable or trivial is often an ENEMY problem, not a count problem.
@@ -63,17 +71,19 @@ polishing a broken frame.
 
 ## Step 0 — LOOK, then CONFIRM THE INTENT (do this first, always)
 
-**Read the YAML and render the overview before anything else — do both:** open
-`scripts/levels/<id>.yaml` for the exact values AND `make map-layout
-LEVEL=<id>` and study the image for the geometry, the path, where every spawn
-point/encounter sits, and the con read (the spawn circles' size + colour). Check
-the con across difficulties (`--difficulty hard`, etc.). This is how you build an
-accurate mental model of the map before you form an opinion about it. If a map
-has no `intendedLevel`, add it (the con anchor) as part of the pass.
+**Read both YAMLs and render the overview before anything else:** open
+`content/levels/<id>.yaml` (the mission) and `content/maps/<id>.yaml` (the
+blueprint its map is carved from) for the exact values, AND `make map-layout
+LEVEL=<id>` — plus a couple more seeds and a `--size large` — and study the
+images for the geometry, where every knot/encounter sits, and the con read (the
+spawn circles' size + colour). Check the con across difficulties
+(`--difficulty hard`, etc.). Judging a generator off ONE carve is how a session
+tunes for a seed instead of for a map. If a venue has no `intendedLevel` in
+`content/ladder.yaml`, add it (the con anchor) as part of the pass.
 
-**Then confirm the intent — the YAML `description` may not capture it.** The
-shipped descriptions were seeded from old code comments; they describe what the
-map *is*, not always what it should *feel* like. Do not tune toward a description
+**Then confirm the intent — the `description` may not capture it.** Both files
+carry one (the mission says what the venue IS, the blueprint says how its map
+should READ); they describe the place, not always what it should *feel* like. Do not tune toward a description
 you can't trust. Use `AskUserQuestion` to confirm the map's intended feel with the
 user:
 
@@ -95,9 +105,10 @@ the user confirms the existing description is right, say so and keep it.
 ## The loop
 
 1. **Render** the current state and LOOK:
-   - `node scripts/map-layout.mjs <id>` — the VISUAL OVERVIEW (grid,
-     walls + gaps, authored path, zones, and the CON CIRCLES: spawn size = count,
-     colour = con). The picture you keep open (with the YAML) while editing.
+   - `node scripts/map-layout.mjs <id>` — the VISUAL OVERVIEW of one carve
+     (grid, walls + gaps, zones, and the CON CIRCLES: spawn size = count,
+     colour = con). The picture you keep open (with the YAMLs) while editing;
+     re-render at two or three seeds before believing any of it.
    - `node scripts/map-preview.mjs <id>` — the design view (path,
      encounters, zones, walls, tempo, legend).
    - `node scripts/map-preview.mjs <id> --actual --seed 1` — the real

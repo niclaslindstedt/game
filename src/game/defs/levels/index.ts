@@ -10,7 +10,7 @@
 import { GENERATED_LEVELS } from "../../../generated/levels.ts";
 import type { GameState } from "../../types/index.ts";
 import { setLevelSummaries } from "./summary.ts";
-import type { LevelDef } from "./types.ts";
+import type { LevelDef, MissionDef } from "./types.ts";
 
 // The story/secret ORDER and the per-level name/`foes` summary live in the leaf
 // `summary.ts`, which reads the compiled index rather than the compiled maps —
@@ -26,6 +26,7 @@ export {
 
 export type {
   LevelDef,
+  MissionDef,
   PackMember,
   PackSpec,
   SpawnerMember,
@@ -37,8 +38,8 @@ export type {
 
 /** Merge the defs into one registry, failing loudly on a duplicate
  * id so a clash surfaces at module load, not as a silently shadowed level. */
-function mergeLevels(defs: LevelDef[]): Record<string, LevelDef> {
-  const merged: Record<string, LevelDef> = {};
+function mergeLevels(defs: MissionDef[]): Record<string, MissionDef> {
+  const merged: Record<string, MissionDef> = {};
   for (const def of defs) {
     if (def.id in merged) {
       throw new Error(`duplicate level id "${def.id}"`);
@@ -48,14 +49,14 @@ function mergeLevels(defs: LevelDef[]): Record<string, LevelDef> {
   return merged;
 }
 
-export const LEVELS: Record<string, LevelDef> = mergeLevels(GENERATED_LEVELS);
+export const LEVELS: Record<string, MissionDef> = mergeLevels(GENERATED_LEVELS);
 
 // Active registry the accessor reads (defaults to the shipped catalog;
 // tests swap in fixtures via `registerDefs`). See src/index.ts.
-let activeLevels: Record<string, LevelDef> = LEVELS;
+let activeLevels: Record<string, MissionDef> = LEVELS;
 
 /** Test/authoring hook: replace the active level catalog. */
-export function setLevelDefs(defs: Record<string, LevelDef>): void {
+export function setLevelDefs(defs: Record<string, MissionDef>): void {
   activeLevels = defs;
   // Keep the menu-facing summaries in step, so a fixture catalog answers for
   // itself on both sides of the split (see summary.ts).
@@ -69,31 +70,47 @@ export function setLevelDefs(defs: Record<string, LevelDef>): void {
   );
 }
 
-/** Look up a level def; throws on a broken id so bugs surface loudly. */
-export function levelDef(levelId: string): LevelDef {
+/** Look up a MISSION — the authored half, with no geometry on it. Throws on a
+ * broken id so bugs surface loudly. */
+export function levelDef(levelId: string): MissionDef {
   const def = activeLevels[levelId];
   if (!def) throw new Error(`unknown level "${levelId}"`);
   return def;
 }
 
 /**
+ * A mission that carries its own geometry, read as the level it already is.
+ *
+ * There is exactly one such thing: a synthetic catalog installed through
+ * `registerDefs` (the engine test fixtures, a mod that hand-draws a venue),
+ * which ships no blueprint to carve from. Every mission the game itself ships
+ * is carved, so this is the narrow door rather than the main one — and it
+ * throws rather than defaulting, because a level with no floor and no spawn is
+ * a run that starts in the void.
+ */
+export function handAuthoredLevel(def: MissionDef): LevelDef {
+  if (def.width === undefined || def.height === undefined || !def.playerSpawn)
+    throw new Error(
+      `level "${def.id}" has no map: a mission ships its geometry as a blueprint ` +
+        `(content/maps/${def.id}.yaml), and only a hand-authored fixture may carry its own`,
+    );
+  return def as LevelDef;
+}
+
+/**
  * THE DEF THE RUN IS ACTUALLY BEING PLAYED ON — the one every in-run read must
  * ask, in place of `levelDef(state.level.id)`.
  *
- * The two answer differently exactly when GENERATED MAPS is on: `createGame`
- * carved this run's map from the mission's blueprint (`mapgen/`), and the
- * catalog still holds the HAND-AUTHORED one. A run keeps asking the level
- * questions long after creation — where does the path go, which zones are
- * quiet, whose lair is this door, where is the exit, does this map stream waves
- * — and a catalog answer to any of them is another map's geometry: doorways
- * that suppress spawns on open ground, a guidance arrow to a landmark that was
- * never carved, lair doors that never open because the authored map has none.
- * So the rule is flat: **inside a run, nothing reads the catalog for its own
- * level.** An ordinary run is unaffected — the carve is absent and the catalog
- * def IS the run's def.
+ * The two answer differently on every run there is: `createGame` carved this
+ * run's map from the mission's blueprint (`mapgen/`), and the catalog holds
+ * only the mission — no walls, no knots, no props, and nowhere to stand. A run
+ * keeps asking the level questions long after creation — which zones are quiet,
+ * whose lair is this door, where is the exit, what is scattered here — and the
+ * catalog cannot answer any of them. So the rule is flat: **inside a run,
+ * nothing reads the catalog for its own level.**
  */
 export function runLevelDef(state: GameState): LevelDef {
-  return state.carvedLevel ?? levelDef(state.level.id);
+  return state.carvedLevel ?? handAuthoredLevel(levelDef(state.level.id));
 }
 
 /**
@@ -131,7 +148,7 @@ export function levelPosition(levelId: string): {
  * Reads the active registry, so tests that install fixture catalogs get
  * fixture answers.
  */
-export function levelsBefore(levelId: string): LevelDef[] {
+export function levelsBefore(levelId: string): MissionDef[] {
   const target = levelDef(levelId);
   return Object.values(activeLevels)
     .filter((def) => def.index < target.index)

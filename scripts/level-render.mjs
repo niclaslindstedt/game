@@ -17,19 +17,18 @@
 //                       rather than only what is minted at creation
 //     [--bare]          no labels and no title strip — a pure art view
 //     [--all]           render every level
-//     [--generated]     render the mission as GENERATED MAPS carves it (see
-//                       src/game/mapgen) instead of as it is hand-authored
-//     [--size N]        small|medium|large — the generated carve's scale
+//     [--size N]        small|medium|large — the carve's scale (see
+//                       src/game/mapgen; a mission has no map of its own)
 //     [--mod <dir>]     compile that MOD and render its venues too, drawn with
 //                       its own sprites (repeatable, load order — see
 //                       scripts/mod-support.mjs and mod/AGENTS.md)
 //
-// Output → pwa/assets-preview/level_<id>.png (or level_<id>_generated.png). This
-// is the measuring instrument for an art pass — render, look, fix the sprites,
-// render again — and, with --generated --dormant, for a MAP-BLUEPRINT pass: the
-// only honest way to judge whether a carved chamber grid reads as a place worth
-// searching is to look at it drawn with the real sprites and the real horde
-// standing in it.
+// Output → pwa/assets-preview/level_<id>.png. This is the measuring instrument
+// for an art pass — render, look, fix the sprites, render again — and, with
+// --dormant, for a MAP-BLUEPRINT pass: the only honest way to judge whether a
+// carved chamber grid reads as a place worth searching is to look at it drawn
+// with the real sprites and the real horde standing in it. Every render is of a
+// CARVE, so `--seed` and `--size` are the two knobs that decide which one.
 
 import { register } from "node:module";
 import { mkdirSync } from "node:fs";
@@ -354,14 +353,14 @@ export function renderLevel(def, opts) {
   // stamped-on caption would be a caption nobody asked for on a public page.)
   if (!opts.bare) {
     const title = renderText(
-      `${def.name}  ${def.id}${opts.generated ? `  GENERATED ${opts.size}` : ""}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
+      `${def.name}  ${def.id}  ${opts.size}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
       [235, 235, 240, 255],
     );
     fillRect(surf, 0, 0, title.width + 6, title.height + 6, [0, 0, 0, 200]);
     blit(surf, title, 3, 3);
   }
 
-  const out = `${previewDir}/level_${def.id}${opts.generated ? "_generated" : ""}.png`;
+  const out = `${previewDir}/level_${def.id}.png`;
   return { state, surf, out, counts };
 }
 
@@ -374,7 +373,6 @@ function parseArgs(argv) {
     all: false,
     bare: false,
     dormant: false,
-    generated: false,
     size: "medium",
   };
   const rest = [];
@@ -383,7 +381,6 @@ function parseArgs(argv) {
     if (a === "--all") opts.all = true;
     else if (a === "--bare") opts.bare = true;
     else if (a === "--dormant") opts.dormant = true;
-    else if (a === "--generated") opts.generated = true;
     else if (a === "--size") opts.size = argv[++i];
     else if (a === "--seed") opts.seed = Number(argv[++i]);
     else if (a === "--difficulty") opts.difficulty = argv[++i];
@@ -413,18 +410,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
 
-  // --generated swaps the hand-authored def for a grid carved from the mission's
-  // blueprint. `createGame` inside renderLevel carves the same one (same id, same
-  // seed, same size), because the engine flag makes the swap at level build — so
-  // the picture and the run agree.
-  if (opts.generated) {
-    const { setGeneratedMapsEnabled, setGeneratedMapSize } = await import(
-      engine("src/game/flags.ts")
-    );
+  // THE MAP IS CARVED, always: a mission authors no geometry, so the def to draw
+  // is the one `createGame` would build — same id, same seed, same size — and the
+  // engine flag is set to that size so the run inside `renderLevel` carves the
+  // very same map. Picture and run agree by construction.
+  {
+    const { setGeneratedMapSize } = await import(engine("src/game/flags.ts"));
     const { resolveLevelDef, hasMapBlueprint } = await import(
       engine("src/game/mapgen/index.ts")
     );
-    setGeneratedMapsEnabled(true);
     setGeneratedMapSize(opts.size);
     for (const entry of targets) {
       if (!hasMapBlueprint(entry.def.id)) {

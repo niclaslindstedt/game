@@ -55,7 +55,7 @@ node scripts/simulate-run.mjs --class all --jobs 1       # …one spec at a time
 node scripts/simulate-run.mjs --class magic --difficulty jesus --start-level 50  # a magic endgame arrival
 node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
 node scripts/simulate-run.mjs --balance xpGain=0.8,mobHp=1.5 --verdict   # probe a candidate tuning
-node scripts/simulate-run.mjs --generated --map-size large  # GENERATED MAPS: carve every mission per run
+node scripts/simulate-run.mjs --map-size large  # every map is carved; this picks the SCALE
 node scripts/simulate-run.mjs --compare baseline.json    # A/B diff vs an earlier --json dump
 node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 ```
@@ -237,24 +237,24 @@ dies everywhere and tells you nothing about the map. Keep the immortal
 default for calibration sweeps: mortal restarts reset in-level progress, so
 pacing/loot reads come from the immortal instrument.
 
-### Generated maps — `--generated`, `--map-size`
+### Map size — `--map-size`
 
-`--generated` runs the sweep on CARVED maps (the DEVELOPER → GENERATED MAPS
-feature — see `AGENTS.md` § GENERATED MAPS), `--map-size small|medium|large|random`
-picks the carve size (default `medium`). The flag is latched around each run
-inside the engine and restored after, so one process can measure both kinds of
-map; a mission with no blueprint plays its authored layout either way.
+Every mission's map is CARVED from its blueprint per run (see `AGENTS.md`
+§ GENERATED MAPS), so the only choice left is the SCALE:
+`--map-size small|medium|large|random` (default `medium`, the shipped one). It is
+latched around each run inside the engine and restored after, so one process can
+measure several sizes.
 
-The point is the A/B — the same sweep twice, once each way:
+The point is the A/B — the same sweep at two sizes:
 
 ```sh
-node scripts/simulate-run.mjs --difficulty all --level all --json authored.json
-node scripts/simulate-run.mjs --difficulty all --level all --generated --json generated.json
-node scripts/simulate-run.mjs --difficulty all --level all --generated --compare authored.json
+node scripts/simulate-run.mjs --difficulty all --level all --json medium.json
+node scripts/simulate-run.mjs --difficulty all --level all --map-size large --json large.json
+node scripts/simulate-run.mjs --difficulty all --level all --map-size large --compare medium.json
 ```
 
-Two things to know before reading the diff. A carved map is **bigger** than the
-map it was carved from (a medium moon is 8.6M px² against the authored 3.8M), so
+Two things to know before reading the diff. A LARGE map is far bigger than a
+medium one (a medium moon is 8.6M px²), so
 per-run TOTALS are not comparable — read the rates (`k/min`, `dpsOut`,
 damage-per-hit) and the per-Mpx² densities instead. And the autopilot has no
 `path` to follow on a carved map (that is the feature: no guidance arrow), so it

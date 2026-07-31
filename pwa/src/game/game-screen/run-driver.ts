@@ -36,7 +36,6 @@ import {
   error,
   freezeRun,
   generatedMapSizeSetting,
-  isGeneratedMapsEnabled,
   step,
   type GameInput,
   type GameState,
@@ -189,7 +188,6 @@ function wireParams(params: RunParams): SessionParams {
     clearedLevels: [...(params.clearedLevels ?? [])],
     merchantDiscovered: params.merchantDiscovered ?? false,
     seenThoughts: [...(params.seenThoughts ?? [])],
-    generatedMaps: isGeneratedMapsEnabled(),
     generatedMapSize: generatedMapSizeSetting(),
   };
 }
@@ -212,7 +210,6 @@ function adoptedParams(state: GameState): SessionParams {
     respec: false,
     clearedLevels: [],
     merchantDiscovered: false,
-    generatedMaps: isGeneratedMapsEnabled(),
     generatedMapSize: generatedMapSizeSetting(),
   };
 }

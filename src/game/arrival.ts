@@ -31,7 +31,12 @@ import {
   STAT_NAMES,
   weaponDef,
 } from "./defs/equipment.ts";
-import { levelsBefore, type LevelDef } from "./defs/levels/index.ts";
+import {
+  levelsBefore,
+  type LevelDef,
+  type MissionDef,
+} from "./defs/levels/index.ts";
+import { resolveLevelDef } from "./mapgen/index.ts";
 import {
   ARMOR_SLOTS,
   inventoryCapacity,
@@ -340,6 +345,24 @@ export function applyLoadout(
   }
 }
 
+/**
+ * The seed and size the derivation carves a cleared mission at.
+ *
+ * A mission has no roster of its own any more — the horde is knots on a carved
+ * grid — so the estimate has to look at a map, and the ONE requirement is that
+ * it always looks at the same one: `deriveArrivalLoadout` is documented as
+ * deterministic per (levelId, difficulty), and rolling the run's own seed in
+ * here would make a dev warp's starting build depend on which map the player
+ * happened to get. A fixed seed at the shipped size is a representative carve
+ * of that mission, and it is the same one every time.
+ */
+const ROSTER_SEED = 1;
+
+/** A cleared mission's map, carved for the roster estimate above. */
+function rosterCarve(def: MissionDef): LevelDef {
+  return resolveLevelDef(def.id, ROSTER_SEED, "medium");
+}
+
 /** The XP a full clear of `def`'s roster pays at this difficulty: every
  * placed spawn and wave-budget mob (base counts — the derivation is a story
  * baseline, not a difficulty simulation), with difficulty-gated lines the
@@ -375,7 +398,7 @@ function rosterXp(def: LevelDef, difficulty: Difficulty): number {
 /** The weapon a clear of `def` is assumed to leave in hand: its scripted
  * early-drop weapon (the run's signature blade), else its all-clear trophy,
  * else the hardest-hitting entry of its random pool. */
-function signatureWeapon(def: LevelDef): string | undefined {
+function signatureWeapon(def: MissionDef): string | undefined {
   for (const drop of def.loot.earlyDrops ?? []) {
     if ("weapon" in drop) return drop.weapon;
   }
@@ -388,7 +411,7 @@ function signatureWeapon(def: LevelDef): string | undefined {
 /** The best piece of `def`'s gear pool worn in `slot` — highest armor for a
  * body slot (a cleared level is assumed to have yielded its best wardrobe),
  * first entry otherwise (charms). Undefined when the pool has none. */
-function issueGear(def: LevelDef, slot: string): string | undefined {
+function issueGear(def: MissionDef, slot: string): string | undefined {
   const fits = def.loot.gearPool.filter((id) => gearDef(id).slot === slot);
   if (fits.length === 0) return undefined;
   return fits.reduce((best, id) =>
@@ -439,7 +462,7 @@ export function deriveArrivalLoadout(
 ): Loadout | null {
   // The campaign so far is one level per story index (variants sharing an
   // index — fixture catalogs do this — count once, first registered wins).
-  const byIndex = new Map<number, LevelDef>();
+  const byIndex = new Map<number, MissionDef>();
   for (const def of levelsBefore(levelId)) {
     if (!byIndex.has(def.index)) byIndex.set(def.index, def);
   }
@@ -448,8 +471,10 @@ export function deriveArrivalLoadout(
 
   // The derived level: the cleared rosters' XP through the real curve.
   let xp = Math.round(
-    cleared.reduce((sum, def) => sum + rosterXp(def, difficulty), 0) *
-      ARRIVAL.clearShare,
+    cleared.reduce(
+      (sum, def) => sum + rosterXp(rosterCarve(def), difficulty),
+      0,
+    ) * ARRIVAL.clearShare,
   );
   let level = 1;
   let points = 0;
@@ -475,7 +500,7 @@ export function deriveArrivalLoadout(
 
   // The previous level's parting kit; with no pool to draw from, fall back
   // to the difficulty's own starting weapon (the piece off the wall).
-  const previous = cleared[cleared.length - 1] as LevelDef;
+  const previous = cleared[cleared.length - 1] as MissionDef;
   const weaponId =
     signatureWeapon(previous) ?? difficultyDef(difficulty).startingWeapon;
   const trinketId = issueGear(previous, "trinket");

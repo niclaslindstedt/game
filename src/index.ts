@@ -26,13 +26,11 @@ export { createGame } from "./game/create.ts";
 // content tests; never by the app's startup path, which reaches levels through
 // `defs/levels/summary.ts` and must not pull the generator's bytes.
 // The engine's runtime toggles. Most reach the app through `@game/menu`; the
-// generated-maps pair is re-exported here too so a simulation-side caller (the
-// map tooling, the content guard) need not import the menu entry point to flip a
+// map-size pair is re-exported here too so a simulation-side caller (the map
+// tooling, the content guard) need not import the menu entry point to set a
 // flag that gates the simulation.
 export {
-  isGeneratedMapsEnabled,
   setGeneratedMapSize,
-  setGeneratedMapsEnabled,
   generatedMapSizeSetting,
   type GeneratedMapSizeSetting,
 } from "./game/flags.ts";
@@ -856,6 +854,7 @@ export {
   levelsBefore,
   runLevelDef,
   type LevelDef,
+  type MissionDef,
   type PackMember,
   type PackSpec,
   type SpawnerMember,

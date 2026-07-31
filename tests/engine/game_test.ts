@@ -105,7 +105,7 @@ describe("createGame", () => {
     const state = createGame(SEED, "test_level");
     const minions = state.enemies.filter((e) => isMinion(e.defId));
     const bosses = state.enemies.filter((e) => isBoss(e.defId));
-    const expectedMinions = MOON.spawns
+    const expectedMinions = (MOON.spawns ?? [])
       .filter((s) => "band" in s)
       .reduce((sum, s) => sum + ("count" in s ? s.count : 0), 0);
     expect(minions).toHaveLength(expectedMinions);

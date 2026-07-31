@@ -46,12 +46,12 @@ spreadsheet, so **the render is the unit of judgement, not the JSON.**
 2. **Render, with the real sprites and the real horde standing in it:**
 
    ```sh
-   node scripts/level-render.mjs <id> --generated --size large --seed 3 --dormant
+   node scripts/level-render.mjs <id> --size large --seed 3 --dormant
    ```
 
    `--dormant` draws the mobs each spawn point still has queued — without it you
    are looking at an empty map and calling it a level. The schematic view is
-   `node scripts/map-layout.mjs <id> --generated` (con colours, zones, labels).
+   `node scripts/map-layout.mjs <id> --seed 3` (con colours, zones, labels).
 3. **LOOK at it — which means CROP it.** The output is up to 10400×8000, and a
    whole-map thumbnail hides every defect this skill exists to catch (tiling in a
    ground tile, a rank that seals a room, a stub of wall). Always take a 1:1 crop

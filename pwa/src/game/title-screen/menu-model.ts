@@ -485,7 +485,6 @@ type OnOffKey =
   | "debug"
   | "autoLevelStats"
   | "storeForce"
-  | "generatedMaps"
   | "vibration"
   | "muted"
   | "xpFloat"

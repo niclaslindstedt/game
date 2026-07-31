@@ -15,6 +15,8 @@ import {
   enemyDef,
   LEVEL_ORDER,
   LEVELS,
+  MAP_BLUEPRINTS,
+  resolveLevelDef,
   OBSTACLES,
   step,
   THOUGHT_DEFS,
@@ -33,6 +35,9 @@ import {
 } from "../helpers.ts";
 
 const RIFT = LEVELS.the_rift!;
+const BLUEPRINT = MAP_BLUEPRINTS.the_rift!;
+/** One representative void — the road a run of the rift actually builds. */
+const carved = resolveLevelDef("the_rift", SEED, "medium");
 
 describe("THE RIFT level def", () => {
   it("is story level 4, after Mars", () => {
@@ -47,16 +52,15 @@ describe("THE RIFT level def", () => {
     expect(RIFT.wells!.length).toBeGreaterThanOrEqual(5);
     expect(RIFT.asteroids).toBeDefined();
     const state = startGame(SEED, "the_rift");
+    // Every authored hole is on the field — the carve re-anchors each into a
+    // room of its own, keeping its authored pull geometry.
     expect(state.wells).toHaveLength(RIFT.wells!.length);
     // The first rock is already owed a rolled interval.
     expect(state.asteroidTimerMs).toBeGreaterThan(0);
   });
 
   it("fields the void's fauna as the horde", () => {
-    const minionIds = RIFT.spawns
-      .filter((s) => "band" in s)
-      .map((s) => s.enemy)
-      .sort();
+    const minionIds = BLUEPRINT.horde.members.map((m) => m.enemy).sort();
     expect(minionIds).toEqual([
       "graviton",
       "star_jelly",
@@ -66,7 +70,7 @@ describe("THE RIFT level def", () => {
   });
 
   it("pins history's missing along the road: four fights, two apparitions", () => {
-    const placed = RIFT.spawns
+    const placed = carved.spawns
       .filter((s) => "at" in s)
       .map((s) => enemyDef(s.enemy));
     const fighters = placed
@@ -87,7 +91,7 @@ describe("THE RIFT level def", () => {
   });
 
   it("stages the double finale: BRO OMEGA and a fleeing THE FOUNDER", () => {
-    const bosses = RIFT.spawns
+    const bosses = carved.spawns
       .filter((s) => "at" in s && enemyDef(s.enemy).role === "boss")
       .map((s) => s.enemy)
       .sort();
@@ -170,15 +174,21 @@ describe("THE RIFT level def", () => {
     expect(state.thoughtsSeen).toContain("rift_asteroid");
   });
 
-  it("parks the TRUST ME BRO probe — the reveal's paper trail — inside a well's pull", () => {
+  it("carries the TRUST ME BRO probe — the reveal's paper trail — on the road", () => {
+    // The mission says the probe is out here; the carve strings it along its
+    // own depth axis with the rest of Ada's trail, so WHERE it turns up is the
+    // run's answer and this only asks that it is somewhere findable.
     const probe = RIFT.placedItems!.find(
       (p) => p.kind === "story" && p.defId === "bro_probe",
     );
     expect(probe).toBeDefined();
-    const nearWell = RIFT.wells!.some(
-      (w) => Math.hypot(w.pos.x - probe!.pos.x, w.pos.y - probe!.pos.y) < 130,
-    );
-    expect(nearWell).toBe(true);
+    const dropped = carved.placedItems!.find(
+      (p) => p.kind === "story" && p.defId === "bro_probe",
+    )!;
+    expect(dropped.pos.x).toBeGreaterThan(0);
+    expect(dropped.pos.x).toBeLessThan(carved.width);
+    expect(dropped.pos.y).toBeGreaterThan(0);
+    expect(dropped.pos.y).toBeLessThan(carved.height);
   });
 
   it("keeps every hop viable: jumpable obstacles clear under rift gravity", () => {

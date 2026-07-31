@@ -72,31 +72,34 @@ hp curves, or the stamina ladders. Those are the game's economy — `savage` mea
 the same thing on your map as it does on Mars, which is what lets a player read
 your level's difficulty without learning your private scale.
 
-## `levels/<id>.yaml` — a venue
+## `levels/<id>.yaml` — a MISSION (a venue minus its floor)
 
 The file stem must equal the level's `id`. Required fields: `id`, `index`,
-`name`, `foes`, `width`, `height`, `gravity`, `biome`, `tiles`, `intro`,
-`playerSpawn`, `objective`, `obstacles`, `decor`, `decorClearance`, `spawns`,
-`loot`, and exactly one of `campaign: true` / `secret: true`.
+`name`, `foes`, `gravity`, `biome`, `tiles`, `intro`, `objective`,
+`decorClearance`, `loot`, and exactly one of `campaign: true` / `secret: true`.
 
-Two authoring keys are **not** yours to set: `mobLevels` and `intendedLevel`
-come from `ladder.yaml`, and a level that states them is an error.
+**A mission is not a map.** Where the walls run, what stands on the floor, where
+the horde knots and where the boss is are carved fresh every run from
+`maps/<id>.yaml` (below) — so a mission that authors `width`, `playerSpawn`,
+`spawns`, `walls`, `obstacles`, `decor`, `chests`, zones, a `path` or any other
+coordinate is a **compile error**, and the message names the field that replaces
+it. What a mission owns is everything a venue is APART from its floor: its story,
+its ladder rung, its hazards, its merchant, its loot pools, its thought pins.
 
-A spawn point names a **ramp** (`meek`, `bold`, `fierce`, `savage`, `brutal`,
-`monstrous`, `endgame`, `apex`) rather than per-difficulty numbers — the ramp is
-expanded against your ladder rows at compile time. So a level reads as intent,
-and every difficulty number comes from one file.
+Two authoring keys are **not** yours to set either: `mobLevels` and
+`intendedLevel` come from `ladder.yaml`, and a level that states them is an
+error.
 
 Full reference: [`../content/levels/moon.yaml`](../content/levels/moon.yaml) is
-a complete, heavily commented venue.
+a complete, heavily commented mission.
 
-## `maps/<id>.yaml` — carving a venue fresh every run
+## `maps/<id>.yaml` — the venue's map, carved fresh every run
 
-Optional, and the only file here that changes how a level is _played_ rather
-than what is in it. With **GENERATED MAPS** on, a venue that ships a blueprint is
-**carved from the run's own seed** instead of loading its hand-drawn layout — so
-the boss has to be **found**. No guidance arrow is emitted; the fog-of-war
-minimap is the only record of where the player has been.
+**Required for a venue anybody can play.** A level with no blueprint compiles,
+but nothing can build a run from it — the map IS this file. It is
+**carved from the run's own seed**, so the boss has to be **found**: no guidance
+arrow is emitted, and the fog-of-war minimap is the only record of where the
+player has been.
 
 The file stem, the `id` and the `level` are all the same word: **a blueprint
 carves the mission it is named after.** An addon may only name one of its own
@@ -112,11 +115,17 @@ levels — re-carving a shipped venue is a `kind: conversion`'s business.
 | `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, …)      |
 | `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                           |
 | `elites` / `guardians` | the set pieces the carve places for you                                                                    |
+| `bystanders`           | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in               |
 | `boss`                 | who, and the candidate **compass regions** one is rolled from per run                                      |
 
 Everything else about the mission — its name, its story, its intro, its loot
 pools, its music, its merchant — is **inherited from the level it names**, so a
 venue is still described in exactly one place.
+
+A set piece and a knot name a **ramp** (`meek`, `bold`, `fierce`, `savage`,
+`brutal`, `monstrous`, `endgame`, `apex`) rather than per-difficulty numbers —
+the ramp is expanded against your ladder rows at compile time. So a map reads as
+intent, and every difficulty number comes from one file.
 
 Three rules to author by:
 

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// GENERATED MAPS (see src/game/mapgen/): the guard on the map generator.
+// THE MAP GENERATOR (see src/game/mapgen/): the guard on every map the game
+// ships. There is no other kind — a mission authors no geometry at all, so what
+// this suite checks is not an alternative mode, it is the campaign.
 //
 // A carved map is only ever seen once, by one player, on one seed — nobody
 // reviews it before it ships and no screenshot proves the next one is fine. So
@@ -44,7 +46,6 @@ import {
   runLevelDef,
   SECRET_LEVEL_ORDER,
   setGeneratedMapSize,
-  setGeneratedMapsEnabled,
   skipCutscene,
   step,
   zoneContains,
@@ -73,10 +74,9 @@ const SEEDS = [1, 2, 3, 5, 8, 13, 21, 34];
 const WALK_SEEDS = [1, 3, 8, 21];
 const MISSIONS = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
 
-// The flag gates the simulation, so any test that turns it on must put it back —
-// vitest shares a module graph across the files in a worker.
+// The SIZE is a process-global flag, so any test that names one must put it
+// back — vitest shares a module graph across the files in a worker.
 afterAll(() => {
-  setGeneratedMapsEnabled(false);
   setGeneratedMapSize("medium");
 });
 
@@ -140,7 +140,9 @@ describe("generated levels", () => {
       for (const size of SIZES)
         for (const seed of SEEDS) {
           const def = resolveLevelDef(id, seed, size);
-          const res = validateLevel(def, refs, "generated") as {
+          const res = validateLevel(def, refs, "generated", {
+            carved: true,
+          }) as {
             errors: string[];
           };
           for (const e of res.errors)
@@ -153,11 +155,10 @@ describe("generated levels", () => {
     const unreachable: string[] = [];
     for (const id of MISSIONS)
       for (const size of SIZES) {
-        // The grid has to come from a run of THE SAME map. `createGame` resolves
-        // its own level through the flag, so the flag has to be told which size
-        // to carve — building the grid from a default run and pathing a
+        // The grid has to come from a run of THE SAME map. `createGame` carves
+        // its own level at whatever size the flag names, so the flag has to be
+        // told which one — building the grid from a default run and pathing a
         // different def's coordinates through it silently checks nothing.
-        setGeneratedMapsEnabled(true);
         setGeneratedMapSize(size);
         for (const seed of WALK_SEEDS) {
           const def = resolveLevelDef(id, seed, size);
@@ -207,7 +208,7 @@ describe("generated levels", () => {
               unreachable.push(`${id}/${size}/${seed}: ${what}`);
         }
       }
-    setGeneratedMapsEnabled(false);
+    setGeneratedMapSize("medium");
     expect(unreachable.slice(0, 8)).toEqual([]);
   }, 120_000);
 
@@ -304,24 +305,17 @@ describe("generated levels", () => {
   });
 });
 
-describe("the generated-maps flag", () => {
-  it("is off by default, so a run plays the hand-authored map", () => {
-    // `resolveLevelDef` with no size override reads the flag; the engine default
-    // must be the shipped campaign, or turning the developer menu on becomes a
-    // prerequisite for playing the game as designed.
+describe("the map size", () => {
+  it("carves every run, with no authored map to fall back to", () => {
+    // The mission in the catalog has no geometry on it at all, so a carve is
+    // not an alternative to it — it is the only thing a run can be built from.
     const id = LEVEL_ORDER[0] as string;
-    expect(resolveLevelDef(id, 3)).toBe(levelDef(id));
-  });
-
-  it("swaps in a carved map while it is on, and back off again", () => {
-    const id = LEVEL_ORDER[0] as string;
-    try {
-      setGeneratedMapsEnabled(true);
-      expect(resolveLevelDef(id, 3)).not.toBe(levelDef(id));
-    } finally {
-      setGeneratedMapsEnabled(false);
-    }
-    expect(resolveLevelDef(id, 3)).toBe(levelDef(id));
+    const def = resolveLevelDef(id, 3);
+    expect(def).not.toBe(levelDef(id));
+    expect(def.width).toBeGreaterThan(0);
+    expect(levelDef(id).width).toBeUndefined();
+    // …and two runs of the same seed carve the same map.
+    expect(resolveLevelDef(id, 3).playerSpawn).toEqual(def.playerSpawn);
   });
 
   it("rolls a size per seed when asked to, and honours a named one", () => {
@@ -345,13 +339,8 @@ describe("a run on a generated map", () => {
   // opened, and the bunker streamed the authored wave budget the carve had
   // deliberately dropped. `runLevelDef` is the one answer; these hold it to it.
   const carved = (levelId: string, difficulty: Difficulty = "medium") => {
-    setGeneratedMapsEnabled(true);
     setGeneratedMapSize("medium");
-    try {
-      return createGame(7, levelId, difficulty);
-    } finally {
-      setGeneratedMapsEnabled(false);
-    }
+    return createGame(7, levelId, difficulty);
   };
 
   /** Tap past whatever is holding the run — the prelude, or the arrival speech
@@ -381,10 +370,9 @@ describe("a run on a generated map", () => {
       // The def the world was actually built from, not merely "a" carve.
       expect(def.playerSpawn).toEqual(state.playerSpawn);
       expect(def.width).toBe(state.level.width);
+      // …and it travels WITH the run, because the catalog cannot answer at all.
+      expect(state.carvedLevel).toBe(def);
     }
-    // An ordinary run is untouched — the catalog def IS its def.
-    const plain = createGame(7, LEVEL_ORDER[0] as string, "medium");
-    expect(runLevelDef(plain)).toBe(levelDef(LEVEL_ORDER[0] as string));
   });
 
   it("shows no guidance arrow, because there is nothing to point at", () => {
@@ -393,14 +381,14 @@ describe("a run on a generated map", () => {
     for (const id of MISSIONS) expect(nextPathWaypoint(carved(id))).toBeNull();
   });
 
-  it("uses its own knots instead of the authored wave stream", () => {
-    // The bunker is the one mission authored around an endless `waves` budget.
-    // The carve drops it — its cell knots ARE its horde — and a run that read
-    // the catalog got both: a finite map with a bottomless bog on top.
-    const state = carved("the_bunker");
-    expect(levelDef("the_bunker").waves).toBeDefined();
-    expect(runLevelDef(state).waves).toBeUndefined();
-    expect(state.spawners.length).toBeGreaterThan(0);
+  it("uses its own knots, and no endless wave stream", () => {
+    // A carve's cell knots ARE its horde: a finite map the hero can clear as he
+    // searches it, rather than a bottomless bog streamed at him from off screen.
+    for (const id of MISSIONS) {
+      const state = carved(id);
+      expect(runLevelDef(state).waves).toBeUndefined();
+      expect(state.spawners.length).toBeGreaterThan(0);
+    }
   });
 
   it("opens every lair onto its own occupant", () => {
@@ -444,7 +432,7 @@ describe("the story on a generated map", () => {
       ...(def.spawners ?? []).flatMap((s) => s.members.map((m) => m.enemy)),
     ]);
 
-  it("keeps every speaking elite and boss the authored map casts", () => {
+  it("keeps every speaking elite and boss its blueprint casts", () => {
     const speaks = (id: string) => {
       const def = ENEMY_DEFS[id];
       return (
@@ -452,7 +440,13 @@ describe("the story on a generated map", () => {
       );
     };
     for (const id of MISSIONS) {
-      const authored = [...castOf(levelDef(id))].filter(speaks);
+      const bp = MAP_BLUEPRINTS[id]!;
+      const authored = [
+        ...bp.elites.map((e) => e.enemy),
+        ...bp.guardians.map((g) => g.enemy),
+        ...(bp.bystanders ?? []).map((b) => b.enemy),
+        ...(bp.boss ? [bp.boss.enemy] : []),
+      ].filter(speaks);
       for (const size of SIZES)
         for (const seed of WALK_SEEDS) {
           const cast = castOf(resolveLevelDef(id, seed, size));
@@ -549,14 +543,8 @@ describe("the generated horde", () => {
   it("stands a spawn point in the map on every rung", () => {
     for (const id of MISSIONS)
       for (const difficulty of DIFFICULTY_ORDER) {
-        setGeneratedMapsEnabled(true);
         setGeneratedMapSize("medium");
-        let state;
-        try {
-          state = createGame(7, id, difficulty);
-        } finally {
-          setGeneratedMapsEnabled(false);
-        }
+        const state = createGame(7, id, difficulty);
         const knots = state.spawners.filter((s) => !(s.openStage ?? 0));
         const gates = state.spawners.filter((s) => (s.openStage ?? 0) > 0);
         expect(

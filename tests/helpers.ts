@@ -7,7 +7,7 @@ import {
   dismissIntro,
   enemyDef,
   getBalanceTuning,
-  levelDef,
+  runLevelDef,
   skipCutscene,
   step,
 } from "@game/core";
@@ -85,7 +85,7 @@ export function stopWaves(state: GameState): void {
   // arming and emitting, so a surgically staged field stays as the test arranged
   // it (a `spawners` level is the wave-model's counterpart).
   state.spawners = [];
-  const waves = levelDef(state.level.id).waves;
+  const waves = runLevelDef(state).waves;
   if (!waves) return;
   waves.budget.forEach((entry, i) => {
     state.waveSpawned[i] = entry.count;

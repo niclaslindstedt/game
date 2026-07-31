@@ -56,6 +56,14 @@ const { ramps } = loadLadder();
 
 const refs = {
   enemies: new Set(Object.keys(ENEMY_DEFS)),
+  // A BYSTANDER must actually be a bystander: a mob the blueprint stands on the
+  // map as an errand's non-combatant, but which fights back, is a quest that
+  // dead-ends the first time the hero swings near it.
+  neutrals: new Set(
+    Object.entries(ENEMY_DEFS)
+      .filter(([, d]) => d.disposition === "neutral")
+      .map(([id]) => id),
+  ),
   levels: new Set(GENERATED_LEVELS.map((l) => l.id)),
   sprites,
   ramps: new Set(Object.keys(ramps)),

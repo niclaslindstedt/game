@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 6;
+export const PROTOCOL_VERSION = 7;
 
 /**
  * The most clients one session seats, host included.
@@ -142,10 +142,9 @@ export type SessionParams = {
   openingSkip?: string;
   /** Mute the in-world dialogue — a bot run has nobody to tap through it. */
   muteDialogue?: boolean;
-  /** GENERATED MAPS: the carve is on, and at which size. Both are engine
-   * FLAGS rather than `createGame` arguments, so they travel separately and
-   * the client applies them before it builds. */
-  generatedMaps: boolean;
+  /** MAP SIZE: which of the three sizes this session's maps are carved at. An
+   * engine FLAG rather than a `createGame` argument, so it travels separately
+   * and the client applies it before it builds. */
   generatedMapSize: string;
 };
 

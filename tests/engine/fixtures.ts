@@ -1370,6 +1370,15 @@ export const FIX_STORY_ITEMS: Record<string, StoryItemDef> = {
     lore: [["A TEST KEY."]],
     unlocks: "test_door",
   },
+  // A SECOND key, for the half of the rule that matters most: a door opens for
+  // ITS key and for no other.
+  test_key_2: {
+    id: "test_key_2",
+    name: "TEST VAULT KEY",
+    icon: "icon_key",
+    lore: [["ANOTHER TEST KEY."]],
+    unlocks: "test_vault",
+  },
 };
 
 // A level mirroring `moon`'s geometry/tuning with synthetic ids: banded +
@@ -1448,6 +1457,31 @@ export const FIX_LEVEL: LevelDef = {
       { atKills: 8, item: "xp" },
     ],
   },
+};
+
+// A LOCKED-DOOR level: the reference level with two keyed doors across it.
+//
+// It is a FIXTURE rather than a shipped map because the shipped campaign carves
+// its geometry per run (see `game/mapgen/`) and a carve emits no doors — the
+// engine rule (a chain that stands until its own key is carried through it) is
+// nonetheless a real one, and this is what keeps it honest.
+export const FIX_DOOR_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_door_level",
+  doors: [
+    {
+      id: "test_door",
+      from: { x: 900, y: 1100 },
+      to: { x: 1100, y: 1100 },
+      radius: 13,
+    },
+    {
+      id: "test_vault",
+      from: { x: 1500, y: 700 },
+      to: { x: 1700, y: 700 },
+      radius: 13,
+    },
+  ],
 };
 
 // A PATH level: the reference level plus an authored INTENDED PATH (spawn →
@@ -2009,6 +2043,7 @@ export function installFixtures(force = false): void {
       test_level: FIX_LEVEL,
       test_level_2: FIX_LEVEL_2,
       test_path_level: FIX_PATH_LEVEL,
+      test_door_level: FIX_DOOR_LEVEL,
       test_rare_level: FIX_RARE_LEVEL,
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
