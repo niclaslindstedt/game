@@ -26,7 +26,7 @@ import {
 function twoFoes() {
   const state = equipBlaster(startGame());
   clearStage(state);
-  const { x, y } = state.player.pos;
+  const { x, y } = state.players[0].pos;
   state.enemies.push(makeEnemy({ id: 1, pos: { x: x + 40, y } })); // right, near
   state.enemies.push(makeEnemy({ id: 2, pos: { x: x - 120, y } })); // left, far
   return { state, x, y };
@@ -60,7 +60,7 @@ describe("mouse aim", () => {
   it("fires at the only foe even when the pointer aims at empty space", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     // A single foe to the LEFT; the cursor points at nothing on the RIGHT.
     state.enemies.push(makeEnemy({ id: 1, pos: { x: x - 100, y } }));
     step(state, { ...idle, aim: { x: x + 1000, y } }, DT);
@@ -97,7 +97,7 @@ describe("mouse aim", () => {
   it("keeps a point-blank foe as the target regardless of pointer direction", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     // A foe right on the hero (no bearing — the dist-0 alignment guard) plus a
     // clean shot out to the right. Aiming right must NOT pull the pick off the
     // point-blank threat: distance 0 always scores lowest.

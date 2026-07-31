@@ -225,7 +225,7 @@ function rollTier(
   // grind). Every shipped artifact requires level 99 to wear (`itemLevelReq`),
   // so this pins the drop to exactly where it becomes wearable — no relic ever
   // falls into a hand too low to use it. Gates the whole artifact tier below.
-  const atCap = state.player.level >= LEVELING.maxLevel;
+  const atCap = state.players[0].level >= LEVELING.maxLevel;
   // The ARTIFACT tier stays INERT while no artifact is authored — no phantom
   // roll consumes rng, so seeded drop streams don't shift until the roster
   // ships. (`pickUniqueForDrop` would downgrade an empty artifact roll to a

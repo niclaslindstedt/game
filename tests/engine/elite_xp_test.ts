@@ -25,8 +25,8 @@ function heroAt(level: number): GameState {
   const state = startGame();
   clearStage(state);
   state.rng = () => 0.99;
-  state.player.level = level;
-  state.player.xpToNext = xpToLevelUp(level);
+  state.players[0].level = level;
+  state.players[0].xpToNext = xpToLevelUp(level);
   return state;
 }
 
@@ -91,7 +91,7 @@ describe("enemyKillXp — elite/boss mob-mult rule", () => {
 describe("mob-mult xp — end to end through the kill event", () => {
   it("an elite kill floats its mob-mult reward (times the overkill toll) as its popup", () => {
     const state = heroAt(20);
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     // Pin the bar (powerScaled) so the engage-time power match leaves maxHp
     // alone; the deep-campaign hero one-shots it with a guaranteed crit, so the
     // popup is the mob-mult reward scaled by the overkill toll that big blow

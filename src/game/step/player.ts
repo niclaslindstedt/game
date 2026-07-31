@@ -44,7 +44,7 @@ export function stepPlayer(
   dt: number,
   dtMs: number,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   player.hurtFlashMs = Math.max(0, player.hurtFlashMs - dtMs);
   player.moving = false;
 
@@ -298,7 +298,7 @@ export function stepPlayer(
 function applySeismicLanding(state: GameState): void {
   const seismic = talentSeismic(state);
   if (!seismic) return;
-  const player = state.player;
+  const player = state.players[0];
   state.events.push({
     type: "seismicLanding",
     pos: { ...player.pos },
@@ -362,7 +362,7 @@ export function stepUseItem(state: GameState, input: GameInput): void {
     discardHeldAbility(state, input.dropItemIndex);
   }
   if (!input.useItem) return;
-  const held = state.player.heldAbilities;
+  const held = state.players[0].heldAbilities;
   const wanted = input.useItemIndex;
   const usable =
     wanted !== undefined &&
@@ -425,14 +425,14 @@ export function debugDetonateNuke(state: GameState): void {
 }
 
 function detonateNuke(state: GameState, radius: number): void {
-  state.events.push({ type: "nuke", pos: { ...state.player.pos } });
+  state.events.push({ type: "nuke", pos: { ...state.players[0].pos } });
   const radiusSq = radius * radius;
   const caught = state.enemies.filter((enemy) => {
     const def = enemyDef(enemy.defId);
     return (
       !inert(def, enemy) &&
-      distanceSq(enemy.pos, state.player.pos) <= radiusSq &&
-      lineOfSight(state, state.player.pos, enemy.pos)
+      distanceSq(enemy.pos, state.players[0].pos) <= radiusSq &&
+      lineOfSight(state, state.players[0].pos, enemy.pos)
     );
   });
   // Flat blast damage: NUKE.meanHpDamageMult (200%) of the MEAN current hp of

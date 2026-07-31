@@ -86,7 +86,7 @@ function enemiesWithin(
  * the next tick's sweep like any other.
  */
 export function stepPowerups(state: GameState, dt: number, dtMs: number): void {
-  const player = state.player;
+  const player = state.players[0];
   if (player.abilities.length === 0) return;
   const power = abilityPowerScale(state);
 
@@ -120,7 +120,7 @@ function stepTrail(
   const trail = def.trail;
   if (!trail) return;
   const patches = (ability.patches ??= []);
-  const player = state.player;
+  const player = state.players[0];
 
   if (tickAbilityClock(ability, "trail", dtMs) <= 0) {
     setAbilityClock(ability, "trail", trail.dropMs);
@@ -179,7 +179,7 @@ function stepRain(
   if (tickAbilityClock(ability, "rain", dtMs) > 0) return;
   setAbilityClock(ability, "rain", rain.intervalMs);
 
-  const player = state.player;
+  const player = state.players[0];
   const marks = enemiesWithin(state, player.pos, rain.range).slice();
   for (let i = 0; i < rain.count; i++) {
     let target: Vec2;
@@ -234,7 +234,7 @@ function stepWell(
 ): void {
   const well = def.well;
   if (!well) return;
-  const core = (ability.pos ??= { ...state.player.pos });
+  const core = (ability.pos ??= { ...state.players[0].pos });
 
   if (well.chase > 0) {
     const prey = nearestEnemy(state.enemies, core, WELL_HUNT_RANGE);
@@ -280,7 +280,7 @@ function stepPulse(
   if (tickAbilityClock(ability, "pulse", dtMs) > 0) return;
   setAbilityClock(ability, "pulse", pulse.intervalMs);
 
-  const origin = { ...state.player.pos };
+  const origin = { ...state.players[0].pos };
   state.events.push({
     type: "voidWave",
     pos: origin,

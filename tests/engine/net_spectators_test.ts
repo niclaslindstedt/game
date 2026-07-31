@@ -118,8 +118,8 @@ describe("seating", () => {
     const hostWelcome = host.of(FRAME.welcome)[0]!.payload as WelcomePayload;
     const watcherWelcome = watchers[0]!.of(FRAME.welcome)[0]!
       .payload as WelcomePayload;
-    expect(hostWelcome.ownsPlayer).toBe(true);
-    expect(watcherWelcome.ownsPlayer).toBe(false);
+    expect(hostWelcome.seat).toBe(0);
+    expect(watcherWelcome.seat).toBe(null);
     expect(live.clientCount).toBe(2);
   });
 
@@ -205,7 +205,7 @@ describe("what a spectator may do", () => {
   it("may not steer, and may not run a command", () => {
     const { live } = session();
     seat(live, 1);
-    const before = { ...live.state.player.pos };
+    const before = { ...live.state.players[0].pos };
     live.receive(100, FRAME.input, 1, {
       seq: 1,
       input: { steering: true, target: { x: 9999, y: 9999 } },
@@ -214,7 +214,7 @@ describe("what a spectator may do", () => {
     live.advance(200);
     // Nothing the watcher sent reached the simulation; the hero has only ever
     // been driven by the idle input the session supplies for an empty slot.
-    expect(live.state.player.pos.x).toBe(before.x);
+    expect(live.state.players[0].pos.x).toBe(before.x);
   });
 
   it("may not change the session, and is TOLD so", () => {

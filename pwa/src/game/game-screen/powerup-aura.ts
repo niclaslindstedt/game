@@ -73,7 +73,7 @@ export function createPowerupAura(
     // the frame because it is a hole in the world); a DUST DEVIL is weather and
     // stays on the field, so it is filtered out here by its own `chase`.
     const classes = new Set<string>();
-    for (const ability of state.player.abilities) {
+    for (const ability of state.players[0].abilities) {
       const def = abilityDef(ability.defId);
       for (const block of abilityBlocks(def)) {
         const aura = AURA_FOR_BLOCK[block];

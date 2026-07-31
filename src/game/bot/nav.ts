@@ -122,7 +122,7 @@ const WELL_REPULSE_PUSH = 240;
  * past the ring — this field is what keeps him from sinking at all.
  */
 function repelFromWells(state: GameState, target: Vec2): Vec2 {
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   let x = target.x;
   let y = target.y;
   for (const well of state.wells) {
@@ -211,7 +211,7 @@ export function limitTurnRate(
 ): TurnGate {
   // Standing still is always allowed — only a REVERSAL is ever held back.
   if (tune.turnCooldownMs <= 0 || !input.steering) return "free";
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   const now = state.stats.timeMs;
   const n = normalize(input.target.x - p.x, input.target.y - p.y);
   // A target underfoot moves nobody (the engine's own arrive radius stops him
@@ -352,7 +352,7 @@ function fogwardBearing(
  * determinism holds.
  */
 function traceTowardFog(bot: Bot, state: GameState, goal: Vec2): Vec2 | null {
-  const from = state.player.pos;
+  const from = state.players[0].pos;
   const base = Math.atan2(goal.y - from.y, goal.x - from.x);
   const cw = fogwardBearing(state, from, base, 1);
   const ccw = fogwardBearing(state, from, base, -1);
@@ -408,7 +408,7 @@ export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
   // map the engine's wall-slide already carries a straight steer past the odd
   // ridge, and deflecting there only wanders, so keep the old behaviour.
   if (!navigatesWalls(state)) return goal;
-  const from = state.player.pos;
+  const from = state.players[0].pos;
   const r = PLAYER.radius;
   // A clear body-width sweep straight to the goal → just go (and release any
   // latched wall trace — the wall is behind him).
@@ -619,7 +619,7 @@ function strayedFromRoute(rc: NonNullable<Bot["route"]>, from: Vec2): boolean {
  */
 export function routeTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
   const rc = ensureRoute(bot, state);
-  const from = state.player.pos;
+  const from = state.players[0].pos;
   // String-pull integrity: the next unretired waypoint must be REACHABLE in a
   // straight body-width sweep from where the hero actually stands. When the
   // horde shoves him into a wall pocket the corridor doesn't see, he can sit
@@ -700,7 +700,10 @@ export function remainingRoute(
 
 /** The point `dist` away from `from`, on the player's side of it. */
 export function holdOff(state: GameState, from: Vec2, dist: number): Vec2 {
-  const n = normalize(state.player.pos.x - from.x, state.player.pos.y - from.y);
+  const n = normalize(
+    state.players[0].pos.x - from.x,
+    state.players[0].pos.y - from.y,
+  );
   return { x: from.x + n.x * dist, y: from.y + n.y * dist };
 }
 
@@ -731,7 +734,7 @@ export function orbitHold(
   step: number,
 ): Vec2 {
   if (step <= 0) return holdOff(state, center, dist);
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   const ang = Math.atan2(p.y - center.y, p.x - center.x);
   if (bot.orbitSign === undefined) bot.orbitSign = 1;
   const r = PLAYER.radius;

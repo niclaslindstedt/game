@@ -50,7 +50,7 @@ export function itemLevelReq(equipment: Equipment): number {
  * equip it, and the UI paints the requirement red until the hero grows into it.
  */
 export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
-  return state.player.level >= itemLevelReq(equipment);
+  return state.players[0].level >= itemLevelReq(equipment);
 }
 
 /**

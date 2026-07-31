@@ -79,7 +79,7 @@ const loadoutMemos = new WeakMap<Player, HeroLoadoutMemo>();
 
 /** Append everything the derived reads depend on, as plain numbers. */
 function writeLoadoutSnapshot(state: GameState, out: number[]): void {
-  const player = state.player;
+  const player = state.players[0];
   out.push(player.level, autoStatGainsOn() ? 1 : 0, setsEpoch());
   for (const stat of STAT_NAMES) out.push(player.stats[stat]);
   const equipment = player.equipment;
@@ -98,7 +98,7 @@ function writeLoadoutSnapshot(state: GameState, out: number[]): void {
  * The hit path walks-and-compares in place — no allocation, no writes.
  */
 export function heroLoadoutMemo(state: GameState): HeroLoadoutMemo {
-  const cached = loadoutMemos.get(state.player);
+  const cached = loadoutMemos.get(state.players[0]);
   if (cached && snapshotMatches(state, cached.snapshot)) return cached;
   const snapshot: number[] = [];
   writeLoadoutSnapshot(state, snapshot);
@@ -109,14 +109,14 @@ export function heroLoadoutMemo(state: GameState): HeroLoadoutMemo {
     hasAffix: {},
     procs: {},
   };
-  loadoutMemos.set(state.player, memo);
+  loadoutMemos.set(state.players[0], memo);
   return memo;
 }
 
 /** Does `snap` still describe this player's loadout exactly? The mirror of
  * `writeLoadoutSnapshot`, walked without building anything. */
 function snapshotMatches(state: GameState, snap: number[]): boolean {
-  const player = state.player;
+  const player = state.players[0];
   let i = 0;
   if (snap[i++] !== player.level) return false;
   if (snap[i++] !== (autoStatGainsOn() ? 1 : 0)) return false;
@@ -159,7 +159,7 @@ export function weaponScoreCaches(state: GameState): {
 
 export function equippedPieces(state: GameState): Equipment[] {
   const { weapon, head, chest, legs, feet, amulet, ring1, ring2, offhand } =
-    state.player.equipment;
+    state.players[0].equipment;
   return [
     weapon,
     head,
@@ -190,7 +190,7 @@ export function isTrinket(piece: Equipment): boolean {
  */
 export function carriedTrinkets(state: GameState): Equipment[] {
   const out: Equipment[] = [];
-  for (const piece of state.player.inventory) {
+  for (const piece of state.players[0].inventory) {
     if (piece && isTrinket(piece)) out.push(piece);
   }
   return out;
@@ -303,7 +303,7 @@ export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
   const cached = memo.hasAffix[kind];
   if (cached !== undefined) return cached;
   let found = false;
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
   outer: for (const slot of EQUIP_SLOTS) {
     const piece = equipment[slot];
     if (!piece || isArmorBroken(piece)) continue;
@@ -317,7 +317,7 @@ export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
   // Carried trinkets carry their affixes too — walked in place, like the
   // worn slots above, so this stays allocation-free on the per-hit path.
   if (!found) {
-    outer2: for (const piece of state.player.inventory) {
+    outer2: for (const piece of state.players[0].inventory) {
       if (!piece || !isTrinket(piece)) continue;
       for (const affix of piece.affixes) {
         if (affix.kind === kind) {
@@ -378,7 +378,7 @@ export function setBonusAffixes(state: GameState): readonly Affix[] {
 }
 
 function computeSetBonusAffixes(state: GameState): readonly Affix[] {
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
   // Count worn named pieces first — with fewer than two, no set can reach its
   // 2-piece threshold and the whole scan (and its allocations) is skipped.
   let named = 0;
@@ -417,9 +417,9 @@ export function previewEquipped(
   state: GameState,
   candidate: Equipment,
 ): GameState {
-  const player = state.player;
+  const player = state.players[0];
   const equipment = { ...player.equipment, [candidate.slot]: candidate };
-  return { ...state, player: { ...player, equipment } };
+  return { ...state, players: [{ ...player, equipment }] };
 }
 
 /**
@@ -446,13 +446,13 @@ function passiveStatBonus(state: GameState, stat: StatName): number {
   // The worn slots and the bag cells, walked in place — the same reach
   // `carriedPieces` flattens, minus its per-call array allocations.
   let total = 0;
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
   for (const slot of EQUIP_SLOTS) {
     const piece = equipment[slot];
     if (!piece || isWeaponDef(piece.defId)) continue;
     total += gearDef(piece.defId).passive?.[stat] ?? 0;
   }
-  for (const piece of state.player.inventory) {
+  for (const piece of state.players[0].inventory) {
     if (!piece || isWeaponDef(piece.defId)) continue;
     total += gearDef(piece.defId).passive?.[stat] ?? 0;
   }
@@ -486,7 +486,7 @@ export function effectiveStat(state: GameState, stat: StatName): number {
   if (cached !== undefined) return cached;
   const { value, pct } = statParts(state, stat);
   const result = Math.round(
-    diminishStat(value, state.player.level) * (1 + pct),
+    diminishStat(value, state.players[0].level) * (1 + pct),
   );
   memo.effective[stat] = result;
   return result;
@@ -511,11 +511,11 @@ function statParts(state: GameState, stat: StatName): StatParts {
 
 function computeStatParts(state: GameState, stat: StatName): StatParts {
   let value =
-    state.player.stats[stat] + baseStatBonus(state.player.level, stat);
+    state.players[0].stats[stat] + baseStatBonus(state.players[0].level, stat);
   // Scaling `statPct` bonuses (uniques) multiply the whole total, so they grow
   // with the hero — a +2% STRENGTH is worth more the stronger you are.
   let pct = 0;
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
   for (const slot of EQUIP_SLOTS) {
     const piece = equipment[slot];
     if (!piece || isArmorBroken(piece)) continue;
@@ -527,7 +527,7 @@ function computeStatParts(state: GameState, stat: StatName): StatParts {
   }
   // Carried TRINKETS pay their affixes from the bag, exactly like a worn
   // piece — the whole point of the charm rule.
-  for (const piece of state.player.inventory) {
+  for (const piece of state.players[0].inventory) {
     if (!piece || !isTrinket(piece)) continue;
     for (const affix of piece.affixes) {
       if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
@@ -596,7 +596,7 @@ export function computeMaxHp(state: GameState): number {
  * losing it only clamps.
  */
 export function recomputeMaxHp(state: GameState): void {
-  const player = state.player;
+  const player = state.players[0];
   const next = computeMaxHp(state);
   const delta = next - player.maxHp;
   player.maxHp = next;
@@ -644,7 +644,7 @@ export function staminaEmptyLockMs(state: GameState): number {
  * only clamps.
  */
 export function recomputeMaxStamina(state: GameState): void {
-  const player = state.player;
+  const player = state.players[0];
   const next = computeMaxStamina(state);
   const delta = next - player.maxStamina;
   player.maxStamina = next;

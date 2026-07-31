@@ -97,7 +97,7 @@ type Owned = { index: number; item: Equipment };
  * the blades. */
 function bagWeapons(state: GameState, kind?: "shot" | "melee"): Owned[] {
   const out: Owned[] = [];
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   for (let index = 0; index < inv.length; index++) {
     const item = inv[index];
     if (!item || item.slot !== "weapon") continue;
@@ -135,7 +135,7 @@ type Body = { dist: number; inPack: boolean };
 type FieldRead = { bodies: Body[]; bossDist: number };
 
 function fieldRead(state: GameState): FieldRead {
-  const player = state.player;
+  const player = state.players[0];
   const bodies: Body[] = [];
   let bossDist = Infinity;
   let aim: Vec2 | null = null;
@@ -230,7 +230,7 @@ function bestBagDraw(
  * nothing in range is churn, not damage.
  */
 export function botPocketShooterIndex(state: GameState): number {
-  const airborne = state.player.z > JUMP.dodgeHeight;
+  const airborne = state.players[0].z > JUMP.dodgeHeight;
   const pick = bestBagDraw(state, fieldRead(state), airborne, "shot");
   return pick ? pick.index : -1;
 }
@@ -263,8 +263,8 @@ export function bestOwnedWeapon(state: GameState): Owned {
 }
 
 function computeBestOwnedWeapon(state: GameState): Owned {
-  const inv = state.player.inventory;
-  let item = state.player.equipment.weapon;
+  const inv = state.players[0].inventory;
+  let item = state.players[0].equipment.weapon;
   let index = -1;
   let bestScore = weaponScore(state, item);
   for (let i = 0; i < inv.length; i++) {
@@ -334,7 +334,7 @@ function computePocketKeepIndices(state: GameState): number[] {
   const main = bestOwnedWeapon(state);
   if (main.index >= 0) keep.add(main.index); // the stashed main, mid-swap
   const owned: Owned[] = [
-    { index: -1, item: state.player.equipment.weapon },
+    { index: -1, item: state.players[0].equipment.weapon },
     ...bagWeapons(state),
   ];
   // The four jobs, each won by the best weapon the hero owns for it.
@@ -365,7 +365,7 @@ function computePocketKeepIndices(state: GameState): number[] {
     ...rest.filter((r) => r && r.lane !== lane),
   ];
   // Never spare so much that the cull can't free the bot's open cell.
-  const cap = Math.min(POCKET_KEEP_MAX, state.player.inventory.length - 1);
+  const cap = Math.min(POCKET_KEEP_MAX, state.players[0].inventory.length - 1);
   let spent = 0;
   for (const role of roles) {
     if (spent >= cap) break;
@@ -411,7 +411,7 @@ export type SwapMemory = { lastSwapMs?: number };
  * `equipFromInventory` zeroes it — instant gratification for a hand-picked
  * swap; the bot, swapping every fight, plays fair). */
 function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
-  const player = state.player;
+  const player = state.players[0];
   const carried = player.weaponCooldownMs;
   if (!equipFromInventory(state, index)) return false;
   player.weaponCooldownMs = Math.min(
@@ -437,7 +437,7 @@ function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
  */
 export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
   if (state.phase !== "playing") return -1;
-  const player = state.player;
+  const player = state.players[0];
   if (player.disarmed) return -1;
   const held = player.equipment.weapon;
   const main = bestOwnedWeapon(state);

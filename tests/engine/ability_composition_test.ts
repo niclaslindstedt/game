@@ -97,7 +97,7 @@ describe("a power's blocks all run", () => {
       // given enough hp to survive them — we are measuring what landed, not
       // racing to a kill.
       const victim = makeEnemy({
-        pos: { x: state.player.pos.x + 30, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 30, y: state.players[0].pos.y },
         hp: 100_000,
         maxHp: 100_000,
       });
@@ -119,7 +119,7 @@ describe("each block keeps its own clock", () => {
     state.enemies.length = 0;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 30, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 30, y: state.players[0].pos.y },
         hp: 100_000,
         maxHp: 100_000,
       }),
@@ -128,7 +128,7 @@ describe("each block keeps its own clock", () => {
     grantAbility(state, "test_composed");
     idleFor(state, DT);
 
-    const running = state.player.abilities.find(
+    const running = state.players[0].abilities.find(
       (a) => a.defId === "test_composed",
     );
     expect(running).toBeDefined();
@@ -144,7 +144,7 @@ describe("each block keeps its own clock", () => {
 describe("the label-readers read the blocks", () => {
   it("the ONE NUKE rule bars a drop while any wipe is docked", () => {
     const state = startGame();
-    state.player.heldAbilities = ["test_secret_bomb"];
+    state.players[0].heldAbilities = ["test_secret_bomb"];
     // It carries a `nuke` block, so it IS a bomb for the one-nuke rule —
     // whatever else it might have called itself.
     expect(canDropNuke(state)).toBe(false);
@@ -152,7 +152,7 @@ describe("the label-readers read the blocks", () => {
 
   it("a power with no wipe does not bar one", () => {
     const state = startGame();
-    state.player.heldAbilities = ["test_composed"];
+    state.players[0].heldAbilities = ["test_composed"];
     expect(canDropNuke(state)).toBe(true);
   });
 });

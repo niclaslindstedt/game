@@ -45,7 +45,7 @@ const useItem: GameInput = {
 };
 
 function dropArrow(state: GameState, id: number): Item {
-  return { id, kind: "xp", pos: { ...state.player.pos } };
+  return { id, kind: "xp", pos: { ...state.players[0].pos } };
 }
 
 describe("xp arrows", () => {
@@ -56,7 +56,7 @@ describe("xp arrows", () => {
     step(state, idle, DT);
     // A fresh hero is level 1: the arrow pays `arrowXpKills` reference-mob
     // kills' worth at L1 — never a share of the bar.
-    expect(state.player.xp).toBe(arrowXp(1));
+    expect(state.players[0].xp).toBe(arrowXp(1));
     expect(state.events).toContainEqual(
       expect.objectContaining({ type: "itemCollected", kind: "xp" }),
     );
@@ -65,11 +65,11 @@ describe("xp arrows", () => {
     // absolute XP, the same few kills' worth against the fatter bar.
     const later = startGame();
     clearStage(later);
-    later.player.level = 4;
-    later.player.xpToNext = 4000;
+    later.players[0].level = 4;
+    later.players[0].xpToNext = 4000;
     later.items = [dropArrow(later, 1)];
     step(later, idle, DT);
-    expect(later.player.xp).toBe(arrowXp(4));
+    expect(later.players[0].xp).toBe(arrowXp(4));
     expect(arrowXp(4)).toBeGreaterThan(arrowXp(1));
   });
 
@@ -80,12 +80,12 @@ describe("xp arrows", () => {
       const s = createGame(SEED, "test_level", "easy");
       dismissIntro(s);
       clearStage(s);
-      s.player.level = 5;
-      s.player.xpToNext = 40000;
-      s.player.xp = 0;
-      s.items = [{ id: 1, kind: "xp", pos: { ...s.player.pos }, mlvl }];
+      s.players[0].level = 5;
+      s.players[0].xpToNext = 40000;
+      s.players[0].xp = 0;
+      s.items = [{ id: 1, kind: "xp", pos: { ...s.players[0].pos }, mlvl }];
       step(s, idle, DT);
-      return s.player.xp;
+      return s.players[0].xp;
     };
     // An arrow shed by a LOW-level mob — the horde on outgrown ground, stuck at
     // a map's mob-level ceiling while the hero climbs past it — pays only that
@@ -108,15 +108,15 @@ describe("xp arrows", () => {
       const s = createGame(SEED, "test_level", "easy");
       dismissIntro(s);
       clearStage(s);
-      s.player.level = level;
-      s.player.xpToNext = 4000;
-      s.player.xp = 0;
+      s.players[0].level = level;
+      s.players[0].xpToNext = 4000;
+      s.players[0].xp = 0;
       s.items = [dropArrow(s, 1)];
       step(s, idle, DT);
       return s;
     };
-    expect(at(2).player.xp).toBe(arrowXp(2));
-    expect(at(3).player.xp).toBe(arrowXp(3));
+    expect(at(2).players[0].xp).toBe(arrowXp(2));
+    expect(at(3).players[0].xp).toBe(arrowXp(3));
   });
 
   it("grant nothing while the faucet is switched off (calibration runs)", () => {
@@ -129,7 +129,7 @@ describe("xp arrows", () => {
       clearStage(state);
       state.items = [dropArrow(state, 1)];
       step(state, idle, DT);
-      expect(state.player.xp).toBe(0);
+      expect(state.players[0].xp).toBe(0);
       expect(state.items).toHaveLength(0);
       expect(state.events).not.toContainEqual(
         expect.objectContaining({ type: "itemCollected", kind: "xp" }),
@@ -145,13 +145,13 @@ describe("xp arrows", () => {
     // How many arrows actually cross the L1 bar — derived from the rounded
     // per-arrow grant, so it stays honest when the curve (xpToLevelUp) or the
     // payout changes and rounding leaves a sliver.
-    const perArrow = arrowXp(state.player.level);
-    const needed = Math.ceil(state.player.xpToNext / perArrow);
+    const perArrow = arrowXp(state.players[0].level);
+    const needed = Math.ceil(state.players[0].xpToNext / perArrow);
     state.items = Array.from({ length: needed }, (_, i) =>
       dropArrow(state, i + 1),
     );
     step(state, idle, DT);
-    expect(state.player.level).toBe(2);
+    expect(state.players[0].level).toBe(2);
     expect(state.events).toContainEqual({
       type: "levelUp",
       level: 2,
@@ -168,12 +168,12 @@ describe("level-up heal", () => {
   it("a level-up restores full health", () => {
     const state = startGame();
     clearStage(state);
-    state.player.hp = 5;
-    state.player.xp = state.player.xpToNext - 1;
+    state.players[0].hp = 5;
+    state.players[0].xp = state.players[0].xpToNext - 1;
     state.items = [dropArrow(state, 1)];
     step(state, idle, DT);
-    expect(state.player.level).toBe(2);
-    expect(state.player.hp).toBe(state.player.maxHp);
+    expect(state.players[0].level).toBe(2);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
   });
 });
 
@@ -186,16 +186,16 @@ describe("the screen nuke", () => {
       {
         id: 1,
         kind: "ability",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         defId: "test_nuke",
       },
     ];
     step(state, idle, DT);
-    expect(state.player.heldAbilities).toContain("test_nuke");
+    expect(state.players[0].heldAbilities).toContain("test_nuke");
 
     const radius = abilityDef("test_nuke").nuke!.radius;
-    const px = state.player.pos.x;
-    const py = state.player.pos.y;
+    const px = state.players[0].pos.x;
+    const py = state.players[0].pos.y;
     // A crowd of rank-and-file minions inside the blast keeps the mean health
     // low, so the fixed 200%-of-mean hit lands as many times its own size on a
     // minion but only a chunk of a heavyweight.
@@ -225,7 +225,7 @@ describe("the screen nuke", () => {
 
     const xpBefore = state.stats.xpGained;
     step(state, useItem, DT);
-    expect(state.player.heldAbilities).toHaveLength(0);
+    expect(state.players[0].heldAbilities).toHaveLength(0);
     // The rank and file are gone; the heavyweights are hurt but still standing.
     for (const minion of minions) expect(state.enemies).not.toContain(minion);
     expect(state.enemies).toContain(boss); // hit, not exempt…
@@ -243,13 +243,13 @@ describe("the screen nuke", () => {
   it("a rock shields the monster behind it from the blast", () => {
     const state = startGame();
     clearStage(state);
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
 
     // A tall rock right beside the player; a mob hides just behind it, well
     // inside the blast, and a second mob stands in the open the same distance
     // out. Same radius, opposite fates — only the sheltered one rides it out.
-    const px = state.player.pos.x;
-    const py = state.player.pos.y;
+    const px = state.players[0].pos.x;
+    const py = state.players[0].pos.y;
     state.obstacles = [
       {
         id: 8100,
@@ -276,7 +276,7 @@ describe("the screen nuke", () => {
     // dinner-bell a fresh crowd in is dumped. The earned floor itself stands.
     const state = startGame();
     clearStage(state);
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     state.menaceFloor = MENACE.perStage * 2; // a floor the ratchet earned
     state.menace = MENACE.perStage * 5; // three stages of transient heat on top
     state.moveSpawnCredit = 999; // a fat lure bank primed to refill the screen
@@ -298,7 +298,7 @@ describe("the screen nuke", () => {
     // The bomb opens a breather so the screen it cleared stays clear long enough
     // to break away; once it burns down the held horde flows again.
     const state = startGame(); // test_level waves live (its floor pulls minions in)
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     // Clear the field of minions (keep the far boss so the objective stays open).
     state.enemies = state.enemies.filter(
       (e) => enemyDef(e.defId).role !== "minion",
@@ -331,7 +331,7 @@ describe("the screen nuke", () => {
     const aliveMult = difficultyDef(state.difficulty).aliveMult;
     const minAlive = Math.round(waves.minAlive * aliveMult);
     expect(minAlive).toBeGreaterThan(4); // enough headroom for a real ramp
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     const minions = (s: GameState) =>
       s.enemies.filter((e) => enemyDef(e.defId).role === "minion").length;
 
@@ -343,9 +343,10 @@ describe("the screen nuke", () => {
     // the run to `dying`, where nothing steps and the nuke never fires.
     for (let i = 0; i < 900; i++) {
       state.campMs = 0;
-      state.player.hp = state.player.maxHp;
+      state.players[0].hp = state.players[0].maxHp;
       step(state, idle, DT);
-      while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
+      while (state.players[0].pendingStatPoints > 0)
+        allocateStat(state, "stamina");
     }
     step(state, useItem, DT);
     expect(state.nukeCalmMs).toBeGreaterThan(0);
@@ -409,11 +410,11 @@ describe("a bomb's kills never drop another bomb", () => {
   const armNuke = (state: GameState): void => {
     clearStage(state);
     state.obstacles = [];
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     state.enemies.push(
       makeEnemy({
         id: 9000,
-        pos: { x: state.player.pos.x + 50, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 50, y: state.players[0].pos.y },
       }),
     );
   };
@@ -432,7 +433,7 @@ describe("a bomb's kills never drop another bomb", () => {
     // one (ENEMY_AI.nearRadius): the crowd survives the nuke, so the victim's
     // drop roll happens with the crowd-bomb chance fully ramped — exactly
     // where a bomb would pay out another bomb without the rule.
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     for (let i = 0; i < 40; i++) {
       state.enemies.push(
         makeEnemy({
@@ -454,7 +455,7 @@ describe("a bomb's kills never drop another bomb", () => {
     const state = startOnEasy();
     armNuke(state);
     // Four far minions keep the equipment pity rule quiet (owed <= remaining).
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     for (let i = 0; i < 4; i++) {
       state.enemies.push(
         makeEnemy({ id: 9100 + i, pos: { x: p.x + 5000, y: p.y + i * 30 } }),
@@ -483,14 +484,14 @@ describe("the ONE NUKE rule — only one bomb in play at a time", () => {
   const groundNuke = (state: GameState, offset: number): Item => ({
     id: 1,
     kind: "ability",
-    pos: { x: state.player.pos.x + offset, y: state.player.pos.y },
+    pos: { x: state.players[0].pos.x + offset, y: state.players[0].pos.y },
     defId: "screen_nuke",
   });
 
   // A packed field, all within the "on screen" radius, so the crowd-bomb ramp
   // is fully lit — exactly where a second bomb would fall without the rule.
   const packField = (state: GameState, n: number): void => {
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     for (let i = 0; i < n; i++) {
       state.enemies.push(
         makeEnemy({
@@ -503,7 +504,7 @@ describe("the ONE NUKE rule — only one bomb in play at a time", () => {
 
   it("bars a drop while a NUKE sits in the powerup dock", () => {
     const state = startOnEasy();
-    state.player.heldAbilities = ["test_nuke"];
+    state.players[0].heldAbilities = ["test_nuke"];
     packField(state, 45); // would be the full 5% crowd-bomb cap…
     expect(canDropNuke(state)).toBe(false);
     // …but the packed field holds its fire while a bomb is already docked.
@@ -532,7 +533,7 @@ describe("the ONE NUKE rule — only one bomb in play at a time", () => {
     state.items = [groundNuke(state, 5000)];
     packField(state, 45);
     // The victim stands right on the hero, so the fresh bomb lands ON screen.
-    const victim = makeEnemy({ id: 9000, pos: { ...state.player.pos } });
+    const victim = makeEnemy({ id: 9000, pos: { ...state.players[0].pos } });
     state.enemies.push(victim);
     // The very first roll is the crowd-bomb draw (0.0 < easy's ramped cap).
     let i = 0;
@@ -543,7 +544,7 @@ describe("the ONE NUKE rule — only one bomb in play at a time", () => {
     );
     // The stale off-screen bomb is gone; only the fresh on-screen one remains.
     expect(bombs).toHaveLength(1);
-    expect(bombs[0]!.pos.x).toBeCloseTo(state.player.pos.x, 5);
+    expect(bombs[0]!.pos.x).toBeCloseTo(state.players[0].pos.x, 5);
     // With a bomb now waiting on screen, no further bomb may drop.
     expect(canDropNuke(state)).toBe(false);
   });
@@ -559,16 +560,16 @@ describe("the item magnet", () => {
       id: 1,
       kind: "medkit",
       pos: {
-        x: state.player.pos.x + def.magnet!.radius - 10,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + def.magnet!.radius - 10,
+        y: state.players[0].pos.y,
       },
     };
     const free: Item = {
       id: 2,
       kind: "medkit",
       pos: {
-        x: state.player.pos.x + def.magnet!.radius + 40,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + def.magnet!.radius + 40,
+        y: state.players[0].pos.y,
       },
     };
     state.items = [caught, free];
@@ -583,7 +584,7 @@ describe("the item magnet", () => {
     const state = startGame();
     const def = abilityDef("test_magnet");
     const base = magnetRadius(state, def);
-    state.player.stats.intelligence = 5;
+    state.players[0].stats.intelligence = 5;
     expect(magnetRadius(state, def)).toBe(base + 5 * def.magnet!.radiusPerInt);
   });
 });

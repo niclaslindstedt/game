@@ -95,7 +95,7 @@ export function characterStatGroups(state: GameState): StatGroup[] {
 
   // The damage RANGE, not the average: the average is what the engine rolls
   // around, and a player sizing up a weapon wants the spread.
-  const damage = weaponDamageRange(state, state.player.equipment.weapon);
+  const damage = weaponDamageRange(state, state.players[0].equipment.weapon);
   const offense: StatReadout[] = [
     {
       key: "damage",
@@ -113,7 +113,7 @@ export function characterStatGroups(state: GameState): StatGroup[] {
       "reach",
       "REACH",
       state,
-      (s) => weaponRangeFor(s, s.player.equipment.weapon),
+      (s) => weaponRangeFor(s, s.players[0].equipment.weapon),
       whole,
       OFFENSE,
     ),

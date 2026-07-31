@@ -265,7 +265,7 @@ export function requirementLines(
   if (req > 1) {
     lines.push({
       text: `REQUIRES LEVEL ${req}`,
-      color: levelReqColor(state.player.level, req),
+      color: levelReqColor(state.players[0].level, req),
     });
   }
   return lines;
@@ -572,7 +572,7 @@ function SetBlock({
   const set = setForItem(uniqueId);
   if (!set) return null;
   const worn = wornSetCount(state, set.id);
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
   const wornIds = new Set<string>();
   for (const slot of ["head", "chest", "legs", "feet"] as const) {
     const piece = equipment[slot];

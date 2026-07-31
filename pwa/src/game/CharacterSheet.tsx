@@ -91,7 +91,7 @@ export function CharacterSheet({
   onOpenBag: () => void;
   onClose: () => void;
 }) {
-  const player = state.player;
+  const player = state.players[0];
   const groups = characterStatGroups(state);
   const toNext = xpToLevelUp(player.level, difficulty);
   const into = Math.max(0, toNext - player.xpToNext);

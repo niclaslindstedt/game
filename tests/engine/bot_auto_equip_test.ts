@@ -56,14 +56,14 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     // The shipped app's default: finds bank to the bag for the player to
     // curate. The bot is not curating anything — it must still gear up.
     setAutoEquipEnabled(false);
-    const inv = state.player.inventory;
+    const inv = state.players[0].inventory;
     inv[0] = gear(state, "test_vest", "chest");
     inv[1] = gear(state, "test_helmet", "head");
 
-    expect(state.player.equipment.chest).toBeNull();
+    expect(state.players[0].equipment.chest).toBeNull();
     expect(botAutoEquip(state)).toBe(true);
-    expect(state.player.equipment.chest?.defId).toBe("test_vest");
-    expect(state.player.equipment.head?.defId).toBe("test_helmet");
+    expect(state.players[0].equipment.chest?.defId).toBe("test_vest");
+    expect(state.players[0].equipment.head?.defId).toBe("test_helmet");
     // The cells they came from are free now — the whole point of the sweep.
     expect(inv[0]).toBeNull();
     expect(inv[1]).toBeNull();
@@ -75,37 +75,37 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     const state = startGame();
     clearStage(state);
     const worn = gear(state, "test_vest", "chest");
-    state.player.equipment.chest = worn;
+    state.players[0].equipment.chest = worn;
     const better = gear(state, "test_vest", "chest", { tier: "rare" });
     better.affixes = [{ kind: "armor", value: 20 }];
-    state.player.inventory[2] = better;
+    state.players[0].inventory[2] = better;
 
     expect(botAutoEquip(state)).toBe(true);
-    expect(state.player.equipment.chest?.id).toBe(better.id);
+    expect(state.players[0].equipment.chest?.id).toBe(better.id);
     // Nothing is destroyed — the displaced piece lands in the vacated cell.
-    expect(state.player.inventory[2]?.id).toBe(worn.id);
+    expect(state.players[0].inventory[2]?.id).toBe(worn.id);
   });
 
   it("leaves the HAND to the pocket arsenal", () => {
     const state = startGame();
     clearStage(state);
-    state.player.stats.strength += 12;
+    state.players[0].stats.strength += 12;
     const bot: SwapMemory = {};
-    state.player.inventory[0] = weapon(state, "test_wand");
+    state.players[0].inventory[0] = weapon(state, "test_wand");
     // The swap system draws the pocket wand at pot-shot range, banking the
     // blade. A sweep that also re-drew the strongest weapon would rip it back
     // out of the bag every tick and flap the hand.
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     );
     expect(stepBotWeaponSwap(bot, state)).toBe(true);
-    expect(state.player.equipment.weapon.defId).toBe("test_wand");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
 
     expect(botAutoEquip(state)).toBe(false);
-    expect(state.player.equipment.weapon.defId).toBe("test_wand");
-    expect(state.player.inventory[0]?.defId).toBe("crude_sword");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
+    expect(state.players[0].inventory[0]?.defId).toBe("crude_sword");
   });
 
   it("wears a find banked while under-leveled once the hero grows into it", () => {
@@ -118,20 +118,20 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
       ilvl: 40,
       tier: "artifact",
     });
-    state.player.inventory[0] = heavy;
+    state.players[0].inventory[0] = heavy;
     expect(botAutoEquip(state)).toBe(false);
-    expect(state.player.equipment.chest).toBeNull();
+    expect(state.players[0].equipment.chest).toBeNull();
 
-    state.player.level = 60;
+    state.players[0].level = 60;
     expect(botAutoEquip(state)).toBe(true);
-    expect(state.player.equipment.chest?.id).toBe(heavy.id);
+    expect(state.players[0].equipment.chest?.id).toBe(heavy.id);
   });
 
   it("frees the bag by WEARING, so the cull never has to shed a keeper", () => {
     const state = startGame();
     clearStage(state);
     setAutoEquipEnabled(false);
-    const inv = state.player.inventory;
+    const inv = state.players[0].inventory;
     // A bag packed with nothing but KEEPERS — armor upgrades bound for empty
     // slots. The cull can still open a cell (it sheds the least precious
     // keeper into the LOST & FOUND), but that is the LAST resort: wearing the
@@ -148,7 +148,7 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     expect(inv.indexOf(null)).not.toBe(-1);
     // Nothing had to be thrown away to get there.
     expect(cullWorstLoot(state)).toEqual([]);
-    expect(state.player.vault).toEqual([]);
+    expect(state.players[0].vault).toEqual([]);
   });
 });
 
@@ -165,15 +165,15 @@ describe("a shooter build draws its banked main (stepBotWeaponSwap)", () => {
     // shooter-build early return used to fire on the BANKED gun and leave him
     // holding the blade forever.
     const gun = weapon(state, "test_revolver", { ilvl: 30 });
-    state.player.inventory[0] = gun;
+    state.players[0].inventory[0] = gun;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     );
 
     expect(stepBotWeaponSwap(bot, state)).toBe(true);
-    expect(state.player.equipment.weapon.id).toBe(gun.id);
+    expect(state.players[0].equipment.weapon.id).toBe(gun.id);
     // And once it is in hand the shooter build settles — no per-tick juggling.
     state.stats.timeMs += 5000;
     expect(stepBotWeaponSwap(bot, state)).toBe(false);

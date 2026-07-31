@@ -107,7 +107,7 @@ export function sellQuestPiece(
   if (index < 0 || (progress.counts[index] ?? 0) <= 0) return false;
   progress.counts[index] = (progress.counts[index] ?? 0) - 1;
 
-  state.player.coins += buys.coins;
+  state.players[0].coins += buys.coins;
   for (const flag of buys.sets ?? []) setQuestFlag(state, flag);
   state.events.push({
     type: "questPieceSold",
@@ -135,8 +135,8 @@ export function buyQuestPiece(
   const row = questStallRows(state).find(
     (r) => r.kind === "buy" && r.questId === questId && r.item === item,
   );
-  if (!row || state.player.coins < row.coins) return false;
-  state.player.coins -= row.coins;
+  if (!row || state.players[0].coins < row.coins) return false;
+  state.players[0].coins -= row.coins;
   creditQuestPickup(state, questId, item);
   state.events.push({
     type: "questPieceBought",
@@ -152,7 +152,7 @@ export function canAffordStallRow(
   state: GameState,
   row: QuestStallRow,
 ): boolean {
-  return row.kind === "sell" || state.player.coins >= row.coins;
+  return row.kind === "sell" || state.players[0].coins >= row.coins;
 }
 
 // ------------------------------------------------------------------ the reads

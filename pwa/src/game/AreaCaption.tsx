@@ -25,7 +25,8 @@ export function currentAreaLabel(state: GameState): string | null {
   const def = runLevelDef(state);
   const zones = [...(def.safeZones ?? []), ...(def.quietZones ?? [])];
   for (const zone of zones) {
-    if (zone.label && zoneContains(zone, state.player.pos)) return zone.label;
+    if (zone.label && zoneContains(zone, state.players[0].pos))
+      return zone.label;
   }
   return null;
 }

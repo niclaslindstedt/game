@@ -415,8 +415,8 @@ describe("the camera under the projection", () => {
         [0, 0],
         [state.level.width, state.level.height],
       ] as const) {
-        state.player.pos.x = x;
-        state.player.pos.y = y;
+        state.players[0].pos.x = x;
+        state.players[0].pos.y = y;
         const camera = computeCamera(state, 844, 390);
         const at = worldToCanvas(x, y, camera);
         // Within a pixel of dead centre — the camera rounds to whole world units.

@@ -45,6 +45,7 @@ import type {
   GameState,
   GravityWell,
   HayBall,
+  Player,
   SandStorm,
   Stampede,
   StampedeRunner,
@@ -85,7 +86,7 @@ function lootPullAt(well: GravityWell, d: number): number {
  * asteroid strike (the well core is instant death, not a scaled bite).
  */
 function hurtPlayer(state: GameState, damage: number, cause: string): void {
-  const player = state.player;
+  const player = state.players[0];
   const hpDamage = Math.max(
     0,
     Math.round(damage * (1 - armorReduction(state, currentMobLevel(state)))),
@@ -110,7 +111,7 @@ function hurtPlayer(state: GameState, damage: number, cause: string): void {
  */
 export function stepWells(state: GameState, dt: number): void {
   if (state.wells.length === 0) return;
-  const player = state.player;
+  const player = state.players[0];
   const airborne = player.z > JUMP.dodgeHeight;
 
   for (const well of state.wells) {
@@ -282,7 +283,7 @@ function explodeAsteroid(
 
   // The grounded hero: a bite scaled by how near the centre he stood, plus the
   // same outward fling. A jump at the moment of impact sails clear of it all.
-  const player = state.player;
+  const player = state.players[0];
   const dp = distance(center, player.pos);
   if (player.z <= JUMP.dodgeHeight && dp <= rock.blastRadius + PLAYER.radius) {
     const falloff = Math.max(0, 1 - dp / (rock.blastRadius + PLAYER.radius));
@@ -387,7 +388,7 @@ function launchEnemy(enemy: Enemy, from: Vec2, speed: number): void {
  * the impulse RIDES ALONGSIDE his steering rather than replacing it.
  */
 export function pushPlayer(
-  player: GameState["player"],
+  player: Player,
   from: Vec2,
   speed: number,
   coastMs: number,
@@ -400,11 +401,7 @@ export function pushPlayer(
 }
 
 /** Arm the blast's own outward impulse on the hero, at its coast length. */
-function launchPlayer(
-  player: GameState["player"],
-  from: Vec2,
-  speed: number,
-): void {
+function launchPlayer(player: Player, from: Vec2, speed: number): void {
   pushPlayer(player, from, speed, ASTEROIDS.knockbackMs);
 }
 
@@ -444,7 +441,7 @@ export function stepKnockback(
   dtMs: number,
 ): void {
   const decay = Math.exp(-dtMs / ASTEROIDS.knockbackTauMs);
-  const player = state.player;
+  const player = state.players[0];
   if (player.knockMs > 0) {
     player.pos.x = clamp(
       player.pos.x + player.knockVel.x * dt,
@@ -546,7 +543,7 @@ export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
   }
   if (state.hayBalls.length === 0) return;
 
-  const player = state.player;
+  const player = state.players[0];
   const grounded = player.z <= JUMP.dodgeHeight;
   const survivors: HayBall[] = [];
   for (const ball of state.hayBalls) {
@@ -596,8 +593,8 @@ export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
 /** Mint one hay bale just past the right screen edge, in its own lane. */
 function spawnHayBall(state: GameState): void {
   const pos = vec(
-    state.player.pos.x + HAY_BALLS.spawnDistance,
-    state.player.pos.y +
+    state.players[0].pos.x + HAY_BALLS.spawnDistance,
+    state.players[0].pos.y +
       randomRange(state.rng, -HAY_BALLS.laneJitter, HAY_BALLS.laneJitter),
   );
   state.hayBalls.push({
@@ -620,13 +617,13 @@ function spawnHayBall(state: GameState): void {
 function spawnAsteroid(state: GameState): void {
   const target = vec(
     clamp(
-      state.player.pos.x +
+      state.players[0].pos.x +
         randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
       0,
       state.level.width,
     ),
     clamp(
-      state.player.pos.y +
+      state.players[0].pos.y +
         randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
       0,
       state.level.height,
@@ -692,7 +689,7 @@ export function stepSandstorms(
   }
   if (state.sandstorms.length === 0) return;
 
-  const player = state.player;
+  const player = state.players[0];
   const survivors: SandStorm[] = [];
   for (const storm of state.sandstorms) {
     storm.pos.x += storm.dir.x * storm.speed * dt;
@@ -751,13 +748,13 @@ export function stepSandstorms(
 function spawnSandstorm(state: GameState): void {
   const angle = state.rng() * Math.PI * 2;
   const pos = vec(
-    state.player.pos.x + Math.cos(angle) * SANDSTORMS.ringDistance,
-    state.player.pos.y + Math.sin(angle) * SANDSTORMS.ringDistance,
+    state.players[0].pos.x + Math.cos(angle) * SANDSTORMS.ringDistance,
+    state.players[0].pos.y + Math.sin(angle) * SANDSTORMS.ringDistance,
   );
   const target = vec(
-    state.player.pos.x +
+    state.players[0].pos.x +
       randomRange(state.rng, -SANDSTORMS.targetJitter, SANDSTORMS.targetJitter),
-    state.player.pos.y +
+    state.players[0].pos.y +
       randomRange(state.rng, -SANDSTORMS.targetJitter, SANDSTORMS.targetJitter),
   );
   state.sandstorms.push({
@@ -797,7 +794,7 @@ function stampedeRumbleIntensity(state: GameState, hasSpec: boolean): number {
   if (state.stampedes.length > 0) {
     let nearest = Infinity;
     for (const herd of state.stampedes) {
-      nearest = Math.min(nearest, distance(herd.pos, state.player.pos));
+      nearest = Math.min(nearest, distance(herd.pos, state.players[0].pos));
     }
     return clamp(1 - nearest / STAMPEDES.rumbleRange, 0, 1);
   }
@@ -832,7 +829,7 @@ function heroRunProgress(state: GameState): number {
   const targetX = boss && "at" in boss ? boss.at.x : def.width;
   const span = targetX - spawnX;
   if (span <= 0) return 1;
-  return clamp((state.player.pos.x - spawnX) / span, 0, 1);
+  return clamp((state.players[0].pos.x - spawnX) / span, 0, 1);
 }
 
 /**
@@ -880,7 +877,7 @@ export function stepStampedes(
     ) {
       state.stampedeWarn = {
         y:
-          state.player.pos.y +
+          state.players[0].pos.y +
           randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
         leadMs,
         ageMs: 0,
@@ -924,7 +921,7 @@ export function stepStampedes(
 
   if (state.stampedes.length === 0) return;
 
-  const player = state.player;
+  const player = state.players[0];
   const grounded = player.z <= JUMP.dodgeHeight;
   const survivors: Stampede[] = [];
   for (const herd of state.stampedes) {
@@ -1002,11 +999,11 @@ function spawnStampede(
   runnerSprite?: string,
 ): void {
   const pos = vec(
-    state.player.pos.x + STAMPEDES.spawnDistance,
+    state.players[0].pos.x + STAMPEDES.spawnDistance,
     // The telegraphed lane (locked when the dust lit) if there is one, else a
     // fresh roll — so the wall arrives exactly where the approach-dust warned.
     laneY ??
-      state.player.pos.y +
+      state.players[0].pos.y +
         randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
   );
   const runners: StampedeRunner[] = [];
@@ -1074,7 +1071,7 @@ export function spawnCalledHerd(state: GameState, runnerSprite?: string): void {
 export function stepScorches(state: GameState, dtMs: number): void {
   const scorches = state.scorches;
   if (scorches.length === 0) return;
-  const player = state.player;
+  const player = state.players[0];
   // A jump clears fire exactly like it clears a slam and a bite; the pre-combat
   // grace holds here too.
   const canBurn = player.z <= JUMP.dodgeHeight && !player.disarmed;
@@ -1151,7 +1148,7 @@ export function stepScorches(state: GameState, dtMs: number): void {
 export function stepBaits(state: GameState, dtMs: number): void {
   const baits = state.baits;
   if (baits.length === 0) return;
-  const player = state.player;
+  const player = state.players[0];
   const canTrigger = player.z <= JUMP.dodgeHeight && !player.disarmed;
 
   for (let i = baits.length - 1; i >= 0; i--) {

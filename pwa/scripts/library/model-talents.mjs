@@ -134,7 +134,7 @@ const EFFECT_SLOPES = {
     // The enrage is the boost at ZERO health, fading linearly to nothing at
     // full — so the figure worth printing is the one at the bottom of the bar.
     read: (state) => {
-      state.player.hp = 0;
+      state.players[0].hp = 0;
       return TALENT_READS.talentBerserkMult(state);
     },
   },
@@ -315,7 +315,7 @@ const PROC_READOUTS = {
       // `0 S`: the multiplier is real at every rank, but no dodge ever opens a
       // window for it to apply in, and printing it would say the opposite.
       if (ms <= 0) return { speedMult: null, ms: null };
-      state.player.evasionBurstMs = ms;
+      state.players[0].evasionBurstMs = ms;
       return {
         speedMult: TALENT_READS.talentEvasionBurstMult(state),
         ms,

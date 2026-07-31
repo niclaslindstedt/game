@@ -21,7 +21,8 @@ import { beginRespec } from "./stat-points.ts";
  */
 export function hasPendingPoints(state: GameState): boolean {
   return (
-    state.player.pendingStatPoints > 0 || state.pendingTalentPoints.length > 0
+    state.players[0].pendingStatPoints > 0 ||
+    state.pendingTalentPoints.length > 0
   );
 }
 
@@ -150,7 +151,7 @@ export function skipCutscene(state: GameState): void {
 export function skipStoryOpening(state: GameState): void {
   if (state.phase === "cutscene") skipCutscene(state);
   dismissIntro(state);
-  state.player.disarmed = false;
+  state.players[0].disarmed = false;
 }
 
 /**

@@ -131,7 +131,7 @@ function weaponTiersAtLoot(
 describe("tier gates by loot level", () => {
   it("drops only regular below the magic gate, whatever the luck", () => {
     const state = startGame();
-    state.player.stats.luck = 100; // heavy Magic Find, still gated out
+    state.players[0].stats.luck = 100; // heavy Magic Find, still gated out
     expect(weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.magic - 1)).toEqual(
       new Set(["regular"]),
     );
@@ -139,7 +139,7 @@ describe("tier gates by loot level", () => {
 
   it("opens magic at its gate and rare at its own, in order", () => {
     const state = startGame();
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     const atMagic = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.magic);
     expect(atMagic.has("magic")).toBe(true);
     expect(atMagic.has("rare")).toBe(false);
@@ -154,7 +154,7 @@ describe("tier gates by loot level", () => {
     // roll that lands the tier folds one of the fixture weapon uniques.
     const state = startGame(42, "test_level");
     state.difficulty = "jesus" as Difficulty;
-    state.player.stats.luck = 100;
+    state.players[0].stats.luck = 100;
     const below = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.unique - 1);
     expect(below.has("unique")).toBe(false);
     const at = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.unique);
@@ -348,17 +348,17 @@ describe("level requirements", () => {
     // equippable from the bag.
     expect(meetsLevelReq(state, relic)).toBe(false);
     expect(isBetterEquipment(state, relic)).toBe(false);
-    state.player.inventory[0] = relic;
+    state.players[0].inventory[0] = relic;
     expect(equipFromInventory(state, 0)).toBe(false);
-    expect(state.player.equipment.weapon.defId).not.toBe("test_relic");
+    expect(state.players[0].equipment.weapon.defId).not.toBe("test_relic");
 
     // Grown into it: at the required level AND with the STRENGTH the melee
     // relic demands, the same find equips.
-    state.player.level = RELIC.levelReq;
-    state.player.stats.strength = 40;
+    state.players[0].level = RELIC.levelReq;
+    state.players[0].stats.strength = 40;
     expect(meetsLevelReq(state, relic)).toBe(true);
     expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.weapon.defId).toBe("test_relic");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_relic");
   });
 });
 

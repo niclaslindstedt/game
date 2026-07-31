@@ -66,7 +66,7 @@ import { repelFromZones } from "../zones.ts";
 import { inert, inertEnemy, isNeutral } from "../disposition.ts";
 
 export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
-  const player = state.player;
+  const player = state.players[0];
   // Per-tick catalog lookups hoisted out of the per-enemy loops — at horde
   // scale (hundreds alive) even a cheap record probe per enemy adds up.
   const difficulty = difficultyDef(state.difficulty);
@@ -290,7 +290,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
  * list mutation, so it's safe to run inline in the contact loop.
  */
 function applyFrostNova(state: GameState): void {
-  const player = state.player;
+  const player = state.players[0];
   if ((player.frostNovaCooldownMs ?? 0) > 0) return;
   const fn = talentFrostNova(state);
   if (!fn) return;
@@ -451,7 +451,7 @@ function moveEnemy(
   level: LevelDef,
   stasisFields: readonly StasisField[],
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   // A meteor blast flung this mob: while the launch coasts (stepKnockback owns
   // the movement) the AI sits out, so the fling reads as a fling instead of the
   // chase immediately fighting it back.
@@ -464,7 +464,7 @@ function moveEnemy(
   const speed =
     enemy.speed *
     mobBalanceSpeed() *
-    stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
+    stasisFactorFrom(stasisFields, state.players[0].pos, enemy.pos) *
     chillFactorFor(enemy) *
     mechSpeedMult(enemy, def);
   const senses = () =>
@@ -587,7 +587,7 @@ function moveEnemy(
     const rushSpeed =
       mobRushSpeed(def) *
       mobBalanceSpeed() *
-      stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
+      stasisFactorFrom(stasisFields, state.players[0].pos, enemy.pos) *
       chillFactorFor(enemy);
     enemy.pos = moveToward(
       enemy.pos,
@@ -620,7 +620,7 @@ function moveEnemy(
     const rushSpeed =
       mobRushSpeed(def) *
       mobBalanceSpeed() *
-      stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
+      stasisFactorFrom(stasisFields, state.players[0].pos, enemy.pos) *
       chillFactorFor(enemy);
     // Close to the same tightened contact distance the damage test uses, so a
     // rusher settles exactly where it can actually bite (not a hair short of it).
@@ -702,7 +702,7 @@ function flankTarget(
   enemy: Enemy,
   difficulty: DifficultyDef,
 ): Vec2 {
-  const player = state.player;
+  const player = state.players[0];
   if (difficulty.index < ENEMY_AI.flankFromIndex) {
     return player.pos;
   }

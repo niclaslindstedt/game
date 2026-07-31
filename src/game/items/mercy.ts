@@ -32,7 +32,7 @@ export function desperationRamp(
  * `desperationRamp`): 0 above `MERCY.lowHealthStart` of max hp, 1 at/under
  * `MERCY.lowHealthFull`. Drives the low-health medkit and armor boosts. */
 export function lowHealthDesperation(state: GameState): number {
-  const { hp, maxHp } = state.player;
+  const { hp, maxHp } = state.players[0];
   if (maxHp <= 0) return 0;
   return desperationRamp(hp / maxHp, MERCY.lowHealthStart, MERCY.lowHealthFull);
 }
@@ -47,8 +47,8 @@ export function lowHealthDesperation(state: GameState): number {
 export function worstKitDurability(state: GameState): number {
   let worst = 1;
   const pieces = [
-    state.player.equipment.weapon,
-    ...ARMOR_SLOTS.map((slot) => state.player.equipment[slot]),
+    state.players[0].equipment.weapon,
+    ...ARMOR_SLOTS.map((slot) => state.players[0].equipment[slot]),
   ];
   for (const piece of pieces) {
     if (!piece || piece.durability === undefined) continue;
@@ -110,6 +110,6 @@ export function mercyRescueWaiting(
   return state.items.some(
     (item) =>
       answersMercy(item, rescue) &&
-      distance(item.pos, state.player.pos) <= MERCY.rescueRadius,
+      distance(item.pos, state.players[0].pos) <= MERCY.rescueRadius,
   );
 }

@@ -111,8 +111,8 @@ export function computeCamera(
   const centerOn = (center: number, offset: number, view: number) =>
     Math.round(center - view / 2 - offset);
   const camera = {
-    x: centerOn(state.player.pos.x, rect.x, rect.width),
-    y: centerOn(state.player.pos.y, rect.y, rect.height),
+    x: centerOn(state.players[0].pos.x, rect.x, rect.width),
+    y: centerOn(state.players[0].pos.y, rect.y, rect.height),
   };
   // Only the drawing pass passes a clock — the simulate pass's view rect
   // (enemy targeting) stays rock steady through the quake.

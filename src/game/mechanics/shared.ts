@@ -35,7 +35,7 @@ export function landHostileBlow(
   striker?: Enemy,
   crit = false,
 ): number {
-  const player = state.player;
+  const player = state.players[0];
   const raw = Math.round(damage * (crit ? STATS.critMultiplier : 1));
   const hpDamage = Math.max(
     0,
@@ -72,7 +72,7 @@ export function mobBlowDamage(
  * pre-combat grace (`disarmed`) is honoured here too.
  */
 export function groundMoveCanTouch(state: GameState): boolean {
-  return state.player.z <= JUMP.dodgeHeight && !state.player.disarmed;
+  return state.players[0].z <= JUMP.dodgeHeight && !state.players[0].disarmed;
 }
 
 /**

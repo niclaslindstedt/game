@@ -36,21 +36,21 @@ function gear(
 /** Fill the bag with exactly these pieces (padding the rest with empty cells).
  * Grows the bag past its small base floor when a test stocks more than fits. */
 function stock(state: GameState, items: Equipment[]): void {
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   while (inv.length < items.length) inv.push(null);
   for (let i = 0; i < inv.length; i++) inv[i] = items[i] ?? null;
 }
 
 /** The ids still loose in the bag, in cell order. */
 function bagIds(state: GameState): number[] {
-  return state.player.inventory
+  return state.players[0].inventory
     .filter((i): i is Equipment => i !== null)
     .map((i) => i.id);
 }
 
 /** Strip every gear slot bare so a test starts from a known empty wardrobe. */
 function bareGear(state: GameState): void {
-  const eq = state.player.equipment;
+  const eq = state.players[0].equipment;
   eq.head = eq.chest = eq.legs = eq.feet = null;
   eq.amulet = eq.ring1 = eq.ring2 = eq.offhand = null;
 }
@@ -58,27 +58,27 @@ function bareGear(state: GameState): void {
 describe("autoEquipBest", () => {
   it("equips a stronger bag weapon and banks the old one", () => {
     const state = startGame();
-    state.player.equipment.weapon = weapon("crude_sword"); // dmg 20
+    state.players[0].equipment.weapon = weapon("crude_sword"); // dmg 20
     const upgrade = weapon("test_hammer"); // dmg 34 → out-scores
     stock(state, [upgrade]);
 
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.weapon.id).toBe(upgrade.id);
+    expect(state.players[0].equipment.weapon.id).toBe(upgrade.id);
     // The displaced sword lands in the freed cell, not the void.
-    expect(bagIds(state)).toContain(state.player.inventory[0]?.id);
-    expect(state.player.inventory.some((i) => i?.defId === "crude_sword")).toBe(
-      true,
-    );
+    expect(bagIds(state)).toContain(state.players[0].inventory[0]?.id);
+    expect(
+      state.players[0].inventory.some((i) => i?.defId === "crude_sword"),
+    ).toBe(true);
   });
 
   it("leaves a weaker bag weapon banked", () => {
     const state = startGame();
-    state.player.equipment.weapon = weapon("test_wrench"); // dmg 22, fast
+    state.players[0].equipment.weapon = weapon("test_wrench"); // dmg 22, fast
     const junk = weapon("test_pistol");
     stock(state, [junk]);
 
     expect(autoEquipBest(state)).toBe(0);
-    expect(state.player.equipment.weapon.defId).toBe("test_wrench");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_wrench");
     expect(bagIds(state)).toEqual([junk.id]);
   });
 
@@ -89,21 +89,21 @@ describe("autoEquipBest", () => {
     stock(state, [amulet]);
 
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.amulet?.id).toBe(amulet.id);
+    expect(state.players[0].equipment.amulet?.id).toBe(amulet.id);
     expect(bagIds(state)).toEqual([]);
   });
 
   it("swaps a better gear piece in and the worn one back to the bag", () => {
     const state = startGame();
-    state.player.equipment.offhand = gear("test_bag", "bag"); // 2 cells → score 20
+    state.players[0].equipment.offhand = gear("test_bag", "bag"); // 2 cells → score 20
     const roomier = gear("test_big_bag", "bag"); // 5 cells → score 50
     stock(state, [roomier]);
 
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.offhand?.id).toBe(roomier.id);
-    expect(state.player.inventory.some((i) => i?.defId === "test_bag")).toBe(
-      true,
-    );
+    expect(state.players[0].equipment.offhand?.id).toBe(roomier.id);
+    expect(
+      state.players[0].inventory.some((i) => i?.defId === "test_bag"),
+    ).toBe(true);
   });
 
   it("never wears a passive trinket — it pays out from the bag", () => {
@@ -126,8 +126,8 @@ describe("autoEquipBest", () => {
     // Two fingers, two rings — the sweep wears one on each rather than
     // planning the same strong ring onto both.
     expect(autoEquipBest(state)).toBe(2);
-    expect(state.player.equipment.ring1?.id).toBe(greater.id);
-    expect(state.player.equipment.ring2?.id).toBe(plain.id);
+    expect(state.players[0].equipment.ring1?.id).toBe(greater.id);
+    expect(state.players[0].equipment.ring2?.id).toBe(plain.id);
     expect(bagIds(state)).toEqual([]);
   });
 
@@ -135,34 +135,34 @@ describe("autoEquipBest", () => {
     const state = startGame();
     bareGear(state);
     const weak = gear("test_ring", "ring");
-    state.player.equipment.ring1 = weak;
-    state.player.equipment.ring2 = gear("test_ring_greater", "ring");
+    state.players[0].equipment.ring1 = weak;
+    state.players[0].equipment.ring2 = gear("test_ring_greater", "ring");
     const upgrade = gear("test_ring_greater", "ring");
     stock(state, [upgrade]);
 
     expect(isBetterEquipment(state, upgrade)).toBe(true);
     expect(autoEquipBest(state)).toBe(1);
     // The weak ring came off; the strong one it did NOT beat stayed on.
-    expect(state.player.equipment.ring1?.id).toBe(upgrade.id);
+    expect(state.players[0].equipment.ring1?.id).toBe(upgrade.id);
     expect(bagIds(state)).toEqual([weak.id]);
   });
 
   it("skips a find the hero has not grown into", () => {
     const state = startGame();
-    state.player.equipment.weapon = weapon("crude_sword");
+    state.players[0].equipment.weapon = weapon("crude_sword");
     // A hammer that would out-score the sword, but the hero is under its gate.
-    state.player.level = 0;
+    state.players[0].level = 0;
     const gated = weapon("test_hammer");
     stock(state, [gated]);
 
     expect(autoEquipBest(state)).toBe(0);
-    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+    expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
     expect(bagIds(state)).toEqual([gated.id]);
   });
 
   it("optimizes weapon and every armor slot in one sweep", () => {
     const state = startGame();
-    state.player.equipment.weapon = weapon("crude_sword");
+    state.players[0].equipment.weapon = weapon("crude_sword");
     bareGear(state);
     const pieces = [
       weapon("test_hammer"),
@@ -174,16 +174,16 @@ describe("autoEquipBest", () => {
     stock(state, pieces);
 
     expect(autoEquipBest(state)).toBe(5);
-    expect(state.player.equipment.weapon.defId).toBe("test_hammer");
-    expect(state.player.equipment.head?.defId).toBe("test_helmet");
-    expect(state.player.equipment.chest?.defId).toBe("test_vest");
-    expect(state.player.equipment.legs?.defId).toBe("test_greaves");
-    expect(state.player.equipment.feet?.defId).toBe("test_boots");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_hammer");
+    expect(state.players[0].equipment.head?.defId).toBe("test_helmet");
+    expect(state.players[0].equipment.chest?.defId).toBe("test_vest");
+    expect(state.players[0].equipment.legs?.defId).toBe("test_greaves");
+    expect(state.players[0].equipment.feet?.defId).toBe("test_boots");
   });
 
   it("is a no-op on an already-optimal loadout", () => {
     const state = startGame();
-    state.player.equipment.weapon = weapon("test_hammer");
+    state.players[0].equipment.weapon = weapon("test_hammer");
     const worse = weapon("test_pistol");
     stock(state, [worse]);
 
@@ -194,26 +194,26 @@ describe("autoEquipBest", () => {
 
   it("picks the weapon that suits the build: melee for a STRENGTH hero", () => {
     const state = startGame();
-    state.player.stats.strength = 50;
-    state.player.stats.intelligence = 1;
-    state.player.equipment.weapon = weapon("blaster"); // weak fallback sidearm
+    state.players[0].stats.strength = 50;
+    state.players[0].stats.intelligence = 1;
+    state.players[0].equipment.weapon = weapon("blaster"); // weak fallback sidearm
     stock(state, [weapon("test_hammer"), weapon("test_wand")]);
 
     autoEquipBest(state);
     // STRENGTH pumps the melee hammer far past the INT-hungry wand.
-    expect(state.player.equipment.weapon.defId).toBe("test_hammer");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_hammer");
   });
 
   it("picks the weapon that suits the build: magic for an INTELLECT hero", () => {
     const state = startGame();
-    state.player.stats.strength = 1;
-    state.player.stats.intelligence = 50;
-    state.player.equipment.weapon = weapon("blaster");
+    state.players[0].stats.strength = 1;
+    state.players[0].stats.intelligence = 50;
+    state.players[0].equipment.weapon = weapon("blaster");
     stock(state, [weapon("test_hammer"), weapon("test_wand")]);
 
     autoEquipBest(state);
     // INTELLIGENCE scales the wand's damage AND cadence, so magic wins the slot.
-    expect(state.player.equipment.weapon.defId).toBe("test_wand");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_wand");
   });
 
   it("keeps a reliable single-target weapon over a same-budget spread gun", () => {
@@ -224,12 +224,12 @@ describe("autoEquipBest", () => {
     // four pellets in full, so auto-equip swapped the revolver away for it. It
     // must now stay put: a spread gun that only ties on paper is not an upgrade.
     const state = startGame();
-    state.player.equipment.weapon = weapon("test_revolver");
+    state.players[0].equipment.weapon = weapon("test_revolver");
     const scatter = weapon("test_scattergun");
     stock(state, [scatter]);
 
     expect(autoEquipBest(state)).toBe(0);
-    expect(state.player.equipment.weapon.defId).toBe("test_revolver");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_revolver");
     expect(bagIds(state)).toEqual([scatter.id]);
   });
 
@@ -238,33 +238,33 @@ describe("autoEquipBest", () => {
     // spread gun whose budget clears the weak sidearm even after the pellet
     // discount still wins its slot, so real ranged AoE upgrades are not lost.
     const state = startGame();
-    state.player.equipment.weapon = weapon("blaster"); // damage 8 — feeble
+    state.players[0].equipment.weapon = weapon("blaster"); // damage 8 — feeble
     const scatter = weapon("test_scattergun");
     stock(state, [scatter]);
 
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.weapon.defId).toBe("test_scattergun");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_scattergun");
   });
 
   it("committedLane reads the hero's spec: deepest attribute, else the held weapon", () => {
     const state = startGame();
     // A STRENGTH lean reads MELEE regardless of the gun in hand.
-    state.player.stats.strength = 50;
-    state.player.stats.dexterity = 10;
-    state.player.stats.intelligence = 10;
-    state.player.equipment.weapon = weapon("test_pistol"); // ranged, ignored
+    state.players[0].stats.strength = 50;
+    state.players[0].stats.dexterity = 10;
+    state.players[0].stats.intelligence = 10;
+    state.players[0].equipment.weapon = weapon("test_pistol"); // ranged, ignored
     expect(committedLane(state)).toBe("melee");
 
     // An INTELLIGENCE lean reads MAGIC.
-    state.player.stats.strength = 10;
-    state.player.stats.intelligence = 50;
+    state.players[0].stats.strength = 10;
+    state.players[0].stats.intelligence = 50;
     expect(committedLane(state)).toBe("magic");
 
     // No lean (equal attack stats) falls back to the class in hand.
-    state.player.stats.strength = 20;
-    state.player.stats.dexterity = 20;
-    state.player.stats.intelligence = 20;
-    state.player.equipment.weapon = weapon("test_pistol"); // ranged
+    state.players[0].stats.strength = 20;
+    state.players[0].stats.dexterity = 20;
+    state.players[0].stats.intelligence = 20;
+    state.players[0].equipment.weapon = weapon("test_pistol"); // ranged
     expect(committedLane(state)).toBe("ranged");
   });
 
@@ -272,20 +272,20 @@ describe("autoEquipBest", () => {
     // Affinity is a margin, not a ban: a melee find that out-budgets the held
     // gun by MORE than the lane bonus is a real upgrade and still wins the slot.
     const state = startGame();
-    state.player.stats.strength = 20;
-    state.player.stats.dexterity = 20;
-    state.player.stats.intelligence = 20;
-    state.player.equipment.weapon = weapon("test_pistol"); // ranged, feeble (7 dmg)
+    state.players[0].stats.strength = 20;
+    state.players[0].stats.dexterity = 20;
+    state.players[0].stats.intelligence = 20;
+    state.players[0].equipment.weapon = weapon("test_pistol"); // ranged, feeble (7 dmg)
     const strong = weapon("test_hammer"); // melee, far higher budget
     stock(state, [strong]);
 
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.weapon.defId).toBe("test_hammer");
+    expect(state.players[0].equipment.weapon.defId).toBe("test_hammer");
   });
 
   it("autoEquipUpgradeCount matches the sweep it predicts", () => {
     const state = startGame();
-    state.player.equipment.weapon = weapon("crude_sword");
+    state.players[0].equipment.weapon = weapon("crude_sword");
     bareGear(state);
     stock(state, [weapon("test_hammer"), gear("test_vest", "chest")]);
 

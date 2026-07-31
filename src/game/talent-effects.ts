@@ -39,7 +39,7 @@ function talentPower(): number {
 
 /** The rank the hero owns in a talent (0 when untrained). */
 export function talentRank(state: GameState, id: string): number {
-  return state.player.talents[id] ?? 0;
+  return state.players[0].talents[id] ?? 0;
 }
 
 /** Total ranks the hero has spent across `tree`'s talents. */
@@ -205,7 +205,7 @@ export function talentFrostNova(state: GameState): {
 export function talentBerserkMult(state: GameState): number {
   const per = sumEffect(state, "berserkPerRank");
   if (per <= 0) return 1;
-  const player = state.player;
+  const player = state.players[0];
   const missing =
     player.maxHp > 0 ? Math.max(0, 1 - player.hp / player.maxHp) : 0;
   return 1 + per * missing;
@@ -367,7 +367,7 @@ export function talentJumpMods(state: GameState): {
  * carrier's `evasionBurst` block; `player.evasionBurstMs > 0`), 1 otherwise.
  * Read in `playerSpeed`; the window is armed on a dodge in the struck path. */
 export function talentEvasionBurstMult(state: GameState): number {
-  if ((state.player.evasionBurstMs ?? 0) <= 0) return 1;
+  if ((state.players[0].evasionBurstMs ?? 0) <= 0) return 1;
   return procTalent(state, "evasionBurst")?.block.speedMult ?? 1;
 }
 

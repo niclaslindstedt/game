@@ -49,7 +49,7 @@ let nextItemId = 9000;
 /** A worn AMULET carrying exactly the given affixes (the granted-power tests'
  * one lever — the fixture amulet base itself carries nothing). */
 function wearCharm(state: GameState, affixes: Equipment["affixes"]): void {
-  state.player.equipment.amulet = {
+  state.players[0].equipment.amulet = {
     id: nextItemId++,
     defId: "test_amulet",
     slot: "amulet",
@@ -68,11 +68,11 @@ function stageMob(
   hp = 500,
 ) {
   stopWaves(state);
-  state.player.disarmed = true;
+  state.players[0].disarmed = true;
   state.rng = () => 0.99;
   const pos = {
-    x: state.player.pos.x + offset.x,
-    y: state.player.pos.y + offset.y,
+    x: state.players[0].pos.x + offset.x,
+    y: state.players[0].pos.y + offset.y,
   };
   const mob = makeEnemy({ pos, hp, maxHp: hp, speed: 0 });
   state.enemies = [mob];
@@ -88,12 +88,12 @@ describe("granted spells (the `spell` affix)", () => {
     const mob = stageMob(state, { x: SPELL.orbit.radius, y: 0 });
     run(state, idle, 3);
     expect(mob.hp).toBeLessThan(500);
-    expect(state.player.itemSpells).toHaveLength(1);
+    expect(state.players[0].itemSpells).toHaveLength(1);
 
     // Dropping the amulet silences the spell on the next tick.
-    state.player.equipment.amulet = null;
+    state.players[0].equipment.amulet = null;
     run(state, idle, 1);
-    expect(state.player.itemSpells).toHaveLength(0);
+    expect(state.players[0].itemSpells).toHaveLength(0);
   });
 
   it("a worn storm strikes the nearest foe on its interval", () => {
@@ -112,12 +112,12 @@ describe("granted spells (the `spell` affix)", () => {
     wearCharm(state, [{ kind: "spell", spell: "stasis", rank: 1 }]);
     syncItemSpells(state);
     const near = {
-      x: state.player.pos.x + SPELL.stasis.radius - 10,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + SPELL.stasis.radius - 10,
+      y: state.players[0].pos.y,
     };
     const far = {
-      x: state.player.pos.x + SPELL.stasis.radius + 200,
-      y: state.player.pos.y,
+      x: state.players[0].pos.x + SPELL.stasis.radius + 200,
+      y: state.players[0].pos.y,
     };
     expect(stasisFactorAt(state, near)).toBe(SPELL.stasis.slowFactor);
     expect(stasisFactorAt(state, far)).toBe(1);
@@ -126,18 +126,18 @@ describe("granted spells (the `spell` affix)", () => {
   it("INTELLIGENCE shortens the granted intervals, floored", () => {
     const state = startGame();
     const base = stormSpellBlock(state, 1).intervalMs;
-    state.player.stats.intelligence = 20;
+    state.players[0].stats.intelligence = 20;
     const quicker = stormSpellBlock(state, 1).intervalMs;
     expect(quicker).toBeLessThan(base);
     // A tower of INT can halve the cadence, never abolish it.
-    state.player.stats.intelligence = 10_000;
+    state.players[0].stats.intelligence = 10_000;
     expect(spellIntervalScale(state)).toBe(SPELL.intervalFloor);
   });
 
   it("ranks from multiple worn sources ADD into one stronger spell", () => {
     const state = startGame();
     wearCharm(state, [{ kind: "spell", spell: "orbit", rank: 1 }]);
-    state.player.equipment.head = {
+    state.players[0].equipment.head = {
       id: nextItemId++,
       defId: "test_helmet",
       slot: "head",
@@ -146,7 +146,7 @@ describe("granted spells (the `spell` affix)", () => {
       affixes: [{ kind: "spell", spell: "orbit", rank: 2 }],
     };
     syncItemSpells(state);
-    expect(state.player.itemSpells).toEqual([
+    expect(state.players[0].itemSpells).toEqual([
       expect.objectContaining({ spell: "orbit", rank: 3 }),
     ]);
   });
@@ -225,8 +225,8 @@ describe("procs (the `proc` affix)", () => {
       { kind: "proc", trigger: "kill", spell: "nova", chance: 1, rank: 1 },
     ]);
     stopWaves(state);
-    state.player.disarmed = true;
-    const at = { x: state.player.pos.x + 200, y: state.player.pos.y };
+    state.players[0].disarmed = true;
+    const at = { x: state.players[0].pos.x + 200, y: state.players[0].pos.y };
     // Low mlvl → the kill pays trivial (level-based) xp, so no incidental ding
     // inflates abilityPowerScale and the nova damage this test measures.
     const victim = makeEnemy({ pos: at, hp: 1, speed: 0, mlvl: 1 });
@@ -257,7 +257,7 @@ describe("sure strike", () => {
     expect(playerMissChance(state)).toBeGreaterThan(0);
     wearCharm(state, [{ kind: "sureStrike" }]);
     expect(playerMissChance(state)).toBe(0);
-    state.player.equipment.amulet = null;
+    state.players[0].equipment.amulet = null;
     expect(playerMissChance(state)).toBeGreaterThan(0);
   });
 });

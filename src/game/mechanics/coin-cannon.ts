@@ -29,7 +29,7 @@ const COIN_RADIUS = 4;
 
 function ready(ability: CoinCannonAbility, ctx: AbilityCtx): boolean {
   if (ctx.distance > ability.range) return false;
-  return lineOfSight(ctx.state, ctx.enemy.pos, ctx.state.player.pos);
+  return lineOfSight(ctx.state, ctx.enemy.pos, ctx.state.players[0].pos);
 }
 
 /**
@@ -39,7 +39,7 @@ function ready(ability: CoinCannonAbility, ctx: AbilityCtx): boolean {
  */
 function cast(ability: CoinCannonAbility, ctx: AbilityCtx): void {
   const { state, enemy, def } = ctx;
-  const locked = ctx.lockedDir ?? direction(enemy.pos, state.player.pos);
+  const locked = ctx.lockedDir ?? direction(enemy.pos, state.players[0].pos);
   const centre = Math.atan2(locked.y, locked.x);
   const spread = (ability.spreadDeg * Math.PI) / 180;
   const damage = mobBlowDamage(enemy, def.contactDamage, ability.damageFrac);

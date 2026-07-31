@@ -36,10 +36,10 @@ function statAffix(stat: StatName, value: number): Affix {
 /** Bias the hero's ALLOCATED stats toward `stat` (the spec the upgrade read
  * weights by), leaving the rest at a low floor. */
 function specInto(state: GameState, stat: StatName): void {
-  for (const s of Object.keys(state.player.stats) as StatName[]) {
-    state.player.stats[s] = 1;
+  for (const s of Object.keys(state.players[0].stats) as StatName[]) {
+    state.players[0].stats[s] = 1;
   }
-  state.player.stats[stat] = 30;
+  state.players[0].stats[stat] = 30;
 }
 
 describe("wouldUpgradeSlot", () => {
@@ -47,7 +47,7 @@ describe("wouldUpgradeSlot", () => {
     const state = startGame();
     // The medium starter is `crude_sword` (damage 20); `test_hammer` (34) is a
     // clear firepower upgrade.
-    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+    expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
     expect(wouldUpgradeSlot(state, weapon(1, "test_hammer"))).toBe(true);
   });
 
@@ -55,7 +55,7 @@ describe("wouldUpgradeSlot", () => {
     const state = startGame();
     // Wear the heavy `test_hammer` (damage 34), then the puny `blaster`
     // (damage 8) is a clear downgrade — no upgrade to tap.
-    state.player.equipment.weapon = weapon(1, "test_hammer");
+    state.players[0].equipment.weapon = weapon(1, "test_hammer");
     expect(wouldUpgradeSlot(state, weapon(2, "blaster"))).toBe(false);
   });
 
@@ -69,7 +69,7 @@ describe("wouldUpgradeSlot", () => {
 
   it("an empty non-weapon slot is always an upgrade to fill", () => {
     const state = startGame();
-    expect(state.player.equipment.chest).toBeNull();
+    expect(state.players[0].equipment.chest).toBeNull();
     expect(wouldUpgradeSlot(state, gear(1, "test_vest", "chest"))).toBe(true);
   });
 
@@ -77,7 +77,7 @@ describe("wouldUpgradeSlot", () => {
     const state = startGame();
     specInto(state, "intelligence"); // a caster
     // Wear an amulet rolling +5 STRENGTH — dead weight for a caster.
-    state.player.equipment.amulet = gear(1, "test_amulet", "amulet", [
+    state.players[0].equipment.amulet = gear(1, "test_amulet", "amulet", [
       statAffix("strength", 5),
     ]);
     // Same base, same-size roll, but into INTELLECT — the caster's stat: an
@@ -88,7 +88,7 @@ describe("wouldUpgradeSlot", () => {
     expect(wouldUpgradeSlot(state, intAmulet)).toBe(true);
     // The mirror: swapping the worn INT amulet for the same-size STR one is a
     // downgrade for this spec, so it flags neither upgrade nor tap.
-    state.player.equipment.amulet = intAmulet;
+    state.players[0].equipment.amulet = intAmulet;
     const strAmulet = gear(3, "test_amulet", "amulet", [
       statAffix("strength", 5),
     ]);
@@ -102,7 +102,7 @@ function dropAndPickUp(state: GameState, item: Equipment) {
   state.items.push({
     id: state.nextId++,
     kind: "equipment",
-    pos: { ...state.player.pos },
+    pos: { ...state.players[0].pos },
     equipment: item,
   });
   run(state, idle, 1);
@@ -124,13 +124,13 @@ describe("itemCollected event — pickup-card fields", () => {
       upgrade: true,
     });
     // It really was worn on the spot.
-    expect(state.player.equipment.weapon.id).toBe(4242);
+    expect(state.players[0].equipment.weapon.id).toBe(4242);
   });
 
   it("a weaker bagged find is flagged not-equipped, not-upgrade, with its id", () => {
     const state = startGame();
     // Wear the hammer so the puny blaster we drop is a downgrade that banks.
-    state.player.equipment.weapon = weapon(1, "test_hammer");
+    state.players[0].equipment.weapon = weapon(1, "test_hammer");
     const blaster = weapon(4343, "blaster"); // damage 8 < hammer's 34
     const event = dropAndPickUp(state, blaster);
     expect(event).toMatchObject({
@@ -141,8 +141,8 @@ describe("itemCollected event — pickup-card fields", () => {
       upgrade: false,
     });
     // It banked; the hammer still holds the weapon slot.
-    expect(state.player.equipment.weapon.id).toBe(1);
-    expect(state.player.inventory.some((it) => it?.id === 4343)).toBe(true);
+    expect(state.players[0].equipment.weapon.id).toBe(1);
+    expect(state.players[0].inventory.some((it) => it?.id === 4343)).toBe(true);
   });
 
   it("a passive trinket banks but is still flagged worth keeping", () => {
@@ -158,6 +158,6 @@ describe("itemCollected event — pickup-card fields", () => {
       equipped: false,
       upgrade: true,
     });
-    expect(state.player.inventory.some((it) => it?.id === 4444)).toBe(true);
+    expect(state.players[0].inventory.some((it) => it?.id === 4444)).toBe(true);
   });
 });

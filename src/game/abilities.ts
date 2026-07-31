@@ -31,7 +31,7 @@ export function grantAbility(
   slot?: number,
 ): boolean {
   const def = abilityDef(defId);
-  const player = state.player;
+  const player = state.players[0];
   const running = player.abilities.filter((a) => a.defId === defId);
   if (running.length > 0 && !def.stackable) return false;
   const ability: ActiveAbility = {
@@ -121,7 +121,7 @@ export function tickAbilityClock(
  * refused pickup stays where it was instead of being consumed.
  */
 export function canBankAbility(state: GameState, defId: string): boolean {
-  const held = state.player.heldAbilities;
+  const held = state.players[0].heldAbilities;
   if (held.length >= HELD_ITEMS.cap) return false;
   return !(abilityDef(defId).uniqueHeld && held.includes(defId));
 }
@@ -134,10 +134,10 @@ export function canBankAbility(state: GameState, defId: string): boolean {
  * spent nuke, or a discard all route through here so the links never drift.
  */
 export function removeHeldSlot(state: GameState, index: number): string | null {
-  const held = state.player.heldAbilities;
+  const held = state.players[0].heldAbilities;
   if (index < 0 || index >= held.length) return null;
   const [defId] = held.splice(index, 1);
-  for (const ability of state.player.abilities) {
+  for (const ability of state.players[0].abilities) {
     if (ability.slot !== undefined && ability.slot > index) ability.slot -= 1;
   }
   return defId ?? null;
@@ -145,7 +145,7 @@ export function removeHeldSlot(state: GameState, index: number): string | null {
 
 /** Whether the dock slot at `index` is holding a power that is running now. */
 export function isSlotActive(state: GameState, index: number): boolean {
-  return state.player.abilities.some((a) => a.slot === index);
+  return state.players[0].abilities.some((a) => a.slot === index);
 }
 
 /**
@@ -165,7 +165,7 @@ export function discardHeldAbility(
   state: GameState,
   index: number,
 ): string | null {
-  for (const ability of state.player.abilities) {
+  for (const ability of state.players[0].abilities) {
     if (ability.slot === index) ability.slot = undefined;
   }
   return removeHeldSlot(state, index);
@@ -185,14 +185,14 @@ export function moveHeldSlot(
   from: number,
   to: number,
 ): boolean {
-  const held = state.player.heldAbilities;
+  const held = state.players[0].heldAbilities;
   if (from === to) return false;
   if (from < 0 || from >= held.length || to < 0 || to >= held.length) {
     return false;
   }
   const [defId] = held.splice(from, 1);
   held.splice(to, 0, defId!);
-  for (const ability of state.player.abilities) {
+  for (const ability of state.players[0].abilities) {
     const s = ability.slot;
     if (s === undefined) continue;
     if (s === from) ability.slot = to;
@@ -217,7 +217,7 @@ export function moveHeldSlot(
  * (`LEVELING.maxLevel` never matters here — mob bars use the same L.)
  */
 export function abilityPowerScale(state: GameState): number {
-  const level = Math.max(1, state.player.level);
+  const level = Math.max(1, state.players[0].level);
   return (
     mobHpLevelFactor(level) *
     autoPowerScale(level) *
@@ -233,7 +233,7 @@ export function abilityPowerScale(state: GameState): number {
  * onto the player, so it can never outlive the power that granted it.
  */
 export function isPhased(state: GameState): boolean {
-  return state.player.abilities.some((a) => abilityDef(a.defId).phase);
+  return state.players[0].abilities.some((a) => abilityDef(a.defId).phase);
 }
 
 /**
@@ -243,7 +243,7 @@ export function isPhased(state: GameState): boolean {
  */
 export function abilitySpeedMult(state: GameState): number {
   let mult = 1;
-  for (const ability of state.player.abilities) {
+  for (const ability of state.players[0].abilities) {
     const phase = abilityDef(ability.defId).phase;
     if (phase) mult *= phase.speedMult;
   }
@@ -263,7 +263,7 @@ export function abilitySurge(state: GameState): {
 } {
   let damage = 1;
   let cooldown = 1;
-  for (const ability of state.player.abilities) {
+  for (const ability of state.players[0].abilities) {
     const surge = abilityDef(ability.defId).surge;
     if (!surge) continue;
     damage *= surge.damageMult;
@@ -282,7 +282,7 @@ export function abilitySurge(state: GameState): {
  */
 export function absorbWithBarriers(state: GameState, damage: number): number {
   if (damage <= 0) return damage;
-  const player = state.player;
+  const player = state.players[0];
   for (let i = player.abilities.length - 1; i >= 0; i--) {
     const ability = player.abilities[i] as ActiveAbility;
     if (ability.pool === undefined || ability.pool <= 0) continue;
@@ -319,7 +319,7 @@ export function absorbWithBarriers(state: GameState, damage: number): number {
  * the next blow kills like any other.
  */
 export function clipLethalDamage(state: GameState, damage: number): number {
-  const player = state.player;
+  const player = state.players[0];
   if (damage < player.hp) return damage;
   let floor: number | null = null;
   // The DEEPEST ward answers, and the cue is drawn in ITS colours — whichever
@@ -407,7 +407,7 @@ export function magnetRadius(state: GameState, def: AbilityDef): number {
  * field; the slow itself stays the authored factor.
  */
 export function stasisFactorAt(state: GameState, pos: Vec2): number {
-  return stasisFactorFrom(activeStasisFields(state), state.player.pos, pos);
+  return stasisFactorFrom(activeStasisFields(state), state.players[0].pos, pos);
 }
 
 /** One live stasis field, resolved for this player: its INT-widened reach
@@ -426,7 +426,7 @@ const NO_STASIS: readonly StasisField[] = Object.freeze([]);
  * radii (a full gear walk each) for every enemy every tick.
  */
 export function activeStasisFields(state: GameState): readonly StasisField[] {
-  const player = state.player;
+  const player = state.players[0];
   let fields: StasisField[] | null = null;
   for (const ability of player.abilities) {
     const def = abilityDef(ability.defId);

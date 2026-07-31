@@ -34,8 +34,8 @@ const SEED_NEXT = 4242;
 function withCompanion(state: GameState, defId = "test_companion"): Companion {
   clearStage(state);
   const companion = recruitCompanion(state, defId, {
-    x: state.player.pos.x + 60,
-    y: state.player.pos.y,
+    x: state.players[0].pos.x + 60,
+    y: state.players[0].pos.y,
   });
   state.events = [];
   return companion;
@@ -207,7 +207,7 @@ describe("the level and XP ride the loadout across runs", () => {
     }
     const next = createGame(SEED_NEXT, "test_level_2", "medium", loadout);
     const carried = next.companions[0]!;
-    expect(carried.level).toBe(Math.max(1, next.player.level));
+    expect(carried.level).toBe(Math.max(1, next.players[0].level));
     expect(carried.xp).toBe(0);
   });
 });
@@ -222,7 +222,10 @@ describe("the merchant no longer revives the party — he SELLS the cure", () =>
     // Plant the (undiscovered) merchant right on top of the hero so the next
     // step discovers him.
     state.merchant.discovered = false;
-    state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
+    state.merchant.pos = {
+      x: state.players[0].pos.x + 6,
+      y: state.players[0].pos.y,
+    };
     for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
       step(state, idle, DT);
     }
@@ -239,7 +242,10 @@ describe("the merchant no longer revives the party — he SELLS the cure", () =>
     const companion = withCompanion(state);
     companion.hp = 1;
     state.merchant.discovered = false;
-    state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
+    state.merchant.pos = {
+      x: state.players[0].pos.x + 6,
+      y: state.players[0].pos.y,
+    };
     for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
       step(state, idle, DT);
     }
@@ -251,7 +257,10 @@ describe("the merchant no longer revives the party — he SELLS the cure", () =>
     const state = startGame();
     withCompanion(state);
     state.merchant.discovered = false;
-    state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
+    state.merchant.pos = {
+      x: state.players[0].pos.x + 6,
+      y: state.players[0].pos.y,
+    };
     for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
       step(state, idle, DT);
     }
@@ -266,20 +275,23 @@ describe("the merchant no longer revives the party — he SELLS the cure", () =>
     const state = startGame();
     withCompanion(state);
     state.merchant.discovered = false;
-    state.merchant.pos = { x: state.player.pos.x + 6, y: state.player.pos.y };
+    state.merchant.pos = {
+      x: state.players[0].pos.x + 6,
+      y: state.players[0].pos.y,
+    };
     for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
       step(state, idle, DT);
     }
     const row = state.merchant.stock.find(
       (r) => r.kind === "weapon" && r.equipment.defId === "test_salts",
     )!;
-    state.player.coins = row.price * 4;
+    state.players[0].coins = row.price * 4;
     // Empty the bag so both purchases have somewhere to land.
-    state.player.inventory.fill(null);
+    state.players[0].inventory.fill(null);
     openShop(state);
     expect(buyStock(state, row.id)).toBe(true);
     expect(buyStock(state, row.id)).toBe(true);
-    const held = state.player.inventory.filter(
+    const held = state.players[0].inventory.filter(
       (item) => item?.defId === "test_salts",
     );
     expect(held).toHaveLength(2);

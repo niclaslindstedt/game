@@ -184,7 +184,7 @@ function emitPos(
 ): Vec2 {
   const { width, height } = state.level;
   const def = runLevelDef(state);
-  const player = state.player.pos;
+  const player = state.players[0].pos;
   const dx = spawner.at.x - player.x;
   const dy = spawner.at.y - player.y;
   // Bearing from the hero toward the point; if he is basically ON it, a summon
@@ -240,7 +240,7 @@ function emitBatch(
     const sc = resolveMobScaling(
       spawner.mobLevels ?? levelDefault,
       state.difficulty,
-      state.player.level,
+      state.players[0].level,
       state.rng,
       mobLevelScale(state),
       currentMobLevel(state),
@@ -345,9 +345,9 @@ function armEligibleSpawners(state: GameState, now: number): void {
     const gate = isHellgate(spawner);
     // A hellgate is simply not there until the rampage reaches its threshold.
     if (gate && stagesOver(state, spawner) < 0) continue;
-    const dist = distance(state.player.pos, spawner.at);
+    const dist = distance(state.players[0].pos, spawner.at);
     if (dist > spawner.triggerRadius) continue;
-    if (!lineOfSight(state, state.player.pos, spawner.at)) continue;
+    if (!lineOfSight(state, state.players[0].pos, spawner.at)) continue;
     if (!chainReady(spawner, spawners, now)) continue;
     eligible.push({ spawner, dist, gate });
   }
@@ -467,7 +467,7 @@ export function stepSpawners(state: GameState, view?: ViewSize): void {
       // or the hero walks out of range, and summons again as a slot frees or
       // he returns.
       const nearPoint =
-        distance(state.player.pos, spawner.at) <= spawner.triggerRadius;
+        distance(state.players[0].pos, spawner.at) <= spawner.triggerRadius;
       if (nearPoint) {
         // He arrived — the alarm has done its job; from here this is an
         // ordinary active point.
@@ -501,7 +501,7 @@ export function stepSpawners(state: GameState, view?: ViewSize): void {
         let live = 0;
         for (const id of spawner.memberIds) {
           const e = enemyById.get(id);
-          if (e && distanceSq(e.pos, state.player.pos) <= countRadiusSq) {
+          if (e && distanceSq(e.pos, state.players[0].pos) <= countRadiusSq) {
             live++;
           }
         }

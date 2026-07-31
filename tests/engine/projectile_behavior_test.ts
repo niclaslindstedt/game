@@ -59,7 +59,7 @@ function quietStage(): GameState {
   const state = startGame();
   stopWaves(state);
   state.enemies = [];
-  state.player.disarmed = true;
+  state.players[0].disarmed = true;
   state.rng = () => 0.99; // no misses, no dodges, no crits — pure mechanics
   return state;
 }
@@ -89,7 +89,7 @@ describe("multi-pellet volleys", () => {
     const state = startGame();
     stopWaves(state);
     state.rng = () => 0.99;
-    state.player.equipment.weapon = {
+    state.players[0].equipment.weapon = {
       id: 900,
       defId: "test_scattergun",
       slot: "weapon",
@@ -98,11 +98,11 @@ describe("multi-pellet volleys", () => {
       affixes: [],
       durability: 100,
     };
-    state.player.weaponCooldownMs = 0;
+    state.players[0].weaponCooldownMs = 0;
     // One sturdy target well inside range but outside a single tick's travel.
     state.enemies = [
       makeEnemy({
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
       }),
     ];
     step(state, idle, DT);
@@ -119,7 +119,7 @@ describe("multi-pellet volleys", () => {
 describe("piercing rounds", () => {
   it("punches through `pierce` bodies and never bills the same body twice", () => {
     const state = quietStage();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     // Three 1-hp fodder in a row along the shot's lane.
     for (let i = 0; i < 3; i++) {
       state.enemies.push(
@@ -147,7 +147,7 @@ describe("piercing rounds", () => {
 describe("homing darts", () => {
   it("curves onto a target it was not aimed at", () => {
     const state = quietStage();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     // Aimed due +x; the only target sits BEHIND the muzzle at −x.
     state.enemies.push(
       makeEnemy(
@@ -172,7 +172,7 @@ describe("homing darts", () => {
 describe("chain lightning", () => {
   it("leaps from the struck foe to its neighbor at reduced damage, with a flash", () => {
     const state = quietStage();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     const first = makeEnemy(
       { id: 9300, pos: { x: p.x + 60, y: p.y }, hp: 1, maxHp: 1, mlvl: 1 },
       "test_fodder",
@@ -205,7 +205,7 @@ describe("chain lightning", () => {
 
   it("does not leap to foes beyond chainRange", () => {
     const state = quietStage();
-    const p = state.player.pos;
+    const p = state.players[0].pos;
     const first = makeEnemy(
       { id: 9310, pos: { x: p.x + 60, y: p.y }, hp: 1, maxHp: 1 },
       "test_fodder",

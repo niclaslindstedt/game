@@ -99,7 +99,7 @@ describe("the stall's rarity markup", () => {
     const state = startGame(seed);
     clearStage(state);
     state.obstacles = [];
-    state.player.pos = {
+    state.players[0].pos = {
       x: state.merchant.pos.x + 20,
       y: state.merchant.pos.y,
     };
@@ -115,7 +115,7 @@ describe("the stall's rarity markup", () => {
     withRarities({ test_storm: ABILITY_DEFAULT_RARITY / 4, test_stasis: 1 });
     const state = trade(42);
     const base =
-      ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.player.level;
+      ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.players[0].level;
     let seen = 0;
     for (const entry of state.merchant.stock) {
       if (entry.kind !== "ability") continue;
@@ -135,9 +135,9 @@ describe("the stall's rarity markup", () => {
     const state = trade(42);
     const entry = state.merchant.stock.find((s) => s.kind === "ability")!;
     expect(entry.qty).toBe(1);
-    state.player.coins = entry.price * 10;
+    state.players[0].coins = entry.price * 10;
     expect(buyStock(state, entry.id)).toBe(true);
     expect(buyStock(state, entry.id)).toBe(false);
-    expect(state.player.coins).toBe(entry.price * 9);
+    expect(state.players[0].coins).toBe(entry.price * 9);
   });
 });

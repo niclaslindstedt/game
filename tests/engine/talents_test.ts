@@ -70,13 +70,13 @@ function heroWithStats(
 ): GameState {
   const state = startGame();
   const { str = 0, dex = 0, int = 0 } = opts;
-  state.player.level = 99;
-  state.player.stats.strength = str;
-  state.player.stats.dexterity = dex;
-  state.player.stats.intelligence = int;
-  state.player.spentStats.strength = str;
-  state.player.spentStats.dexterity = dex;
-  state.player.spentStats.intelligence = int;
+  state.players[0].level = 99;
+  state.players[0].stats.strength = str;
+  state.players[0].stats.dexterity = dex;
+  state.players[0].stats.intelligence = int;
+  state.players[0].spentStats.strength = str;
+  state.players[0].spentStats.dexterity = dex;
+  state.players[0].spentStats.intelligence = int;
   reconcileTalentPoints(state);
   return state;
 }
@@ -116,9 +116,9 @@ describe("the talent point economy", () => {
     const cap = treeCapacity("magic");
     expect(cap).toBeGreaterThanOrEqual(25); // even a full spec can't max the tree
     const state = heroWithStats({ int: 250 });
-    expect(earnedTalentPoints(state.player.spentStats, "intelligence")).toBe(
-      25,
-    );
+    expect(
+      earnedTalentPoints(state.players[0].spentStats, "intelligence"),
+    ).toBe(25);
     // All 25 earned points fit — none stranded.
     expect(availableTalentPoints(state, "intelligence")).toBe(25);
     expect(state.pendingTalentPoints.length).toBe(25);
@@ -160,13 +160,13 @@ describe("the talent point economy", () => {
 describe("the level-up pause holds behind the talent picker", () => {
   it("earns a talent point on a ×10 tree milestone and holds the pause", () => {
     const state = startGame();
-    state.player.level = 99;
-    state.player.stats.strength = 9;
-    state.player.spentStats.strength = 9;
-    state.player.pendingStatPoints = 1;
+    state.players[0].level = 99;
+    state.players[0].stats.strength = 9;
+    state.players[0].spentStats.strength = 9;
+    state.players[0].pendingStatPoints = 1;
     state.phase = "levelup";
     allocateStat(state, "strength"); // 9 → 10: crosses the first STR milestone
-    expect(state.player.pendingStatPoints).toBe(0);
+    expect(state.players[0].pendingStatPoints).toBe(0);
     expect(state.pendingTalentPoints).toEqual(["strength"]);
     // The point is spent, but the picker holds the run frozen.
     expect(state.phase).toBe("levelup");
@@ -174,10 +174,10 @@ describe("the level-up pause holds behind the talent picker", () => {
 
   it("resumes only once the talent point is spent", () => {
     const state = startGame();
-    state.player.level = 99;
-    state.player.stats.strength = 9;
-    state.player.spentStats.strength = 9;
-    state.player.pendingStatPoints = 1;
+    state.players[0].level = 99;
+    state.players[0].stats.strength = 9;
+    state.players[0].spentStats.strength = 9;
+    state.players[0].pendingStatPoints = 1;
     state.phase = "levelup";
     allocateStat(state, "strength");
     expect(state.phase).toBe("levelup");
@@ -187,15 +187,15 @@ describe("the level-up pause holds behind the talent picker", () => {
 
   it("resumes immediately when the last point crosses no milestone", () => {
     const state = startGame();
-    state.player.level = 99;
-    state.player.stats.strength = 12; // mid-decade: 12 → 13 crosses no ×10
-    state.player.spentStats.strength = 12;
+    state.players[0].level = 99;
+    state.players[0].stats.strength = 12; // mid-decade: 12 → 13 crosses no ×10
+    state.players[0].spentStats.strength = 12;
     // The point the first 10 STR already earned is spent (rank 1), so nothing
     // is pending going in — a realistic mid-decade hero.
-    state.player.talents.executioner = 1;
+    state.players[0].talents.executioner = 1;
     reconcileTalentPoints(state);
     expect(hasPendingTalentPoint(state)).toBe(false);
-    state.player.pendingStatPoints = 1;
+    state.players[0].pendingStatPoints = 1;
     state.phase = "levelup";
     allocateStat(state, "strength");
     expect(state.pendingTalentPoints).toHaveLength(0);
@@ -205,12 +205,12 @@ describe("the level-up pause holds behind the talent picker", () => {
   it("earns per-stat for a HYBRID build (no dominant-stat gate)", () => {
     // 9 STR + 9 INT, one banked point each; each crossing earns in its own tree.
     const state = startGame();
-    state.player.level = 99;
-    state.player.stats.strength = 9;
-    state.player.stats.intelligence = 9;
-    state.player.spentStats.strength = 9;
-    state.player.spentStats.intelligence = 9;
-    state.player.pendingStatPoints = 2;
+    state.players[0].level = 99;
+    state.players[0].stats.strength = 9;
+    state.players[0].stats.intelligence = 9;
+    state.players[0].spentStats.strength = 9;
+    state.players[0].spentStats.intelligence = 9;
+    state.players[0].pendingStatPoints = 2;
     state.phase = "levelup";
     allocateStat(state, "strength"); // earns a STR (melee) point
     allocateStat(state, "intelligence"); // earns an INT (magic) point
@@ -232,12 +232,12 @@ describe("the respec floor locks a spent talent's earning stat", () => {
   it("beginRespec keeps the floor placed and refunds only the surplus", () => {
     const state = heroWithStats({ str: 30 });
     spendTalentPoint(state, "executioner"); // 1 rank → floor 10
-    const before = state.player.pendingStatPoints;
+    const before = state.players[0].pendingStatPoints;
     beginRespec(state);
     // STR can't drop below the floor; the surplus (30 − 10) returns to the pool.
-    expect(state.player.stats.strength).toBe(10);
-    expect(state.player.spentStats.strength).toBe(10);
-    expect(state.player.pendingStatPoints).toBe(before + 20);
+    expect(state.players[0].stats.strength).toBe(10);
+    expect(state.players[0].spentStats.strength).toBe(10);
+    expect(state.players[0].pendingStatPoints).toBe(before + 20);
     // The spent rank survives, and its point is not re-owed.
     expect(talentRank(state, "executioner")).toBe(1);
     expect(availableTalentPoints(state, "strength")).toBe(0);
@@ -248,7 +248,7 @@ describe("the respec floor locks a spent talent's earning stat", () => {
     spendTalentPoint(state, "executioner"); // floor 10
     beginRespec(state); // STR now sits at its floor of 10
     expect(deallocateStat(state, "strength")).toBe(false);
-    expect(state.player.stats.strength).toBe(10);
+    expect(state.players[0].stats.strength).toBe(10);
   });
 
   it("revokes an UNSPENT point when a respec drops below its milestone", () => {
@@ -256,7 +256,7 @@ describe("the respec floor locks a spent talent's earning stat", () => {
     spendTalentPoint(state, "executioner"); // 1 spent, 1 still pending
     expect(availableTalentPoints(state, "strength")).toBe(1);
     beginRespec(state); // keeps only the floor (10) — the 2nd milestone is gone
-    expect(state.player.stats.strength).toBe(10);
+    expect(state.players[0].stats.strength).toBe(10);
     expect(availableTalentPoints(state, "strength")).toBe(0);
   });
 });
@@ -351,12 +351,12 @@ describe("stat-modifier effect reads", () => {
   it("BERSERKER RAGE scales weapon damage with MISSING hp", () => {
     const state = heroWithStats({ str: 50 });
     spendTalentPoint(state, "berserker_rage"); // +10% at 0 hp, rank 1
-    state.player.maxHp = 100;
-    state.player.hp = 100; // full → no bonus
+    state.players[0].maxHp = 100;
+    state.players[0].hp = 100; // full → no bonus
     expect(talentBerserkMult(state)).toBeCloseTo(1, 5);
-    state.player.hp = 50; // half → half the bonus
+    state.players[0].hp = 50; // half → half the bonus
     expect(talentBerserkMult(state)).toBeCloseTo(1.05, 5);
-    state.player.hp = 0; // dead-ish → full bonus
+    state.players[0].hp = 0; // dead-ish → full bonus
     expect(talentBerserkMult(state)).toBeCloseTo(1.1, 5);
   });
 });
@@ -389,7 +389,7 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
       ilvl: 50,
       affixes: [{ kind: "spell", spell: "orbit", rank: 2 }],
     };
-    state.player.equipment.amulet = amulet;
+    state.players[0].equipment.amulet = amulet;
     // 1 (talent) + 2 (item) → one rank-3 orbit spell.
     expect(grantedSpellRanks(state)).toEqual({ orbit: 3 });
   });
@@ -400,13 +400,13 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
     // A quiet arena: no waves, the hero holstered, a pinned rng, one mob sitting
     // on the orbit ring so an orb sweeps through it. Any damage is the talent's.
     stopWaves(state);
-    state.player.disarmed = true;
+    state.players[0].disarmed = true;
     state.rng = () => 0.99;
     const hp = 500;
     const mob = makeEnemy({
       pos: {
-        x: state.player.pos.x + SPELL.orbit.radius,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + SPELL.orbit.radius,
+        y: state.players[0].pos.y,
       },
       hp,
       maxHp: hp,
@@ -415,7 +415,7 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
     state.enemies = [mob];
     run(state, idle, 3);
     expect(mob.hp).toBeLessThan(hp);
-    expect(state.player.itemSpells).toEqual([
+    expect(state.players[0].itemSpells).toEqual([
       expect.objectContaining({ spell: "orbit", rank: 1 }),
     ]);
   });
@@ -445,7 +445,7 @@ function conjurerArena(talentId: string, ranks = 1): GameState {
   const state = heroWithStats({ int: 50 });
   for (let i = 0; i < ranks; i++) spendTalentPoint(state, talentId);
   stopWaves(state);
-  state.player.disarmed = true;
+  state.players[0].disarmed = true;
   state.rng = () => 0.99;
   return state;
 }
@@ -455,7 +455,7 @@ describe("the new magic conjurations kill through the live step", () => {
     const state = conjurerArena("immolation_aura");
     const hp = 5000;
     const mob = makeEnemy({
-      pos: { x: state.player.pos.x + 12, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 12, y: state.players[0].pos.y },
       hp,
       maxHp: hp,
       speed: 0,
@@ -470,7 +470,7 @@ describe("the new magic conjurations kill through the live step", () => {
     const state = conjurerArena("seeker_orbs");
     const hp = 5000;
     const mob = makeEnemy({
-      pos: { x: state.player.pos.x + 120, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 120, y: state.players[0].pos.y },
       hp,
       maxHp: hp,
       speed: 0,
@@ -489,8 +489,8 @@ describe("the new magic conjurations kill through the live step", () => {
   it("ARCANE SINGULARITY drags a nearby foe inward and crushes both", () => {
     const state = conjurerArena("arcane_singularity");
     const hp = 5000;
-    const cx = state.player.pos.x + 120;
-    const cy = state.player.pos.y;
+    const cx = state.players[0].pos.x + 120;
+    const cy = state.players[0].pos.y;
     const seed = makeEnemy({ pos: { x: cx, y: cy }, hp, maxHp: hp, speed: 0 });
     const drawn = makeEnemy(
       { pos: { x: cx, y: cy + 60 }, hp, maxHp: hp, speed: 0 },
@@ -529,12 +529,12 @@ describe("the magic tree's STRUCK defenses", () => {
     const state = heroWithStats({ int: 50 });
     spendTalentPoint(state, "frost_nova");
     stopWaves(state);
-    state.player.disarmed = false;
-    state.player.maxHp = 1e6;
-    state.player.hp = 1e6; // survive the blows so the assert is reached
+    state.players[0].disarmed = false;
+    state.players[0].maxHp = 1e6;
+    state.players[0].hp = 1e6; // survive the blows so the assert is reached
     state.rng = () => 0.99; // no dodge
     const mob = makeEnemy({
-      pos: { ...state.player.pos }, // touching → a contact blow lands
+      pos: { ...state.players[0].pos }, // touching → a contact blow lands
       hp: 1e6,
       maxHp: 1e6,
       speed: 0,
@@ -543,7 +543,7 @@ describe("the magic tree's STRUCK defenses", () => {
     state.enemies = [mob];
     run(state, idle, 20);
     expect(mob.chillMs).toBeGreaterThan(0); // frozen by the nova
-    expect(state.player.frostNovaCooldownMs).toBeGreaterThan(0); // armed
+    expect(state.players[0].frostNovaCooldownMs).toBeGreaterThan(0); // armed
   });
 
   it("ARCANE RETRIBUTION reflects a share of every blow back at the attacker", () => {
@@ -554,12 +554,12 @@ describe("the magic tree's STRUCK defenses", () => {
       const state = heroWithStats({ int: 50 });
       if (reflect) spendTalentPoint(state, "arcane_retribution");
       stopWaves(state);
-      state.player.disarmed = false;
-      state.player.maxHp = 1e6;
-      state.player.hp = 1e6;
+      state.players[0].disarmed = false;
+      state.players[0].maxHp = 1e6;
+      state.players[0].hp = 1e6;
       state.rng = () => 0.99;
       const mob = makeEnemy({
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         hp: 1e6,
         maxHp: 1e6,
         speed: 0,
@@ -602,9 +602,9 @@ describe("the melee tree's proc talents", () => {
       if (twin) trained(state, "twin_strike", 5);
       stopWaves(state);
       state.rng = () => 0.3; // no miss/dodge; fires the echo (chance 0.5)
-      state.player.weaponCooldownMs = 0;
+      state.players[0].weaponCooldownMs = 0;
       const mob = makeEnemy({
-        pos: { x: state.player.pos.x + 18, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 18, y: state.players[0].pos.y },
         hp: 1e6,
         maxHp: 1e6,
         speed: 0,
@@ -648,14 +648,14 @@ describe("the melee tree's proc talents", () => {
       stopWaves(state);
       // Armed (a holstered hero takes no contact at all); his own swings never
       // touch his hp, so the incoming blow is still the only thing that can.
-      state.player.disarmed = false;
-      state.player.maxHp = 1e6;
-      state.player.hp = 1e6;
+      state.players[0].disarmed = false;
+      state.players[0].maxHp = 1e6;
+      state.players[0].hp = 1e6;
       // Below the rank-5 parry chance (0.3) and above the low dodge → the blow
       // is parried, not dodged.
       state.rng = () => 0.2;
       const mob = makeEnemy({
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         hp: 1e6,
         maxHp: 1e6,
         speed: 0,
@@ -663,7 +663,7 @@ describe("the melee tree's proc talents", () => {
       });
       state.enemies = [mob];
       run(state, idle, 20);
-      return state.player.hp;
+      return state.players[0].hp;
     };
     expect(stage(true)).toBeGreaterThan(stage(false));
   });
@@ -683,11 +683,11 @@ describe("the melee tree's proc talents", () => {
     const state = heroWithStats({ str: 50 });
     trained(state, "seismic_landing", 3);
     stopWaves(state);
-    state.player.disarmed = true; // only the landing deals damage
+    state.players[0].disarmed = true; // only the landing deals damage
     state.rng = () => 0.99;
     const hp = 1e6;
     const mob = makeEnemy({
-      pos: { x: state.player.pos.x + 20, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 20, y: state.players[0].pos.y },
       hp,
       maxHp: hp,
       speed: 0,
@@ -697,7 +697,7 @@ describe("the melee tree's proc talents", () => {
     // Hop, then idle until the arc completes and touches down (the `land` fires).
     run(state, jumpOnce, 1);
     run(state, idle, 240, (s) => {
-      if (s.player.z === 0 && s.player.vz === 0) landed = true;
+      if (s.players[0].z === 0 && s.players[0].vz === 0) landed = true;
       return landed;
     });
     expect(landed).toBe(true);
@@ -726,13 +726,13 @@ describe("the ranged tree's proc talents", () => {
     state.rng = () => 0.9; // clean hits, no crit
     const hp = 1e6;
     const near = makeEnemy({
-      pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y },
       hp,
       maxHp: hp,
       speed: 0,
     });
     const far = makeEnemy({
-      pos: { x: state.player.pos.x + 90, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 90, y: state.players[0].pos.y },
       hp,
       maxHp: hp,
       speed: 0,
@@ -762,9 +762,9 @@ describe("the ranged tree's proc talents", () => {
     stopWaves(state);
     state.rng = () => 0.3; // clears miss/dodge, fires the shove (chance 0.65)
     const hp = 1e6;
-    const startX = state.player.pos.x + 40;
+    const startX = state.players[0].pos.x + 40;
     const mob = makeEnemy({
-      pos: { x: startX, y: state.player.pos.y },
+      pos: { x: startX, y: state.players[0].pos.y },
       hp,
       maxHp: hp,
       speed: 0,
@@ -786,7 +786,7 @@ describe("the ranged tree's proc talents", () => {
     state.rng = () => 0.3; // fires the slow (chance 0.75)
     const hp = 1e6;
     const mob = makeEnemy({
-      pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y },
       hp,
       maxHp: hp,
       speed: 0,
@@ -814,9 +814,9 @@ describe("the ranged tree's proc talents", () => {
     equipBlaster(state);
     stopWaves(state);
     state.rng = () => 0.3; // fires the extra spread (chance 0.5)
-    state.player.weaponCooldownMs = 0;
+    state.players[0].weaponCooldownMs = 0;
     const mob = makeEnemy({
-      pos: { x: state.player.pos.x + 120, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 120, y: state.players[0].pos.y },
       hp: 1e6,
       maxHp: 1e6,
       speed: 0,
@@ -853,8 +853,8 @@ describe("the ranged tree's mobility kickers", () => {
       let top = 0;
       run(state, jumpOnce, 1);
       run(state, idle, 240, (s) => {
-        top = Math.max(top, s.player.z);
-        return s.player.z === 0 && s.player.vz === 0 && top > 0;
+        top = Math.max(top, s.players[0].z);
+        return s.players[0].z === 0 && s.players[0].vz === 0 && top > 0;
       });
       return top;
     };
@@ -871,7 +871,7 @@ describe("the ranged tree's mobility kickers", () => {
     // Untriggered, the multiplier is still 1 (no live burst window).
     expect(talentEvasionBurstMult(state)).toBe(1);
     const base = playerSpeed(state);
-    state.player.evasionBurstMs = 500; // arm the window
+    state.players[0].evasionBurstMs = 500; // arm the window
     expect(talentEvasionBurstMult(state)).toBeGreaterThan(1);
     expect(playerSpeed(state)).toBeGreaterThan(base);
   });
@@ -880,10 +880,10 @@ describe("the ranged tree's mobility kickers", () => {
     const state = heroWithStats({ dex: 50 });
     trained(state, "evasion", 5);
     stopWaves(state);
-    state.player.disarmed = false; // a holstered hero takes no contact to dodge
+    state.players[0].disarmed = false; // a holstered hero takes no contact to dodge
     state.rng = () => 0; // force the dodge roll to succeed
     const mob = makeEnemy({
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       hp: 1e6,
       maxHp: 1e6,
       speed: 0,
@@ -891,7 +891,7 @@ describe("the ranged tree's mobility kickers", () => {
     });
     state.enemies = [mob];
     run(state, idle, 3);
-    expect(state.player.evasionBurstMs ?? 0).toBeGreaterThan(0);
+    expect(state.players[0].evasionBurstMs ?? 0).toBeGreaterThan(0);
   });
 });
 

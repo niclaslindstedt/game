@@ -161,7 +161,7 @@ export function drawAbilities(
   camera: Camera,
   timeMs: number,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   drawRunningPowerups(ctx, state, assets, camera, timeMs);
 
   // GRANTED forever spells (the `spell` affix on worn gear) draw off the
@@ -235,8 +235,8 @@ function drawImmolationRing(
   radius: number,
   timeMs: number,
 ): void {
-  const cx = Math.round(state.player.pos.x - camera.x);
-  const cy = Math.round(state.player.pos.y - camera.y);
+  const cx = Math.round(state.players[0].pos.x - camera.x);
+  const cy = Math.round(state.players[0].pos.y - camera.y);
   const flicker = 0.32 + 0.12 * Math.sin(timeMs / 90);
   ctx.strokeStyle = `rgba(255, 150, 60, ${flicker})`;
   ctx.lineWidth = 2;

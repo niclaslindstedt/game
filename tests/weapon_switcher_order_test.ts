@@ -36,7 +36,7 @@ function weapon(
  * feeble sidearm first, the heavy hitter last. */
 function stagedBag() {
   const state = startGame();
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   for (let i = 0; i < inv.length; i++) inv[i] = null;
   inv[0] = weapon(state, "blaster"); // the last-resort sidearm
   inv[1] = weapon(state, "box_cutter");
@@ -86,7 +86,7 @@ describe("quick-draw order (weaponAlternatives)", () => {
 
   it("never offers a broken weapon in either order", () => {
     const state = stagedBag();
-    state.player.inventory[2]!.durability = 0;
+    state.players[0].inventory[2]!.durability = 0;
     for (const order of ["bag", "dps"] as const) {
       expect(weaponAlternatives(state, order).some((a) => a.index === 2)).toBe(
         false,

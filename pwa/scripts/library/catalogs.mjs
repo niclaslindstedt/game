@@ -268,7 +268,7 @@ export const QUESTS = config.QUESTS;
  */
 export function questXp(reward, level, difficultyId) {
   return questRewards.questXpReward(
-    { player: { level }, difficulty: difficultyId },
+    { players: [{ level }], difficulty: difficultyId },
     reward,
   );
 }
@@ -433,7 +433,7 @@ const referenceState = createGame(1, LEVEL_ORDER[0]);
  * the talent whose page is being built rather than the pair.
  */
 export function withTalent(id, rank, read) {
-  const player = referenceState.player;
+  const player = referenceState.players[0];
   const owned = player.talents;
   const hp = player.hp;
   const burstMs = player.evasionBurstMs;
@@ -612,7 +612,7 @@ export const mobLevelXp = leveling.mobLevelXp;
  * whole state, and the reward rule stays the engine's rather than a copy.
  */
 export function killXp(def, mlvl, heroLevel) {
-  return loot.enemyKillXp({ player: { level: heroLevel } }, def, { mlvl });
+  return loot.enemyKillXp({ players: [{ level: heroLevel }] }, def, { mlvl });
 }
 
 /** An equipment/unique/story/companion id resolved to its display name. */

@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 5;
+export const PROTOCOL_VERSION = 6;
 
 /**
  * The most clients one session seats, host included.
@@ -260,18 +260,24 @@ export type FrameHeader = {
 export type WelcomePayload = {
   handshake: Handshake;
   params: SessionParams;
-  /** Which player slot this client is seated in. 0 for the host in PR 1; the
-   * party arrives in PR 3. */
+  /** Which ROSTER slot this client is drawn in — its row in the party frame
+   * and the name a `/kick` matches. Not the same fact as `seat`: a spectator
+   * has a slot and no seat. */
   slot: number;
   /**
-   * Whether this client STEERS the hero, or only watches him.
+   * WHICH HERO THIS CLIENT STEERS — an index into `state.players` — or null to
+   * watch.
    *
-   * Stated outright rather than inferred from `slot === 0`, and the difference
-   * is not cosmetic: the first spectator to connect is also seated at slot 0
-   * (there is nobody else), so inferring it silently handed a watcher the
-   * hero's whole private bag to draw. Two facts, two fields.
+   * Stated outright rather than inferred from `slot`, and the difference is not
+   * cosmetic: the first spectator to connect is also drawn at slot 0 (there is
+   * nobody else), so inferring it silently handed a watcher the hero's whole
+   * private bag to draw. Two facts, two fields.
+   *
+   * The seat is the SERVER's answer, decided at admission from what it seated
+   * the connection in. A client is TOLD its seat; it never asserts one, which
+   * is what stops a stranger claiming somebody else's hero.
    */
-  ownsPlayer: boolean;
+  seat: number | null;
 };
 
 /** The payload of a `bye`. */

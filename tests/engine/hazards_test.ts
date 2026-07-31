@@ -89,50 +89,50 @@ describe("gravity wells", () => {
   it("drags the grounded player toward the core", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { x: well.pos.x + 100, y: well.pos.y };
+    state.players[0].pos = { x: well.pos.x + 100, y: well.pos.y };
     step(state, idle, DT);
-    expect(state.player.pos.x).toBeLessThan(well.pos.x + 100);
-    expect(state.player.pos.y).toBe(well.pos.y);
+    expect(state.players[0].pos.x).toBeLessThan(well.pos.x + 100);
+    expect(state.players[0].pos.y).toBe(well.pos.y);
   });
 
   it("has no reach past its pull radius", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
     const x = well.pos.x + WELLS.pullRadius + 20;
-    state.player.pos = { x, y: well.pos.y };
+    state.players[0].pos = { x, y: well.pos.y };
     step(state, idle, DT);
-    expect(state.player.pos.x).toBe(x);
+    expect(state.players[0].pos.x).toBe(x);
   });
 
   it("a jumping player drifts toward the core and jumps less high", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { x: well.pos.x + 60, y: well.pos.y };
-    state.player.z = JUMP.dodgeHeight + 30;
-    state.player.vz = 100;
-    const vzBefore = state.player.vz;
-    const hpBefore = state.player.hp;
+    state.players[0].pos = { x: well.pos.x + 60, y: well.pos.y };
+    state.players[0].z = JUMP.dodgeHeight + 30;
+    state.players[0].vz = 100;
+    const vzBefore = state.players[0].vz;
+    const hpBefore = state.players[0].hp;
     step(state, idle, DT);
     // No longer sails clean over: the hole still tugs him toward the core...
-    expect(state.player.pos.x).toBeLessThan(well.pos.x + 60);
-    expect(state.player.pos.x).toBeGreaterThan(well.pos.x);
+    expect(state.players[0].pos.x).toBeLessThan(well.pos.x + 60);
+    expect(state.players[0].pos.x).toBeGreaterThan(well.pos.x);
     // ...and heaps gravity onto the hop, so vz drops FASTER than the level's
     // gravity alone would carry it — he jumps less high near the horizon.
     const levelOnly = vzBefore - state.level.gravity * (DT / 1000);
-    expect(state.player.vz).toBeLessThan(levelOnly - 0.001);
+    expect(state.players[0].vz).toBeLessThan(levelOnly - 0.001);
     // But he floats above the core: no burn while airborne.
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].hp).toBe(hpBefore);
   });
 
   it("devours the grounded player in the core: instant death", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { ...well.pos };
+    state.players[0].pos = { ...well.pos };
     step(state, idle, DT);
     // Getting stuck in a black hole is instant death — hp to 0, the run drops
     // into the death scene (the `dying` tableau, before the defeat modal) this
     // same tick, and the swallow event fires at the hole.
-    expect(state.player.hp).toBe(0);
+    expect(state.players[0].hp).toBe(0);
     expect(state.phase).toBe("dying");
     expect(
       state.events.some(
@@ -144,19 +144,19 @@ describe("gravity wells", () => {
   it("a player jumping over the core is not swallowed", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { ...well.pos };
-    state.player.z = JUMP.dodgeHeight + 30;
-    state.player.vz = 100;
+    state.players[0].pos = { ...well.pos };
+    state.players[0].z = JUMP.dodgeHeight + 30;
+    state.players[0].vz = 100;
     step(state, idle, DT);
     // He floats above the core — no swallow while airborne.
-    expect(state.player.hp).toBeGreaterThan(0);
+    expect(state.players[0].hp).toBeGreaterThan(0);
     expect(state.phase).not.toBe("defeat");
   });
 
   it("devours a minion at the core: no kill, no XP, no loot", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { x: well.pos.x + 600, y: well.pos.y };
+    state.players[0].pos = { x: well.pos.x + 600, y: well.pos.y };
     state.enemies.push(
       makeEnemy({ pos: { x: well.pos.x + 40, y: well.pos.y } }),
     );
@@ -175,7 +175,7 @@ describe("gravity wells", () => {
   it("drags but never devours an elite or boss", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { x: well.pos.x + 600, y: well.pos.y };
+    state.players[0].pos = { x: well.pos.x + 600, y: well.pos.y };
     const boss = state.enemies[0]!;
     boss.pos = { x: well.pos.x + 40, y: well.pos.y };
     run(state, idle, 300);
@@ -186,7 +186,7 @@ describe("gravity wells", () => {
   it("parks dragged items on the rim instead of eating them", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { x: well.pos.x + 600, y: well.pos.y };
+    state.players[0].pos = { x: well.pos.x + 600, y: well.pos.y };
     state.items.push({
       id: state.nextId++,
       kind: "medkit",
@@ -202,7 +202,7 @@ describe("gravity wells", () => {
   it("pulls loot from beyond the player's reach — about a screen away", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { x: well.pos.x + 900, y: well.pos.y };
+    state.players[0].pos = { x: well.pos.x + 900, y: well.pos.y };
     // Past the player's own pull, but well inside the loot reach.
     const startX = well.pos.x + WELLS.pullRadius + 60;
     expect(startX).toBeLessThan(well.pos.x + WELLS.lootRadius);
@@ -219,7 +219,7 @@ describe("gravity wells", () => {
   it("leaves loot beyond the loot reach untouched", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
-    state.player.pos = { x: well.pos.x + 900, y: well.pos.y };
+    state.players[0].pos = { x: well.pos.x + 900, y: well.pos.y };
     const x = well.pos.x + WELLS.lootRadius + 20;
     state.items.push({
       id: state.nextId++,
@@ -233,7 +233,7 @@ describe("gravity wells", () => {
 
 /** Park the hero clear of the impact so a staged strike never catches him. */
 function movePlayerAway(state: GameState, target: { x: number; y: number }) {
-  state.player.pos = { x: target.x + 400, y: target.y };
+  state.players[0].pos = { x: target.x + 400, y: target.y };
 }
 
 describe("asteroids", () => {
@@ -259,23 +259,23 @@ describe("asteroids", () => {
     const state = startGame(42, "test_asteroid_level");
     clearStage(state);
     state.asteroidTimerMs = 999_999;
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     // A still-falling rock aimed at the hero: airborne, it touches nothing.
     state.asteroids.push(
       makeRock({
-        target: { ...state.player.pos },
+        target: { ...state.players[0].pos },
         fallMs: 1500,
         ageMs: 0,
       }),
     );
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].hp).toBe(hpBefore);
     expect(state.asteroids).toHaveLength(1);
     expect(state.events.some((e) => e.type === "asteroidImpact")).toBe(false);
     // Age it to impact — now it detonates, hurts, and clears off the board.
     state.asteroids[0]!.ageMs = state.asteroids[0]!.fallMs;
     step(state, idle, DT);
-    expect(state.player.hp).toBeLessThan(hpBefore);
+    expect(state.players[0].hp).toBeLessThan(hpBefore);
     expect(state.asteroids).toHaveLength(0);
     expect(state.events.some((e) => e.type === "asteroidImpact")).toBe(true);
   });
@@ -292,35 +292,35 @@ describe("asteroids", () => {
     for (const [difficulty, frac] of rungs) {
       const state = startAsteroidsOn(difficulty);
       state.asteroidTimerMs = 999_999;
-      const hpBefore = state.player.hp;
+      const hpBefore = state.players[0].hp;
       // Dead centre: the distance falloff is ~1, so the bite is the full frac.
-      state.asteroids.push(makeRock({ target: { ...state.player.pos } }));
+      state.asteroids.push(makeRock({ target: { ...state.players[0].pos } }));
       step(state, idle, DT);
-      const expected = Math.max(1, Math.round(state.player.maxHp * frac));
-      expect(state.player.hp, difficulty).toBe(hpBefore - expected);
+      const expected = Math.max(1, Math.round(state.players[0].maxHp * frac));
+      expect(state.players[0].hp, difficulty).toBe(hpBefore - expected);
     }
   });
 
   it("hurts less at the blast edge than at the centre", () => {
     const centre = startAsteroidsOn("medium");
     centre.asteroidTimerMs = 999_999;
-    const centreHp = centre.player.hp;
-    centre.asteroids.push(makeRock({ target: { ...centre.player.pos } }));
+    const centreHp = centre.players[0].hp;
+    centre.asteroids.push(makeRock({ target: { ...centre.players[0].pos } }));
     step(centre, idle, DT);
-    const centreBite = centreHp - centre.player.hp;
+    const centreBite = centreHp - centre.players[0].hp;
 
     const edge = startAsteroidsOn("medium");
     edge.asteroidTimerMs = 999_999;
-    const edgeHp = edge.player.hp;
+    const edgeHp = edge.players[0].hp;
     // Impact almost a full blast radius away: near the rim, the bite eases off.
     edge.asteroids.push(
       makeRock({
-        target: { x: edge.player.pos.x + 45, y: edge.player.pos.y },
+        target: { x: edge.players[0].pos.x + 45, y: edge.players[0].pos.y },
         blastRadius: 50,
       }),
     );
     step(edge, idle, DT);
-    const edgeBite = edgeHp - edge.player.hp;
+    const edgeBite = edgeHp - edge.players[0].hp;
     expect(edgeBite).toBeGreaterThan(0);
     expect(edgeBite).toBeLessThan(centreBite);
   });
@@ -328,48 +328,51 @@ describe("asteroids", () => {
   it("misses the hero entirely when he stands outside the blast", () => {
     const state = startAsteroidsOn("medium");
     state.asteroidTimerMs = 999_999;
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     state.asteroids.push(
       makeRock({
-        target: { x: state.player.pos.x + 300, y: state.player.pos.y },
+        target: { x: state.players[0].pos.x + 300, y: state.players[0].pos.y },
         blastRadius: 50,
       }),
     );
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].hp).toBe(hpBefore);
   });
 
   it("a jumping hero rides out the blast unhurt", () => {
     const state = startAsteroidsOn("medium");
     state.asteroidTimerMs = 999_999;
-    state.player.z = JUMP.dodgeHeight + 30;
-    state.player.vz = 100;
-    const hpBefore = state.player.hp;
-    state.asteroids.push(makeRock({ target: { ...state.player.pos } }));
+    state.players[0].z = JUMP.dodgeHeight + 30;
+    state.players[0].vz = 100;
+    const hpBefore = state.players[0].hp;
+    state.asteroids.push(makeRock({ target: { ...state.players[0].pos } }));
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].hp).toBe(hpBefore);
   });
 
   it("flings the caught hero outward from ground zero", () => {
     const state = startAsteroidsOn("easy");
     state.asteroidTimerMs = 999_999;
-    const startX = state.player.pos.x;
+    const startX = state.players[0].pos.x;
     // Impact just to the LEFT of the hero — the shockwave shoves him RIGHT.
     state.asteroids.push(
       makeRock({
-        target: { x: startX - 20, y: state.player.pos.y },
+        target: { x: startX - 20, y: state.players[0].pos.y },
         blastRadius: 60,
       }),
     );
     run(state, idle, 200);
-    expect(state.player.pos.x).toBeGreaterThan(startX);
+    expect(state.players[0].pos.x).toBeGreaterThan(startX);
   });
 
   it("vaporizes a minion at the lethal core — no kill, no XP, no loot", () => {
     const state = startGame(42, "test_asteroid_level");
     clearStage(state);
     state.asteroidTimerMs = 999_999;
-    const target = { x: state.player.pos.x + 300, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 300,
+      y: state.players[0].pos.y,
+    };
     movePlayerAway(state, target);
     const minion = makeEnemy({ pos: { ...target } });
     minion.maxHp = 500; // fat bar: proves it wasn't an overkill farm
@@ -391,7 +394,10 @@ describe("asteroids", () => {
     const state = startGame(42, "test_asteroid_level");
     clearStage(state);
     state.asteroidTimerMs = 999_999;
-    const target = { x: state.player.pos.x + 400, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 400,
+      y: state.players[0].pos.y,
+    };
     movePlayerAway(state, target);
     // Sit the minion in the outer ring: past the lethal core, inside the blast.
     const blastRadius = 60;
@@ -410,7 +416,10 @@ describe("asteroids", () => {
     const state = startGame(42, "test_asteroid_level");
     clearStage(state);
     state.asteroidTimerMs = 999_999;
-    const target = { x: state.player.pos.x + 500, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 500,
+      y: state.players[0].pos.y,
+    };
     movePlayerAway(state, target);
     const boss = state.enemies[0]!; // the fixture's set piece
     boss.pos = { ...target };
@@ -424,7 +433,10 @@ describe("asteroids", () => {
     const state = startGame(42, "test_asteroid_level");
     clearStage(state);
     state.asteroidTimerMs = 999_999;
-    const target = { x: state.player.pos.x + 300, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 300,
+      y: state.players[0].pos.y,
+    };
     movePlayerAway(state, target);
     expect(state.craters).toHaveLength(0);
     state.asteroids.push(makeRock({ target, blastRadius: 50 }));
@@ -462,21 +474,21 @@ describe("hay balls", () => {
     const state = startGame(42, "test_hayball_level");
     clearStage(state);
     state.hayBallTimerMs = 999_999; // the hand-built bale is the only one
-    const startX = state.player.pos.x;
-    const hpBefore = state.player.hp;
+    const startX = state.players[0].pos.x;
+    const hpBefore = state.players[0].hp;
     state.hayBalls.push(
-      makeBall({ pos: { x: startX, y: state.player.pos.y } }),
+      makeBall({ pos: { x: startX, y: state.players[0].pos.y } }),
     );
     step(state, idle, DT);
     // Pushed left, and nicked exactly the slight flat bite.
-    expect(state.player.pos.x).toBeLessThan(startX);
-    expect(state.player.hp).toBe(hpBefore - HAY_BALLS.damage);
+    expect(state.players[0].pos.x).toBeLessThan(startX);
+    expect(state.players[0].hp).toBe(hpBefore - HAY_BALLS.damage);
     expect(state.events.some((e) => e.type === "hayBallHit")).toBe(true);
     // The bite latches — the same bale keeps shoving but never nicks again.
-    const xAfterFirst = state.player.pos.x;
+    const xAfterFirst = state.players[0].pos.x;
     step(state, idle, DT);
-    expect(state.player.pos.x).toBeLessThan(xAfterFirst);
-    expect(state.player.hp).toBe(hpBefore - HAY_BALLS.damage);
+    expect(state.players[0].pos.x).toBeLessThan(xAfterFirst);
+    expect(state.players[0].hp).toBe(hpBefore - HAY_BALLS.damage);
   });
 
   it("stops shoving once the hero steps out of the lane", () => {
@@ -486,30 +498,30 @@ describe("hay balls", () => {
     // A bale far off the hero's lane never touches him.
     state.hayBalls.push(
       makeBall({
-        pos: { x: state.player.pos.x, y: state.player.pos.y + 400 },
+        pos: { x: state.players[0].pos.x, y: state.players[0].pos.y + 400 },
       }),
     );
-    const startX = state.player.pos.x;
-    const hpBefore = state.player.hp;
+    const startX = state.players[0].pos.x;
+    const hpBefore = state.players[0].hp;
     step(state, idle, DT);
-    expect(state.player.pos.x).toBe(startX);
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].pos.x).toBe(startX);
+    expect(state.players[0].hp).toBe(hpBefore);
   });
 
   it("a jumping hero clears a bale untouched", () => {
     const state = startGame(42, "test_hayball_level");
     clearStage(state);
     state.hayBallTimerMs = 999_999;
-    state.player.z = JUMP.dodgeHeight + 30;
-    state.player.vz = 100;
-    const startX = state.player.pos.x;
-    const hpBefore = state.player.hp;
+    state.players[0].z = JUMP.dodgeHeight + 30;
+    state.players[0].vz = 100;
+    const startX = state.players[0].pos.x;
+    const hpBefore = state.players[0].hp;
     state.hayBalls.push(
-      makeBall({ pos: { x: startX, y: state.player.pos.y } }),
+      makeBall({ pos: { x: startX, y: state.players[0].pos.y } }),
     );
     step(state, idle, DT);
-    expect(state.player.pos.x).toBe(startX);
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].pos.x).toBe(startX);
+    expect(state.players[0].hp).toBe(hpBefore);
   });
 
   it("shoves minions out of its path without hurting them", () => {
@@ -517,7 +529,7 @@ describe("hay balls", () => {
     clearStage(state);
     state.hayBallTimerMs = 999_999;
     const minion = makeEnemy({
-      pos: { x: state.player.pos.x + 200, y: state.player.pos.y + 3 },
+      pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y + 3 },
     });
     state.enemies.push(minion);
     state.hayBalls.push(
@@ -543,8 +555,8 @@ describe("hay balls", () => {
     state.hayBalls.push(
       makeBall({
         pos: {
-          x: state.player.pos.x - HAY_BALLS.despawnDistance - 10,
-          y: state.player.pos.y,
+          x: state.players[0].pos.x - HAY_BALLS.despawnDistance - 10,
+          y: state.players[0].pos.y,
         },
       }),
     );

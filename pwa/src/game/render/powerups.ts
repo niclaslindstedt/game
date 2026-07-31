@@ -77,7 +77,7 @@ export function drawRunningPowerups(
   camera: Camera,
   timeMs: number,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   if (player.abilities.length === 0) return;
   const px = Math.round(player.pos.x - camera.x);
   const py = Math.round(player.pos.y - camera.y);
@@ -153,7 +153,7 @@ function drawOrbitRing(
   const style = powerupStyle(ability.defId);
   const sprite =
     spriteByName(assets.sprites, orbit.sprite) ?? assets.sprites.fireball;
-  const player = state.player;
+  const player = state.players[0];
 
   ctx.save();
   // NO scorch ring: a drawn circle on the floor reads as a decal someone
@@ -314,7 +314,7 @@ function drawMagnetField(
   style: PowerupStyle,
   timeMs: number,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   const px = Math.round(player.pos.x - camera.x);
   const py = Math.round(player.pos.y - camera.y);
   ctx.save();

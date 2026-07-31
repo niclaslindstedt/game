@@ -418,7 +418,7 @@ describe("a run on a generated map", () => {
         expect(state.enemies.some((e) => e.defId === occupant)).toBe(false);
         // Walk the hero up to the door and let the run tick, exactly as play
         // does — the door bangs open and the occupant comes out to greet him.
-        state.player.pos = { ...lair.pos };
+        state.players[0].pos = { ...lair.pos };
         settle(state);
         step(state, { steering: false, target: lair.pos, jump: false }, 16);
         expect(lair.open, `${id} lair ${i} stayed shut`).toBe(true);

@@ -23,7 +23,7 @@ import { qualityMult } from "./quality.ts";
 
 /** The equipped weapon's per-hit damage before the crit roll. */
 export function weaponDamage(state: GameState): number {
-  return weaponDamageFor(state, state.player.equipment.weapon);
+  return weaponDamageFor(state, state.players[0].equipment.weapon);
 }
 
 /**

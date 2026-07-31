@@ -36,38 +36,38 @@ describe("weapon break re-derives the stat pools", () => {
     const state = startGame();
     clearStage(state);
 
-    const bareMaxStamina = state.player.maxStamina;
-    const bareMaxHp = state.player.maxHp;
+    const bareMaxStamina = state.players[0].maxStamina;
+    const bareMaxHp = state.players[0].maxHp;
 
     // Equip a +10 STAMINA blade through the real bag path — the pools grow.
     const bonus = 10;
-    state.player.inventory[0] = staminaSword(bonus);
+    state.players[0].inventory[0] = staminaSword(bonus);
     expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.maxStamina).toBe(
+    expect(state.players[0].maxStamina).toBe(
       bareMaxStamina + bonus * STAMINA.maxPerPoint,
     );
-    expect(state.player.maxHp).toBe(bareMaxHp + bonus * STAMINA.hpPerPoint);
+    expect(state.players[0].maxHp).toBe(bareMaxHp + bonus * STAMINA.hpPerPoint);
 
     // Fill the pools so the clamp is visible. Clear the bag so the shattered
     // blade falls back to the unbreakable sidearm (no stat affixes), leaving
     // the pool drop attributable solely to the lost +STAMINA.
-    state.player.stamina = state.player.maxStamina;
-    state.player.hp = state.player.maxHp;
-    state.player.inventory.fill(null);
-    state.player.equipment.weapon.durability = 1;
+    state.players[0].stamina = state.players[0].maxStamina;
+    state.players[0].hp = state.players[0].maxHp;
+    state.players[0].inventory.fill(null);
+    state.players[0].equipment.weapon.durability = 1;
     wearEquippedWeapon(state);
 
     // The blade is gone (swapped for the sidearm), so its bonus is too — the
     // pools are re-derived to the bare stats, not left at the broken weapon's.
     expect(state.events.some((e) => e.type === "weaponBroke")).toBe(true);
-    expect(state.player.equipment.weapon.id).not.toBe(555);
+    expect(state.players[0].equipment.weapon.id).not.toBe(555);
     expect(
-      state.player.equipment.weapon.affixes.some((a) => a.kind === "stat"),
+      state.players[0].equipment.weapon.affixes.some((a) => a.kind === "stat"),
     ).toBe(false);
-    expect(state.player.maxStamina).toBe(bareMaxStamina);
-    expect(state.player.maxHp).toBe(bareMaxHp);
+    expect(state.players[0].maxStamina).toBe(bareMaxStamina);
+    expect(state.players[0].maxHp).toBe(bareMaxHp);
     // Current pools clamp to the re-derived max (never left above the bar).
-    expect(state.player.stamina).toBe(bareMaxStamina);
-    expect(state.player.hp).toBe(bareMaxHp);
+    expect(state.players[0].stamina).toBe(bareMaxStamina);
+    expect(state.players[0].hp).toBe(bareMaxHp);
   });
 });

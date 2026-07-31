@@ -102,7 +102,7 @@ describe("the quality roll", () => {
   it("pieces from before quality shipped read as normal", () => {
     const state = startGame();
     // The hand-minted starter carries no quality field — the old-save shape.
-    const starter = state.player.equipment.weapon;
+    const starter = state.players[0].equipment.weapon;
     expect(starter.quality).toBeUndefined();
     expect(qualityOf(starter)).toBe("normal");
     expect(qualityMult(starter)).toBe(1);
@@ -175,7 +175,7 @@ describe("what quality is worth", () => {
       }),
     );
     // Wear it, mend it: the kit restores the CRUDE maximum, never the def's.
-    state.player.equipment.weapon = crude;
+    state.players[0].equipment.weapon = crude;
     crude.durability = 1;
     expect(repairEquippedWeapon(state)).toBe(true);
     expect(crude.durability).toBe(full);

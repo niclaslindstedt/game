@@ -330,7 +330,7 @@ export function MapOverlay({
               className="pixel-img map-marker is-you"
               src={iconUrl(PLAYER_SPRITE)}
               alt=""
-              style={at(state.player.pos)}
+              style={at(state.players[0].pos)}
             />
           </div>
         </div>

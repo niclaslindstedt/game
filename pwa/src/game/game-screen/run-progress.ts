@@ -89,7 +89,7 @@ export function createRunProgress(deps: {
       captureEnabled &&
       checkpointRef.current?.levelId !== runLevelId &&
       state.phase === "playing" &&
-      !state.player.disarmed
+      !state.players[0].disarmed
     ) {
       checkpointRef.current = {
         levelId: runLevelId,
@@ -342,7 +342,7 @@ const WORN_SLOTS = [
  * weapon plus every filled armor / jewellery / offhand slot.
  */
 export function wornEquipment(state: GameState): WornPiece[] {
-  const eq = state.player.equipment;
+  const eq = state.players[0].equipment;
   const worn: WornPiece[] = [];
   for (const slot of WORN_SLOTS) {
     const piece = eq[slot];
@@ -366,7 +366,7 @@ export function makeWornEquipmentGate(): (state: GameState) => boolean {
   const seen: unknown[] = WORN_SLOTS.map(() => undefined);
   let primed = false;
   return (state) => {
-    const eq = state.player.equipment;
+    const eq = state.players[0].equipment;
     let changed = !primed;
     primed = true;
     for (let i = 0; i < WORN_SLOTS.length; i++) {

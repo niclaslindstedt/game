@@ -52,7 +52,7 @@ function foesWithin(state: GameState, radius: number): number {
   let n = 0;
   for (const enemy of state.enemies) {
     if (inertEnemy(enemy)) continue;
-    if (distance(state.player.pos, enemy.pos) <= radius) n++;
+    if (distance(state.players[0].pos, enemy.pos) <= radius) n++;
   }
   return n;
 }
@@ -61,7 +61,7 @@ function foesWithin(state: GameState, radius: number): number {
  * afford to be DARING: it keeps kiting forward and skips the escape-route
  * guard — worst case, the button clears the screen. Pure. */
 export function hasNukeBanked(state: GameState): boolean {
-  return state.player.heldAbilities.some(
+  return state.players[0].heldAbilities.some(
     (id) => abilityDef(id).nuke !== undefined,
   );
 }
@@ -76,7 +76,7 @@ export function hasNukeBanked(state: GameState): boolean {
 function bankedPowerups(
   state: GameState,
 ): { defId: string; slot: number; def: AbilityDef }[] {
-  const player = state.player;
+  const player = state.players[0];
   return player.heldAbilities
     .map((defId, slot) => ({ defId, slot, def: abilityDef(defId) }))
     .filter(({ slot }) => !isSlotActive(state, slot))
@@ -99,7 +99,7 @@ function bankedPowerups(
  * never the stasis. Pure (state only), so determinism holds.
  */
 export function pickPowerupMoment(state: GameState): number {
-  const player = state.player;
+  const player = state.players[0];
   const banked = bankedPowerups(state);
   if (banked.length === 0) return -1;
   const packedClose = threatCountWithin(state, SURROUND_RADIUS);
@@ -148,7 +148,7 @@ export function pickPowerupMoment(state: GameState): number {
 export function pickPowerupBurn(state: GameState): number {
   const banked = bankedPowerups(state);
   if (banked.length === 0) return -1;
-  const openSlots = HELD_ITEMS.cap - state.player.heldAbilities.length;
+  const openSlots = HELD_ITEMS.cap - state.players[0].heldAbilities.length;
   const anyFoeNear = threatCountWithin(state, THREAT_RADIUS) > 0;
   for (let i = banked.length - 1; i >= 0; i--) {
     const { def, defId, slot } = banked[i]!;
@@ -174,7 +174,7 @@ function magnetLootClose(state: GameState, def: AbilityDef): boolean {
   let count = 0;
   for (const item of state.items) {
     if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
-    if (distance(state.player.pos, item.pos) > reach) continue;
+    if (distance(state.players[0].pos, item.pos) > reach) continue;
     count++;
     if (count >= MAGNET_LOOT_MIN) return true;
   }
@@ -193,7 +193,7 @@ function magnetLootClose(state: GameState, def: AbilityDef): boolean {
 export function powerupSortMove(
   state: GameState,
 ): { from: number; to: number } | null {
-  const held = state.player.heldAbilities;
+  const held = state.players[0].heldAbilities;
   if (held.length < 2) return null;
   const order = held
     .map((defId, i) => ({ i, v: abilityValue(defId) }))
@@ -220,7 +220,7 @@ export function powerupSortMove(
  * over the item (nearestWantedItem already steers at ground abilities).
  */
 export function powerupDropForUpgrade(state: GameState): number {
-  const player = state.player;
+  const player = state.players[0];
   const held = player.heldAbilities;
   if (held.length < HELD_ITEMS.cap) return -1; // room already
   // The best grabbable powerup find in reach.
@@ -291,7 +291,7 @@ const AIM_CLUSTER_CAP = 10;
  * wins over a hittable foe. Pure (state only), so determinism holds.
  */
 export function bestAimTarget(state: GameState): Vec2 | undefined {
-  const player = state.player;
+  const player = state.players[0];
   const equipped = player.equipment.weapon;
   const range = weaponRangeFor(state, equipped);
   // Candidates: live, targetable, in range, in sight — the foes a swing or a

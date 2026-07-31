@@ -32,7 +32,7 @@ import { gearScore } from "./weapon-math.ts";
  * is what the caller swaps back into the bag.
  */
 export function ringSlotFor(state: GameState): RingSlot {
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
   for (const slot of RING_SLOTS) if (!equipment[slot]) return slot;
   const [first, second] = RING_SLOTS;
   return gearScore(equipment[second] as Equipment) <
@@ -72,7 +72,7 @@ export function wornCounterpart(
   piece: Equipment,
 ): Equipment | null {
   const slot = wearSlotFor(state, piece);
-  return slot ? state.player.equipment[slot] : null;
+  return slot ? state.players[0].equipment[slot] : null;
 }
 
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
@@ -84,7 +84,7 @@ export function wornCounterpart(
  * it's equipped, and a hero who chose the shield chose the smaller carry.
  */
 export function equippedBagSlots(state: GameState): number {
-  const bag = state.player.equipment.offhand;
+  const bag = state.players[0].equipment.offhand;
   // The second arm may be holding a SHIELD instead, which carries no cells.
   if (!bag || bag.slot !== "bag" || isWeaponDef(bag.defId)) return 0;
   // The INSTANCE stamp first — the ilvl-grown count `rollEquipment` froze at
@@ -122,7 +122,7 @@ export function inventoryCapacity(state: GameState): number {
  * STRENGTH-boosting charm can never strand or discard a carried item.
  */
 export function syncInventoryCapacity(state: GameState): void {
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   const want = inventoryCapacity(state);
   while (inv.length < want) inv.push(null);
 }
@@ -134,7 +134,7 @@ export function syncInventoryCapacity(state: GameState): void {
  * slot back into that cell. Returns false on an empty cell.
  */
 export function equipFromInventory(state: GameState, index: number): boolean {
-  const player = state.player;
+  const player = state.players[0];
   const item = player.inventory[index];
   if (!item) return false;
   // The equip gates hold in the bag too: an under-leveled or under-statted
@@ -178,7 +178,7 @@ export function equipFromInventoryInto(
   index: number,
   slot: EquipSlot,
 ): boolean {
-  const player = state.player;
+  const player = state.players[0];
   const item = player.inventory[index];
   if (!item) return false;
   if (!fitsEquipSlot(item.slot, slot)) return false;
@@ -205,7 +205,7 @@ export function equipFromInventoryInto(
  */
 export function unequipToInventory(state: GameState, slot: EquipSlot): boolean {
   if (slot === "weapon") return false;
-  const player = state.player;
+  const player = state.players[0];
   const item = player.equipment[slot];
   if (!item) return false;
   const free = player.inventory.indexOf(null);
@@ -223,7 +223,7 @@ export function moveInventoryItem(
   from: number,
   to: number,
 ): void {
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   if (from === to || !(from in inv) || !(to in inv)) return;
   const a = inv[from] ?? null;
   inv[from] = inv[to] ?? null;
@@ -232,9 +232,9 @@ export function moveInventoryItem(
 
 /** Add loot to the first free cell; false (and no mutation) when full. */
 export function addToInventory(state: GameState, item: Equipment): boolean {
-  const free = state.player.inventory.indexOf(null);
+  const free = state.players[0].inventory.indexOf(null);
   if (free === -1) return false;
-  state.player.inventory[free] = item;
+  state.players[0].inventory[free] = item;
   return true;
 }
 
@@ -265,17 +265,17 @@ export function gateKeyTarget(
  * the gate already stands.
  */
 export function spendGateKey(state: GameState, index: number): boolean {
-  const item = state.player.inventory[index] ?? null;
+  const item = state.players[0].inventory[index] ?? null;
   if (!item) return false;
   const gate = gateKeyTarget(state, item);
   if (!gate) return false;
   const def = runLevelDef(state);
   const gateDef = (def.gates ?? []).find((g) => g.id === gate.id);
   if (!gateDef) return false;
-  state.player.inventory[index] = null;
+  state.players[0].inventory[index] = null;
   const pos = {
-    x: clamp(state.player.pos.x + GATES.summonDistance, 24, def.width - 24),
-    y: clamp(state.player.pos.y, 24, def.height - 24),
+    x: clamp(state.players[0].pos.x + GATES.summonDistance, 24, def.width - 24),
+    y: clamp(state.players[0].pos.y, 24, def.height - 24),
   };
   state.gates.push({ id: gate.id, to: gate.to, pos, entered: false });
   state.landmarks.push({
@@ -298,7 +298,7 @@ export function discardFromInventory(
   state: GameState,
   index: number,
 ): Equipment | null {
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   const item = inv[index] ?? null;
   if (!item) return null;
   inv[index] = null;
@@ -317,7 +317,7 @@ export function discardEquipped(
   slot: EquipSlot,
 ): Equipment | null {
   if (slot === "weapon") return null;
-  const player = state.player;
+  const player = state.players[0];
   const item = player.equipment[slot];
   if (!item) return null;
   player.equipment[slot] = null;

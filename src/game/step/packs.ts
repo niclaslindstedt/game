@@ -49,7 +49,7 @@ export function stepPacks(state: GameState): void {
     if (pack.status === "dormant") {
       if (
         canWake &&
-        distance(state.player.pos, pack.at) <= pack.triggerRadius
+        distance(state.players[0].pos, pack.at) <= pack.triggerRadius
       ) {
         wakePack(state, pack, specs[i] as PackSpec);
       }
@@ -87,7 +87,7 @@ function wakePack(state: GameState, pack: PackState, spec: PackSpec): void {
       const psc = resolveMobScaling(
         runLevelDef(state).mobLevels,
         state.difficulty,
-        state.player.level,
+        state.players[0].level,
         state.rng,
         mobLevelScale(state),
         currentMobLevel(state),

@@ -164,7 +164,7 @@ function mintCompanionWeapon(state: GameState, weaponId: string): Equipment {
     defId: weaponId,
     slot: "weapon",
     tier: "regular",
-    ilvl: Math.max(1, state.player.level),
+    ilvl: Math.max(1, state.players[0].level),
     affixes: [],
     def: structuredClone(weaponDef(weaponId)),
   };
@@ -195,8 +195,8 @@ export function recruitCompanion(
     const outgoing = state.companions.shift() as Companion;
     for (const slot of ["head", "chest"] as const) {
       const piece = outgoing.equipment[slot];
-      const free = piece ? state.player.inventory.indexOf(null) : -1;
-      if (piece && free >= 0) state.player.inventory[free] = piece;
+      const free = piece ? state.players[0].inventory.indexOf(null) : -1;
+      if (piece && free >= 0) state.players[0].inventory[free] = piece;
     }
     state.events.push({
       type: "companionDismissed",
@@ -207,7 +207,7 @@ export function recruitCompanion(
   const def = companionDef(defId);
   // Recruited TRAINED to the hero — it joins as an equal, then earns its own
   // levels from here (its XP bar starts fresh at that level).
-  const level = Math.max(1, state.player.level);
+  const level = Math.max(1, state.players[0].level);
   const maxHp = companionMaxHp(def, level);
   const companion: Companion = {
     id: state.nextId++,
@@ -339,7 +339,7 @@ export function stepCompanions(
   const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
   for (const enemy of state.enemies) {
     if (inertEnemy(enemy)) continue;
-    if (distanceSq(enemy.pos, state.player.pos) > radiusSq) continue;
+    if (distanceSq(enemy.pos, state.players[0].pos) > radiusSq) continue;
     engageCandidates.push(enemy);
   }
   for (let i = 0; i < count; i++) {
@@ -386,7 +386,7 @@ function stepCompanion(
   dtMs: number,
 ): void {
   const def = companionDef(companion.defId);
-  const player = state.player;
+  const player = state.players[0];
   companion.moving = false;
   companion.quoteCooldownMs = Math.max(0, companion.quoteCooldownMs - dtMs);
   companion.weaponCooldownMs = Math.max(0, companion.weaponCooldownMs - dtMs);
@@ -523,7 +523,7 @@ function pickTarget(state: GameState): Enemy | undefined {
     if (enemy.hp <= 0) continue;
     // A kneeling spareable awaiting its verdict is out of the fight.
     if (state.choice !== null && state.choice.enemyId === enemy.id) continue;
-    const d = distanceSq(enemy.pos, state.player.pos);
+    const d = distanceSq(enemy.pos, state.players[0].pos);
     if (d < bestD) {
       best = enemy;
       bestD = d;
@@ -539,7 +539,7 @@ function formationSpot(
   index: number,
   count: number,
 ): { x: number; y: number } {
-  const player = state.player;
+  const player = state.players[0];
   const facing = player.facing;
   const perp = { x: -facing.y, y: facing.x };
   const offset = (index - (count - 1) / 2) * COMPANIONS.spacing;
@@ -792,7 +792,7 @@ export function equipCompanionFromInventory(
 ): boolean {
   const companion = companionById(state, companionId);
   if (!companion) return false;
-  const item = state.player.inventory[index];
+  const item = state.players[0].inventory[index];
   if (!item) return false;
   if (item.slot !== "weapon" && item.slot !== "head" && item.slot !== "chest") {
     return false;
@@ -800,7 +800,7 @@ export function equipCompanionFromInventory(
   if (!meetsLevelReq(state, item)) return false;
   const slot = item.slot as CompanionSlot;
   const previous = companion.equipment[slot];
-  state.player.inventory[index] = previous ?? null;
+  state.players[0].inventory[index] = previous ?? null;
   companion.equipment[slot] = item;
   if (slot === "weapon") companion.weaponCooldownMs = 0;
   return true;
@@ -822,9 +822,9 @@ export function unequipCompanionToInventory(
   if (!companion) return false;
   const item = companion.equipment[slot];
   if (!item) return false;
-  const free = state.player.inventory.indexOf(null);
+  const free = state.players[0].inventory.indexOf(null);
   if (free === -1) return false;
-  state.player.inventory[free] = item;
+  state.players[0].inventory[free] = item;
   companion.equipment[slot] = null;
   return true;
 }
@@ -863,11 +863,11 @@ export function reviveTarget(
  * mistap can never cost the player a bottle.
  */
 export function spendReviveItem(state: GameState, index: number): boolean {
-  const item = state.player.inventory[index] ?? null;
+  const item = state.players[0].inventory[index] ?? null;
   if (!item) return false;
   const companion = reviveTarget(state, item);
   if (!companion) return false;
-  state.player.inventory[index] = null;
+  state.players[0].inventory[index] = null;
   const seat = state.companions.indexOf(companion);
   delete companion.downed;
   companion.hp = Math.max(
@@ -899,7 +899,7 @@ export function canHealCompanion(
   const companion = companionById(state, companionId);
   if (!companion || companion.downed) return -1;
   if (companion.hp >= companion.maxHp) return -1;
-  return state.player.medkits.findIndex((count) => (count ?? 0) > 0);
+  return state.players[0].medkits.findIndex((count) => (count ?? 0) > 0);
 }
 
 /**
@@ -921,7 +921,7 @@ export function healCompanionWithMedkit(
   const tier = canHealCompanion(state, companionId);
   if (tier < 0) return false;
   const companion = companionById(state, companionId) as Companion;
-  const medkits = state.player.medkits;
+  const medkits = state.players[0].medkits;
   medkits[tier] = (medkits[tier] ?? 0) - 1;
   const quality = MEDKIT.tiers[medkitTierIndex(tier)];
   const healed = Math.min(
@@ -962,5 +962,5 @@ export function openCompanionPanel(
 export function closeCompanionPanel(state: GameState): void {
   if (state.phase !== "companion") return;
   state.companionFocus = null;
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
 }

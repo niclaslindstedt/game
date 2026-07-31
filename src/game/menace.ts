@@ -83,7 +83,7 @@ export function menaceCeiling(state: GameState): number {
 export function menaceWarmup(state: GameState): number {
   const t = Math.min(
     1,
-    Math.max(0, (state.player.level - 1) / MENACE.warmupLevels),
+    Math.max(0, (state.players[0].level - 1) / MENACE.warmupLevels),
   );
   return MENACE.warmupFloor + (1 - MENACE.warmupFloor) * t;
 }
@@ -196,7 +196,7 @@ const GEAR_SLOT_COUNT = 7;
  * level, a naked max-level hero far below it.
  */
 export function heroGearLevel(state: GameState): number {
-  const eq = state.player.equipment;
+  const eq = state.players[0].equipment;
   const total =
     eq.weapon.ilvl +
     (eq.head?.ilvl ?? 0) +
@@ -228,11 +228,11 @@ export function heroGearLevel(state: GameState): number {
  * `heroPowerLevel`). It survives purely for the analytic readout (`src/sim`).
  */
 export function heroDamageLevel(state: GameState): number {
-  const dps = weaponDps(state, state.player.equipment.weapon);
+  const dps = weaponDps(state, state.players[0].equipment.weapon);
   // One typical healthbar at ramp 1: what the reference minion carries at
   // this hero's autoPowerScale (the free-stat growth cancels out — it sits
   // in the hero's output AND in every spawned bar).
-  const bar = LEVELING.refMobHp * autoPowerScale(state.player.level);
+  const bar = LEVELING.refMobHp * autoPowerScale(state.players[0].level);
   if (bar <= 0) return 1;
   // Invert `mobHpLevelFactor` (geometric below the knee): the level whose bar
   // this dps would fell in `damageLevelKillSec`. Diagnostic only, so the
@@ -258,7 +258,7 @@ export function heroDamageLevel(state: GameState): number {
  * longer feeding any spawned mob's hp, level, or xp.
  */
 export function heroPowerLevel(state: GameState): number {
-  return state.player.level;
+  return state.players[0].level;
 }
 
 /**
@@ -278,7 +278,7 @@ export function mobLevelScale(state: GameState): number {
   return Math.max(
     MENACE.mobHpScaleFloor,
     mobHpLevelFactor(mobLevel) *
-      autoPowerScale(state.player.level) *
+      autoPowerScale(state.players[0].level) *
       d.mobHpMult,
   );
 }
@@ -324,7 +324,7 @@ export function currentMobLevel(state: GameState): number {
     runLevelDef(state).mobLevels,
     state.difficulty,
   );
-  return authored ?? mobLevelFor(state.player.level, state.difficulty);
+  return authored ?? mobLevelFor(state.players[0].level, state.difficulty);
 }
 
 // === HARD-CODED MOB LEVELS (level-spec `mobLevels` / spawner override) ===
@@ -438,7 +438,7 @@ export function resolveMobScaling(
 export function mobLevelTierBonus(state: GameState): number {
   return Math.min(
     MENACE.tierBonusLevelCap,
-    Math.max(0, state.player.level - 1) * MENACE.tierBonusPerLevel,
+    Math.max(0, state.players[0].level - 1) * MENACE.tierBonusPerLevel,
   );
 }
 
@@ -597,7 +597,7 @@ export function bankOverkill(
     state.events.push({
       type: "menaceRose",
       stage: after,
-      pos: { ...(ctx?.pos ?? state.player.pos) },
+      pos: { ...(ctx?.pos ?? state.players[0].pos) },
       cause: ratcheted ? "ratchet" : "overkill",
     });
   }
@@ -703,7 +703,7 @@ export function tickMenace(
   const bar =
     LEVELING.refMobHp *
     mobHpLevelFactor(Math.max(1, currentMobLevel(state))) *
-    autoPowerScale(state.player.level) *
+    autoPowerScale(state.players[0].level) *
     diff.mobHpMult *
     evolutionHpMult(before, effectMult);
   // The rolling heat only fires through the clearance gate: sustained DPS and
@@ -734,7 +734,7 @@ export function tickMenace(
     state.events.push({
       type: "menaceRose",
       stage: after,
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       cause: "heat",
     });
   }
@@ -750,7 +750,7 @@ export function enemyPowerScale(state: GameState): number {
   // Like the rank and file (`mobLevelScale`), the set pieces also ride the
   // automatic stat-gain damage curve, so a boss met at level 12 doesn't melt
   // under growth the player never chose.
-  return enemyPowerLevelTerm(state) * autoPowerScale(state.player.level);
+  return enemyPowerLevelTerm(state) * autoPowerScale(state.players[0].level);
 }
 
 /**

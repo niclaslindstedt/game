@@ -101,7 +101,7 @@ describe("what airborne loot may not do", () => {
     const state = stage();
     // Dropped right on top of the hero: without the flight gate the very next
     // tick would collect it.
-    const from = { ...state.player.pos };
+    const from = { ...state.players[0].pos };
     tossAt(state, medkit(state, { ...from }), from);
     step(state, idle, 16);
     expect(state.items).toHaveLength(1);

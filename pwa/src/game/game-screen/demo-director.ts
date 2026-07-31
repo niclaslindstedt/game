@@ -377,7 +377,7 @@ export function createDemoDirector(deps: {
   const statButton = (stat: string) =>
     screenRef.current?.querySelector(`[aria-label="stat-${stat}"]`) ?? null;
   const stepLevelup = (dtMs: number) => {
-    if (!bot || state.player.pendingStatPoints <= 0) return;
+    if (!bot || state.players[0].pendingStatPoints <= 0) return;
     const stat = botAllocate(bot, state);
     const btn = statButton(stat);
     // The modal paints one render frame after the phase flips; hold off until
@@ -558,7 +558,7 @@ export function createDemoDirector(deps: {
     heroAt: () => { x: number; y: number },
   ) => {
     if (!demo || state.phase !== "playing") return;
-    trackStandstill(refs.demoStillRef.current, state.player.pos, dtMs);
+    trackStandstill(refs.demoStillRef.current, state.players[0].pos, dtMs);
     if (refs.demoLessonGapMsRef.current > 0) {
       refs.demoLessonGapMsRef.current -= dtMs;
       return;
@@ -606,17 +606,17 @@ export function createDemoDirector(deps: {
     {
       flag: "useMedkit",
       slot: "medkit",
-      held: (s: GameState) => s.player.medkits.reduce((n, c) => n + c, 0),
+      held: (s: GameState) => s.players[0].medkits.reduce((n, c) => n + c, 0),
     },
     {
       flag: "useStaminaPotion",
       slot: "stamina",
-      held: (s: GameState) => s.player.staminaPotions,
+      held: (s: GameState) => s.players[0].staminaPotions,
     },
     {
       flag: "useRepairKit",
       slot: "repair",
-      held: (s: GameState) => s.player.repairKits,
+      held: (s: GameState) => s.players[0].repairKits,
     },
   ] as const;
   const holdItemUse = (input: GameInput) => {
@@ -644,7 +644,12 @@ export function createDemoDirector(deps: {
   // VIEW shows the raw steer).
   const dampFlicker = (input: GameInput, dtMs: number) => {
     if (demo)
-      dampDemoFlicker(input, state.player.pos, refs.demoFaceRef.current, dtMs);
+      dampDemoFlicker(
+        input,
+        state.players[0].pos,
+        refs.demoFaceRef.current,
+        dtMs,
+      );
   };
 
   // The anchor is a THUNK so the caller (the render loop, every frame while

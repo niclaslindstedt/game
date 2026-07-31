@@ -173,7 +173,7 @@ export function createBotFeedback(deps: {
   const onEvent: BotFeedback["onEvent"] = (event, state, camera) => {
     if (event.type === "jump") {
       const cr = canvas.getBoundingClientRect();
-      const at = toCss(state.player.pos.x, state.player.pos.y, camera);
+      const at = toCss(state.players[0].pos.x, state.players[0].pos.y, camera);
       const sx = cr.left + at.x;
       const sy = cr.top + at.y;
       tapFx.rippleAtClient(sx, sy, "jump");
@@ -191,7 +191,7 @@ export function createBotFeedback(deps: {
       // back for the newest one. The dock renders slots 0..2 in order, so slot
       // index === child index — index directly (the slot may not have
       // re-rendered to its active/data-slot form yet this synchronous tick).
-      const abilities = state.player.abilities;
+      const abilities = state.players[0].abilities;
       let slotIndex: number | undefined;
       for (let i = abilities.length - 1; i >= 0; i--) {
         const ability = abilities[i];
@@ -216,7 +216,7 @@ export function createBotFeedback(deps: {
       // loot vanished / the bite landed). One-shot like every tip;
       // outside the demo showDemoTip is a no-op.
       const cr = canvas.getBoundingClientRect();
-      const at = toCss(state.player.pos.x, state.player.pos.y, camera);
+      const at = toCss(state.players[0].pos.x, state.players[0].pos.y, camera);
       const sx = cr.left + at.x;
       const sy = cr.top + at.y;
       if (event.type === "itemCollected") {

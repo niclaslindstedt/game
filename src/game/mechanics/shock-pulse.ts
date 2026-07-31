@@ -44,7 +44,10 @@ function cast(ability: ShockPulseAbility, ctx: AbilityCtx): void {
 
   // A jump sails clean over it — the same answer a slam takes.
   if (!groundMoveCanTouch(state)) return;
-  if (distance(state.player.pos, enemy.pos) > ability.radius + PLAYER.radius) {
+  if (
+    distance(state.players[0].pos, enemy.pos) >
+    ability.radius + PLAYER.radius
+  ) {
     return;
   }
   landHostileBlow(
@@ -56,7 +59,7 @@ function cast(ability: ShockPulseAbility, ctx: AbilityCtx): void {
     state.rng() < def.critChance,
   );
   pushPlayer(
-    state.player,
+    state.players[0],
     enemy.pos,
     ability.push,
     ability.pushCoastMs ?? DEFAULT_PUSH_COAST_MS,

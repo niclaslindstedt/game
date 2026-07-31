@@ -66,9 +66,9 @@ describe("the death rite opens", () => {
     // The loot is the player's the instant the blow lands: a cinematic standing
     // between them and what they earned would be the feature taxing the win.
     const state = startGame();
-    const before = state.player.xp;
+    const before = state.players[0].xp;
     fellBoss(state);
-    expect(state.player.xp).toBeGreaterThan(before);
+    expect(state.players[0].xp).toBeGreaterThan(before);
     expect(state.stats.kills).toBe(1);
   });
 
@@ -108,17 +108,17 @@ describe("the death rite runs its beats", () => {
   it("moves the hero onto the boss and leaves him there", () => {
     const state = startGame();
     const pos = fellBoss(state);
-    const startedAt = { ...state.player.pos };
+    const startedAt = { ...state.players[0].pos };
     settleBossRite(state);
     // He closed: he is nearer the body at the end than he was at the blow.
     const before = Math.hypot(startedAt.x - pos.x, startedAt.y - pos.y);
     const after = Math.hypot(
-      state.player.pos.x - pos.x,
-      state.player.pos.y - pos.y,
+      state.players[0].pos.x - pos.x,
+      state.players[0].pos.y - pos.y,
     );
     expect(after).toBeLessThan(before);
     // …and he is back on the ground, not stuck mid-leap.
-    expect(state.player.z).toBeCloseTo(0, 1);
+    expect(state.players[0].z).toBeCloseTo(0, 1);
   });
 
   it("holds the horde off the ring while it plays", () => {
@@ -246,7 +246,7 @@ describe("the FLIGHT rite — the coward's exit", () => {
   function routCoward(state: GameState): { x: number; y: number } {
     clearStage(state);
     state.enemies = [];
-    const at = { x: state.player.pos.x + 60, y: state.player.pos.y };
+    const at = { x: state.players[0].pos.x + 60, y: state.players[0].pos.y };
     state.enemies.push(
       makeEnemy(
         { pos: { ...at }, hp: 1, maxHp: 100, powerScaled: true, spoke: true },

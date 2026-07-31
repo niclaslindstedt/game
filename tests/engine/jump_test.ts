@@ -22,17 +22,17 @@ import {
 function stagedTarget(state = startGame()) {
   clearStage(state);
   state.obstacles = [];
-  state.player.weaponCooldownMs = 0;
+  state.players[0].weaponCooldownMs = 0;
   state.enemies = [
-    makeEnemy({ id: 1, pos: { ...state.player.pos }, hp: 200, maxHp: 200 }),
+    makeEnemy({ id: 1, pos: { ...state.players[0].pos }, hp: 200, maxHp: 200 }),
   ];
   return state;
 }
 
 /** Lift the hero clear of the ground for a jumped step. */
 function airborne(state: ReturnType<typeof stagedTarget>): void {
-  state.player.z = JUMP.dodgeHeight + 40;
-  state.player.vz = 200;
+  state.players[0].z = JUMP.dodgeHeight + 40;
+  state.players[0].vz = 200;
 }
 
 describe("airborne melee", () => {
@@ -59,7 +59,7 @@ describe("airborne melee", () => {
     state.enemies = [
       makeEnemy({
         id: 1,
-        pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y },
         hp: 200,
         maxHp: 200,
       }),
@@ -76,15 +76,15 @@ describe("airborne loot pickup", () => {
     const state = startGame();
     clearStage(state);
     state.items = [
-      { id: state.nextId++, kind: "medkit", pos: { ...state.player.pos } },
+      { id: state.nextId++, kind: "medkit", pos: { ...state.players[0].pos } },
     ];
     return state;
   }
 
   it("a jump floats past loot without taking it", () => {
     const state = stagedDrop();
-    state.player.z = JUMP.dodgeHeight + 40;
-    state.player.vz = 200;
+    state.players[0].z = JUMP.dodgeHeight + 40;
+    state.players[0].vz = 200;
     step(state, idle, DT);
     expect(state.items).toHaveLength(1);
     expect(state.stats.itemsCollected).toBe(0);

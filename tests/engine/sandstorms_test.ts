@@ -43,7 +43,7 @@ function stormBite(state: GameState, difficulty: Difficulty): number {
   return Math.max(
     1,
     Math.round(
-      state.player.maxHp * difficultyDef(difficulty).sandstormDamageFrac,
+      state.players[0].maxHp * difficultyDef(difficulty).sandstormDamageFrac,
     ),
   );
 }
@@ -66,7 +66,7 @@ function makeStorm(
 
 /** Drop a storm right on top of the hero. */
 function stormOnHero(state: GameState): SandStorm {
-  const storm = makeStorm({ pos: { ...state.player.pos } });
+  const storm = makeStorm({ pos: { ...state.players[0].pos } });
   state.sandstorms.push(storm);
   return storm;
 }
@@ -94,12 +94,12 @@ describe("sand storms — spawning", () => {
 describe("sand storms — the strike", () => {
   it("catches the grounded hero: a bite AND a knockout", () => {
     const state = startStormsOn("medium");
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     const bite = stormBite(state, "medium");
     stormOnHero(state);
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore - bite);
-    expect(state.player.knockoutMs).toBeGreaterThan(0);
+    expect(state.players[0].hp).toBe(hpBefore - bite);
+    expect(state.players[0].knockoutMs).toBeGreaterThan(0);
     expect(state.events.some((e) => e.type === "sandstormHit")).toBe(true);
   });
 
@@ -113,40 +113,40 @@ describe("sand storms — the strike", () => {
     ];
     for (const [difficulty, frac] of rungs) {
       const state = startStormsOn(difficulty);
-      const hpBefore = state.player.hp;
+      const hpBefore = state.players[0].hp;
       stormOnHero(state);
       step(state, idle, DT);
-      const expected = Math.max(1, Math.round(state.player.maxHp * frac));
-      expect(state.player.hp, difficulty).toBe(hpBefore - expected);
+      const expected = Math.max(1, Math.round(state.players[0].maxHp * frac));
+      expect(state.players[0].hp, difficulty).toBe(hpBefore - expected);
     }
   });
 
   it("a jumping hero sails over the gust — no strike, no knockout", () => {
     const state = startStormsOn("medium");
-    state.player.z = JUMP.dodgeHeight + 30;
-    state.player.vz = 100;
-    const hpBefore = state.player.hp;
+    state.players[0].z = JUMP.dodgeHeight + 30;
+    state.players[0].vz = 100;
+    const hpBefore = state.players[0].hp;
     stormOnHero(state);
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore);
-    expect(state.player.knockoutMs).toBe(0);
+    expect(state.players[0].hp).toBe(hpBefore);
+    expect(state.players[0].knockoutMs).toBe(0);
   });
 
   it("never catches a hero already knocked out — no chain-lock", () => {
     const state = startStormsOn("medium");
-    state.player.knockoutMs = 400;
-    const hpBefore = state.player.hp;
+    state.players[0].knockoutMs = 400;
+    const hpBefore = state.players[0].hp;
     stormOnHero(state);
     step(state, idle, DT);
     // No fresh bite, and the timer only counts DOWN (never re-armed to full).
-    expect(state.player.hp).toBe(hpBefore);
-    expect(state.player.knockoutMs).toBeLessThan(400);
+    expect(state.players[0].hp).toBe(hpBefore);
+    expect(state.players[0].knockoutMs).toBeLessThan(400);
   });
 
   it("shoves minions out of its path without hurting them", () => {
     const state = startStormsOn("medium");
     // Keep the hero clear so the storm's only job this test is the shove.
-    state.player.pos = { x: 400, y: 400 };
+    state.players[0].pos = { x: 400, y: 400 };
     const minion = makeEnemy({ pos: { x: 1200, y: 803 } });
     state.enemies.push(minion);
     const hpBefore = minion.hp;
@@ -177,8 +177,8 @@ describe("sand storms — passing over and fading", () => {
     state.sandstorms.push(
       makeStorm({
         pos: {
-          x: state.player.pos.x + SANDSTORMS.despawnDistance + 20,
-          y: state.player.pos.y,
+          x: state.players[0].pos.x + SANDSTORMS.despawnDistance + 20,
+          y: state.players[0].pos.y,
         },
         speed: 0,
       }),
@@ -191,28 +191,28 @@ describe("sand storms — passing over and fading", () => {
 describe("knockout — the hero lies helpless", () => {
   it("freezes movement: a steered hero doesn't budge while down", () => {
     const state = startStormsOn("medium");
-    state.player.knockoutMs = 500;
-    const at = { ...state.player.pos };
+    state.players[0].knockoutMs = 500;
+    const at = { ...state.players[0].pos };
     step(state, steerTo(at.x + 400, at.y), DT);
-    expect(state.player.pos).toEqual(at);
-    expect(state.player.moving).toBe(false);
+    expect(state.players[0].pos).toEqual(at);
+    expect(state.players[0].moving).toBe(false);
     // The timer ticked down toward recovery.
-    expect(state.player.knockoutMs).toBe(500 - DT);
+    expect(state.players[0].knockoutMs).toBe(500 - DT);
   });
 
   it("pins the hero flat to the floor while down", () => {
     const state = startStormsOn("medium");
-    state.player.knockoutMs = 500;
-    state.player.z = JUMP.dodgeHeight;
-    state.player.vz = 80;
+    state.players[0].knockoutMs = 500;
+    state.players[0].z = JUMP.dodgeHeight;
+    state.players[0].vz = 80;
     step(state, { ...idle, jump: true }, DT);
-    expect(state.player.z).toBe(0);
-    expect(state.player.vz).toBe(0);
+    expect(state.players[0].z).toBe(0);
+    expect(state.players[0].vz).toBe(0);
   });
 
   it("blocks the auto-weapon while down, then swings once up", () => {
     const state = startStormsOn("medium");
-    state.player.pos = { x: 400, y: 400 };
+    state.players[0].pos = { x: 400, y: 400 };
     // A fat-hp minion right on top of the hero, well inside any weapon reach.
     const minion = makeEnemy({
       pos: { x: 410, y: 400 },
@@ -220,11 +220,11 @@ describe("knockout — the hero lies helpless", () => {
       maxHp: 100_000,
     });
     state.enemies.push(minion);
-    state.player.knockoutMs = 10 * DT;
+    state.players[0].knockoutMs = 10 * DT;
     const before = state.stats.damageDealt;
     // Nine ticks still fully down (the tenth would stand him up): no damage.
     run(state, idle, 9);
-    expect(state.player.knockoutMs).toBeGreaterThan(0);
+    expect(state.players[0].knockoutMs).toBeGreaterThan(0);
     expect(state.stats.damageDealt).toBe(before);
     // Play on — he stands and the auto-attack lands.
     run(state, idle, 30);
@@ -233,18 +233,18 @@ describe("knockout — the hero lies helpless", () => {
 
   it("gets up when the timer lapses and regains control", () => {
     const state = startStormsOn("medium");
-    state.player.pos = { x: 400, y: 400 };
-    state.player.knockoutMs = 2 * DT;
+    state.players[0].pos = { x: 400, y: 400 };
+    state.players[0].knockoutMs = 2 * DT;
     // First tick: still down. Second: the timer hits 0 and the recover fires.
     step(state, idle, DT);
-    expect(state.player.knockoutMs).toBe(DT);
+    expect(state.players[0].knockoutMs).toBe(DT);
     step(state, idle, DT);
-    expect(state.player.knockoutMs).toBe(0);
+    expect(state.players[0].knockoutMs).toBe(0);
     expect(state.events.some((e) => e.type === "knockoutRecovered")).toBe(true);
     // Up and mobile again.
-    const at = { ...state.player.pos };
+    const at = { ...state.players[0].pos };
     step(state, steerTo(at.x + 400, at.y), DT);
-    expect(state.player.pos.x).toBeGreaterThan(at.x);
+    expect(state.players[0].pos.x).toBeGreaterThan(at.x);
   });
 });
 

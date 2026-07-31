@@ -53,14 +53,14 @@ export function stepLairs(state: GameState): void {
   for (let i = 0; i < lairs.length; i++) {
     const lair = lairs[i] as LairState;
     if (lair.open) continue;
-    if (distance(state.player.pos, lair.pos) > lair.triggerRadius) continue;
+    if (distance(state.players[0].pos, lair.pos) > lair.triggerRadius) continue;
     const spec = specs[i];
     if (!spec) continue;
     lair.open = true;
     lair.sprite = lair.openSprite;
     // The occupant steps out TOWARD the hero, so it clears the doorway it came
     // through instead of standing in it.
-    const out = stepOut(lair.pos, state.player.pos);
+    const out = stepOut(lair.pos, state.players[0].pos);
     mint(state, spec.enemy, out, spec.level, spec.hp);
     for (const guard of spec.escort ?? []) {
       for (let n = 0; n < guard.count; n++) {
@@ -111,7 +111,7 @@ function mint(
       1,
       menaceStage(state),
       difficultyDef(state.difficulty).menaceEffectMult,
-      state.player.level,
+      state.players[0].level,
     ),
     level,
     hp,

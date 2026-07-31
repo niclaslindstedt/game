@@ -221,7 +221,7 @@ export function heroSoak(state: GameState): HeroSoak {
 export function syncHeroGear(state: GameState): void {
   ensureRun(state);
   for (const zone of SOAK_ZONES) {
-    const id = state.player.equipment[zone]?.id ?? null;
+    const id = state.players[0].equipment[zone]?.id ?? null;
     if (worn[zone] === id) continue;
     worn[zone] = id;
     soak[zone] = 0;
@@ -243,7 +243,10 @@ export function soakHero(
   const amount = heroSoakAmount();
   if (amount == null) return;
   ensureRun(state);
-  const dist = Math.hypot(at.x - state.player.pos.x, at.y - state.player.pos.y);
+  const dist = Math.hypot(
+    at.x - state.players[0].pos.x,
+    at.y - state.players[0].pos.y,
+  );
   // CONTACT range, widened a little by how violently this particular body came
   // apart and capped so it stays contact range. Everything past it lands on the
   // floor and on nobody.

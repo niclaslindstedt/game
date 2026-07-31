@@ -386,8 +386,8 @@ export function createControls(deps: {
         }
       } else if (
         n <= 2 &&
-        state.player.heldAbilities[n] &&
-        !state.player.abilities.some((a) => a.slot === n)
+        state.players[0].heldAbilities[n] &&
+        !state.players[0].abilities.some((a) => a.slot === n)
       ) {
         // A slot already counting down a running power isn't spendable.
         queues.useItemQueuedRef.current = true;

@@ -159,7 +159,7 @@ export function advanceDialogue(state: GameState): void {
     return;
   }
   state.dialogue = null;
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
 }
 
 /**
@@ -173,7 +173,8 @@ export function muteDialogue(state: GameState): void {
   state.dialogueMuted = true;
   if (state.phase === "dialogue" && state.dialogue) {
     state.dialogue = null;
-    state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+    state.phase =
+      state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
   }
 }
 
@@ -345,7 +346,7 @@ export function maybeCapThought(state: GameState): void {
   if (state.dialogue !== null || state.capThoughtMs > 0) return;
   if (menaceStage(state) > DIALOGUE.capThoughtMenaceStageCeiling) return;
   const cap = xpLevelCap(state.level.id, state.difficulty);
-  if (state.player.level < cap) return;
+  if (state.players[0].level < cap) return;
   // A conversion may replace the thought catalog without authoring a rotation,
   // which leaves nothing to mutter — the beat simply never fires.
   const rotation = capThoughtIds();
@@ -381,7 +382,7 @@ export function stepSightThoughts(
     const seen = state.enemies.some(
       (e) =>
         e.defId === trigger.enemy &&
-        distance(e.pos, state.player.pos) <= radius,
+        distance(e.pos, state.players[0].pos) <= radius,
     );
     if (!seen) continue;
     state.thoughtsSeen.push(trigger.thought);
@@ -422,14 +423,14 @@ export function stepSightThoughts(
  * already-read check only suppresses RE-SHOWING the monologue.
  */
 export function stepOpeningStrike(state: GameState): void {
-  if (state.dialogue !== null || !state.player.disarmed) return;
+  if (state.dialogue !== null || !state.players[0].disarmed) return;
   const opening = runLevelDef(state).openingStrike;
   if (!opening) return;
   if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
   const radius = opening.radius ?? DIALOGUE.strikeRadius;
   const vanguards = state.enemies.filter((e) => e.vanguard);
   const struck = vanguards.some(
-    (e) => distance(e.pos, state.player.pos) <= radius,
+    (e) => distance(e.pos, state.players[0].pos) <= radius,
   );
   // The vanguard's touch draws the blade — but a COMPANION (or a conjured
   // power) can cut the lone rusher down before it ever reaches the holstered
@@ -441,11 +442,11 @@ export function stepOpeningStrike(state: GameState): void {
   const vanquished = vanguards.length === 0;
   if (!struck && !vanquished) return;
   // Draw the blade: combat is live from here on.
-  state.player.disarmed = false;
+  state.players[0].disarmed = false;
   // The soft first hit is a flash, no HP — but a vanguard cut down before it
   // arrived landed no blow, so there is nothing to flash for the death path.
   if (struck) {
-    state.player.hurtFlashMs = 250;
+    state.players[0].hurtFlashMs = 250;
     state.events.push({ type: "playerHurt", crit: false });
   }
   // Fire the pinned thought once, but only if it hasn't been read yet — a
@@ -471,7 +472,7 @@ export function wantsDialogue(state: GameState, enemy: Enemy): boolean {
     !enemy.spoke &&
     state.dialogue === null &&
     state.phase === "playing" &&
-    distance(enemy.pos, state.player.pos) <= DIALOGUE.speakRadius
+    distance(enemy.pos, state.players[0].pos) <= DIALOGUE.speakRadius
   );
 }
 
@@ -515,7 +516,7 @@ function holdsKeyFor(state: GameState, doorId: string): boolean {
 export function stepGates(state: GameState): void {
   for (const gate of state.gates) {
     if (gate.entered) continue;
-    if (distance(state.player.pos, gate.pos) > GATES.enterRadius) continue;
+    if (distance(state.players[0].pos, gate.pos) > GATES.enterRadius) continue;
     gate.entered = true;
     state.events.push({
       type: "gateEntered",
@@ -532,7 +533,8 @@ export function stepGates(state: GameState): void {
 export function stepDoors(state: GameState): void {
   for (const door of state.doors) {
     if (door.open || !holdsKeyFor(state, door.id)) continue;
-    if (distance(state.player.pos, door.center) > DOORS.openRadius) continue;
+    if (distance(state.players[0].pos, door.center) > DOORS.openRadius)
+      continue;
     door.open = true;
     const gone = new Set(door.obstacleIds);
     state.obstacles = state.obstacles.filter((o) => !gone.has(o.id));

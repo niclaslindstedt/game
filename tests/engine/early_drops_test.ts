@@ -28,13 +28,15 @@ function killAt(state: GameState, atKills: number): void {
   // and stall the stray-minion kill this relies on. The fast opening curve dings
   // within a handful of kills, which is exactly this window.
   state.phase = "playing";
-  state.player.pendingStatPoints = 0;
+  state.players[0].pendingStatPoints = 0;
   state.levelUpFxMs = 0;
-  state.player.xp = 0;
-  state.player.xpToNext = Number.MAX_SAFE_INTEGER;
+  state.players[0].xp = 0;
+  state.players[0].xpToNext = Number.MAX_SAFE_INTEGER;
   state.stats.kills = atKills - 1;
   state.enemies.push(
-    makeEnemy({ pos: { x: state.player.pos.x + 60, y: state.player.pos.y } }),
+    makeEnemy({
+      pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
+    }),
   );
   run(state, idle, 2000, (s) => s.enemies.length === 1);
 }

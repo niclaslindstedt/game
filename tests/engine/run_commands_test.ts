@@ -145,13 +145,13 @@ describe("arguments a stranger may send", () => {
     // The proof, rather than the promise: a stat allocation with a bad name
     // must leave the hero's points exactly where they were.
     const state = freshRun();
-    state.player.pendingStatPoints = 3;
+    state.players[0].pendingStatPoints = 3;
     applyRunCommand(state, "allocateStat", ["luckk"]);
     applyRunCommand(state, "allocateStat", []);
     applyRunCommand(state, "allocateStat", ["luck", "luck"]);
-    expect(state.player.pendingStatPoints).toBe(3);
+    expect(state.players[0].pendingStatPoints).toBe(3);
     applyRunCommand(state, "allocateStat", ["luck"]);
-    expect(state.player.pendingStatPoints).toBe(2);
+    expect(state.players[0].pendingStatPoints).toBe(2);
   });
 });
 
@@ -177,13 +177,13 @@ describe("the verbs actually do the thing", () => {
   it("moves a piece around the bag by index", () => {
     const state = freshRun();
     applyRunCommand(state, "skipStoryOpening");
-    const bag = state.player.inventory;
+    const bag = state.players[0].inventory;
     const from = bag.findIndex((cell) => cell !== null);
     if (from < 0) return; // a fixture hero with an empty bag has nothing to prove
     const to = bag.findIndex((cell) => cell === null);
     const piece = bag[from];
     applyRunCommand(state, "moveInventoryItem", [from, to]);
-    expect(state.player.inventory[to]).toBe(piece);
+    expect(state.players[0].inventory[to]).toBe(piece);
   });
 });
 

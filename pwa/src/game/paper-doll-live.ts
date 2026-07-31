@@ -46,7 +46,7 @@ export function playerDollLayers(
   const layers: DollLayer[] = [
     { sprite: `${playerAppearance(state)}_${frame}`, dx: 0, dy: 0 },
   ];
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
   for (const slot of WORN_ORDER) {
     const piece = equipment[slot];
     if (!piece) continue;

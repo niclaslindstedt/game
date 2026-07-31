@@ -55,11 +55,11 @@ describe("alarm links", () => {
   /** Walk the hero up to the sentry so it wakes this tick. */
   function trip(state: GameState): void {
     const walker = sentry(state);
-    state.player.pos = { x: walker.pos.x, y: walker.pos.y - 150 };
+    state.players[0].pos = { x: walker.pos.x, y: walker.pos.y - 150 };
     // The probe watches spawner behavior, not survival: the answering squad
     // will chew on the idle hero for the whole window.
-    state.player.maxHp = 100_000;
-    state.player.hp = 100_000;
+    state.players[0].maxHp = 100_000;
+    state.players[0].hp = 100_000;
     step(state, idle, DT);
     expect(walker.awake).toBe(true);
   }

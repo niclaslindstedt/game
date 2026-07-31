@@ -54,7 +54,7 @@ import { distance as dist } from "@game/lib/vec.ts";
  * test can never accidentally turn into a meeting. */
 function parkFarAway(state: GameState): void {
   const m = state.merchant.pos;
-  state.player.pos = {
+  state.players[0].pos = {
     x: m.x < state.level.width / 2 ? state.level.width - 20 : 20,
     y: m.y < state.level.height / 2 ? state.level.height - 20 : 20,
   };
@@ -67,7 +67,7 @@ function parkFarAway(state: GameState): void {
 function meet(state: GameState): void {
   clearStage(state);
   state.obstacles = []; // nothing between them — the meeting needs sight
-  state.player.pos = {
+  state.players[0].pos = {
     x: state.merchant.pos.x + MERCHANT.tradeRadius / 2,
     y: state.merchant.pos.y,
   };
@@ -223,12 +223,12 @@ describe("the shop", () => {
     const state = startGame();
     expect(openShop(state)).toBe(false); // not discovered yet
     meet(state);
-    state.player.pos = {
+    state.players[0].pos = {
       x: state.merchant.pos.x + MERCHANT.tradeRadius * 3,
       y: state.merchant.pos.y,
     };
     expect(openShop(state)).toBe(false); // too far from the stall
-    state.player.pos = { ...state.merchant.pos };
+    state.players[0].pos = { ...state.merchant.pos };
     expect(openShop(state)).toBe(true);
     expect(state.phase).toBe("shop");
     // Frozen like the bag.
@@ -242,14 +242,14 @@ describe("the shop", () => {
   it("selling pays the valuation into the purse and empties the cell", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
+    state.players[0].pos = { ...state.merchant.pos };
     const loot = piece("test_wand", "magic", 4);
-    state.player.inventory[0] = loot;
+    state.players[0].inventory[0] = loot;
     openShop(state);
     const paid = sellItem(state, 0);
     expect(paid).toBe(sellValue(loot));
-    expect(state.player.coins).toBe(paid);
-    expect(state.player.inventory[0]).toBeNull();
+    expect(state.players[0].coins).toBe(paid);
+    expect(state.players[0].inventory[0]).toBeNull();
     expect(sellItem(state, 0)).toBeNull(); // empty cell: no-op
   });
 
@@ -271,7 +271,7 @@ describe("the shop", () => {
       // powers carry no authored `rarity`, so each sits at exactly 1×.
       expect(abilityRarity(entry.defId)).toBe(ABILITY_DEFAULT_RARITY);
       expect(entry.price).toBe(
-        ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.player.level,
+        ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.players[0].level,
       );
     }
     for (const entry of weapons) {
@@ -286,31 +286,31 @@ describe("the shop", () => {
   it("buys a powerup into the dock, gated by coins and the carry cap", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
+    state.players[0].pos = { ...state.merchant.pos };
     openShop(state);
     const entry = state.merchant.stock.find((s) => s.kind === "ability")!;
     expect(buyStock(state, entry.id)).toBe(false); // too poor
-    state.player.coins = entry.price * 10;
+    state.players[0].coins = entry.price * 10;
     expect(canBuyStock(state, entry)).toBe(true);
     expect(buyStock(state, entry.id)).toBe(true);
-    expect(state.player.heldAbilities).toContain(
+    expect(state.players[0].heldAbilities).toContain(
       entry.kind === "ability" ? entry.defId : "",
     );
-    expect(state.player.coins).toBe(entry.price * 9);
+    expect(state.players[0].coins).toBe(entry.price * 9);
     // WHAT HE SELLS IS WHAT HE SELLS: the powerup slot held one unit, so the
     // entry is spent and a second purchase is refused however deep the purse
     // and however much room the dock still has.
     expect(entry.qty).toBe(0);
-    expect(state.player.heldAbilities.length).toBeLessThan(HELD_ITEMS.cap);
+    expect(state.players[0].heldAbilities.length).toBeLessThan(HELD_ITEMS.cap);
     expect(canBuyStock(state, entry)).toBe(false);
     expect(buyStock(state, entry.id)).toBe(false);
-    expect(state.player.coins).toBe(entry.price * 9); // no coins moved
+    expect(state.players[0].coins).toBe(entry.price * 9); // no coins moved
   });
 
   it("stocks the three consumables and banks each into its own dock stack", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
+    state.players[0].pos = { ...state.merchant.pos };
     openShop(state);
     const shelf = state.merchant.stock.filter((s) => s.kind === "consumable");
     expect(shelf.map((s) => (s.kind === "consumable" ? s.item : null))).toEqual(
@@ -318,9 +318,9 @@ describe("the shop", () => {
     );
     // Hurt and winded, so the medkit and the drink have something to do — a
     // bank refuses nothing here, but the SPEND side of the dock would.
-    state.player.hp = 1;
-    state.player.stamina = 0;
-    state.player.coins = 100_000;
+    state.players[0].hp = 1;
+    state.players[0].stamina = 0;
+    state.players[0].coins = 100_000;
     for (const entry of shelf) {
       if (entry.kind !== "consumable") continue;
       const depth = entry.qty;
@@ -335,10 +335,10 @@ describe("the shop", () => {
       expect(buyStock(state, entry.id)).toBe(false); // sold out, not restocked
       const banked =
         entry.item === "medkit"
-          ? (state.player.medkits[medkitTierIndex(entry.tier)] ?? 0)
+          ? (state.players[0].medkits[medkitTierIndex(entry.tier)] ?? 0)
           : entry.item === "repair"
-            ? state.player.repairKits
-            : state.player.staminaPotions;
+            ? state.players[0].repairKits
+            : state.players[0].staminaPotions;
       expect(banked).toBe(depth);
     }
   });
@@ -346,24 +346,24 @@ describe("the shop", () => {
   it("refuses a consumable whose dock stack is already full", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
+    state.players[0].pos = { ...state.merchant.pos };
     openShop(state);
     const entry = state.merchant.stock.find(
       (s) => s.kind === "consumable" && s.item === "drink",
     )!;
-    state.player.coins = 100_000;
-    state.player.staminaPotions = CONSUMABLES.stackCap;
+    state.players[0].coins = 100_000;
+    state.players[0].staminaPotions = CONSUMABLES.stackCap;
     expect(canBuyStock(state, entry)).toBe(false);
     expect(buyStock(state, entry.id)).toBe(false);
     // Refused with nothing spent: neither the purse nor the shelf moved.
-    expect(state.player.coins).toBe(100_000);
+    expect(state.players[0].coins).toBe(100_000);
     expect(entry.qty).toBeGreaterThan(0);
   });
 
   it("won't sell a uniqueHeld powerup while one is already docked", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
+    state.players[0].pos = { ...state.merchant.pos };
     openShop(state);
     // A hand-stocked bomb on the stall (no level pools a nuke, so the entry
     // is planted): the first sale docks it, the second is refused while it
@@ -377,36 +377,36 @@ describe("the shop", () => {
       qty: 2,
     });
     const entry = state.merchant.stock.find((s) => s.id === 990)!;
-    state.player.coins = 100;
+    state.players[0].coins = 100;
     expect(canBuyStock(state, entry)).toBe(true);
     expect(buyStock(state, 990)).toBe(true);
     expect(canBuyStock(state, entry)).toBe(false);
     expect(buyStock(state, 990)).toBe(false); // refused, coins untouched
-    expect(state.player.coins).toBe(95);
+    expect(state.players[0].coins).toBe(95);
     expect(
-      state.player.heldAbilities.filter((d) => d === "test_nuke"),
+      state.players[0].heldAbilities.filter((d) => d === "test_nuke"),
     ).toHaveLength(1);
   });
 
   it("a stall weapon is a one-off that lands in the bag", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
+    state.players[0].pos = { ...state.merchant.pos };
     openShop(state);
     const entry = state.merchant.stock.find(
       (s) => s.kind === "weapon" && s.equipment.slot === "weapon",
     ) as Extract<MerchantStock, { kind: "weapon" }>;
-    state.player.coins = entry.price * 2;
+    state.players[0].coins = entry.price * 2;
     expect(buyStock(state, entry.id)).toBe(true);
     // The piece that lands is the row's own roll, handed over as a FRESH
     // instance: a row may hold several units (the salts shelf), so the same
     // object must never end up in two bag cells sharing an id.
-    const bought = state.player.inventory.find(
+    const bought = state.players[0].inventory.find(
       (i) => i?.defId === entry.equipment.defId,
     );
     expect(bought).toBeDefined();
     expect(bought!.id).not.toBe(entry.equipment.id);
-    expect(state.player.coins).toBe(entry.price);
+    expect(state.players[0].coins).toBe(entry.price);
     // Sold out: the entry refuses a second purchase.
     expect(buyStock(state, entry.id)).toBe(false);
     expect(canBuyStock(state, entry)).toBe(false);
@@ -416,17 +416,17 @@ describe("the shop", () => {
 describe("the purse", () => {
   it("carries over through the loadout, defaulting old saves to empty", () => {
     const state = startGame();
-    state.player.coins = 321;
+    state.players[0].coins = 321;
     const loadout = extractLoadout(state);
     expect(loadout.coins).toBe(321);
     const next = startGame(43);
     applyLoadout(next, loadout);
-    expect(next.player.coins).toBe(321);
+    expect(next.players[0].coins).toBe(321);
     // A loadout banked before the economy shipped has no purse field.
     delete loadout.coins;
     const legacy = startGame(44);
     applyLoadout(legacy, loadout);
-    expect(legacy.player.coins).toBe(0);
+    expect(legacy.players[0].coins).toBe(0);
   });
 });
 
@@ -452,17 +452,17 @@ describe("repair", () => {
   it("mends the whole kit at the counter, charging the quote and chiming", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
-    state.player.inventory[0] = worn();
-    state.player.coins = 100_000;
+    state.players[0].pos = { ...state.merchant.pos };
+    state.players[0].inventory[0] = worn();
+    state.players[0].coins = 100_000;
     openShop(state);
     const quote = repairAllCost(state);
     expect(quote).toBeGreaterThan(0);
-    const before = state.player.coins;
+    const before = state.players[0].coins;
     const paid = repairGear(state);
     expect(paid).toBe(quote);
-    expect(state.player.coins).toBe(before - quote);
-    expect(state.player.inventory[0]?.durability).toBe(
+    expect(state.players[0].coins).toBe(before - quote);
+    expect(state.players[0].inventory[0]?.durability).toBe(
       equipmentMaxDurability(worn()),
     );
     expect(state.events).toContainEqual(
@@ -475,16 +475,16 @@ describe("repair", () => {
   it("refuses with the shop shut or the purse short — kit untouched", () => {
     const state = startGame();
     meet(state);
-    state.player.pos = { ...state.merchant.pos };
-    state.player.inventory[0] = worn();
+    state.players[0].pos = { ...state.merchant.pos };
+    state.players[0].inventory[0] = worn();
     // Shop shut.
     expect(repairGear(state)).toBeNull();
     // Open, but broke.
-    state.player.coins = 0;
+    state.players[0].coins = 0;
     openShop(state);
     expect(repairAllCost(state)).toBeGreaterThan(0);
     expect(repairGear(state)).toBeNull();
-    expect(state.player.inventory[0]?.durability).toBe(1); // untouched
+    expect(state.players[0].inventory[0]?.durability).toBe(1); // untouched
   });
 });
 
@@ -521,7 +521,7 @@ describe("return visit — met here before", () => {
     dismissIntro(state);
     clearStage(state);
     state.obstacles = [];
-    state.player.pos = {
+    state.players[0].pos = {
       x: state.merchant.pos.x + MERCHANT.tradeRadius / 2,
       y: state.merchant.pos.y,
     };

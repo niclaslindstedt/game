@@ -184,8 +184,8 @@ export function runExhibit(deps: {
       clearCameraShake(shared.cameraShake);
     }
     // A walking exhibit laps around wherever the staging just put him.
-    walkCentre.x = state.player.pos.x;
-    walkCentre.y = state.player.pos.y;
+    walkCentre.x = state.players[0].pos.x;
+    walkCentre.y = state.players[0].pos.y;
   };
   stage();
 
@@ -364,7 +364,11 @@ export function runExhibit(deps: {
           nukeFx.fire(at.x, at.y);
         }
         if (event.type === "levelUp") {
-          const at = toPage(state.player.pos.x, state.player.pos.y, camera);
+          const at = toPage(
+            state.players[0].pos.x,
+            state.players[0].pos.y,
+            camera,
+          );
           levelUpFx.fire(at.x, at.y, levelUpIntensity(event.level));
         }
       }

@@ -45,7 +45,7 @@ import type { GameState, StatName } from "./types/index.ts";
 export function resumeAfterLevelup(state: GameState): void {
   if (
     state.phase === "levelup" &&
-    state.player.pendingStatPoints === 0 &&
+    state.players[0].pendingStatPoints === 0 &&
     state.pendingTalentPoints.length === 0
   ) {
     state.phase = "playing";
@@ -72,7 +72,7 @@ export function availableTalentPoints(
 ): number {
   const tree = TALENT_STAT_CLASS[stat];
   if (!tree) return 0;
-  const earned = earnedTalentPoints(state.player.spentStats, stat);
+  const earned = earnedTalentPoints(state.players[0].spentStats, stat);
   const spent = spentTalentRanks(state, tree);
   const room = treeCapacity(tree) - spent;
   return Math.max(0, Math.min(earned - spent, room));
@@ -118,7 +118,7 @@ export function spendTalentPoint(state: GameState, talentId: string): boolean {
   if (availableTalentPoints(state, TALENT_CLASS_STAT[def.tree]) <= 0) {
     return false;
   }
-  state.player.talents[talentId] = rank + 1;
+  state.players[0].talents[talentId] = rank + 1;
   recomputeMaxHp(state);
   reconcileTalentPoints(state);
   resumeAfterLevelup(state);

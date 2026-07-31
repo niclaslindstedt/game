@@ -105,7 +105,7 @@ export function armorReduction(
 export function wearWornArmor(state: GameState): void {
   let broke = false;
   for (const slot of ARMOR_SLOTS) {
-    const piece = state.player.equipment[slot];
+    const piece = state.players[0].equipment[slot];
     if (!piece || piece.durability === undefined || piece.durability <= 0) {
       continue;
     }
@@ -131,7 +131,7 @@ export function repairWornArmor(state: GameState): boolean {
   let mended = false;
   let revived = false;
   for (const slot of ARMOR_SLOTS) {
-    const piece = state.player.equipment[slot];
+    const piece = state.players[0].equipment[slot];
     if (!piece || piece.durability === undefined) continue;
     const max = equipmentMaxDurability(piece);
     if (piece.durability >= max) continue;
@@ -176,7 +176,7 @@ export function repairCost(piece: Equipment): number {
  * quote the merchant's REPAIR action charges; 0 when nothing needs mending.
  */
 export function repairAllCost(state: GameState): number {
-  const p = state.player;
+  const p = state.players[0];
   let total = repairCost(p.equipment.weapon);
   for (const slot of ARMOR_SLOTS) {
     const piece = p.equipment[slot];
@@ -196,7 +196,7 @@ export function repairAllCost(state: GameState): number {
  * changed.
  */
 export function repairAll(state: GameState): boolean {
-  const p = state.player;
+  const p = state.players[0];
   let mended = false;
   let wornArmorRevived = false;
   const mend = (piece: Equipment | null, wornArmor: boolean): void => {
@@ -257,8 +257,8 @@ function nextUnequipSeq(state: GameState): number {
       max = piece.unequippedAt;
     }
   };
-  consider(state.player.equipment.weapon);
-  for (const cell of state.player.inventory) consider(cell);
+  consider(state.players[0].equipment.weapon);
+  for (const cell of state.players[0].inventory) consider(cell);
   return max + 1;
 }
 
@@ -280,7 +280,7 @@ function nextUnequipSeq(state: GameState): number {
  * that reached the bottom.
  */
 export function wearEquippedWeapon(state: GameState, times = 1): void {
-  const player = state.player;
+  const player = state.players[0];
   const weapon = player.equipment.weapon;
   if (weapon.durability === undefined) return; // the unbreakable sidearm
   weapon.durability = Math.max(0, weapon.durability - Math.max(1, times));
@@ -330,7 +330,7 @@ export function wearEquippedWeapon(state: GameState, times = 1): void {
  * so the kit can stay on the ground for later.
  */
 export function repairEquippedWeapon(state: GameState): boolean {
-  const weapon = state.player.equipment.weapon;
+  const weapon = state.players[0].equipment.weapon;
   if (weapon.durability === undefined) return false;
   const max = equipmentMaxDurability(weapon);
   if (weapon.durability >= max) return false;

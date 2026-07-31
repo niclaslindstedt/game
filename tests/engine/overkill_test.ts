@@ -31,7 +31,7 @@ function bareStage(): GameState {
 
 /** Kill one staged mob with an exact blow and return the kill event's xp. */
 function xpFromKill(state: GameState, maxHp: number, damage: number): number {
-  const { x, y } = state.player.pos;
+  const { x, y } = state.players[0].pos;
   const enemy = makeEnemy(
     { id: state.nextId++, pos: { x: x + 30, y }, hp: maxHp, maxHp },
     "test_minion",
@@ -60,7 +60,7 @@ describe("overkillEfficiency — the curve", () => {
 describe("kill event — launch inputs", () => {
   it("carries the victim's full bar so the app can size the death launch", () => {
     const state = bareStage();
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     const enemy = makeEnemy(
       { id: state.nextId++, pos: { x: x + 30, y }, hp: 40, maxHp: 200 },
       "test_minion",
@@ -83,7 +83,7 @@ describe("kill event — launch inputs", () => {
 describe("overkill toll — xp", () => {
   // The staged mob carries makeEnemy's default mlvl (99); kill xp is level-based
   // now (`mobLevelXp`), and the overkill toll scales that base down.
-  const base = (state: GameState) => mobLevelXp(99, state.player.level);
+  const base = (state: GameState) => mobLevelXp(99, state.players[0].level);
 
   it("a clean kill pays the mob's full level-based xp", () => {
     const state = bareStage();
@@ -120,7 +120,7 @@ describe("overkill toll — drops", () => {
       const enemy = makeEnemy(
         {
           id: state.nextId++,
-          pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
           hp: maxHp,
           maxHp,
         },

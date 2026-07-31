@@ -171,7 +171,7 @@ describe("SPACEZ HQ level def", () => {
       state.stampedes = [];
       state.stampedeTimerMs = Number.POSITIVE_INFINITY;
       state.items = [];
-      state.player.stats.luck = 0; // isolate the base rate + the profile bonus
+      state.players[0].stats.luck = 0; // isolate the base rate + the profile bonus
       // The parked stack sits inside the sight radius — mute the level's
       // sight-pinned story beats so the run measures drops, not dialogue.
       state.thoughtsSeen.push("spacez_staff", "spacez_optimusk");
@@ -182,8 +182,8 @@ describe("SPACEZ HQ level def", () => {
             {
               id: 9000 + i,
               pos: {
-                x: state.player.pos.x + 80,
-                y: state.player.pos.y + (i - N / 2) * 2,
+                x: state.players[0].pos.x + 80,
+                y: state.players[0].pos.y + (i - N / 2) * 2,
               },
               // Wounded down to 1 hp under a tall max bar: the bolt finishes
               // each in one hit (fast) without ever exceeding its FULL health,
@@ -200,7 +200,7 @@ describe("SPACEZ HQ level def", () => {
       // stat chooser never freezes the massacre being measured.
       for (let i = 0; i < 40_000 && state.enemies.length > 1; i++) {
         step(state, idle, DT);
-        while (state.player.pendingStatPoints > 0) {
+        while (state.players[0].pendingStatPoints > 0) {
           allocateStat(state, "stamina");
         }
       }
@@ -225,11 +225,11 @@ describe("SPACEZ HQ level def", () => {
     // comes, since its thought is marked seen).
     const state = createGame(SEED, "spacez_hq");
     expect(state.phase).toBe("cutscene");
-    expect(state.player.disarmed).toBe(true);
+    expect(state.players[0].disarmed).toBe(true);
     skipStoryOpening(state);
     expect(state.phase).toBe("playing");
     expect(state.cutscene).toBeNull();
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
   });
 
   it("silences an already-read inner monologue on replay (markThoughtsSeen)", () => {
@@ -249,7 +249,7 @@ describe("SPACEZ HQ level def", () => {
   it("spawns the player clear of every wall", () => {
     const state = startGame(SEED, "spacez_hq");
     for (const wall of state.obstacles.filter((o) => o.kind === "wall")) {
-      expect(dist(state.player.pos, wall.pos)).toBeGreaterThan(
+      expect(dist(state.players[0].pos, wall.pos)).toBeGreaterThan(
         wall.radius + PLAYER.radius,
       );
     }

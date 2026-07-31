@@ -114,9 +114,9 @@ describe("createGame", () => {
     const flag = state.landmarks.find((l) => l.kind === "flag")!;
     expect(bosses[0]!.pos).toEqual(flag.pos);
     expect(state.landmarks.some((l) => l.kind === "lander")).toBe(true);
-    expect(dist(state.player.pos, state.playerSpawn)).toBe(0);
+    expect(dist(state.players[0].pos, state.playerSpawn)).toBe(0);
     expect(state.decor.length).toBeGreaterThan(0);
-    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+    expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
     expect(state.level.biome).toBe("test");
   });
 
@@ -144,13 +144,16 @@ describe("createGame", () => {
 describe("steering", () => {
   it("moves the player toward the held target and stops on arrival", () => {
     const state = startGame();
-    const target = { x: state.player.pos.x + 60, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 60,
+      y: state.players[0].pos.y,
+    };
     step(state, steerTo(target.x, target.y), DT);
-    expect(state.player.moving).toBe(true);
-    expect(state.player.facing.x).toBeCloseTo(1);
+    expect(state.players[0].moving).toBe(true);
+    expect(state.players[0].facing.x).toBeCloseTo(1);
 
     run(state, steerTo(target.x, target.y), 200);
-    expect(Math.abs(state.player.pos.x - target.x)).toBeLessThanOrEqual(
+    expect(Math.abs(state.players[0].pos.x - target.x)).toBeLessThanOrEqual(
       PLAYER.arriveRadius,
     );
   });
@@ -158,26 +161,34 @@ describe("steering", () => {
   it("only flips the sprite on decisively horizontal movement", () => {
     const state = startGame();
     clearStage(state);
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
 
     step(state, steerTo(x - 200, y), DT);
-    expect(state.player.faceLeft).toBe(true);
+    expect(state.players[0].faceLeft).toBe(true);
 
     // Near-vertical steering (even leaning slightly right) keeps the flip:
     // this is what used to flicker when diagonals hovered around vertical.
-    step(state, steerTo(state.player.pos.x + 2, state.player.pos.y + 300), DT);
-    expect(state.player.faceLeft).toBe(true);
+    step(
+      state,
+      steerTo(state.players[0].pos.x + 2, state.players[0].pos.y + 300),
+      DT,
+    );
+    expect(state.players[0].faceLeft).toBe(true);
 
-    step(state, steerTo(state.player.pos.x + 200, state.player.pos.y), DT);
-    expect(state.player.faceLeft).toBe(false);
+    step(
+      state,
+      steerTo(state.players[0].pos.x + 200, state.players[0].pos.y),
+      DT,
+    );
+    expect(state.players[0].faceLeft).toBe(false);
   });
 
   it("does not move while the pointer is released", () => {
     const state = startGame();
-    const before = { ...state.player.pos };
+    const before = { ...state.players[0].pos };
     step(state, idle, DT);
-    expect(state.player.pos).toEqual(before);
-    expect(state.player.moving).toBe(false);
+    expect(state.players[0].pos).toEqual(before);
+    expect(state.players[0].moving).toBe(false);
   });
 
   it("clamps the player inside the finite level", () => {
@@ -190,8 +201,8 @@ describe("steering", () => {
     // Long enough for the diagonal to the corner even once the sprint pool
     // drains and the run drops to its winded half-speed floor.
     run(state, steerTo(-5000, -5000), 8000);
-    expect(state.player.pos.x).toBe(PLAYER.radius);
-    expect(state.player.pos.y).toBe(PLAYER.radius);
+    expect(state.players[0].pos.x).toBe(PLAYER.radius);
+    expect(state.players[0].pos.y).toBe(PLAYER.radius);
   });
 });
 
@@ -200,7 +211,7 @@ describe("jumping", () => {
     const state = startGame();
     clearStage(state);
     step(state, jumpOnce, DT);
-    expect(state.player.z).toBeGreaterThan(0);
+    expect(state.players[0].z).toBeGreaterThan(0);
     expect(state.events).toContainEqual(
       expect.objectContaining({ type: "jump" }),
     );
@@ -209,8 +220,8 @@ describe("jumping", () => {
     // the moon's low g makes it far higher than an earth hop would be.
     let apex = 0;
     run(state, idle, 400, (s) => {
-      apex = Math.max(apex, s.player.z);
-      return s.player.z === 0 && s.stats.timeMs > DT * 4;
+      apex = Math.max(apex, s.players[0].z);
+      return s.players[0].z === 0 && s.stats.timeMs > DT * 4;
     });
     const expected = JUMP.velocity ** 2 / (2 * state.level.gravity);
     expect(apex).toBeGreaterThan(expected * 0.85);
@@ -221,9 +232,9 @@ describe("jumping", () => {
     const state = startGame();
     clearStage(state);
     step(state, jumpOnce, DT);
-    const rising = state.player.vz;
+    const rising = state.players[0].vz;
     step(state, jumpOnce, DT);
-    expect(state.player.vz).toBeLessThan(rising); // gravity, not a re-launch
+    expect(state.players[0].vz).toBeLessThan(rising); // gravity, not a re-launch
   });
 
   it("sails over ghosts: no contact damage while airborne", () => {
@@ -231,11 +242,11 @@ describe("jumping", () => {
     clearStage(state);
     // Get airborne above the dodge height, then drop a ghost on the player.
     step(state, jumpOnce, DT);
-    run(state, idle, 100, (s) => s.player.z > JUMP.dodgeHeight + 10);
-    expect(state.player.z).toBeGreaterThan(JUMP.dodgeHeight);
+    run(state, idle, 100, (s) => s.players[0].z > JUMP.dodgeHeight + 10);
+    expect(state.players[0].z).toBeGreaterThan(JUMP.dodgeHeight);
     // Unkillable so the auto-attack can't clear it before the landing.
     const ghost = makeEnemy({
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       hp: 1_000_000,
       maxHp: 1_000_000,
     });
@@ -244,8 +255,8 @@ describe("jumping", () => {
     expect(state.stats.damageTaken).toBe(0);
 
     // Back on the ground the same ghost connects.
-    run(state, idle, 200, (s) => s.player.z === 0);
-    ghost.pos = { ...state.player.pos };
+    run(state, idle, 200, (s) => s.players[0].z === 0);
+    ghost.pos = { ...state.players[0].pos };
     ghost.contactCooldownMs = 0;
     step(state, idle, DT);
     expect(state.stats.damageTaken).toBeGreaterThan(0);
@@ -258,13 +269,16 @@ describe("weapon", () => {
     const range = weaponDef("blaster").range;
     state.enemies = [
       makeEnemy({
-        pos: { x: state.player.pos.x + range + 100, y: state.player.pos.y },
+        pos: {
+          x: state.players[0].pos.x + range + 100,
+          y: state.players[0].pos.y,
+        },
       }),
     ];
     step(state, idle, DT);
     expect(state.projectiles).toHaveLength(0);
 
-    state.enemies[0]!.pos.x = state.player.pos.x + range - 50;
+    state.enemies[0]!.pos.x = state.players[0].pos.x + range - 50;
     step(state, idle, DT);
     expect(state.projectiles).toHaveLength(1);
     expect(state.stats.shotsFired).toBe(1);
@@ -280,7 +294,9 @@ describe("weapon", () => {
     setBalanceTuning({ knockback: 0 }); // don't shove the parked mob out of reach
     stopWaves(state);
     state.enemies = [
-      makeEnemy({ pos: { x: state.player.pos.x + 30, y: state.player.pos.y } }),
+      makeEnemy({
+        pos: { x: state.players[0].pos.x + 30, y: state.players[0].pos.y },
+      }),
     ];
     state.items = [];
     run(state, idle, 2000, (s) => s.enemies.length === 0);
@@ -292,10 +308,10 @@ describe("weapon", () => {
   it("fires from the player's height mid-jump and the shot sinks back", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
-    state.player.z = 40; // mid-jump
+    state.players[0].z = 40; // mid-jump
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 100, y: state.players[0].pos.y },
       }),
     );
     step(state, idle, DT);
@@ -310,7 +326,7 @@ describe("weapon", () => {
   it("ignores monsters outside the given view — they aren't on screen yet", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     state.enemies.push(makeEnemy({ pos: { x: x + 150, y } }));
     // A view that ends before the monster: in range, but not visible.
     const view = { x: x - 160, y: y - 90, width: 300, height: 180 };
@@ -325,7 +341,7 @@ describe("weapon", () => {
 
   it("swings melee weapons directly, no projectile", () => {
     const state = startGame();
-    state.player.equipment.weapon = {
+    state.players[0].equipment.weapon = {
       id: 777,
       defId: "test_wrench",
       slot: "weapon",
@@ -336,7 +352,7 @@ describe("weapon", () => {
     state.enemies = [
       // Level-1 mob → ~no armor, so the swing lands its full catalog damage.
       makeEnemy({
-        pos: { x: state.player.pos.x + 20, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 20, y: state.players[0].pos.y },
         mlvl: 1,
       }),
     ];
@@ -356,7 +372,7 @@ describe("weapon", () => {
 
 describe("melee sweep AoE", () => {
   const equip = (state: ReturnType<typeof startGame>, defId: string) => {
-    state.player.equipment.weapon = {
+    state.players[0].equipment.weapon = {
       id: 777,
       defId,
       slot: "weapon",
@@ -373,8 +389,8 @@ describe("melee sweep AoE", () => {
     state.rng = () => 0.99; // no miss, no crit — this is a geometry test
     // The swing's target cap starts at MELEE.baseAoeTargets (2); one point of
     // INT lifts it to 3 so the whole front rank is cleaved.
-    state.player.stats.intelligence = 1;
-    const { x, y } = state.player.pos;
+    state.players[0].stats.intelligence = 1;
+    const { x, y } = state.players[0].pos;
     // Three minions clustered ahead, all within reach and the front cone.
     const front = [
       makeEnemy({ pos: { x: x + 20, y } }),
@@ -403,7 +419,7 @@ describe("melee sweep AoE", () => {
     equip(state, "test_wrench"); // default 120° cone, reach 42
     state.rng = () => 0.99; // no miss, no crit — this is a geometry test
     // No INTELLIGENCE: the cap sits at MELEE.baseAoeTargets (2).
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     // Three foes in the cone at increasing distance; the swing must land on
     // the two NEAREST and spare the third even though it is inside the arc.
     const near = makeEnemy({ pos: { x: x + 16, y } });
@@ -422,7 +438,7 @@ describe("melee sweep AoE", () => {
     const state = startGame();
     state.obstacles = [];
     equip(state, "test_wrench");
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     state.enemies = [makeEnemy({ pos: { x: x + 20, y } })];
     step(state, idle, DT);
     const swing = state.events.find((e) => e.type === "swing");
@@ -435,7 +451,7 @@ describe("melee sweep AoE", () => {
     state.obstacles = [];
     equip(state, "test_spear"); // narrow 40° cone, long reach 90
     state.rng = () => 0.99; // no miss, no crit — this is a geometry test
-    const { x, y } = state.player.pos;
+    const { x, y } = state.players[0].pos;
     // Nearest monster straight ahead sets the aim.
     const near = makeEnemy({ pos: { x: x + 40, y } });
     // A second monster far down the same line — beyond a blade's reach,
@@ -455,7 +471,7 @@ describe("melee sweep AoE", () => {
 
 describe("weapon reach, cadence, and AoE", () => {
   const equipWrench = (state: ReturnType<typeof startGame>) => {
-    state.player.equipment.weapon = {
+    state.players[0].equipment.weapon = {
       id: 777,
       defId: "test_wrench",
       slot: "weapon",
@@ -469,7 +485,7 @@ describe("weapon reach, cadence, and AoE", () => {
     const state = startGame();
     equipWrench(state);
     const base = weaponDef("test_wrench");
-    const weapon = () => state.player.equipment.weapon;
+    const weapon = () => state.players[0].equipment.weapon;
 
     // No stats: the plain catalog numbers, cadence included.
     const baseCadence = base.cooldownMs;
@@ -478,15 +494,15 @@ describe("weapon reach, cadence, and AoE", () => {
 
     // INTELLIGENCE does NOT lengthen a MELEE blade's reach (that is STRENGTH's;
     // INT owns the cone's WIDTH and target count instead) — nor is it a speed stat.
-    state.player.stats.intelligence = 20;
+    state.players[0].stats.intelligence = 20;
     expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
     expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
 
     // STRENGTH lengthens the melee reach; DEXTERITY quickens the swing.
-    state.player.stats.strength = 20;
+    state.players[0].stats.strength = 20;
     expect(weaponRangeFor(state, weapon())).toBeGreaterThan(base.range);
     expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence); // STR is not a speed stat
-    state.player.stats.dexterity = 20;
+    state.players[0].stats.dexterity = 20;
     expect(weaponCooldownFor(state, weapon())).toBeLessThan(base.cooldownMs);
 
     // A RANGED weapon's reach grows with INT (not STR) and its cadence with DEX.
@@ -513,21 +529,23 @@ describe("weapon reach, cadence, and AoE", () => {
 
     const weak = startGame();
     equipWrench(weak);
-    weak.player.stats.strength = 0;
+    weak.players[0].stats.strength = 0;
     stopWaves(weak);
     weak.enemies = [
-      makeEnemy({ pos: { x: weak.player.pos.x + gap, y: weak.player.pos.y } }),
+      makeEnemy({
+        pos: { x: weak.players[0].pos.x + gap, y: weak.players[0].pos.y },
+      }),
     ];
     step(weak, idle, DT);
     expect(weak.events.some((e) => e.type === "swing")).toBe(false);
 
     const reachy = startGame();
     equipWrench(reachy);
-    reachy.player.stats.strength = 20;
+    reachy.players[0].stats.strength = 20;
     stopWaves(reachy);
     reachy.enemies = [
       makeEnemy({
-        pos: { x: reachy.player.pos.x + gap, y: reachy.player.pos.y },
+        pos: { x: reachy.players[0].pos.x + gap, y: reachy.players[0].pos.y },
       }),
     ];
     step(reachy, idle, DT);
@@ -543,9 +561,9 @@ describe("weapon reach, cadence, and AoE", () => {
       const state = startGame();
       equipWrench(state); // 120° cone (60° half-angle), reach 42
       state.rng = () => 0.99; // no miss, no crit — this is a geometry test
-      state.player.stats.intelligence = intelligence;
+      state.players[0].stats.intelligence = intelligence;
       stopWaves(state);
-      const { x, y } = state.player.pos;
+      const { x, y } = state.players[0].pos;
       // The nearer foe dead ahead fixes the aim along +x; the flank foe is 70°
       // off it (just past the base half-angle), well within reach.
       const flank = makeEnemy({
@@ -574,20 +592,23 @@ describe("enemy AI", () => {
     const aggro = enemyDef("test_minion").ai.aggroRadius;
     const near = makeEnemy({
       id: 1,
-      pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 100, y: state.players[0].pos.y },
       speed: 60,
     });
     const far = makeEnemy({
       id: 2,
-      pos: { x: state.player.pos.x + aggro + 200, y: state.player.pos.y },
+      pos: {
+        x: state.players[0].pos.x + aggro + 200,
+        y: state.players[0].pos.y,
+      },
       speed: 60,
     });
     far.home = { x: far.pos.x + 50, y: far.pos.y };
     state.enemies = [near, far];
 
     step(state, idle, DT);
-    expect(near.pos.x).toBeLessThan(state.player.pos.x + 100); // closing in
-    expect(far.pos.x).toBeGreaterThan(state.player.pos.x + aggro + 200); // heading home
+    expect(near.pos.x).toBeLessThan(state.players[0].pos.x + 100); // closing in
+    expect(far.pos.x).toBeGreaterThan(state.players[0].pos.x + aggro + 200); // heading home
   });
 
   it("deals contact damage with a cooldown", () => {
@@ -596,7 +617,7 @@ describe("enemy AI", () => {
     stopWaves(state);
     state.enemies = [
       makeEnemy({
-        pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,
@@ -625,13 +646,13 @@ describe("enemy AI", () => {
     run(state, idle, 20);
     expect(dist(boss.pos, flag.pos)).toBeLessThan(4); // still hiding
 
-    state.player.pos = {
+    state.players[0].pos = {
       x: flag.pos.x - enemyDef("test_boss").ai.aggroRadius + 40,
       y: flag.pos.y,
     };
-    const before = dist(boss.pos, state.player.pos);
+    const before = dist(boss.pos, state.players[0].pos);
     run(state, idle, 10);
-    expect(dist(boss.pos, state.player.pos)).toBeLessThan(before); // awake
+    expect(dist(boss.pos, state.players[0].pos)).toBeLessThan(before); // awake
   });
 });
 
@@ -639,20 +660,20 @@ describe("items", () => {
   it("banks a medkit into the consumable dock on pickup (heals on use)", () => {
     const state = startGame();
     clearStage(state);
-    state.player.hp = state.player.maxHp - 10;
+    state.players[0].hp = state.players[0].maxHp - 10;
     state.items = [
-      { id: 999, kind: "medkit", tier: 0, pos: { ...state.player.pos } },
+      { id: 999, kind: "medkit", tier: 0, pos: { ...state.players[0].pos } },
     ];
     step(state, idle, DT);
     // Picked up but not spent: the hp is untouched, the kit is stacked.
-    expect(state.player.hp).toBe(state.player.maxHp - 10);
-    expect(state.player.medkits[0]).toBe(1);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp - 10);
+    expect(state.players[0].medkits[0]).toBe(1);
     expect(state.items).toHaveLength(0);
     expect(state.stats.itemsCollected).toBe(1);
     // Spending it on the input edge tops the hero up, capped at max hp.
     step(state, { ...idle, useMedkit: true }, DT);
-    expect(state.player.hp).toBe(state.player.maxHp);
-    expect(state.player.medkits[0]).toBe(0);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
+    expect(state.players[0].medkits[0]).toBe(0);
   });
 });
 
@@ -673,7 +694,7 @@ describe("win and lose", () => {
     boss.hp = 1;
     boss.spoke = true; // skip his arrival scene: this test is the victory flow
     // Within the default crude sword's melee reach so a swing finishes him.
-    boss.pos = { x: state.player.pos.x + 30, y: state.player.pos.y };
+    boss.pos = { x: state.players[0].pos.x + 30, y: state.players[0].pos.y };
     boss.speed = 0;
 
     run(state, idle, 500, (s) => s.enemies.length === 0);
@@ -689,7 +710,8 @@ describe("win and lose", () => {
     // The boss gasps his last words as he falls: tap through the death scene,
     // then spend the level-ups the kill banked, so time can resume.
     while (state.phase === "dialogue") advanceDialogue(state);
-    while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
+    while (state.players[0].pendingStatPoints > 0)
+      allocateStat(state, "stamina");
     expect(state.phase).toBe("playing");
     // …and only now, with the rite done and the box tapped through, does the
     // loot-grab countdown arm.
@@ -707,25 +729,25 @@ describe("win and lose", () => {
 
   it("falls into the death scene when the player's hp reaches zero", () => {
     const state = startGame();
-    state.player.hp = 1;
-    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    state.players[0].hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.players[0].pos } })];
     step(state, idle, DT);
     // The fatal blow drops the run into the DEATH SCENE (the `dying` tableau),
     // not straight to the modal: hp 0, phase `dying`, and a `playerDeath` event
     // for the app's death sting/haptic/camera-kick.
-    expect(state.player.hp).toBe(0);
+    expect(state.players[0].hp).toBe(0);
     expect(state.phase).toBe("dying");
     expect(state.events).toContainEqual({
       type: "playerDeath",
-      pos: state.player.pos,
+      pos: state.players[0].pos,
     });
     expect(state.deathScene).not.toBeNull();
   });
 
   it("raises the defeat splash when the death scene times out", () => {
     const state = startGame();
-    state.player.hp = 1;
-    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    state.players[0].hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.players[0].pos } })];
     step(state, idle, DT); // fall → `dying`
     // Play out the whole scene; the run drops to `defeat` with a `defeat` event.
     let defeated = false;
@@ -741,8 +763,8 @@ describe("win and lose", () => {
 
   it("skips the death scene straight to defeat on a tap", () => {
     const state = startGame();
-    state.player.hp = 1;
-    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    state.players[0].hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.players[0].pos } })];
     step(state, idle, DT); // fall → `dying`
     expect(state.phase).toBe("dying");
     // Past the opening grace window, a tap is a deliberate "get on with it".
@@ -757,8 +779,8 @@ describe("win and lose", () => {
 
   it("refuses to skip the death scene inside its grace window", () => {
     const state = startGame();
-    state.player.hp = 1;
-    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    state.players[0].hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.players[0].pos } })];
     step(state, idle, DT); // fall → `dying`
     // The input that was steering when the hero fell must not throw the modal
     // up on the tick of the fall — the death beat plays.
@@ -775,8 +797,8 @@ describe("win and lose", () => {
 
   it("freezes the simulation after the game ends", () => {
     const state = startGame();
-    state.player.hp = 1;
-    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    state.players[0].hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.players[0].pos } })];
     step(state, idle, DT);
     const time = state.stats.timeMs;
     step(state, steerTo(0, 0), DT);

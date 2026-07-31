@@ -85,7 +85,7 @@ function copyPiece(piece: Equipment | null): Equipment | null {
  * into `createGame` when the following level starts.
  */
 export function extractLoadout(state: GameState): Loadout {
-  const player = state.player;
+  const player = state.players[0];
   return {
     level: player.level,
     xp: player.xp,
@@ -144,7 +144,7 @@ export function extractLoadout(state: GameState): Loadout {
  * fastened. Called from createGame when a loadout is passed.
  */
 export function applyLoadout(state: GameState, loadout: Loadout): void {
-  const player = state.player;
+  const player = state.players[0];
   player.level = Math.max(1, loadout.level);
   player.xpToNext = xpToNextAt(player.level, state.difficulty);
   player.xp = clamp(loadout.xp, 0, player.xpToNext - 1);

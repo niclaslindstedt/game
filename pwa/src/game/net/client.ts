@@ -220,7 +220,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
       return;
     }
     state = options.adopt ?? buildLocalState(welcome.params);
-    const recipient = { ownsPlayer: welcome.ownsPlayer };
+    const recipient = { seat: welcome.seat };
     // A CLIENT THAT MAY NOT SEE THE BAG MUST NOT INVENT ONE. Its own
     // `createGame` just built a whole private hero — an empty inventory, a
     // starting purse, a fresh stat block — and none of that is real: the

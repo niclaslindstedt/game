@@ -289,8 +289,8 @@ export function drawFrame(
   drawDeathClouds(ctx, state, view, timeMs);
 
   // Red flash while recently hurt.
-  if (state.player.hurtFlashMs > 0) {
-    ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
+  if (state.players[0].hurtFlashMs > 0) {
+    ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.players[0].hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
   }
 }

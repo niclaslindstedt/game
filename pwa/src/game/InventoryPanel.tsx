@@ -222,11 +222,11 @@ export function InventoryPanel({
           }
         } else if (d.from.type === "slot" && kind === "inv") {
           if (runCommandOk(state, "unequipToInventory", d.from.slot)) {
-            const landed = state.player.inventory.findIndex(
+            const landed = state.players[0].inventory.findIndex(
               (i) => i?.id === d.item.id,
             );
             const wanted = Number(arg);
-            if (landed >= 0 && state.player.inventory[wanted] === null) {
+            if (landed >= 0 && state.players[0].inventory[wanted] === null) {
               runCommand(state, "moveInventoryItem", landed, wanted);
             }
           }
@@ -313,7 +313,9 @@ export function InventoryPanel({
   // bag cell (desktop).
   const activateItem = (item: Equipment) => {
     const verb = bagVerb(item);
-    const index = state.player.inventory.findIndex((i) => i?.id === item.id);
+    const index = state.players[0].inventory.findIndex(
+      (i) => i?.id === item.id,
+    );
     if (!verb || index < 0 || !runCommandOk(state, verb, index)) return;
     playUiSound(synth, "confirm");
     setInspect(null);
@@ -363,7 +365,7 @@ export function InventoryPanel({
       setDrag(dragRef.current);
     };
 
-  const player = state.player;
+  const player = state.players[0];
   // How many bag pieces the SCRAP sweep would clear right now — loot the hero
   // has outgrown (worse than what's worn, and not a trinket/trophy the engine
   // spares). Drives the button's count and its disabled state so it never

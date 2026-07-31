@@ -76,7 +76,7 @@ function wearPieces(state: ReturnType<typeof startGame>, n: number): void {
   for (let i = 0; i < n; i++) {
     const [slot, defId, member] = slots[i]!;
     // @ts-expect-error indexing the equipment record by a dynamic armor slot
-    state.player.equipment[slot] = piece(900 + i, defId, slot, member);
+    state.players[0].equipment[slot] = piece(900 + i, defId, slot, member);
   }
 }
 
@@ -119,7 +119,7 @@ describe("set bonuses", () => {
     expect(wornSetCount(state, SET_ID)).toBe(4);
     // Break the feet piece: durability 0 makes it inactive, so the count and
     // the capstone fall back to the 3-piece tier.
-    const feet = state.player.equipment.feet;
+    const feet = state.players[0].equipment.feet;
     if (feet) feet.durability = 0;
     expect(wornSetCount(state, SET_ID)).toBe(3);
     const affixKinds = activeEquippedAffixes(state).map((a) => a.kind);

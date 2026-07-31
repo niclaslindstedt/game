@@ -28,7 +28,7 @@ import { clearStage, runUntilChooser, startGame } from "./helpers.ts";
 afterEach(() => setAutoStatGainsEnabled(true));
 
 function spentTotal(state: GameState): number {
-  return STAT_NAMES.reduce((sum, s) => sum + state.player.spentStats[s], 0);
+  return STAT_NAMES.reduce((sum, s) => sum + state.players[0].spentStats[s], 0);
 }
 
 /** Ding to level 2 and idle to the open chooser (its first appearance). */
@@ -52,14 +52,14 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
     expect(baseStatBonus(2, "stamina")).toBeGreaterThan(0);
     expect(effectiveStat(state, "stamina")).toBe(baseStatBonus(2, "stamina"));
     // …but the chooser's tally shows none of it — the player hasn't picked yet.
-    expect(state.player.spentStats.stamina).toBe(0);
+    expect(state.players[0].spentStats.stamina).toBe(0);
     expect(spentTotal(state)).toBe(0);
   });
 
   it("the difficulty head-start is not counted as spent", () => {
     const state = createGame(7, "test_level", "easy");
     // EASY banks a few pre-allocated points into the raw stats…
-    expect(state.player.stats.strength).toBeGreaterThan(0);
+    expect(state.players[0].stats.strength).toBeGreaterThan(0);
     // …none of which read as the player's own picks on the chooser.
     expect(spentTotal(state)).toBe(0);
   });
@@ -68,28 +68,28 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
     const state = startGame();
     dingToChooser(state);
     allocateStat(state, "strength");
-    expect(state.player.spentStats.strength).toBe(1);
-    expect(state.player.stats.strength).toBe(1);
+    expect(state.players[0].spentStats.strength).toBe(1);
+    expect(state.players[0].stats.strength).toBe(1);
   });
 
   it("a respec zeroes the tally, then it grows back as points are re-placed", () => {
     const state = startGame();
-    state.player.pendingStatPoints = 2;
+    state.players[0].pendingStatPoints = 2;
     allocateStat(state, "luck");
     allocateStat(state, "luck");
-    expect(state.player.spentStats.luck).toBe(2);
+    expect(state.players[0].spentStats.luck).toBe(2);
 
     beginRespec(state);
     // The whole refunded pool is re-placed from scratch — spent restarts at 0.
     expect(spentTotal(state)).toBe(0);
 
     allocateStat(state, "stamina");
-    expect(state.player.spentStats.stamina).toBe(1);
+    expect(state.players[0].spentStats.stamina).toBe(1);
     deallocateStat(state, "stamina");
-    expect(state.player.spentStats.stamina).toBe(0);
+    expect(state.players[0].spentStats.stamina).toBe(0);
     // Floored — a spurious refund never drives the tally negative.
     deallocateStat(state, "stamina");
-    expect(state.player.spentStats.stamina).toBe(0);
+    expect(state.players[0].spentStats.stamina).toBe(0);
   });
 
   it("a loadout carries the spent tally to the next level", () => {
@@ -101,7 +101,7 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
     expect(carried.spentStats?.dexterity).toBe(1);
 
     const next = createGame(11, "test_level", "medium", carried);
-    expect(next.player.spentStats.dexterity).toBe(1);
+    expect(next.players[0].spentStats.dexterity).toBe(1);
   });
 
   it("a pre-spentStats loadout falls back to its carried stats", () => {
@@ -116,7 +116,7 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
     delete legacy.spentStats;
 
     const next = createGame(13, "test_level", "medium", legacy);
-    expect(next.player.spentStats.stamina).toBe(3);
-    expect(next.player.spentStats.strength).toBe(2);
+    expect(next.players[0].spentStats.stamina).toBe(3);
+    expect(next.players[0].spentStats.strength).toBe(2);
   });
 });

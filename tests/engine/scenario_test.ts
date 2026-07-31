@@ -32,7 +32,7 @@ describe("scenario / opening", () => {
     expect(state.phase).toBe("intro");
     applyScenario(state, {});
     expect(state.phase).toBe("playing");
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
   });
 
   it("skips a prelude cutscene too", () => {
@@ -46,7 +46,7 @@ describe("scenario / opening", () => {
     const state = createGame(SEED, "test_level");
     applyScenario(state, { skipOpening: false, hp: 5 });
     expect(state.phase).toBe("intro");
-    expect(state.player.hp).toBe(5);
+    expect(state.players[0].hp).toBe(5);
   });
 });
 
@@ -54,26 +54,26 @@ describe("scenario / the hero", () => {
   it("sets hp last, clamped into [1, maxHp]", () => {
     const state = startGame();
     applyScenario(state, { hp: 2 });
-    expect(state.player.hp).toBe(2);
+    expect(state.players[0].hp).toBe(2);
     applyScenario(state, { hp: 99_999 });
-    expect(state.player.hp).toBe(state.player.maxHp);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
     applyScenario(state, { hp: -5 });
-    expect(state.player.hp).toBe(1);
+    expect(state.players[0].hp).toBe(1);
   });
 
   it("survives the gear-driven maxHp recompute (2 hp stays 2 hp)", () => {
     const state = startGame();
     applyScenario(state, { hp: 2, gear: { chest: "test_vest" } });
     // The vest grants +20 maxHp; the explicit hp still lands after it.
-    expect(state.player.hp).toBe(2);
+    expect(state.players[0].hp).toBe(2);
   });
 
   it("sets level and re-derives the xp curve", () => {
     const state = startGame();
     applyScenario(state, { level: 7 });
-    expect(state.player.level).toBe(7);
-    expect(state.player.xp).toBe(0);
-    expect(state.player.xpToNext).toBe(xpToLevelUp(7));
+    expect(state.players[0].level).toBe(7);
+    expect(state.players[0].xp).toBe(0);
+    expect(state.players[0].xpToNext).toBe(xpToLevelUp(7));
   });
 
   it("sets absolute stat allocations, stamina, and coins", () => {
@@ -83,10 +83,10 @@ describe("scenario / the hero", () => {
       stamina: 0,
       coins: 123,
     });
-    expect(state.player.stats.strength).toBe(4);
-    expect(state.player.stats.luck).toBe(2);
-    expect(state.player.stamina).toBe(0);
-    expect(state.player.coins).toBe(123);
+    expect(state.players[0].stats.strength).toBe(4);
+    expect(state.players[0].stats.luck).toBe(2);
+    expect(state.players[0].stamina).toBe(0);
+    expect(state.players[0].coins).toBe(123);
   });
 
   it("fills the powerup dock, capped at its size", () => {
@@ -100,8 +100,8 @@ describe("scenario / the hero", () => {
         "test_nuke",
       ],
     });
-    expect(state.player.heldAbilities.length).toBe(HELD_ITEMS.cap);
-    expect(state.player.heldAbilities[0]).toBe("test_orbit");
+    expect(state.players[0].heldAbilities.length).toBe(HELD_ITEMS.cap);
+    expect(state.players[0].heldAbilities[0]).toBe("test_orbit");
   });
 });
 
@@ -109,7 +109,7 @@ describe("scenario / equipment", () => {
   it("mints a named weapon plain at catalog durability", () => {
     const state = startGame();
     applyScenario(state, { weapon: "test_hammer" });
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     expect(weapon.defId).toBe("test_hammer");
     expect(weapon.durability).toBe(weaponDef("test_hammer").durability);
   });
@@ -117,37 +117,37 @@ describe("scenario / equipment", () => {
   it("weapon null hands over the unbreakable fallback sidearm", () => {
     const state = startGame();
     applyScenario(state, { weapon: null });
-    expect(state.player.equipment.weapon.defId).toBe("blaster");
-    expect(state.player.equipment.weapon.durability).toBeUndefined();
+    expect(state.players[0].equipment.weapon.defId).toBe("blaster");
+    expect(state.players[0].equipment.weapon.durability).toBeUndefined();
   });
 
   it("an unknown weapon id keeps the held weapon", () => {
     const state = startGame();
-    const before = state.player.equipment.weapon.defId;
+    const before = state.players[0].equipment.weapon.defId;
     applyScenario(state, { weapon: "no_such_weapon" });
-    expect(state.player.equipment.weapon.defId).toBe(before);
+    expect(state.players[0].equipment.weapon.defId).toBe(before);
   });
 
   it("dresses and strips gear slots", () => {
     const state = startGame();
     applyScenario(state, { gear: { chest: "test_vest" } });
-    expect(state.player.equipment.chest?.defId).toBe("test_vest");
-    const dressedMax = state.player.maxHp;
+    expect(state.players[0].equipment.chest?.defId).toBe("test_vest");
+    const dressedMax = state.players[0].maxHp;
     applyScenario(state, { gear: { chest: null } });
-    expect(state.player.equipment.chest).toBeNull();
-    expect(state.player.maxHp).toBe(dressedMax - 20);
+    expect(state.players[0].equipment.chest).toBeNull();
+    expect(state.players[0].maxHp).toBe(dressedMax - 20);
   });
 
   it("refuses a piece minted into the wrong slot", () => {
     const state = startGame();
     applyScenario(state, { gear: { head: "test_vest" } });
-    expect(state.player.equipment.head).toBeNull();
+    expect(state.players[0].equipment.head).toBeNull();
   });
 
   it("disarmed holsters the hero", () => {
     const state = startGame();
     applyScenario(state, { disarmed: true });
-    expect(state.player.disarmed).toBe(true);
+    expect(state.players[0].disarmed).toBe(true);
   });
 });
 
@@ -157,32 +157,32 @@ describe("scenario / placement", () => {
     applyScenario(state, { place: "boss" });
     const b = boss(state);
     expect(b).toBeDefined();
-    const away = dist(state.player.pos, b!.pos);
+    const away = dist(state.players[0].pos, b!.pos);
     expect(away).toBeGreaterThan(60);
     expect(away).toBeLessThan(160);
-    expect(isExplored(state, state.player.pos)).toBe(true);
+    expect(isExplored(state, state.players[0].pos)).toBe(true);
   });
 
   it("places the hero at exact coordinates, clamped into the level", () => {
     const state = startGame();
     applyScenario(state, { place: { x: 1200, y: 800 } });
-    expect(state.player.pos).toEqual({ x: 1200, y: 800 });
+    expect(state.players[0].pos).toEqual({ x: 1200, y: 800 });
     applyScenario(state, { place: { x: -500, y: 99_999 } });
-    expect(state.player.pos.x).toBeGreaterThan(0);
-    expect(state.player.pos.y).toBeLessThan(state.level.height);
+    expect(state.players[0].pos.x).toBeGreaterThan(0);
+    expect(state.players[0].pos.y).toBeLessThan(state.level.height);
   });
 
   it("places the hero beside the merchant, outside his discovery radius", () => {
     const state = startGame();
     applyScenario(state, { place: "merchant" });
-    const away = dist(state.player.pos, state.merchant.pos);
+    const away = dist(state.players[0].pos, state.merchant.pos);
     expect(away).toBeGreaterThan(MERCHANT.discoverRadius);
     expect(away).toBeLessThanOrEqual(MERCHANT.discoverRadius + 12);
     // Horizontally beside the stall — a vertical stand-off this size would
     // sit just outside the phone frame's ~97 world units of half-height.
-    expect(state.player.pos.y).toBeCloseTo(state.merchant.pos.y, 5);
+    expect(state.players[0].pos.y).toBeCloseTo(state.merchant.pos.y, 5);
     expect(state.merchant.discovered).toBe(false);
-    expect(isExplored(state, state.player.pos)).toBe(true);
+    expect(isExplored(state, state.players[0].pos)).toBe(true);
   });
 });
 
@@ -220,7 +220,7 @@ describe("scenario / the field", () => {
     const fodder = state.enemies.filter((e) => e.defId === "test_fodder");
     expect(fodder.length).toBe(60);
     for (const mob of fodder) {
-      expect(dist(mob.pos, state.player.pos)).toBeGreaterThanOrEqual(100);
+      expect(dist(mob.pos, state.players[0].pos)).toBeGreaterThanOrEqual(100);
     }
     expect(state.stats.totalEnemies).toBe(61);
   });
@@ -287,10 +287,10 @@ describe("scenario / freeze", () => {
       ],
     });
     const posed = state.enemies.map((e) => `${e.pos.x},${e.pos.y}`);
-    const hp = state.player.hp;
+    const hp = state.players[0].hp;
     run(state, idle, Math.ceil(3000 / DT));
     expect(state.enemies.map((e) => `${e.pos.x},${e.pos.y}`)).toEqual(posed);
-    expect(state.player.hp).toBe(hp);
+    expect(state.players[0].hp).toBe(hp);
   });
 
   it("roots the merchant mid-pose", () => {
@@ -330,7 +330,7 @@ describe("scenario / drops", () => {
     expect(added.length).toBe(3);
     for (const item of added) {
       expect(item.kind).toBe("medkit");
-      expect(dist(item.pos, state.player.pos)).toBeGreaterThanOrEqual(30);
+      expect(dist(item.pos, state.players[0].pos)).toBeGreaterThanOrEqual(30);
     }
   });
 
@@ -462,17 +462,17 @@ describe("scenario / the display case", () => {
   it("runAbilities starts powerups already running, not banked", () => {
     const state = startGame();
     applyScenario(state, { runAbilities: ["test_orbit", "test_stasis"] });
-    expect(state.player.abilities.map((a) => a.defId)).toEqual([
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
       "test_orbit",
       "test_stasis",
     ]);
     // Running, not docked — the dock is what `abilities` fills.
-    expect(state.player.heldAbilities).toEqual([]);
+    expect(state.players[0].heldAbilities).toEqual([]);
     // Each starts at its def's full duration and ticks down from there.
-    const orbit = state.player.abilities[0];
+    const orbit = state.players[0].abilities[0];
     expect(orbit?.remainingMs).toBe(abilityDef("test_orbit").durationMs);
     run(state, idle, Math.ceil(500 / DT));
-    expect(state.player.abilities[0]?.remainingMs).toBeLessThan(
+    expect(state.players[0].abilities[0]?.remainingMs).toBeLessThan(
       abilityDef("test_orbit").durationMs,
     );
   });
@@ -480,6 +480,6 @@ describe("scenario / the display case", () => {
   it("refuses an unknown id and an instant power, without throwing", () => {
     const state = startGame();
     applyScenario(state, { runAbilities: ["no_such_power", "test_nuke"] });
-    expect(state.player.abilities).toEqual([]);
+    expect(state.players[0].abilities).toEqual([]);
   });
 });

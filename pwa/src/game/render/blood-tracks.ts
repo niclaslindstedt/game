@@ -154,8 +154,8 @@ function ensureRun(state: GameState): boolean {
   carry = 0;
   sinceStep = 0;
   leftFoot = false;
-  lastX = state.player.pos.x;
-  lastY = state.player.pos.y;
+  lastX = state.players[0].pos.x;
+  lastY = state.players[0].pos.y;
   lastMs = state.stats.timeMs;
   return false;
 }
@@ -175,7 +175,7 @@ export function stepBloodTracks(state: GameState): void {
   const first = !ensureRun(state);
   syncHeroGear(state);
   const amount = bloodTrackAmount();
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   const nowMs = state.stats.timeMs;
   const dtMs = Math.max(0, nowMs - lastMs);
   const dx = pos.x - lastX;

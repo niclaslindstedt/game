@@ -128,7 +128,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     key: "stamina",
     anchor: ".vital-st",
     ready: (state, ctx) => {
-      const { stamina, maxStamina } = state.player;
+      const { stamina, maxStamina } = state.players[0];
       return (
         maxStamina > 0 &&
         stamina <= maxStamina * STAMINA_LOW_FRAC &&
@@ -141,7 +141,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     key: "repair",
     anchor: '[aria-label="switch-weapon"]',
     ready: (state) => {
-      const weapon = state.player.equipment.weapon;
+      const weapon = state.players[0].equipment.weapon;
       if (weapon.durability === undefined) return false; // unbreakable
       const max = equipmentMaxDurability(weapon);
       return max > 0 && weapon.durability <= max * WEAPON_WORN_FRAC;
@@ -152,7 +152,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     key: "bag",
     anchor: ".hud-bag-slot",
     ready: (state) =>
-      state.player.inventory.filter(Boolean).length >= BAG_TAUGHT_AT,
+      state.players[0].inventory.filter(Boolean).length >= BAG_TAUGHT_AT,
   },
   {
     // A recruited ally's portrait on the party rail. Deep into a campaign, so

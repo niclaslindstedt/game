@@ -150,7 +150,7 @@ export function createBotDriver(deps: {
     }
     if (state.phase === "respec") {
       // Spend the refunded pool point-by-point, then commit and drop in.
-      if (state.player.pendingStatPoints > 0) {
+      if (state.players[0].pendingStatPoints > 0) {
         runCommandOk(state, "allocateStat", botAllocate(drivingBot, state));
       } else {
         runCommandOk(state, "confirmRespec");
@@ -227,7 +227,7 @@ export function createBotDriver(deps: {
     if (!bot && state.autopilot.active) {
       autopilotKeyTick = (autopilotKeyTick + 1) % AUTOPILOT_KEY_SCAN_TICKS;
       if (autopilotKeyTick === 0 && state.phase === "playing") {
-        const bag = state.player.inventory;
+        const bag = state.players[0].inventory;
         const keyAt = bag.findIndex(
           (it) => it != null && gateKeyTarget(state, it) != null,
         );

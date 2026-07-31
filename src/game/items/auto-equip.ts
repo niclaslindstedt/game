@@ -40,7 +40,7 @@ export function isBetterEquipment(
   // banks until the hero grows the level and the attribute to wield it.
   if (!canEquip(state, candidate)) return false;
   if (candidate.slot === "weapon") {
-    const current = state.player.equipment.weapon;
+    const current = state.players[0].equipment.weapon;
     // No starter special case anymore: weaponScore speaks the damage-budget
     // model (AoE targets + crit weight folded in), so the wall weapon holds
     // its slot until a find genuinely out-scores it — a budget-normalized
@@ -71,7 +71,7 @@ export function isBetterEquipment(
   // two-hander is drawn.
   if (
     isOffhandItem(candidate.slot) &&
-    isTwoHandedWeapon(state.player.equipment.weapon)
+    isTwoHandedWeapon(state.players[0].equipment.weapon)
   )
     return false;
   const current = wornRival(state, candidate);
@@ -93,7 +93,7 @@ function wornRival(
 ): Equipment | null | undefined {
   const slot = wearSlotFor(state, candidate);
   if (!slot) return undefined;
-  return state.player.equipment[slot];
+  return state.players[0].equipment[slot];
 }
 
 /**
@@ -109,7 +109,7 @@ function wornRival(
  * stat-agnostic behaviour.
  */
 function specStatWeight(state: GameState, stat: StatName): number {
-  const stats = state.player.stats;
+  const stats = state.players[0].stats;
   let total = 0;
   for (const s of STAT_NAMES) total += stats[s];
   if (total <= 0) return 1;
@@ -158,7 +158,7 @@ export function wouldUpgradeSlot(
   if (candidate.slot === "weapon") {
     return (
       weaponScore(state, candidate) >
-      weaponScore(state, state.player.equipment.weapon)
+      weaponScore(state, state.players[0].equipment.weapon)
     );
   }
   const current = wornRival(state, candidate);
@@ -184,7 +184,7 @@ export function canCollectEquipment(
   item: Equipment,
 ): boolean {
   if (isAutoEquipEnabled() && isBetterEquipment(state, item)) return true;
-  return state.player.inventory.indexOf(null) !== -1;
+  return state.players[0].inventory.indexOf(null) !== -1;
 }
 
 // ---- Bulk scrap (the "clear out junk" sweep) -----------------------------------
@@ -228,7 +228,7 @@ function isAtLeastAsGoodAsEquipped(state: GameState, item: Equipment): boolean {
   if (item.slot === "weapon") {
     return (
       weaponScore(state, item) >=
-      weaponScore(state, state.player.equipment.weapon)
+      weaponScore(state, state.players[0].equipment.weapon)
     );
   }
   const current = wornRival(state, item);
@@ -257,7 +257,7 @@ export function isScrappableLoot(state: GameState, item: Equipment): boolean {
  * is no undo, exactly like a single `discardFromInventory`.
  */
 export function scrapInferiorLoot(state: GameState): Equipment[] {
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   const scrapped: Equipment[] = [];
   for (let i = 0; i < inv.length; i++) {
     const item = inv[i];
@@ -301,7 +301,7 @@ function planAutoEquip(
   state: GameState,
   opts: { weapon?: boolean } = {},
 ): number[] {
-  const player = state.player;
+  const player = state.players[0];
   const inv = player.inventory;
   const plan: number[] = [];
   let twoHandedPlanned: boolean;

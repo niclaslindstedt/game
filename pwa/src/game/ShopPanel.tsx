@@ -240,7 +240,7 @@ export function ShopPanel({
 }) {
   const [selected, setSelected] = useState<Selection | null>(null);
   const merchant = state.merchant;
-  const player = state.player;
+  const player = state.players[0];
 
   // Derived per render, never stored: a row goes stale the instant a flag
   // three rooms away unlocks or spends it (see quests/merchant.ts).

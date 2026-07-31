@@ -48,7 +48,7 @@ export function questXpReward(state: GameState, reward?: QuestReward): number {
   return Math.max(
     1,
     Math.round(
-      xpToLevelUp(state.player.level, state.difficulty) * reward.xpShare,
+      xpToLevelUp(state.players[0].level, state.difficulty) * reward.xpShare,
     ),
   );
 }
@@ -78,7 +78,7 @@ export function payQuestReward(
   }
 
   if (reward.coins) {
-    state.player.coins += reward.coins;
+    state.players[0].coins += reward.coins;
     payout.coins = reward.coins;
   }
 
@@ -96,7 +96,7 @@ export function payQuestReward(
           : {}),
         ...(reward.loot.tierBonus ? { tierBonus: reward.loot.tierBonus } : {}),
         // Priced against the hero who did the work, exactly as the stall is.
-        mlvl: state.player.level,
+        mlvl: state.players[0].level,
       });
       payout.items.push(handOver(state, equipment, at));
     }
@@ -114,7 +114,7 @@ export function payQuestReward(
   // cap — there is nowhere else to put one, and dropping it on the floor
   // beside a full dock would be a pickup the player cannot take either.
   for (const id of reward.abilities ?? []) {
-    if (canBankAbility(state, id)) state.player.heldAbilities.push(id);
+    if (canBankAbility(state, id)) state.players[0].heldAbilities.push(id);
   }
 
   return payout;

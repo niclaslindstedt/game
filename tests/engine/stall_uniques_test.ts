@@ -16,8 +16,8 @@ import { idle, startGame } from "./helpers.ts";
 /** Walk the merchant onto the hero and let the meeting stock the stall. */
 function discover(state: GameState): void {
   state.merchant.pos = {
-    x: state.player.pos.x + 30,
-    y: state.player.pos.y,
+    x: state.players[0].pos.x + 30,
+    y: state.players[0].pos.y,
   };
   step(state, idle, 16);
 }
@@ -37,7 +37,7 @@ describe("merchant stall uniques (stockUniques)", () => {
       const state = startGame(seed, "test_stall_level");
       // The relic's ilvl is 1, so a leveled hero caps the roll at
       // UNIQUE.dropChanceCap (10%) — high enough to observe across seeds.
-      state.player.level = 50;
+      state.players[0].level = 50;
       discover(state);
       expect(state.merchant.discovered).toBe(true);
       if (stalledRelic(state)) stocked++;
@@ -51,7 +51,7 @@ describe("merchant stall uniques (stockUniques)", () => {
     // Find a seed whose roll stocks the relic, then exercise the purchase.
     for (let seed = 1; seed <= 200; seed++) {
       const state = startGame(seed, "test_stall_level");
-      state.player.level = 50;
+      state.players[0].level = 50;
       discover(state);
       const entry = stalledRelic(state);
       if (!entry || entry.kind !== "weapon") continue;
@@ -61,16 +61,16 @@ describe("merchant stall uniques (stockUniques)", () => {
       expect(entry.equipment.tier).toBe("unique");
       expect(entry.equipment.name).toBe("TEST RELIC");
       // Rich enough to buy it: the one-off purchase spends the entry's `qty`.
-      state.player.coins = entry.price;
+      state.players[0].coins = entry.price;
       // The dialogue-free fixture merchant leaves the run playing; walk up
       // and trade.
-      state.player.pos = { ...state.merchant.pos };
+      state.players[0].pos = { ...state.merchant.pos };
       expect(openShop(state)).toBe(true);
       expect(buyStock(state, entry.id)).toBe(true);
       expect(entry.qty).toBe(0);
-      expect(state.player.coins).toBe(0);
+      expect(state.players[0].coins).toBe(0);
       expect(
-        state.player.inventory.some((i) => i?.uniqueId === "test_relic"),
+        state.players[0].inventory.some((i) => i?.uniqueId === "test_relic"),
       ).toBe(true);
       return;
     }
@@ -80,7 +80,7 @@ describe("merchant stall uniques (stockUniques)", () => {
   it("levels without stockUniques never stock one", () => {
     for (let seed = 1; seed <= 30; seed++) {
       const state = startGame(seed, "test_merchant_level");
-      state.player.level = 50;
+      state.players[0].level = 50;
       discover(state);
       expect(stalledRelic(state)).toBeUndefined();
     }

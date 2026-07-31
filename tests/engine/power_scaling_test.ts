@@ -25,8 +25,8 @@ import { startGame } from "./helpers.ts";
 describe("abilityPowerScale", () => {
   it("anchors at the level-1 minion healthbar — a powerup's authored damage is\n     still measured in reference minions", () => {
     const state = startGame();
-    state.player.level = 1;
-    state.player.stats.intelligence = 0;
+    state.players[0].level = 1;
+    state.players[0].stats.intelligence = 0;
     // The anchor is `MENACE.mobHpBase`, not 1, because the reference minion's
     // healthbar itself carries the flat mob-hp scale (the mob-side counterweight
     // that lets weapons deal their catalog damage). Both sides moved together,
@@ -37,11 +37,11 @@ describe("abilityPowerScale", () => {
 
   it("tracks the minion healthbar's growth, so a powerup keeps its bite", () => {
     const state = startGame();
-    state.player.stats.intelligence = 0;
+    state.players[0].stats.intelligence = 0;
     // At the NEUTRAL offset the scale IS the mob bar's growth: the ratio of
     // ability damage to a level-appropriate healthbar stays constant.
     for (const level of [1, 10, 30, 55]) {
-      state.player.level = level;
+      state.players[0].level = level;
       const scale = abilityPowerScale(state);
       const bar = mobHpLevelFactor(level) * autoPowerScale(level);
       // The INT term contributes the auto-stat INT... none is automatic
@@ -53,10 +53,10 @@ describe("abilityPowerScale", () => {
 
   it("INTELLIGENCE deepens the burn", () => {
     const state = startGame();
-    state.player.level = 5;
-    state.player.stats.intelligence = 0;
+    state.players[0].level = 5;
+    state.players[0].stats.intelligence = 0;
     const plain = abilityPowerScale(state);
-    state.player.stats.intelligence = 10;
+    state.players[0].stats.intelligence = 10;
     expect(abilityPowerScale(state)).toBeGreaterThan(plain * 1.3);
   });
 
@@ -64,9 +64,9 @@ describe("abilityPowerScale", () => {
     const state = startGame();
     const def = abilityDef("test_stasis");
     if (!def.stasis) throw new Error("fixture stasis missing");
-    state.player.stats.intelligence = 0;
+    state.players[0].stats.intelligence = 0;
     const base = stasisRadius(state, def);
-    state.player.stats.intelligence = 10;
+    state.players[0].stats.intelligence = 10;
     expect(stasisRadius(state, def)).toBeGreaterThan(base);
     expect(def.stasis.slowFactor).toBeLessThan(1); // authored, untouched
   });
@@ -75,7 +75,7 @@ describe("abilityPowerScale", () => {
 describe("medkit tiers", () => {
   it("the opening only drops LIGHT kits", () => {
     const state = startGame();
-    state.player.level = 1;
+    state.players[0].level = 1;
     for (let i = 0; i < 30; i++) {
       expect(rollMedkitTier(state)).toBe(0);
     }
@@ -85,7 +85,8 @@ describe("medkit tiers", () => {
     const state = startGame();
     // Fixture medium offset −2: mlvl = level − 2. Reach the top tier's band.
     const top = MEDKIT.tiers.length - 1;
-    state.player.level = (MEDKIT.tiers[top] as { minMlvl: number }).minMlvl + 4;
+    state.players[0].level =
+      (MEDKIT.tiers[top] as { minMlvl: number }).minMlvl + 4;
     const seen = new Set<number>();
     for (let i = 0; i < 200; i++) seen.add(rollMedkitTier(state));
     expect(seen.has(top)).toBe(true); // the deep kit drops

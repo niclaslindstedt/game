@@ -174,7 +174,7 @@ export function applyOrbit(
   scratch.angle += orbit.angularSpeed * dt;
   if (scratch.cooldownMs > 0) return;
 
-  const player = state.player;
+  const player = state.players[0];
   const candidates = enemiesInReach(
     state,
     player.pos,
@@ -221,7 +221,7 @@ export function applyStorm(
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const victim = nearestEnemy(state.enemies, state.player.pos, storm.range);
+  const victim = nearestEnemy(state.enemies, state.players[0].pos, storm.range);
   if (!victim) return;
   scratch.cooldownMs = storm.intervalMs;
   state.events.push({ type: "lightning", pos: { ...victim.pos } });
@@ -245,7 +245,7 @@ export function applyVolley(
   power: number,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const player = state.player;
+  const player = state.players[0];
   const mark = nearestEnemy(state.enemies, player.pos, volley.range);
   if (!mark) return;
   scratch.cooldownMs = volley.intervalMs;
@@ -293,7 +293,11 @@ export function applySingularity(
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const seed = nearestEnemy(state.enemies, state.player.pos, singularity.range);
+  const seed = nearestEnemy(
+    state.enemies,
+    state.players[0].pos,
+    singularity.range,
+  );
   if (!seed) return;
   scratch.cooldownMs = singularity.intervalMs;
 
@@ -334,7 +338,7 @@ export function applyImmolation(
   const options = bill(state);
   const caught = enemiesInReach(
     state,
-    state.player.pos,
+    state.players[0].pos,
     immolation.radius,
     reachScratch,
   );

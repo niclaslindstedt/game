@@ -262,7 +262,7 @@ export function createSession(options: SessionOptions): Session {
     JSON.stringify(
       captureSnapshot(
         state as unknown as Record<string, unknown>,
-        { ownsPlayer: true },
+        { seat: 0 },
         [],
       ),
     ),
@@ -334,11 +334,11 @@ export function createSession(options: SessionOptions): Session {
       .map((client) => ({
         slot: client.slot,
         name: client.name,
-        playing: client.recipient.ownsPlayer,
+        playing: client.recipient.seat !== null,
         // The host's own renderer reaches this process over a MessagePort
         // inside the same machine; there is no wire to time, and -1 is the
         // seam's word for that rather than a flattering 0.
-        ping: client.recipient.ownsPlayer ? -1 : peers.ping(client.id),
+        ping: client.slot === 0 ? -1 : peers.ping(client.id),
       }));
   }
 
@@ -353,7 +353,7 @@ export function createSession(options: SessionOptions): Session {
   function kickByName(name: string): string | null {
     const wanted = name.trim().toUpperCase();
     for (const client of clients.values()) {
-      if (client.recipient.ownsPlayer) continue;
+      if (client.slot === 0) continue;
       if (client.name.toUpperCase() !== wanted) continue;
       peers.kick(client.id, "kicked by the host");
       clients.delete(client.id);
@@ -498,8 +498,12 @@ export function createSession(options: SessionOptions): Session {
     },
 
     addClient(id, send, ownsPlayer, name) {
-      const recipient: Recipient = { ownsPlayer };
       const slot = ownsPlayer ? 0 : nextSlot();
+      // THE SEAT IS THE SERVER'S ANSWER, and it is the roster slot: a seated
+      // client steers `state.players[slot]` and nobody else. A spectator has no
+      // seat at all, which is what every privacy and authority check below
+      // reads — never a claim the client made about itself.
+      const recipient: Recipient = { seat: ownsPlayer ? slot : null };
       const client: Client = {
         id,
         slot,
@@ -527,7 +531,7 @@ export function createSession(options: SessionOptions): Session {
         },
         params,
         slot: client.slot,
-        ownsPlayer,
+        seat: recipient.seat,
       };
       send(encodeFrame({ type: FRAME.welcome, seq, ack: 0, tick }, welcome));
       // The log is handed over WHOLE, and only to the arriving client: a
@@ -548,7 +552,7 @@ export function createSession(options: SessionOptions): Session {
       // The host leaving is the session ending, and `close` says so in its own
       // words; announcing "HOST LEFT" first would put a chat line in front of
       // a bye nobody will be around to read.
-      if (client.recipient.ownsPlayer) return;
+      if (client.slot === 0) return;
       broadcastChat([chat.announce(`${client.name} LEFT`)]);
       broadcastRoster();
     },
@@ -585,7 +589,7 @@ export function createSession(options: SessionOptions): Session {
           {
             slot: client.slot,
             name: client.name,
-            isHost: client.recipient.ownsPlayer,
+            isHost: client.slot === 0,
           },
           (payload as { text?: unknown } | null)?.text,
         );
@@ -600,9 +604,9 @@ export function createSession(options: SessionOptions): Session {
       // driving somebody else's character is the cheapest possible griefing,
       // and the check belongs HERE — the one place a client cannot argue with
       // it.
-      if (!client.recipient.ownsPlayer) return;
+      if (client.recipient.seat === null) return;
       if (type === FRAME.input) {
-        applyInput(inputs, client.slot, payload);
+        applyInput(inputs, client.recipient.seat, payload);
         return;
       }
       if (type === FRAME.command) {

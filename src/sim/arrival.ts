@@ -106,7 +106,7 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
 
   const target = Math.max(1, Math.round(level));
   const state = createGame(seed, levelId, difficulty);
-  const player = state.player;
+  const player = state.players[0];
 
   // Spin the hero up to the target level and spend the banked stat points into
   // the FOUR combat stats (strength/dexterity/intelligence keep the equip gates
@@ -192,7 +192,7 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
  * still booked once, but he gets a breath to move before the next blow.
  */
 export function reviveHero(state: GameState): void {
-  const player = state.player;
+  const player = state.players[0];
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
   const path = runLevelDef(state).path;

@@ -46,7 +46,7 @@ function reachVictory(state: GameState): { x: number; y: number } {
   // The kill can open the death-words box and bank level-ups; clear both so
   // time can resume and the countdown can run out.
   while (state.phase === "dialogue") advanceDialogue(state);
-  while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
+  while (state.players[0].pendingStatPoints > 0) allocateStat(state, "stamina");
   run(
     state,
     idle,

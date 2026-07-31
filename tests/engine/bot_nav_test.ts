@@ -137,13 +137,13 @@ describe("bot guidance-arrow march", () => {
     for (const e of state.enemies) e.mlvl = 20;
     state.obstacles = state.obstacles.filter((o) => !o.chest);
     const wp = { x: 800, y: 1100 }; // the path's first waypoint
-    const before = dist(state.player.pos, wp);
+    const before = dist(state.players[0].pos, wp);
     const bot = createBot("survivor");
     // Stay inside the anti-loiter window (seekFightAfterMs, 5s) so the lull
     // never latches a hunt on the parked boss.
     drive(state, bot, 250);
     expect(bot.lastThought).toBe("FOLLOW ARROW");
-    expect(dist(state.player.pos, wp)).toBeLessThan(before - 80);
+    expect(dist(state.players[0].pos, wp)).toBeLessThan(before - 80);
   });
 
   it("falls back to the normal plan once the whole path is walked", () => {
@@ -246,9 +246,9 @@ describe("bot wall tracing", () => {
       state,
       bot,
       2000,
-      (s) => dist(s.player.pos, mark) <= 120,
+      (s) => dist(s.players[0].pos, mark) <= 120,
     );
     expect(steps).toBeLessThan(2000);
-    expect(state.player.pos.x).toBeGreaterThan(612);
+    expect(state.players[0].pos.x).toBeGreaterThan(612);
   });
 });

@@ -101,7 +101,7 @@ function step(ability: OrbitGuardAbility, ctx: AbilityCtx): boolean {
     ability.radius,
   );
   const reach = ability.orbRadius + PLAYER.radius;
-  const struck = motes.some((m) => distance(m, state.player.pos) <= reach);
+  const struck = motes.some((m) => distance(m, state.players[0].pos) <= reach);
   if (!struck) return false;
 
   mech.orbitBiteMs = ability.hitIntervalMs;
@@ -115,7 +115,7 @@ function step(ability: OrbitGuardAbility, ctx: AbilityCtx): boolean {
   );
   pushEliteCast(state, enemy, ability, {
     phase: "tick",
-    pos: state.player.pos,
+    pos: state.players[0].pos,
   });
   // FALSE — the ring never owns the mob's tick. See the header.
   return false;

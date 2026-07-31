@@ -373,8 +373,8 @@ function drawTether(
   if (!ability || ability.id !== "siphon_tether") return;
   const look = ability.look ?? DEFAULT_ELITE_LOOK;
 
-  const dx = state.player.pos.x - enemy.pos.x;
-  const dy = state.player.pos.y - enemy.pos.y;
+  const dx = state.players[0].pos.x - enemy.pos.x;
+  const dy = state.players[0].pos.y - enemy.pos.y;
   const len = Math.hypot(dx, dy);
   if (len < 1) return;
   const beam = beamSprite(look.core, 6, Math.round(len));

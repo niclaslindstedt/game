@@ -123,7 +123,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // merely postpones the chooser rather than racing it.
   if (state.levelUpFxMs > 0) {
     state.levelUpFxMs = Math.max(0, state.levelUpFxMs - dtMs);
-    if (state.levelUpFxMs === 0 && state.player.pendingStatPoints > 0) {
+    if (state.levelUpFxMs === 0 && state.players[0].pendingStatPoints > 0) {
       state.phase = "levelup";
     }
   }
@@ -170,7 +170,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // walked, not the whole camera view. Everything uncovered reads fully clear
   // in the main view; only the exploration frontier stipples (see render.ts /
   // MAP.fogBand).
-  revealAround(state, state.player.pos);
+  revealAround(state, state.players[0].pos);
   // The wandering merchant strolls (and may be MET) on this tick's player
   // position — right after the hero moves, so the meeting judges what the
   // player actually sees. A scenario FREEZE (state.freeze — the developer
@@ -183,7 +183,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // already-running powers still tick below — only the player-DRIVEN passes sit
   // out. `stepPlayer` (above) has already frozen his movement and ticked the
   // timer; the flag it reads is the same `knockoutMs`.
-  const incapacitated = state.player.knockoutMs > 0;
+  const incapacitated = state.players[0].knockoutMs > 0;
   if (!incapacitated) {
     stepUseItem(state, input);
     stepUseConsumables(state, input);
@@ -306,7 +306,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // A scenario FREEZE holds the whole pass, like the merchant's stroll.
   if (!state.freeze) stepQuests(state, dt, dtMs);
 
-  if (state.player.hp <= 0) {
+  if (state.players[0].hp <= 0) {
     // The hero fell: drop into the DEATH SCENE (the dramatic tableau — the
     // horde rings the corpse, clouds roll in) rather than straight to the
     // modal. It books the DEATH TOLL (the `deathXpLoss` XP forfeit) and emits
@@ -366,7 +366,7 @@ function objectiveCleared(state: GameState): boolean {
     // The bossless form: standing at the exit door ends the level. Deliberate
     // contact — the radius is a doorstep, not a drive-by.
     return (
-      distance(state.player.pos, objective.at) <=
+      distance(state.players[0].pos, objective.at) <=
       (objective.radius ?? GATES.exitRadius)
     );
   }

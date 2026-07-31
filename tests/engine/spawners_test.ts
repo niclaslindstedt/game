@@ -20,13 +20,13 @@ describe("spawn points arm, drip, and drain", () => {
     expect(state.spawners[1]!.total).toBe(4);
 
     // Parked far from the point — it never arms.
-    state.player.pos = { x: 2000, y: 260 };
+    state.players[0].pos = { x: 2000, y: 260 };
     run(state, idle, 20);
     expect(state.spawners[0]!.status).toBe("dormant");
     expect(state.enemies.some((e) => e.defId === "test_fodder")).toBe(false);
 
     // Walk onto the point — it arms and starts emitting its fodder.
-    state.player.pos = { x: 520, y: 1320 };
+    state.players[0].pos = { x: 520, y: 1320 };
     run(state, idle, 6);
     expect(state.spawners[0]!.status).not.toBe("dormant");
     expect(state.spawners[0]!.memberIds.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe("spawn points arm, drip, and drain", () => {
     // The tiny fixture base floors at SPAWNERS.respawnDelayMin (250ms).
     expect(s.respawnDelayMs).toBe(250);
     // Stand on the point (in trigger range) and let it fill.
-    state.player.pos = { x: 520, y: 1320 };
+    state.players[0].pos = { x: 520, y: 1320 };
     const aliveMembers = () =>
       state.enemies.filter((e) => s.memberIds.includes(e.id)).length;
     run(state, idle, 60);
@@ -71,7 +71,7 @@ describe("spawn points arm, drip, and drain", () => {
     const state = startGame(1, "test_spawner_level");
     const s = state.spawners[0]!;
     s.maxAlive = 2; // a small cap against the queue of 6
-    state.player.pos = { x: 520, y: 1320 }; // on the point, in range
+    state.players[0].pos = { x: 520, y: 1320 }; // on the point, in range
     const localMembers = () =>
       state.enemies.filter(
         (e) =>
@@ -103,7 +103,7 @@ describe("spawn points arm, drip, and drain", () => {
     muteDialogue(state);
     const s = state.spawners[0]!;
     // Arm it and let the first batch boil up.
-    state.player.pos = { x: 520, y: 1320 };
+    state.players[0].pos = { x: 520, y: 1320 };
     run(state, idle, 4, (st) => st.spawners[0]!.memberIds.length > 0);
     expect(s.status).toBe("active");
     const emitted = s.memberIds.length;
@@ -111,13 +111,13 @@ describe("spawn points arm, drip, and drain", () => {
     expect(s.queue.length).toBeGreaterThan(0);
 
     // Walk out of trigger range — emission pauses, the queue holds.
-    state.player.pos = { x: 2000, y: 260 };
+    state.players[0].pos = { x: 2000, y: 260 };
     run(state, idle, 40);
     expect(s.memberIds.length).toBe(emitted);
     expect(s.status).toBe("active");
 
     // Return — it drips again, no banked catch-up burst.
-    state.player.pos = { x: 520, y: 1320 };
+    state.players[0].pos = { x: 520, y: 1320 };
     run(state, idle, 40);
     expect(s.memberIds.length).toBeGreaterThan(emitted);
   });
@@ -125,7 +125,7 @@ describe("spawn points arm, drip, and drain", () => {
   it("a chained point waits for its predecessor to drain plus the delay", () => {
     const state = startGame(1, "test_spawner_level");
     // Sit between both points so range never gates — only the chain does.
-    state.player.pos = { x: 540, y: 1320 };
+    state.players[0].pos = { x: 540, y: 1320 };
     run(state, idle, 60, (s) => s.spawners[0]!.status === "drained");
     expect(state.spawners[0]!.status).toBe("drained");
     // The moment s1 drains, s2 is still dormant — its 500ms delay hasn't run.
@@ -231,7 +231,7 @@ describe("summoned mobs appear off-screen and run in to the approach circle", ()
     const state = startGame(1, "test_spawner_level");
     const s = state.spawners[0]!;
     // Stand on the point so it arms and summons at once.
-    state.player.pos = { x: 520, y: 1320 };
+    state.players[0].pos = { x: 520, y: 1320 };
     run(state, idle, 6, (st) => st.spawners[0]!.memberIds.length > 0);
     const summoned = state.enemies.find((e) => s.memberIds.includes(e.id))!;
     expect(summoned).toBeDefined();
@@ -239,8 +239,8 @@ describe("summoned mobs appear off-screen and run in to the approach circle", ()
     // placed OFF-SCREEN — beyond that circle — carrying the run-in marker.
     expect(summoned.approachRadius).toBe(SPAWNERS.approachRadiusFallback);
     const startDist = Math.hypot(
-      summoned.pos.x - state.player.pos.x,
-      summoned.pos.y - state.player.pos.y,
+      summoned.pos.x - state.players[0].pos.x,
+      summoned.pos.y - state.players[0].pos.y,
     );
     expect(startDist).toBeGreaterThan(SPAWNERS.approachRadiusFallback);
 
@@ -255,7 +255,7 @@ describe("summoned mobs appear off-screen and run in to the approach circle", ()
       (e) => s.memberIds.includes(e.id) && e.approachRadius === undefined,
     );
     expect(arrived).toBeDefined();
-    const dist = distance(arrived!.pos, state.player.pos);
+    const dist = distance(arrived!.pos, state.players[0].pos);
     expect(dist).toBeLessThanOrEqual(SPAWNERS.approachRadiusFallback + 1);
   });
 });

@@ -95,8 +95,8 @@ export function pushBoss(
     think(bot, "IDLE");
     return idleInput();
   }
-  const d = distance(state.player.pos, target);
-  const hold = weaponRangeFor(state, state.player.equipment.weapon) * 0.7;
+  const d = distance(state.players[0].pos, target);
+  const hold = weaponRangeFor(state, state.players[0].equipment.weapon) * 0.7;
   // Far from the boss → follow a global A* route to him, so the runner rounds
   // every wall on the way instead of beelining through them. Close enough →
   // circle-strafe at weapon range and fight (a moving orbit slips his fire).
@@ -136,7 +136,7 @@ function topUpBeforeFight(
   tune: BotTuning,
 ): GameInput | null {
   if (tune.topUpSpotDist <= 0) return null;
-  const player = state.player;
+  const player = state.players[0];
   // The rested bar slides with BRAVERY: a timid rookie tops to 100% before
   // engaging, a kitted shredder settles for ~70% (TOPUP_BRAVE_MIN_FRAC) —
   // idling for the last drops before an easy fight is its own waste.
@@ -201,7 +201,7 @@ function commitHop(
   flee: boolean,
   tune: BotTuning,
 ): boolean {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   const n = normalize(target.x - pos.x, target.y - pos.y);
   // No ground to gain — a hop in place is a loser move.
   if (n.len < 1) return false;
@@ -241,7 +241,7 @@ export function survive(
   posture: Posture,
   tune: BotTuning,
 ): GameInput {
-  const player = state.player;
+  const player = state.players[0];
   let pt = tune.postures[posture];
   // RUSH THE OBJECTIVE: leveled for this map's named foes (readyForBoss — the
   // bossEngageMargin knob, e.g. committed from one level below) and marching

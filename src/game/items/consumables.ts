@@ -18,7 +18,7 @@ import { desperationRamp, worstKitDurability } from "./mercy.ts";
  * winded rather than being spent on a rested one.
  */
 export function restoreStamina(state: GameState): boolean {
-  const player = state.player;
+  const player = state.players[0];
   if (player.stamina >= player.maxStamina) return false;
   player.stamina = player.maxStamina;
   return true;
@@ -52,7 +52,7 @@ export function bankMedkit(
   tier: number | undefined,
 ): boolean {
   const index = medkitTierIndex(tier);
-  const medkits = state.player.medkits;
+  const medkits = state.players[0].medkits;
   if ((medkits[index] ?? 0) >= CONSUMABLES.stackCap) return false;
   medkits[index] = (medkits[index] ?? 0) + 1;
   return true;
@@ -108,8 +108,8 @@ export function bankConsumable(
   kind: StackedConsumableKind,
 ): boolean {
   const { counter } = STACKED_CONSUMABLES[kind];
-  if (state.player[counter] >= CONSUMABLES.stackCap) return false;
-  state.player[counter] += 1;
+  if (state.players[0][counter] >= CONSUMABLES.stackCap) return false;
+  state.players[0][counter] += 1;
   return true;
 }
 
@@ -128,10 +128,10 @@ function spendConsumable(
   kind: StackedConsumableKind,
 ): boolean {
   const { counter, spend } = STACKED_CONSUMABLES[kind];
-  if (state.player[counter] <= 0) return false;
+  if (state.players[0][counter] <= 0) return false;
   const event = spend(state);
   if (!event) return false;
-  state.player[counter] -= 1;
+  state.players[0][counter] -= 1;
   state.events.push(event);
   return true;
 }
@@ -179,7 +179,7 @@ function deficitOf(value: number, max: number): number {
  * be superior, however empty his LIGHT stack is.
  */
 export function medkitAppetite(state: GameState, mlvl: number): number {
-  const player = state.player;
+  const player = state.players[0];
   const medkits = player.medkits;
   const cap = CONSUMABLES.stackCap;
   const top = topMedkitTier(mlvl);
@@ -201,7 +201,7 @@ export function consumableAppetite(
   state: GameState,
   kind: StackedConsumableKind,
 ): number {
-  const player = state.player;
+  const player = state.players[0];
   const { counter } = STACKED_CONSUMABLES[kind];
   const deficit =
     kind === "drink"
@@ -238,7 +238,7 @@ export function consumeRepairKit(state: GameState): boolean {
  * `MEDKIT.tiers`), or -1 when the medkit stacks are all empty. This is the
  * kit `consumeMedkit` spends and the one the HUD's medkit slot shows. */
 export function bestMedkitTier(state: GameState): number {
-  const medkits = state.player.medkits;
+  const medkits = state.players[0].medkits;
   for (let i = medkits.length - 1; i >= 0; i--) {
     if ((medkits[i] ?? 0) > 0) return i;
   }
@@ -252,7 +252,7 @@ export function bestMedkitTier(state: GameState): number {
  * `medkitUsed` with the quality name and the hp actually restored.
  */
 export function consumeMedkit(state: GameState): boolean {
-  const player = state.player;
+  const player = state.players[0];
   if (player.hp >= player.maxHp) return false;
   const tierIndex = bestMedkitTier(state);
   if (tierIndex < 0) return false;

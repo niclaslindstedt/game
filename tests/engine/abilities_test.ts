@@ -36,7 +36,7 @@ function pickUp(defId: string): GameState {
   const state = startGame();
   clearStage(state);
   state.items = [
-    { id: 500, kind: "ability", pos: { ...state.player.pos }, defId },
+    { id: 500, kind: "ability", pos: { ...state.players[0].pos }, defId },
   ];
   step(state, idle, DT); // touch banks it…
   step(state, useItem, DT); // …and the useItem edge spends it
@@ -51,16 +51,18 @@ describe("ability pickups", () => {
       {
         id: 500,
         kind: "ability",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         defId: "test_orbit",
       },
     ];
     step(state, idle, DT);
     // Banked, not running — and never in the bag.
     expect(state.items).toHaveLength(0);
-    expect(state.player.heldAbilities).toEqual(["test_orbit"]);
-    expect(state.player.abilities).toHaveLength(0);
-    expect(state.player.inventory.every((cell) => cell === null)).toBe(true);
+    expect(state.players[0].heldAbilities).toEqual(["test_orbit"]);
+    expect(state.players[0].abilities).toHaveLength(0);
+    expect(state.players[0].inventory.every((cell) => cell === null)).toBe(
+      true,
+    );
     expect(state.events).toContainEqual(
       expect.objectContaining({
         type: "itemCollected",
@@ -71,9 +73,11 @@ describe("ability pickups", () => {
     step(state, useItem, DT);
     // The spent power keeps its dock slot (running, linked back to slot 0) and
     // counts down there rather than vacating it.
-    expect(state.player.heldAbilities).toEqual(["test_orbit"]);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_orbit"]);
-    expect(state.player.abilities[0]!.slot).toBe(0);
+    expect(state.players[0].heldAbilities).toEqual(["test_orbit"]);
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
+      "test_orbit",
+    ]);
+    expect(state.players[0].abilities[0]!.slot).toBe(0);
     expect(state.events).toContainEqual({
       type: "abilityStarted",
       defId: "test_orbit",
@@ -83,7 +87,7 @@ describe("ability pickups", () => {
   it("stack a second copy when the power is stackable", () => {
     const state = pickUp("test_storm"); // stackable in the fixtures
     run(state, idle, 60); // burn ~1s off the first copy's clock
-    const worn = state.player.abilities[0]!.remainingMs;
+    const worn = state.players[0].abilities[0]!.remainingMs;
 
     // Bank and spend a second STORM CELL: it adds a fresh copy rather than
     // refreshing (or being blocked), so both run side by side — each holding
@@ -92,58 +96,69 @@ describe("ability pickups", () => {
       {
         id: 501,
         kind: "ability",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         defId: "test_storm",
       },
     ];
     step(state, idle, DT);
     step(state, useItem, DT);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual([
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
       "test_storm",
       "test_storm",
     ]);
     // Both copies run, so both slots stay full and linked (slots 0 and 1).
-    expect(state.player.heldAbilities).toEqual(["test_storm", "test_storm"]);
-    expect(state.player.abilities.map((a) => a.slot)).toEqual([0, 1]);
+    expect(state.players[0].heldAbilities).toEqual([
+      "test_storm",
+      "test_storm",
+    ]);
+    expect(state.players[0].abilities.map((a) => a.slot)).toEqual([0, 1]);
     // The first copy keeps its worn clock; the second starts (nearly) full.
-    expect(state.player.abilities[0]!.remainingMs).toBeLessThanOrEqual(worn);
-    expect(state.player.abilities[1]!.remainingMs).toBeGreaterThan(worn);
+    expect(state.players[0].abilities[0]!.remainingMs).toBeLessThanOrEqual(
+      worn,
+    );
+    expect(state.players[0].abilities[1]!.remainingMs).toBeGreaterThan(worn);
   });
 
   it("refuse to re-enable a non-stackable power already running", () => {
     const state = pickUp("test_magnet"); // non-stackable in the fixtures
-    expect(state.player.abilities).toHaveLength(1);
+    expect(state.players[0].abilities).toHaveLength(1);
     // The running copy holds slot 0.
-    expect(state.player.heldAbilities).toEqual(["test_magnet"]);
+    expect(state.players[0].heldAbilities).toEqual(["test_magnet"]);
 
     // Bank a second MAGNET (slot 1) and try to spend it while the first runs.
     state.items = [
       {
         id: 501,
         kind: "ability",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         defId: "test_magnet",
       },
     ];
     step(state, idle, DT);
-    expect(state.player.heldAbilities).toEqual(["test_magnet", "test_magnet"]);
+    expect(state.players[0].heldAbilities).toEqual([
+      "test_magnet",
+      "test_magnet",
+    ]);
 
     step(state, useItem, DT);
     // Refused: no second copy, and the banked pickup stays put (slot 1) rather
     // than being wasted — only the first copy is running.
-    expect(state.player.abilities).toHaveLength(1);
-    expect(state.player.abilities[0]!.slot).toBe(0);
-    expect(state.player.heldAbilities).toEqual(["test_magnet", "test_magnet"]);
+    expect(state.players[0].abilities).toHaveLength(1);
+    expect(state.players[0].abilities[0]!.slot).toBe(0);
+    expect(state.players[0].heldAbilities).toEqual([
+      "test_magnet",
+      "test_magnet",
+    ]);
   });
 
   it("expire after their duration, freeing the slot at last", () => {
     const state = pickUp("test_stasis");
-    expect(state.player.heldAbilities).toEqual(["test_stasis"]);
+    expect(state.players[0].heldAbilities).toEqual(["test_stasis"]);
     const steps = Math.ceil(abilityDef("test_stasis").durationMs / DT) + 2;
     run(state, idle, steps);
-    expect(state.player.abilities).toHaveLength(0);
+    expect(state.players[0].abilities).toHaveLength(0);
     // Only now — once the power lapses — does the slot free.
-    expect(state.player.heldAbilities).toEqual([]);
+    expect(state.players[0].heldAbilities).toEqual([]);
   });
 });
 
@@ -152,14 +167,17 @@ describe("fire orbs", () => {
     const state = pickUp("test_orbit");
     const orbit = abilityDef("test_orbit").orbit!;
     // Park an unkillable ghost right on an orb so every tick connects.
-    const orb = orbPositions(state.player, state.player.abilities[0]!)[0]!;
+    const orb = orbPositions(
+      state.players[0],
+      state.players[0].abilities[0]!,
+    )[0]!;
     state.enemies.push(
       makeEnemy({ pos: { ...orb }, hp: 1_000_000, maxHp: 1_000_000 }),
     );
     // Disarm the held weapon so all damage is the orbs'. A ghost on the
     // ring is inside melee range of nothing — the blaster would need line
     // time anyway; simplest is an enormous cooldown.
-    state.player.weaponCooldownMs = 1_000_000;
+    state.players[0].weaponCooldownMs = 1_000_000;
 
     const before = state.stats.damageDealt;
     // Two seconds ≈ one full sweep: each orb pass over the parked ghost
@@ -171,9 +189,9 @@ describe("fire orbs", () => {
 
   it("sweep: the orbs' angle advances every step", () => {
     const state = pickUp("test_orbit");
-    const a0 = state.player.abilities[0]!.angle;
+    const a0 = state.players[0].abilities[0]!.angle;
     step(state, idle, DT);
-    expect(state.player.abilities[0]!.angle).toBeGreaterThan(a0);
+    expect(state.players[0].abilities[0]!.angle).toBeGreaterThan(a0);
   });
 });
 
@@ -181,10 +199,10 @@ describe("storm cell", () => {
   it("strikes the nearest monster on its interval", () => {
     const state = pickUp("test_storm");
     const storm = abilityDef("test_storm").storm!;
-    state.player.weaponCooldownMs = 1_000_000;
+    state.players[0].weaponCooldownMs = 1_000_000;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
       }),
@@ -197,8 +215,8 @@ describe("storm cell", () => {
 
   it("emits a lightning event for the app to flash", () => {
     const state = pickUp("test_storm");
-    state.player.weaponCooldownMs = 1_000_000;
-    const pos = { x: state.player.pos.x + 80, y: state.player.pos.y };
+    state.players[0].weaponCooldownMs = 1_000_000;
+    const pos = { x: state.players[0].pos.x + 80, y: state.players[0].pos.y };
     state.enemies.push(makeEnemy({ pos, hp: 1_000_000, maxHp: 1_000_000 }));
     step(state, idle, DT);
     expect(state.events).toContainEqual({ type: "lightning", pos });
@@ -212,18 +230,18 @@ describe("storm cell", () => {
       {
         id: 502,
         kind: "ability",
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         defId: "test_storm",
       },
     ];
     step(state, idle, DT);
     step(state, useItem, DT);
-    expect(state.player.abilities).toHaveLength(2);
+    expect(state.players[0].abilities).toHaveLength(2);
 
-    state.player.weaponCooldownMs = 1_000_000;
+    state.players[0].weaponCooldownMs = 1_000_000;
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
       }),
@@ -242,8 +260,8 @@ describe("stasis field", () => {
     const inside = makeEnemy({
       id: 9001,
       pos: {
-        x: state.player.pos.x + stasis.radius - 40,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + stasis.radius - 40,
+        y: state.players[0].pos.y,
       },
       speed,
       hp: 1_000_000,
@@ -252,15 +270,15 @@ describe("stasis field", () => {
     const outside = makeEnemy({
       id: 9002,
       pos: {
-        x: state.player.pos.x + stasis.radius + 300,
-        y: state.player.pos.y,
+        x: state.players[0].pos.x + stasis.radius + 300,
+        y: state.players[0].pos.y,
       },
       speed,
       hp: 1_000_000,
       maxHp: 1_000_000,
     });
     state.enemies.push(inside, outside);
-    state.player.weaponCooldownMs = 1_000_000;
+    state.players[0].weaponCooldownMs = 1_000_000;
     const inX = inside.pos.x;
     const outX = outside.pos.x;
     step(state, idle, DT);
@@ -281,12 +299,12 @@ describe("item magnet", () => {
    * clear of pickup reach, so a step can move it without collecting it. */
   function withDrop(drop: Equipment): { state: GameState; startX: number } {
     const state = pickUp("test_magnet");
-    const startX = state.player.pos.x + 40;
+    const startX = state.players[0].pos.x + 40;
     state.items = [
       {
         id: 700,
         kind: "equipment",
-        pos: { x: startX, y: state.player.pos.y },
+        pos: { x: startX, y: state.players[0].pos.y },
         equipment: drop,
       },
     ];
@@ -305,7 +323,7 @@ describe("item magnet", () => {
     setAutoEquipEnabled(false); // even an upgrade banks, so nothing auto-equips
     const { state, startX } = withDrop(fixtureWeapon(60, "crude_sword"));
     // Fill every bag cell so the drop has no home.
-    state.player.inventory = state.player.inventory.map((_, i) =>
+    state.players[0].inventory = state.players[0].inventory.map((_, i) =>
       fixtureWeapon(100 + i, "crude_sword"),
     );
     step(state, idle, DT);

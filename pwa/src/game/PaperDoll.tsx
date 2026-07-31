@@ -141,7 +141,7 @@ export function PaperDoll({
   onSlotEnter: (item: Equipment) => (e: ReactPointerEvent) => void;
   onSlotLeave: (e: ReactPointerEvent) => void;
 }) {
-  const equipment = state.player.equipment;
+  const equipment = state.players[0].equipment;
 
   return (
     <div className="paper-doll">

@@ -63,7 +63,7 @@ export function takeBestBagWeapon(
   state: GameState,
   opts: { skipTwoHanded?: boolean } = {},
 ): Equipment | null {
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   let bestIndex = -1;
   let bestScore = -Infinity;
   for (let i = 0; i < inv.length; i++) {
@@ -99,7 +99,7 @@ export function drawSidearm(state: GameState): Equipment {
 /** The first free bag cell, ignoring `except` (the cell the incoming piece is
  * being lifted out of — it is about to be free, but is not yet). */
 function freeCell(state: GameState, except: number): number {
-  const inv = state.player.inventory;
+  const inv = state.players[0].inventory;
   for (let i = 0; i < inv.length; i++) {
     if (i !== except && inv[i] === null) return i;
   }
@@ -133,7 +133,7 @@ export function freeHandsFor(
   piece: Equipment,
   cell: number,
 ): boolean {
-  const player = state.player;
+  const player = state.players[0];
   const equipment = player.equipment;
   if (isTwoHandedWeapon(piece)) {
     const held = equipment.offhand;

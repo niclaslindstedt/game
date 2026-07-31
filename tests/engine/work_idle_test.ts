@@ -16,7 +16,7 @@ import { distance as dist } from "@game/lib/vec.ts";
 function placeWorker(state: ReturnType<typeof startGame>, dx: number) {
   const worker = makeEnemy(
     {
-      pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
       speed: 16,
       hp: 1_000_000, // survives ambient fire for the whole probe
       maxHp: 1_000_000,
@@ -73,7 +73,7 @@ describe("the dormant at-work stroll", () => {
     placeWorker(b, 700);
     run(a, idle, 200);
     run(b, idle, 200);
-    expect(b.player.pos).toEqual(a.player.pos);
+    expect(b.players[0].pos).toEqual(a.players[0].pos);
   });
 
   it("wakes and hunts at full pace once the player is in range and sight", () => {
@@ -81,13 +81,13 @@ describe("the dormant at-work stroll", () => {
     clearStage(state);
     state.obstacles = [];
     const worker = placeWorker(state, 250); // inside the 300 aggro
-    const before = dist(worker.pos, state.player.pos);
+    const before = dist(worker.pos, state.players[0].pos);
 
     run(state, idle, 60);
     expect(worker.awake).toBe(true);
     // A real chase, not the stroll's shuffle: closing far faster than the
     // work pace could cover in the same window.
-    const closed = before - dist(worker.pos, state.player.pos);
+    const closed = before - dist(worker.pos, state.players[0].pos);
     const strollReach = 16 * ENEMY_AI.work.speedFactor * ((60 * DT) / 1000) + 1;
     expect(closed).toBeGreaterThan(strollReach);
   });
@@ -102,7 +102,7 @@ describe("the dormant at-work stroll", () => {
 
     // Teleport out of range: the latch releases and the stroll resumes,
     // anchored to HOME — the worker drifts back to its patch.
-    state.player.pos = { x: worker.pos.x + 1200, y: worker.pos.y };
+    state.players[0].pos = { x: worker.pos.x + 1200, y: worker.pos.y };
     run(state, idle, 1500);
     expect(worker.awake).toBeFalsy();
     expect(dist(worker.pos, worker.home)).toBeLessThanOrEqual(
@@ -116,7 +116,7 @@ describe("the dormant at-work stroll", () => {
     state.obstacles = [];
     const mob = makeEnemy(
       {
-        pos: { x: state.player.pos.x + 1200, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 1200, y: state.players[0].pos.y },
         speed: 26,
         hp: 1_000_000,
         maxHp: 1_000_000,

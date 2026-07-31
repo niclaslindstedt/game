@@ -31,7 +31,7 @@ function stageApparition(state: GameState): Enemy {
 
 /** Park the figure beside the hero and play its scene through. */
 function meetAndTapThrough(state: GameState, ghost: Enemy): void {
-  ghost.pos = { x: state.player.pos.x + 40, y: state.player.pos.y };
+  ghost.pos = { x: state.players[0].pos.x + 40, y: state.players[0].pos.y };
   run(state, idle, 60, (s) => s.phase === "dialogue");
   expect(state.phase).toBe("dialogue");
   advanceDialogue(state);
@@ -49,7 +49,7 @@ describe("apparitions", () => {
   it("rushes in and delivers its scene like any elite speaker", () => {
     const state = startGame(42, "test_apparition_level");
     const ghost = stageApparition(state);
-    ghost.pos = { x: state.player.pos.x + 200, y: state.player.pos.y };
+    ghost.pos = { x: state.players[0].pos.x + 200, y: state.players[0].pos.y };
     ghost.speed = 20;
     run(state, idle, 400, (s) => s.phase === "dialogue");
     expect(state.phase).toBe("dialogue");
@@ -64,13 +64,13 @@ describe("apparitions", () => {
     const ghost = stageApparition(state);
     ghost.spoke = true;
     ghost.vanishMs = 999_999;
-    ghost.pos = { x: state.player.pos.x + 30, y: state.player.pos.y };
+    ghost.pos = { x: state.players[0].pos.x + 30, y: state.players[0].pos.y };
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x - 30, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x - 30, y: state.players[0].pos.y },
       }),
     );
-    state.player.heldAbilities.push("test_nuke");
+    state.players[0].heldAbilities.push("test_nuke");
     step(
       state,
       { steering: false, target: { x: 0, y: 0 }, jump: false, useItem: true },
@@ -88,7 +88,7 @@ describe("apparitions", () => {
     // Mark it spoken so the scene doesn't pause the run mid-test.
     ghost.spoke = true;
     ghost.vanishMs = 999_999; // hold it on the board
-    ghost.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
+    ghost.pos = { x: state.players[0].pos.x + 60, y: state.players[0].pos.y };
     run(state, idle, 30);
     expect(state.stats.shotsFired).toBe(0);
   });
@@ -98,10 +98,10 @@ describe("apparitions", () => {
     const ghost = stageApparition(state);
     ghost.spoke = true;
     ghost.vanishMs = 999_999;
-    ghost.pos = { ...state.player.pos };
-    const hpBefore = state.player.hp;
+    ghost.pos = { ...state.players[0].pos };
+    const hpBefore = state.players[0].hp;
     run(state, idle, 30);
-    expect(state.player.hp).toBe(hpBefore);
+    expect(state.players[0].hp).toBe(hpBefore);
   });
 
   it("walks off and dissolves after its scene", () => {
@@ -112,13 +112,13 @@ describe("apparitions", () => {
 
     // It drifts away from the hero while the linger runs out…
     const before = Math.hypot(
-      ghost.pos.x - state.player.pos.x,
-      ghost.pos.y - state.player.pos.y,
+      ghost.pos.x - state.players[0].pos.x,
+      ghost.pos.y - state.players[0].pos.y,
     );
     run(state, idle, 20);
     const after = Math.hypot(
-      ghost.pos.x - state.player.pos.x,
-      ghost.pos.y - state.player.pos.y,
+      ghost.pos.x - state.players[0].pos.x,
+      ghost.pos.y - state.players[0].pos.y,
     );
     expect(after).toBeGreaterThan(before);
 

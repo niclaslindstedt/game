@@ -95,7 +95,7 @@ describe("crate loot", () => {
     const state = startGame(SEED);
     clearStage(state);
     // A leveled hero so the gear roll clears the tier gates it would early on.
-    state.player.level = 30;
+    state.players[0].level = 30;
 
     let consumables = 0;
     let gear = 0;
@@ -251,7 +251,7 @@ describe("locker (chest) loot", () => {
     const state = startGame(SEED);
     clearStage(state);
     // A leveled hero so the gear roll clears the tier gates it would early on.
-    state.player.level = 30;
+    state.players[0].level = 30;
 
     let gearBreaks = 0;
     let consumables = 0;
@@ -282,7 +282,7 @@ describe("locker (chest) loot", () => {
   it("is a richer haul than a plain crate — a break can spill two gear pieces", () => {
     const state = startGame(SEED);
     clearStage(state);
-    state.player.level = 30;
+    state.players[0].level = 30;
 
     let twoGearBreaks = 0;
     for (let i = 0; i < 400; i++) {
@@ -351,7 +351,7 @@ describe("the hero smashes crates autonomously", () => {
   it("a melee swing breaks a lone crate in reach when no foe is near", () => {
     const state = startGame(SEED); // medium starts on the melee crude_sword
     clearStage(state); // only the far-off boss remains, out of reach
-    const hero = state.player.pos;
+    const hero = state.players[0].pos;
     const crate = addCrate(state, { x: hero.x + 30, y: hero.y }, 10);
     const itemsBefore = state.items.length;
 
@@ -365,7 +365,7 @@ describe("the hero smashes crates autonomously", () => {
     const state = startGame(SEED);
     clearStage(state);
     equipBlaster(state); // a ranged bolt — a jumpable crate is normally flown over
-    const hero = state.player.pos;
+    const hero = state.players[0].pos;
     const crate = addCrate(state, { x: hero.x + 70, y: hero.y }, 10);
     const itemsBefore = state.items.length;
 
@@ -380,7 +380,7 @@ describe("the manual AIM & SHOOT trigger never fires on a crate", () => {
   it("a held trigger with no foe in reach leaves a crate in range untouched", () => {
     const state = equipBlaster(startGame(SEED));
     clearStage(state); // no foe anywhere in reach
-    const hero = state.player.pos;
+    const hero = state.players[0].pos;
     const crate = addCrate(state, { x: hero.x + 40, y: hero.y }, 10);
 
     // Holding the AIM & SHOOT trigger (input.fire === true) with nothing to
@@ -397,7 +397,7 @@ describe("the manual AIM & SHOOT trigger never fires on a crate", () => {
   it("autonomous fire (no manual gate) still smashes the same crate", () => {
     const state = equipBlaster(startGame(SEED));
     clearStage(state);
-    const hero = state.player.pos;
+    const hero = state.players[0].pos;
     const crate = addCrate(state, { x: hero.x + 40, y: hero.y }, 10);
 
     // The default autonomous auto-attack (fire undefined — every touch/bot/

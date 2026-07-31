@@ -17,7 +17,7 @@ function meetTalker(): GameState {
   clearStage(state);
   state.enemies.push(
     makeEnemy(
-      { pos: { x: state.player.pos.x + 40, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 40, y: state.players[0].pos.y } },
       "test_talker",
     ),
   );
@@ -55,7 +55,7 @@ describe("hero replies in arrival scenes", () => {
   it("keeps single-speaker scenes free of hero pages", () => {
     const state = startGame();
     clearStage(state);
-    collectStoryItem(state, "test_key", { ...state.player.pos });
+    collectStoryItem(state, "test_key", { ...state.players[0].pos });
     expect(state.phase).toBe("dialogue");
     const content = dialogueContent(state.dialogue!);
     expect(content.heroPages).toEqual(content.pages.map(() => false));

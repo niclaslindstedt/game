@@ -224,7 +224,7 @@ export function CompanionPanel({
           />
         </div>
         <div className="inv-grid companion-bag">
-          {state.player.inventory.map((item, index) => {
+          {state.players[0].inventory.map((item, index) => {
             const usable =
               item !== null &&
               fitsCompanion(item) &&

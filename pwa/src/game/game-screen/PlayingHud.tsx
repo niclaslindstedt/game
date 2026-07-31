@@ -191,7 +191,7 @@ export function PlayingHud({
                   wears, and reads a full teal ring for the unbreakable
                   sidearm. Tapping it opens the weapon switcher (Q). */}
               {(() => {
-                const equipped = state.player.equipment.weapon;
+                const equipped = state.players[0].equipment.weapon;
                 const equippedColor =
                   WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
                 const icon = spriteDataUrl(

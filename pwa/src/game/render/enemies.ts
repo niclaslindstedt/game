@@ -111,7 +111,8 @@ export function drawEnemies(
     // genuinely cannot see through, the same solids that eat his shots — is not
     // drawn until it steps into view (a peeking silhouette still shows). Runs
     // after the cheap view/fog culls so only on-screen mobs pay for the query.
-    if (!enemyVisible(state, state.player.pos, enemy.pos, def.radius)) continue;
+    if (!enemyVisible(state, state.players[0].pos, enemy.pos, def.radius))
+      continue;
     // A BODY STANDS UP out of the tilted floor (render/tilt.ts): every screen
     // coordinate below is written as if the camera still looked straight down,
     // and the mob's projected spot on the ground is what moves. The ground

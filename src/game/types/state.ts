@@ -325,7 +325,7 @@ export type BossDeathState = {
    * assumed for the reason `docs/multiplayer-plan.md` §3.2 gives for the
    * spare-or-kill `choice`: in co-op the player who landed the killing blow is
    * the one who acts, with the scene shown to everybody. Resolving it through
-   * `bossDeathExecutioner` keeps PR 3's `state.player` → `state.players[]`
+   * `bossDeathExecutioner` keeps PR 3's `state.players[0]` → `state.players[]`
    * rename to one site instead of one per read.
    */
   executioner: number;
@@ -664,7 +664,29 @@ export type GameState = {
    * app (to point the guidance arrow). 0 with no path — inert.
    */
   pathIndex: number;
-  player: Player;
+  /**
+   * THE PARTY — every hero in the run, in SEAT order. Seat 0 is the host's, and
+   * it is the only seat a single-player run has.
+   *
+   * It is a LIST rather than one hero because a session seats up to
+   * `MAX_CLIENTS` of them, and because a pass written against one hero silently
+   * means "seat 0" the day a second player arrives. Nothing in the engine
+   * treats the one-element case specially; read it through `game/party.ts`,
+   * which is the one module allowed to ask the party a question, and take a
+   * `Player` as a PARAMETER wherever a pass is about one specific hero.
+   *
+   * A seat is never empty and never reordered while a run lives: a player who
+   * leaves keeps their hero standing (PR 4 owns what happens to it), because
+   * splicing the list would renumber everybody else's seat and every command in
+   * flight names a seat.
+   *
+   * Typed as a NON-EMPTY tuple, which is the type stating the one invariant the
+   * whole party model rests on: a run always has seat 0. It is what lets
+   * `players[0]` read as a `Player` while `players[seat]` — an index that came
+   * from somewhere else, very possibly from a stranger's command — reads as
+   * `Player | undefined` and has to be checked.
+   */
+  players: [Player, ...Player[]];
   enemies: Enemy[];
   projectiles: Projectile[];
   items: Item[];

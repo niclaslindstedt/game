@@ -101,7 +101,7 @@ export const UNSENT_FIELDS: readonly string[] = ["rng", "fxRng", "view"];
  * is coded.
  *
  * These are the reads the plan measured as the private two thirds of
- * `state.player`: the bag, the purse, the build. A spectator or a second hero
+ * `state.players[0]`: the bag, the purse, the build. A spectator or a second hero
  * gets the hero's `pos`, `hp` and `equipment` (they can SEE those) and nothing
  * that would let them enumerate — or, past PR 5's trade window, assert
  * anything about — what is in his pockets.

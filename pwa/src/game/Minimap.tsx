@@ -399,8 +399,8 @@ export function drawMinimap(
     const scale = bw / (FOLLOW_VIEW_CELLS * MAP.cellSize);
     const viewW = bw / scale;
     const viewH = bh / scale;
-    const vx = state.player.pos.x - viewW / 2;
-    const vy = state.player.pos.y - viewH / 2;
+    const vx = state.players[0].pos.x - viewW / 2;
+    const vy = state.players[0].pos.y - viewH / 2;
     const src = cellPx / MAP.cellSize;
     const wx0 = Math.max(0, vx);
     const wy0 = Math.max(0, vy);
@@ -451,8 +451,8 @@ export function drawMinimap(
   }
   // The hero's own pin: a bright green dot ringed dark so it reads over any
   // terrain, always shown.
-  const px = toX(state.player.pos.x);
-  const py = toY(state.player.pos.y);
+  const px = toX(state.players[0].pos.x);
+  const py = toY(state.players[0].pos.y);
   ctx.fillStyle = "rgba(11,13,16,0.9)";
   ctx.beginPath();
   ctx.arc(px, py, 3.2 * dpr, 0, Math.PI * 2);

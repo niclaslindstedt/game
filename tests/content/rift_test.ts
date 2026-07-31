@@ -145,11 +145,14 @@ describe("THE RIFT level def", () => {
     const state = startGame(SEED, "the_rift");
     clearStage(state);
     state.asteroidTimerMs = 999_999; // the hand-built rock is the only one
-    const hpBefore = state.player.hp;
+    const hpBefore = state.players[0].hp;
     state.asteroids.push({
       id: state.nextId++,
-      target: { x: state.player.pos.x, y: state.player.pos.y },
-      entry: { x: state.player.pos.x - 100, y: state.player.pos.y - 100 },
+      target: { x: state.players[0].pos.x, y: state.players[0].pos.y },
+      entry: {
+        x: state.players[0].pos.x - 100,
+        y: state.players[0].pos.y - 100,
+      },
       fallMs: 1000,
       ageMs: 1000, // already at impact — it detonates on the player this tick
       blastRadius: 50,
@@ -158,7 +161,7 @@ describe("THE RIFT level def", () => {
     });
     step(state, idle, DT);
     // It hurt (a fraction of max hp) and stopped the run for the monologue.
-    expect(state.player.hp).toBeLessThan(hpBefore);
+    expect(state.players[0].hp).toBeLessThan(hpBefore);
     expect(state.phase).toBe("dialogue");
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
@@ -265,7 +268,7 @@ describe("ELON MOSQUE flees again", () => {
     state.enemies.push(
       makeEnemy(
         {
-          pos: { x: state.player.pos.x + 30, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 30, y: state.players[0].pos.y },
           hp: 1,
           maxHp: 750,
           powerScaled: true,
@@ -301,7 +304,7 @@ describe("ELON MOSQUE flees again", () => {
         (i) =>
           i.kind === "equipment" && i.equipment.defId === "golden_parachute",
       ) ||
-      state.player.inventory.some((c) => c?.defId === "golden_parachute") ||
+      state.players[0].inventory.some((c) => c?.defId === "golden_parachute") ||
       events.some(
         (e) => e.type === "autoEquipped" && e.defId === "golden_parachute",
       );

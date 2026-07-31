@@ -21,7 +21,7 @@ import { syncInventoryCapacity } from "./inventory.ts";
  * pause lifts and play resumes.
  */
 export function allocateStat(state: GameState, stat: StatName): boolean {
-  const player = state.player;
+  const player = state.players[0];
   if (player.pendingStatPoints <= 0) return false;
   // The level-scaled cap: chosen points can't be placed past `statCap` (they'd
   // realize nothing — that region is the diminished GEAR tail). Below ~L66 the
@@ -70,7 +70,7 @@ export type { BuildSnapshot };
 /** Snapshot the hero's chosen build (see {@link BuildSnapshot}) — a deep copy
  * safe to hold across the whole ride and diff against later. */
 export function captureBuildSnapshot(state: GameState): BuildSnapshot {
-  const player = state.player;
+  const player = state.players[0];
   return {
     stats: { ...player.stats },
     spentStats: { ...player.spentStats },
@@ -101,7 +101,7 @@ export function refundAutopilotBuild(
   // wrapped up" no-op a second call is — which is what lets this be a verb the
   // app may send without first asking whether it applies.
   if (!snapshot) return;
-  const player = state.player;
+  const player = state.players[0];
   // The points the ride ADDED to the chosen pool — measured as a delta against
   // the snapshot (plus any it left unspent) — are exactly what becomes pending.
   // A delta, not a level-based total, so a prior LEVEL-TOKEN respec that folded
@@ -149,7 +149,7 @@ export function refundAutopilotBuild(
  * difficulty head-start already folded into his stats).
  */
 export function beginRespec(state: GameState): void {
-  const player = state.player;
+  const player = state.players[0];
   state.respecPending = false;
   let pool = player.pendingStatPoints;
   for (const stat of STAT_NAMES) {
@@ -195,7 +195,7 @@ export function beginRespec(state: GameState): void {
  * a cutscene or a death would open a chooser nobody could see.
  */
 export function spendCleanSlate(state: GameState): boolean {
-  const player = state.player;
+  const player = state.players[0];
   if (player.cleanSlates <= 0) return false;
   if (
     state.phase !== "playing" &&
@@ -215,7 +215,7 @@ export function spendCleanSlate(state: GameState): boolean {
  * Uncapped for the reason the arrival is (a chase reward, not a floor pickup).
  */
 export function grantCleanSlate(state: GameState, count = 1): void {
-  state.player.cleanSlates += Math.max(0, Math.floor(count));
+  state.players[0].cleanSlates += Math.max(0, Math.floor(count));
 }
 
 /**
@@ -228,7 +228,7 @@ export function grantCleanSlate(state: GameState, count = 1): void {
  */
 export function deallocateStat(state: GameState, stat: StatName): boolean {
   if (state.phase !== "respec") return false;
-  const player = state.player;
+  const player = state.players[0];
   if (player.stats[stat] <= talentStatFloor(state, stat)) return false;
   player.stats[stat]--;
   player.spentStats[stat] = Math.max(0, player.spentStats[stat] - 1);
@@ -252,7 +252,7 @@ export function deallocateStat(state: GameState, stat: StatName): boolean {
  * remain or the run is not respeccing.
  */
 export function confirmRespec(state: GameState): boolean {
-  const player = state.player;
+  const player = state.players[0];
   if (state.phase !== "respec" || player.pendingStatPoints > 0) return false;
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;

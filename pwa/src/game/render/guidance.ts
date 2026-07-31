@@ -37,7 +37,7 @@ export function guidanceArrowBlinkIndex(timeMs: number): number {
 export function guidanceArrowVisible(state: GameState): boolean {
   const wp = nextPathWaypoint(state);
   if (!wp) return false;
-  const hero = state.player.pos;
+  const hero = state.players[0].pos;
   const clearSq = GUIDE_CLEAR_RADIUS * GUIDE_CLEAR_RADIUS;
   for (const e of state.enemies) {
     if (enemyDef(e.defId).apparition) continue;
@@ -72,7 +72,7 @@ export function drawGuidanceArrow(
   timeMs: number,
 ): void {
   if (!guidanceArrowVisible(state)) return;
-  const hero = state.player.pos;
+  const hero = state.players[0].pos;
   const wp = nextPathWaypoint(state)!; // guidanceArrowVisible guaranteed non-null
   const { x: ux, y: uy } = normalize(wp.x - hero.x, wp.y - hero.y);
   // A soft blink so the cue pulses without strobing.

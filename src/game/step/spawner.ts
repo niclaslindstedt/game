@@ -53,8 +53,8 @@ export function stepSpawner(state: GameState, dtMs: number): void {
   // The camp clock: staying inside campRadius of where the player last
   // settled counts up; stepping out re-anchors and resets. Starvation eases
   // 0→1 across the fade window once the grace runs out.
-  if (distance(state.player.pos, state.campAnchor) > CAMPING.campRadius) {
-    state.campAnchor = { ...state.player.pos };
+  if (distance(state.players[0].pos, state.campAnchor) > CAMPING.campRadius) {
+    state.campAnchor = { ...state.players[0].pos };
     state.campMs = 0;
   } else {
     state.campMs += dtMs;
@@ -122,7 +122,7 @@ export function stepSpawner(state: GameState, dtMs: number): void {
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).role !== "minion") continue;
     alive++;
-    if (distanceSq(enemy.pos, state.player.pos) <= nearRadiusSq) near++;
+    if (distanceSq(enemy.pos, state.players[0].pos) <= nearRadiusSq) near++;
   }
 
   // A fully-starved camper also pauses the timed stream — the horde loses
@@ -213,13 +213,13 @@ function spawnGoal(state: GameState): Vec2 | null {
     const def = enemyDef(enemy.defId);
     if (inert(def, enemy)) continue;
     if (def.role === "boss") {
-      const d = distanceSq(enemy.pos, state.player.pos);
+      const d = distanceSq(enemy.pos, state.players[0].pos);
       if (d < bossDistSq) {
         bossDistSq = d;
         boss = enemy.pos;
       }
     } else if (def.role === "elite") {
-      const d = distanceSq(enemy.pos, state.player.pos);
+      const d = distanceSq(enemy.pos, state.players[0].pos);
       if (d < eliteDistSq) {
         eliteDistSq = d;
         elite = enemy.pos;
@@ -332,8 +332,8 @@ function spawnWaveEnemy(
     const angle =
       toward && attempts < 5
         ? Math.atan2(
-            toward.y - state.player.pos.y,
-            toward.x - state.player.pos.x,
+            toward.y - state.players[0].pos.y,
+            toward.x - state.players[0].pos.x,
           ) +
           (state.rng() * 2 - 1) * ((CAMPING.directionSpreadDeg * Math.PI) / 180)
         : state.rng() * Math.PI * 2;
@@ -341,17 +341,18 @@ function spawnWaveEnemy(
       ENEMY_AI.minSpawnDistance + state.rng() * ENEMY_AI.spawnRingWidth;
     const pos = {
       x: clamp(
-        state.player.pos.x + Math.cos(angle) * ring,
+        state.players[0].pos.x + Math.cos(angle) * ring,
         def.radius,
         state.level.width - def.radius,
       ),
       y: clamp(
-        state.player.pos.y + Math.sin(angle) * ring,
+        state.players[0].pos.y + Math.sin(angle) * ring,
         def.radius,
         state.level.height - def.radius,
       ),
     };
-    if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
+    if (distance(pos, state.players[0].pos) < ENEMY_AI.minSpawnDistance)
+      continue;
     if (insideObstacle(state, pos, def.radius)) continue;
     // Never stream the horde into a safe or quiet region (see zones.ts).
     if (insideNoSpawnZone(state, pos)) continue;
@@ -366,7 +367,7 @@ function spawnWaveEnemy(
     const wsc = resolveMobScaling(
       runLevelDef(state).mobLevels,
       state.difficulty,
-      state.player.level,
+      state.players[0].level,
       state.rng,
       mobLevelScale(state),
       currentMobLevel(state),

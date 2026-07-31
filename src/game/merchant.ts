@@ -190,15 +190,15 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
 
   // The meeting: close enough to see each other, and nothing in the way.
   if (
-    distance(state.player.pos, merchant.pos) <= MERCHANT.discoverRadius &&
-    lineOfSight(state, state.player.pos, merchant.pos)
+    distance(state.players[0].pos, merchant.pos) <= MERCHANT.discoverRadius &&
+    lineOfSight(state, state.players[0].pos, merchant.pos)
   ) {
     merchant.discovered = true;
     // Met live — the first-meeting scene IS his greeting, so he owes no
     // separate "welcome back" on this run.
     merchant.greetedReturn = true;
     merchant.wanderTarget = null;
-    merchant.faceLeft = state.player.pos.x < merchant.pos.x;
+    merchant.faceLeft = state.players[0].pos.x < merchant.pos.x;
     merchant.stock = rollStock(state, merchant);
     addMapMarker(state, "merchant", merchant.pos, "merchant");
     state.events.push({
@@ -298,11 +298,11 @@ export function revealMerchant(state: GameState): void {
  */
 function maybeGreetReturn(state: GameState, merchant: Merchant): void {
   if (merchant.greetedReturn || state.phase !== "playing") return;
-  if (distance(state.player.pos, merchant.pos) > MERCHANT.discoverRadius)
+  if (distance(state.players[0].pos, merchant.pos) > MERCHANT.discoverRadius)
     return;
-  if (!lineOfSight(state, state.player.pos, merchant.pos)) return;
+  if (!lineOfSight(state, state.players[0].pos, merchant.pos)) return;
   merchant.greetedReturn = true;
-  merchant.faceLeft = state.player.pos.x < merchant.pos.x;
+  merchant.faceLeft = state.players[0].pos.x < merchant.pos.x;
   if (state.dialogueMuted) return;
   state.dialogue = {
     source: {
@@ -331,9 +331,9 @@ export function repairGear(state: GameState): number | null {
   if (state.phase !== "shop") return null;
   const cost = repairAllCost(state);
   if (cost <= 0) return null; // nothing to mend
-  if (state.player.coins < cost) return null; // can't afford it
+  if (state.players[0].coins < cost) return null; // can't afford it
   repairAll(state);
-  state.player.coins -= cost;
+  state.players[0].coins -= cost;
   state.events.push({ type: "gearRepaired", paid: cost });
   return cost;
 }
@@ -346,7 +346,7 @@ export function repairGear(state: GameState): number | null {
  */
 function abilityPrice(state: GameState, defId: string): number {
   const base =
-    ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.player.level;
+    ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.players[0].level;
   const rarity = abilityRarity(defId);
   const markup =
     rarity > 0
@@ -367,7 +367,7 @@ function consumablePrice(
   tier: number | undefined,
 ): number {
   const { base, perLevel } = ECONOMY.consumablePrices[item];
-  let price = base + perLevel * state.player.level;
+  let price = base + perLevel * state.players[0].level;
   if (item === "medkit") {
     const lightest = MEDKIT.tiers[0];
     const quality = MEDKIT.tiers[medkitTierIndex(tier)];
@@ -419,7 +419,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
   // for the customer in front of him), a repair kit, an energy drink. No roll:
   // these are the shop's staples, and a trader who sometimes had no bandages
   // would just be a trader you learn not to visit.
-  const medkitTier = topMedkitTier(state.player.level);
+  const medkitTier = topMedkitTier(state.players[0].level);
   const shelf: MerchantConsumable[] = ["medkit", "repair", "drink"];
   for (const item of shelf.slice(0, MERCHANT.stockConsumables)) {
     const tier = item === "medkit" ? medkitTier : undefined;
@@ -448,12 +448,12 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         defId,
         slot: gearDef(defId).slot,
         tier: "regular",
-        ilvl: Math.max(1, state.player.level),
+        ilvl: Math.max(1, state.players[0].level),
         affixes: [],
       },
       price: Math.round(
         ECONOMY.revivePrice.base +
-          ECONOMY.revivePrice.perLevel * state.player.level,
+          ECONOMY.revivePrice.perLevel * state.players[0].level,
       ),
       qty: MERCHANT.stockRevives,
     });
@@ -470,7 +470,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         slot: "weapon",
         tierBonus: MERCHANT.stockTierBonus,
         // Stocked against the hero himself — his level is the stall's mlvl.
-        mlvl: state.player.level,
+        mlvl: state.players[0].level,
       });
       stock.push({
         id: state.nextId++,
@@ -491,7 +491,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
       const ilvl = Math.max(1, uniqueDef(id).ilvl);
       const chance = Math.min(
         UNIQUE.dropChanceCap,
-        UNIQUE.dropChance * (state.player.level / ilvl),
+        UNIQUE.dropChance * (state.players[0].level / ilvl),
       );
       if (state.rng() >= chance) continue;
       const equipment = mintUnique(state, id);
@@ -576,7 +576,7 @@ export function openShop(state: GameState): boolean {
   if (state.phase !== "playing") return false;
   const merchant = state.merchant;
   if (!merchant.discovered) return false;
-  if (distance(state.player.pos, merchant.pos) > MERCHANT.tradeRadius) {
+  if (distance(state.players[0].pos, merchant.pos) > MERCHANT.tradeRadius) {
     return false;
   }
   state.phase = "shop";
@@ -586,7 +586,7 @@ export function openShop(state: GameState): boolean {
 /** Close the shop and resume (pending level-ups take priority). */
 export function closeShop(state: GameState): void {
   if (state.phase !== "shop") return;
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
 }
 
 /**
@@ -600,11 +600,11 @@ export function closeShop(state: GameState): void {
  */
 export function sellItem(state: GameState, index: number): number | null {
   if (state.phase !== "shop") return null;
-  const item = state.player.inventory[index];
+  const item = state.players[0].inventory[index];
   if (!item) return null;
   const paid = sellValue(item);
-  state.player.inventory[index] = null;
-  state.player.coins += paid;
+  state.players[0].inventory[index] = null;
+  state.players[0].coins += paid;
   if (state.autopilot.active) state.autopilot.coinsEarned += paid;
   return paid;
 }
@@ -623,12 +623,12 @@ function canCarryStock(state: GameState, entry: MerchantStock): boolean {
     case "ability":
       return canBankAbility(state, entry.defId);
     case "weapon":
-      return state.player.inventory.includes(null);
+      return state.players[0].inventory.includes(null);
     case "consumable":
       return entry.item === "medkit"
-        ? (state.player.medkits[medkitTierIndex(entry.tier)] ?? 0) <
+        ? (state.players[0].medkits[medkitTierIndex(entry.tier)] ?? 0) <
             CONSUMABLES.stackCap
-        : state.player[
+        : state.players[0][
             entry.item === "repair" ? "repairKits" : "staminaPotions"
           ] < CONSUMABLES.stackCap;
   }
@@ -647,11 +647,11 @@ export function buyStock(state: GameState, stockId: number): boolean {
   const entry = state.merchant.stock.find((s) => s.id === stockId);
   if (!entry) return false;
   if (entry.qty <= 0) return false;
-  if (state.player.coins < entry.price) return false;
+  if (state.players[0].coins < entry.price) return false;
   switch (entry.kind) {
     case "ability":
       if (!canBankAbility(state, entry.defId)) return false;
-      state.player.heldAbilities.push(entry.defId);
+      state.players[0].heldAbilities.push(entry.defId);
       break;
     case "weapon": {
       // A stall row may hold SEVERAL of one thing (the salts shelf), so every
@@ -673,7 +673,7 @@ export function buyStock(state: GameState, stockId: number): boolean {
     }
   }
   entry.qty -= 1;
-  state.player.coins -= entry.price;
+  state.players[0].coins -= entry.price;
   return true;
 }
 
@@ -686,6 +686,6 @@ export function canBuyStock(
   entry: Merchant["stock"][number],
 ): boolean {
   if (entry.qty <= 0) return false;
-  if (state.player.coins < entry.price) return false;
+  if (state.players[0].coins < entry.price) return false;
   return canCarryStock(state, entry);
 }

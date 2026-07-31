@@ -69,7 +69,7 @@ export function grantedSpellRanks(
  */
 export function syncItemSpells(state: GameState): void {
   const ranks = grantedSpellRanks(state);
-  const player = state.player;
+  const player = state.players[0];
   const kept: ItemSpell[] = [];
   for (const spell of Object.keys(ranks) as SpellKind[]) {
     const rank = ranks[spell] as number;

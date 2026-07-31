@@ -77,13 +77,13 @@ import type { Enemy, GameState, Player } from "./types/index.ts";
 /**
  * WHICH HERO is performing the running rite.
  *
- * One site rather than a bare `state.player` at every read, for the reason
- * `docs/multiplayer-plan.md` §3.1 gives: `state.player` → `state.players[]` is
+ * One site rather than a bare `state.players[0]` at every read, for the reason
+ * `docs/multiplayer-plan.md` §3.1 gives: `state.players[0]` → `state.players[]` is
  * 538 engine sites, and the ones that are already shaped like a parameter cost
  * nothing to convert. Today the party is one hero and the index is always 0.
  */
 export function bossDeathExecutioner(state: GameState): Player {
-  return state.player;
+  return state.players[0];
 }
 
 /** The beat boundaries of a rite, in ms from the killing blow. */

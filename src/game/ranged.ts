@@ -42,7 +42,7 @@ export function moveRangedEnemy(
   const def = enemyDef(enemy.defId);
   const ranged = def.ranged;
   if (!ranged) return;
-  const player = state.player;
+  const player = state.players[0];
   const hold = ranged.range * ENEMY_RANGED.holdRangeFraction;
   const dist = distance(enemy.pos, player.pos);
   const reloading =
@@ -95,7 +95,7 @@ export function moveRangedEnemy(
  */
 function coverPoint(state: GameState, enemy: Enemy): Vec2 | null {
   const def = enemyDef(enemy.defId);
-  const player = state.player;
+  const player = state.players[0];
   let best: { pos: Vec2; radius: number } | null = null;
   let bestDist: number = ENEMY_RANGED.coverSearchRadius;
   for (const obstacle of state.obstacles) {
@@ -122,7 +122,7 @@ function coverPoint(state: GameState, enemy: Enemy): Vec2 | null {
  * The reload clock ticks here for every shooter, hidden or not.
  */
 export function stepRangedAttacks(state: GameState, dtMs: number): void {
-  const player = state.player;
+  const player = state.players[0];
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
     const ranged = def.ranged;
@@ -200,7 +200,7 @@ export function resolveHostileHit(
   state: GameState,
   projectile: Projectile,
 ): boolean {
-  const player = state.player;
+  const player = state.players[0];
   if (player.z > JUMP.dodgeHeight) return false;
   const reach = projectile.radius + PLAYER.radius;
   const dx = player.pos.x - projectile.pos.x;

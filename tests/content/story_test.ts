@@ -49,7 +49,7 @@ import { distance as dist } from "@game/lib/vec.ts";
 function placeElite(state: GameState, away: number): Enemy {
   const elite = makeEnemy(
     {
-      pos: { x: state.player.pos.x + away, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + away, y: state.players[0].pos.y },
       hp: 150,
       maxHp: 150,
       mlvl: 99,
@@ -111,7 +111,7 @@ describe("elite ambushes", () => {
 
     run(state, idle, 200, (s) => s.phase === "dialogue");
     expect(state.phase).toBe("dialogue");
-    expect(dist(elite.pos, state.player.pos)).toBeLessThanOrEqual(
+    expect(dist(elite.pos, state.players[0].pos)).toBeLessThanOrEqual(
       DIALOGUE.speakRadius,
     );
     expect(elite.spoke).toBe(true);
@@ -136,10 +136,10 @@ describe("elite ambushes", () => {
       speaker: "THE NIGHT MANAGER",
     });
 
-    const playerAt = { ...state.player.pos };
+    const playerAt = { ...state.players[0].pos };
     const timeAt = state.stats.timeMs;
     run(state, steerTo(2000, 800), 30);
-    expect(state.player.pos).toEqual(playerAt);
+    expect(state.players[0].pos).toEqual(playerAt);
     expect(state.stats.timeMs).toBe(timeAt);
   });
 
@@ -160,7 +160,7 @@ describe("elite ambushes", () => {
     expect(state.phase).toBe("playing");
     // …and it now moves at its fighting speed, not the rush.
     const before = { ...elite.pos };
-    state.player.pos.x = elite.pos.x + 200;
+    state.players[0].pos.x = elite.pos.x + 200;
     // This assertion is about THE RUSH BEING OVER, not about the speaker's own
     // kit. Every elite carries set-piece abilities now (see the elite tier in
     // defs/enemies/abilities.ts), and a speaker standing point-blank as its
@@ -182,7 +182,7 @@ describe("elite ambushes", () => {
     placeElite(state, 120);
     run(state, idle, 200, (s) => s.phase === "dialogue");
 
-    state.player.pendingStatPoints = 1;
+    state.players[0].pendingStatPoints = 1;
     finishDialogue(state);
     expect(state.phase).toBe("levelup");
   });
@@ -230,7 +230,7 @@ describe("boss confrontations", () => {
     stopWaves(state);
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     state.enemies = [boss];
-    state.player.pos = { x: boss.pos.x - 80, y: boss.pos.y };
+    state.players[0].pos = { x: boss.pos.x - 80, y: boss.pos.y };
 
     run(state, idle, 10, (s) => s.phase === "dialogue");
     expect(state.phase).toBe("dialogue");
@@ -264,7 +264,7 @@ describe("story items", () => {
     state.items.push({
       id: state.nextId++,
       kind: "story",
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       defId: "cargo_manifest",
     });
 
@@ -282,7 +282,9 @@ describe("story items", () => {
     finishDialogue(state);
     expect(state.phase).toBe("playing");
     // Plot lives outside the bag: nothing occupies an inventory cell.
-    expect(state.player.inventory.every((cell) => cell === null)).toBe(true);
+    expect(state.players[0].inventory.every((cell) => cell === null)).toBe(
+      true,
+    );
   });
 
   it("places the anti-grav unit inside the level-1 vault", () => {
@@ -320,7 +322,7 @@ describe("locked doors", () => {
     const vault = state.doors.find((d) => d.id === "vault")!;
 
     // Stand at the door empty-handed: nothing moves.
-    state.player.pos = { x: storage.center.x, y: storage.center.y + 34 };
+    state.players[0].pos = { x: storage.center.x, y: storage.center.y + 34 };
     step(state, idle, DT);
     expect(storage.open).toBe(false);
 
@@ -337,7 +339,7 @@ describe("locked doors", () => {
     });
 
     // The other door doesn't care about this key.
-    state.player.pos = { x: vault.center.x, y: vault.center.y - 34 };
+    state.players[0].pos = { x: vault.center.x, y: vault.center.y - 34 };
     step(state, idle, DT);
     expect(vault.open).toBe(false);
     expect(

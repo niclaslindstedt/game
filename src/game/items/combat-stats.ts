@@ -109,7 +109,7 @@ export function saturateToward(x: number, cap: number): number {
 
 export function playerCritChance(
   state: GameState,
-  weaponClass: WeaponClass = weaponDef(state.player.equipment.weapon.defId)
+  weaponClass: WeaponClass = weaponDef(state.players[0].equipment.weapon.defId)
     .class,
 ): number {
   let chance =
@@ -241,7 +241,7 @@ export function playerSpeed(state: GameState): number {
     // one site, which owns the hero's pace, so the sprint pool, the winded jog
     // and every talent above ride the hold instead of fighting it. Already
     // resolved for this tick by `stepScorches` — see `Player.snareFactor`.
-    (state.player.snareFactor ?? 1)
+    (state.players[0].snareFactor ?? 1)
   );
 }
 

@@ -40,7 +40,7 @@ function ready(ability: BlinkStrikeAbility, ctx: AbilityCtx): boolean {
 function cast(ability: BlinkStrikeAbility, ctx: AbilityCtx): void {
   const { state, enemy, def } = ctx;
   const from = { ...enemy.pos };
-  const dir = ctx.lockedDir ?? direction(enemy.pos, state.player.pos);
+  const dir = ctx.lockedDir ?? direction(enemy.pos, state.players[0].pos);
   // The RANGE locked at the tell, not the one measured now. See the header.
   const travel = Math.max(
     0,
@@ -61,7 +61,7 @@ function cast(ability: BlinkStrikeAbility, ctx: AbilityCtx): void {
 
   if (!groundMoveCanTouch(state)) return;
   if (
-    distance(state.player.pos, enemy.pos) >
+    distance(state.players[0].pos, enemy.pos) >
     ability.strikeRadius + PLAYER.radius
   ) {
     return;

@@ -39,7 +39,7 @@ export function RespecOverlay({
   onConfirm: () => void;
 }) {
   const [showInfo, setShowInfo] = useState(false);
-  const points = state.player.pendingStatPoints;
+  const points = state.players[0].pendingStatPoints;
   const ready = points === 0;
   return (
     <div
@@ -72,9 +72,9 @@ export function RespecOverlay({
               // Only the points re-placed during this respec (see
               // `spentStats`) — `beginRespec` zeroes the tally, so it grows
               // from zero as the player rebuilds, matching the level-up chooser.
-              const value = state.player.spentStats[stat];
+              const value = state.players[0].spentStats[stat];
               const canAdd = points > 0;
-              const canRemove = state.player.stats[stat] > 0;
+              const canRemove = state.players[0].stats[stat] > 0;
               return (
                 <div key={stat} className="respec-row">
                   <StatGlyph sprites={sprites} icon={icon} />

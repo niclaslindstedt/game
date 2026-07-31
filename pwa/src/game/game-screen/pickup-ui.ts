@@ -173,17 +173,17 @@ export function createPickupCardQueue(deps: {
     // base req.
     const bagged =
       itemId != null
-        ? (state.player.inventory.find((it) => it?.id === itemId) ?? null)
+        ? (state.players[0].inventory.find((it) => it?.id === itemId) ?? null)
         : null;
     const canEquip =
       upgrade &&
       !equipped &&
       defId != null &&
       bagged != null &&
-      state.player.level >= itemLevelReq(bagged);
+      state.players[0].level >= itemLevelReq(bagged);
     const onEquip = canEquip
       ? () => {
-          const index = state.player.inventory.findIndex(
+          const index = state.players[0].inventory.findIndex(
             (it) => it?.id === itemId,
           );
           if (index >= 0 && runCommandOk(state, "equipFromInventory", index)) {

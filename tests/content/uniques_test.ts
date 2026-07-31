@@ -109,7 +109,7 @@ describe("mintUnique", () => {
     const baseReq = equipmentLevelReq("fluted_greaves");
     // The ilvl scales power, not the requirement — wearable far below it.
     expect(baseReq).toBeLessThan(uniqueDef("walled_garden").ilvl);
-    state.player.level = baseReq;
+    state.players[0].level = baseReq;
     expect(meetsLevelReq(state, item)).toBe(true);
   });
 
@@ -123,15 +123,15 @@ describe("mintUnique", () => {
     expect(itemLevelReq(artifact)).toBe(Math.min(cap, artifact.ilvl));
     expect(itemLevelReq(artifact)).toBe(cap);
     // One level short of the cap it cannot be worn; at the cap it can.
-    state.player.level = cap - 1;
+    state.players[0].level = cap - 1;
     expect(meetsLevelReq(state, artifact)).toBe(false);
-    state.player.level = cap;
+    state.players[0].level = cap;
     expect(meetsLevelReq(state, artifact)).toBe(true);
   });
 
   it("a scaling unique bonus reaches the hero's effective stat once worn", () => {
     const state = startGame();
-    state.player.stats.intelligence = 20;
+    state.players[0].stats.intelligence = 20;
     const before = effectiveStat(state, "intelligence");
     // THE PANOPTICON carries +2% INTELLIGENCE (a scaling bonus, at the
     // UNIQUE.scalingPctCap ceiling).
@@ -139,7 +139,7 @@ describe("mintUnique", () => {
       { ...state, rng: () => 0.5 } as typeof state,
       "the_panopticon",
     );
-    state.player.equipment.head = panopticon;
+    state.players[0].equipment.head = panopticon;
     expect(effectiveStat(state, "intelligence")).toBe(
       Math.round(before * 1.02),
     );

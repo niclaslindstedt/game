@@ -209,7 +209,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // resumes. Also self-heals a takeoff the engine refused (z never left 0).
   if (
     bot.hopPlan &&
-    state.player.z === 0 &&
+    state.players[0].z === 0 &&
     bot.hopPlan.sinceMs !== state.stats.timeMs
   )
     bot.hopPlan = null;
@@ -220,7 +220,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // already committed. Null when nothing preempts — then the strategy decides.
   const preempt = preemptInput(bot, state, tune);
   const decided = preempt ?? strategyInput(bot, state, tune);
-  const player = state.player;
+  const player = state.players[0];
   // TURN RATE LIMIT — no turning around more than twice a second (nav.ts
   // `limitTurnRate`). The autopilot re-decides every tick, so two branches that
   // disagree used to trade the tick and leave the hero strobing
@@ -275,14 +275,14 @@ function preemptInput(
   // close, which trips the sight gate SOONER. Path-marching off toward the
   // objective would strand him unarmed for the whole run. A SCRIPTED beat, so
   // it preempts (and skips the turn limit) like the reflexes.
-  if (state.player.disarmed) {
+  if (state.players[0].disarmed) {
     think(bot, "ARM UP");
     const foe = nearestEnemy(state);
     if (!foe) return idleInput();
     // Outside the standoff → close in (trip the sight beat, draw the rusher
     // into contact). At or inside it → plant and take the harmless scripted
     // hit rather than retreating the pack across the map.
-    return distance(state.player.pos, foe.pos) > tune.armApproachStandoff
+    return distance(state.players[0].pos, foe.pos) > tune.armApproachStandoff
       ? steer(state, foe.pos)
       : idleInput();
   }
@@ -364,7 +364,7 @@ function preemptInput(
   // reflex dodges above still preempt (an airborne hero can steer), and a
   // mechanic hop (stampede/bale) never latches a plan — hopping in place IS
   // that dodge.
-  if (state.player.z > 0 && bot.hopPlan) {
+  if (state.players[0].z > 0 && bot.hopPlan) {
     think(bot, bot.hopPlan.flee ? "HOP OUT" : "HOP OVER");
     return sprint(navSteer(bot, state, bot.hopPlan.target));
   }
@@ -392,7 +392,7 @@ function strategyInput(bot: Bot, state: GameState, tune: BotTuning): GameInput {
       // lets it cut the chord; the orbit is for a boss/set-piece the hero is
       // committed to DPSing (pushBoss / the survive boss-lock).
       think(bot, "KITE");
-      const reach = weaponRangeFor(state, state.player.equipment.weapon);
+      const reach = weaponRangeFor(state, state.players[0].equipment.weapon);
       return steer(state, holdOff(state, foe.pos, reach * 0.7));
     }
     case "boss":
@@ -418,7 +418,7 @@ function strategyInput(bot: Bot, state: GameState, tune: BotTuning): GameInput {
  * read must not book it as one (the pre-fight BREATHER does the same).
  */
 function plantBreather(bot: Bot, state: GameState, decided: GameInput): void {
-  const player = state.player;
+  const player = state.players[0];
   decided.steering = false;
   decided.target = { x: player.pos.x, y: player.pos.y };
   decided.jump = false;
@@ -456,7 +456,7 @@ function digInForLockout(
   eligible: boolean,
   window: number,
 ): boolean {
-  const player = state.player;
+  const player = state.players[0];
   const owed = state.staminaRegenLockMs;
   if (!eligible || tune.digInMarginSec < 0 || owed <= 0 || player.stamina > 0) {
     bot.digIn = false;
@@ -483,7 +483,7 @@ function postDecision(
   decided: GameInput,
   reflex: boolean,
 ): GameInput {
-  const player = state.player;
+  const player = state.players[0];
   // STAMINA PACING — a post-decision pace modifier (like the aim/consumable
   // tweaks below; the branch's thought label stands, bar the deliberate
   // stands). The rule is absolute and simple: the hero RUNS only under
@@ -770,7 +770,7 @@ function postDecision(
  */
 export function botAllocate(bot: Bot, state: GameState): StatName {
   const build = BUILD_ROTATION[botBuild(bot, state)];
-  const spent = Object.values(state.player.spentStats).reduce(
+  const spent = Object.values(state.players[0].spentStats).reduce(
     (a, b) => a + b,
     0,
   );
@@ -786,7 +786,7 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
 function botBuild(bot: Bot, state: GameState): StatBuild {
   if (bot.profile === "auto") return botLane(state);
   if (bot.profile === "meta") {
-    bot.metaLaneChoice ??= metaLane(state.player.level);
+    bot.metaLaneChoice ??= metaLane(state.players[0].level);
     return bot.metaLaneChoice;
   }
   return bot.profile;

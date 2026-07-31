@@ -51,7 +51,7 @@ export function stepAbilities(
   dt: number,
   dtMs: number,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   if (player.abilities.length === 0) return;
 
   // The conjured powers' damage scale (level ramp × INT — abilityPowerScale):
@@ -141,7 +141,7 @@ export function stepItemSpells(
   dtMs: number,
 ): void {
   syncItemSpells(state);
-  const player = state.player;
+  const player = state.players[0];
   if (player.itemSpells.length === 0) return;
 
   const power = abilityPowerScale(state);

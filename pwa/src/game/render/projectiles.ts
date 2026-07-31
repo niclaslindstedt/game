@@ -63,7 +63,7 @@ function drawProjectilePass(
         py,
         projectile.dir,
         shotStyleFor(
-          state.player.equipment.weapon.uniqueId,
+          state.players[0].equipment.weapon.uniqueId,
           projectile.weaponClass === "magic" ? "magic" : "ranged",
         ),
       );

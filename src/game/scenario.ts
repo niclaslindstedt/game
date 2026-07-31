@@ -269,7 +269,7 @@ const SPAWN_ATTEMPTS = 24;
  * to a mid-flight run works but tramples whatever the run had done.
  */
 export function applyScenario(state: GameState, spec: ScenarioSpec): void {
-  const player = state.player;
+  const player = state.players[0];
 
   if (spec.skipOpening !== false) skipStoryOpening(state);
   if (spec.freeze !== undefined) state.freeze = spec.freeze;
@@ -487,7 +487,7 @@ function placePlayer(
   state: GameState,
   place: "boss" | "merchant" | Vec2,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   let target: Vec2;
   if (place === "boss") {
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
@@ -545,7 +545,7 @@ function spawnRing(state: GameState, spawn: ScenarioSpawn): void {
   const max = Math.max(min, spawn.maxDistance ?? min + 160);
   const mlvl = spawn.mlvl ?? currentMobLevel(state);
   const hpMult = mobLevelScale(state) * (spawn.hpMult ?? 1);
-  const center = state.player.pos;
+  const center = state.players[0].pos;
 
   for (let i = 0; i < count; i++) {
     const pos =
@@ -577,7 +577,7 @@ function dropRing(state: GameState, drop: ScenarioDrop): void {
   const count = Math.max(1, Math.floor(drop.count ?? 1));
   const min = Math.max(0, drop.minDistance ?? 30);
   const max = Math.max(min, drop.maxDistance ?? min + 90);
-  const center = state.player.pos;
+  const center = state.players[0].pos;
   for (let i = 0; i < count; i++) {
     const pos =
       drop.at !== undefined

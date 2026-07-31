@@ -88,17 +88,19 @@ function sampleLoadout(): Loadout {
 describe("loadout carry-over", () => {
   it("starts exactly as authored when no loadout is passed", () => {
     const state = createGame(SEED, "test_level_2");
-    expect(state.player.level).toBe(1);
-    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+    expect(state.players[0].level).toBe(1);
+    expect(state.players[0].equipment.weapon.defId).toBe("crude_sword");
     // The fixture ladder mints no starting clothes, so the body is bare.
-    expect(state.player.equipment.chest).toBeNull();
-    expect(state.player.heldAbilities).toEqual([]);
-    expect(Object.values(state.player.stats).every((v) => v === 0)).toBe(true);
+    expect(state.players[0].equipment.chest).toBeNull();
+    expect(state.players[0].heldAbilities).toEqual([]);
+    expect(Object.values(state.players[0].stats).every((v) => v === 0)).toBe(
+      true,
+    );
   });
 
   it("dresses the run in a passed loadout, re-minted and rested", () => {
     const state = createGame(SEED, "test_level_2", "medium", sampleLoadout());
-    const player = state.player;
+    const player = state.players[0];
     expect(player.level).toBe(7);
     expect(player.xp).toBe(40);
     expect(player.stats.strength).toBe(2);
@@ -138,10 +140,10 @@ describe("loadout carry-over", () => {
     } as unknown as Loadout["spentStats"];
     const state = createGame(SEED, "test_level_2", "medium", legacy);
     // The dead stat is gone from the live hero...
-    expect("speed" in state.player.stats).toBe(false);
-    expect("speed" in state.player.spentStats).toBe(false);
+    expect("speed" in state.players[0].stats).toBe(false);
+    expect("speed" in state.players[0].spentStats).toBe(false);
     // ...and its 3 spent points come back for the chooser to re-place.
-    expect(state.player.pendingStatPoints).toBe(3);
+    expect(state.players[0].pendingStatPoints).toBe(3);
   });
 
   it("backfills a stat a legacy loadout predates (no undefined stat)", () => {
@@ -152,12 +154,12 @@ describe("loadout carry-over", () => {
     // Drop a stat the way a save predating it would have — it never existed.
     delete (legacy.stats as Partial<Record<string, number>>).luck;
     const state = createGame(SEED, "test_level_2", "medium", legacy);
-    expect(state.player.stats.luck).toBe(0);
+    expect(state.players[0].stats.luck).toBe(0);
     // spentStats backfills too — it falls back to the carried stats here.
-    expect(state.player.spentStats.luck).toBe(0);
+    expect(state.players[0].spentStats.luck).toBe(0);
     // Every stat is a real number, none left undefined.
     expect(
-      Object.values(state.player.stats).every((v) => v === 0 || v > 0),
+      Object.values(state.players[0].stats).every((v) => v === 0 || v > 0),
     ).toBe(true);
   });
 
@@ -169,24 +171,24 @@ describe("loadout carry-over", () => {
       heldAbilities: ["test_nuke", "test_nuke", "test_storm"],
     };
     const state = createGame(SEED, "test_level_2", "medium", loadout);
-    expect(state.player.heldAbilities).toEqual(["test_nuke", "test_storm"]);
+    expect(state.players[0].heldAbilities).toEqual(["test_nuke", "test_storm"]);
   });
 
   it("round-trips: extractLoadout of one run seeds the next", () => {
     const first = createGame(SEED, "test_level", "medium", sampleLoadout());
-    first.player.xp = 12; // some progress made during the run
-    first.player.repairKits = 3; // a hoarded stack of repair kits
+    first.players[0].xp = 12; // some progress made during the run
+    first.players[0].repairKits = 3; // a hoarded stack of repair kits
     const carried = extractLoadout(first);
     const next = createGame(SEED + 1, "test_level_2", "medium", carried);
-    expect(next.player.level).toBe(first.player.level);
-    expect(next.player.stats).toEqual(first.player.stats);
-    expect(next.player.xp).toBe(12);
-    expect(next.player.repairKits).toBe(3); // the stack rides along
-    expect(next.player.equipment.weapon.defId).toBe(
-      first.player.equipment.weapon.defId,
+    expect(next.players[0].level).toBe(first.players[0].level);
+    expect(next.players[0].stats).toEqual(first.players[0].stats);
+    expect(next.players[0].xp).toBe(12);
+    expect(next.players[0].repairKits).toBe(3); // the stack rides along
+    expect(next.players[0].equipment.weapon.defId).toBe(
+      first.players[0].equipment.weapon.defId,
     );
     // The snapshot is a deep copy: mutating the old run can't reach it.
-    first.player.stats.luck = 99;
+    first.players[0].stats.luck = 99;
     expect(carried.stats.luck).toBe(0);
   });
 

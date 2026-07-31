@@ -139,7 +139,8 @@ function onScreenMinions(state: GameState): number {
   let count = 0;
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).role !== "minion") continue;
-    if (distance(enemy.pos, state.player.pos) <= ENEMY_AI.nearRadius) count++;
+    if (distance(enemy.pos, state.players[0].pos) <= ENEMY_AI.nearRadius)
+      count++;
   }
   return count;
 }
@@ -148,7 +149,7 @@ function onScreenMinions(state: GameState): number {
  * label: a power that carries a screen wipe alongside something else is still
  * a bomb for the purposes of the one-nuke rule. */
 function holdsNuke(state: GameState): boolean {
-  return state.player.heldAbilities.some(
+  return state.players[0].heldAbilities.some(
     (id) => abilityDef(id).nuke !== undefined,
   );
 }
@@ -261,7 +262,7 @@ export function staminaDrinkChance(state: GameState): number {
   const max = difficultyDef(state.difficulty).mercy.staminaDrinkChanceMax;
   if (max <= 0) return 0;
   // Only a bone-dry pool pulls a drink; a merely low reserve does not.
-  if (state.player.stamina > 0) return 0;
+  if (state.players[0].stamina > 0) return 0;
   // One rope at a time: while an un-collected drink already waits in view,
   // the stranded hero is not thrown another (see mercyRescueWaiting).
   if (mercyRescueWaiting(state, "drink")) return 0;
@@ -269,7 +270,7 @@ export function staminaDrinkChance(state: GameState): number {
   // is already in his pocket, and the rope would only be refused on touch. (The
   // ORDINARY rain still trickles drinks onto the ground at the appetite floor —
   // bait to plan a sprint around. A rescue is not bait; it holds fire.)
-  if (state.player.staminaPotions >= CONSUMABLES.stackCap) return 0;
+  if (state.players[0].staminaPotions >= CONSUMABLES.stackCap) return 0;
   const ramp = MERCY.staminaEmptyDrinkRampMs;
   if (ramp <= 0) return max;
   return max * Math.min(1, state.staminaEmptyMs / ramp);
@@ -298,7 +299,7 @@ function applyKnockback(
   const def = enemyDef(enemy.defId);
   const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
   if (scale <= 0) return;
-  const dir = direction(state.player.pos, enemy.pos);
+  const dir = direction(state.players[0].pos, enemy.pos);
   if (dir.x === 0 && dir.y === 0) return; // sitting on the hero: no bearing
   const push = KNOCKBACK.distance * scale;
   enemy.pos.x = clamp(
@@ -333,7 +334,7 @@ function applyRangedShotProcs(
   if (knock && state.rng() < knock.chance) {
     const def = enemyDef(enemy.defId);
     const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
-    const dir = direction(state.player.pos, enemy.pos);
+    const dir = direction(state.players[0].pos, enemy.pos);
     if (scale > 0 && (dir.x !== 0 || dir.y !== 0)) {
       const push = knock.distance * scale;
       enemy.pos.x = clamp(
@@ -822,7 +823,7 @@ export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
     state.pendingProcs.push({
       spell: proc.spell,
       rank: proc.rank,
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       enemyId: attacker?.id,
     });
   }
@@ -849,7 +850,7 @@ export function enemyKillXp(
   enemy: Enemy,
 ): number {
   if (def.xp != null) return def.xp;
-  const base = mobLevelXp(enemy.mlvl, state.player.level);
+  const base = mobLevelXp(enemy.mlvl, state.players[0].level);
   if (def.role !== "minion") {
     const mult =
       def.xpMobMult ??
@@ -1597,7 +1598,7 @@ function maybeDropWorldUnique(
   // untouched — as do levels without a table (fixtures) and under-level runs.
   if (def.role === "minion") {
     const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
-    if (gate === undefined || state.player.level < gate) return;
+    if (gate === undefined || state.players[0].level < gate) return;
   }
   // `namedDropMult` is the farm-venue sweetener: a dedicated grind venue (the
   // bunker) pays better per kill than the relics' home levels (default 1). It
@@ -1759,7 +1760,7 @@ function dropGuaranteedLoot(
  */
 export function levelUpShockwave(state: GameState): void {
   const { radius, knockbackSpeed, knockbackMs } = LEVELING.shockwave;
-  const origin = state.player.pos;
+  const origin = state.players[0].pos;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
     // Ghosts have no body the light could shove, and a bystander is not in
@@ -1789,7 +1790,11 @@ export function levelUpShockwave(state: GameState): void {
 export function debugLevelUpFx(state: GameState): void {
   levelUpShockwave(state);
   state.levelUpFxMs = LEVELING.dingCelebrationMs;
-  state.events.push({ type: "levelUp", level: state.player.level, gains: [] });
+  state.events.push({
+    type: "levelUp",
+    level: state.players[0].level,
+    gains: [],
+  });
 }
 
 /**
@@ -1814,11 +1819,11 @@ export function grantXp(state: GameState, amount: number): void {
   amount = Math.round(
     amount *
       xpCapMultiplier(
-        state.player.level,
+        state.players[0].level,
         xpLevelCap(state.level.id, state.difficulty),
       ),
   );
-  const player = state.player;
+  const player = state.players[0];
   player.xp += amount;
   state.stats.xpGained += amount;
   let leveled = false;
@@ -1878,7 +1883,7 @@ export function applyDeathXpPenalty(state: GameState): number {
   const fraction =
     LEVELING.deathXpPenaltyFraction * Math.max(0, BALANCE.deathXpLoss);
   if (fraction <= 0) return 0;
-  const player = state.player;
+  const player = state.players[0];
   const toll = Math.round(player.xpToNext * fraction);
   const lost = Math.min(player.xp, toll);
   if (lost <= 0) return 0;

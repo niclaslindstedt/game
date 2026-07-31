@@ -19,16 +19,16 @@ function shove(target: { x: number; y: number }, seconds: number) {
   clearStage(state);
   // Park him against the level's left bound — the one blocker every level has,
   // so the rule is proven without leaning on a fixture's rolled obstacles.
-  state.player.pos = { x: PLAYER.radius, y: state.level.height / 2 };
+  state.players[0].pos = { x: PLAYER.radius, y: state.level.height / 2 };
   const input: GameInput = {
     steering: true,
     target,
     jump: false,
     throttle: 1,
   };
-  const startStamina = state.player.stamina;
+  const startStamina = state.players[0].stamina;
   for (let t = 0; t < (seconds * 1000) / DT; t++) step(state, input, DT);
-  return { state, startStamina, moved: state.player.pos.x - PLAYER.radius };
+  return { state, startStamina, moved: state.players[0].pos.x - PLAYER.radius };
 }
 
 describe("a wedged hero does not pay for a sprint he never ran", () => {
@@ -36,7 +36,7 @@ describe("a wedged hero does not pay for a sprint he never ran", () => {
     // Straight into the wall: the step is granted, then taken back every tick.
     const { state, startStamina, moved } = shove({ x: -5000, y: 800 }, 30);
     expect(Math.abs(moved)).toBeLessThan(1);
-    expect(state.player.stamina).toBe(startStamina);
+    expect(state.players[0].stamina).toBe(startStamina);
   });
 
   it("leaves the regen lockout unarmed while wedged", () => {
@@ -48,8 +48,8 @@ describe("a wedged hero does not pay for a sprint he never ran", () => {
   it("still drains in the open — the tuned run is untouched", () => {
     // The control: the same flat-out push, with nothing in the way.
     const { state, startStamina } = shove({ x: 5000, y: 800 }, 30);
-    expect(state.player.stamina).toBeLessThan(startStamina);
-    expect(state.player.stamina).toBe(0);
+    expect(state.players[0].stamina).toBeLessThan(startStamina);
+    expect(state.players[0].stamina).toBe(0);
   });
 
   it("charges a wall-slide for the ground it actually makes", () => {
@@ -59,8 +59,8 @@ describe("a wedged hero does not pay for a sprint he never ran", () => {
     // out at 0 the comparison saturates and proves nothing.
     const slide = shove({ x: -5000, y: 100000 }, 4);
     const open = shove({ x: 5000, y: 100000 }, 4);
-    const slideSpent = slide.startStamina - slide.state.player.stamina;
-    const openSpent = open.startStamina - open.state.player.stamina;
+    const slideSpent = slide.startStamina - slide.state.players[0].stamina;
+    const openSpent = open.startStamina - open.state.players[0].stamina;
     expect(slideSpent).toBeGreaterThan(0);
     expect(slideSpent).toBeLessThan(openSpent);
   });

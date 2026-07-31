@@ -380,16 +380,16 @@ function allocatePoints(
 ): void {
   const active = STAT_NAMES.filter((s) => (weights[s] ?? 0) > 0);
   const lane = active.length > 0 ? active : (["stamina"] as StatName[]);
-  while (state.player.pendingStatPoints > 0) {
+  while (state.players[0].pendingStatPoints > 0) {
     // Only stats below the level-scaled cap can still take a chosen point; once
     // the lane is capped (a deep spec past ~L66), spill into any stat with room
     // so the pool always drains — never spin on an un-placeable point.
-    const cap = statCap(state.player.level);
-    const laneRoom = lane.filter((s) => state.player.stats[s] < cap);
+    const cap = statCap(state.players[0].level);
+    const laneRoom = lane.filter((s) => state.players[0].stats[s] < cap);
     const pool =
       laneRoom.length > 0
         ? laneRoom
-        : STAT_NAMES.filter((s) => state.player.stats[s] < cap);
+        : STAT_NAMES.filter((s) => state.players[0].stats[s] < cap);
     if (pool.length === 0) break; // every stat capped (unreachable in practice)
     let best: StatName = pool[0] ?? "stamina";
     let bestScore = -Infinity;
@@ -427,7 +427,7 @@ function killOne(
   const sc = resolveMobScaling(
     runLevelDef(state).mobLevels,
     state.difficulty,
-    state.player.level,
+    state.players[0].level,
     state.rng,
     mobLevelScale(state),
     currentMobLevel(state),
@@ -493,10 +493,10 @@ function collectDrops(
     const slot = wearSlotFor(state, eq);
     if (!slot) continue;
     if (slot === "weapon") {
-      state.player.equipment.weapon = eq;
-      state.player.weaponCooldownMs = 0;
+      state.players[0].equipment.weapon = eq;
+      state.players[0].weaponCooldownMs = 0;
     } else {
-      state.player.equipment[slot] = eq;
+      state.players[0].equipment[slot] = eq;
     }
     recomputeMaxHp(state);
     recomputeMaxStamina(state);
@@ -536,7 +536,7 @@ function snapshot(
   batch: BatchAccumulator,
   ref: MobRef | null,
 ): Checkpoint {
-  const player = state.player;
+  const player = state.players[0];
   const weapon = player.equipment.weapon;
   const stats = {} as Record<StatName, number>;
   for (const stat of STAT_NAMES) stats[stat] = effectiveStat(state, stat);
@@ -631,7 +631,7 @@ function runLevelPass(
   excludeTiers: Set<Tier>,
 ): LevelResult {
   const level = levelDef(levelId);
-  const heroLevelStart = state.player.level;
+  const heroLevelStart = state.players[0].level;
   const xpStart = state.stats.xpGained;
   const checkpoints: Checkpoint[] = [];
   const levelDrops: Partial<Record<Tier, number>> = {};
@@ -717,7 +717,7 @@ function runLevelPass(
     raresKilled,
     bossKilled,
     heroLevelStart,
-    heroLevelEnd: state.player.level,
+    heroLevelEnd: state.players[0].level,
     xpGained: state.stats.xpGained - xpStart,
     dropsByTier: levelDrops,
     named: levelNamed,

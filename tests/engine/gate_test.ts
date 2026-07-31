@@ -40,7 +40,7 @@ function gateKey(id = 501): Equipment {
 function startWithKey(): GameState {
   const state = startGame(42, "test_gate_level");
   clearStage(state);
-  state.player.inventory[0] = gateKey();
+  state.players[0].inventory[0] = gateKey();
   return state;
 }
 
@@ -52,12 +52,14 @@ describe("travel gates", () => {
     expect(spendGateKey(state, 0)).toBe(true);
     // The key is spent, the gate stands a step ahead, and the renderer got
     // its landmark — all from one call.
-    expect(state.player.inventory[0]).toBeNull();
+    expect(state.players[0].inventory[0]).toBeNull();
     expect(state.gates).toHaveLength(1);
     const gate = state.gates[0]!;
     expect(gate.to).toBe("test_exit_level");
     expect(gate.entered).toBe(false);
-    expect(gate.pos.x).toBeCloseTo(state.player.pos.x + GATES.summonDistance);
+    expect(gate.pos.x).toBeCloseTo(
+      state.players[0].pos.x + GATES.summonDistance,
+    );
     expect(state.landmarks.some((l) => l.kind === "test_gate")).toBe(true);
     expect(
       state.events.some(
@@ -70,22 +72,24 @@ describe("travel gates", () => {
     const state = startWithKey();
     expect(spendGateKey(state, 0)).toBe(true);
     // Same gate again: refused, nothing consumed.
-    state.player.inventory[0] = gateKey(502);
+    state.players[0].inventory[0] = gateKey(502);
     expect(spendGateKey(state, 0)).toBe(false);
-    expect(state.player.inventory[0]).not.toBeNull();
+    expect(state.players[0].inventory[0]).not.toBeNull();
 
     // On a level with no gate wired to the key, the trinket is inert.
     const elsewhere = startGame(42, "test_level");
     clearStage(elsewhere);
-    elsewhere.player.inventory[0] = gateKey(503);
-    expect(gateKeyTarget(elsewhere, elsewhere.player.inventory[0]!)).toBeNull();
+    elsewhere.players[0].inventory[0] = gateKey(503);
+    expect(
+      gateKeyTarget(elsewhere, elsewhere.players[0].inventory[0]!),
+    ).toBeNull();
     expect(spendGateKey(elsewhere, 0)).toBe(false);
-    expect(elsewhere.player.inventory[0]).not.toBeNull();
+    expect(elsewhere.players[0].inventory[0]).not.toBeNull();
   });
 
   it("advertises the USE affordance only while the gate is still latent", () => {
     const state = startWithKey();
-    const key = state.player.inventory[0]!;
+    const key = state.players[0].inventory[0]!;
     expect(gateKeyTarget(state, key)).toEqual({
       id: "test_gate",
       to: "test_exit_level",
@@ -103,7 +107,7 @@ describe("travel gates", () => {
     step(state, idle, DT);
     expect(state.events.some((e) => e.type === "gateEntered")).toBe(false);
 
-    state.player.pos = { ...gate.pos };
+    state.players[0].pos = { ...gate.pos };
     step(state, idle, DT);
     expect(
       state.events.filter(
@@ -121,7 +125,7 @@ describe("travel gates", () => {
     const state = startWithKey();
     // Bank a strictly better trinket so the zero-stat key is exactly the junk
     // a worth-ranking sweep would reach for.
-    state.player.inventory[1] = {
+    state.players[0].inventory[1] = {
       id: 600,
       defId: "test_charm",
       slot: "trinket",
@@ -129,11 +133,11 @@ describe("travel gates", () => {
       ilvl: 1,
       affixes: [],
     };
-    const key = state.player.inventory[0]!;
+    const key = state.players[0].inventory[0]!;
     expect(isSpecialItem(key)).toBe(true);
     expect(isScrappableLoot(state, key)).toBe(false);
     scrapInferiorLoot(state);
-    expect(state.player.inventory[0]).not.toBeNull();
+    expect(state.players[0].inventory[0]).not.toBeNull();
   });
 });
 
@@ -147,7 +151,7 @@ describe("the reachExit objective", () => {
     expect(state.victoryCountdownMs).toBeNull();
 
     // Standing at the door arms the countdown (and the outro's quake).
-    state.player.pos = { x: 2130, y: 260 };
+    state.players[0].pos = { x: 2130, y: 260 };
     step(state, idle, DT);
     expect(state.victoryCountdownMs).not.toBeNull();
     expect(state.quakeMs).toBeGreaterThan(0);

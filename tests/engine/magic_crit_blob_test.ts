@@ -90,15 +90,15 @@ describe("magic crit blob — the burst", () => {
   const stageBurst = (intel: number, innerCount: number) => {
     const state = startGame();
     stopWaves(state);
-    state.player.stats.intelligence = intel;
+    state.players[0].stats.intelligence = intel;
     // Keep the hero's own weapon holstered this tick so nothing but the blob
     // touches the cluster.
-    state.player.weaponCooldownMs = 1e9;
+    state.players[0].weaponCooldownMs = 1e9;
     const shape = blobShape(state);
     // Just off the hero (in-level, out of contact range) — the blob is placed
     // here, not fired, so it needn't be in weapon range.
-    const cx = state.player.pos.x;
-    const cy = state.player.pos.y - 120;
+    const cx = state.players[0].pos.x;
+    const cy = state.players[0].pos.y - 120;
     const victim = makeEnemy({
       id: 1,
       pos: { x: cx, y: cy },
@@ -154,14 +154,14 @@ describe("magic crit blob — the burst", () => {
 
   it("grows the reach and the target count with INTELLIGENCE, both capped", () => {
     const low = startGame();
-    low.player.stats.intelligence = 0;
+    low.players[0].stats.intelligence = 0;
     const lowShape = blobShape(low);
     // At zero INT the blob is its small base — one splash target, tight ring.
     expect(lowShape.maxTargets).toBe(MAGIC_CRIT.blobTargets);
     expect(lowShape.radius).toBe(MAGIC_CRIT.blobRadius);
 
     const high = startGame();
-    high.player.stats.intelligence = 5000; // far past the caps
+    high.players[0].stats.intelligence = 5000; // far past the caps
     const highShape = blobShape(high);
     expect(highShape.maxTargets).toBeGreaterThan(lowShape.maxTargets);
     expect(highShape.radius).toBeGreaterThan(lowShape.radius);
@@ -182,6 +182,6 @@ describe("magic crit blob — the burst", () => {
 /** `maxTargets` at a given raw INT stat, for sizing the cluster in the test. */
 function shape2Count(intel: number): number {
   const state = startGame();
-  state.player.stats.intelligence = intel;
+  state.players[0].stats.intelligence = intel;
   return blobShape(state).maxTargets;
 }

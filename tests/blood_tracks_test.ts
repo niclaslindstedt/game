@@ -40,7 +40,7 @@ function fresh() {
   resetHeroSoak();
   updateSettings({ ...ALL_GORE_ON, blood: 1 });
   const state = startGame();
-  state.player.pos = { x: 400, y: 400 };
+  state.players[0].pos = { x: 400, y: 400 };
   // One frame to adopt the run — the tracker measures every step from the last
   // call, so its first is always a standstill.
   stepBloodTracks(state);
@@ -51,7 +51,12 @@ function fresh() {
 function pool(state: ReturnType<typeof fresh>) {
   for (let i = 0; i < 6; i++) {
     spillBlood(state, [
-      { x: state.player.pos.x, y: state.player.pos.y, radius: 40, amount: 1 },
+      {
+        x: state.players[0].pos.x,
+        y: state.players[0].pos.y,
+        radius: 40,
+        amount: 1,
+      },
     ]);
   }
 }
@@ -59,9 +64,9 @@ function pool(state: ReturnType<typeof fresh>) {
 /** Walk him `steps` strides east, stepping the tracker each frame. */
 function walk(state: ReturnType<typeof fresh>, steps: number) {
   for (let i = 0; i < steps; i++) {
-    state.player.pos = {
-      x: state.player.pos.x + STRIDE,
-      y: state.player.pos.y,
+    state.players[0].pos = {
+      x: state.players[0].pos.x + STRIDE,
+      y: state.players[0].pos.y,
     };
     state.stats.timeMs += 100;
     stepBloodTracks(state);
@@ -81,7 +86,9 @@ describe("stepBloodTracks", () => {
   it("tracks a pool out onto clean ground", () => {
     const state = fresh();
     pool(state);
-    expect(bloodAt(state.player.pos.x, state.player.pos.y)).toBeGreaterThan(0);
+    expect(
+      bloodAt(state.players[0].pos.x, state.players[0].pos.y),
+    ).toBeGreaterThan(0);
     walk(state, 30);
     expect(bloodPrintCount()).toBeGreaterThan(0);
   });
@@ -125,7 +132,7 @@ describe("stepBloodTracks", () => {
     let last = 0;
     for (let lap = 0; lap < 12; lap++) {
       pool(state);
-      state.player.pos = { x: 400, y: 400 };
+      state.players[0].pos = { x: 400, y: 400 };
       state.stats.timeMs += 100;
       stepBloodTracks(state);
       walk(state, 24);
@@ -172,7 +179,7 @@ describe("stepBloodTracks", () => {
     walk(first, 30);
     expect(bloodPrintCount()).toBeGreaterThan(0);
     const second = startGame();
-    second.player.pos = { x: 400, y: 400 };
+    second.players[0].pos = { x: 400, y: 400 };
     stepBloodTracks(second);
     expect(bloodPrintCount()).toBe(0);
   });

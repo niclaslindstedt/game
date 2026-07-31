@@ -65,11 +65,11 @@ function tapThrough(state: GameState): void {
 
 describe("SpaceZ HQ opening strike", () => {
   it("opens the hero disarmed, and other levels armed", () => {
-    expect(disarmedHQ().player.disarmed).toBe(true);
+    expect(disarmedHQ().players[0].disarmed).toBe(true);
     const moon = createGame(SEED, "moon");
     skipCutscene(moon); // no prelude on the moon — a no-op
     dismissIntro(moon);
-    expect(moon.player.disarmed ?? false).toBe(false);
+    expect(moon.players[0].disarmed ?? false).toBe(false);
   });
 
   it("places a lone vanguard that outruns the pack and cannot hurt him", () => {
@@ -98,28 +98,28 @@ describe("SpaceZ HQ opening strike", () => {
     state.enemies = state.enemies.filter(
       (e) => e.vanguard || enemyDef(e.defId).role === "boss",
     );
-    const startX = state.player.pos.x + 120;
-    v.pos = { x: startX, y: state.player.pos.y };
+    const startX = state.players[0].pos.x + 120;
+    v.pos = { x: startX, y: state.players[0].pos.y };
     // Sighting gate held shut (no interns to fire spacez_staff): the vanguard
     // waits at its post through the hero's opening read rather than rushing him
     // before he has even looked around. It must NOT have closed the gap — the
     // "look at this place" monologue is meant to land first.
     for (let i = 0; i < 400; i++) step(state, idle, DT);
-    expect(state.player.disarmed).toBe(true); // gate held, still holstered
+    expect(state.players[0].disarmed).toBe(true); // gate held, still holstered
     expect(v.pos.x).toBeCloseTo(startX, 5); // never left its post
     // The moment the beat plays, it breaks from the pack, sprints the hero
     // down, and its swing draws the blade — the rush follows the read.
     state.thoughtsSeen.push("spacez_staff");
-    for (let i = 0; i < 400 && state.player.disarmed; i++)
+    for (let i = 0; i < 400 && state.players[0].disarmed; i++)
       step(state, idle, DT);
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
       defId: "spacez_armed",
     });
     // The blade came out with the scientist on top of him, not half a screen
     // away — a contact-range strike, never the old distant standoff.
-    const dist = distance(v.pos, state.player.pos);
+    const dist = distance(v.pos, state.players[0].pos);
     expect(dist).toBeLessThan(30);
   });
 
@@ -127,15 +127,15 @@ describe("SpaceZ HQ opening strike", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("spacez_staff"); // gate open
-    v.pos = { ...state.player.pos };
+    v.pos = { ...state.players[0].pos };
     step(state, idle, DT); // strike lands, arms the hero
     tapThrough(state);
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
     // Now it chases like any minion: one tick advances at most its plain
     // snapshot `speed`, nowhere near the opening rushSpeed. Place it a clear
     // stretch away in the open lobby and measure a single tick's travel.
     v.awake = true;
-    v.pos = { x: state.player.pos.x + 300, y: state.player.pos.y };
+    v.pos = { x: state.players[0].pos.x + 300, y: state.players[0].pos.y };
     const before = v.pos.x;
     step(state, idle, DT);
     const moved = before - v.pos.x; // travelled toward the hero (leftward)
@@ -150,22 +150,22 @@ describe("SpaceZ HQ opening strike", () => {
     const state = disarmedHQ();
     isolateVanguard(state);
     // Park a mob the sword would shred right on top of the hero.
-    state.enemies = [makeEnemy({ pos: { ...state.player.pos } }, "intern")];
+    state.enemies = [makeEnemy({ pos: { ...state.players[0].pos } }, "intern")];
     const before = state.stats.damageDealt;
     for (let i = 0; i < 30; i++) step(state, idle, DT);
     expect(state.stats.damageDealt).toBe(before); // never swung
-    expect(state.player.disarmed).toBe(true);
+    expect(state.players[0].disarmed).toBe(true);
   });
 
   it("arms the hero on the vanguard's strike — after the sighting beat", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("spacez_staff"); // the gate's prerequisite
-    v.pos = { ...state.player.pos }; // in contact
-    const hp = state.player.hp;
+    v.pos = { ...state.players[0].pos }; // in contact
+    const hp = state.players[0].hp;
     step(state, idle, DT);
-    expect(state.player.disarmed).toBe(false);
-    expect(state.player.hp).toBe(hp); // the first swing costs no HP
+    expect(state.players[0].disarmed).toBe(false);
+    expect(state.players[0].hp).toBe(hp); // the first swing costs no HP
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
       defId: "spacez_armed",
@@ -185,10 +185,10 @@ describe("SpaceZ HQ opening strike", () => {
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("spacez_staff"); // the gate's prerequisite
     state.thoughtsSeen.push("spacez_armed"); // pre-seeded, as a replay would
-    v.pos = { ...state.player.pos }; // in contact
+    v.pos = { ...state.players[0].pos }; // in contact
     step(state, idle, DT);
     // He drew the blade despite the beat already being marked read …
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
     // … and did NOT re-open the already-read monologue.
     expect(state.dialogue).toBeNull();
   });
@@ -200,22 +200,22 @@ describe("SpaceZ HQ opening strike", () => {
     // A clear gap away — sprinting in, but nowhere near touching. A single
     // tick's rush can't close it, so the blade stays holstered: the beat waits
     // for the scientist to actually arrive, not a distant proximity read.
-    v.pos = { x: state.player.pos.x + 80, y: state.player.pos.y };
+    v.pos = { x: state.players[0].pos.x + 80, y: state.players[0].pos.y };
     step(state, idle, DT);
-    expect(state.player.disarmed).toBe(true);
+    expect(state.players[0].disarmed).toBe(true);
     expect(state.dialogue).toBeNull();
     // Let it sprint the rest of the way in. It parks right up against the hero
     // and THAT touch draws the blade and fires the beat.
-    for (let i = 0; i < 200 && state.player.disarmed; i++)
+    for (let i = 0; i < 200 && state.players[0].disarmed; i++)
       step(state, idle, DT);
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
       defId: "spacez_armed",
     });
     // The swing landed with the scientist on top of him — a contact gap, never
     // the old ~96 px half-a-screen standoff.
-    const dist = distance(v.pos, state.player.pos);
+    const dist = distance(v.pos, state.players[0].pos);
     expect(dist).toBeLessThan(30);
   });
 
@@ -226,9 +226,9 @@ describe("SpaceZ HQ opening strike", () => {
     // Way off across the lobby: a single tick's rush can't close the ~300 px
     // gap, so the blade stays holstered — the beat waits on the rusher arriving,
     // not on time.
-    v.pos = { x: state.player.pos.x + 400, y: state.player.pos.y };
+    v.pos = { x: state.players[0].pos.x + 400, y: state.players[0].pos.y };
     step(state, idle, DT);
-    expect(state.player.disarmed).toBe(true);
+    expect(state.players[0].disarmed).toBe(true);
     expect(state.thoughtsSeen).not.toContain("spacez_armed");
     expect(state.dialogue).toBeNull();
   });
@@ -236,10 +236,10 @@ describe("SpaceZ HQ opening strike", () => {
   it("holds the arming until the sighting beat has played (the gate)", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
-    v.pos = { ...state.player.pos };
+    v.pos = { ...state.players[0].pos };
     // spacez_staff not seen, and no interns on the board to fire it.
     for (let i = 0; i < 10; i++) step(state, idle, DT);
-    expect(state.player.disarmed).toBe(true);
+    expect(state.players[0].disarmed).toBe(true);
     expect(state.thoughtsSeen).not.toContain("spacez_armed");
     expect(state.dialogue).toBeNull();
   });
@@ -258,7 +258,7 @@ describe("SpaceZ HQ opening strike", () => {
     // having reached the hero.
     state.enemies = [];
     step(state, idle, DT);
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
     expect(state.thoughtsSeen).toContain("spacez_armed");
     // A dead rusher landed no blow, so the arming costs no HP.
     // (hp is untouched — nothing struck him.)
@@ -272,17 +272,17 @@ describe("SpaceZ HQ opening strike", () => {
     // the safety net that arms on a vanquished vanguard stays out of it — here
     // we test only that a NON-vanguard touch is harmless and never draws the
     // blade.
-    v.pos = { x: state.player.pos.x + 400, y: state.player.pos.y };
+    v.pos = { x: state.players[0].pos.x + 400, y: state.players[0].pos.y };
     // A regular scientist (contactDamage > 0) right on the hero — not the
     // vanguard, so it neither hurts him nor draws the blade.
     state.enemies = [
       v,
-      makeEnemy({ pos: { ...state.player.pos } }, "scientist"),
+      makeEnemy({ pos: { ...state.players[0].pos } }, "scientist"),
     ];
-    const hp = state.player.hp;
+    const hp = state.players[0].hp;
     for (let i = 0; i < 20; i++) step(state, idle, DT);
-    expect(state.player.hp).toBe(hp);
-    expect(state.player.disarmed).toBe(true);
+    expect(state.players[0].hp).toBe(hp);
+    expect(state.players[0].disarmed).toBe(true);
     expect(state.dialogue).toBeNull();
   });
 
@@ -301,23 +301,23 @@ describe("SpaceZ HQ opening strike", () => {
           sawStaff = true;
           const v = vanguard(state);
           vgapAtStaff = Math.hypot(
-            v.pos.x - state.player.pos.x,
-            v.pos.y - state.player.pos.y,
+            v.pos.x - state.players[0].pos.x,
+            v.pos.y - state.players[0].pos.y,
           );
         }
       }
     }
     expect(sawStaff).toBe(true);
-    expect(state.player.disarmed).toBe(true); // still holstered at this point
+    expect(state.players[0].disarmed).toBe(true); // still holstered at this point
     // The vanguard has NOT reached him yet — the read lands first, and the
     // scientist is still out in the lobby (its 180 px start), not glued on.
     expect(vgapAtStaff).toBeGreaterThan(100);
     // Tap the read closed; now the vanguard breaks loose, closes, and its
     // strike arms the hero and opens the "good thing I came armed" beat.
     tapThrough(state);
-    for (let i = 0; i < 600 && state.player.disarmed; i++)
+    for (let i = 0; i < 600 && state.players[0].disarmed; i++)
       step(state, idle, DT);
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
       defId: "spacez_armed",
@@ -328,7 +328,7 @@ describe("SpaceZ HQ opening strike", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("spacez_staff");
-    v.pos = { ...state.player.pos };
+    v.pos = { ...state.players[0].pos };
     step(state, idle, DT); // the strike arms him and opens spacez_armed
     tapThrough(state);
     expect(state.phase).toBe("playing");
@@ -338,7 +338,7 @@ describe("SpaceZ HQ opening strike", () => {
       makeEnemy(
         {
           id: 9100,
-          pos: { x: state.player.pos.x + 10, y: state.player.pos.y },
+          pos: { x: state.players[0].pos.x + 10, y: state.players[0].pos.y },
           hp: 200,
           maxHp: 200,
         },
@@ -361,7 +361,7 @@ describe("SpaceZ HQ opening strike", () => {
     // close, so a handful of bodies gather inside the ring — but he's armed in a
     // couple of seconds, far short of a real dive.
     const state = disarmedHQ();
-    const startX = state.player.pos.x;
+    const startX = state.players[0].pos.x;
     const bot = createBot("survivor");
     let maxCrowdWhileDisarmed = 0;
     let armedStep = -1;
@@ -372,11 +372,11 @@ describe("SpaceZ HQ opening strike", () => {
         continue;
       }
       step(state, botAct(bot, state), DT);
-      if (!state.player.disarmed) {
+      if (!state.players[0].disarmed) {
         armedStep = i;
         break;
       }
-      const p = state.player.pos;
+      const p = state.players[0].pos;
       backpedal = Math.max(backpedal, startX - p.x);
       const crowd = state.enemies.filter(
         (e) =>
@@ -418,12 +418,12 @@ describe("SpaceZ HQ opening strike", () => {
       skipCutscene(state);
       dismissIntro(state); // skipOpening leaves him disarmed
       muteDialogue(state);
-      expect(state.player.disarmed).toBe(true);
+      expect(state.players[0].disarmed).toBe(true);
       const bot = createBot("survivor");
       let armedStep = -1;
       for (let i = 0; i < 1200; i++) {
         step(state, botAct(bot, state), DT);
-        if (!state.player.disarmed) {
+        if (!state.players[0].disarmed) {
           armedStep = i;
           break;
         }

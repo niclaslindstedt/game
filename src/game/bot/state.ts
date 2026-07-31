@@ -438,7 +438,7 @@ export function setBotWaypoint(bot: Bot, target: Vec2 | null): void {
  * from {@link decideAct}; mutates only bot memory, so determinism holds. */
 export function trackWaypoint(bot: Bot, state: GameState): void {
   if (!bot.waypoint) return;
-  if (distance(state.player.pos, bot.waypoint) <= WAYPOINT_REACH)
+  if (distance(state.players[0].pos, bot.waypoint) <= WAYPOINT_REACH)
     bot.waypoint = null;
 }
 

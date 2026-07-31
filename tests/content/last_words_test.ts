@@ -36,7 +36,7 @@ function placeDying(state: GameState, defId: string) {
   // blow and the elite would reach its arrival scene before dying.
   state.rng = () => 0.99;
   const mob = makeEnemy(
-    { pos: { ...state.player.pos }, hp: 1, maxHp: 10, speed: 0 },
+    { pos: { ...state.players[0].pos }, hp: 1, maxHp: 10, speed: 0 },
     defId,
   );
   state.enemies.push(mob);
@@ -97,10 +97,10 @@ describe("last words on death", () => {
     // hp-proportional lump — so brim the bar first and let the set-piece kill
     // tip it over: the killing blow both banks a level-up AND opens the death
     // scene, the scene wins the phase, the level-up waits its turn.
-    state.player.xp = state.player.xpToNext - 1;
+    state.players[0].xp = state.players[0].xpToNext - 1;
     const elite = makeEnemy(
       {
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         hp: 1,
         maxHp: 200,
         speed: 0,
@@ -111,7 +111,7 @@ describe("last words on death", () => {
 
     killAndCollect(state, elite.id);
     expect(state.phase).toBe("dialogue");
-    expect(state.player.pendingStatPoints).toBeGreaterThan(0);
+    expect(state.players[0].pendingStatPoints).toBeGreaterThan(0);
     advanceDialogue(state);
     // The scene closed straight into the level-up chooser it was holding back.
     expect(state.phase).toBe("levelup");

@@ -64,7 +64,7 @@ export function vaultWorth(item: Equipment): number {
  */
 export function vaultItem(state: GameState, item: Equipment): boolean {
   if (!isVaultWorthy(item)) return false;
-  const vault = state.player.vault;
+  const vault = state.players[0].vault;
   if (vault.length < VAULT.capacity) {
     vault.push(item);
     return true;
@@ -116,7 +116,7 @@ export function reclaimVaultItem(
   state: GameState,
   itemId: number,
 ): VaultRefusal | null {
-  const player = state.player;
+  const player = state.players[0];
   const at = player.vault.findIndex((piece) => piece.id === itemId);
   if (at < 0) return "gone";
   const item = player.vault[at] as Equipment;
@@ -142,7 +142,7 @@ export function reclaimVaultItem(
  * the caller can say so.
  */
 export function clearVault(state: GameState): number {
-  const binned = state.player.vault.length;
-  state.player.vault.length = 0;
+  const binned = state.players[0].vault.length;
+  state.players[0].vault.length = 0;
   return binned;
 }

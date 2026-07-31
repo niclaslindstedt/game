@@ -557,7 +557,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) =>
       ctx.emit({
         type: "seismicLanding",
-        pos: { x: ctx.state.player.pos.x, y: ctx.state.player.pos.y },
+        pos: { x: ctx.state.players[0].pos.x, y: ctx.state.players[0].pos.y },
         radius: 84,
       }),
   },
@@ -970,7 +970,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // Laid straight into state, because burning floor IS state — there is no
       // event for it (the patches outlive any one tick, so the renderer reads
       // the list the same way it reads the meteors and the storms).
-      const hero = ctx.state.player.pos;
+      const hero = ctx.state.players[0].pos;
       ctx.state.scorches.length = 0;
       for (let i = 0; i < 9; i++) {
         const d = 28 + i * 22;
@@ -1047,7 +1047,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       // Laid into state directly, like the burning floor: bait outlives any one
       // tick, so the renderer reads the list rather than an event.
-      const hero = ctx.state.player.pos;
+      const hero = ctx.state.players[0].pos;
       ctx.state.baits.length = 0;
       for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2 + 0.6;
@@ -1091,7 +1091,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       // The pods ride the meteor system, so the exhibit puts real ones in the
       // sky and lets the engine's own fall, shadow and blast play out.
-      const hero = ctx.state.player.pos;
+      const hero = ctx.state.players[0].pos;
       for (let i = 0; i < 3; i++) {
         const angle = (i / 3) * Math.PI * 2 + 0.4;
         const target = {
@@ -1208,7 +1208,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // Dropped straight into `state.obstacles`, because that is genuinely all
       // the ability does — the shutters ARE obstacles, and drawObstacles is
       // what puts them on screen in a real fight too.
-      const hero = ctx.state.player.pos;
+      const hero = ctx.state.players[0].pos;
       // The bunker's own floor furniture is dark and boxy, and a ring of dark
       // boxy shutters standing among it reads as more of the same. The exhibit
       // is about the SHAPE the ring makes and the hole in it, so it clears the
@@ -1333,8 +1333,8 @@ const FIELD_EXHIBITS: Exhibit[] = [
         pos: from,
         defId: "jeff_baywatch",
         angle: Math.atan2(
-          ctx.state.player.pos.y - from.y,
-          ctx.state.player.pos.x - from.x,
+          ctx.state.players[0].pos.y - from.y,
+          ctx.state.players[0].pos.x - from.x,
         ),
         spread: (38 * Math.PI) / 180,
         count: 5,
@@ -1543,7 +1543,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
         type: "eliteCast",
         kind: "siphon_tether",
         pos: mob ? { ...mob.pos } : heroPos(ctx.state),
-        to: { ...ctx.state.player.pos },
+        to: { ...ctx.state.players[0].pos },
         defId: "grigori_rasputin",
         ms: 3600,
       });
@@ -1645,8 +1645,8 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 1100,
     fire: (ctx) => {
       const pos = {
-        x: ctx.state.player.pos.x + 40,
-        y: ctx.state.player.pos.y,
+        x: ctx.state.players[0].pos.x + 40,
+        y: ctx.state.players[0].pos.y,
       };
       // The chip that flies off a blow the box survives, then the break.
       ctx.emit({ type: "crateHit", pos: { ...pos } });
@@ -1668,7 +1668,10 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) =>
       ctx.emit({
         type: "asteroidImpact",
-        pos: { x: ctx.state.player.pos.x + 30, y: ctx.state.player.pos.y + 10 },
+        pos: {
+          x: ctx.state.players[0].pos.x + 30,
+          y: ctx.state.players[0].pos.y + 10,
+        },
         radius: 62,
       }),
   },
@@ -1753,8 +1756,8 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // Well clear of the hero: a spill that lands under his feet is a spill he
       // walks off with, and the show is the ARRIVAL, not the pickup.
       const from = {
-        x: ctx.state.player.pos.x + 62,
-        y: ctx.state.player.pos.y,
+        x: ctx.state.players[0].pos.x + 62,
+        y: ctx.state.players[0].pos.y,
       };
       const spill: { defId: string; tier: Tier }[] = [
         { defId: "gladius", tier: "regular" },
@@ -1845,7 +1848,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     stage: { spawns: horde(4, 44, 110) },
     showMs: 1600,
     fire: (ctx) => {
-      const at = ctx.state.player.pos;
+      const at = ctx.state.players[0].pos;
       // The whole arc in one show: he shoves off, and a beat later he lands
       // hard — the takeoff's low backward smear against the landing's ring,
       // cloud and grit.
@@ -1853,7 +1856,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       ctx.after(520, () =>
         ctx.emit({
           type: "land",
-          pos: { ...ctx.state.player.pos },
+          pos: { ...ctx.state.players[0].pos },
           impact: 1.4,
           speed: 60,
         }),
@@ -1943,7 +1946,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       // What a fatal blow does: the engine takes it from here (enterDeathScene
       // on the next step) and plays the whole tableau.
-      ctx.state.player.hp = 0;
+      ctx.state.players[0].hp = 0;
     },
   },
   {
@@ -1959,7 +1962,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // The flash is a state timer the renderer reads, not an effect — arm it
       // the way a real bite does and let render.ts wash the frame. The event
       // carries the grunt on the sound bus.
-      ctx.state.player.hurtFlashMs = 250;
+      ctx.state.players[0].hurtFlashMs = 250;
       ctx.emit({ type: "playerHurt", crit: false, cause: "gallery" });
     },
   },

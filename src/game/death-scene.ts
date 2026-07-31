@@ -41,7 +41,7 @@ import { inert, inertEnemy } from "./disposition.ts";
  * (contact, hazard, a black-hole swallow) routes through the same scene.
  */
 export function enterDeathScene(state: GameState): void {
-  const player = state.player;
+  const player = state.players[0];
   player.hp = 0;
   // No lingering post-hit blink over the corpse — the death pose owns the
   // sprite from here (the flash timer would otherwise sit frozen at `dying`).
@@ -246,7 +246,7 @@ function spawnCrowdMob(state: GameState, center: Vec2): void {
   const sc = resolveMobScaling(
     runLevelDef(state).mobLevels,
     state.difficulty,
-    state.player.level,
+    state.players[0].level,
     state.rng,
     mobLevelScale(state),
     currentMobLevel(state),

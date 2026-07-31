@@ -140,7 +140,7 @@ function installQuests(): void {
 function questRun(): GameState {
   installQuests();
   const state = startGame();
-  state.player.pos = { x: GIVER_AT.x - 20, y: GIVER_AT.y };
+  state.players[0].pos = { x: GIVER_AT.x - 20, y: GIVER_AT.y };
   return state;
 }
 
@@ -299,10 +299,10 @@ describe("quest givers", () => {
     const state = questRun();
     walkUp(state);
     expect(state.phase).toBe("quest");
-    const at = { ...state.player.pos };
+    const at = { ...state.players[0].pos };
     // A frozen phase is not stepped at all, so nothing in the world moves.
     for (let i = 0; i < 30; i++) step(state, idle, DT);
-    expect(state.player.pos).toEqual(at);
+    expect(state.players[0].pos).toEqual(at);
   });
 
   it("ward the horde off, so the conversation is always reachable", () => {
@@ -380,7 +380,7 @@ describe("the handover", () => {
 
     const quoted = questXpReward(state, FIX_QUESTS.test_cull!.reward);
     const xpBefore = state.stats.xpGained;
-    const coinsBefore = state.player.coins;
+    const coinsBefore = state.players[0].coins;
 
     expect(talkToQuestGiver(state, "test_giver")).toBe(true);
     // Finished work sorts to the top of the slate (`giverTopics`), so it is
@@ -397,7 +397,7 @@ describe("the handover", () => {
 
     expect(payout).not.toBeNull();
     expect(payout!.coins).toBe(50);
-    expect(state.player.coins).toBe(coinsBefore + 50);
+    expect(state.players[0].coins).toBe(coinsBefore + 50);
     // The grant runs through `grantXp`, so the banked figure is the quoted one
     // scaled by the run's own xp knobs — never more than it, never zero.
     expect(state.stats.xpGained).toBeGreaterThan(xpBefore);
@@ -509,7 +509,7 @@ describe("an escort errand", () => {
     takeWalk(state);
     const escort = state.escorts[0]!;
     // The hero standing on the destination alone delivers nobody.
-    state.player.pos = { x: 700, y: 1320 };
+    state.players[0].pos = { x: 700, y: 1320 };
     step(state, idle, DT);
     expect(state.quests.test_walk?.status).toBe("active");
 
@@ -528,7 +528,7 @@ describe("an escort errand", () => {
     // to its rim and the escort would walk away from it — which is the ward
     // working, not the bite failing.
     escort.pos = { x: 1200, y: 1320 };
-    state.player.pos = { x: 1200, y: 1320 };
+    state.players[0].pos = { x: 1200, y: 1320 };
     escort.hp = 1;
     escort.hitCooldownMs = 0;
     // A mob in contact reach bites on the escort's own cadence.
@@ -546,7 +546,7 @@ describe("an escort errand", () => {
     const state = questRun();
     takeWalk(state);
     const escort = state.escorts[0]!;
-    state.player.pos = {
+    state.players[0].pos = {
       x: escort.pos.x + QUESTS.escortLeashDistance + 100,
       y: escort.pos.y,
     };
@@ -608,7 +608,7 @@ describe("the quest log screen", () => {
     expect(state.phase).toBe("paused");
     state.phase = "playing";
     openQuestLog(state);
-    state.player.pendingStatPoints = 1;
+    state.players[0].pendingStatPoints = 1;
     closeQuestLog(state);
     expect(state.phase).toBe("levelup");
   });
@@ -638,7 +638,7 @@ describe("the progress announcement", () => {
     // The placed piece lies a step away; walk onto it.
     const piece = state.items.find((i) => i.kind === "quest");
     expect(piece).toBeDefined();
-    state.player.pos = { ...piece!.pos };
+    state.players[0].pos = { ...piece!.pos };
     for (let i = 0; i < 20 && !state.events.some(isProgress); i++) {
       step(state, idle, DT);
     }

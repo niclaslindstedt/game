@@ -33,7 +33,7 @@ import { collectStoryItem } from "../story.ts";
 import type { EquipSlot, GameState, Item } from "../types/index.ts";
 
 export function stepItems(state: GameState, dtMs: number): void {
-  const player = state.player;
+  const player = state.players[0];
   // Pieces displaced by an auto-equip with a full bag fall back to the
   // ground — collected here so the filter pass isn't mutated mid-flight.
   const displaced: Item[] = [];
@@ -173,7 +173,7 @@ export function stepItems(state: GameState, dtMs: number): void {
     // one is already docked — they stay on the ground like an overflowing drop.
     if (item.kind === "ability") {
       if (!canBankAbility(state, item.defId)) return true;
-      state.player.heldAbilities.push(item.defId);
+      state.players[0].heldAbilities.push(item.defId);
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",

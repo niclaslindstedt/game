@@ -33,7 +33,7 @@ function clearMinions(state: GameState): void {
 /** Angle (rad) between the bearings player→a and player→b. */
 function bearingGap(state: GameState, a: { x: number; y: number }): number {
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-  const p = state.player.pos;
+  const p = state.players[0].pos;
   const toSpawn = Math.atan2(a.y - p.y, a.x - p.x);
   const toBoss = Math.atan2(boss.pos.y - p.y, boss.pos.x - p.x);
   let gap = Math.abs(toSpawn - toBoss);
@@ -68,9 +68,9 @@ describe("camping starves the spawner", () => {
     expect(spawnedSoFar(state)).toBe(before);
 
     // Moving on re-anchors the camp clock and the held backlog floods back.
-    state.player.pos = {
-      x: state.player.pos.x + CAMPING.campRadius + 10,
-      y: state.player.pos.y,
+    state.players[0].pos = {
+      x: state.players[0].pos.x + CAMPING.campRadius + 10,
+      y: state.players[0].pos.y,
     };
     step(state, idle, DT);
     expect(state.campMs).toBe(0);
@@ -145,7 +145,10 @@ describe("camping starves the spawner", () => {
       state.enemies.push(
         makeEnemy({
           id: state.nextId++,
-          pos: { x: state.player.pos.x + 50 + i, y: state.player.pos.y },
+          pos: {
+            x: state.players[0].pos.x + 50 + i,
+            y: state.players[0].pos.y,
+          },
         }),
       );
     }

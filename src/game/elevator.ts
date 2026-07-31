@@ -44,21 +44,21 @@ export function stepElevators(state: GameState, dtMs: number): void {
   // A hero in the air is between floors: the jump arc regularly carries him over
   // a plate he was steering past, and being yanked off it mid-hop reads as a bug
   // rather than as a lift.
-  if (state.player.z > 0) return;
+  if (state.players[0].z > 0) return;
   for (const pad of state.elevators) {
-    if (distance(state.player.pos, pad.pos) > pad.radius) continue;
-    const from = { ...state.player.pos };
-    state.player.pos = { ...pad.to };
+    if (distance(state.players[0].pos, pad.pos) > pad.radius) continue;
+    const from = { ...state.players[0].pos };
+    state.players[0].pos = { ...pad.to };
     // Cancel the momentum he arrived with, or he walks out of the car still
     // travelling in the direction that put him in it.
-    state.player.vel = { x: 0, y: 0 };
+    state.players[0].vel = { x: 0, y: 0 };
     state.elevatorLockMs = ELEVATOR.lockMs;
     const first = !pad.used;
     pad.used = true;
     // Light the room he was just dropped into. The fog sweep is a disc around the
     // hero every tick anyway; this only makes the FIRST frame of the arrival show
     // the place rather than the inside of a cloud.
-    revealAround(state, state.player.pos, ELEVATOR.arrivalReveal);
+    revealAround(state, state.players[0].pos, ELEVATOR.arrivalReveal);
     state.events.push({
       type: "elevatorRide",
       id: pad.id,

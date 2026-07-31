@@ -129,10 +129,10 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
 
   for (const giver of state.questGivers) {
     const near =
-      distance(state.player.pos, giver.pos) <= QUESTS.talkRadius &&
-      lineOfSight(state, state.player.pos, giver.pos);
+      distance(state.players[0].pos, giver.pos) <= QUESTS.talkRadius &&
+      lineOfSight(state, state.players[0].pos, giver.pos);
     if (!near) continue;
-    giver.faceLeft = state.player.pos.x < giver.pos.x;
+    giver.faceLeft = state.players[0].pos.x < giver.pos.x;
     if (!giver.discovered) {
       giver.discovered = true;
       addMapMarker(state, "questGiver", giver.pos, giver.id);
@@ -191,7 +191,7 @@ function pollQuestConditions(state: GameState): void {
         // identically at both sites, so the mark and the piece lying on it
         // never drift apart.
         if (
-          distance(state.player.pos, questSpot(state, objective.at)) > reach
+          distance(state.players[0].pos, questSpot(state, objective.at)) > reach
         ) {
           return;
         }
@@ -206,7 +206,7 @@ function pollQuestConditions(state: GameState): void {
         // gained (or a hero adopted mid-chain at a level well past the last
         // reading) lands on the right number in one step instead of counting
         // up to it. Only ever climbs, so a respec cannot walk it backwards.
-        const level = Math.min(state.player.level, objective.level);
+        const level = Math.min(state.players[0].level, objective.level);
         if (level <= at) return;
         progress.counts[index] = level;
         state.events.push({
@@ -300,7 +300,7 @@ function openQuestList(state: GameState, giverId: string): void {
   state.questOffer = { giverId, kind: "list", page: 0 };
   state.phase = "quest";
   const giver = state.questGivers.find((g) => g.id === giverId);
-  if (giver) giver.faceLeft = state.player.pos.x < giver.pos.x;
+  if (giver) giver.faceLeft = state.players[0].pos.x < giver.pos.x;
 }
 
 /**
@@ -352,7 +352,8 @@ export function talkToQuestGiver(state: GameState, giverId: string): boolean {
   if (state.dialogue !== null) return false;
   const giver = state.questGivers.find((g) => g.id === giverId);
   if (!giver || !giver.discovered) return false;
-  if (distance(state.player.pos, giver.pos) > QUESTS.tapRadius) return false;
+  if (distance(state.players[0].pos, giver.pos) > QUESTS.tapRadius)
+    return false;
 
   // A TAP OPENS EVERYTHING THIS PERSON HAS — the pick list when that is more
   // than one thing, the single topic when it is one. It is the answer to the
@@ -386,7 +387,7 @@ function openQuestConversation(
   };
   state.phase = "quest";
   const giver = state.questGivers.find((g) => g.id === giverId);
-  if (giver) giver.faceLeft = state.player.pos.x < giver.pos.x;
+  if (giver) giver.faceLeft = state.players[0].pos.x < giver.pos.x;
 }
 
 /** Turn to the next page of the open conversation; the last page closes it —
@@ -425,7 +426,7 @@ export function conversationPages(
 export function closeQuestDialogue(state: GameState): void {
   if (state.phase !== "quest") return;
   state.questOffer = null;
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
 }
 
 /**
@@ -443,7 +444,7 @@ export function openQuestLog(state: GameState): void {
 /** Close the log and resume (pending level-ups take priority). */
 export function closeQuestLog(state: GameState): void {
   if (state.phase !== "questLog") return;
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
 }
 
 /**
@@ -469,7 +470,7 @@ export function acceptQuest(state: GameState): boolean {
   });
 
   const giver = state.questGivers.find((g) => g.id === offer.giverId);
-  const from = giver?.pos ?? state.player.pos;
+  const from = giver?.pos ?? state.players[0].pos;
   placeQuestItems(state, def);
   for (const objective of def.objectives) {
     if (objective.kind !== "escort") continue;
@@ -521,7 +522,7 @@ export function turnInQuest(state: GameState): QuestPayout | null {
   if (!progress || progress.status !== "complete") return null;
   const def = questDef(offer.questId);
   const giver = state.questGivers.find((g) => g.id === offer.giverId);
-  const at = giver?.pos ?? state.player.pos;
+  const at = giver?.pos ?? state.players[0].pos;
 
   progress.status = "turnedIn";
   clearEscorts(state, def.id);
@@ -757,8 +758,8 @@ function markQuestTargets(state: GameState): void {
       const seen = state.enemies.find(
         (e) =>
           e.defId === objective.enemy &&
-          distance(e.pos, state.player.pos) <= QUESTS.markSightRadius &&
-          lineOfSight(state, state.player.pos, e.pos),
+          distance(e.pos, state.players[0].pos) <= QUESTS.markSightRadius &&
+          lineOfSight(state, state.players[0].pos, e.pos),
       );
       if (seen) addMapMarker(state, "questTarget", seen.pos, objective.enemy);
     }

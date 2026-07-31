@@ -32,17 +32,17 @@ describe("space suit", () => {
     expect(playerSuited(state)).toBe(false);
     expect(playerAppearance(state)).toBe("hero"); // plain clothes
 
-    collectStoryItem(state, "space_suit", { ...state.player.pos });
+    collectStoryItem(state, "space_suit", { ...state.players[0].pos });
     expect(playerSuited(state)).toBe(true);
     expect(playerAppearance(state)).toBe("player"); // the astronaut
   });
 
   it("banks as a story item and plays its lore, never entering the bag", () => {
     const state = spacez();
-    const bagBefore = state.player.inventory.filter(Boolean).length;
-    collectStoryItem(state, "space_suit", { ...state.player.pos });
+    const bagBefore = state.players[0].inventory.filter(Boolean).length;
+    collectStoryItem(state, "space_suit", { ...state.players[0].pos });
     expect(state.storyItems).toContain("space_suit");
-    expect(state.player.inventory.filter(Boolean).length).toBe(bagBefore);
+    expect(state.players[0].inventory.filter(Boolean).length).toBe(bagBefore);
     expect(storyItemDef("space_suit").suitsHero).toBe(true);
     expect(storyItemDef("space_suit").lore.length).toBeGreaterThan(0);
   });

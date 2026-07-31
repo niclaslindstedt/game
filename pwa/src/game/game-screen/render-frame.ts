@@ -180,8 +180,8 @@ export function createRenderFrame(deps: {
       // the body out of frame as the scene zooms, which is the one thing this
       // transform exists to prevent.
       const { x: hx, y: hy } = worldToCanvas(
-        state.player.pos.x,
-        state.player.pos.y,
+        state.players[0].pos.x,
+        state.players[0].pos.y,
         camera,
       );
       ctx.setTransform(zoom, 0, 0, zoom, hx * (1 - zoom), hy * (1 - zoom));
@@ -205,8 +205,8 @@ export function createRenderFrame(deps: {
           // the preview strip shows a greatsword swinging like a greatsword
           // rather than like a gladius with a longer sprite — and a weapon that
           // is never swung juddering rather than sweeping an arc it has not got.
-          twoHanded: heldTwoHanded(state.player.equipment.weapon.defId),
-          motion: heldMotion(state.player.equipment.weapon.defId),
+          twoHanded: heldTwoHanded(state.players[0].equipment.weapon.defId),
+          motion: heldMotion(state.players[0].equipment.weapon.defId),
         }
       : shared.heroAction;
     drawFrame(ctx, state, assets, camera, timeMs, action, shared.heroImpact);
@@ -250,8 +250,8 @@ export function createRenderFrame(deps: {
         ...shared.effects,
         {
           kind: "swing",
-          pos: { x: state.player.pos.x, y: state.player.pos.y },
-          angle: state.player.faceLeft ? Math.PI : 0,
+          pos: { x: state.players[0].pos.x, y: state.players[0].pos.y },
+          angle: state.players[0].faceLeft ? Math.PI : 0,
           radius: debugPose.range ?? 40,
           arc: debugPose.arc,
           untilMs: state.stats.timeMs + (1 - debugPose.t) * MELEE_SWING_MS,
@@ -267,10 +267,10 @@ export function createRenderFrame(deps: {
         ...shared.effects,
         {
           kind: "muzzle",
-          pos: { x: state.player.pos.x, y: state.player.pos.y },
-          angle: state.player.faceLeft ? Math.PI : 0,
+          pos: { x: state.players[0].pos.x, y: state.players[0].pos.y },
+          angle: state.players[0].faceLeft ? Math.PI : 0,
           weaponClass: debugPose.weaponClass,
-          fx: shotStyleFor(state.player.equipment.weapon.uniqueId, wc),
+          fx: shotStyleFor(state.players[0].equipment.weapon.uniqueId, wc),
           untilMs: state.stats.timeMs + (1 - debugPose.t) * MUZZLE_MS,
           durationMs: MUZZLE_MS,
         },
@@ -305,9 +305,13 @@ export function createRenderFrame(deps: {
       const label = bot.lastThought;
       // Drawn after the frame, in screen space: project the hero's place, then
       // clear his head in unprojected px.
-      const at = worldToCanvas(state.player.pos.x, state.player.pos.y, camera);
+      const at = worldToCanvas(
+        state.players[0].pos.x,
+        state.players[0].pos.y,
+        camera,
+      );
       const sx = Math.round(at.x);
-      const sy = Math.round(at.y - PLAYER.radius - state.player.z - 14);
+      const sy = Math.round(at.y - PLAYER.radius - state.players[0].z - 14);
       const tx = sx - Math.round(font.measure(label) / 2);
       font.draw(ctx, label, tx + 1, sy + 1, { color: "#0b0d10" });
       font.draw(ctx, label, tx, sy, { color: "#ffd23f" });
@@ -329,8 +333,8 @@ export function createRenderFrame(deps: {
     // never clobbers it (className/style props here are constants).
     const xpHeatNode = xpHeatRef.current;
     if (xpHeatNode) {
-      const xp = state.player.xp;
-      const toNext = Math.max(1, state.player.xpToNext);
+      const xp = state.players[0].xp;
+      const toNext = Math.max(1, state.players[0].xpToNext);
       // A level-up wraps XP below the baseline — flash the whole new level's
       // fill from empty rather than a stale (old-level) offset.
       const base = xp < shared.xpHeatBaseXp ? 0 : shared.xpHeatBaseXp;
@@ -352,7 +356,7 @@ export function createRenderFrame(deps: {
     const staminaNode = staminaFillRef.current;
     if (staminaNode) {
       const frac = clamp(
-        state.player.stamina / Math.max(1, state.player.maxStamina),
+        state.players[0].stamina / Math.max(1, state.players[0].maxStamina),
         0,
         1,
       );
@@ -418,8 +422,8 @@ export function createRenderFrame(deps: {
       botDpad.style.display = show ? "block" : "none";
       if (show) {
         const n = normalize(
-          input.target.x - state.player.pos.x,
-          input.target.y - state.player.pos.y,
+          input.target.x - state.players[0].pos.x,
+          input.target.y - state.players[0].pos.y,
         );
         const steering = input.steering && n.len > 1e-3;
         // Target unit direction + pace this frame (zero when idle, so the
@@ -476,7 +480,7 @@ export function createRenderFrame(deps: {
     // its own slot, so there's no stacking to reconcile here.
     const dock = powerupDockRef.current;
     if (dock) {
-      for (const ability of state.player.abilities) {
+      for (const ability of state.players[0].abilities) {
         if (ability.slot === undefined) continue;
         let entry = dockSlots.get(ability.slot);
         if (!entry || !entry.slot.isConnected) {

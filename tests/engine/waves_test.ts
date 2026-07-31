@@ -35,12 +35,13 @@ const spawnedSoFar = (state: GameState) =>
  */
 function stepThrough(state: GameState, steps: number): void {
   for (let i = 0; i < steps; i++) {
-    state.player.z = 100;
-    state.player.vz = 0;
-    state.player.weaponCooldownMs = 1_000_000;
+    state.players[0].z = 100;
+    state.players[0].vz = 0;
+    state.players[0].weaponCooldownMs = 1_000_000;
     state.campMs = 0;
     step(state, idle, DT);
-    while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
+    while (state.players[0].pendingStatPoints > 0)
+      allocateStat(state, "stamina");
   }
 }
 
@@ -76,7 +77,7 @@ describe("wave spawner", () => {
     expect(minions.length).toBe(WAVES.maxAlive);
     for (const enemy of state.enemies) {
       if (enemy.id < firstNewId) continue;
-      expect(dist(enemy.pos, state.player.pos)).toBeGreaterThanOrEqual(
+      expect(dist(enemy.pos, state.players[0].pos)).toBeGreaterThanOrEqual(
         ENEMY_AI.minSpawnDistance,
       );
     }
@@ -125,7 +126,7 @@ describe("wave spawner", () => {
 
     // Bank a long walk without simulating it step by step.
     state.moveSpawnCredit = WAVES.moveSpawnEvery * 5;
-    state.player.z = 100; // stay untouchable, as stepThrough does
+    state.players[0].z = 100; // stay untouchable, as stepThrough does
     step(state, idle, DT);
     expect(spawnedSoFar(state)).toBeGreaterThanOrEqual(before + 5);
     expect(state.moveSpawnCredit).toBeLessThan(WAVES.moveSpawnEvery);
@@ -133,7 +134,10 @@ describe("wave spawner", () => {
 
   it("banks walked distance into moveSpawnCredit while steering", () => {
     const state = startGame();
-    const target = { x: state.player.pos.x + 200, y: state.player.pos.y };
+    const target = {
+      x: state.players[0].pos.x + 200,
+      y: state.players[0].pos.y,
+    };
     step(state, { steering: true, target, jump: false }, DT);
     // One step's walk (well under moveSpawnEvery, so nothing is spent yet) —
     // at the pace the hero actually moves at, the world's shipped one.

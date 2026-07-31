@@ -37,7 +37,7 @@ import {
 function placeDying(state: GameState, defId: string) {
   const mob = makeEnemy(
     {
-      pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 80, y: state.players[0].pos.y },
       hp: 1,
       maxHp: 10,
       speed: 0,
@@ -94,7 +94,7 @@ describe("first-kill thoughts", () => {
     equipBlaster(state); // kill at range — no hp traded for the story beat
     // Kills now pay real (level-based) xp; hold the bar open so a story-beat
     // kill doesn't ding the fresh hero and freeze the run in the levelup phase.
-    state.player.xpToNext = Number.MAX_SAFE_INTEGER;
+    state.players[0].xpToNext = Number.MAX_SAFE_INTEGER;
 
     const first = placeDying(state, "optimusk");
     killAndCollect(state, first.id);
@@ -118,7 +118,7 @@ describe("first-kill thoughts", () => {
     // yet. The beat uses a full-view radius so it fires the instant the packed
     // opening ring is on screen, so "beyond" here is well past that.
     const staffer = makeEnemy(
-      { pos: { x: state.player.pos.x + 280, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 280, y: state.players[0].pos.y } },
       "intern",
     );
     state.enemies.push(staffer);
@@ -126,7 +126,7 @@ describe("first-kill thoughts", () => {
     expect(state.dialogue).toBeNull();
 
     // It steps into view — the thought fires on sight, before any blow.
-    staffer.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
+    staffer.pos = { x: state.players[0].pos.x + 60, y: state.players[0].pos.y };
     step(state, idle, DT);
     expect(state.phase).toBe("dialogue");
     expect(state.dialogue?.source).toEqual({
@@ -144,7 +144,7 @@ describe("first-kill thoughts", () => {
     const state = startGame(undefined, "spacez_hq");
     clearStage(state);
     const staffer = makeEnemy(
-      { pos: { x: state.player.pos.x + 60, y: state.player.pos.y } },
+      { pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y } },
       "intern",
     );
     state.enemies.push(staffer);
@@ -166,7 +166,7 @@ describe("first-kill thoughts", () => {
     const spirit = makeEnemy(
       {
         id: 9001,
-        pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
         hp: 1,
         maxHp: 10,
       },
@@ -181,7 +181,7 @@ describe("first-kill thoughts", () => {
     tapThrough(state);
 
     // It drifts onto the blade: the kill beat closes the read.
-    spirit.pos = { ...state.player.pos };
+    spirit.pos = { ...state.players[0].pos };
     killAndCollect(state, spirit.id);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
@@ -196,12 +196,12 @@ describe("first-kill thoughts", () => {
     equipBlaster(state);
     // Kills now pay real (level-based) xp; hold the bar open so a story-beat
     // kill doesn't ding the fresh hero and freeze the run in the levelup phase.
-    state.player.xpToNext = Number.MAX_SAFE_INTEGER;
+    state.players[0].xpToNext = Number.MAX_SAFE_INTEGER;
     // Downed from beyond the sight radius: the gated kill beat holds, unspent.
     const sniped = makeEnemy(
       {
         id: 9001,
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 150, y: state.players[0].pos.y },
         hp: 1,
         maxHp: 10,
       },
@@ -216,7 +216,7 @@ describe("first-kill thoughts", () => {
     const seen = makeEnemy(
       {
         id: 9002,
-        pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
         hp: 1,
         maxHp: 10,
       },
@@ -229,7 +229,7 @@ describe("first-kill thoughts", () => {
       defId: "moon_wisp_sight",
     });
     tapThrough(state);
-    seen.pos = { ...state.player.pos };
+    seen.pos = { ...state.players[0].pos };
     killAndCollect(state, seen.id);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
@@ -243,7 +243,7 @@ describe("first-kill thoughts", () => {
     // Parked beyond the sight radius: no reaction yet.
     const bot = makeEnemy(
       {
-        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+        pos: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
         hp: 1,
         maxHp: 10,
       },
@@ -254,7 +254,7 @@ describe("first-kill thoughts", () => {
     expect(state.dialogue).toBeNull();
 
     // It stomps into view — the beat fires on sight, before any blow.
-    bot.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
+    bot.pos = { x: state.players[0].pos.x + 60, y: state.players[0].pos.y };
     step(state, idle, DT);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
@@ -264,7 +264,7 @@ describe("first-kill thoughts", () => {
 
     // Downing it here plays nothing more: the KILL beat (moon_optimusk)
     // belongs to the moon, where the tin men have no business being.
-    bot.pos = { ...state.player.pos };
+    bot.pos = { ...state.players[0].pos };
     killAndCollect(state, bot.id);
     expect(state.dialogue).toBeNull();
     expect(state.phase).toBe("playing");

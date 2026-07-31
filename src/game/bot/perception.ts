@@ -52,7 +52,7 @@ export function awayFromPack(
   prefer?: Vec2 | null,
   bias = PATH_RETREAT_BIAS,
 ): Vec2 {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   let ax = 0;
   let ay = 0;
   for (const e of near) {
@@ -78,12 +78,12 @@ export function retreatHeading(state: GameState, tune: BotTuning): Vec2 | null {
   const axis = objectiveAxis(state);
   if (axis) {
     // Already at the spawn end — backing further only finds the wall.
-    if (axisProgress(axis, state.player.pos) < 0.12) return null;
+    if (axisProgress(axis, state.players[0].pos) < 0.12) return null;
     return { x: -axis.dir.x, y: -axis.dir.y };
   }
   const n = normalize(
-    state.playerSpawn.x - state.player.pos.x,
-    state.playerSpawn.y - state.player.pos.y,
+    state.playerSpawn.x - state.players[0].pos.x,
+    state.playerSpawn.y - state.players[0].pos.y,
   );
   if (n.len < 80) return null;
   return n;
@@ -132,7 +132,7 @@ const byDistance = (a: ThreatEntry, b: ThreatEntry): number => a.dSq - b.dSq;
 let threatScan: ThreatScan | null = null;
 
 function scanThreats(state: GameState): ThreatScan {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   const scan = threatScan;
   if (
     scan &&
@@ -243,7 +243,9 @@ export function bossPos(state: GameState): Vec2 | undefined {
 export function readyForBoss(state: GameState, tune: BotTuning): boolean {
   const boss = bossOf(state);
   if (!boss) return true;
-  return state.player.level >= Math.max(1, boss.mlvl - tune.bossEngageMargin);
+  return (
+    state.players[0].level >= Math.max(1, boss.mlvl - tune.bossEngageMargin)
+  );
 }
 
 /**
@@ -313,7 +315,7 @@ export function activeSpawnerNear(state: GameState): Vec2 | null {
     // and once it has emitted its queue (→ drained) he moves on, mopping up the
     // chasers as he goes.
     if (spawner.status !== "active" || spawner.queue.length === 0) continue;
-    const d = distance(state.player.pos, spawner.at);
+    const d = distance(state.players[0].pos, spawner.at);
     if (d < bestD) {
       best = spawner.at;
       bestD = d;
@@ -329,7 +331,7 @@ export function activeSpawnerNear(state: GameState): Vec2 | null {
  * only is NOT encircled: he can just back off along the open lane.
  */
 export function isEncircled(state: GameState, packed: Enemy[]): boolean {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   const cx = packed.reduce((s, e) => s + e.pos.x, 0) / packed.length;
   const cy = packed.reduce((s, e) => s + e.pos.y, 0) / packed.length;
   const r = normalize(pos.x - cx, pos.y - cy);
@@ -368,7 +370,7 @@ export function escapeLaneScores(
   near: Enemy[],
   avoidForward: boolean,
 ): number[] {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   const axis = avoidForward ? objectiveAxis(state) : null;
   // Each foe's unit bearing + distance, computed ONCE — the lane loop below
   // re-reads them 16 times, and the old per-lane hypot was the fan's hotspot
@@ -419,7 +421,7 @@ export function escapeLaneScores(
 
 /** The world point down the openest lane of a scored escape fan. */
 export function bestLanePoint(state: GameState, scores: number[]): Vec2 {
-  const pos = state.player.pos;
+  const pos = state.players[0].pos;
   let bestI = 0;
   let bestScore = Infinity;
   for (let i = 0; i < scores.length; i++) {
@@ -455,14 +457,15 @@ export function bestEscapeTarget(
  * a clear line? While there is, standing still is FIGHTING, not being wedged, so
  * the stall detector holds off (a boss/pack brawl never trips the unstuck). */
 export function hasReachableFoe(state: GameState): boolean {
-  const range = weaponRangeFor(state, state.player.equipment.weapon);
+  const range = weaponRangeFor(state, state.players[0].equipment.weapon);
   const rangeSq = range * range;
   const r = PLAYER.radius;
   const scan = scanThreats(state);
   for (let i = 0; i < scan.len; i++) {
     if ((scan.distSq[i] as number) > rangeSq) break; // sorted — rest are farther
     const enemy = scan.sorted[i] as Enemy;
-    if (!blockedByObstacle(state, state.player.pos, enemy.pos, r)) return true;
+    if (!blockedByObstacle(state, state.players[0].pos, enemy.pos, r))
+      return true;
   }
   return false;
 }

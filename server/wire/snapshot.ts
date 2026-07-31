@@ -31,13 +31,26 @@ import {
 } from "./split.ts";
 import type { WireState } from "./delta.ts";
 
-/** Who a snapshot is being cut for. In PR 1 there is one client and it owns
- * the hero; the shape exists now so the private split is real and tested
- * before PR 3 gives it a second player to keep things from. */
+/**
+ * Who a snapshot is being cut for — a SEAT, or none for a spectator.
+ *
+ * The seat is the server's answer to "which hero does this connection steer",
+ * assigned at admission and never taken from anything the client said. It is
+ * what the private tier is measured against: seat 3 sees seat 3's bag and
+ * nobody else's, which is a WITHHOLDING rather than an omission (see the
+ * header), and a spectator sees no bag at all.
+ */
 export type Recipient = {
-  /** True when this client steers the hero the snapshot describes. */
-  ownsPlayer: boolean;
+  /** The seat into `state.players` this client steers, or null to watch. */
+  seat: number | null;
 };
+
+/** A recipient that owns seat 0 — a single-player run, and the shape most of
+ * the suite wants. */
+export const HOST_RECIPIENT: Recipient = { seat: 0 };
+
+/** A recipient that steers nothing. */
+export const SPECTATOR: Recipient = { seat: null };
 
 /**
  * One recipient's view of `state`, as a plain record.
@@ -46,7 +59,12 @@ export type Recipient = {
  * because the differ only reads and the encoder only serializes, and a deep
  * copy of 146 mobs twenty times a second is exactly the cost this design
  * exists to avoid. The two places a copy IS made are the ones where a member
- * is edited: the player and the run's private fields.
+ * is edited: the party and the run's private fields.
+ *
+ * The party is copied SHALLOWLY and per hero — the list is rebuilt, but every
+ * hero the recipient owns is passed through by reference. So the cost of the
+ * withholding is one array and one object per OTHER hero, which is eight small
+ * spreads at the eight-player cap rather than a clone of the run.
  */
 export function captureSnapshot(
   state: Record<string, unknown>,
@@ -57,18 +75,27 @@ export function captureSnapshot(
   for (const field of UNSENT_FIELDS) delete out[field];
   // The accumulated events of every tick since the last publish, in order.
   out.events = events;
-  const player = out.player;
-  if (player && typeof player === "object") {
-    const copy = { ...(player as Record<string, unknown>) };
-    if (!recipient.ownsPlayer) {
-      for (const field of PRIVATE_PLAYER_FIELDS) delete copy[field];
-    }
-    out.player = copy;
+  const party = out.players;
+  if (Array.isArray(party)) {
+    out.players = party.map((hero, seat) =>
+      seat === recipient.seat ? hero : withheld(hero),
+    );
   }
-  if (!recipient.ownsPlayer) {
+  if (recipient.seat === null) {
     for (const field of PRIVATE_RUN_FIELDS) delete out[field];
   }
   return out;
+}
+
+/** One hero as everybody else may see them: their position, their health and
+ * what they are visibly wearing, and nothing that would let a stranger
+ * enumerate — or, past PR 5's trade window, assert anything about — what is in
+ * their pockets. */
+function withheld(hero: unknown): unknown {
+  if (!hero || typeof hero !== "object") return hero;
+  const copy = { ...(hero as Record<string, unknown>) };
+  for (const field of PRIVATE_PLAYER_FIELDS) delete copy[field];
+  return copy;
 }
 
 /**
@@ -103,18 +130,24 @@ export function baselineFor(
  * owns. Removing them is what makes "this client does not have that data" true
  * of the client as well as of the wire.
  *
- * A no-op for the hero's owner, who is entitled to all of it.
+ * The recipient's OWN seat is left whole — they are entitled to all of it — and
+ * so is every field of every other hero the server does send.
  */
 export function stripPrivate(
   state: Record<string, unknown>,
   recipient: Recipient,
 ): void {
-  if (recipient.ownsPlayer) return;
-  const player = state.player;
-  if (player && typeof player === "object") {
-    for (const field of PRIVATE_PLAYER_FIELDS) {
-      delete (player as Record<string, unknown>)[field];
-    }
+  const party = state.players;
+  if (Array.isArray(party)) {
+    party.forEach((hero, seat) => {
+      if (seat === recipient.seat) return;
+      if (!hero || typeof hero !== "object") return;
+      for (const field of PRIVATE_PLAYER_FIELDS) {
+        delete (hero as Record<string, unknown>)[field];
+      }
+    });
   }
-  for (const field of PRIVATE_RUN_FIELDS) delete state[field];
+  if (recipient.seat === null) {
+    for (const field of PRIVATE_RUN_FIELDS) delete state[field];
+  }
 }

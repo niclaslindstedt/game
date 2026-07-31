@@ -50,7 +50,7 @@ export function stepWeapon(
   input: GameInput,
   dtMs: number,
 ): void {
-  const player = state.player;
+  const player = state.players[0];
   // Holstered on levels with a scripted opening strike: the auto-attack sits
   // out entirely until the vanguard's first swing draws the blade (story.ts).
   if (player.disarmed) return;
@@ -270,7 +270,7 @@ function meleeSweep(
   weaponClass: WeaponClass,
   critMult: number,
 ): { eligible: number; executed: number } {
-  const player = state.player;
+  const player = state.players[0];
   const rangeSq = range * range;
   const cosHalf = Math.cos(halfAngle);
   // Gather every foe the cone can reach, then strike only the `maxTargets`

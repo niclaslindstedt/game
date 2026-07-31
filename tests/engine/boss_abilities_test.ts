@@ -164,7 +164,10 @@ function startAt(
 }
 
 function plant(state: GameState, defId: string, dx = 90, dy = 0): Enemy {
-  const pos = { x: state.player.pos.x + dx, y: state.player.pos.y + dy };
+  const pos = {
+    x: state.players[0].pos.x + dx,
+    y: state.players[0].pos.y + dy,
+  };
   const enemy: Enemy = {
     id: state.nextId++,
     defId,
@@ -209,7 +212,7 @@ describe("the three-beat contract", () => {
     // The hero moves off while the eyes are still lighting — far enough to
     // swing the bearing well off true, but not so far the boss loses him and
     // stands down (an unaggroed boss stops running its mechanics entirely).
-    state.player.pos.x += 140;
+    state.players[0].pos.x += 140;
     run(state, idle, steps(LASER.windupMs + 40));
     const beam = boss.mech?.beam;
     expect(beam).toBeDefined();
@@ -300,7 +303,7 @@ describe("laser eyes", () => {
   it("sweeps one way, edge to edge, and burns the hero standing in it", () => {
     const state = startAt();
     const boss = plant(state, "test_burner", 90, 0);
-    const before = state.player.hp;
+    const before = state.players[0].hp;
     run(state, idle, steps(LASER.windupMs + 60));
     const beam = boss.mech?.beam;
     expect(beam).toBeDefined();
@@ -309,7 +312,7 @@ describe("laser eyes", () => {
     const later = beamBearing(boss.mech!.beam!);
     expect(later).toBeGreaterThan(first); // travels one way
     run(state, idle, steps(LASER.sweepMs));
-    expect(state.player.hp).toBeLessThan(before);
+    expect(state.players[0].hp).toBeLessThan(before);
   });
 
   it("leaves the floor burning, and the burn bites, then burns out", () => {
@@ -320,10 +323,10 @@ describe("laser eyes", () => {
     // Standing in it costs hp on the patch's own cadence.
     state.enemies = [];
     const patch = state.scorches[0]!;
-    state.player.pos = { ...patch.pos };
-    state.player.hp = state.player.maxHp;
+    state.players[0].pos = { ...patch.pos };
+    state.players[0].hp = state.players[0].maxHp;
     run(state, idle, steps(LASER.scorchTickMs * 3));
-    expect(state.player.hp).toBeLessThan(state.player.maxHp);
+    expect(state.players[0].hp).toBeLessThan(state.players[0].maxHp);
     // And it is temporary: a boss may carve the floor, never delete it.
     run(state, idle, steps(LASER.scorchMs + 500));
     expect(state.scorches).toHaveLength(0);
@@ -335,7 +338,7 @@ describe("laser eyes", () => {
     // Six patches stacked on the hero — the shape a swept band actually makes.
     for (let i = 0; i < 6; i++) {
       state.scorches.push({
-        pos: { ...state.player.pos },
+        pos: { ...state.players[0].pos },
         radius: 14,
         remainingMs: 4000,
         durationMs: 4000,
@@ -346,7 +349,7 @@ describe("laser eyes", () => {
         seed: i,
       });
     }
-    state.player.hp = state.player.maxHp;
+    state.players[0].hp = state.players[0].maxHp;
     // One cadence's worth of time: one bite, not six.
     const hits = collect(state, 100).filter(
       (e) => e.type === "playerHurt" && e.cause?.startsWith("hazard:scorch"),
@@ -358,7 +361,7 @@ describe("laser eyes", () => {
     const state = startAt();
     state.enemies = [];
     state.scorches.push({
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       radius: 14,
       remainingMs: 4000,
       durationMs: 4000,
@@ -368,10 +371,10 @@ describe("laser eyes", () => {
       defId: "test_burner",
       seed: 1,
     });
-    state.player.z = 40;
-    state.player.hp = state.player.maxHp;
+    state.players[0].z = 40;
+    state.players[0].hp = state.players[0].maxHp;
     run(state, idle, steps(200));
-    expect(state.player.hp).toBe(state.player.maxHp);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
   });
 });
 
@@ -511,8 +514,8 @@ describe("coin cannon", () => {
     // centre and unwrapped — a fan aimed along -X straddles the ±pi seam, so
     // raw sorted angles would report a 5.8 radian "spread" that is really 1.05.
     const centre = Math.atan2(
-      state.player.pos.y - boss.pos.y,
-      state.player.pos.x - boss.pos.x,
+      state.players[0].pos.y - boss.pos.y,
+      state.players[0].pos.x - boss.pos.x,
     );
     const offsets = coins
       .map((c) => {
@@ -534,7 +537,7 @@ describe("coin cannon", () => {
     // a normal known by inspection, which is exactly what a ricochet needs.
     const coin = state.projectiles;
     coin.length = 0;
-    state.player.pos = { x: 60, y: 60 };
+    state.players[0].pos = { x: 60, y: 60 };
     coin.push({
       id: state.nextId++,
       pos: { x: 6, y: 60 },
@@ -573,12 +576,12 @@ describe("pump and dump", () => {
     expect(state.baits.length).toBeGreaterThan(0);
     // Still arming — the walk-away window, and the whole reason it is fair.
     expect(state.baits.every((b) => b.armMs > 0)).toBe(true);
-    const hp = state.player.hp;
-    state.player.pos = {
-      ...(state.baits[0] as { pos: GameState["player"]["pos"] }).pos,
+    const hp = state.players[0].hp;
+    state.players[0].pos = {
+      ...(state.baits[0] as { pos: GameState["players"][0]["pos"] }).pos,
     };
     run(state, idle, steps(120));
-    expect(state.player.hp).toBe(hp);
+    expect(state.players[0].hp).toBe(hp);
   });
 
   it("goes off once armed and the hero walks into it", () => {
@@ -586,7 +589,7 @@ describe("pump and dump", () => {
     state.enemies = [];
     state.baits.push({
       id: 1,
-      pos: { ...state.player.pos },
+      pos: { ...state.players[0].pos },
       armMs: 0,
       remainingMs: 5000,
       durationMs: 5000,
@@ -598,7 +601,7 @@ describe("pump and dump", () => {
     });
     const seen = collect(state, 100);
     expect(seen.some((e) => e.type === "baitDetonated")).toBe(true);
-    expect(state.player.hp).toBeLessThan(state.player.maxHp);
+    expect(state.players[0].hp).toBeLessThan(state.players[0].maxHp);
     expect(state.baits).toHaveLength(0);
   });
 
@@ -607,7 +610,7 @@ describe("pump and dump", () => {
     state.enemies = [];
     state.baits.push({
       id: 1,
-      pos: { x: state.player.pos.x + 400, y: state.player.pos.y },
+      pos: { x: state.players[0].pos.x + 400, y: state.players[0].pos.y },
       armMs: 0,
       remainingMs: 900,
       durationMs: 900,
@@ -619,7 +622,7 @@ describe("pump and dump", () => {
     });
     run(state, idle, steps(1200));
     expect(state.baits).toHaveLength(0);
-    expect(state.player.hp).toBe(state.player.maxHp);
+    expect(state.players[0].hp).toBe(state.players[0].maxHp);
   });
 });
 
@@ -632,8 +635,8 @@ describe("orbital delivery", () => {
     expect(pods).toHaveLength(STRIKE.count);
     // Bracketing, not chasing — every mark is off the hero's own spot.
     for (const pod of pods) {
-      const dx = pod.target.x - state.player.pos.x;
-      const dy = pod.target.y - state.player.pos.y;
+      const dx = pod.target.x - state.players[0].pos.x;
+      const dy = pod.target.y - state.players[0].pos.y;
       expect(Math.hypot(dx, dy)).toBeGreaterThan(20);
     }
   });
@@ -644,8 +647,11 @@ describe("orbital delivery", () => {
     const before = state.enemies.length;
     state.asteroids.push({
       id: state.nextId++,
-      target: { x: state.player.pos.x + 200, y: state.player.pos.y },
-      entry: { x: state.player.pos.x + 300, y: state.player.pos.y - 200 },
+      target: { x: state.players[0].pos.x + 200, y: state.players[0].pos.y },
+      entry: {
+        x: state.players[0].pos.x + 300,
+        y: state.players[0].pos.y - 200,
+      },
       fallMs: 200,
       ageMs: 0,
       blastRadius: 55,
@@ -791,8 +797,8 @@ describe("lockdown", () => {
     // And it is a ring around the HERO, at the authored radius.
     for (const s of shutters) {
       const d = Math.hypot(
-        s.pos.x - state.player.pos.x,
-        s.pos.y - state.player.pos.y,
+        s.pos.x - state.players[0].pos.x,
+        s.pos.y - state.players[0].pos.y,
       );
       expect(Math.abs(d - LOCKDOWN.radius)).toBeLessThan(2);
     }

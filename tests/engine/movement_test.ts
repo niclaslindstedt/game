@@ -14,15 +14,15 @@ import { clearStage, DT, startGame } from "./helpers.ts";
 function stepDistance(throttle: number | undefined): number {
   const state = startGame();
   clearStage(state);
-  const startX = state.player.pos.x;
+  const startX = state.players[0].pos.x;
   const input: GameInput = {
     steering: true,
-    target: { x: startX + 1000, y: state.player.pos.y },
+    target: { x: startX + 1000, y: state.players[0].pos.y },
     jump: false,
     throttle,
   };
   step(state, input, DT);
-  return state.player.pos.x - startX;
+  return state.players[0].pos.x - startX;
 }
 
 describe("walk throttle", () => {

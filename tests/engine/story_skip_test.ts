@@ -20,7 +20,7 @@ describe("skipStoryOpening", () => {
     expect(state.cutscene).toBeNull();
     // No opening strike on this level, so the hero was armed to begin with and
     // stays that way.
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
   });
 
   it("skips a plain intro monologue straight into play", () => {
@@ -37,7 +37,7 @@ describe("skipStoryOpening", () => {
     // Calling it again changes nothing.
     skipStoryOpening(state);
     expect(state.phase).toBe("playing");
-    expect(state.player.disarmed).toBe(false);
+    expect(state.players[0].disarmed).toBe(false);
   });
 });
 

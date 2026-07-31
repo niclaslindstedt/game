@@ -60,10 +60,12 @@ export function createTickReactions(deps: {
     // so only real hits buzz; the magnitude is the true hp delta so a
     // shield-softened blow reads lighter than the damage the engine rolled.
     if (
-      state.player.maxHp > 0 &&
+      state.players[0].maxHp > 0 &&
       state.events.some((e) => e.type === "playerHurt")
     ) {
-      playDamageHaptic((hpBeforeStep - state.player.hp) / state.player.maxHp);
+      playDamageHaptic(
+        (hpBeforeStep - state.players[0].hp) / state.players[0].maxHp,
+      );
     }
     // Feel the field FX too: a nuke HAMMERS the motor (once, even if it clears
     // a crowd), and a lightning strike flicks it — paired with the camera kick

@@ -8,7 +8,7 @@ import type { GameState } from "./types/index.ts";
 
 /** Advance the talent timers one tick (see module note). */
 export function stepTimers(state: GameState, dtMs: number): void {
-  const player = state.player;
+  const player = state.players[0];
 
   // FROST NOVA's internal cooldown (magic-tree talent) ebbs each tick so the
   // next blow the hero takes can freeze the swarm again.

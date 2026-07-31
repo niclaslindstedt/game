@@ -33,7 +33,12 @@ function weapon(id: number, defId: string): Equipment {
 /** Drop `upgrade` on top of the player so the next step collects it. */
 function dropOnPlayer(state: ReturnType<typeof startGame>, up: Equipment) {
   state.items = [
-    { id: 1, kind: "equipment", pos: { ...state.player.pos }, equipment: up },
+    {
+      id: 1,
+      kind: "equipment",
+      pos: { ...state.players[0].pos },
+      equipment: up,
+    },
   ];
 }
 
@@ -48,22 +53,22 @@ describe("auto-equip-on-pickup setting", () => {
   it("wears a picked-up upgrade on the spot when on", () => {
     const state = startGame();
     clearStage(state);
-    state.player.equipment.weapon = weapon(50, "crude_sword"); // dmg 20
+    state.players[0].equipment.weapon = weapon(50, "crude_sword"); // dmg 20
     const upgrade = weapon(60, "test_hammer"); // dmg 34 → out-scores
     dropOnPlayer(state, upgrade);
 
     setAutoEquipEnabled(true);
     step(state, idle, DT);
 
-    expect(state.player.equipment.weapon.id).toBe(60);
+    expect(state.players[0].equipment.weapon.id).toBe(60);
     // The displaced sword banks; nothing is destroyed.
-    expect(state.player.inventory.some((i) => i?.id === 50)).toBe(true);
+    expect(state.players[0].inventory.some((i) => i?.id === 50)).toBe(true);
   });
 
   it("banks the same upgrade to the bag when off", () => {
     const state = startGame();
     clearStage(state);
-    state.player.equipment.weapon = weapon(50, "crude_sword");
+    state.players[0].equipment.weapon = weapon(50, "crude_sword");
     const upgrade = weapon(60, "test_hammer");
     dropOnPlayer(state, upgrade);
 
@@ -71,22 +76,22 @@ describe("auto-equip-on-pickup setting", () => {
     step(state, idle, DT);
 
     // Weapon untouched; the find sits in the bag for a manual equip.
-    expect(state.player.equipment.weapon.id).toBe(50);
-    expect(state.player.inventory.some((i) => i?.id === 60)).toBe(true);
+    expect(state.players[0].equipment.weapon.id).toBe(50);
+    expect(state.players[0].inventory.some((i) => i?.id === 60)).toBe(true);
     // The ground is clear — it was collected, just not worn.
     expect(state.items).toHaveLength(0);
   });
 
   it("leaves the ranking predicate and the manual sweep unaffected when off", () => {
     const state = startGame();
-    state.player.equipment.weapon = weapon(50, "crude_sword");
+    state.players[0].equipment.weapon = weapon(50, "crude_sword");
     const upgrade = weapon(60, "test_hammer");
     // The find still RANKS as better — the setting gates only the pickup path.
     setAutoEquipEnabled(false);
     expect(isBetterEquipment(state, upgrade)).toBe(true);
     // And the manual AUTO-EQUIP button still wears it from the bag.
-    state.player.inventory[0] = upgrade;
+    state.players[0].inventory[0] = upgrade;
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.weapon.id).toBe(60);
+    expect(state.players[0].equipment.weapon.id).toBe(60);
   });
 });

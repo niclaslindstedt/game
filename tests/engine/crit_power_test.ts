@@ -18,7 +18,7 @@ import { equipBlaster, makeEnemy, startGame } from "./helpers.ts";
 describe("crit power", () => {
   it("reports the roll's position in the variance band", () => {
     const state = equipBlaster(startGame());
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     const avg = weaponDamageFor(state, weapon);
     const v = WEAPON.damageVariance; // the fixture blaster takes the default
     for (let i = 0; i < 500; i++) {
@@ -33,7 +33,7 @@ describe("crit power", () => {
 
   it("spans the full [0, 1] band over many rolls", () => {
     const state = equipBlaster(startGame());
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     let lo = 1;
     let hi = 0;
     for (let i = 0; i < 2000; i++) {
@@ -47,7 +47,7 @@ describe("crit power", () => {
 
   it("never advances the loot stream", () => {
     const state = equipBlaster(startGame());
-    const weapon = state.player.equipment.weapon;
+    const weapon = state.players[0].equipment.weapon;
     const before = rngState(state.rng);
     for (let i = 0; i < 100; i++) rollWeaponHit(state, weapon);
     expect(rngState(state.rng)).toBe(before);

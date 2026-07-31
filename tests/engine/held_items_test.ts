@@ -12,7 +12,7 @@ import { clearStage, DT, idle, run, startGame } from "./helpers.ts";
 const useItem: GameInput = { ...idle, useItem: true };
 
 function abilityAt(state: GameState, id: number, defId: string): Item {
-  return { id, kind: "ability", pos: { ...state.player.pos }, defId };
+  return { id, kind: "ability", pos: { ...state.players[0].pos }, defId };
 }
 
 describe("held ability items", () => {
@@ -28,7 +28,7 @@ describe("held ability items", () => {
     step(state, idle, DT);
 
     expect(HELD_ITEMS.cap).toBe(3);
-    expect(state.player.heldAbilities).toEqual([
+    expect(state.players[0].heldAbilities).toEqual([
       "test_orbit",
       "test_storm",
       "test_stasis",
@@ -50,9 +50,14 @@ describe("held ability items", () => {
     step(state, useItem, DT);
     // The oldest still-banked slot fires and keeps its place (slot 0); the dock
     // does not shift — both slots stay full, one running, one banked.
-    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_storm"]);
-    expect(state.player.abilities[0]!.slot).toBe(0);
-    expect(state.player.heldAbilities).toEqual(["test_storm", "test_stasis"]);
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
+      "test_storm",
+    ]);
+    expect(state.players[0].abilities[0]!.slot).toBe(0);
+    expect(state.players[0].heldAbilities).toEqual([
+      "test_storm",
+      "test_stasis",
+    ]);
     expect(state.events).toContainEqual({
       type: "abilityStarted",
       defId: "test_storm",
@@ -60,12 +65,15 @@ describe("held ability items", () => {
 
     // A second edge skips the running slot 0 and fires the next banked one.
     step(state, useItem, DT);
-    expect(state.player.heldAbilities).toEqual(["test_storm", "test_stasis"]);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual([
+    expect(state.players[0].heldAbilities).toEqual([
       "test_storm",
       "test_stasis",
     ]);
-    expect(state.player.abilities.map((a) => a.slot)).toEqual([0, 1]);
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
+      "test_storm",
+      "test_stasis",
+    ]);
+    expect(state.players[0].abilities.map((a) => a.slot)).toEqual([0, 1]);
   });
 
   it("spends the exact slot named by useItemIndex, in place", () => {
@@ -81,9 +89,11 @@ describe("held ability items", () => {
     // Tap the middle slot (index 1): the storm fires but stays in slot 1 —
     // orbit and stasis keep their places, nothing shifts.
     step(state, { ...idle, useItem: true, useItemIndex: 1 }, DT);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_storm"]);
-    expect(state.player.abilities[0]!.slot).toBe(1);
-    expect(state.player.heldAbilities).toEqual([
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
+      "test_storm",
+    ]);
+    expect(state.players[0].abilities[0]!.slot).toBe(1);
+    expect(state.players[0].heldAbilities).toEqual([
       "test_orbit",
       "test_storm",
       "test_stasis",
@@ -100,9 +110,14 @@ describe("held ability items", () => {
     step(state, idle, DT);
 
     step(state, { ...idle, useItem: true, useItemIndex: 9 }, DT);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_storm"]);
-    expect(state.player.abilities[0]!.slot).toBe(0);
-    expect(state.player.heldAbilities).toEqual(["test_storm", "test_stasis"]);
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
+      "test_storm",
+    ]);
+    expect(state.players[0].abilities[0]!.slot).toBe(0);
+    expect(state.players[0].heldAbilities).toEqual([
+      "test_storm",
+      "test_stasis",
+    ]);
   });
 
   it("skips a running slot, falling back to the oldest still-banked one", () => {
@@ -119,18 +134,18 @@ describe("held ability items", () => {
     // …then aim at slot 0 again: it's running, so the edge falls through to the
     // oldest banked slot (1) instead of no-oping on the busy slot.
     step(state, { ...idle, useItem: true, useItemIndex: 0 }, DT);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual([
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
       "test_storm",
       "test_stasis",
     ]);
-    expect(state.player.abilities.map((a) => a.slot)).toEqual([0, 1]);
+    expect(state.players[0].abilities.map((a) => a.slot)).toEqual([0, 1]);
   });
 
   it("ignores useItem with empty hands", () => {
     const state = startGame();
     clearStage(state);
     step(state, useItem, DT);
-    expect(state.player.abilities).toHaveLength(0);
+    expect(state.players[0].abilities).toHaveLength(0);
     expect(state.events.some((e) => e.type === "abilityStarted")).toBe(false);
   });
 
@@ -148,8 +163,10 @@ describe("held ability items", () => {
     // Spend the oldest: it keeps its slot and runs, so the dock stays full —
     // the grounded overflow can't bank while the power is going.
     step(state, useItem, DT);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_stasis"]);
-    expect(state.player.heldAbilities).toEqual([
+    expect(state.players[0].abilities.map((a) => a.defId)).toEqual([
+      "test_stasis",
+    ]);
+    expect(state.players[0].heldAbilities).toEqual([
       "test_stasis",
       "test_storm",
       "test_orbit",
@@ -161,12 +178,12 @@ describe("held ability items", () => {
     const steps = Math.ceil(abilityDef("test_stasis").durationMs / DT) + 2;
     run(state, idle, steps);
     expect(state.items).toHaveLength(0);
-    expect(state.player.heldAbilities).toEqual([
+    expect(state.players[0].heldAbilities).toEqual([
       "test_storm",
       "test_orbit",
       "test_orbit",
     ]);
-    expect(state.player.abilities).toHaveLength(0);
+    expect(state.players[0].abilities).toHaveLength(0);
   });
 });
 
@@ -183,7 +200,7 @@ describe("uniqueHeld powers (one bomb in the dock at a time)", () => {
 
     // The first nuke banks; the double stays grounded (like an over-cap
     // pickup) while the orbit behind it banks past it into the open slot.
-    expect(state.player.heldAbilities).toEqual(["test_nuke", "test_orbit"]);
+    expect(state.players[0].heldAbilities).toEqual(["test_nuke", "test_orbit"]);
     expect(state.items.map((i) => i.id)).toEqual([501]);
     expect(state.stats.itemsCollected).toBe(2);
   });
@@ -202,7 +219,7 @@ describe("uniqueHeld powers (one bomb in the dock at a time)", () => {
     // per run.
     step(state, useItem, DT);
     step(state, idle, DT);
-    expect(state.player.heldAbilities).toEqual(["test_nuke"]);
+    expect(state.players[0].heldAbilities).toEqual(["test_nuke"]);
     expect(state.items).toHaveLength(0);
   });
 });
@@ -221,8 +238,11 @@ describe("discarding banked abilities", () => {
     // Drag the middle slot out to the ground: it is gone (never activated) and
     // the row closes up oldest-first.
     expect(discardHeldAbility(state, 1)).toBe("test_storm");
-    expect(state.player.heldAbilities).toEqual(["test_orbit", "test_stasis"]);
-    expect(state.player.abilities).toHaveLength(0);
+    expect(state.players[0].heldAbilities).toEqual([
+      "test_orbit",
+      "test_stasis",
+    ]);
+    expect(state.players[0].abilities).toHaveLength(0);
   });
 
   it("frees room so a grounded overflow pickup can bank", () => {
@@ -239,7 +259,7 @@ describe("discarding banked abilities", () => {
     discardHeldAbility(state, 0); // trash the oldest → a slot opens
     step(state, idle, DT); // overflow pickup now banks
     expect(state.items).toHaveLength(0);
-    expect(state.player.heldAbilities).toEqual([
+    expect(state.players[0].heldAbilities).toEqual([
       "test_storm",
       "test_stasis",
       "test_orbit",
@@ -254,7 +274,7 @@ describe("discarding banked abilities", () => {
 
     expect(discardHeldAbility(state, 5)).toBeNull();
     expect(discardHeldAbility(state, -1)).toBeNull();
-    expect(state.player.heldAbilities).toEqual(["test_storm"]);
+    expect(state.players[0].heldAbilities).toEqual(["test_storm"]);
   });
 
   it("discards a running slot too — the copy runs on, the slot frees", () => {
@@ -268,9 +288,9 @@ describe("discarding banked abilities", () => {
     // running copy merely unlinks (it counts its duration out like a scripted
     // grant) and the dock slot frees for new loot at once.
     expect(discardHeldAbility(state, 0)).toBe("test_storm");
-    expect(state.player.heldAbilities).toEqual([]);
-    expect(state.player.abilities).toHaveLength(1);
-    expect(state.player.abilities[0]!.slot).toBeUndefined();
+    expect(state.players[0].heldAbilities).toEqual([]);
+    expect(state.players[0].abilities).toHaveLength(1);
+    expect(state.players[0].abilities[0]!.slot).toBeUndefined();
   });
 
   it("reorders the dock via the moveItem input, links following", () => {
@@ -287,12 +307,12 @@ describe("discarding banked abilities", () => {
     // Pull the tail slot to the front: the row shifts, and the running orbit's
     // link follows its powerup from slot 0 to slot 1.
     step(state, { ...idle, moveItem: { from: 2, to: 0 } }, DT);
-    expect(state.player.heldAbilities).toEqual([
+    expect(state.players[0].heldAbilities).toEqual([
       "test_stasis",
       "test_orbit",
       "test_storm",
     ]);
-    const running = state.player.abilities.find(
+    const running = state.players[0].abilities.find(
       (a) => a.defId === "test_orbit",
     )!;
     expect(running.slot).toBe(1);
@@ -300,7 +320,7 @@ describe("discarding banked abilities", () => {
     // Out-of-range and same-slot moves are quiet no-ops.
     step(state, { ...idle, moveItem: { from: 9, to: 0 } }, DT);
     step(state, { ...idle, moveItem: { from: 1, to: 1 } }, DT);
-    expect(state.player.heldAbilities).toEqual([
+    expect(state.players[0].heldAbilities).toEqual([
       "test_stasis",
       "test_orbit",
       "test_storm",
@@ -317,7 +337,7 @@ describe("discarding banked abilities", () => {
     step(state, idle, DT);
 
     step(state, { ...idle, dropItemIndex: 0 }, DT);
-    expect(state.player.heldAbilities).toEqual(["test_storm"]);
-    expect(state.player.abilities).toHaveLength(0); // destroyed, never granted
+    expect(state.players[0].heldAbilities).toEqual(["test_storm"]);
+    expect(state.players[0].abilities).toHaveLength(0); // destroyed, never granted
   });
 });
