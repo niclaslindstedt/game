@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: snare_field
+      bark:
+        - I HAVE A FILE ON
+        - YOU. YOU'LL BE
+        - HERE SOME TIME.
       windupMs: 600
       cooldownMs: 8500
       range: 200

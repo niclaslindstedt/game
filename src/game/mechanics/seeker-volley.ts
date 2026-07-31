@@ -21,8 +21,9 @@ import { createProjectile } from "../projectile.ts";
 import { registerAbility, type AbilityCtx } from "./catalog.ts";
 import { mobBlowDamage, pushEliteCast } from "./shared.ts";
 
-/** Bolt size (world px) — read as a thrown orb rather than as a bullet. */
-const BOLT_RADIUS = 4;
+/** What a def that says nothing gets — `boltRadius` is authored per mob. Read
+ * as a thrown orb rather than as a bullet. */
+const DEFAULT_BOLT_RADIUS = 4;
 
 function ready(ability: SeekerVolleyAbility, ctx: AbilityCtx): boolean {
   if (ctx.distance > ability.range) return false;
@@ -45,7 +46,7 @@ function cast(ability: SeekerVolleyAbility, ctx: AbilityCtx): void {
         pos: { ...enemy.pos },
         dir: { x: Math.cos(angle), y: Math.sin(angle) },
         speed: ability.speed,
-        radius: BOLT_RADIUS,
+        radius: ability.boltRadius ?? DEFAULT_BOLT_RADIUS,
         damage,
         lifetimeMs: ability.lifetimeMs,
         // Not a weapon class — it only picks the app's fallback shot family.

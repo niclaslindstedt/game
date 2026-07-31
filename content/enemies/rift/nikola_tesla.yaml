@@ -30,6 +30,10 @@ spareable:
 mechanics:
   abilities:
     - id: shock_pulse
+      bark:
+        - I HAVE BEEN IN
+        - THE CURRENT SINCE
+        - "'43. STAND BACK."
       windupMs: 520
       cooldownMs: 7000
       radius: 66

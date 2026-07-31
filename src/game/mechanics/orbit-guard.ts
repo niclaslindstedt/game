@@ -55,7 +55,10 @@ export function orbitMotePositions(
 /** Worth raising when the hero is anywhere near enough to walk into it. Far
  * enough out and the ring would simply burn its duration on empty floor. */
 function ready(ability: OrbitGuardAbility, ctx: AbilityCtx): boolean {
-  return ctx.distance <= ability.radius * 4;
+  // Authored per mob; absent, four ring-radii off its own `radius` — so a
+  // caster that never says anything still scales its own gate with its own
+  // ring rather than with a number typed in here.
+  return ctx.distance <= (ability.range ?? ability.radius * 4);
 }
 
 function cast(ability: OrbitGuardAbility, ctx: AbilityCtx): void {

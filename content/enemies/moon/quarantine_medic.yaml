@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: ember_trail
+      bark:
+        - YOU'VE BEEN
+        - EXPOSED. SO HAS
+        - EVERYTHING I TOUCH.
       windupMs: 580
       cooldownMs: 12000
       radius: 24

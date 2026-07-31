@@ -28,6 +28,10 @@ lastWords:
 mechanics:
   abilities:
     - id: seeker_volley
+      bark:
+        - I BUILT THESE TO
+        - FIND THINGS. THEY
+        - ALWAYS FIND THINGS.
       windupMs: 680
       cooldownMs: 8000
       count: 3

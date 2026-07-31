@@ -28,6 +28,10 @@ lastWords:
 mechanics:
   abilities:
     - id: quake_line
+      bark:
+        - TWO HUNDRED FILMS!
+        - THE GROUND HAS
+        - NEVER MISSED A CUE!
       windupMs: 740
       cooldownMs: 9500
       count: 6

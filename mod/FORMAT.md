@@ -241,6 +241,29 @@ looked like.
 move scales with whatever you tuned the monster to — you never restate a
 damage figure.
 
+#### Every number is YOURS
+
+There is no shared tuning file for these. **Everything an ability does is
+authored on the mob that casts it**, in this file — the damage, the reaches, the
+durations, the cooldown, the windup, the colours. Two mobs naming the same
+primitive share the CODE and nothing else.
+
+That extends to the knobs that decide when a move is worth casting at all, which
+are optional and fall back to something derived from your own numbers rather than
+to a constant:
+
+| ability         | optional           | default                                             |
+| --------------- | ------------------ | --------------------------------------------------- |
+| `orbit_guard`   | `range`            | four ring-radii off your own `radius`               |
+| `ember_trail`   | `range`            | twelve patch-widths off your own `radius`           |
+| `seeker_volley` | `boltRadius`       | 4 — the bolt's hitbox as well as its picture        |
+| `shock_pulse`   | `pushCoastMs`      | 260 — with `push`, this is how FAR the hero ends up |
+| `ward_shield`   | `raiseBelowHpFrac` | 0.9 — how hurt it must be before it turtles         |
+| `ward_shield`   | `range`            | 420 — how near you must be for it to bother         |
+
+A typo in one of these is an error rather than a silent no-op: an unread key
+would leave your mob quietly using the default you were trying to override.
+
 ## `companions.yaml` — who a spared elite joins you as
 
 One file at your mod's root, a `companions:` mapping of id → companion. The KEY

@@ -115,6 +115,21 @@ const ABILITY_FIELDS = {
 };
 
 /**
+ * The OPTIONAL numbers an ability may carry beyond its required set — every one
+ * of them a knob the shipping code would otherwise have had to pick for every
+ * mob at once. They are checked here so a typo is caught rather than silently
+ * ignored (an unknown key would simply never be read, and the mob would keep
+ * quietly using the default the author was trying to override).
+ */
+const OPTIONAL_ABILITY_FIELDS = {
+  orbit_guard: ["range"],
+  seeker_volley: ["boltRadius"],
+  ember_trail: ["range"],
+  shock_pulse: ["pushCoastMs"],
+  ward_shield: ["raiseBelowHpFrac", "range"],
+};
+
+/**
  * The four colours every `look` kit owes (`AbilityLook`, mirrored from
  * src/game/defs/abilities.ts). An ability's kit is what makes two mobs casting
  * the SAME primitive read as nothing alike, so a half-written one is a
@@ -387,6 +402,28 @@ export function validateEnemy(def, refs) {
         ) {
           err(`${where} "blink_strike": arriveDistance must be above 0`);
         }
+      }
+      // The optional per-mob knobs: a number if present at all.
+      for (const field of OPTIONAL_ABILITY_FIELDS[id] ?? []) {
+        if (ability[field] === undefined) continue;
+        if (
+          typeof ability[field] !== "number" ||
+          !Number.isFinite(ability[field])
+        ) {
+          err(`${where} "${id}": ${field} must be a finite number`);
+        }
+      }
+      // A shell raised at FULL health is a mob with more health rather than a
+      // move — the player has to see it go up in answer to something they did.
+      if (
+        id === "ward_shield" &&
+        typeof ability.raiseBelowHpFrac === "number" &&
+        (ability.raiseBelowHpFrac <= 0 || ability.raiseBelowHpFrac > 1)
+      ) {
+        err(
+          `${where} "ward_shield": raiseBelowHpFrac (${ability.raiseBelowHpFrac}) ` +
+            `must be within (0, 1] — above 1 raises the shell before it is hurt`,
+        );
       }
       if (id === "flag_plant") ref(refs.enemies, ability.defId, "planted body");
       if (id === "recompile") ref(refs.enemies, ability.defId, "repair node");

@@ -29,6 +29,10 @@ spareable:
 mechanics:
   abilities:
     - id: blink_strike
+      bark:
+        - I FLEW INTO A
+        - CLOUD WITH NO
+        - OTHER SIDE. WATCH.
       windupMs: 760
       cooldownMs: 9000
       range: 280

@@ -24,18 +24,25 @@ import type { WardShieldAbility } from "../defs/enemies/abilities.ts";
 import { registerAbility, type AbilityCtx } from "./catalog.ts";
 import { pushEliteCast } from "./shared.ts";
 
-/** How far into the mob's health the fight must be before it will bother.
- * Deliberately generous — the shell should arrive early enough to be met
- * several times in one fight, so it is learned rather than merely suffered. */
-const HURT_BELOW = 0.9;
+/** What a def that says nothing gets. Both are AUTHORED per mob
+ * (`raiseBelowHpFrac`, `range`) — these are only the fallbacks, so a caster
+ * that has no opinion still behaves, and one that does is never overruled by a
+ * constant in here. Deliberately generous: the shell should arrive early enough
+ * to be met several times in one fight, so it is learned rather than suffered. */
+const DEFAULT_RAISE_BELOW = 0.9;
+const DEFAULT_RANGE = 420;
 
 function ready(ability: WardShieldAbility, ctx: AbilityCtx): boolean {
   const { enemy } = ctx;
   if (enemy.mech?.wardHp) return false; // one shell at a time
   if (enemy.maxHp <= 0) return false;
-  if (enemy.hp > enemy.maxHp * HURT_BELOW) return false;
+  if (
+    enemy.hp >
+    enemy.maxHp * (ability.raiseBelowHpFrac ?? DEFAULT_RAISE_BELOW)
+  )
+    return false;
   // Raised in answer to somebody, not to an empty room.
-  return ctx.distance <= 420;
+  return ctx.distance <= (ability.range ?? DEFAULT_RANGE);
 }
 
 function cast(ability: WardShieldAbility, ctx: AbilityCtx): void {

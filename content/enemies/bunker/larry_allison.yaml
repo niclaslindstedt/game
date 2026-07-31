@@ -28,6 +28,10 @@ lastWords:
 mechanics:
   abilities:
     - id: snare_field
+      bark:
+        - EVERY AGENCY SITS
+        - IN MY TABLES.
+        - NOW SO DO YOU.
       windupMs: 620
       cooldownMs: 8000
       range: 210

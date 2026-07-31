@@ -26,6 +26,10 @@ lastWords:
 mechanics:
   abilities:
     - id: seeker_volley
+      bark:
+        - INDEXED. CRAWLED.
+        - THEY KNOW EXACTLY
+        - WHERE YOU STAND.
       windupMs: 640
       cooldownMs: 7500
       count: 4

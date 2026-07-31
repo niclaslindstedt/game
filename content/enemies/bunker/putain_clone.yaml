@@ -28,6 +28,10 @@ lastWords:
 mechanics:
   abilities:
     - id: rally_cry
+      bark:
+        - THE ORIGINAL IS
+        - GONE. THE ORDERS
+        - STILL CARRY.
       windupMs: 700
       cooldownMs: 12000
       radius: 230

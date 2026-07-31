@@ -28,6 +28,10 @@ spareable:
 mechanics:
   abilities:
     - id: orbit_guard
+      bark:
+        - ME GOLD STAYS
+        - CLOSE, BOYO.
+        - AND IT BITES.
       windupMs: 580
       cooldownMs: 10500
       count: 5

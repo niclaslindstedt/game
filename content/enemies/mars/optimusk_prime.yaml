@@ -27,6 +27,10 @@ lastWords:
 mechanics:
   abilities:
     - id: rally_cry
+      bark:
+        - EVERY UNIT ON THE
+        - PAYROLL. FORM UP.
+        - DOUBLE SHIFT.
       windupMs: 680
       cooldownMs: 12000
       radius: 220

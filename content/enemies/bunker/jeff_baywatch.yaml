@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: seeker_volley
+      bark:
+        - SAME-DAY
+        - DELIVERY. NOBODY
+        - MISSES A DROP.
       windupMs: 640
       cooldownMs: 7500
       count: 5

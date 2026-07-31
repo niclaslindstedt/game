@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: orbit_guard
+      bark:
+        - FIFTY YEARS OF
+        - SUIT LIGHTS, AND
+        - THEY STILL CIRCLE.
       windupMs: 600
       cooldownMs: 11000
       count: 4

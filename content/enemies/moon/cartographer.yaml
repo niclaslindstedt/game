@@ -30,6 +30,10 @@ lastWords:
 mechanics:
   abilities:
     - id: blink_strike
+      bark:
+        - THE MAP MOVED.
+        - SO DID I.
+        - DO KEEP UP.
       windupMs: 780
       cooldownMs: 9500
       range: 260

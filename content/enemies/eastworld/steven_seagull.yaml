@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: shock_pulse
+      bark:
+        - AIKIDO. I DON'T
+        - PUSH YOU. I JUST
+        - LET GO OF YOU.
       windupMs: 500
       cooldownMs: 7500
       radius: 62

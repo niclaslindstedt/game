@@ -28,6 +28,10 @@ lastWords:
 mechanics:
   abilities:
     - id: rally_cry
+      bark:
+        - THIS PARK IS MINE.
+        - EVERY HOST IN IT
+        - ANSWERS TO ME.
       windupMs: 700
       cooldownMs: 12500
       radius: 230

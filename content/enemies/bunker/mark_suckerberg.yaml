@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: ward_shield
+      bark:
+        - MY SECURITY DETAIL
+        - IS A FIELD NOW.
+        - EXTREMELY NORMAL.
       windupMs: 680
       cooldownMs: 12000
       durationMs: 7500

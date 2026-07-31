@@ -27,6 +27,10 @@ lastWords:
 mechanics:
   abilities:
     - id: ward_shield
+      bark:
+        - CONTAINMENT FIELD.
+        - STANDARD PROCEDURE.
+        - NOTHING GETS OUT.
       windupMs: 640
       cooldownMs: 12000
       durationMs: 7000

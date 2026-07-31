@@ -21,9 +21,10 @@ import { mobBlowDamage, pushEliteCast } from "./shared.ts";
 
 function ready(ability: EmberTrailAbility, ctx: AbilityCtx): boolean {
   // Worth starting only when there is somebody to paint a path away from —
-  // otherwise the duration burns down on an empty room. Priced off the patch
-  // itself so a wide, slow trail commits from further out than a mean one.
-  return ctx.distance <= ability.radius * 12;
+  // otherwise the duration burns down on an empty room. Authored per mob;
+  // absent, twelve patch-widths off its own `radius`, so a wide slow trail
+  // commits from further out than a mean one.
+  return ctx.distance <= (ability.range ?? ability.radius * 12);
 }
 
 function cast(ability: EmberTrailAbility, ctx: AbilityCtx): void {

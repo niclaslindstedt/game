@@ -26,6 +26,10 @@ lastWords:
 mechanics:
   abilities:
     - id: ward_shield
+      bark:
+        - SECURITY UPDATE.
+        - IT INSTALLS NOW.
+        - IT ALWAYS DOES.
       windupMs: 660
       cooldownMs: 12500
       durationMs: 7000

@@ -27,8 +27,10 @@ import {
   pushEliteCast,
 } from "./shared.ts";
 
-/** How long the shove coasts. Short — this is a shunt, not a launch. */
-const PUSH_COAST_MS = 260;
+/** What a def that says nothing gets — `pushCoastMs` is authored per mob, and
+ * with `push` it decides HOW FAR the hero actually ends up. Short by default:
+ * a shunt, not a launch. */
+const DEFAULT_PUSH_COAST_MS = 260;
 
 function ready(ability: ShockPulseAbility, ctx: AbilityCtx): boolean {
   // Only worth it once the hero is actually inside the ring. Cast at the edge
@@ -53,7 +55,12 @@ function cast(ability: ShockPulseAbility, ctx: AbilityCtx): void {
     enemy,
     state.rng() < def.critChance,
   );
-  pushPlayer(state.player, enemy.pos, ability.push, PUSH_COAST_MS);
+  pushPlayer(
+    state.player,
+    enemy.pos,
+    ability.push,
+    ability.pushCoastMs ?? DEFAULT_PUSH_COAST_MS,
+  );
 }
 
 registerAbility<ShockPulseAbility>({ id: "shock_pulse", ready, cast });

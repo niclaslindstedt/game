@@ -26,6 +26,10 @@ lastWords:
 mechanics:
   abilities:
     - id: siphon_tether
+      bark:
+        - EVERYTHING FLOWS
+        - SOMEWHERE. TODAY
+        - IT FLOWS TO ME.
       windupMs: 740
       cooldownMs: 10500
       range: 210

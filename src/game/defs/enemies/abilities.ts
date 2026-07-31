@@ -392,6 +392,11 @@ export type OrbitGuardAbility = AbilityBase & {
   hitIntervalMs: number;
   /** Ms the ring turns before it goes out. */
   durationMs: number;
+  /** How near the hero has to be before it bothers raising the ring (world px).
+   * Absent derives four ring-radii from its own `radius`, which is the right
+   * answer for most casters — a mob that wants to ring up early, or only at
+   * contact, says so. */
+  range?: number;
   /** The mote's sprite. */
   sprite: string;
 };
@@ -422,6 +427,9 @@ export type SeekerVolleyAbility = AbilityBase & {
   homing: number;
   /** Damage per bolt, as a fraction of the mob's `contactDamage`. */
   damageFrac: number;
+  /** The bolt's own size (world px) — its hitbox as much as its picture, so a
+   * mob throwing something heavy is harder to slip past. Defaults to 4. */
+  boltRadius?: number;
   /** The bolt's sprite. */
   sprite: string;
 };
@@ -454,6 +462,9 @@ export type EmberTrailAbility = AbilityBase & {
    * between burns on a body standing in one. */
   damageFrac: number;
   tickMs: number;
+  /** How near the hero has to be before it starts painting (world px). Absent
+   * derives twelve patch-widths from its own `radius`. */
+  range?: number;
 };
 
 /**
@@ -473,6 +484,10 @@ export type ShockPulseAbility = AbilityBase & {
   damageFrac: number;
   /** How hard it shoves (world px of impulse). 0 = damage only. */
   push: number;
+  /** How long the shove coasts (ms) — with `push`, this is HOW FAR the hero
+   * actually ends up, so the two together are the move. Defaults to 260, a
+   * shunt rather than a launch. */
+  pushCoastMs?: number;
 };
 
 /**
@@ -586,6 +601,21 @@ export type WardShieldAbility = AbilityBase & {
   poolFrac: number;
   /** Ms it stands before it fades, if it is never spent. */
   durationMs: number;
+  /**
+   * How far into its own health the fight must be before it raises the shell,
+   * as a fraction of max hp. Defaults to 0.9 — deliberately generous, so the
+   * shell arrives early enough to be met several times in one fight and is
+   * therefore LEARNED rather than merely suffered.
+   *
+   * A shell raised at full health is a mob with more health, which is the one
+   * thing this move must not be: the player has to see it go up in answer to
+   * something they did. Author it lower for a mob that only turtles when it is
+   * genuinely losing.
+   */
+  raiseBelowHpFrac?: number;
+  /** How near the hero has to be for it to bother (world px). Defaults to 420
+   * — a shell raised at an empty room is a cooldown spent on nobody. */
+  range?: number;
 };
 
 /**

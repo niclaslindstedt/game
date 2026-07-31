@@ -50,6 +50,7 @@
       "abilities": [
         {
           "arriveDistance": 30,
+          "bark": ["I FLEW INTO A", "CLOUD WITH NO", "OTHER SIDE. WATCH."],
           "cooldownMs": 9000,
           "damageFrac": 0.72,
           "id": "blink_strike",
@@ -140,6 +141,7 @@
       "abilities": [
         {
           "angularSpeed": 1.9,
+          "bark": ["FIFTY YEARS OF", "SUIT LIGHTS, AND", "THEY STILL CIRCLE."],
           "cooldownMs": 11000,
           "count": 4,
           "damageFrac": 0.5,
@@ -237,6 +239,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "I BUILT THESE TO",
+            "FIND THINGS. THEY",
+            "ALWAYS FIND THINGS."
+          ],
           "cooldownMs": 8000,
           "count": 3,
           "damageFrac": 0.55,
@@ -526,6 +533,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["SECURITY UPDATE.", "IT INSTALLS NOW.", "IT ALWAYS DOES."],
           "cooldownMs": 12500,
           "durationMs": 7000,
           "id": "ward_shield",
@@ -617,6 +625,7 @@
       "abilities": [
         {
           "arriveDistance": 28,
+          "bark": ["THE MAP MOVED.", "SO DID I.", "DO KEEP UP."],
           "cooldownMs": 9500,
           "damageFrac": 0.75,
           "id": "blink_strike",
@@ -993,6 +1002,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["I TOLD THEM THE", "ROBOTS WOULD COME.", "NOBODY LISTENED."],
           "cooldownMs": 12500,
           "damageMult": 1.26,
           "durationMs": 7000,
@@ -1112,6 +1122,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["I HAVE A FILE ON", "YOU. YOU'LL BE", "HERE SOME TIME."],
           "cooldownMs": 8500,
           "durationMs": 4600,
           "id": "snare_field",
@@ -1714,6 +1725,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "TWO HUNDRED FILMS!",
+            "THE GROUND HAS",
+            "NEVER MISSED A CUE!"
+          ],
           "cooldownMs": 9500,
           "count": 6,
           "damageFrac": 0.75,
@@ -1850,6 +1866,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "POISON. BULLETS.",
+            "THE RIVER. I TOOK",
+            "IT ALL AND KEPT IT."
+          ],
           "cooldownMs": 9500,
           "damageFrac": 0.32,
           "durationMs": 3200,
@@ -2524,6 +2545,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "CONTAINMENT FIELD.",
+            "STANDARD PROCEDURE.",
+            "NOTHING GETS OUT."
+          ],
           "cooldownMs": 12000,
           "durationMs": 7000,
           "id": "ward_shield",
@@ -2636,6 +2662,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["MIND THE FLOOR.", "I JUST DID IT.", "I DID WARN YOU."],
           "cooldownMs": 8500,
           "durationMs": 5000,
           "id": "snare_field",
@@ -2725,6 +2752,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["SAME-DAY", "DELIVERY. NOBODY", "MISSES A DROP."],
           "cooldownMs": 7500,
           "count": 5,
           "damageFrac": 0.52,
@@ -2810,6 +2838,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["EVERY AGENCY SITS", "IN MY TABLES.", "NOW SO DO YOU."],
           "cooldownMs": 8000,
           "durationMs": 5000,
           "id": "snare_field",
@@ -2905,6 +2934,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "INDEXED. CRAWLED.",
+            "THEY KNOW EXACTLY",
+            "WHERE YOU STAND."
+          ],
           "cooldownMs": 7500,
           "count": 4,
           "damageFrac": 0.5,
@@ -3029,6 +3063,7 @@
       "abilities": [
         {
           "angularSpeed": 2.2,
+          "bark": ["ME GOLD STAYS", "CLOSE, BOYO.", "AND IT BITES."],
           "cooldownMs": 10500,
           "count": 5,
           "damageFrac": 0.5,
@@ -3143,6 +3178,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "MY SECURITY DETAIL",
+            "IS A FIELD NOW.",
+            "EXTREMELY NORMAL."
+          ],
           "cooldownMs": 12000,
           "durationMs": 7500,
           "id": "ward_shield",
@@ -3312,6 +3352,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "THERE'S PAPERWORK",
+            "ON YOU NOW. YOU'RE",
+            "NOT GOING ANYWHERE."
+          ],
           "cooldownMs": 9000,
           "durationMs": 4200,
           "id": "snare_field",
@@ -3413,6 +3458,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["I HAVE BEEN IN", "THE CURRENT SINCE", "'43. STAND BACK."],
           "cooldownMs": 7000,
           "damageFrac": 0.78,
           "id": "shock_pulse",
@@ -3566,6 +3612,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["EVERY UNIT ON THE", "PAYROLL. FORM UP.", "DOUBLE SHIFT."],
           "cooldownMs": 12000,
           "damageMult": 1.25,
           "durationMs": 6500,
@@ -3680,6 +3727,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["EVERYTHING FLOWS", "SOMEWHERE. TODAY", "IT FLOWS TO ME."],
           "cooldownMs": 10500,
           "damageFrac": 0.3,
           "durationMs": 3000,
@@ -3796,6 +3844,11 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": [
+            "I DUG THEIR WHOLE",
+            "TUNNEL. I CAN DIG",
+            "ONE THROUGH YOU."
+          ],
           "cooldownMs": 9500,
           "count": 5,
           "damageFrac": 0.7,
@@ -3889,6 +3942,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["THE ORIGINAL IS", "GONE. THE ORDERS", "STILL CARRY."],
           "cooldownMs": 12000,
           "damageMult": 1.22,
           "durationMs": 6500,
@@ -3977,6 +4031,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["YOU'VE BEEN", "EXPOSED. SO HAS", "EVERYTHING I TOUCH."],
           "cooldownMs": 12000,
           "damageFrac": 0.32,
           "dropMs": 380,
@@ -4082,6 +4137,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["IT DRAINED ME", "FIRST. I ONLY", "LEARNED THE TRICK."],
           "cooldownMs": 10000,
           "damageFrac": 0.3,
           "durationMs": 3200,
@@ -4235,6 +4291,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["ALL UNITS. ALL", "UNITS. HE'S ON MY", "FLOOR. MOVE."],
           "cooldownMs": 13000,
           "damageMult": 1.2,
           "durationMs": 6000,
@@ -4472,6 +4529,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["AIKIDO. I DON'T", "PUSH YOU. I JUST", "LET GO OF YOU."],
           "cooldownMs": 7500,
           "damageFrac": 0.8,
           "id": "shock_pulse",
@@ -5001,6 +5059,7 @@
     "mechanics": {
       "abilities": [
         {
+          "bark": ["THIS PARK IS MINE.", "EVERY HOST IN IT", "ANSWERS TO ME."],
           "cooldownMs": 12500,
           "damageMult": 1.24,
           "durationMs": 6500,

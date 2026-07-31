@@ -27,6 +27,10 @@ lastWords:
 mechanics:
   abilities:
     - id: snare_field
+      bark:
+        - THERE'S PAPERWORK
+        - ON YOU NOW. YOU'RE
+        - NOT GOING ANYWHERE.
       windupMs: 620
       cooldownMs: 9000
       range: 190

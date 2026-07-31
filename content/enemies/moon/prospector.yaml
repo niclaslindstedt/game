@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: quake_line
+      bark:
+        - I DUG THEIR WHOLE
+        - TUNNEL. I CAN DIG
+        - ONE THROUGH YOU.
       windupMs: 720
       cooldownMs: 9500
       count: 5

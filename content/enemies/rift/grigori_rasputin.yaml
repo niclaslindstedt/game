@@ -30,6 +30,10 @@ spareable:
 mechanics:
   abilities:
     - id: siphon_tether
+      bark:
+        - POISON. BULLETS.
+        - THE RIVER. I TOOK
+        - IT ALL AND KEPT IT.
       windupMs: 720
       cooldownMs: 9500
       range: 220

@@ -27,6 +27,10 @@ lastWords:
 mechanics:
   abilities:
     - id: snare_field
+      bark:
+        - MIND THE FLOOR.
+        - I JUST DID IT.
+        - I DID WARN YOU.
       windupMs: 560
       cooldownMs: 8500
       range: 170

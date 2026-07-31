@@ -26,6 +26,10 @@ lastWords:
 mechanics:
   abilities:
     - id: rally_cry
+      bark:
+        - ALL UNITS. ALL
+        - UNITS. HE'S ON MY
+        - FLOOR. MOVE.
       windupMs: 700
       cooldownMs: 13000
       radius: 200

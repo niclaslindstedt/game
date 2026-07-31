@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: siphon_tether
+      bark:
+        - IT DRAINED ME
+        - FIRST. I ONLY
+        - LEARNED THE TRICK.
       windupMs: 760
       cooldownMs: 10000
       range: 220

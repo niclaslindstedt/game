@@ -29,6 +29,10 @@ lastWords:
 mechanics:
   abilities:
     - id: rally_cry
+      bark:
+        - I TOLD THEM THE
+        - ROBOTS WOULD COME.
+        - NOBODY LISTENED.
       windupMs: 720
       cooldownMs: 12500
       radius: 240
