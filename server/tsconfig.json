@@ -1,0 +1,42 @@
+{
+  // The ENGINE'S NODE SHIP TARGET — the one tsconfig in this repo that EMITS.
+  //
+  // Everything else here typechecks with `noEmit`, because the browser build is
+  // Vite's and the tooling reads `.ts` through a loader hook. The session
+  // server is the exception: it runs under Electron's bundled Node, which has
+  // neither. See scripts/build-server.mjs for why precompiling won over type
+  // stripping, and for the alias rewrite this config cannot do itself.
+  "compilerOptions": {
+    "target": "ES2022",
+    // Real Node resolution at runtime — the output is `import`ed by a Node
+    // process, not bundled — and `nodenext` is what makes `rewriteRelative
+    // ImportExtensions` legal.
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // The engine's imports carry `.ts` extensions (the repo's convention, and
+    // what the alias loader and Vite both expect). This is what turns them
+    // into `.js` on the way out.
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "declaration": false,
+    "outDir": "../electron/server-dist",
+    // The STAGED copy, not the repo's own sources — `scripts/build-server.mjs`
+    // writes it, having turned the `@game/…` aliases into relative paths first
+    // (TypeScript refuses to emit an import that is both aliased and carries a
+    // `.ts` extension). So `tsc -p` is not runnable on its own here; run the
+    // build script, which stages and then invokes it.
+    "rootDir": "../electron/server-src",
+    "types": ["node"]
+  },
+  "include": ["../electron/server-src/**/*.ts"]
+}

@@ -26,6 +26,11 @@ Neither is an npm workspace member, neither is imported by the engine or the
 app, and both answer the same four bridge protocols over their own transport;
 see their sections below.
 
+A fifth tree, `server/`, is the engine compiled for **Node** rather than for a
+browser: the authoritative session server multiplayer runs the simulation in.
+It ships inside the desktop app and is forked as its own process. It imports
+the engine and nothing else — see [`multiplayer.md`](multiplayer.md).
+
 ### `src/` — the engine
 
 Pure TypeScript with no React and no build-tool coupling. The simulation is
@@ -1384,6 +1389,27 @@ the Steam Deck runs the real binary rather than the Windows one under Proton.
 `.github/workflows/desktop-build.yml` typechecks and tests the shell on every
 relevant push, and packages the depot directories dispatch-only. See
 `electron/README.md`.
+
+### `server/` — the session server (the fifth layer)
+
+The engine, compiled for Node and shipped inside the desktop app, so a
+multiplayer session can simulate in a process of its own rather than in the
+renderer. `electron/src/session-host.ts` forks it as a `utilityProcess`,
+`electron/src/net.ts` is its bridge, and the snapshots travel to the page on a
+`MessagePort` that bypasses the main process entirely.
+
+It is a fifth arm of the same bridge → provider → platform shape the other four
+platform features use, with one thing deliberately NOT copied from them: the
+volume. Those move a handful of JSON round trips per session; this one moves a
+snapshot twenty times a second, so `__gisNet` carries only control traffic and
+the game frames get their own channel.
+
+Like `mod/`, it is at the repo's top level rather than inside `electron/`,
+because it is engine code rather than shell code — and, from PR 5, the same
+file is the standalone dedicated server. `scripts/build-server.mjs` is its ship
+target and `server/package.json` declares its runtime dependencies, checked
+against the real import graph by `tests/content/server_deps_test.ts`. See
+[`multiplayer.md`](multiplayer.md) and `server/README.md`.
 
 ### `/library/` — the generated reference site
 
