@@ -18,7 +18,7 @@
 // exactly as it was in PR 1, and everything below this line is about the door
 // that faces the internet.
 //
-// THREE BOUNDS, EACH ANSWERING A DIFFERENT ABUSE:
+// FOUR BOUNDS, EACH ANSWERING A DIFFERENT ABUSE:
 //
 //  1. **A CONNECTIONLESS BUDGET PER ADDRESS.** A `hello` costs the host a
 //     hash and a small reply. A million of them costs it a tick. The bucket is
@@ -31,6 +31,19 @@
 //     one, the flood defence is gone and this comment is the warning.
 //  3. **A SEAT CAP.** `MAX_CLIENTS`, checked in `admit`, so a session cannot
 //     be filled past what its publish loop was measured for.
+//  4. **A PER-SESSION PACKET BUDGET** (§5.2's fourth clause), and it is the
+//     one that covers the peer who got IN. Everything above stops a stranger;
+//     none of it stops an admitted client sending sixty thousand chat lines or
+//     run commands a second, each of which the session parses, dispatches and
+//     broadcasts to everybody else — a seat is a licence to be heard, not a
+//     licence to be heard at any rate. So an admitted peer draws on a bucket of
+//     its own: over it, packets are DROPPED (the same answer the reliability
+//     layer already gives a lost datagram, and one the game recovers from by
+//     design), and a peer that stays over it long enough to run up a real DEBT
+//     is dropped with a `bye` that says why. Two thresholds rather than one,
+//     because a burst on a recovering connection and a flood are different
+//     things and treating them alike either kicks a friend or tolerates an
+//     attacker.
 //
 // **AND A REFUSAL IS A `bye`, NOT A SILENCE.** Version skew is the failure mode
 // that reaches a player as "random crashes"; a joiner told "one of you needs to
@@ -69,6 +82,39 @@ const CONNECTIONLESS_REFILL_MS = 1_000;
 /** How long an idle rate-limit record is kept. A bound on the table, so the
  * defence against a flood is not itself a way to grow memory by flooding. */
 const LIMITER_IDLE_MS = 60_000;
+
+/**
+ * What an ADMITTED peer may send, per second, before its extras are dropped.
+ *
+ * Sized off what a client legitimately sends rather than off a round number: an
+ * input frame per simulation tick is 60/s, an ack per publish is 20/s, and chat
+ * and run commands are a handful between them. 240/s is four times that
+ * ceiling, so no honest client comes near it and a flood is throttled within a
+ * frame of starting.
+ */
+const PEER_PACKET_RATE = 240;
+
+/**
+ * …and how much of that allowance may be banked and spent at once.
+ *
+ * A second's worth, because the traffic this covers genuinely arrives in
+ * clumps: a client whose connection stalled for a moment delivers everything
+ * the reliability layer was holding the instant it recovers, and throttling
+ * exactly that is throttling the recovery.
+ */
+const PEER_PACKET_BURST = PEER_PACKET_RATE;
+
+/**
+ * How far past its allowance a peer may run before it is dropped rather than
+ * merely throttled.
+ *
+ * The bucket is allowed to go NEGATIVE, and the debt is what separates the two
+ * cases: a burst dips it and the refill pays it back within the second, while a
+ * sustained flood drives it down without limit. Ten seconds' worth of excess is
+ * long past anything a bad connection produces and short enough that a flood
+ * costs the host a couple of thousand dropped packets rather than a session.
+ */
+const PEER_FLOOD_DEBT = PEER_PACKET_RATE * 10;
 
 /** What the hub needs from the session. Structural rather than the `Session`
  * type itself so the whole admission path can be tested against a stub — the
@@ -131,6 +177,11 @@ export function createPeerHub(options: HubOptions): PeerHub {
     key: PeerKey;
     name: string;
     transport: Transport;
+    /** Packets this peer may still send. Refilled from the clock, allowed to
+     * go negative — see `PEER_FLOOD_DEBT`. */
+    tokens: number;
+    /** When `tokens` was last topped up. */
+    filledAt: number;
   };
   const byKey = new Map<PeerKey, Admitted>();
   const byId = new Map<number, Admitted>();
@@ -159,6 +210,44 @@ export function createPeerHub(options: HubOptions): PeerHub {
     if (held.tokens <= 0) return false;
     held.tokens--;
     return true;
+  }
+
+  /**
+   * Spend one packet of an admitted peer's budget.
+   *
+   * Returns false when the packet should be DROPPED and never reaches the
+   * session. A peer that has run its debt past `PEER_FLOOD_DEBT` is dropped
+   * outright — with a `bye`, because it may well be a friend whose client has
+   * gone wrong, and "you were disconnected for flooding" is a bug report while
+   * silence is a mystery.
+   */
+  function affordable(peer: Admitted): boolean {
+    const at = options.now();
+    const elapsed = Math.max(0, at - peer.filledAt);
+    peer.filledAt = at;
+    peer.tokens = Math.min(
+      PEER_PACKET_BURST,
+      peer.tokens + (elapsed * PEER_PACKET_RATE) / 1000,
+    );
+    peer.tokens--;
+    if (peer.tokens >= 0) return true;
+    if (peer.tokens < -PEER_FLOOD_DEBT) {
+      // Named as its own thing rather than folded into `kick`: the reason
+      // reaches the host's log, and a session that starts dropping people
+      // should say which rule did it.
+      peer.transport.send(
+        peer.key,
+        new Uint8Array(
+          encodeFrame(
+            { type: FRAME.bye, seq: 0, ack: 0, tick: 0 },
+            { reason: "rate-limited" },
+          ),
+        ),
+        "reliable",
+      );
+      forget(peer.key, "flooding");
+    }
+    return false;
   }
 
   /**
@@ -272,6 +361,8 @@ export function createPeerHub(options: HubOptions): PeerHub {
       // count is the closest honest guess and is only ever a default.
       name: sanitizeName(join.name, options.session.clientCount),
       transport,
+      tokens: PEER_PACKET_BURST,
+      filledAt: options.now(),
     };
     byKey.set(key, peer);
     byId.set(id, peer);
@@ -295,15 +386,21 @@ export function createPeerHub(options: HubOptions): PeerHub {
 
   function onPacket(transport: Transport, packet: Packet): void {
     const known = byKey.get(packet.from);
-    const frame = decodeFrame(packet.data);
-    if (!frame) return;
     if (known) {
+      // THE BUDGET IS SPENT BEFORE THE FRAME IS PARSED, which is the whole
+      // point of it: a decode is the cheapest thing the session does with a
+      // packet and still the thing a flood is trying to buy in bulk.
+      if (!affordable(known)) return;
+      const frame = decodeFrame(packet.data);
+      if (!frame) return;
       // An admitted peer's frames go straight to the session, which owns what
       // an input, a command or a chat line may do. It refuses a spectator's
       // steering itself — the one place a client cannot argue with it.
       options.session.receive(known.id, frame.type, frame.seq, frame.payload);
       return;
     }
+    const frame = decodeFrame(packet.data);
+    if (!frame) return;
     // Not admitted: two frames are permitted and both are rate limited.
     if (frame.type !== FRAME.hello && frame.type !== FRAME.join) return;
     if (!allow(packet.from)) return;
