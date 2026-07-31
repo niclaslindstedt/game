@@ -57,6 +57,10 @@ const MAX_PAGE_LINES = 2;
  */
 const LORE_WARN_CHARS = 420;
 
+/** How near a map's edge an authored spot may sit before it is worth flagging
+ * — roughly a body's width plus the clearance the placement passes want. */
+const MAP_EDGE_MARGIN = 32;
+
 /**
  * How long a CONVERSATION CHOICE runs before it wraps to a second row.
  *
@@ -134,6 +138,48 @@ function checkLines(lines, what, err, warn) {
 }
 
 /**
+ * IS THIS COORDINATE ACTUALLY ON THE MAP IT NAMES?
+ *
+ * The gap this closes is the nastiest kind the quest schema can have, because
+ * it is silent in exactly the way every other refusal here exists to prevent.
+ * A `{ x, y }` that parses is not a spot: the moon is 2400x1600, and an
+ * objective authored at (2680, 340) is off the east edge of it. The build was
+ * happy, the level loaded, and the errand simply could never be completed —
+ * a `visit` the hero cannot stand on, or a piece lying past the wall. (Not
+ * hypothetical: the campaign chain's first draft shipped six of these, all
+ * caught by hand-diffing coordinates against map sizes.)
+ *
+ * A MARGIN rather than the raw rectangle, because a body has width: a spot on
+ * the very edge is one no character can stand centred on. That case is a
+ * WARNING, not an error — the engine nudges a blocked spot to clear ground, so
+ * an edge coordinate is recoverable where an off-map one is not.
+ */
+function checkOnMap(at, levelId, what, refs, err, warn) {
+  if (!isVec(at) || !levelId) return;
+  const size = refs.levelSizes?.get(levelId);
+  if (!size) return;
+  if (at.x < 0 || at.y < 0 || at.x > size.width || at.y > size.height) {
+    err(
+      `${what} is at (${at.x}, ${at.y}), which is off "${levelId}" — that map ` +
+        `is ${size.width}x${size.height}. Nothing would ever reach it.`,
+    );
+    return;
+  }
+  if (
+    at.x < MAP_EDGE_MARGIN ||
+    at.y < MAP_EDGE_MARGIN ||
+    at.x > size.width - MAP_EDGE_MARGIN ||
+    at.y > size.height - MAP_EDGE_MARGIN
+  ) {
+    warn(
+      `${what} is at (${at.x}, ${at.y}), within ${MAP_EDGE_MARGIN}px of the ` +
+        `edge of "${levelId}" (${size.width}x${size.height}) — a body cannot ` +
+        `stand centred that close to a wall`,
+    );
+  }
+}
+
+/**
  * Validate one quest giver.
  *
  * @param {string} id    the catalog key (the giver's id).
@@ -165,6 +211,7 @@ export function validateQuestGiver(id, def, refs) {
     err(`sprite "${def.sprite}" has no "${def.sprite}_1" frame`);
   }
   if (!isVec(def.at)) err("at must be `{ x, y }` (world px)");
+  else checkOnMap(def.at, def.level, "at", refs, err, warn);
   checkLore(def.lore, "every giver owes a paragraph", err, warn);
   if (def.greeting !== undefined)
     checkLines(def.greeting, "greeting", err, warn);
@@ -236,7 +283,9 @@ export function validateQuest(id, def, refs) {
         refs,
         itemIds,
         escortIds,
+        questLevel: def.level,
         err,
+        warn,
       }),
     );
   }
@@ -246,17 +295,17 @@ export function validateQuest(id, def, refs) {
   // legitimately lies nowhere and falls off nothing.
   const givenInConversation = new Set([...(refs.givenPieces?.get(id) ?? [])]);
   for (const [i, item] of (def.items ?? []).entries()) {
-    checkQuestItem(
-      item,
-      `items[${i}]`,
+    checkQuestItem(item, `items[${i}]`, {
       refs,
-      err,
-      def.merchant,
+      deal: def.merchant,
       givenInConversation,
-    );
+      questLevel: def.level,
+      err,
+      warn,
+    });
   }
   for (const [i, escort] of (def.escorts ?? []).entries()) {
-    checkEscort(escort, `escorts[${i}]`, refs, err);
+    checkEscort(escort, `escorts[${i}]`, refs, err, warn, def.level);
   }
   checkReward(def.reward, refs, err, warn);
 
@@ -292,7 +341,11 @@ export function validateQuest(id, def, refs) {
   return { errors, warnings };
 }
 
-function checkObjective(objective, what, { refs, itemIds, escortIds, err }) {
+function checkObjective(
+  objective,
+  what,
+  { refs, itemIds, escortIds, questLevel, err, warn },
+) {
   if (!objective || typeof objective !== "object" || Array.isArray(objective)) {
     err(`${what} must be a mapping`);
     return;
@@ -332,6 +385,8 @@ function checkObjective(objective, what, { refs, itemIds, escortIds, err }) {
       err(`${what} visits level "${objective.level}", which does not exist`);
     }
     if (!isVec(objective.at)) err(`${what} needs \`at: { x, y }\` (world px)`);
+    else
+      checkOnMap(objective.at, objective.level, `${what} at`, refs, err, warn);
     // The NAME is what the tracker prints instead of a coordinate, and a
     // search objective without one is an errand that says "go somewhere".
     if (!isStr(objective.name)) {
@@ -404,9 +459,14 @@ function checkObjective(objective, what, { refs, itemIds, escortIds, err }) {
     );
   }
   if (!isVec(objective.to)) err(`${what} needs a destination \`to: { x, y }\``);
+  else checkOnMap(objective.to, questLevel, `${what} to`, refs, err, warn);
 }
 
-function checkQuestItem(item, what, refs, err, deal, givenInConversation) {
+function checkQuestItem(
+  item,
+  what,
+  { refs, deal, givenInConversation, questLevel, err, warn },
+) {
   if (!item || typeof item !== "object" || Array.isArray(item)) {
     err(`${what} must be a mapping`);
     return;
@@ -431,8 +491,9 @@ function checkQuestItem(item, what, refs, err, deal, givenInConversation) {
       err(`${what} dropChance must be in (0, 1]`);
     }
   }
-  for (const at of item.at ?? []) {
+  for (const [i, at] of (item.at ?? []).entries()) {
     if (!isVec(at)) err(`${what} at entries must be \`{ x, y }\``);
+    else checkOnMap(at, questLevel, `${what} at[${i}]`, refs, err, warn);
   }
   // A piece nobody drops, nobody placed, nobody sells and nobody hands over is
   // a piece that cannot be found. The last two producers are why this takes
@@ -453,7 +514,7 @@ function checkQuestItem(item, what, refs, err, deal, givenInConversation) {
   }
 }
 
-function checkEscort(escort, what, refs, err) {
+function checkEscort(escort, what, refs, err, warn, questLevel) {
   if (!escort || typeof escort !== "object" || Array.isArray(escort)) {
     err(`${what} must be a mapping`);
     return;
@@ -466,8 +527,9 @@ function checkEscort(escort, what, refs, err) {
   } else if (refs.sprites && !refs.sprites.has(`${escort.sprite}_1`)) {
     err(`${what} sprite "${escort.sprite}" has no "${escort.sprite}_1" frame`);
   }
-  if (escort.at !== undefined && !isVec(escort.at)) {
-    err(`${what} at must be \`{ x, y }\``);
+  if (escort.at !== undefined) {
+    if (!isVec(escort.at)) err(`${what} at must be \`{ x, y }\``);
+    else checkOnMap(escort.at, questLevel, `${what} at`, refs, err, warn);
   }
   if (escort.hp !== undefined && (!isNum(escort.hp) || escort.hp <= 0)) {
     err(`${what} hp must be positive`);

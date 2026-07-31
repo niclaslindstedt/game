@@ -1,6 +1,6 @@
 ---
 name: quest-design
-description: "Use when adding, updating or reworking a QUEST — an errand a non-combatant asks of the hero — or the person who hands it out, the conversation tree behind it, or a campaign-long chain. Covers the two catalogs and their pipeline, the eight objective kinds, what a reward may pay and how to price it, campaign vs run errands, conversations and neutral mobs, the trader hook, the story-chain obligation, and the build refusals and tests that bite when a piece is missing."
+description: "Use when adding, updating or reworking a QUEST — an errand a non-combatant asks of the hero — or the person who hands it out, the conversation tree behind it, or a campaign-long chain. Covers what makes an errand worth doing rather than a chore (which verb each objective kind actually buys, combining two into a beat, giving a conversation a branch that can lose, pacing a chain), then the two catalogs and their pipeline, the eight objective kinds, what a reward may pay and how to price it, campaign vs run errands, conversations and neutral mobs, the trader hook, the story-chain obligation, and the build refusals and tests that bite when a piece is missing."
 ---
 
 # Designing a Quest
@@ -14,7 +14,9 @@ one, that is the finding.
 **The rules live in `AGENTS.md` → QUESTS.** Read that section first: it is the
 _why_ (why the mark is derived, why the givers step last, why an escort is a
 timer with a body). This skill is the _how_ — where to put things, what the
-build will refuse, and how to check the result.
+build will refuse, and how to check the result — plus the one thing no schema
+can check: whether the errand is worth doing at all. If you read one section
+before writing anything, make it **What makes an errand worth doing**.
 
 **Before starting, read past lessons:** `node scripts/skill-lessons.mjs quest-design`.
 
@@ -93,6 +95,80 @@ in either direction. Use sparingly.
 hero has to talk around. **`merchant:`** lets the chain run through the stall —
 `buys` (with `sets:` flags) and `sells` (gated on `requires:` flags).
 
+## What makes an errand worth doing
+
+The section above is how to author one. This is how to make one anybody wants
+to finish — the part that is actually design, and the part a schema can never
+check.
+
+**The default failure is a chore.** "Kill eight of those" is not bad because
+killing is bad; it is bad because it asks for more of what the player was
+already doing, and the errand adds nothing but a counter. Before writing the
+objectives, answer one question: **what does this make the player do that they
+would not otherwise do today?** If the honest answer is "the same thing, but
+counted", the errand is not ready.
+
+Reaching for a kind other than `kill` is usually the answer, and each one buys
+a different verb:
+
+| Kind | What it actually asks of the player |
+| --- | --- |
+| `visit` | Look at the map instead of the fight. There is no arrow — the tracker gives a described PLACE, so the errand is a search |
+| `flag` | Talk to somebody, and choose what to say |
+| `sell` | Give something up. The piece LEAVES, and that cost is the beat |
+| `collect` off a rare breed | Hunt a specific thing rather than whatever is nearest |
+| `escort` | Fight differently — the horde wants you to kite, the follower wants you not to |
+| `reachLevel` | Nothing today. It is a wall, and the chain has to be worth the wait |
+
+**COMBINE kinds to make a beat; the ORDER is the mechanic.** The single most
+useful thing in the catalog is not any one objective, it is that two of them in
+sequence mean something neither means alone. The trader hook is the worked
+example: `sell` the seal you prised off a body, and only THEN does `merchant.
+sells` put the thing you actually wanted on the counter. Written as one step —
+"buy the signature" — it is a fetch quest with a price tag. Written as two, the
+trader becomes somebody with an opinion about what you are carrying. When you
+add a `merchant:` block, check that the `requires:` flag makes the order
+un-short-circuitable; if the player can buy first, you have written a shop.
+
+**A conversation earns its place when a branch can LOSE.** A tree whose rows
+all lead to the same node is a monologue with extra taps. Give at least one
+branch a cost:
+
+- **A door that closes.** The moon surveyor will not talk to a company man, and
+  "COMPANY. SITE T AUDIT." is offered plainly as the efficient-sounding opening.
+  Take it and he is done with you for the run.
+- **A fight you asked for.** `provoke: true` turns the speaker hostile, and it
+  cannot be taken back.
+- **A branch you have to lose ON PURPOSE.** The tithe assessor will never hand
+  over its seal — there is no clever line that gets it. What it cannot do is
+  leave an error in its own count, so telling it the count is short starts a
+  fight the player chose. That is a better beat than a persuasion check, because
+  the player has to decide to start something with somebody who has been polite
+  to them.
+
+Two supporting rules: a gated row is LEFT OUT, never greyed (a greyed row is a
+spoiler in the shape of a locked door), and `reentry` on flags is what stops a
+person greeting you identically after you have already been told something.
+
+**A chain earns its length by starting small.** THE SEVERANCE opens on a man
+who needs a typewriter ribbon, pays 0.06 of a level for it, and the errand is
+genuinely boring — deliberately, because the turn only lands if the player took
+it for the coins. Escalate by REVEAL rather than by numbers: each link should
+change what the previous one meant. If link four is link two with a bigger
+count, the chain is padded rather than written.
+
+**Put the last link's climax before the gate, not on it.** `reachLevel` is a
+wait, not a fight. THE SEVERANCE's real climax is the link BEFORE it (a named
+elite, a drop, the answer to the whole chain); the level gate that follows is a
+quiet errand you finish by playing the game. A chain that ends on the wall ends
+on an anticlimax.
+
+**Nothing new is needed for most of this.** A quest is a second CALLER of
+systems that already exist — the loot roller, the drop pipeline, the merchant,
+the conversation runtime. If an errand seems to want an engine change, that is
+usually the design asking for something the game does not do yet, and it is
+worth reconsidering the errand before widening the engine.
+
 ## Picking the numbers
 
 Calibrated against the 39 shipped errands — stay inside these unless you have a
@@ -153,6 +229,9 @@ reason:
 Every one of these is silent at runtime — an errand that simply never completes,
 with nothing on screen to explain it. That is why they are hard errors.
 
+- **A coordinate that is off the map it names** — a giver's `at`, a `visit`,
+  an `escort` destination or a placed piece. Checked against the venue's real
+  `width`/`height`; within 32px of an edge is a warning instead.
 - **Dangling ids:** the level, the giver, an enemy, a `dropFrom` breed, a
   sprite (and its `_0`/`_1` frames), an icon, a unique, a powerup, a
   conversation, a `requires` quest, a `minDifficulty`.
@@ -183,7 +262,9 @@ page, `lore` over 420 chars, `xpShare` over 2, an errand with no reward.
 - [ ] `mod/catalog.json` regenerated if an id was added
 - [ ] `docs/story.md` + `docs/manuscript.md` updated for every spoken line
 - [ ] The library builds — a new authored field must be declared in
-      `QUEST_FIELDS` / `QUEST_GIVER_FIELDS` or the build fails
+      `QUEST_FIELDS` / `QUEST_GIVER_FIELDS` **and actually rendered**. Declaring
+      it alone makes the build pass while the page shows nothing, which is the
+      exact silent omission the guard exists to prevent
 - [ ] Looked at the offer box and the tracker in the running game
 - [ ] Changeset fragment written
 - [ ] A lesson fragment if this pass taught you something
