@@ -68,8 +68,8 @@ describe("EASTWORLD level def", () => {
   it("locks the control center behind THE STUNT DOUBLE's all-access pass", () => {
     expect(EASTWORLD.doors?.map((d) => d.id)).toEqual(["control"]);
     expect(STORY_ITEM_DEFS.keycard_eastworld?.unlocks).toBe("control");
-    const stunt double = enemyDef("the_stunt_double");
-    expect(stunt double.loot?.storyItems).toContain("keycard_eastworld");
+    const stuntDouble = enemyDef("the_stunt_double");
+    expect(stuntDouble.loot?.storyItems).toContain("keycard_eastworld");
   });
 
   it("plays the arrival read on sight, then the hosts read on the first kill", () => {
@@ -88,7 +88,7 @@ describe("EASTWORLD level def", () => {
   });
 });
 
-describe("the celebrity staff", () => {
+describe("the park's resident staff", () => {
   it("THE STUNT DOUBLE moves slow and redirects half your swings", () => {
     const def = enemyDef("the_stunt_double");
     expect(def.role).toBe("elite");
@@ -111,8 +111,8 @@ describe("the celebrity staff", () => {
     expect(watches).toHaveLength(3);
     for (const watch of watches) expect(watch.tier).toBe("unique");
     expect(def.loot?.storyItems).toContain("annexation_map");
-    // His last words face the war he retreated from.
-    expect(def.lastWords?.join(" ")).toContain("UKRAINE");
+    // His last words face the only game he ever rigged and still lost.
+    expect(def.lastWords?.join(" ")).toContain("LET ME WIN");
   });
 
   it("THE LEADING MAN is enormous, glacial, and cannot dodge", () => {
@@ -126,7 +126,7 @@ describe("the celebrity staff", () => {
   it("THE LEAK is the game's first ranged elite and drops the archive", () => {
     const def = enemyDef("the_leak");
     expect(def.role).toBe("elite");
-    // The leaker fights from cover, like the GROKs his archive trained.
+    // The leaker fights from cover, like the BROs his archive trained.
     expect(def.ranged?.takesCover).toBe(true);
     expect(def.dialogue?.length ?? 0).toBeGreaterThan(0);
     expect(def.lastWords?.length ?? 0).toBeGreaterThan(0);
@@ -190,7 +190,7 @@ describe("THE BRO SUPERCORE and its controllers", () => {
     }
   });
 
-  it("the shield holds in play: the SUPERCORE can't be hurt until the GROKs fall", () => {
+  it("the shield holds in play: the SUPERCORE can't be hurt until the BROs fall", () => {
     const state = startGame(SEED, "eastworld");
     const boss = state.enemies.find((e) => e.defId === "bro_supercore")!;
     expect(boss).toBeDefined();
@@ -200,8 +200,10 @@ describe("THE BRO SUPERCORE and its controllers", () => {
     hitEnemy(state, boss, 500);
     expect(boss.hp).toBe(before);
     expect(state.events.some((e) => e.type === "enemyShielded")).toBe(true);
-    // Drop the controllers: the shield falls.
-    state.enemies = state.enemies.filter((e) => !e.defId.startsWith("grok_"));
+    // Drop the controllers: the shield falls. Matched by name rather than by a
+    // "bro_" prefix, which the SUPERCORE itself now shares.
+    const controllers = ["bro_alpha", "bro_beta", "bro_gamma"];
+    state.enemies = state.enemies.filter((e) => !controllers.includes(e.defId));
     hitEnemy(state, boss, 500);
     expect(boss.hp).toBeLessThan(before);
   });

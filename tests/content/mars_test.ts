@@ -50,9 +50,9 @@ describe("MARS level def", () => {
     expect(minionIds).toEqual([
       "fembot",
       "mining_rover",
-      "successor",
       "scout_rover",
       "servo_bot",
+      "successor",
     ]);
 
     // The desert-to-base transition: rovers band the near (outdoor) half,
@@ -80,10 +80,10 @@ describe("MARS level def", () => {
       .map((s) => s.enemy)
       .sort();
     expect(elites).toEqual([
-      "the_vendor",
-      "the_indexer",
       "successor_prime",
+      "the_indexer",
       "the_seed",
+      "the_vendor",
     ]);
 
     const state = startGame(SEED, "mars");

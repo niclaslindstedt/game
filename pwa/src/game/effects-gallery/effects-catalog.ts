@@ -1025,7 +1025,15 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "COIN CANNON",
     blurb: "A FAN OF COINS THAT COME OFF THE WALLS INSTEAD OF DYING ON THEM",
     group: "BOSSES",
-    keywords: ["boss", "coin", "payload", "ricochet", "bounce", "fan", "volley"],
+    keywords: [
+      "boss",
+      "coin",
+      "payload",
+      "ricochet",
+      "bounce",
+      "fan",
+      "volley",
+    ],
     levelId: "goodco_hq",
     // Unfrozen and put in front of the real PAYLOAD-1, for the same reason the
     // beam exhibit is: the ricochet only means anything against the level's

@@ -1364,6 +1364,15 @@
       "name": "LATTICE HELM",
       "slot": "head"
     },
+    "leaks_dead_mans_switch": {
+      "bonuses": {
+        "maxHp": 35
+      },
+      "icon": "icon_dead_switch",
+      "id": "leaks_dead_mans_switch",
+      "name": "DEAD MAN'S SWITCH",
+      "slot": "trinket"
+    },
     "leather_boots": {
       "armor": 2,
       "armorType": "leather",
@@ -2070,15 +2079,6 @@
       "name": "SAMPLE CASE",
       "slot": "bag"
     },
-    "stunt_doubles_ponytail": {
-      "bonuses": {
-        "maxHp": 30
-      },
-      "icon": "icon_ponytail",
-      "id": "stunt_doubles_ponytail",
-      "name": "THE STUNT DOUBLE'S PONYTAIL",
-      "slot": "trinket"
-    },
     "servo_greaves": {
       "armor": 24,
       "armorType": "mail",
@@ -2206,15 +2206,6 @@
       "name": "SNEAKERS",
       "slot": "feet"
     },
-    "leaks_dead_mans_switch": {
-      "bonuses": {
-        "maxHp": 35
-      },
-      "icon": "icon_dead_switch",
-      "id": "leaks_dead_mans_switch",
-      "name": "DEAD MAN'S SWITCH",
-      "slot": "trinket"
-    },
     "solar_wing": {
       "armor": 28,
       "armorType": "mail",
@@ -2312,6 +2303,15 @@
       "levelReq": 92,
       "name": "STORMWALL DUSTER",
       "slot": "chest"
+    },
+    "stunt_doubles_ponytail": {
+      "bonuses": {
+        "maxHp": 30
+      },
+      "icon": "icon_ponytail",
+      "id": "stunt_doubles_ponytail",
+      "name": "THE STUNT DOUBLE'S PONYTAIL",
+      "slot": "trinket"
     },
     "synaptic_visor": {
       "armor": 56,
@@ -4328,36 +4328,6 @@
       "slot": "weapon",
       "tier": "artifact"
     },
-    "prototype_fang": {
-      "base": "combat_knife",
-      "bonuses": [
-        {
-          "kind": "crit",
-          "value": 0.08
-        },
-        {
-          "kind": "statPct",
-          "stat": "dexterity",
-          "value": 0.01
-        },
-        {
-          "kind": "stat",
-          "stat": "dexterity",
-          "value": 3
-        }
-      ],
-      "fx": {
-        "core": "#eaf1ff",
-        "particle": "spark"
-      },
-      "id": "prototype_fang",
-      "ilvl": 16,
-      "keeper": true,
-      "lore": "A CHROME CANINE PRIED FROM PAYLOAD-1'S JAW, STILL WARM FROM THE CORE.",
-      "name": "PROTOTYPE FANG",
-      "slot": "weapon",
-      "tier": "unique"
-    },
     "nightfall": {
       "base": "plasma_claymore",
       "bonuses": [
@@ -4578,25 +4548,34 @@
       "tier": "legendary",
       "world": true
     },
-    "strongmans_tracksuit": {
-      "base": "tin_star_cuirass",
+    "prototype_fang": {
+      "base": "combat_knife",
       "bonuses": [
         {
-          "kind": "stat",
+          "kind": "crit",
+          "value": 0.08
+        },
+        {
+          "kind": "statPct",
           "stat": "dexterity",
-          "value": 5
+          "value": 0.01
         },
         {
           "kind": "stat",
-          "stat": "stamina",
-          "value": 4
+          "stat": "dexterity",
+          "value": 3
         }
       ],
-      "id": "strongmans_tracksuit",
-      "ilvl": 32,
-      "lore": "STRIPES DOWN THE ARMS. AUTHORITY DOWN THE SPINE. RUNS FROM NOTHING, OFFICIALLY.",
-      "name": "THE STRONGMAN'S TRACKSUIT",
-      "slot": "chest",
+      "fx": {
+        "core": "#eaf1ff",
+        "particle": "spark"
+      },
+      "id": "prototype_fang",
+      "ilvl": 16,
+      "keeper": true,
+      "lore": "A CHROME CANINE PRIED FROM PAYLOAD-1'S JAW, STILL WARM FROM THE CORE.",
+      "name": "PROTOTYPE FANG",
+      "slot": "weapon",
       "tier": "unique"
     },
     "pyrelight": {
@@ -5141,6 +5120,27 @@
       "slot": "weapon",
       "tier": "unique",
       "world": true
+    },
+    "strongmans_tracksuit": {
+      "base": "tin_star_cuirass",
+      "bonuses": [
+        {
+          "kind": "stat",
+          "stat": "dexterity",
+          "value": 5
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 4
+        }
+      ],
+      "id": "strongmans_tracksuit",
+      "ilvl": 32,
+      "lore": "STRIPES DOWN THE ARMS. AUTHORITY DOWN THE SPINE. RUNS FROM NOTHING, OFFICIALLY.",
+      "name": "THE STRONGMAN'S TRACKSUIT",
+      "slot": "chest",
+      "tier": "unique"
     },
     "sunspear": {
       "base": "cosmic_raygun",
@@ -5718,48 +5718,6 @@
       "slot": "weapon",
       "tier": "unique"
     },
-    "the_residencys_ransom": {
-      "bagSlots": 5,
-      "base": "bag",
-      "bonuses": [
-        {
-          "kind": "stat",
-          "stat": "luck",
-          "value": 18
-        },
-        {
-          "kind": "stat",
-          "stat": "stamina",
-          "value": 16
-        },
-        {
-          "kind": "maxHp",
-          "value": 200
-        },
-        {
-          "kind": "stat",
-          "stat": "strength",
-          "value": 14
-        },
-        {
-          "kind": "stat",
-          "stat": "dexterity",
-          "value": 12
-        },
-        {
-          "kind": "stat",
-          "stat": "intelligence",
-          "value": 10
-        }
-      ],
-      "id": "the_residencys_ransom",
-      "ilvl": 93,
-      "lore": "ENOUGH TO BUY BACK A CROWN. THE CROWN WAS NEVER WORTH IT.",
-      "name": "THE KING'S RANSOM",
-      "slot": "bag",
-      "tier": "unique",
-      "world": true
-    },
     "the_kremlin_ushanka": {
       "base": "mirrorshade_visor",
       "bonuses": [
@@ -6290,6 +6248,48 @@
       "setId": "exiles_flight",
       "slot": "head",
       "tier": "set"
+    },
+    "the_residencys_ransom": {
+      "bagSlots": 5,
+      "base": "bag",
+      "bonuses": [
+        {
+          "kind": "stat",
+          "stat": "luck",
+          "value": 18
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 16
+        },
+        {
+          "kind": "maxHp",
+          "value": 200
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 14
+        },
+        {
+          "kind": "stat",
+          "stat": "dexterity",
+          "value": 12
+        },
+        {
+          "kind": "stat",
+          "stat": "intelligence",
+          "value": 10
+        }
+      ],
+      "id": "the_residencys_ransom",
+      "ilvl": 93,
+      "lore": "ENOUGH TO BUY BACK A CROWN. THE CROWN WAS NEVER WORTH IT.",
+      "name": "THE KING'S RANSOM",
+      "slot": "bag",
+      "tier": "unique",
+      "world": true
     },
     "the_riftwidow": {
       "base": "flamberge",

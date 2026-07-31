@@ -1172,8 +1172,19 @@ describe("library pages", () => {
       expect(venue).toBeTruthy();
       expect(founder.nameQualifier).toBe(venue);
       expect(founder.distinctName).toBe(`THE FOUNDER (${venue})`);
-      // The front door's rack is flat, so it prints the qualifier…
-      expect(front).toContain(`<span class="where">${venue}</span></span>`);
+    }
+    // The front door's rack is flat, so whichever of them it carries prints the
+    // qualifier. WHICH of the three lands there follows from the venue rosters
+    // — the rack takes one boss per venue — so this asserts the rule on the ones
+    // actually racked rather than assuming all three are.
+    const racked = founders.filter((f: { path: string }) =>
+      front.includes(`${f.path}/`),
+    );
+    expect(racked.length).toBeGreaterThan(0);
+    for (const founder of racked) {
+      expect(front).toContain(
+        `<span class="where">${founder.home?.name}</span></span>`,
+      );
     }
     // …and the bestiary's, which sits under the venue's own heading, does not.
     expect(index).not.toContain('<span class="where">MARS</span>');

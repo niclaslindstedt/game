@@ -24,8 +24,7 @@ animations:
   derelict_rover_roll:
     { frames: [derelict_rover_0, derelict_rover_1], delayMs: 300 }
   unit_zero_walk: { frames: [unit_zero_0, unit_zero_1], delayMs: 320 }
-  the_indexer_walk:
-    { frames: [the_indexer_0, the_indexer_1], delayMs: 280 }
+  the_indexer_walk: { frames: [the_indexer_0, the_indexer_1], delayMs: 280 }
   the_vendor_walk: { frames: [the_vendor_0, the_vendor_1], delayMs: 300 }
   successor_prime_walk:
     { frames: [successor_prime_0, successor_prime_1], delayMs: 340 }

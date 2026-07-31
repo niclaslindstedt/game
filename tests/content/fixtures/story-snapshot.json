@@ -2030,6 +2030,19 @@
       ],
       "name": "ANTI-GRAV UNIT"
     },
+    "bro_probe": {
+      "icon": "icon_probe",
+      "id": "bro_probe",
+      "lore": [
+        [
+          "A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
+        ],
+        [
+          "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
+        ]
+      ],
+      "name": "TRUST ME BRO AI PROBE"
+    },
     "bunker_ledger": {
       "icon": "icon_ledger",
       "id": "bunker_ledger",
@@ -2116,6 +2129,19 @@
         ["THAT'S MY GIRL.", "...ALL OF IT. THAT'S MY GIRL."]
       ],
       "name": "ENGAGEMENT REPORT"
+    },
+    "goodco_blueprints": {
+      "icon": "icon_blueprint",
+      "id": "goodco_blueprints",
+      "lore": [
+        [
+          "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED GOODCO, DATED YEARS AGO."
+        ],
+        [
+          "EVERY CORRIDOR DRAINS INTO THE OLD WRECK. THE BASE ISN'T ON THE MOON. IT'S PLUGGED IN."
+        ]
+      ],
+      "name": "GOODCO BLUEPRINTS"
     },
     "keycard_core": {
       "icon": "icon_keycard_blue",
@@ -2225,7 +2251,7 @@
       "id": "park_brochure",
       "lore": [
         [
-          "'EASTWORLD! THE WEST, BUT EAST. BUILT BY V. THE STRONGMAN & S. THE STUNT DOUBLE. INTELLIGENCE BY TRUST ME BRO.'"
+          "'EASTWORLD! THE WEST, BUT EAST. BUILT BY THE STRONGMAN & THE STUNT DOUBLE. INTELLIGENCE BY TRUST ME BRO AI.'"
         ],
         [
           "THE MASCOT IS A BEAR IN A COWBOY HAT. THE FINE PRINT WAIVES YOUR ORGANS."
@@ -2257,19 +2283,6 @@
       ],
       "name": "SPACE SUIT",
       "suitsHero": true
-    },
-    "goodco_blueprints": {
-      "icon": "icon_blueprint",
-      "id": "goodco_blueprints",
-      "lore": [
-        [
-          "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED GOODCO, DATED YEARS AGO."
-        ],
-        [
-          "EVERY CORRIDOR DRAINS INTO THE OLD WRECK. THE BASE ISN'T ON THE MOON. IT'S PLUGGED IN."
-        ]
-      ],
-      "name": "GOODCO BLUEPRINTS"
     },
     "tribute_schedule": {
       "icon": "icon_tablet",
@@ -2310,19 +2323,6 @@
         ]
       ],
       "name": "WARDENCLYFFE NOTES"
-    },
-    "bro_probe": {
-      "icon": "icon_probe",
-      "id": "bro_probe",
-      "lore": [
-        [
-          "A BURNT PROBE, STAMPED TRUST ME BRO. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
-        ],
-        [
-          "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
-        ]
-      ],
-      "name": "TRUST ME BRO PROBE"
     }
   },
   "thoughts": {
@@ -2430,6 +2430,44 @@
         [
           "TRUST ME BRO HOSTS. THE SAME BRAIN THAT TOOK MY JOB, NOW IN SPURS. GOOD. NO GUILT, THEN."
         ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "goodco_armed": {
+      "id": "goodco_armed",
+      "pages": [
+        [
+          "A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID."
+        ],
+        ["SO THE NIGHT SHIFT BITES NOW. GOOD THING I CAME ARMED."]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "goodco_staff": {
+      "id": "goodco_staff",
+      "pages": [
+        [
+          "LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT."
+        ],
+        [
+          "WE NEVER RAN NIGHTS LIKE THIS. SOMETHING'S GOT THE WHOLE BUILDING UP AFTER DARK."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "goodco_successor": {
+      "id": "goodco_successor",
+      "pages": [
+        [
+          "AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE."
+        ],
+        [
+          "THEN THE AI REDREW IT, AND THE LINE STARTED WALKING EVERYONE'S JOBS OUT THE DOOR."
+        ],
+        ["FUNNY THING, PROGRESS. MY TURN TO MAKE SOMETHING OBSOLETE."]
       ],
       "portrait": "hero",
       "speaker": "ME"
@@ -2687,44 +2725,6 @@
         ["NOTED. DON'T STAND STILL. DON'T TRUST THE FLOOR. THERE ISN'T ONE."]
       ],
       "portrait": "player",
-      "speaker": "ME"
-    },
-    "goodco_armed": {
-      "id": "goodco_armed",
-      "pages": [
-        [
-          "A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID."
-        ],
-        ["SO THE NIGHT SHIFT BITES NOW. GOOD THING I CAME ARMED."]
-      ],
-      "portrait": "hero",
-      "speaker": "ME"
-    },
-    "goodco_successor": {
-      "id": "goodco_successor",
-      "pages": [
-        [
-          "AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE."
-        ],
-        [
-          "THEN THE AI REDREW IT, AND THE LINE STARTED WALKING EVERYONE'S JOBS OUT THE DOOR."
-        ],
-        ["FUNNY THING, PROGRESS. MY TURN TO MAKE SOMETHING OBSOLETE."]
-      ],
-      "portrait": "hero",
-      "speaker": "ME"
-    },
-    "goodco_staff": {
-      "id": "goodco_staff",
-      "pages": [
-        [
-          "LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT."
-        ],
-        [
-          "WE NEVER RAN NIGHTS LIKE THIS. SOMETHING'S GOT THE WHOLE BUILDING UP AFTER DARK."
-        ]
-      ],
-      "portrait": "hero",
       "speaker": "ME"
     }
   }

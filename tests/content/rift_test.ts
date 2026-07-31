@@ -91,7 +91,7 @@ describe("THE RIFT level def", () => {
       .filter((s) => "at" in s && enemyDef(s.enemy).role === "boss")
       .map((s) => s.enemy)
       .sort();
-    expect(bosses).toEqual(["the_founder_rift", "bro_omega"]);
+    expect(bosses).toEqual(["bro_omega", "the_founder_rift"]);
     // The second encounter is the same coward — but NOT in the same clothes.
     // He turns up on the far side of the tear in an all-black suit and a black
     // campaign cap, so the two meetings read as two different nights rather

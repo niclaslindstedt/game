@@ -67,8 +67,8 @@ describe("GOODCO HQ level def", () => {
       "guard",
       "hazmat",
       "intern",
-      "successor",
       "scientist",
+      "successor",
     ]);
 
     const state = startGame(SEED, "goodco_hq");
@@ -237,7 +237,11 @@ describe("GOODCO HQ level def", () => {
     // instant an intern is on screen; pre-marking it seen keeps a replay quiet.
     const seen = createGame(SEED, "goodco_hq");
     skipStoryOpening(seen);
-    markThoughtsSeen(seen, ["goodco_staff", "goodco_armed", "goodco_successor"]);
+    markThoughtsSeen(seen, [
+      "goodco_staff",
+      "goodco_armed",
+      "goodco_successor",
+    ]);
     let opened = false;
     for (let i = 0; i < 400 && !opened; i++) {
       step(seen, idle, DT);

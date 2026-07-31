@@ -29,7 +29,8 @@ animations:
   soldier_walk: { frames: [soldier_0, soldier_1], delayMs: 320 }
   vacuum_bot_roll: { frames: [vacuum_bot_0, vacuum_bot_1], delayMs: 240 }
   bodyguard_walk: { frames: [bodyguard_0, bodyguard_1], delayMs: 340 }
-  the_developer_walk: { frames: [the_developer_0, the_developer_1], delayMs: 380 }
+  the_developer_walk:
+    { frames: [the_developer_0, the_developer_1], delayMs: 380 }
   permafrost_saint_drift:
     { frames: [permafrost_saint_0, permafrost_saint_1], delayMs: 400 }
   dead_hand_scuttle: { frames: [dead_hand_0, dead_hand_1], delayMs: 240 }
