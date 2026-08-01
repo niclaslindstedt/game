@@ -178,7 +178,24 @@ export type NetClient = {
    * what it may DO are the server's — see `server/wire/chat.ts` for why the
    * client is not entitled to an opinion about `/kick`. */
   sendChat(text: string): void;
+  /**
+   * The net graph's client half: what the state stream is costing, measured
+   * where it arrives. Clock-free on purpose — the window is counted in server
+   * ticks off the frames themselves, so the same numbers come out of a page,
+   * a bot client and a test without anybody injecting a clock.
+   */
+  netStats(): NetStats;
   dispose(): void;
+};
+
+/** What `netStats` reports. All zeros until two snapshots have landed. */
+export type NetStats = {
+  /** State bytes per second, over the recent snapshot window. */
+  rate: number;
+  /** Snapshots (full or delta) per second over the same window. */
+  perSec: number;
+  /** The last applied state frame's size in bytes. */
+  lastBytes: number;
 };
 
 export function createNetClient(options: NetClientOptions): NetClient {
@@ -193,6 +210,10 @@ export function createNetClient(options: NetClientOptions): NetClient {
   let tick = 0;
   let inputSeq = 0;
   let disposed = false;
+  /** The recent state frames, as (server tick, wire bytes) pairs — the net
+   * graph's raw material. Bounded to ~2 s at the publish rate. */
+  const received: { tick: number; bytes: number }[] = [];
+  const RECEIVED_KEPT = 40;
 
   transport.onFrame((raw) => {
     if (disposed) return;
@@ -231,6 +252,8 @@ export function createNetClient(options: NetClientOptions): NetClient {
     }
     tick = frame.tick;
     acked = frame.seq;
+    received.push({ tick: frame.tick, bytes: raw.byteLength });
+    if (received.length > RECEIVED_KEPT) received.shift();
     // ACK IMMEDIATELY, and only for what was actually applied. The server codes
     // its next delta against this sequence, so an ack sent optimistically — or
     // for a frame that failed to apply — is a desync with the shape of a
@@ -346,6 +369,25 @@ export function createNetClient(options: NetClientOptions): NetClient {
           payload,
         ),
       );
+    },
+    netStats() {
+      const last = received[received.length - 1];
+      const first = received[0];
+      if (!last || !first || received.length < 2) {
+        return { rate: 0, perSec: 0, lastBytes: last?.bytes ?? 0 };
+      }
+      // The span is measured in SERVER TICKS (60/s), read off the frames that
+      // arrived — so a stalled connection reads as a falling rate rather than
+      // a frozen one, and no clock had to be injected to get there.
+      const spanSec = Math.max(1 / 60, (last.tick - first.tick) / 60);
+      let bytes = 0;
+      for (const entry of received) bytes += entry.bytes;
+      return {
+        rate: Math.round((bytes - first.bytes) / spanSec),
+        perSec:
+          Math.round(((received.length - 1) / spanSec) * 10) / 10,
+        lastBytes: last.bytes,
+      };
     },
     dispose() {
       if (disposed) return;

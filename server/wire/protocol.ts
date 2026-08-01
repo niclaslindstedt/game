@@ -387,6 +387,10 @@ export type RosterEntry = {
   /** Round trip in ms as the server last measured it, or -1 for the host's own
    * renderer, which has no wire to measure. */
   ping: number;
+  /** State bytes per second the server is sending this client, over the last
+   * measured second. The net graph's per-seat figure; 0 until a window has
+   * completed. */
+  rate: number;
 };
 
 /** A `roster` frame. */

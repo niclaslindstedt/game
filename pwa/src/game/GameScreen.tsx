@@ -883,6 +883,7 @@ export function GameScreen({
       botView,
       demo,
       showFps,
+      netStats: driver.netStats?.bind(driver),
       demoDirector,
       minimapRef,
       fpsRef,

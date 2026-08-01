@@ -53,6 +53,7 @@ export type ServerRosterEntry = {
   name: string;
   playing: boolean;
   ping: number;
+  rate: number;
 };
 
 /** A message down the control channel to the server. Mirrors `ControlMessage`

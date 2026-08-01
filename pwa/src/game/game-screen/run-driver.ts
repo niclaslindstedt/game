@@ -41,6 +41,7 @@ import {
   type GameState,
   type RunParams,
 } from "@game/core";
+import type { NetStats } from "@game/client";
 import type { SessionParams } from "@game/wire/protocol.ts";
 
 import { activeDefOverrides, activeMods } from "../mod-state.ts";
@@ -92,13 +93,19 @@ export type RunDriver = {
    */
   readonly live: boolean;
   /**
-   * Register the app's reaction to an IN-SESSION CROSSING (§6.4) — called
-   * with the OLD state, before the incoming full snapshot moves the world,
-   * which is the one moment the local hero can still be banked off the level
-   * being left. Net drivers implement it; the local driver has no session to
-   * travel with and leaves it undefined.
+   * Register the app's reaction to an IN-SESSION CROSSING — called with the
+   * OLD state, before the incoming full snapshot moves the world, which is
+   * the one moment the local hero can still be banked off the level being
+   * left. Net drivers implement it; the local driver has no session to travel
+   * with and leaves it undefined.
    */
   setTravelHook?(hook: (state: GameState) => void): void;
+  /**
+   * The net graph's numbers — what the state stream costs, as this client
+   * measures it. Net drivers answer; the local driver has no wire and leaves
+   * it undefined, which is what keeps the readout off single-player screens.
+   */
+  netStats?(): NetStats;
   dispose(): void;
 };
 

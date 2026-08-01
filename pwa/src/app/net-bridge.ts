@@ -100,6 +100,9 @@ export type SeatEntry = {
    * peer whose route Valve owns. Printed as such rather than as a flattering
    * zero. */
   ping: number;
+  /** State bytes per second the session is sending this seat — the net
+   * graph's per-seat figure; 0 until a full second has been measured. */
+  rate: number;
 };
 
 /** One row in the server browser. Everything in it is what the host CLAIMED;

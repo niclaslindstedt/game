@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 description: |-
-  THE GARAGE - the hero's home base, and the game's HUB (multiplayer plan
-  phase 6). A STATIC venue: the blueprint pins its carve seed, so the place
+  THE GARAGE - the hero's home base, and the game's HUB (docs/multiplayer.md
+  has the co-op architecture it anchors). A STATIC venue: the blueprint pins its carve seed, so the place
   lays out identically every visit - a home should not rearrange its walls
   between errands. SMALL and fully KNOWN: the whole lot is one screen and a
   half, there is no fog of war (`revealed` - a man knows his own garage),

@@ -126,7 +126,7 @@ export function SessionPanel({
           label={seat.name.toUpperCase()}
           value={`${seat.playing ? "PLAYING" : "WATCHING"}${
             seat.ping >= 0 ? ` - ${seat.ping} MS` : ""
-          }`}
+          }${seat.rate > 0 ? ` - ${(seat.rate / 1024).toFixed(1)} KB/S` : ""}`}
           action={
             onTrade && seat.seat !== null && seat.seat !== mySeat
               ? { label: "TRADE", run: () => onTrade(seat.seat!) }

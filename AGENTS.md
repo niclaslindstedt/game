@@ -436,8 +436,8 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`) |
 | A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                             |
 
-Everything multiplayer: **`docs/multiplayer.md`** (shipped architecture) and
-`docs/multiplayer-plan.md` (the roadmap, and phase 5.5 for every open debt).
+Everything multiplayer: **`docs/multiplayer.md`** — the shipped architecture,
+and the record of what still needs a human with hardware to accept.
 
 ## The content pipelines
 
@@ -537,7 +537,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | a plot beat / the story as a whole                                     | `docs/story.md`, then push down — load `update-story`                     |
 | story or dialogue text (any line)                                      | `docs/manuscript.md`, with `docs/story.md` above it — load `update-story` |
 | a name (a mob, an item, a company)                                     | `docs/naming.md` if the RULE changes; otherwise just obey it              |
-| the co-op architecture                                                 | `docs/multiplayer.md`; open debts in `docs/multiplayer-plan.md` §5.5      |
+| the co-op architecture                                                 | `docs/multiplayer.md`                                                     |
 | the mod format or SDK                                                  | `docs/modding.md`, `mod/FORMAT.md`, and `make mod-catalog` if ids moved   |
 | Make targets / npm scripts                                             | `README.md` Usage, `CONTRIBUTING.md`, this file                           |
 | deploy slots / pages workflow                                          | `docs/architecture.md`, `README.md`, `pwa/pwa-plugin.ts` `DEPLOY_SLOTS`   |
@@ -623,7 +623,7 @@ skill is the source of truth — load that, not a search of the tree.
 | The projection, postfx, the canvas and its scale tiers, gaits, jumps, the loot toss and rarity aura, the hero doll    | `docs/rendering.md`                                                      |
 | Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                                               |
 | Naming anything                                                                                                       | `docs/naming.md`                                                         |
-| Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md` (roadmap + open debts: `docs/multiplayer-plan.md`) |
+| Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                    |
 | Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | `docs/modding.md`, `mod/FORMAT.md`, `mod/AGENTS.md`                      |
 | Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                  |
 | This game's plot, roster, venues and economy                                                                          | `docs/game-content.md`, `docs/story.md`                                  |

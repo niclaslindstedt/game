@@ -65,7 +65,7 @@ import {
 
 import { createChatRoom, type ChatRoom } from "./chat-room.ts";
 import { hash32 } from "./wire/handshake.ts";
-import { encodeFrame, encodeFrameJson } from "./wire/codec.ts";
+import { encodeFrame, encodeFrameJson, HEADER_BYTES } from "./wire/codec.ts";
 import { playerScaling } from "./wire/players.ts";
 import {
   diffState,
@@ -149,6 +149,14 @@ type Client = {
    * replay, and the map holds kilobytes rather than worlds.
    */
   history: Map<number, Sent>;
+  /** State bytes sent in the current measuring window. Snapshot and delta
+   * frames only — control traffic is noise beside them. */
+  sentWindow: number;
+  /** When the window opened. */
+  windowStart: number;
+  /** The last completed window's rate, in bytes per second. What the roster
+   * reports — a live counter would flicker with the publish beat. */
+  sendRate: number;
 };
 
 /**
@@ -457,6 +465,7 @@ export function createSession(options: SessionOptions): Session {
         // inside the same machine; there is no wire to time, and -1 is the
         // seam's word for that rather than a flattering 0.
         ping: client.slot === 0 ? -1 : peers.ping(client.id),
+        rate: client.sendRate,
       }));
   }
 
@@ -724,6 +733,19 @@ export function createSession(options: SessionOptions): Session {
           json,
         ),
       );
+      // THE NET GRAPH'S SERVER HALF: state bytes per client, windowed to a
+      // second so the roster reports a steady figure instead of the publish
+      // beat. Booked here — and only here — because snapshot traffic is the
+      // whole story; control frames are bytes-per-minute beside it.
+      client.sentWindow += json.length + HEADER_BYTES;
+      const at = now();
+      if (at - client.windowStart >= 1000) {
+        client.sendRate = Math.round(
+          (client.sentWindow * 1000) / (at - client.windowStart),
+        );
+        client.sentWindow = 0;
+        client.windowStart = at;
+      }
       // Cleared only AFTER the frame is handed over, so a send that throws
       // leaves the client still owed its world rather than baselined on one it
       // never received.
@@ -863,6 +885,9 @@ export function createSession(options: SessionOptions): Session {
         ackedSeq: 0,
         needsFull: adopted !== null,
         history: new Map(),
+        sentWindow: 0,
+        windowStart: now(),
+        sendRate: 0,
       };
       clients.set(id, client);
       if (seat !== null) inputs.set(seat, { ...IDLE_INPUT });
