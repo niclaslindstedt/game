@@ -4,6 +4,13 @@
 // the typed array into a plain object, and a thawed run whose `explored` stays
 // a plain object has no `.length`, which freezes the fog renderers so the map
 // never clears after a resume (the bug this guards).
+//
+// It must also REFUSE a snapshot from another save format outright, and the
+// shape-drift guard at the bottom is what keeps that refusal honest: a field
+// added to the state without a SAVE_VERSION bump ships a build that resumes
+// old snapshots into a shape the engine can't read — which presents as the
+// post-update freeze (a still image of the map and hero, no UI), not as the
+// missing bump it is.
 
 import { createGame, LEVEL_ORDER, mapCols, mapRows } from "@game/core";
 import type { Difficulty } from "@game/core";
@@ -12,6 +19,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   clearSavedRun,
   loadSavedRun,
+  SAVE_VERSION,
   saveRun,
 } from "../pwa/src/game/saved-run.ts";
 
@@ -111,4 +119,231 @@ describe("saved run — fog grid survives the freeze/thaw", () => {
   });
 
   afterEach(() => clearSavedRun());
+});
+
+describe("saved run — incompatible snapshots are dropped, not resumed", () => {
+  it("refuses a snapshot from an older save format and clears it", () => {
+    const state = createGame(1, LEVEL_ID, DIFFICULTY);
+    saveRun({
+      characterId: "char-1",
+      difficulty: DIFFICULTY,
+      levelId: LEVEL_ID,
+      state,
+    });
+    // Rewrite the parked blob as the PREVIOUS format would have stamped it —
+    // the situation an app update creates when the state grew a field the old
+    // build never wrote (v24: the ammunition pouch, the gold ledger).
+    const keys = Array.from({ length: localStorage.length }, (_, i) =>
+      localStorage.key(i),
+    );
+    const key = keys.find((k) => k?.includes("current-run")) as string;
+    const blob = JSON.parse(localStorage.getItem(key) as string) as {
+      v: number;
+    };
+    blob.v = SAVE_VERSION - 1;
+    localStorage.setItem(key, JSON.stringify(blob));
+
+    // The thaw must refuse it (CONTINUE simply doesn't appear) and clear the
+    // blob so it can't wedge a later load.
+    expect(loadSavedRun()).toBeNull();
+    expect(localStorage.getItem(key)).toBeNull();
+  });
+
+  afterEach(() => clearSavedRun());
+});
+
+// THE SHAPE-DRIFT GUARD. These lists are the state shape SAVE_VERSION promises
+// it can thaw. When this test fails, a field joined (or left) the serialized
+// state and the save format has NOT been told:
+//
+//   1. Decide whether a snapshot from the current SAVE_VERSION can still be
+//      read into the new shape. A new REQUIRED field the engine reads
+//      unguarded (`player.ammo[...]`) cannot — that thaw crashes the resume's
+//      first frame, before any UI mounts, and the player sees a frozen map. A
+//      new OPTIONAL field, or one every reader defaults, can.
+//   2. If it can't: bump SAVE_VERSION in pwa/src/game/saved-run.ts (with a
+//      comment line saying what joined, like every bump before it).
+//   3. Update the lists below to the new shape — in the SAME commit.
+//
+// Only fresh-state keys are pinned: a field that appears mid-run is optional
+// by construction (an old snapshot thaws without it either way), so this
+// guards exactly the dangerous class — required fields initialized at
+// creation, which a thawed older snapshot alone would lack.
+describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
+  const state = createGame(1, LEVEL_ID, DIFFICULTY);
+
+  it("knows every field of a fresh GameState", () => {
+    expect(Object.keys(state).sort()).toEqual([
+      "asteroidTimerMs",
+      "asteroids",
+      "autopilot",
+      "bagFullHintCooldownMs",
+      "baits",
+      "bossCorpse",
+      "bossDeath",
+      "campAnchor",
+      "campMs",
+      "canopy",
+      "capThoughtIdx",
+      "capThoughtMs",
+      "carvedLevel",
+      "choice",
+      "clearedLevels",
+      "combatDps",
+      "combatGraceMs",
+      "combatKillRate",
+      "companionFocus",
+      "companions",
+      "craters",
+      "critters",
+      "cutscene",
+      "cutsceneQueue",
+      "deathScene",
+      "decor",
+      "dialogue",
+      "dialogueMuted",
+      "difficulty",
+      "doors",
+      "earlyDropCursor",
+      "earlyDropKills",
+      "elevatorLockMs",
+      "elevators",
+      "enemies",
+      "escorts",
+      "events",
+      "evoProof",
+      "evoRatchetMs",
+      "explored",
+      "freeze",
+      "fxRng",
+      "gates",
+      "goldRng",
+      "hayBallTimerMs",
+      "hayBalls",
+      "introPage",
+      "items",
+      "lairs",
+      "landmarks",
+      "lastMenaceAttack",
+      "level",
+      "levelUpFxMs",
+      "mapMarkers",
+      "menace",
+      "menaceExemptDamage",
+      "menaceExemptKills",
+      "menaceFloor",
+      "merchant",
+      "minionEquipmentDrops",
+      "minionKillRate",
+      "minionSpawnRate",
+      "moveSpawnCredit",
+      "nextId",
+      "nukeCalmMs",
+      "nukeRecoverMs",
+      "obstacles",
+      "obstaclesVersion",
+      "outroPage",
+      "packs",
+      "pathIndex",
+      "pendingCritBlobs",
+      "pendingMinionKills",
+      "pendingMinionSpawns",
+      "pendingProcs",
+      "pendingReflects",
+      "pendingTalentPoints",
+      "phase",
+      "playerSpawn",
+      "players",
+      "projectiles",
+      "quakeMs",
+      "questFlags",
+      "questGivers",
+      "questOffer",
+      "questRewards",
+      "quests",
+      "respecPending",
+      "rng",
+      "sandstormTimerMs",
+      "sandstorms",
+      "scorches",
+      "spawners",
+      "staminaEmptyMs",
+      "staminaRegenLockMs",
+      "stampedeRumbleMs",
+      "stampedeTimerMs",
+      "stampedeWarn",
+      "stampedes",
+      "stats",
+      "staying",
+      "storyItems",
+      "talk",
+      "thoughtsSeen",
+      "trickleMs",
+      "victoryCountdownMs",
+      "waveSpawned",
+      "wells",
+    ]);
+  });
+
+  it("knows every field of a fresh hero", () => {
+    expect(Object.keys(state.players[0] as object).sort()).toEqual([
+      "abilities",
+      // v24: the ammunition pouch — the field whose missing bump shipped the
+      // frozen-resume bug this guard exists to prevent.
+      "ammo",
+      "cleanSlates",
+      "coins",
+      "disarmed",
+      "equipment",
+      "faceLeft",
+      "facing",
+      "heldAbilities",
+      "hp",
+      "hurtFlashMs",
+      "inventory",
+      "itemSpells",
+      "knockMs",
+      "knockVel",
+      "knockoutMs",
+      "level",
+      "maxHp",
+      "maxStamina",
+      "medkits",
+      "moving",
+      "pendingStatPoints",
+      "pos",
+      "repairKits",
+      "spentStats",
+      "stamina",
+      "staminaPotions",
+      "stats",
+      "talents",
+      "vault",
+      "vel",
+      "vz",
+      "weaponCooldownMs",
+      "xp",
+      "xpToNext",
+      "z",
+    ]);
+  });
+
+  it("knows every field of the stats record", () => {
+    expect(Object.keys(state.stats).sort()).toEqual([
+      "coinsSold",
+      "combatMs",
+      "damageDealt",
+      "damageTaken",
+      "goldCollected",
+      "itemsCollected",
+      "jumps",
+      "kills",
+      "peakMenace",
+      "shotsFired",
+      "timeMs",
+      "totalEnemies",
+      "xpGained",
+      "xpLost",
+    ]);
+  });
 });

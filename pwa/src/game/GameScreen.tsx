@@ -311,6 +311,16 @@ export function GameScreen({
   // so React re-reads the frozen state.
   const [, setUiTick] = useState(0);
   const bumpUi = () => setUiTick((t) => t + 1);
+  // A loop failure BEFORE this mount's first complete frame. The loop's
+  // crash-resilience (game-loop.ts) is built for a bad frame in a healthy run —
+  // it logs, drops the frame and keeps going. A run that cannot produce its
+  // FIRST frame is a different animal: nothing has published a HUD yet, so no
+  // overlay, dock or pause menu ever mounts, and "keep going" leaves a frozen
+  // canvas with no UI and no way out (the post-update resume freeze — a thawed
+  // save the new build can't read throws on every frame). Escalate that one
+  // case to React instead: the throw below lands in App's ErrorBoundary, which
+  // shows the RELOAD screen.
+  const [fatalRunError, setFatalRunError] = useState<unknown>(null);
   // The AUTO PILOT session (see autopilot-director.ts): survives the run
   // remounts the ride itself causes and ends with the screen.
   const autopilot = useAutopilotSession();
@@ -694,7 +704,7 @@ export function GameScreen({
       bumpUi,
     });
 
-    const render = createRenderFrame({
+    const renderFrame = createRenderFrame({
       state,
       canvas,
       ctx,
@@ -721,6 +731,16 @@ export function GameScreen({
       guideBlinkRef,
       setHud,
     });
+    // One COMPLETE frame is the line between "a bad frame in a live run"
+    // (survivable — see onError below) and "a run that cannot start" (fatal).
+    // Flipped after the first render that returns without throwing, which is
+    // also what publishes the first HUD snapshot React's whole overlay stack
+    // is gated on.
+    let firstFrameOk = false;
+    const render = (timeMs: number) => {
+      renderFrame(timeMs);
+      firstFrameOk = true;
+    };
 
     const stop = startGameLoop({
       // Fast-forward (`?speed=` / `__speed`) advances the sim faster by running
@@ -947,6 +967,17 @@ export function GameScreen({
       // instead of the run simply stopping dead with nothing to go on.
       onError: (err, phase) => {
         error(`game loop ${phase} failed: ${describeError(err)}`);
+        // Failed before ever completing a frame: the run is dead on arrival
+        // (a deterministic engine re-throws the same way every frame), and no
+        // HUD means no UI ever mounts to escape through. Hand the error to
+        // React — the throw in the render body routes it to App's
+        // ErrorBoundary and the player gets a RELOAD screen instead of a
+        // frozen picture.
+        if (!firstFrameOk) {
+          setFatalRunError(
+            err ?? new Error(`game loop ${phase} failed before first frame`),
+          );
+        }
       },
     });
 
@@ -990,6 +1021,14 @@ export function GameScreen({
     queues,
     setDemoTip,
   ]);
+
+  // A run that failed before its first complete frame (see the loop's
+  // onError): re-throw during render so App's ErrorBoundary catches it and
+  // shows the RELOAD screen. The parked run (if this was a resume) was already
+  // consumed, so reloading lands on a working title menu.
+  if (fatalRunError !== null) {
+    throw fatalRunError;
+  }
 
   if (!assets) {
     return <LoadingScreen />;
