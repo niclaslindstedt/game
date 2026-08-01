@@ -51,7 +51,6 @@ import {
 } from "./keybindings.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { HighScoresBoard } from "./title-screen/HighScoresBoard.tsx";
 import { MenuHeading } from "./title-screen/MenuHeading.tsx";
 import { MenuList } from "./title-screen/MenuList.tsx";
 import { StoreBackdrop } from "./title-screen/StoreBackdrop.tsx";
@@ -75,7 +74,7 @@ import { furthestUnlockedDifficulty } from "./title-screen/menus-campaign.ts";
 import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
 import { useCloudSave } from "./title-screen/use-cloud-save.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
-import { listMods, type InstalledMod } from "../app/mods-bridge.ts";
+import type { InstalledMod } from "../app/mods-bridge.ts";
 import type { ModBundle } from "./mod-state.ts";
 import { useMods } from "./title-screen/use-mods.ts";
 import { useSessions } from "./title-screen/use-sessions.ts";
@@ -116,6 +115,16 @@ const VaultScreen = lazy(() =>
 );
 const ArsenalScreen = /* @__PURE__ */ lazy(() =>
   import("./ArsenalScreen.tsx").then((m) => ({ default: m.ArsenalScreen })),
+);
+// The HIGH SCORES board, lazy for the same reason as the shelf-mates above:
+// an EXTRAS destination nobody reaches from a cold start, and the ranking
+// tables + medal rendering are real bytes the entry chunk should not carry.
+// (The `highscores.ts` DATA module stays eager — cloud save and the main menu
+// read it at launch; only the BOARD that draws it moves.)
+const HighScoresBoard = lazy(() =>
+  import("./title-screen/HighScoresBoard.tsx").then((m) => ({
+    default: m.HighScoresBoard,
+  })),
 );
 
 export function TitleScreen({
@@ -433,29 +442,16 @@ export function TitleScreen({
         } as unknown as Record<string, unknown>)
       : null,
     // §4.4: apply the HOST's exact mod set for the session on the way through
-    // a browser row — the same dynamic-import rule as `onPlayMods`, because
-    // `game/mods.ts` reaches `@game/core` and this screen is the startup path.
-    // An empty set restores the shipped game (a modded joiner entering a
-    // stock host's session plays stock).
+    // a browser row — a lazy chunk (join-mods.ts), because the apply reaches
+    // `game/mods.ts` → `@game/core` and this screen is the startup path.
     applyForSession: useCallback(
-      async (modIds: string[]) => {
-        if (!assets) return false;
-        const mods = await import("./mods.ts");
-        if (modIds.length === 0) {
-          mods.restoreBaseDefs(assets.sprites);
-          return true;
-        }
-        const list = await listMods();
-        const byId = new Map(
-          list
-            .filter((mod) => mod.bundle)
-            .map((mod) => [mod.bundle!.id, mod.bundle!] as const),
-        );
-        const bundles = modIds.map((id) => byId.get(id));
-        if (bundles.some((bundle) => !bundle)) return false;
-        await mods.applyMods(bundles as ModBundle[], assets.sprites);
-        return true;
-      },
+      async (modIds: string[]) =>
+        assets
+          ? (await import("./title-screen/join-mods.ts")).applyForSession(
+              modIds,
+              assets.sprites,
+            )
+          : false,
       [assets],
     ),
     onJoin,
@@ -885,20 +881,22 @@ export function TitleScreen({
           </div>
 
           {screen === "scores" && (
-            <HighScoresBoard
-              font={font}
-              difficulty={scoreDifficulty}
-              setDifficulty={setScoreDifficulty}
-              metric={scoreMetric}
-              setMetric={setScoreMetric}
-              detail={scoreDetail}
-              setDetail={setScoreDetail}
-              onBack={() => {
-                // Land back on the HIGH SCORES row of the EXTRAS shelf.
-                setScreen("extras");
-                setCursor(ctx.rowIndexIn("extras", "high-scores"));
-              }}
-            />
+            <Suspense fallback={null}>
+              <HighScoresBoard
+                font={font}
+                difficulty={scoreDifficulty}
+                setDifficulty={setScoreDifficulty}
+                metric={scoreMetric}
+                setMetric={setScoreMetric}
+                detail={scoreDetail}
+                setDetail={setScoreDetail}
+                onBack={() => {
+                  // Land back on the HIGH SCORES row of the EXTRAS shelf.
+                  setScreen("extras");
+                  setCursor(ctx.rowIndexIn("extras", "high-scores"));
+                }}
+              />
+            </Suspense>
           )}
 
           {/* browserOpen (arsenal/achievements) never reaches here — the whole

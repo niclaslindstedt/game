@@ -34,7 +34,7 @@
 // It is reached through the `@game/client` alias, which resolves to this file
 // in all four config maps (root tsconfig, pwa tsconfig, vitest, vite).
 //
-// **THE 170 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
+// **THE 200 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
 // `@game/core`, so nothing on the app's startup path may import it: the HOST and
 // JOIN screens are title-menu screens and must reach `@game/menu` and the
 // import-free `@game/wire/*` leaves alone. `pwa/scripts/check-seo.mjs` is what
@@ -53,14 +53,13 @@ import {
 
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
 import { patchState, type StatePatch, type WireState } from "./wire/delta.ts";
+import { FRAME, type CommandName } from "./wire/frames.ts";
 import {
-  FRAME,
   PROTOCOL_VERSION,
   refuseHandshake,
   type ByePayload,
   type ChatLine,
   type ChatPayload,
-  type CommandName,
   type CommandPayload,
   type Handshake,
   type RefusalReason,

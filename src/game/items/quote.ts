@@ -2,7 +2,7 @@
 // The item card's FLAVOR LINE — the one sentence printed in gold at the foot of
 // a tooltip, under everything the piece does.
 //
-// A whole module for one accessor, and the reason is the 170 KB CRITICAL-PATH
+// A whole module for one accessor, and the reason is the 200 KB CRITICAL-PATH
 // BUDGET rather than tidiness. This reads `defs/uniques.ts`, and the named chase
 // roster is deliberately kept off the app's startup path — it rides its own
 // generated module precisely so the title screen does not download 149 items it

@@ -9,7 +9,7 @@
 //
 // THE SHAPE AND THE MERGE LIVE NEXT DOOR in ./campaign-save.ts, a leaf whose
 // only import is a type — because the app's ROSTER stores this record and the
-// roster is on the startup path (the 170 KB budget). What is left here is the
+// roster is on the startup path (the 200 KB budget). What is left here is the
 // half that genuinely needs the CATALOG: deciding which errands are campaign
 // errands at all.
 //

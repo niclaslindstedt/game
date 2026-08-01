@@ -11,7 +11,8 @@ import { describe, expect, it } from "vitest";
 
 import { engineVersion, type GameState } from "@game/core";
 import { decodeFrame } from "@game/wire/codec.ts";
-import { FRAME, TICK_MS, type SessionParams } from "@game/wire/protocol.ts";
+import { FRAME, TICK_MS } from "@game/wire/frames.ts";
+import { type SessionParams } from "@game/wire/protocol.ts";
 
 import { createNetClient, type NetClient } from "../../server/client.ts";
 import { createSession, type Session } from "../../server/session.ts";

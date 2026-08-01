@@ -6,7 +6,7 @@
 // **NOTHING HERE REACHES `pwa/src/game/net/`.** These are TITLE MENU screens,
 // i.e. the app's startup path, and that directory imports `@game/core` — one
 // static edge from here would drag the whole simulation into every player's
-// first download and blow the 170 KB critical-path budget.
+// first download and blow the 200 KB critical-path budget.
 // `pwa/src/app/net-bridge.ts` is import-free by construction and is the only
 // thing this file talks to; the client that speaks the wire is loaded by the
 // RUN, behind its own lazy chunk. `tests/content/net_reachability_test.ts` is
@@ -30,13 +30,9 @@ import {
   type BrowserRow,
   type FirewallStatus,
 } from "../../app/net-bridge.ts";
-import {
-  listMods,
-  modsBridgeAvailable,
-  openWorkshop,
-  type InstalledMod,
-} from "../../app/mods-bridge.ts";
+import { modsBridgeAvailable, openWorkshop } from "../../app/mods-bridge.ts";
 import { engineVersion } from "@game/menu";
+import type { JoinModsHelper } from "./join-mods.ts";
 
 import { activeMods } from "../mod-state.ts";
 import { myHandshake, sessionRowRefusal } from "../net-text.ts";
@@ -83,13 +79,12 @@ export function useSessions({
   const netOpen = netBridgeAvailable();
   const [rows, setRows] = useState<BrowserRow[] | null>(null);
   const [firewall, setFirewall] = useState<FirewallStatus | null>(null);
-  // EVERY MOD ON THIS MACHINE, compiled, by its bundle id — what decides
-  // whether a modded host's row is a door (all installed: the set is applied
-  // on the way through) or a refusal with a Workshop pointer (§4.4). Null
-  // until the list lands; a row is then treated as it always was.
-  const [installed, setInstalled] = useState<Map<string, InstalledMod> | null>(
-    null,
-  );
+  // THE JOINER'S MOD RECONCILE (§4.4), behind its own lazy chunk — what
+  // decides whether a modded host's row is a door (all installed: the set is
+  // applied on the way through) or a refusal with a Workshop pointer. Null
+  // until the sessions screen loads it; a row is then treated exactly as it
+  // was before reconciliation existed.
+  const [joinMods, setJoinMods] = useState<JoinModsHelper | null>(null);
   // Bumped to re-read the settings this screen writes through (the port, the
   // password, the seats) — they live in the settings rather than in state so a
   // session's shape survives a relaunch.
@@ -152,44 +147,28 @@ export function useSessions({
     setRound((n) => n + 1);
   }, []);
 
-  // The installed-mod list rides the browser screen the way the rows do —
-  // fetched when it opens, because compiling a dozen mods is real work the
-  // title menu must not pay at launch.
+  // The reconcile helper rides the browser screen the way the rows do —
+  // loaded when it opens (its chunk AND the installed-mod list it compiles),
+  // because neither is work the title menu may pay at launch.
   useEffect(() => {
     if (screen !== "sessions" || !modsBridgeAvailable()) return;
     let live = true;
-    void listMods().then((mods) => {
-      if (!live) return;
-      const byId = new Map<string, InstalledMod>();
-      for (const mod of mods) {
-        const id = (mod.bundle as { id?: unknown } | null)?.id;
-        if (typeof id === "string" && mod.bundle) byId.set(id, mod);
-      }
-      setInstalled(byId);
-    });
+    void import("./join-mods.ts")
+      .then((m) => m.loadJoinMods())
+      .then((helper) => {
+        if (live) setJoinMods(helper);
+      });
     return () => {
       live = false;
     };
   }, [screen]);
 
-  /**
-   * The gap between a row's mod set and this build's (§4.4): which of the
-   * host's mods are MISSING here (not installed, or installed but broken),
-   * and whether joining would need the active set swapped at all.
-   */
+  /** The gap between a row's mod set and this build's (§4.4), or null while
+   * the helper has not loaded — a row is then judged exactly as it was
+   * before reconciliation existed. */
   const modsGap = useCallback(
-    (target: readonly string[]) => {
-      const mine = activeMods().map((stamp) => stamp.id);
-      const same =
-        target.length === mine.length &&
-        target.every((id, at) => mine[at] === id);
-      if (same) return { missing: [] as string[], needsApply: false };
-      return {
-        missing: target.filter((id) => !installed?.get(id)?.bundle),
-        needsApply: true,
-      };
-    },
-    [installed],
+    (target: readonly string[]) => joinMods?.gap(target) ?? null,
+    [joinMods],
   );
 
   /**
@@ -203,7 +182,7 @@ export function useSessions({
   const reconcileAndJoin = useCallback(
     (target: readonly string[], intent: JoinIntent) => {
       const gap = modsGap(target);
-      if (!gap.needsApply) {
+      if (!gap || !gap.needsApply) {
         onJoin(intent);
         return;
       }
@@ -270,17 +249,19 @@ export function useSessions({
       // WITH the host's set — joining applies it on the way through — and
       // only a genuinely missing mod (or a build/protocol skew) still greys
       // the row.
-      refusalFor: (row) =>
-        sessionRowRefusal(
+      refusalFor: (row) => {
+        const gap = modsGap(row.mods);
+        return sessionRowRefusal(
           row,
           myHandshake(
             engineVersion,
-            modsGap(row.mods).missing.length
-              ? activeMods().map((stamp) => stamp.id)
-              : row.mods,
+            gap && gap.missing.length === 0
+              ? row.mods
+              : activeMods().map((stamp) => stamp.id),
           ),
-        ),
-      missingMods: (row) => modsGap(row.mods).missing.length > 0,
+        );
+      },
+      missingMods: (row) => (modsGap(row.mods)?.missing.length ?? 0) > 0,
       openWorkshop,
       joinRow: (row, password) => {
         // A lobby row carries the host's direct address when it is offering

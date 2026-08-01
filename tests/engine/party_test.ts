@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createSession } from "../../server/session.ts";
-import { FRAME } from "../../server/wire/protocol.ts";
+import { FRAME } from "../../server/wire/frames.ts";
 
 import {
   anyHeroWithin,

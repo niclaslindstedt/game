@@ -64,10 +64,9 @@ import { createUdpTransport, keyFor } from "./net/udp.ts";
 import type { MappingState } from "./net/upnp.ts";
 import { parseAddress } from "./wire/address.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
+import { FRAME, TICK_MS } from "./wire/frames.ts";
 import {
-  FRAME,
   PROTOCOL_VERSION,
-  TICK_MS,
   type ByePayload,
   type RosterEntry,
   type SessionParams,

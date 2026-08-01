@@ -28,8 +28,9 @@
 // phase 5's trust model already says the host is a player and the host can cheat.
 // What both are for is keeping a session between the people invited to it.
 
+import { MAX_CLIENTS } from "./frames.ts";
 import type { Handshake, RefusalReason } from "./protocol.ts";
-import { MAX_CLIENTS, refuseHandshake } from "./protocol.ts";
+import { refuseHandshake } from "./protocol.ts";
 
 /**
  * How long a cookie stays good for, in ms.

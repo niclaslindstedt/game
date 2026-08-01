@@ -232,7 +232,7 @@ never by editing the fixture.
   `music-schema.mjs`, loaders `scripts/sound-data/` and `scripts/music-data/`).
   The sound bank emits SPLIT — `sounds.ts` for the run, `sounds-ui.ts` for the
   interface — because a menu click must not drag every kill and explosion into
-  the 170 KB critical path; the music emits **one module per track** plus an
+  the 200 KB critical path; the music emits **one module per track** plus an
   index of dynamic imports, for the same reason, so a score is fetched when its
   venue starts and never before. The round-trip guard
   (`tests/content/music_roundtrip_test.ts`) pins the compiled scores to

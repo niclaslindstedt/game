@@ -76,10 +76,12 @@ import {
 import {
   FRAME,
   MAX_CLIENTS,
-  PROTOCOL_VERSION,
   RECONNECT_GRACE_MS,
   SNAPSHOT_EVERY_TICKS,
   TICK_MS,
+} from "./wire/frames.ts";
+import {
+  PROTOCOL_VERSION,
   type ChatLine,
   type ChatPayload,
   type RosterEntry,

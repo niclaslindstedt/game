@@ -246,7 +246,7 @@ joining cost one small module rather than a second client.
 
 `server/wire/` is the vocabulary both ends speak, and it imports nothing at
 all — not even the engine. Both halves read it, and the page reads it from
-screens that may sit on the app's startup path, where the 170 KB critical-path
+screens that may sit on the app's startup path, where the 200 KB critical-path
 budget forbids reaching `@game/core`.
 
 ## The three rules worth knowing
@@ -390,7 +390,7 @@ Two things, and both are narrow on purpose:
   **THE LIST EXISTS TWICE, AND THAT IS DELIBERATE.** The engine owns what each
   verb DOES; `server/wire/protocol.ts` keeps a literal copy of the NAMES for its
   allow-list, because that leaf is read by the page from screens on the app's
-  startup path where the 170 KB budget forbids reaching `@game/core`.
+  startup path where the 200 KB budget forbids reaching `@game/core`.
   `tests/engine/run_commands_test.ts` fails the build when the two disagree —
   the same snapshot-and-drift-test shape `mod/catalog.json` uses.
 

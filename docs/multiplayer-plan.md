@@ -95,7 +95,7 @@ the engine's shape is stable on the axes this plan leans on.
 | Levels shipped                   | **6** (`content/levels/`), **no hub/town**                                                                                                                                                                                                                                                                                                                                                                                     |
 | Desktop packaging target         | **`dir`**, not an installer — Steam uploads a directory to a depot and its client installs it. **There is no elevated install step**                                                                                                                                                                                                                                                                                           |
 | Electron / Node                  | Electron ^43 (so `utilityProcess` is available); root `engines.node >= 24`; imports carry `.ts` extensions; `scripts/game-alias-loader.mjs` already maps the aliases for plain `node`                                                                                                                                                                                                                                          |
-| Critical-path budget             | **170 KB gzipped**, enforced by `pwa/scripts/check-seo.mjs`                                                                                                                                                                                                                                                                                                                                                                    |
+| Critical-path budget             | **200 KB gzipped**, enforced by `pwa/scripts/check-seo.mjs`                                                                                                                                                                                                                                                                                                                                                                    |
 
 ### The Steam binding is narrower than it looks — verify before leaning
 
@@ -353,7 +353,7 @@ in `GameScreen`. It applies snapshots, holds the interpolation buffer, and
 exposes exactly the same `GameState`-shaped object the renderer already reads,
 so `render.ts`, the HUD model, the effects and the overlays are untouched.
 
-**The 170 KB critical-path budget is a live hazard here.** The title menu's
+**The 200 KB critical-path budget is a live hazard here.** The title menu's
 future HOST / JOIN screens are on the app's **startup** path, so they may import
 `@game/menu` and nothing else. The net client, the codec and anything that
 reaches `@game/core` must be lazy — the same rule that keeps the level catalog
@@ -372,7 +372,7 @@ made the feature reachable**; they are now phase 1.5.
 | `tests/engine/` gains wire codec round-trips, snapshot/delta correctness, and the same-seed determinism test                                                  | ✅ Met — and the determinism test runs in a real second `node` process                                                                                                             |
 | `npm run electron:test` gains the session lifecycle: spawn, tick, orderly shutdown, crash-and-report, **and the utility process outliving a renderer reload** | ⚠️ **Four of five.** Spawn, port handover, orderly stop, forced kill, crash-vs-stop and restart are covered; the renderer-reload case is not, because the test rig has no renderer |
 | A parked run still resumes, a checkpoint still restores, and the autopilot still flies — all three **through the server**                                     | ❌ **Not met**, and it follows from the first row rather than being a second omission                                                                                              |
-| `make test`, `make lint`, `npm run electron:test` green; budget check passes                                                                                  | ✅ Met — critical path 163.7 KB gzipped against the 170 KB budget                                                                                                                  |
+| `make test`, `make lint`, `npm run electron:test` green; budget check passes                                                                                  | ✅ Met — critical path 163.7 KB gzipped against the 170 KB budget (the budget of the day)                                                                                          |
 
 One more thing phase 1 flagged rather than claimed, and it is still outstanding:
 **the packaged desktop path was never launched.** The `extraResources` entry, the
@@ -717,7 +717,7 @@ is where that debt is paid.
 - A parked run resumes, a checkpoint restores, and the autopilot flies — all
   three through the server.
 - `npm run electron` launches the packaged path and plays.
-- `make test`, `make lint`, `npm run electron:test` green; the 170 KB budget
+- `make test`, `make lint`, `npm run electron:test` green; the 200 KB budget
   still passes (the net client must stay lazy).
 
 **§1.5.1 LANDED; §1.5.2 AND §1.5.3 DID NOT.** The verbs travel — 69 of them,
@@ -905,7 +905,7 @@ sandbox that cannot fetch the Electron binary — #790 tried.)
   the cutover lands that test fails, and flipping it to the positive assertion
   is part of this PR rather than a follow-up. See §1.75.7.
 - `npm run electron` launches the packaged path and plays.
-- `make test`, `make lint`, `npm run electron:test` green; the 170 KB budget
+- `make test`, `make lint`, `npm run electron:test` green; the 200 KB budget
   still passes (the net client must stay lazy).
 
 ### 1.75.6 Risks
@@ -948,7 +948,7 @@ Three guards, and the second is the one that matters:
    `todo` would have been green in both worlds, which is the same silence the
    file exists to end. It carries the permanent half of the rule beside it: the
    app's STARTUP path must never statically reach `pwa/src/game/net/` or
-   `@game/core`, which is the 170 KB budget stated as the import that would
+   `@game/core`, which is the 200 KB budget stated as the import that would
    break it rather than as the number that would report it.
 3. **The first-delta size assertion** of §1.75.6, which has no home yet and
    should get one with the driver seam.
@@ -988,7 +988,7 @@ through — which is precisely why phase 2 held it.
 
 ### 2.5.2 Two rules carried over from §2
 
-**THE 170 KB CRITICAL-PATH BUDGET IS THE LIVE HAZARD OF THIS PR**, more than of
+**THE 200 KB CRITICAL-PATH BUDGET IS THE LIVE HAZARD OF THIS PR**, more than of
 any other. These are TITLE MENU screens, i.e. the app's startup path. They may
 import `@game/menu` and the import-free `@game/wire/*` leaves — never
 `pwa/src/game/net/`, which reaches `@game/core` and would drag the whole
@@ -2364,10 +2364,21 @@ measurements the bot enables, and the acceptances only hardware can give:
   depot's launch options, and store screenshots showing a party
   (`store-shots` skill): the mode meeting the world is this phase's whole
   subject.
+- **THE PLAN ERASED FROM THE CODE.** Remove every existing reference to this
+  plan from the shipped tree: the §-paragraph numbers and the words
+  "multiplayer plan" in code comments, doc comments and test headers. This
+  plan is a TRANSIENT document — it was used to WRITE the code, and code must
+  not reference back to it: a comment that explains a rule by citing a §
+  stops explaining anything the day the plan is archived. Each such comment
+  is rewritten to state its reasoning IN PLACE (or to point at
+  `docs/multiplayer.md`, the shipped-architecture doc, which is permanent),
+  and the sweep ends with zero hits for `multiplayer plan` and plan-§ numbers
+  anywhere outside `docs/`. From here on, no NEW code references the plan.
 
 _Done when a bot party plays like a party, the tuning numbers are re-measured
 rather than inherited, the soak has run for hours, every §5.5.1 row has a
-recorded result, and the store says what shipped._
+recorded result, the store says what shipped, and no line of code references
+this plan._
 
 What this list used to carry that is now a RECORD rather than work:
 
@@ -3182,7 +3193,7 @@ settled before the phase that needs it, not during.
 - **The menu tree is content.** A HOST or JOIN screen is authored in
   `content/mainmenu.yaml`, and its builder lands in the same commit — the
   compiler refuses a row nobody answers, and that refusal is the feature.
-- **Watch the 170 KB budget on every PR that touches the title screen.** A
+- **Watch the 200 KB budget on every PR that touches the title screen.** A
   server browser that reaches `@game/core` for a level's name drags the whole
   simulation onto the startup path for every player who never opens it.
 - **Measure, don't guess.** `scripts/simulate-run.mjs`, the autopilot and the

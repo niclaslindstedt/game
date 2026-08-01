@@ -13,7 +13,7 @@
 // handshake, the spectators and the chat are on a path a player walks, and that
 // they cannot quietly become an orphan again.
 //
-// **THE STARTUP PATH MUST NOT.** The other direction, and it is the 170 KB
+// **THE STARTUP PATH MUST NOT.** The other direction, and it is the 200 KB
 // critical-path budget at the source level: `pwa/src/game/net/` imports
 // `@game/core`, so a static edge to it from the app's first download drags the
 // whole simulation along. `pwa/scripts/check-seo.mjs` measures the built bytes;
@@ -169,7 +169,7 @@ describe("the app's startup path", () => {
   });
 
   it("never statically reaches the net client", () => {
-    // THE 170 KB CRITICAL-PATH BUDGET, stated as the import that would break it
+    // THE 200 KB CRITICAL-PATH BUDGET, stated as the import that would break it
     // rather than as the number that would report it. `pwa/src/game/net/`
     // imports `@game/core`; a static edge from the startup path to it puts the
     // whole simulation — the catalogs, the step pipeline, the loot roller, the

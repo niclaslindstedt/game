@@ -12,7 +12,7 @@
 // This module does not import the engine, on purpose. It reads a `GameState`
 // structurally — as `Record<string, unknown>` — for two independent reasons:
 // the page imports it from screens that may sit on the app's STARTUP path
-// (where the 170 KB critical-path budget forbids reaching `@game/core`), and a
+// (where the 200 KB critical-path budget forbids reaching `@game/core`), and a
 // wire that knows nothing about the simulation cannot fall out of step with it
 // when the simulation grows a field.
 //

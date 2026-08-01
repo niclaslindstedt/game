@@ -37,9 +37,8 @@
 
 import { decodeFrame, encodeFrame } from "../wire/codec.ts";
 import { CHALLENGE_EPOCH_MS, passwordProof } from "../wire/handshake.ts";
+import { FRAME, HELLO_MIN_BYTES } from "../wire/frames.ts";
 import {
-  FRAME,
-  HELLO_MIN_BYTES,
   refuseHandshake,
   type ByePayload,
   type ChallengePayload,

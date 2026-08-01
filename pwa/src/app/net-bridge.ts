@@ -35,7 +35,7 @@
 //
 // This module is import-free apart from the shell channel and the wire's own
 // leaf types, and it must stay that way: the HOST and JOIN screens are TITLE
-// MENU screens, i.e. the app's startup path, where the 170 KB critical-path
+// MENU screens, i.e. the app's startup path, where the 200 KB critical-path
 // budget forbids reaching `@game/core`. The run driver that does reach it lives
 // in `pwa/src/game/net/`, behind a lazy import.
 

@@ -21,9 +21,8 @@ import type {
   TransportEvents,
 } from "../../server/net/transport.ts";
 import { decodeFrame, encodeFrame } from "@game/wire/codec.ts";
+import { FRAME, HELLO_MIN_BYTES } from "@game/wire/frames.ts";
 import {
-  FRAME,
-  HELLO_MIN_BYTES,
   type ByePayload,
   type Handshake,
   type WelcomePayload,

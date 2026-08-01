@@ -29,7 +29,8 @@ import {
   type GameState,
 } from "@game/core";
 import { decodeFrame } from "@game/wire/codec.ts";
-import { FRAME, TICK_MS, type SessionParams } from "@game/wire/protocol.ts";
+import { FRAME, TICK_MS } from "@game/wire/frames.ts";
+import { type SessionParams } from "@game/wire/protocol.ts";
 import { PRIVATE_PLAYER_FIELDS, UNSENT_FIELDS } from "@game/wire/split.ts";
 
 import { createNetClient, type NetClient } from "../../server/client.ts";
