@@ -84,6 +84,11 @@ export function createRunProgress(deps: {
    * the app-side crossing exactly as it has always been.
    */
   sessionTravels?: () => boolean;
+  /** Whether this run actually shows its opening (see run-setup.ts). False —
+   * a dev warp, a `?scenario=` staging, a muted run — means no progress event
+   * may stamp the opening "seen": a level warped into once would otherwise
+   * skip its real first-visit story forever. Thoughts still bank. */
+  openingPlayed: boolean;
   setHud: Dispatch<SetStateAction<Hud | null>>;
   setLevelId: (id: string) => void;
   setNewRecord: (flag: boolean) => void;
@@ -95,6 +100,7 @@ export function createRunProgress(deps: {
     coinsIncludePending,
     runLevelId,
     captureEnabled,
+    openingPlayed,
     setHud,
     setLevelId,
     setNewRecord,
@@ -123,10 +129,11 @@ export function createRunProgress(deps: {
       // that armed him) has been witnessed — bank it on the character now,
       // together with the inner monologues read so far, so it stays skipped
       // even if the player quits before the run resolves. Late in-play
-      // thoughts are added again at run's end below.
+      // thoughts are added again at run's end below. A run that never SHOWED
+      // its opening (a warp, a staging, a muted run) banks only the thoughts.
       characterRef.current = markStorySeen(
         characterRef.current,
-        runLevelId,
+        openingPlayed ? runLevelId : null,
         difficulty,
         state.thoughtsSeen,
       );
@@ -150,7 +157,7 @@ export function createRunProgress(deps: {
     );
     characterRef.current = markStorySeen(
       characterRef.current,
-      state.level.id,
+      openingPlayed ? state.level.id : null,
       difficulty,
       state.thoughtsSeen,
     );
@@ -387,7 +394,7 @@ export function createRunProgress(deps: {
     if (event.type === "victory" || event.type === "defeat") {
       characterRef.current = markStorySeen(
         characterRef.current,
-        state.level.id,
+        openingPlayed ? state.level.id : null,
         difficulty,
         state.thoughtsSeen,
       );

@@ -34,7 +34,7 @@ import {
 import { synth } from "../audio.ts";
 import { isLandmarkHidden } from "../render/hidden-landmarks.ts";
 import { stopMusic } from "../music/index.ts";
-import { screenDirToWorld } from "../render/tilt.ts";
+import { projectOffset, screenDirToWorld } from "../render/tilt.ts";
 import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { moveVectorForCode } from "../keybindings.ts";
@@ -94,8 +94,10 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
 }
 
 /** The car the LOCAL hero is at the wheel of, or null on foot. While driving,
- * every direction-pad-shaped input (WASD, the stick, the touch dpad) speaks
- * CAR language instead of screen language — see `composeDriveTarget`. */
+ * the stick and WASD speak CAR language (pedals and a wheel — see
+ * `composeDriveTarget`); the touch dpad speaks SCREEN language (point where
+ * the car should go — `composeTouchDriveTarget`); a held pointer stays a
+ * DESTINATION the car simply drives at like a car. */
 function drivenCar(state: GameState): CarVehicle | null {
   const seat = state.players.indexOf(localHero(state));
   return (
@@ -114,8 +116,10 @@ function drivenCar(state: GameState): CarVehicle | null {
  * target IN the right spot: dead ahead for W, off the bow for W+A/D, ABEAM
  * for a bare A/D (pure steering — no throttle, so a parked car stays
  * parked), behind the trunk for S. No push = no steering = the car coasts
- * to a stop. The cursor-follow scheme skips this entirely: a held pointer
- * is a DESTINATION, and the car simply drives at it like a car.
+ * to a stop. The cursor-follow scheme skips this entirely (a held pointer
+ * is a DESTINATION, and the car simply drives at it like a car), and the
+ * touch dpad has a screen-frame composer of its own
+ * (`composeTouchDriveTarget`).
  */
 function composeDriveTarget(
   input: GameInput,
@@ -136,6 +140,65 @@ function composeDriveTarget(
           // the tail chases a target hung off the rear quarter.
           car.heading + Math.PI - steer * (Math.PI / 4)
         : car.heading + steer * (Math.PI / 2);
+  input.steering = true;
+  input.target.x = car.pos.x + Math.cos(ang) * DPAD_STEER_DISTANCE;
+  input.target.y = car.pos.y + Math.sin(ang) * DPAD_STEER_DISTANCE;
+  input.throttle = throttle;
+}
+
+/**
+ * TOUCH-DPAD CAR CONTROLS — the thumb points WHERE THE CAR SHOULD GO on the
+ * SCREEN. The push along the nose's screen direction is the throttle (with
+ * the car drawn in side profile, that is "drive left or right"); the push
+ * across it is the wheel, curving the MOVING car up or down the screen. A
+ * pure vertical push carries no throttle at all, so it does nothing to a
+ * parked car — the wheel only bites as far as the car rolls (vehicles.ts).
+ *
+ * Deliberately NOT the stick/keyboard pedal frame (`composeDriveTarget`): a
+ * thumb holding a diagonal there kept the target a fixed angle off the nose,
+ * and the car chased it in an endless circle instead of going where the
+ * thumb pointed.
+ *
+ * The target is composed in the CAR's OWN frame — `heading` plus a
+ * deflection measured on the SCREEN between the push and the projected nose
+ * — rather than by handing the engine the pushed direction raw. The world
+ * projection's yaw skews screen bearings in world space (render/tilt.ts): a
+ * raw screen-up push unprojects far enough behind an east-facing nose that
+ * the engine's intent arcs read it as REVERSE, and the parked car backed
+ * away from an innocent upward push. Screen-side geometry decides the
+ * INTENT; the car's frame anchors it, whatever the camera is doing. The
+ * projection's determinant is positive, so which SIDE of the nose the push
+ * sits on means the same thing on screen and on the floor.
+ */
+function composeTouchDriveTarget(
+  input: GameInput,
+  car: CarVehicle,
+  /** The dpad push, as a unit vector in screen space. */
+  nx: number,
+  ny: number,
+  throttle: number,
+): void {
+  // The nose as the player SEES it: the heading pushed through the world
+  // projection, normalized (the projection squashes lengths, not meaning).
+  const noseRaw = projectOffset(Math.cos(car.heading), Math.sin(car.heading));
+  const noseLen = Math.hypot(noseRaw.x, noseRaw.y) || 1;
+  const noseX = noseRaw.x / noseLen;
+  const noseY = noseRaw.y / noseLen;
+  // Along the nose (+) or into the trunk (-) picks which end of the car the
+  // target hangs off; the base flips to the tail for a reversing intent so
+  // the deflection below stays a small angle off the base either way.
+  const along = nx * noseX + ny * noseY;
+  const backing = along < 0;
+  const base = backing ? car.heading + Math.PI : car.heading;
+  const baseX = backing ? -noseX : noseX;
+  const baseY = backing ? -noseY : noseY;
+  // The push's side of the base bearing (screen cross product) and how hard
+  // it leans off it: dead along the base for a pure "drive" push, exactly
+  // ABEAM — the engine's neutral steering band — for a pure vertical one.
+  const cross = baseX * ny - baseY * nx;
+  const lean = Math.atan2(Math.abs(cross), Math.abs(along));
+  const side = cross === 0 ? 0 : Math.sign(cross);
+  const ang = base + side * lean;
   input.steering = true;
   input.target.x = car.pos.x + Math.cos(ang) * DPAD_STEER_DISTANCE;
   input.target.y = car.pos.y + Math.sin(ang) * DPAD_STEER_DISTANCE;
@@ -335,8 +398,7 @@ export function readHumanInput(
     input.steering = n.len >= DPAD_DEADZONE_PX;
     if (input.steering) {
       if (car) {
-        // The dpad drives like the stick: up = W, down = S, sideways = A/D.
-        composeDriveTarget(input, car, -n.y, n.x, dpadThrottle(n.len));
+        composeTouchDriveTarget(input, car, n.x, n.y, dpadThrottle(n.len));
       } else {
         const dir = screenDirToWorld(n.x, n.y);
         input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;

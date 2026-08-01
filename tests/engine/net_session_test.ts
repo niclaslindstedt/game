@@ -136,6 +136,9 @@ function play(rig: Rig, ticks: number, input?: GameInput): void {
  */
 function takeTheField(rig: Rig): void {
   rig.client.sendCommand("skipStoryOpening");
+  // The story skip lands on the level-name card; the card's dismissal is its
+  // own verb, exactly as the app's tap is.
+  rig.client.sendCommand("dismissIntro");
   play(rig, 6);
 }
 

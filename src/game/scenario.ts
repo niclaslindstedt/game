@@ -26,6 +26,7 @@ import { storyItemDef } from "./defs/story.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import { spawnEnemy } from "./create.ts";
 import {
+  dismissIntro,
   fitsEquipSlot,
   markIdentified,
   mintUnique,
@@ -272,7 +273,12 @@ const SPAWN_ATTEMPTS = 24;
 export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   const player = state.players[0];
 
-  if (spec.skipOpening !== false) skipStoryOpening(state);
+  // A staged run wants PLAY, not the title card the replay skip now lands
+  // on: bail the story, then dismiss the card too.
+  if (spec.skipOpening !== false) {
+    skipStoryOpening(state);
+    dismissIntro(state);
+  }
   if (spec.freeze !== undefined) state.freeze = spec.freeze;
   // The mute goes on BEFORE anything is staged: a spawn below may be an elite
   // whose arrival scene would otherwise take the stage on the next tick.

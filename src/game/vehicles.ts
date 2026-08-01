@@ -567,6 +567,19 @@ function driveCar(
                 -CAR.reverseSpeed * throttle,
                 car.speed - CAR.driveAccel * dt,
               );
+      } else {
+        // The band between the arcs is pure steering — and COASTING, as the
+        // doc above has always promised: no throttle keeps a car rolling, so
+        // the speed bleeds off exactly as it does with every control
+        // released. Holding whatever speed the car happened to carry made a
+        // stray push abeam preserve momentum forever — a car nudged into
+        // reverse by a glancing input kept creeping and slowly pivoting for
+        // as long as a sideways push was held.
+        const drop = CAR.driveBrake * dt;
+        car.speed =
+          car.speed > 0
+            ? Math.max(0, car.speed - drop)
+            : Math.min(0, car.speed + drop);
       }
       // The wheel only bites as far as the car rolls; reversing steers the
       // TAIL at the target, which is what cranking the wheel in reverse does.

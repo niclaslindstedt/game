@@ -787,6 +787,7 @@ export function GameScreen({
       sessionTravels: () =>
         Boolean(driver.session) &&
         (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1),
+      openingPlayed: session.openingPlayed,
       setHud,
       setLevelId,
       setNewRecord,

@@ -161,7 +161,11 @@ describe("the verbs actually do the thing", () => {
     // each verb toggles the ACTING hero's own `screen` — seat 0 by default.
     const state = freshRun();
     const hero = state.players[0];
+    // The story skip lands on the level-name card; dismissing the card is
+    // what drops into play — the same two beats the app's replay path takes.
     applyRunCommand(state, "skipStoryOpening");
+    expect(state.phase).toBe("title");
+    applyRunCommand(state, "dismissIntro");
     expect(state.phase).toBe("playing");
     applyRunCommand(state, "openInventory");
     expect(hero.screen).toBe("inventory");
@@ -181,6 +185,7 @@ describe("the verbs actually do the thing", () => {
   it("moves a piece around the bag by index", () => {
     const state = freshRun();
     applyRunCommand(state, "skipStoryOpening");
+    applyRunCommand(state, "dismissIntro");
     const bag = state.players[0].inventory;
     const from = bag.findIndex((cell) => cell !== null);
     if (from < 0) return; // a fixture hero with an empty bag has nothing to prove

@@ -32,10 +32,18 @@
        this looked like. A checker has no axis at all, and four coprime ones
        laid over each other only realign every 420px, so what the eye gets is
        irregular grit instead of a direction.
-     • TWO COARSE BLOTCHES tiled at 137×89 and 211×151 — near-coprime, so their
-       overlap wanders across a panel instead of stamping a repeat. This is the
-       weathering: uneven value at a scale the eye reads as "worn", which fine
-       grain on its own can never give.
+     • TWO TURBULENCE WASHES for the weathering — inline-SVG feTurbulence
+       fractal noise (a light wash and a dark one, different seeds and
+       frequencies), each `stitchTiles='stitch'` so its edges are seamless, on
+       prime-sized tiles of 1201×911 and 1097×829 so a panel would have to be
+       wider than a desktop before a repeat even exists. This layer was
+       previously two tiled radial-gradient blotches (137×89 / 211×151), and
+       that was a trap: A TILED BLOB IS A GRID, however coprime its neighbours —
+       each layer alone stamps its bright cell every tile-width, and on a wide
+       panel the 137px column-beat read as vertical lines from across the room
+       (column-luminance autocorrelation peaked at every multiple of 137).
+       "Near-coprime tiles wander" only hides the overlap of two layers, never
+       the period of each one. Real noise has no period to hide.
 
      Kept at 2–14% so it stays texture rather than decoration: it has to survive
      behind body text at pixel-scale 1 without competing with it. */
@@ -54,14 +62,10 @@
       0 2px / 10px 10px,
     repeating-conic-gradient(rgba(0, 0, 0, 0.075) 0% 25%, transparent 0% 50%)
       3px 1px / 14px 14px,
-    radial-gradient(
-        ellipse at 22% 28%,
-        rgba(255, 255, 255, 0.045),
-        transparent 62%
-      )
-      0 0 / 137px 89px repeat,
-    radial-gradient(ellipse at 72% 66%, rgba(0, 0, 0, 0.15), transparent 58%) 0
-      0 / 211px 151px repeat;
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1201'%20height='911'%3E%3Cfilter%20id='n'%20x='0'%20y='0'%20width='100%25'%20height='100%25'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.012'%20numOctaves='3'%20seed='7'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20values='0%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%200.07%200'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'/%3E%3C/svg%3E")
+      0 0 / 1201px 911px repeat,
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1097'%20height='829'%3E%3Cfilter%20id='n'%20x='0'%20y='0'%20width='100%25'%20height='100%25'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.008'%20numOctaves='3'%20seed='23'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.14%200'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'/%3E%3C/svg%3E")
+      0 0 / 1097px 829px repeat;
   /* The grain rides ON TOP of the gradient (earlier layer = nearer the
      viewer), and it is folded into `--panel-fill` itself rather than added to
      `.pixel-panel` — a good half of the game's windows set
