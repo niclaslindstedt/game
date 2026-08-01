@@ -12004,13 +12004,6 @@ canvas.tier-artifact {
   gap: 0.1rem;
 }
 
-.quest-log-untaken {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding-top: 0.4rem;
-  border-top: 2px solid rgba(201, 169, 92, 0.25);
-}
 
 .quest-log-close {
   align-self: center;

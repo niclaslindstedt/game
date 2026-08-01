@@ -8,9 +8,14 @@
 // It is the ANSWER TO "what was I doing", and that is a different question from
 // the one the on-screen tracker answers. The tracker (QuestTracker.tsx) shows
 // only what is RUNNING, in two or three lines, because it lives over the fight;
-// the log shows everything — running, finished-but-not-handed-in, handed in,
-// and failed — with who wants it and what it pays, because the player opened it
-// on purpose and has stopped playing to read.
+// the log shows every errand TAKEN — running, finished-but-not-handed-in,
+// handed in, and failed — with who wants it and what it pays, because the
+// player opened it on purpose and has stopped playing to read.
+//
+// It lists ONLY accepted work. Givers the player has not spoken to are never
+// named here — a log that says who is standing on the map before the player
+// has met them spoils the walk that finds them. Their presence is announced
+// where it belongs: the gold `!` over their own heads out in the world.
 //
 // It lists in the engine's own order (`trackedQuests`: most recently accepted
 // first), so the errand the player just took is the first thing they see.
@@ -55,16 +60,6 @@ export function QuestLogOverlay({
   onClose: () => void;
 }) {
   const tracked = trackedQuests(state);
-  // The people on this map who still have something to offer are listed too,
-  // under their own heading — an empty log on a map with two `!` marks on it
-  // would read as "this level has no quests", which is the opposite of true.
-  const untaken = giversForLevel(state.level.id).filter((giver) =>
-    state.questGivers.some(
-      (g) =>
-        g.id === giver.id &&
-        !tracked.some((q) => questDef(q.id).giver === giver.id),
-    ),
-  );
 
   return (
     <div
@@ -81,10 +76,10 @@ export function QuestLogOverlay({
         </div>
 
         <div className="quest-log-rows">
-          {tracked.length === 0 && untaken.length === 0 && (
+          {tracked.length === 0 && (
             <PixelText
               font={font}
-              text="NOBODY HERE HAS ASKED YOU FOR ANYTHING."
+              text="YOU HAVE NOT TAKEN ON ANY ERRANDS."
               scale={2}
               color="#6f7a88"
               maxWidth={30}
@@ -146,49 +141,6 @@ export function QuestLogOverlay({
             );
           })}
 
-          {untaken.length > 0 && (
-            <div className="quest-log-untaken">
-              <PixelText
-                font={font}
-                text="ASKING FOR HELP"
-                scale={2}
-                color="#c9a95c"
-              />
-              {untaken.map((giver) => (
-                <div className="quest-log-row" key={giver.id}>
-                  <img
-                    src={bustSrc(assets.sprites, giver.sprite) ?? ""}
-                    alt=""
-                    className="pixel-img quest-log-face"
-                  />
-                  <div className="quest-log-body">
-                    <PixelText
-                      font={font}
-                      text={giver.name}
-                      scale={2}
-                      color="#f6e3b0"
-                      maxWidth={28}
-                    />
-                    <PixelText
-                      font={font}
-                      // Found on the map, or still out there — the log says
-                      // which, because "go talk to them" is only useful advice
-                      // once the player knows where they are.
-                      text={
-                        state.questGivers.find((g) => g.id === giver.id)
-                          ?.discovered
-                          ? "MARKED ON YOUR MAP"
-                          : "SOMEWHERE ON THIS MAP"
-                      }
-                      scale={2}
-                      color="#6f7a88"
-                      maxWidth={28}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         <button

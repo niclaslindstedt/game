@@ -54,16 +54,15 @@ export type Hud = {
   /**
    * THE QUEST BUTTON's state — the `!` sitting beside the bag pouch.
    *
-   * `hidden` is a map that hands out no errands at all (no givers stand on it),
-   * where the log could only ever open empty. Otherwise it is `alert` (gold)
-   * once this run has taken an errand — the log has something in it worth
-   * reading — and `quiet` (grey) until then. A giver's UNTAKEN offer
-   * deliberately does NOT light it: two of them stand on every map from the
-   * first frame, so counting those would leave the button permanently gold and
-   * say nothing. The offer is already announced where it belongs — the gold `!`
-   * over that person's own head (`giverMark`).
+   * `hidden` until this run has actually TAKEN an errand: the log lists only
+   * accepted work, so before the first acceptance it could only open empty.
+   * A giver's untaken offer deliberately does not surface it — the log must
+   * not reveal who stands on the map before the player has met them, and the
+   * offer is already announced where it belongs: the gold `!` over that
+   * person's own head (`giverMark`). Once an errand is taken it is `alert`
+   * (gold) — the log has something in it worth reading.
    */
-  questLog: "hidden" | "quiet" | "alert";
+  questLog: "hidden" | "alert";
   /** The powerup dock, oldest first (ABILITY_DEFS ids) — banked and running. */
   heldAbilities: string[];
   /**
@@ -233,8 +232,7 @@ export function buildHud(
     if (progress.status !== "offered" && progress.status !== "declined")
       questTaken = true;
   }
-  const questLog: Hud["questLog"] =
-    state.questGivers.length === 0 ? "hidden" : questTaken ? "alert" : "quiet";
+  const questLog: Hud["questLog"] = questTaken ? "alert" : "hidden";
   const held = localHero(state).heldAbilities.join(",");
   // Only *which* slots are banked vs running mounts/unmounts dock chrome;
   // the ticking timer itself is animated straight on the DOM, so it stays
