@@ -105,6 +105,37 @@ async function pump(
   }
 }
 
+/**
+ * Pump until `phaseOf()` reads `playing`, then answer whatever it reads.
+ *
+ * **READING THE PHASE STRAIGHT OFF A PUMP IS A RACE, NOT A MEASUREMENT.** The
+ * pumps above exit on a BOT statistic (`played > 30`), which says nothing
+ * about what is on stage — and something is on stage constantly, because the
+ * horde walks up and speaks. A bot clears a scene the way a player does, with
+ * a verb on its NEXT tick (`advanceDialogue`), so the tick that satisfies the
+ * pump's condition can perfectly well be the tick an arrival scene opened on:
+ * the run is running exactly as intended and the phase reads `dialogue`.
+ *
+ * That is a coin flip weighted by how far the session's clock got per
+ * iteration, which is why it came up green on a laptop for weeks and red on a
+ * CI runner playing two shards at once. So: give the party the ticks to finish
+ * whatever it is reading, and only then look. The assertion at the call site
+ * stays EXACT — a run genuinely stuck in a scene burns every iteration here
+ * and still fails, which is the bug these assertions were written to catch.
+ *
+ * The READER is the caller's, because the two callers are asking different
+ * questions: one wants the phase as it REACHED A CLIENT (the split carried it),
+ * the other wants the session's own.
+ */
+async function settledPhase(
+  host: Host,
+  bots: BotClient[],
+  phaseOf: () => string | undefined,
+): Promise<string | undefined> {
+  await pump(host, bots, 200, () => phaseOf() === "playing");
+  return phaseOf();
+}
+
 describe("a bot client against a real dedicated server", () => {
   it("joins, takes a seat, and plays from the snapshots alone", async () => {
     const host = await serve(PORT);
@@ -137,7 +168,9 @@ describe("a bot client against a real dedicated server", () => {
     // figure above is happily satisfied by that: the session ticks, snapshots
     // arrive, the bot decides and sends sixty times a second. Only the PHASE
     // tells them apart.
-    expect(state!.phase).toBe("playing");
+    expect(await settledPhase(host, [bot], () => bot.state?.phase)).toBe(
+      "playing",
+    );
     // And the server's clock is moving under it — a bot happily steering a run
     // that has stopped is the other half of the same illusion.
     expect(bot.stats.tick).toBeGreaterThan(0);
@@ -226,7 +259,9 @@ describe("a bot client against a real dedicated server", () => {
     expect(party.flatMap(({ closed }) => closed)).toEqual([]);
     expect(host.session.clientCount).toBe(4);
     // The run is on the field, not on the title card — see the first test.
-    expect(host.session.state.phase).toBe("playing");
+    expect(await settledPhase(host, bots, () => host.session.state.phase)).toBe(
+      "playing",
+    );
     // FOUR DISTINCT SEATS. A fleet that all steered seat 0 would satisfy every
     // other assertion in this file.
     const seats = bots.map((bot) => bot.seat);
