@@ -95,9 +95,7 @@ describe("an in-session crossing (§6.4)", () => {
     expect(joiner.travelledFrom).toEqual(["test_level"]);
     // The joiner still holds its own seat, and its own (private) purse.
     expect(joiner.client.seat).toBe(1);
-    expect(
-      (joiner.client.state as GameState).players[1]!.coins,
-    ).toBe(777);
+    expect((joiner.client.state as GameState).players[1]!.coins).toBe(777);
     // The state object survived the swap — every renderer helper closes over
     // it, so a crossing that replaced the reference would draw a dead world.
     expect(host.client.state).not.toBeNull();

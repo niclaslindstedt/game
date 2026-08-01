@@ -294,11 +294,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
     // the state as it still stands. The one field the swap must not leave
     // stale is the request itself: the new world never carried one.
     const level = snapshot.level as { id?: unknown } | null | undefined;
-    if (
-      level &&
-      typeof level.id === "string" &&
-      level.id !== state.level.id
-    ) {
+    if (level && typeof level.id === "string" && level.id !== state.level.id) {
       options.onTravel?.(state);
       delete target.pendingTravel;
     }

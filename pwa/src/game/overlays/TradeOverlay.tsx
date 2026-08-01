@@ -208,9 +208,7 @@ export function TradeOverlay({
           >
             <PixelText
               font={font}
-              text={
-                mine.accepted && !theirs.accepted ? "WAITING..." : "ACCEPT"
-              }
+              text={mine.accepted && !theirs.accepted ? "WAITING..." : "ACCEPT"}
               scale={2}
             />
           </button>
