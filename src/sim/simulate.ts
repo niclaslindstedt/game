@@ -47,17 +47,13 @@ import {
   type BotStrategy,
 } from "../game/bot/index.ts";
 import {
-  botAutoEquip,
-  cullWorstLoot,
-  careForCompanion,
   tradeAtMerchant,
   wantsMerchantVisit,
   weaponStarved as heroWeaponStarved,
 } from "../game/bot/economy.ts";
-import { stepBotWeaponSwap } from "../game/bot/weapon-swap.ts";
+import { runBotActions, runBotUpkeep } from "../game/bot/intent.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
-import { sortInventory } from "../game/items/inventory.ts";
 import { seatHero } from "../game/seating.ts";
 import { heroInPlay } from "../game/party.ts";
 import { STAT_BUILDS } from "../game/builds.ts";
@@ -1618,17 +1614,19 @@ function playRun(args: {
     }
 
     const beforeXpGained = state.stats.xpGained;
-    // POCKET ARSENAL: keep the hand on whatever maximizes damage this moment
-    // — the blade with a body in blade reach, the banked ranged/magic shot
-    // out of reach and through every airborne frame (see bot/economy.ts
-    // stepBotWeaponSwap).
-    stepBotWeaponSwap(state, state.players[0]);
-    // KEEP THE FRIEND ON ITS FEET: crack a bought bottle of salts over a downed
-    // companion, and spend a spare medkit on a badly hurt one. Nothing mends a
-    // companion on its own any more, so a run that never did this would play
-    // every level after the first loss a party member short — and report that
-    // as balance rather than as the bot not knowing the rules.
-    careForCompanion(state, state.players[0]);
+    // THE PRE-STEP HOUSEKEEPING, as INTENTS (bot/intent.ts): the POCKET
+    // ARSENAL's draw — keep the hand on whatever maximizes damage this moment,
+    // the blade with a body in blade reach, the banked ranged/magic shot out of
+    // reach and through every airborne frame — and then KEEP THE FRIEND ON ITS
+    // FEET, a bought bottle of salts over a downed companion or a spare medkit
+    // into a badly hurt one.
+    //
+    // They travel through `applyRunCommand`, the same dispatch a session server
+    // runs, rather than as direct calls. The simulator is the one host that
+    // never has a wire under it (plan §7.2.5's third limit), so this changes
+    // nothing it measures — but it is the reason a verb cannot behave one way
+    // under the bot and another in a session.
+    runBotActions(state, state.players[0]);
     const input = botAct(bot, state, state.players[0]);
     // The camera the simulated player watches through: player-centred and
     // clamped to the level, the same rect the app stamps from its canvas
@@ -1662,8 +1660,7 @@ function playRun(args: {
         // other members never equipped a find, never swapped a weapon and
         // never revived a companion would report the party's damage as flat
         // and call it balance.
-        stepBotWeaponSwap(state, hero);
-        careForCompanion(state, hero);
+        runBotActions(state, hero);
         const seatInput = botAct(seatBot, state, hero);
         // EACH SEAT WATCHES ITS OWN SCREEN. The weapon's targeting gate reads
         // the SEAT's own `input.view` (step/weapon.ts) — eight clients have
@@ -1677,17 +1674,16 @@ function playRun(args: {
     }
     step(state, acted, args.dtMs);
     phaseAdvances = 0;
-    // BAG DISCIPLINE: WEAR what the step's pickups brought (`botAutoEquip` —
-    // gear only; the hand belongs to the pocket arsenal), which also catches a
-    // find banked while under-leveled the moment the hero grows into it. Then
-    // keep a cell open by dropping the cheapest outgrown junk (keepers, the
-    // pocket arsenal, and the good sell-fodder stay — see bot/economy.ts), so
-    // the next drop always has a home. Cheap when a slot is already free.
-    // Then keep the bag SORTED (pockets up front, loot by preciousness) the
-    // way the powerup dock sorts its slots.
-    botAutoEquip(state, state.players[0]);
-    cullWorstLoot(state, state.players[0]);
-    sortInventory(state, state.players[0]);
+    // BAG DISCIPLINE, as INTENTS (bot/intent.ts): WEAR what the step's pickups
+    // brought (`autoEquipGear` — gear only; the hand belongs to the pocket
+    // arsenal), which also catches a find banked while under-leveled the moment
+    // the hero grows into it. Then keep a cell open by shedding the cheapest
+    // outgrown junk into the LOST & FOUND (`bankSpareItem`; keepers, the pocket
+    // arsenal, and the good sell-fodder stay — see bot/economy.ts), so the next
+    // drop always has a home. Cheap when a slot is already free. Then keep the
+    // bag SORTED (pockets up front, loot by preciousness) the way the powerup
+    // dock sorts its slots.
+    runBotUpkeep(state, state.players[0]);
     // EVERY SEAT RUNS THE SAME BAG DISCIPLINE, and every seat is IMMORTAL.
     //
     // The second half is the one that would silently ruin a measurement. Seat 0
@@ -1715,9 +1711,7 @@ function playRun(args: {
         if (seat > 0) {
           // Seat 0's bag discipline already ran above, in the order the
           // single-player path has always used.
-          botAutoEquip(state, hero);
-          cullWorstLoot(state, hero);
-          sortInventory(state, hero);
+          runBotUpkeep(state, hero);
         }
         if (hero.hp > 0 || hero.departed) continue;
         if (seat === 0) bookDeath();

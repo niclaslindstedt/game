@@ -73,6 +73,7 @@ import type {
   Equipment,
   GameInput,
   GameState,
+  Player,
 } from "./types/index.ts";
 import { inert, inertEnemy } from "./disposition.ts";
 
@@ -874,13 +875,24 @@ export function reviveTarget(
  * beaten down three rooms back is not an errand to walk. Returns false (and
  * consumes nothing) when the cell holds no such piece or nobody is down, so a
  * mistap can never cost the player a bottle.
+ *
+ * **`hero` IS WHOSE BOTTLE IT IS, and it is a parameter rather than a lookup.**
+ * A bag is PRIVATE (plan §3.1), so the cell index only means anything against
+ * the hero who sent it: this used to read `state.players[0].inventory[index]`,
+ * which is a seat-0 read on a verb the command channel hands an ACTING HERO —
+ * a joiner cracking a bottle would have consumed the host's cell, and the
+ * simulator's own party (§7.2) already ran every seat's care through it.
  */
-export function spendReviveItem(state: GameState, index: number): boolean {
-  const item = state.players[0].inventory[index] ?? null;
+export function spendReviveItem(
+  state: GameState,
+  hero: Player,
+  index: number,
+): boolean {
+  const item = hero.inventory[index] ?? null;
   if (!item) return false;
   const companion = reviveTarget(state, item);
   if (!companion) return false;
-  state.players[0].inventory[index] = null;
+  hero.inventory[index] = null;
   const seat = state.companions.indexOf(companion);
   delete companion.downed;
   companion.hp = Math.max(
@@ -904,15 +916,19 @@ export function spendReviveItem(state: GameState, index: number): boolean {
  * opens the equip screen — and to show the medkit badge that says which, before
  * the press rather than after it. False for a DOWNED companion: a corpse does
  * not want a bandage, it wants the salts.
+ *
+ * The POUCH it answers about is `hero`'s — a private read, so it is a parameter
+ * (the same seat-0 correction {@link spendReviveItem} carries).
  */
 export function canHealCompanion(
   state: GameState,
+  hero: Player,
   companionId: number,
 ): number {
   const companion = companionById(state, companionId);
   if (!companion || companion.downed) return -1;
   if (companion.hp >= companion.maxHp) return -1;
-  return state.players[0].medkits.findIndex((count) => (count ?? 0) > 0);
+  return hero.medkits.findIndex((count) => (count ?? 0) > 0);
 }
 
 /**
@@ -929,12 +945,13 @@ export function canHealCompanion(
  */
 export function healCompanionWithMedkit(
   state: GameState,
+  hero: Player,
   companionId: number,
 ): boolean {
-  const tier = canHealCompanion(state, companionId);
+  const tier = canHealCompanion(state, hero, companionId);
   if (tier < 0) return false;
   const companion = companionById(state, companionId) as Companion;
-  const medkits = state.players[0].medkits;
+  const medkits = hero.medkits;
   medkits[tier] = (medkits[tier] ?? 0) - 1;
   const quality = MEDKIT.tiers[medkitTierIndex(tier)];
   const healed = Math.min(

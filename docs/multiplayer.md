@@ -289,7 +289,9 @@ Two things, and both are narrow on purpose:
   the day phase 2 opens a UDP port.
 
   **THE ARGUMENTS ARE PART OF THAT MODEL AND ARE SCALARS ONLY.** phase 1's nine
-  verbs took none; phase 1.5's sixty-nine mostly do. A verb whose payload is a
+  verbs took none; phase 1.5's sixty-nine mostly do (the list has grown since —
+  `RUN_COMMAND_NAMES` is the count, and every addition bumps
+  `PROTOCOL_VERSION`). A verb whose payload is a
   STRUCTURE is a verb whose payload a stranger gets to shape, so what crosses is
   a number, a string or a boolean — an index, a slot name, a stat, a quest id, a
   speed rung — and each verb's arity and argument types are declared beside it in
@@ -838,9 +840,57 @@ THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster (phase
 the result, so an optimistic apply would draw an outcome the next snapshot may
 not agree with.
 
-Five of the autoplay bot's housekeeping calls also still mutate the state
-directly: four are plain verbs, and the fifth carries the bot's own swap memory
-and is a real design question.
+## The autopilot is an intent
+
+`botAct` never touched the run — it RETURNS a `GameInput`, which is the very
+shape `FRAME.input` carries, so the bot's STEERING has always been an intent and
+needed nothing designed. The gap was five HOUSEKEEPING calls that reached in and
+MUTATED, and on a client a direct write is erased by the next snapshot: the
+bot's draw, its shed or its tidy silently does not happen. So the bot's whole
+output is now an intent (`src/game/bot/intent.ts`), and every one of the five is
+a DECISION plus a VERB — the decision is the autopilot's opinion and stays under
+`bot/`, the action is the hero's and lives with the thing it acts on:
+
+| the autopilot decides                     | the hero's verb               |
+| ----------------------------------------- | ----------------------------- |
+| `botWeaponSwapTarget` — the pocket draw   | `swapHand(cell)`              |
+| `botReviveCell` — a bottle worth breaking | `spendReviveItem(cell)`       |
+| `botCompanionToHeal` — who needs a kit    | `healCompanionWithMedkit(id)` |
+| `botWantsGearSweep` — is there a wear     | `autoEquipGear()`             |
+| `botCullPlan` — which cell can be spared  | `bankSpareItem(cell)`         |
+| `inventoryNeedsSort` — is the bag untidy  | `sortInventory()`             |
+
+**TWO OF THOSE VERBS ARE NEW, AND NEITHER IS THE PLAYER'S LOOKALIKE.** The
+sweep is `autoEquipGear` rather than `autoEquipBest`, because the player's
+OPTIMIZE button takes the WEAPON slot with it and the pocket arsenal owns that
+slot — a sweep re-drawing the strongest weapon every tick would flap against the
+draw above it. The shed is `bankSpareItem` rather than `scrapInferiorLoot`,
+because that verb empties every outgrown cell at once and banks none of them: it
+would destroy the banked shooters a blade hero carries on purpose and throw away
+the uniques the LOST & FOUND exists to catch.
+
+**A TICK HAS TWO HALVES.** The draw and the care are decided BEFORE the step —
+the hand the bot steers with is the hand it just drew — and the bag discipline
+AFTER it, once this step's pickups have landed. Culling before the step only
+reopens a cell the same step's pickup refills, which is the bug that made a
+watched AUTO PILOT run ride a full bag.
+
+**THREE HOSTS, ONE VOCABULARY.** The simulator applies in-process through
+`applyRunCommand` (`runBotActions` / `runBotUpkeep`) — the same dispatch the
+server runs, so a verb cannot behave one way under the bot and another in a
+session. The app pushes through its own router (`driveBotActions` /
+`driveBotUpkeep` with `runCommand` as the sink), which is what makes a paid AUTO
+PILOT ride inside a Steam session actually send its housekeeping. A bot CLIENT
+calls `botIntent`, which answers a whole tick from one snapshot: the steer plus
+at most one verb per half, because a client cannot read the run back between
+verbs — a stage wanting several takes several ticks and converges as the
+snapshots arrive.
+
+**`tests/engine/bot_intent_test.ts` is the guard**, and it writes the mapping out
+by hand rather than deriving it from the code. What is NOT here is the bot CLIENT
+itself: a headless process that joins a session over the real transport and
+steers off replicated state. That is the plan's §7.2.5, and this adapter was its
+prerequisite.
 
 ## What is NOT here yet
 

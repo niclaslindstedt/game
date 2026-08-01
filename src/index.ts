@@ -289,6 +289,9 @@ export {
   enemyDodgeChance,
   equipFromInventory,
   equipFromInventoryInto,
+  bankSpareItem,
+  inventoryNeedsSort,
+  planAutoEquipGear,
   sortInventory,
   swapHand,
   fitsEquipSlot,
@@ -570,6 +573,10 @@ export { repairAllCost, repairCost } from "./game/items/index.ts";
 // the bot reads them for movement (see bot/economy.ts).
 export {
   botAutoEquip,
+  botCompanionToHeal,
+  botCullPlan,
+  botReviveCell,
+  botWantsGearSweep,
   careForCompanion,
   cullWorstLoot,
   sellableJunkCount,
@@ -577,6 +584,29 @@ export {
   wantsMerchantVisit,
   weaponStarved,
 } from "./game/bot/economy.ts";
+
+// THE AUTOPILOT'S OUTPUT AS AN INTENT — the steer plus the verbs its
+// housekeeping travels as, and the three hosts that apply them (in-process, the
+// app's command router, a bot client). See bot/intent.ts and the multiplayer
+// plan's §7.2.5.
+export {
+  applyBotCommand,
+  botCareCommand,
+  botCullCommands,
+  botDrawCommand,
+  botIntent,
+  botSortCommand,
+  botSweepCommand,
+  driveBotActions,
+  driveBotUpkeep,
+  runBotActions,
+  runBotUpkeep,
+} from "./game/bot/intent.ts";
+export type {
+  BotCommand,
+  BotCommandSink,
+  BotIntent,
+} from "./game/bot/intent.ts";
 
 // The POCKET ARSENAL: which weapon is in the hand, moment by moment — the
 // blade in reach, the boss round at a big body, the spread across a mass —

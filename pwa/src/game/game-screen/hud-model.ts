@@ -268,7 +268,7 @@ export function buildHud(
   const party = state.companions
     .map(
       (c) =>
-        `${c.id}:${Math.ceil((10 * c.hp) / Math.max(1, c.maxHp))}:${c.downed ? 1 : 0}:${canHealCompanion(state, c.id) >= 0 ? 1 : 0}`,
+        `${c.id}:${Math.ceil((10 * c.hp) / Math.max(1, c.maxHp))}:${c.downed ? 1 : 0}:${canHealCompanion(state, localHero(state), c.id) >= 0 ? 1 : 0}`,
     )
     .join(",");
   // The prelude scene's id is part of the key: a chained prelude swaps
@@ -330,7 +330,7 @@ export function buildHud(
         sprite: companionDef(c.defId).sprite,
         hpFrac: c.maxHp > 0 ? c.hp / c.maxHp : 0,
         downed: c.downed === true,
-        canHeal: canHealCompanion(state, c.id) >= 0,
+        canHeal: canHealCompanion(state, localHero(state), c.id) >= 0,
       })),
       stats: { ...state.stats },
     },

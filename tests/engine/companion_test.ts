@@ -233,20 +233,26 @@ describe("companions in the field", () => {
     companion.hp = 1;
     state.players[0].medkits = [2, 0, 0, 0];
 
-    expect(healCompanionWithMedkit(state, companion.id)).toBe(true);
+    expect(healCompanionWithMedkit(state, state.players[0], companion.id)).toBe(
+      true,
+    );
     expect(companion.hp).toBeGreaterThan(1);
     expect(state.players[0].medkits[0]).toBe(1); // exactly one kit spent
     expect(state.events.some((e) => e.type === "companionHealed")).toBe(true);
 
     // Topped right up, a further press buys nothing and costs nothing.
     companion.hp = companion.maxHp;
-    expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
+    expect(healCompanionWithMedkit(state, state.players[0], companion.id)).toBe(
+      false,
+    );
     expect(state.players[0].medkits[0]).toBe(1);
 
     // …and neither does an empty pouch.
     companion.hp = 1;
     state.players[0].medkits = [0, 0, 0, 0];
-    expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
+    expect(healCompanionWithMedkit(state, state.players[0], companion.id)).toBe(
+      false,
+    );
     expect(companion.hp).toBe(1);
   });
 
@@ -255,7 +261,9 @@ describe("companions in the field", () => {
     const companion = withCompanion(state);
     companion.hp = 1;
     state.players[0].medkits = [1, 0, 0, 1]; // one LIGHT, one SUPERIOR
-    expect(healCompanionWithMedkit(state, companion.id)).toBe(true);
+    expect(healCompanionWithMedkit(state, state.players[0], companion.id)).toBe(
+      true,
+    );
     expect(state.players[0].medkits[0]).toBe(0);
     expect(state.players[0].medkits[3]).toBe(1);
   });
@@ -266,8 +274,12 @@ describe("companions in the field", () => {
     companion.hp = 0;
     companion.downed = true;
     state.players[0].medkits = [5, 0, 0, 0];
-    expect(canHealCompanion(state, companion.id)).toBeLessThan(0);
-    expect(healCompanionWithMedkit(state, companion.id)).toBe(false);
+    expect(
+      canHealCompanion(state, state.players[0], companion.id),
+    ).toBeLessThan(0);
+    expect(healCompanionWithMedkit(state, state.players[0], companion.id)).toBe(
+      false,
+    );
     expect(state.players[0].medkits[0]).toBe(5);
   });
 
@@ -361,7 +373,7 @@ describe("companions in the field", () => {
       };
       const at = giveSalts(state);
 
-      expect(spendReviveItem(state, at)).toBe(true);
+      expect(spendReviveItem(state, state.players[0], at)).toBe(true);
       expect(companion.downed).toBeUndefined();
       expect(companion.hp).toBe(
         Math.round(companion.maxHp * COMPANIONS.saltsHpFraction),
@@ -388,7 +400,7 @@ describe("companions in the field", () => {
       const bottle = state.players[0].inventory[at] as Equipment;
       expect(companion.downed).toBeUndefined();
       expect(reviveTarget(state, bottle)).toBeNull();
-      expect(spendReviveItem(state, at)).toBe(false);
+      expect(spendReviveItem(state, state.players[0], at)).toBe(false);
       expect(state.players[0].inventory[at]).toBe(bottle); // not consumed
     });
 
@@ -400,7 +412,7 @@ describe("companions in the field", () => {
       expect(
         reviveTarget(state, state.players[0].inventory[at] as Equipment),
       ).toBe(null);
-      expect(spendReviveItem(state, at)).toBe(false);
+      expect(spendReviveItem(state, state.players[0], at)).toBe(false);
     });
 
     it("survives the walk to the next level — the loadout carries DOWN", () => {

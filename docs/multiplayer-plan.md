@@ -1947,9 +1947,18 @@ than rediscovered:
 4. **§7.2.5 — BOTS ARE CLIENTS**, blocked on (1) for the same reason (2) is: a
    client's seat is never 0. Amended since it was written — this is now the
    SHIPPED shape rather than a test harness beside it (see §7.2.5), so it lands
-   together with §7.3's local bots and needs no separate instrument. It also
-   forces decision 3b's other half, since on a client a direct write is erased
-   by the next snapshot.
+   together with §7.3's local bots and needs no separate instrument.
+
+   **ITS PREREQUISITE IS PAID: the ADAPTER has landed** (decision 3b's other
+   half, §5.5.3). The bot's whole output is an intent — `botIntent` answers a
+   tick from one snapshot, and the same decisions drive the simulator in-process
+   and the app through its command router. What remains is the CLIENT: a headless
+   process beside `server/net/connect.ts` that joins over the real transport,
+   applies snapshots, and steers with `botAct` off the replicated state. The half
+   of that which does not exist yet is the snapshot-applying client outside
+   `pwa/` — `pwa/src/game/net/client.ts` is the only one today, and the app is
+   exactly where a headless joiner may not live.
+
 5. **§5.6's SOAK AND ADVERSITY PASS**, blocked on (4) — and cheap once (4) is
    done, because under the amendment the soak is just "run a dedicated server
    and let eight bots join it". Watched for leaks, drift and snapshot growth;
@@ -2002,26 +2011,53 @@ order, beside the chain above.
   merge depends on precisely that. Its twin is that a joiner still plays the
   THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster —
   the same job from the other end, and it should land with it.
-- **Decision 3b's other half — the bot's five housekeeping mutators. THE VERBS
-  ARE DONE; THE ADAPTER IS NOT.** All five can now travel: `autoEquipBest` and
-  `scrapInferiorLoot` always could, `careForCompanion`'s two actions
-  (`spendReviveItem`, `healCompanionWithMedkit`) were already on the list, and
-  the two that were not are now — `swapHand` and `sortInventory`, both moved out
-  of `bot/` into `items/inventory.ts`, because in each case the DECISION was the
-  bot's and the ACTION was the hero's, and a run command may not reach into the
-  autopilot for its implementation. `stepBotWeaponSwap` was the one that forced
-  the question, exactly as predicted: it carried the bot's own anti-juggle
+- **Decision 3b — the bot's five housekeeping mutators. DONE, VERBS AND ADAPTER
+  BOTH.** All five travel: `careForCompanion`'s two actions (`spendReviveItem`,
+  `healCompanionWithMedkit`) were already on the list, `swapHand` and
+  `sortInventory` were moved out of `bot/` into `items/inventory.ts`, and the
+  remaining two got verbs of their own — in every case because the DECISION was
+  the bot's and the ACTION was the hero's, and a run command may not reach into
+  the autopilot for its implementation. `stepBotWeaponSwap` was the one that
+  forced the question, exactly as predicted: it carried the bot's own anti-juggle
   memory, and moving that memory onto the run (`Player.lastSwapMs`) was the
-  cheaper answer than moving the bot. `tests/engine/bot_intent_test.ts` is the
-  guard, and it writes the five out by hand rather than deriving them from the
-  code.
+  cheaper answer than moving the bot.
 
-  **WHAT IS LEFT IS THE ADAPTER ITSELF**: `botAct` still returns a bare
-  `GameInput` and the five calls are still made directly by each host (the
-  simulator, `bot-driver.ts`). The output becomes `{ input, commands }` and the
-  adapter decides whether an intent is applied in-process or sent — which is now
-  a mechanical change rather than a design one, since every destination exists.
-  Land it with §7.2.5's bot client rather than beside it.
+  **AND THE "MECHANICAL CHANGE" WAS NOT ONE, WHICH IS THE FINDING WORTH KEEPING.**
+  This entry used to say the last two mutators could travel as `autoEquipBest`
+  and `scrapInferiorLoot` because both were already in `COMMANDS`. They were —
+  and neither is the verb. `autoEquipBest` is the player's OPTIMIZE button and
+  takes the WEAPON slot with it, which the pocket arsenal owns and re-picks every
+  tick, so a sweep behind that verb flaps against the draw beside it.
+  `scrapInferiorLoot` empties every outgrown cell at once and banks NONE of them,
+  so it would destroy the shooters a blade hero carries on purpose and throw away
+  the uniques the LOST & FOUND exists to catch. Both existed, so the guard test
+  passed on the paper mapping alone. The verbs the bot actually needed are
+  `autoEquipGear` (the sweep MINUS the hand) and `bankSpareItem` (shed ONE cell,
+  into the vault) — two new names, `PROTOCOL_VERSION` 12 → 13. **The lesson is
+  about the guard rather than the verbs**: a test that only asserts a named verb
+  EXISTS agrees with any mapping at all, so `tests/engine/bot_intent_test.ts` now
+  drives each decision and reads the emission back, and pins the two lookalikes
+  by name as verbs the bot must never reach for.
+
+  **THE ADAPTER LANDED WITH IT** (`src/game/bot/intent.ts`): every decision
+  answers a `BotCommand`, and the tick's two halves — the draw and the care
+  BEFORE the step, the bag discipline AFTER it — are driven through a SINK. The
+  simulator applies in-process through `applyRunCommand` (the same dispatch the
+  server runs), the app pushes through `pwa/src/game/run-commands.ts` so an AUTO
+  PILOT ride inside a session sends rather than writes, and `botIntent` answers a
+  whole tick from one snapshot for the bot client §7.2.5 still owes. Byte
+  identity was PROVEN rather than argued, on §7.1's own method: `moon`/medium/4242
+  and `goodco_hq`/hard/777, solo and at `--party 4`, produce simulator reports
+  identical to `main`'s down to the wall-clock line.
+
+  **ONE REAL BUG FELL OUT OF IT.** `spendReviveItem` and
+  `healCompanionWithMedkit` both read `state.players[0]` for the bag and the
+  pouch they spend from, on verbs the command channel hands an ACTING HERO — so a
+  joiner cracking a bottle consumed the HOST's cell, and the simulator's own
+  party (§7.2) ran every seat's care through seat 0's kit. Both now take the hero
+  (with `canHealCompanion` beside them). It is the same seat-0 un-migration §3.1
+  swept the engine for, surviving in three functions nothing had reason to
+  parameterize until the bot's care had to name a cell.
 
 - **§5.6's STORE SURFACES** — the Steam listing's multiplayer categories, the
   depot's launch options, and store screenshots showing a party (`store-shots`
@@ -2391,16 +2427,19 @@ state.players[0])` all describe one hero. The interesting readouts for a party
 > `transport.send(encodeFrame(FRAME.input, …))` in a client. One function, three
 > adapters, no branch inside the bot.
 >
-> **THE GAP IS THE HALF THAT IS NOT AN INTENT YET** — the five housekeeping
-> calls that reach in and MUTATE (`stepBotWeaponSwap`, `careForCompanion`,
-> `botAutoEquip`, `cullWorstLoot`, `sortBotInventory`). Those cannot cross a
-> wire, because on a client a direct write is erased by the next snapshot. So
-> the bot's output becomes intent for BOTH halves — `{ input, commands }`, the
-> commands drawn from the closed list the channel already polices — and the
-> adapter stays trivial in either direction. Two of the five (`autoEquipBest`,
-> `scrapInferiorLoot`) are already in `COMMANDS` and can travel today; this is
-> the same work decision 3b has been describing since phase 1.75, arrived at from
-> the other end.
+> **THE GAP WAS THE HALF THAT WAS NOT AN INTENT — AND IT IS CLOSED.** The five
+> housekeeping calls that reached in and MUTATED (`stepBotWeaponSwap`,
+> `careForCompanion`, `botAutoEquip`, `cullWorstLoot`, `sortBotInventory`) cannot
+> cross a wire, because on a client a direct write is erased by the next
+> snapshot. The bot's output is now intent for BOTH halves — the commands drawn
+> from the closed list the channel already polices — and the adapter
+> (`src/game/bot/intent.ts`) is a SINK, so the simulator applies in-process, the
+> app pushes through its own router, and `botIntent` answers a whole tick from one
+> snapshot for the client below. See §5.5.3's decision-3b entry for what landed,
+> including the two verbs this section wrongly assumed were already there
+> (`autoEquipBest` and `scrapInferiorLoot` exist, but neither is the bot's).
+> **WHAT IS STILL OWED HERE IS THE CLIENT ITSELF**, and the adapter was its
+> prerequisite.
 >
 > **THE ONE THING THAT DOES NOT MOVE IS THE SIMULATOR.** §7.2's bots keep
 > calling `botAct` directly on the authoritative state, in-process, with no wire
@@ -2486,14 +2525,14 @@ it does.**
   bot needs (the bag, the purse, the build) for its OWN seat and no other: the
   private tier goes to its owner, so the one hero a bot client can read in full
   is precisely the one it is steering.
-- **IT FORCES THE REST OF DECISION 3b.** Five of the bot's housekeeping calls
-  still mutate the state directly. In the renderer that is merely untidy; in a
-  CLIENT it is wrong — the write lands on a replicated state and the next
-  snapshot erases it, so the bot's stat spend, repair or swap silently does not
-  happen. Four are plain verbs and travel as commands unchanged; the fifth
-  (`stepBotWeaponSwap`) carries the bot's own swap memory, and 3b already
-  recommends moving that memory onto the run rather than moving the bot. This is
-  the thing that makes that a requirement rather than a preference.
+- **IT FORCED THE REST OF DECISION 3b, WHICH IS NOW PAID.** Five of the bot's
+  housekeeping calls mutated the state directly. In the renderer that is merely
+  untidy; in a CLIENT it is wrong — the write lands on a replicated state and the
+  next snapshot erases it, so the bot's stat spend, repair or swap silently does
+  not happen. All five are verbs now, `botAct`'s output is `{ input, commands }`
+  through `botIntent`, and the swap memory moved onto the run
+  (`Player.lastSwapMs`) exactly as 3b recommended. So the client below is
+  unblocked: what it needs from the bot side already exists.
 
 ### 7.3 BOTS IN A LOCAL GAME
 

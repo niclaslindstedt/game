@@ -25,6 +25,7 @@ import { equipSlotForItem, fitsEquipSlot, RING_SLOTS } from "./slots.ts";
 import { canEquip } from "./requirements.ts";
 import { heroLoadoutMemo } from "./derived.ts";
 import { gearScore, weaponCooldownFor, weaponScore } from "./weapon-math.ts";
+import { vaultItem } from "./vault.ts";
 import { sellValue } from "./worth.ts";
 
 // ---- Where a piece is worn ----------------------------------------------------
@@ -192,24 +193,74 @@ export function equipFromInventory(
  * cull (the bot tidies as it plays; a hand-sorting player is left alone).
  * Ties keep mint order (`Equipment.id`) so the sort is stable and
  * deterministic. Returns whether anything moved.
+ *
+ * **THE DECISION TO TIDY IS SOMEBODY ELSE'S** — {@link inventoryNeedsSort} —
+ * and that split is what lets the autopilot's tidy travel as an intent rather
+ * than as a per-tick mutation (multiplayer plan §7.2.5). This half does the
+ * work every time it is asked; the predicate is the one that carries the
+ * per-tick short-circuit, because it is the one called at 60 Hz.
  */
-const sortedLoadouts = new WeakSet<object>();
-
 export function sortInventory(state: GameState, hero: Player): boolean {
-  // Called EVERY tick by the harness, but the desired order is a pure function
-  // of the loadout (the head picks by `weaponScore`/`canEquip`, the tail by
-  // `sellValue`/mint id) — all captured by the loadout memo, which the bag's
-  // own slot order feeds into. Once a given loadout is sorted the bag stays
-  // sorted until something moves (which mints a fresh memo), so a memo already
-  // marked sorted short-circuits the whole walk+sort — the common quiet tick.
+  const inv = hero.inventory;
+  const next = desiredBagOrder(state, hero);
+  if (!next) return false;
+  let changed = false;
+  for (let i = 0; i < inv.length; i++) {
+    const want = next[i] ?? null;
+    if (inv[i] !== want) {
+      inv[i] = want;
+      changed = true;
+    }
+  }
+  // Mark the resulting arrangement sorted — a reorder minted a fresh memo that
+  // reflects the new slot order; a no-op keeps the same one. Either way the next
+  // quiet tick short-circuits until a pickup/drop/equip changes the loadout.
+  sortedLoadouts.add(heroLoadoutMemo(state, hero));
+  return changed;
+}
+
+/**
+ * Does the bag want tidying right now? The autopilot's own decision, and a
+ * PURE one — the thing a bot client sends a `sortInventory` for.
+ *
+ * Asked EVERY tick, which is why the short-circuit lives here: the order
+ * {@link sortInventory} wants is a pure function of the loadout (the head picks
+ * by `weaponScore`/`canEquip`, the tail by `sellValue`/mint id), all captured
+ * by the loadout memo — which the bag's own slot order feeds into. Once an
+ * arrangement is known sorted it stays sorted until something moves (which
+ * mints a fresh memo), so a marked memo answers without walking the bag at all.
+ */
+export function inventoryNeedsSort(state: GameState, hero: Player): boolean {
   const memo = heroLoadoutMemo(state, hero);
   if (sortedLoadouts.has(memo)) return false;
   const inv = hero.inventory;
-  const items = inv.filter((cell): cell is Equipment => cell !== null);
-  if (items.length === 0) {
+  const next = desiredBagOrder(state, hero);
+  if (!next) {
     sortedLoadouts.add(memo);
     return false;
   }
+  for (let i = 0; i < inv.length; i++) {
+    if (inv[i] !== (next[i] ?? null)) return true;
+  }
+  // Already in the order it wants — mark it so the next quiet tick is free.
+  sortedLoadouts.add(memo);
+  return false;
+}
+
+/** Loadout memos whose bag is known to be in {@link sortInventory}'s order. */
+const sortedLoadouts = new WeakSet<object>();
+
+/**
+ * The arrangement {@link sortInventory} wants, or null when there is nothing to
+ * arrange (an empty bag). Pure: it reads the bag and builds a new array.
+ */
+function desiredBagOrder(
+  state: GameState,
+  hero: Player,
+): (Equipment | null)[] | null {
+  const inv = hero.inventory;
+  const items = inv.filter((cell): cell is Equipment => cell !== null);
+  if (items.length === 0) return null;
   const head: Equipment[] = [];
   for (const cls of ["ranged", "magic"] as const) {
     let best: Equipment | null = null;
@@ -235,20 +286,7 @@ export function sortInventory(state: GameState, hero: Player): boolean {
   const rest = items
     .filter((item) => !head.includes(item))
     .sort((a, b) => sellValue(b) - sellValue(a) || a.id - b.id);
-  const next = [...head, ...rest];
-  let changed = false;
-  for (let i = 0; i < inv.length; i++) {
-    const want = next[i] ?? null;
-    if (inv[i] !== want) {
-      inv[i] = want;
-      changed = true;
-    }
-  }
-  // Mark the resulting arrangement sorted — a reorder minted a fresh memo that
-  // reflects the new slot order; a no-op keeps the same one. Either way the next
-  // quiet tick short-circuits until a pickup/drop/equip changes the loadout.
-  sortedLoadouts.add(heroLoadoutMemo(state, hero));
-  return changed;
+  return [...head, ...rest];
 }
 
 /**
@@ -450,6 +488,38 @@ export function discardFromInventory(
   if (!item) return null;
   // Not while it is on a trade table — see `isOfferedInTrade`.
   if (isOfferedInTrade(state, player, index)) return null;
+  inv[index] = null;
+  return item;
+}
+
+/**
+ * SHED bag cell `index` to make room — the piece goes into the LOST & FOUND if
+ * it is worth rescuing (`vaultItem`) and over the shoulder if it is not.
+ * Returns the shed piece, or null on an empty cell (or one on a trade table).
+ *
+ * **THIS IS THE BAG DISCIPLINE'S ACTION, AND IT LIVES HERE FOR THE SAME REASON
+ * `swapHand` AND `sortInventory` DO** (multiplayer plan §7.2.5, decision 3b):
+ * the DECISION of which cell can be spared is the autopilot's — it reads the
+ * pocket arsenal's keep-set and the preciousness ladder (`bot/economy.ts`
+ * `botCullPlan`) — but the SHED itself is the hero's, and a run command may not
+ * reach into the autopilot to find its implementation.
+ *
+ * It is deliberately NOT {@link discardFromInventory} with a flag. That verb is
+ * the player's own "drag it out and drop it": it destroys, with no undo and
+ * nothing banked, because a deliberate trash is deliberate. This one is what an
+ * UNATTENDED hero does to keep a cell open, and the whole point of the LOST &
+ * FOUND is that nobody chose it (`items/vault.ts`).
+ */
+export function bankSpareItem(
+  state: GameState,
+  player: Player,
+  index: number,
+): Equipment | null {
+  const inv = player.inventory;
+  const item = inv[index] ?? null;
+  if (!item) return null;
+  if (isOfferedInTrade(state, player, index)) return null;
+  vaultItem(state, player, item);
   inv[index] = null;
   return item;
 }

@@ -14,21 +14,29 @@
 // can't land: airborne (step/ holsters melee above JUMP.dodgeHeight), closing
 // on a pack still out of arm's reach, walking off to fetch loot with mobs
 // pot-shot distance away. Which of those weapons is IN THE HAND at any moment
-// is weapon-swap.ts's call. This module also keeps the bag SORTED like the
-// powerup dock (`sortBotInventory`): pockets up front, then the loot by
-// preciousness, so a glance (or a bag hotkey) always finds the good stuff in
-// the same place.
+// is weapon-swap.ts's call. The bag is also kept SORTED like the powerup dock —
+// pockets up front, then the loot by preciousness, so a glance (or a bag
+// hotkey) always finds the good stuff in the same place — though that order is
+// `items/inventory.ts`'s (`sortInventory`), because it is a pure function of the
+// loadout and only the DECISION to tidy is the bot's.
+//
+// **EVERY MUTATOR HERE IS HALVED, AND THE DECISION IS THE HALF THAT STAYS.**
+// `botWantsGearSweep`, `botCullPlan`, `botReviveCell` and `botCompanionToHeal`
+// are pure reads that answer WHAT the autopilot wants; the committing forms
+// beside them are the in-process convenience, and `bot/intent.ts` turns the same
+// decisions into the run commands a bot CLIENT sends (multiplayer plan §7.2.5).
 
 import {
   autoEquipBest,
   autoEquipGear,
+  bankSpareItem,
   canEquip,
   equipmentMaxDurability,
   heroLoadoutMemo,
   isScrappableLoot,
   isWeaponBroken,
+  planAutoEquipGear,
   repairAllCost,
-  vaultItem,
   vaultWorth,
   weaponScore,
 } from "../items/index.ts";
@@ -43,6 +51,7 @@ import {
 import { abilityBlocks, abilityDef } from "../defs/abilities.ts";
 import type { AbilityKind } from "../defs/abilities.ts";
 import {
+  canHealCompanion,
   healCompanionWithMedkit,
   reviveTarget,
   spendReviveItem,
@@ -138,16 +147,29 @@ const junkCountByLoadout = new WeakMap<object, number>();
  * Returns whether anything was equipped, so the app can refresh its HUD.
  */
 export function botAutoEquip(state: GameState, hero: Player): boolean {
-  // Called EVERY tick, but the sweep is a pure function of the loadout (the
-  // plan turns only on the worn kit, the bag, and the hero's level/stats — all
-  // captured by the loadout memo). Once a loadout is swept there is nothing
-  // left to wear until something moves, which mints a fresh memo — so the
-  // common quiet tick short-circuits before walking the bag at all.
+  if (!botWantsGearSweep(state, hero)) return false;
+  return autoEquipGear(state, hero) > 0;
+}
+
+/**
+ * Is there anything in the bag the hero should be WEARING? The sweep's
+ * decision, split from the commit above so it can travel as an intent
+ * (multiplayer plan §7.2.5) — the verb behind it is `autoEquipGear`.
+ *
+ * Asked EVERY tick, which is why the short-circuit lives here: the plan is a
+ * pure function of the loadout (it turns only on the worn kit, the bag, and the
+ * hero's level/stats — all captured by the loadout memo). A loadout that has
+ * been CONSIDERED is marked whether or not the sweep was wanted, so a plan the
+ * run then refuses (a piece the two-handed rule won't seat) is asked for once
+ * rather than every tick forever — which is exactly what the committing form
+ * used to do by marking after its own attempt.
+ */
+export function botWantsGearSweep(state: GameState, hero: Player): boolean {
   const memo = heroLoadoutMemo(state, hero);
   if (sweptLoadouts.has(memo)) return false;
-  const changed = autoEquipGear(state, hero) > 0;
-  sweptLoadouts.add(heroLoadoutMemo(state, hero));
-  return changed;
+  const wanted = planAutoEquipGear(state, hero).length > 0;
+  sweptLoadouts.add(memo);
+  return wanted;
 }
 const sweptLoadouts = new WeakSet<object>();
 
@@ -180,13 +202,37 @@ const sweptLoadouts = new WeakSet<object>();
  * slot is already open.
  */
 export function cullWorstLoot(state: GameState, hero: Player): Equipment[] {
-  const inv = hero.inventory;
   const dropped: Equipment[] = [];
+  for (const cell of botCullPlan(state, hero)) {
+    const item = bankSpareItem(state, hero, cell);
+    if (item) dropped.push(item);
+  }
+  return dropped;
+}
+
+/**
+ * WHICH CELLS THE BAG CAN SPARE, in the order they should go — the cull's
+ * decision, split from the commit above so it can travel as an intent
+ * (multiplayer plan §7.2.5). The verb behind each cell is `bankSpareItem`.
+ *
+ * Pure: it reads the bag and answers with indices, counting the cells it has
+ * already named as freed rather than emptying them, so the answer is the same
+ * sequence the committing loop used to walk. Empty when a cell is already open
+ * (the quiet tick) or when every remaining cell is a pocket weapon or a key.
+ *
+ * It stays in `bot/` rather than moving beside `bankSpareItem` because THIS is
+ * the autopilot's opinion — the pocket keep-set and the preciousness ladder are
+ * how the bot plays, not how a bag works, and a run command reaching in here
+ * for its implementation is the thing decision 3b forbids.
+ */
+export function botCullPlan(state: GameState, hero: Player): number[] {
+  const inv = hero.inventory;
+  const plan: number[] = [];
   let free = 0;
   for (const cell of inv) {
     if (cell === null) free++;
   }
-  if (free >= BOT_BAG_KEEP_FREE) return dropped;
+  if (free >= BOT_BAG_KEEP_FREE) return plan;
   const keep = new Set(botPocketKeepIndices(state, hero));
   const keys = gateKeyIds();
   /** The bag's least precious cell among those `spare` allows, or -1. */
@@ -196,6 +242,7 @@ export function cullWorstLoot(state: GameState, hero: Player): Equipment[] {
     for (let i = 0; i < inv.length; i++) {
       const item = inv[i];
       if (!item || keep.has(i) || keys.includes(item.defId)) continue;
+      if (plan.includes(i)) continue; // already named — count it as gone
       if (!spare(item)) continue;
       const worth = vaultWorth(item);
       if (worth < worstWorth) {
@@ -210,15 +257,10 @@ export function cullWorstLoot(state: GameState, hero: Player): Equipment[] {
     let worst = worstCell((item) => isScrappableLoot(state, hero, item));
     if (worst < 0) worst = worstCell(() => true);
     if (worst < 0) break; // every cell is a pocket or a key — nothing to shed
-    const item = inv[worst] as Equipment;
-    // Worth rescuing? Into the LOST & FOUND, where coins buy it back. Junk
-    // just goes over the shoulder as it always did.
-    vaultItem(state, hero, item);
-    dropped.push(item);
-    inv[worst] = null;
+    plan.push(worst);
     free++;
   }
-  return dropped;
+  return plan;
 }
 
 // The POCKET ARSENAL — WHICH weapon is in the hand, moment by moment — is its
@@ -462,18 +504,45 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
  * driver can bump its UI.
  */
 export function careForCompanion(state: GameState, hero: Player): boolean {
-  if (state.phase !== "playing" || state.companions.length === 0) return false;
-  const bottleAt = hero.inventory.findIndex(
+  const bottleAt = botReviveCell(state, hero);
+  if (bottleAt >= 0) return spendReviveItem(state, hero, bottleAt);
+  const patient = botCompanionToHeal(state, hero);
+  if (patient >= 0) return healCompanionWithMedkit(state, hero, patient);
+  return false;
+}
+
+/**
+ * The bag cell holding a bottle of SALTS worth breaking right now, or -1 — the
+ * first half of the care decision, split from the commit above so it can travel
+ * as an intent (multiplayer plan §7.2.5). The verb behind it is
+ * `spendReviveItem`, and `reviveTarget` is what makes the answer non-null only
+ * when somebody is actually face-down.
+ */
+export function botReviveCell(state: GameState, hero: Player): number {
+  if (state.phase !== "playing" || state.companions.length === 0) return -1;
+  return hero.inventory.findIndex(
     (item) => item !== null && reviveTarget(state, item) !== null,
   );
-  if (bottleAt >= 0 && spendReviveItem(state, bottleAt)) return true;
+}
+
+/**
+ * The companion a spare medkit should go to right now, by id, or -1 — the
+ * second half of the care decision. The verb behind it is
+ * `healCompanionWithMedkit`. Only asked once no bottle is owed: a corpse wants
+ * the salts, not a bandage.
+ */
+export function botCompanionToHeal(state: GameState, hero: Player): number {
+  if (state.phase !== "playing" || state.companions.length === 0) return -1;
   const kits = hero.medkits.reduce((sum, n) => sum + (n ?? 0), 0);
-  if (kits < BOT_COMPANION_MEDKIT_RESERVE) return false;
+  if (kits < BOT_COMPANION_MEDKIT_RESERVE) return -1;
   for (const companion of state.companions) {
     if (companion.hp >= companion.maxHp * BOT_COMPANION_HEAL_FRAC) continue;
-    if (healCompanionWithMedkit(state, companion.id)) return true;
+    // `canHealCompanion` is the same gate the commit runs — a DOWNED friend and
+    // a full one are both refused, and the loop moves on exactly as it did when
+    // the refusal came back from the attempt itself.
+    if (canHealCompanion(state, hero, companion.id) >= 0) return companion.id;
   }
-  return false;
+  return -1;
 }
 
 /**
