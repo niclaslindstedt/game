@@ -110,7 +110,7 @@ export {
   worldYaw,
   YAW_RANGE,
 } from "./render/tilt.ts";
-export { drawEffects, type Effect } from "./render/effects.ts";
+export { damageTextScale, drawEffects, type Effect } from "./render/effects.ts";
 export {
   combatNoiseFade,
   COMBAT_NOISE_FADE_MS,

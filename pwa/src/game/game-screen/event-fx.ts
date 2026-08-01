@@ -48,6 +48,8 @@ import {
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
 import { bossRitePresentation } from "./boss-rite.ts";
+import { pushDamage, pushFloat } from "./float-lane.ts";
+import { collectGoldPickup } from "./gold-float.ts";
 import { goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
 import { splashOnly } from "./gore-gate.ts";
@@ -172,8 +174,7 @@ export function mergePackKillXp(
           XP_MERGE_MIN_SCALE,
           Math.min(XP_MERGE_MAX_SCALE, group.length / 10),
         );
-        shared.effects.push({
-          kind: "text",
+        pushFloat(shared.effects, state.stats.timeMs, {
           pos: { x: cx, y: headY - 12 },
           untilMs: state.stats.timeMs + 1400,
           durationMs: 1400,
@@ -642,11 +643,13 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       });
     }
     const duration = event.crit ? 900 : 650;
-    effects.push({
-      kind: "damage",
+    // Scattered a little along the body so a burst of hits on one mob does not
+    // draw one column of numbers; the LANE (float-lane.ts) then lifts whatever
+    // still lands on a live number, so the ladder climbs instead of overprinting.
+    pushDamage(effects, state.stats.timeMs, {
       pos: {
         x: event.pos.x + Math.round((Math.random() - 0.5) * 12),
-        y: event.pos.y - def.radius - 2 - Math.round(Math.random() * 4),
+        y: event.pos.y - def.radius - 2,
       },
       untilMs: state.stats.timeMs + duration,
       durationMs: duration,
@@ -667,12 +670,8 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       // Trail the popup half a second behind the kill's damage number so
       // the two read in sequence — the hit lands, then the XP flows up.
       const xpDelayMs = 500;
-      effects.push({
-        kind: "text",
-        pos: {
-          x: event.pos.x,
-          y: event.pos.y - def.radius - 12,
-        },
+      pushFloat(effects, state.stats.timeMs, {
+        pos: { x: event.pos.x, y: event.pos.y - def.radius - 12 },
         startMs: state.stats.timeMs + xpDelayMs,
         untilMs: state.stats.timeMs + xpDelayMs + 1100,
         durationMs: 1100,
@@ -839,8 +838,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   }
   // A blow passing clean THROUGH the spectral hero — the shroud's own "DODGE".
   if (event.type === "playerPhased") {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius },
       untilMs: state.stats.timeMs + 650,
       durationMs: 650,
@@ -849,8 +847,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     });
   }
   if (event.type === "playerDodge") {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius },
       untilMs: state.stats.timeMs + 650,
       durationMs: 650,
@@ -868,8 +865,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       durationMs: 240,
       radius: PLAYER.radius * 1.6,
     });
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius },
       untilMs: state.stats.timeMs + 650,
       durationMs: 650,
@@ -892,8 +888,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // hero's own aim whiffed ("MISS"). Float the tag off the target.
   if (event.type === "enemyDodge" || event.type === "enemyMiss") {
     const def = enemyDef(event.defId);
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - def.radius - 2 },
       untilMs: state.stats.timeMs + 650,
       durationMs: 650,
@@ -905,8 +900,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // immunity reads as a rule (kill the controllers first), not a bug.
   if (event.type === "enemyShielded") {
     const def = enemyDef(event.defId);
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - def.radius - 2 },
       untilMs: state.stats.timeMs + 650,
       durationMs: 650,
@@ -929,8 +923,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // gold and longer-lived than a combat tag — a one-liner, not a
   // dialogue scene, so the run never pauses for it.
   if (event.type === "companionQuote") {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - 16 },
       untilMs: state.stats.timeMs + 2200,
       durationMs: 2200,
@@ -965,8 +958,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       seed: Math.floor(Math.random() * 997),
       intensity: levelUpIntensity(event.level),
     });
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: {
         x: localHero(state).pos.x,
         y: localHero(state).pos.y - PLAYER.radius - 8,
@@ -994,8 +986,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // A companion beaten down / back on its feet: float the state
   // change off its head so the party's ebb reads at a glance.
   if (event.type === "companionDowned" || event.type === "companionRevived") {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - 14 },
       untilMs: state.stats.timeMs + 900,
       durationMs: 900,
@@ -1008,8 +999,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // signature power grows a rank at a time, so the level is worth
   // noticing.
   if (event.type === "companionLeveledUp") {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - 16 },
       untilMs: state.stats.timeMs + 1200,
       durationMs: 1200,
@@ -1027,8 +1017,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // FULL" thought over the hero's hair and light the inventory button's
   // pulse so the player knows to open it and make room.
   if (event.type === "pickupBlocked") {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius - 6 },
       untilMs: state.stats.timeMs + 900,
       durationMs: 900,
@@ -1098,7 +1087,9 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // instead, so a loot flood doesn't bury the thumb zone. Loose pickups
   // (medkits, arrows, repair kits, powerups) always ride the feed; only
   // special tiers tint their name there.
-  if (event.type === "itemCollected" && event.name) {
+  // GOLD is excluded here: its line is written by the GROUPED flush below,
+  // because a boss's six piles are one handful of money and deserve one line.
+  if (event.type === "itemCollected" && event.name && event.kind !== "gold") {
     const tier = event.tier ?? "regular";
     if (
       event.kind === "equipment" &&
@@ -1113,11 +1104,6 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         equipped: event.equipped === true,
         upgrade: event.upgrade === true,
       });
-    } else if (event.kind === "gold" && event.coins != null) {
-      // A pile's line is GROUPED and abbreviated rather than printed raw: a
-      // late-campaign hoard is a six-digit number, and "127463 GOLD" in a feed
-      // that scrolls past in a second is a wall of digits nobody reads.
-      ctx.pushPickup(`${formatCompact(event.coins)} GOLD`, "#ffd75e");
     } else {
       ctx.pushPickup(
         event.name,
@@ -1138,8 +1124,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     event.xp > 0 &&
     getSettings().xpFloat === "on"
   ) {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: {
         x: localHero(state).pos.x,
         y: localHero(state).pos.y - PLAYER.radius - 12,
@@ -1153,32 +1138,17 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       shake: true,
     });
   }
-  // GOLD BANKED: the amount flows up off the hero in the purse's own warm
-  // yellow, exactly as an arrow's XP floats in blue. Gold has no pickup card
-  // and never will — a card is for a find worth STOPPING to read, and a farm
-  // run walks over dozens of piles a minute — so this float and the feed line
-  // are the whole of what a pile says on the way past.
+  // GOLD BANKED: the pile joins the open GROUP rather than floating on its own,
+  // so piles taken within a breath of each other — a boss sheds six at once —
+  // add up into one number instead of stacking six identical ones on the same
+  // spot. The group floats its total (and writes its one feed line) from
+  // `flushGoldPickups`, the moment the money stops arriving.
   if (
     event.type === "itemCollected" &&
     event.kind === "gold" &&
-    event.coins != null &&
-    event.coins > 0
+    event.coins != null
   ) {
-    effects.push({
-      kind: "text",
-      pos: {
-        x: localHero(state).pos.x,
-        y: localHero(state).pos.y - PLAYER.radius - 12,
-      },
-      untilMs: state.stats.timeMs + 900,
-      durationMs: 900,
-      text: `+${formatCompact(event.coins)}`,
-      color: "#ffd75e",
-      rise: 24,
-      // A big pile shouts and a couple of coins murmurs: the same escalation
-      // the pile ladder and the glitter count both ride, so all three agree.
-      scale: event.coins >= 1000 ? 2 : 1,
-    });
+    collectGoldPickup(ctx.shared, state, event.coins, ctx.pushPickup);
   }
   if (event.type === "storyItemCollected") {
     ctx.pushPickup(storyItemDef(event.defId).name, "#ffd75e");
@@ -1344,8 +1314,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // that keeps shouting (the standing red aura in render/enemies.ts carries it
   // from here on).
   if (event.type === "enemyEnraged") {
-    effects.push({
-      kind: "text",
+    pushFloat(effects, state.stats.timeMs, {
       pos: { x: event.pos.x, y: event.pos.y - 22 },
       untilMs: state.stats.timeMs + 900,
       durationMs: 900,
@@ -1489,15 +1458,17 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // upward so the lines read in order, each staggered in behind the last.
   if (event.type === "bossBark") {
     const lines = event.lines;
-    for (let i = 0; i < lines.length; i++) {
+    // The lines are laid out by the SAME allocator that keeps the fight's
+    // numbers off each other (float-lane.ts): the last line is pushed first and
+    // takes the first free row over the speaker, and each earlier line lands on
+    // the row above it — so the paragraph reads top-down, and it clears the
+    // damage numbers, the XP and another boss's bark for free. (Two janitors
+    // shouting over each other used to print one illegible block.)
+    for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i];
       if (!line) continue;
-      effects.push({
-        kind: "text",
-        pos: {
-          x: event.pos.x,
-          y: event.pos.y - 30 - (lines.length - 1 - i) * 9,
-        },
+      pushFloat(effects, state.stats.timeMs, {
+        pos: { x: event.pos.x, y: event.pos.y - 30 },
         untilMs: state.stats.timeMs + 1500 + i * 120,
         durationMs: 1500 + i * 120,
         text: line,
