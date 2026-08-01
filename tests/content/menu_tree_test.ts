@@ -113,6 +113,11 @@ function ctxFor(overrides: Partial<MenuContext> = {}): MenuContext {
     captureBind: null,
     setCaptureBind: () => {},
     hasFinePointer: true,
+    // Populated (like everything above), so the touch-gated rows are built by
+    // the build-everything pass — see the ctxFor lesson in the menu-design
+    // skill: a field defaulting to "absent" silently drops its rows from the
+    // suite that exists to catch missing builders.
+    hasTouch: true,
     canBuzz: true,
     canQuit: true,
     onQuit: () => {},
@@ -367,6 +372,16 @@ describe("the title menu tree", () => {
 
     const phone = buildMenu("settings", ctxFor({ ...touch, canBuzz: true }));
     expect(phone.map((row) => row.aria)).toContain("settings-controls");
+  });
+
+  it("offers SWIPE BARS only where touch exists", () => {
+    // The row's feature IS a touch gesture, so a mouse-only desktop would show
+    // a dead switch. Gated on hasTouch (not !hasFinePointer): a touch laptop
+    // has both pointers and the gesture works there, so it keeps the row.
+    const noTouch = buildMenu("gameplay", ctxFor({ hasTouch: false }));
+    expect(noTouch.map((row) => row.aria)).not.toContain("gameplay-swipe-bars");
+    const touch = buildMenu("gameplay", ctxFor({ hasTouch: true }));
+    expect(touch.map((row) => row.aria)).toContain("gameplay-swipe-bars");
   });
 
   it("resolves a BACK cursor by row id, not by position", () => {

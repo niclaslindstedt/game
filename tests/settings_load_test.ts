@@ -71,6 +71,7 @@ describe("a saved settings blob", () => {
       healthBars: "off",
       musicVolume: 0.12,
       autoEquip: "on",
+      swipeBars: "on",
       minimapMode: "follow",
       vignette: 0.4,
     });
@@ -78,6 +79,7 @@ describe("a saved settings blob", () => {
     expect(settings.healthBars).toBe("off");
     expect(settings.musicVolume).toBeCloseTo(0.12, 5);
     expect(settings.autoEquip).toBe("on");
+    expect(settings.swipeBars).toBe("on");
     expect(settings.minimapMode).toBe("follow");
     expect(settings.vignette).toBeCloseTo(0.4, 5);
   });

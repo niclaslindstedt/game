@@ -119,6 +119,7 @@ import { QuestTracker } from "./game-screen/QuestTracker.tsx";
 import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
 import { TalkOverlay } from "./overlays/TalkOverlay.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
+import { SwipeDock } from "./game-screen/SwipeDock.tsx";
 import {
   createRenderFrame,
   type AreaCaptionState,
@@ -385,6 +386,9 @@ export function GameScreen({
   // the short landscape field. Portrait keeps them all stacked in one corner
   // (there's room up the tall edge, and one thumb covers both). See the dock CSS.
   const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
+  // SWIPE BARS is a touch gesture, so the mode only ever engages where touch
+  // exists — a desktop with the setting somehow on keeps its fixed docks.
+  const hasTouch = useMediaQuery("(any-pointer: coarse)");
   // The XP strip's kill-heat overlay — the render loop sizes it to the
   // freshly-earned slice and toggles its `is-hot` class straight on the DOM
   // (like fpsRef) so a kill lights it up without a React re-render.
@@ -1055,6 +1059,10 @@ export function GameScreen({
   // Which bottom corner the powerup dock lives in; the pickup feed takes the
   // opposite one. Read live so the title-screen toggle applies next run.
   const powerupSide = getSettings().powerupSide;
+  // SWIPE BARS (SETTINGS → GAMEPLAY, touch only): the fixed corner docks stand
+  // down and an edge swipe summons both bars where the thumb is (SwipeDock).
+  // Read live like the row above, so the title-screen toggle applies next run.
+  const swipeBars = hasTouch && getSettings().swipeBars === "on";
   // The consumable dock rides with the powerups in portrait (stacked above
   // them), but crosses to the OPPOSITE corner in landscape so the two rows split
   // left/right instead of piling up on one side of the field.
@@ -1197,7 +1205,7 @@ export function GameScreen({
         />
       )}
 
-      {hud?.phase === "playing" && (
+      {hud?.phase === "playing" && !swipeBars && (
         <ConsumableDock
           hud={hud}
           assets={assets}
@@ -1209,23 +1217,39 @@ export function GameScreen({
         />
       )}
 
-      <PowerupDock
-        hud={hud?.phase === "playing" ? hud : null}
-        assets={assets}
-        font={font}
-        keyHints={keyHints}
-        weaponMenuOpen={weaponMenuOpen}
-        side={powerupSide}
-        dockRef={powerupDockRef}
-        onSpend={queues.queueDockSpend}
-        onDiscard={(index) => {
-          if (state && runCommand(state, "discardHeldAbility", index)) {
-            playUiSound(synth, "back");
-            return true;
-          }
-          return false;
-        }}
-      />
+      {!swipeBars && (
+        <PowerupDock
+          hud={hud?.phase === "playing" ? hud : null}
+          assets={assets}
+          font={font}
+          keyHints={keyHints}
+          weaponMenuOpen={weaponMenuOpen}
+          side={powerupSide}
+          dockRef={powerupDockRef}
+          onSpend={queues.queueDockSpend}
+          onDiscard={(index) => {
+            if (state && runCommand(state, "discardHeldAbility", index)) {
+              playUiSound(synth, "back");
+              return true;
+            }
+            return false;
+          }}
+        />
+      )}
+
+      {/* SWIPE BARS: the fixed docks' stand-in — an edge swipe reveals both
+          slot groups where the thumb is (SwipeDock.tsx). The render loop's
+          cooldown writes ride the same dockRef either way. */}
+      {swipeBars && (
+        <SwipeDock
+          hud={hud?.phase === "playing" ? hud : null}
+          assets={assets}
+          font={font}
+          dockRef={powerupDockRef}
+          onSpend={queues.queueDockSpend}
+          onUse={queues.queueConsumable}
+        />
+      )}
 
       {hud?.phase === "playing" && (
         <PickupFeed

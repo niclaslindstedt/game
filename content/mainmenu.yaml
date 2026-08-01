@@ -279,6 +279,16 @@ screens:
         help:
           auto: POWERS FIRE THE MOMENT YOU GRAB THEM
           manual: TAP A POWERUP SLOT / CLICK / E / 1-3 SPENDS ONE
+      # Touch devices only (the builder drops it elsewhere): a one-hand
+      # accessibility mode — swipe in from a screen edge and the item/powerup
+      # bars open right under the thumb, bigger, wherever along the edge the
+      # swipe landed. Sits under POWERUPS because it is the next question
+      # about the same slots: HOW you reach them.
+      - id: swipe-bars
+        label: SWIPE BARS
+        help:
+          on: SWIPE IN FROM A SCREEN EDGE - THE BARS OPEN AT YOUR THUMB
+          off: THE ITEM AND POWERUP BARS SIT FIXED IN THE CORNERS
       - id: quick-draw
         label: QUICK DRAW
         help:
