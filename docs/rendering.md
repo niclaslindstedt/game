@@ -358,6 +358,31 @@ throws pale regolith, Mars rust, a base's deck plate grey — on carved maps and
 any venue added later, with nothing authored per level. Impact sizes the cloud;
 his ground speed smears it along his heading.
 
+**WHICH WAY THE HERO IS TURNED — HIS FIGHT FIRST, HIS LEGS SECOND.** Facing is a
+whole-doll horizontal mirror (`Player.faceLeft`, decided by the ENGINE in
+`step/player.ts`), and everything the hero holds is drawn inside it: the weapon
+layer, its swing pivot, the slash streak, the muzzle flash's side. So the flip
+answers "which way is the weapon pointing", and pointing it down the hero's LEGS
+put the whole armament behind him whenever he fought something he was not walking
+toward — shots visibly leaving his back, a blade slashing away from the pack. It
+now follows, in order:
+
+1. **What he just STRUCK.** `stepWeapon` turns him onto each blow's bearing, and
+   the steering pass leaves that alone while the weapon is recovering — one
+   cooldown IS the gap between two blows, so a hero mid-fight stays turned on the
+   fight rather than snapping back to his legs between shots. The hold needs no
+   timer and no state of its own: when the fight stops paying out blows, the last
+   cooldown drains and his legs have him again.
+2. **Where he is AIMED.** Desktop AIM & SHOOT hands the cursor's world point in
+   every tick (`GameInput.aim`), trigger down or not, so the hero turns with the
+   cursor the instant it crosses him.
+3. **Where he is WALKING** — the whole of it for a hero out of a fight.
+
+A hero shooting left while running right is therefore mirrored left and reads as
+RUNNING BACKWARD, which is what he is doing. The near-vertical deadzone
+(`PLAYER.faceFlipMinX`) applies to all three, so a bearing within ~11° of
+straight up or down keeps the last side instead of mirror-flickering.
+
 ## The hero doll, his kit and his weapon
 
 **AND ALL THREE SHOW ON THE HERO.** A build choice the player cannot see on his
@@ -423,9 +448,11 @@ look (no toggle). Both are pure render concerns:
   bloom at the tip AND a glow trail riding the hero's round/bolt in flight
   (`render.ts`, gated to the hero's own shots via the projectile's
   `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
-  shot. The hero faces where he MOVES, not where he shoots, so his flash pins to
-  the barrel's facing side (the muzzle effect's `faceLeft`) — a shot at a foe
-  behind him still fires at the weapon, not off his back. The PIXELS are the
+  shot. The hero faces WHAT HE IS FIGHTING (see _Which way the hero is turned_
+  below), so the flash leaves the barrel by construction; it is still pinned to
+  the facing side (the muzzle effect's `faceLeft`) for the one case the two can
+  disagree — a near-vertical shot, which the facing deadzone deliberately lets
+  keep the last side. The PIXELS are the
   app's and the engine draws none of it; what travels on the def is the weapon's
   CHOICE. A weapon with no `fx:` keeps the plain class look, so the roster grows
   one weapon at a time. The eleven elements (fire, holy, frost, storm, void,

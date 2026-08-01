@@ -9,6 +9,7 @@ import {
   distance,
   distanceSq,
   moveToward,
+  type Vec2,
 } from "@game/lib/vec.ts";
 import {
   abilityPowerScale,
@@ -97,11 +98,6 @@ export function stepPlayer(
       player.vel.y = (next.y - before.y) / dt;
     }
     player.facing = direction(before, input.target);
-    // The sprite flip only follows decisively horizontal movement —
-    // near-vertical steering would otherwise mirror-flicker every step.
-    if (Math.abs(player.facing.x) >= PLAYER.faceFlipMinX) {
-      player.faceLeft = player.facing.x < 0;
-    }
     // Walking stirs the horde: bank the distance for the wave spawner.
     //
     // **PER CAPITA, because the counter is the RUN's and the legs are each
@@ -121,6 +117,8 @@ export function stepPlayer(
     player.pos = next;
     player.moving = true;
   }
+
+  turnHero(player, input);
 
   // Stamina is a strict three-pace ladder. RUNNING (any throttle above the
   // walk pace) spends the pool at the FULL drain rate — easing the stick off
@@ -299,6 +297,57 @@ export function stepPlayer(
   // ramp its chance with time stranded (see `staminaDrinkChance`); any stamina
   // back resets it, so catching a breath drops straight back to the baseline.
   state.staminaEmptyMs = player.stamina <= 0 ? state.staminaEmptyMs + dtMs : 0;
+}
+
+/**
+ * Turn the sprite along `dir` — the ONE place `faceLeft` is decided, shared
+ * with the weapon pass so a blow and a step turn the hero by the same rule.
+ *
+ * The flip only follows a decisively HORIZONTAL bearing (`PLAYER.faceFlipMinX`):
+ * a near-vertical one keeps the last facing instead of mirror-flickering every
+ * step, which is what a diagonal hovering around straight-up used to do.
+ */
+export function faceAlong(player: Player, dir: Vec2): void {
+  if (Math.abs(dir.x) >= PLAYER.faceFlipMinX) player.faceLeft = dir.x < 0;
+}
+
+/**
+ * WHICH WAY THE HERO IS TURNED — his FIGHT first, his legs second.
+ *
+ * A hero shooting to his left while running right is turned LEFT, and reads as
+ * running backwards, because that is what he is doing: covering a retreat.
+ * Turning him the way his feet go instead put the whole weapon on the wrong
+ * side of the body — the held sprite, the slash arc and the muzzle flash all
+ * sat behind him while the shots left from his back. Three sources, in order:
+ *
+ *  1. **WHAT HE JUST STRUCK.** `stepWeapon` turns him onto each blow's bearing
+ *     (`faceAlong` there) and this pass leaves that alone for as long as the
+ *     weapon is recovering. One cooldown IS the gap between two blows, so a hero
+ *     mid-fight stays turned on the fight rather than snapping back to his legs
+ *     between shots — and the moment the fight stops paying out blows, the last
+ *     cooldown drains and his legs have him again. That is the whole hold: no
+ *     timer of its own, no state that can go stale, and it costs nothing.
+ *     Skipped while he is `disarmed` (the scripted opening), whose holster jumps
+ *     the cooldown tick — a frozen cooldown there would freeze the facing too.
+ *  2. **WHERE HE IS AIMED.** Desktop AIM & SHOOT hands the cursor's world point
+ *     in on every tick (`input.aim`), trigger down or not, so the hero turns
+ *     with the cursor the instant it crosses him — no shot needed, and no scan:
+ *     the bearing is one subtraction from a point the app already computed.
+ *  3. **WHERE HE IS WALKING**, which is the whole of it for a hero out of a
+ *     fight — the original rule, unchanged.
+ */
+function turnHero(player: Player, input: GameInput): void {
+  if (player.weaponCooldownMs > 0 && !player.disarmed) return;
+  if (input.aim) {
+    const aim = direction(player.pos, input.aim);
+    // A cursor resting ON the hero has no bearing (`direction` returns zero):
+    // fall through to his legs rather than reading it as "face east".
+    if (aim.x !== 0 || aim.y !== 0) {
+      faceAlong(player, aim);
+      return;
+    }
+  }
+  if (player.moving) faceAlong(player, player.facing);
 }
 
 /**

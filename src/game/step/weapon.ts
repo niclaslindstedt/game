@@ -44,6 +44,7 @@ import type {
   WeaponClass,
 } from "../types/index.ts";
 import { inert } from "../disposition.ts";
+import { faceAlong } from "./player.ts";
 
 /**
  * The character fights autonomously with whatever is in the weapon slot:
@@ -126,6 +127,14 @@ export function stepWeapon(
   // each drop the effective cooldown as they rise.
   player.weaponCooldownMs = weaponCooldownFor(state, player, equipped);
   const dir = direction(player.pos, targetPos);
+  // TURN THE HERO ONTO THE BLOW. The sprite — and with it the held weapon, the
+  // slash arc and the muzzle flash, all drawn inside its facing flip — points at
+  // what he is striking rather than at where his legs are carrying him, so a
+  // hero backing away from a pack while firing into it reads as running
+  // backwards. `stepPlayer` (which ran earlier this tick) leaves the flip alone
+  // while the cooldown set above is recovering, so this holds between blows
+  // instead of flicking back to his legs the moment the swing lands.
+  faceAlong(player, dir);
   if (!weapon.projectile) {
     // A swing cleaves a cone: the nearest monster is the aim, and every other
     // monster within reach and inside the weapon's arc is struck in the same
