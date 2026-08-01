@@ -28,6 +28,7 @@ import {
   debugDetonateNuke,
   debugLevelUpFx,
   error,
+  tradePartner,
   type Difficulty,
   type GameInput,
   type GameState,
@@ -120,6 +121,7 @@ import { QuestFlash } from "./game-screen/QuestFlash.tsx";
 import { QuestTracker } from "./game-screen/QuestTracker.tsx";
 import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
 import { TalkOverlay } from "./overlays/TalkOverlay.tsx";
+import { TradeOverlay } from "./overlays/TradeOverlay.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
 import { SwipeDock } from "./game-screen/SwipeDock.tsx";
 import {
@@ -1520,6 +1522,27 @@ export function GameScreen({
             playUiSound(synth, "back");
             bumpUi();
           }}
+        />
+      )}
+
+      {/* THE TRADE WINDOW (§5.1) — the hero's own `trade` screen, raised on
+          both seats at once by `openTrade`. The overlay only shows the table
+          and sends verbs; every rule is the engine's. The partner's NAME comes
+          from the session roster — the engine's Player carries no name. */}
+      {state && hud?.screen === "trade" && (
+        <TradeOverlay
+          state={state}
+          assets={assets}
+          font={font}
+          partnerName={(() => {
+            const seat = tradePartner(state, localHero(state));
+            if (seat === null) return null;
+            return (
+              sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
+              null
+            );
+          })()}
+          bumpUi={bumpUi}
         />
       )}
 

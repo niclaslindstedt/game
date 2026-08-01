@@ -313,6 +313,10 @@ export const RUN_COMMAND_ARGS = {
   openTrade: ["int"],
   cancelTrade: [],
   offerTradeItem: ["int"],
+  // Taking an item back OFF the table is its own verb rather than
+  // `offerTradeItem(-1)`: the channel's `int` deliberately refuses negatives,
+  // and widening it for one verb would widen it for every index on the list.
+  clearTradeOffer: [],
   offerTradeCoins: ["int"],
   acceptTrade: [],
 
@@ -640,6 +644,8 @@ export function applyRunCommand(
       return cancelTrade(state, hero);
     case "offerTradeItem":
       return offerItem(state, hero, num(a, 0));
+    case "clearTradeOffer":
+      return offerItem(state, hero, -1);
     case "offerTradeCoins":
       return offerCoins(state, hero, num(a, 0));
     case "acceptTrade":

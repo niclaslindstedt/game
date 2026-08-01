@@ -438,6 +438,7 @@ export function createSession(options: SessionOptions): Session {
         slot: client.slot,
         name: client.name,
         playing: client.recipient.seat !== null,
+        seat: client.recipient.seat,
         // The host's own renderer reaches this process over a MessagePort
         // inside the same machine; there is no wire to time, and -1 is the
         // seam's word for that rather than a flattering 0.

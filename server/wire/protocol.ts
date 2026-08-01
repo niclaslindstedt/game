@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 17;
+export const PROTOCOL_VERSION = 18;
 
 /**
  * The most clients one session seats, host included.
@@ -469,6 +469,10 @@ export type RosterEntry = {
   /** False for a spectator. phase 3 seats a second hero; until then exactly one
    * entry is ever true. */
   playing: boolean;
+  /** The seat this client's hero sits in, or null for a spectator. The engine's
+   * `Player` carries no name, so this pairing is the ONE place a party frame or
+   * a trade window can put a name to a hero. */
+  seat: number | null;
   /** Round trip in ms as the server last measured it, or -1 for the host's own
    * renderer, which has no wire to measure. */
   ping: number;
@@ -609,6 +613,7 @@ export const COMMANDS = [
   "openTrade",
   "cancelTrade",
   "offerTradeItem",
+  "clearTradeOffer",
   "offerTradeCoins",
   "acceptTrade",
   "reclaimVaultItem",
