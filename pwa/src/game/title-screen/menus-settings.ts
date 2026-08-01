@@ -115,6 +115,13 @@ export function buildGameplayMenu(ctx: MenuContext): MenuEntry[] {
           state: s.itemUse,
         },
       ),
+      // Touch devices only — the feature IS a touch gesture, so on a
+      // mouse-only desktop the row would be a dead switch. `hasTouch` rather
+      // than `!hasFinePointer`, because a touch laptop has both and the
+      // gesture works there.
+      "swipe-bars": ctx.hasTouch
+        ? onOffRow(ctx, "gameplay", "swipe-bars", "swipeBars")
+        : null,
       // Two ways to READ the switcher — likewise a label-cycling row.
       "quick-draw": actionRow(
         "gameplay",

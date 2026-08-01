@@ -5045,6 +5045,176 @@ html.app-locked body {
   }
 }
 
+/* SWIPE BARS (SETTINGS → GAMEPLAY, touch only): the docks summoned by an edge
+   swipe instead of parked in the corners — see SwipeDock.tsx. Three invisible
+   strips hug the left/right/bottom rims; a touch pulling inward off one opens
+   the bar centred on the swipe. `touch-action: none` keeps the browser's own
+   edge gestures (scroll, back-swipe) from fighting the reveal. The strips sit
+   over the canvas (a touch here belongs to the gesture, not the steering) and
+   under every modal surface. */
+.swipe-bar-zone {
+  position: absolute;
+  z-index: 30;
+  touch-action: none;
+}
+
+.swipe-bar-zone.zone-left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(24px + env(safe-area-inset-left));
+}
+
+.swipe-bar-zone.zone-right {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: calc(24px + env(safe-area-inset-right));
+}
+
+.swipe-bar-zone.zone-bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(24px + env(safe-area-inset-bottom));
+}
+
+/* The dismiss layer: one tap anywhere off the bar folds it away — and the
+   backdrop eats that press, because a dismissal that also steered the hero
+   toward the tap would make closing the bar a movement command. */
+.swipe-bar-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 39;
+}
+
+/* The anchor owns WHERE the bar sits (the swipe's own coordinate, written
+   inline by the component) and the centring translate; the inner .swipe-bar
+   owns the fold animation, so the two transforms never fight. The slide
+   direction rides on custom properties the keyframes read, so one pair of
+   keyframes serves all three edges. */
+.swipe-bar-anchor {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none;
+  --bar-slide-x: 0px;
+  --bar-slide-y: 0px;
+}
+
+.swipe-bar-anchor.bar-left {
+  left: calc(0.6rem + env(safe-area-inset-left));
+  transform: translateY(-50%);
+  --bar-slide-x: -16px;
+}
+
+.swipe-bar-anchor.bar-right {
+  right: calc(0.6rem + env(safe-area-inset-right));
+  transform: translateY(-50%);
+  --bar-slide-x: 16px;
+}
+
+.swipe-bar-anchor.bar-bottom {
+  bottom: calc(0.6rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  --bar-slide-y: 16px;
+}
+
+/* The bar itself: both slot groups on one plate. Off the bottom edge the
+   groups stack (items over powerups, the corners' own order) and each group
+   runs as a row; off a side edge the whole thing turns — groups side by side,
+   each running as a column — so the bar always lies ALONG its edge. */
+.swipe-bar {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.55rem;
+  background: rgba(13, 17, 23, 0.92);
+  border: 2px solid #39435a;
+  border-radius: 12px;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+  animation: swipe-bar-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.swipe-bar-group {
+  display: flex;
+  flex-direction: row;
+  gap: 0.55rem;
+}
+
+.bar-left .swipe-bar,
+.bar-right .swipe-bar {
+  flex-direction: row;
+}
+
+.bar-left .swipe-bar-group,
+.bar-right .swipe-bar-group {
+  flex-direction: column;
+}
+
+/* The whole point of the mode: the slots run LARGER than the fixed docks'
+   (2.3rem there), because the bar is transient — it never has to earn its
+   keep against the field, so it can afford thumb-sized targets. Overrides the
+   portrait breakpoint's shrink too (higher specificity). */
+.swipe-bar .powerup-slot,
+.swipe-bar .consumable-slot {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 9px;
+}
+
+.swipe-bar .powerup-icon,
+.swipe-bar .consumable-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+/* No reach-past hit padding here: the slots are already thumb-sized, and a
+   padded region would overlap the neighbouring group's slots. */
+.swipe-bar .powerup-slot.filled::before,
+.swipe-bar .consumable-slot.filled::before {
+  content: none;
+}
+
+.swipe-bar .active-powerup-secs {
+  font-size: 0.9rem;
+}
+
+.swipe-bar.closing {
+  animation: swipe-bar-out 150ms ease-in both;
+}
+
+@keyframes swipe-bar-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--bar-slide-x), var(--bar-slide-y)) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes swipe-bar-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--bar-slide-x), var(--bar-slide-y)) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-bar,
+  .swipe-bar.closing {
+    animation-duration: 1ms;
+  }
+}
+
 /* The lifted powerup icon trailing the finger/cursor mid-discard. Fixed to the
    viewport and centered on the pointer; purely decorative (no pointer events). */
 .powerup-drag-ghost {
