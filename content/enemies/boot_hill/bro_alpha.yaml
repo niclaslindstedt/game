@@ -49,7 +49,7 @@ loot:
     magic: 1
   weapons: 0
   gear: 1
-  xpArrows: 1
+  xpScrolls: 1
   repairs: 0
   medkits: 1
   tierBonus: 0.3

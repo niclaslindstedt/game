@@ -645,9 +645,9 @@ export function dropProse(enemy) {
       pieces.push(
         `${count(drops.counts.repairs)} repair kit${drops.counts.repairs === 1 ? "" : "s"}`,
       );
-    if (drops.counts.xpArrows)
+    if (drops.counts.xpScrolls)
       pieces.push(
-        `${count(drops.counts.xpArrows)} golden arrow${drops.counts.xpArrows === 1 ? "" : "s"}`,
+        `${count(drops.counts.xpScrolls)} XP scroll${drops.counts.xpScrolls === 1 ? "" : "s"}`,
       );
     if (pieces.length > 0) lines.push(`Every kill pays ${list(pieces)}.`);
     if (drops.counts.tierBonus)

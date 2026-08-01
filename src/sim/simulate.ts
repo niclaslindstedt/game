@@ -86,7 +86,7 @@ import {
 import { spendTalentPoint, talentPointsEarned } from "../game/talents.ts";
 import { talentDef, type TalentClass } from "../game/defs/talents/index.ts";
 import {
-  setArrowXpEnabled,
+  setXpScrollEnabled,
   xpCapMultiplier,
   xpLevelCap,
   xpToLevelUp,
@@ -195,7 +195,7 @@ export type SimulateLevelOptions = {
    * and moves on — would be, which poisons every level-relative read
    * (loot-vs-level, boss-level, difficulty). When true, the run instead ENDS
    * (outcome `"cleared"`) once the hero reaches the map's INTENDED EXIT LEVEL —
-   * `LevelDef.loot.arrowCapByDifficulty[difficulty]`, the level a normal single
+   * `LevelDef.loot.intendedLevelByDifficulty[difficulty]`, the level a normal single
    * clear leaves him at, the same yardstick the boss-level read uses — so he
    * carries a REPRESENTATIVE level into the next map. A map with no cap for this
    * rung is unbounded (falls through to victory/timeout). Omit/false = the
@@ -216,12 +216,14 @@ export type SimulateLevelOptions = {
    */
   autoShop?: boolean;
   /**
-   * Golden-arrow XP faucet (default on — the real game). `false` switches it
-   * off for the run (`setArrowXpEnabled`), so a pacing read is the pure kill
-   * grind — the isolation view for tuning the `arrowXpKills`/`arrowDropShare`
-   * levers in content/leveling.yaml (`--no-arrow-xp` in the CLI).
+   * XP-SCROLL faucet (default on — the real game). `false` switches it off for
+   * the run (`setXpScrollEnabled`; scrolls still drop and are still walked
+   * over, they just light no window), so a pacing read is the pure kill grind
+   * — the isolation view for tuning the
+   * `scrollXpMult`/`scrollDurationMs`/`scrollDropShare` levers in
+   * content/leveling.yaml (`--no-xp-scroll` in the CLI).
    */
-  arrowXp?: boolean;
+  xpScroll?: boolean;
   /**
    * Which SIZE this run's map is carved at (default the setting's `medium`);
    * `"random"` rolls one per run off its seed. Applied via
@@ -341,9 +343,9 @@ export type SimulateCampaignOptions = {
   /** Use the merchant to recover from a broken weapon (see
    * SimulateLevelOptions.autoShop) — real-player behaviour the bot lacks. */
   autoShop?: boolean;
-  /** Golden-arrow XP faucet forwarded to every run — `false` reads the pure
-   * kill grind (see SimulateLevelOptions.arrowXp / `--no-arrow-xp`). */
-  arrowXp?: boolean;
+  /** XP-scroll faucet forwarded to every run — `false` reads the pure kill
+   * grind (see SimulateLevelOptions.xpScroll / `--no-xp-scroll`). */
+  xpScroll?: boolean;
   /**
    * The hero walking into the FIRST run of the sweep — a carried-over loadout to
    * start from instead of a fresh level-1 rookie. This is how a rung is measured
@@ -451,7 +453,7 @@ export type BossEncounter = {
   heroDps: number;
   /**
    * The level a normal single run of this map/difficulty is meant to leave the
-   * hero at (the map's `loot.arrowCapByDifficulty`) — the yardstick for
+   * hero at (the map's `loot.intendedLevelByDifficulty`) — the yardstick for
    * `heroLevel`. null when the map declares no cap for this rung.
    */
   intendedHeroLevel: number | null;
@@ -991,17 +993,17 @@ export function runLevel(options: SimulateLevelOptions): {
     trace,
     stuckLimit = 0,
     view = SIM_VIEW_DEFAULT,
-    arrowXp = true,
+    xpScroll = true,
     mapSize,
   } = options;
 
-  // Apply the requested balance knobs (and the arrow-faucet kill switch) for
+  // Apply the requested balance knobs (and the scroll-faucet kill switch) for
   // the duration of the run, then put the global tuning back exactly as we
   // found it — the sim measures a candidate tuning without leaking it into a
   // later run or a test.
   const priorBalance = getBalanceTuning();
   if (balance) setBalanceTuning(balance);
-  if (!arrowXp) setArrowXpEnabled(false);
+  if (!xpScroll) setXpScrollEnabled(false);
   // The MAP SIZE is read at level build, so it has to be latched around the
   // whole run (a mortal restart rebuilds the game mid-run) and put back after —
   // same discipline as the balance knobs, so one process can measure a small
@@ -1035,7 +1037,7 @@ export function runLevel(options: SimulateLevelOptions): {
     return { report, loadout: extractLoadout(state, state.players[0]) };
   } finally {
     if (balance) setBalanceTuning(priorBalance);
-    if (!arrowXp) setArrowXpEnabled(true);
+    if (!xpScroll) setXpScrollEnabled(true);
     setGeneratedMapSize(priorMapSize);
   }
 }
@@ -1179,7 +1181,7 @@ function playRun(args: {
   // and `drop` are filled in later; `intendedHeroLevel` is the map's yardstick.
   const bosses = new Map<string, BossEncounter>();
   const intendedHeroLevel =
-    def.loot?.arrowCapByDifficulty?.[args.difficulty] ?? null;
+    def.loot?.intendedLevelByDifficulty?.[args.difficulty] ?? null;
   // The fight has started — book the hero's level/hp/gear the moment the first
   // blow lands on this boss (idempotent: only the first call takes).
   const engageBoss = (defId: string) => {
@@ -1489,7 +1491,7 @@ function playRun(args: {
   let nextSnapshotMs = args.snapshotEveryMs;
 
   // Realistic-pacing target: the level a normal single clear leaves the hero at
-  // (`intendedHeroLevel` = the map's arrowCapByDifficulty, computed above). In
+  // (`intendedHeroLevel` = the map's intendedLevelByDifficulty, computed above). In
   // realistic mode the run ends `"cleared"` the moment the hero reaches it, so
   // he carries a real-player level forward instead of farming to the cap. A map
   // with no cap for this rung stays unbounded.
@@ -2447,7 +2449,7 @@ export function simulateCampaign(
     balance,
     realisticPacing,
     autoShop,
-    arrowXp,
+    xpScroll,
     mortal,
     maxDeaths,
     startLoadout = null,
@@ -2478,7 +2480,7 @@ export function simulateCampaign(
         balance,
         realisticPacing,
         autoShop,
-        arrowXp,
+        xpScroll,
         mortal,
         maxDeaths,
         onKill,

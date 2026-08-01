@@ -534,12 +534,15 @@ in the same direction:
   the power-levelling D2 is famous for, and it is the reason bringing a friend
   is worth doing.
 
-Only a KILL is the party's. A golden arrow, a handed-in errand and a scripted
-grant each have an obvious owner and go through `grantXp(state, hero, amount)`
-directly — sharing one out to the neighbours would be a gift from the player who
-earned it to one who did not. The per-map XP cap is read against the RECIPIENT's
-level, so a level-90 in the party cannot throttle the level-20 beside them down
-to an outgrown map's trickle.
+Only a KILL is the party's. A handed-in errand and a scripted grant each have an
+obvious owner and go through `grantXp(state, hero, amount)` directly — sharing
+one out to the neighbours would be a gift from the player who earned it to one
+who did not. The per-map XP cap is read against the RECIPIENT's level, so a
+level-90 in the party cannot throttle the level-20 beside them down to an
+outgrown map's trickle — and so is an XP SCROLL's double-XP window
+(`Player.xpBoostMs`), which is why a scroll doubles its reader's cut of a party
+kill and nobody else's: the split happens first, and `grantXp` multiplies each
+cut against the hero it is paying.
 
 **Loot is FREE FOR ALL by default, with a host toggle for ALLOCATED**
 (`GameState.lootMode`, HOST GAME → LOOT). Free-for-all is D2 classic and the

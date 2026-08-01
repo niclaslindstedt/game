@@ -70,6 +70,7 @@ import {
   levelStatGains,
   mobLevelXp,
   statPointsAt,
+  xpBoostMultiplier,
   xpCapMultiplier,
   xpLevelCap,
   xpToLevelUp,
@@ -1367,18 +1368,19 @@ function dropMinionLoot(
   const diff = difficultyDef(state.difficulty);
   const abilities = runLevelDef(state).loot.abilityPool;
   // The developer knob widens (or thins) the equipment slice in place — the
-  // ladder below is cumulative, so the lesser slices shift up and the arrow
+  // ladder below is cumulative, so the lesser slices shift up and the scroll
   // tail absorbs the difference, exactly as authored-share tuning would.
   const equipmentShare = LOOT.equipmentShare * BALANCE.equipmentShare;
   // The difficulty leans on the drop ladder: medkits and powerups thin out a
   // few percent per rung (the equipment/repair slices stay as authored).
   const abilityShare =
     abilities.length > 0 ? LOOT.abilityShare * diff.powerupDropMult : 0;
-  // The golden-arrow slice, thinned by the rung (zero on JESUS). Unlike the
+  // The XP-SCROLL slice, thinned by the rung (zero on JESUS). Unlike the
   // slices above it this is the ladder's TAIL, not the leftover: whatever the
-  // difficulty trims off it just doesn't drop, so free levels grow scarcer up
-  // the rungs instead of the arrow rain quietly refilling the remainder.
-  const arrowShare = XP_TUNING.arrowDropShare * diff.arrowDropMult;
+  // difficulty trims off it just doesn't drop, so double-XP windows grow
+  // scarcer up the rungs instead of the scroll rain quietly refilling the
+  // remainder.
+  const scrollShare = XP_TUNING.scrollDropShare * diff.scrollDropMult;
   // MERCY DROPS (gentle rungs only — the bonuses are zero from hard up): as the
   // hero's health drains, medkits and plated armor rain harder; as his weapon
   // nears breaking, repair kits do. Each boost scales the slice by
@@ -1403,7 +1405,7 @@ function dropMinionLoot(
   // rain thins to bait rather than stopping. Applied LAST, over the mercy boost:
   // a dying hero sitting on five medkits doesn't need a sixth nearly as much as
   // one with an empty pouch does. What the gate trims falls through to the
-  // ladder's tail exactly as a difficulty's trimmed arrow slice does.
+  // ladder's tail exactly as a difficulty's trimmed scroll slice does.
   const wantedMedkit =
     LOOT.medkitShare *
     diff.medkitDropMult *
@@ -1435,7 +1437,7 @@ function dropMinionLoot(
     AMMO.dropShare * (1 + ammoBoost) * ammoAppetite(state, state.players[0]);
   // FIT THE LADDER UNDER ONE ROLL. The bands are cumulative against a single
   // `rng()` in [0,1), so a boosted consumable slice that pushes the total past 1
-  // silently kills every band BELOW it — the drinks and the arrow tail would go
+  // silently kills every band BELOW it — the drinks and the scroll tail would go
   // dead exactly when a drowning hero's mercy boosts and need leans are widest,
   // and a hero short on BOTH health and stamina would find his medkit slice
   // eating the drink he also needs. Scale the three consumable slices by one
@@ -1443,7 +1445,7 @@ function dropMinionLoot(
   // weights (and the tail) survive the widest boost.
   const consumableRoom = Math.max(
     0,
-    1 - (equipmentShare + abilityShare + arrowShare),
+    1 - (equipmentShare + abilityShare + scrollShare),
   );
   const consumableTotal =
     wantedMedkit + wantedRepair + wantedDrink + wantedAmmo;
@@ -1587,15 +1589,15 @@ function dropMinionLoot(
         repairShare +
         drinkShare +
         ammoShare +
-        arrowShare
+        scrollShare
     ) {
-      // Golden XP arrows — the field's steady drip of levels (points to spend on
-      // a build) rather than free healing. The slice shrinks up the rungs, so on
+      // XP SCROLLS — the field's steady drip of levels (points to spend on a
+      // build) rather than free healing. The slice shrinks up the rungs, so on
       // the hard difficulties this branch is reached less often and, on JESUS
-      // (arrowShare 0), never — the tail below it drops nothing at all. The
-      // dropping mob's level rides along (`mlvl`) so the pickup prices the arrow
-      // to THIS mob — an outgrown map's low-level horde pays a thin arrow.
-      dropItem(state, { id: state.nextId++, kind: "xp", pos, mlvl }, at);
+      // (scrollShare 0), never — the tail below it drops nothing at all. No
+      // mob level rides along: a scroll multiplies what the hero earns instead
+      // of paying a mob-priced lump, so there is nothing to price it to.
+      dropItem(state, { id: state.nextId++, kind: "xp", pos }, at);
     }
     // Nothing is announced here: whatever this payout minted (and the ladder's
     // tail may mint nothing at all) says so itself when it hits the floor —
@@ -1797,13 +1799,8 @@ function dropGuaranteedLoot(
       at,
     );
   }
-  for (let i = 0; i < loot.xpArrows; i++) {
-    // Priced to the fallen mob's level like the minion rain (see `mlvl` above).
-    dropItem(
-      state,
-      { id: state.nextId++, kind: "xp", pos: scatter(), mlvl },
-      at,
-    );
+  for (let i = 0; i < loot.xpScrolls; i++) {
+    dropItem(state, { id: state.nextId++, kind: "xp", pos: scatter() }, at);
   }
   for (let i = 0; i < loot.repairs; i++) {
     dropItem(state, { id: state.nextId++, kind: "repair", pos: scatter() }, at);
@@ -1883,10 +1880,14 @@ export function debugLevelUpFx(state: GameState): void {
  * has, because one hero in range takes the payout whole.
  *
  * Every OTHER XP award in the game deliberately does NOT come through here — a
- * golden arrow, a handed-in errand, a scripted grant — because each of those has
- * an obvious owner (whoever walked over it, whoever handed it in) and sharing
- * one out to the neighbours would be a gift from a player who earned it to one
- * who did not. Only a KILL is the party's.
+ * handed-in errand, a scripted grant — because each of those has an obvious
+ * owner (whoever handed it in) and sharing one out to the neighbours would be a
+ * gift from a player who earned it to one who did not. Only a KILL is the
+ * party's.
+ *
+ * A hero's XP SCROLL rides UNDER this rather than beside it: the split happens
+ * first and `grantXp` doubles each cut against the RECIPIENT's own window, so a
+ * scroll doubles its reader's share of a party kill and nobody else's.
  */
 export function shareXp(
   state: GameState,
@@ -1914,18 +1915,26 @@ export function grantXp(
   amount: number,
 ): void {
   // The developer XP knob AND the per-difficulty `xpBonus` both scale every
-  // grant at the door — kills, golden arrows, and scripted awards alike — so
+  // grant at the door — kills, scripted awards, an errand's purse alike — so
   // they pace leveling without touching the cost curve (`xpToLevelUp`). The
   // `xpBonus` lifts a big-span tier (nightmare) that lands short of its finish.
   amount = Math.round(
     amount * BALANCE.xpGain * (difficultyDef(state.difficulty).xpBonus ?? 1),
   );
+  // THE XP SCROLL's window, if this hero has one lit: everything he earns for
+  // its thirty seconds counts double. It is applied HERE — above the per-map
+  // soft cap, not under it — on purpose: a doubled grant on ground the hero has
+  // outgrown is still throttled to the same trickle, so a pocketful of scrolls
+  // can no more power-level him on an old map than the kills themselves could.
+  // Read off the RECIPIENT, like the cap below: the window belongs to whoever
+  // walked over the scroll, never to the party.
+  amount = Math.round(amount * xpBoostMultiplier(player));
   // The PER-MAP SOFT CAP (config XP_CAP): every grant on this map diminishes as
   // the hero closes on the (level × difficulty) cap and, a couple of levels
   // past it, decays to the never-zero ~1/100 floor trickle, so re-running an
   // outgrown map farms loot and only crawls XP — no hard wall, just a glacial
-  // pace. Applied at the same one door as the dev knob — kills, arrows, and
-  // scripted awards all obey.
+  // pace. Applied at the same one door as the dev knob — kills, scroll-doubled
+  // grants and scripted awards all obey.
   // Read against the RECIPIENT's own level, never the party's: the cap is a
   // statement about how far past this map a given hero has grown, so a level-90
   // in the party must not throttle the level-20 beside them down to a trickle

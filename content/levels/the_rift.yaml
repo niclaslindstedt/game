@@ -386,7 +386,7 @@ loot:
       - the_last_shift
       - the_held_note
       - the_grand_tour
-  arrowCapByDifficulty:
+  intendedLevelByDifficulty:
     easy: 29
     medium: 31
     hard: 33

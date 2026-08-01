@@ -23,7 +23,8 @@ import { clamp } from "@game/lib/vec.ts";
  * each, and the shipped tuning too except for the speed pair (see
  * `BALANCE_TUNING_DEFAULTS`). */
 export type BalanceTuning = {
-  /** Scales all XP granted (kills and golden arrows alike) — leveling pace. */
+  /** Scales all XP granted (kills, errands, a scroll's doubled cut alike) —
+   * leveling pace. */
   xpGain: number;
   /** Scales the PER-TIER leveling slowdown (`LEVELING.tierLevelCostStep`): how
    * much longer a level takes on nightmare/jesus than on a bottom lane. 1× is

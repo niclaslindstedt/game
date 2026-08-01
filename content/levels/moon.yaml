@@ -188,7 +188,7 @@ loot:
       - earthfast
       - the_worldshell
       - the_long_march
-  arrowCapByDifficulty:
+  intendedLevelByDifficulty:
     easy: 18
     medium: 19
     hard: 21

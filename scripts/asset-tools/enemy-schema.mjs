@@ -528,6 +528,16 @@ export function validateEnemy(def, refs) {
   for (const list of Object.values(def.uniquesByDifficulty ?? {}))
     for (const id of list ?? []) ref(refs.uniques, id, "difficulty unique");
 
+  // AN XP SCROLL REFRESHES RATHER THAN STACKS, so two shed by one body is one
+  // double-XP window and a wasted drop — the second is picked up inside the
+  // first's thirty seconds and overwrites it. Authoring more than one is
+  // therefore always a mistake about the item, not a generosity dial: make the
+  // body richer with gear or a deeper `tierBonus` instead.
+  if ((def.loot?.xpScrolls ?? 0) > 1)
+    err(
+      `loot.xpScrolls is ${def.loot.xpScrolls} — a scroll REFRESHES rather than stacks, so a pile off one body is one window; cap it at 1`,
+    );
+
   // Soft: an apparition can't die, so death-only fields read as author error.
   if (def.apparition && (def.loot || def.lastWords))
     warn(`apparition carries loot/lastWords, which never fire`);

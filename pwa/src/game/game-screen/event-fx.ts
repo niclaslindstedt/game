@@ -13,6 +13,7 @@ import {
   PLAYER,
   questDef,
   storyItemDef,
+  XP_TUNING,
   type GameEvent,
   type GameState,
 } from "@game/core";
@@ -1111,17 +1112,17 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       );
     }
   }
-  // A golden XP arrow flows its award up off the hero's head as blue
-  // "+N XP" combat text — the same popup a slain foe drips, but at
-  // double size and with a crit-style jolt first: an arrow is a whole
-  // slice of the level bar, basically a crit's worth of XP, so it
-  // shakes in place before it floats. Honors the same `xpFloat` DISPLAY
-  // preference that silences kill-XP popups.
+  // AN XP SCROLL announces what it LIT rather than what it paid — it pays
+  // nothing. The multiplier flows up off the hero's head as blue combat text,
+  // the same popup a slain foe drips but at double size and with a crit-style
+  // jolt first, and then the VEIL takes over as the standing reminder that the
+  // window is burning (render/xp-veil.ts). Honors the same `xpFloat` DISPLAY
+  // preference that silences kill-XP popups: a player who turned the XP numbers
+  // off has said he doesn't want them, and this is one of them.
   if (
     event.type === "itemCollected" &&
     event.kind === "xp" &&
-    event.xp != null &&
-    event.xp > 0 &&
+    XP_TUNING.scrollXpMult > 1 &&
     getSettings().xpFloat === "on"
   ) {
     pushFloat(effects, state.stats.timeMs, {
@@ -1131,7 +1132,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       },
       untilMs: state.stats.timeMs + 1100,
       durationMs: 1100,
-      text: `+${formatCompact(event.xp)} XP`,
+      text: `${XP_TUNING.scrollXpMult}\u00d7 XP`,
       color: "#6cc4ff",
       rise: 30,
       scale: 2,

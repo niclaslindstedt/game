@@ -176,7 +176,7 @@ export const LOOT = {
    * to keep a good weapon alive through a run. Uniform across rungs (no
    * `repairDropMult`) — since medkits thin up the ladder but this doesn't, the
    * repair rain actually stands out MORE on the hard rungs, exactly where a
-   * broken weapon hurts most. It sits below the drink/arrow bands on the drop
+   * broken weapon hurts most. It sits below the drink/scroll bands on the drop
    * ladder, so widening it just eats the "nothing drops" tail — every other
    * resource's drop rate is untouched.
    */
@@ -193,10 +193,10 @@ export const LOOT = {
    */
   // Doubled from 0.05.
   drinkShare: 0.1,
-  // The GOLDEN XP ARROW slice of the ladder is authored in
-  // content/leveling.yaml (`arrowDropShare`, thinned per rung by the
-  // difficulty's `arrowDropMult`) beside the arrow's payout (`arrowXpKills`)
-  // — the arrow faucet's drop-rate and reward levers live together there.
+  // The XP SCROLL slice of the ladder is authored in content/leveling.yaml
+  // (`scrollDropShare`, thinned per rung by the difficulty's `scrollDropMult`)
+  // beside what a scroll is worth (`scrollXpMult` × `scrollDurationMs`) — the
+  // scroll faucet's drop-rate and reward levers live together there.
   /**
    * Clearing every regular monster on a level is guaranteed to have dropped
    * at least this much equipment (a pity roll forces the tail end; boss

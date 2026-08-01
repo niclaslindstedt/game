@@ -200,7 +200,7 @@
             "the_severance"
           ]
         },
-        "arrowCapByDifficulty": {
+        "intendedLevelByDifficulty": {
           "easy": 14,
           "medium": 15,
           "hard": 16,
@@ -428,7 +428,7 @@
             "the_long_march"
           ]
         },
-        "arrowCapByDifficulty": {
+        "intendedLevelByDifficulty": {
           "easy": 18,
           "medium": 19,
           "hard": 21,
@@ -649,7 +649,7 @@
             "the_motherlode"
           ]
         },
-        "arrowCapByDifficulty": {
+        "intendedLevelByDifficulty": {
           "easy": 24,
           "medium": 26,
           "hard": 27,
@@ -1121,7 +1121,7 @@
             "the_grand_tour"
           ]
         },
-        "arrowCapByDifficulty": {
+        "intendedLevelByDifficulty": {
           "easy": 29,
           "medium": 31,
           "hard": 33,
@@ -1441,7 +1441,7 @@
             "the_residencys_ransom"
           ]
         },
-        "arrowCapByDifficulty": {
+        "intendedLevelByDifficulty": {
           "easy": 34,
           "medium": 37,
           "hard": 39,
@@ -1655,7 +1655,7 @@
           "sentry_grid"
         ],
         "namedDropMult": 2,
-        "arrowCapByDifficulty": {
+        "intendedLevelByDifficulty": {
           "easy": 34,
           "medium": 37,
           "hard": 39,

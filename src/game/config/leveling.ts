@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// XP and level-ups: the kills-per-level curve, stat-point grants, arrow XP,
+// XP and level-ups: the kills-per-level curve, stat-point grants, the scroll,
 // and the per-map XP caps.
 
 import type { Difficulty } from "../types/index.ts";
@@ -71,7 +71,7 @@ export const LEVELING = {
    * endgame tail) and the `leveling-balance` skill for the retuning workflow:
    * edit the YAML, check with `scripts/leveling-curve.mjs`, verify with a
    * `simulate-run` campaign, and re-size `XP_CAP` and every level's
-   * `arrowCapByDifficulty` off the result. The two knobs below stay ON TOP of
+   * `intendedLevelByDifficulty` off the result. The two knobs below stay ON TOP of
    * the table because they aren't per-level facts of the shared curve.
    */
   /**
@@ -85,7 +85,7 @@ export const LEVELING = {
    * (the steep step is what holds the nightmare full-clear landing at ~57
    * against the cheap post-rework mid-curve). The
    * tier is `difficultyDef.index − 3` floored at 0; applied in `xpToLevelUp`
-   * keyed on the run's difficulty (so the bar, the arrow/boss bar-shares, and
+   * keyed on the run's difficulty (so the bar, the boss bar-shares, and
    * the kills-per-level all move together). 0 makes every difficulty level
    * alike. Turn it with the BALANCE › LEVEL SLOWDOWN slider (scales this step).
    */
@@ -121,11 +121,12 @@ export const LEVELING = {
   statPointsPerLevel: 1,
   statPointsBonusEvery: 10,
   /**
-   * Golden-arrow XP is MOB-PRICED too: a flat `arrowXpKills` reference-mob
-   * kills' worth at the hero's level (`arrowXp` in leveling.ts), authored in
-   * `content/leveling.yaml` and compiled into `XP_TUNING`. No share-of-bar and
-   * no hot/cold split — the same small bonus at every level and difficulty,
-   * so the arrow drip never distorts the table's kills-per-level.
+   * The XP SCROLL pays no XP at all — it MULTIPLIES what the hero earns for a
+   * window (`scrollXpMult` × `scrollDurationMs`, authored in
+   * `content/leveling.yaml` and compiled into `XP_TUNING`; see
+   * `xpBoostMultiplier` in leveling.ts). No share-of-bar and no flat payout, so
+   * the scroll drip can never distort the table's kills-per-level: it only ever
+   * makes the same kills count twice.
    */
   /**
    * Ms the level-up celebration plays before the stat chooser interrupts:

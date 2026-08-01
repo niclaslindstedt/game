@@ -371,18 +371,6 @@ export type Bot = {
    */
   lastTopOffMs?: number;
   /**
-   * What a GOLDEN ARROW is WORTH, learned from experience: the share of the
-   * XP bar the last collected arrow actually paid, remembered in 5%
-   * increments (a human who grabs arrows all run knows roughly what one gives
-   * — this game taps the same feel, never the engine's hidden formula). Read
-   * by the strategic-arrow heuristics ({@link dingArrowNearby}): an arrow
-   * that would DING is a free FULL HEAL (a level-up restores hp and stamina),
-   * so a nearby one substitutes for a medkit and buys bravery. Cold arrows
-   * teach ~0%, which naturally disables the reads. Per-bot memory keyed off
-   * pure state (the collection events) — determinism holds.
-   */
-  arrowXp?: { pct: number; level: number };
-  /**
    * CIRCLE-STRAFE direction (+1 / −1) the hero is currently orbiting a held
    * target in — the committed sense of a human's circle-strafe, held until the
    * next arc would run into a wall or the map edge, then reversed (see

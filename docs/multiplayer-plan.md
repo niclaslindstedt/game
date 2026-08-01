@@ -1517,7 +1517,7 @@ moved.
   `src/game/xp-share.ts`. `grantXp` took the recipient as a PARAMETER (§3.1's
   rule: a bar and a pile of banked stat points are as private as a bag), and
   `shareXp(state, amount, pos)` is the door every KILL goes through. Everything
-  else with an obvious owner — an arrow, an errand, a scripted grant — stays a
+  else with an obvious owner — an errand, a scripted grant — stays a
   direct grant, because sharing one out would be a gift from the player who
   earned it to one who did not. The per-map cap now reads the RECIPIENT's level.
 - **§4.3's loot ownership** — `GameState.lootMode`, free-for-all by default with

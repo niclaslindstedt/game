@@ -949,6 +949,41 @@ with the count printed in the corner exactly the way the bag prints its free
 cells. The inventory's foot rail carries the pouch itself, one icon and number
 per kind.
 
+### The XP SCROLL — the pickup that uses itself (`content/leveling.yaml`)
+
+Every other pickup in the game is either banked (a medkit, a repair kit, a
+powerup) or paid on touch (gold). The **XP SCROLL** is neither: there is no dock
+cell for it and no button to spend it on, so walking over one **reads** it, and
+for the next **`scrollDurationMs`** (30 s) every scrap of XP that hero earns is
+multiplied by **`scrollXpMult`** (×2). The window is `Player.xpBoostMs`, counted
+down in `stepTimers` and applied at the one `grantXp` door
+(`xpBoostMultiplier`); the app draws it as a faint blue veil around the hero
+(`pwa/src/game/render/xp-veil.ts`) so the clock is legible without a HUD number.
+
+**It pays nothing, and that is the whole design.** What a scroll is worth is
+whatever the hero DOES with its thirty seconds: read into a pack it pays for
+itself many times over, read over a cleared floor it doubles nothing. So unlike
+the flat golden arrow it replaced, it needs no mob-pricing and no
+below-level penalty to stop a player farming outgrown ground — a doubled trickle
+is still a trickle, and the per-map XP cap (applied UNDER the multiplier) throttles
+it exactly as it throttles the kills themselves. It also cannot distort the
+leveling table's kills-per-level: it only ever makes the same kills count twice.
+
+**A second scroll REFRESHES the window rather than stacking it**, so a floor
+littered with them buys thirty seconds, not five minutes — which is what keeps a
+lucky rain from out-paying the fight it is meant to reward. Three knobs, all in
+`content/leveling.yaml` beside the elite/boss payouts: `scrollXpMult`,
+`scrollDurationMs`, and `scrollDropShare` (the ladder's tail, thinned per rung by
+the difficulty's `scrollDropMult` and zero on JESUS, where every level is earned
+kill by kill).
+
+Because its worth is a DUTY CYCLE rather than a payout, the drop share does not
+read like a flat faucet's: at a pickup rate λ and a window D the boost is dark
+only when a whole D has passed with no pickup, so it is live `1 − e^(−λD)` of the
+time. The shipped `scrollDropShare` was set by measuring that against the arrow
+it replaced over a full `simulate-run` campaign, not by arithmetic — see the
+`leveling-balance` skill.
+
 ### Powerups — two new ones per map (`content/powerups.yaml`)
 
 The powerup dock's vocabulary GROWS with the campaign. Every map's drop pool

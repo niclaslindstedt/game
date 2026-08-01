@@ -179,7 +179,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       items: ["test_hammer"],
       weapons: 0,
       gear: 1,
-      xpArrows: 2,
+      xpScrolls: 2,
       repairs: 1,
       medkits: 2,
       tierBonus: 0.35,
@@ -225,7 +225,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       items: [],
       weapons: 1,
       gear: 0,
-      xpArrows: 1,
+      xpScrolls: 1,
       repairs: 0,
       medkits: 1,
       tierBonus: 0.2,
@@ -297,7 +297,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       items: ["test_hammer"],
       weapons: 0,
       gear: 0,
-      xpArrows: 1,
+      xpScrolls: 1,
       repairs: 0,
       medkits: 1,
       tierBonus: 0,
@@ -326,7 +326,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       items: ["test_hammer"],
       weapons: 0,
       gear: 0,
-      xpArrows: 1,
+      xpScrolls: 1,
       repairs: 0,
       medkits: 1,
       tierBonus: 0,
@@ -461,7 +461,7 @@ FIX_ENEMIES.test_spareable = {
     storyItems: ["test_key"],
     weapons: 0,
     gear: 0,
-    xpArrows: 1,
+    xpScrolls: 1,
     repairs: 0,
     medkits: 1,
     tierBonus: 0.2,
@@ -1204,7 +1204,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
     powerupDropMult: 1.05,
-    arrowDropMult: 1,
+    scrollDropMult: 1,
     mercy: {
       crowdBombChanceMax: 0.05,
       medkitBonus: 2,
@@ -1248,7 +1248,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 1,
     armorDropMult: 1,
     powerupDropMult: 1,
-    arrowDropMult: 1,
+    scrollDropMult: 1,
     mercy: {
       crowdBombChanceMax: 0.03,
       medkitBonus: 1.3,
@@ -1291,7 +1291,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
     powerupDropMult: 0.95,
-    arrowDropMult: 0.7,
+    scrollDropMult: 0.7,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,
@@ -1334,7 +1334,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
     powerupDropMult: 0.9,
-    arrowDropMult: 0.4,
+    scrollDropMult: 0.4,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,
@@ -1376,7 +1376,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 0.77,
     armorDropMult: 0.77,
     powerupDropMult: 0.77,
-    arrowDropMult: 0,
+    scrollDropMult: 0,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,
@@ -1496,7 +1496,7 @@ export const FIX_LEVEL: LevelDef = {
     // A low EASY cap so the golden-arrow COLD rule is exercisable on a
     // fixture; the default-difficulty (MEDIUM) suites leave it unset so their
     // arrows stay hot at every level they test.
-    arrowCapByDifficulty: { easy: 3 },
+    intendedLevelByDifficulty: { easy: 3 },
     earlyDrops: [
       { atKills: 2, weapon: "test_hammer" },
       { atKills: 5, ability: "test_storm" },

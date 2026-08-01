@@ -573,12 +573,18 @@ escort.ts` walks the people an escort errand puts on the field, and
   base-attribute gains (see `leveling.ts` below), and celebrate first: the
   ding arms `state.levelUpFxMs` (config `LEVELING.dingCelebrationMs`) — the
   app draws the golden burn off it — and the `levelup` stat-chooser phase
-  only opens once the window has burned down. Golden XP arrows pay a flat few
-  kills' worth of XP priced to the mob that DROPPED them (the `arrowXpKills` knob
-  in `content/leveling.yaml`, via `arrowXp` on the arrow's `mlvl`) — mob-priced
-  like every other XP faucet, so the leveling table's kills-per-level stays true
-  and an arrow shed by an outgrown map's low-level horde is worth only that mob's
-  little, never a full at-level ding. Picked-up
+  only opens once the window has burned down. XP SCROLLS pay no XP at all — one
+  is READ by walking over it (there is nothing to dock and nothing to spend), and
+  for `scrollDurationMs` afterwards every XP that hero earns is multiplied by
+  `scrollXpMult` (both authored in `content/leveling.yaml`; the window is
+  `Player.xpBoostMs`, counted down in `stepTimers` and applied at the one
+  `grantXp` door via `xpBoostMultiplier`, above the per-map cap so outgrown
+  ground still throttles it). A second scroll REFRESHES the window rather than
+  stacking, so a scroll rain buys one window rather than five. Because it
+  multiplies rather than pays, it cannot distort the leveling table's
+  kills-per-level: it only ever makes the same kills count twice. The app draws
+  the lit window as a faint blue veil around the hero
+  (`pwa/src/game/render/xp-veil.ts`). Picked-up
   equipment that beats what is worn — and that the hero can actually WIELD, both
   the level and the attribute gate (`canEquip`) — is equipped on the spot; a
   find he is too low-level or too weak for banks until he grows into it.

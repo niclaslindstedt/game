@@ -13,4 +13,4 @@ game, set the `content/leveling.yaml` opening rows from the simulator's
 `levelUps` ding timestamps (minutes), never from the model's kill counts —
 and expect lane landings in the sim to run a couple of levels above the
 `--by-level --clear-share 1` model for the same reason (the per-map
-`arrowCapByDifficulty` and XP caps are what actually bound them).
+`intendedLevelByDifficulty` and XP caps are what actually bound them).

@@ -11,12 +11,14 @@ export type Item =
    * on items minted before tiers shipped, read as the lightest kit. */
   (
     | { id: number; kind: "medkit"; pos: Vec2; tier?: number }
-    /** The golden level-up arrow: grants a few kills' worth of XP. `mlvl` is
-     * the monster level of the mob that dropped it, so the payout is priced to
-     * THAT mob (see `arrowXp`) — an arrow shed by a low-level mob (grinding
-     * outgrown ground) is worth little, not a full at-level ding. Absent on
-     * arrows minted without a source mob (read as the hero's own level). */
-    | { id: number; kind: "xp"; pos: Vec2; mlvl?: number }
+    /** The XP SCROLL: read on contact (there is nothing to dock and nothing to
+     * spend — walking over it IS using it), it lights a `scrollDurationMs`
+     * window in which every XP the hero earns counts double
+     * (`XP_TUNING.scrollXpMult`, see `xpBoostMultiplier`). It pays nothing by
+     * itself, so it needs no `mlvl`: what it is worth is whatever the hero
+     * does with the thirty seconds, which is why it can't over-level a hero
+     * grinding outgrown ground the way a flat payout could. */
+    | { id: number; kind: "xp"; pos: Vec2 }
     /** A repair kit: restores the equipped weapon's durability to full. */
     | { id: number; kind: "repair"; pos: Vec2 }
     /** An energy drink: resets the sprint pool to full on touch. Like the repair

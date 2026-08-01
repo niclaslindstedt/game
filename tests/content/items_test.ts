@@ -61,7 +61,7 @@ function killTheBoss(state: GameState): void {
 }
 
 describe("boss loot", () => {
-  it("ALWAYS drops a weapon, gear, XP arrows, repairs, and medkits", () => {
+  it("ALWAYS drops a weapon, gear, XP scrolls, repairs, and medkits", () => {
     // No luck involved: the drop is unconditional across seeds.
     for (const seed of [1, 2, 3, 99]) {
       const state = startGame(seed);
@@ -85,7 +85,7 @@ describe("boss loot", () => {
         ),
       ).toBe(true);
       const arrows = state.items.filter((i) => i.kind === "xp").length;
-      expect(arrows).toBe(ENEMY_DEFS.the_flagbearer!.loot!.xpArrows);
+      expect(arrows).toBe(ENEMY_DEFS.the_flagbearer!.loot!.xpScrolls);
       const repairs = state.items.filter((i) => i.kind === "repair").length;
       expect(repairs).toBe(ENEMY_DEFS.the_flagbearer!.loot!.repairs);
     }

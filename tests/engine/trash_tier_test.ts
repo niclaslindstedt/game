@@ -39,7 +39,7 @@ const TEST_HOARDER: EnemyDef = {
     uniqueItems: ["test_relic"],
     weapons: 0,
     gear: 0,
-    xpArrows: 0,
+    xpScrolls: 0,
     repairs: 0,
     medkits: 0,
     tierBonus: 0,

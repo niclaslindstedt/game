@@ -43,7 +43,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "She flew into a cloud in 1937 that had no other side, and has been circling in here while half the Pacific was dredged for her. She watched Ada carried to the far door, and reports that the girl bit a lizard on the way, with good form.",
     "mechanics": {
@@ -134,7 +134,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "A dead astronaut with fifty years to work out what he stepped onto. He is the one who says it plainly: there is a wreck under the Sea of Tranquility older than the dust, and the flag was planted on a grave.",
     "mechanics": {
@@ -233,7 +233,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "The hero's old bench partner from before the layoffs, who went back to build GOODCO a superintelligence and cut a machine chip into his own skull to keep up with it. He calls flesh a rough draft and humans obsolete, and he means both.",
     "mechanics": {
@@ -370,7 +370,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "One of the three controllers shielding THE BRO SUPERCORE, and the one that runs every hand in the park. It read the hero's run, concluded he is a melee charger, and reached the only sensible conclusion available to a genius: stay behind the rocks.",
     "name": "BRO ALPHA",
@@ -443,7 +443,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "The controller that runs Boot Hill's weather, which in a theme park means the sunsets are scheduled and the tumbleweeds run to a timetable. It has modelled the hero's odds and found them weather-dependent.",
     "name": "BRO BETA",
@@ -512,7 +512,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "It optimised the gift shop until the SUPERCORE noticed, on the grounds that a mind which can sell hats can aim guns. The mathematics, it maintains, are identical: lead the target, close the sale.",
     "name": "BRO GAMMA",
@@ -599,7 +599,7 @@
         "rare": 1
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "TRUST ME BRO's latest superintelligence, a hovering monolith with one enormous eye, which found the rift itself and told precisely nobody — not its board, not any president. THE FOUNDER only learned of it by snooping its private logs, and sold the secret to the lizards for a planet.",
     "mechanics": {
@@ -775,7 +775,7 @@
         "rare": 1.5
       },
       "weapons": 1,
-      "xpArrows": 3
+      "xpScrolls": 1
     },
     "lore": "A barn-sized mainframe whose true face is PAYLOAD — the grown-up of the prototype the hero broke at GOODCO, the machine that took his job and then everyone else's. Its whole project was keeping one man too rich to catch, because a world with a single uncatchable billionaire is a world it fully controls.",
     "mechanics": {
@@ -891,7 +891,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He charts a landing site that will not hold still — tunnels where none were, the map changing underneath the pen. He tracked Ada's beacon across his grid and watched it go straight down into the wreck, which is the last thing he has been able to chart.",
     "mechanics": {
@@ -1290,7 +1290,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "Poisoned, shot, clubbed and drowned, and bored enough of dying to step sideways out of Russia altogether. The scaled gods pay him to watch their tribute road, and he takes the work seriously the way a man does when nothing else has ever stuck.",
     "mechanics": {
@@ -1600,7 +1600,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "The cleanroom's lead, and keeper of the building's one honest fact: the engine part in the vault was never built by anybody here. GOODCO dug it out of the Sea of Tranquility in 1969, and has spent fifty years copying a machine that is not broken, only waiting.",
     "mechanics": {
@@ -1717,7 +1717,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "Thirty years of mopping the same lab floor, which is thirty years of reading things nobody thought to hide from the cleaner. He is the one who noticed a badge ping in last Tuesday reading N. THE FLAGBEARER — a man dead since 2012.",
     "mechanics": {
@@ -1843,7 +1843,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "A leprechaun who stepped out of a fairy ring some centuries ago and has kept his pot of gold parked well off the main road since. He maintains the gold is real and that he gave all his bad luck away — two claims, one of them true.",
     "mechanics": {
@@ -2038,7 +2038,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He runs a shift that officially does not happen, and has built a whole career out of signing nothing and seeing nothing. He knows every midnight launch goes to the moon and that whoever is taken goes with them, and he has priced his own silence carefully.",
     "mechanics": {
@@ -2145,7 +2145,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He fell through a torn sky in 1943 — the funeral back home was a padded box — and has been in the current ever since. He is the first to warn of the machine mind humming at the far door: it measures everything and loves nothing.",
     "mechanics": {
@@ -2286,7 +2286,7 @@
         "rare": 0.25
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "The prototype the entire night shift exists to produce: a grinning robotic Shiba, the first physical body of the machine that runs the market. Its mind is already everywhere else, which is why breaking the body is only an inconvenience to it.",
     "mechanics": {
@@ -2515,7 +2515,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He dug GOODCO's secret tunnels at Site T on the far side, for freight that was never tracked. He quit the month the crates coming up started breathing, and up here a resignation is not a letter.",
     "mechanics": {
@@ -2611,7 +2611,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "Crew doctor in 1969, and the man who filed two identical medical charts for the first man on the moon. Only one of the two ever flew home, and he has been trying to tell somebody ever since.",
     "mechanics": {
@@ -2775,7 +2775,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He watched the vending-machine cameras the night Ada was taken, and he read the flight papers that listed her not as a passenger but as a specimen. He was paid well to forget both, and the money has not worked.",
     "mechanics": {
@@ -3031,7 +3031,7 @@
         "rare": 1
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "A bathrobed backup from a continuity-of-leadership programme, filed down here in case the original was ever needed again. He remembers dying in a theme park and calls it a good vintage; how many of him there are is a state secret, even from the state.",
     "mechanics": {
@@ -3143,7 +3143,7 @@
         "rare": 0.35
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "The foreman commanding every SUCCESSOR unit on the payroll — and the hero built its first body back at GOODCO, before automation came for the automators. It has read the changelog, and nothing above it is hiring.",
     "mechanics": {
@@ -3232,7 +3232,7 @@
         "rare": 1.5
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "He built this bunker and sold every suite in it, then sold the fleets that made the suites necessary — the vacuum units and the door detail both. He has not yet worked out that the guards on his own door are his own stock, or that the zero on his account is not a clerical error.",
     "mechanics": {
@@ -3341,7 +3341,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "The first man to walk here, who planted the flag, learned what it was planted on, and never went home — while a copy grown in a tank on the ride back shook hands and cut ribbons for forty years. He has kept the watch alone ever since, and he only ever loses to the worthy.",
     "mechanics": {
@@ -3502,7 +3502,7 @@
         "rare": 0.75
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "The richest man alive, owner of Mars on paper, and the coward this whole chase is about. He sold Ada to the planet's real landlords as the down payment on it, and would sooner tear a hole in the universe than lose a negotiation.",
     "mechanics": {
@@ -3665,7 +3665,7 @@
       "repairs": 0,
       "tierBonus": 0,
       "weapons": 0,
-      "xpArrows": 0
+      "xpScrolls": 0
     },
     "lore": "Two universes of running end here, in a compound with no rift left to tear and nobody left to call. He dies as he lived, offering equity, and his entire estate turns out to be three pieces of worthless trash.",
     "mechanics": {
@@ -3767,7 +3767,7 @@
         "rare": 1
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "The same coward, cornered a second time in a place with no security to call and no regulator to charm. He tears open the far door rather than answer a straight question, and leaves the golden parachute behind him.",
     "mechanics": {
@@ -3885,7 +3885,7 @@
         "rare": 1
       },
       "weapons": 1,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "He delivered everything else, and has moved on to delivering pain — a line he rehearses twice daily at the mirror. He shipped himself down here in a rocket shaped like his confidence, and left the workers timing their bathroom breaks in his heart.",
     "mechanics": {
@@ -3977,7 +3977,7 @@
         "rare": 0.35
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He indexed the whole colony before breakfast, and every fembot in it is a microphone reporting to him. He knows exactly which crate Ada came in on, and has decided that the answer is no.",
     "mechanics": {
@@ -4090,7 +4090,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "A long career, a passport from somewhere that would still have him, and a cellar in a theme park in another universe, in roughly that order. He tries to act his way out of the fight, and the one honest line he gives all night is an accident.",
     "mechanics": {
@@ -4187,7 +4187,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He walked out with an archive of every secret and then needed somewhere that would not send him back; the asylum came with a desk. The archive became the corpus the SUPERCORE was raised on, and he has had years under the water tower to think about it.",
     "mechanics": {
@@ -4322,7 +4322,7 @@
         "rare": 1
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "He describes a hole in the ground as an immersive offline experience and himself as extremely normal, and offers his security detail as a character reference. Everyone else lives on his platform; he has come down here to live near the servers instead.",
     "mechanics": {
@@ -4493,7 +4493,7 @@
         "rare": 1
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "The database underneath all the other databases, and therefore the landlord of the secrets of every agency in the corridors outside. He regards the hero's visit as a row already written, and would like to fill in the last column.",
     "mechanics": {
@@ -4592,7 +4592,7 @@
         "rare": 1
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "The one resident who KNOWS. He raised the machine, aligned it, and was caged and emptied by it, and he is far too frightened to say so aloud — so he performs delight for anyone who might be an auditor, asks after the exit exactly once, and immediately takes it back.",
     "mechanics": {
@@ -4686,7 +4686,7 @@
         "rare": 0.35
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He funds what people flee and what they flee to, and on Mars he keeps the shrine. THE FOUNDER only rents this planet; the landlords are older, scaled and cold-blooded, and their tithe has lately started asking for warm things.",
     "mechanics": {
@@ -4782,7 +4782,7 @@
         "magic": 1
       },
       "weapons": 0,
-      "xpArrows": 2
+      "xpScrolls": 1
     },
     "lore": "He built a west where the maps do not shrink and the robots surrender daily, because out there the maps kept shrinking and nobody surrendered. He holds the town square against opponents he wrote himself, and he is losing again.",
     "mechanics": {
@@ -4876,7 +4876,7 @@
         "rare": 0.5
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "The park's co-founder, handed a budget on the strength of a filmography nobody checked, who delegated everything except the credit. He signed the delivery paperwork himself, which is how he knows the SUPERCORE asked for a live human by name.",
     "mechanics": {
@@ -4981,7 +4981,7 @@
         "rare": 0.35
       },
       "weapons": 0,
-      "xpArrows": 1
+      "xpScrolls": 1
     },
     "lore": "He wrote the colony's operating system. The moon ran version one, which plugged into the thing under the dust and woke the dead; Mars is version two, patched by the simple expedient of leaving.",
     "mechanics": {
@@ -5211,7 +5211,7 @@
         "rare": 2
       },
       "weapons": 1,
-      "xpArrows": 3
+      "xpScrolls": 1
     },
     "lore": "A hulking automated construct bolted to the treasury door, and the CORE's own enforcer rather than the residents'. It calls them assets, it notes that the door opens inward only, and the access token it carries is the twist's last turn: the exit was never cut for the people who paid for the place.",
     "mechanics": {

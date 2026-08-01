@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Ground-item pickups: medkits, golden arrows, stacked consumables, story
+// Ground-item pickups: medkits, XP scrolls, stacked consumables, story
 // items, ability pickups, and equipment (auto-equip or bag). Part of the step
 // pipeline (see ./index.ts).
 
@@ -27,8 +27,7 @@ import {
   wearSlotFor,
   wouldUpgradeSlot,
 } from "../items/index.ts";
-import { arrowXp } from "../leveling.ts";
-import { grantXp } from "../loot.ts";
+import { xpScrollDurationMs } from "../leveling.ts";
 import { heroInPlay, seatOf } from "../party.ts";
 import { questItemDef } from "../defs/quests.ts";
 import { creditQuestPickup } from "../quests/index.ts";
@@ -154,29 +153,33 @@ export function stepItems(state: GameState, dtMs: number): void {
         return false;
       }
 
-      // The golden arrow: a flat, MOB-PRICED bonus — `arrowXp` pays a set few
-      // kills' worth (`XP_TUNING.arrowXpKills`, authored in content/leveling.yaml)
-      // of the mob that DROPPED it (`item.mlvl`), so an arrow shed by a low-level
-      // mob on outgrown ground is worth only that mob's little, never a full
-      // at-level ding — grinding old ground can't over-level the hero. No
-      // share-of-bar, no hot/cold split: the payout can never distort the leveling
-      // table's kills-per-level, and grinding arrows is never better than fighting.
-      // A source-less arrow (no `mlvl`) falls back to the hero's own level.
+      // THE XP SCROLL — the one pickup in the game that USES ITSELF. There is
+      // no dock cell to bank it in and no button to spend it on: the hero reads
+      // it the moment he walks over it, and for the next `scrollDurationMs`
+      // every XP he earns counts double (`xpBoostMultiplier`, applied at the
+      // one `grantXp` door). A second scroll REFRESHES the window rather than
+      // stacking on it, so walking a floor littered with them buys thirty
+      // seconds, not five minutes — which is what keeps a scroll rain from
+      // out-paying the fight it is supposed to reward.
+      //
+      // It pays no XP itself, so nothing here is mob-priced and there is no
+      // hot/cold split to gate: a scroll read on outgrown ground doubles a
+      // trickle and a scroll read into a boss pack doubles a boss. Grinding old
+      // ground can never over-level the hero on scrolls alone.
       if (item.kind === "xp") {
         state.stats.itemsCollected++;
-        // Resolve the award once so the same figure both banks XP and floats up
-        // off the hero's head as blue "+N XP" combat text. 0 = the faucet is
-        // switched off (a calibration run) — collect silently, grant nothing.
-        const xpGain = arrowXp(item.mlvl ?? player.level, player.level);
-        if (xpGain > 0) {
+        // 0 = the faucet is switched off (a calibration run — `--no-xp-scroll`):
+        // the scroll is still walked over and consumed, it just lights nothing.
+        const durationMs = xpScrollDurationMs();
+        if (durationMs > 0) {
+          // REFRESH, never extend — see the note above. `Math.max` also means a
+          // scroll walked over mid-window can only ever help.
+          player.xpBoostMs = Math.max(player.xpBoostMs ?? 0, durationMs);
           state.events.push({
             type: "itemCollected",
             kind: "xp",
-            name: "GOLDEN ARROW",
-            xp: xpGain,
+            name: "XP SCROLL",
           });
-          // The arrow belongs to whoever walked over it — no share, no gate.
-          grantXp(state, player, xpGain);
         }
         return false;
       }

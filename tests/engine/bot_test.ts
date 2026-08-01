@@ -21,6 +21,7 @@ import {
   step,
   weaponDef,
   weaponRangeFor,
+  XP_TUNING,
   type Bot,
   type Enemy,
   type Equipment,
@@ -888,11 +889,19 @@ describe("bot pickup discipline", () => {
     expect(wanting.lastThought).toBe("GRAB ITEM");
   });
 
-  it("detours to a golden arrow ahead of nearer ordinary loot", () => {
-    // A warm arrow pays a real share of the level bar — worth more than any
-    // consumable, so it wins the pick even when a medkit lies closer.
+  it("detours to a worth-reading XP scroll ahead of nearer ordinary loot", () => {
+    // A lit window doubles the whole next half-minute of the fight — worth more
+    // than any consumable, so it wins the pick even when a medkit lies closer.
     const state = startGame();
     clearStage(state);
+    state.enemies = [];
+    // Something to spend the window on, outside the local pack radius so the
+    // bot is still on its quiet-field loot read.
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.players[0].pos.x + 600, y: state.players[0].pos.y },
+      }),
+    );
     state.items = [
       {
         id: 9001,
@@ -907,146 +916,83 @@ describe("bot pickup discipline", () => {
     ];
     const bot = createBot("survivor");
     const input = botAct(bot, state, state.players[0]);
-    expect(bot.lastThought).toBe("GRAB ITEM");
-    expect(input.target.x).toBeLessThan(state.players[0].pos.x); // toward the arrow
+    expect(bot.lastThought).toBe("GRAB SCROLL");
+    expect(input.target.x).toBeLessThan(state.players[0].pos.x); // toward the scroll
   });
 });
 
-describe("bot consumable top-off", () => {
-  // With a stack at its cap the ground pickup is refused (it stays where it
-  // lies), so passing over one with full pockets normally wastes it. The
-  // PASS-OVER TOP-OFF spends one from the full stack — only when the bar that
-  // kind feeds has real room — so the walked-over pickup refills it.
-  it("drinks a stamina potion in passing to make room for the one underfoot", () => {
-    const state = startGame();
-    clearStage(state);
-    state.players[0].staminaPotions = CONSUMABLES.stackCap;
-    state.players[0].stamina = state.players[0].maxStamina * 0.5;
+describe("bot xp-scroll strategy", () => {
+  /** A scroll on the floor `dx` px away from the hero. */
+  function placeScroll(state: GameState, dx: number): void {
     state.items = [
-      { id: 9001, kind: "drink", pos: { ...state.players[0].pos } },
+      {
+        id: 9001,
+        kind: "xp",
+        pos: { x: state.players[0].pos.x + dx, y: state.players[0].pos.y },
+      },
     ];
-    const input = botAct(createBot("survivor"), state, state.players[0]);
-    expect(input.useStaminaPotion).toBe(true);
-  });
+  }
 
-  it("keeps the stack corked when the pool is basically full", () => {
+  it("walks to a scroll when its window is spent and there is a fight to spend it on", () => {
     const state = startGame();
     clearStage(state);
-    state.players[0].staminaPotions = CONSUMABLES.stackCap;
-    state.players[0].stamina = state.players[0].maxStamina; // nothing to top off
-    state.items = [
-      { id: 9001, kind: "drink", pos: { ...state.players[0].pos } },
-    ];
-    const input = botAct(createBot("survivor"), state, state.players[0]);
-    expect(input.useStaminaPotion).toBe(false);
-  });
-
-  it("mends in passing when a kit lies underfoot and the loadout carries wear", () => {
-    const state = startGame();
-    clearStage(state);
-    state.players[0].repairKits = CONSUMABLES.stackCap;
-    state.players[0].equipment.weapon.durability = 60; // worn, far from breaking
-    state.items = [
-      { id: 9001, kind: "repair", pos: { ...state.players[0].pos } },
-    ];
-    const input = botAct(createBot("survivor"), state, state.players[0]);
-    expect(input.useRepairKit).toBe(true);
-  });
-
-  it("rate-limits the top-off so a kit-littered field is not a crawl", () => {
-    const state = startGame();
-    clearStage(state);
-    state.players[0].repairKits = CONSUMABLES.stackCap;
-    state.players[0].equipment.weapon.durability = 60;
-    state.items = [
-      { id: 9001, kind: "repair", pos: { ...state.players[0].pos } },
-    ];
+    state.enemies = [];
+    const player = state.players[0];
+    // Something alive well inside the scroll's fight radius, but outside the
+    // local pack radius so the bot is on its quiet-field loot read.
+    state.enemies.push(
+      makeEnemy({ pos: { x: player.pos.x + 600, y: player.pos.y } }),
+    );
+    placeScroll(state, 120);
     const bot = createBot("survivor");
-    expect(botAct(bot, state, state.players[0]).useRepairKit).toBe(true); // first switch fires
-    state.stats.timeMs = 5000; // inside the 10s cooldown
-    expect(botAct(bot, state, state.players[0]).useRepairKit).toBe(false);
-    state.stats.timeMs = 11_000; // cooldown served
-    expect(botAct(bot, state, state.players[0]).useRepairKit).toBe(true);
+    botAct(bot, state, player);
+    expect(bot.lastThought).toBe("GRAB SCROLL");
   });
-});
 
-describe("bot arrow strategy", () => {
-  // The bot LEARNS what a golden arrow pays (5% increments) from the "+N XP"
-  // collection events, and treats a nearby arrow that would DING — a level-up
-  // is a free full heal — as a strategic medkit.
-  it("learns an arrow's XP share from the collection event", () => {
+  it("leaves a scroll lying when there is nothing alive to double", () => {
+    // The judgement the golden arrow never had to make: an arrow paid on touch,
+    // so grabbing one was never wrong. A scroll read over a cleared floor
+    // doubles thirty seconds of nothing, so it is left for the next pack.
     const state = startGame();
     clearStage(state);
-    state.players[0].xpToNext = 100;
-    state.events.push({
-      type: "itemCollected",
-      kind: "xp",
-      name: "GOLDEN ARROW",
-      xp: 23,
-    });
+    state.enemies = [];
+    placeScroll(state, 120);
     const bot = createBot("survivor");
     botAct(bot, state, state.players[0]);
-    expect(bot.arrowXp?.pct).toBe(0.25); // 23% remembered as the 25% step
+    expect(bot.lastThought).not.toBe("GRAB SCROLL");
   });
 
-  it("holds the medkit when a dinging arrow is in reach", () => {
+  it("leaves a scroll lying while its own window still has most of its life", () => {
+    const state = startGame();
+    clearStage(state);
+    state.enemies = [];
+    const player = state.players[0];
+    state.enemies.push(
+      makeEnemy({ pos: { x: player.pos.x + 600, y: player.pos.y } }),
+    );
+    // A scroll REFRESHES rather than stacks, so reading one now throws most of
+    // the running window away — come back for it.
+    player.xpBoostMs = XP_TUNING.scrollDurationMs * 0.9;
+    placeScroll(state, 120);
+    const bot = createBot("survivor");
+    botAct(bot, state, player);
+    expect(bot.lastThought).not.toBe("GRAB SCROLL");
+  });
+
+  it("still pops the medkit when bleeding — a scroll is not a heal", () => {
+    // The golden arrow it replaced could tip a DING, and a ding is a free full
+    // heal, so the bot used to hold its kit for one. A multiplier heals nothing
+    // and the kit fires as it would with no scroll on the floor at all.
     const state = startGame();
     clearStage(state);
     const player = state.players[0];
     player.medkits[0] = 2;
-    player.hp = player.maxHp * 0.45; // would normally pop a kit (< 55%)
-    player.xpToNext = 100;
-    player.xp = 85; // a 25% arrow tips the bar
-    state.items = [
-      {
-        id: 9001,
-        kind: "xp",
-        pos: { x: player.pos.x + 100, y: player.pos.y },
-      },
-    ];
-    const bot = createBot("survivor");
-    bot.arrowXp = { pct: 0.25, level: player.level };
-    expect(botAct(bot, state, state.players[0]).useMedkit).toBe(false); // the arrow is the heal
-
-    // Nearly dead, the gamble is off — the kit fires even with the arrow near.
-    player.hp = player.maxHp * 0.2;
-    expect(botAct(bot, state, state.players[0]).useMedkit).toBe(true);
-  });
-
-  it("grabs the dinging arrow over a medkit when bleeding", () => {
-    const state = startGame();
-    clearStage(state);
-    const player = state.players[0];
-    // Below even the aggro fleeHp bail (0.28) — the boss-ready fixture run
-    // flips the balanced posture to its rush/aggro row.
-    player.hp = player.maxHp * 0.25;
+    player.hp = player.maxHp * 0.45; // under the 55% heal threshold
     player.xpToNext = 100;
     player.xp = 85;
-    state.items = [
-      {
-        id: 9001,
-        kind: "medkit",
-        pos: { x: player.pos.x + 60, y: player.pos.y },
-      },
-      {
-        id: 9002,
-        kind: "xp",
-        pos: { x: player.pos.x - 120, y: player.pos.y },
-      },
-    ];
-    state.enemies.push(
-      makeEnemy({
-        pos: { x: player.pos.x + 200, y: player.pos.y },
-        hp: 1_000_000,
-        maxHp: 1_000_000,
-        mlvl: 99,
-        speed: 20,
-      }),
-    );
+    placeScroll(state, 100);
     const bot = createBot("survivor");
-    bot.arrowXp = { pct: 0.25, level: player.level };
-    botAct(bot, state, state.players[0]);
-    expect(bot.lastThought).toBe("GRAB ARROW");
+    expect(botAct(bot, state, player).useMedkit).toBe(true);
   });
 });
 

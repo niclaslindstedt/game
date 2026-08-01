@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The new pickups: golden XP arrows that pay a flat mob-priced bonus (and
+// The new pickups: XP SCROLLS that light a double-XP window on contact (and
 // the full heal a level-up brings), the rare screen nuke, and the item
 // magnet whose reach grows with INTELLIGENCE.
 
@@ -8,7 +8,6 @@ import { describe, expect, it } from "vitest";
 import {
   abilityDef,
   allocateStat,
-  arrowXp,
   canDropNuke,
   createGame,
   crowdBombChance,
@@ -16,26 +15,19 @@ import {
   dismissIntro,
   enemyDef,
   grantAbility,
+  grantXp,
   killEnemy,
   levelDef,
-  levelStatGains,
   magnetRadius,
   MENACE,
   menaceStage,
   NUKE,
-  setArrowXpEnabled,
+  setXpScrollEnabled,
   step,
+  XP_TUNING,
 } from "@game/core";
 import type { GameInput, GameState, Item } from "@game/core";
-import {
-  clearStage,
-  DT,
-  idle,
-  makeEnemy,
-  runUntilChooser,
-  SEED,
-  startGame,
-} from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, SEED, startGame } from "./helpers.ts";
 
 const useItem: GameInput = {
   steering: false,
@@ -44,123 +36,124 @@ const useItem: GameInput = {
   useItem: true,
 };
 
-function dropArrow(state: GameState, id: number): Item {
+function dropScroll(state: GameState, id: number): Item {
   return { id, kind: "xp", pos: { ...state.players[0].pos } };
 }
 
-describe("xp arrows", () => {
-  it("grant a flat mob-priced bonus at the hero's level", () => {
+/** The XP one kill of `enemy` banks for the hero under identical conditions —
+ * the measurement the doubling tests compare with and without a lit window. */
+function xpForOneKill(lit: boolean): number {
+  const state = startGame();
+  clearStage(state);
+  state.players[0].xpToNext = 1_000_000; // never ding mid-measurement
+  state.players[0].xp = 0;
+  if (lit) state.players[0].xpBoostMs = XP_TUNING.scrollDurationMs;
+  const victim = makeEnemy({ id: 9500, pos: { ...state.players[0].pos } });
+  state.enemies = [victim];
+  killEnemy(state, victim, 1, false);
+  return state.players[0].xp;
+}
+
+describe("the xp scroll", () => {
+  it("is read on contact — it lights a window and pays no XP of its own", () => {
     const state = startGame();
     clearStage(state);
-    state.items = [dropArrow(state, 1)];
+    state.items = [dropScroll(state, 1)];
     step(state, idle, DT);
-    // A fresh hero is level 1: the arrow pays `arrowXpKills` reference-mob
-    // kills' worth at L1 — never a share of the bar.
-    expect(state.players[0].xp).toBe(arrowXp(1));
-    expect(state.events).toContainEqual(
-      expect.objectContaining({ type: "itemCollected", kind: "xp" }),
+    // The scroll is gone off the floor and its window is lit at full duration
+    // (one tick of the step has already burned off, hence the tolerance).
+    expect(state.items).toHaveLength(0);
+    expect(state.players[0].xpBoostMs).toBeGreaterThan(
+      XP_TUNING.scrollDurationMs - 2 * DT,
     );
-
-    // At a later level the payout rides the compounding mob unit — bigger in
-    // absolute XP, the same few kills' worth against the fatter bar.
-    const later = startGame();
-    clearStage(later);
-    later.players[0].level = 4;
-    later.players[0].xpToNext = 4000;
-    later.items = [dropArrow(later, 1)];
-    step(later, idle, DT);
-    expect(later.players[0].xp).toBe(arrowXp(4));
-    expect(arrowXp(4)).toBeGreaterThan(arrowXp(1));
+    // …and it banked nothing on its own: a scroll multiplies, it never pays.
+    expect(state.players[0].xp).toBe(0);
+    expect(state.events).toContainEqual(
+      expect.objectContaining({
+        type: "itemCollected",
+        kind: "xp",
+        name: "XP SCROLL",
+      }),
+    );
   });
 
-  it("price the arrow to the mob that dropped it, not the hero's level", () => {
-    // The XP a `kind: "xp"` arrow with monster level `mlvl` banks for a level-5
-    // hero, under identical map/cap conditions so only `mlvl` moves the number.
-    const grantFor = (mlvl: number | undefined): number => {
-      const s = createGame(SEED, "test_level", "easy");
-      dismissIntro(s);
-      clearStage(s);
-      s.players[0].level = 5;
-      s.players[0].xpToNext = 40000;
-      s.players[0].xp = 0;
-      s.items = [{ id: 1, kind: "xp", pos: { ...s.players[0].pos }, mlvl }];
-      step(s, idle, DT);
-      return s.players[0].xp;
-    };
-    // An arrow shed by a LOW-level mob — the horde on outgrown ground, stuck at
-    // a map's mob-level ceiling while the hero climbs past it — pays only that
-    // mob's few kills, well under an at-level ding.
-    expect(grantFor(1)).toBeGreaterThan(0);
-    expect(grantFor(1)).toBeLessThan(grantFor(5));
-    // A source-less arrow (no `mlvl`) falls back to the hero's own level, so it
-    // pays the same at-level ding as an `mlvl === hero level` one.
-    expect(grantFor(undefined)).toBe(grantFor(5));
-    // The raw payout mirrors a real kill of that mob: mob-priced, penalized for
-    // being below the hero (see `arrowXp` / `mobLevelXp`).
-    expect(arrowXp(1, 5)).toBeLessThan(arrowXp(5));
+  it("doubles every XP the hero earns while its window burns", () => {
+    const plain = xpForOneKill(false);
+    const doubled = xpForOneKill(true);
+    expect(plain).toBeGreaterThan(0);
+    expect(doubled).toBe(plain * XP_TUNING.scrollXpMult);
   });
 
-  it("pay the same mob-priced bonus past the map's pacing yardstick", () => {
-    // `test_level` marks EASY's yardstick (`arrowCapByDifficulty`) at level 3.
-    // Arrows no longer read it — the payout is the same flat mob-priced bonus
-    // on either side, so there is no hot/cold cliff to game.
-    const at = (level: number): GameState => {
-      const s = createGame(SEED, "test_level", "easy");
-      dismissIntro(s);
-      clearStage(s);
-      s.players[0].level = level;
-      s.players[0].xpToNext = 4000;
-      s.players[0].xp = 0;
-      s.items = [dropArrow(s, 1)];
-      step(s, idle, DT);
-      return s;
-    };
-    expect(at(2).players[0].xp).toBe(arrowXp(2));
-    expect(at(3).players[0].xp).toBe(arrowXp(3));
+  it("burns down in real time and stops doubling when it lapses", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [dropScroll(state, 1)];
+    step(state, idle, DT);
+    const lit = state.players[0].xpBoostMs ?? 0;
+    expect(lit).toBeGreaterThan(0);
+    // A second of play takes a second off it — no more, no less.
+    for (let ms = 0; ms < 1000; ms += DT) step(state, idle, DT);
+    const left = state.players[0].xpBoostMs ?? 0;
+    expect(left).toBeLessThan(lit);
+    expect(lit - left).toBeGreaterThanOrEqual(1000);
+    expect(lit - left).toBeLessThan(1000 + 2 * DT);
+    // Run it all the way out: the window closes and stays closed at zero.
+    for (let ms = 0; ms < XP_TUNING.scrollDurationMs; ms += DT)
+      step(state, idle, DT);
+    expect(state.players[0].xpBoostMs).toBe(0);
   });
 
-  it("grant nothing while the faucet is switched off (calibration runs)", () => {
-    // `setArrowXpEnabled(false)` is the simulator's `--no-arrow-xp` isolation
-    // switch: the arrow still collects (vanishes), but pays no XP and floats
-    // no "+N XP" text — a pacing read of the pure kill grind.
-    setArrowXpEnabled(false);
+  it("REFRESHES rather than stacks — a second scroll buys one window, not two", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [dropScroll(state, 1)];
+    step(state, idle, DT);
+    // Spend half the window, then read another one off the floor.
+    for (let ms = 0; ms < XP_TUNING.scrollDurationMs / 2; ms += DT)
+      step(state, idle, DT);
+    expect(state.players[0].xpBoostMs).toBeLessThan(
+      XP_TUNING.scrollDurationMs * 0.6,
+    );
+    state.items = [dropScroll(state, 2)];
+    step(state, idle, DT);
+    // Back to a full window — never to one and a half.
+    expect(state.players[0].xpBoostMs).toBeGreaterThan(
+      XP_TUNING.scrollDurationMs - 2 * DT,
+    );
+    expect(state.players[0].xpBoostMs).toBeLessThanOrEqual(
+      XP_TUNING.scrollDurationMs,
+    );
+  });
+
+  it("two scrolls at once are still one window", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [dropScroll(state, 1), dropScroll(state, 2)];
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(0); // both read…
+    expect(state.players[0].xpBoostMs).toBeLessThanOrEqual(
+      XP_TUNING.scrollDurationMs,
+    ); // …one window
+  });
+
+  it("lights nothing while the faucet is switched off (calibration runs)", () => {
+    // `setXpScrollEnabled(false)` is the simulator's `--no-xp-scroll` isolation
+    // switch: the scroll still collects (vanishes), but lights no window and
+    // floats no "2x XP" text — a pacing read of the pure kill grind.
+    setXpScrollEnabled(false);
     try {
       const state = startGame();
       clearStage(state);
-      state.items = [dropArrow(state, 1)];
+      state.items = [dropScroll(state, 1)];
       step(state, idle, DT);
-      expect(state.players[0].xp).toBe(0);
       expect(state.items).toHaveLength(0);
+      expect(state.players[0].xpBoostMs ?? 0).toBe(0);
       expect(state.events).not.toContainEqual(
         expect.objectContaining({ type: "itemCollected", kind: "xp" }),
       );
     } finally {
-      setArrowXpEnabled(true);
+      setXpScrollEnabled(true);
     }
-  });
-
-  it("enough arrows level the player up and open the chooser", () => {
-    const state = startGame();
-    clearStage(state);
-    // How many arrows actually cross the L1 bar — derived from the rounded
-    // per-arrow grant, so it stays honest when the curve (xpToLevelUp) or the
-    // payout changes and rounding leaves a sliver.
-    const perArrow = arrowXp(state.players[0].level);
-    const needed = Math.ceil(state.players[0].xpToNext / perArrow);
-    state.items = Array.from({ length: needed }, (_, i) =>
-      dropArrow(state, i + 1),
-    );
-    step(state, idle, DT);
-    expect(state.players[0].level).toBe(2);
-    expect(state.events).toContainEqual({
-      type: "levelUp",
-      level: 2,
-      gains: levelStatGains(2),
-    });
-    // The ding celebrates for a beat first; the chooser opens after the burn.
-    expect(state.phase).toBe("playing");
-    runUntilChooser(state);
-    expect(state.phase).toBe("levelup");
   });
 });
 
@@ -170,8 +163,7 @@ describe("level-up heal", () => {
     clearStage(state);
     state.players[0].hp = 5;
     state.players[0].xp = state.players[0].xpToNext - 1;
-    state.items = [dropArrow(state, 1)];
-    step(state, idle, DT);
+    grantXp(state, state.players[0], 1);
     expect(state.players[0].level).toBe(2);
     expect(state.players[0].hp).toBe(state.players[0].maxHp);
   });

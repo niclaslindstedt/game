@@ -257,6 +257,15 @@ export type Player = {
    * (see `talentEvasionBurstMult`, read in `playerSpeed`). Absent/0 = no burst.
    * A transient runtime field — not persisted; the talent itself is. */
   evasionBurstMs?: number;
+  /**
+   * THE XP SCROLL's window (ms remaining): while this is above zero every XP
+   * grant this hero takes is multiplied by `XP_TUNING.scrollXpMult` (see
+   * `xpBoostMultiplier`, read at the one `grantXp` door). Walking over a scroll
+   * REFRESHES it to `XP_TUNING.scrollDurationMs` rather than adding to it, so
+   * a rain of scrolls buys one window, not five. Counted down in `stepTimers`;
+   * absent/0 = no boost. The app reads it to veil the hero in blue.
+   * A transient runtime field — a scroll's window does not survive the run. */
+  xpBoostMs?: number;
   equipment: {
     /** Never empty — the character always fights with something. */
     weapon: Equipment;

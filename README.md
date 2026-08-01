@@ -150,12 +150,13 @@ and something enormous haunts the old flag.
   winded half-speed jog. The
   base fire rate is deliberately slow, so a build is what wins the cadence
   back, and a new **(i)** button on the level-up screen spells out exactly
-  what each stat does. Golden
-  **XP arrows** are a rare catch-up drop (about one every fifty kills): they
-  pay a share of your next level while you're under-levelled for the map, then
-  go **cold** — a handful of kills' worth — once you've reached the level a
-  normal run of that map and difficulty leaves you at, so grinding old ground
-  can't push you past it.
+  what each stat does. **XP scrolls** are a rare drop that read themselves the
+  moment you walk over one: for the next **30 seconds every scrap of experience
+  counts double**, and a faint blue veil around your character says the clock is
+  running. A scroll pays nothing on its own, so what one is worth is whatever you
+  do with those thirty seconds — read one into a pack and it pays for itself,
+  read one over a cleared floor and it doubles nothing. Picking a second one up
+  **refreshes** the window rather than stacking it.
 - **Medkits, stamina potions, and repair kits** are carried, not
   spent on contact: grabbing one banks it into the **consumable dock** — a
   medkit slot, a stamina slot, and a repair slot just above the powerups —
@@ -174,7 +175,7 @@ and something enormous haunts the old flag.
   aura clear the screen on their own — a Vampire-Survivors engine that kills
   while you just steer.
 - The horde drops **loot**, Diablo-style — medkits, gear, repair kits, stamina
-  potions, XP arrows, and **base weapons themed to each level** (a box cutter or the
+  potions, XP scrolls, and **base weapons themed to each level** (a box cutter or the
   armory's pump shotgun on earth, 70s hardware on the moon, AI-forged
   railguns and plasma blades on Mars, historic and fantasy arms in the
   rift). Each base has a **level requirement** — it neither drops from

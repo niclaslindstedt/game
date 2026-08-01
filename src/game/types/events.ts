@@ -430,7 +430,7 @@ export type GameEvent =
       /**
        * The equipment's def id (equipment pickups only) — lets the app resolve
        * the piece's icon for the framed pickup card. Absent for loose pickups
-       * (medkits, arrows, powerups), which never carry an inventory icon.
+       * (medkits, scrolls, powerups), which never carry an inventory icon.
        */
       defId?: string;
       /**
@@ -460,15 +460,9 @@ export type GameEvent =
        */
       upgrade?: boolean;
       /**
-       * XP this pickup awarded (golden XP arrows only) — the app floats it as
-       * rising blue combat text above the hero's head, mirroring the "+N XP"
-       * that flows off a slain foe. Absent for pickups that grant no XP.
-       */
-      xp?: number;
-      /**
        * COINS this pickup banked (gold piles only) — the app floats it as
-       * rising gold text over the hero, the way an arrow floats its XP. Absent
-       * for every pickup that isn't money.
+       * rising gold text over the hero, the way a scroll floats its multiplier.
+       * Absent for every pickup that isn't money.
        */
       coins?: number;
     }
