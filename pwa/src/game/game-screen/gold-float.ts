@@ -24,6 +24,7 @@ import { PLAYER, type GameState } from "@game/core";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { localHero } from "../local-seat.ts";
+import { pushFloat } from "./float-lane.ts";
 import type { LoopShared } from "./loop-shared.ts";
 
 /** Quiet time that closes an open group (ms). A pile landing within this of the
@@ -123,8 +124,10 @@ export function flushGoldPickups(
   if (!group || !goldGroupClosed(group, state.stats.timeMs)) return;
   shared.goldGroup = undefined;
   const hero = localHero(state);
-  shared.effects.push({
-    kind: "text",
+  // A pile is very often shaken out of something that died at the hero's feet,
+  // so this spot usually already carries that kill's damage number and its blue
+  // "+N XP" — `pushFloat` takes the lane above them rather than the same pixels.
+  pushFloat(shared.effects, state.stats.timeMs, {
     pos: { x: hero.pos.x, y: hero.pos.y - PLAYER.radius - 12 },
     untilMs: state.stats.timeMs + GOLD_FLOAT_MS,
     durationMs: GOLD_FLOAT_MS,
