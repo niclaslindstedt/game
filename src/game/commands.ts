@@ -440,9 +440,9 @@ export function applyRunCommand(
     case "closeInventory":
       return closeInventory(state);
     case "openShop":
-      return openShop(state);
+      return openShop(state, hero);
     case "closeShop":
-      return closeShop(state);
+      return closeShop(state, hero);
     case "openMap":
       return openMap(state);
     case "closeMap":
@@ -528,17 +528,18 @@ export function applyRunCommand(
     case "discardHeldAbility":
       return discardHeldAbility(state, hero, num(a, 0));
 
-    // THE COUNTER
+    // THE COUNTER — every purse, bag and pouch here is the ACTING hero's, so
+    // a joiner buying spends their own coins rather than the host's.
     case "buyStock":
-      return buyStock(state, num(a, 0));
+      return buyStock(state, hero, num(a, 0));
     case "sellItem":
-      return sellItem(state, num(a, 0));
+      return sellItem(state, hero, num(a, 0));
     case "repairGear":
-      return repairGear(state);
+      return repairGear(state, hero);
     case "buyQuestPiece":
-      return buyQuestPiece(state, str(a, 0), str(a, 1));
+      return buyQuestPiece(state, hero, str(a, 0), str(a, 1));
     case "sellQuestPiece":
-      return sellQuestPiece(state, str(a, 0), str(a, 1));
+      return sellQuestPiece(state, hero, str(a, 0), str(a, 1));
 
     // THE BUILD
     case "allocateStat":

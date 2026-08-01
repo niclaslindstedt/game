@@ -217,7 +217,7 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
     merchant.greetedReturn = true;
     merchant.wanderTarget = null;
     merchant.faceLeft = finder.pos.x < merchant.pos.x;
-    merchant.stock = rollStock(state, merchant);
+    merchant.stock = rollStock(state, merchant, finder);
     addMapMarker(state, "merchant", merchant.pos, "merchant");
     state.events.push({
       type: "merchantDiscovered",
@@ -304,7 +304,9 @@ export function revealMerchant(state: GameState): void {
   merchant.discovered = true;
   merchant.greetedReturn = false;
   merchant.wanderTarget = null;
-  merchant.stock = rollStock(state, merchant);
+  // A met-before reveal happens before anybody joins, so the arriving hero is
+  // seat 0 by construction rather than by the old habit.
+  merchant.stock = rollStock(state, merchant, state.players[0]);
   addMapMarker(state, "merchant", merchant.pos, "merchant");
 }
 
@@ -348,13 +350,13 @@ function maybeGreetReturn(state: GameState, merchant: Merchant): void {
  * open; refused when nothing needs mending or the purse is short. Returns the
  * coins paid, else null (so the app can ignore a dud tap).
  */
-export function repairGear(state: GameState): number | null {
+export function repairGear(state: GameState, hero: Player): number | null {
   if (state.phase !== "shop") return null;
-  const cost = repairAllCost(state, state.players[0]);
+  const cost = repairAllCost(state, hero);
   if (cost <= 0) return null; // nothing to mend
-  if (state.players[0].coins < cost) return null; // can't afford it
-  repairAll(state, state.players[0]);
-  state.players[0].coins -= cost;
+  if (hero.coins < cost) return null; // can't afford it
+  repairAll(state, hero);
+  hero.coins -= cost;
   state.events.push({ type: "gearRepaired", paid: cost });
   return cost;
 }
@@ -365,9 +367,8 @@ export function repairGear(state: GameState): number | null {
  * markup is what stops the counter being a way to buy past the drop ladder's
  * rationing of the strong powers; an ordinary power sits at exactly the base.
  */
-function abilityPrice(state: GameState, defId: string): number {
-  const base =
-    ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.players[0].level;
+function abilityPrice(hero: Player, defId: string): number {
+  const base = ECONOMY.abilityBase + ECONOMY.abilityPerLevel * hero.level;
   const rarity = abilityRarity(defId);
   const markup =
     rarity > 0
@@ -383,12 +384,12 @@ function abilityPrice(state: GameState, defId: string): number {
  * scaled again by how much of the bar its quality mends against the lightest
  * kit's — so a SUPERIOR costs what it is worth rather than what a LIGHT does. */
 function consumablePrice(
-  state: GameState,
+  hero: Player,
   item: MerchantConsumable,
   tier: number | undefined,
 ): number {
   const { base, perLevel } = ECONOMY.consumablePrices[item];
-  let price = base + perLevel * state.players[0].level;
+  let price = base + perLevel * hero.level;
   if (item === "medkit") {
     const lightest = MEDKIT.tiers[0];
     const quality = MEDKIT.tiers[medkitTierIndex(tier)];
@@ -416,7 +417,15 @@ function consumablePrice(
  * the duration), so when the meeting happens can never reshuffle the drops
  * the rest of the run would have paid.
  */
-function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
+function rollStock(
+  state: GameState,
+  merchant: Merchant,
+  // The customer he stocks AGAINST — the hero who met him (or, on a met-before
+  // reveal, the arriving one). The stall is shared by the whole party, so the
+  // mlvl and the medkit tier read the party; only the price scaling and the
+  // gamble rolls are his.
+  hero: Player,
+): Merchant["stock"] {
   const stock: Merchant["stock"] = [];
   const level = runLevelDef(state);
   const abilityPool = level.loot.abilityPool;
@@ -429,7 +438,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
       id: state.nextId++,
       kind: "ability",
       defId,
-      price: abilityPrice(state, defId),
+      price: abilityPrice(hero, defId),
       // ONE unit: the dock holds three powers, and three slots of one is
       // already a full dock bought over the counter.
       qty: 1,
@@ -449,7 +458,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
       kind: "consumable",
       item,
       ...(tier !== undefined ? { tier } : {}),
-      price: consumablePrice(state, item, tier),
+      price: consumablePrice(hero, item, tier),
       // Never deeper than the dock's own stack, so clearing the shelf in one
       // visit can't leave units the bank would refuse.
       qty: Math.min(MERCHANT.stockConsumableQty, CONSUMABLES.stackCap),
@@ -473,8 +482,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         affixes: [],
       },
       price: Math.round(
-        ECONOMY.revivePrice.base +
-          ECONOMY.revivePrice.perLevel * state.players[0].level,
+        ECONOMY.revivePrice.base + ECONOMY.revivePrice.perLevel * hero.level,
       ),
       qty: MERCHANT.stockRevives,
     });
@@ -487,7 +495,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
   state.rng = merchantRng;
   try {
     for (let i = 0; i < MERCHANT.stockWeapons; i++) {
-      const equipment = rollEquipment(state, state.players[0], {
+      const equipment = rollEquipment(state, hero, {
         slot: "weapon",
         tierBonus: MERCHANT.stockTierBonus,
         // Stocked against the hero himself — his level is the stall's mlvl.
@@ -593,24 +601,26 @@ export { sellValue };
  * run in the `shop` phase, exactly like the bag. Returns false when any gate
  * refuses, so the app can ignore a stray tap.
  */
-export function openShop(state: GameState): boolean {
+export function openShop(state: GameState, hero: Player): boolean {
   if (state.phase !== "playing") return false;
   const merchant = state.merchant;
   if (!merchant.discovered) return false;
   // The SHOPPER has to be at the counter — this one is emphatically not "any
   // hero", or a player across the map would find the stall open in front of
-  // them because somebody else walked up to it.
-  if (distance(state.players[0].pos, merchant.pos) > MERCHANT.tradeRadius) {
+  // them because somebody else walked up to it. `hero` is the one who tapped,
+  // which on the wire is the seat the session admitted the client into.
+  if (distance(hero.pos, merchant.pos) > MERCHANT.tradeRadius) {
     return false;
   }
   state.phase = "shop";
   return true;
 }
 
-/** Close the shop and resume (pending level-ups take priority). */
-export function closeShop(state: GameState): void {
+/** Close the shop and resume (the closer's own pending level-ups take
+ * priority). */
+export function closeShop(state: GameState, hero: Player): void {
   if (state.phase !== "shop") return;
-  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = hero.pendingStatPoints > 0 ? "levelup" : "playing";
 }
 
 /**
@@ -622,13 +632,17 @@ export function closeShop(state: GameState): void {
  * PILOT ride books its takings (`autopilot.coinsEarned`) — the counterpart to
  * the meter's `coinsSpent`, shown side by side on the ride's scoreboard.
  */
-export function sellItem(state: GameState, index: number): number | null {
+export function sellItem(
+  state: GameState,
+  hero: Player,
+  index: number,
+): number | null {
   if (state.phase !== "shop") return null;
-  const item = state.players[0].inventory[index];
+  const item = hero.inventory[index];
   if (!item) return null;
   const paid = sellValue(item);
-  state.players[0].inventory[index] = null;
-  state.players[0].coins += paid;
+  hero.inventory[index] = null;
+  hero.coins += paid;
   // The recycling faucet's tally, beside the gold faucet's (`goldCollected`):
   // the two together are what the run's play was worth in coins, which is the
   // figure `GOLD.dropMult` is calibrated against.
@@ -673,19 +687,20 @@ function canCarryStock(
  * falls, and at zero it is sold out for the rest of the level. False = the
  * purchase was refused (missing entry, sold out, too poor, or no room).
  */
-export function buyStock(state: GameState, stockId: number): boolean {
+export function buyStock(
+  state: GameState,
+  hero: Player,
+  stockId: number,
+): boolean {
   if (state.phase !== "shop") return false;
   const entry = state.merchant.stock.find((s) => s.id === stockId);
   if (!entry) return false;
   if (entry.qty <= 0) return false;
-  if (state.players[0].coins < entry.price) return false;
-  // TODO(plan §3.1): the merchant's MUTATORS are still seat-0 reads — a joiner
-  // buying spends the host's purse. Same shape as the fix on `canBuyStock`
-  // above and on the companion verbs; see the plan's §5.9.
+  if (hero.coins < entry.price) return false;
   switch (entry.kind) {
     case "ability":
-      if (!canBankAbility(state, state.players[0], entry.defId)) return false;
-      state.players[0].heldAbilities.push(entry.defId);
+      if (!canBankAbility(state, hero, entry.defId)) return false;
+      hero.heldAbilities.push(entry.defId);
       break;
     case "weapon": {
       // A stall row may hold SEVERAL of one thing (the salts shelf), so every
@@ -694,20 +709,20 @@ export function buyStock(state: GameState, stockId: number): boolean {
       // and one object would sit in two bag cells at once, sharing an id, a
       // durability counter and a destroy.
       const piece = { ...structuredClone(entry.equipment), id: state.nextId++ };
-      if (!addToInventory(state, state.players[0], piece)) return false;
+      if (!addToInventory(state, hero, piece)) return false;
       break;
     }
     case "consumable": {
       const banked =
         entry.item === "medkit"
-          ? bankMedkit(state, state.players[0], entry.tier)
-          : bankConsumable(state, state.players[0], entry.item);
+          ? bankMedkit(state, hero, entry.tier)
+          : bankConsumable(state, hero, entry.item);
       if (!banked) return false;
       break;
     }
   }
   entry.qty -= 1;
-  state.players[0].coins -= entry.price;
+  hero.coins -= entry.price;
   return true;
 }
 

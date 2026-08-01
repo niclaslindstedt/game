@@ -190,8 +190,8 @@ describe("the takings meter (coinsEarned)", () => {
     expect(billed).toBeGreaterThan(0);
     expect(state.autopilot.coinsEarned).toBe(0);
 
-    expect(openShop(state)).toBe(true);
-    const paid = sellItem(state, 0);
+    expect(openShop(state, state.players[0])).toBe(true);
+    const paid = sellItem(state, state.players[0], 0);
     expect(paid).toBeGreaterThan(0);
     // The sale lands in the takings; the price is untouched by it.
     expect(state.autopilot.coinsEarned).toBe(paid);
@@ -201,8 +201,8 @@ describe("the takings meter (coinsEarned)", () => {
   it("ignores sales made off the ride — takings are the flight's, not the run's", () => {
     const state = atTheCounter(1000);
     expect(state.autopilot.active).toBe(false);
-    expect(openShop(state)).toBe(true);
-    expect(sellItem(state, 0)).toBeGreaterThan(0);
+    expect(openShop(state, state.players[0])).toBe(true);
+    expect(sellItem(state, state.players[0], 0)).toBeGreaterThan(0);
     expect(state.autopilot.coinsEarned).toBe(0);
   });
 

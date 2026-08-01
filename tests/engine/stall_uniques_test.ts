@@ -65,8 +65,8 @@ describe("merchant stall uniques (stockUniques)", () => {
       // The dialogue-free fixture merchant leaves the run playing; walk up
       // and trade.
       state.players[0].pos = { ...state.merchant.pos };
-      expect(openShop(state)).toBe(true);
-      expect(buyStock(state, entry.id)).toBe(true);
+      expect(openShop(state, state.players[0])).toBe(true);
+      expect(buyStock(state, state.players[0], entry.id)).toBe(true);
       expect(entry.qty).toBe(0);
       expect(state.players[0].coins).toBe(0);
       expect(

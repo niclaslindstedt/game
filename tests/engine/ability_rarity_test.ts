@@ -104,7 +104,7 @@ describe("the stall's rarity markup", () => {
       y: state.merchant.pos.y,
     };
     run(state, idle, 1);
-    openShop(state);
+    openShop(state, state.players[0]);
     return state;
   }
 
@@ -136,8 +136,8 @@ describe("the stall's rarity markup", () => {
     const entry = state.merchant.stock.find((s) => s.kind === "ability")!;
     expect(entry.qty).toBe(1);
     state.players[0].coins = entry.price * 10;
-    expect(buyStock(state, entry.id)).toBe(true);
-    expect(buyStock(state, entry.id)).toBe(false);
+    expect(buyStock(state, state.players[0], entry.id)).toBe(true);
+    expect(buyStock(state, state.players[0], entry.id)).toBe(false);
     expect(state.players[0].coins).toBe(entry.price * 9);
   });
 });
