@@ -1045,9 +1045,12 @@ export function generateLevel(
     shape: "circle",
     pos: playerSpawn,
     radius: 170,
-    // The opening cell wears its DISTRICT's own name when the area has one
-    // (the garage bay announces THE GARAGE, not a generic LANDING).
-    label: areaOf(bp.areas, spawn).label ?? "LANDING",
+    // On an AUTHORED plan the opening cell wears its district's own name —
+    // the garage bay announces THE GARAGE, because home is a place, not an
+    // arrival. A rolled carve keeps the generic LANDING: there the caption
+    // marks the breather, and every mission's opening beat says the same
+    // thing on purpose.
+    label: bp.plan ? (areaOf(bp.areas, spawn).label ?? "LANDING") : "LANDING",
   });
 
   // --- The errand cast ------------------------------------------------------
