@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // LOADING a hero resumes their campaign with no difficulty picker (pwa
 // `resumeTargetFor`): it points at the campaign still IN PROGRESS — the furthest
-// difficulty begun but not yet beaten — at the beginning of its first uncleared
-// level. It returns null when nothing is under way (a fresh hero, or one who has
-// beaten their difficulty), the signal for the caller to open the ladder
-// instead so the hero picks a starting lane or steps up a rung.
+// difficulty begun but not yet beaten — and its first uncleared level, the
+// FRONTIER. The caller (App.tsx) lands the hero AT HOME in the garage on that
+// difficulty; the frontier is what the hub's travel doors put one tap away, so
+// the levelId here is the doors' answer rather than the mount's. It returns
+// null when nothing is under way (a fresh hero, or one who has beaten their
+// difficulty), the signal for the caller to open the ladder instead so the
+// hero picks a starting lane or steps up a rung.
 
 import { DIFFICULTY_ORDER, LEVEL_ORDER, type Difficulty } from "@game/core";
 import { describe, expect, it } from "vitest";

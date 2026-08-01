@@ -483,17 +483,22 @@ export function App() {
         return;
       }
       // PLAY flow. A hero with a campaign already under way skips the difficulty
-      // ladder entirely: LOAD drops straight into the beginning of their current
-      // level at their current difficulty. A hero with nothing in progress — a
-      // freshly minted one, or one who has beaten their current difficulty —
-      // opens the ladder instead, to pick a starting lane or step up a rung.
+      // ladder entirely: LOAD lands them AT HOME — the garage — on their current
+      // difficulty, and the doors carry them back out: the car, the rocket and
+      // the rift seam list the campaign under the same unlock rules as ever, so
+      // their frontier level is exactly one door-tap away. Landing on the
+      // frontier's own start instead (what this did before the hub existed)
+      // skipped the whole town loop: no counter, no stash run, no kit-out
+      // between sessions. A hero with nothing in progress — a freshly minted
+      // one, or one who has beaten their current difficulty — opens the ladder
+      // instead, to pick a starting lane or step up a rung.
       const target = resumeTargetFor(picked);
       if (target) {
         // Starting a fresh run abandons whatever was parked (in memory + storage).
         setParked(null);
         clearSavedRun();
         setStartOnDifficulty(false);
-        setRun({ difficulty: target.difficulty, levelId: target.levelId });
+        setRun({ difficulty: target.difficulty, levelId: "garage" });
         return;
       }
       setStartOnDifficulty(true);
