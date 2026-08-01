@@ -41,6 +41,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { BuybackPanel } from "./BuybackPanel.tsx";
 import {
   medkitIconFor,
   REPAIR_KIT_ICON,
@@ -224,6 +225,48 @@ function RepairButton({
   );
 }
 
+/**
+ * Open the BUY-BACK shelf — the undo beside the sell tools it undoes. It wears
+ * the satchel the LOST & FOUND's rows wear (the two screens are the same idea
+ * at two prices) and carries the count of what is on the shelf, so a player who
+ * has just fired SELL ALL can see at a glance that the seven pieces are still
+ * recoverable. Dead until something has actually been sold here.
+ */
+function BuybackButton({
+  font,
+  sprites,
+  count,
+  onOpen,
+}: {
+  font: PixelFont;
+  sprites: Sprites;
+  count: number;
+  onOpen: () => void;
+}) {
+  const enabled = count > 0;
+  const bag = spriteDataUrl(sprites, "icon_bag");
+  return (
+    <button
+      type="button"
+      className="pixel-button secondary shop-bulk-btn"
+      aria-label="buy-back"
+      disabled={!enabled}
+      onClick={enabled ? onOpen : undefined}
+    >
+      {bag && <img src={bag} alt="" className="pixel-img shop-bulk-coin" />}
+      <PixelText
+        font={font}
+        text="BUY BACK"
+        scale={2}
+        color={enabled ? "#e6e8eb" : "#5a6470"}
+      />
+      {enabled && (
+        <PixelText font={font} text={String(count)} scale={2} color="#ffd75e" />
+      )}
+    </button>
+  );
+}
+
 export function ShopPanel({
   state,
   font,
@@ -240,6 +283,8 @@ export function ShopPanel({
   onClose: () => void;
 }) {
   const [selected, setSelected] = useState<Selection | null>(null);
+  // The BUY-BACK shelf, raised over the counter (BuybackPanel).
+  const [buybackOpen, setBuybackOpen] = useState(false);
   const merchant = state.merchant;
   const player = localHero(state);
 
@@ -601,6 +646,21 @@ export function ShopPanel({
                 onChange();
               }}
             />
+            {/* BUY BACK: the undo, parked with the sales it undoes. Only the
+                shelf's own count is read here (never `buybackContents`, which
+                copies the list) — the panel it raises does the reading. */}
+            <BuybackButton
+              font={font}
+              sprites={sprites}
+              count={merchant.buyback.length}
+              onOpen={() => {
+                playUiSound(synth, "confirm");
+                // Never leave a deal card floating under the shelf: it is
+                // anchored to a cell the overlay now covers.
+                setSelected(null);
+                setBuybackOpen(true);
+              }}
+            />
             {/* REPAIR ALL: mend the whole kit — an icon-only button, no label. */}
             <RepairButton
               sprites={sprites}
@@ -678,6 +738,20 @@ export function ShopPanel({
               />
             </button>
           }
+        />
+      )}
+
+      {/* THE BUY-BACK SHELF, raised over the counter — the last dozen pieces
+          sold here, each redeemable for what he paid. Rendered last so it sits
+          above the panel and any card left floating beside it. */}
+      {buybackOpen && (
+        <BuybackPanel
+          font={font}
+          relicFonts={relicFonts}
+          sprites={sprites}
+          state={state}
+          onChange={onChange}
+          onClose={() => setBuybackOpen(false)}
         />
       )}
     </div>

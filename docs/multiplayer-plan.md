@@ -1883,8 +1883,9 @@ reason §7.2.5 exists at all.
    what TRAVELS, every suite around it asserts that a field which changed
    arrived, and none of them asks whether what a client HAS is enough to decide
    with. Fixed by parameterizing the read on the acting hero. **THE MERCHANT'S
-   MUTATORS ARE STILL SEAT-0 READS** — `buyStock`, `sellItem`, `repairGear`,
-   twenty-four sites — so a joiner buying spends the HOST's purse. Same shape as
+   MUTATORS ARE STILL SEAT-0 READS** — `buyStock`, `sellItem`, `buybackItem`,
+   `repairGear`, twenty-four sites — so a joiner buying spends the HOST's purse
+   (and buys back into the host's bag off a shelf every seat shares). Same shape as
    the fix above and as the companion verbs in §5.5.3; it is the next thing on
    §3.1's list and it is now a known bug rather than a suspicion.
 2. **A run parked on the TITLE CARD for ever.** A session builds its run waiting

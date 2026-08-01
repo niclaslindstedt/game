@@ -838,7 +838,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   called from the enemy pass) keeps the horde `MERCHANT.repelRadius` off
   the stall — bosses and apparitions excepted. `openShop`/`closeShop`
   toggle the `shop` pause phase (proximity-gated); `sellItem`/`buyStock`
-  are the UI's trade mutators, and `sellValue` is the one valuation every
+  are the UI's trade mutators — a sale also lands on the trader's BUY-BACK
+  shelf (`MERCHANT.buybackSlots`, read with `buybackContents`, undone with
+  `buybackItem` for exactly the coins it fetched, and gone with the level's
+  merchant) — and `sellValue` is the one valuation every
   price tag reads — item level × tier orders of magnitude × material
   (metal ×2, precious ×4, from the equipment defs). `repairGear` mends the
   whole kit (worn weapon + armor + every breakable bag piece, via

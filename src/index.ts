@@ -471,6 +471,8 @@ export {
 // buy/sell mutators the shop UI calls, and the valuation every price tag
 // reads (see merchant.ts / config MERCHANT + ECONOMY).
 export {
+  buybackContents,
+  buybackItem,
   buyStock,
   canBuyStock,
   closeShop,
@@ -480,6 +482,7 @@ export {
   sellItem,
   sellValue,
   stockName,
+  type BuybackRefusal,
 } from "./game/merchant.ts";
 // QUESTS — the errands the field's non-combatants ask of the hero (see
 // quests/). The conversation is a pause phase like the shop, and so is the LOG
@@ -1150,6 +1153,7 @@ export type {
   MapMarker,
   MapMarkerKind,
   Merchant,
+  MerchantBuyback,
   MerchantConsumable,
   MerchantStock,
   Obstacle,

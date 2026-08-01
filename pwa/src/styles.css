@@ -7843,6 +7843,14 @@ canvas.tier-artifact {
   z-index: 110;
 }
 
+/* The merchant's BUY-BACK shelf (BuybackPanel) wears the same shelf as the
+   LOST & FOUND and is raised from the shop panel — itself a .game-overlay at
+   z-index 100 — so it needs the same lift, or the counter underneath keeps the
+   pointer and the list can't be touched. */
+.arsenal-overlay.shop-buyback {
+  z-index: 110;
+}
+
 .vault-price {
   margin-left: auto;
   padding-left: 0.6rem;
@@ -7918,11 +7926,17 @@ canvas.tier-artifact {
 /* The item card as a centered modal over the arsenal on narrow phones: a tapped
    row opens it, the backdrop or ESC dismisses it. The card inside is the shared
    ItemCard (its own tier border), so it reads exactly as it does in play — the
-   same window skin as the achievements pop-up, centered over the dimmed shelf. */
+   same window skin as the achievements pop-up, centered over the dimmed shelf.
+
+   It sits above EVERY shelf that can raise it, not merely the title screen's
+   arsenal (z-index 70) it was first written for: the run's LOST & FOUND and the
+   merchant's BUY-BACK shelf are both lifted to 110 to clear the run overlays
+   under them, and at 80 a phone tapping a row there opened the card BEHIND the
+   list it was tapped from. */
 .item-card-overlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 120;
   display: flex;
   align-items: center;
   justify-content: center;

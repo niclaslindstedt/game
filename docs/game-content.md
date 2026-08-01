@@ -1044,6 +1044,18 @@ piece (the inventory's scrap rule) in one tap; SELL ALL empties the whole bag
 across the counter, keepers included (the worn loadout is untouched). Coins
 ride the loadout between levels like everything else the hero carries.
 
+**The BUY-BACK shelf.** Every sale lands on the trader's buy-back shelf — the
+last dozen pieces sold across this counter (`MERCHANT.buybackSlots`), most
+recent first, the oldest pushed off as new sales arrive. The shop's BUY BACK
+button opens it, and anything on it comes back for **exactly the coins he
+paid**: the same instance that left the bag, with its affixes, its item level
+and its worn-down durability intact. It is an UNDO rather than a purchase,
+which is why there is no vendor markup on it and why buying a piece back also
+un-books the sale from the run's recycling tally — a mis-tap on the deal card,
+or a SELL ALL fired with a keeper still in the bag, costs nothing but the walk
+back to the counter. The shelf is the TRADER's memory, so it dies with him: the
+next level is a different man with an empty one.
+
 ### Gold — what a body was carrying (`src/game/items/gold.ts`, config `GOLD`)
 
 The coin economy's other faucet, and the one that answers "what did this hour of

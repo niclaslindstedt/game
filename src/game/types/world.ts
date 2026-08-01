@@ -521,6 +521,26 @@ export type MerchantStock = {
 );
 
 /**
+ * One piece on the merchant's BUY-BACK shelf: something sold across this
+ * counter, and the coins he paid for it. He resells it for exactly that —
+ * a buy-back moves no money, it only undoes a sale (see merchant.ts).
+ */
+export type MerchantBuyback = {
+  /** The piece itself, held whole — the same instance that left the bag. */
+  item: Equipment;
+  /** Coins he paid, and the coins he wants back for it. */
+  price: number;
+  /**
+   * The sale was booked to an AUTO PILOT ride's takings
+   * (`autopilot.coinsEarned`). Carried per entry rather than re-read at the
+   * buy-back, because a player who stops the ride and then undoes a sale would
+   * otherwise dock a scoreboard that never counted it — and one who sells
+   * during a ride and buys back after would leave it counted forever.
+   */
+  ride?: boolean;
+};
+
+/**
  * The WANDERING MERCHANT: one per level, roaming until met (config
  * MERCHANT). The horde ignores him and nothing hurts him — he is a trader,
  * not a combatant. `discovered` latches on the first close encounter: he
@@ -558,6 +578,13 @@ export type Merchant = {
   greetedReturn: boolean;
   /** The stall (empty until discovered — stock is rolled at the meeting). */
   stock: MerchantStock[];
+  /**
+   * The BUY-BACK shelf: what has been sold across this counter, oldest first,
+   * capped at `MERCHANT.buybackSlots`. Grows only through `sellItem` and
+   * shrinks only through `buybackItem` — and dies with the level's merchant,
+   * so it is a way out of a mis-tap rather than a stash.
+   */
+  buyback: MerchantBuyback[];
   /**
    * Private seeded stream for wander legs and stall rolls, parked as its
    * plain uint32 state (not a closure) so the whole merchant serializes with
