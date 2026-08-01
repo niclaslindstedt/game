@@ -68,7 +68,14 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   garage door itself — an **approach door** (`doors[].opens: approach`) that
   rolls up for anybody who walks or drives near. The **merchant is PARKED**
   on the drive (`merchant.parked` — revealed from map start, scene-free,
-  never wanders), buying loot and repairing gear. The only decisions are the
+  never wanders), buying loot and repairing gear. **RUTH — Ada's mother —
+  waits in the bay** (`content/quest-givers.yaml`): she has a key and always
+  has, and hands out the game's second campaign-long chain
+  (`content/quests/ruth_*.yaml`) — three collect errands, one per leg of
+  Ada's trail, each asking for something of her daughter's; the pieces drop
+  from carriers on OTHER levels (`dropFrom` rolls wherever the kill happens,
+  since a campaign errand rides the hero), and every handover happens at
+  home. The only decisions are the
   three **travel doors** (`LevelDef.travelDoors`): the CAR (tap to board —
   the engine starts, lights and idle rumble on — then DRIVE: W throttles
   along the nose, S brakes then reverses, A/D steer the rolling car;

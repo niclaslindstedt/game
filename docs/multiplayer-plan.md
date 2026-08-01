@@ -2309,12 +2309,12 @@ your mods, and leave with everything they earned on their own roster._
 > **The hub tails split.** The workbench is the stash's place (a tap on any
 > bay bench raises the run's LOST & FOUND — hub levels only, and the verbs
 > already travel so a joiner's bench is their own vault). **The garage's
-> quest givers did NOT ship, and deliberately**: a giver is a person with
-> lines, every line is manuscript-governed, and §6.5's own rule is that the
-> manuscript edit needs the user's explicit confirmation before it is
-> written. That conversation has not happened, so the item stays owed rather
-> than smuggled in — it is the one piece of R1 that is a story commit, not a
-> code commit.
+> quest giver shipped as a story commit, in order**: the giver drafts were
+> put to the user first (§6.5's confirmation rule), the user picked ADA'S
+> MOTHER, and RUTH landed with the full chain walk — story.md, the
+> manuscript, and a second campaign-long quest chain (three collect errands
+> riding Ada's Trail cross-level via `dropFrom`, which the hub exception in
+> `tests/content/quests_test.ts` now sanctions).
 
 **R2 — THE HONEST WIRE.** _Goal: what travels is correct, felt, and priced._
 Everything here is engine/netcode work with no screen to it:

@@ -940,9 +940,10 @@ phases** (the plan's §5.5.3):
 - **R1 — THE WHOLE PARTY**: **LANDED** (the plan's §5.5.3 carries the
   as-built record). In-session party travel (§6.4), banking a joiner's
   character + the party HUD and field visibility (§4.5), the trade window
-  screen (§5.1), mod reconciliation (§4.4), and the workbench stash. The one
-  unshipped tail is the garage's quest givers, which are a STORY commit — the
-  manuscript confirmation §6.5 requires has not been asked for.
+  screen (§5.1), mod reconciliation (§4.4), and the workbench stash. The
+  garage's quest giver shipped as its own story commit after the manuscript
+  confirmation §6.5 requires: RUTH, Ada's mother, stands in the bay with a
+  second campaign-long chain.
 - **R2 — THE HONEST WIRE**: prediction and reconciliation (§3.3), the attacker
   thread (the last seat-0 combat reads, which also unblocks the spare-or-kill
   owner gate), the snapshot's size + the DEBUG net graph, and decision 15's
