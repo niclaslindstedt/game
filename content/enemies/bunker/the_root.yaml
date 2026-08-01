@@ -8,6 +8,8 @@ lore: >-
 role: elite
 levelBonus: 6
 sprite: the_root
+# WEALTH (config GOLD): landlord of every agency's secrets, and secrets are priced.
+wealth: 3
 hp: 1800
 speed: 24
 radius: 12

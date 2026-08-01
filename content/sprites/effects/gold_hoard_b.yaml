@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_hoard_b
+family: effects
+size: [18, 13]
+description: >
+  A wide mound of coins spilling to one side, a crown half-buried in its crest and gems scattered through the slope — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: a wide mound of coins spilling to one side, a crown half-buried in its crest and gems scattered through the slope
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: a hoard that came down as an avalanche and is still settling
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+  r: "#d83a3a" # ruby
+  j: "#4054bc" # sapphire
+  l: "#678f5d" # emerald
+  W: "#f4f4f4" # the one white glint
+grid: |
+  .....O..O..O......
+  .....OyOyOyO......
+  .....OhhhhhhO.....
+  .....OqqqqqqO.....
+  ......OOOOOO......
+  ...OOOhyyhOOO.....
+  ..OOhyoorooyhOO...
+  .OOhyoooooooyhOOO.
+  OYhqooqqjooqqoohyO
+  OhqooqolqooqooqohO
+  OYhqooqqooqqoohyqO
+  OqqqqqqqqqqqqqqqqO
+  .OOOOOOOOOOOOOOOO.

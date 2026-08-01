@@ -203,6 +203,8 @@ export function renderSingleCampaign(
     );
   }
 
+  renderGold(report);
+
   if (verdict) renderVerdict(report, allBosses);
   if (comparePath) renderCompare(report, comparePath);
 
@@ -340,6 +342,128 @@ export function renderSingleCampaign(
 // they are independent knobs that happen to be about "players". A report that
 // named only one of them is a measurement somebody will later read under the
 // wrong one.
+/**
+ * GOLD — what the run's play was WORTH, and what that buys.
+ *
+ * The coin economy has two faucets and they are moved by different levers, so
+ * they are printed apart: `drops` is gold shaken out of bodies (its knob is
+ * `GOLD.dropMult`) and `sales` is what the run's loot fetched at the counter
+ * (the drop ladder's and `ECONOMY`'s). A pass that read only the total could
+ * push one up while the other fell and call it a win.
+ *
+ * The right-hand columns are the point of the table. `AP min` is what the
+ * takings buy in minutes of AUTO PILOT at 1×, and `farm:AP` is the same number
+ * inside out — minutes of PLAY per minute of watching it play itself, which is
+ * the figure `GOLD.farmMinutesPerAutopilotMinute` is the target for. A run at
+ * or under the target pays for itself; one above it means the farm is too
+ * stingy, and `GOLD.dropMult` is the one number to move.
+ *
+ * Skipped entirely on a `--no-shop` run's sales column being the only content —
+ * no: it is printed always. A run that earned nothing is itself the finding.
+ */
+function renderGold(report) {
+  const runs = report.runs.filter((r) => r.purse);
+  if (runs.length === 0) return;
+  console.log("");
+  console.log(
+    "GOLD — what the run's play was worth in coins, and what it buys",
+  );
+  const gh =
+    padE("difficulty", 11) +
+    padE("level", 13) +
+    pad("mins", 6) +
+    pad("drops", 10) +
+    pad("sales", 10) +
+    pad("total", 10) +
+    pad("/min", 9) +
+    pad("drop%", 7) +
+    pad("AP min", 8) +
+    pad("farm:AP", 9);
+  console.log(gh);
+  console.log("-".repeat(gh.length));
+  const sum = { drops: 0, sales: 0, ms: 0 };
+  for (const run of runs) {
+    const p = run.purse;
+    sum.drops += p.fromDrops;
+    sum.sales += p.fromSales;
+    sum.ms += run.timeMs;
+    console.log(
+      padE(run.difficulty, 11) +
+        padE(run.levelId, 13) +
+        pad(min(run.timeMs), 6) +
+        pad(p.fromDrops.toLocaleString("en-US"), 10) +
+        pad(p.fromSales.toLocaleString("en-US"), 10) +
+        pad(p.total.toLocaleString("en-US"), 10) +
+        pad(Math.round(p.perMinute).toLocaleString("en-US"), 9) +
+        pad(pct(p.dropShare), 7) +
+        pad(p.autopilotMinutes, 8) +
+        pad(
+          Number.isFinite(p.farmMinutesPerAutopilotMinute)
+            ? `${p.farmMinutesPerAutopilotMinute}:1`
+            : "—",
+          9,
+        ),
+    );
+  }
+  const total = sum.drops + sum.sales;
+  const target = runs[0].purse.farmTarget;
+  // The CAMPAIGN figure, which is the one the knob is actually set against: a
+  // single early map is a rounding error next to a JESUS run, so per-run rows
+  // are the diagnosis and this line is the verdict.
+  const apMinutes = total / 100 / 60; // AUTOPILOT.coinsPerSecond = 100/s at 1x
+  const farmMinutes = sum.ms / 60000;
+  const ratio = apMinutes > 0 ? farmMinutes / apMinutes : Infinity;
+  console.log("-".repeat(gh.length));
+  console.log(
+    padE("CAMPAIGN", 11) +
+      padE("", 13) +
+      pad(farmMinutes.toFixed(1), 6) +
+      pad(sum.drops.toLocaleString("en-US"), 10) +
+      pad(sum.sales.toLocaleString("en-US"), 10) +
+      pad(total.toLocaleString("en-US"), 10) +
+      pad(
+        Math.round(total / Math.max(1 / 60, farmMinutes)).toLocaleString(
+          "en-US",
+        ),
+        9,
+      ) +
+      pad(total > 0 ? pct(sum.drops / total) : "—", 7) +
+      pad(apMinutes.toFixed(1), 8) +
+      pad(Number.isFinite(ratio) ? `${ratio.toFixed(1)}:1` : "—", 9),
+  );
+  // GOLD ALONE, on the same scale. This is the line `GOLD.dropMult` is set
+  // against, and it is a separate number from the one above on purpose: the
+  // SALES faucet rides the sell ladder's orders of magnitude (a single unique
+  // is worth a map of trash), so a late campaign's total swings by a factor of
+  // ten on whether one item dropped. Judging the knob by the total would mean
+  // retuning gold every time the loot ladder rolled differently.
+  const goldAp = sum.drops / 100 / 60;
+  const goldRatio = goldAp > 0 ? farmMinutes / goldAp : Infinity;
+  const verdict = !Number.isFinite(goldRatio)
+    ? "FAIL — the gold faucet paid nothing"
+    : goldRatio <= target * 1.35 && goldRatio >= target * 0.65
+      ? "PASS"
+      : goldRatio > target
+        ? "FAIL — the farm is too stingy; raise GOLD.dropMult"
+        : "FAIL — the farm is too rich; lower GOLD.dropMult";
+  console.log(
+    `  drops = gold off the floor · sales = loot sold at the counter · ` +
+      `AP min = minutes of AUTO PILOT at 1x the takings buy`,
+  );
+  console.log(
+    `  target ${target}:1 — an hour of play buys ${(60 / target).toFixed(0)} min of AUTO PILOT at 1x`,
+  );
+  console.log(
+    `  GOLD alone ${Number.isFinite(goldRatio) ? goldRatio.toFixed(1) : "—"}:1 ` +
+      `— ${verdict}`,
+  );
+  console.log(
+    `  both faucets ${Number.isFinite(ratio) ? ratio.toFixed(1) : "—"}:1 ` +
+      `(sales ride the sell ladder's orders of magnitude, so this swings on ` +
+      `whether one unique dropped — read it, don't tune to it)`,
+  );
+}
+
 export function renderParty(taggedRuns) {
   const rows = taggedRuns.filter(({ run }) => run.party);
   if (rows.length === 0) return;

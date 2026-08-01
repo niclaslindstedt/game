@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_stack_b
+family: effects
+size: [14, 8]
+description: >
+  A low heap of coins leaning to one side with a coin slid clear of its foot — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: a low heap of coins leaning to one side with a coin slid clear of its foot
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: a handful that landed leaning, and half of it slid off
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+grid: |
+  ...OOOO.......
+  ..OYYhyO......
+  .OOhyyhOO.....
+  OYhqooqhO.....
+  OhyoooohO.OOO.
+  OhqooqqoOOYhyO
+  OqqqqqqqOOqqqO
+  .OOOOOOO..OOO.

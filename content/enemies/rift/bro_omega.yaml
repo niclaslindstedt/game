@@ -9,6 +9,8 @@ role: boss
 levelBonus: 5
 sprite: bro_omega
 gore: sparks
+# WEALTH (config GOLD): it sold a rift to the lizards for a planet.
+wealth: 2
 hp: 850
 speed: 40
 radius: 20

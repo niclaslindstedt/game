@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_coin
+description: >-
+  A purse coming apart on the floor: a bright metallic chime with a second,
+  lower one a beat behind it, over a short hiss of loose change settling. Not
+  one object landing — several, which is what tells it apart from the trinket's
+  single tink.
+on:
+  type: itemLanded
+  kind: coin
+voices:
+  - call: tone
+    type: triangle
+    from: 1568
+    to: 2093
+    durationMs: 70
+    volume: 0.034
+    echo: 0.3
+  - call: tone
+    type: triangle
+    from: 1175
+    to: 1397
+    durationMs: 90
+    volume: 0.026
+    delayMs: 55
+    echo: 0.35
+  - call: noise
+    durationMs: 110
+    volume: 0.016
+    filter:
+      type: bandpass
+      frequency: 4600
+      q: 1.4

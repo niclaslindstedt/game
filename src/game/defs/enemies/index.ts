@@ -47,6 +47,7 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
     rarity: d.rarity,
     pack: d.pack,
     hellborn: d.hellborn,
+    wealth: d.wealth,
     hp: d.hp,
     levelBonus: d.levelBonus,
     speed: d.speed,

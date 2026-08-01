@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_coins_b
+family: effects
+size: [12, 8]
+description: >
+  One round coin lying flat with a smaller one fallen well clear of it — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: one round coin lying flat with a smaller one fallen well clear of it
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: one coin flat, one landed on its edge and stayed there
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+  W: "#f4f4f4" # the glint off a milled edge
+grid: |
+  .OOOO.......
+  OYWhyO......
+  OhyyhO......
+  OqqqqO......
+  .OOOO...OOO.
+  .......OYhyO
+  .......OqqqO
+  ........OOO.

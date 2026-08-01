@@ -35,7 +35,7 @@
 
 import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import { extractLoadout } from "../game/arrival.ts";
-import { STAMINA } from "../game/config/index.ts";
+import { AUTOPILOT, GOLD, STAMINA } from "../game/config/index.ts";
 import { reviveHero } from "./arrival.ts";
 import {
   botAct,
@@ -741,6 +741,46 @@ export type LevelReport = {
     /** Trained talents at run end, highest rank first. */
     ranks: { id: string; name: string; tree: TalentClass; rank: number }[];
   };
+  /**
+   * THE PURSE — what this run's play was WORTH in coins, split by where the
+   * coins came from.
+   *
+   * The two faucets are reported apart because they answer different questions
+   * and are moved by different levers. `fromDrops` is the gold shaken out of
+   * bodies (`GOLD.dropMult` is its knob); `fromSales` is what the run's loot
+   * fetched at the merchant's counter (the drop ladder and `ECONOMY`'s are).
+   * A tuning pass that read only the total could push one up while the other
+   * fell and call it a win.
+   *
+   * `autopilotMinutes` is the figure the whole block exists for: what the
+   * takings BUY, in minutes of AUTO PILOT at 1× (`AUTOPILOT.coinsPerSecond`).
+   * `farmMinutesPerAutopilotMinute` is the same number turned inside out — how
+   * long you have to play to buy a minute of not playing — and is what
+   * `GOLD.farmMinutesPerAutopilotMinute` is the target for.
+   */
+  purse: {
+    /** Coins picked up off the floor (gold piles). */
+    fromDrops: number;
+    /** Coins taken at the counter for loot the run hauled there. */
+    fromSales: number;
+    /** Both faucets together — what the run's play was worth. */
+    total: number;
+    /** Coins per simulated minute, both faucets. */
+    perMinute: number;
+    /** Share of the total that came off the floor, in [0, 1]. */
+    dropShare: number;
+    /** Minutes of AUTO PILOT at 1× the run's takings pay for. */
+    autopilotMinutes: number;
+    /** Minutes of FARMING that buy one minute of AUTO PILOT at 1× — the number
+     * `GOLD.farmMinutesPerAutopilotMinute` names the target for. Infinity when
+     * the run earned nothing at all. */
+    farmMinutesPerAutopilotMinute: number;
+    /** …and the TARGET it is measured against (`GOLD.farmMinutesPerAutopilot-
+     * Minute`), carried on the report rather than looked up by the reader: a
+     * `--json` dump read six months later has to say whether the run met the
+     * bar, not merely what it scored. */
+    farmTarget: number;
+  };
   drops: {
     /** Items that appeared on the ground, by kind. */
     spawnedByKind: Record<string, number>;
@@ -1074,6 +1114,8 @@ function playRun(args: {
     shotsFired: 0,
     xpGained: 0,
     jumps: 0,
+    goldCollected: 0,
+    coinsSold: 0,
   };
   const bot = createBot(args.strategy, args.profile);
   // THE REST OF THE PARTY (multiplayer plan §7.2). Seat 0 is `bot` above — the
@@ -1477,6 +1519,8 @@ function playRun(args: {
     banked.shotsFired += state.stats.shotsFired;
     banked.xpGained += state.stats.xpGained;
     banked.jumps += state.stats.jumps;
+    banked.goldCollected += state.stats.goldCollected;
+    banked.coinsSold += state.stats.coinsSold;
     attempt++;
     state = createGame(
       (args.seed + attempt * MORTAL_ATTEMPT_SEED_STRIDE) >>> 0,
@@ -2140,7 +2184,18 @@ function playRun(args: {
     shotsFired: banked.shotsFired + state.stats.shotsFired,
     xpGained: banked.xpGained + state.stats.xpGained,
     jumps: banked.jumps + state.stats.jumps,
+    goldCollected: banked.goldCollected + state.stats.goldCollected,
+    coinsSold: banked.coinsSold + state.stats.coinsSold,
   };
+
+  // THE PURSE, resolved once: both faucets summed, and the same figure priced
+  // in AUTO PILOT seconds — which is the only unit the gold knob is actually
+  // calibrated in (`GOLD.farmMinutesPerAutopilotMinute`). Priced at the 1×
+  // rung deliberately: the faster rungs charge a premium per wall-clock second
+  // (see AUTOPILOT.speeds), so a target stated against one of them would be a
+  // target about the premium rather than about the faucet.
+  const purseTotal = totals.goldCollected + totals.coinsSold;
+  const autopilotSeconds = purseTotal / AUTOPILOT.coinsPerSecond;
 
   const report: LevelReport = {
     levelId: args.levelId,
@@ -2262,6 +2317,19 @@ function playRun(args: {
           return { id, name: d.name, tree: d.tree, rank };
         })
         .sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name)),
+    },
+    purse: {
+      fromDrops: totals.goldCollected,
+      fromSales: totals.coinsSold,
+      total: purseTotal,
+      perMinute: round1(purseTotal / Math.max(1 / 60, now() / 60_000)),
+      dropShare: purseTotal > 0 ? round3(totals.goldCollected / purseTotal) : 0,
+      autopilotMinutes: round1(autopilotSeconds / 60),
+      farmMinutesPerAutopilotMinute:
+        autopilotSeconds > 0
+          ? round1(now() / 1000 / autopilotSeconds)
+          : Infinity,
+      farmTarget: GOLD.farmMinutesPerAutopilotMinute,
     },
     drops: {
       spawnedByKind,

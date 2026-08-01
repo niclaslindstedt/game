@@ -139,6 +139,11 @@ export function createGame(
   // mobs into a level leaves its main rng (obstacles, spawns, decor, and every
   // downstream combat/loot roll) byte-identical to what it was without them.
   const rareRng = createRng((seed ^ 0x5f356495) >>> 0);
+  // The GOLD stream (items/gold.ts): its own sequence so tuning the gold faucet
+  // leaves every equipment drop in a seeded run exactly where it was — the A/B
+  // that calibrates the knob compares gold against loot sales, and a shared
+  // stream would move both halves at once.
+  const goldRng = createRng((seed ^ 0x1f83d9ab) >>> 0);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
   const heroLevel = loadout?.level ?? 1;
   // REGULAR-mob scaling (spawn points, packs, waves, the opening scatter): when
@@ -763,6 +768,8 @@ export function createGame(
       damageDealt: 0,
       damageTaken: 0,
       itemsCollected: 0,
+      goldCollected: 0,
+      coinsSold: 0,
       xpGained: 0,
       xpLost: 0,
       timeMs: 0,
@@ -776,6 +783,7 @@ export function createGame(
     nextId,
     rng,
     fxRng,
+    goldRng,
   };
 
   // The hero has seen where he lands: the map opens with the spawn uncovered.

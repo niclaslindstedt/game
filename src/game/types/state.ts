@@ -1002,4 +1002,20 @@ export type GameState = {
    * fully reproducible.
    */
   fxRng: Rng;
+  /**
+   * A THIRD seeded stream, for the GOLD faucet alone (`items/gold.ts`) — the
+   * per-kill purse roll, its size, and where its piles scatter.
+   *
+   * Kept apart from `rng` for the same reason `fxRng` is, one step sharper:
+   * gold is CALIBRATED against the other faucet (what the run's loot sells
+   * for), and if a gold draw advanced the loot stream then moving
+   * `GOLD.dropMult` would reshuffle every equipment drop in the run — so the
+   * A/B that sets the knob would move both halves at once and measure nothing.
+   * It also means the whole feature perturbs no existing seeded loot test.
+   *
+   * Frozen and thawed with the other two (see `session-setup.ts`), so a run
+   * that crosses a process boundary or comes back off disk resumes the exact
+   * stream it left.
+   */
+  goldRng: Rng;
 };

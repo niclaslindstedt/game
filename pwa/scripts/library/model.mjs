@@ -18,6 +18,7 @@ import {
   RARE_MOBS,
   SECRET_LEVEL_ORDER,
   bandIndex,
+  carriesGold,
   hardMobHpScale,
   killXp,
   mobContactScaleFor,
@@ -61,6 +62,7 @@ export const ENEMY_FIELDS = {
   rarity: "the rarity chip, the opening line and the rare/unique note",
   pack: "the opening line's pack size",
   hellborn: "the HELLBORN chip and note",
+  wealth: "the WHAT IT WAS CARRYING note — how rich it was, in gold",
   hp: "the stat block, and the base the field table scales",
   levelBonus: "the stat block, and the field table's level",
   speed: "the stat block",
@@ -450,6 +452,13 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
     rarity: def.rarity ?? null,
     rarityTuning: rarity ?? null,
     hellborn: !!def.hellborn,
+    // WHAT IT WAS CARRYING (config GOLD): whether its corpse sheds coins at
+    // all, and how rich it was if it does. Both read off the engine's own rule
+    // rather than re-derived here, so the page can never claim a purse the
+    // drop does not pay.
+    purse: carriesGold(def)
+      ? { wealth: def.wealth ?? 1, authored: def.wealth !== undefined }
+      : null,
     sprite: `${def.sprite}_0`,
     gore: def.gore ?? "blood",
     // Only asked of a body that bleeds; nothing else can be burst.

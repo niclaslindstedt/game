@@ -8,6 +8,8 @@ lore: >-
 role: elite
 levelBonus: 6
 sprite: the_developer
+# WEALTH (config GOLD): he sold every suite in the bunker AND the fleets.
+wealth: 4
 hp: 2600
 speed: 10
 radius: 15

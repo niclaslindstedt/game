@@ -10,6 +10,8 @@ levelBonus: 4
 sprite: bro_alpha
 xpMobMult: 5
 gore: sparks
+# WEALTH (config GOLD): a controller running the park's hands, and its float with them.
+wealth: 1
 hp: 380
 speed: 34
 radius: 10

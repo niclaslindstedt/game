@@ -32,6 +32,7 @@ export * from "./inventory.ts";
 export * from "./stat-points.ts";
 export * from "./flow.ts";
 export * from "./toss.ts";
+export * from "./gold.ts";
 export * from "./edge.ts";
 export * from "./execute.ts";
 export * from "./burn.ts";

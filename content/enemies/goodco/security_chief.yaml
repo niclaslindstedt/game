@@ -7,6 +7,8 @@ lore: >-
 role: elite
 levelBonus: 3
 sprite: security_chief
+# WEALTH (config GOLD): he was paid well to forget, and never spent it.
+wealth: 2
 hp: 210
 speed: 30
 radius: 12

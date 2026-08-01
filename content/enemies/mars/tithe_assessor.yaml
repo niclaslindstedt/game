@@ -10,6 +10,8 @@ sprite: tithe_assessor
 disposition: neutral
 conversation: tithe_assessor
 gore: sparks
+# WEALTH (config GOLD): it is carrying the count, and the count is in coin.
+wealth: 2
 hp: 340
 speed: 30
 radius: 9

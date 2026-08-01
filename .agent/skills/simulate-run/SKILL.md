@@ -439,6 +439,28 @@ Fast-leveling opening maps read a higher trash share naturally (the hero
 out-levels his early drops by the clear), so read Δilvl across the campaign, not
 off one short map.
 
+**The GOLD table** (always printed) is the COIN economy's read: what the run's
+play was worth, split by which faucet paid it. `drops` is gold shaken out of
+bodies (`GOLD.dropMult` is its knob), `sales` is what the run's loot fetched at
+the merchant's counter (the drop ladder's and `ECONOMY`'s), and the right-hand
+columns price the takings in what they actually buy — `AP min`, minutes of AUTO
+PILOT at 1×, and `farm:AP`, minutes of PLAY per minute of watching it play
+itself.
+
+**Tune `GOLD.dropMult` against the GOLD ALONE line, never against both faucets.**
+The sell ladder is orders of magnitude wide (a single unique is worth a map of
+trash), so the combined figure swings by a factor of ten on whether one item
+dropped — two seeds of the same campaign measured 1.0:1 and 1.9:1 on the total
+while the gold half sat at 2.0:1 and 4.5:1. Read the total; tune to the gold.
+
+Two more things the table will show you and no other read will. **Bosses swing
+it hard** — a run that timed out before the boss and one that killed him differ
+by a factor of three, so compare runs that got equally far. And **gold is a
+property of WHO you fight**: the moon's dead and the rift's geometry are not
+humanoid and pay nothing from their rank and file, so those rows read a tenth of
+what the corporate maps do. That is the design, not a bug — but it means a
+single-map measurement is not a campaign measurement.
+
 **`--verdict`** distills the whole run to PASS/WARN/FAIL band checks — plus one
 overall line. It's the "does anything seem off?" answer without reading every
 table; the bands are generous by design (they flag gross regressions, not fine

@@ -158,6 +158,17 @@ export {
   outOfAmmoDesperation,
   type MercyRescue,
 } from "./game/items/index.ts";
+// GOLD (items/gold.ts): who carries a purse, what one is worth, and which pile
+// sprite a heap of coins wears. The app reads `goldSprite` to draw a drop; the
+// balance suites and the simulator read the other two to price a run's takings
+// without sampling a roll.
+export {
+  carriesGold,
+  dropGold,
+  expectedGold,
+  goldSprite,
+  goldValue,
+} from "./game/items/index.ts";
 
 // Loadout carry-over between levels: snapshot a finished run's progress,
 // dress the next run in it (via createGame's `loadout` parameter), or derive
@@ -1045,6 +1056,7 @@ export {
   DODGE,
   DOORS,
   ECONOMY,
+  GOLD,
   DEATH_SCENE,
   BOSS_DEATH,
   ENEMY_AI,

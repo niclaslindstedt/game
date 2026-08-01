@@ -628,6 +628,10 @@ export function sellItem(state: GameState, index: number): number | null {
   const paid = sellValue(item);
   state.players[0].inventory[index] = null;
   state.players[0].coins += paid;
+  // The recycling faucet's tally, beside the gold faucet's (`goldCollected`):
+  // the two together are what the run's play was worth in coins, which is the
+  // figure `GOLD.dropMult` is calibrated against.
+  state.stats.coinsSold += paid;
   if (state.autopilot.active) state.autopilot.coinsEarned += paid;
   return paid;
 }

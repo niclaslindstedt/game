@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Persisting a run: the whole GameState is plain JSON apart from its `rng`
-// closure, so it can be frozen to storage and thawed on reload. This suite
+// Persisting a run: the whole GameState is plain JSON apart from its THREE rng
+// closures, so it can be frozen to storage and thawed on reload. This suite
 // proves the round-trip is lossless AND that a thawed run keeps stepping the
 // exact same sequence a live one would — the guarantee behind the CONTINUE
 // button surviving an app update (see pwa/src/game/saved-run.ts).
@@ -16,10 +16,11 @@ import { DT, idle, run, startGame } from "./helpers.ts";
 // Everything the app persists: the state minus its (unserializable) rng
 // closures, with each stream's internal position snapshotted alongside.
 function freeze(state: GameState): string {
-  const { rng, fxRng, ...rest } = state;
+  const { rng, fxRng, goldRng, ...rest } = state;
   return JSON.stringify({
     rngState: rngState(rng),
     fxRngState: rngState(fxRng),
+    goldRngState: rngState(goldRng),
     state: { ...rest },
   });
 }
@@ -30,12 +31,14 @@ function thaw(json: string): GameState {
   const parsed = JSON.parse(json) as {
     rngState: number;
     fxRngState: number;
-    state: Omit<GameState, "rng" | "fxRng">;
+    goldRngState: number;
+    state: Omit<GameState, "rng" | "fxRng" | "goldRng">;
   };
   return {
     ...parsed.state,
     rng: createRngFromState(parsed.rngState),
     fxRng: createRngFromState(parsed.fxRngState),
+    goldRng: createRngFromState(parsed.goldRngState),
   };
 }
 

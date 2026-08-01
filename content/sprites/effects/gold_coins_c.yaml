@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_coins_c
+family: effects
+size: [13, 10]
+description: >
+  One larger round coin with two much smaller ones scattered away from it — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: one larger round coin with two much smaller ones scattered away from it
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: one good coin and the small change that came out with it
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+  W: "#f4f4f4" # the glint off a milled edge
+grid: |
+  .....OOOO....
+  ....OYWhyO...
+  ....OhyyhO...
+  ....OqqqqO...
+  .....OOOO....
+  .OOO.........
+  OYhyO...OOO..
+  OqqqO..OYhyO.
+  .OOO...OqqqO.
+  ........OOO..

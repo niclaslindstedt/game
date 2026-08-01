@@ -132,6 +132,28 @@ export function stepItems(state: GameState, dtMs: number): void {
         return false;
       }
 
+      // GOLD is the one pickup nothing can refuse: no bag cell, no stack cap,
+      // no dock — it goes straight into the purse of whoever walked over it and
+      // the pile is gone. That is deliberate rather than an oversight: every
+      // other drop in the game can be turned away and left lying there, and a
+      // cleared floor still glittering with money the hero could not carry
+      // would read as a bug in a way a refused medkit does not.
+      //
+      // Gold is PERSONAL, like everything else in the purse: it credits the
+      // hero standing on it, never the party. The party's shared payout is XP.
+      if (item.kind === "gold") {
+        player.coins += item.amount;
+        state.stats.goldCollected += item.amount;
+        state.stats.itemsCollected++;
+        state.events.push({
+          type: "itemCollected",
+          kind: "gold",
+          name: `${item.amount} GOLD`,
+          coins: item.amount,
+        });
+        return false;
+      }
+
       // The golden arrow: a flat, MOB-PRICED bonus — `arrowXp` pays a set few
       // kills' worth (`XP_TUNING.arrowXpKills`, authored in content/leveling.yaml)
       // of the mob that DROPPED it (`item.mlvl`), so an arrow shed by a low-level

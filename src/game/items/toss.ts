@@ -77,6 +77,10 @@ export function itemVoice(item: Item): ItemVoice {
     case "story":
     case "quest":
       return "relic";
+    // A purse hitting the floor and coming apart: loose small metal, and the
+    // one sound in the game a player learns to walk toward.
+    case "gold":
+      return "coin";
   }
 }
 

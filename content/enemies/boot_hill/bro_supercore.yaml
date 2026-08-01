@@ -11,6 +11,8 @@ levelBonus: 6
 sprite: bro_supercore
 locomotion: wheels
 gore: sparks
+# WEALTH (config GOLD): its whole project was keeping one man too rich to catch.
+wealth: 2
 hp: 1400
 speed: 0
 radius: 24

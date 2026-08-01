@@ -10,6 +10,8 @@ role: boss
 levelBonus: 8
 sprite: vault_warden
 gore: sparks
+# WEALTH (config GOLD): bolted to the treasury door, and holding what is behind it.
+wealth: 2
 hp: 2600
 speed: 16
 radius: 18

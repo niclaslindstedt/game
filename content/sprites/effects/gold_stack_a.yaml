@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_stack_a
+family: effects
+size: [12, 8]
+description: >
+  A low rounded heap of coins, wider than it is tall, the coins in it read as stacked discs — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: a low rounded heap of coins, wider than it is tall, the coins in it read as stacked discs
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: a handful, landed in a low heap
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+grid: |
+  ....OOOO....
+  ...OYYhyO...
+  ..OOhyyhOO..
+  .OYhqooqhyO.
+  .OhyooooyhO.
+  OYhqooqqohyO
+  OqqqqqqqqqqO
+  .OOOOOOOOOO.

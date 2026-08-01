@@ -183,6 +183,15 @@ a head among the meat, a `beast` throws the same viscera and bone with no face
 in it. Only a body that bleeds is ever asked, so a `sparks` monster authoring an
 `anatomy` is refused rather than ignored — it can never come apart.
 
+`wealth` is how rich the thing was in life — a multiplier on the GOLD its
+corpse sheds. Omitted is an ordinary pocket, and whether there is a purse at all
+is read off the body: something that walks on **legs** and is not a `beast`
+carries money, and a thing on `wheels` or one that `float`s does not. Set it
+above 1 for the moneyed (and to open the pockets of a machine or a haunting that
+should pay anyway); set it to `0` to close the pockets of something that would
+otherwise have paid. The compounded ceiling is what to watch — it multiplies
+with the role, so a `boss` at `wealth: 20` pays hundreds of ordinary bodies.
+
 Full reference: [`../content/enemies/`](../content/enemies).
 
 ### `mechanics:` — the set-piece moves

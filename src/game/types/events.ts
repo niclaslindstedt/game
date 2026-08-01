@@ -25,6 +25,16 @@ export type GameStats = {
   damageDealt: number;
   damageTaken: number;
   itemsCollected: number;
+  /**
+   * COINS PICKED UP OFF THE FLOOR this run (`items/gold.ts`) — the gold faucet's
+   * own tally, kept apart from `coinsSold` so the two halves of the coin economy
+   * can be read against each other. Together they are what an hour of farming
+   * paid, which is the figure `GOLD.dropMult` is calibrated against.
+   */
+  goldCollected: number;
+  /** COINS TAKEN AT THE COUNTER this run — what the merchant paid for the loot
+   * the run hauled to him (`sellItem`). The recycling half of the purse. */
+  coinsSold: number;
   xpGained: number;
   /** XP forfeited to the DEATH TOLL this run (`applyDeathXpPenalty`) — 0 until
    * the hero dies, then the share of the level's bar the death cost. Banked on
@@ -455,6 +465,12 @@ export type GameEvent =
        * that flows off a slain foe. Absent for pickups that grant no XP.
        */
       xp?: number;
+      /**
+       * COINS this pickup banked (gold piles only) — the app floats it as
+       * rising gold text over the hero, the way an arrow floats its XP. Absent
+       * for every pickup that isn't money.
+       */
+      coins?: number;
     }
   /**
    * A thrown drop touched down. This is the one that CLATTERS — a landing is

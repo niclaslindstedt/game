@@ -17,6 +17,8 @@ locomotion: float
 gore: ecto
 phasing: true
 levelBonus: 2
+# WEALTH (config GOLD): buried with it, and still holding on to it.
+wealth: 4
 hp: 340
 speed: 21
 radius: 15

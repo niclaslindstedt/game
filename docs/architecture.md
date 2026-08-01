@@ -809,6 +809,18 @@ escort.ts` walks the people an escort errand puts on the field, and
   victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the
   `map` pause phase (frozen sim, level-up priority on close) for the HUD's
   MAP button / the M key.
+- **`src/game/items/gold.ts`** — GOLD, the coin economy's other faucet (config
+  `GOLD`): what a body was carrying, shed on the floor when it falls. One funnel
+  (`dropGold`, called from `killEnemy`), and three rules. `carriesGold` decides
+  WHO pays from what the roster already says — something that walks on `legs`
+  and is not a `beast` is a humanoid and has pockets; a rover on treads, a
+  haunting that drifts and a rift-thing do not — with `EnemyDef.wealth`
+  overriding in both directions. One minion in FIVE pays, so a fight's floor
+  stays blood; the size makes up for the rate. And every draw comes off
+  `state.goldRng`, a third seeded stream beside `rng` and `fxRng`, so moving
+  `GOLD.dropMult` reshuffles no equipment drop — which is what lets the knob be
+  calibrated against the OTHER faucet (loot sales) rather than against itself.
+  `goldSprite` picks the pile's rung; the app glitters it (`render/gold.ts`).
 - **`src/game/merchant.ts`** — the WANDERING MERCHANT and his coin economy
   (config `MERCHANT` / `ECONOMY`): one trader per level (`state.merchant`,
   minted at creation on his own seeded rng stream — parked as a plain

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_heap_c
+family: effects
+size: [16, 11]
+description: >
+  A rounded heap of coins with a thick gold bar lying across its crown — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: a rounded heap of coins with a thick gold bar lying across its crown
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: a heap with the good stuff sitting on it
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+grid: |
+  ...OOOOOOOO.....
+  ..OYYhhhhyoO....
+  ..OqhoooooqO....
+  ...OOOOOOOO.....
+  ..OOhyqqhyOO....
+  .OYhyoqqoyhyO...
+  .OOhyooooooyhOO.
+  OYhqooqqooqqohyO
+  OhqooqooqooqooqO
+  OqqqqqqqqqqqqqqO
+  .OOOOOOOOOOOOOO.

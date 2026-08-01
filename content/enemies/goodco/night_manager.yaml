@@ -8,6 +8,8 @@ lore: >-
 role: elite
 levelBonus: 3
 sprite: night_manager
+# WEALTH (config GOLD): he has priced his own silence carefully.
+wealth: 2
 hp: 150
 speed: 22
 radius: 12
