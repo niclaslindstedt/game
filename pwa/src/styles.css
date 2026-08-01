@@ -5919,6 +5919,24 @@ html.app-locked body {
   margin: 0 auto;
 }
 
+/* ---- The drive-out curtain (the hub's departure) -------------------------- */
+
+/* The wash to black over a car driving away down the road (the engine's
+   `state.departure`; opacity written every frame by render-frame.ts). It sits
+   ABOVE the .game-overlay tier because a departure takes the whole picture —
+   field, HUD, splashes and all — and it is `pointer-events: none` at every
+   opacity: the beat is short, the run is already committed, and a sheet that
+   swallowed taps would only make the last second feel broken. The same colour
+   the level-name card lands on, so the handover into it is invisible. */
+.departure-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  background: #06070c;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ---- The level-name card (name alone on black before the drop) ------------ */
 
 /* Opaque from the first frame — the world keeps rendering underneath, so a

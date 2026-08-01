@@ -90,6 +90,11 @@ export function missionLead(mission) {
     lines.push(
       `It is a home rather than a mission: nothing here ends, and its doors are the way out — ${doors}.`,
     );
+    if (mission.driveOut) {
+      lines.push(
+        `The car is the one you leave in rather than through: the road runs down the far edge of the lot, and the trip is not booked until the wheels are on it.`,
+      );
+    }
   }
 
   return lines;

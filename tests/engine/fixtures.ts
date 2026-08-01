@@ -1643,6 +1643,21 @@ export const FIX_GARAGE_LEVEL: LevelDef = {
   ],
 };
 
+// THE GARAGE WITH A ROAD OUT — the same hub, its bay door hung exactly where
+// the twin above hangs one, plus the strip of public tarmac a driven car is
+// really gone at (`driveOut`). It is the SUPERSET on purpose: the point of the
+// road is that it OUTRANKS the door it stands beyond, so a fixture that dropped
+// the door could not prove the ordering at all. The strip runs north-south well
+// east of the threshold (car parks at x 700, door at x 800, road from x 1000),
+// so the bumper crosses the doorway a long moment before it reaches tarmac.
+export const FIX_ROAD_LEVEL: LevelDef = {
+  ...FIX_GARAGE_LEVEL,
+  id: "test_road_level",
+  driveOut: [
+    { shape: "rect", rect: { x: 1000, y: 0, width: 120, height: 1600 } },
+  ],
+};
+
 // A SECOND-CHAPTER level (index 2) for the seasoned-arrival rules: starting
 // here must derive the player's level from test_level's roster and hand over
 // its kit (see src/game/arrival.ts). Geometry is the reference level's.
@@ -2166,6 +2181,7 @@ export function installFixtures(force = false): void {
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_hub_level: FIX_HUB_LEVEL,
       test_garage_level: FIX_GARAGE_LEVEL,
+      test_road_level: FIX_ROAD_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,

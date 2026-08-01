@@ -163,6 +163,9 @@ function pickSpawnChamber(
   width: number,
   height: number,
   rng: Rng,
+  /** Did an AUTHORED PLAN draw these rooms? Then `spawn: false` is the law
+   * rather than a preference — see the LONG WALK note at the bottom. */
+  planned = false,
 ): Chamber {
   const fromGoal = doorDistances(grid, goal.id);
   const goalMid = chamberCenter(goal);
@@ -228,7 +231,16 @@ function pickSpawnChamber(
   // outdoor cell on a floor of sealed labs — and then the preference decides the
   // landing all by itself, boss in plain sight. When that happens the whole map
   // is back in play and the far side of it wins.
-  return gap(pick) >= floor || pool === anywhere
+  //
+  // UNDER AN AUTHORED PLAN IT IS THE RULE INSTEAD, for the same reason
+  // `plan.goal` beats the rolled one: the districts are DRAWN, not grown, so
+  // "the carve came out short of somewhere to land" cannot happen and the
+  // fallback has nothing to rescue. Left in, it quietly overrules the author —
+  // adding a strip of road down one edge of the garage stretched the map's
+  // diagonal past this floor and the hero opened the hub standing in the middle
+  // of the public highway, with the roll-up door hung on the wrong room behind
+  // him.
+  return gap(pick) >= floor || pool === anywhere || planned
     ? pick
     : pickFarthest(anywhere);
 }
@@ -691,6 +703,7 @@ export function generateLevel(
     spec.width,
     spec.height,
     rng,
+    bp.plan !== undefined,
   );
   // The ANNEX, appended AFTER both endpoints are chosen so it can never be picked
   // as one: it is not a candidate for anything, it is where the lift goes. It
@@ -1053,6 +1066,16 @@ export function generateLevel(
     label: bp.plan ? (areaOf(bp.areas, spawn).label ?? "LANDING") : "LANDING",
   });
 
+  // THE ROAD OUT: the districts a driven car leaves by, as plain rects — the
+  // cell rather than a circle inside it, because the whole point of the strip is
+  // that touching its tarmac at all is the departure (see `MapArea.driveOut`).
+  const driveOut: Zone[] = grid.chambers
+    .filter((c) => areaOf(bp.areas, c).driveOut === true)
+    .map((c) => ({
+      shape: "rect",
+      rect: { x: c.x, y: c.y, width: c.w, height: c.h },
+    }));
+
   // --- The errand cast ------------------------------------------------------
   // The blueprint's NON-COMBATANTS: the handful of neutral mobs an errand sends
   // the hero to talk to. They are cast rather than horde, so they are named one
@@ -1222,6 +1245,7 @@ export function generateLevel(
     safeZones,
     quietZones,
     merchantSpawns: [merchantAt],
+    ...(driveOut.length > 0 ? { driveOut } : {}),
     obstacles: buildObstacles(bp, grid, rng),
     decor: buildDecor(bp, grid, rng),
     walls,

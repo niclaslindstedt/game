@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: asphalt_0
+family: goodco
+size: [16, 16]
+description: >
+  The public road at the end of the driveway — dark laid tarmac, coarse and
+  matte, several shades below the swept pavement it meets.
+subject:
+  kind: "ground tile (road tarmac)"
+  build: "a patch of laid asphalt, coarse and matte"
+  features: "loose aggregate speckle, faint sun-bleached patches, no markings"
+  accent: "dark neutral greys"
+  flavor: "the county's tarmac, not the household's concrete"
+palette:
+  A: "#45474e" # laid tarmac
+  a: "#3f4148" # worn tarmac
+  V: "#4e5058" # pale aggregate
+  s: "#383a41" # dark grit
+grid: |
+  AAAsAAAAAAVAAAAA
+  AAAAAAaAAAAAAsAA
+  AVAAAAAAAAAAAAAA
+  AAAAsAAAAAaAAAVA
+  AAAAAAAAVAAAAAAA
+  AaAAAAsAAAAAAAAA
+  AAAAVAAAAAAAsAAA
+  AAAAAAAAAaAAAAAA
+  AAsAAAAVAAAAAAaA
+  AAAAAAAAAAAsAAAA
+  AVAAAaAAAAAAAAVA
+  AAAAAAAAsAAAAAAA
+  AAAAVAAAAAAAaAAA
+  AsAAAAAAAVAAAAAA
+  AAAAAaAAAAAAsAAA
+  AAVAAAAAAAAAAAAA

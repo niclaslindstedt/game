@@ -67,6 +67,7 @@ export const LEVEL_FIELDS = {
   gates: "the secret-gate note",
   exitTo: "the RETURNS TO row",
   travelDoors: "the DOORS list — the hub's standing doors and their roads",
+  driveOut: "the DOORS list — that the car door is driven out to a real road",
   wells: "the map render and the hazards section",
   chests: "the map render and the CHESTS note",
   placedItems: "the loot section's hand-placed finds",
@@ -338,6 +339,11 @@ function missionModel(level, order) {
       to: door.to.map((id) => missionLink(id)).filter(Boolean),
       requires: door.requires ? (itemLink(door.requires) ?? null) : null,
     })),
+    // Does this venue have a ROAD OUT (LevelDef.driveOut) — tarmac a driven car
+    // leaves by, rather than a threshold it books the trip at? Reader-facing as
+    // a fact about the car door: you drive off the property, you don't blink out
+    // of the driveway.
+    driveOut: (level.driveOut ?? []).length > 0,
     lockedDoors: (level.doors ?? []).length,
     chests: (level.chests ?? []).length,
     safeZones: (level.safeZones ?? []).length,

@@ -2677,9 +2677,13 @@ mechanisms under it are the ones §6.3 priced:
   it (`enterCar`, a run command like every other verb; `PROTOCOL_VERSION`
   bumped) and starts the engine
   (`carStarted`, the cadenced `carEngine` rumble, lights and body shiver);
-  driving `CAR.departDistance` from home books `carDeparted` once and the
-  app travels to the car door's destination. The driving/flying minigames
-  remain a later phase — the drive-out is deliberately collision-free.
+  driving out to the level's ROAD (`LevelDef.driveOut`; the garage door's
+  threshold and `CAR.departDistance` are the fallbacks for a venue with no
+  road) opens the DRIVE-OUT beat — `state.departure`, the engine steering the
+  car away up the road while the app washes the screen to black — which books
+  `carDeparted` once at its end, and the app travels to the car door's
+  destination. The driving/flying minigames remain a later phase — the
+  drive-out is deliberately collision-free.
 - **THE STORY CHAIN RAN FIRST**, with the manuscript's confirmation on the
   record: the campaign now opens at home (`docs/story.md` "Home — THE GARAGE
   (hub)", the prelude cutscene re-homed), and the RIFT CREATOR's lore pages

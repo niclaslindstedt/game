@@ -745,6 +745,7 @@ export function createGame(
     staminaEmptyMs: 0,
     staminaRegenLockMs: 0,
     deathScene: null,
+    departure: null,
     victoryCountdownMs: null,
     bossCorpse: null,
     bossDeath: null,

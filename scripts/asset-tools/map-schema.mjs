@@ -345,6 +345,19 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: spawn must be a boolean`);
       if (a.once !== undefined && typeof a.once !== "boolean")
         err(`${where}: once must be a boolean`);
+      if (a.driveOut !== undefined) {
+        if (typeof a.driveOut !== "boolean")
+          err(`${where}: driveOut must be a boolean`);
+        // A road out is where a DRIVEN car leaves, and the only car in the game
+        // is the one a hub's `car` travel door stands on. Marking a district on
+        // a map with no such door compiles a departure strip nothing can ever
+        // reach — silent, and exactly the kind of thing this gate is for.
+        else if (a.driveOut === true && bp.plan === undefined)
+          err(
+            `${where}: driveOut belongs to an AUTHORED plan — a rolled carve ` +
+              `puts the strip wherever the seed likes, which is not a road`,
+          );
+      }
       if (a.lock !== undefined) {
         if (typeof a.lock !== "boolean")
           err(`${where}: lock must be a boolean`);
@@ -388,6 +401,7 @@ export function validateMap(bp, refs, description = "") {
         "horde",
         "boss",
         "spawn",
+        "driveOut",
         "label",
         "ground",
         "patch",

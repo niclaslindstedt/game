@@ -52,15 +52,19 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
 
 - **Home — THE GARAGE (hub)** (`content/levels/garage.yaml`). The campaign
   opens here and every earthside victory returns here: the hero's own lot,
-  and SMALL on purpose (400×280 — a Left 4 Dead staging area, not a level),
-  laid out as the prelude cutscene's own establishing shot via an **authored
+  and SMALL on purpose (512×280, of which the lot is the western 400 — a
+  Left 4 Dead staging area, not a level), laid out as the prelude cutscene's
+  own establishing shot via an **authored
   floor plan** (`MapBlueprint.plan` — drawn rooms, not a BSP roll): the snug
   GARAGE BAY southwest (poured cement — no tile grid — oil patches, papers
   and cable on the floor, the WORKBENCH and tool chests standing against the
   walls via `edge:` scatter, the CAR mid-floor, the ROLL-UP GARAGE DOOR on
   its east wall), the clean PAVED DRIVE out front of the door (the house
-  stands just south of it, off the map's edge), and the LAWN across the
-  whole back of the lot where the half-built ship stands. **No fog of war**
+  stands just south of it, off the map's edge), the LAWN across the
+  whole back of the lot where the half-built ship stands, and — down the far
+  east edge, past a grass verge, the one strip of the map that is not the
+  household's — THE ROAD: two lanes of tarmac with a painted centre line,
+  running off both ends of the map. **No fog of war**
   (`revealed:` — a man knows his own garage) and **no loot**: no chests, no
   breakable crates, just furniture. Its objective is **`hub`** — it never
   clears; no victory, outro or bank can fire, and a player (or a joining
@@ -80,8 +84,14 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   home. The only decisions are the
   three **travel doors** (`LevelDef.travelDoors`): the CAR (tap to board —
   the engine starts, lights and idle rumble on — then DRIVE: W throttles
-  along the nose, S brakes then reverses, A/D steer the rolling car;
-  crossing the open garage door's threshold commits the trip → GOODCO HQ),
+  along the nose, S brakes then reverses, A/D steer the rolling car; the
+  roll-up opens on approach and the trip commits when the wheels reach THE
+  ROAD (`MapArea.driveOut` → `LevelDef.driveOut`), not at the door, because a
+  car on its own drive has not gone anywhere. Reaching the tarmac opens the
+  **DRIVE-OUT** (`GameState.departure`, config `DEPARTURE`): the wheel leaves
+  the player's hands, the engine steers the car into the right-hand lane and
+  away up the road, and the app washes the whole screen — field, HUD and all
+  — to black over ~1.7 s before the next level is built → GOODCO HQ),
   the ROCKET on the lawn (→ the moon, Mars — but it opens NO picker while
   every road is still shut: the ship is one part short until GOODCO HQ falls,
   and the tap plays the hero's own read on it instead

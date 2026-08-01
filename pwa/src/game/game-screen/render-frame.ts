@@ -15,6 +15,7 @@ import type {
 
 import {
   abilityDef,
+  DEPARTURE,
   PLAYER,
   type Bot,
   type GameInput,
@@ -50,6 +51,7 @@ import { shotStyleFor } from "../weapon-fx.ts";
 import type { DemoDirector } from "./demo-director.ts";
 import { buildHud, type Hud } from "./hud-model.ts";
 import { XP_BAR_HOT_MS } from "./event-fx.ts";
+import { ARRIVAL_FADE_MS } from "./run-progress.ts";
 import type { LoopShared } from "./loop-shared.ts";
 import { DPAD_DEADZONE_PX, DPAD_RING_PX } from "./player-input.ts";
 import type { RunTuning } from "./run-setup.ts";
@@ -82,6 +84,15 @@ export function createRenderFrame(deps: {
    * publishing it through React re-rendered the HUD dozens of times a
    * second and still stepped at the change-key's resolution). */
   staminaFillRef: RefObject<HTMLDivElement | null>;
+  /** The DRIVE-OUT curtain (`GameState.departure`) — a screen-space black
+   * sheet over the whole game screen, its opacity written here every frame.
+   * Not a canvas wash: the departure has to take the HUD and the overlays
+   * with it, and those are DOM. */
+  departureRef: RefObject<HTMLDivElement | null>;
+  /** The deadline (rAF clock) the ARRIVING run lifts that same curtain off by
+   * — parked by the departing run, since the arriving state has no memory of
+   * the beat that brought it here. 0 on every ordinary run. */
+  arrivalFadeRef: MutableRefObject<number>;
   dpadRef: RefObject<HTMLDivElement | null>;
   botDpadRef: RefObject<HTMLDivElement | null>;
   powerupDockRef: RefObject<HTMLDivElement | null>;
@@ -112,6 +123,8 @@ export function createRenderFrame(deps: {
     fpsRef,
     xpHeatRef,
     staminaFillRef,
+    departureRef,
+    arrivalFadeRef,
     dpadRef,
     botDpadRef,
     powerupDockRef,
@@ -361,6 +374,32 @@ export function createRenderFrame(deps: {
         shared.lastXpGainMs !== undefined &&
         state.stats.timeMs - shared.lastXpGainMs <= XP_BAR_HOT_MS;
       xpHeatNode.classList.toggle("is-hot", hot);
+    }
+
+    // THE DRIVE-OUT: the car has reached the road and is driving itself away,
+    // so the picture lets go rather than being switched off. Eased in (the
+    // smoothstep the death scene's push-in uses) and full black by
+    // `DEPARTURE.fadeAt` of the beat, which is deliberately short of its end —
+    // the run is torn down BEHIND black, not under a fade still lifting.
+    // Written straight to the DOM for the same reason every driver above is:
+    // this moves every frame and React must never own it.
+    const departureNode = departureRef.current;
+    if (departureNode) {
+      const scene = state.departure;
+      const going = scene
+        ? clamp(scene.ms / (DEPARTURE.durationMs * DEPARTURE.fadeAt), 0, 1)
+        : 0;
+      // …and the far side of it: an arriving run lifts the black the departing
+      // one left, so the two halves read as one move instead of a black frame
+      // and then a lit level. `max` rather than a branch — a run that both
+      // arrived and is leaving again keeps whichever curtain is heavier.
+      const coming = clamp(
+        (arrivalFadeRef.current - timeMs) / ARRIVAL_FADE_MS,
+        0,
+        1,
+      );
+      const prog = Math.max(going, coming);
+      departureNode.style.opacity = (prog * prog * (3 - 2 * prog)).toFixed(3);
     }
 
     // The stamina bar: the sprint pool moves every simulated tick while the

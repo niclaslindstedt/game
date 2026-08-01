@@ -111,6 +111,19 @@ export type MapArea = {
   /** May the hero LAND here? Default true. */
   spawn?: boolean;
   /**
+   * THE ROAD OUT: a DRIVEN car that reaches this district has left — the trip
+   * its travel door names is booked from here rather than from the garage
+   * door's own threshold.
+   *
+   * A departure wants somewhere to depart TO. Booking the trip at the roll-up
+   * meant the drive ended the moment the bumper cleared the door: the car was
+   * still in its own driveway, nose barely straight, and the screen cut. A
+   * strip of public road along the map's edge gives the beat its second half —
+   * out of the bay, across the drive, onto the road — and the road is where the
+   * level lets go. Compiled into `LevelDef.driveOut`; see `vehicles.ts`.
+   */
+  driveOut?: boolean;
+  /**
    * The area's OWN GROUND, as a `TileSpec` ground pair (and optional patch pair)
    * of sprite names. This is what makes a district legible: without it every cell
    * is the same floor and the wall around a compound reads as a stub of rock in

@@ -202,6 +202,11 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "cutsceneQueue",
       "deathScene",
       "decor",
+      // THE DRIVE-OUT scene (the hub's departure). Additive and null on every
+      // tick but the beat's own — every reader tests it for truth, so a v25
+      // snapshot thawing without it behaves exactly as one that has it null:
+      // no version bump.
+      "departure",
       "dialogue",
       "dialogueMuted",
       "difficulty",
