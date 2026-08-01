@@ -339,6 +339,7 @@ export {
   isAutoEquipEnabled,
   isPassiveItem,
   isScrappableLoot,
+  isTrashLoot,
   isArmorBroken,
   isWeaponBroken,
   isSpecialItem,

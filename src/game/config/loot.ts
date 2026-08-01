@@ -348,6 +348,21 @@ export const LOOT = {
    */
   baseInventorySize: 3,
   /**
+   * HOW FAR BELOW THE HELD WEAPON A SPARE HAS TO SIT before the TRASH sweep
+   * will part with it, in item levels. It exists because a weapon is not loot
+   * like any other loot: a bag with no armor in it costs the hero some armor,
+   * and a bag with no WEAPON in it can cost him the run — his blade snaps, his
+   * rifle runs dry, and the only thing left in the holster is the sidearm.
+   *
+   * So the sweep is not allowed to price a spare weapon the way it prices a
+   * spare helmet. "Worse than what I am holding" describes every backup ever
+   * carried; a real backup is only trash once the hero has climbed a long way
+   * past it, and ten levels is roughly a whole difficulty rung of climbing.
+   * See `isScrappableLoot`, which also spares the best piece of each weapon
+   * CLASS outright, however far behind it has fallen.
+   */
+  trashWeaponIlvlMargin: 10,
+  /**
    * BAGS — the unarmed half of the SECOND ARM, and the light build's answer to
    * it. A bag carries no armor at all; what it pays is CELLS, and
    * `slotsPerIlvl` is how fast a deep find of one grows them: the same WoW

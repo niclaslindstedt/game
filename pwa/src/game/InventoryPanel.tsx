@@ -35,7 +35,7 @@ import {
   gateKeyTarget,
   isArmorBroken,
   isWeaponBroken,
-  isScrappableLoot,
+  isTrashLoot,
   reviveTarget,
   wouldUpgradeSlot,
   type EquipSlot,
@@ -373,11 +373,13 @@ export function InventoryPanel({
   const player = localHero(state);
   // How many bag pieces the SCRAP sweep would clear right now — loot the hero
   // has outgrown (worse than what's worn, and not a trinket/trophy the engine
-  // spares). Drives the button's count and its disabled state so it never
-  // destroys anything when there's nothing junk to cull.
+  // spares), MINUS the backup weapons it refuses to destroy. Drives the
+  // button's count and its disabled state so it never destroys anything when
+  // there's nothing junk to cull — and, because it is the sweep's own
+  // predicate, the badge can never promise a cull the sweep won't make.
   const scrapCount = player.inventory.filter(
     (item): item is Equipment =>
-      item !== null && isScrappableLoot(state, player, item),
+      item !== null && isTrashLoot(state, player, item),
   ).length;
   // How many slots AUTO-EQUIP would improve right now — drives the button's
   // count and its disabled state so it never runs on an already-optimal

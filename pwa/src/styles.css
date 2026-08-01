@@ -7475,10 +7475,18 @@ canvas.tier-artifact {
    the inventory's paper doll. It replaced a hover popover tucked under the old
    inventory portrait, which meant the hero's own numbers were the one screen
    in the game you had to know about to find. */
+/* THE WHOLE SHEET IS TRIMMED AROUND ITS TEXT, NOT AROUND A COMFORTABLE GAP.
+   Every figure on it prints at scale 2 (SHEET_SCALE in CharacterSheet.tsx), so
+   the page is twice as tall as the one this padding was chosen for — and the
+   short viewports are the tablets, whose 2x root font leaves the iPad mini
+   21.9rem of usable height in landscape. The gaps below buy that back: at the
+   sizes here the whole sheet measures ~20.7rem, so it still lands WITHOUT a
+   scrollbar on the shortest screen the game runs on. Anything added to this
+   panel is added against that budget. */
 .char-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.7rem;
   /* Sized so the four groups always land as a 2x2 rather than 3-and-a-widow:
      the `auto-fit` track below fits exactly two columns at this width in every
      root-font regime, and one orphaned group under three is the layout this
@@ -7488,7 +7496,7 @@ canvas.tier-artifact {
   max-height: 94vh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 1rem 1.1rem 1.1rem;
+  padding: 0.8rem 0.9rem 0.9rem;
   box-sizing: border-box;
 }
 
@@ -7497,7 +7505,7 @@ canvas.tier-artifact {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.7rem;
 }
 
 .char-bust {
@@ -7505,8 +7513,8 @@ canvas.tier-artifact {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 4rem;
-  height: 4rem;
+  width: 3.5rem;
+  height: 3.5rem;
   background:
     radial-gradient(
       circle at 50% 35%,
@@ -7522,7 +7530,7 @@ canvas.tier-artifact {
 
 .char-bust-img {
   width: auto;
-  height: 3rem;
+  height: 2.6rem;
 }
 
 .char-bust-level {
@@ -7566,14 +7574,19 @@ canvas.tier-artifact {
 .char-groups {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .char-group {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  padding: 0.5rem 0.6rem;
+  /* The horizontal padding is the other half of the width budget: at scale 2
+     the widest row on the sheet (ARMOR and its reduction) measures ~7.9rem, and
+     the narrowest column the 2-up grid ever hands out — the iPad mini in
+     portrait — is 9.55rem. That leaves the padding here just under a rem to
+     spend on both sides together. */
+  padding: 0.4rem 0.5rem;
   background: rgba(4, 6, 9, 0.6);
   border: 1px solid #232b35;
   border-radius: 4px;
@@ -11354,7 +11367,9 @@ canvas.tier-artifact {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  /* The speaker's name is a label for the speech under it, so it owes the same
+     air the speech's own rows get — at 0.2rem it sat on the first line. */
+  gap: 0.4rem;
 }
 
 .quest-speaker {
@@ -11366,11 +11381,16 @@ canvas.tier-artifact {
    column wider than `.quest-content`, the ResizeObserver would measure the
    bigger box, the next wrap would be wider still, and the speech would walk off
    the right edge of the modal. Same reason `.quest-content` carries it. */
+/* THE LEADING IS THE DIALOGUE BOX'S (0.4rem), not a tighter one of its own. The
+   speech used to sit at 0.1rem — a 5px glyph with a 1.6px gap under it — so a
+   two-line ask read as one solid block of capitals with no air to find the next
+   line in. A quest offer is the longest prose the game asks anybody to read on a
+   phone; it owes at least the leading a one-line bark gets. */
 .quest-lines {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 0.1rem;
+  gap: 0.4rem;
 }
 
 /* The contract. Boxed off from the speech so the player can find "what does
@@ -11379,8 +11399,8 @@ canvas.tier-artifact {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 0.1rem;
-  padding: 0.35rem 0.5rem;
+  gap: 0.4rem;
+  padding: 0.45rem 0.5rem;
   background: rgba(6, 8, 12, 0.4);
   border-left: 2px solid rgba(255, 215, 94, 0.4);
 }
@@ -11391,7 +11411,9 @@ canvas.tier-artifact {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 0.05rem;
+  /* A hair under the speech's leading: these rows are one WRAPPED sentence, so
+     they want to read as a block while still being separable. */
+  gap: 0.3rem;
 }
 
 /* THE PICK LIST — this person's whole slate, one row each. The row's mark is
@@ -11468,8 +11490,8 @@ canvas.tier-artifact {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 0.15rem;
-  padding: 0.35rem 0.5rem;
+  gap: 0.3rem;
+  padding: 0.45rem 0.5rem;
   background: rgba(6, 8, 12, 0.3);
 }
 
