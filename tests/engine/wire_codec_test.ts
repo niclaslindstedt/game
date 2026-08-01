@@ -92,7 +92,7 @@ describe("frame codec", () => {
     });
 
     it("never throws on random bytes", () => {
-      // The cheap ancestor of phase 5's fuzz test. Deterministic, so a failure is
+      // The cheap ancestor of `net_fuzz_test.ts`. Deterministic, so a failure is
       // reproducible rather than a flake nobody can chase.
       let seed = 0x2545f491;
       const next = () => {

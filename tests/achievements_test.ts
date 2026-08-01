@@ -297,7 +297,7 @@ describe("lifetime totals reducer", () => {
   });
 
   it("books a party run for the badges and not for the boards", () => {
-    // §5.3's two rules, which genuinely disagree: a party kill counts for
+    // The party stamp's two rules, which genuinely disagree: a party kill counts for
     // everyone present (or half the badges are unearnable in the mode the
     // player is enjoying), and a party run reaches no ranking at all.
     const totals = emptyTotals();

@@ -7,7 +7,7 @@
 // bound to and taken apart again.
 //
 // **THE PORT WALK IS THE HEADLINE.** "The HOST screen shows the port the socket
-// actually got, not the one that was requested" is stated as a rule in the plan
+// actually got, not the one that was requested" is stated as a rule
 // because it is the exact bug that makes "direct connect doesn't work"
 // unanswerable: a host reads 27015 off a settings page, a joiner types 27015,
 // and the socket is on 27016 because a second copy of the game was already

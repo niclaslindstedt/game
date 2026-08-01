@@ -15,8 +15,8 @@
 //                               event plays three times over
 //
 // Only the local driver is exercised here. The net driver needs a forked
-// session process and a packaged shell, which is `docs/multiplayer-plan.md`
-// §1.75.4's debt; what IS testable is that the local driver still behaves
+// session process and a packaged shell, which is a debt still
+// open; what IS testable is that the local driver still behaves
 // exactly as the loop's own `step()` call did, which is the regression that
 // would reach every player rather than only a host.
 

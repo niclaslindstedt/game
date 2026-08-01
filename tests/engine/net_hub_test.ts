@@ -451,7 +451,7 @@ describe("leaving", () => {
 });
 
 describe("multiplayer is licensed through Steam", () => {
-  // DECISION 15. The game ships under PolyForm-Noncommercial and the
+  // THE LICENCE GATE. The game ships under PolyForm-Noncommercial and the
   // multiplayer right travels with the Steam copy, so a session carried by
   // anything other than the Steam relay is unlicensed play — whoever set it up
   // and whatever they meant by it. The hub is the one door every path into a

@@ -155,7 +155,7 @@ describe("admit", () => {
     expect(admit(request({ seats: 2, maxSeats: 2 }))).toBe("session-full");
   });
 
-  it("holds hardcore and softcore apart, in both directions (§4.2)", () => {
+  it("holds hardcore and softcore apart, in both directions", () => {
     // A hardcore hero never lands under a softcore host's rules…
     expect(admit(request({ joinerHardcore: true }))).toBe("hardcore-mismatch");
     // …and a softcore hero never tours a game played for keeps.

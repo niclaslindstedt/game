@@ -2,9 +2,8 @@
 // WHERE THE NET CLIENT MAY AND MAY NOT BE REACHED FROM — two rules pulling in
 // opposite directions, which is why they live in one file.
 //
-// **THE RUN LOOP MUST REACH IT.** The plan was amended twice for the same
-// failure: a LAYER ships and the CUTOVER that would make it reachable does not
-// (phase 1 and phase 2 both, see `docs/multiplayer-plan.md`'s amendments). Both times
+// **THE RUN LOOP MUST REACH IT.** The same failure shipped twice: a LAYER
+// lands and the CUTOVER that would make it reachable does not. Both times
 // the corrective was more prose, and prose was nought for two. So this began as
 // a TRIPWIRE — an assertion that the loop did NOT reach the client, green while
 // the machinery was orphaned and failing the moment somebody wired it up — and
@@ -18,7 +17,7 @@
 // `@game/core`, so a static edge to it from the app's first download drags the
 // whole simulation along. `pwa/scripts/check-seo.mjs` measures the built bytes;
 // this says WHICH IMPORT would have caused it, which is the half a size number
-// cannot tell you — and it is the rule phase 2.5's title-menu screens will be
+// cannot tell you — and it is the rule the HOST/JOIN title-menu screens will be
 // tempted to break.
 
 import { readFileSync } from "node:fs";
@@ -38,8 +37,8 @@ const RUN_LOOP = path.join(repoRoot, "pwa", "src", "game", "GameScreen.tsx");
  *
  * It lives in `server/` rather than under `pwa/`, and the walk below is exactly
  * why that is safe to do: it is the ONE thing that turns snapshots back into a
- * run, a headless BOT CLIENT needs it too (`server/bot-client.ts`, plan
- * §7.2.5), and a second copy written beside it would prove the wrong thing
+ * run, a headless BOT CLIENT needs it too (`server/bot-client.ts`),
+ * and a second copy written beside it would prove the wrong thing
  * playable. Reached as `@game/client`.
  */
 const NET_CLIENT = path.join(repoRoot, "server", "client.ts");
@@ -173,8 +172,8 @@ describe("the app's startup path", () => {
     // rather than as the number that would report it. `pwa/src/game/net/`
     // imports `@game/core`; a static edge from the startup path to it puts the
     // whole simulation — the catalogs, the step pipeline, the loot roller, the
-    // carve — into every player's first download. The HAND and JOIN screens of
-    // phase 2.5 are title-menu screens and are exactly where this will be tempting:
+    // carve — into every player's first download. The HAND and JOIN screens
+    // are title-menu screens and are exactly where this will be tempting:
     // they may reach `@game/menu` and the import-free `@game/wire/*` leaves,
     // never this.
     expect(startup.has(NET_CLIENT)).toBe(false);

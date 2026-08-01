@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The pause screen: per-player since plan §3.2 — the phase stays `playing`
+// The pause screen: per-player since the screens split — the phase stays `playing`
 // and the hero's own `screen` carries the menu. Solo, one hero with the menu
 // up freezes the world (and its clock) exactly as the old `paused` phase did.
 
