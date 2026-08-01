@@ -6744,10 +6744,41 @@ html.app-locked body {
   grid-column: 2;
 }
 
-/* The purse — D2 hangs the gold under the panel, and so does this. */
+/* A FOOT-RAIL READOUT — the purse, and one per ammunition kind. D2 hangs its
+   gold in a CUTOUT under the panel rather than as loose text on the plate, and
+   so does this: every count on the rail wears the same recessed socket the
+   doll's own slots wear (`.inv-cell.doll-slot`), so the foot reads as frames
+   cut into the panel instead of numbers floating at its edge.
+
+   The centring of the two halves is NOT here — it has to sit after the blanket
+   `.game-overlay canvas` rule, which ties on specificity and wins on order.
+   See the `.inv-readout canvas` block down beside it. */
+.inv-readout {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  /* The horizontal padding is the socket's own margin around its number, and
+     it has to be generous: the pixel font's glyphs run flush to the edge of
+     their canvas, so a tight inset reads as digits pressed against the rail. */
+  padding: 0.2rem 0.55rem;
+  border: 2px solid #232b35;
+  border-radius: 3px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.25)),
+    rgba(4, 6, 9, 0.72);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.65);
+  line-height: 0;
+}
+
+/* The purse — D2 hangs the gold under the panel, and so does this. It is the
+   foot rail's first GRID cell, so it needs `justify-self` to stop the socket
+   stretching the whole `1fr` column: invisible while the purse was loose text,
+   glaring the moment it wears a frame. */
 .inv-purse {
   display: flex;
   align-items: center;
+  justify-self: start;
   gap: 0.35rem;
   line-height: 0;
 }
@@ -6771,10 +6802,22 @@ html.app-locked body {
   line-height: 0;
 }
 
+/* One socket per kind, SIZED FOR THE WIDEST COUNT IT CAN EVER HOLD rather than
+   for the count it happens to hold now — `AMMO.stackCap` is 200, so three
+   digits at pixel-scale 2 (≈1.4rem) plus the icon, the gap and the padding.
+   Getting this wrong is visible in one specific way: a socket only as wide as
+   two digits is BLOWN OPEN by the third, and because the extra width lands
+   inside the padding the number ends up pressed against the right rail while
+   its shorter neighbour sits with slack to spare.
+   `space-between` is the other half — with the sockets a fixed width, it lands
+   every count's last digit the same distance from the right rail, so the
+   numbers read as a column instead of drifting with their digit count. */
 .inv-ammo-kind {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.3rem;
+  min-width: 4.2rem;
   line-height: 0;
 }
 
@@ -6938,6 +6981,25 @@ html.app-locked body {
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, 0.65),
     0 0 6px rgba(126, 240, 200, 0.5);
+}
+
+/* A cell the hero has NOT EARNED yet. The frame draws its whole rectangle from
+   the first minute (see BAG_FRAME_CELLS), so these are the sockets STRENGTH
+   and a roomier bag still have to open — sealed rather than absent, which is
+   what makes the carry read as something that grows. Hatched, dimmed, and
+   inert: no drop target, no tier rim, no cursor promise. */
+.inv-cell.locked {
+  border-color: rgba(35, 43, 53, 0.55);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0 2px,
+      transparent 2px 6px
+    ),
+    rgba(6, 8, 12, 0.32);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  opacity: 0.6;
 }
 
 /* A BROKEN armor piece: worn out (durability 0), contributing nothing until
@@ -8196,6 +8258,77 @@ canvas.tier-artifact {
   }
 }
 
+/* ---- THE BAG, as one framed SECTION of grid (Diablo 2's carry) ------------
+   The hero's own bag is the one `.inv-grid` that is a RECTANGLE rather than a
+   run of cells: a fixed column count, a whole number of rows, and a recessed
+   frame drawn round the lot — which is what makes the panel read as a carry
+   set into the plate instead of loose sockets scattered over it. (The shop's
+   stall and the companion's bag keep the generic auto-fill grid; they are
+   lists of what is on offer, not a space the hero owns.)
+
+   THIS BLOCK MUST STAY BELOW the landscape `@media` above. `.inv-bag-grid` and
+   `.inv-grid` are both a single class, so they TIE on specificity and the
+   cascade falls to document order — declared any earlier, every line here that
+   re-states a property that query sets (the columns, the gap, the cap) would
+   silently lose on a landscape phone, which is the reference viewport. */
+.inv-bag-frame {
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.3rem;
+  border: 2px solid #232b35;
+  border-radius: 4px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.3)),
+    rgba(4, 6, 9, 0.5);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* `--inv-cols` is the whole layout: the cells flex to fill whatever width the
+   bag column has, so only the COUNT changes per breakpoint. Every value it
+   takes must divide BAG_FRAME_CELLS (InventoryPanel.tsx) or the rectangle ends
+   in a ragged half row. */
+.inv-bag-grid {
+  --inv-cols: 8;
+  --inv-gap: 0.3rem;
+  /* Cells stop growing once there is room to spare, so a desktop or a tablet
+     gets a bag at a sane size rather than eight dinner plates. */
+  --inv-cell-max: 2.6rem;
+  grid-template-columns: repeat(var(--inv-cols), minmax(0, 1fr));
+  grid-auto-rows: auto;
+  gap: var(--inv-gap);
+  justify-content: center;
+  width: 100%;
+  max-width: calc(
+    var(--inv-cols) * var(--inv-cell-max) + (var(--inv-cols) - 1) *
+      var(--inv-gap)
+  );
+  /* Tall enough for one whole 40-cell frame at every breakpoint below (five
+     rows of eight in portrait), so the scroll only ever engages on a hero who
+     has earned a SECOND frame. */
+  max-height: 14.6rem;
+}
+
+/* Landscape: the bag lies beside the doll with room for ten columns, which is
+   D2's own width — and four rows, which is D2's own height. */
+@media (min-aspect-ratio: 4/3) {
+  .inv-bag-grid {
+    --inv-cols: 10;
+    max-height: 11.4rem;
+  }
+}
+
+/* ...but the SE-class landscape floor cannot spare ten columns beside the doll
+   without shrinking the cells past a thumb. Eight keeps them touchable and
+   still divides the frame, so the rectangle stays whole — it just stands five
+   rows tall instead of four. */
+@media (min-aspect-ratio: 4/3) and (max-width: 720px) {
+  .inv-bag-grid {
+    --inv-cols: 8;
+  }
+}
+
 .drag-ghost {
   position: fixed;
   z-index: 50;
@@ -8302,9 +8435,19 @@ canvas.tier-artifact {
   align-self: flex-start;
 }
 
-/* The purse's coin count centres against `.game-overlay canvas`'s blanket
-   left-pin above. */
-.inv-purse canvas {
+/* A FOOT-RAIL READOUT is an icon and the number it labels on ONE line, so both
+   halves centre against `.game-overlay canvas`'s blanket left-pin above.
+   Without this the number top-pins and rides ~4 CSS px high of its own icon —
+   the purse had a one-off override for exactly this and the ammunition
+   sockets, added later, did not, so the two counts on the right of the rail
+   sat visibly off their glyphs. Scoped to the shared class so the next readout
+   cannot rediscover it.
+
+   THIS RULE MUST STAY BELOW `.game-overlay canvas`: both are (0,1,1), so the
+   cascade falls to document order — moved up beside `.inv-readout`'s own block
+   it would silently do nothing. */
+.inv-readout canvas,
+.inv-readout .inv-purse-icon {
   align-self: center;
 }
 

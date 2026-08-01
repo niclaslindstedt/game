@@ -16,7 +16,61 @@
    every later reader sees a page that ALMOST looks like the game. */
 
 :root {
-  --panel-fill: linear-gradient(180deg, #2b313a 0%, #1a1f27 48%, #0e1219 100%);
+  /* THE GRAIN — what keeps a panel from reading as a smooth slab of CSS.
+     Diablo 2's windows are chiselled stone, and the thing that sells them is
+     that no two square inches are the same value; a clean vertical gradient is
+     exactly what a pixel-art game cannot afford behind pixel-art content.
+
+     It is built at TWO SCALES, because that is what separates stone from
+     fabric — fine grain alone, however dense, just reads as weave.
+
+     • FOUR CHECKER TILES for the grain, at 2, 3, 5 and 7px cells (the 4/6/10/
+       14px tiles below hold two cells each), offset from one another so their
+       corners never stack. Checkers rather than HATCHES on purpose: a hatch
+       has an axis, and four of them — at any angle, at any period — come out
+       as corduroy or as denim weave, which is what the first two attempts at
+       this looked like. A checker has no axis at all, and four coprime ones
+       laid over each other only realign every 420px, so what the eye gets is
+       irregular grit instead of a direction.
+     • TWO COARSE BLOTCHES tiled at 137×89 and 211×151 — near-coprime, so their
+       overlap wanders across a panel instead of stamping a repeat. This is the
+       weathering: uneven value at a scale the eye reads as "worn", which fine
+       grain on its own can never give.
+
+     Kept at 2–14% so it stays texture rather than decoration: it has to survive
+     behind body text at pixel-scale 1 without competing with it. */
+  --panel-grain:
+    repeating-conic-gradient(
+        rgba(255, 255, 255, 0.05) 0% 25%,
+        transparent 0% 50%
+      )
+      0 0 / 4px 4px,
+    repeating-conic-gradient(rgba(0, 0, 0, 0.11) 0% 25%, transparent 0% 50%) 1px
+      0 / 6px 6px,
+    repeating-conic-gradient(
+        rgba(255, 255, 255, 0.03) 0% 25%,
+        transparent 0% 50%
+      )
+      0 2px / 10px 10px,
+    repeating-conic-gradient(rgba(0, 0, 0, 0.075) 0% 25%, transparent 0% 50%)
+      3px 1px / 14px 14px,
+    radial-gradient(
+        ellipse at 22% 28%,
+        rgba(255, 255, 255, 0.045),
+        transparent 62%
+      )
+      0 0 / 137px 89px repeat,
+    radial-gradient(ellipse at 72% 66%, rgba(0, 0, 0, 0.15), transparent 58%) 0
+      0 / 211px 151px repeat;
+  /* The grain rides ON TOP of the gradient (earlier layer = nearer the
+     viewer), and it is folded into `--panel-fill` itself rather than added to
+     `.pixel-panel` — a good half of the game's windows set
+     `background: var(--panel-fill)` by hand instead of wearing the class, and
+     a skin only one of the two groups gets is the drift this file exists to
+     prevent. */
+  --panel-fill:
+    var(--panel-grain),
+    linear-gradient(180deg, #2b313a 0%, #1a1f27 48%, #0e1219 100%);
   --panel-rail: #3d4653;
   --panel-rail-top: #4d5766;
   --panel-rail-bottom: #262c35;

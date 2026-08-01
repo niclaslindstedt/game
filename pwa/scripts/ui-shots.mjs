@@ -247,16 +247,30 @@ for (const vp of VIEWPORTS) {
     await page.locator(".arsenal-panel").waitFor();
     await shot("arsenal");
     await page.locator(".arsenal-close").click();
-    // The warp picker: SELECT LEVEL -> difficulty (warp) -> level list.
+    // The warp picker: SELECT LEVEL -> difficulty (warp) -> level list. The
+    // difficulty list is built from what the ROSTER has unlocked, and this
+    // sweep's profile is a hero created two steps ago who has never finished a
+    // run — so on a clean machine the page comes up holding nothing but BACK.
+    // Skip rather than spend the locator's full timeout on a row that cannot
+    // be there: the throw would otherwise abort the whole settings step, and
+    // every capture after this line with it.
     await click("developer-select-level");
-    await page.getByRole("button", { name: "difficulty-easy" }).waitFor();
-    await click("difficulty-easy");
-    await page
-      .getByRole("button", { name: /level-/ })
-      .first()
-      .waitFor();
-    await shot("levels");
-    await page.keyboard.press("Escape");
+    const warpEasy = page.getByRole("button", { name: "difficulty-easy" });
+    const warpLevel = page.getByRole("button", { name: /level-/ }).first();
+    if (await warpEasy.isVisible().catch(() => false)) {
+      await click("difficulty-easy");
+      // Same reason as the difficulty list above: a hero who has cleared
+      // nothing has nowhere to warp TO, so the level list can be empty even
+      // when the difficulty list was not.
+      if (await warpLevel.isVisible().catch(() => false)) {
+        await shot("levels");
+      } else {
+        console.error(`[${vp.name}] SKIP levels: the level list is empty`);
+      }
+      await page.keyboard.press("Escape");
+    } else {
+      console.error(`[${vp.name}] SKIP levels: no difficulty unlocked to warp`);
+    }
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
   });
@@ -397,7 +411,7 @@ for (const vp of VIEWPORTS) {
   await tryStep("autopilot", async () => {
     await ensurePlaying();
     await game.evaluate(() => {
-      window.__game.player.coins = 250000;
+      window.__game.players[0].coins = 250000;
     });
     await game.keyboard.press("p");
     await game.waitForFunction(() => window.__game?.phase === "paused");
@@ -418,7 +432,7 @@ for (const vp of VIEWPORTS) {
     // Broke: every rung greys out and the modal swaps its note for the
     // CAN'T AFFORD call-out.
     await game.evaluate(() => {
-      window.__game.player.coins = 0;
+      window.__game.players[0].coins = 0;
     });
     await game.waitForTimeout(400);
     await gshot("autopilot-start-broke");
@@ -428,8 +442,8 @@ for (const vp of VIEWPORTS) {
     // name (with an empty vault the modal reads "nothing left to trash").
     await game.evaluate(() => {
       const g = window.__game;
-      g.player.coins = 250000;
-      g.player.vault = [{ ...g.player.equipment.weapon, id: 90002 }];
+      g.players[0].coins = 250000;
+      g.players[0].vault = [{ ...g.players[0].equipment.weapon, id: 90002 }];
     });
     await game.waitForTimeout(400);
     // `exact` matters: without it "autopilot-speed-1" also matches the 16× rung.
@@ -438,9 +452,13 @@ for (const vp of VIEWPORTS) {
       .click();
     await game.locator(".autopilot-trash").waitFor();
     await gshot("autopilot-trash-confirm");
+    // The capture is done, and there is no clean way back out of here: the
+    // trash confirm offers only BUY BACK and FLY (no cancel), and it sits over
+    // the start picker — so `autopilot-start-cancel` reads as visible while
+    // being covered, and clicking it waits out the full locator timeout for
+    // nothing. Leave the modal parked; the next step opens with
+    // `ensurePlaying()`, which is built to walk a run back from any phase.
     await game.keyboard.press("Escape");
-    await game.getByRole("button", { name: "autopilot-start-cancel" }).click();
-    await game.keyboard.press("p");
   });
 
   // The LOOT history — the engaged ride's session scoreboard. Forced through
@@ -449,7 +467,7 @@ for (const vp of VIEWPORTS) {
     await ensurePlaying();
     await game.evaluate(() => {
       const g = window.__game;
-      g.player.coins = 250000;
+      g.players[0].coins = 250000;
       g.autopilot.active = true;
       g.autopilot.speed = 4;
     });
@@ -473,8 +491,9 @@ for (const vp of VIEWPORTS) {
       // engine RECONCILES the queue from `spentStats` — so bank the ten points
       // rather than only pushing onto the queue, which the next reconcile
       // would wipe. The queue holds STAT names (see `reconcileTalentPoints`).
-      g.player.spentStats.strength = (g.player.spentStats.strength ?? 0) + 10;
-      g.player.stats.strength = (g.player.stats.strength ?? 0) + 10;
+      g.players[0].spentStats.strength =
+        (g.players[0].spentStats.strength ?? 0) + 10;
+      g.players[0].stats.strength = (g.players[0].stats.strength ?? 0) + 10;
       g.pendingTalentPoints = ["strength"];
     });
     await game.locator(".talent-overlay").waitFor();
@@ -484,13 +503,13 @@ for (const vp of VIEWPORTS) {
     // re-opens this picker on top of whatever the next step is capturing.
     await game.evaluate(() => {
       const g = window.__game;
-      g.player.spentStats.strength = Math.max(
+      g.players[0].spentStats.strength = Math.max(
         0,
-        (g.player.spentStats.strength ?? 0) - 10,
+        (g.players[0].spentStats.strength ?? 0) - 10,
       );
-      g.player.stats.strength = Math.max(
+      g.players[0].stats.strength = Math.max(
         0,
-        (g.player.stats.strength ?? 0) - 10,
+        (g.players[0].stats.strength ?? 0) - 10,
       );
       g.pendingTalentPoints = [];
     });
@@ -527,7 +546,7 @@ for (const vp of VIEWPORTS) {
     await ensurePlaying();
     await game.evaluate(() => {
       const g = window.__game;
-      g.player.pendingStatPoints = 1;
+      g.players[0].pendingStatPoints = 1;
       g.levelUpFxMs = 1;
     });
     await game.waitForFunction(() => window.__game?.phase === "levelup");
@@ -544,14 +563,14 @@ for (const vp of VIEWPORTS) {
     await ensurePlaying();
     await game.evaluate(() => {
       const g = window.__game;
-      g.player.pendingStatPoints = 6;
+      g.players[0].pendingStatPoints = 6;
       g.phase = "respec";
     });
     await game.waitForFunction(() => window.__game?.phase === "respec");
     await gshot("respec");
     await game.evaluate(() => {
       const g = window.__game;
-      g.player.pendingStatPoints = 0;
+      g.players[0].pendingStatPoints = 0;
       g.phase = "playing";
     });
   });
@@ -568,7 +587,7 @@ for (const vp of VIEWPORTS) {
       const g = window.__game;
       g.dialogueMuted = true;
       g.obstacles = []; // the meeting needs line of sight
-      g.merchant.pos = { ...g.player.pos };
+      g.merchant.pos = { ...g.players[0].pos };
     });
     await game.waitForFunction(
       () => (window.__game?.merchant.stock.length ?? 0) > 0,
@@ -576,7 +595,7 @@ for (const vp of VIEWPORTS) {
     await game.evaluate(() => {
       const g = window.__game;
       // A purse fat enough that nothing on the counter greys out as unaffordable.
-      g.player.coins = 50_000;
+      g.players[0].coins = 50_000;
       g.phase = "shop";
     });
     await game.waitForFunction(() => window.__game?.phase === "shop");
@@ -625,8 +644,8 @@ for (const vp of VIEWPORTS) {
         g.enemies.push({
           id: 999999,
           defId,
-          pos: { x: g.player.pos.x + 20, y: g.player.pos.y },
-          home: { x: g.player.pos.x + 20, y: g.player.pos.y },
+          pos: { x: g.players[0].pos.x + 20, y: g.players[0].pos.y },
+          home: { x: g.players[0].pos.x + 20, y: g.players[0].pos.y },
           hp: 0,
           maxHp: 100,
           mlvl: 3,
@@ -687,7 +706,7 @@ for (const vp of VIEWPORTS) {
   await tryStep("defeat", async () => {
     await ensurePlaying();
     await game.evaluate(() => {
-      window.__game.player.hp = 0;
+      window.__game.players[0].hp = 0;
     });
     await game.waitForFunction(() => window.__game?.phase === "defeat");
     await gshot("defeat");
@@ -705,7 +724,7 @@ for (const vp of VIEWPORTS) {
       const roster = JSON.parse(raw);
       const hero = roster[roster.length - 1];
       if (!hero) return false;
-      const p = g.player;
+      const p = g.players[0];
       hero.loadout = {
         level: p.level,
         xp: p.xp,
@@ -725,7 +744,12 @@ for (const vp of VIEWPORTS) {
     }, `${config.storagePrefix}:characters`);
     if (!planted) throw new Error("no roster hero to bank a vault loadout on");
     await game.goto(`${url}/?debug`);
-    await game.getByRole("button", { name: "lost-found" }).click();
+    // LOST & FOUND is a row on the EXTRAS shelf, not on the title root — so it
+    // is `extras-lost-found` (rowAria is `${screen}-${id}`) and it is reached
+    // by opening EXTRAS first. Clicking a bare "lost-found" from the root
+    // matched nothing and spent the locator's full timeout.
+    await game.getByRole("button", { name: "main-extras" }).click();
+    await game.getByRole("button", { name: "extras-lost-found" }).click();
     await game.locator(".vault-actions").waitFor();
     await gshot("vault");
     await game.keyboard.press("Escape");
@@ -790,7 +814,7 @@ for (const vp of VIEWPORTS) {
       // Keep the bot alive: the sweep needs a living hero at the end.
       await bot.evaluate(() => {
         const g = window.__game;
-        if (g && g.player.hp > 0) g.player.hp = g.player.maxHp;
+        if (g && g.players[0].hp > 0) g.players[0].hp = g.players[0].maxHp;
       });
       if (!got.card && (await bot.locator(".pickup-card").count()) > 0) {
         await bshot("pickup-card");

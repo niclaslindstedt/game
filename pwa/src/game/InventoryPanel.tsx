@@ -66,6 +66,24 @@ import { runCommand, runCommandOk } from "./run-commands.ts";
 type DragSource =
   { type: "inv"; index: number } | { type: "slot"; slot: EquipSlot };
 
+/**
+ * THE BAG FRAME: how many cells the grid draws at once, whether or not the
+ * hero has earned them yet. Diablo 2 draws its whole 10x4 rectangle from the
+ * first minute, and drawing ours the same way — with the cells STRENGTH and a
+ * worn bag have not unlocked yet greyed out and inert — turns "your bag is
+ * small" into "here is the bag you are growing into". The cells that exist are
+ * still exactly the engine's (`inventoryCapacity` → `player.inventory.length`);
+ * nothing here grants room.
+ *
+ * 40 is also the least common multiple of the two column counts the layout
+ * uses (eight in portrait and on the narrow landscape floor, ten on a normal
+ * landscape phone), so padding the drawn count up to a multiple of it always
+ * lands a WHOLE number of rows — the frame stays a clean rectangle at every
+ * breakpoint instead of ending in a ragged half row. Keep it divisible by
+ * every column count `--inv-cols` takes in styles.css.
+ */
+const BAG_FRAME_CELLS = 40;
+
 type Drag = {
   item: Equipment;
   from: DragSource;
@@ -386,6 +404,13 @@ export function InventoryPanel({
   // loadout (the sweep folds the hero's build into the weapon pick, so a melee
   // hero lands a melee weapon and a mage a wand).
   const autoCount = autoEquipUpgradeCount(state, player);
+  // The cells the hero actually HAS — the engine's own capacity, grown by
+  // STRENGTH and by a worn bag — and the size of the rectangle drawn around
+  // them. A carry that outgrows one frame gets another whole frame rather than
+  // a ragged row (see BAG_FRAME_CELLS).
+  const unlockedCells = player.inventory.length;
+  const framedCells =
+    Math.max(1, Math.ceil(unlockedCells / BAG_FRAME_CELLS)) * BAG_FRAME_CELLS;
   // The backdrop is the "ground": releasing a bag item over it destroys the
   // item. The panel itself absorbs drops (data-drop="none") so a miss between
   // cells is a harmless no-op, never a discard; only a release out beyond the
@@ -471,62 +496,89 @@ export function InventoryPanel({
                 />
               </div>
             </div>
-            <div className="inv-grid">
-              {player.inventory.map((item, index) => (
-                <div
-                  key={index}
-                  className={`inv-cell${
-                    item && (isArmorBroken(item) || isWeaponBroken(item))
-                      ? " broken"
-                      : ""
-                  }${
-                    // A find that beats what's worn in its slot glows to pull
-                    // the eye — the cue that replaces auto-equip now that finds
-                    // bank to the bag. A broken piece never glows (a broken
-                    // weapon can't be wielded and broken armor wears nothing).
-                    item &&
-                    !isArmorBroken(item) &&
-                    !isWeaponBroken(item) &&
-                    wouldUpgradeSlot(state, player, item)
-                      ? " upgrade"
-                      : ""
-                  }${item ? tierGlowClass(item.tier) : ""}`}
-                  data-drop={`inv:${index}`}
-                  style={
-                    item ? { borderColor: TIER_COLORS[item.tier] } : undefined
+            {/* THE BAG PROPER, framed as one SECTION of grid the way D2 sets
+                its carry into the panel rather than scattering loose cells
+                across it. The rectangle is always whole: the cells past what
+                STRENGTH and the worn bag have unlocked are drawn LOCKED —
+                sealed sockets that hold nothing and take no drop — so the room
+                still to be earned is visible instead of absent. */}
+            <div className="inv-bag-frame">
+              <div className="inv-grid inv-bag-grid">
+                {Array.from({ length: framedCells }, (_, index) => {
+                  if (index >= unlockedCells) {
+                    return (
+                      <div
+                        key={index}
+                        className="inv-cell locked"
+                        aria-hidden
+                      />
+                    );
                   }
-                  onPointerDown={
-                    item ? startDrag(item, { type: "inv", index }) : undefined
-                  }
-                  onPointerEnter={item ? inspectItem(item) : undefined}
-                  onPointerLeave={leaveItem}
-                  // Desktop's quiet ritual: right-clicking a usable trinket
-                  // (a gate key on its home level, a bottle of salts with a
-                  // friend down) uses it in place.
-                  onContextMenu={
-                    item && bagVerb(item)
-                      ? (e) => {
-                          e.preventDefault();
-                          activateItem(item);
-                        }
-                      : undefined
-                  }
-                >
-                  {item &&
-                    !(
-                      drag?.from.type === "inv" && drag.from.index === index
-                    ) && <ItemIcon sprites={sprites} item={item} />}
-                </div>
-              ))}
+                  const item = player.inventory[index];
+                  return (
+                    <div
+                      key={index}
+                      className={`inv-cell${
+                        item && (isArmorBroken(item) || isWeaponBroken(item))
+                          ? " broken"
+                          : ""
+                      }${
+                        // A find that beats what's worn in its slot glows to pull
+                        // the eye — the cue that replaces auto-equip now that finds
+                        // bank to the bag. A broken piece never glows (a broken
+                        // weapon can't be wielded and broken armor wears nothing).
+                        item &&
+                        !isArmorBroken(item) &&
+                        !isWeaponBroken(item) &&
+                        wouldUpgradeSlot(state, player, item)
+                          ? " upgrade"
+                          : ""
+                      }${item ? tierGlowClass(item.tier) : ""}`}
+                      data-drop={`inv:${index}`}
+                      style={
+                        item
+                          ? { borderColor: TIER_COLORS[item.tier] }
+                          : undefined
+                      }
+                      onPointerDown={
+                        item
+                          ? startDrag(item, { type: "inv", index })
+                          : undefined
+                      }
+                      onPointerEnter={item ? inspectItem(item) : undefined}
+                      onPointerLeave={leaveItem}
+                      // Desktop's quiet ritual: right-clicking a usable trinket
+                      // (a gate key on its home level, a bottle of salts with a
+                      // friend down) uses it in place.
+                      onContextMenu={
+                        item && bagVerb(item)
+                          ? (e) => {
+                              e.preventDefault();
+                              activateItem(item);
+                            }
+                          : undefined
+                      }
+                    >
+                      {item &&
+                        !(
+                          drag?.from.type === "inv" && drag.from.index === index
+                        ) && <ItemIcon sprites={sprites} item={item} />}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
         {/* The foot rail: the purse on the left the way D2 hangs its gold under
             the panel, CLOSE centred. Keeping the purse out of the doll column
-            is what buys that column the height its frames are worth. */}
+            is what buys that column the height its frames are worth.
+            Every count on the rail — the purse and one socket per ammunition
+            kind — wears the same `.inv-readout` CUTOUT, so the foot reads as
+            frames cut into the panel rather than numbers loose on the plate. */}
         <div className="inv-footer">
-          <div className="inv-purse">
+          <div className="inv-purse inv-readout">
             {(() => {
               const coin = spriteDataUrl(sprites, "icon_coins");
               return coin ? (
@@ -558,7 +610,7 @@ export function InventoryPanel({
                 const icon = spriteDataUrl(sprites, AMMO_KINDS[type].icon);
                 const count = ammoCount(player, type);
                 return (
-                  <div className="inv-ammo-kind" key={type}>
+                  <div className="inv-ammo-kind inv-readout" key={type}>
                     {icon ? (
                       <img
                         src={icon}
