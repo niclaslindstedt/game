@@ -1,21 +1,35 @@
 ---
-title: A one-class override of .pixel-button padding must come AFTER it in styles.css
-date: 2026-07-29
+title: A single-class override of a single-class base only works BELOW it in styles.css
+date: 2026-08-01
 ---
 
-`.pixel-button` sets `padding: 0.75rem 1.5rem`, and a per-button modifier
-(`.defeat-retry`, `.defeat-quit`, …) is also a single class — so the two TIE on
-specificity and the cascade falls to document order. A modifier declared earlier
-in `styles.css` than the `.pixel-button` block therefore does nothing at all,
-silently: no warning from the linter, no error in the browser, and the button
-still looks plausible because it keeps the base padding.
+Three separate sweeps have now lost time to the same cause: `styles.css` is one
+huge file, most of its selectors are a single class, and a single class TIES a
+single class on specificity — so the cascade falls to **document order**. An
+override declared above the rule it means to beat does nothing at all, silently:
+no linter warning, no console error, and the surface still looks plausible
+because it keeps the base value.
 
-It is invisible in code review and it does not even show in a screenshot on its
-own — you have to MEASURE. A button intended to be visibly bigger came out
-44 px tall in the capture, exactly `5px glyph × 4 scale + 12px × 2`, i.e. the
-base padding; the "0.9rem" that was supposed to carry it had lost the cascade.
+Three instances, all found by MEASURING rather than by looking:
 
-Two habits fix it: put new `.pixel-button` modifiers next to `.modal-action` /
-`.modal-close-btn`, which already sit after the base block, and when a size
-override "seems not to be doing much", measure the box in the screenshot against
-the base padding before touching the numbers.
+- `.pixel-button` sets `padding: 0.75rem 1.5rem`; a modifier (`.defeat-retry`,
+  `.defeat-quit`, …) declared earlier kept the base padding. A button meant to
+  be visibly bigger came out 44px tall — exactly `5px glyph × 4 scale + 12px × 2`,
+  i.e. the base.
+- `.inv-bag-grid` re-states the columns, the gap and the height cap that
+  `.inv-grid` sets. `.inv-grid` is overridden **inside a landscape `@media`
+  block**, and a media query adds NO specificity — so a top-level
+  `.inv-bag-grid` written above that block loses on the reference viewport
+  while working fine in portrait. That asymmetry is the tell.
+- `.inv-readout canvas` (centring an icon against its number) has to beat the
+  blanket `.game-overlay canvas { align-self: flex-start }`. Both are (0,1,1).
+  The purse had a one-off `.inv-purse canvas` override sitting correctly below
+  it; the ammunition sockets, added later and higher up, silently top-pinned
+  their numbers ~4px above their own icons.
+
+Two habits fix it. Put an override next to the rule it overrides, or below it
+with a comment saying it MUST stay there and why — the next reader will
+otherwise "tidy" it back up beside its siblings. And when an override "seems
+not to be doing much", measure the box in the screenshot against the base value
+before touching the numbers; the failure mode is a value that never applied,
+not a value that is wrong.
