@@ -2906,6 +2906,16 @@
       "portrait": "player",
       "speaker": "ME"
     },
+    "garage_ship_unfinished": {
+      "id": "garage_ship_unfinished",
+      "pages": [
+        [
+          "STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
     "goodco_armed": {
       "id": "goodco_armed",
       "pages": [

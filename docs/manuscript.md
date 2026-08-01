@@ -225,6 +225,18 @@ the ship still wants its part._
 
 1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
 
+### Hero's thought — trying THE ROCKET before the part is home
+
+_The garage's only other line, and the only one in the game pinned to a DOOR
+rather than to a mob: tapping the ship on the back lawn before GOODCO HQ has
+fallen plays this instead of the travel picker. It REPLAYS — it answers the
+tap, not a story beat the player is owed once — and it deliberately names
+neither the moon nor Mars, which is the whole reason the picker is withheld.
+He has not earned those roads and does not yet know they are where the trail
+goes._
+
+1. STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
+
 ## Level 1 — GOODCO HQ
 
 A cleanroom raid for the one engine part the hero's garage-built ship still
@@ -2928,6 +2940,7 @@ at the top of this file).
 | Hero's inner thoughts (`firstKillThoughts`)                  | `content/thoughts.yaml` (compiled to `src/generated/thoughts.ts`; pinned from a `LevelDef`)                                                                               |
 | The scripted opening strike's blows (`openingStrike`)        | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml` |
 | Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                    |
+| What he says at a door with no open road                     | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `src/game/story.ts`)                           |
 | Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                                             |
 | Companion joining words + kill quotes                        | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                          |
 | Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                  |

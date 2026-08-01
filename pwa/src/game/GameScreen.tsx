@@ -133,6 +133,7 @@ import {
   type RunProgress,
 } from "./game-screen/run-progress.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
+import { groundedDoorThought } from "./game-screen/travel-doors.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { ConnectingScreen } from "./game-screen/ConnectingScreen.tsx";
@@ -892,8 +893,20 @@ export function GameScreen({
           // A joined client may look at a door but not swap the level — the
           // session is the host's, so the picker mounts read-only there
           // (TravelPanel's canTravel) and the tap itself stays enabled.
-          openTravelDoor: (doorId) =>
-            setTravelDoor({ doorId, character: characterRef.current }),
+          tapTravelDoor: (doorId) => {
+            const character = characterRef.current;
+            // A DOOR WITH NOWHERE TO GO SAYS SO, AND NAMES NOTHING (see
+            // travel-doors.ts): before GOODCO HQ falls the ship is one part
+            // short, so the hero's own line plays instead of a picker whose
+            // greyed rows would spoil two voyages. Sent as a run command
+            // because the run may be simulating elsewhere.
+            if (groundedDoorThought(state, character, difficulty, doorId)) {
+              runCommand(state, "tapTravelDoor", doorId);
+              return;
+            }
+            playUiSound(synth, "confirm");
+            setTravelDoor({ doorId, character });
+          },
         });
         // The fill level BEFORE this step, so a kill that starts a fresh streak
         // can anchor the bright slice at the XP the hero already had.

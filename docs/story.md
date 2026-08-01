@@ -77,7 +77,10 @@ part, and it comes home the worse for every trip. THE ROCKET stands on the
 back lawn once the part is in — THE LAUNCH and every voyage after it leave
 from here, and it flies only where Ada's trail has already led (the moon
 first, then Mars once the moon has let go; he stops home between them,
-because there is no food on the moon). And a RIFT SEAM waits on the garage
+because there is no food on the moon). Tried before the part is home it goes
+nowhere at all, and he says why rather than showing a list of places he has
+not earned: still one part short, no sense climbing in until he has been and
+got it. And a RIFT SEAM waits on the garage
 wall, sealed until THE FOUNDER's RIFT CREATOR comes home from the void (see
 Level 4) — then it reaches the deep roads already walked, into the rift and
 out to the West. The campaign's chapters are unchanged; the garage is the

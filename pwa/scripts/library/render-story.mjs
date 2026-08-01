@@ -261,16 +261,27 @@ function thoughtsSection(chapter, { href }) {
               kill: "The first one he kills",
               sight: "The first one he sees",
               strike: "The one who swings first",
+              // Not a speaker but a DOOR he tries too early — so the slot the
+              // others fill with a mob's name gets the door's instead.
+              door: "The way out he cannot take yet",
             }[thought.when]
-          }${who ? ` — ${who}` : ""}`;
+          }${
+            thought.door
+              ? ` — ${escapeHtml(thought.door)}`
+              : who
+                ? ` — ${who}`
+                : ""
+          }`;
       return `      <h3 id="thought-${i}">${heading}</h3>
 ${pinnedBeat(thought)}`;
     })
     .join("\n");
   return `      <h2 id="thoughts">What stops him mid-run</h2>
-      <p>The run halts for these on their own, once each: something on this map
-      is worth him saying out loud. Usually there is nobody to say it to — and
-      on the few where there is, they answer back.</p>
+      <p>The run halts for these: something on this map is worth him saying out
+      loud. Most fire on their own and once only. Usually there is nobody to say
+      it to — and on the few where there is, they answer back. The ones pinned
+      to a door are his answer to you trying it, and they keep answering for as
+      long as the road stays shut.</p>
 ${reveal({ id: "reveal-thoughts", label: "WHAT HE THINKS", body })}`;
 }
 

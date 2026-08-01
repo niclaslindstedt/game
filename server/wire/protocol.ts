@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 17;
+export const PROTOCOL_VERSION = 18;
 
 /**
  * The most clients one session seats, host included.
@@ -614,6 +614,7 @@ export const COMMANDS = [
   "reclaimVaultItem",
   "clearVault",
   "enterCar",
+  "tapTravelDoor",
   "startAutopilot",
   "stopAutopilot",
   "setAutopilotSpeed",
