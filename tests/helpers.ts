@@ -12,6 +12,8 @@ import {
   step,
 } from "@game/core";
 import type { Enemy, GameEvent, GameInput, GameState, Vec2 } from "@game/core";
+// Engine-internal: the seed reveal a fresh run stamps around the spawn.
+import { revealAround } from "../src/game/map.ts";
 
 export const SEED = 42;
 export const DT = 16;
@@ -101,12 +103,44 @@ export function stopWaves(state: GameState): void {
  * Strip the level to just the parked, far-away boss (waves included).
  * Tests that want a clean stage must keep him: removing every boss clears
  * the objective and starts the victory countdown.
+ *
+ * Lifts the fog off the whole level too ({@link revealAll}), because a surgical
+ * arrangement is meant to be a scene the hero can SEE: the auto-attack refuses
+ * anything still in the dark (`clearOfFog`), and a run only uncovers
+ * `MAP.revealRadius` around the hero, which is shorter than most weapons reach.
+ * Without this, a mob parked at a weapon's edge would go unshot for a reason
+ * the test never meant to be about. The fog's own suites stage their own grid.
  */
 export function clearStage(state: GameState): void {
   stopWaves(state);
   state.enemies = state.enemies.filter(
     (e) => enemyDef(e.defId).role === "boss",
   );
+  revealAll(state);
+}
+
+/**
+ * Uncover the whole level's fog — every cell of `state.explored`.
+ *
+ * The hero's weapon (and his companions', and the conjured powers) will not
+ * fire at anything standing in fog or in its frontier band, so any test that
+ * parks a body further out than the reveal disc has to say that the player can
+ * see it. Exploration never rolls back mid-run, so this is a state a real run
+ * reaches — it is "the hero has walked this floor", not a cheat.
+ */
+export function revealAll(state: GameState): void {
+  state.explored.fill(1);
+}
+
+/**
+ * The opposite: put the fog back exactly as a fresh run starts it — the whole
+ * level dark but the disc around the hero. The suites that are ABOUT the fog
+ * (what it hides, what lifts it) stage with this after a {@link clearStage},
+ * which lifts the fog wholesale for everyone else.
+ */
+export function refog(state: GameState): void {
+  state.explored.fill(0);
+  revealAround(state, state.players[0].pos);
 }
 
 /**

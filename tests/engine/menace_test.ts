@@ -42,7 +42,15 @@ import {
 } from "@game/core";
 import type { Equipment, GameInput, GameState } from "@game/core";
 
-import { DT, idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
+import {
+  DT,
+  idle,
+  makeEnemy,
+  revealAll,
+  run,
+  startGame,
+  stopWaves,
+} from "./helpers.ts";
 
 /** A run past the prelude on a chosen difficulty (fixtures are installed). */
 function startOn(difficulty: string, levelId = "test_level"): GameState {
@@ -96,6 +104,9 @@ function bareStage(state: GameState): void {
   state.enemies = state.enemies.filter(
     (e) => enemyDef(e.defId).role === "boss",
   );
+  // …and the fog off the whole floor, so a body staged out at a weapon's reach
+  // is one the party will actually engage (see `revealAll`).
+  revealAll(state);
 }
 
 describe("menace — the meter", () => {

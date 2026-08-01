@@ -22,6 +22,7 @@ import {
   rollEquipment,
 } from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
+import { clearOfFog } from "./map.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
 import type { GameState, Obstacle } from "./types/index.ts";
@@ -54,11 +55,15 @@ function insideView(
 }
 
 /**
- * The nearest breakable crate within `range` of `from`, on screen, with a
- * clear line to it — the fallback target the hero's auto-attack smashes when
- * no foe is in reach (see stepWeapon). Enemies always win the pick; this only
- * runs once they're all out of range, so a lone crate in an empty room still
- * gets cracked open.
+ * The nearest breakable crate within `range` of `from`, on screen, out of the
+ * fog and with a clear line to it — the fallback target the hero's auto-attack
+ * smashes when no foe is in reach (see stepWeapon). Enemies always win the
+ * pick; this only runs once they're all out of range, so a lone crate in an
+ * empty room still gets cracked open.
+ *
+ * The fog rule is the horde's (`clearOfFog`): a box on ground the hero has not
+ * uncovered is swallowed by the same blackness a mob standing there would be,
+ * so the auto-attack does not fire into it. Walk up and it is a target.
  */
 export function nearestCrate(
   state: GameState,
@@ -74,6 +79,7 @@ export function nearestCrate(
     if (view && !insideView(obstacle.pos, view)) continue;
     const dSq = distanceSq(from, obstacle.pos);
     if (dSq > bestSq) continue;
+    if (!clearOfFog(state, obstacle.pos)) continue;
     if (!lineOfSight(state, from, obstacle.pos)) continue;
     best = obstacle;
     bestSq = dSq;

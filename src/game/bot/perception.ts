@@ -9,11 +9,12 @@
 import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import type { BotTuning } from "./tuning.ts";
-import { PLAYER, SPAWNERS } from "../config/index.ts";
+import { MAP, PLAYER, SPAWNERS } from "../config/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponRangeFor } from "../items/index.ts";
+import { clearOfFog, exploredRay } from "../map.ts";
 import type { Enemy, GameState, Player } from "../types/index.ts";
 import { inertEnemy } from "../disposition.ts";
 
@@ -482,9 +483,12 @@ export function bestEscapeTarget(
   );
 }
 
-/** Is there a foe the hero could actually strike right now — in weapon range with
- * a clear line? While there is, standing still is FIGHTING, not being wedged, so
- * the stall detector holds off (a boss/pack brawl never trips the unstuck). */
+/** Is there a foe the hero could actually strike right now — in weapon range,
+ * out of the fog and with a clear line? While there is, standing still is
+ * FIGHTING, not being wedged, so the stall detector holds off (a boss/pack brawl
+ * never trips the unstuck). The fog counts because the auto-attack will not fire
+ * at anything still in it (`clearOfFog`): a hero standing over a mob he refuses
+ * to shoot is wedged, and the detector has to be allowed to say so. */
 export function hasReachableFoe(state: GameState, hero: Player): boolean {
   const range = weaponRangeFor(state, hero, hero.equipment.weapon);
   const rangeSq = range * range;
@@ -493,9 +497,35 @@ export function hasReachableFoe(state: GameState, hero: Player): boolean {
   for (let i = 0; i < scan.len; i++) {
     if ((scan.distSq[i] as number) > rangeSq) break; // sorted — rest are farther
     const enemy = scan.sorted[i] as Enemy;
+    if (!clearOfFog(state, enemy.pos)) continue;
     if (!blockedByObstacle(state, hero.pos, enemy.pos, r)) return true;
   }
   return false;
+}
+
+/**
+ * THE REACH THE HERO CAN ACTUALLY FIRE AT along the bearing to `at` — his
+ * weapon's effective range (`weaponRangeFor`) cut short where the FOG begins.
+ *
+ * Every stand-off the bot picks measures from this rather than from the weapon's
+ * paper reach, because the auto-attack refuses a target that is not `clearOfFog`
+ * (step/weapon.ts): across unexplored ground a long gun's range is NOT where its
+ * shots land. Holding at the paper figure parks the hero beyond the light,
+ * standing still and firing nothing at a mob that never closes — the same
+ * mistake reading the weapon's BASE range used to make, one layer further out.
+ *
+ * The cut is `exploredRay` (how far the uncovered ground runs that way) less the
+ * frontier band, so it grows as the hero walks and never has to be re-derived.
+ * Ground explored clean to the level edge yields the weapon's own reach: there
+ * is nothing hidden out there. A pure read of `state.explored` — botted runs
+ * stay deterministic.
+ */
+export function firingReach(state: GameState, hero: Player, at: Vec2): number {
+  const reach = weaponRangeFor(state, hero, hero.equipment.weapon);
+  const angle = Math.atan2(at.y - hero.pos.y, at.x - hero.pos.x);
+  const ray = exploredRay(state, hero.pos, angle, reach);
+  if (!ray.fog) return reach;
+  return Math.max(0, Math.min(reach, ray.dist - MAP.fogBand));
 }
 
 /** How far out the contact clock bothers to look (world px). A body beyond

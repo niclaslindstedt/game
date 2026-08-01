@@ -19,7 +19,14 @@ import {
   FIX_STORY_ITEMS,
   FIX_WEAPONS,
 } from "./fixtures.ts";
-import { DT, idle, makeEnemy, startGame, stopWaves } from "./helpers.ts";
+import {
+  DT,
+  idle,
+  makeEnemy,
+  revealAll,
+  startGame,
+  stopWaves,
+} from "./helpers.ts";
 
 registerDefs({
   levels: { test_level: FIX_LEVEL },
@@ -88,6 +95,7 @@ describe("multi-pellet volleys", () => {
   it("fires `count` projectiles fanned across the spread on one trigger pull", () => {
     const state = startGame();
     stopWaves(state);
+    revealAll(state); // the target stands past the reveal disc
     state.rng = () => 0.99;
     state.players[0].equipment.weapon = {
       id: 900,

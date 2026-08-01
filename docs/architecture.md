@@ -806,7 +806,18 @@ escort.ts` walks the people an escort errand puts on the field, and
   MAIN-VIEW fog of war (`render.ts` `drawFog`): everything uncovered reads
   fully clear, never-explored terrain is solid black, and the frontier between
   them is a graded ordered-dither transition band (`MAP.fogBand` wide) that also
-  hides any mob standing in it or the dark beyond. A sibling render-side cull
+  hides any mob standing in it or the dark beyond. **And what is not drawn is
+  not shot at**: `clearOfFog` is the engine's own deterministic reading of that
+  same frontier — no unexplored cell centre within `MAP.fogBand` — and every
+  automatic target pick goes through it (the hero's auto-attack and its crate
+  fallback, the conjured powers that pick their own mark, the companions' engage
+  bubble, and the autopilot's `firingReach`, which shortens a stand-off to where
+  its shots can actually land). A hero who fires into the blackness is acting on
+  knowledge the player does not have. It deliberately reads OFF-MAP cells as
+  clear, unlike the renderer, which seeds them as frontier so a level's rim
+  fogs: nothing out past the boundary is undiscovered, and fogging it would
+  leave a mob pinned against the level edge untargetable for the rest of the
+  run. A sibling render-side cull
   drops any enemy the hero has no LINE OF SIGHT to — one tucked fully behind a
   wall or boulder — reusing the engine's `lineOfSight` (`src/game/obstacles.ts`,
   the same tall-obstacle query that stops shots); a mob only peeking out from an

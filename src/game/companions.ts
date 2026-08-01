@@ -62,7 +62,7 @@ import {
   qualityMult,
 } from "./items/index.ts";
 import { enemyKillXp, hitEnemy, killEnemy, shareXp } from "./loot.ts";
-import { addMapMarker } from "./map.ts";
+import { addMapMarker, clearOfFog } from "./map.ts";
 import { startJoinWords } from "./story.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import { createProjectile } from "./projectile.ts";
@@ -341,11 +341,18 @@ export function stepCompanions(
   // per-companion full-horde scans (with a def probe per mob) repeated the
   // same work `party × horde` times a tick. Enemies don't move during this
   // pass; one slain mid-pass is skipped by hp in pickTarget.
+  //
+  // NOTHING IN THE FOG IS IN THE BUBBLE, the same rule the hero's own weapon
+  // picks through (`clearOfFog`, step/weapon.ts): the engage radius (230) reaches
+  // further than the fog lifts (`MAP.revealRadius` 160), so without it the party
+  // would stand beside a hero holding his fire and shoot into the blackness he
+  // is refusing to. Checked last — it is the dearest of the three tests.
   engageCandidates.length = 0;
   const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
   for (const enemy of state.enemies) {
     if (inertEnemy(enemy)) continue;
     if (distanceSq(enemy.pos, state.players[0].pos) > radiusSq) continue;
+    if (!clearOfFog(state, enemy.pos)) continue;
     engageCandidates.push(enemy);
   }
   for (let i = 0; i < count; i++) {

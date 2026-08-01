@@ -185,6 +185,17 @@ rather than an optimization: the fog can never crawl back over floor already
 uncovered. `fogDistanceAt` reads the drawn field, so the mob cull and the band
 stay the same frontier — a mob appears as the ground under it clears.
 
+**THE SIMULATION ANSWERS THAT SAME QUESTION FOR ITSELF, AND MUST.** A mob the
+band hides is also a mob the hero refuses to fire at (`clearOfFog`,
+`src/game/map.ts`) — otherwise the character shoots into blackness on the
+player's behalf, which is what a long gun advancing into unexplored ground used
+to do. The engine cannot read `FogField.shown` to decide it: that field eases on
+a RENDER clock, and a simulation that depended on one would desync a session and
+break every seeded replay. So the two are deliberately near-copies rather than
+one function — the engine measures where the frontier IS, the picture draws
+where it has eased to, and the few frames between them are the frontier gliding
+the last pixels onto ground the hero already owns.
+
 Note the two defects only looked alike from outside: the warp above was
 sub-pixel rounding in the PROJECTION, this is whole-cell quantization in the
 EXPLORED GRID.

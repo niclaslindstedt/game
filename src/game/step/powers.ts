@@ -248,7 +248,7 @@ export function stepProcs(state: GameState): void {
     if (proc.spell === "bolt") {
       const target =
         state.enemies.find((e) => e.id === proc.enemyId) ??
-        nearestEnemy(state.enemies, proc.pos, SPELL.bolt.range);
+        nearestEnemy(state, proc.pos, SPELL.bolt.range);
       if (!target) continue;
       state.events.push({ type: "lightning", pos: { ...target.pos } });
       hitEnemy(state, target, boltProcDamage(proc.rank) * power, "magic");

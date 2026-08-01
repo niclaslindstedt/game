@@ -20,7 +20,7 @@ import {
 // Engine-internal kill funnel — asserting the crit math right at the door.
 import { hitEnemy } from "../../src/game/loot.ts";
 
-import { equipBlaster, makeEnemy, startGame } from "./helpers.ts";
+import { equipBlaster, makeEnemy, revealAll, startGame } from "./helpers.ts";
 
 const weaponAt = (cls: WeaponClass): WeaponDef => ({
   id: "test_class",
@@ -140,6 +140,7 @@ describe("class-based crit weight", () => {
 
   it("stamps the firing weapon's DEX-scaled weight onto its projectiles", () => {
     const state = equipBlaster(startGame()); // ranged: the shot carries it
+    revealAll(state); // the target stands past the reveal disc
     state.players[0].stats.dexterity = 60;
     state.enemies = [
       makeEnemy({

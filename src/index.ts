@@ -451,7 +451,14 @@ export {
 
 // The level map: fog-of-war queries, the map pause phase, and the grid
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
-export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
+export {
+  clearOfFog,
+  closeMap,
+  isExplored,
+  mapCols,
+  mapRows,
+  openMap,
+} from "./game/map.ts";
 
 // Obstacle sight queries: the swept "does this line clear every TALL obstacle?"
 // test the simulation runs against solid features (walls, boulders, rocks —
