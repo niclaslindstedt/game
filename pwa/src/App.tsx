@@ -521,6 +521,7 @@ export function App() {
         <UpdateModal
           needRefresh={pwa.needRefresh}
           incomingVersion={pwa.incomingVersion}
+          runInProgress={parked !== null}
           onReload={() => pwa.reload()}
           onDismiss={() => pwa.dismiss()}
         />
@@ -601,10 +602,13 @@ export function App() {
           sprite, chunky buttons) in place of the framework's plain toast so
           it fits the game. Applying reloads onto the new build; dismissing
           leaves it parked. `incomingVersion` is already the full label
-          (`v0.1.0 · abc1234`, see pwa/vite.config.ts). */}
+          (`v0.1.0 · abc1234`, see pwa/vite.config.ts). With a run parked
+          mid-level, UPDATE asks first — the reload only keeps the run when
+          the new build still reads the old save format. */}
       <UpdateModal
         needRefresh={pwa.needRefresh}
         incomingVersion={pwa.incomingVersion}
+        runInProgress={parked !== null}
         onReload={() => pwa.reload()}
         onDismiss={() => pwa.dismiss()}
       />
