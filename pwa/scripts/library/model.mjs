@@ -404,7 +404,7 @@ function dropModel(def) {
       ? {
           weapons: loot.weapons,
           gear: loot.gear,
-          xpArrows: loot.xpArrows,
+          xpScrolls: loot.xpScrolls,
           repairs: loot.repairs,
           medkits: loot.medkits,
           tierBonus: loot.tierBonus,

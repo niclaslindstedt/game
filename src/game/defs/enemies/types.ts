@@ -581,8 +581,10 @@ export type EnemyDef = {
     tierDrops?: Partial<Record<Tier, number>>;
     weapons: number;
     gear: number;
-    /** Golden XP arrows (see `arrowXp` in leveling.ts). */
-    xpArrows: number;
+    /** XP scrolls — each lights a double-XP window on whoever walks over it
+     * (see `xpScrollDurationMs` in leveling.ts). Two off one body is not two
+     * windows: a scroll REFRESHES rather than stacks. */
+    xpScrolls: number;
     /** Weapon repair kits. */
     repairs: number;
     medkits: number;

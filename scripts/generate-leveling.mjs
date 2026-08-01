@@ -27,10 +27,11 @@ const src = readFileSync(join(root, "content/leveling.yaml"), "utf8");
 // flat `xpToNext:` map of `level: xp` rows — parse it directly (no YAML
 // dependency needed for scalars, matching the other loaders' spirit).
 const TUNING_KEYS = [
-  "arrowXpKills",
   "eliteXpMobMult",
   "bossXpMobMult",
-  "arrowDropShare",
+  "scrollXpMult",
+  "scrollDurationMs",
+  "scrollDropShare",
 ];
 const tuning = {};
 const table = new Map();
@@ -46,7 +47,7 @@ for (const [lineNo, raw] of src.split("\n").entries()) {
     const s = line.match(/^([A-Za-z]\w*):\s*(\d+(?:\.\d+)?)\s*$/);
     if (s && TUNING_KEYS.includes(s[1])) {
       tuning[s[1]] = Number(s[2]);
-      // Zero is a legal off-switch (no arrow drops / no payout); negatives
+      // Zero is a legal off-switch (no scroll drops / no payout); negatives
       // are typos.
       if (!Number.isFinite(tuning[s[1]]) || tuning[s[1]] < 0) {
         throw new Error(
@@ -107,15 +108,18 @@ const out = `// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 /** XP needed to cross OUT of level L (1-based: index L−1), levels 1..${last}. */
 export const XP_TO_NEXT: readonly number[] = ${JSON.stringify(values)};
 
-/** The flat mob-priced XP payouts (regular-mob units — see the YAML header):
- * a golden arrow pays \`arrowXpKills\` reference-mob kills; an elite/boss pays
- * \`eliteXpMobMult\`/\`bossXpMobMult\` × its own mob-level XP. \`arrowDropShare\`
- * is the arrow slice of the drop ladder (per-rung \`arrowDropMult\` on top). */
+/** The flat mob-priced kill payouts (regular-mob units — see the YAML header):
+ * an elite/boss pays \`eliteXpMobMult\`/\`bossXpMobMult\` × its own mob-level XP.
+ * The XP SCROLL multiplies instead of paying: every grant is ×\`scrollXpMult\`
+ * for \`scrollDurationMs\` after one is walked over (a second REFRESHES the
+ * window rather than stacking), and \`scrollDropShare\` is its slice of the drop
+ * ladder (per-rung \`scrollDropMult\` on top). */
 export const XP_TUNING = {
-  arrowXpKills: ${tuning.arrowXpKills},
   eliteXpMobMult: ${tuning.eliteXpMobMult},
   bossXpMobMult: ${tuning.bossXpMobMult},
-  arrowDropShare: ${tuning.arrowDropShare},
+  scrollXpMult: ${tuning.scrollXpMult},
+  scrollDurationMs: ${tuning.scrollDurationMs},
+  scrollDropShare: ${tuning.scrollDropShare},
 } as const;
 `;
 

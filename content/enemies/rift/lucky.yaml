@@ -65,7 +65,7 @@ loot:
     rare: 0.5
   weapons: 0
   gear: 1
-  xpArrows: 2
+  xpScrolls: 1
   repairs: 0
   medkits: 1
   tierBonus: 0.5

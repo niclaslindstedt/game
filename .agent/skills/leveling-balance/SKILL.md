@@ -34,13 +34,14 @@ ships at 0, so the BALANCE › ENDGAME WALL slider is inert unless a rate is
 restored. Every YAML row carries a `# ~N kills` annotation — the IN-PLAY
 design target on the critical path (medium → nightmare → jesus), verified
 against simulator ding data; keep it in step when editing, it is what makes
-the curve reviewable. Because EVERY XP faucet is mob-priced (elites and
-bosses pay a flat multiple of their own mob-level XP, arrows a flat few
-reference-mob kills — the `eliteXpMobMult`/`bossXpMobMult`/`arrowXpKills`
-knobs at the top of the YAML), the annotation is directly tunable — but the
+the curve reviewable. Because EVERY XP faucet is mob-priced (elites and bosses
+pay a flat multiple of their own mob-level XP — the
+`eliteXpMobMult`/`bossXpMobMult` knobs at the top of the YAML — and the XP
+SCROLL multiplies those payouts rather than adding a payout of its own), the
+annotation is directly tunable — but the
 raw XP behind a row is NOT `annotation × referenceMobXp(L)`: it embeds each
 band's measured income factor (the WoW-style level-difference premium where a
-rung's mob band sits above the hero, the elite/arrow drip, and the tier step
+rung's mob band sits above the hero, the elite/scroll drip, and the tier step
 the row must compensate — the shipped rows ride factors of roughly ×1.2–1.8
 on the bottom band, ×1.8–2.6 on nightmare, ×0.6–0.7 on jesus, which is also
 why the raw cost legitimately DIPS at the L58 seam while the in-play curve
@@ -74,22 +75,57 @@ SIMULATOR's ding data stays the final yardstick — read it with
 > matrix check. The goal is each build strongest in its own stretch, none walling
 > or one-shotting where the others are on-curve.
 
-**Golden XP arrows are a SECOND faucet — a small, flat one.** They drop from the
-loot rain (`LOOT.dropChance × arrowDropShare × the difficulty's `arrowDropMult`)
-and each pays a flat `arrowXpKills × referenceMobXp(L)` (`arrowXp` in
-leveling.ts) — a few mob kills' worth at every level and difficulty, XP the
-kill-count model above ignores. BOTH arrow levers — the drop share
-(`arrowDropShare`) and the reward (`arrowXpKills`) — are authored at the top of
-`content/leveling.yaml`, so the whole faucet dials from one file. There is no
-share-of-bar and no hot/cold split, so the drip can never distort the table's
-kills-per-level; it thins out up the difficulty ladder (zero on JESUS, via the
-per-difficulty `arrowDropMult`). To tune the faucet, first read the curve with
-it OFF (`simulate-run --no-arrow-xp`, or `leveling-pace.mjs --run
---no-arrow-xp`) — the pure kill grind — then dial the two levers to add the
-drip you want on top. `LevelDef.loot.arrowCapByDifficulty` remains as each
-map's PACING YARDSTICK (the level a normal run ends at — the campaign
-simulator's realistic pacing and boss-level verdicts read it); when the curve
-moves, re-read it off `--by-level` and update the level defs.
+**The XP SCROLL is not a second faucet — it is a DUTY CYCLE on the first
+one.** Scrolls drop from the loot rain (`LOOT.dropChance × scrollDropShare ×
+the difficulty's `scrollDropMult`) and each lights a `scrollDurationMs` window
+in which every XP the reader earns is multiplied by `scrollXpMult`. It pays
+nothing itself, so it can never distort the table's kills-per-level — it only
+makes the same kills count twice.
+
+That changes how you MODEL it, and getting this wrong is the trap. A scroll
+REFRESHES rather than stacks, so at a pickup rate λ (the per-kill drop chance
+times the hero's KILL RATE) and a window D, the boost is dark only when a whole
+D has passed with no pickup — an active share of `1 − e^(−λD)`, and an average
+multiplier of `1 + (mult − 1)(1 − e^(−λD))`. Both calculators
+(`leveling-curve.mjs`, `stats-track.mjs`) implement exactly that. The kill rate
+is therefore a real input: the same drop share is worth far more to a hero
+killing fast enough to keep the window permanently lit than to one who reads a
+scroll and then walks.
+
+All three scroll levers — `scrollDropShare`, `scrollDurationMs` and
+`scrollXpMult` — are authored at the top of `content/leveling.yaml`, so the
+whole faucet dials from one file; it thins out up the difficulty ladder (zero on
+JESUS, via the per-difficulty `scrollDropMult`). To tune it, first read the
+curve with it OFF (`simulate-run --no-xp-scroll`, or `leveling-pace.mjs --run
+--no-xp-scroll`) — the pure kill grind — then dial the levers to add the drip
+you want on top.
+
+**Two traps, both measured 2026-08 and both expensive to re-learn:**
+
+- **The drop SHARE is the fine dial, not the coarse one.** Most scrolls a
+  campaign sees are the GUARANTEED `loot.xpScrolls` on elite/boss defs, not the
+  ladder's: a `--no-xp-scroll` control sweep still spawned ~15 scrolls per 1000
+  kills from those alone, against the ~4 that `scrollDropShare: 0.05` was
+  adding. Moving the share from 0.02 to 0.05 barely moved the pickup count. If a
+  candidate needs a real cut, the per-def counts are where it lives. (And no def
+  may author more than ONE — the schema refuses it — because a scroll refreshes
+  rather than stacks, so a second off the same body is a wasted drop.)
+- **Judge a candidate by the XP SHARE IT PAYS, never by an A/B of two
+  campaigns.** Changing the share changes the drop ladder's cumulative bands, so
+  every rng draw after it differs: the two runs diverge into different weapons,
+  different DPS and different worlds, and the faucet's ~10% signal drowns
+  completely. A paired-seed A/B of `scrollDropShare: 0.04` against its own
+  no-faucet control came out NEGATIVE on both seeds — mechanically impossible
+  for a faucet that only adds XP. Measure the faucet directly instead: take
+  `collectedByKind.xp` and the run clock, compute the lit share
+  `1 − e^(−λD)`, and read the faucet's cut of the campaign's XP as
+  `a / (1 + a)` (for the retired flat arrow it was
+  `Σ picked × arrowXpKills × referenceMobXp(L) ÷ xpGained`). That read has a
+  fraction of the variance and is what the shipped numbers were set against. `LevelDef.loot.intendedLevelByDifficulty` is each map's PACING
+YARDSTICK (the level a normal run ends at — the campaign simulator's realistic
+pacing and boss-level verdicts read it, and the autopilot reads it to decide
+whether a scroll is still worth a detour); when the curve moves, re-read it off
+`--by-level` and update the level defs.
 
 ## The knobs (`LEVELING` in `src/game/config/leveling.ts`)
 
@@ -119,8 +155,9 @@ clamped level. A difficulty that omits the caps is uncapped (test fixtures do).
 
 `statPointsPerLevel`, `dingCelebrationMs`, `autoGainsPerLevel` are ding
 *rewards/feel*, not pacing — leave them unless that's the change. The YAML's
-`arrowXpKills` and `arrowDropShare` (and the per-difficulty `arrowDropMult`)
-DO move pacing — the golden-arrow faucet above — and the calculator models them.
+`scrollXpMult`, `scrollDurationMs` and `scrollDropShare` (and the
+per-difficulty `scrollDropMult`) DO move pacing — the XP-scroll faucet above —
+and the calculators model them.
 
 **Don't fight the auto-stat/mob balance.** `autoGainsPerLevel` (leveling.ts)
 and `MENACE.mobHpPerLevel` are wired so free growth cancels against the horde

@@ -214,7 +214,7 @@ export function levelDiffXpMult(mlvl: number, playerLevel: number): number {
 /**
  * A reference minion's worth of XP at `level`: `mobLevelXp` for a mob AT the
  * hero's own level. This is the "typical mob" unit the KILLS-per-level curve
- * is authored against (see `xpToLevelUp`) and the arrow payout's unit, so
+ * is authored against (see `xpToLevelUp`) and the elite/boss payouts' unit, so
  * "5 mob kills" means the same thing to the game and the calculator.
  */
 export function referenceMobXp(level: number): number {
@@ -223,39 +223,46 @@ export function referenceMobXp(level: number): number {
 }
 
 /**
- * Kill switch for the golden-arrow XP faucet — a CALIBRATION control, not a
- * player setting: `simulate-run --no-arrow-xp` turns it off so a pacing
- * graph reads the pure kill grind, isolating what the arrow levers
- * (`arrowXpKills` / `arrowDropShare` in content/leveling.yaml) add on top.
+ * Kill switch for the XP-SCROLL faucet — a CALIBRATION control, not a player
+ * setting: `simulate-run --no-xp-scroll` turns it off so a pacing graph reads
+ * the pure kill grind, isolating what the scroll levers (`scrollXpMult` /
+ * `scrollDurationMs` / `scrollDropShare` in content/leveling.yaml) add on top.
+ * Scrolls still drop and are still walked over — they just light no window.
  * Mirrors `setAutoStatGainsEnabled`'s pattern; the app never calls it.
  */
-let arrowXpOn = true;
-export function setArrowXpEnabled(enabled: boolean): void {
-  arrowXpOn = enabled;
+let xpScrollOn = true;
+export function setXpScrollEnabled(enabled: boolean): void {
+  xpScrollOn = enabled;
 }
 
 /**
- * The golden-arrow payout: a flat `XP_TUNING.arrowXpKills` kills' worth of XP,
- * priced to the mob that SHED the arrow — `arrowXpKills × mobLevelXp(mobLevel,
- * playerLevel)`, exactly what that many kills of the dropping mob pay (the
- * multiple is authored in `content/leveling.yaml`). So an arrow dropped by a
- * low-level mob — the horde on outgrown ground, stuck at a map's mob-level
- * ceiling while the hero climbs past it — is worth only that mob's few kills,
- * not a full at-level ding, and a grey mob's arrow trickles to nothing (the
- * `mobLevelXp` below-level penalty). `playerLevel` defaults to `mobLevel`, so a
- * single-argument call prices an at-level (neutral ×1) arrow — the unit the
- * kills-per-level curve and calculator are authored against, unchanged. 0 when
- * the faucet is switched off (`setArrowXpEnabled`) or authored to nothing.
+ * How long ONE scroll burns (ms), or 0 when the faucet is switched off
+ * (`setXpScrollEnabled`) or authored to nothing — in which case walking over a
+ * scroll lights no window at all. Read once, at the pickup (`stepItems`).
  */
-export function arrowXp(
-  mobLevel: number,
-  playerLevel: number = mobLevel,
-): number {
-  if (!arrowXpOn || XP_TUNING.arrowXpKills <= 0) return 0;
-  return Math.max(
-    1,
-    Math.round(XP_TUNING.arrowXpKills * mobLevelXp(mobLevel, playerLevel)),
-  );
+export function xpScrollDurationMs(): number {
+  if (!xpScrollOn || XP_TUNING.scrollXpMult <= 1) return 0;
+  return Math.max(0, XP_TUNING.scrollDurationMs);
+}
+
+/**
+ * THE SCROLL PAYS NOTHING AND MULTIPLIES EVERYTHING: while a hero's window is
+ * lit (`Player.xpBoostMs`, counted down in `stepTimers`), every XP grant he
+ * takes is scaled by `XP_TUNING.scrollXpMult` — kills, errands, scripted awards
+ * alike, since they all pass the one `grantXp` door. 1 when his window is dark.
+ *
+ * That is the whole reason the scroll can't over-level anybody the way a flat
+ * payout could: it is worth exactly what the hero DOES with its thirty seconds,
+ * so a scroll read on outgrown ground doubles a trickle and a scroll read into
+ * a boss pack doubles a boss. The old golden arrow needed a mob-priced payout
+ * and a below-level penalty to say the same thing.
+ *
+ * PRIVATE, like every other read of one hero (§3.1): the window belongs to
+ * whoever walked over the scroll, so a party-mate's kill share is doubled only
+ * for the hero whose own window is lit.
+ */
+export function xpBoostMultiplier(player: { xpBoostMs?: number }): number {
+  return (player.xpBoostMs ?? 0) > 0 ? Math.max(1, XP_TUNING.scrollXpMult) : 1;
 }
 
 /**

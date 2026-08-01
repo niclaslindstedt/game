@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   allocateStat,
-  arrowXp,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,
@@ -31,7 +30,6 @@ import {
   PLAYER,
   playerCritChance,
   playerDodgeChance,
-  referenceMobXp,
   resetBalanceTuning,
   saturateToward,
   setAutoStatGainsEnabled,
@@ -164,21 +162,40 @@ describe("xp", () => {
   });
 });
 
-describe("golden-arrow XP is a flat mob-priced bonus", () => {
-  it("pays XP_TUNING.arrowXpKills reference-mob kills' worth at every level", () => {
-    // The payout is the flat multiple of the reference-mob unit…
-    expect(arrowXp(1)).toBe(
-      Math.round(XP_TUNING.arrowXpKills * referenceMobXp(1)),
-    );
-    expect(arrowXp(20)).toBe(
-      Math.round(XP_TUNING.arrowXpKills * referenceMobXp(20)),
-    );
-    // …so it compounds WITH the mob unit (never a share of the bar): each
-    // level's arrow is worth more XP, the same few kills.
-    expect(arrowXp(20)).toBeGreaterThan(arrowXp(5));
-    expect(arrowXp(99)).toBeGreaterThan(arrowXp(20));
-    // A level floor: absurd inputs clamp to the level-1 payout, never blow up.
-    expect(arrowXp(0)).toBe(arrowXp(1));
+describe("the XP scroll multiplies rather than pays", () => {
+  it("doubles every grant while a hero's window is lit, and only his", () => {
+    const state = startGame();
+    const hero = state.players[0];
+    hero.xpToNext = 1_000_000; // never ding mid-measurement
+    grantXp(state, hero, 1000);
+    const plain = hero.xp;
+    hero.xp = 0;
+    hero.xpBoostMs = XP_TUNING.scrollDurationMs;
+    grantXp(state, hero, 1000);
+    expect(hero.xp).toBe(plain * XP_TUNING.scrollXpMult);
+    // A lapsed window multiplies nothing.
+    hero.xp = 0;
+    hero.xpBoostMs = 0;
+    grantXp(state, hero, 1000);
+    expect(hero.xp).toBe(plain);
+  });
+
+  it("is still throttled by the per-map XP cap — a scroll can't power-level outgrown ground", () => {
+    // The multiplier is applied ABOVE the cap, so a doubled grant on ground the
+    // hero has outgrown is throttled to twice the same trickle, never past it.
+    const capped = (lit: boolean): number => {
+      const s = startGame();
+      const hero = s.players[0];
+      hero.level = 60; // far past `test_level`'s cap
+      hero.xpToNext = 1_000_000;
+      hero.xp = 0;
+      if (lit) hero.xpBoostMs = XP_TUNING.scrollDurationMs;
+      grantXp(s, hero, 100_000);
+      return hero.xp;
+    };
+    const plain = capped(false);
+    expect(plain).toBeLessThan(100_000); // the cap bit
+    expect(capped(true)).toBe(plain * XP_TUNING.scrollXpMult);
   });
 });
 

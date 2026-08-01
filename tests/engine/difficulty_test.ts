@@ -101,7 +101,7 @@ describe("difficulty catalog", () => {
     expect(medium.medkitDropMult).toBe(1);
     expect(medium.armorDropMult).toBe(1);
     expect(medium.powerupDropMult).toBe(1);
-    expect(medium.arrowDropMult).toBe(1);
+    expect(medium.scrollDropMult).toBe(1);
     expect(medium.staminaDrainMult).toBe(1);
     expect(medium.menaceDecayMult).toBe(1);
     expect(medium.menaceEffectMult).toBe(1);
@@ -135,9 +135,9 @@ describe("difficulty catalog", () => {
       expect(next.medkitDropMult).toBeLessThan(prev.medkitDropMult);
       expect(next.armorDropMult).toBeLessThan(prev.armorDropMult);
       expect(next.powerupDropMult).toBeLessThan(prev.powerupDropMult);
-      // Golden arrows thin out too (easy and medium share the 1.0 baseline, so
+      // XP scrolls thin out too (easy and medium share the 1.0 baseline, so
       // this is non-increasing, not strictly down).
-      expect(next.arrowDropMult).toBeLessThanOrEqual(prev.arrowDropMult);
+      expect(next.scrollDropMult).toBeLessThanOrEqual(prev.scrollDropMult);
       // JESUS deliberately burns no faster than nightmare — kiting country.
       expect(next.staminaDrainMult).toBeGreaterThanOrEqual(
         prev.staminaDrainMult,

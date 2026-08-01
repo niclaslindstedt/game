@@ -57,6 +57,7 @@ import {
   type HeroImpact,
   type PlayerAction,
 } from "./render/player.ts";
+import { drawXpBoostVeil } from "./render/xp-veil.ts";
 import { drawProjectiles } from "./render/projectiles.ts";
 import {
   drawEscortDestinations,
@@ -278,7 +279,13 @@ export function drawFrame(
   drawCompanions(ctx, state, assets, camera, timeMs);
   drawAbilities(ctx, state, assets, camera, timeMs);
   drawLevelUpBurn(ctx, state, camera, timeMs, "under");
+  // THE XP SCROLL'S VEIL straddles the hero exactly as the ding's burn does,
+  // and for the same reason — the halo behind him, the wash and motes in front
+  // — so the blue wraps the character instead of sitting behind him. Far
+  // fainter than the burn on purpose: this one is up for thirty seconds.
+  drawXpBoostVeil(ctx, state, camera, timeMs, "under");
   drawPlayer(ctx, state, assets, camera, timeMs, playerAction, heroImpact);
+  drawXpBoostVeil(ctx, state, camera, timeMs, "over");
   drawLevelUpBurn(ctx, state, camera, timeMs, "over");
 
   // Hazards sweeping the field — the storms and stampedes drawn AFTER the hero

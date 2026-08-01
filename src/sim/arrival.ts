@@ -50,7 +50,7 @@ export type SynthesizeArrivalOptions = {
    * the make-quality context; the hero then walks this kit into the run. */
   difficulty: Difficulty;
   /** Hero level to arrive at — the campaign's intended entry level for the
-   * measured rung (a rung's terminal `arrowCapByDifficulty`, ~50 for JESUS). */
+   * measured rung (a rung's terminal `intendedLevelByDifficulty`, ~50 for JESUS). */
   level: number;
   /** Which campaign level's loot pool to draw the kit from (default: the last
    * story level, whose pool is the deepest). */

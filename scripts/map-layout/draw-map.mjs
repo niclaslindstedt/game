@@ -64,7 +64,7 @@ function conFor(def, levels, diff) {
  * hero's CURRENT level; a level costs `xpToLevelUp`), so this needs no sim. It
  * lets the con ramp be judged against the hero's actual rise: mobs should keep
  * pace (even) and pull a touch ahead toward the end (a rising con). Ignores the
- * per-map XP CAP and golden arrows — it's the raw kill-XP the swarm is worth. */
+ * per-map XP CAP and XP scrolls — it's the raw kill-XP the swarm is worth. */
 export function heroProjection(def, diff) {
   const i = DIFF_IDX[diff];
   const start = def.intendedLevel?.[i];

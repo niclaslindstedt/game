@@ -208,7 +208,7 @@ loot:
       - the_anvil
       - the_last_word
       - the_severance
-  arrowCapByDifficulty:
+  intendedLevelByDifficulty:
     easy: 14
     medium: 15
     hard: 16

@@ -48,13 +48,13 @@ import { idleInput, sprint, think } from "./state.ts";
 import type { Bot, Posture } from "./state.ts";
 import {
   braveryScore,
-  dingArrowNearby,
   ITEM_REACH,
   nearestRepairKit,
   nearestWantedItem,
   TOPUP_BRAVE_MIN_FRAC,
   wantedItemNearby,
   wantsRepairKitPickup,
+  xpWindowLit,
 } from "./supplies.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMINA } from "../config/index.ts";
@@ -263,7 +263,16 @@ export function survive(
     posture !== "flee" &&
     readyForBoss(state, hero, tune) &&
     marchingOnFoe(bot, state, hero, tune);
-  if (posture === "balanced" && rushing) pt = tune.postures.aggro;
+  // A LIT XP SCROLL is a clock, and it runs whether or not he is swinging: for
+  // its thirty seconds every kill pays twice, and a window spent circling a
+  // pack pays nothing at all. So while one burns, a BALANCED posture leans into
+  // its AGGRO row exactly as a boss rush does — press the fight, bank the
+  // double, and go back to being careful when it lapses. `flee` keeps its
+  // deliberate cowardice: dying with a scroll up is strictly worse than
+  // wasting one.
+  const spendingWindow = posture !== "flee" && xpWindowLit(hero);
+  if (posture === "balanced" && (rushing || spendingWindow))
+    pt = tune.postures.aggro;
   const near = threatsWithin(state, hero, THREAT_RADIUS);
 
   // 1. Breathing room: grab a pickup within reach; else follow the MACRO TRAVEL
@@ -273,7 +282,9 @@ export function survive(
   if (near.length === 0) {
     const item = wantedItemNearby(bot, state, hero, tune);
     if (item) {
-      think(bot, "GRAB ITEM");
+      // Named apart in the thought trail because it is a different DECISION:
+      // a scroll is walked to for the fight that is coming, not for the pocket.
+      think(bot, item.kind === "xp" ? "GRAB SCROLL" : "GRAB ITEM");
       // Wall-aware: the drop was sweep-clear when picked, but the walk can
       // still clip a shelf edge — round it instead of grinding on it.
       return navSteer(bot, state, hero, item.pos);
@@ -283,7 +294,14 @@ export function survive(
     // foe in reach the auto-attack turns on the nearest breakable box
     // (stepWeapon) and smashes it open, and standing still tops the pool up
     // while it does. The macro content sweep still routes to the far ones.
-    const chest = nearestChestNearby(state, hero, tune);
+    // NOT while an XP scroll burns, though. This is the QUIET-field read, so
+    // the alternative to the locker is marching at the next pack — and a locker
+    // will keep, where thirty seconds of doubled XP will not. (The in-fight
+    // chest read further down stands: there the box is closer than the foe he
+    // is already trading with, so it costs a swing, not the window.)
+    const chest = spendingWindow
+      ? undefined
+      : nearestChestNearby(state, hero, tune);
     if (chest) {
       think(bot, "CRACK CHEST");
       const reach = weaponRangeFor(state, player, player.equipment.weapon);
@@ -449,23 +467,10 @@ export function survive(
     // banking stamina instead of hopping the whole way and winding himself; the
     // reserve floor keeps the pool from ever bottoming out.
     if (lowHp) {
-      // A DINGING golden arrow beats any medkit: the level-up it tips is a
-      // free FULL heal + stamina refill (see Bot.arrowXp — the bot knows what
-      // an arrow pays from experience), and the medkit stays pocketed.
-      const arrow = dingArrowNearby(bot, state, hero, ITEM_REACH);
-      if (arrow) {
-        think(bot, "GRAB ARROW");
-        return sprint(
-          navSteer(
-            bot,
-            state,
-            hero,
-            arrow.pos,
-            wantHop && commitHop(bot, state, hero, arrow.pos, true, tune),
-          ),
-        );
-      }
-      // Else a medkit within reach is worth the detour when we're bleeding.
+      // A medkit within reach is worth the detour when we're bleeding. (An XP
+      // scroll is NOT an option here, however close: it heals nothing — the
+      // golden arrow it replaced could tip a ding and with it a free full
+      // heal, and that is exactly the shortcut a multiplier cannot offer.)
       const item = nearestWantedItem(state, hero);
       if (
         item &&

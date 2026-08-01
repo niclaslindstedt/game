@@ -36,7 +36,7 @@ export function parseFlags(args, deps) {
         "[--level all|goodco_hq[,…]] [--rerun N] [--seed N] " +
         "[--strategy all|aggro,balanced,flee|survivor|rush|kite|boss] " +
         "[--class all|melee,ranged,magic,balanced|auto] " +
-        "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-arrow-xp] " +
+        "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-xp-scroll] " +
         "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
         "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] [--jobs N] " +
         "[--map-size small|medium|large|random] [--mod <dir>] " +
@@ -99,12 +99,13 @@ export function parseFlags(args, deps) {
         "                 repair → buy → equip, the way a real player recovers a broken weapon.\n" +
         "                 --no-shop turns it off (the bot-never-shops read) to A/B how much a\n" +
         "                 high-difficulty stall is the bot vs real balance.\n\n" +
-        "arrow xp (DEFAULT on): --no-arrow-xp switches the golden-arrow XP faucet off for\n" +
-        "                 the sweep, so pacing graphs read the pure kill grind — the isolation\n" +
-        "                 view for tuning the arrowXpKills/arrowDropShare levers in\n" +
+        "xp scroll (DEFAULT on): --no-xp-scroll switches the XP-scroll faucet off for the\n" +
+        "                 sweep (scrolls still drop, they just light no window), so pacing graphs\n" +
+        "                 read the pure kill grind — the isolation view for tuning the\n" +
+        "                 scrollXpMult/scrollDurationMs/scrollDropShare levers in\n" +
         "                 content/leveling.yaml.\n\n" +
         "pacing (DEFAULT realistic): each run ends when the hero reaches the map's intended\n" +
-        "                 exit level (arrowCapByDifficulty), so he carries a real-player level\n" +
+        "                 exit level (intendedLevelByDifficulty), so he carries a real-player level\n" +
         "                 forward. --farm turns that off and farms to the cap (the endgame /\n" +
         "                 L99 / artifact-chase read; pair with a big --max-minutes / --rerun).\n\n" +
         `--balance knobs (same ten as the DEVELOPER → BALANCE page, 0..100, 1 = shipped):\n  ${Object.keys(
@@ -213,7 +214,7 @@ export function parseFlags(args, deps) {
   const comparePath = opt("compare");
   const jsonPath = opt("json");
   // PACING. The DEFAULT is realistic: each run ends the moment the hero reaches
-  // the map's intended exit level (its arrowCapByDifficulty), so he moves on with
+  // the map's intended exit level (its intendedLevelByDifficulty), so he moves on with
   // a real-player level and every level-relative read stays trustworthy. `--farm`
   // opts OUT — the bot farms to the cap for the whole run, the endgame read (farm
   // toward L99 / full artifact gear); pair it with a big `--max-minutes`/`--rerun`
@@ -226,11 +227,12 @@ export function parseFlags(args, deps) {
   // turns it off — the bot-never-shops read, to A/B how much a stall is the bot
   // vs real balance.
   const autoShop = !flag("no-shop");
-  // ARROW XP is ON by default (the real game). `--no-arrow-xp` switches the
-  // golden-arrow faucet off for the sweep (engine `setArrowXpEnabled`) so a
-  // pacing graph reads the pure kill grind — the isolation view for tuning
-  // the `arrowXpKills` / `arrowDropShare` levers in content/leveling.yaml.
-  const arrowXp = !flag("no-arrow-xp");
+  // THE XP SCROLL is ON by default (the real game). `--no-xp-scroll` switches
+  // the faucet off for the sweep (engine `setXpScrollEnabled`) so a pacing
+  // graph reads the pure kill grind — the isolation view for tuning the
+  // `scrollXpMult` / `scrollDurationMs` / `scrollDropShare` levers in
+  // content/leveling.yaml.
+  const xpScroll = !flag("no-xp-scroll");
   // ARRIVAL. --start-level N drops a REALISTIC leveled + geared hero into the
   // first swept rung instead of a fresh level-1 rookie — the campaign's intended
   // entry state (a hero who cleared the rungs below and carried his kit forward).
@@ -361,7 +363,7 @@ export function parseFlags(args, deps) {
     jsonPath,
     realisticPacing,
     autoShop,
-    arrowXp,
+    xpScroll,
     gearTier,
     stuckLimit,
     mortal,

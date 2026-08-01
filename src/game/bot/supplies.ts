@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The autopilot's SUPPLY SENSE: which ground pickups are worth wanting (the
-// GPS-disciplined loot detours, the golden-arrow reads and the learned arrow
-// worth, the repair-kit stocking cycle, the pass-over top-off reach) and the
-// BRAVERY gauge — how boldly the stamina pool gets spent, judged off recent
-// kill power and the depth of the pockets. Pure reads of the GameState; the
-// only mutations are the bot's own bravery/arrow memories, so botted runs
-// stay deterministic.
+// GPS-disciplined loot detours, the XP-scroll reads, the repair-kit stocking
+// cycle, the pass-over top-off reach) and the BRAVERY gauge — how boldly the
+// stamina pool gets spent, judged off recent kill power and the depth of the
+// pockets. Pure reads of the GameState; the only mutations are the bot's own
+// bravery memories, so botted runs stay deterministic.
 
 import { clamp, distance } from "@game/lib/vec.ts";
 import { canBankAbility, magnetRadius } from "../abilities.ts";
 import { abilityValue } from "./economy.ts";
 import { insideWellPull } from "./nav.ts";
 import { travelHeading } from "./macro.ts";
-import { THREAT_RADIUS } from "./perception.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { AMMO, CONSUMABLES, PLAYER } from "../config/index.ts";
@@ -26,6 +24,7 @@ import {
   medkitTierIndex,
   weaponDamageFor,
 } from "../items/index.ts";
+import { xpScrollDurationMs } from "../leveling.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import type { Equipment, GameState, Item, Player } from "../types/index.ts";
 import { inertEnemy } from "../disposition.ts";
@@ -144,18 +143,13 @@ export function braveryScore(bot: Bot, state: GameState, hero: Player): number {
     killPower = Math.max(blowPower, recentPower);
   }
   const medkits = player.medkits.reduce((sum, n) => sum + n, 0);
-  // A DINGING golden arrow in the local ring is a banked full heal (the
-  // level-up restores hp and stamina — see Bot.arrowXp): with one close by
-  // the hero can afford to fight braver, so it credits the safety net like a
-  // couple of pocketed kits.
-  const arrowHeals = dingArrowNearby(bot, state, hero, THREAT_RADIUS) ? 2 : 0;
   const powerupValue = player.heldAbilities.reduce(
     (sum, id) => sum + abilityValue(id),
     0,
   );
   return clamp(
     0.5 * killPower +
-      0.2 * Math.min(1, (medkits + arrowHeals) / BRAVE_MEDKITS) +
+      0.2 * Math.min(1, medkits / BRAVE_MEDKITS) +
       0.15 * Math.min(1, player.staminaPotions / BRAVE_STAMINA_POTS) +
       0.15 * Math.min(1, powerupValue / BRAVE_POWERUP_VALUE),
     0,
@@ -275,6 +269,14 @@ function canBankPickup(state: GameState, hero: Player, item: Item): boolean {
     // at it is the full-pockets stall this function exists to prevent.
     case "ammo":
       return ammoCount(player, item.ammo) < AMMO.stackCap;
+    // AN XP SCROLL IS NEVER ORDINARY LOOT. It has its own read
+    // ({@link wantedScrollNearby}) because whether it is worth walking to
+    // depends on the FIGHT — is anything alive to double, is my own window
+    // already running — and none of that is a question about pockets. Left in
+    // the generic pool it would be scooped as "a close drop", which is exactly
+    // the judgement the scroll model exists to make.
+    case "xp":
+      return false;
     default:
       return true;
   }
@@ -319,24 +321,79 @@ export function nearestWantedItem(
   return best;
 }
 
-/** Are this map's GOLDEN ARROWS still WARM — the hero under the rung's arrow
- * XP cap (`arrowCapByDifficulty`)? A warm arrow pays a real share of the
- * current level's XP bar (the catch-up faucet), so it outranks every other
- * ground pickup; past the cap it goes cold (a sliver) and drops back to
- * ordinary loot. A rung with no cap entry never goes cold. */
-function arrowsWarm(state: GameState, hero: Player): boolean {
-  const cap = runLevelDef(state).loot.arrowCapByDifficulty?.[state.difficulty];
+/** Is this map's XP still WORTH DOUBLING — the hero under the rung's intended
+ * exit level (`intendedLevelByDifficulty`)? A scroll multiplies what the hero
+ * earns, and on ground he has outgrown the per-map cap has already throttled
+ * that to a trickle, so twice a trickle is not worth a detour. Under the level
+ * it is the best pickup on the floor; past it a scroll drops back to ordinary
+ * loot. A rung with no entry never goes cold. */
+function scrollsWarm(state: GameState, hero: Player): boolean {
+  const cap =
+    runLevelDef(state).loot.intendedLevelByDifficulty?.[state.difficulty];
   return cap === undefined || hero.level < cap;
 }
 
-/** The nearest collectable GOLDEN ARROW within `reach` the body can
- * sweep straight to — the "level up now" pickup {@link wantedItemNearby} puts
- * ahead of everything else while the arrows are warm. */
-function nearestXpArrow(
+/** Is a fresh scroll worth walking to RIGHT NOW, or would it overwrite a window
+ * that has most of its life left? A scroll REFRESHES rather than stacks, so
+ * reading one at 25 of 30 seconds remaining throws almost the whole thing away
+ * — the same judgement a human makes when he steps around one to come back for
+ * it later. Under this share of the window left, the top-up is worth it. */
+const SCROLL_REFRESH_FRAC = 0.4;
+
+/**
+ * How far out the bot looks for SOMETHING TO SPEND A WINDOW ON before it walks
+ * to a scroll (world px). Deliberately far wider than the local pack radius:
+ * thirty seconds is a long time and the hero crosses this well inside it, so
+ * anything alive in here will be in the fight before the window runs out. This
+ * is the whole difference between the scroll and the golden arrow it replaced —
+ * an arrow paid the moment it was touched, so grabbing one was never wrong,
+ * while a scroll read on an empty floor doubles thirty seconds of nothing.
+ */
+const SCROLL_FIGHT_RADIUS = 900;
+
+/** A scroll THIS close is read whatever the field is doing — at arm's length it
+ * costs no detour worth the name, and the alternative is stepping over free
+ * value on the off-chance the floor stays empty. */
+const SCROLL_FREE_REACH = 90;
+
+/** Is anything still alive within {@link SCROLL_FIGHT_RADIUS} — is there a
+ * fight for a window to double? Bystanders and downed apparitions don't count:
+ * a room full of quest-givers is an empty room to a scroll. */
+function foeWithinScrollReach(state: GameState, hero: Player): boolean {
+  for (const enemy of state.enemies) {
+    if (inertEnemy(enemy)) continue;
+    if (distance(enemy.pos, hero.pos) <= SCROLL_FIGHT_RADIUS) return true;
+  }
+  return false;
+}
+
+/**
+ * The nearest XP SCROLL worth READING right now, or undefined — the bot's whole
+ * model of the item, and the reason it is not simply "the best pickup on the
+ * floor". Three questions, in the order a human asks them:
+ *
+ *  1. Is this map's XP still worth doubling ({@link scrollsWarm})? Past the
+ *     rung's intended exit level the per-map cap has already throttled the
+ *     hero's income to a trickle, and twice a trickle is not worth a step.
+ *  2. Is my own window spent ({@link SCROLL_REFRESH_FRAC})? A scroll refreshes
+ *     rather than stacks, so reading a second one at 25 of 30 seconds left
+ *     throws the difference away — leave it lying and come back.
+ *  3. Is there anything to spend it ON ({@link SCROLL_FIGHT_RADIUS})? This is
+ *     the judgement the golden arrow never needed. A scroll at arm's length
+ *     ({@link SCROLL_FREE_REACH}) is read regardless — it is free — but a walk
+ *     across a cleared floor to light a window over nothing is a walk to waste
+ *     it, and the scroll will still be there after the next pack spawns.
+ */
+function wantedScrollNearby(
   state: GameState,
   hero: Player,
   reach: number = ITEM_REACH,
 ): Item | undefined {
+  if (!scrollsWarm(state, hero)) return undefined;
+  const duration = xpScrollDurationMs();
+  if (duration <= 0) return undefined; // the faucet is off — a scroll is litter
+  if ((hero.xpBoostMs ?? 0) > duration * SCROLL_REFRESH_FRAC) return undefined;
+  const worthLighting = foeWithinScrollReach(state, hero);
   let best: Item | undefined;
   let bestD = reach;
   for (const item of state.items) {
@@ -344,6 +401,7 @@ function nearestXpArrow(
     if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
     const d = distance(item.pos, hero.pos);
     if (d >= bestD) continue;
+    if (!worthLighting && d > SCROLL_FREE_REACH) continue;
     if (blockedByObstacle(state, hero.pos, item.pos, PLAYER.radius)) continue;
     best = item;
     bestD = d;
@@ -352,51 +410,14 @@ function nearestXpArrow(
 }
 
 /**
- * Keep the LEARNED arrow worth fresh: whenever this tick's events carry a
- * collected GOLDEN ARROW's "+N XP" figure, remember what share of the XP bar
- * it paid, rounded to 5% increments (see {@link Bot.arrowXp}). A step whose
- * events also carry a level-up is skipped — the bar itself changed under the
- * award, so the ratio is unreadable that tick (the next arrow re-teaches it).
- * Reads only `state.events` + the bot's own memory, so determinism holds.
+ * Is this hero's double-XP window LIT — is the clock running? Read by the
+ * fight code to press the pack instead of circling it, and to walk past the
+ * errands (a locker to smash) that would spend the window on nothing. The
+ * window burns in real time whether or not he is swinging, which is exactly why
+ * it changes how he plays rather than only what he picks up.
  */
-export function trackArrowXp(bot: Bot, state: GameState, hero: Player): void {
-  let award: number | undefined;
-  for (const event of state.events) {
-    if (event.type === "levelUp") return; // bar replaced mid-step — unreadable
-    if (event.type === "itemCollected" && event.kind === "xp") {
-      award = event.xp ?? award;
-    }
-  }
-  if (award === undefined) return;
-  const share = award / Math.max(1, hero.xpToNext);
-  bot.arrowXp = {
-    pct: clamp(Math.round(share * 20) / 20, 0, 1),
-    level: hero.level,
-  };
-}
-
-/**
- * A GOLDEN ARROW within `reach` that would DING — push the hero over the
- * level-up line, by the bot's LEARNED read of what an arrow pays
- * ({@link Bot.arrowXp}) — or undefined. A ding is a free FULL HEAL (grantXp
- * refills hp and stamina on level-up), so a dinging arrow nearby is a
- * strategic resource: it substitutes for a medkit and buys bravery. Nothing
- * fires before the first arrow has taught its worth, and cold arrows teach
- * ~0%, which disables the read on outgrown maps.
- */
-export function dingArrowNearby(
-  bot: Bot,
-  state: GameState,
-  hero: Player,
-  reach: number,
-): Item | undefined {
-  const learned = bot.arrowXp;
-  if (!learned || learned.pct <= 0) return undefined;
-  if (!arrowsWarm(state, hero)) return undefined;
-  const player = hero;
-  if (player.xpToNext - player.xp > learned.pct * player.xpToNext)
-    return undefined; // an arrow would not tip the bar
-  return nearestXpArrow(state, hero, reach);
+export function xpWindowLit(hero: Player): boolean {
+  return (hero.xpBoostMs ?? 0) > 0;
 }
 
 /** An item this close (world px) is stooped for freely — drops land where the
@@ -411,8 +432,8 @@ const ITEM_CLOSE_REACH = 120;
 const ITEM_DETOUR_MIN_ALONG = -0.2;
 
 /** The nearest wanted ground pickup worth a detour NOW, GPS-disciplined: a
- * WARM golden arrow first at any reach (a share of the level bar beats any
- * other pickup — see {@link arrowsWarm}), then a
+ * WORTH-READING XP scroll first at any reach (doubling the next half-minute of
+ * the fight beats any other pickup — see {@link wantedScrollNearby}), then a
  * close drop ({@link ITEM_CLOSE_REACH}) is always grabbed, and EQUIPMENT (and
  * story pieces) at any reach — a gear upgrade is worth any detour. A farther
  * CONSUMABLE only if it doesn't drag the hero backward off the current route
@@ -426,10 +447,8 @@ export function wantedItemNearby(
   hero: Player,
   tune: BotTuning,
 ): Item | undefined {
-  if (arrowsWarm(state, hero)) {
-    const arrow = nearestXpArrow(state, hero);
-    if (arrow) return arrow;
-  }
+  const scroll = wantedScrollNearby(state, hero);
+  if (scroll) return scroll;
   const item = nearestWantedItem(state, hero);
   if (!item) return undefined;
   const d = distance(item.pos, hero.pos);

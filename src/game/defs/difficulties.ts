@@ -331,7 +331,8 @@ export type DifficultyDef = {
   menaceStageCap?: number;
   /**
    * A flat XP-GAIN multiplier for this rung, applied to EVERY grant (kills,
-   * arrows, scripted awards) at the one `grantXp` door. It paces how far a
+   * a scroll's doubled cut, scripted awards) at the one `grantXp` door. It
+   * paces how far a
    * campaign clear levels the hero WITHOUT touching mob levels, counts, or the
    * cost curve — the lever for lifting a tier that lands short of its intended
    * finish (a big-span tier like NIGHTMARE, whose per-level cost outruns the
@@ -361,14 +362,14 @@ export type DifficultyDef = {
    */
   powerupDropMult: number;
   /**
-   * Multiplies the golden-XP-arrow slice of the drop ladder (the
-   * `arrowDropShare` knob in content/leveling.yaml) —
-   * free levels thin out up the rungs, so the harder fights lean on the kill
-   * grind instead of arrow rain. Whatever this trims off the slice simply
-   * doesn't drop (arrows are the ladder's tail, not the leftover). JESUS sets
-   * it to 0: no arrows at all, the climb is earned kill by kill.
+   * Multiplies the XP-SCROLL slice of the drop ladder (the `scrollDropShare`
+   * knob in content/leveling.yaml) — double-XP windows thin out up the rungs,
+   * so the harder fights lean on the kill grind instead of a scroll rain.
+   * Whatever this trims off the slice simply doesn't drop (scrolls are the
+   * ladder's tail, not the leftover). JESUS sets it to 0: no scrolls at all,
+   * the climb is earned kill by kill.
    */
-  arrowDropMult: number;
+  scrollDropMult: number;
   /**
    * MERCY DROPS (see the `MERCY` config for the ramp shapes) — the per-rung
    * STRENGTH of the easy/medium rope: how hard a packed field, a bleeding
@@ -531,18 +532,19 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 1.5,
     menaceEffectMult: 0.5,
     menaceStageCap: 3,
-    // Trimmed (2.5 → 2.2) with the leveling.yaml repace: the golden-arrow
-    // faucet pays a share of the BAR (self-scaling), so the gentle lanes kept
-    // landing ~2 over the ladder however much the curve rose — the last two
-    // levels of the trim live here (full clear → ~31, the ladder's finish).
+    // Trimmed (2.5 → 2.2) with the leveling.yaml repace, back when the XP
+    // faucet was a golden arrow paying a share of the BAR (self-scaling), so
+    // the gentle lanes kept landing ~2 over the ladder however much the curve
+    // rose — the last two levels of the trim live here (full clear → ~31, the
+    // ladder's finish).
     xpBonus: 1.6,
     dropChanceBonus: 0,
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
     powerupDropMult: 1.05,
-    // The gentlest rung keeps the full arrow rain — the onboarding wants the
+    // The gentlest rung keeps the full scroll rain — the onboarding wants the
     // quick dings.
-    arrowDropMult: 1,
+    scrollDropMult: 1,
     // The most forgiving rung: a full screen tops out at a 5%-per-kill bomb,
     // a dying hero triples his medkit odds and coin-flips gear into armor, and
     // a near-broken weapon draws repairs three times as hard.
@@ -606,9 +608,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 1,
     armorDropMult: 1,
     powerupDropMult: 1,
-    // The 1.0 baseline: the arrow slice fills the rest of the ladder exactly
+    // The 1.0 baseline: the scroll slice fills the rest of the ladder exactly
     // as the old implicit remainder did.
-    arrowDropMult: 1,
+    scrollDropMult: 1,
     // The fight as intended, with a lighter touch than easy: a packed field
     // caps at 3% bomb, and the low-health/low-durability boosts are dialed
     // back so the rope is thinner.
@@ -666,8 +668,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
     powerupDropMult: 0.95,
-    // Arrows start thinning: fewer free levels, more of the climb earned.
-    arrowDropMult: 0.7,
+    // Scrolls start thinning: fewer doubled windows, more of the climb earned.
+    scrollDropMult: 0.7,
     // The mercy taper (~x0.4 per rung off medium): hard keeps a WHISPER of
     // the rope — a rare bomb in a drowning swarm, a thin low-health boost —
     // so the cliff out of medium is a step, not a wall.
@@ -729,8 +731,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
     powerupDropMult: 0.9,
-    // Arrows are scarce up here — the horde is the only real XP source.
-    arrowDropMult: 0.4,
+    // Scrolls are scarce up here — the horde is the only real XP source.
+    scrollDropMult: 0.4,
     // A ghost of mercy (the taper's last audible step before JESUS's zero).
     mercy: {
       crowdBombChanceMax: 0.005,
@@ -789,8 +791,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.77,
     armorDropMult: 0.77,
     powerupDropMult: 0.77,
-    // No arrows at all on JESUS: every level is earned kill by kill.
-    arrowDropMult: 0,
+    // No scrolls at all on JESUS: every level is earned kill by kill.
+    scrollDropMult: 0,
     // JESUS is the taper's terminus: absolute zero, no net, by design.
     mercy: {
       crowdBombChanceMax: 0,

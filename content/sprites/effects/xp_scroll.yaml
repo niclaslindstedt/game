@@ -1,0 +1,33 @@
+name: xp_scroll
+family: effects
+size: [12, 12]
+description: >
+  The XP SCROLL pickup — a short parchment scroll, rolled at both ends, with
+  two lines of arcane blue writing burning across its open face. Walking over
+  one reads it: every scrap of experience counts double for half a minute, and
+  the blue is the same blue as the veil it wraps the hero in.
+subject:
+  kind: pickup
+  build: a small parchment scroll seen face-on, wound onto tan rollers that
+    overhang it top and bottom, two short lines of glowing blue script across
+    the open cream face, each line ending ragged the way writing does
+  accent: glowing arcane blue script on cream parchment
+  flavor: somebody's cheat sheet, still burning
+palette:
+  O: "#1a1c2c" # dark outline
+  t: "#c9a06a" # tan roller
+  w: "#f6efdc" # open parchment
+  E: "#5ab4ff" # arcane blue script
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OttttttttO.
+  .OOOOOOOOOO.
+  ..OEEEwwwO..
+  ..OwwwwwwO..
+  ..OEEEEwwO..
+  ..OwwwwwwO..
+  .OOOOOOOOOO.
+  .OttttttttO.
+  .OOOOOOOOOO.
+  ............

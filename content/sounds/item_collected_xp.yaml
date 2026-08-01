@@ -1,21 +1,38 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: item_collected_xp
 description: >-
-  The treasure flourish — brighter and wetter for magic+ finds.
+  An XP SCROLL read on the run: parchment unrolling in a short dry rasp, then
+  the script catching — a rising arcane shimmer with a bell over the top. Airier
+  and longer than the pickups around it because it isn't a pickup, it's a spell
+  going off, and the thirty seconds it lights are worth announcing.
 on:
   type: itemCollected
   kind: xp
 voices:
+  # The unroll: a dry papery rasp, filtered high and gone in a blink.
+  - call: noise
+    durationMs: 90
+    volume: 0.035
+    filter:
+      type: bandpass
+      frequency: 4200
+      q: 0.9
+  # The script catching light — a wide rising sweep, detuned so it shimmers
+  # rather than beeps.
   - call: tone
-    type: square
-    from: 440
-    to: 880
-    durationMs: 110
+    type: triangle
+    from: 520
+    to: 1560
+    durationMs: 240
     volume: 0.045
+    detuneCents: 9
+    delayMs: 40
+    echo: 0.35
+  # And the bell over the top: the window is open.
   - call: tone
     type: sine
-    from: 1320
-    durationMs: 150
-    volume: 0.04
-    delayMs: 90
-    echo: 0.3
+    from: 1980
+    durationMs: 320
+    volume: 0.035
+    delayMs: 200
+    echo: 0.45

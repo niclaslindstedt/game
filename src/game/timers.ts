@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The talent timers — Frost Nova's internal cooldown (magic tree) and Evasion's
-// rank-5 speed-burst window (ranged tree). Called every playing frame from
-// `step`, before the combat passes read them: both clocks count down so the next
-// struck-frame can freeze the swarm again and a dodge's dart fades out.
+// The per-hero windows — Frost Nova's internal cooldown (magic tree), Evasion's
+// rank-5 speed-burst (ranged tree), and the XP SCROLL's double-XP window.
+// Called every playing frame from `step`, before the combat passes read them:
+// the clocks count down so the next struck-frame can freeze the swarm again, a
+// dodge's dart fades out, and a scroll's thirty seconds actually run out.
 
 import type { GameState, Player } from "./types/index.ts";
 
@@ -22,5 +23,14 @@ export function stepTimers(
   // fresh dodge re-arms it in the struck path.
   if (player.evasionBurstMs && player.evasionBurstMs > 0) {
     player.evasionBurstMs = Math.max(0, player.evasionBurstMs - dtMs);
+  }
+
+  // THE XP SCROLL's double-XP window burns down in real time, whatever the hero
+  // spends it on — that IS the scroll's design (its worth is what he does with
+  // the thirty seconds). Ticked here rather than in `stepPlayer` so a hero
+  // knocked flat by a sandstorm still burns his window: the scroll is not a
+  // resource he can bank by lying down.
+  if (player.xpBoostMs && player.xpBoostMs > 0) {
+    player.xpBoostMs = Math.max(0, player.xpBoostMs - dtMs);
   }
 }
