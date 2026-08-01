@@ -49,10 +49,13 @@ line, played in several moods whenever he over-farms a map.
 **Movie night, the night it starts.** Ada announces they are out of chips and
 soda and steps out for five minutes, telling the hero to keep her spot warm.
 She takes the jacket he fixed the zipper on. Two hours later she still hasn't
-come back, and the room is quiet. He takes the weapon down off the back wall —
-which one depends on the difficulty (his GRANDFATHER'S SAWED-OFF SHOTGUN, a
-MEDIEVAL SWORD, a COMBAT KNIFE, BRASS KNUCKLES, or just A STICK) — and resolves to bring her
-home. It becomes the weapon he starts the whole run with.
+come back, and the room is quiet. Then the man who never gets up gets up: he
+crosses to the back wall, leaps for the weapon mounted over the couch and takes
+it down out of the air — which one depends on the difficulty (his GRANDFATHER'S
+SAWED-OFF SHOTGUN, a MEDIEVAL SWORD, a COMBAT KNIFE, BRASS KNUCKLES, or just A
+STICK) — and walks out the door she left by, carrying it. It becomes the weapon
+he starts the whole run with, and he is holding it in his hand from the moment
+the scene ends.
 
 ## Home — THE GARAGE (hub)
 

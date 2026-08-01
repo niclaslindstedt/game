@@ -21,6 +21,11 @@ import { distance, moveToward, type Vec2 } from "./vec.ts";
 export type CutsceneProp = {
   kind: string;
   pos: Vec2;
+  /**
+   * A handle a `prop` beat addresses this piece by — the wall weapon the
+   * hero takes down. Optional: dressing nothing ever touches needs no name.
+   */
+  id?: string;
   /** Camera-shift multiplier: 1 = foreground (default), 0 = infinitely far. */
   parallax?: number;
   /** Wrap around the stage horizontally instead of leaving it. */
@@ -95,6 +100,30 @@ export type CutsceneBeat =
   | { kind: "pose"; actor: string; sprite: string }
   /** Mirror an actor without moving. Instant. */
   | { kind: "face"; actor: string; faceLeft: boolean }
+  /**
+   * Leave the ground and come back down: ease the actor's `lift` (world px
+   * above the mark it stands on) to `lift` over `ms`, ballistically — a rise
+   * decelerates into its apex, a fall accelerates out of it. A whole leap is
+   * therefore TWO beats, up and down, and whatever the jump was for (taking a
+   * thing off a wall) settles between them, at the apex, in one frame.
+   *
+   * A lift is HEIGHT, not depth: it moves the actor up the frame without
+   * touching `pos`, so a jump never re-sorts the actor through the furniture
+   * it is standing in front of.
+   */
+  | { kind: "jump"; actor: string; lift: number; ms: number }
+  /**
+   * Put something in an actor's hands, or take it away (`sprite` omitted).
+   * `at` offsets the held sprite from the ACTOR SPRITE'S OWN top-left, so it
+   * is authored against the body plan exactly the way the hero's paper doll
+   * anchors his weapon, and it mirrors with the actor. Instant.
+   */
+  | { kind: "hold"; actor: string; sprite?: string; at?: Vec2 }
+  /**
+   * Show or hide a stage prop by its `id` — the wall weapon leaving the wall
+   * the moment the hero closes his hand on it. Instant.
+   */
+  | { kind: "prop"; prop: string; hidden: boolean }
   /** Pop an actor onto / off the stage. Instant. */
   | { kind: "enter"; actor: string }
   | { kind: "exit"; actor: string }
@@ -118,6 +147,13 @@ export type CutsceneDef = {
   beats: CutsceneBeat[];
 };
 
+/** Something in an actor's hands, drawn over the body (a `hold` beat). */
+export type CutsceneHold = {
+  sprite: string;
+  /** Offset from the actor sprite's own top-left; mirrors with the actor. */
+  at: Vec2;
+};
+
 /** A live actor: def snapshot + where the scene has moved it so far. */
 export type CutsceneActor = {
   id: string;
@@ -129,6 +165,11 @@ export type CutsceneActor = {
   moving: boolean;
   /** Tremble amplitude in world px (a `shake` beat sets it; 0 = still). */
   shake: number;
+  /** World px above the mark, off the ground (a `jump` beat drives it). The
+   * renderer lifts the drawing by it and sorts by `pos` regardless. */
+  lift: number;
+  /** What this actor is carrying, or null for empty hands. */
+  holding: CutsceneHold | null;
 };
 
 export type CutsceneState = {
@@ -145,6 +186,11 @@ export type CutsceneState = {
   fade: number;
   /** Fade level when the running fade beat started (interpolation base). */
   fadeFrom: number;
+  /** The jumping actor's lift when the running jump beat started (its
+   * interpolation base — the peer of `fadeFrom`). */
+  liftFrom: number;
+  /** Ids of the props a `prop` beat has taken off the stage. */
+  hiddenProps: string[];
   /**
    * The camera's accumulated shift in world px (stage `drift` + `pan`
    * beats). The renderer offsets each prop by `shift × its parallax`;
@@ -166,12 +212,16 @@ export function createCutscene(def: CutsceneDef): CutsceneState {
       hidden: a.hidden ?? false,
       moving: false,
       shake: 0,
+      lift: 0,
+      holding: null,
     })),
     beat: 0,
     beatMs: 0,
     timeMs: 0,
     fade: 0,
     fadeFrom: 0,
+    liftFrom: 0,
+    hiddenProps: [],
     shift: { x: 0, y: 0 },
     done: def.beats.length === 0,
   };
@@ -188,6 +238,13 @@ function settleBeat(state: CutsceneState, beat: CutsceneBeat): void {
   switch (beat.kind) {
     case "move": {
       const a = actor(state, beat.actor);
+      // Face the way the walk went, exactly as stepping it would have — a
+      // walk the player TAPPED through settles its whole end state, facing
+      // included, or the actor arrives at its mark still turned the way it
+      // was standing before it set off.
+      if (Math.abs(beat.to.x - a.pos.x) > 0.5) {
+        a.faceLeft = beat.to.x < a.pos.x;
+      }
       a.pos = { ...beat.to };
       a.moving = false;
       break;
@@ -207,6 +264,20 @@ function settleBeat(state: CutsceneState, beat: CutsceneBeat): void {
     case "shake":
       actor(state, beat.actor).shake = beat.amp;
       break;
+    case "jump":
+      actor(state, beat.actor).lift = beat.lift;
+      break;
+    case "hold":
+      actor(state, beat.actor).holding = beat.sprite
+        ? { sprite: beat.sprite, at: beat.at ? { ...beat.at } : { x: 0, y: 0 } }
+        : null;
+      break;
+    case "prop": {
+      const hidden = state.hiddenProps.filter((id) => id !== beat.prop);
+      if (beat.hidden) hidden.push(beat.prop);
+      state.hiddenProps = hidden;
+      break;
+    }
     case "fade":
       state.fade = beat.to;
       break;
@@ -231,13 +302,19 @@ function beginBeat(state: CutsceneState, def: CutsceneDef): void {
     return;
   }
   if (beat.kind === "fade") state.fadeFrom = state.fade;
+  // The jump's base is read HERE, before its first step — so the fall beat
+  // that follows a rise picks up the apex the settle just left behind, in the
+  // same synchronous turn, and the actor never blinks back to the ground.
+  if (beat.kind === "jump") state.liftFrom = actor(state, beat.actor).lift;
   // Instant beats settle immediately and roll into the next one.
   if (
     beat.kind === "pose" ||
     beat.kind === "face" ||
     beat.kind === "enter" ||
     beat.kind === "exit" ||
-    beat.kind === "shake"
+    beat.kind === "shake" ||
+    beat.kind === "hold" ||
+    beat.kind === "prop"
   ) {
     settleBeat(state, beat);
     state.beat++;
@@ -289,6 +366,19 @@ export function stepCutscene(
       const now = Math.min(1, state.beatMs / ms);
       state.shift.x += beat.by.x * (now - was);
       state.shift.y += beat.by.y * (now - was);
+      if (state.beatMs >= beat.ms) nextBeat(state, def, beat);
+      return;
+    }
+    case "jump": {
+      // A ballistic half-arc: going UP the actor decelerates into the apex,
+      // coming DOWN it accelerates out of it. Which half this is, is the
+      // direction of travel — so a leap needs no authored gravity, only its
+      // height and how long it takes.
+      const a = actor(state, beat.actor);
+      const t = Math.min(1, state.beatMs / Math.max(1, beat.ms));
+      const rising = beat.lift > state.liftFrom;
+      const eased = rising ? 1 - (1 - t) * (1 - t) : t * t;
+      a.lift = state.liftFrom + (beat.lift - state.liftFrom) * eased;
       if (state.beatMs >= beat.ms) nextBeat(state, def, beat);
       return;
     }

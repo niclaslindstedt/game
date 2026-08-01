@@ -496,10 +496,101 @@
           "ms": 500
         },
         {
+          "actor": "hero",
+          "kind": "pose",
+          "sprite": "hero"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 44,
+          "to": {
+            "x": 136,
+            "y": 100
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 104,
+            "y": 86
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 30,
+          "ms": 380
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "arm"
+        },
+        {
+          "actor": "hero",
+          "at": {
+            "x": 9,
+            "y": 2
+          },
+          "kind": "hold",
+          "sprite": "icon_medieval_sword"
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 0,
+          "ms": 300
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 146,
+            "y": 108
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
           "kind": "caption",
           "text": [
             "THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
           ]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
         },
         {
           "kind": "fade",
@@ -526,6 +617,7 @@
             }
           },
           {
+            "id": "arm",
             "kind": "wall_medieval_sword",
             "pos": {
               "x": 104,
@@ -700,10 +792,101 @@
           "ms": 500
         },
         {
+          "actor": "hero",
+          "kind": "pose",
+          "sprite": "hero"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 44,
+          "to": {
+            "x": 136,
+            "y": 100
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 104,
+            "y": 86
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 30,
+          "ms": 380
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "arm"
+        },
+        {
+          "actor": "hero",
+          "at": {
+            "x": 9,
+            "y": 2
+          },
+          "kind": "hold",
+          "sprite": "icon_sawed_off_shotgun"
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 0,
+          "ms": 300
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 146,
+            "y": 108
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
           "kind": "caption",
           "text": [
             "GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
           ]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
         },
         {
           "kind": "fade",
@@ -730,6 +913,7 @@
             }
           },
           {
+            "id": "arm",
             "kind": "wall_sawed_off_shotgun",
             "pos": {
               "x": 104,
@@ -904,8 +1088,99 @@
           "ms": 500
         },
         {
+          "actor": "hero",
+          "kind": "pose",
+          "sprite": "hero"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 44,
+          "to": {
+            "x": 136,
+            "y": 100
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 104,
+            "y": 86
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 30,
+          "ms": 380
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "arm"
+        },
+        {
+          "actor": "hero",
+          "at": {
+            "x": 9,
+            "y": 2
+          },
+          "kind": "hold",
+          "sprite": "icon_combat_knife"
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 0,
+          "ms": 300
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 146,
+            "y": 108
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
           "kind": "caption",
           "text": ["THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
         },
         {
           "kind": "fade",
@@ -932,6 +1207,7 @@
             }
           },
           {
+            "id": "arm",
             "kind": "wall_combat_knife",
             "pos": {
               "x": 104,
@@ -1106,8 +1382,99 @@
           "ms": 500
         },
         {
+          "actor": "hero",
+          "kind": "pose",
+          "sprite": "hero"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 44,
+          "to": {
+            "x": 136,
+            "y": 100
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 104,
+            "y": 86
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 30,
+          "ms": 380
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "arm"
+        },
+        {
+          "actor": "hero",
+          "at": {
+            "x": 9,
+            "y": 2
+          },
+          "kind": "hold",
+          "sprite": "icon_stick"
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 0,
+          "ms": 300
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 146,
+            "y": 108
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
           "kind": "caption",
           "text": ["THE STICK OFF THE WALL. GOD HELP US BOTH."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
         },
         {
           "kind": "fade",
@@ -1134,6 +1501,7 @@
             }
           },
           {
+            "id": "arm",
             "kind": "wall_stick",
             "pos": {
               "x": 104,
@@ -1308,8 +1676,99 @@
           "ms": 500
         },
         {
+          "actor": "hero",
+          "kind": "pose",
+          "sprite": "hero"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 44,
+          "to": {
+            "x": 136,
+            "y": 100
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 104,
+            "y": 86
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 30,
+          "ms": 380
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "arm"
+        },
+        {
+          "actor": "hero",
+          "at": {
+            "x": 9,
+            "y": 2
+          },
+          "kind": "hold",
+          "sprite": "icon_knuckles"
+        },
+        {
+          "actor": "hero",
+          "kind": "jump",
+          "lift": 0,
+          "ms": 300
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 146,
+            "y": 108
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
           "kind": "caption",
           "text": ["THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
         },
         {
           "kind": "fade",
@@ -1336,6 +1795,7 @@
             }
           },
           {
+            "id": "arm",
             "kind": "wall_brass_knuckles",
             "pos": {
               "x": 104,

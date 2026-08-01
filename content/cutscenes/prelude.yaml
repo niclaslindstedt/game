@@ -2,10 +2,11 @@
 # THE PRELUDE — the night everything started, and the campaign's opening scene.
 #
 # Built once per DIFFICULTY: `variants:` at the foot re-emits this scene as
-# `prelude_<difficulty>` with the weapon on the back wall (and the caption when
-# he takes it down) swapped for the rung's actual `startingWeapon`, so the scene
-# always shows the exact piece the run starts with. MEDIUM is the base scene the
-# other rungs vary from; `cutsceneVariant` resolves the variant at run creation.
+# `prelude_<difficulty>` with the weapon on the back wall, the one he carries
+# out in his hand, and the caption over it all swapped for the rung's actual
+# `startingWeapon`, so the scene always shows the exact piece the run starts
+# with. MEDIUM is the base scene the other rungs vary from; `cutsceneVariant`
+# resolves the variant at run creation.
 # A variant patches a LABELLED part of the scene — the `label:` keys below are
 # authoring handles, not engine fields, and never reach the game.
 id: prelude
@@ -18,9 +19,10 @@ stage:
   # the renderer paints back to front by y.
   props:
     - { sprite: window, at: { x: 150, y: 52 } }
-    # The starting weapon, mounted on the back wall the whole scene — the one
-    # thing the hero owns worth taking, and what he fights with until the run
-    # yields better (DifficultyDef.startingWeapon). It hangs ABOVE THE COUCH
+    # The starting weapon, mounted on the back wall until he leaps for it — the
+    # one thing the hero owns worth taking, and what he fights with until the
+    # run yields better (DifficultyDef.startingWeapon). Its `label:` is also the
+    # id the `prop` beat takes it off the wall by. It hangs ABOVE THE COUCH
     # (centred on the couch's own x, clear of the seated pair's heads at y≈73):
     # the thing he will carry out of this room is over the two of them for the
     # whole scene, rather than parked in the corner by the door.
@@ -104,32 +106,76 @@ beats:
     text:
       - SHE NEVER CAME BACK.
   - { kind: wait, ms: 500 }
+  # AND HE GETS UP. The man who never gets up — the joke the whole first half
+  # is built on — stands, and the scene stops being a joke. He swaps to the
+  # standing walk family (`hero`, the same plain-clothes body the run itself
+  # draws) and goes ROUND THE COUCH to get under the mount: out past its right
+  # arm (x 86…122 at y 96), then back in at y 86 — BEHIND it, between the sofa
+  # and the wall, which is the only floor the weapon actually hangs over. The
+  # backrest cuts him off at the knees there, and it should: the painter sorts
+  # on `y`, so standing at 86 puts him behind a couch anchored at 96, and the
+  # leap lifts him clear of it without ever re-sorting him (a `lift` is height,
+  # not depth). It is also the shorter jump — from back there the mount is two
+  # of his own heights up rather than three.
+  - { kind: pose, actor: hero, sprite: hero }
+  - { kind: move, actor: hero, to: { x: 136, y: 100 }, speed: 44 }
+  - { kind: move, actor: hero, to: { x: 104, y: 86 }, speed: 40 }
+  - { kind: wait, ms: 320 } # the crouch before the leap
   # He takes the one thing off the wall worth taking. Whatever the difficulty
-  # hung there is what he brings to save her.
+  # hung there is what he brings to save her. The leap is TWO beats — up, then
+  # down — and the grab settles between them, at the apex, in a single frame:
+  # the piece leaves the wall (`prop`) and lands in his hand (`hold`) on the
+  # same tick, which is what makes it read as one motion rather than a swap.
+  # `hold.at` is the paper doll's own grip anchor (HELD_DX/HELD_DY in
+  # pwa/src/game/paper-doll.ts) on the 16×16 body, so he carries it out of the
+  # room at exactly the angle he carries it through the run.
+  - { kind: jump, actor: hero, lift: 30, ms: 380 }
+  - { kind: prop, prop: arm, hidden: true }
+  - label: grip
+    kind: hold
+    actor: hero
+    sprite: icon_medieval_sword
+    at: { x: 9, y: 2 }
+  - { kind: jump, actor: hero, lift: 0, ms: 300 }
+  # And back out round the couch's arm BEFORE the caption: from behind the
+  # backrest only his head and the sword's tip clear it, and the line that
+  # closes the scene wants the whole man and the whole weapon in frame.
+  - { kind: wait, ms: 300 }
+  - { kind: move, actor: hero, to: { x: 146, y: 108 }, speed: 46 }
+  - { kind: wait, ms: 300 }
   - label: take
     kind: caption
     text:
       - THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
+  # Out the door Ada walked out of, two hours behind her, armed.
+  - { kind: move, actor: hero, to: { x: 201, y: 88 }, speed: 46 }
+  - { kind: wait, ms: 300 }
+  - { kind: exit, actor: hero }
+  - { kind: wait, ms: 400 }
   - { kind: fade, to: 1, ms: 1300 }
 # One entry per non-base difficulty; each patches the labelled parts above.
 variants:
   easy:
     arm: { sprite: wall_sawed_off_shotgun }
+    grip: { sprite: icon_sawed_off_shotgun }
     take:
       text:
         - GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
   hard:
     arm: { sprite: wall_combat_knife }
+    grip: { sprite: icon_combat_knife }
     take:
       text:
         - THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH.
   nightmare:
     arm: { sprite: wall_brass_knuckles }
+    grip: { sprite: icon_knuckles }
     take:
       text:
         - THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH.
   jesus:
     arm: { sprite: wall_stick }
+    grip: { sprite: icon_stick }
     take:
       text:
         - THE STICK OFF THE WALL. GOD HELP US BOTH.

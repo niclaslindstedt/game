@@ -11,10 +11,13 @@
 // (`StoryItemDef`) — keep the two in step when a field is added. What the
 // AUTHORED form changes on top of those types is documented in
 // `scripts/story-data/load-yaml.mjs`: a prop's sprite is `sprite:` rather than
-// `kind:`, and `variants:` expands into whole scenes.
+// `kind:`, a prop's `label:` compiles to the `id:` a `prop` beat addresses it
+// by, and `variants:` expands into whole scenes.
 
 /** Beat kind → the fields it requires and the ones it may also carry. Mirrors
- * the `CutsceneBeat` union; a kind not in here is a typo. */
+ * the `CutsceneBeat` union; a kind not in here is a typo. `optional:` lists the
+ * fields of that spec a beat may leave out (a `hold` with no sprite is the
+ * actor letting go of what it was carrying). */
 const BEAT_SPECS = {
   wait: { nums: ["ms"] },
   caption: { text: true },
@@ -27,6 +30,16 @@ const BEAT_SPECS = {
   fade: { nums: ["to", "ms"] },
   pan: { vecs: ["by"], nums: ["ms"] },
   shake: { actors: ["actor"], nums: ["amp"] },
+  jump: { actors: ["actor"], nums: ["lift", "ms"] },
+  // A held sprite is a single piece of art like a prop's (the weapon icon the
+  // hero grips), not a two-frame walk family.
+  hold: {
+    actors: ["actor"],
+    art: ["sprite"],
+    vecs: ["at"],
+    optional: ["sprite", "at"],
+  },
+  prop: { stageProps: ["prop"], bools: ["hidden"] },
 };
 
 /** The colour channels a stage palette paints with. */
@@ -177,6 +190,9 @@ export function validateCutscene(doc, refs) {
   if (stage.props !== undefined && !Array.isArray(stage.props)) {
     err("stage.props must be a list");
   }
+  // The labelled props, which are the ones a `prop` beat can address (a
+  // prop's label compiles to its id — see scripts/story-data/load-yaml.mjs).
+  const stageProps = new Set();
   for (const [i, prop] of (Array.isArray(stage.props)
     ? stage.props
     : []
@@ -185,6 +201,15 @@ export function validateCutscene(doc, refs) {
     if (!prop || typeof prop !== "object" || Array.isArray(prop)) {
       err(`${where} must be a mapping`);
       continue;
+    }
+    if (prop.label !== undefined) {
+      if (typeof prop.label !== "string" || prop.label === "") {
+        err(`${where}.label must be a name`);
+      } else if (stageProps.has(prop.label)) {
+        err(`${where}.label "${prop.label}" is already used by another prop`);
+      } else {
+        stageProps.add(prop.label);
+      }
     }
     checkSprite(prop.sprite, `${where}.sprite`, refs, err);
     if (!isVec(prop.at)) err(`${where}.at must be ${VEC}`);
@@ -253,7 +278,7 @@ export function validateCutscene(doc, refs) {
     ? doc.beats
     : []
   ).entries()) {
-    checkBeat(beat, `beats[${i}]`, { cast, refs }, err, warn);
+    checkBeat(beat, `beats[${i}]`, { cast, stageProps, refs }, err, warn);
   }
 
   // ---- the per-difficulty variants ----------------------------------------
@@ -298,7 +323,7 @@ export function validateCutscene(doc, refs) {
 }
 
 /** One beat, against its kind's spec. */
-function checkBeat(beat, where, { cast, refs }, err, warn) {
+function checkBeat(beat, where, { cast, stageProps, refs }, err, warn) {
   if (!beat || typeof beat !== "object" || Array.isArray(beat)) {
     err(`${where} must be a mapping`);
     return;
@@ -311,7 +336,11 @@ function checkBeat(beat, where, { cast, refs }, err, warn) {
     );
     return;
   }
+  // A field this kind may leave out is only checked when it is present.
+  const omitted = (field) =>
+    (spec.optional ?? []).includes(field) && beat[field] === undefined;
   for (const field of spec.nums ?? []) {
+    if (omitted(field)) continue;
     if (!isNum(beat[field])) err(`${where}.${field} must be a number`);
     else if (beat[field] < 0) err(`${where}.${field} must be >= 0`);
   }
@@ -319,9 +348,11 @@ function checkBeat(beat, where, { cast, refs }, err, warn) {
     err(`${where}.speed must be > 0 — a walk at 0 px/s never arrives`);
   }
   for (const field of spec.vecs ?? []) {
+    if (omitted(field)) continue;
     if (!isVec(beat[field])) err(`${where}.${field} must be ${VEC}`);
   }
   for (const field of spec.bools ?? []) {
+    if (omitted(field)) continue;
     if (typeof beat[field] !== "boolean")
       err(`${where}.${field} must be a boolean`);
   }
@@ -333,8 +364,27 @@ function checkBeat(beat, where, { cast, refs }, err, warn) {
       err(`${where}.${field} "${id}" is not in the cast`);
     }
   }
+  // A prop is addressed by its `label:`, which is the id it compiles to — so
+  // a beat reaching for an unlabelled piece of dressing fails here rather
+  // than silently leaving it on the wall.
+  for (const field of spec.stageProps ?? []) {
+    const id = beat[field];
+    if (typeof id !== "string" || id === "") {
+      err(`${where}.${field} must name a labelled stage prop`);
+    } else if (!stageProps.has(id)) {
+      err(
+        `${where}.${field} "${id}" is not a labelled stage prop (a prop a ` +
+          `beat addresses needs a \`label:\`)`,
+      );
+    }
+  }
   for (const field of spec.sprites ?? []) {
+    if (omitted(field)) continue;
     checkSprite(beat[field], `${where}.${field}`, refs, err, true);
+  }
+  for (const field of spec.art ?? []) {
+    if (omitted(field)) continue;
+    checkSprite(beat[field], `${where}.${field}`, refs, err);
   }
   if (spec.text) checkLines(beat.text, `${where}.text`, err, warn);
   const allowed = new Set([
@@ -344,7 +394,9 @@ function checkBeat(beat, where, { cast, refs }, err, warn) {
     ...(spec.vecs ?? []),
     ...(spec.bools ?? []),
     ...(spec.actors ?? []),
+    ...(spec.stageProps ?? []),
     ...(spec.sprites ?? []),
+    ...(spec.art ?? []),
     ...(spec.text ? ["text"] : []),
   ]);
   for (const key of Object.keys(beat)) {
