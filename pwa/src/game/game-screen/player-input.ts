@@ -493,9 +493,21 @@ export function handleFieldTaps(
      * TravelPanel). Absent on mounts that may not travel — a joined
      * session's client, the spectator — so the tap simply does nothing. */
     openTravelDoor?: (doorId: string) => void;
+    /** Open the LOST & FOUND at the hub's workbench (§6.8's stash tail) —
+     * the vault, reached from a PLACE instead of only a menu row. */
+    openWorkbench?: () => void;
   },
 ): void {
-  const { state, bot, camera, viewport, queues, bumpUi, openTravelDoor } = deps;
+  const {
+    state,
+    bot,
+    camera,
+    viewport,
+    queues,
+    bumpUi,
+    openTravelDoor,
+    openWorkbench,
+  } = deps;
   const shopTap = queues.shopTapRef.current;
   queues.shopTapRef.current = null;
   if (shopTap && !bot && fieldLive(state) && state.merchant.discovered) {
@@ -590,6 +602,39 @@ export function handleFieldTaps(
         bumpUi();
         break;
       }
+    }
+  }
+  // A tap on the hub's WORKBENCH opens the LOST & FOUND (§6.8's stash tail):
+  // the bay's benches are where a man keeps what he set aside, so the vault
+  // is finally reached from a PLACE rather than only a menu row. Hub levels
+  // only — the objective that never clears is what marks home ground — and
+  // any bench along the wall answers: they are all his.
+  if (
+    shopTap &&
+    !bot &&
+    openWorkbench &&
+    fieldLive(state) &&
+    runLevelDef(state).objective.type === "hub"
+  ) {
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+    const hero = localHero(state);
+    for (const obstacle of state.obstacles) {
+      if (obstacle.kind !== "workbench") continue;
+      if (
+        Math.hypot(wx - obstacle.pos.x, wy - obstacle.pos.y) >
+        MERCHANT.radius * 3
+      ) {
+        continue;
+      }
+      if (distance(hero.pos, obstacle.pos) > MERCHANT.tradeRadius * 1.5) {
+        continue;
+      }
+      input.jump = false;
+      input.useItem = false;
+      playUiSound(synth, "confirm");
+      openWorkbench();
+      bumpUi();
+      break;
     }
   }
   // Same screen→world hit-test as the merchant; the tap must not double as a

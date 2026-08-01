@@ -138,6 +138,7 @@ import {
   type RunProgress,
 } from "./game-screen/run-progress.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
+import { RunVaultScreen } from "./VaultScreen.tsx";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { ConnectingScreen } from "./game-screen/ConnectingScreen.tsx";
@@ -329,6 +330,10 @@ export function GameScreen({
     doorId: string;
     character: Character;
   } | null>(null);
+  // The hub's WORKBENCH is the vault's own place (§6.8's stash tail): a tap
+  // on a bench in the bay raises the run's LOST & FOUND, exactly the browser
+  // the AUTO PILOT's last-call confirm mounts.
+  const [workbenchOpen, setWorkbenchOpen] = useState(false);
   // The current run's progress banker, reachable from the travel picker's
   // render-time onTravel — the run effect rebuilds it per run.
   const progressRef = useRef<RunProgress | null>(null);
@@ -792,8 +797,10 @@ export function GameScreen({
     // world, so the local hero is banked off the level being left.
     driver.setTravelHook?.((old) => progress.bankHero(old));
     // A fresh run starts with no picker open — a door tapped on the way out
-    // of the last level must not greet the arrival.
+    // of the last level must not greet the arrival. The workbench browser
+    // drops for the same reason.
     setTravelDoor(null);
+    setWorkbenchOpen(false);
     // AUTO PILOT: re-arm the session's meter on this fresh run and stand up
     // the flight director (finds, coin meters, the next-lap routing).
     const autopilotDirector = createAutopilotDirector({
@@ -953,6 +960,7 @@ export function GameScreen({
           // (TravelPanel's canTravel) and the tap itself stays enabled.
           openTravelDoor: (doorId) =>
             setTravelDoor({ doorId, character: characterRef.current }),
+          openWorkbench: () => setWorkbenchOpen(true),
         });
         // The fill level BEFORE this step, so a kill that starts a fresh streak
         // can anchor the bright slice at the XP the hero already had.
@@ -1545,6 +1553,25 @@ export function GameScreen({
           }}
           onClose={() => {
             setTravelDoor(null);
+            playUiSound(synth, "back");
+          }}
+        />
+      )}
+
+      {/* THE WORKBENCH (§6.8's stash tail) — the hub bay's benches raise the
+          run's LOST & FOUND: the same browser the AUTO PILOT's last-call
+          confirm mounts, reached from a PLACE instead of only a menu row.
+          The reclaim verbs travel like every other, so a joiner's bench is
+          their own vault. */}
+      {state && workbenchOpen && (
+        <RunVaultScreen
+          font={font}
+          relicFonts={assets.relicFonts}
+          sprites={assets.sprites}
+          state={state}
+          onChange={bumpUi}
+          onClose={() => {
+            setWorkbenchOpen(false);
             playUiSound(synth, "back");
           }}
         />
