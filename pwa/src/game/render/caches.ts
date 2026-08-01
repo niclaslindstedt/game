@@ -183,6 +183,26 @@ export function flatSprite(
   }
   const cached = flatCache.get(name);
   if (cached !== undefined) return cached;
+  const canvas = bakeFlat(sprite);
+  flatCache.set(name, canvas);
+  return canvas;
+}
+
+/**
+ * BAKE ONE PIECE OF FLOOR ART THROUGH THE LIVE PROJECTION — the uncached core of
+ * `flatSprite`, for the passes that hold their own cache because the art they
+ * lay down is not an atlas sprite: the blood grid's rungs (re-hued per gore
+ * family and mirrored per tile) and the boot prints tracked out of them
+ * (`render/blood-ground.ts`, `render/blood-tracks.ts`).
+ *
+ * Those passes each keep ONE map from their own key to the finished art, so the
+ * hot loop stays a single lookup and a single blit per tile — a second cache in
+ * front of this one would build a key string per blot per frame for no gain.
+ * They drop their map on a projection change exactly as this module does.
+ */
+export function bakeFlat(
+  sprite: ImageBitmap | HTMLCanvasElement,
+): HTMLCanvasElement | null {
   const w = sprite.width;
   const h = sprite.height;
   // The projected footprint of the sprite's own rect, about its centre.
@@ -199,7 +219,7 @@ export function flatSprite(
   // Supersampled, so the turned edges of a wall panel come out antialiased
   // instead of as a staircase of single pixels — see `bakeSupersampled`. Free of
   // any effect at yaw 0 and pitch 1, where the transform is the identity.
-  const canvas = bakeSupersampled(width, height, (ctx) => {
+  return bakeSupersampled(width, height, (ctx) => {
     ctx.transform(
       projectX(1, 0),
       projectY(1, 0),
@@ -210,8 +230,6 @@ export function flatSprite(
     );
     ctx.drawImage(sprite, -w / 2, -h / 2);
   });
-  flatCache.set(name, canvas);
-  return canvas;
 }
 
 /** Pre-rendered radial glows, keyed by `rgb/radius`. Loot glows pulse every

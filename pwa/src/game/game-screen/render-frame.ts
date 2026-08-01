@@ -210,7 +210,21 @@ export function createRenderFrame(deps: {
           motion: heldMotion(localHero(state).equipment.weapon.defId),
         }
       : shared.heroAction;
-    drawFrame(ctx, state, assets, camera, timeMs, action, shared.heroImpact);
+    // The effect list goes IN as well as out: the corpses, gibs and cleaved
+    // halves that have come to rest are drawn inside the frame, under the actors,
+    // so the hero walks over the mess instead of under it (render.ts,
+    // render/effects.ts `restsOnFloor`). The live list rather than the debug one
+    // below — a pinned swing or muzzle is never something lying on the floor.
+    drawFrame(
+      ctx,
+      state,
+      assets,
+      camera,
+      timeMs,
+      action,
+      shared.heroImpact,
+      shared.effects,
+    );
     // Area caption: flash a named zone's label the moment the hero walks in
     // (only while actually playing — no captions mid-cutscene/menu). Guarded
     // on the ref so it fires once per entry, not every frame.

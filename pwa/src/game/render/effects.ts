@@ -10,7 +10,11 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { spriteByName, type GameAssets } from "../assets.ts";
 import { type BloodBlow } from "../game-screen/blood-hit.ts";
 import { type GoreFamilyId } from "../game-screen/gore.ts";
-import { type GoreBurst } from "../game-screen/gore-burst.ts";
+import {
+  CLEAVE_MS,
+  GORE_BURST_MS,
+  type GoreBurst,
+} from "../game-screen/gore-burst.ts";
 import {
   drawBurst,
   drawMuzzle,
@@ -202,11 +206,55 @@ export type Effect = {
 };
 
 /**
- * Draw the live effects over the frame. `fade` (default 1) dims the WHOLE pass
- * as one — the death scene eases it to 0 so the fight's floating damage / crit
- * / XP numbers clear off the tableau instead of hanging over the fallen hero
- * (render/death.ts `combatNoiseFade`). Each effect sets its own alpha as it
- * draws, so the fade composites through a scratch layer (`drawFaded`).
+ * HOW LONG A BODY TAKES TO COME TO REST — the keel-over of one that simply
+ * dropped, and the flight of one the killing blow punted (see the `corpse`
+ * branch below, which animates both from these).
+ */
+const CORPSE_KEEL_MS = 260;
+const CORPSE_LAUNCH_MS_MAX = 1000;
+function corpseFlightMs(launch: NonNullable<Effect["launch"]>): number {
+  return Math.min(CORPSE_LAUNCH_MS_MAX, 240 + launch.dist * 2.0);
+}
+
+/**
+ * HAS THIS ONE STOPPED MOVING — i.e. is it SCENERY now rather than an event?
+ *
+ * The effect layer is drawn over the finished frame because almost everything in
+ * it happens in the AIR: an explosion, a rising damage number, a spray of blood,
+ * a body coming apart. What is left when those are over is not in the air at
+ * all. A corpse lies on the floor for seconds, a burst's gibs and a cleave's
+ * halves for the ten of GORE LINGER, and an epic's remains for the rest of the
+ * level — and drawn with the rest of the layer, every one of them is painted
+ * OVER the hero the moment he walks across the spot. There is no depth sort to
+ * appeal to (the field is a painter's stack: floor, furniture, actors, hero), so
+ * the remains have to change layers when they land.
+ *
+ * The moment they do is the moment their own animation ends — the flight `t` in
+ * ./gibs.ts is clamped over exactly these lengths, so nothing is still moving
+ * when this turns true.
+ */
+export function restsOnFloor(effect: Effect, timeMs: number): boolean {
+  if (effect.kind === "gib" || effect.kind === "cleave") {
+    const age = (effect.durationMs ?? 0) - (effect.untilMs - timeMs);
+    return age >= (effect.kind === "cleave" ? CLEAVE_MS : GORE_BURST_MS);
+  }
+  if (effect.kind !== "corpse") return false;
+  const age = (effect.durationMs ?? 2000) - (effect.untilMs - timeMs);
+  const launch = effect.launch;
+  const launched = launch != null && launch.dist > 2;
+  return age >= Math.max(CORPSE_KEEL_MS, launched ? corpseFlightMs(launch) : 0);
+}
+
+/**
+ * Draw the live effects over the frame — everything in the layer EXCEPT what has
+ * already come to rest on the floor, which `drawFloorRemains` put down under the
+ * actors (`restsOnFloor`).
+ *
+ * `fade` (default 1) dims the WHOLE pass as one — the death scene eases it to 0
+ * so the fight's floating damage / crit / XP numbers clear off the tableau
+ * instead of hanging over the fallen hero (render/death.ts `combatNoiseFade`).
+ * Each effect sets its own alpha as it draws, so the fade composites through a
+ * scratch layer (`drawFaded`).
  */
 export function drawEffects(
   ctx: CanvasRenderingContext2D,
@@ -216,13 +264,45 @@ export function drawEffects(
   assets: GameAssets,
   fade = 1,
 ): void {
+  drawLayer(ctx, effects, camera, timeMs, assets, fade, false);
+}
+
+/**
+ * …and the other half: the corpses, the gibs and the cleaved halves that have
+ * LANDED, drawn from inside `drawFrame` with the floor furniture so the hero
+ * walks OVER the mess he made instead of under it.
+ *
+ * Same pass, same billboarded anchors, same fade — only the membership differs,
+ * so a piece of gore does not change size, place or colour on the frame it
+ * changes layers.
+ */
+export function drawFloorRemains(
+  ctx: CanvasRenderingContext2D,
+  effects: readonly Effect[],
+  camera: Camera,
+  timeMs: number,
+  assets: GameAssets,
+  fade = 1,
+): void {
+  drawLayer(ctx, effects, camera, timeMs, assets, fade, true);
+}
+
+function drawLayer(
+  ctx: CanvasRenderingContext2D,
+  effects: readonly Effect[],
+  camera: Camera,
+  timeMs: number,
+  assets: GameAssets,
+  fade: number,
+  onFloor: boolean,
+): void {
   if (fade < 1) {
     drawFaded(ctx, fade, (target) =>
-      drawEffectPass(target, effects, camera, timeMs, assets),
+      drawEffectPass(target, effects, camera, timeMs, assets, onFloor),
     );
     return;
   }
-  drawEffectPass(ctx, effects, camera, timeMs, assets);
+  drawEffectPass(ctx, effects, camera, timeMs, assets, onFloor);
 }
 
 function drawEffectPass(
@@ -231,12 +311,14 @@ function drawEffectPass(
   camera: Camera,
   timeMs: number,
   assets: GameAssets,
+  onFloor: boolean,
 ): void {
   const font = assets.font;
   const viewW = ctx.canvas.width;
   const viewH = ctx.canvas.height;
   for (const effect of effects) {
     if (timeMs > effect.untilMs) continue;
+    if (restsOnFloor(effect, timeMs) !== onFloor) continue;
     // A delayed float (e.g. the XP popup trailing its damage number) stays
     // hidden until its start tick, then animates from t=0 as usual.
     if (effect.startMs != null && timeMs < effect.startMs) continue;
@@ -354,7 +436,7 @@ function drawEffectPass(
       // hop, lies there a beat, then blinks out and is gone. Purely cosmetic —
       // the engine already removed the live enemy the tick it died, so this
       // plays on top at the spot it fell. Timeline over `duration` (2s):
-      // keel-over (first ~260ms) → lie still → blink for the final second.
+      // keel-over (`CORPSE_KEEL_MS`) → lie still → blink for the final second.
       const duration = effect.durationMs ?? 2000;
       const age = duration - (effect.untilMs - timeMs); // ms since death
       // A single fixed frame (dying, frame 0) — a corpse never walks or bobs,
@@ -380,7 +462,7 @@ function drawEffectPass(
       // GameScreen sized `dist` from the kill's `damage / maxHp`.
       const launch = effect.launch;
       const launched = launch != null && launch.dist > 2;
-      const flightMs = launched ? Math.min(1000, 240 + launch.dist * 2.0) : 0;
+      const flightMs = launched ? corpseFlightMs(launch) : 0;
       const flight = launched ? Math.min(1, age / flightMs) : 0;
       const flightEase = flight * (2 - flight); // ease-out into the landing
       // `launch.dx/dy` is the bearing AWAY FROM THE HERO, in the world, so the
@@ -412,9 +494,9 @@ function drawEffectPass(
       const tumble = launched
         ? (Math.sign(launch.dx) || 1) * spins * Math.PI * 2 * flightEase
         : 0;
-      // Keel-over: rotate 0 → the rolled ±90° over the first 260ms (ease-out),
+      // Keel-over: rotate 0 → the rolled ±90° over `CORPSE_KEEL_MS` (ease-out),
       // with a brief hop as it topples.
-      const fall = Math.min(1, age / 260);
+      const fall = Math.min(1, age / CORPSE_KEEL_MS);
       const eased = fall * (2 - fall);
       const tip = (effect.angle ?? Math.PI / 2) * eased;
       const hop = Math.round(Math.sin(fall * Math.PI) * 4);

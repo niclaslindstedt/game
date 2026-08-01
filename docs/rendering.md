@@ -34,14 +34,31 @@ pieces — which is an art project, not a render setting.
 The whole thing rests on one split, and getting it backwards is the only way to
 break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
 the ground — the baked ground layer, blood, burn scars, craters, AoE footprints
-— is drawn through the projection and takes it whole (a ground ring becoming an
-ellipse IS the effect, which is why none of those passes has a line about the
-tilt in it). Anything with a body — a character, a rock, a shot in flight, a
-floating damage number — is anchored at its projected spot and then drawn
-upright at FULL size through `billboard`, whose composite works out to exactly
-the identity at a whole-pixel offset so the pixel art stays crisp. Billboarding
-a pass is therefore a one-line wrap, never a rewrite of its arithmetic — which
-is how the yaw knob was added later without touching a single draw pass.
+— takes the projection whole (a ground ring becoming an ellipse IS the effect,
+which is why none of those passes has a line about the tilt in it). Anything
+with a body — a character, a rock, a shot in flight, a floating damage number —
+is anchored at its projected spot and then drawn upright at FULL size through
+`billboard`, whose composite works out to exactly the identity at a whole-pixel
+offset so the pixel art stays crisp. Billboarding a pass is therefore a one-line
+wrap, never a rewrite of its arithmetic — which is how the yaw knob was added
+later without touching a single draw pass.
+
+**A FLOOR PASS TAKES THE PROJECTION IN ITS ART OR IN ITS TRANSFORM, AND WHICH
+ONE DECIDES WHETHER IT WOBBLES.** A pass drawn live inside
+`applyWorldProjection` is resampled every frame, and a nearest-neighbour squash
+decides which rows to drop from the DESTINATION offset — so at pitch 0.75, where
+a world unit of northward travel moves that offset three quarters of a pixel,
+every piece re-picks its dropped rows at its own moment while the baked ground
+layer under it sits perfectly still. That is what made the BLOOD wobble as the
+hero walked north or diagonally and hold rock steady walking east or west (there
+the projection is the identity and `computeCamera` rounds to a whole world unit,
+so nothing lands off a pixel). The fix is the ground layer's and the flat
+furniture's: bake the art through the projection ONCE (`bakeFlat`) and blit it in
+SCREEN space at the decal's own whole-pixel seat — `render/plane.ts`
+`drawFloorDecal`, used by the blood grid and the boot prints, seated on
+`bodyAnchor*` like everything else. The live transform is still right for
+anything the projection has to reshape per frame (a growing crater, a swept AoE
+footprint); it is wrong for authored pixel art that merely lies there.
 
 **WHICH SIDE OF THAT SPLIT A PIECE OF FURNITURE FALLS ON IS THE ART'S CALL, NOT
 THE PASS'S — `plane:` on the sprite.** A boulder and a house front are drawn in
@@ -71,6 +88,21 @@ turned floor was the tell. A VERTICAL is the exception and stays a true screen
 vertical: a drop's hop, a corpse's arc, dust drifting up. Beware the tempting
 shortcut this replaced — a hardcoded `FLATTEN` squash faking the foreshortening,
 which is wrong at every pitch but the one it was eyeballed at.
+
+**AND WHAT HAS COME TO REST IS NO LONGER PART OF THAT LAYER —
+`restsOnFloor`.** The effect layer is drawn OVER the finished frame because
+nearly everything in it happens in the air. What is left when those are over is
+not: a corpse lies on the floor for seconds, a burst's gibs and a cleave's halves
+for the ten of GORE LINGER, an epic's remains for the whole level. The field is a
+painter's stack with no depth sort to appeal to (floor → furniture → loot →
+horde → hero), so drawn with the rest of the layer every one of those was painted
+OVER the hero the moment he walked across the spot. They change layers when they
+land: `drawFloorRemains` puts them down inside `drawFrame`, under the loot and the
+bodies and over the floor furniture, while `drawEffects` draws everything else on
+top as before. The moment of the handover is each one's own animation ending
+(`CLEAVE_MS`, `GORE_BURST_MS`, a corpse's keel-over or the flight of a punted
+one), so nothing is still moving when it changes sides — and a launched body stays
+in the air layer for its whole arc, because it genuinely is in the air.
 
 **A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
 `screenDirToWorld`.** A destination goes through `toWorld`, but the controls that
