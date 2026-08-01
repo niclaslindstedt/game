@@ -154,6 +154,10 @@ export type HubOptions = {
    * is a thing a player can set, and this must not be one.
    */
   allowUnlicensedTransport?: boolean;
+  /** The session is a HARDCORE game (§4.2, `SessionParams.hardcore`): only
+   * hardcore characters are admitted — and a softcore session admits only
+   * softcore ones. Defaults false. */
+  hardcore?: boolean;
   /** The per-session challenge secret. Passed in rather than minted here
    * because this module has no randomness of its own — see `wire/handshake.ts`
    * for why that is the rule and not an inconvenience. */
@@ -330,6 +334,9 @@ export function createPeerHub(options: HubOptions): PeerHub {
       needsPassword: password.length > 0,
       players: options.session.clientCount,
       maxPlayers: maxClients,
+      // On the probe so the JOIN screen can show the constraint up front; the
+      // real refusal is `admit`'s (§4.2).
+      hardcore: options.hardcore ?? false,
     };
     transport.send(
       key,
@@ -400,6 +407,12 @@ export function createPeerHub(options: HubOptions): PeerHub {
       proof: Number(join.proof) || 0,
       seats: options.session.clientCount,
       maxSeats: maxClients,
+      // §4.2: hardcore never mixes with softcore. The joiner's flag is a
+      // claim off the frame like the loadout beside it — coerced, never
+      // trusted past what phase 5's trust model already says about a listen
+      // server — and the mismatch is refused by name either way round.
+      sessionHardcore: options.hardcore ?? false,
+      joinerHardcore: join.hardcore === true,
     });
     if (refusal) {
       refuse(transport, key, refusal, detailFor(refusal, options.handshake));

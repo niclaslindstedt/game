@@ -331,6 +331,12 @@ export function loadSavedRun(): ParkedRun | null {
         ...payload.state.merchant,
         buyback: payload.state.merchant?.buyback ?? [],
       },
+      // PLAYER CORPSES (§4.2) are purely additive on the same reasoning as the
+      // buy-back shelf above: a run parked before they shipped simply has none
+      // — and a SOLO run can never have one at all — so an empty default beats
+      // a SAVE_VERSION bump that bins every parked run for a list that starts
+      // empty anyway.
+      corpses: payload.state.corpses ?? [],
     };
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
     // plain object, which freezes the fog renderers (see reviveExplored).

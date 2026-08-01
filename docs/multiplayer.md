@@ -88,9 +88,44 @@ is the run's one stream, so spending a draw there moves every seeded
 measurement, replay and test in the repo.
 
 **The run ends when the party falls, not when a hero does** (`partyWiped`). One
-player going down is a setback the rest fight through; phase 4's §4.2 owns the
-corpse and the respawn — and its per-player `dying` screen is now unblocked,
-because the screens ARE per-player:
+player going down is a setback the rest fight through — and what that setback
+IS shipped with §4.2 (`src/game/downed.ts`), Diablo 2's shape whole:
+
+- **The FALL.** A hero at 0 hp while the party still stands goes DOWN
+  (`downHero`, the step pipeline's sweep): their own DEATH TOLL is billed at
+  that moment (the wipe toll later skips a hero already `downed`, so no fall
+  is ever priced twice), their worn kit is stripped onto a **corpse** where
+  they fell (`state.corpses`, public in the replication split — worn gear was
+  always visible), and the never-empty hand holds the minted sidearm. The body
+  lies on the field; `heroInPlay` already answered for everything else.
+- **The WAY BACK is a verb.** `respawn` (a run command like any other — the
+  acting hero is the admitted seat) stands a downed hero up at the level's
+  start at full health: the toll was paid at the fall, so the respawn costs
+  the walk. When to take it is the player's own call — there is no timer.
+- **The CORPSE is the owner's alone.** Walking back within
+  `CORPSE.recoverRadius` takes the gear back piece by piece — worn again where
+  the slot is free (the minted sidearm is discarded for the real weapon, never
+  banked), to the bag where it is not, and a piece with nowhere to go STAYS on
+  the body, which leaves the field only when emptied. Another hero standing on
+  it all day takes nothing, and the server is what enforces that.
+- **An unrecovered corpse never costs the kit.** `extractLoadout` folds
+  whatever a hero's corpses still hold into the banked loadout's VAULT — the
+  LOST & FOUND, whose whole purpose is gear the player did not choose to lose
+  — so every banking path (victory, travel, defeat) keeps the promise at once.
+- **Solo is untouched, structurally.** One hero at 0 hp IS the party wiped, so
+  the wipe path (`enterDeathScene` → the death scene → defeat) fires on the
+  same tick it always has and none of the above runs: no corpse, no flag, no
+  per-hero toll. Every §4.2 rule is an exact no-op at one hero, the same
+  property every §4.3 rule shipped with.
+- **HARDCORE NEVER MIXES WITH SOFTCORE** — enforced at the door, not in the
+  engine (which still never learns hardcore exists). `SessionParams.hardcore`
+  marks a hardcore character's session, the `join` frame carries the joiner's
+  flag, and `admit` refuses a mismatch either way round
+  (`hardcore-mismatch`), after the challenge so a spoofed address learns
+  nothing. The probe reply names the session's mode so the JOIN screen can
+  pre-empt the refusal without a round trip.
+
+Its per-player `dying` screen came free, because the screens ARE per-player:
 
 **THE SCREENS ARE PER-PLAYER (§3.2).** `state.phase` keeps only what is
 genuinely global — the scenes, the spare-or-kill `choice`, victory and defeat —
@@ -840,9 +875,10 @@ could before multiplayer existed.
 
 ## What has landed, and what is still owed
 
-phases 1, 2, 1.5, 1.75, 2.5, **phase 3's §3.1**, **phase 4's §4.2-abandoned-hero and
-§4.3**, **phase 5** and **phase 6's hub** of the ten in
-`docs/multiplayer-plan.md` have landed. THE GARAGE (the plan's §6.8) is the
+phases 1, 2, 1.5, 1.75, 2.5, **phase 3's §3.1 and §3.2**, **phase 4's §4.2
+(the abandoned hero, and now the per-player death, corpse and respawn — see
+"the run ends when the party falls" above) and §4.3**, **phase 5** and
+**phase 6's hub** of the ten in `docs/multiplayer-plan.md` have landed. THE GARAGE (the plan's §6.8) is the
 home base the mode was owed: a static hub level whose `hub` objective never
 clears, a merchant PARKED at his counter, standing travel doors
 (`LevelDef.travelDoors`) as the level select — the car boards and drives out,
@@ -856,7 +892,8 @@ that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered acros
 eleven PR sections is how a debt stops being anybody's. §5.5 collects them, says
 which are BLOCKED and on what, and gives the order they unblock each other in —
 **§7.1 (landed)** → **§7.2 (landed)** → **§4.3's measured pass (run — see
-below)** → §7.2.5 → §5.6's soak → §3.2 → §4.2's corpse → §3.3. It also separates out the FOUR that no diff can close (a
+below)** → **§7.2.5 (landed)** → §5.6's soak → **§3.2 (landed)** → **§4.2's
+corpse (landed)** → §3.3. It also separates out the FOUR that no diff can close (a
 packaged Electron launch, eight machines through a real NAT, a real router, the
 per-OS firewall prompts): those need a human with hardware, and writing them as
 work items is how they get ticked from a diff.
@@ -873,8 +910,7 @@ be — and the fall at party 4 tracks a fall in the per-capita KILL RATE (69 →
 so it is the autopilot's missing SPACING and PACK-SPLITTING (§7.4) rather than
 the XP split. **Lifting `XP_SHARE.partyBonusPerHero` to hide that would be
 re-tuning the game's economy to cover a bot deficiency**, and would have to be
-undone the day §7.4 lands. §4.2's corpse and respawn are still BLOCKED on §3.2's
-per-player `dying` screen.
+undone the day §7.4 lands.
 
 **THE BOT KNOWS ONE THING ABOUT THE PARTY: DON'T LEAVE IT**
 (`src/game/bot/party-play.ts`). The rest of §7.4 — spacing, splitting the packs,

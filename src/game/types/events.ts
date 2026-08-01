@@ -1051,6 +1051,18 @@ export type GameEvent =
    * get their own beat.
    */
   | { type: "playerDeath"; pos: Vec2 }
+  /**
+   * A hero fell while the party was STILL STANDING (multiplayer plan §4.2,
+   * `downed.ts`): their gear went to a corpse at `pos` and `xpLost` is the
+   * DEATH TOLL their own bar just paid. Never fires solo — one hero falling
+   * is the party wiped, which is `playerDeath`'s beat. The app lands the
+   * death sting for its OWN seat and a softer party cue for anybody else's;
+   * the party HUD flips the seat's frame to DOWN off the state itself.
+   */
+  | { type: "heroDown"; seat: number; pos: Vec2; xpLost: number }
+  /** A corpse was emptied by its owner walking back to it — every piece worn
+   * again or banked to the bag, and the body leaves the field. */
+  | { type: "corpseRecovered"; seat: number; pos: Vec2 }
   /** The death scene ended and the YOU DIED modal takes the stage. `xpLost` is
    * the XP the DEATH TOLL took (0 when the penalty knob is off or the bar was
    * already empty) — the app floats it on the defeat splash so the cost of

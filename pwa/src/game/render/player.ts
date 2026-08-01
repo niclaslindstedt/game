@@ -528,8 +528,14 @@ function drawHero(
   // `defeat` splash behind the modal). Lay him sprawled on his back in a
   // spreading pool of blood — no facing, no weapon swing, no walk cycle. Drawn
   // here so the corpse stays put and dressed (worn armor + weapon glued) while
-  // the horde rings him.
-  if (state.phase === "dying" || state.phase === "defeat") {
+  // the horde rings him. A hero DOWN in a party still fighting (§4.2) wears
+  // the same sprawl mid-`playing`, behind the YOU FELL overlay, until the
+  // respawn stands them back up.
+  if (
+    state.phase === "dying" ||
+    state.phase === "defeat" ||
+    player.downed === true
+  ) {
     drawDeadHero(ctx, sprites, layers, coat, held, state, camera, x, y, timeMs);
     return;
   }

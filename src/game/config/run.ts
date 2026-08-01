@@ -56,6 +56,20 @@ export const DEATH_SCENE = {
 } as const;
 
 /**
+ * PER-PLAYER DEATH in a party (multiplayer plan §4.2, `downed.ts`): a hero who
+ * falls while the party still stands goes DOWN where the wipe used to end the
+ * run — a corpse holding their worn gear is left where they fell, and the
+ * player respawns at the level's start and walks back. Solo is untouched: one
+ * hero down is the party down, and the wipe path owns that exactly as before.
+ */
+export const CORPSE = {
+  /** How close the OWNER must stand to their corpse to take their gear back
+   * (world px, centre to centre). A touch wider than the loot pickup reach —
+   * walking onto your own body should feel deliberate but never fiddly. */
+  recoverRadius: 22,
+} as const;
+
+/**
  * The BOSS DEATH RITE — the scripted send-off a boss gets instead of merely
  * toppling over (see `boss-death.ts`). The mirror image of the DEATH SCENE
  * above, and deliberately built to the same shape: the engine owns the beats,

@@ -44,6 +44,10 @@ export type Hud = {
   /** "My hero is on the field and I have nothing open" (see `fieldLive`) —
    * what every "show the live-field HUD" gate reads. */
   fieldLive: boolean;
+  /** The LOCAL hero is DOWN in a party still standing (§4.2) — mounts the
+   * YOU FELL overlay with its RESPAWN button. Never true solo (one hero down
+   * is the party wiped, which is the defeat path). */
+  downed: boolean;
   /** The local hero has stat or talent points banked and unspent — lights
    * the HUD's points pip, whose press opens the chooser on demand. */
   pointsWaiting: boolean;
@@ -334,13 +338,15 @@ export function buildHud(
   // and the overlays mount off the published snapshot.
   const screen = localScreen(state);
   const live = fieldLive(state);
-  const key = `${state.phase}/${screen ?? ""}/${live ? 1 : 0}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
+  const downed = localHero(state).downed === true;
+  const key = `${state.phase}/${screen ?? ""}/${live ? 1 : 0}/${downed ? 1 : 0}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
       phase: state.phase,
       screen,
       fieldLive: live,
+      downed,
       pointsWaiting:
         localHero(state).pendingStatPoints > 0 || talentPoints.length > 0,
       hp: localHero(state).hp,

@@ -95,6 +95,15 @@ export {
   type DepartOptions,
 } from "./game/seating.ts";
 export { validateLoadout, type LoadoutCheck } from "./game/loadout-check.ts";
+// PER-PLAYER DEATH (the plan's §4.2, `game/downed.ts`): the fall, the corpse,
+// the respawn. `respawnHero` is reached through the `respawn` run command;
+// these are exported for the tests and the headless harnesses.
+export {
+  downHero,
+  foldCorpseGear,
+  respawnHero,
+  stepCorpseRecovery,
+} from "./game/downed.ts";
 // TRADE (the plan's §5.1) — the one place a piece of gear leaves one private
 // bag and arrives in another, which is why every rule about it lives in one
 // module and the swap is a single transaction.
@@ -141,6 +150,7 @@ export { spawnCalledHerd as debugCallHorde } from "./game/hazards.ts";
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.
 export {
   applyDeathXpPenalty,
+  applyHeroDeathToll,
   canDropNuke,
   crowdBombChance,
   debugLevelUpFx,
@@ -1088,6 +1098,7 @@ export {
   GOLD,
   DEATH_SCENE,
   BOSS_DEATH,
+  CORPSE,
   ENEMY_AI,
   GATES,
   HAY_BALLS,

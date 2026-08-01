@@ -133,6 +133,10 @@ export type JoinLinkOptions = {
    * find out about.
    */
   resume?: string;
+  /** The arriving character is HARDCORE (§4.2). Compared against the session's
+   * mode — locally off the challenge, so the mismatch is answered without a
+   * join round trip, and again at the host's own door. Absent = softcore. */
+  hardcore?: boolean;
   now(): number;
   /** One frame for the renderer, exactly as it arrived. */
   deliver(frame: Uint8Array): void;
@@ -228,6 +232,14 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       finish(skew, detailFor(skew, theirs, options.handshake));
       return;
     }
+    // §4.2's hardcore gate, pre-empted the way a protocol skew is: the probe
+    // reply names the session's mode, so a mismatch is answered here without
+    // spending the join round trip. The host still refuses it at the door —
+    // this is a courtesy, not the enforcement.
+    if ((payload.hardcore === true) !== (options.hardcore === true)) {
+      finish("hardcore-mismatch");
+      return;
+    }
     const cookie = Number(payload.cookie) || 0;
     const join: JoinPayload = {
       cookie,
@@ -235,6 +247,7 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       proof: passwordProof(options.password ?? "", cookie),
       name: options.name,
       resume: options.resume,
+      hardcore: options.hardcore === true,
     };
     pending = { join, cookieAt: options.now() };
     sendJoin();

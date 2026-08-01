@@ -151,19 +151,19 @@ still owed. A PHASE is a body of work with a done-when; a PULL REQUEST is one
 delivery of part of it, and a phase may take as many as it takes. "PR" in this
 document now always means the second thing.
 
-| Phase                   | Ships                                                                                                                                    | Playable at the end                                          | Estimate | State                                          |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | ---------------------------------------------- |
-| **1 — THE SERVER**      | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                          | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6                    |
-| **2 — THE WIRE**        | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**               | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7                    |
-| **1.5 — THE VERBS**     | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4                  |
-| **1.75 — THE LOOP**     | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                        |
-| **2.5 — THE SCREENS**   | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                         |
-| **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 + §3.2 landed**, see §3.6; §3.3 remains |
-| **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7     |
-| **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                    |
-| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks |                                                |
-| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Hub landed**, see §6.8 — §6.4 still owed     |
-| **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | Its three instrument halves moved to phase 5.5 |
+| Phase                   | Ships                                                                                                                                    | Playable at the end                                          | Estimate | State                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------: | -------------------------------------------------- |
+| **1 — THE SERVER**      | The simulation moves into a `utilityProcess`, the engine gains a Node ship target, replication + the wire codec                          | Nothing changes — the machinery is not yet reachable         |  4–6 wks | **Landed** (#783), see §1.6                        |
+| **2 — THE WIRE**        | Both transports (Steam P2P + direct UDP), the lobby, port binding/reveal, UPnP + firewall, admission, chat, **spectators**               | Nothing changes — no screen reaches it                       |  5–7 wks | **Landed** (#788), see §2.7                        |
+| **1.5 — THE VERBS**     | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4                      |
+| **1.75 — THE LOOP**     | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                            |
+| **2.5 — THE SCREENS**   | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                             |
+| **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 + §3.2 landed**, see §3.6; §3.3 remains     |
+| **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2 + §4.3 landed**, see §4.7; §4.4/§4.5 remain |
+| **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                        |
+| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks |                                                    |
+| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Hub landed**, see §6.8 — §6.4 still owed         |
+| **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | Its three instrument halves moved to phase 5.5     |
 
 **≈ 44–65 weeks.** The band is wide because phase 3 is a design exercise wearing a
 refactor's clothes (see §phase 3), and its uncertainty dominates everything. It
@@ -1458,6 +1458,53 @@ What ships:
   body on the field MEAN. Reconnect (§5.4) is the adjacent case and NOT the same
   one — that is somebody who is coming back. See §3.7.
 
+> **AS BUILT (the corpse, the respawn and the hardcore gate — the abandoned
+> hero landed earlier, see §4.7).** `src/game/downed.ts` owns all three
+> moments, and every rule is an exact no-op at one hero (solo, one hero at 0 hp
+> IS `partyWiped`, so the wipe path fires on the same tick it always did and
+> none of this runs). The FALL is the step pipeline's own sweep — after every
+> damage pass, only while the party still stands — and books the hero's OWN
+> toll (`applyHeroDeathToll`; the wipe toll skips a hero already `downed`, so
+> no fall is priced twice), strips the worn kit onto `state.corpses` (public in
+> the split: worn gear was always visible) and leaves the sidearm in the
+> never-empty hand. The RESPAWN is a run COMMAND (`respawn`, PROTOCOL 16 → 17)
+> rather than a timer — when to take the walk back is the player's call — and
+> it deliberately emits NO event, because a verb runs between ticks and the
+> session only collects events pushed inside `step()`; the state change is the
+> cue. RECOVERY is owner-only proximity (`CORPSE.recoverRadius`), piece by
+> piece — slot if free (the minted sidearm is discarded for the real weapon,
+> never banked), bag if not, and a piece with nowhere to go STAYS on the body,
+> which leaves the field only when emptied. Four deviations from the sketch
+> above, each deliberate:
+>
+> 1. **Respawn is at the LEVEL'S START, not "in town"** — there is no town in
+>    the session (§6.4's in-session travel has not landed), and the level
+>    start preserves what the sentence was actually for: full health, and the
+>    walk back as the price.
+> 2. **The corpse holds the WORN kit only** — D2's own rule. The bag, the
+>    pouch, the purse and the consumables stay with the hero.
+> 3. **An unrecovered corpse can never cost the kit**: `extractLoadout` folds
+>    whatever a hero's corpses still hold into the banked loadout's VAULT (the
+>    LOST & FOUND — gear the player did not choose to lose is its whole
+>    charter), which covers every banking path (victory, travel, defeat) at
+>    one funnel, deliberately past the vault's cap if it must be.
+> 4. **The hardcore rule shipped as a MODE gate, not a difficulty gate.**
+>    `SessionParams.hardcore` (a session parameter the engine never reads —
+>    hardcore stays app-side), the joiner's flag on the `join` frame, and a
+>    symmetric `hardcore-mismatch` refusal in `admit` — checked after the
+>    challenge, so a spoofed address learns nothing, and pre-empted off the
+>    probe reply (`ChallengePayload.hardcore`) so the JOIN screen refuses
+>    without a round trip. The "same difficulty" half is the joiner's app's to
+>    enforce (only it knows the character's unlocks); the wire carries the
+>    session's difficulty in the lobby metadata already.
+>
+> The simulator's party (§7.2) respawns a downed bot immediately through the
+> same `applyRunCommand` dispatch — what a human does, and what keeps the
+> instrument measuring a party rather than a shrinking one.
+> `tests/engine/party_death_test.ts` pins the rules, the solo no-op included;
+> the session ending when the host leaves was already true (no host
+> migration, `DepartOptions.seatZero`).
+
 ### 4.3 XP, loot and the meter
 
 **XP sharing.** `grantXp` pays one hero today. D2 splits XP among nearby party
@@ -1565,12 +1612,11 @@ moved.
 
 **NOT LANDED, and the reasons differ.**
 
-- **§4.2's corpse and respawn are BLOCKED**, and by this plan's own text: "phase 3's
-  phase split already makes `dying` a `Player.screen`". §3.2 has not landed, so
-  `dying` and `defeat` are still global phases and there is no per-player death
-  to give a corpse to. `applyDeathXpPenalty` is party-aware in the meantime — it
-  bills every non-departed hero on the wipe, which is the transition it actually
-  rides — but that is the PARTY falling, not a player dying.
+- ~~**§4.2's corpse and respawn are BLOCKED**~~ — **now LANDED**, unblocked by
+  §3.2 exactly as predicted: the down, the corpse, the respawn verb and the
+  hardcore admission gate, with the as-built record in §4.2's own box above.
+  `applyDeathXpPenalty` still bills the wipe; what changed is that a hero who
+  fell EARLIER already paid at the fall and is skipped.
 - **§4.1 the town, §4.4 mods, §4.5 the party HUD and banking are simply not
   done.** §4.1 is authored content and, if the hub speaks a single line, a story
   chain edit that needs the user's confirmation before it is written — which is
@@ -2113,9 +2159,14 @@ than rediscovered:
    global-anyone-resolves until the kill chain knows its owner; conversations
    are one-at-a-time held by their opener). `tests/engine/player_screens_test.ts`
    is the guard.
-7. **§4.2's corpse and respawn**, which §4.7 records as BLOCKED on §3.2 — now
-   UNBLOCKED: `dying` can become a per-player screen the same way the other
-   ten did. It is the next chain item.
+7. **§4.2's corpse and respawn. LANDED** — the down sweep, the corpse, the
+   `respawn` verb, owner-only recovery, the vault fold at banking, and the
+   hardcore admission gate; §4.2's as-built box has the four deliberate
+   deviations (level-start respawn, worn-kit-only corpse, the never-lose-gear
+   fold, mode-not-difficulty at the door). It did NOT need a per-player
+   `dying` screen after all: a downed hero is a body the world stops
+   answering for (`hp <= 0` through `heroInPlay`), and the YOU FELL overlay
+   is the app's, keyed off `Player.downed`.
 8. **§3.3 — prediction and reconciliation.** Deliberately last: it is the item
    that changes what a player FEELS on a GOOD connection, so it wants a mode
    that is otherwise finished. Input frames carry a sequence, the LOCAL hero

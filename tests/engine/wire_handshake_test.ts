@@ -153,6 +153,26 @@ describe("admit", () => {
     expect(admit(request({ seats: MAX_CLIENTS }))).toBe("session-full");
     expect(admit(request({ seats: 2, maxSeats: 2 }))).toBe("session-full");
   });
+
+  it("holds hardcore and softcore apart, in both directions (§4.2)", () => {
+    // A hardcore hero never lands under a softcore host's rules…
+    expect(admit(request({ joinerHardcore: true }))).toBe("hardcore-mismatch");
+    // …and a softcore hero never tours a game played for keeps.
+    expect(admit(request({ sessionHardcore: true }))).toBe("hardcore-mismatch");
+    // Matching modes pass, and both absent is softcore — every pre-flag
+    // client still admits.
+    expect(
+      admit(request({ sessionHardcore: true, joinerHardcore: true })),
+    ).toBeNull();
+    expect(admit(request())).toBeNull();
+  });
+
+  it("answers the hardcore mismatch only after the challenge is proved", () => {
+    // A spoofed source address learns nothing about the session's mode.
+    expect(admit(request({ sessionHardcore: true, cookie: 0 }))).toBe(
+      "bad-challenge",
+    );
+  });
 });
 
 describe("sanitizeName", () => {

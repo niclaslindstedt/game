@@ -52,6 +52,7 @@ import {
   weaponStarved as heroWeaponStarved,
 } from "../game/bot/economy.ts";
 import { runBotActions, runBotUpkeep } from "../game/bot/intent.ts";
+import { applyRunCommand } from "../game/commands.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { seatHero } from "../game/seating.ts";
@@ -1636,7 +1637,15 @@ function playRun(args: {
     // holding the solo freeze.
     for (let seat = 0; seat < state.players.length; seat++) {
       const hero = state.players[seat];
-      if (!hero || !heroInPlay(hero)) continue;
+      if (!hero) continue;
+      // A DOWNED party member stands straight back up (§4.2's `respawn` verb,
+      // through the same dispatch a session runs). Immediately, because that
+      // is what a human at the keyboard does and what keeps the instrument
+      // measuring a party rather than a shrinking one — the walk back from
+      // the spawn is the cost, and the sim pays it honestly. Solo is
+      // untouched: one hero down is the party wiped, handled above.
+      if (hero.downed) applyRunCommand(state, "respawn", [], hero);
+      if (!heroInPlay(hero)) continue;
       const seatBot = bots[seat] ?? bot;
       while (hero.pendingStatPoints > 0) {
         if (allocateStat(state, hero, botAllocate(seatBot, state, hero))) {

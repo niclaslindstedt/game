@@ -23,6 +23,7 @@ import { stepCutscene } from "@game/lib/cutscene.ts";
 import { stepAutopilot } from "../autopilot.ts";
 import { stepBossDeath } from "../boss-death.ts";
 import { enterDeathScene, stepDeathScene } from "../death-scene.ts";
+import { downHero, stepCorpseRecovery } from "../downed.ts";
 import { stepElevators } from "../elevator.ts";
 import { stepLairs } from "../lairs.ts";
 import { stepCompanions } from "../companions.ts";
@@ -415,10 +416,26 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // A scenario FREEZE holds the whole pass, like the merchant's stroll.
   if (!state.freeze) stepQuests(state, dt, dtMs);
 
-  // THE RUN ENDS WHEN THE PARTY FALLS, NOT WHEN A HERO DOES. One player going
-  // down in a co-op run is a setback the rest fight through (phase 4 owns the
-  // corpse and the respawn); it is only when the LAST of them is down that the
-  // run is over. In single player that is the same tick it always was.
+  // THE RUN ENDS WHEN THE PARTY FALLS, NOT WHEN A HERO DOES — and a hero who
+  // falls while the party still stands goes DOWN instead (§4.2, downed.ts): a
+  // corpse holding their kit, their own XP toll, and the `respawn` verb back.
+  // The sweep runs AFTER every damage pass so it judges the tick's final hp,
+  // and only when the party is NOT wiped — the wipe path below owns that case
+  // whole, which is exactly what keeps solo byte-identical: one hero at 0 hp
+  // is `partyWiped` on the same tick it always was, and no corpse is minted.
+  if (!partyWiped(state)) {
+    for (const hero of state.players) {
+      if (hero.hp <= 0 && !hero.downed && !hero.departed) {
+        downHero(state, hero);
+      }
+    }
+    // The walk back: an owner standing on their own corpse takes their gear
+    // back. Free when there are no corpses, which is every solo run.
+    stepCorpseRecovery(state);
+  }
+
+  // In single player this fires on the same tick it always did — one hero
+  // down IS the party down.
   if (partyWiped(state)) {
     // The party fell: drop into the DEATH SCENE (the dramatic tableau — the
     // horde rings the corpse, clouds roll in) rather than straight to the

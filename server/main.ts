@@ -104,6 +104,9 @@ type ControlMessage =
       password?: string;
       /** This client's mods, in load order — the host refuses a mismatch. */
       mods?: string[];
+      /** The joining character is HARDCORE (§4.2) — compared against the
+       * session's mode at the door; the mismatch is refused by name. */
+      hardcore?: boolean;
     }
   /** One packet the shell pumped off the Steam P2P queue. */
   | { kind: "peer"; from: string; data: ArrayBuffer | Uint8Array | number[] }
@@ -472,6 +475,9 @@ async function joinSession(
     },
     name: message.name,
     password: message.password,
+    // §4.2's hardcore gate — the mode of the character this player is coming
+    // with, compared against the session's at both ends of the handshake.
+    hardcore: message.hardcore === true,
     // THE TICKET BACK INTO THE SEAT WE LAST HELD AT THIS ADDRESS (plan §5.4).
     // Held per host for the life of this process, which is exactly the span
     // that matters: the case the grace window exists for is a wifi hiccup

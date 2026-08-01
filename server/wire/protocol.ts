@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 16;
+export const PROTOCOL_VERSION = 17;
 
 /**
  * The most clients one session seats, host included.
@@ -170,6 +170,18 @@ export type SessionParams = {
    * engine FLAG rather than a `createGame` argument, so it travels separately
    * and the client applies it before it builds. */
   generatedMapSize: string;
+  /**
+   * THE SESSION IS A HARDCORE GAME — hosted by a hardcore character (§4.2).
+   *
+   * A session fact rather than a per-player one, because the two modes may
+   * never mix: a hardcore hero dying in a stranger's softcore-rules session is
+   * a betrayal, and a softcore hero in a hardcore session is a tourist among
+   * people playing for keeps. Admission refuses the mismatch by name
+   * (`hardcore-mismatch`) — the ENGINE never learns hardcore exists (death and
+   * permadeath stay app-side, as ever); this flag lives only at the door.
+   * Absent means softcore, which is every session hosted before it existed.
+   */
+  hardcore?: boolean;
 };
 
 /**
@@ -197,7 +209,8 @@ export type RefusalReason =
   | "bad-password"
   | "bad-challenge"
   | "rate-limited"
-  | "unlicensed";
+  | "unlicensed"
+  | "hardcore-mismatch";
 
 /**
  * What the JOIN screen prints for each refusal.
@@ -217,6 +230,9 @@ export const REFUSAL_TEXT: Record<RefusalReason, string> = {
   "bad-challenge": "THE HANDSHAKE EXPIRED - TRY AGAIN",
   "rate-limited": "TOO MANY ATTEMPTS - WAIT A MOMENT",
   unlicensed: "MULTIPLAYER IS PLAYED THROUGH STEAM",
+  // Worded from the joiner's side, mode-neutral: whichever way the mismatch
+  // runs, the thing the player can act on is picking a matching character.
+  "hardcore-mismatch": "HARDCORE AND SOFTCORE HEROES CANNOT SHARE A GAME",
 };
 
 // ---------------------------------------------------------------------------
@@ -357,6 +373,15 @@ export type ChallengePayload = {
    * probe rather than off metadata a host could have set to anything. */
   players: number;
   maxPlayers: number;
+  /**
+   * The session is a HARDCORE game (§4.2 — see `SessionParams.hardcore`).
+   * On the probe so the JOIN screen can show the constraint and refuse the
+   * mismatch locally, without spending the join round trip to be told; the
+   * host still enforces it at admission, because a probe reply is advice and
+   * the door is the door. Nothing sensitive: the Steam lobby metadata says
+   * the same thing to anybody browsing.
+   */
+  hardcore?: boolean;
 };
 
 /**
@@ -390,6 +415,16 @@ export type JoinPayload = {
    * in the `welcome`.
    */
   loadout?: unknown | null;
+  /**
+   * The arriving character is HARDCORE (§4.2). Compared against the session's
+   * own mode at admission — a mismatch either way is refused by name
+   * (`hardcore-mismatch`), because the two modes may never share a game. A
+   * claim like the loadout beside it (phase 5's trust model applies), but the
+   * honest client sends it and the promise it buys — a hardcore hero never
+   * lands under softcore rules — is one the hardcore player wants kept.
+   * Absent means softcore.
+   */
+  hardcore?: boolean;
   /**
    * THE TICKET FROM AN EARLIER `welcome`, when this is a RECONNECT (plan §5.4).
    *
@@ -525,6 +560,7 @@ export const COMMANDS = [
   "resumeGame",
   "stayOnField",
   "reopenVictoryChoice",
+  "respawn",
   "equipFromInventory",
   "swapHand",
   "sortInventory",

@@ -281,8 +281,11 @@ export function validateMap(bp, refs, description = "") {
             `${layout.minRoom} — a doorway plus its end margins must fit a chamber border`,
         );
       // Narrow doorways plug: the scatter pass keeps furniture clear of walls
-      // but not of openings, so a rock can land in a thin gap.
-      if (layout.doorWidth < 160)
+      // but not of openings, so a rock can land in a thin gap. A PINNED
+      // blueprint (`carveSeed` — the static hub) is exempt: its one carve was
+      // authored and eyeballed, so "a random scatter MIGHT plug it" cannot
+      // happen to a layout that never re-rolls.
+      if (layout.doorWidth < 160 && bp.carveSeed === undefined)
         warnings.push(
           `${tag}: layout.doorWidth ${layout.doorWidth} is narrow — scattered ` +
             `obstacles may plug it`,
@@ -640,7 +643,13 @@ export function validateMap(bp, refs, description = "") {
       err(`${where}: wall "${id}" is not in the object palette`);
   for (const [id, where] of areaNests)
     if (!areaIds.has(id)) err(`${where}: shellOf names unknown area "${id}"`);
-  if (!bp.objects?.some((o) => o.type === "chest"))
+  // A PINNED blueprint (`carveSeed` — the static hub) pays nothing on purpose:
+  // a hub with loot in its dead ends would be a farm in the one place the
+  // player is meant to idle, so the missing chest is the design, not a gap.
+  if (
+    !bp.objects?.some((o) => o.type === "chest") &&
+    bp.carveSeed === undefined
+  )
     warnings.push(`${tag}: no chest object — the dead ends pay nothing`);
 
   // ---- horde ---------------------------------------------------------------

@@ -51,6 +51,7 @@ import { drawCanopy } from "./render/canopy.ts";
 import { drawElevators, drawLairs } from "./render/elevators.ts";
 import { drawFauna } from "./render/fauna.ts";
 import { drawItems } from "./render/items.ts";
+import { drawPlayerCorpses } from "./render/player-corpse.ts";
 import {
   drawLevelUpBurn,
   drawPlayer,
@@ -264,6 +265,10 @@ export function drawFrame(
   // be indistinguishable from a pickup at a glance, and drawing it anywhere else
   // in the stack would quietly give it away.
   drawBaits(ctx, state, sprites, camera, inView, timeMs);
+  // A FALLEN PARTY MEMBER'S BODY (§4.2) — under the loot: it is the walk-back
+  // target holding its owner's gear, advertised by the same rarity aura a find
+  // on the floor wears. Solo runs never have one.
+  drawPlayerCorpses(ctx, state, sprites, camera, inView, timeMs);
   drawItems(ctx, state, sprites, camera, inView, timeMs);
   drawProjectiles(ctx, state, sprites, camera, inView, noiseFade);
   drawEnemies(ctx, state, sprites, camera, inView, timeMs, field, noiseFade);

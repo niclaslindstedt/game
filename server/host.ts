@@ -151,6 +151,9 @@ export function createHost(options: HostOptions): Host {
     },
     password: options.password,
     maxClients,
+    // §4.2's hardcore gate: the session's mode is a session parameter, and the
+    // hub is the one door that enforces it.
+    hardcore: options.params.hardcore === true,
     secret,
     now,
     log: options.log,

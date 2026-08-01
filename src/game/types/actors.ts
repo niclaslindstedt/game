@@ -9,6 +9,7 @@ import type {
   ActiveAbility,
   AmmoType,
   Equipment,
+  EquipSlot,
   ItemSpell,
   PlayerScreen,
   StatName,
@@ -143,6 +144,22 @@ export type Player = {
    * ready to fight.
    */
   disarmed?: boolean;
+  /**
+   * DOWN: this hero fell while the party was still standing (multiplayer plan
+   * §4.2, `downed.ts`). Their worn gear went to a corpse where they fell
+   * (`GameState.corpses`), their own DEATH TOLL is already paid, and the body
+   * lies on the field until the `respawn` verb stands them back up at the
+   * level's start. `heroInPlay` already reads false off `hp <= 0`, so nothing
+   * geometric asks this flag — what it answers is "has this fall been
+   * PROCESSED", which is what keeps the down bookkeeping from re-running every
+   * tick, keeps the wipe toll from billing a hero who already paid at their
+   * fall, and is what the `respawn` verb requires. PUBLIC on the wire, like
+   * `screen`: "they're down" is something the party HUD is meant to say.
+   *
+   * Never set in a solo run: one hero falling IS the party wiped, and the wipe
+   * path (`enterDeathScene`) owns that tick exactly as it always has.
+   */
+  downed?: boolean;
   /**
    * THE OWNER OF THIS SEAT LEFT THE SESSION.
    *
@@ -336,6 +353,30 @@ export type Player = {
    * it survives the level hops a multi-lap flight makes.
    */
   vault: Equipment[];
+};
+
+/**
+ * A fallen hero's BODY, holding what they were wearing — D2's rule, and §4.2's
+ * (see `downed.ts`). Left where a hero went down while the party still stood;
+ * recoverable by its OWNER alone (walking within `CORPSE.recoverRadius` takes
+ * the gear back — worn again where the slot is free, banked to the bag where it
+ * is not); persists for the level. Whatever is still on it when the run banks
+ * is folded into the owner's loadout VAULT by `extractLoadout`, so an
+ * unrecovered corpse can never cost a player their kit.
+ *
+ * PUBLIC in the replication split: the gear on it was worn, and worn gear was
+ * visible to the whole party already — hiding the body would hide nothing.
+ */
+export type PlayerCorpse = {
+  id: number;
+  /** WHOSE body this is — a seat into `state.players`, like every other
+   * cross-cutting reference: a seat survives the wire, an object does not. */
+  seat: number;
+  /** Where they fell. */
+  pos: Vec2;
+  /** The worn kit, each piece remembering the slot it came off — what recovery
+   * tries to put it back into. */
+  gear: { slot: EquipSlot; item: Equipment }[];
 };
 
 /** The three slots a companion can be equipped in: a weapon, a helmet, and a

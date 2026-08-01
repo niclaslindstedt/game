@@ -2006,23 +2006,34 @@ export function grantXp(
  * who was still in the run when it was lost pays the toll on their own bar.
  * A DEPARTED seat is billed nothing — its owner left before the wipe, and
  * taking XP off a hero whose player was not there for the defeat is a bill for
- * somebody else's mistake. The returned figure is the whole party's forfeit,
- * which is what the defeat splash quotes; per-hero death (a fallen player in a
- * party still standing) is §4.2's, and waits on the per-player `dying` screen.
+ * somebody else's mistake. A DOWNED hero is billed nothing either, and for the
+ * opposite reason: they already paid, at their own fall (`downHero` books the
+ * per-hero toll the moment a hero drops in a party still standing — §4.2), and
+ * a wipe that re-billed the already-fallen would price one death twice.
  */
 export function applyDeathXpPenalty(state: GameState): number {
+  let total = 0;
+  for (const player of state.players) {
+    if (player.departed || player.downed) continue;
+    total += applyHeroDeathToll(state, player);
+  }
+  return total;
+}
+
+/**
+ * One hero's own DEATH TOLL — the per-head unit `applyDeathXpPenalty` bills the
+ * wiped party with, and the bill `downHero` books at a single fall in a party
+ * still standing (multiplayer plan §4.2). Same fraction, same floor, same
+ * `stats.xpLost` book-keeping, whichever transition it rides.
+ */
+export function applyHeroDeathToll(state: GameState, player: Player): number {
   const fraction =
     LEVELING.deathXpPenaltyFraction * Math.max(0, BALANCE.deathXpLoss);
   if (fraction <= 0) return 0;
-  let total = 0;
-  for (const player of state.players) {
-    if (player.departed) continue;
-    const toll = Math.round(player.xpToNext * fraction);
-    const lost = Math.min(player.xp, toll);
-    if (lost <= 0) continue;
-    player.xp -= lost;
-    state.stats.xpLost += lost;
-    total += lost;
-  }
-  return total;
+  const toll = Math.round(player.xpToNext * fraction);
+  const lost = Math.min(player.xp, toll);
+  if (lost <= 0) return 0;
+  player.xp -= lost;
+  state.stats.xpLost += lost;
+  return lost;
 }

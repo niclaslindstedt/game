@@ -53,6 +53,10 @@ export type JoinIntent = {
   /** What this player is called in the roster and in chat. */
   name: string;
   password?: string;
+  /** The character this player is coming with is HARDCORE (§4.2). A hardcore
+   * hero may only enter a hardcore session and vice versa — the handshake
+   * refuses the mismatch by name. */
+  hardcore?: boolean;
   /** What the browser row CLAIMED about the session, for the screen the joiner
    * is looking at while the level builds. Null for a typed address, which
    * claims nothing until the handshake answers. */

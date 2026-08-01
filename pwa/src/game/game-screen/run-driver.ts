@@ -142,7 +142,9 @@ export function createRunDriver(session: RunSession): RunDriver {
   const hosting = takeHostIntent();
   const net = createNetDriver({
     state: session.state,
-    params: params ? wireParams(params) : adoptedParams(session.state),
+    params: params
+      ? wireParams(params)
+      : adoptedParams(session.state, session.hardcore),
     adopt: params ? null : freezeRun(session.state),
     // THE MODS THIS RUN IS ACTUALLY PLAYING, in load order. They travel because
     // the handshake refuses a mismatch on them: a host with a conversion on and
@@ -201,7 +203,7 @@ function wireParams(params: RunParams): SessionParams {
  * requires them, and the SEED in particular is meaningless here: a client of an
  * adopted session never builds the world, it is sent one.
  */
-function adoptedParams(state: GameState): SessionParams {
+function adoptedParams(state: GameState, hardcore: boolean): SessionParams {
   return {
     seed: 0,
     levelId: state.level.id,
@@ -211,5 +213,8 @@ function adoptedParams(state: GameState): SessionParams {
     clearedLevels: [],
     merchantDiscovered: false,
     generatedMapSize: generatedMapSizeSetting(),
+    // §4.2's door gate is real for an adopted run too — a RETRY'd hardcore
+    // checkpoint is still a hardcore game.
+    hardcore,
   };
 }

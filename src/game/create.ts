@@ -704,6 +704,7 @@ export function createGame(
     mapMarkers: [],
     pathIndex: 0,
     players: [createHero(playerSpawn, def, difficulty, diff, () => nextId++)],
+    corpses: [],
     enemies,
     projectiles: [],
     items: [],

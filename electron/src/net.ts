@@ -93,6 +93,9 @@ export type NetRequest = {
   address?: string;
   peer?: string;
   playerName?: string;
+  /** `connect`: the joining character is HARDCORE (§4.2) — the handshake holds
+   * hardcore and softcore apart, so the flag rides the join. */
+  hardcore?: boolean;
 };
 
 /** An event to inject back into the page (see the web bridge's protocol). */
@@ -406,6 +409,7 @@ export function createNetBridge(
         name: request.playerName ?? "PLAYER",
         password: request.password,
         mods: request.mods,
+        hardcore: request.hardcore === true,
       });
       window.webContents.postMessage(NET_PORT_CHANNEL, null, [channel.port2]);
       const reply = await await_("connected", CONNECT_TIMEOUT_MS);

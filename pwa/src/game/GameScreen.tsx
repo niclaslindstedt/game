@@ -88,6 +88,7 @@ import {
   useDemoState,
 } from "./game-screen/demo-director.ts";
 import { DefeatSplash, VictorySplash } from "./game-screen/EndSplash.tsx";
+import { DownedOverlay } from "./game-screen/DownedOverlay.tsx";
 import {
   applyEventFx,
   expireEffects,
@@ -460,6 +461,7 @@ export function GameScreen({
         peer: join.peer,
         name: join.name,
         password: join.password,
+        hardcore: join.hardcore,
         mods: activeMods().map((stamp) => stamp.id),
         onReady: (state: GameState) => {
           if (live) setJoined({ state, driver: made as RunDriver });
@@ -1541,6 +1543,14 @@ export function GameScreen({
           bumpUi={bumpUi}
           sessionLink={sessionLink}
         />
+      )}
+
+      {/* YOU FELL (§4.2) — the local hero is down while the party still
+          fights. Not the defeat splash: the run goes on behind it, and the one
+          press is the `respawn` verb. Never mounts solo, where one hero down
+          is the party wiped (the `dying`/`defeat` path below). */}
+      {state && hud?.downed && hud.phase === "playing" && (
+        <DownedOverlay state={state} font={font} bumpUi={bumpUi} />
       )}
 
       {/* The achievement unlock banner — any phase: a badge earned on the

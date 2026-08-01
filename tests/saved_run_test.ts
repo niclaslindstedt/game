@@ -193,6 +193,9 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "combatGraceMs",
       "combatKillRate",
       "companions",
+      // §4.2: fallen party members' bodies. Additive — a solo run never mints
+      // one — so `loadSavedRun` defaults it instead of a version bump.
+      "corpses",
       "craters",
       "critters",
       "cutscene",
