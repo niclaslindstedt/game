@@ -58,7 +58,7 @@ import {
 import { synth } from "./audio.ts";
 import { playEquipHaptic } from "./haptics.ts";
 import { IdentifyReveal } from "./IdentifyReveal.tsx";
-import { ItemIcon } from "./ItemCard.tsx";
+import { ItemIcon, itemKindGlyph } from "./ItemCard.tsx";
 import { ItemTooltip } from "./ItemTooltip.tsx";
 import { PaperDoll } from "./PaperDoll.tsx";
 import { playUiSound } from "./sfx/ui.ts";
@@ -722,6 +722,11 @@ export function InventoryPanel({
           useLabel={
             bagVerb(inspect.item) === "spendLookupTicket"
               ? "IDENTIFY"
+              : undefined
+          }
+          useIcon={
+            bagVerb(inspect.item) === "spendLookupTicket"
+              ? itemKindGlyph(inspect.item)
               : undefined
           }
         />

@@ -14,7 +14,7 @@ import { boxesOverlap, placeBeside } from "@ui/lib/anchor-box.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import type { RelicTier, Sprites } from "./assets.ts";
+import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { ItemCard } from "./ItemCard.tsx";
 
 /**
@@ -43,6 +43,7 @@ export function ItemTooltip({
   anchor,
   onUse,
   useLabel,
+  useIcon,
 }: {
   font: PixelFont;
   relicFonts: Record<RelicTier, PixelFont>;
@@ -61,6 +62,10 @@ export function ItemTooltip({
   /** The USE row's label — "USE" unless the verb reads better by name (the
    * unidentified card says IDENTIFY, because the tap spends a ticket ON it). */
   useLabel?: string;
+  /** A sprite riding the label — the unidentified card's IDENTIFY carries the
+   * piece's class/slot glyph (`itemKindGlyph`), the one place a veiled find
+   * says what KIND of thing it is. */
+  useIcon?: string;
 }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const wornRef = useRef<HTMLDivElement>(null);
@@ -191,6 +196,17 @@ export function ItemTooltip({
               scale={2}
               color="#0b0d10"
             />
+            {(() => {
+              const src = useIcon && spriteDataUrl(sprites, useIcon);
+              return src ? (
+                <img
+                  src={src}
+                  alt=""
+                  className="pixel-img card-class-glyph"
+                  draggable={false}
+                />
+              ) : null;
+            })()}
           </button>
         )}
       </ItemCard>

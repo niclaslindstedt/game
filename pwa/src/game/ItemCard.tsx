@@ -557,6 +557,22 @@ export function durabilityLine(item: Equipment): CardLine | null {
   };
 }
 
+/**
+ * The sprite naming WHAT KIND of thing a piece is — a weapon's class glyph
+ * (sword/reticle/spark) or a gear piece's slot glyph. A SHIELD borrows the
+ * OFF HAND frame's own glyph (`icon_slot_offhand`, which IS a shield
+ * silhouette) rather than shipping an identical second copy; a BAG keeps its
+ * satchel, and the glyph is how the card says which of the two arm-fillers
+ * this is. The card's foot row reads it, and so does the unidentified
+ * tooltip's IDENTIFY button (the one place a veiled find says its shape).
+ */
+export function itemKindGlyph(item: Equipment): string {
+  if (isWeaponDef(item.defId)) {
+    return `icon_class_${weaponDef(item.defId).class}`;
+  }
+  return `icon_slot_${item.slot === "shield" ? "offhand" : item.slot}`;
+}
+
 /** The item's pixel icon (equipmentIcon → sprite), the same glyph the field
  * pickup and inventory cell draw — so every surface shows the same art. */
 export function ItemIcon({
@@ -713,15 +729,7 @@ export function ItemCardBody({
   const weaponClass = isWeaponDef(item.defId)
     ? weaponDef(item.defId).class
     : null;
-  // A SHIELD borrows the OFF HAND frame's own glyph (`icon_slot_offhand`, which
-  // IS a shield silhouette) rather than shipping an identical second copy of it.
-  // A BAG keeps its satchel glyph: the two share a slot, and the glyph is how
-  // the card says which of them this is.
-  const slotGlyph = item.slot === "shield" ? "offhand" : item.slot;
-  const glyph = spriteDataUrl(
-    sprites,
-    weaponClass ? `icon_class_${weaponClass}` : `icon_slot_${slotGlyph}`,
-  );
+  const glyph = spriteDataUrl(sprites, itemKindGlyph(item));
   // A unique/legendary/artifact name is struck in its tier's own golden RELIC
   // font (pre-colored, so no `color` — see assets.relicFonts), each rung
   // richer than the last; every other tier stays the flat-tinted UI font in
@@ -742,15 +750,18 @@ export function ItemCardBody({
       scale={2}
       color={relicFont ? undefined : TIER_COLORS[item.tier]}
       className={tierGlowClass(item.tier).trim() || undefined}
-      maxWidth={icon && maxWidth ? maxWidth - 1 : maxWidth}
+      // The icon (1.25rem) and its gap eat into the wrap width, so long names
+      // still stay inside the card.
+      maxWidth={icon && maxWidth ? maxWidth - 2 : maxWidth}
     />
   );
   // AN UNIDENTIFIED FIND SHOWS NOTHING BUT ITS SHAPE — the D2 read. The name
-  // already says UNIDENTIFIED <BASE> (equipmentName veils the compose), the
-  // tier speaks through the name's color and a spelled-out tier line (color
-  // alone is a lot to ask of a find you can't inspect), and the only other
-  // line is the gold instruction for lifting the veil. No stats, no affixes,
-  // no ilvl, no requirements: everything else IS the reveal.
+  // already says UNIDENTIFIED <BASE> (equipmentName veils the compose) and the
+  // tier speaks through the name's color plus a spelled-out tier line (color
+  // alone is a lot to ask of a find you can't inspect). Nothing else — no
+  // stats, no affixes, no ilvl, no requirements, no foot row (the class/slot
+  // glyph rides the IDENTIFY button instead — see ItemTooltip): everything
+  // else IS the reveal, and the veil needs no instruction manual.
   if (item.unidentified) {
     return (
       <>
@@ -772,25 +783,6 @@ export function ItemCardBody({
           color={TIER_COLORS[item.tier]}
           maxWidth={maxWidth}
         />
-        <PixelText
-          font={font}
-          text="IDENTIFY AT A MERCHANT OR USE A LOOKUP TICKET"
-          scale={lineScale}
-          color={QUOTE_GOLD}
-          maxWidth={maxWidth}
-        />
-        <div className="card-foot">
-          <div className="card-foot-right">
-            {glyph && (
-              <img
-                src={glyph}
-                alt={weaponClass ? `${weaponClass} weapon` : item.slot}
-                className="pixel-img card-class-glyph card-class-glyph-lg"
-                draggable={false}
-              />
-            )}
-          </div>
-        </div>
       </>
     );
   }

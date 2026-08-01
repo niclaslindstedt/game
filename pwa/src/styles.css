@@ -7982,9 +7982,16 @@ canvas.tier-artifact {
 }
 
 /* The USE row a usable trinket grows (a travel-gate key on its home level):
-   the tooltip itself ignores the pointer, so the button opts back in. */
+   the tooltip itself ignores the pointer, so the button opts back in. The
+   label — and the class/slot glyph the IDENTIFY row seats beside it — rides
+   centered: the row spans the card, and a label parked at its left edge read
+   as a misrender rather than a button. */
 .item-tooltip .tooltip-use {
   pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   margin-top: 0.3rem;
   padding: 0.3rem 0;
   width: 100%;
@@ -8003,10 +8010,13 @@ canvas.tier-artifact {
 
 .tooltip-name-row .inv-item-icon {
   flex: 0 0 auto;
-  /* Match one row of the scale-2 name (font height 5px × 2 = 10px = 0.625rem)
-     so icon and title line up top-and-bottom. */
-  width: 0.625rem;
-  height: 0.625rem;
+  /* TWO rows of the scale-2 name (font height 5px × 2 × 2 = 20px = 1.25rem):
+     one row rendered a 12px sprite at 10px — smaller than the bag cell it was
+     tapped in, and unreadable next to the title. At two rows the art shows its
+     pixels; the row is `align-items: center`, so a one-line name simply rides
+     the icon's midline instead of stretching. */
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* ---- Developer ARSENAL viewer (ArsenalScreen) ------------------------------
@@ -8276,7 +8286,13 @@ canvas.tier-artifact {
   animation: identify-reveal-pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
-.identify-reveal-kicker {
+/* The kicker centres over the figure. The compound selector is load-bearing:
+   the reveal mounts inside the shop/bag `.game-overlay`, whose blanket
+   `.game-overlay canvas` rule (align-self: flex-start) would otherwise park
+   the title at the figure's left edge — the same fight the map header's
+   canvas has, won the same way (an extra class outranks the blanket). */
+.identify-reveal-figure .identify-reveal-kicker {
+  align-self: center;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
 }
 
