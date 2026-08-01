@@ -2,7 +2,7 @@
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
 describes what actually exists. **Every numbered phase through the plan's
-§5.5.3 R1 has landed, bar §3.3's prediction.** The simulation runs in its own
+§5.5.3 R1 has landed.** The simulation runs in its own
 process, the run loop drives it, the wire between it and a renderer is
 complete and tested, the desktop shell forks and supervises a session, a
 session can open a UDP socket and a Steam lobby and admit remote clients
@@ -16,10 +16,11 @@ device.
 
 The screens are per-player too (§3.2): one player in their bag no longer stops
 the world for anybody else — the run halts only when EVERY hero in play has a
-screen up, which solo is exactly the freeze it always was. What is NOT here yet
-is prediction: a client still shows its hero where the last snapshot put him
-rather than predicting his own steering. See **What is NOT here yet** at the
-foot of this file.
+screen up, which solo is exactly the freeze it always was. The client-side
+LATENCY answer is in too: the local hero is PREDICTED by running the engine's
+own movement pass over unacknowledged inputs, and every other hero is
+INTERPOLATED one publish interval behind — see **Prediction and
+interpolation** below. What remains open is listed at the foot of this file.
 
 ## The party
 
@@ -1128,19 +1129,65 @@ Every one of these is a real defect, and not one of them fails a unit test.
 
 The soak runs themselves are in the plan's §5.9.
 
+## Prediction and interpolation
+
+The client sends INPUT FRAMES, never positions — the server stays the only
+authority over where anybody is. What prediction changes is when the PLAYER
+gets to see the answer: without it, the hero moves at the 20 Hz publish rate
+plus a round trip, which is the one latency a player feels in their hands.
+
+**The local hero is predicted, and only the local hero.** After every input
+frame, the client runs `predictHeroMovement` (`src/game/predict.ts`) — the
+engine's OWN `stepPlayer`, so speed, steering, facing, jump/gravity, obstacle
+resolution, the bounds clamp and the stamina ledger are all the real rules —
+with the shared-state side effects neutralized: `state.events` swapped for a
+scratch sink, `moveSpawnCredit` / `staminaRegenLockMs` / `staminaEmptyMs` /
+`stats.jumps` saved and restored, and the seismic-landing slam skipped via
+`stepPlayer`'s `predicting` flag. That slam is the one COMBAT side effect the
+movement pass has and the only path from it to the seeded rng stream, so a
+predicted step damages nothing and draws nothing — **combat is never
+predicted**, because a mispredicted kill is a rollback problem this codebase
+has no machinery for and the player would experience as monsters un-dying.
+
+**Reconciliation rides the wire's existing header.** Every input frame carries
+a monotonically increasing seq (its own counter — commands and chat number
+themselves separately); the server tracks the highest seq it has applied per
+client and echoes it in the `ack` field of every state frame, which used to
+carry a snapshot-ack echo nothing read. On each applied snapshot the client
+rolls its predicted scribbles back, lets the authoritative patch land, drops
+every pending input the ack covers, replays the rest through
+`predictHeroMovement`, and reconciles the PRESENTATION: an error under one
+body length (2 × `PLAYER.radius`) is eased toward the replayed truth, a larger
+one (a knockback, a hazard shove — things prediction cannot see) snaps.
+Because every replay starts from server truth, a mispredict lives for exactly
+one publish interval and the easing cannot compound.
+
+**Every other hero is interpolated.** Their inputs are not here to replay, so
+each remote hero is drawn between its last two snapshot positions, advanced by
+local ticks — one publish interval behind, perfectly smooth, and the lateness
+is invisible on a body nobody is steering from this chair. Facing and pose
+take the newest snapshot's values as-is; downed and departed heroes keep their
+corpse-sprawl positions untouched.
+
+The whole thing lives in `server/client-predict.ts`, is wired into
+`server/client.ts` behind `NetClientOptions.predict`, and is **opt-in, default
+off**. The app's two net drivers (`pwa/src/game/net/driver.ts`) pass true; the
+BOT CLIENT deliberately does not — its staleness is the honest readout of what
+the network costs, which is the measurement it exists to take — and the
+replication suites that hash a client's whole state against the server's run
+unpredicted, since a predicted hero is deliberately ahead of the last
+snapshot. An in-session travel resets every buffer: pending inputs would
+replay a walk across geometry that no longer exists.
+`tests/engine/net_prediction_test.ts` holds all of it — the ack echo, the
+60 Hz motion, the exact rebase, the loss reconcile, the untouched shared
+state, and the interpolation bounds.
+
 ## What is NOT here yet
 
 - **The Steam path is written but unproven.** The binding's legacy P2P API is
   polled, deprecated and thinner on guarantees than SDR, and the plan is
   unsparing about spiking it under load before the UI rests on it. The direct
   UDP path exists partly as the insurance policy on exactly that.
-- **Nothing is predicted.** A client shows its own hero where the last snapshot
-  put him, so its steering costs a round trip of felt latency. phase 3's §3.3 is
-  the fix: input frames with a sequence number, the LOCAL hero's movement
-  predicted by replaying unacknowledged input, everybody else interpolated one
-  interval behind — and combat deliberately NOT predicted, because that is a
-  rollback problem this codebase has no machinery for and the player would
-  experience as monsters un-dying.
 - **VICTORY → NEXT LEVEL still drops joiners.** In-session travel (§6.4)
   carries the party through every door, gate and drive-out — but the
   post-victory crossing is tangled in the outro/banking flow and still

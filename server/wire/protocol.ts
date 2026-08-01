@@ -199,10 +199,21 @@ export type FrameHeader = {
   /** The server's snapshot sequence this frame belongs to (0 on client→server
    * frames other than `ack`). */
   seq: number;
-  /** The last sequence the SENDER has applied from the other side. A delta is
-   * always coded against the receiver's acked snapshot, never against the
-   * sender's latest — that is what makes a lost packet cost one frame of
-   * smoothness instead of a desync. */
+  /**
+   * The last sequence the SENDER has applied from the other side — and WHICH
+   * sequence space depends on the direction.
+   *
+   * Client → server (`ack` frames): the last SNAPSHOT sequence applied. A
+   * delta is always coded against the receiver's acked snapshot, never against
+   * the sender's latest — that is what makes a lost packet cost one frame of
+   * smoothness instead of a desync.
+   *
+   * Server → client STATE frames (`snapshot`/`delta`): the highest
+   * `InputPayload.seq` from THIS client the server has applied. The client's
+   * movement prediction reads it to drop acknowledged inputs and replay only
+   * the ones the snapshot cannot yet reflect. Meaningless (0) on every other
+   * server → client frame.
+   */
   ack: number;
   /** The simulation tick the frame was produced on. */
   tick: number;
@@ -399,9 +410,16 @@ export type RosterPayload = {
 };
 
 /**
- * One sampled input frame. Structurally `GameInput` plus the two fields that
- * make it replayable: the sequence the client will reconcile against, and the
- * tick it was sampled on.
+ * One sampled input frame. Structurally `GameInput` plus the sequence that
+ * makes it replayable.
+ *
+ * `seq` increases by one per input frame, on the input frames' OWN counter
+ * (commands and chat number their headers separately). The server folds the
+ * input latest-wins exactly as before, but tracks the highest `seq` it has
+ * applied per client and echoes that number in the `ack` field of every state
+ * frame it sends back (see `FrameHeader.ack`) — which is what lets the
+ * client's movement prediction drop the inputs a snapshot already covers and
+ * replay only the rest.
  *
  * The client sends INPUT, never positions. A client that sends positions is a
  * client that can teleport, and phase 5's trust rules would have nothing to check.

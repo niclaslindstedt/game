@@ -51,6 +51,7 @@ import {
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
+import { createPredictor } from "./client-predict.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
 import { patchState, type StatePatch, type WireState } from "./wire/delta.ts";
 import { FRAME, type CommandName } from "./wire/frames.ts";
@@ -138,6 +139,18 @@ export type NetClientOptions = {
    * lets the renderer and every loop helper carry on across the swap.
    */
   onTravel?: (state: GameState) => void;
+  /**
+   * PREDICT the local hero and INTERPOLATE the remote ones (see
+   * `./client-predict.ts` and `docs/multiplayer.md`).
+   *
+   * OPT-IN, default off, and the default is load-bearing twice over: the
+   * replication suites hash this client's entire state against the server's
+   * (a predicted hero is deliberately AHEAD of the last snapshot), and the
+   * BOT CLIENT must stay unpredicted — its staleness is the honest readout of
+   * what the network costs, which is the measurement it exists to take. The
+   * app's drivers pass true; nothing else does.
+   */
+  predict?: boolean;
 };
 
 export type NetClient = {
@@ -208,8 +221,18 @@ export function createNetClient(options: NetClientOptions): NetClient {
   let baseline: WireState | null = null;
   let seat: number | null = null;
   let tick = 0;
+  /** INPUT frames' own monotonically increasing counter — the number the
+   * server echoes back on state frames (`FrameHeader.ack`) so prediction
+   * knows which inputs a snapshot covers. Inputs alone: a command or a chat
+   * line consuming one would make the echo skip numbers no input ever wore. */
   let inputSeq = 0;
+  /** The header counter every NON-input client frame shares (commands, chat).
+   * Purely informational on those frames; kept so traces stay orderable. */
+  let frameSeq = 0;
   let disposed = false;
+  /** The prediction/interpolation half, or null when not opted in — see
+   * `NetClientOptions.predict` and `./client-predict.ts`. */
+  const predictor = options.predict ? createPredictor() : null;
   /** The recent state frames, as (server tick, wire bytes) pairs — the net
    * graph's raw material. Bounded to ~2 s at the publish rate. */
   const received: { tick: number; bytes: number }[] = [];
@@ -242,14 +265,22 @@ export function createNetClient(options: NetClientOptions): NetClient {
       return;
     }
     if (!state || !baseline) return; // nothing to apply it to yet
+    if (frame.type !== FRAME.snapshot && frame.type !== FRAME.delta) return;
+    // The predictor's scribbles (the predicted local hero, the interpolated
+    // remote ones) are rolled back BEFORE the patch lands, so a delta that
+    // happens not to mention the party leaves authoritative values standing
+    // rather than confirming a guess.
+    predictor?.beforeApply(state, seat);
     if (frame.type === FRAME.snapshot) {
       applyWhole(frame.payload as WireState);
-    } else if (frame.type === FRAME.delta) {
+    } else {
       patchState(state as unknown as WireState, frame.payload as StatePatch);
       patchState(baseline, frame.payload as StatePatch);
-    } else {
-      return;
     }
+    // Rebase + replay: the header's `ack` is the highest input seq the server
+    // has applied (see `FrameHeader.ack`), so everything above it is replayed
+    // over the fresh authoritative state, and the presentation reconciled.
+    predictor?.afterApply(state, seat, frame.ack, frame.tick);
     tick = frame.tick;
     acked = frame.seq;
     received.push({ tick: frame.tick, bytes: raw.byteLength });
@@ -318,6 +349,10 @@ export function createNetClient(options: NetClientOptions): NetClient {
     const level = snapshot.level as { id?: unknown } | null | undefined;
     if (level && typeof level.id === "string" && level.id !== state.level.id) {
       options.onTravel?.(state);
+      // The predictor's buffers are the OLD level's: pending inputs would
+      // replay a walk across geometry that no longer exists, and the
+      // interpolation samples name positions on a map nobody is on.
+      predictor?.reset();
       delete target.pendingTravel;
     }
     for (const [field, value] of Object.entries(snapshot)) {
@@ -338,12 +373,17 @@ export function createNetClient(options: NetClientOptions): NetClient {
     },
     sendInput(input) {
       if (disposed || !state) return;
+      const seq = ++inputSeq;
       transport.send(
         encodeFrame(
-          { type: FRAME.input, seq: ++inputSeq, ack: acked, tick },
-          { seq: inputSeq, input: input as unknown as Record<string, unknown> },
+          { type: FRAME.input, seq, ack: acked, tick },
+          { seq, input: input as unknown as Record<string, unknown> },
         ),
       );
+      // AFTER the send, one predicted movement step for this frame (plus the
+      // remote heroes' interpolation tick) — so the local hero answers the
+      // stick at the loop's 60 Hz instead of at the publish rate.
+      predictor?.onInput(state, seat, seq, input);
     },
     sendCommand(name, args) {
       if (disposed || !state) return;
@@ -351,7 +391,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
       if (args?.length) payload.args = [...args];
       transport.send(
         encodeFrame(
-          { type: FRAME.command, seq: ++inputSeq, ack: acked, tick },
+          { type: FRAME.command, seq: ++frameSeq, ack: acked, tick },
           payload,
         ),
       );
@@ -365,7 +405,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
       const payload: ChatPayload = { text };
       transport.send(
         encodeFrame(
-          { type: FRAME.chat, seq: ++inputSeq, ack: acked, tick },
+          { type: FRAME.chat, seq: ++frameSeq, ack: acked, tick },
           payload,
         ),
       );

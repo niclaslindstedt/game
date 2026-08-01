@@ -115,6 +115,11 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
       mods: options.mods,
       // The renderer's own object. See the header.
       adopt: state,
+      // The player's hands are on THIS client: predict the local hero at the
+      // loop's 60 Hz and interpolate the party (see server/client-predict.ts).
+      // The host's port is loopback-cheap, but the publish rate is still 20 Hz
+      // — without this the hero answers the stick a third of the time.
+      predict: true,
       onReady: () => {
         live = true;
       },
@@ -255,6 +260,9 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
       transport: portTransport(port),
       build: engineVersion,
       mods: options.mods,
+      // A joiner is the case prediction exists for: a real wire sits between
+      // the stick and the simulation (see server/client-predict.ts).
+      predict: true,
       onReady: (ready, params) => {
         state = ready;
         live = true;

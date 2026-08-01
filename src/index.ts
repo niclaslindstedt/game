@@ -61,6 +61,10 @@ export {
   type MapSizeName,
 } from "./game/mapgen/index.ts";
 export { IDLE_INPUT, step, type PartyInput } from "./game/step/index.ts";
+// CLIENT-SIDE MOVEMENT PREDICTION — the engine's own movement pass with combat
+// and shared-state side effects neutralized, for the net client's local-hero
+// prediction/replay (see `game/predict.ts` and `docs/multiplayer.md`).
+export { predictHeroMovement } from "./game/predict.ts";
 // THE PARTY — the run's heroes, and the questions the simulation may ask about
 // them as a group (see `game/party.ts`; the plan's §3.1). A hero's own reads are
 // a PARAMETER rather than a lookup and are deliberately absent from this list.

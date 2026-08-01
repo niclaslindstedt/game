@@ -125,6 +125,16 @@ type Client = {
   /** The last sequence this client said it had applied. */
   ackedSeq: number;
   /**
+   * The highest `InputPayload.seq` this client has sent that was APPLIED —
+   * folded onto its seat's live input. Echoed in the `ack` field of every
+   * state frame sent to this client, which is what the client's movement
+   * prediction reconciles against: inputs at or below this number are the
+   * server's business now, inputs above it are replayed locally. Tracking the
+   * MAX (rather than the last seen) keeps the input fold latest-wins while a
+   * reordered or duplicated frame can never move the echo backwards.
+   */
+  lastInputSeq: number;
+  /**
    * This client has never been sent a world it can trust, so the next publish
    * owes it a FULL snapshot rather than a delta.
    *
@@ -725,9 +735,14 @@ export function createSession(options: SessionOptions): Session {
       client.send(
         encodeFrameJson(
           {
+            // The header's `ack` on a STATE frame is the highest input seq
+            // applied from THIS client (see `Client.lastInputSeq`) — the
+            // number its prediction drops replayed inputs against. The
+            // snapshot-ack bookkeeping lives in `ackedSeq`/`history` and
+            // never needed to travel back: nothing client-side read it.
             type: full ? FRAME.snapshot : FRAME.delta,
             seq,
-            ack: client.ackedSeq,
+            ack: client.lastInputSeq,
             tick,
           },
           json,
@@ -883,6 +898,7 @@ export function createSession(options: SessionOptions): Session {
         // fields the server must never confirm or deny.
         baseline: baselineFor(genesis, recipient),
         ackedSeq: 0,
+        lastInputSeq: 0,
         needsFull: adopted !== null,
         history: new Map(),
         sentWindow: 0,
@@ -1035,7 +1051,20 @@ export function createSession(options: SessionOptions): Session {
       // it.
       if (client.recipient.seat === null) return;
       if (type === FRAME.input) {
-        applyInput(inputs, client.recipient.seat, payload);
+        if (applyInput(inputs, client.recipient.seat, payload)) {
+          // Track the highest APPLIED seq — the fold itself stays latest-wins
+          // (an older frame arriving late still lands on the live input; the
+          // next fresh one overwrites it), but the echo the client's
+          // prediction reads may only move forward.
+          const seq = (payload as { seq?: unknown }).seq;
+          if (
+            typeof seq === "number" &&
+            Number.isFinite(seq) &&
+            seq > client.lastInputSeq
+          ) {
+            client.lastInputSeq = seq;
+          }
+        }
         return;
       }
       if (type === FRAME.command) {
@@ -1112,17 +1141,21 @@ const IDLE_INPUT: GameInput = {
  * is only the shape: an input that is not an object is dropped rather than
  * spread onto the slot, because a `null` here would be a crash inside `step`
  * on the host's own machine.
+ *
+ * Returns whether the frame was actually folded, so the caller can advance the
+ * applied-input-seq echo only for payloads that reached the simulation.
  */
 function applyInput(
   inputs: Map<number, GameInput>,
   slot: number,
   payload: unknown,
-): void {
-  if (!payload || typeof payload !== "object") return;
+): boolean {
+  if (!payload || typeof payload !== "object") return false;
   const frame = (payload as { input?: unknown }).input;
-  if (!frame || typeof frame !== "object") return;
+  if (!frame || typeof frame !== "object") return false;
   const current = inputs.get(slot) ?? { ...IDLE_INPUT };
   inputs.set(slot, { ...current, ...(frame as Partial<GameInput>) });
+  return true;
 }
 
 /**
