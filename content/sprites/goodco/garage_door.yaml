@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: garage_door
+family: goodco
+size: [16, 16]
+description: >
+  One segment of the garage's roll-up door — horizontal slats in weathered
+  metal over a hazard-striped kick rail; the chain tiles it across the bay
+  doorway, and it rolls up for anybody who pulls in.
+subject:
+  kind: "solid door obstacle prop"
+  build: "a section of ribbed roll-up garage door, slats running wall to wall"
+  features: "horizontal slat ribs, a worn kick rail with hazard striping"
+  accent: "dull galvanized greys over amber hazard chevrons"
+  flavor: "home hardware, thirty years old and still on its original springs"
+palette:
+  O: "#1a1c2c" # outline and frame
+  T: "#c0c5cf" # slat highlight
+  V: "#9095a5" # light slat face
+  v: "#60687e" # slate slat face
+  b: "#3f4553" # slat seam shadow
+  y: "#d8b74a" # hazard amber
+grid: |
+  OOOOOOOOOOOOOOOO
+  OTTTTTTTTTTTTTTO
+  OVVVVVVVVVVVVVVO
+  ObbbbbbbbbbbbbbO
+  OTVVVVVVVVVVVVTO
+  OvvvvvvvvvvvvvvO
+  ObbbbbbbbbbbbbbO
+  OTVVVVVVVVVVVVTO
+  OvvvvvvvvvvvvvvO
+  ObbbbbbbbbbbbbbO
+  OTVVVVVVVVVVVVTO
+  OvvvvvvvvvvvvvvO
+  ObbbbbbbbbbbbbbO
+  OyybbyybbyybbyyO
+  OyybbyybbyybbyyO
+  OOOOOOOOOOOOOOOO

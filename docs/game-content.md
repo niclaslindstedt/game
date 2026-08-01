@@ -51,25 +51,36 @@ where anything is. No two runs of a map are the same walk, and no intended route
 is emitted — the fog-of-war minimap is the only record of where you have been.
 
 - **Home — THE GARAGE (hub)** (`content/levels/garage.yaml`). The campaign
-  opens here and every earthside victory returns here: the hero's own lot —
-  the GARAGE BAY (workbench world: tool chests, part racks, fuel drums, the
-  CAR parked mid-floor) opening onto the LAWN where the half-built ship
-  stands. The one **STATIC venue** in the game: its blueprint pins the carve
-  (`content/maps/garage.yaml`, `carveSeed`), so home lays out identically on
-  every seed and every GENERATED MAPS size — and a mod re-lays it by editing
-  the blueprint like any other. Its objective is **`hub`** — it never clears;
-  no victory, outro or bank can fire, and a player (or a joining party) can
-  stand in it indefinitely. No horde, no boss, no locks. The **merchant is
-  PARKED** at his counter (`merchant.parked` — revealed from map start,
-  scene-free, never wanders), buying loot and repairing gear. The only
-  decisions are the three **travel doors** (`LevelDef.travelDoors`): the CAR
-  (tap to board — the engine starts, lights and idle rumble on — then drive
-  out; → GOODCO HQ), the ROCKET (→ the moon, Mars), and the RIFT SEAM —
+  opens here and every earthside victory returns here: the hero's own lot,
+  and SMALL on purpose (400×280 — a Left 4 Dead staging area, not a level),
+  laid out as the prelude cutscene's own establishing shot via an **authored
+  floor plan** (`MapBlueprint.plan` — drawn rooms, not a BSP roll): the snug
+  GARAGE BAY southwest (poured cement — no tile grid — oil patches, papers
+  and cable on the floor, the WORKBENCH and tool chests standing against the
+  walls via `edge:` scatter, the CAR mid-floor, the ROLL-UP GARAGE DOOR on
+  its east wall), the clean PAVED DRIVE out front of the door (the house
+  stands just south of it, off the map's edge), and the LAWN across the
+  whole back of the lot where the half-built ship stands. **No fog of war**
+  (`revealed:` — a man knows his own garage) and **no loot**: no chests, no
+  breakable crates, just furniture. Its objective is **`hub`** — it never
+  clears; no victory, outro or bank can fire, and a player (or a joining
+  party) can stand in it indefinitely. No horde, no boss, no locks but the
+  garage door itself — an **approach door** (`doors[].opens: approach`) that
+  rolls up for anybody who walks or drives near. The **merchant is PARKED**
+  on the drive (`merchant.parked` — revealed from map start, scene-free,
+  never wanders), buying loot and repairing gear. The only decisions are the
+  three **travel doors** (`LevelDef.travelDoors`): the CAR (tap to board —
+  the engine starts, lights and idle rumble on — then DRIVE: W throttles
+  along the nose, S brakes then reverses, A/D steer the rolling car;
+  crossing the open garage door's threshold commits the trip → GOODCO HQ),
+  the ROCKET on the lawn (→ the moon, Mars), and the RIFT SEAM — hidden and
   **SEALED** until THE FOUNDER's RIFT CREATOR keepsake comes home from the
-  rift (→ the rift, BOOT HILL): the Diablo-style town loop, earned at the
-  campaign's far end. **LOAD lands here too**: a hero with a campaign under
-  way resumes at home, and their frontier mission is one door-tap away under
-  the ordinary unlock rules. Music: `bench_light`, the sanctuary theme.
+  rift, then humming on the bay wall beside the car (→ the rift, BOOT HILL):
+  the Diablo-style town loop, earned at the campaign's far end. **LOAD lands
+  here too**: a hero with a campaign under way resumes at home, and their
+  frontier mission is one door-tap away under the ordinary unlock rules. The
+  hub never wears a level number (the title card drops its LEVEL line).
+  Music: `bench_light`, the sanctuary theme.
 
 - **Level 1 — GOODCO HQ** (`levels/goodco_hq.ts`). A cleanroom raid for the
   ship engine's one missing part. `goodco` biome (polished lab

@@ -65,10 +65,11 @@ import {
   worldToCanvas,
   worldViewRect,
 } from "./render.ts";
+import { setHiddenLandmarks } from "./render/hidden-landmarks.ts";
 import { fxStyleVars } from "./render/postfx.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { type Character } from "./characters.ts";
+import { hasKeepsake, type Character } from "./characters.ts";
 import {
   createAutopilotDirector,
   useAutopilotSession,
@@ -520,6 +521,19 @@ export function GameScreen({
     // it is owned by the join effect above rather than by this one.
     const driver = joined?.driver ?? createRunDriver(session);
     setState(state);
+    // A sealed travel door's landmark stays out of sight (and out of tap
+    // reach) until its keepsake is banked — the rift seam only appears in
+    // the garage once the player has come back through the rift with THE
+    // FOUNDER's RIFT CREATOR in hand.
+    setHiddenLandmarks(
+      (runLevelDef(state).travelDoors ?? [])
+        .filter(
+          (door) =>
+            door.requires !== undefined &&
+            !hasKeepsake(characterRef.current, door.requires),
+        )
+        .map((door) => door.id),
+    );
     // THE SESSION BEHIND THIS RUN, if there is one — what the chat overlay is
     // mounted from. Null for every local run, which is every browser, every
     // phone and every desktop game nobody opened the doors on.

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: oil_patch
+family: goodco
+plane: floor
+size: [14, 9]
+description: >
+  A slick of old engine oil soaked into the cement — near-black with one
+  iridescent gleam, spread where the car has stood for years.
+subject:
+  kind: "ground decor prop"
+  build: "an irregular dark oil slick dried into concrete"
+  features: "one faint iridescent gleam on the blackest pool"
+  accent: "near-black over a violet sheen"
+  flavor: "the spot under the engine, refreshed every time it runs"
+palette:
+  o: "#23222bd8" # soaked oil
+  O: "#16151dd8" # pooled oil
+  g: "#4b3e63d8" # iridescent gleam
+grid: |
+  ..............
+  ....ooo.......
+  ..ooOOOoo.o...
+  .ooOOgOOOoo...
+  ..oOOOOOOOoo..
+  ...ooOOOoo.o..
+  ....oooo......
+  ......o.......
+  ..............

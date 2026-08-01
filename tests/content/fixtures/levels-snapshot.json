@@ -1471,12 +1471,13 @@
         ]
       ],
       "gravity": 800,
+      "revealed": true,
       "biome": "goodco",
       "tiles": {
         "ground": {
-          "common": "deck_0",
-          "rare": "deck_1",
-          "rareEvery": 11
+          "common": "cement_0",
+          "rare": "cement_1",
+          "rareEvery": 5
         }
       },
       "heroSuited": false,
@@ -1601,7 +1602,7 @@
           "jesus": 77
         }
       },
-      "decorClearance": 80,
+      "decorClearance": 30,
       "mobLevels": [
         [1, 7],
         [1, 7],

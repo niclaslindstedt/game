@@ -17,6 +17,7 @@ import {
   runLevelDef,
   STAMINA,
   type Bot,
+  type CarVehicle,
   type GameInput,
   type GameState,
 } from "@game/core";
@@ -31,6 +32,7 @@ import {
 } from "@ui/lib/gamepad.ts";
 
 import { synth } from "../audio.ts";
+import { isLandmarkHidden } from "../render/hidden-landmarks.ts";
 import { stopMusic } from "../music/index.ts";
 import { screenDirToWorld } from "../render/tilt.ts";
 import { getSettings } from "../settings.ts";
@@ -89,6 +91,55 @@ export function dpadThrottle(len: number): number {
  * cursor travel whether or not the desktop 2× zoom is active. */
 function cursorThrottle(dist: number, fullSpeedPx: number): number {
   return clamp01(dist / fullSpeedPx);
+}
+
+/** The car the LOCAL hero is at the wheel of, or null on foot. While driving,
+ * every direction-pad-shaped input (WASD, the stick, the touch dpad) speaks
+ * CAR language instead of screen language — see `composeDriveTarget`. */
+function drivenCar(state: GameState): CarVehicle | null {
+  const seat = state.players.indexOf(localHero(state));
+  return (
+    state.vehicles.find(
+      (v): v is CarVehicle => v.kind === "car" && v.driver === seat,
+    ) ?? null
+  );
+}
+
+/**
+ * CAR CONTROLS — the pad push read in the CAR's frame, not the screen's:
+ * `fwd` (+1 = W / stick up = throttle, -1 = S = brake-then-reverse) and
+ * `steer` (-1 = A = the moving car swings left of its own nose, +1 = D =
+ * right). The engine's car steers toward `input.target` and throttles by
+ * where that target sits against its nose (vehicles.ts), so this composes a
+ * target IN the right spot: dead ahead for W, off the bow for W+A/D, ABEAM
+ * for a bare A/D (pure steering — no throttle, so a parked car stays
+ * parked), behind the trunk for S. No push = no steering = the car coasts
+ * to a stop. The cursor-follow scheme skips this entirely: a held pointer
+ * is a DESTINATION, and the car simply drives at it like a car.
+ */
+function composeDriveTarget(
+  input: GameInput,
+  car: CarVehicle,
+  fwd: number,
+  steer: number,
+  throttle: number,
+): void {
+  if (fwd === 0 && steer === 0) {
+    input.steering = false;
+    return;
+  }
+  const ang =
+    fwd > 0
+      ? car.heading + steer * (Math.PI / 4)
+      : fwd < 0
+        ? // Reversing: A still curves the PATH the same way it does forward —
+          // the tail chases a target hung off the rear quarter.
+          car.heading + Math.PI - steer * (Math.PI / 4)
+        : car.heading + steer * (Math.PI / 2);
+  input.steering = true;
+  input.target.x = car.pos.x + Math.cos(ang) * DPAD_STEER_DISTANCE;
+  input.target.y = car.pos.y + Math.sin(ang) * DPAD_STEER_DISTANCE;
+  input.throttle = throttle;
 }
 
 /** The queued one-shot edges the DOM handlers bank between sim ticks: taps,
@@ -248,19 +299,32 @@ export function readHumanInput(
     !gamepadSteering &&
     pointer.state.held &&
     pointer.state.pointerType !== "mouse";
+  const car = drivenCar(state);
   if (gamepadSteering && stick) {
-    // Same shape as the touch dpad: a direction, not a destination, projected
-    // far enough ahead that the walk never "arrives". The push is a SCREEN
-    // direction, so it crosses into the world through the projection — see
-    // `screenDirToWorld`.
-    const dir = screenDirToWorld(stick.x, stick.y);
-    input.steering = true;
-    input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
-    input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
-    // The gentlest push still creeps rather than standing still, matching the
-    // touch dpad's floor — the deadzone already removed the resting noise, so
-    // everything past it is deliberate.
-    input.throttle = Math.max(MIN_WALK_THROTTLE, stick.magnitude);
+    if (car) {
+      // At the wheel the stick is pedals-and-wheel: up throttles, down
+      // brakes/reverses, sideways steers the moving car.
+      composeDriveTarget(
+        input,
+        car,
+        -stick.y,
+        stick.x,
+        Math.max(MIN_WALK_THROTTLE, stick.magnitude),
+      );
+    } else {
+      // Same shape as the touch dpad: a direction, not a destination,
+      // projected far enough ahead that the walk never "arrives". The push is
+      // a SCREEN direction, so it crosses into the world through the
+      // projection — see `screenDirToWorld`.
+      const dir = screenDirToWorld(stick.x, stick.y);
+      input.steering = true;
+      input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
+      input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
+      // The gentlest push still creeps rather than standing still, matching
+      // the touch dpad's floor — the deadzone already removed the resting
+      // noise, so everything past it is deliberate.
+      input.throttle = Math.max(MIN_WALK_THROTTLE, stick.magnitude);
+    }
   } else if (touchSteering) {
     // Touch virtual dpad: the drag offset from the anchor is a
     // direction, not a destination — steer relative to the player.
@@ -270,12 +334,17 @@ export function readHumanInput(
     );
     input.steering = n.len >= DPAD_DEADZONE_PX;
     if (input.steering) {
-      const dir = screenDirToWorld(n.x, n.y);
-      input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
-      input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
-      // How far the thumb sits from the dpad center sets the pace: a
-      // nudge past the deadzone creeps, a full push to the ring runs.
-      input.throttle = dpadThrottle(n.len);
+      if (car) {
+        // The dpad drives like the stick: up = W, down = S, sideways = A/D.
+        composeDriveTarget(input, car, -n.y, n.x, dpadThrottle(n.len));
+      } else {
+        const dir = screenDirToWorld(n.x, n.y);
+        input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
+        input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
+        // How far the thumb sits from the dpad center sets the pace: a
+        // nudge past the deadzone creeps, a full push to the ring runs.
+        input.throttle = dpadThrottle(n.len);
+      }
     }
   } else {
     // Desktop WASD/arrows and the mouse coexist. While any movement
@@ -307,14 +376,27 @@ export function readHumanInput(
     }
     const key = normalize(dx, dy);
     if (key.len > 0) {
-      // The bind names a direction on the SCREEN ("forward" is up the screen),
-      // so it crosses into the world through the projection like every other
-      // push — see `screenDirToWorld`.
-      const dir = screenDirToWorld(key.x, key.y);
-      input.steering = true;
-      input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
-      input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
-      input.throttle = queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
+      if (car) {
+        // W/S/A/D at the wheel are throttle, brake/reverse, and the wheel —
+        // read in the CAR's own frame, never as screen directions: there is
+        // no way to slide the car up the screen without W giving it speed.
+        composeDriveTarget(
+          input,
+          car,
+          -Math.sign(dy),
+          Math.sign(dx),
+          queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1,
+        );
+      } else {
+        // The bind names a direction on the SCREEN ("forward" is up the
+        // screen), so it crosses into the world through the projection like
+        // every other push — see `screenDirToWorld`.
+        const dir = screenDirToWorld(key.x, key.y);
+        input.steering = true;
+        input.target.x = localHero(state).pos.x + dir.x * DPAD_STEER_DISTANCE;
+        input.target.y = localHero(state).pos.y + dir.y * DPAD_STEER_DISTANCE;
+        input.throttle = queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
+      }
     } else if (settings.steering === "aim" || settings.steering === "gamepad") {
       // AIM & SHOOT: the mouse never steers — with no movement key
       // down the hero stands his ground while the pointer keeps
@@ -489,6 +571,10 @@ export function handleFieldTaps(
       for (const door of doors) {
         const mark = state.landmarks.find((l) => l.kind === door.id);
         if (!mark) continue;
+        // A landmark the character cannot SEE yet (the sealed rift seam)
+        // cannot be tapped either — a picker opening over bare grass reads
+        // as a bug, not a promise.
+        if (isLandmarkHidden(door.id)) continue;
         // The tap radius is the stall's own reach test; the fixtures are
         // merchant-sized or bigger, so the same figure reads right.
         if (Math.hypot(wx - mark.pos.x, wy - mark.pos.y) > MERCHANT.radius * 3)

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: pavement_0
+family: goodco
+size: [16, 16]
+description: >
+  The driveway's paving in front of the garage — pale clean concrete, swept,
+  a shade lighter than the oil-stained floor inside the bay.
+subject:
+  kind: "ground tile (driveway paving)"
+  build: "a patch of pale poured paving, swept clean"
+  features: "faint aggregate speckle, no stains"
+  accent: "pale cool greys"
+  flavor: "the one part of the lot that gets hosed down"
+palette:
+  P: "#989aa4" # pale paving
+  p: "#91939d" # worn paving
+  V: "#a1a3ad" # light fleck
+  s: "#888a94" # faint speckle
+grid: |
+  PPPPPPpPPPPPPPPP
+  PPPVPPPPPPPPPsPP
+  PpPPPPPPPPPPPPPP
+  PPPPPPPPVPPPPPPP
+  PPPPsPPPPPPPPPpP
+  PPPPPPPPPPpPPPPP
+  PVPPPPPPPPPPPVPP
+  PPPPPPPpPPPPPPPP
+  PPPPPPPPPPsPPPPP
+  PpPPVPPPPPPPPPPP
+  PPPPPPPPPPPVPPpP
+  PPPPPPsPPPPPPPPP
+  PPPVPPPPPPPPPPPP
+  PPPPPPPPPpPPPVPP
+  PpPPPPPPPPPPPPPP
+  PPPPPsPPPPPPPpPP

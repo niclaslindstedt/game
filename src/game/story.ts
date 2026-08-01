@@ -643,17 +643,38 @@ export function stepGates(state: GameState): void {
 }
 
 /**
- * Locked doors: whenever the player carries the matching key up to a
- * closed door, its obstacle chain vanishes and the room is open for good.
+ * Doors: a KEY door opens for the party carrying the matching key up to it;
+ * an APPROACH door (the garage door) opens for anybody who simply comes
+ * near — on foot here, or driven at by the car (vehicles.ts calls
+ * `openDoor` with the car's own position).
  */
 export function stepDoors(state: GameState): void {
   for (const door of state.doors) {
-    if (door.open || !holdsKeyFor(state, door.id)) continue;
-    if (distance(state.players[0].pos, door.center) > DOORS.openRadius)
-      continue;
-    door.open = true;
-    const gone = new Set(door.obstacleIds);
-    state.obstacles = state.obstacles.filter((o) => !gone.has(o.id));
-    state.events.push({ type: "doorOpened", pos: { ...door.center } });
+    if (door.open) continue;
+    if (!door.approach && !holdsKeyFor(state, door.id)) continue;
+    if (!anyHeroWithin(state, door.center, DOORS.openRadius)) continue;
+    openDoor(state, door);
   }
+}
+
+/**
+ * Slide a door open: its obstacle chain vanishes for good, the autopilot's
+ * nav grid is told (`obstaclesVersion` — a wall that disappears without the
+ * bump is a wall the bot still routes around), and the app hears which KIND
+ * of door moved: `garageDoorOpened` drives the roll-up animation, `doorOpened`
+ * the vault slide.
+ */
+export function openDoor(
+  state: GameState,
+  door: GameState["doors"][number],
+): void {
+  if (door.open) return;
+  door.open = true;
+  const gone = new Set(door.obstacleIds);
+  state.obstacles = state.obstacles.filter((o) => !gone.has(o.id));
+  state.obstaclesVersion++;
+  state.events.push({
+    type: door.approach ? "garageDoorOpened" : "doorOpened",
+    pos: { ...door.center },
+  });
 }

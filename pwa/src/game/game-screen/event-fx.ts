@@ -736,6 +736,27 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       seed: Math.floor(Math.random() * 997),
     });
   }
+  // THE GARAGE DOOR rolling up: the engine dropped its obstacle chain the
+  // tick it opened, so the app redraws the slat chain sliding up out of the
+  // doorway (the `garageDoor` effect). The door's own segment travels on
+  // `state.doors` — matched by center, since the event only carries a pos.
+  if (event.type === "garageDoorOpened") {
+    const door = state.doors.find(
+      (d) =>
+        d.approach &&
+        Math.hypot(d.center.x - event.pos.x, d.center.y - event.pos.y) < 8,
+    );
+    if (door?.from && door.to) {
+      effects.push({
+        kind: "garageDoor",
+        pos: { x: door.from.x, y: door.from.y },
+        to: { x: door.to.x, y: door.to.y },
+        radius: Math.hypot(door.to.x - door.from.x, door.to.y - door.from.y),
+        untilMs: state.stats.timeMs + 750,
+        durationMs: 750,
+      });
+    }
+  }
   // A bare axle grinding the road (a wheel torn off the car): a shower of
   // hot metal sparks off the dragging corner — the car's last stand. The
   // throw trails the travel, so the sparks fly out BEHIND the wreck.

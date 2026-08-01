@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: garage_door
+description: >-
+  The garage door rolling up: the chain drive taking up with a clack, then
+  the long rattling climb of thirty-year-old slats on their track.
+on:
+  type: garageDoorOpened
+voices:
+  - call: noise
+    durationMs: 80
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 500
+  - call: noise
+    durationMs: 620
+    volume: 0.04
+    delayMs: 90
+    filter:
+      type: lowpass
+      frequency: 320
+  - call: tone
+    type: square
+    from: 70
+    to: 110
+    durationMs: 640
+    volume: 0.03
+    delayMs: 90
+    detuneCents: 9
+  - call: tone
+    type: square
+    from: 330
+    to: 440
+    durationMs: 120
+    volume: 0.035
+    delayMs: 700
+    echo: 0.2

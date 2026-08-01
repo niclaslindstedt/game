@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: pavement_1
+family: goodco
+size: [16, 16]
+description: >
+  The driveway paving's rare tile — the same pale concrete crossed by a
+  clean expansion joint.
+subject:
+  kind: "ground tile (driveway paving, rare variant)"
+  build: "pale poured paving with a straight expansion joint"
+  features: "one ruled joint line, still clean"
+  accent: "pale cool greys"
+  flavor: "poured in slabs the summer the house was built"
+palette:
+  P: "#989aa4" # pale paving
+  p: "#91939d" # worn paving
+  V: "#a1a3ad" # light fleck
+  s: "#888a94" # faint speckle
+  j: "#7d7f89" # expansion joint
+grid: |
+  PPPPPPpPPjPPPPPP
+  PPPVPPPPPjPPPsPP
+  PpPPPPPPPjPPPPPP
+  PPPPPPPPVjPPPPPP
+  PPPPsPPPPjPPPPpP
+  PPPPPPPPPjPPPPPP
+  PVPPPPPPPjPPPVPP
+  PPPPPPPpPjPPPPPP
+  PPPPPPPPPjPsPPPP
+  PpPPVPPPPjPPPPPP
+  PPPPPPPPPjPVPPpP
+  PPPPPPsPPjPPPPPP
+  PPPVPPPPPjPPPPPP
+  PPPPPPPPPjPPPVPP
+  PpPPPPPPPjPPPPPP
+  PPPPPsPPPjPPPpPP

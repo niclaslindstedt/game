@@ -56,6 +56,10 @@ export type { Enclosure, MapArea } from "./areas.ts";
  *             off the render clock, collides with nothing, cannot be hurt.
  *   lair      an OCCUPIED house: a structure with a door that opens and an elite
  *             that comes out of it (see `LevelDef.lairs`)
+ *   door      an APPROACH door hung across every doorway of the SPAWN chamber
+ *             (the garage door): a solid chain that slides open for anybody
+ *             who walks or drives up to it (`LevelDef.doors`, opens:
+ *             "approach"), and the threshold a driven car departs through
  */
 export type MapObjectType =
   | "wall"
@@ -68,12 +72,14 @@ export type MapObjectType =
   | "building"
   | "row"
   | "critter"
-  | "lair";
+  | "lair"
+  | "door";
 
 /** Where a `landmark` object is pinned once the chambers are carved:
- * the hero's landing, the goal cell, or a step aside from the trader's
- * counter (`stall` — the hub's rift seam hums on the shop wall). */
-export type MapAnchor = "spawn" | "goal" | "stall";
+ * the hero's landing, the goal cell, a step aside from the trader's
+ * counter (`stall`), or a step off the landing itself (`home` — the
+ * garage's rift seam hums on the bay wall beside the car). */
+export type MapAnchor = "spawn" | "goal" | "stall" | "home";
 
 /**
  * One entry of a blueprint's object palette: a sprite plus the purpose that
@@ -113,6 +119,13 @@ export type MapObject = {
   density?: number;
   /** A jumping hero clears it (the horde never jumps). Scatter types only. */
   jumpable?: boolean;
+  /**
+   * WALL-HUGGING scatter (`obstacle`/`cover`/`crate` with an `areas` list):
+   * placements are drawn along the borders of the district's cells instead of
+   * across their floor — furniture stands against the walls of its room
+   * (the garage's workbench world), keeping the middle open.
+   */
+  edge?: boolean;
   /** Rectangular rock footprints, `[wCells, hCells]` — see `LevelDef`. */
   rockSizes?: [number, number][];
   /** World px per `rockSizes` cell. */
@@ -293,6 +306,26 @@ export type MapHellborn = {
  */
 export type MapRegion = string;
 
+/** An authored floor plan (see `MapBlueprint.plan`). */
+export type MapPlan = {
+  /** The rooms, each an area id plus its rectangle (world px). Order is the
+   * chamber order — stable, so everything keyed by chamber id stays put. */
+  rooms: {
+    area: string;
+    rect: { x: number; y: number; width: number; height: number };
+  }[];
+  /** Which hard borders carry a doorway, named as area pairs. A pair with no
+   * shared border is a schema error; every hard border not named stays a
+   * solid wall. */
+  doors?: { between: [string, string] }[];
+  /** The GOAL room's area (the rocket's `goal` anchor lands in it). Omitted =
+   * the ordinary roll. */
+  goal?: string;
+  /** The TRADER's room's area (his counter parks in it). Omitted = the
+   * ordinary mid-depth pick. */
+  stall?: string;
+};
+
 /** The boss and the corners it may be hiding in. */
 export type MapBoss = MapSetPiece & {
   /** Candidate compass regions — one is rolled per run, and the boss's chamber
@@ -381,6 +414,21 @@ export type MapBlueprint = {
    * the geometry is pinned. Omitted = carved fresh per run, as everywhere.
    */
   carveSeed?: number;
+  /**
+   * THE AUTHORED FLOOR PLAN — a static venue's rooms, drawn outright instead
+   * of grown by the BSP. Each room names its AREA and its RECT; the walls
+   * between rooms are still DERIVED from the areas' enclosures exactly as a
+   * carve derives them (none↔none stays open ground), and `doors` names the
+   * area pairs whose hard border gets a doorway punched (centered, at
+   * `layout.doorWidth`) — every unnamed hard border stays a solid wall.
+   * Everything downstream (dressing, landmarks, the scatter) reads the same
+   * `ChamberGrid` a carve emits and cannot tell the difference. This is what
+   * a COMPOSED venue uses — the garage laying out the cutscene's own shot:
+   * bay southwest, lawn behind, the paved drive out the door — where a
+   * weighted roll could only gamble at it. The rooms should tile the map's
+   * `sizes` extents; `sizes.rooms` is ignored when a plan is present.
+   */
+  plan?: MapPlan;
   sizes: Record<MapSizeName, MapSizeSpec>;
   /**
    * The AREA PALETTE — what kinds of place this map is made of (see areas.ts).

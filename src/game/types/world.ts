@@ -345,6 +345,16 @@ export type DoorState = {
   /** The obstacle ids to remove from `state.obstacles` when it opens. */
   obstacleIds: number[];
   open: boolean;
+  /** The segment's two ends — the roll-up animation redraws the chain the
+   * obstacles no longer hold once an approach door opens. */
+  from?: Vec2;
+  to?: Vec2;
+  /**
+   * An APPROACH door (the garage door) opens for anybody who walks or drives
+   * up to it — no key, and its opening fires `garageDoorOpened` (the app's
+   * roll-up animation) rather than `doorOpened`. Absent = a key door.
+   */
+  approach?: boolean;
 };
 
 /**
@@ -608,8 +618,16 @@ export const CAR_FIX = {
 export type CarVehicle = VehicleBase & {
   kind: "car";
   /** Where it was parked when the run was minted — the drive-out latch
-   * measures departure from here. */
+   * measures departure from here (on maps with no garage door). */
   home: Vec2;
+  /**
+   * The nose's bearing (radians, world frame: 0 = +x, π/2 = +y/down-screen).
+   * The car MOVES along this — W throttles down it, S backs up it, A/D turn
+   * it while rolling — while the renderer keeps the side-profile art and
+   * reads only its sign (`faceLeft`). `speed` is SIGNED against it: positive
+   * rolls nose-first, negative backs up.
+   */
+  heading: number;
   /** True once the drive-out has been booked (`carDeparted` fired) — the
    * latch, so the event never fires twice while the app fades out. */
   departed: boolean;

@@ -3,15 +3,21 @@ description: |-
   THE GARAGE - the hero's home base, and the game's HUB (multiplayer plan
   phase 6). A STATIC venue: the blueprint pins its carve seed, so the place
   lays out identically every visit - a home should not rearrange its walls
-  between errands. Nothing hostile lives here (objective `hub` never clears,
+  between errands. SMALL and fully KNOWN: the whole lot is one screen and a
+  half, there is no fog of war (`revealed` - a man knows his own garage),
+  and nothing here is loot - no chests, no crates, just the workbench, the
+  car, and the ROLL-UP GARAGE DOOR that opens for anybody who walks or
+  drives up to it. Nothing hostile lives here (objective `hub` never clears,
   every area carries `horde: 0`), the vendor from GOODCO's machines is PARKED
   at his counter (buys loot, sells kit, repairs gear), and the campaign flows
-  through its three doors: the CAR to GOODCO HQ, the ROCKET on the lawn to the
-  moon and Mars, and the RIFT SEAM - sealed until THE FOUNDER's RIFT CREATOR
-  is brought home - back into the rift and out to Boot Hill.
-  A new game opens here (the living-room prelude plays on first entry), every
-  earthside victory returns here, and a joiner in a hosted session has
-  somewhere to land that is not the middle of somebody else's boss fight.
+  through its three doors: the CAR to GOODCO HQ - board it, drive at the
+  garage door, and crossing the open threshold commits the trip - the ROCKET
+  on the lawn to the moon and Mars, and the RIFT SEAM - sealed until THE
+  FOUNDER's RIFT CREATOR is brought home - back into the rift and out to
+  Boot Hill. A new game opens here (the living-room prelude plays on first
+  entry), every earthside victory returns here, and a joiner in a hosted
+  session has somewhere to land that is not the middle of somebody else's
+  boss fight.
 secret: true
 id: garage
 index: 1
@@ -24,12 +30,16 @@ intro:
   # of ten years is not.
   - - HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
 gravity: 800
+# His own garage: no fog of war, the whole floor lit from the first frame.
+revealed: true
 biome: goodco
 tiles:
+  # Poured cement, not tiles — the bay's own floor (the map's lawn override
+  # hands the outside back to grass).
   ground:
-    common: deck_0
-    rare: deck_1
-    rareEvery: 11
+    common: cement_0
+    rare: cement_1
+    rareEvery: 5
 heroSuited: false
 foes: TROUBLE
 objective:
@@ -150,4 +160,6 @@ loot:
     hard: 39
     nightmare: 58
     jesus: 77
-decorClearance: 80
+# Snug rooms: furniture may stand near the landmarks (the bay IS small), it
+# just may not stand ON them.
+decorClearance: 30

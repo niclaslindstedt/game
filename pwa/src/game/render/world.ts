@@ -13,6 +13,7 @@ import {
   groundLayer,
   groundLayerOrigin,
 } from "./caches.ts";
+import { isLandmarkHidden } from "./hidden-landmarks.ts";
 import { drawWorldSprite } from "./plane.ts";
 import { drawSpriteCentered, type ViewSize } from "./shared.ts";
 import { cameraAnchorX, cameraAnchorY } from "./tilt.ts";
@@ -149,6 +150,9 @@ export function drawLandmarks(
     // is drawn ASSEMBLED by ./vehicles.ts (wheels, springs, flame), so the
     // flat sprite here would just stack a second car under the real one.
     if (VEHICLE_LANDMARK_KINDS.has(landmark.kind)) continue;
+    // A sealed travel door's landmark (the rift seam before the RIFT
+    // CREATOR is home) is not there yet as far as this character knows.
+    if (isLandmarkHidden(landmark.kind)) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     drawWorldSprite(
       ctx,

@@ -29,12 +29,18 @@ export {
   setMapBlueprints,
 } from "./blueprints.ts";
 export { generateLevel, resolveMapSize } from "./generate.ts";
-export { carveChambers, doorDistances, wallSegments } from "./rooms.ts";
+export {
+  carveChambers,
+  doorDistances,
+  planChambers,
+  wallSegments,
+} from "./rooms.ts";
 export { parseRegion, regionRect } from "./regions.ts";
 export type {
   MapBlueprint,
   MapObject,
   MapObjectType,
+  MapPlan,
   MapSetPiece,
   MapSizeName,
   MapSizeSpec,
