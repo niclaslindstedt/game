@@ -96,7 +96,17 @@ const KEY = storageKey("current-run");
 // single `player`. A v22 snapshot would thaw a run with no party at all, and
 // every pass in the pipeline reads seat 0 on its first line; there is nothing
 // left to resume.
-const SAVE_VERSION = 23;
+// v24: AMMUNITION and GOLD — every hero grew the `ammo` pouch (required; read
+// by `ammoCount` on the HUD build of the very first frame, so a v23 hero
+// without one froze the resume on a still image with no UI at all), and stats
+// grew `goldCollected`/`coinsSold` (a v23 snapshot would tick them to NaN on
+// the first pile of gold).
+//
+// The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
+// hero, or the stats record grows a field this version doesn't know — bump
+// here (and update the guard's lists) in the SAME commit as the shape change,
+// or the next release resumes old snapshots into a state the engine can't read.
+export const SAVE_VERSION = 24;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
