@@ -6,8 +6,8 @@
 // `SessionParams` the welcome carried and builds the obstacles, the decor, the
 // canopy, the spawner layout and the carved geometry itself — ~100 KB the wire
 // does not carry, per level, per client. That is a BIT-FOR-BIT determinism
-// claim across the same build, and the plan is explicit that it must be tested
-// rather than believed (§1.4): if it is false, the failure does not present as
+// claim across the same build, and it must be tested
+// rather than believed: if it is false, the failure does not present as
 // a wrong number, it presents as a desync three rooms into a level that nobody
 // can reproduce.
 //
@@ -21,7 +21,7 @@
 //                on module-load order, on a warmed cache, or on state left
 //                behind by a previous test in this file.
 //
-// The comparison is canonical JSON, exactly as the plan names: `JSON.stringify`
+// The comparison is canonical JSON, deliberately: `JSON.stringify`
 // preserves INSERTION order, so two structurally equal worlds assembled by two
 // code paths can stringify differently and the difference would read as a
 // change.

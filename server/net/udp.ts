@@ -7,7 +7,7 @@
 // is landing `ISteamNetworkingSockets` upstream or writing an N-API addon — the
 // latter costing the prebuilt binaries that make the desktop shell installable
 // without a Rust toolchain. It is also, on its own, the feature that makes a
-// LAN party, a Steam Deck with the internet off, and phase 5's headless dedicated
+// LAN party, a Steam Deck with the internet off, and the headless dedicated
 // server all work with no Steam client on either end.
 //
 // **THE BOUND PORT IS NOT THE REQUESTED PORT, AND THE DIFFERENCE IS A RULE.**
@@ -39,11 +39,11 @@ import type {
 } from "./transport.ts";
 
 /**
- * NETWORK ADVERSITY, injected at the seam (multiplayer plan §5.6).
+ * NETWORK ADVERSITY, injected at the seam.
  *
- * §5.6 asks for the game held playable at 150 ms and 2% loss, and §5.7 makes it
- * a done-when — but as written neither names an instrument, so it was a
- * requirement nobody could run. This is that instrument's other half: the bot
+ * The bar is the game held playable at 150 ms and 2% loss — but a bar with no
+ * instrument to measure it is a requirement nobody can run against. This is
+ * that instrument's other half: the bot
  * client (`server/bot-client.ts`) supplies the players, this supplies the
  * weather.
  *

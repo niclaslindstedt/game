@@ -6,9 +6,7 @@ client: it sends input frames and applies snapshots exactly as a joiner does,
 which is why there is no "and also, when you are the host…" clause anywhere in
 this feature.
 
-See [`docs/multiplayer.md`](../docs/multiplayer.md) for the architecture and
-[`docs/multiplayer-plan.md`](../docs/multiplayer-plan.md) for the five-PR plan
-this is the first of.
+See [`docs/multiplayer.md`](../docs/multiplayer.md) for the architecture.
 
 ## Layout
 
@@ -93,7 +91,6 @@ Four things about it are worth knowing before running one:
   (never the one it asked for) and whether the router accepted a mapping; past
   that, the first joiner is the only proof.
 
-The licence question is open and is not this code's to settle: decision 15 in
-`docs/multiplayer-plan.md` asks what `PolyForm-Noncommercial-1.0.0` permits for
-somebody running a server for other people, and it should be confirmed before a
-binary ships.
+The licence question is open and is not this code's to settle: what
+`PolyForm-Noncommercial-1.0.0` permits for somebody running a server for other
+people should be confirmed before a binary ships.

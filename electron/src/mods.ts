@@ -128,7 +128,7 @@ export function createModsBridge(emit: (event: ModsEvent) => void): ModsBridge {
         );
         return;
       }
-      // Open the game's Workshop hub in the Steam client (§4.4) — where a
+      // Open the game's Workshop hub in the Steam client — where a
       // joiner refused for a missing mod goes to get it. A fixed steam:// URL
       // built from OUR OWN app id, never from anything the page sent: the one
       // thing this action must not become is an open-arbitrary-URL channel.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // RECONNECT — a dropped player comes back to the hero they were playing rather
-// than to a fresh one (multiplayer plan §5.4).
+// than to a fresh one.
 //
 // **THE PROPERTY UNDER TEST IS AN ABSENCE OF LOSS**, which is why the suite
 // spends most of its lines putting something ON the hero before dropping it: a
@@ -276,7 +276,7 @@ describe("the engine's half", () => {
   });
 
   it("leaves the party stamp alone across a departure and a return", () => {
-    // §5.3's mark never clears — a run two people played stays one, however
+    // The party stamp never clears — a run two people played stays one, however
     // the room looks now.
     const state = seated(2);
     departHero(state, 1, { hold: true });

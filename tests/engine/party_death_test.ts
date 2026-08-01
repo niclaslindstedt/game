@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// PER-PLAYER DEATH (multiplayer plan §4.2, src/game/downed.ts): a hero who
+// PER-PLAYER DEATH (src/game/downed.ts): a hero who
 // falls while the party still stands goes DOWN — their own toll, a corpse
 // holding their worn kit, and the `respawn` verb back — and one death never
 // ends anybody else's game. Every rule is pinned beside the one that matters
@@ -37,7 +37,7 @@ function fell(state: GameState, hero: Player): void {
   step(state, idle, DT);
 }
 
-describe("a hero falling in a party (§4.2)", () => {
+describe("a hero falling in a party", () => {
   it("goes DOWN without ending anyone else's game", () => {
     const { state, b } = party();
     fell(state, b);
@@ -152,7 +152,7 @@ describe("a hero falling in a party (§4.2)", () => {
   });
 });
 
-describe("solo death is byte-identical (§4.2's no-op guarantee)", () => {
+describe("solo death is byte-identical (the no-op guarantee)", () => {
   it("wipes on the same tick, mints no corpse, sets no flag", () => {
     const state = startGame();
     stopWaves(state);
@@ -162,7 +162,7 @@ describe("solo death is byte-identical (§4.2's no-op guarantee)", () => {
     hero.hp = 0;
     step(state, idle, DT);
     // The wipe path took the tick whole: the death scene, the party toll —
-    // and none of §4.2's machinery so much as stirred.
+    // and none of the downed machinery so much as stirred.
     expect(state.phase).toBe("dying");
     expect(state.corpses).toHaveLength(0);
     expect(hero.downed).toBeUndefined();

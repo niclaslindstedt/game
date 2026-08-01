@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// FUZZING THE WIRE — §5.2's last clause, and the one test in this feature whose
+// FUZZING THE WIRE — the one test in this feature whose
 // value is entirely in what it does NOT observe.
 //
 // The direct-connect path means the game parses bytes from anybody on the
@@ -195,7 +195,7 @@ describe("the hub under hostile packets", () => {
   }
 
   it("lets nothing from an unadmitted peer reach the session, ever", async () => {
-    // §5.2's first rule, fuzzed: a peer that has not cleared the handshake may
+    // The admission rule, fuzzed: a peer that has not cleared the handshake may
     // send exactly a padded `hello` and a `join`, and every other frame from it
     // is dropped without being looked at. Two thousand random packets is a
     // cheap way to notice the day somebody adds a third.
@@ -204,7 +204,7 @@ describe("the hub under hostile packets", () => {
     let clock = 0;
     const hub = createPeerHub({
       // Loopback UDP, with no Steam anywhere near it — the licence escape
-      // (decision 15) is exactly what this suite is for.
+      // is exactly what this suite is for.
       allowUnlicensedTransport: true,
       session,
       handshake: HOST,
@@ -234,7 +234,7 @@ describe("the hub under hostile packets", () => {
     let clock = 0;
     const hub = createPeerHub({
       // Loopback UDP, with no Steam anywhere near it — the licence escape
-      // (decision 15) is exactly what this suite is for.
+      // is exactly what this suite is for.
       allowUnlicensedTransport: true,
       session,
       handshake: HOST,

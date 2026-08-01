@@ -3,7 +3,7 @@
 // often. Getting this table right is most of the design; everything else in
 // `wire/` is machinery serving it.
 //
-// The state splits three ways (docs/multiplayer-plan.md §1.4):
+// The state splits three ways (see `docs/multiplayer.md`):
 //
 //   STATIC   never sent. The level is a deterministic function of the
 //            SessionParams, so the client calls `createGame` with the same
@@ -15,7 +15,7 @@
 // The PRIVATE tier is simultaneously three things, and only the first is
 // obvious: a bandwidth win, a privacy win, and **the anti-cheat boundary** —
 // a client that never receives another player's bag cannot manipulate it. It
-// is also what makes phase 5's trade window honest. So the rule is a WITHHOLDING
+// is also what makes the trade window honest. So the rule is a WITHHOLDING
 // rather than an optimization: a private field is deleted from the snapshot
 // before it is coded, not merely skipped when it happens not to have changed.
 //
@@ -105,10 +105,10 @@ export const UNSENT_FIELDS: readonly string[] = [
  * The owner's alone. Deleted from every other recipient's snapshot before it
  * is coded.
  *
- * These are the reads the plan measured as the private two thirds of
- * `state.players[0]`: the bag, the purse, the build. A spectator or a second hero
+ * These reads are the private two thirds of `state.players[0]`: the bag, the
+ * purse, the build. A spectator or a second hero
  * gets the hero's `pos`, `hp` and `equipment` (they can SEE those) and nothing
- * that would let them enumerate — or, past phase 5's trade window, assert
+ * that would let them enumerate — or, past the trade window, assert
  * anything about — what is in his pockets.
  */
 export const PRIVATE_PLAYER_FIELDS: readonly string[] = [
@@ -125,8 +125,8 @@ export const PRIVATE_PLAYER_FIELDS: readonly string[] = [
   "cleanSlates",
   "pendingStatPoints",
   // The talent-picker queue and the companion-panel focus are the build's and
-  // the screen's own detail (plan §3.2 moved both onto the Player beside the
-  // banked stat points). `screen` itself is deliberately PUBLIC: "in their
+  // the screen's own detail (the per-player screens split moved both onto the
+  // Player beside the banked stat points). `screen` itself is deliberately PUBLIC: "in their
   // bag" is something the party HUD is meant to say, and D2's own affordance.
   "pendingTalentPoints",
   "companionFocus",
@@ -137,7 +137,7 @@ export const PRIVATE_PLAYER_FIELDS: readonly string[] = [
  * shared record. The quest LOG is shared in co-op (it lives on the run, not on
  * the character — see the QUESTS section of AGENTS.md), so what is private
  * here is only the conversation currently on one player's screen — whose
- * HOLDER any seat may be (plan §3.2), so seated recipients all receive it and
+ * HOLDER any seat may be, so seated recipients all receive it and
  * only a SPECTATOR is denied.
  */
 export const PRIVATE_RUN_FIELDS: readonly string[] = ["questOffer", "talk"];

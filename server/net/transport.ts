@@ -10,12 +10,12 @@
 // richer shape could not accommodate that, and the whole point of having a
 // seam is that both paths ride it: the Steam friend list is the frictionless
 // door, and a typed address is the one that works on a LAN, on a Steam Deck
-// with no internet, and — from phase 5 — against a headless dedicated server.
+// with no internet, and against the headless dedicated server.
 //
-// **IT LIVES IN `server/`, NOT IN `electron/src/`, and that is a deliberate
-// departure from the plan's own file list.** The plan sketched
-// `electron/src/net-transport*.ts`; §5.5 of the same plan says the dedicated
-// server "is the same file" as this one, minus Electron. Both cannot be true —
+// **IT LIVES IN `server/`, NOT IN `electron/src/`, and the placement is
+// deliberate.** An `electron/src/net-transport*.ts` would be the natural spot
+// for shell code — but the dedicated server must be "the same file" as the
+// session host, minus Electron, and both cannot be true:
 // a transport in the shell is a transport the standalone server does not have.
 // So the seam and the UDP implementation sit here, where the session already
 // is, and the STEAM one stays in the shell because only the main process may
@@ -72,7 +72,7 @@ export type TransportEvents = {
    *
    * The layer above has to hear it rather than discover it: a spectator whose
    * laptop shut its lid is a seat still taken, a roster entry still drawn, and
-   * — once phase 3 seats heroes — a body still standing on the field. The
+   * a body still standing on the field. The
    * transport is what knows, because it is what was waiting for the packet
    * that never came.
    */

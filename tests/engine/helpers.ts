@@ -51,7 +51,7 @@ export function startGame(seed = 42, levelId = "test_level"): GameState {
 
 /**
  * Idle through the ding celebration, then open seat 0's stat chooser. A ding
- * no longer forces the chooser (plan §3.2, decision 4): the points bank while
+ * no longer forces the chooser: the points bank while
  * `levelUpFxMs` burns, and `promptPendingPoints` opens the `levelup` screen
  * on demand.
  */

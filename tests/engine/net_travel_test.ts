@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// IN-SESSION PARTY TRAVEL (multiplayer plan §6.4): the session survives the
+// IN-SESSION PARTY TRAVEL: the session survives the
 // level swap, and the party goes through the door together.
 //
 // A real session and two real clients over loopback pairs, exactly as
@@ -71,7 +71,7 @@ function play(session: Session, ticks: number): void {
   for (let i = 0; i < ticks; i++) session.advance(TICK_MS);
 }
 
-describe("an in-session crossing (§6.4)", () => {
+describe("an in-session crossing", () => {
   it("carries the whole party through the door together", () => {
     const { session, host, joiner } = rig();
     expect(session.state.players).toHaveLength(2);

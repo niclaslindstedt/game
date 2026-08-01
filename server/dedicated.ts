@@ -224,7 +224,8 @@ export async function startDedicated(
     // NOBODY OWNS THIS ONE. Seat 0 stands empty until somebody joins, the
     // first arrival is dressed in the hero they brought rather than in the
     // run's default, an empty server costs no CPU, and the run is a PARTY run
-    // for §5.3's purposes because the operator controls the simulation. All
+    // for the party stamp's purposes because the operator controls the
+    // simulation. All
     // three fall out of this flag — see `SessionOptions.ownerless`.
     ownerless: true,
     mods: config.mods,

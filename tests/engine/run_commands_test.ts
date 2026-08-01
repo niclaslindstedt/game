@@ -11,7 +11,7 @@
 // check — the same shape `mod/catalog.json` and the Game Center manifests use.
 //
 // The argument suite is not paperwork. These arguments arrive from an open UDP
-// port from phase 2 on: an index that is really an object, a stat called "luckk",
+// port: an index that is really an object, a stat called "luckk",
 // a `NaN` speed and a missing argument are all things a stranger may send, and
 // every one of them has to be a refusal rather than a host-side throw.
 
@@ -157,7 +157,7 @@ describe("arguments a stranger may send", () => {
 
 describe("the verbs actually do the thing", () => {
   it("turns the opening into play, and raises the actor's screens", () => {
-    // The screens are per-player (plan §3.2): the phase stays `playing` and
+    // The screens are per-player: the phase stays `playing` and
     // each verb toggles the ACTING hero's own `screen` — seat 0 by default.
     const state = freshRun();
     const hero = state.players[0];

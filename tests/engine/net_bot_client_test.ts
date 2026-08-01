@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE BOT CLIENT (multiplayer plan §7.2.5) — a headless process that joins a
+// THE BOT CLIENT (`server/bot-client.ts`) — a headless process that joins a
 // real session over a real socket and plays its hero off the replicated state
 // alone.
 //
@@ -18,7 +18,7 @@
 //
 // **IT IS NOT A DETERMINISM TEST** (the client applies snapshots, it does not
 // simulate — that stays `net_determinism_test.ts`) and **IT IS NOT THE SOAK**
-// (§5.6 wants eight clients for hours; this wants a few seconds of loopback).
+// (the soak wants eight clients for hours; this wants a few seconds of loopback).
 // What it is, is the thing that made both of those possible to write.
 
 import { afterEach, describe, expect, it } from "vitest";
@@ -44,7 +44,7 @@ afterEach(async () => {
 /** Stand a dedicated server up on `port`, with a run a bot can actually play. */
 async function serve(port: number): Promise<Host> {
   const host = await startDedicated({
-    // Decision 15's escape — a loopback socket with no Steam near it, which is
+    // The Steam-only licence gate's escape — a loopback socket with no Steam near it, which is
     // exactly what a headless suite is for.
     allowUnlicensedTransport: true,
     level: "moon",
@@ -168,7 +168,7 @@ describe("a bot client against a real dedicated server", () => {
   }, 30_000);
 
   it("keeps playing at 150 ms and 2% loss", async () => {
-    // §5.6's adversity figures, injected at the transport seam BELOW the
+    // The soak's adversity figures, injected at the transport seam BELOW the
     // reliability layer — so a lost reliable payload is genuinely retransmitted
     // and a lost snapshot is genuinely gone. The claim under test is the
     // design's own: a dropped snapshot costs a frame and can never desync.
@@ -194,7 +194,7 @@ describe("a bot client against a real dedicated server", () => {
   }, 45_000);
 
   it("seats a party of four, each steering its own hero", async () => {
-    // The shape §5.6's soak scales up: N processes' worth of client, all
+    // The shape the soak scales up: N processes' worth of client, all
     // pumped from one clock. Four rather than eight because this is a unit
     // suite on somebody's laptop, and the property being checked — every bot
     // gets a DISTINCT seat and plays it — does not need the cap to show.

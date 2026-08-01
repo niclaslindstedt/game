@@ -25,7 +25,8 @@
 // source address from reaching the session at all. It does not authenticate a
 // person, and the password proof beside it is a speed bump rather than a wall:
 // a listen server's host can read the password out of their own memory, and
-// phase 5's trust model already says the host is a player and the host can cheat.
+// the listen-server trust model already says the host is a player and the host
+// can cheat.
 // What both are for is keeping a session between the people invited to it.
 
 import { MAX_CLIENTS } from "./frames.ts";
@@ -120,8 +121,8 @@ export type Admission = {
   seats: number;
   /** Seats there are. Defaults to the wire's own cap. */
   maxSeats?: number;
-  /** The session is a hardcore game, and the joiner's character is hardcore
-   * (§4.2). Both default false (softcore); a mismatch either way is refused —
+  /** The session is a hardcore game, and the joiner's character is hardcore.
+   * Both default false (softcore); a mismatch either way is refused —
    * the two modes never share a game. */
   sessionHardcore?: boolean;
   joinerHardcore?: boolean;
@@ -160,7 +161,7 @@ export function admit(request: Admission): RefusalReason | null {
       return "bad-password";
     }
   }
-  // HARDCORE NEVER MIXES WITH SOFTCORE (§4.2): a hardcore hero dying under a
+  // HARDCORE NEVER MIXES WITH SOFTCORE: a hardcore hero dying under a
   // softcore host's rules — or the reverse — is a support burden and a
   // betrayal, so the mismatch is refused by name. After the challenge and the
   // password on purpose: the session's mode is on the probe reply anyway, but

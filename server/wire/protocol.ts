@@ -42,7 +42,7 @@ export const PROTOCOL_VERSION = 19;
 /**
  * Everything a client needs to rebuild the RUN for itself.
  *
- * This is the whole of the plan's STATIC tier: the level is a deterministic
+ * This is the whole of the replication split's STATIC tier: the level is a deterministic
  * function of these arguments, so the obstacles, the decor, the canopy, the
  * ground layer, the spawner layout and the carved geometry are all built by
  * the client's own `createRunFromParams` call and NEVER travel. On a measured
@@ -122,7 +122,7 @@ export type SessionParams = {
    * and the client applies it before it builds. */
   generatedMapSize: string;
   /**
-   * THE SESSION IS A HARDCORE GAME — hosted by a hardcore character (§4.2).
+   * THE SESSION IS A HARDCORE GAME — hosted by a hardcore character.
    *
    * A session fact rather than a per-player one, because the two modes may
    * never mix: a hardcore hero dying in a stranger's softcore-rules session is
@@ -139,8 +139,8 @@ export type SessionParams = {
  * What the two ends compare before a single game byte is exchanged.
  *
  * `build` is the engine version rather than a git hash because that is what
- * both ends can honestly know about themselves; phase 2 replaces it with a real
- * build hash once the client is a different machine and a different download.
+ * both ends can honestly know about themselves; a real build hash replaces it
+ * once the client is a different machine and a different download.
  */
 export type Handshake = {
   protocol: number;
@@ -192,7 +192,7 @@ export const REFUSAL_TEXT: Record<RefusalReason, string> = {
 
 /** A frame's fixed header. Every frame carries all four fields even when one
  * is meaningless for its type — a fixed-size header is what lets the decoder
- * validate a length before it reads anything, which §5.2 of the plan makes
+ * validate a length before it reads anything, which is
  * non-negotiable once the socket is open to the internet. */
 export type FrameHeader = {
   type: FrameType;
@@ -242,8 +242,8 @@ export type WelcomePayload = {
    */
   seat: number | null;
   /**
-   * THE TICKET BACK INTO THIS SEAT if the connection drops (multiplayer plan
-   * §5.4). Opaque, unguessable, and this client's alone; echoed on a later
+   * THE TICKET BACK INTO THIS SEAT if the connection drops.
+   * Opaque, unguessable, and this client's alone; echoed on a later
    * `join` to resume the hero rather than be built a fresh one.
    *
    * Absent for a spectator, who has no hero to come back to.
@@ -296,7 +296,7 @@ export type ChallengePayload = {
   players: number;
   maxPlayers: number;
   /**
-   * The session is a HARDCORE game (§4.2 — see `SessionParams.hardcore`).
+   * The session is a HARDCORE game (see `SessionParams.hardcore`).
    * On the probe so the JOIN screen can show the constraint and refuse the
    * mismatch locally, without spending the join round trip to be told; the
    * host still enforces it at admission, because a probe reply is advice and
@@ -338,17 +338,17 @@ export type JoinPayload = {
    */
   loadout?: unknown | null;
   /**
-   * The arriving character is HARDCORE (§4.2). Compared against the session's
+   * The arriving character is HARDCORE. Compared against the session's
    * own mode at admission — a mismatch either way is refused by name
    * (`hardcore-mismatch`), because the two modes may never share a game. A
-   * claim like the loadout beside it (phase 5's trust model applies), but the
+   * claim like the loadout beside it (the listen-server trust model applies), but the
    * honest client sends it and the promise it buys — a hardcore hero never
    * lands under softcore rules — is one the hardcore player wants kept.
    * Absent means softcore.
    */
   hardcore?: boolean;
   /**
-   * THE TICKET FROM AN EARLIER `welcome`, when this is a RECONNECT (plan §5.4).
+   * THE TICKET FROM AN EARLIER `welcome`, when this is a RECONNECT.
    *
    * A ticket the session still holds resumes that seat's hero exactly as the
    * connection left it — every point of xp, every item, every level — and the
@@ -388,8 +388,7 @@ export type ChatPayload = {
 export type RosterEntry = {
   slot: number;
   name: string;
-  /** False for a spectator. phase 3 seats a second hero; until then exactly one
-   * entry is ever true. */
+  /** False for a spectator, who watches without a seated hero. */
   playing: boolean;
   /** The seat this client's hero sits in, or null for a spectator. The engine's
    * `Player` carries no name, so this pairing is the ONE place a party frame or
@@ -422,7 +421,7 @@ export type RosterPayload = {
  * replay only the rest.
  *
  * The client sends INPUT, never positions. A client that sends positions is a
- * client that can teleport, and phase 5's trust rules would have nothing to check.
+ * client that can teleport, and the server's trust rules would have nothing to check.
  */
 export type InputPayload = {
   seq: number;

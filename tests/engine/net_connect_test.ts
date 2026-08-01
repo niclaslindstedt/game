@@ -152,7 +152,7 @@ async function pair(opts: { password?: string; joiner?: Handshake } = {}) {
   const { session, seated } = stubSession();
   const hub = createPeerHub({
     // Loopback UDP, with no Steam anywhere near it — the licence escape
-    // (decision 15) is exactly what this suite is for.
+    // is exactly what this suite is for.
     allowUnlicensedTransport: true,
     session,
     handshake: HOST,
@@ -280,7 +280,7 @@ async function pairWithPassword(hostPassword: string, typed: string) {
   const { session } = stubSession();
   const hub = createPeerHub({
     // Loopback UDP, with no Steam anywhere near it — the licence escape
-    // (decision 15) is exactly what this suite is for.
+    // is exactly what this suite is for.
     allowUnlicensedTransport: true,
     session,
     handshake: HOST,

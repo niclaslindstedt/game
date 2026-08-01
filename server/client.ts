@@ -24,9 +24,10 @@
 // **IT SITS IN `server/` AND KNOWS NOTHING ABOUT A PAGE**, which is the whole
 // reason it moved out of `pwa/src/game/net/`. It is the only thing in the repo
 // that turns snapshots back into a run, and a BOT CLIENT — a headless process
-// that joins a session and plays off replicated state (multiplayer plan §7.2.5)
+// that joins a session and plays off replicated state (`server/bot-client.ts`)
 // — needs exactly that and has no renderer to put it in. A second client
-// written beside this one would be the drift the plan warns about: what the bot
+// written beside this one would be exactly the drift this file exists to
+// prevent: what the bot
 // proves playable has to be what the page actually reads. So the ONE app-shaped
 // thing it used to do — telling `local-seat.ts` which chair the server gave us
 // — is now the `onSeat` callback, and the page passes `setLocalSeat` to it.
@@ -71,9 +72,10 @@ import {
 } from "./wire/protocol.ts";
 import { baselineFor, stripPrivate } from "./wire/snapshot.ts";
 
-/** The pipe, whatever it is. A `MessagePort` in phase 1; a Steam P2P peer or a
- * UDP connection in phase 2. The client knows nothing else about it — which is
- * the point of writing the seam here rather than inside the transport. */
+/** The pipe, whatever it is. A `MessagePort` for a local host; a Steam P2P
+ * peer or a UDP connection for a remote one. The client knows nothing else
+ * about it — which is the point of writing the seam here rather than inside
+ * the transport. */
 export type ClientTransport = {
   send(frame: ArrayBuffer): void;
   /** Install the receiver. Called once, at construction. */
@@ -131,7 +133,7 @@ export type NetClientOptions = {
    */
   onSeat?: (seat: number | null) => void;
   /**
-   * AN IN-SESSION CROSSING IS ABOUT TO MOVE THE WORLD (§6.4): the incoming
+   * AN IN-SESSION CROSSING IS ABOUT TO MOVE THE WORLD: the incoming
    * full snapshot names a different level than the state on screen. Fired
    * with the OLD state, BEFORE anything is overwritten — the one moment the
    * app can still bank its hero as they stood on the level being left. The
@@ -340,7 +342,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
   function applyWhole(snapshot: WireState): void {
     if (!state) return;
     const target = state as unknown as WireState;
-    // AN IN-SESSION CROSSING (§6.4): the world moved under us. The statics a
+    // AN IN-SESSION CROSSING: the world moved under us. The statics a
     // full snapshot carries (the level, the carve, the decor) move the client
     // wholesale — the same ~100 KB an adopted session costs, once per
     // crossing — but the hero being LEFT BEHIND has to be banked first, off
