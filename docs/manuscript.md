@@ -166,8 +166,9 @@ _The night everything started. Movie night in the living room. The weapon
 mounted on the back wall — which one depends on the chosen difficulty — is the
 one thing the hero takes off it to go after her: his starting weapon for the
 whole run. The scene is identical on every difficulty except for the mounted
-piece and the closing caption (the per-difficulty variants are the `variants:`
-block of `content/cutscenes/prelude.yaml`)._
+piece, the piece he carries out in his hand, and the closing caption (the
+per-difficulty variants are the `variants:` block of
+`content/cutscenes/prelude.yaml`)._
 
 > **CAPTION:** FRIDAY NIGHT. MOVIE NIGHT.
 
@@ -189,7 +190,9 @@ _(Ada crosses to the door and exits.)_
 
 > **CAPTION:** SHE NEVER CAME BACK.
 
-_(The closing caption names the wall weapon, per difficulty:)_
+_(He gets up off the couch — the first time all night — crosses under the
+mount, and leaps for it. The weapon leaves the wall at the top of the jump and
+is in his hand when he lands. The closing caption names it, per difficulty:)_
 
 - **EASY** (SAWED-OFF SHOTGUN):
   > **CAPTION:** GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
@@ -202,7 +205,8 @@ _(The closing caption names the wall weapon, per difficulty:)_
 - **JESUS CHRIST!** (A STICK):
   > **CAPTION:** THE STICK OFF THE WALL. GOD HELP US BOTH.
 
-_(Fade to black.)_
+_(He walks out the door Ada left by, carrying it. Fade to black — and the
+monologue on the far side shows him still holding it.)_
 
 ---
 

@@ -111,6 +111,29 @@ describe("cutscene player", () => {
     expect(cs.actors[1]!.hidden).toBe(true); // exit
   });
 
+  it("a walk cut short by a tap still faces the way it went", () => {
+    // The settle owes the actor its FACING as well as its mark: tapping a walk
+    // away used to land it on the spot still turned the way it set off from,
+    // which shows up as a mirrored actor (and a weapon on the wrong hand) for
+    // every beat after it.
+    const WALK: CutsceneDef = {
+      id: "test_walk",
+      stage: { width: 320, height: 180, backdrop: "test", props: [] },
+      actors: [{ id: "a", sprite: "a_idle", at: { x: 100, y: 20 } }],
+      beats: [
+        { kind: "move", actor: "a", to: { x: 20, y: 20 }, speed: 40 },
+        { kind: "move", actor: "a", to: { x: 200, y: 20 }, speed: 40 },
+      ],
+    };
+    const cs = createCutscene(WALK);
+    expect(cs.actors[0]!.faceLeft).toBe(false);
+    advanceCutsceneBeat(cs, WALK); // tapped away before a single step ran
+    expect(cs.actors[0]!.pos.x).toBe(20);
+    expect(cs.actors[0]!.faceLeft).toBe(true);
+    advanceCutsceneBeat(cs, WALK);
+    expect(cs.actors[0]!.faceLeft).toBe(false);
+  });
+
   it("interpolates fades and finishes the scene", () => {
     const cs = createCutscene(SCENE);
     runScene(cs, 112);
@@ -202,6 +225,90 @@ describe("cutscene player", () => {
     expect(cs.actors[0]!.shake).toBe(2);
     for (let t = 0; t < 200; t += DT) stepCutscene(cs, SHAKE, DT);
     expect(cs.actors[0]!.shake).toBe(0);
+  });
+
+  // The leap for the wall weapon: two jump beats with the grab settled
+  // between them. What the pair has to guarantee is that the actor is at the
+  // TOP when the grab lands (the piece leaves the wall as he reaches it, not
+  // after he is back on the carpet) and that the fall starts from that apex
+  // rather than snapping to the ground first.
+  const LEAP: CutsceneDef = {
+    id: "test_leap",
+    stage: {
+      width: 320,
+      height: 180,
+      backdrop: "test",
+      props: [
+        { kind: "shelf", pos: { x: 40, y: 40 } },
+        { kind: "wall_thing", pos: { x: 40, y: 40 }, id: "arm" },
+      ],
+    },
+    actors: [{ id: "a", sprite: "a_idle", at: { x: 40, y: 90 } }],
+    beats: [
+      { kind: "jump", actor: "a", lift: 20, ms: 100 },
+      { kind: "prop", prop: "arm", hidden: true },
+      { kind: "hold", actor: "a", sprite: "thing", at: { x: 9, y: 2 } },
+      { kind: "jump", actor: "a", lift: 0, ms: 100 },
+    ],
+  };
+
+  it("arcs a jump off the ground without moving the actor's mark", () => {
+    const cs = createCutscene(LEAP);
+    expect(cs.actors[0]!.lift).toBe(0);
+    for (let t = 0; t < 50; t += DT) stepCutscene(cs, LEAP, DT);
+    // Half way UP a rise is past half height — it decelerates into the apex.
+    expect(cs.actors[0]!.lift).toBeGreaterThan(10);
+    expect(cs.actors[0]!.lift).toBeLessThan(20);
+    // A lift is height, not depth: the mark it sorts by never moved.
+    expect(cs.actors[0]!.pos).toEqual({ x: 40, y: 90 });
+  });
+
+  it("settles the grab at the apex and falls from there", () => {
+    const cs = createCutscene(LEAP);
+    for (let t = 0; t < 100; t += DT) stepCutscene(cs, LEAP, DT);
+    // The rise ended; both instants collapsed into the start of the fall.
+    expect(cs.actors[0]!.lift).toBe(20);
+    expect(cs.hiddenProps).toEqual(["arm"]);
+    expect(cs.actors[0]!.holding).toEqual({
+      sprite: "thing",
+      at: { x: 9, y: 2 },
+    });
+    // Half way DOWN a fall is still high — it accelerates out of the apex.
+    for (let t = 0; t < 50; t += DT) stepCutscene(cs, LEAP, DT);
+    expect(cs.actors[0]!.lift).toBeGreaterThan(10);
+    for (let t = 0; t < 60; t += DT) stepCutscene(cs, LEAP, DT);
+    expect(cs.actors[0]!.lift).toBe(0);
+    expect(cs.done).toBe(true);
+  });
+
+  it("finishCutscene lands the whole leap: down, stripped and carrying", () => {
+    const cs = createCutscene(LEAP);
+    finishCutscene(cs, LEAP);
+    expect(cs.actors[0]!.lift).toBe(0);
+    expect(cs.hiddenProps).toEqual(["arm"]);
+    expect(cs.actors[0]!.holding?.sprite).toBe("thing");
+  });
+
+  it("a hold with no sprite empties the actor's hands", () => {
+    const DROP: CutsceneDef = {
+      ...LEAP,
+      id: "test_drop",
+      beats: [
+        { kind: "hold", actor: "a", sprite: "thing" },
+        { kind: "wait", ms: 50 },
+        { kind: "hold", actor: "a" },
+        { kind: "wait", ms: 50 },
+      ],
+    };
+    const cs = createCutscene(DROP);
+    stepCutscene(cs, DROP, DT);
+    // An omitted `at` grips at the actor sprite's own origin.
+    expect(cs.actors[0]!.holding).toEqual({
+      sprite: "thing",
+      at: { x: 0, y: 0 },
+    });
+    for (let t = 0; t < 100; t += DT) stepCutscene(cs, DROP, DT);
+    expect(cs.actors[0]!.holding).toBeNull();
   });
 
   it("is deterministic for a fixed dt sequence", () => {

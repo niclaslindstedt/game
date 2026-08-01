@@ -238,8 +238,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   on the garage launch, then the space transit); the run then opens in the
   `cutscene` phase (the sim frozen underneath), advanced by `step()` on the
   same clock. Motion beats run on that clock — walks, fades, camera `pan`s
-  (the launch's ascent: the world falls away under the climbing ship) and
-  actor `shake`s (the rattling rocket) — and a stage may carry a constant
+  (the launch's ascent: the world falls away under the climbing ship), actor
+  `shake`s (the rattling rocket) and `jump`s (the prelude's leap for the wall
+  weapon: a rise and a fall, with the `prop` that takes the piece off the wall
+  and the `hold` that puts it in his hand settling between them, at the apex —
+  a jump's `lift` is HEIGHT, so an airborne actor is never re-sorted through
+  the furniture it leapt from) — and a stage may carry a constant
   `drift` that streams its props by per-prop `parallax` depth (the space
   transits' star field) even while a held line idles the timeline. Text
   beats crawl in letter by letter and hold until

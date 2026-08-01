@@ -81,6 +81,9 @@ export const CUTSCENE_BEAT_KINDS = {
   fade: "not reader-facing: staging — the fade to and from black",
   pan: "not reader-facing: staging — gliding the camera",
   shake: "not reader-facing: staging — an actor's tremble",
+  jump: "not reader-facing: staging — an actor leaving the ground",
+  hold: "not reader-facing: staging — putting a thing in an actor's hands",
+  prop: "not reader-facing: staging — taking a prop off the stage",
 };
 
 const SPOKEN_BEATS = new Set(

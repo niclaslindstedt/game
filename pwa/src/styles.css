@@ -5888,8 +5888,12 @@ html.app-locked body {
 }
 
 .intro-hero {
-  width: 5rem;
+  /* Height-driven, width free: the doll's canvas is wider than the 16×16 body
+     when he is holding a weapon (paper-doll.ts DOLL_WIDTH), and a fixed square
+     would shrink the man himself to fit the blade. */
+  width: auto;
   height: 5rem;
+  max-width: 8rem;
   object-fit: contain;
   image-rendering: pixelated;
   animation: intro-hero-bob 2.4s ease-in-out infinite;
