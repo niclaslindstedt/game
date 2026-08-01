@@ -87,7 +87,9 @@ export function TravelPanel({
               <PixelText
                 font={font}
                 text={
-                  unlocked ? levelDef(dest).name : `${levelDef(dest).name} · LOCKED`
+                  unlocked
+                    ? levelDef(dest).name
+                    : `${levelDef(dest).name} · LOCKED`
                 }
                 scale={3}
                 color={open ? "#0b0d10" : "#6b7480"}

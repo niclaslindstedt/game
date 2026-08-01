@@ -2,15 +2,15 @@
 # Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
 # 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
 # damage mix with `node scripts/car-viewer.mjs`.
-name: car_bumper_1
+name: car_bumper_dangle_0
 family: goodco
 size: [48, 26]
 description: >
-  The hero's hatchback: the nose, the light bar and the front bumper, bumped - first dents and dings. One damage rung of one panel - the driving minigame crumples exactly what hit the tree.
+  The hero's hatchback: the front bumper torn loose and HANGING by its rear corner, swing frame A.
 subject:
   kind: "vehicle part"
-  build: "a compact five-door hatchback panel: the nose, the light bar and the front bumper"
-  features: "bumped - first dents and dings"
+  build: "the bumper block hanging nose-down"
+  features: "a hanging bumper"
   accent: "white body, black roof and trim, dark glass"
   flavor: "the hero's hatchback, one piece of it"
 palette:
@@ -18,8 +18,6 @@ palette:
   W: "#e8ecf2" # white body paint
   b: "#3f4553" # dark trim
   d: "#565d6b" # shadow steel
-  g: "#9aa3ad" # scuffed steel
-  m: "#565d6b" # dented bare metal
   s: "#c0c5cf" # silver highlight
   y: "#f2c14e" # lamp amber
 grid: |
@@ -34,15 +32,15 @@ grid: |
   ................................................
   ................................................
   ..........................................WWWO..
-  ..........................................WWmO..
-  ..........................................yyyO..
-  ..........................................gWmO..
-  ..........................................mmmO..
-  ..........................................ssmO..
-  ..........................................OWmO..
-  ..........................................OObO..
-  ...........................................ObO..
-  ...........................................OdO..
+  ..........................................WWWWO.
+  ..........................................yyyyO.
+  ..........................................WWWWO.
+  ..........................................WWWWO.
+  ..........................................ssssO.
+  ..........................................OWWOO.
+  ..........................................OOb.O.
+  ...........................................ObbO.
+  ...........................................Odb..
   ................................................
   ................................................
   ................................................

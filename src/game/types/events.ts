@@ -749,6 +749,35 @@ export type GameEvent =
    */
   | { type: "gateEntered"; pos: Vec2; to: string }
   /**
+   * A hero climbed into the car and the engine turned over (`enterCar`).
+   * The app plays the starter cough and begins the idle rumble; the lights
+   * and the body shiver key off `CarVehicle.driver` directly.
+   */
+  | { type: "carStarted"; pos: Vec2 }
+  /**
+   * The running engine's cadence grain — fired every `CAR.engineCueMs`
+   * while somebody is at the wheel, like `stampedeRumble`: each grain is a
+   * touch shorter than the app's putter, so successive grains overlap into
+   * a continuous idle rumble. `intensity` is speed over top speed (0 at
+   * idle, 1 flat out) — driving raises the pitch and the volume.
+   */
+  | { type: "carEngine"; pos: Vec2; intensity: number }
+  /**
+   * A bare axle grinding the road — the car's last stand. Fired on its own
+   * cadence while the car moves with a wheel GONE (and once, at full
+   * intensity, the moment a wheel tears off and the corner slams down).
+   * `pos` is the dragging corner's ground contact; `intensity` is speed
+   * over top speed. The app answers with a shower of sparks.
+   */
+  | { type: "carGrind"; pos: Vec2; intensity: number }
+  /**
+   * The car drove clear of its parking spot — the drive-out. Like
+   * `gateEntered`, the engine only BOOKS the departure (once); the APP owns
+   * the travel: `to` is the car door's destination, resolved from the
+   * level's own `travelDoors` when the latch fires.
+   */
+  | { type: "carDeparted"; pos: Vec2; to: string }
+  /**
    * The hero met the wandering merchant for the first time: he stops
    * wandering, pins the level map, and his stall is now open at `pos`. The
    * app toasts the meeting and can chime a till.

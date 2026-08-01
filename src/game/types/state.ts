@@ -54,6 +54,7 @@ import type {
   Obstacle,
   PartyStamp,
   Vehicle,
+  WheelDebris,
   CanopyPiece,
   TileSpec,
 } from "./world.ts";
@@ -638,6 +639,10 @@ export type GameState = {
    * carve pins their landmarks (the garage; empty everywhere else). Machines,
    * not props: see `Vehicle` and src/game/vehicles.ts. */
   vehicles: Vehicle[];
+  /** Wheels torn off a vehicle, bouncing away or come to rest — dropped by
+   * `detachWheel`, stepped by `stepVehicles`, never cleaned up: the wreck
+   * keeps its history. Empty on every map without a car crash. */
+  wheelDebris: WheelDebris[];
   /**
    * The people on this map with an errand to hand out (see quests.ts), built
    * at creation from the quest-giver catalog. Empty on a map nobody wrote a

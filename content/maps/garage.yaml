@@ -52,7 +52,7 @@ sizes:
 
 layout:
   minRoom: 380
-  doorWidth: 140
+  doorWidth: 160
   loopDoors: 0.5
   cluster: 0.6
   wall: partition
@@ -118,6 +118,11 @@ objects:
     type: decor
     density: 12
     areas: [bay]
+  # The spares stash: the one paid chest home keeps — the dead-end payer
+  # every blueprint owes (and a garage without a hidden box of good parts
+  # would not be a garage).
+  - id: cache
+    type: chest
   - id: cable
     type: decor
     density: 9

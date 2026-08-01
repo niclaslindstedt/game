@@ -311,8 +311,14 @@ export function GameScreen({
   const [state, setState] = useState<GameState | null>(null);
   // Which standing travel door's picker is open (a `travelDoors` id from the
   // hub), or null. Opened by a field tap on the door's landmark
-  // (player-input.ts), closed by picking a road or NOT YET.
-  const [travelDoorId, setTravelDoorId] = useState<string | null>(null);
+  // (player-input.ts), closed by picking a road or NOT YET. The CHARACTER is
+  // snapshotted at the tap — a victory banked earlier in this same mount is
+  // exactly what decides which roads read unlocked, and capturing it at the
+  // open keeps the render off the live ref.
+  const [travelDoor, setTravelDoor] = useState<{
+    doorId: string;
+    character: Character;
+  } | null>(null);
   // The current run's progress banker, reachable from the travel picker's
   // render-time onTravel — the run effect rebuilds it per run.
   const progressRef = useRef<RunProgress | null>(null);
@@ -667,7 +673,7 @@ export function GameScreen({
     progressRef.current = progress;
     // A fresh run starts with no picker open — a door tapped on the way out
     // of the last level must not greet the arrival.
-    setTravelDoorId(null);
+    setTravelDoor(null);
     // AUTO PILOT: re-arm the session's meter on this fresh run and stand up
     // the flight director (finds, coin meters, the next-lap routing).
     const autopilotDirector = createAutopilotDirector({
@@ -813,7 +819,8 @@ export function GameScreen({
           // A joined client may look at a door but not swap the level — the
           // session is the host's, so the picker mounts read-only there
           // (TravelPanel's canTravel) and the tap itself stays enabled.
-          openTravelDoor: (doorId) => setTravelDoorId(doorId),
+          openTravelDoor: (doorId) =>
+            setTravelDoor({ doorId, character: characterRef.current }),
         });
         // The fill level BEFORE this step, so a kill that starts a fresh streak
         // can anchor the bright slice at the XP the hero already had.
@@ -1315,24 +1322,24 @@ export function GameScreen({
           rocket / rift portal) can take you. The run keeps playing behind it
           (a hub is safe ground), so it hangs off its own React state rather
           than an engine phase; the trip itself is run-progress's travelTo,
-          the same crossing a gateEntered books. `character` comes off the
-          ref deliberately: a victory banked earlier in this same mount is
-          exactly what decides which roads read unlocked. */}
-      {state && travelDoorId && hud?.phase === "playing" && (
+          the same crossing a gateEntered books. The character travels WITH
+          the open (snapshotted at the tap), so the render never touches the
+          live ref. */}
+      {state && travelDoor && hud?.phase === "playing" && (
         <TravelPanel
           state={state}
           font={font}
-          doorId={travelDoorId}
-          character={characterRef.current}
+          doorId={travelDoor.doorId}
+          character={travelDoor.character}
           difficulty={difficulty}
           canTravel={!join}
           onTravel={(dest) => {
-            setTravelDoorId(null);
+            setTravelDoor(null);
             playUiSound(synth, "confirm");
             progressRef.current?.travelTo(state, dest);
           }}
           onClose={() => {
-            setTravelDoorId(null);
+            setTravelDoor(null);
             playUiSound(synth, "back");
           }}
         />

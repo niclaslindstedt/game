@@ -14,8 +14,8 @@ subject:
   accent: "white body, black roof and trim, dark glass"
   flavor: "the hero's hatchback, one piece of it"
 palette:
-  O: "#1a1c2c"
-  k: "#0a0910"
+  O: "#1a1c2c" # outline ink
+  k: "#0a0910" # cabin void
 grid: |
   ................................................
   ................................................

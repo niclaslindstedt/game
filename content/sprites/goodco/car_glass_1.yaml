@@ -14,8 +14,8 @@ subject:
   accent: "white body, black roof and trim, dark glass"
   flavor: "the hero's hatchback, one piece of it"
 palette:
-  L: "#8ccdd7"
-  c: "#22262e"
+  L: "#8ccdd7" # glass glint
+  c: "#22262e" # cabin glass
 grid: |
   ................................................
   ................................................

@@ -14,12 +14,12 @@ subject:
   accent: "white body, black roof and trim, dark glass"
   flavor: "the hero's hatchback, one piece of it"
 palette:
-  O: "#1a1c2c"
-  W: "#e8ecf2"
-  b: "#3f4553"
-  d: "#565d6b"
-  s: "#c0c5cf"
-  y: "#f2c14e"
+  O: "#1a1c2c" # outline ink
+  W: "#e8ecf2" # white body paint
+  b: "#3f4553" # dark trim
+  d: "#565d6b" # shadow steel
+  s: "#c0c5cf" # silver highlight
+  y: "#f2c14e" # lamp amber
 grid: |
   ................................................
   ................................................

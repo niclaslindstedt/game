@@ -139,6 +139,7 @@ import { skipBossDeath } from "./boss-death.ts";
 import { skipDeathScene } from "./death-scene.ts";
 import { advanceDialogue, muteDialogue, unmuteDialogue } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
+import { enterCar } from "./vehicles.ts";
 import type {
   CompanionSlot,
   EquipSlot,
@@ -299,6 +300,11 @@ export const RUN_COMMAND_ARGS = {
   // THE LOST & FOUND.
   reclaimVaultItem: ["int"],
   clearVault: [],
+
+  // THE DRIVEWAY — climbing into the hub's car (src/game/vehicles.ts). No
+  // arguments: the car is found by standing at it, and WHO climbs in is the
+  // acting hero, exactly like every counter verb.
+  enterCar: [],
 
   // THE RIDE. `refundAutopilotBuild` takes no arguments on purpose: the build
   // the ride is measured against lives on the RUN (`state.autopilot.build`,
@@ -612,6 +618,10 @@ export function applyRunCommand(
       return reclaimVaultItem(state, hero, num(a, 0));
     case "clearVault":
       return clearVault(state, hero);
+
+    // THE DRIVEWAY
+    case "enterCar":
+      return enterCar(state, hero);
 
     // THE RIDE
     case "startAutopilot":

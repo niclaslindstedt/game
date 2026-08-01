@@ -16,7 +16,6 @@ import {
   LEVELS,
   MAP_BLUEPRINTS,
   resolveLevelDef,
-  runLevelDef,
   SECRET_LEVEL_ORDER,
   skipCutscene,
   step,
@@ -100,7 +99,10 @@ describe("the doors", () => {
     ]);
     for (const door of doors) {
       const mark = carved.landmarks.find((l) => l.kind === door.id);
-      expect(mark, `door "${door.id}" has no landmark to stand on`).toBeDefined();
+      expect(
+        mark,
+        `door "${door.id}" has no landmark to stand on`,
+      ).toBeDefined();
       for (const dest of door.to) {
         expect(LEVEL_ORDER, `door "${door.id}" → "${dest}"`).toContain(dest);
       }

@@ -483,7 +483,11 @@ export {
 export {
   CAR,
   SHIP,
+  WHEEL_DEBRIS,
   nudgeCar,
+  enterCar,
+  shedPart,
+  detachWheel,
   stepVehicles,
   createVehicles,
   vehicleFootprint,
@@ -1156,6 +1160,7 @@ export type {
   Loadout,
   MapMarker,
   MapMarkerKind,
+  CarDetachable,
   CarPanelId,
   CarVehicle,
   Merchant,
@@ -1164,6 +1169,7 @@ export type {
   Obstacle,
   ShipVehicle,
   Vehicle,
+  WheelDebris,
   PackState,
   PartyStamp,
   PendingProc,
@@ -1181,4 +1187,6 @@ export type {
   TileSpec,
   WeaponClass,
 } from "./game/types/index.ts";
+// The fix ladder's named rungs (a value, not a type — see `CarVehicle.fixes`).
+export { CAR_FIX } from "./game/types/index.ts";
 export type { Vec2 } from "@game/lib/vec.ts";

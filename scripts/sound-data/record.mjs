@@ -96,6 +96,11 @@ export const PARAMETERIZED = new Set([
   "stampedeRumble",
   "stampedeTrample",
   "asteroidImpact",
+  // The car's running engine and a bare axle's grind both ride the drive's
+  // continuous intensity (idle putter → full-throttle roar), so they keep
+  // their code the way the stampede rumble does.
+  "carEngine",
+  "carGrind",
 ]);
 
 /** The catalog id for one event variant: the event type, then each

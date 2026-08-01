@@ -563,16 +563,40 @@ type VehicleBase = {
  * driving minigame crumples exactly what hit the wall. Sprite names key off
  * these ids: `car_<panel>_<rung>`. */
 export type CarPanelId =
-  | "backside"
-  | "doors"
-  | "roof"
-  | "hood"
-  | "front_side"
-  | "bumper"
-  | "glass";
+  "backside" | "doors" | "roof" | "hood" | "front_side" | "bumper" | "glass";
+
+/** The parts that can work FREE of the body, each walking its own fix
+ * ladder (see `CarVehicle.fixes`). The roof is bolted, not hinged, so it
+ * skips DANGLING and tears straight off. */
+export type CarDetachable = "doors" | "hood" | "bumper" | "roof";
+
+/** The fix ladder a detachable part climbs — how attached it still is,
+ * independent of how DENTED it is (that's the panel rung). */
+export const CAR_FIX = {
+  /** Bolted down — the panel rung draws, nothing moves. */
+  attached: 0,
+  /** Working free: still shut, but a bump makes it rattle a tad. */
+  loose: 1,
+  /** Hanging on its hinge, swinging with the suspension. */
+  dangling: 2,
+  /** Torn off — the bay shows, and the part lies shed on the ground. */
+  gone: 3,
+} as const;
 
 export type CarVehicle = VehicleBase & {
   kind: "car";
+  /** Where it was parked when the run was minted — the drive-out latch
+   * measures departure from here. */
+  home: Vec2;
+  /** True once the drive-out has been booked (`carDeparted` fired) — the
+   * latch, so the event never fires twice while the app fades out. */
+  departed: boolean;
+  /** Ms until the next `carEngine` rumble grain (only ticks with a driver
+   * seated) — the running engine's sound cadence, stampede-rumble style. */
+  engineCueMs: number;
+  /** Ms until the next `carGrind` spark burst (only ticks while a bare
+   * axle is dragging under way) — the grind's own cadence. */
+  grindCueMs: number;
   /** Wheel roll angle (radians) — picks the spin frame per wheel. */
   wheelAngle: number;
   /** Spring compression per axle, [rear, front], world px downward. */
@@ -583,11 +607,45 @@ export type CarVehicle = VehicleBase & {
    * `car_<panel>_<rung>` sprite. The minigame's crashes raise these; `wear`
    * stays the overall ladder the two of them summarize. */
   panels: Record<CarPanelId, number>;
-  /** Per-wheel state, [rear, front]: 0 sound, 1 flat tire, 2 bent rim. */
+  /** Per-wheel state, [rear, front]: 0 sound, 1 flat tire, 2 bent rim,
+   * 3 GONE — the wheel tore off and is bouncing away as debris
+   * (`WheelDebris`); the axle drops to the bump stop. */
   wheelStates: [number, number];
-  /** The rear door: 0 closed (the panel rung draws), 1 SPRUNG open, 2 GONE —
-   * the crash states that change the silhouette, not just the paint. */
-  doorState: number;
+  /** How attached each detachable part still is (`CAR_FIX`): 0 attached,
+   * 1 loose (rattles a tad on bumps), 2 dangling on the hinge, 3 gone.
+   * `shedPart` climbs a part to gone and drops the shed piece as decor. */
+  fixes: Record<CarDetachable, number>;
+  /** Each part's swing away from rest (px-ish) — the dangle oscillator's
+   * position, excited by the suspension and clamped tiny while only loose. */
+  dangle: Record<CarDetachable, number>;
+  /** The oscillator's other half (px/s). */
+  dangleVel: Record<CarDetachable, number>;
+};
+
+/**
+ * A wheel that tore off the car, dropped like a wheel on a highway: it
+ * BOUNCES — gravity pulls `z` down, each floor hit keeps a fraction of the
+ * fall and bleeds ground speed, and rolling friction walks the rest to a
+ * stop. Deterministic clockwork like the car itself (no rng — the launch
+ * kick comes from the crash that shed it), stepped by `stepVehicles`, and
+ * left in place once settled so the wreck keeps its history.
+ */
+export type WheelDebris = {
+  /** Ground-plane position of the wheel's contact point. */
+  pos: Vec2;
+  /** Ground-plane velocity (px/s). */
+  vel: Vec2;
+  /** Height above the floor (px) — the bounce. */
+  z: number;
+  /** Vertical speed (px/s, up positive). */
+  vz: number;
+  /** Roll angle (radians) — spins from ground speed, same as on the axle. */
+  angle: number;
+  /** The state the wheel wore when it left: 0 sound, 1 flat, 2 bent rim —
+   * picks the same sprite ladder the axle uses. */
+  wheelState: number;
+  /** True once the bounce is spent — integration stops, the wheel rests. */
+  settled: boolean;
 };
 
 export type ShipVehicle = VehicleBase & {

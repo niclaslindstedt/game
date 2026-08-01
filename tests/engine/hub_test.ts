@@ -71,7 +71,15 @@ describe("the parked merchant", () => {
     // merchantDiscovered = the persisted met-here-before flag: a wanderer is
     // set up AT THE DOOR on such a run, but a parked trader's post IS the
     // counter, wherever the hero spawns.
-    const state = createGame(42, "test_hub_level", "medium", undefined, false, [], true);
+    const state = createGame(
+      42,
+      "test_hub_level",
+      "medium",
+      undefined,
+      false,
+      [],
+      true,
+    );
     const counter = runLevelDef(state).merchantSpawns?.[0];
     expect(state.merchant.pos).toEqual(counter);
     expect(state.merchant.discovered).toBe(true);

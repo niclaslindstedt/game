@@ -457,6 +457,12 @@ export function drawPlayer(
   action: PlayerAction | undefined,
   impact: HeroImpact | undefined,
 ): void {
+  // A hero AT THE WHEEL is inside the car — the car assembly is his body
+  // this frame (render/vehicles.ts), so the walking doll stays undrawn.
+  const seat = state.players.indexOf(localHero(state));
+  if (state.vehicles.some((v) => v.kind === "car" && v.driver === seat)) {
+    return;
+  }
   billboard(
     ctx,
     localHero(state).pos.x,

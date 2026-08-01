@@ -331,6 +331,12 @@ export function createRunProgress(deps: {
     if (event.type === "gateEntered") {
       travelTo(state, event.to);
     }
+    // DRIVING OUT of the garage: the car cleared its parking spot, and the
+    // trip it commits is the car door's own destination — the same crossing
+    // as a gate, booked by the wheel instead of a tap.
+    if (event.type === "carDeparted") {
+      travelTo(state, event.to);
+    }
     // Run over either way: bank the opening and every inner monologue read
     // this run onto the character, so the next replay on this difficulty
     // skips them. This catches the late kill/sight beats that only fire

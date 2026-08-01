@@ -1588,6 +1588,10 @@ export const FIX_HUB_LEVEL: LevelDef = (() => {
     merchantSpawns: [{ x: 600, y: 400 }],
     travelDoors: [
       { id: "test_hub_door", name: "TEST DOOR", to: ["test_level_2"] },
+      // The car IS a travel door (the drive-out books `carDeparted` with
+      // this door's destination) — id must be the landmark kind, like the
+      // garage's own.
+      { id: "car", name: "TEST CAR", to: ["test_level_2"] },
     ],
     landmarks: [
       {

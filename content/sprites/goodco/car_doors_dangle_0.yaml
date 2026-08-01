@@ -2,24 +2,24 @@
 # Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
 # 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
 # damage mix with `node scripts/car-viewer.mjs`.
-name: car_doors_open
+name: car_doors_dangle_0
 family: goodco
 size: [48, 26]
 description: >
-  The hero's hatchback: the rear door SPRUNG off its hinge, swung back over the quarter and never closing again — the crash's signature. Used in place of the closed-door panel when the car's doorState says open.
+  The hero's hatchback: the rear door DANGLING off its hinge, swing frame A. A dangling part is an oscillator (src/game/vehicles.ts stepVehicles) — bumps kick it, the swing decays, and the phase picks the frame.
 subject:
   kind: "vehicle part"
   build: "the door bay open to the cabin, the door swung rearward"
-  features: "a sprung door, a dark bay"
+  features: "a sprung door mid-swing"
   accent: "white body, black roof and trim, dark glass"
   flavor: "the hero's hatchback, one piece of it"
 palette:
-  O: "#1a1c2c"
-  W: "#e8ecf2"
-  b: "#3f4553"
-  d: "#565d6b"
-  k: "#0a0910"
-  s: "#c0c5cf"
+  O: "#1a1c2c" # outline ink
+  W: "#e8ecf2" # white body paint
+  b: "#3f4553" # dark trim
+  d: "#565d6b" # shadow steel
+  k: "#0a0910" # cabin void
+  s: "#c0c5cf" # silver highlight
 grid: |
   ................................................
   ................................................

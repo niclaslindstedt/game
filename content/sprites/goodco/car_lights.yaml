@@ -1,26 +1,27 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
-# 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
-# damage mix with `node scripts/car-viewer.mjs`.
-name: car_roof_1
+# 48x26 canvas, so the renderer stacks them at a single anchor. This layer
+# only draws while the engine is RUNNING (a driver is seated): the head and
+# tail lamps burning over whatever damage rungs the panels wear.
+name: car_lights
 family: goodco
 size: [48, 26]
 description: >
-  The hero's hatchback: the black roof panel and its crown line, bumped - first dents and dings. One damage rung of one panel - the driving minigame crumples exactly what hit the tree.
+  The hatchback's lamps lit: the headlight bar burning warm white-gold at the nose, the twin taillights burning red at the tail. Drawn over the body stack only while the engine runs.
 subject:
   kind: "vehicle part"
-  build: "a compact five-door hatchback panel: the black roof panel and its crown line"
-  features: "bumped - first dents and dings"
-  accent: "white body, black roof and trim, dark glass"
-  flavor: "the hero's hatchback, one piece of it"
+  build: "a compact five-door hatchback's lit lamps: headlight bar at the nose, twin taillights at the tail"
+  features: "lamps burning, engine running"
+  accent: "warm white-gold headlights, red taillights"
+  flavor: "the hero's hatchback, key turned"
 palette:
-  O: "#1a1c2c" # outline ink
-  b: "#3f4553" # dark trim
+  H: "#fff6c8" # headlight hot core
+  Y: "#ffdf6e" # headlight gold
+  R: "#ff4a3a" # taillight red
+  r: "#ff8d6e" # taillight glow
 grid: |
   ................................................
   ................................................
-  .....OOOOOO.......OOOOOOOOOOO...................
-  ....ObbbbbbOOOOOOObbbbbbbbbbbO..................
   ................................................
   ................................................
   ................................................
@@ -30,8 +31,10 @@ grid: |
   ................................................
   ................................................
   ................................................
-  ................................................
-  ................................................
+  ..rr.........................................Y..
+  ..RR......................................HHHHY.
+  ..RR......................................YHHHY.
+  ..rr.........................................Y..
   ................................................
   ................................................
   ................................................

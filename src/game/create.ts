@@ -691,6 +691,8 @@ export function createGame(
     // The parked machines minted above (their footprints already stand in
     // `obstacles`) — the car and the ship, where the carve pinned them.
     vehicles,
+    // No wheel has come off anything yet — crashes fill this.
+    wheelDebris: [],
     // The people with errands on this map (see quests/). Placed exactly where
     // they are authored — a person with a quest is a landmark, and one that
     // moved between runs could not be walked back to.

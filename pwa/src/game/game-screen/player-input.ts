@@ -413,8 +413,7 @@ export function handleFieldTaps(
     openTravelDoor?: (doorId: string) => void;
   },
 ): void {
-  const { state, bot, camera, viewport, queues, bumpUi, openTravelDoor } =
-    deps;
+  const { state, bot, camera, viewport, queues, bumpUi, openTravelDoor } = deps;
   const shopTap = queues.shopTapRef.current;
   queues.shopTapRef.current = null;
   if (
@@ -497,6 +496,14 @@ export function handleFieldTaps(
         if (distance(hero.pos, mark.pos) > MERCHANT.tradeRadius * 1.5) continue;
         input.jump = false;
         input.useItem = false;
+        // THE CAR IS BOARDED, NOT PICKED FROM: tapping it climbs in and
+        // turns the key (`enterCar` — the engine coughs awake, lights on),
+        // and DRIVING out is what commits the trip. Every other door still
+        // opens the destination picker.
+        if (door.id === "car") {
+          if (runCommandOk(state, "enterCar")) bumpUi();
+          break;
+        }
         playUiSound(synth, "confirm");
         openTravelDoor(door.id);
         bumpUi();

@@ -546,7 +546,8 @@ describe("a run on a generated map", () => {
     for (const id of MISSIONS) {
       const state = carved(id);
       expect(runLevelDef(state).waves).toBeUndefined();
-      if (isHub(id)) expect(state.spawners.length).toBe(0); // home ground
+      if (isHub(id))
+        expect(state.spawners.length).toBe(0); // home ground
       else expect(state.spawners.length).toBeGreaterThan(0);
     }
   });
