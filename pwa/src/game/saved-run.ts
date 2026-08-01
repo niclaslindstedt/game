@@ -117,15 +117,16 @@ type Serialized = {
   // same loot AND damage-variance sequence a live one would.
   rngState: number;
   fxRngState: number;
+  goldRngState: number;
   // The GameState verbatim minus its rng streams (restored on load). `events`
   // is transient per-step chatter, blanked so a resume doesn't replay stale sfx.
-  state: Omit<GameState, "rng" | "fxRng">;
+  state: Omit<GameState, "rng" | "fxRng" | "goldRng">;
 };
 
 /** Freeze the parked run to storage. Best-effort — a storage failure is logged, not thrown. */
 export function saveRun(run: ParkedRun): void {
   try {
-    const { rng, fxRng, ...rest } = run.state;
+    const { rng, fxRng, goldRng, ...rest } = run.state;
     const payload: Serialized = {
       v: SAVE_VERSION,
       characterId: run.characterId,
@@ -133,6 +134,7 @@ export function saveRun(run: ParkedRun): void {
       levelId: run.levelId,
       rngState: rngState(rng),
       fxRngState: rngState(fxRng),
+      goldRngState: rngState(goldRng),
       // `events` is transient per-step chatter; blank it so a resume doesn't
       // replay stale sfx (it's overwritten again on the first step anyway).
       state: { ...rest, events: [] },
@@ -295,6 +297,12 @@ export function loadSavedRun(): ParkedRun | null {
       // seed derived from the loot position so they resume without a crash).
       fxRng: createRngFromState(
         payload.fxRngState ?? (payload.rngState ^ 0x9e3779b9) >>> 0,
+      ),
+      // …and the GOLD stream, on the same terms: a save written before gold
+      // shipped has no position for it, so it resumes from a seed derived off
+      // the loot stream's rather than crashing the run it was parked from.
+      goldRng: createRngFromState(
+        payload.goldRngState ?? (payload.rngState ^ 0x1f83d9ab) >>> 0,
       ),
     };
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a

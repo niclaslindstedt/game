@@ -234,7 +234,12 @@ describe("GOODCO HQ level def", () => {
           allocateStat(state, state.players[0], "stamina");
         }
       }
-      return state.items.length;
+      // GOLD is excluded, and has to be: this measures the `dropProfile`
+      // bonus on the LOOT LADDER, and gold is a second faucet paid at a flat
+      // one-in-five to both bodies alike (config GOLD). Counting it would add
+      // the same constant to each side and shrink the very difference the
+      // comparison exists to see.
+      return state.items.filter((i) => i.kind !== "gold").length;
     };
 
     let successorTotal = 0;

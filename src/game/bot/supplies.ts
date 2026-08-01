@@ -435,7 +435,17 @@ export function wantedItemNearby(
   const d = distance(item.pos, hero.pos);
   if (d > ITEM_REACH) return undefined;
   if (d <= ITEM_CLOSE_REACH) return item;
-  if (item.kind === "equipment" || item.kind === "story") return item;
+  // Worth a sideways step whatever the march is doing: a piece of gear, a plot
+  // piece, and MONEY — gold can never be refused (no cell, no cap), so a pile
+  // inside reach is guaranteed value, and walking past one is the autopilot
+  // declining to pay for its own ride.
+  if (
+    item.kind === "equipment" ||
+    item.kind === "story" ||
+    item.kind === "gold"
+  ) {
+    return item;
+  }
   const heading = travelHeading(bot, state, hero, tune);
   if (!heading) return item;
   const ax = (item.pos.x - hero.pos.x) / d;

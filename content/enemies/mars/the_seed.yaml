@@ -7,6 +7,8 @@ lore: >-
 role: elite
 levelBonus: 3
 sprite: the_seed
+# WEALTH (config GOLD): he funds what people flee and what they flee to.
+wealth: 4
 hp: 280
 speed: 20
 radius: 12

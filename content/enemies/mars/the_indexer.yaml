@@ -7,6 +7,8 @@ lore: >-
 role: elite
 levelBonus: 3
 sprite: the_indexer
+# WEALTH (config GOLD): he indexed the colony and bills it for the privilege.
+wealth: 4
 hp: 260
 speed: 22
 radius: 12

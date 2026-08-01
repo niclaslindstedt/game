@@ -7,6 +7,8 @@ lore: >-
 role: boss
 levelBonus: 5
 sprite: the_founder_rift
+# WEALTH (config GOLD): the richest man alive, and it is all in his pockets.
+wealth: 6
 hp: 750
 speed: 44
 radius: 20

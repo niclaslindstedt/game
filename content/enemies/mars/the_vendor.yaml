@@ -7,6 +7,8 @@ lore: >-
 role: elite
 levelBonus: 3
 sprite: the_vendor
+# WEALTH (config GOLD): he wrote the operating system two colonies run on.
+wealth: 4
 hp: 250
 speed: 18
 radius: 12

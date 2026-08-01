@@ -31,6 +31,18 @@ export type Item =
      * swallowing it whole.
      */
     | { id: number; kind: "ammo"; pos: Vec2; ammo: AmmoType; count: number }
+    /**
+     * A PILE OF GOLD shaken out of a body that had pockets (see
+     * `items/gold.ts`). `amount` is the coins in it — banked straight into the
+     * purse of whoever walks over it, with no bag cell, no cap and nothing to
+     * refuse it, which is what separates gold from every other pickup in the
+     * game: it can never be turned away and so never litters a cleared floor.
+     *
+     * The amount also decides which pile SPRITE it wears (config
+     * `GOLD.pileTiers`), so the size of the heap on the floor is an honest
+     * read of what is in it from across the room.
+     */
+    | { id: number; kind: "gold"; pos: Vec2; amount: number }
     | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
     /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
     | { id: number; kind: "ability"; pos: Vec2; defId: string }
@@ -116,7 +128,10 @@ export type ItemVoice =
   | "flask"
   | "scrap"
   | "spark"
-  | "relic";
+  | "relic"
+  /** Loose money hitting the floor — a spill of small metal, and nothing
+   * else in the game sounds like it. */
+  | "coin";
 
 /**
  * A drop's flight: where it came out of the ground, and how much of the arc is

@@ -291,9 +291,15 @@ export function validateEnemy(def, refs) {
     "xp",
     "xpMobMult",
     "dodgeChance",
+    "wealth",
   ]) {
     num(def[f], f);
   }
+  // WEALTH multiplies the gold a corpse sheds and, at 0, closes its pockets
+  // entirely — a negative one would mean a body that takes money off the floor,
+  // which is not a thing the payout funnel can express.
+  if (typeof def.wealth === "number" && def.wealth < 0)
+    err(`wealth must be >= 0 (0 = carried nothing)`);
 
   if (def.ai === undefined || typeof def.ai !== "object") {
     err(`missing "ai" block (needs at least aggroRadius)`);

@@ -219,6 +219,165 @@ export const ECONOMY = {
 } as const;
 
 /**
+ * GOLD — what a body was carrying, shed on the floor when it falls.
+ *
+ * The coin economy's SECOND faucet, and the one that answers "what did this
+ * hour of play buy me". Selling loot recycles what the run already gave you;
+ * gold is new money, and it is what the AUTO PILOT meter is actually paid
+ * with — so this block and `AUTOPILOT.coinsPerSecond` are two ends of one
+ * lever. `farmMinutesPerAutopilotMinute` below records which side is which.
+ *
+ * THE RULES IT OBEYS, IN THE ORDER THEY BITE:
+ *
+ * 1. **NOT EVERY CORPSE PAYS.** `minionChance` is one body in five, and that
+ *    is a feel decision rather than an economy one: a purse out of every kill
+ *    turns a fight into a coin fountain and buries the thing a kill is
+ *    actually for, which is the blood. The rate is made up for in the SIZE of
+ *    a pile, never in how many of them there are.
+ * 2. **ONLY SOMETHING WITH POCKETS.** See `carriesGold` (items/gold.ts): a
+ *    body that WALKS ON LEGS and is not a beast is a humanoid — people and the
+ *    two-legged machines alike — and a humanoid was carrying money. A rover on
+ *    treads, a haunting that drifts and a collapsed star were not, and a def
+ *    can say otherwise either way with `EnemyDef.wealth`.
+ * 3. **THE PILE IS PRICED OFF THE MONSTER'S LEVEL**, `base + perMlvl × mlvl`,
+ *    so deeper ground pays better without any per-level authoring.
+ * 4. **A SET PIECE PAYS LIKE ONE.** `roleMult` is the whole difference
+ *    between the rank and file and the thing at the end of the map, and
+ *    `wealth` is the difference between a night watchman and the man who
+ *    owns the building.
+ *
+ * Every draw comes off the run's own `goldRng` stream, never `rng` — moving
+ * any knob here must not reshuffle a single equipment drop, or the A/B that
+ * calibrates it (loot sales vs. gold, see the simulator's GOLD table) would
+ * move both halves at once and measure nothing.
+ */
+export const GOLD = {
+  /**
+   * THE KNOB. Multiplies every pile in the game, and it is the ONE number to
+   * move when the farm rate is wrong.
+   *
+   * Calibrated against `farmMinutesPerAutopilotMinute` below: an hour of
+   * ordinary mid-campaign farming should pay for about fifteen minutes of
+   * AUTO PILOT at 1× (`AUTOPILOT.coinsPerSecond × 900`). Measure it —
+   * never eyeball it — with `node scripts/simulate-run.mjs`, whose GOLD table
+   * prints the two faucets apart and scores the ratio against the target.
+   *
+   * **TUNE IT AGAINST THE GOLD-ALONE LINE, NOT THE COMBINED ONE.** The other
+   * faucet (loot sold at the counter) rides the sell ladder's ORDERS OF
+   * MAGNITUDE — a single unique is worth a map of trash — so one item dropping
+   * swings a campaign's combined figure by a factor of ten. Tuning this number
+   * against the total would mean re-tuning it every time the loot ladder rolled
+   * differently.
+   *
+   * SET AT 1.5 against two full medium campaigns (seeds 11 and 23, 20 min/map):
+   * 222,344 coins of gold over 146 simulated minutes = 37 minutes of AUTO PILOT
+   * bought, or **3.95:1** against the 4:1 target. The two seeds individually
+   * read 6.0:1 and 2.7:1, and the difference is entirely whether the run got far
+   * enough to kill its bosses — so re-calibrate on at least two campaigns, never
+   * on one map.
+   */
+  dropMult: 1.5,
+  /**
+   * THE CALIBRATION TARGET, recorded here so the number the knob was set
+   * against travels with the knob: minutes of FARMING that should buy one
+   * minute of AUTO PILOT at 1×. 4 = an hour of play buys a quarter of an hour
+   * of watching it play itself.
+   *
+   * Nothing in the simulation reads it — the simulator's `--gold` verdict
+   * does, which is the point: a target nobody can check is a target that
+   * silently rots.
+   */
+  farmMinutesPerAutopilotMinute: 4,
+  /**
+   * Chance a fallen MINION sheds a purse at all. One in five: gold is a
+   * punctuation mark on a fight, not its texture.
+   */
+  minionChance: 0.2,
+  /** An ELITE always paid something; so did a BOSS. They are the payday. */
+  eliteChance: 1,
+  bossChance: 1,
+  /**
+   * A pile's floor and its slope: `base + perMlvl × mlvl` coins before every
+   * multiplier below.
+   *
+   * THE SLOPE IS DELIBERATELY SHALLOW, and that is the one number here with a
+   * reason outside itself. The AUTO PILOT meter charges a FLAT rate whatever
+   * the hero's level (`AUTOPILOT.coinsPerSecond`), so gold's scaling IS the
+   * campaign's purchasing-power curve. A steep line (the first draft ran a
+   * floor of 6 with a slope of 9) makes a JESUS mob pay eighteen times an
+   * opening one, and the ratio this block is calibrated against then holds at
+   * exactly one point in the campaign. A HIGH floor with a GENTLE slope keeps
+   * deeper ground genuinely richer — about six times, end to end — without
+   * making the target meaningless everywhere but the middle.
+   */
+  base: 40,
+  perMlvl: 4,
+  /**
+   * What the body's RANK is worth, as a multiple of a minion's purse.
+   *
+   * KEPT SMALL ON PURPOSE, because this MULTIPLIES with `wealth` and the
+   * product is what actually lands: at an earlier elite/boss of 14/70 against a
+   * founder's wealth of 50, one boss kill paid 3,500 minions and a whole map's
+   * trash rounded to nothing beside it — a coin economy whose only real verb is
+   * "kill the man at the end". A map's rank and file should carry about half its
+   * takings, its elites a fifth, and its boss the rest, which is what 1 / 8 / 24
+   * comes out at against the kill mix a real run actually produces.
+   */
+  roleMult: { minion: 1, elite: 8, boss: 24 } as Record<
+    "minion" | "elite" | "boss",
+    number
+  >,
+  /**
+   * A SPECIAL monster's purse (config RARE_MOBS): the oddity that turns up
+   * once a map, and the named one-off that turns up on a fraction of runs,
+   * were carrying more than the rank and file. Below the elite rung on
+   * purpose — a rare mob is a lucky find, not a set piece.
+   */
+  rarityMult: { rare: 3, unique: 5 } as Record<"rare" | "unique", number>,
+  /**
+   * A HELLBORN kill's purse (config HELLGATES). The gates are the one place a
+   * rampage pays instead of costing, and gold follows the gear.
+   */
+  hellbornMult: 6,
+  /**
+   * How much a pile may swing either side of its computed worth, as a
+   * fraction: 0.35 = anywhere from 65% to 135%. Purely so two identical mobs
+   * don't shed two identical numbers.
+   */
+  variance: 0.35,
+  /**
+   * How many SEPARATE piles a payout is split into, by role — the D2 boss
+   * fountain. A boss's takings landing as one tidy pile reads like a medkit;
+   * split six ways and scattered they read like the vault came open. The
+   * total is unchanged, so this is spectacle and nothing else.
+   */
+  piles: { minion: 1, elite: 2, boss: 6 } as Record<
+    "minion" | "elite" | "boss",
+    number
+  >,
+  /** How far (world px) the split piles of one payout scatter from the body. */
+  scatterPx: 34,
+  /**
+   * THE PILE LADDER — which sprite a pile wears, by what is in it, richest
+   * rung first. The names are `content/sprites/effects/gold_*`, and each rung
+   * carries SEVERAL so a floor strewn with piles doesn't read as a floor
+   * strewn with one stamp; the variant is picked off the item's own id hash
+   * (never a draw — see `goldSprite`).
+   *
+   * The thresholds are the ladder's whole grammar: the rungs are what a player
+   * learns to read from across a room, so they are spaced by roughly ×5 rather
+   * than evenly, and the top rung has no ceiling.
+   */
+  pileTiers: [
+    { min: 10_000, sprites: ["gold_hoard_a", "gold_hoard_b"] },
+    { min: 2500, sprites: ["gold_heap_a", "gold_heap_b", "gold_heap_c"] },
+    { min: 600, sprites: ["gold_pile_a", "gold_pile_b", "gold_pile_c"] },
+    { min: 150, sprites: ["gold_stack_a", "gold_stack_b", "gold_stack_c"] },
+    { min: 0, sprites: ["gold_coins_a", "gold_coins_b", "gold_coins_c"] },
+  ] as readonly { min: number; sprites: readonly string[] }[],
+} as const;
+
+/**
  * THE LOST & FOUND — the vault that catches what the AUTO PILOT throws away.
  *
  * An unattended bot fills a bag it cannot empty: it sheds the worst piece to

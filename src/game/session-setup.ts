@@ -231,6 +231,7 @@ function applyOpeningSkip(state: GameState, skip: string | undefined): void {
 export type FrozenRun = Record<string, unknown> & {
   rngState: number;
   fxRngState: number;
+  goldRngState: number;
 };
 
 /**
@@ -242,7 +243,7 @@ export type FrozenRun = Record<string, unknown> & {
  * `step()` cannot write a byte into.
  */
 export function freezeRun(state: GameState): FrozenRun {
-  const { rng, fxRng, explored, ...rest } = state;
+  const { rng, fxRng, goldRng, explored, ...rest } = state;
   return {
     ...(structuredClone(rest) as Record<string, unknown>),
     // Transient per-step chatter, blanked rather than carried: a frozen run
@@ -253,17 +254,25 @@ export function freezeRun(state: GameState): FrozenRun {
     explored: Array.from(explored),
     rngState: rngState(rng),
     fxRngState: rngState(fxRng),
+    goldRngState: rngState(goldRng),
   };
 }
 
 /** Thaw a frozen run back into something `step()` can advance. */
 export function adoptRun(frozen: FrozenRun): GameState {
-  const { rngState: seedState, fxRngState, explored, ...rest } = frozen;
+  const {
+    rngState: seedState,
+    fxRngState,
+    goldRngState,
+    explored,
+    ...rest
+  } = frozen;
   return {
     ...(rest as unknown as GameState),
     explored: Uint8Array.from((explored as number[] | undefined) ?? []),
     events: [],
     rng: createRngFromState(seedState),
     fxRng: createRngFromState(fxRngState),
+    goldRng: createRngFromState(goldRngState),
   };
 }

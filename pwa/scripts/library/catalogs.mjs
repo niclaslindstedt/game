@@ -53,6 +53,7 @@ const [
   edge,
   weaponMath,
   requirements,
+  gold,
   create,
   config,
   cutscenes,
@@ -87,6 +88,7 @@ const [
   engine("game/items/edge.ts"),
   engine("game/items/weapon-math.ts"),
   engine("game/items/requirements.ts"),
+  engine("game/items/gold.ts"),
   engine("game/create.ts"),
   engine("game/config/index.ts"),
   engine("game/defs/cutscenes.ts"),
@@ -167,6 +169,10 @@ export const companionXpToLevelUp = companionStats.companionXpToLevelUp;
  * above is authored in, so a page can print the ladder in KILLS (which is what
  * a reader can act on) rather than in an XP figure that means nothing alone. */
 export const referenceMobXp = leveling.referenceMobXp;
+/** Engine: whether a body of this kind was carrying money (`items/gold.ts`) —
+ * the humanoid rule, read off the def rather than re-derived, so the bestiary's
+ * WHAT IT WAS CARRYING note can never disagree with the drop. */
+export const carriesGold = gold.carriesGold;
 /** Engine: which POWER RANK a companion of `level` has reached. */
 export const companionPowerRank = companionStats.companionPowerRank;
 /** Engine: the extra pellets / chain arcs / pierce a ranked power adds. */

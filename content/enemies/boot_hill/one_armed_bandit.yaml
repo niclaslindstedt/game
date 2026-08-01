@@ -8,6 +8,8 @@ role: minion
 rarity: unique
 sprite: one_armed_bandit
 gore: sparks
+# WEALTH (config GOLD): a slot machine that has been taking the town's money for years.
+wealth: 3
 hp: 130
 speed: 18
 radius: 9

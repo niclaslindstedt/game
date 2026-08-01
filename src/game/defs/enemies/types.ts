@@ -248,6 +248,26 @@ export type EnemyDef = {
    * `dropMinionLoot`.
    */
   hellborn?: boolean;
+  /**
+   * HOW RICH IT WAS — a multiplier on the GOLD its corpse sheds (config
+   * `GOLD`, see `items/gold.ts`). Omitted = 1: ordinary pockets.
+   *
+   * It is the field the satire is actually about. The rank and file are
+   * carrying a shift's pay; the people who own the place are carrying the
+   * place, and a corpse that pays out a hundred times what the man guarding it
+   * did is the joke told in loot rather than in dialogue. Author it on the
+   * moneyed — a founder, an investor, an executive — and leave every guard,
+   * clerk and intern alone.
+   *
+   * IT ALSO DECIDES WHETHER THERE IS A PURSE AT ALL, in both directions, which
+   * is why it is one field and not two. Left off, the body is asked the
+   * ordinary question (`carriesGold`: does it bleed, and does it have a face?)
+   * — so nothing on the roster needs authoring for gold to work. Set to 0, a
+   * body that would have paid pays nothing, whatever it is made of. Set above
+   * 0 on something that would NOT have paid — a bank rover, a haunted till —
+   * and it pays: the exception is data, not a branch in the engine.
+   */
+  wealth?: number;
   hp: number;
   /**
    * Levels ABOVE the horde's baseline this mob runs at: its monster level is

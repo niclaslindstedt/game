@@ -9,6 +9,8 @@ role: boss
 levelBonus: 5
 sprite: payload_1
 gore: sparks
+# WEALTH (config GOLD): the first body of the machine that runs the market.
+wealth: 2
 hp: 480
 speed: 36
 radius: 18

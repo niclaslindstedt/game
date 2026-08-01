@@ -18,15 +18,19 @@ import type { GameState } from "@game/core";
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 
 /**
- * A deep, independent copy of the engine state: everything but the two rng
+ * A deep, independent copy of the engine state: everything but the three rng
  * closures cloned outright, their stream positions snapshotted and rebuilt so
- * the copy replays the exact same loot/damage streams. Each call yields a fresh
- * object graph, so one stored snapshot can be restored again and again — every
- * RETRY gets its own clone and mutating the run never touches the checkpoint.
+ * the copy replays the exact same loot/damage/gold streams. Each call yields a
+ * fresh object graph, so one stored snapshot can be restored again and again —
+ * every RETRY gets its own clone and mutating the run never touches the
+ * checkpoint.
  */
 export function cloneGameState(state: GameState): GameState {
-  const { rng, fxRng, ...rest } = state;
-  const copy = structuredClone(rest) as Omit<GameState, "rng" | "fxRng">;
+  const { rng, fxRng, goldRng, ...rest } = state;
+  const copy = structuredClone(rest) as Omit<
+    GameState,
+    "rng" | "fxRng" | "goldRng"
+  >;
   return {
     ...copy,
     // `events` is transient per-step chatter; blank it so an adopted copy
@@ -34,5 +38,6 @@ export function cloneGameState(state: GameState): GameState {
     events: [],
     rng: createRngFromState(rngState(rng)),
     fxRng: createRngFromState(rngState(fxRng)),
+    goldRng: createRngFromState(rngState(goldRng)),
   };
 }

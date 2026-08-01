@@ -594,6 +594,21 @@ export function traitNotes(enemy) {
       enemy.rarity === "unique" ? "UNIQUE MONSTER" : "RARE MONSTER",
       `Fields ${enemy.rarityTuning.hpMult}× the health, ${enemy.rarityTuning.damageMult}× the damage and pays ${enemy.rarityTuning.xpMult}× the experience of an ordinary monster of its kind.`,
     ]);
+  // WHAT IT WAS CARRYING — the gold its corpse sheds (config GOLD). Worth a
+  // note on every page rather than only on the rich ones, because the ABSENCE
+  // is the interesting half: a reader who has worked out that the moon's dead
+  // pay nothing has worked out the rule, and a bestiary that only mentioned
+  // money where there was some would never let them.
+  notes.push([
+    "WHAT IT WAS CARRYING",
+    enemy.purse === null
+      ? "Nothing. It has no pockets, and never had wages — a kill pays in gear, not in coin."
+      : enemy.purse.wealth > 4
+        ? `A fortune. Its corpse sheds ${enemy.purse.wealth}× the gold an ordinary body of its rank does, which is the plainest thing anyone has ever said about it.`
+        : enemy.purse.wealth > 1
+          ? `More than it should be. Its corpse sheds ${enemy.purse.wealth}× the gold an ordinary body of its rank does.`
+          : "A shift's pay, and only about one body in five is carrying any of it when it falls.",
+  ]);
   notes.push([
     "WHEN STRUCK",
     `It ${GORE_NOUN[enemy.gore]}.` +

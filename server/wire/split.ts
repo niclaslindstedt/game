@@ -94,7 +94,12 @@ export const BYTE_ARRAY_FIELDS: readonly string[] = ["explored"];
  * from the same seed) and the app-owned view rect the renderer writes onto the
  * state each frame.
  */
-export const UNSENT_FIELDS: readonly string[] = ["rng", "fxRng", "view"];
+export const UNSENT_FIELDS: readonly string[] = [
+  "rng",
+  "fxRng",
+  "goldRng",
+  "view",
+];
 
 /**
  * The owner's alone. Deleted from every other recipient's snapshot before it

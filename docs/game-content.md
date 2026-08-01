@@ -1000,9 +1000,9 @@ the only source of **SMELLING SALTS**, the one thing that puts a downed
 companion back on its feet — every stall stocks a couple, on every map (see
 **Companions** below). He no longer revives the party for free.
 
-The shop trades in **coins**, earned one way — selling loot across the
-counter — and spent on the stall, so the economy recycles the loot rain
-rather than printing money. An item's sell value is its **item level** times
+The shop trades in **coins**, which enter a run by two faucets — **gold off
+the floor** (below) and selling loot across the counter — and leave it on the
+stall and on the AUTO PILOT meter. An item's sell value is its **item level** times
 its **tier** in orders of magnitude (magic ×10, rare ×100, unique ×1,000,
 legendary ×10,000) times its **material** — METAL pieces melt down for
 double, PRECIOUS ones (gold, gems, the genuinely magical) fetch four times
@@ -1037,6 +1037,53 @@ intended purse. The shop's SELL JUNK button clears every outgrown
 piece (the inventory's scrap rule) in one tap; SELL ALL empties the whole bag
 across the counter, keepers included (the worn loadout is untouched). Coins
 ride the loadout between levels like everything else the hero carries.
+
+### Gold — what a body was carrying (`src/game/items/gold.ts`, config `GOLD`)
+
+The coin economy's other faucet, and the one that answers "what did this hour of
+play buy me". Selling loot recycles what the run already handed you; **gold is
+new money**, and it is what the AUTO PILOT meter is actually paid with — so
+`GOLD` and `AUTOPILOT.coinsPerSecond` are two ends of one lever.
+
+**Only humanoids carry a purse.** A body that walks on **legs** and is not a
+beast is a humanoid — the people AND the two-legged machines, because a park
+robot built to take money is as much a purse as the man who wrote its firmware.
+A rover on treads, a haunting that drifts and a collapsed star are not, so the
+moon's dead and the rift's geometry pay nothing from their rank and file (both
+have named bodies that do). Nothing is authored for this: it is read off the
+`locomotion` and `anatomy` the roster already carries.
+
+**Not every corpse pays.** One minion in five (`GOLD.minionChance`), because the
+floor of a fight is meant to be blood rather than money — the rate is made up
+for in the SIZE of a pile, never in how many of them there are. Elites and
+bosses always pay, and split their takings into two and six scattered piles
+respectively: the same total, thrown as a fountain because a boss's money
+arriving as one tidy heap reads like a medkit.
+
+**A pile is priced off the victim's monster level**, then multiplied by its RANK
+(an elite is worth eight of the rank and file, a boss twenty-four) and by
+**`EnemyDef.wealth`** — how rich it was in life. That last field is the satire
+told in loot rather than in dialogue: the guard on the door is carrying a
+shift's pay and THE FOUNDER is carrying the building. It is also the escape
+hatch in both directions — `wealth: 0` closes the pockets of something that
+would have paid, and any positive value opens the pockets of something that
+would not have, which is how THE VAULT WARDEN (bolted to a treasury door, on
+treads) still pays like the treasury, and how the DUST PHARAOH keeps what he was
+buried with.
+
+**How much is in it is legible from across the room.** A pile wears one of five
+sprite rungs by its amount (`GOLD.pileTiers` — loose coins, a stack, a pile, a
+heap, a hoard), each rung carrying two or three stamps picked off the drop's own
+id so a strewn floor is not one sprite repeated. It also **glitters**, and the
+more coins the more sparks: two specks for a couple of coins, a dozen for a
+boss's hoard, the biggest of them blooming (`pwa/src/game/render/gold.ts`).
+
+**The rate is a knob.** `GOLD.dropMult` multiplies every pile, and it is
+calibrated so an hour of ordinary mid-campaign farming buys about **fifteen
+minutes of AUTO PILOT at 1×** (`GOLD.farmMinutesPerAutopilotMinute`, a 4:1
+target). Measure it — never eyeball it — with the campaign simulator, whose
+**GOLD** table prints the two faucets apart, the coins per minute, and the
+farm:AP ratio against the target.
 
 ## Enemy roster (`src/game/defs/enemies/`)
 

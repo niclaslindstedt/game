@@ -7,6 +7,7 @@ import {
   abilityDef,
   AMMO_KINDS,
   equipmentIcon,
+  goldSprite,
   MERCY,
   questItemDef,
   storyItemDef,
@@ -17,6 +18,7 @@ import {
 import { spriteByName, type Sprites } from "../assets.ts";
 import { medkitIconFor } from "../consumables.ts";
 import { glowSprite } from "./caches.ts";
+import { drawGoldGlitter } from "./gold.ts";
 import {
   drawLootAuraOver,
   drawLootAuraUnder,
@@ -212,37 +214,43 @@ export function drawItems(
       item.kind === "medkit"
         ? (spriteByName(sprites, medkitIconFor(item.tier ?? 0)) ??
           sprites.medkit)
-        : item.kind === "xp"
-          ? sprites.upgrade
-          : item.kind === "repair"
-            ? sprites.repair
-            : item.kind === "drink"
-              ? sprites.drink
-              : // A BOX OF AMMUNITION draws its kind's own ground sprite — a
-                // spilled handful of brass, a bundle of arrows, a strip of
-                // charged cells — so a shooter reads what is worth the walk
-                // from across the room.
-                item.kind === "ammo"
-                ? (spriteByName(sprites, AMMO_KINDS[item.ammo].sprite) ??
-                  sprites.medkit)
-                : item.kind === "ability"
-                  ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
+        : // A PILE OF GOLD wears the rung of the ladder its `amount` puts it on
+          // (config `GOLD.pileTiers`), so how much is in it is legible from
+          // across the room without a number over it.
+          item.kind === "gold"
+          ? (spriteByName(sprites, goldSprite(item.amount, item.id)) ??
+            sprites.medkit)
+          : item.kind === "xp"
+            ? sprites.upgrade
+            : item.kind === "repair"
+              ? sprites.repair
+              : item.kind === "drink"
+                ? sprites.drink
+                : // A BOX OF AMMUNITION draws its kind's own ground sprite — a
+                  // spilled handful of brass, a bundle of arrows, a strip of
+                  // charged cells — so a shooter reads what is worth the walk
+                  // from across the room.
+                  item.kind === "ammo"
+                  ? (spriteByName(sprites, AMMO_KINDS[item.ammo].sprite) ??
                     sprites.medkit)
-                  : item.kind === "story"
-                    ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
+                  : item.kind === "ability"
+                    ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
                       sprites.medkit)
-                    : // A QUEST PIECE draws the icon the errand that wants it
-                      // authored, resolved through the quest rather than a
-                      // global catalog — two mods may both ship a "spare fuse".
-                      item.kind === "quest"
-                      ? (spriteByName(
-                          sprites,
-                          questItemDef(item.questId, item.defId)?.icon ?? "",
-                        ) ?? sprites.medkit)
-                      : (spriteByName(
-                          sprites,
-                          equipmentIcon(item.equipment.defId),
-                        ) ?? sprites.medkit);
+                    : item.kind === "story"
+                      ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
+                        sprites.medkit)
+                      : // A QUEST PIECE draws the icon the errand that wants it
+                        // authored, resolved through the quest rather than a
+                        // global catalog — two mods may both ship a "spare fuse".
+                        item.kind === "quest"
+                        ? (spriteByName(
+                            sprites,
+                            questItemDef(item.questId, item.defId)?.icon ?? "",
+                          ) ?? sprites.medkit)
+                        : (spriteByName(
+                            sprites,
+                            equipmentIcon(item.equipment.defId),
+                          ) ?? sprites.medkit);
     // A MERCY DROP still riding its angel down (deliverMs ticking): the guardian
     // swoops in from above cradling the gift, then releases it to fall the last
     // stretch to `pos`. Purely presentational — the engine has already parked
@@ -287,7 +295,16 @@ export function drawItems(
       }
     }
     // Float ~2px off the ground and bob gently; the glow stays anchored below.
-    const hover = Math.round(Math.sin(timeMs / 320 + item.id) * 1.5) - 2;
+    //
+    // GOLD IS THE ONE EXCEPTION, and it has to be: coins are not a magical
+    // pickup waiting to be claimed, they are a heap of metal somebody dropped,
+    // and a heap of metal bobbing in the air reads as a bug rather than as
+    // treasure. It sits flat on the floor and GLITTERS instead — which is the
+    // livelier cue anyway, and the one that scales with what is in the pile.
+    const hover =
+      item.kind === "gold"
+        ? 0
+        : Math.round(Math.sin(timeMs / 320 + item.id) * 1.5) - 2;
     const at = spriteTopLeft(item.pos, sprite, camera);
     const x = at.x;
     const y = at.y + hover;
@@ -302,6 +319,23 @@ export function drawItems(
       ctx.fillRect(x + sprite.width + r - 2, y + sprite.height + r - 2, 2, 2);
     }
     ctx.drawImage(sprite, x, y);
+    // THE GLITTER, over the pile it belongs to: bright specks winking off the
+    // coin faces, more of them the more coins there are (./gold.ts). This is
+    // gold's whole standing presentation — it is to a pile what the rarity aura
+    // is to a magic find, and it is priced off the same thing the SPRITE is, so
+    // the two say the same number in two languages.
+    if (item.kind === "gold") {
+      drawGoldGlitter(
+        ctx,
+        item.id,
+        item.amount,
+        x + sprite.width / 2,
+        y + sprite.height / 2,
+        sprite.width,
+        sprite.height,
+        timeMs,
+      );
+    }
     // The layers that pass IN FRONT of the piece — the smoke on its way up and
     // the near half of the orbiting motes. Drawn last so a legendary is never a
     // decal with an icon sitting on it.

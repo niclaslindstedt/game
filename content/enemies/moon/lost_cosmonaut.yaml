@@ -11,6 +11,8 @@ sprite: lost_cosmonaut
 locomotion: float
 gore: ecto
 phasing: true
+# WEALTH (config GOLD): his mission pay, in a pocket he can no longer reach.
+wealth: 1
 hp: 45
 speed: 18
 radius: 9

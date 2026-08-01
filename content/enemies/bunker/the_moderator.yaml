@@ -8,6 +8,8 @@ lore: >-
 role: elite
 levelBonus: 6
 sprite: the_moderator
+# WEALTH (config GOLD): everyone else lives on his platform, and pays rent on it.
+wealth: 4
 hp: 1700
 speed: 30
 radius: 11

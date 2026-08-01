@@ -16,6 +16,8 @@ hellborn: true
 sprite: first_investor
 gore: blood
 levelBonus: 3
+# WEALTH (config GOLD): older than money, and it has been collecting since.
+wealth: 5
 hp: 480
 speed: 25
 radius: 16

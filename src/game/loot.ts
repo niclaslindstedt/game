@@ -45,6 +45,7 @@ import {
   ammoKindFor,
   consumableAppetite,
   dropChance,
+  dropGold,
   dropItem,
   enemyDodgeChance,
   heroArmorPen,
@@ -773,6 +774,10 @@ export function hitEnemy(
       enemy.pos,
     );
     if (def.loot) dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
+    // He drops his purse on the way out, exactly as he drops his loot: the
+    // fight was won, and a coward running for a rift is not the man who stops
+    // to pick his money back up.
+    dropGold(state, def, enemy.pos, enemy.mlvl);
     // His parting words go over the rift he just went through, not over the
     // spot he was standing on when he decided to run — so the rite defers them
     // exactly as the death rite does. `finishBossDeath` calls this very
@@ -1076,6 +1081,13 @@ export function killEnemy(
   // Level-locked world drops: this level's relics, rolled at role-scaled odds
   // on EVERY kill once the hero out-levels a first campaign pass (see function).
   maybeDropWorldUnique(state, def, enemy);
+
+  // WHAT IT WAS CARRYING (items/gold.ts): the purse, shaken onto the floor.
+  // Rolled outside the drop ladder entirely — off its own stream, at its own
+  // odds, on every kill including the ones the ladder returned early from — so
+  // gold is a second faucet rather than another rung of the first, and moving
+  // its knob never disturbs a single equipment roll.
+  dropGold(state, def, enemy.pos, enemy.mlvl);
 
   // A BOSS gets the scripted send-off — the DEATH RITE (boss-death.ts): it
   // goes to its knees, the horde is held off, the hero closes and finishes it,

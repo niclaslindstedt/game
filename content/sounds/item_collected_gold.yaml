@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_collected_gold
+description: >-
+  Coins going into the purse: a quick three-note run up, dry and small, with a
+  scoop of change under it. Deliberately the QUIETEST reward in the bank — a
+  farm run walks over dozens of these a minute, and anything with a flourish on
+  it would be unbearable by the second map.
+on:
+  type: itemCollected
+  kind: gold
+voices:
+  - call: noise
+    durationMs: 40
+    volume: 0.013
+    filter:
+      type: bandpass
+      frequency: 3800
+      q: 1.2
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 45
+    volume: 0.024
+  - call: tone
+    type: triangle
+    from: 1319
+    durationMs: 45
+    volume: 0.022
+    delayMs: 40
+  - call: tone
+    type: triangle
+    from: 1760
+    durationMs: 60
+    volume: 0.02
+    delayMs: 80
+    echo: 0.22

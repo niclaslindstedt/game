@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_pile_b
+family: effects
+size: [14, 9]
+description: >
+  A broad low pile of coins, domed at the crown and spilling wider at the foot than the others — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: a broad low pile of coins, domed at the crown and spilling wider at the foot than the others
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: a pile that burst on landing and spread
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+grid: |
+  ......OO......
+  .....OYhO.....
+  ...OOhyyhOO...
+  ..OYhqooqhyO..
+  .OOhyoooooyhOO
+  OYhqooqqooqohO
+  OhqooqooqooqhO
+  OqqqqqqqqqqqqO
+  .OOOOOOOOOOOO.

@@ -11,6 +11,8 @@ sprite: the_flagbearer
 locomotion: float
 gore: ecto
 phasing: true
+# WEALTH (config GOLD): forty years of mission pay he was never alive to spend.
+wealth: 1
 hp: 550
 speed: 40
 radius: 20

@@ -8,6 +8,8 @@ lore: >-
 role: elite
 levelBonus: 6
 sprite: the_fulfiller
+# WEALTH (config GOLD): shipped himself down here in a rocket he paid for.
+wealth: 4
 hp: 2200
 speed: 34
 radius: 13

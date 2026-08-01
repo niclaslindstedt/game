@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: gold_hoard_a
+family: effects
+size: [18, 14]
+description: >
+  A great mound of coins with three short towers of stacked coins standing on its crown and loose gems catching the light in its slopes — one rung of the gold
+  pile ladder (config GOLD.pileTiers), which is how a player reads what a pile
+  is worth from across the room.
+subject:
+  kind: pickup
+  build: a great mound of coins with three short towers of stacked coins standing on its crown and loose gems catching the light in its slopes
+  accent: warm gold lit from the upper left, shading to old brass underneath
+  flavor: what a boss was sitting on, out on the floor where anyone can take it
+palette:
+  O: "#1a1c2c" # dark rim
+  q: "#96762e" # old brass, the shadowed underside
+  o: "#d6a842" # mid gold
+  h: "#e2c640" # gold face
+  y: "#ffb02e" # warm inner gold
+  Y: "#ffe3b6" # pale highlight
+  r: "#d83a3a" # ruby
+  j: "#4054bc" # sapphire
+  l: "#678f5d" # emerald
+  W: "#f4f4f4" # the one white glint
+grid: |
+  ........OO........
+  .......OWyO.......
+  ....OO.OqqO.......
+  ...OYyOOYyO.......
+  ...OqqOOqqO.OO....
+  ...OYyOOYyOOYyO...
+  ...OqqOOqqOOqqO...
+  ...OYyOOYyOOYyO...
+  ..OOhyooooooyhOO..
+  .OOhyoooooooyhOO..
+  OYhqooqqjooqqoohyO
+  OhqooqolqooqooqoqO
+  OqqqqqqqqqqqqqqqqO
+  .OOOOOOOOOOOOOOOO.

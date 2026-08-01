@@ -1055,6 +1055,22 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       angle: 0,
       seed: state.stats.timeMs,
     });
+    // …and a purse coming apart on the floor throws its own small warm flash
+    // on top of the dust. Gold has no rarity to bloom (`lootShine` is the
+    // equipment ladder's), but it is the one drop the player is always glad to
+    // see, and the flash is what makes a pile ANNOUNCE itself in a fight
+    // instead of quietly appearing among the bodies.
+    if (event.kind === "coin") {
+      effects.push({
+        kind: "lootShine",
+        pos: { ...event.pos },
+        untilMs: state.stats.timeMs + LOOT_SHINE_MS,
+        durationMs: LOOT_SHINE_MS,
+        color: "255, 215, 94",
+        intensity: 1,
+        seed: state.stats.timeMs,
+      });
+    }
   }
   // A MAGIC-OR-BETTER FIND SETTLES. The rarity's own colour blooms out of it
   // once — the "look over here" that the standing aura then keeps alive. It is
@@ -1097,6 +1113,11 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         equipped: event.equipped === true,
         upgrade: event.upgrade === true,
       });
+    } else if (event.kind === "gold" && event.coins != null) {
+      // A pile's line is GROUPED and abbreviated rather than printed raw: a
+      // late-campaign hoard is a six-digit number, and "127463 GOLD" in a feed
+      // that scrolls past in a second is a wall of digits nobody reads.
+      ctx.pushPickup(`${formatCompact(event.coins)} GOLD`, "#ffd75e");
     } else {
       ctx.pushPickup(
         event.name,
@@ -1130,6 +1151,33 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       rise: 30,
       scale: 2,
       shake: true,
+    });
+  }
+  // GOLD BANKED: the amount flows up off the hero in the purse's own warm
+  // yellow, exactly as an arrow's XP floats in blue. Gold has no pickup card
+  // and never will — a card is for a find worth STOPPING to read, and a farm
+  // run walks over dozens of piles a minute — so this float and the feed line
+  // are the whole of what a pile says on the way past.
+  if (
+    event.type === "itemCollected" &&
+    event.kind === "gold" &&
+    event.coins != null &&
+    event.coins > 0
+  ) {
+    effects.push({
+      kind: "text",
+      pos: {
+        x: localHero(state).pos.x,
+        y: localHero(state).pos.y - PLAYER.radius - 12,
+      },
+      untilMs: state.stats.timeMs + 900,
+      durationMs: 900,
+      text: `+${formatCompact(event.coins)}`,
+      color: "#ffd75e",
+      rise: 24,
+      // A big pile shouts and a couple of coins murmurs: the same escalation
+      // the pile ladder and the glitter count both ride, so all three agree.
+      scale: event.coins >= 1000 ? 2 : 1,
     });
   }
   if (event.type === "storyItemCollected") {
