@@ -22,9 +22,7 @@ import { beginRespec } from "./stat-points.ts";
  * placed by the player before play, never left silently on the table.
  */
 export function hasPendingPoints(player: Player): boolean {
-  return (
-    player.pendingStatPoints > 0 || player.pendingTalentPoints.length > 0
-  );
+  return player.pendingStatPoints > 0 || player.pendingTalentPoints.length > 0;
 }
 
 /**
@@ -98,8 +96,11 @@ export function dismissIntro(state: GameState): void {
     // control before play, not left waiting on a ding a max-level hero might
     // never see. Per hero, and closeable: the chooser is non-blocking now.
     for (const hero of state.players) {
-      if (heroInPlay(hero) && hero.screen === undefined &&
-        hasPendingPoints(hero)) {
+      if (
+        heroInPlay(hero) &&
+        hero.screen === undefined &&
+        hasPendingPoints(hero)
+      ) {
         hero.screen = "levelup";
       }
     }

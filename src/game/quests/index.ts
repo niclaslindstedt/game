@@ -773,14 +773,15 @@ function markQuestTargets(state: GameState): void {
       if (objective.kind !== "kill" && objective.kind !== "killNamed") continue;
       if (state.mapMarkers.some((m) => m.defId === objective.enemy)) continue;
       // ANY hero's sighting pins the target — the map is shared (plan §3.1).
-      const seen = state.enemies.find((e) =>
-        e.defId === objective.enemy &&
-        state.players.some(
-          (hero) =>
-            heroInPlay(hero) &&
-            distance(e.pos, hero.pos) <= QUESTS.markSightRadius &&
-            lineOfSight(state, hero.pos, e.pos),
-        ),
+      const seen = state.enemies.find(
+        (e) =>
+          e.defId === objective.enemy &&
+          state.players.some(
+            (hero) =>
+              heroInPlay(hero) &&
+              distance(e.pos, hero.pos) <= QUESTS.markSightRadius &&
+              lineOfSight(state, hero.pos, e.pos),
+          ),
       );
       if (seen) addMapMarker(state, "questTarget", seen.pos, objective.enemy);
     }

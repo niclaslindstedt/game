@@ -42,12 +42,7 @@ import { questGiverDef } from "./defs/quests.ts";
 import { isNeutral, provokeEnemy } from "./disposition.ts";
 import { dropItem } from "./items/index.ts";
 import { lineOfSight } from "./obstacles.ts";
-import type {
-  Enemy,
-  GameState,
-  Player,
-  TalkSpeaker,
-} from "./types/index.ts";
+import type { Enemy, GameState, Player, TalkSpeaker } from "./types/index.ts";
 
 // ------------------------------------------------------------------ the flags
 
