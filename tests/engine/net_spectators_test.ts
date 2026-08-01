@@ -14,8 +14,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { engineVersion, resetBalanceTuning } from "@game/core";
 import { decodeFrame } from "@game/wire/codec.ts";
 import { playerScaling } from "@game/wire/players.ts";
+import { FRAME } from "@game/wire/frames.ts";
 import {
-  FRAME,
   type ChatPayload,
   type RosterPayload,
   type SessionParams,

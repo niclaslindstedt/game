@@ -215,7 +215,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   their log and their flags are banked on the character per difficulty and
   seeded back at run setup. The shape and the merge live in the second file, a
   LEAF whose only import is a type, because the app's roster stores this record
-  and the roster is on the 170 KB startup path — which is why `@game/menu`
+  and the roster is on the 200 KB startup path — which is why `@game/menu`
   re-exports it. The merge keeps the FURTHER reading of each errand, so progress
   can never walk backwards.
 - **`src/game/disposition.ts`** — WHO IS ACTUALLY IN THE FIGHT. One predicate,
@@ -1130,9 +1130,11 @@ behind it. Two patterns keep that possible:
   The menus read the first of each pair through `defs/levels/summary.ts`.
 
 `pwa/scripts/check-seo.mjs` polices the result as a critical-path budget of
-170 KB of gzipped JavaScript — web.dev's performance-budget figure, the one
-behind a ~5 s time-to-interactive on a slow 3G phone. A sudden jump means
-something on the startup path reached back through `@game/core`.
+200 KB of gzipped JavaScript. Web.dev's performance-budget figure — the one
+behind a ~5 s time-to-interactive on a slow 3G phone — is 170 KB; the extra
+30 KB is a deliberate allowance for react-dom (~113 KB of the path) until the
+planned React→Preact swap returns it, at which point the budget drops back to 170. A sudden jump means something on the startup path reached back through
+`@game/core`.
 
 `src/output.ts` remains the central output module (OSS_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers

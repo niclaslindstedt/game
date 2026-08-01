@@ -42,7 +42,7 @@ import { AchievementsScreen } from "./achievements-shelf.ts";
 import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
-import type { Character } from "./characters.ts";
+import { characterPurse, type Character } from "./characters.ts";
 import type { JoinIntent } from "./session-intent.ts";
 import {
   mouseButtonCode,
@@ -52,7 +52,6 @@ import {
 } from "./keybindings.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { HighScoresBoard } from "./title-screen/HighScoresBoard.tsx";
 import { MenuHeading } from "./title-screen/MenuHeading.tsx";
 import { MenuList } from "./title-screen/MenuList.tsx";
 import { StoreBackdrop } from "./title-screen/StoreBackdrop.tsx";
@@ -113,6 +112,16 @@ const VaultScreen = lazy(() =>
 );
 const ArsenalScreen = /* @__PURE__ */ lazy(() =>
   import("./ArsenalScreen.tsx").then((m) => ({ default: m.ArsenalScreen })),
+);
+// The HIGH SCORES board, lazy for the same reason as the shelf-mates above:
+// an EXTRAS destination nobody reaches from a cold start, and the ranking
+// tables + medal rendering are real bytes the entry chunk should not carry.
+// (The `highscores.ts` DATA module stays eager — cloud save and the main menu
+// read it at launch; only the BOARD that draws it moves.)
+const HighScoresBoard = lazy(() =>
+  import("./title-screen/HighScoresBoard.tsx").then((m) => ({
+    default: m.HighScoresBoard,
+  })),
 );
 
 export function TitleScreen({
@@ -419,6 +428,29 @@ export function TitleScreen({
     // §4.2's handshake rule needs to know which kind of hero is knocking:
     // hardcore and softcore never share a game.
     heroHardcore: character?.hardcore === true,
+    // §4.5: the hero travels WITH the player. The purse is funded from their
+    // whole wealth (banked + pending store credit) exactly as a local run's is
+    // (run-setup.ts), so banking after the session treats the two alike. A
+    // fresh hero carries null and arrives as the authored fresh start.
+    heroLoadout: character?.loadout
+      ? ({
+          ...character.loadout,
+          coins: characterPurse(character),
+        } as unknown as Record<string, unknown>)
+      : null,
+    // §4.4: apply the HOST's exact mod set for the session on the way through
+    // a browser row — a lazy chunk (join-mods.ts), because the apply reaches
+    // `game/mods.ts` → `@game/core` and this screen is the startup path.
+    applyForSession: useCallback(
+      async (modIds: string[]) =>
+        assets
+          ? (await import("./title-screen/join-mods.ts")).applyForSession(
+              modIds,
+              assets.sprites,
+            )
+          : false,
+      [assets],
+    ),
     onJoin,
   });
   // The one line of text the menu ever asks for — a password, a port, an
@@ -846,20 +878,22 @@ export function TitleScreen({
           </div>
 
           {screen === "scores" && (
-            <HighScoresBoard
-              font={font}
-              difficulty={scoreDifficulty}
-              setDifficulty={setScoreDifficulty}
-              metric={scoreMetric}
-              setMetric={setScoreMetric}
-              detail={scoreDetail}
-              setDetail={setScoreDetail}
-              onBack={() => {
-                // Land back on the HIGH SCORES row of the EXTRAS shelf.
-                setScreen("extras");
-                setCursor(ctx.rowIndexIn("extras", "high-scores"));
-              }}
-            />
+            <Suspense fallback={null}>
+              <HighScoresBoard
+                font={font}
+                difficulty={scoreDifficulty}
+                setDifficulty={setScoreDifficulty}
+                metric={scoreMetric}
+                setMetric={setScoreMetric}
+                detail={scoreDetail}
+                setDetail={setScoreDetail}
+                onBack={() => {
+                  // Land back on the HIGH SCORES row of the EXTRAS shelf.
+                  setScreen("extras");
+                  setCursor(ctx.rowIndexIn("extras", "high-scores"));
+                }}
+              />
+            </Suspense>
           )}
 
           {/* browserOpen (arsenal/achievements) never reaches here — the whole

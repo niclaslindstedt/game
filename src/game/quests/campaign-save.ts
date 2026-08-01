@@ -2,7 +2,7 @@
 // THE CAMPAIGN CHAIN'S CARRY — the shape a hero stores between runs, and the
 // one rule for folding a run's progress into it.
 //
-// THIS IS A LEAF ON PURPOSE, and the reason is the 170 KB critical-path budget
+// THIS IS A LEAF ON PURPOSE, and the reason is the 200 KB critical-path budget
 // (see the engine's two entry points in AGENTS.md). The app's ROSTER stores
 // this record and merges it on every save, and the roster is on the startup
 // path — so it may reach `@game/menu` and nothing heavier. Everything here

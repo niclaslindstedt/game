@@ -33,7 +33,8 @@
 // nothing else. Measure first (§1.7's snapshot-rate risk) and pack what the
 // measurement says is expensive.
 
-import { isFrameType, type FrameHeader, type FrameType } from "./protocol.ts";
+import { isFrameType, type FrameType } from "./frames.ts";
+import type { FrameHeader } from "./protocol.ts";
 
 /** Bytes before the payload. Read `decodeFrame` before changing it. */
 export const HEADER_BYTES = 16;

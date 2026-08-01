@@ -32,9 +32,9 @@ describe("the campaign's quest givers", () => {
     // that reads as a level rather than as a place — the whole reason these
     // people exist (see content/quest-givers.yaml).
     for (const levelId of Object.keys(LEVELS)) {
-      // The HUB is exempt: home is a breather, not an errand board. (Phase
-      // 6's own §6.1 wants givers parked here eventually — that is a story
-      // change with lines of its own, owed a pass of its own.)
+      // The HUB is exempt from the REQUIREMENT: home is a breather first,
+      // and whether somebody waits there (RUTH does) is the story's call,
+      // not this rule's.
       if (LEVELS[levelId]!.objective.type === "hub") continue;
       expect(
         giversForLevel(levelId).length,
@@ -141,7 +141,19 @@ describe("the campaign's errands", () => {
     // and it looks exactly like bad luck. The schema checks the id EXISTS; only
     // here can it be checked against the level it is asked for.
     for (const quest of QUESTS) {
-      const breeds = levelBreeds(quest.level);
+      // A HUB errand is the one sanctioned exception: accepted at home,
+      // carried across the campaign (`campaign: true`), its carriers live on
+      // the maps the trail visits — the engine rolls a collect piece off any
+      // ACTIVE errand's carriers wherever the kill happens (see
+      // `maybeDropQuestItem`). Home spawns nothing by design, so a hub
+      // chain's breeds are checked against the whole game instead.
+      const hub = LEVELS[quest.level]!.objective.type === "hub";
+      const breeds = hub
+        ? Object.keys(LEVELS).reduce(
+            (all, id) => new Set([...all, ...levelBreeds(id)]),
+            new Set<string>(),
+          )
+        : levelBreeds(quest.level);
       for (const objective of quest.objectives) {
         if (objective.kind !== "kill" && objective.kind !== "killNamed") {
           continue;

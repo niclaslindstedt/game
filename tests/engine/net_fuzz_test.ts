@@ -38,7 +38,8 @@ import type {
 } from "../../server/net/transport.ts";
 import { decodeFrame, encodeFrame, HEADER_BYTES } from "@game/wire/codec.ts";
 import { patchState, type StatePatch } from "../../server/wire/delta.ts";
-import { FRAME, type Handshake } from "@game/wire/protocol.ts";
+import { FRAME } from "@game/wire/frames.ts";
+import type { Handshake } from "@game/wire/protocol.ts";
 
 const HOST: Handshake = { protocol: 9, build: "0.0.0", mods: [] };
 const PEER = "198.51.100.4:27015";

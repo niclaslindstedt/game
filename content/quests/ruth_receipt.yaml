@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: garage
+giver: ruth
+name: THE RECEIPT
+campaign: true
+order: 1
+lore: >
+  The chips-and-soda run that started it all was interrupted mid-purchase, and
+  a company that logs everything logged that too: the slip is still on the HQ
+  floor, carried around on somebody's clipboard with the rest of the night's
+  paperwork. Ada's mother wants the last ordinary thing her daughter did, and
+  she wants it out of GOODCO's hands.
+offer:
+  - - THE NIGHT SHE WENT, SHE BOUGHT CHIPS AND A SODA AT THEIR MACHINES.
+    - THE MACHINES PRINT A SLIP. GOODCO KEEPS EVERYTHING.
+  - - THEIR NIGHT PEOPLE CARRY THE FLOOR'S PAPERWORK ON THEM. EVERY SHEET OF IT.
+  - - BRING ME THE RECEIPT. IT'S THE LAST ORDINARY THING SHE DID. IT'S HERS, NOT THEIRS.
+incomplete:
+  - SOMEBODY ON THAT FLOOR IS CARRYING IT. THEY CARRY EVERYTHING.
+complete:
+  - - CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.'
+  - - SHE STOOD THERE BEING ORDINARY, AND THEY TOOK HER MID-COIN.
+  - - I'M KEEPING THIS. IT'S THE LAST NORMAL MINUTE ANYONE HAS OF HER.
+objectives:
+  - kind: collect
+    item: ada_receipt
+    count: 1
+items:
+  - id: ada_receipt
+    name: THE RECEIPT
+    icon: icon_ada_receipt
+    dropFrom: [intern, scientist]
+reward:
+  xpShare: 0.5
+  coins: 120
+  loot:
+    count: 1
+    tierBonus: 1

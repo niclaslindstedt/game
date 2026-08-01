@@ -293,6 +293,11 @@ function sessionRow(
   const refusal = net.refusalFor(row);
   const full = row.players >= row.maxPlayers;
   const blocked = refusal !== null || full;
+  // A row refused for MODS THIS MACHINE DOES NOT HAVE is a refusal with a
+  // door behind it (§4.4): the press opens the game's Workshop hub instead of
+  // doing nothing. A row whose mods are all INSTALLED is not refused at all —
+  // joining applies the host's set on the way through (use-sessions.ts).
+  const gettable = refusal !== null && !full && net.missingMods(row);
   return {
     label: row.name.toUpperCase(),
     aria: rowAria("sessions", `session-${row.id}`),
@@ -301,7 +306,9 @@ function sessionRow(
     // metadata rather than off a connection nobody has made yet.
     subtitle: `${row.host.toUpperCase()} - ${row.level.toUpperCase()} - ${row.difficulty.toUpperCase()} - ${row.players}/${row.maxPlayers}`,
     blurb: blocked
-      ? (refusal ?? REFUSAL_TEXT["session-full"])
+      ? gettable
+        ? `${refusal} - PRESS FOR THE WORKSHOP`
+        : (refusal ?? REFUSAL_TEXT["session-full"])
       : row.needsPassword
         ? "THIS GAME HAS A PASSWORD"
         : undefined,
@@ -309,6 +316,11 @@ function sessionRow(
     locked: blocked,
     action: () => {
       if (blocked) {
+        if (gettable) {
+          playUiSound(synth, "confirm");
+          net.openWorkshop();
+          return;
+        }
         playUiSound(synth, "back");
         return;
       }

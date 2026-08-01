@@ -40,12 +40,8 @@ import {
   type PortMapper,
 } from "./net/upnp.ts";
 import { createSession, type Session, type SessionPeers } from "./session.ts";
-import {
-  MAX_CLIENTS,
-  PROTOCOL_VERSION,
-  TICK_MS,
-  type SessionParams,
-} from "./wire/protocol.ts";
+import { MAX_CLIENTS, TICK_MS } from "./wire/frames.ts";
+import { PROTOCOL_VERSION, type SessionParams } from "./wire/protocol.ts";
 
 export type HostOptions = {
   params: SessionParams;

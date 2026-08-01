@@ -12,7 +12,7 @@
 //
 // **IT IS IMPORT-FREE APART FROM SETTINGS, AND MUST STAY THAT WAY.** The HOST
 // and JOIN screens are TITLE MENU screens, i.e. the app's startup path, where
-// the 170 KB critical-path budget forbids reaching `@game/core`. Everything
+// the 200 KB critical-path budget forbids reaching `@game/core`. Everything
 // here is plain values; the module that acts on them
 // (`pwa/src/game/net/driver.ts`) is behind the run's own lazy chunk.
 //
@@ -57,10 +57,21 @@ export type JoinIntent = {
    * hero may only enter a hardcore session and vice versa — the handshake
    * refuses the mismatch by name. */
   hardcore?: boolean;
+  /** The hero this player is coming WITH (§4.5): their banked `Loadout` as
+   * plain JSON, with the purse already funded from their whole wealth the way
+   * a local run's is. Structural (`Record`) on purpose — this leaf may not
+   * import the engine — and null for a fresh character, who arrives as the
+   * authored fresh start. The session WEIGHS it before seating anybody
+   * (`validateLoadout`); this is a claim, never an authority. */
+  loadout?: Record<string, unknown> | null;
   /** What the browser row CLAIMED about the session, for the screen the joiner
    * is looking at while the level builds. Null for a typed address, which
    * claims nothing until the handshake answers. */
   label?: string;
+  /** The HOST'S MOD SET was applied on the way through this door (§4.4) —
+   * so when the joined run ends, the run must put the shipped game back
+   * (`restoreBaseDefs`): a mod applies to a run, never to the install. */
+  appliedMods?: boolean;
 };
 
 let armed: HostIntent | null = null;

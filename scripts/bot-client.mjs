@@ -49,7 +49,7 @@ const { createBotClient } = await import("../server/bot-client.ts");
 const { createUdpTransport } = await import("../server/net/udp.ts");
 const { parseAddress } = await import("../server/wire/address.ts");
 const { engineVersion } = await import("@game/core");
-const { TICK_MS } = await import("../server/wire/protocol.ts");
+const { TICK_MS } = await import("../server/wire/frames.ts");
 
 const USAGE = `
   node scripts/bot-client.mjs --address HOST:PORT [options]

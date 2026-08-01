@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: garage
+giver: ruth
+name: THE SCALE
+campaign: true
+order: 3
+requires:
+  - ruth_dent
+lore: >
+  In the rift Ada pried a scale off a lizard god with her bare hands - the
+  trail's gut-punch find says so. Her mother asks for a scale like it, off the
+  same scaled breed, not as proof and not for comfort: she wants to hold what
+  her daughter is up against, and find out it is the gods who should worry.
+offer:
+  - - WHERE SHE'S GONE NOW, THE THINGS THAT KEEP HER ARE SCALED. GODS, YOU SAID.
+  - - MY GIRL WILL BE PRYING AT THEM. SHE PRIES. SHE ALWAYS HAS.
+  - - BRING ME A SCALE OFF ONE. I WANT TO HOLD WHAT SHE'S UP AGAINST.
+incomplete:
+  - A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT.
+complete:
+  - - IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
+  - - I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
+  - - GO AND MEET HER HALFWAY.
+objectives:
+  - kind: collect
+    item: pried_scale
+    count: 1
+items:
+  - id: pried_scale
+    name: A LIZARD GOD'S SCALE
+    icon: icon_pried_scale
+    dropFrom: [scaled_ancestor]
+reward:
+  xpShare: 1
+  coins: 800
+  loot:
+    count: 2
+    tierBonus: 2

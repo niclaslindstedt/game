@@ -26,7 +26,7 @@
 
 // Types only, and through `@game/menu` on purpose: this module sits on the
 // app's STARTUP path (App.tsx reaches it through saved-run.ts), where the
-// 170 KB budget forbids any edge to `@game/core` — the reachability tripwire
+// 200 KB budget forbids any edge to `@game/core` — the reachability tripwire
 // (`tests/content/net_reachability_test.ts`) counts a type-only import as an
 // edge, deliberately, because the distinction is too easy to lose.
 import type { GameState, PlayerScreen } from "@game/menu";

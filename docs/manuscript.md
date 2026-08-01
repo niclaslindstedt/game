@@ -227,7 +227,7 @@ the ship still wants its part._
 
 ### Hero's thought — trying THE ROCKET before the part is home
 
-_The garage's only other line, and the only one in the game pinned to a DOOR
+_The hero's own only other line at home, and the only one in the game pinned to a DOOR
 rather than to a mob: tapping the ship on the back lawn before GOODCO HQ has
 fallen plays this instead of the travel picker. It REPLAYS — it answers the
 tap, not a story beat the player is owed once — and it deliberately names
@@ -236,6 +236,78 @@ He has not earned those roads and does not yet know they are where the trail
 goes._
 
 1. STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
+
+### Side errands — RUTH
+
+_Ada's mother, who has a key to the garage and always has. Once the voyages
+start she is simply there between them, standing by the engine parts, because
+waiting at home means staring at the phone. Her chain is the game's second
+campaign-long one (`campaign: true`): three errands, one per leg of the trail,
+each asking for something of her daughter's — and she is never once scared for
+Ada, only proud._
+
+**On being spoken to** (and the header of her errand list):
+
+- SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
+- WHEN YOU'RE OUT THERE — BRING ME SOMETHING OF HERS.
+
+#### THE RECEIPT
+
+**The ask:**
+
+1. THE NIGHT SHE WENT, SHE BOUGHT CHIPS AND A SODA AT THEIR MACHINES. THE MACHINES PRINT A SLIP. GOODCO KEEPS EVERYTHING.
+2. THEIR NIGHT PEOPLE CARRY THE FLOOR'S PAPERWORK ON THEM. EVERY SHEET OF IT.
+3. BRING ME THE RECEIPT. IT'S THE LAST ORDINARY THING SHE DID. IT'S HERS, NOT THEIRS.
+
+**Coming back short:**
+
+- SOMEBODY ON THAT FLOOR IS CARRYING IT. THEY CARRY EVERYTHING.
+
+**The handover:**
+
+1. CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.'
+2. SHE STOOD THERE BEING ORDINARY, AND THEY TOOK HER MID-COIN.
+3. I'M KEEPING THIS. IT'S THE LAST NORMAL MINUTE ANYONE HAS OF HER.
+
+#### THE DENT — offered once THE RECEIPT is handed in
+
+**The ask:**
+
+1. WHEREVER THEY'RE KEEPING HER, THEY'LL HAVE GIVEN HER A COMPANION. A MACHINE WITH A FACE.
+2. SHE'LL HAVE BITTEN IT. I RAISED HER.
+3. FIND THE ONE SHE BIT AND BRING ME THE PLATE.
+
+**Coming back short:**
+
+- A MACHINE WITH A FACE AND A DENT IN IT. IT'S OUT THERE SOMEWHERE.
+
+**The handover:**
+
+1. TEETH. RIGHT THROUGH THE SHELL.
+2. THAT'S MY GIRL.
+3. I BOUGHT HER A DOLL ONCE. SHE BURIED IT. SOMEBODY SHOULD HAVE TOLD THEM THAT.
+
+#### THE SCALE — offered once THE DENT is handed in
+
+**The ask:**
+
+1. WHERE SHE'S GONE NOW, THE THINGS THAT KEEP HER ARE SCALED. GODS, YOU SAID.
+2. MY GIRL WILL BE PRYING AT THEM. SHE PRIES. SHE ALWAYS HAS.
+3. BRING ME A SCALE OFF ONE. I WANT TO HOLD WHAT SHE'S UP AGAINST.
+
+**Coming back short:**
+
+- A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT.
+
+**The handover:**
+
+1. IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
+2. I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
+3. GO AND MEET HER HALFWAY.
+
+**Farewell.**
+
+> SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
 
 ## Level 1 — GOODCO HQ
 

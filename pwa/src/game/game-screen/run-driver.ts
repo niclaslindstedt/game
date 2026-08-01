@@ -43,7 +43,7 @@ import {
 } from "@game/core";
 import type { SessionParams } from "@game/wire/protocol.ts";
 
-import { activeMods } from "../mod-state.ts";
+import { activeDefOverrides, activeMods } from "../mod-state.ts";
 import { createNetDriver } from "../net/driver.ts";
 import type { SessionLink } from "../net/session-link.ts";
 import { takeHostIntent } from "../session-intent.ts";
@@ -60,6 +60,13 @@ export type RunDriver = {
    * to cannot be drawn over a game that has none.
    */
   readonly session?: SessionLink | null;
+  /**
+   * The doors were armed for this run — HOST GAME's open-doors bit, consumed
+   * by the driver that opened them. Read by the crossing decision (§6.4): a
+   * host with the doors open travels IN-SESSION even before anybody joins,
+   * because tearing the session down to travel is what would close them.
+   */
+  readonly hosting?: boolean;
   /**
    * Advance the run by one fixed slice.
    *
@@ -84,6 +91,14 @@ export type RunDriver = {
    * advance, and the run sits on the frame it is on.
    */
   readonly live: boolean;
+  /**
+   * Register the app's reaction to an IN-SESSION CROSSING (§6.4) — called
+   * with the OLD state, before the incoming full snapshot moves the world,
+   * which is the one moment the local hero can still be banked off the level
+   * being left. Net drivers implement it; the local driver has no session to
+   * travel with and leaves it undefined.
+   */
+  setTravelHook?(hook: (state: GameState) => void): void;
   dispose(): void;
 };
 
@@ -152,6 +167,11 @@ export function createRunDriver(session: RunSession): RunDriver {
     // the first spawn. A host that advertised none would admit exactly that
     // joiner and call the desync a replication bug.
     mods: activeMods().map((stamp) => stamp.id),
+    // AND THE CATALOGS THEMSELVES (§4.4), for the process that simulates: the
+    // page's `registerDefs` never reached the session, so without this a
+    // modded host's horde spawns from the SHIPPED catalogs while the renderer
+    // draws the mod. Null is the shipped game and costs the channel nothing.
+    modDefs: activeDefOverrides(),
     listen: hosting
       ? {
           name: hosting.name,

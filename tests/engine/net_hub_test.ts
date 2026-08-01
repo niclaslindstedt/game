@@ -22,12 +22,8 @@ import {
   challengeFor,
   passwordProof,
 } from "@game/wire/handshake.ts";
-import {
-  FRAME,
-  HELLO_MIN_BYTES,
-  type ChallengePayload,
-  type Handshake,
-} from "@game/wire/protocol.ts";
+import { FRAME, HELLO_MIN_BYTES } from "@game/wire/frames.ts";
+import { type ChallengePayload, type Handshake } from "@game/wire/protocol.ts";
 
 const HOST: Handshake = { protocol: 2, build: "1.2.3", mods: [] };
 const SECRET = 0xbadf00d;

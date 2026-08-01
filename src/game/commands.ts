@@ -23,7 +23,7 @@
 //
 // **WHY THE TABLE IS HERE AND NOT IN `server/wire/`.** The wire's vocabulary
 // (`server/wire/protocol.ts`) imports NOTHING — the page reads it from screens
-// on the app's startup path, where the 170 KB critical-path budget forbids
+// on the app's startup path, where the 200 KB critical-path budget forbids
 // anything that drags `@game/core` behind it. A table that calls engine
 // functions plainly cannot live there. So the wire keeps a literal copy of the
 // NAMES for its allow-list, this module owns what each one DOES, and
@@ -148,6 +148,7 @@ import {
 } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
 import { enterCar } from "./vehicles.ts";
+import { requestTravel } from "./travel.ts";
 import type {
   CompanionSlot,
   EquipSlot,
@@ -318,6 +319,10 @@ export const RUN_COMMAND_ARGS = {
   openTrade: ["int"],
   cancelTrade: [],
   offerTradeItem: ["int"],
+  // Taking an item back OFF the table is its own verb rather than
+  // `offerTradeItem(-1)`: the channel's `int` deliberately refuses negatives,
+  // and widening it for one verb would widen it for every index on the list.
+  clearTradeOffer: [],
   offerTradeCoins: ["int"],
   acceptTrade: [],
 
@@ -336,6 +341,13 @@ export const RUN_COMMAND_ARGS = {
   // sends this; the engine owns the line and re-checks that the acting hero is
   // really standing at the door.
   tapTravelDoor: ["str"],
+
+  // THE ROAD — an in-session crossing (plan §6.4, src/game/travel.ts). The
+  // destination level id, and how much of its opening to skip (`OpeningSkip`
+  // words — the HOST's app computes it from its own character exactly as a
+  // locally-built run would). Refused for any seat but 0: the host chooses
+  // the road.
+  travelTo: ["str", "str"],
 
   // THE RIDE. `refundAutopilotBuild` takes no arguments on purpose: the build
   // the ride is measured against lives on the RUN (`state.autopilot.build`,
@@ -652,6 +664,8 @@ export function applyRunCommand(
       return cancelTrade(state, hero);
     case "offerTradeItem":
       return offerItem(state, hero, num(a, 0));
+    case "clearTradeOffer":
+      return offerItem(state, hero, -1);
     case "offerTradeCoins":
       return offerCoins(state, hero, num(a, 0));
     case "acceptTrade":
@@ -666,6 +680,10 @@ export function applyRunCommand(
       return enterCar(state, hero);
     case "tapTravelDoor":
       return tapTravelDoor(state, hero, str(a, 0));
+
+    // THE ROAD
+    case "travelTo":
+      return requestTravel(state, hero, str(a, 0), str(a, 1));
 
     // THE RIDE
     case "startAutopilot":

@@ -28,6 +28,7 @@ import {
   debugDetonateNuke,
   debugLevelUpFx,
   error,
+  tradePartner,
   type Difficulty,
   type GameInput,
   type GameState,
@@ -70,7 +71,11 @@ import { setHiddenLandmarks } from "./render/hidden-landmarks.ts";
 import { fxStyleVars } from "./render/postfx.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { hasKeepsake, type Character } from "./characters.ts";
+import {
+  hasKeepsake,
+  spectatorCharacter,
+  type Character,
+} from "./characters.ts";
 import {
   createAutopilotDirector,
   useAutopilotSession,
@@ -121,6 +126,7 @@ import { QuestFlash } from "./game-screen/QuestFlash.tsx";
 import { QuestTracker } from "./game-screen/QuestTracker.tsx";
 import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
 import { TalkOverlay } from "./overlays/TalkOverlay.tsx";
+import { TradeOverlay } from "./overlays/TradeOverlay.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
 import { SwipeDock } from "./game-screen/SwipeDock.tsx";
 import {
@@ -133,6 +139,7 @@ import {
   type RunProgress,
 } from "./game-screen/run-progress.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
+import { RunVaultScreen } from "./VaultScreen.tsx";
 import { groundedDoorThought } from "./game-screen/travel-doors.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
@@ -326,6 +333,10 @@ export function GameScreen({
     doorId: string;
     character: Character;
   } | null>(null);
+  // The hub's WORKBENCH is the vault's own place (§6.8's stash tail): a tap
+  // on a bench in the bay raises the run's LOST & FOUND, exactly the browser
+  // the AUTO PILOT's last-call confirm mounts.
+  const [workbenchOpen, setWorkbenchOpen] = useState(false);
   // The current run's progress banker, reachable from the travel picker's
   // render-time onTravel — the run effect rebuilds it per run.
   const progressRef = useRef<RunProgress | null>(null);
@@ -466,6 +477,18 @@ export function GameScreen({
     state: GameState;
     driver: RunDriver;
   } | null>(null);
+  // The joined run's live state, held for the LEAVE bank (§4.5): the join
+  // effect's cleanup banks the hero as the wire last showed them, and `joined`
+  // is stale inside that closure.
+  const joinStateRef = useRef<GameState | null>(null);
+  // AN IN-SESSION CROSSING mid-flight (§6.4): the session swapped the level
+  // under this run, and the driver (with every joiner's connection behind it)
+  // must SURVIVE the remount the level change forces. The loop parks the live
+  // pair here just before `setLevelId`, the cleanup skips the dispose, and
+  // the next effect run adopts them instead of building a fresh session.
+  const travelKeepRef = useRef<{ state: GameState; driver: RunDriver } | null>(
+    null,
+  );
   const [joinRefusal, setJoinRefusal] = useState<string | null>(null);
   const [sessionLink, setSessionLink] = useState<SessionLink | null>(null);
   useEffect(() => {
@@ -480,9 +503,18 @@ export function GameScreen({
         name: join.name,
         password: join.password,
         hardcore: join.hardcore,
+        // §4.5: the hero travels with the player — the banked loadout the
+        // title screen put on the intent, weighed and seated by the session.
+        loadout: join.loadout,
         mods: activeMods().map((stamp) => stamp.id),
-        onReady: (state: GameState) => {
-          if (live) setJoined({ state, driver: made as RunDriver });
+        onReady: (state: GameState, params) => {
+          if (!live) return;
+          // The run this client is in plays the HOST's difficulty, and the
+          // banking below must record clears and story under it — the prop is
+          // a placeholder on this path (see App).
+          setDifficulty(params.difficulty);
+          joinStateRef.current = state;
+          setJoined({ state, driver: made as RunDriver });
         },
         onClosed: (reason, detail) => {
           if (!live) return;
@@ -496,7 +528,28 @@ export function GameScreen({
     });
     return () => {
       live = false;
+      // §4.5: A JOINER LEAVES WITH EVERYTHING THEY EARNED. Whatever ends the
+      // session from this side — quitting, the host leaving, the connection
+      // dying — the last state the wire delivered is banked to the joiner's
+      // own roster before the driver goes. The victory/travel/defeat paths
+      // have usually banked already; this is the mid-run leave, and a
+      // re-bank of unchanged content moves nothing (`saveCharacters` keeps
+      // the old stamp for an unchanged hero).
+      const state = joinStateRef.current;
+      if (state) {
+        joinStateRef.current = null;
+        progressRef.current?.bankHero(state);
+      }
       made?.dispose();
+      // §4.4: the HOST's mod set was applied on the way through this door,
+      // and a mod applies to a RUN, never to the install — put the shipped
+      // game back. The assets resolve from the memoized loader's cache.
+      if (join.appliedMods) {
+        void Promise.all([
+          import("./mods.ts"),
+          import("./assets.ts").then((m) => m.loadGameAssets()),
+        ]).then(([mods, loaded]) => mods.restoreBaseDefs(loaded.sprites));
+      }
     };
   }, [join]);
 
@@ -516,6 +569,16 @@ export function GameScreen({
       spriteCursor(assets.sprites, "crosshair", { fallback: "crosshair" }) ??
       "crosshair";
 
+    // AN IN-SESSION CROSSING (§6.4) parked the live state + driver here just
+    // before the level id flipped — adopt them instead of building a fresh
+    // session, exactly as the join path adopts its own. A kept pair that does
+    // not match this mount (a stray) is disposed rather than leaked; the
+    // joiner's copy is simply dropped, because `joined` owns that driver.
+    const kept = travelKeepRef.current;
+    travelKeepRef.current = null;
+    const travelled =
+      !joined && kept && kept.state.level.id === levelId ? kept : null;
+    if (kept && !travelled && !joined) kept.driver.dispose();
     // Build this run's engine state (seed/resume/checkpoint/bot-view/scenario,
     // opening skip + music arming, `?debug` hooks) — see run-setup.ts.
     const session = createRunSession({
@@ -528,7 +591,7 @@ export function GameScreen({
       demo,
       skipOpening,
       runId,
-      spectate: joined?.state ?? null,
+      spectate: joined?.state ?? travelled?.state ?? null,
     });
     const { state, runLevelId, bot, tuning, beginRun } = session;
     // WHO ADVANCES THIS RUN. A local driver steps it here, exactly as this
@@ -538,8 +601,22 @@ export function GameScreen({
     // ./game-screen/run-driver.ts.
     // A SPECTATOR'S DRIVER IS ALREADY RUNNING — the connection is what built
     // the state this loop is about to read, so it cannot be created here, and
-    // it is owned by the join effect above rather than by this one.
-    const driver = joined?.driver ?? createRunDriver(session);
+    // it is owned by the join effect above rather than by this one. A
+    // TRAVELLED run's driver likewise: the session it speaks to just swapped
+    // the level under it, and a fresh one would drop every joiner.
+    const driver =
+      joined?.driver ?? travelled?.driver ?? createRunDriver(session);
+    // WHO THIS RUN BELONGS TO, on the join path. A SEATED joiner plays their
+    // own hero and banks to their own roster (§4.5); a client the session
+    // could not seat only WATCHES — its `localHero` is the HOST's hero, and a
+    // banking path left live would copy somebody else's bag onto this roster.
+    // So a spectator's run is put back on the throwaway shell, whose persist
+    // is a no-op by construction. The seat's answer arrived with the welcome
+    // (before `onReady`), so the flag is settled by the time this runs.
+    const spectatorRun = Boolean(join) && driver.session?.spectating !== false;
+    if (spectatorRun && join) {
+      characterRef.current = spectatorCharacter(join.name);
+    }
     setState(state);
     // A sealed travel door's landmark stays out of sight (and out of tap
     // reach) until its keepsake is banked — the rift seam only appears in
@@ -568,7 +645,7 @@ export function GameScreen({
     // player is watching, not playing, so the bot must bank no achievements and
     // inflate no lifetime totals — and a SPECTATOR is the same case for the
     // same reason, one machine further away.
-    if (!session.resumed && !demo && !join)
+    if (!session.resumed && !demo && !spectatorRun)
       celebrateAchievements(recordRunStarted(runLevelId));
 
     // The per-run scratch shared between simulate and render (effects, the
@@ -711,8 +788,11 @@ export function GameScreen({
       state,
       // A SPECTATOR banks nothing, exactly as the demo banks nothing: the kills
       // on this screen are somebody else's, and a lifetime ledger that counted
-      // them would pay a watcher for a run they are not playing.
-      transient: demo || Boolean(join),
+      // them would pay a watcher for a run they are not playing. A SEATED
+      // joiner is a player (decision 12: a party kill counts for everyone
+      // present), so their ledger books — the boards stay honest through the
+      // run's own PartyStamp, not by suppressing the ledger.
+      transient: demo || spectatorRun,
       difficulty,
       celebrateAchievements,
     });
@@ -723,19 +803,34 @@ export function GameScreen({
       // A real run funds its purse from the hero's whole wealth (banked coins +
       // pendingCoins) at start (run-setup.ts), so banking must not fold the
       // pending in again. BOT VIEW / demo fly a synthetic loadout, not the
-      // hero's purse, so they keep the plain fold.
-      coinsIncludePending: !botView && !demo,
+      // hero's purse, so they keep the plain fold. A JOINED run only funded
+      // the purse when it had a loadout to send (the fresh hero arrives as
+      // the authored start with nothing folded), so the pending fold follows
+      // the same fact.
+      coinsIncludePending:
+        !botView && !demo && !(join && characterRef.current.loadout === null),
       runLevelId,
       captureEnabled: session.captureCheckpoint,
+      // §6.4: with the doors open or a party aboard, a crossing is the
+      // SESSION's to perform — see run-progress's own note.
+      sessionTravels: () =>
+        Boolean(driver.session) &&
+        (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1),
       openingPlayed: session.openingPlayed,
       setHud,
       setLevelId,
       setNewRecord,
     });
     progressRef.current = progress;
+    // The bank-before-the-swap half of an in-session crossing: the driver
+    // calls this with the OLD state, before the incoming snapshot moves the
+    // world, so the local hero is banked off the level being left.
+    driver.setTravelHook?.((old) => progress.bankHero(old));
     // A fresh run starts with no picker open — a door tapped on the way out
-    // of the last level must not greet the arrival.
+    // of the last level must not greet the arrival. The workbench browser
+    // drops for the same reason.
     setTravelDoor(null);
+    setWorkbenchOpen(false);
     // AUTO PILOT: re-arm the session's meter on this fresh run and stand up
     // the flight director (finds, coin meters, the next-lap routing).
     const autopilotDirector = createAutopilotDirector({
@@ -907,6 +1002,7 @@ export function GameScreen({
             playUiSound(synth, "confirm");
             setTravelDoor({ doorId, character });
           },
+          openWorkbench: () => setWorkbenchOpen(true),
         });
         // The fill level BEFORE this step, so a kill that starts a fresh streak
         // can anchor the bright slice at the XP the hero already had.
@@ -1053,6 +1149,19 @@ export function GameScreen({
         // because `step()` — which does it here — is running in another
         // process. See run-driver.ts for what leaving it in place sounds like.
         driver.endTick();
+        // AN IN-SESSION CROSSING LANDED (§6.4): the session rebuilt the run
+        // on another level and the snapshot moved this state wholesale — the
+        // hero was already banked by the driver's travel hook. What is left
+        // is the app's half of any crossing (drop the checkpoint, the music
+        // and the HUD, remount on the destination), done while KEEPING the
+        // driver so the session — and every joiner on it — survives.
+        if (driver.session && state.level.id !== runLevelId) {
+          travelKeepRef.current = { state, driver };
+          checkpointRef.current = null;
+          stopMusic();
+          setHud(null);
+          setLevelId(state.level.id);
+        }
       },
       render,
       // A frame that throws no longer takes the run down with it (see
@@ -1079,8 +1188,12 @@ export function GameScreen({
       stop();
       // A joined run's driver belongs to the join effect, which holds the
       // connection for the whole mount: disposing it here would drop the
-      // session every time this effect re-ran.
-      if (!joined) driver.dispose();
+      // session every time this effect re-ran. A driver parked for an
+      // in-session crossing (§6.4) survives for the same reason — the next
+      // effect run adopts it.
+      if (!joined && travelKeepRef.current?.driver !== driver) {
+        driver.dispose();
+      }
       stopMusic();
       controls.detach();
       observer.disconnect();
@@ -1303,6 +1416,10 @@ export function GameScreen({
             )
           }
           userPausedRef={userPausedRef}
+          seatName={(seat) =>
+            sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
+            null
+          }
           bumpUi={bumpUi}
         />
       )}
@@ -1490,6 +1607,25 @@ export function GameScreen({
         />
       )}
 
+      {/* THE WORKBENCH (§6.8's stash tail) — the hub bay's benches raise the
+          run's LOST & FOUND: the same browser the AUTO PILOT's last-call
+          confirm mounts, reached from a PLACE instead of only a menu row.
+          The reclaim verbs travel like every other, so a joiner's bench is
+          their own vault. */}
+      {state && workbenchOpen && (
+        <RunVaultScreen
+          font={font}
+          relicFonts={assets.relicFonts}
+          sprites={assets.sprites}
+          state={state}
+          onChange={bumpUi}
+          onClose={() => {
+            setWorkbenchOpen(false);
+            playUiSound(synth, "back");
+          }}
+        />
+      )}
+
       {/* THE TALK BOX — a conversation the player STEERS: what a bystander
           says, and what the hero may say back. The hero's own `talk` screen,
           parked exactly as the errand box is; every branch is an engine
@@ -1569,6 +1705,27 @@ export function GameScreen({
             playUiSound(synth, "back");
             bumpUi();
           }}
+        />
+      )}
+
+      {/* THE TRADE WINDOW (§5.1) — the hero's own `trade` screen, raised on
+          both seats at once by `openTrade`. The overlay only shows the table
+          and sends verbs; every rule is the engine's. The partner's NAME comes
+          from the session roster — the engine's Player carries no name. */}
+      {state && hud?.screen === "trade" && (
+        <TradeOverlay
+          state={state}
+          assets={assets}
+          font={font}
+          partnerName={(() => {
+            const seat = tradePartner(state, localHero(state));
+            if (seat === null) return null;
+            return (
+              sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
+              null
+            );
+          })()}
+          bumpUi={bumpUi}
         />
       )}
 

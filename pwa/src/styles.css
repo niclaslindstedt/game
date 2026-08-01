@@ -7420,6 +7420,111 @@ canvas.tier-artifact {
   gap: 0.5rem;
 }
 
+/* THE TRADE WINDOW (multiplayer §5.1) — the shop's sibling: the same
+   inventory-panel window skin, tap-only (so touches pan rather than drag), and
+   content-sized against the 844x390 reference the way the shop is. */
+.trade-panel {
+  gap: 0.6rem;
+  max-height: min(92vh, 30rem);
+  touch-action: pan-y;
+}
+
+.trade-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* The table: my side and theirs, one column each, mirrored. */
+.trade-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.trade-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(154, 163, 173, 0.35);
+  border-radius: 3px;
+  background: rgba(6, 8, 12, 0.35);
+}
+
+.trade-side-heading {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* The offered piece's cell — the stall-cell size, so the two windows read as
+   the same furniture. */
+.trade-offer-cell {
+  width: 2.6rem;
+  height: 2.6rem;
+  aspect-ratio: auto;
+  cursor: pointer;
+  padding: 0;
+}
+
+.trade-item-name {
+  max-width: 100%;
+}
+
+.trade-coin-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+/* Coin steppers: small, one line each, sized like the shop's tool buttons. */
+.trade-coin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.45rem;
+}
+
+/* My bag, scrollable exactly as the shop's is (outline padding included). */
+.trade-bag {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.trade-bag-grid {
+  max-height: 8.5rem;
+  padding: 3px;
+}
+
+.trade-bag-cell {
+  cursor: pointer;
+  padding: 0;
+  touch-action: pan-y;
+}
+
+.trade-bag-cell.selected {
+  outline: 2px solid #7ef0c8;
+  outline-offset: 1px;
+}
+
+.trade-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* The READY lamp holds its slot whether lit or not, so the heading doesn't
+   shuffle when an acceptance lands or drops. */
+.trade-ready {
+  display: inline-flex;
+}
+
 /* In the footer row CLOSE hugs the right edge (`margin-left: auto` eats the
    free space to its left, on a shared line or a wrapped line of its own). The
    panel-level `flex-end` would otherwise pin it to the row's bottom rather than
@@ -7570,6 +7675,93 @@ canvas.tier-artifact {
   display: block;
   height: 100%;
   background: #7ef0c8;
+}
+
+/* ---- Party frames (§4.5) -------------------------------------------------- */
+/* Every OTHER hero in play, stacked down the same left rail the companion
+   rides — the one edge with no absolute-positioned competitor, and clear of
+   the steering thumb's bottom thirds. Same furniture as the companion
+   portrait on purpose: a frame on this rail means "somebody on your side". */
+.party-frames {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  pointer-events: auto;
+}
+
+.party-frame {
+  appearance: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.12rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #2f4a3a;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.party-frame:active {
+  transform: translateY(2px);
+}
+
+/* DOWN where they fell: drained gray until the respawn stands them up. */
+.party-frame.downed {
+  border-color: #4a1d1d;
+}
+
+.party-frame.downed .party-frame-img {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.party-frame-img {
+  width: 1.8rem;
+  height: 1.8rem;
+  object-fit: contain;
+}
+
+/* The BAG badge — D2's "in their menus" affordance, top-right like the
+   companion's medkit chip, tap-transparent for the same reason. */
+.party-frame-badge {
+  position: absolute;
+  top: -0.22rem;
+  right: -0.22rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(11, 13, 16, 0.9));
+}
+
+/* The LEVEL chip, bottom-left, the consumable-count idiom. */
+.party-frame-level {
+  position: absolute;
+  left: 1px;
+  bottom: 0.9rem;
+  padding: 0 1px;
+  background: rgba(11, 13, 16, 0.75);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.party-frame-hp {
+  display: block;
+  width: 1.8rem;
+  height: 3px;
+  background: #1d2530;
+}
+
+.party-frame-hp > span {
+  display: block;
+  height: 100%;
+  background: #7ef0c8;
+}
+
+.party-frame-name {
+  max-width: 2.2rem;
+  overflow: hidden;
 }
 
 /* The SPARE-or-KILL verdict box (ChoiceOverlay): the kneeling figure's face

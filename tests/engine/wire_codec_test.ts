@@ -11,7 +11,7 @@
 import { describe, expect, it } from "vitest";
 
 import { decodeFrame, encodeFrame, HEADER_BYTES } from "@game/wire/codec.ts";
-import { FRAME, isFrameType } from "@game/wire/protocol.ts";
+import { FRAME, isFrameType } from "@game/wire/frames.ts";
 
 describe("frame codec", () => {
   it("round-trips a header and its payload", () => {

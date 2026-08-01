@@ -1,0 +1,28 @@
+name: icon_ada_receipt
+family: icons
+size: [12, 12]
+description: >
+  A narrow vending-machine receipt, faint print lines, a red header band, torn off ragged at the bottom.
+subject:
+  kind: quest item icon
+  features: a narrow paper slip with rows of faded print and a ragged torn edge
+  accent: the red header band — the machine's brand stripe
+  flavor: chips and her soda, 11:52 PM, payment interrupted
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#f4efdc" # receipt paper
+  g: "#8a8a96" # faded print
+  r: "#d83a3a" # header band
+grid: |
+  ............
+  ...OOOOOO...
+  ..OWWWWWWO..
+  ..OWrrrrWO..
+  ..OWWWWWWO..
+  ..OWggggWO..
+  ..OWWWWWWO..
+  ..OWggWWWO..
+  ..OWWWWWWO..
+  ..OWggggWO..
+  ..OWOWOWOO..
+  ............

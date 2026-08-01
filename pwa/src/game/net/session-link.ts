@@ -43,7 +43,7 @@ export type SessionLink = {
   readonly spectating: boolean;
 };
 
-/** The link, plus the two setters only the driver may call. */
+/** The link, plus the three setters only the driver may call. */
 export function createSessionLink(
   say: (text: string) => void,
   spectating: boolean,
@@ -51,9 +51,15 @@ export function createSessionLink(
   link: SessionLink;
   receive(lines: ChatLine[]): void;
   seat(entries: RosterEntry[]): void;
+  /** Whether this client only watches — the SEAT's answer, which arrives in
+   * the welcome. A joiner starts `true` (nothing seated yet) and flips the
+   * moment the session seats a hero of theirs; the host's own renderer is
+   * `false` from birth. */
+  spectate(flag: boolean): void;
 } {
   let lines: ChatLine[] = [];
   let roster: RosterEntry[] = [];
+  let watching = spectating;
   const listeners = new Set<() => void>();
   const changed = () => {
     for (const listener of listeners) listener();
@@ -71,7 +77,9 @@ export function createSessionLink(
         listeners.add(listener);
         return () => listeners.delete(listener);
       },
-      spectating,
+      get spectating() {
+        return watching;
+      },
     },
     receive(next) {
       lines = [...lines, ...next].slice(-CHAT_SCROLLBACK);
@@ -79,6 +87,11 @@ export function createSessionLink(
     },
     seat(entries) {
       roster = entries;
+      changed();
+    },
+    spectate(flag) {
+      if (watching === flag) return;
+      watching = flag;
       changed();
     },
   };

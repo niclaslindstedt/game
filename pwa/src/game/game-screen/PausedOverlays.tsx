@@ -5,7 +5,7 @@
 // wiring reaches into music, the autopilot session, and the character — the
 // scene overlays proper (SceneOverlays.tsx) stay free of all that.
 
-import { localHero, localScreen } from "../local-seat.ts";
+import { localHero, localScreen, localSeat } from "../local-seat.ts";
 import { useState, type MutableRefObject } from "react";
 
 import {
@@ -136,7 +136,30 @@ export function RunPausedOverlay({
         font={font}
         sprites={sprites}
         session={
-          sessionLink ? <SessionPanel font={font} link={sessionLink} /> : null
+          sessionLink ? (
+            <SessionPanel
+              font={font}
+              link={sessionLink}
+              mySeat={localSeat()}
+              // TRADE, from the roster row (§5.1). The press has to leave the
+              // pause screen first — `openTrade` refuses a hero with any other
+              // screen up — so it resumes exactly as the RESUME row does and
+              // sends the verb behind it. A spectator holds no seat and gets
+              // no button.
+              onTrade={
+                sessionLink.spectating
+                  ? undefined
+                  : (seat) => {
+                      if (localScreen(state) !== "paused") return;
+                      userPausedRef.current = false;
+                      runCommand(state, "resumeGame");
+                      runCommandOk(state, "openTrade", seat);
+                      resumeMusic();
+                      bumpUi();
+                    }
+              }
+            />
+          ) : null
         }
         onResume={resumeRun}
         onExit={exitToMenu}
