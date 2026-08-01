@@ -38,6 +38,7 @@ import {
   spriteDataUrl,
   type GameAssets,
 } from "./assets.ts";
+import { AchievementsScreen } from "./achievements-shelf.ts";
 import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
@@ -87,13 +88,9 @@ import {
   useViewportMetrics,
 } from "./title-screen/use-title-layout.ts";
 
-// Lazy for the SEO critical-path budget: the browser is a menu destination,
-// not startup code (see the GameScreen twin of this note).
-const AchievementsScreen = lazy(() =>
-  import("./AchievementsScreen.tsx").then((m) => ({
-    default: m.AchievementsScreen,
-  })),
-);
+// The ACHIEVEMENTS browser is lazy for the SEO critical-path budget — a menu
+// destination, not startup code — through the ONE shared handle in
+// achievements-shelf.ts, which a live run mounts too.
 // Same reasoning for the developer EFFECTS GALLERY: it drags the whole renderer
 // + engine step in behind it, and nobody reaches it from a cold start. The
 // /* @__PURE__ */ is what lets a build without the developer tooling
@@ -946,6 +943,7 @@ export function TitleScreen({
           <AchievementsScreen
             font={font}
             sprites={assets.sprites}
+            closeKey={getSettings().keybindings.achievements}
             onClose={() => {
               setScreen("extras");
               setCursor(ctx.rowIndexIn("extras", "achievements"));

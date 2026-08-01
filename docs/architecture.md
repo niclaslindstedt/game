@@ -1213,7 +1213,10 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   per-unique / per-companion groups derived from the live content
   registries — and the persisted unlock store built on the oss-framework
   achievements ledger; `AchievementsScreen.tsx` is the browsable shelf
-  reached from the title menu's ACHIEVEMENTS screen, and
+  reached from the title menu's ACHIEVEMENTS screen — and mid-run from the
+  rebindable ACHIEVEMENTS key (Y, World of Warcraft's own) or a tap on the
+  unlock banner, which raises the same shelf over the run and PAUSES it
+  (`game-screen/use-achievements-shelf.ts`) — and
   `AchievementToast.tsx` the gold unlock banner that still fires in-run as
   badges are earned; `platform-achievements.ts` / `achievement-sync.ts`
   mirror the curated slice of the catalog into Game Center in native builds —

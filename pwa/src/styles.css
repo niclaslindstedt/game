@@ -9549,11 +9549,11 @@ canvas.tier-artifact {
 }
 
 /* ---- Achievements ----------------------------------------------------------
-   Three surfaces: the unlock TOAST (a gold banner under the XP strip — a
-   deliberate notch below the level-up burn and the unique pickup card), the
-   HUD STAR button (below the MAP button, shown only while unseen badges
-   wait), and the BROWSER (AchievementsScreen — the arsenal viewer's layout
-   with per-row progress and locked dimming). */
+   Two surfaces: the unlock TOAST (a gold banner under the XP strip — a
+   deliberate notch below the level-up burn and the unique pickup card, and the
+   tap target that opens the shelf mid-run), and the BROWSER
+   (AchievementsScreen — the arsenal viewer's layout with per-row progress and
+   locked dimming), reached from the title menu and from the run alike. */
 
 /* The unlock banner: bottom-center, tucked under the pickup card's zone and
    clear of the corner feed, the powerup dock, and the top HUD — the badge
@@ -9717,6 +9717,16 @@ canvas.tier-artifact {
   padding: 1rem;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* The same shelf raised over a RUN (the ACHIEVEMENTS bind, or a tap on the
+   unlock toast) has the game shell's layer bands to answer to: it must cover
+   the screen-space FX layers (90..96) and the pause menu it may have been
+   opened from, so it joins the MODAL band and wins on DOM order (GameScreen
+   mounts it after the pause overlay). Out in the title menu nothing else
+   claims a band, so the 70 above stands. */
+.game-screen .achievements-overlay {
+  z-index: 100;
 }
 
 .achievements-panel {

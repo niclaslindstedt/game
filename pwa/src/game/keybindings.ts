@@ -22,6 +22,7 @@ export type BindableAction =
   | "weaponMenu"
   | "inventory"
   | "map"
+  | "achievements"
   | "pause"
   | "medkit"
   | "stamina"
@@ -35,7 +36,11 @@ export type KeyBindings = Record<BindableAction, string>;
 /** The shipped scheme: WASD steering with the action keys the game grew up on
  * (E powerup, Q weapon menu, I bag, M map, Y achievements, P pause, C/X/V the
  * consumable dock). Shift walks, Space jumps. Bound by `KeyboardEvent.code` so
- * the physical WASD cluster holds under any keyboard layout. */
+ * the physical WASD cluster holds under any keyboard layout.
+ *
+ * ACHIEVEMENTS is Y on purpose: it is the key World of Warcraft opens its own
+ * achievement pane with, and a player who has one of those in their fingers
+ * should find the trophy shelf where they already reach for it. */
 export const DEFAULT_KEYBINDINGS: KeyBindings = {
   moveUp: "KeyW",
   moveDown: "KeyS",
@@ -47,6 +52,7 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   weaponMenu: "KeyQ",
   inventory: "KeyI",
   map: "KeyM",
+  achievements: "KeyY",
   pause: "KeyP",
   medkit: "KeyC",
   stamina: "KeyX",
@@ -78,6 +84,11 @@ export const KEYBIND_ROWS: {
   },
   { action: "inventory", label: "INVENTORY", blurb: "TOGGLE THE BAG" },
   { action: "map", label: "MAP", blurb: "TOGGLE THE LEVEL MAP" },
+  {
+    action: "achievements",
+    label: "ACHIEVEMENTS",
+    blurb: "OPEN THE TROPHY SHELF - PAUSES THE RUN",
+  },
   { action: "pause", label: "PAUSE", blurb: "PAUSE THE RUN AND ITS MUSIC" },
   {
     action: "medkit",
@@ -118,6 +129,7 @@ const DISCRETE_ACTIONS: BindableAction[] = [
   "weaponMenu",
   "inventory",
   "map",
+  "achievements",
   "pause",
   "medkit",
   "stamina",

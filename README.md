@@ -92,7 +92,10 @@ and something enormous haunts the old flag.
 - **Or use the keyboard** — on desktop, **WASD** runs, **Shift** walks, and no
   key stands still (a binary run/walk mode that frees the mouse from steering).
   Toggle it under SETTINGS → CONTROLS, and rebind every key (movement, actions,
-  the consumable dock) in the Quake-style **KEY BINDINGS** list there.
+  the consumable dock) in the Quake-style **KEY BINDINGS** list there. **Y**
+  raises the **ACHIEVEMENTS** shelf mid-run — World of Warcraft's own key for
+  it — freezing the fight behind it until you back out; so does tapping the
+  gold unlock banner when a badge drops.
 - **Tap** (with the other hand while steering, or press Space) to **jump**
   — each level sets its own gravity: HQ hops clear a desk; moon gravity
   sails you clean over a ghost's grasp. A jump is a pure dodge, though:
