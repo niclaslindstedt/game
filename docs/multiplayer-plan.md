@@ -159,10 +159,10 @@ document now always means the second thing.
 | **1.75 — THE LOOP**     | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                            |
 | **2.5 — THE SCREENS**   | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                             |
 | **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 + §3.2 landed**, see §3.6; §3.3 remains     |
-| **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2 + §4.3 landed**, see §4.7; §4.4/§4.5 remain |
+| **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **Landed** (§4.4/§4.5 via R1 — see §5.5.3)         |
 | **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                        |
-| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks | Chain spent; the rest is **R1/R2/R3**, §5.5.3      |
-| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Hub landed**, see §6.8 — §6.4 is R1's            |
+| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks | **R1 landed** (see §5.5.3); **R2/R3** remain       |
+| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Landed** (§6.4 via R1) — givers await the story  |
 | **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | §7.1/§7.2/§7.2.5 landed; §7.3–§7.5 are R3's        |
 
 **≈ 44–65 weeks.** The band is wide because phase 3 is a design exercise wearing a
@@ -2204,10 +2204,11 @@ work lives.
 > soft ordering: §3.3 (in R2) prefers a mode that is otherwise finished, so R2
 > sensibly trails R1.
 
-**R1 — THE WHOLE PARTY.** _Goal: a joiner is a first-class player._ Everything
-here is feature work on the same seam — what a second player can DO and KEEP —
-and the two sharpest items share their hardest piece (the banking), which is
-why they are one phase:
+**R1 — THE WHOLE PARTY** — **LANDED** (the as-built record closes this group).
+_Goal: a joiner is a first-class player._ Everything here is feature work on
+the same seam — what a second player can DO and KEEP — and the two sharpest
+items share their hardest piece (the banking), which is why they are one
+phase:
 
 - **§6.4 — in-session party travel.** The session survives the level swap and
   the party goes through the door together; today a crossing re-mounts
@@ -2234,6 +2235,86 @@ why they are one phase:
 _Done when a friend with their own hardcore-matched character can join your
 garage, kit out, travel through a door with you, trade you a find, play under
 your mods, and leave with everything they earned on their own roster._
+
+> **R1 AS BUILT — LANDED, with the deviations and the tail recorded here so
+> nobody rediscovers them.** Every item above shipped in one PR, plus one the
+> list never wrote down because nobody had noticed it was missing: **the party
+> was INVISIBLE.** The renderer drew `localHero` alone — §3.1's note that the
+> render layer was "genuinely small" thanks to the companion precedent was
+> right about the machinery and wrong about anybody having done it — so the
+> field pass now draws every hero in play (their own public worn kit through
+> the same paper-doll pass, per-seat gait keys, the downed sprawled where they
+> fell, the local hero last and on top), and §4.5's party frames hang down the
+> companion rail's edge with the roster's name for the seat
+> (`RosterEntry.seat`, new). A teammate draws WITHOUT a blood coat —
+> `hero-soak.ts` keeps one record, the local hero's — recorded there as a
+> simplification rather than silently.
+>
+> **§6.4 travel** landed as a run command (`travelTo`, seat 0 only — the host
+> chooses the road) consumed by the SESSION between ticks: every seat's
+> loadout is extracted through the one banking funnel, the destination is
+> built from the session's own parameters with a derived seed, the party is
+> re-seated in the same order (departed/held flags and the PartyStamp
+> intact), every client is re-baselined with FULL snapshots until one is
+> acknowledged (a delta against the old level's baseline names ids the client
+> no longer holds), and the params are replaced so a later joiner carves the
+> new level. The app end keeps the driver across the remount, joiner-style,
+> and each device banks its OWN hero off the level being left
+> (`NetClient.onTravel`). Three honest narrowings: the crossing routes
+> in-session only when the doors are armed or the roster has more than one
+> name — a solo local run keeps the app-side crossing byte-identically; a
+> travelled-to level takes `openingSkip` from the HOST's character and starts
+> its merchant undiscovered (the session has no roster to ask); and
+> **VICTORY → NEXT LEVEL still re-mounts app-side**, so that one crossing
+> still drops joiners — it is tangled in the outro/banking flow and is R1's
+> one deliberate leftover on this item.
+>
+> **§4.5 banking** landed by making the joiner's character REAL: the active
+> roster hero rides the join intent as a loadout (purse funded from their
+> whole wealth, exactly as a local run's), the session weighs and seats it,
+> and every banking path a local run has — victory, travel, softcore defeat,
+> plus the new mid-run leave — writes to the joiner's own roster through the
+> same `saveCharacters` stamping discipline. The join driver's `spectating`
+> flag now follows the welcome's seat answer (it was hard-coded `true`, a
+> fossil of the spectator era), and a client the session could NOT seat is
+> put back on the throwaway shell so a watcher can never bank the host's bag.
+> Ledger and achievements count for a seated joiner (decision 12); the boards
+> stay honest through the PartyStamp, not by suppressing the ledger.
+>
+> **§5.1's window** is `TradeOverlay`, mounted like the quest box, with the
+> table a per-player SCREEN on both seats at once (`PlayerScreen` grew
+> `"trade"`; `openTrade` refuses "busy" unless both heroes are free — the
+> refusal is the consent model until a request flow exists). Taking an item
+> back off the table travels as its own verb (`clearTradeOffer` — the
+> channel's `int` deliberately refuses the engine's `-1` idiom). Opened from
+> a teammate's party frame on the field, or from the pause roster's TRADE
+> button. `PROTOCOL_VERSION` 17 → 18 covers this PR's wire changes whole.
+>
+> **§4.4 mods** shipped three halves, one of them a bug fix bigger than the
+> feature: **the session process never had the mods' catalogs at all** — the
+> page's `registerDefs` never reached it, so every modded HOSTED run (which
+> on Steam is every modded run) simulated the shipped game while the renderer
+> drew the mod. The exact overrides the page registers now travel with
+> `start` and the session registers them before it builds. A joiner with the
+> host's mods installed walks through the row and the set is applied in the
+> host's order on the way (and `restoreBaseDefs` — dead code until now — puts
+> the shipped game back when the run ends); a joiner MISSING one keeps the
+> refusal, whose press opens the game's Workshop HUB. Still owed from §4.4's
+> own text: the per-item Workshop page (the wire carries compiled ids and the
+> Workshop wants published file ids; nothing maps them yet), reconciliation
+> on the invite/`+connect_lobby` and JOIN BY ADDRESS paths (no lobby metadata
+> in hand), and the `ModStamp` on the CHARACTER — which this plan called "the
+> rule that already exists" and which, measured, never did.
+>
+> **The hub tails split.** The workbench is the stash's place (a tap on any
+> bay bench raises the run's LOST & FOUND — hub levels only, and the verbs
+> already travel so a joiner's bench is their own vault). **The garage's
+> quest givers did NOT ship, and deliberately**: a giver is a person with
+> lines, every line is manuscript-governed, and §6.5's own rule is that the
+> manuscript edit needs the user's explicit confirmation before it is
+> written. That conversation has not happened, so the item stays owed rather
+> than smuggled in — it is the one piece of R1 that is a story commit, not a
+> code commit.
 
 **R2 — THE HONEST WIRE.** _Goal: what travels is correct, felt, and priced._
 Everything here is engine/netcode work with no screen to it:
@@ -2593,17 +2674,20 @@ mechanisms under it are the ones §6.3 priced:
   (hub)", the prelude cutscene re-homed), and the RIFT CREATOR's lore pages
   carry the D2-style town loop.
 
-**Still owed, and recorded rather than discovered later — all three now R1's
-(§5.5.3):**
+**Still owed, and recorded rather than discovered later — all three went to R1
+(§5.5.3), and two of the three are now PAID:**
 
-- **§6.4 in-session party travel** — a SESSION does not yet survive the level
-  swap: travel re-mounts app-side exactly like a gate crossing, so a hosted
-  session still lands joiners on level start rather than carrying the party
-  through the door together. The banking half exists (`travelTo` banks every
-  crossing); the session-side teardown/rebuild is the remainder.
-- **Quest givers in the hub** — the garage casts none yet; the errand board
-  stays on the field levels.
-- **The workbench stash** — still the lost-and-found vault, as §6.1 allowed.
+- ~~**§6.4 in-session party travel**~~ — **LANDED** (R1's as-built box in
+  §5.5.3): the session performs the swap between ticks and the party goes
+  through the door together. VICTORY → NEXT LEVEL is the one crossing that
+  still re-mounts app-side and drops joiners.
+- **Quest givers in the hub** — the garage still casts none, and deliberately:
+  a giver is lines, lines are manuscript-governed, and the manuscript
+  confirmation §6.5 requires has not been asked for. The one R1 item that is a
+  story commit rather than a code commit.
+- ~~**The workbench stash**~~ — **LANDED**, in §6.1's own minimal sense: a tap
+  on any bay workbench raises the run's LOST & FOUND, so the vault finally has
+  a place. A real shared stash stays deliberately unbuilt (§5.1's own note).
 
 ---
 

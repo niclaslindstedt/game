@@ -1,15 +1,18 @@
 # Multiplayer — the shipped architecture
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
-describes what actually exists. **phase 1, phase 2, phase 1.5, phase 1.75, phase 2.5 and the
-first half of phase 3 have landed.** The simulation runs in its own process, the
-run loop drives it, the wire between it and a renderer is complete and tested,
-the desktop shell forks and supervises a session, a session can open a UDP
-socket and a Steam lobby and admit remote clients behind a challenge handshake,
-the title menu has the three doors that let somebody walk through it (**HOST
-GAME**, the **server browser**, **JOIN BY ADDRESS**) — and a run now carries a
-**PARTY** rather than a hero, so an admitted player is seated with a character
-of their own.
+describes what actually exists. **Every numbered phase through the plan's
+§5.5.3 R1 has landed, bar §3.3's prediction.** The simulation runs in its own
+process, the run loop drives it, the wire between it and a renderer is
+complete and tested, the desktop shell forks and supervises a session, a
+session can open a UDP socket and a Steam lobby and admit remote clients
+behind a challenge handshake, the title menu has the three doors that let
+somebody walk through it (**HOST GAME**, the **server browser**, **JOIN BY
+ADDRESS**) — and a run carries a **PARTY** rather than a hero: an admitted
+player is seated with their OWN roster character, sees the whole party on the
+field and the HUD, trades across a real window, travels through doors with
+everybody else, and leaves with everything they earned banked on their own
+device.
 
 The screens are per-player too (§3.2): one player in their bag no longer stops
 the world for anybody else — the run halts only when EVERY hero in play has a
@@ -875,17 +878,57 @@ could before multiplayer existed.
 
 ## What has landed, and what is still owed
 
-phases 1, 2, 1.5, 1.75, 2.5, **phase 3's §3.1 and §3.2**, **phase 4's §4.2
-(the abandoned hero, and now the per-player death, corpse and respawn — see
-"the run ends when the party falls" above) and §4.3**, **phase 5** and
-**phase 6's hub** of the ten in `docs/multiplayer-plan.md` have landed. THE GARAGE (the plan's §6.8) is the
+phases 1, 2, 1.5, 1.75, 2.5, **phase 3's §3.1 and §3.2**, **phase 4** (the
+abandoned hero, the per-player death/corpse/respawn — see "the run ends when
+the party falls" above — the co-op rules, and now §4.4's mods and §4.5's
+banking + party HUD), **phase 5**, **phase 6** and **phase 5.5's R1** of the
+plan's phases have landed. THE GARAGE (the plan's §6.8) is the
 home base the mode was owed: a static hub level whose `hub` objective never
 clears, a merchant PARKED at his counter, standing travel doors
 (`LevelDef.travelDoors`) as the level select — the car boards and drives out,
 the rocket and the sealed rift seam open the destination picker — and the
-campaign now opens there. What §6.4 still owes is IN-SESSION party travel: a
-crossing today re-mounts the run app-side exactly like a gate, so a hosted
-session does not yet carry its party through a door together.
+campaign now opens there.
+
+**AND A CROSSING NO LONGER ENDS THE SESSION (§6.4).** With the doors armed or
+a party aboard, travel is a run command (`travelTo`, seat 0 only — the host
+chooses the road) the SESSION consumes between ticks: every seat's loadout is
+extracted through the one banking funnel, the destination is built from the
+session's own parameters with a derived seed, the party is re-seated in the
+same order (departed and held seats keep their flags, the PartyStamp
+survives), and every client is re-baselined with FULL snapshots until one is
+acknowledged — a delta coded against the old level's baseline would name
+entity ids the client no longer holds. The app end keeps the driver across
+the remount, joiner-style, and each device banks its OWN hero off the level
+being left (`NetClient.onTravel`). A solo local run keeps the app-side
+crossing byte-identically; VICTORY → NEXT LEVEL is the one crossing that
+still re-mounts app-side and drops joiners (recorded in the plan's R1
+as-built box).
+
+**THE PARTY IS VISIBLE, AND A JOINER IS A FIRST-CLASS PLAYER (§4.5).** The
+field pass draws every hero in play — their own public worn kit through the
+shared paper-doll pass, the downed sprawled where they fell, the local hero
+last and on top — and party frames hang down the HUD's left rail (dressed
+bust, hp sliver, level chip, DOWN gray, a BAG badge for a hero in their
+menus, the roster's name for the seat via `RosterEntry.seat`; a press asks
+for a trade). A joiner brings their ACTIVE roster character: the loadout
+rides the join (purse funded from their whole wealth, exactly as a local
+run's), the session weighs and seats it, and every banking path a local run
+has — victory, travel, softcore defeat, plus the mid-run leave — writes to
+the joiner's own roster on their own device. The throwaway
+`spectatorCharacter` now covers only true watchers (a client the session
+could not seat), so a watcher can never bank the host's bag. Achievements
+and the lifetime ledger count for a seated joiner (decision 12); the boards
+stay honest through the PartyStamp.
+
+**MODS RECONCILE AT THE DOOR (§4.4), and the fix under it was bigger than the
+feature**: the session process never had a mod's catalogs at all — the page's
+`registerDefs` never reached it, so every modded HOSTED run (on Steam, every
+modded run) simulated the shipped game while the renderer drew the mod. The
+exact overrides the page registers now travel with `start`. A joiner with the
+host's mods installed walks through the browser row and the host's set is
+applied in the host's order on the way (and `restoreBaseDefs` puts the
+shipped game back when the run ends); a joiner missing one keeps the refusal,
+whose press opens the game's Steam Workshop hub.
 
 The deferred work is inventoried in the plan's **phase 5.5 — "THE REMAINDER"**,
 and that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered
@@ -894,10 +937,12 @@ chain is SPENT (§7.1 → §7.2 → §4.3's measured pass → §7.2.5 → §3.2 
 corpse all landed), and everything still open is consolidated into **THREE
 phases** (the plan's §5.5.3):
 
-- **R1 — THE WHOLE PARTY**: a joiner becomes a first-class player. In-session
-  party travel (§6.4), banking a joiner's character + the party HUD (§4.5,
-  landing together because they share the banking), the trade window screen
-  (§5.1), mod reconciliation (§4.4), and the hub's quest givers and stash.
+- **R1 — THE WHOLE PARTY**: **LANDED** (the plan's §5.5.3 carries the
+  as-built record). In-session party travel (§6.4), banking a joiner's
+  character + the party HUD and field visibility (§4.5), the trade window
+  screen (§5.1), mod reconciliation (§4.4), and the workbench stash. The one
+  unshipped tail is the garage's quest givers, which are a STORY commit — the
+  manuscript confirmation §6.5 requires has not been asked for.
 - **R2 — THE HONEST WIRE**: prediction and reconciliation (§3.3), the attacker
   thread (the last seat-0 combat reads, which also unblocks the spare-or-kill
   owner gate), the snapshot's size + the DEBUG net graph, and decision 15's
@@ -938,15 +983,14 @@ boundary all run; it walks to the NEAREST teammate rather than the centroid,
 which is a spot on the floor where nobody is standing; and it is null in single
 player, which is what keeps every existing measurement byte-identical.
 
-**WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** §3.2's half is now paid
-(the per-player screens above, non-blocking level-up included). What remains:
-nothing is predicted, so a client shows its hero where the last snapshot put
-him (§3.3); and a joiner still plays on the THROWAWAY `spectatorCharacter`, so
-nothing they earn reaches their roster (phase 4's §4.5). A client's run
-commands travel but are NOT applied locally
-(`setCommandSink(…, { optimistic: false })`) — the server is authoritative over
-the result, so an optimistic apply would draw an outcome the next snapshot may
-not agree with.
+**WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** §3.2's half is paid
+(the per-player screens above, non-blocking level-up included), and §4.5's
+half is now too — a joiner plays their own character and banks it. What
+remains: nothing is predicted, so a client shows its hero where the last
+snapshot put him (§3.3). A client's run commands travel but are NOT applied
+locally (`setCommandSink(…, { optimistic: false })`) — the server is
+authoritative over the result, so an optimistic apply would draw an outcome
+the next snapshot may not agree with.
 
 ## The autopilot is an intent
 
@@ -1096,10 +1140,11 @@ The soak runs themselves are in the plan's §5.9.
   interval behind — and combat deliberately NOT predicted, because that is a
   rollback problem this codebase has no machinery for and the player would
   experience as monsters un-dying.
-- **A joiner's run is not banked.** The spectator's THROWAWAY character
-  (`spectatorCharacter`) is still what a joining client plays on, so nothing a
-  seated player earns reaches their own roster. Banking eight characters is
-  phase 4's §4.5.
+- **VICTORY → NEXT LEVEL still drops joiners.** In-session travel (§6.4)
+  carries the party through every door, gate and drive-out — but the
+  post-victory crossing is tangled in the outro/banking flow and still
+  re-mounts app-side, ending the session. The plan's R1 as-built box records
+  it as the item's one deliberate leftover.
 - **The co-op tuning is STRUCTURAL, not measured.** The XP share, the loot
   allocation and the menace meter's per-capita read are each shaped correctly
   and each an exact no-op at one hero, but the two knobs that decide how they
@@ -1110,11 +1155,11 @@ The soak runs themselves are in the plan's §5.9.
   one hero. Parameterizing the bot on a `Player` is the prerequisite, and it is
   the next thing phase 4 owes — it is phase 7's §7.1–§7.2, which is owed earlier than
   its number because nothing else can measure this. See the plan's §4.7.
-- **Trade has no window yet.** The engine, the five verbs and the anti-dupe
-  rules are all here and tested; what is missing is the SCREEN — a trade is
-  currently something only a command can start. It is app work of exactly the
-  shape `QuestOverlay` already is, and the engine side it would read
-  (`tradeOf`, `tradePartner`, `TradeSide.item`) is deliberately shaped for it.
+- **A trade has no request step.** The window exists now (`TradeOverlay` —
+  the table is a per-player `"trade"` screen raised on BOTH seats by
+  `openTrade`, opened from a teammate's party frame or the pause roster), but
+  opening one is unilateral: the refusal for a busy hero is the whole consent
+  model, and a D2-style ask-first flow is future work.
 - **There is no net graph.** The plan's §5.6 asks for round trip, snapshot size,
   packet loss and prediction error behind DEBUG MODE, with the FPS meter as the
   precedent. Every number it wants is already measured — `Reliability.stats` and
