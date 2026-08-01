@@ -15,7 +15,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 import { MAP } from "./config/index.ts";
-import type { GameState, MapMarker } from "./types/index.ts";
+import type { GameState, MapMarker, Player } from "./types/index.ts";
 
 /** Fog-grid columns for a level (cells per explored-array row). */
 export function mapCols(level: { width: number }): number {
@@ -161,13 +161,15 @@ export function addMapMarker(
   state.mapMarkers.push({ kind, pos: { ...pos }, defId });
 }
 
-/** Pause into the level map. Only possible mid-run, like the bag. */
-export function openMap(state: GameState): void {
-  if (state.phase === "playing") state.phase = "map";
+/** Open this hero's level map. Only possible mid-run, like the bag. */
+export function openMap(state: GameState, player: Player): void {
+  if (state.phase === "playing" && player.screen === undefined) {
+    player.screen = "map";
+  }
 }
 
-/** Close the map and resume (pending level-ups take priority). */
-export function closeMap(state: GameState): void {
-  if (state.phase !== "map") return;
-  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+/** Close the map. */
+export function closeMap(player: Player): void {
+  if (player.screen !== "map") return;
+  delete player.screen;
 }

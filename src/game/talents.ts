@@ -29,68 +29,33 @@ import {
   treeCapacity,
 } from "./defs/talents/index.ts";
 import { recomputeMaxHp } from "./items/derived.ts";
-import { heroInPlay } from "./party.ts";
 import { spentTalentRanks, talentRank } from "./talent-effects.ts";
 import type { GameState, Player, StatName } from "./types/index.ts";
 
 /**
- * Lift the `levelup` pause and drop back into play — but only once the banked
- * stat points are all spent AND the talent-picker queue is empty. A ding that
- * crosses a ×10 tree milestone earns a talent point (`allocateStat` →
- * `reconcileTalentPoints`); the run must stay frozen behind the picker, or the
- * hero would fight on unattended while the player chooses. Called when the last
- * point lands (`allocateStat`) and when the last talent is picked
- * (`spendTalentPoint`), so whichever finishes last is the one that resumes. A
- * no-op outside `levelup` (a respec never auto-closes; play stays play).
+ * Close this hero's level-up chooser — but only once the banked stat points
+ * are all spent AND their talent-picker queue is empty. A ding that crosses a
+ * ×10 tree milestone earns a talent point (`allocateStat` →
+ * `reconcileTalentPoints`); the chooser stays up behind the picker so the
+ * point is never left silently on the table. Called when the last point lands
+ * (`allocateStat`) and when the last talent is picked (`spendTalentPoint`),
+ * so whichever finishes last is the one that closes. A no-op outside the
+ * chooser (a respec never auto-closes; the field stays the field).
+ *
+ * A stuck chooser is no longer anybody's problem: the screen is this hero's
+ * alone (plan §3.2), so a hero who quits or goes down with it open holds
+ * nothing shut — `partyBlocked` only counts heroes in play. That is the
+ * structural version of what `releaseStuckLevelup` used to bolt on, and the
+ * reason that function no longer exists.
  */
-export function resumeAfterLevelup(state: GameState, player: Player): void {
+export function resumeAfterLevelup(player: Player): void {
   if (
-    state.phase === "levelup" &&
+    player.screen === "levelup" &&
     player.pendingStatPoints === 0 &&
-    state.pendingTalentPoints.length === 0
+    player.pendingTalentPoints.length === 0
   ) {
-    state.phase = "playing";
+    delete player.screen;
   }
-}
-
-/**
- * DROP A LEVEL-UP CHOOSER NOBODY LEFT IN PLAY CAN CLOSE.
- *
- * The chooser is a GLOBAL phase that lifts only when the points are placed, and
- * the hero who owes them can stop being able to place them in two ways: they
- * QUIT (`departHero`) or they go DOWN (hp 0 with the party not yet wiped, so no
- * `dying` scene ever runs). Either way the run freezes for everybody, for ever
- * — and it does so silently, because from the outside the session still ticks
- * and still publishes. The bot-client soak found both, in that order: the first
- * was fixed at the departure and the second wedged the very next run.
- *
- * So the rule is checked EVERY TICK rather than at the events that can trigger
- * it, which is the only version that cannot be out-run by a new way of leaving
- * play. `heroInPlay` is the same line the rest of the engine draws — the world
- * does not answer for a body nobody is behind, and that has to include waiting
- * on one.
- *
- * **THE POINTS ARE NOT FORFEITED.** A held seat may be reclaimed inside the
- * grace window and a downed hero may be revived, and either should find their
- * level-up where they left it (`promptPendingPoints` raises it again). What is
- * dropped is the WORLD's obligation to stand still.
- *
- * It can only ever lower a screen that is already stuck: `promptPendingPoints`
- * refuses to raise one with nothing owed, so a live hero owing points always
- * holds it. `respec` is deliberately untouched — it is raised by a deliberate
- * act and closed by one, and a run does not enter it by surprise.
- *
- * The real fix is per-player screens (multiplayer plan §3.2); until `state.phase`
- * loses its eleven UI members this is the difference between one player leaving
- * and everybody's run ending.
- */
-export function releaseStuckLevelup(state: GameState): void {
-  if (state.phase !== "levelup") return;
-  if (state.pendingTalentPoints.length > 0) return;
-  for (const player of state.players) {
-    if (heroInPlay(player) && player.pendingStatPoints > 0) return;
-  }
-  state.phase = "playing";
 }
 
 /** Talent points a tree stat has EARNED — one per `TALENT_UNLOCK_STEP` chosen
@@ -121,11 +86,11 @@ export function availableTalentPoints(
 }
 
 /**
- * Rebuild `state.pendingTalentPoints` from the current stats + owned ranks —
- * the single source of truth for "what the picker still owes." One entry per
- * spendable point, in `TALENT_STATS` (STR > DEX > INT) order so the picker
- * surfaces trees in a stable sequence. Idempotent; call after any change to
- * `spentStats` or `talents` (allocate/deallocate/respec/load/spend).
+ * Rebuild this hero's `pendingTalentPoints` from their current stats + owned
+ * ranks — the single source of truth for "what the picker still owes." One
+ * entry per spendable point, in `TALENT_STATS` (STR > DEX > INT) order so the
+ * picker surfaces trees in a stable sequence. Idempotent; call after any
+ * change to `spentStats` or `talents` (allocate/deallocate/respec/load/spend).
  */
 export function reconcileTalentPoints(state: GameState, player: Player): void {
   const queue: StatName[] = [];
@@ -133,14 +98,14 @@ export function reconcileTalentPoints(state: GameState, player: Player): void {
     const n = availableTalentPoints(state, player, stat);
     for (let i = 0; i < n; i++) queue.push(stat);
   }
-  state.pendingTalentPoints = queue;
+  player.pendingTalentPoints = queue;
 }
 
-/** True while the hero has a talent point waiting to be spent — the picker's
- * "show me" flag and the level-up pause's hold condition. Every queued point is
+/** True while this hero has a talent point waiting to be spent — the picker's
+ * "show me" flag and the chooser's hold condition. Every queued point is
  * spendable (the queue is capacity-clamped), so length alone is the test. */
-export function hasPendingTalentPoint(state: GameState): boolean {
-  return state.pendingTalentPoints.length > 0;
+export function hasPendingTalentPoint(player: Player): boolean {
+  return player.pendingTalentPoints.length > 0;
 }
 
 /**
@@ -167,7 +132,7 @@ export function spendTalentPoint(
   player.talents[talentId] = rank + 1;
   recomputeMaxHp(state, player);
   reconcileTalentPoints(state, player);
-  resumeAfterLevelup(state, player);
+  resumeAfterLevelup(player);
   return true;
 }
 
@@ -175,12 +140,17 @@ export function spendTalentPoint(
  * The lowest a tree stat may be respecced to: `TALENT_UNLOCK_STEP × ranks spent
  * in that tree`, so every spent point stays supported by the stat that earned
  * it (spent points are permanent). 0 for a non-tree stat. The respec UI shows
- * this as the "locked by talents" floor.
+ * this as the "locked by talents" floor. Takes the hero whose build is being
+ * respecced — a party member's floor is their own, never seat 0's.
  */
-export function talentStatFloor(state: GameState, stat: StatName): number {
+export function talentStatFloor(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): number {
   const tree = TALENT_STAT_CLASS[stat];
   if (!tree) return 0;
-  return TALENT_UNLOCK_STEP * spentTalentRanks(state, state.players[0], tree);
+  return TALENT_UNLOCK_STEP * spentTalentRanks(state, player, tree);
 }
 
 /** Total talent points a build has earned across all three trees — reporting

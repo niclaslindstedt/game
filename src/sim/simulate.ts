@@ -1568,40 +1568,6 @@ function playRun(args: {
         resolveChoice(state, false);
         guardPhase(++phaseAdvances);
         continue;
-      case "levelup": {
-        // WHICHEVER SEAT IS OWED THE POINTS, not seat 0 (plan §7.2).
-        //
-        // `levelup` is still a GLOBAL phase — §3.2's per-player screens have
-        // not landed — so a party member's ding pauses the whole run, and a
-        // simulator that only ever drained seat 0's chooser wedged the moment a
-        // second hero levelled: the phase never resumed and the guard fired.
-        // Draining the seat that actually owes points is what makes a party
-        // playable HERE without waiting for §3.2, and it is exactly what the
-        // app's autoplay does per hero.
-        const owing =
-          state.players.find((p) => p.pendingStatPoints > 0) ??
-          state.players[0];
-        const owingSeat = Math.max(0, state.players.indexOf(owing));
-        const owingBot = bots[owingSeat] ?? bot;
-        // If the bot's pick is at the level-scaled cap it won't take; dump the
-        // point into any stat that still has room so the ding always resolves.
-        if (!allocateStat(state, owing, botAllocate(owingBot, state, owing))) {
-          for (const s of STAT_NAMES) if (allocateStat(state, owing, s)) break;
-        }
-        // A ×10 TREE milestone earns a passive TALENT point that holds the
-        // level-up pause (see allocateStat/resumeAfterLevelup); spend it per the
-        // bot's build so the ding resolves (the app's autoplay runs the
-        // identical drain). The break guards against a point that can't be spent
-        // — the queue is capacity-clamped, so in practice there is always a
-        // pick.
-        while (state.pendingTalentPoints.length > 0) {
-          const talentId = botPickTalent(bot, state, state.players[0]);
-          if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
-            break;
-        }
-        guardPhase(++phaseAdvances);
-        continue;
-      }
       case "outro":
         advanceOutro(state);
         guardPhase(++phaseAdvances);
@@ -1660,6 +1626,36 @@ function playRun(args: {
     }
 
     const beforeXpGained = state.stats.xpGained;
+    // THE BANKED LEVEL-UPS, per seat (plan §3.2): a ding no longer pauses the
+    // run — the points bank on the hero and the chooser opens on demand — so
+    // the sim spends them the moment they appear, exactly as the app's
+    // autoplay does. If the bot's pick is at the level-scaled cap it won't
+    // take; dump the point into any stat with room so a ding always resolves.
+    // Spending the last point closes a chooser `dismissIntro` greeted an
+    // adopted veteran with (`resumeAfterLevelup`), so no screen is left
+    // holding the solo freeze.
+    for (let seat = 0; seat < state.players.length; seat++) {
+      const hero = state.players[seat];
+      if (!hero || !heroInPlay(hero)) continue;
+      const seatBot = bots[seat] ?? bot;
+      while (hero.pendingStatPoints > 0) {
+        if (allocateStat(state, hero, botAllocate(seatBot, state, hero))) {
+          continue;
+        }
+        let placed = false;
+        for (const s of STAT_NAMES) {
+          if (allocateStat(state, hero, s)) {
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) break; // every stat capped — the pile keeps
+      }
+      while (hero.pendingTalentPoints.length > 0) {
+        const talentId = botPickTalent(seatBot, state, hero);
+        if (!talentId || !spendTalentPoint(state, hero, talentId)) break;
+      }
+    }
     // THE PRE-STEP HOUSEKEEPING, as INTENTS (bot/intent.ts): the POCKET
     // ARSENAL's draw — keep the hand on whatever maximizes damage this moment,
     // the blade with a body in blade reach, the banked ranged/magic shot out of

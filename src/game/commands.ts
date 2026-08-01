@@ -31,19 +31,19 @@
 // the same snapshot-and-drift-test shape `mod/catalog.json` and the Game Center
 // manifests already use.
 //
-// **THIS FILE MAKES THE VERBS TRAVEL. IT DOES NOT MAKE THEM NON-BLOCKING.** A
-// command that opens the inventory still halts the simulation, because that is
-// what it does today and the cutover is not allowed to change how the game
-// feels. Splitting `state.phase` from a per-player screen — so a player in
-// their bag can still be killed — is phase 3's design exercise (§3.2 of the plan).
-// Anyone widening this list must not quietly do the second job at the same
-// time.
+// **THE VERBS TRAVEL *AND* THE SCREENS ARE PER-PLAYER** (plan §1.5 made the
+// first true, §3.2 the second). A command that opens the inventory opens the
+// ACTING hero's own screen (`Player.screen`); the simulation halts only when
+// every hero in play has one up (`partyBlocked`), which solo is exactly the
+// freeze it always was. The acting hero is the seat the session admitted the
+// caller into — never a claim on the frame.
 
 import { discardHeldAbility } from "./abilities.ts";
 import {
   advanceIntro,
   advanceOutro,
   closeInventory,
+  closeLevelup,
   dismissIntro,
   openInventory,
   pauseGame,
@@ -211,9 +211,11 @@ export const RUN_COMMAND_ARGS = {
   muteDialogue: [],
   unmuteDialogue: [],
 
-  // THE SCREENS. Each of these is a PHASE change, which is exactly why they
-  // have to travel rather than being drawn app-side: the run freezes because
-  // the phase is not `playing`, and the phase is the server's.
+  // THE SCREENS. Each of these moves the ACTING hero's own `Player.screen`
+  // (plan §3.2), and they still travel rather than being drawn app-side: the
+  // screen is state the whole party can see (the party HUD says "in their
+  // bag"), a hero with one up steers nothing, and the world halts when every
+  // hero in play has one — all of which is the server's to decide.
   openInventory: [],
   closeInventory: [],
   openShop: [],
@@ -225,6 +227,7 @@ export const RUN_COMMAND_ARGS = {
   openCompanionPanel: ["int"],
   closeCompanionPanel: [],
   promptPendingPoints: [],
+  closeLevelup: [],
 
   // THE RUN'S OWN FLOW.
   pauseGame: [],
@@ -447,33 +450,35 @@ export function applyRunCommand(
 
     // THE SCREENS
     case "openInventory":
-      return openInventory(state);
+      return openInventory(state, hero);
     case "closeInventory":
-      return closeInventory(state);
+      return closeInventory(hero);
     case "openShop":
       return openShop(state, hero);
     case "closeShop":
-      return closeShop(state, hero);
+      return closeShop(hero);
     case "openMap":
-      return openMap(state);
+      return openMap(state, hero);
     case "closeMap":
-      return closeMap(state);
+      return closeMap(hero);
     case "openQuestLog":
-      return openQuestLog(state);
+      return openQuestLog(state, hero);
     case "closeQuestLog":
-      return closeQuestLog(state);
+      return closeQuestLog(hero);
     case "openCompanionPanel":
-      return openCompanionPanel(state, num(a, 0));
+      return openCompanionPanel(state, hero, num(a, 0));
     case "closeCompanionPanel":
-      return closeCompanionPanel(state);
+      return closeCompanionPanel(hero);
     case "promptPendingPoints":
       return promptPendingPoints(state, hero);
+    case "closeLevelup":
+      return closeLevelup(hero);
 
     // THE RUN'S OWN FLOW
     case "pauseGame":
-      return pauseGame(state);
+      return pauseGame(state, hero);
     case "resumeGame":
-      return resumeGame(state);
+      return resumeGame(hero);
     case "stayOnField":
       return stayOnField(state);
     case "reopenVictoryChoice":
@@ -572,10 +577,11 @@ export function applyRunCommand(
     case "healCompanionWithMedkit":
       return healCompanionWithMedkit(state, hero, num(a, 0));
     case "equipCompanionFromInventory":
-      return equipCompanionFromInventory(state, num(a, 0), num(a, 1));
+      return equipCompanionFromInventory(state, hero, num(a, 0), num(a, 1));
     case "unequipCompanionToInventory":
       return unequipCompanionToInventory(
         state,
+        hero,
         num(a, 0),
         str(a, 1) as CompanionSlot,
       );
@@ -584,31 +590,31 @@ export function applyRunCommand(
 
     // THE ERRANDS
     case "talkToQuestGiver":
-      return talkToQuestGiver(state, str(a, 0));
+      return talkToQuestGiver(state, hero, str(a, 0));
     case "pickQuestTopic":
-      return pickQuestTopic(state, str(a, 0));
+      return pickQuestTopic(state, hero, str(a, 0));
     case "chooseQuestReward":
-      return chooseQuestReward(state, num(a, 0));
+      return chooseQuestReward(state, hero, num(a, 0));
     case "acceptQuest":
-      return acceptQuest(state);
+      return acceptQuest(state, hero);
     case "declineQuest":
-      return declineQuest(state);
+      return declineQuest(state, hero);
     case "turnInQuest":
-      return turnInQuest(state);
+      return turnInQuest(state, hero);
     case "advanceQuestDialogue":
-      return advanceQuestDialogue(state);
+      return advanceQuestDialogue(state, hero);
     case "closeQuestDialogue":
-      return closeQuestDialogue(state);
+      return closeQuestDialogue(state, hero);
 
     // THE CONVERSATIONS
     case "talkToEnemy":
-      return talkToEnemy(state, num(a, 0));
+      return talkToEnemy(state, hero, num(a, 0));
     case "advanceTalk":
-      return advanceTalk(state);
+      return advanceTalk(state, hero);
     case "pickTalkChoice":
-      return pickTalkChoice(state, num(a, 0));
+      return pickTalkChoice(state, hero, num(a, 0));
     case "closeTalk":
-      return closeTalk(state);
+      return closeTalk(state, hero);
 
     // THE LOST & FOUND
     case "openTrade":

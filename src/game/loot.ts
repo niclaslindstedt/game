@@ -1979,15 +1979,15 @@ export function grantXp(
     });
   }
   if (leveled) {
-    // The chooser waits out the celebration: the blinding light explosion
-    // engulfs the hero and the fanfare rings for this long before the modal
-    // rises out of it. The same flash HURLS the surrounding horde back — a
-    // knockback on the light, no wound (the app draws the burst off the
-    // `levelUp` event; this is the physics of the shove).
+    // The ding celebrates on the field and the points BANK (plan §3.2,
+    // decision 4): the blinding light explosion engulfs the hero, the fanfare
+    // rings, and the same flash HURLS the surrounding horde back — a knockback
+    // on the light, no wound (the app draws the burst off the `levelUp` event;
+    // this is the physics of the shove). The chooser no longer forces itself
+    // open — the HUD pips while points wait, and `promptPendingPoints` opens
+    // it when the player wants it.
     state.levelUpFxMs = LEVELING.dingCelebrationMs;
     levelUpShockwave(state);
-  } else if (player.pendingStatPoints > 0 && state.levelUpFxMs <= 0) {
-    state.phase = "levelup";
   }
 }
 

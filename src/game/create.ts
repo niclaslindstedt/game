@@ -648,13 +648,9 @@ export function createGame(
     dialogueMuted,
     choice: null,
     companions: [],
-    companionFocus: null,
     storyItems: [],
     clearedLevels,
     thoughtsSeen: [],
-    // The talent-picker queue — reconciled from the hero's stats/ranks after the
-    // loadout applies (a fresh hero has none).
-    pendingTalentPoints: [],
     capThoughtMs: 0,
     capThoughtIdx: 0,
     doors,
@@ -1722,6 +1718,10 @@ export function createHero(
     xp: 0,
     xpToNext: xpToLevelUp(1, difficulty),
     pendingStatPoints: 0,
+    // The talent-picker queue — reconciled from the hero's stats/ranks after
+    // the loadout applies (a fresh hero has none). `screen` and
+    // `companionFocus` stay absent: a fresh hero is on the field.
+    pendingTalentPoints: [],
     // The purse opens empty — coins come from selling loot to the merchant
     // (a carried loadout restores its banked purse below).
     coins: 0,

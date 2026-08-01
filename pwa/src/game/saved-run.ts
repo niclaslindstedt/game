@@ -105,12 +105,17 @@ const KEY = storageKey("current-run");
 // and `wheelDebris` (wheels torn off, bouncing or at rest). Both are arrays
 // `stepVehicles` iterates on every tick, so a v24 snapshot would crash the
 // resume's very first step.
+// v26: PER-PLAYER SCREENS (plan §3.2) — `state.phase` lost its eleven UI
+// members to `Player.screen`, and `pendingTalentPoints`/`companionFocus`
+// moved from the run onto the hero. A v25 blob was parked from the pause
+// screen, so essentially every one carries `phase: "paused"` — a value the
+// union no longer holds — and its talent queue sits where nothing reads it.
 //
 // The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
 // hero, or the stats record grows a field this version doesn't know — bump
 // here (and update the guard's lists) in the SAME commit as the shape change,
 // or the next release resumes old snapshots into a state the engine can't read.
-export const SAVE_VERSION = 25;
+export const SAVE_VERSION = 26;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
