@@ -167,16 +167,34 @@ export function exploredRay(
  * fogging it would make a mob pinned against the level's edge permanently
  * untargetable, melee included, since bodies clamp to their own radius and the
  * rim is barely a cell and a half wide.
+ *
+ * Every automatic target pick in the game runs this, several times a tick and
+ * once per candidate at horde scale, so the interior answer comes off a cached
+ * bit — see {@link settledClear}.
  */
 export function clearOfFog(state: GameState, pos: Vec2): boolean {
   const cell = MAP.cellSize;
   const cols = mapCols(state.level);
   const rows = mapRows(state.level);
-  const band = MAP.fogBand;
-  const bandSq = band * band;
-  const reach = Math.ceil(band / cell);
   const cx = Math.floor(pos.x / cell);
   const cy = Math.floor(pos.y / cell);
+  const settled = settledClear(state.explored, cols, rows);
+  const home = cy * cols + cx;
+  // Deep inside uncovered ground the answer is already known and needs no scan
+  // at all. Only cells near the frontier (or never asked about) fall through.
+  if (cx >= 0 && cy >= 0 && cx < cols && cy < rows && settled[home] === 1) {
+    return true;
+  }
+  // Otherwise walk the neighbourhood: only a still-fogged cell whose CENTRE
+  // falls inside the band refuses the position. `all` rides along — it says the
+  // whole neighbourhood came back uncovered, which is stronger than the question
+  // asked (it ignores where in the cell `pos` stands) and is therefore what may
+  // be cached: a cell that clears it clears for EVERY point in it. Off-map
+  // neighbours are skipped by both, since out there nothing is hidden.
+  const band = MAP.fogBand;
+  const reach = Math.ceil(band / cell);
+  const bandSq = band * band;
+  let all = true;
   for (let dy = -reach; dy <= reach; dy++) {
     const ty = cy + dy;
     if (ty < 0 || ty >= rows) continue;
@@ -184,12 +202,45 @@ export function clearOfFog(state: GameState, pos: Vec2): boolean {
       const tx = cx + dx;
       if (tx < 0 || tx >= cols) continue;
       if (state.explored[ty * cols + tx] === 1) continue;
+      all = false;
       const ex = (tx + 0.5) * cell - pos.x;
       const ey = (ty + 0.5) * cell - pos.y;
       if (ex * ex + ey * ey <= bandSq) return false;
     }
   }
+  if (all && cx >= 0 && cy >= 0 && cx < cols && cy < rows) settled[home] = 1;
   return true;
+}
+
+/**
+ * The "this cell is DONE" bits behind {@link clearOfFog}: one byte per fog cell,
+ * set once the cell's whole neighbourhood is uncovered.
+ *
+ * It needs no invalidation, which is the whole reason it can be this cheap: the
+ * fog NEVER rolls back (see the file header), so a neighbourhood that is fully
+ * uncovered stays fully uncovered for the rest of the run and a set bit can only
+ * ever have been right. Nothing is cached the other way — a cell short of the
+ * mark is re-asked every time, which is exactly where the answer still changes.
+ *
+ * Keyed off the run's own `explored` array, so a fresh level (or a second live
+ * run — a session's world beside a client's) gets its own bits rather than
+ * inheriting a stranger's, and the whole thing is collected with the run. This
+ * is a derived cache and not simulation state: it holds no answer the grid does
+ * not already imply, so nothing here can make two runs of the same seed differ.
+ */
+const settledClearBits = new WeakMap<Uint8Array, Uint8Array>();
+
+function settledClear(
+  explored: Uint8Array,
+  cols: number,
+  rows: number,
+): Uint8Array {
+  let bits = settledClearBits.get(explored);
+  if (bits === undefined || bits.length !== cols * rows) {
+    bits = new Uint8Array(cols * rows);
+    settledClearBits.set(explored, bits);
+  }
+  return bits;
 }
 
 /** Has the fog been lifted from the cell containing this world position? */
