@@ -94,7 +94,8 @@ export type Effect = {
     | "sparks"
     // THE GARAGE DOOR rolling up (`garageDoorOpened`): the slat chain the
     // engine's obstacles no longer hold, redrawn sliding up out of the
-    // doorway. `pos` is one end of the segment, `to` the other.
+    // doorway a block at a time. `pos` is the FIRST slat's centre, `to` the
+    // LAST one's, and `slats` how many blocks stood between them inclusive.
     | "garageDoor";
   pos: { x: number; y: number };
   untilMs: number;
@@ -104,7 +105,9 @@ export type Effect = {
    * the hit that spawned it (the XP popup trails the damage number). */
   startMs?: number;
   /** Splash: gore family ("blood", "ecto") — frames `<family>_0/_1`.
-   * Corpse: the slain enemy's sprite family, drawn as it keels over. */
+   * Corpse: the slain enemy's sprite family, drawn as it keels over.
+   * Garage door: the slat the chain wore, since by now the obstacles that
+   * carried it are gone (a mod's door hangs its own art, not this one's). */
   sprite?: string;
   /** Text float: the word to rise off the spot (e.g. "DODGE"). */
   text?: string;
@@ -214,6 +217,10 @@ export type Effect = {
    * it smears the cloud along `angle`, so a sprinting takeoff trails dust and a
    * standing hop blooms evenly. */
   speed?: number;
+  /** Garage door: how many slat blocks the chain hung — the engine's own
+   * count, so the roll-up redraws the door that actually stood there rather
+   * than a guess made from the span and the sprite's width. */
+  slats?: number;
   /** Muzzle: the HERO's facing when he fired (only set for his own shots). The
    * flash is pinned to the weapon's side (where the sprite is drawn) rather than
    * the aim, so firing at a foe BEHIND him still flashes at the barrel, not off
@@ -231,6 +238,14 @@ const CORPSE_LAUNCH_MS_MAX = 1000;
 function corpseFlightMs(launch: NonNullable<Effect["launch"]>): number {
   return Math.min(CORPSE_LAUNCH_MS_MAX, 240 + launch.dist * 2.0);
 }
+
+/**
+ * HOW LONG THE WHOLE GARAGE DOOR TAKES TO ROLL UP, however many slats it hangs
+ * — the blocks divide this between them rather than each taking a fixed beat,
+ * so a wide doorway and a narrow one both finish with the `garage_door` sound's
+ * closing clack (content/sounds/garage_door.yaml) instead of drifting off it.
+ */
+export const GARAGE_DOOR_MS = 750;
 
 /**
  * HAS THIS ONE STOPPED MOVING — i.e. is it SCENERY now rather than an event?
@@ -789,31 +804,52 @@ function drawEffectPass(
     }
 
     if (effect.kind === "garageDoor") {
-      // The roll-up: the engine dropped the door's obstacles the tick it
-      // opened, so this redraws the slat chain cosmetically — every segment's
-      // bottom edge rising into the lintel (the visible slab is the sprite's
-      // TOP fraction at a fixed top edge), with a light fade so the last
-      // pixels don't pop. Eased to start slow like a chain drive taking up.
-      const duration = effect.durationMs ?? 700;
+      // THE ROLL-UP, ONE BLOCK AT A TIME. The engine dropped the door's whole
+      // obstacle chain the tick it opened, so this redraws those slats
+      // cosmetically — but a garage door does not evaporate all at once, which
+      // is exactly how a chain animated in lockstep reads. The BOTTOM-MOST
+      // block goes first, then the one above it, on up the doorway: the door
+      // opens the way the player's own would, and the wall behind it comes
+      // back into view progressively rather than in one blink.
+      //
+      // A block's own departure is its bottom edge rising into the block above
+      // (the visible slab is the sprite's TOP fraction drawn at a fixed top
+      // edge), eased to start slow like a chain drive taking up and faded over
+      // the last pixels so nothing pops.
+      //
+      // Each block is drawn on the obstacle pass's own anchor — CENTRED on its
+      // world point (render/plane.ts), not standing its feet on it, which is
+      // what an effect does. Getting that wrong slides the whole door half a
+      // block up the doorway the instant it starts moving.
+      const duration = effect.durationMs ?? GARAGE_DOOR_MS;
       const age = duration - (effect.untilMs - timeMs);
-      const t = Math.min(1, Math.max(0, age / duration));
-      const eased = t * t * (3 - 2 * t);
-      const slab = spriteByName(assets.sprites, "garage_door");
+      const slab = spriteByName(assets.sprites, effect.sprite ?? "garage_door");
       const far = effect.to;
-      if (slab && far && eased < 1) {
-        const ddx = far.x - effect.pos.x;
-        const ddy = far.y - effect.pos.y;
-        const len = Math.hypot(ddx, ddy);
-        const steps = Math.max(1, Math.round(len / slab.width));
-        const keep = 1 - eased;
-        const h = Math.max(1, Math.round(slab.height * keep));
+      if (slab && far) {
+        const count = Math.max(1, effect.slats ?? 1);
+        // Each block's own beat, taken in order — a block is fully up before
+        // the next one starts moving.
+        const beat = duration / count;
+        // Bottom of the screen first: the block furthest DOWN the doorway is
+        // the one the opener lifts away first, whichever end of the chain that
+        // happens to be. (A doorway lying east–west has every block on one
+        // line — it opens right to left, which is the same rule.)
+        const flip =
+          far.y !== effect.pos.y ? far.y > effect.pos.y : far.x > effect.pos.x;
         ctx.save();
-        ctx.globalAlpha = Math.min(1, keep * 3);
-        for (let i = 0; i <= steps; i++) {
-          const wx = effect.pos.x + (ddx * i) / steps;
-          const wy = effect.pos.y + (ddy * i) / steps;
+        for (let i = 0; i < count; i++) {
+          const f = count > 1 ? i / (count - 1) : 0;
+          const wx = effect.pos.x + (far.x - effect.pos.x) * f;
+          const wy = effect.pos.y + (far.y - effect.pos.y) * f;
+          const order = flip ? count - 1 - i : i;
+          const t = Math.min(1, Math.max(0, (age - order * beat) / beat));
+          if (t >= 1) continue;
+          const eased = t * t * (3 - 2 * t);
+          const keep = 1 - eased;
+          const h = Math.max(1, Math.round(slab.height * keep));
           const ax = bodyAnchorX(wx, wy, camera.x, camera.y);
           const ay = bodyAnchorY(wx, wy, camera.x, camera.y);
+          ctx.globalAlpha = Math.min(1, keep * 3);
           ctx.drawImage(
             slab,
             0,
@@ -821,7 +857,7 @@ function drawEffectPass(
             slab.width,
             h,
             ax - Math.round(slab.width / 2),
-            ay - slab.height,
+            ay - Math.round(slab.height / 2),
             slab.width,
             h,
           );

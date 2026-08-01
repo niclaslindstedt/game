@@ -66,7 +66,9 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   clears; no victory, outro or bank can fire, and a player (or a joining
   party) can stand in it indefinitely. No horde, no boss, no locks but the
   garage door itself — an **approach door** (`doors[].opens: approach`) that
-  rolls up for anybody who walks or drives near. The **merchant is PARKED**
+  rolls up for anybody who walks or drives near, one slat block at a time
+  from the bottom, filling exactly the doorway it hangs in and none of the
+  wall either side of it. The **merchant is PARKED**
   on the drive (`merchant.parked` — revealed from map start, scene-free,
   never wanders), buying loot and repairing gear. The only decisions are the
   three **travel doors** (`LevelDef.travelDoors`): the CAR (tap to board —

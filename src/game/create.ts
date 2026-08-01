@@ -1402,6 +1402,63 @@ export function buildPropLines(
 }
 
 /**
+ * Expand one DOORWAY into the chain of slat blocks that fills it.
+ *
+ * A door is not a wall run, and expanding it as one gets it visibly wrong. The
+ * `from`–`to` span a door is given is the doorway's two EDGES — the centres of
+ * the wall stones flanking the hole — so each of those stones already covers a
+ * radius of the span. A wall-style chain, which puts a stone on each endpoint,
+ * therefore hangs half a block of door over the wall at either end: a door a
+ * whole block wider than the doorway it hangs in.
+ *
+ * So the END blocks are pinned half a block INSIDE those edges — their sprites
+ * then start exactly where the opening does — and the rest are spread evenly
+ * between them. `ceil` on the count is the other half of it: it keeps the
+ * spacing from ever opening past a block width and leaving a slot of daylight
+ * in the middle of a shut door.
+ *
+ * A door built this way tiles at a full block (`2 × radius` — a wall sprite's
+ * own width) wherever the opening divides evenly, which is the point: each
+ * block reads as a block, and that is what lets the roll-up take them away one
+ * at a time (render/effects.ts `garageDoor`). Tiling that cleanly would leave
+ * the colliders merely TANGENT, though, and a hairline seam between two circles
+ * is a seam a shot can thread — so the blocks carry a collider inflated back
+ * past their spacing. A sprite is drawn at its own size wherever its obstacle
+ * sits, so that inflation is collision-only and nothing about the door LOOKS
+ * fatter.
+ */
+function expandDoor(
+  sprite: string,
+  from: Vec2,
+  to: Vec2,
+  radius: number,
+  takeId: () => number,
+): Obstacle[] {
+  // The free opening: the span minus the half-stone each flanking wall puts
+  // into it. Blocks stand a further half-block in, so their sprites START at
+  // the opening's edge rather than straddling it.
+  const span = Math.max(0, distance(from, to) - radius * 2);
+  const dir = normalize(to.x - from.x, to.y - from.y);
+  const count = Math.max(1, Math.ceil(span / (radius * 2)));
+  const inner = Math.max(0, span - radius * 2);
+  const step = count > 1 ? inner / (count - 1) : 0;
+  const obstacles: Obstacle[] = [];
+  for (let i = 0; i < count; i++) {
+    // A doorway too narrow for two blocks gets one, in the middle of it.
+    const along = count > 1 ? radius * 2 + step * i : radius + span / 2;
+    obstacles.push({
+      id: takeId(),
+      kind: sprite,
+      sprite,
+      pos: vec(from.x + dir.x * along, from.y + dir.y * along),
+      radius: Math.max(radius, step * 0.7),
+      jumpable: false,
+    });
+  }
+  return obstacles;
+}
+
+/**
  * Expand the level's locked doors into `door_locked` obstacle chains
  * (appended to `obstacles`) and the DoorState entries that let the key
  * remove them again. Doors are never jumpable — a hop over a locked door
@@ -1415,23 +1472,21 @@ function buildDoors(
   const doors: DoorState[] = [];
   for (const door of def.doors ?? []) {
     const sprite = door.sprite ?? "door_locked";
-    const chain = expandSegment(
-      sprite,
-      sprite,
-      door.from,
-      door.to,
-      door.radius,
-      false,
-      takeId,
-    );
+    const chain = expandDoor(sprite, door.from, door.to, door.radius, takeId);
     obstacles.push(...chain);
+    const first = chain[0] as Obstacle;
+    const last = chain[chain.length - 1] as Obstacle;
     const state: DoorState = {
       id: door.id,
       center: vec((door.from.x + door.to.x) / 2, (door.from.y + door.to.y) / 2),
       obstacleIds: chain.map((o) => o.id),
       open: false,
-      from: vec(door.from.x, door.from.y),
-      to: vec(door.to.x, door.to.y),
+      sprite,
+      // The SLATS' own ends, not the doorway's: the roll-up redraws the blocks
+      // the obstacles no longer hold, and it can only land them back on their
+      // own pixels if it is handed where they actually stood.
+      from: vec(first.pos.x, first.pos.y),
+      to: vec(last.pos.x, last.pos.y),
     };
     if (door.opens === "approach") state.approach = true;
     doors.push(state);

@@ -30,6 +30,7 @@ import { spillBlood } from "../render/blood-ground.ts";
 import { BLOOD_SPRAY_MS } from "../render/blood.ts";
 import { groundColorAt } from "../render/caches.ts";
 import { LANDING_DUST_MS, TAKEOFF_DUST_MS } from "../render/dust.ts";
+import { GARAGE_DOOR_MS } from "../render/effects.ts";
 import { FLAME_MS } from "../render/flame.ts";
 import { LOOT_SHINE_MS } from "../render/loot-aura.ts";
 import {
@@ -738,8 +739,10 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   }
   // THE GARAGE DOOR rolling up: the engine dropped its obstacle chain the
   // tick it opened, so the app redraws the slat chain sliding up out of the
-  // doorway (the `garageDoor` effect). The door's own segment travels on
-  // `state.doors` — matched by center, since the event only carries a pos.
+  // doorway, one block at a time from the bottom (the `garageDoor` effect).
+  // The door's own segment travels on `state.doors` — matched by center, since
+  // the event only carries a pos — and its chain's length IS the slat count,
+  // so the animation redraws exactly the blocks that stood there.
   if (event.type === "garageDoorOpened") {
     const door = state.doors.find(
       (d) =>
@@ -752,8 +755,10 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         pos: { x: door.from.x, y: door.from.y },
         to: { x: door.to.x, y: door.to.y },
         radius: Math.hypot(door.to.x - door.from.x, door.to.y - door.from.y),
-        untilMs: state.stats.timeMs + 750,
-        durationMs: 750,
+        slats: door.obstacleIds.length,
+        sprite: door.sprite ?? "garage_door",
+        untilMs: state.stats.timeMs + GARAGE_DOOR_MS,
+        durationMs: GARAGE_DOOR_MS,
       });
     }
   }
