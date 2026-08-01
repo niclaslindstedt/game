@@ -83,10 +83,13 @@ first, then Mars once the moon has let go; he stops home between them,
 because there is no food on the moon). Tried before the part is home it goes
 nowhere at all, and he says why rather than showing a list of places he has
 not earned: still one part short, no sense climbing in until he has been and
-got it. And a RIFT SEAM waits on the garage
-wall, sealed until THE FOUNDER's RIFT CREATOR comes home from the void (see
-Level 4) — then it reaches the deep roads already walked, into the rift and
-out to the West. The campaign's chapters are unchanged; the garage is the
+got it. Nothing here ever names a road ahead of the trail: Mars is not
+mentioned until the moon lets go. And a RIFT SEAM opens on the garage
+wall only once it leads somewhere — THE FOUNDER's RIFT CREATOR home from the
+void (see Level 4) and a deep road already walked — and then it reaches back
+into the rift and out to the West. Until then there is nothing on that wall
+at all, because a hole in the world that goes nowhere is not a promise, it is
+a question. The campaign's chapters are unchanged; the garage is the
 breath between them, and — when friends join his game — the place they land.
 
 **Side errands at home — RUTH, Ada's mother.** She has a key to the garage and

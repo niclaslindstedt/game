@@ -92,14 +92,20 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   the player's hands, the engine steers the car into the right-hand lane and
   away up the road, and the app washes the whole screen — field, HUD and all
   — to black over ~1.7 s before the next level is built → GOODCO HQ),
-  the ROCKET on the lawn (→ the moon, Mars — but it opens NO picker while
-  every road is still shut: the ship is one part short until GOODCO HQ falls,
-  and the tap plays the hero's own read on it instead
-  (`travelDoors[].unready`), so the two voyages stay unnamed until one of them
-  is earned), and the RIFT SEAM — hidden and
-  **SEALED** until THE FOUNDER's RIFT CREATOR keepsake comes home from the
-  rift, then humming on the bay wall beside the car (→ the rift, BOOT HILL):
-  the Diablo-style town loop, earned at the campaign's far end. **LOAD lands
+  the ROCKET on the lawn (→ the moon, then Mars), and the RIFT SEAM (→ the
+  rift, BOOT HILL): the Diablo-style town loop, earned at the campaign's far
+  end. **A ROAD THE PLAYER HAS NOT EARNED IS NEVER NAMED** — the picker lists
+  only OPEN destinations, so MARS is not mentioned until the moon lets go, and
+  a door with no open road does one of two things by its own authoring
+  (`pwa/src/game/game-screen/travel-doors.ts`): the ROCKET **says so**, since
+  the ship is the story and cannot simply vanish — the tap plays the hero's
+  read on it (`travelDoors[].unready`, a thought id) instead of a picker —
+  while the RIFT SEAM **is not there at all**, off the bay wall until it leads
+  somewhere. That covers both ways it can lead nowhere: before THE FOUNDER's
+  RIFT CREATOR keepsake comes home from the rift (`travelDoors[].requires`),
+  and on a fresh higher-difficulty campaign, where the keepsake is still
+  banked — it lives on the CHARACTER, not per rung — but neither deep road has
+  been walked on that rung yet. **LOAD lands
   here too**: a hero with a campaign under way resumes at home, and their
   frontier mission is one door-tap away under the ordinary unlock rules. The
   hub never wears a level number (the title card drops its LEVEL line).
