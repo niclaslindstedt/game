@@ -33,6 +33,16 @@ import { playUiSound } from "./sfx/ui.ts";
 
 const LABEL = "#9aa3ad";
 
+/**
+ * The scale every figure on the sheet prints at. It is 2 rather than 1 because
+ * the pixel font is FIVE PIXELS TALL: at scale 1 that is a 5px glyph, which is
+ * legible on a desk monitor and simply is not on the phone this game is
+ * designed around — the whole page (five attributes and eleven derived figures)
+ * was the smallest text in the game, on the one screen that is nothing but
+ * numbers. Everything here moves together, so the sheet never mixes two sizes.
+ */
+const SHEET_SCALE = 2;
+
 /** One sheet line: the glyph and label pinned left, the value pinned right —
  * the character-sheet read, not a wrapping sentence. */
 function SheetRow({
@@ -56,13 +66,18 @@ function SheetRow({
             draggable={false}
           />
         )}
-        <PixelText font={font} text={readout.label} scale={1} color={LABEL} />
+        <PixelText
+          font={font}
+          text={readout.label}
+          scale={SHEET_SCALE}
+          color={LABEL}
+        />
       </span>
       <span className="sheet-row-value">
         <PixelText
           font={font}
           text={readout.value}
-          scale={1}
+          scale={SHEET_SCALE}
           color={readout.color}
         />
       </span>
@@ -130,7 +145,7 @@ export function CharacterSheet({
               <PixelText
                 font={font}
                 text={String(player.level)}
-                scale={1}
+                scale={SHEET_SCALE}
                 color="#ffd75e"
               />
             </span>
@@ -142,7 +157,7 @@ export function CharacterSheet({
               text={`${difficulty.toUpperCase()} - ${
                 hardcore ? "HARDCORE" : "SOFTCORE"
               }`}
-              scale={1}
+              scale={SHEET_SCALE}
               color={hardcore ? "#e06a6a" : LABEL}
             />
             <div className="char-xp">
@@ -154,7 +169,7 @@ export function CharacterSheet({
             <PixelText
               font={font}
               text={`${formatCompact(into)} / ${formatCompact(toNext)} XP`}
-              scale={1}
+              scale={SHEET_SCALE}
               color={LABEL}
             />
           </div>
@@ -168,7 +183,7 @@ export function CharacterSheet({
               <PixelText
                 font={font}
                 text={group.title}
-                scale={1}
+                scale={SHEET_SCALE}
                 color="#6f7684"
               />
               <div className="char-group-rows">

@@ -165,8 +165,10 @@ describe("firing spends rounds", () => {
     emptyPouch(player);
     bankAmmo(player, "bullets", 4);
     // Long enough for far more than four cooldowns to come round: the stack,
-    // not the clock, is what stops him.
-    run(state, idle, 1200);
+    // not the clock, is what stops him. Stopped on the round the stack runs out
+    // — the tick AFTER that is the dry swap, and the fallback weapon's own
+    // shots are not what this is counting.
+    run(state, idle, 1200, (s) => ammoCount(s.players[0], "bullets") === 0);
     expect(state.stats.shotsFired).toBe(4);
     expect(ammoCount(player, "bullets")).toBe(0);
   });
@@ -203,15 +205,20 @@ describe("firing spends rounds", () => {
 });
 
 describe("a dry weapon", () => {
-  it("cannot fire", () => {
+  it("cannot fire, and never gets the chance to try", () => {
     const state = startGame();
     clearStage(state);
-    arm(state, "test_carbine");
+    const dry = arm(state, "test_carbine");
     addTarget(state);
-    emptyPouch(state.players[0]);
+    const player = state.players[0];
+    emptyPouch(player);
+    expect(hasAmmoFor(player, dry)).toBe(false);
     run(state, idle, 400);
-    expect(state.stats.shotsFired).toBe(0);
-    expect(state.stats.damageDealt).toBe(0);
+    // Not one round of its kind was spent, and the empty weapon left the hand
+    // on the first tick that reached for its trigger — a hero standing in a
+    // fight holding something that cannot fire is the softlock, not the rule.
+    expect(ammoCount(player, "bullets")).toBe(0);
+    expect(player.equipment.weapon.id).not.toBe(dry.id);
   });
 
   it("is stowed for something in the bag the hero CAN fight with", () => {
@@ -231,18 +238,24 @@ describe("a dry weapon", () => {
     expect(state.events.some((e) => e.type === "weaponDry")).toBe(true);
   });
 
-  it("stays in hand when the bag holds nothing loaded", () => {
+  it("falls back to the built-in SIDEARM when the bag holds nothing loaded", () => {
     const state = startGame();
     clearStage(state);
     const dry = arm(state, "test_carbine");
     addTarget(state);
     const player = state.players[0];
     emptyPouch(player);
-    // Armor is not an answer, and neither is a second empty carbine.
+    // A second empty carbine is no answer to an empty carbine — but the
+    // sidearm is MINTED rather than carried, so it is always the last one.
+    // Without it the hero stood in the fight holding a weapon that could not
+    // fire, could therefore not earn a kill, and so could never reach the drop
+    // that would have handed him a box: a softlock, not a setback.
     player.inventory[0] = weapon(state.nextId++, "test_carbine");
-    run(state, idle, 20);
-    expect(player.equipment.weapon.id).toBe(dry.id);
-    expect(state.events.some((e) => e.type === "weaponDry")).toBe(false);
+    step(state, idle, DT);
+    expect(player.equipment.weapon.defId).toBe("blaster");
+    expect(state.events.some((e) => e.type === "weaponDry")).toBe(true);
+    // …and the empty weapon is kept, not destroyed: he is going to reload it.
+    expect(player.inventory.some((cell) => cell?.id === dry.id)).toBe(true);
   });
 });
 

@@ -929,9 +929,15 @@ the **cartridge crates** stacked around BOOT HILL — are for.
 
 **Running dry is never a dead end.** A hero whose weapon is empty puts it away
 and draws the best thing in the bag he can actually fight with
-(`swapOffDryWeapon`); a full bag keeps the empty one in hand instead, since
-there is nothing to preserve by dropping it. Only a hero with an empty weapon
-and _nothing else he can fight with_ is genuinely stuck, and that is the one
+(`swapOffDryWeapon`) — and with nothing loaded in the bag he reaches for the
+built-in **SIDEARM**, which is minted on demand rather than carried, so an empty
+bag is not the end of the line either. **And the bag is kept stocked to make
+that rarer:** the DROP TRASH sweep will not destroy the hero's best weapon of
+each class — one melee, one ranged, one magic — however far behind his hand
+they have fallen, precisely because a gun runs out of ammunition where a blade
+cannot and a blade cannot reach what a gun can (`isTrashLoot`). Only a hero with
+an empty weapon and _nothing else he can fight with_ is genuinely stuck, and
+that is the one
 state the mercy ladder answers at **every** difficulty rather than tapering off
 by JESUS — the other ropes are kindnesses a good player should not need, and
 this one is the guard on a soft lock no amount of skill escapes.
