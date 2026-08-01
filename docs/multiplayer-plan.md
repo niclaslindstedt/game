@@ -161,9 +161,9 @@ document now always means the second thing.
 | **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 + §3.2 landed**, see §3.6; §3.3 remains     |
 | **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2 + §4.3 landed**, see §4.7; §4.4/§4.5 remain |
 | **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                        |
-| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks |                                                    |
-| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Hub landed**, see §6.8 — §6.4 still owed         |
-| **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | Its three instrument halves moved to phase 5.5     |
+| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks | Chain spent; the rest is **R1/R2/R3**, §5.5.3      |
+| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Hub landed**, see §6.8 — §6.4 is R1's            |
+| **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | §7.1/§7.2/§7.2.5 landed; §7.3–§7.5 are R3's        |
 
 **≈ 44–65 weeks.** The band is wide because phase 3 is a design exercise wearing a
 refactor's clothes (see §phase 3), and its uncertainty dominates everything. It
@@ -2064,6 +2064,9 @@ The `ui-review` screenshot audit of the HOST / JOIN screens is a fifth of the
 same kind: the harness drives a BROWSER, and every one of those screens is
 deliberately absent from a browser build.
 
+All five now sit inside **R3 — THE PROOF** (§5.5.3), which is where acceptance
+belongs; this list stays as their statement of WHY no diff can close them.
+
 ### 5.5.2 The order the rest has to be done in
 
 Three of these dependencies are non-obvious, so the order is stated once rather
@@ -2150,7 +2153,7 @@ than rediscovered:
    four defects it found), so the done-when is NOT met: leaks and snapshot
    growth are hour-scale questions and this has answered a ten-minute one. What
    changed is that the remaining work is somebody leaving a terminal open
-   overnight rather than an instrument nobody has built.
+   overnight rather than an instrument nobody has built. **Now R3's** (§5.5.3).
 
 6. **§3.2 — the per-player screens. LANDED** — see §3.2's as-built amendment
    for the shape (ten screens on `Player.screen`, `partyBlocked` as the one
@@ -2173,59 +2176,120 @@ than rediscovered:
    replays unacknowledged input, everybody else interpolates one interval
    behind — and COMBAT is deliberately not predicted, because that is a rollback
    problem this codebase has no machinery for and a player would experience as
-   monsters un-dying.
+   monsters un-dying. **Now R2's** (§5.5.3).
 
-### 5.5.3 The independent items
+**THE CHAIN IS SPENT.** Six of its eight items are landed and the two that are
+not have homes in the consolidation below — so this list is a RECORD now, kept
+for the as-built notes each landed entry carries, and §5.5.3 is where the open
+work lives.
 
-None of these blocks anything and none is blocked. They can be done in any
-order, beside the chain above.
+### 5.5.3 THE CONSOLIDATION — everything still open, as three phases
 
-- **§5.1's TRADE WINDOW.** The engine, the five verbs and all four anti-dupe
-  rules landed in phase 5 and are tested; the SCREEN did not, so a trade is
-  currently something only a command can start. App work of the shape
-  `QuestOverlay` already is, and the engine side it reads (`tradeOf`,
-  `tradePartner`, `TradeSide.item`) is deliberately shaped for it.
-- **§5.6's NET GRAPH** behind DEBUG MODE — round trip, snapshot size, packet
-  loss, prediction error, with the FPS meter as the precedent. Every number is
-  already measured (`Reliability.stats`, `.rtt`, the roster's ping), so this is
-  a readout rather than an instrument. **It is worth more than it was**: §5.9's
-  soak put a first number on the snapshot — roughly 23 KB per publish, ~450 KB/s
-  per client at 20 Hz — and nobody had one before, which is exactly the state a
-  readout ends.
-- **THE SNAPSHOT'S SIZE, now that there is a figure for it.** Not a task this
-  plan ever wrote down, because until §5.9 nothing measured it. 300–450 KB/s per
-  client is 2.4–3.6 Mbit/s down to each of eight players, which is fine on a LAN
-  and is not a number to ship to somebody's home connection without looking at
-  it. Whether it is the split being generous, the differ re-sending arrays whole,
-  or simply what a horde costs is unknown and is the first thing to find out.
-- **§3.1's REMAINING SEAT-0 READS — the VERB paths are paid; the COMBAT
-  CHAIN is what remains.** The merchant's counter verbs act on the shopper
-  (paid before §3.2); §3.2's pass paid the rest of the verb-reachable ones:
-  the companion equip verbs moved a joiner's items through the HOST's bag,
-  quest rewards paid the host's bar/purse/bag whoever turned in, the reward
-  row was priced against seat 0, `talentStatFloor` read seat 0's ranks, and a
-  conversation's given piece dropped at seat 0's feet — all now take the
-  acting hero. What remains is the ATTACKER THREAD: `hitEnemy`/`killEnemy`
-  never learn who landed the blow, so crit, miss, armor-pen and the `struck`/
-  `hit` procs read seat 0's build (~20 sites in `loot.ts`), the drop economy's
-  appetites and `rollEquipment` price against seat 0, and a kill's base XP is
-  measured against seat 0's level. Threading the attacker shifts seeded rolls,
-  so it is its own measured piece of work — and it is the same thread §3.2's
-  `choice` owner-gate waits on.
-- **§4.4 — mods and versions reconciled.** phase 2 refuses a mismatch; this makes
-  it WORK, which is the common case on Steam. The host's set is the session's, a
-  joiner subscribed to the same mods applies them through `registerDefs`, and a
-  joiner MISSING one is offered the Workshop page and refused until they have
-  it — auto-downloading a stranger's content on join is a decision nobody asked
-  us to make on their behalf.
-- **§4.5 — the party HUD, and banking eight characters.** Frames down one edge,
-  off the steering thumb's third; portraits through the existing paper-doll
-  compositor. The banking half is the sharp one: every player's character banks
-  on their OWN device through their own `saveCharacters`, and `updatedAt` must
-  stay stamped only for heroes a save actually changed, because cloud save's
-  merge depends on precisely that. Its twin is that a joiner still plays the
-  THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster —
-  the same job from the other end, and it should land with it.
+> **AMENDED AFTER §4.2's CORPSE LANDED, when the chain ran out.** This section
+> used to be "the independent items" — a flat list beside a chain that still
+> had a spine. The chain is spent now, and what was left was fifteen loose
+> items scattered across this list, two chain stragglers, a decision, phase 6's
+> tail and phase 7's whole remainder — which is the exact failure §5.5 was
+> written to prevent, one level up. So the remainder is CONSOLIDATED into
+> THREE phases, grouped by the KIND of work each one is, because that is what
+> makes a phase internally consistent: one is app-and-engine FEATURE work on
+> the joiner's experience, one is engine CORRECTNESS work on what the wire
+> carries, and one is VERIFICATION — the bot that plays, the measurements it
+> enables, and the human-with-hardware acceptances.
+>
+> **The design of every item stays in its owning section** — these groups are
+> an index and an order, not a re-plan, exactly as §5.5 itself was. R1 and R2
+> are INDEPENDENT and can run in either order or in parallel; R3 runs beside
+> them and finishes last only because acceptance is what finishing IS. The one
+> soft ordering: §3.3 (in R2) prefers a mode that is otherwise finished, so R2
+> sensibly trails R1.
+
+**R1 — THE WHOLE PARTY.** _Goal: a joiner is a first-class player._ Everything
+here is feature work on the same seam — what a second player can DO and KEEP —
+and the two sharpest items share their hardest piece (the banking), which is
+why they are one phase:
+
+- **§6.4 — in-session party travel.** The session survives the level swap and
+  the party goes through the door together; today a crossing re-mounts
+  app-side like a gate, so a hosted session lands joiners on level start. The
+  banking half exists (`travelTo` banks every crossing); the session-side
+  teardown/rebuild is the work.
+- **§4.5 — banking a joiner's character, and the party HUD.** The throwaway
+  `spectatorCharacter` retires: every player's character banks on their OWN
+  device through their own `saveCharacters` (`updatedAt` stamped only for
+  heroes a save actually changed — cloud save's merge depends on it). The
+  party frames go down one edge, off the steering thumb's third, portraits
+  through the paper-doll compositor. **This phase resolves the "whichever
+  lands second inherits the banking" note — travel and banking land
+  TOGETHER.**
+- **§5.1's TRADE WINDOW screen.** The engine, the five verbs and the anti-dupe
+  rules are landed and tested; the screen is app work of the shape
+  `QuestOverlay` already is, reading `tradeOf`/`tradePartner`/`TradeSide.item`.
+- **§4.4 — mods reconciled.** The host's set is the session's; a subscribed
+  joiner applies it through `registerDefs`; a joiner missing one is offered
+  the Workshop page and refused until they have it.
+- **Phase 6's hub tails**: quest givers cast in the garage, and the workbench
+  stash (§6.8's still-owed list).
+
+_Done when a friend with their own hardcore-matched character can join your
+garage, kit out, travel through a door with you, trade you a find, play under
+your mods, and leave with everything they earned on their own roster._
+
+**R2 — THE HONEST WIRE.** _Goal: what travels is correct, felt, and priced._
+Everything here is engine/netcode work with no screen to it:
+
+- **§3.3 — prediction and reconciliation** (design in §3.3; the chain's note
+  about combat staying unpredicted holds).
+- **THE ATTACKER THREAD** (§3.1's last seat-0 reads): `hitEnemy`/`killEnemy`
+  learn who landed the blow, so crit/miss/armor-pen and the `struck`/`hit`
+  procs read the attacker's build (~20 sites in `loot.ts`), the drop economy
+  prices against the attacker, and a kill's base XP is measured against the
+  attacker's level. Threading it shifts seeded rolls, so it is a MEASURED
+  piece — and it unblocks §3.2's `choice` owner-gate, which joins it here.
+- **THE SNAPSHOT'S SIZE, then the readout.** §5.9 measured ~23 KB per publish
+  (300–450 KB/s per client at 20 Hz) — fine on a LAN, not a number to ship to
+  a home connection unexamined. Find whether it is the split, the differ
+  re-sending arrays whole, or what a horde costs — §1.4's "measure first,
+  then pack what the measurement says is expensive" comes due here — and land
+  **§5.6's NET GRAPH** behind DEBUG MODE beside it (every number is already
+  measured; this is the readout that ends the flying-blind).
+- **Decision 15's REAL LOCK** (from §5.5.4): the build-time literal or the
+  Steam auth ticket. The wire's door is this phase's subject, so the decision
+  is settled here rather than beside it.
+
+_Done when a party-4 fight feels local at 150 ms, every payout names the hero
+who earned it, the per-client rate is a number chosen rather than discovered,
+and the licence check is a lock rather than a statement._
+
+**R3 — THE PROOF.** _Goal: the mode is verified, not believed._ Everything
+here answers "does it actually work" — the bot that can play it, the
+measurements the bot enables, and the acceptances only hardware can give:
+
+- **§7.3 — BOTS IN A LOCAL GAME** (the feature: a party without four friends
+  online), **§7.4 — party behaviour** (spacing, pack-splitting, covering a
+  downed hero — the known blocker on the party-4 measurement), and **§7.5 —
+  quest awareness**. Phase 7 keeps the designs; R3 is where they happen.
+- **§4.3's REMAINING MEASURED PASS**, unblocked by §7.4: the party-4 per-capita
+  read re-run, and the `/players 2/4/8` scaling pass the harness already takes
+  `--players` for.
+- **§5.6's OVERNIGHT SOAK** — the instrument exists (`scripts/bot-client.mjs`
+  - `Impairment`); what is owed is hours rather than minutes, and §5.8's
+    paragraph replaced with the result.
+- **§5.5.1's FIVE ACCEPTANCES** — the packaged launch, eight machines through
+  a real NAT, the real router, the per-OS firewall prompts, and the HOST/JOIN
+  `ui-review` audit. Unchanged: a human with hardware, results recorded,
+  failures included.
+- **§5.6's STORE SURFACES** — the Steam listing's multiplayer categories, the
+  depot's launch options, and store screenshots showing a party
+  (`store-shots` skill): the mode meeting the world is this phase's whole
+  subject.
+
+_Done when a bot party plays like a party, the tuning numbers are re-measured
+rather than inherited, the soak has run for hours, every §5.5.1 row has a
+recorded result, and the store says what shipped._
+
+What this list used to carry that is now a RECORD rather than work:
+
 - **Decision 3b — the bot's five housekeeping mutators. DONE, VERBS AND ADAPTER
   BOTH.** All five travel: `careForCompanion`'s two actions (`spendReviveItem`,
   `healCompanionWithMedkit`) were already on the list, `swapHand` and
@@ -2274,14 +2338,10 @@ order, beside the chain above.
   swept the engine for, surviving in three functions nothing had reason to
   parameterize until the bot's care had to name a cell.
 
-- **§5.6's STORE SURFACES** — the Steam listing's multiplayer categories, the
-  depot's launch options, and store screenshots showing a party (`store-shots`
-  skill). Not code, but it is on phase 5's list and nobody is holding it.
-
 ### 5.5.4 The two open decisions
 
-Neither is the plan's to make, and both should be settled before the thing that
-needs them rather than during it:
+Neither is the plan's to make. One is now scheduled (R2) and one turned out to
+be already answered:
 
 - **Decision 15 — the LICENCE. ANSWERED: multiplayer is played through STEAM,
   and nowhere else.** The multiplayer right travels with the Steam copy, so a
@@ -2320,24 +2380,26 @@ needs them rather than during it:
   binary folds to false, which is cheap and airtight for the SHIPPED build and
   does nothing about somebody compiling the open-source tree themselves. The
   second is probably right, and the first is what makes a public server list
-  possible later.
+  possible later. **Choosing and building the lock is R2's** (§5.5.3).
 
-- **phase 6's story chain.** If the garage speaks a single line that is a
-  manuscript change, and the manuscript may not be rewritten without the user's
-  confirmation first (see AGENTS.md's story chain). It is a conversation rather
-  than a commit, and phase 6 should open with it rather than discover it.
+- **phase 6's story chain — ANSWERED, the way this asked.** Phase 6 opened
+  with the story commit, manuscript confirmation on the record (§6.8: "THE
+  STORY CHAIN RAN FIRST"). Kept here only so the register's count of open
+  decisions reads zero from this section.
 
 ### 5.5.5 Done when
 
-- Every row of §5.5.1 has been performed by a human on real hardware and the
-  result recorded — **including a FAILURE**, if that is what happens, because
-  the point of the list is that these were never verified rather than that they
-  were assumed to pass.
-- §5.5.2's chain has landed in order, with §4.3's tuning numbers written into
-  §4.7 and §5.6's soak result into §5.8 — in both cases REPLACING the paragraph
-  that says it could not be run.
-- §5.5.3 is empty.
-- Both decisions in §5.5.4 are answered in the register.
+- **R1, R2 and R3 have each met their own done-when** (§5.5.3), with every
+  as-built record written into the owning section the way §4.2's and §3.2's
+  were — an unamended design is how a plan starts lying about its own state.
+- §5.5.1's rows (now inside R3) each have a recorded result from a human on
+  real hardware — **including a FAILURE**, if that is what happens, because
+  the point of the list is that these were never verified rather than that
+  they were assumed to pass.
+- §4.3's re-measured tuning numbers are written into §4.7 and §5.6's soak
+  result into §5.8 — in both cases REPLACING the paragraph that says it could
+  not be run.
+- The remaining §5.5.4 decision (the lock) is answered in the register.
 - **And this section is deleted rather than ticked.** A remainder list that
   survives its own completion is the next plan's stale inheritance.
 
@@ -2531,7 +2593,8 @@ mechanisms under it are the ones §6.3 priced:
   (hub)", the prelude cutscene re-homed), and the RIFT CREATOR's lore pages
   carry the D2-style town loop.
 
-**Still owed, and recorded rather than discovered later:**
+**Still owed, and recorded rather than discovered later — all three now R1's
+(§5.5.3):**
 
 - **§6.4 in-session party travel** — a SESSION does not yet survive the level
   swap: travel re-mounts app-side exactly like a gate crossing, so a hosted
@@ -2567,7 +2630,9 @@ party rather than like a soloist who happens to be standing near you.
 >
 > **SO phase 7 IS THE SMALLER HALF: how a bot PLAYS.** Bots in a local game
 > (§7.3), a bot that behaves like a party member rather than a soloist standing
-> near you (§7.4), and quest awareness (§7.5).
+> near you (§7.4), and quest awareness (§7.5). All three are now scheduled
+> inside **R3 — THE PROOF** (§5.5.3), where the measurements they unblock and
+> the acceptances they precede live beside them; the designs stay here.
 
 ### 7.1 The parameterization — `botAct(bot, state, hero)`
 

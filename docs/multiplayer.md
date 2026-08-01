@@ -887,16 +887,29 @@ campaign now opens there. What §6.4 still owes is IN-SESSION party travel: a
 crossing today re-mounts the run app-side exactly like a gate, so a hosted
 session does not yet carry its party through a door together.
 
-The deferred work is inventoried in the plan's **phase 5.5 — "THE REMAINDER"**, and
-that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered across
-eleven PR sections is how a debt stops being anybody's. §5.5 collects them, says
-which are BLOCKED and on what, and gives the order they unblock each other in —
-**§7.1 (landed)** → **§7.2 (landed)** → **§4.3's measured pass (run — see
-below)** → **§7.2.5 (landed)** → §5.6's soak → **§3.2 (landed)** → **§4.2's
-corpse (landed)** → §3.3. It also separates out the FOUR that no diff can close (a
-packaged Electron launch, eight machines through a real NAT, a real router, the
-per-OS firewall prompts): those need a human with hardware, and writing them as
-work items is how they get ticked from a diff.
+The deferred work is inventoried in the plan's **phase 5.5 — "THE REMAINDER"**,
+and that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered
+across eleven PR sections is how a debt stops being anybody's. Its original
+chain is SPENT (§7.1 → §7.2 → §4.3's measured pass → §7.2.5 → §3.2 → §4.2's
+corpse all landed), and everything still open is consolidated into **THREE
+phases** (the plan's §5.5.3):
+
+- **R1 — THE WHOLE PARTY**: a joiner becomes a first-class player. In-session
+  party travel (§6.4), banking a joiner's character + the party HUD (§4.5,
+  landing together because they share the banking), the trade window screen
+  (§5.1), mod reconciliation (§4.4), and the hub's quest givers and stash.
+- **R2 — THE HONEST WIRE**: prediction and reconciliation (§3.3), the attacker
+  thread (the last seat-0 combat reads, which also unblocks the spare-or-kill
+  owner gate), the snapshot's size + the DEBUG net graph, and decision 15's
+  real licence lock.
+- **R3 — THE PROOF**: the party bot (§7.3–§7.5), the re-measured co-op tuning
+  it unblocks, the overnight soak, the five human-with-hardware acceptances (a
+  packaged Electron launch, eight machines through a real NAT, a real router,
+  the per-OS firewall prompts, the HOST/JOIN screenshot audit), and the store
+  surfaces.
+
+R1 and R2 are independent; R3 runs beside them and finishes last, because
+acceptance is what finishing is.
 
 **§4.3's MEASURED PASS HAS BEEN RUN, AND THE ANSWER IS THAT NEITHER LEVER
 MOVES.** Both prerequisites landed first: `botAct(bot, state, hero)` (164 sites,
