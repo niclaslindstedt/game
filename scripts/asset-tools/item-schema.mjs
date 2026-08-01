@@ -442,6 +442,28 @@ export function validateItem(doc, refs) {
       if (doc.armor !== undefined || doc.bagSlots !== undefined)
         err(`a revive item pays no armor and no bag cells — it is spent`);
     }
+    // An IDENTIFY item (GearDef.identify — the ITEM LOOKUP TICKET): spent from
+    // the bag to reveal an unidentified find. Same rules as `revive`, for the
+    // same reasons: a consumed-on-use piece is a carried trinket, never worn.
+    if (doc.identify !== undefined) {
+      if (typeof doc.identify !== "boolean") err(`identify must be a boolean`);
+      if (doc.slot !== "trinket")
+        err(
+          `identify is for a carried trinket (slot "${doc.slot}" is worn, ` +
+            `and using the piece consumes it)`,
+        );
+      if (doc.armor !== undefined || doc.bagSlots !== undefined)
+        err(`an identify item pays no armor and no bag cells — it is spent`);
+    }
+    // STACKING (GearDef.stack / Equipment.qty): how many units one bag cell
+    // holds. Reserved for the spend-from-the-bag trinkets — ordinary gear is
+    // one instance per cell, and a stack of rolled affixes would be nonsense.
+    if (doc.stack !== undefined) {
+      if (!Number.isInteger(doc.stack) || doc.stack < 2)
+        err(`stack must be a whole number of units, 2 or more`);
+      if (doc.slot !== "trinket")
+        err(`stack is for a carried trinket (slot "${doc.slot}" is worn)`);
+    }
     // The per-BASE difficulty drop gate (GearDef.minDifficulty): how a whole
     // item kind is held back for the deep ladder — rings from nightmare,
     // amulets from JESUS.

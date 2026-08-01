@@ -229,10 +229,11 @@ export function isSpecialItem(item: Equipment): boolean {
   if (gateKeyIds().includes(item.defId)) return true;
   if (isWeaponDef(item.defId)) return false;
   const def = gearDef(item.defId);
-  // Both of the zero-stat "the worth is what it DOES" trinkets read the same
-  // way here: a stat comparison prices them at nothing, so the sweep would sell
-  // the bottle of salts the hero bought two rooms ago for exactly this.
-  if (def.revive) return true;
+  // The zero-stat "the worth is what it DOES" trinkets all read the same way
+  // here: a stat comparison prices them at nothing, so the sweep would sell
+  // the bottle of salts — or the stack of lookup tickets — the hero bought two
+  // rooms ago for exactly this.
+  if (def.revive || def.identify) return true;
   return def.passive !== undefined;
 }
 

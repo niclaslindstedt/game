@@ -1128,8 +1128,12 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // because a boss's six piles are one handful of money and deserve one line.
   if (event.type === "itemCollected" && event.name && event.kind !== "gold") {
     const tier = event.tier ?? "regular";
+    // An UNIDENTIFIED find never pops the card, whatever the rarity filter
+    // says: the reveal spectacle is saved for the identify (IdentifyReveal),
+    // so the pickup itself is just a quiet tier-tinted feed line.
     if (
       event.kind === "equipment" &&
+      event.unidentified !== true &&
       pickupCardVisible(tier, getSettings().pickupCardsTier)
     ) {
       ctx.showPickupCard({

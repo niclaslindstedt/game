@@ -27,6 +27,7 @@ import { uniqueDef } from "./defs/uniques.ts";
 import { spawnEnemy } from "./create.ts";
 import {
   fitsEquipSlot,
+  markIdentified,
   mintUnique,
   recomputeMaxHp,
   recomputeMaxStamina,
@@ -318,7 +319,9 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
         ? uniqueDef(defId)
         : null;
     if (asUnique && asUnique.slot === "weapon") {
-      player.equipment.weapon = mintUnique(state, defId);
+      // Staged into the hand already identified — a scenario stages a BUILD,
+      // and a veiled piece cannot be worn.
+      player.equipment.weapon = markIdentified(mintUnique(state, defId));
       player.weaponCooldownMs = 0;
     } else if (spec.weapon !== null && !isWeaponDef(defId)) {
       warn(`scenario: unknown weapon def '${defId}' — kept the held weapon`);
@@ -619,11 +622,15 @@ function mintDrop(
       id: state.nextId++,
       kind: "equipment",
       pos,
-      equipment: rollEquipment(state, state.players[0], {
-        defId: id,
-        tier: drop.tier ?? "regular",
-        quality: "normal",
-      }),
+      // Identified whatever the tier: a scenario's drop exists to be picked up
+      // and worn in the staged moment, not appraised first.
+      equipment: markIdentified(
+        rollEquipment(state, state.players[0], {
+          defId: id,
+          tier: drop.tier ?? "regular",
+          quality: "normal",
+        }),
+      ),
     };
   }
   if (knownDef(uniqueDef, id)) {
@@ -631,7 +638,7 @@ function mintDrop(
       id: state.nextId++,
       kind: "equipment",
       pos,
-      equipment: mintUnique(state, id),
+      equipment: markIdentified(mintUnique(state, id)),
     };
   }
   if (knownDef(abilityDef, id)) {

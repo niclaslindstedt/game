@@ -30,7 +30,7 @@ import {
   abilityRarity,
   pickAbility,
 } from "./defs/abilities.ts";
-import { gearDef, reviveGearIds } from "./defs/equipment.ts";
+import { gearDef, identifyGearIds, reviveGearIds } from "./defs/equipment.ts";
 import { levelDef, runLevelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
@@ -39,6 +39,8 @@ import {
   bankMedkit,
   consumableName,
   equipmentName,
+  hasStackRoom,
+  markIdentified,
   medkitTierIndex,
   mintUnique,
   repairAll,
@@ -504,6 +506,31 @@ function rollStock(
       qty: MERCHANT.stockRevives,
     });
   }
+  // ITEM LOOKUP TICKETS (`GearDef.identify`): the take-home identify, D2's
+  // scroll shelf. A staple like the salts — no dice, stocked on every stall —
+  // because a hero drowning in unidentified finds with no way to read them in
+  // the field is exactly the customer this counter exists for. Each purchase
+  // MERGES into the bag's ticket stack (`addToInventory`), so buying the shelf
+  // down fills one cell, not twenty.
+  for (const defId of identifyGearIds()) {
+    stock.push({
+      id: state.nextId++,
+      kind: "weapon",
+      equipment: {
+        id: state.nextId++,
+        defId,
+        slot: gearDef(defId).slot,
+        tier: "regular",
+        ilvl: 1,
+        affixes: [],
+      },
+      price: Math.round(
+        ECONOMY.lookupTicketPrice.base +
+          ECONOMY.lookupTicketPrice.perLevel * hero.level,
+      ),
+      qty: MERCHANT.stockLookupTickets,
+    });
+  }
   // The weapon rolls ride the ordinary loot pipeline (level pool, levelReq
   // gates, tiers, affixes) — on the merchant's dice, not the run's: swap a
   // generator built at his parked state in for the rolls, park it back after.
@@ -512,12 +539,17 @@ function rollStock(
   state.rng = merchantRng;
   try {
     for (let i = 0; i < MERCHANT.stockWeapons; i++) {
-      const equipment = rollEquipment(state, hero, {
-        slot: "weapon",
-        tierBonus: MERCHANT.stockTierBonus,
-        // Stocked against the hero himself — his level is the stall's mlvl.
-        mlvl: partyLevel(state),
-      });
+      // Identified on the shelf: the trader knows his own stock, and a price
+      // tag on a veiled roll would be a gamble the stall doesn't sell — the
+      // sellValue below already reads the piece's true tier.
+      const equipment = markIdentified(
+        rollEquipment(state, hero, {
+          slot: "weapon",
+          tierBonus: MERCHANT.stockTierBonus,
+          // Stocked against the hero himself — his level is the stall's mlvl.
+          mlvl: partyLevel(state),
+        }),
+      );
       stock.push({
         id: state.nextId++,
         kind: "weapon",
@@ -540,7 +572,9 @@ function rollStock(
         UNIQUE.dropChance * (partyLevel(state) / ilvl),
       );
       if (state.rng() >= chance) continue;
-      const equipment = mintUnique(state, id);
+      // A fenced unique is sold BY NAME — identified like the rest of the
+      // counter, or the price tag would spoil what the label withheld.
+      const equipment = markIdentified(mintUnique(state, id));
       stock.push({
         id: state.nextId++,
         kind: "weapon",
@@ -771,7 +805,11 @@ function canCarryStock(
     case "ability":
       return canBankAbility(state, hero, entry.defId);
     case "weapon":
-      return hero.inventory.includes(null);
+      // A STACKABLE row (the lookup tickets) still fits a full bag while an
+      // existing stack has room — the same merge `buyStock`'s add performs.
+      return (
+        hero.inventory.includes(null) || hasStackRoom(hero, entry.equipment)
+      );
     case "consumable":
       return entry.item === "medkit"
         ? (hero.medkits[medkitTierIndex(entry.tier)] ?? 0) <

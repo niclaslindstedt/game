@@ -24,7 +24,9 @@ import {
   questStallRows,
   type QuestStallRow,
   equipmentIcon,
+  identifyCost,
   isScrappableLoot,
+  isUnidentified,
   medkitTierIndex,
   merchantName,
   repairAllCost,
@@ -47,6 +49,7 @@ import {
   REPAIR_KIT_ICON,
   STAMINA_POTION_ICON,
 } from "./consumables.ts";
+import { IdentifyReveal } from "./IdentifyReveal.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { POWERUP_BLUE, ShopDealCard } from "./ShopDealCard.tsx";
 import { bustSrc, SpritePortrait } from "./SpritePortrait.tsx";
@@ -226,6 +229,52 @@ function RepairButton({
 }
 
 /**
+ * Arm the counter's APPRAISAL — the merchant's identify service as a MODE:
+ * press this, then press the unidentified find to identify (the D2 Cain flow,
+ * one press per piece). Pressing it again disarms. It wears the lookup
+ * ticket's own barcode glyph (the two are the same service at two venues) and
+ * carries the count of veiled finds in the bag; dead while the bag holds none.
+ */
+function IdentifyButton({
+  font,
+  sprites,
+  count,
+  armed,
+  onToggle,
+}: {
+  font: PixelFont;
+  sprites: Sprites;
+  count: number;
+  armed: boolean;
+  onToggle: () => void;
+}) {
+  const enabled = count > 0;
+  const glyph = spriteDataUrl(sprites, "icon_lookup_ticket");
+  return (
+    <button
+      type="button"
+      className={`pixel-button secondary shop-bulk-btn${
+        armed ? " shop-identify-armed" : ""
+      }`}
+      aria-label="identify-mode"
+      disabled={!enabled}
+      onClick={enabled ? onToggle : undefined}
+    >
+      {glyph && <img src={glyph} alt="" className="pixel-img shop-bulk-coin" />}
+      <PixelText
+        font={font}
+        text="IDENTIFY"
+        scale={2}
+        color={enabled ? (armed ? "#ffd75e" : "#e6e8eb") : "#5a6470"}
+      />
+      {enabled && (
+        <PixelText font={font} text={String(count)} scale={2} color="#ffd75e" />
+      )}
+    </button>
+  );
+}
+
+/**
  * Open the BUY-BACK shelf — the undo beside the sell tools it undoes. It wears
  * the satchel the LOST & FOUND's rows wear (the two screens are the same idea
  * at two prices) and carries the count of what is on the shelf, so a player who
@@ -285,6 +334,14 @@ export function ShopPanel({
   const [selected, setSelected] = useState<Selection | null>(null);
   // The BUY-BACK shelf, raised over the counter (BuybackPanel).
   const [buybackOpen, setBuybackOpen] = useState(false);
+  // The just-identified piece whose centered REVEAL is on stage — the counter's
+  // appraisal was paid and the veil came off (see doIdentify / IdentifyReveal).
+  const [revealed, setRevealed] = useState<Equipment | null>(null);
+  // The APPRAISAL mode: armed by the footer's IDENTIFY button, and while armed
+  // a tap on a veiled bag find identifies it (doIdentify) instead of raising
+  // its deal card. Stays armed across a run of identifies — press, tap, tap —
+  // and disarms itself when nothing veiled is left.
+  const [identifyMode, setIdentifyMode] = useState(false);
   const merchant = state.merchant;
   const player = localHero(state);
 
@@ -331,24 +388,35 @@ export function ShopPanel({
     }
   }, []);
 
-  // ESCAPE (and the pad's B, which arrives as one) closes the CARD first and the
-  // shop only once nothing is raised — the same one-layer-at-a-time unwind the
-  // arsenal's card modal does. Caught in the capture phase so it beats the
-  // run's own shop-closing handler underneath. Bound only while a card is up, so
-  // an un-selected counter is dismissed by Escape exactly as before.
+  // ESCAPE (and the pad's B, which arrives as one) unwinds one layer at a time
+  // — the CARD first, then an armed IDENTIFY mode, and the shop only once
+  // nothing is raised — the same unwind the arsenal's card modal does. Caught
+  // in the capture phase so it beats the run's own shop-closing handler
+  // underneath. Bound only while something is raised, so an idle counter is
+  // dismissed by Escape exactly as before.
+  // How many veiled finds the bag still holds — the IDENTIFY button's badge
+  // and gate. The ARMED read is derived rather than reset by an effect: the
+  // mode collapses the moment the last veiled piece is read (or sold), with
+  // no setState-in-effect cascade to lint about.
+  const unidentifiedCount = player.inventory.filter(
+    (item): item is Equipment => item !== null && isUnidentified(item),
+  ).length;
+  const identifyArmed = identifyMode && unidentifiedCount > 0;
+
   const hasCard = selected !== null;
   useEffect(() => {
-    if (!hasCard) return;
+    if (!hasCard && !identifyArmed) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
       playUiSound(synth, "back");
-      setSelected(null);
+      if (hasCard) setSelected(null);
+      else setIdentifyMode(false);
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [hasCard]);
+  }, [hasCard, identifyArmed]);
 
   // The stat card compares the selection against what the hero already wears in
   // that slot (the same green/red deltas the inventory shows) — so a purchase
@@ -396,6 +464,23 @@ export function ShopPanel({
       setSelected(null);
       onChange();
     }
+  };
+
+  // IDENTIFY the tapped bag piece at the counter (items/identify.ts): the fee
+  // leaves the purse and the reveal takes center stage. Cued from the
+  // command's own result rather than an engine event — a UI-driven mutator's
+  // events are wiped by the next step() before the app's event pass runs.
+  // The armed mode STAYS armed, so a bagful identifies press-tap-tap-tap.
+  const doIdentify = (index: number) => {
+    const item = player.inventory[index];
+    if (!item || runCommand(state, "identifyItem", index) === null) {
+      playUiSound(synth, "back");
+      return;
+    }
+    playUiSound(synth, "confirm");
+    setSelected(null);
+    setRevealed(item);
+    onChange();
   };
 
   const doBuy = (entry: MerchantStock) => {
@@ -565,9 +650,21 @@ export function ShopPanel({
           </div>
         )}
 
-        {/* The hero's bag: tap a piece to see what he pays for it. */}
+        {/* The hero's bag: tap a piece to see what he pays for it — or, with
+            the IDENTIFY mode armed, tap a veiled find to have it appraised on
+            the spot (each target wears its fee as a gold corner chip). */}
         <div className="shop-section">
-          <PixelText font={font} text="YOUR BAG" scale={3} color="#9aa3ad" />
+          <div className="shop-section-heading">
+            <PixelText font={font} text="YOUR BAG" scale={3} color="#9aa3ad" />
+            {identifyArmed && (
+              <PixelText
+                font={font}
+                text="TAP A FIND TO IDENTIFY"
+                scale={2}
+                color="#ffd75e"
+              />
+            )}
+          </div>
           <div className="inv-grid shop-bag-grid">
             {player.inventory.map((item, index) => (
               <button
@@ -577,6 +674,10 @@ export function ShopPanel({
                   selected?.kind === "bag" && selected.index === index
                     ? " selected"
                     : ""
+                }${
+                  identifyArmed && item && isUnidentified(item)
+                    ? " identify-target"
+                    : ""
                 }${item ? tierGlowClass(item.tier) : ""}`}
                 aria-label={`bag-${index}`}
                 style={
@@ -585,7 +686,9 @@ export function ShopPanel({
                 disabled={!item}
                 onClick={
                   item
-                    ? (e) => select({ kind: "bag", index }, e.currentTarget)
+                    ? identifyArmed && isUnidentified(item)
+                      ? () => doIdentify(index)
+                      : (e) => select({ kind: "bag", index }, e.currentTarget)
                     : undefined
                 }
               >
@@ -603,6 +706,31 @@ export function ShopPanel({
                       />
                     ) : null;
                   })()}
+                {/* A bag STACK's depth (lookup tickets) — the same corner chip
+                    the stall piles wear. */}
+                {item && (item.qty ?? 1) > 1 && (
+                  <span className="consumable-count inv-stack-count">
+                    <PixelText
+                      font={font}
+                      text={String(item.qty)}
+                      scale={2}
+                      color="#f4f4f4"
+                    />
+                  </span>
+                )}
+                {/* With the appraisal armed, each veiled find wears its FEE in
+                    the same corner chip, in coin gold — what the next tap will
+                    actually cost, before it is spent. */}
+                {identifyArmed && item && isUnidentified(item) && (
+                  <span className="consumable-count inv-stack-count">
+                    <PixelText
+                      font={font}
+                      text={formatCoins(identifyCost(item))}
+                      scale={2}
+                      color="#ffd75e"
+                    />
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -659,6 +787,20 @@ export function ShopPanel({
                 // anchored to a cell the overlay now covers.
                 setSelected(null);
                 setBuybackOpen(true);
+              }}
+            />
+            {/* IDENTIFY: arm the appraisal, then tap the veiled find. */}
+            <IdentifyButton
+              font={font}
+              sprites={sprites}
+              count={unidentifiedCount}
+              armed={identifyArmed}
+              onToggle={() => {
+                playUiSound(synth, identifyArmed ? "back" : "confirm");
+                // The mode owns the bag's taps — a floating deal card under
+                // it would read as the thing the next tap acts on.
+                setSelected(null);
+                setIdentifyMode(!identifyArmed);
               }}
             />
             {/* REPAIR ALL: mend the whole kit — an icon-only button, no label. */}
@@ -752,6 +894,20 @@ export function ShopPanel({
           state={state}
           onChange={onChange}
           onClose={() => setBuybackOpen(false)}
+        />
+      )}
+
+      {/* THE IDENTIFY REVEAL — the appraisal just paid off: the item-found
+          spectacle takes center stage with the piece's full stats. Rendered
+          last so it sits above the counter and any floating card. */}
+      {revealed && (
+        <IdentifyReveal
+          font={font}
+          relicFonts={relicFonts}
+          sprites={sprites}
+          state={state}
+          item={revealed}
+          onClose={() => setRevealed(null)}
         />
       )}
     </div>

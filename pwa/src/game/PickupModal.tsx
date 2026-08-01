@@ -185,7 +185,10 @@ const FLAMES = [20, 38, 50, 62, 80] as const;
 /** The legendary blaze packs the base edge to edge. */
 const LEGENDARY_FLAMES = [8, 20, 32, 44, 56, 68, 80, 92] as const;
 
-function RarityReveal({ tier }: { tier: Tier }) {
+/** The one-shot rarity flourish (sparkles, flames, the legendary blast) —
+ * exported so the IDENTIFY reveal (IdentifyReveal.tsx) can play the same
+ * spectacle over its centered card that a plain pickup plays down here. */
+export function RarityReveal({ tier }: { tier: Tier }) {
   const rank = TIER_RANK[tier];
   // Magic reads purely from its finish (the blue frame + border glare); the
   // extra flourishes start at rare so the ladder stays subtle below it.

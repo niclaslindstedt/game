@@ -36,6 +36,8 @@ import {
   isArmorBroken,
   isWeaponBroken,
   isTrashLoot,
+  isUnidentified,
+  lookupTicketIndex,
   reviveTarget,
   wouldUpgradeSlot,
   type EquipSlot,
@@ -55,7 +57,8 @@ import {
 } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playEquipHaptic } from "./haptics.ts";
-import { ItemIcon } from "./ItemCard.tsx";
+import { IdentifyReveal } from "./IdentifyReveal.tsx";
+import { ItemIcon, itemKindGlyph } from "./ItemCard.tsx";
 import { ItemTooltip } from "./ItemTooltip.tsx";
 import { PaperDoll } from "./PaperDoll.tsx";
 import { playUiSound } from "./sfx/ui.ts";
@@ -205,6 +208,10 @@ export function InventoryPanel({
     item: Equipment;
     anchor: DOMRect;
   } | null>(null);
+  // The just-identified piece whose centered REVEAL is on stage (a ticket was
+  // spent on it from this panel). The same live instance — the identify
+  // already cleared its veil, so the card renders the full stats.
+  const [revealed, setRevealed] = useState<Equipment | null>(null);
   // Written only from event handlers (start/move/up), never during render:
   // the up-handler needs the freshest drag without re-subscribing per move.
   const dragRef = useRef<Drag | null>(null);
@@ -321,25 +328,42 @@ export function InventoryPanel({
   // WHICH VERB a bag piece offers right now, or null when it is inert here —
   // the one probe the USE row, the right-click and the activation all read, so
   // the affordance the card shows and the command the tap runs can never
-  // disagree. Two pieces answer today and both are zero-stat trinkets whose
-  // whole worth is what they DO: a travel-gate key on its home level (the
-  // cow-level ritual), and SMELLING SALTS while a companion is face-down.
+  // disagree. Three pieces answer today: a travel-gate key on its home level
+  // (the cow-level ritual), SMELLING SALTS while a companion is face-down —
+  // zero-stat trinkets whose whole worth is what they DO — and an UNIDENTIFIED
+  // find while an ITEM LOOKUP TICKET is in the bag (the affordance rides the
+  // FIND, not the ticket: one tap identifies, no target-picking dance).
   const bagVerb = (item: Equipment) => {
     if (gateKeyTarget(state, item)) return "spendGateKey" as const;
     if (reviveTarget(state, item)) return "spendReviveItem" as const;
+    if (isUnidentified(item) && lookupTicketIndex(localHero(state)) >= 0) {
+      return "spendLookupTicket" as const;
+    }
     return null;
   };
 
   // USE that piece: consume it, run its verb, and close the panel so the player
   // watches it land — the gate tearing open a step ahead, or a friend coming
   // round. Reached from the tooltip's USE row (touch) or a right-click on the
-  // bag cell (desktop).
+  // bag cell (desktop). The IDENTIFY verb is the exception on both counts: it
+  // spends a ticket ON the tapped find, and instead of closing the panel it
+  // raises the centered reveal (the identified card IS the payoff).
   const activateItem = (item: Equipment) => {
     const verb = bagVerb(item);
     const index = localHero(state).inventory.findIndex(
       (i) => i?.id === item.id,
     );
-    if (!verb || index < 0 || !runCommandOk(state, verb, index)) return;
+    if (!verb || index < 0) return;
+    if (verb === "spendLookupTicket") {
+      const ticket = lookupTicketIndex(localHero(state));
+      if (ticket < 0 || !runCommandOk(state, verb, ticket, index)) return;
+      playUiSound(synth, "confirm");
+      setInspect(null);
+      setRevealed(item);
+      onChange();
+      return;
+    }
+    if (!runCommandOk(state, verb, index)) return;
     playUiSound(synth, "confirm");
     setInspect(null);
     onChange();
@@ -562,7 +586,25 @@ export function InventoryPanel({
                       {item &&
                         !(
                           drag?.from.type === "inv" && drag.from.index === index
-                        ) && <ItemIcon sprites={sprites} item={item} />}
+                        ) && (
+                          <>
+                            <ItemIcon sprites={sprites} item={item} />
+                            {/* A STACK says how deep it is on the cell itself
+                                (lookup tickets) — the same corner badge the
+                                merchant's stall piles wear. A single unit
+                                shows nothing. */}
+                            {(item.qty ?? 1) > 1 && (
+                              <span className="consumable-count inv-stack-count">
+                                <PixelText
+                                  font={font}
+                                  text={String(item.qty)}
+                                  scale={2}
+                                  color="#f4f4f4"
+                                />
+                              </span>
+                            )}
+                          </>
+                        )}
                     </div>
                   );
                 })}
@@ -677,6 +719,31 @@ export function InventoryPanel({
           onUse={
             bagVerb(inspect.item) ? () => activateItem(inspect.item) : undefined
           }
+          useLabel={
+            bagVerb(inspect.item) === "spendLookupTicket"
+              ? "IDENTIFY"
+              : undefined
+          }
+          useIcon={
+            bagVerb(inspect.item) === "spendLookupTicket"
+              ? itemKindGlyph(inspect.item)
+              : undefined
+          }
+        />
+      )}
+
+      {/* THE IDENTIFY REVEAL — a ticket was just spent on a find from this
+          bag: the item-found spectacle takes center stage with the full stat
+          card. Dismissed by tap/ESC back to the open bag, where the freshly
+          revealed piece can be equipped. */}
+      {revealed && (
+        <IdentifyReveal
+          font={font}
+          relicFonts={relicFonts}
+          sprites={sprites}
+          state={state}
+          item={revealed}
+          onClose={() => setRevealed(null)}
         />
       )}
 

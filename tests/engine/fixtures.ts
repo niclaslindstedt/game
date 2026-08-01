@@ -850,6 +850,19 @@ export const FIX_GEAR: Record<string, GearDef> = {
     revive: true,
     icon: "icon_smelling_salts",
   },
+  // An IDENTIFY item (`GearDef.identify`): the engine's stand-in for the ITEM
+  // LOOKUP TICKET, so the identification rules run without naming the shipped
+  // `lookup_ticket`. The stack cap is deliberately SMALL (3, not the shipped
+  // 20) so the merge/overflow rules are cheap to prove.
+  test_ticket: {
+    id: "test_ticket",
+    name: "TEST TICKET",
+    slot: "trinket",
+    bonuses: {},
+    identify: true,
+    stack: 3,
+    icon: "icon_charm",
+  },
   // A carried TRINKET (the old charm): it is never worn — its bonus pays out
   // from the bag, so the engine's carried-contribution rule has a
   // content-agnostic piece to exercise.

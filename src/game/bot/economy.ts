@@ -33,7 +33,9 @@ import {
   canEquip,
   equipmentMaxDurability,
   heroLoadoutMemo,
+  identifyItem,
   isScrappableLoot,
+  isUnidentified,
   isWeaponBroken,
   planAutoEquipGear,
   repairAllCost,
@@ -421,6 +423,16 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
     if (item && !keep.has(i) && isScrappableLoot(state, hero, item)) {
       sellItem(state, hero, i);
     }
+  }
+  // IDENTIFY what the sell-run kept: every veiled find still in the bag is one
+  // the sweep judged worth keeping (or a chase tier it always spares), so the
+  // counter's per-piece fee is paid to make it wearable — the `autoEquipBest`
+  // below is what actually collects on it. After the sell so the junk's coins
+  // fund the appraisals; a short purse just leaves the rest veiled for the
+  // next visit.
+  for (let i = 0; i < inv.length; i++) {
+    const item = inv[i];
+    if (item && isUnidentified(item)) identifyItem(state, hero, i);
   }
   // WAKE THE FRIEND FIRST. A bottle of SMELLING SALTS outranks the weapon
   // upgrade below it and the whole consumable shelf: those make the next fight

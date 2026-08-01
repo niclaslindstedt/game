@@ -156,6 +156,11 @@ export function canEquip(
   player: Player,
   equipment: Equipment,
 ): boolean {
+  // An UNIDENTIFIED find is never worn — its rolls exist but are veiled, and
+  // wearing hidden affixes would make identification a formality. It banks
+  // until the merchant's counter or a lookup ticket reveals it, which also
+  // keeps every auto-equip sweep and upgrade marker honest for free.
+  if (equipment.unidentified) return false;
   // A weapon worn out to zero durability is unequippable until a repair kit
   // mends it — it rides in the bag as a broken spare, never worn.
   if (isWeaponBroken(equipment)) return false;

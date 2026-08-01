@@ -38,6 +38,7 @@ import {
   lootLevelFor,
   rollEquipment,
 } from "../items/rolling.ts";
+import { markIdentified } from "../items/identify.ts";
 import { armorTypeOf } from "../items/durability.ts";
 import { gearDef, isWeaponDef, weaponDef } from "../defs/equipment.ts";
 import { questDef } from "../defs/quests.ts";
@@ -134,11 +135,15 @@ function mintChoices(
   // are the same roll wearing a different base.
   const slot =
     loot.slot === "weapon" || loot.slot === "gear" ? loot.slot : undefined;
-  const anchor = rollEquipment(state, hero, {
-    ...(slot ? { slot } : {}),
-    ...(loot.tierBonus ? { tierBonus: loot.tierBonus } : {}),
-    mlvl: hero.level,
-  });
+  // Identified from the moment they exist: the whole point of a reward CHOICE
+  // is reading the stats before saying yes, so a veiled offer would be a lie.
+  const anchor = markIdentified(
+    rollEquipment(state, hero, {
+      ...(slot ? { slot } : {}),
+      ...(loot.tierBonus ? { tierBonus: loot.tierBonus } : {}),
+      mlvl: hero.level,
+    }),
+  );
 
   const lanes = laneBases(state, hero, anchor);
   // Nothing to choose between: a neutral piece (rule 3), or a pool too thin to
@@ -151,12 +156,14 @@ function mintChoices(
   return lanes.map((defId) =>
     defId === anchor.defId
       ? anchor
-      : rollEquipment(state, hero, {
-          defId,
-          tier: anchor.tier,
-          quality: anchor.quality,
-          mlvl: hero.level,
-        }),
+      : markIdentified(
+          rollEquipment(state, hero, {
+            defId,
+            tier: anchor.tier,
+            quality: anchor.quality,
+            mlvl: hero.level,
+          }),
+        ),
   );
 }
 

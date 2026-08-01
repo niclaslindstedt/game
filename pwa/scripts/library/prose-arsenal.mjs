@@ -112,7 +112,7 @@ export function itemLead(item, sources) {
         ? ` ${CLASS_STAT[item.weaponClass]} is the stat that scales it.`
         : ""),
   );
-  if (!item.stats.revive) {
+  if (!item.stats.revive && !item.stats.identify) {
     lines.push(
       `The requirement cuts both ways: nothing below level ${item.levelReq} ever drops one, and a hero below it banks the find rather than wearing it.`,
     );
@@ -123,11 +123,11 @@ export function itemLead(item, sources) {
       `It is a pool base, so it climbs: the same shape returns later in the campaign as ${list(item.ladder.map((rung) => rung.name))}, at requirements the endgame can actually meet.`,
     );
   }
-  if (item.stats.revive) {
-    // A REVIVE item is a STAPLE, not a find: no venue pools it and no monster
-    // pays it out, so the generic "nothing is authored to pay it out" line
-    // below would read as "you can barely get one" about the single most
-    // reliably available object in the game. Every trader has a crate.
+  if (item.stats.revive || item.stats.identify) {
+    // A REVIVE or IDENTIFY item is a STAPLE, not a find: no venue pools it and
+    // no monster pays it out, so the generic "nothing is authored to pay it
+    // out" line below would read as "you can barely get one" about the most
+    // reliably available objects in the game. Every trader has a crate.
     lines.push(
       `It is not a find. No monster drops one and no venue's pool carries it — every merchant simply stocks it, on every map, at a price that climbs with your level, and that is the only way to get one.`,
     );
@@ -348,6 +348,18 @@ export function gearShapeNotes(item) {
     notes.push([
       "WAKES A FRIEND",
       "USE it out of the bag and your downed companion comes round — groggy, on a sliver of health, but back on its feet. It is spent doing so, and it is the only thing in the game that does this: nothing else revives a companion, not time, not the merchant, not the walk to the next venue.",
+    ]);
+  }
+  if (stats.identify) {
+    notes.push([
+      "LIFTS THE VEIL",
+      "USE it on an unidentified find and the piece is revealed on the spot — name, rolls, everything — with no walk back to a counter. It is spent doing so; the merchant's own appraisal does the same job for a per-piece fee.",
+    ]);
+  }
+  if (stats.stack) {
+    notes.push([
+      "STACKS",
+      `Up to ${stats.stack} share one bag cell, so a full book of them costs a single slot.`,
     ]);
   }
   if (stats.bagSlots) {

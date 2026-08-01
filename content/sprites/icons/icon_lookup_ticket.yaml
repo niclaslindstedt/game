@@ -1,0 +1,31 @@
+name: icon_lookup_ticket
+family: icons
+size: [12, 12]
+description: >
+  A cream paper appraisal voucher with a printed barcode across its face and a
+  small gold assay seal stamped in the lower corner.
+subject:
+  kind: item icon
+  features: a rectangular paper ticket, a barcode of dark ink bars, a round gold seal in one corner
+  accent: gold assay seal, crisp black barcode on cream stock
+  flavor: a valuations bureau's single-use price check, thermal-printed and non-refundable
+palette:
+  O: "#1a1c2c" # dark outline
+  p: "#e8dfc8" # cream ticket stock
+  s: "#f7f2e2" # paper highlight
+  k: "#2a2e3e" # barcode ink
+  g: "#e0a33c" # gold assay seal
+  G: "#f2c56b" # seal highlight
+grid: |
+  ............
+  ............
+  .OOOOOOOOOO.
+  .OsppppppsO.
+  .OpkpkpkppO.
+  .OpkpkpkppO.
+  .OpkpkpkppO.
+  .OppppppGgO.
+  .OppppppggO.
+  .OOOOOOOOOO.
+  ............
+  ............

@@ -14,7 +14,7 @@ import { boxesOverlap, placeBeside } from "@ui/lib/anchor-box.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import type { RelicTier, Sprites } from "./assets.ts";
+import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { ItemCard } from "./ItemCard.tsx";
 
 /**
@@ -42,6 +42,8 @@ export function ItemTooltip({
   item,
   anchor,
   onUse,
+  useLabel,
+  useIcon,
 }: {
   font: PixelFont;
   relicFonts: Record<RelicTier, PixelFont>;
@@ -51,11 +53,19 @@ export function ItemTooltip({
   anchor: DOMRect;
   /**
    * Present only on a usable trinket in a place it works — a travel-gate key on
-   * its home level (`gateKeyTarget`), or SMELLING SALTS with a companion
-   * face-down (`reviveTarget`). Renders a USE row on the card: the touch path
-   * to using it, where desktop can also right-click the bag cell.
+   * its home level (`gateKeyTarget`), SMELLING SALTS with a companion
+   * face-down (`reviveTarget`), or an UNIDENTIFIED find while a LOOKUP TICKET
+   * is in the bag. Renders a USE row on the card: the touch path to using it,
+   * where desktop can also right-click the bag cell.
    */
   onUse?: () => void;
+  /** The USE row's label — "USE" unless the verb reads better by name (the
+   * unidentified card says IDENTIFY, because the tap spends a ticket ON it). */
+  useLabel?: string;
+  /** A sprite riding the label — the unidentified card's IDENTIFY carries the
+   * piece's class/slot glyph (`itemKindGlyph`), the one place a veiled find
+   * says what KIND of thing it is. */
+  useIcon?: string;
 }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const wornRef = useRef<HTMLDivElement>(null);
@@ -180,7 +190,23 @@ export function ItemTooltip({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={onUse}
           >
-            <PixelText font={font} text="USE" scale={2} color="#0b0d10" />
+            <PixelText
+              font={font}
+              text={useLabel ?? "USE"}
+              scale={2}
+              color="#0b0d10"
+            />
+            {(() => {
+              const src = useIcon && spriteDataUrl(sprites, useIcon);
+              return src ? (
+                <img
+                  src={src}
+                  alt=""
+                  className="pixel-img card-class-glyph"
+                  draggable={false}
+                />
+              ) : null;
+            })()}
           </button>
         )}
       </ItemCard>

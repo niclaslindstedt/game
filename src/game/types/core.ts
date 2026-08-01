@@ -467,6 +467,23 @@ export type Equipment = {
    * Absent on every weapon that hasn't broken out of the hand.
    */
   unequippedAt?: number;
+  /**
+   * The D2 rule: a MAGIC-or-better find drops UNIDENTIFIED — its rolls are all
+   * made at mint (so the seeded loot stream never shifts), but the piece cannot
+   * be worn and its name/stats stay hidden until it is identified at a
+   * merchant's counter or with an ITEM LOOKUP TICKET in the field (see
+   * items/identify.ts). Identifying DELETES the flag, so an identified piece —
+   * and every instance minted before this shipped — reads unchanged. Never set
+   * on staged/stall/reward mints, which are handed over already known.
+   */
+  unidentified?: true;
+  /**
+   * STACKABLE trinkets only (`GearDef.stack` — the ITEM LOOKUP TICKET): how
+   * many units this bag cell holds. `addToInventory` merges a new unit into an
+   * existing stack up to the def's cap; spending one decrements it and frees
+   * the cell at zero. Absent (= 1) on everything else.
+   */
+  qty?: number;
 };
 
 /** One burning patch of an ION WAKE (`trail`): where it landed, how long it

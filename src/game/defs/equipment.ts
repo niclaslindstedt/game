@@ -816,6 +816,19 @@ export function reviveGearIds(): string[] {
 }
 
 /**
+ * Every gear base marked as an IDENTIFY item (`GearDef.identify`) — the ITEM
+ * LOOKUP TICKET, and whatever a MOD authors with the same marker. Read by the
+ * merchant to stock the shelf, exactly like `reviveGearIds`; the USE itself
+ * asks the piece's own def (`spendLookupTicket`), never this list. Scanned
+ * rather than memoized, for the same mod-swap reason.
+ */
+export function identifyGearIds(): string[] {
+  return Object.values(activeGearDefs)
+    .filter((def) => def.identify)
+    .map((def) => def.id);
+}
+
+/**
  * A base's TREASURECLASS drop weight (D2's `Prob`): the relative odds it is the
  * one picked from a level's eligible pool once stage 1 decides SOMETHING drops
  * (see the weighted pick in `rollEquipment`). Default 1 — an even pool, exactly

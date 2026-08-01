@@ -465,6 +465,32 @@ export type GameEvent =
        * Absent for every pickup that isn't money.
        */
       coins?: number;
+      /**
+       * True when the collected piece is UNIDENTIFIED (a magic-or-better find
+       * — see `Equipment.unidentified`). The app routes these to the small
+       * pickup feed instead of the framed card: the reveal spectacle is saved
+       * for the moment the piece is identified.
+       */
+      unidentified?: boolean;
+    }
+  /**
+   * A bag piece was IDENTIFIED — at the merchant's counter (`identifyItem`) or
+   * with an ITEM LOOKUP TICKET in the field (`spendLookupTicket`). This is the
+   * moment the find's name and stats are revealed, so it is the cue the app's
+   * reveal card fires on (the one a plain pickup used to get). Pushed by a
+   * UI-driven mutator, so like `gearRepaired` it is only seen by callers that
+   * read events before the next `step()` — the app cues its reveal directly
+   * from the command's result as well.
+   */
+  | {
+      type: "itemIdentified";
+      tier: Tier;
+      name: string;
+      defId: string;
+      /** The identified piece's stable `Equipment.id` — the app resolves the
+       * live instance in the bag from it for the full-stats reveal card. */
+      itemId: number;
+      uniqueId?: string;
     }
   /**
    * A thrown drop touched down. This is the one that CLATTERS — a landing is

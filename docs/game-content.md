@@ -1097,7 +1097,10 @@ worth only what is still on it. He carries three things:
   kit;
 - a couple of **weapons**, single pieces rolled with a magic-skewed tier bonus,
   Diablo 2 gamble style, priced at ten times their own sell value — a purchase
-  costs roughly what selling a handful of magic finds brings in.
+  costs roughly what selling a handful of magic finds brings in;
+- a shelf of **ITEM LOOKUP TICKETS** (`lookup_ticket`, `GearDef.identify`) —
+  the take-home identify, D2's scroll of identify. See **Identification**
+  below.
 
 A level may also list **stall UNIQUES**
 (`LevelDef.merchant.stockUniques`): named uniques the trader fences, each
@@ -1110,6 +1113,32 @@ intended purse. The shop's SELL JUNK button clears every outgrown
 piece (the inventory's scrap rule) in one tap; SELL ALL empties the whole bag
 across the counter, keepers included (the worn loadout is untouched). Coins
 ride the loadout between levels like everything else the hero carries.
+
+**Identification (the D2 veil — `src/game/items/identify.ts`).** Every
+**magic-or-better find drops UNIDENTIFIED**: its rolls are all made at mint
+(so seeded runs never shift), but the piece names only its base — in its
+tier's color, `UNIDENTIFIED <BASE>` — cannot be worn, and shows no stats
+until identified. The reveal is the loot loop's second beat: the pickup
+itself is a quiet feed line, and the item-found spectacle (the centered
+reveal card, full stats, the rarity flourish) plays at the moment of
+identification instead. Two ways to lift the veil:
+
+- **the merchant's counter** — the shop's IDENTIFY button arms an appraisal
+  mode: tap it, then tap the veiled find, and the fee
+  (`ECONOMY.identifyPrice`, a base plus a share per item level — a ritual,
+  never a tax) leaves the purse as the reveal takes the stage;
+- an **ITEM LOOKUP TICKET** in the field — a single-use trinket off the
+  stall's shelf (`ECONOMY.lookupTicketPrice`, priced above the counter's own
+  fee because it buys knowing mid-dive), spent from the bag on the find
+  itself. Tickets **stack twenty to a bag cell** (`GearDef.stack` /
+  `Equipment.qty` — the game's one stackable bag item), so a full book costs
+  one slot, and purchases merge into the carried stack.
+
+Everything handed over already known stays known: the stall's own goods, a
+quest reward chosen off a card, staged scenario kits. Selling blind stays
+possible — the sweeps judge a veiled piece by its hidden rolls, so SELL JUNK
+still clears the outgrown ones — and the autopilot pays for appraisals at
+every counter visit before it re-equips.
 
 **The BUY-BACK shelf.** Every sale lands on the trader's buy-back shelf — the
 last dozen pieces sold across this counter (`MERCHANT.buybackSlots`), most

@@ -92,6 +92,8 @@ export const GEAR_FIELDS = {
     "the lore paragraph (see WEAPON_FIELDS — read through `baseLore`)",
   quote: "the flavor line under the stat block",
   revive: "the WAKES A FRIEND note — what USING it out of the bag does",
+  identify: "the LIFTS THE VEIL note — what USING it out of the bag does",
+  stack: "the STACKS note — how many units share one bag cell",
   slot: "the slot chip and the opening line",
   levelReq: "the REQUIRES LEVEL row",
   dropWeight: "the COMMON/SCARCE note",
@@ -389,6 +391,8 @@ function baseStats(family, def) {
     passive: def.passive ?? null,
     bagSlots: def.bagSlots ?? null,
     revive: def.revive ?? false,
+    identify: def.identify ?? false,
+    stack: def.stack ?? null,
     slot: def.slot,
   };
 }
