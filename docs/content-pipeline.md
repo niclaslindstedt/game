@@ -20,10 +20,15 @@ that keep the repo's several copies of a fact in agreement.
 
 ## The order, and why it is that order
 
-`make levels` runs the generators in a fixed chain (`npm run levels`, defined in
-`pwa/package.json`). The order is a DEPENDENCY order, not a preference — each
-generator validates its authored ids against the catalogs the earlier ones
-emitted:
+`make levels` runs the generators in a fixed chain. That chain lives in
+**`scripts/generate-content.mjs`** — one ordered step list, each entry carrying
+the one-line reason it sits where it does, spawned in sequence. It used to be
+written out twice, as two sixteen-deep `&&` chains in `pwa/package.json`
+differing by a single entry; two copies of a dependency order is a copy that
+drifts, and neither could say WHY a step sat where it did.
+
+The order is a DEPENDENCY order, not a preference — each generator validates its
+authored ids against the catalogs the earlier ones emitted:
 
 ```
 generate-leveling      leaf: the XP curve, nothing cross-refs it
@@ -50,10 +55,47 @@ generate-music         /   and the engine has no idea the game makes noise
 `generate-assets.mjs` (the sprite atlas, tiles, the UI font) between
 `generate-quests` and `generate-levels`, because the sprite pipeline derives
 wound frames from every enemy's `role`/`gore`. So `assets` is a superset of
-`levels`, and **`npm run levels` deliberately does not rebuild the atlas** —
-which is exactly why verifying with a bare `npx vitest run` is unsafe: a
-committed artifact compared against a half-stale build can agree with itself
-while CI fails.
+`levels` (`--no-assets` is what drops that one step), and **`npm run levels`
+deliberately does not rebuild the atlas** — which is exactly why verifying with
+a bare `npx vitest run` is unsafe: a committed artifact compared against a
+half-stale build can agree with itself while CI fails.
+
+**THE STEPS RUN IN SEQUENCE ON PURPOSE.** They are separate processes that read
+each other's output through the engine's def catalogs, and the whole chain minus
+the sprite renderer costs about three seconds — running them concurrently would
+trade a dependency the module loader can prove for one nobody can see, to save
+less time than a single contact sheet. The pipeline's real cost is
+`generate-assets.mjs`, and that one parallelizes INTERNALLY: every PNG it emits
+goes through a bounded queue rather than being awaited one at a time.
+
+## How much of it to run — `--previews`
+
+Almost everything `generate-assets.mjs` spends its time on is a PREVIEW, and
+previews are gitignored review surfaces rather than anything the game loads. Of
+its ~30 s, the atlas, the source rects, the plane manifest and the three fonts —
+everything the game itself ships — account for about two. The rest is the ~1800
+per-sprite 8x PNGs, seventeen family contact sheets, the full cross-family
+sheet, the film strips and animated WebPs, the font specimens and the palette
+swatches.
+
+So how much of it to draw is an argument, and the three npm entry points differ
+only in that:
+
+| Script         | `--previews` | Draws                               | For                         |
+| -------------- | ------------ | ----------------------------------- | --------------------------- |
+| `assets`       | `full`       | everything                          | `make assets`, the art loop |
+| `assets:site`  | `sprites`    | the per-sprite `@8x.png` files only | the website build           |
+| `assets:check` | `none`       | nothing                             | test / lint / typecheck     |
+
+`assets:site` exists because the LIBRARY's page builder copies those 8x previews
+as its sprite art (`pwa/scripts/library/art.mjs`) and throws on a missing one —
+a page with a hole in it should fail the build, not ship. Nothing else reads any
+of them.
+
+Every mode builds and checks the atlas, the fonts and every catalog identically,
+and the sprite LINTS — orphan pixels, ground contrast, wound visibility — run in
+all three. A check that only fires when somebody asked for pictures is not a
+check.
 
 **The snapshot guards.** Most catalogs are pinned to a committed fixture under
 `tests/content/fixtures/` by a round-trip test. Several were frozen from the
@@ -69,8 +111,9 @@ never by editing the fixture.
   carved per run (the `mapgen-improvement` skill), so the loader refuses a mission that
   authors a wall, a spawn, a prop, a zone or a coordinate, naming where each one
   went. `content/levels/<id>.yaml`
-  is the source of truth; `make levels` (folded into `make assets`, plus a root
-  `pretypecheck`) validates it against the live engine catalogs and generates
+  is the source of truth; `make levels` (folded into `make assets`, and into the
+  rebuild every root check opens with) validates it against the live engine
+  catalogs and generates
   `src/generated/levels.ts` (the gitignored, regenerated-on-build output — never
   edit or commit it), which `src/game/defs/levels/index.ts` reads. The
   per-difficulty × per-map LEVEL LADDER — each map's `[start, end]` mob band +
