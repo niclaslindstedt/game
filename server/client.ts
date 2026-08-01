@@ -21,13 +21,25 @@
 // `tests/engine/net_determinism_test.ts`. If it ever fails, the fallback is
 // already scoped: static state joins the wire and costs ~100 KB once per level.
 //
-// **THE 170 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD IN THIS DIRECTORY.** This
-// module imports `@game/core`, so nothing on the app's startup path may import
-// it: the future HOST and JOIN screens are title-menu screens and must reach
-// `@game/menu` and the import-free `@game/wire/*` leaves alone. `pwa/scripts/
-// check-seo.mjs` is what catches the mistake; do not raise the number.
+// **IT SITS IN `server/` AND KNOWS NOTHING ABOUT A PAGE**, which is the whole
+// reason it moved out of `pwa/src/game/net/`. It is the only thing in the repo
+// that turns snapshots back into a run, and a BOT CLIENT — a headless process
+// that joins a session and plays off replicated state (multiplayer plan §7.2.5)
+// — needs exactly that and has no renderer to put it in. A second client
+// written beside this one would be the drift the plan warns about: what the bot
+// proves playable has to be what the page actually reads. So the ONE app-shaped
+// thing it used to do — telling `local-seat.ts` which chair the server gave us
+// — is now the `onSeat` callback, and the page passes `setLocalSeat` to it.
+//
+// It is reached through the `@game/client` alias, which resolves to this file
+// in all four config maps (root tsconfig, pwa tsconfig, vitest, vite).
+//
+// **THE 170 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
+// `@game/core`, so nothing on the app's startup path may import it: the HOST and
+// JOIN screens are title-menu screens and must reach `@game/menu` and the
+// import-free `@game/wire/*` leaves alone. `pwa/scripts/check-seo.mjs` is what
+// catches the mistake; do not raise the number.
 
-import { setLocalSeat } from "../local-seat.ts";
 import {
   createRunFromParams,
   type GameState,
@@ -39,12 +51,8 @@ import {
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
-import { decodeFrame, encodeFrame } from "@game/wire/codec.ts";
-import {
-  patchState,
-  type StatePatch,
-  type WireState,
-} from "@game/wire/delta.ts";
+import { decodeFrame, encodeFrame } from "./wire/codec.ts";
+import { patchState, type StatePatch, type WireState } from "./wire/delta.ts";
 import {
   FRAME,
   PROTOCOL_VERSION,
@@ -60,8 +68,8 @@ import {
   type RosterPayload,
   type SessionParams,
   type WelcomePayload,
-} from "@game/wire/protocol.ts";
-import { baselineFor, stripPrivate } from "@game/wire/snapshot.ts";
+} from "./wire/protocol.ts";
+import { baselineFor, stripPrivate } from "./wire/snapshot.ts";
 
 /** The pipe, whatever it is. A `MessagePort` in phase 1; a Steam P2P peer or a
  * UDP connection in phase 2. The client knows nothing else about it — which is
@@ -111,6 +119,17 @@ export type NetClientOptions = {
    * a state rather than a stream, and merging one would leave a player who
    * quit on the party frames for ever. */
   onRoster?: (entries: RosterEntry[]) => void;
+  /**
+   * WHICH CHAIR THE SERVER GAVE US, the moment the welcome says — and null on
+   * dispose, because a stale seat outliving its session would point the next
+   * run's camera at somebody who is not there.
+   *
+   * A callback rather than a direct write to `local-seat.ts`, because that
+   * module is the PAGE's answer to "which hero is this screen about" and this
+   * client also runs in processes that have no screen (a bot client). The app
+   * passes `setLocalSeat`; a headless joiner reads the seat itself.
+   */
+  onSeat?: (seat: number | null) => void;
 };
 
 export type NetClient = {
@@ -121,6 +140,14 @@ export type NetClient = {
    * never re-read it expecting a new one.
    */
   readonly state: GameState | null;
+  /**
+   * The chair the server seated us in, or null for a spectator (and before the
+   * welcome). The page reads the same answer through `localHero`; a headless
+   * joiner has no such module and reads it here — it is which hero in
+   * `state.players` this process is entitled to steer, and the ONLY one whose
+   * private tier (the bag, the purse, the build) it actually holds.
+   */
+  readonly seat: number | null;
   /** The server tick the last applied snapshot was taken on. */
   readonly tick: number;
   /** Hand the server this frame's input. Called once per rendered frame. */
@@ -154,6 +181,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
    * never disagree about which sequence it is. */
   let acked = 0;
   let baseline: WireState | null = null;
+  let seat: number | null = null;
   let tick = 0;
   let inputSeq = 0;
   let disposed = false;
@@ -220,12 +248,13 @@ export function createNetClient(options: NetClientOptions): NetClient {
       return;
     }
     state = options.adopt ?? buildLocalState(welcome.params);
+    seat = welcome.seat ?? null;
     const recipient = { seat: welcome.seat };
     // WHICH HERO THIS SCREEN IS ABOUT. The seat is the server's answer and
     // arrives here; everything the app draws about "the hero" — the camera, the
     // health bar, the bag, the paper doll — reads it through `localHero`. A
     // spectator has no seat and watches the host's (see local-seat.ts).
-    setLocalSeat(welcome.seat);
+    options.onSeat?.(welcome.seat ?? null);
     // A CLIENT THAT MAY NOT SEE THE BAG MUST NOT INVENT ONE. Its own
     // `createGame` just built a whole private hero — an empty inventory, a
     // starting purse, a fresh stat block — and none of that is real: the
@@ -258,6 +287,9 @@ export function createNetClient(options: NetClientOptions): NetClient {
   return {
     get state() {
       return state;
+    },
+    get seat() {
+      return seat;
     },
     get tick() {
       return tick;
@@ -299,9 +331,10 @@ export function createNetClient(options: NetClientOptions): NetClient {
     dispose() {
       if (disposed) return;
       disposed = true;
+      seat = null;
       // A stale seat outlives its session otherwise, and the next run — a
       // one-hero party — would point its camera at a seat that is not there.
-      setLocalSeat(null);
+      options.onSeat?.(null);
       transport.close();
     },
   };

@@ -397,7 +397,7 @@ export function ShopPanel({
             {merchant.stock.map((entry) => {
               const icon = stockIcon(entry);
               const soldOut = entry.qty <= 0;
-              const affordable = canBuyStock(state, entry);
+              const affordable = canBuyStock(state, localHero(state), entry);
               const tint =
                 entry.kind === "weapon"
                   ? TIER_COLORS[entry.equipment.tier]
@@ -642,7 +642,7 @@ export function ShopPanel({
               type="button"
               className="pixel-button shop-deal-btn"
               aria-label="buy-selected"
-              disabled={!canBuyStock(state, selectedStock)}
+              disabled={!canBuyStock(state, localHero(state), selectedStock)}
               onClick={() => doBuy(selectedStock)}
             >
               <DealLabel

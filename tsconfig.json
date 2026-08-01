@@ -20,6 +20,7 @@
       "@game/menu": ["./src/menu.ts"],
       "@game/lib/*": ["./src/lib/*"],
       "@game/wire/*": ["./server/wire/*"],
+      "@game/client": ["./server/client.ts"],
       "@ui/lib/*": ["./pwa/src/lib/*"]
     }
   },

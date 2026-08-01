@@ -36,7 +36,7 @@
 // crashed between the two.
 
 import { decodeFrame, encodeFrame } from "../wire/codec.ts";
-import { passwordProof } from "../wire/handshake.ts";
+import { CHALLENGE_EPOCH_MS, passwordProof } from "../wire/handshake.ts";
 import {
   FRAME,
   HELLO_MIN_BYTES,
@@ -62,6 +62,40 @@ const HELLO_ATTEMPTS = 12;
  * rather than the probe's, because by here the host is provably reachable and
  * what is being waited on is a level being built. */
 const WELCOME_TIMEOUT_MS = 15_000;
+
+/**
+ * How long to wait before knocking again after a host said TOO MANY ATTEMPTS.
+ *
+ * The hub's connectionless bucket is keyed on the ADDRESS rather than the
+ * address and port — a flood trivially varies its source port — so everyone
+ * behind one address shares one allowance of five, refilled once a second. That
+ * is the right rule and it makes a perfectly ordinary case fail: a household
+ * where two people join the same friend, a LAN party, a dedicated server's own
+ * soak driving eight clients out of one loopback. None of those is abuse, and
+ * the correct answer to a rate limit has always been to WAIT, not to give up.
+ *
+ * Comfortably over the one-per-second refill, so a retry is met by a token that
+ * exists rather than by a second refusal.
+ */
+const RATE_LIMIT_BACKOFF_MS = 1_500;
+
+/**
+ * How many times a BUSY host may say wait before the attempt is given up on.
+ *
+ * Its own budget rather than the probe's, because the two answer different
+ * questions. The probe's twelve tries ask "IS ANYBODY THERE?", and its whole
+ * design point is that a player who mistyped an address finds out while they
+ * still remember typing it. A `rate-limited` reply has already answered that:
+ * somebody is plainly there, they issued us a challenge, and the only thing
+ * left is a queue. Charging the wait against the find-the-host budget made a
+ * contended address indistinguishable from a wrong one — four clients out of
+ * one loopback burned six seconds of retries and reported "no session".
+ *
+ * Twenty at a second and a half is half a minute of patience for a host that
+ * keeps saying no, which is longer than any honest queue and short enough that
+ * a host refusing for ever still terminates.
+ */
+const RATE_LIMIT_ATTEMPTS = 20;
 
 /**
  * The padding, made once.
@@ -133,10 +167,15 @@ export type JoinLink = {
 
 export function createJoinLink(options: JoinLinkOptions): JoinLink {
   const { transport, host } = options;
-  let phase: "probing" | "joining" | "live" | "done" = "probing";
+  let phase: "probing" | "joining" | "busy" | "live" | "done" = "probing";
   let attempts = 0;
+  let busyRetries = 0;
   let lastProbeAt = 0;
   let joinedAt = 0;
+  /** The join we sent, kept so a BUSY host can be knocked at again without
+   * spending a second token on a fresh challenge. See {@link RATE_LIMIT_ATTEMPTS}. */
+  let pending: { join: JoinPayload; cookieAt: number } | null = null;
+  let retryAt = 0;
 
   function finish(
     reason: RefusalReason | ByePayload["reason"],
@@ -197,16 +236,26 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       name: options.name,
       resume: options.resume,
     };
+    pending = { join, cookieAt: options.now() };
+    sendJoin();
+    options.log?.(`net: joining ${host}`);
+  }
+
+  /** Put the held join on the wire and start its deadline. */
+  function sendJoin(): void {
+    if (!pending) return;
     phase = "joining";
     joinedAt = options.now();
     transport.send(
       host,
       new Uint8Array(
-        encodeFrame({ type: FRAME.join, seq: 0, ack: 0, tick: 0 }, join),
+        encodeFrame(
+          { type: FRAME.join, seq: 0, ack: 0, tick: 0 },
+          pending.join,
+        ),
       ),
       "reliable",
     );
-    options.log?.(`net: joining ${host}`);
   }
 
   function onFrame(data: Uint8Array): void {
@@ -220,6 +269,36 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
     }
     if (frame.type === FRAME.bye) {
       const bye = (frame.payload ?? {}) as ByePayload;
+      // **TOO MANY ATTEMPTS IS A WAIT, NOT A REFUSAL.** It is the one `bye` that
+      // says nothing about whether we may play — only that the host's
+      // connectionless allowance was empty at the moment we knocked, which is
+      // an ordinary thing to be when several people share an address. So it
+      // goes back to probing rather than ending the attempt, and it is
+      // deliberately NOT forwarded: the JOIN screen would word it as a failure
+      // and the player would close a dialog over something that resolves
+      // itself in a second and a half. A host that means it will simply refuse
+      // again until the probe budget runs out, and THAT ending is reported.
+      if (bye.reason === "rate-limited" && phase === "joining") {
+        if (++busyRetries > RATE_LIMIT_ATTEMPTS) {
+          options.deliver(data);
+          finish("rate-limited");
+          return;
+        }
+        // **THE JOIN IS RE-SENT, NOT THE WHOLE HANDSHAKE.** The cookie we hold
+        // is good for its epoch and the one before it, so going back to the
+        // probe would spend a SECOND token of the very allowance that just ran
+        // out — two tokens per attempt against a bucket refilling at one a
+        // second, which is a queue that never drains. Re-knocking with what we
+        // already have costs one.
+        phase = "busy";
+        retryAt = options.now() + RATE_LIMIT_BACKOFF_MS;
+        // The probe budget is RESET rather than spent: this refusal is proof
+        // the host exists, which is the very question those attempts were
+        // asking. The wait is bounded by {@link RATE_LIMIT_ATTEMPTS} instead.
+        attempts = 0;
+        options.log?.(`net: ${host} is busy — retrying`);
+        return;
+      }
       // FORWARDED FIRST, THEN ACTED ON. The page's own client words a refusal
       // for the JOIN screen, and a `bye` that only reached the control channel
       // would leave a live session's ending unexplained on the one surface the
@@ -249,7 +328,25 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
           onFrame(packet.data);
         },
         onPeerLost: (peer, reason) => {
-          if (peer === host) finish("no-session", reason);
+          if (peer !== host) return;
+          // **SILENCE FROM A HOST THAT TOLD US TO WAIT IS NOT A DEAD HOST.**
+          // The reliability layer calls a peer dead after ten seconds without a
+          // word, and a busy address can easily be quiet for longer than that
+          // while its allowance refills — so eight clients out of one loopback
+          // had two of them declare a perfectly healthy server unreachable.
+          // The peer record is already gone by here (that is what being
+          // declared dead means), so the honest move is to start the handshake
+          // over: a fresh probe rebuilds both sides cleanly, and the cookie we
+          // were holding is past its epoch by now anyway. Bounded by
+          // `busyRetries`, so a host that is genuinely gone still ends.
+          if (phase === "busy" && busyRetries <= RATE_LIMIT_ATTEMPTS) {
+            pending = null;
+            phase = "probing";
+            attempts = 0;
+            probe();
+            return;
+          }
+          finish("no-session", reason);
         },
         onError: (detail) => finish("no-session", detail),
       });
@@ -275,6 +372,19 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       if (phase === "done") return;
       transport.tick();
       const at = options.now();
+      if (phase === "busy" && at >= retryAt) {
+        // A cookie the host will no longer honour is worse than no cookie: the
+        // join would be refused as a forgery rather than queued. Past its epoch
+        // the handshake starts over, which costs the extra token but is the
+        // only thing that can still work.
+        if (pending && at - pending.cookieAt < CHALLENGE_EPOCH_MS) sendJoin();
+        else {
+          pending = null;
+          phase = "probing";
+          probe();
+        }
+        return;
+      }
       if (phase === "probing" && at - lastProbeAt >= HELLO_RETRY_MS) {
         if (attempts >= HELLO_ATTEMPTS) {
           finish("no-session");

@@ -54,6 +54,7 @@ import type {
   Merchant,
   MerchantConsumable,
   MerchantStock,
+  Player,
 } from "./types/index.ts";
 
 /**
@@ -645,19 +646,22 @@ export function sellItem(state: GameState, index: number): number | null {
  * refuses is a dud tap, and a row it greys out that would have worked is a lost
  * sale.
  */
-function canCarryStock(state: GameState, entry: MerchantStock): boolean {
+function canCarryStock(
+  state: GameState,
+  hero: Player,
+  entry: MerchantStock,
+): boolean {
   switch (entry.kind) {
     case "ability":
-      return canBankAbility(state, state.players[0], entry.defId);
+      return canBankAbility(state, hero, entry.defId);
     case "weapon":
-      return state.players[0].inventory.includes(null);
+      return hero.inventory.includes(null);
     case "consumable":
       return entry.item === "medkit"
-        ? (state.players[0].medkits[medkitTierIndex(entry.tier)] ?? 0) <
+        ? (hero.medkits[medkitTierIndex(entry.tier)] ?? 0) <
             CONSUMABLES.stackCap
-        : state.players[0][
-            entry.item === "repair" ? "repairKits" : "staminaPotions"
-          ] < CONSUMABLES.stackCap;
+        : hero[entry.item === "repair" ? "repairKits" : "staminaPotions"] <
+            CONSUMABLES.stackCap;
   }
 }
 
@@ -675,6 +679,9 @@ export function buyStock(state: GameState, stockId: number): boolean {
   if (!entry) return false;
   if (entry.qty <= 0) return false;
   if (state.players[0].coins < entry.price) return false;
+  // TODO(plan §3.1): the merchant's MUTATORS are still seat-0 reads — a joiner
+  // buying spends the host's purse. Same shape as the fix on `canBuyStock`
+  // above and on the companion verbs; see the plan's §5.9.
   switch (entry.kind) {
     case "ability":
       if (!canBankAbility(state, state.players[0], entry.defId)) return false;
@@ -705,14 +712,30 @@ export function buyStock(state: GameState, stockId: number): boolean {
 }
 
 /**
- * Can the hero afford (and carry) this stall entry right now? The app reads
- * it to gray out unbuyable rows; `buyStock` re-checks everything itself.
+ * Can `hero` afford (and carry) this stall entry right now? The app reads it to
+ * gray out unbuyable rows; `buyStock` re-checks everything itself.
+ *
+ * **`hero` IS A PARAMETER BECAUSE THIS CRASHED A CLIENT.** A purse, a bag and a
+ * pouch are PRIVATE (plan §3.1) — the split sends a hero's to that hero and to
+ * nobody else — and this used to read `state.players[0]` whoever asked. On a
+ * JOINER seat 0 belongs to somebody else, so its `inventory` simply is not
+ * there, and the autopilot's perfectly ordinary "would a walk to the stall
+ * re-arm me?" read (`bot/economy.ts affordableStallUpgrade`) died on
+ * `undefined.includes`.
+ *
+ * It is the exact failure the bot client exists to catch and the one no other
+ * test can: `split.ts` declares what TRAVELS, and every suite around it asserts
+ * that a field which changed arrived. None of them asks whether the set of
+ * fields a client HAS is enough to make a decision with. A human would have met
+ * this as a crash on a joiner's machine, minutes into a session, in a build
+ * where every test was green.
  */
 export function canBuyStock(
   state: GameState,
+  hero: Player,
   entry: Merchant["stock"][number],
 ): boolean {
   if (entry.qty <= 0) return false;
-  if (state.players[0].coins < entry.price) return false;
-  return canCarryStock(state, entry);
+  if (hero.coins < entry.price) return false;
+  return canCarryStock(state, hero, entry);
 }

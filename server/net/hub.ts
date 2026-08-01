@@ -463,7 +463,39 @@ export function createPeerHub(options: HubOptions): PeerHub {
     if (!frame) return;
     // Not admitted: two frames are permitted and both are rate limited.
     if (frame.type !== FRAME.hello && frame.type !== FRAME.join) return;
-    if (!allow(packet.from)) return;
+    if (!allow(packet.from)) {
+      // **A REFUSED JOIN IS TOLD; A REFUSED HELLO IS NOT**, and the asymmetry is
+      // the anti-reflection rule doing its job rather than an inconsistency.
+      //
+      // A `hello` is answered with SILENCE because a hello is the amplification
+      // vector: it is padded to `HELLO_MIN_BYTES` precisely so no reply can be
+      // larger than the request, and a refusal packet sent to a spoofed source
+      // address is the abuse this rule exists to prevent. A hello is also
+      // retried by every joiner, so silence costs half a second.
+      //
+      // A `join` is a different animal. It arrives from an address that already
+      // completed the challenge round trip — so it is not spoofed — it is far
+      // larger than this reply, and NOTHING RETRIES IT: it travelled reliable,
+      // which means the reliability layer under this one already acknowledged
+      // the datagram, so dropping it here loses it for good. Left silent, a
+      // legitimate player behind a busy address (a household, a LAN party, a
+      // soak driving eight clients out of one loopback) waits out the joiner's
+      // fifteen-second deadline and is told "the session stopped answering",
+      // which is a lie about which rule refused them.
+      if (frame.type === FRAME.join) {
+        transport.send(
+          packet.from,
+          new Uint8Array(
+            encodeFrame(
+              { type: FRAME.bye, seq: 0, ack: 0, tick: 0 },
+              { reason: "rate-limited" },
+            ),
+          ),
+          "unreliable",
+        );
+      }
+      return;
+    }
     if (frame.type === FRAME.hello) {
       // The whole frame as it arrived — header included, reliability header
       // already stripped — which is what `HELLO_MIN_BYTES` is measured

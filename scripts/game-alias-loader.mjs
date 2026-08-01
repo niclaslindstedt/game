@@ -29,6 +29,7 @@ const DIRS = [
 const FILES = {
   "@game/core": path.join(root, "src", "index.ts"),
   "@game/menu": path.join(root, "src", "menu.ts"),
+  "@game/client": path.join(root, "server", "client.ts"),
 };
 
 export function resolve(specifier, context, nextResolve) {

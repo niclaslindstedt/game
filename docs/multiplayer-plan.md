@@ -1842,15 +1842,103 @@ and it should be a few hundred lines.
 - **§5.6's net graph.** Every number it wants is already measured
   (`Reliability.stats`, `.rtt`, the roster's ping); it is a readout rather than
   an instrument, and it did not fit.
-- **§5.6's SOAK AND ADVERSITY PASS, AND THAT ONE IS THE FINDING** — the same
+- **§5.6's SOAK AND ADVERSITY PASS, AND THAT ONE WAS THE FINDING** — the same
   shape §4.7 hit. Neither could be run, because neither had an instrument: as
   written they need eight machines and eight bored humans. That is what §7.2.5
-  now exists for, and the honest ordering is §7.1 → §7.2 → §7.2.5 → this soak —
-  **all four of which are now phase 5.5's, sequenced in §5.5.2.**
+  exists for, and the honest ordering is §7.1 → §7.2 → §7.2.5 → this soak —
+  **all four of which are phase 5.5's, sequenced in §5.5.2.**
   What DID land is `tests/engine/net_dedicated_test.ts`, which drives a real
   session behind a real admission desk over a real UDP socket and proves the
   stack CONNECTS — a strictly weaker claim, and it must not be recorded as the
   soak.
+
+  **THE INSTRUMENT NOW EXISTS AND HAS BEEN RUN — SEE BELOW. THE DONE-WHEN IS
+  STILL NOT MET**, because what has been run is minutes rather than hours.
+
+### 5.9 The first soaks — what they measured, and the six defects they found
+
+`scripts/bot-client.mjs`, eight bot clients, one dedicated server, 75 ms of
+one-way latency (§5.6's 150 ms round trip) and 2% loss injected at the transport
+seam. Minutes at a time, on one machine, over loopback.
+
+**THE LAST RUN, with every fix below in.** Seven of eight clients seated (the
+eighth timed out joining) and all seven stayed connected for the full fifteen
+minutes. The party played L1 → L7 over 199 kills and CLEARED the level in about
+four minutes. Inbound 2.0–3.1 MB/s across seven clients while the fight was on —
+**roughly 300–450 KB/s each at a 20 Hz publish, i.e. 15–23 KB per snapshot**,
+which is the first number anybody has for §5.6's "snapshot growth" and is larger
+than this plan has ever assumed. Process rss moved between 151 and 187 MB with
+no monotonic climb. 223 verbs sent against 246,772 steers.
+
+**THE SIX DEFECTS.** Not one of them fails a unit test, and the first is the
+reason §7.2.5 exists at all.
+
+1. **A READ THE SPLIT WITHHOLDS, met as a CRASH.** `canBuyStock` asked
+   `state.players[0].inventory` whoever was asking, and on a joiner seat 0 is
+   somebody else's hero — whose bag the split does not send. The autopilot's
+   ordinary "would a walk to the stall re-arm me?" read
+   (`bot/economy.ts affordableStallUpgrade`) died on `undefined.includes`,
+   minutes into a session, in a build where every test was green. **This is
+   exactly the failure §7.2.5 says nothing else can catch**: `split.ts` declares
+   what TRAVELS, every suite around it asserts that a field which changed
+   arrived, and none of them asks whether what a client HAS is enough to decide
+   with. Fixed by parameterizing the read on the acting hero. **THE MERCHANT'S
+   MUTATORS ARE STILL SEAT-0 READS** — `buyStock`, `sellItem`, `repairGear`,
+   twenty-four sites — so a joiner buying spends the HOST's purse. Same shape as
+   the fix above and as the companion verbs in §5.5.3; it is the next thing on
+   §3.1's list and it is now a known bug rather than a suspicion.
+2. **A run parked on the TITLE CARD for ever.** A session builds its run waiting
+   on the level card, and a headless joiner that never sends `dismissIntro`
+   steers a hero on a run that has not started. 143,793 ticks "played", zero
+   kills, every figure a soak watches looking healthy. It was the readout's
+   phase/level/kills line that caught it — the argument for that line existing,
+   and for never judging a soak by whether the processes are alive.
+3. **A CLIENT KILLING ITSELF WITH ITS OWN POLITENESS.** A screen holds the run
+   until somebody clears it, so the naive loop re-sent the clearing verb on every
+   tick it still saw that screen — sixty a second, all RELIABLE, against a window
+   of sixty-four unacknowledged messages. The layer below did what it promises
+   and declared the peer dead. Eight clients gone inside a minute, each one's
+   last snapshot frozen on the readout looking for all the world like a wedged
+   server — **which is what it was mistaken for twice before the readout got good
+   enough to tell them apart.** `RESEND_QUIET_TICKS` is the rule a human obeys
+   without thinking: having asked, wait a few publishes to see whether it worked.
+4. **A rate-limited JOIN dropped in silence.** The hub's connectionless bucket is
+   keyed on the ADDRESS — a flood trivially varies its source port — so everyone
+   behind one shares an allowance of five, refilled once a second. That is the
+   right rule, and it makes an ordinary case fail: two people in a house joining
+   the same friend, a LAN party, a soak out of one loopback. The refused join
+   travelled RELIABLE, the reliability layer under the hub had already
+   acknowledged the datagram, and nothing ever retried it — so the player waited
+   out a fifteen-second deadline and was told "the session stopped answering".
+   The host now replies TOO MANY ATTEMPTS (a join is far larger than that reply,
+   so the anti-reflection rule is untouched, and unlike a hello it is not
+   spoofable — the sender completed the challenge round trip). The joiner treats
+   it as a WAIT: it re-sends the HELD join rather than the whole handshake,
+   because a fresh challenge would spend a second token of the very allowance
+   that just ran out, and the wait gets its own budget rather than being charged
+   against the probe's "is anybody there" tries.
+5. **A busy host declared dead by its own joiner.** The reliability layer calls a
+   peer dead after ten seconds of silence, which a queue can easily exceed; the
+   joiner now restarts the handshake instead of reporting an unreachable host.
+6. **A GLOBAL SCREEN NOBODY LEFT IN PLAY CAN CLOSE.** The level-up chooser lifts
+   only when the points are placed, and its owner can stop being able to place
+   them by QUITTING or by GOING DOWN (hp 0 with the party not yet wiped, so no
+   `dying` scene ever runs) — either way the run freezes for everybody, for ever.
+   `releaseStuckLevelup` drops the world's obligation to wait, checked every tick
+   rather than at the events that cause it, which is the only version a new way
+   of leaving play cannot out-run. The points are KEPT: a held seat may be
+   reclaimed and a downed hero revived, and both should find their level-up where
+   they left it. **Honesty about provenance**: this was reasoned out of a soak
+   whose frozen readout turned out to be (3), so it is proven by
+   `tests/engine/coop_rules_test.ts` rather than by a run. The real fix is §3.2's
+   per-player screens.
+
+**WHAT THEY HAVE NOT ANSWERED.** Leaks and snapshot growth are HOUR-scale
+questions and this ran for minutes; the 15–23 KB snapshot deserves a look on its
+own (§5.5.3); one client in eight still fails to join from a shared address; and
+the fleet's own limits are the plan's, not the instrument's — no prediction, one
+transport at a time, and a client's dps is partly a measurement of the network
+(§7.2.5's three limits). §5.7's done-when stands.
 
 ---
 
@@ -1949,21 +2037,40 @@ than rediscovered:
    SHIPPED shape rather than a test harness beside it (see §7.2.5), so it lands
    together with §7.3's local bots and needs no separate instrument.
 
-   **ITS PREREQUISITE IS PAID: the ADAPTER has landed** (decision 3b's other
-   half, §5.5.3). The bot's whole output is an intent — `botIntent` answers a
-   tick from one snapshot, and the same decisions drive the simulator in-process
-   and the app through its command router. What remains is the CLIENT: a headless
-   process beside `server/net/connect.ts` that joins over the real transport,
-   applies snapshots, and steers with `botAct` off the replicated state. The half
-   of that which does not exist yet is the snapshot-applying client outside
-   `pwa/` — `pwa/src/game/net/client.ts` is the only one today, and the app is
-   exactly where a headless joiner may not live.
+   **LANDED.** `server/bot-client.ts` joins over the real transport, applies
+   real snapshots, and plays its hero off the replicated state alone. It cost
+   one small module because both halves were already written to a seam: the
+   adapter (decision 3b, §5.5.3) had made the bot's whole output an intent, and
+   `createJoinLink` and the page's client already spoke to "a pipe, whatever it
+   is". The bridge between them is four lines.
 
-5. **§5.6's SOAK AND ADVERSITY PASS**, blocked on (4) — and cheap once (4) is
-   done, because under the amendment the soak is just "run a dedicated server
-   and let eight bots join it". Watched for leaks, drift and snapshot growth;
-   150 ms and 2% loss injected at the transport seam. §5.8 records that this
-   could not be run, and it must not be ticked from a green unit suite.
+   **THE ONE STRUCTURAL MOVE was `pwa/src/game/net/client.ts` →
+   `server/client.ts`** (the `@game/client` alias). It is the only thing in the
+   repo that turns snapshots back into a run, a headless joiner needs exactly
+   that, and a second client written beside it would be the drift this
+   instrument exists to catch — what a bot proves playable has to be what the
+   page actually reads. Its one app-shaped line (`setLocalSeat`) became the
+   `onSeat` callback; nothing else about it changed.
+
+   `tests/engine/net_bot_client_test.ts` is the guard, and it asserts the thing
+   nothing else does: not that a field which changed arrived, but that the set
+   of fields a client HAS is enough to make a decision with. It also runs the
+   party case and §5.6's 150 ms / 2% loss figures.
+
+5. **§5.6's SOAK AND ADVERSITY PASS. THE INSTRUMENT EXISTS AND HAS BEEN RUN —
+   BRIEFLY.** `scripts/bot-client.mjs` is the fleet ("run a dedicated server and
+   let eight bots join it", exactly as the amendment predicted), and
+   `Impairment` on the UDP transport is the weather — latency, jitter and loss
+   injected at the transport seam, BELOW the reliability layer so a dropped
+   reliable payload is genuinely retransmitted and a dropped snapshot is
+   genuinely gone.
+
+   **What has been run is MINUTES, not hours** (§5.8 has the numbers and the
+   four defects it found), so the done-when is NOT met: leaks and snapshot
+   growth are hour-scale questions and this has answered a ten-minute one. What
+   changed is that the remaining work is somebody leaving a terminal open
+   overnight rather than an instrument nobody has built.
+
 6. **§3.2 — the per-player screens.** `state.phase` loses eleven members to a
    new `Player.screen`. This is the design exercise rather than the plumbing:
    the non-blocking level-up is a real SINGLE-PLAYER behaviour change that owes
@@ -1996,7 +2103,23 @@ order, beside the chain above.
 - **§5.6's NET GRAPH** behind DEBUG MODE — round trip, snapshot size, packet
   loss, prediction error, with the FPS meter as the precedent. Every number is
   already measured (`Reliability.stats`, `.rtt`, the roster's ping), so this is
-  a readout rather than an instrument.
+  a readout rather than an instrument. **It is worth more than it was**: §5.9's
+  soak put a first number on the snapshot — roughly 23 KB per publish, ~450 KB/s
+  per client at 20 Hz — and nobody had one before, which is exactly the state a
+  readout ends.
+- **THE SNAPSHOT'S SIZE, now that there is a figure for it.** Not a task this
+  plan ever wrote down, because until §5.9 nothing measured it. 300–450 KB/s per
+  client is 2.4–3.6 Mbit/s down to each of eight players, which is fine on a LAN
+  and is not a number to ship to somebody's home connection without looking at
+  it. Whether it is the split being generous, the differ re-sending arrays whole,
+  or simply what a horde costs is unknown and is the first thing to find out.
+- **§3.1's REMAINING SEAT-0 READS, and the merchant is the big one.** §5.9's
+  first defect was one of these met as a crash on a client. `src/game/merchant.ts`
+  still has twenty-four `state.players[0]` sites, so a joiner buying spends the
+  HOST's purse and a joiner selling banks into it. Mechanical — the same change
+  `canBuyStock`, `spendReviveItem` and `healCompanionWithMedkit` have already
+  had — but it touches the shop screen and the command dispatch, so it is its own
+  piece of work rather than a rider on somebody else's.
 - **§4.4 — mods and versions reconciled.** phase 2 refuses a mismatch; this makes
   it WORK, which is the common case on Steam. The host's set is the session's, a
   joiner subscribed to the same mods applies them through `registerDefs`, and a
@@ -2438,8 +2561,10 @@ state.players[0])` all describe one hero. The interesting readouts for a party
 > snapshot for the client below. See §5.5.3's decision-3b entry for what landed,
 > including the two verbs this section wrongly assumed were already there
 > (`autoEquipBest` and `scrapInferiorLoot` exist, but neither is the bot's).
-> **WHAT IS STILL OWED HERE IS THE CLIENT ITSELF**, and the adapter was its
-> prerequisite.
+> **AND THE CLIENT ITSELF HAS LANDED** — `server/bot-client.ts`, with
+> `scripts/bot-client.mjs` as the fleet and `Impairment` on the UDP transport as
+> the weather. See §5.5.2's item 4 for what it cost and §5.9 for what its first
+> run found.
 >
 > **THE ONE THING THAT DOES NOT MOVE IS THE SIMULATOR.** §7.2's bots keep
 > calling `botAct` directly on the authoritative state, in-process, with no wire

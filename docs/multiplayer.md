@@ -142,10 +142,25 @@ server/net/upnp.ts            the router mapping (NAT-PMP, then UPnP-IGD)
         │
         ▼
 pwa/src/app/net-bridge.ts     the page's control half
-pwa/src/game/net/client.ts    the run driver the renderer reads
+server/client.ts              snapshots back into a run — @game/client
 pwa/src/game/net/driver.ts    host a run, or join somebody else's
 pwa/src/game/title-screen/    the three doors (menus-net.ts, use-sessions.ts)
+
+server/bot-client.ts          a headless joiner that PLAYS — the soak's engine
+scripts/bot-client.mjs        a fleet of them, pointed at an address
 ```
+
+**`server/client.ts` IS THE ONE CLIENT, and it is in `server/` rather than
+`pwa/` on purpose.** It is the only thing in the repo that turns snapshots back
+into a run — it builds the level for itself, applies what the server sends, and
+hands its holder the same `GameState`-shaped object the renderer has always
+read. A BOT CLIENT needs exactly that and has no renderer to put it in, and a
+second client written beside this one would be the drift the instrument exists
+to catch: what a bot proves playable has to be what the page actually reads. The
+one app-shaped thing it used to do — telling `local-seat.ts` which chair the
+server gave us — is the `onSeat` callback, and the page passes `setLocalSeat`.
+It is reached through the `@game/client` alias, which lives in all four config
+maps plus `scripts/game-alias-loader.mjs`.
 
 The JOINER's half of the wire is `server/net/connect.ts`, and it lives beside
 the hub rather than in the shell or in the page for the two reasons the seam
@@ -887,10 +902,93 @@ verbs — a stage wanting several takes several ticks and converges as the
 snapshots arrive.
 
 **`tests/engine/bot_intent_test.ts` is the guard**, and it writes the mapping out
-by hand rather than deriving it from the code. What is NOT here is the bot CLIENT
-itself: a headless process that joins a session over the real transport and
-steers off replicated state. That is the plan's §7.2.5, and this adapter was its
-prerequisite.
+by hand rather than deriving it from the code.
+
+## The bot client, and the soak
+
+`server/bot-client.ts` is a headless process that JOINS a session over the real
+transport, receives real snapshots, and plays its hero off the replicated state
+alone. It is a socket, a clock and a seat: the client is the page's own
+(`server/client.ts`) and the decisions are `botIntent`'s, so the file itself
+holds no game knowledge.
+
+**IT EXISTS TO ANSWER A QUESTION NOTHING ELSE ASKS.** `wire/split.ts` declares
+what travels, and every test around it asserts that a field which CHANGED
+arrived. None of them asks whether the set of fields a client HAS is enough to
+make a decision with. That gap fails silently and in exactly the direction the
+generic differ was built to avoid: a read moves behind a field the split
+withholds, every test stays green, and a joiner's screen is subtly wrong in a way
+only a human playing it would notice. A bot playing off a client's view cannot
+paper over it — it stops fighting, walks into a wall, or fails to swap a weapon,
+and it does so in CI (`tests/engine/net_bot_client_test.ts`).
+
+**THE SOAK IS `scripts/bot-client.mjs`** — a fleet pointed at an address, with
+§5.6's adversity available at the transport seam:
+
+```sh
+node electron/server-dist/server/main.js soak.json     # allowUnlicensedTransport
+node scripts/bot-client.mjs --address 127.0.0.1:27015 --bots 8   --minutes 120 --latency 75 --loss 0.02
+```
+
+`--latency` / `--jitter` / `--loss` are `Impairment` on the UDP transport, and
+they sit BELOW the reliability layer — so a dropped RELIABLE payload is genuinely
+retransmitted and a dropped snapshot is genuinely gone, which is the design claim
+worth testing. Impairing above reliability would model a failure that cannot
+happen and would look like it was working.
+
+**READ THE PHASE, NOT THE TICK COUNT.** The readout carries `played` (ticks in
+which a bot decided and sent), the last server tick, verbs sent, inbound KB/s,
+this process's rss — and the run's own phase, party level and kill count. That
+last group is what earns its keep: a fleet parked on the title card sending idle
+input scores identically to one clearing the level on every other figure. Two of
+the bugs below were invisible without it.
+
+### What the first soaks found
+
+Every one of these is a real defect, and not one of them fails a unit test.
+
+- **A read the split withholds, met as a CRASH.** `canBuyStock` asked
+  `state.players[0].inventory` whoever was asking, and on a joiner seat 0 is
+  somebody else's hero — whose bag the split does not send. So the autopilot's
+  perfectly ordinary "would a walk to the stall re-arm me?" read died on
+  `undefined.includes`, minutes into a session, in a build where every test was
+  green. **This is precisely the failure the bot client exists to catch and the
+  one nothing else can**: every other suite asks whether a field that changed
+  arrived, and none asks whether what a client HAS is enough to decide with.
+  The merchant's MUTATORS are still seat-0 reads and are the same bug waiting to
+  be met — see the plan's §5.9.
+- **A run parked on the TITLE CARD for ever.** A session builds its run waiting
+  on the level card, and a headless joiner that never sends `dismissIntro` steers
+  a hero on a run that has not started. 143,793 ticks "played", zero kills, and
+  every figure but the phase looked healthy.
+- **A client killing itself with its own politeness.** A screen holds the run
+  until somebody clears it, so the naive loop re-sent `advanceDialogue` on every
+  tick it still saw that screen — sixty a second, all RELIABLE, against a window
+  of sixty-four unacknowledged messages. The layer below did exactly what it says
+  and declared the peer dead. Eight clients, gone inside a minute, each one's
+  last snapshot frozen on the readout looking for all the world like a wedged
+  server. `RESEND_QUIET_TICKS` is the fix: having asked, wait a few publishes to
+  see whether it worked.
+- **A rate-limited JOIN dropped in silence.** The hub's connectionless bucket is
+  keyed on the ADDRESS, so everyone behind one — a household, a LAN party, a soak
+  — shares an allowance of five. A refused join travelled reliable, the layer
+  under the hub had already acknowledged the datagram, and nothing ever retried
+  it: the player waited out a fifteen-second deadline and was told "the session
+  stopped answering". The host now says TOO MANY ATTEMPTS, and the joiner treats
+  that as a WAIT rather than a refusal — re-sending the held join rather than the
+  whole handshake, because a fresh challenge would spend a second token of the
+  very allowance that just ran out.
+- **A busy host declared dead by its own joiner.** The reliability layer calls a
+  peer dead after ten seconds of silence, which a queue can easily exceed.
+- **A global screen nobody left in play can close.** The level-up chooser lifts
+  only when the points are placed, and its owner can stop being able to place
+  them by quitting or by going down. `releaseStuckLevelup` drops the world's
+  obligation to wait, every tick (the points are KEPT — a held seat may be
+  reclaimed and a downed hero revived). Found by reasoning about the soak rather
+  than by it, and proven by `tests/engine/coop_rules_test.ts`; the real fix is
+  per-player screens, §3.2.
+
+The soak runs themselves are in the plan's §5.9.
 
 ## What is NOT here yet
 

@@ -38,6 +38,42 @@ import type {
   TransportEvents,
 } from "./transport.ts";
 
+/**
+ * NETWORK ADVERSITY, injected at the seam (multiplayer plan §5.6).
+ *
+ * §5.6 asks for the game held playable at 150 ms and 2% loss, and §5.7 makes it
+ * a done-when — but as written neither names an instrument, so it was a
+ * requirement nobody could run. This is that instrument's other half: the bot
+ * client (`server/bot-client.ts`) supplies the players, this supplies the
+ * weather.
+ *
+ * **IT SITS BELOW THE RELIABILITY LAYER, AND THAT PLACEMENT IS THE WHOLE POINT.**
+ * A dropped datagram here is a datagram the layer above never saw — so a
+ * RELIABLE payload is retransmitted exactly as it would be over a bad route, and
+ * an UNRELIABLE one (every snapshot and delta) is simply gone, which is the
+ * design claim being tested: a lost snapshot costs a frame of smoothness and can
+ * never desync. Impairing above reliability would instead model a failure that
+ * cannot happen, and would look like it was working.
+ *
+ * Delayed packets are released on `tick()` rather than by a timer, because there
+ * is no timer anywhere below `server/net/` — the session ticks, the transport is
+ * ticked. Jitter therefore REORDERS, which is realistic and is a thing the layer
+ * above is supposed to survive.
+ *
+ * Off unless asked for. Nothing shipped passes it.
+ */
+export type Impairment = {
+  /** One-way delay added to every datagram, each direction, in ms. */
+  latencyMs?: number;
+  /** Extra delay up to this many ms on top of the latency, drawn per datagram. */
+  jitterMs?: number;
+  /** Fraction of datagrams dropped, each direction. 0..1. */
+  loss?: number;
+  /** Where the jitter and the loss draws come from. Injected so a soak can be
+   * replayed: the default is `Math.random`, which cannot be. */
+  random?: () => number;
+};
+
 export type UdpTransportOptions = {
   /** The port to try first. The walk starts here rather than at 27015 so a
    * player who set one in SETTINGS gets theirs tried first. */
@@ -49,6 +85,8 @@ export type UdpTransportOptions = {
   host?: string;
   /** Monotonic ms. Injected for the same reason the reliability layer's is. */
   now?: () => number;
+  /** Latency, jitter and loss to apply to this socket. See {@link Impairment}. */
+  impair?: Impairment;
 };
 
 /**
@@ -78,6 +116,47 @@ export function createUdpTransport(
   let events: TransportEvents | null = null;
   let closed = false;
   const peers = new Map<PeerKey, Reliability>();
+
+  // THE WEATHER, if any. `held` is the in-flight queue in BOTH directions —
+  // one list, because a datagram waiting to leave and one waiting to arrive are
+  // the same kind of thing to a clock.
+  const impair = options.impair;
+  const roll = impair?.random ?? Math.random;
+  const held: { dueAt: number; run: () => void }[] = [];
+
+  /** Drop it, delay it, or do it now — the one gate every datagram passes. */
+  function weather(run: () => void): void {
+    if (!impair) {
+      run();
+      return;
+    }
+    if (impair.loss && roll() < impair.loss) return;
+    const delay = (impair.latencyMs ?? 0) + (impair.jitterMs ?? 0) * roll();
+    if (delay <= 0) {
+      run();
+      return;
+    }
+    held.push({ dueAt: now() + delay, run });
+  }
+
+  /** Release everything whose time has come, in the order it was queued —
+   * collected first and run after, so a release cannot queue into the list it
+   * is walking. Called from `tick`, the only clock below this line. */
+  function releaseDue(): void {
+    if (held.length === 0) return;
+    const at = now();
+    const due: (() => void)[] = [];
+    for (let i = 0; i < held.length;) {
+      const entry = held[i] as { dueAt: number; run: () => void };
+      if (entry.dueAt > at) {
+        i++;
+        continue;
+      }
+      due.push(entry.run);
+      held.splice(i, 1);
+    }
+    for (const run of due) run();
+  }
 
   /** The reliability layer for one peer, made on demand. A stranger's first
    * packet creates one — which is safe precisely because it holds no memory
@@ -132,7 +211,8 @@ export function createUdpTransport(
           };
           socket.on("message", (data, rinfo) => {
             const key = keyFor(rinfo.address, rinfo.port);
-            peerFor(key).receive(new Uint8Array(data));
+            const payload = new Uint8Array(data);
+            weather(() => peerFor(key).receive(payload));
           });
           socket.on("error", (err) => {
             handlers.onError(err.message);
@@ -170,6 +250,7 @@ export function createUdpTransport(
     },
 
     tick() {
+      releaseDue();
       for (const peer of peers.values()) peer.update();
     },
 
@@ -177,6 +258,7 @@ export function createUdpTransport(
       if (closed) return;
       closed = true;
       peers.clear();
+      held.length = 0;
       try {
         socket?.close();
       } catch {

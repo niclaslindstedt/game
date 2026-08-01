@@ -25,6 +25,7 @@ export default defineConfig({
       { find: "@game/menu", replacement: here("./src/menu.ts") },
       { find: "@game/lib", replacement: here("./src/lib") },
       { find: "@game/wire", replacement: here("./server/wire") },
+      { find: "@game/client", replacement: here("./server/client.ts") },
       { find: "@ui/lib", replacement: here("./pwa/src/lib") },
     ],
   },

@@ -17,7 +17,7 @@
 // `ArrayBuffer` is TRANSFERRED rather than copied — which is also why a frame
 // is neutered after `send` and must never be read again by the sender.
 
-import type { ClientTransport } from "./client.ts";
+import type { ClientTransport } from "@game/client";
 
 /**
  * Wrap a `MessagePort` for the net client.
