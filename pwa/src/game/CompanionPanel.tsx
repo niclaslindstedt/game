@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The companion equip screen (Diablo-2 mercenary style): shown while the
-// engine pauses in the `companion` phase after tapping a party portrait.
+// local hero's `companion` screen is up after tapping a party portrait.
 // The companion's three slots — weapon, helmet, chest; never legs or feet —
 // sit above the HERO's own bag, so dressing the companion is a tap on a bag
 // item (equippable pieces highlight; the swapped-out piece drops into the
@@ -76,14 +76,13 @@ export function CompanionPanel({
   onChange: () => void;
   onClose: () => void;
 }) {
-  // The engine may already be back in `playing` for a frame while React's
-  // hud snapshot still says `companion` (the render loop throttles it) — a
-  // stale focus renders nothing and the next hud tick unmounts the panel.
-  // Never mutate state from render.
+  // The hero may already be back on the field for a frame while React's hud
+  // snapshot still says `companion` (the render loop throttles it) — a stale
+  // focus renders nothing and the next hud tick unmounts the panel. Never
+  // mutate state from render.
+  const focus = localHero(state).companionFocus;
   const companion =
-    state.companionFocus !== null
-      ? companionById(state, state.companionFocus)
-      : undefined;
+    focus !== undefined ? companionById(state, focus) : undefined;
   if (!companion) return null;
   const def = companionDef(companion.defId);
   const portrait = bustSrc(sprites, def.sprite);

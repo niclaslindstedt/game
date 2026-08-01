@@ -106,6 +106,8 @@ export type {
   GameEvent,
   GameState,
   Loadout,
+  Player,
+  PlayerScreen,
   Tier,
   WeaponClass,
 } from "./game/types/index.ts";

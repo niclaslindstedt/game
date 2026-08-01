@@ -24,6 +24,15 @@
 // there — which on a one-hero party reads as a black screen rather than as a
 // wrong seat.
 
+// Types only, and through `@game/menu` on purpose: this module sits on the
+// app's STARTUP path (App.tsx reaches it through saved-run.ts), where the
+// 170 KB budget forbids any edge to `@game/core` — the reachability tripwire
+// (`tests/content/net_reachability_test.ts`) counts a type-only import as an
+// edge, deliberately, because the distinction is too easy to lose.
+import type { GameState, PlayerScreen } from "@game/menu";
+
+export type { PlayerScreen };
+
 /** The seat this client steers, or 0 offline / watching. */
 let seat = 0;
 
@@ -49,4 +58,21 @@ export function localSeat(): number {
  */
 export function localHero<T>(state: { players: [T, ...T[]] }): T {
   return state.players[seat] ?? state.players[0];
+}
+
+/** The screen the local hero has up (bag, map, pause, …), or undefined when
+ * they are on the field. The per-player counterpart of `state.phase`. */
+export function localScreen(state: GameState): PlayerScreen | undefined {
+  return localHero(state).screen;
+}
+
+/**
+ * "My hero is on the field and I have nothing open" — the run is in the
+ * global `playing` phase AND the local hero has no screen up. This is what
+ * `state.phase === "playing"` used to mean before the per-player screens
+ * split (plan §3.2): every "show the live-field HUD" and "a field tap may
+ * act" gate reads this, never the bare phase.
+ */
+export function fieldLive(state: GameState): boolean {
+  return state.phase === "playing" && localScreen(state) === undefined;
 }

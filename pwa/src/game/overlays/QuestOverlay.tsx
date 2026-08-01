@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE QUEST BOX — the conversation with somebody who has an errand, shown while
-// `phase === "quest"`. The run is frozen behind it, exactly as it is behind the
-// shop and the bag.
+// the local hero's `quest` screen is up. The hero is parked behind it, exactly
+// as behind the shop and the bag.
 //
 // IT IS THE ONE SURFACE IN THE GAME THAT IS GOLD, and that is deliberate rather
 // than decorative. Every other window wears the shared FF6 skin (`--panel-*`);
@@ -22,6 +22,7 @@
 // re-derived here: an offer that promises a different number than the handover
 // pays is a reward the player stops trusting.
 
+import { localHero } from "../local-seat.ts";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -311,7 +312,10 @@ export function QuestOverlay({
   // READ, never minted: the engine decided these when the conversation opened
   // (see quests/reward-choices.ts), so a re-render cannot re-roll the reward.
   const choices: Equipment[] = useMemo(
-    () => (quest && !listing ? questRewardChoices(state, quest.id) : []),
+    () =>
+      quest && !listing
+        ? questRewardChoices(state, localHero(state), quest.id)
+        : [],
     [state, quest, listing],
   );
   const rewardPick = quest
@@ -716,7 +720,7 @@ function rewardLines(
 ): RewardLine[] {
   if (!reward) return [];
   const rows: RewardLine[] = [];
-  const xp = questXpReward(state, reward);
+  const xp = questXpReward(state, localHero(state), reward);
   if (xp > 0) {
     rows.push({ label: `${formatCompact(xp)} XP`, color: XP_BLUE });
   }

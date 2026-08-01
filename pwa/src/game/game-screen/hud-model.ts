@@ -4,7 +4,12 @@
 // publishes it to React when the change-key differs (see buildHud), so the
 // DOM UI re-renders on real changes, not sixty times a second.
 
-import { localHero } from "../local-seat.ts";
+import {
+  fieldLive,
+  localHero,
+  localScreen,
+  type PlayerScreen,
+} from "../local-seat.ts";
 import {
   AMMO,
   ammoCount,
@@ -32,6 +37,16 @@ import { getSettings, type WeaponSwitchOrder } from "../settings.ts";
 
 export type Hud = {
   phase: GamePhase;
+  /** The LOCAL hero's open screen (bag, map, pause, …), or undefined when
+   * they are on the field — the per-player half of what `phase` used to
+   * carry. Every former per-player phase mount keys off this. */
+  screen: PlayerScreen | undefined;
+  /** "My hero is on the field and I have nothing open" (see `fieldLive`) —
+   * what every "show the live-field HUD" gate reads. */
+  fieldLive: boolean;
+  /** The local hero has stat or talent points banked and unspent — lights
+   * the HUD's points pip, whose press opens the chooser on demand. */
+  pointsWaiting: boolean;
   hp: number;
   maxHp: number;
   /** Current sprint pool and its max. */
@@ -256,7 +271,7 @@ export function buildHud(
   // The talent-picker queue + the hero's owned ranks — the picker reads both to
   // show the earning tree and its filled pips. Keyed so a spent point (rank up,
   // queue shrinks) re-renders the overlay.
-  const talentPoints = [...state.pendingTalentPoints];
+  const talentPoints = [...localHero(state).pendingTalentPoints];
   const talents = { ...localHero(state).talents };
   const talentKey = `${talentPoints.join(",")}/${Object.entries(talents)
     .sort(([a], [b]) => (a < b ? -1 : 1))
@@ -316,11 +331,20 @@ export function buildHud(
   const xpKey = Math.floor(
     (1000 * localHero(state).xp) / Math.max(1, localHero(state).xpToNext),
   );
-  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
+  // The local hero's screen (and the fieldLive it folds into) are part of the
+  // key: opening the bag or the map moves nothing else the key was watching,
+  // and the overlays mount off the published snapshot.
+  const screen = localScreen(state);
+  const live = fieldLive(state);
+  const key = `${state.phase}/${screen ?? ""}/${live ? 1 : 0}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
       phase: state.phase,
+      screen,
+      fieldLive: live,
+      pointsWaiting:
+        localHero(state).pendingStatPoints > 0 || talentPoints.length > 0,
       hp: localHero(state).hp,
       maxHp: localHero(state).maxHp,
       stamina: localHero(state).stamina,

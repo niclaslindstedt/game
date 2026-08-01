@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The run's phase-driven overlay stack: the prelude cutscene, the level
+// The run's scene overlay stack (global phases + the local hero's own
+// screens): the prelude cutscene, the level
 // intro/outro monologues, the level-name title card, in-world dialogue
 // (with the arrival-scene bag shortcut), the spare/finish choice, the
 // companion equip panel, the level-up chooser, the "SPELL UNLOCKED" modal,
@@ -10,6 +11,7 @@
 // end-of-run splashes stay in GameScreen — they reach into run/session
 // machinery (music, autopilot, quit/exit) this stack doesn't know about.
 
+import { localHero } from "../local-seat.ts";
 import type { MutableRefObject, ReactNode } from "react";
 
 import { canOpenInventory, type GameState } from "@game/core";
@@ -202,9 +204,10 @@ export function SceneOverlays({
           player open the inventory and equip a fitting weapon before the
           fight. Other scenes (last words, thoughts, lore) stay read-only —
           the engine's canOpenInventory draws that line. */}
-      {hud.phase === "dialogue" && canOpenInventory(state) && (
-        <div className="dialogue-hud">{heroAvatar}</div>
-      )}
+      {hud.phase === "dialogue" &&
+        canOpenInventory(state, localHero(state)) && (
+          <div className="dialogue-hud">{heroAvatar}</div>
+        )}
 
       {hud.phase === "choice" && (
         <ChoiceOverlay
@@ -218,7 +221,7 @@ export function SceneOverlays({
         />
       )}
 
-      {hud.phase === "companion" && (
+      {hud.screen === "companion" && (
         <CompanionPanel
           state={state}
           font={font}
@@ -232,7 +235,7 @@ export function SceneOverlays({
         />
       )}
 
-      {hud.phase === "levelup" && (
+      {hud.screen === "levelup" && (
         <LevelUpOverlay
           state={state}
           font={font}
@@ -256,7 +259,7 @@ export function SceneOverlays({
         />
       )}
 
-      {hud.phase === "respec" && (
+      {hud.screen === "respec" && (
         <RespecOverlay
           state={state}
           font={font}
@@ -271,11 +274,11 @@ export function SceneOverlays({
         />
       )}
 
-      {/* The CHARACTER SCREEN, in its two D2 faces. Both share the engine's
-          `inventory` phase — pressing the bag pouch or the hero's portrait
-          freezes the run identically — and the app decides which half shows,
+      {/* The CHARACTER SCREEN, in its two D2 faces. Both share the hero's
+          `inventory` screen — pressing the bag pouch or the hero's portrait
+          parks the hero identically — and the app decides which half shows,
           so a swap between them is instant and CLOSE leaves both. */}
-      {hud.phase === "inventory" && charTab === "bag" && (
+      {hud.screen === "inventory" && charTab === "bag" && (
         <InventoryPanel
           state={state}
           font={font}
@@ -289,7 +292,7 @@ export function SceneOverlays({
         />
       )}
 
-      {hud.phase === "inventory" && charTab === "stats" && (
+      {hud.screen === "inventory" && charTab === "stats" && (
         <CharacterSheet
           state={state}
           font={font}
@@ -306,7 +309,7 @@ export function SceneOverlays({
         />
       )}
 
-      {hud.phase === "shop" && (
+      {hud.screen === "shop" && (
         <ShopPanel
           state={state}
           font={font}
@@ -321,7 +324,7 @@ export function SceneOverlays({
         />
       )}
 
-      {hud.phase === "map" && (
+      {hud.screen === "map" && (
         <MapOverlay
           state={state}
           assets={assets}
@@ -334,9 +337,9 @@ export function SceneOverlays({
         />
       )}
 
-      {/* THE QUEST LOG — raised by the HUD's `!` button, freezing the run in
-          its own phase exactly as the map does. */}
-      {hud.phase === "questLog" && (
+      {/* THE QUEST LOG — raised by the HUD's `!` button, parking the hero on
+          its own screen exactly as the map does. */}
+      {hud.screen === "questLog" && (
         <QuestLogOverlay
           state={state}
           assets={assets}
