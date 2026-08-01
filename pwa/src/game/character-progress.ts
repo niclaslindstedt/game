@@ -226,11 +226,12 @@ export function firstUnclearedLevel(
 }
 
 /**
- * Where LOADING this hero drops in: the campaign still IN PROGRESS — the
- * furthest (hardest) difficulty they have begun but not yet beaten — at the
- * beginning of its first uncleared level. A loaded hero is already tied to a
- * difficulty and a current level, so LOAD resumes there straight away with no
- * difficulty picker.
+ * The campaign this hero has IN PROGRESS: the furthest (hardest) difficulty
+ * they have begun but not yet beaten, and its first uncleared level — the
+ * FRONTIER. A loaded hero is already tied to a difficulty, so LOAD skips the
+ * difficulty picker; but it lands them AT HOME (the garage — App.tsx mounts
+ * the hub, not `levelId`), and the frontier is what the hub's travel doors
+ * put one tap away under the ordinary unlock rules.
  *
  * Null when no campaign is under way: a brand-new hero who has not started one,
  * or a hero who has beaten every difficulty they have touched. The caller then
