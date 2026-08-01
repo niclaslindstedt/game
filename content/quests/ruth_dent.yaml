@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: garage
+giver: ruth
+name: THE DENT
+campaign: true
+order: 2
+requires:
+  - ruth_receipt
+lore: >
+  Ruth has never met a companion unit and does not need to: wherever they are
+  keeping her daughter, somebody will have sent a machine with a face to keep
+  her company, and Ada will have bitten it. She raised her. The colony's own
+  paperwork will later file the same fact as 'REFUSES COMPANY. BIT UNIT 34' -
+  the mother predicted it from a kitchen on Earth.
+offer:
+  - - WHEREVER THEY'RE KEEPING HER, THEY'LL HAVE GIVEN HER A COMPANION. A MACHINE WITH A FACE.
+  - - SHE'LL HAVE BITTEN IT. I RAISED HER.
+  - - FIND THE ONE SHE BIT AND BRING ME THE PLATE.
+incomplete:
+  - A MACHINE WITH A FACE AND A DENT IN IT. IT'S OUT THERE SOMEWHERE.
+complete:
+  - - TEETH. RIGHT THROUGH THE SHELL.
+  - - THAT'S MY GIRL.
+  - - I BOUGHT HER A DOLL ONCE. SHE BURIED IT. SOMEBODY SHOULD HAVE TOLD THEM THAT.
+objectives:
+  - kind: collect
+    item: bitten_plate
+    count: 1
+items:
+  - id: bitten_plate
+    name: A BITTEN SHELL PLATE
+    icon: icon_bitten_plate
+    dropFrom: [fembot, misprinted_fembot]
+reward:
+  xpShare: 0.7
+  coins: 350
+  loot:
+    count: 1
+    tierBonus: 2

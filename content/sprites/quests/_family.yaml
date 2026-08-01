@@ -12,6 +12,8 @@ style: >
 # different venue, so the shared look is the SILHOUETTE and the one prop, not a
 # colour set. Each sprite carries its own.
 animations:
+  # RUTH — Ada's mother, waiting at the garage hub between voyages.
+  qg_ruth_walk: { frames: [qg_ruth_0, qg_ruth_1], delayMs: 300 }
   qg_intern_walk: { frames: [qg_intern_0, qg_intern_1], delayMs: 220 }
   qg_unit7_walk: { frames: [qg_unit7_0, qg_unit7_1], delayMs: 260 }
   qg_radio_walk: { frames: [qg_radio_0, qg_radio_1], delayMs: 300 }

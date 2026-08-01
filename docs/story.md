@@ -38,7 +38,10 @@ all the way to the AI that took his job in the first place. Ada is never on
 screen, but she is never passive: at every stop she leaves a trace behind
 (**Ada's Trail**) — scared at first, then defiant, then actively sabotaging —
 so the hero (and the player) follows a person fighting her way forward, not a
-beacon. His own impatience is the counter-melody to that urgency: whenever he
+beacon. The one other person who cannot stop following her is **RUTH, Ada's
+mother**, who lets herself into the hero's garage with her own key and waits
+there between his voyages — because waiting at home means staring at the
+phone. His own impatience is the counter-melody to that urgency: whenever he
 lingers on a place long enough to outgrow it — the enemies turned pathetic, the
 fights teaching him nothing — he catches himself grinding and mutters that he
 should stop wasting time and go find Ada. It is the game's one recurring inner
@@ -79,6 +82,25 @@ wall, sealed until THE FOUNDER's RIFT CREATOR comes home from the void (see
 Level 4) — then it reaches the deep roads already walked, into the rift and
 out to the West. The campaign's chapters are unchanged; the garage is the
 breath between them, and — when friends join his game — the place they land.
+
+**Side errands at home — RUTH, Ada's mother.** She has a key to the garage and
+always has, and once the voyages start she is simply there between them,
+standing by the engine parts, because waiting at home means staring at the
+phone. She knows about the jacket — Ada told her about the zipper he fixed and
+laughed about it for a week — and she asks him for the one thing a search party
+cannot bring back: something of her daughter's. Three errands, one per leg of
+the trail, each elaborating a trace the campaign already lays down. THE
+RECEIPT: the chips-and-soda purchase the cameras caught being interrupted was
+still logged and printed, and GOODCO's night staff carry the floor's paperwork
+on them — bring her the slip from the last ordinary thing Ada did. THE DENT:
+the ENGAGEMENT REPORT says Ada bit companion unit 34, so somewhere on Mars a
+service robot carries a dented shell plate — Ruth wants to see the dent her
+daughter's teeth left in the machine that was told to keep her company. THE
+SCALE: in the rift Ada pried a scale off a lizard god, so Ruth asks for a scale
+like it, off the same scaled breed, to hold what her daughter's hands were
+strong enough to do. She is never scared for Ada and says so; each trophy
+confirms what she already believed, and her last word on the subject is that
+the girl is fighting her way back and the hero should go on.
 
 ## Level 1 — GOODCO HQ
 
