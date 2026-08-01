@@ -370,6 +370,15 @@ export type MapBlueprint = {
   id: string;
   /** The hand-authored level every non-geometry field is inherited from. */
   level: string;
+  /**
+   * PIN THE CARVE — the STATIC map. When set, the carve (and the size roll)
+   * runs on this constant instead of the run's seed, so the venue lays out
+   * IDENTICALLY every visit: the hub's garage looks the same every time the
+   * hero comes home, exactly as a home should. Everything the RUN rolls
+   * (loot, the stall's stock, drops) still draws the run's own streams — only
+   * the geometry is pinned. Omitted = carved fresh per run, as everywhere.
+   */
+  carveSeed?: number;
   sizes: Record<MapSizeName, MapSizeSpec>;
   /**
    * The AREA PALETTE — what kinds of place this map is made of (see areas.ts).

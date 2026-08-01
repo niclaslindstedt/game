@@ -65,7 +65,10 @@ export function resolveLevelDef(
   const base = levelDef(levelId);
   const blueprint = mapBlueprint(levelId);
   if (!blueprint) return handAuthoredLevel(base);
+  // A pinned blueprint (`carveSeed`) carves on its constant rather than the
+  // run's seed — the STATIC hub. The run itself still lives on `seed`.
+  const carveSeed = blueprint.carveSeed ?? seed;
   const carved =
-    size ?? resolveMapSize(blueprint, generatedMapSizeSetting(), seed);
-  return generateLevel(blueprint, base, seed, carved);
+    size ?? resolveMapSize(blueprint, generatedMapSizeSetting(), carveSeed);
+  return generateLevel(blueprint, base, carveSeed, carved);
 }

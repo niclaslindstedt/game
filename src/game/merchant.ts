@@ -70,7 +70,7 @@ export function createMerchant(
     id: string;
     width: number;
     height: number;
-    merchant?: { sprite?: string };
+    merchant?: { sprite?: string; parked?: boolean };
     /** Authored spots the trader may first appear at (LevelDef.merchantSpawns). */
     merchantSpawns?: Vec2[];
   },
@@ -90,8 +90,12 @@ export function createMerchant(
   // whole map — the shop lands somewhere intended. A pre-placed (met-before)
   // trader keeps his door post, so this only steers a fresh placement.
   const spawnPoints = level.merchantSpawns ?? [];
+  // A PARKED trader stands at his counter — the carve's stall spot — even on
+  // a met-before restart: the counter IS his door post, so `preDiscovered`
+  // must not pull him over to the hero's spawn.
+  const parked = level.merchant?.parked === true;
   const authored =
-    !preDiscovered && spawnPoints.length > 0
+    (parked || !preDiscovered) && spawnPoints.length > 0
       ? ([...spawnPoints]
           .sort(() => rng() - 0.5)
           .find((p) => !blocked(p, MERCHANT.radius)) ?? spawnPoints[0])
@@ -101,10 +105,10 @@ export function createMerchant(
   // drag the def's `merchantSpawns` entry (and the safe zone that shares it)
   // around the map behind him — invisible in a single run, and a desync the
   // moment a second machine builds the same level and compares.
-  let pos: Vec2 = preDiscovered
-    ? nearSpawnSpot(playerSpawn, level, blocked)
-    : authored
-      ? { x: authored.x, y: authored.y }
+  let pos: Vec2 = authored
+    ? { x: authored.x, y: authored.y }
+    : preDiscovered
+      ? nearSpawnSpot(playerSpawn, level, blocked)
       : { x: level.width / 2, y: level.height / 2 };
   if (!preDiscovered && !authored) {
     for (let attempts = 0; attempts < 60; attempts++) {
@@ -246,6 +250,11 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
     return;
   }
 
+  // A PARKED trader never wanders — the counter is where he is, discovered
+  // or not. (A parked merchant is normally revealed at creation; this guard
+  // is what keeps a modded or adopted state honest about it.)
+  if (runLevelDef(state).merchant?.parked) return;
+
   // Wandering: idle a beat, pick a leg, stroll it, idle again. A leg that
   // terrain refuses (walking into a wall) simply times out and re-rolls.
   if (merchant.idleMs > 0) {
@@ -302,7 +311,10 @@ export function revealMerchant(state: GameState): void {
   const merchant = state.merchant;
   if (merchant.discovered) return;
   merchant.discovered = true;
-  merchant.greetedReturn = false;
+  // A PARKED trader owes no "welcome back" — the hub is re-entered constantly,
+  // and a scene on every approach would make the counter a toll booth. The
+  // met-before wanderer keeps his line for the walk-up.
+  merchant.greetedReturn = runLevelDef(state).merchant?.parked === true;
   merchant.wanderTarget = null;
   // A met-before reveal happens before anybody joins, so the arriving hero is
   // seat 0 by construction rather than by the old habit.

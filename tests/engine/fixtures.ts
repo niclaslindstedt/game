@@ -1571,6 +1571,37 @@ export const FIX_MERCHANT_LEVEL: LevelDef = {
   },
 };
 
+// A HUB level — the objective that never clears (`hub`), a merchant PARKED at
+// his authored counter, no horde at all, and a standing travel door. The
+// synthetic twin of the garage, for the engine rules a home base rests on.
+export const FIX_HUB_LEVEL: LevelDef = (() => {
+  const base: LevelDef = {
+    ...FIX_LEVEL,
+    id: "test_hub_level",
+    objective: { type: "hub" },
+    spawns: [],
+    obstacles: [],
+    decor: [],
+    merchant: {
+      parked: true,
+    },
+    merchantSpawns: [{ x: 600, y: 400 }],
+    travelDoors: [
+      { id: "test_hub_door", name: "TEST DOOR", to: ["test_level_2"] },
+    ],
+    landmarks: [
+      {
+        kind: "test_hub_door",
+        sprite: "test_hub_door",
+        anchor: "base",
+        pos: { x: 900, y: 400 },
+      },
+    ],
+  };
+  delete base.waves;
+  return base;
+})();
+
 // A SECOND-CHAPTER level (index 2) for the seasoned-arrival rules: starting
 // here must derive the player's level from test_level's roster and hand over
 // its kit (see src/game/arrival.ts). Geometry is the reference level's.
@@ -2092,6 +2123,7 @@ export function installFixtures(force = false): void {
       test_door_level: FIX_DOOR_LEVEL,
       test_rare_level: FIX_RARE_LEVEL,
       test_merchant_level: FIX_MERCHANT_LEVEL,
+      test_hub_level: FIX_HUB_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,

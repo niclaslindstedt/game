@@ -22,6 +22,7 @@ import { knockEnemyBack } from "./knockback.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
+import { anyHeroWithin } from "./party.ts";
 import type { DialogueState, Enemy, GameState } from "./types/index.ts";
 
 // The `dialogue`/`cutscenes` display preferences live in the engine's leaf
@@ -629,7 +630,9 @@ function holdsKeyFor(state: GameState, doorId: string): boolean {
 export function stepGates(state: GameState): void {
   for (const gate of state.gates) {
     if (gate.entered) continue;
-    if (distance(state.players[0].pos, gate.pos) > GATES.enterRadius) continue;
+    // ANY hero steps through for the party — a gate is a doorway, not a
+    // turnstile, and the app answers the crossing for the whole run.
+    if (!anyHeroWithin(state, gate.pos, GATES.enterRadius)) continue;
     gate.entered = true;
     state.events.push({
       type: "gateEntered",

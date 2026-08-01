@@ -140,6 +140,14 @@ export function validateMap(bp, refs, description = "") {
   if (bp.level !== undefined && !refs.levels.has(bp.level))
     err(`inherits from unknown level "${bp.level}"`);
 
+  // A pinned carve (the STATIC hub) must pin to a real seed — a string or a
+  // negative here would quietly carve something else than intended.
+  if (
+    bp.carveSeed !== undefined &&
+    (!Number.isInteger(bp.carveSeed) || bp.carveSeed <= 0)
+  )
+    err(`carveSeed must be a positive integer, got ${JSON.stringify(bp.carveSeed)}`);
+
   const enemy = (id, where) => {
     if (id === undefined) {
       err(`missing enemy id in ${where}`);

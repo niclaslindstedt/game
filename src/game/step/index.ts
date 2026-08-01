@@ -445,6 +445,12 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
 /** Has the level's objective been met? */
 function objectiveCleared(state: GameState): boolean {
   const objective = runLevelDef(state).objective;
+  // A HUB never clears: no victory, no outro, no bank — the run ends only by
+  // leaving through a door. Checked FIRST because the last return below is
+  // the killBoss fallthrough, and a hub with no boss on the board would
+  // otherwise read as "cleared" on tick one and end the run in the one place
+  // the player is meant to idle.
+  if (objective.type === "hub") return false;
   if (objective.type === "reachExit") {
     // The bossless form: standing at the exit door ends the level. Deliberate
     // contact — the radius is a doorstep, not a drive-by.
