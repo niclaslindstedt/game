@@ -84,7 +84,14 @@ function drawCar(
   const at = { x: car.pos.x, y: car.pos.y + compress };
   for (const panel of CAR.panels) {
     const rung = Math.max(0, Math.min(3, car.panels[panel] ?? 0));
-    const name = `car_${panel}_${rung}`;
+    // A sprung or missing door changes the SILHOUETTE, not the paint — it
+    // replaces the whole doors panel rather than picking a rung of it.
+    const name =
+      panel === "doors" && car.doorState > 0
+        ? car.doorState === 1
+          ? "car_doors_open"
+          : "car_doors_gone"
+        : `car_${panel}_${rung}`;
     const sprite = spriteByName(sprites, name);
     if (sprite) drawWorldSprite(ctx, name, sprite, at, camera, "base");
   }

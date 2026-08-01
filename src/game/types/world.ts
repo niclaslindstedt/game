@@ -585,6 +585,9 @@ export type CarVehicle = VehicleBase & {
   panels: Record<CarPanelId, number>;
   /** Per-wheel state, [rear, front]: 0 sound, 1 flat tire, 2 bent rim. */
   wheelStates: [number, number];
+  /** The rear door: 0 closed (the panel rung draws), 1 SPRUNG open, 2 GONE —
+   * the crash states that change the silhouette, not just the paint. */
+  doorState: number;
 };
 
 export type ShipVehicle = VehicleBase & {

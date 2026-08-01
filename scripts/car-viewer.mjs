@@ -74,7 +74,13 @@ function assemble(panelRungs, wheelStates) {
     stamp(wheel, WHEEL_AT[i] - Math.floor(wheel.w / 2), CANVAS.h - wheel.h);
   });
   for (const panel of PANELS) {
-    stamp(loadSprite(`car_${panel}_${panelRungs[panel] ?? 0}`), 0, 0);
+    const name =
+      panel === "doors" && panelRungs.doorState > 0
+        ? panelRungs.doorState === 1
+          ? "car_doors_open"
+          : "car_doors_gone"
+        : `car_${panel}_${panelRungs[panel] ?? 0}`;
+    stamp(loadSprite(name), 0, 0);
   }
   return px;
 }
@@ -161,8 +167,12 @@ if (args.includes("--mixed")) {
   // doors scuffed, rear untouched, front rim bent.
   cars.push(
     assemble(
-      { backside: 0, doors: 1, roof: 0, hood: 2, front_side: 2, bumper: 3 },
+      { backside: 0, doors: 1, roof: 0, hood: 2, front_side: 2, bumper: 3, glass: 2, doorState: 1 },
       [0, 2],
+    ),
+    assemble(
+      { backside: 3, doors: 3, roof: 2, hood: 3, front_side: 3, bumper: 3, glass: 3, doorState: 2 },
+      [1, 2],
     ),
   );
 }

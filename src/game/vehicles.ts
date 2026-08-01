@@ -97,6 +97,7 @@ function createCar(pos: Vec2): CarVehicle {
       glass: 0,
     },
     wheelStates: [0, 0],
+    doorState: 0,
   };
 }
 

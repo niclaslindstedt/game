@@ -54,6 +54,32 @@ which one depends on the difficulty (his GRANDFATHER'S SAWED-OFF SHOTGUN, a
 MEDIEVAL SWORD, a COMBAT KNIFE, BRASS KNUCKLES, or just A STICK) — and resolves to bring her
 home. It becomes the weapon he starts the whole run with.
 
+## Home — THE GARAGE (hub)
+
+**Intro.** The whole campaign now stands on the hero's own ground: a new game
+opens at home — the prelude's living room is one wall away — and every
+earthside chapter breathes here before the next. The garage is the most his
+place in the world: ten years of weekends, the bench, the white hatchback
+parked on the deck, and the ship that is still one part short. His summary on
+the doorstep says everything the room needs to: home — the lawn is dead, the
+bench is a mess, and the ship is one part from perfect. Nothing hunts him
+here. The vendor who stocked GOODCO's machines has parked his cart at a
+counter inside (lockdown is a seller's market, and he follows the customer),
+buying what weighs the hero down, selling what keeps him upright, and mending
+what the road broke.
+
+**The doors.** Three ways out, earned in order. THE CAR — the white hatchback
+— does the earthbound leg: he drives it to GOODCO HQ the night he takes the
+part, and it comes home the worse for every trip. THE ROCKET stands on the
+back lawn once the part is in — THE LAUNCH and every voyage after it leave
+from here, and it flies only where Ada's trail has already led (the moon
+first, then Mars once the moon has let go; he stops home between them,
+because there is no food on the moon). And a RIFT SEAM waits on the garage
+wall, sealed until THE FOUNDER's RIFT CREATOR comes home from the void (see
+Level 4) — then it reaches the deep roads already walked, into the rift and
+out to the West. The campaign's chapters are unchanged; the garage is the
+breath between them, and — when friends join his game — the place they land.
+
 ## Level 1 — GOODCO HQ
 
 **Intro.** The tracker in Ada's jacket has pinged from space: someone is taking
@@ -119,27 +145,6 @@ first-generation SUCCESSOR decommissioned eleven years ago and never collected,
 holds a floor-safety order it may not act on without a countersignature — it
 asks the hero to be the hands, and then to withdraw the order above its own,
 which the NIGHT MANAGER signed.
-
-## Home — THE GARAGE (hub)
-
-**Intro.** With the part in his jacket the hero comes home, and from this night
-on the garage is where he stands between chapters: the most his place in the
-world — ten years of weekends, the bench, the car that never ran as well as the
-ship — now the staging ground of the whole trail. His own summary on the
-doorstep says everything the room needs to: home — the lawn is dead, the bench
-is a mess, and the ship is perfect. Nothing hunts him here. The vendor who
-stocked GOODCO's machines has parked his cart at a counter inside (lockdown is
-a seller's market, and he follows the customer), buying what weighs the hero
-down, selling what keeps him upright, and mending what the road broke.
-
-**The doors.** The way out is the ROCKET standing on the back lawn — THE LAUNCH
-and every voyage after it leave from here, and it flies only where Ada's trail
-has already led (the moon first, Mars once the moon has let go). Beside it
-waits a RIFT SEAM in the garage wall, dormant until the hero has walked roads
-deep enough to answer it — the same truth THE SEVERED HAND proves, that a rift
-can be carried and torn open where somebody wants one, here pointed at the void
-and at the West. The campaign's own chapters are unchanged; the garage is the
-breath between them, and — when friends join his game — the place they land.
 
 ## Travel — THE LAUNCH (cutscene)
 
@@ -297,7 +302,12 @@ the world's presidents. THE FOUNDER only learned of it by snooping its private l
 and sold the secret to the lizards for a planet, sending their tribute through
 the door. BRO OMEGA dies for real, dropping a SINGULARITY CANNON — and at the
 far door **THE FOUNDER** is cornered a second time and flees again, out the
-other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE.
+other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE —
+and, in the scramble, his **RIFT CREATOR**: the pocket rig that tears a seam to
+anywhere it has already been. "Keep the rift, garage man" turns out to be
+literal. The hero bolts it to the garage wall, and from then on the seam home
+reaches the deep roads both ways — the going-back the rest of the campaign
+walks on.
 **Ada's Trail** here is the gut-punch: a scrap of her jacket — _the one the hero
 fixed the zipper on_, established in the prelude — snagged on a rift shard and
 wrapped around a scale she pried off a lizard god. She is fighting back, and the
