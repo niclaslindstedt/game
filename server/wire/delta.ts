@@ -13,17 +13,21 @@
 // it is given cannot drift, and what it costs is that it must be told the few
 // things it cannot work out for itself — which is `split.ts`, one small table.
 //
-// Four strategies, chosen by LOOKING at the value and NAMED IN THE PATCH so
+// Five strategies, chosen by LOOKING at the value and NAMED IN THE PATCH so
 // the decoder never has to guess:
 //
 //   "v"  value      resend whole. The default, and the only one for a scalar.
 //   "n"  nested     a plain object, coded key by key (recursively). This is
 //                   what keeps `player` affordable: he changes every tick, but
 //                   what changes is `pos` and `hp`, not his 30-cell bag.
-//   "e"  entities   an array of `{ id }` objects, coded as the entries that
-//                   changed plus the ids that left. A measured moon run at
-//                   t=60s has 146 enemies (~47 KB as JSON), of which a handful
-//                   differ from tick to tick.
+//   "e"  entities   an array of `{ id: number }` objects — newcomers whole,
+//                   departures by id, and bodies the receiver already holds as
+//                   PARTIALS (id + the fields that moved), because a horde's
+//                   positions change every tick and its def-sized selves never
+//                   do.
+//   "a"  indexed    a plain array of the same length, coded per index — the
+//                   party and the spawner list, whose string ids fail the
+//                   entity shape.
 //   "b"  bytes      a `Uint8Array`, coded as the indices that flipped.
 //
 // **The strategies are chosen by shape, not from a list**, for the same reason
@@ -110,7 +114,7 @@ export function patchState(state: WireState, patch: StatePatch): void {
 
 /**
  * THE APPLIER IS TOTAL OVER ARBITRARY JSON, AND THAT IS A SECURITY PROPERTY
- * RATHER THAN DEFENSIVENESS (multiplayer plan §5.2).
+ * RATHER THAN DEFENSIVENESS.
  *
  * Everything below `patchState` used to assume its input came from `diffState`,
  * which is true of every patch the game produces and false of every patch a

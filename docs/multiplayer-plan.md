@@ -158,12 +158,12 @@ document now always means the second thing.
 | **1.5 — THE VERBS**     | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4                     |
 | **1.75 — THE LOOP**     | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                           |
 | **2.5 — THE SCREENS**   | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                            |
-| **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 + §3.2 landed**, see §3.6; §3.3 remains    |
+| **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **Landed** (§3.3 closed the phase — see §5.5.3)   |
 | **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **Landed** (§4.4/§4.5 via R1 — see §5.5.3)        |
 | **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                       |
-| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks | **R1 landed** (see §5.5.3); **R2/R3** remain      |
+| **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks | **R1/R2 landed; R3's code landed** (see §5.5.3)   |
 | **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Landed** (§6.4 via R1) — givers await the story |
-| **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | §7.1/§7.2/§7.2.5 landed; §7.3–§7.5 are R3's       |
+| **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | **Landed** (§7.3–§7.5 via R3 — see §5.5.3)        |
 
 **≈ 44–65 weeks.** The band is wide because phase 3 is a design exercise wearing a
 refactor's clothes (see §phase 3), and its uncertainty dominates everything. It
@@ -1684,6 +1684,14 @@ and the two effects only show up together) and the `/players N` pairing itself.
 > pass at `/players 2/4/8` is worth running the same way once it is — the harness
 > takes `--players` and prints it beside the party size for exactly that.
 >
+> **RE-MEASURED AFTER §7.4 LANDED, and the diagnosis held.** With spacing,
+> pack-splitting, ally cover and the convoy in (moon/MEDIUM, fresh heroes,
+> 2 seeds × 6 min): per-capita xp/min reads 1× / **2.4×** / **1.7×** at party
+> 1/2/4, and the per-capita kill rate reads 7.1 / 23.3 / 13.9 — the party-4
+> collapse was the bots crowding one body, exactly as diagnosed, and grouping
+> now PAYS at both sizes. Neither lever moved; the numbers changed because the
+> bots stopped standing inside each other.
+>
 > **A SECOND VENUE SAYS THE SAME THING, and that is what the conclusion rests
 > on.** On `goodco_hq` at MEDIUM (3 seeds × 6 min, fresh heroes) the per-capita
 > XP reads 1× / 0.4× / 0.2× / 0.2× at party 1/2/4/8 — and the per-capita KILL
@@ -2316,8 +2324,22 @@ your mods, and leave with everything they earned on their own roster._
 > riding Ada's Trail cross-level via `dropFrom`, which the hub exception in
 > `tests/content/quests_test.ts` now sanctions).
 
-**R2 — THE HONEST WIRE.** _Goal: what travels is correct, felt, and priced._
-Everything here is engine/netcode work with no screen to it:
+**R2 — THE HONEST WIRE — LANDED**, all four items, in the PR that closed the
+plan's code work. As built: §3.3 shipped exactly as designed (input frames
+carry their own sequence, the server echoes the highest applied seq in every
+state frame's header, the local hero replays unacknowledged inputs through
+`predictHeroMovement` — the movement pass with combat and shared-state side
+effects neutralized — and everybody else interpolates one publish interval
+behind; combat is never predicted; the bot client deliberately stays
+unpredicted as the network-cost readout). The ATTACKER THREAD landed with the
+spare-or-kill owner gate and the boss-death executioner riding it, solo proven
+byte-identical on a seeded simulator A/B. THE SNAPSHOT was measured before it
+was packed — 27.6 KB/publish on a 135-mob field, two thirds of it whole
+entities re-sent for one moved field and the spawner list travelling whole —
+and partial-entity + per-index array patches cut it to 8.15 KB; the NET GRAPH
+rides the DEBUG FPS meter and the session panel's roster rows. Decision 15's
+REAL LOCK chose the build-time literal (`server/licence.ts`, folded shut by
+the ship target, drift-tested from both ends). The original inventory:
 
 - **§3.3 — prediction and reconciliation** (design in §3.3; the chain's note
   about combat staying unpredicted holds).
@@ -2342,9 +2364,19 @@ _Done when a party-4 fight feels local at 150 ms, every payout names the hero
 who earned it, the per-client rate is a number chosen rather than discovered,
 and the licence check is a lock rather than a statement._
 
-**R3 — THE PROOF.** _Goal: the mode is verified, not believed._ Everything
-here answers "does it actually work" — the bot that can play it, the
-measurements the bot enables, and the acceptances only hardware can give:
+**R3 — THE PROOF — THE CODE HALF LANDED; what remains needs a human, hardware
+or hours.** As built: §7.3's local bots are CLIENTS of the session process
+over an in-process pipe (the amended design, so every client rule governs
+them by construction), priced through the same pure `/players` pairing, XP-
+exempt, roster-less, yielding their seats to arriving humans; §7.4's party
+behaviours and §7.5's errand awareness landed in the autopilot (see their own
+sections); §4.3's re-measured pass ran with them in (the numbers are in §4.7:
+grouping now pays at party 2 AND party 4); and the plan was erased from the
+shipped tree — zero references outside `docs/`, every comment restated in
+place or pointed at `docs/multiplayer.md`. **Still open, recorded in
+`docs/multiplayer.md` — "What is NOT here yet"**: the overnight soak (the
+instrument exists; hours have not been run), the five human-with-hardware
+acceptances, and the store surfaces. The original inventory:
 
 - **§7.3 — BOTS IN A LOCAL GAME** (the feature: a party without four friends
   online), **§7.4 — party behaviour** (spacing, pack-splitting, covering a
@@ -2472,7 +2504,13 @@ be already answered:
   binary folds to false, which is cheap and airtight for the SHIPPED build and
   does nothing about somebody compiling the open-source tree themselves. The
   second is probably right, and the first is what makes a public server list
-  possible later. **Choosing and building the lock is R2's** (§5.5.3).
+  possible later. **CHOSEN AND BUILT (R2): the build-time literal.**
+  `server/licence.ts` holds one marked literal, `true` in the repo tree so the
+  suites and the soak fleet run from sources, folded to `false` by
+  `scripts/build-server.mjs` while staging the ship target — so the packaged
+  binary's config escape is dead code, the fold refuses a build where the
+  literal has drifted, and the dedicated suite drift-tests both ends. The
+  auth-ticket route stays available the day a public server list wants it.
 
 - **phase 6's story chain — ANSWERED, the way this asked.** Phase 6 opened
   with the story commit, manuscript confirmation on the record (§6.8: "THE
