@@ -271,7 +271,15 @@ export function renderLevel(def, opts) {
       blitCentred(surf, "car_underbody", v.pos.x, v.pos.y, true);
       for (const dx of [-14, 12])
         blitCentred(surf, "car_wheel_0", v.pos.x + dx, v.pos.y, true);
-      for (const panel of ["backside", "doors", "hood", "front_side", "bumper", "roof", "glass"])
+      for (const panel of [
+        "backside",
+        "doors",
+        "hood",
+        "front_side",
+        "bumper",
+        "roof",
+        "glass",
+      ])
         blitCentred(surf, `car_${panel}_0`, v.pos.x, v.pos.y, true);
     } else {
       blitCentred(surf, "starship", v.pos.x, v.pos.y, true);

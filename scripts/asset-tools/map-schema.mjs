@@ -146,7 +146,9 @@ export function validateMap(bp, refs, description = "") {
     bp.carveSeed !== undefined &&
     (!Number.isInteger(bp.carveSeed) || bp.carveSeed <= 0)
   )
-    err(`carveSeed must be a positive integer, got ${JSON.stringify(bp.carveSeed)}`);
+    err(
+      `carveSeed must be a positive integer, got ${JSON.stringify(bp.carveSeed)}`,
+    );
 
   const enemy = (id, where) => {
     if (id === undefined) {

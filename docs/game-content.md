@@ -50,6 +50,25 @@ all rolled fresh, so what follows describes what a venue is MADE OF rather than
 where anything is. No two runs of a map are the same walk, and no intended route
 is emitted — the fog-of-war minimap is the only record of where you have been.
 
+- **Home — THE GARAGE (hub)** (`content/levels/garage.yaml`). The campaign
+  opens here and every earthside victory returns here: the hero's own lot —
+  the GARAGE BAY (workbench world: tool chests, part racks, fuel drums, the
+  CAR parked mid-floor) opening onto the LAWN where the half-built ship
+  stands. The one **STATIC venue** in the game: its blueprint pins the carve
+  (`content/maps/garage.yaml`, `carveSeed`), so home lays out identically on
+  every seed and every GENERATED MAPS size — and a mod re-lays it by editing
+  the blueprint like any other. Its objective is **`hub`** — it never clears;
+  no victory, outro or bank can fire, and a player (or a joining party) can
+  stand in it indefinitely. No horde, no boss, no locks. The **merchant is
+  PARKED** at his counter (`merchant.parked` — revealed from map start,
+  scene-free, never wanders), buying loot and repairing gear. The only
+  decisions are the three **travel doors** (`LevelDef.travelDoors`): the CAR
+  (tap to board — the engine starts, lights and idle rumble on — then drive
+  out; → GOODCO HQ), the ROCKET (→ the moon, Mars), and the RIFT SEAM —
+  **SEALED** until THE FOUNDER's RIFT CREATOR keepsake comes home from the
+  rift (→ the rift, BOOT HILL): the Diablo-style town loop, earned at the
+  campaign's far end. Music: `bench_light`, the sanctuary theme.
+
 - **Level 1 — GOODCO HQ** (`levels/goodco_hq.ts`). A cleanroom raid for the
   ship engine's one missing part. `goodco` biome (polished lab
   tiles + floor vents), ~800 px/s² gravity (hoppable desks, and CRATES the
