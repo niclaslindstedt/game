@@ -79,21 +79,57 @@ describe("state delta", () => {
   });
 
   describe("the entity strategy", () => {
-    it("sends only the entities that changed", () => {
+    it("sends only the fields that changed, of only the entities that changed", () => {
+      // A body the receiver already holds travels as a PARTIAL — id plus the
+      // moved fields. Re-sending the whole entity re-sent its def-sized
+      // never-changing self with every step it took, and a horde takes a lot
+      // of steps: the partials were measured at two thirds of the enemies
+      // field's wire cost.
       const prev = {
         enemies: [
-          { id: 1, hp: 5 },
-          { id: 2, hp: 5 },
+          { id: 1, hp: 5, home: { x: 1, y: 2 } },
+          { id: 2, hp: 5, home: { x: 3, y: 4 } },
         ],
       };
       const next = {
         enemies: [
-          { id: 1, hp: 5 },
-          { id: 2, hp: 4 },
+          { id: 1, hp: 5, home: { x: 1, y: 2 } },
+          { id: 2, hp: 4, home: { x: 3, y: 4 } },
         ],
       };
       const patch = diffState(prev, next);
-      expect(patch.enemies).toEqual({ k: "e", upd: [{ id: 2, hp: 4 }] });
+      expect(patch.enemies).toEqual({
+        k: "e",
+        pat: [{ id: 2, set: { hp: { k: "v", v: 4 } } }],
+      });
+      expect(roundTrip(prev, next)).toEqual(next);
+    });
+
+    it("sends a newcomer whole — a partial cannot materialize a body", () => {
+      const prev = { enemies: [{ id: 1, hp: 5 }] };
+      const next = {
+        enemies: [
+          { id: 1, hp: 5 },
+          { id: 2, hp: 9 },
+        ],
+      };
+      expect(diffState(prev, next).enemies).toEqual({
+        k: "e",
+        upd: [{ id: 2, hp: 9 }],
+      });
+      expect(roundTrip(prev, next)).toEqual(next);
+    });
+
+    it("skips a partial for an id the receiver does not hold", () => {
+      // An honest sender codes partials only against the acknowledged
+      // baseline; a partial naming an unknown id is a forgery, and merging it
+      // into nothing would mint a half-built body.
+      const held = { enemies: [{ id: 1, hp: 5 }] };
+      const forged = {
+        enemies: { k: "e", pat: [{ id: 99, set: { hp: { k: "v", v: 1 } } }] },
+      };
+      patchState(held, forged as never);
+      expect(held.enemies).toEqual([{ id: 1, hp: 5 }]);
     });
 
     it("removes the ids that left", () => {
@@ -125,11 +161,50 @@ describe("state delta", () => {
     });
 
     it("does not take an array of plain values for entities", () => {
+      // Same length, no ids: the per-index array strategy carries the one
+      // slot that moved rather than the whole list.
       const prev = { waveSpawned: [0, 0, 0] };
       const next = { waveSpawned: [0, 1, 0] };
       expect(diffState(prev, next).waveSpawned).toEqual({
+        k: "a",
+        set: { "1": { k: "v", v: 1 } },
+      });
+      expect(roundTrip(prev, next)).toEqual(next);
+    });
+  });
+
+  describe("the indexed-array strategy", () => {
+    it("sends only the member whose field moved, not the whole list", () => {
+      // The spawner list is the motivating case: string-keyed authored ids, so
+      // it is not an entity array — and one point's clock arming used to
+      // re-send every point's whole spawn queue (a measured ~10 KB a publish).
+      const prev = {
+        spawners: [
+          { id: "a", emitAtMs: 100, queue: ["x", "y", "z"] },
+          { id: "b", emitAtMs: 200, queue: ["x", "y", "z"] },
+        ],
+      };
+      const next = {
+        spawners: [
+          { id: "a", emitAtMs: 100, queue: ["x", "y", "z"] },
+          { id: "b", emitAtMs: 350, queue: ["x", "y", "z"] },
+        ],
+      };
+      expect(diffState(prev, next).spawners).toEqual({
+        k: "a",
+        set: { "1": { k: "n", set: { emitAtMs: { k: "v", v: 350 } } } },
+      });
+      expect(roundTrip(prev, next)).toEqual(next);
+    });
+
+    it("resends the whole list when its length changes", () => {
+      // Seating a hero, draining a queue: rare, and a positional diff across
+      // an insert would pay per-index patches for every shifted slot anyway.
+      const prev = { players: [{ hp: 10 }] };
+      const next = { players: [{ hp: 10 }, { hp: 20 }] };
+      expect(diffState(prev, next).players).toEqual({
         k: "v",
-        v: [0, 1, 0],
+        v: [{ hp: 10 }, { hp: 20 }],
       });
       expect(roundTrip(prev, next)).toEqual(next);
     });
@@ -210,7 +285,7 @@ describe("state delta", () => {
       };
       expect(diffState(prev, next).obstacles).toEqual({
         k: "e",
-        upd: [{ id: 1, hp: 22, maxHp: 72 }],
+        pat: [{ id: 1, set: { hp: { k: "v", v: 22 } } }],
       });
     });
 

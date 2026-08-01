@@ -36,7 +36,20 @@ import { isByteArray, isSkipped, versionGuard } from "./split.ts";
 export type FieldPatch =
   | { k: "v"; v: unknown }
   | { k: "n"; set?: Record<string, FieldPatch>; del?: string[] }
-  | { k: "e"; upd?: unknown[]; del?: number[] }
+  | {
+      k: "e";
+      /** Whole entities: newcomers, and anything the receiver may not hold. */
+      upd?: unknown[];
+      /** PARTIAL entities — `{ id, set, del }` field patches for entities the
+       * receiver's baseline already holds, so an enemy whose `pos` moved does
+       * not drag its whole def-sized body across the wire with it. An id the
+       * receiver does not hold is skipped: a partial cannot materialize a
+       * body, and the sender only codes partials against the acknowledged
+       * baseline, so the case is a stranger's forgery rather than a loss. */
+      pat?: unknown[];
+      del?: number[];
+    }
+  | { k: "a"; set?: Record<string, FieldPatch> }
   | { k: "b"; n: number; ix?: number[]; vs?: number[] };
 
 /** A whole patch: the top-level fields that changed, by name. */
@@ -140,10 +153,38 @@ function diffValue(before: unknown, after: unknown): FieldPatch | null {
   if (isEntityArray(after) && isEntityArray(before)) {
     return diffEntities(before, after);
   }
+  if (
+    Array.isArray(after) &&
+    Array.isArray(before) &&
+    before.length === after.length
+  ) {
+    // A PLAIN ARRAY OF THE SAME LENGTH diffs per index — this is the party and
+    // the spawner list, both of which used to travel WHOLE whenever one member
+    // moved a timer (a measured ~10 KB per publish of re-sent spawn queues).
+    // A length change falls through to the whole-value patch below: seating a
+    // hero or draining a list is rare, and a positional diff across an insert
+    // would pay per-index patches for every shifted slot anyway.
+    return diffIndexed(before, after);
+  }
   if (isPlainObject(after) && isPlainObject(before)) {
     return diffNested(before, after);
   }
   return sameValue(before, after) ? null : { k: "v", v: after };
+}
+
+/** Per-index over two same-length arrays. */
+function diffIndexed(before: unknown[], after: unknown[]): FieldPatch | null {
+  const set: Record<string, FieldPatch> = {};
+  let changed = false;
+  for (let i = 0; i < after.length; i++) {
+    const sub = diffValue(before[i], after[i]);
+    if (sub) {
+      set[String(i)] = sub;
+      changed = true;
+    }
+  }
+  if (!changed) return null;
+  return { k: "a", set };
 }
 
 /** Write one patched member into its holder — a record key or an array index
@@ -165,6 +206,22 @@ function applyPatch(
   }
   if (entry.k === "e") {
     holder[key] = patchEntities(current, entry);
+    return;
+  }
+  if (entry.k === "a") {
+    // Per-index array patch. A receiver holding something that is not an
+    // array starts from an empty one — the same total-over-garbage posture as
+    // the nested branch below, and the fuzzer is what holds it there.
+    const target: unknown[] = Array.isArray(current) ? current : [];
+    const set = isPlainObject(entry.set) ? entry.set : {};
+    for (const [index, sub] of Object.entries(set)) {
+      applyPatch(
+        target as unknown as Record<string, unknown>,
+        index,
+        sub as FieldPatch,
+      );
+    }
+    holder[key] = target;
     return;
   }
   if (entry.k === "b") {
@@ -236,22 +293,40 @@ function isEntityArray(value: unknown): value is Entity[] {
   return true;
 }
 
-/** The entries that changed and the ids that left, or null if nothing did. */
+/** The entries that changed and the ids that left, or null if nothing did.
+ *
+ * A NEWCOMER travels whole; a body the receiver already holds travels as a
+ * PARTIAL — its id and the fields that moved. The difference is most of a
+ * horde's wire cost: an enemy's `pos` changes every tick, and re-sending the
+ * whole body with it re-sent `home`, `speed`, `defId` and the rest of its
+ * never-changing def-sized self twenty times a second per mob (measured at
+ * two thirds of the enemies field's bytes). */
 function diffEntities(prev: Entity[], next: Entity[]): FieldPatch | null {
   const before = new Map<number, Entity>();
   for (const item of prev) before.set(item.id, item);
   const upd: unknown[] = [];
+  const pat: unknown[] = [];
   const seen = new Set<number>();
   for (const item of next) {
     seen.add(item.id);
     const was = before.get(item.id);
-    if (was === undefined || !sameValue(was, item)) upd.push(item);
+    if (was === undefined) {
+      upd.push(item);
+      continue;
+    }
+    const fields = diffNested(was, item);
+    if (!fields || fields.k !== "n") continue;
+    const partial: Record<string, unknown> = { id: item.id };
+    if (fields.set) partial.set = fields.set;
+    if (fields.del) partial.del = fields.del;
+    pat.push(partial);
   }
   const del: number[] = [];
   for (const item of prev) if (!seen.has(item.id)) del.push(item.id);
-  if (upd.length === 0 && del.length === 0) return null;
+  if (upd.length === 0 && pat.length === 0 && del.length === 0) return null;
   const patch: FieldPatch = { k: "e" };
   if (upd.length) patch.upd = upd;
+  if (pat.length) patch.pat = pat;
   if (del.length) patch.del = del;
   return patch;
 }
@@ -271,6 +346,22 @@ function patchEntities(current: unknown, entry: FieldPatch): unknown {
     // entry turns the whole list's order into NaN.
     if (!isPlainObject(item) || typeof item.id !== "number") continue;
     byId.set(item.id, item as Entity);
+  }
+  for (const item of asList<unknown>(entry.pat)) {
+    // A PARTIAL merges onto the body the receiver holds. An unknown id is
+    // skipped — see the FieldPatch doc: a partial cannot materialize a body,
+    // and an honest sender codes only against the acknowledged baseline.
+    if (!isPlainObject(item) || typeof item.id !== "number") continue;
+    const target = byId.get(item.id);
+    if (!target) continue;
+    for (const dead of asList<string>(item.del as unknown)) {
+      if (typeof dead === "string" && dead !== "id") delete target[dead];
+    }
+    const set = isPlainObject(item.set) ? item.set : {};
+    for (const [member, sub] of Object.entries(set)) {
+      if (member === "id") continue; // a partial may not re-key its body
+      applyPatch(target, member, sub as FieldPatch);
+    }
   }
   // A Map iterates in first-seen order — the receiver's old order with
   // newcomers appended, which is NOT the sender's. Sorting by id restores an
