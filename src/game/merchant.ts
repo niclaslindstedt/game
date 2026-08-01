@@ -50,8 +50,10 @@ import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import { nearestHeroWhere, partyLevel } from "./party.ts";
 import type {
+  Equipment,
   GameState,
   Merchant,
+  MerchantBuyback,
   MerchantConsumable,
   MerchantStock,
   Player,
@@ -140,6 +142,8 @@ export function createMerchant(
     // one met live greets through the first-meeting scene, so he owes none.
     greetedReturn: !preDiscovered,
     stock: [],
+    // Nothing has been sold to him yet — the shelf fills from `sellItem`.
+    buyback: [],
     // Parked as a plain number so the merchant serializes with the run.
     rngState: rngState(rng),
   };
@@ -636,9 +640,11 @@ export function closeShop(state: GameState, hero: Player): void {
 }
 
 /**
- * Sell the piece in bag cell `index` across the counter: the item is gone
- * for good and its `sellValue` lands in the purse. Only while the shop is
- * open. Returns the coins paid, or null on an empty cell (no mutation).
+ * Sell the piece in bag cell `index` across the counter: its `sellValue`
+ * lands in the purse and the piece goes onto the trader's BUY-BACK shelf
+ * (`buybackItem` below — it is recoverable until the shelf pushes it off or
+ * the hero leaves the level). Only while the shop is open. Returns the coins
+ * paid, or null on an empty cell (no mutation).
  *
  * A sale is the ONE way coins come into a run, so it is also where the AUTO
  * PILOT ride books its takings (`autopilot.coinsEarned`) — the counterpart to
@@ -660,7 +666,89 @@ export function sellItem(
   // figure `GOLD.dropMult` is calibrated against.
   state.stats.coinsSold += paid;
   if (state.autopilot.active) state.autopilot.coinsEarned += paid;
+  shelveForBuyback(state.merchant, item, paid, state.autopilot.active);
   return paid;
+}
+
+/**
+ * Put a just-sold piece on the trader's BUY-BACK shelf at the front (most
+ * recent first — the mistake a player wants back is almost always the LAST
+ * thing that left the bag, and a SELL ALL of a full bag would otherwise bury
+ * it under eleven mops). At `MERCHANT.buybackSlots` the OLDEST entry falls off
+ * the end for good.
+ */
+function shelveForBuyback(
+  merchant: Merchant,
+  item: Equipment,
+  price: number,
+  ride: boolean,
+): void {
+  merchant.buyback.unshift(ride ? { item, price, ride } : { item, price });
+  if (merchant.buyback.length > MERCHANT.buybackSlots) {
+    merchant.buyback.length = MERCHANT.buybackSlots;
+  }
+}
+
+/** Why a buy-back can't go through — the piece has fallen off the shelf (or
+ * somebody beat you to it), the purse is short, or the bag has no free cell.
+ * Named apart from the LOST & FOUND's `VaultRefusal` on purpose: the two
+ * happen to refuse for the same three reasons today, and a shared alias would
+ * quietly tie the trader's counter to the AUTO PILOT's vault. */
+export type BuybackRefusal = "gone" | "coins" | "bag";
+
+/**
+ * The BUY-BACK shelf as the counter lists it: most recently sold first. A copy
+ * — the caller never reorders the shelf itself, because the shelf's order IS
+ * its eviction order.
+ */
+export function buybackContents(merchant: Merchant): MerchantBuyback[] {
+  return [...merchant.buyback];
+}
+
+/**
+ * Buy a sold piece back off the shelf, by the ITEM's own id: the purse pays
+ * exactly what the trader paid for it and the piece lands in the first free
+ * bag cell, the same instance that left it — its affixes, its ilvl and its
+ * worn-down durability all intact.
+ *
+ * **A BUY-BACK IS NOT A PURCHASE, IT IS AN UNDO**, which is why it is priced
+ * at the sale rather than at the stall's markup and why it books its coins
+ * back out of the same tallies `sellItem` booked them into. A shelf that
+ * charged the vendor gap would make a mis-tap on the deal card cost ten times
+ * what the piece was worth, and a shelf that left `stats.coinsSold` inflated
+ * would tell the balance sim the run recycled loot it still has in the bag.
+ *
+ * Refused (with nothing spent and nothing moved) when the piece is no longer
+ * shelved, the purse is short, or there is nowhere to put it. Returns `null`
+ * on success, else the refusal — the same shape the LOST & FOUND's buy-back
+ * answers in, so one browser reads both.
+ */
+export function buybackItem(
+  state: GameState,
+  hero: Player,
+  itemId: number,
+): BuybackRefusal | null {
+  if (state.phase !== "shop") return "gone";
+  const merchant = state.merchant;
+  const at = merchant.buyback.findIndex((entry) => entry.item.id === itemId);
+  if (at < 0) return "gone";
+  const entry = merchant.buyback[at] as MerchantBuyback;
+  if (hero.coins < entry.price) return "coins";
+  const cell = hero.inventory.indexOf(null);
+  if (cell < 0) return "bag";
+  hero.coins -= entry.price;
+  hero.inventory[cell] = entry.item;
+  merchant.buyback.splice(at, 1);
+  // Un-book the sale: the piece is back in the bag, so the run did not recycle
+  // it after all. Both tallies can only fall by what the same sale added.
+  state.stats.coinsSold -= entry.price;
+  if (entry.ride) {
+    state.autopilot.coinsEarned = Math.max(
+      0,
+      state.autopilot.coinsEarned - entry.price,
+    );
+  }
+  return null;
 }
 
 /**

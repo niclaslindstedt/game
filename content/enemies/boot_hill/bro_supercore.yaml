@@ -110,7 +110,7 @@ loot:
     rare: 1.5
   weapons: 1
   gear: 1
-  xpArrows: 3
+  xpScrolls: 1
   repairs: 1
   medkits: 2
   tierBonus: 0.4

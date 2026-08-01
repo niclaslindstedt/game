@@ -89,6 +89,22 @@ export const MERCHANT = {
    * he is standing at. A curiosity on a solo run is the cheaper mistake.
    */
   stockRevives: 2,
+  /**
+   * How many sold pieces the trader keeps on the BUY-BACK shelf — the last N
+   * things sold across this counter, oldest pushed off first, each redeemable
+   * for exactly the coins he paid for it.
+   *
+   * Twelve, World of Warcraft's number, and for its reason: the shelf exists
+   * to undo a MISTAKE (a mis-tap on the deal card, a SELL ALL that went out
+   * with a keeper still in the bag), not to be a second bag the hero parks his
+   * overflow in. A dozen is more than any one visit's regret and far fewer than
+   * a stash. It costs nothing either way — a bought-back piece is bought at the
+   * price it sold for, so the shelf moves no coins, only mistakes.
+   *
+   * It is the TRADER's memory, so it dies with him: a new level is a new
+   * merchant with an empty shelf, and what was sold on the last map is gone.
+   */
+  buybackSlots: 12,
 } as const;
 
 /**

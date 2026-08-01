@@ -274,7 +274,7 @@ loot:
       - horizons_end
       - the_last_ante
       - the_residencys_ransom
-  arrowCapByDifficulty:
+  intendedLevelByDifficulty:
     easy: 34
     medium: 37
     hard: 39

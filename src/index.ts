@@ -339,6 +339,7 @@ export {
   isAutoEquipEnabled,
   isPassiveItem,
   isScrappableLoot,
+  isTrashLoot,
   isArmorBroken,
   isWeaponBroken,
   isSpecialItem,
@@ -470,6 +471,8 @@ export {
 // buy/sell mutators the shop UI calls, and the valuation every price tag
 // reads (see merchant.ts / config MERCHANT + ECONOMY).
 export {
+  buybackContents,
+  buybackItem,
   buyStock,
   canBuyStock,
   closeShop,
@@ -479,6 +482,7 @@ export {
   sellItem,
   sellValue,
   stockName,
+  type BuybackRefusal,
 } from "./game/merchant.ts";
 export {
   CAR,
@@ -698,11 +702,11 @@ export type {
 // Automatic per-level base-attribute growth (the WoW-style ding gains): the
 // derived bonuses the app can read to break "base + chosen" apart, and the
 // power curve the horde's hp scaling mirrors.
-// The flat mob-priced XP payouts (arrow / elite / boss multiples) authored in
-// content/leveling.yaml, for the calculators and tests.
+// The flat mob-priced kill payouts (elite / boss multiples) and the XP
+// scroll's dial, authored in content/leveling.yaml, for the calculators and
+// tests.
 export { XP_TUNING } from "./generated/leveling.ts";
 export {
-  arrowXp,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,
@@ -713,13 +717,15 @@ export {
   levelStatGains,
   mobLevelXp,
   referenceMobXp,
-  setArrowXpEnabled,
   setAutoStatGainsEnabled,
+  setXpScrollEnabled,
   statCap,
   statPointsAt,
   tierLevelCostMult,
+  xpBoostMultiplier,
   xpCapMultiplier,
   xpLevelCap,
+  xpScrollDurationMs,
   xpToLevelUp,
 } from "./game/leveling.ts";
 
@@ -1164,6 +1170,7 @@ export type {
   CarPanelId,
   CarVehicle,
   Merchant,
+  MerchantBuyback,
   MerchantConsumable,
   MerchantStock,
   Obstacle,

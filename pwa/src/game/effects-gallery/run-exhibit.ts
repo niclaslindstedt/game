@@ -35,6 +35,7 @@ import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { type GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { applyEventFx, expireEffects } from "../game-screen/event-fx.ts";
+import { flushGoldPickups } from "../game-screen/gold-float.ts";
 import { pinCleaveCut } from "../game-screen/gore-burst.ts";
 import { pinEliteCaster } from "./exhibit-kit.ts";
 import { createLevelUpFx } from "../game-screen/levelup-fx.ts";
@@ -373,6 +374,9 @@ export function runExhibit(deps: {
           levelUpFx.fire(at.x, at.y, levelUpIntensity(event.level));
         }
       }
+      // An exhibit that hands the hero money floats it the same grouped way a
+      // run does — the group needs a tick, not an event, to land.
+      flushGoldPickups(shared, state, () => {});
       expireEffects(shared, state);
     },
     render(timeMs) {

@@ -213,6 +213,13 @@ export function TitleScreen({
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(any-pointer: fine)").matches;
+  // SWIPE BARS is a touch GESTURE, so its row shows only where touch exists at
+  // all — asked separately from the fine-pointer probe because a touch laptop
+  // has both. A device characteristic, read once at mount like the others.
+  const hasTouch =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(any-pointer: coarse)").matches;
   // The VIBRATION row is offered only where a buzz can actually land: a
   // touch-primary device whose browser has the Vibration API (Android in a
   // browser or an installed PWA), or the native app (Taptic bridge). Desktop
@@ -465,6 +472,7 @@ export function TitleScreen({
       // out, which means calling `buildMenu` with this very context.
       rowIndexIn: () => 0,
       hasFinePointer,
+      hasTouch,
       canBuzz,
       canQuit,
       onQuit: quitApp,
@@ -526,6 +534,7 @@ export function TitleScreen({
     botView,
     botLevel,
     hasFinePointer,
+    hasTouch,
     canBuzz,
     canQuit,
     transferOpen,

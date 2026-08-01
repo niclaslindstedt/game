@@ -160,7 +160,7 @@ loot:
     - continuity_protocol
     - sentry_grid
   namedDropMult: 2
-  arrowCapByDifficulty:
+  intendedLevelByDifficulty:
     easy: 34
     medium: 37
     hard: 39

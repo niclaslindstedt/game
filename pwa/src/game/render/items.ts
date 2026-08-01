@@ -220,8 +220,11 @@ export function drawItems(
           item.kind === "gold"
           ? (spriteByName(sprites, goldSprite(item.amount, item.id)) ??
             sprites.medkit)
-          : item.kind === "xp"
-            ? sprites.upgrade
+          : // The XP SCROLL — read by walking over it (there is nothing to dock),
+            // so it wears its own parchment-and-blue-script sprite rather than
+            // the app's update-prompt arrow it used to borrow.
+            item.kind === "xp"
+            ? sprites.xp_scroll
             : item.kind === "repair"
               ? sprites.repair
               : item.kind === "drink"

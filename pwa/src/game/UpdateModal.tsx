@@ -19,15 +19,24 @@ const forPixelFont = (version: string) => version.replace(/•/g, "·");
 export function UpdateModal({
   needRefresh,
   incomingVersion,
+  runInProgress = false,
   onReload,
   onDismiss,
 }: {
   needRefresh: boolean;
   incomingVersion?: string | null;
+  /** A run is parked mid-level (the menu's CONTINUE). Applying the update
+   * reloads the page, and a parked run only survives that when the new build
+   * still reads the old save format — a shape change drops it (saved-run.ts).
+   * So UPDATE asks first instead of quietly gambling the run. */
+  runInProgress?: boolean;
   onReload: () => void;
   onDismiss: () => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
+  // The confirm beat: UPDATE was pressed while a run is parked, and the modal
+  // is asking whether to risk it. Never entered when nothing is at stake.
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -39,6 +48,13 @@ export function UpdateModal({
     };
   }, []);
 
+  // A dismissed (or applied) prompt drops the confirm beat with it, so a
+  // later deploy's toast opens on the plain prompt again. Adjusted during
+  // render (the derived-state pattern) rather than in an effect — the reset
+  // must land before the next paint, and the lint forbids a bare
+  // setState-in-effect for exactly this case.
+  if (!needRefresh && confirming) setConfirming(false);
+
   // Hold the prompt back until the sprite font is decoded: a flash of
   // system-font text that then snaps to pixels reads worse than a beat of
   // nothing. loadGameAssets is a shared memoized decode, so on the menu the
@@ -47,6 +63,65 @@ export function UpdateModal({
 
   const font = assets.font;
   const icon = spriteDataUrl(assets.sprites, "upgrade") ?? "";
+
+  // The confirm beat: same panel, harder question. UPDATE ANYWAY applies the
+  // update; BACK returns to the plain prompt (the run stays parked, the toast
+  // stays up, nothing is decided).
+  if (confirming) {
+    return (
+      <div
+        className="update-modal"
+        role="alertdialog"
+        aria-label="update while a run is in progress"
+      >
+        <div className="update-modal-main">
+          <img
+            src={icon}
+            alt=""
+            className="update-modal-icon"
+            aria-hidden="true"
+          />
+          <div className="update-modal-copy">
+            <PixelText
+              font={font}
+              text="A RUN IS STILL IN PROGRESS"
+              scale={2}
+              color="#ffcf6b"
+            />
+            <PixelText
+              font={font}
+              text="IT MAY NOT SURVIVE THE UPDATE"
+              scale={2}
+              color="#9aa3ad"
+            />
+          </div>
+        </div>
+        <div className="update-modal-actions">
+          <button
+            type="button"
+            className="pixel-button"
+            aria-label="update-anyway"
+            onClick={onReload}
+          >
+            <PixelText
+              font={font}
+              text="UPDATE ANYWAY"
+              scale={2}
+              color="#0b0d10"
+            />
+          </button>
+          <button
+            type="button"
+            className="pixel-button secondary update-modal-dismiss"
+            aria-label="cancel-update"
+            onClick={() => setConfirming(false)}
+          >
+            <PixelText font={font} text="X" scale={3} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -83,7 +158,12 @@ export function UpdateModal({
           type="button"
           className="pixel-button"
           aria-label="update"
-          onClick={onReload}
+          onClick={() => {
+            // A parked run is on the line: ask before the reload gambles it.
+            // With nothing parked the update applies straight away, as before.
+            if (runInProgress) setConfirming(true);
+            else onReload();
+          }}
         >
           <PixelText font={font} text="UPDATE" scale={3} color="#0b0d10" />
         </button>

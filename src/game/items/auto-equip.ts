@@ -3,11 +3,13 @@
 // ranking (flat and spec-weighted), the UPGRADE marker read, the bulk-scrap
 // cull, and the optimize-everything sweep.
 
+import { LOOT } from "../config/index.ts";
 import {
   gearDef,
   isWeaponDef,
   STAT_NAMES,
   tierRank,
+  weaponDef,
 } from "../defs/equipment.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
 import type {
@@ -16,9 +18,10 @@ import type {
   GameState,
   Player,
   StatName,
+  WeaponClass,
 } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
-import { isPassiveItem } from "./derived.ts";
+import { heroLoadoutMemo, isPassiveItem } from "./derived.ts";
 import { isTwoHandedWeapon } from "./hands.ts";
 import { fitsEquipSlot, isOffhandItem, RING_SLOTS } from "./slots.ts";
 import { equipFromInventory, wearSlotFor } from "./inventory.ts";
@@ -260,10 +263,71 @@ function isAtLeastAsGoodAsEquipped(
 }
 
 /**
+ * THE BACKUP ARSENAL — the bag pieces the TRASH sweep will never take, by item
+ * id: the best weapon the hero owns of each CLASS (melee, ranged, magic),
+ * whatever it scores against the one in his hand.
+ *
+ * It exists because a weapon is the one kind of loot whose absence can end a
+ * run rather than weaken it. The hand is never empty — but the thing that fills
+ * it when a blade snaps or a rifle runs dry comes out of the BAG (see
+ * `takeBestBagWeapon`), and with nothing there the hero drops onto the built-in
+ * sidearm, which is itself a ranged weapon with a pouch that can also run out.
+ * A sweep that priced spares the way it prices a spare helmet — "worse than
+ * what I am wearing, so it is junk" — dutifully destroyed every one of them,
+ * and the player found out at the exact moment he needed one.
+ *
+ * ONE PER CLASS is what makes it a keep-set rather than a hoard: the classes
+ * fail in different ways (a blade cannot be starved of ammunition, a gun cannot
+ * be swarmed out of reach), so a spare of each is a genuine answer while a
+ * second blade beside the first is not. A wieldable piece always outranks one
+ * the hero cannot lift or that is broken, since the point of the set is
+ * something he can fight with THIS second; among equals `weaponScore` picks.
+ *
+ * Memoised on the hero's loadout memo — the bag's own contents feed it, so
+ * moving, spending or picking up anything mints a fresh one — because the sweep
+ * asks this once per bag CELL, and recomputing it per call would make an O(n)
+ * walk O(n²).
+ */
+function backupWeaponIds(state: GameState, player: Player): Set<number> {
+  const memo = heroLoadoutMemo(state, player);
+  const hit = backupsByLoadout.get(memo);
+  if (hit) return hit;
+  const best = new Map<
+    WeaponClass,
+    { id: number; score: number; wieldable: boolean }
+  >();
+  for (const item of player.inventory) {
+    if (!item || item.slot !== "weapon") continue;
+    const cls = weaponDef(item.defId).class;
+    const wieldable = canEquip(state, player, item);
+    const score = weaponScore(state, player, item);
+    const current = best.get(cls);
+    if (
+      !current ||
+      (wieldable && !current.wieldable) ||
+      (wieldable === current.wieldable && score > current.score)
+    ) {
+      best.set(cls, { id: item.id, score, wieldable });
+    }
+  }
+  const ids = new Set<number>();
+  for (const pick of best.values()) ids.add(pick.id);
+  backupsByLoadout.set(memo, ids);
+  return ids;
+}
+const backupsByLoadout = new WeakMap<object, Set<number>>();
+
+/**
  * True when the bulk-scrap sweep would destroy this bag piece: it is neither
  * special (see `isSpecialItem`) nor as good as what's already worn in its slot
- * (see `isAtLeastAsGoodAsEquipped`) — the loot the hero has outgrown. The UI
- * reads this to count the cull and enable the SCRAP button.
+ * (see `isAtLeastAsGoodAsEquipped`) — the loot the hero has outgrown. The
+ * merchant reads this to decide what a SELL RUN puts on the counter.
+ *
+ * IT IS NOT WHAT THE TRASH BUTTON DESTROYS — that is the stricter
+ * {@link isTrashLoot}, and the split is the whole point: selling an outgrown
+ * weapon happens at a counter, in front of a player, with coins and a stall of
+ * replacements on the other side of it, while trashing one happens in a bag
+ * mid-level and cannot be undone.
  */
 export function isScrappableLoot(
   state: GameState,
@@ -276,12 +340,45 @@ export function isScrappableLoot(
 }
 
 /**
+ * True when the DROP TRASH sweep may destroy this bag piece — outgrown loot
+ * ({@link isScrappableLoot}) that has also cleared the extra bar every WEAPON
+ * has to clear, because a weapon is the one kind of loot whose absence can end
+ * a run rather than weaken it:
+ *
+ *  • it is not part of the {@link backupWeaponIds} keep-set — the hero's best
+ *    piece of each weapon class, which is never trash however far behind it has
+ *    fallen; and
+ *  • it sits at least `LOOT.trashWeaponIlvlMargin` item levels under the weapon
+ *    in his hand, the "he has genuinely climbed past this" test that keeps a
+ *    plain side-grade out of the bin.
+ *
+ * The ilvl bar is measured against the HELD weapon rather than against the
+ * spare's own class-mate on purpose: it asks how far the HERO has come, and a
+ * hero still swinging his starting weapon — or dumped onto the ilvl-1 sidearm,
+ * which is exactly when he is one bad break from having nothing — has come
+ * nowhere and should keep every weapon he has found.
+ *
+ * Anything that is not a weapon answers the same as `isScrappableLoot`: a spare
+ * helmet nobody kept costs armor, never the ability to fight.
+ */
+export function isTrashLoot(
+  state: GameState,
+  player: Player,
+  item: Equipment,
+): boolean {
+  if (!isScrappableLoot(state, player, item)) return false;
+  if (item.slot !== "weapon") return true;
+  if (backupWeaponIds(state, player).has(item.id)) return false;
+  return item.ilvl <= player.equipment.weapon.ilvl - LOOT.trashWeaponIlvlMargin;
+}
+
+/**
  * The SCRAP-JUNK sweep: permanently destroy every bag piece the hero has
- * outgrown — loot that is neither special nor at least as good as what's worn
- * in its slot (see `isScrappableLoot`). Keepers stay: upgrades, side-grades,
- * trinkets, trophies, and anything bound for an empty slot. Returns the culled
- * pieces (empty when nothing was junk) so the UI can announce the count; there
- * is no undo, exactly like a single `discardFromInventory`.
+ * outgrown AND can spare (see `isTrashLoot`). Keepers stay: upgrades,
+ * side-grades, trinkets, trophies, anything bound for an empty slot, and the
+ * backup weapon of every class. Returns the culled pieces (empty when nothing
+ * was junk) so the UI can announce the count; there is no undo, exactly like a
+ * single `discardFromInventory`.
  */
 export function scrapInferiorLoot(
   state: GameState,
@@ -291,7 +388,7 @@ export function scrapInferiorLoot(
   const scrapped: Equipment[] = [];
   for (let i = 0; i < inv.length; i++) {
     const item = inv[i];
-    if (!item || !isScrappableLoot(state, player, item)) continue;
+    if (!item || !isTrashLoot(state, player, item)) continue;
     inv[i] = null;
     scrapped.push(item);
   }

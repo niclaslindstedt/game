@@ -277,6 +277,10 @@ export type MenuContext = {
   captureBind: BindableAction | null;
   setCaptureBind: (action: BindableAction | null) => void;
   hasFinePointer: boolean;
+  /** The device takes touch at all (`any-pointer: coarse`). Gates the rows
+   * whose feature is a touch gesture (SWIPE BARS) — distinct from
+   * `hasFinePointer`, because a touch laptop has both. */
+  hasTouch: boolean;
   canBuzz: boolean;
   /** Can this build close itself? The desktop shell can; a browser tab and the
    * mobile app cannot, so the QUIT row is absent there rather than dead. */
@@ -482,6 +486,7 @@ export function navRow(
 type OnOffKey =
   | "autoFire"
   | "autoEquip"
+  | "swipeBars"
   | "debug"
   | "autoLevelStats"
   | "storeForce"

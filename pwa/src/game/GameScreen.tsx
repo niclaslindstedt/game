@@ -94,6 +94,7 @@ import {
   mergePackKillXp,
   trackXpHeat,
 } from "./game-screen/event-fx.ts";
+import { flushGoldPickups } from "./game-screen/gold-float.ts";
 import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
 import { type Hud } from "./game-screen/hud-model.ts";
 import { createLoopShared } from "./game-screen/loop-shared.ts";
@@ -118,6 +119,7 @@ import { QuestTracker } from "./game-screen/QuestTracker.tsx";
 import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
 import { TalkOverlay } from "./overlays/TalkOverlay.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
+import { SwipeDock } from "./game-screen/SwipeDock.tsx";
 import {
   createRenderFrame,
   type AreaCaptionState,
@@ -326,6 +328,16 @@ export function GameScreen({
   // so React re-reads the frozen state.
   const [, setUiTick] = useState(0);
   const bumpUi = () => setUiTick((t) => t + 1);
+  // A loop failure BEFORE this mount's first complete frame. The loop's
+  // crash-resilience (game-loop.ts) is built for a bad frame in a healthy run —
+  // it logs, drops the frame and keeps going. A run that cannot produce its
+  // FIRST frame is a different animal: nothing has published a HUD yet, so no
+  // overlay, dock or pause menu ever mounts, and "keep going" leaves a frozen
+  // canvas with no UI and no way out (the post-update resume freeze — a thawed
+  // save the new build can't read throws on every frame). Escalate that one
+  // case to React instead: the throw below lands in App's ErrorBoundary, which
+  // shows the RELOAD screen.
+  const [fatalRunError, setFatalRunError] = useState<unknown>(null);
   // The AUTO PILOT session (see autopilot-director.ts): survives the run
   // remounts the ride itself causes and ends with the screen.
   const autopilot = useAutopilotSession();
@@ -389,6 +401,9 @@ export function GameScreen({
   // the short landscape field. Portrait keeps them all stacked in one corner
   // (there's room up the tall edge, and one thumb covers both). See the dock CSS.
   const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
+  // SWIPE BARS is a touch gesture, so the mode only ever engages where touch
+  // exists — a desktop with the setting somehow on keeps its fixed docks.
+  const hasTouch = useMediaQuery("(any-pointer: coarse)");
   // The XP strip's kill-heat overlay — the render loop sizes it to the
   // freshly-earned slice and toggles its `is-hot` class straight on the DOM
   // (like fpsRef) so a kill lights it up without a React re-render.
@@ -713,7 +728,7 @@ export function GameScreen({
       bumpUi,
     });
 
-    const render = createRenderFrame({
+    const renderFrame = createRenderFrame({
       state,
       canvas,
       ctx,
@@ -740,6 +755,16 @@ export function GameScreen({
       guideBlinkRef,
       setHud,
     });
+    // One COMPLETE frame is the line between "a bad frame in a live run"
+    // (survivable — see onError below) and "a run that cannot start" (fatal).
+    // Flipped after the first render that returns without throwing, which is
+    // also what publishes the first HUD snapshot React's whole overlay stack
+    // is gated on.
+    let firstFrameOk = false;
+    const render = (timeMs: number) => {
+      renderFrame(timeMs);
+      firstFrameOk = true;
+    };
 
     const stop = startGameLoop({
       // Fast-forward (`?speed=` / `__speed`) advances the sim faster by running
@@ -953,6 +978,10 @@ export function GameScreen({
           progress.onEvent(event, state);
           autopilotDirector.onEvent(event, state);
         }
+        // Money taken in one breath floats as ONE number: the group lands the
+        // moment the piles stop arriving, which needs a tick of its own rather
+        // than an event (the last pile of a handful is still an event too early).
+        flushGoldPickups(shared, state, feed.push);
         expireEffects(shared, state);
         // The sustained powerup auras track the run's live power list — a
         // spectral wash, a hot rim, a gilded frame — and can never outlive
@@ -971,6 +1000,17 @@ export function GameScreen({
       // instead of the run simply stopping dead with nothing to go on.
       onError: (err, phase) => {
         error(`game loop ${phase} failed: ${describeError(err)}`);
+        // Failed before ever completing a frame: the run is dead on arrival
+        // (a deterministic engine re-throws the same way every frame), and no
+        // HUD means no UI ever mounts to escape through. Hand the error to
+        // React — the throw in the render body routes it to App's
+        // ErrorBoundary and the player gets a RELOAD screen instead of a
+        // frozen picture.
+        if (!firstFrameOk) {
+          setFatalRunError(
+            err ?? new Error(`game loop ${phase} failed before first frame`),
+          );
+        }
       },
     });
 
@@ -1015,6 +1055,14 @@ export function GameScreen({
     setDemoTip,
   ]);
 
+  // A run that failed before its first complete frame (see the loop's
+  // onError): re-throw during render so App's ErrorBoundary catches it and
+  // shows the RELOAD screen. The parked run (if this was a resume) was already
+  // consumed, so reloading lands on a working title menu.
+  if (fatalRunError !== null) {
+    throw fatalRunError;
+  }
+
   if (!assets) {
     return <LoadingScreen />;
   }
@@ -1035,6 +1083,10 @@ export function GameScreen({
   // Which bottom corner the powerup dock lives in; the pickup feed takes the
   // opposite one. Read live so the title-screen toggle applies next run.
   const powerupSide = getSettings().powerupSide;
+  // SWIPE BARS (SETTINGS → GAMEPLAY, touch only): the fixed corner docks stand
+  // down and an edge swipe summons both bars where the thumb is (SwipeDock).
+  // Read live like the row above, so the title-screen toggle applies next run.
+  const swipeBars = hasTouch && getSettings().swipeBars === "on";
   // The consumable dock rides with the powerups in portrait (stacked above
   // them), but crosses to the OPPOSITE corner in landscape so the two rows split
   // left/right instead of piling up on one side of the field.
@@ -1177,7 +1229,7 @@ export function GameScreen({
         />
       )}
 
-      {hud?.phase === "playing" && (
+      {hud?.phase === "playing" && !swipeBars && (
         <ConsumableDock
           hud={hud}
           assets={assets}
@@ -1189,23 +1241,39 @@ export function GameScreen({
         />
       )}
 
-      <PowerupDock
-        hud={hud?.phase === "playing" ? hud : null}
-        assets={assets}
-        font={font}
-        keyHints={keyHints}
-        weaponMenuOpen={weaponMenuOpen}
-        side={powerupSide}
-        dockRef={powerupDockRef}
-        onSpend={queues.queueDockSpend}
-        onDiscard={(index) => {
-          if (state && runCommand(state, "discardHeldAbility", index)) {
-            playUiSound(synth, "back");
-            return true;
-          }
-          return false;
-        }}
-      />
+      {!swipeBars && (
+        <PowerupDock
+          hud={hud?.phase === "playing" ? hud : null}
+          assets={assets}
+          font={font}
+          keyHints={keyHints}
+          weaponMenuOpen={weaponMenuOpen}
+          side={powerupSide}
+          dockRef={powerupDockRef}
+          onSpend={queues.queueDockSpend}
+          onDiscard={(index) => {
+            if (state && runCommand(state, "discardHeldAbility", index)) {
+              playUiSound(synth, "back");
+              return true;
+            }
+            return false;
+          }}
+        />
+      )}
+
+      {/* SWIPE BARS: the fixed docks' stand-in — an edge swipe reveals both
+          slot groups where the thumb is (SwipeDock.tsx). The render loop's
+          cooldown writes ride the same dockRef either way. */}
+      {swipeBars && (
+        <SwipeDock
+          hud={hud?.phase === "playing" ? hud : null}
+          assets={assets}
+          font={font}
+          dockRef={powerupDockRef}
+          onSpend={queues.queueDockSpend}
+          onUse={queues.queueConsumable}
+        />
+      )}
 
       {hud?.phase === "playing" && (
         <PickupFeed

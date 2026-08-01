@@ -948,9 +948,15 @@ the **cartridge crates** stacked around BOOT HILL — are for.
 
 **Running dry is never a dead end.** A hero whose weapon is empty puts it away
 and draws the best thing in the bag he can actually fight with
-(`swapOffDryWeapon`); a full bag keeps the empty one in hand instead, since
-there is nothing to preserve by dropping it. Only a hero with an empty weapon
-and _nothing else he can fight with_ is genuinely stuck, and that is the one
+(`swapOffDryWeapon`) — and with nothing loaded in the bag he reaches for the
+built-in **SIDEARM**, which is minted on demand rather than carried, so an empty
+bag is not the end of the line either. **And the bag is kept stocked to make
+that rarer:** the DROP TRASH sweep will not destroy the hero's best weapon of
+each class — one melee, one ranged, one magic — however far behind his hand
+they have fallen, precisely because a gun runs out of ammunition where a blade
+cannot and a blade cannot reach what a gun can (`isTrashLoot`). Only a hero with
+an empty weapon and _nothing else he can fight with_ is genuinely stuck, and
+that is the one
 state the mercy ladder answers at **every** difficulty rather than tapering off
 by JESUS — the other ropes are kindnesses a good player should not need, and
 this one is the guard on a soft lock no amount of skill escapes.
@@ -961,6 +967,41 @@ melee or magic weapon that is its durability, for a ranged one it is the pouch,
 with the count printed in the corner exactly the way the bag prints its free
 cells. The inventory's foot rail carries the pouch itself, one icon and number
 per kind.
+
+### The XP SCROLL — the pickup that uses itself (`content/leveling.yaml`)
+
+Every other pickup in the game is either banked (a medkit, a repair kit, a
+powerup) or paid on touch (gold). The **XP SCROLL** is neither: there is no dock
+cell for it and no button to spend it on, so walking over one **reads** it, and
+for the next **`scrollDurationMs`** (30 s) every scrap of XP that hero earns is
+multiplied by **`scrollXpMult`** (×2). The window is `Player.xpBoostMs`, counted
+down in `stepTimers` and applied at the one `grantXp` door
+(`xpBoostMultiplier`); the app draws it as a faint blue veil around the hero
+(`pwa/src/game/render/xp-veil.ts`) so the clock is legible without a HUD number.
+
+**It pays nothing, and that is the whole design.** What a scroll is worth is
+whatever the hero DOES with its thirty seconds: read into a pack it pays for
+itself many times over, read over a cleared floor it doubles nothing. So unlike
+the flat golden arrow it replaced, it needs no mob-pricing and no
+below-level penalty to stop a player farming outgrown ground — a doubled trickle
+is still a trickle, and the per-map XP cap (applied UNDER the multiplier) throttles
+it exactly as it throttles the kills themselves. It also cannot distort the
+leveling table's kills-per-level: it only ever makes the same kills count twice.
+
+**A second scroll REFRESHES the window rather than stacking it**, so a floor
+littered with them buys thirty seconds, not five minutes — which is what keeps a
+lucky rain from out-paying the fight it is meant to reward. Three knobs, all in
+`content/leveling.yaml` beside the elite/boss payouts: `scrollXpMult`,
+`scrollDurationMs`, and `scrollDropShare` (the ladder's tail, thinned per rung by
+the difficulty's `scrollDropMult` and zero on JESUS, where every level is earned
+kill by kill).
+
+Because its worth is a DUTY CYCLE rather than a payout, the drop share does not
+read like a flat faucet's: at a pickup rate λ and a window D the boost is dark
+only when a whole D has passed with no pickup, so it is live `1 − e^(−λD)` of the
+time. The shipped `scrollDropShare` was set by measuring that against the arrow
+it replaced over a full `simulate-run` campaign, not by arithmetic — see the
+`leveling-balance` skill.
 
 ### Powerups — two new ones per map (`content/powerups.yaml`)
 
@@ -1056,6 +1097,18 @@ intended purse. The shop's SELL JUNK button clears every outgrown
 piece (the inventory's scrap rule) in one tap; SELL ALL empties the whole bag
 across the counter, keepers included (the worn loadout is untouched). Coins
 ride the loadout between levels like everything else the hero carries.
+
+**The BUY-BACK shelf.** Every sale lands on the trader's buy-back shelf — the
+last dozen pieces sold across this counter (`MERCHANT.buybackSlots`), most
+recent first, the oldest pushed off as new sales arrive. The shop's BUY BACK
+button opens it, and anything on it comes back for **exactly the coins he
+paid**: the same instance that left the bag, with its affixes, its item level
+and its worn-down durability intact. It is an UNDO rather than a purchase,
+which is why there is no vendor markup on it and why buying a piece back also
+un-books the sale from the run's recycling tally — a mis-tap on the deal card,
+or a SELL ALL fired with a keeper still in the bag, costs nothing but the walk
+back to the counter. The shelf is the TRADER's memory, so it dies with him: the
+next level is a different man with an empty one.
 
 ### Gold — what a body was carrying (`src/game/items/gold.ts`, config `GOLD`)
 

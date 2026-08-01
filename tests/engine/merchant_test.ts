@@ -11,6 +11,8 @@ import {
   abilityRarity,
   advanceDialogue,
   applyLoadout,
+  buybackContents,
+  buybackItem,
   buyStock,
   canBuyStock,
   closeShop,
@@ -252,6 +254,94 @@ describe("the shop", () => {
     expect(state.players[0].coins).toBe(paid);
     expect(state.players[0].inventory[0]).toBeNull();
     expect(sellItem(state, state.players[0], 0)).toBeNull(); // empty cell: no-op
+  });
+
+  describe("the buy-back shelf", () => {
+    /** A hero at the open counter with `pieces` loose in his bag. */
+    function atCounter(pieces: Equipment[]): GameState {
+      const state = startGame();
+      meet(state);
+      state.players[0].pos = { ...state.merchant.pos };
+      pieces.forEach((item, i) => {
+        state.players[0].inventory[i] = item;
+      });
+      openShop(state, state.players[0]);
+      return state;
+    }
+
+    it("a sale is undoable for exactly what it paid", () => {
+      const loot = piece("test_wand", "magic", 4);
+      const state = atCounter([loot]);
+      const paid = sellItem(state, state.players[0], 0) as number;
+      expect(buybackContents(state.merchant)).toEqual([
+        { item: loot, price: paid },
+      ]);
+
+      expect(buybackItem(state, state.players[0], loot.id)).toBeNull();
+      // The purse is exactly where it started, the piece is back in the bag —
+      // the SAME instance, not a re-roll — and the shelf is empty again.
+      expect(state.players[0].coins).toBe(0);
+      expect(state.players[0].inventory[0]).toBe(loot);
+      expect(buybackContents(state.merchant)).toHaveLength(0);
+      // …and the run no longer counts loot it still has as recycled.
+      expect(state.stats.coinsSold).toBe(0);
+    });
+
+    it("shelves most-recent-first and drops the oldest past the cap", () => {
+      // One more piece than the shelf holds, sold oldest-first.
+      const pieces = Array.from(
+        { length: MERCHANT.buybackSlots + 1 },
+        (_, i) => ({ ...piece("test_wand", "regular", 1 + i), id: 100 + i }),
+      );
+      const state = atCounter([]);
+      // Sold one at a time through the SAME cell, so the bag's size can't cap
+      // the run of sales.
+      for (const item of pieces) {
+        state.players[0].inventory[0] = item;
+        sellItem(state, state.players[0], 0);
+      }
+      const shelf = buybackContents(state.merchant);
+      expect(shelf).toHaveLength(MERCHANT.buybackSlots);
+      // Most recent first…
+      expect(shelf[0]?.item.id).toBe(pieces[pieces.length - 1]?.id);
+      // …and the very first sale has fallen off for good.
+      expect(shelf.some((e) => e.item.id === pieces[0]?.id)).toBe(false);
+      expect(buybackItem(state, state.players[0], pieces[0]?.id as number)).toBe("gone");
+    });
+
+    it("refuses a short purse, a full bag, and a closed counter", () => {
+      const loot = piece("test_wand", "rare", 6);
+      const state = atCounter([loot]);
+      const paid = sellItem(state, state.players[0], 0) as number;
+
+      state.players[0].coins = paid - 1;
+      expect(buybackItem(state, state.players[0], loot.id)).toBe("coins");
+      state.players[0].coins = paid;
+
+      // Every cell taken: nowhere to put it, and nothing is spent trying.
+      const filler = state.players[0].inventory.map((_, i) => ({
+        ...piece("test_wand", "regular", 1),
+        id: 500 + i,
+      }));
+      state.players[0].inventory = filler;
+      expect(buybackItem(state, state.players[0], loot.id)).toBe("bag");
+      expect(state.players[0].coins).toBe(paid);
+      expect(buybackContents(state.merchant)).toHaveLength(1);
+
+      // The shelf is the COUNTER's, so it is only reachable across it.
+      state.players[0].inventory[0] = null;
+      closeShop(state, state.players[0]);
+      expect(buybackItem(state, state.players[0], loot.id)).toBe("gone");
+      expect(state.players[0].coins).toBe(paid);
+    });
+
+    it("is the trader's memory — a new level's merchant has an empty shelf", () => {
+      const state = atCounter([piece("test_wand", "magic", 4)]);
+      sellItem(state, state.players[0], 0);
+      expect(state.merchant.buyback.length).toBeGreaterThan(0);
+      const fresh = startGame();
+      expect(fresh.merchant.buyback).toEqual([]);
+    });
   });
 
   it("stocks powerups and weapons priced off the economy", () => {

@@ -109,7 +109,7 @@ describe("simulateLevel", () => {
   }, 30_000);
 
   it("realistic pacing ends the run at the map's intended level, not farmed out", () => {
-    // FIX_LEVEL carries arrowCapByDifficulty.easy = 3 — a normal clear's exit.
+    // FIX_LEVEL carries intendedLevelByDifficulty.easy = 3 — a normal clear's exit.
     const opts = {
       levelId: "test_level",
       difficulty: "easy" as const,
@@ -122,7 +122,7 @@ describe("simulateLevel", () => {
     // farms PAST where farm mode would land.
     expect(paced.hero.levelEnd).toBeLessThanOrEqual(farmed.hero.levelEnd);
     // Ending by the pacing rule means it stopped AT the intended exit level
-    // (arrowCapByDifficulty.easy = 3) rather than farming on past it.
+    // (intendedLevelByDifficulty.easy = 3) rather than farming on past it.
     if (paced.outcome === "cleared") {
       expect(paced.hero.levelEnd).toBeGreaterThanOrEqual(3);
     }

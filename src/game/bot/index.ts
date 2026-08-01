@@ -19,7 +19,7 @@
 //   • dodges.ts     — the reflex dodges (telegraphs, hazards, herds)
 //   • content.ts    — chest/elite engagement + the fog-coverage sweep
 //   • macro.ts      — the macro travel plan, anti-loiter hunt, unstuck
-//   • supplies.ts   — loot/consumable/repair/arrow reads + bravery
+//   • supplies.ts   — loot/consumable/repair/scroll reads + bravery
 //   • arsenal.ts    — aiming and the powerup dock
 //   • fight.ts      — the strategy bodies (survive/pushBoss/hops)
 //   • economy.ts    — bag/merchant play, invoked by the HARNESSES
@@ -71,13 +71,11 @@ import {
 } from "./state.ts";
 import type { Bot } from "./state.ts";
 import {
-  dingArrowNearby,
   hasWear,
   HEAL_HP_FRAC,
   needsRepair,
   STAMINA_TOPUP_FRAC,
   topOffReach,
-  trackArrowXp,
   trackBravery,
 } from "./supplies.ts";
 import { createThoughtMemory, resolveThought } from "./thoughts.ts";
@@ -110,13 +108,6 @@ export {
 } from "./state.ts";
 export type { Bot, BotProfile, BotStrategy } from "./state.ts";
 
-/** How near (world px) a DINGING golden arrow must be to stand in for a
- * medkit — close enough that "grab the arrow instead" is the same fight, not
- * a trek across the field while bleeding. */
-const ARROW_SAVE_REACH = 150;
-/** Below this hp fraction the medkit is popped even with a dinging arrow in
- * reach — nearly dead is no time to gamble on making the pickup. */
-const ARROW_MEDKIT_HOLD_HP_FRAC = 0.3;
 /** Spend-to-refill a MEDKIT only when hp sits below this fraction of max —
  * "not full" with a real gap, so the heal isn't wasted on a scratch. */
 const TOP_OFF_HP_FRAC = 0.9;
@@ -217,9 +208,6 @@ function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
   trackEngagement(bot, state, hero, tune);
   // Consume an arrived-at GPS nudge (see Bot.waypoint).
   trackWaypoint(bot, state, hero);
-  // Learn what a GOLDEN ARROW pays from this tick's collection events (the
-  // 5%-increment memory the strategic-arrow reads consult — see Bot.arrowXp).
-  trackArrowXp(bot, state, hero);
   // LAND the committed hop: back on the ground (and not on the takeoff tick
   // itself), the jump's purpose is spent — clear the plan so the normal read
   // resumes. Also self-heals a takeoff the engine refused (z never left 0).
@@ -707,20 +695,9 @@ function postDecision(
   // low/empty — a winded hero is capped to a jog and gets run down. On a quiet
   // march the potion stays corked: the jog cap is merely slow, and standing
   // still refills the pool for free — supplies are for fights, not travel.
-  //
-  // SAVE THE MEDKIT when a DING is in reach: a golden arrow that would level
-  // him up is a free FULL HEAL (grantXp tops hp and stamina off on the ding),
-  // so with one lying close by — by the bot's LEARNED read of what an arrow
-  // pays (Bot.arrowXp) — the kit stays pocketed and the arrow is the heal.
-  // Only above the emergency floor: nearly dead, he pops the kit rather than
-  // gamble the last of the bar on reaching the arrow.
-  const dingHeal =
-    player.hp >= player.maxHp * ARROW_MEDKIT_HOLD_HP_FRAC &&
-    dingArrowNearby(bot, state, hero, ARROW_SAVE_REACH) !== undefined;
   decided.useMedkit =
     player.hp < player.maxHp * HEAL_HP_FRAC &&
-    bestMedkitTier(state, player) >= 0 &&
-    !dingHeal;
+    bestMedkitTier(state, player) >= 0;
   const threatNear = threatCountWithin(state, hero, THREAT_RADIUS) > 0;
   decided.useStaminaPotion =
     player.staminaPotions > 0 &&

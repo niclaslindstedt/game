@@ -1,6 +1,6 @@
 ---
 name: level-design
-description: "Use when adding a new level/mission to the game or substantially reworking one — the TWO files a venue is (the mission's YAML and the blueprint its map is carved from), their compile pipeline, the renderers for reading a carve, campaign registration and unlock order, the cumulative loot-pool rule, XP/arrow-cap pacing wiring, and the checker + test battery a new venue must pass before it ships."
+description: "Use when adding a new level/mission to the game or substantially reworking one — the TWO files a venue is (the mission's YAML and the blueprint its map is carved from), their compile pipeline, the renderers for reading a carve, campaign registration and unlock order, the cumulative loot-pool rule, XP/intended-level pacing wiring, and the checker + test battery a new venue must pass before it ships."
 ---
 
 # Designing a Level
@@ -111,7 +111,7 @@ so they are read, not authored:
    beat, not its spot), `placedItems` and `wells` (WHAT the venue leaves lying
    around and how hard its holes pull — the carve decides where).
 4. **Loot**: `weaponPool`/`gearPool`/`abilityPool`, `earlyDrops`,
-   `allClearWeapon`, `worldUniques`, `arrowCapByDifficulty`. **The
+   `allClearWeapon`, `worldUniques`, `intendedLevelByDifficulty`. **The
    cumulative-pool rule (the bunker idiom): later maps re-list every earlier
    stage's bases.** Forge any new base via `weapon-system`.
 5. **The map**, in `content/maps/<id>.yaml`: areas, objects, `horde`, `elites`,
@@ -242,7 +242,7 @@ enforcing the tuples is `level-schema.mjs`.
 
 - **Pacing caps come from the calculator, not intuition.** Run
   `node scripts/leveling-curve.mjs --by-level` and read the hero's level at the
-  start/end of the new map's clears: that sizes `loot.arrowCapByDifficulty` and
+  start/end of the new map's clears: that sizes `loot.intendedLevelByDifficulty` and
   any `worldUniques` `minPlayerLevel` gate. Adding a campaign level also shifts
   the `XP_CAP.capByDifficulty` interpolation (`config.ts`) — verify first visits
   still forfeit ~no XP (`xpLost` in the `simulate-run` summary).
@@ -305,7 +305,7 @@ else to render — change the seed to see another run's map.
       (`generated_maps_test.ts` asserts one per mission).
 - [ ] `yaml_roundtrip_test.ts` green (or snapshot intentionally updated).
 - [ ] `node scripts/leveling-curve.mjs --by-level` re-read →
-      `arrowCapByDifficulty` + `XP_CAP` bands land where runs end.
+      `intendedLevelByDifficulty` + `XP_CAP` bands land where runs end.
 - [ ] `scripts/weapon-stats.mjs --coverage` clean, `LEVEL_MLVL_BANDS` +
       `CAMPAIGN_LANDINGS` entries added.
 - [ ] `node scripts/unique-check.mjs` clean if the map hands world uniques.

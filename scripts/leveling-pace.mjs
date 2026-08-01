@@ -14,7 +14,7 @@
 //
 //   node scripts/leveling-pace.mjs --run            # run the standard battery
 //                                                   # first (see BATTERY below)
-//   node scripts/leveling-pace.mjs --run --no-arrow-xp   # pure kill grind
+//   node scripts/leveling-pace.mjs --run --no-xp-scroll  # pure kill grind
 //
 // Each dump is a single-campaign `simulate-run --json` report; several dumps
 // for the same difficulty (a lane run + arrival samplers) merge, averaging
@@ -75,7 +75,7 @@ if (args.includes("--run")) {
     path.join(path.dirname(htmlPath) || ".", "leveling-pace-runs"),
   );
   mkdirSync(outDir, { recursive: true });
-  const extra = args.includes("--no-arrow-xp") ? ["--no-arrow-xp"] : [];
+  const extra = args.includes("--no-xp-scroll") ? ["--no-xp-scroll"] : [];
   const battery = BATTERY(extra);
   console.log(
     `running the standard battery (${battery.length} sweeps) → ${outDir} …`,
@@ -100,7 +100,7 @@ if (args.includes("--run")) {
 if (!files.length) {
   console.error(
     "usage: node scripts/leveling-pace.mjs <simulate-run --json dump>… " +
-      "[--html out.html] [--to L] | --run [--no-arrow-xp] [--out-dir dir]",
+      "[--html out.html] [--to L] | --run [--no-xp-scroll] [--out-dir dir]",
   );
   process.exit(1);
 }
@@ -200,7 +200,7 @@ if (!Object.keys(series).length) {
 
 // The authored target: the yaml rows' `~N kills` annotations — the IN-PLAY
 // design curve on the critical path (the raw XP behind each row embeds the
-// measured band factor: level-diff premiums, elite/arrow drip, tier steps —
+// measured band factor: level-diff premiums, elite/scroll drip, tier steps —
 // so xp ÷ referenceMobXp is NOT the annotation; read the comments).
 const annotated = {};
 const yaml = readFileSync(path.join(root, "content/leveling.yaml"), "utf8");

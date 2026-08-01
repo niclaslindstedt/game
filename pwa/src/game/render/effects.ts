@@ -109,6 +109,13 @@ export type Effect = {
   /** Text float: how far the word climbs over its life, in world px
    * (default 16). XP popups rise further so they read as "flowing up". */
   rise?: number;
+  /** Text float / damage number: extra screen px between the word and its
+   * anchor, so a float landing where a live one already sits takes the LANE
+   * ABOVE it instead of being drawn into the same pixels
+   * (game-screen/float-lane.ts). A kill at the hero's feet that also sheds a
+   * purse is the everyday case: the hit's number, its blue "+N XP" and the gold
+   * "+N" are one spot and three messages. Default 0 — the spot was free. */
+  lift?: number;
   /** Text float: glyph scale (default 1). A golden-arrow XP popup doubles it,
    * and a merged pack-kill float grows it with the pack (≈count/10 — 20 mobs →
    * 2×, 30 → 3×), so a bigger gain reads as a bigger number. */
@@ -238,6 +245,17 @@ function corpseFlightMs(launch: NonNullable<Effect["launch"]>): number {
  * ./gibs.ts is clamped over exactly these lengths, so nothing is still moving
  * when this turns true.
  */
+/**
+ * HOW BIG A HIT NUMBER DRAWS. A plain hit is 1×; a crit's size tracks how hard
+ * it rolled — a glancing one grows a modest 1.5×, a top-of-band slam a fat 3×,
+ * quantized to half-steps so the pixel glyphs stay crisp. Exported because the
+ * LANE the number is given has to know how tall it will be
+ * (game-screen/float-lane.ts), and a second copy of this rule would drift.
+ */
+export function damageTextScale(crit: boolean, critPower?: number): number {
+  return crit ? Math.round((1.5 + 1.5 * (critPower ?? 0.5)) * 2) / 2 : 1;
+}
+
 export function restsOnFloor(effect: Effect, timeMs: number): boolean {
   if (effect.kind === "gib" || effect.kind === "cleave") {
     const age = (effect.durationMs ?? 0) - (effect.untilMs - timeMs);
@@ -777,8 +795,7 @@ function drawEffectPass(
       const duration = effect.durationMs ?? 650;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       const crit = effect.crit ?? false;
-      const power = effect.critPower ?? 0.5;
-      const scale = crit ? Math.round((1.5 + 1.5 * power) * 2) / 2 : 1;
+      const scale = damageTextScale(crit, effect.critPower);
       const elapsedMs = t * duration;
       const shake = !crit
         ? 0
@@ -790,11 +807,14 @@ function drawEffectPass(
       const text = formatCompact(effect.value ?? 0);
       const width = font.measure(text) * scale;
       ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
+      // `lift` is the lane this number was given so it clears whatever was
+      // already on the body (game-screen/float-lane.ts) — in a busy fight the
+      // hits ladder up off it instead of overprinting each other.
       font.draw(
         ctx,
         text,
         x - Math.round(width / 2) + shake,
-        groundY - font.height * scale,
+        groundY - (effect.lift ?? 0) - font.height * scale,
         { scale, color: crit ? "#ffd75e" : "#f4f4f4" },
       );
       ctx.globalAlpha = 1;
@@ -834,7 +854,10 @@ function drawEffectPass(
       const text = effect.text ?? "";
       const width = font.measure(text) * scale;
       const tx = x - Math.round(width / 2) + jolt;
-      const ty = groundY - rise - font.height * scale;
+      // `lift` is the lane this float was given at spawn so it clears whatever
+      // was already on this spot (game-screen/float-lane.ts) — it rides ABOVE
+      // the rise, so a stacked float still climbs its own full arc.
+      const ty = groundY - rise - (effect.lift ?? 0) - font.height * scale;
       ctx.globalAlpha = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
       // A hard 1px drop-shadow first so the word keeps contrast on both the
       // bright floor and the dark sky — the colored glyphs ride on top.

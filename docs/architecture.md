@@ -360,7 +360,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   firearm, `arrows` for a drawn bow, `cells` for charged shot — to
   `AMMO.stackCap` (200) independently. A gun never breaks and never wants a
   repair kit; it runs dry, and the hero draws whatever in the bag he can still
-  fire (`swapOffDryWeapon`). Ranged
+  fire — falling back to the built-in SIDEARM when the bag holds nothing loaded
+  (`swapOffDryWeapon`). Ranged
   bases can fire pellet volleys, pierce, home, or chain), gear, the
   quality ladder (trash/regular/magic/rare/unique/legendary — each tier
   unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`; TRASH sits below
@@ -572,12 +573,18 @@ escort.ts` walks the people an escort errand puts on the field, and
   base-attribute gains (see `leveling.ts` below), and celebrate first: the
   ding arms `state.levelUpFxMs` (config `LEVELING.dingCelebrationMs`) — the
   app draws the golden burn off it — and the `levelup` stat-chooser phase
-  only opens once the window has burned down. Golden XP arrows pay a flat few
-  kills' worth of XP priced to the mob that DROPPED them (the `arrowXpKills` knob
-  in `content/leveling.yaml`, via `arrowXp` on the arrow's `mlvl`) — mob-priced
-  like every other XP faucet, so the leveling table's kills-per-level stays true
-  and an arrow shed by an outgrown map's low-level horde is worth only that mob's
-  little, never a full at-level ding. Picked-up
+  only opens once the window has burned down. XP SCROLLS pay no XP at all — one
+  is READ by walking over it (there is nothing to dock and nothing to spend), and
+  for `scrollDurationMs` afterwards every XP that hero earns is multiplied by
+  `scrollXpMult` (both authored in `content/leveling.yaml`; the window is
+  `Player.xpBoostMs`, counted down in `stepTimers` and applied at the one
+  `grantXp` door via `xpBoostMultiplier`, above the per-map cap so outgrown
+  ground still throttles it). A second scroll REFRESHES the window rather than
+  stacking, so a scroll rain buys one window rather than five. Because it
+  multiplies rather than pays, it cannot distort the leveling table's
+  kills-per-level: it only ever makes the same kills count twice. The app draws
+  the lit window as a faint blue veil around the hero
+  (`pwa/src/game/render/xp-veil.ts`). Picked-up
   equipment that beats what is worn — and that the hero can actually WIELD, both
   the level and the attribute gate (`canEquip`) — is equipped on the spot; a
   find he is too low-level or too weak for banks until he grows into it.
@@ -837,7 +844,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   called from the enemy pass) keeps the horde `MERCHANT.repelRadius` off
   the stall — bosses and apparitions excepted. `openShop`/`closeShop`
   toggle the `shop` pause phase (proximity-gated); `sellItem`/`buyStock`
-  are the UI's trade mutators, and `sellValue` is the one valuation every
+  are the UI's trade mutators — a sale also lands on the trader's BUY-BACK
+  shelf (`MERCHANT.buybackSlots`, read with `buybackContents`, undone with
+  `buybackItem` for exactly the coins it fetched, and gone with the level's
+  merchant) — and `sellValue` is the one valuation every
   price tag reads — item level × tier orders of magnitude × material
   (metal ×2, precious ×4, from the equipment defs). `repairGear` mends the
   whole kit (worn weapon + armor + every breakable bag piece, via
@@ -866,7 +876,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   `unequipToInventory` / `moveInventoryItem`, the one-tap bag tools
   (`autoEquipBest` — wear the best wearable piece in every slot at once,
   weapons by the build-aware `weaponScore`; `scrapInferiorLoot` — cull every
-  outgrown find), `allocateStat` (plus the
+  outgrown find the hero can spare, which is `isTrashLoot` rather than the
+  looser `isScrappableLoot` the merchant sell-run reads: a WEAPON is spared
+  unless it is neither the hero's best of its class (the BACKUP ARSENAL — one
+  melee, one ranged, one magic, since a gun runs out of ammunition where a
+  blade cannot) nor `LOOT.trashWeaponIlvlMargin` item levels behind the weapon
+  in his hand), `allocateStat` (plus the
   respec trio `beginRespec` / `deallocateStat` / `confirmRespec`),
   the derived
   stats (max hp — now STAMINA-scaled, class-aware crit chance
@@ -893,8 +908,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   wieldable bag weapon takes over, never defaulting to the sidearm while a good
   weapon remains; its twin `swapOffDryWeapon` does the same for a RANGED weapon
   that ran out of AMMUNITION, narrowed to bag weapons the hero can actually
-  fire — a full bag keeps the empty one in hand instead, since there is nothing
-  to preserve by putting it down; `wearWornArmor` — armor spends a point per landed hit
+  fire and falling back to the SIDEARM — which is minted rather than carried, so
+  a bag with nothing loaded in it is not the end of the line — whenever the
+  sidearm's own pouch has something in it; `wearWornArmor` — armor spends a point per landed hit
   and a piece at zero goes INACTIVE (`isArmorBroken`), never trashed — and the
   stacked repair kit (`consumeRepairKit` → `repairAll`), banked into the
   consumable dock like a medkit and spent on the player's call to mend the whole

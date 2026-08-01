@@ -5,7 +5,12 @@
 // repair kit share.
 
 import { ARMOR, ARMOR_TYPES, ECONOMY } from "../config/index.ts";
-import { gearDef, isWeaponDef } from "../defs/equipment.ts";
+import {
+  gearDef,
+  isWeaponDef,
+  SIDEARM_DEF_ID,
+  weaponDef,
+} from "../defs/equipment.ts";
 import type {
   ArmorType,
   Equipment,
@@ -25,7 +30,7 @@ import {
   equipFromInventory,
   syncInventoryCapacity,
 } from "./inventory.ts";
-import { hasAmmoFor } from "./ammo.ts";
+import { ammoCount, hasAmmoFor } from "./ammo.ts";
 import { drawSidearm, takeBestBagWeapon } from "./hands.ts";
 import { equipmentMaxDurability, qualityMult } from "./quality.ts";
 import { itemLevelReq } from "./requirements.ts";
@@ -347,19 +352,46 @@ export function wearEquippedWeapon(
  * reload for a bag cell he does not have is not an improvement, and unlike a
  * broken weapon there is nothing to preserve by putting it down.
  *
- * Returns whether the hand changed. False also covers the quiet common case:
- * nothing loaded in the bag, so he keeps the dry weapon and the shot simply
- * does not happen. That is the state `outOfAmmoDesperation` watches, and the
- * mercy ladder is what eventually answers it.
+ * WITH NOTHING LOADED IN THE BAG HE REACHES FOR THE SIDEARM, exactly as the
+ * on-break swap above does — and that fallback was missing here, which is a
+ * softlock rather than a rough patch. The sidearm is not IN the bag; it is
+ * minted on demand, so a `takeBestBagWeapon` that came back empty used to leave
+ * the hero holding a rifle that cannot fire while a hundred charged cells sat
+ * in his pouch for a weapon he had no way to draw. He could not land a blow, so
+ * he could not earn a kill, so the drop ladder — which only rolls on a kill —
+ * could never hand him the box that would have freed him. The sidearm is only
+ * worth drawing if it can actually shoot (its own pouch has something in it);
+ * a hero who is dry on every kind keeps the weapon he knows, and THAT is the
+ * state `outOfAmmoDesperation` watches for the mercy ladder to answer.
+ *
+ * Returns whether the hand changed.
  */
 export function swapOffDryWeapon(state: GameState, player: Player): boolean {
   const dry = player.equipment.weapon;
   if (hasAmmoFor(player, dry)) return false;
-  const replacement = takeBestBagWeapon(state, player, { loadedOnly: true });
+  const fromBag = takeBestBagWeapon(state, player, { loadedOnly: true });
+  const replacement = fromBag ?? loadedSidearm(state, player);
   if (!replacement) return false;
   if (!addToInventory(state, player, dry)) {
-    addToInventory(state, player, replacement);
-    return false;
+    if (fromBag) {
+      // No room for the empty weapon, so there is no trade to make: put the
+      // loaded one back and keep holding the one he will reload.
+      addToInventory(state, player, fromBag);
+      return false;
+    }
+    // The SIDEARM path has no trade to back out of — the alternative is a hero
+    // standing in a fight unable to fire at all — so the empty weapon goes on
+    // the ground at his feet, exactly as a broken one does on a full bag.
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "equipment",
+        pos: { ...player.pos },
+        equipment: dry,
+      },
+      player.pos,
+    );
   }
   player.equipment.weapon = replacement;
   player.weaponCooldownMs = 0;
@@ -371,6 +403,24 @@ export function swapOffDryWeapon(state: GameState, player: Player): boolean {
   syncInventoryCapacity(state, player);
   state.events.push({ type: "autoEquipped", defId: replacement.defId });
   return true;
+}
+
+/**
+ * A fresh sidearm for the dry swap — but only one that could actually SHOOT.
+ * Two refusals, and both are the difference between a fallback and a shrug:
+ *
+ *  • ALREADY HOLDING ONE. `stepWeapon` asks for this swap on every attack tick,
+ *    so a sidearm minted into a hand that already holds one would stow a
+ *    sidearm into a bag cell 60 times a second.
+ *  • THE POUCH IS EMPTY TOO. The sidearm is a RANGED weapon, so swapping a dry
+ *    rifle for a dry sidearm changes the picture and nothing else. Asked of the
+ *    catalog rather than of a minted piece, so the refusal costs no `nextId`.
+ */
+function loadedSidearm(state: GameState, player: Player): Equipment | null {
+  if (player.equipment.weapon.defId === SIDEARM_DEF_ID) return null;
+  const kind = weaponDef(SIDEARM_DEF_ID).ammo;
+  if (kind !== undefined && ammoCount(player, kind) <= 0) return null;
+  return drawSidearm(state);
 }
 
 /**

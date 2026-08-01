@@ -13,12 +13,18 @@
 // which is INVARIANT to the auto-stat flag and the hero's damage (autoPowerScale
 // cancels top and bottom) — only the difficulty's mob-level offset moves it.
 //
-// GOLDEN XP ARROWS are folded in on top: they drop from the ordinary loot rain
-// (`LOOT.dropChance × arrowDropShare × the difficulty's arrowDropMult`) and
-// each grants a flat `arrowXp(L)` — a few reference-mob kills' worth, the
-// `arrowXpKills` knob in content/leveling.yaml — a second, parallel XP faucet
-// the raw kill-XP count above ignores. The `w/arrows` column folds it in; the
-// drip thins out up the rungs (zero on JESUS).
+// XP SCROLLS are folded in on top: they drop from the ordinary loot rain
+// (`LOOT.dropChance × scrollDropShare × the difficulty's scrollDropMult`) and
+// each lights a `scrollDurationMs` window in which every XP counts
+// `scrollXpMult` times (content/leveling.yaml). A scroll pays nothing itself,
+// so it is not a parallel faucet — it is a DUTY CYCLE on the kill faucet: at a
+// pickup rate λ (drops/sec, off the assumed kill rate) and window D, a scroll
+// walked over mid-window REFRESHES rather than stacks, so the boost is dark
+// only when nothing has been picked up for a whole D — an active share of
+// `1 − e^(−λD)`. The `w/scroll` column folds that in; the drip thins out up the
+// rungs (zero on JESUS). This is why the kill RATE matters to the column: the
+// same drop share is worth much more to a hero killing fast enough to keep the
+// window permanently lit than to one who reads a scroll and then walks.
 //
 // From a kill rate (kills/hour × hours/day) the model reads out LEVELS PER DAY
 // at each level and the cumulative kills/days to a target level, so you can aim
@@ -27,7 +33,7 @@
 //   node scripts/leveling-curve.mjs                 # medium, 1500 kills/hr, 1 h/day
 //   node scripts/leveling-curve.mjs --difficulty easy --kills-per-hour 3000
 //   node scripts/leveling-curve.mjs --hours-per-day 2 --to 99
-//   node scripts/leveling-curve.mjs --luck 20       # more LUCK → more arrows
+//   node scripts/leveling-curve.mjs --luck 20       # more LUCK → more scrolls
 //
 // The kill rate is an ASSUMPTION — measure the real one with the `playtest`
 // skill (kills ÷ timeMs from a bot run) and pass it here.
@@ -46,8 +52,9 @@ const root = path.join(here, "..");
 const { LEVELING, LOOT, STATS } = await import(
   path.join(root, "src/game/config/index.ts")
 );
-const { xpToLevelUp, arrowXp, xpLevelCap, xpCapMultiplier, mobLevelXp } =
-  await import(path.join(root, "src/game/leveling.ts"));
+const { xpToLevelUp, xpLevelCap, xpCapMultiplier, mobLevelXp } = await import(
+  path.join(root, "src/game/leveling.ts")
+);
 const { XP_TUNING } = await import(
   path.join(root, "src/generated/leveling.ts")
 );
@@ -75,11 +82,11 @@ const luck = Number(opt("luck", "0"));
 const target = Math.min(LEVELING.maxLevel, Number(opt("to", "99")));
 const killsPerDay = killsPerHour * hoursPerDay;
 
-// The per-kill chance that a kill drops a golden XP arrow at `diff`: the drop
-// gate (base + the rung's bonus + LUCK) times the arrow slice of the ladder
-// (thinned by `arrowDropMult`, zero on JESUS). The nuke slice is skimmed first,
+// The per-kill chance that a kill drops an XP SCROLL at `diff`: the drop gate
+// (base + the rung's bonus + LUCK) times the scroll slice of the ladder
+// (thinned by `scrollDropMult`, zero on JESUS). The nuke slice is skimmed first,
 // hence the `(1 - nukeShare)`.
-const arrowDropProb = (diff) => {
+const scrollDropProb = (diff) => {
   const d = difficultyDef(diff);
   const dropChance = Math.min(
     1,
@@ -88,9 +95,25 @@ const arrowDropProb = (diff) => {
   return (
     dropChance *
     (1 - LOOT.nukeShare) *
-    XP_TUNING.arrowDropShare *
-    d.arrowDropMult
+    XP_TUNING.scrollDropShare *
+    d.scrollDropMult
   );
+};
+
+/**
+ * The average XP MULTIPLIER a scroll drip is worth at a given per-kill drop
+ * chance — the duty-cycle model from the header. `pScroll × killsPerHour` is
+ * the pickup rate λ (assuming the hero walks over what he drops, which the
+ * autopilot's scroll-first detour makes close to true); the window is dark only
+ * when a whole `scrollDurationMs` has passed with no pickup, so the boost is
+ * live a share `1 − e^(−λD)` of the time.
+ */
+const scrollXpMult = (pScroll) => {
+  const gain = Math.max(0, XP_TUNING.scrollXpMult - 1);
+  const durationSec = XP_TUNING.scrollDurationMs / 1000;
+  if (gain <= 0 || durationSec <= 0 || pScroll <= 0) return 1;
+  const perSec = (pScroll * killsPerHour) / 3600;
+  return 1 + gain * (1 - Math.exp(-perSec * durationSec));
 };
 // `--campaign` models a full story playthrough instead of the per-level table:
 // clearing every level along the CRITICAL PATH in order, to check where the
@@ -344,22 +367,21 @@ if (campaign || byLevel) {
     const starts = [];
     for (const id of LEVEL_ORDER) {
       starts.push(level); // the hero's level as this level's clear BEGINS
-      const pArrow = arrowDropProb(diff);
+      const scrollMult = scrollXpMult(scrollDropProb(diff));
       const mapCap = xpLevelCap(id, diff);
       // Walk the roster kill-by-kill, leveling up as XP banks. Each kill is
       // priced at the hero's CURRENT level: `mobLevelXp` times the set-piece
-      // mob-multiple where one applies; plus the golden-arrow drip (a flat
-      // mob-priced bonus, `arrowXp`); all faded by the per-map XP cap
+      // mob-multiple where one applies, then lifted by the scroll drip's duty
+      // cycle (`scrollXpMult`); all faded by the per-map XP cap
       // (`xpCapMultiplier`) exactly as `grantXp` does.
       // xpToLevelUp is keyed on the difficulty, so the per-tier leveling
       // slowdown and the endgame steepening both bite here.
       for (const [e, count, mobLevels] of rosterEntries(LEVELS[id], diff)) {
         const n = clearShare < 1 ? count * clearShare : count;
         for (let k = 0; k < n; k++) {
-          const killXp = killXpOf(e, level, diff, mobLevels);
-          const arrowDripXp = pArrow * arrowXp(level);
+          const killXp = killXpOf(e, level, diff, mobLevels) * scrollMult;
           const capMult = xpCapMultiplier(level, mapCap);
-          xp += (killXp + arrowDripXp) * capMult;
+          xp += killXp * capMult;
           advance(diff);
         }
       }
@@ -388,16 +410,14 @@ if (campaign || byLevel) {
 const killsPerLevel = (L) =>
   xpToLevelUp(L, difficulty) / mobLevelXp(mobLevelFor(L, difficulty), L);
 
-// The same count with golden arrows folded in: each kill drips an expected
-// `pArrow × arrowXp(L)` of flat mob-priced arrow XP on top of its own reward,
-// so the kills actually needed fall to `k0 / (1 + pArrow × arrowXp/killXp)`.
-// On JESUS pArrow is 0 and the two columns coincide.
-const pArrow = arrowDropProb(difficulty);
-const killsPerLevelWithArrows = (L) => {
-  const k0 = killsPerLevel(L);
-  const killXp = mobLevelXp(mobLevelFor(L, difficulty), L);
-  return k0 / (1 + (pArrow * arrowXp(L)) / killXp);
-};
+// The same count with the XP-SCROLL drip folded in: every kill made inside a
+// lit window counts `scrollXpMult` times, and the drip keeps the window lit a
+// `1 − e^(−λD)` share of the time (see the header), so the kills actually
+// needed fall by exactly that average multiplier. On JESUS pScroll is 0 and the
+// two columns coincide.
+const pScroll = scrollDropProb(difficulty);
+const scrollMultAtRate = scrollXpMult(pScroll);
+const killsPerLevelWithScrolls = (L) => killsPerLevel(L) / scrollMultAtRate;
 
 const rows = [
   1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 99,
@@ -410,20 +430,20 @@ console.log(
   `knobs: curve=content/leveling.yaml (authored per-level XP) refMobHp=${LEVELING.refMobHp} · cap=${LEVELING.maxLevel}`,
 );
 console.log(
-  `arrows: flat ${XP_TUNING.arrowXpKills} mob-kills each · slice=${XP_TUNING.arrowDropShare}×${difficultyDef(difficulty).arrowDropMult} · luck=${luck} → ~${pArrow.toFixed(3)} arrows/kill\n`,
+  `scrolls: ×${XP_TUNING.scrollXpMult} XP for ${(XP_TUNING.scrollDurationMs / 1000).toFixed(0)}s each · slice=${XP_TUNING.scrollDropShare}×${difficultyDef(difficulty).scrollDropMult} · luck=${luck} → ~${pScroll.toFixed(3)} scrolls/kill → window lit ${(((scrollMultAtRate - 1) / Math.max(1e-9, XP_TUNING.scrollXpMult - 1)) * 100).toFixed(0)}% of the time → ×${scrollMultAtRate.toFixed(2)} XP\n`,
 );
 console.log(
-  "   L     xpToNext   kills/lvl   w/arrows   levels/day   cum.kills   cum.days",
+  "   L     xpToNext   kills/lvl  w/scrolls   levels/day   cum.kills   cum.days",
 );
 
-// Cumulative and levels/day ride the WITH-ARROWS count — the realistic pace;
+// Cumulative and levels/day ride the WITH-SCROLLS count — the realistic pace;
 // the raw `kills/lvl` column stays beside it as the kill-XP-only baseline.
 let cumKills = 0;
 let cumDays = 0;
 let firstDing = 0;
 for (let L = 1; L < target; L++) {
   const kpl = killsPerLevel(L);
-  const kplA = killsPerLevelWithArrows(L);
+  const kplA = killsPerLevelWithScrolls(L);
   cumKills += kplA;
   cumDays += kplA / killsPerDay;
   if (L === 1) firstDing = kplA;
@@ -448,6 +468,6 @@ console.log(
 console.log(
   "note: kills/lvl uses refMobHp as the reference mob; the opening waves are\n" +
     "weaker (worth less XP), so the very first ding takes more kills in play.\n" +
-    "`w/arrows` folds in the golden-arrow drip at an ASSUMED drop rate — confirm\n" +
-    "the real pace with a bot run (see the playtest skill).\n",
+    "`w/scrolls` folds in the XP-scroll duty cycle at an ASSUMED kill rate and\n" +
+    "drop rate — confirm the real pace with a bot run (see the playtest skill).\n",
 );

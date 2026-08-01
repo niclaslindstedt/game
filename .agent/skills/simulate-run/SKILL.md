@@ -68,7 +68,7 @@ over-levels wildly (L48 after just easy+medium, L99 by the hard tier) — which
 the hero is 20 levels above the content, so drops read as trash and bosses read
 as trivial, purely from the over-farm, not the balance. So the CLI **defaults to
 realistic pacing**: each run ENDS (`outcome: cleared`) the moment the hero
-reaches the map's intended exit level (its `arrowCapByDifficulty`, the same
+reaches the map's intended exit level (its `intendedLevelByDifficulty`, the same
 yardstick the boss-level read uses), and he carries a real-player level forward.
 This is what makes the audit trustworthy — **use it for any level-relative
 tuning**. Notes:
@@ -129,16 +129,21 @@ artifact of the bot not shopping (in the audit, `--no-shop` stranded the hero on
 the 46-dps sidearm through all of JESUS; with shopping he stayed armed with
 447→1662-dps weapons, so the "spiral" was mostly the missing shop behaviour).
 
-### Arrow XP — ON by default; `--no-arrow-xp` for the pure kill grind
+### XP scrolls — ON by default; `--no-xp-scroll` for the pure kill grind
 
-**`--no-arrow-xp`** switches the golden-arrow XP faucet off for the sweep
-(engine `setArrowXpEnabled`; arrows still drop and collect, they just pay
-nothing) — so a pacing read is the pure kill grind, with nothing but
-mob/elite/boss XP moving the bar. This is the ISOLATION view for tuning the
-arrow levers (`arrowXpKills` / `arrowDropShare` in `content/leveling.yaml`):
-graph the no-arrow curve first (`scripts/leveling-pace.mjs --run
---no-arrow-xp`, see the `leveling-balance` skill), then dial the two levers to
-add exactly the drip the curve needs.
+**`--no-xp-scroll`** switches the XP-scroll faucet off for the sweep (engine
+`setXpScrollEnabled`; scrolls still drop and are still walked over, they just
+light no double-XP window) — so a pacing read is the pure kill grind, with
+nothing but mob/elite/boss XP moving the bar. This is the ISOLATION view for
+tuning the scroll levers (`scrollXpMult` / `scrollDurationMs` /
+`scrollDropShare` in `content/leveling.yaml`): graph the no-scroll curve first
+(`scripts/leveling-pace.mjs --run --no-xp-scroll`, see the `leveling-balance`
+skill), then dial the levers to add exactly the drip the curve needs.
+
+A scroll's worth is a DUTY CYCLE, not a payout — it refreshes rather than
+stacks, so a rain of them buys one window — which means the A/B that matters is
+total XP over a whole campaign, not scrolls collected. Read `hero level
+start→end` per rung and the final sweep level against a `--compare` baseline.
 
 ### Probing balance WITHOUT editing config — the `--balance` knobs
 
@@ -377,7 +382,7 @@ finds), and per-minute hero snapshots (hp, dps, armor, menace stage).
 what does it drop?" One row per boss/elite met: the sim-minute and hero level
 the fight STARTED (engagement — the first blow traded, not the boss's spawn,
 since bosses are usually placed at map load), shown as `heroL/intended` against
-the map's `arrowCapByDifficulty` yardstick; the boss's own monster level, hp,
+the map's `intendedLevelByDifficulty` yardstick; the boss's own monster level, hp,
 and contact damage; blows-to-kill; the hero's hp% entering the fight; and the
 named unique/legendary it dropped (attributed by kill order). A boss the run
 never reached reads `not reached`; one engaged but not felled reads `ENGAGED,

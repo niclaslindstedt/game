@@ -94,6 +94,20 @@ export type AutoEquip = "on" | "off";
  * off hand. Defaults to the lower-left. */
 export type PowerupSide = "left" | "right";
 
+/** SWIPE BARS (SETTINGS → GAMEPLAY, touch devices only): how the item and
+ * powerup bars are REACHED. `off` (the default) keeps them fixed in the
+ * bottom corners; `on` hides them and a swipe in from the left, right or
+ * bottom screen edge reveals both — with larger icons — centred on the swipe
+ * itself, so the bar opens under the thumb that asked for it (vertical off a
+ * side edge, horizontal off the bottom). Pressing a slot spends it and the
+ * bar folds away. A one-hand accessibility mode: a player who cannot reach
+ * the bottom corners, or plays with a single hand, summons the bars to
+ * wherever their thumb already is. The gesture answers only touch pointers,
+ * and the row is offered only on touch devices (see menus-settings.ts).
+ * A pure presentation preference read app-side (SwipeDock.tsx), so it needs
+ * no engine setter. */
+export type SwipeBars = "on" | "off";
+
 /** Desktop keyboard movement: `on` lets WASD/arrows drive the walk (Shift
  * runs) — while a key is held it steers, and the moment no key is down the
  * mouse takes back over (cursor-follow steering), so the two coexist. `off`
@@ -291,6 +305,9 @@ export type GameSettings = {
   /** Equip stronger finds on pickup, or bank them to the bag (see AutoEquip). */
   autoEquip: AutoEquip;
   powerupSide: PowerupSide;
+  /** Gameplay preference (touch only): summon the item/powerup bars with an
+   * edge swipe instead of keeping them fixed in the corners (see SwipeBars). */
+  swipeBars: SwipeBars;
   /** Control preference: how the weapon switcher orders its slots — the
    * backpack's own order, or best-first for this hero (see WeaponSwitchOrder). */
   weaponSwitchOrder: WeaponSwitchOrder;
@@ -507,6 +524,9 @@ function defaults(): GameSettings {
     // they're grabbed turns it on.
     autoEquip: "off",
     powerupSide: "left",
+    // The bars sit fixed in the corners out of the box; a touch player who
+    // can't reach them (or plays one-handed) turns on the swipe reveal.
+    swipeBars: "off",
     // The switcher mirrors the BACKPACK out of the box — one place per weapon
     // across both screens. A player who'd rather have the hardest hitter under
     // slot 1 at all times switches it to the dps ranking.
@@ -939,6 +959,10 @@ function load(): GameSettings {
         stored.powerupSide === "left" || stored.powerupSide === "right"
           ? stored.powerupSide
           : base.powerupSide,
+      swipeBars:
+        stored.swipeBars === "on" || stored.swipeBars === "off"
+          ? stored.swipeBars
+          : base.swipeBars,
       weaponSwitchOrder:
         stored.weaponSwitchOrder === "bag" || stored.weaponSwitchOrder === "dps"
           ? stored.weaponSwitchOrder

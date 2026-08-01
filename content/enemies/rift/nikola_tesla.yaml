@@ -68,7 +68,7 @@ loot:
     - wardenclyffe_notes
   weapons: 0
   gear: 0
-  xpArrows: 1
+  xpScrolls: 1
   repairs: 1
   medkits: 1
   tierBonus: 0.3

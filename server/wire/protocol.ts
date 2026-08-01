@@ -542,6 +542,7 @@ export const COMMANDS = [
   "discardHeldAbility",
   "buyStock",
   "sellItem",
+  "buybackItem",
   "repairGear",
   "buyQuestPiece",
   "sellQuestPiece",

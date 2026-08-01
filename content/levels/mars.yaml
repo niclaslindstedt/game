@@ -201,7 +201,7 @@ loot:
       - the_bulwark
       - the_ember_hour
       - the_motherlode
-  arrowCapByDifficulty:
+  intendedLevelByDifficulty:
     easy: 24
     medium: 26
     hard: 27

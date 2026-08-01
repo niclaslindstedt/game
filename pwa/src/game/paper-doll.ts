@@ -153,6 +153,10 @@ export function loadoutDollLayers(loadout: Loadout | null): DollLayer[] {
  * against, and what all but one weapon in the game draws at. */
 export const HELD_ICON = 12;
 
+/** The BODY's own square — the 16×16 the appearance sprite and every worn
+ * overlay is authored on (`content/sprites/hero/player_0.yaml`), all of them
+ * anchored at dx 0. It is the whole canvas a doll with EMPTY HANDS needs. */
+export const DOLL_BODY_WIDTH = 16;
 /** The doll's canvas: the 16×16 body plus a standard held icon's overhang. */
 export const DOLL_WIDTH = HELD_DX + HELD_ICON;
 export const DOLL_HEIGHT = 16;
@@ -179,17 +183,29 @@ export const DOLL_SIZE = { width: DOLL_WIDTH, height: DOLL_HEIGHT };
  * there, so a TALLER one would need the body pushed down the canvas — which
  * moves the hero inside the portrait box. Oversized weapons are therefore
  * authored long rather than tall (see `icon_austerity_chainsaw`).
+ *
+ * AND IT SHRINKS BACK when the hands are EMPTY, which is the same rule read the
+ * other way. The overhang is the weapon's room and nobody else's — every body
+ * and worn-armor layer sits at dx 0 on the 16×16 square — so a stack drawn
+ * WITHOUT a weapon (`playerDollLayers(state, "0", { weapon: false })`: the
+ * character sheet's full-body doll, a brand-new roster hero with no gear) came
+ * out on a canvas a third wider than the man on it, and every portrait box that
+ * centred that image sat him visibly LEFT of centre with five columns of
+ * nothing beside his arm. Trimming the canvas to the body is what centres him,
+ * and it moves no pixel of a doll that IS holding something.
  */
 export function dollSizeFor(
   sprites: Sprites,
   layers: readonly DollLayer[],
 ): { width: number; height: number } {
-  let width = DOLL_WIDTH;
+  let width = 0;
   for (const layer of layers) {
     if (!layer.weapon) continue;
     const image = spriteByName(sprites, layer.sprite);
     if (image) width = Math.max(width, layer.dx + image.width);
   }
+  if (width === 0) return { width: DOLL_BODY_WIDTH, height: DOLL_HEIGHT };
+  width = Math.max(width, DOLL_WIDTH);
   return width === DOLL_WIDTH ? DOLL_SIZE : { width, height: DOLL_HEIGHT };
 }
 

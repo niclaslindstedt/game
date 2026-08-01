@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: item_landed_spark
 description: >-
-  A charged pickup settling — a golden arrow or a powerup canister: a
+  A charged pickup settling — an XP scroll or a powerup canister: a
   quick rising ting with a hiss of static, so the energy reads before the
   weight does.
 on:

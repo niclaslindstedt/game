@@ -27,8 +27,9 @@ const root = path.join(here, "..");
 const { LEVELING, LOOT, STATS } = await import(
   path.join(root, "src/game/config/index.ts")
 );
-const { xpToLevelUp, arrowXp, xpLevelCap, xpCapMultiplier, mobLevelXp } =
-  await import(path.join(root, "src/game/leveling.ts"));
+const { xpToLevelUp, xpLevelCap, xpCapMultiplier, mobLevelXp } = await import(
+  path.join(root, "src/game/leveling.ts")
+);
 const { XP_TUNING } = await import(
   path.join(root, "src/generated/leveling.ts")
 );
@@ -91,8 +92,8 @@ const mobStats = (heroLevel, diff, def) => {
 const isApparition = (e) =>
   e.apparition === true || (e.contactDamage ?? 0) === 0;
 
-// The per-kill golden-arrow drop chance at `diff` (mirrors the calculator).
-const arrowDropProb = (diff) => {
+// The per-kill XP-SCROLL drop chance at `diff` (mirrors the calculator).
+const scrollDropProb = (diff) => {
   const d = difficultyDef(diff);
   const dropChance = Math.min(
     1,
@@ -101,9 +102,27 @@ const arrowDropProb = (diff) => {
   return (
     dropChance *
     (1 - LOOT.nukeShare) *
-    XP_TUNING.arrowDropShare *
-    d.arrowDropMult
+    XP_TUNING.scrollDropShare *
+    d.scrollDropMult
   );
+};
+
+/**
+ * The average XP multiplier the XP-SCROLL drip is worth at `diff` — the same
+ * duty-cycle model `leveling-curve.mjs` documents: at a pickup rate λ (the
+ * per-kill drop chance times an assumed kill rate) and a window D, a scroll
+ * REFRESHES rather than stacks, so the boost is live `1 − e^(−λD)` of the time.
+ * `ASSUMED_KILLS_PER_HOUR` is a bot-run figure (simulate-run's k/min sits
+ * around 22–49 across the campaign); this graph is analytic, so it needs one.
+ */
+const ASSUMED_KILLS_PER_HOUR = 2000;
+const scrollXpMult = (diff) => {
+  const gain = Math.max(0, XP_TUNING.scrollXpMult - 1);
+  const durationSec = XP_TUNING.scrollDurationMs / 1000;
+  const pScroll = scrollDropProb(diff);
+  if (gain <= 0 || durationSec <= 0 || pScroll <= 0) return 1;
+  const perSec = (pScroll * ASSUMED_KILLS_PER_HOUR) / 3600;
+  return 1 + gain * (1 - Math.exp(-perSec * durationSec));
 };
 // The roster as [enemyDef, scaled head-count] (minDifficulty-gated).
 const rosterEntries = (def, diff) => {
@@ -155,7 +174,7 @@ for (const diff of PATH) {
     level = TIER_ENTRY[diff];
     xp = 0;
   }
-  const pArrow = arrowDropProb(diff);
+  const scrollMult = scrollXpMult(diff);
   for (const id of LEVEL_ORDER) {
     if (bucketDiff !== null && (diff !== bucketDiff || id !== bucketLevel))
       flush();
@@ -167,7 +186,8 @@ for (const diff of PATH) {
       for (let k = 0; k < count; k++) {
         cumKills++;
         // Bank the kill's XP — every role mob-priced, a set piece times its
-        // flat mob-multiple (see enemyKillXp) — plus the flat arrow drip.
+        // flat mob-multiple (see enemyKillXp) — lifted by the scroll drip's
+        // duty cycle.
         const mult = isBoss
           ? (e.xpMobMult ??
             (e.role === "boss"
@@ -177,8 +197,7 @@ for (const diff of PATH) {
         const killXp =
           mobLevelXp(mobLevelFor(level, diff) + (e.levelBonus ?? 0), level) *
           mult;
-        xp +=
-          (killXp + pArrow * arrowXp(level)) * xpCapMultiplier(level, mapCap);
+        xp += killXp * scrollMult * xpCapMultiplier(level, mapCap);
         advance(diff);
         // Record a scatter row for real combat elites/bosses only. Non-combat
         // "apparition" elites (phasing story ghosts like HOUDINI / THE KING deal

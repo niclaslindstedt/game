@@ -1047,11 +1047,11 @@ export type LevelDef = {
      * campaign model (`scripts/leveling-curve.mjs --by-level`, the level each
      * map/difficulty clear reaches); read by the campaign simulator's
      * realistic pacing (a run "clears" when the hero reaches it) and its
-     * boss-level verdicts. Arrows themselves no longer read it: a golden
-     * arrow pays a flat mob-priced bonus at every level (`arrowXp`), so
-     * there is no hot/cold payout split to gate.
+     * boss-level verdicts. It is a YARDSTICK, never an XP faucet's gate — no
+     * payout is priced off it (the XP scroll multiplies rather than pays), so
+     * moving it re-paces a map's runs and changes nothing about what drops.
      */
-    arrowCapByDifficulty?: Partial<Record<Difficulty, number>>;
+    intendedLevelByDifficulty?: Partial<Record<Difficulty, number>>;
     /**
      * Trophy weapon def dropped by the last regular monster standing —
      * clearing every mob on the level always earns it.

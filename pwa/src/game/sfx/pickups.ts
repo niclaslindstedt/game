@@ -36,21 +36,35 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
           });
         }
       } else if (event.kind === "xp") {
-        // The golden arrow: a rising ring with a bell on top.
+        // An XP SCROLL read on the run: parchment unrolling in a short dry
+        // rasp, then the script catching — a rising arcane shimmer with a bell
+        // over the top. It is not a pickup, it is a spell going off, and the
+        // thirty seconds it lights are worth announcing. Kept byte-identical to
+        // `content/sounds/item_collected_xp.yaml`, which is the shipped voice
+        // (the catalog answers first — see sfx/index.ts); this is the fallback,
+        // and `tests/sound_catalog_test.ts` proves the two agree.
+        synth.noise({
+          durationMs: 90,
+          volume: 0.035,
+          filter: { type: "bandpass", frequency: 4200, q: 0.9 },
+        });
         synth.tone({
-          type: "square",
-          from: 440,
-          to: 880,
-          durationMs: 110,
+          type: "triangle",
+          from: 520,
+          to: 1560,
+          durationMs: 240,
           volume: 0.045,
+          detuneCents: 9,
+          delayMs: 40,
+          echo: 0.35,
         });
         synth.tone({
           type: "sine",
-          from: 1320,
-          durationMs: 150,
-          volume: 0.04,
-          delayMs: 90,
-          echo: 0.3,
+          from: 1980,
+          durationMs: 320,
+          volume: 0.035,
+          delayMs: 200,
+          echo: 0.45,
         });
       } else if (event.kind === "repair") {
         // Repair kits now STASH into the consumable dock rather than firing on

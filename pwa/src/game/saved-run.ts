@@ -96,7 +96,17 @@ const KEY = storageKey("current-run");
 // single `player`. A v22 snapshot would thaw a run with no party at all, and
 // every pass in the pipeline reads seat 0 on its first line; there is nothing
 // left to resume.
-const SAVE_VERSION = 23;
+// v24: AMMUNITION and GOLD — every hero grew the `ammo` pouch (required; read
+// by `ammoCount` on the HUD build of the very first frame, so a v23 hero
+// without one froze the resume on a still image with no UI at all), and stats
+// grew `goldCollected`/`coinsSold` (a v23 snapshot would tick them to NaN on
+// the first pile of gold).
+//
+// The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
+// hero, or the stats record grows a field this version doesn't know — bump
+// here (and update the guard's lists) in the SAME commit as the shape change,
+// or the next release resumes old snapshots into a state the engine can't read.
+export const SAVE_VERSION = 24;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
@@ -304,6 +314,14 @@ export function loadSavedRun(): ParkedRun | null {
       goldRng: createRngFromState(
         payload.goldRngState ?? (payload.rngState ^ 0x1f83d9ab) >>> 0,
       ),
+      // The trader's BUY-BACK shelf is purely additive — a run parked before it
+      // shipped simply has nothing on it — so it is defaulted here rather than
+      // paid for with a SAVE_VERSION bump that would bin every parked run for a
+      // list that starts empty anyway.
+      merchant: {
+        ...payload.state.merchant,
+        buyback: payload.state.merchant?.buyback ?? [],
+      },
     };
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
     // plain object, which freezes the fog renderers (see reviveExplored).

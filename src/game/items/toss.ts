@@ -67,7 +67,7 @@ export function itemVoice(item: Item): ItemVoice {
     case "repair":
     case "ammo":
       return "scrap";
-    // The golden arrow and a powerup canister are both charged things, and both
+    // An XP scroll and a powerup canister are both charged things, and both
     // land on a bright electric ting rather than on a weight.
     case "xp":
     case "ability":
