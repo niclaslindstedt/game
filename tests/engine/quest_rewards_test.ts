@@ -74,7 +74,7 @@ function run(): GameState {
 /** Open the giver's conversation (they have exactly one errand, so the pick
  * list is skipped and the ask opens directly). */
 function talk(state: GameState): void {
-  talkToQuestGiver(state, "reward_giver");
+  talkToQuestGiver(state, state.players[0], "reward_giver");
 }
 
 describe("a quest's reward gear", () => {
@@ -92,11 +92,11 @@ describe("a quest's reward gear", () => {
   it("is the SAME gear every time it is asked for", () => {
     const state = run();
     talk(state);
-    const first = questRewardChoices(state, "test_paid");
+    const first = questRewardChoices(state, state.players[0], "test_paid");
     // Walk away and come back: the promise has to survive leaving the box.
-    closeQuestDialogue(state);
+    closeQuestDialogue(state, state.players[0]);
     talk(state);
-    const second = questRewardChoices(state, "test_paid");
+    const second = questRewardChoices(state, state.players[0], "test_paid");
     expect(second).toBe(first);
     expect(second.map((i) => i.id)).toEqual(first.map((i) => i.id));
   });
@@ -104,15 +104,18 @@ describe("a quest's reward gear", () => {
   it("hands over exactly the piece that was shown", () => {
     const state = run();
     talk(state);
-    const shown = questRewardChoices(state, "test_paid");
+    const shown = questRewardChoices(state, state.players[0], "test_paid");
     const chosen = shown[shown.length - 1]!;
-    expect(chooseQuestReward(state, shown.length - 1)).toBe(true);
-    acceptQuest(state);
+    expect(chooseQuestReward(state, state.players[0], shown.length - 1)).toBe(
+      true,
+    );
+    acceptQuest(state, state.players[0]);
     // No objectives, so it is complete at once — talk again to hand it in.
-    if (state.phase === "quest") closeQuestDialogue(state);
+    if (state.players[0].screen === "quest")
+      closeQuestDialogue(state, state.players[0]);
     talk(state);
     expect(state.questOffer?.kind).toBe("complete");
-    const payout = turnInQuest(state);
+    const payout = turnInQuest(state, state.players[0]);
     expect(payout).not.toBeNull();
     expect(payout!.items.map((i) => i.id)).toContain(chosen.id);
   });
@@ -120,29 +123,35 @@ describe("a quest's reward gear", () => {
   it("carries a pick made at the OFFER onto the accepted errand", () => {
     const state = run();
     talk(state);
-    const shown = questRewardChoices(state, "test_paid");
+    const shown = questRewardChoices(state, state.players[0], "test_paid");
     if (shown.length < 2) return; // a neutral piece has nothing to pick
     // Chosen BEFORE accepting, when there is no log row to store it on.
-    expect(chooseQuestReward(state, 1)).toBe(true);
-    acceptQuest(state);
+    expect(chooseQuestReward(state, state.players[0], 1)).toBe(true);
+    acceptQuest(state, state.players[0]);
     expect(state.quests.test_paid?.rewardPick).toBe(1);
-    expect(pickedQuestReward(state, "test_paid")?.id).toBe(shown[1]!.id);
+    expect(pickedQuestReward(state, state.players[0], "test_paid")?.id).toBe(
+      shown[1]!.id,
+    );
   });
 
   it("refuses a row that is not on the table", () => {
     const state = run();
     talk(state);
-    const shown = questRewardChoices(state, "test_paid");
-    expect(chooseQuestReward(state, -1)).toBe(false);
-    expect(chooseQuestReward(state, shown.length)).toBe(false);
+    const shown = questRewardChoices(state, state.players[0], "test_paid");
+    expect(chooseQuestReward(state, state.players[0], -1)).toBe(false);
+    expect(chooseQuestReward(state, state.players[0], shown.length)).toBe(
+      false,
+    );
     // ...and an untouched errand still pays the top row rather than nothing.
-    expect(pickedQuestReward(state, "test_paid")?.id).toBe(shown[0]!.id);
+    expect(pickedQuestReward(state, state.players[0], "test_paid")?.id).toBe(
+      shown[0]!.id,
+    );
   });
 
   it("offers one row per class, or exactly one for a neutral piece", () => {
     const state = run();
     talk(state);
-    const shown = questRewardChoices(state, "test_paid");
+    const shown = questRewardChoices(state, state.players[0], "test_paid");
     // Never a padded-out list: it is a real choice or a single piece.
     expect(shown.length === 1 || shown.length === 3).toBe(true);
     // Every row is a DIFFERENT base — three copies of one item is not a choice.

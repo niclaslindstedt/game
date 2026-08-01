@@ -1,25 +1,27 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The pause phase: the world (and its clock) freeze while `paused`, exactly
-// like the other non-`playing` phases, and pause/resume only toggle mid-run.
+// The pause screen: per-player since plan §3.2 — the phase stays `playing`
+// and the hero's own `screen` carries the menu. Solo, one hero with the menu
+// up freezes the world (and its clock) exactly as the old `paused` phase did.
 
 import { describe, expect, it } from "vitest";
 
 import { pauseGame, resumeGame } from "@game/core";
 import { clearStage, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
-describe("pause phase", () => {
+describe("pause screen", () => {
   it("pauseGame freezes the run and resumeGame lifts it", () => {
     const state = startGame();
     expect(state.phase).toBe("playing");
-    pauseGame(state);
-    expect(state.phase).toBe("paused");
-    resumeGame(state);
+    pauseGame(state, state.players[0]);
     expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("paused");
+    resumeGame(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
   it("the simulation clock does not advance while paused", () => {
     const state = startGame();
-    pauseGame(state);
+    pauseGame(state, state.players[0]);
     const before = state.stats.timeMs;
     run(state, idle, 500);
     expect(state.stats.timeMs).toBe(before);
@@ -33,24 +35,24 @@ describe("pause phase", () => {
       speed: 40,
     });
     state.enemies.push(enemy);
-    pauseGame(state);
+    pauseGame(state, state.players[0]);
     const frozenX = enemy.pos.x;
     run(state, idle, 500);
     expect(enemy.pos.x).toBe(frozenX); // no AI ran
 
-    resumeGame(state);
+    resumeGame(state.players[0]);
     run(state, idle, 500);
     expect(enemy.pos.x).toBeLessThan(frozenX); // walks toward the player again
   });
 
-  it("pause/resume only toggle from the matching phase", () => {
+  it("pause/resume only toggle from the matching screen", () => {
     const state = startGame();
-    // resume from playing is a no-op.
-    resumeGame(state);
-    expect(state.phase).toBe("playing");
-    pauseGame(state);
+    // resume with nothing up is a no-op.
+    resumeGame(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
+    pauseGame(state, state.players[0]);
     // pause again while paused stays paused.
-    pauseGame(state);
-    expect(state.phase).toBe("paused");
+    pauseGame(state, state.players[0]);
+    expect(state.players[0].screen).toBe("paused");
   });
 });

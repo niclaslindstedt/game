@@ -233,13 +233,14 @@ describe("the shop", () => {
     expect(openShop(state, state.players[0])).toBe(false); // too far from the stall
     state.players[0].pos = { ...state.merchant.pos };
     expect(openShop(state, state.players[0])).toBe(true);
-    expect(state.phase).toBe("shop");
-    // Frozen like the bag.
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("shop");
+    // Frozen like the bag (solo).
     const before = state.stats.timeMs;
     run(state, idle, 20);
     expect(state.stats.timeMs).toBe(before);
-    closeShop(state, state.players[0]);
-    expect(state.phase).toBe("playing");
+    closeShop(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
   it("selling pays the valuation into the purse and empties the cell", () => {
@@ -332,7 +333,7 @@ describe("the shop", () => {
 
       // The shelf is the COUNTER's, so it is only reachable across it.
       state.players[0].inventory[0] = null;
-      closeShop(state, state.players[0]);
+      closeShop(state.players[0]);
       expect(buybackItem(state, state.players[0], loot.id)).toBe("gone");
       expect(state.players[0].coins).toBe(paid);
     });

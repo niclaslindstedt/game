@@ -31,6 +31,7 @@ import {
   questXpReward,
   registerDefs,
   repelFromQuestGivers,
+  resumeGame,
   skipCutscene,
   step,
   talkToQuestGiver,
@@ -157,7 +158,7 @@ function walkUp(state: GameState, ticks = 20): void {
 /** Walk up AND tap them, which is the only way into a conversation. */
 function meet(state: GameState, ticks = 20): void {
   walkUp(state, ticks);
-  talkToQuestGiver(state, "test_giver");
+  talkToQuestGiver(state, state.players[0], "test_giver");
 }
 
 /**
@@ -169,16 +170,16 @@ function offerUntil(state: GameState, questId: string): void {
   for (let i = 0; i < 8; i++) {
     if (state.questOffer?.questId === questId) return;
     if (!state.questOffer) {
-      if (!talkToQuestGiver(state, "test_giver")) break;
+      if (!talkToQuestGiver(state, state.players[0], "test_giver")) break;
       continue;
     }
     // A giver with several errands opens on the PICK LIST — choose the one
     // this test is after rather than declining through the slate.
     if (state.questOffer.kind === "list") {
-      if (pickQuestTopic(state, questId)) return;
+      if (pickQuestTopic(state, state.players[0], questId)) return;
       break;
     }
-    declineQuest(state);
+    declineQuest(state, state.players[0]);
   }
   throw new Error(`never offered "${questId}"`);
 }
@@ -191,21 +192,22 @@ function offerUntil(state: GameState, questId: string): void {
  */
 function takeAndLeave(state: GameState): void {
   take(state);
-  if (state.phase === "quest") closeQuestDialogue(state);
+  if (state.players[0].screen === "quest")
+    closeQuestDialogue(state, state.players[0]);
 }
 
 /** Take the errand `id`, whichever conversation is currently open. */
 function take(state: GameState): void {
   if (state.questOffer?.kind === "list") {
     const first = giverTopics(state, state.questOffer.giverId)[0];
-    if (first) pickQuestTopic(state, first.questId);
+    if (first) pickQuestTopic(state, state.players[0], first.questId);
   }
   while (state.questOffer && state.questOffer.kind === "offer") {
     const before = state.questOffer.page;
-    advanceQuestDialogue(state);
+    advanceQuestDialogue(state, state.players[0]);
     if (state.questOffer && state.questOffer.page === before) break;
   }
-  acceptQuest(state);
+  acceptQuest(state, state.players[0]);
 }
 
 /** Kill `n` fixture minions outright, as the horde would be felled. */
@@ -250,7 +252,7 @@ describe("quest givers", () => {
     // them over one at a time: the alternative makes a giver's second quest
     // reachable only by refusing the first, which reads as the game losing
     // track of what it already offered.
-    expect(state.phase).toBe("quest");
+    expect(state.players[0].screen).toBe("quest");
     expect(state.questOffer?.kind).toBe("list");
     // `test_cull_2` is chain-gated behind `test_cull`, so it is not among them.
     expect(giverTopics(state, "test_giver").map((t) => t.questId)).toEqual([
@@ -259,7 +261,7 @@ describe("quest givers", () => {
       "test_walk",
     ]);
 
-    closeQuestDialogue(state);
+    closeQuestDialogue(state, state.players[0]);
     // STANDING THERE NEVER OPENS IT — not the first time and not the
     // hundredth. A giver the hero is fighting beside must not keep grabbing
     // the stage, so the only thing approach ever does is the meeting above.
@@ -270,7 +272,7 @@ describe("quest givers", () => {
     // ...but the giver keeps their `!`, and a deliberate tap opens the slate:
     // a player who walked away at level 3 may want the job at level 9.
     expect(giverMark(state, "test_giver")).toBe("offer");
-    expect(talkToQuestGiver(state, "test_giver")).toBe(true);
+    expect(talkToQuestGiver(state, state.players[0], "test_giver")).toBe(true);
     expect(state.questOffer?.kind).toBe("list");
   });
 
@@ -281,12 +283,12 @@ describe("quest givers", () => {
     meet(state);
     take(state);
     if (state.questOffer?.kind === "list") take(state);
-    closeQuestDialogue(state);
+    closeQuestDialogue(state, state.players[0]);
     registerDefs({
       quests: { test_walk: FIX_QUESTS.test_walk! },
       questGivers: FIX_GIVERS,
     });
-    expect(talkToQuestGiver(state, "test_giver")).toBe(true);
+    expect(talkToQuestGiver(state, state.players[0], "test_giver")).toBe(true);
     expect(state.questOffer?.kind).toBe("offer");
     expect(state.questOffer?.questId).toBe("test_walk");
     installQuests();
@@ -298,25 +300,25 @@ describe("quest givers", () => {
     expect(state.questOffer?.kind).toBe("list");
     // Picking one, then backing out of it, returns to the list — so taking
     // three errands off one person costs one walk-up rather than three.
-    expect(pickQuestTopic(state, "test_fetch")).toBe(true);
+    expect(pickQuestTopic(state, state.players[0], "test_fetch")).toBe(true);
     expect(state.questOffer?.questId).toBe("test_fetch");
-    declineQuest(state);
-    expect(state.phase).toBe("quest");
+    declineQuest(state, state.players[0]);
+    expect(state.players[0].screen).toBe("quest");
     expect(state.questOffer?.kind).toBe("list");
 
     // And accepting does the same, so the next one is one tap away.
-    expect(pickQuestTopic(state, "test_cull")).toBe(true);
+    expect(pickQuestTopic(state, state.players[0], "test_cull")).toBe(true);
     take(state);
-    expect(state.phase).toBe("quest");
+    expect(state.players[0].screen).toBe("quest");
     expect(state.questOffer?.kind).toBe("list");
-    closeQuestDialogue(state);
-    expect(state.phase).toBe("playing");
+    closeQuestDialogue(state, state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
   it("hold the run frozen while the conversation is up", () => {
     const state = questRun();
     meet(state);
-    expect(state.phase).toBe("quest");
+    expect(state.players[0].screen).toBe("quest");
     const at = { ...state.players[0].pos };
     // A frozen phase is not stepped at all, so nothing in the world moves.
     for (let i = 0; i < 30; i++) step(state, idle, DT);
@@ -382,7 +384,8 @@ describe("a kill errand", () => {
     meet(state);
     // Take everything this giver has — each accept drops back to the slate, so
     // the whole set comes off one conversation.
-    for (let i = 0; i < 4 && state.phase === "quest"; i++) take(state);
+    for (let i = 0; i < 4 && state.players[0].screen === "quest"; i++)
+      take(state);
     expect(giverMark(state, "test_giver")).toBe("progress");
   });
 });
@@ -396,11 +399,15 @@ describe("the handover", () => {
     takeAndLeave(state);
     cull(state, 3);
 
-    const quoted = questXpReward(state, FIX_QUESTS.test_cull!.reward);
+    const quoted = questXpReward(
+      state,
+      state.players[0],
+      FIX_QUESTS.test_cull!.reward,
+    );
     const xpBefore = state.stats.xpGained;
     const coinsBefore = state.players[0].coins;
 
-    expect(talkToQuestGiver(state, "test_giver")).toBe(true);
+    expect(talkToQuestGiver(state, state.players[0], "test_giver")).toBe(true);
     // Finished work sorts to the top of the slate (`giverTopics`), so it is
     // the first row — the hero walked back for the reward, not for a new job.
     if (state.questOffer?.kind === "list") {
@@ -408,10 +415,10 @@ describe("the handover", () => {
         questId: "test_cull",
         kind: "complete",
       });
-      pickQuestTopic(state, "test_cull");
+      pickQuestTopic(state, state.players[0], "test_cull");
     }
     expect(state.questOffer?.kind).toBe("complete");
-    const payout = turnInQuest(state);
+    const payout = turnInQuest(state, state.players[0]);
 
     expect(payout).not.toBeNull();
     expect(payout!.coins).toBe(50);
@@ -424,10 +431,10 @@ describe("the handover", () => {
     // Handing one in drops back to the SLATE (this giver still has errands on
     // it), not out to the field — the same "one walk-up, several errands"
     // rule accepting follows.
-    expect(state.phase).toBe("quest");
+    expect(state.players[0].screen).toBe("quest");
     expect(state.questOffer?.kind).toBe("list");
-    closeQuestDialogue(state);
-    expect(state.phase).toBe("playing");
+    closeQuestDialogue(state, state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
   it("unlocks the chain's next link, and not before", () => {
@@ -437,16 +444,19 @@ describe("the handover", () => {
 
     // The second link is gated on the first being HANDED IN, not finished.
     cull(state, 3);
-    expect(talkToQuestGiver(state, "test_giver")).toBe(true);
-    if (state.questOffer?.kind === "list") pickQuestTopic(state, "test_cull");
+    expect(talkToQuestGiver(state, state.players[0], "test_giver")).toBe(true);
+    if (state.questOffer?.kind === "list")
+      pickQuestTopic(state, state.players[0], "test_cull");
     expect(state.questOffer?.questId).toBe("test_cull");
 
-    turnInQuest(state);
+    turnInQuest(state, state.players[0]);
     expect(giverMark(state, "test_giver")).toBe("offer");
     // The chain's next link is now on the slate, and was not a moment ago.
     if (state.questOffer?.kind !== "list") {
-      closeQuestDialogue(state);
-      expect(talkToQuestGiver(state, "test_giver")).toBe(true);
+      closeQuestDialogue(state, state.players[0]);
+      expect(talkToQuestGiver(state, state.players[0], "test_giver")).toBe(
+        true,
+      );
     }
     expect(
       giverTopics(state, "test_giver").some(
@@ -463,7 +473,7 @@ describe("a fetch errand", () => {
     const state = questRun();
     meet(state);
     // Decline the first two so the fetch is what gets offered.
-    declineQuest(state);
+    declineQuest(state, state.players[0]);
     expect(state.items.some((i) => i.kind === "quest")).toBe(false);
 
     // A tap cycles the giver's other errands rather than re-offering the one
@@ -594,9 +604,10 @@ describe("the quest log", () => {
     meet(state);
     takeAndLeave(state);
     cull(state, 3);
-    talkToQuestGiver(state, "test_giver");
-    if (state.questOffer?.kind === "list") pickQuestTopic(state, "test_cull");
-    turnInQuest(state);
+    talkToQuestGiver(state, state.players[0], "test_giver");
+    if (state.questOffer?.kind === "list")
+      pickQuestTopic(state, state.players[0], "test_cull");
+    turnInQuest(state, state.players[0]);
     expect(trackedQuests(state).map((q) => q.id)).toContain("test_cull");
   });
 });
@@ -608,27 +619,30 @@ describe("the quest log screen", () => {
     const state = questRun();
     meet(state);
     takeAndLeave(state);
-    openQuestLog(state);
-    expect(state.phase).toBe("questLog");
+    openQuestLog(state, state.players[0]);
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("questLog");
     const before = state.stats.timeMs;
     for (let i = 0; i < 20; i++) step(state, idle, DT);
-    expect(state.stats.timeMs).toBe(before); // frozen like the map
-    closeQuestLog(state);
-    expect(state.phase).toBe("playing");
+    expect(state.stats.timeMs).toBe(before); // frozen like the map (solo)
+    closeQuestLog(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
-  it("only opens mid-run, and closing yields to a pending level-up", () => {
+  it("only opens with no other screen up, and closing keeps points banked", () => {
     const state = questRun();
     meet(state);
     takeAndLeave(state);
-    pauseGame(state);
-    openQuestLog(state); // not playing: a no-op
-    expect(state.phase).toBe("paused");
-    state.phase = "playing";
-    openQuestLog(state);
+    pauseGame(state, state.players[0]);
+    openQuestLog(state, state.players[0]); // pause menu already up: a no-op
+    expect(state.players[0].screen).toBe("paused");
+    resumeGame(state.players[0]);
+    openQuestLog(state, state.players[0]);
+    // Closing no longer diverts to the chooser: the points stay banked.
     state.players[0].pendingStatPoints = 1;
-    closeQuestLog(state);
-    expect(state.phase).toBe("levelup");
+    closeQuestLog(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
+    expect(state.players[0].pendingStatPoints).toBe(1);
   });
 });
 
@@ -684,7 +698,7 @@ describe("a run with no errands", () => {
     expect(state.questOffer).toBeNull();
     for (let i = 0; i < 30; i++) step(state, idle, DT);
     expect(state.phase).toBe("playing");
-    closeQuestDialogue(state); // a no-op, and must not throw
+    closeQuestDialogue(state, state.players[0]); // a no-op, and must not throw
     expect(state.phase).toBe("playing");
     installQuests();
   });

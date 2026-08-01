@@ -1447,7 +1447,8 @@ describe("library pages", () => {
         players: [{ level: rung.heroLevel }],
         difficulty: rung.difficulty,
       } as unknown as Parameters<typeof questXpReward>[0];
-      expect(rung.xp, rung.difficulty).toBe(questXpReward(state, reward));
+      const hero = state.players[0] as Parameters<typeof questXpReward>[1];
+      expect(rung.xp, rung.difficulty).toBe(questXpReward(state, hero, reward));
     }
     // JESUS scales to the hero rather than to an authored level, so it has no
     // reference hero to price against and is left off rather than guessed at.

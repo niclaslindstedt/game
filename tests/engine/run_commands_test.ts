@@ -156,21 +156,25 @@ describe("arguments a stranger may send", () => {
 });
 
 describe("the verbs actually do the thing", () => {
-  it("turns the opening into play, and freezes it again", () => {
+  it("turns the opening into play, and raises the actor's screens", () => {
+    // The screens are per-player (plan §3.2): the phase stays `playing` and
+    // each verb toggles the ACTING hero's own `screen` — seat 0 by default.
     const state = freshRun();
+    const hero = state.players[0];
     applyRunCommand(state, "skipStoryOpening");
     expect(state.phase).toBe("playing");
     applyRunCommand(state, "openInventory");
-    expect(state.phase).toBe("inventory");
+    expect(hero.screen).toBe("inventory");
     applyRunCommand(state, "closeInventory");
-    expect(state.phase).toBe("playing");
+    expect(hero.screen).toBeUndefined();
     applyRunCommand(state, "openMap");
-    expect(state.phase).toBe("map");
+    expect(hero.screen).toBe("map");
     applyRunCommand(state, "closeMap");
-    expect(state.phase).toBe("playing");
+    expect(hero.screen).toBeUndefined();
     applyRunCommand(state, "pauseGame");
-    expect(state.phase).toBe("paused");
+    expect(hero.screen).toBe("paused");
     applyRunCommand(state, "resumeGame");
+    expect(hero.screen).toBeUndefined();
     expect(state.phase).toBe("playing");
   });
 

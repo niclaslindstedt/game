@@ -100,8 +100,8 @@ describe("refundAutopilotBuild", () => {
     expect(state.players[0].pendingStatPoints).toBe(RIDE_POINTS);
     // The talent queue is empty for now — the reverted 10 STR still just
     // supports the single EXECUTIONER rank; it re-mints as the points are placed.
-    expect(state.pendingTalentPoints).toEqual([]);
-    expect(hasPendingPoints(state, state.players[0])).toBe(true);
+    expect(state.players[0].pendingTalentPoints).toEqual([]);
+    expect(hasPendingPoints(state.players[0])).toBe(true);
   });
 
   it("keeps the level, xp and gear the ride actually won", () => {
@@ -149,10 +149,10 @@ describe("refundAutopilotBuild", () => {
     expect(state.players[0].pendingStatPoints).toBe(0);
     expect(state.players[0].spentStats.dexterity).toBe(owed);
     // Crossing DEX milestones minted the player fresh RANGED talent points.
-    expect(state.pendingTalentPoints.every((s) => s === "dexterity")).toBe(
-      true,
-    );
-    expect(state.pendingTalentPoints.length).toBeGreaterThan(0);
+    expect(
+      state.players[0].pendingTalentPoints.every((s) => s === "dexterity"),
+    ).toBe(true);
+    expect(state.players[0].pendingTalentPoints.length).toBeGreaterThan(0);
     // The melee pick the player brought to the ride is untouched.
     expect(talentRank(state, state.players[0], "executioner")).toBe(1);
   });
@@ -183,9 +183,10 @@ describe("carrying the refund across a bank + fresh run", () => {
     const next = createGame(1, "test_level", "medium", loadout);
     skipCutscene(next);
     dismissIntro(next);
-    // Instead of dropping straight into play, the opener opens the level-up
-    // chooser so the player places the handed-back points first.
-    expect(next.phase).toBe("levelup");
+    // The opener drops into play but greets the hero with his chooser open,
+    // so the player places the handed-back points first.
+    expect(next.phase).toBe("playing");
+    expect(next.players[0].screen).toBe("levelup");
   });
 
   it("drops straight into play when nothing is owed (an ordinary carry)", () => {
@@ -197,41 +198,47 @@ describe("carrying the refund across a bank + fresh run", () => {
     skipCutscene(next);
     dismissIntro(next);
     expect(next.phase).toBe("playing");
+    expect(next.players[0].screen).toBeUndefined();
   });
 });
 
-describe("promptPendingPoints / resumeGame diversion", () => {
+describe("promptPendingPoints and the pause screen", () => {
   it("opens the chooser mid-play when points are owed", () => {
     const state = startGame();
     state.players[0].pendingStatPoints = 3;
     expect(promptPendingPoints(state, state.players[0])).toBe(true);
-    expect(state.phase).toBe("levelup");
+    expect(state.players[0].screen).toBe("levelup");
   });
 
-  it("is a no-op with nothing owed, or from a non-playing phase", () => {
+  it("is a no-op with nothing owed, or with another screen up", () => {
     const state = startGame();
     expect(promptPendingPoints(state, state.players[0])).toBe(false);
-    expect(state.phase).toBe("playing");
-    // From the pause screen it does NOT divert — a resume handles that path
-    // (so the music resumes with it); the point owed just waits.
-    pauseGame(state);
+    expect(state.players[0].screen).toBeUndefined();
+    // With the pause menu up it does NOT fight over the stage — the point
+    // owed just waits, banked, until the field is back.
+    pauseGame(state, state.players[0]);
     state.players[0].pendingStatPoints = 5;
     expect(promptPendingPoints(state, state.players[0])).toBe(false);
-    expect(state.phase).toBe("paused");
+    expect(state.players[0].screen).toBe("paused");
   });
 
-  it("a resume with points owed opens the chooser, not play", () => {
+  it("a resume with points owed keeps them banked for the on-demand chooser", () => {
     const state = startGame();
-    pauseGame(state);
+    pauseGame(state, state.players[0]);
     state.players[0].pendingStatPoints = 2;
-    resumeGame(state);
-    expect(state.phase).toBe("levelup");
+    resumeGame(state.players[0]);
+    // No divert: the resume just takes the field back, the points wait.
+    expect(state.players[0].screen).toBeUndefined();
+    expect(state.players[0].pendingStatPoints).toBe(2);
+    // The chooser opens on demand.
+    expect(promptPendingPoints(state, state.players[0])).toBe(true);
+    expect(state.players[0].screen).toBe("levelup");
   });
 
   it("a resume with nothing owed drops back into play", () => {
     const state = startGame();
-    pauseGame(state);
-    resumeGame(state);
-    expect(state.phase).toBe("playing");
+    pauseGame(state, state.players[0]);
+    resumeGame(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 });

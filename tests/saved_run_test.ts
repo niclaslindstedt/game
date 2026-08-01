@@ -192,7 +192,6 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "combatDps",
       "combatGraceMs",
       "combatKillRate",
-      "companionFocus",
       "companions",
       "craters",
       "critters",
@@ -250,7 +249,6 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "pendingMinionSpawns",
       "pendingProcs",
       "pendingReflects",
-      "pendingTalentPoints",
       "phase",
       "playerSpawn",
       "players",
@@ -313,6 +311,9 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "medkits",
       "moving",
       "pendingStatPoints",
+      // v26: the per-player screens split (plan §3.2) — the talent queue moved
+      // onto the hero (`screen`/`companionFocus` are optional and absent here).
+      "pendingTalentPoints",
       "pos",
       "repairKits",
       "spentStats",

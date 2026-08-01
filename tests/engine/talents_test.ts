@@ -101,12 +101,12 @@ describe("the talent point economy", () => {
   it("reconciles the picker queue from stats, STR>DEX>INT ordered", () => {
     const state = heroWithStats({ str: 20, dex: 10, int: 0 });
     // 2 STR points + 1 DEX point, none spent yet.
-    expect(state.pendingTalentPoints).toEqual([
+    expect(state.players[0].pendingTalentPoints).toEqual([
       "strength",
       "strength",
       "dexterity",
     ]);
-    expect(hasPendingTalentPoint(state)).toBe(true);
+    expect(hasPendingTalentPoint(state.players[0])).toBe(true);
   });
 
   it("clamps available points to what the tree can still hold", () => {
@@ -123,19 +123,19 @@ describe("the talent point economy", () => {
     expect(availableTalentPoints(state, state.players[0], "intelligence")).toBe(
       25,
     );
-    expect(state.pendingTalentPoints.length).toBe(25);
+    expect(state.players[0].pendingTalentPoints.length).toBe(25);
   });
 
   it("spends a point, ranking the talent up and shrinking the queue", () => {
     const state = heroWithStats({ str: 20 });
-    expect(state.pendingTalentPoints.length).toBe(2);
+    expect(state.players[0].pendingTalentPoints.length).toBe(2);
     expect(spendTalentPoint(state, state.players[0], "executioner")).toBe(true);
     expect(talentRank(state, state.players[0], "executioner")).toBe(1);
-    expect(state.pendingTalentPoints.length).toBe(1);
+    expect(state.players[0].pendingTalentPoints.length).toBe(1);
     // A second point ranks it again.
     expect(spendTalentPoint(state, state.players[0], "executioner")).toBe(true);
     expect(talentRank(state, state.players[0], "executioner")).toBe(2);
-    expect(hasPendingTalentPoint(state)).toBe(false);
+    expect(hasPendingTalentPoint(state.players[0])).toBe(false);
   });
 
   it("refuses to overspend, to rank a maxed talent, or an unknown id", () => {
@@ -170,12 +170,12 @@ describe("the level-up pause holds behind the talent picker", () => {
     state.players[0].stats.strength = 9;
     state.players[0].spentStats.strength = 9;
     state.players[0].pendingStatPoints = 1;
-    state.phase = "levelup";
+    state.players[0].screen = "levelup";
     allocateStat(state, state.players[0], "strength"); // 9 → 10: crosses the first STR milestone
     expect(state.players[0].pendingStatPoints).toBe(0);
-    expect(state.pendingTalentPoints).toEqual(["strength"]);
+    expect(state.players[0].pendingTalentPoints).toEqual(["strength"]);
     // The point is spent, but the picker holds the run frozen.
-    expect(state.phase).toBe("levelup");
+    expect(state.players[0].screen).toBe("levelup");
   });
 
   it("resumes only once the talent point is spent", () => {
@@ -184,11 +184,11 @@ describe("the level-up pause holds behind the talent picker", () => {
     state.players[0].stats.strength = 9;
     state.players[0].spentStats.strength = 9;
     state.players[0].pendingStatPoints = 1;
-    state.phase = "levelup";
+    state.players[0].screen = "levelup";
     allocateStat(state, state.players[0], "strength");
-    expect(state.phase).toBe("levelup");
+    expect(state.players[0].screen).toBe("levelup");
     expect(spendTalentPoint(state, state.players[0], "ironhide")).toBe(true);
-    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
   });
 
   it("resumes immediately when the last point crosses no milestone", () => {
@@ -200,12 +200,12 @@ describe("the level-up pause holds behind the talent picker", () => {
     // is pending going in — a realistic mid-decade hero.
     state.players[0].talents.executioner = 1;
     reconcileTalentPoints(state, state.players[0]);
-    expect(hasPendingTalentPoint(state)).toBe(false);
+    expect(hasPendingTalentPoint(state.players[0])).toBe(false);
     state.players[0].pendingStatPoints = 1;
-    state.phase = "levelup";
+    state.players[0].screen = "levelup";
     allocateStat(state, state.players[0], "strength");
-    expect(state.pendingTalentPoints).toHaveLength(0);
-    expect(state.phase).toBe("playing");
+    expect(state.players[0].pendingTalentPoints).toHaveLength(0);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
   it("earns per-stat for a HYBRID build (no dominant-stat gate)", () => {
@@ -217,10 +217,13 @@ describe("the level-up pause holds behind the talent picker", () => {
     state.players[0].spentStats.strength = 9;
     state.players[0].spentStats.intelligence = 9;
     state.players[0].pendingStatPoints = 2;
-    state.phase = "levelup";
+    state.players[0].screen = "levelup";
     allocateStat(state, state.players[0], "strength"); // earns a STR (melee) point
     allocateStat(state, state.players[0], "intelligence"); // earns an INT (magic) point
-    expect(state.pendingTalentPoints).toEqual(["strength", "intelligence"]);
+    expect(state.players[0].pendingTalentPoints).toEqual([
+      "strength",
+      "intelligence",
+    ]);
   });
 });
 
@@ -229,10 +232,10 @@ describe("the respec floor locks a spent talent's earning stat", () => {
     const state = heroWithStats({ str: 30 });
     spendTalentPoint(state, state.players[0], "executioner");
     spendTalentPoint(state, state.players[0], "bulwark");
-    expect(talentStatFloor(state, "strength")).toBe(20); // 2 ranks × 10
-    expect(talentStatFloor(state, "dexterity")).toBe(0);
+    expect(talentStatFloor(state, state.players[0], "strength")).toBe(20); // 2 ranks × 10
+    expect(talentStatFloor(state, state.players[0], "dexterity")).toBe(0);
     // A non-tree stat never floors.
-    expect(talentStatFloor(state, "stamina")).toBe(0);
+    expect(talentStatFloor(state, state.players[0], "stamina")).toBe(0);
   });
 
   it("beginRespec keeps the floor placed and refunds only the surplus", () => {
@@ -276,7 +279,7 @@ describe("veteran conversion on load", () => {
     const fresh = startGame();
     applyLoadout(fresh, fresh.players[0], loadout);
     // 3 STR + 1 DEX earned points, none spent — all pending after load.
-    expect(fresh.pendingTalentPoints).toEqual([
+    expect(fresh.players[0].pendingTalentPoints).toEqual([
       "strength",
       "strength",
       "strength",
@@ -291,7 +294,7 @@ describe("veteran conversion on load", () => {
     const fresh = startGame();
     applyLoadout(fresh, fresh.players[0], loadout);
     expect(talentRank(fresh, fresh.players[0], "executioner")).toBe(1);
-    expect(fresh.pendingTalentPoints).toHaveLength(2); // 3 earned − 1 spent
+    expect(fresh.players[0].pendingTalentPoints).toHaveLength(2); // 3 earned − 1 spent
   });
 });
 

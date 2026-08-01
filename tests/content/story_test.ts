@@ -15,6 +15,7 @@ import {
   enemyDef,
   mobRushSpeed,
   gearDef,
+  promptPendingPoints,
   isWeaponDef,
   LEVELS,
   MAP_BLUEPRINTS,
@@ -177,7 +178,7 @@ describe("elite ambushes", () => {
     );
   });
 
-  it("hands a pending level-up the stage as the scene ends", () => {
+  it("keeps a pending level-up banked as the scene ends", () => {
     const state = startGame();
     clearStage(state);
     placeElite(state, 120);
@@ -185,7 +186,12 @@ describe("elite ambushes", () => {
 
     state.players[0].pendingStatPoints = 1;
     finishDialogue(state);
-    expect(state.phase).toBe("levelup");
+    // The scene closes back to play; the point stays banked for the
+    // on-demand chooser (plan §3.2 — a ding never forces the screen).
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].pendingStatPoints).toBe(1);
+    expect(promptPendingPoints(state, state.players[0])).toBe(true);
+    expect(state.players[0].screen).toBe("levelup");
   });
 
   it("forfeits the arrival scene — never the drops or last words — mid-rush", () => {
