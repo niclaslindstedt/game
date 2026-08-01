@@ -463,6 +463,11 @@ export {
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
 export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
 
+// Is a spot somewhere the player can SEE — out of the fog AND out of its
+// frontier band? The read every automatic target pick goes through; kept off
+// map.ts because that module is on the app's startup path (see fog.ts).
+export { clearOfFog } from "./game/fog.ts";
+
 // Obstacle sight queries: the swept "does this line clear every TALL obstacle?"
 // test the simulation runs against solid features (walls, boulders, rocks —
 // jumpable low ones never occlude). The renderer reuses `lineOfSight` to cull

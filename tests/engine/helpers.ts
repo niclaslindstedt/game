@@ -28,6 +28,8 @@ export {
   jumpOnce,
   stopWaves,
   clearStage,
+  revealAll,
+  refog,
   run,
   settleBossRite,
   equipBlaster,

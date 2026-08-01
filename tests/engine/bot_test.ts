@@ -34,6 +34,7 @@ import {
   DT,
   equipBlaster,
   makeEnemy,
+  refog,
   startGame,
 } from "./helpers.ts";
 
@@ -152,6 +153,7 @@ describe("bot strategies", () => {
     // the fog coverage climb while it stays out of the boss's half of the map.
     const state = startGame();
     clearStage(state); // just the parked boss; no waves, no threats near
+    refog(state); // …and the fog back on: uncovering it is what this measures
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     // Keep the hero UNDER the boss-ready level (exploration fills the leveling
     // window) — the boss out-levels a fresh hero, as on the real maps.
@@ -385,7 +387,8 @@ describe("bot objective awareness", () => {
     // a cleared field sweeps fog — but with a live straggler idling nearby, a
     // fightless lull should turn the wander into a hunt that puts it down.
     const state = startGame();
-    clearStage(state); // just the parked boss; the fog is untouched
+    clearStage(state);
+    refog(state); // the fog is what the aimless phase wanders into
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     boss.mlvl = 20; // under-levelled → the plan explores rather than TO BOSS
     const straggler = makeEnemy({

@@ -246,7 +246,7 @@ function stepWell(
   const core = (ability.pos ??= { ...state.players[0].pos });
 
   if (well.chase > 0) {
-    const prey = nearestEnemy(state.enemies, core, WELL_HUNT_RANGE);
+    const prey = nearestEnemy(state, core, WELL_HUNT_RANGE);
     if (prey) ability.pos = moveToward(core, prey.pos, well.chase * dt);
   }
 
@@ -408,7 +408,7 @@ function stepTurret(
   for (const node of nodes) {
     node.cooldownMs -= dtMs;
     if (node.cooldownMs > 0) continue;
-    const mark = nearestEnemy(state.enemies, node.pos, turret.range);
+    const mark = nearestEnemy(state, node.pos, turret.range);
     if (!mark) continue;
     node.cooldownMs = turret.intervalMs;
     state.projectiles.push({
