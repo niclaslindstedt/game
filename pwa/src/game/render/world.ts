@@ -16,9 +16,10 @@ import {
 import { drawWorldSprite } from "./plane.ts";
 import { drawSpriteCentered, type ViewSize } from "./shared.ts";
 import { cameraAnchorX, cameraAnchorY } from "./tilt.ts";
+import { VEHICLE_LANDMARK_KINDS } from "./vehicles.ts";
 import { type Camera } from "./view.ts";
 
-type InView = (x: number, y: number, margin: number) => boolean;
+export type InView = (x: number, y: number, margin: number) => boolean;
 
 /**
  * Ground: one blit of the visible rect from the baked level layer, falling
@@ -144,6 +145,10 @@ export function drawLandmarks(
 ): void {
   for (const landmark of state.landmarks) {
     if (!inView(landmark.pos.x, landmark.pos.y, 48)) continue;
+    // A VEHICLE's landmark is its tap anchor, not its picture: the machine
+    // is drawn ASSEMBLED by ./vehicles.ts (wheels, springs, flame), so the
+    // flat sprite here would just stack a second car under the real one.
+    if (VEHICLE_LANDMARK_KINDS.has(landmark.kind)) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     drawWorldSprite(
       ctx,
@@ -200,6 +205,9 @@ export function drawObstacles(
 ): void {
   for (const obstacle of state.obstacles) {
     if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
+    // A vehicle's footprint blockers are collision only — the machine over
+    // them is ./vehicles.ts's to draw.
+    if (obstacle.kind === "vehicle") continue;
     const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
     drawWorldSprite(ctx, obstacle.sprite, sprite, obstacle.pos, camera);
   }

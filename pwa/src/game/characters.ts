@@ -119,6 +119,14 @@ export type Character = {
    */
   merchantsMet: string[];
   /**
+   * KEEPSAKES — story items banked for good (`StoryItemDef.keepsake`),
+   * across every run and every difficulty: the RIFT CREATOR that unseals
+   * the garage's rift seam. Recorded on the `storyItemCollected` engine
+   * event; read by the hub's travel doors (`travelDoors[].requires`).
+   * Optional: a roster stored before the field existed reads as none.
+   */
+  keepsakes?: string[];
+  /**
    * THE CAMPAIGN CHAIN'S LOG, per difficulty — the errands marked
    * `campaign: true` (see src/game/quests/campaign.ts) plus the run flags their
    * conversations set. Keyed by rung for the same reason clears and story beats
@@ -297,6 +305,7 @@ export function loadCharacters(): Character[] {
       beaten: Array.isArray(c.beaten) ? c.beaten : [],
       storySeen: Array.isArray(c.storySeen) ? c.storySeen : [],
       merchantsMet: Array.isArray(c.merchantsMet) ? c.merchantsMet : [],
+      ...(Array.isArray(c.keepsakes) ? { keepsakes: c.keepsakes } : {}),
       ...(c.campaignQuests && typeof c.campaignQuests === "object"
         ? { campaignQuests: c.campaignQuests as Character["campaignQuests"] }
         : {}),
@@ -588,6 +597,9 @@ export function normalizeCharacter(data: unknown): Character {
     beaten: strings(c.beaten) as Difficulty[],
     storySeen: strings(c.storySeen),
     merchantsMet: strings(c.merchantsMet),
+    ...(Array.isArray(c.keepsakes) && c.keepsakes.length > 0
+      ? { keepsakes: strings(c.keepsakes) }
+      : {}),
     ...(c.campaignQuests && typeof c.campaignQuests === "object"
       ? { campaignQuests: c.campaignQuests as Character["campaignQuests"] }
       : {}),
@@ -778,6 +790,24 @@ export function markStorySeen(
 /** Record that this hero has now MET the merchant on `levelId`/`difficulty`
  * (called on the `merchantDiscovered` event). Idempotent — a no-op returns the
  * character untouched; otherwise it persists and returns the update. */
+/** BANK A KEEPSAKE — a story item the character keeps for good (the RIFT
+ * CREATOR; see `StoryItemDef.keepsake`). Recorded on the
+ * `storyItemCollected` event; idempotent like `markMerchantMet` beside it. */
+export function bankKeepsake(character: Character, defId: string): Character {
+  if (character.keepsakes?.includes(defId)) return character;
+  const updated: Character = {
+    ...character,
+    keepsakes: [...(character.keepsakes ?? []), defId],
+  };
+  persist(updated);
+  return updated;
+}
+
+/** Does this character keep `defId` — the travel doors' `requires` read. */
+export function hasKeepsake(character: Character, defId: string): boolean {
+  return character.keepsakes?.includes(defId) === true;
+}
+
 export function markMerchantMet(
   character: Character,
   levelId: string,

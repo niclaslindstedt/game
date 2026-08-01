@@ -17,7 +17,6 @@ import {
 import { synth } from "../audio.ts";
 import { BOT_VIEW_SPECS, botViewSpec } from "../bot-view-specs.ts";
 import {
-  firstUnclearedLevel,
   hasClearedLevel,
   isDifficultyBeaten,
   isDifficultyTierBeaten,
@@ -124,15 +123,16 @@ export function buildDifficultyMenu(
             ctx.setCursor(0);
             return;
           }
-          // Until this difficulty's TIER is beaten the level picker stays
-          // locked: the hero is walked straight through the campaign from the
-          // next unbeaten level. Once the tier is clear (any starting lane, or
-          // this gated rung itself), the picker opens — grinding the last levels
-          // before nightmare on a sibling lane goes through the picker, not a
-          // fresh linear run from level one.
+          // Until this difficulty's TIER is beaten there is no picker — the
+          // campaign starts AT HOME: the hero lands in THE GARAGE (the hub)
+          // and leaves through a door, and the doors themselves gate on this
+          // difficulty's progress (the same rule the picker runs). Once the
+          // tier is clear the picker opens — grinding the last levels before
+          // nightmare on a sibling lane goes through the picker, not a walk
+          // through the house.
           if (!tierBeaten) {
             playUiSound(synth, "start");
-            ctx.onStart(id, firstUnclearedLevel(character, id));
+            ctx.onStart(id, "garage");
             return;
           }
           playUiSound(synth, "confirm");
@@ -172,6 +172,24 @@ export function buildLevelsMenu(
     },
   };
   return [
+    // HOME FIRST. The garage is where a campaign stands between missions, so
+    // the opened picker lists it ahead of the numbered levels — always
+    // unlocked (its doors carry the campaign's own gates), never numbered
+    // (it is not a rung). Warp mode already lists it among the secret rows.
+    ...(ctx.warp || ctx.botView
+      ? []
+      : [
+          {
+            label: `H. ${levelSummary("garage").name}`,
+            aria: rowAria("levels", "garage"),
+            color: "#8ccdd7",
+            blurb: "HOME - KIT OUT, THEN LEAVE BY A DOOR",
+            action: () => {
+              playUiSound(synth, "start");
+              ctx.onStart(ctx.difficulty, "garage");
+            },
+          } satisfies MenuEntry,
+        ]),
     ...LEVEL_ORDER.map((id, i) => {
       const def = levelSummary(id);
       const unlocked =

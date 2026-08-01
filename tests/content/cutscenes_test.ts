@@ -41,11 +41,18 @@ describe("campaign preludes", () => {
 
   it("every level past the first opens on a travel scene", () => {
     for (const levelId of LEVEL_ORDER) {
+      // GOODCO HQ is the one exception: the campaign now OPENS in the
+      // garage, so the living-room prelude plays on the hub's first entry
+      // and the drive over needs no scene of its own.
+      if (levelId === "goodco_hq") continue;
       expect(
         levelDef(levelId).prelude,
         `${levelId} ships no prelude`,
       ).toBeDefined();
     }
+    // The scene GOODCO used to open on lives at home now.
+    expect(levelDef("garage").prelude).toBe("prelude");
+    expect(levelDef("goodco_hq").prelude).toBeUndefined();
   });
 });
 

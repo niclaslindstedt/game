@@ -120,6 +120,27 @@ holds a floor-safety order it may not act on without a countersignature — it
 asks the hero to be the hands, and then to withdraw the order above its own,
 which the NIGHT MANAGER signed.
 
+## Home — THE GARAGE (hub)
+
+**Intro.** With the part in his jacket the hero comes home, and from this night
+on the garage is where he stands between chapters: the most his place in the
+world — ten years of weekends, the bench, the car that never ran as well as the
+ship — now the staging ground of the whole trail. His own summary on the
+doorstep says everything the room needs to: home — the lawn is dead, the bench
+is a mess, and the ship is perfect. Nothing hunts him here. The vendor who
+stocked GOODCO's machines has parked his cart at a counter inside (lockdown is
+a seller's market, and he follows the customer), buying what weighs the hero
+down, selling what keeps him upright, and mending what the road broke.
+
+**The doors.** The way out is the ROCKET standing on the back lawn — THE LAUNCH
+and every voyage after it leave from here, and it flies only where Ada's trail
+has already led (the moon first, Mars once the moon has let go). Beside it
+waits a RIFT SEAM in the garage wall, dormant until the hero has walked roads
+deep enough to answer it — the same truth THE SEVERED HAND proves, that a rift
+can be carried and torn open where somebody wants one, here pointed at the void
+and at the West. The campaign's own chapters are unchanged; the garage is the
+breath between them, and — when friends join his game — the place they land.
+
 ## Travel — THE LAUNCH (cutscene)
 
 **The garage at night.** The stolen part is in, and the ship the hero built

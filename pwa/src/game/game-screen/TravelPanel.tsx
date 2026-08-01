@@ -18,8 +18,8 @@ import { type PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { isLevelUnlocked } from "../character-progress.ts";
-import type { Character } from "../characters.ts";
-import type { Difficulty } from "@game/core";
+import { hasKeepsake, type Character } from "../characters.ts";
+import { storyItemDef, type Difficulty } from "@game/core";
 
 export function TravelPanel({
   state,
@@ -47,9 +47,22 @@ export function TravelPanel({
     (d) => d.id === doorId,
   );
   if (!door) return null;
+  // A door with a `requires` gate (the rift seam) is SEALED as a whole until
+  // its keepsake is banked on the character — shown, named, and inert, so
+  // the player knows there is a thing to go and find.
+  const sealed =
+    door.requires !== undefined && !hasKeepsake(character, door.requires);
   return (
     <div className="game-splash">
       <PixelText font={font} text={door.name} scale={5} color="#7ef0c8" />
+      {sealed && (
+        <PixelText
+          font={font}
+          text={`SEALED - IT ANSWERS TO THE ${storyItemDef(door.requires!).name}`}
+          scale={2}
+          color="#ec52be"
+        />
+      )}
       {!canTravel && (
         <PixelText
           font={font}
@@ -60,7 +73,8 @@ export function TravelPanel({
       )}
       <div className="splash-buttons">
         {door.to.map((dest) => {
-          const unlocked = isLevelUnlocked(character, dest, difficulty);
+          const unlocked =
+            !sealed && isLevelUnlocked(character, dest, difficulty);
           const open = unlocked && canTravel;
           return (
             <button

@@ -360,6 +360,8 @@ export function validateLevel(def, refs, description = "", options = {}) {
         else if (refs.levels && !refs.levels.has(dest))
           err(`travel door "${d.id}" leads to unknown level "${dest}"`);
       }
+      if (d.requires !== undefined && !refs.storyItems.has(d.requires))
+        err(`travel door "${d.id}" requires unknown story item "${d.requires}"`);
     }
   }
   if (

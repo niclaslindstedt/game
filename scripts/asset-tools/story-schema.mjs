@@ -496,8 +496,17 @@ export function validateStoryItem(id, def, refs) {
   if (def.suitsHero !== undefined && typeof def.suitsHero !== "boolean") {
     err("suitsHero must be a boolean");
   }
+  // A KEEPSAKE is banked on the persistent character rather than living only
+  // in the run — what a travel door's `requires` gate reads (StoryItemDef).
+  if (def.keepsake !== undefined && typeof def.keepsake !== "boolean") {
+    err("keepsake must be a boolean");
+  }
   for (const key of Object.keys(def)) {
-    if (!["name", "icon", "lore", "unlocks", "suitsHero"].includes(key)) {
+    if (
+      !["name", "icon", "lore", "unlocks", "suitsHero", "keepsake"].includes(
+        key,
+      )
+    ) {
       err(`unknown field "${key}"`);
     }
   }

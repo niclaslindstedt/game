@@ -65,6 +65,7 @@ export const LEVEL_FIELDS = {
   doors: "the map render, and the LOCKED note",
   gates: "the secret-gate note",
   exitTo: "the RETURNS TO row",
+  travelDoors: "the DOORS list — the hub's standing doors and their roads",
   wells: "the map render and the hazards section",
   chests: "the map render and the CHESTS note",
   placedItems: "the loot section's hand-placed finds",
@@ -327,6 +328,13 @@ function missionModel(level, order) {
     gates: (level.gates ?? []).map((gate) => ({
       to: missionLink(gate.to),
       key: itemLink(gate.opensWith),
+    })),
+    // The hub's STANDING doors (LevelDef.travelDoors): each named, with the
+    // roads it opens and — for the sealed one — the keepsake it answers to.
+    travelDoors: (level.travelDoors ?? []).map((door) => ({
+      name: door.name,
+      to: door.to.map((id) => missionLink(id)).filter(Boolean),
+      requires: door.requires ? (itemLink(door.requires) ?? null) : null,
     })),
     lockedDoors: (level.doors ?? []).length,
     chests: (level.chests ?? []).length,

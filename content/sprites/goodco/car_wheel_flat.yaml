@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
+# 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
+# damage mix with `node scripts/car-viewer.mjs`.
+name: car_wheel_flat
+family: goodco
+size: [11, 11]
+description: >
+  The wheel on a FLAT TIRE - squashed onto its rim, going nowhere fast.
+subject:
+  kind: "vehicle part"
+  build: "a five-spoke alloy on a flat, bulging tire"
+  features: "flat tire, seated rim"
+  accent: "white body, black roof and trim, dark glass"
+  flavor: "the hero's hatchback, one piece of it"
+palette:
+  O: "#1a1c2c"
+  T: "#c0c5cf"
+  b: "#3f4553"
+  k: "#0a0910"
+grid: |
+  ....OOO....
+  ..OOkkkOO..
+  .OkkkkkkkO.
+  .OkbbbTbkO.
+  OkkTTTbbkkO
+  OkkbbTTTkkO
+  OkkTTTbbkkO
+  .OObbbTbOO.
+  ...OkkkO...
+  .OOkkkkkOO.
+  ..OOOOOOO..

@@ -480,6 +480,14 @@ export {
   sellValue,
   stockName,
 } from "./game/merchant.ts";
+export {
+  CAR,
+  SHIP,
+  nudgeCar,
+  stepVehicles,
+  createVehicles,
+  vehicleFootprint,
+} from "./game/vehicles.ts";
 // QUESTS — the errands the field's non-combatants ask of the hero (see
 // quests/). The conversation is a pause phase like the shop, and so is the LOG
 // (`openQuestLog`, raised from the HUD's own `!` button, exactly as the map
@@ -1148,10 +1156,14 @@ export type {
   Loadout,
   MapMarker,
   MapMarkerKind,
+  CarPanelId,
+  CarVehicle,
   Merchant,
   MerchantConsumable,
   MerchantStock,
   Obstacle,
+  ShipVehicle,
+  Vehicle,
   PackState,
   PartyStamp,
   PendingProc,

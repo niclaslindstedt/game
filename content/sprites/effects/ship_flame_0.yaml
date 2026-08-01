@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: ship_flame_0
+family: effects
+size: [10, 8]
+description: >
+  The garage ship's engine flame, frame one — lit only while the SHIP
+  vehicle's `thrust` is above zero (src/game/vehicles.ts). The flying
+  minigame's throttle is what turns it on; parked in the garage it never
+  shows.
+subject:
+  kind: "vehicle part - engine flame"
+  build: "a short hot exhaust cone under a rocket bell"
+  features: "white-hot core, amber body, red fringe"
+  accent: "furnace orange on void black"
+  flavor: "homemade thrust, duct tape rated"
+palette:
+  y: "#f2c14e" # amber body
+  W: "#fff3d9" # white-hot core
+  r: "#d83a3a" # red fringe
+grid: |
+  ..yWWyy...
+  ..yWWy....
+  .ryWWyr...
+  .ryWyyr...
+  ..ryyr....
+  ..ryyr....
+  ...rr.....
+  ....r.....

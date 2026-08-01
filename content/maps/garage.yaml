@@ -1,0 +1,165 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  THE GARAGE — the hub, and the one STATIC blueprint in the game: `carveSeed`
+  pins the carve (and the size roll), so home lays out identically every
+  visit. THE READ: a small home lot — the GARAGE BAY (the workbench world:
+  tool chests, part racks, fuel drums, the car parked mid-floor) opening onto
+  the LAWN, where the rocket stands and the rift seam waits. No horde at all
+  (`horde: 0` on every area — the mission's objective is `hub` and the whole
+  lot is home ground), no boss, no locks: the only decisions here are which
+  door to leave through. The trader parks at the carve's stall spot; the
+  three door landmarks (car, rocket, rift_seam) are what the mission's
+  `travelDoors` stand on.
+id: garage
+level: garage
+
+# THE PIN. A home does not rearrange its walls between errands — and a mod
+# that wants a different garage changes this file like any other blueprint.
+carveSeed: 9
+
+areas:
+  - id: bay
+    enclosure: hard
+    weight: 3
+    horde: 0
+    boss: false
+    spawn: false
+    label: THE GARAGE
+    ground: { common: deck_0, rare: deck_1, rareEvery: 11 }
+  - id: lawn
+    enclosure: none
+    weight: 2
+    horde: 0
+    boss: false
+    label: THE LAWN
+    ground: { common: grass_0, rare: grass_1, rareEvery: 9 }
+
+# One look, three times: the sizes are identical on purpose — a static hub
+# must not change scale under the GENERATED MAPS setting.
+sizes:
+  small:
+    width: 1280
+    height: 840
+    rooms: 4
+  medium:
+    width: 1280
+    height: 840
+    rooms: 4
+  large:
+    width: 1280
+    height: 840
+    rooms: 4
+
+layout:
+  minRoom: 380
+  doorWidth: 140
+  loopDoors: 0.5
+  cluster: 0.6
+  wall: partition
+
+objects:
+  - id: partition
+    type: wall
+    kind: wall
+    radius: 8
+
+  # ── THE DOORS (see the mission's travelDoors) ────────────────────────────
+  # The car sits by the way in; the rocket holds the goal cell out on the
+  # lot; the seam lands wherever the pinned carve put it — fixed forever.
+  # The car and the rocket are VEHICLES (src/game/vehicles.ts): the landmark
+  # is the travel door's tap anchor and the assembly renderer draws the
+  # machine in its place, so the sprite here only satisfies the atlas check.
+  - id: car
+    type: landmark
+    sprite: car_doors_0
+    at: spawn
+  - id: rocket
+    type: landmark
+    sprite: starship
+    at: goal
+  - id: rift_seam
+    type: landmark
+    at: stall
+
+  # ── THE WORKBENCH WORLD ──────────────────────────────────────────────────
+  - id: tool_chest
+    type: crate
+    radius: 6
+    density: 9
+    areas: [bay]
+    loot:
+      chance: 0.35
+      drop: { gear: 2, health: 1, stamina: 1 }
+  - id: part_rack
+    type: obstacle
+    radius: 6
+    density: 8
+    areas: [bay]
+  - id: fuel_drum
+    type: obstacle
+    radius: 5
+    density: 6
+    areas: [bay]
+  - id: parts_bin
+    type: decor
+    density: 10
+    areas: [bay]
+  - id: gas_rack
+    type: decor
+    density: 6
+    areas: [bay]
+  - id: desk
+    type: cover
+    radius: 7
+    jumpable: true
+    density: 4
+    areas: [bay]
+  - id: stain
+    type: decor
+    density: 12
+    areas: [bay]
+  - id: cable
+    type: decor
+    density: 9
+    areas: [bay]
+
+  # ── THE LAWN ─────────────────────────────────────────────────────────────
+  - id: crate
+    type: crate
+    radius: 6
+    density: 4
+    areas: [lawn]
+    loot:
+      chance: 0.4
+      drop: { health: 2, stamina: 1, gear: 1 }
+  - id: laundry_line
+    type: decor
+    density: 4
+    areas: [lawn]
+  - id: haystack
+    type: obstacle
+    radius: 7
+    density: 4
+    areas: [lawn]
+  - id: plant
+    type: decor
+    density: 9
+    areas: [lawn]
+
+# No horde stands here — every area above is `horde: 0`, so no knot is ever
+# placed — but the block itself is required and its members must resolve, so
+# it names the gentlest staffer at zero pressure.
+horde:
+  perRoom: [1, 1]
+  maxAlive: 1
+  lingering: 0
+  ramps: [meek]
+  hellgates: 0
+  members:
+    - enemy: intern
+      window: [0, 1]
+      weight: 1
+
+# No elites, no guardians, no boss: a hub casts nobody — the mission's
+# objective is `hub` and never clears.
+boss: null

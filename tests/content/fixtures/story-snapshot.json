@@ -2259,6 +2259,18 @@
       ],
       "name": "BOOT HILL BROCHURE"
     },
+    "rift_creator": {
+      "icon": "icon_rift_creator",
+      "id": "rift_creator",
+      "keepsake": true,
+      "lore": [
+        [
+          "THE FOUNDER'S POCKET RIFT RIG. IT TEARS A SEAM TO ANYWHERE IT'S ALREADY BEEN."
+        ],
+        ["HE SAID KEEP THE RIFT. I'M BOLTING THIS TO THE GARAGE WALL."]
+      ],
+      "name": "RIFT CREATOR"
+    },
     "snow_archive": {
       "icon": "icon_snow_archive",
       "id": "snow_archive",

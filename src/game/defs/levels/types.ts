@@ -423,6 +423,13 @@ export type LevelDef = {
     name: string;
     /** Destination level ids, in the order the picker lists them. */
     to: string[];
+    /**
+     * A story-item id that must be banked on the CHARACTER (a `keepsake:`
+     * item — see StoryItemDef) before this door works at all: the RIFT SEAM
+     * stays sealed until THE FOUNDER's RIFT CREATOR comes home. Omitted =
+     * the door only gates per destination, on campaign progress.
+     */
+    requires?: string;
   }[];
   /**
    * Where the exit of a `reachExit` level leads: the victory splash swaps

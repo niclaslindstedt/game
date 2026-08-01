@@ -9,7 +9,7 @@
 import { localHero } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
-import { bankCampaignQuests, isPartyRun } from "@game/core";
+import { bankCampaignQuests, isPartyRun, storyItemDef } from "@game/core";
 import {
   extractLoadout,
   type Difficulty,
@@ -19,6 +19,7 @@ import {
 
 import {
   accrueCampaign,
+  bankKeepsake,
   bankLoadout,
   campaignTally,
   hasClearedLevel,
@@ -147,6 +148,15 @@ export function createRunProgress(deps: {
         runLevelId,
         difficulty,
       );
+    }
+    // A KEEPSAKE story item (the RIFT CREATOR) banks on the character the
+    // moment it is picked up — a permanent acquisition, not run state, so a
+    // death or an abandoned run can never un-find it.
+    if (
+      event.type === "storyItemCollected" &&
+      storyItemDef(event.defId)?.keepsake
+    ) {
+      characterRef.current = bankKeepsake(characterRef.current, event.defId);
     }
     // A CAMPAIGN ERRAND MOVED — bank the chain on the character now rather
     // than at the level's end. The whole point of a campaign chain is that it

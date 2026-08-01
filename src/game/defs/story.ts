@@ -32,6 +32,14 @@ export type StoryItemDef = {
    * space suit sets it.
    */
   suitsHero?: boolean;
+  /**
+   * A PERMANENT ACQUISITION: picking this up banks it on the persistent
+   * CHARACTER (the app's run-progress does the write), where every other
+   * story item is the run's own and resets with the level. What a travel
+   * door's `requires` gate reads — the RIFT CREATOR that unseals the
+   * garage's rift seam is the first.
+   */
+  keepsake?: boolean;
 };
 
 export const STORY_ITEM_DEFS: Record<string, StoryItemDef> =

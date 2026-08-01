@@ -32,6 +32,10 @@ describe("the campaign's quest givers", () => {
     // that reads as a level rather than as a place — the whole reason these
     // people exist (see content/quest-givers.yaml).
     for (const levelId of Object.keys(LEVELS)) {
+      // The HUB is exempt: home is a breather, not an errand board. (Phase
+      // 6's own §6.1 wants givers parked here eventually — that is a story
+      // change with lines of its own, owed a pass of its own.)
+      if (LEVELS[levelId]!.objective.type === "hub") continue;
       expect(
         giversForLevel(levelId).length,
         `${levelId} has nobody with an errand`,
@@ -78,6 +82,7 @@ describe("the campaign's errands", () => {
 
   it("are handed out on every map", () => {
     for (const levelId of Object.keys(LEVELS)) {
+      if (LEVELS[levelId]!.objective.type === "hub") continue; // home, not an errand board
       expect(
         questsForLevel(levelId).length,
         `${levelId} hands out no errands`,
@@ -110,6 +115,7 @@ describe("the campaign's errands", () => {
     // A chain is what turns three jobs into a reason to keep coming back to
     // one person. A map whose errands are all standalone has a to-do list.
     for (const levelId of Object.keys(LEVELS)) {
+      if (LEVELS[levelId]!.objective.type === "hub") continue; // home, not an errand board
       const onMap = questsForLevel(levelId);
       expect(
         onMap.some((q) => (q.requires?.length ?? 0) > 0),
@@ -262,6 +268,7 @@ describe("the quest chains", () => {
     // A map whose every errand has a prerequisite offers nothing at all — the
     // gate never opens, and it is invisible: the giver simply has no `!`.
     for (const levelId of Object.keys(LEVELS)) {
+      if (LEVELS[levelId]!.objective.type === "hub") continue; // home, not an errand board
       const onMap = questsForLevel(levelId);
       expect(
         onMap.some((q) => (q.requires?.length ?? 0) === 0),

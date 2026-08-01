@@ -75,6 +75,13 @@ const SEEDS = [1, 2, 3, 5, 8, 13, 21, 34];
 const WALK_SEEDS = [1, 3, 8, 21];
 const MISSIONS = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
 
+/** The HUB is a different kind of venue — STATIC (`carveSeed` pinned), no
+ * horde, no boss, objective `hub` — so the handful of assertions below that
+ * are ABOUT variety or pressure exempt it, each stating which of those
+ * properties it rides. Everything structural (schema, reachability, locks)
+ * still runs on it unexempted. */
+const isHub = (id: string) => levelDef(id).objective.type === "hub";
+
 // The SIZE is a process-global flag, so any test that names one must put it
 // back — vitest shares a module graph across the files in a worker.
 afterAll(() => {
@@ -365,6 +372,7 @@ describe("generated levels", () => {
 
   it("put the boss somewhere new from run to run", () => {
     for (const id of MISSIONS) {
+      if (isHub(id)) continue; // no boss to place
       const spots = new Set(
         SEEDS.map((seed) => {
           const goal = goalOf(resolveLevelDef(id, seed, "large"));
@@ -408,14 +416,22 @@ describe("generated levels", () => {
       const a = resolveLevelDef(id, 7, "medium");
       const b = resolveLevelDef(id, 7, "medium");
       expect(JSON.stringify(b)).toEqual(JSON.stringify(a));
-      // …and a different one from a different seed, or the seed means nothing.
       const c = resolveLevelDef(id, 8, "medium");
-      expect(JSON.stringify(c)).not.toEqual(JSON.stringify(a));
+      if (MAP_BLUEPRINTS[id]?.carveSeed !== undefined) {
+        // A PINNED blueprint (the hub) carves the same map from EVERY seed —
+        // home does not rearrange its walls between errands.
+        expect(JSON.stringify(c)).toEqual(JSON.stringify(a));
+      } else {
+        // …and a different one from a different seed, or the seed means
+        // nothing.
+        expect(JSON.stringify(c)).not.toEqual(JSON.stringify(a));
+      }
     }
   });
 
   it("grow with the size, in floor and in rooms", () => {
     for (const id of MISSIONS) {
+      if (MAP_BLUEPRINTS[id]?.carveSeed !== undefined) continue; // static: one look
       const [small, medium, large] = SIZES.map((size) =>
         resolveLevelDef(id, 4, size),
       ) as [LevelDef, LevelDef, LevelDef];
@@ -530,7 +546,8 @@ describe("a run on a generated map", () => {
     for (const id of MISSIONS) {
       const state = carved(id);
       expect(runLevelDef(state).waves).toBeUndefined();
-      expect(state.spawners.length).toBeGreaterThan(0);
+      if (isHub(id)) expect(state.spawners.length).toBe(0); // home ground
+      else expect(state.spawners.length).toBeGreaterThan(0);
     }
   });
 
@@ -684,7 +701,7 @@ describe("the story on a generated map", () => {
 
 describe("the generated horde", () => {
   it("stands a spawn point in the map on every rung", () => {
-    for (const id of MISSIONS)
+    for (const id of MISSIONS.filter((id) => !isHub(id)))
       for (const difficulty of DIFFICULTY_ORDER) {
         setGeneratedMapSize("medium");
         const state = createGame(7, id, difficulty);
@@ -716,7 +733,7 @@ describe("the generated horde", () => {
     // floor here is a fight roughly every screen and a half of walking, at EVERY
     // size — a large carve going empty is the same bug wearing a bigger map.
     const MILLION = 1_000_000;
-    for (const id of MISSIONS)
+    for (const id of MISSIONS.filter((id) => !isHub(id)))
       for (const size of SIZES)
         for (const seed of WALK_SEEDS) {
           const def = resolveLevelDef(id, seed, size);
@@ -748,6 +765,7 @@ describe("the generated horde", () => {
     // the ramps off raw depth left the last rung or two unreachable and the
     // generated horde a couple of levels softer than the authored one.
     for (const id of MISSIONS) {
+      if (isHub(id)) continue; // no knots to walk a ladder with
       const ramps = MAP_BLUEPRINTS[id]?.horde.ramps;
       if (!ramps) throw new Error(`no blueprint for "${id}"`);
       const used = new Set<string>();

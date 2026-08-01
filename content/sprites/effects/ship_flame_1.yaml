@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: ship_flame_1
+family: effects
+size: [10, 8]
+description: >
+  The garage ship's engine flame, frame two — the flicker's other half
+  (see ship_flame_0).
+subject:
+  kind: "vehicle part - engine flame"
+  build: "a short hot exhaust cone under a rocket bell, licking wider"
+  features: "white-hot core, amber body, red fringe"
+  accent: "furnace orange on void black"
+  flavor: "homemade thrust, duct tape rated"
+palette:
+  y: "#f2c14e" # amber body
+  W: "#fff3d9" # white-hot core
+  r: "#d83a3a" # red fringe
+grid: |
+  ...yWWy...
+  ..ryWWyr..
+  ..yWWWWy..
+  .ryWWyyr..
+  ..ryyyr...
+  ...ryr....
+  ...ryr....
+  ....r.....

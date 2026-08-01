@@ -603,6 +603,19 @@ _A first-generation SUCCESSOR, decommissioned eleven years ago and never collect
 1. THE ORDER IS WITHDRAWN. I AM RELEASED FROM THE LINE.
 2. I HAVE NO FURTHER TASK. THIS IS WHAT I WAS SAVING.
 
+## Home — THE GARAGE (hub)
+
+_The hero's home base between chapters (`content/levels/garage.yaml`) — the
+hub every campaign victory returns to, with the rocket and the rift seam as
+its doors. The parked vendor at the counter is deliberately scene-free: the
+hub is re-entered constantly, and a greeting on every approach would make the
+counter a toll booth. Its one line is the arrival monologue, played once per
+difficulty._
+
+### Opening monologue (hero, black screen)
+
+1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS PERFECT.
+
 ## Travel — THE LAUNCH (cutscene)
 
 _Between GOODCO HQ and the moon, part one of the moon level's prelude chain

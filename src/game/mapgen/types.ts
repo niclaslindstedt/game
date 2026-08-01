@@ -70,8 +70,10 @@ export type MapObjectType =
   | "critter"
   | "lair";
 
-/** Where a `landmark` object is pinned once the chambers are carved. */
-export type MapAnchor = "spawn" | "goal";
+/** Where a `landmark` object is pinned once the chambers are carved:
+ * the hero's landing, the goal cell, or a step aside from the trader's
+ * counter (`stall` — the hub's rift seam hums on the shop wall). */
+export type MapAnchor = "spawn" | "goal" | "stall";
 
 /**
  * One entry of a blueprint's object palette: a sprite plus the purpose that

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: icon_rift_creator
+family: icons
+size: [12, 12]
+description: >
+  THE FOUNDER's pocket rift rig — a chrome handheld frame holding a live
+  magenta seam, small enough to bolt to a garage wall.
+subject:
+  kind: item icon
+  features: a squat chrome frame cradling a vertical tear of light
+  accent: magenta discharge in cold grey metal
+  flavor: frontier physics with a carrying handle
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome frame
+  b: "#3f4553" # dark metal
+  X: "#ec52be" # magenta seam
+  P: "#b05cdc" # violet glow
+  K: "#0a0910" # void
+grid: |
+  ............
+  ...OOOOOO...
+  ..OTTOOTTO..
+  ..OTOXKOTO..
+  ..OTOKXOTO..
+  ..OTOXPOTO..
+  ..OTOKXOTO..
+  ..OTOXKOTO..
+  ..OTTOOTTO..
+  ..ObOOOObO..
+  ...OOOOOO...
+  ............

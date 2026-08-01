@@ -53,6 +53,7 @@ import type {
   Merchant,
   Obstacle,
   PartyStamp,
+  Vehicle,
   CanopyPiece,
   TileSpec,
 } from "./world.ts";
@@ -633,6 +634,10 @@ export type GameState = {
   gates: GateState[];
   /** The level's wandering merchant (see merchant.ts). */
   merchant: Merchant;
+  /** THE HERO'S VEHICLES — the car and the garage ship, minted where the
+   * carve pins their landmarks (the garage; empty everywhere else). Machines,
+   * not props: see `Vehicle` and src/game/vehicles.ts. */
+  vehicles: Vehicle[];
   /**
    * The people on this map with an errand to hand out (see quests.ts), built
    * at creation from the quest-giver catalog. Empty on a map nobody wrote a

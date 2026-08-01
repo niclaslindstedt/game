@@ -1596,6 +1596,10 @@ export const FIX_HUB_LEVEL: LevelDef = (() => {
         anchor: "base",
         pos: { x: 900, y: 400 },
       },
+      // The parked machines: `car` and `rocket` are ENGINE landmark kinds —
+      // createGame mints a Vehicle for each (src/game/vehicles.ts).
+      { kind: "car", anchor: "base", pos: { x: 700, y: 500 } },
+      { kind: "rocket", anchor: "base", pos: { x: 1100, y: 300 } },
     ],
   };
   delete base.waves;

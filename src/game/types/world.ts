@@ -528,6 +528,74 @@ export type MerchantStock = {
  * against the hero he just met. `rng` is his own seeded stream so his
  * wandering never perturbs the run's roll sequence.
  */
+/**
+ * THE HERO'S VEHICLES — the car and the garage ship as first-class MACHINES,
+ * not pictures. Each is ASSEMBLED at render time from parts so every part
+ * can move on its own: the car's wheels spin from `speed` and its body rides
+ * two simulated suspension springs; the ship's engine flame answers
+ * `thrust`. The driving and flying minigames plug into these fields rather
+ * than building systems beside them: throttle writes `speed`/`thrust`,
+ * crashes and hard landings write `wear` (0 = showroom, 1 = trashed and
+ * buckled — body sprite variants and stains key off it when they exist),
+ * and climbing in writes `driver`.
+ *
+ * Minted at run creation wherever the carve pins a `car` or `rocket`
+ * landmark (the landmark stays as the travel door's tap anchor; the
+ * renderer draws the assembly in its place), with `kind: "vehicle"`
+ * blockers under the footprint. Simulated by `stepVehicles`
+ * (src/game/vehicles.ts) — deterministic clockwork, no rng.
+ */
+type VehicleBase = {
+  /** Body center at the ground line. */
+  pos: Vec2;
+  /** Which way the nose points (sprites author nose-right / upright). */
+  faceLeft: boolean;
+  /** Ground speed (world px/s) along the facing — spins the car's wheels.
+   * Parked runs hold it at 0; the minigames own it. */
+  speed: number;
+  /** Damage, 0 (showroom) .. 1 (trashed) — the minigames raise it. */
+  wear: number;
+  /** Seat index of whoever is at the wheel/stick, or null when parked. */
+  driver: number | null;
+};
+
+/** The car's six body panels — each carries its own damage rung, so the
+ * driving minigame crumples exactly what hit the wall. Sprite names key off
+ * these ids: `car_<panel>_<rung>`. */
+export type CarPanelId =
+  | "backside"
+  | "doors"
+  | "roof"
+  | "hood"
+  | "front_side"
+  | "bumper"
+  | "glass";
+
+export type CarVehicle = VehicleBase & {
+  kind: "car";
+  /** Wheel roll angle (radians) — picks the spin frame per wheel. */
+  wheelAngle: number;
+  /** Spring compression per axle, [rear, front], world px downward. */
+  suspension: [number, number];
+  /** Spring velocity per axle (px/s) — the integrator's other half. */
+  suspensionVel: [number, number];
+  /** Per-panel damage rung, 0 (factory straight) .. 3 (broken) — picks the
+   * `car_<panel>_<rung>` sprite. The minigame's crashes raise these; `wear`
+   * stays the overall ladder the two of them summarize. */
+  panels: Record<CarPanelId, number>;
+  /** Per-wheel state, [rear, front]: 0 sound, 1 flat tire, 2 bent rim. */
+  wheelStates: [number, number];
+};
+
+export type ShipVehicle = VehicleBase & {
+  kind: "ship";
+  /** Engine output 0..1 — 0 parked and cold, above it the renderer lights
+   * the flame. The flying minigame's throttle. */
+  thrust: number;
+};
+
+export type Vehicle = CarVehicle | ShipVehicle;
+
 export type Merchant = {
   pos: Vec2;
   /**

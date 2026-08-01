@@ -59,6 +59,7 @@ import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
 import { resolveLevelDef } from "./mapgen/index.ts";
 import { createMerchant, revealMerchant } from "./merchant.ts";
+import { createVehicles, vehicleFootprint } from "./vehicles.ts";
 import { createQuestGivers } from "./quests/index.ts";
 import {
   difficultyBandIndex,
@@ -202,6 +203,23 @@ export function createGame(
   const propLines = buildPropLines(def, () => nextId++);
   obstacles.push(...propLines.obstacles);
   const doors = buildDoors(def, obstacles, () => nextId++);
+  // THE VEHICLES' FOOTPRINTS: solid ground under the car and the garage
+  // ship (see src/game/vehicles.ts). The machines themselves are drawn
+  // ASSEMBLED by the vehicle renderer, so these blockers carry no sprite
+  // and the obstacle pass skips their kind. The car is low enough to hop.
+  const vehicles = createVehicles(def);
+  for (const vehicle of vehicles) {
+    for (const print of vehicleFootprint(vehicle)) {
+      obstacles.push({
+        id: nextId++,
+        kind: "vehicle",
+        sprite: "",
+        pos: print.pos,
+        radius: print.radius,
+        jumpable: vehicle.kind === "car",
+      });
+    }
+  }
   // Break hp for this run's crates, scaled once to the hero's starting level so
   // a crate takes about as many blows as a weak trash mob all campaign.
   const crateHp = crateMaxHp(loadout?.level ?? 1, difficulty);
@@ -670,6 +688,9 @@ export function createGame(
       blocked,
       merchantDiscovered,
     ),
+    // The parked machines minted above (their footprints already stand in
+    // `obstacles`) — the car and the ship, where the carve pinned them.
+    vehicles,
     // The people with errands on this map (see quests/). Placed exactly where
     // they are authored — a person with a quest is a landmark, and one that
     // moved between runs could not be walked back to.

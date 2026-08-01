@@ -18,7 +18,6 @@ campaign: true
 id: goodco_hq
 index: 1
 name: GOODCO HQ
-prelude: prelude
 music: hq_lockdown
 intro:
   # PICKS UP WHERE THE PRELUDE FADED OUT — it does not recap it. The scene the
@@ -71,6 +70,9 @@ merchant:
     - BACK ALREADY, FRIEND? THE MACHINES MISSED YOU.
 objective:
   type: killBoss
+# LEVEL CLEAR goes home: the campaign breathes in THE GARAGE between
+# missions (the D2 town loop), and the part comes back to the bench.
+exitTo: garage
 placedItems:
   - kind: story
     defId: ada_soda

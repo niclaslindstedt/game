@@ -46,6 +46,7 @@ import { revealAround } from "../map.ts";
 import { anyHeroWithin, heroInPlay, partyWiped } from "../party.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
+import { stepVehicles } from "../vehicles.ts";
 import { advancePath } from "../path.ts";
 import { stepQuests } from "../quests/index.ts";
 import { releaseStuckLevelup } from "../talents.ts";
@@ -280,6 +281,10 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // wandering (and can't be discovered mid-pose), the horde neither moves,
   // strikes, nor fires — while the hero stays fully playable.
   if (!state.freeze) stepMerchant(state, dt, dtMs);
+  // The parked machines: the car's springs settle, its wheels roll only
+  // when something (the future minigame) gives it speed. A no-op loop on
+  // every map without a vehicle.
+  if (!state.freeze) stepVehicles(state, dtMs);
   stepProjectiles(state, dt, dtMs);
   if (!state.freeze) {
     stepEnemies(state, dt, dtMs);

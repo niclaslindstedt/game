@@ -187,6 +187,18 @@ storyItems:
     lore:
       - - "A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
       - - "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
+  # THE FOUNDER's parting gift, dropped where he says "KEEP THE RIFT, GARAGE
+  # MAN" — the device that unseals the garage's RIFT SEAM (a KEEPSAKE: banked
+  # on the character, so the seam stays open on every later run). Its second
+  # page states the D2 going-back rule in the fiction's own words: the seam
+  # only reaches roads already walked.
+  rift_creator:
+    name: RIFT CREATOR
+    icon: icon_rift_creator
+    keepsake: true
+    lore:
+      - - THE FOUNDER'S POCKET RIFT RIG. IT TEARS A SEAM TO ANYWHERE IT'S ALREADY BEEN.
+      - - HE SAID KEEP THE RIFT. I'M BOLTING THIS TO THE GARAGE WALL.
   # ---- Boot Hill ------------------------------------------------------------
   # ADA'S TRAIL (5/5): sabotage from inside the control room — the setup for
   # the reunion's "nice hat" (see the epilogue in docs/manuscript.md).
