@@ -15,6 +15,7 @@ import {
   BOT_STRATEGIES,
   createBot,
   debug,
+  levelDef,
   runLevelDef,
   hasLevel,
   markThoughtsSeen,
@@ -37,6 +38,7 @@ import {
   characterPurse,
   campaignChainFor,
   clearedLevelsFor,
+  hasClearedLevel,
   hasMetMerchant,
   hasSeenOpening,
   seenThoughts,
@@ -255,14 +257,18 @@ export function createRunSession(deps: {
       ? createBot(requested as BotStrategy, profile)
       : null;
 
-  // Has this hero already watched this level's opening on this difficulty? We
-  // die and replay a lot, so a witnessed opening is skipped — which is a RUN
-  // PARAMETER, not something done to the run afterwards.
-  const openingSeen = hasSeenOpening(
-    characterRef.current,
-    runLevelId,
-    difficulty,
-  );
+  // The opening skips only for a level this hero has FINISHED on this
+  // difficulty: a run that died or was abandoned partway still owes its
+  // story, so the next entry tells it again (the mid-fight RETRY is
+  // unaffected — it adopts the combat-start checkpoint and never rebuilds
+  // the opening). Which is a RUN PARAMETER, not something done to the run
+  // afterwards. The HUB is the one exception: home never "completes", so its
+  // opening — the campaign's own prelude — skips once witnessed instead of
+  // replaying on every LOAD.
+  const openingSeen =
+    hasClearedLevel(characterRef.current, runLevelId, difficulty) ||
+    (levelDef(runLevelId).objective.type === "hub" &&
+      hasSeenOpening(characterRef.current, runLevelId, difficulty));
   // `?scenario=<json>` stages an exact situation on a run built from scratch,
   // and it is applied AFTER the run is built. A run that is about to be staged
   // therefore skips nothing here, exactly as before: the staging decides where
@@ -447,10 +453,10 @@ export function createRunSession(deps: {
     if (state.phase === "cutscene") skipCutscene(state);
     beginRun();
   } else if (openingSeen) {
-    // Already watched this level's opening on this difficulty (a die-and-retry
-    // loop, or a hub door into a familiar venue): skip the prelude, the intro
-    // monologue and the scripted opening strike, arming the hero — but land on
-    // the level-name TITLE card, not in play. The card is orientation rather
+    // A level already CLEARED on this difficulty (or the hub, once its
+    // opening has been watched): skip the prelude, the intro monologue and
+    // the scripted opening strike, arming the hero — but land on the
+    // level-name TITLE card, not in play. The card is orientation rather
     // than story (arriving from the garage with no announcement read as a
     // bug), and its tap/auto-advance runs beginRun, which rolls the level
     // theme exactly as a first visit does.
