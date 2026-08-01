@@ -303,7 +303,10 @@ describe("cutscene player", () => {
     const cs = createCutscene(DROP);
     stepCutscene(cs, DROP, DT);
     // An omitted `at` grips at the actor sprite's own origin.
-    expect(cs.actors[0]!.holding).toEqual({ sprite: "thing", at: { x: 0, y: 0 } });
+    expect(cs.actors[0]!.holding).toEqual({
+      sprite: "thing",
+      at: { x: 0, y: 0 },
+    });
     for (let t = 0; t < 100; t += DT) stepCutscene(cs, DROP, DT);
     expect(cs.actors[0]!.holding).toBeNull();
   });

@@ -149,8 +149,11 @@ export function IntroOverlay({
   // that fade shows him still holding it. Falls back to the bare body if the
   // doll can't compose (a sprite set that never loaded).
   const hero =
-    dollDataUrl(assets.sprites, playerDollLayers(state, "0"), heroSoak(state)) ??
-    spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`);
+    dollDataUrl(
+      assets.sprites,
+      playerDollLayers(state, "0"),
+      heroSoak(state),
+    ) ?? spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`);
 
   return (
     <div
