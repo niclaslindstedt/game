@@ -11,7 +11,7 @@
 // the window working, not a bug — what you accepted is no longer on the table.
 
 import { localHero, localSeat } from "../local-seat.ts";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   equipmentName,
@@ -260,7 +260,7 @@ function TradeSidePane({
   offer: { item?: Equipment; coins: number };
   ready: boolean;
   onItemPress: (item: Equipment, target: HTMLElement) => void;
-  coinControls?: React.ReactNode;
+  coinControls?: ReactNode;
 }) {
   const item = offer.item;
   return (

@@ -144,6 +144,22 @@ export type Hud = {
     downed: boolean;
     canHeal: boolean;
   }[];
+  /**
+   * THE PARTY FRAMES (§4.5) — every OTHER hero in play, in seat order, empty
+   * solo (and for a departed seat, which is nobody's). Portraits are composed
+   * in PlayingHud through the paper-doll compositor from the live state; the
+   * name is NOT here because the engine's Player carries none — the session
+   * roster answers it, and GameScreen wires the two together by seat. `busy`
+   * is the hero's screen state, D2's own affordance: "in their bag" is a fact
+   * the party is meant to see.
+   */
+  partyFrames: {
+    seat: number;
+    level: number;
+    hpFrac: number;
+    downed: boolean;
+    busy: boolean;
+  }[];
   stats: GameStats;
 };
 
@@ -341,6 +357,30 @@ export function buildHud(
   const screen = localScreen(state);
   const live = fieldLive(state);
   const downed = localHero(state).downed === true;
+  // THE PARTY FRAMES (§4.5): every other hero in play, keyed on the same
+  // coarse facts the frame shows — membership, sliver-resolution health, the
+  // downed flag, the screen state, the level.
+  const partyFrames: Hud["partyFrames"] = [];
+  if (state.players.length > 1) {
+    for (const [seat, hero] of state.players.entries()) {
+      if (seat === localSeat() || hero.departed === true) continue;
+      partyFrames.push({
+        seat,
+        level: hero.level,
+        hpFrac: hero.hp <= 0 ? 0 : hero.hp / Math.max(1, hero.maxHp),
+        downed: hero.downed === true,
+        busy: hero.screen !== undefined,
+      });
+    }
+  }
+  const partyKey = partyFrames
+    .map(
+      (f) =>
+        `${f.seat}:${Math.ceil(10 * f.hpFrac)}:${f.downed ? 1 : 0}:${
+          f.busy ? 1 : 0
+        }:${f.level}`,
+    )
+    .join(",");
   // THE TABLE. The trade window redraws on the PARTNER's moves — an offer, a
   // re-price, an acceptance — which arrive in a snapshot and touch nothing
   // else the key watches. Signed whole (cells, ids, coins, both lamps): any
@@ -352,7 +392,7 @@ export function buildHud(
         .map((o) => `${o.cell}:${o.itemId}:${o.coins}:${o.accepted ? 1 : 0}`)
         .join("|")
     : "";
-  const key = `${state.phase}/${screen ?? ""}/${live ? 1 : 0}/${downed ? 1 : 0}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${tradeKey}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
+  const key = `${state.phase}/${screen ?? ""}/${live ? 1 : 0}/${downed ? 1 : 0}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${partyKey}/${tradeKey}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
@@ -398,6 +438,7 @@ export function buildHud(
         downed: c.downed === true,
         canHeal: canHealCompanion(state, localHero(state), c.id) >= 0,
       })),
+      partyFrames,
       stats: { ...state.stats },
     },
   };

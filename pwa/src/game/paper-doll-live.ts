@@ -12,6 +12,7 @@
 import { localHero } from "./local-seat.ts";
 import {
   type GameState,
+  type Player,
   gearDef,
   playerAppearance,
   weaponDef,
@@ -42,12 +43,16 @@ import {
 export function playerDollLayers(
   state: GameState,
   frame: DollFrame,
-  opts: { weapon?: boolean } = {},
+  opts: { weapon?: boolean; hero?: Player } = {},
 ): DollLayer[] {
   const layers: DollLayer[] = [
     { sprite: `${playerAppearance(state)}_${frame}`, dx: 0, dy: 0 },
   ];
-  const equipment = localHero(state).equipment;
+  // WHOSE doll defaults to the local seat's — the one-hero case and every
+  // existing caller. A party frame or a field pass drawing a TEAMMATE names
+  // the hero instead (worn equipment is public in the replication split, so a
+  // client can dress every seat).
+  const equipment = (opts.hero ?? localHero(state)).equipment;
   for (const slot of WORN_ORDER) {
     const piece = equipment[slot];
     if (!piece) continue;

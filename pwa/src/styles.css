@@ -7673,6 +7673,93 @@ canvas.tier-artifact {
   background: #7ef0c8;
 }
 
+/* ---- Party frames (§4.5) -------------------------------------------------- */
+/* Every OTHER hero in play, stacked down the same left rail the companion
+   rides — the one edge with no absolute-positioned competitor, and clear of
+   the steering thumb's bottom thirds. Same furniture as the companion
+   portrait on purpose: a frame on this rail means "somebody on your side". */
+.party-frames {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  pointer-events: auto;
+}
+
+.party-frame {
+  appearance: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.12rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #2f4a3a;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.party-frame:active {
+  transform: translateY(2px);
+}
+
+/* DOWN where they fell: drained gray until the respawn stands them up. */
+.party-frame.downed {
+  border-color: #4a1d1d;
+}
+
+.party-frame.downed .party-frame-img {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.party-frame-img {
+  width: 1.8rem;
+  height: 1.8rem;
+  object-fit: contain;
+}
+
+/* The BAG badge — D2's "in their menus" affordance, top-right like the
+   companion's medkit chip, tap-transparent for the same reason. */
+.party-frame-badge {
+  position: absolute;
+  top: -0.22rem;
+  right: -0.22rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(11, 13, 16, 0.9));
+}
+
+/* The LEVEL chip, bottom-left, the consumable-count idiom. */
+.party-frame-level {
+  position: absolute;
+  left: 1px;
+  bottom: 0.9rem;
+  padding: 0 1px;
+  background: rgba(11, 13, 16, 0.75);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.party-frame-hp {
+  display: block;
+  width: 1.8rem;
+  height: 3px;
+  background: #1d2530;
+}
+
+.party-frame-hp > span {
+  display: block;
+  height: 100%;
+  background: #7ef0c8;
+}
+
+.party-frame-name {
+  max-width: 2.2rem;
+  overflow: hidden;
+}
+
 /* The SPARE-or-KILL verdict box (ChoiceOverlay): the kneeling figure's face
    over two big fates. Shares the level-up box's window skin. */
 .choice-box {

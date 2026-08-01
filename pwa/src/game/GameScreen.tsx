@@ -1256,6 +1256,10 @@ export function GameScreen({
             )
           }
           userPausedRef={userPausedRef}
+          seatName={(seat) =>
+            sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
+            null
+          }
           bumpUi={bumpUi}
         />
       )}
