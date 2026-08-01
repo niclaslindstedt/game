@@ -436,6 +436,25 @@ export type LevelDef = {
      * the door only gates per destination, on campaign progress.
      */
     requires?: string;
+    /**
+     * WHAT HE THINKS WHEN THE DOOR CAN TAKE HIM NOWHERE YET — a thought id
+     * (`content/thoughts.yaml`) played INSTEAD of the picker on a tap that
+     * finds every one of `to` still locked.
+     *
+     * The rocket is the case it exists for. A picker listing THE MOON and
+     * MARS greyed out answers a question the player has not been asked yet:
+     * the ship is one part short, and the hero knows exactly why it isn't
+     * going anywhere. So he says so, and the roads he has not earned stay
+     * unnamed until one of them opens. Omitted = the old behaviour, a picker
+     * whose locked rows read as "come back later" (which is right for a door
+     * that already has an open road beside the shut ones).
+     *
+     * WHICH ROADS ARE OPEN IS THE APP'S ANSWER, not the engine's: it is
+     * campaign progress on the CHARACTER (`isLevelUnlocked`), which no run
+     * carries. The engine only owns the line and the reach test behind it
+     * (`tapTravelDoor` in story.ts).
+     */
+    unready?: string;
   }[];
   /**
    * Where the exit of a `reachExit` level leads: the victory splash swaps

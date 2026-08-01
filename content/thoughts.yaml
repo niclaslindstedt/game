@@ -26,6 +26,20 @@
 # see mod/FORMAT.md.)
 
 thoughts:
+  # THE SHIP HE CANNOT FLY YET. Tapping the rocket on the garage's back lawn
+  # before GOODCO HQ has fallen plays this instead of the travel picker (the
+  # door's `unready:` pin — see `LevelDef.travelDoors`). Two things it must do
+  # and one it must not: say the ship is still unfinished, point at the errand
+  # that finishes it — and NOT name the moon or Mars, which is the whole reason
+  # the picker is withheld. He has not earned those roads and does not yet know
+  # they are where the trail goes. Portrait is "hero" (unsuited — he is at
+  # home), and unlike every other pinned beat it REPLAYS: it answers a tap, so
+  # a player who tries the ship again next chapter gets the same answer.
+  garage_ship_unfinished:
+    speaker: ME
+    portrait: hero
+    pages:
+      - - STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
   # Sighting the first INTERN at GOODCO HQ: it's past midnight and the
   # building is packed like a product launch. He worked here — nights were
   # never staffed like this. Fires on view, before any blow (a sight pin),

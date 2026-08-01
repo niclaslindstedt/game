@@ -140,7 +140,12 @@ import {
 import { skipBossDeath } from "./boss-death.ts";
 import { skipDeathScene } from "./death-scene.ts";
 import { respawnHero } from "./downed.ts";
-import { advanceDialogue, muteDialogue, unmuteDialogue } from "./story.ts";
+import {
+  advanceDialogue,
+  muteDialogue,
+  tapTravelDoor,
+  unmuteDialogue,
+} from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
 import { enterCar } from "./vehicles.ts";
 import type {
@@ -324,6 +329,13 @@ export const RUN_COMMAND_ARGS = {
   // arguments: the car is found by standing at it, and WHO climbs in is the
   // acting hero, exactly like every counter verb.
   enterCar: [],
+  // THE SHIP HE CANNOT FLY YET. A tap on a standing travel door whose roads are
+  // all still locked plays the door's own line instead of a picker full of
+  // places the player has not earned (`travelDoors[].unready`). WHICH roads are
+  // open is campaign progress on the CHARACTER, so the app answers that and
+  // sends this; the engine owns the line and re-checks that the acting hero is
+  // really standing at the door.
+  tapTravelDoor: ["str"],
 
   // THE RIDE. `refundAutopilotBuild` takes no arguments on purpose: the build
   // the ride is measured against lives on the RUN (`state.autopilot.build`,
@@ -652,6 +664,8 @@ export function applyRunCommand(
     // THE DRIVEWAY
     case "enterCar":
       return enterCar(state, hero);
+    case "tapTravelDoor":
+      return tapTravelDoor(state, hero, str(a, 0));
 
     // THE RIDE
     case "startAutopilot":

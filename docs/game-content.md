@@ -73,7 +73,11 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   the engine starts, lights and idle rumble on — then DRIVE: W throttles
   along the nose, S brakes then reverses, A/D steer the rolling car;
   crossing the open garage door's threshold commits the trip → GOODCO HQ),
-  the ROCKET on the lawn (→ the moon, Mars), and the RIFT SEAM — hidden and
+  the ROCKET on the lawn (→ the moon, Mars — but it opens NO picker while
+  every road is still shut: the ship is one part short until GOODCO HQ falls,
+  and the tap plays the hero's own read on it instead
+  (`travelDoors[].unready`), so the two voyages stay unnamed until one of them
+  is earned), and the RIFT SEAM — hidden and
   **SEALED** until THE FOUNDER's RIFT CREATOR keepsake comes home from the
   rift, then humming on the bay wall beside the car (→ the rift, BOOT HILL):
   the Diablo-style town loop, earned at the campaign's far end. **LOAD lands
