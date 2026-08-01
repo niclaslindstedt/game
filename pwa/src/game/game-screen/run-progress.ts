@@ -32,7 +32,9 @@ import {
   type Character,
 } from "../characters.ts";
 import type { WornPiece } from "../achievement-totals.ts";
+import { hasSeenOpening } from "../character-progress.ts";
 import { cloneGameState } from "../checkpoint.ts";
+import { runCommand } from "../run-commands.ts";
 import { playDeathHaptic } from "../haptics.ts";
 import { recordCampaign } from "../highscores.ts";
 import { publishLeaderboards } from "../leaderboards.ts";
@@ -73,6 +75,15 @@ export function createRunProgress(deps: {
   /** Whether this mount should capture a combat-start checkpoint (a run
    * started from scratch — not resumed, not itself adopted from one). */
   captureEnabled: boolean;
+  /**
+   * WHETHER A CROSSING IS THE SESSION'S TO PERFORM (§6.4). True when this run
+   * is hosted with the doors open or has other people in it — then `travelTo`
+   * sends the run command and the SESSION swaps the level under everybody at
+   * once, instead of the app tearing the session down (which is what
+   * disconnects every joiner). Absent/false is every local run, which keeps
+   * the app-side crossing exactly as it has always been.
+   */
+  sessionTravels?: () => boolean;
   setHud: Dispatch<SetStateAction<Hud | null>>;
   setLevelId: (id: string) => void;
   setNewRecord: (flag: boolean) => void;
@@ -146,6 +157,24 @@ export function createRunProgress(deps: {
   };
 
   const travelTo = (state: GameState, to: string) => {
+    // §6.4: WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
+    // the session to swap the level under everybody at once; the swap comes
+    // back as a full snapshot, the driver's travel hook banks this hero off
+    // the level being left, and the level-id change is what remounts the app
+    // — with the driver and every joiner's connection intact. Only seat 0's
+    // request is honored (the host chooses the road), so a joiner's copy of
+    // the same event sends a verb the session politely refuses.
+    if (deps.sessionTravels?.()) {
+      runCommand(
+        state,
+        "travelTo",
+        to,
+        // How much of the destination's opening to skip — the same question a
+        // locally-built run answers from this character (run-setup.ts).
+        hasSeenOpening(characterRef.current, to, difficulty) ? "story" : "none",
+      );
+      return;
+    }
     bankHero(state);
     checkpointRef.current = null;
     stopMusic();

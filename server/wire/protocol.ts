@@ -619,6 +619,7 @@ export const COMMANDS = [
   "reclaimVaultItem",
   "clearVault",
   "enterCar",
+  "travelTo",
   "startAutopilot",
   "stopAutopilot",
   "setAutopilotSpeed",

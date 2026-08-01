@@ -94,6 +94,9 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
   let client: ReturnType<typeof createNetClient> | null = null;
   let live = false;
   let disposed = false;
+  // The app's bank-before-the-swap reaction to an in-session crossing (§6.4)
+  // — installed later (the progress that banks is built after the driver).
+  let travelHook: ((state: GameState) => void) | null = null;
   // The HOST steers the hero, so its own seat is not a spectator's.
   const link = createSessionLink((text) => client?.sendChat(text), false);
 
@@ -121,6 +124,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
       // joiners now (`server/client.ts`), so the seat arrives as a callback and
       // the PAGE is what knows `local-seat.ts` exists.
       onSeat: setLocalSeat,
+      onTravel: (old) => travelHook?.(old),
     });
     // FROM HERE THE APP'S VERBS TRAVEL. `run-commands.ts` still applies each
     // one locally as well — the call sites read what a verb returned, and a
@@ -150,6 +154,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
 
   return {
     session: link.link,
+    hosting: options.listen !== undefined,
     advance(input) {
       // No stepping here, ever. The server owns the clock; this hands over what
       // the player did and the next snapshot says what came of it.
@@ -167,6 +172,9 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
     },
     get live() {
       return live;
+    },
+    setTravelHook(hook) {
+      travelHook = hook;
     },
     dispose() {
       if (disposed) return;
@@ -221,6 +229,11 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
   let state: GameState | null = null;
   let live = false;
   let disposed = false;
+  // The bank-before-the-swap reaction to an in-session crossing (§6.4) —
+  // installed by the run once its banking exists. A joiner's hero crosses
+  // WITH the party, and their app banks them off the level being left exactly
+  // as the host's does.
+  let travelHook: ((state: GameState) => void) | null = null;
   const link = createSessionLink((text) => client?.sendChat(text), true);
 
   // BEFORE the connect request, for the same reason the host path registers
@@ -255,6 +268,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
         setLocalSeat(seat);
         link.spectate(seat === null);
       },
+      onTravel: (old) => travelHook?.(old),
     });
     setCommandSink((name, args) => client?.sendCommand(name, args), {
       optimistic: false,
@@ -289,6 +303,9 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
     },
     get live() {
       return live;
+    },
+    setTravelHook(hook) {
+      travelHook = hook;
     },
     dispose() {
       if (disposed) return;

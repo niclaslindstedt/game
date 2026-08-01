@@ -120,6 +120,7 @@ export {
   type Trade,
   type TradeRefusal,
 } from "./game/trade.ts";
+export { requestTravel } from "./game/travel.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
 export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";

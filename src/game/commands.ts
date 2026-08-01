@@ -143,6 +143,7 @@ import { respawnHero } from "./downed.ts";
 import { advanceDialogue, muteDialogue, unmuteDialogue } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
 import { enterCar } from "./vehicles.ts";
+import { requestTravel } from "./travel.ts";
 import type {
   CompanionSlot,
   EquipSlot,
@@ -328,6 +329,13 @@ export const RUN_COMMAND_ARGS = {
   // arguments: the car is found by standing at it, and WHO climbs in is the
   // acting hero, exactly like every counter verb.
   enterCar: [],
+
+  // THE ROAD — an in-session crossing (plan §6.4, src/game/travel.ts). The
+  // destination level id, and how much of its opening to skip (`OpeningSkip`
+  // words — the HOST's app computes it from its own character exactly as a
+  // locally-built run would). Refused for any seat but 0: the host chooses
+  // the road.
+  travelTo: ["str", "str"],
 
   // THE RIDE. `refundAutopilotBuild` takes no arguments on purpose: the build
   // the ride is measured against lives on the RUN (`state.autopilot.build`,
@@ -658,6 +666,10 @@ export function applyRunCommand(
     // THE DRIVEWAY
     case "enterCar":
       return enterCar(state, hero);
+
+    // THE ROAD
+    case "travelTo":
+      return requestTravel(state, hero, str(a, 0), str(a, 1));
 
     // THE RIDE
     case "startAutopilot":

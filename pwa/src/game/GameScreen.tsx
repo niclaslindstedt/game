@@ -458,6 +458,14 @@ export function GameScreen({
   // effect's cleanup banks the hero as the wire last showed them, and `joined`
   // is stale inside that closure.
   const joinStateRef = useRef<GameState | null>(null);
+  // AN IN-SESSION CROSSING mid-flight (§6.4): the session swapped the level
+  // under this run, and the driver (with every joiner's connection behind it)
+  // must SURVIVE the remount the level change forces. The loop parks the live
+  // pair here just before `setLevelId`, the cleanup skips the dispose, and
+  // the next effect run adopts them instead of building a fresh session.
+  const travelKeepRef = useRef<{ state: GameState; driver: RunDriver } | null>(
+    null,
+  );
   const [joinRefusal, setJoinRefusal] = useState<string | null>(null);
   const [sessionLink, setSessionLink] = useState<SessionLink | null>(null);
   useEffect(() => {
@@ -529,6 +537,16 @@ export function GameScreen({
       spriteCursor(assets.sprites, "crosshair", { fallback: "crosshair" }) ??
       "crosshair";
 
+    // AN IN-SESSION CROSSING (§6.4) parked the live state + driver here just
+    // before the level id flipped — adopt them instead of building a fresh
+    // session, exactly as the join path adopts its own. A kept pair that does
+    // not match this mount (a stray) is disposed rather than leaked; the
+    // joiner's copy is simply dropped, because `joined` owns that driver.
+    const kept = travelKeepRef.current;
+    travelKeepRef.current = null;
+    const travelled =
+      !joined && kept && kept.state.level.id === levelId ? kept : null;
+    if (kept && !travelled && !joined) kept.driver.dispose();
     // Build this run's engine state (seed/resume/checkpoint/bot-view/scenario,
     // opening skip + music arming, `?debug` hooks) — see run-setup.ts.
     const session = createRunSession({
@@ -541,7 +559,7 @@ export function GameScreen({
       demo,
       skipOpening,
       runId,
-      spectate: joined?.state ?? null,
+      spectate: joined?.state ?? travelled?.state ?? null,
     });
     const { state, runLevelId, bot, tuning, beginRun } = session;
     // WHO ADVANCES THIS RUN. A local driver steps it here, exactly as this
@@ -551,8 +569,11 @@ export function GameScreen({
     // ./game-screen/run-driver.ts.
     // A SPECTATOR'S DRIVER IS ALREADY RUNNING — the connection is what built
     // the state this loop is about to read, so it cannot be created here, and
-    // it is owned by the join effect above rather than by this one.
-    const driver = joined?.driver ?? createRunDriver(session);
+    // it is owned by the join effect above rather than by this one. A
+    // TRAVELLED run's driver likewise: the session it speaks to just swapped
+    // the level under it, and a fresh one would drop every joiner.
+    const driver =
+      joined?.driver ?? travelled?.driver ?? createRunDriver(session);
     // WHO THIS RUN BELONGS TO, on the join path. A SEATED joiner plays their
     // own hero and banks to their own roster (§4.5); a client the session
     // could not seat only WATCHES — its `localHero` is the HOST's hero, and a
@@ -747,11 +768,20 @@ export function GameScreen({
         !botView && !demo && !(join && characterRef.current.loadout === null),
       runLevelId,
       captureEnabled: session.captureCheckpoint,
+      // §6.4: with the doors open or a party aboard, a crossing is the
+      // SESSION's to perform — see run-progress's own note.
+      sessionTravels: () =>
+        Boolean(driver.session) &&
+        (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1),
       setHud,
       setLevelId,
       setNewRecord,
     });
     progressRef.current = progress;
+    // The bank-before-the-swap half of an in-session crossing: the driver
+    // calls this with the OLD state, before the incoming snapshot moves the
+    // world, so the local hero is banked off the level being left.
+    driver.setTravelHook?.((old) => progress.bankHero(old));
     // A fresh run starts with no picker open — a door tapped on the way out
     // of the last level must not greet the arrival.
     setTravelDoor(null);
@@ -1060,6 +1090,19 @@ export function GameScreen({
         // because `step()` — which does it here — is running in another
         // process. See run-driver.ts for what leaving it in place sounds like.
         driver.endTick();
+        // AN IN-SESSION CROSSING LANDED (§6.4): the session rebuilt the run
+        // on another level and the snapshot moved this state wholesale — the
+        // hero was already banked by the driver's travel hook. What is left
+        // is the app's half of any crossing (drop the checkpoint, the music
+        // and the HUD, remount on the destination), done while KEEPING the
+        // driver so the session — and every joiner on it — survives.
+        if (driver.session && state.level.id !== runLevelId) {
+          travelKeepRef.current = { state, driver };
+          checkpointRef.current = null;
+          stopMusic();
+          setHud(null);
+          setLevelId(state.level.id);
+        }
       },
       render,
       // A frame that throws no longer takes the run down with it (see
@@ -1086,8 +1129,12 @@ export function GameScreen({
       stop();
       // A joined run's driver belongs to the join effect, which holds the
       // connection for the whole mount: disposing it here would drop the
-      // session every time this effect re-ran.
-      if (!joined) driver.dispose();
+      // session every time this effect re-ran. A driver parked for an
+      // in-session crossing (§6.4) survives for the same reason — the next
+      // effect run adopts it.
+      if (!joined && travelKeepRef.current?.driver !== driver) {
+        driver.dispose();
+      }
       stopMusic();
       controls.detach();
       observer.disconnect();

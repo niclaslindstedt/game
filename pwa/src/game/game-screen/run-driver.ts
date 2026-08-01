@@ -61,6 +61,13 @@ export type RunDriver = {
    */
   readonly session?: SessionLink | null;
   /**
+   * The doors were armed for this run — HOST GAME's open-doors bit, consumed
+   * by the driver that opened them. Read by the crossing decision (§6.4): a
+   * host with the doors open travels IN-SESSION even before anybody joins,
+   * because tearing the session down to travel is what would close them.
+   */
+  readonly hosting?: boolean;
+  /**
    * Advance the run by one fixed slice.
    *
    * The LOCAL driver steps the simulation here; the NET driver hands the input
@@ -84,6 +91,14 @@ export type RunDriver = {
    * advance, and the run sits on the frame it is on.
    */
   readonly live: boolean;
+  /**
+   * Register the app's reaction to an IN-SESSION CROSSING (§6.4) — called
+   * with the OLD state, before the incoming full snapshot moves the world,
+   * which is the one moment the local hero can still be banked off the level
+   * being left. Net drivers implement it; the local driver has no session to
+   * travel with and leaves it undefined.
+   */
+  setTravelHook?(hook: (state: GameState) => void): void;
   dispose(): void;
 };
 

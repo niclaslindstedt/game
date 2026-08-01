@@ -41,8 +41,10 @@
 import {
   adoptRun,
   applyRunCommand,
+  bankCampaignQuests,
   createRunFromParams,
   departHero,
+  extractLoadout,
   isRunCommand,
   nextFreeSeat,
   releaseSeat,
@@ -129,6 +131,15 @@ type Client = {
    * whole of why the static tier is free.
    */
   needsFull: boolean;
+  /**
+   * AN IN-SESSION CROSSING (§6.4) MOVED THE WORLD UNDER THIS CLIENT, and until
+   * it acknowledges a post-travel snapshot every publish stays FULL. A delta
+   * would be coded against a baseline from the OLD level — entity lists whose
+   * ids the client no longer holds — and on an unreliable transport there is
+   * no ordering to lean on. -1 until the first post-travel full is sent; then
+   * that send's seq; deleted when an ack reaches it.
+   */
+  fullUntilAck?: number;
   /**
    * What was sent at each unacknowledged sequence. Patches, not snapshots:
    * every delta since the last ack is coded against the SAME baseline, so an
@@ -297,7 +308,10 @@ export type Session = {
 const MAX_TICKS_PER_ADVANCE = 240;
 
 export function createSession(options: SessionOptions): Session {
-  const { params } = options;
+  // MUTABLE, because an in-session crossing (§6.4) replaces the run: the
+  // params are what a LATER joiner's welcome carries, so after a travel they
+  // must describe the level the party is actually on.
+  let params = options.params;
   // The map SIZE is a process-global FLAG, not a `createGame` argument — which
   // is precisely why one session per process is the topology (see the plan's
   // §1.2, reason 2). Applied here so the carve a client rebuilds from the same
@@ -317,7 +331,7 @@ export function createSession(options: SessionOptions): Session {
   // ADOPTED — a parked run or a checkpoint restore, which no set of parameters
   // describes. The client cannot rebuild it, so it gets a full snapshot.
   const adopted = options.adopt ?? null;
-  const state = adopted ? adoptRun(adopted) : createRunFromParams(params);
+  let state = adopted ? adoptRun(adopted) : createRunFromParams(params);
   const ownerless = options.ownerless === true;
   if (ownerless) {
     // Seat 0 is a body nobody is behind until somebody joins — see
@@ -339,15 +353,13 @@ export function createSession(options: SessionOptions): Session {
    * same seed), and `explored` arrives back as an index-keyed object, which
    * the differ's byte strategy reads as bytes on purpose.
    */
-  const genesis = JSON.parse(
-    JSON.stringify(
-      captureSnapshot(
-        state as unknown as Record<string, unknown>,
-        { seat: 0 },
-        [],
-      ),
-    ),
-  ) as Record<string, unknown>;
+  /**
+   * The world at tick 0, frozen — the state every client's first delta is
+   * coded against. See {@link frozenGenesis} for why it goes through JSON.
+   * Mutable because an in-session crossing (§6.4) replaces the world, and the
+   * genesis a later joiner is baselined on has to be the NEW one.
+   */
+  let genesis = frozenGenesis(state);
 
   // WHAT THE ADOPTED STATE CLAIMS TO BE has to match what the parameters will
   // make a client build, and there is no delta that could ever reconcile them:
@@ -572,6 +584,102 @@ export function createSession(options: SessionOptions): Session {
     for (const seated of inputs.values()) clearEdges(seated);
   }
 
+  /** How many crossings this session has performed — folded into each new
+   * seed so travelling A → B → A does not rebuild B's first carve. */
+  let travels = 0;
+
+  /**
+   * AN IN-SESSION CROSSING (§6.4): tear the level down and carry the party
+   * through together.
+   *
+   * The request arrived as the `travelTo` run command (seat 0 only — the host
+   * chooses the road) and was parked on `state.pendingTravel` for THIS moment:
+   * between ticks, where no frame is half-applied. Every seat's loadout is
+   * extracted from the authoritative run (the same funnel every bank uses, an
+   * unrecovered corpse's gear included), the destination is built from the
+   * session's own parameters with a derived seed, and the party is re-seated
+   * in the SAME ORDER — a seat is an index every in-flight frame names, so
+   * the rebuild may not renumber anybody. Departed and held seats keep their
+   * flags: a body nobody is behind is still nobody's on the next level, and a
+   * reconnect ticket must still name a real chair.
+   *
+   * Every client is then re-baselined: full snapshots until one is
+   * acknowledged (`fullUntilAck`), because a delta against a baseline from
+   * the old level would name entity ids the client no longer holds. The
+   * params are REPLACED so a later joiner's welcome builds the new level.
+   */
+  function performTravel(): void {
+    const request = state.pendingTravel;
+    delete state.pendingTravel;
+    if (!request) return;
+    const seats = state.players.map((hero) => ({
+      loadout: extractLoadout(state, hero),
+      departed: hero.departed === true,
+      held: hero.held === true,
+    }));
+    const nextParams: SessionParams = {
+      ...params,
+      seed: hash32(`${params.seed}|${request.to}|${++travels}`),
+      levelId: request.to,
+      loadout: seats[0]!.loadout,
+      // The run's own campaign chain travels with it — each client's app
+      // banks the same chain to its own character beside this.
+      campaignQuests: bankCampaignQuests(state),
+      seenThoughts: [...state.thoughtsSeen],
+      // The loadout's banked purse IS the purse: the wealth fold happened
+      // when the run was first built.
+      coins: null,
+      // The session has no roster to ask (a per-character fact) — the
+      // destination's merchant starts undiscovered, and each app still banks
+      // the meeting for its own hero when he is found.
+      merchantDiscovered: false,
+      respec: false,
+      openingSkip: request.skip,
+      // A flight in progress crosses with the run (the refund must revert to
+      // the pre-FLIGHT build, not the pre-level one).
+      autopilotBuild: state.autopilot.build ?? null,
+    };
+    let fresh: GameState;
+    try {
+      fresh = createRunFromParams(nextParams);
+    } catch (err) {
+      // A destination this build cannot carve. The verb validated the id, so
+      // this is belt and braces — refused loudly rather than killing the
+      // session process mid-run.
+      options.log?.(`net: travel to ${request.to} refused — ${String(err)}`);
+      return;
+    }
+    // The PARTY STAMP survives the crossing — a run more than one person has
+    // played does not get its records back by walking through a door.
+    if (state.party) fresh.party = { ...state.party };
+    for (let seat = 1; seat < seats.length; seat++) {
+      seatHero(fresh, seats[seat]!.loadout);
+    }
+    for (const [seat, info] of seats.entries()) {
+      const hero = fresh.players[seat];
+      if (!hero) continue;
+      if (info.departed) hero.departed = true;
+      if (info.held) hero.held = true;
+    }
+    state = fresh;
+    params = nextParams;
+    genesis = frozenGenesis(state);
+    for (const client of clients.values()) {
+      client.needsFull = true;
+      client.fullUntilAck = -1;
+      client.history.clear();
+      client.baseline = baselineFor(genesis, client.recipient);
+    }
+    inputs.clear();
+    for (const client of clients.values()) {
+      if (client.recipient.seat !== null) {
+        inputs.set(client.recipient.seat, { ...IDLE_INPUT });
+      }
+    }
+    options.log?.(`net: travelled to ${request.to} (${travels})`);
+    broadcastChat([chat.announce(`TRAVELLING TO ${request.to.toUpperCase()}`)]);
+  }
+
   function publish(): void {
     seq++;
     for (const client of clients.values()) {
@@ -584,7 +692,7 @@ export function createSession(options: SessionOptions): Session {
       // session that ADOPTED its run ever takes this branch: everybody else
       // built the genesis world for themselves from the same parameters, which
       // is the whole of why the static tier costs nothing.
-      const full = client.needsFull;
+      const full = client.needsFull || client.fullUntilAck !== undefined;
       const payload = full ? snapshot : diffState(client.baseline, snapshot);
       // Serialized ONCE and used twice: as the frame's bytes, and — parsed
       // back — as the history entry. The parse is what makes the entry safe to
@@ -618,6 +726,9 @@ export function createSession(options: SessionOptions): Session {
       // leaves the client still owed its world rather than baselined on one it
       // never received.
       client.needsFull = false;
+      // The first post-travel full is the one whose ack releases the client
+      // back onto deltas (§6.4) — record its sequence once.
+      if (client.fullUntilAck === -1) client.fullUntilAck = seq;
     }
     // Every client that exists has been handed these; one that joins after
     // this point starts from the genesis baseline and owes nothing.
@@ -659,6 +770,10 @@ export function createSession(options: SessionOptions): Session {
       const owed = Math.min(Math.floor(ms / TICK_MS), MAX_TICKS_PER_ADVANCE);
       for (let i = 0; i < owed; i++) {
         stepOnce();
+        // A requested crossing (§6.4) is consumed BETWEEN ticks, where no
+        // frame is half-applied — and before the publish, so the first
+        // snapshot after a travel is already the new world.
+        if (state.pendingTravel) performTravel();
         if (++sinceSnapshot >= SNAPSHOT_EVERY_TICKS) {
           sinceSnapshot = 0;
           publish();
@@ -853,6 +968,14 @@ export function createSession(options: SessionOptions): Session {
         if (sent.full) client.baseline = sent.state;
         else patchState(client.baseline, sent.patch);
         client.ackedSeq = frameSeq;
+        // The client has applied a post-travel world — deltas are safe again.
+        if (
+          client.fullUntilAck !== undefined &&
+          client.fullUntilAck > 0 &&
+          frameSeq >= client.fullUntilAck
+        ) {
+          delete client.fullUntilAck;
+        }
         for (const held of [...client.history.keys()]) {
           if (held <= frameSeq) client.history.delete(held);
         }
@@ -920,6 +1043,28 @@ export function createSession(options: SessionOptions): Session {
       clients.clear();
     },
   };
+}
+
+/**
+ * A state frozen for use as the genesis baseline.
+ *
+ * Through JSON rather than by reference, and that is the point: the live
+ * state is about to change, and a baseline aliasing it would compare the
+ * running world against itself. The rng closures cannot survive the trip and
+ * do not need to (the wire never carries them; a client has its own from the
+ * same seed), and `explored` arrives back as an index-keyed object, which
+ * the differ's byte strategy reads as bytes on purpose.
+ */
+function frozenGenesis(state: GameState): Record<string, unknown> {
+  return JSON.parse(
+    JSON.stringify(
+      captureSnapshot(
+        state as unknown as Record<string, unknown>,
+        { seat: 0 },
+        [],
+      ),
+    ),
+  ) as Record<string, unknown>;
 }
 
 /** What the simulation is handed when nobody is steering — a hero standing
