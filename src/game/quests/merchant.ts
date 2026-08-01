@@ -28,7 +28,7 @@
 import { QUESTS } from "../config/index.ts";
 import { questDef } from "../defs/quests.ts";
 import { setQuestFlag } from "../conversation.ts";
-import type { GameState, QuestStallRow } from "../types/index.ts";
+import type { GameState, Player, QuestStallRow } from "../types/index.ts";
 import {
   activeQuests,
   creditQuestPickup,
@@ -94,6 +94,7 @@ export function questStallRows(state: GameState): QuestStallRow[] {
  */
 export function sellQuestPiece(
   state: GameState,
+  hero: Player,
   questId: string,
   item: string,
 ): boolean {
@@ -107,7 +108,8 @@ export function sellQuestPiece(
   if (index < 0 || (progress.counts[index] ?? 0) <= 0) return false;
   progress.counts[index] = (progress.counts[index] ?? 0) - 1;
 
-  state.players[0].coins += buys.coins;
+  // The tally is the RUN's (quests are shared); the coins are the seller's.
+  hero.coins += buys.coins;
   for (const flag of buys.sets ?? []) setQuestFlag(state, flag);
   state.events.push({
     type: "questPieceSold",
@@ -129,14 +131,15 @@ export function sellQuestPiece(
  */
 export function buyQuestPiece(
   state: GameState,
+  hero: Player,
   questId: string,
   item: string,
 ): boolean {
   const row = questStallRows(state).find(
     (r) => r.kind === "buy" && r.questId === questId && r.item === item,
   );
-  if (!row || state.players[0].coins < row.coins) return false;
-  state.players[0].coins -= row.coins;
+  if (!row || hero.coins < row.coins) return false;
+  hero.coins -= row.coins;
   creditQuestPickup(state, questId, item);
   state.events.push({
     type: "questPieceBought",
@@ -147,12 +150,11 @@ export function buyQuestPiece(
   return true;
 }
 
-/** Can the hero afford this row? (The stall greys what he cannot.) */
-export function canAffordStallRow(
-  state: GameState,
-  row: QuestStallRow,
-): boolean {
-  return row.kind === "sell" || state.players[0].coins >= row.coins;
+/** Can `hero` afford this row? (The stall greys what he cannot. A purse is
+ * PRIVATE — the split sends a hero's to that hero alone — so the asker is a
+ * parameter, never a seat-0 lookup.) */
+export function canAffordStallRow(hero: Player, row: QuestStallRow): boolean {
+  return row.kind === "sell" || hero.coins >= row.coins;
 }
 
 // ------------------------------------------------------------------ the reads

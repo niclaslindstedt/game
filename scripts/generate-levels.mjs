@@ -81,6 +81,10 @@ const refs = {
 const { entries, mobHp, staminaDrain, staminaRefill, staminaEmptyLock } =
   loadLevels();
 
+// The level ids themselves are a ref set too: a travel door names its
+// destinations, and a typo there is a door that opens onto nothing.
+refs.levels = new Set(entries.map((e) => e.id));
+
 const errors = [];
 const warnings = [];
 for (const { def, description } of entries) {

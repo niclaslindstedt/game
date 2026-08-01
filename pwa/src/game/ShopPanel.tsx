@@ -528,7 +528,7 @@ export function ShopPanel({
             <PixelText font={font} text="ERRANDS" scale={3} color="#e0b955" />
             <div className="shop-errands">
               {questRows.map((row) => {
-                const affordable = canAffordStallRow(state, row);
+                const affordable = canAffordStallRow(player, row);
                 return (
                   <button
                     key={`${row.questId}:${row.item}:${row.kind}`}

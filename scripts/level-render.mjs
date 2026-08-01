@@ -256,9 +256,35 @@ export function renderLevel(def, opts) {
   // 2. Decor (flat, non-colliding scenery) — under everything.
   for (const d of state.decor) blitCentred(surf, d.sprite, d.pos.x, d.pos.y);
 
-  // 3. Landmarks (entrance, prototype rocket…).
-  for (const lm of state.landmarks)
+  // 3. Landmarks (entrance, prototype rocket…). A VEHICLE's landmark is its
+  //    tap anchor, not its picture — the machine is assembled below (3b),
+  //    mirroring the app's own render/vehicles.ts.
+  for (const lm of state.landmarks) {
+    if (lm.kind === "car" || lm.kind === "rocket") continue;
     blitCentred(surf, lm.sprite, lm.pos.x, lm.pos.y, lm.anchor === "base");
+  }
+
+  // 3b. The vehicles, part by part: wheels under the car's panel stack,
+  //     the parked ship's cold hull (mirrors pwa render/vehicles.ts).
+  for (const v of state.vehicles ?? []) {
+    if (v.kind === "car") {
+      blitCentred(surf, "car_underbody", v.pos.x, v.pos.y, true);
+      for (const dx of [-14, 12])
+        blitCentred(surf, "car_wheel_0", v.pos.x + dx, v.pos.y, true);
+      for (const panel of [
+        "backside",
+        "doors",
+        "hood",
+        "front_side",
+        "bumper",
+        "roof",
+        "glass",
+      ])
+        blitCentred(surf, `car_${panel}_0`, v.pos.x, v.pos.y, true);
+    } else {
+      blitCentred(surf, "starship", v.pos.x, v.pos.y, true);
+    }
+  }
 
   // 4. Obstacles — walls, doors, buildings, crates, servers, vending… all
   //    carry their own sprite name from create.ts.

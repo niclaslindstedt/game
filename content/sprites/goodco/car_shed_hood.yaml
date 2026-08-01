@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Ground debris shed by the CAR (src/game/vehicles.ts shedPart): the part
+# itself, flat on the road where it fell.
+name: car_shed_hood
+family: goodco
+plane: floor
+size: [12, 6]
+description: >
+  Shed by the hero's hatchback: the hood sheet, creased and face down. Dropped as decor where shedPart
+  detached it — the car drives on, the part stays.
+subject:
+  kind: "vehicle debris"
+  build: "the hood sheet, creased and face down"
+  features: "flat on the ground, outlined"
+  accent: "white metal and black trim on tarmac"
+  flavor: "the road keeps what the crash paid it"
+palette:
+  O: "#1a1c2c" # outline ink
+  W: "#e8ecf2" # white body paint
+  m: "#565d6b" # dented bare metal
+  s: "#c0c5cf" # silver highlight
+grid: |
+  ..OOOOOOOOO.
+  .OssmmWWWWWO
+  OWWmOOmWWWWO
+  OWWWmmWWWsWO
+  .OWWWWWWmWO.
+  ..OOOOOOOO..

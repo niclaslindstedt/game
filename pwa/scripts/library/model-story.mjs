@@ -48,6 +48,7 @@ export const STORY_ITEM_FIELDS = {
   lore: "the find's pages, behind the reveal",
   unlocks: "the LOCKED DOOR note",
   suitsHero: "the SUIT note",
+  keepsake: "the KEPT FOR GOOD note",
 };
 
 export const THOUGHT_FIELDS = {
@@ -125,6 +126,9 @@ const SECTION_KINDS = [
   },
   { kind: "level", match: /^Level \d+ — (.+)$/, venue: (m) => m[1] },
   { kind: "level", match: /^Secret level — (.+)$/, venue: (m) => m[1] },
+  // The HUB is a venue chapter too — home carries story the same way a
+  // mission does, it just never ends.
+  { kind: "level", match: /^Home — (.+) \(hub\)$/, venue: (m) => m[1] },
   { kind: "epilogue", match: /^Epilogue\b/ },
   { kind: "hellborn", match: /^The hellborn\b/ },
   { kind: "chain", match: /^The Severance\b/ },
@@ -347,6 +351,7 @@ function findsOn(level) {
       lore: def.lore,
       unlocks: def.unlocks ?? null,
       suitsHero: !!def.suitsHero,
+      keepsake: !!def.keepsake,
       from,
     });
   };

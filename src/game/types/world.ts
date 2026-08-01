@@ -550,6 +550,135 @@ export type MerchantBuyback = {
  * against the hero he just met. `rng` is his own seeded stream so his
  * wandering never perturbs the run's roll sequence.
  */
+/**
+ * THE HERO'S VEHICLES — the car and the garage ship as first-class MACHINES,
+ * not pictures. Each is ASSEMBLED at render time from parts so every part
+ * can move on its own: the car's wheels spin from `speed` and its body rides
+ * two simulated suspension springs; the ship's engine flame answers
+ * `thrust`. The driving and flying minigames plug into these fields rather
+ * than building systems beside them: throttle writes `speed`/`thrust`,
+ * crashes and hard landings write `wear` (0 = showroom, 1 = trashed and
+ * buckled — body sprite variants and stains key off it when they exist),
+ * and climbing in writes `driver`.
+ *
+ * Minted at run creation wherever the carve pins a `car` or `rocket`
+ * landmark (the landmark stays as the travel door's tap anchor; the
+ * renderer draws the assembly in its place), with `kind: "vehicle"`
+ * blockers under the footprint. Simulated by `stepVehicles`
+ * (src/game/vehicles.ts) — deterministic clockwork, no rng.
+ */
+type VehicleBase = {
+  /** Body center at the ground line. */
+  pos: Vec2;
+  /** Which way the nose points (sprites author nose-right / upright). */
+  faceLeft: boolean;
+  /** Ground speed (world px/s) along the facing — spins the car's wheels.
+   * Parked runs hold it at 0; the minigames own it. */
+  speed: number;
+  /** Damage, 0 (showroom) .. 1 (trashed) — the minigames raise it. */
+  wear: number;
+  /** Seat index of whoever is at the wheel/stick, or null when parked. */
+  driver: number | null;
+};
+
+/** The car's six body panels — each carries its own damage rung, so the
+ * driving minigame crumples exactly what hit the wall. Sprite names key off
+ * these ids: `car_<panel>_<rung>`. */
+export type CarPanelId =
+  "backside" | "doors" | "roof" | "hood" | "front_side" | "bumper" | "glass";
+
+/** The parts that can work FREE of the body, each walking its own fix
+ * ladder (see `CarVehicle.fixes`). The roof is bolted, not hinged, so it
+ * skips DANGLING and tears straight off. */
+export type CarDetachable = "doors" | "hood" | "bumper" | "roof";
+
+/** The fix ladder a detachable part climbs — how attached it still is,
+ * independent of how DENTED it is (that's the panel rung). */
+export const CAR_FIX = {
+  /** Bolted down — the panel rung draws, nothing moves. */
+  attached: 0,
+  /** Working free: still shut, but a bump makes it rattle a tad. */
+  loose: 1,
+  /** Hanging on its hinge, swinging with the suspension. */
+  dangling: 2,
+  /** Torn off — the bay shows, and the part lies shed on the ground. */
+  gone: 3,
+} as const;
+
+export type CarVehicle = VehicleBase & {
+  kind: "car";
+  /** Where it was parked when the run was minted — the drive-out latch
+   * measures departure from here. */
+  home: Vec2;
+  /** True once the drive-out has been booked (`carDeparted` fired) — the
+   * latch, so the event never fires twice while the app fades out. */
+  departed: boolean;
+  /** Ms until the next `carEngine` rumble grain (only ticks with a driver
+   * seated) — the running engine's sound cadence, stampede-rumble style. */
+  engineCueMs: number;
+  /** Ms until the next `carGrind` spark burst (only ticks while a bare
+   * axle is dragging under way) — the grind's own cadence. */
+  grindCueMs: number;
+  /** Wheel roll angle (radians) — picks the spin frame per wheel. */
+  wheelAngle: number;
+  /** Spring compression per axle, [rear, front], world px downward. */
+  suspension: [number, number];
+  /** Spring velocity per axle (px/s) — the integrator's other half. */
+  suspensionVel: [number, number];
+  /** Per-panel damage rung, 0 (factory straight) .. 3 (broken) — picks the
+   * `car_<panel>_<rung>` sprite. The minigame's crashes raise these; `wear`
+   * stays the overall ladder the two of them summarize. */
+  panels: Record<CarPanelId, number>;
+  /** Per-wheel state, [rear, front]: 0 sound, 1 flat tire, 2 bent rim,
+   * 3 GONE — the wheel tore off and is bouncing away as debris
+   * (`WheelDebris`); the axle drops to the bump stop. */
+  wheelStates: [number, number];
+  /** How attached each detachable part still is (`CAR_FIX`): 0 attached,
+   * 1 loose (rattles a tad on bumps), 2 dangling on the hinge, 3 gone.
+   * `shedPart` climbs a part to gone and drops the shed piece as decor. */
+  fixes: Record<CarDetachable, number>;
+  /** Each part's swing away from rest (px-ish) — the dangle oscillator's
+   * position, excited by the suspension and clamped tiny while only loose. */
+  dangle: Record<CarDetachable, number>;
+  /** The oscillator's other half (px/s). */
+  dangleVel: Record<CarDetachable, number>;
+};
+
+/**
+ * A wheel that tore off the car, dropped like a wheel on a highway: it
+ * BOUNCES — gravity pulls `z` down, each floor hit keeps a fraction of the
+ * fall and bleeds ground speed, and rolling friction walks the rest to a
+ * stop. Deterministic clockwork like the car itself (no rng — the launch
+ * kick comes from the crash that shed it), stepped by `stepVehicles`, and
+ * left in place once settled so the wreck keeps its history.
+ */
+export type WheelDebris = {
+  /** Ground-plane position of the wheel's contact point. */
+  pos: Vec2;
+  /** Ground-plane velocity (px/s). */
+  vel: Vec2;
+  /** Height above the floor (px) — the bounce. */
+  z: number;
+  /** Vertical speed (px/s, up positive). */
+  vz: number;
+  /** Roll angle (radians) — spins from ground speed, same as on the axle. */
+  angle: number;
+  /** The state the wheel wore when it left: 0 sound, 1 flat, 2 bent rim —
+   * picks the same sprite ladder the axle uses. */
+  wheelState: number;
+  /** True once the bounce is spent — integration stops, the wheel rests. */
+  settled: boolean;
+};
+
+export type ShipVehicle = VehicleBase & {
+  kind: "ship";
+  /** Engine output 0..1 — 0 parked and cold, above it the renderer lights
+   * the flame. The flying minigame's throttle. */
+  thrust: number;
+};
+
+export type Vehicle = CarVehicle | ShipVehicle;
+
 export type Merchant = {
   pos: Vec2;
   /**

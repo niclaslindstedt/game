@@ -259,7 +259,9 @@ describe("GOODCO HQ level def", () => {
     // the holstered hero (who would otherwise wait on the strike that never
     // comes, since its thought is marked seen).
     const state = createGame(SEED, "goodco_hq");
-    expect(state.phase).toBe("cutscene");
+    // The living-room prelude moved HOME (the campaign opens in the garage
+    // now), so GOODCO itself opens on the intro monologue.
+    expect(state.phase).toBe("intro");
     expect(state.players[0].disarmed).toBe(true);
     skipStoryOpening(state);
     expect(state.phase).toBe("playing");

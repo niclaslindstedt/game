@@ -208,6 +208,9 @@ staminaEmptyLock:
   jesus: 4.5
 
 easy:
+  # THE GARAGE is the hub: no horde ever spawns, so its cells only anchor
+  # the tooling (con colours, stall math). Mirrors each rung's opener.
+  garage: { hero: 6, mob: [1, 7] }
   goodco_hq: { hero: 6, mob: [1, 7] }
   moon: { hero: 13, mob: [8, 14] }
   mars: { hero: 19, mob: [15, 21] }
@@ -216,6 +219,7 @@ easy:
   the_bunker: { hero: 28, mob: [25, 28] }
 
 medium:
+  garage: { hero: 6, mob: [1, 7] }
   goodco_hq: { hero: 6, mob: [1, 7] }
   moon: { hero: 13, mob: [8, 15] }
   mars: { hero: 19, mob: [16, 22] }
@@ -224,6 +228,7 @@ medium:
   the_bunker: { hero: 28, mob: [25, 30] }
 
 hard:
+  garage: { hero: 8, mob: [3, 10] }
   goodco_hq: { hero: 8, mob: [3, 10] }
   moon: { hero: 15, mob: [9, 16] }
   mars: { hero: 22, mob: [18, 25] }
@@ -232,6 +237,7 @@ hard:
   the_bunker: { hero: 31, mob: [27, 34] }
 
 nightmare:
+  garage: { hero: 42, mob: [42, 45] }
   goodco_hq: { hero: 42, mob: [42, 45] }
   moon: { hero: 44, mob: [42, 47] }
   mars: { hero: 47, mob: [46, 50] }

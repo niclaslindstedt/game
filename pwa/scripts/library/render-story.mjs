@@ -337,6 +337,10 @@ function findsSection(chapter, { href }) {
         find.suitsHero
           ? "Picking it up puts the hero in the suit for the rest of the run."
           : null,
+        find.keepsake
+          ? "Kept for good: it stays with the character across every later " +
+            "run — and it is what unseals the rift seam on the garage wall."
+          : null,
       ].filter(Boolean);
       return `      <h3 id="found-${escapeHtml(find.id.replace(/_/g, "-"))}">${escapeHtml(find.name)}</h3>
       <p class="note">${notes.join(" ")}</p>

@@ -70,8 +70,10 @@ export type MapObjectType =
   | "critter"
   | "lair";
 
-/** Where a `landmark` object is pinned once the chambers are carved. */
-export type MapAnchor = "spawn" | "goal";
+/** Where a `landmark` object is pinned once the chambers are carved:
+ * the hero's landing, the goal cell, or a step aside from the trader's
+ * counter (`stall` — the hub's rift seam hums on the shop wall). */
+export type MapAnchor = "spawn" | "goal" | "stall";
 
 /**
  * One entry of a blueprint's object palette: a sprite plus the purpose that
@@ -370,6 +372,15 @@ export type MapBlueprint = {
   id: string;
   /** The hand-authored level every non-geometry field is inherited from. */
   level: string;
+  /**
+   * PIN THE CARVE — the STATIC map. When set, the carve (and the size roll)
+   * runs on this constant instead of the run's seed, so the venue lays out
+   * IDENTICALLY every visit: the hub's garage looks the same every time the
+   * hero comes home, exactly as a home should. Everything the RUN rolls
+   * (loot, the stall's stock, drops) still draws the run's own streams — only
+   * the geometry is pinned. Omitted = carved fresh per run, as everywhere.
+   */
+  carveSeed?: number;
   sizes: Record<MapSizeName, MapSizeSpec>;
   /**
    * The AREA PALETTE — what kinds of place this map is made of (see areas.ts).

@@ -3761,6 +3761,7 @@
       "items": ["golden_parachute"],
       "medkits": 2,
       "repairs": 1,
+      "storyItems": ["rift_creator"],
       "tierBonus": 0.35,
       "tierDrops": {
         "magic": 2,

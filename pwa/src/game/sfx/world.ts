@@ -446,6 +446,50 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "carEngine": {
+      // The running engine: a putter grain fired on the sim's cadence
+      // (`CAR.engineCueMs`), each a touch longer than the cadence so they
+      // overlap into a continuous rumble — the stampede trick. `intensity`
+      // is the throttle: idle sits low and quiet, driving raises both the
+      // pitch and the volume of the chug.
+      const i = clamp01(event.intensity);
+      synth.tone({
+        type: "triangle",
+        from: 55 + 70 * i,
+        to: 48 + 62 * i,
+        durationMs: 240,
+        volume: 0.028 + 0.03 * i,
+        detuneCents: 12,
+      });
+      synth.noise({
+        durationMs: 230,
+        volume: 0.012 + 0.022 * i,
+        filter: { type: "lowpass", frequency: 220 + 520 * i },
+      });
+      return true;
+    }
+
+    case "carGrind": {
+      // Bare axle on the road: a harsh little scrape grain per spark burst
+      // — gritty bandpass noise with a thin metallic edge, riding the same
+      // cadence as the sparks so the ear and the eye agree. Kept well under
+      // the engine rumble it plays over.
+      const i = clamp01(event.intensity);
+      synth.noise({
+        durationMs: 110,
+        volume: 0.02 + 0.03 * i,
+        filter: { type: "bandpass", frequency: 2400 + 1200 * i },
+      });
+      synth.tone({
+        type: "sawtooth",
+        from: 1900 + 500 * i,
+        to: 1500,
+        durationMs: 90,
+        volume: 0.008 + 0.01 * i,
+      });
+      return true;
+    }
+
     case "asteroidImpact": {
       // A meteor slamming the surface: a sharp crack of broadband noise on top
       // of a deep, echoing BOOM that drops away, with a grit-and-rubble tail —

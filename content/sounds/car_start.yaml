@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: car_start
+description: >-
+  The hero turns the key on a thirty-year-old hatchback: the starter motor
+  cranks — a dry whirr with three low square coughs riding it — then the
+  engine CATCHES: a saw swell climbing out of the floor into the idle the
+  running `carEngine` rumble takes over from.
+on:
+  type: carStarted
+voices:
+  # The starter's whirr: a dry band of noise while the crank turns.
+  - call: noise
+    durationMs: 380
+    volume: 0.045
+    filter:
+      type: bandpass
+      frequency: 1100
+  # Three crank coughs — the engine turning over without firing.
+  - call: tone
+    type: square
+    from: 110
+    to: 90
+    durationMs: 70
+    volume: 0.035
+  - call: tone
+    type: square
+    from: 110
+    to: 90
+    durationMs: 70
+    volume: 0.035
+    delayMs: 130
+  - call: tone
+    type: square
+    from: 110
+    to: 90
+    durationMs: 70
+    volume: 0.035
+    delayMs: 260
+  # The catch: the engine fires and swells up into its idle.
+  - call: tone
+    type: sawtooth
+    from: 36
+    to: 62
+    durationMs: 420
+    volume: 0.055
+    delayMs: 380
+    detuneCents: 14
+    attackMs: 60
+  - call: noise
+    durationMs: 320
+    volume: 0.03
+    delayMs: 380
+    filter:
+      type: lowpass
+      frequency: 380

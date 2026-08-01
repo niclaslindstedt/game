@@ -9,7 +9,7 @@
 import { localHero } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
-import { bankCampaignQuests, isPartyRun } from "@game/core";
+import { bankCampaignQuests, isPartyRun, storyItemDef } from "@game/core";
 import {
   extractLoadout,
   type Difficulty,
@@ -19,6 +19,7 @@ import {
 
 import {
   accrueCampaign,
+  bankKeepsake,
   bankLoadout,
   campaignTally,
   hasClearedLevel,
@@ -45,6 +46,10 @@ export type RunProgress = {
   captureCheckpoint: (state: GameState) => void;
   /** Bank whatever this event means for the character/checkpoint/scores. */
   onEvent: (event: GameEvent, state: GameState) => void;
+  /** Cross to another level RIGHT NOW: bank the hero's build and the
+   * thoughts read this run, then swap the mount to the destination. The
+   * gate crossing and the hub's travel doors are the same trip. */
+  travelTo: (state: GameState, to: string) => void;
 };
 
 export function createRunProgress(deps: {
@@ -110,6 +115,30 @@ export function createRunProgress(deps: {
     }
   };
 
+  // CROSS TO ANOTHER LEVEL: bank the hero's build and the thoughts read this
+  // run, then swap the mount to the destination level. The next run dresses
+  // the hero in the banked build, so the crossing carries everything he's
+  // holding — the run he leaves behind simply ends. Shared by the latent
+  // gate (`gateEntered`) and the hub's standing travel doors, so the two
+  // trips can never drift apart on what gets banked.
+  const travelTo = (state: GameState, to: string) => {
+    characterRef.current = bankLoadout(
+      characterRef.current,
+      extractLoadout(state, localHero(state)),
+      coinsIncludePending,
+    );
+    characterRef.current = markStorySeen(
+      characterRef.current,
+      state.level.id,
+      difficulty,
+      state.thoughtsSeen,
+    );
+    checkpointRef.current = null;
+    stopMusic();
+    setHud(null);
+    setLevelId(to);
+  };
+
   const onEvent = (event: GameEvent, state: GameState) => {
     // The merchant met: remember the meeting per map+difficulty so he's set
     // up at the door on every later entry (repair-after-death within reach).
@@ -119,6 +148,15 @@ export function createRunProgress(deps: {
         runLevelId,
         difficulty,
       );
+    }
+    // A KEEPSAKE story item (the RIFT CREATOR) banks on the character the
+    // moment it is picked up — a permanent acquisition, not run state, so a
+    // death or an abandoned run can never un-find it.
+    if (
+      event.type === "storyItemCollected" &&
+      storyItemDef(event.defId)?.keepsake
+    ) {
+      characterRef.current = bankKeepsake(characterRef.current, event.defId);
     }
     // A CAMPAIGN ERRAND MOVED — bank the chain on the character now rather
     // than at the level's end. The whole point of a campaign chain is that it
@@ -289,26 +327,15 @@ export function createRunProgress(deps: {
       }
     }
     // Stepping into a travel gate (the cow-level door the SEVERED HAND
-    // tears open): bank the hero's build and the thoughts read this
-    // run, then swap the mount to the destination level. The next run
-    // dresses the hero in the banked build, so the crossing carries
-    // everything he's holding — the run he leaves behind simply ends.
+    // tears open): the same crossing a hub's travel door makes on a tap.
     if (event.type === "gateEntered") {
-      characterRef.current = bankLoadout(
-        characterRef.current,
-        extractLoadout(state, localHero(state)),
-        coinsIncludePending,
-      );
-      characterRef.current = markStorySeen(
-        characterRef.current,
-        state.level.id,
-        difficulty,
-        state.thoughtsSeen,
-      );
-      checkpointRef.current = null;
-      stopMusic();
-      setHud(null);
-      setLevelId(event.to);
+      travelTo(state, event.to);
+    }
+    // DRIVING OUT of the garage: the car cleared its parking spot, and the
+    // trip it commits is the car door's own destination — the same crossing
+    // as a gate, booked by the wheel instead of a tap.
+    if (event.type === "carDeparted") {
+      travelTo(state, event.to);
     }
     // Run over either way: bank the opening and every inner monologue read
     // this run onto the character, so the next replay on this difficulty
@@ -335,7 +362,7 @@ export function createRunProgress(deps: {
     }
   };
 
-  return { captureCheckpoint, onEvent };
+  return { captureCheckpoint, onEvent, travelTo };
 }
 
 /** Every worn slot the wardrobe feats track, weapon first. */

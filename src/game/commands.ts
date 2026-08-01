@@ -140,6 +140,7 @@ import { skipBossDeath } from "./boss-death.ts";
 import { skipDeathScene } from "./death-scene.ts";
 import { advanceDialogue, muteDialogue, unmuteDialogue } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
+import { enterCar } from "./vehicles.ts";
 import type {
   CompanionSlot,
   EquipSlot,
@@ -305,6 +306,11 @@ export const RUN_COMMAND_ARGS = {
   reclaimVaultItem: ["int"],
   clearVault: [],
 
+  // THE DRIVEWAY — climbing into the hub's car (src/game/vehicles.ts). No
+  // arguments: the car is found by standing at it, and WHO climbs in is the
+  // acting hero, exactly like every counter verb.
+  enterCar: [],
+
   // THE RIDE. `refundAutopilotBuild` takes no arguments on purpose: the build
   // the ride is measured against lives on the RUN (`state.autopilot.build`,
   // stamped by `startAutopilot`) rather than in the caller's hand, because a
@@ -445,9 +451,9 @@ export function applyRunCommand(
     case "closeInventory":
       return closeInventory(state);
     case "openShop":
-      return openShop(state);
+      return openShop(state, hero);
     case "closeShop":
-      return closeShop(state);
+      return closeShop(state, hero);
     case "openMap":
       return openMap(state);
     case "closeMap":
@@ -533,19 +539,20 @@ export function applyRunCommand(
     case "discardHeldAbility":
       return discardHeldAbility(state, hero, num(a, 0));
 
-    // THE COUNTER
+    // THE COUNTER — every purse, bag and pouch here is the ACTING hero's, so
+    // a joiner buying spends their own coins rather than the host's.
     case "buyStock":
-      return buyStock(state, num(a, 0));
+      return buyStock(state, hero, num(a, 0));
     case "sellItem":
-      return sellItem(state, num(a, 0));
+      return sellItem(state, hero, num(a, 0));
     case "buybackItem":
-      return buybackItem(state, num(a, 0));
+      return buybackItem(state, hero, num(a, 0));
     case "repairGear":
-      return repairGear(state);
+      return repairGear(state, hero);
     case "buyQuestPiece":
-      return buyQuestPiece(state, str(a, 0), str(a, 1));
+      return buyQuestPiece(state, hero, str(a, 0), str(a, 1));
     case "sellQuestPiece":
-      return sellQuestPiece(state, str(a, 0), str(a, 1));
+      return sellQuestPiece(state, hero, str(a, 0), str(a, 1));
 
     // THE BUILD
     case "allocateStat":
@@ -618,6 +625,10 @@ export function applyRunCommand(
       return reclaimVaultItem(state, hero, num(a, 0));
     case "clearVault":
       return clearVault(state, hero);
+
+    // THE DRIVEWAY
+    case "enterCar":
+      return enterCar(state, hero);
 
     // THE RIDE
     case "startAutopilot":

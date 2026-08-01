@@ -46,6 +46,7 @@ import { revealAround } from "../map.ts";
 import { anyHeroWithin, heroInPlay, partyWiped } from "../party.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
+import { stepVehicles } from "../vehicles.ts";
 import { advancePath } from "../path.ts";
 import { stepQuests } from "../quests/index.ts";
 import { releaseStuckLevelup } from "../talents.ts";
@@ -234,6 +235,19 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   for (let seat = 0; seat < state.players.length; seat++) {
     const player = state.players[seat] as Player;
     if (!heroInPlay(player)) continue;
+    // A hero AT THE WHEEL rides instead of walking: his body travels with
+    // the car (so the camera, the fog sweep and everything party-geometric
+    // follow the drive), and every on-foot pass sits out — his held pointer
+    // is steering the CAR this tick (stepVehicles reads it), not him.
+    const ride = state.vehicles.find(
+      (v) => v.kind === "car" && v.driver === seat,
+    );
+    if (ride) {
+      player.pos.x = ride.pos.x;
+      player.pos.y = ride.pos.y;
+      revealAround(state, player.pos);
+      continue;
+    }
     const seatInput = inputFor(input, seat);
     stepPlayer(state, player, seatInput, dt, dtMs);
     // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
@@ -280,6 +294,12 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // wandering (and can't be discovered mid-pose), the horde neither moves,
   // strikes, nor fires — while the hero stays fully playable.
   if (!state.freeze) stepMerchant(state, dt, dtMs);
+  // The machines: the car's springs settle, its wheels roll from its speed,
+  // and a seated driver's held pointer steers it (the garage drive-out). A
+  // no-op loop on every map without a vehicle.
+  if (!state.freeze) {
+    stepVehicles(state, dtMs, (seat) => inputFor(input, seat));
+  }
   stepProjectiles(state, dt, dtMs);
   if (!state.freeze) {
     stepEnemies(state, dt, dtMs);
@@ -445,6 +465,12 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
 /** Has the level's objective been met? */
 function objectiveCleared(state: GameState): boolean {
   const objective = runLevelDef(state).objective;
+  // A HUB never clears: no victory, no outro, no bank — the run ends only by
+  // leaving through a door. Checked FIRST because the last return below is
+  // the killBoss fallthrough, and a hub with no boss on the board would
+  // otherwise read as "cleared" on tick one and end the run in the one place
+  // the player is meant to idle.
+  if (objective.type === "hub") return false;
   if (objective.type === "reachExit") {
     // The bossless form: standing at the exit door ends the level. Deliberate
     // contact — the radius is a doorstep, not a drive-by.

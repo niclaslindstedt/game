@@ -736,6 +736,21 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       seed: Math.floor(Math.random() * 997),
     });
   }
+  // A bare axle grinding the road (a wheel torn off the car): a shower of
+  // hot metal sparks off the dragging corner — the car's last stand. The
+  // throw trails the travel, so the sparks fly out BEHIND the wreck.
+  if (event.type === "carGrind") {
+    const car = state.vehicles.find((v) => v.kind === "car");
+    effects.push({
+      kind: "sparks",
+      pos: { x: event.pos.x, y: event.pos.y },
+      untilMs: state.stats.timeMs + 340,
+      durationMs: 340,
+      intensity: event.intensity,
+      angle: car?.faceLeft ? 0 : Math.PI,
+      seed: Math.floor(Math.random() * 997),
+    });
+  }
   // A crate smashed open: keel the box over and burst it into splinters
   // (the crateBreak effect), leaving just the loot the engine spilled.
   if (event.type === "crateBroken") {

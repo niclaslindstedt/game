@@ -162,7 +162,7 @@ document now always means the second thing.
 | **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7     |
 | **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                    |
 | **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks |                                                |
-| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks |                                                |
+| **6 — THE GARAGE**      | The hub the game has never had: the hero's garage, the rift door as level select, party travel, the merchant parked, the story chain     | Somewhere to stand, and somewhere to land a joiner           |  3–5 wks | **Hub landed**, see §6.8 — §6.4 still owed     |
 | **7 — THE PARTY BOT**   | BOTS IN A LOCAL GAME, and a bot that plays like somebody in a party rather than a soloist standing near you                              | A party without four friends online                          |  2–3 wks | Its three instrument halves moved to phase 5.5 |
 
 **≈ 44–65 weeks.** The band is wide because phase 3 is a design exercise wearing a
@@ -2396,6 +2396,60 @@ the hero thinks the first time the door opens on somewhere he has already been.
   idle. Prefer a new objective kind over an abuse of `reachExit`.
 - **Scope creep toward a town.** The garage is one room. A hub with districts is
   a different game and a different PR.
+
+### 6.8 What shipped, and what deviated
+
+**The hub landed** — the garage exists, the campaign OPENS in it, and the
+mechanisms under it are the ones §6.3 priced:
+
+- **`objective: { type: "hub" }`** — the fourth objective kind; it never
+  clears, checked ahead of every victory fallthrough, so a player idles in the
+  hub forever and no outro, victory or bank can fire (`objectiveCleared`).
+- **THE STATIC VENUE** is a pin, not a special case: `MapBlueprint.carveSeed`
+  freezes the carve AND the size roll (`content/maps/garage.yaml`,
+  `carveSeed: 9`), so home lays out identically every visit on every seed and
+  every GENERATED MAPS size — and a mod re-lays the garage by editing a
+  blueprint like any other.
+- **LEVEL SELECT IS `LevelDef.travelDoors`**, standing on landmarks — and the
+  plan's "one rift door" became THREE doors, because the fiction already had
+  three vehicles out: the CAR (→ GOODCO HQ), the ROCKET (→ moon, Mars), and
+  the RIFT SEAM (→ the rift, BOOT HILL), the last **sealed behind the RIFT
+  CREATOR** — a `keepsake` story item THE FOUNDER drops in the rift, banked on
+  the character (`hasKeepsake`), which is §6.2's option 1 with the door split
+  by destination instead of swapped mid-campaign.
+- **TRAVEL IS THE GATE CROSSING, SHARED** — `travelTo` in
+  `pwa/src/game/game-screen/run-progress.ts` (bank the loadout, mark the
+  thoughts, drop the checkpoint, re-mount on the destination), used by
+  `gateEntered`, the travel-door picker, and the car's drive-out alike.
+- **THE MERCHANT PARKS** — `merchant.parked` on the def: revealed at his
+  authored counter from map start, scene-free, and he never wanders (which
+  also answers §3.1's "whom does he follow?" for the hub).
+- **THE CAR AND THE SHIP ARE MACHINES** (`src/game/vehicles.ts`,
+  `state.vehicles`): panel-assembled sprites with four damage rungs each, a
+  glass layer, suspension springs, wheels that roll from speed, a per-part
+  FIX ladder (attached → loose rattle → dangling → gone, shed parts as floor
+  decor) and wheels that tear off as BOUNCING debris. Tapping the car boards
+  it (`enterCar`, a run command like every other verb; `PROTOCOL_VERSION`
+  bumped) and starts the engine
+  (`carStarted`, the cadenced `carEngine` rumble, lights and body shiver);
+  driving `CAR.departDistance` from home books `carDeparted` once and the
+  app travels to the car door's destination. The driving/flying minigames
+  remain a later phase — the drive-out is deliberately collision-free.
+- **THE STORY CHAIN RAN FIRST**, with the manuscript's confirmation on the
+  record: the campaign now opens at home (`docs/story.md` "Home — THE GARAGE
+  (hub)", the prelude cutscene re-homed), and the RIFT CREATOR's lore pages
+  carry the D2-style town loop.
+
+**Still owed, and recorded rather than discovered later:**
+
+- **§6.4 in-session party travel** — a SESSION does not yet survive the level
+  swap: travel re-mounts app-side exactly like a gate crossing, so a hosted
+  session still lands joiners on level start rather than carrying the party
+  through the door together. The banking half exists (`travelTo` banks every
+  crossing); the session-side teardown/rebuild is the remainder.
+- **Quest givers in the hub** — the garage casts none yet; the errand board
+  stays on the field levels.
+- **The workbench stash** — still the lost-and-found vault, as §6.1 allowed.
 
 ---
 

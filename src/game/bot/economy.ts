@@ -408,7 +408,7 @@ const UNRANKED_BLOCK_VALUE = 2;
  * pure `botAct`).
  */
 export function tradeAtMerchant(state: GameState, hero: Player): boolean {
-  if (!openShop(state)) return false;
+  if (!openShop(state, hero)) return false;
   // SELL: every outgrown piece across the counter. The cull (cullWorstLoot)
   // only ever drops the cheapest junk in the field, so the good junk lands
   // here — the whole reason the bag hauls it. The pocket shooters stay in
@@ -419,7 +419,7 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
   for (let i = 0; i < inv.length; i++) {
     const item = inv[i];
     if (item && !keep.has(i) && isScrappableLoot(state, hero, item)) {
-      sellItem(state, i);
+      sellItem(state, hero, i);
     }
   }
   // WAKE THE FRIEND FIRST. A bottle of SMELLING SALTS outranks the weapon
@@ -430,7 +430,9 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
   // his friend should come back with his friend.
   if (needsRevive(state, hero)) {
     const bottle = reviveRow(state);
-    if (bottle && canBuyStock(state, hero, bottle)) buyStock(state, bottle.id);
+    if (bottle && canBuyStock(state, hero, bottle)) {
+      buyStock(state, hero, bottle.id);
+    }
   }
   // BUY the single best wieldable weapon upgrade the purse covers.
   let bestId = -1;
@@ -452,17 +454,20 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
       bestId = entry.id;
     }
   }
-  if (bestId >= 0) buyStock(state, bestId);
+  if (bestId >= 0) buyStock(state, hero, bestId);
   // MEND the whole kit (refused on its own when nothing needs it or the
   // purse is short — a free no-op).
-  repairGear(state);
+  repairGear(state, hero);
   // Then the spare coins, keeping a reserve big enough to pay for the kit's
   // next mend. Each shelf is bought DOWN until the purse, the dock stack, or
   // the entry's own `qty` says stop — nothing on the stall restocks, so the
   // loop always terminates on the counter's own supply.
   const reserve = repairAllCost(state, hero);
   const buyDown = (entry: MerchantStock) => {
-    while (hero.coins - entry.price >= reserve && buyStock(state, entry.id)) {
+    while (
+      hero.coins - entry.price >= reserve &&
+      buyStock(state, hero, entry.id)
+    ) {
       // keep stocking up while it pays
     }
   };
@@ -480,7 +485,7 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
     )
     .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
   for (const entry of powerups) buyDown(entry);
-  closeShop(state);
+  closeShop(state, hero);
   // Wear the purchase (and anything freed by the mend) on the spot.
   autoEquipBest(state, hero);
   // Crack the bottle at the counter if one was just bought — the walk is over

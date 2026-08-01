@@ -32,8 +32,14 @@ const BLOCK_SCALE = 2;
 
 const atlasMeta = JSON.parse(readFileSync(join(ASSETS, "atlas.json"), "utf8"));
 
-/** The atlas cell of a sprite name — `{ x, y, w, h }`, or undefined. */
-export const spriteCell = (name) => atlasMeta[name];
+/** The atlas cell of a sprite name — `{ x, y, w, h }`, or undefined. The
+ * manifest ships compact `[x, y, w, h]` tuples (it rides the app's
+ * critical-path budget — see generate-assets.mjs); this is the one place
+ * they widen back to named fields. */
+export const spriteCell = (name) => {
+  const cell = atlasMeta[name];
+  return cell ? { x: cell[0], y: cell[1], w: cell[2], h: cell[3] } : undefined;
+};
 
 /**
  * The intrinsic size of a sprite's 8× preview file, for the `width`/`height`
@@ -41,7 +47,7 @@ export const spriteCell = (name) => atlasMeta[name];
  * reflows as its images land is a page that scores badly).
  */
 export function spriteSize(name) {
-  const cell = atlasMeta[name];
+  const cell = spriteCell(name);
   return cell ? { width: cell.w * 8, height: cell.h * 8 } : null;
 }
 
@@ -89,7 +95,7 @@ export async function writeGroundTile(tiles, file, groundTileName) {
 
   for (let ty = 0; ty < BLOCK; ty++) {
     for (let tx = 0; tx < BLOCK; tx++) {
-      const cell = atlasMeta[groundTileName(tiles, tx, ty)];
+      const cell = spriteCell(groundTileName(tiles, tx, ty));
       if (!cell) continue;
       for (let y = 0; y < TILE; y++) {
         const srcY = cell.y + (y % cell.h);

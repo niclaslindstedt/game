@@ -1049,10 +1049,15 @@ export function generateLevel(
   const landmarks: LevelDef["landmarks"] = bp.objects
     .filter((o) => o.type === "landmark")
     .map((o) => {
+      // `stall` stands a fixed step off the trader's counter — deterministic
+      // on purpose (no rng draw, so adding one to a map cannot shift the
+      // rolls of anything placed after it).
       const pos =
         o.at === "goal"
           ? vec(Math.round(goalCenter.x), Math.round(goalCenter.y))
-          : vec(Math.round(playerSpawn.x), Math.round(playerSpawn.y));
+          : o.at === "stall"
+            ? vec(Math.round(merchantAt.x + 70), Math.round(merchantAt.y - 40))
+            : vec(Math.round(playerSpawn.x), Math.round(playerSpawn.y));
       const mark: LevelDef["landmarks"][number] = { kind: o.kind ?? o.id, pos };
       if (o.sprite) mark.sprite = o.sprite;
       if (o.anchor) mark.anchor = o.anchor;

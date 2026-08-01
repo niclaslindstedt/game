@@ -14,6 +14,7 @@ import {
   QUESTS,
   enemyDef,
   isNeutral,
+  runLevelDef,
   STAMINA,
   type Bot,
   type GameInput,
@@ -406,9 +407,13 @@ export function handleFieldTaps(
     viewport: Viewport;
     queues: InputQueues;
     bumpUi: () => void;
+    /** Open the hub's travel-door picker for the tapped door (see
+     * TravelPanel). Absent on mounts that may not travel — a joined
+     * session's client, the spectator — so the tap simply does nothing. */
+    openTravelDoor?: (doorId: string) => void;
   },
 ): void {
-  const { state, bot, camera, viewport, queues, bumpUi } = deps;
+  const { state, bot, camera, viewport, queues, bumpUi, openTravelDoor } = deps;
   const shopTap = queues.shopTapRef.current;
   queues.shopTapRef.current = null;
   if (
@@ -469,6 +474,41 @@ export function handleFieldTaps(
       playUiSound(synth, "confirm");
       bumpUi();
       break;
+    }
+  }
+  // A tap on a STANDING TRAVEL DOOR (the hub's rocket / rift portal) opens
+  // the destination picker — the merchant-stall gesture on the landmark that
+  // carries the door's id. The hero has to be AT the door (their own feet —
+  // a fixture across the map must not open a menu), and the picker itself is
+  // app UI: the engine only says where the door stands and where it leads.
+  if (shopTap && !bot && openTravelDoor && state.phase === "playing") {
+    const doors = runLevelDef(state).travelDoors ?? [];
+    if (doors.length > 0) {
+      const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+      const hero = localHero(state);
+      for (const door of doors) {
+        const mark = state.landmarks.find((l) => l.kind === door.id);
+        if (!mark) continue;
+        // The tap radius is the stall's own reach test; the fixtures are
+        // merchant-sized or bigger, so the same figure reads right.
+        if (Math.hypot(wx - mark.pos.x, wy - mark.pos.y) > MERCHANT.radius * 3)
+          continue;
+        if (distance(hero.pos, mark.pos) > MERCHANT.tradeRadius * 1.5) continue;
+        input.jump = false;
+        input.useItem = false;
+        // THE CAR IS BOARDED, NOT PICKED FROM: tapping it climbs in and
+        // turns the key (`enterCar` — the engine coughs awake, lights on),
+        // and DRIVING out is what commits the trip. Every other door still
+        // opens the destination picker.
+        if (door.id === "car") {
+          if (runCommandOk(state, "enterCar")) bumpUi();
+          break;
+        }
+        playUiSound(synth, "confirm");
+        openTravelDoor(door.id);
+        bumpUi();
+        break;
+      }
     }
   }
   // Same screen→world hit-test as the merchant; the tap must not double as a

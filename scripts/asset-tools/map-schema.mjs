@@ -110,7 +110,7 @@ const NEEDS_DENSITY = new Set([
   "critter",
 ]);
 
-const ANCHORS = new Set(["spawn", "goal"]);
+const ANCHORS = new Set(["spawn", "goal", "stall"]);
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isPosNum = (v) => isNum(v) && v > 0;
@@ -139,6 +139,16 @@ export function validateMap(bp, refs, description = "") {
 
   if (bp.level !== undefined && !refs.levels.has(bp.level))
     err(`inherits from unknown level "${bp.level}"`);
+
+  // A pinned carve (the STATIC hub) must pin to a real seed — a string or a
+  // negative here would quietly carve something else than intended.
+  if (
+    bp.carveSeed !== undefined &&
+    (!Number.isInteger(bp.carveSeed) || bp.carveSeed <= 0)
+  )
+    err(
+      `carveSeed must be a positive integer, got ${JSON.stringify(bp.carveSeed)}`,
+    );
 
   const enemy = (id, where) => {
     if (id === undefined) {
@@ -191,7 +201,10 @@ export function validateMap(bp, refs, description = "") {
           );
       }
     }
-    for (let i = 1; i < SIZE_NAMES.length; i++) {
+    // A PINNED blueprint (`carveSeed` — the static hub) deliberately prices
+    // all three sizes identically: one home, one look, whatever the
+    // GENERATED MAPS setting says. Everything else must climb.
+    for (let i = 1; bp.carveSeed === undefined && i < SIZE_NAMES.length; i++) {
       const prev = bp.sizes[SIZE_NAMES[i - 1]];
       const cur = bp.sizes[SIZE_NAMES[i]];
       if (!prev || !cur) continue;
@@ -389,7 +402,9 @@ export function validateMap(bp, refs, description = "") {
       err(
         'every area has enclosure "none" — the map would have no walls at all',
       );
-    if (bossable === 0) err("no area may hold the boss — set `boss: true`");
+    // A bossless blueprint (the hub: `boss: null`) needs no room to hold one.
+    if (bossable === 0 && bp.boss !== null)
+      err("no area may hold the boss — set `boss: true`");
     if (spawnable === 0) err("no area may hold the hero — set `spawn: true`");
   } else if (bp.areas !== undefined) {
     err("areas must be a list");

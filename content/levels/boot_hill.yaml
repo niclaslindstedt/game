@@ -66,6 +66,9 @@ merchant:
     - honorary_rank
 objective:
   type: killBoss
+# The campaign's last clear walks back out of the West to the garage -
+# the rift seam on the wall is the going-back loop from here on.
+exitTo: garage
 # SPINNING HAY BALLS: the park's western prop hazard. Bales roll in from the
 # right and bounce straight across the hero's surroundings to the left, spinning
 # as they go. A bale caught on the grounded hero costs a very slight bite of hp

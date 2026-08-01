@@ -51,7 +51,7 @@ export const CARVED_FIELDS = [
   "decor",
 ];
 
-const OBJECTIVES = new Set(["killBoss", "clearAll", "reachExit"]);
+const OBJECTIVES = new Set(["killBoss", "clearAll", "reachExit", "hub"]);
 
 const isVec = (v) => v && typeof v.x === "number" && typeof v.y === "number";
 
@@ -338,6 +338,39 @@ export function validateLevel(def, refs, description = "", options = {}) {
   for (const g of def.gates ?? [])
     if (!refs.gear.has(g.opensWith))
       err(`gate "${g.id}" opensWith unknown gear "${g.opensWith}"`);
+  // Travel doors: id + name + at least one destination, every destination a
+  // real level and never this one (a door home from home is a no-op that
+  // reads like a bug). The id must match a blueprint landmark object — that
+  // half is positional and is asserted by the content tests, not here.
+  {
+    const doorIds = new Set();
+    for (const d of def.travelDoors ?? []) {
+      if (typeof d.id !== "string" || d.id.length === 0)
+        err("travelDoors entry needs an id");
+      else if (doorIds.has(d.id)) err(`travelDoors repeats id "${d.id}"`);
+      else doorIds.add(d.id);
+      if (typeof d.name !== "string" || d.name.length === 0)
+        err(`travel door "${d.id}" needs a name (the picker's heading)`);
+      const to = Array.isArray(d.to) ? d.to : [];
+      if (to.length === 0)
+        err(`travel door "${d.id}" needs at least one destination`);
+      for (const dest of to) {
+        if (dest === def.id)
+          err(`travel door "${d.id}" leads to its own level`);
+        else if (refs.levels && !refs.levels.has(dest))
+          err(`travel door "${d.id}" leads to unknown level "${dest}"`);
+      }
+      if (d.requires !== undefined && !refs.storyItems.has(d.requires))
+        err(
+          `travel door "${d.id}" requires unknown story item "${d.requires}"`,
+        );
+    }
+  }
+  if (
+    def.merchant?.parked !== undefined &&
+    typeof def.merchant.parked !== "boolean"
+  )
+    err("merchant.parked must be a boolean");
   for (const d of def.doors ?? [])
     if (!refs.doorKeys.has(d.id))
       err(`locked door "${d.id}" has no story-item key that unlocks it`);

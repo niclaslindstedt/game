@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
+# 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
+# damage mix with `node scripts/car-viewer.mjs`.
+name: car_wheel_bent_1
+family: goodco
+size: [11, 11]
+description: >
+  The wheel with a BENT RIM, spokes turned - the wobbling spin's other frame.
+subject:
+  kind: "vehicle part"
+  build: "a battered alloy with a bitten rim"
+  features: "bent rim, missing spokes"
+  accent: "white body, black roof and trim, dark glass"
+  flavor: "the hero's hatchback, one piece of it"
+palette:
+  O: "#1a1c2c" # outline ink
+  T: "#c0c5cf" # hubcap steel
+  b: "#3f4553" # dark trim
+  k: "#0a0910" # cabin void
+grid: |
+  ....OOO....
+  ..OOkkkOO..
+  .OkkkkkkkO.
+  .OkbTbkkkO.
+  OkkbbTTkkkO
+  OkkTTTbbkkO
+  OkkbbTTTkkO
+  .OkbTbbbkO.
+  .OkkkkkkkO.
+  ..OOkkkOO..
+  ....OOO....

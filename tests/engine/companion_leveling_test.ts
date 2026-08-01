@@ -249,7 +249,7 @@ describe("the merchant no longer revives the party — he SELLS the cure", () =>
     for (let i = 0; i < 20 && !state.merchant.discovered; i++) {
       step(state, idle, DT);
     }
-    openShop(state);
+    openShop(state, state.players[0]);
     expect(companion.hp).toBe(1);
   });
 
@@ -288,9 +288,9 @@ describe("the merchant no longer revives the party — he SELLS the cure", () =>
     state.players[0].coins = row.price * 4;
     // Empty the bag so both purchases have somewhere to land.
     state.players[0].inventory.fill(null);
-    openShop(state);
-    expect(buyStock(state, row.id)).toBe(true);
-    expect(buyStock(state, row.id)).toBe(true);
+    openShop(state, state.players[0]);
+    expect(buyStock(state, state.players[0], row.id)).toBe(true);
+    expect(buyStock(state, state.players[0], row.id)).toBe(true);
     const held = state.players[0].inventory.filter(
       (item) => item?.defId === "test_salts",
     );

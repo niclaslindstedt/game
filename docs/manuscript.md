@@ -206,6 +206,21 @@ _(Fade to black.)_
 
 ---
 
+## Home — THE GARAGE (hub)
+
+_The hero's home base (`content/levels/garage.yaml`), and where a new game now
+OPENS: the living-room prelude plays on the garage's first entry, and every
+earthside chapter returns here (GOODCO by car, the moon for food, the West
+once the rift seam is unsealed). The parked vendor at the counter is
+deliberately scene-free — the hub is re-entered constantly, and a greeting on
+every approach would make the counter a toll booth. Its one line is the
+arrival monologue, played once per difficulty, spoken BEFORE the GOODCO raid:
+the ship still wants its part._
+
+### Opening monologue (hero, black screen)
+
+1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
+
 ## Level 1 — GOODCO HQ
 
 A cleanroom raid for the one engine part the hero's garage-built ship still
@@ -1607,6 +1622,13 @@ _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 
 - A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'
 - 'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S.
+
+**RIFT CREATOR** _(dropped where THE FOUNDER quits the field — his "KEEP THE
+RIFT, GARAGE MAN" made literal; a KEEPSAKE: it unseals the garage's rift seam
+for good)_
+
+- THE FOUNDER'S POCKET RIFT RIG. IT TEARS A SEAM TO ANYWHERE IT'S ALREADY BEEN.
+- HE SAID KEEP THE RIFT. I'M BOLTING THIS TO THE GARAGE WALL.
 
 ### The wandering merchant — the trader between worlds
 

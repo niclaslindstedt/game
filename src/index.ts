@@ -484,6 +484,18 @@ export {
   stockName,
   type BuybackRefusal,
 } from "./game/merchant.ts";
+export {
+  CAR,
+  SHIP,
+  WHEEL_DEBRIS,
+  nudgeCar,
+  enterCar,
+  shedPart,
+  detachWheel,
+  stepVehicles,
+  createVehicles,
+  vehicleFootprint,
+} from "./game/vehicles.ts";
 // QUESTS — the errands the field's non-combatants ask of the hero (see
 // quests/). The conversation is a pause phase like the shop, and so is the LOG
 // (`openQuestLog`, raised from the HUD's own `!` button, exactly as the map
@@ -1154,11 +1166,17 @@ export type {
   Loadout,
   MapMarker,
   MapMarkerKind,
+  CarDetachable,
+  CarPanelId,
+  CarVehicle,
   Merchant,
   MerchantBuyback,
   MerchantConsumable,
   MerchantStock,
   Obstacle,
+  ShipVehicle,
+  Vehicle,
+  WheelDebris,
   PackState,
   PartyStamp,
   PendingProc,
@@ -1176,4 +1194,6 @@ export type {
   TileSpec,
   WeaponClass,
 } from "./game/types/index.ts";
+// The fix ladder's named rungs (a value, not a type — see `CarVehicle.fixes`).
+export { CAR_FIX } from "./game/types/index.ts";
 export type { Vec2 } from "@game/lib/vec.ts";

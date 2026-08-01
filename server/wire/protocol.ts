@@ -575,6 +575,7 @@ export const COMMANDS = [
   "acceptTrade",
   "reclaimVaultItem",
   "clearVault",
+  "enterCar",
   "startAutopilot",
   "stopAutopilot",
   "setAutopilotSpeed",

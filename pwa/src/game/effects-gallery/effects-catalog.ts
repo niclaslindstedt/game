@@ -1732,6 +1732,28 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
   {
+    id: "car-grind",
+    icon: "car_wheel_0",
+    label: "THE LAST STAND",
+    blurb: "A BARE AXLE GRINDS THE ROAD - HOT SPARKS TRAIL THE WRECK",
+    group: "WORLD",
+    keywords: ["car", "sparks", "grind", "wheel", "wreck", "garage"],
+    stage: {},
+    showMs: 1200,
+    // Three bursts strung along the travel, the way the sim's cadence lays
+    // them down under way, so the shower reads as a TRAIL rather than a pop.
+    fire: (ctx) => {
+      const hero = localHero(ctx.state);
+      for (let burst = 0; burst < 3; burst++) {
+        ctx.emit({
+          type: "carGrind",
+          pos: { x: hero.pos.x + 30 - burst * 12, y: hero.pos.y + 8 },
+          intensity: 1 - burst * 0.25,
+        });
+      }
+    },
+  },
+  {
     id: "meteor",
     icon: "spell_meteor",
     label: "METEOR IMPACT",

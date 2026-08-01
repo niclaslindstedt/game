@@ -80,6 +80,18 @@ export function missionLead(mission) {
     );
   }
 
+  if (mission.travelDoors.length > 0) {
+    const doors = mission.travelDoors
+      .map((door) => {
+        const roads = door.to.map((road) => road.name).join(" and ");
+        return `${door.name} to ${roads}`;
+      })
+      .join("; ");
+    lines.push(
+      `It is a home rather than a mission: nothing here ends, and its doors are the way out — ${doors}.`,
+    );
+  }
+
   return lines;
 }
 

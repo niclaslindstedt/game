@@ -88,7 +88,10 @@ export type Effect = {
     // ONE kind for all of them, discriminated by `eliteKind`, mirroring the
     // single `eliteCast` engine event they come from: ten primitives sharing a
     // draw pass is what keeps the effect list from growing a member per idea.
-    | "elite";
+    | "elite"
+    // A bare axle grinding the road (the car's `carGrind`): a shower of hot
+    // metal sparks thrown back along the travel and pulled down by gravity.
+    | "sparks";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -196,7 +199,9 @@ export type Effect = {
   /** Levelup: how big the ding plays, in [0.2, 1] — the blast's brightness,
    * reach, and mote count all scale by it, so an early level-up is a modest
    * glow and the last ding before the cap is the full detonation
-   * (levelup-intensity.ts). Default 1 (full). */
+   * (levelup-intensity.ts). Default 1 (full).
+   * Sparks: how hard the grind is (0..1, the event's own intensity) — scales
+   * the spark count, the throw and the contact flare. */
   intensity?: number;
   /** Muzzle: the firing weapon's shot signature (weapon-fx.ts). Absent = the
    * plain class look. */
@@ -446,6 +451,61 @@ function drawEffectPass(
           drawBurst(ctx, x, groundY - 4, t, effect.gore, effect.seed ?? 0);
         }
       }
+      continue;
+    }
+
+    if (effect.kind === "sparks") {
+      // A bare axle grinding the road: hot metal streaks thrown back along
+      // the travel (`angle` — cos gives the throw sign), each on its own
+      // seeded ballistic arc, white-hot at the contact and cooling to
+      // orange as it flies. LIGHT, so the shower draws additively.
+      const duration = effect.durationMs ?? 340;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      if (t < 0 || t > 1) continue;
+      const seed = effect.seed ?? 0;
+      const heat = effect.intensity ?? 1;
+      const sign = Math.cos(effect.angle ?? Math.PI) >= 0 ? 1 : -1;
+      const fract = (v: number) => v - Math.floor(v);
+      ctx.globalCompositeOperation = "lighter";
+      // The contact flare: a small hot pool right where steel meets road,
+      // brightest at the first instant.
+      const flare = (1 - t) * (0.25 + 0.35 * heat);
+      if (flare > 0.02) {
+        ctx.globalAlpha = flare;
+        ctx.fillStyle = "#ffe9a8";
+        ctx.beginPath();
+        ctx.arc(x, groundY, 2 + 2 * heat, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const count = 6 + Math.round(4 * heat);
+      for (let i = 0; i < count; i++) {
+        const u1 = fract(seed * 0.731 + i * 0.377);
+        const u2 = fract(seed * 0.517 + i * 0.911);
+        const u3 = fract(seed * 0.293 + i * 0.641);
+        // Each spark lives a little shorter than the effect, staggered.
+        const life = 0.55 + 0.4 * u3;
+        const st = t / life;
+        if (st > 1) continue;
+        const throwPx = (18 + 34 * u1) * (0.5 + 0.5 * heat);
+        const lift = 8 + 14 * u2; // initial upward flick, px
+        const arc = (tt: number) => ({
+          px: x + sign * throwPx * tt,
+          py: groundY - lift * tt + (lift + 4) * tt * tt,
+        });
+        const now = arc(st);
+        const was = arc(Math.max(0, st - 0.12));
+        const cool = st; // white → gold → orange along its own life
+        ctx.strokeStyle =
+          cool < 0.35 ? "#fff8d8" : cool < 0.7 ? "#ffcf5e" : "#ff7a2d";
+        ctx.globalAlpha = (1 - st) * 0.9;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(Math.round(was.px), Math.round(was.py));
+        ctx.lineTo(Math.round(now.px), Math.round(now.py));
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
       continue;
     }
 

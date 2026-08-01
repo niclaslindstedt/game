@@ -5,7 +5,12 @@
 // renderer blits like any image. Everything under ./assets/ is produced by
 // scripts/generate-assets.mjs — never edited by hand.
 
-import { bitmapDataUrl, monochromeDataUrl, sliceAtlas } from "@ui/lib/atlas.ts";
+import {
+  bitmapDataUrl,
+  monochromeDataUrl,
+  sliceAtlas,
+  type AtlasRect,
+} from "@ui/lib/atlas.ts";
 import { bustDataUrl } from "@ui/lib/bust.ts";
 import { loadImages } from "@ui/lib/load-images.ts";
 import { createPixelFont, type PixelFont } from "@ui/lib/pixel-font.ts";
@@ -226,7 +231,12 @@ export function loadGameAssets(): Promise<GameAssets> {
     loadUiFont(),
   ]).then(async ([images, font]) => {
     const assets: GameAssets = {
-      sprites: await sliceAtlas(images.atlas, atlasRects),
+      // The JSON import types the tuples as `number[]`; the generator's
+      // format is exactly `[x, y, w, h]` per entry (generate-assets.mjs).
+      sprites: await sliceAtlas(
+        images.atlas,
+        atlasRects as unknown as Record<SpriteName, AtlasRect>,
+      ),
       font,
       hudFont: createPixelFont(images.hudFont, hudFontMeta),
       relicFonts: {

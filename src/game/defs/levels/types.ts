@@ -406,6 +406,32 @@ export type LevelDef = {
     sprite?: string;
   }[];
   /**
+   * STANDING travel doors — the hub's rocket and rift portal. Unlike `gates`
+   * (latent until a key trinket is used), a travel door is on the board from
+   * the first tick: the carve pins a LANDMARK whose object id equals the
+   * door's `id`, and the app hit-tests that landmark like the merchant's
+   * stall. One door lists SEVERAL destinations (the rocket flies to the moon
+   * AND Mars), each gated by campaign progress on the app's side — the
+   * engine only says where the door stands and where it can lead. The APP
+   * owns the actual travel, exactly as it does for a `gateEntered` crossing.
+   */
+  travelDoors?: {
+    /** Door id — MUST match a landmark object id in the level's blueprint,
+     * or the door stands nowhere and the content test says so. */
+    id: string;
+    /** What the door is called on the picker (THE ROCKET, THE RIFT DOOR). */
+    name: string;
+    /** Destination level ids, in the order the picker lists them. */
+    to: string[];
+    /**
+     * A story-item id that must be banked on the CHARACTER (a `keepsake:`
+     * item — see StoryItemDef) before this door works at all: the RIFT SEAM
+     * stays sealed until THE FOUNDER's RIFT CREATOR comes home. Omitted =
+     * the door only gates per destination, on campaign progress.
+     */
+    requires?: string;
+  }[];
+  /**
    * Where the exit of a `reachExit` level leads: the victory splash swaps
    * NEXT LEVEL for a "BACK TO <name>" button that starts a run of this level.
    * The farm-loop return door; omitted = the campaign's NEXT LEVEL rules.
@@ -941,6 +967,14 @@ export type LevelDef = {
     sprite?: string;
     /** Dialogue-box name; defaults to THE MERCHANT. */
     name?: string;
+    /**
+     * PARKED AT A COUNTER — the hub mode. He stands at the carve's stall
+     * spot from the first tick, revealed (rooted, stocked, pinned on the
+     * map) with no walk-up meeting and no scene, and he never wanders. The
+     * answer to "whom does he follow?" in co-op: nobody — everyone knows
+     * where the counter is. Omitted = the wandering trader, as everywhere.
+     */
+    parked?: boolean;
     /** Pages of the meeting scene (same shape as an elite's `dialogue`). */
     greeting?: string[][];
     /**
@@ -1167,11 +1201,18 @@ export type EarlyDrop = {
  * scale from the player spawn toward the boss. `reachExit` is the bossless
  * form (farm levels): standing within `radius` (default GATES.exitRadius) of
  * `at` clears the objective — the exit door anchors the axis instead.
+ *
+ * `hub` is the objective that NEVER clears: a home base (the garage) raises
+ * no victory, no outro and no bank, so a player can stand in it indefinitely
+ * and the run only ends by leaving through a door. A hub is the one place a
+ * "harmless" objective bug becomes unbearable, which is why it is its own
+ * kind rather than an abuse of `reachExit` — see `objectiveCleared`.
  */
 export type Objective =
   | { type: "killBoss" }
   | { type: "clearAll" }
-  | { type: "reachExit"; at: Vec2; radius?: number };
+  | { type: "reachExit"; at: Vec2; radius?: number }
+  | { type: "hub" };
 
 /**
  * A hand-placed pickup on the carved map (the loot inside a sealed room, a plot
@@ -1234,7 +1275,8 @@ export type MissionDef = Omit<
     objective:
       | { type: "killBoss" }
       | { type: "clearAll" }
-      | { type: "reachExit"; at?: Vec2; radius?: number };
+      | { type: "reachExit"; at?: Vec2; radius?: number }
+      | { type: "hub" };
     /** WHAT the mission leaves lying around; the carve decides WHERE (it
      * strings the story pieces along its own depth axis — see
      * `mapgen/place.ts`). */

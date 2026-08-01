@@ -1156,10 +1156,15 @@ describe("library pages", () => {
       // …and the covered half is really there rather than dropped.
       expect(html, name).toContain('class="role-boss"');
     }
-    // Every venue's section carries its own switch, plus one that lifts them all.
+    // Every venue that fields a NAMED cast carries its own switch, plus one
+    // that lifts them all. A venue with nobody to cover (the garage — a hub
+    // casts no monsters at all) has no section and so owes no switch.
     expect(index).toContain('class="reveal-all-toggle"');
     for (const venue of model.venues) {
-      expect(index).toContain(`id="reveal-${venue.slug}"`);
+      const named = model.enemies.some(
+        (enemy) => enemy.home?.id === venue.id && enemy.role !== "minion",
+      );
+      if (named) expect(index).toContain(`id="reveal-${venue.slug}"`);
     }
   });
 

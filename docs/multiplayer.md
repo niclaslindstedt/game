@@ -807,7 +807,15 @@ could before multiplayer existed.
 ## What has landed, and what is still owed
 
 phases 1, 2, 1.5, 1.75, 2.5, **phase 3's §3.1**, **phase 4's §4.2-abandoned-hero and
-§4.3** and **phase 5** of the ten in `docs/multiplayer-plan.md` have landed.
+§4.3**, **phase 5** and **phase 6's hub** of the ten in
+`docs/multiplayer-plan.md` have landed. THE GARAGE (the plan's §6.8) is the
+home base the mode was owed: a static hub level whose `hub` objective never
+clears, a merchant PARKED at his counter, standing travel doors
+(`LevelDef.travelDoors`) as the level select — the car boards and drives out,
+the rocket and the sealed rift seam open the destination picker — and the
+campaign now opens there. What §6.4 still owes is IN-SESSION party travel: a
+crossing today re-mounts the run app-side exactly like a gate, so a hosted
+session does not yet carry its party through a door together.
 
 The deferred work is inventoried in the plan's **phase 5.5 — "THE REMAINDER"**, and
 that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered across

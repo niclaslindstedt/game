@@ -31,6 +31,7 @@ import {
   repairCost,
   repairGear,
   sellItem,
+  seatHero,
   sellValue,
   skipCutscene,
   type Equipment,
@@ -223,21 +224,21 @@ describe("sell valuation", () => {
 describe("the shop", () => {
   it("only opens mid-run, discovered, and at the counter", () => {
     const state = startGame();
-    expect(openShop(state)).toBe(false); // not discovered yet
+    expect(openShop(state, state.players[0])).toBe(false); // not discovered yet
     meet(state);
     state.players[0].pos = {
       x: state.merchant.pos.x + MERCHANT.tradeRadius * 3,
       y: state.merchant.pos.y,
     };
-    expect(openShop(state)).toBe(false); // too far from the stall
+    expect(openShop(state, state.players[0])).toBe(false); // too far from the stall
     state.players[0].pos = { ...state.merchant.pos };
-    expect(openShop(state)).toBe(true);
+    expect(openShop(state, state.players[0])).toBe(true);
     expect(state.phase).toBe("shop");
     // Frozen like the bag.
     const before = state.stats.timeMs;
     run(state, idle, 20);
     expect(state.stats.timeMs).toBe(before);
-    closeShop(state);
+    closeShop(state, state.players[0]);
     expect(state.phase).toBe("playing");
   });
 
@@ -247,12 +248,12 @@ describe("the shop", () => {
     state.players[0].pos = { ...state.merchant.pos };
     const loot = piece("test_wand", "magic", 4);
     state.players[0].inventory[0] = loot;
-    openShop(state);
-    const paid = sellItem(state, 0);
+    openShop(state, state.players[0]);
+    const paid = sellItem(state, state.players[0], 0);
     expect(paid).toBe(sellValue(loot));
     expect(state.players[0].coins).toBe(paid);
     expect(state.players[0].inventory[0]).toBeNull();
-    expect(sellItem(state, 0)).toBeNull(); // empty cell: no-op
+    expect(sellItem(state, state.players[0], 0)).toBeNull(); // empty cell: no-op
   });
 
   describe("the buy-back shelf", () => {
@@ -264,19 +265,19 @@ describe("the shop", () => {
       pieces.forEach((item, i) => {
         state.players[0].inventory[i] = item;
       });
-      openShop(state);
+      openShop(state, state.players[0]);
       return state;
     }
 
     it("a sale is undoable for exactly what it paid", () => {
       const loot = piece("test_wand", "magic", 4);
       const state = atCounter([loot]);
-      const paid = sellItem(state, 0) as number;
+      const paid = sellItem(state, state.players[0], 0) as number;
       expect(buybackContents(state.merchant)).toEqual([
         { item: loot, price: paid },
       ]);
 
-      expect(buybackItem(state, loot.id)).toBeNull();
+      expect(buybackItem(state, state.players[0], loot.id)).toBeNull();
       // The purse is exactly where it started, the piece is back in the bag —
       // the SAME instance, not a re-roll — and the shelf is empty again.
       expect(state.players[0].coins).toBe(0);
@@ -297,7 +298,7 @@ describe("the shop", () => {
       // the run of sales.
       for (const item of pieces) {
         state.players[0].inventory[0] = item;
-        sellItem(state, 0);
+        sellItem(state, state.players[0], 0);
       }
       const shelf = buybackContents(state.merchant);
       expect(shelf).toHaveLength(MERCHANT.buybackSlots);
@@ -305,16 +306,18 @@ describe("the shop", () => {
       expect(shelf[0]?.item.id).toBe(pieces[pieces.length - 1]?.id);
       // …and the very first sale has fallen off for good.
       expect(shelf.some((e) => e.item.id === pieces[0]?.id)).toBe(false);
-      expect(buybackItem(state, pieces[0]?.id as number)).toBe("gone");
+      expect(
+        buybackItem(state, state.players[0], pieces[0]?.id as number),
+      ).toBe("gone");
     });
 
     it("refuses a short purse, a full bag, and a closed counter", () => {
       const loot = piece("test_wand", "rare", 6);
       const state = atCounter([loot]);
-      const paid = sellItem(state, 0) as number;
+      const paid = sellItem(state, state.players[0], 0) as number;
 
       state.players[0].coins = paid - 1;
-      expect(buybackItem(state, loot.id)).toBe("coins");
+      expect(buybackItem(state, state.players[0], loot.id)).toBe("coins");
       state.players[0].coins = paid;
 
       // Every cell taken: nowhere to put it, and nothing is spent trying.
@@ -323,20 +326,20 @@ describe("the shop", () => {
         id: 500 + i,
       }));
       state.players[0].inventory = filler;
-      expect(buybackItem(state, loot.id)).toBe("bag");
+      expect(buybackItem(state, state.players[0], loot.id)).toBe("bag");
       expect(state.players[0].coins).toBe(paid);
       expect(buybackContents(state.merchant)).toHaveLength(1);
 
       // The shelf is the COUNTER's, so it is only reachable across it.
       state.players[0].inventory[0] = null;
-      closeShop(state);
-      expect(buybackItem(state, loot.id)).toBe("gone");
+      closeShop(state, state.players[0]);
+      expect(buybackItem(state, state.players[0], loot.id)).toBe("gone");
       expect(state.players[0].coins).toBe(paid);
     });
 
     it("is the trader's memory — a new level's merchant has an empty shelf", () => {
       const state = atCounter([piece("test_wand", "magic", 4)]);
-      sellItem(state, 0);
+      sellItem(state, state.players[0], 0);
       expect(state.merchant.buyback.length).toBeGreaterThan(0);
       const fresh = startGame();
       expect(fresh.merchant.buyback).toEqual([]);
@@ -377,12 +380,12 @@ describe("the shop", () => {
     const state = startGame();
     meet(state);
     state.players[0].pos = { ...state.merchant.pos };
-    openShop(state);
+    openShop(state, state.players[0]);
     const entry = state.merchant.stock.find((s) => s.kind === "ability")!;
-    expect(buyStock(state, entry.id)).toBe(false); // too poor
+    expect(buyStock(state, state.players[0], entry.id)).toBe(false); // too poor
     state.players[0].coins = entry.price * 10;
     expect(canBuyStock(state, state.players[0], entry)).toBe(true);
-    expect(buyStock(state, entry.id)).toBe(true);
+    expect(buyStock(state, state.players[0], entry.id)).toBe(true);
     expect(state.players[0].heldAbilities).toContain(
       entry.kind === "ability" ? entry.defId : "",
     );
@@ -393,7 +396,7 @@ describe("the shop", () => {
     expect(entry.qty).toBe(0);
     expect(state.players[0].heldAbilities.length).toBeLessThan(HELD_ITEMS.cap);
     expect(canBuyStock(state, state.players[0], entry)).toBe(false);
-    expect(buyStock(state, entry.id)).toBe(false);
+    expect(buyStock(state, state.players[0], entry.id)).toBe(false);
     expect(state.players[0].coins).toBe(entry.price * 9); // no coins moved
   });
 
@@ -401,7 +404,7 @@ describe("the shop", () => {
     const state = startGame();
     meet(state);
     state.players[0].pos = { ...state.merchant.pos };
-    openShop(state);
+    openShop(state, state.players[0]);
     const shelf = state.merchant.stock.filter((s) => s.kind === "consumable");
     expect(shelf.map((s) => (s.kind === "consumable" ? s.item : null))).toEqual(
       ["medkit", "repair", "drink"],
@@ -419,10 +422,10 @@ describe("the shop", () => {
       // would sell units the bank then refuses.
       expect(depth).toBeLessThanOrEqual(CONSUMABLES.stackCap);
       for (let i = 0; i < depth; i++) {
-        expect(buyStock(state, entry.id)).toBe(true);
+        expect(buyStock(state, state.players[0], entry.id)).toBe(true);
       }
       expect(entry.qty).toBe(0);
-      expect(buyStock(state, entry.id)).toBe(false); // sold out, not restocked
+      expect(buyStock(state, state.players[0], entry.id)).toBe(false); // sold out, not restocked
       const banked =
         entry.item === "medkit"
           ? (state.players[0].medkits[medkitTierIndex(entry.tier)] ?? 0)
@@ -437,14 +440,14 @@ describe("the shop", () => {
     const state = startGame();
     meet(state);
     state.players[0].pos = { ...state.merchant.pos };
-    openShop(state);
+    openShop(state, state.players[0]);
     const entry = state.merchant.stock.find(
       (s) => s.kind === "consumable" && s.item === "drink",
     )!;
     state.players[0].coins = 100_000;
     state.players[0].staminaPotions = CONSUMABLES.stackCap;
     expect(canBuyStock(state, state.players[0], entry)).toBe(false);
-    expect(buyStock(state, entry.id)).toBe(false);
+    expect(buyStock(state, state.players[0], entry.id)).toBe(false);
     // Refused with nothing spent: neither the purse nor the shelf moved.
     expect(state.players[0].coins).toBe(100_000);
     expect(entry.qty).toBeGreaterThan(0);
@@ -454,7 +457,7 @@ describe("the shop", () => {
     const state = startGame();
     meet(state);
     state.players[0].pos = { ...state.merchant.pos };
-    openShop(state);
+    openShop(state, state.players[0]);
     // A hand-stocked bomb on the stall (no level pools a nuke, so the entry
     // is planted): the first sale docks it, the second is refused while it
     // sits there — same gate as the ground pickup (canBankAbility). Stocked two
@@ -469,9 +472,9 @@ describe("the shop", () => {
     const entry = state.merchant.stock.find((s) => s.id === 990)!;
     state.players[0].coins = 100;
     expect(canBuyStock(state, state.players[0], entry)).toBe(true);
-    expect(buyStock(state, 990)).toBe(true);
+    expect(buyStock(state, state.players[0], 990)).toBe(true);
     expect(canBuyStock(state, state.players[0], entry)).toBe(false);
-    expect(buyStock(state, 990)).toBe(false); // refused, coins untouched
+    expect(buyStock(state, state.players[0], 990)).toBe(false); // refused, coins untouched
     expect(state.players[0].coins).toBe(95);
     expect(
       state.players[0].heldAbilities.filter((d) => d === "test_nuke"),
@@ -482,12 +485,12 @@ describe("the shop", () => {
     const state = startGame();
     meet(state);
     state.players[0].pos = { ...state.merchant.pos };
-    openShop(state);
+    openShop(state, state.players[0]);
     const entry = state.merchant.stock.find(
       (s) => s.kind === "weapon" && s.equipment.slot === "weapon",
     ) as Extract<MerchantStock, { kind: "weapon" }>;
     state.players[0].coins = entry.price * 2;
-    expect(buyStock(state, entry.id)).toBe(true);
+    expect(buyStock(state, state.players[0], entry.id)).toBe(true);
     // The piece that lands is the row's own roll, handed over as a FRESH
     // instance: a row may hold several units (the salts shelf), so the same
     // object must never end up in two bag cells sharing an id.
@@ -498,7 +501,7 @@ describe("the shop", () => {
     expect(bought!.id).not.toBe(entry.equipment.id);
     expect(state.players[0].coins).toBe(entry.price);
     // Sold out: the entry refuses a second purchase.
-    expect(buyStock(state, entry.id)).toBe(false);
+    expect(buyStock(state, state.players[0], entry.id)).toBe(false);
     expect(canBuyStock(state, state.players[0], entry)).toBe(false);
   });
 });
@@ -545,11 +548,11 @@ describe("repair", () => {
     state.players[0].pos = { ...state.merchant.pos };
     state.players[0].inventory[0] = worn();
     state.players[0].coins = 100_000;
-    openShop(state);
+    openShop(state, state.players[0]);
     const quote = repairAllCost(state, state.players[0]);
     expect(quote).toBeGreaterThan(0);
     const before = state.players[0].coins;
-    const paid = repairGear(state);
+    const paid = repairGear(state, state.players[0]);
     expect(paid).toBe(quote);
     expect(state.players[0].coins).toBe(before - quote);
     expect(state.players[0].inventory[0]?.durability).toBe(
@@ -559,7 +562,7 @@ describe("repair", () => {
       expect.objectContaining({ type: "gearRepaired", paid: quote }),
     );
     // Nothing left to mend — a second repair is a no-op.
-    expect(repairGear(state)).toBeNull();
+    expect(repairGear(state, state.players[0])).toBeNull();
   });
 
   it("refuses with the shop shut or the purse short — kit untouched", () => {
@@ -568,12 +571,12 @@ describe("repair", () => {
     state.players[0].pos = { ...state.merchant.pos };
     state.players[0].inventory[0] = worn();
     // Shop shut.
-    expect(repairGear(state)).toBeNull();
+    expect(repairGear(state, state.players[0])).toBeNull();
     // Open, but broke.
     state.players[0].coins = 0;
-    openShop(state);
+    openShop(state, state.players[0]);
     expect(repairAllCost(state, state.players[0])).toBeGreaterThan(0);
-    expect(repairGear(state)).toBeNull();
+    expect(repairGear(state, state.players[0])).toBeNull();
     expect(state.players[0].inventory[0]?.durability).toBe(1); // untouched
   });
 });
@@ -642,5 +645,79 @@ describe("return visit — met here before", () => {
     expect(dialogueContent(easy.dialogue!).pages[0]).not.toEqual(
       dialogueContent(jesus.dialogue!).pages[0],
     );
+  });
+});
+
+describe("the counter in co-op — every mutator acts on the ACTING hero", () => {
+  // §5.9's first defect, from the other side of the counter: the READ was
+  // parameterized when it crashed a client, and the MUTATORS kept spending
+  // seat 0's purse. A joiner at the stall must trade with their own coins,
+  // their own bag and their own kit — the host's must not move.
+  const seatJoiner = (state: GameState) => {
+    meet(state); // seat 0 latches the stall
+    if (state.phase === "dialogue") {
+      advanceDialogue(state);
+      run(state, idle, 1);
+    }
+    const joiner = seatHero(state, null);
+    joiner.pos = { ...state.merchant.pos };
+    return joiner;
+  };
+
+  it("a joiner's purchase spends the joiner's purse, never the host's", () => {
+    const state = startGame();
+    const joiner = seatJoiner(state);
+    const host = state.players[0];
+    const entry = state.merchant.stock.find((s) => s.kind === "consumable")!;
+    host.coins = 5; // too poor — and must stay untouched
+    joiner.coins = entry.price + 3;
+    expect(openShop(state, joiner)).toBe(true);
+    expect(buyStock(state, joiner, entry.id)).toBe(true);
+    expect(joiner.coins).toBe(3);
+    expect(host.coins).toBe(5);
+  });
+
+  it("a joiner's sale empties the joiner's cell and pays the joiner", () => {
+    const state = startGame();
+    const joiner = seatJoiner(state);
+    const host = state.players[0];
+    const hostCoins = host.coins;
+    const goods = piece("blaster");
+    joiner.inventory[0] = goods;
+    openShop(state, joiner);
+    const paid = sellItem(state, joiner, 0);
+    expect(paid).toBe(sellValue(goods));
+    expect(joiner.inventory[0]).toBeNull();
+    expect(joiner.coins).toBe(paid);
+    expect(host.coins).toBe(hostCoins);
+  });
+
+  it("repair mends the acting hero's kit and bills their purse", () => {
+    const state = startGame();
+    const joiner = seatJoiner(state);
+    const host = state.players[0];
+    const hostCoins = host.coins;
+    const blade = piece("blaster");
+    blade.durability = 1;
+    joiner.equipment.weapon = blade;
+    joiner.coins = 100_000;
+    openShop(state, joiner);
+    const paid = repairGear(state, joiner);
+    expect(paid).toBeGreaterThan(0);
+    expect(joiner.equipment.weapon?.durability).toBe(
+      equipmentMaxDurability(blade),
+    );
+    expect(joiner.coins).toBe(100_000 - paid!);
+    expect(host.coins).toBe(hostCoins);
+  });
+
+  it("the shopper has to be at the counter — their own feet, not seat 0's", () => {
+    const state = startGame();
+    const joiner = seatJoiner(state);
+    // Host at the stall, joiner across the map: the JOINER's tap is refused.
+    state.players[0].pos = { ...state.merchant.pos };
+    joiner.pos = { x: 20, y: 20 };
+    expect(openShop(state, joiner)).toBe(false);
+    expect(openShop(state, state.players[0])).toBe(true);
   });
 });
