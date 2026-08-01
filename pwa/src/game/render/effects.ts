@@ -223,8 +223,9 @@ export type Effect = {
   slats?: number;
   /** Muzzle: the HERO's facing when he fired (only set for his own shots). The
    * flash is pinned to the weapon's side (where the sprite is drawn) rather than
-   * the aim, so firing at a foe BEHIND him still flashes at the barrel, not off
-   * his back. Absent on companion/enemy shots (they flash along the aim). */
+   * the aim, so a near-vertical shot — the one case the facing deadzone lets the
+   * two disagree — still flashes at the barrel, not off his back. Absent on
+   * companion/enemy shots (they flash along the aim). */
   faceLeft?: boolean;
 };
 
@@ -1022,10 +1023,13 @@ function drawEffectPass(
       const duration = effect.durationMs ?? 110;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       if (t < 0 || t > 1) continue;
-      // The weapon points where the hero FACES, not where the shot goes — so his
-      // own flash fires out the barrel's side even when the target is behind
-      // him. Force the horizontal to the facing side, keeping the aim's up/down
-      // tilt. Companion/enemy shots (no `faceLeft`) flash straight along the aim.
+      // The weapon points where the hero FACES, and he now faces what he is
+      // SHOOTING (`stepWeapon` turns him onto every blow), so the two agree on
+      // all but a near-vertical shot — where the facing deadzone deliberately
+      // keeps the last side. Force the horizontal to the facing side there,
+      // keeping the aim's up/down tilt, so the flash still leaves the barrel
+      // rather than his back. Companion/enemy shots (no `faceLeft`) flash
+      // straight along the aim.
       let aim = effect.angle ?? 0;
       if (effect.faceLeft !== undefined) {
         const c = Math.abs(Math.cos(aim)) * (effect.faceLeft ? -1 : 1);

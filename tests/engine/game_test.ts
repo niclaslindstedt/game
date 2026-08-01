@@ -184,6 +184,69 @@ describe("steering", () => {
     expect(state.players[0].faceLeft).toBe(false);
   });
 
+  it("turns the hero onto what he is FIGHTING, not onto his legs", () => {
+    const state = startGame();
+    clearStage(state);
+    equipBlaster(state);
+    const hero = state.players[0];
+    const { x, y } = hero.pos;
+    // One foe BEHIND him, well inside the sidearm's reach.
+    state.enemies.push(makeEnemy({ pos: { x: x - 60, y } }));
+
+    // He runs RIGHT and shoots LEFT — mirrored onto the fight, so the weapon
+    // (and its muzzle flash) stays on the side the shots actually leave. His
+    // legs still carry him the other way: that is the "running backward" read.
+    run(state, steerTo(x + 400, y), 4);
+    expect(hero.faceLeft).toBe(true);
+    expect(hero.facing.x).toBeGreaterThan(0);
+    expect(hero.pos.x).toBeGreaterThan(x);
+  });
+
+  it("holds the fighting facing between blows, then hands him back to his legs", () => {
+    const state = startGame();
+    clearStage(state);
+    equipBlaster(state);
+    const hero = state.players[0];
+    const { x, y } = hero.pos;
+    const foe = makeEnemy({ pos: { x: x - 60, y } });
+    state.enemies.push(foe);
+
+    run(state, steerTo(x + 400, y), 4);
+    expect(hero.faceLeft).toBe(true);
+    // Mid-cooldown — between two shots — he stays turned on the fight rather
+    // than flicking back to his legs the moment the round leaves the barrel.
+    expect(hero.weaponCooldownMs).toBeGreaterThan(0);
+    run(state, steerTo(hero.pos.x + 400, y), 4);
+    expect(hero.faceLeft).toBe(true);
+
+    // Fight over: the last cooldown drains and his legs have him again.
+    state.enemies = state.enemies.filter((e) => e !== foe);
+    run(
+      state,
+      steerTo(hero.pos.x + 400, y),
+      Math.ceil(weaponCooldownFor(state, hero, hero.equipment.weapon) / DT) + 4,
+    );
+    expect(hero.faceLeft).toBe(false);
+  });
+
+  it("turns the hero with a held AIM even when no shot is fired", () => {
+    const state = startGame();
+    clearStage(state); // nothing in reach: the sidearm never pulls
+    const hero = state.players[0];
+    const { x, y } = hero.pos;
+    // Desktop AIM & SHOOT: the cursor is a bearing on every tick, trigger or no
+    // trigger, so the hero turns with it the instant it crosses him.
+    const aimLeftRunRight = {
+      ...steerTo(x + 400, y),
+      aim: { x: x - 200, y },
+      fire: false,
+    };
+    run(state, aimLeftRunRight, 4);
+    expect(hero.weaponCooldownMs).toBe(0);
+    expect(hero.faceLeft).toBe(true);
+    expect(hero.pos.x).toBeGreaterThan(x);
+  });
+
   it("does not move while the pointer is released", () => {
     const state = startGame();
     const before = { ...state.players[0].pos };
