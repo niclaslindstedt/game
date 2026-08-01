@@ -110,6 +110,7 @@ import {
 } from "./trade.ts";
 import { closeMap, openMap } from "./map.ts";
 import {
+  buybackItem,
   buyStock,
   closeShop,
   openShop,
@@ -251,6 +252,10 @@ export const RUN_COMMAND_ARGS = {
   // THE COUNTER.
   buyStock: ["int"],
   sellItem: ["int"],
+  // The BUY-BACK shelf takes the ITEM's id, not a shelf index: the shelf
+  // reorders itself under every sale, so an index picked off a rendered list
+  // is stale the moment anything else is sold.
+  buybackItem: ["int"],
   repairGear: [],
   buyQuestPiece: ["str", "str"],
   sellQuestPiece: ["str", "str"],
@@ -533,6 +538,8 @@ export function applyRunCommand(
       return buyStock(state, num(a, 0));
     case "sellItem":
       return sellItem(state, num(a, 0));
+    case "buybackItem":
+      return buybackItem(state, num(a, 0));
     case "repairGear":
       return repairGear(state);
     case "buyQuestPiece":

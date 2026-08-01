@@ -304,6 +304,14 @@ export function loadSavedRun(): ParkedRun | null {
       goldRng: createRngFromState(
         payload.goldRngState ?? (payload.rngState ^ 0x1f83d9ab) >>> 0,
       ),
+      // The trader's BUY-BACK shelf is purely additive — a run parked before it
+      // shipped simply has nothing on it — so it is defaulted here rather than
+      // paid for with a SAVE_VERSION bump that would bin every parked run for a
+      // list that starts empty anyway.
+      merchant: {
+        ...payload.state.merchant,
+        buyback: payload.state.merchant?.buyback ?? [],
+      },
     };
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
     // plain object, which freezes the fog renderers (see reviveExplored).
