@@ -12,7 +12,8 @@ twoHanded: true
 damage: 51
 cooldownMs: 700
 range: 320
-durability: 190
+# RANGED: eats bullets, and so never wears out (see WeaponDef.ammo).
+ammo: bullets
 projectile:
   speed: 520
   radius: 3

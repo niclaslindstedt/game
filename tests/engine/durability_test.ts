@@ -78,7 +78,9 @@ describe("weapon durability", () => {
     clearStage(state);
     addPunchingBag(state);
     run(state, idle, 200, (s) => s.stats.damageDealt > 0); // one swing
-    expect(weapon.durability).toBeLessThan(weaponDef("crude_sword").durability);
+    expect(weapon.durability).toBeLessThan(
+      weaponDef("crude_sword").durability as number,
+    );
   });
 
   it("each attack spends one point of durability", () => {

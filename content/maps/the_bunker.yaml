@@ -149,8 +149,22 @@ objects:
   - id: crate
     type: crate
     radius: 7
-    density: 3.5
+    density: 5
     areas: [atrium, hall]
+  # THE ARMORY CABINETS. A shelter sold to people who expected to need one came
+  # with lockers on every corridor, and they are still stocked — a solid,
+  # non-jumpable obstacle that happens to break, which is what a `loot` block on
+  # an `obstacle` buys (see buildObstacles).
+  - id: weapon_locker
+    type: obstacle
+    radius: 8
+    density: 4.5
+    areas: [hall, wing]
+    loot:
+      drop:
+        ammo: 9
+        gear: 4
+        health: 1
   - id: cache
     type: chest
   # THE OCCUPIED SUITES. A marble frontage in a hall like any other, right up

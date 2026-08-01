@@ -153,7 +153,11 @@ export {
   shareXp,
   staminaDrinkChance,
 } from "./game/loot.ts";
-export { mercyRescueWaiting, type MercyRescue } from "./game/items/index.ts";
+export {
+  mercyRescueWaiting,
+  outOfAmmoDesperation,
+  type MercyRescue,
+} from "./game/items/index.ts";
 
 // Loadout carry-over between levels: snapshot a finished run's progress,
 // dress the next run in it (via createGame's `loadout` parameter), or derive
@@ -264,6 +268,10 @@ export {
   vaultItem,
   vaultWorth,
   absorbPlayerDamage,
+  ammoCount,
+  ammoKindFor,
+  ammoName,
+  bankAmmo,
   bankMedkit,
   bankRepairKit,
   bankStaminaPotion,
@@ -327,6 +335,9 @@ export {
   itemLevelReq,
   medkitTierIndex,
   meetsLevelReq,
+  hasAmmoFor,
+  weaponAmmoLeft,
+  weaponAmmoType,
   scrapInferiorLoot,
   moveInventoryItem,
   openInventory,
@@ -1017,6 +1028,9 @@ export {
   ACCURACY,
   AIM,
   ABILITY,
+  AMMO,
+  AMMO_KINDS,
+  AMMO_TYPES,
   APPARITION,
   ARMOR,
   ARRIVAL,
@@ -1079,6 +1093,7 @@ export {
 export type {
   ActiveAbility,
   Affix,
+  AmmoType,
   ArmorSlot,
   Asteroid,
   CanopyPiece,

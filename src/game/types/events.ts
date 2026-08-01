@@ -508,6 +508,17 @@ export type GameEvent =
   | { type: "autoEquipped"; defId: string }
   /** The equipped weapon's durability ran out; `defId` is the broken one. */
   | { type: "weaponBroke"; defId: string }
+  /**
+   * The equipped RANGED weapon ran out of ammunition and was stowed for
+   * something the hero can actually fire (`swapOffDryWeapon`); `defId` is the
+   * empty one. Durability's twin — a ranged weapon never breaks, so this is
+   * the only way one leaves the hand on its own.
+   *
+   * Emitted only on an actual SWAP. A hero with nothing loaded to swap to keeps
+   * the empty weapon in hand and fires nothing, silently — an event per tick
+   * for a state the player can already read off the HUD's gauge would be noise.
+   */
+  | { type: "weaponDry"; defId: string }
   /** A worn armor piece's durability ran out. It stays worn but INACTIVE
    * (no armor, no bonuses) until a repair kit restores it. */
   | { type: "armorBroke"; defId: string }

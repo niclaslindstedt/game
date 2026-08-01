@@ -259,6 +259,18 @@ objects:
         health: 2
         stamina: 1
         gear: 1
+  # THE ARMORY NOBODY ASKED ABOUT — the same cabinets the PUMP SHOTGUN's lore
+  # names, standing on the floor and in the bays.
+  - id: weapon_locker
+    type: obstacle
+    radius: 8
+    density: 4
+    areas: [floor, bay]
+    loot:
+      drop:
+        ammo: 9
+        gear: 4
+        health: 1
   - id: crate
     type: crate
     radius: 7

@@ -11,11 +11,14 @@
 // Extracted from step//loot.ts so the crate rules live in one place.
 
 import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
-import { CHESTS, CRATES, LEVELING } from "./config/index.ts";
+import { AMMO, CHESTS, CRATES, LEVELING } from "./config/index.ts";
 import {
+  ammoAppetite,
+  ammoKindFor,
   consumableAppetite,
   dropItem,
   medkitAppetite,
+  rollAmmoCount,
   rollEquipment,
 } from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
@@ -225,6 +228,24 @@ function dropConsumable(
   }
 }
 
+/** Drop one box of AMMUNITION at a scattered spot near `at`, of the kind the
+ * hero's own holster eats (`ammoKindFor` — deterministic, so it shifts no
+ * seeded draw) and sized by that kind's authored band. */
+function dropAmmo(state: GameState, at: Vec2): void {
+  const type = ammoKindFor(state, state.players[0]);
+  dropItem(
+    state,
+    {
+      id: state.nextId++,
+      kind: "ammo",
+      pos: scatter(state, at),
+      ammo: type,
+      count: rollAmmoCount(state, type),
+    },
+    at,
+  );
+}
+
 /**
  * A crate's spill (config `CRATES`): exactly one PRIMARY drop — weighted
  * toward healing and stamina, sometimes gear rolled HOTTER than a mob's
@@ -239,13 +260,19 @@ function dropConsumable(
 function dropCrateLoot(
   state: GameState,
   at: Vec2,
-  weights?: { health?: number; stamina?: number; gear?: number },
+  weights?: {
+    health?: number;
+    stamina?: number;
+    gear?: number;
+    ammo?: number;
+  },
 ): void {
   const mlvl = currentMobLevel(state);
   const authoredHealth = weights?.health ?? (weights ? 0 : CRATES.drop.health);
   const authoredStamina =
     weights?.stamina ?? (weights ? 0 : CRATES.drop.stamina);
   const gear = weights?.gear ?? (weights ? 0 : CRATES.drop.gear);
+  const authoredAmmo = weights?.ammo ?? (weights ? 0 : CRATES.drop.ammo);
   // APPETITE: a consumable's weight fades with the pouch it would bank into
   // (and grows with how far down the pool it refills has fallen), so a crate
   // leans toward gear — or the other consumable — for a hero already carrying
@@ -254,13 +281,19 @@ function dropCrateLoot(
   const health = authoredHealth * medkitAppetite(state, state.players[0], mlvl);
   const stamina =
     authoredStamina * consumableAppetite(state, state.players[0], "drink");
-  const total = health + stamina + gear;
+  // AMMUNITION leans the same way, and on one extra axis: what the hero is
+  // HOLDING (`ammoAppetite`). A sword build cracking a weapons locker mostly
+  // finds the gear and the drinks in it; a shooter finds the rounds.
+  const ammo = authoredAmmo * ammoAppetite(state, state.players[0]);
+  const total = health + stamina + gear + ammo;
   if (total <= 0) return;
   const roll = state.rng() * total;
   if (roll < health) {
     dropConsumable(state, "health", at);
   } else if (roll < health + stamina) {
     dropConsumable(state, "stamina", at);
+  } else if (roll < health + stamina + ammo) {
+    dropAmmo(state, at);
   } else {
     dropItem(
       state,
@@ -319,4 +352,9 @@ function dropChestLoot(state: GameState, at: Vec2): void {
   for (let i = 0; i < CHESTS.consumables; i++) {
     dropConsumable(state, pickConsumableKind(state, mlvl), at);
   }
+  // …and the ROUNDS, guaranteed and unweighted. Everything else in a locker is
+  // a roll; this is the part a player detours for and can count on, which is
+  // what makes "there is a cache at the end of that dead end" a decision rather
+  // than a lottery ticket.
+  for (let i = 0; i < AMMO.chestDrops; i++) dropAmmo(state, at);
 }

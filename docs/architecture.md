@@ -348,11 +348,19 @@ escort.ts` walks the people an escort errand puts on the field, and
   hero's RAW attribute — never authored per item, and it scales with the AUTO
   LEVEL STATS flag so the arsenal stays calibrated when auto-attributes toggle
   (config `STAT_REQ`); plus a durability
-  budget: dropped weapons wear out per attack and break, though the starting
-  sidearm and every unique/legendary find are minted unbreakable (the one
+  budget: MELEE AND MAGIC weapons wear out per attack and break, though every
+  unique/legendary find is minted unbreakable (the one
   exception is an EXECUTIONER — `WeaponDef.execute`, `items/execute.ts` — whose
   durability is a BODY COUNT rather than a swing count, because it takes a body
-  outright instead of damaging it); ranged
+  outright instead of damaging it). RANGED weapons made the OTHER trade and
+  carry no durability at all: they eat AMMUNITION (`WeaponDef.ammo`, config
+  `AMMO` / `AMMO_KINDS`, the rules in `items/ammo.ts`), one round per TRIGGER
+  PULL however many pellets that pull throws, out of a per-hero pouch
+  (`Player.ammo`) that stacks each of the three kinds — `bullets` for every
+  firearm, `arrows` for a drawn bow, `cells` for charged shot — to
+  `AMMO.stackCap` (200) independently. A gun never breaks and never wants a
+  repair kit; it runs dry, and the hero draws whatever in the bag he can still
+  fire (`swapOffDryWeapon`). Ranged
   bases can fire pellet volleys, pierce, home, or chain), gear, the
   quality ladder (trash/regular/magic/rare/unique/legendary — each tier
   unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`; TRASH sits below
@@ -871,7 +879,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`wearEquippedWeapon` — a weapon worn to zero is NOT trashed: it falls into
   the bag as a broken, unequippable spare (`isWeaponBroken`) and the best
   wieldable bag weapon takes over, never defaulting to the sidearm while a good
-  weapon remains; `wearWornArmor` — armor spends a point per landed hit
+  weapon remains; its twin `swapOffDryWeapon` does the same for a RANGED weapon
+  that ran out of AMMUNITION, narrowed to bag weapons the hero can actually
+  fire — a full bag keeps the empty one in hand instead, since there is nothing
+  to preserve by putting it down; `wearWornArmor` — armor spends a point per landed hit
   and a piece at zero goes INACTIVE (`isArmorBroken`), never trashed — and the
   stacked repair kit (`consumeRepairKit` → `repairAll`), banked into the
   consumable dock like a medkit and spent on the player's call to mend the whole

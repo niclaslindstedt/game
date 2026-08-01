@@ -116,6 +116,7 @@ export const PRIVATE_PLAYER_FIELDS: readonly string[] = [
   "medkits",
   "staminaPotions",
   "repairKits",
+  "ammo",
   "cleanSlates",
   "pendingStatPoints",
 ];

@@ -49,6 +49,14 @@ export const CRATES = {
     stamina: 4,
     /** A full equipment roll (see `gearTierBonus`). */
     gear: 3,
+    /**
+     * A box of AMMUNITION — the heaviest single weight in the spill, and the
+     * reason a shooter crosses a room to smash a crate. Read through
+     * `ammoAppetite` like the two consumables above it, so a full pouch (or a
+     * hero swinging a sword) hands most of this weight back to the others
+     * rather than paying out rounds he cannot carry.
+     */
+    ammo: 6,
   },
   /**
    * Crate gear rolls HOTTER than a mob's: this tier-chance bonus sweetens the

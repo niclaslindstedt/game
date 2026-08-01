@@ -16,6 +16,7 @@ import {
 import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
   ACCURACY,
+  AMMO,
   COMPANIONS,
   CONSUMABLES,
   ENEMY_AI,
@@ -40,6 +41,8 @@ import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
+  ammoAppetite,
+  ammoKindFor,
   consumableAppetite,
   dropChance,
   dropItem,
@@ -51,10 +54,12 @@ import {
   medkitAppetite,
   mercyRescueWaiting,
   mintUnique,
+  outOfAmmoDesperation,
   playerCritChance,
   playerMissChance,
   recomputeMaxHp,
   recomputeMaxStamina,
+  rollAmmoCount,
   rollEquipment,
   syncInventoryCapacity,
   topMedkitTier,
@@ -1399,6 +1404,23 @@ function dropMinionLoot(
     consumableAppetite(state, state.players[0], "repair");
   const wantedDrink =
     LOOT.drinkShare * consumableAppetite(state, state.players[0], "drink");
+  // AMMUNITION rides the same appetite shape (`ammoAppetite`), with one extra
+  // factor no other consumable has: WHAT IS IN THE HERO'S HAND. A shooter with
+  // a draining pouch earns the whole slice; a hero swinging a sword earns
+  // `AMMO.offClassShare` of it, because the weapon he holds now is not the
+  // weapon he will hold in five minutes and a pouch that only fills once you
+  // are already armed for it makes picking up a found rifle a punishment.
+  //
+  // …plus the one mercy rope that hangs at EVERY difficulty (see
+  // `AMMO.mercyBonus`): a hero whose weapon is dry with nothing in the bag he
+  // can fight with is soft-locked rather than merely losing, and no amount of
+  // skill kills his way back to a drop. `outOfAmmoDesperation` stays flatly
+  // zero in every other case, including a dry rifle with a sword in the bag.
+  const ammoBoost = mercyRescueWaiting(state, state.players[0], "ammo")
+    ? 0
+    : outOfAmmoDesperation(state, state.players[0]) * AMMO.mercyBonus;
+  const wantedAmmo =
+    AMMO.dropShare * (1 + ammoBoost) * ammoAppetite(state, state.players[0]);
   // FIT THE LADDER UNDER ONE ROLL. The bands are cumulative against a single
   // `rng()` in [0,1), so a boosted consumable slice that pushes the total past 1
   // silently kills every band BELOW it — the drinks and the arrow tail would go
@@ -1411,12 +1433,14 @@ function dropMinionLoot(
     0,
     1 - (equipmentShare + abilityShare + arrowShare),
   );
-  const consumableTotal = wantedMedkit + wantedRepair + wantedDrink;
+  const consumableTotal =
+    wantedMedkit + wantedRepair + wantedDrink + wantedAmmo;
   const fit =
     consumableTotal > consumableRoom ? consumableRoom / consumableTotal : 1;
   const medkitShare = wantedMedkit * fit;
   const repairShare = wantedRepair * fit;
   const drinkShare = wantedDrink * fit;
+  const ammoShare = wantedAmmo * fit;
   // Each payout runs the ladder once. An ordinary mob pays exactly one (the
   // pre-restructure body verbatim); a rare/unique mob's burst loops, each
   // payout scattered around the corpse so the pile reads as separate finds.
@@ -1523,6 +1547,34 @@ function dropMinionLoot(
         medkitShare +
         repairShare +
         drinkShare +
+        ammoShare
+    ) {
+      // A box of AMMUNITION, of the kind the hero's own holster eats
+      // (`ammoKindFor` — deterministic, so the pick shifts no seeded draw) and
+      // sized by the kind's own band. A hero out of rounds with nothing else to
+      // fight with gets it flown in by the angel, exactly as a dying one's
+      // medkit is: it is the same rope, thrown for the same reason.
+      const type = ammoKindFor(state, state.players[0]);
+      dropItem(
+        state,
+        {
+          id: state.nextId++,
+          kind: "ammo",
+          pos,
+          ammo: type,
+          count: rollAmmoCount(state, type),
+        },
+        at,
+      );
+      if (ammoBoost > 0) flyInByAngel(state, pos);
+    } else if (
+      roll <
+      equipmentShare +
+        abilityShare +
+        medkitShare +
+        repairShare +
+        drinkShare +
+        ammoShare +
         arrowShare
     ) {
       // Golden XP arrows — the field's steady drip of levels (points to spend on

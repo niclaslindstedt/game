@@ -155,7 +155,15 @@ export function weaponGradeVariants(
         grade,
         gradeBase: baseId,
         levelReq,
-        durability: Math.round(base.durability * GRADE_DURABILITY[grade]),
+        // A grade variant inherits its base's WEAR BUDGET, scaled — and a base
+        // that has none (every weapon that eats AMMUNITION instead) passes that
+        // on too: a better-made rifle is still a rifle, and still runs dry
+        // rather than wearing out.
+        ...(base.durability === undefined
+          ? {}
+          : {
+              durability: Math.round(base.durability * GRADE_DURABILITY[grade]),
+            }),
       };
       // Price the variant's damage on ITS OWN shape, not the base's: the melee
       // budget's assumed targets is now build-aware (it grows with `levelReq` as

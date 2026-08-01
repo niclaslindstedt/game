@@ -5,7 +5,13 @@
 import type { Vec2 } from "@game/lib/vec.ts";
 
 import type { BossAbilityId } from "../defs/enemies/abilities.ts";
-import type { ActiveAbility, Equipment, ItemSpell, StatName } from "./core.ts";
+import type {
+  ActiveAbility,
+  AmmoType,
+  Equipment,
+  ItemSpell,
+  StatName,
+} from "./core.ts";
 
 export type Player = {
   pos: Vec2;
@@ -79,6 +85,19 @@ export type Player = {
    * between levels via the loadout.
    */
   repairKits: number;
+  /**
+   * THE AMMUNITION POUCH — how many rounds of each kind the hero is carrying
+   * (config `AMMO_TYPES`), each stack capped at `AMMO.stackCap` (200) and each
+   * kind independent, so a full quiver never blocks a box of bullets. A RANGED
+   * weapon spends one of its kind per trigger pull and cannot fire on an empty
+   * stack; melee and magic never touch it. Read and written only through
+   * `items/ammo.ts` — nothing else may reach into the record, because the cap,
+   * the overflow remainder and the dry-weapon swap all hang off those helpers.
+   *
+   * A partial record: a kind the hero has never picked up is simply absent and
+   * reads as zero (`ammoCount`). Carried between levels via the loadout.
+   */
+  ammo: Partial<Record<AmmoType, number>>;
   /**
    * CLEAN SLATES IN HAND — charges that reopen the hero's whole build (see
    * `useCleanSlate` in items/stat-points.ts). The shipped campaign's carrier

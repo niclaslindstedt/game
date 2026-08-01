@@ -746,6 +746,31 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     },
     icon: "icon_pistol",
   },
+  // THE AMMUNITION FIXTURE — the one ranged weapon in this catalog that plays
+  // by the SHIPPED ranged rule: it eats a kind and carries no durability at
+  // all, so a shot spends a round and a dry pouch stops it dead
+  // (tests/engine/ammo_test.ts).
+  //
+  // Its neighbours above deliberately do NOT, and that is not an oversight. The
+  // engine treats `ammo` and `durability` as independent facts about a def —
+  // it is the ITEM SCHEMA that makes them an either/or for shipped content
+  // (`tests/content/ammo_content_test.ts` holds that end) — so keeping the
+  // older ranged fixtures on durability lets the WEAR suites go on asserting
+  // wear rules through a ranged weapon, exactly as they always have, while this
+  // one carries the ammunition rules. Two fixtures, two rules, no suite
+  // rewritten to accommodate the other.
+  test_carbine: {
+    id: "test_carbine",
+    name: "TEST CARBINE",
+    class: "ranged",
+    levelReq: 1,
+    damage: 12,
+    cooldownMs: 400,
+    range: 240,
+    ammo: "bullets",
+    projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
+    icon: "icon_pistol",
+  },
   // A rapid spread caster that SEPARATES the pocket pick's two contexts: its
   // crowd-credited rank (weaponScore: 4 pellets damped to 2.5 targets ×
   // ~33 dps/target ≈ 83) beats test_revolver's (~48), while its per-target

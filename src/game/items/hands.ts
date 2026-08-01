@@ -27,6 +27,7 @@
 
 import { isWeaponDef, SIDEARM_DEF_ID, weaponDef } from "../defs/equipment.ts";
 import type { Equipment, GameState, Player } from "../types/index.ts";
+import { hasAmmoFor } from "./ammo.ts";
 import { canEquip } from "./requirements.ts";
 import { isOffhandItem } from "./slots.ts";
 import { weaponScore } from "./weapon-math.ts";
@@ -58,11 +59,16 @@ export function isTwoHandedWeapon(
  *
  * `skipTwoHanded` is what the offhand equip asks for: the arm it is about to
  * fill must stay free, so another greatsword is not a legal answer.
+ *
+ * `loadedOnly` is what the DRY-WEAPON swap asks for (`stepWeapon`): a rifle
+ * with an empty pouch is not an answer to a rifle with an empty pouch, so the
+ * pick is narrowed to weapons the hero can actually fire this second. Melee and
+ * magic always qualify — they eat nothing.
  */
 export function takeBestBagWeapon(
   state: GameState,
   player: Player,
-  opts: { skipTwoHanded?: boolean } = {},
+  opts: { skipTwoHanded?: boolean; loadedOnly?: boolean } = {},
 ): Equipment | null {
   const inv = player.inventory;
   let bestIndex = -1;
@@ -71,6 +77,7 @@ export function takeBestBagWeapon(
     const item = inv[i];
     if (!item || item.slot !== "weapon") continue;
     if (opts.skipTwoHanded && isTwoHandedWeapon(item)) continue;
+    if (opts.loadedOnly && !hasAmmoFor(player, item)) continue;
     if (!canEquip(state, player, item)) continue;
     const score = weaponScore(state, player, item);
     if (score > bestScore) {

@@ -6,6 +6,8 @@
 
 import { localHero } from "../local-seat.ts";
 import {
+  AMMO,
+  ammoCount,
   bestMedkitTier,
   canHealCompanion,
   companionDef,
@@ -16,8 +18,10 @@ import {
   isWeaponDef,
   menaceStage,
   playerAppearance,
+  weaponAmmoType,
   weaponDamageFor,
   weaponDps,
+  type AmmoType,
   type Equipment,
   type GamePhase,
   type GameState,
@@ -87,8 +91,19 @@ export type Hud = {
   talents: Record<string, number>;
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
-  /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
+  /** Equipped weapon's durability 0..1, or null for a weapon that never wears
+   * — an unbreakable unique, and every RANGED weapon, which carries `ammo`
+   * below instead. */
   weaponWear: number | null;
+  /**
+   * The equipped weapon's AMMUNITION, or null for one that eats nothing (melee
+   * and magic). `count` is what is in the pouch for that kind and `cap` the
+   * per-kind stack cap, which together drive the weapon circle's ring — the
+   * same gauge a wearing weapon fills with its durability, because from the
+   * player's side both answer the one question the ring is there for: how many
+   * more attacks does this thing have in it.
+   */
+  ammo: { type: AmmoType; count: number; cap: number } | null;
   /** The purse — coins earned selling loot to the merchant. */
   coins: number;
   /** Player sprite family (`playerAppearance`) for the inventory avatar. */
@@ -252,6 +267,15 @@ export function buildHud(
     weapon.durability === undefined
       ? null
       : weapon.durability / equipmentMaxDurability(weapon);
+  const ammoType = weaponAmmoType(weapon);
+  const ammo =
+    ammoType === undefined
+      ? null
+      : {
+          type: ammoType,
+          count: ammoCount(localHero(state), ammoType),
+          cap: AMMO.stackCap,
+        };
   const appearance = playerAppearance(state);
   // The worn armor pieces, so the avatar portrait re-renders when the
   // outfit changes (the weapon is already keyed via `weapon.defId`).
@@ -292,7 +316,7 @@ export function buildHud(
   const xpKey = Math.floor(
     (1000 * localHero(state).xp) / Math.max(1, localHero(state).xpToNext),
   );
-  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
+  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
@@ -322,6 +346,7 @@ export function buildHud(
       talents,
       weaponDefId: weapon.defId,
       weaponWear,
+      ammo,
       coins: localHero(state).coins,
       appearance,
       companions: state.companions.map((c) => ({

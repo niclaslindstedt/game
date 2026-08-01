@@ -51,6 +51,7 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
   rollEquipment,
+  startingAmmo,
   syncInventoryCapacity,
   wearSlotFor,
 } from "./items/index.ts";
@@ -1665,6 +1666,13 @@ export function createHero(
     medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
     staminaPotions: 0,
     repairKits: 0,
+    // THE OPENING HOLSTER: a hundred rounds for the weapon in his hand and a
+    // hundred for the sidearm behind it (`startingAmmo`) — a long, unhurried
+    // introduction to the fact that ammunition exists. It has to know the
+    // DIFFICULTY'S starting weapon, because EASY opens with a shotgun and a
+    // holster stocked from the sidearm alone would leave that hero unable to
+    // fire a shot. A carried loadout overwrites the whole pouch below.
+    ammo: startingAmmo(diff.startingWeapon),
     cleanSlates: 0,
     moving: false,
     weaponCooldownMs: 0,

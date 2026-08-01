@@ -11,7 +11,8 @@ twoHanded: true
 damage: 50
 cooldownMs: 800
 range: 360
-durability: 180
+# RANGED: eats arrows, and so never wears out (see WeaponDef.ammo).
+ammo: arrows
 projectile:
   speed: 520
   radius: 3

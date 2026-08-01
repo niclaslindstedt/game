@@ -24,7 +24,8 @@ damage: 5
 damageVariance: 0.25
 cooldownMs: 800
 range: 160
-durability: 300
+# RANGED: eats bullets, and so never wears out (see WeaponDef.ammo).
+ammo: bullets
 projectile:
   # No `pierce`: a pellet spends itself on the first body it meets, so the
   # blast's power is how many of the six land on ONE target at contact range

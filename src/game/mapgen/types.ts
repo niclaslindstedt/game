@@ -118,7 +118,12 @@ export type MapObject = {
   /** A breakable prop's spill odds and themed drop weights (see `LevelDef`). */
   loot?: {
     chance?: number;
-    drop?: { health?: number; stamina?: number; gear?: number };
+    drop?: {
+      health?: number;
+      stamina?: number;
+      gear?: number;
+      ammo?: number;
+    };
   };
   /** `building` footprint (world px). */
   w?: number;

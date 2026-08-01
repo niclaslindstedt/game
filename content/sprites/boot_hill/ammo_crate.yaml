@@ -1,0 +1,36 @@
+name: ammo_crate
+family: boot_hill
+plane: floor
+size: [16, 14]
+description: >
+  A rough pine cartridge crate, top-down — rope handles at both ends, iron
+  banding across the lid, and the lid sprung just enough to show brass.
+subject:
+  kind: breakable obstacle prop — cartridge crate
+  build: a rectangular pine crate seen from above, iron bands across the lid
+    and a rope handle looped at each end
+  features: the lid sprung open along one seam with brass cartridges showing
+  accent: brass through a sprung pine lid
+  flavor: a case of rounds off the last freight wagon
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # pine plank
+  E: "#5d4028" # shaded plank and rope
+  S: "#b39378" # lit plank edge
+  Y: "#ffb02e" # brass cartridge
+  k: "#342c26" # iron band
+grid: |
+  ................
+  ..OOOOOOOOOOOO..
+  .OSBBBBBBBBBBSO.
+  .OBkkkkkkkkkkBO.
+  .OBBBBBBBBBBBBO.
+  .OEYYYYYYYYYYEO.
+  .OEYYYYYYYYYYEO.
+  .OBBBBBBBBBBBBO.
+  .OBkkkkkkkkkkBO.
+  .OBBBBBBBBBBBBO.
+  .OSBBBBBBBBBBSO.
+  .OEEBBBBBBBBEEO.
+  ..OOOOOOOOOOOO..
+  ................

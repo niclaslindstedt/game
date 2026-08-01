@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_collected_ammo
+description: >-
+  Scooping up a box of ammunition — a short bright rattle of loose metal
+  followed by the click of it going into the pouch. Deliberately drier and
+  lower than the repair kit's tuck: rounds are a stock you top up constantly,
+  so the sound has to survive being heard fifty times a level.
+on:
+  type: itemCollected
+  kind: ammo
+voices:
+  - call: noise
+    durationMs: 55
+    volume: 0.022
+    filter:
+      type: bandpass
+      frequency: 3100
+      q: 1.4
+  - call: tone
+    type: square
+    from: 520
+    to: 390
+    durationMs: 60
+    volume: 0.026
+    delayMs: 25

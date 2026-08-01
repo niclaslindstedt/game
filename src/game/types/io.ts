@@ -4,7 +4,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import type { Equipment, StatName } from "./core.ts";
+import type { AmmoType, Equipment, StatName } from "./core.ts";
 
 /** Per-step player intent, produced by the app's input layer. */
 export type GameInput = {
@@ -180,6 +180,12 @@ export type Loadout = {
   /** Stacked weapon repair kits (see `Player.repairKits`). Optional so
    * loadouts banked before repair kits stacked load with none held. */
   repairKits?: number;
+  /** The AMMUNITION POUCH (see `Player.ammo`) — rounds per kind, carried
+   * between levels like every other pocket. Optional so a loadout banked
+   * before ammunition shipped lands with an empty pouch, which `arrival.ts`
+   * then seeds with the opening holster rather than leaving a returning hero
+   * unable to fire. */
+  ammo?: Partial<Record<AmmoType, number>>;
   /** CLEAN SLATES in hand (see `Player.cleanSlates`) — the respec charges THE
    * BIBLE carries. Optional so a loadout banked before the chain shipped
    * reads as none. */

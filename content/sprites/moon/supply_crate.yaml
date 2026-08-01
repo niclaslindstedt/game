@@ -1,0 +1,36 @@
+name: supply_crate
+family: moon
+plane: floor
+size: [16, 14]
+description: >
+  An expedition supply box, top-down — white composite shell banded with hazard
+  orange, a stencilled cross-brace over the lid and a recessed latch. The kind
+  of thing that was stacked at a landing site and never unpacked.
+subject:
+  kind: breakable obstacle prop — supply crate
+  build: a rectangular white supply box seen from above, lid banded across in
+    both directions, a recessed dark latch at the near edge
+  features: hazard-orange banding over a white composite lid, stencil marks
+  accent: hazard orange on mission white
+  flavor: mission stores nobody came back for
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white composite lid
+  a: "#d6dce4" # shaded composite
+  Q: "#e0603a" # hazard-orange band
+  v: "#60687e" # recessed latch
+grid: |
+  ................
+  ..OOOOOOOOOOOO..
+  .OWWWWWQQWWWWWO.
+  .OWaaaWQQWaaaWO.
+  .OWaaaWQQWaaaWO.
+  .OQQQQQQQQQQQQO.
+  .OQQQQQQQQQQQQO.
+  .OWaaaWQQWaaaWO.
+  .OWaaaWQQWaaaWO.
+  .OWaaaWQQWaaaWO.
+  .OaaavvQQvvaaaO.
+  .OaaaaaaaaaaaaO.
+  ..OOOOOOOOOOOO..
+  ................

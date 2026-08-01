@@ -873,6 +873,28 @@ html.app-locked body {
   line-height: 0;
 }
 
+/* The ROUNDS LEFT on the held weapon, tucked into the same lower-right corner
+   as the pouch's free-cell count above and wearing the same dark chip — the
+   player already reads that corner for "how many", so ammunition says it where
+   they are already looking. It sits ABOVE the gauge ring's svg so the ring
+   stays a clean unbroken arc behind it. */
+.wpn-ammo-count {
+  position: absolute;
+  right: -0.18rem;
+  bottom: -0.18rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.85rem;
+  height: 0.85rem;
+  padding: 0 0.12rem;
+  background: #0b0d10;
+  border-radius: 999px;
+  line-height: 0;
+  z-index: 1;
+}
+
 .hud-bag-slot.bag-full {
   border-color: #ffcf6b;
   animation: bag-full-pulse 0.9s ease-in-out infinite;
@@ -6563,6 +6585,27 @@ html.app-locked body {
 .inv-purse-icon {
   width: 1.1rem;
   height: 1.1rem;
+}
+
+/* The AMMUNITION POUCH on the foot rail, beside the purse: one icon-and-number
+   per kind the hero is actually carrying, read exactly the way the gold is. */
+.inv-ammo {
+  /* The rail's third column — the purse holds the first and CLOSE the middle,
+     so the pouch takes the empty right and the foot reads gold · close · rounds
+     rather than crowding the gold. */
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  line-height: 0;
+}
+
+.inv-ammo-kind {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 0;
 }
 
 /* The bag header: the BAG title on the left, the SCRAP-junk button on the

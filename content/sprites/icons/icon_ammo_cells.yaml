@@ -1,0 +1,30 @@
+name: icon_ammo_cells
+family: icons
+size: [12, 12]
+description: >
+  The CELLS pouch icon — one power cell, terminal on top, charge window lit.
+subject:
+  kind: ammunition icon
+  features: a single upright power cell with a small metal terminal on top and
+    a bright cyan charge window across its dark casing
+  accent: electric cyan in a dark casing
+  flavor: what the rails, tasers and plasma burn
+palette:
+  O: "#1a1c2c" # dark outline
+  K: "#2b3040" # cell casing
+  C: "#2fd3e0" # charge glow
+  c: "#c8fbff" # bright charged core
+  m: "#8d9196" # metal terminal
+grid: |
+  ............
+  ....OOOO....
+  ....OmmO....
+  ..OOOOOOOO..
+  ..OKKKKKKO..
+  ..OKCCCCKO..
+  ..OKCccCKO..
+  ..OKCCCCKO..
+  ..OKKKKKKO..
+  ..OOOOOOOO..
+  ............
+  ............

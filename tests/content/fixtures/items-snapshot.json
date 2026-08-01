@@ -7071,11 +7071,11 @@
       "twoHanded": true
     },
     "auto_shotgun": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 950,
       "damage": 71,
       "damageVariance": 0.3,
-      "durability": 210,
       "grade": "elite",
       "gradeBase": "pump_shotgun",
       "icon": "icon_pump_shotgun",
@@ -7150,11 +7150,11 @@
       "twoHanded": true
     },
     "blaster": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 700,
       "damage": 16,
       "description": "The printed polymer sidearm out of the garage ship's emergency locker. It is the weapon of last resort, and it knows it: slow, steady, and impossible to break.",
-      "durability": 150,
       "icon": "icon_blaster",
       "id": "blaster",
       "levelReq": 1,
@@ -7185,11 +7185,11 @@
       "range": 280
     },
     "blunderbuss": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 1100,
       "damage": 29,
       "damageVariance": 0.5,
-      "durability": 150,
       "icon": "icon_blunderbuss",
       "id": "blunderbuss",
       "levelReq": 19,
@@ -7275,10 +7275,10 @@
       "sweepDeg": 60
     },
     "coilgun_repeater": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 700,
       "damage": 98,
-      "durability": 238,
       "grade": "exceptional",
       "gradeBase": "maglev_repeater",
       "icon": "icon_repeater",
@@ -7310,11 +7310,11 @@
       "sweepDeg": 70
     },
     "combat_shotgun": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 950,
       "damage": 44,
       "damageVariance": 0.3,
-      "durability": 175,
       "grade": "exceptional",
       "gradeBase": "pump_shotgun",
       "icon": "icon_pump_shotgun",
@@ -7406,11 +7406,11 @@
       "sweepDeg": 70
     },
     "dragon_blunderbuss": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 1100,
       "damage": 60,
       "damageVariance": 0.5,
-      "durability": 188,
       "grade": "exceptional",
       "gradeBase": "blunderbuss",
       "icon": "icon_blunderbuss",
@@ -7532,11 +7532,11 @@
       "twoHanded": true
     },
     "flare_gun": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 800,
       "damage": 48,
       "damageVariance": 0.35,
-      "durability": 160,
       "icon": "icon_flare_gun",
       "id": "flare_gun",
       "levelReq": 7,
@@ -7586,11 +7586,11 @@
       "sweepDeg": 55
     },
     "gauss_rifle": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 1000,
       "damage": 93,
       "damageVariance": 0.1,
-      "durability": 188,
       "grade": "exceptional",
       "gradeBase": "railgun",
       "icon": "icon_railgun",
@@ -7626,11 +7626,11 @@
       "range": 290
     },
     "genius_pistol": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 380,
       "damage": 58,
       "damageVariance": 0.1,
-      "durability": 250,
       "grade": "exceptional",
       "gradeBase": "smart_pistol",
       "icon": "icon_smart_pistol",
@@ -7691,11 +7691,11 @@
       "twoHanded": true
     },
     "golden_stapler": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 280,
       "damage": 15,
       "damageVariance": 0.08,
-      "durability": 260,
       "icon": "icon_golden_stapler",
       "id": "golden_stapler",
       "levelReq": 4,
@@ -7759,11 +7759,11 @@
       "twoHanded": true
     },
     "hand_mortar": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 1100,
       "damage": 105,
       "damageVariance": 0.5,
-      "durability": 225,
       "grade": "elite",
       "gradeBase": "blunderbuss",
       "icon": "icon_blunderbuss",
@@ -7878,10 +7878,10 @@
       "range": 300
     },
     "ion_peacemaker": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 460,
       "damage": 59,
-      "durability": 250,
       "grade": "exceptional",
       "gradeBase": "plasma_peacemaker",
       "icon": "icon_peacemaker",
@@ -7916,11 +7916,11 @@
       "twoHanded": true
     },
     "legal_distinction": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 520,
       "damage": 67,
       "damageVariance": 0.4,
-      "durability": 260,
       "icon": "icon_legal_distinction",
       "id": "legal_distinction",
       "levelReq": 14,
@@ -7965,10 +7965,10 @@
       "range": 280
     },
     "longbow": {
+      "ammo": "arrows",
       "class": "ranged",
       "cooldownMs": 800,
       "damage": 50,
-      "durability": 180,
       "icon": "icon_longbow",
       "id": "longbow",
       "levelReq": 17,
@@ -8010,10 +8010,10 @@
       "range": 46
     },
     "maglev_repeater": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 700,
       "damage": 51,
-      "durability": 190,
       "icon": "icon_repeater",
       "id": "maglev_repeater",
       "levelReq": 21,
@@ -8051,10 +8051,10 @@
       "range": 280
     },
     "magnum_revolver": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 550,
       "damage": 74,
-      "durability": 238,
       "grade": "exceptional",
       "gradeBase": "service_revolver",
       "icon": "icon_service_revolver",
@@ -8071,10 +8071,10 @@
       "range": 240
     },
     "marksman_rifle": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 850,
       "damage": 200,
-      "durability": 210,
       "grade": "elite",
       "gradeBase": "surplus_carbine",
       "icon": "icon_surplus_carbine",
@@ -8113,11 +8113,11 @@
       "range": 260
     },
     "mass_driver": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 1000,
       "damage": 161,
       "damageVariance": 0.1,
-      "durability": 225,
       "grade": "elite",
       "gradeBase": "railgun",
       "icon": "icon_railgun",
@@ -8136,10 +8136,10 @@
       "twoHanded": true
     },
     "match_pistol": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 480,
       "damage": 56,
-      "durability": 213,
       "grade": "exceptional",
       "gradeBase": "nine_mm",
       "icon": "icon_nine_mm",
@@ -8281,10 +8281,10 @@
       "twoHanded": true
     },
     "nine_mm": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 480,
       "damage": 18,
-      "durability": 170,
       "icon": "icon_nine_mm",
       "id": "nine_mm",
       "levelReq": 2,
@@ -8299,10 +8299,10 @@
       "range": 230
     },
     "nova_peacemaker": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 460,
       "damage": 105,
-      "durability": 300,
       "grade": "elite",
       "gradeBase": "plasma_peacemaker",
       "icon": "icon_peacemaker",
@@ -8320,11 +8320,11 @@
       "range": 250
     },
     "oracle_pistol": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 380,
       "damage": 98,
       "damageVariance": 0.1,
-      "durability": 300,
       "grade": "elite",
       "gradeBase": "smart_pistol",
       "icon": "icon_smart_pistol",
@@ -8438,10 +8438,10 @@
       "sweepDeg": 70
     },
     "plasma_peacemaker": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 460,
       "damage": 30,
-      "durability": 200,
       "icon": "icon_peacemaker",
       "id": "plasma_peacemaker",
       "levelReq": 19,
@@ -8486,10 +8486,10 @@
       "twoHanded": true
     },
     "prairie_iron": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 500,
       "damage": 52,
-      "durability": 210,
       "icon": "icon_prairie_iron",
       "id": "prairie_iron",
       "levelReq": 17,
@@ -8558,11 +8558,11 @@
       "range": 280
     },
     "pump_shotgun": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 950,
       "damage": 16,
       "damageVariance": 0.3,
-      "durability": 140,
       "icon": "icon_pump_shotgun",
       "id": "pump_shotgun",
       "levelReq": 5,
@@ -8619,10 +8619,10 @@
       "range": 280
     },
     "race_gun": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 480,
       "damage": 91,
-      "durability": 255,
       "grade": "elite",
       "gradeBase": "nine_mm",
       "icon": "icon_nine_mm",
@@ -8639,11 +8639,11 @@
       "range": 230
     },
     "railgun": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 1000,
       "damage": 42,
       "damageVariance": 0.1,
-      "durability": 150,
       "icon": "icon_railgun",
       "id": "railgun",
       "levelReq": 13,
@@ -8675,10 +8675,10 @@
       "twoHanded": true
     },
     "railstorm_repeater": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 700,
       "damage": 176,
-      "durability": 285,
       "grade": "elite",
       "gradeBase": "maglev_repeater",
       "icon": "icon_repeater",
@@ -8697,10 +8697,10 @@
       "twoHanded": true
     },
     "ranger_revolver": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 550,
       "damage": 124,
-      "durability": 285,
       "grade": "elite",
       "gradeBase": "service_revolver",
       "icon": "icon_service_revolver",
@@ -8802,10 +8802,10 @@
       "sweepDeg": 100
     },
     "riot_taser": {
+      "ammo": "cells",
       "class": "ranged",
       "cooldownMs": 420,
       "damage": 21,
-      "durability": 190,
       "icon": "icon_riot_taser",
       "id": "riot_taser",
       "levelReq": 3,
@@ -8835,11 +8835,11 @@
       "twoHanded": true
     },
     "sawed_off_shotgun": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 800,
       "damage": 5,
       "damageVariance": 0.25,
-      "durability": 300,
       "icon": "icon_sawed_off_shotgun",
       "id": "sawed_off_shotgun",
       "levelReq": 1,
@@ -8877,10 +8877,10 @@
       "twoHanded": true
     },
     "scout_rifle": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 850,
       "damage": 118,
-      "durability": 175,
       "grade": "exceptional",
       "gradeBase": "surplus_carbine",
       "icon": "icon_surplus_carbine",
@@ -8974,10 +8974,10 @@
       "twoHanded": true
     },
     "service_revolver": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 550,
       "damage": 29,
-      "durability": 190,
       "icon": "icon_service_revolver",
       "id": "service_revolver",
       "levelReq": 6,
@@ -9008,10 +9008,10 @@
       "sweepDeg": 100
     },
     "siege_bow": {
+      "ammo": "arrows",
       "class": "ranged",
       "cooldownMs": 800,
       "damage": 180,
-      "durability": 270,
       "grade": "elite",
       "gradeBase": "longbow",
       "icon": "icon_longbow",
@@ -9062,11 +9062,11 @@
       "sweepDeg": 130
     },
     "smart_pistol": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 380,
       "damage": 26,
       "damageVariance": 0.1,
-      "durability": 200,
       "icon": "icon_smart_pistol",
       "id": "smart_pistol",
       "levelReq": 10,
@@ -9259,10 +9259,10 @@
       "range": 280
     },
     "surplus_carbine": {
+      "ammo": "bullets",
       "class": "ranged",
       "cooldownMs": 850,
       "damage": 49,
-      "durability": 140,
       "icon": "icon_surplus_carbine",
       "id": "surplus_carbine",
       "levelReq": 9,
@@ -9440,10 +9440,10 @@
       "twoHanded": true
     },
     "war_bow": {
+      "ammo": "arrows",
       "class": "ranged",
       "cooldownMs": 800,
       "damage": 103,
-      "durability": 225,
       "grade": "exceptional",
       "gradeBase": "longbow",
       "icon": "icon_longbow",

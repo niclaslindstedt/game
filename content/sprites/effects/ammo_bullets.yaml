@@ -1,0 +1,30 @@
+name: ammo_bullets
+family: effects
+size: [12, 12]
+description: >
+  The BULLETS pickup — an olive ammunition can with its lid off and a rank of
+  brass cartridges standing in it. Every firearm in the game eats these.
+subject:
+  kind: pickup
+  build: an open olive-drab ammunition can, steel latch on the front, a rank of
+    brass cartridges standing upright out of the open top
+  accent: warm brass against olive drab
+  flavor: a can of rounds, cracked open and ready to grab
+palette:
+  O: "#1a1c2c" # dark outline
+  Y: "#c98b2a" # brass casing
+  y: "#ffd27a" # lit brass edge
+  m: "#8d9196" # steel rim
+grid: |
+  ............
+  ............
+  .OOOOOOOOOO.
+  .OyyOyyOyyO.
+  .OYyOYyOYyO.
+  .OYyOYyOYyO.
+  .OYyOYyOYyO.
+  .OmmOmmOmmO.
+  .OOOOOOOOOO.
+  ............
+  ............
+  ............

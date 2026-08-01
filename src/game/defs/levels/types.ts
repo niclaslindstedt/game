@@ -533,8 +533,8 @@ export type LevelDef = {
      * probability the break drops anything at all (absent = 1, a crate's
      * guaranteed spill); `drop` overrides the primary drop's category weights
      * (absent = config `CRATES.drop`) so a themed prop pays themed loot — a
-     * vending machine leans stamina drinks, a wine rack healing. Ignored
-     * without `breakable`.
+     * vending machine leans stamina drinks, a wine rack healing, a WEAPONS
+     * LOCKER almost nothing but rounds and guns. Ignored without `breakable`.
      */
     loot?: {
       chance?: number;
@@ -542,6 +542,7 @@ export type LevelDef = {
         health?: number;
         stamina?: number;
         gear?: number;
+        ammo?: number;
       };
     };
     /**

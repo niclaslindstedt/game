@@ -95,6 +95,26 @@ export type ArmorSlot = "head" | "chest" | "legs" | "feet";
 export type ArmorType = "cloth" | "leather" | "mail" | "plate";
 
 /**
+ * THE THREE KINDS OF AMMUNITION a RANGED weapon spends (`WeaponDef.ammo`),
+ * and deliberately only three. The split is by WHAT THE THING IS, not by what
+ * fires it: every firearm in the game eats the same `bullets`, from the
+ * service revolver to the sawn-off, because a game that asks the player to
+ * keep four calibres straight has bought a spreadsheet and sold a shooter.
+ * What genuinely reads different on the ground gets its own kind.
+ *
+ *   bullets  every firearm: pistols, revolvers, rifles, shotguns, nailguns
+ *   arrows   anything drawn and loosed — bows, and the crossbow idiom
+ *   cells    charged shot: rails, tasers, plasma, the printed sidearm
+ *
+ * MELEE and MAGIC weapons carry none. Magic is powered by the hero, which is
+ * the whole distinction between a wand and a gun; melee needs no argument.
+ * Both keep DURABILITY, which ranged weapons gave up in exchange for this —
+ * a ranged weapon never breaks and never wants a repair kit; it runs dry.
+ * The per-kind presentation and economy is config `AMMO_KINDS` / `AMMO`.
+ */
+export type AmmoType = "bullets" | "arrows" | "cells";
+
+/**
  * Item quality, lowest to highest: grey trash, white regular, blue magic,
  * yellow rare, green SET, gold unique, orange legendary (the colors are the
  * app's, see tiers.ts) — the Diablo ladder. Every tier exists engine-wide, but

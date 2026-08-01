@@ -14,7 +14,8 @@ damage: 42
 damageVariance: 0.1
 cooldownMs: 1000
 range: 340
-durability: 150
+# RANGED: eats cells, and so never wears out (see WeaponDef.ammo).
+ammo: cells
 projectile:
   speed: 700
   radius: 3

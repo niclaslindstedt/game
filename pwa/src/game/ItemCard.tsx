@@ -27,7 +27,9 @@ import {
   armorValueOf,
   enemyDodgeChance,
   equipmentIcon,
+  AMMO_KINDS,
   equipmentMaxDurability,
+  weaponAmmoType,
   equipmentName,
   gearDef,
   isWeaponDef,
@@ -517,6 +519,18 @@ function bagSlotsOf(item: Equipment): number {
 export function durabilityLine(item: Equipment): CardLine | null {
   const maxDur = equipmentMaxDurability(item);
   if (isWeaponDef(item.defId)) {
+    // A weapon that eats AMMUNITION says so in durability's seat, because it is
+    // the answer to durability's question: this is the thing that will stop it
+    // firing. It never wears out, so UNBREAKABLE would be true and useless —
+    // what the player needs to know is which box to look for on the floor.
+    const ammo = weaponAmmoType(item);
+    if (ammo !== undefined) {
+      return {
+        text: `AMMO ${AMMO_KINDS[ammo].name}`,
+        label: "AMMO",
+        value: AMMO_KINDS[ammo].name,
+      };
+    }
     if (item.durability === undefined) return { text: "UNBREAKABLE" };
   } else {
     const def = gearDef(item.defId);

@@ -1,0 +1,32 @@
+name: ammo_arrows
+family: effects
+size: [12, 12]
+description: >
+  The ARROWS pickup — a leather quiver with a handful of broadheads standing
+  out of its mouth. What a drawn bow eats.
+subject:
+  kind: pickup
+  build: a strapped leather quiver seen head-on, arrow shafts rising out of the
+    open mouth with steel broadheads above them
+  accent: pale steel heads over dark leather
+  flavor: somebody's quiver, left where they fell
+palette:
+  O: "#1a1c2c" # dark outline
+  w: "#f4f4f4" # broadhead glint
+  M: "#c0c5cf" # steel broadhead
+  s: "#b39378" # wooden shaft
+  R: "#c4453a" # fletching
+  r: "#8f2f28" # shaded fletching
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OwwOwwOwwO.
+  .OMMOMMOMMO.
+  .OssOssOssO.
+  .OssOssOssO.
+  .OssOssOssO.
+  .ORRORRORRO.
+  .OrrOrrOrrO.
+  .OOOOOOOOOO.
+  ............
+  ............
