@@ -15,6 +15,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { fogGridAnchor } from "../pwa/src/game/render/fog.ts";
+import { drawFloorDecal } from "../pwa/src/game/render/plane.ts";
 import {
   beginBillboard,
   cameraAnchorX,
@@ -494,6 +495,70 @@ describe("billboard", () => {
         };
         expect(Number.isInteger(seat.x - base.x)).toBe(true);
         expect(Number.isInteger(seat.y - base.y)).toBe(true);
+      }
+    },
+  );
+
+  it.each(RIGIDITY_SWEEP)(
+    "seats a floor decal on that same lattice — $name",
+    (p) => {
+      // THE BLOOD IS ON THE FLOOR, AND THE FLOOR DOES NOT WOBBLE. A stain, a
+      // pool's frayed rim and a boot print are the one part of the picture the
+      // player watches for minutes at a stretch, so a decal that shifts against
+      // the ground under it reads as the whole field crawling.
+      //
+      // Those passes used to draw their art THROUGH the live tilt, at
+      // `pos - camera` in world units. Every claim below fails that way: the
+      // destination lands between two pixels, so a nearest-neighbour squash
+      // re-picks which rows it drops as the camera moves a fraction of a pixel,
+      // and each blot re-picks at its own moment. Walking east or west hid it
+      // completely — the projection is the identity there and the camera is a
+      // whole world unit, so nothing ever landed off a pixel.
+      setWorldProjection(p);
+      // Deliberately fractional and off-grid: a tile centre nudged by the
+      // blood grid's own per-cell jitter, and a boot print laid wherever a foot
+      // came down.
+      const decals = [
+        { x: 312, y: 312 },
+        { x: 315.5, y: 328.25 },
+        { x: 287.75, y: 341.5 },
+      ] as const;
+      const art = { width: 22, height: 17 };
+      const drawnAt = (
+        decal: { x: number; y: number },
+        cam: { x: number; y: number },
+      ) => {
+        let at = { x: 0, y: 0 };
+        const ctx = {
+          drawImage: (_art: unknown, x: number, y: number) => {
+            at = { x, y };
+          },
+        };
+        drawFloorDecal(
+          ctx as unknown as CanvasRenderingContext2D,
+          art as unknown as ImageBitmap,
+          decal.x,
+          decal.y,
+          cam,
+        );
+        return at;
+      };
+      const gapAt = (cam: { x: number; y: number }) => {
+        const first = drawnAt(decals[0], cam);
+        return decals.map((decal) => {
+          const at = drawnAt(decal, cam);
+          // Whole pixels, or the blit resamples the art it was baked to avoid
+          // resampling.
+          expect(Number.isInteger(at.x)).toBe(true);
+          expect(Number.isInteger(at.y)).toBe(true);
+          return { x: at.x - first.x + 0, y: at.y - first.y + 0 };
+        });
+      };
+      const base = gapAt({ x: 200, y: 200 });
+      for (let step = 0; step < 24; step++) {
+        expect(gapAt({ x: 200, y: 200 + step })).toEqual(base);
+        expect(gapAt({ x: 200 + step, y: 200 })).toEqual(base);
+        expect(gapAt({ x: 200 + step, y: 200 + step })).toEqual(base);
       }
     },
   );

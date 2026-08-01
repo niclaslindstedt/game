@@ -23,7 +23,12 @@ import {
 import { drawBloodGround } from "./render/blood-ground.ts";
 import { drawBloodTracks, stepBloodTracks } from "./render/blood-tracks.ts";
 import { ensureCaches } from "./render/caches.ts";
-import { combatNoiseFade, drawDeathClouds } from "./render/death.ts";
+import {
+  combatNoiseFade,
+  drawDeathClouds,
+  effectsClockMs,
+} from "./render/death.ts";
+import { drawFloorRemains, type Effect } from "./render/effects.ts";
 import {
   drawBaits,
   drawBeams,
@@ -129,6 +134,7 @@ export function drawFrame(
   timeMs: number,
   playerAction?: PlayerAction,
   heroImpact?: HeroImpact,
+  effects: readonly Effect[] = [],
 ): void {
   const { sprites } = assets;
   ensureCaches(sprites);
@@ -168,25 +174,24 @@ export function drawFrame(
   // and `groundLayer`).
   drawGround(ctx, state, sprites, camera, view);
 
-  // …and from here to `ctx.restore()` below, the world is drawn TILTED: the
-  // ground plane rakes away from the eye, and anything with a body to it stands
-  // back up through `billboard` in its own pass. Everything painted flat on the
-  // floor — the blood, the burn scars, the pressure shadows, the AoE footprints
-  // — foreshortens for free right here, which is why none of those passes has a
-  // line about the tilt in it.
-  ctx.save();
-  applyWorldProjection(ctx);
-  // The blood the fight left on it, ON the floor and UNDER the rocks standing
-  // on it. Deliberately not baked into the ground layer itself: `groundColorAt`
+  // THE BLOOD the fight left on it, ON the floor and UNDER the rocks standing on
+  // it. Deliberately not baked into the ground layer itself: `groundColorAt`
   // samples that layer to colour the dust a jump kicks up, and a boot throwing
   // red dust because something died there three minutes ago would be a bug
   // wearing a feature's clothes.
-  // Kept flat, on the tilted floor, and deliberately: the whole decal system is
-  // a GRID whose rungs, rims and washes are tuned against how far apart the
-  // cells sit (render/blood-ground.ts). Standing each blot up would leave the
-  // art at full height over cells that had drawn a quarter closer together, and
-  // a pool would smear north. It takes the world rect for the same reason — it
-  // scans tiles, not pixels.
+  //
+  // Kept FLAT on the floor and deliberately: the whole decal system is a GRID
+  // whose rungs, rims and washes are tuned against how far apart the cells sit
+  // (render/blood-ground.ts). Standing each blot up would leave the art at full
+  // height over cells that had drawn a quarter closer together, and a pool would
+  // smear north. It takes the world rect for the same reason — it scans tiles,
+  // not pixels.
+  //
+  // Flat, but in SCREEN space, exactly like the ground blit above and for
+  // exactly that reason: the art is baked through the projection once and
+  // blitted 1:1 at each blot's own whole-pixel seat, rather than resampled live
+  // through the tilt every frame, which made the stains crawl against the floor
+  // as the hero walked north (render/plane.ts `drawFloorDecal`).
   drawBloodGround(ctx, state, sprites, camera, worldView);
   // THE TRAIL, over the pools that made it and under everything that walks: the
   // hero's boots pick blood up off a soaked tile and print it onto clean ground
@@ -195,6 +200,15 @@ export function drawFrame(
   // from the last frame, so it must be called exactly once per frame.
   stepBloodTracks(state);
   drawBloodTracks(ctx, state, sprites, camera, worldView);
+
+  // …and from here to `ctx.restore()` below, the world is drawn TILTED: the
+  // ground plane rakes away from the eye, and anything with a body to it stands
+  // back up through `billboard` in its own pass. Everything painted flat on the
+  // floor — the burn scars, the pressure shadows, the AoE footprints —
+  // foreshortens for free right here, which is why none of those passes has a
+  // line about the tilt in it.
+  ctx.save();
+  applyWorldProjection(ctx);
   // BURNING FLOOR a boss's beam laid — on the ground plane, under everything
   // that walks, because a body stands ON burning ground rather than behind it.
   drawScorches(ctx, state, sprites, camera, inView, timeMs);
@@ -216,6 +230,29 @@ export function drawFrame(
   // Where an escort is being walked TO — a ring on the GROUND plane, drawn with
   // the floor furniture rather than with the bodies, because it is a place.
   drawEscortDestinations(ctx, state, camera, timeMs);
+  ctx.restore();
+
+  // WHAT THE FIGHT LEFT LYING THERE — the corpses, the gibs and the cleaved
+  // halves that have already landed (`restsOnFloor`). The rest of the effect
+  // layer is drawn over the finished frame by the run's loop, because almost all
+  // of it happens in the AIR; these do not, and drawn up there a chunk of somebody
+  // was painted over the hero every time he walked across the spot it lay in.
+  // Under the loot and the bodies, over the floor furniture: gore is a thing on
+  // the ground, and a find that dropped on top of it has to stay visible.
+  //
+  // Screen space, like the rest of its layer — the pass billboards its own
+  // anchors, so it goes OUTSIDE the tilt (which is reopened for the actors right
+  // below, each of which stands itself back up).
+  drawFloorRemains(
+    ctx,
+    effects,
+    camera,
+    effectsClockMs(state),
+    assets,
+    noiseFade,
+  );
+  ctx.save();
+  applyWorldProjection(ctx);
 
   // Loot, shots in flight, and the horde.
   // BAIT a boss threw down — drawn in with the LOOT, on purpose: it is meant to

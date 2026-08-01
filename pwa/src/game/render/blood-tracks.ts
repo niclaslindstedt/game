@@ -45,7 +45,10 @@ import { bloodTrackAmount } from "../game-screen/gore-gate.ts";
 import { syncHeroGear, wadeHero } from "../game-screen/hero-soak.ts";
 import { bloodAt } from "./blood-ground.ts";
 import { RUNG_AT } from "./blood-rungs.ts";
+import { bakeFlat } from "./caches.ts";
+import { drawFloorDecal } from "./plane.ts";
 import { TILE, type ViewSize } from "./shared.ts";
+import { projectionKey } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 /** The print art, wettest first, and how each of the four bearings is drawn from
@@ -131,9 +134,11 @@ let leftFoot = false;
 /** Prints' worth of blood still on the boots. */
 let carry = 0;
 
-/** Pre-mirrored print art, keyed `name/flip` — one `drawImage` per print in the
- * draw loop, exactly as the floor's tiles are handled. */
+/** Pre-mirrored, pre-PROJECTED print art, keyed `name/flip` — one `drawImage`
+ * per print in the draw loop, exactly as the floor's tiles are handled, and
+ * dropped on a projection change for the same reason (`bakeFlat`). */
 let flipCacheFor: Sprites | null = null;
+let flipCacheProjection = projectionKey();
 const flipCache = new Map<string, HTMLCanvasElement | ImageBitmap>();
 
 /** Wipe the trail — a new run, or a hot reload. */
@@ -250,14 +255,22 @@ function bearingOf(dx: number, dy: number): number {
   return dy >= 0 ? 1 : 0;
 }
 
-/** The print art for `name`, mirrored per `flip` (bit 0 = X, bit 1 = Y). */
+/**
+ * The print art for `name`, mirrored per `flip` (bit 0 = X, bit 1 = Y) and baked
+ * through the world projection — a print lies on the floor, so it is squashed
+ * ONCE in the art rather than every frame on the way to the screen. Mirrored
+ * before projected, because a mirror and a turn do not commute: under a yaw the
+ * two orders point the toe at different corners of the floor.
+ */
 function flipped(
   sprites: Sprites,
   name: string,
   flip: number,
 ): HTMLCanvasElement | ImageBitmap | null {
-  if (flipCacheFor !== sprites) {
+  const projection = projectionKey();
+  if (flipCacheFor !== sprites || flipCacheProjection !== projection) {
     flipCacheFor = sprites;
+    flipCacheProjection = projection;
     flipCache.clear();
   }
   const key = `${name}/${flip}`;
@@ -265,10 +278,17 @@ function flipped(
   if (cached) return cached;
   const art = spriteByName(sprites, name);
   if (!art) return null;
-  if (flip === 0) {
-    flipCache.set(key, art);
-    return art;
-  }
+  const flat = bakeFlat(flip === 0 ? art : mirror(art, flip));
+  if (!flat) return null;
+  flipCache.set(key, flat);
+  return flat;
+}
+
+/** `art` mirrored per `flip` (bit 0 = X, bit 1 = Y). */
+function mirror(
+  art: HTMLCanvasElement | ImageBitmap,
+  flip: number,
+): HTMLCanvasElement | ImageBitmap {
   const canvas = document.createElement("canvas");
   canvas.width = art.width;
   canvas.height = art.height;
@@ -278,7 +298,6 @@ function flipped(
   g.translate(flip & 1 ? art.width : 0, flip & 2 ? art.height : 0);
   g.scale(flip & 1 ? -1 : 1, flip & 2 ? -1 : 1);
   g.drawImage(art, 0, 0);
-  flipCache.set(key, canvas);
   return canvas;
 }
 
@@ -324,11 +343,13 @@ export function drawBloodTracks(
         const into = Math.min(1, print.carry / CARRY_FULL);
         ctx.globalAlpha =
           PRINT_ALPHA_MIN + (PRINT_ALPHA_MAX - PRINT_ALPHA_MIN) * into;
-        ctx.drawImage(
-          art,
-          Math.round(print.x - camera.x - art.width / 2),
-          Math.round(print.y - camera.y - art.height / 2),
-        );
+        // Seated on the print's own whole-pixel place on the projected floor —
+        // the lattice the ground blit and the bodies share, so the trail stays
+        // put under a hero walking north (`drawFloorDecal`). Rounding the WORLD
+        // offset instead, as this did, quantized to a whole world unit — which
+        // the pitch then turns back into three quarters of a screen pixel, and
+        // the prints shuffled against each other as the camera panned.
+        drawFloorDecal(ctx, art, print.x, print.y, camera);
       }
     }
   }

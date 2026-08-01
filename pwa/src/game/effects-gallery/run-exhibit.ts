@@ -379,7 +379,18 @@ export function runExhibit(deps: {
       const camera = computeCamera(state, canvas.width, canvas.height, timeMs);
       applyCameraShake(camera, shared.cameraShake, state.stats.timeMs, timeMs);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      drawFrame(ctx, state, assets, camera, timeMs, shared.heroAction);
+      // The effect list goes in as well as out: what has come to rest on the
+      // floor is drawn INSIDE the frame, under the actors (render.ts).
+      drawFrame(
+        ctx,
+        state,
+        assets,
+        camera,
+        timeMs,
+        shared.heroAction,
+        undefined,
+        shared.effects,
+      );
       drawEffects(
         ctx,
         shared.effects,

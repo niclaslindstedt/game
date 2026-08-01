@@ -19,7 +19,7 @@
 
 import { isFloorPlaneSprite } from "../assets.ts";
 import { flatSprite } from "./caches.ts";
-import { billboard } from "./tilt.ts";
+import { billboard, bodyAnchorX, bodyAnchorY } from "./tilt.ts";
 
 /**
  * Draw a piece of the level's furniture at world `pos`, on whichever plane its
@@ -62,5 +62,40 @@ export function drawWorldSprite(
       Math.round(pos.x - sprite.width / 2 - camera.x),
       Math.round(pos.y - yAnchor - camera.y),
     ),
+  );
+}
+
+/**
+ * A FLOOR DECAL — art the FIGHT left on the ground rather than furniture the
+ * level was built with: the blood grid's tiles and the boot prints tracked out
+ * of them. Centred on a world point, in SCREEN space.
+ *
+ * `art` is ALREADY BAKED through the projection (`bakeFlat`), so this is the
+ * same deal `drawWorldSprite`'s flat branch strikes, made once per decal rather
+ * than once per sprite: the squash is baked in and the per-frame draw is a plain
+ * 1:1 blit. Drawing the raw art through the live tilt instead is what makes a
+ * floor of blood WOBBLE — a nearest-neighbour squash decides which rows to drop
+ * from the DESTINATION offset, so a floor whose destination moves 0.75 px per
+ * world unit of northward travel re-picks them every frame, and the stains crawl
+ * against a ground layer that is a single rigid blit. East-west travel hid it
+ * completely: there the projection is the identity and `computeCamera` rounds to
+ * a whole world unit, so nothing ever landed between two pixels.
+ *
+ * The seat is `bodyAnchor*` — the same whole-pixel lattice the standing bodies,
+ * the ground blit and the fog's dither register against — so the blood steps
+ * with the floor it is on instead of sliding across it.
+ */
+export function drawFloorDecal(
+  ctx: CanvasRenderingContext2D,
+  art: ImageBitmap | HTMLCanvasElement,
+  worldX: number,
+  worldY: number,
+  camera: { x: number; y: number },
+): void {
+  ctx.drawImage(
+    art,
+    bodyAnchorX(worldX, worldY, camera.x, camera.y) - Math.round(art.width / 2),
+    bodyAnchorY(worldX, worldY, camera.x, camera.y) -
+      Math.round(art.height / 2),
   );
 }

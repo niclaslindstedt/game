@@ -46,6 +46,18 @@
 //     sixteen corner variants. All the minimums are MINIMUMS, not averages: an
 //     average bleeds the effect outward past the edge of the mess.
 //
+// **AND IT IS BAKED FLAT, NOT SQUASHED ON THE WAY OUT.** The blood lies on the
+// ground and takes the world projection whole — but it takes it ONCE, in the art
+// (`bakeFlat`), and the per-frame draw is a plain blit at the tile's own
+// whole-pixel seat (`drawFloorDecal`). Drawn through the live tilt instead, a
+// screenful of stains WOBBLES as the hero walks north: a nearest-neighbour
+// squash picks which rows to drop from the DESTINATION offset, and a pitch of
+// 0.75 moves that offset three quarters of a pixel per world unit of travel, so
+// every tile re-picks its dropped rows at its own moment against a ground layer
+// that is one rigid blit. Walking east or west hid it perfectly — there the
+// projection is the identity and the camera is a whole world unit — which is why
+// the wobble read as "only on some axes" rather than as a resample.
+//
 // And the floor is deliberately STILL: nothing here animates, which is why the
 // draw takes no clock. A travelling specular glint over the soaked cells was
 // tried and cut — a highlight moving across a dark red mass reads as the blood
@@ -83,9 +95,12 @@ import {
   type GoreFamilyId,
 } from "../game-screen/gore.ts";
 import { drawnRung, RUNG_AT, SOAKED_RUNG } from "./blood-rungs.ts";
+import { bakeFlat } from "./caches.ts";
 import { tileHash } from "./ground-tiles.ts";
+import { drawFloorDecal } from "./plane.ts";
 import { recolorSprite } from "./recolor.ts";
 import { TILE, type ViewSize } from "./shared.ts";
+import { projectionKey } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 /** The saturation ladder's four rungs, two variants each. The tile's hash picks
@@ -169,12 +184,16 @@ const FAMILY_INDEX = new Map<GoreFamilyId, number>(
 );
 const BLOOD_INDEX = FAMILY_INDEX.get("blood") ?? 0;
 
-/** Pre-mirrored tile art, keyed `name/flip`. Four flips of eight 16×16 sprites
- * is a few KB, and it keeps the draw loop to one `drawImage` per tile — a
- * save/translate/scale/restore per tile is the one thing that would make a
- * screenful of bloodied floor cost real time. Keyed by the Sprites instance so a
- * hot reload drops it with everything else. */
+/** Pre-mirrored, pre-PROJECTED tile art, keyed `name/flip/family`. Four flips of
+ * eight 16×16 sprites is a few KB, and it keeps the draw loop to one `drawImage`
+ * per tile — a save/translate/scale/restore per tile is the one thing that would
+ * make a screenful of bloodied floor cost real time. Keyed by the Sprites
+ * instance so a hot reload drops it with everything else, and dropped outright
+ * when the camera knobs move, because the projection is baked into every entry
+ * (`bakeFlat`; the same deal `flatSprite` strikes for the level's flat
+ * furniture). */
 let flipCacheFor: Sprites | null = null;
+let flipCacheProjection = projectionKey();
 const flipCache = new Map<string, HTMLCanvasElement | ImageBitmap>();
 
 /** Wipe the floor — a new run, or a hot reload. */
@@ -238,15 +257,28 @@ export function spillBlood(
   }
 }
 
-/** The tile art for `name`, mirrored per `flip` (bit 0 = X, bit 1 = Y). */
+/**
+ * The tile art for `name`, mirrored per `flip` (bit 0 = X, bit 1 = Y) — RE-HUED,
+ * MIRRORED and PROJECTED, in that order, and each step is in that place for a
+ * reason.
+ *
+ * The re-hue is a full pixel walk with a cache of its own keyed on the sprite,
+ * so doing it first means one walk per (tile, family) rather than one per (tile,
+ * family, flip) — four times the work for four identical results. The mirror
+ * comes before the projection because a mirror and a turn do not commute: under
+ * a yaw, flipping the already-turned art would fray a pool's rim toward the
+ * wrong corner of the floor.
+ */
 function flipped(
   sprites: Sprites,
   name: string,
   flip: number,
   family: GoreFamily,
 ): HTMLCanvasElement | ImageBitmap | null {
-  if (flipCacheFor !== sprites) {
+  const projection = projectionKey();
+  if (flipCacheFor !== sprites || flipCacheProjection !== projection) {
     flipCacheFor = sprites;
+    flipCacheProjection = projection;
     flipCache.clear();
   }
   const key = `${name}/${flip}/${family.id}`;
@@ -254,15 +286,22 @@ function flipped(
   if (cached) return cached;
   const source = spriteByName(sprites, name);
   if (!source) return null;
-  // RE-HUED FIRST, MIRRORED SECOND. The re-hue is a full pixel walk with a cache
-  // of its own keyed on the sprite, so doing it before the flip means one walk
-  // per (tile, family) rather than one per (tile, family, flip) — four times the
-  // work for four identical results.
   const art = family.ramp ? recolorSprite(source, name, family.ramp) : source;
-  if (flip === 0) {
-    flipCache.set(key, art);
-    return art;
-  }
+  const mirrored = flip === 0 ? art : mirror(art, flip);
+  if (!mirrored) return null;
+  // Baked through the projection once, so the per-frame draw is a plain blit of
+  // pre-squashed art rather than a live resample that re-picks its dropped rows
+  // every time the camera moves a fraction of a pixel — see `drawFloorDecal`.
+  const flat = bakeFlat(mirrored) ?? mirrored;
+  flipCache.set(key, flat);
+  return flat;
+}
+
+/** `art` mirrored per `flip` (bit 0 = X, bit 1 = Y). */
+function mirror(
+  art: HTMLCanvasElement | ImageBitmap,
+  flip: number,
+): HTMLCanvasElement | ImageBitmap {
   const canvas = document.createElement("canvas");
   canvas.width = art.width;
   canvas.height = art.height;
@@ -272,7 +311,6 @@ function flipped(
   g.translate(flip & 1 ? art.width : 0, flip & 2 ? art.height : 0);
   g.scale(flip & 1 ? -1 : 1, flip & 2 ? -1 : 1);
   g.drawImage(art, 0, 0);
-  flipCache.set(key, canvas);
   return canvas;
 }
 
@@ -289,7 +327,8 @@ function diagonalMin(tx: number, ty: number, orthogonal: number): number {
 }
 
 /**
- * Draw one piece of blood art for the cell whose top-left is at (`px`, `py`).
+ * Draw one piece of blood art for the cell whose CENTRE is at world (`cx`,
+ * `cy`), nudged by (`jx`, `jy`) world px.
  *
  * **The art is CENTRED on the cell and nudged, never blitted into the cell
  * rect.** The heavy rungs are wider than a cell, so centring makes neighbouring
@@ -298,23 +337,25 @@ function diagonalMin(tx: number, ty: number, orthogonal: number): number {
  * finishes the job: a straight edge in a tiled overlay is a run of cells that
  * agreed on where to stop, and three pixels of disagreement is enough that they
  * never do.
+ *
+ * The nudge is a WORLD offset applied before the seat is worked out, not a
+ * screen one applied after: it moves the blot across the FLOOR, so a turned
+ * camera nudges it along the floor's own axes, and the seat stays a pure
+ * function of where the blot is (`drawFloorDecal`).
  */
 function blot(
   ctx: CanvasRenderingContext2D,
   art: HTMLCanvasElement | ImageBitmap | null,
-  px: number,
-  py: number,
+  camera: Camera,
+  cx: number,
+  cy: number,
   jx: number,
   jy: number,
   alpha: number,
 ): void {
   if (!art || alpha <= 0) return;
   ctx.globalAlpha = Math.min(1, alpha);
-  ctx.drawImage(
-    art,
-    px - Math.round((art.width - TILE) / 2) + jx,
-    py - Math.round((art.height - TILE) / 2) + jy,
-  );
+  drawFloorDecal(ctx, art, cx + jx, cy + jy, camera);
 }
 
 /** Saturation at a tile, 0 outside the map — the neighbour lookups the wash
@@ -360,8 +401,10 @@ export function drawBloodGround(
       const family =
         GORE_FAMILIES[fam[ty * cols + tx] ?? BLOOD_INDEX] ??
         goreFamily("blood");
-      const px = tx * TILE - camera.x;
-      const py = ty * TILE - camera.y;
+      // The cell's CENTRE, in the world — every blot below is seated on it
+      // (`blot`), never on a screen offset worked out here.
+      const cx = tx * TILE + TILE / 2;
+      const cy = ty * TILE + TILE / 2;
       const hash = tileHash(tx, ty);
       const flip = (hash >>> 5) & 3;
       // How bloodied the WEAKEST of the four neighbours is, and of all EIGHT.
@@ -397,8 +440,9 @@ export function drawBloodGround(
             (hash >>> 10) & 3,
             family,
           ),
-          px,
-          py,
+          camera,
+          cx,
+          cy,
           -jx,
           -jy,
           1,
@@ -407,8 +451,9 @@ export function drawBloodGround(
       blot(
         ctx,
         flipped(sprites, RUNGS[rung]![(hash >>> 3) & 1]!, flip, family),
-        px,
-        py,
+        camera,
+        cx,
+        cy,
         jx,
         jy,
         RUNG_ALPHA_MIN + (RUNG_ALPHA_MAX - RUNG_ALPHA_MIN) * into,
@@ -429,8 +474,9 @@ export function drawBloodGround(
           blot(
             ctx,
             flipped(sprites, name, edgeFlip, family),
-            px,
-            py,
+            camera,
+            cx,
+            cy,
             jx,
             jy,
             Math.min(1, (drop - EDGE_DROP) / EDGE_FULL),
@@ -452,8 +498,9 @@ export function drawBloodGround(
             (hash >>> 7) & 3,
             family,
           ),
-          px,
-          py,
+          camera,
+          cx,
+          cy,
           jy,
           jx,
           (WASH_ALPHA * (surround - WASH_FROM) * s) / ((255 - WASH_FROM) * 255),
