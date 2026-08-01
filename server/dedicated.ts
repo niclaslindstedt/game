@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE DEDICATED SERVER — the same session, run from a terminal instead of from
-// a game (multiplayer plan §5.5).
+// a game (docs/multiplayer.md).
 //
-// **IT IS THE SAME CODE, AND `host.ts` IS WHERE THAT IS TRUE.** The plan says
-// the utility-process server "is the same file" as the standalone one; what that
-// has to mean in practice is one session implementation, one admission desk, one
-// transport stack and — the part that must not be copied — ONE fixed-timestep
-// loop. All of that is `host.ts`. This file is the wrapper the plan asks for:
-// a config file, a console, log output through the engine's own `output.ts`,
-// graceful shutdown, and no Steam.
+// **IT IS THE SAME CODE, AND `host.ts` IS WHERE THAT IS TRUE.** The
+// utility-process server and the standalone one must be the same thing: one
+// session implementation, one admission desk, one transport stack and — the
+// part that must not be copied — ONE fixed-timestep loop. All of that is
+// `host.ts`. This file is only the terminal wrapper: a config file, a console,
+// log output through the engine's own `output.ts`, graceful shutdown, and no
+// Steam.
 //
 // **NO STEAM IS A CONSEQUENCE RATHER THAN A FEATURE.** `steamworks.init()` is a
 // single global handshake the desktop shell's main process owns, so the relay
@@ -24,18 +24,19 @@
 // what that costs — the party stamp, the loadout check, the packet budget — is
 // the session's and applies here unchanged because it is the same session.
 //
-// **THE LICENCE IS AN OPEN QUESTION AND THIS FILE IS NOT THE PLACE IT IS
-// ANSWERED.** `PolyForm-Noncommercial-1.0.0` is decision 15 in the plan's own
-// register: what it permits for somebody running this for other people has to
-// be confirmed before a binary ships. Running one yourself, for your friends,
-// is plainly inside it; a paid hosting business is plainly not; the middle is
-// not this module's to settle.
+// **THE LICENCE QUESTION IS SETTLED, AND THIS FILE ENFORCES ITS SHARE.**
+// Multiplayer is played through Steam and nowhere else (docs/multiplayer.md —
+// Licence), so a standalone server on an open UDP port is exactly the play the
+// licence does not cover. The config escape below exists for the repo's own
+// suites and the headless soak — and in the shipped binary it is DEAD, folded
+// shut by the build-time literal in `licence.ts`.
 
 import { readFileSync } from "node:fs";
 
 import { engineVersion, error, header, info, status, warn } from "@game/core";
 
 import { createHost, type Host } from "./host.ts";
+import { UNLICENSED_TRANSPORT_UNLOCKED } from "./licence.ts";
 import { MAX_CLIENTS } from "./wire/frames.ts";
 import {
   PROTOCOL_VERSION,
@@ -57,18 +58,17 @@ export type DedicatedConfig = {
   /**
    * Admit players over a raw UDP socket rather than through Steam.
    *
-   * **DEFAULT FALSE, AND WITHOUT IT THIS SERVER ADMITS NOBODY** (decision 15).
-   * Multiplayer is licensed through Steam and nowhere else, and a standalone
-   * server on an open port is exactly the play that is not — so the door is
-   * shut unless something deliberately opens it. It is here for the repo's own
-   * suites and §5.6's headless soak, which talk to a loopback socket.
+   * **DEFAULT FALSE, AND WITHOUT IT THIS SERVER ADMITS NOBODY.** Multiplayer
+   * is licensed through Steam and nowhere else, and a standalone server on an
+   * open port is exactly the play that is not — so the door is shut unless
+   * something deliberately opens it. It is here for the repo's own suites and
+   * the headless soak fleet, which talk to a loopback socket.
    *
-   * **THE HONEST LIMIT, stated rather than papered over:** this is read from a
-   * CONFIG FILE, and a config file is a thing a determined player can edit. It
-   * is a statement of what the licence permits, not a lock — the same shape as
-   * a licence header. A real lock is a Steam auth ticket validated at the hub or
-   * a build-time literal the shipped binary folds to false, and choosing between
-   * those two is work this has not done. Do not describe this as enforcement.
+   * **IN THE SHIPPED BINARY THIS FIELD DOES NOTHING.** The ship target folds
+   * `UNLICENSED_TRANSPORT_UNLOCKED` (`server/licence.ts`) to `false`, so the
+   * escape only works when the server runs from sources. That is the lock: a
+   * config file is a thing a determined player can edit, and a packaged build
+   * that honoured it would be enforcing the licence with a statement.
    */
   allowUnlicensedTransport?: boolean;
   /** The mission to run. Defaults to the campaign's first. */
@@ -213,11 +213,13 @@ export async function startDedicated(
   if (config.password) info("password required");
 
   const host = createHost({
-    // Decision 15: multiplayer is licensed through Steam. A standalone server
-    // on a raw UDP socket is precisely the unlicensed path, so it is REFUSED by
-    // default and this is the only thing that opens it — see
-    // `DedicatedConfig.allowUnlicensedTransport` for what it is and is not.
-    allowUnlicensedTransport: config.allowUnlicensedTransport,
+    // Multiplayer is licensed through Steam. A standalone server on a raw UDP
+    // socket is precisely the unlicensed path, so it is REFUSED by default,
+    // the config escape is the only thing that opens it, and in the shipped
+    // binary the build-time literal holds even that shut — see
+    // `DedicatedConfig.allowUnlicensedTransport` and `licence.ts`.
+    allowUnlicensedTransport:
+      config.allowUnlicensedTransport === true && UNLICENSED_TRANSPORT_UNLOCKED,
     params,
     // NOBODY OWNS THIS ONE. Seat 0 stands empty until somebody joins, the
     // first arrival is dressed in the hero they brought rather than in the
