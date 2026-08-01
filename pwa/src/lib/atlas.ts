@@ -2,8 +2,10 @@
 // Sprite-atlas slicing. Generic React/UI game code — lives in
 // pwa/src/lib/ so it can be extracted into oss-framework once mature.
 
-/** A sprite's source rectangle inside an atlas texture. */
-export type AtlasRect = { x: number; y: number; w: number; h: number };
+/** A sprite's source rectangle inside an atlas texture — a compact
+ * `[x, y, w, h]` tuple, the shape the atlas manifest ships in (it rides the
+ * app's critical-path budget, so it pays for no field names). */
+export type AtlasRect = readonly [number, number, number, number];
 
 /**
  * Slice a decoded atlas image into per-sprite bitmaps — one fetch and one
@@ -17,7 +19,7 @@ export async function sliceAtlas<K extends string>(
 ): Promise<Record<K, ImageBitmap>> {
   const entries = await Promise.all(
     (Object.entries(rects) as [K, AtlasRect][]).map(
-      async ([name, { x, y, w, h }]) =>
+      async ([name, [x, y, w, h]]) =>
         [name, await createImageBitmap(atlas, x, y, w, h)] as const,
     ),
   );

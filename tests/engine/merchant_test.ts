@@ -306,7 +306,9 @@ describe("the shop", () => {
       expect(shelf[0]?.item.id).toBe(pieces[pieces.length - 1]?.id);
       // …and the very first sale has fallen off for good.
       expect(shelf.some((e) => e.item.id === pieces[0]?.id)).toBe(false);
-      expect(buybackItem(state, state.players[0], pieces[0]?.id as number)).toBe("gone");
+      expect(
+        buybackItem(state, state.players[0], pieces[0]?.id as number),
+      ).toBe("gone");
     });
 
     it("refuses a short purse, a full bag, and a closed counter", () => {
