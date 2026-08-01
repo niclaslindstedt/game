@@ -173,7 +173,7 @@ export function setActiveMods(stamps: ModStamp[], found: ModClash[]): void {
 }
 
 /**
- * THE CATALOGS THE SESSION PROCESS MUST SIMULATE WITH (multiplayer §4.4).
+ * THE CATALOGS THE SESSION PROCESS MUST SIMULATE WITH (docs/multiplayer.md).
  *
  * The page applies a mod by swapping the live registry (`registerDefs`), but
  * a hosted run SIMULATES in the session's own process, whose registry this

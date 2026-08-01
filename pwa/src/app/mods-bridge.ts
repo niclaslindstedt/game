@@ -102,14 +102,14 @@ export async function listMods(): Promise<InstalledMod[]> {
 
 /**
  * Open the game's Steam Workshop hub — the door a joiner MISSING a mod is
- * offered (multiplayer §4.4): the session refuses them until they have it, and
- * a refusal with nowhere to go is a dead end. Fire-and-forget: the Steam
+ * offered (docs/multiplayer.md): the session refuses them until they have it,
+ * and a refusal with nowhere to go is a dead end. Fire-and-forget: the Steam
  * client owns the page from here.
  *
  * The HUB rather than the item's own page, honestly: the wire carries the
  * mod's compiled id and the Workshop needs its published FILE id, and nothing
  * maps one to the other across the handshake yet. The per-item link is
- * recorded as owed in the plan.
+ * a known debt (docs/multiplayer.md — What is NOT here yet).
  */
 export function openWorkshop(): void {
   if (!modsBridgeAvailable()) return;

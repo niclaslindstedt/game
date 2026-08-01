@@ -53,7 +53,7 @@ export type RunProgress = {
    * gate crossing and the hub's travel doors are the same trip. */
   travelTo: (state: GameState, to: string) => void;
   /** Bank the hero's build and this run's thoughts WITHOUT ending anything —
-   * the mid-run leave (§4.5): a joiner quitting, or the session dying under
+   * the mid-run leave: a joiner quitting, or the session dying under
    * them. The victory/travel/defeat paths bank on their own; re-banking
    * unchanged content moves nothing (an unchanged hero keeps its stamp). */
   bankHero: (state: GameState) => void;
@@ -76,7 +76,7 @@ export function createRunProgress(deps: {
    * started from scratch — not resumed, not itself adopted from one). */
   captureEnabled: boolean;
   /**
-   * WHETHER A CROSSING IS THE SESSION'S TO PERFORM (§6.4). True when this run
+   * WHETHER A CROSSING IS THE SESSION'S TO PERFORM. True when this run
    * is hosted with the doors open or has other people in it — then `travelTo`
    * sends the run command and the SESSION swaps the level under everybody at
    * once, instead of the app tearing the session down (which is what
@@ -164,7 +164,7 @@ export function createRunProgress(deps: {
   };
 
   const travelTo = (state: GameState, to: string) => {
-    // §6.4: WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
+    // WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
     // the session to swap the level under everybody at once; the swap comes
     // back as a full snapshot, the driver's travel hook banks this hero off
     // the level being left, and the level-id change is what remounts the app
@@ -303,7 +303,7 @@ export function createRunProgress(deps: {
         if (completed) {
           const tally = campaignTally(characterRef.current, difficulty);
           // A CAMPAIGN ANY LEG OF WHICH WAS PLAYED IN COMPANY IS OFF THE BOARD
-          // (plan §5.3). The tally is still cleared below, so a tainted
+          // (docs/multiplayer.md). The tally is still cleared below, so a tainted
           // campaign ends rather than lingering to be re-banked.
           if (
             !tally.party &&

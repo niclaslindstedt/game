@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// A FALLEN HERO'S BODY on the field (multiplayer plan §4.2, `state.corpses`):
-// the walk-back target a party death leaves behind. It is drawn with the LOOT
-// AURA machinery, exactly as the plan asks, because that is the honest read of
+// A FALLEN HERO'S BODY on the field (`state.corpses`; docs/multiplayer.md —
+// The party): the walk-back target a party death leaves behind. It is drawn
+// with the LOOT AURA machinery, and deliberately so — that is the honest read of
 // what it is — a pile of the owner's own gear lying where they dropped, and
 // the aura's rarity ladder advertises the best piece on it the same way it
 // advertises any find. The body itself is the hero doll's base sprite laid on

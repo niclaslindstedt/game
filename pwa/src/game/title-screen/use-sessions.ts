@@ -56,15 +56,15 @@ export function useSessions({
   /** What this player is called in a session's roster and chat — their hero's
    * name, which is the only name the game knows them by. */
   heroName: string;
-  /** The picked hero is HARDCORE (§4.2): rides every join so the handshake can
+  /** The picked hero is HARDCORE: rides every join so the handshake can
    * hold hardcore and softcore apart — the mismatch is refused by name. */
   heroHardcore: boolean;
-  /** The picked hero's banked loadout (§4.5), purse already funded — what the
+  /** The picked hero's banked loadout, purse already funded — what the
    * session seats them with. Null for a fresh hero (the authored fresh
    * start), and for no hero at all. */
   heroLoadout: Record<string, unknown> | null;
   /**
-   * APPLY THIS EXACT MOD SET FOR THE SESSION (§4.4) — the host's ids, in the
+   * APPLY THIS EXACT MOD SET FOR THE SESSION — the host's ids, in the
    * host's load order (empty = the shipped game, i.e. restore). Owned by the
    * title screen because applying needs the sprite atlas and `game/mods.ts`,
    * both of which live behind lazy chunks this startup-path module may not
@@ -79,7 +79,7 @@ export function useSessions({
   const netOpen = netBridgeAvailable();
   const [rows, setRows] = useState<BrowserRow[] | null>(null);
   const [firewall, setFirewall] = useState<FirewallStatus | null>(null);
-  // THE JOINER'S MOD RECONCILE (§4.4), behind its own lazy chunk — what
+  // THE JOINER'S MOD RECONCILE (join-mods.ts), behind its own lazy chunk — what
   // decides whether a modded host's row is a door (all installed: the set is
   // applied on the way through) or a refusal with a Workshop pointer. Null
   // until the sessions screen loads it; a row is then treated exactly as it
@@ -163,7 +163,7 @@ export function useSessions({
     };
   }, [screen]);
 
-  /** The gap between a row's mod set and this build's (§4.4), or null while
+  /** The gap between a row's mod set and this build's, or null while
    * the helper has not loaded — a row is then judged exactly as it was
    * before reconciliation existed. */
   const modsGap = useCallback(
@@ -172,7 +172,7 @@ export function useSessions({
   );
 
   /**
-   * Walk through a row's door with the host's mod set applied (§4.4): the
+   * Walk through a row's door with the host's mod set applied: the
    * host's set is the session's, in the host's load order, and a joiner who
    * has it all installed simply plays under it — `restoreBaseDefs` puts the
    * shipped game back when the run ends (the intent's `appliedMods` is what
@@ -244,7 +244,7 @@ export function useSessions({
         setTick((n) => n + 1);
       },
       hostIntent: () => hostIntentFor(heroName),
-      // A MOD GAP THIS BUILD CAN CLOSE IS NOT A REFUSAL (§4.4): when every
+      // A MOD GAP THIS BUILD CAN CLOSE IS NOT A REFUSAL: when every
       // one of the host's mods is installed here, the row presents itself
       // WITH the host's set — joining applies it on the way through — and
       // only a genuinely missing mod (or a build/protocol skew) still greys

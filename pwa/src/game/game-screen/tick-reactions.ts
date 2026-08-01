@@ -97,7 +97,8 @@ export function createTickReactions(deps: {
         stats: state.stats,
         // A PARTY KILL COUNTS FOR EVERYONE PRESENT — so the badges book a
         // co-op run exactly as they book a solo one — but nothing it produces
-        // may reach a ranking (plan §5.3). The ledger keeps both, off this one
+        // may reach a ranking (docs/multiplayer.md). The ledger keeps both,
+        // off this one
         // flag; see `LifetimeTotals.solo`.
         party: isPartyRun(state),
       }),

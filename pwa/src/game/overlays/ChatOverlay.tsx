@@ -4,9 +4,8 @@
 //
 // **IT LIVES IN THE BOTTOM LEFT AND NOWHERE ELSE.** The reference device is a
 // phone held in landscape, and the right-hand third of it is where the steering
-// thumb lives; the plan's §2.6 states the rule as "a scrollback that does not
-// steal the steering thumb's third of the screen", and this is that rule
-// implemented. The log is also POINTER-TRANSPARENT while nobody is typing —
+// thumb lives; the rule is "a scrollback that does not steal the steering
+// thumb's third of the screen", and this is that rule implemented. The log is also POINTER-TRANSPARENT while nobody is typing —
 // a tap that lands on a chat line is a tap the hero did not take.
 //
 // **THE FIELD IS RAISED, NOT PARKED.** A permanently open text box on a game

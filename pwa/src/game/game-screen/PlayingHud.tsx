@@ -83,7 +83,7 @@ export function PlayingHud({
   /** Latched so BOT VIEW's autopilot won't clear the timer-tap pause before
    * the menu can show (see the sim loop). */
   userPausedRef: MutableRefObject<boolean>;
-  /** A seat's display name off the session roster (§4.5) — the engine's
+  /** A seat's display name off the session roster — the engine's
    * Player carries none. Null when nothing can answer (offline, a test). */
   seatName?: (seat: number) => string | null;
   bumpUi: () => void;
@@ -538,7 +538,7 @@ export function PlayingHud({
             </div>
           )}
 
-          {/* THE PARTY FRAMES (§4.5): every other hero in play, down the same
+          {/* THE PARTY FRAMES: every other hero in play, down the same
               left rail the companion rides — the one edge with no absolute
               competitor, and well clear of the steering thumb's bottom
               thirds. The portrait is the hero's own dressed paper-doll bust

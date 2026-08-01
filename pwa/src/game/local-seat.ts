@@ -70,7 +70,7 @@ export function localScreen(state: GameState): PlayerScreen | undefined {
  * "My hero is on the field and I have nothing open" — the run is in the
  * global `playing` phase AND the local hero has no screen up. This is what
  * `state.phase === "playing"` used to mean before the per-player screens
- * split (plan §3.2): every "show the live-field HUD" and "a field tap may
+ * split: every "show the live-field HUD" and "a field tap may
  * act" gate reads this, never the bare phase.
  */
 export function fieldLive(state: GameState): boolean {

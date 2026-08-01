@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE HOST SCREEN'S STATUS PANEL — §2.2 of the plan, live, on the pause screen.
+// THE HOST SCREEN'S STATUS PANEL — the session's live status, on the pause
+// screen.
 //
 // **WHY IT IS HERE RATHER THAN ON THE TITLE MENU'S HOST SCREEN.** A session
 // exists only while a run does: hosting is not a lobby you sit in, it is a game
@@ -45,7 +46,7 @@ export function SessionPanel({
    * status poll: it changes when somebody joins, which is exactly when the
    * server sends one. */
   link: SessionLink;
-  /** Open a trade with this SEAT (§5.1). Absent when this client cannot trade
+  /** Open a trade with this SEAT. Absent when this client cannot trade
    * — a spectator, or a session with nobody else seated. The press leaves the
    * pause screen behind it, so it lives with the pause overlay's wiring. */
   onTrade?: (seat: number) => void;

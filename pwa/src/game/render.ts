@@ -265,7 +265,7 @@ export function drawFrame(
   // be indistinguishable from a pickup at a glance, and drawing it anywhere else
   // in the stack would quietly give it away.
   drawBaits(ctx, state, sprites, camera, inView, timeMs);
-  // A FALLEN PARTY MEMBER'S BODY (§4.2) — under the loot: it is the walk-back
+  // A FALLEN PARTY MEMBER'S BODY — under the loot: it is the walk-back
   // target holding its owner's gear, advertised by the same rarity aura a find
   // on the floor wears. Solo runs never have one.
   drawPlayerCorpses(ctx, state, sprites, camera, inView, timeMs);

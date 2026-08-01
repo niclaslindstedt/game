@@ -7420,7 +7420,7 @@ canvas.tier-artifact {
   gap: 0.5rem;
 }
 
-/* THE TRADE WINDOW (multiplayer §5.1) — the shop's sibling: the same
+/* THE TRADE WINDOW (docs/multiplayer.md — Trade) — the shop's sibling: the same
    inventory-panel window skin, tap-only (so touches pan rather than drag), and
    content-sized against the 844x390 reference the way the shop is. */
 .trade-panel {
@@ -7677,7 +7677,7 @@ canvas.tier-artifact {
   background: #7ef0c8;
 }
 
-/* ---- Party frames (§4.5) -------------------------------------------------- */
+/* ---- Party frames --------------------------------------------------------- */
 /* Every OTHER hero in play, stacked down the same left rail the companion
    rides — the one edge with no absolute-positioned competitor, and clear of
    the steering thumb's bottom thirds. Same furniture as the companion

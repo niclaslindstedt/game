@@ -91,7 +91,7 @@ export type LifetimeTotals = {
   bestKillRate: number;
   /**
    * THE SAME RECORDS, KEPT FOR SOLO PLAY ALONE — what the platform boards rank
-   * (multiplayer plan §5.3).
+   * (docs/multiplayer.md — Leaderboards).
    *
    * **Two readers, two rules, and they genuinely disagree.** The achievement
    * catalog reads the counters above, and a PARTY KILL COUNTS FOR EVERYONE

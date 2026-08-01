@@ -141,7 +141,7 @@ export function RunPausedOverlay({
               font={font}
               link={sessionLink}
               mySeat={localSeat()}
-              // TRADE, from the roster row (§5.1). The press has to leave the
+              // TRADE, from the roster row. The press has to leave the
               // pause screen first — `openTrade` refuses a hero with any other
               // screen up — so it resumes exactly as the RESUME row does and
               // sends the verb behind it. A spectator holds no seat and gets
