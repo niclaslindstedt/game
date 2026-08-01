@@ -3,8 +3,10 @@
 build:
 	npm run build
 
+# `make test ARGS="--shard=1/2"` forwards to vitest — how CI splits the suite
+# across parallel jobs without anyone having to bypass the pretest rebuild.
 test:
-	npm test
+	npm test -- $(ARGS)
 
 lint:
 	npm run lint

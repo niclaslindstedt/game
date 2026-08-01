@@ -6,18 +6,22 @@
   "type": "module",
   "scripts": {
     "extract": "node scripts/extract-source-data.mjs",
-    "dev": "npm run assets && npm run extract && vite",
-    "build": "npm run assets && npm run extract && vite build && npm run library && node scripts/generate-seo.mjs",
+    "dev": "npm run assets:site && npm run extract && vite",
+    "build": "npm run assets:site && npm run build:site",
+    "build:site": "npm run extract && vite build && npm run library && node scripts/generate-seo.mjs",
     "library": "node scripts/library/build.mjs",
     "check:seo": "node scripts/check-seo.mjs",
     "icons": "pwa-assets-generator && node scripts/generate-og.mjs",
     "screenshots": "node scripts/generate-screenshots.mjs",
-    "assets": "node ../scripts/generate-leveling.mjs && node ../scripts/generate-items.mjs && node ../scripts/generate-sets.mjs && node ../scripts/generate-companions.mjs && node ../scripts/generate-story.mjs && node ../scripts/generate-enemies.mjs && node ../scripts/generate-powerups.mjs && node ../scripts/generate-talents.mjs && node ../scripts/generate-quests.mjs && node ../scripts/generate-assets.mjs && node ../scripts/generate-levels.mjs && node ../scripts/generate-maps.mjs && node ../scripts/generate-bot-tuning.mjs && node ../scripts/generate-menu.mjs && node ../scripts/generate-sounds.mjs && node ../scripts/generate-music.mjs",
-    "levels": "node ../scripts/generate-leveling.mjs && node ../scripts/generate-items.mjs && node ../scripts/generate-sets.mjs && node ../scripts/generate-companions.mjs && node ../scripts/generate-story.mjs && node ../scripts/generate-enemies.mjs && node ../scripts/generate-powerups.mjs && node ../scripts/generate-talents.mjs && node ../scripts/generate-quests.mjs && node ../scripts/generate-levels.mjs && node ../scripts/generate-maps.mjs && node ../scripts/generate-bot-tuning.mjs && node ../scripts/generate-menu.mjs && node ../scripts/generate-sounds.mjs && node ../scripts/generate-music.mjs",
+    "assets": "node ../scripts/generate-content.mjs",
+    "assets:site": "node ../scripts/generate-content.mjs --previews=sprites",
+    "assets:check": "node ../scripts/generate-content.mjs --previews=none",
+    "levels": "node ../scripts/generate-content.mjs --no-assets",
     "map": "node ../scripts/map-preview.mjs",
     "map-layout": "node ../scripts/map-layout.mjs",
     "preview": "vite preview",
-    "typecheck": "npm run assets && tsc --noEmit -p tsconfig.json"
+    "typecheck": "npm run assets:check && npm run typecheck:only",
+    "typecheck:only": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@niclaslindstedt/oss-framework": "^2.3.0",

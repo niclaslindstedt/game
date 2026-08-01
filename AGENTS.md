@@ -50,19 +50,31 @@ make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 
 **VERIFY WITH `make test` (or `npm run test`) — NEVER with a bare
 `npx vitest run`.** They are not the same check, and the difference passes
-locally and fails in CI. `npm run test` fires the `pretest` hook, which rebuilds
-the generated content and the sprite atlas first; `npx vitest run` skips it and
-tests whatever happens to be on disk. Several COMMITTED artifacts here are
-drift-tested against a fresh build — `mod/catalog.json`,
-`native/store/game-center-achievements.json`,
+locally and fails in CI. `npm run test` opens by rebuilding the generated
+content and the sprite atlas (`npm run assets:check --workspace pwa`); `npx
+vitest run` skips that and tests whatever happens to be on disk. Several
+COMMITTED artifacts here are drift-tested against a fresh build —
+`mod/catalog.json`, `native/store/game-center-achievements.json`,
 `native/store/game-center-leaderboards.json`,
 `electron/store/steam-achievements.json` — so a stale artifact compared against
 an equally stale build MATCHES, and the suite goes green over exactly the drift
 the test exists to catch. (This is not hypothetical: a merge brought in sprites
 from other PRs, `mod/catalog.json` was regenerated after `npm run levels` —
 which deliberately does not run `generate-assets.mjs` — and `npx vitest run`
-happily agreed with itself while CI failed.) The same applies to `make lint`,
-whose `prelint` hook does the same rebuild.
+happily agreed with itself while CI failed.) The same applies to `make lint`
+and `make build`, which open with the same rebuild.
+
+**HOW MUCH OF THE PIPELINE A COMMAND RUNS IS AN ARGUMENT, and every entry point
+runs it EXACTLY ONCE.** The chain is `scripts/generate-content.mjs` — one
+ordered step list, in the dependency order `docs/content-pipeline.md` explains —
+and its `--previews` flag decides how much of the (gitignored) preview set the
+sprite renderer draws: `assets` draws all of it (the art loop), `assets:site`
+only the per-sprite `@8x.png` files the library build copies, `assets:check`
+none at all. Everything the game itself ships — every catalog, the sprite atlas,
+the fonts — is built and checked identically in all three. So a new npm script
+that needs fresh content calls ONE of those three and then does its own work; it
+must never chain a second entry point that rebuilds again (which is what made
+`make lint` compile the whole content tree three times over).
 
 **The two store shells are OUTSIDE the npm workspace**, each with its own
 dependency tree (and `electron/` with its own `tsc` and its own vitest, so the
