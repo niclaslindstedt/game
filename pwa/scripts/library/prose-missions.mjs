@@ -136,6 +136,12 @@ export function venueNotes(mission) {
       ? "The hero arrives in the EVA suit, because outside it he would not last."
       : "The hero arrives in plain clothes — the air here is breathable, so the suit stays stowed.",
   ]);
+  if (mission.revealed) {
+    notes.push([
+      "KNOWN GROUND",
+      "No fog of war here — the whole floor is lit from the first step, because you know your own home by heart.",
+    ]);
+  }
   if (mission.safeZones > 0) {
     notes.push([
       "BREATHING ROOM",
