@@ -45,6 +45,10 @@ export type RunProgress = {
   captureCheckpoint: (state: GameState) => void;
   /** Bank whatever this event means for the character/checkpoint/scores. */
   onEvent: (event: GameEvent, state: GameState) => void;
+  /** Cross to another level RIGHT NOW: bank the hero's build and the
+   * thoughts read this run, then swap the mount to the destination. The
+   * gate crossing and the hub's travel doors are the same trip. */
+  travelTo: (state: GameState, to: string) => void;
 };
 
 export function createRunProgress(deps: {
@@ -108,6 +112,30 @@ export function createRunProgress(deps: {
         state.thoughtsSeen,
       );
     }
+  };
+
+  // CROSS TO ANOTHER LEVEL: bank the hero's build and the thoughts read this
+  // run, then swap the mount to the destination level. The next run dresses
+  // the hero in the banked build, so the crossing carries everything he's
+  // holding — the run he leaves behind simply ends. Shared by the latent
+  // gate (`gateEntered`) and the hub's standing travel doors, so the two
+  // trips can never drift apart on what gets banked.
+  const travelTo = (state: GameState, to: string) => {
+    characterRef.current = bankLoadout(
+      characterRef.current,
+      extractLoadout(state, localHero(state)),
+      coinsIncludePending,
+    );
+    characterRef.current = markStorySeen(
+      characterRef.current,
+      state.level.id,
+      difficulty,
+      state.thoughtsSeen,
+    );
+    checkpointRef.current = null;
+    stopMusic();
+    setHud(null);
+    setLevelId(to);
   };
 
   const onEvent = (event: GameEvent, state: GameState) => {
@@ -289,26 +317,9 @@ export function createRunProgress(deps: {
       }
     }
     // Stepping into a travel gate (the cow-level door the SEVERED HAND
-    // tears open): bank the hero's build and the thoughts read this
-    // run, then swap the mount to the destination level. The next run
-    // dresses the hero in the banked build, so the crossing carries
-    // everything he's holding — the run he leaves behind simply ends.
+    // tears open): the same crossing a hub's travel door makes on a tap.
     if (event.type === "gateEntered") {
-      characterRef.current = bankLoadout(
-        characterRef.current,
-        extractLoadout(state, localHero(state)),
-        coinsIncludePending,
-      );
-      characterRef.current = markStorySeen(
-        characterRef.current,
-        state.level.id,
-        difficulty,
-        state.thoughtsSeen,
-      );
-      checkpointRef.current = null;
-      stopMusic();
-      setHud(null);
-      setLevelId(event.to);
+      travelTo(state, event.to);
     }
     // Run over either way: bank the opening and every inner monologue read
     // this run onto the character, so the next replay on this difficulty
@@ -335,7 +346,7 @@ export function createRunProgress(deps: {
     }
   };
 
-  return { captureCheckpoint, onEvent };
+  return { captureCheckpoint, onEvent, travelTo };
 }
 
 /** Every worn slot the wardrobe feats track, weapon first. */
