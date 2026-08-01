@@ -6,9 +6,9 @@
 // stays uncovered for the rest of the run (no re-fogging). The main-view fog
 // then draws everything uncovered fully clear and stipples only the frontier
 // band between clear and never-seen (MAP.fogBand, in the renderer), and hides
-// any mob standing in it — so `clearOfFog` is the engine's own reading of that
-// same frontier, and the auto-attack picks its target through it (nothing the
-// player cannot see is ever fired at).
+// any mob standing in it. Whether a body is out of that band — the question
+// every automatic target pick asks — is `clearOfFog` in the sibling fog.ts,
+// which is a separate file for a REACHABILITY reason: see its header.
 // `revealRect` (lift fog from a world rect) remains available for a
 // caller that wants the whole camera view instead. Memorable events pin
 // `state.mapMarkers` (story finds,
@@ -142,105 +142,6 @@ export function exploredRay(
     y += dy;
   }
   return { dist: maxDist, fog: false };
-}
-
-/**
- * Is this world position on ground the player can actually SEE — uncovered AND
- * clear of the frontier band the fog stipples over?
- *
- * `isExplored` answers the raw grid; this is the question the HORDE is judged
- * by, because the main view refuses to draw a body standing anywhere within
- * `MAP.fogBand` of the frontier (render/enemies.ts) — the stipple there is
- * still thick enough that a mob would be a silhouette in the dark. Targeting
- * reads THIS one, so the hero never swings at, shoots at, or conjures onto
- * something the player cannot see (step/weapon.ts `nearestEnemy`).
- *
- * The test is "no unexplored cell centre within `MAP.fogBand` of `pos`", which
- * is the engine's own deterministic reading of the renderer's chamfer field:
- * the drawn frontier eases outward over a few frames (render/fog.ts) and a
- * simulation may never depend on a render clock, so this answers where the
- * frontier IS rather than where it is currently drawn.
- *
- * OFF-MAP CELLS READ AS CLEAR, deliberately unlike the renderer (which seeds
- * them as frontier so a level's rim fogs). Out past the boundary there is
- * nothing left for the hero to discover — it is not undiscovered ground — and
- * fogging it would make a mob pinned against the level's edge permanently
- * untargetable, melee included, since bodies clamp to their own radius and the
- * rim is barely a cell and a half wide.
- *
- * Every automatic target pick in the game runs this, several times a tick and
- * once per candidate at horde scale, so the interior answer comes off a cached
- * bit — see {@link settledClear}.
- */
-export function clearOfFog(state: GameState, pos: Vec2): boolean {
-  const cell = MAP.cellSize;
-  const cols = mapCols(state.level);
-  const rows = mapRows(state.level);
-  const cx = Math.floor(pos.x / cell);
-  const cy = Math.floor(pos.y / cell);
-  const settled = settledClear(state.explored, cols, rows);
-  const home = cy * cols + cx;
-  // Deep inside uncovered ground the answer is already known and needs no scan
-  // at all. Only cells near the frontier (or never asked about) fall through.
-  if (cx >= 0 && cy >= 0 && cx < cols && cy < rows && settled[home] === 1) {
-    return true;
-  }
-  // Otherwise walk the neighbourhood: only a still-fogged cell whose CENTRE
-  // falls inside the band refuses the position. `all` rides along — it says the
-  // whole neighbourhood came back uncovered, which is stronger than the question
-  // asked (it ignores where in the cell `pos` stands) and is therefore what may
-  // be cached: a cell that clears it clears for EVERY point in it. Off-map
-  // neighbours are skipped by both, since out there nothing is hidden.
-  const band = MAP.fogBand;
-  const reach = Math.ceil(band / cell);
-  const bandSq = band * band;
-  let all = true;
-  for (let dy = -reach; dy <= reach; dy++) {
-    const ty = cy + dy;
-    if (ty < 0 || ty >= rows) continue;
-    for (let dx = -reach; dx <= reach; dx++) {
-      const tx = cx + dx;
-      if (tx < 0 || tx >= cols) continue;
-      if (state.explored[ty * cols + tx] === 1) continue;
-      all = false;
-      const ex = (tx + 0.5) * cell - pos.x;
-      const ey = (ty + 0.5) * cell - pos.y;
-      if (ex * ex + ey * ey <= bandSq) return false;
-    }
-  }
-  if (all && cx >= 0 && cy >= 0 && cx < cols && cy < rows) settled[home] = 1;
-  return true;
-}
-
-/**
- * The "this cell is DONE" bits behind {@link clearOfFog}: one byte per fog cell,
- * set once the cell's whole neighbourhood is uncovered.
- *
- * It needs no invalidation, which is the whole reason it can be this cheap: the
- * fog NEVER rolls back (see the file header), so a neighbourhood that is fully
- * uncovered stays fully uncovered for the rest of the run and a set bit can only
- * ever have been right. Nothing is cached the other way — a cell short of the
- * mark is re-asked every time, which is exactly where the answer still changes.
- *
- * Keyed off the run's own `explored` array, so a fresh level (or a second live
- * run — a session's world beside a client's) gets its own bits rather than
- * inheriting a stranger's, and the whole thing is collected with the run. This
- * is a derived cache and not simulation state: it holds no answer the grid does
- * not already imply, so nothing here can make two runs of the same seed differ.
- */
-const settledClearBits = new WeakMap<Uint8Array, Uint8Array>();
-
-function settledClear(
-  explored: Uint8Array,
-  cols: number,
-  rows: number,
-): Uint8Array {
-  let bits = settledClearBits.get(explored);
-  if (bits === undefined || bits.length !== cols * rows) {
-    bits = new Uint8Array(cols * rows);
-    settledClearBits.set(explored, bits);
-  }
-  return bits;
 }
 
 /** Has the fog been lifted from the cell containing this world position? */

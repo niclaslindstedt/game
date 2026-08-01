@@ -22,7 +22,7 @@ import {
   rollEquipment,
 } from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
-import { clearOfFog } from "./map.ts";
+import { clearOfFog } from "./fog.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
 import type { GameState, Obstacle } from "./types/index.ts";

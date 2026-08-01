@@ -26,7 +26,7 @@ import {
   wearEquippedWeapon,
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
-import { clearOfFog } from "../map.ts";
+import { clearOfFog } from "../fog.ts";
 import { lineOfSight } from "../obstacles.ts";
 import { createProjectile } from "../projectile.ts";
 import {

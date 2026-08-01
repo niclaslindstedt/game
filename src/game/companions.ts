@@ -62,7 +62,8 @@ import {
   qualityMult,
 } from "./items/index.ts";
 import { enemyKillXp, hitEnemy, killEnemy, shareXp } from "./loot.ts";
-import { addMapMarker, clearOfFog } from "./map.ts";
+import { clearOfFog } from "./fog.ts";
+import { addMapMarker } from "./map.ts";
 import { startJoinWords } from "./story.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import { createProjectile } from "./projectile.ts";

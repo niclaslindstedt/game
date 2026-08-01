@@ -807,7 +807,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   fully clear, never-explored terrain is solid black, and the frontier between
   them is a graded ordered-dither transition band (`MAP.fogBand` wide) that also
   hides any mob standing in it or the dark beyond. **And what is not drawn is
-  not shot at**: `clearOfFog` is the engine's own deterministic reading of that
+  not shot at**: `clearOfFog` (the sibling **`src/game/fog.ts`**, kept out of
+  map.ts because `src/menu.ts` re-exports map.ts's grid arithmetic and so puts
+  that whole module inside the 170 KB critical-path budget) is the engine's own
+  deterministic reading of that
   same frontier — no unexplored cell centre within `MAP.fogBand` — and every
   automatic target pick goes through it (the hero's auto-attack and its crate
   fallback, the conjured powers that pick their own mark, the companions' engage

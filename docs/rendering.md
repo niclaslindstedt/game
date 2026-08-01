@@ -187,7 +187,7 @@ stay the same frontier — a mob appears as the ground under it clears.
 
 **THE SIMULATION ANSWERS THAT SAME QUESTION FOR ITSELF, AND MUST.** A mob the
 band hides is also a mob the hero refuses to fire at (`clearOfFog`,
-`src/game/map.ts`) — otherwise the character shoots into blackness on the
+`src/game/fog.ts`) — otherwise the character shoots into blackness on the
 player's behalf, which is what a long gun advancing into unexplored ground used
 to do. The engine cannot read `FogField.shown` to decide it: that field eases on
 a RENDER clock, and a simulation that depended on one would desync a session and

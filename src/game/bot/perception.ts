@@ -14,7 +14,8 @@ import { blockedByObstacle } from "../obstacles.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponRangeFor } from "../items/index.ts";
-import { clearOfFog, exploredRay } from "../map.ts";
+import { clearOfFog } from "../fog.ts";
+import { exploredRay } from "../map.ts";
 import type { Enemy, GameState, Player } from "../types/index.ts";
 import { inertEnemy } from "../disposition.ts";
 
