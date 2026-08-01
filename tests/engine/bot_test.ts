@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   allocateStat,
+  AMMO,
   botAct,
   botAllocate,
   CONSUMABLES,
@@ -24,6 +25,7 @@ import {
   type Enemy,
   type Equipment,
   type GameState,
+  type Item,
   staminaEmptyLockMs,
 } from "@game/core";
 import {
@@ -37,6 +39,7 @@ import {
 import { distance as dist } from "@game/lib/vec.ts";
 
 import { navigatesWalls } from "../../src/game/bot/nav.ts";
+import { nearestWantedItem } from "../../src/game/bot/supplies.ts";
 import { revealAround } from "../../src/game/map.ts";
 
 /** Step the sim with the bot at the controls, spending its level-ups. */
@@ -1996,6 +1999,29 @@ describe("bot repair awareness", () => {
     // sword is melee, so measure damage dealt rather than bolts fired.
     expect(state.stats.damageDealt).toBeGreaterThan(0);
     expect(state.stats.kills).toBeGreaterThan(0);
+  });
+
+  describe("bot ammunition awareness", () => {
+    it("never steers at a box a full stack would refuse (the full-pockets stall)", () => {
+      // The engine turns a pickup away at the cap and it STAYS on the ground, so
+      // wanting one parks the hero on an item he can never collect.
+      const state = startGame();
+      clearStage(state);
+      const hero = state.players[0];
+      hero.ammo = { bullets: AMMO.stackCap };
+      const box: Item = {
+        id: 8103,
+        kind: "ammo",
+        pos: { x: hero.pos.x + 40, y: hero.pos.y },
+        ammo: "bullets",
+        count: 20,
+      };
+      state.items.push(box);
+      expect(nearestWantedItem(state, hero)).not.toBe(box);
+      // …and with room in the stack it is wanted again.
+      hero.ammo = { bullets: 10 };
+      expect(nearestWantedItem(state, hero)).toBe(box);
+    });
   });
 });
 

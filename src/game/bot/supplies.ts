@@ -15,10 +15,11 @@ import { travelHeading } from "./macro.ts";
 import { THREAT_RADIUS } from "./perception.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
-import { CONSUMABLES, PLAYER } from "../config/index.ts";
+import { AMMO, CONSUMABLES, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import {
+  ammoCount,
   canCollectEquipment,
   equipmentMaxDurability,
   isWeaponBroken,
@@ -267,6 +268,13 @@ function canBankPickup(state: GameState, hero: Player, item: Item): boolean {
       return player.staminaPotions < CONSUMABLES.stackCap;
     case "ability":
       return canBankAbility(state, player, item.defId);
+    // A box of AMMUNITION is the one pickup that PARTIALLY banks: a stack with
+    // room for six of a twenty-round box takes six and the box stays on the
+    // ground carrying the rest (`bankAmmo`). So the question is only whether
+    // the stack has ANY room — at the cap the box is refused whole and steering
+    // at it is the full-pockets stall this function exists to prevent.
+    case "ammo":
+      return ammoCount(player, item.ammo) < AMMO.stackCap;
     default:
       return true;
   }
