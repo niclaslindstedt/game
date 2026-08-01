@@ -13,6 +13,7 @@
 
 import { clamp } from "@game/lib/vec.ts";
 import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
+import { foldCorpseGear } from "./downed.ts";
 import {
   AMMO,
   AMMO_TYPES,
@@ -117,8 +118,19 @@ export function extractLoadout(state: GameState, player: Player): Loadout {
     },
     inventory: player.inventory.map(copyPiece),
     // The LOST & FOUND rides along too, so what a multi-lap flight threw away
-    // on level three is still buyable back after it lands (items/vault.ts).
-    vault: player.vault.map((piece) => copyPiece(piece) as Equipment),
+    // on level three is still buyable back after it lands (items/vault.ts) —
+    // and whatever this hero's UNRECOVERED CORPSES still hold is folded in
+    // beside it (§4.2, downed.ts): banking is the one moment a body's gear
+    // would otherwise be lost, and the vault is the shelf that exists for
+    // exactly this kind of not-chosen loss. Deliberately past the vault's cap
+    // if it must be — the cap disciplines the bot's banking sweep, and
+    // enforcing it here would DELETE a player's kit to honour a tidiness rule.
+    vault: [
+      ...player.vault.map((piece) => copyPiece(piece) as Equipment),
+      ...foldCorpseGear(state, player).map(
+        (piece) => copyPiece(piece) as Equipment,
+      ),
+    ],
     heldAbilities: [...player.heldAbilities],
     medkits: [...player.medkits],
     staminaPotions: player.staminaPotions,

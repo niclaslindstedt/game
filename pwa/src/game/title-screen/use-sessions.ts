@@ -45,12 +45,16 @@ import type { MenuScreen, NetMenuState } from "./menu-model.ts";
 export function useSessions({
   screen,
   heroName,
+  heroHardcore,
   onJoin,
 }: {
   screen: MenuScreen;
   /** What this player is called in a session's roster and chat — their hero's
    * name, which is the only name the game knows them by. */
   heroName: string;
+  /** The picked hero is HARDCORE (§4.2): rides every join so the handshake can
+   * hold hardcore and softcore apart — the mismatch is refused by name. */
+  heroHardcore: boolean;
   /** Go and watch one. The title screen does not connect: joining is a RUN,
    * and a run belongs to the app above it. */
   onJoin: (intent: JoinIntent) => void;
@@ -79,6 +83,7 @@ export function useSessions({
         onJoin({
           address: invite.address,
           name: heroName,
+          hardcore: heroHardcore,
           label: invite.address,
         });
         return;
@@ -86,11 +91,16 @@ export function useSessions({
       if (!invite.lobbyId) return;
       void joinSession(invite.lobbyId).then((found) => {
         if (found) {
-          onJoin({ peer: found.hostId, name: heroName, label: found.row.name });
+          onJoin({
+            peer: found.hostId,
+            name: heroName,
+            hardcore: heroHardcore,
+            label: found.row.name,
+          });
         }
       });
     });
-  }, [netOpen, heroName, onJoin]);
+  }, [netOpen, heroName, heroHardcore, onJoin]);
 
   // Browsing starts when the browser is opened, and again on every press of
   // REFRESH: the list is a live fact about other people, not a fetched resource
@@ -181,6 +191,7 @@ export function useSessions({
             address: row.address,
             name: heroName,
             password,
+            hardcore: heroHardcore,
             label: row.name,
           });
           return;
@@ -195,13 +206,20 @@ export function useSessions({
             peer: found.hostId,
             name: heroName,
             password,
+            hardcore: heroHardcore,
             label: row.name,
           });
         });
       },
       joinAddress: (address, password) => {
         remember(address);
-        onJoin({ address, name: heroName, password, label: address });
+        onJoin({
+          address,
+          name: heroName,
+          password,
+          hardcore: heroHardcore,
+          label: address,
+        });
       },
     },
   };

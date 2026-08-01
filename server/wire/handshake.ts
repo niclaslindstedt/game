@@ -119,6 +119,11 @@ export type Admission = {
   seats: number;
   /** Seats there are. Defaults to the wire's own cap. */
   maxSeats?: number;
+  /** The session is a hardcore game, and the joiner's character is hardcore
+   * (§4.2). Both default false (softcore); a mismatch either way is refused —
+   * the two modes never share a game. */
+  sessionHardcore?: boolean;
+  joinerHardcore?: boolean;
 };
 
 /**
@@ -153,6 +158,17 @@ export function admit(request: Admission): RefusalReason | null {
     if (request.proof !== passwordProof(request.password, request.cookie)) {
       return "bad-password";
     }
+  }
+  // HARDCORE NEVER MIXES WITH SOFTCORE (§4.2): a hardcore hero dying under a
+  // softcore host's rules — or the reverse — is a support burden and a
+  // betrayal, so the mismatch is refused by name. After the challenge and the
+  // password on purpose: the session's mode is on the probe reply anyway, but
+  // a peer that has proved nothing should be told nothing it did not already
+  // have. Both sides default softcore, so every pre-flag client still admits.
+  if (
+    (request.sessionHardcore ?? false) !== (request.joinerHardcore ?? false)
+  ) {
+    return "hardcore-mismatch";
   }
   if (request.seats >= (request.maxSeats ?? MAX_CLIENTS)) return "session-full";
   return null;

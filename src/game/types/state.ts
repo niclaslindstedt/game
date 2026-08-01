@@ -8,7 +8,13 @@ import type { CutsceneState } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import type { ChoiceState, Companion, Enemy, Player } from "./actors.ts";
+import type {
+  ChoiceState,
+  Companion,
+  Enemy,
+  Player,
+  PlayerCorpse,
+} from "./actors.ts";
 import type {
   ActiveTalk,
   EscortState,
@@ -734,6 +740,15 @@ export type GameState = {
    * `Player | undefined` and has to be checked.
    */
   players: [Player, ...Player[]];
+  /**
+   * Fallen heroes' bodies, each holding the gear its owner was wearing when
+   * they went down (multiplayer plan §4.2 — see `downed.ts` and
+   * `PlayerCorpse`). Only ever populated in a party: solo, one hero falling is
+   * the party wiped, and the wipe path never mints a corpse. Recovery is the
+   * owner walking back (`stepCorpseRecovery`); whatever is never recovered is
+   * folded into the owner's banked loadout by `extractLoadout`.
+   */
+  corpses: PlayerCorpse[];
   enemies: Enemy[];
   projectiles: Projectile[];
   items: Item[];

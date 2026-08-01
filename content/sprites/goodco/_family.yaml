@@ -48,8 +48,7 @@ animations:
     { frames: [first_investor_0, first_investor_1], delayMs: 340 }
 wounds:
   wandering_tourist: { splat: r, core: O }
-contrastExempt:
-  [
+contrastExempt: [
     lab_0,
     lab_1,
     vent_0,
@@ -65,4 +64,8 @@ contrastExempt:
     conveyor_2,
     conveyor_3,
     conveyor_4,
+    # The garage driveway's paving — ground tiles like lab_0/lab_1 above: a
+    # floor is not a silhouette that must stand out from the floor.
+    pavement_0,
+    pavement_1,
   ]

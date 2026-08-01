@@ -365,6 +365,9 @@ export type ConnectOptions = {
   /** The mods this build has applied, in load order. A mismatch is what the
    * host refuses on; sending them is how it can. */
   mods?: string[];
+  /** The joining character is HARDCORE (§4.2): hardcore and softcore heroes
+   * never share a game, and the handshake refuses the mismatch by name. */
+  hardcore?: boolean;
 };
 
 export type ConnectResult =
@@ -396,6 +399,7 @@ export async function connectSession(
       playerName: options.name,
       password: options.password,
       mods: options.mods,
+      hardcore: options.hardcore === true,
     },
     CONNECT_TIMEOUT_MS,
   )) as { ok?: boolean; reason?: string; detail?: string } | null;

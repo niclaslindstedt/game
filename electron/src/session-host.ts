@@ -81,6 +81,7 @@ export type ServerControl =
       name: string;
       password?: string;
       mods?: string[];
+      hardcore?: boolean;
     }
   | { kind: "peer"; from: string; data: number[] }
   | { kind: "peer-lost"; from: string; reason: string };

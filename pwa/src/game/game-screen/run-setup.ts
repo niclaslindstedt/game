@@ -120,6 +120,13 @@ export type RunSession = {
   beginRun: () => void;
   seed: number;
   /**
+   * The character behind this run is HARDCORE (§4.2) — read by the run driver
+   * for an ADOPTED run, whose `params` below are null. A BUILT run carries the
+   * same fact on `params.hardcore`; a spectator carries false (they host
+   * nothing).
+   */
+  hardcore: boolean;
+  /**
    * WHAT THIS RUN WAS BUILT FROM — the description a session server would need
    * to build the same one.
    *
@@ -315,6 +322,9 @@ export function createRunSession(deps: {
     // the driver. Undefined (every single-player run, and every hosted game
     // left on the default) is free-for-all.
     lootMode: armedLootMode(),
+    // §4.2's hardcore gate: a hardcore character's session admits only
+    // hardcore characters. The engine ignores this — it feeds the door.
+    hardcore: characterRef.current.hardcore === true,
   };
 
   const state =
@@ -517,6 +527,9 @@ export function createRunSession(deps: {
     tuning,
     beginRun,
     seed,
+    // §4.2's door gate for an ADOPTED run: the parameters below are null for
+    // one, so the driver reads the hosting character's mode from here instead.
+    hardcore: characterRef.current.hardcore === true,
     // The parameters describe a run that was BUILT. An adopted one is not
     // described by them and must not pretend to be: handing a session the
     // parameters of a run it is not simulating is a client carving one map and
@@ -563,6 +576,7 @@ function spectatorSession(state: GameState, runId: number): RunSession {
     // no-op is the honest thing to hand the title card.
     beginRun: () => {},
     seed: 0,
+    hardcore: false,
     params: null,
   };
 }

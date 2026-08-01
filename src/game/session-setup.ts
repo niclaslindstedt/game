@@ -124,6 +124,15 @@ export type RunParams = {
    * `free`, which is the safe answer (nobody is locked out of anything).
    */
   lootMode?: string;
+  /**
+   * THE HOSTING CHARACTER IS HARDCORE (§4.2). Carried here so it rides into
+   * `SessionParams` with everything else a run is built from, but the ENGINE
+   * NEVER READS IT — hardcore (permadeath, the keepsake stash) is app-side, as
+   * it has always been. What it feeds is the session's DOOR: a hardcore game
+   * admits only hardcore characters, and the handshake refuses the mismatch by
+   * name (`server/wire/handshake.ts`).
+   */
+  hardcore?: boolean;
   /** Mute the in-world dialogue: with a bot steering there is nobody to tap
    * through the arrival scenes, so un-muted they would freeze the run in the
    * `dialogue` phase and flash a page per tick. */

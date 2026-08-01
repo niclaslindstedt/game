@@ -419,6 +419,9 @@ export function TitleScreen({
     // picked yet the roster is one press away and the name is a placeholder
     // nothing is stored under.
     heroName: character?.name ?? "PLAYER",
+    // §4.2's handshake rule needs to know which kind of hero is knocking:
+    // hardcore and softcore never share a game.
+    heroHardcore: character?.hardcore === true,
     onJoin,
   });
   // The one line of text the menu ever asks for — a password, a port, an

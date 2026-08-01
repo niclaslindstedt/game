@@ -259,6 +259,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
     name: options.name,
     password: options.password,
     mods: options.mods,
+    hardcore: options.hardcore,
   }).then((result) => {
     if (result.ok || disposed) return;
     options.onClosed?.(result.reason, result.detail);

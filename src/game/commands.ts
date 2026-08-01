@@ -139,6 +139,7 @@ import {
 } from "./quests/index.ts";
 import { skipBossDeath } from "./boss-death.ts";
 import { skipDeathScene } from "./death-scene.ts";
+import { respawnHero } from "./downed.ts";
 import { advanceDialogue, muteDialogue, unmuteDialogue } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
 import { enterCar } from "./vehicles.ts";
@@ -235,6 +236,11 @@ export const RUN_COMMAND_ARGS = {
   resumeGame: [],
   stayOnField: [],
   reopenVictoryChoice: [],
+  // THE WAY BACK from a party death (§4.2, downed.ts): stand the ACTING hero
+  // up at the level's start. No arguments — WHO respawns is the seat the
+  // session admitted the caller into, exactly like every other private verb,
+  // and the engine refuses it for anybody not actually down.
+  respawn: [],
 
   // THE BAG. Indices rather than items, always: an index names a cell the
   // server can check, an item would be a thing the client asserts exists.
@@ -488,6 +494,8 @@ export function applyRunCommand(
       return stayOnField(state);
     case "reopenVictoryChoice":
       return reopenVictoryChoice(state);
+    case "respawn":
+      return respawnHero(state, hero);
 
     // THE BAG
     case "equipFromInventory":
