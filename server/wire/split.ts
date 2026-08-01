@@ -124,19 +124,23 @@ export const PRIVATE_PLAYER_FIELDS: readonly string[] = [
   "ammo",
   "cleanSlates",
   "pendingStatPoints",
+  // The talent-picker queue and the companion-panel focus are the build's and
+  // the screen's own detail (plan §3.2 moved both onto the Player beside the
+  // banked stat points). `screen` itself is deliberately PUBLIC: "in their
+  // bag" is something the party HUD is meant to say, and D2's own affordance.
+  "pendingTalentPoints",
+  "companionFocus",
 ];
 
 /**
  * Run-level fields that are the owner's private detail rather than the party's
  * shared record. The quest LOG is shared in co-op (it lives on the run, not on
  * the character — see the QUESTS section of AGENTS.md), so what is private
- * here is only the offer currently on one player's screen.
+ * here is only the conversation currently on one player's screen — whose
+ * HOLDER any seat may be (plan §3.2), so seated recipients all receive it and
+ * only a SPECTATOR is denied.
  */
-export const PRIVATE_RUN_FIELDS: readonly string[] = [
-  "questOffer",
-  "talk",
-  "companionFocus",
-];
+export const PRIVATE_RUN_FIELDS: readonly string[] = ["questOffer", "talk"];
 
 /**
  * **`trades` IS DELIBERATELY NOT ON THAT LIST, and the reasoning is worth

@@ -131,8 +131,9 @@ describe("a neutral mob", () => {
 describe("a conversation", () => {
   it("opens on its start node and hides choices the run has not earned", () => {
     const { state, id } = withBystander();
-    expect(talkToEnemy(state, id)).toBe(true);
-    expect(state.phase).toBe("talk");
+    expect(talkToEnemy(state, state.players[0], id)).toBe(true);
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("talk");
     expect(talkNode(state)?.id).toBe("greet");
 
     // THE GATED ROW IS ABSENT, NOT GREYED — a locked sentence is a spoiler
@@ -143,36 +144,36 @@ describe("a conversation", () => {
 
   it("indexes the FILTERED list, so a gate cannot shift which branch is taken", () => {
     const { state, id } = withBystander();
-    talkToEnemy(state, id);
+    talkToEnemy(state, state.players[0], id);
 
     // Index 1 of the filtered list is SWING AT ME; index 1 of the AUTHORED
     // list is the gated SECRET row. Picking 1 must provoke — anything else
     // means the app and the engine disagree about what the player tapped.
-    expect(pickTalkChoice(state, 1)).toBe(true);
+    expect(pickTalkChoice(state, state.players[0], 1)).toBe(true);
     const enemy = state.enemies.find((e) => e.id === id)!;
     expect(enemy.hostile).toBe(true);
     // Provoking closes the talk: there is nobody left to speak to.
     expect(state.talk).toBeNull();
-    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
   });
 
   it("sets a flag, walks to the node, and re-enters there next time", () => {
     const { state, id } = withBystander();
-    talkToEnemy(state, id);
-    expect(pickTalkChoice(state, 0)).toBe(true);
+    talkToEnemy(state, state.players[0], id);
+    expect(pickTalkChoice(state, state.players[0], 0)).toBe(true);
 
     expect(state.questFlags.told).toBe(true);
     expect(talkNode(state)?.id).toBe("answer");
     expect(state.events.some((e) => e.type === "questFlagSet")).toBe(true);
 
     // A node with no choices is a plain reply — tapping it closes the talk.
-    advanceTalk(state);
+    advanceTalk(state, state.players[0]);
     expect(state.talk).toBeNull();
 
     // RE-ENTRY: the flag has been earned, so the second walk-up does not
     // greet from the top. A person who has told you something does not tell
     // you again from the start.
-    expect(talkToEnemy(state, id)).toBe(true);
+    expect(talkToEnemy(state, state.players[0], id)).toBe(true);
     expect(talkNode(state)?.id).toBe("again");
   });
 

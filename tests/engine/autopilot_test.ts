@@ -106,7 +106,7 @@ describe("the meter", () => {
   it("holds the meter while the run is paused", () => {
     const state = quietGame(1000);
     startAutopilot(state, 1);
-    pauseGame(state);
+    pauseGame(state, state.players[0]);
     run(state, idle, 125);
     expect(state.players[0].coins).toBe(1000);
     expect(state.autopilot.active).toBe(true);

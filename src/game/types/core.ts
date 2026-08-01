@@ -6,37 +6,33 @@ import type { GearDef, WeaponDef } from "../defs/equipment.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 /**
- * `cutscene` plays the level's prelude scene, `intro` shows the story text
- * box, `title` flashes the level name alone before the drop, `levelup` waits
- * for a stat choice, `inventory` pauses for bag management, `map` pauses over
- * the fog-of-war level map, `questLog` pauses over the run's errand log,
- * `dialogue` holds the world while a character (or
- * a found story item) speaks, `choice` holds it while a beaten spareable
- * unique awaits the SPARE-or-KILL verdict, `companion` pauses into a
- * companion's equip screen, `outro` shows a level's post-victory epilogue
- * pages (the intro's black-screen mirror, before the victory splash), `dying`
- * plays the dramatic death tableau (the horde rings the fallen hero, clouds
- * roll in) before the defeat splash; the simulation only advances while
- * `playing` (the `dying` scene runs on its own reduced pass — see
- * `death-scene.ts`).
+ * THE RUN'S OWN PHASE — only what is genuinely GLOBAL (multiplayer plan
+ * §3.2). `cutscene` plays the level's prelude scene, `intro` shows the story
+ * text box, `title` flashes the level name alone before the drop, `dialogue`
+ * holds the world while a character (or a found story item) speaks — a group
+ * beat, played for everyone and advanced by anyone — `choice` holds it while
+ * a beaten spareable unique awaits the SPARE-or-KILL verdict (a group
+ * decision, shown to everybody), `outro` shows a level's post-victory
+ * epilogue pages (the intro's black-screen mirror, before the victory
+ * splash), `dying` plays the dramatic death tableau (the horde rings the
+ * fallen hero, clouds roll in) before the defeat splash; the simulation only
+ * advances while `playing` (the `dying` scene runs on its own reduced pass —
+ * see `death-scene.ts`).
+ *
+ * WHAT ONE PLAYER IS LOOKING AT IS NOT A PHASE. The bag, the map, the shop,
+ * the pause menu, the level-up chooser and the rest are {@link PlayerScreen}s
+ * on the `Player` — per-player, so one hero in their inventory does not
+ * freeze the other seven. The world still halts when EVERY hero in play has a
+ * screen up (see `partyBlocked` in party.ts), which is what keeps a solo
+ * game's bag exactly the freeze it always was.
  */
 export type GamePhase =
   | "cutscene"
   | "intro"
   | "title"
   | "playing"
-  | "paused"
-  | "levelup"
-  | "respec"
-  | "inventory"
-  | "map"
-  | "questLog"
-  | "shop"
-  | "quest"
-  | "talk"
   | "dialogue"
   | "choice"
-  | "companion"
   | "outro"
   | "dying"
   // The BOSS DEATH RITE — the scripted send-off played over a felled boss
@@ -51,6 +47,34 @@ export type GamePhase =
   | "bossDeath"
   | "victory"
   | "defeat";
+
+/**
+ * WHAT ONE PLAYER IS LOOKING AT — the per-player half of the split above
+ * (multiplayer plan §3.2). Each of these was a `GamePhase` when the game had
+ * one hero; now it sits on the `Player`, the simulation runs regardless, and
+ * a hero with a screen up simply contributes no steering (they are still
+ * standing on the field and can still be killed — D2's rule, and what makes
+ * opening your bag mid-fight a decision).
+ *
+ * `paused` is the pause MENU, per player like the rest: in a solo game it
+ * still freezes the world (every hero in play has a screen up), in a party it
+ * parks one hero. `levelup` is the stat/talent chooser — no longer forced
+ * open by a ding: the points bank on `Player.pendingStatPoints` and the
+ * chooser is opened on demand (`promptPendingPoints`). `respec` is the one
+ * modal among them: it cannot be closed until the refunded points are
+ * re-spent (`confirmRespec`), exactly as before.
+ */
+export type PlayerScreen =
+  | "paused"
+  | "levelup"
+  | "respec"
+  | "inventory"
+  | "map"
+  | "questLog"
+  | "shop"
+  | "quest"
+  | "talk"
+  | "companion";
 
 /**
  * A difficulty id: a key into DIFFICULTY_DEFS. Deliberately a bare `string`

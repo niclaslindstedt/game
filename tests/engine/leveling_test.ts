@@ -30,6 +30,7 @@ import {
   PLAYER,
   playerCritChance,
   playerDodgeChance,
+  promptPendingPoints,
   resetBalanceTuning,
   saturateToward,
   setAutoStatGainsEnabled,
@@ -130,18 +131,19 @@ describe("xp", () => {
     expect(state.players[0].xpToNext).toBe(xpToLevelUp(2));
     expect(xpToLevelUp(2)).toBeGreaterThan(xpToLevelUp(1));
 
-    // The chooser opens only once the celebration has burned down.
+    // The chooser opens on demand once the celebration has burned down.
     runUntilChooser(state);
     expect(state.levelUpFxMs).toBe(0);
-    expect(state.phase).toBe("levelup");
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("levelup");
 
-    // The pause is real: time stands still until the point is spent.
+    // The freeze is real (solo): time stands still until the point is spent.
     const time = state.stats.timeMs;
     step(state, idle, DT);
     expect(state.stats.timeMs).toBe(time);
 
     allocateStat(state, state.players[0], "luck");
-    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
     expect(state.players[0].stats.luck).toBe(1);
     expect(state.players[0].pendingStatPoints).toBe(0);
   });
@@ -153,12 +155,12 @@ describe("xp", () => {
     grantXp(state, state.players[0], xpToLevelUp(1) + xpToLevelUp(2) + 10);
     expect(state.players[0].level).toBe(3);
     expect(state.players[0].pendingStatPoints).toBe(2);
-    runUntilChooser(state); // burn the celebration down
-    expect(state.phase).toBe("levelup");
+    runUntilChooser(state); // burn the celebration down, open the chooser
+    expect(state.players[0].screen).toBe("levelup");
     allocateStat(state, state.players[0], "stamina");
-    expect(state.phase).toBe("levelup"); // one point still pending
+    expect(state.players[0].screen).toBe("levelup"); // one point still pending
     allocateStat(state, state.players[0], "dexterity");
-    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
   });
 });
 
@@ -431,11 +433,13 @@ describe("the ding: automatic base gains and the celebration window", () => {
   it("xp gained during the celebration window never yanks the chooser open early", () => {
     const state = dingToLevel2(); // window armed
     expect(state.phase).toBe("playing");
-    // More xp lands mid-celebration (below the next threshold): still playing.
+    // More xp lands mid-celebration (below the next threshold): still playing,
+    // no screen forced up — the point stays banked until the player asks.
     grantXp(state, state.players[0], 1);
     expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
     runUntilChooser(state);
-    expect(state.phase).toBe("levelup");
+    expect(state.players[0].screen).toBe("levelup");
   });
 });
 
@@ -795,23 +799,28 @@ describe("stats", () => {
 });
 
 describe("pauses", () => {
-  it("the inventory pauses the run and resumes on close", () => {
+  it("the inventory freezes the run (solo) and resumes on close", () => {
     const state = startGame();
-    openInventory(state);
-    expect(state.phase).toBe("inventory");
+    openInventory(state, state.players[0]);
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("inventory");
     const time = state.stats.timeMs;
     step(state, idle, DT);
     expect(state.stats.timeMs).toBe(time);
-    closeInventory(state);
-    expect(state.phase).toBe("playing");
+    closeInventory(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
-  it("closing the inventory with banked points returns to the level-up choice", () => {
+  it("closing the inventory keeps banked points for the on-demand chooser", () => {
     const state = startGame();
     state.players[0].pendingStatPoints = 1;
-    openInventory(state);
-    closeInventory(state);
-    expect(state.phase).toBe("levelup");
+    openInventory(state, state.players[0]);
+    closeInventory(state.players[0]);
+    // No divert to the chooser any more — the point stays banked until asked.
+    expect(state.players[0].screen).toBeUndefined();
+    expect(state.players[0].pendingStatPoints).toBe(1);
+    expect(promptPendingPoints(state, state.players[0])).toBe(true);
+    expect(state.players[0].screen).toBe("levelup");
   });
 
   it("base hp starts at the configured value", () => {

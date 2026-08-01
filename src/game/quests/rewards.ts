@@ -28,7 +28,7 @@ import {
   mintUnique,
   rollEquipment,
 } from "../items/index.ts";
-import type { Equipment, GameState } from "../types/index.ts";
+import type { Equipment, GameState, Player } from "../types/index.ts";
 
 /** What a payout actually handed over, so the app can list the haul. */
 export type QuestPayout = {
@@ -45,13 +45,15 @@ export type QuestPayout = {
  * it before the player accepts, and quoting a different number than the
  * handover pays is how a reward stops being trusted.
  */
-export function questXpReward(state: GameState, reward?: QuestReward): number {
+export function questXpReward(
+  state: GameState,
+  hero: Player,
+  reward?: QuestReward,
+): number {
   if (!reward?.xpShare) return 0;
   return Math.max(
     1,
-    Math.round(
-      xpToLevelUp(state.players[0].level, state.difficulty) * reward.xpShare,
-    ),
+    Math.round(xpToLevelUp(hero.level, state.difficulty) * reward.xpShare),
   );
 }
 
@@ -65,6 +67,10 @@ export function questXpReward(state: GameState, reward?: QuestReward): number {
  */
 export function payQuestReward(
   state: GameState,
+  /** The hero who ran the errand — the payout is theirs alone: the XP, the
+   * coins, the bag the gear lands in. A joiner handing in pays their own bar,
+   * never the host's (the seat-0 read this used to be is mended). */
+  hero: Player,
   reward: QuestReward | undefined,
   at: Vec2,
   /** The errand being paid — how the decided gear row is found. Omitted only by
@@ -75,24 +81,19 @@ export function payQuestReward(
   const payout: QuestPayout = { xp: 0, coins: 0, items: [], cleanSlates: 0 };
   if (!reward) return payout;
 
-  const xp = questXpReward(state, reward);
+  const xp = questXpReward(state, hero, reward);
   if (xp > 0) {
     // Through the ordinary grant, so the difficulty's xpBonus, the BALANCE
     // knob and the level-up celebration all behave exactly as on a kill. NOT
     // through `shareXp`: an errand is paid to the person who ran it, and a
     // handover split with whoever happened to be standing nearby would be a
     // gift from the player who did the work to one who did not.
-    //
-    // `state.players[0]` is an UN-MIGRATED SEAT, spelled out rather than hidden
-    // so it stays greppable (plan §3.7): the command channel carries no seat
-    // yet, so a joiner handing in an errand pays the host's bar. It is fixed
-    // where that list is fixed, not here.
-    grantXp(state, state.players[0], xp);
+    grantXp(state, hero, xp);
     payout.xp = xp;
   }
 
   if (reward.coins) {
-    state.players[0].coins += reward.coins;
+    hero.coins += reward.coins;
     payout.coins = reward.coins;
   }
 
@@ -102,7 +103,7 @@ export function payQuestReward(
     // Handed over BY NAME — a promised relic arrives identified, or the offer
     // that named it would have spoiled its own reveal.
     payout.items.push(
-      handOver(state, markIdentified(mintUnique(state, id)), at),
+      handOver(state, hero, markIdentified(mintUnique(state, id)), at),
     );
   }
 
@@ -115,20 +116,21 @@ export function payQuestReward(
   // decided row rather than opening a second choice: a `count: 3` errand hands
   // over three of the piece that was chosen.
   if (questId && reward.loot) {
-    const chosen = pickedQuestReward(state, questId);
+    const chosen = pickedQuestReward(state, hero, questId);
     if (chosen) {
-      payout.items.push(handOver(state, chosen, at));
+      payout.items.push(handOver(state, hero, chosen, at));
       for (let i = 1; i < reward.loot.count; i++) {
         payout.items.push(
           handOver(
             state,
+            hero,
             // Extra copies of the CHOSEN row — identified like the choice was.
             markIdentified(
-              rollEquipment(state, state.players[0], {
+              rollEquipment(state, hero, {
                 defId: chosen.defId,
                 tier: chosen.tier,
                 quality: chosen.quality,
-                mlvl: state.players[0].level,
+                mlvl: hero.level,
               }),
             ),
             at,
@@ -142,7 +144,7 @@ export function payQuestReward(
   // `Player.cleanSlates` for why a thing that must never be lost does not live
   // in a container the player empties.
   if (reward.cleanSlates) {
-    grantCleanSlate(state, state.players[0], reward.cleanSlates);
+    grantCleanSlate(state, hero, reward.cleanSlates);
     payout.cleanSlates = reward.cleanSlates;
   }
 
@@ -150,16 +152,20 @@ export function payQuestReward(
   // cap — there is nowhere else to put one, and dropping it on the floor
   // beside a full dock would be a pickup the player cannot take either.
   for (const id of reward.abilities ?? []) {
-    if (canBankAbility(state, state.players[0], id))
-      state.players[0].heldAbilities.push(id);
+    if (canBankAbility(state, hero, id)) hero.heldAbilities.push(id);
   }
 
   return payout;
 }
 
 /** Into the bag if it fits; onto the ground (thrown, like any drop) if not. */
-function handOver(state: GameState, equipment: Equipment, at: Vec2): Equipment {
-  if (!addToInventory(state, state.players[0], equipment)) {
+function handOver(
+  state: GameState,
+  hero: Player,
+  equipment: Equipment,
+  at: Vec2,
+): Equipment {
+  if (!addToInventory(state, hero, equipment)) {
     dropItem(
       state,
       { id: state.nextId++, kind: "equipment", pos: { ...at }, equipment },

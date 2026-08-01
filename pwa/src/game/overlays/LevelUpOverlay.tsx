@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The level-up chooser: shown while the engine pauses in the `levelup`
-// phase. One button per stat; each click spends one banked point through
-// `allocateStat`, and play resumes automatically when the last point is
-// spent. Each button carries a short blurb; the (i) toggle opens a panel with
-// the full per-stat effects (kept in sync with the engine's STATS rules).
+// The level-up chooser: shown while the local hero's `levelup` screen is up.
+// One button per stat; each click spends one banked point through
+// `allocateStat`, and the screen closes automatically when the last point is
+// spent — or on LATER/Escape (`closeLevelup`), which banks the rest for the
+// HUD's points pip. Each button carries a short blurb; the (i) toggle opens a
+// panel with the full per-stat effects (kept in sync with the engine's STATS
+// rules).
 //
 // Reveal freeze: the chooser pops open under a short lockout (`LEVELUP_ARM_MS`)
 // during which the stat buttons are dimmed and inert — pointer AND keyboard.
@@ -14,8 +16,9 @@
 //
 // Keyboard: a cursor highlights one stat; the arrow keys (and WASD) move it and
 // Enter/Space spends a point on it. GameScreen cedes the keyboard to this
-// overlay while the `levelup` phase is up, so these keys never leak to steering
-// or the jump.
+// overlay while the `levelup` screen is up, so these keys never leak to
+// steering or the jump — which is also why Escape is handled HERE rather than
+// in controls.ts's Escape ladder.
 
 import { localHero } from "../local-seat.ts";
 import { useEffect, useState } from "react";
@@ -28,6 +31,8 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useArmDelay } from "@ui/lib/use-arm-delay.ts";
 
 import { type Sprites } from "../assets.ts";
+import { synth } from "../audio.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import {
   STAT_CHOICES as CHOICES,
   InfoButton,
@@ -35,7 +40,7 @@ import {
   StatInfoPanel,
 } from "../stat-choices.tsx";
 
-import { runCommandOk } from "../run-commands.ts";
+import { runCommand, runCommandOk } from "../run-commands.ts";
 
 // How long the chooser stays inert after it reveals, so an accidental
 // hold-over tap from steering can't spend a point. Kept in sync with the CSS
@@ -73,6 +78,14 @@ export function LevelUpOverlay({
   const armed = useArmDelay(LEVELUP_ARM_MS);
   const points = localHero(state).pendingStatPoints;
 
+  // LATER/Escape: bank the unspent points and close the chooser — the HUD's
+  // points pip carries the reminder, and `promptPendingPoints` reopens it.
+  const close = () => {
+    runCommand(state, "closeLevelup");
+    playUiSound(synth, "back");
+    onChange();
+  };
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       // While the reveal freeze is up the whole chooser is inert: swallow every
@@ -85,7 +98,7 @@ export function LevelUpOverlay({
       // A talent point earned this level-up floats its picker ABOVE this
       // chooser and owns the keyboard until it's spent — swallow keys here so
       // one Enter doesn't both pick a talent and spend a stat point behind it.
-      if (state.pendingTalentPoints.length > 0) {
+      if (localHero(state).pendingTalentPoints.length > 0) {
         event.preventDefault();
         return;
       }
@@ -100,6 +113,16 @@ export function LevelUpOverlay({
           event.preventDefault();
           setShowInfo(false);
         }
+        return;
+      }
+      // Escape banks the remaining points and closes (the LATER button's key).
+      // Handled here rather than in controls.ts's Escape ladder because the
+      // ladder cedes the whole keyboard while this chooser is up.
+      if (event.key === "Escape") {
+        event.preventDefault();
+        runCommand(state, "closeLevelup");
+        playUiSound(synth, "back");
+        onChange();
         return;
       }
       const code = event.code;
@@ -186,65 +209,81 @@ export function LevelUpOverlay({
         {showInfo ? (
           <StatInfoPanel font={font} sprites={sprites} />
         ) : (
-          <div className="stat-buttons">
-            {CHOICES.map(({ stat, label, blurb, icon }, i) => {
-              // Only the points the PLAYER has spent on this stat (see
-              // `spentStats`) — the head-start, automatic per-level growth, and
-              // gear bonuses folded into the effective stat are deliberately
-              // left off so the chooser shows the player's own picks alone.
-              const spent = localHero(state).spentStats[stat];
-              // The demo's bot-focus highlight overrides the cursor/hover one so
-              // the picked stat lights up as the autopilot taps it.
-              const highlighted =
-                demoFocusStat != null
-                  ? stat === demoFocusStat
-                  : active && cursor === i;
-              return (
-                <button
-                  key={stat}
-                  type="button"
-                  className={`pixel-button stat-button${
-                    highlighted ? " selected" : ""
-                  }`}
-                  aria-label={`stat-${stat}`}
-                  // Hover with a mouse tracks the cursor; a bare touch (which
-                  // also fires pointerenter) shouldn't light the ring, so only
-                  // a real mouse activates it.
-                  onPointerEnter={(e) => {
-                    if (e.pointerType === "mouse") setActive(true);
-                    setCursor(i);
-                  }}
-                  onClick={() => {
-                    // Belt-and-suspenders: CSS already blocks pointer events on
-                    // the buttons while arming, but never spend a point before
-                    // the lockout lifts even if a click slips through.
-                    if (!armed) return;
-                    setCursor(i);
-                    runCommandOk(state, "allocateStat", stat);
-                    onChange();
-                  }}
-                >
-                  <StatGlyph sprites={sprites} icon={icon} />
-                  <span className="stat-button-text">
-                    <span className="stat-button-value">
+          <>
+            <div className="stat-buttons">
+              {CHOICES.map(({ stat, label, blurb, icon }, i) => {
+                // Only the points the PLAYER has spent on this stat (see
+                // `spentStats`) — the head-start, automatic per-level growth, and
+                // gear bonuses folded into the effective stat are deliberately
+                // left off so the chooser shows the player's own picks alone.
+                const spent = localHero(state).spentStats[stat];
+                // The demo's bot-focus highlight overrides the cursor/hover one so
+                // the picked stat lights up as the autopilot taps it.
+                const highlighted =
+                  demoFocusStat != null
+                    ? stat === demoFocusStat
+                    : active && cursor === i;
+                return (
+                  <button
+                    key={stat}
+                    type="button"
+                    className={`pixel-button stat-button${
+                      highlighted ? " selected" : ""
+                    }`}
+                    aria-label={`stat-${stat}`}
+                    // Hover with a mouse tracks the cursor; a bare touch (which
+                    // also fires pointerenter) shouldn't light the ring, so only
+                    // a real mouse activates it.
+                    onPointerEnter={(e) => {
+                      if (e.pointerType === "mouse") setActive(true);
+                      setCursor(i);
+                    }}
+                    onClick={() => {
+                      // Belt-and-suspenders: CSS already blocks pointer events on
+                      // the buttons while arming, but never spend a point before
+                      // the lockout lifts even if a click slips through.
+                      if (!armed) return;
+                      setCursor(i);
+                      runCommandOk(state, "allocateStat", stat);
+                      onChange();
+                    }}
+                  >
+                    <StatGlyph sprites={sprites} icon={icon} />
+                    <span className="stat-button-text">
+                      <span className="stat-button-value">
+                        <PixelText
+                          font={font}
+                          text={`${label} ${spent}`}
+                          scale={2}
+                          color="#0b0d10"
+                        />
+                      </span>
                       <PixelText
                         font={font}
-                        text={`${label} ${spent}`}
+                        text={blurb}
                         scale={2}
-                        color="#0b0d10"
+                        color="#3a4048"
                       />
                     </span>
-                    <PixelText
-                      font={font}
-                      text={blurb}
-                      scale={2}
-                      color="#3a4048"
-                    />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+            {/* LATER banks the unspent points instead of forcing a pick —
+                the HUD's points pip remembers, and its press reopens this
+                chooser. Same close row every other overlay ends with. */}
+            <button
+              type="button"
+              className="pixel-button modal-close-btn"
+              aria-label="close-levelup"
+              onClick={() => {
+                if (!armed) return;
+                close();
+              }}
+            >
+              <PixelText font={font} text="LATER" scale={2} color="#0b0d10" />
+            </button>
+          </>
         )}
       </div>
     </div>

@@ -10,6 +10,7 @@ import type {
   AmmoType,
   Equipment,
   ItemSpell,
+  PlayerScreen,
   StatName,
 } from "./core.ts";
 
@@ -215,8 +216,37 @@ export type Player = {
   xp: number;
   /** XP still needed to reach the next level. */
   xpToNext: number;
-  /** Stat points awarded but not yet spent (spent via `allocateStat`). */
+  /** Stat points awarded but not yet spent (spent via `allocateStat`). A ding
+   * BANKS them here rather than freezing the run — the chooser is a
+   * non-blocking {@link PlayerScreen} opened on demand (plan §3.2); the HUD
+   * shows a pip while any are waiting. */
   pendingStatPoints: number;
+  /**
+   * PASSIVE TALENT picks earned but not yet spent — one entry per ×10 tree
+   * milestone crossed, naming the stat whose tree minted the pick (see
+   * `reconcileTalentPoints`). Per-player for the same reason
+   * `pendingStatPoints` is: the chooser is this hero's, and a party member's
+   * milestone must never be spent by somebody else's build. Rebuilt from
+   * stats + owned ranks on every allocate/respec, so it never travels in a
+   * loadout.
+   */
+  pendingTalentPoints: StatName[];
+  /**
+   * WHAT THIS PLAYER IS LOOKING AT — the bag, the map, the chooser, the pause
+   * menu (multiplayer plan §3.2). Absent = on the field. The simulation runs
+   * regardless; a hero with a screen up contributes no steering and can still
+   * be killed. The world halts only when EVERY hero in play has one up
+   * (`partyBlocked`), which is what keeps the solo bag the freeze it always
+   * was. Replicates publicly, so the party HUD can say "in their bag".
+   */
+  screen?: PlayerScreen;
+  /**
+   * Which companion's equip screen this player has open while
+   * `screen === "companion"` (the companion's id); absent otherwise.
+   * Per-player beside `screen`, so two heroes can tend two companions at
+   * once.
+   */
+  companionFocus?: number;
   /**
    * COINS — the merchant economy's currency (see merchant.ts / config
    * ECONOMY). Earned by selling loot to a discovered merchant, spent on his

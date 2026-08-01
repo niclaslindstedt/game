@@ -5,7 +5,7 @@
 // minimap hub column (timer/kills/rampage + the AUTO PILOT panel slot). The
 // bottom docks live in their own components (ConsumableDock, PowerupDock).
 
-import { localHero } from "../local-seat.ts";
+import { fieldLive, localHero } from "../local-seat.ts";
 import type { MutableRefObject, ReactNode, RefObject } from "react";
 
 import { weaponDef, type GameState } from "@game/core";
@@ -40,6 +40,7 @@ export function PlayingHud({
   heroAvatar,
   onOpenBag,
   onOpenQuestLog,
+  onOpenPoints,
   autopilotOverlay,
   userPausedRef,
   bumpUi,
@@ -66,9 +67,13 @@ export function PlayingHud({
   heroAvatar: ReactNode;
   /** Open the bag half of the character screen (the pouch's press). */
   onOpenBag: () => void;
-  /** Open the QUEST LOG (the `!` button's press) — it freezes the run behind
+  /** Open the QUEST LOG (the `!` button's press) — it parks the hero behind
    * itself, since the log is read with the play stopped. */
   onOpenQuestLog: () => void;
+  /** Open the level-up chooser on the BANKED points (the `+` pip's press) —
+   * a ding no longer forces the chooser, so the pip is the reminder and this
+   * sends `promptPendingPoints`. */
+  onOpenPoints: () => void;
   /** The AUTO PILOT control panel, mounted under the minimap while the
    * engine meter runs (GameScreen owns the session it drives). */
   autopilotOverlay: ReactNode;
@@ -91,7 +96,7 @@ export function PlayingHud({
    * or a hero with an empty pouch, gets the panel on the first press.
    */
   const onPressCompanion = (id: number, canHeal: boolean) => {
-    if (state.phase !== "playing") return;
+    if (!fieldLive(state)) return;
     if (canHeal) {
       if (runCommandOk(state, "healCompanionWithMedkit", id)) {
         playUiSound(synth, "confirm");
@@ -104,7 +109,7 @@ export function PlayingHud({
     bumpUi();
   };
   const onOpenMap = () => {
-    if (state.phase === "playing") {
+    if (fieldLive(state)) {
       onToggleWeaponMenu(false);
       runCommand(state, "openMap");
       playUiSound(synth, "confirm");
@@ -112,7 +117,7 @@ export function PlayingHud({
     }
   };
   const onPause = () => {
-    if (state.phase === "playing") {
+    if (fieldLive(state)) {
       // Latch it as viewer-initiated so BOT VIEW's autopilot won't clear the
       // pause before the menu can show (see the sim loop).
       userPausedRef.current = true;
@@ -436,6 +441,28 @@ export function PlayingHud({
                     scale={3}
                     color={hud.questLog === "alert" ? "#ffd75e" : "#6f7a88"}
                   />
+                </button>
+              )}
+              {/* THE POINTS PIP — the same round slot once more, at the row's
+                  end, worn only while the hero has stat/talent points BANKED
+                  (a ding no longer forces the chooser open). Gold like the
+                  quest button's alert, because it too means "something is
+                  waiting for you"; pressing it opens the chooser on demand
+                  (`promptPendingPoints`). It yields to the weapon switcher
+                  for the same reason its neighbours do. */}
+              {hud.pointsWaiting && (
+                <button
+                  type="button"
+                  className={`hud-bag-slot hud-quest-slot has-quests${
+                    weaponMenuOpen ? " hud-slot-yielded" : ""
+                  }`}
+                  aria-label="spend-points"
+                  onClick={() => {
+                    onToggleWeaponMenu(false);
+                    onOpenPoints();
+                  }}
+                >
+                  <PixelText font={font} text="+" scale={3} color="#ffd75e" />
                 </button>
               )}
             </div>

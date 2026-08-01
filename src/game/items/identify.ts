@@ -70,17 +70,18 @@ function reveal(state: GameState, item: Equipment): void {
 
 /**
  * IDENTIFY the piece in bag cell `index` at the merchant's counter: only with
- * the shop open, only on an unidentified piece, and only when the purse covers
- * the fee (`identifyCost`). Returns the coins paid, or null on a refusal (no
- * mutation) — the same shape `repairGear` answers in, so the app can ignore a
- * dud tap.
+ * the shopper's own SHOP screen up (plan §3.2 — the screen is per-player, so
+ * the gate reads the ACTING hero's, exactly like `repairGear`), only on an
+ * unidentified piece, and only when the purse covers the fee (`identifyCost`).
+ * Returns the coins paid, or null on a refusal (no mutation) — the same shape
+ * `repairGear` answers in, so the app can ignore a dud tap.
  */
 export function identifyItem(
   state: GameState,
   hero: Player,
   index: number,
 ): number | null {
-  if (state.phase !== "shop") return null;
+  if (hero.screen !== "shop") return null;
   const item = hero.inventory[index];
   if (!item || !isUnidentified(item)) return null;
   const cost = identifyCost(item);

@@ -43,13 +43,17 @@ import {
 } from "../hazards.ts";
 import { packsCleared, unspawnedMinions } from "../loot.ts";
 import { revealAround } from "../map.ts";
-import { anyHeroWithin, heroInPlay, partyWiped } from "../party.ts";
+import {
+  anyHeroWithin,
+  heroInPlay,
+  partyBlocked,
+  partyWiped,
+} from "../party.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
 import { stepVehicles } from "../vehicles.ts";
 import { advancePath } from "../path.ts";
 import { stepQuests } from "../quests/index.ts";
-import { releaseStuckLevelup } from "../talents.ts";
 import { stepRangedAttacks } from "../ranged.ts";
 import { stepTimers } from "../timers.ts";
 import { stepSpawners } from "../spawners.ts";
@@ -158,26 +162,26 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
     return;
   }
 
-  // A LEVEL-UP CHOOSER NOBODY LEFT IN PLAY CAN CLOSE IS LOWERED HERE, ahead of
-  // the gate it would otherwise hold shut for the rest of the run. The hero who
-  // owes the points can stop being able to place them by quitting or by going
-  // down, and either freezes the whole session silently — see
-  // `releaseStuckLevelup`, and the bot-client soak that found both.
-  releaseStuckLevelup(state);
-
   if (state.phase !== "playing") return;
+
+  // THE PARTY'S OWN FREEZE (multiplayer plan §3.2). The screens are
+  // per-player — a hero in their bag stands on the field, steers nothing, and
+  // can still be killed — so the world only halts when EVERY hero in play has
+  // one up. With one hero that is exactly the freeze the bag, the map and the
+  // pause menu always were; with eight it is "everybody stepped out at once".
+  // A departed or downed hero's abandoned screen holds nothing shut, which is
+  // the structural version of the fix `releaseStuckLevelup` used to bolt on.
+  if (partyBlocked(state)) return;
 
   const dt = dtMs / 1000;
   state.stats.timeMs += dtMs;
   // The ding celebration: a fresh level-up burns on the hero for a beat
-  // (golden pillar + fanfare) before the stat chooser pauses the run. The
-  // window only ticks while `playing`, so a dialogue or pause that cuts in
-  // merely postpones the chooser rather than racing it.
+  // (golden pillar + fanfare). The points BANK (`Player.pendingStatPoints`)
+  // rather than forcing the chooser open — the chooser is a non-blocking
+  // screen the player opens when they want (`promptPendingPoints`), and the
+  // HUD shows a pip while points wait. Plan §3.2, decision 4.
   if (state.levelUpFxMs > 0) {
     state.levelUpFxMs = Math.max(0, state.levelUpFxMs - dtMs);
-    if (state.levelUpFxMs === 0 && state.players[0].pendingStatPoints > 0) {
-      state.phase = "levelup";
-    }
   }
   // Cool down the "bags are full" nudge so a player parked on uncarriable loot
   // gets one cue, not one per frame (see stepItems).
@@ -248,7 +252,13 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
       revealAround(state, player.pos);
       continue;
     }
-    const seatInput = inputFor(input, seat);
+    // A hero with a SCREEN up steers nothing (plan §3.2): their pointer is on
+    // a menu, not the field. Everything else about them still ticks — the
+    // weapon auto-fires at whatever comes close (the character acts
+    // autonomously; standing in the horde with the bag open is survivable,
+    // not safe), regen runs, and the horde still reaches them.
+    const seatInput =
+      player.screen === undefined ? inputFor(input, seat) : IDLE_INPUT;
     stepPlayer(state, player, seatInput, dt, dtMs);
     // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
     // (Warcraft-style, no re-fogging): a `MAP.revealRadius` disc around him is

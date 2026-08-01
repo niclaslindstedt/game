@@ -254,7 +254,7 @@ export function autopilotRideGains(
     Object.values(talents).reduce((sum, rank) => sum + rank, 0);
   const talents =
     Math.max(0, ranks(player.talents) - ranks(snap.talents)) +
-    state.pendingTalentPoints.length;
+    player.pendingTalentPoints.length;
   return { levels, stats, talents };
 }
 

@@ -299,8 +299,10 @@ export const QUESTS = config.QUESTS;
  * from the curve in `content/leveling.yaml` the way a copied formula would.
  */
 export function questXp(reward, level, difficultyId) {
+  const hero = { level };
   return questRewards.questXpReward(
-    { players: [{ level }], difficulty: difficultyId },
+    { players: [hero], difficulty: difficultyId },
+    hero,
     reward,
   );
 }

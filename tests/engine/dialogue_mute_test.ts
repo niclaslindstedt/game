@@ -35,12 +35,16 @@ describe("muteDialogue", () => {
     expect(state.phase).toBe("playing");
   });
 
-  it("routes a pending level-up to the chooser as it dismisses", () => {
+  it("keeps a pending level-up banked as it dismisses", () => {
     const state = meetBoss();
     state.players[0].pendingStatPoints = 1;
     muteDialogue(state);
     expect(state.dialogue).toBeNull();
-    expect(state.phase).toBe("levelup");
+    // No divert to the chooser: the scene closes back to play and the point
+    // waits, banked, for the on-demand chooser (`promptPendingPoints`).
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
+    expect(state.players[0].pendingStatPoints).toBe(1);
   });
 
   it("suppresses a later enemy arrival for the rest of the level", () => {

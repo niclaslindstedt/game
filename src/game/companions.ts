@@ -793,41 +793,44 @@ function separateCompanions(state: GameState): void {
 // ---- Companion equipment (called by the app's UI) --------------------------------
 
 /**
- * Equip the item in the hero's bag cell `index` onto this companion,
+ * Equip the item in the ACTING hero's bag cell `index` onto this companion,
  * swapping whatever occupied the slot back into that cell. Companions only
  * dress in a weapon, a helmet, and a chest piece — legs, feet, charms and
  * bags are refused — and the hero's own level gates the piece exactly as it
- * gates his own hands.
+ * gates his own hands. The bag is the actor's (a private read, §3.1): a
+ * joiner dressing a companion spends from their own kit, never the host's.
  */
 export function equipCompanionFromInventory(
   state: GameState,
+  hero: Player,
   companionId: number,
   index: number,
 ): boolean {
   const companion = companionById(state, companionId);
   if (!companion) return false;
-  const item = state.players[0].inventory[index];
+  const item = hero.inventory[index];
   if (!item) return false;
   if (item.slot !== "weapon" && item.slot !== "head" && item.slot !== "chest") {
     return false;
   }
-  if (!meetsLevelReq(state, state.players[0], item)) return false;
+  if (!meetsLevelReq(state, hero, item)) return false;
   const slot = item.slot as CompanionSlot;
   const previous = companion.equipment[slot];
-  state.players[0].inventory[index] = previous ?? null;
+  hero.inventory[index] = previous ?? null;
   companion.equipment[slot] = item;
   if (slot === "weapon") companion.weaponCooldownMs = 0;
   return true;
 }
 
 /**
- * Move a companion's worn piece back into the hero's first free bag cell.
- * The weapon slot is never emptied — a companion always fights with
+ * Move a companion's worn piece back into the ACTING hero's first free bag
+ * cell. The weapon slot is never emptied — a companion always fights with
  * something — so weapons only leave via an `equipCompanionFromInventory`
  * swap.
  */
 export function unequipCompanionToInventory(
   state: GameState,
+  hero: Player,
   companionId: number,
   slot: CompanionSlot,
 ): boolean {
@@ -836,9 +839,9 @@ export function unequipCompanionToInventory(
   if (!companion) return false;
   const item = companion.equipment[slot];
   if (!item) return false;
-  const free = state.players[0].inventory.indexOf(null);
+  const free = hero.inventory.indexOf(null);
   if (free === -1) return false;
-  state.players[0].inventory[free] = item;
+  hero.inventory[free] = item;
   companion.equipment[slot] = null;
   return true;
 }
@@ -975,22 +978,25 @@ export function healCompanionWithMedkit(
   return true;
 }
 
-// ---- Phase toggles (called by the app's UI) --------------------------------------
+// ---- Screen toggles (called by the app's UI) -------------------------------------
 
-/** Pause into a companion's equip screen. Only possible mid-run. */
+/** Open a companion's equip screen for this hero. Only possible mid-run with
+ * no other screen up. The focus is the OPENER's own (plan §3.2), so two
+ * heroes can tend two companions at once. */
 export function openCompanionPanel(
   state: GameState,
+  hero: Player,
   companionId: number,
 ): void {
-  if (state.phase !== "playing") return;
+  if (state.phase !== "playing" || hero.screen !== undefined) return;
   if (!companionById(state, companionId)) return;
-  state.companionFocus = companionId;
-  state.phase = "companion";
+  hero.companionFocus = companionId;
+  hero.screen = "companion";
 }
 
-/** Close the companion screen and resume (pending level-ups take priority). */
-export function closeCompanionPanel(state: GameState): void {
-  if (state.phase !== "companion") return;
-  state.companionFocus = null;
-  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+/** Close this hero's companion screen. */
+export function closeCompanionPanel(hero: Player): void {
+  if (hero.screen !== "companion") return;
+  delete hero.companionFocus;
+  delete hero.screen;
 }

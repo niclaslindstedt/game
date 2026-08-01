@@ -445,7 +445,9 @@ describe("companions in the field", () => {
       // The hero lent it a helmet out of his own bag.
       const at = bagItem(state, "test_helmet", "head");
       const helmet = state.players[0].inventory[at] as Equipment;
-      expect(equipCompanionFromInventory(state, first.id, at)).toBe(true);
+      expect(
+        equipCompanionFromInventory(state, state.players[0], first.id, at),
+      ).toBe(true);
       expect(first.equipment.head).toBe(helmet);
       state.events = [];
 
@@ -589,28 +591,59 @@ describe("companion equipment", () => {
     });
 
     const helmet = bagItem(state, "test_helmet", "head");
-    expect(equipCompanionFromInventory(state, companion.id, helmet)).toBe(true);
+    expect(
+      equipCompanionFromInventory(
+        state,
+        state.players[0],
+        companion.id,
+        helmet,
+      ),
+    ).toBe(true);
     expect(companion.equipment.head?.defId).toBe("test_helmet");
     expect(state.players[0].inventory[helmet]).toBeNull();
 
     const greaves = bagItem(state, "test_greaves", "legs");
-    expect(equipCompanionFromInventory(state, companion.id, greaves)).toBe(
-      false,
-    );
+    expect(
+      equipCompanionFromInventory(
+        state,
+        state.players[0],
+        companion.id,
+        greaves,
+      ),
+    ).toBe(false);
     expect(state.players[0].inventory[greaves]?.defId).toBe("test_greaves");
 
     // A weapon swaps: the signature wrench comes back to the bag cell.
     const pistol = bagItem(state, "test_pistol", "weapon");
-    expect(equipCompanionFromInventory(state, companion.id, pistol)).toBe(true);
+    expect(
+      equipCompanionFromInventory(
+        state,
+        state.players[0],
+        companion.id,
+        pistol,
+      ),
+    ).toBe(true);
     expect(companion.equipment.weapon.defId).toBe("test_pistol");
     expect(state.players[0].inventory[pistol]?.defId).toBe("test_wrench");
 
     // Armor unequips back to the bag; the weapon slot never empties.
-    expect(unequipCompanionToInventory(state, companion.id, "head")).toBe(true);
+    expect(
+      unequipCompanionToInventory(
+        state,
+        state.players[0],
+        companion.id,
+        "head",
+      ),
+    ).toBe(true);
     expect(companion.equipment.head).toBeNull();
-    expect(unequipCompanionToInventory(state, companion.id, "weapon")).toBe(
-      false,
-    );
+    expect(
+      unequipCompanionToInventory(
+        state,
+        state.players[0],
+        companion.id,
+        "weapon",
+      ),
+    ).toBe(false);
   });
 
   it("pauses into the companion screen and resumes out of it", () => {
@@ -620,16 +653,17 @@ describe("companion equipment", () => {
       x: 30,
       y: 30,
     });
-    openCompanionPanel(state, companion.id);
-    expect(state.phase).toBe("companion");
-    expect(state.companionFocus).toBe(companion.id);
-    // Frozen like the bag: a step advances nothing.
+    openCompanionPanel(state, state.players[0], companion.id);
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("companion");
+    expect(state.players[0].companionFocus).toBe(companion.id);
+    // Frozen like the bag (solo): a step advances nothing.
     const before = state.stats.timeMs;
     step(state, idle, DT);
     expect(state.stats.timeMs).toBe(before);
-    closeCompanionPanel(state);
-    expect(state.phase).toBe("playing");
-    expect(state.companionFocus).toBeNull();
+    closeCompanionPanel(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
+    expect(state.players[0].companionFocus).toBeUndefined();
   });
 });
 
@@ -764,7 +798,7 @@ describe("the party rides the loadout", () => {
       y: 30,
     });
     const helmet = bagItem(state, "test_helmet", "head");
-    equipCompanionFromInventory(state, companion.id, helmet);
+    equipCompanionFromInventory(state, state.players[0], companion.id, helmet);
     companion.hp = 3; // beaten up — the next level greets him rested
 
     const loadout = extractLoadout(state, state.players[0]);

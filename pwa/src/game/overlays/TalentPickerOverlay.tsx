@@ -103,12 +103,12 @@ export function TalentPickerOverlay({
     return () => observer.disconnect();
   }, []);
 
-  const stat = state.pendingTalentPoints[0];
+  const stat = localHero(state).pendingTalentPoints[0];
   const tree = stat ? TALENT_STAT_CLASS[stat] : undefined;
   // The tree's talent list is stable for a given tree — memoize it so it doesn't
   // re-trigger the keyboard effect every render.
   const talents = useMemo(() => (tree ? talentsForTree(tree) : []), [tree]);
-  const points = state.pendingTalentPoints.length;
+  const points = localHero(state).pendingTalentPoints.length;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

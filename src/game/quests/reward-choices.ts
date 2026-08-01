@@ -42,7 +42,12 @@ import { markIdentified } from "../items/identify.ts";
 import { armorTypeOf } from "../items/durability.ts";
 import { gearDef, isWeaponDef, weaponDef } from "../defs/equipment.ts";
 import { questDef } from "../defs/quests.ts";
-import type { ArmorType, Equipment, GameState } from "../types/index.ts";
+import type {
+  ArmorType,
+  Equipment,
+  GameState,
+  Player,
+} from "../types/index.ts";
 
 /**
  * The armor materials that stand for the three build lanes, in the order the
@@ -66,11 +71,13 @@ const LANE_WEAPON_CLASSES = ["melee", "ranged", "magic"] as const;
  */
 export function questRewardChoices(
   state: GameState,
+  /** The hero the row is priced against — the one in the conversation. */
+  hero: Player,
   questId: string,
 ): Equipment[] {
   const cached = state.questRewards[questId];
   if (cached) return cached;
-  const minted = mintChoices(state, questId);
+  const minted = mintChoices(state, hero, questId);
   state.questRewards[questId] = minted;
   return minted;
 }
@@ -79,9 +86,10 @@ export function questRewardChoices(
  * top row when they never touched it. Null when the errand pays no gear. */
 export function pickedQuestReward(
   state: GameState,
+  hero: Player,
   questId: string,
 ): Equipment | null {
-  const choices = questRewardChoices(state, questId);
+  const choices = questRewardChoices(state, hero, questId);
   if (choices.length === 0) return null;
   const at = state.quests[questId]?.rewardPick ?? 0;
   return choices[Math.min(Math.max(0, at), choices.length - 1)] ?? null;
@@ -93,10 +101,15 @@ export function pickedQuestReward(
  * pressed again at the handover. Returns false for an index that is not on the
  * table, so a stray tap is ignored rather than paying out something else.
  */
-export function chooseQuestReward(state: GameState, index: number): boolean {
+export function chooseQuestReward(
+  state: GameState,
+  hero: Player,
+  index: number,
+): boolean {
+  if (hero.screen !== "quest") return false;
   const offer = state.questOffer;
   if (!offer?.questId) return false;
-  const choices = questRewardChoices(state, offer.questId);
+  const choices = questRewardChoices(state, hero, offer.questId);
   if (index < 0 || index >= choices.length) return false;
   // The errand may not be accepted yet — the whole point is choosing BEFORE
   // saying yes — so the pick is parked on the offer's own progress row if there
@@ -108,7 +121,11 @@ export function chooseQuestReward(state: GameState, index: number): boolean {
 }
 
 /** Mint the choices. Called exactly once per errand per run. */
-function mintChoices(state: GameState, questId: string): Equipment[] {
+function mintChoices(
+  state: GameState,
+  hero: Player,
+  questId: string,
+): Equipment[] {
   const loot = questDef(questId).reward?.loot;
   if (!loot || loot.count <= 0) return [];
 
@@ -121,14 +138,14 @@ function mintChoices(state: GameState, questId: string): Equipment[] {
   // Identified from the moment they exist: the whole point of a reward CHOICE
   // is reading the stats before saying yes, so a veiled offer would be a lie.
   const anchor = markIdentified(
-    rollEquipment(state, state.players[0], {
+    rollEquipment(state, hero, {
       ...(slot ? { slot } : {}),
       ...(loot.tierBonus ? { tierBonus: loot.tierBonus } : {}),
-      mlvl: state.players[0].level,
+      mlvl: hero.level,
     }),
   );
 
-  const lanes = laneBases(state, anchor);
+  const lanes = laneBases(state, hero, anchor);
   // Nothing to choose between: a neutral piece (rule 3), or a pool too thin to
   // offer a second lane. Either way the anchor stands alone rather than being
   // padded out with copies of itself.
@@ -140,11 +157,11 @@ function mintChoices(state: GameState, questId: string): Equipment[] {
     defId === anchor.defId
       ? anchor
       : markIdentified(
-          rollEquipment(state, state.players[0], {
+          rollEquipment(state, hero, {
             defId,
             tier: anchor.tier,
             quality: anchor.quality,
-            mlvl: state.players[0].level,
+            mlvl: hero.level,
           }),
         ),
   );
@@ -155,8 +172,12 @@ function mintChoices(state: GameState, questId: string): Equipment[] {
  * has no lanes to offer. The anchor's own base is kept in its lane so the row
  * the ordinary pipeline picked is genuinely on the table.
  */
-function laneBases(state: GameState, anchor: Equipment): string[] {
-  const lootLevel = lootLevelFor(state, state.players[0].level);
+function laneBases(
+  state: GameState,
+  hero: Player,
+  anchor: Equipment,
+): string[] {
+  const lootLevel = lootLevelFor(state, hero.level);
   if (isWeaponDef(anchor.defId)) {
     const pool = eligibleBases(state, "weapon", lootLevel);
     return LANE_WEAPON_CLASSES.map((weaponClass) => {

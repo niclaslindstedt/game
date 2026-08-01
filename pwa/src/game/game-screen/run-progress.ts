@@ -6,7 +6,7 @@
 // Pure feedback (effects, toasts) lives in event-fx.ts; the AUTO PILOT's
 // route decisions live in autopilot-director.ts.
 
-import { localHero } from "../local-seat.ts";
+import { fieldLive, localHero } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { bankCampaignQuests, isPartyRun, storyItemDef } from "@game/core";
@@ -94,7 +94,9 @@ export function createRunProgress(deps: {
     if (
       captureEnabled &&
       checkpointRef.current?.levelId !== runLevelId &&
-      state.phase === "playing" &&
+      // On the field, nothing open: a checkpoint must never be snapped while
+      // the local player sits in a screen (bag, pause, chooser).
+      fieldLive(state) &&
       !localHero(state).disarmed
     ) {
       checkpointRef.current = {

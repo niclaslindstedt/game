@@ -9,7 +9,7 @@
 // demo input only — the bot's own decisions, and every non-demo run, are
 // untouched.
 
-import { localHero } from "../local-seat.ts";
+import { fieldLive, localHero, localScreen } from "../local-seat.ts";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
@@ -379,6 +379,14 @@ export function createDemoDirector(deps: {
     screenRef.current?.querySelector(`[aria-label="stat-${stat}"]`) ?? null;
   const stepLevelup = (dtMs: number) => {
     if (!bot || localHero(state).pendingStatPoints <= 0) return;
+    // A ding no longer raises the chooser on its own — the points bank on the
+    // hero. The demo opens it the way a player would (`promptPendingPoints`),
+    // so the viewer still watches the modal instead of an invisible drain.
+    if (localScreen(state) !== "levelup") {
+      runCommandOk(state, "promptPendingPoints");
+      bumpUi();
+      return;
+    }
     const stat = botAllocate(bot, state, localHero(state));
     const btn = statButton(stat);
     // The modal paints one render frame after the phase flips; hold off until
@@ -444,12 +452,12 @@ export function createDemoDirector(deps: {
   const talentRow = (id: string) =>
     screenRef.current?.querySelector(`[aria-label="talent-${id}"]`) ?? null;
   const stepTalent = (dtMs: number) => {
-    if (!bot || state.pendingTalentPoints.length === 0) return;
+    if (!bot || localHero(state).pendingTalentPoints.length === 0) return;
     const id = botPickTalent(bot, state, localHero(state));
     // No pickable talent (a maxed tree): fall back to the instant drain so the
     // queue can't wedge the run behind a picker nothing will ever spend.
     if (!id) {
-      while (state.pendingTalentPoints.length > 0) {
+      while (localHero(state).pendingTalentPoints.length > 0) {
         const next = botPickTalent(bot, state, localHero(state));
         if (!next || !runCommandOk(state, "spendTalentPoint", next)) break;
       }
@@ -558,7 +566,7 @@ export function createDemoDirector(deps: {
     dtMs: number,
     heroAt: () => { x: number; y: number },
   ) => {
-    if (!demo || state.phase !== "playing") return;
+    if (!demo || !fieldLive(state)) return;
     trackStandstill(refs.demoStillRef.current, localHero(state).pos, dtMs);
     if (refs.demoLessonGapMsRef.current > 0) {
       refs.demoLessonGapMsRef.current -= dtMs;

@@ -67,7 +67,9 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   out; → GOODCO HQ), the ROCKET (→ the moon, Mars), and the RIFT SEAM —
   **SEALED** until THE FOUNDER's RIFT CREATOR keepsake comes home from the
   rift (→ the rift, BOOT HILL): the Diablo-style town loop, earned at the
-  campaign's far end. Music: `bench_light`, the sanctuary theme.
+  campaign's far end. **LOAD lands here too**: a hero with a campaign under
+  way resumes at home, and their frontier mission is one door-tap away under
+  the ordinary unlock rules. Music: `bench_light`, the sanctuary theme.
 
 - **Level 1 — GOODCO HQ** (`levels/goodco_hq.ts`). A cleanroom raid for the
   ship engine's one missing part. `goodco` biome (polished lab

@@ -158,7 +158,7 @@ document now always means the second thing.
 | **1.5 — THE VERBS**     | The app's ~50 direct engine mutations become commands — one closed list, scalar arguments, one dispatch shared by the app and the server | Nothing changes — the loop still runs in the renderer        |    2 wks | **Landed** (#790), see §1.5.4                  |
 | **1.75 — THE LOOP**     | `SessionParams` can describe a real run; a session can ADOPT one; `GameScreen` drives the net client instead of owning the loop          | Identical single-player, over loopback. Zero networking      |  2–4 wks | **Landed**, bar §1.75.4                        |
 | **2.5 — THE SCREENS**   | HOST / JOIN / the server browser / JOIN BY ADDRESS, the chat overlay, the port setting, the invite launch arguments                      | Eight people in one session; one plays, seven watch and chat |  2–4 wks | **Landed**, see §2.5.4                         |
-| **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 landed**, see §3.6                      |
+| **3 — THE PARTY**       | `state.player` → `state.players[]`, per-player phases, per-player input, client prediction + reconciliation                              | Eight heroes actually playing one map together               | 8–11 wks | **§3.1 + §3.2 landed**, see §3.6; §3.3 remains |
 | **4 — THE CO-OP GAME**  | Per-player death/corpse/respawn, XP share, loot rules, `/players N` balance, party HUD, banking, mod + version reconciliation            | The whole campaign, co-op, start to finish                   |  5–7 wks | **§4.2-abandoned + §4.3 landed**, see §4.7     |
 | **5 — PRODUCTION**      | Trade, hardening/anti-cheat, reconnect, dedicated server binary, platform rules, soak tests, docs, store surfaces                        | Shippable                                                    |  5–7 wks | **Landed** (#813), see §5.8                    |
 | **5.5 — THE REMAINDER** | Every debt the earlier PRs deferred, in the order they unblock each other — plus the three phase 7 halves that were always owed early    | Nothing new — the mode stops owing anything                  |  6–9 wks |                                                |
@@ -1132,7 +1132,7 @@ good one — phase 3's rendering work is genuinely small because of it.
 `saved-run.ts` takes a migration bump: a v-N snapshot with one `player` thaws
 into a one-element `players` array.
 
-### 3.2 Per-player phases
+### 3.2 Per-player phases — **LANDED** (see the amendment at the end of this section)
 
 `GamePhase` has 19 members. `playing` is live, `cutscene` and `dying` run
 reduced passes, and **the other 16 halt the simulation outright**.
@@ -1174,6 +1174,43 @@ refund path already uses), and the chooser becomes a non-blocking screen the
 player opens when they want. The HUD grows a pip that says points are waiting.
 This is a real single-player behaviour change and should be called out in the
 changelog as such rather than smuggled in.
+
+> **AS BUILT.** `state.phase` kept eleven globals (`cutscene`, `intro`,
+> `title`, `playing`, `dialogue`, `choice`, `outro`, `dying`, `bossDeath`,
+> `victory`, `defeat`) and TEN members moved to `Player.screen` (`paused`,
+> `levelup`, `respec`, `inventory`, `map`, `questLog`, `shop`, `quest`,
+> `talk`, `companion`). The halting rule is `partyBlocked`: the world stops
+> only when every hero in play has a screen up — which with one hero is
+> exactly the freeze every screen always was, so single player's FEEL survives
+> except where this section deliberately changes it. The level-up landed as
+> recommended: points bank (`pendingStatPoints`, and `pendingTalentPoints`
+> moved from the run onto the hero), the ding celebrates on the field, the
+> chooser opens on demand (`promptPendingPoints`, a HUD pip) and closes with
+> points still banked (a new `closeLevelup` verb, `PROTOCOL_VERSION` 14 → 15);
+> the respec stays modal for its owner. A hero with a screen up contributes
+> IDLE input, stands on the field, and can be killed. `releaseStuckLevelup`
+> was RETIRED — a quitter's or a downed hero's abandoned screen holds nothing
+> shut, structurally. Four narrowings against the sketch above, each
+> deliberate:
+>
+> 1. **`choice` stayed GLOBAL and anyone may resolve it.** The
+>    killing-blow-owner gate needs the kill chain to know who landed the blow,
+>    and nothing threads the attacker through `hitEnemy` (the same un-threaded
+>    attacker behind the seat-0 combat reads in `loot.ts` — see §5.5.3). One
+>    job, do it once.
+> 2. **`dialogue`/`cutscene` were already group beats** advanced by anyone;
+>    they simply stayed so.
+> 3. **A conversation is ONE AT A TIME, held by its opener.** `questOffer` and
+>    `talk` stay single records on the run; every conversation verb is gated
+>    on the acting hero holding the screen, and a second hero walking up is
+>    politely refused. Per-hero conversation records can come later without
+>    touching the verbs.
+> 4. **`paused` is per-player like the rest** — solo it freezes the world via
+>    `partyBlocked`; in a party it parks one hero.
+>
+> The save format bumped to v26 (a v25 park carries `phase: "paused"`, a value
+> the union no longer holds; the version gate bins it, which costs one parked
+> run and is called out in the changelog).
 
 ### 3.3 Input, prediction and reconciliation
 
@@ -1265,14 +1302,9 @@ each leaving single player byte-identical.
 
 **NOT LANDED, and each is a job rather than a loose end.**
 
-- **§3.2, the per-player screens.** This is the design exercise, and it is
-  bigger than the plumbing it sits on: `state.phase` has to lose eleven members
-  to a new `Player.screen`, the non-blocking level-up is a real single-player
-  BEHAVIOUR change that owes the changelog a line of its own, and `dialogue`,
-  `cutscene` and `choice` each need a group protocol rather than a per-player
-  one. Nothing about it is blocked — the verbs already travel — but it changes
-  how the game feels for a single player, which is why it is not smuggled in
-  beside a refactor that changes nothing.
+- ~~**§3.2, the per-player screens.**~~ **LANDED** — see §3.2's own as-built
+  amendment: ten members moved to `Player.screen`, the world halts on
+  `partyBlocked`, the level-up banks, and `releaseStuckLevelup` is retired.
 - **§3.3, prediction and reconciliation.** Untouched. A client still shows its
   hero where the last snapshot put him.
 - **The command channel carries no SEAT.** A shop, an equip or a stat spend
@@ -1932,7 +1964,9 @@ reason §7.2.5 exists at all.
    they left it. **Honesty about provenance**: this was reasoned out of a soak
    whose frozen readout turned out to be (3), so it is proven by
    `tests/engine/coop_rules_test.ts` rather than by a run. The real fix is §3.2's
-   per-player screens.
+   per-player screens — **which have since landed and RETIRED the bolt-on**: an
+   abandoned screen holds nothing shut, because `partyBlocked` only counts
+   heroes in play.
 
 **WHAT THEY HAVE NOT ANSWERED.** Leaks and snapshot growth are HOUR-scale
 questions and this ran for minutes; the 15–23 KB snapshot deserves a look on its
@@ -2072,17 +2106,16 @@ than rediscovered:
    changed is that the remaining work is somebody leaving a terminal open
    overnight rather than an instrument nobody has built.
 
-6. **§3.2 — the per-player screens.** `state.phase` loses eleven members to a
-   new `Player.screen`. This is the design exercise rather than the plumbing:
-   the non-blocking level-up is a real SINGLE-PLAYER behaviour change that owes
-   the changelog its own line, and `dialogue`, `cutscene` and `choice` each need
-   a GROUP protocol rather than a per-player one. Its own prerequisite — the
-   seat on the command channel — **is paid** (phase 5), so nothing blocks it; it
-   sorts after the instruments because it is the first item here that changes
-   how the game feels, and it should land against a mode that can be measured.
-7. **§4.2's corpse and respawn**, which §4.7 records as BLOCKED on §3.2 and
-   which unblocks the moment (6) lands: there is no per-player death to give a
-   corpse to until `dying` is a `Player.screen`.
+6. **§3.2 — the per-player screens. LANDED** — see §3.2's as-built amendment
+   for the shape (ten screens on `Player.screen`, `partyBlocked` as the one
+   halting rule, the banked level-up with its changelog line, the retired
+   `releaseStuckLevelup`) and the four deliberate narrowings (`choice` stays
+   global-anyone-resolves until the kill chain knows its owner; conversations
+   are one-at-a-time held by their opener). `tests/engine/player_screens_test.ts`
+   is the guard.
+7. **§4.2's corpse and respawn**, which §4.7 records as BLOCKED on §3.2 — now
+   UNBLOCKED: `dying` can become a per-player screen the same way the other
+   ten did. It is the next chain item.
 8. **§3.3 — prediction and reconciliation.** Deliberately last: it is the item
    that changes what a player FEELS on a GOOD connection, so it wants a mode
    that is otherwise finished. Input frames carry a sequence, the LOCAL hero
@@ -2114,13 +2147,20 @@ order, beside the chain above.
   and is not a number to ship to somebody's home connection without looking at
   it. Whether it is the split being generous, the differ re-sending arrays whole,
   or simply what a horde costs is unknown and is the first thing to find out.
-- **§3.1's REMAINING SEAT-0 READS, and the merchant is the big one.** §5.9's
-  first defect was one of these met as a crash on a client. `src/game/merchant.ts`
-  still has twenty-four `state.players[0]` sites, so a joiner buying spends the
-  HOST's purse and a joiner selling banks into it. Mechanical — the same change
-  `canBuyStock`, `spendReviveItem` and `healCompanionWithMedkit` have already
-  had — but it touches the shop screen and the command dispatch, so it is its own
-  piece of work rather than a rider on somebody else's.
+- **§3.1's REMAINING SEAT-0 READS — the VERB paths are paid; the COMBAT
+  CHAIN is what remains.** The merchant's counter verbs act on the shopper
+  (paid before §3.2); §3.2's pass paid the rest of the verb-reachable ones:
+  the companion equip verbs moved a joiner's items through the HOST's bag,
+  quest rewards paid the host's bar/purse/bag whoever turned in, the reward
+  row was priced against seat 0, `talentStatFloor` read seat 0's ranks, and a
+  conversation's given piece dropped at seat 0's feet — all now take the
+  acting hero. What remains is the ATTACKER THREAD: `hitEnemy`/`killEnemy`
+  never learn who landed the blow, so crit, miss, armor-pen and the `struck`/
+  `hit` procs read seat 0's build (~20 sites in `loot.ts`), the drop economy's
+  appetites and `rollEquipment` price against seat 0, and a kill's base XP is
+  measured against seat 0's level. Threading the attacker shifts seeded rolls,
+  so it is its own measured piece of work — and it is the same thread §3.2's
+  `choice` owner-gate waits on.
 - **§4.4 — mods and versions reconciled.** phase 2 refuses a mismatch; this makes
   it WORK, which is the common case on Steam. The host's set is the session's, a
   joiner subscribed to the same mods applies them through `registerDefs`, and a

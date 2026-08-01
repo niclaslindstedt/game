@@ -5,6 +5,7 @@
 // TO PLAY demo's front layer: the teaching tooltip and the invisible
 // full-shell catcher whose tap freezes the demo into its exit confirm.
 
+import { fieldLive } from "../local-seat.ts";
 import type { MutableRefObject, RefObject } from "react";
 
 import { type GameState } from "@game/core";
@@ -131,7 +132,7 @@ export function DemoChrome({
   // showing. The catch layer only mounts during play, where a tip is visible
   // for every key except "levelstat" (that one is bound to the level-up modal).
   const openDemoExit = () => {
-    if (!state || state.phase !== "playing") return;
+    if (!state || !fieldLive(state)) return;
     if (demoTip && demoTip.key !== "levelstat") {
       clearTip();
       playUiSound(synth, "back");
@@ -152,18 +153,18 @@ export function DemoChrome({
       {/* The current teaching tooltip, anchored where the bot just tapped.
           Decorative (pointer-events off) so the catch layer below still gets
           every click. The "levelstat" tip is anchored to a stat button, so it
-          shows ONLY while the level-up modal is up — bound to that phase so it
-          vanishes with the modal instead of lingering over the field for the
-          rest of its lifetime; every other tip shows during play. */}
+          shows ONLY while the level-up chooser is up — bound to that screen so
+          it vanishes with the modal instead of lingering over the field for
+          the rest of its lifetime; every other tip shows during play. */}
       {demoTip &&
         (demoTip.key === "levelstat"
-          ? hud?.phase === "levelup"
-          : hud?.phase === "playing") && <DemoTip font={font} tip={demoTip} />}
+          ? hud?.screen === "levelup"
+          : hud?.fieldLive) && <DemoTip font={font} tip={demoTip} />}
 
       {/* An invisible full-shell catcher — a tap ANYWHERE (field, HUD, docks)
           freezes the demo and raises the exit confirm. Only while the demo
           actually plays; the paused confirm covers everything itself. */}
-      {hud?.phase === "playing" && (
+      {hud?.fieldLive && (
         <div
           className="demo-exit-catch"
           role="presentation"

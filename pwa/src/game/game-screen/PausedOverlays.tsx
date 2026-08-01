@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The paused-phase overlays, wired to the run's session machinery: the demo's
+// The paused-screen overlays, wired to the run's session machinery: the demo's
 // exit confirm (HOW TO PLAY taps anywhere to raise it) and the ordinary pause
 // menu with its AUTO PILOT engage/stop row. Split from GameScreen because the
 // wiring reaches into music, the autopilot session, and the character — the
 // scene overlays proper (SceneOverlays.tsx) stay free of all that.
 
-import { localHero } from "../local-seat.ts";
+import { localHero, localScreen } from "../local-seat.ts";
 import { useState, type MutableRefObject } from "react";
 
 import {
@@ -74,7 +74,7 @@ export function RunPausedOverlay({
   /** Abandon the demo for good (no parked run to keep). */
   onQuit: () => void;
   /** Leave to the menu but keep the frozen run in memory — CONTINUE
-   * resumes it. The state is already in the `paused` phase here. */
+   * resumes it. The local hero's `paused` screen is already up here. */
   onExitToMenu: (state: GameState) => void;
   bumpUi: () => void;
   /** The session behind this run, when there is one — the pause screen is
@@ -90,11 +90,11 @@ export function RunPausedOverlay({
   // buy-back has to be reachable from in here, not only from the title menu.
   const [browsingVault, setBrowsingVault] = useState(false);
   const resumeRun = () => {
-    if (state.phase !== "paused") return;
+    if (localScreen(state) !== "paused") return;
     userPausedRef.current = false;
-    // A hero carrying unspent points (an AUTO PILOT ride stopped from here hands
-    // its allocations back as pending) drops into the level-up chooser instead
-    // of straight into play — resumeGame routes it.
+    // A hero carrying unspent points (an AUTO PILOT ride stopped from here
+    // hands its allocations back as pending) drops straight back into play —
+    // the points stay banked, and the HUD's points pip carries the reminder.
     runCommand(state, "resumeGame");
     resumeMusic();
     bumpUi();
@@ -185,7 +185,7 @@ export function RunPausedOverlay({
                   };
                 }),
                 onStart: (speed: number) => {
-                  if (state.phase !== "paused") return;
+                  if (localScreen(state) !== "paused") return;
                   if (!runCommandOk(state, "startAutopilot", speed)) return;
                   // A NEW flight, a new LOST & FOUND: whatever the last one threw
                   // away and the player never bought back is trashed here, for
@@ -220,9 +220,9 @@ export function RunPausedOverlay({
                 },
                 onBuyCoins: buyCoins,
                 onStop: () => {
-                  // End the ride and hand the flight's stat/talent picks back as
-                  // unspent points; the hero is still `paused` here, so the
-                  // chooser opens on the next resume (see `resumeRun`).
+                  // End the ride and hand the flight's stat/talent picks back
+                  // as unspent points; they stay banked across the resume, and
+                  // the HUD's points pip is what reminds the player to spend.
                   finishAutopilotRide({
                     state,
                     characterRef,

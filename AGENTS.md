@@ -269,6 +269,17 @@ is a design bug rather than a typo. A mob's own target is `src/game/aggro.ts`.
 `hp > 0`** — which misses a DEPARTED seat and once made a party whose fourth
 player quit undefeatable.
 
+**A SCREEN IS THE PLAYER'S, NEVER THE RUN'S — `Player.screen`, and
+`state.phase` keeps only the global beats.** The bag, the map, the shop, the
+pause menu and the level-up chooser are per-player (`PlayerScreen`); the world
+halts only when EVERY hero in play has one up (`partyBlocked`), which solo is
+exactly the old freeze. So `state.phase === "playing"` no longer means "the
+world is live" — the question "may this hero act / is this hero watching the
+field" is `phase === "playing" && hero.screen === undefined` (app-side:
+`fieldLive(state)` in `pwa/src/game/local-seat.ts`). A ding BANKS its points
+(`pendingStatPoints`/`pendingTalentPoints` on the hero); nothing may force the
+chooser open mid-run except `promptPendingPoints`.
+
 **EVERY PAYOUT GOES THROUGH ITS ONE FUNNEL.** A KILL's XP is the party's:
 `shareXp(state, amount, pos)`. Every other award has an owner:
 `grantXp(state, hero, amount)`. A DROP goes through `dropItem`, which stamps

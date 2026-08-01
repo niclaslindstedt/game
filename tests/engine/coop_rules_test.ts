@@ -22,6 +22,7 @@ import {
   partyLevel,
   partyWiped,
   partyXpBonus,
+  promptPendingPoints,
   seatHero,
   shareXp,
   splitXp,
@@ -84,40 +85,42 @@ describe("an abandoned hero", () => {
     expect(nearestHero(state, { x: 120, y: 120 })).toBe(a);
   });
 
-  it("stops the whole run waiting on a level-up it will never place", () => {
-    // FOUND BY THE BOT-CLIENT SOAK (`scripts/bot-client.mjs`), and it is the
-    // worst thing that suite has turned up: the level-up chooser is a GLOBAL
-    // phase, it lifts only when the points are placed, and a player who left
-    // owing points will never place them. Eight clients went on steering at a
-    // run whose clock had stopped — every figure a soak watches looked healthy
-    // except the two that mattered, the phase and the kill count.
+  it("holds no screen shut — the world runs on past an abandoned chooser", () => {
+    // FOUND BY THE BOT-CLIENT SOAK (`scripts/bot-client.mjs`) back when the
+    // chooser was a GLOBAL phase: a player who left owing points would never
+    // place them, and eight clients went on steering at a run whose clock had
+    // stopped. The screens are per-player now and `partyBlocked` only counts
+    // heroes IN PLAY, so a departed hero's open chooser holds nothing shut —
+    // structurally, with no bolt-on release.
     const { state, heroes } = party(2);
     const [, b] = heroes as [Player, Player];
     b.pendingStatPoints = 2;
-    state.phase = "levelup";
+    expect(promptPendingPoints(state, b)).toBe(true);
+    expect(b.screen).toBe("levelup");
     departHero(state, 1);
-    expect(state.phase).toBe("playing");
+    const before = state.stats.timeMs;
+    step(state, [idle, idle], DT);
+    expect(state.stats.timeMs).toBeGreaterThan(before);
     // The points are NOT forfeited: the seat may be held for the grace window,
     // and somebody coming back should find their level-up where they left it.
     // What was dropped is the WORLD's obligation to sit and wait.
     expect(b.pendingStatPoints).toBe(2);
   });
 
-  it("stops the run waiting on a level-up its owner went DOWN owing", () => {
-    // The second half of the same bug, and the one that wedged the very next
-    // soak after the first was fixed at the departure: a hero at 0 hp with the
-    // party not yet wiped never reaches the `dying` scene, so nobody quits and
-    // nobody can spend. It is checked every TICK rather than at the events that
-    // can cause it, which is the only version a new way of leaving play cannot
-    // out-run.
+  it("does not freeze the run when the chooser's owner goes DOWN owing it", () => {
+    // The second half of the same bug: a hero at 0 hp with the party not yet
+    // wiped never reaches the `dying` scene, so nobody quits and nobody can
+    // spend. `partyBlocked` counts only heroes in play, so the downed hero's
+    // open chooser is as inert as the departed one's.
     const { state, heroes } = party(2);
     const [a, b] = heroes as [Player, Player];
     b.pendingStatPoints = 2;
+    expect(promptPendingPoints(state, b)).toBe(true);
     b.hp = 0;
-    state.phase = "levelup";
     expect(partyWiped(state)).toBe(false); // a still up — no death scene
+    const before = state.stats.timeMs;
     step(state, [idle, idle], DT);
-    expect(state.phase).toBe("playing");
+    expect(state.stats.timeMs).toBeGreaterThan(before);
     expect(b.pendingStatPoints).toBe(2);
     expect(a.hp).toBeGreaterThan(0);
   });
@@ -125,13 +128,22 @@ describe("an abandoned hero", () => {
   it("leaves a level-up somebody still playing owes exactly where it is", () => {
     // The other direction, and the one that would be a worse bug: yanking the
     // chooser out from under a live player mid-decision because somebody else
-    // quit.
+    // quit — and, solo, the open chooser still freezes the world exactly as
+    // the old global phase did.
     const { state, heroes } = party(3);
     const [a] = heroes as [Player, Player, Player];
     a.pendingStatPoints = 1;
-    state.phase = "levelup";
+    expect(promptPendingPoints(state, a)).toBe(true);
     departHero(state, 2);
-    expect(state.phase).toBe("levelup");
+    expect(a.screen).toBe("levelup");
+
+    // SOLO: one hero with a screen up is the whole party — the world halts.
+    const solo = party(1).state;
+    solo.players[0].pendingStatPoints = 1;
+    expect(promptPendingPoints(solo, solo.players[0])).toBe(true);
+    const frozen = solo.stats.timeMs;
+    step(solo, idle, DT);
+    expect(solo.stats.timeMs).toBe(frozen);
   });
 
   it("hands its seat to the next arrival instead of blocking it", () => {

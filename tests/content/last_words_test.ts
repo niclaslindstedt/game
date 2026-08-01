@@ -11,6 +11,7 @@ import {
   dialogueContent,
   ENEMY_DEFS,
   enemyDef,
+  promptPendingPoints,
   step,
   type GameEvent,
   type GameState,
@@ -113,8 +114,12 @@ describe("last words on death", () => {
     expect(state.phase).toBe("dialogue");
     expect(state.players[0].pendingStatPoints).toBeGreaterThan(0);
     advanceDialogue(state);
-    // The scene closed straight into the level-up chooser it was holding back.
-    expect(state.phase).toBe("levelup");
+    // The scene closes back to play; the banked point waits for the
+    // on-demand chooser (plan §3.2 — a ding never forces the screen).
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].pendingStatPoints).toBeGreaterThan(0);
+    expect(promptPendingPoints(state, state.players[0])).toBe(true);
+    expect(state.players[0].screen).toBe("levelup");
   });
 
   it("stays silent for nameless minions", () => {

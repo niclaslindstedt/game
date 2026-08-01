@@ -560,15 +560,11 @@ export type GameState = {
    * they own a SKIP button of their own.
    */
   dialogueMuted: boolean;
-  /** The pending SPARE-or-KILL verdict while `phase === "choice"`. */
+  /** The pending SPARE-or-KILL verdict while `phase === "choice"` — a GROUP
+   * beat (plan §3.2): shown to everybody, the world frozen for it. */
   choice: ChoiceState | null;
   /** The recruited party, in join order (see companions.ts). */
   companions: Companion[];
-  /**
-   * Which companion's equip screen is open while `phase === "companion"`
-   * (a `Companion.id`); null otherwise.
-   */
-  companionFocus: number | null;
   /** Collected story items (STORY_ITEM_DEFS ids) — keys, dossiers, the lot. */
   storyItems: string[];
   /**
@@ -584,20 +580,6 @@ export type GameState = {
    * inner monologue plays exactly once per run.
    */
   thoughtsSeen: string[];
-  /**
-   * The talent-picker QUEUE — one entry per talent point the hero has earned
-   * but not yet spent, each the TREE STAT (strength/dexterity/intelligence)
-   * whose milestone minted it, in STR > DEX > INT order. It is a deterministic
-   * CACHE derived from the hero's chosen stats + owned ranks, rebuilt by
-   * `reconcileTalentPoints` after any relevant change — never hand-maintained —
-   * so a respec revoking an unspent point or a full tree refusing one both fall
-   * out for free. The app drains it through the talent picker, one point at a
-   * time; the level-up pause holds while it is non-empty (see
-   * `resumeAfterLevelup`). Not an event (which would die at the next step's
-   * `events = []`) because stat allocation runs OUTSIDE `step()`; a persistent
-   * queue survives until the picker consumes it.
-   */
-  pendingTalentPoints: StatName[];
   /**
    * Cooldown (ms, counts down each step) gating the RECURRING cap-farm mutter
    * (`maybeCapThought`): the "these enemies are pathetic — go find Ada" thought
@@ -672,15 +654,18 @@ export type GameState = {
    */
   questRewards: Record<string, Equipment[]>;
   /**
-   * The conversation on screen while `phase === "quest"`; null otherwise. The
-   * run freezes behind it exactly as it does behind the shop.
+   * The conversation on screen while some hero's `screen === "quest"`; null
+   * otherwise. ONE conversation at a time, party-wide: the record stays on
+   * the run and the holder is the hero whose screen is up, so a second hero
+   * walking up to a giver mid-conversation is politely refused (see
+   * quests/index.ts).
    */
   questOffer: QuestOffer | null;
   /**
-   * The conversation TREE on screen while `phase === "talk"`; null otherwise
-   * (see conversation.ts). Distinct from `questOffer` because the two are
-   * different things: an offer is a page the player accepts or declines, a
-   * talk is a tree he steers.
+   * The conversation TREE on screen while some hero's `screen === "talk"`;
+   * null otherwise (see conversation.ts). Distinct from `questOffer` because
+   * the two are different things: an offer is a page the player accepts or
+   * declines, a talk is a tree he steers. One at a time, like the offer.
    */
   talk: ActiveTalk | null;
   /**

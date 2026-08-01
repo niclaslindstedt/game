@@ -18,7 +18,7 @@
 // render-frame draws and writes the per-frame DOM, and the JSX surfaces
 // (PlayingHud, docks, SceneOverlays, EndSplash) render from the HUD snapshot.
 
-import { localHero } from "./local-seat.ts";
+import { fieldLive, localHero, localScreen } from "./local-seat.ts";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
@@ -619,12 +619,13 @@ export function GameScreen({
       showDemoTip: demoDirector.showDemoTip,
     });
 
-    // Pause freezes the sim (the engine's "paused" phase) and the music
-    // together; resume lifts both. Music truly resumes in place — the chiptune
-    // player keeps its position across the pause. Guarded so it only toggles
-    // mid-run, never over an intro/level-up/end splash.
+    // Pause raises the local hero's `paused` screen (which halts the world
+    // solo) and the music together; resume lifts both. Music truly resumes in
+    // place — the chiptune player keeps its position across the pause. Guarded
+    // so it only toggles mid-run, never over an intro/end splash or another
+    // open screen.
     const pause = (userInitiated = false) => {
-      if (state.phase !== "playing") return;
+      if (!fieldLive(state)) return;
       // A hand-opened pause latches so the bot's input loop won't clear it (an
       // auto-pause from tab blur passes userInitiated=false and stays clearable).
       if (userInitiated) userPausedRef.current = true;
@@ -633,7 +634,7 @@ export function GameScreen({
       bumpUi();
     };
     const resumeRun = () => {
-      if (state.phase !== "paused") return;
+      if (localScreen(state) !== "paused") return;
       userPausedRef.current = false;
       runCommand(state, "resumeGame");
       resumeMusic();
@@ -798,19 +799,21 @@ export function GameScreen({
           pause(true);
           bumpUi();
         }
-        // CONTROLLER NAVIGATION yields to the field. `playing` is exactly
-        // "the run owns the input": every menu and overlay the game can put up
-        // — paused, levelup, shop, dying, victory, dialogue — is its own phase,
-        // so each of them keeps full controller navigation, and only live play
-        // gives it up. Set every tick rather than on transitions so no path out
-        // of a phase can leave it stuck.
-        // `bossDeath` joins `playing` on the FIELD side of that split, and it is
-        // the one phase where that is not obvious: it puts no menu up, the run
-        // is still simulating, and the only press it wants is "get on with it"
-        // (handled in controls.ts). Left out, the arrow keys would start driving
-        // menus in the middle of a finisher.
+        // CONTROLLER NAVIGATION yields to the field. "The run owns the input"
+        // is exactly "the local player is actually on the field": every menu
+        // and overlay the game can put up — the pause screen, the chooser, the
+        // shop (all `Player.screen`s now), dying, victory, dialogue (still
+        // phases) — keeps full controller navigation, and only live play gives
+        // it up. Set every tick rather than on transitions so no path out of a
+        // screen or phase can leave it stuck.
+        // `bossDeath` joins the FIELD side of that split, and it is the one
+        // phase where that is not obvious: it puts no menu up, the run is
+        // still simulating, and the only press it wants is "get on with it"
+        // (handled in controls.ts). Left out, the arrow keys would start
+        // driving menus in the middle of a finisher.
         setGamepadKeysSuspended(
-          state.phase === "playing" || state.phase === "bossDeath",
+          (state.phase === "playing" && localScreen(state) === undefined) ||
+            state.phase === "bossDeath",
         );
         // The driving seat: the developer BOT VIEW / `?bot=` playtest bot, or
         // the paid AUTO PILOT's own bot while its engine meter runs.
@@ -1115,7 +1118,7 @@ export function GameScreen({
   // on the order (pick the face BEFORE the freeze, or the panel that mounts is
   // whichever one was up last time).
   const openCharScreen = (tab: CharTab) => {
-    if (!state || !canOpenInventory(state)) return;
+    if (!state || !canOpenInventory(state, localHero(state))) return;
     setWeaponMenuOpen(false);
     setCharTab(tab);
     runCommand(state, "openInventory");
@@ -1190,7 +1193,7 @@ export function GameScreen({
         />
       )}
 
-      {hud && hud.phase === "playing" && state && (
+      {hud && hud.fieldLive && state && (
         <PlayingHud
           hud={hud}
           state={state}
@@ -1205,9 +1208,19 @@ export function GameScreen({
           heroAvatar={heroAvatar}
           onOpenBag={() => openCharScreen("bag")}
           onOpenQuestLog={() => {
-            if (state.phase !== "playing") return;
+            if (!fieldLive(state)) return;
             setWeaponMenuOpen(false);
             runCommand(state, "openQuestLog");
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }}
+          onOpenPoints={() => {
+            // Re-check against the live state (the HUD snapshot that showed
+            // the pip may be a frame stale) before opening the chooser on the
+            // banked points.
+            if (!fieldLive(state)) return;
+            setWeaponMenuOpen(false);
+            runCommand(state, "promptPendingPoints");
             playUiSound(synth, "confirm");
             bumpUi();
           }}
@@ -1229,7 +1242,7 @@ export function GameScreen({
         />
       )}
 
-      {hud?.phase === "playing" && !swipeBars && (
+      {hud?.fieldLive && !swipeBars && (
         <ConsumableDock
           hud={hud}
           assets={assets}
@@ -1243,7 +1256,7 @@ export function GameScreen({
 
       {!swipeBars && (
         <PowerupDock
-          hud={hud?.phase === "playing" ? hud : null}
+          hud={hud?.fieldLive ? hud : null}
           assets={assets}
           font={font}
           keyHints={keyHints}
@@ -1266,7 +1279,7 @@ export function GameScreen({
           cooldown writes ride the same dockRef either way. */}
       {swipeBars && (
         <SwipeDock
-          hud={hud?.phase === "playing" ? hud : null}
+          hud={hud?.fieldLive ? hud : null}
           assets={assets}
           font={font}
           dockRef={powerupDockRef}
@@ -1275,7 +1288,7 @@ export function GameScreen({
         />
       )}
 
-      {hud?.phase === "playing" && (
+      {hud?.fieldLive && (
         <PickupFeed
           font={font}
           messages={pickups}
@@ -1286,9 +1299,7 @@ export function GameScreen({
       {/* THE ON-SCREEN QUEST TRACKER — what is running, in the corner, over
           the fight (game-screen/QuestTracker.tsx). Tap-transparent: the strip
           annotates the run, it must never eat a steering press. */}
-      {state && hud?.phase === "playing" && (
-        <QuestTracker state={state} font={font} />
-      )}
+      {state && hud?.fieldLive && <QuestTracker state={state} font={font} />}
 
       {/* The AUTO PILOT LOOT history — a full-shell modal. */}
       {state && state.autopilot.active && autopilot.historyOpen && (
@@ -1306,7 +1317,7 @@ export function GameScreen({
           sequences, so each key carries its own prefix — bare numbers collide
           the moment two of the counters reach the same value, which React
           reports as duplicate children. */}
-      {hud?.phase === "playing" && areaCaption && (
+      {hud?.fieldLive && areaCaption && (
         <AreaCaption
           key={`area-${areaCaption.id}`}
           label={areaCaption.label}
@@ -1318,7 +1329,7 @@ export function GameScreen({
       {/* THE QUEST PROGRESS FLASH — "SCRAP DRONES: 3/10" over the middle of the
           field the moment the tally moves, keyed on its bump id so every
           objective bump replays the pop (QuestFlash.tsx). */}
-      {hud?.phase === "playing" && questFlash && (
+      {hud?.fieldLive && questFlash && (
         <QuestFlash
           key={`quest-${questFlash.id}`}
           text={questFlash.text}
@@ -1329,7 +1340,7 @@ export function GameScreen({
 
       {/* The framed pickup card for freshly bagged gear. Keyed by the card id
           so a new find remounts the box and restarts its pop + border spark. */}
-      {hud?.phase === "playing" && pickupCard && (
+      {hud?.fieldLive && pickupCard && (
         <PickupModal
           key={`card-${pickupCard.id}`}
           font={font}
@@ -1349,13 +1360,14 @@ export function GameScreen({
         <ChatOverlay
           font={font}
           link={sessionLink}
-          suspended={hud?.phase !== "playing"}
+          suspended={!hud?.fieldLive}
         />
       )}
 
-      {/* The phase-driven overlay stack: cutscene, intro/outro, title card,
-          dialogue (+ the arrival-scene bag shortcut), choice, companion,
-          level-up, spell unlock, respec, inventory, shop, and map. */}
+      {/* The scene overlay stack — the global phases (cutscene, intro/outro,
+          title card, dialogue + the arrival-scene bag shortcut, choice) and
+          the local hero's screens (companion, level-up, respec, inventory,
+          shop, map, quest log). */}
       {state && hud && (
         <SceneOverlays
           state={state}
@@ -1393,7 +1405,7 @@ export function GameScreen({
           the same crossing a gateEntered books. The character travels WITH
           the open (snapshotted at the tap), so the render never touches the
           live ref. */}
-      {state && travelDoor && hud?.phase === "playing" && (
+      {state && travelDoor && hud?.fieldLive && (
         <TravelPanel
           state={state}
           font={font}
@@ -1414,10 +1426,10 @@ export function GameScreen({
       )}
 
       {/* THE TALK BOX — a conversation the player STEERS: what a bystander
-          says, and what the hero may say back. Its own `talk` phase, frozen
-          exactly as the errand box is; every branch is an engine mutator, so
-          the box owns none of the rules. */}
-      {state && hud?.phase === "talk" && (
+          says, and what the hero may say back. The hero's own `talk` screen,
+          parked exactly as the errand box is; every branch is an engine
+          mutator, so the box owns none of the rules. */}
+      {state && hud?.screen === "talk" && (
         <TalkOverlay
           state={state}
           assets={assets}
@@ -1445,10 +1457,10 @@ export function GameScreen({
       )}
 
       {/* THE QUEST BOX — the conversation with somebody who has an errand.
-          The run is frozen behind it in its own `quest` phase, exactly as it
-          is behind the shop; every action here is an engine mutator, so the
-          box owns none of the rules. */}
-      {state && hud?.phase === "quest" && (
+          The hero is parked behind it on their own `quest` screen, exactly as
+          behind the shop; every action here is an engine mutator, so the box
+          owns none of the rules. */}
+      {state && hud?.screen === "quest" && (
         <QuestOverlay
           state={state}
           assets={assets}
@@ -1495,9 +1507,9 @@ export function GameScreen({
         />
       )}
 
-      {/* The paused-phase menus: the demo's exit confirm, or the ordinary
+      {/* The paused-screen menus: the demo's exit confirm, or the ordinary
           pause menu with its AUTO PILOT engage row (PausedOverlays.tsx). */}
-      {state && hud?.phase === "paused" && (
+      {state && hud?.screen === "paused" && (
         <RunPausedOverlay
           state={state}
           font={font}

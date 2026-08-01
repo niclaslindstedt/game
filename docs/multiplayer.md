@@ -11,9 +11,10 @@ GAME**, the **server browser**, **JOIN BY ADDRESS**) — and a run now carries a
 **PARTY** rather than a hero, so an admitted player is seated with a character
 of their own.
 
-What is NOT here yet is the half of phase 3 that makes eight heroes comfortable
-rather than merely possible: a screen one player opens still stops the world for
-everybody, and a client still shows its hero where the last snapshot put him
+The screens are per-player too (§3.2): one player in their bag no longer stops
+the world for anybody else — the run halts only when EVERY hero in play has a
+screen up, which solo is exactly the freeze it always was. What is NOT here yet
+is prediction: a client still shows its hero where the last snapshot put him
 rather than predicting his own steering. See **What is NOT here yet** at the
 foot of this file.
 
@@ -88,7 +89,40 @@ measurement, replay and test in the repo.
 
 **The run ends when the party falls, not when a hero does** (`partyWiped`). One
 player going down is a setback the rest fight through; phase 4's §4.2 owns the
-corpse and the respawn, and waits on the per-player `dying` screen.
+corpse and the respawn — and its per-player `dying` screen is now unblocked,
+because the screens ARE per-player:
+
+**THE SCREENS ARE PER-PLAYER (§3.2).** `state.phase` keeps only what is
+genuinely global — the scenes, the spare-or-kill `choice`, victory and defeat —
+and what one player is LOOKING AT is `Player.screen` ("paused", "levelup",
+"respec", "inventory", "map", "questLog", "shop", "quest", "talk",
+"companion"). A hero with a screen up contributes no steering but still stands
+on the field, still auto-fires at what comes close, and can still be killed —
+D2's rule, and what makes opening your bag mid-fight a decision. The world
+halts only when EVERY hero in play has a screen up (`partyBlocked`), which is
+what keeps a solo game's bag exactly the freeze it always was. Three
+consequences worth knowing:
+
+- **A LEVEL-UP BANKS instead of pausing** (decision 4 — a real single-player
+  behaviour change): the ding celebrates on the field, the points bank on
+  `Player.pendingStatPoints` (and the talent queue on
+  `Player.pendingTalentPoints`, moved off the run), and the chooser is a
+  non-blocking screen opened on demand (`promptPendingPoints`, the HUD's
+  points pip) and closeable with points still banked (`closeLevelup`). The
+  RESPEC stays the one modal: it holds its owner until the refunded pool is
+  re-placed.
+- **A quitter's or a downed hero's abandoned screen holds nothing shut** —
+  `partyBlocked` only counts heroes in play. That is the structural version of
+  the fix `releaseStuckLevelup` used to bolt on, and the reason that function
+  no longer exists.
+- **A conversation is held by its opener, one at a time.** The quest offer and
+  the talk tree stay records on the RUN (`questOffer`, `talk`); the holder is
+  the hero whose screen is up, every conversation verb is gated on holding it,
+  and a second hero walking up mid-conversation is politely refused. The
+  spare-or-kill `choice` stays a GLOBAL beat: shown to everybody, the world
+  frozen for it — the plan's killing-blow-owner gate still waits on the kill
+  chain learning who landed the blow (nothing threads the attacker through
+  `hitEnemy` yet).
 
 **A seat is appended, never inserted, and never spliced out.** Every command and
 every input frame in flight names a seat by INDEX, so renumbering the party
@@ -855,13 +889,12 @@ boundary all run; it walks to the NEAREST teammate rather than the centroid,
 which is a spot on the floor where nobody is standing; and it is null in single
 player, which is what keeps every existing measurement byte-identical.
 
-**WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** A screen one player opens
-still stops the world for everybody (`Player.screen` and the non-blocking
-level-up are §3.2, and the level-up is a real single-player behaviour change that
-owes the changelog its own line); nothing is predicted, so a client shows its
-hero where the last snapshot put him (§3.3); and a joiner still plays on the
-THROWAWAY `spectatorCharacter`, so nothing they earn reaches their roster (phase 4's
-§4.5). A client's run commands travel but are NOT applied locally
+**WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** §3.2's half is now paid
+(the per-player screens above, non-blocking level-up included). What remains:
+nothing is predicted, so a client shows its hero where the last snapshot put
+him (§3.3); and a joiner still plays on the THROWAWAY `spectatorCharacter`, so
+nothing they earn reaches their roster (phase 4's §4.5). A client's run
+commands travel but are NOT applied locally
 (`setCommandSink(…, { optimistic: false })`) — the server is authoritative over
 the result, so an optimistic apply would draw an outcome the next snapshot may
 not agree with.
@@ -991,13 +1024,13 @@ Every one of these is a real defect, and not one of them fails a unit test.
   very allowance that just ran out.
 - **A busy host declared dead by its own joiner.** The reliability layer calls a
   peer dead after ten seconds of silence, which a queue can easily exceed.
-- **A global screen nobody left in play can close.** The level-up chooser lifts
-  only when the points are placed, and its owner can stop being able to place
-  them by quitting or by going down. `releaseStuckLevelup` drops the world's
-  obligation to wait, every tick (the points are KEPT — a held seat may be
-  reclaimed and a downed hero revived). Found by reasoning about the soak rather
-  than by it, and proven by `tests/engine/coop_rules_test.ts`; the real fix is
-  per-player screens, §3.2.
+- **A global screen nobody left in play can close.** The level-up chooser
+  lifted only when the points were placed, and its owner could stop being able
+  to place them by quitting or by going down. `releaseStuckLevelup` dropped
+  the world's obligation to wait, every tick, as a bolt-on; §3.2's per-player
+  screens are the structural fix and RETIRED it — an abandoned screen holds
+  nothing shut, because `partyBlocked` only counts heroes in play (the points
+  are still KEPT for a reclaim).
 
 The soak runs themselves are in the plan's §5.9.
 
@@ -1007,15 +1040,6 @@ The soak runs themselves are in the plan's §5.9.
   polled, deprecated and thinner on guarantees than SDR, and the plan is
   unsparing about spiking it under load before the UI rests on it. The direct
   UDP path exists partly as the insurance policy on exactly that.
-- **A screen still stops the world.** `GamePhase` has 19 members and 16 of them
-  halt the simulation outright; eleven are per-player UI (`paused`, `levelup`,
-  `respec`, `inventory`, `map`, `questLog`, `shop`, `quest`, `talk`, `choice`,
-  `companion`) that in co-op must not freeze the other seven. Splitting the
-  concept — `state.phase` keeping only what is genuinely global, a new
-  `Player.screen` carrying what one player is looking at, with that player still
-  standing on the field and still killable — is phase 3's §3.2 and has NOT landed.
-  The verbs that raise those phases already travel (phase 1.5); what is left is
-  changing what they MEAN.
 - **Nothing is predicted.** A client shows its own hero where the last snapshot
   put him, so its steering costs a round trip of felt latency. phase 3's §3.3 is
   the fix: input frames with a sequence number, the LOCAL hero's movement

@@ -801,18 +801,18 @@ function botBuild(bot: Bot, state: GameState, hero: Player): StatBuild {
 
 /**
  * Which talent the bot spends its next point on — the highest-priority talent
- * in the earning tree (the front of `state.pendingTalentPoints`) that isn't
- * maxed, per the build's `BUILD_TALENTS` order. Returns null only if the tree is
- * somehow full (the picker queue is capacity-clamped, so in practice there is
- * always a pick). Called whenever `pendingTalentPoints` is non-empty; the driver
- * spends the returned id via `spendTalentPoint`.
+ * in the earning tree (the front of the HERO's own `pendingTalentPoints`)
+ * that isn't maxed, per the build's `BUILD_TALENTS` order. Returns null only
+ * if the tree is somehow full (the picker queue is capacity-clamped, so in
+ * practice there is always a pick). Called whenever `pendingTalentPoints` is
+ * non-empty; the driver spends the returned id via `spendTalentPoint`.
  */
 export function botPickTalent(
   bot: Bot,
   state: GameState,
   hero: Player,
 ): string | null {
-  const stat = state.pendingTalentPoints[0];
+  const stat = hero.pendingTalentPoints[0];
   if (!stat) return null;
   const tree = TALENT_STAT_CLASS[stat];
   if (!tree) return null;

@@ -1,41 +1,58 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Phase toggles the app's UI calls: the intro/outro pagers, cutscene taps
-// and skips, the bag and pause phases, and the post-victory STAY choice.
+// The run-flow verbs the app's UI calls: the intro/outro pagers, cutscene
+// taps and skips, the bag / pause / level-up SCREENS (per-player since plan
+// §3.2 — the run's phase stays `playing` and the hero's own `screen` carries
+// what they are looking at), and the post-victory STAY choice.
 
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
+import { heroInPlay } from "../party.ts";
 import { advanceCutsceneChain } from "../story.ts";
 import type { GameState, Player } from "../types/index.ts";
 import { beginRespec } from "./stat-points.ts";
 
-// ---- Phase toggles (called by the app's UI) -----------------------------------
+// ---- Screen toggles (called by the app's UI) ----------------------------------
 
 /**
  * Does the hero have UNSPENT level-up points of either kind waiting on the
  * chooser — banked stat points or a queued talent pick? The gate the run's
- * opener and a resume both reopen the chooser on, so points a fresh run arrives
- * with (an adopted veteran's converted talents, or the AUTO PILOT refund's
- * handed-back allocations) are placed by the player before play, never left
- * silently on the table.
+ * opener leans on, so points a fresh run arrives with (an adopted veteran's
+ * converted talents, or the AUTO PILOT refund's handed-back allocations) are
+ * placed by the player before play, never left silently on the table.
  */
-export function hasPendingPoints(state: GameState, player: Player): boolean {
-  return player.pendingStatPoints > 0 || state.pendingTalentPoints.length > 0;
+export function hasPendingPoints(player: Player): boolean {
+  return player.pendingStatPoints > 0 || player.pendingTalentPoints.length > 0;
 }
 
 /**
- * Force the level-up chooser open when the hero is in active play with unspent
- * points — the "allocate before you go on" gate the AUTO PILOT refund leans on
- * to hand a stopped ride straight to the stat chooser (and, as those points are
- * placed, the talent picker). From `playing` only, so it never fights the pause
- * menu or an end-of-run splash; a resume from `paused` routes through
- * `resumeGame` instead. Returns whether it diverted.
+ * Open the level-up chooser for a hero with unspent points — the on-demand
+ * opener behind the HUD's "points waiting" pip, and the door the AUTO PILOT
+ * refund walks a stopped ride through. A ding no longer forces the chooser
+ * open (plan §3.2, decision 4): the points bank, and this is how they get
+ * placed. From active play only, with no other screen up — a pause menu or an
+ * end-of-run splash is never fought over. Returns whether it opened.
  */
 export function promptPendingPoints(state: GameState, player: Player): boolean {
-  if (state.phase !== "playing" || !hasPendingPoints(state, player))
+  if (
+    state.phase !== "playing" ||
+    player.screen !== undefined ||
+    !hasPendingPoints(player)
+  ) {
     return false;
-  state.phase = "levelup";
+  }
+  player.screen = "levelup";
   return true;
+}
+
+/**
+ * Close the chooser — with points still banked, if that is how the player
+ * wants it. The chooser is non-blocking (plan §3.2): points keep, the pip
+ * keeps showing, and the field takes the pointer back.
+ */
+export function closeLevelup(player: Player): void {
+  if (player.screen !== "levelup") return;
+  delete player.screen;
 }
 
 /**
@@ -65,21 +82,27 @@ export function skipIntro(state: GameState): void {
  */
 export function dismissIntro(state: GameState): void {
   if (state.phase === "intro" || state.phase === "title") {
+    state.phase = "playing";
     // A LEVEL TOKEN jump owes a respec before the first step: open the
     // reallocation chooser in place of dropping straight into play.
     if (state.respecPending) {
       beginRespec(state, state.players[0]);
-    } else if (hasPendingPoints(state, state.players[0])) {
-      // The hero starts the run owing the chooser: an adopted veteran whose
-      // loadout implies talent points (see `applyLoadout`), or a build the AUTO
-      // PILOT refund handed its allocations back as pending stat points (see
-      // `refundAutopilotBuild`). Greet them with the stat chooser / talent
-      // picker (the level-up flow) so the pile is placed under the player's own
-      // control before play, not left waiting on a ding a max-level hero might
-      // never see.
-      state.phase = "levelup";
-    } else {
-      state.phase = "playing";
+      return;
+    }
+    // A hero who starts the run owing the chooser — an adopted veteran whose
+    // loadout implies talent points (see `applyLoadout`), or a build the AUTO
+    // PILOT refund handed its allocations back as pending stat points — is
+    // greeted with it open, so the pile is placed under the player's own
+    // control before play, not left waiting on a ding a max-level hero might
+    // never see. Per hero, and closeable: the chooser is non-blocking now.
+    for (const hero of state.players) {
+      if (
+        heroInPlay(hero) &&
+        hero.screen === undefined &&
+        hasPendingPoints(hero)
+      ) {
+        hero.screen = "levelup";
+      }
     }
   }
 }
@@ -153,57 +176,49 @@ export function skipStoryOpening(state: GameState): void {
 }
 
 /**
- * Can the bag open right now? Mid-run always — and during an elite/boss
- * ARRIVAL scene (a `dialogue` with an `enemy` source): the stare-down is
- * exactly when the player wants to size up the speaker and equip a fitting
- * weapon, so the scene lends the bag the stage and takes it back on close.
- * Every other scene (last words, inner thoughts, lore, greetings, joins)
- * stays read-only.
+ * Can this hero's bag open right now? Mid-run whenever they have no other
+ * screen up — and during an elite/boss ARRIVAL scene (a `dialogue` with an
+ * `enemy` source): the stare-down is exactly when the player wants to size up
+ * the speaker and equip a fitting weapon, so the scene lends the bag the
+ * stage and takes it back on close. Every other scene (last words, inner
+ * thoughts, lore, greetings, joins) stays read-only.
  */
-export function canOpenInventory(state: GameState): boolean {
+export function canOpenInventory(state: GameState, player: Player): boolean {
+  if (player.screen !== undefined) return false;
   return (
     state.phase === "playing" ||
     (state.phase === "dialogue" && state.dialogue?.source.kind === "enemy")
   );
 }
 
-/** Pause into the bag — mid-run, or from an elite/boss arrival scene. */
-export function openInventory(state: GameState): void {
-  if (canOpenInventory(state)) state.phase = "inventory";
+/** Open this hero's bag — mid-run, or from an elite/boss arrival scene. */
+export function openInventory(state: GameState, player: Player): void {
+  if (canOpenInventory(state, player)) player.screen = "inventory";
 }
 
-/** Close the bag and resume: the arrival scene it interrupted takes the
- * stage back if one is still up, else play (pending level-ups take
- * priority — a scene's own pending level-up lands when IT ends). */
-export function closeInventory(state: GameState): void {
-  if (state.phase !== "inventory") return;
-  if (state.dialogue !== null) {
-    state.phase = "dialogue";
-    return;
-  }
-  state.phase = hasPendingPoints(state, state.players[0])
-    ? "levelup"
-    : "playing";
-}
-
-/** Freeze the run into the pause screen. Only possible mid-run — end-of-run
- * splashes and other overlays are already their own frozen phases. */
-export function pauseGame(state: GameState): void {
-  if (state.phase === "playing") state.phase = "paused";
+/** Close the bag. An arrival scene it was opened over is still on the global
+ * phase and simply takes the whole stage back. */
+export function closeInventory(player: Player): void {
+  if (player.screen !== "inventory") return;
+  delete player.screen;
 }
 
 /**
- * Leave the pause screen and resume the run — but a hero carrying unspent
- * points (a run resumed with them, or an AUTO PILOT ride stopped from the pause
- * menu) drops into the level-up chooser instead of straight into play, so the
- * points are placed under the player's own control first (see
- * `hasPendingPoints`).
+ * Open this hero's pause menu. Only possible mid-run with nothing else up —
+ * end-of-run splashes and scenes hold the whole stage already. Solo it
+ * freezes the world exactly as it always did (`partyBlocked`); in a party it
+ * parks one hero, and the other seven play on.
  */
-export function resumeGame(state: GameState): void {
-  if (state.phase !== "paused") return;
-  state.phase = hasPendingPoints(state, state.players[0])
-    ? "levelup"
-    : "playing";
+export function pauseGame(state: GameState, player: Player): void {
+  if (state.phase === "playing" && player.screen === undefined) {
+    player.screen = "paused";
+  }
+}
+
+/** Leave the pause menu and take the field back. */
+export function resumeGame(player: Player): void {
+  if (player.screen !== "paused") return;
+  delete player.screen;
 }
 
 /**

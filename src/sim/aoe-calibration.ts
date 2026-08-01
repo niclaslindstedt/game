@@ -494,29 +494,6 @@ function advanceUntilStep(
       case "choice":
         resolveChoice(state, false);
         break;
-      case "levelup": {
-        // Spend the point (prefer the bot's pick; else any stat with room) so
-        // the ding resolves.
-        if (
-          !allocateStat(
-            state,
-            state.players[0],
-            botAllocate(bot, state, state.players[0]),
-          )
-        ) {
-          for (const s of STAT_NAMES)
-            if (allocateStat(state, state.players[0], s)) break;
-        }
-        // A ×10 tree milestone earns a passive TALENT point that holds the same
-        // level-up pause; spend it per the bot's build so the ding resolves (see
-        // allocateStat/resumeAfterLevelup).
-        while (state.pendingTalentPoints.length > 0) {
-          const talentId = botPickTalent(bot, state, state.players[0]);
-          if (!talentId || !spendTalentPoint(state, state.players[0], talentId))
-            break;
-        }
-        break;
-      }
       case "outro":
         advanceOutro(state);
         break;
@@ -525,8 +502,31 @@ function advanceUntilStep(
       case "defeat":
         reviveHero(state);
         break;
-      default:
+      default: {
+        // Banked level-ups (plan §3.2 — a ding no longer pauses the run):
+        // spend on sight so the probe's stats track its level, and so a
+        // chooser `dismissIntro` greeted the hero with never holds the solo
+        // freeze. Spending the last point closes it (`resumeAfterLevelup`).
+        const hero = state.players[0];
+        while (hero.pendingStatPoints > 0) {
+          if (allocateStat(state, hero, botAllocate(bot, state, hero))) {
+            continue;
+          }
+          let placed = false;
+          for (const s of STAT_NAMES) {
+            if (allocateStat(state, hero, s)) {
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) break; // every stat capped — the pile keeps
+        }
+        while (hero.pendingTalentPoints.length > 0) {
+          const talentId = botPickTalent(bot, state, hero);
+          if (!talentId || !spendTalentPoint(state, hero, talentId)) break;
+        }
         return true; // a live, unpaused phase → run a real tick
+      }
     }
     if (++guard > 10_000) return false;
   }
