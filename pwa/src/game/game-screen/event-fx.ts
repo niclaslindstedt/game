@@ -48,6 +48,7 @@ import {
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
 import { bossRitePresentation } from "./boss-rite.ts";
+import { collectGoldPickup } from "./gold-float.ts";
 import { goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
 import { splashOnly } from "./gore-gate.ts";
@@ -1098,7 +1099,9 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // instead, so a loot flood doesn't bury the thumb zone. Loose pickups
   // (medkits, arrows, repair kits, powerups) always ride the feed; only
   // special tiers tint their name there.
-  if (event.type === "itemCollected" && event.name) {
+  // GOLD is excluded here: its line is written by the GROUPED flush below,
+  // because a boss's six piles are one handful of money and deserve one line.
+  if (event.type === "itemCollected" && event.name && event.kind !== "gold") {
     const tier = event.tier ?? "regular";
     if (
       event.kind === "equipment" &&
@@ -1113,11 +1116,6 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         equipped: event.equipped === true,
         upgrade: event.upgrade === true,
       });
-    } else if (event.kind === "gold" && event.coins != null) {
-      // A pile's line is GROUPED and abbreviated rather than printed raw: a
-      // late-campaign hoard is a six-digit number, and "127463 GOLD" in a feed
-      // that scrolls past in a second is a wall of digits nobody reads.
-      ctx.pushPickup(`${formatCompact(event.coins)} GOLD`, "#ffd75e");
     } else {
       ctx.pushPickup(
         event.name,
@@ -1153,32 +1151,17 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       shake: true,
     });
   }
-  // GOLD BANKED: the amount flows up off the hero in the purse's own warm
-  // yellow, exactly as an arrow's XP floats in blue. Gold has no pickup card
-  // and never will — a card is for a find worth STOPPING to read, and a farm
-  // run walks over dozens of piles a minute — so this float and the feed line
-  // are the whole of what a pile says on the way past.
+  // GOLD BANKED: the pile joins the open GROUP rather than floating on its own,
+  // so piles taken within a breath of each other — a boss sheds six at once —
+  // add up into one number instead of stacking six identical ones on the same
+  // spot. The group floats its total (and writes its one feed line) from
+  // `flushGoldPickups`, the moment the money stops arriving.
   if (
     event.type === "itemCollected" &&
     event.kind === "gold" &&
-    event.coins != null &&
-    event.coins > 0
+    event.coins != null
   ) {
-    effects.push({
-      kind: "text",
-      pos: {
-        x: localHero(state).pos.x,
-        y: localHero(state).pos.y - PLAYER.radius - 12,
-      },
-      untilMs: state.stats.timeMs + 900,
-      durationMs: 900,
-      text: `+${formatCompact(event.coins)}`,
-      color: "#ffd75e",
-      rise: 24,
-      // A big pile shouts and a couple of coins murmurs: the same escalation
-      // the pile ladder and the glitter count both ride, so all three agree.
-      scale: event.coins >= 1000 ? 2 : 1,
-    });
+    collectGoldPickup(ctx.shared, state, event.coins, ctx.pushPickup);
   }
   if (event.type === "storyItemCollected") {
     ctx.pushPickup(storyItemDef(event.defId).name, "#ffd75e");

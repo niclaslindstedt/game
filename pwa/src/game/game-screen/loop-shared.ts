@@ -10,6 +10,7 @@ import {
   type HeroImpact,
   type PlayerAction,
 } from "../render.ts";
+import type { GoldGroup } from "./gold-float.ts";
 
 export type LoopShared = {
   /** When a tethered boss last took health back (`bossHealed`) — the tether is
@@ -41,6 +42,11 @@ export type LoopShared = {
   /** Run-clock ms through which the "bags are full" nudge stays lit — set when
    * a `pickupBlocked` event fires, drives the inventory button's pulse. */
   bagFullHintUntilMs: number;
+  /** Gold picked up but not yet floated: piles taken within a breath of each
+   * other add up into ONE "+N" float and one feed line rather than stacking
+   * half a dozen identical numbers on the same spot (game-screen/gold-float.ts).
+   * Absent while no group is open. */
+  goldGroup: GoldGroup | undefined;
 };
 
 export function createLoopShared(): LoopShared {
@@ -52,5 +58,6 @@ export function createLoopShared(): LoopShared {
     lastXpGainMs: undefined,
     xpHeatBaseXp: 0,
     bagFullHintUntilMs: 0,
+    goldGroup: undefined,
   };
 }
