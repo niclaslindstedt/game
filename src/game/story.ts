@@ -214,8 +214,8 @@ export function dialogueContent(dialogue: DialogueState): {
 
 /**
  * The player's tap: turn the page; past the last one the scene ends and play
- * resumes. A GROUP verb — anyone in the party may advance the beat (plan
- * §3.2). Banked level-up points stay banked; the HUD pip carries the
+ * resumes. A GROUP verb — anyone in the party may advance the beat.
+ * Banked level-up points stay banked; the HUD pip carries the
  * reminder.
  */
 export function advanceDialogue(state: GameState): void {

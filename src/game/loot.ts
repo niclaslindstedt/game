@@ -1949,7 +1949,8 @@ export function shareXp(
  * automatic base-attribute gains, and arms the ding celebration — the stat
  * chooser only pauses the run once `levelUpFxMs` has burned down (see step()).
  *
- * The hero is a PARAMETER rather than a lookup, per §3.1's rule: a bar, a level
+ * The hero is a PARAMETER rather than a lookup, per the private-read rule: a
+ * bar, a level
  * and a pile of banked stat points are as private as a bag, and a grant that
  * reached for seat 0 would level the host every time a joiner killed something.
  * A KILL's payout goes through `shareXp` above; this is the direct grant.
@@ -2024,8 +2025,8 @@ export function grantXp(
     });
   }
   if (leveled) {
-    // The ding celebrates on the field and the points BANK (plan §3.2,
-    // decision 4): the blinding light explosion engulfs the hero, the fanfare
+    // The ding celebrates on the field and the points BANK:
+    // the blinding light explosion engulfs the hero, the fanfare
     // rings, and the same flash HURLS the surrounding horde back — a knockback
     // on the light, no wound (the app draws the burst off the `levelUp` event;
     // this is the physics of the shove). The chooser no longer forces itself
@@ -2053,7 +2054,7 @@ export function grantXp(
  * taking XP off a hero whose player was not there for the defeat is a bill for
  * somebody else's mistake. A DOWNED hero is billed nothing either, and for the
  * opposite reason: they already paid, at their own fall (`downHero` books the
- * per-hero toll the moment a hero drops in a party still standing — §4.2), and
+ * per-hero toll the moment a hero drops in a party still standing), and
  * a wipe that re-billed the already-fallen would price one death twice.
  */
 export function applyDeathXpPenalty(state: GameState): number {
@@ -2068,7 +2069,7 @@ export function applyDeathXpPenalty(state: GameState): number {
 /**
  * One hero's own DEATH TOLL — the per-head unit `applyDeathXpPenalty` bills the
  * wiped party with, and the bill `downHero` books at a single fall in a party
- * still standing (multiplayer plan §4.2). Same fraction, same floor, same
+ * still standing (downed.ts). Same fraction, same floor, same
  * `stats.xpLost` book-keeping, whichever transition it rides.
  */
 export function applyHeroDeathToll(state: GameState, player: Player): number {

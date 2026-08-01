@@ -165,7 +165,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
 
   if (state.phase !== "playing") return;
 
-  // THE PARTY'S OWN FREEZE (multiplayer plan §3.2). The screens are
+  // THE PARTY'S OWN FREEZE. The screens are
   // per-player — a hero in their bag stands on the field, steers nothing, and
   // can still be killed — so the world only halts when EVERY hero in play has
   // one up. With one hero that is exactly the freeze the bag, the map and the
@@ -180,7 +180,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // (golden pillar + fanfare). The points BANK (`Player.pendingStatPoints`)
   // rather than forcing the chooser open — the chooser is a non-blocking
   // screen the player opens when they want (`promptPendingPoints`), and the
-  // HUD shows a pip while points wait. Plan §3.2, decision 4.
+  // HUD shows a pip while points wait.
   if (state.levelUpFxMs > 0) {
     state.levelUpFxMs = Math.max(0, state.levelUpFxMs - dtMs);
   }
@@ -230,7 +230,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // A DOWNED hero is skipped whole. Nothing of his ticks — he is not steering,
   // shooting, casting or picking anything up — but he is still on the field and
   // still in `state.players`, because the horde walking over a corpse is what
-  // makes a party death mean something (phase 4's §4.2 owns the corpse and the
+  // makes a party death mean something (downed.ts owns the corpse and the
   // respawn; it waits on the per-player `dying` screen).
   //
   // A DEPARTED hero is skipped for the same reason and a different one: nobody
@@ -253,7 +253,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
       revealAround(state, player.pos);
       continue;
     }
-    // A hero with a SCREEN up steers nothing (plan §3.2): their pointer is on
+    // A hero with a SCREEN up steers nothing: their pointer is on
     // a menu, not the field. Everything else about them still ticks — the
     // weapon auto-fires at whatever comes close (the character acts
     // autonomously; standing in the horde with the bag open is survivable,
@@ -417,7 +417,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   if (!state.freeze) stepQuests(state, dt, dtMs);
 
   // THE RUN ENDS WHEN THE PARTY FALLS, NOT WHEN A HERO DOES — and a hero who
-  // falls while the party still stands goes DOWN instead (§4.2, downed.ts): a
+  // falls while the party still stands goes DOWN instead (downed.ts): a
   // corpse holding their kit, their own XP toll, and the `respawn` verb back.
   // The sweep runs AFTER every damage pass so it judges the tick's final hp,
   // and only when the party is NOT wiped — the wipe path below owns that case

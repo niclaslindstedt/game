@@ -134,7 +134,7 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
   if (state.questGivers.length === 0) return;
 
   for (const giver of state.questGivers) {
-    // ANY hero meets a giver (the party rule, plan §3.1): whoever walks up
+    // ANY hero meets a giver (the party rule): whoever walks up
     // discovers them for everybody, and the giver turns to face that hero.
     const meeter = state.players.find(
       (hero) =>
@@ -190,7 +190,7 @@ function pollQuestConditions(state: GameState): void {
         // in, which is an objective that cannot be completed. Re-homed
         // identically at both sites, so the mark and the piece lying on it
         // never drift apart.
-        // ANY hero's visit counts — the errand is the party's (plan §3.1).
+        // ANY hero's visit counts — the errand is the party's.
         const spot = questSpot(state, objective.at);
         if (
           !state.players.some(
@@ -335,7 +335,7 @@ function leaveTopic(state: GameState, hero: Player): void {
 }
 
 /**
- * Open a giver's conversation on the TAPPING hero's screen (plan §3.2 — the
+ * Open a giver's conversation on the TAPPING hero's screen (the
  * rest of the party plays on; solo the world freezes exactly as before). THE
  * ONLY DOOR IN — the app calls it for a tap on a giver, and nothing calls it
  * on the player's behalf. ONE conversation at a time, party-wide: the offer
@@ -772,7 +772,7 @@ function markQuestTargets(state: GameState): void {
     for (const objective of objectives) {
       if (objective.kind !== "kill" && objective.kind !== "killNamed") continue;
       if (state.mapMarkers.some((m) => m.defId === objective.enemy)) continue;
-      // ANY hero's sighting pins the target — the map is shared (plan §3.1).
+      // ANY hero's sighting pins the target — the map is shared.
       const seen = state.enemies.find(
         (e) =>
           e.defId === objective.enemy &&

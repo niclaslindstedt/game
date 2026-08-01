@@ -120,7 +120,7 @@ export function extractLoadout(state: GameState, player: Player): Loadout {
     // The LOST & FOUND rides along too, so what a multi-lap flight threw away
     // on level three is still buyable back after it lands (items/vault.ts) —
     // and whatever this hero's UNRECOVERED CORPSES still hold is folded in
-    // beside it (§4.2, downed.ts): banking is the one moment a body's gear
+    // beside it (downed.ts): banking is the one moment a body's gear
     // would otherwise be lost, and the vault is the shelf that exists for
     // exactly this kind of not-chosen loss. Deliberately past the vault's cap
     // if it must be — the cap disciplines the bot's banking sweep, and

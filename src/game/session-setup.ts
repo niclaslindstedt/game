@@ -27,8 +27,8 @@
 // staging hook applied to a local run and never travels (a session that could be
 // handed an arbitrary scenario is a session a client could stage). And a PARKED
 // RUN or a CHECKPOINT RESTORE is not built from parameters at all — it ADOPTS an
-// arbitrary `GameState`, which is a different door into the session and is
-// written up as its own piece of work (see `docs/multiplayer-plan.md` §1.75.2).
+// arbitrary `GameState`, which is a different door into the session and a
+// separate piece of work, deliberately not handled here.
 
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 
@@ -126,7 +126,7 @@ export type RunParams = {
    */
   lootMode?: string;
   /**
-   * THE HOSTING CHARACTER IS HARDCORE (§4.2). Carried here so it rides into
+   * THE HOSTING CHARACTER IS HARDCORE. Carried here so it rides into
    * `SessionParams` with everything else a run is built from, but the ENGINE
    * NEVER READS IT — hardcore (permadeath, the keepsake stash) is app-side, as
    * it has always been. What it feeds is the session's DOOR: a hardcore game

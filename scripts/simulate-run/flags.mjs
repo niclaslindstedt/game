@@ -195,7 +195,7 @@ export function parseFlags(args, deps) {
   // single campaign is one chained hero and cannot be split.
   const jobs = Math.max(1, Number(opt("jobs", String(cpuCount ?? 2))));
   const maxMinutes = Number(opt("max-minutes", "15"));
-  // HOW MANY HEROES ARE ON THE MAP (multiplayer plan §7.2).
+  // HOW MANY HEROES ARE ON THE MAP.
   //
   // **IT IS `--party`, NOT `--players`, AND THE NAME IS THE WHOLE POINT.**
   // `/players N` already means D2's monster-hp and XP scaling in this codebase

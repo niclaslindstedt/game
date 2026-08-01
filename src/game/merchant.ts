@@ -5,7 +5,7 @@
 // stream (never the run's, so his strolling can't perturb a single loot
 // roll); the first close encounter roots him to the spot for the rest of
 // the run, pins the level map, and stocks his stall against the hero he
-// just met. `openShop` opens the SHOPPER's own screen (plan §3.2 — the rest
+// just met. `openShop` opens the SHOPPER's own screen (the rest
 // of the party plays on, and the world only freezes solo, like the bag);
 // the buy/sell mutators are safe to call from the app's UI outside `step()`.
 
@@ -212,8 +212,8 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
   // WHOEVER FINDS HIM FINDS HIM FOR EVERYBODY — the stall is a fixture of the
   // run, not a private acquaintance, and a merchant seven players could not
   // trade with because the eighth walked past first would be a bug nobody
-  // could diagnose from the field. (phase 4 retires the question outright by
-  // standing him in the town hub.)
+  // could diagnose from the field. (The town hub retires the question outright
+  // by standing him there.)
   const finder = nearestHeroWhere(state, merchant.pos, (hero) =>
     lineOfSight(state, hero.pos, merchant.pos),
   );
@@ -649,7 +649,7 @@ export { sellValue };
 /**
  * Open the shop for this hero: only mid-run, only with the merchant met, and
  * only with the hero actually at the stall (config `MERCHANT.tradeRadius`).
- * The screen is the SHOPPER's own (plan §3.2) — the rest of the party plays
+ * The screen is the SHOPPER's own — the rest of the party plays
  * on, and two heroes can stand at the counter at once (the shelf is shared,
  * exactly like the stall itself). Returns false when any gate refuses, so the
  * app can ignore a stray tap.
@@ -871,7 +871,7 @@ export function buyStock(
  * gray out unbuyable rows; `buyStock` re-checks everything itself.
  *
  * **`hero` IS A PARAMETER BECAUSE THIS CRASHED A CLIENT.** A purse, a bag and a
- * pouch are PRIVATE (plan §3.1) — the split sends a hero's to that hero and to
+ * pouch are PRIVATE — the split sends a hero's to that hero and to
  * nobody else — and this used to read `state.players[0]` whoever asked. On a
  * JOINER seat 0 belongs to somebody else, so its `inventory` simply is not
  * there, and the autopilot's perfectly ordinary "would a walk to the stall

@@ -24,8 +24,8 @@
 //     breaks in a released build, on a player's machine, for a reason nobody
 //     changed.
 //
-// So this is the plan's own fallback (§1.1, second bullet): precompile, which
-// also makes phase 5's standalone dedicated server trivially portable.
+// So the fallback is to precompile, which
+// also makes the standalone dedicated server trivially portable.
 //
 // **WHY THE SOURCES ARE STAGED FIRST, which is the one surprising step.**
 // TypeScript refuses outright to EMIT a file whose import is both aliased and

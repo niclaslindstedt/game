@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// IN-SESSION PARTY TRAVEL (multiplayer plan §6.4) — the verb half.
+// IN-SESSION PARTY TRAVEL — the verb half.
 //
 // A crossing used to be the APP's alone: bank the hero, drop the mount, build
 // a fresh run. That still is the whole story for a local run — but a hosted

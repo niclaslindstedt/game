@@ -252,7 +252,7 @@ export const XP_CAP = {
 
 /**
  * PARTY XP SHARING — how a kill's XP is divided when several heroes are
- * standing in the same fight (`xp-share.ts`, multiplayer plan §4.3).
+ * standing in the same fight (`xp-share.ts`).
  *
  * Both knobs are inert in a single-player run BY CONSTRUCTION rather than by a
  * special case: one hero in range takes the whole payout, and the bonus is 1 at

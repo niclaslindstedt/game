@@ -51,7 +51,7 @@
 // would make a censored boss simply cease to exist, which is the exact failure
 // the incinerate gate is shaped to avoid.
 //
-// IT IS A GLOBAL PHASE AND MUST STAY ONE. `docs/multiplayer-plan.md` §3.2 turns
+// IT IS A GLOBAL PHASE AND MUST STAY ONE. The per-player screen split turns
 // the eleven per-player UI phases into `Player.screen`s but keeps the GROUP
 // beats — a boss's arrival dialogue, a cutscene — global: played for everyone,
 // advanced by anyone, world frozen for the beat. A boss's death is that same

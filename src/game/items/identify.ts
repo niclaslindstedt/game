@@ -70,7 +70,7 @@ function reveal(state: GameState, item: Equipment): void {
 
 /**
  * IDENTIFY the piece in bag cell `index` at the merchant's counter: only with
- * the shopper's own SHOP screen up (plan §3.2 — the screen is per-player, so
+ * the shopper's own SHOP screen up (the screen is per-player, so
  * the gate reads the ACTING hero's, exactly like `repairGear`), only on an
  * unidentified piece, and only when the purse covers the fee (`identifyCost`).
  * Returns the coins paid, or null on a refusal (no mutation) — the same shape

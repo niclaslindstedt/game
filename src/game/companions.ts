@@ -823,7 +823,7 @@ function separateCompanions(state: GameState): void {
  * swapping whatever occupied the slot back into that cell. Companions only
  * dress in a weapon, a helmet, and a chest piece — legs, feet, charms and
  * bags are refused — and the hero's own level gates the piece exactly as it
- * gates his own hands. The bag is the actor's (a private read, §3.1): a
+ * gates his own hands. The bag is the actor's (a private read): a
  * joiner dressing a companion spends from their own kit, never the host's.
  */
 export function equipCompanionFromInventory(
@@ -906,11 +906,11 @@ export function reviveTarget(
  * mistap can never cost the player a bottle.
  *
  * **`hero` IS WHOSE BOTTLE IT IS, and it is a parameter rather than a lookup.**
- * A bag is PRIVATE (plan §3.1), so the cell index only means anything against
+ * A bag is PRIVATE, so the cell index only means anything against
  * the hero who sent it: this used to read `state.players[0].inventory[index]`,
  * which is a seat-0 read on a verb the command channel hands an ACTING HERO —
  * a joiner cracking a bottle would have consumed the host's cell, and the
- * simulator's own party (§7.2) already ran every seat's care through it.
+ * simulator's own party already ran every seat's care through it.
  */
 export function spendReviveItem(
   state: GameState,
@@ -1007,7 +1007,7 @@ export function healCompanionWithMedkit(
 // ---- Screen toggles (called by the app's UI) -------------------------------------
 
 /** Open a companion's equip screen for this hero. Only possible mid-run with
- * no other screen up. The focus is the OPENER's own (plan §3.2), so two
+ * no other screen up. The focus is the OPENER's own, so two
  * heroes can tend two companions at once. */
 export function openCompanionPanel(
   state: GameState,

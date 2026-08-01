@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// PER-PLAYER DEATH — what a hero falling means while the party still stands
-// (multiplayer plan §4.2). Diablo 2's shape, deliberately: the fallen hero
+// PER-PLAYER DEATH — what a hero falling means while the party still stands.
+// Diablo 2's shape, deliberately: the fallen hero
 // leaves a BODY where they fell holding what they were wearing, pays their own
 // DEATH TOLL, and respawns at the level's start at full health — the walk back
 // is the price and recovering the corpse is the errand. One player's death is
@@ -10,7 +10,8 @@
 // the step pipeline's wipe check (`partyWiped` → `enterDeathScene`) fires on
 // the same tick it always has and the down sweep below never runs — no corpse,
 // no per-hero toll, no respawn. Every rule in this module is an exact no-op at
-// one hero, which is the property §4.7 demanded of every co-op rule before it.
+// one hero, which is the property demanded of every co-op rule before it
+// shipped.
 //
 // Three moments, three functions:
 //
@@ -141,7 +142,7 @@ export function respawnHero(state: GameState, hero: Player): boolean {
 /**
  * The walk back: an owner standing on their own corpse takes their gear back.
  *
- * OWNER ONLY — that is the whole promise (§4.2), and it is enforceable
+ * OWNER ONLY — that is the whole promise, and it is enforceable
  * precisely because recovery is engine code the server runs: another hero
  * standing on the body all day takes nothing. Each piece goes back where it
  * came off when the slot is free (the respawned hero's minted sidearm is

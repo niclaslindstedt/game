@@ -199,7 +199,7 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
  * FURTHEST from the nearest live foe models a checkpoint respawn: the death is
  * still booked once, but he gets a breath to move before the next blow.
  *
- * **EVERY SEAT IS IMMORTAL, NOT JUST SEAT 0** (multiplayer plan §7.2). A party
+ * **EVERY SEAT IS IMMORTAL, NOT JUST SEAT 0.** A party
  * run whose seats stay down is not a party of N after the first casualty — it is
  * a party of one with the per-capita figures still divided by N, which reports a
  * bot that died as a balance result. So the hero is a PARAMETER; omitted it is

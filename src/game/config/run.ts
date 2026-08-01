@@ -56,7 +56,7 @@ export const DEATH_SCENE = {
 } as const;
 
 /**
- * PER-PLAYER DEATH in a party (multiplayer plan §4.2, `downed.ts`): a hero who
+ * PER-PLAYER DEATH in a party (`downed.ts`): a hero who
  * falls while the party still stands goes DOWN where the wipe used to end the
  * run — a corpse holding their worn gear is left where they fell, and the
  * player respawns at the level's start and walks back. Solo is untouched: one

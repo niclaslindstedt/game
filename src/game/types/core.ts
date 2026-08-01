@@ -6,8 +6,8 @@ import type { GearDef, WeaponDef } from "../defs/equipment.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 /**
- * THE RUN'S OWN PHASE — only what is genuinely GLOBAL (multiplayer plan
- * §3.2). `cutscene` plays the level's prelude scene, `intro` shows the story
+ * THE RUN'S OWN PHASE — only what is genuinely GLOBAL.
+ * `cutscene` plays the level's prelude scene, `intro` shows the story
  * text box, `title` flashes the level name alone before the drop, `dialogue`
  * holds the world while a character (or a found story item) speaks — a group
  * beat, played for everyone and advanced by anyone — `choice` holds it while
@@ -37,7 +37,7 @@ export type GamePhase =
   | "dying"
   // The BOSS DEATH RITE — the scripted send-off played over a felled boss
   // before its last words (`boss-death.ts`). A GLOBAL phase, and deliberately
-  // so: `docs/multiplayer-plan.md` §3.2 makes the eleven per-player UI phases
+  // so: the per-player split makes the eleven per-player UI phases
   // into `Player.screen`s but keeps the group beats — a boss's arrival
   // dialogue, a cutscene — global, played for everyone, advanced by anyone,
   // with the world frozen for the beat. A boss's DEATH is that same kind of
@@ -49,8 +49,8 @@ export type GamePhase =
   | "defeat";
 
 /**
- * WHAT ONE PLAYER IS LOOKING AT — the per-player half of the split above
- * (multiplayer plan §3.2). Each of these was a `GamePhase` when the game had
+ * WHAT ONE PLAYER IS LOOKING AT — the per-player half of the split above.
+ * Each of these was a `GamePhase` when the game had
  * one hero; now it sits on the `Player`, the simulation runs regardless, and
  * a hero with a screen up simply contributes no steering (they are still
  * standing on the field and can still be killed — D2's rule, and what makes
@@ -75,7 +75,7 @@ export type PlayerScreen =
   | "quest"
   | "talk"
   | "companion"
-  // The trade window (multiplayer plan §5.1). Unlike the others it is raised
+  // The trade window (`src/game/trade.ts`). Unlike the others it is raised
   // on TWO heroes at once — `openTrade` parks both sides at the table — and
   // lowered by whatever ends the trade: a settle, a cancel, or one side
   // leaving play. A hero at the table is a hero in a screen: no steering,

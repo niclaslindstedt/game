@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE CO-OP TUNING PROBE — is grouping worth doing, and by how much?
-// (multiplayer plan §4.3, the measured pass §4.7 says shipped as STRUCTURE.)
+// (The measured pass behind the party XP rules, which first shipped as
+// STRUCTURE only.)
 //
 //   node scripts/coop-tuning.mjs [--levels moon,goodco_hq] [--difficulties medium,hard]
 //     [--party 1,2,4,8] [--players 1] [--minutes 6] [--seeds 3] [--seed 4242]
@@ -19,9 +20,10 @@
 //   - the KILL RATE says grouping is free money (four heroes clear four times as
 //     fast),
 //
-// and both are true. Only the rate per head per minute says which won. §4.7 named
-// this in advance and could not run it, because the simulator flew exactly one
-// hero; §7.2 gave it a party, and this is the harness that reads it.
+// and both are true. Only the rate per head per minute says which won. The read
+// was named in advance and could not be run, because the simulator flew exactly
+// one hero; the simulator's party support gave it one, and this is the harness
+// that reads it.
 //
 // **THE TWO KNOBS IT MOVES ARE `XP_SHARE.partyBonusPerHero` AND THE `/players N`
 // PAIRING.** They are deliberately measured apart. The first is a fact about a
