@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 18;
+export const PROTOCOL_VERSION = 19;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split

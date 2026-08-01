@@ -5888,8 +5888,12 @@ html.app-locked body {
 }
 
 .intro-hero {
-  width: 5rem;
+  /* Height-driven, width free: the doll's canvas is wider than the 16×16 body
+     when he is holding a weapon (paper-doll.ts DOLL_WIDTH), and a fixed square
+     would shrink the man himself to fit the blade. */
+  width: auto;
   height: 5rem;
+  max-width: 8rem;
   object-fit: contain;
   image-rendering: pixelated;
   animation: intro-hero-bob 2.4s ease-in-out infinite;
@@ -8119,6 +8123,37 @@ canvas.tier-artifact {
   height: 0.85rem;
 }
 
+/* EVERY SHEET ROW IS ITS OWN EXPLAINER'S TRIGGER (InfoTip) — a hover on a
+   desktop, a tap on a phone. It has to read as askable without becoming a
+   button: sixteen button plates on a page of sixteen numbers would turn a
+   readout into a form. So the affordance is the lightest one that exists — a
+   faint plate under the pointer or the focus ring, on a row that is otherwise
+   unchanged. The negative margin cancels the padding, so adopting it moved no
+   number by a pixel. */
+.sheet-row {
+  padding: 0.1rem 0.25rem;
+  margin: -0.1rem -0.25rem;
+  border-radius: 3px;
+  cursor: help;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sheet-row:hover,
+.sheet-row:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+  outline: none;
+}
+
+/* The line that tells the player the rows answer questions at all. Centred
+   under the groups, in the same grey the group titles wear — a caption, not a
+   figure, so it never competes with the numbers above it. */
+.char-hint {
+  display: flex;
+  justify-content: center;
+  line-height: 0;
+  opacity: 0.9;
+}
+
 .char-foot {
   display: flex;
   flex-direction: row;
@@ -8182,6 +8217,72 @@ canvas.tier-artifact {
      out-rank the `.game-overlay` (the inventory/shop) it was opened from. */
   z-index: 110;
   pointer-events: none;
+}
+
+/* THE EXPLAINER NOTE (@ui/lib/InfoTip.tsx + InfoNote.tsx): the card a figure
+   raises when the player asks what it is — the character sheet's rows, the
+   bag's purse and ammunition sockets.
+
+   It shares the item tooltip's contract exactly, and for the same reasons: it
+   is portaled to <body>, so it needs a z-index that clears the `.game-overlay`
+   it was raised from, and it is pointer-transparent, so the tap that dismisses
+   it lands on whatever is underneath instead of on the note. It sits one step
+   ABOVE the item tooltip only so the two can never argue on a screen that has
+   both up; in practice they never do. */
+.info-tip-box {
+  position: fixed;
+  z-index: 111;
+  pointer-events: none;
+}
+
+/* The note's own frame — the item card's, so the game has ONE kind of floating
+   explainer rather than two that nearly match. */
+.info-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  /* Wider than an item card: these lines are sentences rather than stat rows,
+     and the models author them pre-wrapped against this width. */
+  max-width: 19rem;
+  padding: 0.55rem 0.7rem;
+  box-sizing: border-box;
+  background: var(--panel-fill);
+  border: 2px solid #1d2530;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px var(--panel-groove),
+    0 6px 18px rgba(0, 0, 0, 0.65);
+}
+
+/* An empty authored line is a paragraph break — it fences "what this does" off
+   from "where this number came from". Half a line tall, because a full blank
+   canvas row reads as a rendering fault on a card this short. */
+.info-note-gap {
+  height: 0.35rem;
+}
+
+/* The foot-rail readouts ask to be asked, the same way the sheet's rows do. */
+.inv-readout {
+  cursor: help;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.inv-readout:focus-visible {
+  outline: 2px solid var(--panel-rail-top);
+  outline-offset: 1px;
+}
+
+/* The (i) panel's closing note — why the chooser's number and the character
+   sheet's differ. Fenced off from the five stat rows above it by a faint rule,
+   the way the item card fences a set bonus, because it is about the SCREEN
+   rather than about any one stat. */
+.stat-info-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* The USE row a usable trinket grows (a travel-gate key on its home level):
@@ -9741,11 +9842,11 @@ canvas.tier-artifact {
 }
 
 /* ---- Achievements ----------------------------------------------------------
-   Three surfaces: the unlock TOAST (a gold banner under the XP strip — a
-   deliberate notch below the level-up burn and the unique pickup card), the
-   HUD STAR button (below the MAP button, shown only while unseen badges
-   wait), and the BROWSER (AchievementsScreen — the arsenal viewer's layout
-   with per-row progress and locked dimming). */
+   Two surfaces: the unlock TOAST (a gold banner under the XP strip — a
+   deliberate notch below the level-up burn and the unique pickup card, and the
+   tap target that opens the shelf mid-run), and the BROWSER
+   (AchievementsScreen — the arsenal viewer's layout with per-row progress and
+   locked dimming), reached from the title menu and from the run alike. */
 
 /* The unlock banner: bottom-center, tucked under the pickup card's zone and
    clear of the corner feed, the powerup dock, and the top HUD — the badge
@@ -9909,6 +10010,16 @@ canvas.tier-artifact {
   padding: 1rem;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* The same shelf raised over a RUN (the ACHIEVEMENTS bind, or a tap on the
+   unlock toast) has the game shell's layer bands to answer to: it must cover
+   the screen-space FX layers (90..96) and the pause menu it may have been
+   opened from, so it joins the MODAL band and wins on DOM order (GameScreen
+   mounts it after the pause overlay). Out in the title menu nothing else
+   claims a band, so the 70 above stands. */
+.game-screen .achievements-overlay {
+  z-index: 100;
 }
 
 .achievements-panel {

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The run's control surface: the canvas pointer tracker (touch dpad taps,
-// mouse press-to-use), the rebindable keyboard/mouse/wheel actions, the
-// fixed Escape hatch, scene-advance keys, the weapon/powerup number rows,
-// and the blur/visibility auto-pause. GameScreen builds one per run effect;
-// detach() unwires everything on teardown.
+// mouse press-to-use, and the tap routing for the two inert banners that park
+// in the thumb's zone — the pickup card and the achievement toast), the
+// rebindable keyboard/mouse/wheel actions, the fixed Escape hatch,
+// scene-advance keys, the weapon/powerup number rows, and the blur/visibility
+// auto-pause. GameScreen builds one per run effect; detach() unwires
+// everything on teardown.
 
 import { fieldLive, localHero, localScreen } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
@@ -52,6 +54,19 @@ export function createControls(deps: {
    * still anchors the virtual dpad. */
   pickupCardElRef: MutableRefObject<HTMLButtonElement | null>;
   pickupCardTapRef: MutableRefObject<(() => void) | null>;
+  /** The live achievement-toast element (null while no badge is celebrating).
+   * The banner is inert for the same reason the pickup card is — it lands in
+   * the thumb's dpad zone — so the canvas routes a tap over it here instead:
+   * `openAchievements` raises the trophy shelf. */
+  achievementToastElRef: MutableRefObject<HTMLDivElement | null>;
+  /** Raise the ACHIEVEMENTS shelf (pausing the run) — see
+   * use-achievements-shelf.ts. */
+  openAchievements: () => void;
+  /** Toggle that same shelf: the ACHIEVEMENTS bind's own verb. */
+  toggleAchievements: () => void;
+  /** Live mirror of whether the shelf is up: while it is, it owns the
+   * keyboard (its own listener walks the rows and closes). */
+  achievementsOpenRef: MutableRefObject<boolean>;
   /** A pause the viewer opened by hand — latched so the bot's input loop
    * leaves it alone. */
   userPausedRef: MutableRefObject<boolean>;
@@ -79,6 +94,10 @@ export function createControls(deps: {
     botView,
     pickupCardElRef,
     pickupCardTapRef,
+    achievementToastElRef,
+    openAchievements,
+    toggleAchievements,
+    achievementsOpenRef,
     userPausedRef,
     dialogueRevealRef,
     introRevealRef,
@@ -97,6 +116,22 @@ export function createControls(deps: {
   synth.unlock();
   const unlock = () => synth.unlock();
   canvas.addEventListener("pointerdown", unlock);
+
+  // Did the tap land over this (pointer-events:none) overlay element? Both the
+  // pickup card and the achievement toast park in the lower centre — where a
+  // thumb anchors the virtual dpad — so neither may take the press itself; the
+  // canvas hit-tests them here and acts on the one the tap fell inside. Reads
+  // `pointer` below, which is assigned before any tap can arrive.
+  const tapHits = (el: HTMLElement | null): boolean => {
+    if (!el) return false;
+    const box = el.getBoundingClientRect();
+    const view = canvas.getBoundingClientRect();
+    const px = view.left + pointer.state.x;
+    const py = view.top + pointer.state.y;
+    return (
+      px >= box.left && px <= box.right && py >= box.top && py <= box.bottom
+    );
+  };
 
   // The control scheme (see settings.ts): a touch anchors a virtual dpad
   // where it lands — dragging away from the anchor walks in that
@@ -138,21 +173,17 @@ export function createControls(deps: {
       // gives the card its button back while a HOLD steers straight through it.
       if (fingers === 1) {
         const tapCard = pickupCardTapRef.current;
-        const el = pickupCardElRef.current;
-        if (tapCard && el) {
-          const card = el.getBoundingClientRect();
-          const view = canvas.getBoundingClientRect();
-          const px = view.left + pointer.state.x;
-          const py = view.top + pointer.state.y;
-          if (
-            px >= card.left &&
-            px <= card.right &&
-            py >= card.top &&
-            py <= card.bottom
-          ) {
-            tapCard();
-            return; // swallow the jump — the tap was spent on the card
-          }
+        if (tapCard && tapHits(pickupCardElRef.current)) {
+          tapCard();
+          return; // swallow the jump — the tap was spent on the card
+        }
+        // The ACHIEVEMENT TOAST rides the same strip and is inert for the same
+        // reason, so a tap on the badge opens the trophy shelf (which pauses
+        // the run) rather than jumping. A HOLD still steers straight through
+        // it — only a tap is spent here.
+        if (tapHits(achievementToastElRef.current)) {
+          openAchievements();
+          return;
         }
       }
       // Only touch/pen taps jump: a mouse click uses an item (cursor-follow)
@@ -223,6 +254,13 @@ export function createControls(deps: {
           bumpUi();
         }
         return;
+      case "achievements":
+        // The trophy shelf over the run — the shelf pauses it on the way up
+        // and thaws it on the way down (use-achievements-shelf.ts). Only
+        // reached while the shelf is DOWN: while it is up it owns the
+        // keyboard, and its own listener closes it.
+        toggleAchievements();
+        return;
       case "pause":
         if (fieldLive(state)) {
           pause(true);
@@ -263,6 +301,10 @@ export function createControls(deps: {
     // the rest). Ceding here keeps those keys from steering or queuing a jump.
     const screen = localScreen(state);
     if (screen === "levelup" || screen === "respec") return;
+    // The ACHIEVEMENTS shelf owns the keyboard the same way while it is up:
+    // it walks its own rows and closes itself on ESC or the achievements bind.
+    // Ceding here keeps that press from also resuming the run under it.
+    if (achievementsOpenRef.current) return;
     const binds = getSettings().keybindings;
     // Track held movement keys + the walk modifier every keydown (repeats
     // included — Set.add is idempotent) so the sim loop reads live state.
@@ -411,6 +453,7 @@ export function createControls(deps: {
   // the shipped scheme is all-keyboard, so there's no default pointer capture
   // to fight the canvas steering.
   const onMouseDown = (event: MouseEvent) => {
+    if (achievementsOpenRef.current) return;
     const action = actionForCode(
       mouseButtonCode(event.button),
       getSettings().keybindings,
@@ -421,6 +464,7 @@ export function createControls(deps: {
     }
   };
   const onWheel = (event: WheelEvent) => {
+    if (achievementsOpenRef.current) return;
     const action = actionForCode(
       wheelCode(event.deltaY),
       getSettings().keybindings,

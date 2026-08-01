@@ -2,9 +2,10 @@
 // The ACHIEVEMENTS browser: a full-screen gallery of every badge, grouped by
 // category, each row showing its icon, name, condition, and (for counter
 // ladders) live progress — earned badges framed in gold, locked ones dimmed.
-// Reached from the title menu's ACHIEVEMENTS row and from the in-run HUD star
-// (which appears only while new badges wait). Opening it acknowledges the
-// unseen queue, dimming the star. Follows the arsenal viewer's shape: a
+// Reached from the title menu's ACHIEVEMENTS row, and mid-run from the
+// ACHIEVEMENTS bind (Y, World of Warcraft's own key) or a tap on the unlock
+// toast — the run freezes behind it (see use-achievements-shelf.ts). Opening
+// it acknowledges the unseen queue. Follows the arsenal viewer's shape: a
 // scrollable list, ESC/BACK out, pointer or arrow keys to walk rows.
 
 import { useEffect, useMemo, useState } from "react";
@@ -66,10 +67,18 @@ type Row =
 export function AchievementsScreen({
   font,
   sprites,
+  closeKey,
   onClose,
 }: {
   font: PixelFont;
   sprites: Sprites;
+  /** The physical code of the ACHIEVEMENTS bind (Y by default), so the key
+   * that opened the shelf toggles it shut again. Passed IN rather than read
+   * from settings here: both callers hold the settings already, and reaching
+   * for the startup path's settings module from inside this LAZY chunk was
+   * measured to re-cut the bundle (two more preloaded chunks in the entry
+   * HTML, for no delivered bytes). Omit for no key but ESC. */
+  closeKey?: string;
   onClose: () => void;
 }) {
   // Opening the shelf IS the acknowledgement — the HUD star dims. Snapshot
@@ -216,11 +225,11 @@ export function AchievementsScreen({
         setOpenBadge(cursor);
       } else if (
         event.key === "Escape" ||
-        event.key === "y" ||
-        event.key === "Y"
+        (closeKey !== undefined && event.code === closeKey)
       ) {
-        // ESC backs out; Y toggles the shelf shut (the WoW binding that
-        // opened it mid-run).
+        // ESC backs out; so does the ACHIEVEMENTS bind itself (Y by default) —
+        // the key that opened the shelf toggles it shut again, and it follows
+        // the player's own binding rather than a hard-coded Y.
         event.preventDefault();
         playUiSound(synth, "back");
         onClose();
@@ -228,7 +237,7 @@ export function AchievementsScreen({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [badges.length, cursor, openBadge, wide, onClose]);
+  }, [badges.length, closeKey, cursor, openBadge, wide, onClose]);
 
   let badgeIndex = -1;
   return (

@@ -42,6 +42,10 @@ describe("code lookups", () => {
     expect(actionForCode("KeyE", DEFAULT_KEYBINDINGS)).toBe("useAbility");
     expect(actionForCode("KeyI", DEFAULT_KEYBINDINGS)).toBe("inventory");
     expect(actionForCode("Space", DEFAULT_KEYBINDINGS)).toBe("jump");
+    // ACHIEVEMENTS ships on Y — World of Warcraft's own key for the pane, so
+    // the trophy shelf is where those fingers already reach.
+    expect(DEFAULT_KEYBINDINGS.achievements).toBe("KeyY");
+    expect(actionForCode("KeyY", DEFAULT_KEYBINDINGS)).toBe("achievements");
   });
 
   it("returns null for unbound or steering codes", () => {

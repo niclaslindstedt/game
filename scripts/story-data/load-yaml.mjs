@@ -26,8 +26,11 @@
 //     every difficulty except the weapon on the wall, so it is authored ONCE
 //     with `label:` handles on the parts that differ; each variant patches those
 //     labels and is emitted as `<id>_<difficulty>`, which is exactly what
-//     `cutsceneVariant` resolves at run creation. Labels are authoring handles —
-//     they are stripped here and never reach the game.
+//     `cutsceneVariant` resolves at run creation. A BEAT's label is an authoring
+//     handle only — stripped here, never reaching the game. **A PROP's label is
+//     also its `id`**, and so it does travel: a `prop` beat takes a piece off
+//     the stage by that name (the wall weapon, the moment the hero has it), and
+//     a thing addressed twice under two spellings is a thing that drifts.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -43,11 +46,15 @@ const BEAT_KEYS = [
   "text",
   "actor",
   "to",
+  "at",
   "by",
   "speed",
   "sprite",
   "faceLeft",
   "amp",
+  "lift",
+  "prop",
+  "hidden",
 ];
 
 /**
@@ -117,6 +124,8 @@ function sceneDef(doc, id) {
       props: (stage.props ?? []).map((prop) => ({
         kind: prop.sprite,
         pos: prop.at,
+        // A labelled prop keeps its label as the id beats address it by.
+        ...(prop.label === undefined ? {} : { id: prop.label }),
         ...pick(prop, ["parallax", "wrap"]),
       })),
     },

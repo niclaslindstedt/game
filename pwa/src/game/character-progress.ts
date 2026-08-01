@@ -66,8 +66,10 @@ export function clearedLevelsFor(
 
 /**
  * Has this character already witnessed `levelId`'s opening (prelude cutscene +
- * intro monologue) on `difficulty`? True means a replay skips the story and
- * lands on the level-name card (see `skipStoryOpening`).
+ * intro monologue) on `difficulty`? Consulted only for the HUB — the one
+ * venue that never "completes": every real mission replays its opening until
+ * the level is CLEARED on the difficulty (`hasClearedLevel`), and skips to
+ * the level-name card after (see `skipStoryOpening` and run-setup.ts).
  */
 export function hasSeenOpening(
   character: Character,

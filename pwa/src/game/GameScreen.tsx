@@ -19,7 +19,7 @@
 // (PlayingHud, docks, SceneOverlays, EndSplash) render from the HUD snapshot.
 
 import { fieldLive, localHero, localScreen } from "./local-seat.ts";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import {
@@ -40,6 +40,7 @@ import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { loadGameAssets, spriteCursor, type GameAssets } from "./assets.ts";
 import { recordRunStarted } from "./achievements.ts";
+import { AchievementsScreen } from "./achievements-shelf.ts";
 import { AchievementToast } from "./AchievementToast.tsx";
 import { synth } from "./audio.ts";
 import { AreaCaption } from "./AreaCaption.tsx";
@@ -139,6 +140,7 @@ import {
 } from "./game-screen/run-progress.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
 import { RunVaultScreen } from "./VaultScreen.tsx";
+import { groundedDoorThought } from "./game-screen/travel-doors.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { ConnectingScreen } from "./game-screen/ConnectingScreen.tsx";
@@ -153,6 +155,7 @@ import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays, type CharTab } from "./game-screen/SceneOverlays.tsx";
 import { DemoChrome, ScreenChrome } from "./game-screen/ScreenChrome.tsx";
 import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
+import { useAchievementsShelf } from "./game-screen/use-achievements-shelf.ts";
 
 import { runCommand, runCommandOk } from "./run-commands.ts";
 
@@ -432,6 +435,21 @@ export function GameScreen({
   // Achievement unlocks: batched unlocks queue and toast ONE at a time (see
   // use-achievement-toasts.ts).
   const { achievementToast, celebrateAchievements } = useAchievementToasts();
+  // …and the shelf those badges live on, raised over the run by the
+  // ACHIEVEMENTS bind or a tap on the toast — it pauses the run on the way up
+  // (see use-achievements-shelf.ts). Destructured because every member but
+  // `open` is stable, which is what lets the run effect list them.
+  const {
+    open: achievementsOpen,
+    openRef: achievementsOpenRef,
+    bind: bindAchievements,
+    openShelf: openAchievements,
+    toggle: toggleAchievements,
+    close: closeAchievements,
+  } = useAchievementsShelf();
+  // The live toast element, so a tap over the (inert) banner can open that
+  // shelf instead of jumping — the pickup card's arrangement exactly.
+  const achievementToastElRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -734,6 +752,13 @@ export function GameScreen({
       bumpUi();
     };
 
+    // Hand this run's pause pair to the ACHIEVEMENTS shelf, so raising it from
+    // a key, a tap or its own BACK button all freeze and thaw the same way.
+    // Never in the DEMO: pausing there raises the exit confirm, which owns the
+    // frozen screen from the top of the stack — there is no shelf to be had
+    // under it, and the attract loop is nobody's trophy run anyway.
+    bindAchievements(demo ? null : { state, pause, resume: resumeRun });
+
     const controls = createControls({
       canvas,
       state,
@@ -742,6 +767,10 @@ export function GameScreen({
       botView,
       pickupCardElRef,
       pickupCardTapRef,
+      achievementToastElRef,
+      openAchievements,
+      toggleAchievements,
+      achievementsOpenRef,
       userPausedRef,
       dialogueRevealRef,
       introRevealRef,
@@ -959,8 +988,20 @@ export function GameScreen({
           // A joined client may look at a door but not swap the level — the
           // session is the host's, so the picker mounts read-only there
           // (TravelPanel's canTravel) and the tap itself stays enabled.
-          openTravelDoor: (doorId) =>
-            setTravelDoor({ doorId, character: characterRef.current }),
+          tapTravelDoor: (doorId) => {
+            const character = characterRef.current;
+            // A DOOR WITH NOWHERE TO GO SAYS SO, AND NAMES NOTHING (see
+            // travel-doors.ts): before GOODCO HQ falls the ship is one part
+            // short, so the hero's own line plays instead of a picker whose
+            // greyed rows would spoil two voyages. Sent as a run command
+            // because the run may be simulating elsewhere.
+            if (groundedDoorThought(state, character, difficulty, doorId)) {
+              runCommand(state, "tapTravelDoor", doorId);
+              return;
+            }
+            playUiSound(synth, "confirm");
+            setTravelDoor({ doorId, character });
+          },
           openWorkbench: () => setWorkbenchOpen(true),
         });
         // The fill level BEFORE this step, so a kill that starts a fresh streak
@@ -1164,6 +1205,9 @@ export function GameScreen({
       powerupAura.dispose();
       cardQueue.dispose();
       demoDirector.dispose();
+      // The run this shelf was pausing is gone — drop it rather than leave it
+      // holding a stale state's pause pair.
+      bindAchievements(null);
     };
   }, [
     assets,
@@ -1178,6 +1222,10 @@ export function GameScreen({
     demo,
     showFps,
     // The rest are STABLE (refs, memoized bundles, setState functions).
+    achievementsOpenRef,
+    bindAchievements,
+    openAchievements,
+    toggleAchievements,
     autopilot.sessionRef,
     autopilot.syncView,
     celebrateAchievements,
@@ -1712,14 +1760,32 @@ export function GameScreen({
       )}
 
       {/* The achievement unlock banner — any phase: a badge earned on the
-          winning blow still gets its moment over the victory splash. */}
+          winning blow still gets its moment over the victory splash. A tap on
+          it opens the shelf below (routed through the canvas, see
+          controls.ts — the banner never takes the press itself). */}
       {achievementToast && (
         <AchievementToast
           key={`toast-${achievementToast.id}`}
           font={font}
           sprites={assets.sprites}
           toast={achievementToast}
+          toastRef={achievementToastElRef}
         />
+      )}
+
+      {/* The ACHIEVEMENTS shelf over the run: the title menu's own browser,
+          raised by the ACHIEVEMENTS bind (Y) or a tap on the toast, with the
+          run frozen behind it. Closing thaws it again (unless the player was
+          already on the pause menu). */}
+      {achievementsOpen && (
+        <Suspense fallback={null}>
+          <AchievementsScreen
+            font={font}
+            sprites={assets.sprites}
+            closeKey={getSettings().keybindings.achievements}
+            onClose={closeAchievements}
+          />
+        </Suspense>
       )}
 
       {hud && hud.phase === "victory" && (

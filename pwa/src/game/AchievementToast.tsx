@@ -8,8 +8,13 @@
 // GameScreen queues batched unlocks and keys the mount by `id` so each badge
 // replays the pop, then clears it after ACHIEVEMENT_TOAST_TTL_MS (kept in
 // sync with the CSS animation length in styles.css).
+//
+// TAPPING the badge opens the ACHIEVEMENTS shelf over the (now paused) run —
+// but not by taking the press itself: the banner is inert in every state, and
+// the canvas routes a tap landing over `toastRef` (see controls.ts), exactly
+// as it does for the pickup card that shares this strip.
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, Ref } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -54,14 +59,25 @@ export function AchievementToast({
   font,
   sprites,
   toast,
+  toastRef,
 }: {
   font: PixelFont;
   sprites: Sprites;
   toast: AchievementToastData;
+  /** The banner element, handed to the run's control layer so a TAP over the
+   * badge opens the trophy shelf. The banner stays pointer-events:none (see
+   * styles.css — it parks in the thumb's dpad zone and must never swallow a
+   * steering press), so the canvas hit-tests this rect instead. */
+  toastRef?: Ref<HTMLDivElement>;
 }) {
   const icon = spriteDataUrl(sprites, toast.icon);
   return (
-    <div className="achievement-toast" role="status" aria-live="polite">
+    <div
+      ref={toastRef}
+      className="achievement-toast"
+      role="status"
+      aria-live="polite"
+    >
       <span className="achievement-toast-sheen" aria-hidden="true" />
       <span className="achievement-toast-sparkles" aria-hidden="true">
         {SPARKLES.map((s, i) => (

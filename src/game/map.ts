@@ -5,7 +5,10 @@
 // fog lifts along his actual path — Warcraft-style, and what has been uncovered
 // stays uncovered for the rest of the run (no re-fogging). The main-view fog
 // then draws everything uncovered fully clear and stipples only the frontier
-// band between clear and never-seen (MAP.fogBand, in the renderer).
+// band between clear and never-seen (MAP.fogBand, in the renderer), and hides
+// any mob standing in it. Whether a body is out of that band — the question
+// every automatic target pick asks — is `clearOfFog` in the sibling fog.ts,
+// which is a separate file for a REACHABILITY reason: see its header.
 // `revealRect` (lift fog from a world rect) remains available for a
 // caller that wants the whole camera view instead. Memorable events pin
 // `state.mapMarkers` (story finds,

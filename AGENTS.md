@@ -317,6 +317,18 @@ the seat the session admitted the client into — never from a field on the fram
 caches it; a wall that appears without the bump is a wall it routes straight
 through.
 
+**NOTHING IN THE FOG IS A TARGET — every automatic pick goes through
+`clearOfFog(state, pos)`.** The main view does not draw a body standing in the
+fog or in its frontier band, so a pass that picks its own mark without asking
+(a new power, a turret, an ally, a second weapon) has the character firing into
+blackness on the player's behalf. Reach is NOT the fog's business: weapons keep
+their range, they just cannot reach past what has been walked — which is why the
+autopilot measures a stand-off with `firingReach` rather than `weaponRangeFor`.
+It lives in `src/game/fog.ts` and NOT in map.ts, because `src/menu.ts` re-exports
+map.ts's grid arithmetic — so that module is inside the 170 KB budget and a
+run-only read added there is spent from the startup path's allowance.
+→ `docs/rendering.md`
+
 **A RANGED WEAPON EATS AMMUNITION AND HAS NO `durability`; MELEE AND MAGIC ARE
 THE EXACT OPPOSITE.** It is one trade, not two independent fields — a gun never
 breaks, it runs dry — so a ranged def authors `ammo:` and no `durability:`, and

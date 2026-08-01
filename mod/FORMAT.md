@@ -1050,6 +1050,33 @@ a tap cuts them short. Instant beats settle and roll straight into the next one.
 | `fade`    | `to` (0–1), `ms`              | Fade the frame toward black (`1`) or clear (`0`).                         |
 | `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.   |
 | `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                |
+| `jump`    | `actor`, `lift`, `ms`         | Ease the actor `lift` px off the ground (`0` puts it back down).          |
+| `hold`    | `actor`, `sprite?`, `at?`     | Put a sprite in the actor's hands at `at`; no `sprite` empties them.      |
+| `prop`    | `prop`, `hidden`              | Take a labelled stage prop off the stage, or put it back.                 |
+
+**A leap is TWO jumps, and the grab happens between them.** A rise decelerates
+into its apex and a fall accelerates out of it — which half a `jump` is, is
+simply whether its `lift` is above or below the actor's current one, so no
+gravity is authored. Pair them and put the instant beats in the middle, and the
+thing being reached for changes hands at the top of the arc, in one frame:
+
+```yaml
+- { kind: jump, actor: hero, lift: 44, ms: 420 } # up
+- { kind: prop, prop: arm, hidden: true } # off the wall…
+- { kind: hold, actor: hero, sprite: icon_axe, at: { x: 9, y: 2 } } # …into his hand
+- { kind: jump, actor: hero, lift: 0, ms: 300 } # down
+```
+
+A `lift` is HEIGHT, not depth: it raises the drawing without touching the mark
+the actor is sorted by, so a jump never sends the jumper behind the furniture it
+leapt from. An airborne actor is drawn as `<sprite>_jump` if the family authors
+one, and holds its standing frame if it doesn't. A held sprite is single art
+like a prop's (a weapon icon), offset from the actor sprite's own top-left, and
+it mirrors when the actor turns around.
+
+**A prop a beat addresses needs a `label:`** — the same handle `variants:`
+patches by, which is also the `id` a `prop` beat names. A prop with no label is
+dressing nothing can touch.
 
 **A text line is a PARAGRAPH, not a row.** The box measures its own column on
 the device it is being read on and flows your line into it, so a phone folds

@@ -618,6 +618,67 @@ export function rawStat(
   return value * (1 + pct);
 }
 
+/**
+ * WHERE ONE ATTRIBUTE'S NUMBER CAME FROM, itemised — the same four sources
+ * `computeStatParts` sums, handed back separately so a screen can SAY them.
+ *
+ * The character sheet prints `effectiveStat`, and every other surface in the
+ * game prints one part of it: the level-up chooser shows `chosen` alone (the
+ * player's own picks), an item card shows the piece's slice of `gear`. A hero
+ * who has spent nothing and still reads 1 INTELLECT is not a bug — it is a
+ * carried trinket paying from the bag — but nothing on screen said so, which
+ * is the confusion this exists to end.
+ */
+export type StatBreakdown = {
+  /** Points the player spent in the level-up chooser (`Player.spentStats`). */
+  chosen: number;
+  /** The difficulty's pre-allocated head start (`startingStats`) — the part of
+   * `Player.stats` the player did not pick. */
+  headStart: number;
+  /** Automatic per-level growth (`LEVELING.autoGainsPerLevel`), zero while the
+   * AUTO LEVEL STATS flag is off. */
+  auto: number;
+  /** Flat `+N` from everything worn or carried: `+stat` affixes, a base's own
+   * `bonuses.stats`, set bonuses, and passive trinkets paying from the bag. */
+  gear: number;
+  /** Scaling `statPct` bonuses (uniques), as a fraction of the flat total. */
+  pct: number;
+  /** The flat total before diminishing returns (`chosen + headStart + auto +
+   * gear`) — what `rawStat` scales and equipment requirements gate against. */
+  raw: number;
+  /** What the sheet prints: the flat total run through `diminishStat` and then
+   * the percentage, rounded (`effectiveStat`). */
+  effective: number;
+};
+
+/**
+ * Itemise one attribute for a screen that has to explain itself. Pure
+ * bookkeeping over the same memoised parts `effectiveStat` reads, so the
+ * breakdown can never disagree with the number it explains.
+ */
+export function statBreakdown(
+  state: GameState,
+  player: Player,
+  stat: StatName,
+): StatBreakdown {
+  const { value, pct } = statParts(state, player, stat);
+  const chosen = player.spentStats[stat] ?? 0;
+  const auto = baseStatBonus(player.level, stat);
+  // `player.stats` carries the chosen points AND the difficulty head start
+  // folded together (create.ts); the chooser's own tally separates them.
+  const headStart = Math.max(0, (player.stats[stat] ?? 0) - chosen);
+  return {
+    chosen,
+    headStart,
+    auto,
+    // Everything the flat total holds that the three tallies above don't.
+    gear: value - (player.stats[stat] ?? 0) - auto,
+    pct,
+    raw: value,
+    effective: effectiveStat(state, player, stat),
+  };
+}
+
 /** Max hp from the base pool + the STAMINA stat + gear bonuses and affixes.
  * STAMINA now feeds BOTH the sprint pool (see `computeMaxStamina`) and the
  * health bar — a hardy sprinter is a sturdier hero. */

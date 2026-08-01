@@ -66,7 +66,9 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   clears; no victory, outro or bank can fire, and a player (or a joining
   party) can stand in it indefinitely. No horde, no boss, no locks but the
   garage door itself — an **approach door** (`doors[].opens: approach`) that
-  rolls up for anybody who walks or drives near. The **merchant is PARKED**
+  rolls up for anybody who walks or drives near, one slat block at a time
+  from the bottom, filling exactly the doorway it hangs in and none of the
+  wall either side of it. The **merchant is PARKED**
   on the drive (`merchant.parked` — revealed from map start, scene-free,
   never wanders), buying loot and repairing gear. **RUTH — Ada's mother —
   waits in the bay** (`content/quest-givers.yaml`): she has a key and always
@@ -80,7 +82,11 @@ is emitted — the fog-of-war minimap is the only record of where you have been.
   the engine starts, lights and idle rumble on — then DRIVE: W throttles
   along the nose, S brakes then reverses, A/D steer the rolling car;
   crossing the open garage door's threshold commits the trip → GOODCO HQ),
-  the ROCKET on the lawn (→ the moon, Mars), and the RIFT SEAM — hidden and
+  the ROCKET on the lawn (→ the moon, Mars — but it opens NO picker while
+  every road is still shut: the ship is one part short until GOODCO HQ falls,
+  and the tap plays the hero's own read on it instead
+  (`travelDoors[].unready`), so the two voyages stay unnamed until one of them
+  is earned), and the RIFT SEAM — hidden and
   **SEALED** until THE FOUNDER's RIFT CREATOR keepsake comes home from the
   rift, then humming on the bay wall beside the car (→ the rift, BOOT HILL):
   the Diablo-style town loop, earned at the campaign's far end. **LOAD lands
@@ -898,21 +904,26 @@ restart the level by accident.
 The level cap is **99** (`LEVELING.maxLevel`): at the cap XP stops banking
 levels and the endgame becomes the hunt for cap-level gear.
 
-Because we die and replay a lot, a level's **story is shown only once per
-difficulty**. The first time a character reaches combat on a level (on a given
-difficulty), its opening — the prelude cutscene and the hero's intro monologue —
-and every pinned inner monologue read that run (the GOODCO scientist, the Mars
-rover, and the rest) are banked onto the character; every later replay on that
-difficulty skips the story and pre-marks those thoughts as seen, landing the
-armed hero on the level-name title card — one tap (or one beat) from the fight
-(`skipStoryOpening`/`markThoughtsSeen`, driven by the per-character `storySeen`
-ledger in `pwa/src/game/characters.ts`). The card is kept because it is
-orientation rather than story: a hub door into a familiar venue still announces
-where the run starts. A run that never put the story on stage — a developer
-warp, a `?scenario=` staging, a muted run — banks only the thoughts, never the
-opening, so the level's real first visit still tells it. A monologue not yet
-reached still plays its one time, and a fresh character — or a harder rung of
-the ladder — sees the whole story again.
+A level's **opening replays until the level is finished**: a mission's opening
+— the prelude cutscene and the hero's intro monologue — plays on every fresh
+entry until the level is CLEARED on that difficulty (a run that died or was
+abandoned partway still owes its story; the mid-fight RETRY is unaffected,
+since it adopts the combat-start checkpoint and never rebuilds the opening).
+Once cleared, a replay skips the story and lands the armed hero on the
+level-name title card — one tap (or one beat) from the fight
+(`skipStoryOpening`, driven by the per-character `clears` ledger in
+`pwa/src/game/characters.ts`). The card is kept because it is orientation
+rather than story: a hub door into a familiar venue still announces where the
+run starts. The HUB is the one exception to the clear rule — home never
+"completes", so its opening skips once witnessed (the `storySeen` ledger)
+instead of replaying on every LOAD. Pinned inner monologues (the GOODCO
+scientist, the Mars rover, and the rest) stay read-once per difficulty:
+`markThoughtsSeen` pre-marks every thought already read, so a replayed opening
+never re-crawls text the player has seen. A run that never put the story on
+stage — a developer warp, a `?scenario=` staging, a muted run — banks only the
+thoughts, never the hub's opening. A monologue not yet reached still plays its
+one time, and a fresh character — or a harder rung of the ladder — sees the
+whole story again.
 
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears

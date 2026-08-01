@@ -31,6 +31,7 @@ import {
   equipBlaster,
   idle,
   makeEnemy,
+  revealAll,
   run,
   startGame,
   stopWaves,
@@ -50,6 +51,9 @@ function makeVest(id: number, tier: Tier = "regular"): Equipment {
 function killTheBoss(state: GameState): void {
   equipBlaster(state); // pick the boss off at range, past the loot scatter
   stopWaves(state);
+  // …on ground the hero has walked: the auto-attack refuses anything still in
+  // the fog, and the blaster outranges the reveal disc (`revealAll`).
+  revealAll(state);
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
   state.enemies = [boss];
   boss.hp = 1;

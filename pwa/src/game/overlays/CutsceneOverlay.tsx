@@ -97,22 +97,37 @@ function drawStage(
     flip: boolean;
     wrap: boolean;
     jitter: number;
+    /** World px the drawing is raised by — HEIGHT, which never re-sorts the
+     * queue (an airborne hero stays in front of the couch he leapt from). */
+    lift: number;
+    /** Carried sprite, offset from this drawing's own top-left. */
+    hold?: { sprite: string; dx: number; dy: number };
+    /** Last-resort art: the actor's frame 0, for a family that authors no
+     * frame for the pose being asked for (only the hero has a jump). */
+    alt?: string;
   };
-  const queue: Placed[] = def.stage.props.map((prop) => {
-    const depth = prop.parallax ?? 1;
-    return {
-      sprite: prop.kind,
-      x: prop.pos.x + shift.x * depth,
-      y: prop.pos.y + shift.y * depth,
-      flip: false,
-      wrap: prop.wrap ?? false,
-      jitter: 0,
-    };
-  });
+  const queue: Placed[] = def.stage.props
+    // A `prop` beat can take a piece off the stage mid-scene — the wall
+    // weapon the moment the hero has it in his hand.
+    .filter((prop) => !(prop.id && cutscene.hiddenProps.includes(prop.id)))
+    .map((prop) => {
+      const depth = prop.parallax ?? 1;
+      return {
+        sprite: prop.kind,
+        x: prop.pos.x + shift.x * depth,
+        y: prop.pos.y + shift.y * depth,
+        flip: false,
+        wrap: prop.wrap ?? false,
+        jitter: 0,
+        lift: 0,
+      };
+    });
   for (const actor of cutscene.actors) {
     if (actor.hidden) continue;
-    // Walking actors alternate `<sprite>_0/_1`; idle holds frame 0.
-    const frame = actor.moving ? Math.floor(timeMs / 220) % 2 : 0;
+    // Off the ground the actor holds its airborne frame; walking alternates
+    // `<sprite>_0/_1`; idle holds frame 0.
+    const frame =
+      actor.lift > 0 ? "jump" : actor.moving ? Math.floor(timeMs / 220) % 2 : 0;
     queue.push({
       sprite: `${actor.sprite}_${frame}`,
       x: actor.pos.x,
@@ -120,6 +135,17 @@ function drawStage(
       flip: actor.faceLeft,
       wrap: false,
       jitter: actor.shake,
+      lift: actor.lift,
+      alt: `${actor.sprite}_0`,
+      ...(actor.holding
+        ? {
+            hold: {
+              sprite: actor.holding.sprite,
+              dx: actor.holding.at.x,
+              dy: actor.holding.at.y,
+            },
+          }
+        : {}),
     });
   }
   queue.sort((a, b) => a.y - b.y);
@@ -127,7 +153,8 @@ function drawStage(
   for (const item of queue) {
     const sprite =
       spriteByName(assets.sprites, item.sprite) ??
-      spriteByName(assets.sprites, `${item.sprite}_0`);
+      spriteByName(assets.sprites, `${item.sprite}_0`) ??
+      (item.alt ? spriteByName(assets.sprites, item.alt) : undefined);
     if (!sprite) continue;
     let cx = item.x;
     if (item.wrap) {
@@ -146,16 +173,27 @@ function drawStage(
       ? Math.round(Math.cos(cutscene.timeMs / 23) * item.jitter * 0.6)
       : 0;
     const x = Math.round(cx - sprite.width / 2) + jx;
-    const y = Math.round(item.y - sprite.height) + jy;
+    const y = Math.round(item.y - sprite.height - item.lift) + jy;
+    // What this drawing carries, offset from its own top-left (the paper
+    // doll's own anchoring, so the cutscene hero grips his weapon where the
+    // field hero does). A held sprite is drawn INSIDE the body's box, which
+    // is what mirrors it onto the other hand when the actor turns around.
+    const held = item.hold
+      ? spriteByName(assets.sprites, item.hold.sprite)
+      : undefined;
+    const draw = () => {
+      ctx.drawImage(sprite, 0, 0);
+      if (held && item.hold) ctx.drawImage(held, item.hold.dx, item.hold.dy);
+    };
+    ctx.save();
     if (item.flip) {
-      ctx.save();
       ctx.translate(x + sprite.width, y);
       ctx.scale(-1, 1);
-      ctx.drawImage(sprite, 0, 0);
-      ctx.restore();
     } else {
-      ctx.drawImage(sprite, x, y);
+      ctx.translate(x, y);
     }
+    draw();
+    ctx.restore();
   }
 
   if (cutscene.fade > 0) {

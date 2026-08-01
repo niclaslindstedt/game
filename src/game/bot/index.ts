@@ -58,6 +58,7 @@ import { trackEngagement, unstuckInput } from "./macro.ts";
 import { holdOff, limitTurnRate, navSteer, steer } from "./nav.ts";
 import {
   contactEtaSec,
+  firingReach,
   nearestEnemy,
   THREAT_RADIUS,
   threatCountWithin,
@@ -85,7 +86,6 @@ import {
   bestMedkitTier,
   committedLane,
   medkitTierIndex,
-  weaponRangeFor,
 } from "../items/index.ts";
 import type {
   GameInput,
@@ -400,7 +400,7 @@ function strategyInput(
       // lets it cut the chord; the orbit is for a boss/set-piece the hero is
       // committed to DPSing (pushBoss / the survive boss-lock).
       think(bot, "KITE");
-      const reach = weaponRangeFor(state, hero, hero.equipment.weapon);
+      const reach = firingReach(state, hero, foe.pos);
       return steer(state, hero, holdOff(state, hero, foe.pos, reach * 0.7));
     }
     case "boss":

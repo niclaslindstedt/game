@@ -1498,7 +1498,8 @@
         {
           "id": "rocket",
           "name": "THE ROCKET",
-          "to": ["moon", "mars"]
+          "to": ["moon", "mars"],
+          "unready": "garage_ship_unfinished"
         },
         {
           "id": "rift_seam",
