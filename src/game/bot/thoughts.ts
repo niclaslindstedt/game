@@ -113,6 +113,11 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   //    preempts, because it is not a destination the bot chose — it is the one
   //    that outranks the errand it was in the middle of.
   REGROUP: { family: "regroup", rank: 25, tier: "state" },
+  // ── Covering a downed (or bleeding-out) teammate: standing over the body /
+  //    holding beside them and pulling aggro (party-play.ts allyCoverTarget).
+  //    Ranked with KEEP EXIT — the watcher should see WHY the hero crosses the
+  //    map toward a spot with nothing on it.
+  "COVER ALLY": { family: "cover", rank: 45, tier: "state" },
   // ── The GPS nudge: working toward an externally-pinned coordinate.
   "TO MARK": { family: "mark", rank: 25, tier: "state" },
   // ── The anti-loiter hunt: idled too long without a fight, marching on the
@@ -125,6 +130,10 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   "SEEK CHEST": { family: "chest", rank: 20, tier: "state" },
   "CRACK CHEST": { family: "chest", rank: 20, tier: "state" },
   "TO SHOP": { family: "shop", rank: 20, tier: "state" },
+  // The running errands (errands.ts): one family, so walking to a quest's
+  // token and hunting its breed read as one sustained intent.
+  "ON ERRAND": { family: "errand", rank: 20, tier: "state" },
+  "FETCH TOKEN": { family: "errand", rank: 20, tier: "state" },
   "FOLLOW ARROW": { family: "arrow", rank: 20, tier: "state" },
   "EXPLORE FOG": { family: "fog", rank: 20, tier: "state" },
   // ── Standing easy.

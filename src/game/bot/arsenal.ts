@@ -9,6 +9,7 @@ import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { isSlotActive, magnetRadius } from "../abilities.ts";
 import { abilityValue } from "./economy.ts";
+import { handledByTeammate } from "./party-play.ts";
 import {
   SURROUND_RADIUS,
   THREAT_RADIUS,
@@ -320,11 +321,22 @@ export function bestAimTarget(
   }
   if (foes.length === 0) return undefined;
   foes.sort((a, b) => a.d - b.d);
-  const nearest = foes[0]!;
-  // A body about to bite is the target, full stop.
-  if (nearest.d < AIM_PANIC_RANGE) {
-    return { x: nearest.enemy.pos.x, y: nearest.enemy.pos.y };
+  // A body about to bite is the target, full stop — a teammate fighting it
+  // makes no difference to the teeth at this hero's own throat.
+  if (foes[0]!.d < AIM_PANIC_RANGE) {
+    return { x: foes[0]!.enemy.pos.x, y: foes[0]!.enemy.pos.y };
   }
+  // SPLIT THE PACKS (party-play.ts): a candidate a NEARER teammate is already
+  // fighting is being handled — prefer the rest of the field, so two bots
+  // don't queue on one minion while six others chew on somebody. Only when an
+  // alternative exists: a lone bot (or a lone target) is never left refusing
+  // the only enemy. Strict no-op solo (the party gate short-circuits).
+  let pool = foes;
+  if (state.players.length > 1) {
+    const open = foes.filter((c) => !handledByTeammate(state, hero, c.enemy));
+    if (open.length > 0) pool = open;
+  }
+  const nearest = pool[0]!;
   const def = weaponDef(equipped.defId);
   const spec = def.projectile;
   // The weapon's damage FOOTPRINT around its aim: a melee sweep's cone, a
@@ -347,21 +359,21 @@ export function bestAimTarget(
     // that blew up to tens of thousands of dot products per tick. Score only
     // the foes the weapon could actually bill: for melee that's what INT lets
     // the sweep cleave (maxMeleeTargets), everything at a hard ceiling of
-    // AIM_CLUSTER_CAP. `foes` is distance-sorted, so the trim is
+    // AIM_CLUSTER_CAP. `pool` is distance-sorted, so the trim is
     // deterministic — the densest reachable knot is always among the nearest.
     const consider = Math.min(
       AIM_CLUSTER_CAP,
       spec ? AIM_CLUSTER_CAP : Math.max(1, cap),
     );
-    if (foes.length > consider) foes.length = consider;
+    if (pool.length > consider) pool.length = consider;
     let best = nearest;
     let bestCovered = 0;
-    for (const c of foes) {
+    for (const c of pool) {
       if (c.d < 1) return { x: c.enemy.pos.x, y: c.enemy.pos.y }; // on top of him
       const ax = c.ux;
       const ay = c.uy;
       let covered = 0;
-      for (const o of foes) {
+      for (const o of pool) {
         if (o.ux * ax + o.uy * ay >= cosHalf) covered++;
       }
       covered = Math.min(covered, cap);
@@ -377,7 +389,7 @@ export function bestAimTarget(
   // Single-target (or no cluster to catch): FINISH the most wounded foe in
   // range — every body dropped is one less set of teeth — tie-broken nearest.
   let pick = nearest;
-  for (const c of foes) {
+  for (const c of pool) {
     if (
       c.enemy.hp < pick.enemy.hp ||
       (c.enemy.hp === pick.enemy.hp && c.d < pick.d)

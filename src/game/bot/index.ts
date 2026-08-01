@@ -55,6 +55,7 @@ import {
 } from "./dodges.ts";
 import { pushBoss, survive } from "./fight.ts";
 import { trackEngagement, unstuckInput } from "./macro.ts";
+import { applyPartySpacing } from "./party-play.ts";
 import { holdOff, limitTurnRate, navSteer, steer } from "./nav.ts";
 import {
   contactEtaSec,
@@ -220,6 +221,13 @@ function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
   // already committed. Null when nothing preempts — then the strategy decides.
   const preempt = preemptInput(bot, state, hero, tune);
   const decided = preempt ?? strategyInput(bot, state, hero, tune);
+  // PERSONAL SPACING (party-play.ts): a steering ADJUSTMENT away from a
+  // teammate standing inside the personal envelope, applied where the
+  // strategy's steering is finalized so it composes with the whole ladder —
+  // and never to a preempt (a dodge lands exactly where it aimed). Ahead of
+  // the turn limiter, so the limiter judges the heading the hero will
+  // actually walk. Strict no-op solo.
+  if (!preempt) applyPartySpacing(state, hero, decided);
   const player = hero;
   // TURN RATE LIMIT — no turning around more than twice a second (nav.ts
   // `limitTurnRate`). The autopilot re-decides every tick, so two branches that

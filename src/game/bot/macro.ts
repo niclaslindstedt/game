@@ -39,7 +39,8 @@ import {
   THREAT_RADIUS,
   threatCountWithin,
 } from "./perception.ts";
-import { partyLeash } from "./party-play.ts";
+import { allyCoverTarget, partyLeash } from "./party-play.ts";
+import { questObjectiveTarget } from "./errands.ts";
 import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
@@ -202,6 +203,14 @@ function macroPreemptible(
     return false;
   const mark = bot.waypoint;
   if (mark && mark.x === goal.x && mark.y === goal.y) return false;
+  // Covering a downed/bleeding teammate and a running errand's objective are
+  // committed DESTINATIONS like the chest walk below them: a lull's hunt
+  // re-pointing the route off either would abandon exactly the work the goal
+  // exists to finish.
+  const cover = allyCoverTarget(state, hero, tune);
+  if (cover && cover.x === goal.x && cover.y === goal.y) return false;
+  const quest = questObjectiveTarget(state, hero);
+  if (quest && quest.pos.x === goal.x && quest.pos.y === goal.y) return false;
   const c = bot.content;
   if (c?.target && c.target.x === goal.x && c.target.y === goal.y) return false;
   // A boss-ready arrow march is the boss push walked down the authored path —
@@ -268,11 +277,15 @@ function seekTarget(bot: Bot, state: GameState): Vec2 | null {
 
 /**
  * The macro destination the bot travels toward when it's free to move: the
- * latched ANTI-LOITER hunt first (idled past `seekFightAfterMs` without a
+ * urgent shop run and the party leash bracket the bot's OWN ladder
+ * ({@link ownMacroTarget}) — a pinned GPS nudge, then a downed/bleeding
+ * teammate to cover (`party-play.ts`), then the
+ * latched ANTI-LOITER hunt (idled past `seekFightAfterMs` without a
  * fight → march on the nearest enemy), else FARM the active spawner in this
  * patch (level up before advancing) while still under the boss-ready level,
  * else sweep to the nearest reachable un-engaged CONTENT — the map's huntable
- * ELITES first, then the chest caches — else DISCOVER NEW GROUND from the
+ * ELITES first, then the chest caches — else a RUNNING ERRAND's outstanding
+ * objective on this level (`errands.ts`), else DISCOVER NEW GROUND from the
  * hero's own side outward (directional fog coverage), else — with nothing left
  * to discover — the BOSS. This is the whole automatic-engagement order in one
  * place; the callers just route to whatever it returns.
@@ -302,17 +315,42 @@ export function macroTarget(
   // which clears the want, so the errand can't loop.
   const errand = wantsMerchantVisit(state, hero);
   if (errand && weaponStarved(state, hero)) return state.merchant.pos;
-  // DON'T LEAVE THE PARTY (multiplayer plan §7.4, and see `party-play.ts` for
-  // why this one rule is here a PR early). It outranks every errand below
-  // because it is not an errand: past `XP_SHARE.radius` the hero has stopped
-  // sharing in the party's kills, so a bot that keeps chasing its own cache out
-  // there is spending the run's payout on it. NULL in single player, which is
-  // what keeps every existing measurement unchanged.
-  const regroup = partyLeash(bot, state, hero);
+  // The bot's OWN plan is computed FIRST, because the leash reads it: a goal
+  // beyond a couple of share-radii is a LONG MARCH, and while one is on the
+  // leash ring tightens so the party travels — and walks through the boss
+  // door — together (see `party-play.ts`).
+  const own = ownMacroTarget(bot, state, hero, tune, errand);
+  // DON'T LEAVE THE PARTY (see `party-play.ts` for the full reasoning). It
+  // outranks every errand below because it is not an errand: past
+  // `XP_SHARE.radius` the hero has stopped sharing in the party's kills, so a
+  // bot that keeps chasing its own cache out there is spending the run's
+  // payout on it. NULL in single player, which is what keeps every existing
+  // measurement unchanged.
+  const regroup = partyLeash(bot, state, hero, own);
   if (regroup) return regroup;
+  return own;
+}
+
+/** The bot's OWN travel ladder — {@link macroTarget} minus the urgent shop run
+ * and the party leash, which bracket it. Split out so the leash can measure
+ * how far the bot's own plan would take it before deciding how tight to hold. */
+function ownMacroTarget(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  tune: BotTuning,
+  errand: boolean,
+): Vec2 {
   // A pinned GPS NUDGE outranks everything but the urgent shop run — the
   // caller pointed the bot at a coordinate, so he works his way there.
   if (bot.waypoint) return bot.waypoint;
+  // COVER THE ONE WHO IS DOWN (or bleeding out beside him) — see
+  // `party-play.ts` `allyCoverTarget`. Above every hunt and errand below,
+  // because a teammate's body is the one destination whose value decays by
+  // the second; below the reflexes and the emergency bails, which never reach
+  // this ladder at all. NULL solo and with everybody healthy.
+  const cover = allyCoverTarget(state, hero, tune);
+  if (cover) return cover;
   // The ANTI-LOITER hunt: gone too long without a fight, the bot marches on
   // the latched foe before any other errand — moving toward the enemy IS the
   // point (only the weapon-starved shop run above still outranks it).
@@ -331,6 +369,14 @@ export function macroTarget(
   const content = nearestContent(bot, state, hero, tune);
   if (content) return content;
   if (errand) return state.merchant.pos;
+  // THE RUNNING ERRANDS: an ACTIVE quest's outstanding objective on this level
+  // — a token to fetch, a breed to hunt, a spot to stand on — is a destination
+  // the player literally signed up for, so it beats the guidance arrow and the
+  // fog sweep below (generic travel) while every committed fight and cache
+  // above keeps its rank. Only errands already TAKEN: a giver is never a goal,
+  // and accepting is the player's decision (see `errands.ts`).
+  const quest = questObjectiveTarget(state, hero);
+  if (quest) return quest.pos;
   // THE GUIDANCE ARROW IS AN INSTRUCTION. On a path level the blinking amber
   // "go this way" arrow the player sees points at the next unwalked waypoint
   // of the authored intended path (path.ts; drawn by the app's
@@ -431,6 +477,11 @@ function macroThought(
   if (bot.regrouping) return "REGROUP";
   const mark = bot.waypoint;
   if (mark && mark.x === goal.x && mark.y === goal.y) return "TO MARK";
+  // Standing over a downed teammate (or holding beside a bleeding one) —
+  // named apart from every travel errand so the readout says WHY the hero is
+  // crossing the map toward a spot with no loot on it.
+  const cover = allyCoverTarget(state, hero, tune);
+  if (cover && cover.x === goal.x && cover.y === goal.y) return "COVER ALLY";
   const hunt = seekTarget(bot, state);
   if (hunt && hunt.x === goal.x && hunt.y === goal.y) return "SEEK FIGHT";
   if (
@@ -442,6 +493,11 @@ function macroThought(
   const content = bot.content?.target;
   if (content && content.x === goal.x && content.y === goal.y)
     return bot.content?.kind === "elite" ? "HUNT ELITE" : "SEEK CHEST";
+  // A running errand's own goal: fetching its token, hunting its breed,
+  // walking to its spot (errands.ts) — the label rides on the goal itself.
+  const quest = questObjectiveTarget(state, hero);
+  if (quest && quest.pos.x === goal.x && quest.pos.y === goal.y)
+    return quest.thought;
   const arrowWp = nextPathWaypoint(state);
   if (arrowWp && arrowWp.x === goal.x && arrowWp.y === goal.y)
     return "FOLLOW ARROW";
