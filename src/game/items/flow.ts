@@ -157,10 +157,10 @@ export function skipCutscene(state: GameState): void {
 }
 
 /**
- * Replay shortcut: bail the whole opening at once — the prelude cutscene AND
- * the hero's intro monologue — and drop straight into play with his weapon
- * drawn. The app calls this when the player has already witnessed this level's
- * opening on this difficulty (see the per-character story ledger in
+ * Replay shortcut: bail the STORY half of the opening — the prelude cutscene
+ * AND the hero's intro monologue — arm the hero, and land on the level-name
+ * `title` card. The app calls this when the player has already witnessed this
+ * level's opening on this difficulty (see the per-character story ledger in
  * characters.ts): a die-and-retry loop shouldn't sit through the cutscene, the
  * briefing, or the scripted "draw your weapon" strike every single time.
  * Arming here is what lets a level that opens holstered (GOODCO HQ's
@@ -168,10 +168,17 @@ export function skipCutscene(state: GameState): void {
  * `stepOpeningStrike` never fires to arm him, and he would stand defenceless
  * otherwise. A harmless no-op on a run already in play (a resumed or
  * checkpointed state).
+ *
+ * THE TITLE CARD IS KEPT ON PURPOSE — it is orientation, not story. Landing
+ * straight in play meant a hub's travel door (driving the car out of the
+ * garage) dropped the player into a firefight with no announcement of where
+ * they had arrived; the card names the level for one beat (or one tap) and
+ * costs a replay nothing. Callers that genuinely want PLAY (a `?scenario=`
+ * staging, a warp) follow with `dismissIntro`.
  */
 export function skipStoryOpening(state: GameState): void {
   if (state.phase === "cutscene") skipCutscene(state);
-  dismissIntro(state);
+  if (state.phase === "intro") state.phase = "title";
   state.players[0].disarmed = false;
 }
 

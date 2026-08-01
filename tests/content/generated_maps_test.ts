@@ -355,6 +355,7 @@ describe("generated levels", () => {
     // whose blueprint asks for patrols.
     const state = createGame(3, "goodco_hq", "medium");
     skipStoryOpening(state);
+    dismissIntro(state);
     const walker = state.enemies.find((e) => e.defId === "night_manager");
     expect(
       walker,

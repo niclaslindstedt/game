@@ -120,16 +120,17 @@ describe("a run built from its parameters", () => {
     expect(state.thoughtsSeen).toContain("moon_arrival");
     expect(state.dialogueMuted).toBe(true);
     // `story` skips the prelude, the monologue and the opening strike, and
-    // leaves the hero armed rather than disarmed for a beat he has read before.
-    expect(state.phase).toBe("playing");
+    // leaves the hero armed rather than disarmed for a beat he has read before
+    // — landing on the level-name card, which shows even on a replay.
+    expect(state.phase).toBe("title");
     expect(state.players[0].disarmed).toBe(false);
   });
 
   it("skips exactly as much of the opening as it was told to", () => {
     // The three states are three different landings, and conflating them is
     // how a developer warp-in ends up sitting on a title card nobody asked
-    // for. `none` leaves the run on its prelude; `story` and `all` both reach
-    // play, by different routes.
+    // for. `none` leaves the run on its prelude; `story` lands on the
+    // level-name card; `all` drops straight into play.
     const none = createRunFromParams({ ...RUN, openingSkip: "none" });
     expect(none.phase).toBe("cutscene");
     const all = createRunFromParams({ ...RUN, openingSkip: "all" });

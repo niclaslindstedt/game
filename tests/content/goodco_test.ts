@@ -24,6 +24,7 @@ import {
   markThoughtsSeen,
   OBSTACLES,
   PLAYER,
+  dismissIntro,
   skipStoryOpening,
   step,
   STORY_ITEM_DEFS,
@@ -253,20 +254,24 @@ describe("GOODCO HQ level def", () => {
     // 5 s default — CI runners cross it while the assertion itself is sound.
   }, 20_000);
 
-  it("replays drop straight into an armed fight (skipStoryOpening)", () => {
-    // A die-and-retry loop shouldn't sit through the prelude, the briefing, or
-    // the scripted opening strike every time — one call bails the lot and arms
-    // the holstered hero (who would otherwise wait on the strike that never
-    // comes, since its thought is marked seen).
+  it("replays drop to an armed title card (skipStoryOpening)", () => {
+    // A die-and-retry loop shouldn't sit through the briefing or the scripted
+    // opening strike every time — one call bails the story and arms the
+    // holstered hero (who would otherwise wait on the strike that never
+    // comes, since its thought is marked seen). The level-name card is KEPT:
+    // it is orientation, not story, so even an arrival through the garage's
+    // car door announces where the run starts.
     const state = createGame(SEED, "goodco_hq");
     // The living-room prelude moved HOME (the campaign opens in the garage
     // now), so GOODCO itself opens on the intro monologue.
     expect(state.phase).toBe("intro");
     expect(state.players[0].disarmed).toBe(true);
     skipStoryOpening(state);
-    expect(state.phase).toBe("playing");
+    expect(state.phase).toBe("title");
     expect(state.cutscene).toBeNull();
     expect(state.players[0].disarmed).toBe(false);
+    dismissIntro(state);
+    expect(state.phase).toBe("playing");
   });
 
   it("silences an already-read inner monologue on replay (markThoughtsSeen)", () => {
@@ -274,6 +279,7 @@ describe("GOODCO HQ level def", () => {
     // instant an intern is on screen; pre-marking it seen keeps a replay quiet.
     const seen = createGame(SEED, "goodco_hq");
     skipStoryOpening(seen);
+    dismissIntro(seen);
     markThoughtsSeen(seen, [
       "goodco_staff",
       "goodco_armed",
