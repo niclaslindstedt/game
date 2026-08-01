@@ -71,11 +71,7 @@ import { setHiddenLandmarks } from "./render/hidden-landmarks.ts";
 import { fxStyleVars } from "./render/postfx.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import {
-  hasKeepsake,
-  spectatorCharacter,
-  type Character,
-} from "./characters.ts";
+import { spectatorCharacter, type Character } from "./characters.ts";
 import {
   createAutopilotDirector,
   useAutopilotSession,
@@ -140,7 +136,10 @@ import {
 } from "./game-screen/run-progress.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
 import { RunVaultScreen } from "./VaultScreen.tsx";
-import { groundedDoorThought } from "./game-screen/travel-doors.ts";
+import {
+  groundedDoorThought,
+  hiddenTravelDoors,
+} from "./game-screen/travel-doors.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { ConnectingScreen } from "./game-screen/ConnectingScreen.tsx";
@@ -628,18 +627,15 @@ export function GameScreen({
       characterRef.current = spectatorCharacter(join.name);
     }
     setState(state);
-    // A sealed travel door's landmark stays out of sight (and out of tap
-    // reach) until its keepsake is banked — the rift seam only appears in
-    // the garage once the player has come back through the rift with THE
-    // FOUNDER's RIFT CREATOR in hand.
+    // A travel door that can take this character nowhere, and has nothing to
+    // say about it, stays out of sight and out of tap reach (travel-doors.ts):
+    // the rift seam is not on the garage wall until it leads somewhere — not
+    // before THE FOUNDER's RIFT CREATOR comes home, and not on a fresh
+    // campaign where the keepsake is banked but neither deep road is walked
+    // yet. A hole in the world that leads nowhere would only name two places
+    // the player has not earned.
     setHiddenLandmarks(
-      (runLevelDef(state).travelDoors ?? [])
-        .filter(
-          (door) =>
-            door.requires !== undefined &&
-            !hasKeepsake(characterRef.current, door.requires),
-        )
-        .map((door) => door.id),
+      hiddenTravelDoors(state, characterRef.current, difficulty),
     );
     // THE SESSION BEHIND THIS RUN, if there is one — what the chat overlay is
     // mounted from. Null for every local run, which is every browser, every
