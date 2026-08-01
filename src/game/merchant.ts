@@ -5,7 +5,8 @@
 // stream (never the run's, so his strolling can't perturb a single loot
 // roll); the first close encounter roots him to the spot for the rest of
 // the run, pins the level map, and stocks his stall against the hero he
-// just met. `openShop` freezes the run in the `shop` phase (like the bag);
+// just met. `openShop` opens the SHOPPER's own screen (plan §3.2 — the rest
+// of the party plays on, and the world only freezes solo, like the bag);
 // the buy/sell mutators are safe to call from the app's UI outside `step()`.
 
 import {
@@ -367,7 +368,7 @@ function maybeGreetReturn(state: GameState, merchant: Merchant): void {
  * coins paid, else null (so the app can ignore a dud tap).
  */
 export function repairGear(state: GameState, hero: Player): number | null {
-  if (state.phase !== "shop") return null;
+  if (hero.screen !== "shop") return null;
   const cost = repairAllCost(state, hero);
   if (cost <= 0) return null; // nothing to mend
   if (hero.coins < cost) return null; // can't afford it
@@ -612,13 +613,15 @@ export function repelFromMerchant(state: GameState, pos: Vec2): void {
 export { sellValue };
 
 /**
- * Open the shop: only mid-run, only with the merchant met, and only with the
- * hero actually at the stall (config `MERCHANT.tradeRadius`). Freezes the
- * run in the `shop` phase, exactly like the bag. Returns false when any gate
- * refuses, so the app can ignore a stray tap.
+ * Open the shop for this hero: only mid-run, only with the merchant met, and
+ * only with the hero actually at the stall (config `MERCHANT.tradeRadius`).
+ * The screen is the SHOPPER's own (plan §3.2) — the rest of the party plays
+ * on, and two heroes can stand at the counter at once (the shelf is shared,
+ * exactly like the stall itself). Returns false when any gate refuses, so the
+ * app can ignore a stray tap.
  */
 export function openShop(state: GameState, hero: Player): boolean {
-  if (state.phase !== "playing") return false;
+  if (state.phase !== "playing" || hero.screen !== undefined) return false;
   const merchant = state.merchant;
   if (!merchant.discovered) return false;
   // The SHOPPER has to be at the counter — this one is emphatically not "any
@@ -628,15 +631,14 @@ export function openShop(state: GameState, hero: Player): boolean {
   if (distance(hero.pos, merchant.pos) > MERCHANT.tradeRadius) {
     return false;
   }
-  state.phase = "shop";
+  hero.screen = "shop";
   return true;
 }
 
-/** Close the shop and resume (the closer's own pending level-ups take
- * priority). */
-export function closeShop(state: GameState, hero: Player): void {
-  if (state.phase !== "shop") return;
-  state.phase = hero.pendingStatPoints > 0 ? "levelup" : "playing";
+/** Close the shop. */
+export function closeShop(hero: Player): void {
+  if (hero.screen !== "shop") return;
+  delete hero.screen;
 }
 
 /**
@@ -655,7 +657,7 @@ export function sellItem(
   hero: Player,
   index: number,
 ): number | null {
-  if (state.phase !== "shop") return null;
+  if (hero.screen !== "shop") return null;
   const item = hero.inventory[index];
   if (!item) return null;
   const paid = sellValue(item);
@@ -728,7 +730,7 @@ export function buybackItem(
   hero: Player,
   itemId: number,
 ): BuybackRefusal | null {
-  if (state.phase !== "shop") return "gone";
+  if (hero.screen !== "shop") return "gone";
   const merchant = state.merchant;
   const at = merchant.buyback.findIndex((entry) => entry.item.id === itemId);
   if (at < 0) return "gone";
@@ -792,7 +794,7 @@ export function buyStock(
   hero: Player,
   stockId: number,
 ): boolean {
-  if (state.phase !== "shop") return false;
+  if (hero.screen !== "shop") return false;
   const entry = state.merchant.stock.find((s) => s.id === stockId);
   if (!entry) return false;
   if (entry.qty <= 0) return false;

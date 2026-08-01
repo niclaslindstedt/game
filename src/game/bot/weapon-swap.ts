@@ -431,7 +431,7 @@ function bestRole(
  * Everything else calls the committing form and never sees this.
  */
 export function botWeaponSwapTarget(state: GameState, hero: Player): number {
-  if (state.phase !== "playing") return -1;
+  if (state.phase !== "playing" || hero.screen !== undefined) return -1;
   const player = hero;
   if (player.disarmed) return -1;
   const held = player.equipment.weapon;

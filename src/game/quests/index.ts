@@ -50,9 +50,11 @@ import {
 import { dropItem } from "../items/index.ts";
 import { addMapMarker } from "../map.ts";
 import { lineOfSight } from "../obstacles.ts";
+import { heroInPlay, partyLevel } from "../party.ts";
 import type {
   Enemy,
   GameState,
+  Player,
   QuestGiver,
   QuestMark,
   QuestProgress,
@@ -132,11 +134,16 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
   if (state.questGivers.length === 0) return;
 
   for (const giver of state.questGivers) {
-    const near =
-      distance(state.players[0].pos, giver.pos) <= QUESTS.talkRadius &&
-      lineOfSight(state, state.players[0].pos, giver.pos);
-    if (!near) continue;
-    giver.faceLeft = state.players[0].pos.x < giver.pos.x;
+    // ANY hero meets a giver (the party rule, plan §3.1): whoever walks up
+    // discovers them for everybody, and the giver turns to face that hero.
+    const meeter = state.players.find(
+      (hero) =>
+        heroInPlay(hero) &&
+        distance(hero.pos, giver.pos) <= QUESTS.talkRadius &&
+        lineOfSight(state, hero.pos, giver.pos),
+    );
+    if (!meeter) continue;
+    giver.faceLeft = meeter.pos.x < giver.pos.x;
     if (!giver.discovered) {
       giver.discovered = true;
       addMapMarker(state, "questGiver", giver.pos, giver.id);
@@ -183,8 +190,12 @@ function pollQuestConditions(state: GameState): void {
         // in, which is an objective that cannot be completed. Re-homed
         // identically at both sites, so the mark and the piece lying on it
         // never drift apart.
+        // ANY hero's visit counts — the errand is the party's (plan §3.1).
+        const spot = questSpot(state, objective.at);
         if (
-          distance(state.players[0].pos, questSpot(state, objective.at)) > reach
+          !state.players.some(
+            (hero) => heroInPlay(hero) && distance(hero.pos, spot) <= reach,
+          )
         ) {
           return;
         }
@@ -199,7 +210,9 @@ function pollQuestConditions(state: GameState): void {
         // gained (or a hero adopted mid-chain at a level well past the last
         // reading) lands on the right number in one step instead of counting
         // up to it. Only ever climbs, so a respec cannot walk it backwards.
-        const level = Math.min(state.players[0].level, objective.level);
+        // The PARTY's level (its highest hero in play) — the reading a
+        // "reach level N" chain link wants with eight bars on the field.
+        const level = Math.min(partyLevel(state), objective.level);
         if (level <= at) return;
         progress.counts[index] = level;
         state.events.push({
@@ -249,6 +262,7 @@ export function giverTopics(state: GameState, giverId: string): QuestTopic[] {
  */
 function openTopics(
   state: GameState,
+  hero: Player,
   giverId: string,
   topics: QuestTopic[],
   fromList: boolean,
@@ -256,19 +270,26 @@ function openTopics(
   if (topics.length === 0) return false;
   if (topics.length === 1) {
     const only = topics[0]!;
-    openQuestConversation(state, giverId, only.questId, only.kind, fromList);
+    openQuestConversation(
+      state,
+      hero,
+      giverId,
+      only.questId,
+      only.kind,
+      fromList,
+    );
     return true;
   }
-  openQuestList(state, giverId);
+  openQuestList(state, hero, giverId);
   return true;
 }
 
-/** Put the giver's pick list on screen and freeze the run behind it. */
-function openQuestList(state: GameState, giverId: string): void {
+/** Put the giver's pick list on this hero's screen. */
+function openQuestList(state: GameState, hero: Player, giverId: string): void {
   state.questOffer = { giverId, kind: "list", page: 0 };
-  state.phase = "quest";
+  hero.screen = "quest";
   const giver = state.questGivers.find((g) => g.id === giverId);
-  if (giver) giver.faceLeft = state.players[0].pos.x < giver.pos.x;
+  if (giver) giver.faceLeft = hero.pos.x < giver.pos.x;
 }
 
 /**
@@ -276,14 +297,19 @@ function openQuestList(state: GameState, giverId: string): void {
  * for a row that is no longer real (the list is derived, so it cannot be), so
  * a stray tap is simply ignored.
  */
-export function pickQuestTopic(state: GameState, questId: string): boolean {
+export function pickQuestTopic(
+  state: GameState,
+  hero: Player,
+  questId: string,
+): boolean {
+  if (hero.screen !== "quest") return false;
   const offer = state.questOffer;
   if (!offer || offer.kind !== "list") return false;
   const topic = giverTopics(state, offer.giverId).find(
     (t) => t.questId === questId,
   );
   if (!topic) return false;
-  openQuestConversation(state, offer.giverId, questId, topic.kind, true);
+  openQuestConversation(state, hero, offer.giverId, questId, topic.kind, true);
   return true;
 }
 
@@ -293,36 +319,42 @@ export function pickQuestTopic(state: GameState, questId: string): boolean {
  * is nothing left to pick. Every exit from a quest conversation goes through
  * here, so "accept, back, accept the next" costs one walk-up instead of three.
  */
-function leaveTopic(state: GameState): void {
+function leaveTopic(state: GameState, hero: Player): void {
   const offer = state.questOffer;
   if (!offer) return;
   if (offer.fromList) {
     const topics = giverTopics(state, offer.giverId);
     if (topics.length > 1) {
-      openQuestList(state, offer.giverId);
+      openQuestList(state, hero, offer.giverId);
       return;
     }
     // Exactly one left: opening a list of one would be a dead end, and the
     // remaining topic is usually the "not yet" nag for what was just taken.
   }
-  closeQuestDialogue(state);
+  closeQuestDialogue(state, hero);
 }
 
 /**
- * Open a giver's conversation and FREEZE the run behind it (the `quest`
- * phase). THE ONLY DOOR IN — the app calls it for a tap on a giver, and
- * nothing calls it on the player's behalf. Returns false when there is nothing
- * to say or the run is not in a state to be interrupted, so a stray tap is
- * simply ignored.
+ * Open a giver's conversation on the TAPPING hero's screen (plan §3.2 — the
+ * rest of the party plays on; solo the world freezes exactly as before). THE
+ * ONLY DOOR IN — the app calls it for a tap on a giver, and nothing calls it
+ * on the player's behalf. ONE conversation at a time, party-wide: the offer
+ * record lives on the run, so a second hero walking up mid-conversation is
+ * politely refused. Returns false when there is nothing to say or the hero is
+ * not in a state to be interrupted, so a stray tap is simply ignored.
  */
-export function talkToQuestGiver(state: GameState, giverId: string): boolean {
+export function talkToQuestGiver(
+  state: GameState,
+  hero: Player,
+  giverId: string,
+): boolean {
   if (state.phase !== "playing" || state.questOffer !== null) return false;
+  if (hero.screen !== undefined) return false;
   // Never step over a scene already on the stage.
   if (state.dialogue !== null) return false;
   const giver = state.questGivers.find((g) => g.id === giverId);
   if (!giver || !giver.discovered) return false;
-  if (distance(state.players[0].pos, giver.pos) > QUESTS.tapRadius)
-    return false;
+  if (distance(hero.pos, giver.pos) > QUESTS.tapRadius) return false;
 
   // A TAP OPENS EVERYTHING THIS PERSON HAS — the pick list when that is more
   // than one thing, the single topic when it is one. It is the answer to the
@@ -331,11 +363,12 @@ export function talkToQuestGiver(state: GameState, giverId: string): boolean {
   // level 3 may well want the job at level 9), so always returning the first
   // entry left a refused quest permanently hiding every other quest that giver
   // owned — and there is no other way in.
-  return openTopics(state, giverId, giverTopics(state, giverId), false);
+  return openTopics(state, hero, giverId, giverTopics(state, giverId), false);
 }
 
 function openQuestConversation(
   state: GameState,
+  hero: Player,
   giverId: string,
   questId: string,
   kind: "offer" | "incomplete" | "complete",
@@ -347,7 +380,7 @@ function openQuestConversation(
   // it at the moment the conversation opens is what keeps the app a pure
   // reader: it never mints, so a re-render cannot re-roll the reward.
   const picked = state.quests[questId]?.rewardPick;
-  questRewardChoices(state, questId);
+  questRewardChoices(state, hero, questId);
   state.questOffer = {
     questId,
     giverId,
@@ -356,14 +389,15 @@ function openQuestConversation(
     ...(fromList ? { fromList: true } : {}),
     ...(picked !== undefined ? { rewardPick: picked } : {}),
   };
-  state.phase = "quest";
+  hero.screen = "quest";
   const giver = state.questGivers.find((g) => g.id === giverId);
-  if (giver) giver.faceLeft = state.players[0].pos.x < giver.pos.x;
+  if (giver) giver.faceLeft = hero.pos.x < giver.pos.x;
 }
 
 /** Turn to the next page of the open conversation; the last page closes it —
  * except an OFFER, which waits on ACCEPT or DECLINE. */
-export function advanceQuestDialogue(state: GameState): void {
+export function advanceQuestDialogue(state: GameState, hero: Player): void {
+  if (hero.screen !== "quest") return;
   const offer = state.questOffer;
   if (!offer || offer.kind === "list" || !offer.questId) return;
   const pages = conversationPages(offer.questId, offer.kind);
@@ -375,10 +409,10 @@ export function advanceQuestDialogue(state: GameState): void {
   // rather than a "next", so paging past it must not silently decline.
   if (offer.kind === "offer") return;
   if (offer.kind === "complete") {
-    turnInQuest(state);
+    turnInQuest(state, hero);
     return;
   }
-  leaveTopic(state);
+  leaveTopic(state, hero);
 }
 
 /** The pages a conversation reads out, by its kind. */
@@ -394,28 +428,30 @@ export function conversationPages(
 }
 
 /** Close the conversation without taking or handing in anything. */
-export function closeQuestDialogue(state: GameState): void {
-  if (state.phase !== "quest") return;
+export function closeQuestDialogue(state: GameState, hero: Player): void {
+  if (hero.screen !== "quest") return;
   state.questOffer = null;
-  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+  delete hero.screen;
 }
 
 /**
- * OPEN THE QUEST LOG — the "what was I doing" screen, raised from the HUD's own
- * `!` button. It is a PHASE rather than something the app pauses behind,
- * exactly as the fog-of-war map is (`openMap`): the run freezes because the
- * phase is not `playing`, so nothing else has to be told a screen is up, and
- * the pause menu stays the pause menu. The log itself is drawn app-side and
- * reads the state it already has — there is nothing to hold here.
+ * OPEN THE QUEST LOG — the "what was I doing" screen, raised from the HUD's
+ * own `!` button. A per-player SCREEN like the fog-of-war map (`openMap`):
+ * this hero steps out to read it, the rest of the party plays on, and solo
+ * the world freezes exactly as it always did. The log itself is drawn
+ * app-side and reads the state it already has — there is nothing to hold
+ * here.
  */
-export function openQuestLog(state: GameState): void {
-  if (state.phase === "playing") state.phase = "questLog";
+export function openQuestLog(state: GameState, hero: Player): void {
+  if (state.phase === "playing" && hero.screen === undefined) {
+    hero.screen = "questLog";
+  }
 }
 
-/** Close the log and resume (pending level-ups take priority). */
-export function closeQuestLog(state: GameState): void {
-  if (state.phase !== "questLog") return;
-  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+/** Close the log. */
+export function closeQuestLog(hero: Player): void {
+  if (hero.screen !== "questLog") return;
+  delete hero.screen;
 }
 
 /**
@@ -423,7 +459,8 @@ export function closeQuestLog(state: GameState): void {
  * pieces at their spots, the escort at theirs — and starts the tallies. False
  * when there is no offer open (a stray tap).
  */
-export function acceptQuest(state: GameState): boolean {
+export function acceptQuest(state: GameState, hero: Player): boolean {
+  if (hero.screen !== "quest") return false;
   const offer = state.questOffer;
   if (!offer || offer.kind !== "offer" || !offer.questId) return false;
   const def = questDef(offer.questId);
@@ -444,7 +481,7 @@ export function acceptQuest(state: GameState): boolean {
   });
 
   const giver = state.questGivers.find((g) => g.id === offer.giverId);
-  const from = giver?.pos ?? state.players[0].pos;
+  const from = giver?.pos ?? hero.pos;
   placeQuestItems(state, def);
   for (const objective of def.objectives) {
     if (objective.kind !== "escort") continue;
@@ -455,7 +492,7 @@ export function acceptQuest(state: GameState): boolean {
   // this person" link in a chain) — checked here so the `?` appears at once
   // instead of on the next kill.
   refreshQuestCompletion(state, def.id);
-  leaveTopic(state);
+  leaveTopic(state, hero);
   return true;
 }
 
@@ -465,7 +502,8 @@ export function acceptQuest(state: GameState): boolean {
  * 9, so the status is what tells a CAMPAIGN merge that a decline ranks below
  * an untaken offer rather than above it (see campaign-save.ts).
  */
-export function declineQuest(state: GameState): boolean {
+export function declineQuest(state: GameState, hero: Player): boolean {
+  if (hero.screen !== "quest") return false;
   const offer = state.questOffer;
   if (!offer || offer.kind !== "offer" || !offer.questId) return false;
   const questId = offer.questId;
@@ -480,7 +518,7 @@ export function declineQuest(state: GameState): boolean {
       acceptedAtMs: state.stats.timeMs,
     };
   }
-  leaveTopic(state);
+  leaveTopic(state, hero);
   return true;
 }
 
@@ -490,14 +528,18 @@ export function declineQuest(state: GameState): boolean {
  * offerable — which is what makes the giver's `!` reappear the moment the `?`
  * is spent.
  */
-export function turnInQuest(state: GameState): QuestPayout | null {
+export function turnInQuest(
+  state: GameState,
+  hero: Player,
+): QuestPayout | null {
+  if (hero.screen !== "quest") return null;
   const offer = state.questOffer;
   if (!offer || offer.kind !== "complete" || !offer.questId) return null;
   const progress = state.quests[offer.questId];
   if (!progress || progress.status !== "complete") return null;
   const def = questDef(offer.questId);
   const giver = state.questGivers.find((g) => g.id === offer.giverId);
-  const at = giver?.pos ?? state.players[0].pos;
+  const at = giver?.pos ?? hero.pos;
 
   progress.status = "turnedIn";
   clearEscorts(state, def.id);
@@ -507,7 +549,7 @@ export function turnInQuest(state: GameState): QuestPayout | null {
     (item) => !(item.kind === "quest" && item.questId === def.id),
   );
 
-  const payout = payQuestReward(state, def.reward, at, def.id);
+  const payout = payQuestReward(state, hero, def.reward, at, def.id);
   state.events.push({
     type: "questTurnedIn",
     questId: def.id,
@@ -516,7 +558,7 @@ export function turnInQuest(state: GameState): QuestPayout | null {
     coins: payout.coins,
     items: payout.items.length,
   });
-  leaveTopic(state);
+  leaveTopic(state, hero);
   return payout;
 }
 
@@ -730,11 +772,16 @@ function markQuestTargets(state: GameState): void {
     for (const objective of objectives) {
       if (objective.kind !== "kill" && objective.kind !== "killNamed") continue;
       if (state.mapMarkers.some((m) => m.defId === objective.enemy)) continue;
+      // ANY hero's sighting pins the target — the map is shared (plan §3.1).
       const seen = state.enemies.find(
         (e) =>
           e.defId === objective.enemy &&
-          distance(e.pos, state.players[0].pos) <= QUESTS.markSightRadius &&
-          lineOfSight(state, state.players[0].pos, e.pos),
+          state.players.some(
+            (hero) =>
+              heroInPlay(hero) &&
+              distance(e.pos, hero.pos) <= QUESTS.markSightRadius &&
+              lineOfSight(state, hero.pos, e.pos),
+          ),
       );
       if (seen) addMapMarker(state, "questTarget", seen.pos, objective.enemy);
     }

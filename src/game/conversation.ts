@@ -42,7 +42,7 @@ import { questGiverDef } from "./defs/quests.ts";
 import { isNeutral, provokeEnemy } from "./disposition.ts";
 import { dropItem } from "./items/index.ts";
 import { lineOfSight } from "./obstacles.ts";
-import type { Enemy, GameState, TalkSpeaker } from "./types/index.ts";
+import type { Enemy, GameState, Player, TalkSpeaker } from "./types/index.ts";
 
 // ------------------------------------------------------------------ the flags
 
@@ -79,7 +79,7 @@ export function hasAllFlags(
  * the prompt over a head and to route the tap — the same shape the merchant's
  * own proximity check takes.
  */
-export function talkPrompt(state: GameState): Enemy | null {
+export function talkPrompt(state: GameState, hero: Player): Enemy | null {
   if (state.phase !== "playing") return null;
   let best: Enemy | null = null;
   let bestDist: number = QUESTS.talkRadius;
@@ -87,9 +87,9 @@ export function talkPrompt(state: GameState): Enemy | null {
     const def = enemyDef(enemy.defId);
     if (!def.conversation || !isNeutral(def, enemy)) continue;
     if (!hasConversation(def.conversation)) continue;
-    const d = distance(state.players[0].pos, enemy.pos);
+    const d = distance(hero.pos, enemy.pos);
     if (d > bestDist) continue;
-    if (!lineOfSight(state, state.players[0].pos, enemy.pos)) continue;
+    if (!lineOfSight(state, hero.pos, enemy.pos)) continue;
     best = enemy;
     bestDist = d;
   }
@@ -97,21 +97,26 @@ export function talkPrompt(state: GameState): Enemy | null {
 }
 
 /**
- * OPEN A CONVERSATION with a neutral mob and freeze the run behind it (the
- * `talk` phase, exactly as a quest offer freezes it). False when there is
- * nobody to talk to or something else already holds the stage, so a stray tap
- * is simply ignored.
+ * OPEN A CONVERSATION with a neutral mob on the TAPPING hero's screen (plan
+ * §3.2 — the rest of the party plays on, exactly as a quest offer). ONE talk
+ * at a time, party-wide: the tree record lives on the run. False when there
+ * is nobody to talk to or something else already holds the stage, so a stray
+ * tap is simply ignored.
  */
-export function talkToEnemy(state: GameState, enemyId: number): boolean {
+export function talkToEnemy(
+  state: GameState,
+  hero: Player,
+  enemyId: number,
+): boolean {
   if (state.phase !== "playing" || state.dialogue !== null) return false;
+  if (hero.screen !== undefined) return false;
   if (state.talk !== null || state.questOffer !== null) return false;
   const enemy = state.enemies.find((e) => e.id === enemyId);
   if (!enemy) return false;
   const def = enemyDef(enemy.defId);
   if (!def.conversation || !isNeutral(def, enemy)) return false;
-  if (distance(state.players[0].pos, enemy.pos) > QUESTS.tapRadius)
-    return false;
-  return openConversation(state, def.conversation, {
+  if (distance(hero.pos, enemy.pos) > QUESTS.tapRadius) return false;
+  return openConversation(state, hero, def.conversation, {
     kind: "enemy",
     id: enemy.id,
     name: def.name,
@@ -126,13 +131,15 @@ export function talkToEnemy(state: GameState, enemyId: number): boolean {
  */
 export function talkToGiverTree(
   state: GameState,
+  hero: Player,
   giverId: string,
   conversationId: string,
 ): boolean {
   if (state.phase !== "playing" || state.dialogue !== null) return false;
+  if (hero.screen !== undefined) return false;
   if (state.talk !== null || state.questOffer !== null) return false;
   const giver = questGiverDef(giverId);
-  return openConversation(state, conversationId, {
+  return openConversation(state, hero, conversationId, {
     kind: "giver",
     id: giverId,
     name: giver.name,
@@ -140,9 +147,11 @@ export function talkToGiverTree(
   });
 }
 
-/** Put a conversation on screen at whichever node its flags have earned. */
+/** Put a conversation on this hero's screen at whichever node its flags have
+ * earned. */
 function openConversation(
   state: GameState,
+  hero: Player,
   defId: string,
   speaker: TalkSpeaker,
 ): boolean {
@@ -154,7 +163,7 @@ function openConversation(
   const nodeId = entry?.node ?? def.start;
   if (!conversationNode(defId, nodeId)) return false;
   state.talk = { defId, node: nodeId, speaker };
-  state.phase = "talk";
+  hero.screen = "talk";
   state.events.push({ type: "talkOpened", defId, node: nodeId });
   return true;
 }
@@ -196,9 +205,10 @@ export function talkChoices(state: GameState): ConversationChoice[] {
  * A node WITH choices ignores this — a conversation that closed itself on the
  * last line would eat the decision it exists for.
  */
-export function advanceTalk(state: GameState): void {
+export function advanceTalk(state: GameState, hero: Player): void {
+  if (hero.screen !== "talk") return;
   if (!state.talk || !talkNode(state)) return;
-  if (talkChoices(state).length === 0) closeTalk(state);
+  if (talkChoices(state).length === 0) closeTalk(state, hero);
 }
 
 /**
@@ -215,7 +225,12 @@ export function advanceTalk(state: GameState): void {
  * the player tapped the moment any gate is in play. False for a row that is
  * not there, so a stale tap is ignored.
  */
-export function pickTalkChoice(state: GameState, index: number): boolean {
+export function pickTalkChoice(
+  state: GameState,
+  hero: Player,
+  index: number,
+): boolean {
+  if (hero.screen !== "talk") return false;
   const talk = state.talk;
   if (!talk) return false;
   const choice = talkChoices(state)[index];
@@ -224,28 +239,28 @@ export function pickTalkChoice(state: GameState, index: number): boolean {
   for (const flag of choice.sets ?? []) setQuestFlag(state, flag);
 
   if (choice.gives)
-    giveQuestPiece(state, choice.gives.quest, choice.gives.item);
+    giveQuestPiece(state, hero, choice.gives.quest, choice.gives.item);
 
   if (choice.provoke && talk.speaker.kind === "enemy") {
     const enemy = state.enemies.find((e) => e.id === talk.speaker.id);
     if (enemy) provokeEnemy(state, enemy);
-    closeTalk(state);
+    closeTalk(state, hero);
     return true;
   }
 
   if (!choice.goto || !conversationNode(talk.defId, choice.goto)) {
-    closeTalk(state);
+    closeTalk(state, hero);
     return true;
   }
   talk.node = choice.goto;
   return true;
 }
 
-/** Close the talk and resume (a pending level-up still takes priority). */
-export function closeTalk(state: GameState): void {
-  if (state.phase !== "talk") return;
+/** Close the talk. */
+export function closeTalk(state: GameState, hero: Player): void {
+  if (hero.screen !== "talk") return;
   state.talk = null;
-  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+  delete hero.screen;
 }
 
 /**
@@ -257,16 +272,21 @@ export function closeTalk(state: GameState): void {
  * refuses a piece no active errand wants, and refusing it HERE would leave the
  * player holding a branch that silently did nothing.
  */
-function giveQuestPiece(state: GameState, questId: string, item: string): void {
+function giveQuestPiece(
+  state: GameState,
+  hero: Player,
+  questId: string,
+  item: string,
+): void {
   dropItem(
     state,
     {
       id: state.nextId++,
       kind: "quest",
-      pos: { ...state.players[0].pos },
+      pos: { ...hero.pos },
       questId,
       defId: item,
     },
-    state.players[0].pos,
+    hero.pos,
   );
 }

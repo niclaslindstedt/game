@@ -5,7 +5,7 @@
 // minimap) — none of it through React — and finally publish the HUD snapshot
 // to React only when its change-key moves (see hud-model.ts).
 
-import { localHero } from "../local-seat.ts";
+import { fieldLive, localHero } from "../local-seat.ts";
 import type {
   Dispatch,
   MutableRefObject,
@@ -226,9 +226,9 @@ export function createRenderFrame(deps: {
       shared.effects,
     );
     // Area caption: flash a named zone's label the moment the hero walks in
-    // (only while actually playing — no captions mid-cutscene/menu). Guarded
-    // on the ref so it fires once per entry, not every frame.
-    if (state.phase === "playing") {
+    // (only while actually on the field — no captions mid-cutscene/screen).
+    // Guarded on the ref so it fires once per entry, not every frame.
+    if (fieldLive(state)) {
       const area = currentAreaLabel(state);
       if (area !== lastAreaRef.current) {
         lastAreaRef.current = area;
@@ -401,7 +401,7 @@ export function createRenderFrame(deps: {
         !bot &&
         pointer.state.held &&
         pointer.state.pointerType !== "mouse" &&
-        state.phase === "playing";
+        fieldLive(state);
       dpad.style.display = show ? "block" : "none";
       if (show) {
         dpad.style.left = `${pointer.state.originX}px`;
@@ -433,7 +433,7 @@ export function createRenderFrame(deps: {
     // every tick, so it's low-passed into a running average that GLIDES like
     // a human thumb rather than snapping to each twitch.
     if (botDpad) {
-      const show = !!bot && state.phase === "playing";
+      const show = !!bot && fieldLive(state);
       botDpad.style.display = show ? "block" : "none";
       if (show) {
         const n = normalize(

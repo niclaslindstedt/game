@@ -59,7 +59,7 @@ export function allocateStat(
   // queue are empty; `spendTalentPoint` finishes the job on the pick. A respec
   // never auto-closes — the chooser stays open (points move back and forth)
   // until the player confirms the build (`confirmRespec`).
-  resumeAfterLevelup(state, player);
+  resumeAfterLevelup(player);
   return true;
 }
 
@@ -167,7 +167,7 @@ export function beginRespec(state: GameState, player: Player): void {
     // points stay placed (and stay "spent"); only the surplus — head-start
     // included — returns to the pool to be re-allocated. A stat with no trained
     // talents floors at 0, refunding whole as before.
-    const floor = talentStatFloor(state, stat);
+    const floor = talentStatFloor(state, player, stat);
     pool += Math.max(0, player.stats[stat] - floor);
     player.stats[stat] = floor;
     player.spentStats[stat] = floor;
@@ -183,7 +183,11 @@ export function beginRespec(state: GameState, player: Player): void {
   // freshly-zeroed pools so the readouts never show an over-full bar.
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
-  state.phase = "respec";
+  // The one MODAL among the screens (plan §3.2): it holds until every
+  // refunded point is re-placed (`confirmRespec`), because a build left
+  // half-poured is not a build. Solo that freezes the world exactly as the
+  // respec phase did; in a party it holds one hero.
+  player.screen = "respec";
 }
 
 /**
@@ -205,10 +209,11 @@ export function beginRespec(state: GameState, player: Player): void {
  */
 export function spendCleanSlate(state: GameState, player: Player): boolean {
   if (player.cleanSlates <= 0) return false;
+  if (state.phase !== "playing") return false;
   if (
-    state.phase !== "playing" &&
-    state.phase !== "inventory" &&
-    state.phase !== "paused"
+    player.screen !== undefined &&
+    player.screen !== "inventory" &&
+    player.screen !== "paused"
   ) {
     return false;
   }
@@ -243,8 +248,8 @@ export function deallocateStat(
   player: Player,
   stat: StatName,
 ): boolean {
-  if (state.phase !== "respec") return false;
-  if (player.stats[stat] <= talentStatFloor(state, stat)) return false;
+  if (player.screen !== "respec") return false;
+  if (player.stats[stat] <= talentStatFloor(state, player, stat)) return false;
   player.stats[stat]--;
   player.spentStats[stat] = Math.max(0, player.spentStats[stat] - 1);
   player.pendingStatPoints++;
@@ -267,12 +272,16 @@ export function deallocateStat(
  * remain or the run is not respeccing.
  */
 export function confirmRespec(state: GameState, player: Player): boolean {
-  if (state.phase !== "respec" || player.pendingStatPoints > 0) return false;
+  if (player.screen !== "respec" || player.pendingStatPoints > 0) return false;
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
   // If the re-placed build crossed milestones the old ranks don't cover, those
   // talent points are now pending — surface the picker (the level-up flow) so
   // they aren't left silently on the table; otherwise drop straight into play.
-  state.phase = state.pendingTalentPoints.length > 0 ? "levelup" : "playing";
+  if (player.pendingTalentPoints.length > 0) {
+    player.screen = "levelup";
+  } else {
+    delete player.screen;
+  }
   return true;
 }

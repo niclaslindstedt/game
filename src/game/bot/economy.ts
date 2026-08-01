@@ -485,7 +485,7 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
     )
     .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
   for (const entry of powerups) buyDown(entry);
-  closeShop(state, hero);
+  closeShop(hero);
   // Wear the purchase (and anything freed by the mend) on the spot.
   autoEquipBest(state, hero);
   // Crack the bottle at the counter if one was just bought — the walk is over
@@ -530,7 +530,8 @@ export function careForCompanion(state: GameState, hero: Player): boolean {
  * when somebody is actually face-down.
  */
 export function botReviveCell(state: GameState, hero: Player): number {
-  if (state.phase !== "playing" || state.companions.length === 0) return -1;
+  if (state.phase !== "playing" || hero.screen !== undefined) return -1;
+  if (state.companions.length === 0) return -1;
   return hero.inventory.findIndex(
     (item) => item !== null && reviveTarget(state, item) !== null,
   );
@@ -543,7 +544,8 @@ export function botReviveCell(state: GameState, hero: Player): number {
  * the salts, not a bandage.
  */
 export function botCompanionToHeal(state: GameState, hero: Player): number {
-  if (state.phase !== "playing" || state.companions.length === 0) return -1;
+  if (state.phase !== "playing" || hero.screen !== undefined) return -1;
+  if (state.companions.length === 0) return -1;
   const kits = hero.medkits.reduce((sum, n) => sum + (n ?? 0), 0);
   if (kits < BOT_COMPANION_MEDKIT_RESERVE) return -1;
   for (const companion of state.companions) {

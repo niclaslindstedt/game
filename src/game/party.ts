@@ -101,6 +101,31 @@ export function partyWiped(state: GameState): boolean {
 }
 
 /**
+ * True while EVERY hero in play has a modal screen up — the moment the world
+ * has nobody left watching it, and the one condition (beside a non-`playing`
+ * phase) that halts the simulation (multiplayer plan §3.2).
+ *
+ * This is what keeps the solo game exactly what it was: one hero opening the
+ * bag is "every hero in play has a screen up", so the world freezes precisely
+ * as it did when the bag was a phase. In a party the same rule means one
+ * player shopping freezes nobody — the world only stops when all of them have
+ * stepped out of it at once.
+ *
+ * An EMPTY party (everyone departed or down) reads false on purpose: `every`
+ * over nothing is vacuously true, and a run frozen by its own emptiness could
+ * never reach the `partyWiped` check that ends it.
+ */
+export function partyBlocked(state: GameState): boolean {
+  let inPlay = 0;
+  for (const hero of state.players) {
+    if (!heroInPlay(hero)) continue;
+    inPlay++;
+    if (hero.screen === undefined) return false;
+  }
+  return inPlay > 0;
+}
+
+/**
  * The living hero nearest `pos`, or null when the party is wiped.
  *
  * The answer a mob's aggro, a hazard's victim search and a spawn point's

@@ -23,7 +23,7 @@
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 14;
+export const PROTOCOL_VERSION = 15;
 
 /**
  * The most clients one session seats, host included.
@@ -480,12 +480,11 @@ export type InputPayload = {
  * which was a circular dependency: phase 3's prediction assumes the run already
  * goes through the server.)
  *
- * The two halves are separate jobs on the same names: **phase 1.5 makes them
- * TRAVEL** with today's blocking semantics exactly preserved, and **phase 3 makes
- * them NON-BLOCKING** per player. Anyone widening this list for the first
- * reason must not quietly do the second at the same time — a command that
- * stopped freezing the world would change how single-player feels, which is the
- * one thing the cutover may not do.
+ * The two halves were separate jobs on the same names, and both are done:
+ * **phase 1.5 made them TRAVEL** with the blocking semantics of the day
+ * preserved, and **§3.2 made them NON-BLOCKING** per player — a screen verb
+ * now moves the acting hero's own `Player.screen`, and the world halts only
+ * when every hero in play has one up (solo: exactly the old freeze).
  *
  * **THIS IS A COPY, AND THE COPY IS DELIBERATE.** What each verb DOES lives in
  * the engine (`src/game/commands.ts`), which this leaf may not import: the page
@@ -521,6 +520,7 @@ export const COMMANDS = [
   "openCompanionPanel",
   "closeCompanionPanel",
   "promptPendingPoints",
+  "closeLevelup",
   "pauseGame",
   "resumeGame",
   "stayOnField",

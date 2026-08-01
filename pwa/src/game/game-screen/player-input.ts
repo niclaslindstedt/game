@@ -5,7 +5,7 @@
 // and the field taps that open the merchant's shop or re-open the victory
 // menu on the fallen boss. The BOT's input lives in bot-driver.ts.
 
-import { localHero } from "../local-seat.ts";
+import { fieldLive, localHero } from "../local-seat.ts";
 import { useMemo, useRef } from "react";
 import type { MutableRefObject } from "react";
 
@@ -416,12 +416,7 @@ export function handleFieldTaps(
   const { state, bot, camera, viewport, queues, bumpUi, openTravelDoor } = deps;
   const shopTap = queues.shopTapRef.current;
   queues.shopTapRef.current = null;
-  if (
-    shopTap &&
-    !bot &&
-    state.phase === "playing" &&
-    state.merchant.discovered
-  ) {
+  if (shopTap && !bot && fieldLive(state) && state.merchant.discovered) {
     const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
     const m = state.merchant.pos;
     if (
@@ -440,7 +435,7 @@ export function handleFieldTaps(
   // standing next to a quest giver is the rarer overlap and the shop is the
   // older gesture. `talkToQuestGiver` re-checks the reach itself, so a tap that
   // lands on a far-off giver is simply ignored.
-  if (shopTap && !bot && state.phase === "playing") {
+  if (shopTap && !bot && fieldLive(state)) {
     const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
     for (const giver of state.questGivers) {
       if (Math.hypot(wx - giver.pos.x, wy - giver.pos.y) > QUESTS.radius * 3) {
@@ -460,7 +455,7 @@ export function handleFieldTaps(
   // Like a giver, a bystander is TAPPED and never opens on approach: a venue
   // may hold a dozen of them and the hero walks past constantly, so
   // self-opening would be a stream of modals over a fight.
-  if (shopTap && !bot && state.phase === "playing") {
+  if (shopTap && !bot && fieldLive(state)) {
     const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
     for (const enemy of state.enemies) {
       const def = enemyDef(enemy.defId);
@@ -481,7 +476,7 @@ export function handleFieldTaps(
   // carries the door's id. The hero has to be AT the door (their own feet —
   // a fixture across the map must not open a menu), and the picker itself is
   // app UI: the engine only says where the door stands and where it leads.
-  if (shopTap && !bot && openTravelDoor && state.phase === "playing") {
+  if (shopTap && !bot && openTravelDoor && fieldLive(state)) {
     const doors = runLevelDef(state).travelDoors ?? [];
     if (doors.length > 0) {
       const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
@@ -516,7 +511,7 @@ export function handleFieldTaps(
   if (
     shopTap &&
     !bot &&
-    state.phase === "playing" &&
+    fieldLive(state) &&
     state.staying &&
     state.bossCorpse
   ) {

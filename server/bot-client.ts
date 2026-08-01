@@ -326,22 +326,24 @@ function sceneCommand(
   state: GameState,
   hero: Player,
 ): BotCommand | null {
-  // The BUILD first: the points are drained through the same two verbs a player
-  // presses, and they are what actually LIFTS the pause — skipping the phase
-  // without spending would just raise it again next tick.
-  if (state.phase === "levelup" || state.phase === "respec") {
-    if (hero.pendingStatPoints > 0) {
-      return { name: "allocateStat", args: [botAllocate(bot, state, hero)] };
-    }
-    if (state.phase === "respec") return { name: "confirmRespec", args: [] };
+  // The BUILD first: banked points are drained through the same two verbs a
+  // player presses (plan §3.2 — a ding banks rather than pausing, so the bot
+  // simply spends on sight; the last spend closes any chooser the run
+  // greeted it with).
+  if (hero.pendingStatPoints > 0) {
+    return { name: "allocateStat", args: [botAllocate(bot, state, hero)] };
   }
-  if (state.pendingTalentPoints.length > 0) {
+  if (hero.pendingTalentPoints.length > 0) {
     const id = botPickTalent(bot, state, hero);
     if (id) return { name: "spendTalentPoint", args: [id] };
   }
+  // The SCREENS are the bot's own now (per-player, plan §3.2): whatever of
+  // its screens is up with nothing left to spend gets closed, and a respec
+  // greeting a level-token jump is confirmed once its pool is placed.
+  if (hero.screen === "respec") return { name: "confirmRespec", args: [] };
+  if (hero.screen === "levelup") return { name: "closeLevelup", args: [] };
+  if (hero.screen === "paused") return { name: "resumeGame", args: [] };
   switch (state.phase) {
-    case "paused":
-      return { name: "resumeGame", args: [] };
     // **THE TITLE CARD IS THE ONE THAT BIT.** A dedicated server's run is built
     // and then waits on the level card for somebody to tap it — that is what
     // `title` IS — and a headless joiner that never sends this sits in a

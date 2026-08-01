@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The level map: fog-of-war exploration (a `MAP.revealRadius` CIRCLE sweeps the
 // hero's path each step, Warcraft-style with no re-fogging; the rest stays
-// fogged), the `map` pause phase (frozen sim, openMap/closeMap toggles,
-// level-up priority), and the map markers pinned by story finds and elite/boss
+// fogged), the per-player `map` screen (frozen sim solo, openMap/closeMap
+// toggles), and the map markers pinned by story finds and elite/boss
 // victories.
 
 import { describe, expect, it } from "vitest";
@@ -13,6 +13,7 @@ import {
   MAP,
   openMap,
   pauseGame,
+  resumeGame,
   rollEquipment,
 } from "@game/core";
 import { hitEnemy } from "../../src/game/loot.ts";
@@ -114,28 +115,31 @@ describe("exploredRay", () => {
   });
 });
 
-describe("map phase", () => {
+describe("map screen", () => {
   it("openMap pauses the run and closeMap resumes it", () => {
     const state = startGame();
-    openMap(state);
-    expect(state.phase).toBe("map");
+    openMap(state, state.players[0]);
+    expect(state.players[0].screen).toBe("map");
+    expect(state.phase).toBe("playing");
     const before = state.stats.timeMs;
     run(state, idle, 20);
-    expect(state.stats.timeMs).toBe(before); // frozen like the bag
-    closeMap(state);
-    expect(state.phase).toBe("playing");
+    expect(state.stats.timeMs).toBe(before); // frozen like the bag (solo)
+    closeMap(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
   });
 
-  it("only opens mid-run and closing yields to a pending level-up", () => {
+  it("only opens with no other screen up, and closing keeps points banked", () => {
     const state = startGame();
-    pauseGame(state);
-    openMap(state); // not playing: a no-op
-    expect(state.phase).toBe("paused");
-    state.phase = "playing";
-    openMap(state);
+    pauseGame(state, state.players[0]);
+    openMap(state, state.players[0]); // pause menu already up: a no-op
+    expect(state.players[0].screen).toBe("paused");
+    resumeGame(state.players[0]);
+    openMap(state, state.players[0]);
+    // Closing no longer diverts to the chooser: the points stay banked.
     state.players[0].pendingStatPoints = 1;
-    closeMap(state);
-    expect(state.phase).toBe("levelup");
+    closeMap(state.players[0]);
+    expect(state.players[0].screen).toBeUndefined();
+    expect(state.players[0].pendingStatPoints).toBe(1);
   });
 });
 

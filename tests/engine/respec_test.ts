@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The LEVEL TOKEN respec: a token jump refunds the carried build into a single
-// pool and freezes the run in the `respec` phase, where points move both ways
+// pool and opens the hero's modal `respec` screen, where points move both ways
 // until every one is re-placed and the build is committed. Covers the refund,
 // the deallocation floor, the "no auto-close" difference from a level-up, the
 // confirm gate, and the createGame → dismissIntro arming path.
@@ -38,7 +38,8 @@ describe("beginRespec", () => {
 
     beginRespec(state, state.players[0]);
 
-    expect(state.phase).toBe("respec");
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("respec");
     expect(state.players[0].pendingStatPoints).toBe(6); // 3 + 2 + 1
     expect(statTotal(state)).toBe(0);
     expect(state.respecPending).toBe(false);
@@ -76,7 +77,7 @@ describe("respec allocation", () => {
 
     // Pool is empty, but the chooser stays open for fine-tuning.
     expect(state.players[0].pendingStatPoints).toBe(0);
-    expect(state.phase).toBe("respec");
+    expect(state.players[0].screen).toBe("respec");
   });
 
   it("deallocateStat puts a point back, floored at zero and respec-only", () => {
@@ -94,10 +95,10 @@ describe("respec allocation", () => {
     expect(state.players[0].pendingStatPoints).toBe(1);
   });
 
-  it("deallocateStat is inert outside the respec phase", () => {
+  it("deallocateStat is inert outside the respec screen", () => {
     const state = startGame();
     state.players[0].stats.luck = 3;
-    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
     expect(deallocateStat(state, state.players[0], "luck")).toBe(false);
     expect(state.players[0].stats.luck).toBe(3);
   });
@@ -112,17 +113,17 @@ describe("confirmRespec", () => {
     // A point still owed: the confirm is refused.
     allocateStat(state, state.players[0], "stamina");
     expect(confirmRespec(state, state.players[0])).toBe(false);
-    expect(state.phase).toBe("respec");
+    expect(state.players[0].screen).toBe("respec");
 
     allocateStat(state, state.players[0], "stamina");
     expect(confirmRespec(state, state.players[0])).toBe(true);
-    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
     // The commit lands rested, like any fresh drop.
     expect(state.players[0].hp).toBe(state.players[0].maxHp);
     expect(state.players[0].stamina).toBe(state.players[0].maxStamina);
   });
 
-  it("is inert outside the respec phase", () => {
+  it("is inert outside the respec screen", () => {
     const state = startGame();
     expect(confirmRespec(state, state.players[0])).toBe(false);
   });
@@ -138,7 +139,8 @@ describe("the token-jump arming path", () => {
     skipCutscene(state);
     dismissIntro(state);
 
-    expect(state.phase).toBe("respec");
+    expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBe("respec");
     expect(state.players[0].pendingStatPoints).toBe(4);
     expect(statTotal(state)).toBe(0);
   });
@@ -149,5 +151,6 @@ describe("the token-jump arming path", () => {
     skipCutscene(state);
     dismissIntro(state);
     expect(state.phase).toBe("playing");
+    expect(state.players[0].screen).toBeUndefined();
   });
 });

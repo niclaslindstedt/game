@@ -213,8 +213,10 @@ export function dialogueContent(dialogue: DialogueState): {
 }
 
 /**
- * The player's tap: turn the page; past the last one the scene ends and
- * play resumes (a pending level-up takes priority, same as the bag).
+ * The player's tap: turn the page; past the last one the scene ends and play
+ * resumes. A GROUP verb — anyone in the party may advance the beat (plan
+ * §3.2). Banked level-up points stay banked; the HUD pip carries the
+ * reminder.
  */
 export function advanceDialogue(state: GameState): void {
   if (state.phase !== "dialogue" || !state.dialogue) return;
@@ -223,7 +225,7 @@ export function advanceDialogue(state: GameState): void {
     return;
   }
   state.dialogue = null;
-  state.phase = state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = "playing";
 }
 
 /**
@@ -237,8 +239,7 @@ export function muteDialogue(state: GameState): void {
   state.dialogueMuted = true;
   if (state.phase === "dialogue" && state.dialogue) {
     state.dialogue = null;
-    state.phase =
-      state.players[0].pendingStatPoints > 0 ? "levelup" : "playing";
+    state.phase = "playing";
   }
 }
 

@@ -5,7 +5,7 @@
 // and the blur/visibility auto-pause. GameScreen builds one per run effect;
 // detach() unwires everything on teardown.
 
-import { localHero } from "../local-seat.ts";
+import { fieldLive, localHero, localScreen } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { canOpenInventory, type Bot, type GameState } from "@game/core";
@@ -186,14 +186,14 @@ export function createControls(deps: {
     switch (action) {
       case "jump":
         // Space's old bare-press jump; queued for the sim loop.
-        if (state.phase === "playing") queues.jumpQueuedRef.current = true;
+        if (fieldLive(state)) queues.jumpQueuedRef.current = true;
         return;
       case "useAbility":
         // Spend the oldest powerup — the engine no-ops off the field.
         queues.useItemQueuedRef.current = true;
         return;
       case "weaponMenu":
-        if (state.phase === "playing") {
+        if (fieldLive(state)) {
           setWeaponMenuOpen((open) => !open);
           playUiSound(synth, "confirm");
         }
@@ -201,11 +201,11 @@ export function createControls(deps: {
       case "inventory":
         // Opens mid-run AND during an elite/boss arrival scene (the engine
         // gate) — the stare-down is when a fitting weapon gets equipped.
-        if (canOpenInventory(state)) {
+        if (canOpenInventory(state, localHero(state))) {
           setCharTab("bag");
           runCommand(state, "openInventory");
           playUiSound(synth, "confirm");
-        } else if (state.phase === "inventory") {
+        } else if (localScreen(state) === "inventory") {
           runCommand(state, "closeInventory");
           playUiSound(synth, "back");
         }
@@ -213,21 +213,21 @@ export function createControls(deps: {
         return;
       case "map":
         // Toggles the fog-of-war level map (same freeze as the bag).
-        if (state.phase === "playing") {
+        if (fieldLive(state)) {
           runCommand(state, "openMap");
           playUiSound(synth, "confirm");
           bumpUi();
-        } else if (state.phase === "map") {
+        } else if (localScreen(state) === "map") {
           runCommand(state, "closeMap");
           playUiSound(synth, "back");
           bumpUi();
         }
         return;
       case "pause":
-        if (state.phase === "playing") {
+        if (fieldLive(state)) {
           pause(true);
           playUiSound(synth, "confirm");
-        } else if (state.phase === "paused") {
+        } else if (localScreen(state) === "paused") {
           resume();
           playUiSound(synth, "back");
         }
@@ -235,15 +235,15 @@ export function createControls(deps: {
       case "medkit":
         // Spend from the consumable dock; the engine no-ops when nothing is
         // held or there's nothing to top up, so an idle press is free.
-        if (state.phase === "playing" && !weaponMenuOpenRef.current)
+        if (fieldLive(state) && !weaponMenuOpenRef.current)
           queues.useMedkitQueuedRef.current = true;
         return;
       case "stamina":
-        if (state.phase === "playing" && !weaponMenuOpenRef.current)
+        if (fieldLive(state) && !weaponMenuOpenRef.current)
           queues.useStaminaQueuedRef.current = true;
         return;
       case "repair":
-        if (state.phase === "playing" && !weaponMenuOpenRef.current)
+        if (fieldLive(state) && !weaponMenuOpenRef.current)
           queues.useRepairQueuedRef.current = true;
         return;
     }
@@ -257,10 +257,12 @@ export function createControls(deps: {
     // whole beat. Swallowing the key here also keeps a bound action (a powerup,
     // the medkit) from queueing itself against a corpse.
     if (state.phase === "dying") return;
-    // The level-up chooser owns the keyboard while it's up: LevelUpOverlay
-    // runs its own listener (arrows/WASD move the cursor, Enter/Space spend a
-    // point). Ceding here keeps those keys from steering or queuing a jump.
-    if (state.phase === "levelup") return;
+    // The level-up chooser (and the respec screen it shares parts with) owns
+    // the keyboard while it's up: LevelUpOverlay runs its own listener
+    // (arrows/WASD move the cursor, Enter/Space spend a point, Escape banks
+    // the rest). Ceding here keeps those keys from steering or queuing a jump.
+    const screen = localScreen(state);
+    if (screen === "levelup" || screen === "respec") return;
     const binds = getSettings().keybindings;
     // Track held movement keys + the walk modifier every keydown (repeats
     // included — Set.add is idempotent) so the sim loop reads live state.
@@ -271,7 +273,7 @@ export function createControls(deps: {
       const s = getSettings();
       if (
         (s.keyboardMove === "on" || s.steering === "aim") &&
-        state.phase === "playing"
+        fieldLive(state)
       ) {
         event.preventDefault(); // arrow keys must not scroll the page
       }
@@ -346,34 +348,34 @@ export function createControls(deps: {
         runCommand(state, "skipOutro");
         playUiSound(synth, "back");
         bumpUi();
-      } else if (state.phase === "inventory") {
+      } else if (screen === "inventory") {
         runCommand(state, "closeInventory");
         playUiSound(synth, "back");
         bumpUi();
-      } else if (state.phase === "shop") {
+      } else if (screen === "shop") {
         runCommand(state, "closeShop");
         playUiSound(synth, "back");
         bumpUi();
-      } else if (state.phase === "map") {
+      } else if (screen === "map") {
         runCommand(state, "closeMap");
         playUiSound(synth, "back");
         bumpUi();
-      } else if (state.phase === "questLog") {
+      } else if (screen === "questLog") {
         runCommand(state, "closeQuestLog");
         playUiSound(synth, "back");
         bumpUi();
-      } else if (state.phase === "playing") {
-        pause(true);
-        playUiSound(synth, "confirm");
-      } else if (state.phase === "paused") {
+      } else if (screen === "paused") {
         resume();
         playUiSound(synth, "back");
+      } else if (fieldLive(state)) {
+        pause(true);
+        playUiSound(synth, "confirm");
       }
     } else if (actionForCode(event.code, binds)) {
       // A rebindable action key fired (see keybindings.ts / runBinding).
       event.preventDefault();
       runBinding(actionForCode(event.code, binds) as BindableAction);
-    } else if (state.phase === "playing" && /^[1-9]$/.test(event.key)) {
+    } else if (fieldLive(state) && /^[1-9]$/.test(event.key)) {
       // The weapon-slot / powerup-dock number keys stay fixed (a contextual
       // range, not a single bind): 1-4 equip a listed alternative while the
       // weapon menu is up, otherwise 1/2/3 fire the matching powerup slot.
@@ -450,8 +452,9 @@ export function createControls(deps: {
   // STICK — even under the autopilot's input loop (DEVELOPER → BOT VIEW),
   // which otherwise clears auto-pauses and would keep the run going in the
   // background. Latch it like a hand-opened pause so the bot leaves it be
-  // (the ordering matters: `onBlur` may have already flipped the phase to
-  // `paused`, so latch directly rather than relying on pause()'s guard). The
+  // (the ordering matters: `onBlur` may have already raised the hero's
+  // `paused` screen, so latch directly rather than relying on pause()'s
+  // guard). The
   // ONE exception is a headless `?bot=` playtest (a bot with no BOT VIEW
   // watcher): it can report itself hidden spuriously and must keep running,
   // so it leaves the pause clearable — the same reason the bot loop clears
@@ -460,7 +463,7 @@ export function createControls(deps: {
   const onVisibility = () => {
     if (!document.hidden) return;
     pause();
-    if (!isHeadlessPlaytest && state.phase === "paused") {
+    if (!isHeadlessPlaytest && localScreen(state) === "paused") {
       userPausedRef.current = true;
     }
   };

@@ -5,7 +5,7 @@
 // click through, spends level-ups, runs the merchant economy, and adopts the
 // bot's decided steer/aim/casts into the frame's GameInput.
 
-import { localHero } from "../local-seat.ts";
+import { fieldLive, localHero, localScreen } from "../local-seat.ts";
 import type { MutableRefObject } from "react";
 
 import {
@@ -103,16 +103,16 @@ export function createBotDriver(deps: {
     bot ?? (state.autopilot.active ? ensureAutopilotBot() : null);
 
   const drive = (drivingBot: Bot, dtMs: number) => {
-    // The bot is a drop-in input source; it also clears the paused
-    // phases a human would click through (including an auto-pause from
-    // the headless tab reporting itself hidden/unfocused). But a LATCHED
-    // pause is left alone so the loop still runs while step() no-ops under
-    // the paused phase: one the VIEWER opened by hand (timer tap / P while
+    // The bot is a drop-in input source; it also clears the waiting screens
+    // a human would click through (including an auto-pause from the headless
+    // tab reporting itself hidden/unfocused). But a LATCHED pause is left
+    // alone so the loop still runs while the world halts under the hero's
+    // `paused` screen: one the VIEWER opened by hand (timer tap / P while
     // watching BOT VIEW), and — for BOT VIEW — a genuine app-switch /
     // backgrounding (onVisibility latches it), so switching away from a
     // watched run actually pauses it instead of playing on in the
     // background.
-    if (state.phase === "paused" && !userPausedRef.current) {
+    if (localScreen(state) === "paused" && !userPausedRef.current) {
       runCommand(state, "resumeGame");
     }
     if (state.phase === "cutscene") runCommand(state, "skipCutscene");
@@ -130,7 +130,7 @@ export function createBotDriver(deps: {
     // means an autoplay run actually exercises the quest system. It skips the
     // speech (a bot has nothing to read) and hands in whatever is finished
     // whenever it happens to wander back past the giver.
-    if (state.phase === "quest") {
+    if (localScreen(state) === "quest") {
       const offer = state.questOffer;
       if (offer?.kind === "list") {
         // A giver with several errands opens on the pick list; the bot takes
@@ -150,23 +150,35 @@ export function createBotDriver(deps: {
       runCommandOk(state, "resolveChoice", true);
       bumpUi();
     }
-    if (state.phase === "levelup") {
-      // The demo plays the modal at a watchable pace (see demo-director);
-      // the developer BOT VIEW drains the banked points instantly.
-      if (demo) {
+    // Level-ups no longer force the chooser open — the points BANK on the
+    // hero, so the drain triggers on the bank rather than on a phase. The
+    // demo plays the modal at a watchable pace (see demo-director, which
+    // also OPENS the chooser so the viewer sees the points spent); the
+    // developer BOT VIEW spends the banked points instantly, no chooser.
+    if (demo) {
+      if (
+        localScreen(state) === "levelup" ||
+        localHero(state).pendingStatPoints > 0
+      ) {
         demoDirector.stepLevelup(dtMs);
       } else {
-        runCommandOk(
-          state,
-          "allocateStat",
-          botAllocate(drivingBot, state, localHero(state)),
-        );
-        bumpUi();
+        demoDirector.resetLevelupPacing();
       }
-    } else if (demo) {
-      demoDirector.resetLevelupPacing();
+    } else if (localHero(state).pendingStatPoints > 0) {
+      runCommandOk(
+        state,
+        "allocateStat",
+        botAllocate(drivingBot, state, localHero(state)),
+      );
+      bumpUi();
+    } else if (localScreen(state) === "levelup") {
+      // The chooser is up with nothing left to spend (opened via the pip):
+      // the engine only auto-closes on the spend that empties the bank, so
+      // shut it here or the ride parks behind an empty modal.
+      runCommand(state, "closeLevelup");
+      bumpUi();
     }
-    if (state.phase === "respec") {
+    if (localScreen(state) === "respec") {
       // Spend the refunded pool point-by-point, then commit and drop in.
       if (localHero(state).pendingStatPoints > 0) {
         runCommandOk(
@@ -179,20 +191,20 @@ export function createBotDriver(deps: {
       }
       bumpUi();
     }
-    // A ding that crossed a ×10 TREE milestone earns a talent point, which holds
-    // the same level-up pause behind the picker. No bot seat shows the picker,
-    // so drain it here — pick per the bot's build (`botPickTalent`) and spend,
-    // which lifts the pause once the queue empties. The break guards against a
-    // pick that can't be spent (should never happen: the queue is
-    // capacity-clamped), so the loop can't spin. The demo instead plays the
-    // picker at a watchable pace (see demo-director), exactly as it does the
-    // level-up chooser above — a drained-in-one-tick picker never paints.
-    if (state.pendingTalentPoints.length > 0) {
+    // A ding that crossed a ×10 TREE milestone earns a talent point, which
+    // banks on the hero beside the stat points. No bot seat shows the picker,
+    // so drain it here — pick per the bot's build (`botPickTalent`) and spend.
+    // The break guards against a pick that can't be spent (should never
+    // happen: the queue is capacity-clamped), so the loop can't spin. The
+    // demo instead plays the picker at a watchable pace (see demo-director),
+    // exactly as it does the level-up chooser above — a drained-in-one-tick
+    // picker never paints.
+    if (localHero(state).pendingTalentPoints.length > 0) {
       if (demo) {
         demoDirector.stepTalent(dtMs);
       } else {
         let picked = false;
-        while (state.pendingTalentPoints.length > 0) {
+        while (localHero(state).pendingTalentPoints.length > 0) {
           const id = botPickTalent(drivingBot, state, localHero(state));
           if (!id || !runCommandOk(state, "spendTalentPoint", id)) break;
           picked = true;
@@ -209,8 +221,10 @@ export function createBotDriver(deps: {
     // counter routine (sell junk → buy an upgrade → mend → powerups)
     // whenever a visit would resolve something and the hero is at the
     // stall — `tradeAtMerchant` is proximity-gated, so until he walks
-    // there (the bot steers the errand itself) it's a cheap no-op.
-    if (state.phase === "playing") {
+    // there (the bot steers the errand itself) it's a cheap no-op. Gated on
+    // the hero being ON THE FIELD (not just the global phase): a viewer's
+    // latched pause parks the hero on a screen while `phase` stays playing.
+    if (fieldLive(state)) {
       // POCKET ARSENAL: keep the hand on whatever maximizes damage this
       // moment — the blade with a body in blade reach, the banked
       // ranged/magic shot out of reach and through every airborne frame
@@ -254,7 +268,7 @@ export function createBotDriver(deps: {
     // severed hand on the rift), which tears the bunker door open a step ahead.
     if (!bot && state.autopilot.active) {
       autopilotKeyTick = (autopilotKeyTick + 1) % AUTOPILOT_KEY_SCAN_TICKS;
-      if (autopilotKeyTick === 0 && state.phase === "playing") {
+      if (autopilotKeyTick === 0 && fieldLive(state)) {
         const bag = localHero(state).inventory;
         const keyAt = bag.findIndex(
           (it) => it != null && gateKeyTarget(state, it) != null,
@@ -321,7 +335,7 @@ export function createBotDriver(deps: {
   // pickup refilled, so the rendered/at-rest bag never showed the promised
   // open cell.
   const postStep = (drivingBot: Bot | null) => {
-    if (drivingBot && state.phase === "playing") {
+    if (drivingBot && fieldLive(state)) {
       if (driveBotUpkeep(state, localHero(state), send)) bumpUi();
     }
   };

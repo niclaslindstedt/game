@@ -5,7 +5,13 @@
 // this game's shipped content. `startGame`/`makeEnemy` default to the fixture
 // ids; the pure helpers are re-exported from the shared root helper.
 
-import { createGame, dismissIntro, LEVELING, skipCutscene } from "@game/core";
+import {
+  createGame,
+  dismissIntro,
+  LEVELING,
+  promptPendingPoints,
+  skipCutscene,
+} from "@game/core";
 import type { Enemy, GameState } from "@game/core";
 
 import { DT, idle, run } from "../helpers.ts";
@@ -42,17 +48,19 @@ export function startGame(seed = 42, levelId = "test_level"): GameState {
 }
 
 /**
- * Idle through the ding celebration until the stat chooser opens — a fresh
- * level-up burns for `LEVELING.dingCelebrationMs` before the `levelup`
- * phase pauses the run (see grantXp/step).
+ * Idle through the ding celebration, then open seat 0's stat chooser. A ding
+ * no longer forces the chooser (plan §3.2, decision 4): the points bank while
+ * `levelUpFxMs` burns, and `promptPendingPoints` opens the `levelup` screen
+ * on demand.
  */
 export function runUntilChooser(state: GameState): void {
   run(
     state,
     idle,
     Math.ceil(LEVELING.dingCelebrationMs / DT) + 2,
-    (s) => s.phase === "levelup",
+    (s) => s.levelUpFxMs === 0,
   );
+  promptPendingPoints(state, state.players[0]);
 }
 
 /**

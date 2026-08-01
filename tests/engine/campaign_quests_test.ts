@@ -111,7 +111,7 @@ describe("spendCleanSlate", () => {
 
     expect(spendCleanSlate(state, state.players[0])).toBe(true);
     expect(state.players[0].cleanSlates).toBe(0);
-    expect(state.phase).toBe("respec");
+    expect(state.players[0].screen).toBe("respec");
     // It is the SAME respec a level jump ran: the build is refunded into a
     // pool that has to be re-placed before play resumes.
     expect(state.players[0].pendingStatPoints).toBeGreaterThanOrEqual(4);
