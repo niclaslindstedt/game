@@ -139,7 +139,7 @@ describe("car physics", () => {
 describe("the drive-out through the door", () => {
   it("books the trip at the OPEN door's threshold, exactly once", () => {
     const state = startGarage();
-    const car = board(state);
+    board(state);
     const door = doorOf(state);
     const departs: string[] = [];
     const drive = steerTo(door.center.x + 400, door.center.y);

@@ -28,7 +28,6 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import { DOORS } from "./config/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { resolveObstacles } from "./obstacles.ts";
