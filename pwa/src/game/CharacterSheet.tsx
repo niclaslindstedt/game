@@ -20,12 +20,14 @@ import { localHero } from "./local-seat.ts";
 import { xpToLevelUp, type Difficulty, type GameState } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
+import { InfoTip } from "@ui/lib/InfoTip.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { characterStatGroups, type StatReadout } from "./char-stats.ts";
+import { InfoNote } from "./InfoNote.tsx";
 import { heroSoak } from "./game-screen/hero-soak.ts";
 import { dollDataUrl } from "./paper-doll.ts";
 import { playerDollLayers } from "./paper-doll-live.ts";
@@ -43,8 +45,15 @@ const LABEL = "#9aa3ad";
  */
 const SHEET_SCALE = 2;
 
-/** One sheet line: the glyph and label pinned left, the value pinned right —
- * the character-sheet read, not a wrapping sentence. */
+/**
+ * One sheet line: the glyph and label pinned left, the value pinned right —
+ * the character-sheet read, not a wrapping sentence.
+ *
+ * THE WHOLE ROW IS THE EXPLAINER'S TRIGGER, not a separate `(i)` pip beside it:
+ * every row on this page wants one, sixteen pips would be sixteen new things to
+ * miss, and the row is already the thing the player's eye and thumb are on. A
+ * mouse raises the note by hovering; a phone raises it by tapping (InfoTip).
+ */
 function SheetRow({
   font,
   sprites,
@@ -56,7 +65,17 @@ function SheetRow({
 }) {
   const icon = readout.icon ? spriteDataUrl(sprites, readout.icon) : undefined;
   return (
-    <div className="sheet-row">
+    <InfoTip
+      className="sheet-row"
+      label={`explain-${readout.key}`}
+      tip={
+        <InfoNote
+          font={font}
+          title={`${readout.label} ${readout.value}`}
+          lines={readout.help}
+        />
+      }
+    >
       <span className="sheet-row-label">
         {icon && (
           <img
@@ -81,7 +100,7 @@ function SheetRow({
           color={readout.color}
         />
       </span>
-    </div>
+    </InfoTip>
   );
 }
 
@@ -198,6 +217,19 @@ export function CharacterSheet({
               </div>
             </div>
           ))}
+        </div>
+
+        {/* The one thing a page of numbers cannot say about itself: that every
+            row will explain what it is. Without it the explainers exist and
+            nobody finds them — the same "a place nobody found unless they were
+            told it was there" this whole screen was built to fix. */}
+        <div className="char-hint">
+          <PixelText
+            font={font}
+            text="TAP A ROW TO SEE WHAT IT MEANS"
+            scale={SHEET_SCALE}
+            color="#6f7684"
+          />
         </div>
 
         <div className="char-foot">

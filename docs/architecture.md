@@ -615,7 +615,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`baseStatBonus`, folded into `effectiveStat`) — never written into
   `player.stats`, so a respec refunds only chosen points — and
   `autoPowerScale` expresses the damage curve those free gains produce so
-  the horde's scaling can cancel it out. Two balance guards live here too:
+  the horde's scaling can cancel it out. Because that growth is derived,
+  a hero who has spent nothing can still read a non-zero attribute — as can
+  one carrying a passive trinket or wearing a base with a `bonuses.stats` —
+  so `statBreakdown(state, hero, stat)` (items/derived.ts) itemises the four
+  sources (`chosen` / `headStart` / `auto` / `gear`, plus the `pct` scaling)
+  for the surface that has to explain the difference. It is bookkeeping over
+  the same memoised parts `effectiveStat` reads, so the two can never
+  disagree; the character sheet is its only caller. Two balance guards live
+  here too:
   `diminishStat` (config `STATS.statHardCap`/`statCeilingBase`/`statTaper`,
   via `statCap(level)`) is the LEVEL-SCALED cap curve every effective-stat
   read and `autoPowerScale` run through — linear up to a ceiling that rises

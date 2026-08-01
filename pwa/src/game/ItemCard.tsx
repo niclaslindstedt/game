@@ -492,6 +492,25 @@ export function itemLines(
         delta: eqGear ? bonusDelta(amount, gearStat(eqGear, stat)) : null,
       });
     }
+    // A PASSIVE TRINKET's bonus — the one a piece pays while merely CARRIED
+    // (`GearDef.passive`, read by `computeStatParts` off the bag as well as the
+    // worn slots). It needs its own line and its own WHILE CARRIED kicker
+    // because it is not an affix and never lands in a slot: without it a chip
+    // in the pocket quietly raised an attribute with nothing on any screen
+    // accounting for it, and the character sheet read a point the player was
+    // certain he did not own. No comparison chip — nothing is being replaced.
+    const passive = gearDef(item.defId).passive;
+    if (passive) {
+      for (const stat of Object.keys(STAT_LABELS) as StatName[]) {
+        const amount = passive[stat] ?? 0;
+        if (!amount) continue;
+        lines.push({
+          text: `+${amount} ${STAT_LABELS[stat]} WHILE CARRIED`,
+          color: AFFIX_COLORS.stat,
+          delta: null,
+        });
+      }
+    }
     // DURABILITY is appended below the affixes (durabilityLine / ItemCardBody),
     // right above the requirement footer — the WoW tooltip order.
   }
