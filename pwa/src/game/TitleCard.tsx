@@ -4,7 +4,7 @@
 // run drops in. It fades itself out on a timer (TITLE_HOLD_MS); a tap drops in
 // early. Shown while `phase === "title"`.
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { runLevelDef, type GameState } from "@game/core";
 
@@ -27,11 +27,20 @@ export function TitleCard({
   const def = runLevelDef(state);
 
   // Auto-drop after the hold; a tap (below) drops in early. onBegin flips the
-  // phase, which unmounts this card and clears the timer via cleanup.
+  // phase, which unmounts this card and clears the timer via cleanup. The
+  // timer arms ONCE per mount and calls the latest handler through a ref:
+  // keying the effect on `onBegin` (an inline closure, fresh every parent
+  // render) re-armed it on every re-render, so on a screen that re-renders
+  // faster than the hold — a HUD ticking behind the card — the card never
+  // dropped on its own.
+  const onBeginRef = useRef(onBegin);
   useEffect(() => {
-    const timer = window.setTimeout(onBegin, TITLE_HOLD_MS);
-    return () => window.clearTimeout(timer);
+    onBeginRef.current = onBegin;
   }, [onBegin]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => onBeginRef.current(), TITLE_HOLD_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
     <div

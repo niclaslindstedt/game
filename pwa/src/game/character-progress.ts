@@ -66,8 +66,8 @@ export function clearedLevelsFor(
 
 /**
  * Has this character already witnessed `levelId`'s opening (prelude cutscene +
- * intro monologue) on `difficulty`? True means a replay should skip straight
- * into play (see `skipStoryOpening`).
+ * intro monologue) on `difficulty`? True means a replay skips the story and
+ * lands on the level-name card (see `skipStoryOpening`).
  */
 export function hasSeenOpening(
   character: Character,

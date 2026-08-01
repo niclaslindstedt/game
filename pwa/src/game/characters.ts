@@ -773,13 +773,17 @@ function persist(character: Character): void {
  */
 export function markStorySeen(
   character: Character,
-  levelId: string,
+  /** The level whose OPENING was witnessed this run — or null when the run
+   * never showed one (a dev warp, a `?scenario=` staging, a muted run): the
+   * thoughts still bank, but an unseen opening must not enter the ledger, or
+   * the level's real first visit would skip a story nobody ever watched. */
+  levelId: string | null,
   difficulty: Difficulty,
   thoughts: readonly string[],
 ): Character {
   const seen = new Set(character.storySeen);
   const before = seen.size;
-  seen.add(openingKey(levelId, difficulty));
+  if (levelId !== null) seen.add(openingKey(levelId, difficulty));
   for (const thought of thoughts) seen.add(thoughtSeenKey(thought, difficulty));
   if (seen.size === before) return character; // nothing new witnessed
   const updated: Character = { ...character, storySeen: [...seen] };

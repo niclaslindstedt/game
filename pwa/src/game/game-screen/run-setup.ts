@@ -112,6 +112,12 @@ export type RunSession = {
   /** Whether this mount should capture the combat-start retry checkpoint (a
    * run started from scratch — not resumed, not adopted from a checkpoint). */
   captureCheckpoint: boolean;
+  /** Whether this run actually SHOWS its opening (or already has it banked) —
+   * false for a dev warp, a `?scenario=` staging, and a muted run, whose
+   * combat start must NOT stamp the opening "seen" on the character: a level
+   * warped into once would otherwise skip its real first-visit story forever
+   * (see run-progress.ts, where every `markStorySeen` reads this). */
+  openingPlayed: boolean;
   /** The developer BOT VIEW / `?bot=` playtest bot, or null. */
   bot: Bot | null;
   tuning: RunTuning;
@@ -325,6 +331,16 @@ export function createRunSession(deps: {
   // checkpoint that already froze it): capture the combat-start checkpoint
   // once this mount, superseding any stale one from an earlier level.
   const captureCheckpoint = !resumed && !checkpoint;
+  // Does this run SHOW its opening (or carry it already banked)? A dev warp
+  // (`skipOpening`), a `?scenario=` staging and a muted run all reach combat
+  // without ever putting the story on stage, so their progress events must not
+  // stamp the opening "seen" — that stamp is what made a warped-into level
+  // skip its real first-visit intro forever. An adopted run (resume /
+  // checkpoint) settled the question on the mount that built it.
+  const openingPlayed =
+    resumed !== null || checkpoint !== null
+      ? true
+      : !skipOpening && !wantsScenario && !state.dialogueMuted;
   // The per-character story ledger, for the two paths the PARAMETERS do not
   // build: a resumed or checkpointed state is adopted whole, so the thoughts
   // this hero has already read are seeded into it here rather than at creation
@@ -422,11 +438,13 @@ export function createRunSession(deps: {
     beginRun();
   } else if (openingSeen) {
     // Already watched this level's opening on this difficulty (a die-and-retry
-    // loop): skip the prelude, the intro monologue and the scripted opening
-    // strike, arming the hero, and roll the level theme straight away — the
-    // level music beginRun would start, minus the story it would sit through.
+    // loop, or a hub door into a familiar venue): skip the prelude, the intro
+    // monologue and the scripted opening strike, arming the hero — but land on
+    // the level-name TITLE card, not in play. The card is orientation rather
+    // than story (arriving from the garage with no announcement read as a
+    // bug), and its tap/auto-advance runs beginRun, which rolls the level
+    // theme exactly as a first visit does.
     skipStoryOpening(state);
-    playLevelMusic(runLevelDef(state).music);
   }
 
   // FAST-FORWARD: `?speed=<n>` (or the ?debug `window.__speed(n)`) runs the
@@ -513,6 +531,7 @@ export function createRunSession(deps: {
     runLevelId,
     resumed: resumed !== null,
     captureCheckpoint,
+    openingPlayed,
     bot,
     tuning,
     beginRun,
@@ -548,6 +567,8 @@ function spectatorSession(state: GameState, runId: number): RunSession {
     // what tells the loop to land on the paused overlay. A joined run is live.
     resumed: false,
     captureCheckpoint: false,
+    // A spectator banks nothing anyway; the flag is inert here.
+    openingPlayed: false,
     bot: null,
     tuning: {
       // REAL TIME, always. The session owns the clock; a spectator running its

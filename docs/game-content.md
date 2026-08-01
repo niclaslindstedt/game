@@ -896,11 +896,16 @@ difficulty**. The first time a character reaches combat on a level (on a given
 difficulty), its opening — the prelude cutscene and the hero's intro monologue —
 and every pinned inner monologue read that run (the GOODCO scientist, the Mars
 rover, and the rest) are banked onto the character; every later replay on that
-difficulty skips the opening and pre-marks those thoughts as seen, dropping the
-hero straight into the fight (`skipStoryOpening`/`markThoughtsSeen`, driven by
-the per-character `storySeen` ledger in `pwa/src/game/characters.ts`). A
-monologue not yet reached still plays its one time, and a fresh character — or a
-harder rung of the ladder — sees the whole story again.
+difficulty skips the story and pre-marks those thoughts as seen, landing the
+armed hero on the level-name title card — one tap (or one beat) from the fight
+(`skipStoryOpening`/`markThoughtsSeen`, driven by the per-character `storySeen`
+ledger in `pwa/src/game/characters.ts`). The card is kept because it is
+orientation rather than story: a hub door into a familiar venue still announces
+where the run starts. A run that never put the story on stage — a developer
+warp, a `?scenario=` staging, a muted run — banks only the thoughts, never the
+opening, so the level's real first visit still tells it. A monologue not yet
+reached still plays its one time, and a fresh character — or a harder rung of
+the ladder — sees the whole story again.
 
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears

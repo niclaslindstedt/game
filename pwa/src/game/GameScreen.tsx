@@ -696,6 +696,7 @@ export function GameScreen({
       coinsIncludePending: !botView && !demo,
       runLevelId,
       captureEnabled: session.captureCheckpoint,
+      openingPlayed: session.openingPlayed,
       setHud,
       setLevelId,
       setNewRecord,

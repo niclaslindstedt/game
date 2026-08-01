@@ -56,7 +56,8 @@ export type OpeningSkip =
   | "none"
   /** The hero has already watched this level's opening on this difficulty (a
    * die-and-retry loop): skip the prelude, the monologue and the opening
-   * strike, arming him, and land in play. */
+   * strike, arming him, and land on the level-name `title` card — the splash
+   * is orientation, not story, so even a replay announces where it starts. */
   | "story"
   /** A developer warp-in: bail the prelude and dismiss the intro straight into
    * the run. */
