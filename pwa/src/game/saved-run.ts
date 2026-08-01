@@ -101,12 +101,16 @@ const KEY = storageKey("current-run");
 // without one froze the resume on a still image with no UI at all), and stats
 // grew `goldCollected`/`coinsSold` (a v23 snapshot would tick them to NaN on
 // the first pile of gold).
+// v25: THE VEHICLES — the state grew `vehicles` (the garage's car and ship)
+// and `wheelDebris` (wheels torn off, bouncing or at rest). Both are arrays
+// `stepVehicles` iterates on every tick, so a v24 snapshot would crash the
+// resume's very first step.
 //
 // The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
 // hero, or the stats record grows a field this version doesn't know — bump
 // here (and update the guard's lists) in the SAME commit as the shape change,
 // or the next release resumes old snapshots into a state the engine can't read.
-export const SAVE_VERSION = 24;
+export const SAVE_VERSION = 25;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

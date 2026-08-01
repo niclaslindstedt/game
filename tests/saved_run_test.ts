@@ -279,9 +279,11 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "talk",
       "thoughtsSeen",
       "trickleMs",
+      "vehicles",
       "victoryCountdownMs",
       "waveSpawned",
       "wells",
+      "wheelDebris",
     ]);
   });
 
