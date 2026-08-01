@@ -146,6 +146,10 @@ export type HostOptions = {
   password?: string;
   maxClients?: number;
   mods?: string[];
+  /** The catalog overrides those mods registered (§4.4) — the session process
+   * simulates, and its registry never saw the page's `registerDefs`. Opaque
+   * JSON here like everything else this bridge moves. */
+  modDefs?: unknown;
   /**
    * A run to ADOPT rather than build from `params` — a parked run, or a
    * checkpoint the player just retried into, neither of which any set of
@@ -280,6 +284,7 @@ export async function hostSession(
     password: opts.password,
     maxClients: opts.maxClients,
     mods: opts.mods,
+    modDefs: opts.modDefs,
   })) as { ok?: boolean; levelId?: string; reason?: string } | null;
   if (reply?.ok && reply.levelId) return { ok: true, levelId: reply.levelId };
   return { ok: false, reason: reply?.reason ?? "no reply" };

@@ -518,6 +518,15 @@ export function GameScreen({
         progressRef.current?.bankHero(state);
       }
       made?.dispose();
+      // §4.4: the HOST's mod set was applied on the way through this door,
+      // and a mod applies to a RUN, never to the install — put the shipped
+      // game back. The assets resolve from the memoized loader's cache.
+      if (join.appliedMods) {
+        void Promise.all([
+          import("./mods.ts"),
+          import("./assets.ts").then((m) => m.loadGameAssets()),
+        ]).then(([mods, loaded]) => mods.restoreBaseDefs(loaded.sprites));
+      }
     };
   }, [join]);
 

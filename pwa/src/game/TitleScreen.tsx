@@ -75,7 +75,7 @@ import { furthestUnlockedDifficulty } from "./title-screen/menus-campaign.ts";
 import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
 import { useCloudSave } from "./title-screen/use-cloud-save.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
-import type { InstalledMod } from "../app/mods-bridge.ts";
+import { listMods, type InstalledMod } from "../app/mods-bridge.ts";
 import type { ModBundle } from "./mod-state.ts";
 import { useMods } from "./title-screen/use-mods.ts";
 import { useSessions } from "./title-screen/use-sessions.ts";
@@ -432,6 +432,32 @@ export function TitleScreen({
           coins: characterPurse(character),
         } as unknown as Record<string, unknown>)
       : null,
+    // §4.4: apply the HOST's exact mod set for the session on the way through
+    // a browser row — the same dynamic-import rule as `onPlayMods`, because
+    // `game/mods.ts` reaches `@game/core` and this screen is the startup path.
+    // An empty set restores the shipped game (a modded joiner entering a
+    // stock host's session plays stock).
+    applyForSession: useCallback(
+      async (modIds: string[]) => {
+        if (!assets) return false;
+        const mods = await import("./mods.ts");
+        if (modIds.length === 0) {
+          mods.restoreBaseDefs(assets.sprites);
+          return true;
+        }
+        const list = await listMods();
+        const byId = new Map(
+          list
+            .filter((mod) => mod.bundle)
+            .map((mod) => [mod.bundle!.id, mod.bundle!] as const),
+        );
+        const bundles = modIds.map((id) => byId.get(id));
+        if (bundles.some((bundle) => !bundle)) return false;
+        await mods.applyMods(bundles as ModBundle[], assets.sprites);
+        return true;
+      },
+      [assets],
+    ),
     onJoin,
   });
   // The one line of text the menu ever asks for — a password, a port, an

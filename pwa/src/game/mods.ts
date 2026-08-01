@@ -61,6 +61,7 @@ import {
 } from "./sfx/index.ts";
 import type { SoundCatalog, SoundDef } from "./sfx/types.ts";
 import {
+  setActiveDefs,
   setActiveMods,
   type ModBundle,
   type ModClash,
@@ -359,7 +360,7 @@ export async function applyMods(
   // imports and stay exactly where they are, so a mod that replaces one does it
   // by claiming its id here rather than by anything being rebuilt.
   setModTracks(music);
-  registerDefs({
+  const defs: DefOverrides = {
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
     blueprints: blueprints as DefOverrides["blueprints"],
@@ -380,7 +381,14 @@ export async function applyMods(
     storyItems: storyItems as DefOverrides["storyItems"],
     quests: quests as DefOverrides["quests"],
     questGivers: questGivers as DefOverrides["questGivers"],
-  });
+  };
+  registerDefs(defs);
+  // The SAME overrides, kept for the session process (multiplayer §4.4): a
+  // hosted run simulates over there, where this `registerDefs` never reached.
+  // The run driver sends this with `start` and the session registers it before
+  // it builds — so the horde a modded host fights is the mod's, not the
+  // shipped game's wearing its skin.
+  setActiveDefs(defs as unknown as Record<string, unknown>);
 
   const stamps = bundles.map((bundle) => ({
     id: bundle.id,
@@ -447,6 +455,7 @@ export function restoreBaseDefs(sprites: Sprites): void {
   setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
   setModTracks({});
   setActiveMods([], []);
+  setActiveDefs(null);
 }
 
 /**

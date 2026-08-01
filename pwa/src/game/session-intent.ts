@@ -68,6 +68,10 @@ export type JoinIntent = {
    * is looking at while the level builds. Null for a typed address, which
    * claims nothing until the handshake answers. */
   label?: string;
+  /** The HOST'S MOD SET was applied on the way through this door (§4.4) —
+   * so when the joined run ends, the run must put the shipped game back
+   * (`restoreBaseDefs`): a mod applies to a run, never to the install. */
+  appliedMods?: boolean;
 };
 
 let armed: HostIntent | null = null;

@@ -65,6 +65,10 @@ export type NetDriverOptions = {
   adopt?: unknown | null;
   /** The mods this run has applied, in load order. */
   mods?: string[];
+  /** The catalog overrides those mods registered (§4.4) — sent with `start`
+   * so the SESSION simulates the same defs the page applied. Null/absent is
+   * the shipped game. */
+  modDefs?: Record<string, unknown> | null;
   /**
    * Open the doors once the session is up, and on which of them.
    *
@@ -137,6 +141,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
     params: options.params,
     adopt: options.adopt ?? undefined,
     mods: options.mods,
+    modDefs: options.modDefs ?? undefined,
     password: options.listen?.password,
     maxClients: options.listen?.maxClients,
   }).then((result) => {

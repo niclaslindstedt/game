@@ -48,7 +48,12 @@
 
 import { lookup } from "node:dns/promises";
 
-import { engineVersion, type FrozenRun } from "@game/core";
+import {
+  engineVersion,
+  registerDefs,
+  type DefOverrides,
+  type FrozenRun,
+} from "@game/core";
 
 import { createJoinLink, type JoinLink } from "./net/connect.ts";
 import { main as dedicated } from "./dedicated.ts";
@@ -74,6 +79,15 @@ type ControlMessage =
       kind: "start";
       params: SessionParams;
       mods?: string[];
+      /**
+       * THE CATALOG OVERRIDES THE PAGE'S MODS REGISTERED (§4.4). This process
+       * SIMULATES, and the page's own `registerDefs` never reached it — so
+       * without this a modded host's horde would spawn from the shipped
+       * catalogs while the renderer drew the mod's. Registered before the run
+       * is built, and never restored: a session process lives exactly one
+       * session, which is what makes the swap safe (plan §1.2, reason 2).
+       */
+      modDefs?: DefOverrides | null;
       password?: string;
       maxClients?: number;
       /** A run to ADOPT rather than build — a parked run or a checkpoint the
@@ -295,6 +309,8 @@ function handleControl(
   try {
     if (message.kind === "start") {
       stop("restarted");
+      // The mods' catalogs, before anything builds a run from them (§4.4).
+      if (message.modDefs) registerDefs(message.modDefs);
       host = createHost({
         params: message.params,
         adopt: message.adopt,

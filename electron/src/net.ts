@@ -77,6 +77,9 @@ export type NetRequest = {
   password?: string;
   maxClients?: number;
   mods?: string[];
+  /** `host`: the catalog overrides those mods registered (§4.4). Forwarded
+   * untouched; the session registers them before it builds. */
+  modDefs?: unknown;
   /** `host`: a run to ADOPT rather than build from `params` — a parked run or
    * a checkpoint. Forwarded untouched; only the session knows what it is. */
   adopt?: unknown;
@@ -356,6 +359,7 @@ export function createNetBridge(
         params,
         adopt: request.adopt,
         mods: request.mods,
+        modDefs: request.modDefs,
         password: request.password,
         maxClients: request.maxClients,
       });

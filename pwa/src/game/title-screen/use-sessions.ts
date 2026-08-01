@@ -30,6 +30,12 @@ import {
   type BrowserRow,
   type FirewallStatus,
 } from "../../app/net-bridge.ts";
+import {
+  listMods,
+  modsBridgeAvailable,
+  openWorkshop,
+  type InstalledMod,
+} from "../../app/mods-bridge.ts";
 import { engineVersion } from "@game/menu";
 
 import { activeMods } from "../mod-state.ts";
@@ -47,6 +53,7 @@ export function useSessions({
   heroName,
   heroHardcore,
   heroLoadout,
+  applyForSession,
   onJoin,
 }: {
   screen: MenuScreen;
@@ -60,6 +67,15 @@ export function useSessions({
    * session seats them with. Null for a fresh hero (the authored fresh
    * start), and for no hero at all. */
   heroLoadout: Record<string, unknown> | null;
+  /**
+   * APPLY THIS EXACT MOD SET FOR THE SESSION (§4.4) — the host's ids, in the
+   * host's load order (empty = the shipped game, i.e. restore). Owned by the
+   * title screen because applying needs the sprite atlas and `game/mods.ts`,
+   * both of which live behind lazy chunks this startup-path module may not
+   * reach. Resolves false when it could not (assets not loaded, a bundle
+   * missing), and then the join is not attempted.
+   */
+  applyForSession: (modIds: string[]) => Promise<boolean>;
   /** Go and watch one. The title screen does not connect: joining is a RUN,
    * and a run belongs to the app above it. */
   onJoin: (intent: JoinIntent) => void;
@@ -67,6 +83,13 @@ export function useSessions({
   const netOpen = netBridgeAvailable();
   const [rows, setRows] = useState<BrowserRow[] | null>(null);
   const [firewall, setFirewall] = useState<FirewallStatus | null>(null);
+  // EVERY MOD ON THIS MACHINE, compiled, by its bundle id — what decides
+  // whether a modded host's row is a door (all installed: the set is applied
+  // on the way through) or a refusal with a Workshop pointer (§4.4). Null
+  // until the list lands; a row is then treated as it always was.
+  const [installed, setInstalled] = useState<Map<string, InstalledMod> | null>(
+    null,
+  );
   // Bumped to re-read the settings this screen writes through (the port, the
   // password, the seats) — they live in the settings rather than in state so a
   // session's shape survives a relaunch.
@@ -129,6 +152,69 @@ export function useSessions({
     setRound((n) => n + 1);
   }, []);
 
+  // The installed-mod list rides the browser screen the way the rows do —
+  // fetched when it opens, because compiling a dozen mods is real work the
+  // title menu must not pay at launch.
+  useEffect(() => {
+    if (screen !== "sessions" || !modsBridgeAvailable()) return;
+    let live = true;
+    void listMods().then((mods) => {
+      if (!live) return;
+      const byId = new Map<string, InstalledMod>();
+      for (const mod of mods) {
+        const id = (mod.bundle as { id?: unknown } | null)?.id;
+        if (typeof id === "string" && mod.bundle) byId.set(id, mod);
+      }
+      setInstalled(byId);
+    });
+    return () => {
+      live = false;
+    };
+  }, [screen]);
+
+  /**
+   * The gap between a row's mod set and this build's (§4.4): which of the
+   * host's mods are MISSING here (not installed, or installed but broken),
+   * and whether joining would need the active set swapped at all.
+   */
+  const modsGap = useCallback(
+    (target: readonly string[]) => {
+      const mine = activeMods().map((stamp) => stamp.id);
+      const same =
+        target.length === mine.length &&
+        target.every((id, at) => mine[at] === id);
+      if (same) return { missing: [] as string[], needsApply: false };
+      return {
+        missing: target.filter((id) => !installed?.get(id)?.bundle),
+        needsApply: true,
+      };
+    },
+    [installed],
+  );
+
+  /**
+   * Walk through a row's door with the host's mod set applied (§4.4): the
+   * host's set is the session's, in the host's load order, and a joiner who
+   * has it all installed simply plays under it — `restoreBaseDefs` puts the
+   * shipped game back when the run ends (the intent's `appliedMods` is what
+   * tells the run it must). A joiner missing one never reaches here: the row
+   * is a refusal with the Workshop behind it.
+   */
+  const reconcileAndJoin = useCallback(
+    (target: readonly string[], intent: JoinIntent) => {
+      const gap = modsGap(target);
+      if (!gap.needsApply) {
+        onJoin(intent);
+        return;
+      }
+      if (gap.missing.length) return; // the row was a refusal; belt and braces
+      void applyForSession([...target]).then((ok) => {
+        if (ok) onJoin({ ...intent, appliedMods: true });
+      });
+    },
+    [modsGap, applyForSession, onJoin],
+  );
+
   // The FIREWALL row asks its question when the HOST screen is opened, and
   // never elevates anything doing so: this is the CHECK, and the remedy is a
   // press (see `allowFirewall`).
@@ -179,14 +265,23 @@ export function useSessions({
         setTick((n) => n + 1);
       },
       hostIntent: () => hostIntentFor(heroName),
+      // A MOD GAP THIS BUILD CAN CLOSE IS NOT A REFUSAL (§4.4): when every
+      // one of the host's mods is installed here, the row presents itself
+      // WITH the host's set — joining applies it on the way through — and
+      // only a genuinely missing mod (or a build/protocol skew) still greys
+      // the row.
       refusalFor: (row) =>
         sessionRowRefusal(
           row,
           myHandshake(
             engineVersion,
-            activeMods().map((stamp) => stamp.id),
+            modsGap(row.mods).missing.length
+              ? activeMods().map((stamp) => stamp.id)
+              : row.mods,
           ),
         ),
+      missingMods: (row) => modsGap(row.mods).missing.length > 0,
+      openWorkshop,
       joinRow: (row, password) => {
         // A lobby row carries the host's direct address when it is offering
         // one, and only the Steam relay when it is not. The ADDRESS is
@@ -194,7 +289,7 @@ export function useSessions({
         // be paying an ocean of latency for a cable in the same room.
         if (row.address) {
           remember(row.address);
-          onJoin({
+          reconcileAndJoin(row.mods, {
             address: row.address,
             name: heroName,
             password,
@@ -210,7 +305,7 @@ export function useSessions({
         // willing to route the two of us to each other at all.
         void joinSession(row.id).then((found) => {
           if (!found) return;
-          onJoin({
+          reconcileAndJoin(row.mods, {
             peer: found.hostId,
             name: heroName,
             password,

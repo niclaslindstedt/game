@@ -143,6 +143,11 @@ export type ModClash = {
 
 let active: ModStamp[] = [];
 let clashes: ModClash[] = [];
+/** The exact catalog overrides the last `applyMods` registered (the object it
+ * handed `registerDefs`), structurally typed because this leaf sits on the
+ * startup path and may not name the engine's types. Null for the shipped
+ * game. See `activeDefOverrides` for who reads it and why. */
+let activeDefs: Record<string, unknown> | null = null;
 
 /** The mods applied to the engine, in LOAD ORDER. Empty for the shipped game. */
 export function activeMods(): ModStamp[] {
@@ -165,4 +170,24 @@ export function modClashes(): ModClash[] {
 export function setActiveMods(stamps: ModStamp[], found: ModClash[]): void {
   active = stamps;
   clashes = found;
+}
+
+/**
+ * THE CATALOGS THE SESSION PROCESS MUST SIMULATE WITH (multiplayer §4.4).
+ *
+ * The page applies a mod by swapping the live registry (`registerDefs`), but
+ * a hosted run SIMULATES in the session's own process, whose registry this
+ * swap never touched — so a modded run's horde would spawn from the SHIPPED
+ * catalogs while the renderer drew a mod. The run driver reads this and sends
+ * it with the `start` message, and the session registers it before it builds
+ * the run. Null means the shipped game, which is every unmodded run.
+ */
+export function activeDefOverrides(): Record<string, unknown> | null {
+  return activeDefs;
+}
+
+/** Record the overrides `applyMods` registered (null on restore). Called only
+ * by `mods.ts`, beside `setActiveMods` and for the same reason. */
+export function setActiveDefs(defs: Record<string, unknown> | null): void {
+  activeDefs = defs;
 }

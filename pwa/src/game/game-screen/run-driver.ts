@@ -43,7 +43,7 @@ import {
 } from "@game/core";
 import type { SessionParams } from "@game/wire/protocol.ts";
 
-import { activeMods } from "../mod-state.ts";
+import { activeDefOverrides, activeMods } from "../mod-state.ts";
 import { createNetDriver } from "../net/driver.ts";
 import type { SessionLink } from "../net/session-link.ts";
 import { takeHostIntent } from "../session-intent.ts";
@@ -167,6 +167,11 @@ export function createRunDriver(session: RunSession): RunDriver {
     // the first spawn. A host that advertised none would admit exactly that
     // joiner and call the desync a replication bug.
     mods: activeMods().map((stamp) => stamp.id),
+    // AND THE CATALOGS THEMSELVES (§4.4), for the process that simulates: the
+    // page's `registerDefs` never reached the session, so without this a
+    // modded host's horde spawns from the SHIPPED catalogs while the renderer
+    // draws the mod. Null is the shipped game and costs the channel nothing.
+    modDefs: activeDefOverrides(),
     listen: hosting
       ? {
           name: hosting.name,

@@ -62,6 +62,9 @@ export type ServerControl =
       kind: "start";
       params: unknown;
       mods?: string[];
+      /** The catalog overrides those mods registered (§4.4), opaque like
+       * `adopt` — the session registers them before it builds. */
+      modDefs?: unknown;
       password?: string;
       maxClients?: number;
       /** A run the session should ADOPT rather than build. Opaque here — this
