@@ -8,8 +8,14 @@ description: |-
   mid-floor, the ROLL-UP DOOR on its east wall, the rift seam humming beside
   the car once it exists at all); the clean PAVED DRIVE out front of the
   door (swept pavement, no garbage — the house stands just south of it, off
-  the map's edge); and THE LAWN behind the garage to the north, grass where
-  the rocket stands and the trader parks. Small MEANS small — a Left 4 Dead
+  the map's edge); THE LAWN behind the garage to the north, grass where the
+  rocket stands and the trader parks; and — down the whole east edge, the
+  one piece of the lot that is not the household's — THE ROAD, two lanes of
+  dark tarmac with a painted centre line, running off both ends of the map.
+  The road is where the driveway leads and where a driven car is finally
+  GONE (`driveOut`), so the trip to GOODCO is a drive out of the bay, across
+  the drive and onto the tarmac rather than a cut at the roll-up door.
+  Small MEANS small — a Left 4 Dead
   staging area, not a level. Nothing is loot: no chests, no breakable
   crates — a hero does not shoot up his own garage — just furniture. No
   horde at all (`horde: 0` on every area — the mission's objective is `hub`
@@ -48,6 +54,49 @@ areas:
     spawn: false
     label: THE LAWN
     ground: { common: grass_0, rare: grass_1, rareEvery: 9 }
+  # ── THE ROAD ────────────────────────────────────────────────────────────────
+  # The two lanes down the far east edge, and the painted line between them.
+  # They are separate areas ONLY because a district's floor is one ground pair:
+  # the dash tile carries its own gaps (`road_dash`), so a one-tile-wide strip
+  # of it between two lanes of plain tarmac paints an evenly broken centre line
+  # with nothing having to place the dashes.
+  #
+  # `driveOut` is what makes this a road rather than a dark stripe: reaching it
+  # in the car ends the level (see `MapArea.driveOut` / `vehicles.ts`). It sits
+  # on BOTH lanes and on the line, so the tarmac is departure ground whichever
+  # inch of it the bumper touches first.
+  - id: road
+    enclosure: none
+    weight: 1
+    horde: 0
+    boss: false
+    spawn: false
+    driveOut: true
+    label: THE ROAD
+    ground: { common: asphalt_0, rare: asphalt_1, rareEvery: 11 }
+  - id: road_line
+    enclosure: none
+    weight: 1
+    horde: 0
+    boss: false
+    spawn: false
+    driveOut: true
+    label: THE ROAD
+    ground: { common: road_dash, rare: road_dash, rareEvery: 1 }
+  # THE VERGE — grass on the far side of the road, and the reason it is here is
+  # the MAP'S OWN EDGE: the renderer dithers the last ~20 units of every map out
+  # to black, and with the tarmac laid flush against the boundary that band ate
+  # the far lane, so the road read as half a road. The verge takes the dither
+  # instead and the road is a road all the way across. Not `driveOut`: a car has
+  # already crossed the tarmac to get here.
+  - id: verge
+    enclosure: none
+    weight: 1
+    horde: 0
+    boss: false
+    spawn: false
+    label: THE ROAD
+    ground: { common: grass_0, rare: grass_1, rareEvery: 9 }
 
 # THE FLOOR PLAN — authored, not carved: the cutscene's establishing shot as
 # rooms. The GARAGE BAY southwest with its roll-up door east onto the clean
@@ -64,6 +113,19 @@ plan:
       rect: { x: 0, y: 140, width: 224, height: 140 }
     - area: drive
       rect: { x: 224, y: 140, width: 176, height: 140 }
+    # THE ROAD, appended last so every chamber id above keeps the number it has
+    # always had. Three rooms, all TILE-ALIGNED (16 px): an open district's floor
+    # is emitted as a ragged patch and then grown back out to the tile grid, so a
+    # strip whose edges already sit on it comes out crisp and full height, which
+    # is what a painted line needs and what a kerbside wants anyway.
+    - area: road
+      rect: { x: 400, y: 0, width: 32, height: 280 }
+    - area: road_line
+      rect: { x: 432, y: 0, width: 16, height: 280 }
+    - area: road
+      rect: { x: 448, y: 0, width: 32, height: 280 }
+    - area: verge
+      rect: { x: 480, y: 0, width: 32, height: 280 }
   doors:
     - between: [bay, drive]
   # The rocket stands on the grass; the vending machine parks on the drive.
@@ -72,20 +134,22 @@ plan:
 
 # One look, three times: the sizes are identical on purpose — a static hub
 # must not change scale under the GENERATED MAPS setting. A LOT smaller than
-# the rest of the game's venues, because it is a garage, not a level.
+# the rest of the game's venues, because it is a garage, not a level. The lot
+# itself is still 400 wide; the extra 112 is the ROAD and its far VERGE, which
+# belong to the county rather than to the house. `rooms` is ignored under a plan.
 sizes:
   small:
-    width: 400
+    width: 512
     height: 280
-    rooms: 4
+    rooms: 7
   medium:
-    width: 400
+    width: 512
     height: 280
-    rooms: 4
+    rooms: 7
   large:
-    width: 400
+    width: 512
     height: 280
-    rooms: 4
+    rooms: 7
 
 layout:
   minRoom: 128

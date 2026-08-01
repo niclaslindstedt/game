@@ -68,4 +68,10 @@ contrastExempt: [
     # floor is not a silhouette that must stand out from the floor.
     pavement_0,
     pavement_1,
+    # The road at the end of the drive — same reason, one shade darker: tarmac
+    # is a floor, and the centre-line dash is paint ON that floor rather than a
+    # thing standing on it.
+    asphalt_0,
+    asphalt_1,
+    road_dash,
   ]

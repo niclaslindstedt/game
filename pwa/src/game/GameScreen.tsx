@@ -414,6 +414,16 @@ export function GameScreen({
   // fpsRef/xpHeatRef) so the sprint pool drains and refills glass-smooth;
   // React only mounts the bar (the pool is out of the HUD change-key).
   const staminaFillRef = useRef<HTMLDivElement | null>(null);
+  // THE DRIVE-OUT CURTAIN — the wash to black over the departing car (the
+  // engine's `state.departure`). Mounted once and left at zero opacity, driven
+  // straight on the DOM by the render loop: it has to cover the HUD and every
+  // overlay as well as the field, so it is a screen-space div rather than
+  // anything the world canvas could paint.
+  const departureRef = useRef<HTMLDivElement | null>(null);
+  // …and the far side of that same curtain: the deadline the ARRIVING run lifts
+  // it back off by. Component-lifetime, because it is the one thing about the
+  // departure that has to outlive the run that played it (see run-progress.ts).
+  const arrivalFadeRef = useRef(0);
   useEffect(() => {
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
@@ -699,6 +709,7 @@ export function GameScreen({
       runLevelId,
       captureEnabled: session.captureCheckpoint,
       openingPlayed: session.openingPlayed,
+      arrivalFadeRef,
       setHud,
       setLevelId,
       setNewRecord,
@@ -764,6 +775,8 @@ export function GameScreen({
       fpsRef,
       xpHeatRef,
       staminaFillRef,
+      departureRef,
+      arrivalFadeRef,
       dpadRef,
       botDpadRef,
       powerupDockRef,
@@ -1602,6 +1615,17 @@ export function GameScreen({
           onQuit={onQuit}
         />
       )}
+
+      {/* THE DRIVE-OUT CURTAIN, last in the tree and above everything in it:
+          the departure takes the whole picture, HUD and splashes included. It
+          is always mounted and transparent until the render loop raises it, so
+          the wash starts on the very frame the car reaches the road rather than
+          one React commit later. */}
+      <div
+        ref={departureRef}
+        className="departure-curtain"
+        aria-hidden="true"
+      />
     </div>
   );
 }

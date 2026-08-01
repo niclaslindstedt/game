@@ -39,6 +39,11 @@ import { publishLeaderboards } from "../leaderboards.ts";
 import { stopMusic } from "../music/index.ts";
 import type { Hud } from "./hud-model.ts";
 
+/** How long the arrival takes to come up out of the drive-out's black (ms).
+ * Shorter than the departure's own fade: going dark is the beat being watched,
+ * coming back is just the door opening. */
+export const ARRIVAL_FADE_MS = 700;
+
 export type RunCheckpoint = { levelId: string; state: GameState };
 
 export type RunProgress = {
@@ -73,6 +78,13 @@ export function createRunProgress(deps: {
    * may stamp the opening "seen": a level warped into once would otherwise
    * skip its real first-visit story forever. Thoughts still bank. */
   openingPlayed: boolean;
+  /** THE DRIVE-OUT'S FAR SIDE: the wall-clock instant the arrival curtain
+   * should be fully lifted by. The departing run washes the screen to black on
+   * its own clock (`GameState.departure`); the run it hands over to is a fresh
+   * state with no memory of that, so the deadline is parked on this
+   * component-lifetime ref and the next run's render loop lifts the same
+   * curtain back off. Left at 0 by every other kind of crossing. */
+  arrivalFadeRef: MutableRefObject<number>;
   setHud: Dispatch<SetStateAction<Hud | null>>;
   setLevelId: (id: string) => void;
   setNewRecord: (flag: boolean) => void;
@@ -85,6 +97,7 @@ export function createRunProgress(deps: {
     runLevelId,
     captureEnabled,
     openingPlayed,
+    arrivalFadeRef,
     setHud,
     setLevelId,
     setNewRecord,
@@ -340,10 +353,14 @@ export function createRunProgress(deps: {
     if (event.type === "gateEntered") {
       travelTo(state, event.to);
     }
-    // DRIVING OUT of the garage: the car cleared its parking spot, and the
-    // trip it commits is the car door's own destination — the same crossing
-    // as a gate, booked by the wheel instead of a tap.
+    // DRIVING OUT of the garage: the drive-out beat has played out — the car
+    // is away down the road and the screen is already black — and the trip it
+    // commits is the car door's own destination, the same crossing as a gate
+    // but booked by the wheel instead of a tap. The curtain is handed over
+    // with it: the destination lifts the SAME black rather than snapping into
+    // a lit level, so the two halves of the transition are one move.
     if (event.type === "carDeparted") {
+      arrivalFadeRef.current = performance.now() + ARRIVAL_FADE_MS;
       travelTo(state, event.to);
     }
     // Run over either way: bank the opening and every inner monologue read

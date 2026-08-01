@@ -32,10 +32,12 @@ import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { openDoor } from "./story.ts";
+import { anyZoneContains, type Zone } from "./zones.ts";
 import {
   CAR_FIX,
   type CarDetachable,
   type CarVehicle,
+  type DepartureState,
   type GameInput,
   type GameState,
   type Player,
@@ -117,8 +119,9 @@ export const CAR = {
    * garage door. */
   bodyRadius: 14,
   /** Driving this far from `home` books the departure (`carDeparted`) on a
-   * map with NO garage door; with one, the departure is the door's own
-   * threshold instead (`departRadius` of its center, once open). */
+   * map with neither a ROAD OUT (`LevelDef.driveOut`) nor a garage door; with
+   * a door and no road, the departure is the door's own threshold instead
+   * (`departRadius` of its center, once open). A road wins over both. */
   departDistance: 150,
   departRadius: 30,
   /** How far out a DRIVEN car trips the garage door — like a real opener,
@@ -132,6 +135,50 @@ export const CAR = {
    * and the speed below which dragging steel stops sparking. */
   grindCueMs: 90,
   grindMinSpeed: 8,
+} as const;
+
+/**
+ * THE DRIVE-OUT — the departure beat between a driven car reaching the level's
+ * road out and the next level being built (see `GameState.departure`).
+ *
+ * It exists because a cut is not a departure. The trip used to book the instant
+ * the bumper crossed the garage door, and the frame after it the hero was
+ * somewhere else entirely — the car never went anywhere, it was merely switched
+ * off in its own driveway. So the road is where the level lets go, and letting
+ * go takes a moment: the wheel comes out of the player's hands, the car drives
+ * on down the tarmac, and the picture washes to black over it. The app paints
+ * the wash off `ms`; everything else here is simulation.
+ */
+export const DEPARTURE = {
+  /** How long the whole beat runs before the trip is booked (ms). Long enough
+   * that the car visibly gets down the road and short enough that a player who
+   * has driven this door fifty times is not made to sit through a cutscene. */
+  durationMs: 1700,
+  /** The fraction of the beat the wash takes to reach full black. Short of 1
+   * on purpose: the picture is GONE before the run is torn down, so the swap
+   * happens behind black rather than under a fade that is still lifting. */
+  fadeAt: 0.8,
+  /** How far beyond the end of the road the car is aimed (world px) — a target
+   * off the map, so the car drives at it flat out instead of easing onto a
+   * point it is about to reach. */
+  overshoot: 260,
+  /**
+   * The most the departing car's steer point may sit off its own nose (rad).
+   *
+   * MUST STAY INSIDE `CAR.forwardArc`, and that is the whole reason this knob
+   * exists. A car joins the road across it, so the road's far end is a right
+   * angle off the bumper — and a target that far round is the wheel's BAND, not
+   * the throttle's: the driver means "come about", the car coasts while the nose
+   * swings, and steering authority is proportional to ground speed. Aimed
+   * straight at the end of the road the departing car therefore slowed itself to
+   * a halt, and a stopped car cannot turn at all, so it sat on the tarmac with
+   * its indicator on until the screen went black. Aiming at a lead point held
+   * inside the forward arc keeps the throttle down, and the nose comes round on
+   * an arc — which is how a car turns onto a road anyway.
+   */
+  steerArc: Math.PI * 0.3,
+  /** How far ahead of the bumper that lead point is thrown (world px). */
+  lead: 300,
 } as const;
 
 /** The shed wheel's highway physics: gravity, the bounce's keep-fraction,
@@ -382,9 +429,20 @@ export function stepVehicles(
   inputs?: (seat: number) => GameInput,
 ): void {
   const dt = dtMs / 1000;
+  stepDeparture(state, dtMs);
+  // THE DRIVE-OUT TAKES THE WHEEL. While the departure beat runs the car steers
+  // itself down the road, whatever the player's thumb is doing — fed in as a
+  // synthetic input rather than as a second movement path, so the car that
+  // drives away is the same car, with the same arcs, grip and body.
+  const scene = state.departure;
   for (const vehicle of state.vehicles) {
     if (vehicle.kind !== "car") continue;
-    driveCar(state, vehicle, dt, inputs);
+    driveCar(
+      state,
+      vehicle,
+      dt,
+      scene ? departureInput(vehicle, scene) : inputs,
+    );
     // The running engine's rumble cadence: one grain every `engineCueMs`
     // while somebody is at the wheel, its intensity the throttle's answer —
     // idle putters, flat out roars. Same overlapping-grain trick as the
@@ -533,11 +591,16 @@ function angleDiff(to: number, from: number): number {
  * The body collides: `resolveObstacles` shoves it out of walls and
  * furniture with its own radius, so the shut garage door really is shut.
  *
- * THE DEPARTURE: on a map with a garage door (an `approach` DoorState), a
- * driven car near it rolls it open, and the trip books ONCE when the car
- * reaches the OPEN door's threshold (`departRadius`) — driving circles
- * inside, or out onto the lawn through nothing, commits nothing. A map with
- * no such door keeps the old radial latch (`departDistance` from home).
+ * THE DEPARTURE: a driven car near a garage door (an `approach` DoorState)
+ * rolls it open, but the door is no longer where the trip books. A map with a
+ * ROAD OUT (`LevelDef.driveOut` — the strip of public tarmac the garage's
+ * driveway runs onto) commits when the car reaches THAT, because a car sitting
+ * on its own drive with the roll-up open behind it has not gone anywhere yet.
+ * Reaching it opens the DRIVE-OUT beat (`stepDeparture`) rather than booking
+ * the trip outright. A map with a door and no road keeps the threshold latch
+ * (`departRadius` of an open door's center); one with neither keeps the oldest
+ * latch of all (`departDistance` from home). Driving circles inside, or out
+ * onto the lawn through nothing, still commits nothing.
  */
 function driveCar(
   state: GameState,
@@ -626,9 +689,15 @@ function driveCar(
     if (d <= CAR.doorReach) openDoor(state, door);
   }
   if (!car.departed) {
+    const def = runLevelDef(state);
+    const road = def.driveOut;
     const garageDoors = state.doors.filter((d) => d.approach);
-    const commits =
-      garageDoors.length > 0
+    // THREE LATCHES, STRONGEST FIRST. A ROAD is the real departure — the car
+    // has left the property. Failing that, an open garage door's threshold.
+    // Failing both, the old radial latch off the parking spot.
+    const commits = road
+      ? anyZoneContains(road, car.pos)
+      : garageDoors.length > 0
         ? garageDoors.some(
             (d) =>
               d.open &&
@@ -640,18 +709,139 @@ function driveCar(
     if (commits) {
       // The car door's destination is the level's own to name — the door
       // whose id is the car landmark's kind, same lookup the tap uses.
-      const door = runLevelDef(state).travelDoors?.find((d) => d.id === "car");
+      const door = def.travelDoors?.find((d) => d.id === "car");
       const to = door?.to[0];
       if (to) {
         car.departed = true;
-        state.events.push({
-          type: "carDeparted",
-          pos: { x: car.pos.x, y: car.pos.y },
-          to,
-        });
+        // With a road there is a beat to play before the trip books: the car
+        // drives on and the picture goes to black (`stepDeparture`). Without
+        // one there is nowhere to drive to, so the crossing books it outright,
+        // exactly as it always did.
+        if (road) {
+          state.departure = {
+            ms: 0,
+            to,
+            target: roadTarget(road, car.pos),
+            booked: false,
+          };
+          // Nobody watches a departure through their own bag. A screen left up
+          // would also halt the world (`partyBlocked`) and freeze the beat
+          // mid-fade, so every seat's is dropped as the wheel is taken.
+          for (const p of state.players) p.screen = undefined;
+        } else
+          state.events.push({
+            type: "carDeparted",
+            pos: { x: car.pos.x, y: car.pos.y },
+            to,
+          });
       }
     }
   }
+}
+
+/**
+ * Where a departing car is aimed: down the middle of the road, past whichever
+ * of its two ends is FARTHER off — the longer runway, so the last thing on
+ * screen is a car still going rather than one that ran out of tarmac.
+ *
+ * Derived from the road's own bounds and the car's position, so it costs no rng
+ * draw and lands the same way on every client that simulates the same tick.
+ */
+function roadTarget(road: readonly Zone[], from: Vec2): Vec2 {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const zone of road) {
+    const [x, y, w, h] =
+      zone.shape === "rect"
+        ? [zone.rect.x, zone.rect.y, zone.rect.width, zone.rect.height]
+        : [
+            zone.pos.x - zone.radius,
+            zone.pos.y - zone.radius,
+            zone.radius * 2,
+            zone.radius * 2,
+          ];
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x + w);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y + h);
+  }
+  // A road runs along its LONG axis; the target is the far end of that axis,
+  // held on the strip's centre line so the car straightens up as it goes.
+  const alongY = maxY - minY >= maxX - minX;
+  const midX = (minX + maxX) / 2;
+  const midY = (minY + maxY) / 2;
+  // AWAY from the half the car came in on: a car that joins the road in its
+  // southern half has the whole northern length to drive, and aiming it at the
+  // near end instead parks it against the map's edge with a second of fade
+  // still to run.
+  //
+  // …and a QUARTER of the road's width to the right of that, which is the lane.
+  // Aimed down the middle the car drives away straddling the painted line, and
+  // a centre line is the one piece of road furniture every player reads without
+  // being told. Right-hand traffic, like the pickup it is.
+  const quarter = (alongY ? maxX - minX : maxY - minY) / 4;
+  if (alongY) {
+    const north = from.y > midY;
+    return {
+      x: midX + (north ? quarter : -quarter),
+      y: north ? minY - DEPARTURE.overshoot : maxY + DEPARTURE.overshoot,
+    };
+  }
+  const west = from.x > midX;
+  return {
+    x: west ? minX - DEPARTURE.overshoot : maxX + DEPARTURE.overshoot,
+    y: midY + (west ? -quarter : quarter),
+  };
+}
+
+/**
+ * The departing car's steering, as an INPUT the ordinary driver reads.
+ *
+ * A lead point thrown `DEPARTURE.lead` off the bumper, on a bearing stepped
+ * toward the end of the road but never further round than `DEPARTURE.steerArc`
+ * — see that knob for why the obvious version (aim at the end of the road)
+ * parks the car instead of driving it.
+ */
+function departureInput(
+  car: CarVehicle,
+  scene: DepartureState,
+): (seat: number) => GameInput {
+  const want = Math.atan2(
+    scene.target.y - car.pos.y,
+    scene.target.x - car.pos.x,
+  );
+  const err = angleDiff(want, car.heading);
+  const bearing =
+    car.heading +
+    Math.max(-DEPARTURE.steerArc, Math.min(DEPARTURE.steerArc, err));
+  const target = {
+    x: car.pos.x + Math.cos(bearing) * DEPARTURE.lead,
+    y: car.pos.y + Math.sin(bearing) * DEPARTURE.lead,
+  };
+  return () => ({ steering: true, target, throttle: 1, jump: false });
+}
+
+/**
+ * One tick of THE DRIVE-OUT (see `GameState.departure`). Runs from
+ * `stepVehicles`, ahead of the car's own physics, and does two things: hold the
+ * throttle down toward the end of the road — the steering itself is `driveCar`'s,
+ * fed a synthetic input, so the departing car obeys exactly the physics the
+ * player was just driving — and book the trip when the clock runs out.
+ */
+function stepDeparture(state: GameState, dtMs: number): void {
+  const scene = state.departure;
+  if (!scene || scene.booked) return;
+  scene.ms += dtMs;
+  if (scene.ms < DEPARTURE.durationMs) return;
+  scene.booked = true;
+  const car = state.vehicles.find((v) => v.kind === "car");
+  state.events.push({
+    type: "carDeparted",
+    pos: car ? { x: car.pos.x, y: car.pos.y } : { x: 0, y: 0 },
+    to: scene.to,
+  });
 }
 
 /** One tick of a shed wheel's highway bounce (see `WheelDebris`). */

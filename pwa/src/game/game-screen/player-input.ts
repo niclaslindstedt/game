@@ -558,7 +558,15 @@ export function handleFieldTaps(
   },
 ): void {
   const { state, bot, camera, viewport, queues, bumpUi, openTravelDoor } = deps;
-  const shopTap = queues.shopTapRef.current;
+  // THE DRIVE-OUT SWALLOWS THE TAP. Once the car is on the road the run is
+  // leaving and the screen is going to black; the field's own tap targets — the
+  // stall, a bystander, the other travel doors — must not answer any more. The
+  // engine refuses every RUN command for the beat, but the travel picker is app
+  // state and would open behind the curtain and book a second trip on top of
+  // the one already committed. Swallowed rather than gated in `fieldLive`,
+  // which also decides whether the HUD is mounted at all: dropping that
+  // mid-fade would pop the HUD off a beat before the black arrives.
+  const shopTap = state.departure ? null : queues.shopTapRef.current;
   queues.shopTapRef.current = null;
   if (shopTap && !bot && fieldLive(state) && state.merchant.discovered) {
     const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);

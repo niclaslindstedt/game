@@ -507,6 +507,7 @@ export {
 } from "./game/merchant.ts";
 export {
   CAR,
+  DEPARTURE,
   SHIP,
   WHEEL_DEBRIS,
   nudgeCar,

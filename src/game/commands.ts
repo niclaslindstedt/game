@@ -419,6 +419,13 @@ export function applyRunCommand(
   actor?: Player,
 ): unknown {
   if (!checkRunCommandArgs(name, args)) return undefined;
+  // THE DRIVE-OUT IS OVER THE PLAYER'S HEAD. Once the car has reached the road
+  // the run is on its way out and the screen is going to black: a bag opened
+  // now would halt the world mid-fade (`partyBlocked`), and a travel door
+  // tapped now would book a SECOND trip on top of the one already committed.
+  // Refusing the lot for the beat's second and a half is one line here rather
+  // than a guard on every caller.
+  if (state.departure) return undefined;
   const a = args as CommandArg[];
   // WHOSE VERB THIS IS. A bag, a purse, a build and a talent tree are PRIVATE
   // (the plan's §3.1), so a command that touches one has to say which hero it

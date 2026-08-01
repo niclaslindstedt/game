@@ -268,6 +268,42 @@ export type DeathSceneState = {
 };
 
 /**
+ * THE DRIVE-OUT — the beat that plays once a driven car reaches the level's
+ * road out (`LevelDef.driveOut`), between the wheel leaving the player's hands
+ * and the next level being built. Null every other tick of the run.
+ *
+ * The hub's departure used to be a CUT: the bumper crossed the garage door's
+ * threshold and the next frame was somewhere else. A drive away deserves the
+ * two things a cut cannot give it — the car actually leaving (the engine steers
+ * it on down the road at `target`, so the last thing seen is the car going) and
+ * the picture LETTING GO rather than being switched off (the app reads `ms`
+ * against `DEPARTURE.durationMs` and washes the screen to black over it).
+ *
+ * The scene is engine-owned for the same reason the death scene is: it is the
+ * simulation that knows where the road runs and when the trip is really booked,
+ * so the whole beat stays deterministic, replicable and headless-testable, and
+ * the app only paints what the clock says.
+ */
+export type DepartureState = {
+  /** Ms elapsed since the car reached the road — the scene's own clock,
+   * advanced each playing tick. Drives the auto-drive and (app-side) the wash
+   * to black. */
+  ms: number;
+  /** The level the car is bound for — the `car` travel door's first
+   * destination, resolved at the moment of the commit so the app need not look
+   * it up again. Carried onto the `carDeparted` event when the scene ends. */
+  to: string;
+  /** Where the car is steered while the screen fades: a point beyond the far
+   * end of the road, so the car swings onto the tarmac and drives off it
+   * rather than trundling into the map's edge. */
+  target: Vec2;
+  /** Latched once `carDeparted` has been pushed, so the trip is booked exactly
+   * once however many ticks the app takes to tear the run down. The wash stays
+   * at full black from here. */
+  booked: boolean;
+};
+
+/**
  * The running BOSS DEATH RITE while `phase === "bossDeath"` — the scripted
  * send-off a boss gets instead of toppling over (see `boss-death.ts`). Null in
  * every other phase. The mirror of `DeathSceneState` above, and shaped the same
@@ -855,6 +891,12 @@ export type GameState = {
    * `death-scene.ts`). Null in every other phase.
    */
   deathScene: DeathSceneState | null;
+  /**
+   * THE DRIVE-OUT: the departure beat that plays once a driven car reaches the
+   * level's road out — the car steering itself away while the picture goes to
+   * black (see `vehicles.ts`). Null every other tick.
+   */
+  departure: DepartureState | null;
   /**
    * The running BOSS DEATH RITE while `phase === "bossDeath"` — the scripted
    * send-off played over the boss the moment it falls, before its last words

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: asphalt_1
+family: goodco
+size: [16, 16]
+description: >
+  The road's rare tile — the same dark tarmac, split by a thin weather crack
+  that wanders down the slab.
+subject:
+  kind: "ground tile (road tarmac, rare variant)"
+  build: "laid asphalt with one wandering weather crack"
+  features: "a single dark fissure, loose aggregate speckle either side"
+  accent: "dark neutral greys"
+  flavor: "nobody has patched this stretch in years"
+palette:
+  A: "#45474e" # laid tarmac
+  a: "#3f4148" # worn tarmac
+  V: "#4e5058" # pale aggregate
+  s: "#383a41" # dark grit
+  j: "#2e3037" # weather crack
+grid: |
+  AAAsAAAAjAAAAAAA
+  AAAAAAaAAjAAAsAA
+  AVAAAAAAAjAAAAAA
+  AAAAsAAAAAjAAAVA
+  AAAAAAAAVAjAAAAA
+  AaAAAAsAAAjAAAAA
+  AAAAVAAAAjAAsAAA
+  AAAAAAAAAjAAAAAA
+  AAsAAAAVAjAAAAaA
+  AAAAAAAAjAAsAAAA
+  AVAAAaAAjAAAAAVA
+  AAAAAAAjAAAAAAAA
+  AAAAVAAjAAAAaAAA
+  AsAAAAjAAVAAAAAA
+  AAAAAjAAAAAAsAAA
+  AAVAAjAAAAAAAAAA

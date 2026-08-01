@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: road_dash
+family: goodco
+size: [16, 16]
+description: >
+  One dash of the road's painted centre line — a worn white bar down the middle
+  of a tarmac tile, with clear road above and below it, so a column of these
+  tiles paints an evenly broken centre line without anything having to place
+  the dashes.
+subject:
+  kind: "ground tile (road centre line)"
+  build: "a tarmac tile carrying one worn white centre-line dash"
+  features: "a short painted bar centred left to right, road clear at top and bottom, paint scuffed thin in places"
+  accent: "dulled traffic white on dark tarmac"
+  flavor: "repainted about as often as the lawn is mown"
+palette:
+  A: "#45474e" # laid tarmac
+  a: "#3f4148" # worn tarmac
+  V: "#4e5058" # pale aggregate
+  s: "#383a41" # dark grit
+  W: "#d9d8ce" # traffic white
+  w: "#b2b1a8" # paint worn thin
+grid: |
+  AAAsAAAAAAVAAAAA
+  AAAAAAaAAAAAAsAA
+  AVAAAAAAAAAAAAAA
+  AAAAAWWWWWWAAAVA
+  AAAAAWWWwWWAAAAA
+  AaAAAWWWWWWAAAAA
+  AAAAAWwWWWWAAAAA
+  AAAAAWWWWWWAAAAA
+  AAsAAWWWWWwAAAaA
+  AAAAAWWWWWWAAAAA
+  AVAAAwWWWWWAAAVA
+  AAAAAWWWWWWAAAAA
+  AAAAAWWWWWWAAAAA
+  AsAAAAAAAVAAAAAA
+  AAAAAaAAAAAAsAAA
+  AAVAAAAAAAAAAAAA

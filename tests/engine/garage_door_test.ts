@@ -3,8 +3,10 @@
 // story.ts stepDoors/openDoor): an APPROACH door opens for anybody near — on
 // foot or at the wheel — with no key; opening drops its obstacle chain, tells
 // the nav grid (`obstaclesVersion`), and fires `garageDoorOpened`; and on a
-// map that hangs one, the driven car's departure books at the OPEN door's
-// threshold, never by radial distance. Plus the car's own physics: a nose and
+// map that hangs one AND HAS NO ROAD OUT, the driven car's departure books at
+// the OPEN door's threshold, never by radial distance. (A venue WITH a road —
+// the shipped garage — books on the tarmac instead, and books it as a scene:
+// see `drive_out_test.ts`.) Plus the car's own physics: a nose and
 // a signed speed — W throttles, S backs up, A/D only turn a rolling car —
 // and a body that collides instead of phasing through the shut door. The
 // `revealed` flag rides the same fixture: the garage knows no fog.

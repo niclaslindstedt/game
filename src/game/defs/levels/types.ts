@@ -504,6 +504,19 @@ export type LevelDef = {
    */
   safeZones?: Zone[];
   /**
+   * THE ROAD OUT (see `src/game/vehicles.ts`): the ground a DRIVEN car leaves
+   * the level by. Reaching any of these books the trip the `car` travel door
+   * names — and books it as a SCENE (`GameState.departure`) rather than a cut,
+   * so the wheel is taken out of the player's hands, the car drives on down the
+   * road, and the picture goes to black before the next level is built.
+   *
+   * Present, it REPLACES the garage door's own threshold as the commit: a hub
+   * with a road has somewhere to drive TO, and ending the beat at the roll-up
+   * left the car standing in its own driveway. A level with no road out keeps
+   * the threshold latch, and one with neither keeps the radial one.
+   */
+  driveOut?: Zone[];
+  /**
    * QUIET ZONES / DEAD AREAS (see `src/game/zones.ts`): regions where the
    * ambient wave/pack horde does NOT spawn — a lull in the pressure — but
    * authored content still lives: a `chest` to find, a lone rare/unique mob
