@@ -46,6 +46,7 @@ export function useSessions({
   screen,
   heroName,
   heroHardcore,
+  heroLoadout,
   onJoin,
 }: {
   screen: MenuScreen;
@@ -55,6 +56,10 @@ export function useSessions({
   /** The picked hero is HARDCORE (§4.2): rides every join so the handshake can
    * hold hardcore and softcore apart — the mismatch is refused by name. */
   heroHardcore: boolean;
+  /** The picked hero's banked loadout (§4.5), purse already funded — what the
+   * session seats them with. Null for a fresh hero (the authored fresh
+   * start), and for no hero at all. */
+  heroLoadout: Record<string, unknown> | null;
   /** Go and watch one. The title screen does not connect: joining is a RUN,
    * and a run belongs to the app above it. */
   onJoin: (intent: JoinIntent) => void;
@@ -84,6 +89,7 @@ export function useSessions({
           address: invite.address,
           name: heroName,
           hardcore: heroHardcore,
+          loadout: heroLoadout,
           label: invite.address,
         });
         return;
@@ -95,12 +101,13 @@ export function useSessions({
             peer: found.hostId,
             name: heroName,
             hardcore: heroHardcore,
+            loadout: heroLoadout,
             label: found.row.name,
           });
         }
       });
     });
-  }, [netOpen, heroName, heroHardcore, onJoin]);
+  }, [netOpen, heroName, heroHardcore, heroLoadout, onJoin]);
 
   // Browsing starts when the browser is opened, and again on every press of
   // REFRESH: the list is a live fact about other people, not a fetched resource
@@ -192,6 +199,7 @@ export function useSessions({
             name: heroName,
             password,
             hardcore: heroHardcore,
+            loadout: heroLoadout,
             label: row.name,
           });
           return;
@@ -207,6 +215,7 @@ export function useSessions({
             name: heroName,
             password,
             hardcore: heroHardcore,
+            loadout: heroLoadout,
             label: row.name,
           });
         });
@@ -218,6 +227,7 @@ export function useSessions({
           name: heroName,
           password,
           hardcore: heroHardcore,
+          loadout: heroLoadout,
           label: address,
         });
       },

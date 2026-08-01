@@ -107,6 +107,10 @@ type ControlMessage =
       /** The joining character is HARDCORE (§4.2) — compared against the
        * session's mode at the door; the mismatch is refused by name. */
       hardcore?: boolean;
+      /** The hero this player brings (§4.5): their banked loadout as plain
+       * JSON, or null for the authored fresh start. Rides the join frame;
+       * the session weighs it (`validateLoadout`) before seating anybody. */
+      loadout?: unknown;
     }
   /** One packet the shell pumped off the Steam P2P queue. */
   | { kind: "peer"; from: string; data: ArrayBuffer | Uint8Array | number[] }
@@ -478,6 +482,9 @@ async function joinSession(
     // §4.2's hardcore gate — the mode of the character this player is coming
     // with, compared against the session's at both ends of the handshake.
     hardcore: message.hardcore === true,
+    // §4.5: the hero this player brings, riding the join frame for the
+    // session to weigh and seat.
+    loadout: message.loadout ?? null,
     // THE TICKET BACK INTO THE SEAT WE LAST HELD AT THIS ADDRESS (plan §5.4).
     // Held per host for the life of this process, which is exactly the span
     // that matters: the case the grace window exists for is a wifi hiccup

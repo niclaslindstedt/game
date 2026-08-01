@@ -368,6 +368,11 @@ export type ConnectOptions = {
   /** The joining character is HARDCORE (§4.2): hardcore and softcore heroes
    * never share a game, and the handshake refuses the mismatch by name. */
   hardcore?: boolean;
+  /** The hero this player brings (§4.5) — their banked loadout as plain JSON,
+   * or null for the authored fresh start. A claim the session weighs
+   * (`validateLoadout`), never an authority. Structural: this module may not
+   * import the engine. */
+  loadout?: Record<string, unknown> | null;
 };
 
 export type ConnectResult =
@@ -400,6 +405,7 @@ export async function connectSession(
       password: options.password,
       mods: options.mods,
       hardcore: options.hardcore === true,
+      loadout: options.loadout ?? null,
     },
     CONNECT_TIMEOUT_MS,
   )) as { ok?: boolean; reason?: string; detail?: string } | null;

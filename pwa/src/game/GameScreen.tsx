@@ -70,7 +70,11 @@ import { setHiddenLandmarks } from "./render/hidden-landmarks.ts";
 import { fxStyleVars } from "./render/postfx.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { hasKeepsake, type Character } from "./characters.ts";
+import {
+  hasKeepsake,
+  spectatorCharacter,
+  type Character,
+} from "./characters.ts";
 import {
   createAutopilotDirector,
   useAutopilotSession,
@@ -450,6 +454,10 @@ export function GameScreen({
     state: GameState;
     driver: RunDriver;
   } | null>(null);
+  // The joined run's live state, held for the LEAVE bank (§4.5): the join
+  // effect's cleanup banks the hero as the wire last showed them, and `joined`
+  // is stale inside that closure.
+  const joinStateRef = useRef<GameState | null>(null);
   const [joinRefusal, setJoinRefusal] = useState<string | null>(null);
   const [sessionLink, setSessionLink] = useState<SessionLink | null>(null);
   useEffect(() => {
@@ -464,9 +472,18 @@ export function GameScreen({
         name: join.name,
         password: join.password,
         hardcore: join.hardcore,
+        // §4.5: the hero travels with the player — the banked loadout the
+        // title screen put on the intent, weighed and seated by the session.
+        loadout: join.loadout,
         mods: activeMods().map((stamp) => stamp.id),
-        onReady: (state: GameState) => {
-          if (live) setJoined({ state, driver: made as RunDriver });
+        onReady: (state: GameState, params) => {
+          if (!live) return;
+          // The run this client is in plays the HOST's difficulty, and the
+          // banking below must record clears and story under it — the prop is
+          // a placeholder on this path (see App).
+          setDifficulty(params.difficulty);
+          joinStateRef.current = state;
+          setJoined({ state, driver: made as RunDriver });
         },
         onClosed: (reason, detail) => {
           if (!live) return;
@@ -480,6 +497,18 @@ export function GameScreen({
     });
     return () => {
       live = false;
+      // §4.5: A JOINER LEAVES WITH EVERYTHING THEY EARNED. Whatever ends the
+      // session from this side — quitting, the host leaving, the connection
+      // dying — the last state the wire delivered is banked to the joiner's
+      // own roster before the driver goes. The victory/travel/defeat paths
+      // have usually banked already; this is the mid-run leave, and a
+      // re-bank of unchanged content moves nothing (`saveCharacters` keeps
+      // the old stamp for an unchanged hero).
+      const state = joinStateRef.current;
+      if (state) {
+        joinStateRef.current = null;
+        progressRef.current?.bankHero(state);
+      }
       made?.dispose();
     };
   }, [join]);
@@ -524,6 +553,17 @@ export function GameScreen({
     // the state this loop is about to read, so it cannot be created here, and
     // it is owned by the join effect above rather than by this one.
     const driver = joined?.driver ?? createRunDriver(session);
+    // WHO THIS RUN BELONGS TO, on the join path. A SEATED joiner plays their
+    // own hero and banks to their own roster (§4.5); a client the session
+    // could not seat only WATCHES — its `localHero` is the HOST's hero, and a
+    // banking path left live would copy somebody else's bag onto this roster.
+    // So a spectator's run is put back on the throwaway shell, whose persist
+    // is a no-op by construction. The seat's answer arrived with the welcome
+    // (before `onReady`), so the flag is settled by the time this runs.
+    const spectatorRun = Boolean(join) && driver.session?.spectating !== false;
+    if (spectatorRun && join) {
+      characterRef.current = spectatorCharacter(join.name);
+    }
     setState(state);
     // A sealed travel door's landmark stays out of sight (and out of tap
     // reach) until its keepsake is banked — the rift seam only appears in
@@ -552,7 +592,7 @@ export function GameScreen({
     // player is watching, not playing, so the bot must bank no achievements and
     // inflate no lifetime totals — and a SPECTATOR is the same case for the
     // same reason, one machine further away.
-    if (!session.resumed && !demo && !join)
+    if (!session.resumed && !demo && !spectatorRun)
       celebrateAchievements(recordRunStarted(runLevelId));
 
     // The per-run scratch shared between simulate and render (effects, the
@@ -684,8 +724,11 @@ export function GameScreen({
       state,
       // A SPECTATOR banks nothing, exactly as the demo banks nothing: the kills
       // on this screen are somebody else's, and a lifetime ledger that counted
-      // them would pay a watcher for a run they are not playing.
-      transient: demo || Boolean(join),
+      // them would pay a watcher for a run they are not playing. A SEATED
+      // joiner is a player (decision 12: a party kill counts for everyone
+      // present), so their ledger books — the boards stay honest through the
+      // run's own PartyStamp, not by suppressing the ledger.
+      transient: demo || spectatorRun,
       difficulty,
       celebrateAchievements,
     });
@@ -696,8 +739,12 @@ export function GameScreen({
       // A real run funds its purse from the hero's whole wealth (banked coins +
       // pendingCoins) at start (run-setup.ts), so banking must not fold the
       // pending in again. BOT VIEW / demo fly a synthetic loadout, not the
-      // hero's purse, so they keep the plain fold.
-      coinsIncludePending: !botView && !demo,
+      // hero's purse, so they keep the plain fold. A JOINED run only funded
+      // the purse when it had a loadout to send (the fresh hero arrives as
+      // the authored start with nothing folded), so the pending fold follows
+      // the same fact.
+      coinsIncludePending:
+        !botView && !demo && !(join && characterRef.current.loadout === null),
       runLevelId,
       captureEnabled: session.captureCheckpoint,
       setHud,

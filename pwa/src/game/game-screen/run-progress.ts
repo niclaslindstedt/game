@@ -50,6 +50,11 @@ export type RunProgress = {
    * thoughts read this run, then swap the mount to the destination. The
    * gate crossing and the hub's travel doors are the same trip. */
   travelTo: (state: GameState, to: string) => void;
+  /** Bank the hero's build and this run's thoughts WITHOUT ending anything —
+   * the mid-run leave (§4.5): a joiner quitting, or the session dying under
+   * them. The victory/travel/defeat paths bank on their own; re-banking
+   * unchanged content moves nothing (an unchanged hero keeps its stamp). */
+  bankHero: (state: GameState) => void;
 };
 
 export function createRunProgress(deps: {
@@ -123,7 +128,10 @@ export function createRunProgress(deps: {
   // holding — the run he leaves behind simply ends. Shared by the latent
   // gate (`gateEntered`) and the hub's standing travel doors, so the two
   // trips can never drift apart on what gets banked.
-  const travelTo = (state: GameState, to: string) => {
+  // Bank the hero as they stand — the shared half of a crossing and of a
+  // mid-run leave. Extracting from the live state folds in everything the
+  // funnels promise (an unrecovered corpse's gear included).
+  const bankHero = (state: GameState) => {
     characterRef.current = bankLoadout(
       characterRef.current,
       extractLoadout(state, localHero(state)),
@@ -135,6 +143,10 @@ export function createRunProgress(deps: {
       difficulty,
       state.thoughtsSeen,
     );
+  };
+
+  const travelTo = (state: GameState, to: string) => {
+    bankHero(state);
     checkpointRef.current = null;
     stopMusic();
     setHud(null);
@@ -364,7 +376,7 @@ export function createRunProgress(deps: {
     }
   };
 
-  return { captureCheckpoint, onEvent, travelTo };
+  return { captureCheckpoint, onEvent, travelTo, bankHero };
 }
 
 /** Every worn slot the wardrobe feats track, weapon first. */

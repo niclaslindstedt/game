@@ -57,6 +57,13 @@ export type JoinIntent = {
    * hero may only enter a hardcore session and vice versa — the handshake
    * refuses the mismatch by name. */
   hardcore?: boolean;
+  /** The hero this player is coming WITH (§4.5): their banked `Loadout` as
+   * plain JSON, with the purse already funded from their whole wealth the way
+   * a local run's is. Structural (`Record`) on purpose — this leaf may not
+   * import the engine — and null for a fresh character, who arrives as the
+   * authored fresh start. The session WEIGHS it before seating anybody
+   * (`validateLoadout`); this is a claim, never an authority. */
+  loadout?: Record<string, unknown> | null;
   /** What the browser row CLAIMED about the session, for the screen the joiner
    * is looking at while the level builds. Null for a typed address, which
    * claims nothing until the handshake answers. */

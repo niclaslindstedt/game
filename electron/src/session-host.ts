@@ -82,6 +82,8 @@ export type ServerControl =
       password?: string;
       mods?: string[];
       hardcore?: boolean;
+      /** The hero this player brings (§4.5), opaque here like `adopt`. */
+      loadout?: unknown;
     }
   | { kind: "peer"; from: string; data: number[] }
   | { kind: "peer-lost"; from: string; reason: string };

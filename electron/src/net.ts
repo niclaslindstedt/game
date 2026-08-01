@@ -96,6 +96,10 @@ export type NetRequest = {
   /** `connect`: the joining character is HARDCORE (§4.2) — the handshake holds
    * hardcore and softcore apart, so the flag rides the join. */
   hardcore?: boolean;
+  /** `connect`: the hero this player brings (§4.5) — a banked loadout as plain
+   * JSON, or null for the authored fresh start. Forwarded untouched; the
+   * session weighs it. */
+  loadout?: unknown;
 };
 
 /** An event to inject back into the page (see the web bridge's protocol). */
@@ -410,6 +414,7 @@ export function createNetBridge(
         password: request.password,
         mods: request.mods,
         hardcore: request.hardcore === true,
+        loadout: request.loadout ?? null,
       });
       window.webContents.postMessage(NET_PORT_CHANNEL, null, [channel.port2]);
       const reply = await await_("connected", CONNECT_TIMEOUT_MS);

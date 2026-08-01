@@ -115,14 +115,19 @@ export function App() {
   const demoHero = useMemo(() => (demo ? demoCharacter() : null), [demo]);
 
   // JOINING somebody else's session (Steam builds only): the run on screen is
-  // theirs and this player is watching it. It stands apart from `run` exactly
-  // as the demo does — its own throwaway hero, no parked-run bookkeeping,
-  // nothing banked — because none of what happens in it belongs to this
-  // roster. Memoised so an App re-render mid-session does not mint a second
-  // hero (and, through the prop identity, reconnect).
+  // the HOST's, and this player is a first-class member of it (§4.5) — the
+  // ACTIVE hero travels with them, is seated by the session, and banks every
+  // clear, thought and find back to this roster through the same paths a
+  // local run uses. With no hero on the roster the throwaway spectator shell
+  // still covers watching (its persist is a no-op by construction) — and
+  // GameScreen falls back to the same shell when the session could not seat
+  // anybody, so a WATCHER can never bank a host's bag. Captured at join time
+  // (not live) so an App re-render mid-session does not swap the hero — or,
+  // through the prop identity, reconnect.
   const [join, setJoin] = useState<JoinIntent | null>(null);
   const joinHero = useMemo(
-    () => (join ? spectatorCharacter(join.name) : null),
+    () =>
+      join ? (getActiveCharacter() ?? spectatorCharacter(join.name)) : null,
     [join],
   );
 
@@ -371,10 +376,25 @@ export function App() {
     );
   }
 
-  // A session is being watched. Before the active hero's own run, like the demo
-  // above and for the same reason: it belongs to neither the roster nor the
-  // parked run, and leaving it drops the connection and nothing else.
+  // A session is being joined. Before the active hero's own run because it is
+  // not one: the run on screen is the host's, the parked-run bookkeeping does
+  // not apply, and leaving it drops the connection. What DOES apply is the
+  // roster (§4.5): the hero banked mid-session, so leaving re-reads them —
+  // and a hardcore hero who died in there is dead here too.
   if (join && joinHero) {
+    const endJoin = () => {
+      setJoin(null);
+      const refreshed = getActiveCharacter();
+      if (!refreshed || refreshed.dead) {
+        setActiveCharacterId(null);
+        setCharacter(null);
+        setStartOnDifficulty(false);
+        setPickCreating(false);
+        setPicking("manage");
+      } else {
+        setCharacter(refreshed);
+      }
+    };
     return (
       <ErrorBoundary
         fallback={<RunLoadError />}
@@ -385,13 +405,13 @@ export function App() {
             character={joinHero}
             // The level and difficulty a joined run plays are the HOST's, and
             // they arrive with the welcome — these two are the shape the props
-            // require, read by nothing on this path (`createRunSession` adopts
-            // the state the session sent rather than building one).
+            // require; GameScreen swaps its own difficulty state to the
+            // session's the moment the welcome names it.
             difficulty="easy"
             levelId={DEMO_LEVEL_ID}
             join={join}
-            onExitToMenu={() => setJoin(null)}
-            onQuit={() => setJoin(null)}
+            onExitToMenu={endJoin}
+            onQuit={endJoin}
           />
         </Suspense>
       </ErrorBoundary>

@@ -246,7 +246,15 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
       // WHICH HERO THIS SCREEN IS ABOUT. The client is shared with headless
       // joiners now (`server/client.ts`), so the seat arrives as a callback and
       // the PAGE is what knows `local-seat.ts` exists.
-      onSeat: setLocalSeat,
+      // The seat's answer is also what says whether this client only WATCHES —
+      // a seated joiner has a hero of their own, and everything reading
+      // `link.spectating` (the chat's wording, the TRADE buttons, the banking
+      // gate) follows the session's answer rather than a guess made before it
+      // existed.
+      onSeat: (seat) => {
+        setLocalSeat(seat);
+        link.spectate(seat === null);
+      },
     });
     setCommandSink((name, args) => client?.sendCommand(name, args), {
       optimistic: false,
@@ -260,6 +268,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
     password: options.password,
     mods: options.mods,
     hardcore: options.hardcore,
+    loadout: options.loadout,
   }).then((result) => {
     if (result.ok || disposed) return;
     options.onClosed?.(result.reason, result.detail);

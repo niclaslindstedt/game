@@ -41,7 +41,7 @@ import {
 import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
-import type { Character } from "./characters.ts";
+import { characterPurse, type Character } from "./characters.ts";
 import type { JoinIntent } from "./session-intent.ts";
 import {
   mouseButtonCode,
@@ -422,6 +422,16 @@ export function TitleScreen({
     // §4.2's handshake rule needs to know which kind of hero is knocking:
     // hardcore and softcore never share a game.
     heroHardcore: character?.hardcore === true,
+    // §4.5: the hero travels WITH the player. The purse is funded from their
+    // whole wealth (banked + pending store credit) exactly as a local run's is
+    // (run-setup.ts), so banking after the session treats the two alike. A
+    // fresh hero carries null and arrives as the authored fresh start.
+    heroLoadout: character?.loadout
+      ? ({
+          ...character.loadout,
+          coins: characterPurse(character),
+        } as unknown as Record<string, unknown>)
+      : null,
     onJoin,
   });
   // The one line of text the menu ever asks for — a password, a port, an
