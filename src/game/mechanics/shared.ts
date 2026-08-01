@@ -46,8 +46,9 @@ export function landHostileBlow(
   player.hurtFlashMs = 250;
   state.stats.damageTaken += raw;
   state.events.push({ type: "playerHurt", crit, cause });
-  // A blow that lands may cast back — the D2 "when struck" procs.
-  if (striker) queueStruckProcs(state, striker);
+  // A blow that lands may cast back — the D2 "when struck" procs, and they
+  // belong to the hero the blow landed on.
+  if (striker) queueStruckProcs(state, striker, player);
   return hpDamage;
 }
 

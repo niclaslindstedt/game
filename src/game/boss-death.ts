@@ -66,6 +66,7 @@ import type { DeathRiteBeat, DeathRiteDef } from "./death-rites/types.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import { inertEnemy } from "./disposition.ts";
+import { heroAt, heroInPlay, seatOf } from "./party.ts";
 import { separateEnemies } from "./step/enemies.ts";
 import {
   maybeCapThought,
@@ -75,15 +76,16 @@ import {
 import type { Enemy, GameState, Player } from "./types/index.ts";
 
 /**
- * WHICH HERO is performing the running rite.
- *
- * One site rather than a bare `state.players[0]` at every read, for the reason
- * `docs/multiplayer-plan.md` §3.1 gives: `state.players[0]` → `state.players[]` is
- * 538 engine sites, and the ones that are already shaped like a parameter cost
- * nothing to convert. Today the party is one hero and the index is always 0.
+ * WHICH HERO is performing the running rite — the seat whose killing blow
+ * felled the boss (`BossDeathState.executioner`, stamped by `enterBossDeath`).
+ * One site rather than a bare seat read at every caller, and it falls back to
+ * seat 0 for a scene with no seat (a thawed legacy state) or a killer who is
+ * no longer in play — the finisher must not be performed by a body nobody is
+ * behind, and the rite always needs somebody to animate.
  */
 export function bossDeathExecutioner(state: GameState): Player {
-  return state.players[0];
+  const hero = heroAt(state, state.bossDeath?.executioner ?? 0);
+  return hero && heroInPlay(hero) ? hero : state.players[0];
 }
 
 /** The beat boundaries of a rite, in ms from the killing blow. */
@@ -133,14 +135,17 @@ export function bossRiteDurationMs(riteId: string | undefined): number {
  * so it carries only what the scene needs to pose it. The `bossDefeated` event
  * and the last words are deliberately NOT fired here — they belong at the END
  * of the rite, over the wreck, which is what the whole beat exists to put them
- * on top of.
+ * on top of. `executioner` is the hero whose blow felled the boss (the kill
+ * path passes its attacker) — that seat performs the finisher; unnamed, seat 0
+ * does, which solo is the same hero.
  */
 export function enterBossDeath(
   state: GameState,
   enemy: Enemy,
   riteId: string | undefined,
+  executioner?: Player,
 ): void {
-  const player = bossDeathExecutioner(state);
+  const player = executioner ?? state.players[0];
   // The ENDING decides which rite this is, not the authored id alone — see
   // `riteFor`. A fleeing boss that named nothing used to get the death default
   // and stage a finisher for a mob that was supposed to run.
@@ -173,7 +178,7 @@ export function enterBossDeath(
     // already spliced out of `state.enemies` by the time we are called, so this
     // is the only place left to read it from anyway.
     radius: enemyDef(enemy.defId).radius,
-    executioner: 0,
+    executioner: seatOf(state, player),
     from: { ...player.pos },
     heading,
     skip: false,

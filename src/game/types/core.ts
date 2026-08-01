@@ -329,13 +329,17 @@ export type ItemSpell = {
  * combat passes so a nova's kills never mutate the enemy list mid-sweep.
  * `enemyId` is the triggering victim/attacker (a bolt strikes it if it
  * still stands) — absent when the attacker is unknown (a hostile shot),
- * where a bolt falls on the nearest foe to `pos` instead.
+ * where a bolt falls on the nearest foe to `pos` instead. `seat` is the hero
+ * whose proc this is (the striker for hit/kill triggers, the struck hero for
+ * "struck" ones), so the resolution scales off their own power rather than
+ * seat 0's; absent reads as seat 0.
  */
 export type PendingProc = {
   spell: ProcSpell;
   rank: number;
   pos: Vec2;
   enemyId?: number;
+  seat?: number;
 };
 
 /**
@@ -345,12 +349,15 @@ export type PendingProc = {
  * inline would splice the enemy list out from under the projectile loop that
  * spawned it. `pos` is the struck foe (the blob's centre), `blowDamage` the
  * PRE-crit damage of the blow, and `victimId` the foe that already took the
- * crit — excluded from the splash so it is never billed twice.
+ * crit — excluded from the splash so it is never billed twice. `seat` is the
+ * hero whose crit it was, so the splash reads that hero's INTELLIGENCE; absent
+ * reads as seat 0.
  */
 export type PendingCritBlob = {
   pos: Vec2;
   blowDamage: number;
   victimId: number;
+  seat?: number;
 };
 
 /** A droppable, equippable item instance (medkits are consumables, not this). */

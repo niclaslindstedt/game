@@ -331,14 +331,11 @@ export type BossDeathState = {
    * body he is actually standing over rather than against a constant. */
   radius: number;
   /**
-   * WHICH PLAYER is performing the rite, as an index into the party.
-   *
-   * Always 0 today, because there is one hero — but it is stored rather than
-   * assumed for the reason `docs/multiplayer-plan.md` §3.2 gives for the
-   * spare-or-kill `choice`: in co-op the player who landed the killing blow is
-   * the one who acts, with the scene shown to everybody. Resolving it through
-   * `bossDeathExecutioner` keeps phase 3's `state.players[0]` → `state.players[]`
-   * rename to one site instead of one per read.
+   * WHICH PLAYER is performing the rite, as an index into the party — the seat
+   * whose blow felled the boss (stamped by `enterBossDeath`), so in co-op the
+   * hero who landed the kill is the one who leaps while the scene is shown to
+   * everybody. Solo it is always 0. Read through `bossDeathExecutioner`, which
+   * falls back to seat 0 for a seat that has since emptied.
    */
   executioner: number;
   /** Where the executioner stood when the blow landed — his scripted approach
@@ -1004,10 +1001,11 @@ export type GameState = {
    * REFLECTED damage the ARCANE RETRIBUTION talent owes attackers this tick —
    * one entry per blow the hero took, drained by `stepReflectedDamage` AFTER
    * the enemy pass: billing the attacker inline (mid contact-loop) would splice
-   * the enemy list out from under the `for…of` iterating it. Empty between
-   * ticks (filled and drained within one `step`), so it needs no save
-   * serialization. */
-  pendingReflects: { enemyId: number; amount: number }[];
+   * the enemy list out from under the `for…of` iterating it. `seat` is the
+   * struck hero whose talent reflects (absent reads as seat 0), so the bite is
+   * billed as THEIR blow. Empty between ticks (filled and drained within one
+   * `step`), so it needs no save serialization. */
+  pendingReflects: { enemyId: number; amount: number; seat?: number }[];
   /** Monotonic id source for spawned entities. */
   nextId: number;
   /** Seeded stream for in-run rolls (crits, drops) — keeps runs replayable. */

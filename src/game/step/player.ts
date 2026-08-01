@@ -395,7 +395,10 @@ function applySeismicLanding(state: GameState, player: Player): void {
       );
       resolveObstacles(state, victim.pos, def.radius);
     }
-    hitEnemy(state, victim, seismic.damage * power, undefined, { attack });
+    hitEnemy(state, victim, seismic.damage * power, undefined, {
+      attack,
+      attacker: player,
+    });
   }
 }
 
@@ -524,6 +527,9 @@ function detonateNuke(state: GameState, player: Player, radius: number): void {
       noNukeDrop: true,
       noMenace: true,
       incinerated: true,
+      // The bomb is the spender's: its kills price XP and drops against the
+      // hero who set it off.
+      attacker: player,
     });
   }
   // THE AFTERMATH (config NUKE): a screen-nuke is a panic button, so it buys

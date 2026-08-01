@@ -57,7 +57,7 @@ import { repelFromMerchant } from "../merchant.ts";
 import { repelFromQuestGivers } from "../quests/index.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
 import { quarryFor } from "../aggro.ts";
-import { nearestHeroWhere } from "../party.ts";
+import { nearestHeroWhere, seatOf } from "../party.ts";
 import { moveRangedEnemy } from "../ranged.ts";
 import { raiseAlarm } from "../spawners.ts";
 import { startEnemyDialogue, wantsDialogue } from "../story.ts";
@@ -275,6 +275,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
           (state.pendingReflects ??= []).push({
             enemyId: enemy.id,
             amount: damage * parry.riposteFrac,
+            seat: seatOf(state, player),
           });
         }
         continue;
@@ -296,7 +297,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // The landed blow may cast back — the D2 "when struck" procs, and the
       // magic tree's own struck defenses: FROST NOVA freezes the swarm, ARCANE
       // RETRIBUTION bills the attacker back its share of the blow.
-      queueStruckProcs(state, enemy);
+      queueStruckProcs(state, enemy, player);
       applyFrostNova(state, player);
       applyRetribution(state, player, enemy, damage);
     }
@@ -348,6 +349,7 @@ function applyRetribution(
   (state.pendingReflects ??= []).push({
     enemyId: attacker.id,
     amount: damage * frac,
+    seat: seatOf(state, player),
   });
 }
 

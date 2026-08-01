@@ -44,6 +44,7 @@ import type {
   WeaponClass,
 } from "../types/index.ts";
 import { inert } from "../disposition.ts";
+import { seatOf } from "../party.ts";
 import { faceAlong } from "./player.ts";
 
 /**
@@ -177,6 +178,7 @@ export function stepWeapon(
     }
     const sweep = meleeSweep(
       state,
+      player,
       dir,
       range,
       half,
@@ -264,6 +266,9 @@ export function stepWeapon(
       // The shot leaves from the shooter's height and sinks back in flight.
       z: player.z,
       volley,
+      // Whose trigger pull this is — the impact bills crits, procs and the
+      // kill's pricing to this seat rather than to seat 0 (stepProjectiles).
+      seat: seatOf(state, player),
       pierceLeft,
       pierceFalloff: pierce?.retain,
       homing: spec.homing || undefined,
@@ -302,6 +307,7 @@ export function stepWeapon(
  */
 function meleeSweep(
   state: GameState,
+  player: Player,
   dir: Vec2,
   range: number,
   halfAngle: number,
@@ -310,7 +316,6 @@ function meleeSweep(
   weaponClass: WeaponClass,
   critMult: number,
 ): { eligible: number; executed: number } {
-  const player = state.players[0];
   const rangeSq = range * range;
   const cosHalf = Math.cos(halfAngle);
   // Gather every foe the cone can reach, then strike only the `maxTargets`
@@ -390,6 +395,7 @@ function meleeSweep(
       edged,
       incinerated: burns || undefined,
       executeBars: bars,
+      attacker: player,
     });
     // A tooth is spent per body TAKEN, so a swing that missed (the accuracy
     // roll stands for an execution too) or that only met a boss costs nothing
@@ -405,6 +411,7 @@ function meleeSweep(
         edged,
         incinerated: burns || undefined,
         executeBars: bars,
+        attacker: player,
       });
     }
   }

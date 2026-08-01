@@ -64,6 +64,7 @@ import {
 import { enemyKillXp, hitEnemy, killEnemy, shareXp } from "./loot.ts";
 import { clearOfFog } from "./fog.ts";
 import { addMapMarker } from "./map.ts";
+import { heroAt, heroInPlay } from "./party.ts";
 import { startJoinWords } from "./story.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import { createProjectile } from "./projectile.ts";
@@ -245,16 +246,33 @@ export function recruitCompanion(
  * (the plot must flow), but its equipment loot stays with it — the gear is
  * the companion's kit now — and it joins the party on the spot. Safe to call
  * from the app outside `step()`, like every other phase mutator.
+ *
+ * THE VERDICT IS THE KILLER'S (`ChoiceState.killer` — whoever forced the
+ * kneel): while that hero is in play, any other `actor` is refused, so a
+ * teammate can't spend somebody else's spare. If the killer's seat has since
+ * departed the choice falls open to anyone — a quitter's kneeling victim must
+ * never deadlock the run. A caller that names no actor (single-player, tests)
+ * is never refused, which is exactly the old behavior.
  */
-export function resolveChoice(state: GameState, spare: boolean): boolean {
+export function resolveChoice(
+  state: GameState,
+  spare: boolean,
+  actor?: Player,
+): boolean {
   if (state.phase !== "choice" || !state.choice) return false;
   const choice = state.choice;
+  const killer = heroAt(state, choice.killer) ?? undefined;
+  if (actor && killer && killer !== actor && heroInPlay(killer)) return false;
   state.choice = null;
   state.phase = "playing";
   const enemy = state.enemies.find((e) => e.id === choice.enemyId);
   if (!enemy) return true; // already off the board — just resume
   if (!spare) {
-    killEnemy(state, enemy, choice.damage, choice.crit, choice.critPower);
+    // The withheld blow lands as the killer's own, so the drops and XP price
+    // against the hero who actually beat the figure down.
+    killEnemy(state, enemy, choice.damage, choice.crit, choice.critPower, {
+      attacker: killer,
+    });
     return true;
   }
 
@@ -287,7 +305,7 @@ export function resolveChoice(state: GameState, spare: boolean): boolean {
   // kill's is — through the same door, gated on the same distance from the same
   // body. Paying only the person who happened to land the last blow would make
   // sparing the one won fight in the game that shuts everybody else out.
-  shareXp(state, Math.round(enemyKillXp(state, def, enemy)), enemy.pos);
+  shareXp(state, Math.round(enemyKillXp(state, def, enemy, killer)), enemy.pos);
   // The joining scene — the thanks, the life owed — takes the stage last,
   // so a level-up earned by the fight waits its turn behind it, the same
   // ordering a death gasp gets.

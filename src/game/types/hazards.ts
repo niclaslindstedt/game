@@ -367,6 +367,10 @@ export type Projectile = {
    * have no DEXTERITY to earn it back with). Absent on the hero's shots.
    */
   companionId?: number;
+  /** Which hero fired this — a seat into `state.players`, so the impact can
+   * bill crits, procs and kill pricing to the shooter rather than to seat 0
+   * (docs/multiplayer.md). Absent on hostile and companion shots. */
+  seat?: number;
   /**
    * A HOSTILE shot — fired by an enemy (`EnemyDef.ranged`) at the PLAYER.
    * It never touches the horde: `stepProjectiles` moves it, walls eat it,

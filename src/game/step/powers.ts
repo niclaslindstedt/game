@@ -37,6 +37,7 @@ import {
   syncItemSpells,
 } from "../spells.ts";
 import type { GameState, Player } from "../types/index.ts";
+import { heroAt } from "../party.ts";
 import { nearestEnemy } from "./weapon.ts";
 import { inertEnemy } from "../disposition.ts";
 
@@ -223,9 +224,13 @@ export function stepReflectedDamage(state: GameState): void {
   for (const reflect of queue) {
     const attacker = state.enemies.find((e) => e.id === reflect.enemyId);
     if (!attacker || attacker.hp <= 0) continue;
-    // The reflected bite is the hero's own build power, so it heats menace like
-    // a granted spell's blow (no `noMenace`); its enemyHit float shows the hit.
-    hitEnemy(state, attacker, reflect.amount, "magic");
+    // The reflected bite is the struck hero's own build power, so it heats
+    // menace like a granted spell's blow (no `noMenace`), and it is billed as
+    // THAT hero's blow — an entry with no seat reads as seat 0's. Its enemyHit
+    // float shows the hit.
+    hitEnemy(state, attacker, reflect.amount, "magic", {
+      attacker: heroAt(state, reflect.seat ?? 0) ?? undefined,
+    });
   }
 }
 
@@ -242,16 +247,23 @@ export function stepProcs(state: GameState): void {
   if (state.pendingProcs.length === 0) return;
   const queue = state.pendingProcs;
   state.pendingProcs = [];
-  const power = abilityPowerScale(state, state.players[0]);
 
   for (const proc of queue) {
+    // The proc's OWNER (the hero whose affix rolled it — see PendingProc.seat):
+    // its damage scales off THEIR power and its hits are billed as their blow.
+    // A proc with no seat, or one whose seat has since emptied, reads as seat 0
+    // — the one hero a solo run has.
+    const owner = heroAt(state, proc.seat ?? 0) ?? state.players[0];
+    const power = abilityPowerScale(state, owner);
     if (proc.spell === "bolt") {
       const target =
         state.enemies.find((e) => e.id === proc.enemyId) ??
         nearestEnemy(state, proc.pos, SPELL.bolt.range);
       if (!target) continue;
       state.events.push({ type: "lightning", pos: { ...target.pos } });
-      hitEnemy(state, target, boltProcDamage(proc.rank) * power, "magic");
+      hitEnemy(state, target, boltProcDamage(proc.rank) * power, "magic", {
+        attacker: owner,
+      });
       continue;
     }
     // NOVA: snapshot the victims first — hitEnemy splices the slain.
@@ -269,7 +281,10 @@ export function stepProcs(state: GameState): void {
     // One proc burst = one menace ATTACK (see bankOverkill).
     const attack = state.nextId++;
     for (const victim of victims) {
-      hitEnemy(state, victim, params.damage * power, "magic", { attack });
+      hitEnemy(state, victim, params.damage * power, "magic", {
+        attack,
+        attacker: owner,
+      });
     }
   }
 }
@@ -289,17 +304,20 @@ export function stepMagicCritBlobs(state: GameState): void {
   if (state.pendingCritBlobs.length === 0) return;
   const queue = state.pendingCritBlobs;
   state.pendingCritBlobs = [];
-  const int = effectiveStat(state, state.players[0], "intelligence");
-  const radius = Math.min(
-    MAGIC_CRIT.blobRadiusMax,
-    MAGIC_CRIT.blobRadius + int * MAGIC_CRIT.blobRadiusPerInt,
-  );
-  const maxTargets = Math.min(
-    MAGIC_CRIT.blobTargetsMax,
-    Math.floor(MAGIC_CRIT.blobTargets + int * MAGIC_CRIT.blobTargetsPerInt),
-  );
-  const reachSq = radius * radius;
   for (const blob of queue) {
+    // The crit was one hero's, so the splash reads THAT hero's INTELLIGENCE
+    // and bills as their blow — a blob with no seat reads as seat 0's.
+    const owner = heroAt(state, blob.seat ?? 0) ?? state.players[0];
+    const int = effectiveStat(state, owner, "intelligence");
+    const radius = Math.min(
+      MAGIC_CRIT.blobRadiusMax,
+      MAGIC_CRIT.blobRadius + int * MAGIC_CRIT.blobRadiusPerInt,
+    );
+    const maxTargets = Math.min(
+      MAGIC_CRIT.blobTargetsMax,
+      Math.floor(MAGIC_CRIT.blobTargets + int * MAGIC_CRIT.blobTargetsPerInt),
+    );
+    const reachSq = radius * radius;
     state.events.push({ type: "nova", pos: { ...blob.pos }, radius });
     if (maxTargets <= 0) continue;
     // The nearest OTHER foes to the burst — the crit victim already ate the
@@ -318,7 +336,7 @@ export function stepMagicCritBlobs(state: GameState): void {
     // One blob's splash = one menace ATTACK (see bankOverkill).
     const attack = state.nextId++;
     for (const victim of victims) {
-      hitEnemy(state, victim, damage, "magic", { attack });
+      hitEnemy(state, victim, damage, "magic", { attack, attacker: owner });
     }
   }
 }

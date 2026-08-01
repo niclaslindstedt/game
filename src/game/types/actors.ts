@@ -466,6 +466,11 @@ export type ChoiceState = {
   /** The withheld blow's damage-variance roll (crits only) — carried so an
    * execution's popup sizes exactly as the blow would have. */
   critPower?: number;
+  /** The SEAT of the hero whose blow forced the kneel — the verdict is theirs
+   * alone while they are in play (`resolveChoice` refuses anyone else), and it
+   * falls open to the whole party once that seat departs, so a quitter's
+   * kneeling victim can never deadlock the run. */
+  killer: number;
 };
 
 export type Enemy = {

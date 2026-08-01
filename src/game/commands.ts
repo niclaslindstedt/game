@@ -627,7 +627,9 @@ export function applyRunCommand(
         str(a, 1) as CompanionSlot,
       );
     case "resolveChoice":
-      return resolveChoice(state, bool(a, 0));
+      // The verdict is gated on the killing blow's owner inside resolveChoice,
+      // so the acting hero must travel with it like every private verb's does.
+      return resolveChoice(state, bool(a, 0), hero);
 
     // THE ERRANDS
     case "talkToQuestGiver":
