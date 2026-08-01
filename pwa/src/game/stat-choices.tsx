@@ -1,89 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Shared stat metadata for the stat-allocation overlays (the level-up chooser
-// and the LEVEL TOKEN respec). One entry per trainable stat: its label, the
-// short button blurb, the full (i)-panel breakdown, and the pixel glyph. Both
-// overlays render the same five stats, so this is the single source they draw
-// from — keep the blurbs/info honest against the engine's STATS rules
-// (src/game/config.ts) + src/game/items/; every stat now touches more than
-// damage. (Move speed is no longer a stat — DEXTERITY is the mobility
-// attribute, so there's no SPEED row here.)
-
-import type { StatName } from "@game/core";
+// The widgets the stat-allocation overlays share (the level-up chooser and the
+// LEVEL TOKEN respec): the per-stat glyph, the (i) toggle, and the full
+// breakdown panel it reveals. Both overlays render the same five stats from the
+// same catalog — which is the DATA module `stat-info.ts`, re-exported here so
+// the overlays keep their one import.
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
+import { STAT_CHOICES } from "./stat-info.ts";
 
-export const STAT_CHOICES: {
-  stat: StatName;
-  label: string;
-  blurb: string;
-  /** The (i)-panel breakdown, pre-wrapped into short lines so it fits a
-   * vertical phone (PixelText draws one canvas per line, no auto-wrap). */
-  info: string[];
-  icon: string;
-}[] = [
-  {
-    stat: "stamina",
-    label: "STAMINA",
-    blurb: "SPRINT + HP",
-    info: [
-      "DEEPER SPRINT POOL, SLOWER",
-      "DRAIN & FASTER RECOVERY.",
-      "ALSO RAISES MAX HP.",
-    ],
-    icon: "icon_stat_stamina",
-  },
-  {
-    stat: "strength",
-    label: "STRENGTH",
-    blurb: "DAMAGE + BAG",
-    info: [
-      "MELEE & RANGED WEAPON DAMAGE,",
-      "+1 BAG SLOT EACH. EARNS A",
-      "MELEE TALENT EVERY 10 POINTS.",
-    ],
-    icon: "icon_stat_strength",
-  },
-  {
-    stat: "dexterity",
-    label: "DEXTERITY",
-    blurb: "SPEED + HIT",
-    info: [
-      "FASTER MELEE & RANGED ATTACK",
-      "SPEED, HIGHER HIT RATE (FEWER",
-      "MISSES & ENEMY DODGES), MORE",
-      "MELEE & RANGED CRITS, AND MORE",
-      "DODGE. EARNS A RANGED TALENT",
-      "EVERY 10 POINTS.",
-    ],
-    icon: "icon_stat_dexterity",
-  },
-  {
-    stat: "intelligence",
-    label: "INTELLECT",
-    blurb: "MAGIC + AOE",
-    info: [
-      "MAGIC WEAPON POWER & CRITS,",
-      "LONGER RANGE, WIDER MELEE AOE.",
-      "EARNS A MAGIC TALENT EVERY",
-      "10 POINTS.",
-    ],
-    icon: "icon_stat_intelligence",
-  },
-  {
-    stat: "luck",
-    label: "LUCK",
-    blurb: "CRIT + LOOT",
-    info: [
-      "A LITTLE MORE CRIT & DODGE,",
-      "DODGE ENEMY CRITS, MORE &",
-      "BETTER LOOT.",
-    ],
-    icon: "icon_stat_luck",
-  },
-];
+export { STAT_CHOICES, statChoice, type StatChoice } from "./stat-info.ts";
 
 /** The stat's pixel glyph, or nothing if the sprite is missing. */
 export function StatGlyph({
@@ -154,6 +82,29 @@ export function StatInfoPanel({
           ))}
         </div>
       ))}
+      {/* The one thing the buttons themselves cannot say: the number beside
+          each stat is the points THIS PLAYER has spent, and nothing else. The
+          character sheet prints the whole attribute — head start, per-level
+          growth, gear and carried charms folded in — so a hero who has spent
+          nothing can honestly read 0 here and 1 there. Both numbers were always
+          right; only their difference went unexplained. */}
+      <div className="stat-info-foot">
+        {[
+          "THE NUMBER ON EACH BUTTON IS",
+          "WHAT YOU HAVE SPENT. THE SHEET",
+          "ADDS GEAR, CHARMS AND LEVEL",
+          "GROWTH ON TOP — TAP A ROW",
+          "THERE TO SEE THE SPLIT.",
+        ].map((line, i) => (
+          <PixelText
+            key={i}
+            font={font}
+            text={line}
+            scale={2}
+            color="#8b94a0"
+          />
+        ))}
+      </div>
     </div>
   );
 }

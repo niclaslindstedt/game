@@ -314,6 +314,7 @@ export {
   discardFromInventory,
   discardEquipped,
   effectiveStat,
+  statBreakdown,
   activeEquippedAffixes,
   setBonusAffixes,
   wornSetCount,
@@ -423,6 +424,7 @@ export {
   wearWornArmor,
   wouldUpgradeSlot,
   type BuildSnapshot,
+  type StatBreakdown,
   type VaultRefusal,
 } from "./game/items/index.ts";
 
