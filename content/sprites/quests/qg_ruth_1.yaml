@@ -1,0 +1,39 @@
+name: qg_ruth_1
+family: quests
+size: [16, 16]
+description: >
+  Ada's mother mid-step — silver bun, teal cardigan, the yellow thermos held steady with both hands while her feet shift.
+subject:
+  kind: quest giver — Ada's mother, waiting in the garage
+  name: "RUTH, ADA'S MOTHER"
+  build: an upright woman in her sixties, unhurried, planted
+  attire: a teal cardigan over a pale blouse, dark slacks
+  features: silver hair pulled into a bun, a level gaze
+  accent: the yellow thermos she holds with both hands — she came to wait, not to visit
+  pose: walk frame, feet apart, the thermos not spilling a drop
+  flavor: she has a key to the garage and always has; waiting at home means staring at the phone
+palette:
+  O: "#1a1c2c" # navy outline
+  H: "#c9c9d4" # silver hair
+  p: "#c98d68" # skin
+  c: "#3e7a6e" # teal cardigan
+  W: "#efe6cd" # pale blouse
+  T: "#e8b93e" # yellow thermos
+  s: "#3a3a4e" # dark slacks and shoes
+grid: |
+  ................
+  ......OOOO......
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ...OHHppppHHO...
+  ...OHpOppOpHO...
+  ....OppppppO....
+  ...OOccccccOO...
+  ..OccWWccWWccO..
+  ..OccpTTTTpccO..
+  ..OcOpTTTTpOcO..
+  ...OssssssssO...
+  ..OccO....OccO..
+  ..OssO....OssO..
+  ..OOOO....OOOO..
+  ................

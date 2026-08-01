@@ -456,7 +456,7 @@ Two details in `menus-mods.ts` are load-bearing:
   roller and the whole step pipeline. So the mod system's TYPES and the
   "which mod is on" state live in an import-free leaf (the same move
   `src/game/flags.ts` makes for the engine's runtime toggles), and the apply
-  itself is a **dynamic** import inside the row's own handler. The 170 KB
+  itself is a **dynamic** import inside the row's own handler. The 200 KB
   gzipped critical-path budget is what notices; it is at 161.3 KB.
 
 ## The shell handler, and what ships with it

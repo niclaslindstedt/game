@@ -10,6 +10,7 @@ import {
   LEVELING,
   weaponDef,
   type GameState,
+  type Player,
   type WeaponClass,
   type WeaponMotion,
 } from "@game/core";
@@ -27,7 +28,12 @@ import { playerDollLayers } from "../paper-doll-live.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
 import { walkFrame, walkGait, withStance } from "./gait.ts";
 import { drawCoatedLayers, drawCoatedSprite } from "./hero-coat.ts";
-import { bodyCoat, weaponCoat, type CoatLayer } from "./soak-ladder.ts";
+import {
+  bodyCoat,
+  NO_SOAK,
+  weaponCoat,
+  type CoatLayer,
+} from "./soak-ladder.ts";
 import { clamp01, drawSpriteCentered, fract, TILE } from "./shared.ts";
 import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
@@ -457,19 +463,45 @@ export function drawPlayer(
   action: PlayerAction | undefined,
   impact: HeroImpact | undefined,
 ): void {
+  const local = localHero(state);
+  // THE WHOLE PARTY STANDS ON THE FIELD, not only the seat this client steers
+  // (§4.5 — a party you cannot see is not a party). Teammates draw first and
+  // the local hero LAST, on top: in a scrum the hero the player is steering is
+  // the one that must stay readable. A teammate's doll is dressed from their
+  // own (public) worn kit; what a teammate does NOT get is the app-side pieces
+  // that only exist for the local seat — the input-driven attack pose, the
+  // landing squash, and the blood coat `hero-soak.ts` keeps for one hero.
+  for (const [seat, hero] of state.players.entries()) {
+    if (hero === local) continue;
+    // A DEPARTED seat's body is nobody's (`heroInPlay`) — but a DOWNED hero is
+    // very much somebody's and must stay visible where they fell, so the sweep
+    // is explicit about which half of the predicate it means.
+    if (hero.departed === true) continue;
+    if (state.vehicles.some((v) => v.kind === "car" && v.driver === seat)) {
+      continue;
+    }
+    billboard(ctx, hero.pos.x, hero.pos.y, camera.x, camera.y, () =>
+      drawHero(
+        ctx,
+        state,
+        assets,
+        camera,
+        timeMs,
+        undefined,
+        undefined,
+        hero,
+        seat,
+      ),
+    );
+  }
   // A hero AT THE WHEEL is inside the car — the car assembly is his body
   // this frame (render/vehicles.ts), so the walking doll stays undrawn.
-  const seat = state.players.indexOf(localHero(state));
+  const seat = state.players.indexOf(local);
   if (state.vehicles.some((v) => v.kind === "car" && v.driver === seat)) {
     return;
   }
-  billboard(
-    ctx,
-    localHero(state).pos.x,
-    localHero(state).pos.y,
-    camera.x,
-    camera.y,
-    () => drawHero(ctx, state, assets, camera, timeMs, action, impact),
+  billboard(ctx, local.pos.x, local.pos.y, camera.x, camera.y, () =>
+    drawHero(ctx, state, assets, camera, timeMs, action, impact, local, seat),
   );
 }
 
@@ -481,8 +513,10 @@ function drawHero(
   timeMs: number,
   action: PlayerAction | undefined,
   impact: HeroImpact | undefined,
+  player: Player,
+  seat: number,
 ): void {
-  const player = localHero(state);
+  const isLocal = player === localHero(state);
   const airborne = player.z > 0;
   // The paper-doll owns the costume: body sprite (from `playerAppearance`),
   // worn-armor overlays, and the held weapon, as one ordered layer stack
@@ -493,19 +527,24 @@ function drawHero(
   // stick creeps, a full push runs, and a hero shoved up against a wall stops
   // walking on the spot. Sampled every frame — including the frames he is dead
   // or airborne on — so his stride is never reconstructed from a stale position.
-  const gait = walkGait("hero", player.pos, timeMs);
+  // The gait memo is keyed PER SEAT — one key would blend every hero's stride
+  // into one averaged walk. The local hero keeps the bare "hero" key the
+  // footprint pass already shares.
+  const gait = walkGait(isLocal ? "hero" : `hero:${seat}`, player.pos, timeMs);
   const frame: DollFrame = airborne
     ? "jump"
     : player.moving && walkFrame(gait) === 1
       ? "1"
       : "0";
-  const layers = playerDollLayers(state, frame, { weapon: true });
+  const layers = playerDollLayers(state, frame, { weapon: true, hero: player });
   // THE BLOOD HE IS WEARING. The five numbers `hero-soak.ts` keeps become the
   // coat art the doll is soaked in, resolved once per frame and shared by all
   // three poses — the hero standing, the hero knocked flat and the hero dead all
   // wear what he did. The BODY's coat and the WEAPON's are separate because they
   // are drawn in different spaces: the weapon's rides its own swing pivot.
-  const soak = heroSoak(state);
+  // `hero-soak.ts` keeps ONE record, the local hero's, so a teammate draws
+  // clean — a known simplification, recorded in the module's own header.
+  const soak = isLocal ? heroSoak(state) : NO_SOAK;
   const coat = bodyCoat(soak);
   const held = weaponCoat(soak);
   // In the rift the ground isn't there — bob the grounded hero so he reads as
@@ -536,7 +575,19 @@ function drawHero(
     state.phase === "defeat" ||
     player.downed === true
   ) {
-    drawDeadHero(ctx, sprites, layers, coat, held, state, camera, x, y, timeMs);
+    drawDeadHero(
+      ctx,
+      sprites,
+      layers,
+      coat,
+      held,
+      state,
+      player,
+      camera,
+      x,
+      y,
+      timeMs,
+    );
     return;
   }
 
@@ -573,7 +624,7 @@ function drawHero(
   const pose = weaponPose(
     action,
     state.stats.timeMs,
-    heldTwoHanded(localHero(state).equipment.weapon.defId),
+    heldTwoHanded(player.equipment.weapon.defId),
   );
   // The whole figure — costume, armor, weapon and the slash it throws — is posed
   // as one about his FEET, outside the facing flip, so both beats read the same
@@ -595,6 +646,7 @@ function drawHero(
         coat,
         held,
         state,
+        player,
         x,
         y,
         pose,
@@ -646,12 +698,12 @@ function drawDressedHero(
   coat: CoatLayer[],
   held: CoatLayer[],
   state: GameState,
+  player: Player,
   x: number,
   y: number,
   pose: WeaponPose,
   action: PlayerAction | undefined,
 ): void {
-  const player = localHero(state);
   ctx.save();
   if (player.faceLeft) {
     ctx.translate(x + TILE, y);
@@ -746,6 +798,7 @@ function drawDeadHero(
   coat: CoatLayer[],
   held: CoatLayer[],
   state: GameState,
+  player: Player,
   camera: Camera,
   x: number,
   y: number,
@@ -758,8 +811,8 @@ function drawDeadHero(
   // The scene's own clock in ms — the pool and spray ride THIS, not the sim
   // clock, which is frozen while `dying`. Held past the end behind the modal.
   const sceneMs = scene ? scene.ms : DEATH_SCENE.durationMs;
-  const cx = Math.round(localHero(state).pos.x - camera.x);
-  const cy = Math.round(localHero(state).pos.y - camera.y + 5); // the ground line
+  const cx = Math.round(player.pos.x - camera.x);
+  const cy = Math.round(player.pos.y - camera.y + 5); // the ground line
 
   // The blood, under the body (the body lies IN the pool): the growing puddle,
   // the rivulets creeping outward, and the welling droplets.

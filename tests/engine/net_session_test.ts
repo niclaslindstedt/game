@@ -29,7 +29,8 @@ import {
   type GameState,
 } from "@game/core";
 import { decodeFrame } from "@game/wire/codec.ts";
-import { FRAME, TICK_MS, type SessionParams } from "@game/wire/protocol.ts";
+import { FRAME, TICK_MS } from "@game/wire/frames.ts";
+import { type SessionParams } from "@game/wire/protocol.ts";
 import { PRIVATE_PLAYER_FIELDS, UNSENT_FIELDS } from "@game/wire/split.ts";
 
 import { createNetClient, type NetClient } from "../../server/client.ts";
@@ -237,7 +238,11 @@ describe("a session and its client", () => {
     play(rig, 600);
     expect(rig.session.tick).toBe(606);
     expect(worldOf(rig.client.state!)).toBe(worldOf(rig.session.state));
-  });
+    // Ten seconds of a real map stepped twice, like the steering run below —
+    // ~4.5s of honest work against the suite's 5s default, which is a coin flip
+    // on a box running the other 280 files beside it. Timed explicitly rather
+    // than trimmed: the tick count is what proves there is no drift.
+  }, 20_000);
 
   it("stays in step while the player steers and fights", () => {
     const rig = connect();

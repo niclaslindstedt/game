@@ -551,21 +551,37 @@ export function handleFieldTaps(
     viewport: Viewport;
     queues: InputQueues;
     bumpUi: () => void;
-    /** Open the hub's travel-door picker for the tapped door (see
-     * TravelPanel). Absent on mounts that may not travel — a joined
-     * session's client, the spectator — so the tap simply does nothing. */
-    openTravelDoor?: (doorId: string) => void;
+    /** The hero tapped one of the hub's standing travel doors. What that MEANS
+     * is the app's answer rather than this function's: the picker if any road
+     * is open, the door's own `unready` line if none is — which is campaign
+     * progress on the CHARACTER, and this module holds no character (see
+     * GameScreen). Absent on mounts that may not travel — a joined session's
+     * client, the spectator — so the tap simply does nothing. */
+    tapTravelDoor?: (doorId: string) => void;
+    /** Open the LOST & FOUND at the hub's workbench (the stash tail) —
+     * the vault, reached from a PLACE instead of only a menu row. */
+    openWorkbench?: () => void;
   },
 ): void {
-  const { state, bot, camera, viewport, queues, bumpUi, openTravelDoor } = deps;
+  const {
+    state,
+    bot,
+    camera,
+    viewport,
+    queues,
+    bumpUi,
+    tapTravelDoor,
+    openWorkbench,
+  } = deps;
   // THE DRIVE-OUT SWALLOWS THE TAP. Once the car is on the road the run is
   // leaving and the screen is going to black; the field's own tap targets — the
-  // stall, a bystander, the other travel doors — must not answer any more. The
-  // engine refuses every RUN command for the beat, but the travel picker is app
-  // state and would open behind the curtain and book a second trip on top of
-  // the one already committed. Swallowed rather than gated in `fieldLive`,
-  // which also decides whether the HUD is mounted at all: dropping that
-  // mid-fade would pop the HUD off a beat before the black arrives.
+  // stall, a bystander, the workbench, the other travel doors — must not answer
+  // any more. The engine refuses every RUN command for the beat, but the travel
+  // picker and the vault are app state and would open behind the curtain (and
+  // the picker would book a second trip on top of the one already committed).
+  // Swallowed rather than gated in `fieldLive`, which also decides whether the
+  // HUD is mounted at all: dropping that mid-fade would pop the HUD off a beat
+  // before the black arrives.
   const shopTap = state.departure ? null : queues.shopTapRef.current;
   queues.shopTapRef.current = null;
   if (shopTap && !bot && fieldLive(state) && state.merchant.discovered) {
@@ -623,12 +639,12 @@ export function handleFieldTaps(
       break;
     }
   }
-  // A tap on a STANDING TRAVEL DOOR (the hub's rocket / rift portal) opens
-  // the destination picker — the merchant-stall gesture on the landmark that
-  // carries the door's id. The hero has to be AT the door (their own feet —
-  // a fixture across the map must not open a menu), and the picker itself is
-  // app UI: the engine only says where the door stands and where it leads.
-  if (shopTap && !bot && openTravelDoor && fieldLive(state)) {
+  // A tap on a STANDING TRAVEL DOOR (the hub's rocket / rift portal) reaches
+  // for it — the merchant-stall gesture on the landmark that carries the
+  // door's id. The hero has to be AT the door (their own feet — a fixture
+  // across the map must not open a menu), and what the reach yields is app
+  // UI: the engine only says where the door stands and where it leads.
+  if (shopTap && !bot && tapTravelDoor && fieldLive(state)) {
     const doors = runLevelDef(state).travelDoors ?? [];
     if (doors.length > 0) {
       const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
@@ -649,17 +665,49 @@ export function handleFieldTaps(
         input.useItem = false;
         // THE CAR IS BOARDED, NOT PICKED FROM: tapping it climbs in and
         // turns the key (`enterCar` — the engine coughs awake, lights on),
-        // and DRIVING out is what commits the trip. Every other door still
-        // opens the destination picker.
+        // and DRIVING out is what commits the trip. Every other door hands
+        // the tap to the app, which owns both answers a door can give.
         if (door.id === "car") {
           if (runCommandOk(state, "enterCar")) bumpUi();
           break;
         }
-        playUiSound(synth, "confirm");
-        openTravelDoor(door.id);
+        tapTravelDoor(door.id);
         bumpUi();
         break;
       }
+    }
+  }
+  // A tap on the hub's WORKBENCH opens the LOST & FOUND (§6.8's stash tail):
+  // the bay's benches are where a man keeps what he set aside, so the vault
+  // is finally reached from a PLACE rather than only a menu row. Hub levels
+  // only — the objective that never clears is what marks home ground — and
+  // any bench along the wall answers: they are all his.
+  if (
+    shopTap &&
+    !bot &&
+    openWorkbench &&
+    fieldLive(state) &&
+    runLevelDef(state).objective.type === "hub"
+  ) {
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+    const hero = localHero(state);
+    for (const obstacle of state.obstacles) {
+      if (obstacle.kind !== "workbench") continue;
+      if (
+        Math.hypot(wx - obstacle.pos.x, wy - obstacle.pos.y) >
+        MERCHANT.radius * 3
+      ) {
+        continue;
+      }
+      if (distance(hero.pos, obstacle.pos) > MERCHANT.tradeRadius * 1.5) {
+        continue;
+      }
+      input.jump = false;
+      input.useItem = false;
+      playUiSound(synth, "confirm");
+      openWorkbench();
+      bumpUi();
+      break;
     }
   }
   // Same screen→world hit-test as the merchant; the tap must not double as a

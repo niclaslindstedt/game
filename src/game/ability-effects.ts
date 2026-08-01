@@ -221,7 +221,7 @@ export function applyStorm(
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const victim = nearestEnemy(state.enemies, player.pos, storm.range);
+  const victim = nearestEnemy(state, player.pos, storm.range);
   if (!victim) return;
   scratch.cooldownMs = storm.intervalMs;
   state.events.push({ type: "lightning", pos: { ...victim.pos } });
@@ -246,7 +246,7 @@ export function applyVolley(
   power: number,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const mark = nearestEnemy(state.enemies, player.pos, volley.range);
+  const mark = nearestEnemy(state, player.pos, volley.range);
   if (!mark) return;
   scratch.cooldownMs = volley.intervalMs;
 
@@ -294,7 +294,7 @@ export function applySingularity(
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const seed = nearestEnemy(state.enemies, player.pos, singularity.range);
+  const seed = nearestEnemy(state, player.pos, singularity.range);
   if (!seed) return;
   scratch.cooldownMs = singularity.intervalMs;
 

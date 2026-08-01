@@ -26,6 +26,7 @@ import {
   wearEquippedWeapon,
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
+import { clearOfFog } from "../fog.ts";
 import { lineOfSight } from "../obstacles.ts";
 import { createProjectile } from "../projectile.ts";
 import {
@@ -47,8 +48,9 @@ import { inert } from "../disposition.ts";
 /**
  * The character fights autonomously with whatever is in the weapon slot:
  * melee weapons strike the nearest monster in reach directly, the rest fire
- * a projectile at it. Only monsters inside the current view (input.view)
- * are targets — the character never shoots at enemies the player can't see.
+ * a projectile at it. Only monsters inside the current view (input.view) and
+ * standing on ground the fog has lifted from (`clearOfFog`) are targets — the
+ * character never shoots at enemies the player can't see.
  */
 export function stepWeapon(
   state: GameState,
@@ -96,7 +98,7 @@ export function stepWeapon(
   // zero vector below falls straight back to the nearest foe.
   const aim = input.aim ? direction(player.pos, input.aim) : undefined;
   const target = nearestEnemy(
-    state.enemies,
+    state,
     player.pos,
     range,
     input.view,
@@ -410,15 +412,25 @@ function meleeSweep(
  * in front of it, which is what the hero picks when nobody is pointing) and,
  * where the player IS pointing, its alignment with that bearing (`AIM`). They
  * multiply, so an explicit point still beats the heuristic.
+ *
+ * NOTHING IN THE FOG IS A TARGET (`clearOfFog`). A mob standing on ground the
+ * hero has not uncovered is not drawn at all — the main view hides it behind
+ * the fog's frontier band — and a weapon that fires at it is shooting into
+ * blackness on the player's behalf. It becomes a target the moment the ground
+ * under it clears, and the fog never rolls back, so a mob that has once stepped
+ * out of it stays fair game wherever it walks afterwards on that floor. Reach
+ * is unchanged: a long gun still outranges a pistol, it just cannot reach past
+ * what has been explored.
  */
 export function nearestEnemy(
-  enemies: Enemy[],
+  state: GameState,
   from: Vec2,
   range: number,
   view?: GameInput["view"],
   clear?: (enemy: Enemy) => boolean,
   aim?: Vec2,
 ): Enemy | undefined {
+  const enemies = state.enemies;
   const rangeSq = range * range;
   // With a pointer bearing (desktop AIM & SHOOT) the pick is scored by distance
   // AND alignment with the cursor, so the aimed-at foe wins over a closer one
@@ -458,10 +470,15 @@ export function nearestEnemy(
             dist;
       score = dist * (1 + AIM.biasStrength * (1 - dot) * 0.5) * weight;
     }
-    // `clear` (line of sight) is checked lazily — only for candidates that
-    // would actually win — so its cost scales with improvements, not with
-    // the whole horde.
-    if (score <= bestScore && (!clear || clear(enemy))) {
+    // The fog and `clear` (line of sight) are both checked lazily — only for
+    // candidates that would actually win — so their cost scales with
+    // improvements, not with the whole horde. The fog goes first: a 5×5 sweep
+    // of a byte grid is cheaper than a segment against every obstacle.
+    if (
+      score <= bestScore &&
+      clearOfFog(state, enemy.pos) &&
+      (!clear || clear(enemy))
+    ) {
       best = enemy;
       bestScore = score;
     }

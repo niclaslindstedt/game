@@ -58,10 +58,14 @@ travelDoors:
     name: THE CAR
     to: [goodco_hq]
   # THE ROCKET — the ship on the back lawn. Flies only where Ada's trail has
-  # already led (the picker greys a locked road rather than hiding it).
+  # already led (the picker greys a locked road rather than hiding it) — and
+  # while NO road is open, it opens no picker at all: the ship is still one
+  # part short, the hero knows it, and `unready:` is what he says instead. The
+  # moon and Mars stay unnamed until the part is home from GOODCO's vault.
   - id: rocket
     name: THE ROCKET
     to: [moon, mars]
+    unready: garage_ship_unfinished
   # THE RIFT SEAM — sealed until the RIFT CREATOR is bolted to the wall
   # (`requires`: a keepsake banked on the character), then it reaches the
   # deep roads already walked. D2's going-back rule, in the fiction's words.

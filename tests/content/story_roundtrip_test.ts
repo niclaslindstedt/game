@@ -26,6 +26,8 @@ import {
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   cutsceneVariant,
+  difficultyDef,
+  weaponDef,
 } from "@game/core";
 
 const snapshot = JSON.parse(
@@ -103,5 +105,30 @@ describe("the YAML story catalogs compile to the shipped script", () => {
     // MEDIUM is the base scene; every other rung resolves to its own variant.
     expect(cutsceneVariant("prelude", "medium")).toBe("prelude");
     expect(new Set(walls.values()).size).toBe(walls.size);
+  });
+
+  // He does not narrate taking the weapon down — he leaps for it, and it
+  // leaves the wall and lands in his hand on the same frame. The piece he
+  // carries out is the run's own starting weapon, so what the scene puts in
+  // his fist is that weapon's ICON: the same art the paper doll holds for the
+  // rest of the run. Re-arming a rung in difficulties.ts without re-authoring
+  // the scene would otherwise send him out of the room holding the last one.
+  it("takes the wall weapon down and hands the run's own piece to the hero", () => {
+    for (const rung of ["easy", "medium", "hard", "nightmare", "jesus"]) {
+      const def = CUTSCENE_DEFS[cutsceneVariant("prelude", rung)]!;
+      const wall = def.stage.props.find((p) => p.kind.startsWith("wall_"))!;
+      const stripped = def.beats.find((b) => b.kind === "prop");
+      const held = def.beats.find((b) => b.kind === "hold");
+      // The prop beat has to name the wall weapon's own id, or the piece
+      // stays hanging there while he walks out carrying a copy of it.
+      expect(stripped, `${rung}: takes the weapon off the wall`).toEqual({
+        kind: "prop",
+        prop: wall.id,
+        hidden: true,
+      });
+      expect(held?.kind === "hold" && held.sprite, `${rung}: carries it`).toBe(
+        weaponDef(difficultyDef(rung).startingWeapon).icon,
+      );
+    }
   });
 });

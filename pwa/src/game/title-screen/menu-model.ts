@@ -203,6 +203,11 @@ export type NetMenuState = {
   hostIntent: () => HostIntent;
   /** Why this build could not join that row, or null. */
   refusalFor: (row: BrowserRow) => string | null;
+  /** The row wants mods this machine does not have (§4.4) — the refusal a
+   * press can at least point at the Workshop for. */
+  missingMods: (row: BrowserRow) => boolean;
+  /** Open the game's Steam Workshop hub — where the missing mods live. */
+  openWorkshop: () => void;
   joinRow: (row: BrowserRow, password?: string) => void;
   joinAddress: (address: string, password?: string) => void;
 };

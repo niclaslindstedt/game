@@ -57,10 +57,8 @@ import {
   challengeFor,
   sanitizeName,
 } from "../wire/handshake.ts";
+import { FRAME, HELLO_MIN_BYTES, MAX_CLIENTS } from "../wire/frames.ts";
 import {
-  FRAME,
-  HELLO_MIN_BYTES,
-  MAX_CLIENTS,
   type ChallengePayload,
   type Handshake,
   type JoinPayload,

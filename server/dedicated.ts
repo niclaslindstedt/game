@@ -36,8 +36,8 @@ import { readFileSync } from "node:fs";
 import { engineVersion, error, header, info, status, warn } from "@game/core";
 
 import { createHost, type Host } from "./host.ts";
+import { MAX_CLIENTS } from "./wire/frames.ts";
 import {
-  MAX_CLIENTS,
   PROTOCOL_VERSION,
   type RosterEntry,
   type SessionParams,

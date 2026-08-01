@@ -37,12 +37,21 @@ const POLL_MS = 1_000;
 export function SessionPanel({
   font,
   link,
+  onTrade,
+  mySeat,
 }: {
   font: PixelFont;
   /** The roster comes off the session's own frames rather than out of the
    * status poll: it changes when somebody joins, which is exactly when the
    * server sends one. */
   link: SessionLink;
+  /** Open a trade with this SEAT (§5.1). Absent when this client cannot trade
+   * — a spectator, or a session with nobody else seated. The press leaves the
+   * pause screen behind it, so it lives with the pause overlay's wiring. */
+  onTrade?: (seat: number) => void;
+  /** This client's own seat — its roster row gets no TRADE button (a table
+   * with yourself is refused by the engine anyway). */
+  mySeat?: number | null;
 }) {
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [copied, setCopied] = useState("");
@@ -118,6 +127,11 @@ export function SessionPanel({
           value={`${seat.playing ? "PLAYING" : "WATCHING"}${
             seat.ping >= 0 ? ` - ${seat.ping} MS` : ""
           }`}
+          action={
+            onTrade && seat.seat !== null && seat.seat !== mySeat
+              ? { label: "TRADE", run: () => onTrade(seat.seat!) }
+              : undefined
+          }
         />
       ))}
     </div>
@@ -131,6 +145,7 @@ function Row({
   copy,
   copied,
   onCopied,
+  action,
 }: {
   font: PixelFont;
   label: string;
@@ -138,6 +153,9 @@ function Row({
   copy?: string;
   copied?: string;
   onCopied?: (value: string) => void;
+  /** A row's one verb — the roster rows wear TRADE here, in the copy button's
+   * own slot and skin. */
+  action?: { label: string; run: () => void };
 }) {
   return (
     <div className="session-row">
@@ -163,6 +181,21 @@ function Row({
             text={copied === copy ? "COPIED" : "COPY"}
             scale={2}
             color="#7ef0c8"
+          />
+        </button>
+      )}
+      {action && (
+        <button
+          type="button"
+          className="session-copy"
+          aria-label={`${action.label.toLowerCase()}-${label.toLowerCase()}`}
+          onClick={action.run}
+        >
+          <PixelText
+            font={font}
+            text={action.label}
+            scale={2}
+            color="#ffd75e"
           />
         </button>
       )}

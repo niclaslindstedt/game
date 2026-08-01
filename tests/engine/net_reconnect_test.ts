@@ -23,9 +23,8 @@ import {
   type GameState,
 } from "@game/core";
 import { decodeFrame } from "@game/wire/codec.ts";
+import { FRAME, RECONNECT_GRACE_MS } from "@game/wire/frames.ts";
 import {
-  FRAME,
-  RECONNECT_GRACE_MS,
   type SessionParams,
   type WelcomePayload,
 } from "@game/wire/protocol.ts";

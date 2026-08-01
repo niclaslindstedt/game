@@ -166,8 +166,9 @@ _The night everything started. Movie night in the living room. The weapon
 mounted on the back wall — which one depends on the chosen difficulty — is the
 one thing the hero takes off it to go after her: his starting weapon for the
 whole run. The scene is identical on every difficulty except for the mounted
-piece and the closing caption (the per-difficulty variants are the `variants:`
-block of `content/cutscenes/prelude.yaml`)._
+piece, the piece he carries out in his hand, and the closing caption (the
+per-difficulty variants are the `variants:` block of
+`content/cutscenes/prelude.yaml`)._
 
 > **CAPTION:** FRIDAY NIGHT. MOVIE NIGHT.
 
@@ -189,7 +190,9 @@ _(Ada crosses to the door and exits.)_
 
 > **CAPTION:** SHE NEVER CAME BACK.
 
-_(The closing caption names the wall weapon, per difficulty:)_
+_(He gets up off the couch — the first time all night — crosses under the
+mount, and leaps for it. The weapon leaves the wall at the top of the jump and
+is in his hand when he lands. The closing caption names it, per difficulty:)_
 
 - **EASY** (SAWED-OFF SHOTGUN):
   > **CAPTION:** GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
@@ -202,7 +205,8 @@ _(The closing caption names the wall weapon, per difficulty:)_
 - **JESUS CHRIST!** (A STICK):
   > **CAPTION:** THE STICK OFF THE WALL. GOD HELP US BOTH.
 
-_(Fade to black.)_
+_(He walks out the door Ada left by, carrying it. Fade to black — and the
+monologue on the far side shows him still holding it.)_
 
 ---
 
@@ -220,6 +224,90 @@ the ship still wants its part._
 ### Opening monologue (hero, black screen)
 
 1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
+
+### Hero's thought — trying THE ROCKET before the part is home
+
+_The hero's own only other line at home, and the only one in the game pinned to a DOOR
+rather than to a mob: tapping the ship on the back lawn before GOODCO HQ has
+fallen plays this instead of the travel picker. It REPLAYS — it answers the
+tap, not a story beat the player is owed once — and it deliberately names
+neither the moon nor Mars, which is the whole reason the picker is withheld.
+He has not earned those roads and does not yet know they are where the trail
+goes._
+
+1. STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
+
+### Side errands — RUTH
+
+_Ada's mother, who has a key to the garage and always has. Once the voyages
+start she is simply there between them, standing by the engine parts, because
+waiting at home means staring at the phone. Her chain is the game's second
+campaign-long one (`campaign: true`): three errands, one per leg of the trail,
+each asking for something of her daughter's — and she is never once scared for
+Ada, only proud._
+
+**On being spoken to** (and the header of her errand list):
+
+- SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
+- WHEN YOU'RE OUT THERE — BRING ME SOMETHING OF HERS.
+
+#### THE RECEIPT
+
+**The ask:**
+
+1. THE NIGHT SHE WENT, SHE BOUGHT CHIPS AND A SODA AT THEIR MACHINES. THE MACHINES PRINT A SLIP. GOODCO KEEPS EVERYTHING.
+2. THEIR NIGHT PEOPLE CARRY THE FLOOR'S PAPERWORK ON THEM. EVERY SHEET OF IT.
+3. BRING ME THE RECEIPT. IT'S THE LAST ORDINARY THING SHE DID. IT'S HERS, NOT THEIRS.
+
+**Coming back short:**
+
+- SOMEBODY ON THAT FLOOR IS CARRYING IT. THEY CARRY EVERYTHING.
+
+**The handover:**
+
+1. CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.'
+2. SHE STOOD THERE BEING ORDINARY, AND THEY TOOK HER MID-COIN.
+3. I'M KEEPING THIS. IT'S THE LAST NORMAL MINUTE ANYONE HAS OF HER.
+
+#### THE DENT — offered once THE RECEIPT is handed in
+
+**The ask:**
+
+1. WHEREVER THEY'RE KEEPING HER, THEY'LL HAVE GIVEN HER A COMPANION. A MACHINE WITH A FACE.
+2. SHE'LL HAVE BITTEN IT. I RAISED HER.
+3. FIND THE ONE SHE BIT AND BRING ME THE PLATE.
+
+**Coming back short:**
+
+- A MACHINE WITH A FACE AND A DENT IN IT. IT'S OUT THERE SOMEWHERE.
+
+**The handover:**
+
+1. TEETH. RIGHT THROUGH THE SHELL.
+2. THAT'S MY GIRL.
+3. I BOUGHT HER A DOLL ONCE. SHE BURIED IT. SOMEBODY SHOULD HAVE TOLD THEM THAT.
+
+#### THE SCALE — offered once THE DENT is handed in
+
+**The ask:**
+
+1. WHERE SHE'S GONE NOW, THE THINGS THAT KEEP HER ARE SCALED. GODS, YOU SAID.
+2. MY GIRL WILL BE PRYING AT THEM. SHE PRIES. SHE ALWAYS HAS.
+3. BRING ME A SCALE OFF ONE. I WANT TO HOLD WHAT SHE'S UP AGAINST.
+
+**Coming back short:**
+
+- A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT.
+
+**The handover:**
+
+1. IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
+2. I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
+3. GO AND MEET HER HALFWAY.
+
+**Farewell.**
+
+> SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
 
 ## Level 1 — GOODCO HQ
 
@@ -2924,6 +3012,7 @@ at the top of this file).
 | Hero's inner thoughts (`firstKillThoughts`)                  | `content/thoughts.yaml` (compiled to `src/generated/thoughts.ts`; pinned from a `LevelDef`)                                                                               |
 | The scripted opening strike's blows (`openingStrike`)        | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml` |
 | Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                    |
+| What he says at a door with no open road                     | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `src/game/story.ts`)                           |
 | Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                                             |
 | Companion joining words + kill quotes                        | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                          |
 | Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                  |

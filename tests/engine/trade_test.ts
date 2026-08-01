@@ -103,6 +103,54 @@ describe("opening a table", () => {
     cancelTrade(state, a);
     expect(openTrade(state, a, 0)).toBe("bad-seat");
   });
+
+  it("refuses a partner who has a screen up, and never hijacks it", () => {
+    const { state, a, b } = table();
+    cancelTrade(state, a);
+    b.screen = "inventory";
+    expect(openTrade(state, a, 1)).toBe("busy");
+    expect(b.screen).toBe("inventory");
+    expect(a.screen).toBeUndefined();
+  });
+});
+
+describe("the table is a screen on both seats", () => {
+  it("parks both heroes at the table and frees them on cancel", () => {
+    const { state, a, b } = table();
+    expect(a.screen).toBe("trade");
+    expect(b.screen).toBe("trade");
+    cancelTrade(state, a);
+    expect(a.screen).toBeUndefined();
+    expect(b.screen).toBeUndefined();
+  });
+
+  it("lowers both screens when the swap settles", () => {
+    const { state, a, b } = table();
+    offerItem(state, a, 0);
+    offerItem(state, b, 0);
+    acceptTrade(state, a);
+    acceptTrade(state, b);
+    expect(state.trades ?? []).toHaveLength(0);
+    expect(a.screen).toBeUndefined();
+    expect(b.screen).toBeUndefined();
+  });
+
+  it("lowers the partner's screen when a seat leaves play", () => {
+    const { state, a, b } = table();
+    departHero(state, 1);
+    expect(a.screen).toBeUndefined();
+    expect(b.departed).toBe(true);
+  });
+
+  it("leaves a screen the seat has since raised over something else", () => {
+    const { state, a, b } = table();
+    // The engine never re-raises over "trade", but a lowered table must not
+    // stomp a screen that is no longer its own.
+    a.screen = "paused";
+    cancelTrade(state, b);
+    expect(a.screen).toBe("paused");
+    expect(b.screen).toBeUndefined();
+  });
 });
 
 describe("the swap is one transaction or nothing", () => {

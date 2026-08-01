@@ -8,7 +8,7 @@
 
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { DIALOGUE, DOORS, GATES } from "./config/index.ts";
+import { DIALOGUE, DOORS, GATES, MERCHANT } from "./config/index.ts";
 import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";
@@ -23,7 +23,7 @@ import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
 import { anyHeroWithin } from "./party.ts";
-import type { DialogueState, Enemy, GameState } from "./types/index.ts";
+import type { DialogueState, Enemy, GameState, Player } from "./types/index.ts";
 
 // The `dialogue`/`cutscenes` display preferences live in the engine's leaf
 // `flags.ts` — no imports at all — so the SETTINGS screen can apply them at
@@ -344,6 +344,42 @@ export function startPlayerThought(state: GameState, thoughtId: string): void {
   };
   state.phase = "dialogue";
   state.events.push({ type: "dialogueStarted", speaker: def.speaker });
+}
+
+/**
+ * THE HERO LOOKS A STANDING DOOR OVER AND FINDS IT ISN'T READY.
+ *
+ * A travel door whose roads are all still locked opens no picker (see
+ * `LevelDef.travelDoors[].unready`): the hero says what is wrong with it
+ * instead, which on the hub's ROCKET is the ship still being one part short.
+ * The app decides that nothing is open — campaign progress lives on the
+ * CHARACTER, not on the run — and this is the half that travels: the authored
+ * line, played through the ordinary thought box.
+ *
+ * The beat REPLAYS on purpose, so it is never written to `thoughtsSeen`: it is
+ * an answer to a tap rather than a story beat the player is owed once, and a
+ * player who taps the ship again a chapter later is asking the same question.
+ *
+ * Refuses for a door with no line, and for a hero who is not actually AT it —
+ * the same revalidation `enterCar` does of the tap the app already checked, so
+ * a session client cannot put a scene on every party member's screen from
+ * across the map.
+ */
+export function tapTravelDoor(
+  state: GameState,
+  hero: Player,
+  doorId: string,
+): boolean {
+  const door = (runLevelDef(state).travelDoors ?? []).find(
+    (d) => d.id === doorId,
+  );
+  if (!door?.unready) return false;
+  const mark = state.landmarks.find((l) => l.kind === doorId);
+  if (!mark || distance(hero.pos, mark.pos) > MERCHANT.tradeRadius * 1.5) {
+    return false;
+  }
+  startPlayerThought(state, door.unready);
+  return true;
 }
 
 /**

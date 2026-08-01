@@ -27,7 +27,7 @@ server/
 `protocol.ts`, `codec.ts`, `split.ts`, `delta.ts` and `snapshot.ts` import
 **nothing** — not even the engine. Both ends of the wire read them, and the
 page reads them from screens that may sit on the app's startup path, where the
-170 KB critical-path budget forbids reaching `@game/core`. A wire that knows
+200 KB critical-path budget forbids reaching `@game/core`. A wire that knows
 nothing about the simulation also cannot fall out of step with it.
 
 ## Shipping it

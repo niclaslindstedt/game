@@ -39,13 +39,17 @@ import {
   isUnidentified,
   lookupTicketIndex,
   reviveTarget,
+  weaponAmmoType,
   wouldUpgradeSlot,
+  type AmmoType,
   type EquipSlot,
   type Equipment,
   type GameState,
+  type Player,
 } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
+import { InfoTip } from "@ui/lib/InfoTip.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -59,6 +63,7 @@ import { synth } from "./audio.ts";
 import { playEquipHaptic } from "./haptics.ts";
 import { IdentifyReveal } from "./IdentifyReveal.tsx";
 import { ItemIcon, itemKindGlyph } from "./ItemCard.tsx";
+import { InfoNote } from "./InfoNote.tsx";
 import { ItemTooltip } from "./ItemTooltip.tsx";
 import { PaperDoll } from "./PaperDoll.tsx";
 import { playUiSound } from "./sfx/ui.ts";
@@ -86,6 +91,39 @@ type DragSource =
  * every column count `--inv-cols` takes in styles.css.
  */
 const BAG_FRAME_CELLS = 40;
+
+/**
+ * WHAT ONE AMMUNITION SOCKET IS, in the player's terms — the rule that governs
+ * every kind, then the one fact that differs per hero: whether anything he is
+ * carrying actually fires this.
+ *
+ * That last line is the whole reason the pouch confused: three icons and three
+ * numbers say nothing about which of them the weapon in your hand will spend,
+ * and a stack for a gun sold two levels ago looks exactly like the stack that
+ * is about to run you dry. So the note NAMES the weapon — the held one first,
+ * since that is the one the trigger is on.
+ */
+function ammoHelp(player: Player, type: AmmoType): string[] {
+  const held = player.equipment.weapon;
+  const eaters: string[] = [];
+  if (weaponAmmoType(held) === type) eaters.push(equipmentName(held));
+  for (const piece of player.inventory) {
+    if (piece && weaponAmmoType(piece) === type)
+      eaters.push(equipmentName(piece));
+  }
+  return [
+    "ONE ROUND PER TRIGGER PULL —",
+    "A SHOTGUN'S PELLETS AND A",
+    "VOLLEY'S EXTRA ARROWS ARE",
+    "STILL ONE. GUNS AND BOWS RUN",
+    "DRY; THEY NEVER WEAR OUT.",
+    "",
+    eaters.length === 0
+      ? "NOTHING YOU CARRY FIRES THESE."
+      : `FIRED BY ${eaters[0]}.`,
+    ...(eaters.length > 1 ? [`AND ${eaters.length - 1} MORE IN THE BAG.`] : []),
+  ];
+}
 
 type Drag = {
   item: Equipment;
@@ -620,7 +658,22 @@ export function InventoryPanel({
             kind — wears the same `.inv-readout` CUTOUT, so the foot reads as
             frames cut into the panel rather than numbers loose on the plate. */}
         <div className="inv-footer">
-          <div className="inv-purse inv-readout">
+          <InfoTip
+            className="inv-purse inv-readout"
+            label="explain-purse"
+            tip={
+              <InfoNote
+                font={font}
+                title={`COINS ${formatCompact(player.coins)}`}
+                lines={[
+                  "WHAT THE MERCHANT PAYS FOR",
+                  "LOOT YOU SELL, AND WHAT HIS",
+                  "STALL AND THE BUYBACK RACK",
+                  "CHARGE. IT SURVIVES THE RUN.",
+                ]}
+              />
+            }
+          >
             {(() => {
               const coin = spriteDataUrl(sprites, "icon_coins");
               return coin ? (
@@ -638,7 +691,7 @@ export function InventoryPanel({
               scale={2}
               color="#ffd75e"
             />
-          </div>
+          </InfoTip>
           {/* THE AMMUNITION POUCH, beside the purse and read the same way: an
               icon and a number per kind. It hangs here rather than taking bag
               cells because rounds the hero cannot pick up for want of room to
@@ -652,7 +705,18 @@ export function InventoryPanel({
                 const icon = spriteDataUrl(sprites, AMMO_KINDS[type].icon);
                 const count = ammoCount(player, type);
                 return (
-                  <div className="inv-ammo-kind inv-readout" key={type}>
+                  <InfoTip
+                    className="inv-ammo-kind inv-readout"
+                    key={type}
+                    label={`explain-ammo-${type}`}
+                    tip={
+                      <InfoNote
+                        font={font}
+                        title={`${AMMO_KINDS[type].name} ${count}/${AMMO.stackCap}`}
+                        lines={ammoHelp(player, type)}
+                      />
+                    }
+                  >
                     {icon ? (
                       <img
                         src={icon}
@@ -670,7 +734,7 @@ export function InventoryPanel({
                       // boxes on the floor.
                       color={count >= AMMO.stackCap ? "#ffb14a" : "#c2ccd6"}
                     />
-                  </div>
+                  </InfoTip>
                 );
               },
             )}

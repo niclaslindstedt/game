@@ -32,7 +32,9 @@ import {
   type Character,
 } from "../characters.ts";
 import type { WornPiece } from "../achievement-totals.ts";
+import { hasSeenOpening } from "../character-progress.ts";
 import { cloneGameState } from "../checkpoint.ts";
+import { runCommand } from "../run-commands.ts";
 import { playDeathHaptic } from "../haptics.ts";
 import { recordCampaign } from "../highscores.ts";
 import { publishLeaderboards } from "../leaderboards.ts";
@@ -55,6 +57,11 @@ export type RunProgress = {
    * thoughts read this run, then swap the mount to the destination. The
    * gate crossing and the hub's travel doors are the same trip. */
   travelTo: (state: GameState, to: string) => void;
+  /** Bank the hero's build and this run's thoughts WITHOUT ending anything —
+   * the mid-run leave (§4.5): a joiner quitting, or the session dying under
+   * them. The victory/travel/defeat paths bank on their own; re-banking
+   * unchanged content moves nothing (an unchanged hero keeps its stamp). */
+  bankHero: (state: GameState) => void;
 };
 
 export function createRunProgress(deps: {
@@ -73,6 +80,15 @@ export function createRunProgress(deps: {
   /** Whether this mount should capture a combat-start checkpoint (a run
    * started from scratch — not resumed, not itself adopted from one). */
   captureEnabled: boolean;
+  /**
+   * WHETHER A CROSSING IS THE SESSION'S TO PERFORM (§6.4). True when this run
+   * is hosted with the doors open or has other people in it — then `travelTo`
+   * sends the run command and the SESSION swaps the level under everybody at
+   * once, instead of the app tearing the session down (which is what
+   * disconnects every joiner). Absent/false is every local run, which keeps
+   * the app-side crossing exactly as it has always been.
+   */
+  sessionTravels?: () => boolean;
   /** Whether this run actually shows its opening (see run-setup.ts). False —
    * a dev warp, a `?scenario=` staging, a muted run — means no progress event
    * may stamp the opening "seen": a level warped into once would otherwise
@@ -143,7 +159,10 @@ export function createRunProgress(deps: {
   // holding — the run he leaves behind simply ends. Shared by the latent
   // gate (`gateEntered`) and the hub's standing travel doors, so the two
   // trips can never drift apart on what gets banked.
-  const travelTo = (state: GameState, to: string) => {
+  // Bank the hero as they stand — the shared half of a crossing and of a
+  // mid-run leave. Extracting from the live state folds in everything the
+  // funnels promise (an unrecovered corpse's gear included).
+  const bankHero = (state: GameState) => {
     characterRef.current = bankLoadout(
       characterRef.current,
       extractLoadout(state, localHero(state)),
@@ -155,6 +174,28 @@ export function createRunProgress(deps: {
       difficulty,
       state.thoughtsSeen,
     );
+  };
+
+  const travelTo = (state: GameState, to: string) => {
+    // §6.4: WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
+    // the session to swap the level under everybody at once; the swap comes
+    // back as a full snapshot, the driver's travel hook banks this hero off
+    // the level being left, and the level-id change is what remounts the app
+    // — with the driver and every joiner's connection intact. Only seat 0's
+    // request is honored (the host chooses the road), so a joiner's copy of
+    // the same event sends a verb the session politely refuses.
+    if (deps.sessionTravels?.()) {
+      runCommand(
+        state,
+        "travelTo",
+        to,
+        // How much of the destination's opening to skip — the same question a
+        // locally-built run answers from this character (run-setup.ts).
+        hasSeenOpening(characterRef.current, to, difficulty) ? "story" : "none",
+      );
+      return;
+    }
+    bankHero(state);
     checkpointRef.current = null;
     stopMusic();
     setHud(null);
@@ -388,7 +429,7 @@ export function createRunProgress(deps: {
     }
   };
 
-  return { captureCheckpoint, onEvent, travelTo };
+  return { captureCheckpoint, onEvent, travelTo, bankHero };
 }
 
 /** Every worn slot the wardrobe feats track, weapon first. */

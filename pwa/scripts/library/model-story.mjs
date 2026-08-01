@@ -81,6 +81,9 @@ export const CUTSCENE_BEAT_KINDS = {
   fade: "not reader-facing: staging — the fade to and from black",
   pan: "not reader-facing: staging — gliding the camera",
   shake: "not reader-facing: staging — an actor's tremble",
+  jump: "not reader-facing: staging — an actor leaving the ground",
+  hold: "not reader-facing: staging — putting a thing in an actor's hands",
+  prop: "not reader-facing: staging — taking a prop off the stage",
 };
 
 const SPOKEN_BEATS = new Set(
@@ -252,7 +255,14 @@ function sceneModel(id, section) {
  * The hero's pinned beats on a level, in the order the run plays them: the
  * SCRIPTED STRIKE first (it is the only one a level can guarantee lands, and on
  * GOODCO HQ it is the opening scene of the whole campaign), then sightings,
- * then kills.
+ * then kills, then the STANDING DOORS he tries too early.
+ *
+ * A door beat is the one here that is not fired by a mob: it answers a TAP on a
+ * travel door with no open road (`travelDoors[].unready` — the garage's rocket
+ * before the part is home), so it names the DOOR where the others name a
+ * speaker. It replays in game, and it is the only line the hub has beyond its
+ * arrival monologue, so leaving it out would publish the garage as a chapter
+ * with nothing in it but the door list.
  *
  * The strike used to be missing here entirely, which is the one omission this
  * section cannot afford: `LEVEL_FIELDS` claims `openingStrike` is covered by
@@ -276,6 +286,13 @@ function thoughtsOn(level) {
       : []),
     ...(level.firstSightThoughts ?? []).map((t) => ({ ...t, when: "sight" })),
     ...(level.firstKillThoughts ?? []).map((t) => ({ ...t, when: "kill" })),
+    ...(level.travelDoors ?? [])
+      .filter((door) => door.unready)
+      .map((door) => ({
+        thought: door.unready,
+        when: "door",
+        door: door.name,
+      })),
   ];
   return triggers.map((trigger) => {
     const def = THOUGHT_DEFS[trigger.thought];
@@ -286,6 +303,9 @@ function thoughtsOn(level) {
       id: def.id,
       when: trigger.when,
       blow: trigger.blow,
+      // The door a "door" beat answers, by its picker name (THE ROCKET) —
+      // the slot a mob-fired beat fills with its speaker.
+      door: trigger.door ?? null,
       enemy: enemy
         ? {
             id: enemy.id,

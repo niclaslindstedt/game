@@ -34,6 +34,7 @@ import {
   idle,
   jumpOnce,
   makeEnemy,
+  revealAll,
   run,
   SEED,
   settleBossRite,
@@ -266,6 +267,9 @@ describe("jumping", () => {
 describe("weapon", () => {
   it("auto-fires only when a monster is in range", () => {
     const state = equipBlaster(startGame());
+    // The blaster outranges the reveal disc, so this is about RANGE only once
+    // the floor is uncovered — fog is its own suite's subject (`revealAll`).
+    revealAll(state);
     const range = weaponDef("blaster").range;
     state.enemies = [
       makeEnemy({

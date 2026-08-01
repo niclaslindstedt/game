@@ -23,6 +23,9 @@ import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { heroSoak } from "../game-screen/hero-soak.ts";
+import { dollDataUrl } from "../paper-doll.ts";
+import { playerDollLayers } from "../paper-doll-live.ts";
 
 /** The reveal state the overlay publishes so the app's keyboard advance can
  * share the tap's two-step semantics (finish the crawl, then turn the page). */
@@ -139,8 +142,18 @@ export function IntroOverlay({
   );
 
   // The hero stands over the box in whatever he's wearing this level (plain
-  // clothes at GOODCO HQ, the EVA suit on the moon) — his idle frame, bobbing.
-  const hero = spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`);
+  // clothes at GOODCO HQ, the EVA suit on the moon) — his idle frame, bobbing,
+  // and ARMED: the dressed paper doll, the same avatar the HUD, the inventory
+  // and the in-world dialogue box draw him as. He walks out of the prelude with
+  // the weapon off his wall in his hand, so the monologue on the far side of
+  // that fade shows him still holding it. Falls back to the bare body if the
+  // doll can't compose (a sprite set that never loaded).
+  const hero =
+    dollDataUrl(
+      assets.sprites,
+      playerDollLayers(state, "0"),
+      heroSoak(state),
+    ) ?? spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`);
 
   return (
     <div

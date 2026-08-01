@@ -1,0 +1,27 @@
+name: icon_bitten_plate
+family: icons
+size: [12, 12]
+description: >
+  A rounded robot shell plate in dull chrome, a bite-shaped notch punched clean out of one edge.
+subject:
+  kind: quest item icon
+  features: a rounded metal plate with a semicircular bite notch missing from its right edge
+  accent: the bite — tooth marks right through the shell
+  flavor: she'll have bitten it; her mother raised her
+palette:
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # shell chrome
+  S: "#d8dce4" # chrome highlight
+grid: |
+  ............
+  ...OOOOOO...
+  ..OVVSSVVO..
+  ..OVSVVVVO..
+  ..OVVVVOOO..
+  ..OVVVOO....
+  ..OVVVVOO...
+  ..OVVVVVOO..
+  ..OVVVVVVO..
+  ...OOOOOO...
+  ............
+  ............

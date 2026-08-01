@@ -20,6 +20,7 @@ import {
   skipCutscene,
   step,
   storyItemDef,
+  thoughtDef,
   type GameState,
 } from "@game/core";
 
@@ -115,6 +116,30 @@ describe("the doors", () => {
     expect(doorMap.get("rocket")?.to).toEqual(["moon", "mars"]);
     expect(doorMap.get("rift_seam")?.to).toEqual(["the_rift", "boot_hill"]);
     expect(doorMap.get("rift_seam")?.requires).toBe("rift_creator");
+  });
+
+  it("grounds the rocket until the part is home, and names no road while it is", () => {
+    const rocket = (garage.travelDoors ?? []).find((d) => d.id === "rocket");
+    // The ship is one part short until GOODCO HQ falls, so the tap plays his
+    // own read on it rather than a picker (`unready`) — the car and the seam
+    // both answer differently and carry none.
+    expect(rocket?.unready).toBe("garage_ship_unfinished");
+    for (const id of ["car", "rift_seam"]) {
+      expect((garage.travelDoors ?? []).find((d) => d.id === id)?.unready).toBe(
+        undefined,
+      );
+    }
+    // AND IT SPOILS NOTHING. The whole reason the picker is withheld is that
+    // its locked rows name two chapters the player has not reached; a line
+    // that named them itself would give the reveal back.
+    const said = thoughtDef(rocket!.unready!)
+      .pages.flat()
+      .join(" ")
+      .toUpperCase();
+    for (const dest of rocket!.to) {
+      const name = LEVELS[dest]!.name.toUpperCase();
+      expect(said, `the grounded line names "${name}"`).not.toContain(name);
+    }
   });
 
   it("comes home from every earthside victory (the town loop)", () => {

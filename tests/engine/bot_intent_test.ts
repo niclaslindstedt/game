@@ -46,7 +46,7 @@ import {
   type Equipment,
   type GameState,
 } from "@game/core";
-import { COMMANDS } from "../../server/wire/protocol.ts";
+import { COMMANDS } from "../../server/wire/frames.ts";
 import { clearStage, startGame } from "./helpers.ts";
 
 /**
@@ -92,7 +92,7 @@ describe("the autopilot's housekeeping can all travel", () => {
 
   it("has each of those verbs on the WIRE's own copy of the list", () => {
     // The allow-list is duplicated on purpose — `server/wire/protocol.ts` is
-    // read from the startup path, where the 170 KB budget forbids reaching
+    // read from the startup path, where the 200 KB budget forbids reaching
     // `@game/core` — so a verb that exists in the engine and not on the wire is
     // a verb a client may never send. The drift test covers the pair in general;
     // this covers the six that decision 3b depends on.

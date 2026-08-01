@@ -28,15 +28,16 @@
 import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import path from "node:path";
 
-import { app } from "electron";
+import { app, shell } from "electron";
 
+import { STEAM_APP_ID } from "./config";
 import { output } from "./output";
 import { modToolsPath } from "./resources";
 import { publishMod, subscribedItems } from "./workshop";
 
 /** A message from the web side (already parsed; `__gisMods` checked). */
 export type ModsRequest = {
-  action?: "list" | "publish";
+  action?: "list" | "publish" | "workshop";
   requestId?: number;
   folder?: string;
   changeNote?: string;
@@ -124,6 +125,16 @@ export function createModsBridge(emit: (event: ModsEvent) => void): ModsBridge {
       if (request.action === "publish") {
         void runPublish(request).then((event) =>
           emit({ ...event, requestId } as ModsEvent),
+        );
+        return;
+      }
+      // Open the game's Workshop hub in the Steam client (§4.4) — where a
+      // joiner refused for a missing mod goes to get it. A fixed steam:// URL
+      // built from OUR OWN app id, never from anything the page sent: the one
+      // thing this action must not become is an open-arbitrary-URL channel.
+      if (request.action === "workshop") {
+        void shell.openExternal(
+          `steam://url/SteamWorkshopPage/${STEAM_APP_ID}`,
         );
       }
     },

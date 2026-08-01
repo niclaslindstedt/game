@@ -18,7 +18,14 @@ import {
 } from "@game/core";
 import { hitEnemy } from "../../src/game/loot.ts";
 import { exploredRay } from "../../src/game/map.ts";
-import { clearStage, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  idle,
+  makeEnemy,
+  refog,
+  run,
+  startGame,
+} from "./helpers.ts";
 
 describe("fog of war", () => {
   it("starts with the spawn surroundings revealed and the far field fogged", () => {
@@ -38,6 +45,7 @@ describe("fog of war", () => {
   it("walking lifts the fog along the way, and it stays lifted", () => {
     const state = startGame();
     clearStage(state);
+    refog(state); // this suite is ABOUT the fog — put it back
     const there = {
       x: state.players[0].pos.x + 600,
       y: state.players[0].pos.y,
@@ -56,6 +64,7 @@ describe("fog of war", () => {
   it("lifts fog as a CIRCLE around the hero, not the whole camera rect", () => {
     const state = startGame();
     clearStage(state);
+    refog(state); // this suite is ABOUT the fog — put it back
     // A corner of the on-screen camera view, well OUTSIDE the reveal circle:
     // visible on screen, but the circular reveal must leave it fogged.
     const view = {

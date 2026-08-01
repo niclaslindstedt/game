@@ -38,7 +38,10 @@ all the way to the AI that took his job in the first place. Ada is never on
 screen, but she is never passive: at every stop she leaves a trace behind
 (**Ada's Trail**) — scared at first, then defiant, then actively sabotaging —
 so the hero (and the player) follows a person fighting her way forward, not a
-beacon. His own impatience is the counter-melody to that urgency: whenever he
+beacon. The one other person who cannot stop following her is **RUTH, Ada's
+mother**, who lets herself into the hero's garage with her own key and waits
+there between his voyages — because waiting at home means staring at the
+phone. His own impatience is the counter-melody to that urgency: whenever he
 lingers on a place long enough to outgrow it — the enemies turned pathetic, the
 fights teaching him nothing — he catches himself grinding and mutters that he
 should stop wasting time and go find Ada. It is the game's one recurring inner
@@ -49,10 +52,13 @@ line, played in several moods whenever he over-farms a map.
 **Movie night, the night it starts.** Ada announces they are out of chips and
 soda and steps out for five minutes, telling the hero to keep her spot warm.
 She takes the jacket he fixed the zipper on. Two hours later she still hasn't
-come back, and the room is quiet. He takes the weapon down off the back wall —
-which one depends on the difficulty (his GRANDFATHER'S SAWED-OFF SHOTGUN, a
-MEDIEVAL SWORD, a COMBAT KNIFE, BRASS KNUCKLES, or just A STICK) — and resolves to bring her
-home. It becomes the weapon he starts the whole run with.
+come back, and the room is quiet. Then the man who never gets up gets up: he
+crosses to the back wall, leaps for the weapon mounted over the couch and takes
+it down out of the air — which one depends on the difficulty (his GRANDFATHER'S
+SAWED-OFF SHOTGUN, a MEDIEVAL SWORD, a COMBAT KNIFE, BRASS KNUCKLES, or just A
+STICK) — and walks out the door she left by, carrying it. It becomes the weapon
+he starts the whole run with, and he is holding it in his hand from the moment
+the scene ends.
 
 ## Home — THE GARAGE (hub)
 
@@ -74,11 +80,33 @@ part, and it comes home the worse for every trip. THE ROCKET stands on the
 back lawn once the part is in — THE LAUNCH and every voyage after it leave
 from here, and it flies only where Ada's trail has already led (the moon
 first, then Mars once the moon has let go; he stops home between them,
-because there is no food on the moon). And a RIFT SEAM waits on the garage
+because there is no food on the moon). Tried before the part is home it goes
+nowhere at all, and he says why rather than showing a list of places he has
+not earned: still one part short, no sense climbing in until he has been and
+got it. And a RIFT SEAM waits on the garage
 wall, sealed until THE FOUNDER's RIFT CREATOR comes home from the void (see
 Level 4) — then it reaches the deep roads already walked, into the rift and
 out to the West. The campaign's chapters are unchanged; the garage is the
 breath between them, and — when friends join his game — the place they land.
+
+**Side errands at home — RUTH, Ada's mother.** She has a key to the garage and
+always has, and once the voyages start she is simply there between them,
+standing by the engine parts, because waiting at home means staring at the
+phone. She knows about the jacket — Ada told her about the zipper he fixed and
+laughed about it for a week — and she asks him for the one thing a search party
+cannot bring back: something of her daughter's. Three errands, one per leg of
+the trail, each elaborating a trace the campaign already lays down. THE
+RECEIPT: the chips-and-soda purchase the cameras caught being interrupted was
+still logged and printed, and GOODCO's night staff carry the floor's paperwork
+on them — bring her the slip from the last ordinary thing Ada did. THE DENT:
+the ENGAGEMENT REPORT says Ada bit companion unit 34, so somewhere on Mars a
+service robot carries a dented shell plate — Ruth wants to see the dent her
+daughter's teeth left in the machine that was told to keep her company. THE
+SCALE: in the rift Ada pried a scale off a lizard god, so Ruth asks for a scale
+like it, off the same scaled breed, to hold what her daughter's hands were
+strong enough to do. She is never scared for Ada and says so; each trophy
+confirms what she already believed, and her last word on the subject is that
+the girl is fighting her way back and the hero should go on.
 
 ## Level 1 — GOODCO HQ
 

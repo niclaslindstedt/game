@@ -34,7 +34,7 @@
 // It is reached through the `@game/client` alias, which resolves to this file
 // in all four config maps (root tsconfig, pwa tsconfig, vitest, vite).
 //
-// **THE 170 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
+// **THE 200 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
 // `@game/core`, so nothing on the app's startup path may import it: the HOST and
 // JOIN screens are title-menu screens and must reach `@game/menu` and the
 // import-free `@game/wire/*` leaves alone. `pwa/scripts/check-seo.mjs` is what
@@ -53,14 +53,13 @@ import {
 
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
 import { patchState, type StatePatch, type WireState } from "./wire/delta.ts";
+import { FRAME, type CommandName } from "./wire/frames.ts";
 import {
-  FRAME,
   PROTOCOL_VERSION,
   refuseHandshake,
   type ByePayload,
   type ChatLine,
   type ChatPayload,
-  type CommandName,
   type CommandPayload,
   type Handshake,
   type RefusalReason,
@@ -130,6 +129,15 @@ export type NetClientOptions = {
    * passes `setLocalSeat`; a headless joiner reads the seat itself.
    */
   onSeat?: (seat: number | null) => void;
+  /**
+   * AN IN-SESSION CROSSING IS ABOUT TO MOVE THE WORLD (§6.4): the incoming
+   * full snapshot names a different level than the state on screen. Fired
+   * with the OLD state, BEFORE anything is overwritten — the one moment the
+   * app can still bank its hero as they stood on the level being left. The
+   * state object itself survives (same reference, new world), which is what
+   * lets the renderer and every loop helper carry on across the swap.
+   */
+  onTravel?: (state: GameState) => void;
 };
 
 export type NetClient = {
@@ -278,6 +286,17 @@ export function createNetClient(options: NetClientOptions): NetClient {
   function applyWhole(snapshot: WireState): void {
     if (!state) return;
     const target = state as unknown as WireState;
+    // AN IN-SESSION CROSSING (§6.4): the world moved under us. The statics a
+    // full snapshot carries (the level, the carve, the decor) move the client
+    // wholesale — the same ~100 KB an adopted session costs, once per
+    // crossing — but the hero being LEFT BEHIND has to be banked first, off
+    // the state as it still stands. The one field the swap must not leave
+    // stale is the request itself: the new world never carried one.
+    const level = snapshot.level as { id?: unknown } | null | undefined;
+    if (level && typeof level.id === "string" && level.id !== state.level.id) {
+      options.onTravel?.(state);
+      delete target.pendingTravel;
+    }
     for (const [field, value] of Object.entries(snapshot)) {
       target[field] = value;
     }

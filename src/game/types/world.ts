@@ -345,8 +345,12 @@ export type DoorState = {
   /** The obstacle ids to remove from `state.obstacles` when it opens. */
   obstacleIds: number[];
   open: boolean;
-  /** The segment's two ends — the roll-up animation redraws the chain the
-   * obstacles no longer hold once an approach door opens. */
+  /** The sprite every slat in the chain wears — the roll-up animation redraws
+   * the blocks the obstacles no longer hold, and by then they are gone. */
+  sprite?: string;
+  /** The FIRST and LAST slat's centres (not the doorway's edges, which sit a
+   * radius further out under the flanking wall stones) — the roll-up animation
+   * lands its blocks back on exactly the pixels the chain stood on. */
   from?: Vec2;
   to?: Vec2;
   /**

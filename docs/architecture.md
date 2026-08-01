@@ -215,7 +215,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   their log and their flags are banked on the character per difficulty and
   seeded back at run setup. The shape and the merge live in the second file, a
   LEAF whose only import is a type, because the app's roster stores this record
-  and the roster is on the 170 KB startup path — which is why `@game/menu`
+  and the roster is on the 200 KB startup path — which is why `@game/menu`
   re-exports it. The merge keeps the FURTHER reading of each errand, so progress
   can never walk backwards.
 - **`src/game/disposition.ts`** — WHO IS ACTUALLY IN THE FIGHT. One predicate,
@@ -238,8 +238,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   on the garage launch, then the space transit); the run then opens in the
   `cutscene` phase (the sim frozen underneath), advanced by `step()` on the
   same clock. Motion beats run on that clock — walks, fades, camera `pan`s
-  (the launch's ascent: the world falls away under the climbing ship) and
-  actor `shake`s (the rattling rocket) — and a stage may carry a constant
+  (the launch's ascent: the world falls away under the climbing ship), actor
+  `shake`s (the rattling rocket) and `jump`s (the prelude's leap for the wall
+  weapon: a rise and a fall, with the `prop` that takes the piece off the wall
+  and the `hold` that puts it in his hand settling between them, at the apex —
+  a jump's `lift` is HEIGHT, so an airborne actor is never re-sorted through
+  the furniture it leapt from) — and a stage may carry a constant
   `drift` that streams its props by per-prop `parallax` depth (the space
   transits' star field) even while a held line idles the timeline. Text
   beats crawl in letter by letter and hold until
@@ -615,7 +619,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`baseStatBonus`, folded into `effectiveStat`) — never written into
   `player.stats`, so a respec refunds only chosen points — and
   `autoPowerScale` expresses the damage curve those free gains produce so
-  the horde's scaling can cancel it out. Two balance guards live here too:
+  the horde's scaling can cancel it out. Because that growth is derived,
+  a hero who has spent nothing can still read a non-zero attribute — as can
+  one carrying a passive trinket or wearing a base with a `bonuses.stats` —
+  so `statBreakdown(state, hero, stat)` (items/derived.ts) itemises the four
+  sources (`chosen` / `headStart` / `auto` / `gear`, plus the `pct` scaling)
+  for the surface that has to explain the difference. It is bookkeeping over
+  the same memoised parts `effectiveStat` reads, so the two can never
+  disagree; the character sheet is its only caller. Two balance guards live
+  here too:
   `diminishStat` (config `STATS.statHardCap`/`statCeilingBase`/`statTaper`,
   via `statCap(level)`) is the LEVEL-SCALED cap curve every effective-stat
   read and `autoPowerScale` run through — linear up to a ceiling that rises
@@ -806,7 +818,21 @@ escort.ts` walks the people an escort errand puts on the field, and
   MAIN-VIEW fog of war (`render.ts` `drawFog`): everything uncovered reads
   fully clear, never-explored terrain is solid black, and the frontier between
   them is a graded ordered-dither transition band (`MAP.fogBand` wide) that also
-  hides any mob standing in it or the dark beyond. A sibling render-side cull
+  hides any mob standing in it or the dark beyond. **And what is not drawn is
+  not shot at**: `clearOfFog` (the sibling **`src/game/fog.ts`**, kept out of
+  map.ts because `src/menu.ts` re-exports map.ts's grid arithmetic and so puts
+  that whole module inside the 170 KB critical-path budget) is the engine's own
+  deterministic reading of that
+  same frontier — no unexplored cell centre within `MAP.fogBand` — and every
+  automatic target pick goes through it (the hero's auto-attack and its crate
+  fallback, the conjured powers that pick their own mark, the companions' engage
+  bubble, and the autopilot's `firingReach`, which shortens a stand-off to where
+  its shots can actually land). A hero who fires into the blackness is acting on
+  knowledge the player does not have. It deliberately reads OFF-MAP cells as
+  clear, unlike the renderer, which seeds them as frontier so a level's rim
+  fogs: nothing out past the boundary is undiscovered, and fogging it would
+  leave a mob pinned against the level edge untargetable for the rest of the
+  run. A sibling render-side cull
   drops any enemy the hero has no LINE OF SIGHT to — one tucked fully behind a
   wall or boulder — reusing the engine's `lineOfSight` (`src/game/obstacles.ts`,
   the same tall-obstacle query that stops shots); a mob only peeking out from an
@@ -1104,9 +1130,11 @@ behind it. Two patterns keep that possible:
   The menus read the first of each pair through `defs/levels/summary.ts`.
 
 `pwa/scripts/check-seo.mjs` polices the result as a critical-path budget of
-170 KB of gzipped JavaScript — web.dev's performance-budget figure, the one
-behind a ~5 s time-to-interactive on a slow 3G phone. A sudden jump means
-something on the startup path reached back through `@game/core`.
+200 KB of gzipped JavaScript. Web.dev's performance-budget figure — the one
+behind a ~5 s time-to-interactive on a slow 3G phone — is 170 KB; the extra
+30 KB is a deliberate allowance for react-dom (~113 KB of the path) until the
+planned React→Preact swap returns it, at which point the budget drops back to 170. A sudden jump means something on the startup path reached back through
+`@game/core`.
 
 `src/output.ts` remains the central output module (OSS_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers
@@ -1213,7 +1241,10 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   per-unique / per-companion groups derived from the live content
   registries — and the persisted unlock store built on the oss-framework
   achievements ledger; `AchievementsScreen.tsx` is the browsable shelf
-  reached from the title menu's ACHIEVEMENTS screen, and
+  reached from the title menu's ACHIEVEMENTS screen — and mid-run from the
+  rebindable ACHIEVEMENTS key (Y, World of Warcraft's own) or a tap on the
+  unlock banner, which raises the same shelf over the run and PAUSES it
+  (`game-screen/use-achievements-shelf.ts`) — and
   `AchievementToast.tsx` the gold unlock banner that still fires in-run as
   badges are earned; `platform-achievements.ts` / `achievement-sync.ts`
   mirror the curated slice of the catalog into Game Center in native builds —

@@ -47,6 +47,41 @@ describe("the approach door", () => {
     expect(chain.length).toBeGreaterThan(2);
   });
 
+  // The doorway's own two edges are the centres of the wall stones flanking
+  // it, so half a block at each end is WALL already. A door that starts at
+  // those edges hangs a block wider than the hole it fills — the bug this
+  // pins: every slat's 16px sprite must land inside the free opening.
+  it("fills the OPENING and not the wall stones either side of it", () => {
+    const state = startGarage();
+    const chain = state.obstacles.filter((o) => o.kind === "test_garage_door");
+    // The fixture's doorway: (800,440)–(800,560), stones of radius 8.
+    const half = 8;
+    for (const slat of chain) {
+      expect(slat.pos.y - half).toBeGreaterThanOrEqual(440 + half);
+      expect(slat.pos.y + half).toBeLessThanOrEqual(560 - half);
+    }
+    // …and it fills it: the slats tile the opening end to end, leaving no
+    // hole a body could walk through.
+    const top = Math.min(...chain.map((o) => o.pos.y));
+    const bottom = Math.max(...chain.map((o) => o.pos.y));
+    expect(top - half).toBeCloseTo(448, 5);
+    expect(bottom + half).toBeCloseTo(552, 5);
+  });
+
+  // The slats' own ends, so the app's roll-up redraws them where they stood —
+  // handing it the doorway's edges instead is what drew the door over the wall.
+  it("reports the chain's ends, and its sprite, for the roll-up", () => {
+    const state = startGarage();
+    const door = doorOf(state);
+    const chain = state.obstacles.filter((o) => o.kind === "test_garage_door");
+    const first = chain[0]!;
+    const last = chain[chain.length - 1]!;
+    expect(door.sprite).toBe("test_garage_door");
+    expect(door.from).toEqual(first.pos);
+    expect(door.to).toEqual(last.pos);
+    expect(door.obstacleIds).toHaveLength(chain.length);
+  });
+
   it("opens for a hero on foot — chain gone, nav told, roll-up announced", () => {
     const state = startGarage();
     const door = doorOf(state);

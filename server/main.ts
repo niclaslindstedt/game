@@ -48,7 +48,12 @@
 
 import { lookup } from "node:dns/promises";
 
-import { engineVersion, type FrozenRun } from "@game/core";
+import {
+  engineVersion,
+  registerDefs,
+  type DefOverrides,
+  type FrozenRun,
+} from "@game/core";
 
 import { createJoinLink, type JoinLink } from "./net/connect.ts";
 import { main as dedicated } from "./dedicated.ts";
@@ -59,10 +64,9 @@ import { createUdpTransport, keyFor } from "./net/udp.ts";
 import type { MappingState } from "./net/upnp.ts";
 import { parseAddress } from "./wire/address.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
+import { FRAME, TICK_MS } from "./wire/frames.ts";
 import {
-  FRAME,
   PROTOCOL_VERSION,
-  TICK_MS,
   type ByePayload,
   type RosterEntry,
   type SessionParams,
@@ -74,6 +78,15 @@ type ControlMessage =
       kind: "start";
       params: SessionParams;
       mods?: string[];
+      /**
+       * THE CATALOG OVERRIDES THE PAGE'S MODS REGISTERED (§4.4). This process
+       * SIMULATES, and the page's own `registerDefs` never reached it — so
+       * without this a modded host's horde would spawn from the shipped
+       * catalogs while the renderer drew the mod's. Registered before the run
+       * is built, and never restored: a session process lives exactly one
+       * session, which is what makes the swap safe (plan §1.2, reason 2).
+       */
+      modDefs?: DefOverrides | null;
       password?: string;
       maxClients?: number;
       /** A run to ADOPT rather than build — a parked run or a checkpoint the
@@ -107,6 +120,10 @@ type ControlMessage =
       /** The joining character is HARDCORE (§4.2) — compared against the
        * session's mode at the door; the mismatch is refused by name. */
       hardcore?: boolean;
+      /** The hero this player brings (§4.5): their banked loadout as plain
+       * JSON, or null for the authored fresh start. Rides the join frame;
+       * the session weighs it (`validateLoadout`) before seating anybody. */
+      loadout?: unknown;
     }
   /** One packet the shell pumped off the Steam P2P queue. */
   | { kind: "peer"; from: string; data: ArrayBuffer | Uint8Array | number[] }
@@ -291,6 +308,8 @@ function handleControl(
   try {
     if (message.kind === "start") {
       stop("restarted");
+      // The mods' catalogs, before anything builds a run from them (§4.4).
+      if (message.modDefs) registerDefs(message.modDefs);
       host = createHost({
         params: message.params,
         adopt: message.adopt,
@@ -478,6 +497,9 @@ async function joinSession(
     // §4.2's hardcore gate — the mode of the character this player is coming
     // with, compared against the session's at both ends of the handshake.
     hardcore: message.hardcore === true,
+    // §4.5: the hero this player brings, riding the join frame for the
+    // session to weigh and seat.
+    loadout: message.loadout ?? null,
     // THE TICKET BACK INTO THE SEAT WE LAST HELD AT THIS ADDRESS (plan §5.4).
     // Held per host for the life of this process, which is exactly the span
     // that matters: the case the grace window exists for is a wifi hiccup

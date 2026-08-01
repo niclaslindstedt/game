@@ -78,11 +78,22 @@ export function openTrade(
   const partner = state.players[partnerSeat];
   if (!partner || !heroInPlay(partner)) return "bad-seat";
   if (tradeOf(state, seat) || tradeOf(state, partnerSeat)) return "busy";
+  // Both heroes must be FREE — standing on the field with nothing open. A
+  // table raised over somebody's bag or mid-respec would hijack a screen they
+  // are using, and there is no request/consent step to soften it with: the
+  // refusal IS the consent model until one exists.
+  if (actor.screen !== undefined || partner.screen !== undefined) {
+    return "busy";
+  }
   state.trades ??= [];
   state.trades.push({
     seats: [seat, partnerSeat],
     offers: [emptySide(), emptySide()],
   });
+  // The window is a per-player SCREEN on both sides at once (plan §3.2's
+  // model): no steering while at the table, still standing, still killable.
+  actor.screen = "trade";
+  partner.screen = "trade";
   return null;
 }
 
@@ -94,7 +105,8 @@ export function cancelTrade(state: GameState, actor: Player): boolean {
   if (seat === null) return false;
   const index = (state.trades ?? []).findIndex((t) => t.seats.includes(seat));
   if (index < 0) return false;
-  state.trades!.splice(index, 1);
+  const [trade] = state.trades!.splice(index, 1);
+  if (trade) lowerTradeScreens(state, trade);
   return true;
 }
 
@@ -219,6 +231,7 @@ function settleTrade(state: GameState, trade: Trade): TradeRefusal | null {
   b.coins += give[0]!.coins - give[1]!.coins;
   const index = (state.trades ?? []).indexOf(trade);
   if (index >= 0) state.trades!.splice(index, 1);
+  lowerTradeScreens(state, trade);
   return null;
 }
 
@@ -272,7 +285,12 @@ export function tradePartner(state: GameState, player: Player): number | null {
 export function endTradesFor(state: GameState, seat: number): void {
   const open = state.trades;
   if (!open?.length) return;
+  const ended = open.filter((trade) => trade.seats.includes(seat));
   state.trades = open.filter((trade) => !trade.seats.includes(seat));
+  // The PARTNER's window comes down too — they are standing at a table whose
+  // other side just left play, and a screen nothing can close is exactly the
+  // wedge §3.2 retired.
+  for (const trade of ended) lowerTradeScreens(state, trade);
 }
 
 // ---------------------------------------------------------------------------
@@ -291,6 +309,15 @@ function emptySide(): TradeSide {
 function unacceptBoth(trade: Trade): void {
   trade.offers[0]!.accepted = false;
   trade.offers[1]!.accepted = false;
+}
+
+/** Lower the trade screen on both of a (just-removed) trade's seats. Only the
+ * trade screen: a seat that has since raised something else keeps it. */
+function lowerTradeScreens(state: GameState, trade: Trade): void {
+  for (const seat of trade.seats) {
+    const hero = state.players[seat];
+    if (hero?.screen === "trade") delete hero.screen;
+  }
 }
 
 /** The trade this hero is in and which side of it they are. */

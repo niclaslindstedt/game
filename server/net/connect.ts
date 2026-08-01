@@ -37,9 +37,8 @@
 
 import { decodeFrame, encodeFrame } from "../wire/codec.ts";
 import { CHALLENGE_EPOCH_MS, passwordProof } from "../wire/handshake.ts";
+import { FRAME, HELLO_MIN_BYTES } from "../wire/frames.ts";
 import {
-  FRAME,
-  HELLO_MIN_BYTES,
   refuseHandshake,
   type ByePayload,
   type ChallengePayload,
@@ -137,6 +136,10 @@ export type JoinLinkOptions = {
    * mode — locally off the challenge, so the mismatch is answered without a
    * join round trip, and again at the host's own door. Absent = softcore. */
   hardcore?: boolean;
+  /** The hero this player brings (§4.5): their banked loadout as plain JSON,
+   * or null for the authored fresh start. Rides the join frame; the session
+   * weighs it (`validateLoadout`) — a claim, never an authority. */
+  loadout?: unknown;
   now(): number;
   /** One frame for the renderer, exactly as it arrived. */
   deliver(frame: Uint8Array): void;
@@ -248,6 +251,10 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       name: options.name,
       resume: options.resume,
       hardcore: options.hardcore === true,
+      // §4.5: the hero travels with the player. On a RECONNECT the session
+      // ignores this by design — the hero standing on the field is the
+      // authoritative one.
+      loadout: options.loadout ?? null,
     };
     pending = { join, cookieAt: options.now() };
     sendJoin();

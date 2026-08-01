@@ -120,6 +120,7 @@ export {
   type Trade,
   type TradeRefusal,
 } from "./game/trade.ts";
+export { requestTravel } from "./game/travel.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
 export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";
@@ -314,6 +315,7 @@ export {
   discardFromInventory,
   discardEquipped,
   effectiveStat,
+  statBreakdown,
   activeEquippedAffixes,
   setBonusAffixes,
   wornSetCount,
@@ -423,6 +425,7 @@ export {
   wearWornArmor,
   wouldUpgradeSlot,
   type BuildSnapshot,
+  type StatBreakdown,
   type VaultRefusal,
 } from "./game/items/index.ts";
 
@@ -462,6 +465,11 @@ export {
 // The level map: fog-of-war queries, the map pause phase, and the grid
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
 export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
+
+// Is a spot somewhere the player can SEE — out of the fog AND out of its
+// frontier band? The read every automatic target pick goes through; kept off
+// map.ts because that module is on the app's startup path (see fog.ts).
+export { clearOfFog } from "./game/fog.ts";
 
 // Obstacle sight queries: the swept "does this line clear every TALL obstacle?"
 // test the simulation runs against solid features (walls, boulders, rocks —

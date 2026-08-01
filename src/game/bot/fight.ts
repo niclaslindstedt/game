@@ -33,6 +33,7 @@ import {
   bestLanePoint,
   CONTACT_DODGE_RADIUS,
   escapeLaneScores,
+  firingReach,
   furthestLandmark,
   isEncircled,
   nearestEnemy,
@@ -60,7 +61,7 @@ import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMINA } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
-import { staminaRegenPerSec, weaponRangeFor } from "../items/index.ts";
+import { staminaRegenPerSec } from "../items/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import type { GameInput, GameState, Player } from "../types/index.ts";
 
@@ -97,7 +98,10 @@ export function pushBoss(
     return idleInput();
   }
   const d = distance(hero.pos, target);
-  const hold = weaponRangeFor(state, hero, hero.equipment.weapon) * 0.7;
+  // The reach the fog actually allows (`firingReach`): holding at the weapon's
+  // paper range across unexplored ground stands the hero where his shots are
+  // refused, so the approach ends short of the fight instead of in it.
+  const hold = firingReach(state, hero, target) * 0.7;
   // Far from the boss → follow a global A* route to him, so the runner rounds
   // every wall on the way instead of beelining through them. Close enough →
   // circle-strafe at weapon range and fight (a moving orbit slips his fire).
@@ -304,7 +308,7 @@ export function survive(
       : nearestChestNearby(state, hero, tune);
     if (chest) {
       think(bot, "CRACK CHEST");
-      const reach = weaponRangeFor(state, player, player.equipment.weapon);
+      const reach = firingReach(state, player, chest.pos);
       const d = distance(player.pos, chest.pos);
       // Close enough that the weapon connects (or the body is right up against
       // the box — a short blade smashes from arm's length): stand and smash.
@@ -512,7 +516,7 @@ export function survive(
     // Circle-strafe the boss at the hero's ACTUAL reach rather than planting on
     // the hold point — a moving target slips his shots between the telegraphs the
     // dedicated dodge already reads.
-    const reach = weaponRangeFor(state, player, player.equipment.weapon);
+    const reach = firingReach(state, player, lockTarget.pos);
     const hold = orbitHold(
       bot,
       state,
@@ -594,11 +598,7 @@ export function survive(
         bot.content.target.y === chest.pos.y;
       if (chestD < nearestD || committed) {
         think(bot, "CRACK CHEST");
-        const smashReach = weaponRangeFor(
-          state,
-          player,
-          player.equipment.weapon,
-        );
+        const smashReach = firingReach(state, player, chest.pos);
         const touch = chest.radius + PLAYER.radius + 8;
         if (chestD <= Math.max(smashReach * 0.9, touch)) {
           return {
@@ -712,7 +712,11 @@ export function survive(
   // and, with a wide `flee` standoff, ANY ranged one — standing BEYOND where its
   // shots land, skirmishing a pack it could never hit. Reading the real reach is
   // what makes the hold range-aware.
-  const reach = weaponRangeFor(state, player, player.equipment.weapon);
+  // …and cut short by the FOG toward the body he is fighting (`firingReach`),
+  // because a target the auto-attack refuses is not one this hold may measure
+  // from: on unexplored ground the hero has to close until the mob is in the
+  // light, exactly as a player would.
+  const reach = firingReach(state, player, nearest.pos);
   // TWO distances, so the hero fights from a spot he can actually HIT from:
   //  • dangerDist — a body THIS close is a real threat: give ground hard. Small,
   //    so full retreat only fires when something breaches his bubble, not merely

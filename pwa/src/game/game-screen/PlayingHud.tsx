@@ -17,6 +17,8 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import { bustSrc } from "../SpritePortrait.tsx";
 import { medkitIconFor } from "../consumables.ts";
+import { dollDataUrl } from "../paper-doll.ts";
+import { playerDollLayers } from "../paper-doll-live.ts";
 import { synth } from "../audio.ts";
 import { Minimap } from "../Minimap.tsx";
 import { pauseMusic } from "../music/index.ts";
@@ -43,6 +45,7 @@ export function PlayingHud({
   onOpenPoints,
   autopilotOverlay,
   userPausedRef,
+  seatName,
   bumpUi,
 }: {
   hud: Hud;
@@ -80,6 +83,9 @@ export function PlayingHud({
   /** Latched so BOT VIEW's autopilot won't clear the timer-tap pause before
    * the menu can show (see the sim loop). */
   userPausedRef: MutableRefObject<boolean>;
+  /** A seat's display name off the session roster (§4.5) — the engine's
+   * Player carries none. Null when nothing can answer (offline, a test). */
+  seatName?: (seat: number) => string | null;
   bumpUi: () => void;
 }) {
   /**
@@ -526,6 +532,85 @@ export function PlayingHud({
                         }}
                       />
                     </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* THE PARTY FRAMES (§4.5): every other hero in play, down the same
+              left rail the companion rides — the one edge with no absolute
+              competitor, and well clear of the steering thumb's bottom
+              thirds. The portrait is the hero's own dressed paper-doll bust
+              (the compositor the roster and the avatar already share); the
+              sliver is their hp; DOWN grays the frame where they fell; a BAG
+              badge is D2's own "in their menus" affordance. A press asks for
+              a TRADE — the engine refuses it politely when either side is
+              busy, which is exactly what the badge warned. */}
+          {hud.partyFrames.length > 0 && (
+            <div className="party-frames">
+              {hud.partyFrames.map((frame) => {
+                const hero = state.players[frame.seat];
+                if (!hero) return null;
+                const src = dollDataUrl(
+                  assets.sprites,
+                  playerDollLayers(state, "0", { weapon: false, hero }),
+                  undefined,
+                  { bust: true },
+                );
+                const badgeSrc = frame.busy
+                  ? spriteDataUrl(assets.sprites, "icon_bag")
+                  : null;
+                const name = seatName?.(frame.seat) ?? `SEAT ${frame.seat + 1}`;
+                return (
+                  <button
+                    key={frame.seat}
+                    type="button"
+                    className={`party-frame${frame.downed ? " downed" : ""}`}
+                    aria-label={`party-frame-${frame.seat}`}
+                    title={name}
+                    onClick={() => {
+                      if (!fieldLive(state)) return;
+                      if (runCommandOk(state, "openTrade", frame.seat)) {
+                        playUiSound(synth, "confirm");
+                        bumpUi();
+                      }
+                    }}
+                  >
+                    {src ? (
+                      <img
+                        src={src}
+                        alt=""
+                        className="pixel-img party-frame-img"
+                      />
+                    ) : null}
+                    {badgeSrc ? (
+                      <img
+                        src={badgeSrc}
+                        alt=""
+                        className="pixel-img party-frame-badge"
+                      />
+                    ) : null}
+                    <span className="party-frame-level">
+                      <PixelText
+                        font={font}
+                        text={String(frame.level)}
+                        scale={2}
+                        color="#f4f4f4"
+                      />
+                    </span>
+                    <span className="party-frame-hp">
+                      <span
+                        style={{ width: `${Math.round(100 * frame.hpFrac)}%` }}
+                      />
+                    </span>
+                    <PixelText
+                      font={font}
+                      text={name.slice(0, 8).toUpperCase()}
+                      scale={2}
+                      color="#9aa3ad"
+                      className="party-frame-name"
+                    />
                   </button>
                 );
               })}

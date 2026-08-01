@@ -35,7 +35,7 @@
 //
 // This module is import-free apart from the shell channel and the wire's own
 // leaf types, and it must stay that way: the HOST and JOIN screens are TITLE
-// MENU screens, i.e. the app's startup path, where the 170 KB critical-path
+// MENU screens, i.e. the app's startup path, where the 200 KB critical-path
 // budget forbids reaching `@game/core`. The run driver that does reach it lives
 // in `pwa/src/game/net/`, behind a lazy import.
 
@@ -146,6 +146,10 @@ export type HostOptions = {
   password?: string;
   maxClients?: number;
   mods?: string[];
+  /** The catalog overrides those mods registered (§4.4) — the session process
+   * simulates, and its registry never saw the page's `registerDefs`. Opaque
+   * JSON here like everything else this bridge moves. */
+  modDefs?: unknown;
   /**
    * A run to ADOPT rather than build from `params` — a parked run, or a
    * checkpoint the player just retried into, neither of which any set of
@@ -280,6 +284,7 @@ export async function hostSession(
     password: opts.password,
     maxClients: opts.maxClients,
     mods: opts.mods,
+    modDefs: opts.modDefs,
   })) as { ok?: boolean; levelId?: string; reason?: string } | null;
   if (reply?.ok && reply.levelId) return { ok: true, levelId: reply.levelId };
   return { ok: false, reason: reply?.reason ?? "no reply" };
@@ -368,6 +373,11 @@ export type ConnectOptions = {
   /** The joining character is HARDCORE (§4.2): hardcore and softcore heroes
    * never share a game, and the handshake refuses the mismatch by name. */
   hardcore?: boolean;
+  /** The hero this player brings (§4.5) — their banked loadout as plain JSON,
+   * or null for the authored fresh start. A claim the session weighs
+   * (`validateLoadout`), never an authority. Structural: this module may not
+   * import the engine. */
+  loadout?: Record<string, unknown> | null;
 };
 
 export type ConnectResult =
@@ -400,6 +410,7 @@ export async function connectSession(
       password: options.password,
       mods: options.mods,
       hardcore: options.hardcore === true,
+      loadout: options.loadout ?? null,
     },
     CONNECT_TIMEOUT_MS,
   )) as { ok?: boolean; reason?: string; detail?: string } | null;

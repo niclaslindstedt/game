@@ -364,6 +364,11 @@ export function validateLevel(def, refs, description = "", options = {}) {
         err(
           `travel door "${d.id}" requires unknown story item "${d.requires}"`,
         );
+      // The line he says when the door can take him nowhere yet. A typo here
+      // would be a tap that silently does nothing at all — the picker is
+      // withheld precisely BECAUSE there is a line to play instead.
+      if (d.unready !== undefined && !refs.thoughts.has(d.unready))
+        err(`travel door "${d.id}" names unknown thought "${d.unready}"`);
     }
   }
   if (

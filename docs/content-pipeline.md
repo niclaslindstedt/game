@@ -232,7 +232,7 @@ never by editing the fixture.
   `music-schema.mjs`, loaders `scripts/sound-data/` and `scripts/music-data/`).
   The sound bank emits SPLIT — `sounds.ts` for the run, `sounds-ui.ts` for the
   interface — because a menu click must not drag every kill and explosion into
-  the 170 KB critical path; the music emits **one module per track** plus an
+  the 200 KB critical path; the music emits **one module per track** plus an
   index of dynamic imports, for the same reason, so a score is fetched when its
   venue starts and never before. The round-trip guard
   (`tests/content/music_roundtrip_test.ts`) pins the compiled scores to
@@ -289,9 +289,11 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
     on every difficulty except the weapon on the wall, so it is authored ONCE
     with `label:` handles on the parts that differ; the loader patches those
     labels per rung and emits `prelude_<difficulty>`, which is exactly what
-    `cutsceneVariant` resolves at run creation. Labels are authoring handles and
-    never reach the game. Five near-identical files would have been five files to
-    keep in step.
+    `cutsceneVariant` resolves at run creation. A BEAT's label is an authoring
+    handle and never reaches the game; a PROP's label is also the `id:` it
+    compiles to, because a `prop` beat has to address the piece it takes off the
+    wall by SOME name and two spellings for one thing is a thing that drifts.
+    Five near-identical files would have been five files to keep in step.
   - **A prop's sprite is `sprite:`, not `kind:`.** `CutsceneProp.kind` is a
     renderer key in the generic player (`src/lib/cutscene.ts`, which knows
     nothing about sprites); in this renderer a prop kind IS a sprite name, and

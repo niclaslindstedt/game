@@ -21,6 +21,25 @@
 # off to accept is a pack, not an errand.
 
 questGivers:
+  # ------------------------------------------------------ THE GARAGE (hub)
+  ruth:
+    level: garage
+    name: RUTH
+    sprite: qg_ruth
+    at: { x: 176, y: 176 }
+    lore: >
+      Ada's mother, who has a key to the garage and always has. Once the
+      voyages start she is simply there between them, standing by the engine
+      parts, because waiting at home means staring at the phone. She was
+      never once scared for her daughter — she raised her — and what she
+      asks for is the one thing a search party cannot bring back: something
+      of Ada's.
+    greeting:
+      - SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
+      - WHEN YOU'RE OUT THERE - BRING ME SOMETHING OF HERS.
+    farewell:
+      - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
+
   # ---------------------------------------------------------- GOODCO HQ
   hq_intern:
     level: goodco_hq

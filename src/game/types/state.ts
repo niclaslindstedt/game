@@ -495,6 +495,16 @@ export type GameState = {
    */
   trades?: Trade[];
   /**
+   * A REQUESTED IN-SESSION CROSSING (multiplayer plan §6.4) — the destination
+   * the host chose, and how much of its opening to skip (`OpeningSkip`'s own
+   * words; a wire value is a claim, read defensively). Set by `requestTravel`
+   * (the `travelTo` run command, seat 0 only) and consumed by the SESSION
+   * between ticks, which rebuilds the run on the destination and carries the
+   * whole party through. Nothing in `step()` reads it, so a run that never
+   * consumes one — every local run — is byte-identical with or without it.
+   */
+  pendingTravel?: { to: string; skip: string };
+  /**
    * The escalation meter (see config MENACE). Heated by the player's rolling
    * combat output (`combatDps` / `combatKillRate`) and jolted by overpowered
    * kills; idling bleeds it off — but never below `menaceFloor`. Read as an

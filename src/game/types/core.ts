@@ -74,7 +74,13 @@ export type PlayerScreen =
   | "shop"
   | "quest"
   | "talk"
-  | "companion";
+  | "companion"
+  // The trade window (multiplayer plan §5.1). Unlike the others it is raised
+  // on TWO heroes at once — `openTrade` parks both sides at the table — and
+  // lowered by whatever ends the trade: a settle, a cancel, or one side
+  // leaving play. A hero at the table is a hero in a screen: no steering,
+  // still standing on the field, still killable.
+  | "trade";
 
 /**
  * A difficulty id: a key into DIFFICULTY_DEFS. Deliberately a bare `string`

@@ -77,6 +77,9 @@ export type NetRequest = {
   password?: string;
   maxClients?: number;
   mods?: string[];
+  /** `host`: the catalog overrides those mods registered (§4.4). Forwarded
+   * untouched; the session registers them before it builds. */
+  modDefs?: unknown;
   /** `host`: a run to ADOPT rather than build from `params` — a parked run or
    * a checkpoint. Forwarded untouched; only the session knows what it is. */
   adopt?: unknown;
@@ -96,6 +99,10 @@ export type NetRequest = {
   /** `connect`: the joining character is HARDCORE (§4.2) — the handshake holds
    * hardcore and softcore apart, so the flag rides the join. */
   hardcore?: boolean;
+  /** `connect`: the hero this player brings (§4.5) — a banked loadout as plain
+   * JSON, or null for the authored fresh start. Forwarded untouched; the
+   * session weighs it. */
+  loadout?: unknown;
 };
 
 /** An event to inject back into the page (see the web bridge's protocol). */
@@ -352,6 +359,7 @@ export function createNetBridge(
         params,
         adopt: request.adopt,
         mods: request.mods,
+        modDefs: request.modDefs,
         password: request.password,
         maxClients: request.maxClients,
       });
@@ -410,6 +418,7 @@ export function createNetBridge(
         password: request.password,
         mods: request.mods,
         hardcore: request.hardcore === true,
+        loadout: request.loadout ?? null,
       });
       window.webContents.postMessage(NET_PORT_CHANNEL, null, [channel.port2]);
       const reply = await await_("connected", CONNECT_TIMEOUT_MS);
