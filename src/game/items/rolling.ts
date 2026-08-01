@@ -54,6 +54,7 @@ import type {
 } from "../types/index.ts";
 import { effectiveStat } from "./derived.ts";
 import { armorTypeOf } from "./durability.ts";
+import { mintsUnidentified } from "./identify.ts";
 import { lowHealthDesperation, mercyRescueWaiting } from "./mercy.ts";
 import { pickWeighted, rollQuality, rollQualityMult } from "./quality.ts";
 
@@ -662,6 +663,11 @@ export function rollEquipment(
     // band, frozen for life (undefined on flat-normal pieces — see above).
     ...(qualityRoll !== undefined ? { qualityRoll } : {}),
     ...(enhancedDamage !== undefined ? { enhancedDamage } : {}),
+    // The D2 veil: a magic-or-better find drops UNIDENTIFIED — every roll
+    // above is already made and frozen, only hidden. Mints that are handed
+    // over already known (the stall, a chosen quest reward, staging) strip it
+    // with `markIdentified` at their own call sites.
+    ...(mintsUnidentified(tier) ? { unidentified: true as const } : {}),
     affixes,
     // Freeze the birth-version def onto the instance so a later catalog edit
     // (rebalance or deletion) can never reach back and change THIS item — the
@@ -764,6 +770,11 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     // The catalog id behind the display name — the stable identity anything
     // booking "which unique is this" keys on (see Equipment.uniqueId).
     uniqueId: u.id,
+    // Named drops veil like any magic+ find — the fixed `name` above IS the
+    // reveal (`equipmentName` shows only the base until identified).
+    ...(mintsUnidentified(u.tier ?? "unique")
+      ? { unidentified: true as const }
+      : {}),
     // A named WEAPON's per-drop variance is its ENHANCED DAMAGE roll — the
     // wide, visible band that replaced the ±few-% `baseRoll` (and, with it,
     // the hidden damper + ilvl growth those weapons used to ride). An ARTIFACT

@@ -406,12 +406,59 @@ export function moveInventoryItem(
   inv[to] = a;
 }
 
-/** Add loot to the first free cell; false (and no mutation) when full. */
+/** How many units of this base one bag cell may hold (`GearDef.stack` — the
+ * ITEM LOOKUP TICKET's 20). Everything else answers 1: ordinary gear never
+ * stacks. Reads the frozen def first, like every other def-backed answer. */
+export function stackCapOf(item: Equipment): number {
+  if (isWeaponDef(item.defId)) return 1;
+  const frozen = item.def;
+  const cap =
+    frozen && "stack" in frozen ? frozen.stack : gearDef(item.defId).stack;
+  return cap ?? 1;
+}
+
+/** Whether `item` could MERGE whole into an existing bag stack of its base
+ * (see `addToInventory`) — the room a full bag still has for one more ticket.
+ * The merchant's carry check reads it so a stackable row isn't greyed out the
+ * moment the last empty cell fills. */
+export function hasStackRoom(player: Player, item: Equipment): boolean {
+  const cap = stackCapOf(item);
+  if (cap <= 1) return false;
+  const incoming = item.qty ?? 1;
+  return player.inventory.some(
+    (cell) =>
+      cell !== null &&
+      cell.defId === item.defId &&
+      (cell.qty ?? 1) + incoming <= cap,
+  );
+}
+
+/**
+ * Add loot to the bag; false (and no mutation) when there is nowhere for it.
+ * A STACKABLE piece (`stackCapOf` > 1) first tries to merge WHOLE into an
+ * existing stack of its base — whole or not at all, so a refusal never leaves
+ * a half-consumed unit behind — and only then takes a free cell like anything
+ * else.
+ */
 export function addToInventory(
   state: GameState,
   player: Player,
   item: Equipment,
 ): boolean {
+  if (stackCapOf(item) > 1) {
+    const cap = stackCapOf(item);
+    const incoming = item.qty ?? 1;
+    const stack = player.inventory.find(
+      (cell) =>
+        cell !== null &&
+        cell.defId === item.defId &&
+        (cell.qty ?? 1) + incoming <= cap,
+    );
+    if (stack) {
+      stack.qty = (stack.qty ?? 1) + incoming;
+      return true;
+    }
+  }
   const free = player.inventory.indexOf(null);
   if (free === -1) return false;
   player.inventory[free] = item;

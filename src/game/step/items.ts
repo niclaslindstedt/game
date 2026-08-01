@@ -309,6 +309,9 @@ export function stepItems(state: GameState, dtMs: number): void {
           // upgrade, so the card badges it EQUIPPED, not tap-to-equip.
           equipped: true,
           upgrade: true,
+          // Unreachable for a veiled find (canEquip refuses it), carried for
+          // the event's shape parity with the bagged branch below.
+          unidentified: item.equipment.unidentified === true,
         });
         state.events.push({
           type: "autoEquipped",
@@ -346,6 +349,9 @@ export function stepItems(state: GameState, dtMs: number): void {
         uniqueId: item.equipment.uniqueId,
         equipped: false,
         upgrade: bagUpgrade,
+        // A veiled find gets the small feed line, not the framed card — the
+        // reveal spectacle waits for the identify (see the app's event-fx).
+        unidentified: item.equipment.unidentified === true,
       });
       return false;
     });

@@ -24,6 +24,7 @@ import {
   addToInventory,
   dropItem,
   grantCleanSlate,
+  markIdentified,
   mintUnique,
   rollEquipment,
 } from "../items/index.ts";
@@ -98,7 +99,11 @@ export function payQuestReward(
   // Named relics are handed over WHOLE — a quest reward the author picked is
   // the one payout in the game that is not a roll.
   for (const id of reward.uniques ?? []) {
-    payout.items.push(handOver(state, mintUnique(state, id), at));
+    // Handed over BY NAME — a promised relic arrives identified, or the offer
+    // that named it would have spoiled its own reveal.
+    payout.items.push(
+      handOver(state, markIdentified(mintUnique(state, id)), at),
+    );
   }
 
   // THE GEAR WAS DECIDED BEFORE THE PLAYER SAID YES, and this hands over the
@@ -117,12 +122,15 @@ export function payQuestReward(
         payout.items.push(
           handOver(
             state,
-            rollEquipment(state, state.players[0], {
-              defId: chosen.defId,
-              tier: chosen.tier,
-              quality: chosen.quality,
-              mlvl: state.players[0].level,
-            }),
+            // Extra copies of the CHOSEN row — identified like the choice was.
+            markIdentified(
+              rollEquipment(state, state.players[0], {
+                defId: chosen.defId,
+                tier: chosen.tier,
+                quality: chosen.quality,
+                mlvl: state.players[0].level,
+              }),
+            ),
             at,
           ),
         );

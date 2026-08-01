@@ -64,7 +64,12 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { AFFIX_COLORS, TIER_COLORS, tierGlowClass } from "./tiers.ts";
+import {
+  AFFIX_COLORS,
+  TIER_COLORS,
+  TIER_LABELS,
+  tierGlowClass,
+} from "./tiers.ts";
 
 /**
  * Wrap width (rem) for the card's stat lines and long affix-built names: the
@@ -740,6 +745,55 @@ export function ItemCardBody({
       maxWidth={icon && maxWidth ? maxWidth - 1 : maxWidth}
     />
   );
+  // AN UNIDENTIFIED FIND SHOWS NOTHING BUT ITS SHAPE — the D2 read. The name
+  // already says UNIDENTIFIED <BASE> (equipmentName veils the compose), the
+  // tier speaks through the name's color and a spelled-out tier line (color
+  // alone is a lot to ask of a find you can't inspect), and the only other
+  // line is the gold instruction for lifting the veil. No stats, no affixes,
+  // no ilvl, no requirements: everything else IS the reveal.
+  if (item.unidentified) {
+    return (
+      <>
+        {subtitle && (
+          <PixelText font={font} text={subtitle} scale={1} color="#9aa3ad" />
+        )}
+        {icon ? (
+          <div className="tooltip-name-row">
+            {icon}
+            {name}
+          </div>
+        ) : (
+          name
+        )}
+        <PixelText
+          font={font}
+          text={TIER_LABELS[item.tier] ?? "UNIDENTIFIED"}
+          scale={lineScale}
+          color={TIER_COLORS[item.tier]}
+          maxWidth={maxWidth}
+        />
+        <PixelText
+          font={font}
+          text="IDENTIFY AT A MERCHANT OR USE A LOOKUP TICKET"
+          scale={lineScale}
+          color={QUOTE_GOLD}
+          maxWidth={maxWidth}
+        />
+        <div className="card-foot">
+          <div className="card-foot-right">
+            {glyph && (
+              <img
+                src={glyph}
+                alt={weaponClass ? `${weaponClass} weapon` : item.slot}
+                className="pixel-img card-class-glyph card-class-glyph-lg"
+                draggable={false}
+              />
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
   // One stat/affix row: a plain fact splits into a white TITLE + light-grey
   // VALUE; a line that carries meaning in its color (affix, freshness, low-
   // durability warning) stays a single tinted string. Either way a delta chip,

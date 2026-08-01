@@ -159,6 +159,21 @@ export type GearDef = {
    */
   revive?: boolean;
   /**
+   * An IDENTIFY item: USING this piece from the bag on an unidentified find
+   * reveals it on the spot (`spendLookupTicket` — the ITEM LOOKUP TICKET,
+   * D2's scroll of identify). Marked on the def rather than named by id in
+   * the engine for the reason `revive` is: a MOD's own ticket has to work.
+   * A marker, not a value — what it does is the whole of what it does.
+   */
+  identify?: boolean;
+  /**
+   * STACKABLE trinkets only: how many units of this base one bag cell holds
+   * (`Equipment.qty` — the ITEM LOOKUP TICKET stacks 20). `addToInventory`
+   * merges new units into an existing stack up to this cap. Absent (= 1) on
+   * everything else: ordinary gear never stacks.
+   */
+  stack?: number;
+  /**
    * Merchant material, same scale as a weapon's (see WeaponDef.material):
    * metal sells for double, precious for four times. Omitted = base value.
    */

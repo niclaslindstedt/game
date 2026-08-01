@@ -42,6 +42,7 @@ export function ItemTooltip({
   item,
   anchor,
   onUse,
+  useLabel,
 }: {
   font: PixelFont;
   relicFonts: Record<RelicTier, PixelFont>;
@@ -51,11 +52,15 @@ export function ItemTooltip({
   anchor: DOMRect;
   /**
    * Present only on a usable trinket in a place it works — a travel-gate key on
-   * its home level (`gateKeyTarget`), or SMELLING SALTS with a companion
-   * face-down (`reviveTarget`). Renders a USE row on the card: the touch path
-   * to using it, where desktop can also right-click the bag cell.
+   * its home level (`gateKeyTarget`), SMELLING SALTS with a companion
+   * face-down (`reviveTarget`), or an UNIDENTIFIED find while a LOOKUP TICKET
+   * is in the bag. Renders a USE row on the card: the touch path to using it,
+   * where desktop can also right-click the bag cell.
    */
   onUse?: () => void;
+  /** The USE row's label — "USE" unless the verb reads better by name (the
+   * unidentified card says IDENTIFY, because the tap spends a ticket ON it). */
+  useLabel?: string;
 }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const wornRef = useRef<HTMLDivElement>(null);
@@ -180,7 +185,12 @@ export function ItemTooltip({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={onUse}
           >
-            <PixelText font={font} text="USE" scale={2} color="#0b0d10" />
+            <PixelText
+              font={font}
+              text={useLabel ?? "USE"}
+              scale={2}
+              color="#0b0d10"
+            />
           </button>
         )}
       </ItemCard>

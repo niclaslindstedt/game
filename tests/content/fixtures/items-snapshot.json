@@ -1412,6 +1412,16 @@
       "name": "LOCOMOTIVE PLATE",
       "slot": "shield"
     },
+    "lookup_ticket": {
+      "bonuses": {},
+      "icon": "icon_lookup_ticket",
+      "id": "lookup_ticket",
+      "identify": true,
+      "name": "ITEM LOOKUP TICKET",
+      "quote": "USE ON AN UNIDENTIFIED FIND TO REVEAL IT",
+      "slot": "trinket",
+      "stack": 20
+    },
     "lucky_clover": {
       "bonuses": {},
       "icon": "icon_clover",

@@ -35,6 +35,14 @@ import type { Equipment, Quality } from "../types/index.ts";
  * affixes on epic/legendary pieces still list their bonuses in full below it).
  */
 export function equipmentName(equipment: Equipment): string {
+  // An UNIDENTIFIED find names only its base — the tier still shows through
+  // the color the app paints it (the D2 read: a gold ring you can't place),
+  // but its affix decoration AND a unique's fixed name stay veiled until the
+  // piece is identified. Checked before the unique name on purpose: the name
+  // IS the reveal.
+  if (equipment.unidentified) {
+    return `UNIDENTIFIED ${equipmentBaseName(equipment.defId)}`;
+  }
   // A hand-authored unique carries its own fixed name — no base/affix compose.
   if (equipment.name) return equipment.name;
   const base = equipmentBaseName(equipment.defId);

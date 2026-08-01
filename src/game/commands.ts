@@ -91,6 +91,7 @@ import {
   swapHand,
   unequipToInventory,
 } from "./items/inventory.ts";
+import { identifyItem, spendLookupTicket } from "./items/identify.ts";
 import { EQUIP_SLOTS } from "./items/slots.ts";
 import {
   allocateStat,
@@ -244,6 +245,9 @@ export const RUN_COMMAND_ARGS = {
   discardEquipped: ["equipSlot"],
   spendGateKey: ["int"],
   spendReviveItem: ["int"],
+  // The FIELD identify: (ticket cell, target cell) — both indices name cells
+  // the server can check, exactly like every other bag verb.
+  spendLookupTicket: ["int", "int"],
   autoEquipBest: [],
   autoEquipGear: [],
   scrapInferiorLoot: [],
@@ -258,6 +262,7 @@ export const RUN_COMMAND_ARGS = {
   // is stale the moment anything else is sold.
   buybackItem: ["int"],
   repairGear: [],
+  identifyItem: ["int"],
   buyQuestPiece: ["str", "str"],
   sellQuestPiece: ["str", "str"],
 
@@ -518,6 +523,8 @@ export function applyRunCommand(
       return spendGateKey(state, hero, num(a, 0));
     case "spendReviveItem":
       return spendReviveItem(state, hero, num(a, 0));
+    case "spendLookupTicket":
+      return spendLookupTicket(state, hero, num(a, 0), num(a, 1));
     case "autoEquipBest":
       return autoEquipBest(state, hero);
     // THE SWEEP MINUS THE HAND, and it is a separate verb rather than a flag
@@ -549,6 +556,8 @@ export function applyRunCommand(
       return buybackItem(state, hero, num(a, 0));
     case "repairGear":
       return repairGear(state, hero);
+    case "identifyItem":
+      return identifyItem(state, hero, num(a, 0));
     case "buyQuestPiece":
       return buyQuestPiece(state, hero, str(a, 0), str(a, 1));
     case "sellQuestPiece":

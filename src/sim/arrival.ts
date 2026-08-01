@@ -27,6 +27,7 @@ import {
   addToInventory,
   autoEquipBest,
   inventoryCapacity,
+  markIdentified,
   recomputeMaxHp,
   recomputeMaxStamina,
   rollEquipment,
@@ -168,7 +169,11 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
   // (attribute gate) is simply left in the bag and cleared below.
   const mlvl = target + difficultyDef(difficulty).mobLevelOffset;
   const roll = (family: "weapon" | "gear", tier: Tier) => {
-    const piece = rollEquipment(state, player, { slot: family, tier, mlvl });
+    // Staged kit arrives identified — the auto-equip below is the whole point,
+    // and a veiled piece cannot be worn.
+    const piece = markIdentified(
+      rollEquipment(state, player, { slot: family, tier, mlvl }),
+    );
     if (!addToInventory(state, player, piece)) {
       autoEquipBest(state, player); // bag full → wear the upgrades, free the cells
       addToInventory(state, player, piece);

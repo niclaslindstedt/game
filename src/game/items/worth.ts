@@ -38,6 +38,9 @@ export function sellValue(item: Equipment): number {
       materialMult *
       // Craftsmanship carries to the scales: a BROKEN find melts down for
       // less, a PERFECT one commands its premium (config QUALITY.mults).
-      qualityMult(item),
+      qualityMult(item) *
+      // A STACK sells whole — the cell crosses the counter with every unit in
+      // it (`Equipment.qty`; 1 for everything that doesn't stack).
+      (item.qty ?? 1),
   );
 }

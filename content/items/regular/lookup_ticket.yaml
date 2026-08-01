@@ -1,0 +1,17 @@
+id: lookup_ticket
+kind: gear
+rarity: regular
+name: ITEM LOOKUP TICKET
+description: >
+  A single-use appraisal voucher, thermal-printed on tamper-evident stock by a
+  valuations bureau nobody has ever managed to visit. Hold it against any find
+  the field has kept quiet about and the barcode comes back with what the thing
+  actually is — make, rolls, provenance, the lot. Every trader on the circuit
+  honours them, prints them, and takes a cut either way, which tells you whose
+  idea the whole arrangement was.
+quote: USE ON AN UNIDENTIFIED FIND TO REVEAL IT
+slot: trinket
+bonuses: {}
+identify: true
+stack: 20
+icon: icon_lookup_ticket

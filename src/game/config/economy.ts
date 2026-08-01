@@ -90,6 +90,15 @@ export const MERCHANT = {
    */
   stockRevives: 2,
   /**
+   * ITEM LOOKUP TICKETS on the shelf (`GearDef.identify`) — the take-home
+   * identify, D2's scroll of identify. A full bag stack's worth: the counter
+   * itself identifies for a per-piece fee (`ECONOMY.identifyPrice`), so the
+   * shelf exists for the FIELD — the hero who wants to know what the boss just
+   * dropped without walking back. Stocked on every stall like the salts;
+   * nothing restocks, so an emptied shelf waits for the next map's trader.
+   */
+  stockLookupTickets: 20,
+  /**
    * How many sold pieces the trader keeps on the BUY-BACK shelf — the last N
    * things sold across this counter, oldest pushed off first, each redeemable
    * for exactly the coins he paid for it.
@@ -194,6 +203,22 @@ export const ECONOMY = {
    * without one for the rest of the campaign.
    */
   revivePrice: { base: 60, perLevel: 10 },
+  /**
+   * An ITEM LOOKUP TICKET off the shelf, on the same `base + perLevel × level`
+   * line. Priced ABOVE the counter's own per-piece identify fee on purpose:
+   * the ticket buys convenience — knowing in the field, mid-dive — while the
+   * walk back to the stall stays the thrifty answer. Cheap enough that a
+   * stack is an ordinary sell-run purchase, never a boss-kill's ransom.
+   */
+  lookupTicketPrice: { base: 15, perLevel: 3 },
+  /**
+   * The counter's own IDENTIFY service, per piece: `base + perIlvl × the
+   * piece's item level` (see items/identify.ts `identifyCost`). Deliberately
+   * a ritual fee rather than a tax — always far under the piece's own
+   * tier-laddered sell value, so identifying a find is never a worse deal
+   * than melting it down blind.
+   */
+  identifyPrice: { base: 5, perIlvl: 1 },
   /**
    * REPAIR pricing at the merchant (see items/durability.ts `repairCost`): mending one
    * worn piece to full costs `(base + perReqLevel × the piece's required level)
