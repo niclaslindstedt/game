@@ -48,6 +48,7 @@ import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
 import { advancePath } from "../path.ts";
 import { stepQuests } from "../quests/index.ts";
+import { releaseStuckLevelup } from "../talents.ts";
 import { stepRangedAttacks } from "../ranged.ts";
 import { stepTimers } from "../timers.ts";
 import { stepSpawners } from "../spawners.ts";
@@ -155,6 +156,13 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
     stepBossDeath(state, dtMs);
     return;
   }
+
+  // A LEVEL-UP CHOOSER NOBODY LEFT IN PLAY CAN CLOSE IS LOWERED HERE, ahead of
+  // the gate it would otherwise hold shut for the rest of the run. The hero who
+  // owes the points can stop being able to place them by quitting or by going
+  // down, and either freezes the whole session silently — see
+  // `releaseStuckLevelup`, and the bot-client soak that found both.
+  releaseStuckLevelup(state);
 
   if (state.phase !== "playing") return;
 

@@ -32,10 +32,7 @@ import { decodeFrame } from "@game/wire/codec.ts";
 import { FRAME, TICK_MS, type SessionParams } from "@game/wire/protocol.ts";
 import { PRIVATE_PLAYER_FIELDS, UNSENT_FIELDS } from "@game/wire/split.ts";
 
-import {
-  createNetClient,
-  type NetClient,
-} from "../../pwa/src/game/net/client.ts";
+import { createNetClient, type NetClient } from "../../server/client.ts";
 import { createSession, type Session } from "../../server/session.ts";
 
 const PARAMS: SessionParams = {

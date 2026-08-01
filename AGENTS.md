@@ -376,6 +376,8 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | The session server, or the wire either end speaks | `server/…` (`server/wire/*` imports NOTHING; never anything under `pwa/`)                                                                                                         |
 | A transport, admission, the router mapping        | `server/net/…` — Node builtins only                                                                                                                                               |
+| Turning SNAPSHOTS back into a run                 | `server/client.ts` — the ONE client, read as `@game/client`. Never a second one: a bot client and the page must prove the same thing playable                                     |
+| A headless player, or a soak                      | `server/bot-client.ts` + `scripts/bot-client.mjs`; the weather is `Impairment` on the UDP transport                                                                               |
 | The shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts`; the page's half is `pwa/src/app/net-bridge.ts`                                                                                         |
 | A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`) |
 | A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                             |
@@ -445,7 +447,13 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
   `@niclaslindstedt/oss-framework/rng`) with no path surgery; keep framework
   subpaths named after the module. The alias maps live in `tsconfig.json`,
   `pwa/tsconfig.json`, `vitest.config.ts`, and `pwa/vite.config.ts`
-  — keep all four in lockstep (they also carry `@game/core` and `@game/menu`).
+  — keep all four in lockstep (they also carry `@game/core`, `@game/menu`,
+  `@game/wire/*` and `@game/client`). Two more copies exist and both bite:
+  `scripts/game-alias-loader.mjs` is what lets a plain `node` script import
+  aliased modules at runtime, and `tests/content/net_reachability_test.ts`
+  resolves them to walk the import graph — a new alias missing from either is a
+  script that cannot start or a budget guard that silently stops following an
+  edge.
 - Installing `@niclaslindstedt/*` packages requires a `GITHUB_PAT` env var
   with `read:packages` (see `.npmrc`); CI falls back to the workflow token.
 

@@ -33,15 +33,16 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const STARTUP = path.join(repoRoot, "pwa", "src", "main.tsx");
 /** The run loop's entry: one mount, one run. */
 const RUN_LOOP = path.join(repoRoot, "pwa", "src", "game", "GameScreen.tsx");
-/** The run driver the cutover has to reach for any of this to be playable. */
-const NET_CLIENT = path.join(
-  repoRoot,
-  "pwa",
-  "src",
-  "game",
-  "net",
-  "client.ts",
-);
+/**
+ * The run driver the cutover has to reach for any of this to be playable.
+ *
+ * It lives in `server/` rather than under `pwa/`, and the walk below is exactly
+ * why that is safe to do: it is the ONE thing that turns snapshots back into a
+ * run, a headless BOT CLIENT needs it too (`server/bot-client.ts`, plan
+ * §7.2.5), and a second copy written beside it would prove the wrong thing
+ * playable. Reached as `@game/client`.
+ */
+const NET_CLIENT = path.join(repoRoot, "server", "client.ts");
 
 /**
  * Every file reachable from `entry`.
@@ -110,6 +111,8 @@ function withoutComments(source: string): string {
 function aliasPath(spec: string): string {
   if (spec === "@game/core") return path.join(repoRoot, "src", "index.ts");
   if (spec === "@game/menu") return path.join(repoRoot, "src", "menu.ts");
+  if (spec === "@game/client")
+    return path.join(repoRoot, "server", "client.ts");
   if (spec.startsWith("@game/lib/")) {
     return path.join(repoRoot, "src", "lib", spec.slice("@game/lib/".length));
   }

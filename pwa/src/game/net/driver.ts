@@ -44,7 +44,8 @@ import {
 import type { SessionParams } from "@game/wire/protocol.ts";
 import { setCommandSink } from "../run-commands.ts";
 import type { RunDriver } from "../game-screen/run-driver.ts";
-import { createNetClient } from "./client.ts";
+import { createNetClient } from "@game/client";
+import { setLocalSeat } from "../local-seat.ts";
 import { portTransport } from "./port-transport.ts";
 import { createSessionLink } from "./session-link.ts";
 
@@ -116,6 +117,10 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
       },
       onChat: (lines) => link.receive(lines),
       onRoster: (entries) => link.seat(entries),
+      // WHICH HERO THIS SCREEN IS ABOUT. The client is shared with headless
+      // joiners now (`server/client.ts`), so the seat arrives as a callback and
+      // the PAGE is what knows `local-seat.ts` exists.
+      onSeat: setLocalSeat,
     });
     // FROM HERE THE APP'S VERBS TRAVEL. `run-commands.ts` still applies each
     // one locally as well — the call sites read what a verb returned, and a
@@ -238,6 +243,10 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
       },
       onChat: (lines) => link.receive(lines),
       onRoster: (entries) => link.seat(entries),
+      // WHICH HERO THIS SCREEN IS ABOUT. The client is shared with headless
+      // joiners now (`server/client.ts`), so the seat arrives as a callback and
+      // the PAGE is what knows `local-seat.ts` exists.
+      onSeat: setLocalSeat,
     });
     setCommandSink((name, args) => client?.sendCommand(name, args), {
       optimistic: false,

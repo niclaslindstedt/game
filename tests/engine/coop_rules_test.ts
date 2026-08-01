@@ -84,6 +84,56 @@ describe("an abandoned hero", () => {
     expect(nearestHero(state, { x: 120, y: 120 })).toBe(a);
   });
 
+  it("stops the whole run waiting on a level-up it will never place", () => {
+    // FOUND BY THE BOT-CLIENT SOAK (`scripts/bot-client.mjs`), and it is the
+    // worst thing that suite has turned up: the level-up chooser is a GLOBAL
+    // phase, it lifts only when the points are placed, and a player who left
+    // owing points will never place them. Eight clients went on steering at a
+    // run whose clock had stopped — every figure a soak watches looked healthy
+    // except the two that mattered, the phase and the kill count.
+    const { state, heroes } = party(2);
+    const [, b] = heroes as [Player, Player];
+    b.pendingStatPoints = 2;
+    state.phase = "levelup";
+    departHero(state, 1);
+    expect(state.phase).toBe("playing");
+    // The points are NOT forfeited: the seat may be held for the grace window,
+    // and somebody coming back should find their level-up where they left it.
+    // What was dropped is the WORLD's obligation to sit and wait.
+    expect(b.pendingStatPoints).toBe(2);
+  });
+
+  it("stops the run waiting on a level-up its owner went DOWN owing", () => {
+    // The second half of the same bug, and the one that wedged the very next
+    // soak after the first was fixed at the departure: a hero at 0 hp with the
+    // party not yet wiped never reaches the `dying` scene, so nobody quits and
+    // nobody can spend. It is checked every TICK rather than at the events that
+    // can cause it, which is the only version a new way of leaving play cannot
+    // out-run.
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    b.pendingStatPoints = 2;
+    b.hp = 0;
+    state.phase = "levelup";
+    expect(partyWiped(state)).toBe(false); // a still up — no death scene
+    step(state, [idle, idle], DT);
+    expect(state.phase).toBe("playing");
+    expect(b.pendingStatPoints).toBe(2);
+    expect(a.hp).toBeGreaterThan(0);
+  });
+
+  it("leaves a level-up somebody still playing owes exactly where it is", () => {
+    // The other direction, and the one that would be a worse bug: yanking the
+    // chooser out from under a live player mid-decision because somebody else
+    // quit.
+    const { state, heroes } = party(3);
+    const [a] = heroes as [Player, Player, Player];
+    a.pendingStatPoints = 1;
+    state.phase = "levelup";
+    departHero(state, 2);
+    expect(state.phase).toBe("levelup");
+  });
+
   it("hands its seat to the next arrival instead of blocking it", () => {
     const { state } = party(3);
     expect(nextFreeSeat(state)).toBe(3);

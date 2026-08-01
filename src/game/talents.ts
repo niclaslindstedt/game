@@ -29,6 +29,7 @@ import {
   treeCapacity,
 } from "./defs/talents/index.ts";
 import { recomputeMaxHp } from "./items/derived.ts";
+import { heroInPlay } from "./party.ts";
 import { spentTalentRanks, talentRank } from "./talent-effects.ts";
 import type { GameState, Player, StatName } from "./types/index.ts";
 
@@ -50,6 +51,46 @@ export function resumeAfterLevelup(state: GameState, player: Player): void {
   ) {
     state.phase = "playing";
   }
+}
+
+/**
+ * DROP A LEVEL-UP CHOOSER NOBODY LEFT IN PLAY CAN CLOSE.
+ *
+ * The chooser is a GLOBAL phase that lifts only when the points are placed, and
+ * the hero who owes them can stop being able to place them in two ways: they
+ * QUIT (`departHero`) or they go DOWN (hp 0 with the party not yet wiped, so no
+ * `dying` scene ever runs). Either way the run freezes for everybody, for ever
+ * — and it does so silently, because from the outside the session still ticks
+ * and still publishes. The bot-client soak found both, in that order: the first
+ * was fixed at the departure and the second wedged the very next run.
+ *
+ * So the rule is checked EVERY TICK rather than at the events that can trigger
+ * it, which is the only version that cannot be out-run by a new way of leaving
+ * play. `heroInPlay` is the same line the rest of the engine draws — the world
+ * does not answer for a body nobody is behind, and that has to include waiting
+ * on one.
+ *
+ * **THE POINTS ARE NOT FORFEITED.** A held seat may be reclaimed inside the
+ * grace window and a downed hero may be revived, and either should find their
+ * level-up where they left it (`promptPendingPoints` raises it again). What is
+ * dropped is the WORLD's obligation to stand still.
+ *
+ * It can only ever lower a screen that is already stuck: `promptPendingPoints`
+ * refuses to raise one with nothing owed, so a live hero owing points always
+ * holds it. `respec` is deliberately untouched — it is raised by a deliberate
+ * act and closed by one, and a run does not enter it by surprise.
+ *
+ * The real fix is per-player screens (multiplayer plan §3.2); until `state.phase`
+ * loses its eleven UI members this is the difference between one player leaving
+ * and everybody's run ending.
+ */
+export function releaseStuckLevelup(state: GameState): void {
+  if (state.phase !== "levelup") return;
+  if (state.pendingTalentPoints.length > 0) return;
+  for (const player of state.players) {
+    if (heroInPlay(player) && player.pendingStatPoints > 0) return;
+  }
+  state.phase = "playing";
 }
 
 /** Talent points a tree stat has EARNED — one per `TALENT_UNLOCK_STEP` chosen

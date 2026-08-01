@@ -280,7 +280,10 @@ function affordableStallUpgrade(state: GameState, hero: Player): boolean {
     // stockUniques can mint unique GEAR into a stall entry — only arms compete
     // (weaponScore throws on a cuirass).
     if (entry.equipment.slot !== "weapon") continue;
-    if (!canBuyStock(state, entry) || !canEquip(state, hero, entry.equipment)) {
+    if (
+      !canBuyStock(state, hero, entry) ||
+      !canEquip(state, hero, entry.equipment)
+    ) {
       continue;
     }
     if (weaponScore(state, hero, entry.equipment) > held) return true;
@@ -427,7 +430,7 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
   // his friend should come back with his friend.
   if (needsRevive(state, hero)) {
     const bottle = reviveRow(state);
-    if (bottle && canBuyStock(state, bottle)) buyStock(state, bottle.id);
+    if (bottle && canBuyStock(state, hero, bottle)) buyStock(state, bottle.id);
   }
   // BUY the single best wieldable weapon upgrade the purse covers.
   let bestId = -1;
@@ -437,7 +440,10 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
     // stockUniques can mint unique GEAR into a stall entry — only arms compete
     // (weaponScore throws on a cuirass).
     if (entry.equipment.slot !== "weapon") continue;
-    if (!canBuyStock(state, entry) || !canEquip(state, hero, entry.equipment)) {
+    if (
+      !canBuyStock(state, hero, entry) ||
+      !canEquip(state, hero, entry.equipment)
+    ) {
       continue;
     }
     const score = weaponScore(state, hero, entry.equipment);

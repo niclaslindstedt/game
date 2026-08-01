@@ -291,7 +291,7 @@ describe("the shop", () => {
     const entry = state.merchant.stock.find((s) => s.kind === "ability")!;
     expect(buyStock(state, entry.id)).toBe(false); // too poor
     state.players[0].coins = entry.price * 10;
-    expect(canBuyStock(state, entry)).toBe(true);
+    expect(canBuyStock(state, state.players[0], entry)).toBe(true);
     expect(buyStock(state, entry.id)).toBe(true);
     expect(state.players[0].heldAbilities).toContain(
       entry.kind === "ability" ? entry.defId : "",
@@ -302,7 +302,7 @@ describe("the shop", () => {
     // and however much room the dock still has.
     expect(entry.qty).toBe(0);
     expect(state.players[0].heldAbilities.length).toBeLessThan(HELD_ITEMS.cap);
-    expect(canBuyStock(state, entry)).toBe(false);
+    expect(canBuyStock(state, state.players[0], entry)).toBe(false);
     expect(buyStock(state, entry.id)).toBe(false);
     expect(state.players[0].coins).toBe(entry.price * 9); // no coins moved
   });
@@ -353,7 +353,7 @@ describe("the shop", () => {
     )!;
     state.players[0].coins = 100_000;
     state.players[0].staminaPotions = CONSUMABLES.stackCap;
-    expect(canBuyStock(state, entry)).toBe(false);
+    expect(canBuyStock(state, state.players[0], entry)).toBe(false);
     expect(buyStock(state, entry.id)).toBe(false);
     // Refused with nothing spent: neither the purse nor the shelf moved.
     expect(state.players[0].coins).toBe(100_000);
@@ -378,9 +378,9 @@ describe("the shop", () => {
     });
     const entry = state.merchant.stock.find((s) => s.id === 990)!;
     state.players[0].coins = 100;
-    expect(canBuyStock(state, entry)).toBe(true);
+    expect(canBuyStock(state, state.players[0], entry)).toBe(true);
     expect(buyStock(state, 990)).toBe(true);
-    expect(canBuyStock(state, entry)).toBe(false);
+    expect(canBuyStock(state, state.players[0], entry)).toBe(false);
     expect(buyStock(state, 990)).toBe(false); // refused, coins untouched
     expect(state.players[0].coins).toBe(95);
     expect(
@@ -409,7 +409,7 @@ describe("the shop", () => {
     expect(state.players[0].coins).toBe(entry.price);
     // Sold out: the entry refuses a second purchase.
     expect(buyStock(state, entry.id)).toBe(false);
-    expect(canBuyStock(state, entry)).toBe(false);
+    expect(canBuyStock(state, state.players[0], entry)).toBe(false);
   });
 });
 

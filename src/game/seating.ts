@@ -44,6 +44,7 @@ import { difficultyDef } from "./defs/difficulties.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import { applyLoadout } from "./arrival.ts";
 import { partyCentroid } from "./party.ts";
+import { releaseStuckLevelup } from "./talents.ts";
 import { endTradesFor } from "./trade.ts";
 import type { GameState, Loadout, Player } from "./types/index.ts";
 
@@ -187,6 +188,21 @@ export function departHero(
   // `resumeHero`. The two look identical from a socket, which is the whole
   // reason the caller has to say which it is.
   if (options.hold) hero.held = true;
+  // **AND THE WORLD STOPS WAITING ON THEM.** Found by the bot-client soak
+  // (`scripts/bot-client.mjs`): a player who leaves while owing a LEVEL-UP
+  // freezes the session for ever. The chooser is a GLOBAL phase, it lifts only
+  // when the points are placed, and a departed hero will never place them — so
+  // eight bots went on steering, sixty times a second, at a run whose clock had
+  // stopped and whose kill count never moved again.
+  //
+  // The points are NOT forfeited: the seat may be held for thirty seconds and
+  // the person coming back should find their level-up where they left it. What
+  // is dropped is the WORLD's obligation to sit and wait — the same line
+  // `heroInPlay` draws everywhere else, arrived at from the one direction that
+  // had not been checked. `state.phase` losing eleven members to a per-player
+  // `Player.screen` is the real fix and is the plan's §3.2; until then this is
+  // the difference between one player quitting and everybody's run ending.
+  releaseStuckLevelup(state);
   return true;
 }
 
