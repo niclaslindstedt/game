@@ -140,7 +140,6 @@ export function QuestLogOverlay({
               </div>
             );
           })}
-
         </div>
 
         <button
