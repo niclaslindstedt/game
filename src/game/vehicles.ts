@@ -30,6 +30,8 @@ import type { Vec2 } from "@game/lib/vec.ts";
 
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
+import { resolveObstacles } from "./obstacles.ts";
+import { openDoor } from "./story.ts";
 import {
   CAR_FIX,
   type CarDetachable,
@@ -90,14 +92,39 @@ export const CAR = {
   } as Record<CarDetachable, Vec2>,
   /** How close a hero must stand to climb in (`enterCar`). */
   boardRadius: 44,
-  /** The garage drive-out's numbers: top speed (px/s), throttle ramp and
-   * coast-down (px/s²). Deliberately gentle — this is backing out of the
-   * garage, not the driving minigame (a later phase owns that). */
+  /** The drive's numbers: top speed (px/s), throttle ramp and brake/coast
+   * (px/s²). Deliberately gentle — this is pulling out of the garage, not
+   * the driving minigame (a later phase owns that). */
   driveSpeed: 130,
   driveAccel: 260,
   driveBrake: 200,
-  /** Driving this far from `home` books the departure (`carDeparted`). */
+  /** Reverse tops out slower — nobody backs out of a garage at road speed. */
+  reverseSpeed: 70,
+  /** The wheel: how fast the nose swings at full authority (rad/s), and the
+   * ground speed (px/s) at which steering GAINS that full authority — a car
+   * only turns as far as it rolls, so a standing car's wheel does nothing
+   * and a creeping one comes around slowly. */
+  turnRate: 3,
+  turnRefSpeed: 40,
+  /** The intent arcs, against the angle between the steer target and the
+   * nose: inside `forwardArc` the driver means GO, beyond `reverseArc` he
+   * means BRAKE/BACK UP, and the band between is pure steering — the car
+   * coasts while the nose comes around. */
+  forwardArc: Math.PI * 0.42,
+  reverseArc: Math.PI * 0.75,
+  /** The body's collision circle (world px) — the car shoves out of walls
+   * and furniture like any other body; it does NOT phase through the shut
+   * garage door. */
+  bodyRadius: 14,
+  /** Driving this far from `home` books the departure (`carDeparted`) on a
+   * map with NO garage door; with one, the departure is the door's own
+   * threshold instead (`departRadius` of its center, once open). */
   departDistance: 150,
+  departRadius: 30,
+  /** How far out a DRIVEN car trips the garage door — like a real opener,
+   * well before the walking hero's own trigger (DOORS.openRadius), so the
+   * roll-up has finished by the time the bumper reaches the threshold. */
+  doorReach: 130,
   /** The running engine's rumble cadence (ms between `carEngine` grains —
    * the app's putter is a touch longer, so grains overlap seamlessly). */
   engineCueMs: 210,
@@ -133,15 +160,16 @@ const VEHICLE_LANDMARKS: Record<string, Vehicle["kind"]> = {
   rocket: "ship",
 };
 
-function createCar(pos: Vec2): CarVehicle {
+function createCar(pos: Vec2, heading: number): CarVehicle {
   return {
     kind: "car",
     pos: { x: pos.x, y: pos.y },
     home: { x: pos.x, y: pos.y },
+    heading,
     departed: false,
     engineCueMs: 0,
     grindCueMs: 0,
-    faceLeft: false,
+    faceLeft: Math.cos(heading) < 0,
     speed: 0,
     wheelAngle: 0,
     suspension: [0, 0],
@@ -179,13 +207,25 @@ function createShip(pos: Vec2): ShipVehicle {
 }
 
 /** Mint the level's vehicles from its carved landmarks — parked, cold,
- * nobody driving. Empty on every map that pins none (all but the garage). */
-export function createVehicles(def: Pick<LevelDef, "landmarks">): Vehicle[] {
+ * nobody driving. Empty on every map that pins none (all but the garage).
+ * The car parks NOSE TOWARD the garage door when the level hangs one, so
+ * the first W the player ever presses drives at the way out. */
+export function createVehicles(
+  def: Pick<LevelDef, "landmarks" | "doors">,
+): Vehicle[] {
   const vehicles: Vehicle[] = [];
+  const garage = (def.doors ?? []).find((d) => d.opens === "approach");
   for (const mark of def.landmarks) {
     const kind = VEHICLE_LANDMARKS[mark.kind];
-    if (kind === "car") vehicles.push(createCar(mark.pos));
-    else if (kind === "ship") vehicles.push(createShip(mark.pos));
+    if (kind === "car") {
+      const heading = garage
+        ? Math.atan2(
+            (garage.from.y + garage.to.y) / 2 - mark.pos.y,
+            (garage.from.x + garage.to.x) / 2 - mark.pos.x,
+          )
+        : 0;
+      vehicles.push(createCar(mark.pos, heading));
+    } else if (kind === "ship") vehicles.push(createShip(mark.pos));
   }
   return vehicles;
 }
@@ -356,7 +396,7 @@ export function stepVehicles(
         state.events.push({
           type: "carEngine",
           pos: { x: vehicle.pos.x, y: vehicle.pos.y },
-          intensity: Math.min(1, vehicle.speed / CAR.driveSpeed),
+          intensity: Math.min(1, Math.abs(vehicle.speed) / CAR.driveSpeed),
         });
       }
     }
@@ -364,13 +404,13 @@ export function stepVehicles(
     // steel on the road SPARKS — one burst per cadence per missing wheel,
     // hotter the faster the wreck is still going.
     if (
-      vehicle.speed > CAR.grindMinSpeed &&
+      Math.abs(vehicle.speed) > CAR.grindMinSpeed &&
       vehicle.wheelStates.some((w) => w === 3)
     ) {
       vehicle.grindCueMs -= dtMs;
       if (vehicle.grindCueMs <= 0) {
         vehicle.grindCueMs += CAR.grindCueMs;
-        const intensity = Math.min(1, vehicle.speed / CAR.driveSpeed);
+        const intensity = Math.min(1, Math.abs(vehicle.speed) / CAR.driveSpeed);
         vehicle.wheelStates.forEach((w, axle) => {
           if (w !== 3) return;
           state.events.push({
@@ -458,14 +498,46 @@ export function stepVehicles(
   }
 }
 
+/** Shortest signed angle from `from` to `to`, in (-π, π]. */
+function angleDiff(to: number, from: number): number {
+  const tau = Math.PI * 2;
+  let d = (to - from) % tau;
+  if (d > Math.PI) d -= tau;
+  if (d <= -Math.PI) d += tau;
+  return d;
+}
+
 /**
- * The garage drive-out: the driver's held pointer steers the car exactly as
- * it steers the hero on foot — hold toward where you want to go, the car
- * ramps up to `driveSpeed`, let go and it coasts down. Deliberately a
- * PLACEHOLDER for the driving minigame (no wall collision, no skids — the
- * bay door is thirty feet away): once the car is `departDistance` from
- * home, the departure is booked ONCE (`carDeparted`, the latch) and the
- * app cuts to the car door's destination the way a travel gate would.
+ * CAR PHYSICS — a nose, a throttle, and a wheel, not a point that chases
+ * the pointer. The car carries a `heading` and a SIGNED `speed` along it;
+ * the steer target only expresses INTENT against that nose:
+ *
+ *   - target AHEAD (inside `forwardArc`)      → throttle up toward
+ *     `driveSpeed` — this is W, or the held pointer out in front;
+ *   - target BEHIND (beyond `reverseArc`)     → brake, then BACK UP toward
+ *     `reverseSpeed` — this is S, or the pointer held behind the trunk;
+ *   - the band between (roughly abeam)        → pure steering: no throttle,
+ *     no brake, the car coasts while the nose comes around — A/D alone
+ *     curve the MOVING car and do nothing to a parked one.
+ *
+ * The wheel turns the nose toward the target (toward the TAIL's target when
+ * reversing — backing up swings the rear the way a real car does), with
+ * authority proportional to ground speed (`turnRefSpeed`): a standing car
+ * cannot pivot on the spot, however hard the wheel is cranked. Releasing
+ * every control coasts the car to a stop.
+ *
+ * The app composes the target FROM the car for the keyboard (W/A/S/D in the
+ * nose's own frame — see player-input.ts); a held pointer/touch works
+ * unchanged, and the car simply drives at it like a car.
+ *
+ * The body collides: `resolveObstacles` shoves it out of walls and
+ * furniture with its own radius, so the shut garage door really is shut.
+ *
+ * THE DEPARTURE: on a map with a garage door (an `approach` DoorState), a
+ * driven car near it rolls it open, and the trip books ONCE when the car
+ * reaches the OPEN door's threshold (`departRadius`) — driving circles
+ * inside, or out onto the lawn through nothing, commits nothing. A map with
+ * no such door keeps the old radial latch (`departDistance` from home).
  */
 function driveCar(
   state: GameState,
@@ -478,18 +550,52 @@ function driveCar(
   if (input.steering) {
     const dx = input.target.x - car.pos.x;
     const dy = input.target.y - car.pos.y;
-    const dist = Math.hypot(dx, dy);
-    const want = CAR.driveSpeed * (input.throttle ?? 1);
-    car.speed = Math.min(want, car.speed + CAR.driveAccel * dt);
-    if (dist > 1) {
-      const move = Math.min(car.speed * dt, dist);
-      car.pos.x += (dx / dist) * move;
-      car.pos.y += (dy / dist) * move;
-      if (Math.abs(dx) > 2) car.faceLeft = dx < 0;
+    if (Math.hypot(dx, dy) > 1) {
+      const want = Math.atan2(dy, dx);
+      const ahead = angleDiff(want, car.heading);
+      const throttle = input.throttle ?? 1;
+      if (Math.abs(ahead) < CAR.forwardArc) {
+        car.speed = Math.min(
+          CAR.driveSpeed * throttle,
+          car.speed + CAR.driveAccel * dt,
+        );
+      } else if (Math.abs(ahead) > CAR.reverseArc) {
+        car.speed =
+          car.speed > 0
+            ? Math.max(0, car.speed - CAR.driveBrake * dt)
+            : Math.max(
+                -CAR.reverseSpeed * throttle,
+                car.speed - CAR.driveAccel * dt,
+              );
+      }
+      // The wheel only bites as far as the car rolls; reversing steers the
+      // TAIL at the target, which is what cranking the wheel in reverse does.
+      const authority = Math.min(1, Math.abs(car.speed) / CAR.turnRefSpeed);
+      const err =
+        car.speed < 0 ? angleDiff(want + Math.PI, car.heading) : ahead;
+      const swing = CAR.turnRate * dt * authority;
+      car.heading += Math.max(-swing, Math.min(swing, err));
     }
   } else {
-    car.speed = Math.max(0, car.speed - CAR.driveBrake * dt);
+    // Nothing held: coast down to a stop from either direction.
+    const drop = CAR.driveBrake * dt;
+    car.speed =
+      car.speed > 0
+        ? Math.max(0, car.speed - drop)
+        : Math.min(0, car.speed + drop);
   }
+  if (car.speed !== 0) {
+    car.pos.x += Math.cos(car.heading) * car.speed * dt;
+    car.pos.y += Math.sin(car.heading) * car.speed * dt;
+    // The body is a body: walls and furniture shove it out, so the shut
+    // garage door (its obstacle chain) really stops the bumper.
+    resolveObstacles(state, car.pos, CAR.bodyRadius);
+  }
+  // The side-profile art has two poses; the nose's x-sign picks one. The
+  // dead zone keeps a car driving straight up/down the screen from
+  // flickering between them.
+  const nose = Math.cos(car.heading);
+  if (Math.abs(nose) > 0.2) car.faceLeft = nose < 0;
   // The driver rides IN the car: his body lands exactly where the car
   // ends the tick (the party loop already pinned him before the move —
   // this is the post-move half, so nothing ever reads him a tick behind).
@@ -498,9 +604,27 @@ function driveCar(
     driver.pos.x = car.pos.x;
     driver.pos.y = car.pos.y;
   }
+  // A driven car pulling up rolls the garage door open — same opener the
+  // walking hero triggers in stepDoors, but from further out (`doorReach`,
+  // a real opener's range), so the roll-up is done before the bumper is.
+  for (const door of state.doors) {
+    if (!door.approach || door.open) continue;
+    const d = Math.hypot(car.pos.x - door.center.x, car.pos.y - door.center.y);
+    if (d <= CAR.doorReach) openDoor(state, door);
+  }
   if (!car.departed) {
-    const gone = Math.hypot(car.pos.x - car.home.x, car.pos.y - car.home.y);
-    if (gone > CAR.departDistance) {
+    const garageDoors = state.doors.filter((d) => d.approach);
+    const commits =
+      garageDoors.length > 0
+        ? garageDoors.some(
+            (d) =>
+              d.open &&
+              Math.hypot(car.pos.x - d.center.x, car.pos.y - d.center.y) <=
+                CAR.departRadius,
+          )
+        : Math.hypot(car.pos.x - car.home.x, car.pos.y - car.home.y) >
+          CAR.departDistance;
+    if (commits) {
       // The car door's destination is the level's own to name — the door
       // whose id is the car landmark's kind, same lookup the tap uses.
       const door = runLevelDef(state).travelDoors?.find((d) => d.id === "car");

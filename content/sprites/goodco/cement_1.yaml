@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: cement_1
+family: goodco
+size: [16, 16]
+description: >
+  The cement garage floor's rare tile — the same poured concrete carrying a
+  hairline crack and a darker cure patch.
+subject:
+  kind: "ground tile (garage floor, rare variant)"
+  build: "a patch of poured concrete with a hairline crack across it"
+  features: "a thin meandering crack, a darker cure blotch"
+  accent: "flat middle greys"
+  flavor: "the slab settled decades ago and split, and nobody minded"
+palette:
+  C: "#83858e" # base concrete
+  c: "#7b7d86" # worn concrete
+  V: "#8c8e97" # light fleck
+  s: "#74767f" # dark speckle
+  k: "#63656e" # crack shadow
+grid: |
+  CCCCCCcCCCCCCCCC
+  CCCVCCCCCCCsCCCC
+  CcCCCCCCkCCCCCcC
+  CCCCCCCkCCCCCCCC
+  CCCCsCCkCCCCCCCC
+  CCCCCCkCCCcCCCCC
+  CVCCCCkCCCCCCVCC
+  CCCCCkCCCCCCCCCC
+  CCCCCkCCCsCcccCC
+  CcCCVCkCCCCcccCC
+  CCCCCCkCCCCVccCC
+  CCCCCCskCCCCCCCC
+  CCCVCCCCkCCCCCCC
+  CCCCCCCCkCcCCVCC
+  CcCCCCCCCkCCCCCC
+  CCCCCsCCCCkCCcCC

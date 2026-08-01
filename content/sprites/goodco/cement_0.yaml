@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: cement_0
+family: goodco
+size: [16, 16]
+description: >
+  Poured cement garage floor — mottled grey concrete with no seams and no
+  tile grid, just the faint speckle of thirty years of feet and wheels.
+subject:
+  kind: "ground tile (garage floor)"
+  build: "a patch of poured concrete, seamless and matte"
+  features: "fine aggregate speckle, faint wear darkening"
+  accent: "flat middle greys"
+  flavor: "the floor a decade of the ship dripped onto"
+palette:
+  C: "#83858e" # base concrete
+  c: "#7b7d86" # worn concrete
+  V: "#8c8e97" # light fleck
+  s: "#74767f" # dark speckle
+grid: |
+  CCCCCCcCCCCCCCCC
+  CCCVCCCCCCCsCCCC
+  CcCCCCCCCCCCCCcC
+  CCCCCCCCVCCCCCCC
+  CCCCsCCCCCCCCCCC
+  CCCCCCCCCCcCCCCC
+  CVCCCCcCCCCCCVCC
+  CCCCCCCCCCCCCCCC
+  CCCCCCCCCsCCCCCC
+  CcCCVCCCCCCCCCcC
+  CCCCCCCCCCCVCCCC
+  CCCCCCsCCCCCCCCC
+  CCCVCCCCCCCCCCCC
+  CCCCCCCCCcCCCVCC
+  CcCCCCCCCCCCCCCC
+  CCCCCsCCCCCCCcCC

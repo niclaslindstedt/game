@@ -252,7 +252,16 @@ describe("generated levels", () => {
           // in the second and not the first is behind a lock; a thing reachable
           // in neither is a carve problem, and the reachability suite above owns
           // that one — this test is about the KEYS.
-          const grid = buildNavGrid(state);
+          // An APPROACH door (the garage door) opens for anybody who walks
+          // up — it can never trap anything, so its chain reads as open
+          // floor in BOTH grids and only KEY doors are interrogated.
+          const approachParts = new Set(
+            state.doors.filter((d) => d.approach).flatMap((d) => d.obstacleIds),
+          );
+          const grid = buildNavGrid({
+            ...state,
+            obstacles: state.obstacles.filter((o) => !approachParts.has(o.id)),
+          });
           const doorParts = new Set(state.doors.flatMap((d) => d.obstacleIds));
           const unlocked = buildNavGrid({
             ...state,
@@ -301,8 +310,11 @@ describe("generated levels", () => {
       for (const size of SIZES)
         for (const seed of SEEDS) {
           const def = resolveLevelDef(id, seed, size);
-          for (const door of def.doors ?? [])
+          for (const door of def.doors ?? []) {
+            // An approach door (the garage door) has no key by design.
+            if (door.opens === "approach") continue;
             expect(keys.has(door.id), `${id}/${size}/${seed} door`).toBe(true);
+          }
           for (const lift of def.elevators ?? [])
             if (lift.opensWith)
               expect(

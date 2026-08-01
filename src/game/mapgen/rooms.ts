@@ -38,6 +38,7 @@ import {
   type Enclosure,
   type MapArea,
 } from "./areas.ts";
+import type { MapPlan } from "./types.ts";
 
 /** One carved cell: an axis-aligned rectangle in world px, plus what it IS. */
 export type Chamber = {
@@ -325,6 +326,70 @@ function unionFind(count: number) {
  * @param promised   districts the map must grow whatever the weights roll (see
  *                   `assignAreas`) — the keyed rooms, one per key
  */
+/**
+ * AUTHORED CHAMBERS — a static venue's floor plan, drawn instead of grown
+ * (see `MapBlueprint.plan`). The rooms come in with their areas already
+ * named; the borders are found exactly as the carve finds them, and their
+ * treatment is DERIVED from the areas' enclosures by the same rule — with
+ * one difference: which hard border carries a doorway is AUTHORED (`doors`
+ * names the area pairs) rather than rolled by a spanning tree. No rng at
+ * all: a plan is a picture, and it comes out the same picture every time.
+ */
+export function planChambers(
+  plan: MapPlan,
+  areas: MapArea[],
+  doorWidth: number,
+  defaultWall: string,
+): ChamberGrid {
+  const chambers: Chamber[] = plan.rooms.map((room, id) => ({
+    id,
+    x: room.rect.x,
+    y: room.rect.y,
+    w: room.rect.width,
+    h: room.rect.height,
+    area: room.area,
+  }));
+  const raw = findBorders(chambers);
+  const areaOf = (id: number): MapArea =>
+    areaById(areas, (chambers[id] as Chamber).area);
+  const wantsDoor = (a: number, b: number): boolean =>
+    (plan.doors ?? []).some(
+      (d) =>
+        (d.between[0] === (chambers[a] as Chamber).area &&
+          d.between[1] === (chambers[b] as Chamber).area) ||
+        (d.between[1] === (chambers[a] as Chamber).area &&
+          d.between[0] === (chambers[b] as Chamber).area),
+    );
+  const borders: Border[] = raw.map((border) => {
+    const strength = borderEnclosure(
+      areaOf(border.a).enclosure,
+      areaOf(border.b).enclosure,
+    );
+    const link: BorderLink =
+      strength === "none"
+        ? "open"
+        : wantsDoor(border.a, border.b)
+          ? strength === "soft"
+            ? "arch"
+            : "door"
+          : "closed";
+    return {
+      ...border,
+      link,
+      material:
+        borderOwner(areaOf(border.a), areaOf(border.b), areas).wall ??
+        defaultWall,
+    };
+  });
+  const neighbors: number[][] = chambers.map(() => []);
+  for (const b of borders) {
+    if (b.link === "closed") continue;
+    (neighbors[b.a] as number[]).push(b.b);
+    (neighbors[b.b] as number[]).push(b.a);
+  }
+  return { chambers, borders, neighbors };
+}
+
 export function carveChambers(
   width: number,
   height: number,

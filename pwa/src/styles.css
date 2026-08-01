@@ -6742,6 +6742,11 @@ html.app-locked body {
 
 .inv-footer .modal-close-btn {
   grid-column: 2;
+  /* Pin CLOSE to the rail's one row. The pouch sits AFTER it in the cascade of
+     auto-placement (purse, pouch, CLOSE in DOM order), so without an explicit
+     row the col-2 button lands BELOW the col-3 pouch — a second row nobody
+     asked for, with the readouts floating above the button. */
+  grid-row: 1;
 }
 
 /* A FOOT-RAIL READOUT — the purse, and one per ammunition kind. D2 hangs its
@@ -6795,10 +6800,16 @@ html.app-locked body {
      so the pouch takes the empty right and the foot reads gold · close · rounds
      rather than crowding the gold. */
   grid-column: 3;
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.7rem;
+  /* Wrap rather than blow the rail open: three fixed-width sockets are wider
+     than a portrait phone's whole panel, and a `1fr` grid track floors at its
+     content's min-content width — wrapping drops that floor to ONE socket, so
+     the rail keeps to the panel and the pouch stacks its kinds instead. */
+  flex-wrap: wrap;
+  gap: 0.3rem 0.7rem;
   line-height: 0;
 }
 
@@ -8327,6 +8338,19 @@ canvas.tier-artifact {
   .inv-bag-grid {
     --inv-cols: 8;
   }
+}
+
+/* THE PANEL SCROLLS — ITS SECTIONS NEVER SQUEEZE. The panel is a flex column
+   with `overflow-y: auto`, but that scrollbar only ever engages if the children
+   REFUSE to shrink: left at the default `flex-shrink: 1`, a viewport shorter
+   than the content quietly crushes `.inv-body` instead, and the fixed-size
+   canvases inside it (every PixelText and slot is `flex: 0 0 auto`) spill out
+   of their crushed boxes and paint straight over the foot rail — the doll over
+   the bag header, the header over the CLOSE row. Two classes deep so the
+   landscape `@media` re-layout above cannot out-cascade it. */
+.inventory-panel .inv-body,
+.inventory-panel .inv-footer {
+  flex-shrink: 0;
 }
 
 .drag-ghost {
@@ -12002,14 +12026,6 @@ canvas.tier-artifact {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-}
-
-.quest-log-untaken {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding-top: 0.4rem;
-  border-top: 2px solid rgba(201, 169, 92, 0.25);
 }
 
 .quest-log-close {

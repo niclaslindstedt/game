@@ -40,12 +40,16 @@ export function TitleCard({
       role="presentation"
     >
       <div className="title-card-inner">
-        <PixelText
-          font={font}
-          text={`LEVEL ${def.index}`}
-          scale={2}
-          color="#9aa3ad"
-        />
+        {/* The hub is HOME, not a rung on the campaign — it never wears a
+            level number. Every real mission announces its own. */}
+        {def.objective.type !== "hub" && (
+          <PixelText
+            font={font}
+            text={`LEVEL ${def.index}`}
+            scale={2}
+            color="#9aa3ad"
+          />
+        )}
         <PixelText font={font} text={def.name} scale={6} color="#7ef0c8" />
       </div>
     </div>

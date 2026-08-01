@@ -1610,6 +1610,26 @@ export const FIX_HUB_LEVEL: LevelDef = (() => {
   return base;
 })();
 
+// THE GARAGE twin: the hub with its bay door hung — an APPROACH door east of
+// the parked car (it slides open for anybody who walks or drives near, no
+// key; the driven car's departure books at its OPEN threshold, never by
+// radial distance) — and the whole floor `revealed` (no fog of war, ever).
+export const FIX_GARAGE_LEVEL: LevelDef = {
+  ...FIX_HUB_LEVEL,
+  id: "test_garage_level",
+  revealed: true,
+  doors: [
+    {
+      id: "test_garage_door",
+      from: { x: 800, y: 440 },
+      to: { x: 800, y: 560 },
+      radius: 8,
+      sprite: "test_garage_door",
+      opens: "approach",
+    },
+  ],
+};
+
 // A SECOND-CHAPTER level (index 2) for the seasoned-arrival rules: starting
 // here must derive the player's level from test_level's roster and hand over
 // its kit (see src/game/arrival.ts). Geometry is the reference level's.
@@ -2132,6 +2152,7 @@ export function installFixtures(force = false): void {
       test_rare_level: FIX_RARE_LEVEL,
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_hub_level: FIX_HUB_LEVEL,
+      test_garage_level: FIX_GARAGE_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,

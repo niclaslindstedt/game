@@ -62,6 +62,7 @@ import {
   chamberCenter,
   doorDistances,
   doorGaps,
+  planChambers,
   wallSegments,
   type Chamber,
   type ChamberGrid,
@@ -646,24 +647,31 @@ export function generateLevel(
   const promised = (bp.locks ?? []).map(
     (_, i) => lockable[i % Math.max(1, lockable.length)] as string,
   );
-  const grid = carveChambers(
-    spec.width,
-    spec.height,
-    spec.rooms,
-    bp.layout.minRoom,
-    bp.layout.doorWidth,
-    bp.layout.loopDoors,
-    bp.areas,
-    bp.layout.cluster,
-    bp.layout.wall,
-    rng,
-    lockable.length > 0 ? promised : [],
-  );
+  // An AUTHORED PLAN draws the rooms outright (the static hub's composed
+  // shot); everything else is grown by the BSP as always. A plan consumes no
+  // rng, so the dressing draws land on the same stream either way.
+  const grid = bp.plan
+    ? planChambers(bp.plan, bp.areas, bp.layout.doorWidth, bp.layout.wall)
+    : carveChambers(
+        spec.width,
+        spec.height,
+        spec.rooms,
+        bp.layout.minRoom,
+        bp.layout.doorWidth,
+        bp.layout.loopDoors,
+        bp.areas,
+        bp.layout.cluster,
+        bp.layout.wall,
+        rng,
+        lockable.length > 0 ? promised : [],
+      );
 
   // --- Where the search ends, and where it starts ----------------------------
   // The boss first: everything else is positioned relative to him, including the
-  // hero, whose whole job is to be far away.
-  const goal = pickGoalChamber(
+  // hero, whose whole job is to be far away. An authored plan may NAME the goal
+  // room outright (`plan.goal` — the rocket stands on the lawn, not wherever
+  // the roll lands); the rng is still drawn so a plan changes no later rolls.
+  const rolledGoal = pickGoalChamber(
     grid,
     bp.areas,
     bp.boss ? bp.boss.regions : ["center"],
@@ -671,6 +679,10 @@ export function generateLevel(
     spec.height,
     rng,
   );
+  const goal =
+    (bp.plan?.goal
+      ? grid.chambers.find((c) => c.area === bp.plan?.goal)
+      : undefined) ?? rolledGoal;
   const spawn = pickSpawnChamber(
     grid,
     bp.areas,
@@ -722,11 +734,16 @@ export function generateLevel(
       .filter((c) => areaOf(bp.areas, c).lock === true)
       .map((c) => c.id),
   );
-  const chestRooms = detourRank(
-    grid,
-    new Set([...offLimits, ...lockableIds]),
-    depth,
-  ).slice(0, Math.max(2, Math.round(grid.chambers.length / 5)));
+  // A blueprint with NO chest object pays no caches at all (the garage: a
+  // hero does not loot his own home) — the schema already warns that its
+  // dead ends pay nothing, so the silence is a choice, never an accident.
+  const wantsChests = bp.objects.some((o) => o.type === "chest");
+  const chestRooms = wantsChests
+    ? detourRank(grid, new Set([...offLimits, ...lockableIds]), depth).slice(
+        0,
+        Math.max(2, Math.round(grid.chambers.length / 5)),
+      )
+    : [];
   const chestIds = new Set(chestRooms.map((c) => c.id));
 
   // --- The vaults -----------------------------------------------------------
@@ -819,8 +836,14 @@ export function generateLevel(
     )
     .sort((a, b) => (depth[a.id] as number) - (depth[b.id] as number));
   // The trader keeps a mid-depth cell — the halfway shop every mission wants,
-  // wherever halfway turned out to be.
-  const shopRoom = throughfare[Math.floor(throughfare.length / 2)] ?? spawn;
+  // wherever halfway turned out to be. An authored plan may park him outright
+  // (`plan.stall` — the vending machine on the paved drive).
+  const shopRoom =
+    (bp.plan?.stall
+      ? grid.chambers.find((c) => c.area === bp.plan?.stall)
+      : undefined) ??
+    throughfare[Math.floor(throughfare.length / 2)] ??
+    spawn;
   // The boss's room stays quiet (a knot there floods the fight); the LIFT's room
   // does not — a guard on the way down is the whole reward for finding it.
   const quiet = new Set([bossHome.id, shopRoom.id, ...chestIds]);
@@ -1002,7 +1025,10 @@ export function generateLevel(
       // one def sharing a mutable vector is a trap waiting for the first thing
       // that writes to either.
       pos: { x: merchantAt.x, y: merchantAt.y },
-      radius: 190,
+      // Capped against the map itself: on a venue the size of the garage a
+      // full 190 swallows the whole lot, and every room announces itself as
+      // the TRADING POST.
+      radius: Math.min(190, Math.round(Math.min(width, height) / 3)),
       label: "TRADING POST",
     },
   ];
@@ -1019,7 +1045,12 @@ export function generateLevel(
     shape: "circle",
     pos: playerSpawn,
     radius: 170,
-    label: "LANDING",
+    // On an AUTHORED plan the opening cell wears its district's own name —
+    // the garage bay announces THE GARAGE, because home is a place, not an
+    // arrival. A rolled carve keeps the generic LANDING: there the caption
+    // marks the breather, and every mission's opening beat says the same
+    // thing on purpose.
+    label: bp.plan ? (areaOf(bp.areas, spawn).label ?? "LANDING") : "LANDING",
   });
 
   // --- The errand cast ------------------------------------------------------
@@ -1057,7 +1088,15 @@ export function generateLevel(
           ? vec(Math.round(goalCenter.x), Math.round(goalCenter.y))
           : o.at === "stall"
             ? vec(Math.round(merchantAt.x + 70), Math.round(merchantAt.y - 40))
-            : vec(Math.round(playerSpawn.x), Math.round(playerSpawn.y));
+            : o.at === "home"
+              ? // A fixed step off the hero's own landing — `stall`'s offset
+                // mirrored, so the two never collide when both stand near it —
+                // clamped on-map for a landing near the western/northern edge.
+                vec(
+                  Math.max(24, Math.round(playerSpawn.x - 70)),
+                  Math.max(24, Math.round(playerSpawn.y - 40)),
+                )
+              : vec(Math.round(playerSpawn.x), Math.round(playerSpawn.y));
       const mark: LevelDef["landmarks"][number] = { kind: o.kind ?? o.id, pos };
       if (o.sprite) mark.sprite = o.sprite;
       if (o.anchor) mark.anchor = o.anchor;
@@ -1111,6 +1150,33 @@ export function generateLevel(
       const to =
         gap.axis === "v" ? vec(gap.coord, gap.to) : vec(gap.to, gap.coord);
       doors.push({ id: key, from, to, radius });
+    }
+  }
+
+  // APPROACH doors (`type: door` — the garage door): hung across every
+  // doorway of the SPAWN chamber, so the hero's own bay is shut until
+  // somebody walks or drives up to a leaf. Deterministic — no rng draw, so
+  // hanging one cannot shift the rolls of anything placed after it.
+  for (const obj of bp.objects) {
+    if (obj.type !== "door") continue;
+    const radius =
+      obj.radius ??
+      bp.objects.find((o) => o.id === bp.layout.wall)?.radius ??
+      8;
+    for (const gap of doorGaps(grid, bp.layout.doorWidth)) {
+      if (gap.a !== spawn.id && gap.b !== spawn.id) continue;
+      const from =
+        gap.axis === "v" ? vec(gap.coord, gap.from) : vec(gap.from, gap.coord);
+      const to =
+        gap.axis === "v" ? vec(gap.coord, gap.to) : vec(gap.to, gap.coord);
+      doors.push({
+        id: obj.id,
+        from,
+        to,
+        radius,
+        sprite: obj.sprite ?? obj.id,
+        opens: "approach",
+      });
     }
   }
 

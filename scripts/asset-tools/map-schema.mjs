@@ -45,6 +45,7 @@ const OBJECT_TYPES = new Set([
   "row",
   "critter",
   "lair",
+  "door",
 ]);
 
 // Which extra fields each purpose is allowed to carry. `id`/`type`/`kind`/
@@ -61,9 +62,10 @@ const ALLOWED_FIELDS = {
     "cell",
     "loot",
     "areas",
+    "edge",
   ],
-  cover: ["radius", "density", "jumpable", "areas"],
-  crate: ["radius", "density", "jumpable", "loot", "areas"],
+  cover: ["radius", "density", "jumpable", "areas", "edge"],
+  crate: ["radius", "density", "jumpable", "loot", "areas", "edge"],
   chest: [],
   decor: ["density", "areas"],
   landmark: ["at", "anchor"],
@@ -83,6 +85,9 @@ const ALLOWED_FIELDS = {
   ],
   critter: ["density", "areas", "animated", "range", "speed", "scale"],
   lair: ["w", "h", "door", "doorOpen", "trigger", "areas"],
+  // An APPROACH door hung across the spawn chamber's doorways (the garage
+  // door): a chain of `radius` circles wearing `sprite`, placed by rule.
+  door: ["radius"],
 };
 
 // Purposes that may be restricted to a district. A `wall`, `chest` or `landmark`
@@ -110,7 +115,7 @@ const NEEDS_DENSITY = new Set([
   "critter",
 ]);
 
-const ANCHORS = new Set(["spawn", "goal", "stall"]);
+const ANCHORS = new Set(["spawn", "goal", "stall", "home"]);
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isPosNum = (v) => isNum(v) && v > 0;
@@ -150,6 +155,50 @@ export function validateMap(bp, refs, description = "") {
       `carveSeed must be a positive integer, got ${JSON.stringify(bp.carveSeed)}`,
     );
 
+  // ---- plan (the authored floor plan — see MapBlueprint.plan) ---------------
+  if (bp.plan !== undefined) {
+    const areaIds = new Set((bp.areas ?? []).map((a) => a.id));
+    if (!Array.isArray(bp.plan.rooms) || bp.plan.rooms.length < 2)
+      err("plan.rooms must list at least two rooms");
+    else {
+      const planAreas = new Set();
+      bp.plan.rooms.forEach((room, i) => {
+        const where = `plan.rooms[${i}]`;
+        if (!areaIds.has(room.area))
+          err(`${where}: unknown area "${room.area}"`);
+        else planAreas.add(room.area);
+        const r = room.rect ?? {};
+        if (
+          !isNum(r.x) ||
+          !isNum(r.y) ||
+          !isPosNum(r.width) ||
+          !isPosNum(r.height)
+        )
+          err(`${where}: rect needs numeric x/y and positive width/height`);
+        for (const key of Object.keys(room))
+          if (!["area", "rect"].includes(key))
+            err(`${where}: unknown field "${key}"`);
+      });
+      for (const [i, d] of (bp.plan.doors ?? []).entries()) {
+        const where = `plan.doors[${i}]`;
+        if (!Array.isArray(d.between) || d.between.length !== 2)
+          err(`${where}: between must name exactly two areas`);
+        else
+          for (const id of d.between)
+            if (!planAreas.has(id))
+              err(`${where}: names "${id}", which no plan room wears`);
+      }
+      for (const field of ["goal", "stall"]) {
+        const named = bp.plan[field];
+        if (named !== undefined && !planAreas.has(named))
+          err(`plan.${field}: names "${named}", which no plan room wears`);
+      }
+      for (const key of Object.keys(bp.plan))
+        if (!["rooms", "doors", "goal", "stall"].includes(key))
+          err(`plan: unknown field "${key}"`);
+    }
+  }
+
   const enemy = (id, where) => {
     if (id === undefined) {
       err(`missing enemy id in ${where}`);
@@ -186,7 +235,8 @@ export function validateMap(bp, refs, description = "") {
       }
       if (!isPosNum(spec.width) || !isPosNum(spec.height))
         err(`sizes.${name} needs positive width/height`);
-      if (!Number.isInteger(spec.rooms) || spec.rooms < 4)
+      // An authored plan draws its own rooms; `rooms` is ignored with one.
+      if (!bp.plan && (!Number.isInteger(spec.rooms) || spec.rooms < 4))
         err(`sizes.${name}.rooms must be an integer >= 4`);
       const min = bp.layout?.minRoom;
       // A size that cannot fit the chambers it asks for silently carves fewer,

@@ -371,9 +371,13 @@ export function validateLevel(def, refs, description = "", options = {}) {
     typeof def.merchant.parked !== "boolean"
   )
     err("merchant.parked must be a boolean");
-  for (const d of def.doors ?? [])
+  for (const d of def.doors ?? []) {
+    // An APPROACH door (the garage door) opens on proximity — no key exists
+    // for it, by design. Every KEY door still owes a story item.
+    if (d.opens === "approach") continue;
     if (!refs.doorKeys.has(d.id))
       err(`locked door "${d.id}" has no story-item key that unlocks it`);
+  }
   for (const it of def.placedItems ?? []) {
     if (it.kind === "story" && !refs.storyItems.has(it.defId))
       err(`placedItems story defId "${it.defId}" unknown`);

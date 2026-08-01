@@ -344,6 +344,12 @@ export type LevelDef = {
    * theme park) stows it again. Omitted = suited.
    */
   heroSuited?: boolean;
+  /**
+   * The map starts FULLY EXPLORED — no fog of war, ever. For venues the hero
+   * knows by heart (his own garage): the whole floor is lit from the first
+   * frame and the minimap draws complete. Omitted = the usual creeping fog.
+   */
+  revealed?: boolean;
   /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
   foes: string;
   /**
@@ -593,6 +599,15 @@ export type LevelDef = {
      * reason.
      */
     within?: Zone[];
+    /**
+     * WALL-HUGGING placement: candidates are drawn along the borders of the
+     * line's `within` rects (inset by the prop's radius plus the wall's own)
+     * instead of anywhere on their floor. Furniture stands against walls —
+     * a workbench in the middle of the garage floor is a scatter artifact,
+     * one against the back wall is a garage. Requires `within` rect zones;
+     * ignored without them.
+     */
+    edge?: boolean;
   }[];
   /**
    * Deliberate architecture: each segment is expanded into a chain of solid
@@ -774,6 +789,16 @@ export type LevelDef = {
     from: Vec2;
     to: Vec2;
     radius: number;
+    /** The obstacle-chain sprite; defaults to `door_locked`. The garage's
+     * roll-up slats wear `garage_door`. */
+    sprite?: string;
+    /**
+     * How it opens: `key` (the default — a story item whose `unlocks` names
+     * this door, carried up to it) or `approach` — it slides open for anybody
+     * who simply walks or drives up (the garage door; no key exists, and its
+     * opening fires `garageDoorOpened` for the roll-up animation).
+     */
+    opens?: "key" | "approach";
   }[];
   /**
    * LAIRS: a named monster lives in this house, and comes OUT of it.

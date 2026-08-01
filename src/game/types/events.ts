@@ -713,6 +713,10 @@ export type GameEvent =
   | { type: "storyItemCollected"; defId: string }
   /** A locked door recognized its key and slid open. */
   | { type: "doorOpened"; pos: Vec2 }
+  /** THE GARAGE DOOR rolled up — an approach door opened for a hero (or the
+   * driven car) pulling up to it. The app draws the roll-up and rattles the
+   * chain drive; the obstacles are already gone when this fires. */
+  | { type: "garageDoorOpened"; pos: Vec2 }
   /**
    * A LAIR opened: the hero walked up to an occupied house and whoever lives
    * there came out to meet him (see lairs.ts). The engine has already put the

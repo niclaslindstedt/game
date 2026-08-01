@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: workbench
+family: goodco
+size: [16, 14]
+description: >
+  The hero's workbench — a heavy steel-topped bench with a vise bolted to
+  one end, tools strewn where they were last dropped, and a shelf of spares
+  underneath. Ten years of the ship were built on it.
+subject:
+  kind: "solid obstacle prop"
+  build: "a heavy workbench: steel top on boxed legs, a bench vise at one end"
+  features: "a bolted-on vise, loose tools on the top, a cluttered under-shelf"
+  accent: "worn steel and grease over deep red vise iron"
+  flavor: "the bench a decade of the ship was filed, tapped and bolted on"
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # steel top highlight
+  V: "#9095a5" # light steel
+  v: "#60687e" # slate steel
+  b: "#3f4553" # shadowed steel
+  r: "#d83a3a" # vise iron
+  y: "#d8b74a" # tool handles
+grid: |
+  ..OrrO..........
+  ..OrrOO.........
+  .OOOOOOO........
+  OOOOOOOOOOOOOOOO
+  OTTTTyTTTTvTTTTO
+  OVVVVVVVyVVVVVVO
+  ObbbbbbbbbbbbbbO
+  .Obv........vbO.
+  .Obv........vbO.
+  .ObOOOOOOOOOObO.
+  .Obvyv..vrv.vbO.
+  .Obv........vbO.
+  .OO..........OO.
+  ................

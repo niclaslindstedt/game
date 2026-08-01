@@ -91,7 +91,11 @@ export type Effect = {
     | "elite"
     // A bare axle grinding the road (the car's `carGrind`): a shower of hot
     // metal sparks thrown back along the travel and pulled down by gravity.
-    | "sparks";
+    | "sparks"
+    // THE GARAGE DOOR rolling up (`garageDoorOpened`): the slat chain the
+    // engine's obstacles no longer hold, redrawn sliding up out of the
+    // doorway. `pos` is one end of the segment, `to` the other.
+    | "garageDoor";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -779,6 +783,49 @@ function drawEffectPass(
           x - Math.round(debris.width / 2),
           groundY - Math.round(debris.height / 2),
         );
+        ctx.restore();
+      }
+      continue;
+    }
+
+    if (effect.kind === "garageDoor") {
+      // The roll-up: the engine dropped the door's obstacles the tick it
+      // opened, so this redraws the slat chain cosmetically — every segment's
+      // bottom edge rising into the lintel (the visible slab is the sprite's
+      // TOP fraction at a fixed top edge), with a light fade so the last
+      // pixels don't pop. Eased to start slow like a chain drive taking up.
+      const duration = effect.durationMs ?? 700;
+      const age = duration - (effect.untilMs - timeMs);
+      const t = Math.min(1, Math.max(0, age / duration));
+      const eased = t * t * (3 - 2 * t);
+      const slab = spriteByName(assets.sprites, "garage_door");
+      const far = effect.to;
+      if (slab && far && eased < 1) {
+        const ddx = far.x - effect.pos.x;
+        const ddy = far.y - effect.pos.y;
+        const len = Math.hypot(ddx, ddy);
+        const steps = Math.max(1, Math.round(len / slab.width));
+        const keep = 1 - eased;
+        const h = Math.max(1, Math.round(slab.height * keep));
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, keep * 3);
+        for (let i = 0; i <= steps; i++) {
+          const wx = effect.pos.x + (ddx * i) / steps;
+          const wy = effect.pos.y + (ddy * i) / steps;
+          const ax = bodyAnchorX(wx, wy, camera.x, camera.y);
+          const ay = bodyAnchorY(wx, wy, camera.x, camera.y);
+          ctx.drawImage(
+            slab,
+            0,
+            0,
+            slab.width,
+            h,
+            ax - Math.round(slab.width / 2),
+            ay - slab.height,
+            slab.width,
+            h,
+          );
+        }
         ctx.restore();
       }
       continue;

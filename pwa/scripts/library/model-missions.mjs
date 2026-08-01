@@ -48,6 +48,7 @@ export const LEVEL_FIELDS = {
   height: "the SIZE row, and the scale the map render is drawn at",
   gravity: "the GRAVITY row",
   heroSuited: "the SUIT note",
+  revealed: "the KNOWN GROUND note — no fog of war on home turf",
   mobLevels: "the difficulty ladder table",
   intendedLevel: "the difficulty ladder table's reference hero",
   loot: "the loot section — the pools, the relics, the powers, the trophy",
@@ -324,6 +325,7 @@ function missionModel(level, order) {
     size: { width: level.width, height: level.height },
     gravity: level.gravity,
     suited: level.heroSuited !== false,
+    revealed: level.revealed === true,
     exitTo: level.exitTo ? missionLink(level.exitTo) : null,
     gates: (level.gates ?? []).map((gate) => ({
       to: missionLink(gate.to),

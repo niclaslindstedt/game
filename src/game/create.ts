@@ -807,6 +807,10 @@ export function createGame(
 
   // The hero has seen where he lands: the map opens with the spawn uncovered.
   revealAround(state, playerSpawn);
+  // A `revealed` venue (his own garage) he knows by heart: the whole floor
+  // is lit from the first frame — nothing ever re-fogs, so one fill is all
+  // it takes.
+  if (def.revealed) state.explored.fill(1);
 
   // The difficulty's head start: pre-allocated stat points (the gentler rungs
   // open with a few level-ups' worth of training banked). Applied before any
@@ -1409,9 +1413,10 @@ function buildDoors(
 ): DoorState[] {
   const doors: DoorState[] = [];
   for (const door of def.doors ?? []) {
+    const sprite = door.sprite ?? "door_locked";
     const chain = expandSegment(
-      "door_locked",
-      "door_locked",
+      sprite,
+      sprite,
       door.from,
       door.to,
       door.radius,
@@ -1419,12 +1424,16 @@ function buildDoors(
       takeId,
     );
     obstacles.push(...chain);
-    doors.push({
+    const state: DoorState = {
       id: door.id,
       center: vec((door.from.x + door.to.x) / 2, (door.from.y + door.to.y) / 2),
       obstacleIds: chain.map((o) => o.id),
       open: false,
-    });
+      from: vec(door.from.x, door.from.y),
+      to: vec(door.to.x, door.to.y),
+    };
+    if (door.opens === "approach") state.approach = true;
+    doors.push(state);
   }
   return doors;
 }
@@ -1466,6 +1475,30 @@ function distToPath(def: LevelDef, spawn: Vec2, p: Vec2): number {
  * keeps from its neighbours. */
 const PICKUP_CLEARANCE = PLAYER.radius * 2 + OBSTACLES.spacing;
 
+/** A point along a rect's border, inset by `inset` — the wall-hugging
+ * candidate an `edge` scatter line draws (furniture against the room's own
+ * walls, the floor kept open). */
+function edgePoint(
+  rng: Rng,
+  rect: { x: number; y: number; width: number; height: number },
+  inset: number,
+): Vec2 {
+  const w = Math.max(0, rect.width - inset * 2);
+  const h = Math.max(0, rect.height - inset * 2);
+  const side = Math.floor(rng() * 4);
+  const along = rng();
+  switch (side) {
+    case 0:
+      return vec(rect.x + inset + along * w, rect.y + inset);
+    case 1:
+      return vec(rect.x + inset + along * w, rect.y + rect.height - inset);
+    case 2:
+      return vec(rect.x + inset, rect.y + inset + along * h);
+    default:
+      return vec(rect.x + rect.width - inset, rect.y + inset + along * h);
+  }
+}
+
 function scatterObstacles(
   rng: Rng,
   def: LevelDef,
@@ -1496,11 +1529,31 @@ function scatterObstacles(
         radius = boundingRadius(half);
         sprite = `${base}_${w}x${h}`;
       }
+      // EDGE placement candidates hug the borders of the line's district
+      // rects — furniture stands against the walls of its room, keeping the
+      // floor open (the garage bay's workbench world). The inset holds the
+      // prop clear of the wall chain itself.
+      const edgeRects: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      }[] =
+        spec.edge && spec.within
+          ? spec.within.flatMap((z) => (z.shape === "rect" ? [z.rect] : []))
+          : [];
       for (let attempts = 0; attempts < 30; attempts++) {
-        const pos = vec(
-          randomRange(rng, radius + 8, def.width - radius - 8),
-          randomRange(rng, radius + 8, def.height - radius - 8),
-        );
+        const pos =
+          edgeRects.length > 0
+            ? edgePoint(
+                rng,
+                edgeRects[Math.floor(rng() * edgeRects.length)]!,
+                radius + 14,
+              )
+            : vec(
+                randomRange(rng, radius + 8, def.width - radius - 8),
+                randomRange(rng, radius + 8, def.height - radius - 8),
+              );
         const clear =
           // A prop that belongs to a DISTRICT only lands inside one (see
           // `within`): the cactus stays in the desert, the crates in the
