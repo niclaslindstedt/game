@@ -32,7 +32,7 @@ export function escapeVdf(value) {
  */
 export const PLATFORM_DIRS = {
   windows: "win-unpacked",
-  macos: "mac-universal",
+  macos: "mac",
   linux: "linux-unpacked",
 };
 

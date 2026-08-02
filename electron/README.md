@@ -98,7 +98,7 @@ being shipped by accident.
 
 ```sh
 npm run release:win     # release/win-unpacked/    — for the STORE
-npm run release:mac     # release/mac-universal/   (Apple Silicon + Intel)
+npm run release:mac     # release/mac/             (x64; Rosetta on Apple Silicon)
 npm run release:linux   # release/linux-unpacked/
 
 npm run dist:win        # …the same, but keeping the DEVELOPER tooling in
