@@ -172,6 +172,11 @@ module.exports = {
     // One depot for both Apple Silicon and Intel — the arch belongs on the
     // target entry, not on this block.
     target: [{ target: "dir", arch: "universal" }],
+    icon: "../pwa/public/maskable-icon-512x512.png",
+    // steamworks.js carries both named prebuilt addons in both npm installs.
+    // They are already architecture-specific files, not two slices for lipo;
+    // keep the identical pair from one side when the two ASARs are merged.
+    x64ArchFiles: "**/steamworks.js/dist/osx/*.node",
     extraFiles: STEAM_REDIST.mac,
     category: "public.app-category.action-games",
     // Gatekeeper blocks an un-notarized app even when Steam launches it, so a
