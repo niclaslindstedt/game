@@ -38,6 +38,19 @@ import type {
   TransportEvents,
 } from "./transport.ts";
 
+// macOS defaults `net.inet.udp.maxdgram` to 9,216 bytes. Keep each framed
+// datagram comfortably below that; a live run snapshot is commonly larger and
+// is reassembled before anything above this transport sees it.
+const DATAGRAM_PAYLOAD_BYTES = 8_000;
+// Outside the frame-type vocabulary. Ordinary payloads stay byte-for-byte
+// compatible so an old peer can still read the handshake and be refused by
+// PROTOCOL_VERSION rather than timing out.
+const FRAGMENT = 0xff;
+const FRAGMENT_HEADER_BYTES = 5;
+const MAX_FRAGMENT_COUNT = 32;
+const MAX_ASSEMBLIES = 64;
+const ASSEMBLY_TTL_MS = 2_000;
+
 /**
  * NETWORK ADVERSITY, injected at the seam.
  *
@@ -116,6 +129,16 @@ export function createUdpTransport(
   let events: TransportEvents | null = null;
   let closed = false;
   const peers = new Map<PeerKey, Reliability>();
+  let nextGroup = 1;
+  const assemblies = new Map<
+    string,
+    {
+      at: number;
+      from: PeerKey;
+      parts: (Uint8Array | undefined)[];
+      received: number;
+    }
+  >();
 
   // THE WEATHER, if any. `held` is the in-flight queue in BOTH directions —
   // one list, because a datagram waiting to leave and one waiting to arrive are
@@ -169,7 +192,7 @@ export function createUdpTransport(
     const made = createReliability({
       now,
       send: (data) => sendRaw(key, data),
-      deliver: (payload) => events?.onPacket({ from: key, data: payload }),
+      deliver: (payload) => deliver(key, payload),
       onDead: (reason) => {
         peers.delete(key);
         events?.onPeerLost(key, reason);
@@ -177,6 +200,58 @@ export function createUdpTransport(
     });
     peers.set(key, made);
     return made;
+  }
+
+  /** Remove this transport's envelope and reassemble a fragmented payload. */
+  function deliver(from: PeerKey, payload: Uint8Array): void {
+    const kind = payload[0];
+    if (kind !== FRAGMENT) {
+      events?.onPacket({ from, data: payload });
+      return;
+    }
+    if (payload.byteLength < FRAGMENT_HEADER_BYTES) return;
+    const view = new DataView(
+      payload.buffer,
+      payload.byteOffset,
+      payload.byteLength,
+    );
+    const group = view.getUint16(1);
+    const index = payload[3] as number;
+    const count = payload[4] as number;
+    if (
+      group === 0 ||
+      count < 2 ||
+      count > MAX_FRAGMENT_COUNT ||
+      index >= count
+    )
+      return;
+
+    const key = `${from}|${group}`;
+    let assembly = assemblies.get(key);
+    if (!assembly || assembly.parts.length !== count) {
+      if (assemblies.size >= MAX_ASSEMBLIES) {
+        const oldest = assemblies.keys().next();
+        if (!oldest.done) assemblies.delete(oldest.value);
+      }
+      assembly = { at: now(), from, parts: Array(count), received: 0 };
+      assemblies.set(key, assembly);
+    }
+    if (assembly.parts[index]) return;
+    assembly.parts[index] = payload.slice(FRAGMENT_HEADER_BYTES);
+    assembly.received++;
+    if (assembly.received !== count) return;
+
+    let length = 0;
+    for (const part of assembly.parts) length += part?.byteLength ?? 0;
+    const data = new Uint8Array(length);
+    let offset = 0;
+    for (const part of assembly.parts) {
+      if (!part) return;
+      data.set(part, offset);
+      offset += part.byteLength;
+    }
+    assemblies.delete(key);
+    events?.onPacket({ from: assembly.from, data });
   }
 
   function sendRaw(key: PeerKey, data: Uint8Array): void {
@@ -238,7 +313,34 @@ export function createUdpTransport(
 
     send(to, data, mode) {
       if (closed) return;
-      peerFor(to).send(data, mode === "reliable");
+      const peer = peerFor(to);
+      const reliable = mode === "reliable";
+      if (data.byteLength <= DATAGRAM_PAYLOAD_BYTES) {
+        peer.send(data, reliable);
+        return;
+      }
+
+      const partBytes = DATAGRAM_PAYLOAD_BYTES - FRAGMENT_HEADER_BYTES;
+      const count = Math.ceil(data.byteLength / partBytes);
+      if (count > MAX_FRAGMENT_COUNT) {
+        events?.onError(`UDP payload too large (${data.byteLength} bytes)`);
+        return;
+      }
+      const group = nextGroup;
+      nextGroup = (nextGroup + 1) & 0xffff;
+      if (nextGroup === 0) nextGroup = 1;
+      for (let index = 0; index < count; index++) {
+        const start = index * partBytes;
+        const end = Math.min(data.byteLength, start + partBytes);
+        const fragment = new Uint8Array(FRAGMENT_HEADER_BYTES + end - start);
+        const view = new DataView(fragment.buffer);
+        fragment[0] = FRAGMENT;
+        view.setUint16(1, group);
+        fragment[3] = index;
+        fragment[4] = count;
+        fragment.set(data.subarray(start, end), FRAGMENT_HEADER_BYTES);
+        peer.send(fragment, reliable);
+      }
     },
 
     ping(to) {
@@ -252,12 +354,17 @@ export function createUdpTransport(
     tick() {
       releaseDue();
       for (const peer of peers.values()) peer.update();
+      const cutoff = now() - ASSEMBLY_TTL_MS;
+      for (const [key, assembly] of assemblies) {
+        if (assembly.at < cutoff) assemblies.delete(key);
+      }
     },
 
     close() {
       if (closed) return;
       closed = true;
       peers.clear();
+      assemblies.clear();
       held.length = 0;
       try {
         socket?.close();
