@@ -176,7 +176,15 @@ page, rather than shipping the phone's chosen moment at a different aspect.
 
 **The capsules are the one thing here with no generator.** They are marketing
 art with the logo laid out per aspect ratio, and the repo has no tooling that
-would produce something honest at 748×896. Draw them.
+would produce something honest at 748×896. Draw them — or generate them from
+[`store/capsules/PROMPTS.md`](store/capsules/PROMPTS.md), which carries a
+prompt per raster written off `docs/art-style.md`, the brand palette and the
+hero's own sprite description, plus the compositions each aspect ratio wants.
+
+Whichever route: **the lettering is never generated.** An image model cannot
+spell reliably, so every capsule is made with the logo area left empty and the
+real wordmark — the game's own pixel font — composited in afterwards. That also
+keeps the store lettering identical to the game's.
 
 ## 4. Build
 
