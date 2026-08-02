@@ -47,12 +47,8 @@ concurrency:
 
 permissions:
   contents: read
-  # The website build resolves @niclaslindstedt/oss-framework from GitHub
-  # Packages via npm ci — needs package-read scope.
-  packages: read
 
 env:
-  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
   # The prebuilt Electron binary is a ~100 MB download that neither the
   # typecheck nor the unit tests need — the TypeScript definitions ship in the
   # npm package itself.

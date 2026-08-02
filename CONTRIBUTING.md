@@ -6,9 +6,6 @@ environment, the conventions we follow, and how to get a change merged.
 ## Prerequisites
 
 - **Node.js ≥ 24** — pinned in `.nvmrc` (`nvm use`); CI resolves the same file.
-- **`GITHUB_PAT` environment variable** — a GitHub personal access token with
-  the `read:packages` scope, required to install
-  `@niclaslindstedt/oss-framework` from GitHub Packages (see `.npmrc`).
 - **GNU make** — the canonical developer entry points.
 - Optional: `shellcheck` and `actionlint` for `make shellcheck` / `make actionlint`.
 

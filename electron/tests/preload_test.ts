@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import { NET_PORT_CHANNEL, SHELL_CHANNEL } from "../src/channels";
 
 const PRELOAD_SOURCE = readFileSync(
-  fileURLToPath(new URL("../src/preload.ts", import.meta.url)),
+  resolve(process.cwd(), "src/preload.ts"),
   "utf8",
 );
 

@@ -19,6 +19,8 @@ node_modules/
 
 # Agent skill playbooks are templated upstream; keep their formatting stable
 .agent/
+.agents/
+.codex/
 
 # The mod reference catalog is generated AND byte-compared by its own drift test
 # (tests/content/mod_catalog_test.ts). Two tools that both want to write a file

@@ -3,30 +3,6 @@
 Common failure modes and their fixes. If your problem is not listed, open an
 issue with the output of the failing command.
 
-## Installing
-
-### `npm error Failed to replace env in config: ${GITHUB_PAT}`
-
-`.npmrc` references the `GITHUB_PAT` environment variable and npm refuses to
-run while it is unset. Export a GitHub personal access token with the
-`read:packages` scope:
-
-```sh
-export GITHUB_PAT=ghp_yourtoken
-```
-
-### `401 Unauthorized` / `403 Forbidden` from `npm.pkg.github.com`
-
-The token is set but invalid: expired, revoked, or missing the
-`read:packages` scope. Regenerate it at <https://github.com/settings/tokens>.
-
-### CI fails installing `@niclaslindstedt/oss-framework`
-
-The workflows use the `GITHUB_PAT` repository secret when present and fall
-back to the workflow's own token. If the fallback lacks access to the
-package, add a `GITHUB_PAT` secret (Settings → Secrets → Actions) containing
-a `read:packages` token.
-
 ## Building
 
 ### `extract-source-data: src/version.ts (…) disagrees with package.json (…)`

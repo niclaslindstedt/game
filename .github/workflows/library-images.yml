@@ -45,15 +45,10 @@ on:
 
 permissions:
   contents: read
-  # npm ci resolves @niclaslindstedt/oss-framework from GitHub Packages.
-  packages: read
 
 concurrency:
   group: library-images
   cancel-in-progress: true
-
-env:
-  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
 
 jobs:
   images:

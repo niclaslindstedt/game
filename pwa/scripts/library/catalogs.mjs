@@ -385,11 +385,6 @@ const platformAchievements = await import(
 const achievementTotals = await import(
   pathToFileURL(join(REPO, "pwa/src/game/achievement-totals.ts")).href
 );
-// The effort ladder's point weights, straight out of oss-framework — the same
-// constant the shelf and the detail card price a badge with.
-const frameworkAchievements =
-  await import("@niclaslindstedt/oss-framework/achievements");
-
 /** Every badge the game can award, in shelf order. */
 export const ACHIEVEMENTS = achievementDefs.ACHIEVEMENTS;
 /** The browser's sections, in display order, and their display names. */
@@ -398,8 +393,8 @@ export const CATEGORY_LABELS = achievementDefs.CATEGORY_LABELS;
 /** App: a blank lifetime ledger — the honest way to ask a counter badge what
  * its GOAL is, since a goal is only ever reported alongside a live tally. */
 export const emptyLifetimeTotals = achievementTotals.emptyTotals;
-/** Framework: what one badge of each tier is worth, in the game's own points. */
-export const TIER_POINTS = frameworkAchievements.TIER_POINTS;
+/** App: what one badge of each effort class is worth. */
+export const ACHIEVEMENT_POINTS = achievementDefs.ACHIEVEMENT_POINTS;
 /** App: whether a badge is one the platform lists carry (Game Center, Steam). */
 export const isPlatformAchievement = platformAchievements.isPlatformAchievement;
 /** App: the curated platform list, and the caps that shape it. */

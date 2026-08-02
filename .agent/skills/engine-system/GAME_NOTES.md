@@ -12,7 +12,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   text, level-up chooser, inventory) are `GamePhase` values — `step()`
   freezes on anything but `playing`, and the UI resumes via exported
   mutators. Import `src/lib` through `@game/lib/*` (never relative) so
-  oss-framework extraction stays a prefix swap.
+  reusable code can move without rewriting every caller.
 - **Cross-level modifiers (2026-07, difficulty ladder):** a setting that
   scales EVERY level (difficulty) is its own defs catalog
   (`defs/difficulties.ts`) threaded through `createGame(seed, levelId,
@@ -306,9 +306,9 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   stays app-side (the tokens/hardcore precedent): the whole system lives in
   `pwa/src/game/achievement-totals.ts` (pure lifetime counters + the
   event reducer), `achievement-defs.ts` (the badge catalog), and
-  `achievements.ts` (the persisted store on the oss-framework ledger —
+  `achievements.ts` (the custom persisted unlock store —
   `applyUnlocks`/`clearUnseen` from
-  `@niclaslindstedt/oss-framework/achievements`). The engine's ONLY change
+  all implemented locally). The engine's ONLY change
   was identity plumbing: `Equipment.uniqueId` stamped by `mintUnique` and
   carried on `itemCollected`, so the app books WHICH unique dropped by id,
   never by display name. GameScreen feeds the store right after

@@ -36,20 +36,13 @@ on:
 # `permissions:` block (see OSS_SPEC §10.3).
 permissions: {}
 
-env:
-  # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc).
-  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
-
 jobs:
   release:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     # contents: write — this job pushes the release commit and the tag.
-    # packages: read — npm ci resolves @niclaslindstedt/oss-framework from
-    # GitHub Packages when the GITHUB_PAT fallback is `github.token`.
     permissions:
       contents: write
-      packages: read
     outputs:
       version: ${{ steps.bump.outputs.version }}
       tag: ${{ steps.bump.outputs.tag }}

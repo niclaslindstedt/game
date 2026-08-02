@@ -121,7 +121,7 @@ Author the new game on the untouched engine, one catalog at a time:
       CNAME to the GitHub Pages origin. The domain mentions in `pages.yml`
       are comments that already defer to `game.config.json`.
 - [ ] Provision a `GITHUB_PAT` with `read:packages` for
-      `@niclaslindstedt/oss-framework` (see `.npmrc`); CI falls back to the
+      any private packages the new game adds; CI falls back to the
       workflow token.
 - [ ] Confirm the per-slot precache ids changed with `cacheIdPrefix` (they
       derive from it in `pwa/src/app/pwa.ts`).

@@ -12,23 +12,7 @@ Install **Node.js 24** (the exact pin lives in [`.nvmrc`](../.nvmrc)):
 nvm install && nvm use   # reads .nvmrc
 ```
 
-## 2. GitHub Packages auth
-
-The app depends on
-[`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework),
-which is published to GitHub Packages. GitHub's npm registry requires
-authentication even for public reads, so create a
-[personal access token](https://github.com/settings/tokens) with the
-`read:packages` scope and export it before any npm command:
-
-```sh
-export GITHUB_PAT=ghp_yourtoken
-```
-
-Put it in your shell profile — [`.npmrc`](../.npmrc) references the variable
-on every npm invocation, and npm errors out if it is unset.
-
-## 3. Install and run
+## 2. Install and run
 
 ```sh
 git clone https://github.com/niclaslindstedt/game.git

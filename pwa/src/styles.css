@@ -12,7 +12,6 @@
    classes — put shell styling there, app styling here. */
 
 @import "tailwindcss";
-@import "@niclaslindstedt/oss-framework/styles.css";
 /* The shared window skin (`.pixel-panel` + its tokens). It sits in its own file
    because the LIBRARY's static pages inline the very same bytes — see the
    header there. */

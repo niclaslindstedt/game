@@ -35,7 +35,7 @@ import {
   PLATFORM_POINT_BUDGET,
   STEAM_ACHIEVEMENTS,
   STEAM_FULL_CATALOG,
-  TIER_POINTS,
+  ACHIEVEMENT_POINTS,
   UNIQUE_DEFS,
   emptyLifetimeTotals,
   isPlatformAchievement,
@@ -62,9 +62,9 @@ export const ACHIEVEMENT_FIELDS = {
   done: "not reader-facing: the condition is published as `desc`, in words",
 };
 
-/** The tiers in effort order — the framework's ladder, lowest weight first. */
-const TIER_ORDER = Object.keys(TIER_POINTS).sort(
-  (a, b) => TIER_POINTS[a] - TIER_POINTS[b],
+/** The effort classes in ascending point order. */
+const TIER_ORDER = Object.keys(ACHIEVEMENT_POINTS).sort(
+  (a, b) => ACHIEVEMENT_POINTS[a] - ACHIEVEMENT_POINTS[b],
 );
 
 /** Fail the build when a badge carries something no page would show. */
@@ -162,7 +162,7 @@ function badgeModel(def, points) {
     icon: def.icon,
     tier: def.tier,
     /** What the badge is worth in the game's own points (framework weights). */
-    points: TIER_POINTS[def.tier],
+    points: ACHIEVEMENT_POINTS[def.tier],
     /** A climb (a counter ladder) rather than a one-shot, and what it climbs to. */
     goal: progress ? progress.goal : null,
     subject: resolveSubject(def.subject),
@@ -299,7 +299,7 @@ export function achievementsModel() {
     /** How many badges sit on each rung of the effort ladder, and its weight. */
     tiers: TIER_ORDER.map((tier) => ({
       id: tier,
-      points: TIER_POINTS[tier],
+      points: ACHIEVEMENT_POINTS[tier],
       count: badges.filter((badge) => badge.tier === tier).length,
     })),
     /** The platform half: what travels, what the caps are, and what stays home. */

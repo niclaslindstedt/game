@@ -1239,8 +1239,8 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   (account-wide **achievements**: pure lifetime counters fed by the engine's
   per-tick events, the badge catalog — its per-level / per-difficulty /
   per-unique / per-companion groups derived from the live content
-  registries — and the persisted unlock store built on the oss-framework
-  achievements ledger; `AchievementsScreen.tsx` is the browsable shelf
+  registries — and the locally persisted unlock store;
+  `AchievementsScreen.tsx` is the browsable shelf
   reached from the title menu's ACHIEVEMENTS screen — and mid-run from the
   rebindable ACHIEVEMENTS key (Y, World of Warcraft's own) or a tap on the
   unlock banner, which raises the same shelf over the run and PAUSES it
@@ -1254,7 +1254,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   font), and `assets/` (the generated atlas + font atlas — never
   hand-edited).
 - **`pwa/src/lib/`** — generic game UI plumbing imported via the
-  `@ui/lib/*` alias and earmarked for oss-framework extraction:
+  `@ui/lib/*` alias:
   `game-loop.ts` (fixed-timestep rAF loop — it catches each frame's
   simulate/render half separately and always schedules the next frame, so a
   single thrown error can't silently unschedule the loop and freeze the run;
@@ -1293,8 +1293,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   screenshots every beat into `pwa/assets-preview/cutscenes/<id>/`,
   so a scene edit is reviewed like a storyboard contact sheet.
 - **`pwa/pwa-plugin.ts`** — emits the service worker, `version.json`,
-  and `precache-manifest.json` at build time (the pattern is borrowed from
-  the oss-framework demo). The worker precaches the app shell, parks new
+  and `precache-manifest.json` at build time. The worker precaches the app shell, parks new
   builds in `waiting`, and only takes over when the player accepts the
   update toast — a mid-run silent refresh would destroy the run.
 - **`pwa/src/app/pwa.ts`** — the per-slot precache cache id shared by
@@ -1312,16 +1311,9 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   `make screenshots` (Playwright installed ephemerally, like the playtest
   harness); `check-seo` fails the build on a named file that is missing.
 
-The app consumes
-[`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework)
-for local-first PWA plumbing (today: the `usePwaUpdate` lifecycle hook; the
-"a new version is ready" prompt itself is the game's own sprite-styled
-`pwa/src/game/UpdateModal.tsx`, in place of the framework's plain
-`UpdateToast`, so it matches the pixel-art dressing). Game-agnostic code is
-kept in the dedicated `src/lib/` and
-`pwa/src/lib/` areas so it can be extracted into the framework for reuse
-in later games once it has matured through playtesting — see `AGENTS.md` for
-the policy.
+The app keeps its PWA update lifecycle and other game-agnostic plumbing in the
+dedicated `src/lib/` and `pwa/src/lib/` areas. This keeps the game self-contained
+while preserving clear reuse boundaries — see `AGENTS.md` for the policy.
 
 ### `native/` — the native shell (optional third layer)
 

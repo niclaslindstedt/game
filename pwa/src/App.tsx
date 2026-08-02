@@ -3,10 +3,9 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { warn, type Difficulty, type GameState } from "@game/menu";
 
-import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
-
 import { ErrorBoundary } from "@ui/lib/ErrorBoundary.tsx";
 import { startGamepadKeyBridge } from "@ui/lib/gamepad-keys.ts";
+import { usePwaUpdate } from "@ui/lib/pwa-update.ts";
 
 import { initDevicePolicy } from "./app/device-policy.ts";
 import { isNativeApp } from "./app/native.ts";

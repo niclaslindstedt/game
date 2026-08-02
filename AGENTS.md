@@ -381,7 +381,7 @@ edit or commit anything under `src/generated/` or `pwa/src/generated/`.
 | Change type                                                         | Goes in                                                                                                                                                     |
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine/gameplay logic specific to this game                         | `src/…` (framework-free TypeScript); exported from `src/index.ts` — add to `src/menu.ts` ONLY if the startup path needs it and it drags no simulation along |
-| Generic engine code (usable by any game)                            | `src/lib/…` — imported as `@game/lib/*`; earmarked for oss-framework                                                                                        |
+| Generic engine code (usable by any game)                            | `src/lib/…` — imported as `@game/lib/*`                                                                                                                     |
 | App shell, rendering, PWA, game-specific UI                         | `pwa/src/…`                                                                                                                                                 |
 | Generic React/UI game components                                    | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                   |
 | Native-only concern (haptics, audio session, IAP, cloud save)       | `native/src/…` — never leak it into `src/` or `pwa/`                                                                                                        |
@@ -390,7 +390,7 @@ edit or commit anything under `src/generated/` or `pwa/src/generated/`.
 | Generators, analyzers, previews, maintenance commands               | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                               |
 | Tests                                                               | `tests/…`, named `*_test.ts`                                                                                                                                |
 | Docs / examples / LLM prompts                                       | `docs/…` / `examples/…` / `prompts/<name>/<major>_<minor>_<patch>.md`                                                                                       |
-| Mature, playtested generic code                                     | extract into `oss-framework`, then import the package                                                                                                       |
+| Mature, playtested generic code                                     | keep in the local `src/lib/` or `pwa/src/lib/` pool                                                                                                         |
 
 **Content is data.** Every catalog below is authored YAML under `content/`,
 compiled by `make levels`. The skill named is the one to load before authoring.
@@ -474,32 +474,16 @@ are regenerated in the same commit as the content change that moves them:
 `mod/catalog.json` (`make mod-catalog`), `native/store/game-center-{achievements,leaderboards}.json`,
 `electron/store/steam-achievements.json`.
 
-## Reuse through oss-framework
+## Local reusable code
 
-This game builds on
-[`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework)
-(shared React components, hooks, and utilities for local-first PWAs —
-storage, PWA update lifecycle, theming, achievements, i18n, …), installed
-from GitHub Packages. **Prefer the framework over hand-rolling**:
-
-- Before writing app-level UI or infrastructure (settings storage, update
-  prompts, sidebars, achievements, encryption, sync, charts), check whether
-  the framework already ships it and use that.
-- **Keep generic game code separate, extract to the framework later.** Code
+- **Keep generic game code separate.** Code
   that is not specific to THIS game (HUD widgets, input handling, game-loop
   utilities, sprite/audio helpers) goes in the dedicated generic areas —
   `src/lib/` for engine-side code, `pwa/src/lib/` for React/UI code —
-  never tangled into game-specific modules. Do **not** upstream it into
-  oss-framework immediately: publishing a framework release for every
-  tweak makes iteration loops far too long. Iterate and playtest it here;
-  once the code has matured and playtesting shows it works, extract the
-  `lib/` module into oss-framework and swap the imports to the package.
-  The clean separation is what keeps that extraction cheap.
+  never tangled into game-specific modules. The game remains self-contained;
+  iterate and playtest reusable code here.
 - **Always import the generic pools through their aliases** — `@game/lib/*`
-  (engine) and `@ui/lib/*` (React/UI), never by relative path. Extraction to
-  oss-framework is then a prefix swap (`@game/lib/rng.ts` →
-  `@niclaslindstedt/oss-framework/rng`) with no path surgery; keep framework
-  subpaths named after the module. The alias maps live in `tsconfig.json`,
+  (engine) and `@ui/lib/*` (React/UI), never by relative path. The alias maps live in `tsconfig.json`,
   `pwa/tsconfig.json`, `vitest.config.ts`, and `pwa/vite.config.ts`
   — keep all four in lockstep (they also carry `@game/core`, `@game/menu`,
   `@game/wire/*` and `@game/client`). Two more copies exist and both bite:

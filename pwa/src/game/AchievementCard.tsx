@@ -17,9 +17,11 @@ import { useEffect } from "react";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { TIER_POINTS } from "@niclaslindstedt/oss-framework/achievements";
-
-import { CATEGORY_LABELS, type AchievementDef } from "./achievement-defs.ts";
+import {
+  ACHIEVEMENT_POINTS,
+  CATEGORY_LABELS,
+  type AchievementDef,
+} from "./achievement-defs.ts";
 import type { AchievementUnlockMeta } from "./achievements.ts";
 import type { LifetimeTotals } from "./achievement-totals.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
@@ -81,7 +83,7 @@ export function AchievementCardBody({
   totals,
 }: AchievementCardProps) {
   const icon = spriteDataUrl(sprites, def.icon);
-  const points = TIER_POINTS[def.tier];
+  const points = ACHIEVEMENT_POINTS[def.tier];
   const progress = def.progress?.(totals);
   const character = meta?.character;
 
