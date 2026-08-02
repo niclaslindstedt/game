@@ -135,12 +135,11 @@ export function createLocalDriver(state: GameState): RunDriver {
 /**
  * Pick this run's driver.
  *
- * The net driver is offered first and answers null wherever it cannot host — a
- * browser, a phone, a desktop build whose bridge is not up — so the local
- * driver is the answer nearly everywhere and the fallback nowhere. That order
- * matters: asking "am I on Steam?" here would put a platform test in the run
- * loop, and the bridge already answers a better question ("can a session
- * actually be started?").
+ * An ordinary NEW GAME is local on every platform, including Electron. The
+ * net driver is offered only when HOST GAME armed this run; it then answers
+ * null wherever the shell cannot actually host and the local driver remains a
+ * safe fallback. The intent is a better boundary than asking "am I on Steam?":
+ * platform is not permission to turn a solo run into a multiplayer session.
  *
  * `?net=off` forces the local path. It exists because the session path is the
  * one thing in this feature that cannot be proved from a test — it needs a
@@ -152,16 +151,18 @@ export function createRunDriver(session: RunSession): RunDriver {
   if (new URLSearchParams(window.location.search).get("net") === "off") {
     return local();
   }
+  // HOST GAME is the only door into the session driver. NEW GAME must not
+  // fork a utility process, expose a SESSION panel, or make local controls
+  // depend on the multiplayer loopback transport merely because Electron has
+  // that bridge available.
+  const hosting = takeHostIntent();
+  if (!hosting) return local();
   // A run that was BUILT travels as its parameters and costs the wire nothing;
   // a run that was ADOPTED — a parked run, a checkpoint a RETRY dropped into —
   // has no parameters that describe it and travels as itself. The session then
   // sends every client a full first snapshot, which carries the terrain as
   // well, so a client that could not have built the world is still given one.
   const params = session.params;
-  // HOST GAME armed this run, or nothing did. A run that nobody asked to host
-  // still simulates in the session process — that is the cutover, not a
-  // multiplayer feature — and must not bind a socket for it.
-  const hosting = takeHostIntent();
   const net = createNetDriver({
     state: session.state,
     params: params
@@ -179,17 +180,15 @@ export function createRunDriver(session: RunSession): RunDriver {
     // modded host's horde spawns from the SHIPPED catalogs while the renderer
     // draws the mod. Null is the shipped game and costs the channel nothing.
     modDefs: activeDefOverrides(),
-    listen: hosting
-      ? {
-          name: hosting.name,
-          port: hosting.port,
-          udp: hosting.udp,
-          steam: hosting.steam,
-          password: hosting.password,
-          maxClients: hosting.maxPlayers,
-          bots: hosting.bots,
-        }
-      : undefined,
+    listen: {
+      name: hosting.name,
+      port: hosting.port,
+      udp: hosting.udp,
+      steam: hosting.steam,
+      password: hosting.password,
+      maxClients: hosting.maxPlayers,
+      bots: hosting.bots,
+    },
     onClosed: (reason, detail) => {
       error(`session ended: ${reason}${detail ? ` — ${detail}` : ""}`);
     },

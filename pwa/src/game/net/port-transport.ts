@@ -13,9 +13,12 @@
 // handful of JSON round trips per session; this one moves a snapshot twenty
 // times a second, and routing that through the main process's single JSON
 // channel would put the window's own event loop between the simulation and the
-// screen. The port is a direct renderer↔utility-process link, and the
-// `ArrayBuffer` is TRANSFERRED rather than copied — which is also why a frame
-// is neutered after `send` and must never be read again by the sender.
+// screen. The port is a direct renderer↔utility-process link. The large,
+// frequent SERVER → CLIENT snapshots are transferred by the server; the tiny
+// CLIENT → SERVER input/command frames are copied here. Electron hands this
+// port into the page through a context-isolated preload, and a transfer list on
+// that proxied `postMessage` throws instead of sending — leaving the session
+// visibly alive while every keyboard and pointer input disappears.
 
 import type { ClientTransport } from "@game/client";
 
@@ -41,7 +44,11 @@ export function portTransport(port: MessagePort): ClientTransport {
     send(frame) {
       if (!open) return;
       try {
-        port.postMessage(frame, [frame]);
+        // Do not add `[frame]` here. In a browser-owned MessagePort that would
+        // save one small copy, but Electron's contextBridge proxy cannot carry
+        // the transfer list back into the isolated preload world. Input frames
+        // are tiny; snapshots remain zero-copy in the other direction.
+        port.postMessage(frame);
       } catch {
         // The other end went away between the check and the post. Every caller
         // already handles a session that stops answering; throwing out of an
