@@ -62,9 +62,9 @@ import {
   STEAM_APP_ID,
   STEAM_ENABLED,
 } from "./config";
+import { SHELL_CHANNEL } from "./channels";
 import { readInvite, type Invite } from "./net-invite";
 import { output } from "./output";
-import { SHELL_CHANNEL } from "./preload";
 import { steamClient } from "./steam";
 import { webrootExists, webrootHandler } from "./webroot";
 import {

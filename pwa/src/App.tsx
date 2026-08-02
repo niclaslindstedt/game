@@ -21,6 +21,7 @@ import {
   spectatorCharacter,
   type Character,
 } from "./game/characters.ts";
+import { initCloudSave } from "./game/cloud-save.ts";
 import type { JoinIntent } from "./game/session-intent.ts";
 import { DEMO_DIFFICULTY, DEMO_LEVEL_ID } from "./game/demo.ts";
 import { LoadGame } from "./game/LoadGame.tsx";
@@ -208,24 +209,12 @@ export function App() {
   // and keep syncing as the app is backgrounded and another device writes (see
   // game/cloud-save.ts). Real money is at stake in the coin bank, so this runs
   // at startup rather than waiting for the player to find a menu. A browser has
-  // no platform cloud, so it stays device-local as before — and since a browser
-  // will never run any of it, the module is fetched on demand rather than
-  // bundled into every player's entry chunk (it carries the whole payload and
-  // merge; see game/cloud-save.ts). The native shell loads it a beat after
-  // mount instead of before first paint, which the sync's own schedule (launch,
-  // foreground, cloud notification) is entirely relaxed about.
+  // no platform cloud, so it stays device-local as before. cloud-save.ts is
+  // already on the title screen's module graph, so importing it statically here
+  // avoids advertising an ineffective split to the bundler.
   useEffect(() => {
     if (!isNativeApp()) return;
-    let stop: (() => void) | undefined;
-    let cancelled = false;
-    void import("./game/cloud-save.ts").then(({ initCloudSave }) => {
-      if (cancelled) return;
-      stop = initCloudSave();
-    });
-    return () => {
-      cancelled = true;
-      stop?.();
-    };
+    return initCloudSave();
   }, []);
 
   // Boot the GAME CENTER mirror in the native shell: sign the player in and

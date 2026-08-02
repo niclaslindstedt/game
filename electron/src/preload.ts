@@ -32,16 +32,9 @@
 
 import { contextBridge, ipcRenderer } from "electron";
 
-/** The channel every bridge message travels on. One channel for all four
- * protocols, because each message already carries its own `__gis*` flag and the
- * main process routes on that — the same way the WebView's single `onMessage`
- * does. */
-export const SHELL_CHANNEL = "gis:post";
-
-/** The channel the renderer's end of the multiplayer snapshot port arrives on.
- * Mirrors `NET_PORT_CHANNEL` in net.ts — it cannot be imported from there,
- * because the preload is a separate bundle with no view of the main process's
- * module graph. */
+// A sandboxed preload may import Electron but cannot require arbitrary local
+// modules. These mirror channels.ts and are drift-checked by preload_test.ts.
+const SHELL_CHANNEL = "gis:post";
 const NET_PORT_CHANNEL = "gis:net-port";
 
 contextBridge.exposeInMainWorld("__GIS_NATIVE__", true);

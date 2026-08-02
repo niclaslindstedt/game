@@ -54,14 +54,16 @@ On top of the web game it adds the things a browser can't give a desktop player:
 
 ## Developing
 
-This tree has **its own dependency tree** — it is not an npm workspace member —
-so it needs its own install:
+This tree has **its own dependency tree** — it is not an npm workspace member.
+The root entry point installs that tree, builds the site into `electron/webroot/`,
+compiles the shell, and launches it:
 
 ```sh
-npm run electron:install     # from the repo root
-npm run electron:bundle      # build the site into electron/webroot/
-npm run electron             # compile the shell and launch it
+npm run electron             # from the repo root
 ```
+
+The individual `electron:install` and `electron:bundle` commands remain
+available when only one preparation step is needed.
 
 Without a Steam client running, `steamworks.init()` throws and the shell
 memoizes "no client": cloud save and achievements report unavailable and the
