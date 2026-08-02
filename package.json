@@ -35,7 +35,7 @@
     "electron:install": "npm --prefix electron install",
     "electron:bundle": "npm --prefix electron run bundle",
     "preelectron": "npm run electron:install && npm run electron:bundle",
-    "electron": "npm --prefix electron run start",
+    "electron": "GIS_STEAM=off npm --prefix electron run start",
     "electron:test": "npm --prefix electron test",
     "electron:dist": "npm --prefix electron run dist",
     "store:metadata": "node scripts/generate-store-metadata.mjs",
