@@ -18,7 +18,8 @@ on:
 # so they are four jobs and CI is as long as the SLOWEST. The suite is split
 # again across shards, because on its own it is longer than the other three
 # together. A job costs ~15s of checkout + install to start, which every one of
-# these earns back many times over.
+# these earns back many times over. Lighthouse is a scheduled/manual advisory
+# audit rather than a PR gate; its former runner now buys a third test shard.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,14 +36,14 @@ jobs:
         run: make build
 
   test:
-    name: test (shard ${{ matrix.shard }}/2)
+    name: test (shard ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
     strategy:
       # A shard that fails should not cancel the other — knowing whether a
       # break is in one half or both is most of the diagnosis.
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -56,9 +57,9 @@ jobs:
       # the generated catalogs and the sprite atlas first, and several committed
       # artifacts are drift-tested against that fresh build (see AGENTS.md).
       # Vitest's own `--shard` splits the file list deterministically, so the
-      # two jobs between them run every file exactly once.
+      # three jobs between them run every file exactly once.
       - name: make test
-        run: make test ARGS="--shard=${{ matrix.shard }}/2"
+        run: make test ARGS="--shard=${{ matrix.shard }}/3"
 
   lint:
     runs-on: ubuntu-latest
