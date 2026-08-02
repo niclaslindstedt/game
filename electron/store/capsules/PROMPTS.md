@@ -36,9 +36,35 @@ where.
 | `pwa/public/og-default.png`      | The existing social card — closest thing to key art already    |
 | A screenshot of the title screen | The mint wordmark in the game's pixel font, and the starfield  |
 | `../screenshots/*.png`           | What the game actually looks like, once `--only steam` has run |
+| `header.png`                     | The canonical key-art style: conceptual, cohesive pixel poster |
 
 Attach the moon icon to every generation. It is doing more brand work than
 anything else the game ships.
+
+Use `header.png` as the visual-style reference for every capsule after the
+header. It establishes the intended distance from gameplay: recognizably the
+same world, palette, hero, horde pressure, powers and loot loop, but composed as
+conceptual key art rather than a counterfeit screenshot.
+
+### One level of abstraction throughout
+
+The capsule art must not mix literal in-game sprites with invented effects,
+pickups or scenery. That lands in an uncanny middle where part of the image
+claims to be gameplay and the rest breaks the claim.
+
+Instead, reinterpret **every** element at the same concept-art level used by
+`header.png`: chunky poster-like pixel clusters, simplified symbolic horde
+shapes, broad terrain forms, and graphic attack and loot motifs. Preserve the
+game's identity and loop, not the exact sprite grids. In particular:
+
+- never copy a shipped sprite, tile, pickup or HUD element one-for-one;
+- never frame the capsule as a gameplay screenshot or reproduce the HUD;
+- keep the hero stocky, practical and ordinary, but allow a larger, more iconic
+  three-quarter-overhead pose than the 16x16 gameplay doll;
+- communicate combat, powers and rewards with abstract arcs, bolts, fragments,
+  gems, discs and weapon silhouettes rather than fake inventory icons;
+- use one consistent pixel density and degree of detail across characters,
+  enemies, terrain, effects and props.
 
 ### The palette, verbatim
 
@@ -73,14 +99,19 @@ man in hostile places, never a chrome space marine.
 
 Paste this above every prompt that follows:
 
-> High-resolution pixel-art key art for a 16-bit top-down survival action-RPG.
-> Hard-edged pixel rendering, no anti-aliasing on the shapes, no gradients, no
-> airbrushed glow, no 3D render, no photorealism. Muted, practical, grounded
-> sci-fi — desaturated surroundings with a few small saturated accents that pop
-> because everything around them is dull. Palette anchored on near-black
-> `#0b0d10`, crimson `#c0392b`, mint `#7ef0c8`, amber `#ffe3b6`. Cinematic and
-> readable at a glance. **No text, no lettering, no logo, no watermark anywhere
-> in the image.**
+> Cohesive high-resolution pixel-art poster for a 16-bit top-down survival
+> action-RPG. Conceptual key art, deliberately not a gameplay screenshot:
+> reinterpret every character, enemy, prop, effect and terrain form at one
+> consistent level of abstraction, following the attached `header.png`. Use
+> deliberately chunky pixel clusters, crisp stepped silhouettes and a limited
+> palette; flat graphic shading with two or three tones per form; no smooth
+> gradients, airbrushed glow, 3D rendering or photorealism. Muted, practical,
+> grounded sci-fi — desaturated surroundings with a few small saturated accents
+> that pop because everything around them is dull. Palette anchored on
+> near-black `#0b0d10`, crimson `#c0392b`, mint `#7ef0c8`, amber `#ffe3b6`.
+> Cinematic and readable at a glance. Never copy an in-game sprite or UI icon
+> one-for-one. **No text, no lettering, no logo, no watermark anywhere in the
+> image.**
 
 The "no text" line is not optional. It is what makes the composite step work.
 
@@ -92,13 +123,16 @@ Top of the store page, above the fold. The single most-seen capsule.
 
 > [shared preamble]
 >
-> Composition: [the hero] stands in the RIGHT third, seen from behind and
-> three-quarters, looking up and away at a huge blood-red cratered moon hanging
-> low in a black starfield. The moon bleeds — thin dark red rivulets running
-> down off its lower limb into the dark. Desaturated grey regolith underfoot,
-> hard black shadows, cold vacuum light. The LEFT half is open sky and stars,
-> deliberately empty and uncluttered for a logo to sit in. Wide cinematic
-> framing.
+> Composition: a wide conceptual combat tableau matching the attached
+> `header.png`. [The hero] occupies the RIGHT half in a compact
+> three-quarter-overhead poster pose, cutting a path through a spiral of
+> simplified horde silhouettes. Broad lunar slabs dissolve into black space.
+> Graphic mint attack arcs, angular bolts, crimson impact fragments and a few
+> abstract loot relics communicate the game's automatic combat and reward loop
+> without resembling literal UI icons. A huge bleeding red cratered moon anchors
+> the upper-right. The LEFT 42% is open near-black sky, deliberately calm and
+> uncluttered for the real wordmark. Everything shares one pixel density and one
+> concept-art abstraction; it must not resemble a gameplay capture.
 
 Composite the mint wordmark into that left half.
 
