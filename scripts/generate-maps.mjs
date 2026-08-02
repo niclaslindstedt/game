@@ -19,7 +19,7 @@
 
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Engine modules under src/lib use the @game/lib alias at runtime — map it so
 // the def catalogs and the mapgen leaf import cleanly under plain node.
@@ -33,13 +33,21 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
 // Import the catalogs DIRECTLY (never @game/core — that pulls the mapgen
 // registry, which imports the file we are about to write: a bootstrap cycle).
-const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
-const { STORY_ITEM_DEFS } = await import(engine("src/game/defs/story.ts"));
-const { GENERATED_LEVELS } = await import(engine("src/generated/levels.ts"));
+const { ENEMY_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/enemies/index.ts")).href
+);
+const { STORY_ITEM_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/story.ts")).href
+);
+const { GENERATED_LEVELS } = await import(
+  pathToFileURL(engine("src/generated/levels.ts")).href
+);
 // The region grammar comes from the engine itself — one parser, so the gate here
 // accepts exactly the names `generate.ts` can resolve. `regions.ts` is a leaf
 // with no imports, so this drags nothing along.
-const { parseRegion } = await import(engine("src/game/mapgen/regions.ts"));
+const { parseRegion } = await import(
+  pathToFileURL(engine("src/game/mapgen/regions.ts")).href
+);
 
 // ---- Sprite stems (content/sprites/<family>/<name>.yaml, stem == sprite id;
 // underscore-prefixed files are family/core preambles, not sprites). ----------

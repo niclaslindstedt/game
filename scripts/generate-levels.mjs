@@ -15,7 +15,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Engine modules under src/lib use the @game/lib alias at runtime — map it so
 // the def catalogs import cleanly under plain node.
@@ -34,12 +34,20 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
 // Import the def catalogs DIRECTLY (never @game/core — that pulls the levels
 // registry, which imports the file we are about to write: a bootstrap cycle).
-const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
-const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
-const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
-const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
+const { ENEMY_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/enemies/index.ts")).href
+);
+const { WEAPON_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/equipment.ts")).href
+);
+const { GEAR_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/gear.ts")).href
+);
+const { ABILITY_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/abilities.ts")).href
+);
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
-  engine("src/game/defs/uniques.ts")
+  pathToFileURL(engine("src/game/defs/uniques.ts")).href
 );
 
 const { storyItems: STORY_ITEMS } = loadStoryItems();

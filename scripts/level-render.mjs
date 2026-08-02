@@ -32,7 +32,7 @@
 
 import { register } from "node:module";
 import { mkdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { writePng } from "./asset-tools/preview.mjs";
 import { renderText } from "./asset-tools/font.mjs";
@@ -53,18 +53,20 @@ import { applyModsWithSprites, takeModFlags } from "./mod-support.mjs";
 register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
-const { createGame } = await import(engine("src/index.ts"));
-const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
+const { createGame } = await import(pathToFileURL(engine("src/index.ts")).href);
+const { ENEMY_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/enemies/index.ts")).href
+);
 // WHICH ground sprite goes in a cell is the RENDERER's own rule, imported
 // rather than restated — a second copy of it here would drift silently the
 // first time a biome gained a zone, and this render would quietly stop
 // matching the game it exists to show. (Same reason the library's page
 // backgrounds import it; see pwa/src/game/render/ground-tiles.ts.)
 const { groundTileName } = await import(
-  engine("pwa/src/game/render/ground-tiles.ts")
+  pathToFileURL(engine("pwa/src/game/render/ground-tiles.ts")).href
 );
 const { resolvePackCount } = await import(
-  engine("src/game/defs/difficulties.ts")
+  pathToFileURL(engine("src/game/defs/difficulties.ts")).href
 );
 
 const previewDir = engine("pwa/assets-preview");
@@ -441,9 +443,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // engine flag is set to that size so the run inside `renderLevel` carves the
   // very same map. Picture and run agree by construction.
   {
-    const { setGeneratedMapSize } = await import(engine("src/game/flags.ts"));
+    const { setGeneratedMapSize } = await import(
+      pathToFileURL(engine("src/game/flags.ts")).href
+    );
     const { resolveLevelDef, hasMapBlueprint } = await import(
-      engine("src/game/mapgen/index.ts")
+      pathToFileURL(engine("src/game/mapgen/index.ts")).href
     );
     setGeneratedMapSize(opts.size);
     for (const entry of targets) {

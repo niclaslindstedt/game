@@ -15,7 +15,7 @@
 
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { parse } from "yaml";
 
@@ -31,7 +31,9 @@ const botYamlPath = fileURLToPath(
 );
 
 // The engine defaults define the valid knob SCHEMA — never edit both by hand.
-const { BOT_TUNING_DEFAULTS } = await import(engine("src/game/bot/tuning.ts"));
+const { BOT_TUNING_DEFAULTS } = await import(
+  pathToFileURL(engine("src/game/bot/tuning.ts")).href
+);
 
 const FLAT_KEYS = new Set(
   Object.keys(BOT_TUNING_DEFAULTS).filter((k) => k !== "postures"),
