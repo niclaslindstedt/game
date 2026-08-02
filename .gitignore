@@ -67,6 +67,7 @@ mob-hp-curve.html
 native/store/store.config.json
 native/store/screenshots/
 electron/store/screenshots/
+electron/store/preview/output/
 
 # fastlane: the metadata tree and staged screenshots are GENERATED from
 # native/store/listing.yaml + native/store/screenshots by `npm run store:stage`

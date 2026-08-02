@@ -13,6 +13,20 @@ python3.12 -m http.server 8765
 # http://127.0.0.1:8765/electron/store/preview/
 ```
 
+Capture the entire page—not only the first viewport—with:
+
+```sh
+make store-page-shot
+# electron/store/preview/output/steam-page-2000.png
+
+make store-page-shot ARGS="--width 1440 --out /tmp/steam-page.png"
+```
+
+The screenshotter opens the checked-in page directly, waits for every image and
+font, fails on browser or asset-load errors, and always passes `fullPage: true`
+to Playwright. `--height` changes the working viewport height but never clips
+the output to that viewport.
+
 The screenshot gallery, arrows, and operating-system tabs are interactive.
 Review the page at both 2000×1200 (the reference desktop density) and 1440×1200,
 then scroll through the About, sidebar, mature-content, and requirements
