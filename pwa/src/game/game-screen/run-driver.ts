@@ -63,7 +63,7 @@ export type RunDriver = {
   readonly session?: SessionLink | null;
   /**
    * The doors were armed for this run — HOST GAME's open-doors bit, consumed
-   * by the driver that opened them. Read by the crossing decision (§6.4): a
+   * by the driver that opened them. Read by the crossing decision: a
    * host with the doors open travels IN-SESSION even before anybody joins,
    * because tearing the session down to travel is what would close them.
    */
@@ -174,7 +174,7 @@ export function createRunDriver(session: RunSession): RunDriver {
     // the first spawn. A host that advertised none would admit exactly that
     // joiner and call the desync a replication bug.
     mods: activeMods().map((stamp) => stamp.id),
-    // AND THE CATALOGS THEMSELVES (§4.4), for the process that simulates: the
+    // AND THE CATALOGS THEMSELVES, for the process that simulates: the
     // page's `registerDefs` never reached the session, so without this a
     // modded host's horde spawns from the SHIPPED catalogs while the renderer
     // draws the mod. Null is the shipped game and costs the channel nothing.
@@ -241,7 +241,7 @@ function adoptedParams(state: GameState, hardcore: boolean): SessionParams {
     clearedLevels: [],
     merchantDiscovered: false,
     generatedMapSize: generatedMapSizeSetting(),
-    // §4.2's door gate is real for an adopted run too — a RETRY'd hardcore
+    // The hardcore door gate is real for an adopted run too — a RETRY'd hardcore
     // checkpoint is still a hardcore game.
     hardcore,
   };

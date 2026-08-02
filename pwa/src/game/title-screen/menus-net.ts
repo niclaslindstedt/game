@@ -13,7 +13,7 @@
 // with it. The alternative (a lobby that waits for players before anybody is
 // playing) would mean a second, idle simulation standing on the map while the
 // host reads a list, and it would make the host's own renderer a client of a
-// session it did not build — which is phase 3's cutover, not this one's.
+// session it did not build — which is the run driver's seam, not this one's.
 //
 // The LIVE status — the address the socket actually got, the router, the seats
 // taken, the ping of each — is therefore shown IN the run, on the pause screen's
@@ -227,7 +227,7 @@ export function buildHostMenu(
 /**
  * The FIREWALL row: one check, and one press to fix what it found.
  *
- * Three rules from the plan's §2.3, all visible here. It never elevates at
+ * Three rules, all visible here. It never elevates at
  * launch or without being asked (the press is the ask, and the row is inert
  * when there is nothing to fix). It reports the VERIFICATION rather than the
  * command's exit code — a green "opened" that is not open sends the player
@@ -328,7 +328,7 @@ function sessionRow(
   const full = row.players >= row.maxPlayers;
   const blocked = refusal !== null || full;
   // A row refused for MODS THIS MACHINE DOES NOT HAVE is a refusal with a
-  // door behind it (§4.4): the press opens the game's Workshop hub instead of
+  // door behind it: the press opens the game's Workshop hub instead of
   // doing nothing. A row whose mods are all INSTALLED is not refused at all —
   // joining applies the host's set on the way through (use-sessions.ts).
   const gettable = refusal !== null && !full && net.missingMods(row);

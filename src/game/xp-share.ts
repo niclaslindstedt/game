@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHO A KILL'S XP BELONGS TO — the one rule that decides whether a level 12
 // friend can meaningfully play with a level 60 character, and therefore most of
-// whether co-op is worth playing at all (multiplayer plan §4.3).
+// whether co-op is worth playing at all (docs/multiplayer.md).
 //
 // It is Diablo 2's shape, and both halves of that shape are load-bearing:
 //

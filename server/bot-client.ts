@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE BOT CLIENT — a headless process that JOINS a session over the real
 // transport, receives real snapshots, and plays its hero off the replicated
-// state alone (multiplayer plan §7.2.5).
+// state alone (docs/multiplayer.md).
 //
 // **WHY IT EXISTS, AHEAD OF THE SOAK IT MAKES POSSIBLE.** `wire/split.ts`
 // declares what travels. Nothing anywhere proves that **what travels is ENOUGH
@@ -15,7 +15,7 @@
 // a weapon, and it does so in CI.
 //
 // Beside that it makes four things measurable that are currently opinions:
-// §5.6's soak and adversity pass, unattended; §5.4's reconnect; §3.3's
+// the soak and its adversity pass, unattended; the reconnect grace window; the
 // prediction error once there is prediction; and the command channel under real
 // arguments, since the bot buys, repairs, allocates, swaps and picks talents
 // with values nobody typed into a test.
@@ -36,10 +36,11 @@
 //  1. **IT IS NOT A DETERMINISM TEST.** It does not simulate — it applies
 //     snapshots. It cannot detect two simulations diverging, and that stays
 //     `tests/engine/net_determinism_test.ts`'s job.
-//  2. **IT IS NOT THE INSTRUMENT FOR §7.2's NUMBERS.** It acts on a snapshot up
-//     to three ticks stale with no prediction under it, so its dps, its deaths
-//     and its clear time are partly a measurement of the NETWORK. phase 4's
-//     §4.3 tuning is read off the SIMULATOR's in-session party and nowhere else.
+//  2. **IT IS NOT THE INSTRUMENT FOR BALANCE NUMBERS.** It acts on a snapshot
+//     up to three ticks stale with no prediction under it, so its dps, its
+//     deaths and its clear time are partly a measurement of the NETWORK. The
+//     party-scaling tuning is read off the SIMULATOR's in-session party and
+//     nowhere else.
 //  3. **IT TESTS ONE TRANSPORT AT A TIME** — whichever it was pointed at.
 
 import {
@@ -127,8 +128,8 @@ export type BotClientStats = {
   /** The last server tick a snapshot carried, so a stalled session shows up as
    * a number that stops moving rather than as silence. */
   tick: number;
-  /** Bytes this client has RECEIVED. §5.6 asks a soak to watch for snapshot
-   * growth, and this divided by the elapsed time is that number — measured at
+  /** Bytes this client has RECEIVED. The soak watches for snapshot growth,
+   * and this divided by the elapsed time is that number — measured at
    * the only place it can be, which is the end that pays for it. */
   bytes: number;
 };
@@ -353,12 +354,12 @@ export function createBotClient(options: BotClientOptions): BotClient {
  * is left is the narrow set that would otherwise park a bot for ever: a phase
  * that freezes the run, and the two pauses a level-up puts in front of it.
  *
- * **EVERY ONE OF THESE IS A GROUP VERB** (plan §3.2 keeps a scene global and
- * lets anyone advance it), so a bot in a session with humans can skip a
- * cutscene out from under them. That is correct for the SOAK this exists for and
- * would be rude in a party; a bot filling a player's party is steered in the
- * session instead (§7.3), which is the other half of why these two hosts are
- * separate.
+ * **EVERY ONE OF THESE IS A GROUP VERB** (a scene stays global and anyone may
+ * advance it — only the screens went per-player), so a bot in a session with
+ * humans can skip a cutscene out from under them. That is correct for the SOAK
+ * this exists for and would be rude in a party; a bot filling a player's party
+ * is steered in the session instead (`server/local-bots.ts`), which is the
+ * other half of why these two hosts are separate.
  */
 function sceneCommand(
   bot: Bot,
@@ -366,7 +367,7 @@ function sceneCommand(
   hero: Player,
 ): BotCommand | null {
   // The BUILD first: banked points are drained through the same two verbs a
-  // player presses (plan §3.2 — a ding banks rather than pausing, so the bot
+  // player presses (a ding banks rather than pausing, so the bot
   // simply spends on sight; the last spend closes any chooser the run
   // greeted it with).
   if (hero.pendingStatPoints > 0) {
@@ -376,7 +377,7 @@ function sceneCommand(
     const id = botPickTalent(bot, state, hero);
     if (id) return { name: "spendTalentPoint", args: [id] };
   }
-  // The SCREENS are the bot's own now (per-player, plan §3.2): whatever of
+  // The SCREENS are the bot's own now (per-player, `Player.screen`): whatever of
   // its screens is up with nothing left to spend gets closed, and a respec
   // greeting a level-token jump is confirmed once its pool is placed.
   if (hero.screen === "respec") return { name: "confirmRespec", args: [] };

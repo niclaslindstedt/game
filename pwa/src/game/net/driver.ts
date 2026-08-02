@@ -65,7 +65,7 @@ export type NetDriverOptions = {
   adopt?: unknown | null;
   /** The mods this run has applied, in load order. */
   mods?: string[];
-  /** The catalog overrides those mods registered (§4.4) — sent with `start`
+  /** The catalog overrides those mods registered — sent with `start`
    * so the SESSION simulates the same defs the page applied. Null/absent is
    * the shipped game. */
   modDefs?: Record<string, unknown> | null;
@@ -104,7 +104,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
   let client: ReturnType<typeof createNetClient> | null = null;
   let live = false;
   let disposed = false;
-  // The app's bank-before-the-swap reaction to an in-session crossing (§6.4)
+  // The app's bank-before-the-swap reaction to an in-session crossing
   // — installed later (the progress that banks is built after the driver).
   let travelHook: ((state: GameState) => void) | null = null;
   // The HOST steers the hero, so its own seat is not a spectator's.
@@ -251,7 +251,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
   let state: GameState | null = null;
   let live = false;
   let disposed = false;
-  // The bank-before-the-swap reaction to an in-session crossing (§6.4) —
+  // The bank-before-the-swap reaction to an in-session crossing —
   // installed by the run once its banking exists. A joiner's hero crosses
   // WITH the party, and their app banks them off the level being left exactly
   // as the host's does.

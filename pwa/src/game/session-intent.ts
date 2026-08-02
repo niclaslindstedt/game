@@ -3,7 +3,8 @@
 // run driver and written by the HOST screen.
 //
 // **WHY IT IS NOT A PROP.** Every Steam run already hosts a session (that is
-// phase 1.75's cutover: the simulation lives in the utility process either way).
+// the loop's move into the session: the simulation lives in the utility
+// process either way).
 // What HOST GAME adds is one bit — OPEN THE DOORS — plus the four values a door
 // needs, and threading those from a title-menu row through `App`, `GameScreen`,
 // `createRunSession` and `createRunDriver` would be five signatures widened to
@@ -56,11 +57,11 @@ export type JoinIntent = {
   /** What this player is called in the roster and in chat. */
   name: string;
   password?: string;
-  /** The character this player is coming with is HARDCORE (§4.2). A hardcore
+  /** The character this player is coming with is HARDCORE. A hardcore
    * hero may only enter a hardcore session and vice versa — the handshake
    * refuses the mismatch by name. */
   hardcore?: boolean;
-  /** The hero this player is coming WITH (§4.5): their banked `Loadout` as
+  /** The hero this player is coming WITH: their banked `Loadout` as
    * plain JSON, with the purse already funded from their whole wealth the way
    * a local run's is. Structural (`Record`) on purpose — this leaf may not
    * import the engine — and null for a fresh character, who arrives as the
@@ -71,7 +72,7 @@ export type JoinIntent = {
    * is looking at while the level builds. Null for a typed address, which
    * claims nothing until the handshake answers. */
   label?: string;
-  /** The HOST'S MOD SET was applied on the way through this door (§4.4) —
+  /** The HOST'S MOD SET was applied on the way through this door —
    * so when the joined run ends, the run must put the shipped game back
    * (`restoreBaseDefs`): a mod applies to a run, never to the install. */
   appliedMods?: boolean;

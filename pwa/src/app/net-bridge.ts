@@ -155,7 +155,7 @@ export type HostOptions = {
    * builds. */
   bots?: number;
   mods?: string[];
-  /** The catalog overrides those mods registered (§4.4) — the session process
+  /** The catalog overrides those mods registered — the session process
    * simulates, and its registry never saw the page's `registerDefs`. Opaque
    * JSON here like everything else this bridge moves. */
   modDefs?: unknown;
@@ -380,10 +380,10 @@ export type ConnectOptions = {
   /** The mods this build has applied, in load order. A mismatch is what the
    * host refuses on; sending them is how it can. */
   mods?: string[];
-  /** The joining character is HARDCORE (§4.2): hardcore and softcore heroes
+  /** The joining character is HARDCORE: hardcore and softcore heroes
    * never share a game, and the handshake refuses the mismatch by name. */
   hardcore?: boolean;
-  /** The hero this player brings (§4.5) — their banked loadout as plain JSON,
+  /** The hero this player brings — their banked loadout as plain JSON,
    * or null for the authored fresh start. A claim the session weighs
    * (`validateLoadout`), never an authority. Structural: this module may not
    * import the engine. */

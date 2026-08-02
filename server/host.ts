@@ -2,11 +2,11 @@
 // HOSTING A SESSION — the session, the admission desk, the sockets, the router
 // mapping and the one clock that drives all four, wired together once.
 //
-// **THIS MODULE EXISTS SO THE PLAN'S §5.5 CAN BE TRUE.** It says the dedicated
-// server "is the same file" as the utility-process one, and the only way to make
-// that hold rather than merely claim it is to have one implementation with two
-// thin entries on top: `main.ts` when Electron forked this process and handed it
-// a control channel, `dedicated.ts` when a person ran it from a terminal. What
+// **THIS MODULE EXISTS SO "THE DEDICATED SERVER IS THE SAME FILE" CAN BE
+// TRUE.** The only way to make that hold rather than merely claim it is to
+// have one implementation with two thin entries on top: `main.ts` when
+// Electron forked this process and handed it a control channel,
+// `dedicated.ts` when a person ran it from a terminal. What
 // would otherwise be duplicated is precisely the part that must not be — a
 // FIXED-TIMESTEP LOOP, whose second copy drifts from the first silently and only
 // under load.
@@ -53,8 +53,9 @@ export type HostOptions = {
   /**
    * Admit peers over a transport that is not Steam's — see
    * `HubOptions.allowUnlicensedTransport`. Multiplayer is licensed through
-   * Steam and nowhere else (decision 15), so the shipped game never sets this;
-   * it exists for the repo's suites and the headless soak.
+   * Steam and nowhere else (the Steam-only licence gate, `server/licence.ts`),
+   * so the shipped game never sets this; it exists for the repo's suites and
+   * the headless soak.
    */
   allowUnlicensedTransport?: boolean;
   /** Seats, host included. */
@@ -149,7 +150,8 @@ export function createHost(options: HostOptions): Host {
 
   const hub = createPeerHub({
     session,
-    // Decision 15: multiplayer is licensed through Steam. The host passes the
+    // The Steam-only licence gate: multiplayer is licensed through Steam and
+    // nowhere else (`server/licence.ts`). The host passes the
     // escape straight through rather than deciding it, so the ONE place that
     // may switch it on is whatever built the host — the repo's own suites and
     // the headless soak, never a shipped path.
@@ -161,8 +163,8 @@ export function createHost(options: HostOptions): Host {
     },
     password: options.password,
     maxClients,
-    // §4.2's hardcore gate: the session's mode is a session parameter, and the
-    // hub is the one door that enforces it.
+    // The hardcore admission gate: the session's mode is a session parameter,
+    // and the hub is the one door that enforces it.
     hardcore: options.params.hardcore === true,
     secret,
     now,

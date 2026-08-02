@@ -7,7 +7,7 @@
 // the host's renderer is JUST ANOTHER CLIENT — it sends input and applies
 // snapshots exactly as a joiner does. That is not tidiness; it is the
 // simplification every listen server from Quake onward makes, and it is why
-// this plan has no "and also, when you are the host…" clauses anywhere in it.
+// this design has no "and also, when you are the host…" clauses anywhere in it.
 //
 // THE CLOCK IS FIXED-TIMESTEP AND CALLER-DRIVEN. `advance(ms)` owes the
 // simulation a number of whole `TICK_MS` slices and runs exactly that many;

@@ -137,7 +137,7 @@ export function isPartyRun(state: GameState): boolean {
  * menu) must never be handed out.
  *
  * A HELD seat is skipped, and that is the same rule read the other way: it is
- * being kept for the person who dropped out of it (`Player.held`, plan §5.4),
+ * being kept for the person who dropped out of it (`Player.held` — reconnect),
  * so handing it to a newcomer would give away a hero somebody is on their way
  * back to. The session releases the hold when the grace window lapses.
  */
@@ -149,7 +149,8 @@ export function nextFreeSeat(state: GameState): number {
 /** What kind of departure this is. */
 export type DepartOptions = {
   /**
-   * KEEP THE SEAT for the person who left it (plan §5.4). A dropped connection
+   * KEEP THE SEAT for the person who left it, so a reconnect can find it.
+   * A dropped connection
    * and a player quitting look identical from a socket, so the caller has to
    * say which it is treating this as.
    */
@@ -159,7 +160,7 @@ export type DepartOptions = {
    *
    * Refused by default, and that is a rule rather than a guard: in the shipped
    * topology seat 0 is the HOST's, the host leaving ENDS the session (there is
-   * no host migration — see the plan's §4.2), and a run whose seat 0 had
+   * no host migration — the host leaving ends the session), and a run whose seat 0 had
    * quietly departed would keep simulating with nobody entitled to it.
    *
    * A DEDICATED SERVER has no host, so that reasoning does not apply to it and
@@ -181,7 +182,7 @@ export type DepartOptions = {
  *
  * Seat 0 is refused, and that is a rule rather than a guard: seat 0 is the
  * HOST's, the host leaving ENDS the session (there is no host migration — see
- * the plan's §4.2), and a run whose seat 0 had quietly departed would keep
+ * the host leaving ends the session), and a run whose seat 0 had quietly departed would keep
  * simulating with nobody entitled to it.
  */
 export function departHero(
@@ -194,7 +195,7 @@ export function departHero(
   const hero = state.players[seat];
   if (!hero || hero.departed) return false;
   hero.departed = true;
-  // A TRADE THIS SEAT WAS IN GOES WITH THEM (plan §5.1). Nothing has moved, so
+  // A TRADE THIS SEAT WAS IN GOES WITH THEM (`src/game/trade.ts`). Nothing has moved, so
   // nothing is undone — but leaving it open would strand the partner at a
   // table whose other side will never accept and can never settle.
   endTradesFor(state, seat);
@@ -203,7 +204,7 @@ export function departHero(
   // `resumeHero`. The two look identical from a socket, which is the whole
   // reason the caller has to say which it is.
   if (options.hold) hero.held = true;
-  // AND NOTHING WAITS ON THEM. The screens are per-player now (plan §3.2), so
+  // AND NOTHING WAITS ON THEM. The screens are per-player now, so
   // a chooser or a bag left open on a departing hero holds nothing shut —
   // `partyBlocked` only counts heroes in play. This used to need a bolt-on
   // (`releaseStuckLevelup`, found by the bot-client soak when a quitter's
@@ -215,7 +216,7 @@ export function departHero(
 
 /**
  * The person who dropped out of this seat is back — hand them the hero they
- * were playing (multiplayer plan §5.4).
+ * were playing (the reconnect grace).
  *
  * The body has been standing on the field meaning nothing to the world while
  * they were gone; this is the single flag flip that makes the world start
@@ -242,7 +243,7 @@ export function resumeHero(state: GameState, seat: number): Player | null {
  *
  * The body stays exactly where it was and stays `departed`; all this does is
  * make the seat available again, so the next arrival is seated into it as they
- * would have been before §5.4 existed.
+ * would have been before held seats existed.
  */
 export function releaseSeat(state: GameState, seat: number): void {
   const hero = state.players[seat];

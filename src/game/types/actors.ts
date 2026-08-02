@@ -122,8 +122,8 @@ export type Player = {
    * `stats.timeMs` when this hero last drew a different weapon out of the bag —
    * the POCKET ARSENAL's anti-juggle memory (`bot/weapon-swap.ts`).
    *
-   * **IT LIVES ON THE RUN RATHER THAN ON THE BOT, and that is decision 3b's
-   * other half** (multiplayer plan §7.2.5). Everything else the autopilot
+   * **IT LIVES ON THE RUN RATHER THAN ON THE BOT, and that is the intent
+   * split's other half** (`src/game/bot/intent.ts`). Everything else the autopilot
    * remembers is an opinion — where it was heading, what it has given up on —
    * and belongs to whatever is doing the thinking. This one is not: it is a fact
    * about the HERO, in the same family as `weaponCooldownMs` beside it, and the
@@ -145,8 +145,8 @@ export type Player = {
    */
   disarmed?: boolean;
   /**
-   * DOWN: this hero fell while the party was still standing (multiplayer plan
-   * §4.2, `downed.ts`). Their worn gear went to a corpse where they fell
+   * DOWN: this hero fell while the party was still standing (`downed.ts`).
+   * Their worn gear went to a corpse where they fell
    * (`GameState.corpses`), their own DEATH TOLL is already paid, and the body
    * lies on the field until the `respawn` verb stands them back up at the
    * level's start. `heroInPlay` already reads false off `hp <= 0`, so nothing
@@ -170,8 +170,8 @@ export type Player = {
    * nothing. `heroInPlay` reads false for it, so it is not chased, not counted
    * in the party's level, not in the centroid, not a pack's alarm clock, not a
    * hazard's victim — and, the sharp end, not ALIVE, so `partyWiped` can fire
-   * and a group whose fourth player quit can lose the run (multiplayer plan
-   * §4.2). It is not a corpse either: a corpse is what §4.2's death rule leaves
+   * and a group whose fourth player quit can lose the run. It is not a
+   * corpse either: a corpse is what the party death rule leaves
    * and holds what its owner was carrying, while a departed hero's kit went
    * home with the person who was steering it.
    *
@@ -181,7 +181,7 @@ export type Player = {
   departed?: boolean;
   /**
    * THIS DEPARTED SEAT IS BEING KEPT FOR THE PERSON WHO LEFT IT (multiplayer
-   * plan §5.4).
+   * the reconnect rule).
    *
    * A dropped connection and a player quitting look identical from the socket,
    * and only one of them should cost somebody their hero. So a departure that
@@ -251,7 +251,7 @@ export type Player = {
   xpToNext: number;
   /** Stat points awarded but not yet spent (spent via `allocateStat`). A ding
    * BANKS them here rather than freezing the run — the chooser is a
-   * non-blocking {@link PlayerScreen} opened on demand (plan §3.2); the HUD
+   * non-blocking {@link PlayerScreen} opened on demand; the HUD
    * shows a pip while any are waiting. */
   pendingStatPoints: number;
   /**
@@ -266,7 +266,7 @@ export type Player = {
   pendingTalentPoints: StatName[];
   /**
    * WHAT THIS PLAYER IS LOOKING AT — the bag, the map, the chooser, the pause
-   * menu (multiplayer plan §3.2). Absent = on the field. The simulation runs
+   * menu. Absent = on the field. The simulation runs
    * regardless; a hero with a screen up contributes no steering and can still
    * be killed. The world halts only when EVERY hero in play has one up
    * (`partyBlocked`), which is what keeps the solo bag the freeze it always
@@ -372,7 +372,7 @@ export type Player = {
 };
 
 /**
- * A fallen hero's BODY, holding what they were wearing — D2's rule, and §4.2's
+ * A fallen hero's BODY, holding what they were wearing — D2's rule, and the
  * (see `downed.ts`). Left where a hero went down while the party still stood;
  * recoverable by its OWNER alone (walking within `CORPSE.recoverRadius` takes
  * the gear back — worn again where the slot is free, banked to the bag where it

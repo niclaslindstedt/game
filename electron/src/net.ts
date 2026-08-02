@@ -22,7 +22,7 @@
 // presents them to the session as an ordinary transport. UDP peers do not: that
 // socket is bound inside the session process itself, so the direct path — the
 // one that carries the bulk of any real session — never touches this event
-// loop, and phase 5's dedicated server inherits it with no shell at all.
+// loop, and the dedicated server inherits it with no shell at all.
 //
 // **The port is minted here and immediately given away.** `MessageChannelMain`
 // is a main-process object; one end goes to the server with the message that
@@ -80,7 +80,7 @@ export type NetRequest = {
    * untouched, like everything else this bridge moves. */
   bots?: number;
   mods?: string[];
-  /** `host`: the catalog overrides those mods registered (§4.4). Forwarded
+  /** `host`: the catalog overrides those mods registered. Forwarded
    * untouched; the session registers them before it builds. */
   modDefs?: unknown;
   /** `host`: a run to ADOPT rather than build from `params` — a parked run or
@@ -99,10 +99,10 @@ export type NetRequest = {
   address?: string;
   peer?: string;
   playerName?: string;
-  /** `connect`: the joining character is HARDCORE (§4.2) — the handshake holds
+  /** `connect`: the joining character is HARDCORE — the handshake holds
    * hardcore and softcore apart, so the flag rides the join. */
   hardcore?: boolean;
-  /** `connect`: the hero this player brings (§4.5) — a banked loadout as plain
+  /** `connect`: the hero this player brings — a banked loadout as plain
    * JSON, or null for the authored fresh start. Forwarded untouched; the
    * session weighs it. */
   loadout?: unknown;
