@@ -25,7 +25,7 @@
 
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   validateTalent,
@@ -37,7 +37,9 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
 // The shared rank ceiling. Imported from the config LEAF directly (never
 // @game/core) — it imports nothing, so this stays a leaf-only pipeline.
-const { TALENTS } = await import(engine("src/game/config/talents.ts"));
+const { TALENTS } = await import(
+  pathToFileURL(engine("src/game/config/talents.ts")).href
+);
 
 // ---- Sprite stems (content/sprites/<family>/<name>.yaml, stem == sprite id;
 // underscore-prefixed files are family/core preambles, not sprites). ----------

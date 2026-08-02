@@ -27,7 +27,7 @@
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Engine modules under src/lib use the @game/lib alias at runtime — map it so
 // the equipment catalog imports cleanly under plain node.
@@ -44,7 +44,9 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 // engine's catalog rather than the content tree's because the built-in `blaster`
 // sidearm is authored in `equipment.ts` as engine machinery, and a companion may
 // legitimately carry it.
-const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
+const { WEAPON_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/equipment.ts")).href
+);
 
 // ---- Sprite stems (content/sprites/<family>/<name>.yaml, stem == sprite id;
 // underscore-prefixed files are family/core preambles, not sprites). ----------

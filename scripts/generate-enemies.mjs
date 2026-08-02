@@ -23,7 +23,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Engine modules under src/lib use the @game/lib alias at runtime — map it so
 // the def catalogs import cleanly under plain node.
@@ -36,11 +36,17 @@ import { loadStoryItems } from "./story-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
-const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
-const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
-const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
+const { UNIQUE_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/uniques.ts")).href
+);
+const { WEAPON_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/equipment.ts")).href
+);
+const { GEAR_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/gear.ts")).href
+);
 const { deathRites: loadDeathRites } = await import(
-  engine("src/game/death-rites/catalog.ts")
+  pathToFileURL(engine("src/game/death-rites/catalog.ts")).href
 );
 const RITE_DEFS = loadDeathRites();
 

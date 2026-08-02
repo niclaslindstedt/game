@@ -1,13 +1,17 @@
 # Desktop (Electron/Steam) shell — checks on every relevant push, and
 # dispatch-only packaging of the Steam depot directories.
 #
-# Two jobs, deliberately split by what they cost:
+# Three jobs, deliberately split by what they cost:
 #
 #   check    Cheap and automatic. `electron/` is not an npm workspace member, so
 #            the root `make lint` / `make test` stop at its edge and NOTHING
 #            else in CI would notice it breaking. Runs on ubuntu with the
 #            Electron binary download skipped (the types ship in the package, so
 #            typechecking and the unit tests need no browser).
+#
+#   windows  Builds the real website and copies it into the shell on every
+#            relevant change. This catches Windows-only command-shim and ESM
+#            path handling that an Ubuntu check cannot exercise.
 #
 #   package  Expensive and manual. Real Windows/macOS runners, a full website
 #            build, and electron-builder. Dispatch-only for the same reason the
@@ -19,6 +23,9 @@ on:
   push:
     paths:
       - "electron/**"
+      - "scripts/**"
+      - "package*.json"
+      - "pwa/package*.json"
       # The shell answers these protocols; a change to the web half can break
       # the desktop build without touching electron/ at all.
       - "pwa/src/app/**"
@@ -26,6 +33,9 @@ on:
   pull_request:
     paths:
       - "electron/**"
+      - "scripts/**"
+      - "package*.json"
+      - "pwa/package*.json"
       - "pwa/src/app/**"
       - ".github/workflows/desktop-build.yml"
   workflow_dispatch:
@@ -101,6 +111,20 @@ jobs:
         run: npm run typecheck
       - name: test
         run: npm test
+
+  windows-bundle:
+    name: Windows site + shell bundle
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Exercise both Windows-sensitive seams: TypeScript modules loaded by the
+      # content generators and npm's .cmd shim launched by the shell bundler.
+      - run: npm run electron:bundle
 
   package:
     name: package (${{ matrix.os }})

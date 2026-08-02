@@ -21,7 +21,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Engine modules under src/lib use the @game/lib alias at runtime — map it so
 // the unique catalog imports cleanly under plain node.
@@ -34,7 +34,9 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
 // Imported DIRECTLY (never @game/core) so nothing pulls the file we are about
 // to write — the same bootstrap rule every other generator follows.
-const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
+const { UNIQUE_DEFS } = await import(
+  pathToFileURL(engine("src/game/defs/uniques.ts")).href
+);
 
 const { sets, entries } = loadSets(engine("content"));
 

@@ -13,13 +13,15 @@
 // (for `maxLevel`), never the content catalogs.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { register } from "node:module";
 
 register("./game-alias-loader.mjs", import.meta.url);
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const { LEVELING } = await import(join(root, "src/game/config/leveling.ts"));
+const { LEVELING } = await import(
+  pathToFileURL(join(root, "src/game/config/leveling.ts")).href
+);
 
 const src = readFileSync(join(root, "content/leveling.yaml"), "utf8");
 
@@ -36,7 +38,7 @@ const TUNING_KEYS = [
 const tuning = {};
 const table = new Map();
 let inTable = false;
-for (const [lineNo, raw] of src.split("\n").entries()) {
+for (const [lineNo, raw] of src.split(/\r?\n/).entries()) {
   const line = raw.replace(/#.*$/, "").trimEnd();
   if (!line.trim()) continue;
   if (/^xpToNext:\s*$/.test(line)) {

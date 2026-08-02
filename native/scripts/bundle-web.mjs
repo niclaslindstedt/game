@@ -37,7 +37,8 @@ const REPO_DIR = resolve(APP_DIR, "..");
 const WEBSITE_DIR = join(REPO_DIR, "pwa");
 const DIST_DIR = join(WEBSITE_DIR, "dist");
 const OUT_ZIP = join(APP_DIR, "assets", "webroot.zip");
-const NPM_COMMAND = process.platform === "win32" ? "npm.cmd" : "npm";
+const WINDOWS = process.platform === "win32";
+const NPM_COMMAND = WINDOWS ? "npm.cmd" : "npm";
 
 const skipBuild = process.argv.includes("--skip-build");
 
@@ -63,6 +64,9 @@ if (!skipBuild) {
   execFileSync(NPM_COMMAND, ["run", "build", "--workspace", "pwa"], {
     cwd: REPO_DIR,
     stdio: "inherit",
+    // Windows command shims are batch files, which Node cannot execute
+    // directly (EINVAL); cmd.exe must interpret them.
+    shell: WINDOWS,
     env: { ...process.env, VITE_DEV_TOOLS: devTools ? "on" : "off" },
   });
 }

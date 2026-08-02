@@ -24,7 +24,7 @@
 // the content tree — so it can never join a bootstrap cycle.
 
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   validateItem,
@@ -66,7 +66,7 @@ const { entries, quality, rarity } = loadItems();
 // both readers check against the one list. Same arrangement as the compass
 // regions.
 const { SLASH_ELEMENTS, SHOT_ELEMENTS } = await import(
-  engine("pwa/src/game/weapon-elements.ts")
+  pathToFileURL(engine("pwa/src/game/weapon-elements.ts")).href
 );
 const FX_ELEMENTS = new Set([
   ...Object.keys(SLASH_ELEMENTS),
