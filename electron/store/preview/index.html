@@ -11,18 +11,53 @@
     <div class="preview-notice">
       INTERNAL STOREFRONT PREVIEW · NOT A LIVE STEAM PAGE
     </div>
-    <header class="steam-bar">
-      <div class="steam-word">STEAM <span>STORE PREVIEW</span></div>
-      <nav aria-label="Preview navigation">
-        <a href="#about">ABOUT</a><a href="#requirements">REQUIREMENTS</a>
+
+    <header class="global-nav">
+      <a class="steam-home" href="#top" aria-label="Steam store preview home">
+        <span class="steam-mark" aria-hidden="true"></span>
+        <span>STEAM</span>
+      </a>
+      <nav aria-label="Store preview navigation">
+        <a href="#about">STORE</a>
+        <a href="#features">COMMUNITY</a>
+        <a href="#requirements">ABOUT</a>
+        <a href="#requirements">SUPPORT</a>
       </nav>
+      <div class="account-tools" aria-label="Preview account controls">
+        <button type="button">Install Steam</button>
+        <span>preview account⌄</span>
+      </div>
     </header>
 
-    <main>
-      <p class="breadcrumbs">All Games &gt; Action Games &gt; Ada's Trail</p>
-      <h1>ADA'S TRAIL</h1>
+    <div class="store-nav-wrap">
+      <div class="store-nav">
+        <a href="#top">Browse⌄</a>
+        <a href="#about">Recommendations⌄</a>
+        <a href="#features">Categories⌄</a>
+        <a href="#requirements">Ways to Play⌄</a>
+        <label class="search-box">
+          <span class="sr-only">Search the store preview</span>
+          <input type="search" placeholder="Search the store" disabled />
+          <span aria-hidden="true">⌕</span>
+        </label>
+        <span class="wishlist">★ Wishlist 0</span>
+      </div>
+    </div>
 
-      <section class="product-hero" aria-label="Store page hero">
+    <main id="top">
+      <div class="title-row">
+        <div>
+          <p class="breadcrumbs">
+            All Games &gt; Action Games &gt; Ada's Trail
+          </p>
+          <h1>Ada's Trail</h1>
+        </div>
+        <button class="community-button" type="button" disabled>
+          Community Hub
+        </button>
+      </div>
+
+      <section class="product-hero" aria-label="Store page overview">
         <div class="gallery">
           <div class="stage">
             <img
@@ -32,56 +67,84 @@
             />
             <div id="stage-label" class="stage-label">MARS · NIGHTMARE</div>
           </div>
-          <div class="thumbs" aria-label="Screenshot gallery">
+          <div class="gallery-rail">
             <button
-              class="thumb active"
-              data-label="MARS · NIGHTMARE"
-              data-src="../screenshots/steam-1080/02-nightmare.png"
+              class="gallery-arrow"
+              id="gallery-prev"
+              type="button"
+              aria-label="Previous screenshot"
             >
-              <img
-                src="../screenshots/steam-1080/02-nightmare.png"
-                alt="Mars combat"
-              />
+              ‹
             </button>
+            <div class="thumbs" aria-label="Screenshot gallery">
+              <button
+                class="thumb active"
+                data-label="MARS · NIGHTMARE"
+                data-src="../screenshots/steam-1080/02-nightmare.png"
+              >
+                <img
+                  src="../screenshots/steam-1080/02-nightmare.png"
+                  alt="Mars combat"
+                />
+              </button>
+              <button
+                class="thumb"
+                data-label="THE RIFT · TALENT BUILD"
+                data-src="../screenshots/steam-1080/03-talents.png"
+              >
+                <img
+                  src="../screenshots/steam-1080/03-talents.png"
+                  alt="Talent effects in The Rift"
+                />
+              </button>
+              <button
+                class="thumb"
+                data-label="BOOT HILL · STACKED POWERS"
+                data-src="../screenshots/steam-1080/06-powers.png"
+              >
+                <img
+                  src="../screenshots/steam-1080/06-powers.png"
+                  alt="Boot Hill combat"
+                />
+              </button>
+              <button
+                class="thumb"
+                data-label="THE RIFT · BOSS"
+                data-src="../screenshots/steam-1080/05-boss.png"
+              >
+                <img
+                  src="../screenshots/steam-1080/05-boss.png"
+                  alt="Rift boss encounter"
+                />
+              </button>
+              <button
+                class="thumb"
+                data-label="LEGENDARY LOOT"
+                data-src="../screenshots/steam-1080/04-loot.png"
+              >
+                <img
+                  src="../screenshots/steam-1080/04-loot.png"
+                  alt="Legendary loot pickup"
+                />
+              </button>
+              <button
+                class="thumb"
+                data-label="THE RIFT · NUKE"
+                data-src="../screenshots/steam-1080/01-nuke.png"
+              >
+                <img
+                  src="../screenshots/steam-1080/01-nuke.png"
+                  alt="Nuke power in The Rift"
+                />
+              </button>
+            </div>
             <button
-              class="thumb"
-              data-label="THE RIFT · TALENT BUILD"
-              data-src="../screenshots/steam-1080/03-talents.png"
+              class="gallery-arrow"
+              id="gallery-next"
+              type="button"
+              aria-label="Next screenshot"
             >
-              <img
-                src="../screenshots/steam-1080/03-talents.png"
-                alt="Talent effects in The Rift"
-              />
-            </button>
-            <button
-              class="thumb"
-              data-label="BOOT HILL · STACKED POWERS"
-              data-src="../screenshots/steam-1080/06-powers.png"
-            >
-              <img
-                src="../screenshots/steam-1080/06-powers.png"
-                alt="Boot Hill combat"
-              />
-            </button>
-            <button
-              class="thumb"
-              data-label="THE RIFT · BOSS"
-              data-src="../screenshots/steam-1080/05-boss.png"
-            >
-              <img
-                src="../screenshots/steam-1080/05-boss.png"
-                alt="Rift boss encounter"
-              />
-            </button>
-            <button
-              class="thumb"
-              data-label="LEGENDARY LOOT"
-              data-src="../screenshots/steam-1080/04-loot.png"
-            >
-              <img
-                src="../screenshots/steam-1080/04-loot.png"
-                alt="Legendary loot pickup"
-              />
+              ›
             </button>
           </div>
         </div>
@@ -92,7 +155,7 @@
             src="../capsules/header.png"
             alt="Ada's Trail header capsule"
           />
-          <p>
+          <p class="summary-copy">
             Ada vanished during a midnight walk. Her trail leads off-world.
             Steer a persistent hero—or a crew of up to eight—through procedural
             top-down survival runs where weapons attack automatically and loot
@@ -100,123 +163,266 @@
           </p>
           <dl>
             <div>
-              <dt>RELEASE DATE</dt>
+              <dt>RELEASE DATE:</dt>
               <dd>To be announced</dd>
             </div>
             <div>
-              <dt>DEVELOPER</dt>
+              <dt>DEVELOPER:</dt>
               <dd>Niclas Lindstedt</dd>
             </div>
             <div>
-              <dt>PUBLISHER</dt>
+              <dt>PUBLISHER:</dt>
               <dd>Niclas Lindstedt</dd>
             </div>
           </dl>
+          <p class="tag-label">Popular user-defined tags for this product:</p>
           <div class="tag-row">
             <span>Bullet Heaven</span><span>Top-Down</span><span>Loot</span>
-            <span>Online Co-Op</span><span>Pixel Graphics</span>
+            <span>Online Co-Op</span><span>Pixel Graphics</span><span>+</span>
           </div>
         </aside>
       </section>
 
-      <section class="purchase" aria-label="Purchase preview">
+      <section class="action-strip" aria-label="Store actions preview">
         <div>
-          <strong>ADA'S TRAIL</strong
-          ><span>Buy once. No in-game purchases.</span>
+          <button type="button" disabled>Add to your wishlist</button>
+          <button type="button" disabled>Follow</button>
+          <button type="button" disabled>Ignore⌄</button>
         </div>
-        <button type="button" disabled>PRICE NOT SET</button>
+        <button type="button" disabled>View Your Queue →</button>
       </section>
 
-      <div class="content-grid">
-        <article id="about" class="about">
-          <h2>ABOUT THIS GAME</h2>
-          <p class="lead">
-            Ada went out for a midnight walk and never came home. The trail
-            leaves Earth, crosses the Moon, and keeps going.
-          </p>
-          <h3>YOU STEER. YOUR BUILD FIGHTS.</h3>
-          <p>
-            Ada's Trail is a top-down survival shooter about positioning,
-            pressure, and the gear you trust your life to. Your hero
-            automatically uses equipped weapons and powers. Read the horde,
-            spend your sprint, and know when holding your ground has become a
-            bad idea.
-          </p>
-          <img
-            class="about-image"
-            src="../capsules/library-header.png"
-            alt="The hero following Ada's ectoplasm trail across the Moon"
-          />
-          <h3>BUILD FROM WHAT SURVIVES THE FIGHT.</h3>
-          <p>
-            Weapons, armor, charms, consumables, and named relics spill from the
-            horde. Every item has its own level, quality, and rolled bonuses.
-            Carry a softcore hero through five hostile worlds and a hidden
-            detour—or give a hardcore hero one life for the whole search.
-          </p>
-          <h3>SEARCH ALONE OR BRING SEVEN FRIENDS.</h3>
-          <p>
-            Host an online run through Steam lobbies and invites. Fight, revive,
-            and share the field together. There is no automatic public
-            matchmaking: one player hosts and friends join that run. Solo play
-            works fully offline.
-          </p>
-
-          <h2 id="requirements">SYSTEM REQUIREMENTS</h2>
-          <div class="requirements">
-            <section>
-              <h3>MINIMUM</h3>
-              <p><b>OS:</b> Windows 10, 64-bit</p>
-              <p><b>Processor:</b> Dual-core 2.0 GHz</p>
-              <p><b>Memory:</b> 4 GB RAM</p>
-              <p><b>Graphics:</b> WebGL 2 capable</p>
-              <p><b>Storage:</b> 1 GB</p>
-            </section>
-            <section>
-              <h3>RECOMMENDED</h3>
-              <p><b>OS:</b> Windows 11, 64-bit</p>
-              <p><b>Processor:</b> Quad-core 2.5 GHz</p>
-              <p><b>Memory:</b> 8 GB RAM</p>
-              <p><b>Graphics:</b> Recent integrated or dedicated GPU</p>
-              <p><b>Storage:</b> 1 GB</p>
-            </section>
-          </div>
-          <p class="platform-note">
-            Native Windows, macOS, and Linux depots are planned. Requirements
-            remain provisional until release-build QA.
-          </p>
-        </article>
-
-        <aside class="facts">
-          <section>
-            <h3>FEATURES</h3>
-            <ul>
-              <li>Single-player</li>
-              <li>Online Co-op</li>
-              <li>Steam Achievements</li>
-              <li>Steam Cloud</li>
-              <li>Steam Workshop</li>
-              <li>Full controller support</li>
-            </ul>
+      <div class="store-columns">
+        <div class="primary-column">
+          <section class="purchase-card" aria-label="Purchase preview">
+            <div class="purchase-heading">
+              <div>
+                <h2>Buy Ada's Trail</h2>
+                <p>Pricing and release timing have not been configured.</p>
+              </div>
+              <div class="platforms" aria-label="Planned platforms">
+                <span title="Windows">⊞</span><span title="macOS">●</span
+                ><span title="Linux">◒</span>
+              </div>
+            </div>
+            <div class="purchase-controls">
+              <span class="price-state">PRICE NOT SET</span>
+              <button type="button" disabled>Portal data required</button>
+            </div>
           </section>
-          <section class="mature">
-            <h3>MATURE CONTENT</h3>
+
+          <section id="about" class="store-section about">
+            <h2>About This Game</h2>
+            <p class="lead">
+              Ada went out for a midnight walk and never came home. The trail
+              leaves Earth, crosses the Moon, and keeps going.
+            </p>
             <p>
-              Frequent stylized pixel-art violence, blood, dismemberment,
-              corpses, and non-human ectoplasm or mechanical wreckage. Gore can
-              be reduced or disabled.
+              <strong
+                >Ada's Trail is a top-down survival shooter about positioning,
+                pressure, and the gear you trust your life to.</strong
+              >
+              You steer. Your hero handles the fighting, automatically using the
+              weapons and powers you have equipped. Read the horde, spend your
+              sprint, and decide when holding your ground has become a bad idea.
+            </p>
+            <img
+              class="about-image"
+              src="../capsules/library-header.png"
+              alt="The hero following Ada's ectoplasm trail across the Moon"
+            />
+            <h3>BUILD FROM WHAT SURVIVES THE FIGHT.</h3>
+            <p>
+              Weapons, armor, charms, consumables, and named relics spill from
+              the horde. Ranged weapons run on ammunition; melee and magic
+              weapons wear down. Every item has its own level, quality, and
+              rolled bonuses, so a find can change how the rest of the run
+              plays.
+            </p>
+            <h3>CARRY A HERO THROUGH THE WHOLE SEARCH—OR LOSE ONE FOR GOOD.</h3>
+            <p>
+              Levels, stats, talents, gear, and the coin bank persist between
+              runs. Choose softcore for a recoverable campaign or hardcore for
+              one life across every world.
+            </p>
+            <img
+              class="about-image gameplay-image"
+              src="../screenshots/steam-1080/05-boss.png"
+              alt="A real Ada's Trail boss encounter in The Rift"
+            />
+            <h3>SEARCH ALONE OR BRING SEVEN FRIENDS.</h3>
+            <p>
+              Host an online run through Steam lobbies and invites. Fight,
+              revive, and share the field together. There is no automatic public
+              matchmaking: one player hosts and friends join that run. Solo play
+              works fully offline.
             </p>
           </section>
-          <section class="truth-note">
-            <h3>PREVIEW QA</h3>
+
+          <section class="store-section mature-copy">
+            <h2>Mature Content Description</h2>
+            <p>The developers describe the content like this:</p>
+            <p class="mature-description">
+              Contains frequent stylized pixel-art violence. Human and creature
+              enemies can bleed; powerful attacks can cut bodies apart or burst
+              them, leaving blood, organs, corpses, and tracks on the ground and
+              on the player character. Ghosts release ectoplasm, machines break
+              into sparks and wreckage, and cosmic enemies leave non-human
+              remains. Gore can be reduced or disabled in the settings.
+            </p>
+          </section>
+
+          <section id="requirements" class="store-section requirements-wrap">
+            <h2>System Requirements</h2>
+            <div class="os-tabs" role="tablist" aria-label="Operating systems">
+              <button class="os-tab active" type="button" data-os="windows">
+                Windows
+              </button>
+              <button class="os-tab" type="button" data-os="macos">
+                macOS
+              </button>
+              <button class="os-tab" type="button" data-os="linux">
+                SteamOS + Linux
+              </button>
+            </div>
+            <div class="requirements" data-os-panel="windows">
+              <section>
+                <h3>MINIMUM:</h3>
+                <p><b>OS:</b> Windows 10, 64-bit</p>
+                <p><b>PROCESSOR:</b> Dual-core 2.0 GHz</p>
+                <p><b>MEMORY:</b> 4 GB RAM</p>
+                <p><b>GRAPHICS:</b> WebGL 2 capable</p>
+                <p><b>STORAGE:</b> 1 GB available space</p>
+              </section>
+              <section>
+                <h3>RECOMMENDED:</h3>
+                <p><b>OS:</b> Windows 11, 64-bit</p>
+                <p><b>PROCESSOR:</b> Quad-core 2.5 GHz</p>
+                <p><b>MEMORY:</b> 8 GB RAM</p>
+                <p><b>GRAPHICS:</b> Recent integrated or dedicated GPU</p>
+                <p><b>STORAGE:</b> 1 GB available space</p>
+              </section>
+            </div>
+            <div class="requirements" data-os-panel="macos" hidden>
+              <section>
+                <h3>MINIMUM:</h3>
+                <p><b>OS:</b> macOS 12 Monterey</p>
+                <p><b>PROCESSOR:</b> Intel or Apple silicon</p>
+                <p><b>MEMORY:</b> 4 GB RAM</p>
+                <p><b>GRAPHICS:</b> Metal-capable integrated graphics</p>
+                <p><b>STORAGE:</b> 1 GB available space</p>
+              </section>
+              <section>
+                <h3>RECOMMENDED:</h3>
+                <p><b>OS:</b> macOS 13 Ventura or later</p>
+                <p><b>PROCESSOR:</b> Apple M1 or later</p>
+                <p><b>MEMORY:</b> 8 GB RAM</p>
+                <p><b>STORAGE:</b> 1 GB available space</p>
+              </section>
+            </div>
+            <div class="requirements" data-os-panel="linux" hidden>
+              <section>
+                <h3>MINIMUM:</h3>
+                <p><b>OS:</b> 64-bit Linux, glibc 2.35+</p>
+                <p><b>PROCESSOR:</b> Dual-core 2.0 GHz, x86-64</p>
+                <p><b>MEMORY:</b> 4 GB RAM</p>
+                <p><b>GRAPHICS:</b> Vulkan or OpenGL with WebGL 2</p>
+                <p><b>STORAGE:</b> 1 GB available space</p>
+              </section>
+              <section>
+                <h3>RECOMMENDED:</h3>
+                <p><b>OS:</b> SteamOS 3 or Ubuntu 22.04 LTS</p>
+                <p><b>PROCESSOR:</b> Quad-core 2.5 GHz, x86-64</p>
+                <p><b>MEMORY:</b> 8 GB RAM</p>
+                <p><b>GRAPHICS:</b> Recent integrated or dedicated GPU</p>
+                <p><b>STORAGE:</b> 1 GB available space</p>
+              </section>
+            </div>
+            <p class="platform-note">
+              Requirements remain provisional until packaged release builds have
+              been tested on every listed operating system.
+            </p>
+          </section>
+        </div>
+
+        <aside class="sidebar" id="features">
+          <section class="sidebar-card relevance">
+            <h2>Is this game relevant to you?</h2>
+            <p>
+              Review, friend, curator, and play-history signals will appear on
+              the live Steam page. This internal preview does not fabricate
+              them.
+            </p>
+          </section>
+
+          <section
+            class="sidebar-card feature-card"
+            aria-label="Steam features"
+          >
+            <ul>
+              <li><span aria-hidden="true">●</span>Single-player</li>
+              <li><span aria-hidden="true">●●</span>Online Co-op</li>
+              <li><span aria-hidden="true">✦</span>Steam Achievements</li>
+              <li><span aria-hidden="true">☁</span>Steam Cloud</li>
+              <li><span aria-hidden="true">▤</span>Steam Workshop</li>
+              <li><span aria-hidden="true">🎮</span>Full controller support</li>
+            </ul>
+          </section>
+
+          <section class="sidebar-card controller-card">
+            <p class="eyebrow">CONTROLLER</p>
+            <p class="controller-status">✓ Full controller support</p>
+          </section>
+
+          <section class="sidebar-card language-card">
+            <h2>Languages:</h2>
+            <p>
+              Steamworks language configuration has not been finalized. Do not
+              infer localization support from this English preview.
+            </p>
+          </section>
+
+          <section class="sidebar-card deck-card">
+            <h2>Steam Deck Compatibility</h2>
+            <p><span class="unknown-mark">?</span> Not yet reviewed</p>
+            <small
+              >Controller glyphs and the packaged build still need QA.</small
+            >
+          </section>
+
+          <section class="sidebar-card achievements-card">
+            <h2>Includes 86 Steam Achievements</h2>
+            <div class="achievement-preview" aria-label="Achievement examples">
+              <span>HQ</span><span>MOON</span><span>MARS</span><span>RIFT</span>
+              <b>View<br />all 86</b>
+            </div>
+          </section>
+
+          <section class="sidebar-card product-data">
+            <p><b>TITLE:</b> Ada's Trail</p>
+            <p><b>GENRE:</b> Action, RPG, Survival</p>
+            <p><b>DEVELOPER:</b> Niclas Lindstedt</p>
+            <p><b>PUBLISHER:</b> Niclas Lindstedt</p>
+            <p><b>RELEASE DATE:</b> To be announced</p>
+          </section>
+
+          <section class="sidebar-card truth-note">
+            <h2>Preview QA</h2>
             <p>
               Capsules are conceptual key art. Gallery images are uncropped
-              captures of the running game with its shipped HUD.
+              captures of the running game with its shipped HUD. Price, reviews,
+              awards, events, languages, and Deck status are intentionally not
+              invented.
             </p>
           </section>
         </aside>
       </div>
     </main>
+
+    <footer>
+      Internal layout proof for Steamworks preparation. Not affiliated with or
+      served by Valve.
+    </footer>
     <script src="app.js"></script>
   </body>
 </html>
