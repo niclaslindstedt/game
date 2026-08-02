@@ -2,14 +2,12 @@
 // WHAT THE TITLE MENU DECIDED ABOUT THIS RUN'S SESSION — one leaf, read by the
 // run driver and written by the HOST screen.
 //
-// **WHY IT IS NOT A PROP.** Every Steam run already hosts a session (that is
-// the loop's move into the session: the simulation lives in the utility
-// process either way).
-// What HOST GAME adds is one bit — OPEN THE DOORS — plus the four values a door
-// needs, and threading those from a title-menu row through `App`, `GameScreen`,
-// `createRunSession` and `createRunDriver` would be five signatures widened to
-// carry a boolean that the driver alone reads. The app plays ONE run at a time,
-// exactly as `run-commands.ts`'s sink is module-global for the same reason.
+// **WHY IT IS NOT A PROP.** HOST GAME chooses the session driver and carries
+// the values its doors need. Threading those from a title-menu row through
+// `App`, `GameScreen`, `createRunSession` and `createRunDriver` would widen five
+// signatures with state the driver alone reads. The app plays ONE run at a
+// time, exactly as `run-commands.ts`'s sink is module-global for the same
+// reason. NEW GAME never arms this leaf and therefore stays local.
 //
 // **IT IS IMPORT-FREE APART FROM SETTINGS, AND MUST STAY THAT WAY.** The HOST
 // and JOIN screens are TITLE MENU screens, i.e. the app's startup path, where
