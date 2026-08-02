@@ -24,7 +24,7 @@
     "typecheck:only": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "react": "^19.0.0",
+    "react": "^19.2.8",
     "react-dom": "^19.0.0",
     "workbox-window": "^7.0.0"
   },
