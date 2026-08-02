@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The achievements STORE: the persisted account-wide slice — lifetime totals
-// (achievement-totals.ts) plus the oss-framework unlock ledger (earned ids →
+// (achievement-totals.ts) plus the local unlock ledger (earned ids →
 // timestamps, and the unseen queue that lights the HUD star). GameScreen feeds
 // it the engine's per-tick events and a run-start hook; whatever unlocks comes
 // back as fresh ids to celebrate. One localStorage blob, shared by every hero
 // (achievements are the ACCOUNT's trophy shelf, not a character's), persisted
 // with the same private-mode-safe guards as settings.ts.
 //
-// The ledger transitions come from the framework (`applyUnlocks` is idempotent
-// and dedupes the unseen queue; `clearUnseen` acknowledges) — only the catalog
-// evaluation is ours, since our conditions read counter totals rather than the
-// framework watcher's prev/next state deltas.
+// Unlock transitions and catalog evaluation are both local: conditions read
+// the custom lifetime counters, while the store records timestamps and the
+// unseen queue.
 //
 // Every write also nudges the PLATFORM MIRROR (achievement-sync.ts): in the
 // native shell the same badges show up in Game Center. That is a one-way copy
@@ -19,12 +18,6 @@
 // looks like.
 
 import type { GameEvent } from "@game/core";
-
-import {
-  applyUnlocks,
-  clearUnseen,
-  type UnlockLedger,
-} from "@niclaslindstedt/oss-framework/achievements";
 
 import { storageKey } from "../identity.ts";
 
@@ -44,14 +37,16 @@ import {
 } from "./achievement-totals.ts";
 
 /** Per-badge context captured the moment it was earned — WHO was playing when
- * the trophy dropped. The timestamp lives in the framework ledger
+ * the trophy dropped. The timestamp lives in the unlock ledger
  * (`unlocked[id]`); this is the game-specific companion to it. `character` is
  * null for badges earned before this was tracked (or with no active hero). */
 export type AchievementUnlockMeta = { character: string | null };
 
-/** The persisted blob: the framework ledger, our counter totals, and the
+/** The persisted blob: the unlock ledger, counter totals, and the
  * per-badge unlock context (`meta`, keyed by achievement id). */
-export type AchievementsSave = UnlockLedger & {
+export type AchievementsSave = {
+  unlocked: Record<string, number>;
+  unseen: string[];
   totals: LifetimeTotals;
   meta: Record<string, AchievementUnlockMeta>;
 };
@@ -128,12 +123,19 @@ function satisfiedNow(): string[] {
 }
 
 /** Record any newly satisfied conditions; returns the genuinely-new ids (the
- * caller's cue to celebrate). Idempotent via the framework ledger. */
+ * caller's cue to celebrate). Idempotent via the unlock ledger. */
 function unlockSatisfied(): string[] {
   const ids = satisfiedNow();
   if (ids.length === 0) return [];
-  const { next, fresh } = applyUnlocks(save, ids, Date.now());
-  save = next;
+  const fresh = ids.filter((id) => save.unlocked[id] === undefined);
+  const unlocked = { ...save.unlocked };
+  const unseen = [...save.unseen];
+  const now = Date.now();
+  for (const id of fresh) {
+    unlocked[id] = now;
+    if (!unseen.includes(id)) unseen.push(id);
+  }
+  save = { ...save, unlocked, unseen };
   // Stamp each freshly-earned badge with the hero who was playing, so the
   // browser can later say "earned by NAME" alongside the unlock date.
   if (fresh.length > 0) {
@@ -206,7 +208,7 @@ export function recordKillRate(rate: number, party = false): void {
 /** The player has seen their new badges (opened the browser) — dim the star. */
 export function acknowledgeAchievements(): void {
   if (save.unseen.length === 0) return;
-  save = clearUnseen(save);
+  save = { ...save, unseen: [] };
   persist();
 }
 

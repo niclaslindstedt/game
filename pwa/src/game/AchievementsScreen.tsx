@@ -15,10 +15,9 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
-import { TIER_POINTS } from "@niclaslindstedt/oss-framework/achievements";
-
 import { AchievementCard, AchievementCardBody } from "./AchievementCard.tsx";
 import {
+  ACHIEVEMENT_POINTS,
   ACHIEVEMENT_CATEGORIES,
   ACHIEVEMENTS,
   CATEGORY_LABELS,
@@ -132,9 +131,9 @@ export function AchievementsScreen({
       earned += done;
       total += defs.length;
       for (const def of defs) {
-        maxPoints += TIER_POINTS[def.tier];
+        maxPoints += ACHIEVEMENT_POINTS[def.tier];
         if (save.unlocked[def.id] !== undefined)
-          points += TIER_POINTS[def.tier];
+          points += ACHIEVEMENT_POINTS[def.tier];
       }
     }
     return { categories, earned, total, points, maxPoints };

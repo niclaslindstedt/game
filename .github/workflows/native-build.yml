@@ -29,14 +29,6 @@ concurrency:
 
 permissions:
   contents: read
-  # The website build (bundled into the app) resolves @niclaslindstedt/oss-framework
-  # from GitHub Packages via npm ci — needs package-read scope.
-  packages: read
-
-env:
-  # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc), used
-  # by the root `npm ci` that the website build depends on.
-  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
 
 jobs:
   build:

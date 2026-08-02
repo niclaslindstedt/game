@@ -35,6 +35,10 @@ docs/_build/
 # every desktop build, never committed.
 electron/server-src/
 electron/server-dist/
+electron/webroot/
+electron/dist/
+electron/release/
+electron/node_modules/
 
 # Node
 node_modules/
@@ -83,3 +87,8 @@ native/*.p8
 # Agent scratch worktrees — parallel sessions' clones of this repo, never
 # content of it (eslint ignores the same path).
 .claude/worktrees/
+
+# Local agent runtime metadata. The canonical checked-in playbooks live under
+# `.agent/`; these plural/runtime directories are materialized by coding tools.
+.agents/
+.codex/

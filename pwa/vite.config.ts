@@ -102,8 +102,7 @@ export default defineConfig({
     // The engine lives at the repository root (`../src`); the app imports it
     // through these aliases so engine code never reaches into app modules.
     // @game/lib and @ui/lib are the generic pools earmarked for extraction
-    // into oss-framework: once a module migrates, only the alias prefix in
-    // its importers changes (@…/lib/foo → @niclaslindstedt/oss-framework/foo).
+    // reusable code local while giving callers a stable import prefix.
     // Keep in lockstep with tsconfig `paths` here and at the root.
     alias: [
       { find: "@game/core", replacement: here("../src/index.ts") },

@@ -19,12 +19,12 @@ import {
 
 // Hand-rolls the game's service worker at build time so the deployed app is an
 // installable, self-updating, offline-first PWA. The pattern follows the
-// oss-framework demo (`demo/pwa-plugin.ts`): the framework's `usePwaUpdate`
+// local PWA update lifecycle:
 // hook owns the update state machine and the prompt UI, and only needs three
 // emitted files plus one cache-naming convention — cheaper than pulling a
 // Workbox toolchain in for.
 //
-// What the hook (@niclaslindstedt/oss-framework/pwa) expects, and what we emit:
+// What the update hook expects, and what we emit:
 //   - `${base}sw.js`                  a "prompt to update" worker (installs,
 //                                     parks in `waiting`, never auto-skips)
 //   - `${base}version.json`           `{ version }` shown in the update toast

@@ -35,9 +35,9 @@
   Game state lives on your device.
 - **Fully offline** — the game is an installable PWA that precaches itself;
   once loaded it launches and plays with no network at all.
-- **Built to be built on** — reusable game components and code are developed
-  against [`oss-framework`](https://github.com/niclaslindstedt/oss-framework)
-  so later games can share them.
+- **Built to be built on** — reusable game components and code live in clearly
+  separated local libraries so later games can share them without coupling
+  this game to an external framework.
 
 ## Play
 
@@ -242,11 +242,6 @@ through the silent switch. Builds are manual to keep costs down; see
 ## Prerequisites
 
 - **Node.js ≥ 24** (pinned in [`.nvmrc`](.nvmrc); `nvm use` picks it up).
-- **A `GITHUB_PAT` environment variable** holding a GitHub personal access
-  token with the `read:packages` scope. The
-  [`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework)
-  dependency is served from GitHub Packages, which requires authentication
-  even for reads (see [`.npmrc`](.npmrc)).
 - `make` for the developer entry points, `shellcheck`/`actionlint` for the
   optional shell-lint targets.
 

@@ -14,8 +14,8 @@
 // secret, wired in `.github/workflows/pages.yml`).
 
 import { engineVersion } from "@game/menu";
-import { createZip, readZip } from "@niclaslindstedt/oss-framework/zip";
-import { downloadBlob, MIME_ZIP } from "@niclaslindstedt/oss-framework/files";
+import { downloadBlob, MIME_ZIP } from "@ui/lib/files.ts";
+import { createZip, readZip } from "@ui/lib/zip.ts";
 
 import { IDENTITY } from "../identity.ts";
 

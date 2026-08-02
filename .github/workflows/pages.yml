@@ -44,11 +44,6 @@ permissions:
   contents: write
   pages: write
   id-token: write
-  # npm ci resolves @niclaslindstedt/oss-framework from GitHub Packages.
-  # Without this, the GITHUB_PAT fallback to `github.token` (see env) has
-  # no package-read scope — the explicit permissions block denies
-  # everything unlisted — and `npm ci` 403s whenever the npm cache is cold.
-  packages: read
 
 concurrency:
   group: pages
@@ -67,8 +62,6 @@ env:
   # Settings -> Secrets and variables -> Actions -> Variables. A build without
   # it falls back to a placeholder (see pwa/vite.config.ts).
   SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
-  # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc).
-  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
   # Signs exported character archives so a hand-edited save fails to re-import
   # (see pwa/src/game/character-transfer.ts). Optional — an empty secret
   # falls back to the committed default key baked into the bundle. Set the

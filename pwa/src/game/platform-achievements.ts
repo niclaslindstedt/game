@@ -27,9 +27,11 @@
 // and the diff is the work list. The suite fails if the manifest drifts, if the
 // list outgrows the cap, or if the points overrun the budget.
 
-import { TIER_POINTS } from "@niclaslindstedt/oss-framework/achievements";
-
-import { ACHIEVEMENTS, type AchievementDef } from "./achievement-defs.ts";
+import {
+  ACHIEVEMENTS,
+  ACHIEVEMENT_POINTS,
+  type AchievementDef,
+} from "./achievement-defs.ts";
 import type { LifetimeTotals } from "./achievement-totals.ts";
 
 /** Game Center's ceiling on achievements per game. Play Games' is far higher,
@@ -103,7 +105,7 @@ export function platformProgress(
 /**
  * The point value to give each entry in the portal, spending the platform's
  * whole 1,000-point budget in proportion to the game's own tier weights
- * (10/25/50/100 — see the framework's `TIER_POINTS`).
+ * (10/25/50/100 — see `ACHIEVEMENT_POINTS`).
  *
  * Not a hand-typed column: the budget is fixed while the catalog grows, so
  * every added badge re-slices the same pie, and typing the numbers would mean
@@ -113,7 +115,7 @@ export function platformProgress(
  */
 export function platformPoints(): Record<string, number> {
   const totalWeight = PLATFORM_ACHIEVEMENTS.reduce(
-    (sum, def) => sum + TIER_POINTS[def.tier],
+    (sum, def) => sum + ACHIEVEMENT_POINTS[def.tier],
     0,
   );
   if (totalWeight <= 0) return {};
@@ -121,7 +123,8 @@ export function platformPoints(): Record<string, number> {
   // Floor first, never below the platform's 1-point minimum, never above its
   // 100-point maximum.
   const shares = PLATFORM_ACHIEVEMENTS.map((def, index) => {
-    const exact = (PLATFORM_POINT_BUDGET * TIER_POINTS[def.tier]) / totalWeight;
+    const exact =
+      (PLATFORM_POINT_BUDGET * ACHIEVEMENT_POINTS[def.tier]) / totalWeight;
     return {
       id: def.id,
       index,

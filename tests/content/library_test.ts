@@ -116,13 +116,15 @@ import {
   storyIndex,
   storyLinks,
 } from "../../pwa/scripts/library/render-story.mjs";
-import { ACHIEVEMENTS } from "../../pwa/src/game/achievement-defs.ts";
+import {
+  ACHIEVEMENTS,
+  ACHIEVEMENT_POINTS,
+} from "../../pwa/src/game/achievement-defs.ts";
 import { emptyTotals } from "../../pwa/src/game/achievement-totals.ts";
 import {
   isPlatformAchievement,
   platformPoints,
 } from "../../pwa/src/game/platform-achievements.ts";
-import { TIER_POINTS } from "@niclaslindstedt/oss-framework/achievements";
 import { ACHIEVEMENT_FIELDS } from "../../pwa/scripts/library/model-achievements.mjs";
 import { CATEGORY_BLURB } from "../../pwa/scripts/library/prose-achievements.mjs";
 import {
@@ -795,7 +797,7 @@ describe("library numbers are the engine's", () => {
 
   it("prices and meters a badge the way the shelf does", () => {
     // Three figures on a badge row, and every one of them has an owner: the
-    // framework's tier weights, the badge's own progress meter, and the app's
+    // catalog's point weights, the badge's own progress meter, and the app's
     // platform curation. A page that worked any of them out for itself would
     // eventually disagree with the shelf sitting one tap away in the game.
     const points = platformPoints();
@@ -805,7 +807,7 @@ describe("library numbers are the engine's", () => {
     for (const def of ACHIEVEMENTS) {
       const badge = byId.get(def.id);
       expect(badge, def.id).toBeDefined();
-      expect(badge!.points, def.id).toBe(TIER_POINTS[def.tier]);
+      expect(badge!.points, def.id).toBe(ACHIEVEMENT_POINTS[def.tier]);
       expect(badge!.goal, def.id).toBe(
         def.progress ? def.progress(emptyTotals()).goal : null,
       );

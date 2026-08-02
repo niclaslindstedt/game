@@ -6,11 +6,10 @@
 // companion) derive from the live content registries so a sequel that rewrites
 // the catalogs gets its roster of badges for free.
 //
-// Tiers reuse the oss-framework achievement ladder (beginner → expert) so the
-// framework's point weights apply; the pixel UI (AchievementsScreen, the
+// Tiers use the game's achievement ladder (beginner → expert) so the shared
+// point weights apply; the pixel UI (AchievementsScreen, the
 // unlock toast) renders these defs directly — sprite-name icons, plain-string
-// caps text — rather than the framework's DOM components, matching how the
-// game re-skins every other framework surface.
+// caps text matching the rest of the game's UI.
 
 import {
   COMPANION_DEFS,
@@ -23,13 +22,20 @@ import {
   uniqueDef,
 } from "@game/core";
 
-import type { AchievementTier } from "@niclaslindstedt/oss-framework/achievements";
-
 import {
   EQUIP_SLOTS,
   maxLevelRuns,
   type LifetimeTotals,
 } from "./achievement-totals.ts";
+
+export type AchievementTier = "beginner" | "intermediate" | "pro" | "expert";
+
+export const ACHIEVEMENT_POINTS: Record<AchievementTier, number> = {
+  beginner: 10,
+  intermediate: 25,
+  pro: 50,
+  expert: 100,
+};
 
 /** Browser sections, in display order. */
 export const ACHIEVEMENT_CATEGORIES = [

@@ -12,13 +12,6 @@ on:
     # red until the next push.
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
-env:
-  # @niclaslindstedt/oss-framework is pulled from GitHub Packages, which
-  # requires auth even for reads (.npmrc references GITHUB_PAT). Prefer the
-  # GITHUB_PAT secret; fall back to the workflow token, which can read
-  # packages in the same owner.
-  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
-
 # The four checks used to be four steps of one job, which made CI as long as
 # their SUM — and every one of them opened by rebuilding the same generated
 # content the previous step had just built. They are independent of each other,

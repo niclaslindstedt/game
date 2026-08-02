@@ -58,9 +58,7 @@ if (!skipBuild) {
       `developer tooling ${devTools ? "on" : "OFF"}…`,
   );
   // Run from the repo root so the workspace + engine build resolve. Inherits
-  // stdio so the vite/asset output streams through. GITHUB_PAT (for the
-  // oss-framework package) must already be in the env if a fresh install is
-  // needed — a warm node_modules needs no token.
+  // stdio so the vite/asset output streams through.
   execFileSync("npm", ["run", "build", "--workspace", "pwa"], {
     cwd: REPO_DIR,
     stdio: "inherit",

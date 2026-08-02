@@ -3,7 +3,7 @@
 // is rejected by the signature check (the anti-cheat speed bump). See
 // pwa/src/game/character-transfer.ts.
 
-import { createZip, readZip } from "@niclaslindstedt/oss-framework/zip";
+import { createZip, readZip } from "../pwa/src/lib/zip.ts";
 import { describe, expect, it } from "vitest";
 
 import type { Character } from "../pwa/src/game/characters.ts";

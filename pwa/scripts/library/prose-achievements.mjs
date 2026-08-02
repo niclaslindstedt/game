@@ -73,7 +73,7 @@ export function achievementsDescription(model) {
 /**
  * THE POINT LADDER: four tiers, four weights, and what the whole shelf is worth.
  *
- * The weights are the framework's (`TIER_POINTS`), not this game's, and the
+ * The weights come from the game's achievement catalog, and the
  * spread across them is the one fact about the catalog nobody can see from
  * inside the game — the shelf shows a running total, never the shape of what
  * makes it up.
