@@ -141,7 +141,7 @@ jobs:
           - os: macos-latest
             target: macos
             script: dist:mac
-            artifact: mac-universal
+            artifact: mac
           - os: ubuntu-latest
             target: linux
             script: dist

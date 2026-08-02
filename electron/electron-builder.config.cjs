@@ -93,6 +93,11 @@ module.exports = {
   // and pwa sources are NOT here — they were compiled into the site already.
   files: ["dist/**/*", "webroot/**/*", "package.json", "!**/*.map"],
 
+  // The game has no translated shell chrome. Chromium otherwise carries every
+  // locale it supports, which is tens of megabytes of duplicate UI strings the
+  // renderer never asks it to draw.
+  electronLanguages: ["en"],
+
   // THE MOD TOOLCHAIN, carried in from outside `electron/`.
   //
   // The compiler runs in the MAIN process at load — that is the security
@@ -163,20 +168,26 @@ module.exports = {
 
   win: {
     target: [{ target: "dir" }],
+    files: [
+      "!node_modules/steamworks.js/dist/linux64/**/*",
+      "!node_modules/steamworks.js/dist/osx/**/*",
+    ],
     extraFiles: STEAM_REDIST.win,
     // Unsigned is tolerated for a Steam-launched app (the client is the trust
     // boundary). Sign anyway if the binary is ever distributed outside Steam.
   },
 
   mac: {
-    // One depot for both Apple Silicon and Intel — the arch belongs on the
-    // target entry, not on this block.
-    target: [{ target: "dir", arch: "universal" }],
+    // Steam for macOS remains an Intel process. One x64 depot supports Intel
+    // Macs directly and Apple Silicon through Rosetta without carrying a
+    // second copy of Chromium in every player's download.
+    target: [{ target: "dir", arch: "x64" }],
     icon: "../pwa/public/maskable-icon-512x512.png",
-    // steamworks.js carries both named prebuilt addons in both npm installs.
-    // They are already architecture-specific files, not two slices for lipo;
-    // keep the identical pair from one side when the two ASARs are merged.
-    x64ArchFiles: "**/steamworks.js/dist/osx/*.node",
+    files: [
+      "!node_modules/steamworks.js/dist/linux64/**/*",
+      "!node_modules/steamworks.js/dist/win64/**/*",
+      "!node_modules/steamworks.js/dist/osx/steamworksjs.darwin-arm64.node",
+    ],
     extraFiles: STEAM_REDIST.mac,
     category: "public.app-category.action-games",
     // Gatekeeper blocks an un-notarized app even when Steam launches it, so a
@@ -190,6 +201,10 @@ module.exports = {
 
   linux: {
     target: [{ target: "dir" }],
+    files: [
+      "!node_modules/steamworks.js/dist/osx/**/*",
+      "!node_modules/steamworks.js/dist/win64/**/*",
+    ],
     extraFiles: STEAM_REDIST.linux,
     category: "Game",
   },

@@ -190,7 +190,7 @@ keeps the store lettering identical to the game's.
 
 ```sh
 npm run release:win      # → release/win-unpacked/
-npm run release:mac      # → release/mac-universal/   (Apple Silicon + Intel)
+npm run release:mac      # → release/mac/   (x64; Rosetta on Apple Silicon)
 npm run release:linux    # → release/linux-unpacked/
 ```
 
