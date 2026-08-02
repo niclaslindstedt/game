@@ -35,6 +35,9 @@ export type HostIntent = {
   name: string;
   password: string;
   maxPlayers: number;
+  /** Empty seats to fill with AUTOPILOT heroes — the BOTS row. Clamped so a
+   * bot can never take the host's own chair. */
+  bots: number;
   /** The port to TRY. What the socket GOT is a different number and comes back
    * from the session — see `SessionSettings.port`. */
   port: number;
@@ -129,6 +132,10 @@ export function hostIntentFor(heroName: string): HostIntent {
     name: `${heroName.toUpperCase()}'S GAME`,
     password: session.password,
     maxPlayers: session.maxPlayers,
+    // Clamped against the seat count HERE as well as in the menu row: the two
+    // settings are stored separately, and a stale pair (seats lowered after
+    // bots were set) must never ask for more bots than there are empty chairs.
+    bots: Math.max(0, Math.min(session.bots, session.maxPlayers - 1)),
     port: session.port,
     udp: doorOpen(session.doors, "direct"),
     steam: doorOpen(session.doors, "steam"),

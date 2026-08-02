@@ -198,6 +198,22 @@ export type Player = {
    */
   held?: boolean;
   /**
+   * NOBODY IS BEHIND THIS SEAT — it is an AUTOPILOT hero the session seated to
+   * fill an empty chair (a bot seat in a hosted game).
+   *
+   * PUBLIC on the wire on purpose, because three different readers need it: the
+   * SERVER stamps it when it seats the bot and prices the horde off it (a bot
+   * seat scales the fight exactly as `/players N` does — `server/session.ts`),
+   * the party HUD may say "BOT" on the frame, and the XP split reads it so a
+   * kill's pot is never taxed by a hero no person is levelling
+   * (`splitXp` in `xp-share.ts`). It is stamped ONCE, at `seatHero`, and only
+   * by the session's own bot creation — a remote joiner's claim to be a bot is
+   * stripped at the hub (`server/net/hub.ts`), so the flag can never be worn as
+   * a disguise. Absent on every hero a person is playing, which is all of them
+   * in a single-player run.
+   */
+  bot?: true;
+  /**
    * What the ground underfoot is doing to the hero's PACE right now — the
    * `snare_field` ability's whole effect (1 = free, below 1 = held).
    *

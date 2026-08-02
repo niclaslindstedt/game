@@ -83,6 +83,12 @@ export type DedicatedConfig = {
   port?: number;
   /** Seats, and there is no host among them here — see `maxClients` below. */
   maxPlayers?: number;
+  /** Seats to FILL WITH AUTOPILOT HEROES (`--bots N`). A session fact rather
+   * than a run parameter — it is passed to the host, never onto the
+   * `SessionParams` (`paramsFrom` describes the RUN, and seat-filling says
+   * nothing about the world every client must build). Each bot joins as an
+   * ordinary client and yields its seat when a person wants it. */
+  bots?: number;
   /** A password, or "" for an open game. */
   password?: string;
   /** Mod ids in load order. A joiner whose list differs is refused by name. */
@@ -171,6 +177,7 @@ export function parseArgs(argv: readonly string[]): {
     else if (name === "port") overrides.port = Number(value);
     else if (name === "seed") overrides.seed = Number(value);
     else if (name === "players") overrides.maxPlayers = Number(value);
+    else if (name === "bots") overrides.bots = Number(value);
     else if (name === "map-size") overrides.generatedMapSize = value;
   }
   return { config, overrides };
@@ -231,6 +238,9 @@ export async function startDedicated(
     mods: config.mods,
     password: config.password,
     maxClients,
+    // `--bots N`: autopilot heroes filling seats until people take them —
+    // the same creation path a hosted game uses (`HostOptions.bots`).
+    bots: config.bots,
     // Every session log line reaches the console rather than a control
     // channel. This is the one deployment where somebody is actually reading
     // them, which is why a refused join and a corrected loadout are worth

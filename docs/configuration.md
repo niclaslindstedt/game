@@ -324,6 +324,7 @@ npm run server:start -- server.config.json    # …from a file
 | `seed`             | `--seed`       | rolled   | The run's seed. A rolled one is PRINTED — a run nobody can reproduce is a bug report nobody can act on. |
 | `port`             | `--port`       | 27015    | The UDP port to TRY. What was BOUND is what gets printed, and the two are not the same thing.           |
 | `maxPlayers`       | `--players`    | 8        | Seats. Capped at the wire's own `MAX_CLIENTS`.                                                          |
+| `bots`             | `--bots`       | 0        | Seats filled with AUTOPILOT heroes. Each is an ordinary client and yields its seat when a person joins. |
 | `password`         | `--password`   | none     | A speed bump between the people invited and everybody else, never a wall.                               |
 | `mods`             | —              | none     | Mod ids in load order. A joiner whose list differs is refused by name.                                  |
 | `generatedMapSize` | `--map-size`   | `random` | `small` / `medium` / `large` / `random`. Every mission is carved, so the size is the only map knob.     |

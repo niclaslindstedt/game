@@ -51,6 +51,17 @@ import type { GameState, Loadout, Player } from "./types/index.ts";
  * not to be inside somebody, near enough to be in the same fight. */
 const ARRIVAL_RING = PLAYER.radius * 6;
 
+/** What kind of hero is being seated. */
+export type SeatOptions = {
+  /**
+   * The seat is a BOT's — an autopilot hero the session created to fill an
+   * empty chair, with no person behind it. Stamps {@link Player.bot}, which the
+   * XP split, the horde pricing and the party HUD all read. Only the session's
+   * own bot creation passes this; the hub never forwards it from a joiner.
+   */
+  bot?: boolean;
+};
+
 /**
  * Seat one more hero in a live run and return them.
  *
@@ -58,7 +69,11 @@ const ARRIVAL_RING = PLAYER.radius * 6;
  * transition hands `createGame`. Null seats the authored fresh start, which is
  * what a brand-new character joining a friend's game gets.
  */
-export function seatHero(state: GameState, loadout: Loadout | null): Player {
+export function seatHero(
+  state: GameState,
+  loadout: Loadout | null,
+  opts: SeatOptions = {},
+): Player {
   const seat = nextFreeSeat(state);
   const def = runLevelDef(state);
   const diff = difficultyDef(state.difficulty);
@@ -73,6 +88,7 @@ export function seatHero(state: GameState, loadout: Loadout | null): Player {
   // run, not to the person, and one arriving holstered would stand there unable
   // to swing because a scripted strike three districts away has not fired.
   hero.disarmed = false;
+  if (opts.bot) hero.bot = true;
   if (seat < state.players.length) state.players[seat] = hero;
   else state.players.push(hero);
   if (loadout) applyLoadout(state, hero, loadout);

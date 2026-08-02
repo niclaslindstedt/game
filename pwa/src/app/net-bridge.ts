@@ -148,6 +148,12 @@ export type HostOptions = {
   params: SessionParams;
   password?: string;
   maxClients?: number;
+  /** Seats to fill with the session's own AUTOPILOT heroes — the BOTS row on
+   * the HOST screen. A session fact like `maxClients`, deliberately NOT a
+   * field on `params`: `SessionParams` describes the run and is compared for
+   * determinism, and seat-filling says nothing about the world every client
+   * builds. */
+  bots?: number;
   mods?: string[];
   /** The catalog overrides those mods registered (§4.4) — the session process
    * simulates, and its registry never saw the page's `registerDefs`. Opaque
@@ -286,6 +292,7 @@ export async function hostSession(
     adopt: opts.adopt,
     password: opts.password,
     maxClients: opts.maxClients,
+    bots: opts.bots,
     mods: opts.mods,
     modDefs: opts.modDefs,
   })) as { ok?: boolean; levelId?: string; reason?: string } | null;

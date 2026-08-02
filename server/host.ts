@@ -30,6 +30,7 @@
 
 import { engineVersion, type FrozenRun } from "@game/core";
 
+import { seatLocalBots, type LocalBots } from "./local-bots.ts";
 import { createPeerHub, type PeerHub } from "./net/hub.ts";
 import type { Bound, Transport } from "./net/transport.ts";
 import { createUdpTransport } from "./net/udp.ts";
@@ -58,6 +59,19 @@ export type HostOptions = {
   allowUnlicensedTransport?: boolean;
   /** Seats, host included. */
   maxClients?: number;
+  /**
+   * FILL THIS MANY SEATS WITH AUTOPILOT HEROES (`server/local-bots.ts`) — the
+   * host playing a party game without four friends online.
+   *
+   * A SESSION fact rather than a run parameter, like `maxClients` beside it:
+   * `SessionParams` describes the RUN and is compared for determinism, and how
+   * many chairs the host chose to fill says nothing about the world both ends
+   * must build. Each bot joins as an ordinary client — same admission, same
+   * seat, same rules — created here because both entries (the forked utility
+   * process and the dedicated terminal) share this module, so neither
+   * duplicates the creation logic.
+   */
+  bots?: number;
   /** A run to ADOPT rather than build — a parked run or a checkpoint. */
   adopt?: FrozenRun | null;
   /** NOBODY OWNS THIS SESSION — it is a dedicated server's, standing empty
@@ -161,7 +175,32 @@ export function createHost(options: HostOptions): Host {
   let lastAdvanceMs = 0;
   let closed = false;
 
+  /** The session's own bot seats, once created. */
+  let localBots: LocalBots | null = null;
+  const botsWanted = Math.max(0, Math.floor(options.bots ?? 0));
+
+  /**
+   * Seat the requested bots, once, as soon as it is SAFE to.
+   *
+   * Not at construction: a hosted session identifies its HOST by being the
+   * first client to ask for a seat, so a bot seated before the renderer
+   * attaches would be mistaken for the host and handed the run's own hero. So
+   * the bots wait until somebody is in — `server/main.ts` attaches the host's
+   * client before it calls `start()`, and every pump retries until then. An
+   * ownerless (dedicated) session has no host to wait for and seats them at
+   * once; `--bots N` is what keeps its field alive with nobody connected.
+   */
+  function ensureBots(): void {
+    if (localBots !== null || botsWanted === 0 || closed) return;
+    if (!options.ownerless && session.clientCount === 0) return;
+    localBots = seatLocalBots(session, botsWanted, {
+      now,
+      log: options.log,
+    });
+  }
+
   function pump(): void {
+    ensureBots();
     const at = now();
     const elapsed = at - lastAdvanceMs;
     // Whole ticks only — the remainder is left on the clock and paid next
@@ -169,6 +208,9 @@ export function createHost(options: HostOptions): Host {
     const ran = session.advance(elapsed);
     lastAdvanceMs += ran * TICK_MS;
     hub.tick();
+    // The bots decide AFTER the session has advanced and published, so each
+    // reads the freshest snapshot — the session's own cadence is theirs.
+    localBots?.tick();
     mapper?.renew(Date.now());
     // A very long stall (a suspended laptop, a host that was swapped out)
     // would otherwise leave a debt the session refuses to pay in one go and
@@ -206,6 +248,11 @@ export function createHost(options: HostOptions): Host {
 
     start() {
       if (timer) clearInterval(timer);
+      // The host's own client is attached by now in every shipped flow
+      // (`server/main.ts` seats it before starting the clock), so this is
+      // where a hosted session's bots come in; pump retries for any caller
+      // that starts the clock first.
+      ensureBots();
       lastAdvanceMs = now();
       timer = setInterval(pump, TICK_MS);
     },
@@ -217,6 +264,8 @@ export function createHost(options: HostOptions): Host {
       closed = true;
       if (timer) clearInterval(timer);
       timer = null;
+      localBots?.close();
+      localBots = null;
       session.close(reason);
       hub.close();
       bound = null;

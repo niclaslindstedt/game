@@ -98,6 +98,7 @@ export {
   resumeHero,
   seatHero,
   type DepartOptions,
+  type SeatOptions,
 } from "./game/seating.ts";
 export { validateLoadout, type LoadoutCheck } from "./game/loadout-check.ts";
 // PER-PLAYER DEATH (`game/downed.ts`): the fall, the corpse,

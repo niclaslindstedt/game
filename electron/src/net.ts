@@ -76,6 +76,9 @@ export type NetRequest = {
   /** `host`: the session's password, seats, and mod list. */
   password?: string;
   maxClients?: number;
+  /** `host`: seats to fill with the session's own autopilot heroes. Forwarded
+   * untouched, like everything else this bridge moves. */
+  bots?: number;
   mods?: string[];
   /** `host`: the catalog overrides those mods registered (§4.4). Forwarded
    * untouched; the session registers them before it builds. */
@@ -362,6 +365,7 @@ export function createNetBridge(
         modDefs: request.modDefs,
         password: request.password,
         maxClients: request.maxClients,
+        bots: request.bots,
       });
       window.webContents.postMessage(NET_PORT_CHANNEL, null, [channel.port2]);
       const reply = await await_("started");

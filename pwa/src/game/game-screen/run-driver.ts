@@ -187,6 +187,7 @@ export function createRunDriver(session: RunSession): RunDriver {
           steam: hosting.steam,
           password: hosting.password,
           maxClients: hosting.maxPlayers,
+          bots: hosting.bots,
         }
       : undefined,
     onClosed: (reason, detail) => {

@@ -80,11 +80,22 @@ import {
 const RESEND_QUIET_TICKS = 12;
 
 export type BotClientOptions = {
-  /** The pipe. A UDP socket for the direct path, the relay for Steam — this
-   * module never asks which. */
-  transport: Transport;
-  /** The session, as the transport names one. */
-  host: PeerKey;
+  /** The pipe, for a SOCKET join. A UDP socket for the direct path, the relay
+   * for Steam — this module never asks which. Omitted when `pipe` is given. */
+  transport?: Transport;
+  /** The session, as the transport names one. Omitted when `pipe` is given. */
+  host?: PeerKey;
+  /**
+   * A raw in-process `ClientTransport` INSTEAD of a socket — the session's own
+   * local bot seats (`server/local-bots.ts`) hand one end of a loopback pair
+   * here. There is no handshake to run and nothing to knock on: the caller has
+   * already admitted this client itself (`session.addClient`), so the whole
+   * join-link half is skipped and `start()` resolves immediately. Everything
+   * above the pipe — the same client, the same autopilot, the same verbs — is
+   * identical either way, which is the point: every rule that governs a client
+   * governs a local bot by construction.
+   */
+  pipe?: ClientTransport;
   /** This build's engine version, compared with the session's at the
    * handshake. */
   build: string;
@@ -175,37 +186,62 @@ export function createBotClient(options: BotClientOptions): BotClient {
   // speaks `ArrayBuffer` to "a pipe, whatever it is". Neither knows the other
   // exists, which is why joining cost one small module rather than a second
   // client — and why a bot client costs this file rather than a second wire.
+  //
+  // AND THE LINK HALF IS OPTIONAL: a LOCAL bot (the session's own seat-filler)
+  // arrives with a raw `ClientTransport` already admitted at the other end, so
+  // there is no socket, no handshake and no link to pump — the bridge below is
+  // simply not built, and the raw pipe is wrapped only to keep the byte count
+  // honest.
   let deliver: ((frame: ArrayBuffer) => void) | null = null;
-  const link: JoinLink = createJoinLink({
-    transport: options.transport,
-    host: options.host,
-    handshake: {
-      protocol: PROTOCOL_VERSION,
-      build: options.build,
-      mods: options.mods ?? [],
-    },
-    name: options.name,
-    password: options.password,
-    now: options.now,
-    // A COPY, because the client's end takes ownership and the transport is
-    // still holding its own scratch buffer — the same rule `server/main.ts`
-    // follows handing frames to a renderer.
-    deliver: (frame) => {
-      stats.bytes += frame.byteLength;
-      deliver?.(frame.slice().buffer);
-    },
-    onAdmitted: () => options.log?.(`${options.name} admitted`),
-    onClosed: report,
-    log: options.log,
-  });
-
-  const pipe: ClientTransport = {
-    send: (frame) => link.send(new Uint8Array(frame)),
-    onFrame: (listener) => {
-      deliver = listener;
-    },
-    close: () => link.close(),
-  };
+  let link: JoinLink | null = null;
+  let pipe: ClientTransport;
+  if (options.pipe) {
+    const raw = options.pipe;
+    pipe = {
+      send: (frame) => raw.send(frame),
+      onFrame: (listener) =>
+        raw.onFrame((frame) => {
+          stats.bytes += frame.byteLength;
+          listener(frame);
+        }),
+      close: () => raw.close(),
+    };
+  } else {
+    const { transport, host } = options;
+    if (!transport || !host) {
+      throw new Error("a bot client needs a transport and a host, or a pipe");
+    }
+    const joined: JoinLink = createJoinLink({
+      transport,
+      host,
+      handshake: {
+        protocol: PROTOCOL_VERSION,
+        build: options.build,
+        mods: options.mods ?? [],
+      },
+      name: options.name,
+      password: options.password,
+      now: options.now,
+      // A COPY, because the client's end takes ownership and the transport is
+      // still holding its own scratch buffer — the same rule `server/main.ts`
+      // follows handing frames to a renderer.
+      deliver: (frame) => {
+        stats.bytes += frame.byteLength;
+        deliver?.(frame.slice().buffer);
+      },
+      onAdmitted: () => options.log?.(`${options.name} admitted`),
+      onClosed: report,
+      log: options.log,
+    });
+    link = joined;
+    pipe = {
+      send: (frame) => joined.send(new Uint8Array(frame)),
+      onFrame: (listener) => {
+        deliver = listener;
+      },
+      close: () => joined.close(),
+    };
+  }
 
   const client: NetClient = createNetClient({
     transport: pipe,
@@ -250,12 +286,15 @@ export function createBotClient(options: BotClientOptions): BotClient {
   let lastTick = -RESEND_QUIET_TICKS;
 
   return {
-    start: () => link.start(),
+    // A local bot has nothing to open or knock on — it was admitted before it
+    // was built — so its start is already done.
+    start: () => link?.start() ?? Promise.resolve(),
     tick() {
       if (closed) return;
       // The link's own clock first: the probe's retry, the reliability layer's
-      // retransmits and the socket. Before admission that is ALL there is to do.
-      link.tick();
+      // retransmits and the socket. Before admission that is ALL there is to
+      // do — and a local bot, which has no link, skips straight to playing.
+      link?.tick();
       stats.tick = client.tick;
       const state = client.state;
       const seat = client.seat;

@@ -77,7 +77,13 @@ export type NetDriverOptions = {
    * simulates in the session process, and it must not bind a socket, ask a
    * router for a mapping or advertise a lobby for that.
    */
-  listen?: ListenOptions & { password?: string; maxClients?: number };
+  listen?: ListenOptions & {
+    password?: string;
+    maxClients?: number;
+    /** Seats to fill with the session's own autopilot heroes — rides the
+     * `start` message like `maxClients`, never the params. */
+    bots?: number;
+  };
   /** The session ended under us — a crashed fork, a refused handshake. The run
    * loop has no state to fall back to, so the caller decides what to say. */
   onClosed?: (reason: string, detail?: string) => void;
@@ -149,6 +155,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
     modDefs: options.modDefs ?? undefined,
     password: options.listen?.password,
     maxClients: options.listen?.maxClients,
+    bots: options.listen?.bots,
   }).then((result) => {
     if (!result.ok) {
       if (!disposed) options.onClosed?.("error", result.reason);

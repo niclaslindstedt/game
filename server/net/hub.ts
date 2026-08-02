@@ -121,13 +121,27 @@ export type HubSession = {
   addClient(
     id: number,
     send: (frame: ArrayBuffer) => void,
-    seat: boolean | { play: boolean; loadout?: unknown; resume?: string },
+    /**
+     * `bot` marks one of the session's OWN autopilot seats — and the hub NEVER
+     * sets it. A joiner's frames cannot claim it: the hub builds its seat
+     * request by hand in `onJoin` from the fields it chooses to read, so a
+     * `bot: true` riding a stranger's join payload is dropped on the floor. A
+     * bot that could be claimed from outside would be a free pass out of the
+     * XP split and a lever on the horde's pricing.
+     */
+    seat:
+      | boolean
+      | { play: boolean; loadout?: unknown; resume?: string; bot?: boolean },
     name?: string,
   ): void;
   removeClient(id: number): void;
   receive(id: number, type: number, seq: number, payload: unknown): void;
   /** How many seats are taken, host included. */
   readonly clientCount: number;
+  /** How many of those seats are the session's own BOTS. A bot yields its seat
+   * to an arriving person, so the admission desk's seat-cap check must not
+   * count them — absent (a stub, an older session) means none. */
+  readonly botClients?: number;
 };
 
 export type HubOptions = {
@@ -403,7 +417,10 @@ export function createPeerHub(options: HubOptions): PeerHub {
       nowMs: options.now(),
       password,
       proof: Number(join.proof) || 0,
-      seats: options.session.clientCount,
+      // Bot seats do not count against the cap: each one YIELDS to an arriving
+      // person (`server/session.ts`), so a session full of the host's own
+      // autopilot heroes still has room for everybody it was sized for.
+      seats: options.session.clientCount - (options.session.botClients ?? 0),
       maxSeats: maxClients,
       // Hardcore never mixes with softcore. The joiner's flag is a claim
       // off the frame like the loadout beside it — coerced, never trusted

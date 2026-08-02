@@ -89,6 +89,11 @@ type ControlMessage =
       modDefs?: DefOverrides | null;
       password?: string;
       maxClients?: number;
+      /** FILL THIS MANY SEATS WITH AUTOPILOT HEROES — the session creates its
+       * own bot clients once the host's renderer has attached. A session fact
+       * like `maxClients`, never a `SessionParams` field: the params describe
+       * the RUN and are compared for determinism. See `HostOptions.bots`. */
+      bots?: number;
       /** A run to ADOPT rather than build — a parked run or a checkpoint the
        * player just retried into (see `SessionOptions.adopt`). Opaque on this
        * hop; the session is what reads it. */
@@ -316,6 +321,7 @@ function handleControl(
         mods: message.mods,
         password: message.password,
         maxClients: message.maxClients,
+        bots: message.bots,
         peers: {
           kick: (clientId, reason) => host?.hub.kick(clientId, reason),
           // The invite panel is the SHELL's — only the main process holds the

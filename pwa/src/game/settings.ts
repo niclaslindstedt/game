@@ -489,6 +489,10 @@ export type SessionSettings = {
   doors: SessionDoors;
   /** Seats, host included. */
   maxPlayers: number;
+  /** Empty seats to fill with AUTOPILOT heroes — the HOST screen's BOTS row.
+   * 0 ships (a party is friends first); at most `maxPlayers - 1`, because the
+   * host's own chair is never a bot's. */
+  bots: number;
   /** What a joiner must know, or "" for an open game. */
   password: string;
   /** Free-for-all, or one drop per player. Fixed for the life of a run — a
@@ -617,6 +621,9 @@ function defaults(): GameSettings {
       port: DEFAULT_SESSION_PORT,
       doors: "both",
       maxPlayers: MAX_SESSION_PLAYERS,
+      // No bots out of the box: a hosted party is friends first, and a chair
+      // full of autopilots is something a host asks for.
+      bots: 0,
       password: "",
       loot: "free",
       recent: [],
@@ -652,6 +659,12 @@ function loadSession(stored: unknown, base: SessionSettings): SessionSettings {
       typeof held.maxPlayers === "number"
         ? clamp(Math.round(held.maxPlayers), 2, MAX_SESSION_PLAYERS)
         : base.maxPlayers,
+    // 0..7: the host's own chair is never a bot's, so at most seats-minus-one
+    // can be filled (the intent clamps again against the LIVE seat count).
+    bots:
+      typeof held.bots === "number"
+        ? clamp(Math.round(held.bots), 0, MAX_SESSION_PLAYERS - 1)
+        : base.bots,
     password:
       typeof held.password === "string"
         ? held.password.slice(0, MAX_SESSION_PASSWORD)

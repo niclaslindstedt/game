@@ -88,14 +88,48 @@ export function buildHostMenu(
       },
       // A slider rather than a cycled value: eight seats is a range, and the
       // number IS the readout — the same reason the volume rows carry their
-      // percentage in the label.
+      // percentage in the label. Moving it re-clamps the BOTS row below: the
+      // host's own chair is never a bot's, so at most seats-minus-one fill.
       "max-players": sliderRow("host", "max-players", {
         readout: `${session.maxPlayers}`,
         pos: (session.maxPlayers - 2) / (MAX_SESSION_PLAYERS - 2),
-        set: (pos) => net.setSession({ maxPlayers: seatsAt(pos) }),
+        set: (pos) => {
+          const maxPlayers = seatsAt(pos);
+          net.setSession({
+            maxPlayers,
+            bots: clampBots(session.bots, maxPlayers),
+          });
+        },
+        nudge: (dir) => {
+          const maxPlayers = clampSeats(session.maxPlayers + Math.sign(dir));
+          net.setSession({
+            maxPlayers,
+            bots: clampBots(session.bots, maxPlayers),
+          });
+        },
+      }),
+      // The same slider idiom as PLAYERS above it: 0 (no bots, the shipped
+      // answer) up to every seat but the host's own.
+      bots: sliderRow("host", "bots", {
+        readout: `${clampBots(session.bots, session.maxPlayers)}`,
+        pos:
+          session.maxPlayers > 1
+            ? clampBots(session.bots, session.maxPlayers) /
+              (session.maxPlayers - 1)
+            : 0,
+        set: (pos) =>
+          net.setSession({
+            bots: clampBots(
+              Math.round(pos * (session.maxPlayers - 1)),
+              session.maxPlayers,
+            ),
+          }),
         nudge: (dir) =>
           net.setSession({
-            maxPlayers: clampSeats(session.maxPlayers + Math.sign(dir)),
+            bots: clampBots(
+              clampBots(session.bots, session.maxPlayers) + Math.sign(dir),
+              session.maxPlayers,
+            ),
           }),
       }),
       // A label-cycling row rather than a switch: FREE FOR ALL and ALLOCATED
@@ -401,6 +435,11 @@ function doorLabel(doors: SessionDoors): string {
 
 function clampSeats(seats: number): number {
   return Math.max(2, Math.min(MAX_SESSION_PLAYERS, Math.round(seats)));
+}
+
+/** 0 … seats-minus-one: the host's own chair is never a bot's. */
+function clampBots(bots: number, maxPlayers: number): number {
+  return Math.max(0, Math.min(maxPlayers - 1, Math.round(bots)));
 }
 
 function seatsAt(pos: number): number {

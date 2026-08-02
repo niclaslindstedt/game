@@ -584,6 +584,46 @@ The MEASURED tuning pass is still owed: it needs the multi-player headless
 campaign that does not exist yet (see the last section). What has landed beside
 it is the meter it had to be reconciled with — below.
 
+## Bot seats — a party without four friends online
+
+The HOST screen's BOTS row (and the dedicated server's `--bots N`) fills empty
+seats with autopilot heroes. **A bot seat is a client seat**: each bot is the
+same `createNetClient` a human joiner is — `server/bot-client.ts` over an
+in-process loopback pair (`server/local-bots.ts`) — admitted through the same
+`session.addClient`, so every rule that governs a client governs a bot
+unchanged, by construction. The bots run inside the session process, on client
+ids of their own (from 1000), ticked from the host's one clock; `host.ts` owns
+their creation, so the forked utility process and the dedicated terminal share
+it rather than duplicating it.
+
+Five rules ride on the public `Player.bot` flag, each enforced where the thing
+is decided:
+
+- **A bot takes no XP** (`splitXp`, `src/game/xp-share.ts`): no cut, no head in
+  the party bonus, no level in the weighting — and the nobody-in-range fallback
+  pays the nearest PERSON, never a bot standing closer. A botless run walks the
+  exact branches it always did.
+- **A bot seat prices the horde like a `/players` step** — one function in
+  `server/session.ts` applies `playerScaling((override ?? 1) + botSeatsInPlay)`
+  from the chat hook and from every bot seating/departure alike, both knobs
+  together as always.
+- **A bot yields its seat to a person.** A session full of the host's own bots
+  is not full: the admission desk does not count bot seats against the cap, and
+  `addClient` departs the most recently seated bot (down the ordinary removal
+  path — no reconnect ticket is ever minted for one, so the seat frees at once)
+  before seating the arrival.
+- **A bot's run is nobody's roster**: loadout null (the authored fresh start),
+  nothing banked — there is no device and no roster behind it.
+- **A botted run is a party run**: the second seat stamps `GameState.party`
+  exactly as a human joiner would, so it stays off the leaderboards.
+
+The flag travels only one way: the hub builds its seat request by hand and
+never forwards a joiner's claim, so `bot: true` on a stranger's join frame is
+dropped on the floor. Desktop/Steam builds only, like all hosting — the whole
+branch is gated on `netBridgeAvailable()`. Steering a bot's build or watching
+through its eyes is the app's BOT VIEW, which is a different feature and stays
+one.
+
 ## What a kill is worth, and whose it is
 
 Three rules a run does differently once there is more than one hero in it. All
@@ -983,14 +1023,15 @@ boundary all run; it walks to the NEAREST teammate rather than the centroid,
 which is a spot on the floor where nobody is standing; and it is null in single
 player, which is what keeps every existing measurement byte-identical.
 
-**WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** §3.2's half is paid
-(the per-player screens above, non-blocking level-up included), and §4.5's
-half is now too — a joiner plays their own character and banks it. What
-remains: nothing is predicted, so a client shows its hero where the last
-snapshot put him (§3.3). A client's run commands travel but are NOT applied
-locally (`setCommandSink(…, { optimistic: false })`) — the server is
-authoritative over the result, so an optimistic apply would draw an outcome
-the next snapshot may not agree with.
+**WHAT §3.1 DELIBERATELY LEFT IS NOW PAID IN FULL.** §3.2's half (the
+per-player screens above, non-blocking level-up included), §4.5's half (a
+joiner plays their own character and banks it), and §3.3's half — the local
+hero is predicted and everybody else interpolated (see *Prediction and
+interpolation*). One deliberate asymmetry stays: a joiner's run commands
+travel but are NOT applied locally (`setCommandSink(…, { optimistic: false })`)
+— the server is authoritative over a verb's result, so an optimistic apply
+would draw an outcome the next snapshot may not agree with; prediction covers
+movement, never verbs.
 
 ## The autopilot is an intent
 

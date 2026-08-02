@@ -68,6 +68,10 @@ export type ServerControl =
       modDefs?: unknown;
       password?: string;
       maxClients?: number;
+      /** Seats to fill with the session's own AUTOPILOT heroes. A session fact
+       * like `maxClients` beside it — never on the params, which describe the
+       * run itself. */
+      bots?: number;
       /** A run the session should ADOPT rather than build. Opaque here — this
        * process never learns what a run is, which is the point of the two
        * channels (see net.ts). */
