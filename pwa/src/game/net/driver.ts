@@ -194,9 +194,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
       travelHook = hook;
     },
     netStats() {
-      return client
-        ? client.netStats()
-        : { rate: 0, perSec: 0, lastBytes: 0 };
+      return client ? client.netStats() : { rate: 0, perSec: 0, lastBytes: 0 };
     },
     dispose() {
       if (disposed) return;
@@ -333,9 +331,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
       travelHook = hook;
     },
     netStats() {
-      return client
-        ? client.netStats()
-        : { rate: 0, perSec: 0, lastBytes: 0 };
+      return client ? client.netStats() : { rate: 0, perSec: 0, lastBytes: 0 };
     },
     dispose() {
       if (disposed) return;

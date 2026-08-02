@@ -215,9 +215,9 @@ describe("the predicted local hero", () => {
         // inputs, same ground: the replayed position IS the server's.
         const mine = state.players[0].pos;
         const theirs = rig.session.state.players[0].pos;
-        expect(
-          Math.hypot(mine.x - theirs.x, mine.y - theirs.y),
-        ).toBeLessThan(0.01);
+        expect(Math.hypot(mine.x - theirs.x, mine.y - theirs.y)).toBeLessThan(
+          0.01,
+        );
         snapshotsChecked++;
       } else if (stepped > 0) {
         movedBetweenPublishes++;

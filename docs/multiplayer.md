@@ -980,7 +980,7 @@ groups landed as follows:
   giver shipped as its own story commit after manuscript confirmation: RUTH,
   Ada's mother, stands in the bay with a second campaign-long chain.
 - **THE HONEST WIRE** — **LANDED**: prediction and reconciliation (see
-  *Prediction and interpolation* above), the attacker thread (a kill's crits,
+  _Prediction and interpolation_ above), the attacker thread (a kill's crits,
   procs, drop pricing and XP value read the hero who landed the blow, and the
   spare-or-kill choice and boss-death rite are the killer's to resolve), the
   snapshot-size measurement and the partial-entity/per-index delta packing it
@@ -1026,8 +1026,8 @@ player, which is what keeps every existing measurement byte-identical.
 **WHAT §3.1 DELIBERATELY LEFT IS NOW PAID IN FULL.** §3.2's half (the
 per-player screens above, non-blocking level-up included), §4.5's half (a
 joiner plays their own character and banks it), and §3.3's half — the local
-hero is predicted and everybody else interpolated (see *Prediction and
-interpolation*). One deliberate asymmetry stays: a joiner's run commands
+hero is predicted and everybody else interpolated (see _Prediction and
+interpolation_). One deliberate asymmetry stays: a joiner's run commands
 travel but are NOT applied locally (`setCommandSink(…, { optimistic: false })`)
 — the server is authoritative over a verb's result, so an optimistic apply
 would draw an outcome the next snapshot may not agree with; prediction covers

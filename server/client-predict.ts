@@ -262,7 +262,11 @@ export function createPredictor(): Predictor {
       while (pending.length && pending[0]!.seq <= ack) pending.shift();
       // Bank the remote heroes' authoritative positions for interpolation.
       const kept = new Map<number, SeatSamples>();
-      for (let remoteSeat = 0; remoteSeat < state.players.length; remoteSeat++) {
+      for (
+        let remoteSeat = 0;
+        remoteSeat < state.players.length;
+        remoteSeat++
+      ) {
         if (remoteSeat === seat) continue;
         const hero = state.players[remoteSeat];
         if (!hero || !heroInPlay(hero)) continue;

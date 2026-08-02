@@ -617,18 +617,18 @@ its author's business, except `mod/examples/`, which is shipped content.
 This file is the router. When a task is about one system, its own document or
 skill is the source of truth — load that, not a search of the tree.
 
-| Looking for                                                                                                           | Read                                                                     |
-| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| The module map, the shells, the platform seams, the library, deployment                                               | `docs/architecture.md`                                                   |
-| The projection, postfx, the canvas and its scale tiers, gaits, jumps, the loot toss and rarity aura, the hero doll    | `docs/rendering.md`                                                      |
-| Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                                               |
-| Naming anything                                                                                                       | `docs/naming.md`                                                         |
-| Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                    |
-| Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | `docs/modding.md`, `mod/FORMAT.md`, `mod/AGENTS.md`                      |
-| Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                  |
-| This game's plot, roster, venues and economy                                                                          | `docs/game-content.md`, `docs/story.md`                                  |
-| The house art style                                                                                                   | `docs/art-style.md`                                                      |
-| Anything failing to install, build or connect                                                                         | `docs/troubleshooting.md`                                                |
+| Looking for                                                                                                           | Read                                                |
+| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| The module map, the shells, the platform seams, the library, deployment                                               | `docs/architecture.md`                              |
+| The projection, postfx, the canvas and its scale tiers, gaits, jumps, the loot toss and rarity aura, the hero doll    | `docs/rendering.md`                                 |
+| Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                          |
+| Naming anything                                                                                                       | `docs/naming.md`                                    |
+| Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                               |
+| Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | `docs/modding.md`, `mod/FORMAT.md`, `mod/AGENTS.md` |
+| Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                             |
+| This game's plot, roster, venues and economy                                                                          | `docs/game-content.md`, `docs/story.md`             |
+| The house art style                                                                                                   | `docs/art-style.md`                                 |
+| Anything failing to install, build or connect                                                                         | `docs/troubleshooting.md`                           |
 
 | Working on                                         | Load the skill                                          |
 | -------------------------------------------------- | ------------------------------------------------------- |

@@ -426,8 +426,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
       for (const entry of received) bytes += entry.bytes;
       return {
         rate: Math.round((bytes - first.bytes) / spanSec),
-        perSec:
-          Math.round(((received.length - 1) / spanSec) * 10) / 10,
+        perSec: Math.round(((received.length - 1) / spanSec) * 10) / 10,
         lastBytes: last.bytes,
       };
     },
