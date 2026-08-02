@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep sim-bench mod-check mod-catalog
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot sim-bench mod-check mod-catalog
 
 build:
 	npm run build
@@ -138,3 +138,10 @@ store-shots:
 # `ARGS="--shot nuke --around 90 --span 120"`. See the store-shots skill.
 store-sweep:
 	node pwa/scripts/store-shot-sweep.mjs $(ARGS)
+
+# Render the internal Steam listing mock as one COMPLETE page image. The script
+# opens the checked-in HTML directly, waits for every raster, and uses
+# Playwright's full-page capture rather than stopping at the viewport fold.
+# `make store-page-shot ARGS="--width 1440 --out /tmp/steam-page.png"`
+store-page-shot:
+	node electron/store/preview/screenshot.mjs $(ARGS)
