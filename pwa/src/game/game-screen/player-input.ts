@@ -677,7 +677,7 @@ export function handleFieldTaps(
       }
     }
   }
-  // A tap on the hub's WORKBENCH opens the LOST & FOUND (§6.8's stash tail):
+  // A tap on the hub's WORKBENCH opens the LOST & FOUND (the vault's stash):
   // the bay's benches are where a man keeps what he set aside, so the vault
   // is finally reached from a PLACE rather than only a menu row. Hub levels
   // only — the objective that never clears is what marks home ground — and

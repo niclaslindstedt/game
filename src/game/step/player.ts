@@ -40,12 +40,24 @@ import { BALANCE } from "../tuning.ts";
 import type { GameInput, GameState, Player } from "../types/index.ts";
 import { inert, inertEnemy } from "../disposition.ts";
 
+/**
+ * One hero's movement tick.
+ *
+ * `opts.predicting` is the CLIENT-PREDICTION switch (`src/game/predict.ts`):
+ * it skips `applySeismicLanding` — the one COMBAT side effect this pass has,
+ * and the only rng consumer reachable from it (via `hitEnemy`'s crit and loot
+ * rolls) — and changes nothing else. Every movement rule, the stamina ledger
+ * and the obstacle pass run identically, which is what makes a predicted step
+ * byte-identical to the authoritative one on open ground. Omitted (every
+ * caller but the predictor), behavior is exactly what it always was.
+ */
 export function stepPlayer(
   state: GameState,
   player: Player,
   input: GameInput,
   dt: number,
   dtMs: number,
+  opts?: { predicting?: boolean },
 ): void {
   player.hurtFlashMs = Math.max(0, player.hurtFlashMs - dtMs);
   player.moving = false;
@@ -178,7 +190,10 @@ export function stepPlayer(
       });
       // SEISMIC LANDING (melee tree): a trained warlord's touchdown slams the
       // ground — AoE damage + knockback (fired only when the talent is owned).
-      applySeismicLanding(state, player);
+      // COMBAT — so a PREDICTED step never fires it: the slam damages enemies
+      // and its kill resolution draws from the seeded rng stream, both of
+      // which are the server's alone (see `predictHeroMovement`).
+      if (!opts?.predicting) applySeismicLanding(state, player);
     }
   }
 
@@ -395,7 +410,10 @@ function applySeismicLanding(state: GameState, player: Player): void {
       );
       resolveObstacles(state, victim.pos, def.radius);
     }
-    hitEnemy(state, victim, seismic.damage * power, undefined, { attack });
+    hitEnemy(state, victim, seismic.damage * power, undefined, {
+      attack,
+      attacker: player,
+    });
   }
 }
 
@@ -524,6 +542,9 @@ function detonateNuke(state: GameState, player: Player, radius: number): void {
       noNukeDrop: true,
       noMenace: true,
       incinerated: true,
+      // The bomb is the spender's: its kills price XP and drops against the
+      // hero who set it off.
+      attacker: player,
     });
   }
   // THE AFTERMATH (config NUKE): a screen-nuke is a panic button, so it buys

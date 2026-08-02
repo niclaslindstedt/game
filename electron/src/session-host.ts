@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE SESSION HOST — the utilityProcess's whole lifecycle, and nothing else.
 //
-// One process per SESSION, not per app. phase 5's dedicated server runs several,
+// One process per SESSION, not per app. The dedicated server runs several,
 // and one process per session is what makes that free; it is also what keeps
 // the engine's 36 process-global mutable bindings — the `BALANCE` tuning
 // object, the six flags in `src/game/flags.ts`, every `activeXDefs` catalog
@@ -53,6 +53,7 @@ export type ServerRosterEntry = {
   name: string;
   playing: boolean;
   ping: number;
+  rate: number;
 };
 
 /** A message down the control channel to the server. Mirrors `ControlMessage`
@@ -62,11 +63,15 @@ export type ServerControl =
       kind: "start";
       params: unknown;
       mods?: string[];
-      /** The catalog overrides those mods registered (§4.4), opaque like
+      /** The catalog overrides those mods registered, opaque like
        * `adopt` — the session registers them before it builds. */
       modDefs?: unknown;
       password?: string;
       maxClients?: number;
+      /** Seats to fill with the session's own AUTOPILOT heroes. A session fact
+       * like `maxClients` beside it — never on the params, which describe the
+       * run itself. */
+      bots?: number;
       /** A run the session should ADOPT rather than build. Opaque here — this
        * process never learns what a run is, which is the point of the two
        * channels (see net.ts). */
@@ -85,7 +90,7 @@ export type ServerControl =
       password?: string;
       mods?: string[];
       hardcore?: boolean;
-      /** The hero this player brings (§4.5), opaque here like `adopt`. */
+      /** The hero this player brings, opaque here like `adopt`. */
       loadout?: unknown;
     }
   | { kind: "peer"; from: string; data: number[] }

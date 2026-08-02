@@ -503,7 +503,7 @@ function advanceUntilStep(
         reviveHero(state);
         break;
       default: {
-        // Banked level-ups (plan §3.2 — a ding no longer pauses the run):
+        // Banked level-ups (a ding no longer pauses the run):
         // spend on sight so the probe's stats track its level, and so a
         // chooser `dismissIntro` greeted the hero with never holds the solo
         // freeze. Spending the last point closes it (`resumeAfterLevelup`).

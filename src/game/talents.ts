@@ -43,7 +43,7 @@ import type { GameState, Player, StatName } from "./types/index.ts";
  * chooser (a respec never auto-closes; the field stays the field).
  *
  * A stuck chooser is no longer anybody's problem: the screen is this hero's
- * alone (plan §3.2), so a hero who quits or goes down with it open holds
+ * alone, so a hero who quits or goes down with it open holds
  * nothing shut — `partyBlocked` only counts heroes in play. That is the
  * structural version of what `releaseStuckLevelup` used to bolt on, and the
  * reason that function no longer exists.

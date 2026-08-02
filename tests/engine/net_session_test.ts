@@ -14,7 +14,7 @@
 // engine rather than by a fixture that was written to agree with it.
 //
 // The transport is a plain function pair. That is the point of putting the
-// seam where it is: phase 2's Steam P2P and UDP transports satisfy the same three
+// seam where it is: the Steam P2P and UDP transports satisfy the same three
 // methods, so everything below keeps its meaning when there is a network.
 
 import { canonicalJson } from "@ui/lib/canonical-json.ts";
@@ -194,8 +194,8 @@ describe("a session and its client", () => {
 
   it("ignores a command name that is not on the list", () => {
     // The allow-list IS the security model: a channel that resolved a name
-    // dynamically would hand a client `grantXp` and `mintUnique` the day phase 2
-    // opens a UDP port.
+    // dynamically would hand a client `grantXp` and `mintUnique` the day a
+    // UDP port opens to the internet.
     const rig = connect();
     const before = rig.session.state.players[0].xp;
     rig.client.sendCommand("grantXp" as never);
@@ -204,7 +204,7 @@ describe("a session and its client", () => {
   });
 
   it("carries a command's ARGUMENTS to the authoritative state", () => {
-    // phase 1's verbs took no arguments; phase 1.5's mostly do — a bag cell, a slot,
+    // The earliest verbs took no arguments; most now carry one — a bag cell, a slot,
     // a stat, a merchant row. What this proves is the whole round trip: the
     // argument survives the encode, the decode and the dispatch, and lands on
     // the SERVER's hero rather than on the client's copy of him.
@@ -219,7 +219,7 @@ describe("a session and its client", () => {
   });
 
   it("ignores an argument of the wrong shape rather than throwing", () => {
-    // These bytes come from a stranger on an open UDP port from phase 2 on. A
+    // These bytes come from a stranger on an open UDP port. A
     // stat that is not a stat must be a refusal the host does not notice, not
     // a write with an attacker's key on it.
     const rig = connect();
@@ -418,7 +418,7 @@ describe("a session that ADOPTED its run", () => {
 
 describe("the private split", () => {
   it("withholds the bag from a client that does not own the hero", () => {
-    // The anti-cheat boundary, and the reason phase 5's trade window can be
+    // The anti-cheat boundary, and the reason the trade window can be
     // honest: a client that never RECEIVES another player's bag cannot
     // manipulate it. A spectator is the first thing that tests it.
     const rig = connect({ ownsPlayer: false });

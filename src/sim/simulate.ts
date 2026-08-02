@@ -131,7 +131,7 @@ export type SimulateLevelOptions = {
    * level-band melee → magic → melee strategy). */
   profile?: BotProfile;
   /**
-   * HOW MANY HEROES ARE ON THE MAP (multiplayer plan §7.2). One by default,
+   * HOW MANY HEROES ARE ON THE MAP. One by default,
    * which is the whole shipped campaign and every existing measurement.
    *
    * **IT IS NOT `/players N` AND THE TWO MUST NEVER BE CONFLATED.** That knob
@@ -323,7 +323,7 @@ export type SimulateCampaignOptions = {
   seed?: number;
   strategy?: BotStrategy;
   profile?: BotProfile;
-  /** Heroes on the map (plan §7.2) — see `SimulateLevelOptions.party`, and note
+  /** Heroes on the map — see `SimulateLevelOptions.party`, and note
    * it is NOT `/players N`. */
   party?: number;
   partyProfiles?: BotProfile[];
@@ -571,9 +571,9 @@ export type StuckReport = {
 };
 
 /**
- * What a PARTY run adds to a level report (multiplayer plan §7.2).
+ * What a PARTY run adds to a level report.
  *
- * **THE PER-CAPITA READ IS THE POINT**, and §4.7 names it as the one to trust:
+ * **THE PER-CAPITA READ IS THE POINT**, and it is the one to trust:
  * a party clears FASTER as well as sharing a kill's payout, so the per-KILL
  * share and the per-capita RATE move in opposite directions and only the second
  * says whether grouping is worth doing. Reading the per-kill share alone is how
@@ -607,7 +607,7 @@ export type PartyReport = {
   }[];
   /** The reads a tuning pass moves a lever on. */
   perCapita: {
-    /** XP per hero per simulated MINUTE — the rate §4.7 says to read, rather
+    /** XP per hero per simulated MINUTE — the rate to read, rather
      * than the per-kill share. */
     xpPerMinute: number;
     /** Kills per hero per simulated minute. */
@@ -632,7 +632,7 @@ export type LevelReport = {
   /** Simulated play time of the run, ms. */
   timeMs: number;
   /**
-   * THE PARTY, when there was one (multiplayer plan §7.2). Absent at party 1,
+   * THE PARTY, when there was one. Absent at party 1,
    * which is the whole shipped campaign and every existing measurement — so no
    * consumer of this report had to learn about it.
    *
@@ -1071,7 +1071,7 @@ function playRun(args: {
   loadout: Loadout | null;
   strategy: BotStrategy;
   profile: BotProfile;
-  /** Heroes on the map (plan §7.2) — NOT `/players N`, which is the hp/XP
+  /** Heroes on the map — NOT `/players N`, which is the hp/XP
    * scaling and is a different knob entirely. */
   party: number;
   partyProfiles?: BotProfile[];
@@ -1121,11 +1121,11 @@ function playRun(args: {
     coinsSold: 0,
   };
   const bot = createBot(args.strategy, args.profile);
-  // THE REST OF THE PARTY (multiplayer plan §7.2). Seat 0 is `bot` above — the
+  // THE REST OF THE PARTY. Seat 0 is `bot` above — the
   // hero every existing readout describes — and the extra seats are appended
   // through the engine's own `seatHero`, so a simulated party grows exactly the
   // way a real one does (beside the party, dressed in their own loadout, and
-  // stamping the run as a PARTY run for §5.3's purposes).
+  // stamping the run as a PARTY run — `PartyStamp`).
   //
   // **EACH SEAT GETS ITS OWN LANE.** A party of four identical meta builds
   // measures one build four times, which is the least interesting thing a party
@@ -1627,7 +1627,7 @@ function playRun(args: {
     }
 
     const beforeXpGained = state.stats.xpGained;
-    // THE BANKED LEVEL-UPS, per seat (plan §3.2): a ding no longer pauses the
+    // THE BANKED LEVEL-UPS, per seat: a ding no longer pauses the
     // run — the points bank on the hero and the chooser opens on demand — so
     // the sim spends them the moment they appear, exactly as the app's
     // autoplay does. If the bot's pick is at the level-scaled cap it won't
@@ -1638,7 +1638,7 @@ function playRun(args: {
     for (let seat = 0; seat < state.players.length; seat++) {
       const hero = state.players[seat];
       if (!hero) continue;
-      // A DOWNED party member stands straight back up (§4.2's `respawn` verb,
+      // A DOWNED party member stands straight back up (the `respawn` verb,
       // through the same dispatch a session runs). Immediately, because that
       // is what a human at the keyboard does and what keeps the instrument
       // measuring a party rather than a shrinking one — the walk back from
@@ -1674,7 +1674,7 @@ function playRun(args: {
     //
     // They travel through `applyRunCommand`, the same dispatch a session server
     // runs, rather than as direct calls. The simulator is the one host that
-    // never has a wire under it (plan §7.2.5's third limit), so this changes
+    // never has a wire under it, so this changes
     // nothing it measures — but it is the reason a verb cannot behave one way
     // under the bot and another in a session.
     runBotActions(state, state.players[0]);
@@ -1684,8 +1684,9 @@ function playRun(args: {
     // (render.ts computeCamera) — so targeting, summon-in and the bot's
     // wall-end sense all run as they do on a real screen.
     if (args.view) input.view = simCamera(state, args.view);
-    // THE REST OF THE PARTY STEERS ITSELF (plan §7.2). One `Bot` per seat, each
-    // handed the hero it is steering — which is what §7.1 was for. A seat the
+    // THE REST OF THE PARTY STEERS ITSELF. One `Bot` per seat, each
+    // handed the hero it is steering — which is what parameterizing the bot's
+    // hero was for. A seat the
     // world has stopped answering for contributes IDLE rather than being asked,
     // the same rule `server/session.ts` follows for an empty chair.
     //

@@ -383,7 +383,7 @@ export async function applyMods(
     questGivers: questGivers as DefOverrides["questGivers"],
   };
   registerDefs(defs);
-  // The SAME overrides, kept for the session process (multiplayer §4.4): a
+  // The SAME overrides, kept for the session process (docs/multiplayer.md): a
   // hosted run simulates over there, where this `registerDefs` never reached.
   // The run driver sends this with `start` and the session registers it before
   // it builds — so the horde a modded host fights is the mod's, not the

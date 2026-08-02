@@ -61,8 +61,13 @@ export {
   type MapSizeName,
 } from "./game/mapgen/index.ts";
 export { IDLE_INPUT, step, type PartyInput } from "./game/step/index.ts";
+// CLIENT-SIDE MOVEMENT PREDICTION — the engine's own movement pass with combat
+// and shared-state side effects neutralized, for the net client's local-hero
+// prediction/replay (see `game/predict.ts` and `docs/multiplayer.md`).
+export { predictHeroMovement } from "./game/predict.ts";
 // THE PARTY — the run's heroes, and the questions the simulation may ask about
-// them as a group (see `game/party.ts`; the plan's §3.1). A hero's own reads are
+// them as a group (see `game/party.ts` and `docs/multiplayer.md`). A hero's
+// own reads are
 // a PARAMETER rather than a lookup and are deliberately absent from this list.
 export {
   anyHeroWithin,
@@ -82,8 +87,8 @@ export {
   seatOf,
 } from "./game/party.ts";
 export { quarryFor, quarryOf } from "./game/aggro.ts";
-// PARTY XP — how a kill's payout is divided (the plan's §4.3). The rule is a
-// leaf so the wire, the tests and the headless simulator can all read it.
+// PARTY XP — how a kill's payout is divided (`docs/multiplayer.md`). The rule
+// is a leaf so the wire, the tests and the headless simulator can all read it.
 export { partyXpBonus, splitXp, type XpCut } from "./game/xp-share.ts";
 export {
   departHero,
@@ -93,9 +98,10 @@ export {
   resumeHero,
   seatHero,
   type DepartOptions,
+  type SeatOptions,
 } from "./game/seating.ts";
 export { validateLoadout, type LoadoutCheck } from "./game/loadout-check.ts";
-// PER-PLAYER DEATH (the plan's §4.2, `game/downed.ts`): the fall, the corpse,
+// PER-PLAYER DEATH (`game/downed.ts`): the fall, the corpse,
 // the respawn. `respawnHero` is reached through the `respawn` run command;
 // these are exported for the tests and the headless harnesses.
 export {
@@ -104,7 +110,7 @@ export {
   respawnHero,
   stepCorpseRecovery,
 } from "./game/downed.ts";
-// TRADE (the plan's §5.1) — the one place a piece of gear leaves one private
+// TRADE (`game/trade.ts`) — the one place a piece of gear leaves one private
 // bag and arrives in another, which is why every rule about it lives in one
 // module and the swap is a single transaction.
 export {
@@ -655,8 +661,8 @@ export {
 
 // THE AUTOPILOT'S OUTPUT AS AN INTENT — the steer plus the verbs its
 // housekeeping travels as, and the three hosts that apply them (in-process, the
-// app's command router, a bot client). See bot/intent.ts and the multiplayer
-// plan's §7.2.5.
+// app's command router, a bot client). See bot/intent.ts and
+// `docs/multiplayer.md`.
 export {
   applyBotCommand,
   botCareCommand,

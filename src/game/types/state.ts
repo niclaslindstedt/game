@@ -367,14 +367,11 @@ export type BossDeathState = {
    * body he is actually standing over rather than against a constant. */
   radius: number;
   /**
-   * WHICH PLAYER is performing the rite, as an index into the party.
-   *
-   * Always 0 today, because there is one hero — but it is stored rather than
-   * assumed for the reason `docs/multiplayer-plan.md` §3.2 gives for the
-   * spare-or-kill `choice`: in co-op the player who landed the killing blow is
-   * the one who acts, with the scene shown to everybody. Resolving it through
-   * `bossDeathExecutioner` keeps phase 3's `state.players[0]` → `state.players[]`
-   * rename to one site instead of one per read.
+   * WHICH PLAYER is performing the rite, as an index into the party — the seat
+   * whose blow felled the boss (stamped by `enterBossDeath`), so in co-op the
+   * hero who landed the kill is the one who leaps while the scene is shown to
+   * everybody. Solo it is always 0. Read through `bossDeathExecutioner`, which
+   * falls back to seat 0 for a seat that has since emptied.
    */
   executioner: number;
   /** Where the executioner stood when the blow landed — his scripted approach
@@ -459,7 +456,7 @@ export type GameState = {
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;
   /**
-   * WHO MAY PICK A DROP UP — the session's loot rule (multiplayer plan §4.3).
+   * WHO MAY PICK A DROP UP — the session's loot rule.
    *
    * `"free"` is free-for-all: anything on the floor goes to whoever reaches it,
    * which is Diablo 2 classic and the shipped default, because friends-only
@@ -476,8 +473,8 @@ export type GameState = {
    */
   lootMode?: LootMode;
   /**
-   * MORE THAN ONE PERSON HAS PLAYED THIS RUN (`PartyStamp`, multiplayer plan
-   * §5.3) — so it banks no leaderboard record, for the reasons written on the
+   * MORE THAN ONE PERSON HAS PLAYED THIS RUN (`PartyStamp`) — so it banks no
+   * leaderboard record, for the reasons written on the
    * type. Null (and absent, on every run created before this existed) means a
    * solo run, which is what the whole shipped campaign is.
    *
@@ -485,7 +482,7 @@ export type GameState = {
    */
   party?: PartyStamp | null;
   /**
-   * OPEN TRADES (`src/game/trade.ts`, multiplayer plan §5.1) — at most one per
+   * OPEN TRADES (`src/game/trade.ts`) — at most one per
    * seat, and absent on every single-player run, which is what makes this cost
    * the shipped campaign nothing.
    *
@@ -495,7 +492,7 @@ export type GameState = {
    */
   trades?: Trade[];
   /**
-   * A REQUESTED IN-SESSION CROSSING (multiplayer plan §6.4) — the destination
+   * A REQUESTED IN-SESSION CROSSING (`src/game/travel.ts`) — the destination
    * the host chose, and how much of its opening to skip (`OpeningSkip`'s own
    * words; a wire value is a claim, read defensively). Set by `requestTravel`
    * (the `travelTo` run command, seat 0 only) and consumed by the SESSION
@@ -613,7 +610,7 @@ export type GameState = {
    */
   dialogueMuted: boolean;
   /** The pending SPARE-or-KILL verdict while `phase === "choice"` — a GROUP
-   * beat (plan §3.2): shown to everybody, the world frozen for it. */
+   * beat: shown to everybody, the world frozen for it. */
   choice: ChoiceState | null;
   /** The recruited party, in join order (see companions.ts). */
   companions: Companion[];
@@ -775,7 +772,8 @@ export type GameState = {
    * `Player` as a PARAMETER wherever a pass is about one specific hero.
    *
    * A seat is never empty and never reordered while a run lives: a player who
-   * leaves keeps their hero standing (phase 4 owns what happens to it), because
+   * leaves keeps their hero standing (`Player.departed` owns what happens to
+   * it), because
    * splicing the list would renumber everybody else's seat and every command in
    * flight names a seat.
    *
@@ -788,7 +786,7 @@ export type GameState = {
   players: [Player, ...Player[]];
   /**
    * Fallen heroes' bodies, each holding the gear its owner was wearing when
-   * they went down (multiplayer plan §4.2 — see `downed.ts` and
+   * they went down (see `downed.ts` and
    * `PlayerCorpse`). Only ever populated in a party: solo, one hero falling is
    * the party wiped, and the wipe path never mints a corpse. Recovery is the
    * owner walking back (`stepCorpseRecovery`); whatever is never recovered is
@@ -1046,10 +1044,11 @@ export type GameState = {
    * REFLECTED damage the ARCANE RETRIBUTION talent owes attackers this tick —
    * one entry per blow the hero took, drained by `stepReflectedDamage` AFTER
    * the enemy pass: billing the attacker inline (mid contact-loop) would splice
-   * the enemy list out from under the `for…of` iterating it. Empty between
-   * ticks (filled and drained within one `step`), so it needs no save
-   * serialization. */
-  pendingReflects: { enemyId: number; amount: number }[];
+   * the enemy list out from under the `for…of` iterating it. `seat` is the
+   * struck hero whose talent reflects (absent reads as seat 0), so the bite is
+   * billed as THEIR blow. Empty between ticks (filled and drained within one
+   * `step`), so it needs no save serialization. */
+  pendingReflects: { enemyId: number; amount: number; seat?: number }[];
   /** Monotonic id source for spawned entities. */
   nextId: number;
   /** Seeded stream for in-run rolls (crits, drops) — keeps runs replayable. */

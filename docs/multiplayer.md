@@ -2,7 +2,7 @@
 
 The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
 describes what actually exists. **Every numbered phase through the plan's
-§5.5.3 R1 has landed, bar §3.3's prediction.** The simulation runs in its own
+§5.5.3 R1 has landed.** The simulation runs in its own
 process, the run loop drives it, the wire between it and a renderer is
 complete and tested, the desktop shell forks and supervises a session, a
 session can open a UDP socket and a Steam lobby and admit remote clients
@@ -16,10 +16,11 @@ device.
 
 The screens are per-player too (§3.2): one player in their bag no longer stops
 the world for anybody else — the run halts only when EVERY hero in play has a
-screen up, which solo is exactly the freeze it always was. What is NOT here yet
-is prediction: a client still shows its hero where the last snapshot put him
-rather than predicting his own steering. See **What is NOT here yet** at the
-foot of this file.
+screen up, which solo is exactly the freeze it always was. The client-side
+LATENCY answer is in too: the local hero is PREDICTED by running the engine's
+own movement pass over unacknowledged inputs, and every other hero is
+INTERPOLATED one publish interval behind — see **Prediction and
+interpolation** below. What remains open is listed at the foot of this file.
 
 ## The party
 
@@ -583,6 +584,46 @@ The MEASURED tuning pass is still owed: it needs the multi-player headless
 campaign that does not exist yet (see the last section). What has landed beside
 it is the meter it had to be reconciled with — below.
 
+## Bot seats — a party without four friends online
+
+The HOST screen's BOTS row (and the dedicated server's `--bots N`) fills empty
+seats with autopilot heroes. **A bot seat is a client seat**: each bot is the
+same `createNetClient` a human joiner is — `server/bot-client.ts` over an
+in-process loopback pair (`server/local-bots.ts`) — admitted through the same
+`session.addClient`, so every rule that governs a client governs a bot
+unchanged, by construction. The bots run inside the session process, on client
+ids of their own (from 1000), ticked from the host's one clock; `host.ts` owns
+their creation, so the forked utility process and the dedicated terminal share
+it rather than duplicating it.
+
+Five rules ride on the public `Player.bot` flag, each enforced where the thing
+is decided:
+
+- **A bot takes no XP** (`splitXp`, `src/game/xp-share.ts`): no cut, no head in
+  the party bonus, no level in the weighting — and the nobody-in-range fallback
+  pays the nearest PERSON, never a bot standing closer. A botless run walks the
+  exact branches it always did.
+- **A bot seat prices the horde like a `/players` step** — one function in
+  `server/session.ts` applies `playerScaling((override ?? 1) + botSeatsInPlay)`
+  from the chat hook and from every bot seating/departure alike, both knobs
+  together as always.
+- **A bot yields its seat to a person.** A session full of the host's own bots
+  is not full: the admission desk does not count bot seats against the cap, and
+  `addClient` departs the most recently seated bot (down the ordinary removal
+  path — no reconnect ticket is ever minted for one, so the seat frees at once)
+  before seating the arrival.
+- **A bot's run is nobody's roster**: loadout null (the authored fresh start),
+  nothing banked — there is no device and no roster behind it.
+- **A botted run is a party run**: the second seat stamps `GameState.party`
+  exactly as a human joiner would, so it stays off the leaderboards.
+
+The flag travels only one way: the hub builds its seat request by hand and
+never forwards a joiner's claim, so `bot: true` on a stranger's join frame is
+dropped on the floor. Desktop/Steam builds only, like all hosting — the whole
+branch is gated on `netBridgeAvailable()`. Steering a bot's build or watching
+through its eyes is the app's BOT VIEW, which is a different feature and stays
+one.
+
 ## What a kill is worth, and whose it is
 
 Three rules a run does differently once there is more than one hero in it. All
@@ -930,32 +971,28 @@ applied in the host's order on the way (and `restoreBaseDefs` puts the
 shipped game back when the run ends); a joiner missing one keeps the refusal,
 whose press opens the game's Steam Workshop hub.
 
-The deferred work is inventoried in the plan's **phase 5.5 — "THE REMAINDER"**,
-and that is the ONE place to look for it: a dozen "NOT LANDED" boxes scattered
-across eleven PR sections is how a debt stops being anybody's. Its original
-chain is SPENT (§7.1 → §7.2 → §4.3's measured pass → §7.2.5 → §3.2 → §4.2's
-corpse all landed), and everything still open is consolidated into **THREE
-phases** (the plan's §5.5.3):
+The build plan's phased remainder is CLOSED on the code side. Its three final
+groups landed as follows:
 
-- **R1 — THE WHOLE PARTY**: **LANDED** (the plan's §5.5.3 carries the
-  as-built record). In-session party travel (§6.4), banking a joiner's
-  character + the party HUD and field visibility (§4.5), the trade window
-  screen (§5.1), mod reconciliation (§4.4), and the workbench stash. The
-  garage's quest giver shipped as its own story commit after the manuscript
-  confirmation §6.5 requires: RUTH, Ada's mother, stands in the bay with a
-  second campaign-long chain.
-- **R2 — THE HONEST WIRE**: prediction and reconciliation (§3.3), the attacker
-  thread (the last seat-0 combat reads, which also unblocks the spare-or-kill
-  owner gate), the snapshot's size + the DEBUG net graph, and decision 15's
-  real licence lock.
-- **R3 — THE PROOF**: the party bot (§7.3–§7.5), the re-measured co-op tuning
-  it unblocks, the overnight soak, the five human-with-hardware acceptances (a
-  packaged Electron launch, eight machines through a real NAT, a real router,
-  the per-OS firewall prompts, the HOST/JOIN screenshot audit), and the store
-  surfaces.
-
-R1 and R2 are independent; R3 runs beside them and finishes last, because
-acceptance is what finishing is.
+- **THE WHOLE PARTY** — **LANDED**: in-session party travel, banking a
+  joiner's character + the party HUD and field visibility, the trade window
+  screen, mod reconciliation, and the workbench stash. The garage's quest
+  giver shipped as its own story commit after manuscript confirmation: RUTH,
+  Ada's mother, stands in the bay with a second campaign-long chain.
+- **THE HONEST WIRE** — **LANDED**: prediction and reconciliation (see
+  _Prediction and interpolation_ above), the attacker thread (a kill's crits,
+  procs, drop pricing and XP value read the hero who landed the blow, and the
+  spare-or-kill choice and boss-death rite are the killer's to resolve), the
+  snapshot-size measurement and the partial-entity/per-index delta packing it
+  demanded (27.6 KB → 8.15 KB per publish on a 135-mob field), the DEBUG net
+  graph, and the licence lock (the dedicated server's config escape is dead
+  code in the shipped binary — `server/licence.ts`, folded shut by
+  `scripts/build-server.mjs`).
+- **THE PROOF** — code half **LANDED**: bots fill a local game's empty seats
+  as real clients, the party bot holds spacing, splits packs, covers the
+  downed and walks errands, and the co-op tuning was re-measured with those
+  behaviours in. What remains is exactly the set of acceptances no diff can
+  close, listed under **What is NOT here yet**.
 
 **§4.3's MEASURED PASS HAS BEEN RUN, AND THE ANSWER IS THAT NEITHER LEVER
 MOVES.** Both prerequisites landed first: `botAct(bot, state, hero)` (164 sites,
@@ -963,20 +1000,22 @@ byte-identical on two full seeded campaigns) and **`--party N`**, the simulator
 flying one bot per seat with a `PartyReport` whose **PER-CAPITA rate is the read
 to trust** — never the per-kill share, because a party also clears faster and
 only dividing by both the head count and the clock shows which effect won.
-`scripts/coop-tuning.mjs` runs it. At party 2, grouping measures **1.1× solo per
-capita** — neutral-to-positive, which is exactly what the rule was designed to
-be — and the fall at party 4 tracks a fall in the per-capita KILL RATE (69 → 18),
-so it is the autopilot's missing SPACING and PACK-SPLITTING (§7.4) rather than
-the XP split. **Lifting `XP_SHARE.partyBonusPerHero` to hide that would be
-re-tuning the game's economy to cover a bot deficiency**, and would have to be
-undone the day §7.4 lands.
+`scripts/coop-tuning.mjs` runs it. The first pass (before the party bot could
+space or split packs) read **1.1× solo at party 2** and a FALL at party 4 that
+tracked the per-capita kill rate collapsing (69 → 18) — the bots crowding one
+mob, not the XP split. **Re-measured after the party behaviours landed**
+(moon/medium, 2 seeds × 6 min): party 2 reads **2.4× solo per capita**, party 4
+**1.7×** — grouping pays at both sizes, the kill rate recovered (per-capita
+13.9/min at party 4 against 7.1 solo), and neither lever moves. The diagnosis
+held: the deficit was the bot's, never the economy's.
 
-**THE BOT KNOWS ONE THING ABOUT THE PARTY: DON'T LEAVE IT**
-(`src/game/bot/party-play.ts`). The rest of §7.4 — spacing, splitting the packs,
-`Item.owner`, covering a hero who is down, group travel — is about how a bot
-party PLAYS and waits until somebody can watch one. The LEASH came early because
-§7.2's simulator is what §4.3's tuning is read off, and an instrument measuring
-N SOLOISTS SHARING A SEED cannot tune co-op. Its number is DERIVED, not typed:
+**THE PARTY BOT PLAYS LIKE A PARTY MEMBER** (`src/game/bot/party-play.ts`,
+`errands.ts`): the leash, a personal spacing envelope, pack-splitting (a foe a
+nearer teammate is handling is deferred when an alternative exists), covering a
+downed or bleeding teammate, a convoy latch that tightens the leash on a long
+march, and errand awareness (active quests' tokens, breeds and visit points
+join the macro ladder; givers are never approached — taking an errand stays
+the player's decision). The LEASH's number is DERIVED, not typed:
 `XP_SHARE.radius` is where a hero stops sharing in a kill, so past it a bot is
 spending the party's payout rather than merely standing badly. It latches with
 hysteresis (pull at 0.9 of the ring, release at 0.5) or a hero oscillates on the
@@ -984,14 +1023,15 @@ boundary all run; it walks to the NEAREST teammate rather than the centroid,
 which is a spot on the floor where nobody is standing; and it is null in single
 player, which is what keeps every existing measurement byte-identical.
 
-**WHAT §3.1 DELIBERATELY LEFT — see the plan's §3.6.** §3.2's half is paid
-(the per-player screens above, non-blocking level-up included), and §4.5's
-half is now too — a joiner plays their own character and banks it. What
-remains: nothing is predicted, so a client shows its hero where the last
-snapshot put him (§3.3). A client's run commands travel but are NOT applied
-locally (`setCommandSink(…, { optimistic: false })`) — the server is
-authoritative over the result, so an optimistic apply would draw an outcome
-the next snapshot may not agree with.
+**WHAT §3.1 DELIBERATELY LEFT IS NOW PAID IN FULL.** §3.2's half (the
+per-player screens above, non-blocking level-up included), §4.5's half (a
+joiner plays their own character and banks it), and §3.3's half — the local
+hero is predicted and everybody else interpolated (see _Prediction and
+interpolation_). One deliberate asymmetry stays: a joiner's run commands
+travel but are NOT applied locally (`setCommandSink(…, { optimistic: false })`)
+— the server is authoritative over a verb's result, so an optimistic apply
+would draw an outcome the next snapshot may not agree with; prediction covers
+movement, never verbs.
 
 ## The autopilot is an intent
 
@@ -1128,51 +1168,94 @@ Every one of these is a real defect, and not one of them fails a unit test.
 
 The soak runs themselves are in the plan's §5.9.
 
+## Prediction and interpolation
+
+The client sends INPUT FRAMES, never positions — the server stays the only
+authority over where anybody is. What prediction changes is when the PLAYER
+gets to see the answer: without it, the hero moves at the 20 Hz publish rate
+plus a round trip, which is the one latency a player feels in their hands.
+
+**The local hero is predicted, and only the local hero.** After every input
+frame, the client runs `predictHeroMovement` (`src/game/predict.ts`) — the
+engine's OWN `stepPlayer`, so speed, steering, facing, jump/gravity, obstacle
+resolution, the bounds clamp and the stamina ledger are all the real rules —
+with the shared-state side effects neutralized: `state.events` swapped for a
+scratch sink, `moveSpawnCredit` / `staminaRegenLockMs` / `staminaEmptyMs` /
+`stats.jumps` saved and restored, and the seismic-landing slam skipped via
+`stepPlayer`'s `predicting` flag. That slam is the one COMBAT side effect the
+movement pass has and the only path from it to the seeded rng stream, so a
+predicted step damages nothing and draws nothing — **combat is never
+predicted**, because a mispredicted kill is a rollback problem this codebase
+has no machinery for and the player would experience as monsters un-dying.
+
+**Reconciliation rides the wire's existing header.** Every input frame carries
+a monotonically increasing seq (its own counter — commands and chat number
+themselves separately); the server tracks the highest seq it has applied per
+client and echoes it in the `ack` field of every state frame, which used to
+carry a snapshot-ack echo nothing read. On each applied snapshot the client
+rolls its predicted scribbles back, lets the authoritative patch land, drops
+every pending input the ack covers, replays the rest through
+`predictHeroMovement`, and reconciles the PRESENTATION: an error under one
+body length (2 × `PLAYER.radius`) is eased toward the replayed truth, a larger
+one (a knockback, a hazard shove — things prediction cannot see) snaps.
+Because every replay starts from server truth, a mispredict lives for exactly
+one publish interval and the easing cannot compound.
+
+**Every other hero is interpolated.** Their inputs are not here to replay, so
+each remote hero is drawn between its last two snapshot positions, advanced by
+local ticks — one publish interval behind, perfectly smooth, and the lateness
+is invisible on a body nobody is steering from this chair. Facing and pose
+take the newest snapshot's values as-is; downed and departed heroes keep their
+corpse-sprawl positions untouched.
+
+The whole thing lives in `server/client-predict.ts`, is wired into
+`server/client.ts` behind `NetClientOptions.predict`, and is **opt-in, default
+off**. The app's two net drivers (`pwa/src/game/net/driver.ts`) pass true; the
+BOT CLIENT deliberately does not — its staleness is the honest readout of what
+the network costs, which is the measurement it exists to take — and the
+replication suites that hash a client's whole state against the server's run
+unpredicted, since a predicted hero is deliberately ahead of the last
+snapshot. An in-session travel resets every buffer: pending inputs would
+replay a walk across geometry that no longer exists.
+`tests/engine/net_prediction_test.ts` holds all of it — the ack echo, the
+60 Hz motion, the exact rebase, the loss reconcile, the untouched shared
+state, and the interpolation bounds.
+
 ## What is NOT here yet
 
-- **The Steam path is written but unproven.** The binding's legacy P2P API is
-  polled, deprecated and thinner on guarantees than SDR, and the plan is
-  unsparing about spiking it under load before the UI rests on it. The direct
-  UDP path exists partly as the insurance policy on exactly that.
-- **Nothing is predicted.** A client shows its own hero where the last snapshot
-  put him, so its steering costs a round trip of felt latency. phase 3's §3.3 is
-  the fix: input frames with a sequence number, the LOCAL hero's movement
-  predicted by replaying unacknowledged input, everybody else interpolated one
-  interval behind — and combat deliberately NOT predicted, because that is a
-  rollback problem this codebase has no machinery for and the player would
-  experience as monsters un-dying.
-- **VICTORY → NEXT LEVEL still drops joiners.** In-session travel (§6.4)
-  carries the party through every door, gate and drive-out — but the
-  post-victory crossing is tangled in the outro/banking flow and still
-  re-mounts app-side, ending the session. The plan's R1 as-built box records
-  it as the item's one deliberate leftover.
-- **The co-op tuning is STRUCTURAL, not measured.** The XP share, the loot
-  allocation and the menace meter's per-capita read are each shaped correctly
-  and each an exact no-op at one hero, but the two knobs that decide how they
-  FEEL — `XP_SHARE.partyBonusPerHero` and the `/players N` pairing — have not
-  been run at 2/4/8 players across the ladder, because the instrument for that
-  (a multi-player headless campaign, the plan's §3.4) does not exist: the
-  autopilot reads seat 0 throughout, so `scripts/simulate-run.mjs` can only fly
-  one hero. Parameterizing the bot on a `Player` is the prerequisite, and it is
-  the next thing phase 4 owes — it is phase 7's §7.1–§7.2, which is owed earlier than
-  its number because nothing else can measure this. See the plan's §4.7.
-- **A trade has no request step.** The window exists now (`TradeOverlay` —
-  the table is a per-player `"trade"` screen raised on BOTH seats by
-  `openTrade`, opened from a teammate's party frame or the pause roster), but
-  opening one is unilateral: the refusal for a busy hero is the whole consent
-  model, and a D2-style ask-first flow is future work.
-- **There is no net graph.** The plan's §5.6 asks for round trip, snapshot size,
-  packet loss and prediction error behind DEBUG MODE, with the FPS meter as the
-  precedent. Every number it wants is already measured — `Reliability.stats` and
-  `.rtt` per peer, the roster's ping — so this is a readout rather than an
-  instrument.
-- **Nothing has been soaked.** §5.6 asks for eight players for hours and for
-  150 ms / 2% loss injected at the transport seam. Neither has been run, and
-  neither CAN be by hand: the instrument is a bot CLIENT, which the plan now
-  names in §7.2.5 and which is blocked on §7.1's parameterization. The end-to-end
-  test (`tests/engine/net_dedicated_test.ts`) proves the stack CONNECTS over a
-  real socket, which is not the same claim.
-- **Nothing has been proven on eight machines through a real NAT**, and it
-  cannot be from CI: that criterion, the UPnP mapping against a real router, and
-  the packaged `npm run electron` launch all need hardware this repo's checks do
-  not have. See the plan's §2.5.3.
+Everything below needs a human, hardware, or hours of wall clock — none of it
+is closable by a diff, which is why it is recorded here instead of being
+ticked from one.
+
+- **The Steam path is written but unproven under load.** The binding's legacy
+  P2P API is polled, deprecated and thinner on guarantees than SDR; it must be
+  spiked under real load before a release leans on it. The direct UDP path
+  exists partly as the insurance policy on exactly that.
+- **VICTORY → NEXT LEVEL still drops joiners.** In-session travel carries the
+  party through every door, gate and drive-out — but the post-victory crossing
+  is tangled in the outro/banking flow and still re-mounts app-side, ending
+  the session. The one deliberate leftover of the travel work.
+- **A trade has no request step.** The window exists (`TradeOverlay` — the
+  table is a per-player `"trade"` screen raised on BOTH seats by `openTrade`,
+  opened from a teammate's party frame or the pause roster), but opening one
+  is unilateral: the refusal for a busy hero is the whole consent model, and a
+  D2-style ask-first flow is future work.
+- **The soak has run for minutes, not hours.** The instrument exists and works
+  — `scripts/bot-client.mjs` drives a fleet of headless clients against a
+  dedicated server, with latency, jitter and loss injected at the transport
+  seam — but leaks and snapshot growth are hour-scale questions, and what has
+  been run answers a ten-minute one. Somebody leaves a terminal open
+  overnight; the section above on the first soaks records what the short runs
+  already found.
+- **Five acceptances need a human with hardware**, and cannot be run from CI:
+  a PACKAGED desktop launch (`npm run electron` with a real
+  `utilityProcess.fork` and `MessagePortMain` handover — covered by stubs and
+  reasoning, never by a running packaged app); eight machines over each
+  transport through a real NAT; the UPnP mapping against a real router; the
+  firewall remedy prompts on each OS; and a `ui-review` screenshot audit of
+  the HOST/JOIN screens (they exist only in desktop builds, which the
+  browser-driving harness cannot reach). Record results — including failures —
+  when they are run.
+- **The store surfaces**: the Steam listing's multiplayer categories, the
+  depot's launch options, and store screenshots showing a party (`store-shots`
+  skill) are owed when the mode ships to the store.

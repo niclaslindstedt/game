@@ -650,7 +650,8 @@ describe("return visit — met here before", () => {
 });
 
 describe("the counter in co-op — every mutator acts on the ACTING hero", () => {
-  // §5.9's first defect, from the other side of the counter: the READ was
+  // The hero-parameterization sweep's first defect, from the other side of the
+  // counter: the READ was
   // parameterized when it crashed a client, and the MUTATORS kept spending
   // seat 0's purse. A joiner at the stall must trade with their own coins,
   // their own bag and their own kit — the host's must not move.

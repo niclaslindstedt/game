@@ -465,7 +465,7 @@ export function drawPlayer(
 ): void {
   const local = localHero(state);
   // THE WHOLE PARTY STANDS ON THE FIELD, not only the seat this client steers
-  // (§4.5 — a party you cannot see is not a party). Teammates draw first and
+  // (a party you cannot see is not a party). Teammates draw first and
   // the local hero LAST, on top: in a scrum the hero the player is steering is
   // the one that must stay readable. A teammate's doll is dressed from their
   // own (public) worn kit; what a teammate does NOT get is the app-side pieces
@@ -567,7 +567,7 @@ function drawHero(
   // `defeat` splash behind the modal). Lay him sprawled on his back in a
   // spreading pool of blood — no facing, no weapon swing, no walk cycle. Drawn
   // here so the corpse stays put and dressed (worn armor + weapon glued) while
-  // the horde rings him. A hero DOWN in a party still fighting (§4.2) wears
+  // the horde rings him. A hero DOWN in a party still fighting wears
   // the same sprawl mid-`playing`, behind the YOU FELL overlay, until the
   // respawn stands them back up.
   if (

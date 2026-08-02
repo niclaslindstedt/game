@@ -3,8 +3,9 @@
 //
 // The round trips are the easy half. The half worth having is that a decoder
 // which will one day be fed bytes from an open UDP port never throws, never
-// over-reads, and never mistakes a stray datagram for a frame — because phase 2
-// puts this exact function behind `node:dgram` and phase 5 fuzzes it, and a
+// over-reads, and never mistakes a stray datagram for a frame — because the
+// direct path puts this exact function behind `node:dgram` and the fuzz suite
+// hammers it, and a
 // decoder that only works on well-formed input is one that has to be rewritten
 // then rather than trusted.
 
@@ -91,7 +92,7 @@ describe("frame codec", () => {
     });
 
     it("never throws on random bytes", () => {
-      // The cheap ancestor of phase 5's fuzz test. Deterministic, so a failure is
+      // The cheap ancestor of `net_fuzz_test.ts`. Deterministic, so a failure is
       // reproducible rather than a flake nobody can chase.
       let seed = 0x2545f491;
       const next = () => {

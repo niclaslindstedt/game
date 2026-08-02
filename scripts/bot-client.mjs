@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE SOAK — a fleet of BOT CLIENTS pointed at a session (multiplayer plan
-// §5.6, §7.2.5).
+// THE SOAK — a fleet of BOT CLIENTS pointed at a session
+// (`server/bot-client.ts`, docs/multiplayer.md).
 //
-// §5.6 asks for "an 8-player session left running for hours, watched for leaks,
-// drift and snapshot growth", and for latency and loss injected at the transport
-// seam with the game held playable at 150 ms / 2% loss. §5.7 makes both a
-// done-when. Neither named an instrument, so as written they needed eight
-// machines and eight bored humans — requirements that could not be run. This is
-// the instrument.
+// The soak's brief is "an 8-player session left running for hours, watched for
+// leaks, drift and snapshot growth", with latency and loss injected at the
+// transport seam and the game held playable at 150 ms / 2% loss. As written
+// that needed eight machines and eight bored humans — requirements that could
+// not be run. This is the instrument.
 //
 // Each bot is a real client: it joins over a real socket, receives real
 // snapshots, and plays its hero with the same `botIntent` the simulator and the
@@ -18,7 +17,7 @@
 //   node scripts/bot-client.mjs --address 127.0.0.1:27015
 //   node scripts/bot-client.mjs --address 1.2.3.4:27015 --bots 8 --minutes 120
 //   node scripts/bot-client.mjs --address 127.0.0.1:27015 --bots 8 \
-//     --latency 75 --loss 0.02          # §5.6's adversity figures
+//     --latency 75 --loss 0.02          # the soak's adversity figures
 //
 // Stand the session up first, in another terminal:
 //
@@ -31,7 +30,7 @@
 // carried, so a stalled session shows as a number that stops moving rather than
 // as silence. `rss` is this process's own memory, which is the leak watch: eight
 // clients holding eight `GameState`s should settle, and a figure that climbs for
-// an hour is the thing §5.6 exists to find.
+// an hour is the thing the soak exists to find.
 //
 // **ONE ADDRESS, ONE ALLOWANCE.** The host's connectionless limiter is keyed on
 // the address rather than the address and port, so a fleet out of one machine

@@ -128,7 +128,7 @@ export type RunSession = {
   beginRun: () => void;
   seed: number;
   /**
-   * The character behind this run is HARDCORE (§4.2) — read by the run driver
+   * The character behind this run is HARDCORE — read by the run driver
    * for an ADOPTED run, whose `params` below are null. A BUILT run carries the
    * same fact on `params.hardcore`; a spectator carries false (they host
    * nothing).
@@ -334,7 +334,7 @@ export function createRunSession(deps: {
     // the driver. Undefined (every single-player run, and every hosted game
     // left on the default) is free-for-all.
     lootMode: armedLootMode(),
-    // §4.2's hardcore gate: a hardcore character's session admits only
+    // The hardcore admission gate: a hardcore character's session admits only
     // hardcore characters. The engine ignores this — it feeds the door.
     hardcore: characterRef.current.hardcore === true,
   };
@@ -552,8 +552,9 @@ export function createRunSession(deps: {
     tuning,
     beginRun,
     seed,
-    // §4.2's door gate for an ADOPTED run: the parameters below are null for
-    // one, so the driver reads the hosting character's mode from here instead.
+    // The hardcore door gate for an ADOPTED run: the parameters below are
+    // null for one, so the driver reads the hosting character's mode from
+    // here instead.
     hardcore: characterRef.current.hardcore === true,
     // The parameters describe a run that was BUILT. An adopted one is not
     // described by them and must not pretend to be: handing a session the

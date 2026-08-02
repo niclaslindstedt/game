@@ -187,7 +187,7 @@ describe("elite ambushes", () => {
     state.players[0].pendingStatPoints = 1;
     finishDialogue(state);
     // The scene closes back to play; the point stays banked for the
-    // on-demand chooser (plan §3.2 — a ding never forces the screen).
+    // on-demand chooser (a ding never forces the screen).
     expect(state.phase).toBe("playing");
     expect(state.players[0].pendingStatPoints).toBe(1);
     expect(promptPendingPoints(state, state.players[0])).toBe(true);

@@ -8,15 +8,15 @@
 // person at a terminal, and it hands over to `dedicated.ts`. Everything that
 // makes a session (the simulation, the admission desk, the sockets, the router
 // mapping and the one fixed-timestep clock) is `host.ts`, used identically by
-// both, which is what makes the plan's §5.5 "it is the same file" true rather
-// than aspirational.
+// both, which is what makes "the dedicated server is the same file" true
+// rather than aspirational.
 //
 // It is deliberately thin. Everything interesting is in `session.ts`; this file
 // is the process's edges: the control channel in, the `MessagePort` that
 // carries snapshots out, and an orderly death.
 //
 // **WHY A UTILITY PROCESS AND NOT THE MAIN ONE** — three reasons, each enough
-// on its own (docs/multiplayer-plan.md §1.2). A 60 Hz simulation must not
+// on its own. A 60 Hz simulation must not
 // compete with the main process's IPC, window, Workshop-compile and Steam
 // duties. The engine holds 36 process-global mutable bindings — the `BALANCE`
 // tuning object, the six flags in `src/game/flags.ts`, and every `activeXDefs`
@@ -26,7 +26,7 @@
 // leaves exactly one code path, because the host's renderer becomes just
 // another client.
 //
-// ONE PROCESS PER SESSION, not per app: phase 5's dedicated server runs several,
+// ONE PROCESS PER SESSION, not per app: the dedicated server runs several,
 // and one process per session is what makes that free.
 //
 // **AND IT HAS TWO ROLES, WHICH IS ONE FORK AND ONE PORT EITHER WAY.** `start`
@@ -79,16 +79,21 @@ type ControlMessage =
       params: SessionParams;
       mods?: string[];
       /**
-       * THE CATALOG OVERRIDES THE PAGE'S MODS REGISTERED (§4.4). This process
+       * THE CATALOG OVERRIDES THE PAGE'S MODS REGISTERED. This process
        * SIMULATES, and the page's own `registerDefs` never reached it — so
        * without this a modded host's horde would spawn from the shipped
        * catalogs while the renderer drew the mod's. Registered before the run
        * is built, and never restored: a session process lives exactly one
-       * session, which is what makes the swap safe (plan §1.2, reason 2).
+       * session, which is what makes the swap safe.
        */
       modDefs?: DefOverrides | null;
       password?: string;
       maxClients?: number;
+      /** FILL THIS MANY SEATS WITH AUTOPILOT HEROES — the session creates its
+       * own bot clients once the host's renderer has attached. A session fact
+       * like `maxClients`, never a `SessionParams` field: the params describe
+       * the RUN and are compared for determinism. See `HostOptions.bots`. */
+      bots?: number;
       /** A run to ADOPT rather than build — a parked run or a checkpoint the
        * player just retried into (see `SessionOptions.adopt`). Opaque on this
        * hop; the session is what reads it. */
@@ -117,10 +122,10 @@ type ControlMessage =
       password?: string;
       /** This client's mods, in load order — the host refuses a mismatch. */
       mods?: string[];
-      /** The joining character is HARDCORE (§4.2) — compared against the
+      /** The joining character is HARDCORE — compared against the
        * session's mode at the door; the mismatch is refused by name. */
       hardcore?: boolean;
-      /** The hero this player brings (§4.5): their banked loadout as plain
+      /** The hero this player brings: their banked loadout as plain
        * JSON, or null for the authored fresh start. Rides the join frame;
        * the session weighs it (`validateLoadout`) before seating anybody. */
       loadout?: unknown;
@@ -194,16 +199,17 @@ type ClientPort = {
   close?(): void;
 };
 
-/** The one client of phase 1: the host's own renderer, which owns the hero. */
+/** The listen server's first client: the host's own renderer, which owns the
+ * hero. */
 const HOST_CLIENT = 1;
 
 /**
  * THE HOSTED SESSION, when this process is a HOST.
  *
  * The session, the admission desk, the sockets, the router mapping and the one
- * clock that drives them are all `host.ts`'s — which is what makes the plan's
- * §5.5 claim true rather than aspirational: the dedicated server is that same
- * module with a different entry on top of it, and the fixed-timestep loop
+ * clock that drives them are all `host.ts`'s — which is what makes "the
+ * dedicated server is the same file" true rather than aspirational: it is that
+ * same module with a different entry on top of it, and the fixed-timestep loop
  * exists once. What is left here is this process's own edges.
  */
 let host: Host | null = null;
@@ -217,8 +223,7 @@ let linkTimer: ReturnType<typeof setInterval> | null = null;
 let admitted = false;
 
 /**
- * THE RECONNECT TICKET LAST HANDED OUT BY EACH HOST WE JOINED (plan §5.4),
- * keyed by peer.
+ * THE RECONNECT TICKET LAST HANDED OUT BY EACH HOST WE JOINED, keyed by peer.
  *
  * In memory and for the life of this process alone, which is the span the
  * feature is about: the case it exists for is a connection dropping inside one
@@ -241,7 +246,7 @@ if (parent) {
   parent.postMessage({ kind: "ready", protocol: PROTOCOL_VERSION });
 } else {
   // NO PARENT MEANS NOBODY FORKED US, so this is a person running the server
-  // from a terminal — the plan's §5.5 dedicated server. It is the same process
+  // from a terminal — the standalone dedicated server. It is the same process
   // over the same `host.ts`; what differs is only where the instructions come
   // from (a config file and a signal, rather than a control channel) and where
   // the log goes. Making it the same ENTRY as well as the same code is what
@@ -271,9 +276,9 @@ function attachClient(port: ClientPort): void {
     }
     // Client → server. Nothing here reaches the simulation directly: the frame
     // is decoded, refused if it is not one, and handed to the session, which
-    // owns what an input may do. That layering is what phase 5's hardening hangs
-    // off — an open UDP port eventually delivers bytes from strangers to this
-    // same decoder.
+    // owns what an input may do. That layering is what the open-port hardening
+    // hangs off — an open UDP port eventually delivers bytes from strangers to
+    // this same decoder.
     const frame = decodeFrame(event.data as ArrayBuffer);
     if (!frame || !host) return;
     host.session.receive(HOST_CLIENT, frame.type, frame.seq, frame.payload);
@@ -308,7 +313,7 @@ function handleControl(
   try {
     if (message.kind === "start") {
       stop("restarted");
-      // The mods' catalogs, before anything builds a run from them (§4.4).
+      // The mods' catalogs, before anything builds a run from them.
       if (message.modDefs) registerDefs(message.modDefs);
       host = createHost({
         params: message.params,
@@ -316,6 +321,7 @@ function handleControl(
         mods: message.mods,
         password: message.password,
         maxClients: message.maxClients,
+        bots: message.bots,
         peers: {
           kick: (clientId, reason) => host?.hub.kick(clientId, reason),
           // The invite panel is the SHELL's — only the main process holds the
@@ -494,13 +500,14 @@ async function joinSession(
     },
     name: message.name,
     password: message.password,
-    // §4.2's hardcore gate — the mode of the character this player is coming
-    // with, compared against the session's at both ends of the handshake.
+    // The hardcore admission gate — the mode of the character this player is
+    // coming with, compared against the session's at both ends of the
+    // handshake.
     hardcore: message.hardcore === true,
-    // §4.5: the hero this player brings, riding the join frame for the
+    // The hero this player brings, riding the join frame for the
     // session to weigh and seat.
     loadout: message.loadout ?? null,
-    // THE TICKET BACK INTO THE SEAT WE LAST HELD AT THIS ADDRESS (plan §5.4).
+    // THE TICKET BACK INTO THE SEAT WE LAST HELD AT THIS ADDRESS.
     // Held per host for the life of this process, which is exactly the span
     // that matters: the case the grace window exists for is a wifi hiccup
     // inside one sitting, and a ticket that outlived the app would be a

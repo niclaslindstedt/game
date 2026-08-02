@@ -1052,7 +1052,7 @@ export type GameEvent =
    */
   | { type: "playerDeath"; pos: Vec2 }
   /**
-   * A hero fell while the party was STILL STANDING (multiplayer plan §4.2,
+   * A hero fell while the party was STILL STANDING (see
    * `downed.ts`): their gear went to a corpse at `pos` and `xpLost` is the
    * DEATH TOLL their own bar just paid. Never fires solo — one hero falling
    * is the party wiped, which is `playerDeath`'s beat. The app lands the

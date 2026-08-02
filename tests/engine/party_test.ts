@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE PARTY — the shared reads the plan's §3.1 table answers, each pinned by a
+// THE PARTY — the shared reads `src/game/party.ts` answers, each pinned by a
 // test that would pass trivially in single player and fails the moment the
 // answer reverts to "seat 0".
 //
@@ -203,7 +203,7 @@ describe("a party's tick", () => {
 
   it("does not tick a downed hero's clocks", () => {
     const { state, b } = party();
-    // The FALL is processed once (§4.2's down sweep strips the kit and hands
+    // The FALL is processed once (the down sweep strips the kit and hands
     // the body the sidearm, resetting its swing clock) — so let it land first,
     // then pin the rule this test is about: nothing of a downed body TICKS.
     b.hp = 0;

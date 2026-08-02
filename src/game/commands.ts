@@ -12,7 +12,7 @@
 //
 // **THE LIST IS THE SECURITY MODEL, AND SO ARE THE ARGUMENTS.** A channel that
 // resolved a function name dynamically would hand a client `grantXp`,
-// `mintUnique` and `killEnemy` the moment phase 2's UDP port opened, and no amount
+// `mintUnique` and `killEnemy` the moment the UDP port opened, and no amount
 // of later validation would put that back in the box. So a command is a NAME
 // FROM A CLOSED LIST dispatched through an explicit `switch`, and its arguments
 // are SCALARS whose shapes are declared beside the name and checked before the
@@ -31,8 +31,8 @@
 // the same snapshot-and-drift-test shape `mod/catalog.json` and the Game Center
 // manifests already use.
 //
-// **THE VERBS TRAVEL *AND* THE SCREENS ARE PER-PLAYER** (plan §1.5 made the
-// first true, §3.2 the second). A command that opens the inventory opens the
+// **THE VERBS TRAVEL *AND* THE SCREENS ARE PER-PLAYER.** A command that opens
+// the inventory opens the
 // ACTING hero's own screen (`Player.screen`); the simulation halts only when
 // every hero in play has one up (`partyBlocked`), which solo is exactly the
 // freeze it always was. The acting hero is the seat the session admitted the
@@ -196,7 +196,7 @@ type ArgKind =
  */
 export const RUN_COMMAND_ARGS = {
   // THE SCENE — turning a page of the opening monologue, skipping a cutscene,
-  // ending the death tableau. The nine phase 1 shipped.
+  // ending the death tableau. The nine original scene verbs.
   advanceIntro: [],
   skipIntro: [],
   dismissIntro: [],
@@ -207,9 +207,8 @@ export const RUN_COMMAND_ARGS = {
   skipStoryOpening: [],
   skipDeathScene: [],
   // A press past the rite's grace window gets on with it. A GROUP verb like
-  // every other scene-advance: docs/multiplayer-plan.md §3.2 keeps a boss's
-  // beat global and lets ANYONE advance it, so this is deliberately not gated
-  // on being the executioner.
+  // every other scene-advance: a boss's beat stays global and ANYONE may
+  // advance it, so this is deliberately not gated on being the executioner.
   skipBossDeath: [],
   advanceDialogue: [],
   // MUTING is a run verb rather than a setting: it latches on the state so the
@@ -219,8 +218,8 @@ export const RUN_COMMAND_ARGS = {
   muteDialogue: [],
   unmuteDialogue: [],
 
-  // THE SCREENS. Each of these moves the ACTING hero's own `Player.screen`
-  // (plan §3.2), and they still travel rather than being drawn app-side: the
+  // THE SCREENS. Each of these moves the ACTING hero's own `Player.screen`,
+  // and they still travel rather than being drawn app-side: the
   // screen is state the whole party can see (the party HUD says "in their
   // bag"), a hero with one up steers nothing, and the world halts when every
   // hero in play has one — all of which is the server's to decide.
@@ -242,7 +241,7 @@ export const RUN_COMMAND_ARGS = {
   resumeGame: [],
   stayOnField: [],
   reopenVictoryChoice: [],
-  // THE WAY BACK from a party death (§4.2, downed.ts): stand the ACTING hero
+  // THE WAY BACK from a party death (downed.ts): stand the ACTING hero
   // up at the level's start. No arguments — WHO respawns is the seat the
   // session admitted the caller into, exactly like every other private verb,
   // and the engine refuses it for anybody not actually down.
@@ -312,8 +311,9 @@ export const RUN_COMMAND_ARGS = {
   pickTalkChoice: ["int"],
   closeTalk: [],
 
-  // THE TABLE — trade (plan §5.1). Every one of these acts for the seat the
-  // session admitted this client into, never a seat named on the frame.
+  // THE TABLE — trade (src/game/trade.ts). Every one of these acts for the
+  // seat the session admitted this client into, never a seat named on the
+  // frame.
   // `openTrade` names the PARTNER, because who else is on the map is a public
   // fact; whose bag is being offered FROM is the server's answer.
   openTrade: ["int"],
@@ -342,7 +342,7 @@ export const RUN_COMMAND_ARGS = {
   // really standing at the door.
   tapTravelDoor: ["str"],
 
-  // THE ROAD — an in-session crossing (plan §6.4, src/game/travel.ts). The
+  // THE ROAD — an in-session crossing (src/game/travel.ts). The
   // destination level id, and how much of its opening to skip (`OpeningSkip`
   // words — the HOST's app computes it from its own character exactly as a
   // locally-built run would). Refused for any seat but 0: the host chooses
@@ -458,15 +458,15 @@ export function applyRunCommand(
   // sitting there.
   if (state.departure && name !== "travelTo") return undefined;
   const a = args as CommandArg[];
-  // WHOSE VERB THIS IS. A bag, a purse, a build and a talent tree are PRIVATE
-  // (the plan's §3.1), so a command that touches one has to say which hero it
+  // WHOSE VERB THIS IS. A bag, a purse, a build and a talent tree are PRIVATE,
+  // so a command that touches one has to say which hero it
   // is for — and the answer is the SERVER's, taken from the seat it admitted
   // this client into, never a claim on the frame. Passing a seat would hand a
   // stranger somebody else's inventory in one field.
   //
   // Defaulting to seat 0 keeps every single-player caller and every existing
-  // test unchanged, which is the same identity case §3.1 relied on: a run with
-  // one hero has exactly one answer to this question.
+  // test unchanged, which is the same identity case the party split relied
+  // on: a run with one hero has exactly one answer to this question.
   const hero = actor ?? state.players[0];
   switch (name) {
     // THE SCENE
@@ -539,7 +539,7 @@ export function applyRunCommand(
     case "equipFromInventory":
       return equipFromInventory(state, hero, num(a, 0));
     // THE POCKET ARSENAL's own draw, and it is a SEPARATE verb from the one
-    // above rather than a flag on it (multiplayer plan §7.2.5, decision 3b).
+    // above rather than a flag on it.
     // Two things differ and both are rules rather than details: the attack
     // clock is CARRIED ACROSS instead of zeroed, so swapping every fight can
     // never mint free shots the way a hand-picked swap deliberately does, and
@@ -550,7 +550,7 @@ export function applyRunCommand(
     case "swapHand":
       return swapHand(state, hero, num(a, 0));
     // The last of the autopilot's five housekeeping mutators to become an
-    // INTENT (multiplayer plan §7.2.5, decision 3b). The bag's order is a pure
+    // INTENT (see bot/intent.ts). The bag's order is a pure
     // function of the loadout, so nothing about it is an opinion the bot holds —
     // only the decision to tidy is, and that stays the bot's.
     case "sortInventory":
@@ -579,7 +579,7 @@ export function applyRunCommand(
     case "autoEquipBest":
       return autoEquipBest(state, hero);
     // THE SWEEP MINUS THE HAND, and it is a separate verb rather than a flag
-    // for the same reason `swapHand` is (multiplayer plan §7.2.5): the
+    // for the same reason `swapHand` is: the
     // autopilot's POCKET ARSENAL owns the weapon slot, so a sweep that re-drew
     // the strongest weapon every tick would flap against it. The player's own
     // OPTIMIZE button is `autoEquipBest` and takes the hand with it.
@@ -641,7 +641,9 @@ export function applyRunCommand(
         str(a, 1) as CompanionSlot,
       );
     case "resolveChoice":
-      return resolveChoice(state, bool(a, 0));
+      // The verdict is gated on the killing blow's owner inside resolveChoice,
+      // so the acting hero must travel with it like every private verb's does.
+      return resolveChoice(state, bool(a, 0), hero);
 
     // THE ERRANDS
     case "talkToQuestGiver":

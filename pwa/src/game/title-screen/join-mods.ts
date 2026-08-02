@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE JOINER'S MOD RECONCILE (multiplayer §4.4) — the half of the server
+// THE JOINER'S MOD RECONCILE (docs/multiplayer.md) — the half of the server
 // browser that decides what a row's mod list MEANS for this machine: a gap it
 // can close (every mod installed → the host's set is applied on the way
 // through the door), or a refusal with the Workshop behind it.
@@ -16,7 +16,7 @@ import { listMods, type InstalledMod } from "../../app/mods-bridge.ts";
 import { activeMods, type ModBundle } from "../mod-state.ts";
 import type { Sprites } from "../assets.ts";
 
-/** The gap between a row's mod set and this build's (§4.4). */
+/** The gap between a row's mod set and this build's. */
 export type ModsGap = {
   /** The host's mods NOT installed (or installed but broken) here. */
   missing: string[];
@@ -54,7 +54,7 @@ export async function loadJoinMods(): Promise<JoinModsHelper> {
 }
 
 /**
- * Apply THIS EXACT mod set for a session (§4.4): the host's ids, in the
+ * Apply THIS EXACT mod set for a session: the host's ids, in the
  * host's load order — an empty set restores the shipped game (a modded
  * joiner entering a stock host's session plays stock). Resolves false when it
  * could not (a bundle missing, a compile failure), and then the join is not

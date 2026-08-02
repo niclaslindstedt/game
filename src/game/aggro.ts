@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHOM DOES A MOB CHASE — the first of the shared reads the party model had to
-// answer (`docs/multiplayer-plan.md` §3.1), and the one every other pass in the
+// answer, and the one every other pass in the
 // combat half then reads back off the mob.
 //
 // The rule is NEAREST VISIBLE, WITH HYSTERESIS, and each of the three words is

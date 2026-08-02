@@ -80,7 +80,7 @@ export function createBotDriver(deps: {
   } = deps;
 
   // WHERE THE BOT'S HOUSEKEEPING GOES. Every one of the autopilot's mutators is
-  // an INTENT now (multiplayer plan §7.2.5) — a verb from the closed list — and
+  // an INTENT now (docs/multiplayer.md) — a verb from the closed list — and
   // it leaves through the app's own router rather than being written straight
   // onto the state. That is the whole point: a paid AUTO PILOT ride inside a
   // Steam session has its run simulating somewhere else, and a direct write on a

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// TRADE, AND THE ANTI-DUPE RULES (multiplayer plan §5.1, which asks for "a test
-// each").
+// TRADE, AND THE ANTI-DUPE RULES — one test each.
 //
 // A trade is the only place in the game where a piece of gear leaves one
 // private bag and arrives in another, and every bug in that shape MINTS ITEMS.

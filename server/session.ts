@@ -7,7 +7,7 @@
 // the host's renderer is JUST ANOTHER CLIENT — it sends input and applies
 // snapshots exactly as a joiner does. That is not tidiness; it is the
 // simplification every listen server from Quake onward makes, and it is why
-// this plan has no "and also, when you are the host…" clauses anywhere in it.
+// this design has no "and also, when you are the host…" clauses anywhere in it.
 //
 // THE CLOCK IS FIXED-TIMESTEP AND CALLER-DRIVEN. `advance(ms)` owes the
 // simulation a number of whole `TICK_MS` slices and runs exactly that many;
@@ -29,7 +29,7 @@
 //     older baseline it still holds, so a loss costs one frame of smoothness
 //     and can never desync — and every publish between two acks re-sends the
 //     same ground, which is the redundancy that makes an unreliable transport
-//     safe in phase 2.
+//     (a UDP datagram, a Steam P2P packet) safe to run over.
 //
 //  3. **A client's FIRST baseline is the world at tick 0**, not an empty
 //     state. The client built exactly that for itself from the SessionParams,
@@ -40,12 +40,10 @@
 
 import {
   adoptRun,
-  applyRunCommand,
   bankCampaignQuests,
   createRunFromParams,
   departHero,
   extractLoadout,
-  isRunCommand,
   nextFreeSeat,
   releaseSeat,
   resumeHero,
@@ -57,15 +55,37 @@ import {
   validateLoadout,
   type GameInput,
   type GameState,
-  type FrozenRun,
   type Loadout,
-  type Player,
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
 import { createChatRoom, type ChatRoom } from "./chat-room.ts";
+// The session's SHAPES and pure helpers live beside this module
+// (`session-model.ts`), split by concern: everything here closes over a
+// running world, everything there deliberately cannot.
+import {
+  applyInput,
+  clearEdges,
+  frozenGenesis,
+  IDLE_INPUT,
+  MAX_TICKS_PER_ADVANCE,
+  runCommand,
+  trimHistory,
+  type Client,
+  type Session,
+  type SessionOptions,
+  type SessionPeers,
+} from "./session-model.ts";
+
+// Re-exported so every existing importer keeps its one import site.
+export type {
+  SendFrame,
+  Session,
+  SessionOptions,
+  SessionPeers,
+} from "./session-model.ts";
 import { hash32 } from "./wire/handshake.ts";
-import { encodeFrame, encodeFrameJson } from "./wire/codec.ts";
+import { encodeFrame, encodeFrameJson, HEADER_BYTES } from "./wire/codec.ts";
 import { playerScaling } from "./wire/players.ts";
 import {
   diffState,
@@ -95,229 +115,15 @@ import {
   type Recipient,
 } from "./wire/snapshot.ts";
 
-/** How a session hands bytes to one client. The transport is somebody else's
- * problem — a `MessagePort` in phase 1, a Steam P2P packet or a UDP datagram in
- * phase 2 — and this signature is the whole of what they have to satisfy. */
-export type SendFrame = (frame: ArrayBuffer) => void;
-
-/** What was sent at one sequence, kept so an ack can advance the baseline to
- * it without the session storing a whole second copy of the world per frame. */
-type Sent =
-  { full: true; state: WireState } | { full: false; patch: StatePatch };
-
-/** One connected client, as the session sees it. */
-type Client = {
-  id: number;
-  slot: number;
-  /** What the roster and the chat log call them. Sanitized by the hub before
-   * it ever reaches here — a name arrives from a stranger. */
-  name: string;
-  send: SendFrame;
-  recipient: Recipient;
-  /**
-   * The state this client is KNOWN to hold — the one every delta is coded
-   * against. It starts as a copy of the world at creation, which is the whole
-   * trick behind the static tier: the client built exactly that for itself
-   * from the SessionParams, so the very first delta already omits the
-   * obstacles, the decor, the canopy and the carve.
-   */
-  baseline: WireState;
-  /** The last sequence this client said it had applied. */
-  ackedSeq: number;
-  /**
-   * This client has never been sent a world it can trust, so the next publish
-   * owes it a FULL snapshot rather than a delta.
-   *
-   * True only for a session that ADOPTED its run: an ordinary session's client
-   * built the genesis world for itself out of the same parameters, which is the
-   * whole of why the static tier is free.
-   */
-  needsFull: boolean;
-  /**
-   * AN IN-SESSION CROSSING (§6.4) MOVED THE WORLD UNDER THIS CLIENT, and until
-   * it acknowledges a post-travel snapshot every publish stays FULL. A delta
-   * would be coded against a baseline from the OLD level — entity lists whose
-   * ids the client no longer holds — and on an unreliable transport there is
-   * no ordering to lean on. -1 until the first post-travel full is sent; then
-   * that send's seq; deleted when an ack reaches it.
-   */
-  fullUntilAck?: number;
-  /**
-   * What was sent at each unacknowledged sequence. Patches, not snapshots:
-   * every delta since the last ack is coded against the SAME baseline, so an
-   * ack for sequence N is satisfied by applying N's patch alone — no chain to
-   * replay, and the map holds kilobytes rather than worlds.
-   */
-  history: Map<number, Sent>;
-};
-
-/**
- * How many unacknowledged publishes are remembered. Three seconds at the
- * publish rate — far past any round trip a playable session has, and a hard
- * bound so a client that stops acking cannot grow the host's memory. Past it
- * the oldest entries are dropped and the client simply stays baselined where
- * it was, which is still correct: every delta is coded from there.
- */
-const MAX_UNACKED = 60;
-
-/**
- * What the session may ask of the layer that owns the peers.
- *
- * All three are things the session decides and cannot do: it knows a chat line
- * said `/kick`, and the hub is the only thing holding a socket to kick with.
- * Every one has a no-op default, so a session with no networking under it —
- * phase 1's, and every test's — still runs the whole chat path.
- */
-export type SessionPeers = {
-  /** Remove a client. The session has already decided it should happen. */
-  kick(clientId: number, reason: string): void;
-  /** Open the platform's invite panel. False when this build has none. */
-  invite(): boolean;
-  /** Round trip in ms, or -1 when nothing can measure one. */
-  ping(clientId: number): number;
-};
-
-/** What the session was told to build. */
-export type SessionOptions = {
-  params: SessionParams;
-  /** The engine build both ends compare at the handshake. */
-  build: string;
-  /** The session's mod ids, in load order. */
-  mods?: string[];
-  /** Seats, host included. */
-  maxClients?: number;
-  peers?: Partial<SessionPeers>;
-  /**
-   * NOBODY OWNS THIS SESSION — it is a DEDICATED SERVER's (plan §5.5), standing
-   * empty until players connect to it, rather than a game somebody is playing.
-   *
-   * **THE BUG THIS EXISTS FOR IS SUBTLE AND WAS FOUND BY RUNNING ONE.** The
-   * host is identified below by being the FIRST client to ask for a seat, which
-   * is true only because in the shipped topology the host's own renderer always
-   * connects first, over a `MessagePort`, before any socket is open. A dedicated
-   * server has no such renderer — so the first person to join over the network
-   * was mistaken for the host, seated on the run's existing seat-0 hero, and
-   * handed a DEFAULT character instead of the one they brought.
-   *
-   * Three things follow, and each is a rule rather than a workaround:
-   *
-   *  1. **No client is the host.** Seat 0 starts DEPARTED, so `nextFreeSeat`
-   *     offers it to the first arrival like any other seat and `seatHero`
-   *     dresses it in their own loadout.
-   *  2. **An empty server does not simulate.** With seat 0 departed and nobody
-   *     in, every hero is out of play and `partyWiped` would end a run nobody
-   *     has played. It also happens to be right on its own terms: a server with
-   *     nobody on it should cost nothing.
-   *  3. **The run is a PARTY run from the first tick** (§5.3). The operator of
-   *     a machine you connect to has exactly the standing a listen server's
-   *     host has — full control of the simulation — so a record set on one is
-   *     worth what a record set on the other is.
-   */
-  ownerless?: boolean;
-  /** A line for the host's own log. Optional, and every caller inside a test
-   * omits it — the same shape `net/hub.ts` uses. */
-  log?(message: string): void;
-  /**
-   * The per-session secret RECONNECT TICKETS are derived from (plan §5.4).
-   *
-   * Passed in for the same reason the hub's challenge secret is: this module
-   * has no randomness of its own, and the engine's seeded rng is emphatically
-   * not a source for one — that stream is the simulation's, every draw from it
-   * is load-bearing for a replay, and a secret taken from a seed a client was
-   * TOLD is not a secret. `server/main.ts` rolls it once per process and hands
-   * the same number to both.
-   *
-   * Zero (the default) still produces distinct tickets per seat and per
-   * occupancy; what it costs is unguessability, which only matters against a
-   * stranger on the wire, and every caller that has one passes it.
-   */
-  secret?: number;
-  /**
-   * Monotonic ms, for the reconnect grace window — the ONE thing in this module
-   * measured in wall clock rather than in ticks.
-   *
-   * A grace window counted in ticks would run at the speed of the simulation,
-   * so a host whose machine hitched would hold seats longer than it meant to,
-   * and a paused session would hold them for ever. Defaulted so every test that
-   * does not care about reconnecting need not supply one.
-   */
-  now?(): number;
-  /**
-   * A run to ADOPT instead of building one from `params` — a parked run, or a
-   * checkpoint the player just retried into.
-   *
-   * **IT COSTS THE STATIC TIER, so pass one only when there is no alternative.**
-   * A client builds the terrain from the parameters and is sent only what
-   * differs from it; a client whose server adopted a state cannot build
-   * anything that matches, so every client is sent a FULL first snapshot
-   * instead (~100 KB per level, per client, that a parameter-built session
-   * never carries).
-   *
-   * The parameters still travel and still matter: they are what the client
-   * builds ITS OWN world from, so an adopted state must be handed the
-   * parameters it was originally built from. Hand it somebody else's and the
-   * client carves different terrain — which nothing will ever correct, because
-   * the static tier is never sent.
-   */
-  adopt?: FrozenRun | null;
-};
-
-export type Session = {
-  /** The authoritative state. Read by the host's own diagnostics and by the
-   * tests; NOTHING outside this module may write it. */
-  readonly state: GameState;
-  /** Ticks elapsed since the session started. */
-  readonly tick: number;
-  /** Owe the simulation `ms` of wall clock and run the whole `TICK_MS` slices
-   * it buys. Returns how many ticks actually ran. */
-  advance(ms: number): number;
-  /** Seats taken, host included. */
-  readonly clientCount: number;
-  /**
-   * Attach a client. Sends it a `welcome` immediately; it is baselined on the
-   * world at tick 0 and receives a delta from there at the next publish.
-   *
-   * `seat` decides whether this client STEERS a hero or only watches. A player
-   * gets a seat of their own — a whole `Player` built by the same function seat
-   * 0 was, dressed in the `loadout` they brought — and the seat number is the
-   * server's answer, never a claim the client made. A spectator gets `false`
-   * and no hero at all.
-   */
-  addClient(
-    id: number,
-    send: SendFrame,
-    seat: boolean | { play: boolean; loadout?: unknown; resume?: string },
-    name?: string,
-  ): void;
-  removeClient(id: number): void;
-  /** One decoded frame from a client. */
-  receive(id: number, type: number, seq: number, payload: unknown): void;
-  /** Everyone seated, as everybody else may see them. */
-  roster(): RosterEntry[];
-  /** Tell every client the session is over, then drop them. */
-  close(reason: string, detail?: string): void;
-};
-
-/**
- * The most simulation one `advance` call may run.
- *
- * The spiral-of-death backstop the browser loop already has, for the same
- * reason and with the same shape: a host whose machine hitched must not try to
- * pay a second of debt inside one timer callback, because the tick that pays it
- * is the tick that stops answering clients. Four seconds of simulation, far
- * above anything an ordinary schedule asks for.
- */
-const MAX_TICKS_PER_ADVANCE = 240;
-
 export function createSession(options: SessionOptions): Session {
-  // MUTABLE, because an in-session crossing (§6.4) replaces the run: the
+  // MUTABLE, because an in-session crossing replaces the run: the
   // params are what a LATER joiner's welcome carries, so after a travel they
   // must describe the level the party is actually on.
   let params = options.params;
   // The map SIZE is a process-global FLAG, not a `createGame` argument — which
-  // is precisely why one session per process is the topology (see the plan's
-  // §1.2, reason 2). Applied here so the carve a client rebuilds from the same
-  // `SessionParams` matches the server's.
+  // is precisely why one session per process is the topology (`server/main.ts`
+  // opens with the reasoning). Applied here so the carve a client rebuilds
+  // from the same `SessionParams` matches the server's.
   setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
 
   // TWO DOORS INTO A RUN, and which one was used decides what an arriving
@@ -358,7 +164,7 @@ export function createSession(options: SessionOptions): Session {
   /**
    * The world at tick 0, frozen — the state every client's first delta is
    * coded against. See {@link frozenGenesis} for why it goes through JSON.
-   * Mutable because an in-session crossing (§6.4) replaces the world, and the
+   * Mutable because an in-session crossing replaces the world, and the
    * genesis a later joiner is baselined on has to be the NEW one.
    */
   let genesis = frozenGenesis(state);
@@ -389,7 +195,7 @@ export function createSession(options: SessionOptions): Session {
   const clients = new Map<number, Client>();
   const inputs = new Map<number, GameInput>();
   /**
-   * SEATS BEING KEPT FOR SOMEBODY WHO DROPPED (plan §5.4), by their ticket.
+   * SEATS BEING KEPT FOR SOMEBODY WHO DROPPED, by their ticket.
    *
    * A dropped connection and a player quitting are the same event as far as a
    * socket is concerned, and only one of them should cost somebody the run they
@@ -419,9 +225,9 @@ export function createSession(options: SessionOptions): Session {
 
   const maxClients = options.maxClients ?? MAX_CLIENTS;
   /** What the session may ask of whatever owns the sockets. Every one has a
-   * no-op default, so a session with no networking under it — phase 1's, and
-   * every engine test's — still runs the whole chat path rather than a
-   * second, less-tested copy of it. */
+   * no-op default, so a session with no networking under it — a MessagePort-
+   * only listen server's, and every engine test's — still runs the whole chat
+   * path rather than a second, less-tested copy of it. */
   const peers: SessionPeers = {
     kick: options.peers?.kick ?? (() => {}),
     invite: options.peers?.invite ?? (() => false),
@@ -431,11 +237,12 @@ export function createSession(options: SessionOptions): Session {
   /**
    * The lowest free seat.
    *
-   * `clients.size` was the phase 1 answer and it is wrong the moment anybody
-   * leaves: with slots 0, 1 and 2 taken, slot 1 quitting and a fourth person
-   * joining, the size is 2 and the newcomer is seated on top of slot 2 — two
-   * clients sharing a seat, two roster rows with one number, and (from phase 3)
-   * two heroes steered by one input. A seat is a position, not a count.
+   * `clients.size` was the obvious first answer and it is wrong the moment
+   * anybody leaves: with slots 0, 1 and 2 taken, slot 1 quitting and a fourth
+   * person joining, the size is 2 and the newcomer is seated on top of slot 2
+   * — two clients sharing a seat, two roster rows with one number, and — once
+   * joiners bring heroes of their own — two heroes steered by one input. A
+   * seat is a position, not a count.
    */
   function nextSlot(): number {
     const taken = new Set([...clients.values()].map((client) => client.slot));
@@ -457,6 +264,7 @@ export function createSession(options: SessionOptions): Session {
         // inside the same machine; there is no wire to time, and -1 is the
         // seam's word for that rather than a flattering 0.
         ping: client.slot === 0 ? -1 : peers.ping(client.id),
+        rate: client.sendRate,
       }));
   }
 
@@ -480,16 +288,47 @@ export function createSession(options: SessionOptions): Session {
     return null;
   }
 
+  /** What `/players N` asked for, or null while the host has not typed one.
+   * Kept apart from the bot count so the two compose rather than overwrite:
+   * the chat knob is a bargain the host strikes, the bot seats are bodies
+   * actually standing in the fight, and each re-application reads BOTH. */
+  let playersOverride: number | null = null;
+
+  /** Bot seats still standing in the run — departed ones stopped counting the
+   * moment they yielded. */
+  function botSeatsInPlay(): number {
+    let bots = 0;
+    for (const hero of state.players) {
+      if (hero.bot && !hero.departed) bots++;
+    }
+    return bots;
+  }
+
+  /**
+   * Recompute and apply the horde's player-count pricing — the ONE place
+   * `setBalanceTuning(playerScaling(…))` is called, from the chat hook and
+   * from every bot seating or departure alike.
+   *
+   * A bot seat prices the fight exactly as a `/players` step does, because it
+   * IS one more body standing in it. And it is BOTH knobs, always: kill XP is
+   * level-based, so a hp-scaled mob is tougher and pays exactly the same XP for
+   * its level — hp and xpGain move together or `/players` (and every bot seat)
+   * is strictly punishing rather than the risk/reward trade it is meant to be.
+   * See `wire/players.ts`.
+   */
+  function applyPlayerScaling(): number {
+    const scale = playerScaling((playersOverride ?? 1) + botSeatsInPlay());
+    setBalanceTuning(scale);
+    return scale.mobHp;
+  }
+
   const chat: ChatRoom = createChatRoom({
     roster: rosterEntries,
     setPlayers(n) {
-      const scale = playerScaling(n);
-      // BOTH knobs, always. Kill XP here is level-based, so a hp-scaled mob is
-      // tougher and pays exactly the same XP for its level; scaling `mobHp`
-      // alone would make `/players 8` strictly punishing rather than the
-      // risk/reward trade it is meant to be. See `wire/players.ts`.
-      setBalanceTuning(scale);
-      return scale.mobHp;
+      playersOverride = n;
+      // The reply keeps quoting the mobHp factor — the number the host was
+      // promised, bots included.
+      return applyPlayerScaling();
     },
     kick: kickByName,
     invite: () => peers.invite(),
@@ -591,7 +430,7 @@ export function createSession(options: SessionOptions): Session {
   let travels = 0;
 
   /**
-   * AN IN-SESSION CROSSING (§6.4): tear the level down and carry the party
+   * AN IN-SESSION CROSSING: tear the level down and carry the party
    * through together.
    *
    * The request arrived as the `travelTo` run command (seat 0 only — the host
@@ -716,20 +555,38 @@ export function createSession(options: SessionOptions): Session {
       client.send(
         encodeFrameJson(
           {
+            // The header's `ack` on a STATE frame is the highest input seq
+            // applied from THIS client (see `Client.lastInputSeq`) — the
+            // number its prediction drops replayed inputs against. The
+            // snapshot-ack bookkeeping lives in `ackedSeq`/`history` and
+            // never needed to travel back: nothing client-side read it.
             type: full ? FRAME.snapshot : FRAME.delta,
             seq,
-            ack: client.ackedSeq,
+            ack: client.lastInputSeq,
             tick,
           },
           json,
         ),
       );
+      // THE NET GRAPH'S SERVER HALF: state bytes per client, windowed to a
+      // second so the roster reports a steady figure instead of the publish
+      // beat. Booked here — and only here — because snapshot traffic is the
+      // whole story; control frames are bytes-per-minute beside it.
+      client.sentWindow += json.length + HEADER_BYTES;
+      const at = now();
+      if (at - client.windowStart >= 1000) {
+        client.sendRate = Math.round(
+          (client.sentWindow * 1000) / (at - client.windowStart),
+        );
+        client.sentWindow = 0;
+        client.windowStart = at;
+      }
       // Cleared only AFTER the frame is handed over, so a send that throws
       // leaves the client still owed its world rather than baselined on one it
       // never received.
       client.needsFull = false;
       // The first post-travel full is the one whose ack releases the client
-      // back onto deltas (§6.4) — record its sequence once.
+      // back onto deltas — record its sequence once.
       if (client.fullUntilAck === -1) client.fullUntilAck = seq;
     }
     // Every client that exists has been handed these; one that joins after
@@ -737,13 +594,89 @@ export function createSession(options: SessionOptions): Session {
     pendingEvents = [];
   }
 
-  /** Drop the oldest unacknowledged entries once the bound is passed. */
-  function trimHistory(client: Client): void {
-    while (client.history.size > MAX_UNACKED) {
-      const oldest = client.history.keys().next();
-      if (oldest.done) return;
-      client.history.delete(oldest.value);
+  /** Remove one client — `removeClient`'s whole body, named so the bot-yield
+   * path in `addClient` can take the SAME road out rather than a second one. */
+  function dropClient(id: number): void {
+    const client = clients.get(id);
+    if (!client) return;
+    clients.delete(id);
+    // A DEPARTING PLAYER'S HERO IS NO LONGER ANYBODY'S. The seat is NOT
+    // spliced out — every command and input frame in flight names a seat by
+    // index, so renumbering the party would deliver somebody else's steering
+    // to the wrong hero — but two things have to happen to the body it holds.
+    //
+    // The last frame they sent goes, or it keeps walking toward wherever they
+    // were last steering for the rest of the run. And the hero is DEPARTED:
+    // the world stops answering for it, which is what lets the
+    // people still playing grow past the seat, keeps a departed level-90 from
+    // holding the horde's level over them, and — the sharp end — lets them
+    // LOSE, since a run whose fourth player quit could not otherwise ever be
+    // defeated.
+    //
+    // AND THE SEAT IS KEPT FOR THEM. A dropped connection and a
+    // player quitting are indistinguishable from here, so every departure is
+    // treated as though it might be the first: the body still means nothing
+    // to the world, but the seat is not handed to a newcomer for
+    // `RECONNECT_GRACE_MS`, and the person who left holds the only ticket
+    // back into it. Coming back resumes the hero as it stands — every point
+    // of xp, every item, every level — rather than building a fresh one out
+    // of whatever loadout was last banked, which is the whole value of the
+    // feature: otherwise a lost packet costs an hour.
+    //
+    // A BOT was never minted a ticket, so its departure holds nothing: the
+    // seat frees immediately, which is the whole of how it is yielded.
+    const ticket = tickets.get(id);
+    tickets.delete(id);
+    if (client.recipient.seat !== null) {
+      inputs.set(client.recipient.seat, { ...IDLE_INPUT });
+      departHero(state, client.recipient.seat, {
+        hold: ticket !== undefined,
+        // Only an ownerless session may empty seat 0 — see `DepartOptions`.
+        seatZero: ownerless,
+      });
+      if (ticket !== undefined) {
+        held.set(ticket, {
+          seat: client.recipient.seat,
+          expiresAt: now() + RECONNECT_GRACE_MS,
+        });
+      }
+      // A bot seat priced the horde while it stood; its departure un-prices
+      // it through the same one function.
+      if (client.bot) applyPlayerScaling();
     }
+    // The host leaving is the session ending, and `close` says so in its own
+    // words; announcing "HOST LEFT" first would put a chat line in front of
+    // a bye nobody will be around to read.
+    if (client.slot === 0) return;
+    broadcastChat([chat.announce(`${client.name} LEFT`)]);
+    broadcastRoster();
+  }
+
+  /**
+   * The most recently seated bot departs, so an arriving person can have its
+   * chair.
+   *
+   * The session OWNS its bot clients — they live in this very process, ticked
+   * off its own clock — so removing one is a direct call down the same removal
+   * path any leaver takes, not a kick over a wire. The `bye` is still sent
+   * first, in the frame every ending travels as: the in-process bot client
+   * reads it off its pipe and stops itself, exactly as a remote client would.
+   */
+  function yieldBotSeat(): void {
+    let newest: Client | null = null;
+    // Insertion order IS seating order, so the last bot found is the newest.
+    for (const client of clients.values()) {
+      if (client.bot && client.recipient.seat !== null) newest = client;
+    }
+    if (!newest) return;
+    newest.send(
+      encodeFrame(
+        { type: FRAME.bye, seq, ack: 0, tick },
+        { reason: "shutdown", detail: "seat yielded to a player" },
+      ),
+    );
+    dropClient(newest.id);
+    options.log?.(`net: ${newest.name} yielded its seat to a player`);
   }
 
   return {
@@ -772,7 +705,7 @@ export function createSession(options: SessionOptions): Session {
       const owed = Math.min(Math.floor(ms / TICK_MS), MAX_TICKS_PER_ADVANCE);
       for (let i = 0; i < owed; i++) {
         stepOnce();
-        // A requested crossing (§6.4) is consumed BETWEEN ticks, where no
+        // A requested crossing is consumed BETWEEN ticks, where no
         // frame is half-applied — and before the publish, so the first
         // snapshot after a travel is already the new world.
         if (state.pendingTravel) performTravel();
@@ -788,11 +721,22 @@ export function createSession(options: SessionOptions): Session {
       return clients.size;
     },
 
+    get botClients() {
+      let bots = 0;
+      for (const client of clients.values()) if (client.bot) bots++;
+      return bots;
+    },
+
     addClient(id, send, seatRequest, name) {
       const wants =
         typeof seatRequest === "boolean"
           ? { play: seatRequest, loadout: undefined as unknown }
           : seatRequest;
+      // A BOT SEAT IS A CLIENT SEAT, and only the session's own bot creation
+      // ever says so: the hub builds its seat request by hand and never
+      // forwards a joiner's claim (`net/hub.ts`), so a stranger cannot wear
+      // the flag to dodge the XP split or reprice the horde.
+      const bot = wants.bot === true;
       // The HOST is always slot 0 and seat 0 — they are the run that already
       // exists. Everybody else takes the lowest free roster slot, and a player
       // among them is SEATED: a hero of their own is appended to the party,
@@ -801,12 +745,6 @@ export function createSession(options: SessionOptions): Session {
       // switched off for one: every player is seated with the hero they
       // brought, and the first of them takes the departed seat 0.
       const host = !ownerless && wants.play && clients.size === 0;
-      const slot = host ? 0 : nextSlot();
-      // THE SEAT IS THE SERVER'S ANSWER: a seated client steers
-      // `state.players[seat]` and nobody else, and a spectator has no seat at
-      // all — which is what every privacy and authority check below reads,
-      // never a claim the client made about itself.
-      let seat: number | null = null;
       // A RECONNECT IS TRIED FIRST, and it short-circuits everything below —
       // the seat cap included, since the seat is already theirs and was never
       // given away. The hero standing on the field IS the authoritative one, so
@@ -814,6 +752,27 @@ export function createSession(options: SessionOptions): Session {
       // hero in a claim that arrived from a stranger would hand a reconnect the
       // one thing a fresh join is checked for.
       const resumed = wants.play ? claimHeldSeat(wants.resume) : null;
+      // A BOT YIELDS ITS SEAT TO A PERSON. A session whose chairs are filled
+      // with the host's own autopilot heroes is not full to a human who wants
+      // to play: the most recently seated bot departs — through the same
+      // removal path any leaver takes, so its hero is departed, the horde is
+      // re-priced and the roster says so — and the person is seated into the
+      // chair it gave up. Before `nextSlot()`, so the roster slot is freed too.
+      if (
+        !bot &&
+        !host &&
+        resumed === null &&
+        wants.play &&
+        nextFreeSeat(state) >= maxClients
+      ) {
+        yieldBotSeat();
+      }
+      const slot = host ? 0 : nextSlot();
+      // THE SEAT IS THE SERVER'S ANSWER: a seated client steers
+      // `state.players[seat]` and nobody else, and a spectator has no seat at
+      // all — which is what every privacy and authority check below reads,
+      // never a claim the client made about itself.
+      let seat: number | null = null;
       if (host) {
         seat = 0;
       } else if (resumed !== null) {
@@ -827,7 +786,7 @@ export function createSession(options: SessionOptions): Session {
         // gone from is not eventually full of bodies nobody is behind.
         //
         // AND THE HERO THEY BRING IS A CLAIM FROM A STRANGER, so it is weighed
-        // before the simulation is handed it (plan §5.3): the level is held
+        // before the simulation is handed it: the level is held
         // inside the ladder, every stat block inside what that level pays for,
         // and every piece checked against the catalogs — an id nothing has
         // heard of is a crash on the HOST's machine from one packet. It is a
@@ -843,14 +802,20 @@ export function createSession(options: SessionOptions): Session {
         }
         seat = seatOf(
           state,
-          seatHero(state, (checked?.loadout as Loadout | null) ?? null),
+          seatHero(state, (checked?.loadout as Loadout | null) ?? null, {
+            bot,
+          }),
         );
+        // A bot seat prices the horde the moment it stands in the fight —
+        // the same knob `/players` turns, from the same one function.
+        if (bot) applyPlayerScaling();
       }
       const recipient: Recipient = { seat };
       const client: Client = {
         id,
         slot,
         name: name?.trim() || (host ? "HOST" : `PLAYER ${slot + 1}`),
+        bot,
         send,
         recipient,
         // THE GENESIS BASELINE, cut for this recipient. The client builds
@@ -861,8 +826,12 @@ export function createSession(options: SessionOptions): Session {
         // fields the server must never confirm or deny.
         baseline: baselineFor(genesis, recipient),
         ackedSeq: 0,
+        lastInputSeq: 0,
         needsFull: adopted !== null,
         history: new Map(),
+        sentWindow: 0,
+        windowStart: now(),
+        sendRate: 0,
       };
       clients.set(id, client);
       if (seat !== null) inputs.set(seat, { ...IDLE_INPUT });
@@ -886,9 +855,13 @@ export function createSession(options: SessionOptions): Session {
         seat: recipient.seat,
         // The ticket back into this seat. Minted per WELCOME rather than per
         // seat, so every reconnection issues a fresh one and the ticket that
-        // just got somebody in is spent.
+        // just got somebody in is spent. Never for a bot: a bot cannot drop,
+        // and a held seat is exactly what must NOT stand between a departing
+        // bot and the person its chair is being yielded to.
         resume:
-          recipient.seat === null ? undefined : mintTicket(recipient.seat),
+          recipient.seat === null || bot
+            ? undefined
+            : mintTicket(recipient.seat),
       };
       if (welcome.resume) tickets.set(id, welcome.resume);
       send(encodeFrame({ type: FRAME.welcome, seq, ack: 0, tick }, welcome));
@@ -903,55 +876,7 @@ export function createSession(options: SessionOptions): Session {
       broadcastRoster();
     },
 
-    removeClient(id) {
-      const client = clients.get(id);
-      if (!client) return;
-      clients.delete(id);
-      // A DEPARTING PLAYER'S HERO IS NO LONGER ANYBODY'S. The seat is NOT
-      // spliced out — every command and input frame in flight names a seat by
-      // index, so renumbering the party would deliver somebody else's steering
-      // to the wrong hero — but two things have to happen to the body it holds.
-      //
-      // The last frame they sent goes, or it keeps walking toward wherever they
-      // were last steering for the rest of the run. And the hero is DEPARTED
-      // (plan §4.2): the world stops answering for it, which is what lets the
-      // people still playing grow past the seat, keeps a departed level-90 from
-      // holding the horde's level over them, and — the sharp end — lets them
-      // LOSE, since a run whose fourth player quit could not otherwise ever be
-      // defeated.
-      //
-      // AND THE SEAT IS KEPT FOR THEM (plan §5.4). A dropped connection and a
-      // player quitting are indistinguishable from here, so every departure is
-      // treated as though it might be the first: the body still means nothing
-      // to the world, but the seat is not handed to a newcomer for
-      // `RECONNECT_GRACE_MS`, and the person who left holds the only ticket
-      // back into it. Coming back resumes the hero as it stands — every point
-      // of xp, every item, every level — rather than building a fresh one out
-      // of whatever loadout was last banked, which is the whole value of the
-      // feature: otherwise a lost packet costs an hour.
-      const ticket = tickets.get(id);
-      tickets.delete(id);
-      if (client.recipient.seat !== null) {
-        inputs.set(client.recipient.seat, { ...IDLE_INPUT });
-        departHero(state, client.recipient.seat, {
-          hold: ticket !== undefined,
-          // Only an ownerless session may empty seat 0 — see `DepartOptions`.
-          seatZero: ownerless,
-        });
-        if (ticket !== undefined) {
-          held.set(ticket, {
-            seat: client.recipient.seat,
-            expiresAt: now() + RECONNECT_GRACE_MS,
-          });
-        }
-      }
-      // The host leaving is the session ending, and `close` says so in its own
-      // words; announcing "HOST LEFT" first would put a chat line in front of
-      // a bye nobody will be around to read.
-      if (client.slot === 0) return;
-      broadcastChat([chat.announce(`${client.name} LEFT`)]);
-      broadcastRoster();
-    },
+    removeClient: dropClient,
 
     receive(id, type, frameSeq, payload) {
       const client = clients.get(id);
@@ -985,7 +910,7 @@ export function createSession(options: SessionOptions): Session {
       }
       if (type === FRAME.chat) {
         // CHAT IS THE ONE THING A SPECTATOR MAY DO, and it is the whole point
-        // of shipping it in this PR rather than in phase 4: eight people watching
+        // of shipping chat the moment spectators exist: eight people watching
         // a hardcore run in silence are eight people watching a video. What
         // any one of them may CHANGE is still nothing — the room refuses a
         // spectator's `/players`, `/kick` and `/invite` by name.
@@ -1010,13 +935,26 @@ export function createSession(options: SessionOptions): Session {
       // it.
       if (client.recipient.seat === null) return;
       if (type === FRAME.input) {
-        applyInput(inputs, client.recipient.seat, payload);
+        if (applyInput(inputs, client.recipient.seat, payload)) {
+          // Track the highest APPLIED seq — the fold itself stays latest-wins
+          // (an older frame arriving late still lands on the live input; the
+          // next fresh one overwrites it), but the echo the client's
+          // prediction reads may only move forward.
+          const seq = (payload as { seq?: unknown }).seq;
+          if (
+            typeof seq === "number" &&
+            Number.isFinite(seq) &&
+            seq > client.lastInputSeq
+          ) {
+            client.lastInputSeq = seq;
+          }
+        }
         return;
       }
       if (type === FRAME.command) {
         const frame = payload as { name?: unknown; args?: unknown } | null;
         // THE ACTING HERO IS THE SEAT WE ADMITTED THIS CLIENT INTO, never a
-        // field on the frame (plan §3.6's debt). A bag, a purse, a build and a
+        // field on the frame. A bag, a purse, a build and a
         // talent tree are private, so a command that touches one had to learn
         // whose it is — and letting a client NAME the seat would hand a
         // stranger somebody else's inventory in one field.
@@ -1045,94 +983,4 @@ export function createSession(options: SessionOptions): Session {
       clients.clear();
     },
   };
-}
-
-/**
- * A state frozen for use as the genesis baseline.
- *
- * Through JSON rather than by reference, and that is the point: the live
- * state is about to change, and a baseline aliasing it would compare the
- * running world against itself. The rng closures cannot survive the trip and
- * do not need to (the wire never carries them; a client has its own from the
- * same seed), and `explored` arrives back as an index-keyed object, which
- * the differ's byte strategy reads as bytes on purpose.
- */
-function frozenGenesis(state: GameState): Record<string, unknown> {
-  return JSON.parse(
-    JSON.stringify(
-      captureSnapshot(
-        state as unknown as Record<string, unknown>,
-        { seat: 0 },
-        [],
-      ),
-    ),
-  ) as Record<string, unknown>;
-}
-
-/** What the simulation is handed when nobody is steering — a hero standing
- * still, which is what a client with a screen open contributes from phase 3 on. */
-const IDLE_INPUT: GameInput = {
-  steering: false,
-  target: { x: 0, y: 0 },
-  jump: false,
-  useItem: false,
-};
-
-/**
- * Fold one client's input frame into the slot's live input.
- *
- * The wire carries a plain record, so this is where it becomes a `GameInput`
- * — and it is the ONE place a client's bytes reach the simulation, which is
- * what makes it the natural home for phase 5's validation. What it enforces today
- * is only the shape: an input that is not an object is dropped rather than
- * spread onto the slot, because a `null` here would be a crash inside `step`
- * on the host's own machine.
- */
-function applyInput(
-  inputs: Map<number, GameInput>,
-  slot: number,
-  payload: unknown,
-): void {
-  if (!payload || typeof payload !== "object") return;
-  const frame = (payload as { input?: unknown }).input;
-  if (!frame || typeof frame !== "object") return;
-  const current = inputs.get(slot) ?? { ...IDLE_INPUT };
-  inputs.set(slot, { ...current, ...(frame as Partial<GameInput>) });
-}
-
-/**
- * Run one named command against the run.
- *
- * TWO CLOSED LISTS, ONE BEHIND THE OTHER, and both are load-bearing. The name
- * is checked here against the ENGINE's table (`isRunCommand`) before anything
- * is dispatched, and the dispatch itself — `applyRunCommand` — is an explicit
- * `switch` over that union rather than a lookup in a table of functions, so no
- * future refactor can widen the channel by making some module's exports
- * reachable. The ARGUMENTS are checked the same way, against the arity and
- * types declared beside each verb: a client on an open UDP port gets to choose
- * them, and "an index" that arrives as an object is how a host is crashed by a
- * stranger.
- *
- * Nothing is done with the return value, deliberately. A command is
- * fire-and-forget on the wire and every caller is written to that contract —
- * see the dispatcher's note in `pwa/src/game/run-commands.ts` about why the
- * app may not depend on the difference between "refused" and "returned
- * nothing".
- */
-function runCommand(
-  state: GameState,
-  name: unknown,
-  args: unknown,
-  actor: Player | undefined,
-): void {
-  if (!isRunCommand(name)) return;
-  applyRunCommand(state, name, Array.isArray(args) ? args : [], actor);
-}
-
-/** Clear the one-shot edges after the tick that consumed them. */
-function clearEdges(input: GameInput): void {
-  input.jump = false;
-  input.useItem = false;
-  delete input.moveItem;
-  delete input.dropItemIndex;
 }

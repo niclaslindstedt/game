@@ -24,7 +24,7 @@
 // `botWantsGearSweep`, `botCullPlan`, `botReviveCell` and `botCompanionToHeal`
 // are pure reads that answer WHAT the autopilot wants; the committing forms
 // beside them are the in-process convenience, and `bot/intent.ts` turns the same
-// decisions into the run commands a bot CLIENT sends (multiplayer plan §7.2.5).
+// decisions into the run commands a bot CLIENT sends.
 
 import {
   autoEquipBest,
@@ -156,7 +156,7 @@ export function botAutoEquip(state: GameState, hero: Player): boolean {
 /**
  * Is there anything in the bag the hero should be WEARING? The sweep's
  * decision, split from the commit above so it can travel as an intent
- * (multiplayer plan §7.2.5) — the verb behind it is `autoEquipGear`.
+ * (bot/intent.ts) — the verb behind it is `autoEquipGear`.
  *
  * Asked EVERY tick, which is why the short-circuit lives here: the plan is a
  * pure function of the loadout (it turns only on the worn kit, the bag, and the
@@ -215,7 +215,7 @@ export function cullWorstLoot(state: GameState, hero: Player): Equipment[] {
 /**
  * WHICH CELLS THE BAG CAN SPARE, in the order they should go — the cull's
  * decision, split from the commit above so it can travel as an intent
- * (multiplayer plan §7.2.5). The verb behind each cell is `bankSpareItem`.
+ * (bot/intent.ts). The verb behind each cell is `bankSpareItem`.
  *
  * Pure: it reads the bag and answers with indices, counting the cells it has
  * already named as freed rather than emptying them, so the answer is the same
@@ -225,7 +225,7 @@ export function cullWorstLoot(state: GameState, hero: Player): Equipment[] {
  * It stays in `bot/` rather than moving beside `bankSpareItem` because THIS is
  * the autopilot's opinion — the pocket keep-set and the preciousness ladder are
  * how the bot plays, not how a bag works, and a run command reaching in here
- * for its implementation is the thing decision 3b forbids.
+ * for its implementation is exactly the coupling the intent split forbids.
  */
 export function botCullPlan(state: GameState, hero: Player): number[] {
   const inv = hero.inventory;
@@ -537,7 +537,7 @@ export function careForCompanion(state: GameState, hero: Player): boolean {
 /**
  * The bag cell holding a bottle of SALTS worth breaking right now, or -1 — the
  * first half of the care decision, split from the commit above so it can travel
- * as an intent (multiplayer plan §7.2.5). The verb behind it is
+ * as an intent (bot/intent.ts). The verb behind it is
  * `spendReviveItem`, and `reviveTarget` is what makes the answer non-null only
  * when somebody is actually face-down.
  */

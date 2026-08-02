@@ -9,7 +9,7 @@
 // `partyCentroid`, and every one of them carried a comment saying — correctly —
 // that with one hero the centroid IS that hero. That is exactly why no test
 // caught it: the whole suite flies one hero, so the party case had no reader at
-// all until §7.2's simulator grew one. Flying a party of two on the moon landed
+// all until the party simulator grew one. Flying a party of two on the moon landed
 // 2 kills over three minutes where the same seed solo landed 128.
 //
 // So these are the tests that fail if either rule is quietly reverted, and both

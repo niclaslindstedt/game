@@ -46,7 +46,7 @@ export type Hud = {
   /** "My hero is on the field and I have nothing open" (see `fieldLive`) —
    * what every "show the live-field HUD" gate reads. */
   fieldLive: boolean;
-  /** The LOCAL hero is DOWN in a party still standing (§4.2) — mounts the
+  /** The LOCAL hero is DOWN in a party still standing — mounts the
    * YOU FELL overlay with its RESPAWN button. Never true solo (one hero down
    * is the party wiped, which is the defeat path). */
   downed: boolean;
@@ -145,7 +145,7 @@ export type Hud = {
     canHeal: boolean;
   }[];
   /**
-   * THE PARTY FRAMES (§4.5) — every OTHER hero in play, in seat order, empty
+   * THE PARTY FRAMES — every OTHER hero in play, in seat order, empty
    * solo (and for a departed seat, which is nobody's). Portraits are composed
    * in PlayingHud through the paper-doll compositor from the live state; the
    * name is NOT here because the engine's Player carries none — the session
@@ -357,7 +357,7 @@ export function buildHud(
   const screen = localScreen(state);
   const live = fieldLive(state);
   const downed = localHero(state).downed === true;
-  // THE PARTY FRAMES (§4.5): every other hero in play, keyed on the same
+  // THE PARTY FRAMES: every other hero in play, keyed on the same
   // coarse facts the frame shows — membership, sliver-resolution health, the
   // downed flag, the screen state, the level.
   const partyFrames: Hud["partyFrames"] = [];

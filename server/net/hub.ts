@@ -3,7 +3,7 @@
 // the only thing in this feature standing between an open UDP port and the
 // simulation.
 //
-// **NOTHING REACHES THE SESSION BEFORE THE CONNECTION IS ESTABLISHED.** §5.2's
+// **NOTHING REACHES THE SESSION BEFORE THE CONNECTION IS ESTABLISHED.** The
 // rule, implemented literally: a peer that has not been admitted may send
 // exactly two frames — a padded `hello` and a `join` — and every other frame
 // from it is dropped without being looked at. Input, commands and chat are only
@@ -15,8 +15,8 @@
 // same machine; there is no address to verify, no version skew possible, and
 // no password a player should have to type to play their own game. It is a
 // different DOOR, not a privileged client — it is seated by `server/main.ts`
-// exactly as it was in phase 1, and everything below this line is about the door
-// that faces the internet.
+// exactly as a local host always has been, and everything below this line is
+// about the door that faces the internet.
 //
 // FOUR BOUNDS, EACH ANSWERING A DIFFERENT ABUSE:
 //
@@ -31,7 +31,7 @@
 //     one, the flood defence is gone and this comment is the warning.
 //  3. **A SEAT CAP.** `MAX_CLIENTS`, checked in `admit`, so a session cannot
 //     be filled past what its publish loop was measured for.
-//  4. **A PER-SESSION PACKET BUDGET** (§5.2's fourth clause), and it is the
+//  4. **A PER-SESSION PACKET BUDGET**, and it is the
 //     one that covers the peer who got IN. Everything above stops a stranger;
 //     none of it stops an admitted client sending sixty thousand chat lines or
 //     run commands a second, each of which the session parses, dispatches and
@@ -121,13 +121,27 @@ export type HubSession = {
   addClient(
     id: number,
     send: (frame: ArrayBuffer) => void,
-    seat: boolean | { play: boolean; loadout?: unknown; resume?: string },
+    /**
+     * `bot` marks one of the session's OWN autopilot seats — and the hub NEVER
+     * sets it. A joiner's frames cannot claim it: the hub builds its seat
+     * request by hand in `onJoin` from the fields it chooses to read, so a
+     * `bot: true` riding a stranger's join payload is dropped on the floor. A
+     * bot that could be claimed from outside would be a free pass out of the
+     * XP split and a lever on the horde's pricing.
+     */
+    seat:
+      | boolean
+      | { play: boolean; loadout?: unknown; resume?: string; bot?: boolean },
     name?: string,
   ): void;
   removeClient(id: number): void;
   receive(id: number, type: number, seq: number, payload: unknown): void;
   /** How many seats are taken, host included. */
   readonly clientCount: number;
+  /** How many of those seats are the session's own BOTS. A bot yields its seat
+   * to an arriving person, so the admission desk's seat-cap check must not
+   * count them — absent (a stub, an older session) means none. */
+  readonly botClients?: number;
 };
 
 export type HubOptions = {
@@ -141,8 +155,8 @@ export type HubOptions = {
   /**
    * Admit peers over a transport that is not Steam's.
    *
-   * **DEFAULT FALSE, AND IT IS A LICENCE SWITCH RATHER THAN A DEBUG ONE**
-   * (decision 15). Multiplayer is licensed through Steam and nowhere else, so
+   * **DEFAULT FALSE, AND IT IS A LICENCE SWITCH RATHER THAN A DEBUG ONE.**
+   * Multiplayer is licensed through Steam and nowhere else, so
    * the shipped game never sets this: a session carried over a raw UDP socket
    * is unlicensed play whoever set it up. It exists for the repo's own suites
    * and the headless soak, which talk to a loopback socket with no Steam
@@ -152,7 +166,7 @@ export type HubOptions = {
    * is a thing a player can set, and this must not be one.
    */
   allowUnlicensedTransport?: boolean;
-  /** The session is a HARDCORE game (§4.2, `SessionParams.hardcore`): only
+  /** The session is a HARDCORE game (`SessionParams.hardcore`): only
    * hardcore characters are admitted — and a softcore session admits only
    * softcore ones. Defaults false. */
   hardcore?: boolean;
@@ -333,7 +347,7 @@ export function createPeerHub(options: HubOptions): PeerHub {
       players: options.session.clientCount,
       maxPlayers: maxClients,
       // On the probe so the JOIN screen can show the constraint up front; the
-      // real refusal is `admit`'s (§4.2).
+      // real refusal is `admit`'s hardcore gate.
       hardcore: options.hardcore ?? false,
     };
     transport.send(
@@ -349,7 +363,7 @@ export function createPeerHub(options: HubOptions): PeerHub {
   }
 
   /**
-   * MAY A SESSION BE CARRIED OVER THIS TRANSPORT AT ALL? (decision 15.)
+   * MAY A SESSION BE CARRIED OVER THIS TRANSPORT AT ALL?
    *
    * Steam only. The `allowUnlicensedTransport` escape exists for the repo's own
    * tests and the headless soak, which run over a loopback UDP socket with no
@@ -369,7 +383,7 @@ export function createPeerHub(options: HubOptions): PeerHub {
       refuse(transport, key, "protocol-mismatch", "malformed join");
       return;
     }
-    // **MULTIPLAYER IS LICENSED THROUGH STEAM AND NOWHERE ELSE** (decision 15).
+    // **MULTIPLAYER IS LICENSED THROUGH STEAM AND NOWHERE ELSE.**
     // The game ships under PolyForm-Noncommercial, and the multiplayer right
     // travels with the Steam copy — so a session carried by anything other than
     // the Steam relay is unlicensed play, whoever set it up and whatever they
@@ -403,12 +417,15 @@ export function createPeerHub(options: HubOptions): PeerHub {
       nowMs: options.now(),
       password,
       proof: Number(join.proof) || 0,
-      seats: options.session.clientCount,
+      // Bot seats do not count against the cap: each one YIELDS to an arriving
+      // person (`server/session.ts`), so a session full of the host's own
+      // autopilot heroes still has room for everybody it was sized for.
+      seats: options.session.clientCount - (options.session.botClients ?? 0),
       maxSeats: maxClients,
-      // §4.2: hardcore never mixes with softcore. The joiner's flag is a
-      // claim off the frame like the loadout beside it — coerced, never
-      // trusted past what phase 5's trust model already says about a listen
-      // server — and the mismatch is refused by name either way round.
+      // Hardcore never mixes with softcore. The joiner's flag is a claim
+      // off the frame like the loadout beside it — coerced, never trusted
+      // past what the trust model already says about a listen server — and
+      // the mismatch is refused by name either way round.
       sessionHardcore: options.hardcore ?? false,
       joinerHardcore: join.hardcore === true,
     });
@@ -442,7 +459,8 @@ export function createPeerHub(options: HubOptions): PeerHub {
     options.session.addClient(
       id,
       (frame) => sendTo(peer, frame),
-      // The RESUME ticket rides the join beside the loadout (plan §5.4). The
+      // The RESUME ticket rides the join beside the loadout (see
+      // `docs/multiplayer.md` → Reconnect). The
       // hub does not read it — a ticket names a SEAT, and seats are the
       // session's business — it only refuses to lose it on the way past.
       {

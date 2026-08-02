@@ -32,8 +32,8 @@
 // the caller gets its answer, and the server's next snapshot overwrites the
 // field either way, because the client's state is server-authoritative and a
 // delta is coded against what the client acknowledged. If the two disagree the
-// server wins within a frame (20 Hz). This is deliberately NOT the input
-// prediction phase 3 owns — there is no rollback, no reconciliation and no replay
+// server wins within a frame (20 Hz). This is deliberately NOT input
+// prediction — there is no rollback, no reconciliation and no replay
 // here, only a UI verb applied twice and corrected by the ordinary snapshot.
 //
 // Two rules follow from that, and both matter:

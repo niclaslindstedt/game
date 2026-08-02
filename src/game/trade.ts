@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // TRADE — one item and one purse across a table, and the rules that stop a
-// party duplicating either (multiplayer plan §5.1).
+// party duplicating either.
 //
 // Half of D2 co-op is trade. What makes it hard is not the UI: it is that a
 // trade is the only place in the game where a piece of gear LEAVES one private
@@ -90,8 +90,9 @@ export function openTrade(
     seats: [seat, partnerSeat],
     offers: [emptySide(), emptySide()],
   });
-  // The window is a per-player SCREEN on both sides at once (plan §3.2's
-  // model): no steering while at the table, still standing, still killable.
+  // The window is a per-player SCREEN on both sides at once (the
+  // `Player.screen` model): no steering while at the table, still standing,
+  // still killable.
   actor.screen = "trade";
   partner.screen = "trade";
   return null;
@@ -289,7 +290,7 @@ export function endTradesFor(state: GameState, seat: number): void {
   state.trades = open.filter((trade) => !trade.seats.includes(seat));
   // The PARTNER's window comes down too — they are standing at a table whose
   // other side just left play, and a screen nothing can close is exactly the
-  // wedge §3.2 retired.
+  // wedge the per-player screen split retired.
   for (const trade of ended) lowerTradeScreens(state, trade);
 }
 

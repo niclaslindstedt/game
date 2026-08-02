@@ -75,6 +75,11 @@ export function createRenderFrame(deps: {
   botView: boolean;
   demo: boolean;
   showFps: boolean;
+  /** The run's net cost, when this run rides a session — the driver's own
+   * `netStats`, or undefined on the local path. Drawn beside the FPS figure
+   * under the same DEBUG MODE flag: the two questions ("is the frame keeping
+   * up" and "what is the wire costing") are asked in the same breath. */
+  netStats?: () => { rate: number; perSec: number };
   demoDirector: DemoDirector;
   minimapRef: RefObject<HTMLCanvasElement | null>;
   fpsRef: RefObject<HTMLDivElement | null>;
@@ -118,6 +123,7 @@ export function createRenderFrame(deps: {
     botView,
     demo,
     showFps,
+    netStats,
     demoDirector,
     minimapRef,
     fpsRef,
@@ -427,7 +433,14 @@ export function createRenderFrame(deps: {
         fpsAvgMs = fpsAvgMs === 0 ? frameMs : fpsAvgMs * 0.9 + frameMs * 0.1;
         if (timeMs >= fpsNextFlushMs && fpsAvgMs > 0) {
           fpsNextFlushMs = timeMs + 250;
-          fpsNode.textContent = `${Math.round(1000 / fpsAvgMs)} FPS`;
+          let line = `${Math.round(1000 / fpsAvgMs)} FPS`;
+          // The NET GRAPH: what the state stream costs, beside the frame cost.
+          // Only a session has one; a local run keeps the meter as it was.
+          const net = netStats?.();
+          if (net && net.perSec > 0) {
+            line += ` · ${(net.rate / 1024).toFixed(1)} KB/S · ${net.perSec}/S`;
+          }
+          fpsNode.textContent = line;
         }
       }
       fpsLastMs = timeMs;

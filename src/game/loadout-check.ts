@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// VALIDATING A JOINER'S HERO — the second of the multiplayer plan's two §5.3
-// debts, and the one place a stranger's claim about their own character is
+// VALIDATING A JOINER'S HERO — the guard beside `PartyStamp` on a session's
+// door, and the one place a stranger's claim about their own character is
 // weighed before the simulation is handed it.
 //
 // A joining client sends a `Loadout` on its `join` frame and the session passed

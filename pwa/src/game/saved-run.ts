@@ -105,7 +105,7 @@ const KEY = storageKey("current-run");
 // and `wheelDebris` (wheels torn off, bouncing or at rest). Both are arrays
 // `stepVehicles` iterates on every tick, so a v24 snapshot would crash the
 // resume's very first step.
-// v26: PER-PLAYER SCREENS (plan §3.2) — `state.phase` lost its eleven UI
+// v26: PER-PLAYER SCREENS — `state.phase` lost its eleven UI
 // members to `Player.screen`, and `pendingTalentPoints`/`companionFocus`
 // moved from the run onto the hero. A v25 blob was parked from the pause
 // screen, so essentially every one carries `phase: "paused"` — a value the
@@ -331,7 +331,7 @@ export function loadSavedRun(): ParkedRun | null {
         ...payload.state.merchant,
         buyback: payload.state.merchant?.buyback ?? [],
       },
-      // PLAYER CORPSES (§4.2) are purely additive on the same reasoning as the
+      // PLAYER CORPSES are purely additive on the same reasoning as the
       // buy-back shelf above: a run parked before they shipped simply has none
       // — and a SOLO run can never have one at all — so an empty default beats
       // a SAVE_VERSION bump that bins every parked run for a list that starts

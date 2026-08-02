@@ -11,7 +11,7 @@
 // counter, and no ranking can ever disagree with what the game shows the player
 // about their own play.
 //
-// **AND EVERY ONE OF THEM IS A SOLO RECORD** (multiplayer plan §5.3). The host
+// **AND EVERY ONE OF THEM IS A SOLO RECORD** (docs/multiplayer.md). The host
 // of a session is a player, so the host can cheat — that is the accepted cost of
 // a listen server, fine among friends and fatal for a ranking — and seven people
 // helping inflates all four of these without anybody having to cheat at all. So

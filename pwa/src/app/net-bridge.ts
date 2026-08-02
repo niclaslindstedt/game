@@ -100,6 +100,9 @@ export type SeatEntry = {
    * peer whose route Valve owns. Printed as such rather than as a flattering
    * zero. */
   ping: number;
+  /** State bytes per second the session is sending this seat — the net
+   * graph's per-seat figure; 0 until a full second has been measured. */
+  rate: number;
 };
 
 /** One row in the server browser. Everything in it is what the host CLAIMED;
@@ -145,8 +148,14 @@ export type HostOptions = {
   params: SessionParams;
   password?: string;
   maxClients?: number;
+  /** Seats to fill with the session's own AUTOPILOT heroes — the BOTS row on
+   * the HOST screen. A session fact like `maxClients`, deliberately NOT a
+   * field on `params`: `SessionParams` describes the run and is compared for
+   * determinism, and seat-filling says nothing about the world every client
+   * builds. */
+  bots?: number;
   mods?: string[];
-  /** The catalog overrides those mods registered (§4.4) — the session process
+  /** The catalog overrides those mods registered — the session process
    * simulates, and its registry never saw the page's `registerDefs`. Opaque
    * JSON here like everything else this bridge moves. */
   modDefs?: unknown;
@@ -283,6 +292,7 @@ export async function hostSession(
     adopt: opts.adopt,
     password: opts.password,
     maxClients: opts.maxClients,
+    bots: opts.bots,
     mods: opts.mods,
     modDefs: opts.modDefs,
   })) as { ok?: boolean; levelId?: string; reason?: string } | null;
@@ -370,10 +380,10 @@ export type ConnectOptions = {
   /** The mods this build has applied, in load order. A mismatch is what the
    * host refuses on; sending them is how it can. */
   mods?: string[];
-  /** The joining character is HARDCORE (§4.2): hardcore and softcore heroes
+  /** The joining character is HARDCORE: hardcore and softcore heroes
    * never share a game, and the handshake refuses the mismatch by name. */
   hardcore?: boolean;
-  /** The hero this player brings (§4.5) — their banked loadout as plain JSON,
+  /** The hero this player brings — their banked loadout as plain JSON,
    * or null for the authored fresh start. A claim the session weighs
    * (`validateLoadout`), never an authority. Structural: this module may not
    * import the engine. */

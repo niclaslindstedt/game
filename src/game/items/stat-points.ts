@@ -183,7 +183,7 @@ export function beginRespec(state: GameState, player: Player): void {
   // freshly-zeroed pools so the readouts never show an over-full bar.
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
-  // The one MODAL among the screens (plan §3.2): it holds until every
+  // The one MODAL among the screens: it holds until every
   // refunded point is re-placed (`confirmRespec`), because a build left
   // half-poured is not a build. Solo that freezes the world exactly as the
   // respec phase did; in a party it holds one hero.

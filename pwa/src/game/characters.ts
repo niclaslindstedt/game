@@ -179,8 +179,9 @@ export type CampaignTally = {
   peakMenace: number;
   levels: number;
   /**
-   * ANY LEG OF THIS CAMPAIGN WAS PLAYED IN COMPANY (`PartyStamp`, multiplayer
-   * plan §5.3) — so the whole campaign is off the two hardcore boards, however
+   * ANY LEG OF THIS CAMPAIGN WAS PLAYED IN COMPANY (`PartyStamp`;
+   * docs/multiplayer.md) — so the whole campaign is off the two hardcore
+   * boards, however
    * the remaining maps were played.
    *
    * It latches on the first co-op map and is only cleared with the tally

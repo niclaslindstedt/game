@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The run-flow verbs the app's UI calls: the intro/outro pagers, cutscene
-// taps and skips, the bag / pause / level-up SCREENS (per-player since plan
-// §3.2 — the run's phase stays `playing` and the hero's own `screen` carries
+// taps and skips, the bag / pause / level-up SCREENS (per-player —
+// the run's phase stays `playing` and the hero's own `screen` carries
 // what they are looking at), and the post-victory STAY choice.
 
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
@@ -29,7 +29,7 @@ export function hasPendingPoints(player: Player): boolean {
  * Open the level-up chooser for a hero with unspent points — the on-demand
  * opener behind the HUD's "points waiting" pip, and the door the AUTO PILOT
  * refund walks a stopped ride through. A ding no longer forces the chooser
- * open (plan §3.2, decision 4): the points bank, and this is how they get
+ * open: the points bank, and this is how they get
  * placed. From active play only, with no other screen up — a pause menu or an
  * end-of-run splash is never fought over. Returns whether it opened.
  */
@@ -47,7 +47,7 @@ export function promptPendingPoints(state: GameState, player: Player): boolean {
 
 /**
  * Close the chooser — with points still banked, if that is how the player
- * wants it. The chooser is non-blocking (plan §3.2): points keep, the pip
+ * wants it. The chooser is non-blocking: points keep, the pip
  * keeps showing, and the field takes the pointer back.
  */
 export function closeLevelup(player: Player): void {

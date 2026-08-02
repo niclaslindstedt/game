@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// A JOINER'S HERO IS A CLAIM FROM A STRANGER (multiplayer plan §5.3). These
+// A JOINER'S HERO IS A CLAIM FROM A STRANGER. These
 // pin what the check refuses to let through, and — just as importantly — what
 // it lets through untouched, because the shape it must never grow is one that
 // turns an honest player's old save into an unjoinable one.

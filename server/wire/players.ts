@@ -18,7 +18,8 @@
 // much.
 //
 // D2's own rule is hp ×(1 + 0.5(N−1)) with a matching experience bump, and
-// that is what ships. The real tuning pass is phase 4's — it has the multi-player
+// that is what ships. The real tuning pass is a later, measured one — it wants
+// the multi-player
 // simulator to measure with, and the menace meter to reconcile, neither of
 // which exists yet. What ships here is the command and the honest pairing.
 
@@ -31,7 +32,7 @@ export const MAX_PLAYER_SCALE = 8;
 export const PLAYER_SCALE_STEP = 0.5;
 
 /** The multipliers `/players N` asks the engine for. Deliberately a pair with
- * no third member: every other knob is phase 4's measured pass, and a guessed one
+ * no third member: every other knob belongs to that measured pass, and a guessed one
  * shipped now would be a number nobody could later tell apart from a decision. */
 export type PlayerScaling = {
   mobHp: number;

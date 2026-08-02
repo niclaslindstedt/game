@@ -8,6 +8,9 @@ import globals from "globals";
 export default [
   {
     ignores: [
+      // Agent scratch worktrees (parallel sessions' clones of this repo) —
+      // each is linted by its own root run, never by this one.
+      ".claude/**",
       "node_modules/**",
       "pwa/node_modules/**",
       "pwa/dist/**",

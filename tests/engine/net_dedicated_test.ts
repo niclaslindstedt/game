@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE DEDICATED SERVER (multiplayer plan §5.5), and the one test in the net
-// suite that runs the WHOLE stack at once.
+// THE DEDICATED SERVER, and the one test in the net suite that runs the WHOLE
+// stack at once.
 //
 // Everything else here drives one layer against a stub. This drives a real
 // session, behind a real admission desk, over a real UDP socket, joined by the
@@ -9,10 +9,12 @@
 // property, because every fake in this suite was written by somebody who had
 // already decided what the layers say to each other.
 //
-// It is also the closest thing in the repo to §5.6's soak, and it is not a
+// It is also the closest thing in the repo to a soak, and it is not a
 // substitute for one: it proves the stack CONNECTS, not that it survives eight
-// players for hours at 150 ms and 2% loss. That needs the bot client the plan
-// now names in §7.2.5.
+// players for hours at 150 ms and 2% loss. That is `scripts/bot-client.mjs`'s
+// job.
+
+import { readFileSync } from "node:fs";
 
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -90,10 +92,46 @@ describe("the dedicated server's command line", () => {
   });
 });
 
+describe("the licence lock", () => {
+  // The ship target (`scripts/build-server.mjs`) folds the licence literal to
+  // `false` by rewriting one marked token while staging, so the packaged
+  // binary's config-file escape is dead code. The fold is a string rewrite, so
+  // this drift test is what keeps it honest: if the literal or its marker
+  // moves, the build would either refuse (marker gone) or — worse — ship the
+  // escape alive. The strings here are the build script's own, duplicated on
+  // purpose: a shared constant would let both ends drift together.
+  const OPEN =
+    "UNLICENSED_TRANSPORT_UNLOCKED: boolean = true; // licence-lock:";
+  const SHUT =
+    "UNLICENSED_TRANSPORT_UNLOCKED: boolean = false; // licence-lock:";
+
+  it("carries the marked literal the ship target folds", () => {
+    const source = readFileSync(
+      new URL("../../server/licence.ts", import.meta.url),
+      "utf8",
+    );
+    expect(source).toContain(OPEN);
+    expect(source).not.toContain(SHUT);
+  });
+
+  it("is the only thing that opens the dedicated config escape", () => {
+    // The escape must be ANDed with the literal, not read on its own — a
+    // folded build where the config still won would be a lock in name only.
+    const source = readFileSync(
+      new URL("../../server/dedicated.ts", import.meta.url),
+      "utf8",
+    );
+    expect(source).toContain(
+      "config.allowUnlicensedTransport === true && UNLICENSED_TRANSPORT_UNLOCKED",
+    );
+  });
+});
+
 describe("a real client against a real dedicated server", () => {
   it("joins over a real socket and is given a seat", async () => {
     const host = await startDedicated({
-      // Decision 15's escape — a loopback socket with no Steam near it.
+      // The Steam-only licence gate's escape — a loopback socket with no Steam
+      // near it.
       allowUnlicensedTransport: true,
       level: "moon",
       difficulty: "easy",
@@ -164,13 +202,13 @@ describe("a real client against a real dedicated server", () => {
 
 describe("the host core both entries share", () => {
   it("runs a session with no socket at all", () => {
-    // `host.ts` is what makes §5.5's "it is the same file" true, and this is
+    // `host.ts` is what makes "the dedicated server is the same file" true, and this is
     // the property that matters: the simulation, the clock and the admission
     // desk exist without a transport under them, so the utility process and the
     // terminal are two entries rather than two servers.
     let clock = 0;
     const host = createHost({
-      // Loopback UDP with no Steam near it — decision 15's escape, which is
+      // Loopback UDP with no Steam near it — the licence gate's escape, which is
       // exactly what a headless suite is for.
       allowUnlicensedTransport: true,
       params: paramsFrom({ level: "moon", difficulty: "easy" }, 5),

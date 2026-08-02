@@ -95,7 +95,7 @@ async function harness(
   options: {
     password?: string;
     maxClients?: number;
-    /** Grant decision 15's escape. TRUE for every test but the licence ones —
+    /** Grant the Steam-only licence gate's escape. TRUE for every test but the licence ones —
      * a headless suite has no Steam anywhere near it. */
     licensed?: boolean;
     /** What the transport calls itself, for the licence ladder. */
@@ -208,9 +208,9 @@ describe("the connectionless probe", () => {
 
 describe("admission", () => {
   it("seats a matching joiner as a SPECTATOR", async () => {
-    // phase 2 replicates one hero to eight machines; seating a second is phase 3's
-    // whole subject, and handing this one the owner's flag would let it steer
-    // somebody else's character today.
+    // Replicating a hero to eight machines and seating a second hero are two
+    // different features, and handing this one the owner's flag would let it
+    // steer somebody else's character today.
     const net = await harness();
     net.arrive({
       from: PEER,
@@ -224,7 +224,7 @@ describe("admission", () => {
     // The NAME travels with the seat: without it the roster and every chat
     // line would fall back to "PLAYER N" for somebody who told us what they
     // are called, and the fallback would look like the feature. And the joiner
-    // is SEATED — they arrive to play, not to watch (phase 3).
+    // is SEATED — they arrive to play, not to watch.
     expect(net.added).toEqual([
       { id: expect.any(Number), plays: true, name: "ZOE" },
     ]);
@@ -318,7 +318,7 @@ describe("admission", () => {
 
 describe("what an unadmitted peer may do", () => {
   it("is exactly nothing", async () => {
-    // §5.2's rule, implemented literally: input, commands and chat are only
+    // The admission rule, implemented literally: input, commands and chat are only
     // parsed for a peer that has already cleared every check.
     const net = await harness();
     for (const type of [FRAME.input, FRAME.command, FRAME.chat, FRAME.ack]) {
@@ -451,7 +451,7 @@ describe("leaving", () => {
 });
 
 describe("multiplayer is licensed through Steam", () => {
-  // DECISION 15. The game ships under PolyForm-Noncommercial and the
+  // THE LICENCE GATE. The game ships under PolyForm-Noncommercial and the
   // multiplayer right travels with the Steam copy, so a session carried by
   // anything other than the Steam relay is unlicensed play — whoever set it up
   // and whatever they meant by it. The hub is the one door every path into a

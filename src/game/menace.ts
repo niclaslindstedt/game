@@ -674,7 +674,7 @@ export function tickMenace(
   // and — because the evolution ratchet is a PERMANENT floor within a run
   // (`bankOverkill`) — never comes back down. So an untuned meter does not
   // merely make co-op hard, it makes it hard for ever after the first minute,
-  // which is the failure the plan's §4.3 names.
+  // which is the failure the party-scaling rules exist to prevent.
   //
   // The divisor is the party actually IN PLAY, so a departed seat and a downed
   // hero both stop diluting the read the moment they stop fighting — otherwise

@@ -109,6 +109,7 @@ import type {
   WeaponClass,
 } from "./types/index.ts";
 import { inert } from "./disposition.ts";
+import { seatOf } from "./party.ts";
 import { spendWard } from "./mechanics/ward-pool.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
@@ -143,22 +144,25 @@ export function packsCleared(state: GameState): boolean {
 
 /** Minions close enough to crowd the screen — the same `ENEMY_AI.nearRadius`
  * the spawner uses for "there's a pack on screen", so the crowd-bomb rescue
- * reads the field the player actually sees, not parked spawns across the map. */
-function onScreenMinions(state: GameState): number {
+ * reads the field the player actually sees, not parked spawns across the map.
+ * `hero` is whose screen is being read (the killer's, on the drop paths);
+ * defaults to seat 0. */
+function onScreenMinions(state: GameState, hero?: Player): number {
+  const around = hero ?? state.players[0];
   let count = 0;
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).role !== "minion") continue;
-    if (distance(enemy.pos, state.players[0].pos) <= ENEMY_AI.nearRadius)
-      count++;
+    if (distance(enemy.pos, around.pos) <= ENEMY_AI.nearRadius) count++;
   }
   return count;
 }
 
-/** True while a NUKE sits in the powerup dock. Read off the BLOCK, not the
- * label: a power that carries a screen wipe alongside something else is still
- * a bomb for the purposes of the one-nuke rule. */
-function holdsNuke(state: GameState): boolean {
-  return state.players[0].heldAbilities.some(
+/** True while a NUKE sits in `hero`'s powerup dock (seat 0 when unnamed).
+ * Read off the BLOCK, not the label: a power that carries a screen wipe
+ * alongside something else is still a bomb for the purposes of the one-nuke
+ * rule. */
+function holdsNuke(state: GameState, hero?: Player): boolean {
+  return (hero ?? state.players[0]).heldAbilities.some(
     (id) => abilityDef(id).nuke !== undefined,
   );
 }
@@ -172,9 +176,9 @@ function holdsNuke(state: GameState): boolean {
  * `dropScreenNuke`). Both loot paths — the crowd-bomb mercy roll and the rare
  * `LOOT.nukeShare` slice — gate on this, so at most one bomb is ever in play.
  */
-export function canDropNuke(state: GameState): boolean {
-  if (holdsNuke(state)) return false;
-  return !mercyRescueWaiting(state, state.players[0], "bomb");
+export function canDropNuke(state: GameState, hero?: Player): boolean {
+  if (holdsNuke(state, hero)) return false;
+  return !mercyRescueWaiting(state, hero ?? state.players[0], "bomb");
 }
 
 /**
@@ -244,15 +248,15 @@ export function rollMedkitTier(state: GameState): number {
  * the ladder (easy 5% … nightmare 0.5%, zero on JESUS). Tune the ramp shape
  * in the `MERCY` config and the per-rung strength on the ladder.
  */
-export function crowdBombChance(state: GameState): number {
+export function crowdBombChance(state: GameState, hero?: Player): number {
   const max = difficultyDef(state.difficulty).mercy.crowdBombChanceMax;
   if (max <= 0) return 0;
   // The ONE NUKE rule: a bomb already in the dock, or an un-collected one still
   // waiting ON screen, holds the packed field's fire (see canDropNuke).
-  if (!canDropNuke(state)) return 0;
+  if (!canDropNuke(state, hero)) return 0;
   const { crowdBombThreshold: lo, crowdBombFull: hi } = MERCY;
   if (hi <= lo) return 0;
-  const crowd = onScreenMinions(state);
+  const crowd = onScreenMinions(state, hero);
   if (crowd <= lo) return 0;
   return max * Math.min(1, (crowd - lo) / (hi - lo));
 }
@@ -267,19 +271,20 @@ export function crowdBombChance(state: GameState): number {
  * stamina returns (see `GameState.staminaEmptyMs`), so a hero who catches his
  * breath drops straight back to the baseline drink rain.
  */
-export function staminaDrinkChance(state: GameState): number {
+export function staminaDrinkChance(state: GameState, hero?: Player): number {
+  const stranded = hero ?? state.players[0];
   const max = difficultyDef(state.difficulty).mercy.staminaDrinkChanceMax;
   if (max <= 0) return 0;
   // Only a bone-dry pool pulls a drink; a merely low reserve does not.
-  if (state.players[0].stamina > 0) return 0;
+  if (stranded.stamina > 0) return 0;
   // One rope at a time: while an un-collected drink already waits in view,
   // the stranded hero is not thrown another (see mercyRescueWaiting).
-  if (mercyRescueWaiting(state, state.players[0], "drink")) return 0;
+  if (mercyRescueWaiting(state, stranded, "drink")) return 0;
   // Nor is a hero with a full pouch thrown one: the way out of the winded jog
   // is already in his pocket, and the rope would only be refused on touch. (The
   // ORDINARY rain still trickles drinks onto the ground at the appetite floor —
   // bait to plan a sprint around. A rescue is not bait; it holds fire.)
-  if (state.players[0].staminaPotions >= CONSUMABLES.stackCap) return 0;
+  if (stranded.staminaPotions >= CONSUMABLES.stackCap) return 0;
   const ramp = MERCY.staminaEmptyDrinkRampMs;
   if (ramp <= 0) return max;
   return max * Math.min(1, state.staminaEmptyMs / ramp);
@@ -300,15 +305,16 @@ export function staminaDrinkChance(state: GameState): number {
  */
 function applyKnockback(
   state: GameState,
+  attacker: Player,
   enemy: Enemy,
   weaponClass?: WeaponClass,
 ): void {
   if (weaponClass !== "melee" && weaponClass !== "ranged") return;
-  if (!heroHasKnockback(state, state.players[0])) return;
+  if (!heroHasKnockback(state, attacker)) return;
   const def = enemyDef(enemy.defId);
   const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
   if (scale <= 0) return;
-  const dir = direction(state.players[0].pos, enemy.pos);
+  const dir = direction(attacker.pos, enemy.pos);
   if (dir.x === 0 && dir.y === 0) return; // sitting on the hero: no bearing
   const push = KNOCKBACK.distance * scale;
   enemy.pos.x = clamp(
@@ -335,15 +341,16 @@ function applyKnockback(
  */
 function applyRangedShotProcs(
   state: GameState,
+  attacker: Player,
   enemy: Enemy,
   weaponClass?: WeaponClass,
 ): void {
   if (weaponClass !== "ranged") return;
-  const knock = talentConcussive(state, state.players[0]);
+  const knock = talentConcussive(state, attacker);
   if (knock && state.rng() < knock.chance) {
     const def = enemyDef(enemy.defId);
     const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
-    const dir = direction(state.players[0].pos, enemy.pos);
+    const dir = direction(attacker.pos, enemy.pos);
     if (scale > 0 && (dir.x !== 0 || dir.y !== 0)) {
       const push = knock.distance * scale;
       enemy.pos.x = clamp(
@@ -359,7 +366,7 @@ function applyRangedShotProcs(
       resolveObstacles(state, enemy.pos, def.radius);
     }
   }
-  const slow = talentCrippling(state, state.players[0]);
+  const slow = talentCrippling(state, attacker);
   if (slow && state.rng() < slow.chance) {
     // Keep the longest slow if a foe is re-crippled mid-hobble.
     enemy.chillMs = Math.max(enemy.chillMs ?? 0, slow.slowMs);
@@ -472,6 +479,14 @@ export function hitEnemy(
      * credits its XP to that companion so it earns its OWN levels
      * (`creditCompanionKill`). Undefined for the hero and for powerups. */
     companionId?: number;
+    /** The HERO whose blow this is. Every read that belongs to the blow — the
+     * miss/dodge/crit rolls, armor piercing, knockback, the hit/kill procs,
+     * the kill's XP pricing and the whole drop economy — reads this hero, so
+     * in co-op a joiner's kill pays against the joiner's build and level
+     * (docs/multiplayer.md). Undefined falls back to seat 0, which solo is the
+     * identical hero. Companion blows leave it unset (`companionId` credits
+     * them). */
+    attacker?: Player;
     /** The hero VOLLEY this blow belongs to (a ranged shot's id) — telemetry,
      * ridden out on the hit/kill event as `fromVolley` for the ranged AoE
      * calibration. Undefined for melee/ability/companion blows. */
@@ -484,6 +499,9 @@ export function hitEnemy(
   },
 ): void {
   const def = enemyDef(enemy.defId);
+  // The hero this blow belongs to — seat 0 when no caller named one, which is
+  // the one hero a solo run has (and the honest fallback for legacy callers).
+  const attacker = opts?.attacker ?? state.players[0];
 
   // AN INERT BODY CANNOT BE HIT — an apparition is mist, and a neutral mob is
   // a bystander who is not in this fight (see disposition.ts). Every attack
@@ -523,7 +541,7 @@ export function hitEnemy(
   // foe's DODGE. Either spends the swing and deals nothing. Rolled only for
   // weapon attacks; abilities skip it (`rollAccuracy` unset) and always hit.
   if (opts?.rollAccuracy) {
-    if (state.rng() < playerMissChance(state, state.players[0])) {
+    if (state.rng() < playerMissChance(state, attacker)) {
       state.events.push({
         type: "enemyMiss",
         pos: { ...enemy.pos },
@@ -533,11 +551,7 @@ export function hitEnemy(
     }
     if (
       state.rng() <
-      enemyDodgeChance(
-        state,
-        state.players[0],
-        def.dodgeChance ?? ACCURACY.enemyDodge,
-      )
+      enemyDodgeChance(state, attacker, def.dodgeChance ?? ACCURACY.enemyDodge)
     ) {
       state.events.push({
         type: "enemyDodge",
@@ -554,7 +568,7 @@ export function hitEnemy(
   // crit false, so nothing downstream flashes a crit popup over a figure the
   // crit multiplier had no part in.
   const crit =
-    state.rng() < playerCritChance(state, state.players[0], weaponClass) &&
+    state.rng() < playerCritChance(state, attacker, weaponClass) &&
     opts?.executeBars === undefined;
   // MOB ARMOR shaves a PHYSICAL blow (melee/ranged weapon); magic weapons,
   // powerups, procs and environmental hits (no melee/ranged class) ignore it —
@@ -570,7 +584,7 @@ export function hitEnemy(
   const gearPen =
     opts?.noMenace || opts?.companionId !== undefined
       ? 0
-      : heroArmorPen(state, state.players[0]);
+      : heroArmorPen(state, attacker);
   // AN EXECUTION IS NOT DAMAGE (`items/execute.ts`): it is priced in the body's
   // own health and passes both the armor shave and the crit multiplier by —
   // armor would quietly drop it under the app's burst ladder at depth, and
@@ -635,6 +649,7 @@ export function hitEnemy(
       pos: { ...enemy.pos },
       blowDamage: baseDamage,
       victimId: enemy.id,
+      seat: seatOf(state, attacker),
     });
   }
 
@@ -646,7 +661,7 @@ export function hitEnemy(
   // where the kill actually books (below). Resolution is deferred to
   // `stepProcs` (step/) so a nova never splices the enemy list under the
   // sweep that triggered it.
-  if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "hit");
+  if (opts?.rollAccuracy) queueWeaponProcs(state, attacker, enemy, "hit");
 
   // A THRESHOLD-FLEE boss doesn't need grinding to 0: the coward bolts the
   // instant his health crosses `belowHpFrac`, so the fight reliably RESOLVES
@@ -666,10 +681,11 @@ export function hitEnemy(
     // KNOCKBACK (config `KNOCKBACK`): the hero's own melee/ranged blow shoves
     // the surviving mob back — never a killing blow (the corpse launch owns
     // that) nor a magic hit, a companion's, a proc's, or a conjured power's.
-    if (opts?.rollAccuracy) applyKnockback(state, enemy, weaponClass);
+    if (opts?.rollAccuracy) applyKnockback(state, attacker, enemy, weaponClass);
     // The RANGED tree's shot control: CONCUSSIVE knockback + CRIPPLING slow, on
     // the hero's own surviving ranged blow (gated inside on trained talents).
-    if (opts?.rollAccuracy) applyRangedShotProcs(state, enemy, weaponClass);
+    if (opts?.rollAccuracy)
+      applyRangedShotProcs(state, attacker, enemy, weaponClass);
     // A critical hit flashes the victim (renderer blink; visual only).
     if (crit) enemy.critFlashMs = 300;
     state.events.push({
@@ -707,6 +723,8 @@ export function hitEnemy(
       damage,
       crit,
       critPower: crit ? opts?.damageRoll : undefined,
+      // The verdict belongs to whoever forced the kneel (see `ChoiceState`).
+      killer: seatOf(state, attacker),
     };
     state.phase = "choice";
     state.events.push({
@@ -737,7 +755,7 @@ export function hitEnemy(
     const rite =
       !state.dialogueMuted && areDeathScenesEnabled() && def.role === "boss";
     if (rite) {
-      enterBossDeath(state, enemy, def.death);
+      enterBossDeath(state, enemy, def.death, attacker);
     } else {
       state.landmarks.push({
         kind: def.flees.landmark,
@@ -760,7 +778,7 @@ export function hitEnemy(
     );
     // A rout is a won fight: the hero's killing blow fires its ON-KILL procs
     // like any kill.
-    if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "kill");
+    if (opts?.rollAccuracy) queueWeaponProcs(state, attacker, enemy, "kill");
     // The overkill toll applies to a routed foe like any kill: a blow far
     // beyond its full health collects only its share of the xp.
     shareXp(
@@ -768,13 +786,14 @@ export function hitEnemy(
       Math.max(
         1,
         Math.round(
-          enemyKillXp(state, def, enemy) *
+          enemyKillXp(state, def, enemy, attacker) *
             overkillEfficiency(damage, enemy.maxHp),
         ),
       ),
       enemy.pos,
     );
-    if (def.loot) dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
+    if (def.loot)
+      dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl, attacker);
     // He drops his purse on the way out, exactly as he drops his loot: the
     // fight was won, and a coward running for a rift is not the man who stops
     // to pick his money back up.
@@ -789,7 +808,7 @@ export function hitEnemy(
 
   // The blow kills: the hero's own weapon kills fire their ON-KILL procs
   // (a spared kneel above is not a kill; a companion's blow never queues).
-  if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "kill");
+  if (opts?.rollAccuracy) queueWeaponProcs(state, attacker, enemy, "kill");
 
   killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined, {
     noNukeDrop: opts?.noNukeDrop,
@@ -800,6 +819,7 @@ export function hitEnemy(
     incinerated: opts?.incinerated,
     edged: opts?.edged,
     hpBefore,
+    attacker,
   });
 }
 
@@ -811,10 +831,11 @@ export function hitEnemy(
  */
 function queueWeaponProcs(
   state: GameState,
+  attacker: Player,
   enemy: Enemy,
   trigger: ProcTrigger,
 ): void {
-  const procs = equippedProcs(state, state.players[0], trigger);
+  const procs = equippedProcs(state, attacker, trigger);
   for (const proc of procs) {
     if (state.rng() >= proc.chance) continue;
     state.pendingProcs.push({
@@ -822,6 +843,7 @@ function queueWeaponProcs(
       rank: proc.rank,
       pos: { ...enemy.pos },
       enemyId: enemy.id,
+      seat: seatOf(state, attacker),
     });
   }
 }
@@ -833,18 +855,26 @@ function queueWeaponProcs(
  * the enemy-sourced damage paths — contact (step/), mechanic blows
  * (mechanics.ts), hostile shots (ranged.ts); impartial hazards never
  * retaliate. A BOLT grounds in `attacker` (or the nearest foe when a shot's
- * shooter is unknown); a NOVA bursts around the HERO. Same no-rng-without-
- * procs guarantee as the weapon triggers.
+ * shooter is unknown); a NOVA bursts around the struck HERO. `victim` is the
+ * hero the blow landed on — the procs are theirs (their worn affixes, their
+ * position, their spell power); unnamed it falls back to seat 0, the one hero
+ * a solo run has. Same no-rng-without-procs guarantee as the weapon triggers.
  */
-export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
-  const procs = equippedProcs(state, state.players[0], "struck");
+export function queueStruckProcs(
+  state: GameState,
+  attacker?: Enemy,
+  victim?: Player,
+): void {
+  const struck = victim ?? state.players[0];
+  const procs = equippedProcs(state, struck, "struck");
   for (const proc of procs) {
     if (state.rng() >= proc.chance) continue;
     state.pendingProcs.push({
       spell: proc.spell,
       rank: proc.rank,
-      pos: { ...state.players[0].pos },
+      pos: { ...struck.pos },
       enemyId: attacker?.id,
+      seat: seatOf(state, struck),
     });
   }
 }
@@ -862,15 +892,19 @@ export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
  * nothing pays a share of the level bar, the leveling table's kills-per-level
  * stays true in play. A RARE/UNIQUE minion multiplies the unit by its
  * `xpMult` (config RARE_MOBS), a fat single payout for the special find. A
- * def's flat `xp` override, when set, wins outright.
+ * def's flat `xp` override, when set, wins outright. The unit is priced
+ * against the ATTACKER's level — whoever landed the killing blow — falling
+ * back to seat 0 for the callers that don't know one (a companion's credit,
+ * the library's tables), which solo is the identical hero.
  */
 export function enemyKillXp(
   state: GameState,
   def: EnemyDef,
   enemy: Enemy,
+  attacker?: Player,
 ): number {
   if (def.xp != null) return def.xp;
-  const base = mobLevelXp(enemy.mlvl, state.players[0].level);
+  const base = mobLevelXp(enemy.mlvl, (attacker ?? state.players[0]).level);
   if (def.role !== "minion") {
     const mult =
       def.xpMobMult ??
@@ -971,9 +1005,14 @@ export function killEnemy(
      * health still on the board, which is the honest reading for a caller that
      * has not applied the blow itself. */
     hpBefore?: number;
+    /** The HERO whose killing blow this is — prices the kill's XP and the
+     * whole drop roll against that hero's level and build (see `hitEnemy`).
+     * Undefined falls back to seat 0. */
+    attacker?: Player;
   },
 ): void {
   const def = enemyDef(enemy.defId);
+  const attacker = opts?.attacker ?? state.players[0];
   const index = state.enemies.indexOf(enemy);
   if (index >= 0) state.enemies.splice(index, 1);
 
@@ -1007,7 +1046,7 @@ export function killEnemy(
   const efficiency = overkillEfficiency(damage, enemy.maxHp);
   const xpGain = Math.max(
     1,
-    Math.round(enemyKillXp(state, def, enemy) * efficiency),
+    Math.round(enemyKillXp(state, def, enemy, attacker) * efficiency),
   );
   state.events.push({
     type: "enemyKilled",
@@ -1059,15 +1098,16 @@ export function killEnemy(
   // The level's scripted opening drops: hand over every schedule entry this
   // kill has reached, in author order — the guaranteed weapon → powerup → item
   // loop the probabilistic rain can't promise inside the first minute.
-  dropEarlyDrops(state, enemy.pos);
+  dropEarlyDrops(state, enemy.pos, attacker);
 
   if (def.loot) {
-    dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
+    dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl, attacker);
   } else {
     dropMinionLoot(
       state,
       def,
       enemy.pos,
+      attacker,
       enemy.evo ?? 0,
       enemy.mlvl,
       opts?.noNukeDrop ?? false,
@@ -1081,7 +1121,7 @@ export function killEnemy(
 
   // Level-locked world drops: this level's relics, rolled at role-scaled odds
   // on EVERY kill once the hero out-levels a first campaign pass (see function).
-  maybeDropWorldUnique(state, def, enemy);
+  maybeDropWorldUnique(state, def, enemy, attacker);
 
   // WHAT IT WAS CARRYING (items/gold.ts): the purse, shaken onto the floor.
   // Rolled outside the drop ladder entirely — off its own stream, at its own
@@ -1107,7 +1147,7 @@ export function killEnemy(
   const rite =
     def.role === "boss" && !state.dialogueMuted && areDeathScenesEnabled();
   if (rite) {
-    enterBossDeath(state, enemy, def.death);
+    enterBossDeath(state, enemy, def.death, attacker);
   } else if (def.role === "boss") {
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
     state.bossCorpse = { pos: { ...enemy.pos }, sprite: def.sprite };
@@ -1147,7 +1187,7 @@ export function killEnemy(
  * ability powerup, or a plain consumable/XP pickup — and advance the cursor.
  * Several entries owed by the same kill fan out so their pickups don't stack.
  */
-function dropEarlyDrops(state: GameState, at: Vec2): void {
+function dropEarlyDrops(state: GameState, at: Vec2, attacker: Player): void {
   const schedule = runLevelDef(state).loot.earlyDrops;
   if (!schedule) return;
   while (state.earlyDropCursor < schedule.length) {
@@ -1174,7 +1214,7 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
           // Scripted story drops arrive exactly as tuned — the make-quality
           // roll would let a BROKEN one undercut the opening the schedule
           // promises (HQ's baton on kill 2), so it is pinned to normal.
-          equipment: rollEquipment(state, state.players[0], {
+          equipment: rollEquipment(state, attacker, {
             defId: entry.weapon,
             quality: "normal",
           }),
@@ -1197,7 +1237,7 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
           id: state.nextId++,
           kind: "equipment",
           pos,
-          equipment: rollEquipment(state, state.players[0], {
+          equipment: rollEquipment(state, attacker, {
             defId: entry.gear,
             quality: "normal",
           }),
@@ -1224,6 +1264,10 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
  * draw, like a zero chance) and the rest of the rain rolls as usual.
  * `efficiency` is the killing blow's overkill toll (`overkillEfficiency`):
  * it scales the whole drop chance, so one-shot farming starves the rain too.
+ * `attacker` is the hero whose kill this is: their LUCK widens the odds, their
+ * pouches and health drive the appetite and mercy leans, and every equipment
+ * roll prices against their level — solo that hero is seat 0 exactly as
+ * before.
  *
  * A HELLBORN kill (config HELLGATES — what a rampage-only hellgate lets
  * through) inverts the rampage rule that governs everything else here: it is
@@ -1236,6 +1280,7 @@ function dropMinionLoot(
   state: GameState,
   def: EnemyDef,
   at: Vec2,
+  attacker: Player,
   evo = 0,
   mlvl = 1,
   noNukeDrop = false,
@@ -1247,7 +1292,7 @@ function dropMinionLoot(
   // and it stands in for this kill's drop (a bomb instead of the usual rain).
   // `crowdBombChance` is zero unless the field is genuinely packed, so no roll
   // is even drawn on a normal kill (the RNG stream is untouched).
-  const bombChance = noNukeDrop ? 0 : crowdBombChance(state);
+  const bombChance = noNukeDrop ? 0 : crowdBombChance(state, attacker);
   if (bombChance > 0 && state.rng() < bombChance) {
     dropScreenNuke(state, at);
     flyInByAngel(state, at);
@@ -1260,7 +1305,7 @@ function dropMinionLoot(
   // gate so the rescue isn't buried under it, and it stands in for this kill's
   // drop. `staminaDrinkChance` is zero unless the pool is genuinely empty, so
   // no roll is drawn on a rested kill (the RNG stream is untouched).
-  const drinkChance = staminaDrinkChance(state);
+  const drinkChance = staminaDrinkChance(state, attacker);
   if (drinkChance > 0 && state.rng() < drinkChance) {
     dropItem(state, { id: state.nextId++, kind: "drink", pos: { ...at } }, at);
     flyInByAngel(state, at);
@@ -1283,7 +1328,7 @@ function dropMinionLoot(
         id: state.nextId++,
         kind: "equipment",
         pos,
-        equipment: rollEquipment(state, state.players[0], {
+        equipment: rollEquipment(state, attacker, {
           defId: trophy,
           tierBonus: LOOT.allClearTierBonus,
           mlvl,
@@ -1339,8 +1384,7 @@ function dropMinionLoot(
   // each full 1.0 of the product is a guaranteed run of the drop ladder and
   // the remainder the chance of one more, capped so LUCK stacking can't
   // carpet the field. The rng draw order for an ordinary mob is unchanged.
-  const baseChance =
-    (dropChance(state, state.players[0]) + dropBonus) * efficiency;
+  const baseChance = (dropChance(state, attacker) + dropBonus) * efficiency;
   // A HELLBORN kill pays in WHOLE PAYOUTS like a rare mob's, but its multiplier
   // GROWS with the rampage (`dropMult + stages × dropMultPerStage`) — the farm
   // the gates exist to be. A hellborn that also carries a rarity takes the
@@ -1389,13 +1433,12 @@ function dropMinionLoot(
   // boost holds fire while the rescue it already threw waits un-collected in
   // view (mercyRescueWaiting), so a signal keeps at most one rope on the
   // ground however long the player sits on it.
-  const medkitBoost = mercyRescueWaiting(state, state.players[0], "medkit")
+  const medkitBoost = mercyRescueWaiting(state, attacker, "medkit")
     ? 0
-    : lowHealthDesperation(state, state.players[0]) * diff.mercy.medkitBonus;
-  const repairBoost = mercyRescueWaiting(state, state.players[0], "repair")
+    : lowHealthDesperation(state, attacker) * diff.mercy.medkitBonus;
+  const repairBoost = mercyRescueWaiting(state, attacker, "repair")
     ? 0
-    : lowDurabilityDesperation(state, state.players[0]) *
-      diff.mercy.repairBonus;
+    : lowDurabilityDesperation(state, attacker) * diff.mercy.repairBonus;
   // APPETITE (see `medkitAppetite` / `consumableAppetite`): each stacked
   // consumable's slice is scaled by how stocked its pouch is (SUPPLY) against
   // how far down the pool it refills has fallen (NEED). A full pouch keeps only
@@ -1410,14 +1453,14 @@ function dropMinionLoot(
     LOOT.medkitShare *
     diff.medkitDropMult *
     (1 + medkitBoost) *
-    medkitAppetite(state, state.players[0], mlvl);
+    medkitAppetite(state, attacker, mlvl);
   const wantedRepair =
     LOOT.repairShare *
     BALANCE.repairDrops *
     (1 + repairBoost) *
-    consumableAppetite(state, state.players[0], "repair");
+    consumableAppetite(state, attacker, "repair");
   const wantedDrink =
-    LOOT.drinkShare * consumableAppetite(state, state.players[0], "drink");
+    LOOT.drinkShare * consumableAppetite(state, attacker, "drink");
   // AMMUNITION rides the same appetite shape (`ammoAppetite`), with one extra
   // factor no other consumable has: WHAT IS IN THE HERO'S HAND. A shooter with
   // a draining pouch earns the whole slice; a hero swinging a sword earns
@@ -1430,11 +1473,11 @@ function dropMinionLoot(
   // can fight with is soft-locked rather than merely losing, and no amount of
   // skill kills his way back to a drop. `outOfAmmoDesperation` stays flatly
   // zero in every other case, including a dry rifle with a sword in the bag.
-  const ammoBoost = mercyRescueWaiting(state, state.players[0], "ammo")
+  const ammoBoost = mercyRescueWaiting(state, attacker, "ammo")
     ? 0
-    : outOfAmmoDesperation(state, state.players[0]) * AMMO.mercyBonus;
+    : outOfAmmoDesperation(state, attacker) * AMMO.mercyBonus;
   const wantedAmmo =
-    AMMO.dropShare * (1 + ammoBoost) * ammoAppetite(state, state.players[0]);
+    AMMO.dropShare * (1 + ammoBoost) * ammoAppetite(state, attacker);
   // FIT THE LADDER UNDER ONE ROLL. The bands are cumulative against a single
   // `rng()` in [0,1), so a boosted consumable slice that pushes the total past 1
   // silently kills every band BELOW it — the drinks and the scroll tail would go
@@ -1484,7 +1527,7 @@ function dropMinionLoot(
     const nuked =
       !forcedNow &&
       !noNukeDrop &&
-      canDropNuke(state) &&
+      canDropNuke(state, attacker) &&
       state.rng() < LOOT.nukeShare;
     const roll = state.rng();
     if (nuked) {
@@ -1503,7 +1546,7 @@ function dropMinionLoot(
           // A RARE/UNIQUE mob's payouts share the elite named-tier bonus and
           // skip the plain-minion penalty (see `rollTier`); plain trash rolls
           // named tiers at a fraction of the odds.
-          equipment: rollEquipment(state, state.players[0], {
+          equipment: rollEquipment(state, attacker, {
             tierBonus,
             mlvl,
             mobRarity: def.rarity,
@@ -1568,7 +1611,7 @@ function dropMinionLoot(
       // sized by the kind's own band. A hero out of rounds with nothing else to
       // fight with gets it flown in by the angel, exactly as a dying one's
       // medkit is: it is the same rope, thrown for the same reason.
-      const type = ammoKindFor(state, state.players[0]);
+      const type = ammoKindFor(state, attacker);
       dropItem(
         state,
         {
@@ -1665,6 +1708,7 @@ function maybeDropWorldUnique(
   state: GameState,
   def: EnemyDef,
   enemy: Enemy,
+  attacker: Player,
 ): void {
   const loot = runLevelDef(state).loot;
   const ids = loot.worldUniques?.[state.difficulty];
@@ -1676,7 +1720,7 @@ function maybeDropWorldUnique(
   // untouched — as do levels without a table (fixtures) and under-level runs.
   if (def.role === "minion") {
     const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
-    if (gate === undefined || state.players[0].level < gate) return;
+    if (gate === undefined || attacker.level < gate) return;
   }
   // `namedDropMult` is the farm-venue sweetener: a dedicated grind venue (the
   // bunker) pays better per kill than the relics' home levels (default 1). It
@@ -1700,6 +1744,7 @@ function dropGuaranteedLoot(
   def: EnemyDef,
   at: Vec2,
   mlvl = 1,
+  attacker: Player = state.players[0],
 ): void {
   const loot = def.loot;
   if (!loot) return;
@@ -1720,7 +1765,7 @@ function dropGuaranteedLoot(
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(),
-        equipment: rollEquipment(state, state.players[0], {
+        equipment: rollEquipment(state, attacker, {
           defId: spec.defId,
           tier: spec.tier,
           tierBonus: loot.tierBonus,
@@ -1770,7 +1815,7 @@ function dropGuaranteedLoot(
           id: state.nextId++,
           kind: "equipment",
           pos: scatter(),
-          equipment: rollEquipment(state, state.players[0], { tier, mlvl }),
+          equipment: rollEquipment(state, attacker, { tier, mlvl }),
         },
         at,
       );
@@ -1787,7 +1832,7 @@ function dropGuaranteedLoot(
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(),
-        equipment: rollEquipment(state, state.players[0], {
+        equipment: rollEquipment(state, attacker, {
           slot,
           tierBonus: loot.tierBonus,
           mlvl,
@@ -1904,7 +1949,8 @@ export function shareXp(
  * automatic base-attribute gains, and arms the ding celebration — the stat
  * chooser only pauses the run once `levelUpFxMs` has burned down (see step()).
  *
- * The hero is a PARAMETER rather than a lookup, per §3.1's rule: a bar, a level
+ * The hero is a PARAMETER rather than a lookup, per the private-read rule: a
+ * bar, a level
  * and a pile of banked stat points are as private as a bag, and a grant that
  * reached for seat 0 would level the host every time a joiner killed something.
  * A KILL's payout goes through `shareXp` above; this is the direct grant.
@@ -1979,8 +2025,8 @@ export function grantXp(
     });
   }
   if (leveled) {
-    // The ding celebrates on the field and the points BANK (plan §3.2,
-    // decision 4): the blinding light explosion engulfs the hero, the fanfare
+    // The ding celebrates on the field and the points BANK:
+    // the blinding light explosion engulfs the hero, the fanfare
     // rings, and the same flash HURLS the surrounding horde back — a knockback
     // on the light, no wound (the app draws the burst off the `levelUp` event;
     // this is the physics of the shove). The chooser no longer forces itself
@@ -2008,7 +2054,7 @@ export function grantXp(
  * taking XP off a hero whose player was not there for the defeat is a bill for
  * somebody else's mistake. A DOWNED hero is billed nothing either, and for the
  * opposite reason: they already paid, at their own fall (`downHero` books the
- * per-hero toll the moment a hero drops in a party still standing — §4.2), and
+ * per-hero toll the moment a hero drops in a party still standing), and
  * a wipe that re-billed the already-fallen would price one death twice.
  */
 export function applyDeathXpPenalty(state: GameState): number {
@@ -2023,7 +2069,7 @@ export function applyDeathXpPenalty(state: GameState): number {
 /**
  * One hero's own DEATH TOLL — the per-head unit `applyDeathXpPenalty` bills the
  * wiped party with, and the bill `downHero` books at a single fall in a party
- * still standing (multiplayer plan §4.2). Same fraction, same floor, same
+ * still standing (downed.ts). Same fraction, same floor, same
  * `stats.xpLost` book-keeping, whichever transition it rides.
  */
 export function applyHeroDeathToll(state: GameState, player: Player): number {

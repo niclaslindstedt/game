@@ -9,6 +9,7 @@
 import { clamp, distance } from "@game/lib/vec.ts";
 import { canBankAbility, magnetRadius } from "../abilities.ts";
 import { abilityValue } from "./economy.ts";
+import { questTokenWanted } from "./errands.ts";
 import { insideWellPull } from "./nav.ts";
 import { travelHeading } from "./macro.ts";
 import type { Bot } from "./state.ts";
@@ -269,6 +270,12 @@ function canBankPickup(state: GameState, hero: Player, item: Item): boolean {
     // at it is the full-pockets stall this function exists to prevent.
     case "ammo":
       return ammoCount(player, item.ammo) < AMMO.stackCap;
+    // A QUEST TOKEN banks only on an ACTIVE errand whose collect tally still
+    // has room — the pickup pass refuses everything else (a leftover from a
+    // failed or handed-in quest stays on the ground), so wanting one the
+    // errand can't bank is the same full-pockets stall as a capped medkit.
+    case "quest":
+      return questTokenWanted(state, item);
     // AN XP SCROLL IS NEVER ORDINARY LOOT. It has its own read
     // ({@link wantedScrollNearby}) because whether it is worth walking to
     // depends on the FIGHT — is anything alive to double, is my own window
@@ -455,12 +462,16 @@ export function wantedItemNearby(
   if (d > ITEM_REACH) return undefined;
   if (d <= ITEM_CLOSE_REACH) return item;
   // Worth a sideways step whatever the march is doing: a piece of gear, a plot
-  // piece, and MONEY — gold can never be refused (no cell, no cap), so a pile
+  // piece, a QUEST TOKEN (a bankable one — `canBankPickup` already gated it on
+  // the errand being active with room in its tally — is progress on work the
+  // player signed up for, the same any-detour class as a plot piece), and
+  // MONEY — gold can never be refused (no cell, no cap), so a pile
   // inside reach is guaranteed value, and walking past one is the autopilot
   // declining to pay for its own ride.
   if (
     item.kind === "equipment" ||
     item.kind === "story" ||
+    item.kind === "quest" ||
     item.kind === "gold"
   ) {
     return item;

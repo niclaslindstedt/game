@@ -8,6 +8,7 @@ import { PROJECTILE, WEAPON } from "../config/index.ts";
 import { crateHitByCircle, damageCrate } from "../crates.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { hitEnemy } from "../loot.ts";
+import { heroAt } from "../party.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { bounceProjectile } from "../projectile.ts";
 import { resolveHostileHit } from "../ranged.ts";
@@ -191,6 +192,9 @@ export function stepProjectiles(
       rollAccuracy: projectile.companionId === undefined,
       critMult: projectile.critMult,
       damageRoll: projectile.damageRoll,
+      // Bill the blow to the seat that fired it (crit/miss rolls, procs, the
+      // kill's pricing) — a shot with no seat reads as seat 0's.
+      attacker: shooterOf(state, projectile),
       // A companion's shot is booked for the run but kept OUT of the menace
       // meter — menace answers an overpowered hero, not a helpful party (see
       // `noMenace` in hitEnemy); the hero's own shots heat it as always.
@@ -242,6 +246,16 @@ export function stepProjectiles(
     }
   }
   state.projectiles = survivors;
+}
+
+/** The hero whose shot this is (`Projectile.seat`), or undefined for a shot
+ * with no seat — a companion's, or one from before the seat was stamped —
+ * which every consumer reads as seat 0 (hitEnemy's own fallback). A seat that
+ * has since emptied resolves to undefined the same way. */
+function shooterOf(state: GameState, projectile: Projectile) {
+  return projectile.seat !== undefined
+    ? (heroAt(state, projectile.seat) ?? undefined)
+    : undefined;
 }
 
 /**
@@ -336,6 +350,7 @@ function burstProjectile(
     hitEnemy(state, victim, projectile.damage, projectile.weaponClass, {
       volley: projectile.volley,
       attack: projectile.volley,
+      attacker: shooterOf(state, projectile),
     });
   }
 }
@@ -393,6 +408,7 @@ function chainLightning(
         // chain as the one trigger pull it came from.
         volley: projectile.volley,
         attack: projectile.volley,
+        attacker: shooterOf(state, projectile),
       },
     );
   }

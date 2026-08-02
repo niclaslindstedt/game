@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE AUTOPILOT'S WHOLE OUTPUT IS AN INTENT (multiplayer plan §7.2.5, and the
-// last half of decision 3b).
+// THE AUTOPILOT'S WHOLE OUTPUT IS AN INTENT — a decision that travels, never
+// a direct mutation of the run.
 //
 // **THE HALF THAT WAS ALREADY DONE.** `botAct` never touched the run — it
 // RETURNS a `GameInput`, which is the very shape `FRAME.input` carries. So

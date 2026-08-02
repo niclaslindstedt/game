@@ -3,13 +3,14 @@
 // allowed to ask about them as a group.
 //
 // `GameState.players` is a LIST because a run may hold up to `MAX_CLIENTS`
-// heroes (multiplayer phase 3). Single player is the one-element case and nothing
+// heroes (co-op — `docs/multiplayer.md`). Single player is the one-element
+// case and nothing
 // in the engine treats it specially — which is the whole point: a pass that
 // works for a party works for one hero, while a pass written against one hero
 // silently means "seat 0" the day a second player arrives.
 //
 // Every read of the party goes through this leaf, and there are exactly two
-// kinds of them (`docs/multiplayer-plan.md` §3.1 measured the split):
+// kinds of them (a measured split — see `docs/multiplayer.md`):
 //
 //   PRIVATE reads — the bag, the purse, the build, the talents — are asking
 //   about ONE hero, and the answer is always "the one this pass is about". They
@@ -59,7 +60,7 @@ export function primaryHero(state: GameState): Player {
  * every question below: neither is anybody the world should react to. Splitting
  * them into two checks is how one of the eight sites quietly keeps answering
  * for a body nobody is behind — which is precisely the bug `departed` exists to
- * close (see `Player.departed`, and the plan's §4.2).
+ * close (see `Player.departed`).
  */
 export function heroInPlay(hero: Player): boolean {
   return hero.hp > 0 && !hero.departed;
@@ -103,7 +104,7 @@ export function partyWiped(state: GameState): boolean {
 /**
  * True while EVERY hero in play has a modal screen up — the moment the world
  * has nobody left watching it, and the one condition (beside a non-`playing`
- * phase) that halts the simulation (multiplayer plan §3.2).
+ * phase) that halts the simulation.
  *
  * This is what keeps the solo game exactly what it was: one hero opening the
  * bag is "every hero in play has a screen up", so the world freezes precisely

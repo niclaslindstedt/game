@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE JOINER'S SIDE OF THE DOOR — the one thing phase 2 built no half of.
+// THE JOINER'S SIDE OF THE DOOR — the half the admission desk never needed.
 //
 // `hub.ts` is the host's admission desk: it answers a padded `hello` with a
 // challenge and turns a `join` into a seat. Nothing anywhere spoke the OTHER
-// side of that conversation, because phase 2 shipped the wire and phase 2.5 is where
-// a player first gets to walk through it. This is that side, and it is
+// side of that conversation when the wire landed — the title-menu JOIN screens
+// are where a player first gets to walk through it. This is that side, and it is
 // deliberately the SMALLEST thing that can be: a state machine with three
 // states, no game knowledge at all, and one job past admission — carry bytes.
 //
 // **IT LIVES BESIDE THE HUB, NOT IN THE SHELL OR IN THE PAGE**, for the two
-// reasons the seam itself moved here (§2.1). The page cannot open a UDP socket
-// at all, and phase 5's dedicated server has no shell to put one in — so the
+// reasons the transport seam itself lives here (see `transport.ts`). The page
+// cannot open a UDP socket at all, and the dedicated server has no shell to
+// put one in — so the
 // connector sits with the transport it drives, in the process that already
 // holds one, and the renderer reaches it down the same `MessagePort` a HOST's
 // renderer already uses. That is what makes the page's `NetClient` identical on
@@ -121,8 +122,8 @@ export type JoinLinkOptions = {
    * client that was never asked for one sends anyway. */
   password?: string;
   /**
-   * A RECONNECT TICKET from an earlier welcome to this same session (plan
-   * §5.4), or undefined for a first join.
+   * A RECONNECT TICKET from an earlier welcome to this same session, or
+   * undefined for a first join.
    *
    * Presenting one resumes the hero that is standing on the field rather than
    * being built a fresh one, which is the difference between a dropped packet
@@ -132,11 +133,11 @@ export type JoinLinkOptions = {
    * find out about.
    */
   resume?: string;
-  /** The arriving character is HARDCORE (§4.2). Compared against the session's
+  /** The arriving character is HARDCORE. Compared against the session's
    * mode — locally off the challenge, so the mismatch is answered without a
    * join round trip, and again at the host's own door. Absent = softcore. */
   hardcore?: boolean;
-  /** The hero this player brings (§4.5): their banked loadout as plain JSON,
+  /** The hero this player brings: their banked loadout as plain JSON,
    * or null for the authored fresh start. Rides the join frame; the session
    * weighs it (`validateLoadout`) — a claim, never an authority. */
   loadout?: unknown;
@@ -235,7 +236,7 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       finish(skew, detailFor(skew, theirs, options.handshake));
       return;
     }
-    // §4.2's hardcore gate, pre-empted the way a protocol skew is: the probe
+    // The hardcore admission gate, pre-empted the way a protocol skew is: the probe
     // reply names the session's mode, so a mismatch is answered here without
     // spending the join round trip. The host still refuses it at the door —
     // this is a courtesy, not the enforcement.
@@ -251,7 +252,7 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       name: options.name,
       resume: options.resume,
       hardcore: options.hardcore === true,
-      // §4.5: the hero travels with the player. On a RECONNECT the session
+      // The hero travels with the player. On a RECONNECT the session
       // ignores this by design — the hero standing on the field is the
       // authoritative one.
       loadout: options.loadout ?? null,

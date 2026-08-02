@@ -97,8 +97,8 @@ export function talkPrompt(state: GameState, hero: Player): Enemy | null {
 }
 
 /**
- * OPEN A CONVERSATION with a neutral mob on the TAPPING hero's screen (plan
- * §3.2 — the rest of the party plays on, exactly as a quest offer). ONE talk
+ * OPEN A CONVERSATION with a neutral mob on the TAPPING hero's screen (the
+ * rest of the party plays on, exactly as a quest offer). ONE talk
  * at a time, party-wide: the tree record lives on the run. False when there
  * is nobody to talk to or something else already holds the stage, so a stray
  * tap is simply ignored.

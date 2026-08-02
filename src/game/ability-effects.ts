@@ -40,6 +40,7 @@ import {
   tickAbilityClock,
 } from "./abilities.ts";
 import { hitEnemy } from "./loot.ts";
+import { seatOf } from "./party.ts";
 import { nearestEnemy } from "./step/weapon.ts";
 import type { ActiveAbility, Enemy, GameState, Player } from "./types/index.ts";
 import { inert, inertEnemy } from "./disposition.ts";
@@ -59,12 +60,16 @@ export type EffectScratch = {
  * sweep as one blow instead of as eight.
  *
  * Typed off `hitEnemy` itself rather than restated, so a new option can never
- * be one this module silently drops. Takes the state rather than closing over
- * it so every carrier's billing is a module CONSTANT — a closure minted per
- * effect per frame is exactly the 60 Hz allocation the house rules forbid.
+ * be one this module silently drops. Takes the state and the OWNING hero
+ * rather than closing over them so every carrier's billing is a module
+ * CONSTANT — a closure minted per effect per frame is exactly the 60 Hz
+ * allocation the house rules forbid. The hero rides out as the round's
+ * `attacker`, so a power a joiner carries bills its crits, procs and kill
+ * pricing to the joiner rather than to seat 0.
  */
 export type EffectBilling = (
   state: GameState,
+  owner: Player,
 ) => Parameters<typeof hitEnemy>[4];
 
 /**
@@ -134,8 +139,12 @@ export function commitAbilityScratch(
 }
 
 /** A POWERUP's output is exempt from the menace meter — a pickup is not the
- * hero's own strength, so it must not make the horde answer for it. */
-export const powerupBilling: EffectBilling = () => ({ noMenace: true });
+ * hero's own strength, so it must not make the horde answer for it. The blow
+ * is still the carrier's own (`attacker`). */
+export const powerupBilling: EffectBilling = (state, owner) => ({
+  noMenace: true,
+  attacker: owner,
+});
 
 /**
  * A GRANTED SPELL's output is the hero's permanent build power, so it heats the
@@ -143,13 +152,16 @@ export const powerupBilling: EffectBilling = () => ({ noMenace: true });
  * so one sweep, one collapse or one aura tick is judged as ONE blow however
  * many bodies it caught (see `bankOverkill`).
  */
-export const spellBilling: EffectBilling = (state) => ({
+export const spellBilling: EffectBilling = (state, owner) => ({
   attack: state.nextId++,
+  attacker: owner,
 });
 
-/** No options at all — the billing the granted STORM has always used: a single
- * bolt into a single body needs neither an exemption nor a grouping id. */
-export const plainBilling: EffectBilling = () => undefined;
+/** The billing the granted STORM has always used: a single bolt into a single
+ * body needs neither an exemption nor a grouping id — only its owner. */
+export const plainBilling: EffectBilling = (state, owner) => ({
+  attacker: owner,
+});
 
 /**
  * ORBIT: projectiles circling the hero, mangling what they touch.
@@ -183,7 +195,7 @@ export function applyOrbit(
   if (candidates.length === 0) return;
 
   let struck = false;
-  const options = bill(state);
+  const options = bill(state, player);
   const orbs = orbRingPositions(
     player,
     scratch.angle,
@@ -225,7 +237,7 @@ export function applyStorm(
   if (!victim) return;
   scratch.cooldownMs = storm.intervalMs;
   state.events.push({ type: "lightning", pos: { ...victim.pos } });
-  hitEnemy(state, victim, storm.damage * power, "magic", bill(state));
+  hitEnemy(state, victim, storm.damage * power, "magic", bill(state, player));
 }
 
 /**
@@ -271,6 +283,9 @@ export function applyVolley(
       pierceLeft: volley.pierce,
       burst: volley.burst,
       volley: volleyId,
+      // Whose power looses these shots — the impact bills their crits, procs
+      // and kill pricing to this seat (stepProjectiles).
+      seat: seatOf(state, player),
       z: 0,
     });
   }
@@ -308,7 +323,7 @@ export function applySingularity(
   const victims = state.enemies.filter(
     (e) => !inertEnemy(e) && distanceSq(e.pos, center) <= reachSq,
   );
-  const options = bill(state);
+  const options = bill(state, player);
   for (const victim of victims) {
     if (victim.hp <= 0) continue;
     victim.pos = moveToward(victim.pos, center, singularity.pull);
@@ -333,7 +348,7 @@ export function applyImmolation(
 ): void {
   if (scratch.cooldownMs > 0) return;
   scratch.cooldownMs = immolation.tickMs;
-  const options = bill(state);
+  const options = bill(state, player);
   const caught = enemiesInReach(
     state,
     player.pos,

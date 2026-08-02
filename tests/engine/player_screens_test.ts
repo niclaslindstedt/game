@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// PER-PLAYER SCREENS (multiplayer plan §3.2) — the split of `state.phase`
+// PER-PLAYER SCREENS — the split of `state.phase`
 // into the run's own global beats and each hero's `Player.screen`. The rules
 // under test are the ones the split exists for: a solo screen still freezes
 // the world exactly as the old phase did; a party member's screen freezes
@@ -181,7 +181,7 @@ describe("an abandoned screen holds nothing shut", () => {
   });
 });
 
-describe("a level-up banks instead of pausing (plan §3.2, decision 4)", () => {
+describe("a level-up banks instead of pausing", () => {
   it("the ding neither halts the run nor opens the chooser", () => {
     const state = startGame();
     stopWaves(state);

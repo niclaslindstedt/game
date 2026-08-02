@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// EVERYTHING THE AUTOPILOT DOES IS AN INTENT (multiplayer plan §7.2.5, and the
-// other half of decision 3b).
+// EVERYTHING THE AUTOPILOT DOES IS AN INTENT (see `docs/multiplayer.md` →
+// The autopilot is an intent).
 //
 // **THE PROPERTY, STATED ONCE.** `botAct` never touched the run — it RETURNS a
 // `GameInput`, which is the very shape `FRAME.input` carries, so steering has
@@ -58,7 +58,7 @@ import { clearStage, startGame } from "./helpers.ts";
  * against it.
  */
 const HOUSEKEEPING: readonly { call: string; verb: string }[] = [
-  // The pocket arsenal's draw. The one that forced decision 3b: it carried the
+  // The pocket arsenal's draw. The one that forced the intent rule: it carried the
   // bot's own anti-juggle memory, so the memory moved onto the run
   // (`Player.lastSwapMs`) and the draw became a hero action.
   { call: "botWeaponSwapTarget", verb: "swapHand" },
@@ -95,7 +95,7 @@ describe("the autopilot's housekeeping can all travel", () => {
     // read from the startup path, where the 200 KB budget forbids reaching
     // `@game/core` — so a verb that exists in the engine and not on the wire is
     // a verb a client may never send. The drift test covers the pair in general;
-    // this covers the six that decision 3b depends on.
+    // this covers the six the intent rule depends on.
     const wire = new Set<string>(COMMANDS);
     const missing = HOUSEKEEPING.filter(({ verb }) => !wire.has(verb));
     expect(missing).toEqual([]);

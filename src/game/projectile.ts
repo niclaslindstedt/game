@@ -37,6 +37,7 @@ export type ProjectileInit = {
   hitIds?: number[];
   volley?: number;
   companionId?: number;
+  seat?: number;
   hostile?: boolean;
   sourceMlvl?: number;
   sourceDefId?: string;
@@ -64,6 +65,7 @@ export function createProjectile(init: ProjectileInit): Projectile {
     hitIds: init.hitIds,
     volley: init.volley,
     companionId: init.companionId,
+    seat: init.seat,
     hostile: init.hostile,
     sourceMlvl: init.sourceMlvl,
     sourceDefId: init.sourceDefId,

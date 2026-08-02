@@ -249,6 +249,16 @@ export type Bot = {
    */
   regrouping?: boolean;
   /**
+   * CONVOY latch: true while the bot's own macro goal is a LONG MARCH (beyond
+   * a couple of `XP_SHARE.radius` — see party-play.ts `convoyTravel`), during
+   * which the leash ring TIGHTENS to half the share radius so the party
+   * travels — and walks through the boss door — as a group. Held with
+   * hysteresis like the leash itself, so a goal hovering on the trigger line
+   * doesn't flap the ring size. Always false in single player. Pure per-bot
+   * memory off pure state — determinism holds.
+   */
+  convoying?: boolean;
+  /**
    * WINDED-STAND latch: true while the bot has committed to CATCHING ITS
    * BREATH — the pool fell to the stand floor
    * (`BotTuning.standStaminaFrac`), so with no foe inside the walk-threat

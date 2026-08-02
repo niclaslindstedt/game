@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE PARTY STAMP — the mark that keeps a co-op run off every leaderboard
-// (multiplayer plan §5.3), and the four things about it that are easy to get
+// THE PARTY STAMP — the mark that keeps a co-op run off every leaderboard,
+// and the four things about it that are easy to get
 // wrong in a way no single-player test would ever notice.
 //
-// The stamp is LATCHED rather than parameterized, which is a deliberate
-// departure from the plan's own sketch (see `PartyStamp`): a run is marked by
+// The stamp is LATCHED rather than parameterized, and the choice is
+// deliberate (see `PartyStamp`): a run is marked by
 // what happened to it, not by how it was opened, so a host who plays alone with
 // the door open keeps their records and a host who seats one friend loses them
 // for the rest of the run.

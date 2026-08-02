@@ -636,8 +636,8 @@ screens:
     rows: []
 
   # =========================================================================
-  # MULTIPLAYER — the three doors of docs/multiplayer-plan.md §2.4, and Steam
-  # builds only.
+  # MULTIPLAYER — the three doors (HOST, the server browser, JOIN BY ADDRESS),
+  # Steam builds only.
   #
   # HOST and JOIN are two different questions and they are asked on two
   # different screens, deliberately: hosting is a handful of settings answered
@@ -686,6 +686,11 @@ screens:
       - id: max-players
         label: PLAYERS
         help: HOW MANY SEATS THE SESSION HAS - YOURS INCLUDED
+      # A bot seat is a real client seat that yields the moment a person wants
+      # it, so the row reads as "how full the party starts" rather than a cap.
+      - id: bots
+        label: BOTS
+        help: FILL EMPTY SEATS WITH AUTOPILOT HEROES
       # Free for all is the shipped answer and the row exists for the other
       # case: the scramble for a legendary is what makes a party feel like a
       # party among friends, and what makes strangers stop playing together.
@@ -708,7 +713,8 @@ screens:
           direct: THE PORT TO TRY FIRST FOR DIRECT CONNECTIONS
           steam: NOT USED WHILE ONLY STEAM FRIENDS CAN JOIN
       # One press, once, and only when the check says a rule is missing. Never
-      # at launch and never without being asked — see the plan's §2.3.
+      # at launch and never without being asked — a game that pops an
+      # elevation prompt when it starts is a game people uninstall.
       - id: firewall
         label: FIREWALL
       - id: start

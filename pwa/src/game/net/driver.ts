@@ -65,7 +65,7 @@ export type NetDriverOptions = {
   adopt?: unknown | null;
   /** The mods this run has applied, in load order. */
   mods?: string[];
-  /** The catalog overrides those mods registered (§4.4) — sent with `start`
+  /** The catalog overrides those mods registered — sent with `start`
    * so the SESSION simulates the same defs the page applied. Null/absent is
    * the shipped game. */
   modDefs?: Record<string, unknown> | null;
@@ -77,7 +77,13 @@ export type NetDriverOptions = {
    * simulates in the session process, and it must not bind a socket, ask a
    * router for a mapping or advertise a lobby for that.
    */
-  listen?: ListenOptions & { password?: string; maxClients?: number };
+  listen?: ListenOptions & {
+    password?: string;
+    maxClients?: number;
+    /** Seats to fill with the session's own autopilot heroes — rides the
+     * `start` message like `maxClients`, never the params. */
+    bots?: number;
+  };
   /** The session ended under us — a crashed fork, a refused handshake. The run
    * loop has no state to fall back to, so the caller decides what to say. */
   onClosed?: (reason: string, detail?: string) => void;
@@ -98,7 +104,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
   let client: ReturnType<typeof createNetClient> | null = null;
   let live = false;
   let disposed = false;
-  // The app's bank-before-the-swap reaction to an in-session crossing (§6.4)
+  // The app's bank-before-the-swap reaction to an in-session crossing
   // — installed later (the progress that banks is built after the driver).
   let travelHook: ((state: GameState) => void) | null = null;
   // The HOST steers the hero, so its own seat is not a spectator's.
@@ -115,6 +121,11 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
       mods: options.mods,
       // The renderer's own object. See the header.
       adopt: state,
+      // The player's hands are on THIS client: predict the local hero at the
+      // loop's 60 Hz and interpolate the party (see server/client-predict.ts).
+      // The host's port is loopback-cheap, but the publish rate is still 20 Hz
+      // — without this the hero answers the stick a third of the time.
+      predict: true,
       onReady: () => {
         live = true;
       },
@@ -144,6 +155,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
     modDefs: options.modDefs ?? undefined,
     password: options.listen?.password,
     maxClients: options.listen?.maxClients,
+    bots: options.listen?.bots,
   }).then((result) => {
     if (!result.ok) {
       if (!disposed) options.onClosed?.("error", result.reason);
@@ -180,6 +192,9 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
     },
     setTravelHook(hook) {
       travelHook = hook;
+    },
+    netStats() {
+      return client ? client.netStats() : { rate: 0, perSec: 0, lastBytes: 0 };
     },
     dispose() {
       if (disposed) return;
@@ -234,7 +249,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
   let state: GameState | null = null;
   let live = false;
   let disposed = false;
-  // The bank-before-the-swap reaction to an in-session crossing (§6.4) —
+  // The bank-before-the-swap reaction to an in-session crossing —
   // installed by the run once its banking exists. A joiner's hero crosses
   // WITH the party, and their app banks them off the level being left exactly
   // as the host's does.
@@ -250,6 +265,9 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
       transport: portTransport(port),
       build: engineVersion,
       mods: options.mods,
+      // A joiner is the case prediction exists for: a real wire sits between
+      // the stick and the simulation (see server/client-predict.ts).
+      predict: true,
       onReady: (ready, params) => {
         state = ready;
         live = true;
@@ -311,6 +329,9 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
     },
     setTravelHook(hook) {
       travelHook = hook;
+    },
+    netStats() {
+      return client ? client.netStats() : { rate: 0, perSec: 0, lastBytes: 0 };
     },
     dispose() {
       if (disposed) return;

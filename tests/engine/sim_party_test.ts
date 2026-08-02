@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE SIMULATOR FLIES A PARTY (multiplayer plan §7.2) — the instrument phase 4's
-// §4.3 tuning is blocked on, and the reason its co-op rules shipped as
+// THE SIMULATOR FLIES A PARTY — the instrument the party-XP tuning pass is
+// blocked on, and the reason the co-op rules shipped as
 // structure rather than as measured numbers.
 //
 // **THE TWO KNOBS THIS SUITE EXISTS TO KEEP APART.** `--party N` is how many
 // heroes are standing on the floor; `/players N` is D2's monster-hp and XP
 // SCALING, and they are independent — a party of four at `/players 1` is four
-// heroes against a solo horde. Conflating them is the one mistake §7.2 names in
-// advance, so the report prints both and this suite asserts it.
+// heroes against a solo horde. Conflating them is the one mistake worth naming
+// in advance, so the report prints both and this suite asserts it.
 
 import { describe, expect, it } from "vitest";
 
@@ -67,7 +67,7 @@ describe("a simulated party", () => {
   });
 
   it("reports PER CAPITA, which is the read the tuning pass moves a lever on", () => {
-    // §4.7's warning: a party shares each kill AND clears faster, so the
+    // The warning worth repeating: a party shares each kill AND clears faster, so the
     // per-KILL share and the per-capita RATE move in opposite directions.
     // Reading the share alone concludes that grouping is a tax when it is a
     // bonus, or the reverse — so the rate is what the report carries.
@@ -85,7 +85,7 @@ describe("a simulated party", () => {
   });
 
   it("keeps `--party` and `/players` as two different numbers", () => {
-    // The collision §7.2 names in advance. A party of two under the shipped 1×
+    // The collision the two knobs invite. A party of two under the shipped 1×
     // tuning must report a scaling of 1 — the horde was not re-priced just
     // because more heroes turned up.
     const report = simulateLevel({
@@ -121,10 +121,11 @@ describe("a simulated party", () => {
   });
 
   it("survives a party member levelling up", () => {
-    // The bug a party found on its first run: `levelup` is still a GLOBAL phase
-    // (§3.2 has not landed), so a party member's ding pauses the whole run —
-    // and a simulator that only drained SEAT 0's chooser wedged, because the
-    // phase never resumed. A run that completes at all is the assertion.
+    // The bug a party found on its first run: `levelup` was still a GLOBAL
+    // phase (the per-player screens split had not landed), so a party member's
+    // ding paused the whole run — and a simulator that only drained SEAT 0's
+    // chooser wedged, because the phase never resumed. A run that completes at
+    // all is the assertion.
     const report = simulateLevel({
       levelId: "moon",
       difficulty: "easy",

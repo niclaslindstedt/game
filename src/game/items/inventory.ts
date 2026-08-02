@@ -150,7 +150,8 @@ export function equipFromInventory(
   const item = player.inventory[index];
   if (!item) return false;
   // A PIECE ON A TRADE TABLE STAYS IN THE BAG UNTIL IT CROSSES, so it has to
-  // be refused here (plan §5.1, rule 3). `settleTrade` would catch it — the
+  // be refused here (the trade rules, src/game/trade.ts). `settleTrade`
+  // would catch it — the
   // offer names the cell AND the id, and an equipped-away cell no longer holds
   // it — but the player who moved it would have no idea why the trade failed
   // a minute later.
@@ -196,7 +197,7 @@ export function equipFromInventory(
  *
  * **THE DECISION TO TIDY IS SOMEBODY ELSE'S** — {@link inventoryNeedsSort} —
  * and that split is what lets the autopilot's tidy travel as an intent rather
- * than as a per-tick mutation (multiplayer plan §7.2.5). This half does the
+ * than as a per-tick mutation (bot/intent.ts). This half does the
  * work every time it is asked; the predicate is the one that carries the
  * per-tick short-circuit, because it is the one called at 60 Hz.
  */
@@ -307,7 +308,7 @@ function desiredBagOrder(
  *     on whatever is deciding, because it is a fact about the hero: the rule
  *     holds whoever is holding the controller, and a memory the server never saw
  *     would let the same hero juggle freely from one end of a session and not
- *     the other (multiplayer plan §7.2.5, decision 3b).
+ *     the other.
  *
  * It sits here rather than under `bot/` for the same reason: the DECISION of
  * when to draw is the autopilot's, the DRAW is the game's — and a run command
@@ -545,7 +546,7 @@ export function discardFromInventory(
  * Returns the shed piece, or null on an empty cell (or one on a trade table).
  *
  * **THIS IS THE BAG DISCIPLINE'S ACTION, AND IT LIVES HERE FOR THE SAME REASON
- * `swapHand` AND `sortInventory` DO** (multiplayer plan §7.2.5, decision 3b):
+ * `swapHand` AND `sortInventory` DO**:
  * the DECISION of which cell can be spared is the autopilot's — it reads the
  * pocket arsenal's keep-set and the preciousness ladder (`bot/economy.ts`
  * `botCullPlan`) — but the SHED itself is the hero's, and a run command may not

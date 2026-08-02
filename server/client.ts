@@ -24,9 +24,10 @@
 // **IT SITS IN `server/` AND KNOWS NOTHING ABOUT A PAGE**, which is the whole
 // reason it moved out of `pwa/src/game/net/`. It is the only thing in the repo
 // that turns snapshots back into a run, and a BOT CLIENT — a headless process
-// that joins a session and plays off replicated state (multiplayer plan §7.2.5)
+// that joins a session and plays off replicated state (`server/bot-client.ts`)
 // — needs exactly that and has no renderer to put it in. A second client
-// written beside this one would be the drift the plan warns about: what the bot
+// written beside this one would be exactly the drift this file exists to
+// prevent: what the bot
 // proves playable has to be what the page actually reads. So the ONE app-shaped
 // thing it used to do — telling `local-seat.ts` which chair the server gave us
 // — is now the `onSeat` callback, and the page passes `setLocalSeat` to it.
@@ -51,6 +52,7 @@ import {
   type GeneratedMapSizeSetting,
 } from "@game/core";
 
+import { createPredictor } from "./client-predict.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
 import { patchState, type StatePatch, type WireState } from "./wire/delta.ts";
 import { FRAME, type CommandName } from "./wire/frames.ts";
@@ -70,9 +72,10 @@ import {
 } from "./wire/protocol.ts";
 import { baselineFor, stripPrivate } from "./wire/snapshot.ts";
 
-/** The pipe, whatever it is. A `MessagePort` in phase 1; a Steam P2P peer or a
- * UDP connection in phase 2. The client knows nothing else about it — which is
- * the point of writing the seam here rather than inside the transport. */
+/** The pipe, whatever it is. A `MessagePort` for a local host; a Steam P2P
+ * peer or a UDP connection for a remote one. The client knows nothing else
+ * about it — which is the point of writing the seam here rather than inside
+ * the transport. */
 export type ClientTransport = {
   send(frame: ArrayBuffer): void;
   /** Install the receiver. Called once, at construction. */
@@ -130,7 +133,7 @@ export type NetClientOptions = {
    */
   onSeat?: (seat: number | null) => void;
   /**
-   * AN IN-SESSION CROSSING IS ABOUT TO MOVE THE WORLD (§6.4): the incoming
+   * AN IN-SESSION CROSSING IS ABOUT TO MOVE THE WORLD: the incoming
    * full snapshot names a different level than the state on screen. Fired
    * with the OLD state, BEFORE anything is overwritten — the one moment the
    * app can still bank its hero as they stood on the level being left. The
@@ -138,6 +141,18 @@ export type NetClientOptions = {
    * lets the renderer and every loop helper carry on across the swap.
    */
   onTravel?: (state: GameState) => void;
+  /**
+   * PREDICT the local hero and INTERPOLATE the remote ones (see
+   * `./client-predict.ts` and `docs/multiplayer.md`).
+   *
+   * OPT-IN, default off, and the default is load-bearing twice over: the
+   * replication suites hash this client's entire state against the server's
+   * (a predicted hero is deliberately AHEAD of the last snapshot), and the
+   * BOT CLIENT must stay unpredicted — its staleness is the honest readout of
+   * what the network costs, which is the measurement it exists to take. The
+   * app's drivers pass true; nothing else does.
+   */
+  predict?: boolean;
 };
 
 export type NetClient = {
@@ -178,7 +193,24 @@ export type NetClient = {
    * what it may DO are the server's — see `server/wire/chat.ts` for why the
    * client is not entitled to an opinion about `/kick`. */
   sendChat(text: string): void;
+  /**
+   * The net graph's client half: what the state stream is costing, measured
+   * where it arrives. Clock-free on purpose — the window is counted in server
+   * ticks off the frames themselves, so the same numbers come out of a page,
+   * a bot client and a test without anybody injecting a clock.
+   */
+  netStats(): NetStats;
   dispose(): void;
+};
+
+/** What `netStats` reports. All zeros until two snapshots have landed. */
+export type NetStats = {
+  /** State bytes per second, over the recent snapshot window. */
+  rate: number;
+  /** Snapshots (full or delta) per second over the same window. */
+  perSec: number;
+  /** The last applied state frame's size in bytes. */
+  lastBytes: number;
 };
 
 export function createNetClient(options: NetClientOptions): NetClient {
@@ -191,8 +223,22 @@ export function createNetClient(options: NetClientOptions): NetClient {
   let baseline: WireState | null = null;
   let seat: number | null = null;
   let tick = 0;
+  /** INPUT frames' own monotonically increasing counter — the number the
+   * server echoes back on state frames (`FrameHeader.ack`) so prediction
+   * knows which inputs a snapshot covers. Inputs alone: a command or a chat
+   * line consuming one would make the echo skip numbers no input ever wore. */
   let inputSeq = 0;
+  /** The header counter every NON-input client frame shares (commands, chat).
+   * Purely informational on those frames; kept so traces stay orderable. */
+  let frameSeq = 0;
   let disposed = false;
+  /** The prediction/interpolation half, or null when not opted in — see
+   * `NetClientOptions.predict` and `./client-predict.ts`. */
+  const predictor = options.predict ? createPredictor() : null;
+  /** The recent state frames, as (server tick, wire bytes) pairs — the net
+   * graph's raw material. Bounded to ~2 s at the publish rate. */
+  const received: { tick: number; bytes: number }[] = [];
+  const RECEIVED_KEPT = 40;
 
   transport.onFrame((raw) => {
     if (disposed) return;
@@ -221,16 +267,26 @@ export function createNetClient(options: NetClientOptions): NetClient {
       return;
     }
     if (!state || !baseline) return; // nothing to apply it to yet
+    if (frame.type !== FRAME.snapshot && frame.type !== FRAME.delta) return;
+    // The predictor's scribbles (the predicted local hero, the interpolated
+    // remote ones) are rolled back BEFORE the patch lands, so a delta that
+    // happens not to mention the party leaves authoritative values standing
+    // rather than confirming a guess.
+    predictor?.beforeApply(state, seat);
     if (frame.type === FRAME.snapshot) {
       applyWhole(frame.payload as WireState);
-    } else if (frame.type === FRAME.delta) {
+    } else {
       patchState(state as unknown as WireState, frame.payload as StatePatch);
       patchState(baseline, frame.payload as StatePatch);
-    } else {
-      return;
     }
+    // Rebase + replay: the header's `ack` is the highest input seq the server
+    // has applied (see `FrameHeader.ack`), so everything above it is replayed
+    // over the fresh authoritative state, and the presentation reconciled.
+    predictor?.afterApply(state, seat, frame.ack, frame.tick);
     tick = frame.tick;
     acked = frame.seq;
+    received.push({ tick: frame.tick, bytes: raw.byteLength });
+    if (received.length > RECEIVED_KEPT) received.shift();
     // ACK IMMEDIATELY, and only for what was actually applied. The server codes
     // its next delta against this sequence, so an ack sent optimistically — or
     // for a frame that failed to apply — is a desync with the shape of a
@@ -286,7 +342,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
   function applyWhole(snapshot: WireState): void {
     if (!state) return;
     const target = state as unknown as WireState;
-    // AN IN-SESSION CROSSING (§6.4): the world moved under us. The statics a
+    // AN IN-SESSION CROSSING: the world moved under us. The statics a
     // full snapshot carries (the level, the carve, the decor) move the client
     // wholesale — the same ~100 KB an adopted session costs, once per
     // crossing — but the hero being LEFT BEHIND has to be banked first, off
@@ -295,6 +351,10 @@ export function createNetClient(options: NetClientOptions): NetClient {
     const level = snapshot.level as { id?: unknown } | null | undefined;
     if (level && typeof level.id === "string" && level.id !== state.level.id) {
       options.onTravel?.(state);
+      // The predictor's buffers are the OLD level's: pending inputs would
+      // replay a walk across geometry that no longer exists, and the
+      // interpolation samples name positions on a map nobody is on.
+      predictor?.reset();
       delete target.pendingTravel;
     }
     for (const [field, value] of Object.entries(snapshot)) {
@@ -315,12 +375,17 @@ export function createNetClient(options: NetClientOptions): NetClient {
     },
     sendInput(input) {
       if (disposed || !state) return;
+      const seq = ++inputSeq;
       transport.send(
         encodeFrame(
-          { type: FRAME.input, seq: ++inputSeq, ack: acked, tick },
-          { seq: inputSeq, input: input as unknown as Record<string, unknown> },
+          { type: FRAME.input, seq, ack: acked, tick },
+          { seq, input: input as unknown as Record<string, unknown> },
         ),
       );
+      // AFTER the send, one predicted movement step for this frame (plus the
+      // remote heroes' interpolation tick) — so the local hero answers the
+      // stick at the loop's 60 Hz instead of at the publish rate.
+      predictor?.onInput(state, seat, seq, input);
     },
     sendCommand(name, args) {
       if (disposed || !state) return;
@@ -328,7 +393,7 @@ export function createNetClient(options: NetClientOptions): NetClient {
       if (args?.length) payload.args = [...args];
       transport.send(
         encodeFrame(
-          { type: FRAME.command, seq: ++inputSeq, ack: acked, tick },
+          { type: FRAME.command, seq: ++frameSeq, ack: acked, tick },
           payload,
         ),
       );
@@ -342,10 +407,28 @@ export function createNetClient(options: NetClientOptions): NetClient {
       const payload: ChatPayload = { text };
       transport.send(
         encodeFrame(
-          { type: FRAME.chat, seq: ++inputSeq, ack: acked, tick },
+          { type: FRAME.chat, seq: ++frameSeq, ack: acked, tick },
           payload,
         ),
       );
+    },
+    netStats() {
+      const last = received[received.length - 1];
+      const first = received[0];
+      if (!last || !first || received.length < 2) {
+        return { rate: 0, perSec: 0, lastBytes: last?.bytes ?? 0 };
+      }
+      // The span is measured in SERVER TICKS (60/s), read off the frames that
+      // arrived — so a stalled connection reads as a falling rate rather than
+      // a frozen one, and no clock had to be injected to get there.
+      const spanSec = Math.max(1 / 60, (last.tick - first.tick) / 60);
+      let bytes = 0;
+      for (const entry of received) bytes += entry.bytes;
+      return {
+        rate: Math.round((bytes - first.bytes) / spanSec),
+        perSec: Math.round(((received.length - 1) / spanSec) * 10) / 10,
+        lastBytes: last.bytes,
+      };
     },
     dispose() {
       if (disposed) return;

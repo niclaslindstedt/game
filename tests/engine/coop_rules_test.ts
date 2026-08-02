@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE CO-OP RULES — the arithmetic a run does differently once there is more
-// than one hero in it (multiplayer plan §4.2's abandoned hero and §4.3's XP,
+// than one hero in it (the abandoned hero, and the party's XP,
 // loot and menace).
 //
 // Every rule here has the same shape and the same trap: it is an exact no-op in

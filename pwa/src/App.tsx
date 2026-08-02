@@ -115,7 +115,7 @@ export function App() {
   const demoHero = useMemo(() => (demo ? demoCharacter() : null), [demo]);
 
   // JOINING somebody else's session (Steam builds only): the run on screen is
-  // the HOST's, and this player is a first-class member of it (§4.5) — the
+  // the HOST's, and this player is a first-class member of it — the
   // ACTIVE hero travels with them, is seated by the session, and banks every
   // clear, thought and find back to this roster through the same paths a
   // local run uses. With no hero on the roster the throwaway spectator shell
@@ -379,7 +379,7 @@ export function App() {
   // A session is being joined. Before the active hero's own run because it is
   // not one: the run on screen is the host's, the parked-run bookkeeping does
   // not apply, and leaving it drops the connection. What DOES apply is the
-  // roster (§4.5): the hero banked mid-session, so leaving re-reads them —
+  // roster: the hero banked mid-session, so leaving re-reads them —
   // and a hardcore hero who died in there is dead here too.
   if (join && joinHero) {
     const endJoin = () => {

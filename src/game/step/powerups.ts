@@ -40,6 +40,7 @@ import { abilityDef, type AbilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { knockEnemyBack } from "../knockback.ts";
 import { hitEnemy } from "../loot.ts";
+import { seatOf } from "../party.ts";
 import type {
   ActiveAbility,
   Enemy,
@@ -101,14 +102,16 @@ export function stepPowerups(
 
   for (const ability of player.abilities) {
     const def = abilityDef(ability.defId);
-    if (def.trail) stepTrail(state, ability, def, dtMs, power);
-    if (def.rain) stepRain(state, ability, def, dtMs, power);
-    if (def.well) stepWell(state, ability, def, dt, dtMs, power);
-    if (def.pulse) stepPulse(state, ability, def, dtMs, power);
-    if (def.volley) stepVolley(state, ability, def, dtMs, power);
-    if (def.turret) stepTurret(state, ability, def, dtMs, power);
-    if (def.singularity) stepSingularity(state, ability, def, dtMs, power);
-    if (def.immolation) stepImmolation(state, ability, def, dtMs, power);
+    if (def.trail) stepTrail(state, player, ability, def, dtMs, power);
+    if (def.rain) stepRain(state, player, ability, def, dtMs, power);
+    if (def.well) stepWell(state, player, ability, def, dt, dtMs, power);
+    if (def.pulse) stepPulse(state, player, ability, def, dtMs, power);
+    if (def.volley) stepVolley(state, player, ability, def, dtMs, power);
+    if (def.turret) stepTurret(state, player, ability, def, dtMs, power);
+    if (def.singularity)
+      stepSingularity(state, player, ability, def, dtMs, power);
+    if (def.immolation)
+      stepImmolation(state, player, ability, def, dtMs, power);
   }
 }
 
@@ -121,6 +124,7 @@ export function stepPowerups(
  */
 function stepTrail(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dtMs: number,
@@ -129,7 +133,6 @@ function stepTrail(
   const trail = def.trail;
   if (!trail) return;
   const patches = (ability.patches ??= []);
-  const player = state.players[0];
 
   if (tickAbilityClock(ability, "trail", dtMs) <= 0) {
     setAbilityClock(ability, "trail", trail.dropMs);
@@ -164,6 +167,7 @@ function stepTrail(
       if (victim.hp <= 0) continue;
       hitEnemy(state, victim, trail.damage * power, "magic", {
         noMenace: true,
+        attacker: player,
       });
     }
   }
@@ -178,6 +182,7 @@ function stepTrail(
  */
 function stepRain(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dtMs: number,
@@ -188,7 +193,6 @@ function stepRain(
   if (tickAbilityClock(ability, "rain", dtMs) > 0) return;
   setAbilityClock(ability, "rain", rain.intervalMs);
 
-  const player = state.players[0];
   const marks = enemiesWithin(state, player.pos, rain.range).slice();
   for (let i = 0; i < rain.count; i++) {
     let target: Vec2;
@@ -220,6 +224,7 @@ function stepRain(
       hitEnemy(state, victim, rain.damage * power, "magic", {
         noMenace: true,
         attack,
+        attacker: player,
       });
     }
   }
@@ -235,6 +240,7 @@ function stepRain(
  */
 function stepWell(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dt: number,
@@ -243,7 +249,7 @@ function stepWell(
 ): void {
   const well = def.well;
   if (!well) return;
-  const core = (ability.pos ??= { ...state.players[0].pos });
+  const core = (ability.pos ??= { ...player.pos });
 
   if (well.chase > 0) {
     const prey = nearestEnemy(state, core, WELL_HUNT_RANGE);
@@ -266,6 +272,7 @@ function stepWell(
     hitEnemy(state, enemy, well.damage * power, "magic", {
       noMenace: true,
       attack,
+      attacker: player,
     });
   }
 }
@@ -279,6 +286,7 @@ function stepWell(
  */
 function stepPulse(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dtMs: number,
@@ -289,7 +297,7 @@ function stepPulse(
   if (tickAbilityClock(ability, "pulse", dtMs) > 0) return;
   setAbilityClock(ability, "pulse", pulse.intervalMs);
 
-  const origin = { ...state.players[0].pos };
+  const origin = { ...player.pos };
   state.events.push({
     type: "voidWave",
     pos: origin,
@@ -308,6 +316,7 @@ function stepPulse(
     hitEnemy(state, victim, pulse.damage * power, "magic", {
       noMenace: true,
       attack,
+      attacker: player,
     });
   }
 }
@@ -322,6 +331,7 @@ function stepPulse(
  */
 function stepVolley(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dtMs: number,
@@ -330,7 +340,7 @@ function stepVolley(
   const volley = def.volley;
   if (!volley) return;
   const scratch = abilityScratch(ability, "volley", dtMs);
-  applyVolley(state, state.players[0], volley, scratch, power);
+  applyVolley(state, player, volley, scratch, power);
   commitAbilityScratch(ability, "volley", scratch);
 }
 
@@ -343,6 +353,7 @@ function stepVolley(
  */
 function stepSingularity(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dtMs: number,
@@ -351,14 +362,7 @@ function stepSingularity(
   const singularity = def.singularity;
   if (!singularity) return;
   const scratch = abilityScratch(ability, "singularity", dtMs);
-  applySingularity(
-    state,
-    state.players[0],
-    singularity,
-    scratch,
-    power,
-    powerupBilling,
-  );
+  applySingularity(state, player, singularity, scratch, power, powerupBilling);
   commitAbilityScratch(ability, "singularity", scratch);
 }
 
@@ -370,6 +374,7 @@ function stepSingularity(
  */
 function stepImmolation(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dtMs: number,
@@ -378,14 +383,7 @@ function stepImmolation(
   const immolation = def.immolation;
   if (!immolation) return;
   const scratch = abilityScratch(ability, "immolation", dtMs);
-  applyImmolation(
-    state,
-    state.players[0],
-    immolation,
-    scratch,
-    power,
-    powerupBilling,
-  );
+  applyImmolation(state, player, immolation, scratch, power, powerupBilling);
   commitAbilityScratch(ability, "immolation", scratch);
 }
 
@@ -397,6 +395,7 @@ function stepImmolation(
  */
 function stepTurret(
   state: GameState,
+  player: Player,
   ability: ActiveAbility,
   def: AbilityDef,
   dtMs: number,
@@ -422,6 +421,8 @@ function stepTurret(
       weaponClass: "magic",
       sprite: turret.sprite,
       volley: state.nextId++,
+      // The grid is this hero's deployed power — its shots bill to their seat.
+      seat: seatOf(state, player),
       z: 0,
     });
   }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE BOT CLIENT — a headless process that JOINS a session over the real
 // transport, receives real snapshots, and plays its hero off the replicated
-// state alone (multiplayer plan §7.2.5).
+// state alone (docs/multiplayer.md).
 //
 // **WHY IT EXISTS, AHEAD OF THE SOAK IT MAKES POSSIBLE.** `wire/split.ts`
 // declares what travels. Nothing anywhere proves that **what travels is ENOUGH
@@ -15,7 +15,7 @@
 // a weapon, and it does so in CI.
 //
 // Beside that it makes four things measurable that are currently opinions:
-// §5.6's soak and adversity pass, unattended; §5.4's reconnect; §3.3's
+// the soak and its adversity pass, unattended; the reconnect grace window; the
 // prediction error once there is prediction; and the command channel under real
 // arguments, since the bot buys, repairs, allocates, swaps and picks talents
 // with values nobody typed into a test.
@@ -36,10 +36,11 @@
 //  1. **IT IS NOT A DETERMINISM TEST.** It does not simulate — it applies
 //     snapshots. It cannot detect two simulations diverging, and that stays
 //     `tests/engine/net_determinism_test.ts`'s job.
-//  2. **IT IS NOT THE INSTRUMENT FOR §7.2's NUMBERS.** It acts on a snapshot up
-//     to three ticks stale with no prediction under it, so its dps, its deaths
-//     and its clear time are partly a measurement of the NETWORK. phase 4's
-//     §4.3 tuning is read off the SIMULATOR's in-session party and nowhere else.
+//  2. **IT IS NOT THE INSTRUMENT FOR BALANCE NUMBERS.** It acts on a snapshot
+//     up to three ticks stale with no prediction under it, so its dps, its
+//     deaths and its clear time are partly a measurement of the NETWORK. The
+//     party-scaling tuning is read off the SIMULATOR's in-session party and
+//     nowhere else.
 //  3. **IT TESTS ONE TRANSPORT AT A TIME** — whichever it was pointed at.
 
 import {
@@ -80,11 +81,22 @@ import {
 const RESEND_QUIET_TICKS = 12;
 
 export type BotClientOptions = {
-  /** The pipe. A UDP socket for the direct path, the relay for Steam — this
-   * module never asks which. */
-  transport: Transport;
-  /** The session, as the transport names one. */
-  host: PeerKey;
+  /** The pipe, for a SOCKET join. A UDP socket for the direct path, the relay
+   * for Steam — this module never asks which. Omitted when `pipe` is given. */
+  transport?: Transport;
+  /** The session, as the transport names one. Omitted when `pipe` is given. */
+  host?: PeerKey;
+  /**
+   * A raw in-process `ClientTransport` INSTEAD of a socket — the session's own
+   * local bot seats (`server/local-bots.ts`) hand one end of a loopback pair
+   * here. There is no handshake to run and nothing to knock on: the caller has
+   * already admitted this client itself (`session.addClient`), so the whole
+   * join-link half is skipped and `start()` resolves immediately. Everything
+   * above the pipe — the same client, the same autopilot, the same verbs — is
+   * identical either way, which is the point: every rule that governs a client
+   * governs a local bot by construction.
+   */
+  pipe?: ClientTransport;
   /** This build's engine version, compared with the session's at the
    * handshake. */
   build: string;
@@ -116,8 +128,8 @@ export type BotClientStats = {
   /** The last server tick a snapshot carried, so a stalled session shows up as
    * a number that stops moving rather than as silence. */
   tick: number;
-  /** Bytes this client has RECEIVED. §5.6 asks a soak to watch for snapshot
-   * growth, and this divided by the elapsed time is that number — measured at
+  /** Bytes this client has RECEIVED. The soak watches for snapshot growth,
+   * and this divided by the elapsed time is that number — measured at
    * the only place it can be, which is the end that pays for it. */
   bytes: number;
 };
@@ -175,37 +187,62 @@ export function createBotClient(options: BotClientOptions): BotClient {
   // speaks `ArrayBuffer` to "a pipe, whatever it is". Neither knows the other
   // exists, which is why joining cost one small module rather than a second
   // client — and why a bot client costs this file rather than a second wire.
+  //
+  // AND THE LINK HALF IS OPTIONAL: a LOCAL bot (the session's own seat-filler)
+  // arrives with a raw `ClientTransport` already admitted at the other end, so
+  // there is no socket, no handshake and no link to pump — the bridge below is
+  // simply not built, and the raw pipe is wrapped only to keep the byte count
+  // honest.
   let deliver: ((frame: ArrayBuffer) => void) | null = null;
-  const link: JoinLink = createJoinLink({
-    transport: options.transport,
-    host: options.host,
-    handshake: {
-      protocol: PROTOCOL_VERSION,
-      build: options.build,
-      mods: options.mods ?? [],
-    },
-    name: options.name,
-    password: options.password,
-    now: options.now,
-    // A COPY, because the client's end takes ownership and the transport is
-    // still holding its own scratch buffer — the same rule `server/main.ts`
-    // follows handing frames to a renderer.
-    deliver: (frame) => {
-      stats.bytes += frame.byteLength;
-      deliver?.(frame.slice().buffer);
-    },
-    onAdmitted: () => options.log?.(`${options.name} admitted`),
-    onClosed: report,
-    log: options.log,
-  });
-
-  const pipe: ClientTransport = {
-    send: (frame) => link.send(new Uint8Array(frame)),
-    onFrame: (listener) => {
-      deliver = listener;
-    },
-    close: () => link.close(),
-  };
+  let link: JoinLink | null = null;
+  let pipe: ClientTransport;
+  if (options.pipe) {
+    const raw = options.pipe;
+    pipe = {
+      send: (frame) => raw.send(frame),
+      onFrame: (listener) =>
+        raw.onFrame((frame) => {
+          stats.bytes += frame.byteLength;
+          listener(frame);
+        }),
+      close: () => raw.close(),
+    };
+  } else {
+    const { transport, host } = options;
+    if (!transport || !host) {
+      throw new Error("a bot client needs a transport and a host, or a pipe");
+    }
+    const joined: JoinLink = createJoinLink({
+      transport,
+      host,
+      handshake: {
+        protocol: PROTOCOL_VERSION,
+        build: options.build,
+        mods: options.mods ?? [],
+      },
+      name: options.name,
+      password: options.password,
+      now: options.now,
+      // A COPY, because the client's end takes ownership and the transport is
+      // still holding its own scratch buffer — the same rule `server/main.ts`
+      // follows handing frames to a renderer.
+      deliver: (frame) => {
+        stats.bytes += frame.byteLength;
+        deliver?.(frame.slice().buffer);
+      },
+      onAdmitted: () => options.log?.(`${options.name} admitted`),
+      onClosed: report,
+      log: options.log,
+    });
+    link = joined;
+    pipe = {
+      send: (frame) => joined.send(new Uint8Array(frame)),
+      onFrame: (listener) => {
+        deliver = listener;
+      },
+      close: () => joined.close(),
+    };
+  }
 
   const client: NetClient = createNetClient({
     transport: pipe,
@@ -250,12 +287,15 @@ export function createBotClient(options: BotClientOptions): BotClient {
   let lastTick = -RESEND_QUIET_TICKS;
 
   return {
-    start: () => link.start(),
+    // A local bot has nothing to open or knock on — it was admitted before it
+    // was built — so its start is already done.
+    start: () => link?.start() ?? Promise.resolve(),
     tick() {
       if (closed) return;
       // The link's own clock first: the probe's retry, the reliability layer's
-      // retransmits and the socket. Before admission that is ALL there is to do.
-      link.tick();
+      // retransmits and the socket. Before admission that is ALL there is to
+      // do — and a local bot, which has no link, skips straight to playing.
+      link?.tick();
       stats.tick = client.tick;
       const state = client.state;
       const seat = client.seat;
@@ -314,12 +354,12 @@ export function createBotClient(options: BotClientOptions): BotClient {
  * is left is the narrow set that would otherwise park a bot for ever: a phase
  * that freezes the run, and the two pauses a level-up puts in front of it.
  *
- * **EVERY ONE OF THESE IS A GROUP VERB** (plan §3.2 keeps a scene global and
- * lets anyone advance it), so a bot in a session with humans can skip a
- * cutscene out from under them. That is correct for the SOAK this exists for and
- * would be rude in a party; a bot filling a player's party is steered in the
- * session instead (§7.3), which is the other half of why these two hosts are
- * separate.
+ * **EVERY ONE OF THESE IS A GROUP VERB** (a scene stays global and anyone may
+ * advance it — only the screens went per-player), so a bot in a session with
+ * humans can skip a cutscene out from under them. That is correct for the SOAK
+ * this exists for and would be rude in a party; a bot filling a player's party
+ * is steered in the session instead (`server/local-bots.ts`), which is the
+ * other half of why these two hosts are separate.
  */
 function sceneCommand(
   bot: Bot,
@@ -327,7 +367,7 @@ function sceneCommand(
   hero: Player,
 ): BotCommand | null {
   // The BUILD first: banked points are drained through the same two verbs a
-  // player presses (plan §3.2 — a ding banks rather than pausing, so the bot
+  // player presses (a ding banks rather than pausing, so the bot
   // simply spends on sight; the last spend closes any chooser the run
   // greeted it with).
   if (hero.pendingStatPoints > 0) {
@@ -337,7 +377,7 @@ function sceneCommand(
     const id = botPickTalent(bot, state, hero);
     if (id) return { name: "spendTalentPoint", args: [id] };
   }
-  // The SCREENS are the bot's own now (per-player, plan §3.2): whatever of
+  // The SCREENS are the bot's own now (per-player, `Player.screen`): whatever of
   // its screens is up with nothing left to spend gets closed, and a respec
   // greeting a level-token jump is confirmed once its pool is placed.
   if (hero.screen === "respec") return { name: "confirmRespec", args: [] };

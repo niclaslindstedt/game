@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE BOT STEERS THE HERO IT IS GIVEN (multiplayer plan §7.1).
+// THE BOT STEERS THE HERO IT IS GIVEN.
 //
 // **EVERY OTHER BOT SUITE WOULD PASS WITH THE REFACTOR REVERTED**, which is
 // precisely why this one exists. `bot_test`, `bot_nav_test`, `bot_economy_test`
@@ -93,7 +93,7 @@ describe("a bot steers the hero it is handed", () => {
   });
 
   it("does not depend on the order the party's bots are polled", () => {
-    // §7.1's second rule: `botAct` is pure with respect to `state`, so asking
+    // The rule's second half: `botAct` is pure with respect to `state`, so asking
     // the party in a different order must produce the same inputs. Nothing in
     // the bot mutates the run today, and this is what pins it — the simulator
     // is about to poll N bots per tick and a hidden write would show up as an

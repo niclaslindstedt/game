@@ -12,8 +12,8 @@
 //   …    payload
 //
 // THE HEADER IS FIXED-SIZE AND VALIDATED BEFORE ANYTHING IS READ, and that is
-// a security property rather than a style: phase 2 opens a UDP socket, which means
-// these bytes eventually arrive from strangers. A decoder that reads a length
+// a security property rather than a style: the direct path opens a UDP socket,
+// which means these bytes eventually arrive from strangers. A decoder that reads a length
 // out of the payload before checking the buffer is long enough is the classic
 // over-read, and it is much easier to never write than to find later. So
 // `decodeFrame` refuses a short buffer, refuses an unknown type, and refuses a
@@ -21,8 +21,8 @@
 // because a malformed packet is an ordinary event on an open port and must not
 // be able to stop a tick.
 //
-// **The payload is JSON, and that is a deliberate PR-1 decision worth stating
-// plainly.** The plan calls for hand-rolled binary packing, and it is right
+// **The payload is JSON, and that is a deliberate decision worth stating
+// plainly.** Hand-rolled binary packing is the obvious alternative, and it is right
 // that the shapes are known at compile time — but there are ~120 of them, they
 // are the engine's own live types, and a hand-written packer per type is a
 // second definition of every one that drifts silently the moment a def grows a
@@ -30,7 +30,7 @@
 // change: both ends already speak "an ArrayBuffer with a typed header", the
 // transferable path and the zero-copy `postMessage` are already in place, and
 // swapping `JSON.stringify` for a packer touches these two functions and
-// nothing else. Measure first (§1.7's snapshot-rate risk) and pack what the
+// nothing else. Measure first (the snapshot rate is the risk) and pack what the
 // measurement says is expensive.
 
 import { isFrameType, type FrameType } from "./frames.ts";

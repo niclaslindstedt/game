@@ -425,10 +425,10 @@ export function TitleScreen({
     // picked yet the roster is one press away and the name is a placeholder
     // nothing is stored under.
     heroName: character?.name ?? "PLAYER",
-    // §4.2's handshake rule needs to know which kind of hero is knocking:
+    // The admission handshake needs to know which kind of hero is knocking:
     // hardcore and softcore never share a game.
     heroHardcore: character?.hardcore === true,
-    // §4.5: the hero travels WITH the player. The purse is funded from their
+    // The hero travels WITH the player. The purse is funded from their
     // whole wealth (banked + pending store credit) exactly as a local run's is
     // (run-setup.ts), so banking after the session treats the two alike. A
     // fresh hero carries null and arrives as the authored fresh start.
@@ -438,7 +438,7 @@ export function TitleScreen({
           coins: characterPurse(character),
         } as unknown as Record<string, unknown>)
       : null,
-    // §4.4: apply the HOST's exact mod set for the session on the way through
+    // Apply the HOST's exact mod set for the session on the way through
     // a browser row — a lazy chunk (join-mods.ts), because the apply reaches
     // `game/mods.ts` → `@game/core` and this screen is the startup path.
     applyForSession: useCallback(

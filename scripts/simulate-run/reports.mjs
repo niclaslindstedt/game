@@ -333,9 +333,9 @@ export function renderSingleCampaign(
 
 // ---- THE PARTY — one row per seat, and the per-capita read ----------------------
 
-// The `--party N` report (multiplayer plan §7.2): who was on the floor, what
-// each seat came away with, and the per-capita rates phase 4's §4.3 tuning pass is
-// read off.
+// The `--party N` report: who was on the floor, what
+// each seat came away with, and the per-capita rates the co-op tuning pass
+// (scripts/coop-tuning.mjs) is read off.
 //
 // **IT PRINTS BOTH NUMBERS IN THE HEADING ON PURPOSE.** `--party N` is how many
 // heroes are standing there; `/players N` is D2's monster-hp and XP scaling, and

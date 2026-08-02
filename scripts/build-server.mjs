@@ -24,8 +24,8 @@
 //     breaks in a released build, on a player's machine, for a reason nobody
 //     changed.
 //
-// So this is the plan's own fallback (§1.1, second bullet): precompile, which
-// also makes phase 5's standalone dedicated server trivially portable.
+// So the fallback is to precompile, which
+// also makes the standalone dedicated server trivially portable.
 //
 // **WHY THE SOURCES ARE STAGED FIRST, which is the one surprising step.**
 // TypeScript refuses outright to EMIT a file whose import is both aliased and
@@ -86,6 +86,21 @@ const generatedDir = path.join(root, "src", "generated");
  * `relativizeAliases`, so the preflight and the rewrite can never disagree
  * about what an import looks like. */
 const IMPORT_RE = /((?:from|import)\s*\(?\s*)"([^"]+)"/g;
+
+/**
+ * THE LICENCE LOCK'S FOLD. `server/licence.ts` holds one build-time literal —
+ * `true` in the repo tree so the suites and the soak fleet run from sources —
+ * and the ship target is what turns it `false`, so the packaged binary's
+ * config-file escape (`DedicatedConfig.allowUnlicensedTransport`) is dead code
+ * rather than a statement a player can edit their way past. The marker comment
+ * is part of the contract: `foldLicenceLock` refuses a build where the literal
+ * has drifted, because a lock that silently stopped folding is no lock.
+ */
+const LICENCE_FILE = path.join("server", "licence.ts");
+const LICENCE_OPEN =
+  "UNLICENSED_TRANSPORT_UNLOCKED: boolean = true; // licence-lock:";
+const LICENCE_SHUT =
+  "UNLICENSED_TRANSPORT_UNLOCKED: boolean = false; // licence-lock:";
 
 main();
 
@@ -172,11 +187,29 @@ function stage() {
       if (!file.endsWith(".ts")) continue;
       const dest = path.join(stageDir, path.relative(root, file));
       mkdirSync(path.dirname(dest), { recursive: true });
-      writeFileSync(dest, relativizeAliases(readFileSync(file, "utf8"), file));
+      let source = relativizeAliases(readFileSync(file, "utf8"), file);
+      if (path.relative(root, file) === LICENCE_FILE) {
+        source = foldLicenceLock(source);
+      }
+      writeFileSync(dest, source);
       count++;
     }
   }
   return count;
+}
+
+/** The one-token rewrite that shuts the licence lock in the ship target, and
+ * the refusal that keeps the fold honest when the literal drifts. */
+function foldLicenceLock(source) {
+  if (!source.includes(LICENCE_OPEN)) {
+    console.error(
+      `server: ${LICENCE_FILE} no longer carries the licence-lock literal ` +
+        "this build folds shut — the shipped binary would honour the " +
+        "config-file escape. Restore the marked literal before building.",
+    );
+    process.exit(1);
+  }
+  return source.replace(LICENCE_OPEN, LICENCE_SHUT);
 }
 
 /** One file's source with `@game/…` specifiers turned into relative paths. */

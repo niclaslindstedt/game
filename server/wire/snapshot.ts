@@ -7,7 +7,7 @@
 // recipient may not see is deleted from the record before it is coded, so a
 // spectator's client never holds another hero's bag at all. Skipping it "when
 // it happens not to have changed" would be a bandwidth trick with no security
-// property behind it, and phase 5's trade window rests on the difference.
+// property behind it, and the trade window rests on the difference.
 //
 // This module does not import the engine, on purpose. It reads a `GameState`
 // structurally — as `Record<string, unknown>` — for two independent reasons:
@@ -89,7 +89,7 @@ export function captureSnapshot(
 
 /** One hero as everybody else may see them: their position, their health and
  * what they are visibly wearing, and nothing that would let a stranger
- * enumerate — or, past phase 5's trade window, assert anything about — what is in
+ * enumerate — or, past the trade window, assert anything about — what is in
  * their pockets. */
 function withheld(hero: unknown): unknown {
   if (!hero || typeof hero !== "object") return hero;

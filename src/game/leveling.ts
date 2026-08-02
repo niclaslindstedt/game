@@ -257,7 +257,7 @@ export function xpScrollDurationMs(): number {
  * a boss pack doubles a boss. The old golden arrow needed a mob-priced payout
  * and a below-level penalty to say the same thing.
  *
- * PRIVATE, like every other read of one hero (§3.1): the window belongs to
+ * PRIVATE, like every other read of one hero: the window belongs to
  * whoever walked over the scroll, so a party-mate's kill share is doubled only
  * for the hero whose own window is lit.
  */

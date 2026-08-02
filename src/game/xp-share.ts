@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHO A KILL'S XP BELONGS TO — the one rule that decides whether a level 12
 // friend can meaningfully play with a level 60 character, and therefore most of
-// whether co-op is worth playing at all (multiplayer plan §4.3).
+// whether co-op is worth playing at all (docs/multiplayer.md).
 //
 // It is Diablo 2's shape, and both halves of that shape are load-bearing:
 //
@@ -28,7 +28,7 @@
 import { distanceSq } from "@game/lib/vec.ts";
 
 import { XP_SHARE } from "./config/index.ts";
-import { heroInPlay, nearestHero } from "./party.ts";
+import { heroInPlay } from "./party.ts";
 import type { GameState, Player } from "./types/index.ts";
 
 /** One hero's cut of a payout, already rounded to whole XP. */
@@ -59,13 +59,24 @@ export function splitXp(
   const near: Player[] = [];
   let levelSum = 0;
   for (const hero of state.players) {
+    // A BOT TAKES NO XP. A bot seat is an autopilot hero nobody is levelling
+    // (`Player.bot`): paying it a cut would burn a share of every kill on a
+    // character that banks nothing, and counting it toward the party bonus or
+    // the level weighting would let a host inflate the pot by seating machines.
+    // Skipped up front, so a botless party walks exactly the branches it always
+    // did — the solo number cannot move.
+    if (hero.bot) continue;
     if (!heroInPlay(hero)) continue;
     if (distanceSq(hero.pos, pos) > r2) continue;
     near.push(hero);
     levelSum += Math.max(1, hero.level);
   }
   if (near.length === 0) {
-    const fallback = nearestHero(state, pos);
+    // The nearest NON-BOT hero in play, for the same reason the loop above
+    // skips them: the fallback exists so a far kill's XP reaches a person, and
+    // a bot standing closer must not intercept it. Only when every hero in
+    // play is a bot does the amount evaporate — there is nobody to pay.
+    const fallback = nearestPayableHero(state, pos);
     return fallback ? [{ hero: fallback, amount }] : [];
   }
   // One hero in range is the solo path, and it must not go through the
@@ -88,6 +99,31 @@ export function splitXp(
     else cuts.push({ hero, amount: 1 });
   }
   return cuts;
+}
+
+/**
+ * The living NON-BOT hero nearest `pos`, or null when every hero in play is a
+ * bot (or the party is wiped).
+ *
+ * Deliberately not `nearestHero` (`party.ts`): that is the GEOMETRY answer —
+ * what a mob chases, what a hazard hits — and a bot is exactly as chaseable as
+ * anybody. This is a PAYOUT answer, and a payout needs a person.
+ */
+function nearestPayableHero(
+  state: GameState,
+  pos: { x: number; y: number },
+): Player | null {
+  let best: Player | null = null;
+  let bestD = Infinity;
+  for (const hero of state.players) {
+    if (hero.bot || !heroInPlay(hero)) continue;
+    const d = distanceSq(hero.pos, pos);
+    if (d < bestD) {
+      bestD = d;
+      best = hero;
+    }
+  }
+  return best;
 }
 
 /**

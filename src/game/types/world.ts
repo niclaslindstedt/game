@@ -747,18 +747,18 @@ export type Merchant = {
 };
 
 /**
- * THE SESSION'S LOOT RULE (`GameState.lootMode`, multiplayer plan §4.3).
+ * THE SESSION'S LOOT RULE (`GameState.lootMode`).
  *
  * Two answers and deliberately no third. A "need before greed" roll — the
  * third answer every MMO eventually grows — needs a modal, a timer, and a
  * quorum, all of which stop a fight the whole party is standing in; that is a
- * trade window's problem (phase 5) rather than a floor drop's.
+ * trade window's problem rather than a floor drop's.
  */
 export type LootMode = "free" | "allocated";
 
 /**
  * THE MARK A RUN CARRIES ONCE MORE THAN ONE PERSON HAS PLAYED IT
- * (`GameState.party`, multiplayer plan §5.3).
+ * (`GameState.party`).
  *
  * **THE HOST IS A PLAYER, SO THE HOST CAN CHEAT** — that is the accepted cost
  * of a listen server, fine for playing with friends and fatal for a ranking. So
@@ -768,9 +768,9 @@ export type LootMode = "free" | "allocated";
  * rate and a hardcore campaign, and every one of those is inflated by seven
  * other people helping without anybody having to cheat at all.
  *
- * **IT IS LATCHED, NOT PARAMETERIZED, AND THAT IS A DEPARTURE FROM THE PLAN'S
- * OWN SKETCH.** §5.3 says "seeded from `SessionParams` like every other run
- * parameter", and a parameter is the wrong shape here for three reasons. A run
+ * **IT IS LATCHED, NOT PARAMETERIZED, AND DELIBERATELY SO.** The obvious
+ * alternative — seeding it from `SessionParams` like every other run
+ * parameter — is the wrong shape here for three reasons. A run
  * is stamped by what HAPPENED to it, not by how it was opened — a host who
  * plays alone with the door open is playing solo, and a parameter set at
  * `createGame` would rank their whole session as co-op. It has three builders
@@ -786,7 +786,7 @@ export type LootMode = "free" | "allocated";
  * board a run that was played by four people.
  */
 /**
- * ONE SIDE OF AN OPEN TRADE (`src/game/trade.ts`, multiplayer plan §5.1).
+ * ONE SIDE OF AN OPEN TRADE (`src/game/trade.ts`).
  *
  * The offered item is named by BOTH its bag cell and its instance id, and the
  * pair is the anti-dupe rule: a cell alone is a cell whose contents may have

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // YOU FELL — what the LOCAL player looks at while their hero lies on the field
-// in a party that is still fighting (multiplayer plan §4.2). Not the defeat
+// in a party that is still fighting (docs/multiplayer.md). Not the defeat
 // splash: the run is not over, nobody else's game stopped, and the one choice
 // on it is WHEN to take the walk back. RESPAWN is the `respawn` run command —
 // up at the level's start at full health, the toll already paid at the fall,

@@ -2,11 +2,11 @@
 // HOSTING A SESSION — the session, the admission desk, the sockets, the router
 // mapping and the one clock that drives all four, wired together once.
 //
-// **THIS MODULE EXISTS SO THE PLAN'S §5.5 CAN BE TRUE.** It says the dedicated
-// server "is the same file" as the utility-process one, and the only way to make
-// that hold rather than merely claim it is to have one implementation with two
-// thin entries on top: `main.ts` when Electron forked this process and handed it
-// a control channel, `dedicated.ts` when a person ran it from a terminal. What
+// **THIS MODULE EXISTS SO "THE DEDICATED SERVER IS THE SAME FILE" CAN BE
+// TRUE.** The only way to make that hold rather than merely claim it is to
+// have one implementation with two thin entries on top: `main.ts` when
+// Electron forked this process and handed it a control channel,
+// `dedicated.ts` when a person ran it from a terminal. What
 // would otherwise be duplicated is precisely the part that must not be — a
 // FIXED-TIMESTEP LOOP, whose second copy drifts from the first silently and only
 // under load.
@@ -30,6 +30,7 @@
 
 import { engineVersion, type FrozenRun } from "@game/core";
 
+import { seatLocalBots, type LocalBots } from "./local-bots.ts";
 import { createPeerHub, type PeerHub } from "./net/hub.ts";
 import type { Bound, Transport } from "./net/transport.ts";
 import { createUdpTransport } from "./net/udp.ts";
@@ -52,12 +53,26 @@ export type HostOptions = {
   /**
    * Admit peers over a transport that is not Steam's — see
    * `HubOptions.allowUnlicensedTransport`. Multiplayer is licensed through
-   * Steam and nowhere else (decision 15), so the shipped game never sets this;
-   * it exists for the repo's suites and the headless soak.
+   * Steam and nowhere else (the Steam-only licence gate, `server/licence.ts`),
+   * so the shipped game never sets this; it exists for the repo's suites and
+   * the headless soak.
    */
   allowUnlicensedTransport?: boolean;
   /** Seats, host included. */
   maxClients?: number;
+  /**
+   * FILL THIS MANY SEATS WITH AUTOPILOT HEROES (`server/local-bots.ts`) — the
+   * host playing a party game without four friends online.
+   *
+   * A SESSION fact rather than a run parameter, like `maxClients` beside it:
+   * `SessionParams` describes the RUN and is compared for determinism, and how
+   * many chairs the host chose to fill says nothing about the world both ends
+   * must build. Each bot joins as an ordinary client — same admission, same
+   * seat, same rules — created here because both entries (the forked utility
+   * process and the dedicated terminal) share this module, so neither
+   * duplicates the creation logic.
+   */
+  bots?: number;
   /** A run to ADOPT rather than build — a parked run or a checkpoint. */
   adopt?: FrozenRun | null;
   /** NOBODY OWNS THIS SESSION — it is a dedicated server's, standing empty
@@ -135,7 +150,8 @@ export function createHost(options: HostOptions): Host {
 
   const hub = createPeerHub({
     session,
-    // Decision 15: multiplayer is licensed through Steam. The host passes the
+    // The Steam-only licence gate: multiplayer is licensed through Steam and
+    // nowhere else (`server/licence.ts`). The host passes the
     // escape straight through rather than deciding it, so the ONE place that
     // may switch it on is whatever built the host — the repo's own suites and
     // the headless soak, never a shipped path.
@@ -147,8 +163,8 @@ export function createHost(options: HostOptions): Host {
     },
     password: options.password,
     maxClients,
-    // §4.2's hardcore gate: the session's mode is a session parameter, and the
-    // hub is the one door that enforces it.
+    // The hardcore admission gate: the session's mode is a session parameter,
+    // and the hub is the one door that enforces it.
     hardcore: options.params.hardcore === true,
     secret,
     now,
@@ -161,7 +177,32 @@ export function createHost(options: HostOptions): Host {
   let lastAdvanceMs = 0;
   let closed = false;
 
+  /** The session's own bot seats, once created. */
+  let localBots: LocalBots | null = null;
+  const botsWanted = Math.max(0, Math.floor(options.bots ?? 0));
+
+  /**
+   * Seat the requested bots, once, as soon as it is SAFE to.
+   *
+   * Not at construction: a hosted session identifies its HOST by being the
+   * first client to ask for a seat, so a bot seated before the renderer
+   * attaches would be mistaken for the host and handed the run's own hero. So
+   * the bots wait until somebody is in — `server/main.ts` attaches the host's
+   * client before it calls `start()`, and every pump retries until then. An
+   * ownerless (dedicated) session has no host to wait for and seats them at
+   * once; `--bots N` is what keeps its field alive with nobody connected.
+   */
+  function ensureBots(): void {
+    if (localBots !== null || botsWanted === 0 || closed) return;
+    if (!options.ownerless && session.clientCount === 0) return;
+    localBots = seatLocalBots(session, botsWanted, {
+      now,
+      log: options.log,
+    });
+  }
+
   function pump(): void {
+    ensureBots();
     const at = now();
     const elapsed = at - lastAdvanceMs;
     // Whole ticks only — the remainder is left on the clock and paid next
@@ -169,6 +210,9 @@ export function createHost(options: HostOptions): Host {
     const ran = session.advance(elapsed);
     lastAdvanceMs += ran * TICK_MS;
     hub.tick();
+    // The bots decide AFTER the session has advanced and published, so each
+    // reads the freshest snapshot — the session's own cadence is theirs.
+    localBots?.tick();
     mapper?.renew(Date.now());
     // A very long stall (a suspended laptop, a host that was swapped out)
     // would otherwise leave a debt the session refuses to pay in one go and
@@ -206,6 +250,11 @@ export function createHost(options: HostOptions): Host {
 
     start() {
       if (timer) clearInterval(timer);
+      // The host's own client is attached by now in every shipped flow
+      // (`server/main.ts` seats it before starting the clock), so this is
+      // where a hosted session's bots come in; pump retries for any caller
+      // that starts the clock first.
+      ensureBots();
       lastAdvanceMs = now();
       timer = setInterval(pump, TICK_MS);
     },
@@ -217,6 +266,8 @@ export function createHost(options: HostOptions): Host {
       closed = true;
       if (timer) clearInterval(timer);
       timer = null;
+      localBots?.close();
+      localBots = null;
       session.close(reason);
       hub.close();
       bound = null;
