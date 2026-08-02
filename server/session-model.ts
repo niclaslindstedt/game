@@ -256,6 +256,8 @@ export type Session = {
     name?: string,
   ): void;
   removeClient(id: number): void;
+  /** Broadcast an operator-authored system line to every connected client. */
+  announce(message: string): void;
   /** One decoded frame from a client. */
   receive(id: number, type: number, seq: number, payload: unknown): void;
   /** How many of the seated clients are the session's own BOTS. The hub reads

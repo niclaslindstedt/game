@@ -72,6 +72,22 @@ npm run server:start -- --port 27015       # …on a chosen port
 npm run server:start -- server.config.json # …from a config file
 ```
 
+The desktop executable exposes the same entry without opening a window:
+
+```sh
+./Ada\'s\ Trail --dedicated --bots 3 --verbose
+```
+
+`--bots` accepts 1–8. With 1–7, bots join after the first human player and
+yield their seats to later human arrivals. With 8, the autonomous party starts
+immediately. `--verbose` prints a detailed status line every second.
+Game starts, player joins/deaths/quits, level finishes, and campaign finishes
+are always printed, with or without `--verbose`.
+
+The first Ctrl-C broadcasts a one-minute shutdown warning, repeats it at 15
+seconds and counts down from 10 so players can say goodbye. A second Ctrl-C
+exits immediately.
+
 Every flag has a config-file twin; see `server.config.example.json` and
 `DedicatedConfig` for the full list. Flags win over the file.
 

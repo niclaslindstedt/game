@@ -864,7 +864,23 @@ second copy would drift from the first silently and only under load.
 ```sh
 npm run server:start -- --port 27015 --level moon --difficulty medium
 npm run server:start -- server.config.json
+./Ada\'s\ Trail --dedicated --bots 3 --verbose
 ```
+
+The Electron executable's `--dedicated` mode enters that same server entry
+without initializing Steam or opening a window. `--bots` accepts 1–8. Counts
+below 8 fill the party only after the first human has joined, preserving seat 0
+for them; bot seats yield to later human arrivals. Eight bots start immediately
+for an autonomous soak or demo. `--verbose` prints detailed status once a
+second (`--debug` is reserved by Electron itself).
+
+The terminal always reports lifecycle edges: game start, player joins, deaths
+and quits, level completion, and campaign completion. `--verbose` adds periodic
+telemetry; it is not required for those events.
+
+Ctrl-C begins a one-minute graceful shutdown announced to chat, with another
+warning at 15 seconds and a 10-to-1 countdown. A second Ctrl-C exits
+immediately; SIGTERM remains immediate for service-manager shutdowns.
 
 **Nobody owns it, and three rules follow** (`SessionOptions.ownerless`). Seat 0
 starts DEPARTED so the first arrival is seated into it with their own loadout;
