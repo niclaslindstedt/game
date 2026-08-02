@@ -122,6 +122,19 @@ describe("the UDP transport", () => {
     expect(splitKey(server.packets[0]!.from)?.port).toBe(client.bound!.port);
   });
 
+  it("carries a live-snapshot-sized payload across macOS UDP limits", async () => {
+    const server = await bind(FIRST);
+    const client = await bind(FIRST + 1);
+    const payload = Uint8Array.from({ length: 16_500 }, (_, index) => index);
+    client.transport.send(
+      keyFor("127.0.0.1", server.bound!.port),
+      payload,
+      "unreliable",
+    );
+    expect(await until(() => server.packets.length > 0)).toBe(true);
+    expect(server.packets[0]!.data).toEqual(payload);
+  });
+
   it("does not throw when sending to a peer that is gone", async () => {
     // An ICMP port-unreachable surfaces as a send error, and a throw on the
     // session's own tick would let any client take the host down by closing
