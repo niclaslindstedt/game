@@ -35,6 +35,7 @@ const REPO_DIR = resolve(APP_DIR, "..");
 const WEBSITE_DIR = join(REPO_DIR, "pwa");
 const DIST_DIR = join(WEBSITE_DIR, "dist");
 const OUT_DIR = join(APP_DIR, "webroot");
+const NPM_COMMAND = process.platform === "win32" ? "npm.cmd" : "npm";
 
 const skipBuild = process.argv.includes("--skip-build");
 
@@ -51,7 +52,7 @@ if (!skipBuild) {
       `developer tooling ${devTools ? "on" : "OFF"}…`,
   );
   // Run from the repo root so the workspace + engine build resolve.
-  execFileSync("npm", ["run", "build", "--workspace", "pwa"], {
+  execFileSync(NPM_COMMAND, ["run", "build", "--workspace", "pwa"], {
     cwd: REPO_DIR,
     stdio: "inherit",
     env: { ...process.env, VITE_DEV_TOOLS: devTools ? "on" : "off" },
