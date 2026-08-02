@@ -1,7 +1,7 @@
 // Recipe generator for BOOT HILL town buildings. Emits one self-describing
 // sprite YAML per building into content/sprites/boot_hill/. Deterministic
 // (no RNG): the grids only change when this recipe does, so the atlas stays
-// diff-stable. Run: `node scripts/gen-boot_hill-buildings.mjs`.
+// diff-stable. Run: `node scripts/gen-boot-hill-buildings.mjs`.
 //
 // The boot_hill building look is an OBLIQUE structure seen from front-above: a
 // ridge highlight, a shingle/tin roof band with vertical seams, an eave shadow,

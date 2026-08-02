@@ -1,0 +1,4 @@
+interface:
+  display_name: "Store Art"
+  short_description: "Create truthful storefront key art and capsules"
+  default_prompt: "Use $store-art to create a complete, platform-ready storefront art set grounded in the shipped product."

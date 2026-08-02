@@ -183,6 +183,11 @@ function surround(enemy, count, { from = 32, to = 150, bands = 3 } = {}) {
 //                  Optional; without one the clock starts after `prepare`.
 //   captureAtMs    ms after the trigger to take the real screenshot. THIS is
 //                  the number the sweep exists to find.
+//   showAchievements
+//                  opt in to achievement recording and toasts when the
+//                  achievement itself is the subject. Store captures suppress
+//                  them by default so a deterministic scene cannot mutate the
+//                  developer's real trophy shelf or cover the action.
 //   sweepMs        the coarse schedule the sweep samples when exploring this
 //                  recipe (defaults to COARSE_MS).
 // ---------------------------------------------------------------------------
@@ -199,6 +204,7 @@ export const SHOTS = [
     level: "the_rift",
     difficulty: "nightmare",
     seed: 21,
+    interior: 0.68,
     scenario: {
       level: 90,
       stats: ENDGAME_STATS,
@@ -218,7 +224,7 @@ export const SHOTS = [
       await page.evaluate(() => window.__nuke?.());
     },
     // Swept: 0 ms is a full white-out, the ring peaks 60-130 ms, gone by 400.
-    captureAtMs: 90,
+    captureAtMs: 560,
     sweepMs: [0, 30, 60, 90, 130, 180, 240, 320, 420, 560, 720, 900],
   },
   {
@@ -231,6 +237,7 @@ export const SHOTS = [
     level: "mars",
     difficulty: "nightmare",
     seed: 33,
+    interior: 0.54,
     scenario: {
       level: 88,
       stats: ENDGAME_STATS,
@@ -254,6 +261,7 @@ export const SHOTS = [
     level: "the_rift",
     difficulty: "nightmare",
     seed: 7,
+    interior: 0.76,
     scenario: {
       level: 92,
       stats: ENDGAME_STATS,
@@ -277,6 +285,7 @@ export const SHOTS = [
     level: "the_rift",
     difficulty: "nightmare",
     seed: 12,
+    interior: 0.43,
     scenario: {
       level: 90,
       stats: ENDGAME_STATS,
@@ -321,6 +330,7 @@ export const SHOTS = [
     level: "boot_hill",
     difficulty: "nightmare",
     seed: 44,
+    interior: 0.62,
     scenario: {
       level: 90,
       stats: ENDGAME_STATS,
@@ -345,18 +355,19 @@ export const SHOTS = [
  */
 export async function stageRun(page, shot, url) {
   const scenario = encodeURIComponent(
-    JSON.stringify({ ...DISPLAY_CASE, ...shot.scenario }),
+    JSON.stringify({ ...DISPLAY_CASE, clearDrops: true }),
   );
   await page.goto(
     `${url}/?debug&bot=off&level=${shot.level}&difficulty=${shot.difficulty}` +
-      `&seed=${shot.seed}&scenario=${scenario}`,
+      `&seed=${shot.seed}&scenario=${scenario}` +
+      (shot.showAchievements ? "" : "&noachievements"),
   );
 
   // Make a hero first (the warp picker still needs one to run as).
   await page
-    .getByRole("button", { name: "new-game" })
+    .getByRole("button", { name: "main-new-game" })
     .waitFor({ timeout: 20000 });
-  await page.getByRole("button", { name: "new-game" }).click();
+  await page.getByRole("button", { name: "main-new-game" }).click();
   await page.getByRole("textbox", { name: "character-name" }).fill("ADA");
   await page.getByRole("button", { name: "character-create" }).click();
 
@@ -365,20 +376,89 @@ export async function stageRun(page, shot, url) {
   // fresh hero — the normal rows render LOCKED and a click on one does nothing,
   // so the run never starts and every shot times out. Warp mode opens every
   // rung and every mission and skips the intro.
-  await page.getByRole("button", { name: "menu-back" }).first().click();
-  await page.getByRole("button", { name: "settings" }).click();
+  await page.getByRole("button", { name: "difficulty-back" }).click();
+  await page.getByRole("button", { name: "main-settings" }).click();
   await page.getByRole("button", { name: "settings-developer" }).click();
   await page.getByRole("button", { name: "developer-select-level" }).click();
   await page
     .getByRole("button", { name: `difficulty-${shot.difficulty}` })
     .click();
-  await page.getByRole("button", { name: `level-${shot.level}` }).click();
+  await page.getByRole("button", { name: `levels-${shot.level}` }).click();
 
   await page.waitForFunction(() => window.__game?.phase === "playing", {
     timeout: 30000,
   });
-  // Let the fog reveal and the first frame of effects settle.
+  // Let the renderer mount before moving the staged encounter away from the
+  // mission entrance. Keep the map's initial population until the interior
+  // anchor is chosen: those actors were already placed on reachable ground by
+  // the map generator, making them better anchors than a guessed coordinate.
   await page.waitForTimeout(700);
+
+  // Store shots should look like play, not six dioramas built on the spawn
+  // tile. Choose a stable position from the generated map's own enemy
+  // population, excluding both the entrance and the merchant. Those actors
+  // already stand on reachable interior ground. The authored path is a second
+  // choice for unusually empty maps; the boss recipe keeps `place: "boss"`.
+  // Apply the actual recipe only AFTER the move, so enemies and drops are laid
+  // around the interior position rather than around an entrance encounter.
+  const place =
+    shot.scenario.place ??
+    (await page.evaluate((fraction) => {
+      const state = window.__game;
+      const start = state?.players?.[0]?.pos;
+      const merchant = state?.merchant?.pos;
+      const farEnough = Math.max(
+        180,
+        Math.min(state?.level?.width ?? 900, state?.level?.height ?? 900) * 0.2,
+      );
+      const candidates = (state?.enemies ?? [])
+        .map((enemy) => enemy.pos)
+        .filter((pos) => {
+          const fromStart = Math.hypot(
+            pos.x - (start?.x ?? 0),
+            pos.y - (start?.y ?? 0),
+          );
+          const fromMerchant = Math.hypot(
+            pos.x - (merchant?.x ?? -10_000),
+            pos.y - (merchant?.y ?? -10_000),
+          );
+          return fromStart >= farEnough && fromMerchant >= 180;
+        })
+        .sort((a, b) => a.x - b.x || a.y - b.y);
+      if (candidates.length) {
+        const at = Math.min(
+          candidates.length - 1,
+          Math.max(0, Math.round((candidates.length - 1) * fraction)),
+        );
+        return candidates[at];
+      }
+      const path = state?.carvedLevel?.path ?? [];
+      if (path.length) {
+        const at = Math.min(
+          path.length - 1,
+          Math.max(0, Math.round((path.length - 1) * fraction)),
+        );
+        return path[at];
+      }
+      return {
+        x: (state?.level?.width ?? 0) * (0.35 + fraction * 0.3),
+        y: (state?.level?.height ?? 0) * (0.65 - fraction * 0.3),
+      };
+    }, shot.interior ?? 0.5));
+  await page.evaluate(
+    ({ spec, destination }) => {
+      window.__scenario?.({
+        ...spec,
+        clearEnemies: true,
+        clearDrops: true,
+        place: destination,
+      });
+    },
+    {
+      spec: { ...DISPLAY_CASE, ...shot.scenario },
+      destination: place,
+    },
+  );
 
   // `?debug` is how the harness reaches `window.__game` to know the run is
   // live — but it also forces the FPS meter on, and a frame-rate counter in a
@@ -388,4 +468,7 @@ export async function stageRun(page, shot, url) {
   });
 
   if (shot.prepare) await shot.prepare(page);
+  // One render beat lets the camera adopt the new interior anchor. Kept short
+  // so the live combat composition still starts at the recipe's chosen clock.
+  await page.waitForTimeout(100);
 }

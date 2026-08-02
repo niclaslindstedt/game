@@ -409,6 +409,14 @@ export function GameScreen({
       getSettings().debug === "on" ||
       new URLSearchParams(window.location.search).has("debug"),
   );
+  // Store-shot recipes build real runs, so they need a narrower switch than
+  // DEMO: keep gameplay and the shipped HUD intact while preventing staged
+  // kills and pickups from mutating the account-wide shelf or covering the
+  // frame with a toast. Developer tooling owns the query, so release builds
+  // ignore it completely.
+  const suppressAchievements =
+    __DEV_TOOLS__ &&
+    new URLSearchParams(window.location.search).has("noachievements");
   const fpsRef = useRef<HTMLDivElement | null>(null);
   // Landscape (the reference orientation) splits the bottom docks across BOTH
   // corners — the powerup (+ spell) buttons in the player's chosen corner, the
@@ -652,7 +660,7 @@ export function GameScreen({
     // player is watching, not playing, so the bot must bank no achievements and
     // inflate no lifetime totals — and a SPECTATOR is the same case for the
     // same reason, one machine further away.
-    if (!session.resumed && !demo && !spectatorRun)
+    if (!session.resumed && !demo && !spectatorRun && !suppressAchievements)
       celebrateAchievements(recordRunStarted(runLevelId));
 
     // The per-run scratch shared between simulate and render (effects, the
@@ -764,7 +772,9 @@ export function GameScreen({
     // Never in the DEMO: pausing there raises the exit confirm, which owns the
     // frozen screen from the top of the stack — there is no shelf to be had
     // under it, and the attract loop is nobody's trophy run anyway.
-    bindAchievements(demo ? null : { state, pause, resume: resumeRun });
+    bindAchievements(
+      demo || suppressAchievements ? null : { state, pause, resume: resumeRun },
+    );
 
     const controls = createControls({
       canvas,
@@ -799,7 +809,7 @@ export function GameScreen({
       // joiner is a player (a party kill counts for everyone
       // present), so their ledger books — the boards stay honest through the
       // run's own PartyStamp, not by suppressing the ledger.
-      transient: demo || spectatorRun,
+      transient: demo || spectatorRun || suppressAchievements,
       difficulty,
       celebrateAchievements,
     });
@@ -1231,6 +1241,7 @@ export function GameScreen({
     skipOpening,
     botView,
     demo,
+    suppressAchievements,
     showFps,
     // The rest are STABLE (refs, memoized bundles, setState functions).
     achievementsOpenRef,
