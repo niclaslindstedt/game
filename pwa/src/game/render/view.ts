@@ -5,7 +5,7 @@
 import { localHero } from "../local-seat.ts";
 import { type GameState } from "@game/menu";
 
-import { worldViewRect } from "./tilt.ts";
+import { unprojectX, unprojectY } from "./tilt.ts";
 
 /**
  * CSS pixels per world unit at the mobile-first baseline — the reference
@@ -106,14 +106,19 @@ export function computeCamera(
   viewHeight: number,
   timeMs = 0,
 ): Camera {
-  const rect = worldViewRect(viewWidth, viewHeight);
-  // Where the camera point has to sit for `center` to land at the middle of the
-  // screen: the visible world box, hung so its own centre is on him.
-  const centerOn = (center: number, offset: number, view: number) =>
-    Math.round(center - view / 2 - offset);
+  // Keep the camera's WORLD point exact. The renderer quantizes it after
+  // projection (`cameraAnchor*`), where a whole screen pixel is actually a
+  // whole pixel. Rounding here instead makes a tilted camera move in whole
+  // WORLD units; those project to fractional screen steps, so the hero rocks
+  // above and below centre as their fractional position crosses each boundary.
+  // Derive the offset from the actual canvas centre, not the conservative
+  // axis-aligned culling box returned by `worldViewRect`: its ceil-rounded
+  // dimensions do not project back to an exact screen pixel under every yaw.
+  const offsetX = unprojectX(viewWidth / 2, viewHeight / 2);
+  const offsetY = unprojectY(viewWidth / 2, viewHeight / 2);
   const camera = {
-    x: centerOn(localHero(state).pos.x, rect.x, rect.width),
-    y: centerOn(localHero(state).pos.y, rect.y, rect.height),
+    x: localHero(state).pos.x - offsetX,
+    y: localHero(state).pos.y - offsetY,
   };
   // Only the drawing pass passes a clock — the simulate pass's view rect
   // (enemy targeting) stays rock steady through the quake.

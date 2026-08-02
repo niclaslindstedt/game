@@ -18,6 +18,8 @@ import { fogGridAnchor } from "../pwa/src/game/render/fog.ts";
 import { drawFloorDecal } from "../pwa/src/game/render/plane.ts";
 import {
   beginBillboard,
+  bodyAnchorX,
+  bodyAnchorY,
   cameraAnchorX,
   cameraAnchorY,
   canvasToWorld,
@@ -598,10 +600,33 @@ describe("the camera under the projection", () => {
         state.players[0].pos.y = y;
         const camera = computeCamera(state, 844, 390);
         const at = worldToCanvas(x, y, camera);
-        // Within a pixel of dead centre — the camera rounds to whole world units.
-        expect(Math.abs(at.x - 422)).toBeLessThanOrEqual(1.5);
-        expect(Math.abs(at.y - 195)).toBeLessThanOrEqual(1.5);
+        expect(at.x).toBeCloseTo(422, 8);
+        expect(at.y).toBeCloseTo(195, 8);
       }
+    },
+  );
+
+  it.each(PROJECTIONS)(
+    "keeps the walking hero fixed on one screen pixel — $name",
+    (p) => {
+      setWorldProjection(p);
+      const state = startGame();
+      const hero = state.players[0];
+      const anchors = [];
+      // Fractional movement is the important case: the simulation advances by
+      // less than one world unit per rendered frame. Quantizing the camera in
+      // world space turned those crossings into uneven projected Y steps.
+      for (let step = 0; step < 80; step++) {
+        hero.pos.x = 300.125 + step * 0.37;
+        hero.pos.y = 400.375 + step * 0.29;
+        const camera = computeCamera(state, 844, 390);
+        anchors.push({
+          x: bodyAnchorX(hero.pos.x, hero.pos.y, camera.x, camera.y),
+          y: bodyAnchorY(hero.pos.x, hero.pos.y, camera.x, camera.y),
+        });
+      }
+      expect(new Set(anchors.map(({ x }) => x))).toEqual(new Set([422]));
+      expect(new Set(anchors.map(({ y }) => y))).toEqual(new Set([195]));
     },
   );
 });
