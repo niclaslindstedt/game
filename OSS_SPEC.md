@@ -1082,7 +1082,9 @@ Achieved through:
 
 Two workflows guard the SEO surfaces, separate from the unit-test
 pipeline (§10). Both are required (§19) alongside `pages.yml` for any
-spec-conforming project.
+spec-conforming project. The deterministic `seo` workflow gates pull
+requests; the measured `lighthouse` workflow is a scheduled audit that can
+also be dispatched manually.
 
 **`seo` — structural assertions.** A Node/TypeScript script
 (`website/scripts/check-seo.{ts,mjs}`) walks every HTML file under
@@ -1111,9 +1113,12 @@ workflow runs on push to the default branch and on every PR.
 `.github/workflows/seo.yml` wires the script into CI.
 
 **`lighthouse` — real-device measured signals.**
-`.github/workflows/lighthouse.yml` runs `lhci autorun` against a
-static serve of `dist/` for the homepage plus one representative URL
-per content type. Thresholds in
+`.github/workflows/lighthouse.yml` runs `lhci autorun` weekly and on manual
+dispatch against a static serve of `dist/` for the homepage plus one
+representative URL per content type. Keeping it off the pull-request path
+avoids making shared-runner timing noise part of delivery latency; structural
+SEO and the critical-path byte budget remain deterministic PR gates in
+`seo.yml`. Thresholds in
 `.github/lighthouse/lighthouserc.json`:
 
 | Category / metric | Threshold |
@@ -1126,10 +1131,11 @@ per content type. Thresholds in
 | CLS               | < 0.1     |
 | TBT               | < 300 ms  |
 
-New projects start every assertion on `warn` and ratchet specific
-ones to `error` once a baseline of three or more clean runs on the
-default branch exists. Reports upload to `temporary-public-storage`
-so every run produces a public report URL.
+Measured performance, accessibility, and best-practice assertions remain
+`warn`: one shared-runner sample is useful for finding trends, not for deciding
+whether a change may merge. Deterministic assertions already covered by the
+structural workflow may be `error`. Reports upload to
+`temporary-public-storage` so every run produces a public report URL.
 
 The deterministic conformance check (§19) verifies that both
 `seo.yml` and `lighthouse.yml` exist, that `llms.txt` is generated,
@@ -1310,11 +1316,11 @@ correctly the manifest is configured.
 
 #### 11.4.7 Lighthouse PWA score in CI
 
-The §11.3.10 Lighthouse workflow must include the `pwa` category for
-projects that opt into PWA. The `lighthouserc.json` config asserts
-`categories:pwa` at `minScore: 0.9` so installability regressions
-fail CI. The same workflow already gates SEO and performance; adding
-the PWA category is a one-line config change.
+When the installed Lighthouse version exposes a `pwa` category, the §11.3.10
+Lighthouse workflow must include it for projects that opt into PWA. The
+`lighthouserc.json` config asserts `categories:pwa` at `minScore: 0.9` so the
+scheduled audit reports installability regressions. While the category is not
+available, deterministic manifest and PWA-shape checks guard installability.
 
 #### 11.4.8 Disjoint scopes for preview deployments (recommended)
 

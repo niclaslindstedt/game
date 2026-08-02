@@ -3,7 +3,7 @@
 build:
 	npm run build
 
-# `make test ARGS="--shard=1/2"` forwards to vitest — how CI splits the suite
+# `make test ARGS="--shard=1/3"` forwards to vitest — how CI splits the suite
 # across parallel jobs without anyone having to bypass the pretest rebuild.
 test:
 	npm test -- $(ARGS)

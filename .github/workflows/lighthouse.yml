@@ -1,15 +1,14 @@
 name: lighthouse
 
-# §11.3.10 — measured Lighthouse runs against the built app, with thresholds
-# enforced via `.github/lighthouse/lighthouserc.json`. Catches the Core Web
-# Vitals regressions (LCP, CLS, TBT) that the static `check-seo` workflow
-# can't see.
+# §11.3.10 — scheduled measured Lighthouse audit against the built app, with
+# thresholds enforced via `.github/lighthouse/lighthouserc.json`. The measured
+# signals are advisory because shared-runner variance makes them unsuitable as
+# PR gates; deterministic SEO and bundle-budget failures remain in `seo.yml`.
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
 
 env:
   GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
