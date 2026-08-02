@@ -173,6 +173,17 @@ model before assuming old selectors still work. Screen-qualified names such as
 ambiguous labels; a timed scene recipe can remain correct while its navigation
 seam drifts.
 
+For a local storefront mock, calibrate layout against recent captures of the
+real store at the same viewport: global navigation, content-rail width, media
+ratio, thumbnail rail, action strip, purchase box, main/sidebar proportions,
+feature rows, mature-content treatment, and requirements tabs all change over
+time. Mirror the platform's information hierarchy, but never fabricate its
+dynamic social or commercial data. Reviews, curator quotes, broadcasts,
+discounts, awards, events, language support, release status, and compatibility
+verdicts remain explicit pending states until a real portal or shipped build
+can supply them. Keep an unmistakable internal-preview label, and never upload
+the store-like mock itself as an About image.
+
 ## Describe every artwork
 
 Create a Markdown sidecar beside every approved image. Treat it as a semantic
