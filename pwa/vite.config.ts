@@ -70,6 +70,12 @@ const version = `v${appVersion} · ${buildRef}`;
 
 export default defineConfig({
   base,
+  build: {
+    // The simulation is deliberately a lazy, run-only chunk. Its minified
+    // size sits above Vite's generic 500 kB warning while the separately
+    // enforced gzipped startup path remains within the SEO budget.
+    chunkSizeWarningLimit: 700,
+  },
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
     __BUILD_COMMIT__: JSON.stringify(commit),
