@@ -138,19 +138,42 @@ if (iosSubmit.appleId || easHasKey) {
   );
 }
 
-// The bundle id is defined once in app.config.js; fastlane repeats it, and a
-// drift means deliver would upload this listing onto a different app.
+// The bundle id is defined once in app.config.js; fastlane repeats it and so
+// does the desktop packager, and a drift means deliver would upload this
+// listing onto a different app — or, on the desktop side, sign and notarize a
+// build under an id no store record holds. Both repeats are checked here
+// rather than derived, because neither file can import the other: the Appfile
+// is Ruby and electron-builder's config lives in a separate dependency tree.
 const appConfig = readFileSync(path.join(native, "app.config.js"), "utf8");
 const appfile = readFileSync(path.join(native, "fastlane", "Appfile"), "utf8");
+const builderConfig = readFileSync(
+  path.join(root, "electron", "electron-builder.config.cjs"),
+  "utf8",
+);
 const configBundle = /BUNDLE_ID = "([^"]+)"/.exec(appConfig)?.[1];
 const fastlaneBundle = /app_identifier\("([^"]+)"\)/.exec(appfile)?.[1];
-if (configBundle && configBundle === fastlaneBundle) {
-  ok(`bundle id ${configBundle} (app.config.js = fastlane/Appfile)`);
+const desktopBundle = /BUNDLE_ID = "([^"]+)"/.exec(builderConfig)?.[1];
+if (
+  configBundle &&
+  configBundle === fastlaneBundle &&
+  configBundle === desktopBundle
+) {
+  ok(
+    `bundle id ${configBundle} ` +
+      `(app.config.js = fastlane/Appfile = electron-builder.config.cjs)`,
+  );
 } else {
+  const drifted = [
+    fastlaneBundle === configBundle
+      ? null
+      : `fastlane/Appfile has ${fastlaneBundle}`,
+    desktopBundle === configBundle
+      ? null
+      : `electron-builder.config.cjs has ${desktopBundle}`,
+  ].filter(Boolean);
   fail(
-    `bundle id drift: app.config.js has ${configBundle}, ` +
-      `fastlane/Appfile has ${fastlaneBundle}`,
-    "app.config.js is the source of truth — fix the Appfile.",
+    `bundle id drift: app.config.js has ${configBundle}, ${drifted.join("; ")}`,
+    "app.config.js is the source of truth — fix the others to match.",
   );
 }
 

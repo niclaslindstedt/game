@@ -40,8 +40,14 @@ const MOD_TOOLCHAIN_DEPS = Object.keys(
   to: `modtools/node_modules/${pkg}`,
 }));
 
-/** Shared with native/app.config.js — one identity across every store. */
-const BUNDLE_ID = "se.niclaslindstedt.goneinspace";
+/**
+ * Shared with native/app.config.js — one identity across every store, which
+ * `make store-preflight` now pins so a rename cannot update one shell and miss
+ * the other (it did once: the game became Ada's Trail and this line stayed
+ * behind, which would have signed the macOS build under an id no store record
+ * holds).
+ */
+const BUNDLE_ID = "se.niclaslindstedt.adastrail";
 
 /**
  * The Steam redistributable that each platform's binding needs beside the
