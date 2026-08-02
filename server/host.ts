@@ -188,13 +188,15 @@ export function createHost(options: HostOptions): Host {
    * first client to ask for a seat, so a bot seated before the renderer
    * attaches would be mistaken for the host and handed the run's own hero. So
    * the bots wait until somebody is in — `server/main.ts` attaches the host's
-   * client before it calls `start()`, and every pump retries until then. An
-   * ownerless (dedicated) session has no host to wait for and seats them at
-   * once; `--bots N` is what keeps its field alive with nobody connected.
+   * client before it calls `start()`, and every pump retries until then. A
+   * dedicated session follows the same rule unless every chair is explicitly
+   * botted: the first human claims seat 0, then `--bots N` fills the chairs
+   * beside them; `--bots 8` is the intentional headless soak/demo case.
    */
   function ensureBots(): void {
     if (localBots !== null || botsWanted === 0 || closed) return;
-    if (!options.ownerless && session.clientCount === 0) return;
+    const allBotDedicated = options.ownerless && botsWanted === MAX_CLIENTS;
+    if (session.clientCount === 0 && !allBotDedicated) return;
     localBots = seatLocalBots(session, botsWanted, {
       now,
       log: options.log,

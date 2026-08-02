@@ -22,6 +22,7 @@
 // Node, and pinned to our own origin (see `createWindow`).
 
 import { app, BrowserWindow, ipcMain, protocol, screen, shell } from "electron";
+import { pathToFileURL } from "node:url";
 
 import {
   createAchievementsBridge,
@@ -63,6 +64,7 @@ import {
   STEAM_ENABLED,
 } from "./config";
 import { SHELL_CHANNEL } from "./channels";
+import { dedicatedArgs } from "./dedicated-mode";
 import { readInvite, type Invite } from "./net-invite";
 import { output } from "./output";
 import { steamClient } from "./steam";
@@ -74,6 +76,29 @@ import {
   saveWindowState,
   type WindowState,
 } from "./window-state";
+import { serverEntryPath } from "./resources";
+
+/** `--dedicated` turns this executable into the already-shipped Node session
+ * server: no Steam handshake, no Chromium readiness, and no window. The server
+ * entry deliberately starts its terminal wrapper when it has no parent port.
+ */
+const dedicated = dedicatedArgs(process.argv);
+if (dedicated) {
+  // Electron is still an app bundle on macOS even when it creates no window.
+  // Mark this process as a background utility before readiness, or merely
+  // starting a terminal server puts a distracting icon in the Dock.
+  if (process.platform === "darwin") {
+    app.setActivationPolicy("prohibited");
+    app.dock?.hide();
+  }
+  const entry = serverEntryPath();
+  // Give the imported Node entry the argv shape it receives when run directly.
+  process.argv = [process.execPath, entry, ...dedicated];
+  void import(pathToFileURL(entry).href).catch((err: unknown) => {
+    output.error(`dedicated server failed — ${describe(err)}`);
+    process.exitCode = 1;
+  });
+}
 
 /** One parsed message off the shell channel. The `__gis*` flag says which
  * bridge it belongs to; that bridge's own request type describes the rest of
@@ -93,7 +118,7 @@ type BridgeMessage = {
 // Before ready — see the header for why each of these cannot wait.
 // ---------------------------------------------------------------------------
 
-if (STEAM_ENABLED) {
+if (!dedicated && STEAM_ENABLED) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const steamworks = require("steamworks.js") as {
@@ -118,22 +143,23 @@ if (STEAM_ENABLED) {
   }
 }
 
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: APP_SCHEME,
-    privileges: {
-      standard: true, // a real origin, so localStorage/IndexedDB persist
-      secure: true, // counts as a secure context (service workers, crypto)
-      supportFetchAPI: true,
-      corsEnabled: true,
-      stream: true, // range requests, so media can seek
+if (!dedicated)
+  protocol.registerSchemesAsPrivileged([
+    {
+      scheme: APP_SCHEME,
+      privileges: {
+        standard: true, // a real origin, so localStorage/IndexedDB persist
+        secure: true, // counts as a secure context (service workers, crypto)
+        supportFetchAPI: true,
+        corsEnabled: true,
+        stream: true, // range requests, so media can seek
+      },
     },
-  },
-]);
+  ]);
 
 // A second copy of the game would fight the first over the same save files and
 // the same Steam session. Hand the argument to the running instance instead.
-if (!app.requestSingleInstanceLock()) {
+if (!dedicated && !app.requestSingleInstanceLock()) {
   output.info("another copy is already running — focusing it");
   app.quit();
 }
@@ -370,6 +396,7 @@ app.on("second-instance", (_event, argv) => {
 });
 
 void app.whenReady().then(() => {
+  if (dedicated) return;
   if (!REMOTE_GAME_URL) {
     if (!webrootExists()) {
       output.error(
@@ -408,6 +435,7 @@ void app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  if (dedicated) return;
   // The platform convention, which players expect from an installed app:
   // macOS keeps the process alive until Cmd+Q, everywhere else closing the
   // window is quitting the game.
@@ -415,6 +443,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => {
+  if (dedicated) return;
   cloud?.stop();
   cloud = null;
   // A session server outliving the window it was forked for is an orphan

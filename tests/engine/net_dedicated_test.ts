@@ -61,6 +61,8 @@ describe("the dedicated server's command line", () => {
       "--players=4",
       "--seed=7",
       "--map-size=large",
+      "--bots=3",
+      "--verbose",
     ]);
     expect(overrides).toEqual({
       level: "moon",
@@ -69,7 +71,16 @@ describe("the dedicated server's command line", () => {
       maxPlayers: 4,
       seed: 7,
       generatedMapSize: "large",
+      bots: 3,
+      verbose: true,
     });
+  });
+
+  it("bounds bot players to the eight available seats", () => {
+    expect(parseArgs(["--bots=8"]).overrides.bots).toBe(8);
+    expect(() => parseArgs(["--bots=0"])).toThrow("integer from 1 to 8");
+    expect(() => parseArgs(["--bots=9"])).toThrow("integer from 1 to 8");
+    expect(() => parseArgs(["--bots=nope"])).toThrow("integer from 1 to 8");
   });
 
   it("treats a missing config file as no config, and a broken one as an error", () => {

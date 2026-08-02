@@ -44,6 +44,7 @@ import {
   createRunFromParams,
   departHero,
   extractLoadout,
+  LEVEL_ORDER,
   nextFreeSeat,
   releaseSeat,
   resumeHero,
@@ -404,6 +405,14 @@ export function createSession(options: SessionOptions): Session {
   /** Reused across ticks: one slot per seat, so the per-tick input array is not
    * a fresh allocation sixty times a second. */
   const frame: GameInput[] = [];
+  let startedLevel: string | null = null;
+
+  function playerName(seat: number): string {
+    for (const client of clients.values()) {
+      if (client.recipient.seat === seat) return client.name;
+    }
+    return `PLAYER ${seat + 1}`;
+  }
 
   function stepOnce(): void {
     // ONE FRAME PER SEAT, index-aligned with `state.players` — which is exactly
@@ -417,7 +426,28 @@ export function createSession(options: SessionOptions): Session {
     }
     step(state, frame, TICK_MS);
     tick++;
-    if (state.events.length) pendingEvents.push(...state.events);
+    if (state.phase === "playing" && startedLevel !== state.level.id) {
+      startedLevel = state.level.id;
+      options.log?.(`game started — ${state.level.id}`);
+    }
+    if (state.events.length) {
+      pendingEvents.push(...state.events);
+      for (const event of state.events) {
+        if (event.type === "heroDown") {
+          options.log?.(`player died — ${playerName(event.seat)}`);
+        } else if (event.type === "playerDeath") {
+          const seat = state.players.findIndex(
+            (hero) => !hero.departed && hero.hp <= 0,
+          );
+          options.log?.(`player died — ${playerName(Math.max(0, seat))}`);
+        } else if (event.type === "victory") {
+          options.log?.(`level finished — ${state.level.id}`);
+          if (state.level.id === LEVEL_ORDER[LEVEL_ORDER.length - 1]) {
+            options.log?.(`campaign finished — ${state.difficulty}`);
+          }
+        }
+      }
+    }
     // A discrete edge is consumed by the tick it was sampled for. Left set, a
     // single tap would jump on every tick until the next input frame arrived —
     // which at 60 Hz simulation and (say) 30 Hz input is a double jump the
@@ -600,6 +630,7 @@ export function createSession(options: SessionOptions): Session {
     const client = clients.get(id);
     if (!client) return;
     clients.delete(id);
+    options.log?.(`player quit — ${client.name}`);
     // A DEPARTING PLAYER'S HERO IS NO LONGER ANYBODY'S. The seat is NOT
     // spliced out — every command and input frame in flight names a seat by
     // index, so renumbering the party would deliver somebody else's steering
@@ -834,6 +865,9 @@ export function createSession(options: SessionOptions): Session {
         sendRate: 0,
       };
       clients.set(id, client);
+      options.log?.(
+        `player joined — ${client.name}${seat === null ? " (spectating)" : ` (seat ${seat + 1})`}`,
+      );
       if (seat !== null) inputs.set(seat, { ...IDLE_INPUT });
       // A HERO SEATED MID-RUN CHANGES THE WORLD, and every other client's
       // baseline predates them. A delta would carry the new hero correctly —
@@ -877,6 +911,10 @@ export function createSession(options: SessionOptions): Session {
     },
 
     removeClient: dropClient,
+
+    announce(message) {
+      broadcastChat([chat.announce(message)]);
+    },
 
     receive(id, type, frameSeq, payload) {
       const client = clients.get(id);

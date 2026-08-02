@@ -100,6 +100,49 @@ function hostWithBots(
 }
 
 describe("a session started with bots", () => {
+  it("waits for the first human in an ownerless session", () => {
+    let clock = 0;
+    const host = createHost({
+      allowUnlicensedTransport: true,
+      params: PARAMS,
+      ownerless: true,
+      bots: 2,
+      now: () => clock,
+    });
+    running.push(host);
+
+    clock += TICK_MS;
+    host.pump();
+    expect(host.session.clientCount).toBe(0);
+    expect(host.session.botClients).toBe(0);
+
+    host.session.addClient(HOST_CLIENT, () => {}, true, "ZOE");
+    clock += TICK_MS;
+    host.pump();
+    expect(host.session.roster().map((entry) => entry.name)).toEqual([
+      "ZOE",
+      "BOT 2",
+      "BOT 3",
+    ]);
+  });
+
+  it("starts an eight-bot ownerless session immediately", () => {
+    let clock = 0;
+    const host = createHost({
+      allowUnlicensedTransport: true,
+      params: PARAMS,
+      ownerless: true,
+      bots: 8,
+      now: () => clock,
+    });
+    running.push(host);
+    clock += TICK_MS;
+    host.pump();
+    expect(host.session.clientCount).toBe(8);
+    expect(host.session.botClients).toBe(8);
+    expect(host.session.roster()[0]?.name).toBe("BOT 1");
+  });
+
   it("seats bot heroes that hold Player.bot and actually play", () => {
     const { host, pump } = hostWithBots(2);
     pump(1);

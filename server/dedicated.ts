@@ -83,7 +83,9 @@ export type DedicatedConfig = {
   port?: number;
   /** Seats, and there is no host among them here — see `maxClients` below. */
   maxPlayers?: number;
-  /** Seats to FILL WITH AUTOPILOT HEROES (`--bots N`). A session fact rather
+  /** Seats to FILL WITH AUTOPILOT HEROES (`--bots N`, 1–8). Counts below 8
+   * join after the first human, so that player claims seat 0; 8 starts an
+   * entirely autonomous run immediately. A session fact rather
    * than a run parameter — it is passed to the host, never onto the
    * `SessionParams` (`paramsFrom` describes the RUN, and seat-filling says
    * nothing about the world every client must build). Each bot joins as an
@@ -98,6 +100,8 @@ export type DedicatedConfig = {
   generatedMapSize?: string;
   /** Seconds between status lines on the console. 0 turns them off. */
   statusEverySec?: number;
+  /** Print a detailed status line every second. */
+  verbose?: boolean;
 };
 
 /** How often the console prints a line about the running session, by default.
@@ -169,6 +173,10 @@ export function parseArgs(argv: readonly string[]): {
     }
     const eq = arg.indexOf("=");
     const name = eq < 0 ? arg.slice(2) : arg.slice(2, eq);
+    if (name === "verbose") {
+      overrides.verbose = true;
+      continue;
+    }
     const value = eq < 0 ? (argv[++i] ?? "") : arg.slice(eq + 1);
     if (name === "config") config = value;
     else if (name === "level") overrides.level = value;
@@ -177,8 +185,13 @@ export function parseArgs(argv: readonly string[]): {
     else if (name === "port") overrides.port = Number(value);
     else if (name === "seed") overrides.seed = Number(value);
     else if (name === "players") overrides.maxPlayers = Number(value);
-    else if (name === "bots") overrides.bots = Number(value);
-    else if (name === "map-size") overrides.generatedMapSize = value;
+    else if (name === "bots") {
+      const bots = Number(value);
+      if (!Number.isInteger(bots) || bots < 1 || bots > MAX_CLIENTS) {
+        throw new Error(`--bots must be an integer from 1 to ${MAX_CLIENTS}`);
+      }
+      overrides.bots = bots;
+    } else if (name === "map-size") overrides.generatedMapSize = value;
   }
   return { config, overrides };
 }
@@ -200,6 +213,14 @@ function rosterLine(roster: readonly RosterEntry[]): string {
 export async function startDedicated(
   config: DedicatedConfig,
 ): Promise<Host | null> {
+  if (
+    config.bots !== undefined &&
+    (!Number.isInteger(config.bots) ||
+      config.bots < 1 ||
+      config.bots > MAX_CLIENTS)
+  ) {
+    throw new Error(`bots must be an integer from 1 to ${MAX_CLIENTS}`);
+  }
   // A ROLLED SEED IS PRINTED. A run nobody can reproduce is a bug report
   // nobody can act on, and this is the one process where there is no title
   // screen to read it off.
@@ -325,31 +346,61 @@ export async function main(argv: readonly string[]): Promise<void> {
   }
   const open = host;
 
-  const every = config.statusEverySec ?? DEFAULT_STATUS_SEC;
+  const every = config.verbose
+    ? 1
+    : (config.statusEverySec ?? DEFAULT_STATUS_SEC);
   const ticker =
     every > 0
       ? setInterval(() => {
           status(
-            `tick ${open.session.tick} — ${open.session.state.enemies.length} foes — ` +
+            `tick ${open.session.tick} — phase ${open.session.state.phase} — ` +
+              `${open.session.clientCount} clients (${open.session.botClients} bots) — ` +
+              `${open.session.state.enemies.length} foes — ` +
               rosterLine(open.session.roster()),
           );
         }, every * 1000)
       : null;
 
   let closing = false;
-  const shutdown = (signal: string) => {
-    // A second Ctrl-C while the first is still releasing the router mapping
-    // must not start a second shutdown — and must not be ignored either, since
-    // an operator pressing it twice wants out now.
+  const finishShutdown = (signal: string) => {
+    if (ticker) clearInterval(ticker);
+    info(`${signal} — closing the session`);
+    void open.close("shutdown").then(() => process.exit(0));
+  };
+
+  const shutdownNow = (signal: string) => {
     if (closing) {
       process.exit(1);
       return;
     }
     closing = true;
-    if (ticker) clearInterval(ticker);
-    info(`${signal} — closing the session`);
-    void open.close("shutdown").then(() => process.exit(0));
+    finishShutdown(signal);
   };
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
+
+  const announceShutdown = (text: string) => {
+    const message = `SERVER SHUTDOWN IN ${text}`;
+    warn(message);
+    open.session.announce(message);
+  };
+
+  const gracefulShutdown = () => {
+    // The first Ctrl-C gives the party one minute to finish a thought and say
+    // goodbye. A second means the operator really does need the process gone.
+    if (closing) {
+      process.exit(1);
+      return;
+    }
+    closing = true;
+    announceShutdown("1 MINUTE");
+    setTimeout(() => announceShutdown("15 SECONDS"), 45_000);
+    for (let seconds = 10; seconds >= 1; seconds--) {
+      setTimeout(
+        () => announceShutdown(`${seconds} SECOND${seconds === 1 ? "" : "S"}`),
+        (60 - seconds) * 1000,
+      );
+    }
+    setTimeout(() => finishShutdown("countdown complete"), 60_000);
+  };
+  process.on("SIGINT", gracefulShutdown);
+  process.on("SIGTERM", () => shutdownNow("SIGTERM"));
 }
