@@ -5,7 +5,7 @@
 // off the street (north to the SALOON/merchant, south to the CORRAL).
 // Deterministic. Paste the output into boot_hill.yaml.
 //
-// Run: `node scripts/gen-boot_hill-town.mjs`
+// Run: `node scripts/gen-boot-hill-town.mjs`
 
 // Building footprints (must match the sprite sizes in sprites/boot_hill/).
 const B = {

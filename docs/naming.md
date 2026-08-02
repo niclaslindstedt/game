@@ -86,7 +86,7 @@ NOT fire before `_`, so `\bmosque\b` silently skips `mosque_brand` and
 prefix-aware one, then grep for `<old>_` and `_<old>` separately. Three
 neighbours of the same trap:
 
-- **A display name may also be a JavaScript identifier** (`const EASTWORLD`), so
+- **A display name may also be a JavaScript identifier** (`const BOOT_HILL`), so
   a replacement containing a space breaks the parser rather than a test.
 - **Library slugs are hyphenated** (`the-flagbearer`), so an id rename that
   writes `the_flagbearer` into a URL passes every type check and fails at

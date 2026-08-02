@@ -1,4 +1,9 @@
-# Capsule art — the generation prompts
+# Capsule art — generation starting points
+
+> The approved PNGs have been iterated beyond these starting prompts. Their
+> sibling `<asset>.md` files are the canonical scene inventories and promise
+> audits. Revisions must start from the approved raster plus those sidecars,
+> not regenerate an obsolete scene from this document.
 
 The capsules are the one store asset with no generator (`../../RELEASING.md`
 §3): they are marketing art with the logo laid out per aspect ratio, and
@@ -155,19 +160,26 @@ accept it — that is roughly how it will be seen.
 
 ## `main` — 1232 × 706
 
-The store front-page carousel. **This is the co-op shot** — the desktop build is
-the one with multiplayer, and it is what the 49 SEK buys.
+The store front-page carousel. **This is the co-op shot** — the desktop build
+supports up to eight players, while four figures keep the capsule readable and
+must not be described as the player cap.
 
 > [shared preamble]
 >
-> Composition: FOUR astronauts in mismatched white-and-grey EVA pressure suits
-> stand together on grey lunar regolith, seen from behind and slightly above,
-> facing away toward the horizon — a loose squad, not a posed line-up. Each
-> carries a different weapon: a rifle, a heavy blade, a glowing energy staff, a
-> shotgun. Their visors and chest lights glow amber and red in the dark. Ahead
-> of them a horde of small ragged silhouettes swarms out of the dark toward the
-> horizon, and beyond it a huge bleeding red moon. Bottom third is open dark
-> ground for a logo. Cinematic, wide, epic in scale but grounded and grimy.
+> Composition: FOUR of the possible EIGHT astronauts in mismatched
+> white-and-grey EVA pressure suits make a loose cooperative stand on cratered
+> lunar regolith, seen from behind and slightly above. They use the shipped
+> Surplus Carbine, Scrap Greatsword, Pulsar Rod plus the separate Storm Call
+> talent, and Blunderbuss. A varied Moon horde surrounds them: common ghosts,
+> wisps, lost cosmonauts, purple wraiths, the prospector and quarantine medic,
+> with the elite Selene Drowned in its antique brass diving helmet. The
+> Flagbearer boss lurks at the dark horizon beside its flag. Ada is a tiny,
+> unarmed figure beyond the enemy line—a narrative destination, never a party
+> member. Earth hangs above the lunar horizon; do not place another moon in the
+> sky or reflect one on the ground. Pale mint ectoplasm, compact muzzle flashes,
+> one cleave, narrow amber loot beams, and Storm Call are the only effects.
+> Bottom ground remains calm enough for the real wordmark. Cinematic and wide,
+> but grounded in the shipped roster and mechanics.
 
 ## `vertical` — 748 × 896
 
