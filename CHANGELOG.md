@@ -12,6 +12,13 @@ them into a dated section here. Do not hand-edit the released sections.
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-08-03
+
+### Fixed
+
+- **The difficulty ladder is no longer skipped** — Naming a new hero with the Enter key now opens the difficulty ladder instead
+  of starting the run straight away on the rung the cursor happened to be on.
+
 ## [1.0.1] - 2026-08-03
 
 ### Fixed
