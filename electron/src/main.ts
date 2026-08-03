@@ -78,8 +78,8 @@ import { capabilityList, resolveCapabilities } from "./capabilities";
 import { SHELL_CHANNEL } from "./channels";
 import { dedicatedArgs, serverArgs } from "./dedicated-mode";
 import { readInvite, type Invite } from "./net-invite";
-import { output } from "./output";
-import { steamClient } from "./steam";
+import { logPath, logToFile, output } from "./output";
+import { steamClient, steamOverlayWanted } from "./steam";
 import { webrootExists, webrootHandler } from "./webroot";
 import {
   loadWindowState,
@@ -90,6 +90,11 @@ import {
 } from "./window-state";
 import { serverEntryPath } from "./resources";
 
+// Before anything else can fail: give the launch somewhere to be written down.
+// `getPath` is safe before `ready`, and the lines that matter most — a native
+// binding that won't load, a GPU process that dies — happen before it.
+logToFile(app.getPath("userData"));
+
 /** What this launch may do — the package's own stamp, plus whatever the
  * command line asked for on top of it. Resolved once, before anything reads
  * it. */
@@ -98,6 +103,69 @@ const { capabilities, refusals } = resolveCapabilities(
   process.argv,
 );
 for (const refusal of refusals) output.warn(refusal);
+
+/** `--dedicated` turns this executable into the already-shipped Node session
+ * server: no Steam handshake, no Chromium readiness, and no window. Resolved
+ * here because everything below branches on it — a server has a console and no
+ * business raising dialogs. */
+const dedicated = dedicatedArgs(process.argv);
+
+/**
+ * Set once the process is on its way out, so the startup steps after the one
+ * that decided to quit don't run anyway.
+ *
+ * `app.quit()` is a REQUEST, not a return: it unwinds asynchronously, and
+ * `whenReady` still fires afterwards. Without this flag a launch that decided
+ * to hand over to another instance (or to Steam) went on to build a window for
+ * the copy that was about to disappear.
+ */
+let quitting = false;
+
+/**
+ * Fail LOUDLY.
+ *
+ * The failure mode this exists to end: the shell hits something it cannot
+ * continue past, writes a line to a console the player does not have, and
+ * exits — so the game "just doesn't launch". A dialog is the only surface a
+ * player double-clicking an icon will ever see, so anything fatal gets one,
+ * carrying the path of the log file that has the rest of the story in it.
+ * `showErrorBox` is one of the few dialogs Electron allows before `ready`,
+ * which is exactly when the early startup steps fail.
+ */
+function fatal(summary: string, err?: unknown): void {
+  const detail = err === undefined ? "" : describe(err);
+  output.error(detail ? `${summary} — ${detail}` : summary);
+  // Only the FIRST failure gets a dialog. A process on its way down tends to
+  // produce more of them (the renderer dies, then its load fails, then a
+  // pending promise rejects), and stacking modal boxes on a player who already
+  // knows the game is not starting is worse than the silence this replaces.
+  if (!dedicated && !quitting) {
+    const log = logPath();
+    try {
+      dialog.showErrorBox(
+        "The game could not start",
+        [summary, detail, log ? `Details were written to:\n${log}` : ""]
+          .filter(Boolean)
+          .join("\n\n"),
+      );
+    } catch {
+      // No GUI to show it on (a headless CI box, a broken display server) —
+      // the console line and the log file above are then the whole report.
+    }
+  }
+  process.exitCode = 1;
+  quitting = true;
+  app.quit();
+}
+
+// A throw with nobody to catch it kills the process silently in a packaged
+// build. Both of these turn that into the dialog above.
+process.on("uncaughtException", (err) =>
+  fatal("The game hit an unexpected error while starting.", err),
+);
+process.on("unhandledRejection", (reason) =>
+  fatal("The game hit an unexpected error while starting.", reason),
+);
 
 /**
  * THE ACKNOWLEDGEMENT.
@@ -139,11 +207,8 @@ const DEVELOPER_NOTICE =
 /** What the title bar says a developer build is, for as long as it is open. */
 const DEVELOPER_TITLE_SUFFIX = " — DEVELOPER BUILD (debugging only)";
 
-/** `--dedicated` turns this executable into the already-shipped Node session
- * server: no Steam handshake, no Chromium readiness, and no window. The server
- * entry deliberately starts its terminal wrapper when it has no parent port.
- */
-const dedicated = dedicatedArgs(process.argv);
+// The dedicated server's own startup. The server entry deliberately starts its
+// terminal wrapper when it has no parent port.
 if (dedicated) {
   // Electron is still an app bundle on macOS even when it creates no window.
   // Mark this process as a background utility before readiness, or merely
@@ -217,9 +282,21 @@ if (!dedicated && STEAM_ENABLED) {
       steamworks.restartAppIfNecessary(STEAM_APP_ID)
     ) {
       output.info("steam: relaunching through the Steam client…");
+      quitting = true;
       app.quit();
     }
-    steamworks.electronEnableSteamOverlay();
+    // Only where there is an overlay to draw — see `steamOverlayWanted` for
+    // what these switches actually do and what they cost a launch that has no
+    // Steam client behind it.
+    if (!quitting && steamOverlayWanted()) {
+      steamworks.electronEnableSteamOverlay();
+      output.info("steam: overlay enabled");
+    } else if (!quitting) {
+      output.info(
+        "steam: overlay not injected — Steam did not start this process " +
+          "(GIS_STEAM_OVERLAY=1 forces it)",
+      );
+    }
   } catch (err) {
     // A machine with no Steam, or a platform the prebuilt binding has no
     // binary for. Neither may stop the game from starting.
@@ -244,7 +321,11 @@ if (!dedicated)
 // A second copy of the game would fight the first over the same save files and
 // the same Steam session. Hand the argument to the running instance instead.
 if (!dedicated && !app.requestSingleInstanceLock()) {
-  output.info("another copy is already running — focusing it");
+  // A WARNING rather than a note: this is the one exit that looks exactly like
+  // the game refusing to start, and a player whose previous copy is wedged (or
+  // still shutting down) deserves to be told which of the two happened.
+  output.warn("another copy is already running — focusing it and exiting");
+  quitting = true;
   app.quit();
 }
 
@@ -457,9 +538,24 @@ function createWindow(): BrowserWindow {
     return { action: "deny" };
   });
 
+  // A page that never loads is a window that never shows (`ready-to-show` does
+  // not fire), which is the same symptom as a game that did not start at all.
+  // Only the MAIN frame's failure counts — a missing sub-resource is the
+  // page's problem, not a launch failure — and `-3` is ERR_ABORTED, which is
+  // what a navigation the shell itself redirected reports.
+  window.webContents.on(
+    "did-fail-load",
+    (_event, code, description, url, isMainFrame) => {
+      if (!isMainFrame || code === -3) return;
+      fatal(`The game's page failed to load: ${description} (${code})\n${url}`);
+    },
+  );
+
   const target = REMOTE_GAME_URL ?? `${APP_ORIGIN}/index.html`;
   output.info(`loading ${target}`);
-  void window.loadURL(target);
+  window.loadURL(target).catch((err: unknown) => {
+    fatal("The game's page could not be opened.", err);
+  });
 
   return window;
 }
@@ -553,19 +649,32 @@ function acknowledgeUnlock(): boolean {
 }
 
 void app.whenReady().then(() => {
-  if (dedicated) return;
+  if (dedicated || quitting) return;
+  try {
+    startUp();
+  } catch (err) {
+    fatal("The game failed while setting itself up.", err);
+  }
+});
+
+function startUp(): void {
   announceDeveloperBuild();
   if (!acknowledgeUnlock()) {
+    quitting = true;
     app.quit();
     return;
   }
   if (!REMOTE_GAME_URL) {
     if (!webrootExists()) {
-      output.error(
-        "no bundled website found. Run `npm run bundle` in electron/ first " +
-          "(it builds the site and copies it to electron/webroot/).",
+      // Fatal rather than logged: from an installed copy this is a broken
+      // install, and from a checkout it is a build step that was skipped —
+      // either way, silence here reads as "the game doesn't launch".
+      fatal(
+        "No bundled website was found inside the app, so there is nothing to " +
+          "show.\n\nFrom a checkout, run `npm run electron` from the repo root " +
+          "(it builds the site into electron/webroot/). From an installed " +
+          "copy, this build is incomplete — please reinstall it.",
       );
-      app.quit();
       return;
     }
     protocol.handle(APP_SCHEME, webrootHandler());
@@ -594,6 +703,33 @@ void app.whenReady().then(() => {
     // macOS: clicking the dock icon with no window open reopens one.
     if (BrowserWindow.getAllWindows().length === 0) mainWindow = createWindow();
   });
+}
+
+// A dead renderer IS the game dying — the renderer is the whole game. Reported
+// rather than left as a window that went blank (or never appeared).
+app.on("render-process-gone", (_event, _contents, details) => {
+  if (dedicated || quitting) return;
+  // `clean-exit` is what a renderer torn down on the way out reports, which is
+  // every normal quit — treating that as a crash would put an error box in
+  // front of a player who just closed the game.
+  if (details.reason === "clean-exit") return;
+  fatal(
+    `The game's renderer stopped unexpectedly (${details.reason}).\n\n` +
+      "If this happens every time, launching once with GIS_VERBOSE=1 will put " +
+      "more detail in the log.",
+  );
+});
+
+// A GPU or utility process can die without taking the window with it, so this
+// is a warning rather than a fatal — but it is the line that explains a black
+// window, and it belongs in the log either way.
+app.on("child-process-gone", (_event, details) => {
+  if (dedicated) return;
+  if (details.reason === "clean-exit") return;
+  output.warn(
+    `child process gone: ${details.type} (${details.reason})` +
+      (details.name ? ` — ${details.name}` : ""),
+  );
 });
 
 app.on("window-all-closed", () => {

@@ -65,6 +65,26 @@ npm run electron             # from the repo root
 The individual `electron:install` and `electron:bundle` commands remain
 available when only one preparation step is needed.
 
+That entry point is `scripts/run-electron.mjs` rather than a shell one-liner for
+one reason worth keeping: **an npm script may not set an environment variable
+with `VAR=value` shell syntax.** npm runs scripts through the platform's shell,
+and `cmd.exe` has no such syntax — it reports `'GIS_STEAM' is not recognized as
+an internal or external command` and the script fails before npm is reached, so
+the game cannot be started from the repo on Windows at all. Anything that needs a
+variable set goes in a Node launcher that sets it on the child;
+`tests/content/npm_scripts_portable_test.ts` keeps every manifest honest.
+
+Arguments reach the game: `npm run electron -- --multiplayer`.
+
+### When it does not start
+
+The shell writes **every launch** to `launch.log` in its user-data directory
+(`%APPDATA%\adas-trail-desktop` on Windows, `~/Library/Application
+Support/adas-trail-desktop` on macOS, `~/.config/adas-trail-desktop` on Linux),
+keeping the previous one beside it as `launch.log.prev`. A packaged game has no
+console, so that file — plus the error dialog anything fatal raises — is the
+whole diagnosis. Attach it to a bug report.
+
 Without a Steam client running, `steamworks.init()` throws and the shell
 memoizes "no client": cloud save and achievements report unavailable and the
 game plays device-locally, exactly as it does in a browser. That is the normal
@@ -72,12 +92,22 @@ way to work on the shell. `GIS_STEAM=off` skips the attempt entirely.
 
 ### Environment
 
-| Variable           | Effect                                                                    |
-| ------------------ | ------------------------------------------------------------------------- |
-| `GIS_STEAM_APP_ID` | The Steam app id. Defaults to **480** (Valve's Spacewar test app)         |
-| `GIS_STEAM=off`    | Don't talk to Steam at all                                                |
-| `GIS_GAME_URL`     | Load a remote URL instead of the bundled site (e.g. the `/preview/` slot) |
-| `GIS_VERBOSE=1`    | Keep the informational log in a packaged build                            |
+| Variable            | Effect                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `GIS_STEAM_APP_ID`  | The Steam app id. Defaults to **480** (Valve's Spacewar test app)                                            |
+| `GIS_STEAM=off`     | Don't talk to Steam at all                                                                                   |
+| `GIS_GAME_URL`      | Load a remote URL instead of the bundled site (e.g. the `/preview/` slot)                                    |
+| `GIS_VERBOSE=1`     | Keep the informational log in a packaged build                                                               |
+| `GIS_STEAM_OVERLAY` | `1` forces the Steam overlay's Chromium switches on, `0` off. Unset = on only when Steam started the process |
+
+`GIS_STEAM_OVERLAY` guards a trap rather than a preference.
+`electronEnableSteamOverlay()` does not draw anything — it appends
+`in-process-gpu` and `disable-direct-composition` to Chromium's command line.
+Where Steam did not launch the game there is no overlay to draw, and an
+in-process GPU that falls over takes the browser process with it: the game exits
+with no window and no message. So the switches are installed only when Steam
+stamped its own variables into our environment, which is exactly the launch that
+has an overlay behind it.
 
 ### Testing against Steam locally
 
@@ -85,9 +115,13 @@ Steam must be **running and signed in**. Until the real app id exists, use
 Spacewar:
 
 ```sh
-echo 480 > steam_appid.txt   # gitignored; only needed for a local run
-npm run electron
+echo 480 > steam_appid.txt        # gitignored; only needed for a local run
+GIS_STEAM=on npm run electron     # Windows: set GIS_STEAM=on && npm run electron
 ```
+
+`GIS_STEAM` has to be asked for, because the launcher defaults it to `off` —
+running the shell without a Steam client is the ordinary case, and a value
+already in the environment wins over that default.
 
 Spacewar's cloud and achievements are shared test surfaces — useful to prove the
 plumbing works end to end, useless as a test of our own achievement list, since

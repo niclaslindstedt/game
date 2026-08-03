@@ -15,6 +15,37 @@ hand — `scripts/update-versions.sh vX.Y.Z` rewrites all of them atomically.
 Dependencies are installed from the repository root (npm workspaces), not
 inside `pwa/`. Run `npm install` at the root.
 
+## The desktop game
+
+### `'GIS_STEAM' is not recognized as an internal or external command`
+
+An npm script tried to set an environment variable with `VAR=value` shell
+syntax. That is Bourne shell; `cmd.exe` reads it as the name of a program, so
+the script fails before the command it was supposed to run. Fixed for
+`npm run electron` (it goes through `scripts/run-electron.mjs`, which sets the
+variable on the child process instead) and pinned by
+`tests/content/npm_scripts_portable_test.ts` — if you hit it in another script,
+that is the bug and a shell prefix is never the fix.
+
+### The desktop game does nothing when launched
+
+Read `launch.log` in the app's user-data directory —
+`%APPDATA%\adas-trail-desktop` (Windows), `~/Library/Application
+Support/adas-trail-desktop` (macOS), `~/.config/adas-trail-desktop` (Linux). The
+shell writes every launch there, INFO included, and keeps the previous one as
+`launch.log.prev`. Anything fatal also raises an error dialog naming that file.
+
+Three lines in it answer most of these:
+
+| Line                              | What happened                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `another copy is already running` | A previous copy (possibly wedged) still holds the single-instance lock. End it in the task manager.     |
+| `no bundled website was found`    | Incomplete install, or a checkout that never ran `npm run electron` from the repo root.                 |
+| `child process gone: GPU`         | A graphics-driver problem. Launching with `GIS_STEAM_OVERLAY=0` rules out the Steam overlay's switches. |
+
+If the log ends with no error at all, launch once with `GIS_VERBOSE=1` set and
+read it again.
+
 ## The deployed game
 
 ### The site shows an old build after a deploy
