@@ -46,6 +46,11 @@ on:
         required: false
         type: boolean
         default: false
+      enable_licensed:
+        description: "Package the desktop downloads as licensed to admit players."
+        required: false
+        type: boolean
+        default: false
 
 # Default to no permissions; every job declares its own least-privilege
 # `permissions:` block (see OSS_SPEC §10.3).
@@ -195,6 +200,7 @@ jobs:
       GIS_ENABLE_MULTIPLAYER: ${{ inputs.enable_multiplayer && '1' || '0' }}
       GIS_ENABLE_MODS: ${{ inputs.enable_mods && '1' || '0' }}
       GIS_ENABLE_UPNP: ${{ inputs.enable_upnp && '1' || '0' }}
+      GIS_ENABLE_LICENSED: ${{ inputs.enable_licensed && '1' || '0' }}
       # Unsigned downloads. Signing and notarization need credentials that
       # cannot live in the repo; without this, electron-builder would try to
       # discover an identity and fail the job on a runner that has none.

@@ -157,6 +157,7 @@ jobs:
       GIS_ENABLE_MULTIPLAYER: "1"
       GIS_ENABLE_MODS: "1"
       GIS_ENABLE_UPNP: "1"
+      GIS_ENABLE_LICENSED: "1"
     steps:
       - name: Skip unselected platform
         if: inputs.platform != 'all' && inputs.platform != matrix.target

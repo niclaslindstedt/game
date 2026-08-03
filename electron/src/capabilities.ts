@@ -23,11 +23,22 @@
 // Kept free of Electron imports so the argument handling is testable without
 // launching the shell runtime — the same reason `dedicated-mode.ts` is.
 
-/** The three capabilities a package is stamped with. */
+/** The capabilities a package is stamped with. */
 export type BuildCapabilities = {
   multiplayer: boolean;
   mods: boolean;
   portMap: boolean;
+  /**
+   * Whether this copy holds the multiplayer licence.
+   *
+   * SEPARATE from `multiplayer`, and the split is the whole point: one is
+   * whether the feature is here at all, the other is whether a session it
+   * hosts may admit anybody over a transport Steam is not carrying. A build
+   * can honestly have the first without the second — that is what a download
+   * someone turned on with `--multiplayer` is — and it then hosts a session
+   * nobody may join, which is the correct answer rather than a broken one.
+   */
+  licensed: boolean;
 };
 
 /** What this LAUNCH may do: the stamped set, plus anything the command line
@@ -48,6 +59,7 @@ export const ALL_CAPABILITIES: BuildCapabilities = {
   multiplayer: true,
   mods: true,
   portMap: true,
+  licensed: true,
 };
 
 /** Nothing on. What an unstamped build is, and what a download is. */
@@ -55,6 +67,7 @@ export const NO_CAPABILITIES: BuildCapabilities = {
   multiplayer: false,
   mods: false,
   portMap: false,
+  licensed: false,
 };
 
 /**
@@ -73,6 +86,7 @@ export function readBuildCapabilities(metadata: unknown): BuildCapabilities {
     multiplayer: stamped.multiplayer === true,
     mods: stamped.mods === true,
     portMap: stamped.portMap === true,
+    licensed: stamped.licensed === true,
   };
 }
 
@@ -123,6 +137,12 @@ export function resolveCapabilities(
 
   const multiplayer = built.multiplayer || has(argv, "multiplayer");
   const mods = built.mods || has(argv, "mods");
+  // A DECLARATION rather than an unlock: `--licensed` is the person starting
+  // the game saying they hold the multiplayer licence. Nothing here can check
+  // that and nothing pretends to — what it does is put the claim on the record
+  // and let the session admit peers, which is exactly what the store build
+  // does by carrying the same word in its stamp.
+  const licensed = built.licensed || has(argv, "licensed");
 
   const portText = valueOf(argv, "port");
   const port = portText === undefined ? undefined : Number(portText);
@@ -145,6 +165,7 @@ export function resolveCapabilities(
       multiplayer,
       mods,
       portMap: built.portMap,
+      licensed,
       unlocked: (multiplayer && !built.multiplayer) || (mods && !built.mods),
       direct,
       port: openPort,

@@ -9,6 +9,7 @@ const caps = (over: Partial<Capabilities> = {}): Capabilities => ({
   multiplayer: true,
   mods: false,
   portMap: true,
+  licensed: false,
   unlocked: false,
   direct: false,
   ...over,
@@ -62,5 +63,12 @@ describe("what the session server is handed", () => {
   it("adds the router refusal, and does not let it be removed", () => {
     expect(serverArgs([], caps({ portMap: false }))).toEqual(["--no-portmap"]);
     expect(serverArgs(["--no-portmap"], caps())).toEqual([]);
+  });
+
+  it("carries the licence the shell resolved, and only that one", () => {
+    // A store build's server is licensed with nothing typed…
+    expect(serverArgs([], caps({ licensed: true }))).toEqual(["--licensed"]);
+    // …and a claim the shell did not resolve does not sneak past it.
+    expect(serverArgs(["--licensed"], caps())).toEqual([]);
   });
 });

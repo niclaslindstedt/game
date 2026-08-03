@@ -65,6 +65,7 @@ const CAPABILITIES = {
   multiplayer: enabled("MULTIPLAYER"),
   mods: enabled("MODS"),
   portMap: enabled("UPNP"),
+  licensed: enabled("LICENSED"),
 };
 
 /**

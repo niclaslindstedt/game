@@ -25,16 +25,20 @@ describe("the package stamp", () => {
   it("reads each capability off the manifest", () => {
     expect(
       readBuildCapabilities({
-        capabilities: { multiplayer: false, mods: true, portMap: false },
+        capabilities: { multiplayer: true, mods: true, licensed: true },
       }),
-    ).toEqual({ multiplayer: false, mods: true, portMap: false });
+    ).toEqual({
+      multiplayer: true,
+      mods: true,
+      portMap: false,
+      licensed: true,
+    });
   });
 
   it("treats an absent field as off rather than on", () => {
     expect(readBuildCapabilities({ capabilities: { mods: true } })).toEqual({
-      multiplayer: false,
+      ...NO_CAPABILITIES,
       mods: true,
-      portMap: false,
     });
   });
 });
@@ -139,12 +143,38 @@ describe("what a launch may do", () => {
     expect(capabilities.unlocked).toBe(false);
   });
 
+  it("takes the licence as a word, on either the stamp or the launch", () => {
+    expect(resolveCapabilities(NOTHING, ["game"]).capabilities.licensed).toBe(
+      false,
+    );
+    expect(
+      resolveCapabilities(NOTHING, ["game", "--licensed"]).capabilities
+        .licensed,
+    ).toBe(true);
+    expect(
+      resolveCapabilities({ ...NOTHING, licensed: true }, ["game"]).capabilities
+        .licensed,
+    ).toBe(true);
+  });
+
+  it("does not treat the licence claim as an unlock of its own", () => {
+    // It opens no feature — it says a held licence covers the ones that are
+    // already open — so on its own it raises nothing to acknowledge.
+    const { capabilities } = resolveCapabilities(NOTHING, [
+      "game",
+      "--licensed",
+    ]);
+    expect(capabilities.multiplayer).toBe(false);
+    expect(capabilities.unlocked).toBe(false);
+  });
+
   it("leaves a depot build's own doors alone", () => {
     const { capabilities } = resolveCapabilities(ALL_CAPABILITIES, ["game"]);
     expect(capabilities).toMatchObject({
       multiplayer: true,
       mods: true,
       portMap: true,
+      licensed: true,
       direct: false,
       unlocked: false,
     });
@@ -156,9 +186,7 @@ describe("what a launch may do", () => {
     ).toEqual([]);
     expect(
       capabilityList({
-        multiplayer: true,
-        mods: true,
-        portMap: true,
+        ...ALL_CAPABILITIES,
         unlocked: false,
         direct: false,
       }),

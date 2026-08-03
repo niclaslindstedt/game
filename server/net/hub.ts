@@ -300,11 +300,19 @@ export function createPeerHub(options: HubOptions): PeerHub {
     peer.transport.send(peer.key, new Uint8Array(frame), mode);
   }
 
+  /**
+   * `detail` travels to the joiner in the `bye`; `note` does not and goes only
+   * to this server's own console. They are separate because the two audiences
+   * need different sentences — the joiner needs to know they were refused, the
+   * operator needs to know what to change — and a refusal that reads well on
+   * one screen usually reads as noise on the other.
+   */
   function refuse(
     transport: Transport,
     key: PeerKey,
     reason: RefusalReason,
     detail?: string,
+    note?: string,
   ): void {
     transport.send(
       key,
@@ -326,7 +334,7 @@ export function createPeerHub(options: HubOptions): PeerHub {
     // and sees "could not reach that session" instead of the better sentence.
     // Best-effort is the right trade; a retained record is not.
     transport.drop(key);
-    options.log?.(`net: refused ${key} — ${reason}`);
+    options.log?.(`net: refused ${key} — ${reason}${note ? ` (${note})` : ""}`);
   }
 
   function onHello(
@@ -406,7 +414,18 @@ export function createPeerHub(options: HubOptions): PeerHub {
     // an unrecognised transport is refused, so the next one added is licensed
     // deliberately rather than by having been forgotten.
     if (!licensedTransport(transport)) {
-      refuse(transport, key, "unlicensed", `transport ${transport.id}`);
+      // SAID OUT LOUD ON THE CONSOLE, because this is the one refusal whose
+      // cause is not on the joiner's end at all: they did nothing wrong, the
+      // server was simply never claimed for. An operator watching people fail
+      // to connect needs the reason and the remedy in the same line, or the
+      // only visible symptom is a server everybody bounces off.
+      refuse(
+        transport,
+        key,
+        "unlicensed",
+        `transport ${transport.id}`,
+        "this session holds no multiplayer licence — start it with --licensed",
+      );
       return;
     }
     const refusal = admit({
