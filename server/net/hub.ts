@@ -302,10 +302,11 @@ export function createPeerHub(options: HubOptions): PeerHub {
 
   /**
    * `detail` travels to the joiner in the `bye`; `note` does not and goes only
-   * to this server's own console. They are separate because the two audiences
-   * need different sentences — the joiner needs to know they were refused, the
-   * operator needs to know what to change — and a refusal that reads well on
-   * one screen usually reads as noise on the other.
+   * to this server's own console, where it REPLACES the bare reason. They are
+   * separate because the two audiences need different sentences: the joiner is
+   * told they were refused, while the console says which END the problem is at
+   * — the difference between "you were rejected" and "this server rejects
+   * everybody", which is the whole of what an operator is trying to work out.
    */
   function refuse(
     transport: Transport,
@@ -334,10 +335,7 @@ export function createPeerHub(options: HubOptions): PeerHub {
     // and sees "could not reach that session" instead of the better sentence.
     // Best-effort is the right trade; a retained record is not.
     transport.drop(key);
-    options.log?.(
-      `net: refusing player join from ${key} — ${reason}` +
-        (note ? ` (${note})` : ""),
-    );
+    options.log?.(`net: refusing player join from ${key} — ${note ?? reason}`);
   }
 
   function onHello(
@@ -418,16 +416,15 @@ export function createPeerHub(options: HubOptions): PeerHub {
     // deliberately rather than by having been forgotten.
     if (!licensedTransport(transport)) {
       // SAID OUT LOUD ON THE CONSOLE, because this is the one refusal whose
-      // cause is not on the joiner's end at all: they did nothing wrong, the
-      // server was simply never claimed for. An operator watching people fail
-      // to connect needs the reason and the remedy in the same line, or the
-      // only visible symptom is a server everybody bounces off.
+      // cause is not on the joiner's end at all: they did nothing wrong, and
+      // an operator reading a bare "unlicensed" would go looking at the person
+      // who just bounced off. It names WHICH end and stops there.
       refuse(
         transport,
         key,
         "unlicensed",
         `transport ${transport.id}`,
-        "unlicensed server — it was not started with --licensed",
+        "unlicensed server",
       );
       return;
     }
