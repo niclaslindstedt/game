@@ -147,13 +147,27 @@ jobs:
           git push origin HEAD:main
           git push origin "$TAG"
 
+      # A DRAFT, and the `publish` job at the bottom is what makes it
+      # public — once every platform's archive is attached to it.
+      #
+      # Published here instead, the release is visible the moment the tag
+      # exists, which is minutes before the four desktop archives finish
+      # uploading and regardless of whether they succeed at all: a
+      # Windows packaging failure (`fail-fast: false`, so the other three
+      # carry on) leaves a public release whose Windows download simply
+      # is not there, and the people who find it are the ones who came to
+      # download the game. A draft is invisible to everyone but the
+      # maintainer, accepts asset uploads exactly the same way, and needs
+      # one flag flipped at the end.
+      #
       # Idempotent on purpose: the tag is already pushed by the step
       # above, so a bare `gh release create` that fails (or a re-run
-      # after one did) would leave a tagged version with no release
-      # and — because the deploy job `needs:` this one — no Pages
-      # deploy either. Creating-or-updating makes the recovery a
-      # re-dispatch rather than a manual `gh release create`.
-      - name: Create GitHub Release
+      # after one did) would leave a tagged version with no release at
+      # all. Creating-or-updating makes the recovery a re-dispatch rather
+      # than a manual `gh release create` — and the edit deliberately
+      # does NOT pass `--draft`, so re-running against a release that is
+      # already public refreshes its notes instead of retracting it.
+      - name: Create GitHub Release (draft)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.bump.outputs.tag }}
@@ -162,7 +176,7 @@ jobs:
             echo "Release $TAG already exists — updating its notes."
             gh release edit "$TAG" --title "$TAG" --notes-file .release-notes.md
           else
-            gh release create "$TAG" --title "$TAG" --notes-file .release-notes.md
+            gh release create "$TAG" --draft --title "$TAG" --notes-file .release-notes.md
           fi
 
   # The downloadable desktop builds, attached to the release the job above
@@ -246,9 +260,37 @@ jobs:
           printf 'uploading %s\n' "${assets[@]}"
           gh release upload "$TAG" "${assets[@]}" --clobber
 
+  # THE RELEASE BECOMES VISIBLE HERE, and nowhere else: `needs: desktop`
+  # means every platform in the matrix has packaged AND uploaded before
+  # anybody can see the release page. If one target fails, the draft stays
+  # a draft — a release that is missing a download is a bug report from
+  # every player on that platform, and the fix (re-dispatch, or upload the
+  # archive by hand) is much cheaper while nobody has seen it yet.
+  publish:
+    needs: [release, desktop]
+    runs-on: ubuntu-latest
+    # contents: write — this is the flag flip on the release itself.
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          gh release edit "$TAG" --draft=false --latest
+          gh release view "$TAG" --json assets \
+            --jq '.assets[] | "published asset: \(.name)"'
+
   # Chain straight into pages.yml so the new tag is served at `/`
   # immediately — without this, deployment would wait for the next
   # push to main (§11.5.2).
+  #
+  # Deliberately `needs: release` and not `needs: publish`: the website IS
+  # the game (§11.4), it is built from the tag that already exists, and
+  # holding the web deploy hostage to a desktop packaging failure would
+  # take the free-to-play version down over a download nobody has yet.
   pages:
     needs: release
     uses: ./.github/workflows/pages.yml
