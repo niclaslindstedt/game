@@ -1533,7 +1533,7 @@ plus wherever Android puts its own parental controls. Four rules:
 Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
 `game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
 the highest
-`v*` tag (or `main` before the first release), `/preview/` serves every
+`v*` tag (or `main` whenever no release can be rebuilt), `/preview/` serves every
 `main` push, `/branch/` serves a manually parked branch persisted in
 the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
 slots into a single Pages artifact; each slot gets its own service worker and
@@ -1915,7 +1915,7 @@ assembled by a single `pages.yml` run into one artifact:
 
 | Slot       | URL         | Source                                                                                     | Indexed        |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------ | -------------- |
-| Production | `/`         | Highest `v*` tag (or `main` before the first release)                                      | Yes            |
+| Production | `/`         | Highest `v*` tag (or `main` whenever no release can be rebuilt)                            | Yes            |
 | Staging    | `/preview/` | `main` HEAD, every push                                                                    | No (`noindex`) |
 | Branch     | `/branch/`  | Last branch parked via `workflow_dispatch`, persisted in the `branch-deploy` orphan branch | No (`noindex`) |
 
@@ -1924,6 +1924,20 @@ worker scoped to its base, and a disjoint precache id (`game`,
 `game-preview`, `game-branch`) so the builds never poison each other. The
 production worker's scope covers the nested slots, so it carries a
 navigation denylist and refuses to answer their navigations.
+
+**The production slot is REBUILT from its tag on every deploy, so a release is
+only servable while today's runner can still install that tag's own lockfile.**
+Nothing is archived — each run checks the tag out, runs `npm ci` against the
+lockfile as it was at release time, and builds. `pages.yml` therefore checks
+the resolved tag before committing to it and falls back to `main` at `/` when
+it cannot be rebuilt, with a `::warning::` naming the tag; the next release
+puts the root slot back on a tag. The one case that exists today is a tag cut
+before the repo dropped its GitHub Packages dependency: its `.npmrc` sends
+`@niclaslindstedt/*` to a registry that needs a token CI no longer carries, and
+npm fails on the unset `${GITHUB_PAT}` before it even reaches the network. The
+general rule this leaves behind: **the build must stay installable from public
+registries alone**, or a release becomes unservable the moment the credential
+goes away.
 
 **One build flavour differs, and only one: the store upload.** The website
 carries the DEVELOPER tooling — the hidden sun reveal (seven taps to arm, then

@@ -492,8 +492,10 @@ are regenerated in the same commit as the content change that moves them:
   resolves them to walk the import graph — a new alias missing from either is a
   script that cannot start or a budget guard that silently stops following an
   edge.
-- Installing `@niclaslindstedt/*` packages requires a `GITHUB_PAT` env var
-  with `read:packages` (see `.npmrc`); CI falls back to the workflow token.
+- **Every dependency comes from the public npm registry.** `npm ci` needs no
+  token, no `.npmrc` and no private registry — keep it that way: a private
+  dependency breaks not just a fresh clone but the pages workflow, which
+  rebuilds the released TAG from that tag's own lockfile.
 
 ## Test conventions
 

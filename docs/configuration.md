@@ -345,9 +345,8 @@ does: whoever operates the machine controls the simulation.
 
 ## Release configuration
 
-| Secret       | Used by                                   | Purpose                                                                   |
-| ------------ | ----------------------------------------- | ------------------------------------------------------------------------- |
-| `GITHUB_PAT` | ci/pages/release/seo/lighthouse workflows | GitHub Packages reads (optional — workflows fall back to `github.token`). |
+No repository secret is needed to build or install: every dependency comes
+from the public npm registry, so `npm ci` works with no token at all.
 
 No `RELEASE_TOKEN` is needed: `release.yml` is dispatched manually and
 chains into `pages.yml` via `workflow_call` inside the same run, so the

@@ -45,7 +45,7 @@ The deployed game lives at **<https://game.niclaslindstedt.se/>**:
 
 | Slot       | URL         | Serves                                                    |
 | ---------- | ----------- | --------------------------------------------------------- |
-| Production | `/`         | The latest release (or `main` until the first release)    |
+| Production | `/`         | The latest release (or `main` if none can be rebuilt)     |
 | Preview    | `/preview/` | The current `main`, on every push                         |
 | Branch     | `/branch/`  | A feature branch parked via the `pages` workflow dispatch |
 
@@ -250,7 +250,6 @@ through the silent switch. Builds are manual to keep costs down; see
 ```sh
 git clone https://github.com/niclaslindstedt/game.git
 cd game
-export GITHUB_PAT=ghp_yourtoken   # read:packages
 npm install
 ```
 
@@ -287,7 +286,6 @@ The game has no user-facing configuration yet. Build-time knobs:
 
 | Variable                     | Effect                                                                                                                                                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GITHUB_PAT`                 | Auth for GitHub Packages installs (`.npmrc`)                                                                                                                                                                       |
 | `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                                                                                             |
 | `VITE_CHARACTER_SIGNING_KEY` | HMAC key that signs exported character archives so hand-edited saves fail to re-import; falls back to a committed default (see `docs/configuration.md`)                                                            |
 | `?debug` URL param           | Turns on debug-level console output (`src/output.ts`), exposes the live game state as `window.__game` for inspection and automated playtests, and shows the in-run FPS meter                                       |
@@ -304,10 +302,6 @@ demonstrating.
 
 ## Troubleshooting
 
-- **`npm install` fails with 401/403 against `npm.pkg.github.com`** — your
-  `GITHUB_PAT` is missing, expired, or lacks the `read:packages` scope.
-- **`npm` complains `Failed to replace env in config: ${GITHUB_PAT}`** — the
-  variable is unset in this shell; `export GITHUB_PAT=…` and retry.
 - **The deployed game doesn't update after a deploy** — the previous build's
   service worker is parked in `waiting`; the in-app update toast applies it,
   or close every tab of the app and reopen.

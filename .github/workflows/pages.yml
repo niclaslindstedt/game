@@ -3,8 +3,9 @@ name: pages
 # Deploys the game (the `pwa/` Vite app, built against the engine source)
 # to GitHub Pages across three slots (OSS_SPEC §11.5):
 #
-#   /          the latest release (highest `v*` tag), or `main` until the
-#              first release exists
+#   /          the latest release (highest `v*` tag), or `main` when there is
+#              no release this workflow can rebuild — before the first one, or
+#              while the newest tag still predates a build-breaking change
 #   /preview/  the current `main` (every push)
 #   /branch/   a feature branch parked via workflow_dispatch, persisted in
 #              the `branch-deploy` orphan branch so it survives later deploys
@@ -113,6 +114,19 @@ jobs:
             # production release regardless of ancestry.
             REF=$(git tag --list 'v*' --sort=-v:refname | head -n1)
           fi
+          # THE ROOT SLOT IS BUILT FROM ITS OWN REF, so that ref's dependency
+          # tree — not main's — has to install in this runner. Releases cut
+          # before the repo went self-contained still carry an `.npmrc` that
+          # points `@niclaslindstedt/*` at GitHub Packages, and installing one
+          # needs a registry token this workflow no longer has; npm does not
+          # even get as far as the network, it fails on the unset
+          # `${GITHUB_PAT}` the file interpolates. Such a tag cannot be
+          # rebuilt here at all, so serve main at the root slot until the next
+          # release — the same fallback as having no release yet.
+          if [ -n "$REF" ] && git show "$REF:.npmrc" 2>/dev/null | grep -q 'npm.pkg.github.com'; then
+            echo "::warning::$REF predates the removal of the external framework dependency and cannot be rebuilt without a GitHub Packages token — serving main at the root slot until the next release."
+            REF=""
+          fi
           if [ -n "$REF" ]; then
             echo "ref=$REF" >> "$GITHUB_OUTPUT"
             echo "has_release=true" >> "$GITHUB_OUTPUT"
@@ -120,7 +134,7 @@ jobs:
           else
             echo "ref=" >> "$GITHUB_OUTPUT"
             echo "has_release=false" >> "$GITHUB_OUTPUT"
-            echo "No release tag found — will serve main at the root slot."
+            echo "No buildable release tag — will serve main at the root slot."
           fi
 
       # AFTER the tag is resolved, because whether a browser is needed depends
@@ -162,9 +176,9 @@ jobs:
         run: mv pwa/dist site-preview
 
       # ---- Root slot build ----
-      # Serves the latest release if one exists; until the first release it
-      # falls back to main. Either way it is a separate build at the
-      # production base path.
+      # Serves the latest release when one resolved above; otherwise it falls
+      # back to main (see `Resolve production tag`). Either way it is a
+      # separate build at the production base path.
       - name: Checkout production tag
         if: steps.tag.outputs.has_release == 'true'
         run: git checkout ${{ steps.tag.outputs.ref }}
