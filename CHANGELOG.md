@@ -11,3 +11,15 @@ fragments** in `.changes/unreleased/` — add a fragment per user-visible change
 them into a dated section here. Do not hand-edit the released sections.
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-08-03
+
+### Added
+
+- **Ada's Trail** — The first release: an offline top-down survival scroller you steer by holding a finger down, fought by a hero who acts on his own.
+- **Desktop downloads** — Every release now ships a desktop build for Windows, macOS (Intel and Apple silicon) and Linux, attached to the release itself.
+
+### Fixed
+
+- **Desktop downloads for every platform** — A release attaches a build for Windows, Linux and both macOS architectures again — the Windows and Linux ones failed to package and never reached the release page.
+
