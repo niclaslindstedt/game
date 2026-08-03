@@ -9,13 +9,16 @@
 // binary and is not something an installed copy can be edited into.
 //
 // A build with none of them stamped — a checkout, `npm run start`, anything
-// built from sources without the switches — gets ALL of them. The repo is the
-// whole game; nothing here is a crippled tree.
+// built from sources without the switches — starts with NONE of them, exactly
+// as a plain download does. That is deliberate: a tree somebody cloned behaves
+// like the thing they would have downloaded, so "it works here" and "it works
+// for a player" mean the same thing, and none of this is a path that only ever
+// gets exercised on a release runner.
 //
-// Two of the three can additionally be turned on for a single launch by
-// command line, and the third deliberately cannot: a port mapping is a change
-// this program makes to somebody's ROUTER, so it is a property of the build
-// and of nothing else.
+// Two of the three can be turned on for a single launch by command line —
+// `--multiplayer` and `--mods` — and the third deliberately cannot: a port
+// mapping is a change this program makes to somebody's ROUTER, so it is a
+// property of the build and of nothing else.
 //
 // Kept free of Electron imports so the argument handling is testable without
 // launching the shell runtime — the same reason `dedicated-mode.ts` is.
@@ -33,37 +36,58 @@ export type Capabilities = BuildCapabilities & {
   /** True when the command line — rather than the package — is what turned
    * multiplayer or mods on. The launch says so out loud when it is. */
   unlocked: boolean;
-  /** The direct door, and the port it was asked to try. Only ever set by the
-   * command line; a stamped build takes its door from the HOST screen. */
-  udp: boolean;
+  /** The direct door, and the port it was asked to try — what the session's
+   * `listen` is pinned to. Only ever set by the command line; a stamped build
+   * takes its door from the HOST screen. */
+  direct: boolean;
   port?: number;
 };
 
-/** Everything on. What a build from sources is, and what the resolver falls
- * back to when a package carries no stamp at all. */
+/** Everything on — what a depot build is stamped with. */
 export const ALL_CAPABILITIES: BuildCapabilities = {
   multiplayer: true,
   mods: true,
   portMap: true,
 };
 
+/** Nothing on. What an unstamped build is, and what a download is. */
+export const NO_CAPABILITIES: BuildCapabilities = {
+  multiplayer: false,
+  mods: false,
+  portMap: false,
+};
+
 /**
  * The stamp, off the app's own manifest.
  *
- * An ABSENT field means "not stamped" and reads as on; only an explicit
- * `false` turns something off. That ordering matters: it is what keeps every
- * unpackaged path — the tests, `electron .`, a developer's own build — working
- * with no environment at all.
+ * NO stamp means nothing is on: a build only carries what something
+ * deliberately gave it, so the narrow case is the one that happens by default
+ * and the wide one has to be asked for. Within a stamp an absent field reads
+ * the same way — only an explicit `true` turns anything on.
  */
 export function readBuildCapabilities(metadata: unknown): BuildCapabilities {
   const stamped = (metadata as { capabilities?: unknown } | null)
     ?.capabilities as Partial<Record<keyof BuildCapabilities, unknown>> | null;
-  if (!stamped || typeof stamped !== "object") return { ...ALL_CAPABILITIES };
+  if (!stamped || typeof stamped !== "object") return { ...NO_CAPABILITIES };
   return {
-    multiplayer: stamped.multiplayer !== false,
-    mods: stamped.mods !== false,
-    portMap: stamped.portMap !== false,
+    multiplayer: stamped.multiplayer === true,
+    mods: stamped.mods === true,
+    portMap: stamped.portMap === true,
   };
+}
+
+/**
+ * Whether this manifest was stamped at all.
+ *
+ * An unstamped app is a DEVELOPER BUILD by definition: nothing packaged it for
+ * a store or for distribution, so it is somebody's own tree — the checkout the
+ * shell is run from, or a `dist` made without the switches. It is a separate
+ * question from what the build MAY do (an unstamped build may do everything),
+ * and it is what the startup notice is keyed on.
+ */
+export function isStamped(metadata: unknown): boolean {
+  const stamped = (metadata as { capabilities?: unknown } | null)?.capabilities;
+  return !!stamped && typeof stamped === "object";
 }
 
 /** `--flag=value` and `--flag value`, for the one option that takes one. */
@@ -85,13 +109,11 @@ function has(argv: readonly string[], name: string): boolean {
 /**
  * What this launch may do.
  *
- * **THE THREE MULTIPLAYER OPTIONS ARE ONE OPTION.** A build that was not
- * stamped with multiplayer takes `--multiplayer --udp --port <n>` TOGETHER or
- * not at all, and the reason is that the parts are meaningless apart: with no
- * Steam client behind it the direct socket is the only door there is, and a
- * door needs a number. A partial set is therefore refused rather than
- * half-honoured — `refusals` says which part was missing, so a launch that
- * looked accepted and did nothing is not a thing that can happen.
+ * `--multiplayer` and `--mods` each stand alone. `--port` is a REFINEMENT
+ * rather than a requirement: hosting from the menu has a port on the HOST
+ * screen already, so naming one here only pins the direct door to it. The one
+ * place it is not optional is `--dedicated`, which has no screen to read a
+ * port off — that pairing is checked where the mode is entered.
  */
 export function resolveCapabilities(
   built: BuildCapabilities,
@@ -99,36 +121,24 @@ export function resolveCapabilities(
 ): { capabilities: Capabilities; refusals: string[] } {
   const refusals: string[] = [];
 
-  const wantsNet = has(argv, "multiplayer");
-  const wantsUdp = has(argv, "udp");
+  const multiplayer = built.multiplayer || has(argv, "multiplayer");
+  const mods = built.mods || has(argv, "mods");
+
   const portText = valueOf(argv, "port");
   const port = portText === undefined ? undefined : Number(portText);
   const portOk =
     port !== undefined && Number.isInteger(port) && port > 0 && port <= 65_535;
 
-  let multiplayer = built.multiplayer;
-  let udp = false;
+  let direct = false;
   let openPort: number | undefined;
-
-  if (wantsNet && !built.multiplayer) {
-    if (!wantsUdp) refusals.push("--multiplayer needs --udp");
-    if (portText === undefined) refusals.push("--multiplayer needs --port");
-    else if (!portOk) refusals.push(`--port ${portText} is not a port number`);
-    if (wantsUdp && portOk) {
-      multiplayer = true;
-      udp = true;
-      openPort = port;
-    }
-  } else if (built.multiplayer && wantsUdp && portOk) {
-    // A stamped build may still be pointed at a door from the command line.
-    udp = true;
+  if (portText !== undefined && !multiplayer) {
+    refusals.push("--port does nothing without --multiplayer");
+  } else if (portText !== undefined && !portOk) {
+    refusals.push(`--port ${portText} is not a port number`);
+  } else if (portOk) {
+    direct = true;
     openPort = port;
-  } else if (!wantsNet && (wantsUdp || portText !== undefined)) {
-    refusals.push("--udp and --port do nothing without --multiplayer");
   }
-
-  const wantsMods = has(argv, "mods");
-  const mods = built.mods || wantsMods;
 
   return {
     capabilities: {
@@ -136,7 +146,7 @@ export function resolveCapabilities(
       mods,
       portMap: built.portMap,
       unlocked: (multiplayer && !built.multiplayer) || (mods && !built.mods),
-      udp,
+      direct,
       port: openPort,
     },
     refusals,

@@ -67,6 +67,7 @@ import {
   APP_SCHEME,
   BRAND_BG,
   BUILD_CAPABILITIES,
+  DEVELOPER_BUILD,
   isPlaceholderAppId,
   REMOTE_GAME_URL,
   STEAM_APP_ID,
@@ -75,7 +76,7 @@ import {
 } from "./config";
 import { capabilityList, resolveCapabilities } from "./capabilities";
 import { SHELL_CHANNEL } from "./channels";
-import { dedicatedArgs } from "./dedicated-mode";
+import { dedicatedArgs, serverArgs } from "./dedicated-mode";
 import { readInvite, type Invite } from "./net-invite";
 import { output } from "./output";
 import { steamClient } from "./steam";
@@ -118,6 +119,26 @@ const UNLOCK_NOTICE =
   "game outside those terms, and that you are doing so on your own " +
   "responsibility.";
 
+/**
+ * WHAT A BUILD NOBODY PACKAGED IS.
+ *
+ * A binary with no packaging stamp on it was made by somebody working on the
+ * game, out of their own tree — it is a debugging tool, not a copy of the game
+ * to play or to hand to anybody. That is easy to forget once it is an
+ * application icon like any other, so it is stated on every launch and carried
+ * in the window title for as long as the window is open. The suffix is
+ * deliberately not a one-time dialog: what it guards against is a build that
+ * has been sitting on somebody's desktop for a month.
+ */
+const DEVELOPER_NOTICE =
+  "This is a developer build of the game, built from sources rather than " +
+  "packaged for release.\n\n" +
+  "It is for debugging the game as a developer and for no other purpose. It " +
+  "is not licensed for play, for sharing, or for distribution in any form.";
+
+/** What the title bar says a developer build is, for as long as it is open. */
+const DEVELOPER_TITLE_SUFFIX = " — DEVELOPER BUILD (debugging only)";
+
 /** `--dedicated` turns this executable into the already-shipped Node session
  * server: no Steam handshake, no Chromium readiness, and no window. The server
  * entry deliberately starts its terminal wrapper when it has no parent port.
@@ -131,23 +152,36 @@ if (dedicated) {
     app.setActivationPolicy("prohibited");
     app.dock?.hide();
   }
-  // No window here, so the acknowledgement is a line on the console the
-  // operator is already looking at.
+  // No window here, so both notices are lines on the console the operator is
+  // already looking at.
+  if (DEVELOPER_BUILD) output.warn(DEVELOPER_NOTICE.replace(/\n+/g, " "));
   if (capabilities.unlocked) output.warn(UNLOCK_NOTICE.replace(/\n+/g, " "));
-  const entry = serverEntryPath();
-  // Give the imported Node entry the argv shape it receives when run directly.
-  // A build that may not touch the router says so here rather than trusting
-  // the server's own default — the operator cannot pass this one themselves.
-  process.argv = [
-    process.execPath,
-    entry,
-    ...dedicated.filter((arg) => arg !== "--no-portmap"),
-    ...(capabilities.portMap ? [] : ["--no-portmap"]),
-  ];
-  void import(pathToFileURL(entry).href).catch((err: unknown) => {
-    output.error(`dedicated server failed — ${describe(err)}`);
+  // A SERVER IS THE MULTIPLAYER FEATURE, so it answers to the same permission
+  // the HOST screen does — this mode is not a way around a build that was not
+  // packaged with it. And unlike the HOST screen it has nowhere to read a port
+  // from, so here the port is required rather than a refinement: a server on
+  // whichever port happened to be free is a server nobody can be told to
+  // connect to.
+  if (!capabilities.multiplayer || capabilities.port === undefined) {
+    output.error(
+      "--dedicated needs --multiplayer and --port <n> on this build.",
+    );
     process.exitCode = 1;
-  });
+    app.quit();
+  } else {
+    const entry = serverEntryPath();
+    // Give the imported Node entry the argv shape it receives when run
+    // directly, with the shell's own options taken back out (`serverArgs`).
+    process.argv = [
+      process.execPath,
+      entry,
+      ...serverArgs(dedicated, capabilities),
+    ];
+    void import(pathToFileURL(entry).href).catch((err: unknown) => {
+      output.error(`dedicated server failed — ${describe(err)}`);
+      process.exitCode = 1;
+    });
+  }
 }
 
 /** One parsed message off the shell channel. The `__gis*` flag says which
@@ -334,7 +368,7 @@ function createWindow(): BrowserWindow {
     // of the mobile shell holding its splash until the WebView's first frame.
     show: false,
     autoHideMenuBar: true,
-    title: "Ada's Trail",
+    title: `Ada's Trail${DEVELOPER_BUILD ? DEVELOPER_TITLE_SUFFIX : ""}`,
     webPreferences: {
       preload: `${__dirname}/preload.js`,
       // What this launch may do, handed to the preload on its own command
@@ -359,6 +393,17 @@ function createWindow(): BrowserWindow {
   if (state.fullscreen) window.setFullScreen(true);
 
   window.once("ready-to-show", () => window.show());
+
+  // The page owns the window title by default, and it sets one — so the
+  // suffix has to be re-applied to whatever the page just asked for rather
+  // than written once at construction, or it survives exactly until the first
+  // frame. Only a developer build takes the handler at all.
+  if (DEVELOPER_BUILD) {
+    window.webContents.on("page-title-updated", (event, title) => {
+      event.preventDefault();
+      window.setTitle(`${title}${DEVELOPER_TITLE_SUFFIX}`);
+    });
+  }
 
   // The parked invite goes over as soon as the page can receive it — on every
   // load, so a reload mid-session does not strand a player who was invited a
@@ -454,6 +499,31 @@ app.on("second-instance", (_event, argv) => {
   deliverInvite(mainWindow);
 });
 
+/**
+ * Say what a developer build is, once per launch.
+ *
+ * A DIALOG only when the thing was packaged, and that split is the whole
+ * point: a packaged developer build is a file that can be copied to somebody
+ * else's machine and opened there, while an unpackaged one is a checkout being
+ * run by the person who checked it out. Making the second case click a box on
+ * every `npm run start` would train the developer to dismiss the box the first
+ * case needs them to read. Both get the log line and the title bar.
+ */
+function announceDeveloperBuild(): void {
+  if (!DEVELOPER_BUILD) return;
+  output.warn(DEVELOPER_NOTICE.replace(/\n+/g, " "));
+  if (!app.isPackaged) return;
+  dialog.showMessageBoxSync({
+    type: "warning",
+    title: "Developer build",
+    message: "Developer build — debugging only",
+    detail: DEVELOPER_NOTICE,
+    buttons: ["I understand"],
+    defaultId: 0,
+    noLink: true,
+  });
+}
+
 /** Ask, and mean it: the cancel path quits rather than starting the game with
  * the options silently dropped. Returns whether to carry on. */
 function acknowledgeUnlock(): boolean {
@@ -484,6 +554,7 @@ function acknowledgeUnlock(): boolean {
 
 void app.whenReady().then(() => {
   if (dedicated) return;
+  announceDeveloperBuild();
   if (!acknowledgeUnlock()) {
     app.quit();
     return;

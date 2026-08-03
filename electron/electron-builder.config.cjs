@@ -55,19 +55,16 @@ const BUNDLE_ID = "se.niclaslindstedt.adastrail";
  * Three capabilities belong to the build rather than to the machine that runs
  * it, and they are read from the build environment (`ENABLE_MULTIPLAYER=1`
  * and friends, via the Makefile) and written into the packaged manifest, where
- * `electron/src/capabilities.ts` reads them back. Absent means ON — a build
- * from sources with no switches set is the whole game — so only a packaging
- * run that deliberately says otherwise produces a narrower binary.
+ * `electron/src/capabilities.ts` reads them back. Absent means OFF, here and
+ * at the reading end both — a binary carries only what something deliberately
+ * gave it.
  */
-const enabled = (name, fallback) => {
-  const value = process.env[`GIS_ENABLE_${name}`];
-  return value === undefined || value === "" ? fallback : value !== "0";
-};
+const enabled = (name) => process.env[`GIS_ENABLE_${name}`] === "1";
 const STAMPED = process.env.GIS_STAMP_CAPABILITIES === "1";
 const CAPABILITIES = {
-  multiplayer: enabled("MULTIPLAYER", !STAMPED),
-  mods: enabled("MODS", !STAMPED),
-  portMap: enabled("UPNP", !STAMPED),
+  multiplayer: enabled("MULTIPLAYER"),
+  mods: enabled("MODS"),
+  portMap: enabled("UPNP"),
 };
 
 /**
@@ -129,8 +126,13 @@ module.exports = {
   // about the binary rather than about the environment it is started in. The
   // store link rides along from `game.config.json` for the same reason the
   // product name does — one place holds every brand string.
+  // A packaging run that did not deliberately stamp itself leaves the field
+  // OFF the manifest entirely rather than writing an all-on one. The absence
+  // is what marks a developer build (`capabilities.ts`'s `isStamped`), so a
+  // plain `npm run dist` out of somebody's tree says what it is instead of
+  // passing for a release that happens to have everything enabled.
   extraMetadata: {
-    capabilities: CAPABILITIES,
+    ...(STAMPED ? { capabilities: CAPABILITIES } : {}),
     storeUrl: identity.steamUrl || "",
   },
 

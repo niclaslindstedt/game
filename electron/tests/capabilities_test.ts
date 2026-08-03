@@ -5,18 +5,20 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_CAPABILITIES,
   capabilityList,
+  isStamped,
+  NO_CAPABILITIES,
   readBuildCapabilities,
   resolveCapabilities,
 } from "../src/capabilities";
 
-const NOTHING = { multiplayer: false, mods: false, portMap: false };
+const NOTHING = NO_CAPABILITIES;
 
 describe("the package stamp", () => {
-  it("gives an unstamped build everything", () => {
-    expect(readBuildCapabilities({})).toEqual(ALL_CAPABILITIES);
-    expect(readBuildCapabilities(null)).toEqual(ALL_CAPABILITIES);
+  it("gives an unstamped build nothing — the same as a download", () => {
+    expect(readBuildCapabilities({})).toEqual(NO_CAPABILITIES);
+    expect(readBuildCapabilities(null)).toEqual(NO_CAPABILITIES);
     expect(readBuildCapabilities({ capabilities: "yes" })).toEqual(
-      ALL_CAPABILITIES,
+      NO_CAPABILITIES,
     );
   });
 
@@ -28,12 +30,25 @@ describe("the package stamp", () => {
     ).toEqual({ multiplayer: false, mods: true, portMap: false });
   });
 
-  it("treats an absent field as on rather than off", () => {
-    expect(readBuildCapabilities({ capabilities: { mods: false } })).toEqual({
-      multiplayer: true,
-      mods: false,
-      portMap: true,
+  it("treats an absent field as off rather than on", () => {
+    expect(readBuildCapabilities({ capabilities: { mods: true } })).toEqual({
+      multiplayer: false,
+      mods: true,
+      portMap: false,
     });
+  });
+});
+
+describe("telling a developer build apart", () => {
+  it("counts anything nobody packaged as one", () => {
+    expect(isStamped({})).toBe(false);
+    expect(isStamped(null)).toBe(false);
+    expect(isStamped({ capabilities: "yes" })).toBe(false);
+  });
+
+  it("does not count a packaged build, however narrow its stamp", () => {
+    expect(isStamped({ capabilities: NOTHING })).toBe(true);
+    expect(isStamped({ capabilities: ALL_CAPABILITIES })).toBe(true);
   });
 });
 
@@ -45,11 +60,10 @@ describe("what a launch may do", () => {
     expect(capabilities.unlocked).toBe(false);
   });
 
-  it("takes the three multiplayer options together", () => {
+  it("unlocks each feature on its own word", () => {
     const { capabilities, refusals } = resolveCapabilities(NOTHING, [
       "game",
       "--multiplayer",
-      "--udp",
       "--port",
       "27849",
       "--mods",
@@ -58,7 +72,7 @@ describe("what a launch may do", () => {
       multiplayer: true,
       mods: true,
       portMap: false,
-      udp: true,
+      direct: true,
       port: 27849,
       unlocked: true,
     });
@@ -69,44 +83,40 @@ describe("what a launch may do", () => {
     const { capabilities } = resolveCapabilities(NOTHING, [
       "game",
       "--multiplayer",
-      "--udp",
       "--port=27015",
     ]);
     expect(capabilities.port).toBe(27015);
   });
 
-  it("refuses a partial set rather than half-honouring it", () => {
+  it("takes --multiplayer with no port — the HOST screen has one", () => {
     const { capabilities, refusals } = resolveCapabilities(NOTHING, [
       "game",
       "--multiplayer",
-      "--udp",
     ]);
-    expect(capabilities.multiplayer).toBe(false);
-    expect(refusals).toEqual(["--multiplayer needs --port"]);
+    expect(capabilities.multiplayer).toBe(true);
+    expect(capabilities.direct).toBe(false);
+    expect(capabilities.port).toBeUndefined();
+    expect(refusals).toEqual([]);
   });
 
   it("refuses a port that is not one", () => {
     const { capabilities, refusals } = resolveCapabilities(NOTHING, [
       "game",
       "--multiplayer",
-      "--udp",
       "--port",
       "no",
     ]);
-    expect(capabilities.multiplayer).toBe(false);
+    expect(capabilities.port).toBeUndefined();
     expect(refusals).toEqual(["--port no is not a port number"]);
   });
 
   it("says so when a door was asked for with no session to put it on", () => {
     const { refusals } = resolveCapabilities(NOTHING, [
       "game",
-      "--udp",
       "--port",
       "27849",
     ]);
-    expect(refusals).toEqual([
-      "--udp and --port do nothing without --multiplayer",
-    ]);
+    expect(refusals).toEqual(["--port does nothing without --multiplayer"]);
   });
 
   it("never turns the router mapping on from the command line", () => {
@@ -115,7 +125,6 @@ describe("what a launch may do", () => {
       "--upnp",
       "--portmap",
       "--multiplayer",
-      "--udp",
       "--port",
       "27849",
     ]);
@@ -130,17 +139,28 @@ describe("what a launch may do", () => {
     expect(capabilities.unlocked).toBe(false);
   });
 
+  it("leaves a depot build's own doors alone", () => {
+    const { capabilities } = resolveCapabilities(ALL_CAPABILITIES, ["game"]);
+    expect(capabilities).toMatchObject({
+      multiplayer: true,
+      mods: true,
+      portMap: true,
+      direct: false,
+      unlocked: false,
+    });
+  });
+
   it("hands the page only the names it may act on", () => {
-    expect(capabilityList({ ...NOTHING, unlocked: false, udp: false })).toEqual(
-      [],
-    );
+    expect(
+      capabilityList({ ...NOTHING, unlocked: false, direct: false }),
+    ).toEqual([]);
     expect(
       capabilityList({
         multiplayer: true,
         mods: true,
         portMap: true,
         unlocked: false,
-        udp: false,
+        direct: false,
       }),
     ).toEqual(["multiplayer", "mods"]);
   });

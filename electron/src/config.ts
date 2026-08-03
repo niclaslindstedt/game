@@ -10,7 +10,7 @@
 // instead (e.g. the `/preview/` deploy slot, for debugging against live
 // content). When set, the bundled webroot is skipped entirely.
 
-import { readBuildCapabilities } from "./capabilities";
+import { isStamped, readBuildCapabilities } from "./capabilities";
 
 /** A remote URL to load instead of the bundled site, or undefined to serve the
  * copy inside the app. */
@@ -75,6 +75,14 @@ const MANIFEST = require("../package.json") as {
 };
 
 export const BUILD_CAPABILITIES = readBuildCapabilities(MANIFEST);
+
+/**
+ * True when nothing packaged this binary for distribution — a checkout, or a
+ * build made without the packaging switches. Such a build is a developer's own
+ * tool for debugging the game and is not a copy of the game to play or pass
+ * on, and it says so at startup rather than leaving that to be assumed.
+ */
+export const DEVELOPER_BUILD = !isStamped(MANIFEST);
 
 /**
  * The game's Steam page, stamped in beside the capabilities from

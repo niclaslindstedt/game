@@ -486,7 +486,7 @@ export function createNetBridge(
     // A launch that opened the direct door itself takes that door and only
     // that one: there is no Steam client behind this build to pump a relay
     // for, and the port it was given is the one it was given.
-    const wantsSteam = request.steam !== false && !capabilities.udp;
+    const wantsSteam = request.steam !== false && !capabilities.direct;
     if (wantsSteam) {
       steam = createSteamP2P({
         onPacket: (from, data) =>
@@ -497,8 +497,8 @@ export function createNetBridge(
     }
     running.send({
       kind: "listen",
-      port: capabilities.udp ? capabilities.port : request.port,
-      udp: capabilities.udp || request.udp !== false,
+      port: capabilities.direct ? capabilities.port : request.port,
+      udp: capabilities.direct || request.udp !== false,
       // The relay is only worth opening when something is pumping it.
       steam: steam !== null,
       // Asking a router to forward a port is a change this program makes to
