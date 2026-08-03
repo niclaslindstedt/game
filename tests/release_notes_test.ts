@@ -101,6 +101,21 @@ describe("capBody", () => {
 // The guard that matters in practice: the section the NEXT release would
 // publish has to fit, whatever the fragments have piled up.
 describe("the repo's own changelog", () => {
+  // What `versions.length > 0` used to stand in for: proof the file still
+  // has the shape the tooling reads, so a regex that quietly matches
+  // nothing can't pass this suite. Released sections are the wrong thing
+  // to hang that on — withdrawing v1.0.0 left the file with none — but the
+  // anchor is load-bearing in a way no release is: collate-changelog.mjs
+  // splices each new section in under it and exits 1 when it is missing,
+  // so losing it means no release can be cut at all.
+  it("keeps the anchor collate-changelog.mjs writes under", () => {
+    const md = readFileSync(
+      new URL("../CHANGELOG.md", import.meta.url),
+      "utf8",
+    );
+    expect(md).toMatch(/^## \[Unreleased\]$/m);
+  });
+
   it("caps every released section to a publishable body", () => {
     const md = readFileSync(
       new URL("../CHANGELOG.md", import.meta.url),
@@ -109,7 +124,6 @@ describe("the repo's own changelog", () => {
     const versions = [...md.matchAll(/^## \[(\d+\.\d+\.\d+)\]/gm)]
       .map((m) => m[1])
       .filter((v): v is string => v !== undefined);
-    expect(versions.length).toBeGreaterThan(0);
     for (const version of versions) {
       const section = extractSection(md, version);
       expect(section).not.toBeNull();
