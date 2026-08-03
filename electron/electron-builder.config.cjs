@@ -50,6 +50,43 @@ const MOD_TOOLCHAIN_DEPS = Object.keys(
 const BUNDLE_ID = "se.niclaslindstedt.adastrail";
 
 /**
+ * WHAT THE PACKAGE IS STAMPED WITH.
+ *
+ * Three capabilities belong to the build rather than to the machine that runs
+ * it, and they are read from the build environment (`ENABLE_MULTIPLAYER=1`
+ * and friends, via the Makefile) and written into the packaged manifest, where
+ * `electron/src/capabilities.ts` reads them back. Absent means ON — a build
+ * from sources with no switches set is the whole game — so only a packaging
+ * run that deliberately says otherwise produces a narrower binary.
+ */
+const enabled = (name, fallback) => {
+  const value = process.env[`GIS_ENABLE_${name}`];
+  return value === undefined || value === "" ? fallback : value !== "0";
+};
+const STAMPED = process.env.GIS_STAMP_CAPABILITIES === "1";
+const CAPABILITIES = {
+  multiplayer: enabled("MULTIPLAYER", !STAMPED),
+  mods: enabled("MODS", !STAMPED),
+  portMap: enabled("UPNP", !STAMPED),
+};
+
+/**
+ * WHAT COMES OUT OF THE PACKAGER.
+ *
+ * `dir` is the default because a depot wants a directory of files and its own
+ * client owns installing them. Anything distributed on its own needs the
+ * opposite — a thing a person can download and open — so the `standalone`
+ * profile switches every platform to its conventional installer/archive pair.
+ */
+const STANDALONE = process.env.GIS_PACKAGE_PROFILE === "standalone";
+const MAC_ARCHES = (
+  process.env.GIS_MAC_ARCH ?? (STANDALONE ? "x64,arm64" : "x64")
+)
+  .split(",")
+  .map((arch) => arch.trim())
+  .filter(Boolean);
+
+/**
  * The Steam redistributable that each platform's binding needs beside the
  * executable. steamworks.js ships these inside its own package; the native
  * `.node` addon links against them at load time, so they must sit next to the
@@ -86,6 +123,15 @@ module.exports = {
   directories: {
     output: "release",
     buildResources: "build",
+  },
+
+  // The capability stamp travels on the app's own manifest, so it is a fact
+  // about the binary rather than about the environment it is started in. The
+  // store link rides along from `game.config.json` for the same reason the
+  // product name does — one place holds every brand string.
+  extraMetadata: {
+    capabilities: CAPABILITIES,
+    storeUrl: identity.steamUrl || "",
   },
 
   // Everything the app needs and nothing else. `webroot/` is the built site
@@ -167,7 +213,12 @@ module.exports = {
   asarUnpack: ["**/node_modules/steamworks.js/**"],
 
   win: {
-    target: [{ target: "dir" }],
+    target: STANDALONE
+      ? [
+          { target: "nsis", arch: "x64" },
+          { target: "zip", arch: "x64" },
+        ]
+      : [{ target: "dir" }],
     files: [
       "!node_modules/steamworks.js/dist/linux64/**/*",
       "!node_modules/steamworks.js/dist/osx/**/*",
@@ -178,15 +229,29 @@ module.exports = {
   },
 
   mac: {
-    // Steam for macOS remains an Intel process. One x64 depot supports Intel
-    // Macs directly and Apple Silicon through Rosetta without carrying a
-    // second copy of Chromium in every player's download.
-    target: [{ target: "dir", arch: "x64" }],
+    // Steam for macOS remains an Intel process, so a depot build is x64 only:
+    // it serves Intel Macs directly and Apple Silicon through Rosetta without
+    // carrying a second copy of Chromium in every player's download. A
+    // standalone download has no Rosetta guarantee to lean on and is expected
+    // to be native, so it ships both slices as separate artifacts.
+    target: STANDALONE
+      ? MAC_ARCHES.flatMap((arch) => [
+          { target: "dmg", arch },
+          { target: "zip", arch },
+        ])
+      : MAC_ARCHES.map((arch) => ({ target: "dir", arch })),
     icon: "../pwa/public/maskable-icon-512x512.png",
     files: [
       "!node_modules/steamworks.js/dist/linux64/**/*",
       "!node_modules/steamworks.js/dist/win64/**/*",
-      "!node_modules/steamworks.js/dist/osx/steamworksjs.darwin-arm64.node",
+      // The Apple Silicon slice of the binding is dropped only when nothing
+      // being built here needs it — excluding the slice a build IS for would
+      // leave that app unable to load Steam at all.
+      ...(MAC_ARCHES.includes("arm64")
+        ? []
+        : [
+            "!node_modules/steamworks.js/dist/osx/steamworksjs.darwin-arm64.node",
+          ]),
     ],
     extraFiles: STEAM_REDIST.mac,
     category: "public.app-category.action-games",
@@ -200,7 +265,12 @@ module.exports = {
   },
 
   linux: {
-    target: [{ target: "dir" }],
+    target: STANDALONE
+      ? [
+          { target: "AppImage", arch: "x64" },
+          { target: "tar.gz", arch: "x64" },
+        ]
+      : [{ target: "dir" }],
     files: [
       "!node_modules/steamworks.js/dist/osx/**/*",
       "!node_modules/steamworks.js/dist/win64/**/*",

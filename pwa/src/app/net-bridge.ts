@@ -41,7 +41,12 @@
 
 import type { SessionParams } from "@game/wire/protocol.ts";
 
-import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
+import {
+  postToShell,
+  shellAvailable,
+  shellCapability,
+  shellPlatform,
+} from "./shell-bridge.ts";
 
 declare global {
   interface Window {
@@ -207,7 +212,11 @@ export type SessionInvite = { lobbyId?: string; address?: string };
  * seam.
  */
 export function netBridgeAvailable(): boolean {
-  return shellAvailable() && shellPlatform() === "steam";
+  return (
+    shellAvailable() &&
+    shellPlatform() === "steam" &&
+    shellCapability("multiplayer")
+  );
 }
 
 /** Install the shell's callbacks. Idempotent; safe to call on every mount. */

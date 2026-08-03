@@ -31,6 +31,21 @@ on:
           - patch
           - minor
           - major
+      enable_multiplayer:
+        description: "Package the desktop downloads with sessions enabled."
+        required: false
+        type: boolean
+        default: false
+      enable_mods:
+        description: "Package the desktop downloads with mod loading enabled."
+        required: false
+        type: boolean
+        default: false
+      enable_upnp:
+        description: "Let the desktop downloads ask the router to forward a port."
+        required: false
+        type: boolean
+        default: false
 
 # Default to no permissions; every job declares its own least-privilege
 # `permissions:` block (see OSS_SPEC §10.3).
@@ -144,6 +159,84 @@ jobs:
           else
             gh release create "$TAG" --title "$TAG" --notes-file .release-notes.md
           fi
+
+  # The downloadable desktop builds, attached to the release the job above
+  # created. One runner per platform because each packager needs its own OS:
+  # NSIS wants Windows, a DMG wants macOS and its `hdiutil`, and an AppImage
+  # wants Linux. macOS builds BOTH slices — Intel and Apple Silicon — as
+  # separate artifacts rather than one universal binary, so neither download
+  # carries a copy of Chromium the machine will never run.
+  desktop:
+    needs: release
+    name: desktop (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+            script: release:win
+          - os: macos-latest
+            target: macos
+            script: release:mac
+          - os: ubuntu-latest
+            target: linux
+            script: release:linux
+    runs-on: ${{ matrix.os }}
+    # contents: write — the artifacts are uploaded onto the GitHub Release.
+    permissions:
+      contents: write
+    env:
+      # The release commit is on the tag, so the build is made from exactly
+      # what was tagged rather than from whatever main looks like by now.
+      TAG: ${{ needs.release.outputs.tag }}
+      GIS_PACKAGE_PROFILE: standalone
+      GIS_STAMP_CAPABILITIES: "1"
+      GIS_ENABLE_MULTIPLAYER: ${{ inputs.enable_multiplayer && '1' || '0' }}
+      GIS_ENABLE_MODS: ${{ inputs.enable_mods && '1' || '0' }}
+      GIS_ENABLE_UPNP: ${{ inputs.enable_upnp && '1' || '0' }}
+      # Unsigned downloads. Signing and notarization need credentials that
+      # cannot live in the repo; without this, electron-builder would try to
+      # discover an identity and fail the job on a runner that has none.
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The website build lives in the root workspace; the shell copies its
+      # output and packages around it.
+      - run: npm ci
+      - run: npm ci
+        working-directory: electron
+
+      - name: Package
+        shell: bash
+        run: npm --prefix electron run ${{ matrix.script }}
+
+      # Whatever this platform's packager produced, by extension — a job that
+      # listed filenames would silently upload nothing the day a target
+      # changed its suffix.
+      - name: Attach to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          assets=(electron/release/*.exe electron/release/*.dmg \
+                  electron/release/*.AppImage electron/release/*.zip \
+                  electron/release/*.tar.gz)
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "::error::${{ matrix.target }} produced no distributable files"
+            ls -R electron/release || true
+            exit 1
+          fi
+          printf 'uploading %s\n' "${assets[@]}"
+          gh release upload "$TAG" "${assets[@]}" --clobber
 
   # Chain straight into pages.yml so the new tag is served at `/`
   # immediately — without this, deployment would wait for the next

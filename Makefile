@@ -145,3 +145,41 @@ store-sweep:
 # `make store-page-shot ARGS="--width 1440 --out /tmp/steam-page.png"`
 store-page-shot:
 	node electron/store/preview/screenshot.mjs $(ARGS)
+
+# ---------------------------------------------------------------------------
+# Desktop packaging
+# ---------------------------------------------------------------------------
+#
+# Three capabilities are decided when the binary is PACKAGED — they belong to
+# the build, not to the machine that runs it — and each target below says which
+# ones its output carries:
+#
+#   ENABLE_MULTIPLAYER=1   sessions, the server browser, the direct door
+#   ENABLE_MODS=1          the Workshop and the local mod folder
+#   ENABLE_UPNP=1          may ask the router to forward the bound port
+#
+# Unset means off in a packaged target; a build from sources with no switches
+# at all keeps everything, so a checkout is always the whole game.
+#
+# `make desktop-steam` is what goes to a depot; `make desktop-dist` is a plain
+# download (installers and archives rather than a depot directory).
+# `PLATFORM=win|mac|linux` picks one, and the default builds for this machine.
+
+.PHONY: desktop-steam desktop-dist
+
+DESKTOP_SCRIPT = release$(if $(PLATFORM),:$(PLATFORM),)
+
+desktop-steam:
+	GIS_STAMP_CAPABILITIES=1 \
+	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),1) \
+	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),1) \
+	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),1) \
+	npm --prefix electron run $(DESKTOP_SCRIPT)
+
+desktop-dist:
+	GIS_STAMP_CAPABILITIES=1 \
+	GIS_PACKAGE_PROFILE=standalone \
+	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),0) \
+	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),0) \
+	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),0) \
+	npm --prefix electron run $(DESKTOP_SCRIPT)

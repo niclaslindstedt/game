@@ -21,7 +21,15 @@
 // renderer is the whole game, so it is sandboxed, context-isolated, given no
 // Node, and pinned to our own origin (see `createWindow`).
 
-import { app, BrowserWindow, ipcMain, protocol, screen, shell } from "electron";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  protocol,
+  screen,
+  shell,
+} from "electron";
 import { pathToFileURL } from "node:url";
 
 import {
@@ -58,11 +66,14 @@ import {
   APP_ORIGIN,
   APP_SCHEME,
   BRAND_BG,
+  BUILD_CAPABILITIES,
   isPlaceholderAppId,
   REMOTE_GAME_URL,
   STEAM_APP_ID,
   STEAM_ENABLED,
+  STORE_URL,
 } from "./config";
+import { capabilityList, resolveCapabilities } from "./capabilities";
 import { SHELL_CHANNEL } from "./channels";
 import { dedicatedArgs } from "./dedicated-mode";
 import { readInvite, type Invite } from "./net-invite";
@@ -78,6 +89,35 @@ import {
 } from "./window-state";
 import { serverEntryPath } from "./resources";
 
+/** What this launch may do — the package's own stamp, plus whatever the
+ * command line asked for on top of it. Resolved once, before anything reads
+ * it. */
+const { capabilities, refusals } = resolveCapabilities(
+  BUILD_CAPABILITIES,
+  process.argv,
+);
+for (const refusal of refusals) output.warn(refusal);
+
+/**
+ * THE ACKNOWLEDGEMENT.
+ *
+ * Multiplayer and mods are licensed with the store edition and not with a
+ * plain download of the binary, so turning either of them on by command line
+ * is a thing somebody has to do knowingly rather than by pasting a line they
+ * found. It is shown on every such launch — a preference that remembered the
+ * answer would turn an acknowledgement into a checkbox — and it is a MODAL
+ * refusal by default: the cancel path quits the game rather than starting it
+ * with the options quietly dropped.
+ */
+const UNLOCK_NOTICE =
+  "Multiplayer and mod support are being enabled by launch options.\n\n" +
+  "The Steam edition is the only edition licensed to play multiplayer" +
+  (STORE_URL ? `:\n${STORE_URL}\n` : ".") +
+  "\nEnabling either of them here is not covered by the terms of service " +
+  "for this build. Continuing means you understand that you are running the " +
+  "game outside those terms, and that you are doing so on your own " +
+  "responsibility.";
+
 /** `--dedicated` turns this executable into the already-shipped Node session
  * server: no Steam handshake, no Chromium readiness, and no window. The server
  * entry deliberately starts its terminal wrapper when it has no parent port.
@@ -91,9 +131,19 @@ if (dedicated) {
     app.setActivationPolicy("prohibited");
     app.dock?.hide();
   }
+  // No window here, so the acknowledgement is a line on the console the
+  // operator is already looking at.
+  if (capabilities.unlocked) output.warn(UNLOCK_NOTICE.replace(/\n+/g, " "));
   const entry = serverEntryPath();
   // Give the imported Node entry the argv shape it receives when run directly.
-  process.argv = [process.execPath, entry, ...dedicated];
+  // A build that may not touch the router says so here rather than trusting
+  // the server's own default — the operator cannot pass this one themselves.
+  process.argv = [
+    process.execPath,
+    entry,
+    ...dedicated.filter((arg) => arg !== "--no-portmap"),
+    ...(capabilities.portMap ? [] : ["--no-portmap"]),
+  ];
   void import(pathToFileURL(entry).href).catch((err: unknown) => {
     output.error(`dedicated server failed — ${describe(err)}`);
     process.exitCode = 1;
@@ -226,19 +276,23 @@ function routeMessage(window: BrowserWindow, raw: string): void {
     );
     scores.handle(data as ScoresRequest);
   }
-  if (data.__gisMods) {
+  // The two gated protocols answer nothing at all where this launch may not
+  // honour them. The page already hides both front doors (the capability list
+  // reaches it through the preload), so this is the second half of the same
+  // fact rather than a message anybody expects to send.
+  if (data.__gisMods && capabilities.mods) {
     mods ??= createModsBridge((event: ModsEvent) =>
       emit(window, "__gisModsEvent", event),
     );
     mods.handle(data as ModsRequest);
   }
-  if (data.__gisNet) {
+  if (data.__gisNet && capabilities.multiplayer) {
     // The FIFTH bridge, and the only one that needs the window itself rather
     // than just a way to emit into it: hosting hands the renderer one end of a
     // `MessagePort` pair, and a port is transferred over `webContents`, not
     // injected as JavaScript. See net.ts for why the game traffic deliberately
     // does not travel down this channel at all.
-    net ??= createNetBridge(window, (event: NetEvent) =>
+    net ??= createNetBridge(window, capabilities, (event: NetEvent) =>
       emit(window, "__gisNetEvent", event),
     );
     net.handle(data as NetRequest);
@@ -283,6 +337,11 @@ function createWindow(): BrowserWindow {
     title: "Ada's Trail",
     webPreferences: {
       preload: `${__dirname}/preload.js`,
+      // What this launch may do, handed to the preload on its own command
+      // line so the menus are built right the first time they are drawn.
+      additionalArguments: [
+        `--gis-caps=${capabilityList(capabilities).join(",")}`,
+      ],
       // The renderer is the game — a large web app. It gets no Node, no
       // `require`, and its own isolated world. See preload.ts for why this
       // departs from steamworks.js' own Electron instructions.
@@ -395,8 +454,40 @@ app.on("second-instance", (_event, argv) => {
   deliverInvite(mainWindow);
 });
 
+/** Ask, and mean it: the cancel path quits rather than starting the game with
+ * the options silently dropped. Returns whether to carry on. */
+function acknowledgeUnlock(): boolean {
+  if (!capabilities.unlocked) return true;
+  output.warn(UNLOCK_NOTICE.replace(/\n+/g, " "));
+  // The way to play this properly is offered beside the way to carry on, and
+  // it is a button rather than a line of text somebody has to copy out.
+  const buttons = STORE_URL
+    ? ["Quit", "Get it on Steam", "I understand — continue"]
+    : ["Quit", "I understand — continue"];
+  const continueAt = buttons.length - 1;
+  const choice = dialog.showMessageBoxSync({
+    type: "warning",
+    title: "Launch options",
+    message: "Enabled by launch options",
+    detail: UNLOCK_NOTICE,
+    buttons,
+    defaultId: continueAt,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (STORE_URL && choice === 1) {
+    void shell.openExternal(STORE_URL);
+    return false;
+  }
+  return choice === continueAt;
+}
+
 void app.whenReady().then(() => {
   if (dedicated) return;
+  if (!acknowledgeUnlock()) {
+    app.quit();
+    return;
+  }
   if (!REMOTE_GAME_URL) {
     if (!webrootExists()) {
       output.error(
@@ -424,7 +515,7 @@ void app.whenReady().then(() => {
   // `+connect_lobby <id>` (a friend accepted an invite while the game was
   // closed) or `--connect <address>` (a shareable link). It arrives before the
   // window exists, so it is parked and delivered on the page's first load.
-  pendingInvite = readInvite(process.argv);
+  if (capabilities.multiplayer) pendingInvite = readInvite(process.argv);
 
   mainWindow = createWindow();
 

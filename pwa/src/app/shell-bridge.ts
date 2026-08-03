@@ -56,6 +56,9 @@ declare global {
     /** Which shell this is — set by the shell before the game boots, beside
      * `__GIS_NATIVE__`. Absent in a browser/PWA. */
     __GIS_PLATFORM__?: ShellPlatform;
+    /** What this copy of the shell may honour, as plain names. Absent
+     * everywhere that has nothing to say about it. */
+    __GIS_CAPS__?: readonly string[];
   }
 }
 
@@ -73,6 +76,21 @@ export function shellPlatform(): ShellPlatform | null {
   return platform === "ios" || platform === "android" || platform === "steam"
     ? platform
     : null;
+}
+
+/**
+ * Whether this shell can honour a named capability.
+ *
+ * A shell that says nothing about them can honour all of them — which is every
+ * browser, every phone build, and any shell that predates the list. Only a
+ * shell that publishes a list is taken at its word, so this can never be what
+ * hides a feature from somebody it was never about; the bridge's own
+ * `*Available()` still decides that.
+ */
+export function shellCapability(name: string): boolean {
+  if (typeof window === "undefined") return true;
+  const caps = window.__GIS_CAPS__;
+  return !Array.isArray(caps) || caps.includes(name);
 }
 
 /**

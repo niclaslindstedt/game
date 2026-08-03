@@ -151,6 +151,12 @@ jobs:
       # The real binary must never be built against Valve's shared test app.
       GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
       GIS_BUILD_PROFILE: ${{ inputs.profile }}
+      # A depot build is the full product: sessions, the Workshop, and the
+      # router mapping the HOST screen's ROUTER row reports on.
+      GIS_STAMP_CAPABILITIES: "1"
+      GIS_ENABLE_MULTIPLAYER: "1"
+      GIS_ENABLE_MODS: "1"
+      GIS_ENABLE_UPNP: "1"
     steps:
       - name: Skip unselected platform
         if: inputs.platform != 'all' && inputs.platform != matrix.target
