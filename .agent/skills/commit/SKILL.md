@@ -71,22 +71,9 @@ Understand what changed so you can write an accurate commit message and PR title
 
 ## Step 4: Changelog Fragment
 
-**The changelog and version bump come from `.changes/unreleased/` fragments, not from commit messages or PR titles.** CI's `changeset` job fails any PR that changes something user-visible without one (files under `tests/`, `docs/`, `scripts/`, `.github/`, etc. are skip-listed; the `no-changelog` label opts a pure refactor/CI/docs PR out).
+**The changelog and version bump come from `.changes/unreleased/` fragments, not from commit messages or PR titles.** Every PR owes exactly one of two things: a fragment when the branch changes something a player would notice, or the `no-changelog` label when it doesn't. CI's `changeset` job fails a PR that gives neither.
 
-If the branch changes user-visible behavior and no fragment exists yet, add one:
-
-```sh
-cat > .changes/unreleased/$(date +%s)-short-slug.md <<'EOF'
----
-type: Added         # Added | Changed | Fixed | Removed | Security | Deprecated
-title: Short title  # optional — bolded at the head of the changelog bullet
----
-
-One-sentence user-facing summary.
-EOF
-```
-
-At release time the fragments drive the semver bump: `breaking: true` → major; Added/Changed/Removed/Deprecated → minor; Fixed/Security → patch. Preview with `make bump`.
+**Load the `changelog` skill and follow it** — it owns the fragment format, the type→semver mapping, when the label is the honest answer, and the traps (`src/` and `pwa/src/` are not skip-listed, so even a comment-only change there needs the label). Do not write a fragment from memory: the rules are restated in enough places already, and the one that drifted is the one-sentence body.
 
 ## Step 5: Stage & Commit
 
