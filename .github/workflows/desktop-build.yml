@@ -190,7 +190,7 @@ jobs:
             echo "::warning::Built against Spacewar (480). Set the STEAM_APP_ID repository variable before shipping this to a depot."
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: inputs.platform == 'all' || inputs.platform == matrix.target
         with:
           name: desktop-${{ matrix.artifact }}
