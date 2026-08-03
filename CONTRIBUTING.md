@@ -30,7 +30,6 @@ supports 7.x ([typescript-eslint#10940](https://github.com/typescript-eslint/typ
 ```sh
 git clone https://github.com/niclaslindstedt/game.git
 cd game
-export GITHUB_PAT=ghp_yourtoken   # read:packages
 npm install
 ```
 
