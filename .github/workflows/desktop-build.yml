@@ -125,6 +125,12 @@ jobs:
       # Exercise both Windows-sensitive seams: TypeScript modules loaded by the
       # content generators and npm's .cmd shim launched by the shell bundler.
       - run: npm run electron:bundle
+      # AND THE THIRD ONE, which nothing else on Windows reaches: the session
+      # server's ship target shells out to `tsc` — a `.cmd` shim here — and
+      # only the packaging job ever ran it, so it broke there instead of in a
+      # check. It needs no `electron/` install: the compiler is found in the
+      # root tree first.
+      - run: node scripts/build-server.mjs
 
   package:
     name: package (${{ matrix.os }})
@@ -157,6 +163,7 @@ jobs:
       GIS_ENABLE_MULTIPLAYER: "1"
       GIS_ENABLE_MODS: "1"
       GIS_ENABLE_UPNP: "1"
+      GIS_ENABLE_LICENSED: "1"
     steps:
       - name: Skip unselected platform
         if: inputs.platform != 'all' && inputs.platform != matrix.target

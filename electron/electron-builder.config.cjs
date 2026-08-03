@@ -65,16 +65,34 @@ const CAPABILITIES = {
   multiplayer: enabled("MULTIPLAYER"),
   mods: enabled("MODS"),
   portMap: enabled("UPNP"),
+  licensed: enabled("LICENSED"),
 };
 
 /**
  * WHAT COMES OUT OF THE PACKAGER.
  *
  * `dir` is the default because a depot wants a directory of files and its own
- * client owns installing them. Anything distributed on its own needs the
- * opposite — a thing a person can download and open — so the `standalone`
- * profile switches every platform to its conventional installer/archive pair.
+ * client owns installing them. The `standalone` profile is for a download
+ * instead, and it produces ARCHIVES on every platform rather than installers.
+ *
+ * That is a deliberate narrowing rather than a shortcut. An installer is a
+ * promise this project cannot keep unsigned: an unsigned NSIS setup trips
+ * SmartScreen, an un-notarized DMG is refused outright by Gatekeeper, and an
+ * AppImage cannot even be NAMED here (electron-builder refuses the apostrophe
+ * in the product name for a file path). An archive has none of those problems,
+ * is what a player who wants a portable copy actually wants, and is honest
+ * about what it is — so when the signing credentials exist, installers come
+ * back as an addition rather than as a fix.
  */
+/** The app bundle's name — the brand with its apostrophe removed. Derived
+ * rather than written out, so a rename still travels from `game.config.json`
+ * like every other brand string. */
+const PRODUCT_NAME = identity.title.replace(/['\u2019]/g, "");
+
+/** What the executable is called on the platforms where it is a COMMAND: one
+ * lowercase word, no spaces, nothing to quote. */
+const EXECUTABLE_NAME = PRODUCT_NAME.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
 const STANDALONE = process.env.GIS_PACKAGE_PROFILE === "standalone";
 const MAC_ARCHES = (
   process.env.GIS_MAC_ARCH ?? (STANDALONE ? "x64,arm64" : "x64")
@@ -113,7 +131,19 @@ const STEAM_REDIST = {
 
 module.exports = {
   appId: BUNDLE_ID,
-  productName: identity.title,
+  // THE APP'S NAME ON DISK, and deliberately not `identity.title` verbatim.
+  //
+  // The brand is "Ada's Trail" and stays that everywhere a person READS it —
+  // the window title, the store pages, the site. This is the name given to a
+  // FILE, and an apostrophe in a file path is a running argument with every
+  // packager and shell there is: electron-builder refuses it outright for an
+  // AppImage, and everything else that accepts it hands the player a path they
+  // have to quote. So the bundle drops the punctuation and keeps the words.
+  //
+  // macOS shows this one (`Adas Trail.app`, which is what a player sees in
+  // Finder and the Dock); Windows and Linux name their executable `adastrail`
+  // below, because a command somebody types should be one lowercase word.
+  productName: PRODUCT_NAME,
   copyright: `Copyright © ${new Date().getFullYear()} ${identity.author.name}`,
   buildVersion: version,
 
@@ -121,6 +151,12 @@ module.exports = {
     output: "release",
     buildResources: "build",
   },
+
+  // NAMED FROM THE PACKAGE NAME rather than the product name, because the
+  // product name has an apostrophe in it and a file path may not. Spelled out
+  // rather than left to the per-target defaults so every download reads the
+  // same way and carries its platform and architecture on its face.
+  artifactName: `${EXECUTABLE_NAME}-\${version}-\${os}-\${arch}.\${ext}`,
 
   // The capability stamp travels on the app's own manifest, so it is a fact
   // about the binary rather than about the environment it is started in. The
@@ -134,6 +170,10 @@ module.exports = {
   extraMetadata: {
     ...(STAMPED ? { capabilities: CAPABILITIES } : {}),
     storeUrl: identity.steamUrl || "",
+    // THE GAME'S version, not the shell package's. `electron/` keeps its own
+    // manifest version and nothing updates it, so a download named after it
+    // would claim a number no release ever had.
+    version,
   },
 
   // Everything the app needs and nothing else. `webroot/` is the built site
@@ -215,12 +255,8 @@ module.exports = {
   asarUnpack: ["**/node_modules/steamworks.js/**"],
 
   win: {
-    target: STANDALONE
-      ? [
-          { target: "nsis", arch: "x64" },
-          { target: "zip", arch: "x64" },
-        ]
-      : [{ target: "dir" }],
+    executableName: EXECUTABLE_NAME,
+    target: STANDALONE ? [{ target: "zip", arch: "x64" }] : [{ target: "dir" }],
     files: [
       "!node_modules/steamworks.js/dist/linux64/**/*",
       "!node_modules/steamworks.js/dist/osx/**/*",
@@ -236,12 +272,10 @@ module.exports = {
     // carrying a second copy of Chromium in every player's download. A
     // standalone download has no Rosetta guarantee to lean on and is expected
     // to be native, so it ships both slices as separate artifacts.
-    target: STANDALONE
-      ? MAC_ARCHES.flatMap((arch) => [
-          { target: "dmg", arch },
-          { target: "zip", arch },
-        ])
-      : MAC_ARCHES.map((arch) => ({ target: "dir", arch })),
+    target: MAC_ARCHES.map((arch) => ({
+      target: STANDALONE ? "zip" : "dir",
+      arch,
+    })),
     icon: "../pwa/public/maskable-icon-512x512.png",
     files: [
       "!node_modules/steamworks.js/dist/linux64/**/*",
@@ -267,11 +301,9 @@ module.exports = {
   },
 
   linux: {
+    executableName: EXECUTABLE_NAME,
     target: STANDALONE
-      ? [
-          { target: "AppImage", arch: "x64" },
-          { target: "tar.gz", arch: "x64" },
-        ]
+      ? [{ target: "tar.gz", arch: "x64" }]
       : [{ target: "dir" }],
     files: [
       "!node_modules/steamworks.js/dist/osx/**/*",

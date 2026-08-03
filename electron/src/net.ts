@@ -361,10 +361,12 @@ export function createNetBridge(
       const channel = new MessageChannelMain();
       running.givePort(channel.port1, {
         kind: "start",
-        // THE DOOR THE HUB MAY ADMIT PEERS THROUGH. Decided by the build (and
-        // by the launch, where the launch is what turned hosting on) rather
-        // than by anything the page can say — see `server/net/hub.ts`.
-        allowDirect: capabilities.multiplayer,
+        // WHETHER THIS SESSION MAY ADMIT ANYBODY STEAM IS NOT CARRYING.
+        // The LICENCE, not the feature: a build can have hosting turned on and
+        // still hold no licence, and it then runs a session nobody may join.
+        // Decided by the build and the launch, never by anything the page can
+        // say — see `server/net/hub.ts`.
+        allowDirect: capabilities.licensed,
         params,
         adopt: request.adopt,
         mods: request.mods,

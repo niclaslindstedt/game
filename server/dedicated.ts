@@ -71,6 +71,25 @@ export type DedicatedConfig = {
    * that honoured it would be enforcing the licence with a statement.
    */
   allowUnlicensedTransport?: boolean;
+  /**
+   * THE OPERATOR'S LICENCE CLAIM (`--licensed`), and what makes this server
+   * able to admit anybody at all.
+   *
+   * Without it the server starts, binds, prints its address and refuses every
+   * join — which is the honest behaviour for a copy that holds no multiplayer
+   * licence, and is why it is not an error at startup: a server that has not
+   * been claimed for is a server nobody joins, not a server that failed.
+   *
+   * It is a DECLARATION, not a check. Nothing here can verify a licence and
+   * nothing pretends to; what this does is make the claim explicit, deliberate
+   * and attributable rather than implied by the mere act of starting a
+   * process. The store build carries the same word in its packaging, so its
+   * server is licensed without anybody typing it.
+   *
+   * Distinct from `allowUnlicensedTransport` above, which is the repo's own
+   * escape for suites and soak runs and stays dead in a packaged binary.
+   */
+  licensed?: boolean;
   /** The mission to run. Defaults to the campaign's first. */
   level?: string;
   /** `easy` … `jesus`. */
@@ -191,6 +210,10 @@ export function parseArgs(argv: readonly string[]): {
       overrides.noPortMap = true;
       continue;
     }
+    if (name === "licensed") {
+      overrides.licensed = true;
+      continue;
+    }
     const value = eq < 0 ? (argv[++i] ?? "") : arg.slice(eq + 1);
     if (name === "config") config = value;
     else if (name === "level") overrides.level = value;
@@ -255,13 +278,20 @@ export async function startDedicated(
   if (config.password) info("password required");
 
   const host = createHost({
-    // Multiplayer is licensed through Steam. A standalone server on a raw UDP
-    // socket is precisely the unlicensed path, so it is REFUSED by default,
-    // the config escape is the only thing that opens it, and in the shipped
-    // binary the build-time literal holds even that shut — see
-    // `DedicatedConfig.allowUnlicensedTransport` and `licence.ts`.
+    // WHO THIS SERVER MAY LET IN, and there are two independent ways to say so.
+    //
+    // `--licensed` is the operator declaring they hold the multiplayer licence
+    // — the shipped route, carried automatically by a store build's packaging
+    // and typed by hand otherwise. Without it every join is refused by name
+    // and the console says so.
+    //
+    // The config-file escape beside it is the repo's own, for suites and soak
+    // runs, and the build-time literal keeps it dead in a packaged binary —
+    // see `DedicatedConfig.allowUnlicensedTransport` and `licence.ts`.
     allowUnlicensedTransport:
-      config.allowUnlicensedTransport === true && UNLICENSED_TRANSPORT_UNLOCKED,
+      config.licensed === true ||
+      (config.allowUnlicensedTransport === true &&
+        UNLICENSED_TRANSPORT_UNLOCKED),
     params,
     // NOBODY OWNS THIS ONE. Seat 0 stands empty until somebody joins, the
     // first arrival is dressed in the hero they brought rather than in the

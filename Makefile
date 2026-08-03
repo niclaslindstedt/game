@@ -157,6 +157,7 @@ store-page-shot:
 #   ENABLE_MULTIPLAYER=1   sessions, the server browser, the direct door
 #   ENABLE_MODS=1          the Workshop and the local mod folder
 #   ENABLE_UPNP=1          may ask the router to forward the bound port
+#   ENABLE_LICENSED=1      sessions it hosts may admit players at all
 #
 # Unset means off in a packaged target; a build from sources with no switches
 # at all keeps everything, so a checkout is always the whole game.
@@ -174,6 +175,7 @@ desktop-steam:
 	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),1) \
 	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),1) \
 	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),1) \
+	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),1) \
 	npm --prefix electron run $(DESKTOP_SCRIPT)
 
 desktop-dist:
@@ -182,4 +184,5 @@ desktop-dist:
 	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),0) \
 	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),0) \
 	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),0) \
+	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),0) \
 	npm --prefix electron run $(DESKTOP_SCRIPT)

@@ -23,20 +23,27 @@ export function dedicatedArgs(argv: readonly string[]): string[] | null {
  *  2. **The port is passed on explicitly.** It may have been given BEFORE
  *     `--dedicated` rather than after, and the server can only see what it is
  *     handed. Appended last, where the parser's last-one-wins puts it.
- *  3. **A build that may not touch the router says so**, in a way the operator
- *     cannot take back out — that flag is theirs to add, never to remove.
+ *  3. **The licence and the router permission are the SHELL's answers**, added
+ *     here in a way the operator cannot take back out or slip past — they are
+ *     resolved from the package stamp and the launch, above.
  */
 export function serverArgs(
   after: readonly string[],
   capabilities: Capabilities,
 ): string[] {
-  const SHELL_OWN = ["--multiplayer", "--mods", "--no-portmap"];
+  const SHELL_OWN = ["--multiplayer", "--mods", "--licensed", "--no-portmap"];
   const args = after.filter(
     (arg) => !SHELL_OWN.some((own) => arg === own || arg.startsWith(`${own}=`)),
   );
   if (capabilities.port !== undefined) {
     args.push("--port", `${capabilities.port}`);
   }
+  // The LICENCE travels as the shell resolved it, so a store build's server is
+  // licensed without the operator typing anything and a download's is not
+  // unless they said so. Stripped above and re-added here for the same reason
+  // the router flag is: what reaches the server is the shell's answer, not the
+  // command line's.
+  if (capabilities.licensed) args.push("--licensed");
   if (!capabilities.portMap) args.push("--no-portmap");
   return args;
 }
