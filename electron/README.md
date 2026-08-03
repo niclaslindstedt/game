@@ -154,6 +154,33 @@ The target is a **directory, not an installer** — Steam distributes by uploadi
 a directory to a depot and its own client owns installing and updating. See the
 comment at the top of `electron-builder.config.cjs`.
 
+### macOS: the build is never unsigned
+
+**Apple Silicon refuses to execute unsigned arm64 code.** Not "warns about it" —
+the kernel will not map the binary, and macOS tells the player _"'Adas Trail.app'
+is damaged and can't be opened. You should move it to the Trash."_ It is the same
+sentence macOS uses for a corrupt download, which is why the first native mac
+build read as a broken zip rather than as a missing signature. x86_64 has no such
+rule, so an unsigned Intel slice runs happily — under Rosetta, at Rosetta's
+speed — and hides the fault.
+
+So the packaging config always signs, and with what depends on what it is given:
+
+| Given                                                            | Signed with              | What the player meets                          |
+| ---------------------------------------------------------------- | ------------------------ | ---------------------------------------------- |
+| nothing                                                          | **ad-hoc** (`-`)         | one Gatekeeper prompt, then it runs — natively |
+| `CSC_LINK` / `GIS_MAC_IDENTITY`                                  | your **Developer ID**    | the same prompt (not notarized yet)            |
+| …plus `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Developer ID + notarized | nothing — it just opens                        |
+
+An ad-hoc build is a real, native, full-speed app. What it is not is _anybody's_
+app: the signature carries no identity, so Gatekeeper still asks. A player who
+downloads one opens it once through **System Settings → Privacy & Security →
+Open Anyway**; after that macOS remembers. `xattr -dr com.apple.quarantine
+"/Applications/Adas Trail.app"` is the same thing from a terminal.
+
+Where the credentials come from, when you want the prompt gone too — all of it
+is [`RELEASING.md`](RELEASING.md) → **Signing**.
+
 ### Before a real release
 
 **[`RELEASING.md`](RELEASING.md) is the full step-by-step** — Steam Direct, the

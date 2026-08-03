@@ -102,6 +102,48 @@ const MAC_ARCHES = (
   .filter(Boolean);
 
 /**
+ * WHO SIGNS THE macOS BUILD — and why an UNSIGNED one is not an option.
+ *
+ * Apple Silicon does not merely distrust unsigned arm64 code, it refuses to
+ * EXECUTE it: every arm64 binary must carry a signature for the kernel to map
+ * it at all. macOS reports that refusal to the player as *"'Adas Trail.app' is
+ * damaged and can't be opened"* — the same wording it uses for a corrupted
+ * download, which is what made the first arm64 release look like a broken zip
+ * rather than a missing signature. x86_64 has no such rule, which is exactly
+ * why the Intel slice ran (under Rosetta, slowly) while the native one died on
+ * launch. Leaving the app unsigned therefore ships a macOS build that only
+ * ever worked by accident.
+ *
+ * So the mac build ALWAYS signs, and the only question is with what:
+ *
+ *   - With a **Developer ID Application** certificate when one is provided
+ *     (`CSC_LINK`/`CSC_KEY_PASSWORD`, or a name in `GIS_MAC_IDENTITY`). That is
+ *     the real thing: with `APPLE_ID`/`APPLE_APP_SPECIFIC_PASSWORD`/
+ *     `APPLE_TEAM_ID` set too, electron-builder notarizes on the way out and
+ *     Gatekeeper lets the download open with no ceremony at all.
+ *   - **Ad hoc** (`identity: "-"`) otherwise, which is what an ordinary CI run
+ *     and any developer build gets. An ad-hoc signature satisfies the kernel —
+ *     the app RUNS, natively, at full speed — but it is nobody's identity, so a
+ *     downloaded copy still meets Gatekeeper's unidentified-developer prompt
+ *     and needs one trip through System Settings → Privacy & Security. That is
+ *     a prompt the player can answer; "damaged" is not.
+ *
+ * An ad-hoc signature cannot be timestamped (there is no certificate for a
+ * timestamp to outlive), so the timestamp is switched off on that path;
+ * `codesign` fails outright if asked for one. It stays ON for a real identity,
+ * where notarization requires it.
+ *
+ * The hardened runtime is on for both, and the entitlements it needs — the JIT
+ * pair, and `disable-library-validation` for Valve's unsigned `libsteam_api`
+ * and steamworks.js' addon — are already in `build/entitlements.mac.plist`.
+ * Ad-hoc signing without that last one launches to an immediate dyld failure.
+ */
+const MAC_IDENTITY =
+  process.env.GIS_MAC_IDENTITY ||
+  (process.env.CSC_LINK || process.env.CSC_NAME ? undefined : "-");
+const MAC_ADHOC = MAC_IDENTITY === "-";
+
+/**
  * The Steam redistributable that each platform's binding needs beside the
  * executable. steamworks.js ships these inside its own package; the native
  * `.node` addon links against them at load time, so they must sit next to the
@@ -291,9 +333,13 @@ module.exports = {
     ],
     extraFiles: STEAM_REDIST.mac,
     category: "public.app-category.action-games",
-    // Gatekeeper blocks an un-notarized app even when Steam launches it, so a
-    // real macOS release needs a Developer ID certificate and notarization.
-    // Both need credentials that cannot live in the repo — see README.md.
+    // NEVER unsigned — an unsigned arm64 app cannot run at all. See
+    // MAC_IDENTITY above for what each value means and what the player sees.
+    identity: MAC_IDENTITY,
+    ...(MAC_ADHOC ? { timestamp: "none", notarize: false } : {}),
+    // Gatekeeper still asks about an ad-hoc signature, so a frictionless macOS
+    // release wants a Developer ID certificate and notarization on top. Both
+    // need credentials that cannot live in the repo — see README.md.
     hardenedRuntime: true,
     gatekeeperAssess: false,
     entitlements: "build/entitlements.mac.plist",
