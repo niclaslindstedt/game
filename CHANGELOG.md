@@ -12,6 +12,12 @@ them into a dated section here. Do not hand-edit the released sections.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-03
+
+### Fixed
+
+- **The desktop game launches on Windows** — The desktop game no longer fails to start on Windows, and a launch that does fail now says why instead of closing silently.
+
 ## [1.0.0] - 2026-08-03
 
 ### Added

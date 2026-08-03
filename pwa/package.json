@@ -1,6 +1,6 @@
 {
   "name": "game-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "The deployed game app — a Vite + React PWA shell around the engine in ../src.",
   "type": "module",
