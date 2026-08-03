@@ -12,6 +12,13 @@ them into a dated section here. Do not hand-edit the released sections.
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-08-03
+
+### Fixed
+
+- **The Apple Silicon macOS download opens** — The Apple Silicon build is now signed, so macOS runs it natively instead of
+  calling it damaged and sending Mac players to the slower Intel one.
+
 ## [1.0.2] - 2026-08-03
 
 ### Fixed
