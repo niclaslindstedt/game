@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // A STABLE JSON string: object keys sorted, so two structurally equal values
 // always produce identical text. Generic (see pwa/src/lib/README.md — this pool
-// is earmarked for oss-framework).
+// is what a later game reuses).
 //
 // `JSON.stringify` preserves INSERTION order, so the same data assembled by two
 // different code paths — say, one built in memory and one round-tripped through

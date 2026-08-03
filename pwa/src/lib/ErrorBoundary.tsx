@@ -5,8 +5,8 @@
 // without a boundary React unmounts the whole tree — the player sees a silent
 // black screen with no way out. The boundary catches it and renders the given
 // fallback instead, which should offer a reload.
-// Generic React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*)
-// so it can be extracted into oss-framework once mature.
+// Generic React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*),
+// the pool a later game keeps as-is.
 
 import { Component, type ReactNode } from "react";
 

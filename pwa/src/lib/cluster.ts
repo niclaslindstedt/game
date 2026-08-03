@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Spatial clustering for touch games. Generic React/UI game code — lives in
-// pwa/src/lib/ so it can be extracted into oss-framework once mature.
+// pwa/src/lib/, the pool a later game keeps as-is.
 //
 // A single primitive: group circular items into connected clusters where two
 // items belong together when their bodies touch. The reference use is fusing a

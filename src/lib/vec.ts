@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Minimal 2D vector math. Generic engine code (usable by any game) — lives in
-// src/lib/ so it can be extracted into oss-framework once mature.
+// src/lib/, the pool a later game keeps as-is.
 
 export type Vec2 = {
   x: number;

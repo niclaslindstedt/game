@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Sprite-atlas slicing. Generic React/UI game code — lives in
-// pwa/src/lib/ so it can be extracted into oss-framework once mature.
+// pwa/src/lib/, the pool a later game keeps as-is.
 
 /** A sprite's source rectangle inside an atlas texture — a compact
  * `[x, y, w, h]` tuple, the shape the atlas manifest ships in (it rides the

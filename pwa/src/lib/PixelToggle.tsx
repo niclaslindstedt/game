@@ -4,7 +4,7 @@
 // (empty, knob left), on is the slider at 100% (filled, knob right). Purely
 // presentational; the enclosing menu row owns the click that flips it. Generic
 // React/UI game code, so it lives in pwa/src/lib/ (imported as
-// @ui/lib/PixelToggle.tsx) for eventual extraction into oss-framework.
+// @ui/lib/PixelToggle.tsx), the pool a later game keeps as-is.
 
 type Props = {
   /** Whether the switch reads on (filled, knob right) or off (empty, left). */

@@ -7,7 +7,7 @@
    second "pipe" line). Kept deliberately restrained — the frame should whisper,
    not shout.
 
-   It lives in `lib/` (generic UI, earmarked for oss-framework) and apart from
+   It lives in `lib/` (generic UI, the pool a later game keeps) and apart from
    styles.css for one reason: the LIBRARY — the generated companion site at
    /library/ — must wear the same panels, and it cannot load the game's
    stylesheet (that would put the app's whole CSS on a document page). Its build

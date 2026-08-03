@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Haptic feedback for touch games. Generic React/UI game code — lives in
-// pwa/src/lib/ so it can be extracted into oss-framework once mature.
+// pwa/src/lib/, the pool a later game keeps as-is.
 //
 // The design is a thin surface (`Haptics`) over a swappable backend
 // (`HapticsDriver`). Today the only backend is the browser Vibration API;

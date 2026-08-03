@@ -22,7 +22,7 @@ what makes every game rule unit-testable in plain Node.
 | Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
 | Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items/` (split by concern behind `index.ts`) — safe to call from UI outside `step()`, but reach them through `src/game/commands.ts` (`applyRunCommand`) so a multiplayer client can run them too |
 | Per-tick behavior | `src/game/step/` — one `stepX()` function per system, each in its own module, called in a fixed order documented at the top of `index.ts` |
-| Generic helpers (any game could use) | `src/lib/` — earmarked for oss-framework extraction |
+| Generic helpers (any game could use) | `src/lib/` — the pool a later game keeps as-is |
 | Public surface | `src/index.ts` — export new types/constants the app needs |
 | Tests | `tests/engine/<system>_test.ts` (Vitest, `_test` suffix mandatory) — engine rules run on the synthetic fixtures (`tests/engine/fixtures.ts` via `registerDefs`), never on shipped content ids; content suites live in `tests/content/` |
 | Drawing | `pwa/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |

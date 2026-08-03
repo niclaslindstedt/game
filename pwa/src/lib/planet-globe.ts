@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // A tiny software renderer for a lit, textured, *rotating* sphere on a 2D
 // canvas — a real globe, not a flat disc with a gradient. Generic enough to
-// live in the @ui/lib pool (earmarked for oss-framework); the title menu is its
+// live in the @ui/lib pool (which a later game keeps); the title menu is its
 // first consumer (see game/title-sky.ts).
 //
 // The maths, per output pixel of the disc:

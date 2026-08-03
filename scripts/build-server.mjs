@@ -35,8 +35,9 @@
 // gone before `tsc` sees the file. Staging a copy and rewriting the specifiers
 // there costs one directory and keeps the engine written in the repo's own
 // house style — which matters, because the alternative was to relativize
-// `@game/lib` across `src/` and lose the prefix swap that makes extraction into
-// oss-framework cheap.
+// `@game/lib` across `src/`, and the alias is what marks the generic pool as
+// generic: a relative path says nothing about which side of that line a
+// module sits on.
 //
 // The alternative to all of it is a bundler, and it was refused for a reason
 // that already has a test in this repo: `typescript` is a declared devDependency

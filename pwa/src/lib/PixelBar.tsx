@@ -6,8 +6,8 @@
 //   - timed: `fillMs` fills the bar from empty to full over that many ms via a
 //     CSS keyframe (the level-up lockout countdown).
 // Purely presentational; the caller owns any click/label. Generic React/UI game
-// code, so it lives in pwa/src/lib/ (imported as @ui/lib/PixelBar.tsx) for
-// eventual extraction into oss-framework.
+// code, so it lives in pwa/src/lib/ (imported as @ui/lib/PixelBar.tsx), the
+// pool a later game keeps as-is.
 
 type Props = {
   /** Static fill fraction, 0..1 (clamped). Ignored when `fillMs` is set. */

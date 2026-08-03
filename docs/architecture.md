@@ -1076,8 +1076,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   `docs/configuration.md`).
 - **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`,
   `cutscene.ts` — the deterministic beat-machine cutscene player),
-  imported via the `@game/lib/*` alias and earmarked for extraction into
-  oss-framework once mature (extraction is then a prefix swap).
+  imported via the `@game/lib/*` alias — the pool a later game keeps as-is
+  while the game-specific modules around it are rewritten.
 - **`src/sim/simulate.ts`** — the headless campaign simulator (see the
   `simulate-run` skill): `simulateLevel`/`simulateCampaign` drive the real
   engine — createGame, step, the autopilot, auto-equip, loadout carry —

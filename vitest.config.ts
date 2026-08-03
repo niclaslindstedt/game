@@ -16,9 +16,9 @@ export default defineConfig({
   },
   resolve: {
     // Keep in lockstep with tsconfig.json `paths` (and the website's vite
-    // config): @game/lib and @ui/lib are the generic pools earmarked for
-    // extraction into oss-framework — extraction swaps the prefix, not the
-    // code. @ui/lib is aliased here so DOM-free UI-lib modules (the chiptune
+    // config): @game/lib and @ui/lib are the generic pools a later game keeps
+    // as-is, and the alias is what marks a module as belonging to one.
+    // @ui/lib is aliased here so DOM-free UI-lib modules (the chiptune
     // sequencer) stay testable from tests/.
     alias: [
       { find: "@game/core", replacement: here("./src/index.ts") },

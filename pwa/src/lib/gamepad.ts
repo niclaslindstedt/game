@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Reading a game controller. Generic browser input with no game in it, so it
-// lives in the shared pool (`@ui/lib/gamepad.ts`) and is earmarked for
-// extraction to oss-framework once it has been played with properly.
+// lives in the shared pool (`@ui/lib/gamepad.ts`), which a later game keeps
+// as-is.
 //
 // The Gamepad API is a POLLING api, not an event one: `navigator.getGamepads()`
 // returns a fresh snapshot each call and there are no button events at all. So

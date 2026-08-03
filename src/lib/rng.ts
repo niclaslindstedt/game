@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Seeded pseudo-random number generator (mulberry32). Generic engine code —
-// lives in src/lib/ so it can be extracted into oss-framework once mature.
+// lives in src/lib/, the pool a later game keeps as-is.
 // A seeded stream keeps level generation deterministic under test while the
 // app passes a clock-derived seed for variety between runs.
 

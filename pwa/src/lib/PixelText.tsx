@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // React binding for the pixel font: renders a string into a small canvas so
 // DOM overlays (HUD, splash screens) use the same generated font as the game
-// canvas. Generic React/UI game code — lives in pwa/src/lib/ so it can
-// be extracted into oss-framework once mature.
+// canvas. Generic React/UI game code — lives in pwa/src/lib/, the pool a
+// later game keeps as-is.
 
 import { useLayoutEffect, useRef } from "react";
 

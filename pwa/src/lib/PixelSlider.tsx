@@ -3,8 +3,8 @@
 // to set a 0..1 position. Purely geometry — the caller maps the position to
 // whatever it means (a balance multiplier, a volume level, …) and renders the
 // value readout itself. Generic React/UI game code, so it lives in
-// pwa/src/lib/ (imported as @ui/lib/PixelSlider.tsx) for eventual
-// extraction into oss-framework.
+// pwa/src/lib/ (imported as @ui/lib/PixelSlider.tsx), the pool a later
+// game keeps as-is.
 
 import {
   useCallback,

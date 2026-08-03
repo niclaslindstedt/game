@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Reveal-lockout hook for modals that pop open under live input. Generic
-// React code (usable by any game) — lives in pwa/src/lib/ so it can be
-// extracted into oss-framework once mature.
+// React code (usable by any game) — lives in pwa/src/lib/, the pool a later
+// game keeps as-is.
 
 import { useEffect, useState } from "react";
 
