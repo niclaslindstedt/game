@@ -93,6 +93,24 @@ the embedded site and is the ONLY correct target for a store build, and the
 - PRs are squash-merged; the **PR title** becomes the single commit on `main`,
   so it must follow conventional-commit format.
 - Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
+- **Push and open the PR WHILE the final verification runs, not after it.**
+  The full suite takes minutes and passes almost every time, so waiting for it
+  before pushing spends that time twice — once locally and again in CI, which
+  is about to run the same checks anyway. Start `make test` in the background,
+  push and open the PR, then read the result: green means the work is already
+  up, and red means a follow-up commit onto a branch that was going to need
+  one regardless. This applies to the FINAL check, not to the fast ones —
+  typecheck and the affected suite still run before the commit is written.
+- **THE PUSH AND THE PR ARE ONE STEP.** The moment a branch is pushed as
+  finished work, open its pull request — same turn, no waiting for a suite, a
+  review, or permission. A pushed branch with no PR is invisible: nothing runs
+  the PR-only checks against it, nobody is asked to look at it, and the work
+  sits done and unmergeable until somebody notices. If a PR is already open
+  for the branch, the push updates it and there is nothing more to do.
+- **Capture the final suite's output to a file** (`… 2>&1 | tee <log>`), never
+  just `| tail`. A run that ends `1 failed` with the failure scrolled past is
+  a run that has to be done again to learn anything, and the second run is
+  where a flake hides from you.
 - **Do not babysit PRs — but do fix what breaks.** Once a PR is opened, write
   out its URL and a short summary of what was done, then stop. Don't
   proactively subscribe to PR activity, poll CI, or schedule check-ins, and

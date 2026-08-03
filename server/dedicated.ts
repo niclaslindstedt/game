@@ -98,6 +98,16 @@ export type DedicatedConfig = {
   /** MAP SIZE: which of the three sizes this server's maps are carved at. Every
    * mission is carved from its blueprint, so the size is the only knob left. */
   generatedMapSize?: string;
+  /**
+   * Never ask the router to forward the bound port (`--no-portmap`).
+   *
+   * A mapping request is a change this process makes to somebody else's
+   * hardware, so a deployment that does not want one — a hosted box with its
+   * ports already forwarded, a LAN, a build whose packaging does not permit it
+   * — must be able to say so. Absent means the mapping is attempted, which is
+   * what an operator on a home connection wants.
+   */
+  noPortMap?: boolean;
   /** Seconds between status lines on the console. 0 turns them off. */
   statusEverySec?: number;
   /** Print a detailed status line every second. */
@@ -175,6 +185,10 @@ export function parseArgs(argv: readonly string[]): {
     const name = eq < 0 ? arg.slice(2) : arg.slice(2, eq);
     if (name === "verbose") {
       overrides.verbose = true;
+      continue;
+    }
+    if (name === "no-portmap") {
+      overrides.noPortMap = true;
       continue;
     }
     const value = eq < 0 ? (argv[++i] ?? "") : arg.slice(eq + 1);
@@ -284,7 +298,7 @@ export async function startDedicated(
   // Asked for AFTER the address is printed: a router discovery takes up to two
   // seconds against an unresponsive gateway, and the address is the one thing
   // an operator is waiting for.
-  await host.mapPort();
+  if (!config.noPortMap) await host.mapPort();
   const mapping = host.mapping;
   if (mapping.status === "mapped") {
     info(

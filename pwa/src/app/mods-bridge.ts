@@ -23,7 +23,12 @@
 // and this bridge is imported by the MODS menu builder on the startup path.
 import type { ModBundle } from "../game/mod-state.ts";
 
-import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
+import {
+  postToShell,
+  shellAvailable,
+  shellCapability,
+  shellPlatform,
+} from "./shell-bridge.ts";
 
 declare global {
   interface Window {
@@ -75,7 +80,9 @@ const waiters = new Map<number, (payload: unknown) => void>();
  * coin store is a mobile one, and each build shows only what it can honour.
  */
 export function modsBridgeAvailable(): boolean {
-  return shellAvailable() && shellPlatform() === "steam";
+  return (
+    shellAvailable() && shellPlatform() === "steam" && shellCapability("mods")
+  );
 }
 
 /** Install the shell's callback. Idempotent; safe to call on every mount. */

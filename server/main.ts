@@ -98,12 +98,34 @@ type ControlMessage =
        * player just retried into (see `SessionOptions.adopt`). Opaque on this
        * hop; the session is what reads it. */
       adopt?: FrozenRun | null;
+      /**
+       * WHETHER THE HUB MAY ADMIT A PEER THAT DID NOT COME THROUGH STEAM.
+       *
+       * The Steam-only transport gate (`net/hub.ts`) is a licence fact, and
+       * this is the shell saying which product it is: the store edition and a
+       * build whose own packaging permits multiplayer both open the direct
+       * door, and a build that does not carry that permission cannot ask for
+       * it here — the field is written by the main process from its own
+       * capability stamp, and nothing the page or a config file says reaches
+       * it. The dedicated server's separate escape stays exactly as it was
+       * (`DedicatedConfig.allowUnlicensedTransport`, dead in a packaged
+       * binary — `licence.ts`).
+       */
+      allowDirect?: boolean;
     }
   | { kind: "stop" }
   | { kind: "status" }
   /** Open the doors. `port` is what to TRY; what was got comes back in the
    * reply, and the two are not the same thing — see `net/udp.ts`. */
-  | { kind: "listen"; port?: number; udp?: boolean; steam?: boolean }
+  | {
+      kind: "listen";
+      port?: number;
+      udp?: boolean;
+      steam?: boolean;
+      /** Whether the router may be asked to forward the bound port. Absent
+       * means yes, which is what every caller but a restricted build sends. */
+      map?: boolean;
+    }
   /**
    * The OTHER direction: this process is a JOINER rather than a host.
    *
@@ -318,6 +340,7 @@ function handleControl(
       host = createHost({
         params: message.params,
         adopt: message.adopt,
+        allowUnlicensedTransport: message.allowDirect === true,
         mods: message.mods,
         password: message.password,
         maxClients: message.maxClients,
@@ -427,7 +450,7 @@ async function openDoors(
     build: engineVersion,
     detail: open.bound ? undefined : "could not bind a UDP port",
   });
-  await open.mapPort();
+  if (message.map !== false) await open.mapPort();
 }
 
 /**

@@ -365,11 +365,12 @@ export function createPeerHub(options: HubOptions): PeerHub {
   /**
    * MAY A SESSION BE CARRIED OVER THIS TRANSPORT AT ALL?
    *
-   * Steam only. The `allowUnlicensedTransport` escape exists for the repo's own
-   * tests and the headless soak, which run over a loopback UDP socket with no
-   * Steam anywhere near them — it is an OPTION on the hub rather than an
-   * environment variable precisely so it cannot be set by a player, a launch
-   * argument, or a config file somebody edits.
+   * The Steam relay always; anything else only where the thing that BUILT the
+   * host said so. The repo's own tests and the headless soak are the plainest
+   * case — they run over a loopback UDP socket with no Steam anywhere near
+   * them — and it is an OPTION on the hub rather than an environment variable
+   * precisely so it stays a property of the build rather than of a file
+   * somebody can edit on an installed copy.
    */
   function licensedTransport(transport: Transport): boolean {
     if (options.allowUnlicensedTransport) return true;

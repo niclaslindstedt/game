@@ -52,10 +52,10 @@ export type HostOptions = {
   password?: string;
   /**
    * Admit peers over a transport that is not Steam's — see
-   * `HubOptions.allowUnlicensedTransport`. Multiplayer is licensed through
-   * Steam and nowhere else (the Steam-only licence gate, `server/licence.ts`),
-   * so the shipped game never sets this; it exists for the repo's suites and
-   * the headless soak.
+   * `HubOptions.allowUnlicensedTransport`. Set by whatever BUILT the host and
+   * by nothing else: the repo's suites and the headless soak, and the shell
+   * from its own packaging stamp. The dedicated server's config-file escape is
+   * a separate thing and stays shut in a packaged binary (`licence.ts`).
    */
   allowUnlicensedTransport?: boolean;
   /** Seats, host included. */

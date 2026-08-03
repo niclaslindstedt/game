@@ -76,10 +76,20 @@ export type ServerControl =
        * process never learns what a run is, which is the point of the two
        * channels (see net.ts). */
       adopt?: unknown;
+      /** Whether the hub may admit peers over a transport other than the
+       * Steam relay. The shell decides it from what the build permits. */
+      allowDirect?: boolean;
     }
   | { kind: "stop" }
   | { kind: "status" }
-  | { kind: "listen"; port?: number; udp?: boolean; steam?: boolean }
+  | {
+      kind: "listen";
+      port?: number;
+      udp?: boolean;
+      steam?: boolean;
+      /** Whether the session may ask the router to forward the bound port. */
+      map?: boolean;
+    }
   /** The other role: JOIN somebody else's session instead of hosting one. The
    * same fork, the same port to the renderer — see `server/main.ts`. */
   | {
