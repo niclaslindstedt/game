@@ -138,30 +138,17 @@ Two rules that go with it, both learned the same way:
 
 ## Changelog fragments
 
-Every PR that changes something user-visible must add a changeset fragment
-under `.changes/unreleased/` — CI's `changeset` job enforces it (label the
-PR `no-changelog` to opt out for pure refactors/CI/docs changes; files in
-`tests/`, `docs/`, `scripts/`, `.github/`, etc. are skip-listed anyway).
+**Every PR settles this, and gets exactly one of the two — never both, never
+neither:**
 
-```
-.changes/unreleased/$(date +%s)-short-slug.md
+- It changes something **a player would notice** → **load the `changelog`
+  skill** and add a fragment under `.changes/unreleased/`.
+- It doesn't → **label the PR `no-changelog`.**
 
----
-type: Added         # Added | Changed | Fixed | Removed | Security | Deprecated
-title: Short title  # optional — bolded at the head of the changelog bullet
-breaking: true      # optional — forces a major version bump
----
-
-One-sentence user-facing summary.
-```
-
-At release time `release.yml` (manual dispatch) derives the semver bump
-from the fragments (`breaking` → major, Added/Changed/Removed/Deprecated →
-minor, Fixed/Security → patch), collates them into `CHANGELOG.md`, updates
-every version string via `scripts/update-versions.sh`, tags, publishes a
-GitHub Release, and deploys. Preview locally with `make bump` (shows the
-derived bump) and `make changelog VERSION=X.Y.Z` (consumes fragments —
-revert afterwards).
+CI's `changeset` job enforces the pair. The skill owns everything else: the
+fragment format, the type→semver mapping, when the label is the honest
+answer, and the release-time constraints a missing or malformed fragment
+breaks.
 
 ## Architecture summary
 
@@ -616,23 +603,24 @@ skill is the source of truth — load that, not a search of the tree.
 | The house art style                                                                                                   | `docs/art-style.md`                                 |
 | Anything failing to install, build or connect                                                                         | `docs/troubleshooting.md`                           |
 
-| Working on                                         | Load the skill                                          |
-| -------------------------------------------------- | ------------------------------------------------------- |
-| Generated maps, blueprints, a venue's feel         | `mapgen-improvement`, `map-improvement`, `level-design` |
-| Errands, givers, conversations, campaign chains    | `quest-design`                                          |
-| The title menu, a settings row, the developer menu | `menu-design`                                           |
-| Blood, cleaves, gibs, gore families, the NSFW gate | `gore-system`                                           |
-| A boss's set-piece move or death rite              | `boss-abilities`                                        |
-| A transient effect, the effects gallery            | `visual-effects`                                        |
-| Weapons, loot, uniques, the off-hand, signature FX | `weapon-system`                                         |
-| The passive talent trees and their always-on looks | `talent-fx`                                             |
-| Enemies, companions, presentation fields           | `enemy-design`                                          |
-| Sprites and the pixel font                         | `pixel-assets`, `art-improvement`                       |
-| Audio                                              | `sound-effects`                                         |
-| The generated `/library/` site                     | `library-improvement`                                   |
-| Balance, the XP curve, measuring a real run        | `simulate-run`, `leveling-balance`, `playtest`          |
-| The autopilot                                      | `bot-improvement`                                       |
-| Any spoken or written line                         | `update-story`                                          |
+| Working on                                            | Load the skill                                          |
+| ----------------------------------------------------- | ------------------------------------------------------- |
+| Generated maps, blueprints, a venue's feel            | `mapgen-improvement`, `map-improvement`, `level-design` |
+| Errands, givers, conversations, campaign chains       | `quest-design`                                          |
+| The title menu, a settings row, the developer menu    | `menu-design`                                           |
+| Blood, cleaves, gibs, gore families, the NSFW gate    | `gore-system`                                           |
+| A boss's set-piece move or death rite                 | `boss-abilities`                                        |
+| A transient effect, the effects gallery               | `visual-effects`                                        |
+| Weapons, loot, uniques, the off-hand, signature FX    | `weapon-system`                                         |
+| The passive talent trees and their always-on looks    | `talent-fx`                                             |
+| Enemies, companions, presentation fields              | `enemy-design`                                          |
+| Sprites and the pixel font                            | `pixel-assets`, `art-improvement`                       |
+| Audio                                                 | `sound-effects`                                         |
+| The generated `/library/` site                        | `library-improvement`                                   |
+| Balance, the XP curve, measuring a real run           | `simulate-run`, `leveling-balance`, `playtest`          |
+| The autopilot                                         | `bot-improvement`                                       |
+| Any spoken or written line                            | `update-story`                                          |
+| A PR's changelog fragment, or the `no-changelog` call | `changelog`                                             |
 
 ## Game development skills
 
@@ -680,6 +668,7 @@ Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone 
 | `update-website` | After changes that affect the deployed app's SEO surfaces or source-derived content under `pwa/`.                                 |
 | `update-prompts` | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
 | `sync-oss-spec`  | When the repo may have drifted from `OSS_SPEC.md` — walks the spec's mandates and fixes violations.                               |
+| `changelog`      | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |
 | `commit`         | To commit, push, and open/update a PR with a conventional-commit title.                                                           |
 
 Each skill has a `SKILL.md` (the playbook) and a `.last-updated` file (the baseline commit hash). Run a skill by loading its `SKILL.md` and following the discovery process and update checklist. The skill rewrites `.last-updated` at the end of a successful run, and improves itself in place when it discovers new mapping entries. The `maintenance` skill owns a **Registry** table listing every `update-*` skill — add a row whenever you create a new sync skill.
