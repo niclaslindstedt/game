@@ -126,8 +126,28 @@ jobs:
       - name: Collate changelog
         run: node scripts/release/collate-changelog.mjs "${{ steps.bump.outputs.version }}"
 
+      # The notes are the changelog section, plus a standing footer about the
+      # downloads. The macOS half of that footer is not decoration: the
+      # archives are signed but not notarized (see electron/RELEASING.md), so
+      # Gatekeeper asks about them once, and a player with no answer to that
+      # prompt has no game.
       - name: Extract release-notes body
-        run: node scripts/release/extract-section.mjs "${{ steps.bump.outputs.version }}" > .release-notes.md
+        run: |
+          node scripts/release/extract-section.mjs "${{ steps.bump.outputs.version }}" > .release-notes.md
+          cat >> .release-notes.md <<'NOTES'
+
+          ---
+
+          ### Downloads
+
+          Pick the archive for your machine — `mac-arm64` for Apple Silicon
+          (M1 and later), `mac-x64` for an Intel Mac.
+
+          **macOS:** the app is signed but not notarized, so the first launch
+          is refused. Open **System Settings → Privacy & Security**, scroll to
+          the message about Ada's Trail and choose **Open Anyway**. macOS
+          remembers after that.
+          NOTES
 
       - name: make build
         run: make build
@@ -219,10 +239,24 @@ jobs:
       GIS_ENABLE_MODS: ${{ inputs.enable_mods && '1' || '0' }}
       GIS_ENABLE_UPNP: ${{ inputs.enable_upnp && '1' || '0' }}
       GIS_ENABLE_LICENSED: ${{ inputs.enable_licensed && '1' || '0' }}
-      # Unsigned downloads. Signing and notarization need credentials that
-      # cannot live in the repo; without this, electron-builder would try to
-      # discover an identity and fail the job on a runner that has none.
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      # macOS SIGNING — optional here, but the build is never unsigned.
+      #
+      # Apple Silicon refuses to execute unsigned arm64 code, and reports that
+      # to the player as "the app is damaged", so an unsigned arm64 download is
+      # not a download at all. electron-builder therefore signs the app AD HOC
+      # when none of these secrets are set (see electron-builder.config.cjs) —
+      # the app runs natively, the player answers one Gatekeeper prompt.
+      #
+      # Set the secrets and the same job signs and notarizes for real, and the
+      # prompt goes away too. Every one of them is empty until somebody adds
+      # it, and empty means "not provided" to electron-builder, so a repo with
+      # no Apple account behaves exactly as it did before.
+      GIS_MAC_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - uses: actions/checkout@v7
         with:

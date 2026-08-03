@@ -164,6 +164,16 @@ jobs:
       GIS_ENABLE_MODS: "1"
       GIS_ENABLE_UPNP: "1"
       GIS_ENABLE_LICENSED: "1"
+      # macOS signing, exactly as release.yml passes it: absent secrets mean an
+      # ad-hoc signature, which is the minimum an arm64 app needs to run at
+      # all. A depot build wants the real one — Gatekeeper blocks an
+      # un-notarized app even when Steam is the one launching it.
+      GIS_MAC_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - name: Skip unselected platform
         if: inputs.platform != 'all' && inputs.platform != matrix.target
