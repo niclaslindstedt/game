@@ -6,7 +6,7 @@
 // edge is at rest (no fade, so the first/last row stays fully visible when you
 // reach it), 1 means there is hidden content past that edge (fade it out).
 // Generic React/UI game code: lives in pwa/src/lib/ (imported as
-// @ui/lib/*) so it can be extracted into oss-framework once mature. The mask
+// @ui/lib/*), the pool a later game keeps as-is. The mask
 // itself is pure CSS; this hook owns only the scroll-position bookkeeping.
 
 import { useEffect, type RefObject } from "react";

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Pointer tracking for canvas games. Generic React/UI game code — lives in
-// pwa/src/lib/ so it can be extracted into oss-framework once mature.
+// pwa/src/lib/, the pool a later game keeps as-is.
 // Unifies mouse/touch/pen via Pointer Events and reports the raw gestures a
 // control scheme is built from: hold state with its anchor point (virtual
 // dpad/joystick steering), mouse hover position (cursor-follow steering),

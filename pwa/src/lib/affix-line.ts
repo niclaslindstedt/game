@@ -2,8 +2,8 @@
 // HOW AN AFFIX READS. One engine `Affix` in, one line of display text out —
 // "+12% DAMAGE", "GRANTS STORMCALL II", "NEVER MISSES".
 //
-// It sits in `lib/` (generic UI text for an engine value, earmarked for
-// oss-framework) and apart from ItemCard.tsx for the same reason
+// It sits in `lib/` (generic UI text for an engine value, the pool a later
+// game keeps as-is) and apart from ItemCard.tsx for the same reason
 // pixel-panel.css and item-card.css sit apart from styles.css: the LIBRARY —
 // the generated companion site at /library/ — prints these very lines on every
 // arsenal page, and it cannot import a React component to get them. It imports

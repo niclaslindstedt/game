@@ -2,9 +2,9 @@
 // Runtime renderer for the generated pixel font (see the pixel-assets
 // skill: glyphs live in scripts/asset-tools/font.mjs and are packed
 // into a white atlas + metrics at build time). Generic React/UI game code —
-// lives in pwa/src/lib/ so it can be extracted into oss-framework once
-// mature. The white atlas is tinted per color into cached offscreen
-// canvases, then glyphs are blitted with smoothing off.
+// lives in pwa/src/lib/, the pool a later game keeps as-is. The white atlas
+// is tinted per color into cached offscreen canvases, then glyphs are
+// blitted with smoothing off.
 
 export type PixelFontMeta = {
   height: number;

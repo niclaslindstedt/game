@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // A stable per-INSTALL identifier, persisted in localStorage. Generic: the
 // caller supplies the storage key, so nothing game-specific leaks in (see
-// pwa/src/lib/README.md — this pool is earmarked for oss-framework).
+// pwa/src/lib/README.md — this pool is what a later game reuses).
 //
 // It identifies the device to a merge, never a person: cloud sync uses it to
 // tell "my row" apart from "the other device's row" in a mergeable counter set

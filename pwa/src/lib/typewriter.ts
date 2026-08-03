@@ -2,8 +2,8 @@
 // Letter-by-letter text reveal — the scrolling-dialogue effect of 16-bit RPGs.
 // Characters appear one at a time with punctuation buying dramatic pauses, so
 // a line lands with the timing it was written for. Generic React/UI game code:
-// lives in pwa/src/lib/ (imported as @ui/lib/*) so it can be extracted
-// into oss-framework once mature. The renderer is anything that can show a
+// lives in pwa/src/lib/ (imported as @ui/lib/*), the pool a later game
+// keeps as-is. The renderer is anything that can show a
 // growing prefix of each line (PixelText here); this module owns only the
 // timing.
 

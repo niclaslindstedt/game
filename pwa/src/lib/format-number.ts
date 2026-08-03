@@ -2,8 +2,8 @@
 // Compact number formatting — shrinks a run's unbounded tallies (XP, damage)
 // into short, readable badges so a huge total reads as "2.93Dc", not the raw
 // "2.925093758188708e+48" that JS `String()` spits out past ~1e21. Generic
-// React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*) so it
-// can be extracted into oss-framework once mature. No DOM, no game types — a
+// React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*), the
+// pool a later game keeps as-is. No DOM, no game types — a
 // pure number → string function. Two entry points share one ladder:
 // `formatCompact` for open-ended tallies (XP, damage) and `formatCoins` for
 // currency, which abbreviates a decade earlier to stay four glyphs wide.

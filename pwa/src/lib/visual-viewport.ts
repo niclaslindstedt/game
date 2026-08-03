@@ -7,8 +7,8 @@
 // behind the keyboard. The VisualViewport API reports the region that is
 // actually visible above the keyboard; mirroring its height and offset onto the
 // element makes flex centring land in that region instead.
-// Generic React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*)
-// so it can be extracted into oss-framework once mature.
+// Generic React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*),
+// the pool a later game keeps as-is.
 
 import { useEffect, type RefObject } from "react";
 

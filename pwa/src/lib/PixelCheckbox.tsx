@@ -5,8 +5,8 @@
 // on/off switch (flip a single setting) — see the note on PixelToggle for why
 // the two-mode picker rows stay switches. Purely presentational; the enclosing
 // menu row owns the click that toggles it. Generic React/UI game code, so it
-// lives in pwa/src/lib/ (imported as @ui/lib/PixelCheckbox.tsx) for
-// eventual extraction into oss-framework.
+// lives in pwa/src/lib/ (imported as @ui/lib/PixelCheckbox.tsx), the pool
+// a later game keeps as-is.
 
 type Props = {
   /** Whether the box reads checked (yellow square shown) or empty. */

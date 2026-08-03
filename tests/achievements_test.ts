@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The achievements system (pwa/src/game/achievement-*.ts): the lifetime
-// totals reducer fed by engine events, the unlock store built on the
-// oss-framework ledger, and the catalog's own sanity (stable unique ids, one
-// badge per hand-authored unique, icons that exist in the shipped atlas, and
-// nothing unlocked on a blank slate). Enemy roles are looked up from the live
+// totals reducer fed by engine events, the unlock store built on the local
+// ledger, and the catalog's own sanity (stable unique ids, one badge per
+// hand-authored unique, icons that exist in the shipped atlas, and nothing
+// unlocked on a blank slate). Enemy roles are looked up from the live
 // catalog by ROLE, not by hardcoded id, so a content rewrite doesn't break
 // the tracking rules asserted here.
 

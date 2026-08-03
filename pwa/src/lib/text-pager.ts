@@ -5,8 +5,8 @@
 // page to the column it is actually being drawn in" and "cut the result into
 // screenfuls the player pages through" (see DialogueOverlay / IntroOverlay).
 // Both are pure and DOM-free so they unit-test without a canvas. Generic
-// React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*) so it can
-// be extracted into oss-framework once mature.
+// React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*), the pool
+// a later game keeps as-is.
 
 /**
  * Break an authored page into the visual rows it is actually drawn as.

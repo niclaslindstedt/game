@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Fixed-timestep game loop on requestAnimationFrame. Generic React/UI game
-// code — lives in pwa/src/lib/ so it can be extracted into oss-framework
-// once mature. Simulation advances in constant `stepMs` slices (determinism,
-// frame-rate independence); rendering happens once per animation frame.
+// code — lives in pwa/src/lib/, the pool a later game keeps as-is. Simulation
+// advances in constant `stepMs` slices (determinism, frame-rate
+// independence); rendering happens once per animation frame.
 //
 // THE LOOP OUTLIVES A BAD FRAME. A rAF callback that throws is never
 // rescheduled by the browser, so — before this — one unhandled error anywhere

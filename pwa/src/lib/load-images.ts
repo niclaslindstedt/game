@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Image preloader. Generic React/UI game code — lives in pwa/src/lib/ so
-// it can be extracted into oss-framework once mature.
+// Image preloader. Generic React/UI game code — lives in pwa/src/lib/, the
+// pool a later game keeps as-is.
 
 /** Load a record of name → URL into name → decoded HTMLImageElement. */
 export async function loadImages<K extends string>(

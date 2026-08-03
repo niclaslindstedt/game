@@ -5,8 +5,8 @@
 // letters. Every overlay is masked by the glyphs themselves (glyphMaskUrl), so
 // the shine lives INSIDE the text — a band drawn over the whole row instead
 // just slides a light past the words and never makes them read as metal.
-// Generic React/UI game code — lives in pwa/src/lib/ so it can be extracted
-// into oss-framework once mature.
+// Generic React/UI game code — lives in pwa/src/lib/, the pool a later game
+// keeps as-is.
 
 import { useMemo, type CSSProperties } from "react";
 

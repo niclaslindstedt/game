@@ -3,8 +3,8 @@
 // channel. A caught `unknown` is usually an Error (whose stack names the
 // frame that actually broke — the whole point of logging it), but it can be
 // anything a `throw` was handed, so every shape has to come out as text.
-// Generic React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*)
-// so it can be extracted into oss-framework once mature.
+// Generic React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*),
+// the pool a later game keeps as-is.
 
 /**
  * Describe a caught value for a log line: an Error yields its stack (which
