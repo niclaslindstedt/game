@@ -166,11 +166,15 @@ jobs:
           fi
 
   # The downloadable desktop builds, attached to the release the job above
-  # created. One runner per platform because each packager needs its own OS:
-  # NSIS wants Windows, a DMG wants macOS and its `hdiutil`, and an AppImage
-  # wants Linux. macOS builds BOTH slices — Intel and Apple Silicon — as
-  # separate artifacts rather than one universal binary, so neither download
-  # carries a copy of Chromium the machine will never run.
+  # created. One runner per platform, because each one packages the Electron
+  # binary for its own OS and the archive has to be built where the app was.
+  # macOS builds BOTH slices — Intel and Apple Silicon — as separate artifacts
+  # rather than one universal binary, so neither download carries a copy of
+  # Chromium the machine will never run.
+  #
+  # Four archives come out: two macOS zips, a Windows zip, a Linux tar.gz.
+  # Archives rather than installers — see electron-builder.config.cjs for why
+  # an unsigned installer is a promise this project cannot keep.
   desktop:
     needs: release
     name: desktop (${{ matrix.target }})
@@ -233,9 +237,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           shopt -s nullglob
-          assets=(electron/release/*.exe electron/release/*.dmg \
-                  electron/release/*.AppImage electron/release/*.zip \
-                  electron/release/*.tar.gz)
+          assets=(electron/release/*.zip electron/release/*.tar.gz)
           if [ ${#assets[@]} -eq 0 ]; then
             echo "::error::${{ matrix.target }} produced no distributable files"
             ls -R electron/release || true

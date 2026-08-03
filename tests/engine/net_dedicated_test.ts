@@ -125,16 +125,23 @@ describe("the licence lock", () => {
     expect(source).not.toContain(SHUT);
   });
 
-  it("is the only thing that opens the dedicated config escape", () => {
-    // The escape must be ANDed with the literal, not read on its own — a
-    // folded build where the config still won would be a lock in name only.
+  it("still gates the dedicated CONFIG escape, whatever else opens a door", () => {
+    // The config-file escape must stay ANDed with the literal, not read on its
+    // own — a folded build where the config still won would be a lock in name
+    // only. The operator's `--licensed` claim is a DIFFERENT route and is
+    // deliberately not gated by the literal (it is the shipped way to run a
+    // server); this test is about the escape it stands beside.
+    //
+    // Whitespace-normalised, so the assertion survives the formatter deciding
+    // where to break a line.
     const source = readFileSync(
       new URL("../../server/dedicated.ts", import.meta.url),
       "utf8",
-    );
+    ).replace(/\s+/g, " ");
     expect(source).toContain(
       "config.allowUnlicensedTransport === true && UNLICENSED_TRANSPORT_UNLOCKED",
     );
+    expect(source).toContain("config.licensed === true ||");
   });
 });
 

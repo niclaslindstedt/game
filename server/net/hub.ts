@@ -334,7 +334,10 @@ export function createPeerHub(options: HubOptions): PeerHub {
     // and sees "could not reach that session" instead of the better sentence.
     // Best-effort is the right trade; a retained record is not.
     transport.drop(key);
-    options.log?.(`net: refused ${key} — ${reason}${note ? ` (${note})` : ""}`);
+    options.log?.(
+      `net: refusing player join from ${key} — ${reason}` +
+        (note ? ` (${note})` : ""),
+    );
   }
 
   function onHello(
@@ -424,7 +427,7 @@ export function createPeerHub(options: HubOptions): PeerHub {
         key,
         "unlicensed",
         `transport ${transport.id}`,
-        "this session holds no multiplayer licence — start it with --licensed",
+        "unlicensed server — it was not started with --licensed",
       );
       return;
     }
