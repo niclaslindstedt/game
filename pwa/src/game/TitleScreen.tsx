@@ -22,6 +22,7 @@ import {
 
 import type { Difficulty } from "@game/menu";
 
+import { onFreshKeyDown } from "@ui/lib/key-handoff.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
@@ -610,6 +611,13 @@ export function TitleScreen({
 
   // Doom menus live on the keyboard: arrows move, Enter/Space picks,
   // Escape backs out.
+  //
+  // Through `onFreshKeyDown`, because this menu is one of the screens a
+  // KEYSTROKE mounts: the Enter that names a new hero commits it and brings the
+  // title up on the difficulty ladder, and that same Enter was still on its way
+  // to `window` when this listener went on. Un-guarded it confirmed the row
+  // under the cursor, so the run started on whatever rung the cursor opened on
+  // and the ladder was never seen (key-handoff.ts).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       // A KEY BINDINGS rebind is listening: the next key IS the new bind, stored
@@ -706,8 +714,7 @@ export function TitleScreen({
         setCursor(0);
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return onFreshKeyDown(onKeyDown);
   }, [entries, cursor, screen, captureBind, warp, bumpSettings]);
 
   // While a KEY BINDINGS row is armed, a mouse button or wheel notch can be
