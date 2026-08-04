@@ -207,8 +207,8 @@ field, is stepped from `src/game/boss-death.ts`, drawn by
 - [ ] Numbers sanity: minion hp near `LEVELING.refMobHp`;
       `simulate-run --full` blows-to-kill neither ~1 nor walled.
 - [ ] Boss drops wired (`uniquesByDifficulty` → `unique-check.mjs` clean).
-- [ ] `make test`, `make lint`; changelog fragment; `docs/game-content.md`
-      roster entry.
+- [ ] `make test`, `make lint`; changelog fragment. No roster entry to write —
+      the enemy YAML and the generated bestiary are the record.
 
 ## Skill self-improvement
 

@@ -40,10 +40,12 @@ it with a fixed timestep — the same seed, difficulty, and input sequence
 always replays the same run, which is what makes gameplay unit-testable in
 plain Node and bugs reproducible.
 
-Content is data, simulation is code: the game's levels, monsters,
-equipment, and cutscenes live in **catalogs** under `src/game/defs/`, and
-the engine only ever references them by id. Shipping level 12 or the
-hundredth weapon means adding catalog entries, not touching the simulation.
+Content is data, simulation is code: the game's levels, monsters, equipment and
+cutscenes are authored as YAML under `content/`, compiled into the **catalogs**
+the engine reads through `src/game/defs/` (see
+[`content-pipeline.md`](content-pipeline.md)), and referenced only ever by id.
+Shipping level 12 or the hundredth weapon means authoring a file, not touching
+the simulation.
 The def accessors read an overridable registry, so `registerDefs(...)` can
 swap the active catalogs for a custom set — the engine test suites use it to
 run against synthetic fixtures with no shipped content (see
@@ -1212,11 +1214,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   `tiers.ts` (tier name colors), `sfx/` (engine events →
   synthesized 16-bit-palette sounds, organized by domain: `ui.ts`,
   `combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts` behind `index.ts`),
-  `music/` (one score file per track — `title.ts`, `level.ts`,
-  `goodco.ts` — each holding all instruments + notes as tracker-style
-  pattern data, arranged to loop at ~2 minutes; `index.ts` owns the single
-  player and a `LEVEL_TRACKS` registry, so a level's `music` id selects its
-  theme and `playLevelMusic(trackId)` switches cleanly between levels),
+  `music/` (the player only — the scores themselves are compiled from
+  `content/music/*.yaml` into the gitignored `pwa/src/generated/music/`, one
+  module per track behind its own `import()` so the browser fetches the one
+  it is about to play; `index.ts` owns the single player, and a level's
+  `music` id selects its theme through `playLevelMusic(trackId)`),
   `audio.ts` (one shared synth split into SFX/music volume views),
   `settings.ts` (persisted control-scheme + volume settings), `characters.ts`
   (persistent named **characters** — the Diablo-style save model: each hero
@@ -1228,7 +1230,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   the picker, not a fresh linear run); a SOFTCORE death banks the run's
   build so the hero keeps the levels, stats and items earned it and just
   restarts the level, while HARDCORE is per-character permadeath — a death
-  retires the hero for good, chosen at creation in `CharacterScreen.tsx`),
+  retires the hero for good, chosen at creation in `NewGame.tsx`),
   `highscores.ts`
   (hardcore-only, whole-campaign high scores — foes felled, combat-clock
   survival time and peak menace summed per difficulty across a campaign's maps

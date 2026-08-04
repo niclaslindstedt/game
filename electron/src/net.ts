@@ -32,6 +32,7 @@
 
 import { MessageChannelMain, type BrowserWindow } from "electron";
 
+import type { Capabilities } from "./capabilities";
 import {
   allowFirewall,
   checkFirewall,
@@ -189,6 +190,7 @@ const CONNECT_TIMEOUT_MS = 25_000;
 
 export function createNetBridge(
   window: BrowserWindow,
+  capabilities: Capabilities,
   emit: (event: NetEvent) => void,
 ): NetBridge {
   let host: SessionHost | null = null;
@@ -359,6 +361,12 @@ export function createNetBridge(
       const channel = new MessageChannelMain();
       running.givePort(channel.port1, {
         kind: "start",
+        // WHETHER THIS SESSION MAY ADMIT ANYBODY STEAM IS NOT CARRYING.
+        // The LICENCE, not the feature: a build can have hosting turned on and
+        // still hold no licence, and it then runs a session nobody may join.
+        // Decided by the build and the launch, never by anything the page can
+        // say — see `server/net/hub.ts`.
+        allowDirect: capabilities.licensed,
         params,
         adopt: request.adopt,
         mods: request.mods,
@@ -477,7 +485,10 @@ export function createNetBridge(
       });
       return;
     }
-    const wantsSteam = request.steam !== false;
+    // A launch that opened the direct door itself takes that door and only
+    // that one: there is no Steam client behind this build to pump a relay
+    // for, and the port it was given is the one it was given.
+    const wantsSteam = request.steam !== false && !capabilities.direct;
     if (wantsSteam) {
       steam = createSteamP2P({
         onPacket: (from, data) =>
@@ -488,10 +499,14 @@ export function createNetBridge(
     }
     running.send({
       kind: "listen",
-      port: request.port,
-      udp: request.udp !== false,
+      port: capabilities.direct ? capabilities.port : request.port,
+      udp: capabilities.direct || request.udp !== false,
       // The relay is only worth opening when something is pumping it.
       steam: steam !== null,
+      // Asking a router to forward a port is a change this program makes to
+      // somebody else's hardware, so it is the BUILD's to permit — never a
+      // request, and never a launch option.
+      map: capabilities.portMap,
     });
     const reply = await await_("listening", LISTEN_TIMEOUT_MS);
     const listening = reply?.kind === "listening" ? reply : null;

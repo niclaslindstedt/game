@@ -9,6 +9,32 @@ this document is thin, the shipped files under [`../content/`](../content) are
 the full reference, because they are the same format going through the same
 validator.
 
+## The schemas — the last word on every field
+
+Each file kind has a **schema module** that decides what its YAML may say:
+which fields are required, what each accepts, and what the error reads like when
+it doesn't. They are ordinary readable JavaScript with the reasoning in
+comments, and the mod compiler runs the **same** modules the game's own build
+runs — so what a schema accepts is exactly what your mod may say. **When this
+document and a schema disagree, the schema is right.**
+
+| Your file                                         | Schema (`../scripts/asset-tools/…`)                                     |
+| ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `mod.yaml`, `ladder.yaml`, `levels/<id>.yaml`     | [`level-schema.mjs`](../scripts/asset-tools/level-schema.mjs)           |
+| `maps/<id>.yaml`                                  | [`map-schema.mjs`](../scripts/asset-tools/map-schema.mjs)               |
+| `enemies/<biome>/<id>.yaml`                       | [`enemy-schema.mjs`](../scripts/asset-tools/enemy-schema.mjs)           |
+| `items/<rarity>/<id>.yaml`                        | [`item-schema.mjs`](../scripts/asset-tools/item-schema.mjs)             |
+| `sets.yaml`                                       | [`set-schema.mjs`](../scripts/asset-tools/set-schema.mjs)               |
+| `companions.yaml`                                 | [`companion-schema.mjs`](../scripts/asset-tools/companion-schema.mjs)   |
+| `powerups.yaml`                                   | [`powerup-schema.mjs`](../scripts/asset-tools/powerup-schema.mjs)       |
+| `talents.yaml`                                    | [`talent-schema.mjs`](../scripts/asset-tools/talent-schema.mjs)         |
+| `quests/<id>.yaml`, `quest-givers.yaml`           | [`quest-schema.mjs`](../scripts/asset-tools/quest-schema.mjs)           |
+| `cutscenes/`, `thoughts.yaml`, `story-items.yaml` | [`story-schema.mjs`](../scripts/asset-tools/story-schema.mjs)           |
+| `sprites/<family>/<name>.yaml`                    | [`sprite-schema.mjs`](../scripts/asset-tools/sprite-schema.mjs)         |
+| `sounds/<id>.yaml`                                | [`sound-schema.mjs`](../scripts/asset-tools/sound-schema.mjs)           |
+| `music/<id>.yaml`                                 | [`music-schema.mjs`](../scripts/asset-tools/music-schema.mjs)           |
+| `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs) |
+
 ---
 
 ## `mod.yaml` — the manifest

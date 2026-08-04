@@ -149,6 +149,30 @@ export const ITEM_STATE_NEEDS_UPDATE = 8;
  * steamworks.js' `overlay.Dialog`. */
 export const OVERLAY_DIALOG_ACHIEVEMENTS = 6;
 
+/**
+ * Should the Steam overlay be injected into this launch?
+ *
+ * `electronEnableSteamOverlay()` is not a request to draw an overlay — it
+ * appends the Chromium switches `in-process-gpu` and
+ * `disable-direct-composition`, which move the GPU work into the browser
+ * process and turn off the compositor path Windows 10/11 actually wants. On a
+ * machine with no Steam client that buys nothing at all, and it costs the whole
+ * launch when the in-process GPU falls over: Chromium takes the browser process
+ * down with it, so the game exits with no window and no message. So the switches
+ * are installed only when there is an overlay to draw — which is to say when
+ * STEAM ITSELF started this process, and the client stamped its own variables
+ * into our environment. `GIS_STEAM_OVERLAY=1` forces it on for testing the
+ * overlay from a checkout launched under Steam's Spacewar; `=0` forces it off.
+ */
+export function steamOverlayWanted(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  if (env.GIS_STEAM_OVERLAY === "1") return true;
+  if (env.GIS_STEAM_OVERLAY === "0") return false;
+  const stamped = [env.SteamAppId, env.SteamGameId, env.SteamClientLaunch];
+  return stamped.some((value) => typeof value === "string" && value !== "");
+}
+
 /** `undefined` = not tried yet; `null` = tried and there is no Steam here. */
 let client: SteamClient | null | undefined;
 

@@ -31,8 +31,11 @@ result compiles before it says so — you start from something that already runs
 rather than from an empty folder. `check` then prints every problem it finds,
 with a filename and a reason; when it prints a `✓`, the game will accept it.
 
-**[`AGENTS.md`](AGENTS.md) is the step-by-step**, from `new` to publish —
-written for an agent, and just as usable as a checklist.
+**Working with a coding agent?** Point it at
+[`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)
+— the scope, the loop and the judgement calls — which sends it to
+**[`AGENTS.md`](AGENTS.md)**, the step-by-step from `new` to publish with the
+command for every step. Both are just as usable as a human checklist.
 
 What `new` copies is [`examples/greenhouse`](examples/greenhouse): one venue,
 one monster, one weapon, one relic, three sprites, one sound, one score, and a
@@ -84,21 +87,45 @@ author its own roster the only figures it could hand over were the shipped four 
 so a conversion's monsters could be its own while its allies stayed somebody
 else's.
 
-## Testing a mod without publishing it
+## Testing a mod without publishing it — and sending one to a friend
 
-Put the folder in the game's own mods directory and it appears in **MODS** on
-the next launch, alongside anything you have subscribed to:
+The game reads **two** mods folders, and anything in either appears in **MODS**
+on the next launch alongside your subscriptions. `node mod/tools/cli.mjs where`
+prints both.
 
-| OS      | Where                                             |
-| ------- | ------------------------------------------------- |
-| Windows | `%APPDATA%\Ada's Trail\mods\`                     |
-| macOS   | `~/Library/Application Support/Ada's Trail/mods/` |
-| Linux   | `~/.config/Ada's Trail/mods/`                     |
+**`mods/` beside the game** (Windows and Linux) — the folder to tell another
+player about:
 
-A mod there is a **local** mod: it is the only kind the game offers a PUBLISH
-row for, because a subscription is somebody else's to update. Local mods also
-sort to the bottom of the load order, so the one you are working on wins its
-clashes while you iterate.
+```
+<the game's install folder>/mods/
+```
+
+On Steam that is LIBRARY → right-click the game → BROWSE LOCAL FILES. It takes
+a mod **folder or a `.zip` of one**, so **sending somebody a mod is sending
+them a zip** and naming this directory — no unpacking, and no application-data
+path to dictate. A zip may be the mod's own files at the top level or wrapped
+in one folder (what right-click → compress produces); both are read, and the
+game unpacks it itself into its own cache.
+
+**macOS has no such folder, deliberately.** An installed app lives in
+`/Applications` — not a place a game should be writing its data into — and
+putting files inside the `.app` would break the signature it is notarized
+under. On macOS the data folder below is the whole answer, and it takes `.zip`
+files too.
+
+**The game's data folder** — for the mod you are WRITING, and on macOS for
+anything you were sent:
+
+| OS      | Where                                           |
+| ------- | ----------------------------------------------- |
+| Windows | `%APPDATA%\adastrail\mods\`                     |
+| macOS   | `~/Library/Application Support/adastrail/mods/` |
+| Linux   | `~/.config/adastrail/mods/`                     |
+
+A mod here is a **local** mod: the only kind the game offers a PUBLISH row for,
+because what is published is what somebody authored — a mod you were sent is
+played, not republished. Both folders sort after your subscriptions, so the mod
+you just added wins its clashes while you iterate.
 
 If you do not hold the released Steam edition, launch the official downloaded
 desktop binary with `--modifications` to enable this local authoring path. That
@@ -220,10 +247,12 @@ change them, publish or sell what you make, credit or no credit; you should
 never have to think about the licence to start a mod. **Your mod is yours**, and
 it is not a derivative of the toolchain. The toolchain itself
 ([`tools/`](tools)) is licensed for making mods for _this_ game rather than for
-reuse in another one. The SDK licence does not grant ordinary play: mods and
-multiplayer require a game licence acquired through Steam, apart from the
-narrow `--modifications` authoring exception above. Full terms:
-[`LICENSE.md`](LICENSE.md).
+reuse in another one. Full terms: [`LICENSE.md`](LICENSE.md).
+
+The SDK licence does not itself license playing mods or multiplayer. Ordinary
+player use requires a game licence acquired through Steam; the limited
+`--modifications` exception above exists only for creators testing their own
+work before that edition is published.
 
 ## Reference
 

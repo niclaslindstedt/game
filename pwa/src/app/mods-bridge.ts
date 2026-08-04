@@ -23,7 +23,12 @@
 // and this bridge is imported by the MODS menu builder on the startup path.
 import type { ModBundle } from "../game/mod-state.ts";
 
-import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
+import {
+  postToShell,
+  shellAvailable,
+  shellCapability,
+  shellPlatform,
+} from "./shell-bridge.ts";
 
 declare global {
   interface Window {
@@ -42,8 +47,16 @@ export type InstalledMod = {
   key: string;
   /** Absolute path, for PUBLISH. Never read by the page. */
   folder: string;
-  /** Where it came from — a subscription, or the player's own mods folder. */
-  source: "workshop" | "local";
+  /**
+   * Where it came from, and it decides what may be done with it:
+   *
+   *   workshop  a subscription — somebody else's to update
+   *   local     the player's own authoring folder — the only publishable one
+   *   portable  `mods/` beside the game: a folder or a `.zip` somebody was
+   *             sent. Played like any other, never published, because what is
+   *             published is what somebody AUTHORED.
+   */
+  source: "workshop" | "local" | "portable";
   /** The compiled mod, or null when it did not compile. */
   bundle: ModBundle | null;
   /** Why it did not compile. Empty when it did. */
@@ -75,7 +88,9 @@ const waiters = new Map<number, (payload: unknown) => void>();
  * coin store is a mobile one, and each build shows only what it can honour.
  */
 export function modsBridgeAvailable(): boolean {
-  return shellAvailable() && shellPlatform() === "steam";
+  return (
+    shellAvailable() && shellPlatform() === "steam" && shellCapability("mods")
+  );
 }
 
 /** Install the shell's callback. Idempotent; safe to call on every mount. */

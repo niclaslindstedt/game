@@ -71,6 +71,25 @@ export type DedicatedConfig = {
    * that honoured it would be enforcing the licence with a statement.
    */
   allowUnlicensedTransport?: boolean;
+  /**
+   * THE OPERATOR'S LICENCE CLAIM (`--licensed`), and what makes this server
+   * able to admit anybody at all.
+   *
+   * Without it the server starts, binds, prints its address and refuses every
+   * join — which is the honest behaviour for a copy that holds no multiplayer
+   * licence, and is why it is not an error at startup: a server that has not
+   * been claimed for is a server nobody joins, not a server that failed.
+   *
+   * It is a DECLARATION, not a check. Nothing here can verify a licence and
+   * nothing pretends to; what this does is make the claim explicit, deliberate
+   * and attributable rather than implied by the mere act of starting a
+   * process. The store build carries the same word in its packaging, so its
+   * server is licensed without anybody typing it.
+   *
+   * Distinct from `allowUnlicensedTransport` above, which is the repo's own
+   * escape for suites and soak runs and stays dead in a packaged binary.
+   */
+  licensed?: boolean;
   /** The mission to run. Defaults to the campaign's first. */
   level?: string;
   /** `easy` … `jesus`. */
@@ -98,6 +117,16 @@ export type DedicatedConfig = {
   /** MAP SIZE: which of the three sizes this server's maps are carved at. Every
    * mission is carved from its blueprint, so the size is the only knob left. */
   generatedMapSize?: string;
+  /**
+   * Never ask the router to forward the bound port (`--no-portmap`).
+   *
+   * A mapping request is a change this process makes to somebody else's
+   * hardware, so a deployment that does not want one — a hosted box with its
+   * ports already forwarded, a LAN, a build whose packaging does not permit it
+   * — must be able to say so. Absent means the mapping is attempted, which is
+   * what an operator on a home connection wants.
+   */
+  noPortMap?: boolean;
   /** Seconds between status lines on the console. 0 turns them off. */
   statusEverySec?: number;
   /** Print a detailed status line every second. */
@@ -177,6 +206,14 @@ export function parseArgs(argv: readonly string[]): {
       overrides.verbose = true;
       continue;
     }
+    if (name === "no-portmap") {
+      overrides.noPortMap = true;
+      continue;
+    }
+    if (name === "licensed") {
+      overrides.licensed = true;
+      continue;
+    }
     const value = eq < 0 ? (argv[++i] ?? "") : arg.slice(eq + 1);
     if (name === "config") config = value;
     else if (name === "level") overrides.level = value;
@@ -241,13 +278,20 @@ export async function startDedicated(
   if (config.password) info("password required");
 
   const host = createHost({
-    // Multiplayer is licensed through Steam. A standalone server on a raw UDP
-    // socket is precisely the unlicensed path, so it is REFUSED by default,
-    // the config escape is the only thing that opens it, and in the shipped
-    // binary the build-time literal holds even that shut — see
-    // `DedicatedConfig.allowUnlicensedTransport` and `licence.ts`.
+    // WHO THIS SERVER MAY LET IN, and there are two independent ways to say so.
+    //
+    // `--licensed` is the operator declaring they hold the multiplayer licence
+    // — the shipped route, carried automatically by a store build's packaging
+    // and typed by hand otherwise. Without it every join is refused by name
+    // and the console says so.
+    //
+    // The config-file escape beside it is the repo's own, for suites and soak
+    // runs, and the build-time literal keeps it dead in a packaged binary —
+    // see `DedicatedConfig.allowUnlicensedTransport` and `licence.ts`.
     allowUnlicensedTransport:
-      config.allowUnlicensedTransport === true && UNLICENSED_TRANSPORT_UNLOCKED,
+      config.licensed === true ||
+      (config.allowUnlicensedTransport === true &&
+        UNLICENSED_TRANSPORT_UNLOCKED),
     params,
     // NOBODY OWNS THIS ONE. Seat 0 stands empty until somebody joins, the
     // first arrival is dressed in the hero they brought rather than in the
@@ -284,7 +328,7 @@ export async function startDedicated(
   // Asked for AFTER the address is printed: a router discovery takes up to two
   // seconds against an unresponsive gateway, and the address is the one thing
   // an operator is waiting for.
-  await host.mapPort();
+  if (!config.noPortMap) await host.mapPort();
   const mapping = host.mapping;
   if (mapping.status === "mapped") {
     info(

@@ -125,6 +125,12 @@ jobs:
       # Exercise both Windows-sensitive seams: TypeScript modules loaded by the
       # content generators and npm's .cmd shim launched by the shell bundler.
       - run: npm run electron:bundle
+      # AND THE THIRD ONE, which nothing else on Windows reaches: the session
+      # server's ship target shells out to `tsc` — a `.cmd` shim here — and
+      # only the packaging job ever ran it, so it broke there instead of in a
+      # check. It needs no `electron/` install: the compiler is found in the
+      # root tree first.
+      - run: node scripts/build-server.mjs
 
   package:
     name: package (${{ matrix.os }})
@@ -151,6 +157,23 @@ jobs:
       # The real binary must never be built against Valve's shared test app.
       GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
       GIS_BUILD_PROFILE: ${{ inputs.profile }}
+      # A depot build is the full product: sessions, the Workshop, and the
+      # router mapping the HOST screen's ROUTER row reports on.
+      GIS_STAMP_CAPABILITIES: "1"
+      GIS_ENABLE_MULTIPLAYER: "1"
+      GIS_ENABLE_MODS: "1"
+      GIS_ENABLE_UPNP: "1"
+      GIS_ENABLE_LICENSED: "1"
+      # macOS signing, exactly as release.yml passes it: absent secrets mean an
+      # ad-hoc signature, which is the minimum an arm64 app needs to run at
+      # all. A depot build wants the real one — Gatekeeper blocks an
+      # un-notarized app even when Steam is the one launching it.
+      GIS_MAC_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - name: Skip unselected platform
         if: inputs.platform != 'all' && inputs.platform != matrix.target

@@ -114,6 +114,11 @@ export function PixelPrompt({
               )
             }
             onKeyDown={(e) => {
+              // The field owns the keyboard while the prompt is up — the same
+              // promise the Escape handler above makes, kept for every other
+              // key: the menu underneath must not walk its cursor on the
+              // arrows, nor fire the row it lands on when Enter submits this.
+              e.stopPropagation();
               if (e.key === "Enter") submit();
             }}
           />

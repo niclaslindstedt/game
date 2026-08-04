@@ -125,9 +125,9 @@ A boss/elite swap is the most far-reaching story change — it ripples across
    old one. Match hp/damage to the scaling model (`enemy-design`).
 3. **Items** (3c): move the departing mob's unique set and any world-drop /
    story-item drops onto the replacement (or explicitly retire them). Re-check
-   `uniquesByDifficulty` coverage so no difficulty rung loses a slot — consult
-   `docs/item-plan.md` for the intended per-rung sets, and `weapon-system` for
-   re-homing uniques.
+   `uniquesByDifficulty` coverage so no difficulty rung loses a slot —
+   `node scripts/unique-check.mjs` reports what each rung actually offers, and
+   `weapon-system` covers re-homing uniques.
 4. **Thoughts / companions** (3d–3e): repoint any `firstKillThoughts`/
    `firstSightThoughts` pin or companion entry that named the old mob.
 5. **Achievements & tests** derive from the live registries, so run the content

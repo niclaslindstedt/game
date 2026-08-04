@@ -250,10 +250,22 @@ function compile() {
     execFileSync(tsc, ["-p", path.join(root, "server", "tsconfig.json")], {
       stdio: "inherit",
       cwd: root,
+      // WINDOWS: `node_modules/.bin/tsc.cmd` is a BATCH FILE, and Node will
+      // not execute one directly — `execFileSync` fails with EINVAL before
+      // the compiler runs at all. cmd.exe has to interpret it. The same trap
+      // is documented in `electron/scripts/bundle-web.mjs`; it reached here
+      // by way of a path only the Windows packaging job takes, and the
+      // symptom was a build that exited 1 having printed nothing whatsoever.
+      shell: process.platform === "win32",
     });
-  } catch {
-    // `tsc` has already printed its diagnostics; a stack trace on top of them
-    // adds nothing and buries the first error.
+  } catch (err) {
+    // A non-zero EXIT is `tsc` having printed its own diagnostics, and a stack
+    // trace on top of them buries the first error. Anything else — a compiler
+    // that could not be started — has printed nothing, so it must be said
+    // here or the failure is silent.
+    if (err?.status === undefined || err.status === null) {
+      console.error(`server: could not run ${tsc} — ${err?.message ?? err}`);
+    }
     process.exit(1);
   }
 }

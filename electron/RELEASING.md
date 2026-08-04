@@ -210,11 +210,15 @@ practice; **macOS cannot** — the `.app` must be produced and signed on a Mac.
 - **Windows** — unsigned is fine for a Steam-launched app; the client is the
   trust boundary. Sign only if the binary is also distributed outside Steam.
 - **Linux** — nothing to sign.
-- **macOS** — **must be signed and notarized.** Gatekeeper blocks an
-  un-notarized app even when Steam launches it. The hardened runtime is already
-  on and the entitlements are in `build/entitlements.mac.plist`; you supply a
-  **Developer ID Application** certificate (not the App Store one) and an
-  app-specific password. Neither can live in the repo:
+- **macOS** — **never unsigned, and for a store build signed and notarized.**
+  An unsigned arm64 app does not merely warn, it does not run: Apple Silicon
+  refuses to execute unsigned arm64 code and macOS reports that as _"the app is
+  damaged"_. The packaging config therefore signs **ad hoc** when it is handed
+  no certificate, which is enough to make the app run and not enough to stop
+  Gatekeeper asking about it — and Gatekeeper blocks an un-notarized app even
+  when Steam is the one launching it. The hardened runtime is already on and the
+  entitlements are in `build/entitlements.mac.plist`; what you supply is the
+  identity:
 
   ```sh
   export CSC_LINK=/path/to/developer-id.p12
@@ -222,6 +226,35 @@ practice; **macOS cannot** — the `.app` must be produced and signed on a Mac.
   export APPLE_ID=… APPLE_APP_SPECIFIC_PASSWORD=… APPLE_TEAM_ID=…
   npm run release:mac
   ```
+
+#### Where those five values come from
+
+All of it hangs off **one $99/year Apple Developer Program membership**
+([developer.apple.com/programs](https://developer.apple.com/programs/)) — the
+same membership the iOS app in [`native/`](../native/README.md) already needs, so
+if that ships, this costs nothing extra. Nothing here is obtainable without it:
+Apple issues no Developer ID certificate to a free account.
+
+| Variable                      | Where you get it                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CSC_LINK`                    | A **Developer ID Application** certificate — _not_ the Mac App Store one. Xcode → Settings → Accounts → Manage Certificates → **+** → Developer ID Application. Then Keychain Access → My Certificates → right-click it → **Export…** → `.p12`. `CSC_LINK` is the path to that file (a base64 string of it also works, which is what a CI secret wants). |
+| `CSC_KEY_PASSWORD`            | The password you typed into that export dialog. Nothing generates it — you choose it.                                                                                                                                                                                                                                                                    |
+| `APPLE_ID`                    | The email address of the Apple ID that owns the membership.                                                                                                                                                                                                                                                                                              |
+| `APPLE_APP_SPECIFIC_PASSWORD` | **Not** your Apple ID password. [account.apple.com](https://account.apple.com) → Sign-In and Security → App-Specific Passwords → **+**. Shown once; a `xxxx-xxxx-xxxx-xxxx` string.                                                                                                                                                                      |
+| `APPLE_TEAM_ID`               | The 10-character team id, e.g. `A1B2C3D4E5`. [developer.apple.com/account](https://developer.apple.com/account) → Membership details.                                                                                                                                                                                                                    |
+
+`GIS_MAC_IDENTITY` is the sixth and is only needed when the keychain holds more
+than one usable certificate: it is the identity's name, as `security
+find-identity -v` prints it, minus the `Developer ID Application:` prefix.
+Leave it unset and electron-builder finds the certificate itself.
+
+**For the GitHub release workflow**, the same values go in as repository
+secrets (Settings → Secrets and variables → Actions), named `MAC_CSC_LINK`,
+`MAC_CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`,
+`APPLE_TEAM_ID` and `MAC_SIGN_IDENTITY`. `MAC_CSC_LINK` must be the `.p12`
+**base64-encoded** (`base64 -i developer-id.p12 | pbcopy`), since a secret is a
+string and not a file. Every one of them is optional: with none set the
+workflow still produces a running native arm64 download, ad-hoc signed.
 
 ## 5. Upload
 

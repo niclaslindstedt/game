@@ -93,6 +93,24 @@ the embedded site and is the ONLY correct target for a store build, and the
 - PRs are squash-merged; the **PR title** becomes the single commit on `main`,
   so it must follow conventional-commit format.
 - Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
+- **Push and open the PR WHILE the final verification runs, not after it.**
+  The full suite takes minutes and passes almost every time, so waiting for it
+  before pushing spends that time twice — once locally and again in CI, which
+  is about to run the same checks anyway. Start `make test` in the background,
+  push and open the PR, then read the result: green means the work is already
+  up, and red means a follow-up commit onto a branch that was going to need
+  one regardless. This applies to the FINAL check, not to the fast ones —
+  typecheck and the affected suite still run before the commit is written.
+- **THE PUSH AND THE PR ARE ONE STEP.** The moment a branch is pushed as
+  finished work, open its pull request — same turn, no waiting for a suite, a
+  review, or permission. A pushed branch with no PR is invisible: nothing runs
+  the PR-only checks against it, nobody is asked to look at it, and the work
+  sits done and unmergeable until somebody notices. If a PR is already open
+  for the branch, the push updates it and there is nothing more to do.
+- **Capture the final suite's output to a file** (`… 2>&1 | tee <log>`), never
+  just `| tail`. A run that ends `1 failed` with the failure scrolled past is
+  a run that has to be done again to learn anything, and the second run is
+  where a flake hides from you.
 - **Do not babysit PRs — but do fix what breaks.** Once a PR is opened, write
   out its URL and a short summary of what was done, then stop. Don't
   proactively subscribe to PR activity, poll CI, or schedule check-ins, and
@@ -456,6 +474,14 @@ Accept an intentional change with the matching `node scripts/update-*-snapshot.m
 APP's tree**, because the engine has no idea the game makes noise or has a title
 screen.
 
+**WHAT A CATALOG'S YAML MAY SAY IS ITS SCHEMA'S CALL, NOT THE GENERATOR'S** —
+`scripts/asset-tools/<catalog>-schema.mjs`, one per catalog, and the field-level
+reference when authoring either this repo's content or a mod: `mod/tools/build.mjs`
+runs the SAME modules, so what a schema accepts is exactly what a mod may say
+(`mainmenu.yaml`'s is the one exception — a mod may not bring one). A new field
+is added THERE, with its rule and its error message, before any generator reads
+it; `CONTRIBUTING.md` indexes the set against the file each validates.
+
 Four artifacts are **committed and drift-tested against a fresh build**, so they
 are regenerated in the same commit as the content change that moves them:
 `mod/catalog.json` (`make mod-catalog`), `native/store/game-center-{achievements,leaderboards}.json`,
@@ -506,7 +532,7 @@ are regenerated in the same commit as the content change that moves them:
 | the title menu (a screen, a row, an order, a page name)                | `content/mainmenu.yaml` only — the compiled tree is the one source        |
 | how the picture is drawn (projection, postfx, gait, loot presentation) | `docs/rendering.md`                                                       |
 | a catalog's compile pipeline, or a parity rule                         | `docs/content-pipeline.md`                                                |
-| game content (levels, enemies, story)                                  | `docs/game-content.md`                                                    |
+| a RULE the catalogs sit inside (a carry-over, an economy, a gate)      | `docs/game-content.md` — never a per-item or per-venue entry              |
 | a plot beat / the story as a whole                                     | `docs/story.md`, then push down — load `update-story`                     |
 | story or dialogue text (any line)                                      | `docs/manuscript.md`, with `docs/story.md` above it — load `update-story` |
 | a name (a mob, an item, a company)                                     | `docs/naming.md` if the RULE changes; otherwise just obey it              |
@@ -590,18 +616,19 @@ its author's business, except `mod/examples/`, which is shipped content.
 This file is the router. When a task is about one system, its own document or
 skill is the source of truth — load that, not a search of the tree.
 
-| Looking for                                                                                                           | Read                                                |
-| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| The module map, the shells, the platform seams, the library, deployment                                               | `docs/architecture.md`                              |
-| The projection, postfx, the canvas and its scale tiers, gaits, jumps, the loot toss and rarity aura, the hero doll    | `docs/rendering.md`                                 |
-| Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                          |
-| Naming anything                                                                                                       | `docs/naming.md`                                    |
-| Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                               |
-| Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | `docs/modding.md`, `mod/FORMAT.md`, `mod/AGENTS.md` |
-| Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                             |
-| This game's plot, roster, venues and economy                                                                          | `docs/game-content.md`, `docs/story.md`             |
-| The house art style                                                                                                   | `docs/art-style.md`                                 |
-| Anything failing to install, build or connect                                                                         | `docs/troubleshooting.md`                           |
+| Looking for                                                                                                           | Read                                                                                |
+| --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| The module map, the shells, the platform seams, the library, deployment                                               | `docs/architecture.md`                                                              |
+| The projection, postfx, the canvas and its scale tiers, gaits, jumps, the loot toss and rarity aura, the hero doll    | `docs/rendering.md`                                                                 |
+| Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                                                          |
+| Naming anything                                                                                                       | `docs/naming.md`                                                                    |
+| Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                               |
+| Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | the `mod-authoring` skill, then `mod/AGENTS.md`, `mod/FORMAT.md`, `docs/modding.md` |
+| Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                             |
+| What a mob, item, venue or power actually IS                                                                          | its `content/` YAML — the catalogs are the lookup                                   |
+| The rules those catalogs sit inside; this game's plot                                                                 | `docs/game-content.md`, `docs/story.md`                                             |
+| The house art style                                                                                                   | `docs/art-style.md`                                                                 |
+| Anything failing to install, build or connect                                                                         | `docs/troubleshooting.md`                                                           |
 
 | Working on                                            | Load the skill                                          |
 | ----------------------------------------------------- | ------------------------------------------------------- |
@@ -620,6 +647,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Balance, the XP curve, measuring a real run           | `simulate-run`, `leveling-balance`, `playtest`          |
 | The autopilot                                         | `bot-improvement`                                       |
 | Any spoken or written line                            | `update-story`                                          |
+| A MOD — creating one, or updating a published one     | `mod-authoring`                                         |
 | A PR's changelog fragment, or the `no-changelog` call | `changelog`                                             |
 
 ## Game development skills
@@ -627,34 +655,35 @@ skill is the source of truth — load that, not a search of the tree.
 Load the relevant `SKILL.md` **before** starting that kind of work — each one
 carries the workflow, the quality bar and the traps for its subject.
 
-| Skill                 | Use for                                                             |
-| --------------------- | ------------------------------------------------------------------- |
-| `new-game`            | Turning a clone of this repo into a new game/sequel                 |
-| `engine-system`       | Adding/changing a gameplay system — the engine-first workflow       |
-| `level-design`        | Adding a venue (the mission + the blueprint its map is carved from) |
-| `map-improvement`     | Improving an EXISTING venue's design and feel                       |
-| `mapgen-improvement`  | Improving the map GENERATOR, which lands on every venue at once     |
-| `enemy-design`        | Adding or reworking a minion/elite/boss, or a companion             |
-| `boss-abilities`      | Giving a boss a set-piece MOVE, or a death rite                     |
-| `quest-design`        | An errand, its giver, its conversation, a campaign chain            |
-| `weapon-system`       | Weapons, loot, tiers/affixes, named uniques, the off-hand           |
-| `leveling-balance`    | How fast the hero levels — the XP curve and its pacing              |
-| `simulate-run`        | MEASURING actual balance by running the real engine headlessly      |
-| `pixel-assets`        | Creating or changing sprites, tiles, palettes, font glyphs          |
-| `art-improvement`     | Finding and replacing the game's WORST art                          |
-| `sound-effects`       | Synthesized SFX and the tracker-style music                         |
-| `talent-fx`           | The passive talent trees and their always-on looks                  |
-| `visual-effects`      | A transient effect — explosion, flash, aura, screen wash            |
-| `gore-system`         | Blood, the floor, the hero's coat, cleaves, gibs, the NSFW gate     |
-| `playtest`            | Verifying a change in the running game with the autoplay bot        |
-| `bot-improvement`     | Improving the autopilot toward human-capability play                |
-| `debug-game`          | Investigating a gameplay/render/input/audio bug                     |
-| `test-scenario`       | Staging an EXACT in-game situation to repro, probe or eyeball       |
-| `menu-design`         | The title menu, a settings row, the developer menu                  |
-| `ui-review`           | A fit-and-finish pass over the UI at the nine reference viewports   |
-| `store-shots`         | Regenerating the App Store / Play Store screenshot set              |
-| `update-story`        | Writing, rewriting or retoning ANY line the game speaks             |
-| `library-improvement` | Building or improving the generated `/library/` site                |
+| Skill                 | Use for                                                              |
+| --------------------- | -------------------------------------------------------------------- |
+| `mod-authoring`       | Creating a MOD, or updating a published one — the scope and the loop |
+| `new-game`            | Turning a clone of this repo into a new game/sequel                  |
+| `engine-system`       | Adding/changing a gameplay system — the engine-first workflow        |
+| `level-design`        | Adding a venue (the mission + the blueprint its map is carved from)  |
+| `map-improvement`     | Improving an EXISTING venue's design and feel                        |
+| `mapgen-improvement`  | Improving the map GENERATOR, which lands on every venue at once      |
+| `enemy-design`        | Adding or reworking a minion/elite/boss, or a companion              |
+| `boss-abilities`      | Giving a boss a set-piece MOVE, or a death rite                      |
+| `quest-design`        | An errand, its giver, its conversation, a campaign chain             |
+| `weapon-system`       | Weapons, loot, tiers/affixes, named uniques, the off-hand            |
+| `leveling-balance`    | How fast the hero levels — the XP curve and its pacing               |
+| `simulate-run`        | MEASURING actual balance by running the real engine headlessly       |
+| `pixel-assets`        | Creating or changing sprites, tiles, palettes, font glyphs           |
+| `art-improvement`     | Finding and replacing the game's WORST art                           |
+| `sound-effects`       | Synthesized SFX and the tracker-style music                          |
+| `talent-fx`           | The passive talent trees and their always-on looks                   |
+| `visual-effects`      | A transient effect — explosion, flash, aura, screen wash             |
+| `gore-system`         | Blood, the floor, the hero's coat, cleaves, gibs, the NSFW gate      |
+| `playtest`            | Verifying a change in the running game with the autoplay bot         |
+| `bot-improvement`     | Improving the autopilot toward human-capability play                 |
+| `debug-game`          | Investigating a gameplay/render/input/audio bug                      |
+| `test-scenario`       | Staging an EXACT in-game situation to repro, probe or eyeball        |
+| `menu-design`         | The title menu, a settings row, the developer menu                   |
+| `ui-review`           | A fit-and-finish pass over the UI at the nine reference viewports    |
+| `store-shots`         | Regenerating the App Store / Play Store screenshot set               |
+| `update-story`        | Writing, rewriting or retoning ANY line the game speaks              |
+| `library-improvement` | Building or improving the generated `/library/` site                 |
 
 ## Maintenance skills
 

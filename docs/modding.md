@@ -71,7 +71,11 @@ module, since the shell compiled them, which is the one place a mod's content
 does not travel the same road as the game's: the shipped scores are each behind
 their own dynamic `import()` and stay there.
 
-### 3a. A mod's venue is CARVED, like every other
+**Every catalog kind rides that same seam**, and each one needed a small thing
+of its own to get there. The sections up to "Clashes between mods" are those —
+one per catalog family, in the order they landed.
+
+### A mod's venue is CARVED, like every other
 
 `maps/<id>.yaml` is the map half of a venue (the `mapgen-improvement` skill in
 `AGENTS.md`): the mission's geometry is carved fresh from the run's own seed —
@@ -104,7 +108,7 @@ release. So `mod/catalog.json` carries the list of names the engine's own parser
 accepts, enumerated from it by `mod/tools/catalog.mjs` and drift-tested like
 every other id set in that file. One grammar, a snapshot of what it says yes to.
 
-### 3a½. A conversion opens under its own name
+### A conversion opens under its own name
 
 `ModBundle.brand` — a title and a tagline, declared in `mod.yaml` — is what the
 title screen draws while an enabled conversion has one. It is the smallest
@@ -133,7 +137,7 @@ a glyph the atlas has no cell for, so a brand with an accent in it renders as
 therefore carries the font's glyph set — the one entry in it that is not an id —
 and the compiler names the offending character.
 
-### 3a¾. The kits are content now too
+### The kits are content too
 
 `content/sets.yaml` is the last catalog to have been code. A SET is what makes a
 boss worth farming past the first drop, and a mod could already ship
@@ -156,7 +160,7 @@ Two decisions worth keeping:
   conversion re-homing a shipped kit ships the pieces too, which puts them in
   the list anyway.
 
-### 3a⅞. The ladder speaks in the mod's voice
+### The ladder speaks in the mod's voice
 
 `difficulties.yaml` renames the five rungs and rewrites their taglines, and does
 nothing else. The split is the interesting part, and it is the same one
@@ -181,7 +185,7 @@ It lands before the picker is drawn — `applyMods` runs and then the flow goes 
 the difficulty ladder — so the rows a player reads are already the mod's, with
 no extra plumbing.
 
-### 3a⁹⁄₁₀. A mod's weapon flares its own element
+### A mod's weapon flares its own element
 
 `UniqueDef.fx` is the last of the four "a mod's content can only look like
 whichever shipped thing it resembles" gaps. The signature slash and muzzle flash
@@ -210,7 +214,7 @@ Three decisions:
   frame, and building a style object there would allocate through the whole
   flight of every round on screen.
 
-### 3b. The story travels the same road — and nobody governs a mod's script
+### The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs
 `registerDefs` already accepted; what was missing was the AUTHORING form. All
@@ -239,7 +243,7 @@ Three things are worth knowing about the format:
   the manuscript). A mod's scenes are never transcribed there and never corrected
   to match it. The distinction is origin, not format.
 
-### 3c. The party is the story's other half
+### The party is the story's other half
 
 A companion is the same lift again: `registerDefs` already took a `companions`
 catalog, and what was missing was the authoring form. The roster is content now
@@ -271,7 +275,7 @@ Two things are worth knowing about the format:
   refuses the mod. The other four growth fields are grants in their own right
   (`chainPerRank` teaches an un-chained weapon to arc) and are legal alone.
 
-### 3d. The build system is content too
+### The build system is content too
 
 The passive TALENT trees were the last catalog a mod could not touch — the one
 place where a total conversion could re-skin every monster, venue, relic, scene
@@ -466,16 +470,61 @@ Two details in `menus-mods.ts` are load-bearing:
 ## The shell handler, and what ships with it
 
 `electron/src/mods.ts` is where the three halves meet: it asks `workshop.ts`
-what the player is subscribed to, walks `<userData>/mods/` for the mod they are
-WRITING, runs the compiler over each folder, and answers the bridge. It is the
-peer of `cloud-save.ts` with one difference that shapes the file — it does real
-work, because **compiling is the security boundary**. A mod's YAML is read,
-parsed and validated here so that only checked JSON crosses to the renderer.
+what the player is subscribed to, walks the two mods folders on disk, runs the
+compiler over each one, and answers the bridge. It is the peer of
+`cloud-save.ts` with one difference that shapes the file — it does real work,
+because **compiling is the security boundary**. A mod's YAML is read, parsed
+and validated here so that only checked JSON crosses to the renderer.
 
-Two sources, one list. The local folder exists because the alternative is
-authoring by publishing-to-test, which is a miserable loop and litters the
-Workshop with drafts; it is also the only source PUBLISH is offered for, since
-a subscription is somebody else's to update.
+**Three sources, one list**, and each answers a different question:
+
+| Source     | Where                                   | Why it exists                                                                                                                                                                   |
+| ---------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workshop` | wherever Steam downloaded it            | a subscription — somebody else's to update, so no PUBLISH row                                                                                                                   |
+| `local`    | `<userData>/mods/`                      | the mod being WRITTEN. Authoring by publishing-to-test is a miserable loop and litters the Workshop with drafts. The only publishable source                                    |
+| `portable` | `mods/` beside the game (Windows/Linux) | a mod somebody was SENT. Folders or `.zip` files, and a `.zip` is `portable` wherever it sat — what compiles is a copy in the cache, which nobody is authoring. Never published |
+
+The portable folder is the answer to a question the other two cannot take: **a
+friend sent me this**. The data folder is correct and unguessable — spelled
+differently on three platforms and hidden on two — which is fine for somebody
+who typed a command to be told where it is, and useless as an instruction to
+pass to a player. The install folder is one place, the player owns it, and it
+travels with a copied install.
+
+**macOS has none, and that is the platform's answer rather than a gap.** An
+installed app lives in `/Applications`, so "beside the app" is a system
+directory a game has no business writing into — and the inside of the bundle is
+worse: a file added there breaks the signature the app is notarized under. macOS
+keeps user data in Application Support, so `localModsDir()` is the whole answer
+there, and it reads archives too — which is what keeps "somebody sent me a zip"
+answerable on every platform. `portableModsPath` is a pure function precisely so
+that rule can be tested for all three from one machine.
+
+### The one archive this app opens
+
+`electron/src/mod-archive.ts` reads a `.zip` from that folder, and it is worth
+being precise about what changed and what did not. The Workshop path still has
+no archive parser: Steam downloads and unpacks a subscription, so a stranger's
+file never meets code of ours. What the reader answers is the other arrival —
+where the alternative was never "no parser" but "the player unzips it by hand
+into a folder whose name they have to be told". The file is opened either way.
+
+So it is a small reader rather than a dependency, and it refuses more than a
+general-purpose one would: stored and deflated entries only, no zip64, no
+encryption; every name checked BEFORE anything is written (absolute paths,
+drive letters, backslashes, `..` segments and control characters all refused);
+hard caps on entry count and size so a bomb is a refusal rather than a full
+disk; and sizes read from the central directory, never from the local header,
+which may legally be zeroed. Extraction goes to `<userData>/mod-archives/`,
+keyed by the archive's size and mtime so replacing the zip re-extracts and an
+unchanged one costs a `statSync`. That cache is deliberately NOT inside
+`<userData>/mods/`, because the publish containment check is a prefix of that
+folder — a mod that arrived cannot be republished by accident.
+
+A zip that will not open is reported the way a mod that will not compile is:
+the row appears with the reason on it. Unlike a nameless directory, which is
+silently skipped, a file called `something.zip` in the mods folder was put
+there to be played, so "it is not a mod" is an answer the player needs.
 
 **Shipping the compiler is its own problem.** It lives outside `electron/` — in
 `mod/tools/`, importing the game's own loaders out of `scripts/` — because
@@ -507,7 +556,7 @@ dynamic import.
 ## What is not here yet
 
 - **A NEW KIND of talent proc.** A mod may author, retune or replace any of the
-  eleven proc blocks the engine fires (see 3d), but a proc the engine has no hook
+  eleven proc blocks the engine fires (see “The build system is content too” above), but a proc the engine has no hook
   for — "your blows sometimes stun" — is engine code, not content. The format has
   no scripting hook and adding one would turn "subscribe to a mod" into "run a
   stranger's code".

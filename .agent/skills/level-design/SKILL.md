@@ -312,8 +312,10 @@ else to render — change the seed to see another run's map.
 - [ ] `make assets` + family sheet looked at; music track registered.
 - [ ] A carve rendered at every size and read (`--seed`, `--size`), plus
       `--heatmap` for coverage.
-- [ ] `docs/game-content.md` walkthrough entry; `docs/manuscript.md` transcribes
-      new lines (user-confirmed).
+- [ ] `docs/manuscript.md` transcribes new lines (user-confirmed). The venue
+      itself needs no doc entry — the YAML and the generated library ARE the
+      record; touch `docs/game-content.md` only if the venue introduces a RULE
+      (a new objective kind, a new carry-over, a new economy) it doesn't state.
 - [ ] Per-level content test written; `make test`, `make lint` green.
 - [ ] Changelog fragment (`.changes/unreleased/`, type `Added`).
 - [ ] Simulated (`simulate-run`) and playtested (`playtest`) at 844×390.

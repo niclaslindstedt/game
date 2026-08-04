@@ -71,6 +71,34 @@ npm run electron             # from the repo root
 The individual `electron:install` and `electron:bundle` commands remain
 available when only one preparation step is needed.
 
+That entry point is `scripts/run-electron.mjs` rather than a shell one-liner for
+one reason worth keeping: **an npm script may not set an environment variable
+with `VAR=value` shell syntax.** npm runs scripts through the platform's shell,
+and `cmd.exe` has no such syntax — it reports `'GIS_STEAM' is not recognized as
+an internal or external command` and the script fails before npm is reached, so
+the game cannot be started from the repo on Windows at all. Anything that needs a
+variable set goes in a Node launcher that sets it on the child;
+`tests/content/npm_scripts_portable_test.ts` keeps every manifest honest.
+
+Arguments reach the game: `npm run electron -- --multiplayer`.
+
+### When it does not start
+
+The shell writes **every launch** to `launch.log` in its user-data directory
+(`%APPDATA%\adastrail` on Windows, `~/Library/Application
+Support/adastrail` on macOS, `~/.config/adastrail` on Linux),
+keeping the previous one beside it as `launch.log.prev`. A packaged game has no
+console, so that file — plus the error dialog anything fatal raises — is the
+whole diagnosis. Attach it to a bug report.
+
+That folder is named by `src/user-data.ts` rather than left to Electron's
+default, which is the npm package name — so the folder, the executable and the
+docs all say `adastrail`. An install that predates that carries the old name
+and is **moved once, on the next launch**, because everything the player owns
+(their roster in `localStorage`, settings, window state, their mods) lives in
+it. The move is logged; if it fails, the app runs on the folder it already had
+rather than starting empty.
+
 Without a Steam client running, `steamworks.init()` throws and the shell
 memoizes "no client": cloud save and achievements report unavailable and the
 game plays device-locally, exactly as it does in a browser. That is the normal
@@ -81,12 +109,22 @@ licence. A mod creator using an official downloaded binary may pass
 
 ### Environment
 
-| Variable           | Effect                                                                    |
-| ------------------ | ------------------------------------------------------------------------- |
-| `GIS_STEAM_APP_ID` | The Steam app id. Defaults to **480** (Valve's Spacewar test app)         |
-| `GIS_STEAM=off`    | Don't talk to Steam at all                                                |
-| `GIS_GAME_URL`     | Load a remote URL instead of the bundled site (e.g. the `/preview/` slot) |
-| `GIS_VERBOSE=1`    | Keep the informational log in a packaged build                            |
+| Variable            | Effect                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `GIS_STEAM_APP_ID`  | The Steam app id. Defaults to **480** (Valve's Spacewar test app)                                            |
+| `GIS_STEAM=off`     | Don't talk to Steam at all                                                                                   |
+| `GIS_GAME_URL`      | Load a remote URL instead of the bundled site (e.g. the `/preview/` slot)                                    |
+| `GIS_VERBOSE=1`     | Keep the informational log in a packaged build                                                               |
+| `GIS_STEAM_OVERLAY` | `1` forces the Steam overlay's Chromium switches on, `0` off. Unset = on only when Steam started the process |
+
+`GIS_STEAM_OVERLAY` guards a trap rather than a preference.
+`electronEnableSteamOverlay()` does not draw anything — it appends
+`in-process-gpu` and `disable-direct-composition` to Chromium's command line.
+Where Steam did not launch the game there is no overlay to draw, and an
+in-process GPU that falls over takes the browser process with it: the game exits
+with no window and no message. So the switches are installed only when Steam
+stamped its own variables into our environment, which is exactly the launch that
+has an overlay behind it.
 
 ### Testing against Steam locally
 
@@ -94,9 +132,13 @@ Steam must be **running and signed in**. Until the real app id exists, use
 Spacewar:
 
 ```sh
-echo 480 > steam_appid.txt   # gitignored; only needed for a local run
-npm run electron
+echo 480 > steam_appid.txt        # gitignored; only needed for a local run
+GIS_STEAM=on npm run electron     # Windows: set GIS_STEAM=on && npm run electron
 ```
+
+`GIS_STEAM` has to be asked for, because the launcher defaults it to `off` —
+running the shell without a Steam client is the ordinary case, and a value
+already in the environment wins over that default.
 
 Spacewar's cloud and achievements are shared test surfaces — useful to prove the
 plumbing works end to end, useless as a test of our own achievement list, since
@@ -128,6 +170,33 @@ npm run steam:upload -- --platform windows
 The target is a **directory, not an installer** — Steam distributes by uploading
 a directory to a depot and its own client owns installing and updating. See the
 comment at the top of `electron-builder.config.cjs`.
+
+### macOS: the build is never unsigned
+
+**Apple Silicon refuses to execute unsigned arm64 code.** Not "warns about it" —
+the kernel will not map the binary, and macOS tells the player _"'Adas Trail.app'
+is damaged and can't be opened. You should move it to the Trash."_ It is the same
+sentence macOS uses for a corrupt download, which is why the first native mac
+build read as a broken zip rather than as a missing signature. x86_64 has no such
+rule, so an unsigned Intel slice runs happily — under Rosetta, at Rosetta's
+speed — and hides the fault.
+
+So the packaging config always signs, and with what depends on what it is given:
+
+| Given                                                            | Signed with              | What the player meets                          |
+| ---------------------------------------------------------------- | ------------------------ | ---------------------------------------------- |
+| nothing                                                          | **ad-hoc** (`-`)         | one Gatekeeper prompt, then it runs — natively |
+| `CSC_LINK` / `GIS_MAC_IDENTITY`                                  | your **Developer ID**    | the same prompt (not notarized yet)            |
+| …plus `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Developer ID + notarized | nothing — it just opens                        |
+
+An ad-hoc build is a real, native, full-speed app. What it is not is _anybody's_
+app: the signature carries no identity, so Gatekeeper still asks. A player who
+downloads one opens it once through **System Settings → Privacy & Security →
+Open Anyway**; after that macOS remembers. `xattr -dr com.apple.quarantine
+"/Applications/Adas Trail.app"` is the same thing from a terminal.
+
+Where the credentials come from, when you want the prompt gone too — all of it
+is [`RELEASING.md`](RELEASING.md) → **Signing**.
 
 ### Before a real release
 

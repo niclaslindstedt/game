@@ -83,9 +83,11 @@ Delete or empty each of these — they are 100% this-game data:
       manuscript (its "Where the data lives" table stays as the template).
       Writing it FIRST pays off: every intro, dialogue, lastWord, and lore
       page you author in step 3 must transcribe from it.
-- [ ] **`docs/game-content.md`** — this game's story/level/roster
-      walkthrough; replace it wholesale. Trim the flavored README sections
-      (premise, how-to-play story beats) to the new game.
+- [ ] **`docs/game-content.md`** — the rules this game's catalogs sit inside
+      (carry-over, ammunition, the coin faucets, menace, companions). Keep the
+      rules the new game keeps; rewrite the ones it changes. It holds no
+      roster or venue listing to replace — those are `content/` and the
+      generated library.
 - [ ] **Per-game data embedded in scripts** — the balance checkers carry
       tables keyed by this game's level ids: `scripts/weapon-stats.mjs`
       (`LEVEL_MLVL_BANDS`, `CAMPAIGN_LANDINGS` — re-derive from

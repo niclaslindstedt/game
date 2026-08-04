@@ -37,8 +37,26 @@ import { contextBridge, ipcRenderer } from "electron";
 const SHELL_CHANNEL = "gis:post";
 const NET_PORT_CHANNEL = "gis:net-port";
 
+/**
+ * WHAT THIS LAUNCH MAY DO, as a list of plain names.
+ *
+ * It arrives on this process's own command line (`additionalArguments` in the
+ * window's `webPreferences`) rather than over the shell channel, because the
+ * menus have to know before they are first drawn — a row that appears and then
+ * vanishes a round trip later is worse than one that was never offered.
+ * Resolved in the main process; see `capabilities.ts`.
+ */
+const CAPS_PREFIX = "--gis-caps=";
+const caps = (
+  process.argv.find((arg) => arg.startsWith(CAPS_PREFIX)) ?? CAPS_PREFIX
+)
+  .slice(CAPS_PREFIX.length)
+  .split(",")
+  .filter(Boolean);
+
 contextBridge.exposeInMainWorld("__GIS_NATIVE__", true);
 contextBridge.exposeInMainWorld("__GIS_PLATFORM__", "steam");
+contextBridge.exposeInMainWorld("__GIS_CAPS__", Object.freeze(caps));
 contextBridge.exposeInMainWorld("__gisShell", {
   post(message: string): void {
     // Only strings cross. The main process parses and validates; a structured

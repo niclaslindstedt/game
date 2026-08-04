@@ -15,6 +15,53 @@ hand — `scripts/update-versions.sh vX.Y.Z` rewrites all of them atomically.
 Dependencies are installed from the repository root (npm workspaces), not
 inside `pwa/`. Run `npm install` at the root.
 
+## The desktop game
+
+### `'GIS_STEAM' is not recognized as an internal or external command`
+
+An npm script tried to set an environment variable with `VAR=value` shell
+syntax. That is Bourne shell; `cmd.exe` reads it as the name of a program, so
+the script fails before the command it was supposed to run. Fixed for
+`npm run electron` (it goes through `scripts/run-electron.mjs`, which sets the
+variable on the child process instead) and pinned by
+`tests/content/npm_scripts_portable_test.ts` — if you hit it in another script,
+that is the bug and a shell prefix is never the fix.
+
+### The desktop game does nothing when launched
+
+Read `launch.log` in the app's user-data directory —
+`%APPDATA%\adastrail` (Windows), `~/Library/Application
+Support/adastrail` (macOS), `~/.config/adastrail` (Linux). The
+shell writes every launch there, INFO included, and keeps the previous one as
+`launch.log.prev`. Anything fatal also raises an error dialog naming that file.
+
+Three lines in it answer most of these:
+
+| Line                              | What happened                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `another copy is already running` | A previous copy (possibly wedged) still holds the single-instance lock. End it in the task manager.     |
+| `no bundled website was found`    | Incomplete install, or a checkout that never ran `npm run electron` from the repo root.                 |
+| `child process gone: GPU`         | A graphics-driver problem. Launching with `GIS_STEAM_OVERLAY=0` rules out the Steam overlay's switches. |
+
+If the log ends with no error at all, launch once with `GIS_VERBOSE=1` set and
+read it again.
+
+## Mods
+
+A compile error is not a troubleshooting question: `node mod/tools/cli.mjs check
+<dir>` names the file and the reason, and `mod/AGENTS.md` § "Reading the errors"
+decodes every message it can print. What follows is the rest.
+
+| Symptom                                                 | Cause                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The mod is not in the MODS screen at all                | Wrong folder — `cli.mjs where` prints both the game reads (`mods/` beside the game on Windows and Linux, and the data folder everywhere; macOS has only the latter, since an installed app sits in `/Applications`). Browser and mobile builds have no mod loader at all, and a non-store desktop download needs `--mods` on its command line. |
+| A `.zip` in the mods folder is listed with an error     | The game opens archives itself and refuses what it cannot trust: it must hold exactly one `mod.yaml` (at the top or in one wrapper folder), use stored/deflate only, and contain no path that climbs out of it. The row says which.                                                                                                            |
+| It is listed but nothing it adds appears                | Another mod later in the LOAD ORDER overrides it. The MODS screen says so on the overridden mod's own help line; the last one wins.                                                                                                                                                                                                            |
+| A `--mod` instrument refuses to run                     | The mod does not compile — the tools stop with the same list `check` prints. There is nothing to measure until it passes.                                                                                                                                                                                                                      |
+| The level compiles but no run can be built from it      | A venue is two files: the mission and its `maps/<id>.yaml` blueprint, which is what the geometry is carved from.                                                                                                                                                                                                                               |
+| Sprites look right in the previews, missing in-game     | A mod's sprites merge at load and never enter the built atlas — anything reading `atlas.json` directly cannot see them. This is by design.                                                                                                                                                                                                     |
+| A hero's items or roster read wrong after unsubscribing | A hero remembers the mod it was played under. Re-subscribe, or accept that content from a removed mod cannot resolve.                                                                                                                                                                                                                          |
+
 ## The deployed game
 
 ### The site shows an old build after a deploy

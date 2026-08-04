@@ -92,7 +92,18 @@ function PixelNameInput({
         onBlur={() => setFocused(false)}
         onChange={(e) => onChange(clampHeroName(e.target.value))}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && value.trim()) onSubmit();
+          // The Enter that names the hero is SPENT HERE. Submitting mints the
+          // hero and hands the screen to the title's difficulty ladder, whose
+          // own window listener goes on while this very keystroke is still
+          // climbing towards `window` — where it would confirm the row under
+          // the cursor and start the run before the ladder was ever drawn.
+          // (`onFreshKeyDown` catches it there too; a field that eats its own
+          // submit key is the exact half — see @ui/lib/key-handoff.ts.)
+          if (e.key === "Enter" && value.trim()) {
+            e.preventDefault();
+            e.stopPropagation();
+            onSubmit();
+          }
         }}
         placeholder="HERO"
       />

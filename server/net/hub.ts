@@ -300,11 +300,20 @@ export function createPeerHub(options: HubOptions): PeerHub {
     peer.transport.send(peer.key, new Uint8Array(frame), mode);
   }
 
+  /**
+   * `detail` travels to the joiner in the `bye`; `note` does not and goes only
+   * to this server's own console, where it REPLACES the bare reason. They are
+   * separate because the two audiences need different sentences: the joiner is
+   * told they were refused, while the console says which END the problem is at
+   * — the difference between "you were rejected" and "this server rejects
+   * everybody", which is the whole of what an operator is trying to work out.
+   */
   function refuse(
     transport: Transport,
     key: PeerKey,
     reason: RefusalReason,
     detail?: string,
+    note?: string,
   ): void {
     transport.send(
       key,
@@ -326,7 +335,7 @@ export function createPeerHub(options: HubOptions): PeerHub {
     // and sees "could not reach that session" instead of the better sentence.
     // Best-effort is the right trade; a retained record is not.
     transport.drop(key);
-    options.log?.(`net: refused ${key} — ${reason}`);
+    options.log?.(`net: refusing player join from ${key} — ${note ?? reason}`);
   }
 
   function onHello(
@@ -365,11 +374,12 @@ export function createPeerHub(options: HubOptions): PeerHub {
   /**
    * MAY A SESSION BE CARRIED OVER THIS TRANSPORT AT ALL?
    *
-   * Steam only. The `allowUnlicensedTransport` escape exists for the repo's own
-   * tests and the headless soak, which run over a loopback UDP socket with no
-   * Steam anywhere near them — it is an OPTION on the hub rather than an
-   * environment variable precisely so it cannot be set by a player, a launch
-   * argument, or a config file somebody edits.
+   * The Steam relay always; anything else only where the thing that BUILT the
+   * host said so. The repo's own tests and the headless soak are the plainest
+   * case — they run over a loopback UDP socket with no Steam anywhere near
+   * them — and it is an OPTION on the hub rather than an environment variable
+   * precisely so it stays a property of the build rather than of a file
+   * somebody can edit on an installed copy.
    */
   function licensedTransport(transport: Transport): boolean {
     if (options.allowUnlicensedTransport) return true;
@@ -405,7 +415,17 @@ export function createPeerHub(options: HubOptions): PeerHub {
     // an unrecognised transport is refused, so the next one added is licensed
     // deliberately rather than by having been forgotten.
     if (!licensedTransport(transport)) {
-      refuse(transport, key, "unlicensed", `transport ${transport.id}`);
+      // SAID OUT LOUD ON THE CONSOLE, because this is the one refusal whose
+      // cause is not on the joiner's end at all: they did nothing wrong, and
+      // an operator reading a bare "unlicensed" would go looking at the person
+      // who just bounced off. It names WHICH end and stops there.
+      refuse(
+        transport,
+        key,
+        "unlicensed",
+        `transport ${transport.id}`,
+        "unlicensed server",
+      );
       return;
     }
     const refusal = admit({

@@ -10,6 +10,8 @@
 // instead (e.g. the `/preview/` deploy slot, for debugging against live
 // content). When set, the bundled webroot is skipped entirely.
 
+import { isStamped, readBuildCapabilities } from "./capabilities";
+
 /** A remote URL to load instead of the bundled site, or undefined to serve the
  * copy inside the app. */
 export const REMOTE_GAME_URL: string | undefined =
@@ -58,6 +60,40 @@ export function isPlaceholderAppId(appId: number = STEAM_APP_ID): boolean {
  * which is how most local work on the shell happens.
  */
 export const STEAM_ENABLED = process.env.GIS_STEAM !== "off";
+
+/**
+ * The capability stamp this binary was packaged with.
+ *
+ * It rides on the app's own manifest, which `electron-builder` writes at
+ * package time — so it is a property of the build rather than of the machine
+ * the build runs on, and an installed copy has nothing to edit. An unpackaged
+ * tree carries no stamp and gets everything; see `capabilities.ts`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const MANIFEST = require("../package.json") as {
+  storeUrl?: string;
+};
+
+export const BUILD_CAPABILITIES = readBuildCapabilities(MANIFEST);
+
+/**
+ * True when nothing packaged this binary for distribution — a checkout, or a
+ * build made without the packaging switches. Such a build is a developer's own
+ * tool for debugging the game and is not a copy of the game to play or pass
+ * on, and it says so at startup rather than leaving that to be assumed.
+ */
+export const DEVELOPER_BUILD = !isStamped(MANIFEST);
+
+/**
+ * The game's Steam page, stamped in beside the capabilities from
+ * `game.config.json`'s `steamUrl` — the one place a brand string lives.
+ *
+ * Empty where there is nothing to link to (an unpackaged tree, or a build made
+ * before the page existed), and everything that shows it treats an empty
+ * string as "say it without a link" rather than printing a broken one.
+ */
+export const STORE_URL: string =
+  typeof MANIFEST.storeUrl === "string" ? MANIFEST.storeUrl : "";
 
 /** The dark brand background (game.config.json theme_color). It paints the
  * window behind the page so no white flash shows through while it loads. */

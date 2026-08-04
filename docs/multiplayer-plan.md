@@ -1,5 +1,15 @@
 # Multiplayer — the phased build plan
 
+> **Status: the plan has been executed; the mode ships.** What actually landed
+> is [`multiplayer.md`](multiplayer.md) — read that first, and treat it as the
+> authority whenever the two disagree. This file is kept for the phases that are
+> still being closed out and for the reasoning behind decisions the shipped doc
+> only states: the remaining gaps are tracked as issues
+> ([#862](https://github.com/niclaslindstedt/game/issues/862),
+> [#863](https://github.com/niclaslindstedt/game/issues/863),
+> [#864](https://github.com/niclaslindstedt/game/issues/864)) and listed under
+> `multiplayer.md` § What is NOT here yet.
+
 A Diablo 2-shaped co-op mode: a host starts a game at a difficulty, up to eight
 friends join it **with their own characters**, the party fights the campaign
 together, shares a quest log, talks in chat, and scales the horde with

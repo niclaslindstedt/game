@@ -50,6 +50,100 @@ const MOD_TOOLCHAIN_DEPS = Object.keys(
 const BUNDLE_ID = "se.niclaslindstedt.adastrail";
 
 /**
+ * WHAT THE PACKAGE IS STAMPED WITH.
+ *
+ * Three capabilities belong to the build rather than to the machine that runs
+ * it, and they are read from the build environment (`ENABLE_MULTIPLAYER=1`
+ * and friends, via the Makefile) and written into the packaged manifest, where
+ * `electron/src/capabilities.ts` reads them back. Absent means OFF, here and
+ * at the reading end both — a binary carries only what something deliberately
+ * gave it.
+ */
+const enabled = (name) => process.env[`GIS_ENABLE_${name}`] === "1";
+const STAMPED = process.env.GIS_STAMP_CAPABILITIES === "1";
+const CAPABILITIES = {
+  multiplayer: enabled("MULTIPLAYER"),
+  mods: enabled("MODS"),
+  portMap: enabled("UPNP"),
+  licensed: enabled("LICENSED"),
+};
+
+/**
+ * WHAT COMES OUT OF THE PACKAGER.
+ *
+ * `dir` is the default because a depot wants a directory of files and its own
+ * client owns installing them. The `standalone` profile is for a download
+ * instead, and it produces ARCHIVES on every platform rather than installers.
+ *
+ * That is a deliberate narrowing rather than a shortcut. An installer is a
+ * promise this project cannot keep unsigned: an unsigned NSIS setup trips
+ * SmartScreen, an un-notarized DMG is refused outright by Gatekeeper, and an
+ * AppImage cannot even be NAMED here (electron-builder refuses the apostrophe
+ * in the product name for a file path). An archive has none of those problems,
+ * is what a player who wants a portable copy actually wants, and is honest
+ * about what it is — so when the signing credentials exist, installers come
+ * back as an addition rather than as a fix.
+ */
+/** The app bundle's name — the brand with its apostrophe removed. Derived
+ * rather than written out, so a rename still travels from `game.config.json`
+ * like every other brand string. */
+const PRODUCT_NAME = identity.title.replace(/['\u2019]/g, "");
+
+/** What the executable is called on the platforms where it is a COMMAND: one
+ * lowercase word, no spaces, nothing to quote. */
+const EXECUTABLE_NAME = PRODUCT_NAME.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+const STANDALONE = process.env.GIS_PACKAGE_PROFILE === "standalone";
+const MAC_ARCHES = (
+  process.env.GIS_MAC_ARCH ?? (STANDALONE ? "x64,arm64" : "x64")
+)
+  .split(",")
+  .map((arch) => arch.trim())
+  .filter(Boolean);
+
+/**
+ * WHO SIGNS THE macOS BUILD — and why an UNSIGNED one is not an option.
+ *
+ * Apple Silicon does not merely distrust unsigned arm64 code, it refuses to
+ * EXECUTE it: every arm64 binary must carry a signature for the kernel to map
+ * it at all. macOS reports that refusal to the player as *"'Adas Trail.app' is
+ * damaged and can't be opened"* — the same wording it uses for a corrupted
+ * download, which is what made the first arm64 release look like a broken zip
+ * rather than a missing signature. x86_64 has no such rule, which is exactly
+ * why the Intel slice ran (under Rosetta, slowly) while the native one died on
+ * launch. Leaving the app unsigned therefore ships a macOS build that only
+ * ever worked by accident.
+ *
+ * So the mac build ALWAYS signs, and the only question is with what:
+ *
+ *   - With a **Developer ID Application** certificate when one is provided
+ *     (`CSC_LINK`/`CSC_KEY_PASSWORD`, or a name in `GIS_MAC_IDENTITY`). That is
+ *     the real thing: with `APPLE_ID`/`APPLE_APP_SPECIFIC_PASSWORD`/
+ *     `APPLE_TEAM_ID` set too, electron-builder notarizes on the way out and
+ *     Gatekeeper lets the download open with no ceremony at all.
+ *   - **Ad hoc** (`identity: "-"`) otherwise, which is what an ordinary CI run
+ *     and any developer build gets. An ad-hoc signature satisfies the kernel —
+ *     the app RUNS, natively, at full speed — but it is nobody's identity, so a
+ *     downloaded copy still meets Gatekeeper's unidentified-developer prompt
+ *     and needs one trip through System Settings → Privacy & Security. That is
+ *     a prompt the player can answer; "damaged" is not.
+ *
+ * An ad-hoc signature cannot be timestamped (there is no certificate for a
+ * timestamp to outlive), so the timestamp is switched off on that path;
+ * `codesign` fails outright if asked for one. It stays ON for a real identity,
+ * where notarization requires it.
+ *
+ * The hardened runtime is on for both, and the entitlements it needs — the JIT
+ * pair, and `disable-library-validation` for Valve's unsigned `libsteam_api`
+ * and steamworks.js' addon — are already in `build/entitlements.mac.plist`.
+ * Ad-hoc signing without that last one launches to an immediate dyld failure.
+ */
+const MAC_IDENTITY =
+  process.env.GIS_MAC_IDENTITY ||
+  (process.env.CSC_LINK || process.env.CSC_NAME ? undefined : "-");
+const MAC_ADHOC = MAC_IDENTITY === "-";
+
+/**
  * The Steam redistributable that each platform's binding needs beside the
  * executable. steamworks.js ships these inside its own package; the native
  * `.node` addon links against them at load time, so they must sit next to the
@@ -79,13 +173,49 @@ const STEAM_REDIST = {
 
 module.exports = {
   appId: BUNDLE_ID,
-  productName: identity.title,
+  // THE APP'S NAME ON DISK, and deliberately not `identity.title` verbatim.
+  //
+  // The brand is "Ada's Trail" and stays that everywhere a person READS it —
+  // the window title, the store pages, the site. This is the name given to a
+  // FILE, and an apostrophe in a file path is a running argument with every
+  // packager and shell there is: electron-builder refuses it outright for an
+  // AppImage, and everything else that accepts it hands the player a path they
+  // have to quote. So the bundle drops the punctuation and keeps the words.
+  //
+  // macOS shows this one (`Adas Trail.app`, which is what a player sees in
+  // Finder and the Dock); Windows and Linux name their executable `adastrail`
+  // below, because a command somebody types should be one lowercase word.
+  productName: PRODUCT_NAME,
   copyright: `Copyright © ${new Date().getFullYear()} ${identity.author.name}`,
   buildVersion: version,
 
   directories: {
     output: "release",
     buildResources: "build",
+  },
+
+  // NAMED FROM THE PACKAGE NAME rather than the product name, because the
+  // product name has an apostrophe in it and a file path may not. Spelled out
+  // rather than left to the per-target defaults so every download reads the
+  // same way and carries its platform and architecture on its face.
+  artifactName: `${EXECUTABLE_NAME}-\${version}-\${os}-\${arch}.\${ext}`,
+
+  // The capability stamp travels on the app's own manifest, so it is a fact
+  // about the binary rather than about the environment it is started in. The
+  // store link rides along from `game.config.json` for the same reason the
+  // product name does — one place holds every brand string.
+  // A packaging run that did not deliberately stamp itself leaves the field
+  // OFF the manifest entirely rather than writing an all-on one. The absence
+  // is what marks a developer build (`capabilities.ts`'s `isStamped`), so a
+  // plain `npm run dist` out of somebody's tree says what it is instead of
+  // passing for a release that happens to have everything enabled.
+  extraMetadata: {
+    ...(STAMPED ? { capabilities: CAPABILITIES } : {}),
+    storeUrl: identity.steamUrl || "",
+    // THE GAME'S version, not the shell package's. `electron/` keeps its own
+    // manifest version and nothing updates it, so a download named after it
+    // would claim a number no release ever had.
+    version,
   },
 
   // Everything the app needs and nothing else. `webroot/` is the built site
@@ -167,7 +297,8 @@ module.exports = {
   asarUnpack: ["**/node_modules/steamworks.js/**"],
 
   win: {
-    target: [{ target: "dir" }],
+    executableName: EXECUTABLE_NAME,
+    target: STANDALONE ? [{ target: "zip", arch: "x64" }] : [{ target: "dir" }],
     files: [
       "!node_modules/steamworks.js/dist/linux64/**/*",
       "!node_modules/steamworks.js/dist/osx/**/*",
@@ -178,21 +309,37 @@ module.exports = {
   },
 
   mac: {
-    // Steam for macOS remains an Intel process. One x64 depot supports Intel
-    // Macs directly and Apple Silicon through Rosetta without carrying a
-    // second copy of Chromium in every player's download.
-    target: [{ target: "dir", arch: "x64" }],
+    // Steam for macOS remains an Intel process, so a depot build is x64 only:
+    // it serves Intel Macs directly and Apple Silicon through Rosetta without
+    // carrying a second copy of Chromium in every player's download. A
+    // standalone download has no Rosetta guarantee to lean on and is expected
+    // to be native, so it ships both slices as separate artifacts.
+    target: MAC_ARCHES.map((arch) => ({
+      target: STANDALONE ? "zip" : "dir",
+      arch,
+    })),
     icon: "../pwa/public/maskable-icon-512x512.png",
     files: [
       "!node_modules/steamworks.js/dist/linux64/**/*",
       "!node_modules/steamworks.js/dist/win64/**/*",
-      "!node_modules/steamworks.js/dist/osx/steamworksjs.darwin-arm64.node",
+      // The Apple Silicon slice of the binding is dropped only when nothing
+      // being built here needs it — excluding the slice a build IS for would
+      // leave that app unable to load Steam at all.
+      ...(MAC_ARCHES.includes("arm64")
+        ? []
+        : [
+            "!node_modules/steamworks.js/dist/osx/steamworksjs.darwin-arm64.node",
+          ]),
     ],
     extraFiles: STEAM_REDIST.mac,
     category: "public.app-category.action-games",
-    // Gatekeeper blocks an un-notarized app even when Steam launches it, so a
-    // real macOS release needs a Developer ID certificate and notarization.
-    // Both need credentials that cannot live in the repo — see README.md.
+    // NEVER unsigned — an unsigned arm64 app cannot run at all. See
+    // MAC_IDENTITY above for what each value means and what the player sees.
+    identity: MAC_IDENTITY,
+    ...(MAC_ADHOC ? { timestamp: "none", notarize: false } : {}),
+    // Gatekeeper still asks about an ad-hoc signature, so a frictionless macOS
+    // release wants a Developer ID certificate and notarization on top. Both
+    // need credentials that cannot live in the repo — see README.md.
     hardenedRuntime: true,
     gatekeeperAssess: false,
     entitlements: "build/entitlements.mac.plist",
@@ -200,7 +347,10 @@ module.exports = {
   },
 
   linux: {
-    target: [{ target: "dir" }],
+    executableName: EXECUTABLE_NAME,
+    target: STANDALONE
+      ? [{ target: "tar.gz", arch: "x64" }]
+      : [{ target: "dir" }],
     files: [
       "!node_modules/steamworks.js/dist/osx/**/*",
       "!node_modules/steamworks.js/dist/win64/**/*",
