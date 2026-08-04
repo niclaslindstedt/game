@@ -79,11 +79,19 @@ Arguments reach the game: `npm run electron -- --multiplayer`.
 ### When it does not start
 
 The shell writes **every launch** to `launch.log` in its user-data directory
-(`%APPDATA%\adas-trail-desktop` on Windows, `~/Library/Application
-Support/adas-trail-desktop` on macOS, `~/.config/adas-trail-desktop` on Linux),
+(`%APPDATA%\adastrail` on Windows, `~/Library/Application
+Support/adastrail` on macOS, `~/.config/adastrail` on Linux),
 keeping the previous one beside it as `launch.log.prev`. A packaged game has no
 console, so that file — plus the error dialog anything fatal raises — is the
 whole diagnosis. Attach it to a bug report.
+
+That folder is named by `src/user-data.ts` rather than left to Electron's
+default, which is the npm package name — so the folder, the executable and the
+docs all say `adastrail`. An install that predates that carries the old name
+and is **moved once, on the next launch**, because everything the player owns
+(their roster in `localStorage`, settings, window state, their mods) lives in
+it. The move is logged; if it fails, the app runs on the folder it already had
+rather than starting empty.
 
 Without a Steam client running, `steamworks.init()` throws and the shell
 memoizes "no client": cloud save and achievements report unavailable and the

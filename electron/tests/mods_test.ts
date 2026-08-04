@@ -16,7 +16,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-import { createModsBridge, localModsDir, type ModsEvent } from "../src/mods";
+import {
+  createModsBridge,
+  localModsDir,
+  portableModsDir,
+  type ModsEvent,
+} from "../src/mods";
+import { zip, zipDir } from "./zip-fixture";
 
 /** The worked mod in the repo, copied in as the player's own local mod.
  * `__dirname`-relative because this suite compiles to CommonJS. */
@@ -24,12 +30,17 @@ const EXAMPLE = join(__dirname, "..", "..", "mod", "examples", "greenhouse");
 
 type InstalledModShape = {
   key: string;
+  folder: string;
   source: string;
   bundle: unknown;
   errors: string[];
 };
 
 let userData: string;
+/** `portableModsDir()` is cwd-relative when unpackaged, so the suite runs from
+ * a directory of its own — that IS the "beside the game" folder here. */
+let portableHome: string;
+const originalCwd = process.cwd();
 
 vi.mock("electron", () => ({
   app: {
@@ -42,10 +53,13 @@ const temps: string[] = [];
 
 beforeAll(() => {
   userData = mkdtempSync(join(tmpdir(), "gis-userdata-"));
-  temps.push(userData);
+  portableHome = mkdtempSync(join(tmpdir(), "gis-install-"));
+  temps.push(userData, portableHome);
+  process.chdir(portableHome);
 });
 
 afterAll(() => {
+  process.chdir(originalCwd);
   for (const dir of temps) rmSync(dir, { recursive: true, force: true });
 });
 
@@ -95,6 +109,49 @@ describe("listing", () => {
     expect(mod!.errors.length).toBeGreaterThan(0);
   });
 
+  it("reads a mod that arrived as a .zip, wrapper folder and all", async () => {
+    // What a friend actually sends: the mod folder compressed, so everything
+    // sits under one top-level directory inside the archive.
+    mkdirSync(portableModsDir(), { recursive: true });
+    writeFileSync(
+      join(portableModsDir(), "greenhouse.zip"),
+      zipDir(EXAMPLE, "greenhouse"),
+    );
+
+    const mod = (await list(4)).mods.find(
+      (m) => m.key === "portable:greenhouse.zip",
+    );
+    expect(mod).toBeDefined();
+    expect(mod!.errors).toEqual([]);
+    expect((mod!.bundle as { id: string }).id).toBe("greenhouse");
+    // Unpacked into the archive cache, NOT into the authoring folder — which
+    // is what keeps a received mod out of the publish path.
+    expect(mod!.folder.startsWith(join(userData, "mod-archives"))).toBe(true);
+  });
+
+  it("finds a plain folder beside the game, and calls it portable", async () => {
+    cpSync(EXAMPLE, join(portableModsDir(), "beside"), { recursive: true });
+    const mod = (await list(5)).mods.find((m) => m.key === "portable:beside");
+    expect(mod).toBeDefined();
+    expect(mod!.source).toBe("portable");
+    expect(mod!.errors).toEqual([]);
+  });
+
+  it("reports a .zip that is not a mod, rather than ignoring the file", async () => {
+    // Unlike a nameless directory: a file put in the mods folder was put there
+    // to be played, so silence would be the wrong answer.
+    writeFileSync(
+      join(portableModsDir(), "holiday-photos.zip"),
+      zip([{ name: "beach.jpg", body: Buffer.from("not a mod") }]),
+    );
+    const mod = (await list(6)).mods.find(
+      (m) => m.key === "portable:holiday-photos.zip",
+    );
+    expect(mod).toBeDefined();
+    expect(mod!.bundle).toBeNull();
+    expect(mod!.errors[0]).toMatch(/no mod.yaml/);
+  });
+
   it("ignores a directory that is not a mod at all", async () => {
     mkdirSync(join(localModsDir(), "just-some-notes"), { recursive: true });
     const mods = (await list(3)).mods;
@@ -126,6 +183,38 @@ describe("publish refuses a folder outside the player's mods directory", () => {
   it("a traversal back out of the mods directory", async () => {
     const escape = join(userData, "mods", "..", "..");
     const reply = await publish(escape);
+    expect(reply.ok).toBe(false);
+    expect(reply.reason).toBe("not-a-mod");
+  });
+
+  it("the cache a received .zip was unpacked into", async () => {
+    // A mod that ARRIVED is not a mod the player authored. The extraction
+    // cache sits beside `mods/` rather than inside it precisely so the
+    // containment check keeps it out of the Workshop.
+    mkdirSync(portableModsDir(), { recursive: true });
+    writeFileSync(
+      join(portableModsDir(), "sendme.zip"),
+      zipDir(EXAMPLE, "sendme"),
+    );
+    const listed = await new Promise<{ mods: InstalledModShape[] }>(
+      (resolve) => {
+        const bridge = createModsBridge((event: ModsEvent) =>
+          resolve(event as unknown as { mods: InstalledModShape[] }),
+        );
+        bridge.handle({ action: "list", requestId: 7 });
+      },
+    );
+    const unpacked = listed.mods.find((m) => m.key === "portable:sendme.zip");
+    expect(unpacked?.folder).toBeDefined();
+
+    const reply = await publish(unpacked!.folder);
+    expect(reply.ok).toBe(false);
+    expect(reply.reason).toBe("not-a-mod");
+  });
+
+  it("a folder beside the game rather than in the authoring directory", async () => {
+    cpSync(EXAMPLE, join(portableModsDir(), "received"), { recursive: true });
+    const reply = await publish(join(portableModsDir(), "received"));
     expect(reply.ok).toBe(false);
     expect(reply.reason).toBe("not-a-mod");
   });

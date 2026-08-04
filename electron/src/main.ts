@@ -89,6 +89,14 @@ import {
   type WindowState,
 } from "./window-state";
 import { serverEntryPath } from "./resources";
+import { adoptUserData, APP_DIR_NAME } from "./user-data";
+
+// FIRST, before any path is read: say what this app is called, so `userData`
+// is `adastrail` — the executable's own name — rather than the npm package's.
+// It has to happen here because `getPath("userData")` is derived from the name
+// the moment it is first asked for, and the very next line asks.
+app.setName(APP_DIR_NAME);
+adoptUserData(app.getPath("appData"), (message) => output.info(message));
 
 // Before anything else can fail: give the launch somewhere to be written down.
 // `getPath` is safe before `ready`, and the lines that matter most — a native

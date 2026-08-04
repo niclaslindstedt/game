@@ -466,16 +466,54 @@ Two details in `menus-mods.ts` are load-bearing:
 ## The shell handler, and what ships with it
 
 `electron/src/mods.ts` is where the three halves meet: it asks `workshop.ts`
-what the player is subscribed to, walks `<userData>/mods/` for the mod they are
-WRITING, runs the compiler over each folder, and answers the bridge. It is the
-peer of `cloud-save.ts` with one difference that shapes the file — it does real
-work, because **compiling is the security boundary**. A mod's YAML is read,
-parsed and validated here so that only checked JSON crosses to the renderer.
+what the player is subscribed to, walks the two mods folders on disk, runs the
+compiler over each one, and answers the bridge. It is the peer of
+`cloud-save.ts` with one difference that shapes the file — it does real work,
+because **compiling is the security boundary**. A mod's YAML is read, parsed
+and validated here so that only checked JSON crosses to the renderer.
 
-Two sources, one list. The local folder exists because the alternative is
-authoring by publishing-to-test, which is a miserable loop and litters the
-Workshop with drafts; it is also the only source PUBLISH is offered for, since
-a subscription is somebody else's to update.
+**Three sources, one list**, and each answers a different question:
+
+| Source     | Where                        | Why it exists                                                                                                                                |
+| ---------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workshop` | wherever Steam downloaded it | a subscription — somebody else's to update, so no PUBLISH row                                                                                |
+| `local`    | `<userData>/mods/`           | the mod being WRITTEN. Authoring by publishing-to-test is a miserable loop and litters the Workshop with drafts. The only publishable source |
+| `portable` | `mods/` beside the game      | a mod somebody was SENT. Folders or `.zip` files; never published                                                                            |
+
+The portable folder is the answer to a question the other two cannot take: **a
+friend sent me this**. The data folder is correct and unguessable — spelled
+differently on three platforms and hidden on two — which is fine for somebody
+who typed a command to be told where it is, and useless as an instruction to
+pass to a player. A folder beside the game is the same everywhere, survives
+being copied to a stick, and is where anybody looks first. On macOS it sits
+beside the `.app` rather than inside it, because the bundle is the unit a
+player sees and moves.
+
+### The one archive this app opens
+
+`electron/src/mod-archive.ts` reads a `.zip` from that folder, and it is worth
+being precise about what changed and what did not. The Workshop path still has
+no archive parser: Steam downloads and unpacks a subscription, so a stranger's
+file never meets code of ours. What the reader answers is the other arrival —
+where the alternative was never "no parser" but "the player unzips it by hand
+into a folder whose name they have to be told". The file is opened either way.
+
+So it is a small reader rather than a dependency, and it refuses more than a
+general-purpose one would: stored and deflated entries only, no zip64, no
+encryption; every name checked BEFORE anything is written (absolute paths,
+drive letters, backslashes, `..` segments and control characters all refused);
+hard caps on entry count and size so a bomb is a refusal rather than a full
+disk; and sizes read from the central directory, never from the local header,
+which may legally be zeroed. Extraction goes to `<userData>/mod-archives/`,
+keyed by the archive's size and mtime so replacing the zip re-extracts and an
+unchanged one costs a `statSync`. That cache is deliberately NOT inside
+`<userData>/mods/`, because the publish containment check is a prefix of that
+folder — a mod that arrived cannot be republished by accident.
+
+A zip that will not open is reported the way a mod that will not compile is:
+the row appears with the reason on it. Unlike a nameless directory, which is
+silently skipped, a file called `something.zip` in the mods folder was put
+there to be played, so "it is not a mod" is an answer the player needs.
 
 **Shipping the compiler is its own problem.** It lives outside `electron/` — in
 `mod/tools/`, importing the game's own loaders out of `scripts/` — because

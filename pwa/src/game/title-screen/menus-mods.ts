@@ -199,6 +199,11 @@ function modBlurb(mod: InstalledMod, state: ModsMenuState): string {
       `${bundle.sprites.length} SPRITE${plural(bundle.sprites.length)}`,
     );
   }
+  // Where it came from, but only when it is the answerable question: a mod
+  // dropped into the folder beside the game is the one a player is looking for
+  // confirmation of, and it is also how two mods of the same name are told
+  // apart. A subscription needs no label — the Workshop is the default.
+  if (mod.source === "portable") parts.push("FROM THE MODS FOLDER");
   if (mod.needsUpdate) parts.push("UPDATE PENDING");
   return parts.join(" - ");
 }

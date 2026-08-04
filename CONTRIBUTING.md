@@ -118,6 +118,18 @@ into whatever column it has, so write a page as one entry and let it wrap. A
 second entry is an explicit line break; spend one only where the held beat is
 the point.
 
+## Sharing one without the Workshop
+
+Zip the mod folder and send it. Your friend drops the `.zip` (or the unpacked
+folder) into **`mods/` beside the game** — the game's own install folder, the
+same place on every platform — and it appears under MODS on the next launch.
+The game unpacks the archive itself; there is nothing to install and no
+application-data path to dictate. `cli.mjs where` prints both folders it reads.
+
+This works on the Steam build and on a plain download alike — a download needs
+`--mods` on its command line, since mods are off by default in a non-store
+build.
+
 ## Publishing
 
 From the game: **MODS → your mod → PUBLISH TO WORKSHOP**. The first publish

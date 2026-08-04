@@ -161,7 +161,7 @@ function newMod() {
     `✓ ${title} → ${path.relative(process.cwd(), dest) || dest}\n` +
       `  it compiles as-is. Next:\n` +
       `    node mod/tools/cli.mjs check ${path.relative(process.cwd(), dest) || dest}\n` +
-      `    copy it into ${localModsHint()} and launch the game`,
+      `    copy it into the game's mods/ folder and launch (cli.mjs where)`,
   );
 }
 
@@ -341,23 +341,41 @@ function searchIds() {
 
 function whereToPutIt() {
   console.log(
-    `Put your mod folder here and the game lists it under MODS on the next launch:\n\n` +
-      `  Windows  %APPDATA%\\Ada's Trail\\mods\\\n` +
-      `  macOS    ~/Library/Application Support/Ada's Trail/mods/\n` +
-      `  Linux    ~/.config/Ada's Trail/mods/\n\n` +
-      `A mod there is a LOCAL mod: the only kind the game offers a PUBLISH row\n` +
-      `for, and it sorts last in the load order so the one you are working on\n` +
-      `wins its clashes while you iterate.`,
+    `Two folders, and the game reads both. Either lists your mod under MODS on\n` +
+      `the next launch.\n\n` +
+      `  1. mods/ BESIDE THE GAME — the same place on every platform:\n\n` +
+      `       <where the game is installed>/mods/\n` +
+      `       macOS: beside "Adas Trail.app", not inside it\n\n` +
+      `     It takes a mod FOLDER or a .zip of one, which is what makes it the\n` +
+      `     folder to tell a player about: sending somebody a mod is sending\n` +
+      `     them a zip and naming this directory. On Steam it is the game's own\n` +
+      `     install folder (LIBRARY > right-click the game > BROWSE LOCAL FILES).\n\n` +
+      `  2. The game's data folder, for the mod you are WRITING:\n\n` +
+      `       ${localModsHint()}\n\n` +
+      `     Only a mod here is offered a PUBLISH row — what gets published is\n` +
+      `     what somebody authored, not what they were sent. Both sort after\n` +
+      `     your subscriptions, so the mod you just added wins its clashes.\n\n` +
+      `The exact data folder is the shell's own (Electron's userData), so if the\n` +
+      `path above does not exist, use folder 1 — it always does.`,
   );
 }
 
-/** The one-line version, for the `new` hint. */
+/**
+ * The one-line version of the DATA folder, for the `new` hint.
+ *
+ * Derived from the desktop package's name rather than from the game's title:
+ * the shell asks Electron for `userData`, which is named after the packaged
+ * app, and the product name deliberately differs from the title (an apostrophe
+ * cannot go in a path — see electron-builder.config.cjs). Guessing from the
+ * title is how this printed a folder the game never reads.
+ */
 function localModsHint() {
-  if (process.platform === "win32") return "%APPDATA%\\Ada's Trail\\mods\\";
+  const app = "adastrail";
+  if (process.platform === "win32") return `%APPDATA%\\${app}\\mods\\`;
   if (process.platform === "darwin") {
-    return "~/Library/Application Support/Ada's Trail/mods/";
+    return `~/Library/Application Support/${app}/mods/`;
   }
-  return "~/.config/Ada's Trail/mods/";
+  return `~/.config/${app}/mods/`;
 }
 
 function fail(message) {
