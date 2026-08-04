@@ -1247,11 +1247,11 @@ ticked from one.
   P2P API is polled, deprecated and thinner on guarantees than SDR; it must be
   spiked under real load before a release leans on it. The direct UDP path
   exists partly as the insurance policy on exactly that.
-- **VICTORY → NEXT LEVEL still drops joiners.** In-session travel carries the
+- **VICTORY → NEXT LEVEL still drops joiners** ([#862](https://github.com/niclaslindstedt/game/issues/862)). In-session travel carries the
   party through every door, gate and drive-out — but the post-victory crossing
   is tangled in the outro/banking flow and still re-mounts app-side, ending
   the session. The one deliberate leftover of the travel work.
-- **A trade has no request step.** The window exists (`TradeOverlay` — the
+- **A trade has no request step** ([#863](https://github.com/niclaslindstedt/game/issues/863)). The window exists (`TradeOverlay` — the
   table is a per-player `"trade"` screen raised on BOTH seats by `openTrade`,
   opened from a teammate's party frame or the pause roster), but opening one
   is unilateral: the refusal for a busy hero is the whole consent model, and a

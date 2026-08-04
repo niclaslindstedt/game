@@ -5,6 +5,12 @@ This file is for an **agent** (or a person who likes a checklist) working in
 field reference; this is the procedure, in order, with the command for every
 step that has one.
 
+**An agent should load the `mod-authoring` skill first**
+([`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)):
+it carries the scope — what the mod system supports and what it refuses — the
+judgment calls to bring back to the user, and which craft skill to load for the
+work. This file is the procedure that skill sends you to.
+
 **The rule that saves the most time: never guess an id, and never hand-write a
 mod from scratch.** Both have commands. Use them.
 
@@ -266,111 +272,54 @@ ids with your mod id.
 
 ---
 
-## The SKILLS — load the playbook before doing that kind of work
+## The SKILLS, the scope, and what to ask before doing
 
-This repo ships a skill per recurring game-development activity
-([`../.agent/skills/`](../.agent/skills), also reachable as `.claude/skills`).
-A mod is authored in the game's own format with the game's own tools, so **the
-craft skills apply to a mod unchanged** — the quality bars, the iteration
-loops, the traps. Load the `SKILL.md` before starting that kind of work, and
-read that skill's accumulated lessons first:
+Owned by the **`mod-authoring` skill**
+([`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)),
+so it is stated once and stays consistent:
 
-```sh
-node scripts/skill-lessons.mjs level-design
-```
-
-Two rules when you follow one inside `mod/`: **run its commands with
-`--mod <dir>`**, and **write the files into the MOD folder** — a skill's
-instruction to add `content/levels/<id>.yaml` means `levels/<id>.yaml` in your
-mod. Never edit this repo's `content/`.
-
-| Skill                | Load it when                                            | Reads differently for a mod                                                                                                                              |
-| -------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `level-design`       | authoring a venue                                       | the format, zones, spawn/wave budgets and the loot-pool rule all apply; campaign REGISTRATION does not — your `index` + `ladder.yaml` place it           |
-| `map-improvement`    | an existing venue does not FEEL right                   | the render → judge → edit → re-render loop, on your own map                                                                                              |
-| `mapgen-improvement` | writing `maps/<id>.yaml` (the carve recipe)             | the blueprint anatomy applies; the generator itself is engine code you cannot ship                                                                       |
-| `enemy-design`       | a monster                                               | `EnemyDef` anatomy, hp/damage against the scaling model, mechanics, spareable companions — all yours; the manuscript rules do NOT reach a mod's dialogue |
-| `weapon-system`      | a weapon, gear piece or named relic                     | the def-first workflow and every calculator; `grades:` and the rarity economy stay the game's                                                            |
-| `pixel-assets`       | any sprite                                              | the generate → LOOK → judge loop; a mod's grids are compiled by `cli.mjs`, not by `make assets`                                                          |
-| `art-improvement`    | hunting the WORST art in your mod                       | the audit funnel, with `art-audit.mjs --mod`                                                                                                             |
-| `sound-effects`      | a sound or a music track                                | the synth vocabulary and the tracker format are the same files                                                                                           |
-| `simulate-run`       | "is this balanced" — the closing loop of any tuning     | run it with `--mod`; the verdict's bands are the game's, and yours should meet them                                                                      |
-| `playtest`           | seeing it running, and tuning FEEL                      | `pwa/scripts/playtest.mjs --mod` — see step 5                                                                                                            |
-| `test-scenario`      | staging an exact situation (at the boss, 2 hp, no gear) | `--scenario` rides along with `--mod` on the playtest harness                                                                                            |
-| `debug-game`         | a bug in a modded run                                   | deterministic seeds, `?debug`, `window.__game` — all unchanged                                                                                           |
-| `visual-effects`     | a POWER's look and sound (`look:` / `sfx:`)             | authoring the colour kit is yours; new effect IMPLEMENTATIONS are engine code a mod cannot add                                                           |
-
-**Skills that are the GAME's, not a mod's** — nothing in a mod can reach what
-they change, so loading one inside `mod/` is a wrong turn: `engine-system`,
-`bot-improvement`, `leveling-balance` (the XP curve is not a mod-authorable
-file), `talent-fx`, `library-improvement`, `ui-review`, `store-shots`,
-`new-game`, `sync-oss-spec`, and every `update-*` / `maintenance` skill (they
-sync THIS repo's docs and artifacts). `commit` is this repo's PR workflow — a
-mod is published to the Workshop, not merged here.
-
----
+- **which craft skill to load** for each kind of work, and how each reads
+  differently inside a mod folder (run its commands with `--mod <dir>`, write
+  its files into the MOD folder — never this repo's `content/`);
+- **which skills are the GAME's** and are a wrong turn inside `mod/`;
+- **the scope** — every catalog a mod may ship, and what the format refuses
+  (code of any kind, a new talent proc or ability effect, `grades:` ladders, the
+  loot economy, the XP curve, the title menu, the built atlas);
+- **the decisions to bring back to the user** — publishing, `kind: conversion`,
+  changing a published mod's `id`, anything that would need this repo's
+  `content/` or `src/` edited.
 
 ### Writing a mod's STORY
 
-A conversion without a story is new monsters walking the shipped plot. The three
+A conversion without a story is new monsters walking the shipped plot; the three
 story files (`cutscenes/`, `thoughts.yaml`, `story-items.yaml`) are what change
-that, and they are the one part of the repo the campaign's story rules do NOT
-reach: the three-tier chain that makes `../docs/manuscript.md` the authority on
-every shipped line stops at a mod folder's edge. Do not file a mod's lines into
-`docs/story.md` or `docs/manuscript.md`, and do not "correct" them to match the
-campaign — contradicting it is allowed and, for a conversion, usually the point.
-A mod's story answers to the schema alone.
+that. The campaign's three-tier story chain does **not** reach them — a mod's
+script answers to the schema alone (the `mod-authoring` skill has the rule).
 
-The one rule that IS worth keeping is the craft one, and it is the opposite of
+What DOES apply is the craft one, and it is the opposite of
 what a fixed-width box would ask for: a text line is a PARAGRAPH the box flows
 into whatever column it has, so write a page as ONE entry and let it wrap. A
 second entry is an explicit line break — spend one only where the beat is the
 point. The compiler warns when a page runs past a screenful or spends more than
 one break.
 
-## What an agent should and should not decide alone
+## What an agent decides alone, and what it asks
 
 **Go ahead:** creating the mod, writing content, looking up ids, fixing compile
 errors, iterating on numbers, running `check` as often as you like — and every
-instrument in step 5: rendering the map, simulating runs, pricing the weapons,
-auditing the relics, driving the playtest harness. All of it is local,
-reversible, and either verified by the compiler or written to
-`pwa/assets-preview/`.
-
-**Ask first:**
-
-- **Publishing.** It is public, it is under the user's Steam account, and the
-  first publish mints a permanent Workshop item. Never publish unprompted.
-- **`kind: conversion`.** It replaces the campaign and licenses id collisions —
-  a much larger claim than an addon, and rarely what someone means by "add a
-  level".
-- **Changing an `id` after a first publish.** The id is how the game and the
-  Workshop remember the mod; changing it orphans subscribers.
-- **Anything in the game's own `content/`.** A mod lives in its own folder. If
-  the fix seems to require editing shipped content, that is a finding to report,
-  not a step to take.
+instrument in step 5. All of it is local, reversible, and either verified by the
+compiler or written to `pwa/assets-preview/`.
 
 **Measure before you ask.** "Is this weapon overpowered" and "does this map
-read" are no longer questions to hand back — step 5 answers both, and an agent
-that reports "I cannot judge the balance" without having run
-`simulate-run.mjs --mod … --verdict` has skipped the work. What genuinely
-cannot be settled from here is whether the result is FUN, and Workshop store
-presentation (description, tags, thumbnail), which is marketing rather than
-code.
+read" are not questions to hand back — step 5 answers both, and reporting "I
+cannot judge the balance" without having run `simulate-run.mjs --mod … --verdict`
+has skipped the work. What genuinely cannot be settled from here is whether the
+result is FUN, and the Workshop store presentation (description, tags,
+thumbnail), which is marketing rather than code.
 
-## Known gaps
-
-Honest list, so nothing is spent looking for a feature that is not there:
-
-- **`grades:`** ladders and the loot economy (`item_quality.yaml`,
-  `item_rarity.yaml`) are deliberately the game's, not a mod's.
-- **A mod's sprites never enter the built ATLAS.** They are merged into the
-  renderer's sprite record at load (and into the tools' by `--mod`), so
-  anything that reads `pwa/src/game/assets/atlas.json` directly does not see
-  them. It is why `make assets` is not part of a mod's loop.
-- **The app-side preview scripts** (the effects gallery, the weapon-swing
-  poser, the talent preview, the UI and store shots) do not take `--mod`; the
-  playtest harness is the browser-side instrument that does.
+**What to ask first** — publishing, `kind: conversion`, changing a published
+mod's `id`, anything needing this repo's own `content/` — is the `mod-authoring`
+skill's list, with the reasoning behind each.
 
 ## Reference
 
