@@ -474,20 +474,27 @@ and validated here so that only checked JSON crosses to the renderer.
 
 **Three sources, one list**, and each answers a different question:
 
-| Source     | Where                        | Why it exists                                                                                                                                |
-| ---------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `workshop` | wherever Steam downloaded it | a subscription — somebody else's to update, so no PUBLISH row                                                                                |
-| `local`    | `<userData>/mods/`           | the mod being WRITTEN. Authoring by publishing-to-test is a miserable loop and litters the Workshop with drafts. The only publishable source |
-| `portable` | `mods/` beside the game      | a mod somebody was SENT. Folders or `.zip` files; never published                                                                            |
+| Source     | Where                                   | Why it exists                                                                                                                                                                   |
+| ---------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workshop` | wherever Steam downloaded it            | a subscription — somebody else's to update, so no PUBLISH row                                                                                                                   |
+| `local`    | `<userData>/mods/`                      | the mod being WRITTEN. Authoring by publishing-to-test is a miserable loop and litters the Workshop with drafts. The only publishable source                                    |
+| `portable` | `mods/` beside the game (Windows/Linux) | a mod somebody was SENT. Folders or `.zip` files, and a `.zip` is `portable` wherever it sat — what compiles is a copy in the cache, which nobody is authoring. Never published |
 
 The portable folder is the answer to a question the other two cannot take: **a
 friend sent me this**. The data folder is correct and unguessable — spelled
 differently on three platforms and hidden on two — which is fine for somebody
 who typed a command to be told where it is, and useless as an instruction to
-pass to a player. A folder beside the game is the same everywhere, survives
-being copied to a stick, and is where anybody looks first. On macOS it sits
-beside the `.app` rather than inside it, because the bundle is the unit a
-player sees and moves.
+pass to a player. The install folder is one place, the player owns it, and it
+travels with a copied install.
+
+**macOS has none, and that is the platform's answer rather than a gap.** An
+installed app lives in `/Applications`, so "beside the app" is a system
+directory a game has no business writing into — and the inside of the bundle is
+worse: a file added there breaks the signature the app is notarized under. macOS
+keeps user data in Application Support, so `localModsDir()` is the whole answer
+there, and it reads archives too — which is what keeps "somebody sent me a zip"
+answerable on every platform. `portableModsPath` is a pure function precisely so
+that rule can be tested for all three from one machine.
 
 ### The one archive this app opens
 

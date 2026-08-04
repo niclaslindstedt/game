@@ -91,22 +91,28 @@ The game reads **two** mods folders, and anything in either appears in **MODS**
 on the next launch alongside your subscriptions. `node mod/tools/cli.mjs where`
 prints both.
 
-**`mods/` beside the game** — the same place on every platform, and the one to
-tell another player about:
+**`mods/` beside the game** (Windows and Linux) — the folder to tell another
+player about:
 
 ```
 <the game's install folder>/mods/
 ```
 
-On Steam that is LIBRARY → right-click the game → BROWSE LOCAL FILES; on macOS
-it is beside `Adas Trail.app`, not inside it. It takes a mod **folder or a
-`.zip` of one**, so **sending somebody a mod is sending them a zip** and naming
-this directory — no unpacking, no application-data path to dictate. A zip may
-be the mod's own files at the top level or wrapped in one folder (what
-right-click → compress produces); both are read, and the game unpacks it itself
-into its own cache.
+On Steam that is LIBRARY → right-click the game → BROWSE LOCAL FILES. It takes
+a mod **folder or a `.zip` of one**, so **sending somebody a mod is sending
+them a zip** and naming this directory — no unpacking, and no application-data
+path to dictate. A zip may be the mod's own files at the top level or wrapped
+in one folder (what right-click → compress produces); both are read, and the
+game unpacks it itself into its own cache.
 
-**The game's data folder** — for the mod you are WRITING:
+**macOS has no such folder, deliberately.** An installed app lives in
+`/Applications` — not a place a game should be writing its data into — and
+putting files inside the `.app` would break the signature it is notarized
+under. On macOS the data folder below is the whole answer, and it takes `.zip`
+files too.
+
+**The game's data folder** — for the mod you are WRITING, and on macOS for
+anything you were sent:
 
 | OS      | Where                                           |
 | ------- | ----------------------------------------------- |

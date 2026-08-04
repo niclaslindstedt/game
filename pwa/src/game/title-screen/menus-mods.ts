@@ -200,10 +200,10 @@ function modBlurb(mod: InstalledMod, state: ModsMenuState): string {
     );
   }
   // Where it came from, but only when it is the answerable question: a mod
-  // dropped into the folder beside the game is the one a player is looking for
-  // confirmation of, and it is also how two mods of the same name are told
+  // somebody dropped in as a folder or a zip is the one a player is looking
+  // for confirmation of, and it is also how two mods of the same name are told
   // apart. A subscription needs no label — the Workshop is the default.
-  if (mod.source === "portable") parts.push("FROM THE MODS FOLDER");
+  if (mod.source === "portable") parts.push("A FILE YOU ADDED");
   if (mod.needsUpdate) parts.push("UPDATE PENDING");
   return parts.join(" - ");
 }

@@ -22,11 +22,13 @@
 //             It is also the only source PUBLISH is offered for.
 //   PORTABLE  `mods/` BESIDE THE GAME, for a mod somebody was sent. It is the
 //             answer to "my friend zipped me a mod": a folder the player can
-//             find without being told an application-data path, on a drive
-//             they can carry, holding either unpacked mod folders or `.zip`
-//             files (`mod-archive.ts` opens those). It is not publishable —
-//             what is published is what somebody AUTHORED, and this is where
-//             what somebody RECEIVED goes.
+//             find without being told an application-data path, holding either
+//             unpacked mod folders or `.zip` files (`mod-archive.ts` opens
+//             those). Windows and Linux only — macOS installs into
+//             /Applications, which is not the player's to write to; see
+//             `portableModsDir`. It is not publishable either way: what is
+//             published is what somebody AUTHORED, and this is where what
+//             somebody RECEIVED goes.
 //
 // A mod that fails to compile is NOT dropped: it crosses with its errors, so
 // the MODS screen can tell the player why their subscription is not playable.
@@ -129,30 +131,51 @@ export function localModsDir(): string {
 }
 
 /**
- * `mods/` BESIDE THE GAME — the folder a player can find without being told.
+ * `mods/` BESIDE THE GAME — the folder a player can find without being told,
+ * where the platform has one.
  *
  * The application-data path `localModsDir` answers is correct and unguessable:
- * it is spelled differently on three platforms, and on two of them it is
- * hidden. That is fine for the mod somebody is WRITING, who typed a command to
- * be told where it is. It is the wrong answer for "a friend sent me this" —
- * so the game also reads a `mods/` directory next to itself, which is the same
- * place on every platform, survives being copied to a stick, and is where
- * anybody would look first.
+ * spelled differently on three platforms and hidden on two. That is fine for
+ * the mod somebody is WRITING, who typed a command to be told where it is, and
+ * it is the wrong answer for "a friend sent me this". On Windows and Linux the
+ * install folder is the answer — the player owns it, it is one place, and it
+ * travels with a copied install.
  *
- * On macOS "next to itself" is not the executable's own directory: that is
- * inside `Adas Trail.app/Contents/MacOS`, where nothing a player owns belongs.
- * The bundle is the unit they see and move, so the folder goes beside THAT.
- * Unpackaged (a checkout, `electron .`) it is the working directory, which is
- * what makes this path testable and usable from a repo.
+ * **macOS has no such folder, on purpose.** An installed app lives in
+ * `/Applications`, so "beside the app" is a system directory the player does
+ * not own and should not be littered with a game's data — and the inside of the
+ * bundle is worse than that: adding a file there breaks the code signature the
+ * app is notarized under. macOS keeps user data in Application Support and this
+ * follows the platform rather than fighting it, so `localModsDir()` is the
+ * whole answer there.
+ *
+ * Unpackaged (a checkout, `electron .`) it is the working directory on every
+ * platform — that is a developer's own tree, not an installed app.
  */
-export function portableModsDir(): string {
-  if (!app.isPackaged) return path.join(process.cwd(), "mods");
-  const exe = app.getPath("exe");
-  const bundle = exe.indexOf(".app" + path.sep);
-  if (bundle !== -1) {
-    return path.join(path.dirname(exe.slice(0, bundle + 4)), "mods");
-  }
-  return path.join(path.dirname(exe), "mods");
+export function portableModsDir(): string | null {
+  return portableModsPath({
+    packaged: app.isPackaged,
+    platform: process.platform,
+    exe: app.isPackaged ? app.getPath("exe") : "",
+    cwd: process.cwd(),
+  });
+}
+
+/** The rule above, as a pure function — the platform branch is the part worth
+ * testing, and it cannot be tested through `app`. */
+export function portableModsPath(env: {
+  packaged: boolean;
+  platform: NodeJS.Platform;
+  exe: string;
+  cwd: string;
+}): string | null {
+  // The separator follows the PLATFORM rather than the host: in production
+  // they are the same thing, and picking it explicitly is what lets the rule
+  // be tested for all three from one machine.
+  const p = env.platform === "win32" ? path.win32 : path.posix;
+  if (!env.packaged) return p.join(env.cwd, "mods");
+  if (env.platform === "darwin") return null;
+  return p.join(p.dirname(env.exe), "mods");
 }
 
 /** Where an archive is unpacked to be compiled. Deliberately NOT inside
@@ -238,7 +261,9 @@ async function listInstalled(): Promise<InstalledMod[]> {
   // and either can still be moved by hand on the LOAD ORDER screen.
   const roots: { dir: string; source: InstalledMod["source"] }[] = [
     { dir: localModsDir(), source: "local" },
-    { dir: portableModsDir(), source: "portable" },
+    ...(portableModsDir() === null
+      ? [] // macOS: there is no folder beside the app — see portableModsDir.
+      : ([{ dir: portableModsDir() as string, source: "portable" }] as const)),
   ];
   const seen = new Set<string>();
 
@@ -268,15 +293,21 @@ async function listInstalled(): Promise<InstalledMod[]> {
       // An archive IS reported when it fails, unlike a nameless directory: a
       // file called `something.zip` sitting in the mods folder was put there
       // to be played, so "it is not a mod" is an answer the player needs.
+      //
+      // Always `portable`, whichever folder it sat in — the source answers
+      // "may this be published?", and a zip never can: what is compiled is a
+      // copy in the archive cache, not a folder anybody is authoring. A zip in
+      // the authoring folder marked `local` would be offered a PUBLISH row
+      // that the containment check then refuses, which is the worst of both.
       const unpacked = unpackArchive(entryPath);
       const key2 = `${source}:${entry.name}`;
       found.push(
         unpacked.folder
-          ? compile(unpacked.folder, key2, source, false)
+          ? compile(unpacked.folder, key2, "portable", false)
           : {
               key: key2,
               folder: entryPath,
-              source,
+              source: "portable",
               bundle: null,
               errors: [unpacked.error ?? "it could not be read"],
               needsUpdate: false,

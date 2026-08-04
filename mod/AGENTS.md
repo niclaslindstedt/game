@@ -236,12 +236,12 @@ node mod/tools/cli.mjs where     # prints both folders the game reads
 Copy (or symlink) your mod folder into either and launch the game. It appears
 under **MODS** on the main menu; switch it on, then **PLAY WITH THESE MODS**.
 
-|                       | `mods/` beside the game                                   | the game's data folder  |
-| --------------------- | --------------------------------------------------------- | ----------------------- |
-| Takes                 | a mod folder **or a `.zip` of one**                       | a mod folder            |
-| Same path on every OS | yes — the install folder (macOS: beside the `.app`)       | no                      |
-| PUBLISH offered       | no — what is published is what was AUTHORED               | **yes**                 |
-| Use it for            | handing a mod to somebody else, and testing what they get | the mod you are writing |
+|                 | `mods/` beside the game                                   | the game's data folder                                                                       |
+| --------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Where           | the install folder — **Windows and Linux only**           | per-platform application data (`cli.mjs where`)                                              |
+| Takes           | a mod folder **or a `.zip` of one**                       | a mod folder **or a `.zip`**                                                                 |
+| PUBLISH offered | no — what is published is what was AUTHORED               | **yes**, for a folder (never for a zip)                                                      |
+| Use it for      | handing a mod to somebody else, and testing what they get | the mod you are writing — and anything RECEIVED on macOS, which has no install-folder option |
 
 Both sort after any subscriptions, so the one you just added wins its clashes.
 

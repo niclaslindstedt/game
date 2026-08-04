@@ -343,20 +343,26 @@ function whereToPutIt() {
   console.log(
     `Two folders, and the game reads both. Either lists your mod under MODS on\n` +
       `the next launch.\n\n` +
-      `  1. mods/ BESIDE THE GAME — the same place on every platform:\n\n` +
-      `       <where the game is installed>/mods/\n` +
-      `       macOS: beside "Adas Trail.app", not inside it\n\n` +
+      `  1. mods/ BESIDE THE GAME — Windows and Linux:\n\n` +
+      `       <where the game is installed>/mods/\n\n` +
       `     It takes a mod FOLDER or a .zip of one, which is what makes it the\n` +
       `     folder to tell a player about: sending somebody a mod is sending\n` +
       `     them a zip and naming this directory. On Steam it is the game's own\n` +
       `     install folder (LIBRARY > right-click the game > BROWSE LOCAL FILES).\n\n` +
-      `  2. The game's data folder, for the mod you are WRITING:\n\n` +
+      `     NOT on macOS: an installed app lives in /Applications, which is not\n` +
+      `     the player's to write to, and a file inside the .app would break the\n` +
+      `     signature it is notarized under. Use folder 2 there — it takes zips\n` +
+      `     too.\n\n` +
+      `  2. The game's data folder — the mod you are WRITING, and anything you were
+     sent on macOS:\n\n` +
       `       ${localModsHint()}\n\n` +
-      `     Only a mod here is offered a PUBLISH row — what gets published is\n` +
-      `     what somebody authored, not what they were sent. Both sort after\n` +
-      `     your subscriptions, so the mod you just added wins its clashes.\n\n` +
-      `The exact data folder is the shell's own (Electron's userData), so if the\n` +
-      `path above does not exist, use folder 1 — it always does.`,
+      `     Only a mod FOLDER here is offered a PUBLISH row — what gets\n` +
+      `     published is what somebody authored, never a zip they were sent.\n` +
+      `     Both folders sort after your subscriptions, so the mod you just\n` +
+      `     added wins its clashes.\n\n` +
+      `The data folder is the desktop shell's own (Electron's userData). If the\n` +
+      `path above does not exist, launch the game once — it is created on the\n` +
+      `first look.`,
   );
 }
 
