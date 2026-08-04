@@ -24,13 +24,13 @@
     "typecheck:only": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "react": "^19.0.0",
+    "react": "^19.2.8",
     "react-dom": "^19.0.0",
     "workbox-window": "^7.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.1",
-    "@types/react": "^19.2.0",
+    "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.0",
     "@vite-pwa/assets-generator": "^1.0.1",
     "@vitejs/plugin-react": "^6.0.3",
