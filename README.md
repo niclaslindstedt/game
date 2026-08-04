@@ -1,19 +1,27 @@
-# game
+# Ada's Trail
 
-The source repository for **Ada's Trail** — an offline top-down survival
-scroller shooter that runs in the browser — and the **mod SDK** its content is
-authored with.
+The source repository for **Ada's Trail** — a top-down survival scroller shooter
+available as a browser PWA and as self-contained **Windows, macOS, and Linux**
+desktop builds — and the **mod SDK** its content is authored with. The desktop
+release is intended for Steam and has not been published yet.
 
 [![CI](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml)
 [![SEO](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml)
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
+[![License: PolyForm NC + feature terms](https://img.shields.io/badge/license-PolyForm%20NC%20%2B%20feature%20terms-blue.svg)](LICENSE)
 
 **Most people who clone this repo are here to make a mod.** A mod is a folder of
 YAML in the game's own content format — no scripting language, no SDK to
 install. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the authoring guide; this page
 is the development environment it runs in, and
 [Testing mod content](#testing-mod-content) below is the loop.
+
+> **Mods are desktop-only.** Ordinary players need a copy acquired through
+> Steam to use mods or multiplayer. Until that edition is published, a mod
+> creator may run an official downloaded desktop binary with `--modifications`
+> solely to author and test their own mod. That exception is not licensed for
+> ordinary play, other people's mods, or multiplayer. The browser PWA and
+> mobile builds do not load mods.
 
 **Use a coding agent — the repo is arranged for one.** Every catalog is
 schema-validated YAML, every error names its file and reason, and every
@@ -202,8 +210,12 @@ macOS has no beside-the-app folder by design: an installed app sits in
 after any subscriptions so the one you just added wins its clashes.
 
 **Mods load in a desktop build only** — the browser and mobile builds have no
-Workshop and no filesystem to read a mod from. A plain (non-store) download
-ships with mods off; launch it with `--mods` to turn them on for that run.
+Workshop and no filesystem to read a mod from. Ordinary players may use mods
+only with a game license acquired through Steam. Before that edition is
+published, a mod creator may launch an official downloaded desktop binary with
+`--modifications` solely to create, validate, and test their own mod; the
+parameter does not authorize ordinary play, other people's mods, or
+multiplayer.
 
 ## Configuration
 
@@ -287,8 +299,20 @@ what to do if a change belongs in this repo instead.
 
 ## License
 
-Licensed under [PolyForm Noncommercial 1.0.0](LICENSE), with one exception: the
-**Mod SDK** in [`mod/`](mod/) has its own terms ([`mod/LICENSE.md`](mod/LICENSE.md)).
-The samples a modder copies — `mod/examples/` and the format docs — are public
-domain (CC0), and your mod is yours; the toolchain in `mod/tools/` is licensed
-for authoring content for this game rather than for reuse in another one.
+The repository is licensed under
+[PolyForm Noncommercial 1.0.0 with Ada's Trail feature terms](LICENSE). Those
+additional terms reserve player use of **mods and multiplayer** for people who
+have acquired the game through Steam. Downloading a binary, cloning or building
+the source, or using `--modifications` does not create that player license.
+
+The narrow exception is for a mod creator: they may run an official downloaded
+Windows, macOS, or Linux binary with `--modifications` solely to author,
+validate, and test their own mod. It does not cover ordinary play, other
+people's mods, or multiplayer. The Steam edition is not published yet.
+
+The **Mod SDK** in [`mod/`](mod/) has its own compatible terms
+([`mod/LICENSE.md`](mod/LICENSE.md)). The samples a modder copies —
+`mod/examples/` and the format docs — are public domain (CC0), and your mod is
+yours; the toolchain in `mod/tools/` is licensed for authoring content for this
+game rather than for reuse in another one. Owning or using the SDK does not
+itself grant a license to play mods or multiplayer.

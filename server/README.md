@@ -107,6 +107,9 @@ Four things about it are worth knowing before running one:
   (never the one it asked for) and whether the router accepted a mapping; past
   that, the first joiner is the only proof.
 
-The licence question is open and is not this code's to settle: what
-`PolyForm-Noncommercial-1.0.0` permits for somebody running a server for other
-people should be confirmed before a binary ships.
+Multiplayer is licensed only to players who have acquired the game through
+Steam. The shipped binary therefore refuses non-Steam transports; the source
+tree's test escape exists for automated development checks and does not grant a
+player licence. The mod creator's `--modifications` exception is single-player
+only and never authorizes hosting or joining a session. See the repository
+[`LICENSE`](../LICENSE) and `server/licence.ts`.
