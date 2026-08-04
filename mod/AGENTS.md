@@ -230,18 +230,24 @@ Honest list, so nothing is spent hunting a flag that is not there:
 ## 6. Play it
 
 ```sh
-node mod/tools/cli.mjs where     # prints the folder for your OS
+node mod/tools/cli.mjs where     # prints both folders the game reads
 ```
 
-Copy (or symlink) your mod folder there and launch the game. It appears under
-**MODS** on the main menu. Switch it on, then **PLAY WITH THESE MODS**.
+Copy (or symlink) your mod folder into either and launch the game. It appears
+under **MODS** on the main menu; switch it on, then **PLAY WITH THESE MODS**.
 
-A mod in that folder is a **local** mod: it sorts last in the load order, so the
-one you are iterating on wins any clash, and it is the only kind the game offers
-a PUBLISH row for.
+|                 | `mods/` beside the game                                   | the game's data folder                                                                       |
+| --------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Where           | the install folder — **Windows and Linux only**           | per-platform application data (`cli.mjs where`)                                              |
+| Takes           | a mod folder **or a `.zip` of one**                       | a mod folder **or a `.zip`**                                                                 |
+| PUBLISH offered | no — what is published is what was AUTHORED               | **yes**, for a folder (never for a zip)                                                      |
+| Use it for      | handing a mod to somebody else, and testing what they get | the mod you are writing — and anything RECEIVED on macOS, which has no install-folder option |
 
-> Mods load in the **Steam desktop build only**. The browser and mobile builds
-> have no Workshop and no filesystem to read a mod from.
+Both sort after any subscriptions, so the one you just added wins its clashes.
+
+> Mods load in a **desktop build only** — the browser and mobile builds have no
+> Workshop and no filesystem to read a mod from. The Steam build has them on; a
+> plain download needs `--mods` on its command line.
 
 ## 7. Publish it
 

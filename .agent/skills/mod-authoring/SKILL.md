@@ -32,9 +32,10 @@ schema, read the shipped file beside it, and author.
 
 ## Before anything: three facts that decide the work
 
-1. **Mods load in the Steam desktop build only.** Browser and mobile have no
-   Workshop and no filesystem. Anything the plan needs from the web build is
-   not deliverable.
+1. **Mods load in a DESKTOP build only.** Browser and mobile have no Workshop
+   and no filesystem, so anything the plan needs from the web build is not
+   deliverable. The Steam build has mods on; a plain download needs `--mods` on
+   its command line.
 2. **A mod applies to a RUN, not to an install.** Start a modded run and its
    content is live; finish it and the shipped game is back.
 3. **Never write into this repo's `content/`.** A mod lives in its own folder.
@@ -48,7 +49,7 @@ node mod/tools/cli.mjs new my-mod --title "MY MOD"   # 1. scaffold (it already c
 node mod/tools/cli.mjs ids <pattern> [--kind <kind>] # 2. verify every id BEFORE authoring it
 node mod/tools/cli.mjs check my-mod                  # 3. validate — fast, writes nothing
 node scripts/simulate-run.mjs --mod ../my-mod …      # 4. measure (every instrument takes --mod)
-node mod/tools/cli.mjs where                         # 5. play it in the desktop build
+node mod/tools/cli.mjs where                         # 5. the two folders the game reads
 ```
 
 Start at 1 **even when deleting everything after** — a mod that runs on the

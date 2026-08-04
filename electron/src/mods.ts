@@ -12,7 +12,7 @@
 // anything a mod shipped, and that stays true precisely because this module
 // does not hand it anything but data.
 //
-// TWO SOURCES, one list:
+// THREE SOURCES, one list:
 //
 //   WORKSHOP  what the player subscribed to. Steam owns the download and the
 //             folder; we ask where it is.
@@ -20,17 +20,35 @@
 //             Without it, authoring means publishing to the Workshop to test —
 //             which is a terrible loop and litters the Workshop with drafts.
 //             It is also the only source PUBLISH is offered for.
+//   PORTABLE  `mods/` BESIDE THE GAME, for a mod somebody was sent. It is the
+//             answer to "my friend zipped me a mod": a folder the player can
+//             find without being told an application-data path, holding either
+//             unpacked mod folders or `.zip` files (`mod-archive.ts` opens
+//             those). Windows and Linux only — macOS installs into
+//             /Applications, which is not the player's to write to; see
+//             `portableModsDir`. It is not publishable either way: what is
+//             published is what somebody AUTHORED, and this is where what
+//             somebody RECEIVED goes.
 //
 // A mod that fails to compile is NOT dropped: it crosses with its errors, so
 // the MODS screen can tell the player why their subscription is not playable.
 // A silent omission would leave them with an empty list and no way to find out.
 
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 
 import { app, shell } from "electron";
 
 import { STEAM_APP_ID } from "./config";
+import { ArchiveError, modEntries, readZip } from "./mod-archive";
 import { output } from "./output";
 import { modToolsPath } from "./resources";
 import { publishMod, subscribedItems } from "./workshop";
@@ -61,7 +79,7 @@ export type ModsEvent =
 type InstalledMod = {
   key: string;
   folder: string;
-  source: "workshop" | "local";
+  source: "workshop" | "local" | "portable";
   bundle: unknown;
   errors: string[];
   needsUpdate: boolean;
@@ -112,6 +130,61 @@ export function localModsDir(): string {
   return dir;
 }
 
+/**
+ * `mods/` BESIDE THE GAME — the folder a player can find without being told,
+ * where the platform has one.
+ *
+ * The application-data path `localModsDir` answers is correct and unguessable:
+ * spelled differently on three platforms and hidden on two. That is fine for
+ * the mod somebody is WRITING, who typed a command to be told where it is, and
+ * it is the wrong answer for "a friend sent me this". On Windows and Linux the
+ * install folder is the answer — the player owns it, it is one place, and it
+ * travels with a copied install.
+ *
+ * **macOS has no such folder, on purpose.** An installed app lives in
+ * `/Applications`, so "beside the app" is a system directory the player does
+ * not own and should not be littered with a game's data — and the inside of the
+ * bundle is worse than that: adding a file there breaks the code signature the
+ * app is notarized under. macOS keeps user data in Application Support and this
+ * follows the platform rather than fighting it, so `localModsDir()` is the
+ * whole answer there.
+ *
+ * Unpackaged (a checkout, `electron .`) it is the working directory on every
+ * platform — that is a developer's own tree, not an installed app.
+ */
+export function portableModsDir(): string | null {
+  return portableModsPath({
+    packaged: app.isPackaged,
+    platform: process.platform,
+    exe: app.isPackaged ? app.getPath("exe") : "",
+    cwd: process.cwd(),
+  });
+}
+
+/** The rule above, as a pure function — the platform branch is the part worth
+ * testing, and it cannot be tested through `app`. */
+export function portableModsPath(env: {
+  packaged: boolean;
+  platform: NodeJS.Platform;
+  exe: string;
+  cwd: string;
+}): string | null {
+  // The separator follows the PLATFORM rather than the host: in production
+  // they are the same thing, and picking it explicitly is what lets the rule
+  // be tested for all three from one machine.
+  const p = env.platform === "win32" ? path.win32 : path.posix;
+  if (!env.packaged) return p.join(env.cwd, "mods");
+  if (env.platform === "darwin") return null;
+  return p.join(p.dirname(env.exe), "mods");
+}
+
+/** Where an archive is unpacked to be compiled. Deliberately NOT inside
+ * `localModsDir()`: a mod that arrived as a zip is not one the player is
+ * authoring, and the publish containment check is a prefix of that folder. */
+function archiveCacheDir(): string {
+  return path.join(app.getPath("userData"), "mod-archives");
+}
+
 export function createModsBridge(emit: (event: ModsEvent) => void): ModsBridge {
   return {
     handle(request) {
@@ -141,9 +214,9 @@ export function createModsBridge(emit: (event: ModsEvent) => void): ModsBridge {
   };
 }
 
-/** Every mod on this machine, compiled. Workshop items first, then local ones:
- * a mod the player is WRITING is the one they want at the bottom of the load
- * order, winning, because they are iterating on it. */
+/** Every mod on this machine, compiled. Workshop items first, then the folders
+ * on disk: a mod the player put there themselves is the one they want at the
+ * bottom of the load order, winning, because it is the one they just added. */
 async function listInstalled(): Promise<InstalledMod[]> {
   const found: InstalledMod[] = [];
   const { buildMod, catalog } = await tools();
@@ -151,7 +224,7 @@ async function listInstalled(): Promise<InstalledMod[]> {
   const compile = (
     folder: string,
     key: string,
-    source: "workshop" | "local",
+    source: InstalledMod["source"],
     needsUpdate: boolean,
   ): InstalledMod => {
     try {
@@ -182,16 +255,64 @@ async function listInstalled(): Promise<InstalledMod[]> {
     found.push(compile(item.folder, item.itemId, "workshop", item.needsUpdate));
   }
 
-  const local = localModsDir();
-  if (existsSync(local)) {
-    for (const entry of readdirSync(local, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const folder = path.join(local, entry.name);
-      // A directory with no manifest is not a half-broken mod, it is not a mod
-      // — somebody's notes, an editor's backup folder. Reporting it as broken
-      // would put permanent noise in the list.
-      if (!existsSync(path.join(folder, "mod.yaml"))) continue;
-      found.push(compile(folder, `local:${entry.name}`, "local", false));
+  // The two folders on disk, in load order: what the player is writing, then
+  // what they were sent. A portable mod wins a clash with an authoring copy of
+  // itself, which is the right way round for the person the feature is for —
+  // and either can still be moved by hand on the LOAD ORDER screen.
+  const roots: { dir: string; source: InstalledMod["source"] }[] = [
+    { dir: localModsDir(), source: "local" },
+    ...(portableModsDir() === null
+      ? [] // macOS: there is no folder beside the app — see portableModsDir.
+      : ([{ dir: portableModsDir() as string, source: "portable" }] as const)),
+  ];
+  const seen = new Set<string>();
+
+  for (const { dir, source } of roots) {
+    // A checkout run with `electron .` has cwd === the repo, and a portable
+    // install could be laid out with one folder serving as both. Reading it
+    // twice would list every mod twice.
+    const key = path.resolve(dir);
+    if (seen.has(key) || !existsSync(dir)) continue;
+    seen.add(key);
+
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        // A directory with no manifest is not a half-broken mod, it is not a
+        // mod — somebody's notes, an editor's backup folder. Reporting it as
+        // broken would put permanent noise in the list.
+        if (!existsSync(path.join(entryPath, "mod.yaml"))) continue;
+        found.push(
+          compile(entryPath, `${source}:${entry.name}`, source, false),
+        );
+        continue;
+      }
+      if (!entry.isFile() || !entry.name.toLowerCase().endsWith(".zip")) {
+        continue;
+      }
+      // An archive IS reported when it fails, unlike a nameless directory: a
+      // file called `something.zip` sitting in the mods folder was put there
+      // to be played, so "it is not a mod" is an answer the player needs.
+      //
+      // Always `portable`, whichever folder it sat in — the source answers
+      // "may this be published?", and a zip never can: what is compiled is a
+      // copy in the archive cache, not a folder anybody is authoring. A zip in
+      // the authoring folder marked `local` would be offered a PUBLISH row
+      // that the containment check then refuses, which is the worst of both.
+      const unpacked = unpackArchive(entryPath);
+      const key2 = `${source}:${entry.name}`;
+      found.push(
+        unpacked.folder
+          ? compile(unpacked.folder, key2, "portable", false)
+          : {
+              key: key2,
+              folder: entryPath,
+              source: "portable",
+              bundle: null,
+              errors: [unpacked.error ?? "it could not be read"],
+              needsUpdate: false,
+            },
+      );
     }
   }
 
@@ -254,6 +375,71 @@ async function runPublish(
     detail: result.detail,
   };
 }
+
+/**
+ * Unpack a `.zip` into the archive cache and answer the folder to compile.
+ *
+ * Re-extracted when the FILE changes rather than on every launch: the cache is
+ * keyed by the archive's size and modification time, so replacing a zip with a
+ * newer one is picked up on the next list, and a launch that changed nothing
+ * pays a `statSync` instead of an unpack. The previous extraction of the same
+ * archive is removed, so the cache tracks the mods folder rather than growing
+ * a copy per version.
+ */
+function unpackArchive(zipPath: string): { folder?: string; error?: string } {
+  let stamp: string;
+  try {
+    const stat = statSync(zipPath);
+    stamp = `${stat.size}-${Math.trunc(stat.mtimeMs)}`;
+  } catch (err) {
+    return { error: describeError(err) };
+  }
+
+  const slug = path.basename(zipPath, path.extname(zipPath));
+  const home = path.join(archiveCacheDir(), safeSlug(slug));
+  const target = path.join(home, stamp);
+  if (existsSync(path.join(target, "mod.yaml"))) return { folder: target };
+
+  try {
+    const entries = modEntries(readZip(readFileSync(zipPath)));
+    // Replace rather than accumulate: one extraction per archive, always the
+    // current one.
+    rmSync(home, { recursive: true, force: true });
+    for (const entry of entries) {
+      const file = path.join(target, entry.name);
+      // Belt and braces over `checkName`: whatever the archive said, nothing
+      // is written outside the folder this extraction owns.
+      if (!file.startsWith(target + path.sep)) {
+        rmSync(home, { recursive: true, force: true });
+        return { error: `"${entry.name}" would be written outside the mod` };
+      }
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, entry.data);
+    }
+    output.info(
+      `mods: unpacked ${path.basename(zipPath)} (${entries.length} files)`,
+    );
+    return { folder: target };
+  } catch (err) {
+    rmSync(home, { recursive: true, force: true });
+    const detail =
+      err instanceof ArchiveError ? err.message : describeError(err);
+    output.warn(
+      `mods: ${path.basename(zipPath)} could not be unpacked — ${detail}`,
+    );
+    return { error: detail };
+  }
+}
+
+/** A cache folder name that is a name and nothing else — the archive's own
+ * stem is a filename the player chose, and it is about to be a path. */
+function safeSlug(name: string): string {
+  const slug = name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 64);
+  return slug.replace(/^[.-]+/, "") || "archive";
+}
+
+const describeError = (err: unknown): string =>
+  err instanceof Error ? err.message : String(err);
 
 /** Is this folder inside the player's own mods directory? Resolved and
  * compared as a path PREFIX with a separator, so `…/mods-elsewhere` cannot

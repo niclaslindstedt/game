@@ -76,8 +76,8 @@ function main() {
       console.error(
         `run-electron: the game exited with code ${code}. The desktop shell ` +
           "writes every launch to `launch.log` in its user-data directory " +
-          "(Windows: %APPDATA%\\adas-trail-desktop, macOS: ~/Library/Application " +
-          "Support/adas-trail-desktop, Linux: ~/.config/adas-trail-desktop).",
+          "(Windows: %APPDATA%\\adastrail, macOS: ~/Library/Application " +
+          "Support/adastrail, Linux: ~/.config/adastrail).",
       );
     }
     process.exitCode = code ?? 0;

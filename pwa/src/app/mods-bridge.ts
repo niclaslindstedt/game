@@ -47,8 +47,16 @@ export type InstalledMod = {
   key: string;
   /** Absolute path, for PUBLISH. Never read by the page. */
   folder: string;
-  /** Where it came from — a subscription, or the player's own mods folder. */
-  source: "workshop" | "local";
+  /**
+   * Where it came from, and it decides what may be done with it:
+   *
+   *   workshop  a subscription — somebody else's to update
+   *   local     the player's own authoring folder — the only publishable one
+   *   portable  `mods/` beside the game: a folder or a `.zip` somebody was
+   *             sent. Played like any other, never published, because what is
+   *             published is what somebody AUTHORED.
+   */
+  source: "workshop" | "local" | "portable";
   /** The compiled mod, or null when it did not compile. */
   bundle: ModBundle | null;
   /** Why it did not compile. Empty when it did. */

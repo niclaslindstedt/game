@@ -8,9 +8,10 @@ install: the files you write are **the same files the game's own content is
 written in**, checked by the same validator, so anything you can read in
 `content/` you can copy into a mod.
 
-> **Steam only.** Mods load in the desktop (Steam) build. The browser and mobile
-> builds have no Workshop to subscribe to and no filesystem to read a mod from,
-> so they play the shipped game. Nothing here changes that.
+> **Desktop only.** Mods load in the desktop build — the Steam one has them on,
+> and a plain download turns them on with `--mods` on its command line. The
+> browser and mobile builds have no Workshop to subscribe to and no filesystem
+> to read a mod from, so they play the shipped game. Nothing here changes that.
 
 ---
 
@@ -84,21 +85,45 @@ author its own roster the only figures it could hand over were the shipped four 
 so a conversion's monsters could be its own while its allies stayed somebody
 else's.
 
-## Testing a mod without publishing it
+## Testing a mod without publishing it — and sending one to a friend
 
-Put the folder in the game's own mods directory and it appears in **MODS** on
-the next launch, alongside anything you have subscribed to:
+The game reads **two** mods folders, and anything in either appears in **MODS**
+on the next launch alongside your subscriptions. `node mod/tools/cli.mjs where`
+prints both.
 
-| OS      | Where                                             |
-| ------- | ------------------------------------------------- |
-| Windows | `%APPDATA%\Ada's Trail\mods\`                     |
-| macOS   | `~/Library/Application Support/Ada's Trail/mods/` |
-| Linux   | `~/.config/Ada's Trail/mods/`                     |
+**`mods/` beside the game** (Windows and Linux) — the folder to tell another
+player about:
 
-A mod there is a **local** mod: it is the only kind the game offers a PUBLISH
-row for, because a subscription is somebody else's to update. Local mods also
-sort to the bottom of the load order, so the one you are working on wins its
-clashes while you iterate.
+```
+<the game's install folder>/mods/
+```
+
+On Steam that is LIBRARY → right-click the game → BROWSE LOCAL FILES. It takes
+a mod **folder or a `.zip` of one**, so **sending somebody a mod is sending
+them a zip** and naming this directory — no unpacking, and no application-data
+path to dictate. A zip may be the mod's own files at the top level or wrapped
+in one folder (what right-click → compress produces); both are read, and the
+game unpacks it itself into its own cache.
+
+**macOS has no such folder, deliberately.** An installed app lives in
+`/Applications` — not a place a game should be writing its data into — and
+putting files inside the `.app` would break the signature it is notarized
+under. On macOS the data folder below is the whole answer, and it takes `.zip`
+files too.
+
+**The game's data folder** — for the mod you are WRITING, and on macOS for
+anything you were sent:
+
+| OS      | Where                                           |
+| ------- | ----------------------------------------------- |
+| Windows | `%APPDATA%\adastrail\mods\`                     |
+| macOS   | `~/Library/Application Support/adastrail/mods/` |
+| Linux   | `~/.config/adastrail/mods/`                     |
+
+A mod here is a **local** mod: the only kind the game offers a PUBLISH row for,
+because what is published is what somebody authored — a mod you were sent is
+played, not republished. Both folders sort after your subscriptions, so the mod
+you just added wins its clashes while you iterate.
 
 ## Looking at it, measuring it, playing it
 

@@ -190,14 +190,20 @@ bundles to the app's own loader, because the browser build has no filesystem.
 ### 4. Play it for real
 
 ```sh
-node mod/tools/cli.mjs where    # prints the mods folder for your OS
+node mod/tools/cli.mjs where    # prints both folders the game reads
 ```
 
-Copy or symlink the folder there and it appears under **MODS** on the main menu.
-**Mods load in the Steam desktop build only** — the browser and mobile builds
-have no Workshop and no filesystem to read a mod from. A mod in that folder is a
-_local_ mod: it sorts last in the load order, so the one you are iterating on
-wins any clash.
+The game reads **`mods/` beside itself** on Windows and Linux (its own install
+folder — takes a mod folder or a `.zip` of one, and is the folder to name when
+sending a mod to somebody) and **its data folder** on every platform (the mod
+you are writing, zips included, and the only source offered a PUBLISH row).
+macOS has no beside-the-app folder by design: an installed app sits in
+`/Applications`. Either way it appears under **MODS** on the main menu, sorted
+after any subscriptions so the one you just added wins its clashes.
+
+**Mods load in a desktop build only** — the browser and mobile builds have no
+Workshop and no filesystem to read a mod from. A plain (non-store) download
+ships with mods off; launch it with `--mods` to turn them on for that run.
 
 ## Configuration
 

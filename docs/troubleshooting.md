@@ -30,8 +30,8 @@ that is the bug and a shell prefix is never the fix.
 ### The desktop game does nothing when launched
 
 Read `launch.log` in the app's user-data directory —
-`%APPDATA%\adas-trail-desktop` (Windows), `~/Library/Application
-Support/adas-trail-desktop` (macOS), `~/.config/adas-trail-desktop` (Linux). The
+`%APPDATA%\adastrail` (Windows), `~/Library/Application
+Support/adastrail` (macOS), `~/.config/adastrail` (Linux). The
 shell writes every launch there, INFO included, and keeps the previous one as
 `launch.log.prev`. Anything fatal also raises an error dialog naming that file.
 
@@ -52,14 +52,15 @@ A compile error is not a troubleshooting question: `node mod/tools/cli.mjs check
 <dir>` names the file and the reason, and `mod/AGENTS.md` § "Reading the errors"
 decodes every message it can print. What follows is the rest.
 
-| Symptom                                                 | Cause                                                                                                                                      |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| The mod is not in the MODS screen at all                | Wrong folder (`cli.mjs where` prints the right one per OS), or not a Steam desktop build — browser and mobile builds have no mod loader.   |
-| It is listed but nothing it adds appears                | Another mod later in the LOAD ORDER overrides it. The MODS screen says so on the overridden mod's own help line; the last one wins.        |
-| A `--mod` instrument refuses to run                     | The mod does not compile — the tools stop with the same list `check` prints. There is nothing to measure until it passes.                  |
-| The level compiles but no run can be built from it      | A venue is two files: the mission and its `maps/<id>.yaml` blueprint, which is what the geometry is carved from.                           |
-| Sprites look right in the previews, missing in-game     | A mod's sprites merge at load and never enter the built atlas — anything reading `atlas.json` directly cannot see them. This is by design. |
-| A hero's items or roster read wrong after unsubscribing | A hero remembers the mod it was played under. Re-subscribe, or accept that content from a removed mod cannot resolve.                      |
+| Symptom                                                 | Cause                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The mod is not in the MODS screen at all                | Wrong folder — `cli.mjs where` prints both the game reads (`mods/` beside the game on Windows and Linux, and the data folder everywhere; macOS has only the latter, since an installed app sits in `/Applications`). Browser and mobile builds have no mod loader at all, and a non-store desktop download needs `--mods` on its command line. |
+| A `.zip` in the mods folder is listed with an error     | The game opens archives itself and refuses what it cannot trust: it must hold exactly one `mod.yaml` (at the top or in one wrapper folder), use stored/deflate only, and contain no path that climbs out of it. The row says which.                                                                                                            |
+| It is listed but nothing it adds appears                | Another mod later in the LOAD ORDER overrides it. The MODS screen says so on the overridden mod's own help line; the last one wins.                                                                                                                                                                                                            |
+| A `--mod` instrument refuses to run                     | The mod does not compile — the tools stop with the same list `check` prints. There is nothing to measure until it passes.                                                                                                                                                                                                                      |
+| The level compiles but no run can be built from it      | A venue is two files: the mission and its `maps/<id>.yaml` blueprint, which is what the geometry is carved from.                                                                                                                                                                                                                               |
+| Sprites look right in the previews, missing in-game     | A mod's sprites merge at load and never enter the built atlas — anything reading `atlas.json` directly cannot see them. This is by design.                                                                                                                                                                                                     |
+| A hero's items or roster read wrong after unsubscribing | A hero remembers the mod it was played under. Re-subscribe, or accept that content from a removed mod cannot resolve.                                                                                                                                                                                                                          |
 
 ## The deployed game
 
