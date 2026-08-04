@@ -1,249 +1,50 @@
 # game
 
-**Ada's Trail** — survive the search for your lost love. Ada went out for chips and soda on movie night and never came back; the trail leads off-planet. An offline top-down survival scroller shooter that runs entirely in your browser: you steer with the pointer (or touch), and your character fights on its own according to the weapons and items it picks up.
+The source repository for **Ada's Trail** — an offline top-down survival
+scroller shooter that runs in the browser — and the **mod SDK** its content is
+authored with.
 
 [![CI](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml)
 [![SEO](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml)
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
 
-> **Status: four playable levels.** Pick a difficulty on the Doom-style
-> main menu and you drop straight into the story (the mission picker only
-> unlocks once you have cleared the campaign at that difficulty), sit through
-> the movie-night prelude (or hit SKIP, top right), raid GOODCO HQ for the
-> drive ingredient PROTOTYPE the mutant rat swallowed, take the fight to
-> the haunted moon and THE FLAGBEARER at the old flag, storm the secret Mars
-> colony THE FOUNDER owns (he flees into a rift rather than lose), then
-> follow him into THE RIFT itself — a hallucinatory void of black holes,
-> asteroid rain, and history's missing, guarded by BRO OMEGA, TRUST ME BRO's secret
-> superintelligence — all to a chiptune soundtrack, looting gear and powers
-> while the auto-firing weapons thin the horde. Beat one of the rift's
-> legends (TESLA, EARHART, RASPUTIN — or LUCKY the leprechaun) and choose:
-> KILL for the loot, or SPARE them and they join you as a companion —
-> fighting at your side, dressable from your bag (weapon, helmet, chest),
-> and walking with you into the next level; sparing LUCKY buys his +50%
-> magic-find aura. Each run's end screen shows a summary with a retry
-> button; the menu's HIGH SCORES board ranks hardcore heroes by how their
-> whole campaign went — mobs killed, survival time and peak menace summed
-> across every map.
+**Most people who clone this repo are here to make a mod.** A mod is a folder of
+YAML in the game's own content format — no scripting language, no SDK to
+install. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the authoring guide; this page
+is the development environment it runs in, and
+[Testing mod content](#testing-mod-content) below is the loop.
+
+The game itself is deployed at **<https://game.niclaslindstedt.se/>**, with its
+generated reference site — bestiary, arsenal, mission guide, story — beside it
+at **`/library/`**. It is an installable PWA: open the site and choose **Install
+app** / **Add to Home Screen** to launch it fullscreen and offline. What is
+_in_ the game is [`docs/game-content.md`](docs/game-content.md); the plot is
+[`docs/story.md`](docs/story.md).
 
 ## Why?
 
-- **One-touch play** — hold to steer, release to stop. Your loadout does the
-  fighting, so the game works equally well with a mouse or a thumb.
-- **Runs entirely in the browser** — no account, no server, no install step.
-  Game state lives on your device.
-- **Fully offline** — the game is an installable PWA that precaches itself;
-  once loaded it launches and plays with no network at all.
-- **Built to be built on** — reusable game components and code live in clearly
-  separated local libraries so later games can share them without coupling
-  this game to an external framework.
-
-## Play
-
-The deployed game lives at **<https://game.niclaslindstedt.se/>**:
-
-| Slot       | URL         | Serves                                                    |
-| ---------- | ----------- | --------------------------------------------------------- |
-| Production | `/`         | The latest release (or `main` if none can be rebuilt)     |
-| Preview    | `/preview/` | The current `main`, on every push                         |
-| Branch     | `/branch/`  | A feature branch parked via the `pages` workflow dispatch |
-
-**The library** lives beside it at **`/library/`** — the game's own reference
-material, generated from the same content the game runs on and rebuilt with it:
-a **bestiary** (every monster, with what it fields on each difficulty, where it
-spawns, what it drops, and what it says), an **arsenal** (every item — damage,
-armor, level requirements, the make-quality table each base rolls on, what it
-upgrades into, and what drops it), a **mission guide** (every venue, its
-roster, its loot pool, and its map), and the **story** (a chapter per mission —
-the plot, the cutscenes, the arrival scenes, the last words and the found lore,
-in the game's own words). Story text and maps sit behind spoiler covers. It is
-static HTML with no JavaScript, so it loads instantly and never pulls the game
-in.
-
-### How to play
-
-Level 1 — GOODCO HQ: Ada went out for chips and soda and never came back.
-Her jacket's beacon points off-planet, and an interplanetary drive needs
-the one ingredient GOODCO keeps in its cleanroom — the one PROTOTYPE, a
-mutant lab rat, just ate. Fight through the night shift (interns,
-scientists, engineers, guards, hazmat techs), through walled offices and
-lab corridors, to his nest under the prototype rocket. Level 2 — THE MOON:
-the beacon's trail. Ghosts thicken the further you stray from the lander,
-and something enormous haunts the old flag.
-
-- Pick **NEW GAME** on the main menu and choose a difficulty — EASY,
-  MEDIUM, HARD, NIGHTMARE, or JESUS CHRIST! Harder settings raise the horde
-  size and monster LEVEL — and since item tiers unlock by monster level
-  (magic, then rare, with unique and legendary plumbed in above), the hard
-  rungs drop more loot, reach every tier earlier, and add their own bonus
-  odds on top.
-- The run opens on a short **cutscene** (the movie night Ada never came
-  back from) — tap (or press **Space** / **Enter**) to advance a beat, hit
-  SKIP, or press **Escape** to skip the whole scene. It plays **once per
-  device**: retries and later runs jump straight to the level.
-- **Point and shoot** — desktop opens on **AIM & SHOOT**: **WASD** walks, the
-  pointer aims, and the left button fires (flip its AUTO-FIRE toggle off to
-  hold every shot until you click). On touch, hold and drag: a virtual
-  joystick appears under your finger and you walk in the direction you drag —
-  release to stop. (Desktop can swap back to **FOLLOW CURSOR** under
-  SETTINGS → CONTROLS, where the character chases the cursor instead and the
-  hero picks his own targets — an elite or a boss over the chaff around it.)
-- **Or use the keyboard** — on desktop, **WASD** runs, **Shift** walks, and no
-  key stands still (a binary run/walk mode that frees the mouse from steering).
-  Toggle it under SETTINGS → CONTROLS, and rebind every key (movement, actions,
-  the consumable dock) in the Quake-style **KEY BINDINGS** list there. **Y**
-  raises the **ACHIEVEMENTS** shelf mid-run — World of Warcraft's own key for
-  it — freezing the fight behind it until you back out; so does tapping the
-  gold unlock banner when a badge drops.
-- **Tap** (with the other hand while steering, or press Space) to **jump**
-  — each level sets its own gravity: HQ hops clear a desk; moon gravity
-  sails you clean over a ghost's grasp. A jump is a pure dodge, though:
-  floating over the field you can't swing a melee weapon at the horde or
-  scoop loot off the ground until you land. And the RIFT's **black holes**
-  fight the hop — jump near one and you drift toward it and don't rise as
-  high.
-- **Feel the game** — on phones with a vibration motor, every takedown
-  buzzes, and the bigger the mob the harder it hits (a minion flicks, a boss
-  rumbles); dialogue is felt too, each letter of the crawl ticking under your
-  thumb. Turn it off under SETTINGS → CONTROLS. (iOS has no web vibration, so
-  it's silently inert there.)
-- **Pause** any time with **P** or **Escape** on desktop — the game and its
-  music freeze on a pause screen; click or press **P**/**Escape** again to
-  resume. The run also auto-pauses when you switch away (on a phone, just
-  leave the app).
-- **AUTO PILOT** (on the pause screen) hands your hero to the game's own bot
-  for **100 coins per game-second** — it fights, loots, auto-equips upgrades,
-  restarts the level when it dies, and flies on while you do something else.
-  Engaged on fresh ground it advances the campaign (rolling into rift runs
-  once the difficulty is beaten, bunker detours included); engaged on a level
-  you've already beaten it **farms that level over and over** instead. Crank
-  the ride to 2×/4×/8×/16× speed for 2/4/8/16× the price; the strip up top
-  shows the purse and burn rate, its satchel button lists the special finds, and
-  the ride pauses itself the moment the purse runs dry. Short on coins? The
-  picker's **STORE** button (app-store builds) buys a coin pack for the hero
-  you're playing without leaving the run.
-- **Obstacles** litter every level and nothing walks through them — desks,
-  crates, and low rocks can be **jumped over**, and monsters can't jump: a
-  barrier the horde must flow around is your best friend. GOODCO HQ's
-  walls only pass at their doorways — the horde funnels; you decide where.
-- **Ability pickups** (fire orbs, storm cell, stasis field, the item
-  magnet — and the rare screen-clearing NUKE) are carried with you and
-  banked into **three big powerup slots** in a bottom corner, oldest on the
-  left. **Tap a slot** (or on desktop click, press E, or hit **1/2/3**) to
-  spend one when the horde closes in — the rest slide left. On desktop **Q**
-  pops the weapon switcher and **1-4** equip a carried weapon. Prefer the
-  corner on your other thumb, or fire powerups the instant you grab them?
-  Both live under SETTINGS → CONTROLS, along with music and sound volumes.
-- The character **fights by itself** with whatever weapon is equipped —
-  your job is positioning: kite the haunting, don't get surrounded.
-- Kills grant **XP**; each level-up **restores you to full health** and
-  pauses the run to spend a stat point. The stats each own an axis:
-  **STRENGTH** hits the hardest for **damage** (melee & ranged — more per point
-  than any other stat lifts its class) and widens your carry bag (which starts
-  at just three slots), but the muscle to haul **slows your walk** a touch per
-  point; **DEXTERITY** speeds up melee & ranged
-  **attacks** and raises your **hit rate** — a nimble hero's blows miss or get
-  dodged far less often; **INTELLECT** powers **magic** weapons, gives every weapon
-  **longer range**, and **widens the melee cleave** — a swing only strikes the
-  two nearest foes until INT raises that cap, so mowing down the crowd is an
-  INT build, not a free perk of a wide sword;
-  **LUCK** lands crits and finds better loot; **STAMINA** deepens your sprint
-  pool and quickens its recovery, so you run at full speed longer before the
-  winded half-speed jog. The
-  base fire rate is deliberately slow, so a build is what wins the cadence
-  back, and a new **(i)** button on the level-up screen spells out exactly
-  what each stat does. **XP scrolls** are a rare drop that read themselves the
-  moment you walk over one: for the next **30 seconds every scrap of experience
-  counts double**, and a faint blue veil around your character says the clock is
-  running. A scroll pays nothing on its own, so what one is worth is whatever you
-  do with those thirty seconds — read one into a pack and it pays for itself,
-  read one over a cleared floor and it doubles nothing. Picking a second one up
-  **refreshes** the window rather than stacking it.
-- **Medkits, stamina potions, and repair kits** are carried, not
-  spent on contact: grabbing one banks it into the **consumable dock** — a
-  medkit slot, a stamina slot, and a repair slot just above the powerups —
-  stacked **five deep** (medkits stack
-  per quality, from LIGHT up to SUPERIOR, and the slot shows the best grade you
-  hold). **Tap a slot** (or on desktop press **C** to heal, **X** to drink,
-  **V** to repair — all rebindable) to spend one when you need it; a
-  medkit always uses your biggest heal first and none is wasted at a full bar.
-- **Grow passive talents.** Every **10 points** you pour into **STRENGTH**,
-  **DEXTERITY**, or **INTELLIGENCE** earns a talent point in that stat's tree —
-  spent through a level-up **picker** on a new talent or a **rank-up** (up to
-  rank 5). Talents are **always on**: no mana, no cooldowns, no tapping.
-  Deep STRENGTH grows a **Warlord** of cleaving echoes and tank plating;
-  DEXTERITY a **Windrunner** of crits, knockback, and speed; INTELLIGENCE an
-  **Archon** whose orbiting flames, storm strikes, seeker orbs, and immolation
-  aura clear the screen on their own — a Vampire-Survivors engine that kills
-  while you just steer.
-- The horde drops **loot**, Diablo-style — medkits, gear, repair kits, stamina
-  potions, XP scrolls, and **base weapons themed to each level** (a box cutter or the
-  armory's pump shotgun on earth, 70s hardware on the moon, AI-forged
-  railguns and plasma blades on Mars, historic and fantasy arms in the
-  rift). Each base has a **level requirement** — it neither drops from
-  monsters below it nor equips before you reach it — and each drop carries
-  an **item level** near its killer's that sizes its magic bonuses, so a
-  deep find genuinely outrolls an early one. Every find lands in the
-  **BAG** — open it with the **hero avatar** in the top-left vitals panel
-  (or press I) for a Diablo-style inventory: pieces that **beat what you
-  wear glow gold** to draw the eye, and you drag them onto their slot or
-  tap to quick-equip. Prefer finds worn the moment you grab them? Turn
-  auto-equip on under SETTINGS → CONTROLS.
-- Dropped weapons **wear out** as they fire: when one breaks it is **not
-  destroyed** — it drops into your bag as a broken, unequippable spare, and the
-  best wieldable weapon left in your bag takes its place (never falling back to
-  the starter sidearm while a real weapon remains; your own sidearm never
-  breaks). **Repair kits** mend your WHOLE arsenal at once — the weapon in hand
-  and every weapon in the bag — and bring the weapons a break booted from your
-  hand back into rotation, your main blade first. **Stamina potions** refill your
-  sprint pool from the consumable dock, and grabbing a **fresh copy of the
-  weapon you already hold** swaps it in for the extra durability, banking the
-  worn one as a spare.
-- **Unique mobs** wait at set spots on every level — larger, named
-  characters (the NIGHT MANAGER, DR. NOVA, the ghost of an Apollo MISSION
-  SPECIALIST…) that **rush into view and talk**: each scene reveals a
-  piece of the plot — what GOODCO launches after midnight, what was under
-  the flag in '69, who really came home. Kill one and it drops a
-  **signature weapon** (better than the level's pool, shy of the boss's)
-  plus **story items**: keycards that open **locked rooms** (spare parts,
-  the alien anti-grav unit) and documents that deepen the mystery.
-- **Don't get complacent when you're winning.** Once you're outclassing the
-  horde — **one-shotting mobs for far more than they're worth** and clearing at
-  a blistering pace — you build **menace** and a RAMPAGE gauge lights up on the
-  HUD. It reads how _overpowered_ you are, not just how fast you swing, so a
-  fresh hero can't trip it in the opening levels; it takes a genuinely lopsided
-  build. How touchy it is depends on the difficulty: **EASY** barely reacts,
-  **MEDIUM** answers only a truly dominant run, and each harder rung is more
-  sensitive up to **JESUS CHRIST!**, where a handful of kills is enough. When it
-  lights, the horde answers: it **lures more foes** onto you, **evolves** the
-  mobs it sends into tougher versions (marked by a glowing aura) that pay more
-  XP and drop better gear, and scales elite mobs and bosses to your power so
-  they can't be one-shot. Ease off and the meter cools.
-- **Kill the boss** — PROTOTYPE under the rocket, THE FLAGBEARER at the flag — to
-  clear the level; bosses have their own longer stare-down scenes before
-  the fight. If your HP reaches zero the run ends with a stats screen and
-  a retry button.
-
-### Install it as an app
-
-The game is a Progressive Web App: open the site in your browser and choose
-**Install app** / **Add to Home Screen** from the browser menu. The installed
-app launches fullscreen, works offline, and shows a small toast when a new
-build is ready — reload when it suits you; an update never interrupts a run.
-
-A native **App Store / Play Store** build also lives in [`native/`](native/) — an
-Expo/React Native shell that wraps the deployed PWA in a full-screen WebView, so
-it looks and plays exactly like the website while adding real device haptics
-(the Taptic Engine, which the browser can't drive on iOS) and audio that plays
-through the silent switch. Builds are manual to keep costs down; see
-[`native/README.md`](native/README.md).
+- **Content is data.** Levels, maps, monsters, items, talents, sprites, sounds,
+  music and story are authored as YAML under `content/` and compiled into the
+  engine at build time — adding a venue or a monster needs no engine change.
+- **A mod is the same format, checked by the same validator.** Anything under
+  `content/` is a worked example of its kind, and `mod/tools/cli.mjs check` runs
+  the exact compiler the shipped game runs when it loads a mod.
+- **Every instrument takes `--mod`.** The map renderers, the headless campaign
+  simulator, the weapon-budget calculators and the browser playtest harness all
+  measure a mod the same way they measure the shipped game.
+- **The engine is framework-free.** `src/` is plain TypeScript with no DOM or
+  React assumptions, so it runs in the browser, in Node and in the test suite.
+- **One repo, four shells.** The same built site is wrapped for the web, the App
+  Store, Steam, and a headless dedicated server for co-op.
 
 ## Prerequisites
 
-- **Node.js ≥ 24** (pinned in [`.nvmrc`](.nvmrc); `nvm use` picks it up).
-- `make` for the developer entry points, `shellcheck`/`actionlint` for the
-  optional shell-lint targets.
+- **Node.js ≥ 24** — pinned in [`.nvmrc`](.nvmrc); `nvm use` picks it up.
+- **GNU make** — the canonical developer entry points.
+- Optional: `shellcheck` / `actionlint` for the shell-lint targets, and
+  Playwright for the screenshot and playtest harnesses (installed ephemerally:
+  `npm install --no-save playwright` — deliberately not a repo dependency).
 
 ## Install
 
@@ -253,103 +54,213 @@ cd game
 npm install
 ```
 
+Nothing else. Authoring and validating a mod needs no build, and no installed
+copy of the game — you only need the game installed to _play_ a mod.
+
 ## Quick start
 
 ```sh
-make website-dev   # start the game app on a local Vite dev server
-make test          # run the engine test suite
-make build         # typecheck everything and produce pwa/dist
+make website-dev                         # run the game on a local Vite dev server
+node mod/tools/cli.mjs new my-mod        # scaffold a mod that already works
+node mod/tools/cli.mjs check my-mod      # validate it — the fast inner loop
+make test                                # the full test suite
 ```
 
 ## Usage
 
-| Command                               | Purpose                                                                                           |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `make build`                          | Typecheck the engine + app and build the deployable bundle                                        |
-| `make test`                           | Run the Vitest suite (`tests/*_test.ts`)                                                          |
-| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                            |
-| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                          |
-| `make website-dev`                    | Local dev server for the game app                                                                 |
-| `make website`                        | Production build of the game app                                                                  |
-| `make icons`                          | Regenerate all PWA icons + the OG card from `pwa/public/icon.svg`                                 |
-| `make screenshots`                    | Recapture the manifest's install-prompt screenshots from the running game                         |
-| `make assets`                         | Regenerate in-game pixel assets (sprite atlas, tiles, UI font) + previews from `content/sprites/` |
-| `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages into `pwa/dist/` (part of `make build`)                   |
-| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                |
-| `npm run server:start`                | Run the standalone session server for co-op (see `docs/configuration.md`)                         |
-| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                    |
-| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                            |
+| Command                               | Purpose                                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `make website-dev`                    | Vite dev server for the game app                                                            |
+| `make website`                        | Production build of the game app                                                            |
+| `make build`                          | Typecheck the engine + app and build the deployable bundle                                  |
+| `make test`                           | The Vitest suite (`tests/**/*_test.ts`); `ARGS="--shard=1/3"` forwards to vitest            |
+| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                      |
+| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                    |
+| `make levels`                         | Recompile every content catalog from `content/*.yaml` (fast path when only content changed) |
+| `make assets`                         | Regenerate the pixel assets (sprite atlas, tiles, UI font) + previews, then `make levels`   |
+| `make mod-check DIR=<dir>`            | Validate a mod (defaults to `mod/examples/greenhouse`)                                      |
+| `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                |
+| `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                 |
+| `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                |
+| `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                     |
+| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                          |
+| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`              |
+| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                      |
+| `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                              |
+| `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                     |
+| `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`            |
+
+**Verify with `make test`, never with a bare `npx vitest run`.** The `make`
+targets open by rebuilding the generated content and the sprite atlas; a bare
+vitest run tests whatever happens to be on disk, and several committed artifacts
+here are drift-tested against a fresh build.
+
+## Repository layout
+
+| Path             | What it is                                                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `content/`       | **Every authored catalog, as YAML** — the format a mod is written in                                |
+| `mod/`           | The mod SDK: the CLI, the compiler, `FORMAT.md`, the worked example, `catalog.json`                 |
+| `src/`           | The engine — framework-free TypeScript (`@game/core`); compiled content lands here                  |
+| `pwa/`           | The deployable app — a Vite + React PWA shell that mounts the engine                                |
+| `scripts/`       | The instruments: renderers, simulators, calculators, catalog generators                             |
+| `tests/`         | Vitest suites (`*_test.ts`) — `tests/engine/` on fixtures, `tests/content/` on the shipped catalogs |
+| `server/`        | The session server for co-op — the engine compiled for Node                                         |
+| `native/`        | The App Store / Play Store shell (Expo, its own dependency tree)                                    |
+| `electron/`      | The Steam shell (its own dependency tree, its own tests)                                            |
+| `docs/`          | Reference documentation                                                                             |
+| `.agent/skills/` | Playbooks for each kind of work — also reachable as `.claude/skills`                                |
+
+Generated catalogs (`src/generated/`, `pwa/src/generated/`) are gitignored and
+rebuilt by `make levels` / `make assets`. Never edit or commit one.
+
+## Testing mod content
+
+Authoring is [`CONTRIBUTING.md`](CONTRIBUTING.md). This is how you find out
+whether what you authored is valid, balanced, and any good.
+
+### 1. Validate — the fast inner loop
+
+```sh
+node mod/tools/cli.mjs check my-mod    # every problem at once, each with its file
+node mod/tools/cli.mjs ids boots       # what ids may I reference?
+make mod-check DIR=my-mod              # the same check, through make
+```
+
+`check` writes nothing and runs the identical compiler the desktop game runs at
+load, so a `✓` here means the game will accept it. `mod/AGENTS.md` § "Reading
+the errors" decodes every message it can print.
+
+### 2. Measure — every instrument takes `--mod`
+
+Run these **from the repo root**; the mod folder may live anywhere. `--mod` is
+repeatable and ordered (`--mod a --mod b` — b wins any id both define, exactly
+as the player's load order does), and it registers the compiled result through
+the same seam the desktop game uses, so a tool measuring your mod measures what
+players get.
+
+| Command                                                            | Answers                                                              |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `node scripts/level-render.mjs <id> --mod <dir> --dormant`         | what the map LOOKS like, drawn with the real sprites and its horde   |
+| `node scripts/map-layout.mjs <id> --mod <dir>`                     | the design blueprint: walls, zones, mob level vs promised hero level |
+| `node scripts/simulate-run.mjs --mod <dir> --level <id> --verdict` | can it be cleared, at what level, what dropped — PASS/WARN/FAIL      |
+| `node scripts/progression-sim.mjs --mod <dir>`                     | where your venue sits on the whole campaign's curve                  |
+| `node scripts/weapon-budget.mjs --mod <dir>`                       | is each weapon on the damage budget its `levelReq` is worth          |
+| `node scripts/unique-check.mjs --mod <dir>`                        | can that named relic ever actually drop — run it before publishing   |
+| `node scripts/drop-rate.mjs --mod <dir> --level <id>`              | how often it drops                                                   |
+| `node scripts/sprite-preview.mjs --mod <dir> family <family>`      | a contact sheet of your sprites                                      |
+| `node scripts/art-audit.mjs --mod <dir> level <id>`                | every piece of art your venue puts on screen, side by side           |
+
+The full battery — and what does _not_ take `--mod`, and why — is
+[`mod/AGENTS.md`](mod/AGENTS.md) step 5.
+
+### 3. Play it in the real renderer
+
+The playtest harness drives the actual app in headless Chromium with the
+autoplay bot, so you see your mod as a player does — sprites, sounds, HUD:
+
+```sh
+npm install --no-save playwright              # once — deliberately not a repo dep
+(cd pwa && npx vite --port 5199 &)            # the dev server, once
+node pwa/scripts/playtest.mjs --mod ../my-mod --level my_level --speed 8
+```
+
+Screenshots land in `pwa/assets-preview/playtest/` and the run's stats come back
+as JSON on stdout. `--speed` fast-forwards deterministically, `--seed` pins the
+layout, and `--scenario '{"place":"boss","hp":2}'` stages an exact situation.
+This is the one instrument that needs the app running, and the only browser-side
+one that takes `--mod` — the harness compiles your mod in Node and hands the
+bundles to the app's own loader, because the browser build has no filesystem.
+
+### 4. Play it for real
+
+```sh
+node mod/tools/cli.mjs where    # prints the mods folder for your OS
+```
+
+Copy or symlink the folder there and it appears under **MODS** on the main menu.
+**Mods load in the Steam desktop build only** — the browser and mobile builds
+have no Workshop and no filesystem to read a mod from. A mod in that folder is a
+_local_ mod: it sorts last in the load order, so the one you are iterating on
+wins any clash.
 
 ## Configuration
 
-The game has no user-facing configuration yet. Build-time knobs:
+Build-time knobs and the developer surfaces the instruments above rely on:
 
-| Variable                     | Effect                                                                                                                                                                                                             |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                                                                                             |
-| `VITE_CHARACTER_SIGNING_KEY` | HMAC key that signs exported character archives so hand-edited saves fail to re-import; falls back to a committed default (see `docs/configuration.md`)                                                            |
-| `?debug` URL param           | Turns on debug-level console output (`src/output.ts`), exposes the live game state as `window.__game` for inspection and automated playtests, and shows the in-run FPS meter                                       |
-| `?level=<id>` URL param      | Starts runs on a specific catalog level (`goodco_hq`, `moon`, `mars`, `the_rift`, `boot_hill`, secret `the_bunker`) instead of the story default                                                                   |
-| `?seed=<n>` URL param        | Pins the run's layout seed so retries reproduce the same level layout                                                                                                                                              |
-| `?scenario=<json>` URL param | Stages a fresh run into an exact test situation — hero position, vitals, gear, spawned mobs (see `docs/configuration.md`)                                                                                          |
-| `?cutscene=<id>` URL param   | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                                                                                               |
-| Hidden DEVELOPER menu        | Tap the title screen's sun seven times quickly — it goes supernova and unlocks a DEVELOPER row in SETTINGS: level select (warp), the arsenal and effects galleries, and a debug-mode toggle (the in-run FPS meter) |
+| Knob                         | Effect                                                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` locally                                                       |
+| `VITE_CHARACTER_SIGNING_KEY` | HMAC key signing exported character archives so hand-edited saves fail to re-import                                                 |
+| `?debug`                     | Debug-level output, the in-run FPS meter, and the live state as `window.__game` (plus the `window.__mods` hook the harness uses)    |
+| `?level=<id>`                | Start on a specific catalog level instead of the story default                                                                      |
+| `?seed=<n>`                  | Pin the run's layout seed so a retry reproduces the same carve                                                                      |
+| `?scenario=<json>`           | Stage a fresh run into an exact situation — hero position, vitals, gear, spawned mobs                                               |
+| `?cutscene=<id>`             | The cutscene workbench: loop one scene for authoring iteration                                                                      |
+| Hidden DEVELOPER menu        | Tap the title screen's sun seven times — unlocks level select, the arsenal and effects galleries, and a debug toggle under SETTINGS |
+| `GIS_ENABLE_MODS` et al.     | Desktop packaging capabilities — see the `desktop-steam` / `desktop-dist` targets in the [`Makefile`](Makefile)                     |
+
+Full reference: [`docs/configuration.md`](docs/configuration.md).
 
 ## Examples
 
-See [`examples/`](examples/) — empty until there is gameplay API worth
-demonstrating.
+- [`mod/examples/greenhouse`](mod/examples/greenhouse) — a complete worked mod
+  (one venue, one monster, one weapon, one relic, sprites, a sound, a score),
+  with a comment on every field. `cli.mjs new` copies it.
+- [`content/`](content) — the shipped game's own catalogs, in the same format.
+- [`examples/`](examples) — empty until there is engine API worth demonstrating.
 
 ## Troubleshooting
 
+- **A mod compiles but its monster never appears** — the sprite family needs
+  both frames (`x_0` and `x_1`); `check` reports this as `sprite "x" has no frames`.
+- **A level compiles but no run can be built from it** — a venue is two files:
+  the mission and the `maps/<id>.yaml` blueprint it is carved from every run.
 - **The deployed game doesn't update after a deploy** — the previous build's
-  service worker is parked in `waiting`; the in-app update toast applies it,
-  or close every tab of the app and reopen.
-- More in [docs/troubleshooting.md](docs/troubleshooting.md).
-
-## Making a sequel / new game on this engine
-
-This repo is built to be built on: a new game is a clone with the first
-game's assets and story stripped and new content authored on the same
-engine. The engine (`src/`) is content-agnostic — all levels, enemies,
-equipment, abilities, and story are data under `src/game/defs/`, and the
-brand identity is one file (`game.config.json`). The step-by-step playbook is
-the **`new-game`** agent skill (`.agent/skills/new-game/SKILL.md`): rename via
-the identity config, strip the content catalogs and this game's docs/tests,
-then rebuild with the `engine-system`, `pixel-assets`, `sound-effects`, and
-`playtest` skills. See [Architecture › Extension points](docs/architecture.md)
-for how to add new _mechanics_ (not just new content).
+  service worker is parked in `waiting`; the in-app update toast applies it, or
+  close every tab and reopen.
+- More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md)
-- [Architecture](docs/architecture.md)
-- [Rendering](docs/rendering.md) — how the picture is made: the world projection, the post effects, the canvas and its scale tiers
-- [The content pipeline](docs/content-pipeline.md) — every catalog is compiled from YAML; the generator order and the parity rules
-- [Game content](docs/game-content.md) — this game's story, levels, and roster
-- [Story](docs/story.md) — the plot in prose; the top of the story source-of-truth chain
-- [Manuscript](docs/manuscript.md) — the verbatim script (every line), extrapolated from the story
-- [Art style](docs/art-style.md) — the house style for the game's pixel art: the feel, the shared look, and the design best practices
-- [Naming](docs/naming.md) — why nothing here is named after a real person, company or franchise, and how to name things instead
-- [Multiplayer](docs/multiplayer.md) — the shipped co-op architecture, and what is not in it yet
-- [Configuration](docs/configuration.md)
-- [Troubleshooting](docs/troubleshooting.md)
+**Modding**
+
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — authoring a mod, start to publish
+- [`mod/FORMAT.md`](mod/FORMAT.md) — every file and every field
+- [`mod/AGENTS.md`](mod/AGENTS.md) — the same procedure as a checklist, with every command
+- [`docs/modding.md`](docs/modding.md) — how a mod is compiled, loaded and resolved
+
+**The repo**
+
+- [Getting started](docs/getting-started.md) — a fresh clone to a running build
+- [Architecture](docs/architecture.md) — the module map, the shells, deployment
+- [The content pipeline](docs/content-pipeline.md) — how every catalog compiles
+- [Rendering](docs/rendering.md) — the projection, the post effects, the canvas
+- [Game content](docs/game-content.md) · [Story](docs/story.md) · [Manuscript](docs/manuscript.md)
+- [Art style](docs/art-style.md) · [Naming](docs/naming.md)
+- [Multiplayer](docs/multiplayer.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
+- [`AGENTS.md`](AGENTS.md) — the conventions this repo is maintained under
+- [`OSS_SPEC.md`](OSS_SPEC.md) — the layout and governance spec it conforms to
+
+Deployment is three GitHub Pages slots on one origin: `/` serves the highest
+`v*` tag, `/preview/` every `main` push, and `/branch/` a branch parked via the
+`pages` workflow dispatch.
 
 Discussion happens in
-[GitHub Issues](https://github.com/niclaslindstedt/game/issues) (bugs,
-feature requests) and
+[GitHub Issues](https://github.com/niclaslindstedt/game/issues) (bugs, feature
+requests) and
 [GitHub Discussions](https://github.com/niclaslindstedt/game/discussions)
 (questions, ideas).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) — it covers authoring mod content, and
+what to do if a change belongs in this repo instead.
 
 ## License
 
-Licensed under [PolyForm Noncommercial 1.0.0](LICENSE), with one exception:
-the **Mod SDK** in [`mod/`](mod/) has its own terms
-([`mod/LICENSE.md`](mod/LICENSE.md)). The samples a modder copies —
-`mod/examples/` and the format docs — are public domain (CC0); the toolchain in
-`mod/tools/` is licensed for authoring content for this game rather than for
-reuse in another one.
+Licensed under [PolyForm Noncommercial 1.0.0](LICENSE), with one exception: the
+**Mod SDK** in [`mod/`](mod/) has its own terms ([`mod/LICENSE.md`](mod/LICENSE.md)).
+The samples a modder copies — `mod/examples/` and the format docs — are public
+domain (CC0), and your mod is yours; the toolchain in `mod/tools/` is licensed
+for authoring content for this game rather than for reuse in another one.
