@@ -18,6 +18,14 @@ that does not fit in a table: the ORDER the generators run in and why, the
 per-catalog rules that carry real information, and the non-catalog parity rules
 that keep the repo's several copies of a fact in agreement.
 
+**What a catalog's YAML may say is its SCHEMA's call** —
+`scripts/asset-tools/<catalog>-schema.mjs`, named per catalog below. They are the
+field-level reference for anyone authoring content, this repo's or a mod's:
+`mod/tools/build.mjs` runs the same modules (`mainmenu.yaml`'s is the one
+exception — a mod may not bring one), and `CONTRIBUTING.md` indexes them against
+the file each validates. A new field is added to the schema first, with its rule
+and its error message, before any generator reads it.
+
 ## The order, and why it is that order
 
 `make levels` runs the generators in a fixed chain. That chain lives in

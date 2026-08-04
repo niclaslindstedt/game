@@ -15,6 +15,13 @@ install. [`CONTRIBUTING.md`](CONTRIBUTING.md) is the authoring guide; this page
 is the development environment it runs in, and
 [Testing mod content](#testing-mod-content) below is the loop.
 
+**Use a coding agent — the repo is arranged for one.** Every catalog is
+schema-validated YAML, every error names its file and reason, and every
+judgement call has a command that answers it. Point your agent at
+[`.agent/skills/mod-authoring/SKILL.md`](.agent/skills/mod-authoring/SKILL.md)
+("read it and follow it"), which carries the scope, the loop, the verification
+bar, and what it must ask you before doing.
+
 The game itself is deployed at **<https://game.niclaslindstedt.se/>**, with its
 generated reference site — bestiary, arsenal, mission guide, story — beside it
 at **`/library/`**. It is an installable PWA: open the site and choose **Install
@@ -114,10 +121,18 @@ here are drift-tested against a fresh build.
 Generated catalogs (`src/generated/`, `pwa/src/generated/`) are gitignored and
 rebuilt by `make levels` / `make assets`. Never edit or commit one.
 
+**What a YAML file may say is decided by its schema** —
+`scripts/asset-tools/<catalog>-schema.mjs`, one per catalog, ordinary readable
+JavaScript with the reasoning in comments. The game's build and the mod compiler
+run the same modules, so they are the field-level reference for authoring
+either; [`mod/FORMAT.md`](mod/FORMAT.md#the-schemas--the-last-word-on-every-field)
+indexes them against the file each validates.
+
 ## Testing mod content
 
-Authoring is [`CONTRIBUTING.md`](CONTRIBUTING.md). This is how you find out
-whether what you authored is valid, balanced, and any good.
+Authoring is [`CONTRIBUTING.md`](CONTRIBUTING.md) (or, for an agent, the
+`mod-authoring` skill). This is the other half: how you find out whether what
+was authored is valid, balanced, and any good.
 
 ### 1. Validate — the fast inner loop
 
@@ -223,12 +238,18 @@ Full reference: [`docs/configuration.md`](docs/configuration.md).
 
 ## Documentation
 
-**Modding**
+**Modding** — five documents, and each answers a different question:
 
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — authoring a mod, start to publish
-- [`mod/FORMAT.md`](mod/FORMAT.md) — every file and every field
-- [`mod/AGENTS.md`](mod/AGENTS.md) — the same procedure as a checklist, with every command
-- [`docs/modding.md`](docs/modding.md) — how a mod is compiled, loaded and resolved
+| Read                                                                           | To learn                                                         | Written for |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------- | ----------- |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                           | how to start, the loop, publishing                               | you         |
+| [`mod/README.md`](mod/README.md)                                               | what a mod may contain, addon vs conversion, load order, licence | you         |
+| [`mod/FORMAT.md`](mod/FORMAT.md)                                               | every file and every field — and the schema behind each          | either      |
+| [`.agent/skills/mod-authoring/SKILL.md`](.agent/skills/mod-authoring/SKILL.md) | the scope, the judgement calls, which playbook to load           | your agent  |
+| [`mod/AGENTS.md`](mod/AGENTS.md)                                               | the procedure with every command, and what each error means      | your agent  |
+
+How a mod is compiled, loaded and resolved — the design behind all of the above
+— is [`docs/modding.md`](docs/modding.md).
 
 **The repo**
 
@@ -236,7 +257,8 @@ Full reference: [`docs/configuration.md`](docs/configuration.md).
 - [Architecture](docs/architecture.md) — the module map, the shells, deployment
 - [The content pipeline](docs/content-pipeline.md) — how every catalog compiles
 - [Rendering](docs/rendering.md) — the projection, the post effects, the canvas
-- [Game content](docs/game-content.md) · [Story](docs/story.md) · [Manuscript](docs/manuscript.md)
+- [Game content](docs/game-content.md) — the rules the catalogs sit inside (what a catalog holds is the YAML, and the generated `/library/`)
+- [Story](docs/story.md) · [Manuscript](docs/manuscript.md) — the plot, and every spoken line
 - [Art style](docs/art-style.md) · [Naming](docs/naming.md)
 - [Multiplayer](docs/multiplayer.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
 - [`AGENTS.md`](AGENTS.md) — the conventions this repo is maintained under

@@ -28,8 +28,11 @@ result compiles before it says so — you start from something that already runs
 rather than from an empty folder. `check` then prints every problem it finds,
 with a filename and a reason; when it prints a `✓`, the game will accept it.
 
-**[`AGENTS.md`](AGENTS.md) is the step-by-step**, from `new` to publish —
-written for an agent, and just as usable as a checklist.
+**Working with a coding agent?** Point it at
+[`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)
+— the scope, the loop and the judgement calls — which sends it to
+**[`AGENTS.md`](AGENTS.md)**, the step-by-step from `new` to publish with the
+command for every step. Both are just as usable as a human checklist.
 
 What `new` copies is [`examples/greenhouse`](examples/greenhouse): one venue,
 one monster, one weapon, one relic, three sprites, one sound, one score, and a

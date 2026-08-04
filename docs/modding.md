@@ -67,7 +67,11 @@ module, since the shell compiled them, which is the one place a mod's content
 does not travel the same road as the game's: the shipped scores are each behind
 their own dynamic `import()` and stay there.
 
-### 3a. A mod's venue is CARVED, like every other
+**Every catalog kind rides that same seam**, and each one needed a small thing
+of its own to get there. The sections up to "Clashes between mods" are those —
+one per catalog family, in the order they landed.
+
+### A mod's venue is CARVED, like every other
 
 `maps/<id>.yaml` is the map half of a venue (the `mapgen-improvement` skill in
 `AGENTS.md`): the mission's geometry is carved fresh from the run's own seed —
@@ -100,7 +104,7 @@ release. So `mod/catalog.json` carries the list of names the engine's own parser
 accepts, enumerated from it by `mod/tools/catalog.mjs` and drift-tested like
 every other id set in that file. One grammar, a snapshot of what it says yes to.
 
-### 3a½. A conversion opens under its own name
+### A conversion opens under its own name
 
 `ModBundle.brand` — a title and a tagline, declared in `mod.yaml` — is what the
 title screen draws while an enabled conversion has one. It is the smallest
@@ -129,7 +133,7 @@ a glyph the atlas has no cell for, so a brand with an accent in it renders as
 therefore carries the font's glyph set — the one entry in it that is not an id —
 and the compiler names the offending character.
 
-### 3a¾. The kits are content now too
+### The kits are content too
 
 `content/sets.yaml` is the last catalog to have been code. A SET is what makes a
 boss worth farming past the first drop, and a mod could already ship
@@ -152,7 +156,7 @@ Two decisions worth keeping:
   conversion re-homing a shipped kit ships the pieces too, which puts them in
   the list anyway.
 
-### 3a⅞. The ladder speaks in the mod's voice
+### The ladder speaks in the mod's voice
 
 `difficulties.yaml` renames the five rungs and rewrites their taglines, and does
 nothing else. The split is the interesting part, and it is the same one
@@ -177,7 +181,7 @@ It lands before the picker is drawn — `applyMods` runs and then the flow goes 
 the difficulty ladder — so the rows a player reads are already the mod's, with
 no extra plumbing.
 
-### 3a⁹⁄₁₀. A mod's weapon flares its own element
+### A mod's weapon flares its own element
 
 `UniqueDef.fx` is the last of the four "a mod's content can only look like
 whichever shipped thing it resembles" gaps. The signature slash and muzzle flash
@@ -206,7 +210,7 @@ Three decisions:
   frame, and building a style object there would allocate through the whole
   flight of every round on screen.
 
-### 3b. The story travels the same road — and nobody governs a mod's script
+### The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs
 `registerDefs` already accepted; what was missing was the AUTHORING form. All
@@ -235,7 +239,7 @@ Three things are worth knowing about the format:
   the manuscript). A mod's scenes are never transcribed there and never corrected
   to match it. The distinction is origin, not format.
 
-### 3c. The party is the story's other half
+### The party is the story's other half
 
 A companion is the same lift again: `registerDefs` already took a `companions`
 catalog, and what was missing was the authoring form. The roster is content now
@@ -267,7 +271,7 @@ Two things are worth knowing about the format:
   refuses the mod. The other four growth fields are grants in their own right
   (`chainPerRank` teaches an un-chained weapon to arc) and are legal alone.
 
-### 3d. The build system is content too
+### The build system is content too
 
 The passive TALENT trees were the last catalog a mod could not touch — the one
 place where a total conversion could re-skin every monster, venue, relic, scene
@@ -503,7 +507,7 @@ dynamic import.
 ## What is not here yet
 
 - **A NEW KIND of talent proc.** A mod may author, retune or replace any of the
-  eleven proc blocks the engine fires (see 3d), but a proc the engine has no hook
+  eleven proc blocks the engine fires (see “The build system is content too” above), but a proc the engine has no hook
   for — "your blows sometimes stun" — is engine code, not content. The format has
   no scripting hook and adding one would turn "subscribe to a mod" into "run a
   stranger's code".

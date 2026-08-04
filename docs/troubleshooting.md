@@ -46,6 +46,21 @@ Three lines in it answer most of these:
 If the log ends with no error at all, launch once with `GIS_VERBOSE=1` set and
 read it again.
 
+## Mods
+
+A compile error is not a troubleshooting question: `node mod/tools/cli.mjs check
+<dir>` names the file and the reason, and `mod/AGENTS.md` § "Reading the errors"
+decodes every message it can print. What follows is the rest.
+
+| Symptom                                                 | Cause                                                                                                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| The mod is not in the MODS screen at all                | Wrong folder (`cli.mjs where` prints the right one per OS), or not a Steam desktop build — browser and mobile builds have no mod loader.   |
+| It is listed but nothing it adds appears                | Another mod later in the LOAD ORDER overrides it. The MODS screen says so on the overridden mod's own help line; the last one wins.        |
+| A `--mod` instrument refuses to run                     | The mod does not compile — the tools stop with the same list `check` prints. There is nothing to measure until it passes.                  |
+| The level compiles but no run can be built from it      | A venue is two files: the mission and its `maps/<id>.yaml` blueprint, which is what the geometry is carved from.                           |
+| Sprites look right in the previews, missing in-game     | A mod's sprites merge at load and never enter the built atlas — anything reading `atlas.json` directly cannot see them. This is by design. |
+| A hero's items or roster read wrong after unsubscribing | A hero remembers the mod it was played under. Re-subscribe, or accept that content from a removed mod cannot resolve.                      |
+
 ## The deployed game
 
 ### The site shows an old build after a deploy

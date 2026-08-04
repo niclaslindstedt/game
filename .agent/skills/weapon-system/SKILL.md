@@ -430,8 +430,9 @@ to the rung — an easy unique only drops on easy. Each is rolled at
 
 **Lore/story note.** Unique `lore` is cosmetic item flavor (like weapon
 flavor), NOT manuscript content — the manuscript transcribes spoken/found
-story, not item cards, so a unique doesn't touch `docs/manuscript.md`. New
-uniques ARE game content, so update `docs/game-content.md`.
+story, not item cards, so a unique doesn't touch `docs/manuscript.md`. It
+doesn't touch `docs/game-content.md` either: the item YAML and the generated
+arsenal are the record of what exists.
 
 ## World-drop uniques (level-locked)
 
@@ -595,9 +596,9 @@ off-hand soak zone) is `docs/rendering.md`; the gore that lands on it is the
       (atlas.png + atlas.json are the build inputs).
 - [ ] `make test` green, `make lint` clean.
 - [ ] Playtest at the phone viewport if feel/tuning changed.
-- [ ] Docs sync (per CLAUDE.md): content changes → `docs/game-content.md`;
-      new config knobs → `docs/configuration.md`; public API →
-      `docs/architecture.md` + README.
+- [ ] Docs sync (per CLAUDE.md): a new RULE (not a new item) →
+      `docs/game-content.md`; new config knobs → `docs/configuration.md`;
+      public API → `docs/architecture.md` + README.
 - [ ] Changelog fragment under `.changes/unreleased/` for player-visible
       changes.
 - [ ] Old saves survive: retired ids/tiers handled in `migrateLoadout`.
