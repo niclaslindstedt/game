@@ -1,4 +1,9 @@
-# PolyForm Noncommercial License 1.0.0
+# PolyForm Noncommercial License 1.0.0 with Ada's Trail Feature Terms
+
+This license consists of the PolyForm Noncommercial 1.0.0 terms and the
+Ada's Trail Feature Terms below. The Feature Terms are additional strict
+obligations and conditions. If they conflict with the PolyForm terms, the
+Feature Terms control for the features they cover.
 
 <https://polyformproject.org/licenses/noncommercial/1.0.0>
 
@@ -73,3 +78,56 @@ The **licensor** is the individual or entity offering these terms, and the **sof
 **Your licenses** are all the licenses granted to you for the software under these terms.
 
 **Use** means anything you do with the software requiring one of your licenses.
+
+## Ada's Trail Feature Terms
+
+### Definitions
+
+**The Game** is _Ada's Trail_, including the software in this repository and
+the Windows, macOS, Linux, browser, and mobile versions published by the
+licensor.
+
+An **Acquired Steam License** is a valid, current license for the Game acquired
+from the licensor through Steam. Downloading a binary, receiving a copy from
+somebody else, cloning or building the source, or possessing the Mod SDK does
+not create an Acquired Steam License.
+
+**Mod Support** means loading, applying, or playing user-authored content in the
+Game. **Multiplayer** means playing the Game with, against, or as a spectator of
+another human player over any transport.
+
+A **Mod Creator** is a person actively creating, validating, or testing Mod
+Content they author for the Game. `--modifications` is the command-line
+parameter that declares use of the mod-authoring exception below.
+
+### Player license for Mod Support and Multiplayer
+
+No license is granted to use Mod Support or Multiplayer as a player unless you
+hold an Acquired Steam License. An Acquired Steam License grants its holder a
+personal, non-transferable license to use those features with the Steam edition
+of the Game, subject to these terms and Steam's terms.
+
+This condition applies even when the use would otherwise be personal,
+noncommercial, private entertainment, or technically possible through a copied
+binary, a source build, a non-Steam transport, or a command-line parameter.
+
+The Steam edition has not been published as of the date of these terms. Until
+it is published, no ordinary player can acquire the license required for Mod
+Support or Multiplayer.
+
+### Limited mod-authoring exception
+
+A Mod Creator may run an official Windows, macOS, or Linux binary downloaded
+from the licensor with the `--modifications` parameter, without an Acquired
+Steam License, **solely to create, validate, and test Mod Content they author**.
+This exception includes only the single-player use reasonably necessary to
+inspect that work.
+
+This exception does not license ordinary or recreational play, playing Mod
+Content authored by somebody else, distributing the Game, or using
+Multiplayer. Regular players may not use `--modifications` as a substitute for
+an Acquired Steam License.
+
+Source compilation, automated tests, and non-play development activity remain
+governed by the PolyForm terms above; they do not create a player license for
+Mod Support or Multiplayer.

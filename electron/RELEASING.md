@@ -10,11 +10,11 @@ The app **embeds the whole game** (`webroot/`) and serves it from a private
 `game://app` scheme, so it plays offline and is an app rather than a viewer for
 a website — see [`README.md`](README.md).
 
-> **Licence note.** The repo is `PolyForm-Noncommercial-1.0.0`, which forbids
-> _others_ commercial use; as the sole copyright holder you are not bound by the
-> licence you grant, so selling the game is yours to do. Nothing to change —
-> just don't be surprised when the licence and the price tag look like they
-> disagree.
+> **Licence note.** The repo uses PolyForm Noncommercial 1.0.0 plus the Ada's
+> Trail Feature Terms, which reserve player use of mods and multiplayer for an
+> acquired Steam licence. As the sole copyright holder you are not bound by the
+> licence you grant, so selling the game is yours to do. The public docs and
+> store copy must keep that scope clear.
 
 ---
 

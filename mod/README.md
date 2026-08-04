@@ -8,9 +8,12 @@ install: the files you write are **the same files the game's own content is
 written in**, checked by the same validator, so anything you can read in
 `content/` you can copy into a mod.
 
-> **Steam only.** Mods load in the desktop (Steam) build. The browser and mobile
-> builds have no Workshop to subscribe to and no filesystem to read a mod from,
-> so they play the shipped game. Nothing here changes that.
+> **Desktop only.** Mods load in the Windows, macOS, and Linux builds. Ordinary
+> players may use them only with a game licence acquired through Steam; the
+> Steam edition has not been published yet. A mod creator may launch an
+> official downloaded desktop binary with `--modifications` solely to build and
+> test their own mod. Regular players may not use that exception, and it never
+> permits multiplayer. The browser and mobile builds do not load mods.
 
 ---
 
@@ -96,6 +99,12 @@ A mod there is a **local** mod: it is the only kind the game offers a PUBLISH
 row for, because a subscription is somebody else's to update. Local mods also
 sort to the bottom of the load order, so the one you are working on wins its
 clashes while you iterate.
+
+If you do not hold the released Steam edition, launch the official downloaded
+desktop binary with `--modifications` to enable this local authoring path. That
+parameter is licensed only while creating, validating, and testing a mod you
+author. It is not a general mod-player switch and does not enable licensed
+multiplayer use.
 
 ## Looking at it, measuring it, playing it
 
@@ -211,7 +220,10 @@ change them, publish or sell what you make, credit or no credit; you should
 never have to think about the licence to start a mod. **Your mod is yours**, and
 it is not a derivative of the toolchain. The toolchain itself
 ([`tools/`](tools)) is licensed for making mods for _this_ game rather than for
-reuse in another one. Full terms: [`LICENSE.md`](LICENSE.md).
+reuse in another one. The SDK licence does not grant ordinary play: mods and
+multiplayer require a game licence acquired through Steam, apart from the
+narrow `--modifications` authoring exception above. Full terms:
+[`LICENSE.md`](LICENSE.md).
 
 ## Reference
 

@@ -1,11 +1,25 @@
-# game
+# Ada's Trail
 
-**Ada's Trail** — survive the search for your lost love. Ada went out for chips and soda on movie night and never came back; the trail leads off-planet. An offline top-down survival scroller shooter that runs entirely in your browser: you steer with the pointer (or touch), and your character fights on its own according to the weapons and items it picks up.
+**Ada's Trail** — survive the search for your lost love. Ada went out for chips
+and soda on movie night and never came back; the trail leads off-planet. It is a
+top-down survival scroller shooter with two homes: a free browser PWA at
+<https://game.niclaslindstedt.se/> and self-contained desktop builds for
+**Windows, macOS, and Linux**. The desktop release is intended for Steam and has
+not been published yet.
+
+> **This repository is primarily for mod creators.** Start with the
+> [Mod SDK guide](mod/README.md), then keep the [format reference](mod/FORMAT.md)
+> beside you while authoring. Mods run only in desktop releases. Ordinary
+> players need a copy acquired through Steam to use mods or multiplayer; until
+> that release is published, mod creators alone may enable the local authoring
+> path in an official downloaded desktop binary with `--modifications`, solely
+> to build and test their own mods. The switch is not licensed for ordinary
+> play and does not grant multiplayer access. See [License](#license).
 
 [![CI](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml)
 [![SEO](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml)
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
+[![License: PolyForm NC + feature terms](https://img.shields.io/badge/license-PolyForm%20NC%20%2B%20feature%20terms-blue.svg)](LICENSE)
 
 > **Status: four playable levels.** Pick a difficulty on the Doom-style
 > main menu and you drop straight into the story (the mission picker only
@@ -27,21 +41,63 @@
 > whole campaign went — mobs killed, survival time and peak menace summed
 > across every map.
 
-## Why?
+## Why mod it?
 
-- **One-touch play** — hold to steer, release to stop. Your loadout does the
-  fighting, so the game works equally well with a mouse or a thumb.
-- **Runs entirely in the browser** — no account, no server, no install step.
-  Game state lives on your device.
-- **Fully offline** — the game is an installable PWA that precaches itself;
-  once loaded it launches and plays with no network at all.
-- **Built to be built on** — reusable game components and code live in clearly
-  separated local libraries so later games can share them without coupling
-  this game to an external framework.
+- **Content is authored as data** — levels, generated maps, enemies, items,
+  sprites, sounds, music, story, talents, companions, and total conversions are
+  YAML rather than scripts.
+- **The SDK is self-service** — scaffold, validate, render, simulate, playtest,
+  and publish through the same compilers and measurements used by the shipped
+  game.
+- **There is a playable baseline** — use the live PWA to learn the game before
+  changing it; one-touch steering works with a mouse or thumb and the loadout
+  does the fighting.
+- **The finished mod has a desktop home** — Windows, macOS, and Linux builds
+  bundle the whole game on-device; Steam Workshop is the publication and
+  subscription path once the unreleased Steam edition launches.
+
+## Modding
+
+A mod is a folder of authored YAML. Nothing in it executes. The shortest path
+from an idea to a valid mod is:
+
+```sh
+node mod/tools/cli.mjs new my-mod
+node mod/tools/cli.mjs check my-mod
+node mod/tools/cli.mjs where
+```
+
+The [Mod SDK guide](mod/README.md) continues from there through local testing,
+the `--mod <dir>` measurement tools, load order, total conversions, and Steam
+Workshop publishing. The generated [library](https://game.niclaslindstedt.se/library/)
+is the quickest catalog of the shipped monsters, items, missions, and story a
+mod may build on.
+
+There are two different command-line switches, for two different jobs:
+
+- `--mod <dir>` belongs to the repository's renderers, simulators, and
+  playtest tools. It selects the authored mod those development tools inspect.
+- `--modifications` belongs to an official downloaded desktop binary. It lets
+  a **mod creator** enable the local mod-authoring path solely to create,
+  validate, and test their own mod before the Steam release exists.
+
+`--modifications` is a narrow license exception, not a free-player mode.
+Ordinary players may not use it to play mods, it does not authorize playing
+other people's mods, and it never authorizes multiplayer. Player use of either
+mods or multiplayer requires a game license acquired through Steam. The web
+PWA and mobile builds do not load mods.
 
 ## Play
 
-The deployed game lives at **<https://game.niclaslindstedt.se/>**:
+The platform split is deliberate:
+
+| Release       | Platforms             | Status and scope                                                                                                     |
+| ------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Web PWA       | Current browsers      | Live, free, installable, and playable offline after loading; no mods or multiplayer                                  |
+| Steam desktop | Windows, macOS, Linux | Not yet published; self-contained and playable offline, with licensed mods and multiplayer for acquired Steam copies |
+| Mobile shell  | iOS, Android          | Store wrapper around the same game; no mods or multiplayer                                                           |
+
+The deployed PWA lives at **<https://game.niclaslindstedt.se/>**:
 
 | Slot       | URL         | Serves                                                    |
 | ---------- | ----------- | --------------------------------------------------------- |
@@ -232,6 +288,14 @@ The game is a Progressive Web App: open the site in your browser and choose
 app launches fullscreen, works offline, and shows a small toast when a new
 build is ready — reload when it suits you; an update never interrupts a run.
 
+The desktop edition in [`electron/`](electron/) bundles the same game for
+**Windows, macOS, and Linux**. It runs on-device and supports ordinary offline
+single-player play, while Steam supplies the license and services for mods and
+multiplayer. It has not been published to Steam yet, so there is currently no
+ordinary-player mod or multiplayer license to acquire. The temporary
+`--modifications` route described under [Modding](#modding) is only for mod
+creators testing their own work in an official downloaded binary.
+
 A native **App Store / Play Store** build also lives in [`native/`](native/) — an
 Expo/React Native shell that wraps the deployed PWA in a full-screen WebView, so
 it looks and plays exactly like the website while adding real device haptics
@@ -347,9 +411,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Licensed under [PolyForm Noncommercial 1.0.0](LICENSE), with one exception:
-the **Mod SDK** in [`mod/`](mod/) has its own terms
+The repository is licensed under
+[PolyForm Noncommercial 1.0.0 with Ada's Trail feature terms](LICENSE). Those
+additional terms reserve player use of **mods and multiplayer** for people who
+have acquired the game through Steam. Downloading a binary, cloning or building
+the source, or using `--modifications` does not create that player license.
+
+The narrow exception is for a mod creator: they may run an official downloaded
+Windows, macOS, or Linux binary with `--modifications` solely to author,
+validate, and test their own mod. It does not cover ordinary play, other
+people's mods, or multiplayer. The Steam edition is not published yet.
+
+The **Mod SDK** in [`mod/`](mod/) has its own compatible terms
 ([`mod/LICENSE.md`](mod/LICENSE.md)). The samples a modder copies —
 `mod/examples/` and the format docs — are public domain (CC0); the toolchain in
 `mod/tools/` is licensed for authoring content for this game rather than for
-reuse in another one.
+reuse in another one. Owning or using the SDK does not itself grant a license
+to play mods or multiplayer.

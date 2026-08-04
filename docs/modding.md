@@ -5,8 +5,12 @@ is [`mod/FORMAT.md`](../mod/FORMAT.md). This page is the other half: what
 happens between a player subscribing to a Workshop item and a mod's monster
 appearing on screen, and why it is built the way it is.
 
-**Steam builds only.** The browser and mobile builds have no Workshop and no
-filesystem to read a mod from.
+**Desktop builds only.** The browser and mobile builds have no Workshop and no
+filesystem to read a mod from. Ordinary players may use mods only with the
+Windows, macOS, or Linux game acquired through Steam. Before that unpublished
+edition is available, a mod creator may run an official downloaded desktop
+binary with `--modifications` solely to create and test their own mod; it is not
+a player entitlement and does not license multiplayer.
 
 ## The shape
 

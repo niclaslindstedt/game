@@ -2,8 +2,8 @@
   "name": "game",
   "version": "1.0.0",
   "private": true,
-  "description": "Offline top-down survival scroller shooter for the browser: steer by holding pointer/touch; the character auto-acts based on picked-up weapons and items. TypeScript PWA deployed to GitHub Pages.",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "Top-down survival scroller shooter for the web and Windows/macOS/Linux desktop releases, with a data-authored Mod SDK.",
+  "license": "SEE LICENSE IN LICENSE",
   "author": "Niclas Lindstedt <niclas@agilator.se>",
   "type": "module",
   "workspaces": [

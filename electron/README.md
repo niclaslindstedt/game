@@ -13,6 +13,12 @@ on-device and offline and updates only when a new build ships to Steam.
 
 On top of the web game it adds the things a browser can't give a desktop player:
 
+- **Licensed mods and multiplayer.** Steam Workshop supplies mods and Steam's
+  relay carries co-op for players who acquired the game through Steam. The
+  edition is not published yet. Mod creators may use `--modifications` with an
+  official downloaded binary solely to build and test their own local mods;
+  regular players may not use that exception, and it never licenses
+  multiplayer.
 - **Steam Cloud.** The roster, the coin bank and the hardcore score board follow
   the player between machines, through the same payload and the same merge the
   iOS app uses over iCloud — the web side never learns the platform changed.
@@ -68,7 +74,10 @@ available when only one preparation step is needed.
 Without a Steam client running, `steamworks.init()` throws and the shell
 memoizes "no client": cloud save and achievements report unavailable and the
 game plays device-locally, exactly as it does in a browser. That is the normal
-way to work on the shell. `GIS_STEAM=off` skips the attempt entirely.
+way to work on the shell. `GIS_STEAM=off` skips the attempt entirely. It does
+not grant player use of mods or multiplayer; those require an acquired Steam
+licence. A mod creator using an official downloaded binary may pass
+`--modifications` only for the local authoring/test exception described above.
 
 ### Environment
 

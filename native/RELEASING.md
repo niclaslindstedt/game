@@ -16,11 +16,11 @@ Store identities are wired in [`app.config.js`](app.config.js):
 - iOS `ios.bundleIdentifier` — `se.niclaslindstedt.adastrail`
 - Android `android.package` — `se.niclaslindstedt.adastrail`
 
-> **Licence note.** The repo is `PolyForm-Noncommercial-1.0.0`, which forbids
-> _others_ commercial use; as the sole copyright holder you are not bound by
-> the licence you grant, so selling coin packs is yours to do. Nothing to
-> change — just don't be surprised when the licence and the IAP look like they
-> disagree.
+> **Licence note.** The repo uses PolyForm Noncommercial 1.0.0 plus the Ada's
+> Trail Feature Terms, which reserve player use of mods and multiplayer for an
+> acquired Steam licence. As the sole copyright holder you are not bound by the
+> licence you grant, so selling coin packs is yours to do. Mobile exposes
+> neither reserved feature.
 
 ---
 
