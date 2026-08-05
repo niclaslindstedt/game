@@ -203,6 +203,20 @@ CENTRE) past the blocker instead puts the drawn clear ground right up against
 the stone, and costs only a sliver of the floor immediately behind a thin wall
 reading as seen — which draws as stipple anyway.
 
+**ONLY ARCHITECTURE CASTS THAT SHADOW.** A LONE obstacle no longer stops the
+sweep at all: it takes two obstacles standing in line — a wall's own chain, a
+rank of machinery, two rocks shoulder to shoulder — or one piece wider than a
+unit of ground (`OBSTACLES.loneSightSpan`, one fog cell) before the eye is
+stopped. The rule and its two tests live in `src/game/obstacles.ts`
+(`lineOfSight`, which is now a different question from the PHYSICAL
+`blockedByObstacle` a body and a bullet ask). Without it every dressed field
+was a fan of dark wedges the hero had to walk into one at a time, thrown by
+single scattered rocks, and — since a body is drawn exactly where the fog has
+lifted — a mob standing in one went undrawn and unshootable on ground the
+player was plainly looking at. It is SIGHT that changed and not substance: the
+lone rock still stops a body walking into it and still eats the shot taken
+past it.
+
 **THE SIMULATION ANSWERS THAT SAME QUESTION FOR ITSELF, AND MUST.** A mob the
 band hides is also a mob the hero refuses to fire at (`clearOfFog`,
 `src/game/fog.ts`, read through `visibleTo` in `src/game/sight.ts`) — otherwise

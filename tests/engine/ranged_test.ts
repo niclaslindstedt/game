@@ -64,8 +64,12 @@ describe("shooters (EnemyDef.ranged)", () => {
     );
     gunner.awake = true;
     state.enemies.push(gunner);
-    // A wall dead between them.
+    // A WALL dead between them, which is two rocks: a lone narrow one is
+    // looked past now (src/game/obstacles.ts, "What blocks SIGHT"), and a
+    // gunner that can see its mark shoots at it — the bolt is then eaten by
+    // the stone on the way, which is the shot a player takes past cover too.
     addRock(state, state.players[0].pos.x + 75, state.players[0].pos.y);
+    addRock(state, state.players[0].pos.x + 75, state.players[0].pos.y + 18);
     step(state, idle, 16);
     expect(state.projectiles.filter((p) => p.hostile)).toHaveLength(0);
   });

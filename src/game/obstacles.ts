@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Obstacle geometry: the collision push-out, the spawn-overlap test, and the
-// swept line-of-sight/shot query the simulation runs against solid features.
-// A round obstacle collides as its `radius`; a rock carries a rectangular
-// `half` footprint and collides as that box. Extracted from step/ so the
-// step stays readable and the nuke and level generator can share one source of
-// truth for "is this blocked?".
+// swept segment query the simulation runs against solid features. A round
+// obstacle collides as its `radius`; a rock carries a rectangular `half`
+// footprint and collides as that box. Extracted from step/ so the step stays
+// readable and the nuke and level generator can share one source of truth for
+// "is this blocked?".
+//
+// THE SEGMENT QUERY IS TWO QUESTIONS, and they no longer have the same answer.
+// `blockedByObstacle` is PHYSICAL — what stops a body, what eats a shot — and
+// every tall obstacle answers it. `lineOfSight` is SIGHT, and a LONE obstacle
+// narrow enough to cover one unit of ground does not stop the eye: it takes
+// two in line, or one wide one. The rule, and why, is the "What blocks SIGHT"
+// block below.
 
 import {
   clamp,
@@ -37,6 +44,7 @@ const MAX_QUERY_RADIUS = 32;
 
 type ObstacleGrid = Map<number, Obstacle[]>;
 const gridCache = new WeakMap<Obstacle[], ObstacleGrid>();
+const sightGridCache = new WeakMap<Obstacle[], ObstacleGrid>();
 
 /** Cell key — level widths stay far below 2¹⁶ cells, so this never collides
  * (same scheme as the enemy grids in step/). */
@@ -56,12 +64,17 @@ let lastGrid: ObstacleGrid | null = null;
 function gridFor(obstacles: Obstacle[]): ObstacleGrid {
   if (obstacles === lastObstacles && lastGrid) return lastGrid;
   let grid = gridCache.get(obstacles);
-  if (grid) {
-    lastObstacles = obstacles;
-    lastGrid = grid;
-    return grid;
+  if (!grid) {
+    grid = buildGrid(obstacles);
+    gridCache.set(obstacles, grid);
   }
-  grid = new Map();
+  lastObstacles = obstacles;
+  lastGrid = grid;
+  return grid;
+}
+
+function buildGrid(obstacles: Obstacle[]): ObstacleGrid {
+  const grid: ObstacleGrid = new Map();
   for (const obstacle of obstacles) {
     const hx = (obstacle.half?.x ?? obstacle.radius) + MAX_QUERY_RADIUS;
     const hy = (obstacle.half?.y ?? obstacle.radius) + MAX_QUERY_RADIUS;
@@ -78,10 +91,161 @@ function gridFor(obstacles: Obstacle[]): ObstacleGrid {
       }
     }
   }
-  gridCache.set(obstacles, grid);
-  lastObstacles = obstacles;
-  lastGrid = grid;
   return grid;
+}
+
+// ---- What blocks SIGHT ----------------------------------------------------
+// A LONE OBSTACLE IS SEEN PAST. `blockedByObstacle` answers the PHYSICAL
+// question — what stops a body, what eats a shot — and there every tall
+// obstacle counts. `lineOfSight` answers the SIGHT question, and there one
+// solitary piece of stone is not enough: the player looks past a single crate,
+// a single scattered rock, the one boulder in the basin. It takes TWO
+// obstacles in line — a wall's own chain, a rank of racks, two rocks shoulder
+// to shoulder — or one piece wider than a unit of ground, before the view is
+// actually stopped.
+//
+// WHY: the fog sweep is sight-limited (fog.ts `revealAround`), so every tall
+// obstacle cast a shadow across everything behind it. On dressed ground —
+// which is most of the game's ground — that reads as a field of dark wedges
+// the player has to walk into one at a time, and a mob standing in one is
+// undrawn and untargetable (`clearOfFog`) although the player would plainly be
+// looking straight at it. Deliberate ARCHITECTURE is what should hide a room:
+// a wall, a building, a rank of machinery. Loose furniture should not.
+//
+// TWO TESTS DECIDE IT, both per obstacle and both cached:
+//   WIDE    a piece spanning more than `OBSTACLES.loneSightSpan` (one unit of
+//           ground, one fog cell) hides what is behind it on its own — a
+//           building, a big sized rock, a long box.
+//   PAIRED  a piece standing closer than `OBSTACLES.spacing` to another tall
+//           piece is part of a line. That threshold is the SCATTER's own
+//           minimum gap (create.ts `scatterObstacles` keeps more than it from
+//           every neighbour, walls included), so nothing the sampler strews
+//           ever pairs by accident, while everything deliberate pairs by
+//           construction: a wall chain overlaps its own circles, and a prop
+//           rank strides tighter than a body is wide.
+//
+// IT COSTS THE HOT PATH NOTHING. The blocking subset gets its OWN spatial
+// grid, so the sight query walks a smaller grid rather than testing a flag per
+// candidate — and the sweep below is the single most-run query in the engine.
+// Both grids key on the obstacle ARRAY's identity and every mutation REPLACES
+// that array (see above), so a door opening rebuilds both for free.
+
+let lastSightObstacles: Obstacle[] | null = null;
+let lastSightGrid: ObstacleGrid | null = null;
+
+/** The grid of only those obstacles that stop the eye — see the block above. */
+function sightGridFor(obstacles: Obstacle[]): ObstacleGrid {
+  if (obstacles === lastSightObstacles && lastSightGrid) return lastSightGrid;
+  let grid = sightGridCache.get(obstacles);
+  if (!grid) {
+    grid = buildGrid(sightBlockers(obstacles));
+    sightGridCache.set(obstacles, grid);
+  }
+  lastSightObstacles = obstacles;
+  lastSightGrid = grid;
+  return grid;
+}
+
+/**
+ * How much air stands between two obstacles' footprints (world px, negative
+ * when they overlap) — the axis-aligned gap, which is exact for the boxes and
+ * treats a circle as its enclosing square. Squaring the circles only ever
+ * pairs two pieces a shade more eagerly on the diagonal, and it keeps the test
+ * consistent with the index the candidates come out of (which buckets by the
+ * same axis-aligned extents), so no adjacent pair can be missed.
+ */
+function footprintGap(a: Obstacle, b: Obstacle): number {
+  return Math.max(
+    Math.abs(a.pos.x - b.pos.x) -
+      (a.half?.x ?? a.radius) -
+      (b.half?.x ?? b.radius),
+    Math.abs(a.pos.y - b.pos.y) -
+      (a.half?.y ?? a.radius) -
+      (b.half?.y ?? b.radius),
+  );
+}
+
+/** Is this piece wide enough to hide something all by itself? */
+function widerThanAUnit(obstacle: Obstacle): boolean {
+  const half = obstacle.half;
+  const span = half ? Math.max(half.x, half.y) * 2 : obstacle.radius * 2;
+  return span > OBSTACLES.loneSightSpan;
+}
+
+/**
+ * The obstacles a sight line actually stops at: the tall ones that are either
+ * wider than a unit or standing in line with another. Runs once per obstacle
+ * array — a level's carve, then again whenever the field replaces it (a door
+ * opening, a crate smashed mid-fight), which is why it gets its own index
+ * rather than reusing the query grid above.
+ *
+ * THE PAIRING INDEX IS TIGHT ON PURPOSE. Each tall piece registers in the
+ * cells its footprint inflated by HALF the pairing gap covers, so two pieces
+ * that pair have overlapping inflated boxes and therefore share a cell — the
+ * scan is exhaustive — while a piece lands in a cell or two instead of the
+ * nine the query grid's much larger inflation puts it in. Paired with a flag
+ * array rather than a Set of objects, that is the difference between a level's
+ * worth of buckets costing microseconds and costing a visible hitch on the
+ * frame a crate breaks.
+ */
+function sightBlockers(obstacles: Obstacle[]): Obstacle[] {
+  const count = obstacles.length;
+  const blocks = new Uint8Array(count);
+  let narrow = 0;
+  for (let i = 0; i < count; i++) {
+    const obstacle = obstacles[i] as Obstacle;
+    if (obstacle.jumpable) continue;
+    if (widerThanAUnit(obstacle)) blocks[i] = 1;
+    else narrow++;
+  }
+  if (narrow > 0) {
+    const pad = OBSTACLES.spacing / 2;
+    const cells = new Map<number, number[]>();
+    for (let i = 0; i < count; i++) {
+      const obstacle = obstacles[i] as Obstacle;
+      if (obstacle.jumpable) continue;
+      const hx = (obstacle.half?.x ?? obstacle.radius) + pad;
+      const hy = (obstacle.half?.y ?? obstacle.radius) + pad;
+      const x1 = Math.floor((obstacle.pos.x + hx) / GRID_CELL);
+      const y1 = Math.floor((obstacle.pos.y + hy) / GRID_CELL);
+      for (
+        let cx = Math.floor((obstacle.pos.x - hx) / GRID_CELL);
+        cx <= x1;
+        cx++
+      ) {
+        for (
+          let cy = Math.floor((obstacle.pos.y - hy) / GRID_CELL);
+          cy <= y1;
+          cy++
+        ) {
+          const key = cellKey(cx, cy);
+          const bucket = cells.get(key);
+          if (bucket) bucket.push(i);
+          else cells.set(key, [i]);
+        }
+      }
+    }
+    for (const bucket of cells.values()) {
+      for (let i = 0; i < bucket.length; i++) {
+        const a = bucket[i] as number;
+        for (let j = i + 1; j < bucket.length; j++) {
+          const b = bucket[j] as number;
+          // A piece sits in a cell or two, so a pair can come up twice; once
+          // both are blockers there is nothing left to learn from them.
+          if (blocks[a] === 1 && blocks[b] === 1) continue;
+          if (
+            footprintGap(obstacles[a] as Obstacle, obstacles[b] as Obstacle) >=
+            OBSTACLES.spacing
+          ) {
+            continue;
+          }
+          blocks[a] = 1;
+          blocks[b] = 1;
+        }
+      }
+    }
+  }
+  return obstacles.filter((_, i) => blocks[i] === 1);
 }
 
 /** The obstacles that can matter to a point query at `pos` (radius ≤
@@ -180,19 +344,40 @@ export function insideObstacle(
 }
 
 /**
- * Does a straight shot from `from` to `to` clear every TALL obstacle? Walls,
- * server racks, boulders, and rocks eat bullets; the low, jumpable ones
- * (desks, hop-rocks, craters) never block — shots fly over them just like a
- * jumping player.
+ * Can `from` SEE `to`? Walls, buildings, ranks of racks and big rocks stop the
+ * eye; the low, jumpable ones (desks, hop-rocks, craters) never do — the
+ * player looks over them just as a shot flies over them — and NEITHER DOES A
+ * LONE PIECE narrow enough to cover a single unit of ground. It takes two
+ * obstacles in line, or one wide one; the "What blocks SIGHT" block above is
+ * the whole rule and the reasoning.
+ *
+ * This is SIGHT, not substance: a shot aimed past a lone crate still hits the
+ * crate ({@link blockedByObstacle} is what a projectile asks), and the crate
+ * still stops a body. What changes is only what the player, the horde and the
+ * autopilot are allowed to KNOW is there.
  */
 export function lineOfSight(state: GameState, from: Vec2, to: Vec2): boolean {
-  return !blockedByObstacle(state, from, to, 0);
+  return !sweepHits(sightGridFor(state.obstacles), from, to, 0);
 }
 
-/** Does the swept path `from`→`to` (a circle of `radius`) hit a tall
- * obstacle? */
+/**
+ * Does the swept path `from`→`to` (a circle of `radius`) hit a tall obstacle?
+ * The PHYSICAL query — a body's step, a projectile's travel, the walker's
+ * probe — so every tall obstacle counts, lone ones included.
+ */
 export function blockedByObstacle(
   state: GameState,
+  from: Vec2,
+  to: Vec2,
+  radius: number,
+): boolean {
+  return sweepHits(gridFor(state.obstacles), from, to, radius);
+}
+
+/** The swept segment test itself, against whichever grid the caller's question
+ * is answered from (see {@link lineOfSight} vs {@link blockedByObstacle}). */
+function sweepHits(
+  grid: ObstacleGrid,
   from: Vec2,
   to: Vec2,
   radius: number,
@@ -206,7 +391,6 @@ export function blockedByObstacle(
   // inflated footprint, and that point's cell is on the walked line. An
   // obstacle can sit in several walked cells and get re-tested — harmless
   // for a boolean query.
-  const grid = gridFor(state.obstacles);
   if (grid.size === 0) return false;
   let cx = Math.floor(from.x / GRID_CELL);
   let cy = Math.floor(from.y / GRID_CELL);

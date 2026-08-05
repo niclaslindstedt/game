@@ -364,6 +364,18 @@ unshootable. Both live in `src/game/fog.ts` and NOT in map.ts, because
 170 KB budget and a run-only read added there is spent from the startup path's
 allowance. → `docs/rendering.md`
 
+**A WALL, THOUGH — NOT A ROCK. `lineOfSight` IS NO LONGER `blockedByObstacle`,
+AND PICKING THE WRONG ONE IS A SILENT REGRESSION.** They are two questions:
+`blockedByObstacle` is PHYSICAL (what stops a body, what eats a shot) and every
+tall obstacle answers it; `lineOfSight` is SIGHT, and a LONE piece narrow enough
+to cover one unit of ground (`OBSTACLES.loneSightSpan`) does not stop the eye —
+it takes two obstacles in line, or one wider piece. So a pass asking "can this
+bullet get there" wants `blockedByObstacle`, and one asking "does anybody know
+this is here" wants `lineOfSight`. A test that stages cover has to build a WALL
+(two pieces in line, or a wide one); a single boulder hides nothing. The rule
+and both its tests are the "What blocks SIGHT" block in
+`src/game/obstacles.ts`.
+
 **A RANGED WEAPON EATS AMMUNITION AND HAS NO `durability`; MELEE AND MAGIC ARE
 THE EXACT OPPOSITE.** It is one trade, not two independent fields — a gun never
 breaks, it runs dry — so a ranged def authors `ammo:` and no `durability:`, and

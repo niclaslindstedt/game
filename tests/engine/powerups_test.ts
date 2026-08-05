@@ -237,20 +237,27 @@ describe("the screen nuke", () => {
     clearStage(state);
     state.players[0].heldAbilities = ["test_nuke"];
 
-    // A tall rock right beside the player; a mob hides just behind it, well
+    // Tall stone right beside the player; a mob hides just behind it, well
     // inside the blast, and a second mob stands in the open the same distance
     // out. Same radius, opposite fates — only the sheltered one rides it out.
+    //
+    // Two boulders rather than one, because the blast is stopped by SIGHT and
+    // a lone narrow obstacle no longer stops that (src/game/obstacles.ts,
+    // "What blocks SIGHT"): cover you can hide behind is cover with some
+    // width to it.
     const px = state.players[0].pos.x;
     const py = state.players[0].pos.y;
+    const boulder = {
+      id: 8100,
+      kind: "boulder",
+      sprite: "boulder",
+      pos: { x: px + 30, y: py },
+      radius: 14,
+      jumpable: false,
+    };
     state.obstacles = [
-      {
-        id: 8100,
-        kind: "boulder",
-        sprite: "boulder",
-        pos: { x: px + 30, y: py },
-        radius: 14,
-        jumpable: false,
-      },
+      boulder,
+      { ...boulder, id: 8101, pos: { x: px + 30, y: py + 20 } },
     ];
     const sheltered = makeEnemy({ id: 9101, pos: { x: px + 60, y: py } });
     const exposed = makeEnemy({ id: 9102, pos: { x: px, y: py + 60 } });

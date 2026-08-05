@@ -44,6 +44,26 @@ function placeObstacle(
   return obstacle;
 }
 
+/**
+ * The same blocker, but as a LINE: the piece on the player's eye level plus a
+ * second one alongside it, closer than `OBSTACLES.spacing`. One lone narrow
+ * obstacle is looked past (see the sight cases below), so anything asserting
+ * that a view is actually stopped has to build what a wall is — two pieces in
+ * line — rather than a single rock.
+ */
+function placeWall(state: GameState, dx: number, radius = 12): Obstacle {
+  const front = placeObstacle(state, dx, false, radius);
+  state.obstacles = [
+    front,
+    {
+      ...front,
+      id: front.id + 1,
+      pos: { x: front.pos.x, y: front.pos.y + radius * 1.5 },
+    },
+  ];
+  return front;
+}
+
 describe("obstacle collision", () => {
   it("stops the player from walking through", () => {
     const state = startGame();
@@ -288,7 +308,7 @@ describe("walls block shots", () => {
   it("auto-aim never targets a monster behind a wall", () => {
     const state = equipBlaster(startGame()); // ranged, so a clear shot would fire
     clearStage(state);
-    const obstacle = placeObstacle(state, 60, false);
+    const obstacle = placeWall(state, 60);
     // In range of the blaster, but walled off.
     const hidden = makeEnemy({
       pos: { x: obstacle.pos.x + 40, y: obstacle.pos.y },
@@ -317,10 +337,10 @@ describe("walls block shots", () => {
 });
 
 describe("lineOfSight (the render cull query)", () => {
-  it("reports no sight through a tall obstacle", () => {
+  it("reports no sight through a wall", () => {
     const state = startGame();
     clearStage(state);
-    const wall = placeObstacle(state, 40, false);
+    const wall = placeWall(state, 40);
     const behind = { x: wall.pos.x + 40, y: wall.pos.y };
     expect(lineOfSight(state, state.players[0].pos, behind)).toBe(false);
   });
@@ -333,13 +353,121 @@ describe("lineOfSight (the render cull query)", () => {
     expect(lineOfSight(state, state.players[0].pos, behind)).toBe(true);
   });
 
-  it("sees a target beside the obstacle, past its edge", () => {
+  it("sees a target beside the wall, past its edge", () => {
     const state = startGame();
     clearStage(state);
-    const wall = placeObstacle(state, 40, false, 12);
-    // Well clear of the wall's footprint on the y-axis: an unobstructed line.
-    const beside = { x: wall.pos.x, y: wall.pos.y + 80 };
+    const wall = placeWall(state, 40);
+    // Well clear of the chain's footprint on the y-axis: an unobstructed line.
+    const beside = { x: wall.pos.x, y: wall.pos.y - 80 };
     expect(lineOfSight(state, state.players[0].pos, beside)).toBe(true);
+  });
+});
+
+// A LONE OBSTACLE IS SEEN PAST (src/game/obstacles.ts, "What blocks SIGHT").
+// The physical queries never changed — a lone crate still stops a body and
+// still eats a shot — but one solitary narrow piece of stone no longer hides
+// what is behind it. It takes TWO obstacles in line, or one piece wider than a
+// unit of ground. Without that, every scattered rock cast a fog shadow across
+// the rest of the map and a mob standing in one was undrawn and untargetable
+// on ground the player was plainly looking at.
+describe("a lone obstacle does not block sight", () => {
+  it("looks straight past one narrow piece", () => {
+    const state = startGame();
+    clearStage(state);
+    const rock = placeObstacle(state, 40, false, 12); // 24 px across: one unit
+    const behind = { x: rock.pos.x + 40, y: rock.pos.y };
+    expect(lineOfSight(state, state.players[0].pos, behind)).toBe(true);
+  });
+
+  it("stops at two of them standing in line", () => {
+    const state = startGame();
+    clearStage(state);
+    const rock = placeObstacle(state, 40, false, 12);
+    const behind = { x: rock.pos.x + 40, y: rock.pos.y };
+    expect(lineOfSight(state, state.players[0].pos, behind)).toBe(true);
+
+    // A second piece alongside it, closer than the scatter would ever put two
+    // — the pair reads as a wall, and the pair hides the same spot.
+    state.obstacles = [
+      rock,
+      { ...rock, id: rock.id + 1, pos: { x: rock.pos.x, y: rock.pos.y + 18 } },
+    ];
+    expect(lineOfSight(state, state.players[0].pos, behind)).toBe(false);
+  });
+
+  it("keeps looking past a neighbour the scatter's own spacing away", () => {
+    // The threshold is `OBSTACLES.spacing`, which the scatter guarantees around
+    // every piece it strews — so two loose props never pair by accident.
+    const state = startGame();
+    clearStage(state);
+    const rock = placeObstacle(state, 40, false, 12);
+    state.obstacles = [
+      rock,
+      {
+        ...rock,
+        id: rock.id + 1,
+        pos: {
+          x: rock.pos.x,
+          y: rock.pos.y + rock.radius * 2 + OBSTACLES.spacing + 1,
+        },
+      },
+    ];
+    const behind = { x: rock.pos.x + 40, y: rock.pos.y };
+    expect(lineOfSight(state, state.players[0].pos, behind)).toBe(true);
+  });
+
+  it("stops at one piece wider than a unit of ground", () => {
+    const state = startGame();
+    clearStage(state);
+    const rock = placeObstacle(state, 40, false, 12);
+    const half = { x: OBSTACLES.loneSightSpan, y: 8 };
+    state.obstacles = [{ ...rock, half, radius: Math.hypot(half.x, half.y) }];
+    const behind = { x: rock.pos.x + 40, y: rock.pos.y };
+    expect(lineOfSight(state, state.players[0].pos, behind)).toBe(false);
+  });
+
+  it("still eats the shot the hero takes past it", () => {
+    // SIGHT, not substance: the mob behind a lone rock is a legal target, and
+    // the rock still stops the bullet on its way there.
+    const state = startGame();
+    clearStage(state);
+    const rock = placeObstacle(state, 60, false, 12);
+    const victim = makeEnemy({
+      pos: { x: rock.pos.x + 60, y: rock.pos.y },
+      hp: 1000,
+      maxHp: 1000,
+    });
+    state.enemies.push(victim);
+    expect(lineOfSight(state, state.players[0].pos, victim.pos)).toBe(true);
+    state.projectiles.push({
+      id: 7200,
+      pos: { ...state.players[0].pos },
+      dir: { x: 1, y: 0 },
+      speed: 400,
+      radius: 2,
+      damage: 50,
+      lifetimeMs: 3000,
+      weaponClass: "ranged",
+      sprite: "bolt",
+      z: 0,
+    });
+    run(state, idle, 200);
+    expect(state.projectiles).toHaveLength(0);
+    expect(victim.hp).toBe(1000);
+  });
+
+  it("still stops a body walking into it", () => {
+    const state = startGame();
+    clearStage(state);
+    const rock = placeObstacle(state, 40, false, 12);
+    run(
+      state,
+      steerTo(state.players[0].pos.x + 200, state.players[0].pos.y),
+      300,
+    );
+    expect(state.players[0].pos.x).toBeLessThanOrEqual(
+      rock.pos.x - rock.radius - PLAYER.radius + 0.001,
+    );
   });
 });
 

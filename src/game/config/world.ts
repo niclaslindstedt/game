@@ -2,6 +2,15 @@
 // Level furniture and geometry: obstacles, crates, design zones, tempo,
 // chests, the intended path, doors, travel gates, and the fog-of-war map.
 
+/** Fog-of-war grid cell size (world px) — {@link MAP.cellSize}, named up here
+ * because three of the map's other numbers are derived from it: two of the
+ * fog's own, and the width of ground a lone obstacle may cover and still be
+ * seen past ({@link OBSTACLES.loneSightSpan}). */
+const FOG_CELL = 32;
+/** Width of the fog's transition band (world px) — {@link MAP.fogBand}, named
+ * for the same reason. */
+const FOG_BAND = 48;
+
 /**
  * Solid obstacles. Levels scatter them at creation (see LevelDef.obstacles);
  * nothing walks through one, and only jumpable ones can be cleared mid-air.
@@ -11,8 +20,28 @@ export const OBSTACLES = {
   clearHeight: 14,
   /** Keep obstacles at least this far from the player spawn (world px). */
   spawnClearance: 140,
-  /** Minimum gap between two obstacles' edges, so lanes always exist. */
+  /**
+   * Minimum gap between two obstacles' edges, so lanes always exist.
+   *
+   * It doubles as the SIGHT rule's "these two are one thing" threshold (see
+   * obstacles.ts): the scatter guarantees more than this much air around every
+   * piece it strews, so two obstacles standing closer than it were put there
+   * deliberately — a wall's own chain, a rank of machinery — and read as a
+   * LINE rather than as two loose props.
+   */
   spacing: 28,
+  /**
+   * SIGHT: the widest a LONE obstacle may be and still be seen past (world px)
+   * — one unit of ground, which is one fog cell.
+   *
+   * A single crate, a single scattered rock, the one boulder in the basin: the
+   * player looks straight past it. Anything wider than a unit hides what is
+   * behind it on its own — a building, a big sized rock, a long box wall — and
+   * so does any piece standing in line with another (see `spacing` above).
+   * The reasoning, and why the physical queries are unaffected, is the
+   * "What blocks SIGHT" block in obstacles.ts.
+   */
+  loneSightSpan: FOG_CELL,
 } as const;
 
 /**
@@ -210,13 +239,6 @@ export const GATES = {
    * surprise. */
   summonDistance: 48,
 } as const;
-
-/** Fog-of-war grid cell size (world px) — {@link MAP.cellSize}, named up here
- * because two of the fog's other numbers are derived from it. */
-const FOG_CELL = 32;
-/** Width of the fog's transition band (world px) — {@link MAP.fogBand}, named
- * for the same reason. */
-const FOG_BAND = 48;
 
 /** The level map and its fog of war (see map.ts). */
 export const MAP = {

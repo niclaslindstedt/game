@@ -319,8 +319,15 @@ describe("a session and its client", () => {
       jump: false,
       useItem: false,
     };
-    const fromServer: unknown[] = [];
-    const fromClient: unknown[] = [];
+    // CAPTURED AS TEXT, THE MOMENT EACH SIDE HOLDS IT. `patchState` applies a
+    // delta IN PLACE — a same-length batch is patched per index, straight onto
+    // the event objects the client is already holding — so a list of live
+    // references collected here would be rewritten under the test by the NEXT
+    // publish, and the comparison at the end would be against whatever the
+    // stream ended up looking like rather than what was delivered. It fails
+    // exactly as a replication bug would, on some seeds and not others.
+    const fromServer: string[] = [];
+    const fromClient: string[] = [];
     let seenTick = rig.client.tick;
     // A whole number of publish periods, so the two streams end together
     // rather than the server holding a partial batch the client cannot have.
@@ -331,16 +338,16 @@ describe("a session and its client", () => {
       // through whatever it meets, which is what a player would be doing.
       if (rig.session.state.dialogue) rig.client.sendCommand("advanceDialogue");
       rig.session.advance(TICK_MS);
-      fromServer.push(...rig.session.state.events);
+      fromServer.push(...rig.session.state.events.map(canonicalJson));
       if (rig.client.tick !== seenTick) {
         seenTick = rig.client.tick;
-        fromClient.push(...rig.client.state!.events);
+        fromClient.push(...rig.client.state!.events.map(canonicalJson));
       }
     }
     // Not vacuous: seven seconds of walking into the nearest knot on the moon
     // produces a stream, and the equality below is only meaningful if it does.
     expect(fromServer.length).toBeGreaterThan(5);
-    expect(canonicalJson(fromClient)).toBe(canonicalJson(fromServer));
+    expect(fromClient.join("\n")).toBe(fromServer.join("\n"));
     // Seven seconds of a real fight on a real map, stepped twice (the session's
     // and the client's), is more than the suite's default patience.
   }, 20_000);

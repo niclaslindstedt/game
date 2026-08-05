@@ -35,12 +35,18 @@ import type { GameState } from "./types/index.ts";
  * standing outside a compound uncovered its whole interior, and a room lit up
  * before he had walked into it — including, since a mob is drawn exactly where
  * the fog is lifted, the horde waiting inside. So each cell is checked against
- * the level's tall obstacles ({@link lineOfSight} — the same query a shot runs,
- * so the low jumpable props a bullet flies over are seen over too) and the
- * ground behind a wall stays dark until he stands somewhere it is in view. What
- * that buys is the thing a top-down game is otherwise missing: rounding a
- * corner is a discovery, and a doorway shows you a cone of the room rather than
- * the room.
+ * whatever the level puts in the way ({@link lineOfSight}) and the ground behind
+ * a wall stays dark until he stands somewhere it is in view. What that buys is
+ * the thing a top-down game is otherwise missing: rounding a corner is a
+ * discovery, and a doorway shows you a cone of the room rather than the room.
+ *
+ * ONLY ARCHITECTURE CASTS A SHADOW, though. The low jumpable props a bullet
+ * flies over are looked over too, and a LONE narrow obstacle — one crate, one
+ * scattered rock — is looked past: it takes two obstacles in line, or one
+ * wider than a unit of ground, before the sweep is stopped (obstacles.ts).
+ * Otherwise every dressed field is a fan of dark wedges the hero has to walk
+ * into one at a time, and the mob standing in one is undrawn and untargetable
+ * on ground the player is plainly looking at.
  *
  * The line is tested only as far as {@link MAP.fogWallDepth} SHORT of the cell,
  * so the wall itself — and a sliver of what is immediately behind it — comes
