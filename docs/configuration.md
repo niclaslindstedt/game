@@ -190,13 +190,20 @@ clock, not the wall clock). The menu's HIGH SCORES board ranks the campaigns
 four ways (mobs killed, survival time, kills-per-minute, peak menace) and opens
 any campaign into a full breakdown. Cutscenes
 always play at the start of a run (dismiss with the top-right SKIP button).
-An in-progress run is parked to storage too: exiting to the menu from the
-pause screen freezes the whole run under `<storagePrefix>:current-run`
+An in-progress run is parked to storage too, under `<storagePrefix>:current-run`
 (`pwa/src/game/saved-run.ts`), so the menu's **RESUME** button survives a
 page reload — the one an app update forces included — instead of vanishing with
-the wiped memory. The snapshot is dropped once the run is resumed, abandoned
-(victory/defeat MENU), or replaced by a fresh game, and a snapshot written by
-an incompatible older build is discarded rather than resumed. Clearing site
+the wiped memory. It is **written while the run is being played** rather than
+only on the way out to the menu (`pwa/src/game/game-screen/autosave.ts`): at
+most every five seconds, and only when the run has actually moved (a kill, a
+pickup, coins, XP, a story item); a ding, a boss going down or an errand turned
+in is written sooner; and backgrounding the app writes immediately, which is
+what covers a phone killing the game from the app switcher without running any
+unload handler. The snapshot is dropped once the run is resumed, abandoned
+(victory/defeat MENU), resolved (the hero falls, or the level is cleared —
+whose outcome the character carries from there), or replaced by a fresh game,
+and a snapshot written by an incompatible older build is discarded rather than
+resumed. The demo, BOT VIEW and a joined session park nothing. Clearing site
 data resets all of it; the `?cutscene=<id>` workbench replays any scene
 regardless, and `?level=<id>` reaches any level regardless of unlock state.
 

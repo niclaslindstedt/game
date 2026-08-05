@@ -50,6 +50,20 @@ class MemoryStorage {
 const LEVEL_ID = LEVEL_ORDER[0] as string;
 const DIFFICULTY: Difficulty = "medium";
 
+/** The storage key the parked run lives under (built from the game identity,
+ * so it is looked up rather than spelled out). */
+function runKey(): string {
+  const keys = Array.from({ length: localStorage.length }, (_, i) =>
+    localStorage.key(i),
+  );
+  return keys.find((k) => k?.includes("current-run")) as string;
+}
+
+/** The parked run's raw JSON, for the tests that inspect the blob itself. */
+function storedRun(): string {
+  return localStorage.getItem(runKey()) as string;
+}
+
 beforeEach(() => {
   (globalThis as { localStorage?: Storage }).localStorage =
     new MemoryStorage() as unknown as Storage;
@@ -118,6 +132,55 @@ describe("saved run — fog grid survives the freeze/thaw", () => {
     expect(explored).toBeInstanceOf(Uint8Array);
   });
 
+  it("carries the grid PACKED, not one JSON number per tile", () => {
+    // The fog grid used to be a quarter of the whole blob (`{"0":0,"1":1,…}`),
+    // which was tolerable when a run was parked once a session and is not now
+    // that the autosave writes it every few seconds of play on a phone. One
+    // bit per tile instead: the packed field must be a small fraction of the
+    // tiles it describes, and must not be the spelled-out object at all.
+    const state = createGame(1, LEVEL_ID, DIFFICULTY);
+    saveRun({
+      characterId: "char-1",
+      difficulty: DIFFICULTY,
+      levelId: LEVEL_ID,
+      state,
+    });
+    const blob = JSON.parse(storedRun()) as { fog?: string; state: object };
+    const tiles = mapCols(state.level) * mapRows(state.level);
+    expect(typeof blob.fog).toBe("string");
+    // Base64 of a bitfield: ~1 char per 6 tiles, well under a fifth either way.
+    expect((blob.fog as string).length).toBeLessThan(tiles / 4);
+    expect(Object.keys(blob.state)).not.toContain("explored");
+  });
+
+  it("still thaws a blob parked BEFORE the packing, grid and all", () => {
+    // Same SAVE_VERSION, older shape: the grid spelled out inside `state` and
+    // no `fog` beside it. Rewriting the blob that way is exactly what sits in
+    // a player's storage when this build reaches them, and binning it would
+    // cost them the run for a change that costs them nothing.
+    const state = createGame(1, LEVEL_ID, DIFFICULTY);
+    saveRun({
+      characterId: "char-1",
+      difficulty: DIFFICULTY,
+      levelId: LEVEL_ID,
+      state,
+    });
+    const blob = JSON.parse(storedRun()) as {
+      fog?: string;
+      state: { explored?: unknown };
+    };
+    delete blob.fog;
+    blob.state.explored = { ...state.explored };
+    localStorage.setItem(runKey(), JSON.stringify(blob));
+
+    const explored = loadSavedRun()?.state.explored;
+    expect(explored).toBeInstanceOf(Uint8Array);
+    expect(explored?.length).toBe(mapCols(state.level) * mapRows(state.level));
+    for (let i = 0; i < (explored?.length ?? 0); i++) {
+      expect(explored?.[i]).toBe(state.explored[i]);
+    }
+  });
+
   afterEach(() => clearSavedRun());
 });
 
@@ -133,13 +196,8 @@ describe("saved run — incompatible snapshots are dropped, not resumed", () => 
     // Rewrite the parked blob as the PREVIOUS format would have stamped it —
     // the situation an app update creates when the state grew a field the old
     // build never wrote (v24: the ammunition pouch, the gold ledger).
-    const keys = Array.from({ length: localStorage.length }, (_, i) =>
-      localStorage.key(i),
-    );
-    const key = keys.find((k) => k?.includes("current-run")) as string;
-    const blob = JSON.parse(localStorage.getItem(key) as string) as {
-      v: number;
-    };
+    const key = runKey();
+    const blob = JSON.parse(storedRun()) as { v: number };
     blob.v = SAVE_VERSION - 1;
     localStorage.setItem(key, JSON.stringify(blob));
 
