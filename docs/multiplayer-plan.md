@@ -2287,6 +2287,15 @@ your mods, and leave with everything they earned on their own roster._
 > still drops joiners — it is tangled in the outro/banking flow and is R1's
 > one deliberate leftover on this item.
 >
+> **THAT LEFTOVER IS PAID** (#862): NEXT LEVEL sends the same `travelTo`,
+> flagged `banked` because `recordVictory` already put the hero on the
+> character; the splash hides the road from a joiner (THE HOST CHOOSES THE
+> ROAD) and keeps STAY; and the session folds the level it WON into the
+> destination's `clearedLevels`, which is the one thing the app used to answer
+> from the character and no longer can. RESTART and the AUTO PILOT's next-lap
+> routing stay app-side on purpose — they REPLAY the level rather than cross,
+> which `travelTo` refuses and a client cannot read as a swap.
+>
 > **§4.5 banking** landed by making the joiner's character REAL: the active
 > roster hero rides the join intent as a loadout (purse funded from their
 > whole wealth, exactly as a local run's), the session weighs and seats it,
@@ -2742,8 +2751,7 @@ mechanisms under it are the ones §6.3 priced:
 
 - ~~**§6.4 in-session party travel**~~ — **LANDED** (R1's as-built box in
   §5.5.3): the session performs the swap between ticks and the party goes
-  through the door together. VICTORY → NEXT LEVEL is the one crossing that
-  still re-mounts app-side and drops joiners.
+  through the door together — VICTORY → NEXT LEVEL included, since #862.
 - **Quest givers in the hub** — the garage still casts none, and deliberately:
   a giver is lines, lines are manuscript-governed, and the manuscript
   confirmation §6.5 requires has not been asked for. The one R1 item that is a

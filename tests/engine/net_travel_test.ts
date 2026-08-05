@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { engineVersion, type GameState } from "@game/core";
+import { engineVersion, RUN, type GameState } from "@game/core";
 import { decodeFrame } from "@game/wire/codec.ts";
 import { FRAME, TICK_MS } from "@game/wire/frames.ts";
 import { type SessionParams } from "@game/wire/protocol.ts";
@@ -71,6 +71,16 @@ function play(session: Session, ticks: number): void {
   for (let i = 0; i < ticks; i++) session.advance(TICK_MS);
 }
 
+/** Win the level the party is on: get past the level-name card, clear the
+ * board (the fixture's objective is `killBoss`) and let the victory countdown
+ * run out — the party is on the victory splash when this returns. */
+function winLevel(session: Session, host: Peer): void {
+  host.client.sendCommand("dismissIntro");
+  play(session, 2);
+  session.state.enemies = [];
+  play(session, Math.ceil(RUN.victoryDelayMs / TICK_MS) + 3);
+}
+
 describe("an in-session crossing", () => {
   it("carries the whole party through the door together", () => {
     const { session, host, joiner } = rig();
@@ -100,6 +110,49 @@ describe("an in-session crossing", () => {
     // The state object survived the swap — every renderer helper closes over
     // it, so a crossing that replaced the reference would draw a dead world.
     expect(host.client.state).not.toBeNull();
+  });
+
+  it("carries the party through VICTORY → NEXT LEVEL, session intact", () => {
+    const { session, host, joiner } = rig();
+    session.state.players[1]!.coins = 777;
+    winLevel(session, host);
+    expect(session.state.phase).toBe("victory");
+
+    // Exactly what the victory splash's NEXT LEVEL sends: the same crossing a
+    // door books, so the session swaps the level instead of the app tearing
+    // the whole thing down and dropping the joiner.
+    host.client.sendCommand("travelTo", ["test_level_2", "story"]);
+    play(session, 6);
+
+    expect(session.state.level.id).toBe("test_level_2");
+    expect(session.state.phase).not.toBe("victory");
+    // Nobody reconnected: both clients still hold their seats, and the
+    // joiner's private purse rode the loadout extraction across.
+    expect(session.clientCount).toBe(2);
+    expect(host.client.seat).toBe(0);
+    expect(joiner.client.seat).toBe(1);
+    expect(host.client.state!.level.id).toBe("test_level_2");
+    expect(joiner.client.state!.level.id).toBe("test_level_2");
+    expect(joiner.travelledFrom).toEqual(["test_level"]);
+    expect((joiner.client.state as GameState).players[1]!.coins).toBe(777);
+  });
+
+  it("counts the level it WON as cleared on the far side", () => {
+    const { session, host } = rig();
+    winLevel(session, host);
+    host.client.sendCommand("travelTo", ["test_level_2", "story"]);
+    play(session, 6);
+    // The engine gates campaign drops on this list; a crossing out of a win
+    // that carried the old parameters forward would keep them latent forever.
+    expect(session.state.clearedLevels).toContain("test_level");
+  });
+
+  it("does not invent a clear for a level merely walked out of", () => {
+    const { session, host } = rig();
+    host.client.sendCommand("travelTo", ["test_level_2", "story"]);
+    play(session, 6);
+    expect(session.state.level.id).toBe("test_level_2");
+    expect(session.state.clearedLevels).not.toContain("test_level");
   });
 
   it("keeps the party stamp — a crossing does not hand records back", () => {

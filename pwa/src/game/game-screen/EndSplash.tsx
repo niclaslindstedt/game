@@ -17,7 +17,7 @@
 // RESTARTING.
 
 import { levelDef, runLevelDef, type GameState } from "@game/core";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
@@ -30,6 +30,7 @@ export function VictorySplash({
   state,
   font,
   newRecord,
+  canAdvance,
   onAdvance,
   onRestart,
   onStay,
@@ -38,6 +39,14 @@ export function VictorySplash({
   font: PixelFont;
   /** The just-ended run set a new best on this difficulty. */
   newRecord: boolean;
+  /**
+   * MAY THIS DEVICE CHOOSE THE ROAD? False for a JOINER, whose copy of this
+   * splash would otherwise offer two buttons the session refuses: the crossing
+   * is seat 0's (`travelTo` — the host chooses the road, exactly as the travel
+   * picker says), and a replay is a whole new run only the host can start. They
+   * are told who is deciding instead of handed a dead control.
+   */
+  canAdvance: boolean;
   /** Move on to the given level (NEXT LEVEL / the bunker's return door). */
   onAdvance: (levelId: string) => void;
   /** Replay this level from scratch. */
@@ -45,6 +54,12 @@ export function VictorySplash({
   /** Drop back onto the cleared field to farm (see stayOnField). */
   onStay: () => void;
 }) {
+  // THE CROSSING IS NOT INSTANT WHEN A PARTY IS ABOARD: `onAdvance` sends the
+  // session a verb and this splash stays up until the new level's snapshot
+  // lands, which is a second helping of NEXT LEVEL presses booking the same
+  // trip twice. One press is all it takes either way — a local crossing
+  // unmounts this component on the spot, so the latch is never seen there.
+  const [committed, setCommitted] = useState(false);
   return (
     <div className="game-splash">
       <PixelText font={font} text="LEVEL CLEAR!" scale={6} color="#7ef0c8" />
@@ -53,6 +68,7 @@ export function VictorySplash({
       )}
       <div className="splash-buttons">
         {state &&
+          canAdvance &&
           (() => {
             // A level with a return door (`exitTo` — the bunker's way
             // back to the rift) offers the crossing instead of the
@@ -64,7 +80,11 @@ export function VictorySplash({
               <button
                 type="button"
                 className="pixel-button"
-                onClick={() => onAdvance(next)}
+                disabled={committed}
+                onClick={() => {
+                  setCommitted(true);
+                  onAdvance(next);
+                }}
               >
                 <PixelText
                   font={font}
@@ -77,25 +97,39 @@ export function VictorySplash({
               </button>
             );
           })()}
-        <button
-          type="button"
-          className="pixel-button secondary"
-          onClick={onRestart}
-        >
-          <PixelText font={font} text="RESTART" scale={3} />
-        </button>
+        {canAdvance && (
+          <button
+            type="button"
+            className="pixel-button secondary"
+            disabled={committed}
+            onClick={onRestart}
+          >
+            <PixelText font={font} text="RESTART" scale={3} />
+          </button>
+        )}
         {/* STAY only makes sense with a boss corpse to walk back to; the
-            bossless hub (reachExit) skips it. */}
+            bossless hub (reachExit) skips it. It is the one choice here a
+            joiner keeps: the field is the party's, and dropping back onto it
+            is a verb every seat may send. */}
         {state?.bossCorpse && (
           <button
             type="button"
             className="pixel-button secondary"
+            disabled={committed}
             onClick={onStay}
           >
             <PixelText font={font} text="STAY" scale={3} />
           </button>
         )}
       </div>
+      {!canAdvance && (
+        <PixelText
+          font={font}
+          text="THE HOST CHOOSES THE ROAD"
+          scale={2}
+          color="#9aa3ad"
+        />
+      )}
     </div>
   );
 }

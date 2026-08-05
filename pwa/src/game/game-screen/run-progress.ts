@@ -12,6 +12,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { bankCampaignQuests, isPartyRun, storyItemDef } from "@game/core";
 import {
   extractLoadout,
+  levelDef,
   type Difficulty,
   type GameEvent,
   type GameState,
@@ -48,6 +49,30 @@ export const ARRIVAL_FADE_MS = 700;
 
 export type RunCheckpoint = { levelId: string; state: GameState };
 
+/**
+ * Has this character already earned the right to skip `levelId`'s opening on
+ * this difficulty?
+ *
+ * The rule is `run-setup.ts`'s own and lives here so both readers share it: a
+ * mission replays its prelude, monologue and opening strike until the level is
+ * CLEARED (a run that died partway still owes its story), while the HUB — which
+ * never "completes" — skips once its opening has been witnessed. An IN-SESSION
+ * crossing has to answer the same question, because the destination is built
+ * from the parameters the HOST hands the session rather than from the local
+ * `createRunSession` that would otherwise ask this.
+ */
+export function openingSeenFor(
+  character: Character,
+  levelId: string,
+  difficulty: Difficulty,
+): boolean {
+  return (
+    hasClearedLevel(character, levelId, difficulty) ||
+    (levelDef(levelId).objective.type === "hub" &&
+      hasSeenOpening(character, levelId, difficulty))
+  );
+}
+
 export type RunProgress = {
   /** Snapshot the combat-start checkpoint once per fresh run (see below). */
   captureCheckpoint: (state: GameState) => void;
@@ -55,13 +80,29 @@ export type RunProgress = {
   onEvent: (event: GameEvent, state: GameState) => void;
   /** Cross to another level RIGHT NOW: bank the hero's build and the
    * thoughts read this run, then swap the mount to the destination. The
-   * gate crossing and the hub's travel doors are the same trip. */
-  travelTo: (state: GameState, to: string) => void;
+   * gate crossing, the hub's travel doors and the victory splash's NEXT LEVEL
+   * are the same trip — see {@link TravelOptions} for the one way they differ. */
+  travelTo: (state: GameState, to: string, opts?: TravelOptions) => void;
   /** Bank the hero's build and this run's thoughts WITHOUT ending anything —
    * the mid-run leave: a joiner quitting, or the session dying under
    * them. The victory/travel/defeat paths bank on their own; re-banking
    * unchanged content moves nothing (an unchanged hero keeps its stamp). */
   bankHero: (state: GameState) => void;
+};
+
+export type TravelOptions = {
+  /**
+   * The hero is ALREADY on the character, so the crossing must not bank again.
+   *
+   * Set by exactly one caller: the victory splash's NEXT LEVEL, whose hero was
+   * banked a beat earlier by `recordVictory` — together with the clear and the
+   * campaign tally that only a WIN books. Skipping the second bank is what
+   * keeps the local crossing identical to the one this splash has always
+   * performed; the gate and the travel doors bank here because nothing else
+   * banked for them. (The splash unsets it after a STAY: a farmed field is
+   * worth more than what the win put on the character.)
+   */
+  banked?: boolean;
 };
 
 export function createRunProgress(deps: {
@@ -176,7 +217,7 @@ export function createRunProgress(deps: {
     );
   };
 
-  const travelTo = (state: GameState, to: string) => {
+  const travelTo = (state: GameState, to: string, opts: TravelOptions = {}) => {
     // WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
     // the session to swap the level under everybody at once; the swap comes
     // back as a full snapshot, the driver's travel hook banks this hero off
@@ -184,18 +225,25 @@ export function createRunProgress(deps: {
     // — with the driver and every joiner's connection intact. Only seat 0's
     // request is honored (the host chooses the road), so a joiner's copy of
     // the same event sends a verb the session politely refuses.
+    //
+    // THE VICTORY SPLASH'S NEXT LEVEL IS THE SAME TRIP. It used to re-mount
+    // app-side like every crossing once did — which ENDED the session and
+    // dropped every joiner exactly at the moment a co-op campaign wants to
+    // carry on together. It routes here now, banked flag and all, so a party
+    // that wins a level walks into the next one without a rejoin.
     if (deps.sessionTravels?.()) {
       runCommand(
         state,
         "travelTo",
         to,
         // How much of the destination's opening to skip — the same question a
-        // locally-built run answers from this character (run-setup.ts).
-        hasSeenOpening(characterRef.current, to, difficulty) ? "story" : "none",
+        // locally-built run answers from this character (run-setup.ts), asked
+        // through the rule the two share.
+        openingSeenFor(characterRef.current, to, difficulty) ? "story" : "none",
       );
       return;
     }
-    bankHero(state);
+    if (!opts.banked) bankHero(state);
     checkpointRef.current = null;
     stopMusic();
     setHud(null);
