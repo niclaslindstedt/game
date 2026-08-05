@@ -487,10 +487,12 @@ export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
 export { clearOfFog } from "./game/fog.ts";
 export { heroView, insideView, visibleTo } from "./game/sight.ts";
 
-// Obstacle sight queries: the swept "does this line clear every TALL obstacle?"
-// test the simulation runs against solid features (walls, boulders, rocks —
-// jumpable low ones never occlude). The renderer reuses `lineOfSight` to cull
-// mobs the hero can't actually see (hidden behind cover).
+// Obstacle sight queries: the swept "does this line clear the level's solid
+// features?" test — walls, buildings, ranks of machinery, big rocks. Jumpable
+// low ones never occlude, and NEITHER DOES A LONE narrow piece: it takes two
+// obstacles in line, or one wider than a unit of ground, to stop the eye (see
+// obstacles.ts). The renderer reuses `lineOfSight` to cull mobs the hero can't
+// actually see (hidden behind cover).
 export { lineOfSight } from "./game/obstacles.ts";
 
 // Design zones — the safe/quiet region geometry LevelDefs carve maps with.

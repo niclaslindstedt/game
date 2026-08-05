@@ -113,6 +113,41 @@ describe("the fog of war stops at a wall", () => {
   });
 });
 
+// ONLY ARCHITECTURE CASTS A SHADOW (src/game/obstacles.ts, "What blocks
+// SIGHT"). A wall is a CHAIN, and it is the chain that stops the sweep: one
+// piece of it standing alone on open ground is looked past. Otherwise every
+// scattered rock on a dressed field threw a dark wedge across the rest of the
+// map, and a mob standing in one went undrawn and untargetable on ground the
+// player was plainly looking at.
+describe("a lone obstacle casts no shadow", () => {
+  /** One piece of the chain above, alone at the hero's eye level. */
+  function loneStage(): GameState {
+    const state = walledStage();
+    const piece = state.obstacles[0] as Obstacle;
+    state.obstacles = [{ ...piece, pos: { x: WALL_X, y: HERO.y } }];
+    return state;
+  }
+
+  it("uncovers the ground behind a single scattered rock", () => {
+    const state = loneStage();
+    lookFrom(state, HERO);
+
+    expect(isExplored(state, BEHIND)).toBe(true);
+  });
+
+  it("shadows that same ground once a second rock stands beside it", () => {
+    const state = loneStage();
+    const piece = state.obstacles[0] as Obstacle;
+    state.obstacles = [
+      piece,
+      { ...piece, id: piece.id + 1, pos: { x: WALL_X, y: HERO.y + 15 } },
+    ];
+    lookFrom(state, HERO);
+
+    expect(isExplored(state, BEHIND)).toBe(false);
+  });
+});
+
 describe("a wall's shadow does not blind the room the hero is in", () => {
   it("keeps a mob pressed against the near face of the wall a target", () => {
     const state = walledStage();

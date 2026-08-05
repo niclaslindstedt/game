@@ -830,7 +830,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   down the inside face of every wall in the level, and a frontier is what the
   band stipples and what `clearOfFog` refuses to target inside of — every mob
   near a wall would go undrawn and unshootable in the room the hero is standing
-  in. **And what is not drawn is
+  in. **ONLY ARCHITECTURE CASTS THE SHADOW**: a LONE obstacle narrow enough to
+  cover one unit of ground (`OBSTACLES.loneSightSpan`) does not stop the sweep
+  — it takes two obstacles in line, or one wider piece — so a field of
+  scattered rocks is not a fan of dark wedges with an unshootable mob hiding in
+  each (`lineOfSight`, `src/game/obstacles.ts`, which is deliberately NOT the
+  physical `blockedByObstacle` a body and a bullet ask). **And what is not drawn is
   not shot at**: `clearOfFog` (the sibling **`src/game/fog.ts`**, which owns the
   sweep too — both are kept out of map.ts because `src/menu.ts` re-exports
   map.ts's grid arithmetic and so puts that whole module inside the 170 KB
@@ -862,9 +867,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   (engine tests, `simulate --view none`) is not blind: the screen half abstains
   and the fog half still applies. A sibling render-side cull
   drops any enemy the hero has no LINE OF SIGHT to — one tucked fully behind a
-  wall or boulder — reusing the engine's `lineOfSight` (`src/game/obstacles.ts`,
-  the same tall-obstacle query that stops shots); a mob only peeking out from an
-  edge still draws. Memorable events pin
+  wall — reusing the engine's `lineOfSight` (`src/game/obstacles.ts`, the SIGHT
+  query: tall obstacles occlude, but not a lone narrow one); a mob only peeking
+  out from an edge still draws. Memorable events pin
   `state.mapMarkers` via `addMapMarker` — story-item finds (story.ts),
   unique/legendary pickups (the pickup switch in step/), and elite/boss
   victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the
