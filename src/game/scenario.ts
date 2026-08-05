@@ -37,7 +37,7 @@ import {
   syncInventoryCapacity,
 } from "./items/index.ts";
 import { xpToLevelUp } from "./leveling.ts";
-import { revealAround } from "./map.ts";
+import { revealAround } from "./fog.ts";
 import { currentMobLevel, mobLevelScale } from "./menace.ts";
 import { insideObstacle } from "./obstacles.ts";
 import { muteDialogue, unmuteDialogue } from "./story.ts";

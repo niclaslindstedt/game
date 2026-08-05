@@ -21,6 +21,7 @@
 // `ensureRoute`, which rebuilds. Any future dynamic obstacle gets the fix free.
 
 import type { LockdownAbility } from "../defs/enemies/abilities.ts";
+import type { Obstacle } from "../types/index.ts";
 import { registerAbility, type AbilityCtx } from "./catalog.ts";
 
 /**
@@ -41,6 +42,12 @@ function cast(ability: LockdownAbility, ctx: AbilityCtx): void {
   const gapAt = state.rng() * Math.PI * 2;
   const gap = (ability.gapDeg * Math.PI) / 180;
   const ids: number[] = [];
+  // Collected and then APPENDED AS A NEW ARRAY. The obstacle spatial index
+  // caches on the array's identity (obstacles.ts), so a shutter pushed into the
+  // live array registers in no cell of it: the cage collided with nothing and
+  // stopped no shot. The lift path already replaced the array, which is why
+  // only the raise was wrong.
+  const shutters: Obstacle[] = [];
 
   for (let i = 0; i < ability.segments; i++) {
     const angle = (i / ability.segments) * Math.PI * 2;
@@ -60,7 +67,7 @@ function cast(ability: LockdownAbility, ctx: AbilityCtx): void {
     if (pos.y > state.level.height - margin) continue;
 
     const id = state.nextId++;
-    state.obstacles.push({
+    shutters.push({
       id,
       kind: "shutter",
       sprite: ability.sprite,
@@ -73,6 +80,7 @@ function cast(ability: LockdownAbility, ctx: AbilityCtx): void {
     ids.push(id);
   }
 
+  state.obstacles = state.obstacles.concat(shutters);
   mech.shutterIds = ids;
   mech.lockdownMs = ability.durationMs;
   // The field changed shape — every cached nav grid is now wrong.

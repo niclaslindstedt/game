@@ -341,10 +341,14 @@ fog or in its frontier band, so a pass that picks its own mark without asking
 blackness on the player's behalf. Reach is NOT the fog's business: weapons keep
 their range, they just cannot reach past what has been walked — which is why the
 autopilot measures a stand-off with `firingReach` rather than `weaponRangeFor`.
-It lives in `src/game/fog.ts` and NOT in map.ts, because `src/menu.ts` re-exports
-map.ts's grid arithmetic — so that module is inside the 170 KB budget and a
-run-only read added there is spent from the startup path's allowance.
-→ `docs/rendering.md`
+**AND THE FOG STOPS AT THE WALLS**: the sweep that lifts it (`revealAround`) is
+sight-limited, so ground behind a wall stays dark until the hero can see it, and
+it deliberately reaches `MAP.fogWallDepth` PAST the blocker — a frontier along
+every wall's inside face would leave a mob pressed against one undrawn and
+unshootable. Both live in `src/game/fog.ts` and NOT in map.ts, because
+`src/menu.ts` re-exports map.ts's grid arithmetic — so that module is inside the
+170 KB budget and a run-only read added there is spent from the startup path's
+allowance. → `docs/rendering.md`
 
 **A RANGED WEAPON EATS AMMUNITION AND HAS NO `durability`; MELEE AND MAGIC ARE
 THE EXACT OPPOSITE.** It is one trade, not two independent fields — a gun never

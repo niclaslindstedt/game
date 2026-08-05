@@ -211,17 +211,47 @@ export const GATES = {
   summonDistance: 48,
 } as const;
 
+/** Fog-of-war grid cell size (world px) — {@link MAP.cellSize}, named up here
+ * because two of the fog's other numbers are derived from it. */
+const FOG_CELL = 32;
+/** Width of the fog's transition band (world px) — {@link MAP.fogBand}, named
+ * for the same reason. */
+const FOG_BAND = 48;
+
 /** The level map and its fog of war (see map.ts). */
 export const MAP = {
   /** Fog-of-war grid cell size (world px). Coarse on purpose: the map reads
    * as chunky pixel terrain, and the whole grid stays a few thousand cells
    * even on the widest level. */
-  cellSize: 32,
+  cellSize: FOG_CELL,
   /** Radius around the hero PERMANENTLY uncovered as he moves (world px) — the
    * fog lifts as a circle sweeping his path (Warcraft-style, no re-fogging), so
    * the map (and minimap) show exactly where he has been, not the whole camera
-   * view. Roughly the phone's near view, so "walked past it" ≈ "on the map". */
+   * view. Roughly the phone's near view, so "walked past it" ≈ "on the map".
+   * The sweep is LINE-OF-SIGHT limited: a wall inside the disc casts a shadow
+   * and the ground behind it stays dark until he walks somewhere he can see it
+   * from (`revealAround` in fog.ts). */
   revealRadius: 160,
+  /**
+   * How far PAST the thing that blocks his view the sweep still reaches (world
+   * px) — the depth of the first step of a wall's shadow.
+   *
+   * It is not slop. A sight line that stopped exactly ON the wall would leave
+   * the wall's own cells fogged, which puts a fog FRONTIER along the inside
+   * face of every wall in the level — and the frontier is what {@link
+   * MAP.fogBand} stipples over and what `clearOfFog` refuses to target inside
+   * of. Every mob standing within a band of a wall would go undrawn and
+   * unshootable, in the room the hero is standing in. So the sweep reaches a
+   * band PLUS a half cell past the blocker: a band, so the drawn clear ground
+   * runs all the way up to the wall rather than stopping short of it, and a
+   * half cell because the grid answers per cell CENTRE and the first fogged
+   * centre can sit anywhere inside its cell.
+   *
+   * What it costs is a sliver — under a cell — of the floor immediately behind
+   * a thin wall being marked seen. The band covers it: that sliver draws as
+   * stipple, and a body standing on it is still hidden and still not a target.
+   */
+  fogWallDepth: FOG_BAND + FOG_CELL / 2,
   /**
    * Width (world px) of the Warcraft-2 fog's TRANSITION band — the graded
    * ordered-dither frontier between the CLEAR terrain the hero has uncovered
@@ -232,5 +262,5 @@ export const MAP = {
    * horde only appears on ground the hero can actually see. Roughly a cell and
    * a half so the stipple reads as a soft edge, not a hard line.
    */
-  fogBand: 48,
+  fogBand: FOG_BAND,
 } as const;

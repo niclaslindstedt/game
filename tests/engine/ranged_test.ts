@@ -19,7 +19,10 @@ function stage(): GameState {
   return state;
 }
 
-/** Park a solid rock at `pos` for cover choreography. */
+/** Park a solid rock at `pos` for cover choreography. The array is REPLACED,
+ * never pushed into: the obstacle spatial index caches on its identity
+ * (obstacles.ts), and a run has already built one by the time a test stages
+ * anything — so a pushed rock stops nothing. */
 function addRock(state: GameState, x: number, y: number): Obstacle {
   const rock: Obstacle = {
     id: state.nextId++,
@@ -29,7 +32,7 @@ function addRock(state: GameState, x: number, y: number): Obstacle {
     radius: 12,
     jumpable: false,
   };
-  state.obstacles.push(rock);
+  state.obstacles = state.obstacles.concat(rock);
   return rock;
 }
 

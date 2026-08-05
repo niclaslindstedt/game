@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The level map and its fog of war. Exploration is a coarse byte grid on the
 // state (`state.explored`, one cell per MAP.cellSize world px): playing sweeps a
-// `MAP.revealRadius` CIRCLE around the hero every step (`revealAround`), so the
-// fog lifts along his actual path — Warcraft-style, and what has been uncovered
-// stays uncovered for the rest of the run (no re-fogging). The main-view fog
-// then draws everything uncovered fully clear and stipples only the frontier
-// band between clear and never-seen (MAP.fogBand, in the renderer), and hides
-// any mob standing in it. Whether a body is out of that band — the question
-// every automatic target pick asks — is `clearOfFog` in the sibling fog.ts,
-// which is a separate file for a REACHABILITY reason: see its header.
-// `revealRect` (lift fog from a world rect) remains available for a
-// caller that wants the whole camera view instead. Memorable events pin
-// `state.mapMarkers` (story finds,
+// `MAP.revealRadius` circle of everything the hero can SEE around him every step
+// (`revealAround`), so the fog lifts along his actual path and stops at the
+// walls — Warcraft-style, and what has been uncovered stays uncovered for the
+// rest of the run (no re-fogging). The main-view fog then draws everything
+// uncovered fully clear and stipples only the frontier band between clear and
+// never-seen (MAP.fogBand, in the renderer), and hides any mob standing in it.
+// BOTH the sweep and the question every automatic target pick asks of it
+// (`clearOfFog`) live in the sibling fog.ts, which is a separate file for a
+// REACHABILITY reason: see its header.
+// `revealRect` (lift fog from a world rect, sight lines ignored) remains
+// available for a caller that wants the whole camera view instead. Memorable
+// events pin `state.mapMarkers` (story finds,
 // elite/boss victories, the merchant) so the map tells the run's story back. The
 // `map` phase freezes the simulation exactly like the bag or the pause
 // screen; `openMap`/`closeMap` are the app's toggles, safe outside `step()`.
@@ -40,10 +41,12 @@ export function createExplored(level: {
 
 /**
  * Uncover the fog under a world-space rectangle: every cell the rect overlaps
- * is marked explored. Fed the on-screen camera view each step (see
- * `input.view`), so the fog lifts from *everything the player can see*, not
- * just a circle around the hero — walk to a level's edge and the whole strip
- * you looked at stays uncovered on the map.
+ * is marked explored, sight lines and walls ignored.
+ *
+ * The blunt instrument, and the only caller left is the one that wants it: the
+ * DEATH SCENE lifts the whole camera field around the corpse so the horde
+ * gathering into its ring is visible however the room is shaped. Play itself
+ * uses the sight-limited disc instead (`revealAround` in fog.ts).
  */
 export function revealRect(
   state: GameState,
@@ -58,43 +61,6 @@ export function revealRect(
   const y1 = Math.min(rows - 1, Math.floor((rect.y + rect.height) / cell));
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
-      state.explored[ty * cols + tx] = 1;
-    }
-  }
-}
-
-/**
- * Uncover the fog around a world position: every cell whose center lies
- * within MAP.revealRadius of `pos` is marked explored. The seed reveal at
- * creation/scenario landing (and any headless caller without a camera view)
- * uses this circle; the running game lifts fog by the on-screen rect instead
- * (see `revealRect`).
- *
- * @param radius override the sweep radius (world px) — an elevator arrival opens
- *   a wider disc than a footstep, so the room the car drops the hero into shows
- *   itself on the frame he lands rather than a second later.
- */
-export function revealAround(
-  state: GameState,
-  pos: Vec2,
-  radius: number = MAP.revealRadius,
-): void {
-  const cell = MAP.cellSize;
-  const cols = mapCols(state.level);
-  const rows = mapRows(state.level);
-  const cx = Math.floor(pos.x / cell);
-  const cy = Math.floor(pos.y / cell);
-  const reach = Math.ceil(radius / cell);
-  const radiusSq = radius * radius;
-  for (let dy = -reach; dy <= reach; dy++) {
-    const ty = cy + dy;
-    if (ty < 0 || ty >= rows) continue;
-    for (let dx = -reach; dx <= reach; dx++) {
-      const tx = cx + dx;
-      if (tx < 0 || tx >= cols) continue;
-      const ex = (tx + 0.5) * cell - pos.x;
-      const ey = (ty + 0.5) * cell - pos.y;
-      if (ex * ex + ey * ey > radiusSq) continue;
       state.explored[ty * cols + tx] = 1;
     }
   }

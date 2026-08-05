@@ -19,7 +19,7 @@ import { describe, expect, it } from "vitest";
 import { MAP } from "@game/core";
 
 import { ensureFogField, fogDistanceAt } from "../pwa/src/game/render/fog.ts";
-import { revealAround } from "../src/game/map.ts";
+import { revealAround } from "../src/game/fog.ts";
 import { startGame } from "./engine/helpers.ts";
 
 /** One 60 Hz frame, in ms — the cadence the ease actually runs at. */

@@ -42,7 +42,7 @@ import { distance as dist } from "@game/lib/vec.ts";
 
 import { navigatesWalls } from "../../src/game/bot/nav.ts";
 import { nearestWantedItem } from "../../src/game/bot/supplies.ts";
-import { revealAround } from "../../src/game/map.ts";
+import { revealAround } from "../../src/game/fog.ts";
 
 /** Step the sim with the bot at the controls, spending its level-ups. */
 function drive(

@@ -43,7 +43,7 @@ import {
   stepWells,
 } from "../hazards.ts";
 import { packsCleared, unspawnedMinions } from "../loot.ts";
-import { revealAround } from "../map.ts";
+import { revealAround } from "../fog.ts";
 import {
   anyHeroWithin,
   heroInPlay,

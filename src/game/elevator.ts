@@ -25,7 +25,7 @@
 
 import { distance } from "@game/lib/vec.ts";
 import { ELEVATOR } from "./config/index.ts";
-import { revealAround } from "./map.ts";
+import { revealAround } from "./fog.ts";
 import { nearestHeroWhere } from "./party.ts";
 import type { GameState } from "./types/index.ts";
 
