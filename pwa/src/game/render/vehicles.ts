@@ -4,9 +4,10 @@
 //
 //   CAR  = two wheels (sprite picked per wheel from its STATE — sound, flat
 //          tire, bent rim, gone — and its spin frame from the simulated
-//          roll angle, so speed IS the spin) under six BODY PANELS, each
-//          picked at its own damage rung (`car_<panel>_<rung>`: factory
-//          straight → bumped → hammered → broken) AND its own FIX
+//          roll angle, so speed IS the spin; the FRONT one warped by the
+//          rack's own angle — see THE STEERED FRONT WHEEL) under six BODY
+//          PANELS, each picked at its own damage rung (`car_<panel>_<rung>`:
+//          factory straight → bumped → hammered → broken) AND its own FIX
 //          (attached → loose rattle → dangling hinge poses → gone, with
 //          the shed piece lying on the floor as decor). All panels share
 //          one canvas, so the stack draws at a single anchor and rides the
@@ -222,6 +223,99 @@ function axleDrop(
   return (car.suspension[axle] ?? 0) + missing;
 }
 
+// ── THE STEERED FRONT WHEEL ─────────────────────────────────────────────────
+// The rack's angle (`CarVehicle.steer`), drawn — a wheel cranked on its
+// kingpin is no longer edge-on to the camera, and there is no second sprite
+// for it. It is the SAME eleven pixels, re-blitted A COLUMN AT A TIME, which
+// is the trick the pitched shell already uses below (`drawShellLayer`) for the
+// same reason: a real rotation resamples pixel art into mush, while a
+// per-column warp keeps every texel and degenerates to the plain blit at dead
+// centre.
+//
+// Three things happen to the wheel as it comes round, and all three are the
+// same fact — that it now stands ACROSS the camera's line of sight rather than
+// along it:
+//
+//   NARROWER — the tyre is foreshortened to `cos(steer)` of its width, because
+//              side-on that is all of it there is left to see;
+//   SHEARED  — the half swung TOWARD the camera drops down the screen and the
+//              half swung away rides up it, so the wheel leans out of the
+//              picture plane instead of merely getting thin. This is the Z:
+//              each column's screen offset IS its out-of-plane displacement;
+//   TALLER   — and the near half is drawn a pixel taller off its own contact
+//              patch, which is the only other depth cue eleven pixels have
+//              room for.
+//
+// Only the FRONT axle gets any of it. The rear wheels of a car do not steer,
+// and warping them too would read as a bent axle rather than as a turn.
+
+/** Below this crank (rad) the wheel draws straight — a warp worth less than a
+ * pixel is a column pass bought for nothing. */
+const STEER_MIN = 0.05;
+/**
+ * How far down the screen a column slides per world px it stands toward the
+ * camera.
+ *
+ * NOT the projection's pitch, and that is the whole tuning note: the assembly
+ * is a BILLBOARD — every body on the field is anchored through the tilt and
+ * then drawn dead straight-on — so a wheel sheared by the ground plane's full
+ * 0.75 leans about two pixels each way across nine, and eleven pixels of tyre
+ * cannot carry that. It stops reading as a wheel turned and starts reading as
+ * a wheel BENT, which is a state this car really has (`car_wheel_bent_*`) and
+ * must not be confused with. Held to about a pixel at full lock, it reads as
+ * the turn it is. Judge any change to it from `node scripts/car-viewer.mjs
+ * --steer`, never from the number.
+ */
+const STEER_LEAN = 0.35;
+/** How much taller a column is drawn per world px it stands toward the
+ * camera. Clamped to a pixel either way, for the same reason. */
+const STEER_GROW = 0.3;
+
+function drawSteeredWheel(
+  ctx: CanvasRenderingContext2D,
+  sprite: ImageBitmap,
+  pos: { x: number; y: number },
+  camera: Camera,
+  steer: number,
+  faceLeft: boolean,
+): void {
+  const w = sprite.width;
+  const h = sprite.height;
+  // The drawn nose points the way the body faces; a left-facing car's leading
+  // edge is the other end of the same eleven pixels.
+  const swing = Math.sin(steer) * (faceLeft ? -1 : 1);
+  const width = Math.max(1, Math.round(w * Math.abs(Math.cos(steer))));
+  billboard(ctx, pos.x, pos.y, camera.x, camera.y, () => {
+    const left = seatX(pos.x, camera.x) - Math.round(width / 2);
+    const top = seatY(pos.y, camera.y) - (h - 2);
+    // Walked over DESTINATION columns, picking a source column for each, so a
+    // squashed wheel comes out solid — mapping the source forward instead
+    // drops columns and leaves gaps through the tyre.
+    for (let i = 0; i < width; i++) {
+      const across = (i + 0.5) / width;
+      const sx = Math.min(w - 1, Math.floor(across * w));
+      // How far this column now stands toward the camera (world px, +y near),
+      // and therefore where it sits and how big it is.
+      const depth = (across - 0.5) * w * swing;
+      const dy = Math.round(depth * STEER_LEAN);
+      const grow = Math.max(-1, Math.min(1, Math.round(depth * STEER_GROW)));
+      // Anchored at the contact patch: the column grows upward off the ground
+      // it is standing on, never through it.
+      ctx.drawImage(
+        sprite,
+        sx,
+        0,
+        1,
+        h,
+        left + i,
+        top + dy - grow,
+        1,
+        h + grow,
+      );
+    }
+  });
+}
+
 /** Vertical column bands the tilted shell is blitted in (px of source). */
 const TILT_BAND = 8;
 
@@ -292,14 +386,14 @@ function drawCar(
     const name = wheelSprite(wheelState, frame);
     const sprite = spriteByName(sprites, name);
     if (!sprite) return;
-    drawWorldSprite(
-      ctx,
-      name,
-      sprite,
-      { x: car.pos.x + (CAR.wheelOffsets[i] ?? 0), y: car.pos.y },
-      camera,
-      "base",
-    );
+    const at = { x: car.pos.x + (CAR.wheelOffsets[i] ?? 0), y: car.pos.y };
+    // The FRONT axle (index 1) is the one on the rack, and it is warped only
+    // once the crank is worth a pixel; everything else is a plain blit.
+    if (i === 1 && Math.abs(car.steer) > STEER_MIN) {
+      drawSteeredWheel(ctx, sprite, at, camera, car.steer, car.faceLeft);
+    } else {
+      drawWorldSprite(ctx, name, sprite, at, camera, "base");
+    }
   });
   for (const panel of CAR.panels) {
     const rung = Math.max(0, Math.min(3, car.panels[panel] ?? 0));
