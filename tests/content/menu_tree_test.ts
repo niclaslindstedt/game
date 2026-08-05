@@ -164,6 +164,10 @@ function ctxFor(overrides: Partial<MenuContext> = {}): MenuContext {
       setEnabled: () => {},
       move: () => {},
       overriddenIds: () => 0,
+      // Both folders present, so the screen builds the rows that open them —
+      // the platform that has neither is covered by `folderRow` returning null.
+      folders: { local: "/home/p/.config/adastrail/mods", portable: "/g/mods" },
+      reveal: () => {},
       onPlay: () => {},
       onPublish: () => {},
     },

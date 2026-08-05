@@ -8,7 +8,8 @@
 // The protocol (mirrored by electron/src/mods.ts — keep the two in step):
 //   → { action: "list", requestId }            compile every installed mod
 //   → { action: "publish", requestId, folder, changeNote }
-//   ← { event: "list", requestId, ok, mods: InstalledMod[] }
+//   → { action: "reveal", requestId, which }   show one of OUR folders
+//   ← { event: "list", requestId, ok, mods: InstalledMod[], folders }
 //   ← { event: "publish", requestId, ok, itemId?, needsToAcceptAgreement?,
 //       reason? }
 //
@@ -106,13 +107,37 @@ export function initModsBridge(): void {
   };
 }
 
-/** Every installed mod, compiled. An empty list on a build with no Workshop. */
-export async function listMods(): Promise<InstalledMod[]> {
+/** The folders the shell read that list from — what the MODS screen shows and
+ * offers to open. `portable` is null where the platform has none (macOS). */
+export type ModsFolders = { local: string; portable: string | null };
+
+/** Every installed mod, compiled, and where they came from. An empty list on a
+ * build with no Workshop. */
+export async function listMods(): Promise<{
+  mods: InstalledMod[];
+  folders: ModsFolders | null;
+}> {
   const reply = (await request({ action: "list" }, LIST_TIMEOUT_MS)) as {
     ok?: boolean;
     mods?: InstalledMod[];
+    folders?: ModsFolders;
   } | null;
-  return reply?.ok ? (reply.mods ?? []) : [];
+  return reply?.ok
+    ? { mods: reply.mods ?? [], folders: reply.folders ?? null }
+    : { mods: [], folders: null };
+}
+
+/**
+ * Show one of the game's own mods folders in the desktop's file manager.
+ *
+ * WHICH folder, never a path — the page names one of a closed set and the
+ * shell resolves it, so this cannot become a way to open an arbitrary
+ * directory from the renderer. Fire-and-forget: the file manager owns it from
+ * there, and there is nothing useful to report back.
+ */
+export function revealModsFolder(which: "local" | "portable"): void {
+  if (!modsBridgeAvailable()) return;
+  postToShell({ __gisMods: true, action: "reveal", requestId: 0, which });
 }
 
 /**

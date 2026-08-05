@@ -32,7 +32,7 @@ export type JoinModsHelper = {
  * rows read. Compiling a dozen mods is real work — call when the screen
  * opens, never at launch. */
 export async function loadJoinMods(): Promise<JoinModsHelper> {
-  const mods = await listMods();
+  const { mods } = await listMods();
   const byId = new Map<string, InstalledMod>();
   for (const mod of mods) {
     const id = (mod.bundle as { id?: unknown } | null)?.id;
@@ -69,7 +69,7 @@ export async function applyForSession(
     mods.restoreBaseDefs(sprites);
     return true;
   }
-  const list = await listMods();
+  const { mods: list } = await listMods();
   const byId = new Map(
     list
       .filter((mod) => mod.bundle)

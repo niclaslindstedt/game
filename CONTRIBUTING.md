@@ -120,13 +120,15 @@ the point.
 
 ## Sharing one without the Workshop
 
-Zip the mod folder and send it. Your friend drops the `.zip` (or the unpacked
-folder) into **`mods/` beside the game** — its own install folder, on Windows
-and Linux — and it appears under MODS on the next launch. The game unpacks the
-archive itself; there is nothing to install. On **macOS** there is no such
-folder on purpose (an installed app lives in `/Applications`, and a file inside
-the `.app` would break its signature), so a zip goes in the game's data folder
-instead, which reads them too. `cli.mjs where` prints both.
+Zip the mod folder and send it. Your friend opens **MODS** on the main menu and
+presses one of the folder rows at the foot of the list — that opens the folder
+in their file manager — drops the `.zip` (or the unpacked folder) in, and comes
+back to the screen, which re-reads itself on every entry. The game unpacks
+the archive itself — no relaunch, and nobody has to be told a path.
+
+The two folders are `mods/` beside the game (Windows and Linux — an installed
+Mac app lives in `/Applications`, so macOS offers only the other) and the
+game's own data folder, which takes zips too. `cli.mjs where` prints both.
 
 This works on the Steam build and on a plain download alike — a download needs
 `--mods` on its command line, since mods are off by default in a non-store

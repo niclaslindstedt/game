@@ -92,6 +92,12 @@ export function buildModsMenu(
           state: "none",
         },
       ),
+      // The two folders the list was read from. Pressing one opens it in the
+      // desktop's own file manager, which is the whole answer to "where do I
+      // put it" — and the screen re-reads itself on every entry, so dropping a
+      // mod in and coming back is the loop.
+      "folder-mods": folderRow(state, "local"),
+      "folder-game": folderRow(state, "portable"),
     }),
     backRow(ctx, "mods"),
   ];
@@ -104,6 +110,61 @@ function inert(screen: "mods" | "modorder", id: string): MenuEntry {
     locked: true,
   });
 }
+
+/**
+ * A row that opens one of the game's mods folders.
+ *
+ * Null when the platform has no such folder (macOS has no install-folder
+ * option — see `electron/src/mods.ts`) or before the first list has answered:
+ * a row offering to open a folder we cannot name is a row that does nothing.
+ */
+function folderRow(
+  state: ModsMenuState,
+  which: "local" | "portable",
+): MenuEntry | null {
+  const dir =
+    which === "local" ? state.folders?.local : state.folders?.portable;
+  if (!dir) return null;
+  return actionRow(
+    "mods",
+    which === "local" ? "folder-mods" : "folder-game",
+    () => {
+      playUiSound(synth, "confirm");
+      state.reveal(which);
+    },
+    // The path goes in the SUBTITLE, the slot the mod rows already use for a
+    // concrete detail (version and author), leaving the tree's help line to say
+    // what pressing the row does. Both are on screen at once, which is what the
+    // row is for: what to do, and which folder to do it in.
+    { subtitle: displayPath(dir) },
+  );
+}
+
+/**
+ * A filesystem path the pixel font can actually draw.
+ *
+ * Three things bite. The font is UPPERCASE-ONLY and falls back to `?` for any
+ * glyph it has no cell for, so a Windows path (`C:\Users\…`) would render as a
+ * row of question marks: separators are normalised to `/`, and anything else
+ * the font lacks — an underscore, a tilde, an accent in somebody's user name —
+ * becomes `-` rather than `?`. And a real path is longer than the row, so only
+ * the tail is shown, which is the part that identifies the folder anyway.
+ */
+export function displayPath(dir: string): string {
+  const slashed = dir.replace(/\\/g, "/").toUpperCase();
+  const parts = slashed.split("/").filter(Boolean);
+  const tail = parts.slice(-KEPT_SEGMENTS).join("/");
+  // `...` only when segments were genuinely dropped — a short path that says
+  // it was shortened is a small lie the player has no way to check.
+  const shown =
+    parts.length > KEPT_SEGMENTS
+      ? `.../${tail}`
+      : `${slashed.startsWith("/") ? "/" : ""}${tail}`;
+  return shown.replace(/[^A-Z0-9./-]/g, "-");
+}
+
+/** How much tail identifies a folder: `…/ADASTRAIL/MODS` and one above it. */
+const KEPT_SEGMENTS = 3;
 
 function publishRow(mod: InstalledMod, state: ModsMenuState): MenuEntry {
   return {
