@@ -91,7 +91,18 @@ cd pwa && npx vite --port 5199 &
 make store-shots                       # everything
 make store-shots ARGS="--only iphone"  # one device
 make store-shots ARGS="--shot boss --layout bleed"
+make store-shots ARGS="--safe"         # the same set, no gore
 ```
+
+`--safe` shoots the SAME recipes with the game's mature-content gate shut — the
+switch a guardian throws in iOS Settings (`nsfwAllowed()`), thrown by the
+harness. It is for a storefront, rating board or press kit that will not take
+blood; every frame is still the real fight at the real moment, with the gore
+decided away at the gate rather than painted over. The mode is a property of
+the whole SET: the output directory records which one it was shot in, and a run
+in the other mode clears it rather than half-replacing it. `store-shot-sweep.mjs`
+takes `--safe` too, because a delay picked off bloodied frames is not
+necessarily the delay a clean set wants.
 
 Three properties make the output trustworthy:
 
@@ -103,9 +114,11 @@ Three properties make the output trustworthy:
 
 2. **Staged, not played.** Every shot is a `?scenario=` spec pinned to a
    `?seed=` (the engine's own display-case system — see the `test-scenario`
-   skill), held up by `reveal` + `muteDialogue` + `noVictory` + `freeze`.
-   Re-running reproduces the same frames, so changing a caption doesn't mean
-   re-hunting for the moment.
+   skill), held up by `reveal` + `muteDialogue` + `noVictory`. NOT by `freeze`:
+   these runs are LIVE and slowed with `window.__timeScale`, because a frozen
+   hero is exactly the screenshot with nothing happening in it. Re-running
+   reproduces the same frames, so changing a caption doesn't mean re-hunting for
+   the moment.
 
 3. **The caption is the game's own font**, drawn from the same `GLYPHS` map the
    in-game text uses, at an integer scale. A caption containing a character the
@@ -115,7 +128,11 @@ Devices shot: **iPhone 6.9″** (2868×1320) and **iPad 13″** (2752×2064) —
 only two sizes App Store Connect requires, since Apple scales each set down to
 every smaller device in its family.
 
-Edit the `SHOTS` array to change what is captured; it is plain data.
+Edit the `SHOTS` array to change what is captured; it is plain data. Each
+recipe stages an endgame moment mid-fight — the nuke's aftermath, a horde
+coming apart, a boss mid-set-piece, a felled boss's legendaries on the ground —
+and `store-shot-sweep.mjs` is what finds the millisecond each is captured at.
+See the `store-shots` skill for that loop.
 
 ## The achievement artwork
 
