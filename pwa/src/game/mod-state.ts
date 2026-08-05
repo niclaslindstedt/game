@@ -39,6 +39,27 @@ export type ModSprite = {
  */
 export type ModBrand = { title: string; tagline: string };
 
+/**
+ * ONE LINE OF A MOD'S INVENTORY — a file the game loads, and what its author
+ * says it is (`contents:` in the mod's manifest).
+ *
+ * The MOD INFO screen is built from these, and they are the only honest source
+ * for what it has to say. A bundle can be counted — two levels, nine sprites —
+ * but "what does this mod do to my game" is a question only the person who
+ * wrote the files can answer, and a player deciding whether to switch on a
+ * stranger's conversion is asking exactly that.
+ */
+export type ModContent = {
+  /** The file, relative to the mod folder. Shown as the row's own line so a
+   * player can see the shape of what they installed. */
+  path: string;
+  /** One line, the author's words. */
+  summary: string;
+  /** Whether it brings something new or takes over something the game already
+   * had — the difference between "adds a monster" and "replaces the shotgun". */
+  change: "adds" | "replaces";
+};
+
 /** A compiled mod, exactly as `mod/tools/build.mjs` emits it.
  *
  * The TYPES live here rather than beside the code that applies them for the
@@ -108,6 +129,10 @@ export type ModBundle = {
   quests: Record<string, unknown>;
   questGivers: Record<string, unknown>;
   sprites: ModSprite[];
+  /** The manifest's own inventory — what the MOD INFO screen reads. Empty for
+   * a mod authored before `contents:` existed, which is why the screen still
+   * has to be able to say something without it. */
+  contents: ModContent[];
 };
 
 /** What a hero remembers about the mods they were played under. Stored on the

@@ -65,6 +65,10 @@ export function useMods({
   const [folders, setFolders] = useState<ModsFolders | null>(null);
   const [order, setOrder] = useState(() => getSettings().modOrder);
   const [publishing, setPublishing] = useState(false);
+  // WHICH MOD THE INFO PAGE IS SHOWING. Kept by KEY rather than as the mod
+  // itself, so the page reads the freshly compiled list on every rebuild
+  // instead of a copy that stopped changing the moment it was opened.
+  const [openKey, setOpenKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (!modsOpen) return;
@@ -184,6 +188,8 @@ export function useMods({
     rows,
     folders,
     reveal: revealModsFolder,
+    selected: (installed ?? []).find((mod) => mod.key === openKey) ?? null,
+    select: (mod) => setOpenKey(mod?.key ?? null),
     isOn: (id) => rows?.some((row) => row.id === id && row.on) ?? false,
     setEnabled,
     move,

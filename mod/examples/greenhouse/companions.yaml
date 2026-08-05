@@ -46,12 +46,10 @@ companions:
     # dialogue box. One entry per PAGE, one string per LINE — keep lines to 34
     # characters or the box breaks them for you.
     joinWords:
-      - - FORTY YEARS I PRUNED THIS
-        - PLACE. YOU'RE THE FIRST THING
-        - THROUGH THAT DOOR THAT KNOCKED.
-      - - I'LL COME. SOMEBODY HAS TO
-        - CUT BACK WHAT'S AHEAD OF YOU,
-        - AND I KNOW WHERE IT GROWS.
+      - - FORTY YEARS I PRUNED THIS PLACE. YOU'RE THE FIRST THING THROUGH
+          THAT DOOR THAT KNOCKED.
+      - - I'LL COME. SOMEBODY HAS TO CUT BACK WHAT'S AHEAD OF YOU, AND I KNOW
+          WHERE IT GROWS.
     # Banter she floats over her own kills — hovering text, never a scene.
     killQuotes:
       - PRUNED.

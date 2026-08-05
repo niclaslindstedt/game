@@ -14,8 +14,6 @@ storyItems:
     # A base-game icon. Your own works the same way once you have drawn it.
     icon: icon_manifest
     lore:
-      - - THE LAST ENTRY IS SIX YEARS
-        - OLD. THE TIMER KEPT GOING.
-      - - "'BED 9 IS DRINKING DOUBLE.'"
-        - "'CANNOT FIND BED 9 ON THE"
-        - "PLAN.' NOTHING AFTER THAT."
+      - - THE LAST ENTRY IS SIX YEARS OLD. THE TIMER KEPT GOING.
+      - - "'BED 9 IS DRINKING DOUBLE.' 'CANNOT FIND BED 9 ON THE PLAN.'
+          NOTHING AFTER THAT."

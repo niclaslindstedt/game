@@ -165,6 +165,7 @@ export function buildMod(modDir, catalog) {
     );
   }
   const brand = readBrand(manifest, kind, catalog, errors);
+  const contents = readContents(manifest, modDir, catalog, errors, warnings);
 
   // THE MENU IS NOT CONTENT, and this refusal is a security rule rather than a
   // tidiness one. `content/mainmenu.yaml` decides which SCREENS exist and which
@@ -827,6 +828,10 @@ export function buildMod(modDir, catalog) {
       quests: modQuests,
       questGivers: modQuestGivers,
       sprites,
+      // The manifest's inventory — what the MOD INFO screen reads to tell a
+      // player what this mod puts in their game. Empty for a mod authored
+      // before the block existed (see `readContents`).
+      contents,
     },
     errors,
     warnings,
@@ -1106,6 +1111,77 @@ function campaignOrder(manifest, kind, entries, errors) {
  * must never be: those are the INSTALL's identity, and a mod that moved them
  * would orphan the player's roster and rewrite a site it does not own.
  */
+/**
+ * `contents:` — the manifest's inventory: every file the game loads, and what
+ * each one is in the author's own words.
+ *
+ * It travels in the bundle because the MODS screen shows it: a player who taps
+ * a mod is asking "what does this do to my game", and counting a bundle's
+ * levels and monsters answers that only in the arithmetic sense. Nobody but the
+ * author can say that the new venue is a seed vault or that a sound file
+ * replaces the shotgun's bark.
+ *
+ * The COMPLETENESS check — that every file in the folder is described, and that
+ * nothing else is in there at all — belongs to `validate.mjs`, which audits a
+ * folder rather than compiling one. Here the block is optional and only its
+ * shape is checked: a mod published before the block existed still loads, and
+ * says so with a warning rather than becoming unplayable on an update.
+ */
+function readContents(manifest, modDir, catalog, errors, warnings) {
+  const declared = manifest.contents;
+  if (declared === undefined) {
+    warnings.push(
+      "mod.yaml: no contents: block — the MODS screen can only count this " +
+        "mod's files instead of saying what they are (mod/FORMAT.md → contents:)",
+    );
+    return [];
+  }
+  if (!Array.isArray(declared)) {
+    errors.push("mod.yaml: contents: must be a list of { path, summary }");
+    return [];
+  }
+  const out = [];
+  declared.forEach((entry, i) => {
+    const at = `mod.yaml: contents[${i}]`;
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      errors.push(`${at}: expected a mapping with a path: and a summary:`);
+      return;
+    }
+    const file = String(entry.path ?? "");
+    const summary = String(entry.summary ?? "").trim();
+    const change = entry.change ?? "adds";
+    // A path that escapes the folder is refused by NAME, before anything opens
+    // it — the same rule the archive reader applies, for the same reason.
+    if (
+      !file ||
+      file.includes("\\") ||
+      file.startsWith("/") ||
+      file.split("/").includes("..")
+    ) {
+      errors.push(`${at}: path "${file}" must be relative to the mod folder`);
+      return;
+    }
+    if (!existsSync(path.join(modDir, file))) {
+      errors.push(`${at}: "${file}" is not in the mod folder`);
+      return;
+    }
+    if (!summary) {
+      errors.push(`${at}: "${file}" needs a summary: — one line, for a player`);
+      return;
+    }
+    if (change !== "adds" && change !== "replaces") {
+      errors.push(`${at}: change "${change}" — expected "adds" or "replaces"`);
+      return;
+    }
+    // Drawn in the game's own pixel font on the MOD INFO screen, so it gets the
+    // check `brand:` gets: a pasted em dash is a "?" on the player's screen.
+    const problem = glyphProblem(summary, catalog.glyphs, "summary");
+    if (problem) errors.push(`${at}: ${problem}`);
+    out.push({ path: file, summary, change });
+  });
+  return out;
+}
+
 function readBrand(manifest, kind, catalog, errors) {
   const brand = manifest.brand;
   if (brand === undefined) return null;

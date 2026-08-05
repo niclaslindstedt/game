@@ -796,7 +796,7 @@ export function TitleScreen({
   // the top of the column, and the PAGE TITLE is what leads the screen.
   const onMain = screen === "main";
   const headerScale = onMain ? logoScale : compact ? 3 : 4;
-  const heading = headingFor(screen, warp);
+  const heading = headingFor(screen, warp, mods);
   // The SETTINGS tree renders as a stable form: a fixed-width column (so a
   // value change never shifts the right-aligned controls) with each row's help
   // text hoisted OUT of the row to a single bottom help line (so toggling a

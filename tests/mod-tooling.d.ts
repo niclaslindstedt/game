@@ -61,6 +61,9 @@ declare module "*/mod/tools/build.mjs" {
     thoughts: Record<string, unknown>;
     capRotation: string[];
     storyItems: Record<string, unknown>;
+    /** The manifest's inventory — every file the game loads, with the author's
+     * own line about what it is. Empty for a mod that ships no `contents:`. */
+    contents: { path: string; summary: string; change: "adds" | "replaces" }[];
   };
 
   /** `bundle` is null whenever `errors` is non-empty — a mod that does not
@@ -69,6 +72,53 @@ declare module "*/mod/tools/build.mjs" {
     modDir: string,
     catalog: unknown,
   ): { bundle: ModBundle | null; errors: string[]; warnings: string[] };
+}
+
+declare module "*/mod/tools/validate.mjs" {
+  /** One file in a mod folder that the audit refused, and why. */
+  export type ModFileFinding = { rel: string; why: string };
+
+  /** The folder, classified: what the game loads, what belongs beside it, and
+   * what should not be there at all. */
+  export type ModFiles = {
+    content: string[];
+    sidecar: string[];
+    junk: ModFileFinding[];
+    stray: ModFileFinding[];
+  };
+
+  /** The pre-publish audit: the folder itself, the README, and the manifest's
+   * inventory — plus the COMPILER's own findings when a catalog is given. */
+  export function validateMod(
+    modDir: string,
+    opts?: { catalog?: unknown },
+  ): {
+    errors: string[];
+    warnings: string[];
+    contents: { path: string; summary: string; change: "adds" | "replaces" }[];
+    files: ModFiles;
+  };
+
+  /** What a package carries: the manifest, the declared content, and the
+   * sidecars that are the author's to ship. */
+  export function packagedFiles(files: ModFiles): string[];
+
+  /** The marker the scaffold's README carries until somebody writes it. */
+  export const README_TODO: string;
+}
+
+declare module "*/mod/tools/package.mjs" {
+  /** Thrown when the folder is not fit to package — every finding at once. */
+  export class ModPackageError extends Error {
+    problems: string[];
+  }
+
+  /** Audit, then write a zip of exactly what the manifest declares. Throws
+   * `ModPackageError` (and writes nothing) when the audit fails. */
+  export function packageMod(
+    modDir: string,
+    opts?: { catalog?: unknown; out?: string },
+  ): { file: string; entries: string[]; bytes: number; warnings: string[] };
 }
 
 declare module "*/mod/tools/catalog-read.mjs" {

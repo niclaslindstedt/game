@@ -59,6 +59,7 @@ const UNION: MenuScreen[] = [
   "storehero",
   "storesend",
   "mods",
+  "modinfo",
   "modorder",
   "multiplayer",
   "host",
@@ -162,6 +163,8 @@ function ctxFor(overrides: Partial<MenuContext> = {}): MenuContext {
       rows: [],
       isOn: () => false,
       setEnabled: () => {},
+      selected: null,
+      select: () => {},
       move: () => {},
       overriddenIds: () => 0,
       // Both folders present, so the screen builds the rows that open them —

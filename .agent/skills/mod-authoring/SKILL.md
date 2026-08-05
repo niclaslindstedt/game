@@ -1,6 +1,6 @@
 ---
 name: mod-authoring
-description: "Use when creating a NEW mod for this game or updating an existing one — a folder of YAML compiled by the same schemas the shipped content uses, published to the Steam Workshop. Covers the scaffold → author → check → measure → play loop, exactly what the mod system does and does not support (so nothing is attempted that cannot ship), which craft skills apply inside a mod folder and how they read differently there, the decisions to bring back to the user, and what updating a published mod owes."
+description: "Use when creating a NEW mod for this game or updating an existing one — a folder of YAML compiled by the same schemas the shipped content uses, published to the Steam Workshop. Covers the scaffold → author → check → measure → validate → package → play loop, exactly what the mod system does and does not support (so nothing is attempted that cannot ship), which craft skills apply inside a mod folder and how they read differently there, the decisions to bring back to the user, and what updating a published mod owes."
 ---
 
 # Authoring a mod
@@ -20,6 +20,7 @@ use the craft skill for that system and this repo's ordinary PR workflow.
 | ------------------------------------------ | ----------------------------------------------------------------- |
 | **this file**                              | the workflow, the scope, the judgment calls, which skill to load  |
 | `mod/AGENTS.md`                            | the step-by-step with every command, and the error decoder        |
+| `mod/tools/validate.mjs`                   | what may be in a mod folder at all, and every refusal's wording   |
 | `mod/FORMAT.md`                            | every file and every field, plus the schema behind each           |
 | `scripts/asset-tools/<catalog>-schema.mjs` | the field-level truth — when FORMAT.md disagrees, the schema wins |
 | `mod/README.md`                            | what a mod may contain, the two kinds, load order, the licence    |
@@ -47,22 +48,47 @@ schema, read the shipped file beside it, and author.
 ```sh
 node mod/tools/cli.mjs new my-mod --title "MY MOD"   # 1. scaffold (it already compiles)
 node mod/tools/cli.mjs ids <pattern> [--kind <kind>] # 2. verify every id BEFORE authoring it
-node mod/tools/cli.mjs check my-mod                  # 3. validate — fast, writes nothing
+node mod/tools/cli.mjs check my-mod                  # 3. compile — fast, writes nothing
 node scripts/simulate-run.mjs --mod ../my-mod …      # 4. measure (every instrument takes --mod)
-node mod/tools/cli.mjs where                         # 5. the two folders the game reads
+node mod/tools/cli.mjs validate my-mod               # 5. audit the FOLDER before anybody sees it
+node mod/tools/cli.mjs package my-mod                # 6. the zip to hand over
+node mod/tools/cli.mjs where                         # 7. the two folders the game reads
 ```
 
 Start at 1 **even when deleting everything after** — a mod that runs on the
 first try proves the toolchain, which an empty folder cannot. Loop 2–4 per
-change; step 5 is for the user, and step 6 (publish) is theirs alone.
+change; 5 and 6 close the work out, step 7 is for the user, and publishing is
+theirs alone.
 
-Two rules that cause most first-attempt failures, both cheap to obey:
+**`check` and `validate` answer different questions, and the second one is the
+one that keeps a mod folder clean.** `check` compiles: will the game load this.
+`validate` audits the folder the compiler never looks at — a `.DS_Store`, an
+editor backup, a folder of layered source art, last week's `notes.txt` (all of
+which compile perfectly and all of which would travel to every subscriber), a
+real file sitting one directory deeper than any loader reads, a missing README,
+and a manifest that does not describe what it ships. `package` runs it and then
+writes a zip of exactly what the manifest declares — never the `.workshop-id`,
+never the compiler's `mod.json`. Run `validate` before reporting the work done.
+
+Four rules that cause most first-attempt failures, all cheap to obey:
 
 - **A venue is TWO files** — `levels/<id>.yaml` (the mission) and
   `maps/<id>.yaml` (the blueprint its geometry is carved from every run). A
   level without a blueprint compiles and no run can be built from it.
 - **Every level needs a `ladder.yaml` row**, or it has no difficulty band and
   the compiler refuses it.
+- **Every file the game loads gets a `contents:` line in `mod.yaml`** — the
+  path, and one sentence saying what it is, written for a PLAYER. Add it in the
+  same edit as the file, the way the ladder row goes in with its level. **The
+  game shows these lines**: tapping a mod on the MODS screen opens a page built
+  from them, so this is the mod telling somebody what it will do to their game.
+  Nobody else can write it — a compiler can count two enemy files, it cannot say
+  that one of them is a gardener who fights beside you if you spare her.
+- **Every mod owes a `README.md`**, and it is an END-USER document: what the mod
+  is, what it adds or changes, how to install and play it, and the credits and
+  terms. Not a developer's note and not a copy of the manifest —
+  `mod/examples/greenhouse/README.md` is the shape. `validate` refuses a folder
+  without one, and refuses the scaffold's unwritten one.
 
 ## Scope — what the mod system supports
 
@@ -81,6 +107,8 @@ is what `mod/tools/build.mjs` loads, so anything absent cannot ship in a mod.
 | Pixel art, sounds, music                                            | `sprites/<family>/<name>.yaml`, `sounds/`, `music/`         |
 | What the five difficulty rungs are CALLED                           | `difficulties.yaml`                                         |
 | The mod's identity, kind, and (a conversion's) own title screen     | `mod.yaml` — `kind:`, `brand:`                              |
+| What the mod says it puts in the game (the MODS screen reads it)    | `mod.yaml` — `contents:`                                    |
+| What it is, for the person installing it                            | `README.md`                                                 |
 
 ### What it does NOT support — stop rather than work around
 
@@ -158,12 +186,21 @@ Everything above still applies, plus what a published mod owes its subscribers:
 - **Re-measure what the change touched**, not just what it added: a weapon
   rebalance re-runs `weapon-budget.mjs` and `simulate-run --verdict`; a map edit
   re-renders and re-plays it.
+- **Keep the inventory and the README in step with the change.** A file added
+  without its `contents:` line fails `validate`; a file whose PURPOSE changed
+  keeps a summary that now lies, and nothing can catch that but reading it.
 - **Bump `version:` in `mod.yaml`** so subscribers can tell what they have.
 
 ## Before reporting the work done
 
 - [ ] `node mod/tools/cli.mjs check <dir>` prints `✓` — and the warnings above it
       were read, not just the exit status.
+- [ ] `node mod/tools/cli.mjs validate <dir>` prints `✓`: nothing stray in the
+      folder, a README written for a player, and a `contents:` line for every
+      file the game loads.
+- [ ] `node mod/tools/cli.mjs package <dir>` when the user wants something to
+      hand over — never a zip made by the archiver, which packs whatever the
+      folder happens to contain.
 - [ ] Every new id was verified with `cli.mjs ids`, never guessed.
 - [ ] A new venue: rendered and LOOKED at (`level-render.mjs --mod`), and
       cleared in `simulate-run.mjs --mod … --verdict`.

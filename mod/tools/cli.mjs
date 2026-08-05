@@ -6,6 +6,8 @@
 //   node mod/tools/cli.mjs new <name> [--in <dir>] [--title "MY MOD"]
 //   node mod/tools/cli.mjs check <mod-dir>
 //   node mod/tools/cli.mjs build <mod-dir> [--out <file>]
+//   node mod/tools/cli.mjs validate <mod-dir>
+//   node mod/tools/cli.mjs package <mod-dir> [--out <file>]
 //   node mod/tools/cli.mjs ids [pattern] [--kind <kind>] [--limit <n>]
 //   node mod/tools/cli.mjs where
 //
@@ -13,6 +15,12 @@
 // Both report every problem at once rather than the first, because a mod that
 // names three enemies that don't exist should take one round trip to fix, not
 // three.
+//
+// `validate` is the wider question `check` cannot answer — is everything in
+// this FOLDER something the game reads, does it say what it is, does the
+// manifest describe every file — and `package` is `validate` plus a zip built
+// from exactly the files the manifest declares. The pair exists so that what
+// leaves somebody's machine is their mod and nothing else. See validate.mjs.
 //
 // The desktop game runs this same compiler on every mod it loads (see
 // electron/src/mods.ts), so a mod that passes here is a mod the game accepts —
@@ -38,8 +46,12 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { parse } from "yaml";
+
 import { buildMod } from "./build.mjs";
 import { readCatalog } from "./catalog-read.mjs";
+import { ModPackageError, packageMod } from "./package.mjs";
+import { README_TODO, validateMod } from "./validate.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CATALOG = path.join(here, "..", "catalog.json");
@@ -68,6 +80,14 @@ const USAGE = `usage:
   node mod/tools/cli.mjs build <mod-dir> [--out <file>]
       Validate, then write the compiled bundle (default <mod-dir>/mod.json).
 
+  node mod/tools/cli.mjs validate <mod-dir>
+      The pre-publish audit: check, plus the folder itself — nothing stray in
+      it, a README, and a manifest that describes every file. Writes nothing.
+
+  node mod/tools/cli.mjs package <mod-dir> [--out <file>]
+      Validate, then zip exactly what the manifest declares — the file you
+      hand somebody (default <parent>/<id>-<version>.zip).
+
   node mod/tools/cli.mjs ids [pattern] [--kind <kind>] [--limit <n>]
       Search the ids a mod may reference.
 
@@ -86,6 +106,8 @@ try {
 async function main() {
   if (command === "new") return newMod();
   if (command === "check" || command === "build") return compile();
+  if (command === "validate") return audit();
+  if (command === "package") return zipItUp();
   if (command === "ids") return searchIds();
   if (command === "where") return whereToPutIt();
   console.error(`${USAGE}\n\nid kinds: ${kinds().join(", ")}`);
@@ -144,7 +166,21 @@ function newMod() {
   // what it is teaches the format badly. The `id` is set here too — it must be
   // the DASHED name (the rule the compiler enforces) while content ids use
   // underscores, so the blanket rewrite above would have got it wrong.
-  writeFileSync(path.join(dest, "mod.yaml"), scaffoldManifest(name, title));
+  //
+  // Its `contents:` is the ONE part carried over rather than written fresh,
+  // read back from the copy after the rename so every path already points at
+  // the new mod's own files. Rewriting it would mean this command knowing what
+  // each of the example's files is, which is the example's business.
+  const carried = parse(readFileSync(path.join(dest, "mod.yaml"), "utf8"));
+  writeFileSync(
+    path.join(dest, "mod.yaml"),
+    scaffoldManifest(name, title, carried?.contents ?? []),
+  );
+  // The mod's own front page. Written rather than copied for the same reason
+  // the manifest is, and it keeps the TODO marker deliberately: `validate`
+  // refuses a README nobody has written, so a mod cannot be packaged with the
+  // scaffold's words on it.
+  writeFileSync(path.join(dest, "README.md"), scaffoldReadme(title));
 
   const { errors } = buildMod(dest, readCatalog(CATALOG));
   if (errors.length > 0) {
@@ -157,10 +193,13 @@ function newMod() {
     process.exit(1);
   }
 
+  const where = path.relative(process.cwd(), dest) || dest;
   console.log(
-    `✓ ${title} → ${path.relative(process.cwd(), dest) || dest}\n` +
+    `✓ ${title} → ${where}\n` +
       `  it compiles as-is. Next:\n` +
-      `    node mod/tools/cli.mjs check ${path.relative(process.cwd(), dest) || dest}\n` +
+      `    node mod/tools/cli.mjs check ${where}\n` +
+      `    write README.md and the summaries in mod.yaml's contents:\n` +
+      `    node mod/tools/cli.mjs validate ${where}\n` +
       `    copy it into the game's mods/ folder and launch (cli.mjs where)`,
   );
 }
@@ -168,7 +207,7 @@ function newMod() {
 /** A fresh mod's manifest. Every field the compiler requires, and a comment
  * on each one saying what it is for — the file is the first thing its author
  * opens, so it doubles as the format's front page. */
-function scaffoldManifest(id, title) {
+function scaffoldManifest(id, title, contents) {
   return `# SPDX-License-Identifier: CC0-1.0
 # The manifest. Every mod has exactly one, at its root.
 # Reference: mod/FORMAT.md — step-by-step: mod/AGENTS.md
@@ -191,6 +230,70 @@ description: >-
 #              re-skin a shipped venue), and you must list \`campaign:\` in
 #              play order.
 kind: addon
+
+# EVERY FILE THE GAME LOADS, and what each one is. The game shows these lines
+# to a player who taps your mod, so write them for that player rather than for
+# the compiler — the summaries below came from the worked example and describe
+# ITS files, so rewrite them as you replace them.
+#
+#   path     relative to this folder
+#   summary  one line, under 120 characters
+#   change   adds (default) or replaces — does it bring something new, or take
+#            over something the game already had?
+#
+# \`cli.mjs validate\` refuses a file this list does not describe, and
+# \`cli.mjs package\` zips exactly what is listed. That is the point of both:
+# nothing ships that nobody meant to ship.
+${contentsBlock(contents)}`;
+}
+
+/** The scaffold's `contents:` block, carried from the example with its paths
+ * already rewritten. Emitted by hand rather than through a YAML serializer so
+ * it looks like a file somebody wrote — which is what its author is about to
+ * edit. */
+function contentsBlock(contents) {
+  if (!Array.isArray(contents) || contents.length === 0)
+    return "contents: []\n";
+  return `contents:\n${contents
+    .map((entry) => {
+      const change =
+        entry.change && entry.change !== "adds"
+          ? `\n    change: ${entry.change}`
+          : "";
+      return `  - path: ${entry.path}\n    summary: ${JSON.stringify(String(entry.summary ?? ""))}${change}`;
+    })
+    .join("\n")}\n`;
+}
+
+/**
+ * A fresh mod's README — what a player reads before installing it.
+ *
+ * It ships the TODO marker on purpose: `validate` refuses a README still
+ * carrying it, so the one file that is nobody's but the author's cannot be
+ * published with this command's words in it.
+ */
+function scaffoldReadme(title) {
+  return `# ${title}
+
+${README_TODO} — a paragraph or two, for somebody deciding whether to install
+it. What is it, what does it add or change, and is it an addon that joins the
+campaign or a conversion that replaces it?
+
+## What's in it
+
+Say what a player gets: the venues, the monsters, the loot, the story. The
+manifest's \`contents:\` block is the file-by-file version of this — the game
+shows it on the MODS screen — and this is the version somebody reads first.
+
+## Playing it
+
+Drop the folder (or the zip \`cli.mjs package\` writes) into the game's mods
+folder — \`node mod/tools/cli.mjs where\` prints it — then switch it on under
+MODS on the main menu and press PLAY WITH THESE MODS.
+
+## Credits and terms
+
+Who made what, and what people may do with it.
 `;
 }
 
@@ -281,6 +384,65 @@ function compile() {
   const out = flag("out") ?? path.join(modDir, "mod.json");
   writeFileSync(out, `${JSON.stringify(bundle)}\n`);
   console.log(`✓ ${summary}\n  → ${path.relative(process.cwd(), out)}`);
+}
+
+// ---------------------------------------------------------------------------
+// validate / package — the folder, and the file you hand somebody
+// ---------------------------------------------------------------------------
+
+/** `validate` — everything `check` cannot see. See validate.mjs. */
+function audit() {
+  const modDir = positional[0] ? path.resolve(positional[0]) : "";
+  if (!modDir) fail("validate: needs a mod directory");
+
+  const { errors, warnings, contents, files } = validateMod(modDir, {
+    catalog: readCatalog(CATALOG),
+  });
+  for (const w of warnings) console.warn(`  ! ${w}`);
+  if (errors.length > 0) {
+    console.error(
+      `\n${errors.length} problem(s) in ${path.basename(modDir)}:\n`,
+    );
+    for (const e of errors) console.error(`  ✗ ${e}`);
+    console.error("");
+    process.exit(1);
+  }
+  const extras = files.sidecar.length;
+  console.log(
+    `✓ ${path.basename(modDir)} — ${contents.length} file(s) the game loads, ` +
+      `all described${extras > 0 ? `, ${extras} alongside them` : ""}, ` +
+      "nothing stray\n" +
+      `  package it:  node mod/tools/cli.mjs package ${path.relative(process.cwd(), modDir) || modDir}`,
+  );
+}
+
+/** `package` — validate, then write the zip. */
+function zipItUp() {
+  const modDir = positional[0] ? path.resolve(positional[0]) : "";
+  if (!modDir) fail("package: needs a mod directory");
+
+  let result;
+  try {
+    result = packageMod(modDir, {
+      catalog: readCatalog(CATALOG),
+      out: flag("out"),
+    });
+  } catch (e) {
+    if (!(e instanceof ModPackageError)) throw e;
+    console.error(`\n${e.message} — ${e.problems.length} problem(s):\n`);
+    for (const problem of e.problems) console.error(`  ✗ ${problem}`);
+    console.error(
+      "\nNothing was written. Fix these and run `package` again.\n",
+    );
+    process.exit(1);
+  }
+  for (const w of result.warnings) console.warn(`  ! ${w}`);
+  console.log(
+    `✓ ${result.entries.length} file(s), ${Math.max(1, Math.round(result.bytes / 1024))} KB\n` +
+      `  → ${path.relative(process.cwd(), result.file) || result.file}\n` +
+      "  drop it in the game's mods/ folder, or send it to somebody who will " +
+      "(cli.mjs where)",
+  );
 }
 
 // ---------------------------------------------------------------------------

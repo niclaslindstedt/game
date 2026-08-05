@@ -800,6 +800,42 @@ screens:
         label: OPEN GAME FOLDER
         help: ITS MODS/ FOLDER IS READ TOO
 
+  # ONE MOD, opened from the list: what its author says it puts in the game, and
+  # the switch that decides whether it does. The list can only say ON or OFF and
+  # count what a mod ships; this is where the mod's own words are — its
+  # description, and its manifest's line for every file the game loads.
+  #
+  # The switch lives HERE rather than on the list row for a reason worth keeping:
+  # switching on a total conversion changes what the game IS, and a screen that
+  # first tells the player what a mod does and then offers the switch is the
+  # order those two things belong in.
+  modinfo:
+    # The heading is the MOD'S OWN NAME, put there by the builder (see
+    # `headingFor`) — this is the fallback for the case that cannot happen from
+    # the UI, a mod page with no mod on it.
+    title: MOD
+    trail: MODS
+    parent: mods
+    home: dynamic
+    tone: player
+    form: menu
+    scroll: true
+    notice: true
+    rows:
+      - id: enabled
+        label: ENABLED
+        help:
+          broken: IT DID NOT COMPILE - NOTHING TO SWITCH ON
+      - id: publish
+        label: PUBLISH TO WORKSHOP
+        help: UPLOADS THIS FOLDER - UPDATES THE SAME ITEM
+      # A mod compiled before its manifest could carry an inventory, or one
+      # whose author left it out. The counts on the row above still say what it
+      # ships; only the per-file words are missing.
+      - id: undeclared
+        label: IT LISTS NO CONTENTS
+        help: ITS AUTHOR DID NOT SAY WHAT ITS FILES ARE
+
   modorder:
     title: LOAD ORDER
     parent: mods

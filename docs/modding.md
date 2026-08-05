@@ -447,7 +447,23 @@ the same binary, and burying it three rows deep would say it was a
 configuration detail. The row appears only where `modsBridgeAvailable()` is true
 — the Steam shell — so no other build shows a door it cannot open.
 
-Three details in `menus-mods.ts` are load-bearing:
+**The list is a list of doors.** Each row names a mod, says ON or OFF, and
+opens that mod's own page (`modinfo`) — it does not flip anything itself. What a
+mod actually puts in the game is far more than a row can hold, and switching on
+a total conversion is a bigger decision than a tap on a list should carry.
+
+**The page is built from the mod's own manifest.** `contents:` lists every file
+the game loads with a line saying what it is, and `buildModInfoMenu` turns each
+into a row: the file, whether it ADDS or REPLACES, and the author's sentence.
+Everything the app could work out for itself — two levels, nine sprites — is
+arithmetic, and arithmetic does not answer "what will this do to my game". A mod
+compiled before the block existed says so and falls back to the counts; a mod
+that did not compile at all gets its whole list of problems in place of an
+inventory, because the row that opened the page can only carry the first one.
+The switch is the page's first row, and PUBLISH — for a `local` mod — its
+second.
+
+The rest of what is load-bearing in `menus-mods.ts`:
 
 - **The screen says where mods come from, and opens it.** Two rows at the foot
   of the list name the folders the list was just read from — the path in the
@@ -462,15 +478,19 @@ Three details in `menus-mods.ts` are load-bearing:
   makes the loop closed: press the row, drop a mod in, come back, play it — no
   relaunch. It was a launch-once cache when the only source was a Steam
   subscription, which the player could not add to without restarting anyway.
-- **A mod that did not compile still appears**, greyed, with its first error as
-  the row's help line. A player who subscribed to something and then finds an
-  empty list has no way at all to learn why.
-- **Reordering is its own screen** (`modorder`). The list's arrows already flip
-  a mod's switch, and one pair of keys cannot mean both "on/off" and
-  "earlier/later" without the player having to remember which screen they are
-  on. The `reorder` capability on `MenuEntry` is what the arrows drive there;
-  confirm also moves a row, so the screen works on a pad and a touch screen,
-  which have no arrow keys.
+- **A mod that did not compile still appears** in the list, greyed, with its
+  first error as the row's help line. A player who subscribed to something and
+  then finds an empty list has no way at all to learn why.
+- **Text from outside the game goes through `speakable()`.** A compiler error
+  names ids in double quotes and the pixel font has no cell for one, so it would
+  draw a row of `?`. A mod's OWN authored lines are checked at compile time
+  instead (`readContents` runs the same `glyphProblem` check `brand:` gets),
+  which is the fix that scales.
+- **Reordering is its own screen** (`modorder`). One pair of arrow keys cannot
+  mean both "on/off" and "earlier/later" without the player having to remember
+  which screen they are on. The `reorder` capability on `MenuEntry` is what the
+  arrows drive there; confirm also moves a row, so the screen works on a pad and
+  a touch screen, which have no arrow keys.
 - **The builder imports `mod-state.ts`, never `mods.ts`.** The MODS screen is on
   the app's startup path, and `mods.ts` reaches `@game/core` for `registerDefs`
   and the shipped catalogs — one import away from the level catalog, the loot

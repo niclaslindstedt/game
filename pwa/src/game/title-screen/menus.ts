@@ -12,6 +12,7 @@ import {
   type MenuContext,
   type MenuEntry,
   type MenuScreen,
+  type ModsMenuState,
 } from "./menu-model.ts";
 import { screenHeading, type ScreenHeading } from "./menu-tree.ts";
 import {
@@ -27,7 +28,11 @@ import {
   buildVisualsMenu,
 } from "./menus-developer.ts";
 import { buildExtrasMenu, buildMainMenu } from "./menus-main.ts";
-import { buildModOrderMenu, buildModsMenu } from "./menus-mods.ts";
+import {
+  buildModInfoMenu,
+  buildModOrderMenu,
+  buildModsMenu,
+} from "./menus-mods.ts";
 import {
   buildAddressMenu,
   buildHostMenu,
@@ -80,6 +85,7 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "sessions") return buildSessionsMenu(ctx, ctx.net);
   if (screen === "address") return buildAddressMenu(ctx, ctx.net);
   if (screen === "mods") return buildModsMenu(ctx, ctx.mods);
+  if (screen === "modinfo") return buildModInfoMenu(ctx, ctx.mods);
   if (screen === "modorder") return buildModOrderMenu(ctx, ctx.mods);
   if (screen === "settings") return buildSettingsMenu(ctx);
   if (__DEV_TOOLS__ && screen === "developer") return buildDeveloperMenu(ctx);
@@ -101,15 +107,30 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
 }
 
 /**
- * A sub-screen's header, with the one variant the tree cannot carry: the
- * campaign pickers say something different when they were opened by the
- * developer WARP, which is a mode rather than a place. It folds away with the
- * rest of the tooling — nothing can set `warp` without it.
+ * A sub-screen's header, with the two variants the tree cannot carry: MOD INFO
+ * is titled by the mod it is showing (a name that arrives over a bridge, so no
+ * compiled tree could hold it), and the campaign pickers say something
+ * different when they were opened by the developer WARP, which is a mode rather
+ * than a place. The warp variant folds away with the rest of the tooling —
+ * nothing can set `warp` without it.
  */
 export function headingFor(
   screen: MenuScreen,
   warp: boolean,
+  mods?: ModsMenuState,
 ): ScreenHeading | null {
+  // MOD INFO is a page ABOUT one mod, so the mod names it — the tree's own
+  // title is the fallback for a page opened with nothing on it, which the UI
+  // cannot do. A mod that did not compile has no compiled name, so its folder
+  // stands in, exactly as it does on the row that opened this.
+  if (screen === "modinfo" && mods?.selected) {
+    const mod = mods.selected;
+    const title =
+      mod.bundle?.name ??
+      mod.folder.split(/[/\\]/).filter(Boolean).pop() ??
+      mod.key;
+    return { title: title.toUpperCase(), trail: "MODS", tone: "player" };
+  }
   if (__DEV_TOOLS__ && warp && screen === "difficulty") {
     return { title: "DIFFICULTY", trail: "WARP", tone: "dev" };
   }

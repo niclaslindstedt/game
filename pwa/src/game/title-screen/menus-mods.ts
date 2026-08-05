@@ -21,15 +21,22 @@
 //     broken mod appears greyed, with its first error as the blurb, so the
 //     answer is on the screen the player is already looking at rather than in a
 //     log they will never open.
-//  2. **SAY WHICH ONES ARE ON.** Every row is a switch, because "am I playing
-//     the game or someone's conversion of it" is the single most confusing
-//     thing a modded install can be vague about.
+//  2. **SAY WHICH ONES ARE ON.** Every row wears ON or OFF, because "am I
+//     playing the game or someone's conversion of it" is the single most
+//     confusing thing a modded install can be vague about.
+//
+// A row OPENS the mod rather than flipping it (`buildModInfoMenu` below). The
+// list is a list of things to read about first: what a mod actually puts in the
+// game is its author's own inventory (`contents:` in its manifest), which is
+// far more than a row can hold — and switching on a total conversion is a
+// bigger decision than a tap on a list should carry. The switch is the first
+// row of the page the tap opens.
 
 import type { InstalledMod } from "../../app/mods-bridge.ts";
 import { synth } from "../audio.ts";
 // The import-free LEAVES, never `mods.ts` — that one reaches `@game/core`, and
 // this builder is on the app's startup path. See mod-state.ts.
-import type { ModClash } from "../mod-state.ts";
+import type { ModBundle, ModClash, ModContent } from "../mod-state.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import {
   actionRow,
@@ -53,15 +60,7 @@ export function buildModsMenu(
     // The installed mods stand above the tree's own rows — and exactly one of
     // the three states is ever on screen, so the LOADING / NO MODS lines fall
     // where the list would have been.
-    ...(state.rows ?? []).flatMap((row, at) => {
-      const rows = [modRow(row.mod, at, state)];
-      // A LOCAL mod is one the player is authoring, so it — and only it — gets
-      // a PUBLISH row. A subscription is somebody else's to update.
-      if (row.mod.source === "local" && row.mod.bundle) {
-        rows.push(publishRow(row.mod, state));
-      }
-      return rows;
-    }),
+    ...(state.rows ?? []).map((row, at) => modRow(ctx, row.mod, at, state)),
     ...assembleRows("mods", {
       loading: loading ? inert("mods", "loading") : null,
       empty: empty ? inert("mods", "empty") : null,
@@ -104,7 +103,7 @@ export function buildModsMenu(
 }
 
 /** A row that is there to say something, not to be pressed. */
-function inert(screen: "mods" | "modorder", id: string): MenuEntry {
+function inert(screen: "mods" | "modinfo" | "modorder", id: string): MenuEntry {
   return actionRow(screen, id, () => {}, {
     color: "#5a6068",
     locked: true,
@@ -166,27 +165,22 @@ export function displayPath(dir: string): string {
 /** How much tail identifies a folder: `…/ADASTRAIL/MODS` and one above it. */
 const KEPT_SEGMENTS = 3;
 
-function publishRow(mod: InstalledMod, state: ModsMenuState): MenuEntry {
-  return {
-    // The font's own `»`, the same glyph the screen headings use for a path,
-    // so the row reads as belonging to the mod above it without a new indent
-    // capability every other menu would then have to ignore.
-    label: "» PUBLISH TO WORKSHOP",
-    aria: rowAria("mods", `publish-${mod.key}`),
-    blurb: "UPLOADS THIS FOLDER AS YOU WROTE IT - UPDATES THE SAME ITEM",
-    action: () => {
-      playUiSound(synth, "confirm");
-      state.onPublish(mod);
-    },
-  };
-}
-
 function modRow(
+  ctx: MenuContext,
   mod: InstalledMod,
   at: number,
   state: ModsMenuState,
 ): MenuEntry {
   const place = `${at + 1}.`;
+  // A broken mod opens its page too — that is where the rest of its errors
+  // are, and a row can only carry the first one.
+  const open = () => {
+    playUiSound(synth, "confirm");
+    state.select(mod);
+    ctx.setNotice(null);
+    ctx.setScreen("modinfo");
+    ctx.setCursor(0);
+  };
 
   if (!mod.bundle) {
     return {
@@ -195,41 +189,51 @@ function modRow(
       label: `${place} ${folderName(mod)}`,
       aria: rowAria("mods", mod.key),
       color: "#5a6068",
-      locked: true,
+      value: "BROKEN",
       blurb: errorBlurb(mod),
-      action: () => {},
+      action: open,
     };
   }
 
   const bundle = mod.bundle;
-  const on = state.isOn(mod.bundle.id);
   return {
     label: `${place} ${bundle.name}`,
     aria: rowAria("mods", mod.key),
     subtitle: `V${bundle.version} - ${bundle.author}`,
+    // ON or OFF, right-aligned like a settings value rather than drawn as a
+    // switch: the row no longer flips anything, so a control that invites the
+    // arrows to try would be lying about what pressing it does.
+    value: state.isOn(bundle.id) ? "ON" : "OFF",
     blurb: modBlurb(mod, state),
-    // A switch, because a mod is straightforwardly on or off — and the arrows
-    // then steer it, which is why REORDERING is its own screen rather than a
-    // second meaning for the same two keys.
-    toggle: {
-      on,
-      set: (next) => {
-        playUiSound(synth, next ? "confirm" : "back");
-        state.setEnabled(bundle.id, next);
-      },
-    },
-    action: () => {
-      playUiSound(synth, on ? "back" : "confirm");
-      state.setEnabled(bundle.id, !on);
-    },
+    action: open,
   };
 }
 
 /** A broken mod's one line: what went wrong, and how much else did. */
 function errorBlurb(mod: InstalledMod): string {
-  const first = (mod.errors[0] ?? "IT DID NOT COMPILE").toUpperCase();
+  const first = speakable(mod.errors[0] ?? "IT DID NOT COMPILE");
   const rest = mod.errors.length - 1;
-  return rest > 0 ? `${first} (+${rest} MORE)` : first;
+  return rest > 0 ? `${first} (+${rest} MORE - OPEN IT)` : first;
+}
+
+/**
+ * A string the pixel font can actually draw, as far as a swap can get it.
+ *
+ * Everything on this screen comes from OUTSIDE the game — a compiler message, a
+ * stranger's manifest — and the font renders what it has no cell for as `?`.
+ * Its quotes are the single most common offender (every compiler error names an
+ * id in double quotes), and the font's own apostrophe says the same thing, so
+ * that one is worth swapping rather than leaving as a row of question marks.
+ * A mod's own authored lines are checked at COMPILE time (see `readContents`),
+ * which is the fix that scales; this is the safety net for the text nobody
+ * authored.
+ */
+function speakable(text: string): string {
+  return text
+    .replace(/[""„"]/g, "'")
+    .replace(/[''‚]/g, "'")
+    .replace(/…/g, "...")
+    .toUpperCase();
 }
 
 /**
@@ -238,9 +242,9 @@ function errorBlurb(mod: InstalledMod): string {
  * that looks installed and switched on but is not drawing what they expected is
  * the whole reason a load order needs a UI.
  */
-function modBlurb(mod: InstalledMod, state: ModsMenuState): string {
+function modBlurb(mod: InstalledMod, state: ModsMenuState | null): string {
   const bundle = mod.bundle!;
-  const lost = state.overriddenIds(bundle.id);
+  const lost = state?.overriddenIds(bundle.id) ?? 0;
   if (lost > 0) {
     return `${lost} OF ITS ID${lost === 1 ? "" : "S"} ARE OVERRIDDEN BY A LATER MOD - MOVE IT DOWN TO WIN`;
   }
@@ -267,6 +271,168 @@ function modBlurb(mod: InstalledMod, state: ModsMenuState): string {
   if (mod.source === "portable") parts.push("A FILE YOU ADDED");
   if (mod.needsUpdate) parts.push("UPDATE PENDING");
   return parts.join(" - ");
+}
+
+/**
+ * ONE MOD'S PAGE: what it puts in the game, and the switch that decides
+ * whether it does.
+ *
+ * The rows above the fold are the DECISION — the switch, and PUBLISH when the
+ * mod is one the player is writing. Below them is the mod's own INVENTORY: one
+ * row per file the game loads, carrying its author's line about what that file
+ * is (`contents:` in the manifest). That list is the reason this screen exists.
+ * Everything the app can work out for itself — two levels, nine sprites — is
+ * arithmetic; only the author can say that the second level is a seed vault and
+ * that one of the sounds replaces the shotgun's bark.
+ *
+ * A mod that did NOT compile gets the same page with its problems in place of
+ * its inventory. The list row can only carry the first one, and "why will my
+ * subscription not load" is a question that deserves the whole answer.
+ */
+export function buildModInfoMenu(
+  ctx: MenuContext,
+  state: ModsMenuState,
+): MenuEntry[] {
+  const mod = state.selected;
+  if (!mod) return [backRow(ctx, "modinfo")];
+  const bundle = mod.bundle;
+  const on = bundle ? state.isOn(bundle.id) : false;
+  const contents = bundle?.contents ?? [];
+
+  return [
+    ...assembleRows("modinfo", {
+      enabled: {
+        ...actionRow(
+          "modinfo",
+          "enabled",
+          () => {
+            if (!bundle) {
+              playUiSound(synth, "back");
+              return;
+            }
+            playUiSound(synth, on ? "back" : "confirm");
+            state.setEnabled(bundle.id, !on);
+          },
+          {
+            locked: !bundle,
+            color: bundle ? undefined : "#5a6068",
+            state: bundle ? undefined : "broken",
+            subtitle: bundle
+              ? `V${bundle.version} - ${speakable(bundle.author)}`
+              : folderName(mod),
+            // The author's own pitch, right under the switch it is there to
+            // inform. A blurb is a line, not a paragraph, so a Workshop-length
+            // description is cut rather than allowed to push the inventory off
+            // the screen.
+            help: bundle ? describe(bundle, mod) : undefined,
+          },
+        ),
+        toggle: bundle
+          ? {
+              on,
+              set: (next) => {
+                playUiSound(synth, next ? "confirm" : "back");
+                state.setEnabled(bundle.id, next);
+              },
+            }
+          : undefined,
+      },
+      // A LOCAL mod is one the player is authoring, so it — and only it — gets
+      // a PUBLISH row. A subscription is somebody else's to update.
+      publish:
+        mod.source === "local" && bundle
+          ? actionRow("modinfo", "publish", () => {
+              playUiSound(synth, "confirm");
+              state.onPublish(mod);
+            })
+          : null,
+      undeclared:
+        bundle && contents.length === 0 ? inert("modinfo", "undeclared") : null,
+    }),
+    ...(bundle
+      ? contents.map((entry, at) => contentRow(entry, at))
+      : mod.errors.map((problem, at) => problemRow(problem, at))),
+    backRow(ctx, "modinfo"),
+  ];
+}
+
+/** What a mod says about itself, or — when it says nothing — what it ships. */
+function describe(bundle: ModBundle, mod: InstalledMod): string {
+  const own = speakable(bundle.description.trim());
+  if (own)
+    return own.length > DESCRIPTION_MAX
+      ? `${own.slice(0, DESCRIPTION_MAX - 3).trimEnd()}...`
+      : own;
+  return modBlurb(mod, null);
+}
+
+/** A blurb is one line under a row; past this it wraps far enough to push the
+ * inventory below the fold on a phone held in landscape. */
+const DESCRIPTION_MAX = 96;
+
+/** One file the mod ships, as its author described it. */
+function contentRow(entry: ModContent, at: number): MenuEntry {
+  return {
+    label: fileName(entry.path),
+    aria: rowAria("modinfo", `content-${at}`),
+    subtitle: `${entry.change === "replaces" ? "REPLACES" : "ADDS"} ${whatItIs(entry.path)}`,
+    blurb: speakable(entry.summary),
+    // Reading matter, not a control: the cursor lands on it (that is how a
+    // keyboard reads down the list) and pressing it does nothing rather than
+    // buzzing, because there is nothing here that could have been done.
+    action: () => {},
+  };
+}
+
+/** One reason a mod did not compile. */
+function problemRow(problem: string, at: number): MenuEntry {
+  return {
+    label: `PROBLEM ${at + 1}`,
+    aria: rowAria("modinfo", `problem-${at}`),
+    color: "#5a6068",
+    blurb: speakable(problem),
+    action: () => {},
+  };
+}
+
+/** The file's own name, drawable: the pixel font has no underscore, so a
+ * `greenhouse_creeper.yaml` would otherwise read as `GREENHOUSE?CREEPER`. */
+function fileName(filePath: string): string {
+  const stem = filePath.split("/").pop() ?? filePath;
+  return stem
+    .replace(/\.ya?ml$/i, "")
+    .replace(/[_-]+/g, " ")
+    .toUpperCase();
+}
+
+/** What KIND of thing a mod file is, from where it sits — the same layout the
+ * compiler loads by (`mod/tools/layout.mjs`), said in a player's words. */
+const CONTENT_KINDS: Record<string, string> = {
+  "levels/": "A MISSION",
+  "maps/": "A MAP",
+  "enemies/": "A MONSTER",
+  "items/": "AN ITEM",
+  "sprites/": "ART",
+  "sounds/": "A SOUND",
+  "music/": "A TRACK",
+  "cutscenes/": "A SCENE",
+  "quests/": "AN ERRAND",
+  "ladder.yaml": "A RUNG ON THE LADDER",
+  "powerups.yaml": "POWERS",
+  "talents.yaml": "TALENTS",
+  "companions.yaml": "COMPANIONS",
+  "sets.yaml": "ITEM SETS",
+  "difficulties.yaml": "DIFFICULTY NAMES",
+  "thoughts.yaml": "THE HERO'S THOUGHTS",
+  "story-items.yaml": "STORY PIECES",
+  "quest-givers.yaml": "PEOPLE WITH ERRANDS",
+};
+
+function whatItIs(filePath: string): string {
+  for (const [where, what] of Object.entries(CONTENT_KINDS)) {
+    if (filePath.startsWith(where)) return what;
+  }
+  return "CONTENT";
 }
 
 /**
