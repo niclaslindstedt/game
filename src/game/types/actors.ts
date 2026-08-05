@@ -13,6 +13,7 @@ import type {
   ItemSpell,
   PlayerScreen,
   StatName,
+  ViewRect,
 } from "./core.ts";
 
 export type Player = {
@@ -273,6 +274,24 @@ export type Player = {
    * was. Replicates publicly, so the party HUD can say "in their bag".
    */
   screen?: PlayerScreen;
+  /**
+   * WHAT THIS PLAYER CAN SEE — their own camera rect (world px), stamped from
+   * the seat's `GameInput.view` on every tick one arrives.
+   *
+   * It is on the HERO rather than read from the input because most of what
+   * aims for a player runs where the input cannot be reached: the conjured
+   * powers tick a pass later, the sentry grid shoots from where it was
+   * planted, a weapon proc resolves after every enemy pass has finished, and
+   * the hero's own weapon is handed IDLE input while their bag is open (the
+   * camera is still showing them the field behind it). One field, asked
+   * through `game/sight.ts`, and none of those passes can forget.
+   *
+   * It survives a tick that reports no camera — this is "the last screen this
+   * player was shown", the same contract `GameState.view` has — and stays
+   * absent for a hero nobody is watching through (headless tests, the sim run
+   * with `--view none`), where every pick falls back to range and fog alone.
+   */
+  view?: ViewRect;
   /**
    * Which companion's equip screen this player has open while
    * `screen === "companion"` (the companion's id); absent otherwise.

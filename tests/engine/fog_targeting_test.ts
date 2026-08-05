@@ -125,8 +125,12 @@ describe("the fog of war hides a mob from the auto-attack", () => {
       },
     ];
 
-    expect(nearestCrate(state, state.players[0].pos, 260)).toBeUndefined();
+    expect(
+      nearestCrate(state, state.players[0].pos, 260, state.players[0]),
+    ).toBeUndefined();
     revealAll(state);
-    expect(nearestCrate(state, state.players[0].pos, 260)?.pos).toEqual(spot);
+    expect(
+      nearestCrate(state, state.players[0].pos, 260, state.players[0])?.pos,
+    ).toEqual(spot);
   });
 });

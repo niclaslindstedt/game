@@ -66,7 +66,7 @@ import {
   stepOpeningStrike,
   stepSightThoughts,
 } from "../story.ts";
-import type { GameInput, GameState, Player } from "../types/index.ts";
+import type { GameInput, GameState, Player, ViewRect } from "../types/index.ts";
 import { stepEnemies } from "./enemies.ts";
 import { stepItems } from "./items.ts";
 import { stepPacks } from "./packs.ts";
@@ -121,6 +121,22 @@ function inputFor(input: PartyInput, seat: number): GameInput {
   return (input as readonly GameInput[])[seat] ?? IDLE_INPUT;
 }
 
+/**
+ * Take a copy of a reported camera rect INTO the slot that already holds one,
+ * minting a rect only the first time. The app hands the same mutable input
+ * object back every frame, so the rect has to be copied rather than aliased —
+ * but it is four numbers arriving sixty times a second per seat, and spreading
+ * a fresh object each time is allocation for nothing.
+ */
+function copyView(into: ViewRect | undefined, from: ViewRect): ViewRect {
+  const slot = into ?? { x: 0, y: 0, width: 0, height: 0 };
+  slot.x = from.x;
+  slot.y = from.y;
+  slot.width = from.width;
+  slot.height = from.height;
+  return slot;
+}
+
 /** Advance the simulation by `dtMs` milliseconds. */
 export function step(state: GameState, input: PartyInput, dtMs: number): void {
   state.events = [];
@@ -128,11 +144,14 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // single answer to a per-client question. Eight clients have eight cameras;
   // what reads `state.view` is the summon geometry (mobs must run in from off
   // screen) and the autopilot's wall-end sense, and both want "a screenful",
-  // not a specific screen. The passes that genuinely care WHOSE screen — the
-  // weapon's targeting gate — read the seat's own `input.view` instead.
-  // Copied, never aliased — the app reuses its input object across frames.
+  // not a specific screen. The passes that genuinely care WHOSE screen — every
+  // pick the game aims on a hero's behalf — read that hero's own `Player.view`
+  // instead, stamped in the seat loop below and asked through `sight.ts`.
+  // Copied, never aliased — the app reuses its input object across frames —
+  // and copied FIELDWISE, because a fresh rect per tick is 60 objects a second
+  // of pure garbage for four numbers that never change shape.
   const hostInput = inputFor(input, 0);
-  if (hostInput.view) state.view = { ...hostInput.view };
+  if (hostInput.view) state.view = copyView(state.view, hostInput.view);
 
   // The prelude scenes run on the same clock as the sim (deterministic,
   // headless-testable); the world stays frozen until the chain plays out.
@@ -245,6 +264,13 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   for (let seat = 0; seat < state.players.length; seat++) {
     const player = state.players[seat] as Player;
     if (!heroInPlay(player)) continue;
+    // WHAT THIS HERO CAN SEE, onto the hero — from the SEAT's own input, and
+    // ahead of both the ride and the screen substitutions below, because
+    // neither takes the camera away: a hero at the wheel is being driven across
+    // a field he is watching, and a bag held open still has the field behind
+    // it. Everything that aims for him reads it back through `sight.ts`.
+    const reported = inputFor(input, seat).view;
+    if (reported) player.view = copyView(player.view, reported);
     // A hero AT THE WHEEL rides instead of walking: his body travels with
     // the car (so the camera, the fog sweep and everything party-geometric
     // follow the drive), and every on-foot pass sits out — his held pointer

@@ -130,6 +130,14 @@ export const PRIVATE_PLAYER_FIELDS: readonly string[] = [
   // bag" is something the party HUD is meant to say, and D2's own affordance.
   "pendingTalentPoints",
   "companionFocus",
+  // WHAT THIS SEAT'S CAMERA IS SHOWING IT (`Player.view`) — the rect every pick
+  // the game aims on that hero's behalf is gated by (sight.ts). It is the same
+  // kind of fact `state.view` is unsent for: the app writes it, the seat that
+  // owns it is the only one that acts on it, and it changes on nearly every
+  // tick, so broadcasting one hero's screen rect to seven other clients would
+  // be pure bandwidth. Private rather than unsent because the per-player filter
+  // is the tier that can express "the owner's alone".
+  "view",
 ];
 
 /**

@@ -29,6 +29,7 @@ import type {
   PendingCritBlob,
   PendingProc,
   StatName,
+  ViewRect,
 } from "./core.ts";
 import type { GameEvent, GameStats } from "./events.ts";
 import type { Trade, TradeRequest } from "../trade.ts";
@@ -766,14 +767,20 @@ export type GameState = {
   /** Pins on the level map: story finds, rare loot, elite/boss victories. */
   mapMarkers: MapMarker[];
   /**
-   * The last camera rect the app reported (world px) — `GameInput.view`
-   * stamped by `step()` each tick it arrives, so state-readers know WHAT THE
-   * PLAYER CAN SEE. The autopilot's wall-end sense reads it to look exactly
-   * as far as the screen edge in each direction (a wall's end visibly on
-   * screen is known; one past the edge is not). Absent on headless runs
-   * (tests, the sim) — readers fall back to the phone-landscape baseline.
+   * SEAT 0's camera rect (world px) — `GameInput.view` stamped by `step()`
+   * each tick it arrives, so state-readers know roughly WHAT THE PLAYER CAN
+   * SEE. The summon geometry reads it (mobs must run in from off screen) and
+   * so does the autopilot's wall-end sense, which looks exactly as far as the
+   * screen edge in each direction (a wall's end visibly on screen is known;
+   * one past the edge is not). Both want "a screenful", not a specific screen.
+   *
+   * ANYTHING THAT AIMS ON A HERO'S BEHALF WANTS `Player.view` INSTEAD — eight
+   * clients have eight cameras, and a joiner who may only strike what is on
+   * the host's screen cannot fight. `game/sight.ts` picks the right one.
+   * Absent on headless runs (tests, the sim without a camera) — readers fall
+   * back to the phone-landscape baseline, or to no gate at all.
    */
-  view?: { x: number; y: number; width: number; height: number };
+  view?: ViewRect;
   /**
    * Progress along the level's INTENDED PATH (`LevelDef.path`): the index of the
    * next waypoint the hero is steering toward. Advanced by `advancePath` each

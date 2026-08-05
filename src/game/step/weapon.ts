@@ -26,7 +26,7 @@ import {
   wearEquippedWeapon,
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
-import { clearOfFog } from "../fog.ts";
+import { visibleTo } from "../sight.ts";
 import { lineOfSight } from "../obstacles.ts";
 import { createProjectile } from "../projectile.ts";
 import {
@@ -50,9 +50,9 @@ import { faceAlong } from "./player.ts";
 /**
  * The character fights autonomously with whatever is in the weapon slot:
  * melee weapons strike the nearest monster in reach directly, the rest fire
- * a projectile at it. Only monsters inside the current view (input.view) and
- * standing on ground the fog has lifted from (`clearOfFog`) are targets — the
- * character never shoots at enemies the player can't see.
+ * a projectile at it. Only monsters the PLAYER CAN SEE are targets — on this
+ * hero's own screen and standing on ground the fog has lifted from (`sight.ts`
+ * `visibleTo`) — so the character never strikes at what the player can't see.
  */
 export function stepWeapon(
   state: GameState,
@@ -103,7 +103,7 @@ export function stepWeapon(
     state,
     player.pos,
     range,
-    input.view,
+    player,
     (enemy) => lineOfSight(state, player.pos, enemy.pos),
     aim,
   );
@@ -121,7 +121,7 @@ export function stepWeapon(
     target?.pos ??
     (input.fire === true
       ? undefined
-      : nearestCrate(state, player.pos, range, input.view)?.pos);
+      : nearestCrate(state, player.pos, range, player)?.pos);
   if (!targetPos) return;
 
   // The speed stat quickens the cadence: DEX (melee & ranged) and INT (magic)
@@ -429,20 +429,27 @@ function meleeSweep(
  * where the player IS pointing, its alignment with that bearing (`AIM`). They
  * multiply, so an explicit point still beats the heuristic.
  *
- * NOTHING IN THE FOG IS A TARGET (`clearOfFog`). A mob standing on ground the
- * hero has not uncovered is not drawn at all — the main view hides it behind
- * the fog's frontier band — and a weapon that fires at it is shooting into
- * blackness on the player's behalf. It becomes a target the moment the ground
- * under it clears, and the fog never rolls back, so a mob that has once stepped
- * out of it stays fair game wherever it walks afterwards on that floor. Reach
- * is unchanged: a long gun still outranges a pistol, it just cannot reach past
- * what has been explored.
+ * NOTHING THE PLAYER CANNOT SEE IS A TARGET — `visibleTo(state, owner, pos)`,
+ * which is both halves of seeing (sight.ts): the mob has to be ON THIS HERO'S
+ * SCREEN and standing on ground clear of the fog. Either one alone is not the
+ * rule. A mob in the dark is not drawn at all, and a mob two screens north is
+ * not drawn either, however long ago the hero walked that floor — and a weapon
+ * that fires at one is shooting into nothing on the player's behalf.
+ *
+ * `owner` is WHOSE EYES the pick is made through, and it is a required
+ * parameter rather than an optional rect precisely so no new caller can leave
+ * it out: this function is shared by the auto-weapon, the conjured powers, the
+ * sentry grid and the weapon procs, and every one of them acts for some hero.
+ * Pass `undefined` only where there genuinely is no hero behind the pick.
+ *
+ * Reach is unchanged either way: a long gun still outranges a pistol, it just
+ * cannot reach past what the player is being shown.
  */
 export function nearestEnemy(
   state: GameState,
   from: Vec2,
   range: number,
-  view?: GameInput["view"],
+  owner: Player | undefined,
   clear?: (enemy: Enemy) => boolean,
   aim?: Vec2,
 ): Enemy | undefined {
@@ -456,7 +463,6 @@ export function nearestEnemy(
   let best: Enemy | undefined;
   let bestScore = aimed ? Infinity : rangeSq;
   for (const enemy of enemies) {
-    if (view && !insideView(enemy.pos, view)) continue;
     // Reach first, THEN the def: the two cheap coordinate tests throw away most
     // of the horde, so the catalog lookup below is paid only for the handful of
     // bodies actually in range (it answers both the bystander question and the
@@ -486,13 +492,14 @@ export function nearestEnemy(
             dist;
       score = dist * (1 + AIM.biasStrength * (1 - dot) * 0.5) * weight;
     }
-    // The fog and `clear` (line of sight) are both checked lazily — only for
+    // Sight and `clear` (line of sight) are both checked lazily — only for
     // candidates that would actually win — so their cost scales with
-    // improvements, not with the whole horde. The fog goes first: a 5×5 sweep
-    // of a byte grid is cheaper than a segment against every obstacle.
+    // improvements, not with the whole horde. Sight goes first: a rect test and
+    // a 5×5 sweep of a byte grid are cheaper than a segment against every
+    // obstacle.
     if (
       score <= bestScore &&
-      clearOfFog(state, enemy.pos) &&
+      visibleTo(state, owner, enemy.pos) &&
       (!clear || clear(enemy))
     ) {
       best = enemy;
@@ -500,14 +507,4 @@ export function nearestEnemy(
     }
   }
   return best;
-}
-
-/** Is a world position on screen (inside the camera rect)? */
-function insideView(pos: Vec2, view: NonNullable<GameInput["view"]>): boolean {
-  return (
-    pos.x >= view.x &&
-    pos.x <= view.x + view.width &&
-    pos.y >= view.y &&
-    pos.y <= view.y + view.height
-  );
 }

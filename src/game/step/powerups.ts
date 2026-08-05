@@ -252,7 +252,11 @@ function stepWell(
   const core = (ability.pos ??= { ...player.pos });
 
   if (well.chase > 0) {
-    const prey = nearestEnemy(state, core, WELL_HUNT_RANGE);
+    // The cyclone hunts what its OWNER can see (sight.ts, through
+    // `nearestEnemy`) — otherwise a 340 px sniff walks it off the screen after
+    // prey the player never knew was there, and the power the player spent
+    // wanders out of the fight.
+    const prey = nearestEnemy(state, core, WELL_HUNT_RANGE, player);
     if (prey) ability.pos = moveToward(core, prey.pos, well.chase * dt);
   }
 
@@ -389,9 +393,14 @@ function stepImmolation(
 
 /**
  * SENTRY GRID (`turret`): each deployed gun runs its own fire clock and shoots
- * the nearest body IT can see, from where IT stands — so the grid keeps
- * covering the ground the hero has already walked off. A gun with nothing in
- * range holds its shot (and its clock) rather than firing into the dark.
+ * the nearest body in reach OF ITS OWN POSITION — so the grid keeps covering
+ * the ground the hero has already walked off. A gun with nothing in range holds
+ * its shot (and its clock) rather than firing into the dark.
+ *
+ * Its mark is still judged by what the PLAYER can see rather than by what the
+ * gun could plausibly make out (`nearestEnemy`'s owner): a grid planted at the
+ * edge of the screen shooting at something past it is a gun firing off frame,
+ * which is exactly the complaint whether or not the barrel had a view of it.
  */
 function stepTurret(
   state: GameState,
@@ -407,7 +416,7 @@ function stepTurret(
   for (const node of nodes) {
     node.cooldownMs -= dtMs;
     if (node.cooldownMs > 0) continue;
-    const mark = nearestEnemy(state, node.pos, turret.range);
+    const mark = nearestEnemy(state, node.pos, turret.range, player);
     if (!mark) continue;
     node.cooldownMs = turret.intervalMs;
     state.projectiles.push({
