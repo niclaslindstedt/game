@@ -35,6 +35,7 @@ session:
 ```sh
 steamcmd +login <your-steam-username>     # answer the Steam Guard prompt, then `quit`
 export STEAM_USER=<your-steam-username>   # what `npm run steam:upload` uses
+export STEAM_WEB_API_KEY=<publisher key>  # what the achievement verify (§1.4) uses
 ```
 
 Do this before anything scripted. A first non-interactive run always fails on
@@ -105,12 +106,50 @@ see [What fails quietly](#what-fails-quietly).
    `node scripts/steam-achievements.mjs` from the repo root; the test suite
    fails when it drifts from the catalog.
 
+   **Do not transcribe it from the JSON.** Valve documents no API for creating
+   an achievement _definition_ — the Web API unlocks and queries stats at
+   runtime, the schema is authored here, by hand, one web form per row — so the
+   entry stays manual and 86 rows read out of a text editor while a browser
+   waits is exactly where a typo comes from. Two commands split the job at the
+   line Valve draws:
+
+   ```sh
+   make store-steam-achievements                      # the worksheet
+   make store-steam-achievements ARGS="--verify"      # …then check what you typed
+   ```
+
+   The **worksheet** prints one block per achievement with the fields in the
+   order this form asks for them and both icon paths filled in, so it is read
+   top to bottom without re-deriving anything per row.
+   `ARGS="--format tsv --out /tmp/rows.tsv"` writes the same thing as a
+   spreadsheet instead.
+
+   The **verification pass** is the half that actually retires the risk. It
+   reads the app's achievement schema back
+   (`ISteamUserStats/GetSchemaForGame`) and names every id the partner site is
+   missing — and, when a missing id is a near-miss on one the site DOES have,
+   says so, because a typo and an unentered row look identical and are
+   completely different work. It exits non-zero on a missing id, reports
+   drifted display text without failing (add `--strict` to fail on that too),
+   and names any row still drawing Valve's placeholder instead of our icons.
+   It needs a **publisher Web API key**:
+
+   ```sh
+   export STEAM_WEB_API_KEY=…   # Steamworks → Users & Permissions →
+                                # Manage Groups → your group → Create Web API Key
+   ```
+
+   A personal Web API key authenticates fine and still cannot read an app that
+   has not been released, which arrives as a bodyless 403.
+
    > Steam caps a **new** app at **100 achievements** until it reaches the
    > Profile Features threshold, which is why the shipped list is a curated 86
    > rather than all 226. Once the cap lifts, flip `STEAM_FULL_CATALOG` in
    > `pwa/src/game/platform-achievements.ts`, regenerate, and create the new
    > rows. That switch goes false → true and **never back**: an achievement id
-   > is permanent once any player has unlocked it.
+   > is permanent once any player has unlocked it. Both commands below take
+   > that second, larger run as it comes — the worksheet grows and the verify
+   > reports the 140 new ids as missing until they are in.
 
    Every row also takes **two 64×64 icons** — achieved and locked, which the
    overlay draws side by side. Both are generated, not drawn:
@@ -319,7 +358,10 @@ Four things in this pipeline break without any error at all, which is why
 - **App id 480.** Valve's shared Spacewar test app. Everything works; the data
   goes into a sandbox every developer on Steam shares.
 - **An achievement id that isn't in the partner site.** The report is dropped
-  on the floor, silently, forever.
+  on the floor, silently, forever. This is the only one of the four that
+  `steam:upload` cannot see — it is a fact about the partner site, not about
+  the build — so it has its own check:
+  `make store-steam-achievements ARGS="--verify"` (§1.4).
 
 ## What you do NOT have to build
 
