@@ -79,6 +79,7 @@ export const LEVEL_FIELDS = {
   hayBalls: "the hazards section",
   firstKillThoughts: "the story section, behind the reveal",
   firstSightThoughts: "the story section, behind the reveal",
+  placeThoughts: "the story section, behind the reveal",
   playerSpawn: "the map render's start marker",
   music: "not reader-facing: which track the app plays here",
   tiles: "the ground the page is tiled with (through the renderer's own rule)",
@@ -414,6 +415,14 @@ function missionModel(level, order) {
           ...trigger,
           when: "kill",
           enemy: enemyLink(trigger.enemy),
+        })),
+        // The PLACE-pinned beats have no speaker at all — they are pinned to
+        // being somewhere (the hub's "take the car", and its "you are walking")
+        // — so `where` carries what the others carry in `enemy`.
+        ...(level.placeThoughts ?? []).map((trigger) => ({
+          ...trigger,
+          when: "place",
+          enemy: null,
         })),
       ],
     },

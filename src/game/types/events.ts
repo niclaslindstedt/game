@@ -779,6 +779,12 @@ export type GameEvent =
    */
   | { type: "carStarted"; pos: Vec2 }
   /**
+   * A hero switched the engine off and got out (`exitCar`). The app plays the
+   * key coming out and the idle dying away; the lights and the body shiver go
+   * out on their own, because both key off `CarVehicle.driver`.
+   */
+  | { type: "carStopped"; pos: Vec2 }
+  /**
    * The running engine's cadence grain — fired every `CAR.engineCueMs`
    * while somebody is at the wheel, like `stampedeRumble`: each grain is a
    * touch shorter than the app's putter, so successive grains overlap into

@@ -533,6 +533,7 @@ export {
   WHEEL_DEBRIS,
   nudgeCar,
   enterCar,
+  exitCar,
   shedPart,
   detachWheel,
   stepVehicles,

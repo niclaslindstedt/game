@@ -149,7 +149,7 @@ import {
   unmuteDialogue,
 } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
-import { enterCar } from "./vehicles.ts";
+import { enterCar, exitCar } from "./vehicles.ts";
 import { requestTravel } from "./travel.ts";
 import type {
   CompanionSlot,
@@ -343,6 +343,10 @@ export const RUN_COMMAND_ARGS = {
   // arguments: the car is found by standing at it, and WHO climbs in is the
   // acting hero, exactly like every counter verb.
   enterCar: [],
+  // …and back out of it. No arguments for the same reason: WHO gets out is
+  // whoever this client is admitted as, and the engine refuses it for anybody
+  // who is not actually at that car's wheel.
+  exitCar: [],
   // THE SHIP HE CANNOT FLY YET. A tap on a standing travel door whose roads are
   // all still locked plays the door's own line instead of a picker full of
   // places the player has not earned (`travelDoors[].unready`). WHICH roads are
@@ -707,6 +711,8 @@ export function applyRunCommand(
     // THE DRIVEWAY
     case "enterCar":
       return enterCar(state, hero);
+    case "exitCar":
+      return exitCar(state, hero);
     case "tapTravelDoor":
       return tapTravelDoor(state, hero, str(a, 0));
 

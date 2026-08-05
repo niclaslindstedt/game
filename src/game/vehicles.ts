@@ -26,8 +26,9 @@
 // landmark as the travel door's tap anchor, and the renderer draws the
 // assembly in the landmark's place (pwa/src/game/render/vehicles.ts).
 
-import type { Vec2 } from "@game/lib/vec.ts";
+import { clamp, type Vec2 } from "@game/lib/vec.ts";
 
+import { PLAYER } from "./config/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { resolveObstacles } from "./obstacles.ts";
@@ -114,10 +115,10 @@ export const CAR = {
    * coasts while the nose comes around. */
   forwardArc: Math.PI * 0.42,
   reverseArc: Math.PI * 0.75,
-  /** The body's collision circle (world px) — the car shoves out of walls
-   * and furniture like any other body; it does NOT phase through the shut
-   * garage door. */
-  bodyRadius: 14,
+  /** How far out of the driver's door a hero steps when he gets out
+   * (`exitCar`, world px, abeam the nose) — clear of the body he was just
+   * inside, so the shove-out has nothing left to do in the common case. */
+  stepOut: 16,
   /** Driving this far from `home` books the departure (`carDeparted`) on a
    * map with neither a ROAD OUT (`LevelDef.driveOut`) nor a garage door; with
    * a door and no road, the departure is the door's own threshold instead
@@ -278,15 +279,48 @@ export function createVehicles(
 }
 
 /** The blockers a vehicle parks on `state.obstacles` (kind "vehicle" — the
- * obstacle pass skips them; the assembly is drawn by the vehicle renderer). */
+ * obstacle pass skips them; the assembly is drawn by the vehicle renderer).
+ * The offsets run along the machine's OWN nose, so a car parked (or left)
+ * facing any which way blocks the ground it actually covers. */
 export function vehicleFootprint(
   vehicle: Vehicle,
 ): { pos: Vec2; radius: number }[] {
   const print = vehicle.kind === "car" ? CAR.footprint : SHIP.footprint;
-  return print.offsets.map((dx) => ({
-    pos: { x: vehicle.pos.x + dx, y: vehicle.pos.y },
+  const heading = vehicle.kind === "car" ? vehicle.heading : 0;
+  const cos = Math.cos(heading);
+  const sin = Math.sin(heading);
+  return print.offsets.map((along) => ({
+    pos: {
+      x: vehicle.pos.x + cos * along,
+      y: vehicle.pos.y + sin * along,
+    },
     radius: print.radius,
   }));
+}
+
+/**
+ * Park a vehicle's blockers back on the field — the same circles `create.ts`
+ * lays under a machine when the level is built, minted fresh at wherever it
+ * now stands. Used when a driver gets out (`exitCar`): a car left in the
+ * middle of the drive is furniture again, exactly as the one that was never
+ * driven is.
+ *
+ * The obstacle array is REPLACED rather than pushed into, because the spatial
+ * index caches on the array's identity (see obstacles.ts) — a mutation in
+ * place would leave every query reading a grid that has never heard of these.
+ * The caller owns the `obstaclesVersion` bump.
+ */
+function parkVehicle(state: GameState, vehicle: Vehicle): void {
+  state.obstacles = state.obstacles.concat(
+    vehicleFootprint(vehicle).map((print) => ({
+      id: state.nextId++,
+      kind: "vehicle",
+      sprite: "",
+      pos: print.pos,
+      radius: print.radius,
+      jumpable: vehicle.kind === "car",
+    })),
+  );
 }
 
 /** Shove a car's axle (rear, front — px/s downward). The springs answer,
@@ -413,6 +447,57 @@ export function enterCar(state: GameState, hero: Player): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Switch the engine off and get out — the tap-the-car verb again, read the
+ * other way round (`exitCar`).
+ *
+ * A car you can climb into and not climb out of is a trap: the only way out of
+ * the driver's seat used to be to drive the whole way to the road and commit
+ * the trip, so a player who boarded to see what it did was stuck in the hub's
+ * one vehicle until he left the level in it. Tapping the car he is sitting in
+ * is the same gesture that put him there, so it is the one that takes him out.
+ *
+ * Whoever is at the wheel is the ACTING hero, never a seat named by the caller.
+ * The car becomes furniture again where it now stands (`parkVehicle` — the
+ * mirror of the blockers `enterCar` lifted, and `obstaclesVersion` bumps so the
+ * autopilot's nav grid hears about the wall that just appeared), and the hero
+ * steps out abeam the nose and is shoved clear of anything he would be standing
+ * in — the car he just left included.
+ */
+export function exitCar(state: GameState, hero: Player): boolean {
+  const seat = state.players.indexOf(hero);
+  if (seat < 0) return false;
+  const car = state.vehicles.find(
+    (v): v is CarVehicle => v.kind === "car" && v.driver === seat,
+  );
+  if (!car) return false;
+  car.driver = null;
+  // The key comes out: no speed, and both cue clocks re-armed so the next
+  // start coughs from the top rather than a grain into an idle it left.
+  car.speed = 0;
+  car.engineCueMs = 0;
+  car.grindCueMs = 0;
+  parkVehicle(state, car);
+  state.obstaclesVersion++;
+  const side = car.heading - Math.PI / 2;
+  hero.pos.x = clamp(
+    car.pos.x + Math.cos(side) * CAR.stepOut,
+    PLAYER.radius,
+    state.level.width - PLAYER.radius,
+  );
+  hero.pos.y = clamp(
+    car.pos.y + Math.sin(side) * CAR.stepOut,
+    PLAYER.radius,
+    state.level.height - PLAYER.radius,
+  );
+  resolveObstacles(state, hero.pos, PLAYER.radius);
+  state.events.push({
+    type: "carStopped",
+    pos: { x: car.pos.x, y: car.pos.y },
+  });
+  return true;
 }
 
 /**
@@ -663,9 +748,9 @@ function driveCar(
   if (car.speed !== 0) {
     car.pos.x += Math.cos(car.heading) * car.speed * dt;
     car.pos.y += Math.sin(car.heading) * car.speed * dt;
-    // The body is a body: walls and furniture shove it out, so the shut
-    // garage door (its obstacle chain) really stops the bumper.
-    resolveObstacles(state, car.pos, CAR.bodyRadius);
+    // The body is a body: walls, furniture and the lot's own boundary shove it
+    // out, so the shut garage door (its obstacle chain) really stops the bumper.
+    collideCarBody(state, car);
   }
   // The side-profile art has two poses; the nose's x-sign picks one. The
   // dead zone keeps a car driving straight up/down the screen from
@@ -736,6 +821,51 @@ function driveCar(
           });
       }
     }
+  }
+}
+
+/**
+ * THE CAR COLLIDES AS A CAR, NOT AS A DOT.
+ *
+ * A single circle at the body's centre was wrong in both directions and both
+ * showed: a 48-px wagon is more than twice as long as it is wide, so one circle
+ * fat enough to hold the flanks let a nose driven at a wall bury a third of the
+ * bonnet in it, and one small enough to fit through the bay's doorway let the
+ * whole back end swing through the door frame on the way out. So the pass runs
+ * the SAME circles the parked car blocks the floor with (`vehicleFootprint`),
+ * turned with the nose: rear, middle, front, each shoved out on its own and the
+ * shove carried back to the body. A corner resolves because each point is read
+ * from the position the one before it left the car in.
+ *
+ * THE LOT IS FINITE TOO. Nothing pins an obstacle along the map's outer edge —
+ * the hero is held in by an explicit clamp in his own step (step/player.ts) —
+ * so a car that only ever asked the obstacle field where it could go drove off
+ * the map entirely, out into the black past the verge. The same clamp is
+ * applied here, per body point, so the boundary stops the BUMPER rather than
+ * the centre and a car pulled up against it stays wholly on the lot.
+ *
+ * …except during THE DRIVE-OUT, which is the one time the car is SUPPOSED to
+ * leave: the beat aims it at a point well off the map on purpose and the
+ * picture washes to black over it (see DEPARTURE), so a boundary clamp would
+ * park the departing car against the edge of the world with a second of fade
+ * still to run.
+ */
+function collideCarBody(state: GameState, car: CarVehicle): void {
+  const cos = Math.cos(car.heading);
+  const sin = Math.sin(car.heading);
+  const r = CAR.footprint.radius;
+  const leaving = state.departure !== null;
+  for (const along of CAR.footprint.offsets) {
+    const px = car.pos.x + cos * along;
+    const py = car.pos.y + sin * along;
+    const point = { x: px, y: py };
+    resolveObstacles(state, point, r);
+    if (!leaving) {
+      point.x = clamp(point.x, r, state.level.width - r);
+      point.y = clamp(point.y, r, state.level.height - r);
+    }
+    car.pos.x += point.x - px;
+    car.pos.y += point.y - py;
   }
 }
 

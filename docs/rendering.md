@@ -538,3 +538,31 @@ exactly one place:
   whole ladder side by side on the moon's dark regolith (a pale deck plate
   flatters every tier equally, which is the one thing a comparison must not do)
   and `loot-toss` runs a whole spill.
+
+## What advertises itself as tappable
+
+The field carries a handful of things a press ACTS on rather than walks to, and
+nothing about a top-down pixel scene says which. The rules are the same three
+every time.
+
+- **A GLOW IS THE ONLY CUE, AND IT IS ON EXACTLY WHEN THE PRESS WORKS.** The
+  parked car in the hub wears a faint amber halo while the local hero stands
+  inside `CAR.boardRadius` — the reach `enterCar` revalidates the tap against —
+  and it fades in over the last few paces rather than switching on under his
+  feet (`pwa/src/game/render/vehicles.ts`). It is drawn UNDER the assembly, so
+  the machine stands in its own light instead of behind a wash, and it goes out
+  the moment somebody is at the wheel: a running car has its lights on and its
+  body shivering, and a second "you may touch this" over the top would be noise.
+  The car needs this and the rocket does not, which is the whole test for
+  whether a fixture wants one — a rocket on a lawn is self-evidently a thing you
+  press, and a thirty-year-old hatchback in a garage full of furniture is
+  furniture until something says otherwise.
+- **IT OBEYS THE XP VEIL'S THREE RULES** (`render/xp-veil.ts`, where the
+  reasoning lives): closed-form off the render clock, so there is no state and
+  nothing to desync; ONE baked `glowSprite` scaled and alpha'd at draw time,
+  never a gradient per frame; and faint enough to live at the edge of attention.
+- **THE TAP IS AIMED AT THE THING, NOT AT ITS ANCHOR.** A travel door is tapped
+  through its LANDMARK, which is correct only because a landmark never moves. A
+  driven car does — so the press that gets the hero back OUT of it
+  (`exitCar`) hit-tests the car's own position, which is the machine the player
+  can actually see under his thumb.

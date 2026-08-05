@@ -46,6 +46,17 @@ heroSuited: false
 foes: TROUBLE
 objective:
   type: hub
+# THE PLACE-PINNED BEATS (see `LevelDef.placeThoughts`). The hub has no horde,
+# so it has nothing to pin a thought to but the ground itself: the errand on
+# arrival, and — if he strolls out under the roll-up on his own feet instead of
+# taking the car — the same errand said less kindly. Each is read once ever
+# (`thoughtsSeen`), and the second holds until the first has been read.
+placeThoughts:
+  - thought: garage_take_the_car
+    where: arrival
+  - thought: garage_on_foot
+    where: pastDoor
+    after: garage_take_the_car
 merchant:
   # The GOODCO vending-machine trader, parked at a counter — he follows the
   # customer, and the customer lives here now. Parked mode is deliberately

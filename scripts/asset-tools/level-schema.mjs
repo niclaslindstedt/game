@@ -53,6 +53,9 @@ export const CARVED_FIELDS = [
 
 const OBJECTIVES = new Set(["killBoss", "clearAll", "reachExit", "hub"]);
 
+/** What `placeThoughts[].where` may say — the engine's `PlaceThoughtWhere`. */
+const PLACE_THOUGHT_WHERE = new Set(["arrival", "pastDoor"]);
+
 const isVec = (v) => v && typeof v.x === "number" && typeof v.y === "number";
 
 /**
@@ -259,6 +262,26 @@ export function validateLevel(def, refs, description = "", options = {}) {
     enemy(t.enemy, "firstSightThoughts");
     thought(t.thought, "firstSightThoughts");
     thought(t.after, "firstSightThoughts.after");
+  }
+  // PLACE-pinned beats: a thought pinned to being somewhere rather than to a
+  // mob. `where` is a closed vocabulary the ENGINE answers (see
+  // `PlaceThoughtWhere`), so an unknown word here would be a beat that silently
+  // never fires — the exact failure a schema exists to turn into a build error.
+  //
+  // What is NOT checked here, deliberately: whether a `pastDoor` beat has a door
+  // to be past. A mission carries no geometry — the roll-up is a `type: door`
+  // object on the blueprint the floor plan is CARVED from — so a mission simply
+  // cannot see whether its venue hangs an approach door, and a check that
+  // guessed would fail the one level that actually does.
+  for (const t of def.placeThoughts ?? []) {
+    thought(t.thought, "placeThoughts");
+    thought(t.after, "placeThoughts.after");
+    if (!PLACE_THOUGHT_WHERE.has(t.where)) {
+      err(
+        `placeThoughts "${t.thought}" has unknown where "${t.where}" ` +
+          `(expected ${[...PLACE_THOUGHT_WHERE].join(" | ")})`,
+      );
+    }
   }
   if (def.openingStrike) {
     thought(def.openingStrike.thought, "openingStrike");

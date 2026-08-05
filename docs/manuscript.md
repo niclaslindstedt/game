@@ -225,6 +225,29 @@ the ship still wants its part._
 
 1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
 
+### Hero's thought — standing in the bay for the first time
+
+_The hub's ARRIVAL beat (`placeThoughts`, `where: arrival`), and one of only two
+lines in the game pinned to nothing but BEING somewhere: the monologue above
+plays on the doorstep, before the lot is walkable, and it is the establishing
+shot rather than the errand. This is the errand. It fires on the first live tick
+the hero has at home, after the prelude and after the doorstep line, and it is
+read once and never again — the player who has been told where the car goes does
+not need telling twice._
+
+1. THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT.
+
+### Hero's thought — walking out of the bay instead of driving
+
+_The other one (`placeThoughts`, `where: pastDoor`): he has strolled out under
+the roll-up on his own two feet and left the car standing in the garage. It is
+the only nudge in the game a player earns by ignoring one, so it is short and
+dry, and it names the stake rather than the mechanic — he is not going to GOODCO
+for a part, he is going for ADA, and the part is how. Read once, ever, and never
+while he is at the wheel: the car crosses this same threshold on its way out._
+
+1. WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
+
 ### Hero's thought — trying THE ROCKET before the part is home
 
 _The hero's own only other line at home, and the only one in the game pinned to a DOOR
@@ -3013,6 +3036,7 @@ at the top of this file).
 | The scripted opening strike's blows (`openingStrike`)        | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml` |
 | Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                    |
 | What he says at a door with no open road                     | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `src/game/story.ts`)                           |
+| What he thinks about being SOMEWHERE (`placeThoughts`)       | `content/thoughts.yaml` (pinned from `placeThoughts` in `content/levels/<id>.yaml` — `where: arrival` / `pastDoor`; fired by `stepPlaceThoughts` in `src/game/story.ts`)  |
 | Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                                             |
 | Companion joining words + kill quotes                        | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                          |
 | Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                  |

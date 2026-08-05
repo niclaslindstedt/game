@@ -1485,6 +1485,17 @@
       "objective": {
         "type": "hub"
       },
+      "placeThoughts": [
+        {
+          "thought": "garage_take_the_car",
+          "where": "arrival"
+        },
+        {
+          "thought": "garage_on_foot",
+          "where": "pastDoor",
+          "after": "garage_take_the_car"
+        }
+      ],
       "merchant": {
         "sprite": "merchant_vendor",
         "parked": true

@@ -64,6 +64,7 @@ import {
   stepDoors,
   stepGates,
   stepOpeningStrike,
+  stepPlaceThoughts,
   stepSightThoughts,
 } from "../story.ts";
 import type { GameInput, GameState, Player } from "../types/index.ts";
@@ -358,6 +359,12 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, runLevelDef(state).firstSightThoughts);
+  // The venue's PLACE-pinned beats — the hub's "take the car to GOODCO", and
+  // its "you are walking out of here" when he leaves the bay on foot instead.
+  // Behind the sightings so a map that pins both lets the monster have the first
+  // word, and gated on `playing` by the phase check at the top of this step, so
+  // neither ever lands over the doorstep intro or the prelude.
+  stepPlaceThoughts(state, runLevelDef(state).placeThoughts);
   // The scripted vanguard's proximity draws the blade (GOODCO HQ's
   // `openingStrike`) — judged after the horde has moved and after the sighting
   // beat above, so the "look at this place" read always lands first.
