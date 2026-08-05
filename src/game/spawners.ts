@@ -193,6 +193,8 @@ function emitPos(
   // Around the hero NEAREST the point: a summon is a squad running in on
   // whoever tripped the alarm, and a ring drawn on the party's middle would
   // deliver it into the floor between two players standing apart.
+  // Seat 0 only with the party wiped — a ring still needs a centre to be drawn
+  // around, and a mid-wipe tick must not divide by nobody.
   const player = (nearestHero(state, spawner.at) ?? state.players[0]).pos;
   const dx = spawner.at.x - player.x;
   const dy = spawner.at.y - player.y;

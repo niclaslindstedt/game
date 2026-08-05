@@ -814,6 +814,12 @@ export function createGame(
   // it takes.
   if (def.revealed) state.explored.fill(1);
 
+  // SEAT 0 IS CORRECT FOR THE REST OF THIS FUNCTION, and for exactly one
+  // reason: `createGame` MINTS the party, and it mints it with one hero in it.
+  // Every joiner arrives later through `seatHero`, which dresses their own seat
+  // from their own arrival parameters — so "the hero" here is not a stand-in
+  // for a parameter, it is the only hero that exists yet.
+  //
   // The difficulty's head start: pre-allocated stat points (the gentler rungs
   // open with a few level-ups' worth of training banked). Applied before any
   // loadout, which simply overwrites them with the hero's own earned stats.
@@ -941,6 +947,8 @@ function placeItem(
       id,
       kind: "equipment",
       pos,
+      // Minted during `createGame`, when the party is one hero — see the note
+      // in `createGame` above.
       equipment: rollEquipment(state, state.players[0], {
         defId: placed.defId,
       }),

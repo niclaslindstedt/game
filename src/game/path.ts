@@ -12,6 +12,7 @@ import { distanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { PATH } from "./config/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
+import { nearestHero } from "./party.ts";
 import type { GameState } from "./types/index.ts";
 
 /** The level's authored waypoints, or undefined when it declares no path. */
@@ -31,9 +32,17 @@ export function advancePath(state: GameState): void {
   const path = pathOf(state);
   if (!path) return;
   const reachSq = PATH.reachRadius * PATH.reachRadius;
-  const pos = state.players[0].pos;
   while (state.pathIndex < path.length) {
     const cur = path[state.pathIndex]!;
+    // WHOEVER IS FURTHEST ALONG WALKS THE ROUTE FOR EVERYBODY. `pathIndex` is
+    // the RUN's marker — one arrow, shown to the whole party — so the node is
+    // retired by the hero who actually reached it rather than by seat 0, who
+    // may well be the one lagging behind. Read per node (the scout for the
+    // next leg may be a different player), and a wiped party simply stops
+    // advancing.
+    const scout = nearestHero(state, cur);
+    if (!scout) return;
+    const pos = scout.pos;
     // Reached the node → retire it.
     if (distanceSq(pos, cur) <= reachSq) {
       state.pathIndex++;

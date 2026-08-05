@@ -32,6 +32,7 @@ import {
   registerDefs,
   repelFromQuestGivers,
   resumeGame,
+  seatHero,
   skipCutscene,
   step,
   talkToQuestGiver,
@@ -568,6 +569,25 @@ describe("an escort errand", () => {
     }
     expect(state.quests.test_walk?.status).toBe("failed");
     expect(state.escorts).toHaveLength(0);
+  });
+
+  it("follows the NEAREST hero, not seat 0 across the map", () => {
+    const state = questRun();
+    takeWalk(state);
+    const escort = state.escorts[0]!;
+    const joiner = seatHero(state, null);
+    // The host walks off to the far corner; the joiner stands a few steps from
+    // the person being walked. Read against seat 0 the escort is past its
+    // leash and plants itself — which is the bug this pins.
+    state.players[0].pos = { x: 2200, y: 200 };
+    joiner.pos = {
+      x: escort.pos.x + QUESTS.escortFollowDistance + 40,
+      y: escort.pos.y,
+    };
+    const startedAt = escort.pos.x;
+    step(state, idle, DT);
+    expect(escort.waiting).toBe(false);
+    expect(escort.pos.x).toBeGreaterThan(startedAt);
   });
 
   it("stops walking once the hero has left it behind", () => {

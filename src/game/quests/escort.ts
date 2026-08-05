@@ -24,6 +24,7 @@ import { QUESTS } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { questDef, questEscortDef } from "../defs/quests.ts";
 import { resolveObstacles } from "../obstacles.ts";
+import { nearestHero } from "../party.ts";
 import type { EscortState, GameState } from "../types/index.ts";
 import { inert } from "../disposition.ts";
 
@@ -93,15 +94,18 @@ export function stepEscorts(
     // "bring them along", so the hero's route is the route, and a follower
     // that pathed to the goal on its own would simply solve the quest by
     // itself while he fought somewhere else.
-    const toHero = distance(escort.pos, state.players[0].pos);
+    //
+    // WHICH hero is the NEAREST one — a frightened civilian follows whoever is
+    // beside them, and in a party an escort that only ever tracked seat 0 would
+    // stand rooted at the leash while the three players actually walking it
+    // wondered why nobody was coming.
+    const leader = nearestHero(state, escort.pos);
+    if (!leader) continue;
+    const toHero = distance(escort.pos, leader.pos);
     escort.waiting = toHero > QUESTS.escortLeashDistance;
     if (!escort.waiting && toHero > QUESTS.escortFollowDistance) {
       const before = escort.pos;
-      escort.pos = moveToward(
-        escort.pos,
-        state.players[0].pos,
-        QUESTS.escortSpeed * dt,
-      );
+      escort.pos = moveToward(escort.pos, leader.pos, QUESTS.escortSpeed * dt);
       const dx = escort.pos.x - before.x;
       if (Math.abs(dx) > 0.01) escort.faceLeft = dx < 0;
       escort.moving = true;

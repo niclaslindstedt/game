@@ -713,6 +713,23 @@ describe("the counter in co-op — every mutator acts on the ACTING hero", () =>
     expect(host.coins).toBe(hostCoins);
   });
 
+  it("a joiner's buy-back returns the piece to the joiner's own bag", () => {
+    const state = startGame();
+    const joiner = seatJoiner(state);
+    const host = state.players[0];
+    const hostCoins = host.coins;
+    const goods = piece("blaster");
+    joiner.inventory[0] = goods;
+    openShop(state, joiner);
+    const paid = sellItem(state, joiner, 0)!;
+    joiner.coins = paid; // exactly enough to take it back
+    expect(buybackItem(state, joiner, goods.id)).toBeNull();
+    expect(joiner.inventory.some((cell) => cell?.id === goods.id)).toBe(true);
+    expect(joiner.coins).toBe(0);
+    expect(host.coins).toBe(hostCoins);
+    expect(buybackContents(state.merchant)).toHaveLength(0);
+  });
+
   it("the shopper has to be at the counter — their own feet, not seat 0's", () => {
     const state = startGame();
     const joiner = seatJoiner(state);

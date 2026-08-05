@@ -40,7 +40,7 @@ function ready(ability: BlinkStrikeAbility, ctx: AbilityCtx): boolean {
 function cast(ability: BlinkStrikeAbility, ctx: AbilityCtx): void {
   const { state, enemy, def } = ctx;
   const from = { ...enemy.pos };
-  const dir = ctx.lockedDir ?? direction(enemy.pos, state.players[0].pos);
+  const dir = ctx.lockedDir ?? direction(enemy.pos, ctx.target.pos);
   // The RANGE locked at the tell, not the one measured now. See the header.
   const travel = Math.max(
     0,
@@ -59,15 +59,16 @@ function cast(ability: BlinkStrikeAbility, ctx: AbilityCtx): void {
   // arrival as one move rather than guessing they belong together.
   pushEliteCast(state, enemy, ability, { pos: from, to: { ...enemy.pos } });
 
-  if (!groundMoveCanTouch(state)) return;
+  if (!groundMoveCanTouch(ctx.target)) return;
   if (
-    distance(state.players[0].pos, enemy.pos) >
+    distance(ctx.target.pos, enemy.pos) >
     ability.strikeRadius + PLAYER.radius
   ) {
     return;
   }
   landHostileBlow(
     state,
+    ctx.target,
     mobBlowDamage(enemy, def.contactDamage, ability.damageFrac),
     enemy.mlvl,
     `${enemy.defId}:blink_strike`,

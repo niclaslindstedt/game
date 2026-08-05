@@ -6,9 +6,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   CONSUMABLES,
+  consumeRepairKit,
   gearDef,
   isBetterEquipment,
   rollEquipment,
+  seatHero,
   step,
   weaponDef,
 } from "@game/core";
@@ -293,6 +295,23 @@ describe("repair kits — spending", () => {
     expect(state.events).toContainEqual(
       expect.objectContaining({ type: "repairKitUsed" }),
     );
+  });
+
+  it("mend the SPENDER's kit, not seat 0's", () => {
+    const state = startGame();
+    clearStage(state);
+    const joiner = seatHero(state, null);
+    const host = state.players[0];
+    host.equipment.weapon = weapon(60, "test_hammer", 3); // battered, and stays so
+    joiner.equipment.weapon = weapon(61, "test_hammer", 3);
+    joiner.repairKits = 1;
+    expect(consumeRepairKit(state, joiner)).toBe(true);
+    expect(joiner.repairKits).toBe(0);
+    expect(joiner.equipment.weapon.durability).toBe(
+      weaponDef("test_hammer").durability,
+    );
+    // A bag and the kit in it are PRIVATE — the host's blade is untouched.
+    expect(host.equipment.weapon.durability).toBe(3);
   });
 
   it("also mend worn armor", () => {

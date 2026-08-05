@@ -20,9 +20,11 @@ import {
 } from "./items/index.ts";
 import { queueStruckProcs } from "./loot.ts";
 import { lineOfSight } from "./obstacles.ts";
+import { quarryOf } from "./aggro.ts";
+import { nearestHeroWhere } from "./party.ts";
 import { BALANCE } from "./tuning.ts";
 import { createProjectile } from "./projectile.ts";
-import type { Enemy, GameState, Projectile } from "./types/index.ts";
+import type { Enemy, GameState, Player, Projectile } from "./types/index.ts";
 
 /**
  * Move one awake SHOOTER for this tick. Two moods, split by the reload:
@@ -42,7 +44,11 @@ export function moveRangedEnemy(
   const def = enemyDef(enemy.defId);
   const ranged = def.ranged;
   if (!ranged) return;
-  const player = state.players[0];
+  // The shooter's OWN quarry (`aggro.ts`) — the hero it is already chasing, so
+  // the cover dance, the hold range and the shot all address the same person.
+  // Reading seat 0 had a party's shooters backing away from a host across the
+  // map while the hero standing in front of them went unshot.
+  const player = quarryOf(state, enemy);
   const hold = ranged.range * ENEMY_RANGED.holdRangeFraction;
   const dist = distance(enemy.pos, player.pos);
   const reloading =
@@ -52,7 +58,7 @@ export function moveRangedEnemy(
   if (reloading) {
     // The hide: dive for the far side of the nearest solid rock. With no
     // cover in reach, just back off toward the hold range instead.
-    const cover = coverPoint(state, enemy);
+    const cover = coverPoint(state, enemy, player);
     if (cover) {
       enemy.pos = moveToward(enemy.pos, cover, speed * dt);
       return;
@@ -93,9 +99,12 @@ export function moveRangedEnemy(
  * `coverSearchRadius`: the spot where the rock sits between shooter and
  * player. Null when nothing solid is in reach.
  */
-function coverPoint(state: GameState, enemy: Enemy): Vec2 | null {
+function coverPoint(
+  state: GameState,
+  enemy: Enemy,
+  player: Player,
+): Vec2 | null {
   const def = enemyDef(enemy.defId);
-  const player = state.players[0];
   let best: { pos: Vec2; radius: number } | null = null;
   let bestDist: number = ENEMY_RANGED.coverSearchRadius;
   for (const obstacle of state.obstacles) {
@@ -122,13 +131,16 @@ function coverPoint(state: GameState, enemy: Enemy): Vec2 | null {
  * The reload clock ticks here for every shooter, hidden or not.
  */
 export function stepRangedAttacks(state: GameState, dtMs: number): void {
-  const player = state.players[0];
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
     const ranged = def.ranged;
     if (!ranged) continue;
     enemy.rangedCooldownMs = Math.max(0, (enemy.rangedCooldownMs ?? 0) - dtMs);
     if (enemy.rangedCooldownMs > 0) continue;
+    // Each shooter aims at the hero it is chasing — read per mob rather than
+    // once for the pass, because a party's shooters are not all fighting the
+    // same person.
+    const player = quarryOf(state, enemy);
     // Sleeping shooters hold their fire: elites wake by the ordinary ambush
     // rules, bosses are judged awake by proximity or a wound (moveEnemy).
     if (def.role === "elite" && !enemy.awake) continue;
@@ -190,19 +202,33 @@ export function stepRangedAttacks(state: GameState, dtMs: number): void {
 }
 
 /**
- * Resolve a hostile projectile against the PLAYER for this tick. Returns
+ * Resolve a hostile projectile against the PARTY for this tick. Returns
  * true when the shot is spent (it connected) — the caller drops it. A
  * jumping hero sails over the shot exactly like he clears enemy contact;
  * a grounded one may still DODGE it (DEXTERITY), and worn armor turns its
  * share against the shooter's level, wearing a point like any landed blow.
+ *
+ * IT IS THE WHOLE PARTY, NOT THE SEAT THE SHOT WAS AIMED AT. A round in flight
+ * belongs to nobody: it hits whichever body it reaches, which is exactly how a
+ * hero walking through a lane meant for somebody else takes the hit — and how
+ * a hero standing behind cover does not. Resolved against seat 0 alone, every
+ * joiner in the game was immune to gunfire and the host was shot by rounds
+ * crossing a room he was not in.
  */
 export function resolveHostileHit(
   state: GameState,
   projectile: Projectile,
 ): boolean {
-  const player = state.players[0];
-  if (player.z > JUMP.dodgeHeight) return false;
   const reach = projectile.radius + PLAYER.radius;
+  const player = nearestHeroWhere(state, projectile.pos, (hero) => {
+    if (hero.z > JUMP.dodgeHeight) return false;
+    const hx = hero.pos.x - projectile.pos.x;
+    const hy = hero.pos.y - projectile.pos.y;
+    return hx * hx + hy * hy <= reach * reach;
+  });
+  // `nearestHeroWhere` falls back to the plain nearest when nobody matches, so
+  // the overlap is re-checked here: a shot that reached nobody flies on.
+  if (!player || player.z > JUMP.dodgeHeight) return false;
   const dx = player.pos.x - projectile.pos.x;
   const dy = player.pos.y - projectile.pos.y;
   if (dx * dx + dy * dy > reach * reach) return false;

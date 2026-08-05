@@ -27,7 +27,7 @@ describe("damage variance", () => {
     const lo = avg * (1 - v);
     const hi = avg * (1 + v);
     for (let i = 0; i < 500; i++) {
-      const rolled = rollWeaponDamage(state, weapon);
+      const rolled = rollWeaponDamage(state, state.players[0], weapon);
       expect(rolled).toBeGreaterThanOrEqual(lo - 1e-9);
       expect(rolled).toBeLessThanOrEqual(hi + 1e-9);
     }
@@ -41,7 +41,7 @@ describe("damage variance", () => {
     const seen = new Set<number>();
     const N = 2000;
     for (let i = 0; i < N; i++) {
-      const rolled = rollWeaponDamage(state, weapon);
+      const rolled = rollWeaponDamage(state, state.players[0], weapon);
       sum += rolled;
       seen.add(Math.round(rolled * 1000));
     }
@@ -65,7 +65,8 @@ describe("damage variance", () => {
     const state = equipBlaster(startGame());
     const weapon = state.players[0].equipment.weapon;
     const before = rngState(state.rng);
-    for (let i = 0; i < 100; i++) rollWeaponDamage(state, weapon);
+    for (let i = 0; i < 100; i++)
+      rollWeaponDamage(state, state.players[0], weapon);
     // The flavor roll draws off fxRng alone — the loot/crit stream is untouched.
     expect(rngState(state.rng)).toBe(before);
   });

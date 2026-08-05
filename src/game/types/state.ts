@@ -221,6 +221,17 @@ export type AutopilotState = {
    * the last one.
    */
   build?: BuildSnapshot | null;
+  /**
+   * The SEAT that bought the ride — whose purse the meter bills, and whose
+   * build the refund reverts.
+   *
+   * It lives on the run because `stepAutopilot` is a per-tick pass with no
+   * actor to hand it, and a purse is PRIVATE: without it the meter drained
+   * seat 0 whoever engaged, so a joiner's ride was paid for out of the host's
+   * coins. Absent on a legacy or adopted state, which reads as seat 0 — the
+   * one hero a solo run has.
+   */
+  seat?: number;
   /** The engaged speed rung (config `AUTOPILOT.speeds`) — scales both the
    * app's fast-forward and the per-game-second price. */
   speed: number;

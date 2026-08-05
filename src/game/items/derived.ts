@@ -445,12 +445,19 @@ function computeSetBonusAffixes(
  * DAMAGE" upgrade hints in the inventory) without disturbing the real
  * loadout. Only `player.equipment` is replaced; everything else is shared, so
  * the stat getters below read straight through it.
+ *
+ * **THE PREVIEWED HERO IS A PARAMETER, AND THE VIEW SEATS THEM AT 0.** The
+ * question is "what would THIS piece do in MY hands", which is a private read
+ * of one hero's worn kit — asked by whoever has the bag open, on a joiner that
+ * is not seat 0. The returned view holds exactly the one hero on purpose: the
+ * stat getters read `player` straight through it, so a preview must never
+ * expose a second seat the caller could accidentally score against.
  */
 export function previewEquipped(
   state: GameState,
+  player: Player,
   candidate: Equipment,
 ): GameState {
-  const player = state.players[0];
   const equipment = { ...player.equipment, [candidate.slot]: candidate };
   return { ...state, players: [{ ...player, equipment }] };
 }

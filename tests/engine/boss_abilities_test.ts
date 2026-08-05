@@ -11,10 +11,11 @@ import {
   createGame,
   dismissIntro,
   registerDefs,
+  seatHero,
   skipCutscene,
   step,
 } from "@game/core";
-import type { Enemy, EnemyDef, GameState } from "@game/core";
+import type { Enemy, EnemyDef, GameState, Player } from "@game/core";
 
 import {
   FIX_ABILITIES,
@@ -822,5 +823,51 @@ describe("lockdown", () => {
     expect(lifted.some((e) => e.type === "bossLockdownLifted")).toBe(true);
     expect(state.obstacles.filter((o) => o.kind === "shutter")).toHaveLength(0);
     expect(state.obstacles.length).toBe(before);
+  });
+});
+
+describe("in a party, a set piece aims at the mob's own quarry", () => {
+  // Every ability used to read `state.players[0]` for its bearing, its reach
+  // and its victim — which in a party means "the host", wherever the fight
+  // happens to be. `AbilityCtx.target` is the mob's OWN quarry (`aggro.ts`),
+  // so the tell, the cast and the resolve all address one person, and it is
+  // the person the boss is actually chasing.
+
+  /** Seat a second hero and put the two of them far apart. */
+  function apart(state: GameState): { host: Player; joiner: Player } {
+    const joiner = seatHero(state, null);
+    const host = state.players[0] as Player;
+    host.pos = { x: 300, y: 1400 };
+    joiner.pos = { x: 1800, y: 300 };
+    return { host, joiner };
+  }
+
+  it("locks the bearing onto the hero it is fighting, not onto seat 0", () => {
+    const state = startAt();
+    const { joiner } = apart(state);
+    // The boss stands beside the JOINER, half a map from the host.
+    const boss = plant(state, "test_burner", 0, 0);
+    boss.pos = { x: joiner.pos.x - 90, y: joiner.pos.y };
+    boss.home = { ...boss.pos };
+    step(state, idle, DT);
+    const dir = boss.mech?.telegraph?.dir;
+    if (!dir) throw new Error("the boss never wound up");
+    // Aimed EAST at the hero beside it. The host lies south-west, so a seat-0
+    // read would have pointed the other way on both axes.
+    expect(dir.x).toBeGreaterThan(0);
+    expect(dir.y).toBeLessThan(0.5);
+  });
+
+  it("burns the hero it is fighting, and leaves the other one untouched", () => {
+    const state = startAt();
+    const { host, joiner } = apart(state);
+    const boss = plant(state, "test_burner", 0, 0);
+    boss.pos = { x: joiner.pos.x - 60, y: joiner.pos.y };
+    boss.home = { ...boss.pos };
+    host.hp = host.maxHp;
+    joiner.hp = joiner.maxHp;
+    run(state, idle, steps(LASER.windupMs + LASER.hitIntervalMs + 120));
+    expect(joiner.hp).toBeLessThan(joiner.maxHp);
+    expect(host.hp).toBe(host.maxHp);
   });
 });

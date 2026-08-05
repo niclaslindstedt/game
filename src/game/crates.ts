@@ -23,9 +23,10 @@ import {
 } from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
 import { clearOfFog } from "./fog.ts";
+import { nearestHero } from "./party.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
-import type { GameState, Obstacle } from "./types/index.ts";
+import type { GameState, Obstacle, Player } from "./types/index.ts";
 
 /**
  * The break hp a crate is minted with, scaled to the run's level: a fraction
@@ -167,9 +168,19 @@ function breakCrate(state: GameState, crate: Obstacle): void {
     pos: { ...crate.pos },
     sprite: crate.sprite,
   });
-  if (crate.chest) dropChestLoot(state, crate.pos);
+  // WHOSE APPETITE THE SPILL IS WEIGHED AGAINST — the hero AT the box, which
+  // is the one who just smashed it. A crate's contents lean toward what its
+  // opener can use (`medkitAppetite`, `ammoKindFor`, `rollEquipment`), and
+  // every one of those is a PRIVATE read: on seat 0 a party's crates all
+  // spilled rounds for the host's holster whoever cracked them, and on a
+  // joiner the same read is a bag the split never sent. The blow's own
+  // attacker is not threaded this far down (a crate is smashed by a swing, a
+  // shot, or a cleave), and the box is where the swing landed — so the nearest
+  // hero IS the breaker, without a parameter through four call sites.
+  const opener = nearestHero(state, crate.pos) ?? state.players[0];
+  if (crate.chest) dropChestLoot(state, crate.pos, opener);
   else if (state.rng() < (crate.lootChance ?? 1))
-    dropCrateLoot(state, crate.pos, crate.lootDrop);
+    dropCrateLoot(state, crate.pos, opener, crate.lootDrop);
   state.obstacles = state.obstacles.filter((o) => o !== crate);
 }
 
@@ -201,10 +212,11 @@ function scatter(state: GameState, at: Vec2): Vec2 {
  */
 function pickConsumableKind(
   state: GameState,
+  opener: Player,
   mlvl: number,
 ): "health" | "stamina" {
-  const health = medkitAppetite(state, state.players[0], mlvl);
-  const stamina = consumableAppetite(state, state.players[0], "drink");
+  const health = medkitAppetite(state, opener, mlvl);
+  const stamina = consumableAppetite(state, opener, "drink");
   return state.rng() * (health + stamina) < health ? "health" : "stamina";
 }
 
@@ -237,8 +249,8 @@ function dropConsumable(
 /** Drop one box of AMMUNITION at a scattered spot near `at`, of the kind the
  * hero's own holster eats (`ammoKindFor` — deterministic, so it shifts no
  * seeded draw) and sized by that kind's authored band. */
-function dropAmmo(state: GameState, at: Vec2): void {
-  const type = ammoKindFor(state, state.players[0]);
+function dropAmmo(state: GameState, opener: Player, at: Vec2): void {
+  const type = ammoKindFor(state, opener);
   dropItem(
     state,
     {
@@ -266,6 +278,7 @@ function dropAmmo(state: GameState, at: Vec2): void {
 function dropCrateLoot(
   state: GameState,
   at: Vec2,
+  opener: Player,
   weights?: {
     health?: number;
     stamina?: number;
@@ -284,13 +297,12 @@ function dropCrateLoot(
   // leans toward gear — or the other consumable — for a hero already carrying
   // all he can. The appetite floor keeps the lean from ever becoming a lockout,
   // so a themed prop that pays ONLY consumables still spills in character.
-  const health = authoredHealth * medkitAppetite(state, state.players[0], mlvl);
-  const stamina =
-    authoredStamina * consumableAppetite(state, state.players[0], "drink");
+  const health = authoredHealth * medkitAppetite(state, opener, mlvl);
+  const stamina = authoredStamina * consumableAppetite(state, opener, "drink");
   // AMMUNITION leans the same way, and on one extra axis: what the hero is
   // HOLDING (`ammoAppetite`). A sword build cracking a weapons locker mostly
   // finds the gear and the drinks in it; a shooter finds the rounds.
-  const ammo = authoredAmmo * ammoAppetite(state, state.players[0]);
+  const ammo = authoredAmmo * ammoAppetite(state, opener);
   const total = health + stamina + gear + ammo;
   if (total <= 0) return;
   const roll = state.rng() * total;
@@ -299,7 +311,7 @@ function dropCrateLoot(
   } else if (roll < health + stamina) {
     dropConsumable(state, "stamina", at);
   } else if (roll < health + stamina + ammo) {
-    dropAmmo(state, at);
+    dropAmmo(state, opener, at);
   } else {
     dropItem(
       state,
@@ -307,7 +319,7 @@ function dropCrateLoot(
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(state, at),
-        equipment: rollEquipment(state, state.players[0], {
+        equipment: rollEquipment(state, opener, {
           tierBonus: CRATES.gearTierBonus,
           mlvl,
         }),
@@ -320,7 +332,7 @@ function dropCrateLoot(
   // spill stays in character (and the scenery props, being plentiful, don't
   // out-earn the actual loot boxes).
   if (!weights && state.rng() < CRATES.bonusDropChance) {
-    dropConsumable(state, pickConsumableKind(state, mlvl), at);
+    dropConsumable(state, pickConsumableKind(state, opener, mlvl), at);
   }
 }
 
@@ -332,7 +344,7 @@ function dropCrateLoot(
  * a couple of guaranteed consumables regardless. The payoff that makes a
  * `quietZone` dead area worth the detour. Tier gates still apply (mlvl-scaled).
  */
-function dropChestLoot(state: GameState, at: Vec2): void {
+function dropChestLoot(state: GameState, at: Vec2, opener: Player): void {
   const mlvl = currentMobLevel(state);
   const dropGear = () => {
     dropItem(
@@ -341,7 +353,7 @@ function dropChestLoot(state: GameState, at: Vec2): void {
         id: state.nextId++,
         kind: "equipment",
         pos: scatter(state, at),
-        equipment: rollEquipment(state, state.players[0], {
+        equipment: rollEquipment(state, opener, {
           tierBonus: CHESTS.gearTierBonus,
           mlvl,
         }),
@@ -356,11 +368,11 @@ function dropChestLoot(state: GameState, at: Vec2): void {
     if (state.rng() < CHESTS.bonusItemChance) dropGear();
   }
   for (let i = 0; i < CHESTS.consumables; i++) {
-    dropConsumable(state, pickConsumableKind(state, mlvl), at);
+    dropConsumable(state, pickConsumableKind(state, opener, mlvl), at);
   }
   // …and the ROUNDS, guaranteed and unweighted. Everything else in a locker is
   // a roll; this is the part a player detours for and can count on, which is
   // what makes "there is a cache at the end of that dead end" a decision rather
   // than a lottery ticket.
-  for (let i = 0; i < AMMO.chestDrops; i++) dropAmmo(state, at);
+  for (let i = 0; i < AMMO.chestDrops; i++) dropAmmo(state, opener, at);
 }

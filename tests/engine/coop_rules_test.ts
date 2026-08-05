@@ -13,6 +13,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ammoKindFor,
+  creditAutopilotPurse,
   departHero,
   dropItem,
   grantXp,
@@ -25,6 +27,7 @@ import {
   promptPendingPoints,
   seatHero,
   shareXp,
+  startAutopilot,
   splitXp,
   step,
   tickMenace,
@@ -32,7 +35,8 @@ import {
   type Player,
 } from "@game/core";
 
-import { DT, idle, startGame, stopWaves } from "./helpers.ts";
+import { damageCrate } from "../../src/game/crates.ts";
+import { DT, idle, makeEnemy, startGame, stopWaves } from "./helpers.ts";
 
 /** A run with `n` heroes seated, the field cleared and the waves stopped. */
 function party(n = 2, seed = 7): { state: GameState; heroes: Player[] } {
@@ -489,3 +493,158 @@ function landEverything(state: GameState): void {
     item.deliverMs = undefined;
   }
 }
+
+// ─── THE WORLD ADDRESSES THE HERO IT IS ACTUALLY DEALING WITH ───────────────
+//
+// The party's other half: not the arithmetic a run does differently, but WHOM
+// each pass is about. Every rule below used to read `state.players[0]` — which
+// is correct in single player and, the day a second seat arrives, means "the
+// host" in a pass that was never about the host. So each of these stages the
+// two heroes APART and puts the event next to the one that is NOT seat 0: a
+// regression to the old read fails on the geometry, not on a number.
+
+describe("a hostile shot hits the body it reaches", () => {
+  it("wounds the hero it flew into, not seat 0 across the map", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 300, y: 300 };
+    b.pos = { x: 1600, y: 1200 };
+    a.hp = a.maxHp;
+    b.hp = b.maxHp;
+    // A round already on top of seat 1, aimed nowhere near seat 0.
+    state.projectiles.push({
+      id: state.nextId++,
+      pos: { ...b.pos },
+      dir: { x: 1, y: 0 },
+      speed: 0,
+      radius: 4,
+      damage: 40,
+      lifetimeMs: 2000,
+      weaponClass: "ranged",
+      sprite: "bolt",
+      hostile: true,
+      sourceMlvl: 1,
+      z: 0,
+    });
+    step(state, idle, DT);
+    expect(b.hp).toBeLessThan(b.maxHp);
+    expect(a.hp).toBe(a.maxHp);
+  });
+
+  it("lets a shooter fire on the hero it is chasing", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    state.obstacles = [];
+    // Seat 0 is far EAST and out of range; seat 1 stands right beside the
+    // shooter, to its west. A seat-0 read fires nothing at all (nobody in
+    // range), and if it fired it would aim the other way.
+    a.pos = { x: 2300, y: 300 };
+    b.pos = { x: 1600, y: 1200 };
+    const gunner = makeEnemy({ pos: { x: 1720, y: 1200 } }, "test_gunner");
+    gunner.awake = true;
+    state.enemies.push(gunner);
+    step(state, idle, DT);
+    const shot = state.projectiles.find((p) => p.hostile);
+    if (!shot) throw new Error("the shooter never fired");
+    expect(shot.dir.x).toBeLessThan(0);
+  });
+});
+
+describe("a level-up's shockwave", () => {
+  it("detonates on the hero who dinged", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 300, y: 300 };
+    b.pos = { x: 1600, y: 1200 };
+    const nearA = makeEnemy({ pos: { x: 330, y: 300 } });
+    const nearB = makeEnemy({ pos: { x: 1630, y: 1200 } });
+    state.enemies.push(nearA, nearB);
+    // Seat 1 earns the level, alone and across the map.
+    grantXp(state, b, b.xpToNext * 3);
+    expect(b.level).toBeGreaterThan(1);
+    expect(nearB.knockMs).toBeGreaterThan(0);
+    expect(nearA.knockMs).toBeFalsy();
+  });
+});
+
+describe("a smashed crate", () => {
+  it("spills for the hero who cracked it open, not for seat 0", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 300, y: 300 };
+    b.pos = { x: 1600, y: 1200 };
+    // Seat 0 carries a weapon that eats BULLETS; seat 1 carries none and is
+    // already stocked with bullets, so his own leanest kind is ARROWS.
+    a.equipment.weapon = {
+      id: state.nextId++,
+      defId: "test_carbine",
+      slot: "weapon",
+      tier: "regular",
+      ilvl: 1,
+      affixes: [],
+    };
+    b.ammo.bullets = 5;
+    expect(ammoKindFor(state, a)).toBe("bullets");
+    expect(ammoKindFor(state, b)).toBe("arrows");
+    // A crate at seat 1's feet, themed to pay ammunition and nothing else.
+    const crate = {
+      id: state.nextId++,
+      kind: "crate",
+      sprite: "crate",
+      pos: { x: b.pos.x + 6, y: b.pos.y },
+      radius: 7,
+      jumpable: true,
+      breakable: true,
+      hp: 1,
+      maxHp: 1,
+      lootDrop: { ammo: 1 },
+    } as GameState["obstacles"][number];
+    state.obstacles = [...state.obstacles, crate];
+    damageCrate(state, crate, 10);
+    const ammo = state.items.find((i) => i.kind === "ammo");
+    if (!ammo || ammo.kind !== "ammo")
+      throw new Error("the crate paid no ammo");
+    expect(ammo.ammo).toBe("arrows");
+  });
+});
+
+describe("the lift", () => {
+  it("carries whoever is standing on the plate", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.pos = { x: 300, y: 300 };
+    state.elevators = [
+      {
+        id: "lift_down",
+        pos: { x: 1600, y: 1200 },
+        to: { x: 2100, y: 400 },
+        sprite: "elevator_pad",
+        radius: 30,
+        used: false,
+      },
+    ];
+    b.pos = { x: 1600, y: 1200 };
+    b.z = 0;
+    step(state, idle, DT);
+    // Seat 1 rode it; seat 0, who never touched the pad, has not moved.
+    expect(b.pos.x).toBeCloseTo(2100, 0);
+    expect(b.pos.y).toBeCloseTo(400, 0);
+    expect(a.pos).toEqual({ x: 300, y: 300 });
+  });
+});
+
+describe("the AUTO PILOT meter", () => {
+  it("bills the purse of the hero who bought the ride", () => {
+    const { state, heroes } = party(2);
+    const [a, b] = heroes as [Player, Player];
+    a.coins = 10_000;
+    b.coins = 10_000;
+    expect(startAutopilot(state, b, 1)).toBe(true);
+    for (let i = 0; i < 125; i++) step(state, idle, DT); // 2s of game time
+    expect(b.coins).toBeLessThan(10_000);
+    expect(a.coins).toBe(10_000);
+    // …and a top-up lands in the buyer's purse too.
+    expect(creditAutopilotPurse(state, b, 250)).toBe(250);
+    expect(a.coins).toBe(10_000);
+  });
+});

@@ -23,8 +23,15 @@ import {
   step,
   stopAutopilot,
 } from "@game/core";
-import type { GameState } from "@game/core";
+import type { GameState, Player } from "@game/core";
 import { clearStage, DT, idle, run, startGame, stopWaves } from "./helpers.ts";
+
+/** The hero buying the ride — the one seat these fixtures have. The ride's
+ * verbs take an ACTING HERO because a purse is private (see `startAutopilot`);
+ * the two-hero case is `coop_rules_test.ts`'s. */
+function hero(state: GameState): Player {
+  return state.players[0] as Player;
+}
 
 /** A quiet field: no waves, no mobs — nothing to interrupt the meter. */
 function quietGame(coins: number): GameState {
@@ -61,13 +68,13 @@ describe("speed rungs", () => {
 describe("engaging", () => {
   it("refuses a purse that can't cover one second at the picked rung", () => {
     const state = quietGame(0);
-    expect(startAutopilot(state)).toBe(false);
+    expect(startAutopilot(state, hero(state))).toBe(false);
     expect(state.autopilot.active).toBe(false);
 
     // One second at 1× is affordable; the same purse can't fund 8×.
     state.players[0].coins = AUTOPILOT.coinsPerSecond;
-    expect(startAutopilot(state, 8)).toBe(false);
-    expect(startAutopilot(state, 1)).toBe(true);
+    expect(startAutopilot(state, hero(state), 8)).toBe(false);
+    expect(startAutopilot(state, hero(state), 1)).toBe(true);
     expect(state.autopilot.active).toBe(true);
     expect(state.autopilot.speed).toBe(1);
   });
@@ -75,13 +82,13 @@ describe("engaging", () => {
   it("refuses a run that is already over", () => {
     const state = quietGame(1_000_000);
     state.phase = "defeat";
-    expect(startAutopilot(state)).toBe(false);
+    expect(startAutopilot(state, hero(state))).toBe(false);
   });
 
   it("retunes the rung mid-flight, but only while engaged", () => {
     const state = quietGame(100_000);
     expect(setAutopilotSpeed(state, 8)).toBe(false);
-    expect(startAutopilot(state, 1)).toBe(true);
+    expect(startAutopilot(state, hero(state), 1)).toBe(true);
     expect(setAutopilotSpeed(state, 8)).toBe(true);
     expect(state.autopilot.speed).toBe(8);
   });
@@ -90,7 +97,7 @@ describe("engaging", () => {
 describe("the meter", () => {
   it("drains coinsPerSecond per game-second at 1×", () => {
     const state = quietGame(1000);
-    startAutopilot(state, 1);
+    startAutopilot(state, hero(state), 1);
     run(state, idle, 125); // 125 × 16ms = 2000ms of game time
     expect(state.players[0].coins).toBe(1000 - 2 * AUTOPILOT.coinsPerSecond);
     expect(state.autopilot.coinsSpent).toBe(2 * AUTOPILOT.coinsPerSecond);
@@ -98,14 +105,14 @@ describe("the meter", () => {
 
   it("drains 8× per game-second on the 8× rung", () => {
     const state = quietGame(10_000);
-    startAutopilot(state, 8);
+    startAutopilot(state, hero(state), 8);
     run(state, idle, 125); // 2000ms of game time
     expect(state.players[0].coins).toBe(10_000 - 16 * AUTOPILOT.coinsPerSecond);
   });
 
   it("holds the meter while the run is paused", () => {
     const state = quietGame(1000);
-    startAutopilot(state, 1);
+    startAutopilot(state, hero(state), 1);
     pauseGame(state, state.players[0]);
     run(state, idle, 125);
     expect(state.players[0].coins).toBe(1000);
@@ -114,7 +121,7 @@ describe("the meter", () => {
 
   it("stops billing after a player stop", () => {
     const state = quietGame(1000);
-    startAutopilot(state, 1);
+    startAutopilot(state, hero(state), 1);
     run(state, idle, 63); // ~1s → ~100 coins burned
     expect(stopAutopilot(state)).toBe(true);
     const left = state.players[0].coins;
@@ -124,7 +131,7 @@ describe("the meter", () => {
 
   it("disengages with an autopilotStopped event when the purse runs dry", () => {
     const state = quietGame(AUTOPILOT.coinsPerSecond); // funds exactly 1s at 1×
-    startAutopilot(state, 1);
+    startAutopilot(state, hero(state), 1);
     let stopped = false;
     for (let i = 0; i < 200 && !stopped; i++) {
       step(state, idle, DT);
@@ -143,22 +150,22 @@ describe("the meter", () => {
 describe("crediting the purse", () => {
   it("tops the purse up so a refused rung becomes affordable", () => {
     const state = quietGame(0);
-    expect(startAutopilot(state, 1)).toBe(false);
+    expect(startAutopilot(state, hero(state), 1)).toBe(false);
 
-    expect(creditAutopilotPurse(state, AUTOPILOT.coinsPerSecond)).toBe(
-      AUTOPILOT.coinsPerSecond,
-    );
+    expect(
+      creditAutopilotPurse(state, hero(state), AUTOPILOT.coinsPerSecond),
+    ).toBe(AUTOPILOT.coinsPerSecond);
     expect(state.players[0].coins).toBe(AUTOPILOT.coinsPerSecond);
-    expect(startAutopilot(state, 1)).toBe(true);
+    expect(startAutopilot(state, hero(state), 1)).toBe(true);
   });
 
   it("adds to an existing purse in whole coins and ignores nothing amounts", () => {
     const state = quietGame(500);
-    expect(creditAutopilotPurse(state, 250.9)).toBe(250);
+    expect(creditAutopilotPurse(state, hero(state), 250.9)).toBe(250);
     expect(state.players[0].coins).toBe(750);
-    expect(creditAutopilotPurse(state, 0)).toBe(0);
-    expect(creditAutopilotPurse(state, -100)).toBe(0);
-    expect(creditAutopilotPurse(state, Number.NaN)).toBe(0);
+    expect(creditAutopilotPurse(state, hero(state), 0)).toBe(0);
+    expect(creditAutopilotPurse(state, hero(state), -100)).toBe(0);
+    expect(creditAutopilotPurse(state, hero(state), Number.NaN)).toBe(0);
     expect(state.players[0].coins).toBe(750);
   });
 });
@@ -184,7 +191,7 @@ describe("the takings meter (coinsEarned)", () => {
 
   it("books what the ride sells as EARNED, apart from what it spent", () => {
     const state = atTheCounter(1000);
-    startAutopilot(state, 1);
+    startAutopilot(state, hero(state), 1);
     run(state, idle, 63); // ~1s of metered flight → the price
     const billed = state.autopilot.coinsSpent;
     expect(billed).toBeGreaterThan(0);
@@ -208,8 +215,8 @@ describe("the takings meter (coinsEarned)", () => {
 
   it("does not count a store top-up as earnings", () => {
     const state = quietGame(500);
-    startAutopilot(state, 1);
-    expect(creditAutopilotPurse(state, 5_000)).toBe(5_000);
+    startAutopilot(state, hero(state), 1);
+    expect(creditAutopilotPurse(state, hero(state), 5_000)).toBe(5_000);
     expect(state.autopilot.coinsEarned).toBe(0);
   });
 });

@@ -29,7 +29,7 @@ function ready(ability: SnareFieldAbility, ctx: AbilityCtx): boolean {
 
 function cast(ability: SnareFieldAbility, ctx: AbilityCtx): void {
   const { state, enemy } = ctx;
-  const at = { ...state.players[0].pos };
+  const at = { ...ctx.target.pos };
   state.scorches.push({
     pos: at,
     field: "snare",

@@ -80,23 +80,28 @@ const STACKED_CONSUMABLES: Record<
     counter: "repairKits" | "staminaPotions";
     /** The pickup card's display name. */
     pickupName: string;
-    /** Apply the spend effect; the event to emit, or null on a no-op. */
-    spend: (state: GameState) => GameEvent | null;
+    /**
+     * Apply the spend effect to the hero who spent it; the event to emit, or
+     * null on a no-op. `player` is a PARAMETER rather than a seat-0 lookup for
+     * the reason every private read is: the kit mends THAT hero's worn gear and
+     * the drink refills THAT hero's pool, and `spendConsumable` already knows
+     * whose stack it just took the unit out of. Billed to seat 0, a joiner's
+     * repair kit mended the host's sword.
+     */
+    spend: (state: GameState, player: Player) => GameEvent | null;
   }
 > = {
   repair: {
     counter: "repairKits",
     pickupName: "REPAIR KIT",
-    spend: (state) =>
-      repairAll(state, state.players[0]) ? { type: "repairKitUsed" } : null,
+    spend: (state, player) =>
+      repairAll(state, player) ? { type: "repairKitUsed" } : null,
   },
   drink: {
     counter: "staminaPotions",
     pickupName: "STAMINA POTION",
-    spend: (state) =>
-      restoreStamina(state, state.players[0])
-        ? { type: "staminaPotionUsed" }
-        : null,
+    spend: (state, player) =>
+      restoreStamina(state, player) ? { type: "staminaPotionUsed" } : null,
   },
 };
 
@@ -134,7 +139,7 @@ function spendConsumable(
 ): boolean {
   const { counter, spend } = STACKED_CONSUMABLES[kind];
   if (player[counter] <= 0) return false;
-  const event = spend(state);
+  const event = spend(state, player);
   if (!event) return false;
   player[counter] -= 1;
   state.events.push(event);
