@@ -1,25 +1,45 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: item_collected_ammo
 description: >-
-  Scooping up a box of ammunition — a short bright rattle of loose metal
-  followed by the click of it going into the pouch. Deliberately drier and
-  lower than the repair kit's tuck: rounds are a stock you top up constantly,
-  so the sound has to survive being heard fifty times a level.
+  Scooping up a box of ammunition — loose rounds shifting in the carton, then the
+  pouch taking it with a short dry fourth up (G4 → C5) on a square that reads as
+  machined rather than musical. It sits at the BOTTOM of the pickup ladder on
+  purpose (ammo → medkit → repair → coins climb a fourth at a time, each with its
+  own material): rounds are a stock topped up constantly, so this is the driest
+  and lowest of the four and carries no echo at all — it has to survive being
+  heard fifty times a level.
 on:
   type: itemCollected
   kind: ammo
 voices:
+  # The rounds themselves: two dry bandpass grains rather than one burst, so it
+  # rattles like loose brass instead of hissing like a leak.
   - call: noise
-    durationMs: 55
+    durationMs: 45
     volume: 0.022
     filter:
       type: bandpass
       frequency: 3100
       q: 1.4
+  - call: noise
+    durationMs: 30
+    volume: 0.016
+    delayMs: 45
+    filter:
+      type: bandpass
+      frequency: 2400
+      q: 1.6
+  # Topped up: the low dry couplet, barely detuned to keep an edge on it.
   - call: tone
     type: square
-    from: 520
-    to: 390
-    durationMs: 60
+    from: 392
+    durationMs: 40
+    volume: 0.024
+    delayMs: 30
+  - call: tone
+    type: square
+    from: 523
+    durationMs: 55
     volume: 0.026
-    delayMs: 25
+    delayMs: 70
+    detuneCents: 6

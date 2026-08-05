@@ -1,20 +1,48 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: item_collected_medkit
 description: >-
-  The treasure flourish — brighter and wetter for magic+ finds.
+  A medkit stashed into the consumable dock: soft canvas going into the pouch,
+  then the warmest rung of the pickup ladder — a major third up (C5 → E5) on a
+  triangle with an attack on it, so it swells rather than blips, under an octave
+  of sine for glow. The only one of the four loose pickups with no click anywhere
+  in it: what the hero heals with should sound like cloth and care, not like
+  hardware. Deliberately quieter, and a THIRD where `medkitUsed` is a loud FIFTH
+  — the satisfying mend chime belongs to the moment the kit is spent, not to
+  finding it.
 on:
   type: itemCollected
   kind: medkit
 voices:
+  # The roll of canvas going in — low, soft, and entirely without a transient.
   - call: noise
-    durationMs: 45
+    durationMs: 60
     volume: 0.02
     filter:
       type: lowpass
-      frequency: 1400
+      frequency: 1200
+  # "Help is in the bag": the warm third, swelling in.
+  # The two notes are butted end to end rather than overlapped: the swell wants
+  # to stay UNDER `medkitUsed` (which peaks at 0.085), and stacking them was
+  # what pushed the find as loud as spending it.
   - call: tone
     type: triangle
-    from: 587
-    durationMs: 70
+    from: 523
+    durationMs: 60
     volume: 0.03
-    delayMs: 30
+    attackMs: 8
+    delayMs: 25
+  - call: tone
+    type: triangle
+    from: 659
+    durationMs: 110
+    volume: 0.03
+    attackMs: 8
+    delayMs: 85
+  # The octave over the top, wet enough to read as warmth rather than as a bell.
+  - call: tone
+    type: sine
+    from: 1319
+    durationMs: 120
+    volume: 0.018
+    delayMs: 85
+    echo: 0.15

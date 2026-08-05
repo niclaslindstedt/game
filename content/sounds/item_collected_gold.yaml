@@ -1,36 +1,40 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: item_collected_gold
 description: >-
-  Coins going into the purse: a quick three-note run up, dry and small, with a
-  scoop of change under it. Deliberately the QUIETEST reward in the bank — a
-  farm run walks over dozens of these a minute, and anything with a flourish on
-  it would be unbearable by the second map.
+  Coins into the purse: the thin clink of metal on metal, then THE coin couplet —
+  a perfect fourth leap (B5 → E6) with a glint of sine two octaves up. The top
+  rung of the pickup ladder and the brightest of the four, but still the QUIETEST
+  reward in the bank: a farm run walks over dozens of these a minute, so it is
+  two notes rather than a run and its echo send stays low. Anything with a
+  flourish on it would be unbearable by the second map.
 on:
   type: itemCollected
   kind: gold
 voices:
+  # Metal on metal — thin, high, and gone before the notes start.
   - call: noise
-    durationMs: 40
-    volume: 0.013
+    durationMs: 25
+    volume: 0.014
     filter:
-      type: bandpass
-      frequency: 3800
-      q: 1.2
+      type: highpass
+      frequency: 5200
   - call: tone
     type: triangle
-    from: 1047
+    from: 988
     durationMs: 45
     volume: 0.024
   - call: tone
     type: triangle
     from: 1319
-    durationMs: 45
+    durationMs: 80
     volume: 0.022
-    delayMs: 40
+    delayMs: 45
+    echo: 0.18
+  # The glint: a sine two octaves over the landing note.
   - call: tone
-    type: triangle
-    from: 1760
-    durationMs: 60
-    volume: 0.02
-    delayMs: 80
-    echo: 0.22
+    type: sine
+    from: 2637
+    durationMs: 70
+    volume: 0.016
+    delayMs: 45
+    echo: 0.2
