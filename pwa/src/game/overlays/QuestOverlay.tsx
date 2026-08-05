@@ -91,6 +91,13 @@ const QUEST_TEXT_REM = 26;
  * `.quest-topic` in styles.css if either changes. */
 const ROW_INSET_REM = 0.7 * 2 + 0.25 + 0.6 + 0.85;
 
+/** A stable empty page, handed to the greeting's typewriter when there is
+ * nothing to crawl (the offer branch, or a hello already printed). */
+const NO_LINES: readonly string[] = [];
+
+/** What a giver with no authored hello says while their slate is on screen. */
+const DEFAULT_GREETING = ["WHAT CAN I DO FOR YOU?"];
+
 export function QuestOverlay({
   state,
   assets,
@@ -229,6 +236,47 @@ export function QuestOverlay({
     if (visibleIndex % 2 === 0) onBlip?.();
   });
 
+  // THE HELLO CRAWLS TOO. The pick list is the FIRST thing a giver says to the
+  // player, and printing it instantly while the ask two taps later types itself
+  // out made the same person read as a vending machine on one screen and as
+  // somebody talking on the next. Same hook, same cadence, same blip — the
+  // ROWS below it stay a menu and never crawl.
+  const greetLines = useMemo(
+    () =>
+      wrapPage(
+        listing && giver ? (giver.greeting ?? DEFAULT_GREETING) : [],
+        greetColFontPx == null
+          ? null
+          : (line) => font.wrap(line, greetColFontPx),
+      ),
+    [listing, giver, greetColFontPx, font],
+  );
+  // A PERSON GREETS YOU ONCE PER WALK-UP. Taking an errand steps back to the
+  // slate (`leaveTopic`), and a hello that retyped every time the player backed
+  // out of a topic would turn one line of characterisation into a toll paid
+  // three times. The flag is local state, so it dies with the conversation —
+  // the next walk-up is a fresh hello.
+  const [greeted, setGreeted] = useState<string | null>(null);
+  const greetKey = listing && offer ? offer.giverId : null;
+  const alreadyGreeted = greetKey !== null && greeted === greetKey;
+  const {
+    rows: greetRows,
+    done: greetDone,
+    skip: skipGreet,
+  } = useTypewriter(alreadyGreeted ? NO_LINES : greetLines, (visibleIndex) => {
+    if (visibleIndex % 2 === 0) onBlip?.();
+  });
+  // Banked DURING RENDER (React's supported "adjust state on a prop change"
+  // pattern, the same one the cursor above and the typewriter itself use)
+  // rather than in an effect: the frame the crawl finishes on is already
+  // showing the whole hello, so the re-render this schedules swaps a completed
+  // crawl for the same completed text with nothing to see in between.
+  if (greetKey !== null && greetDone && greeted !== greetKey) {
+    setGreeted(greetKey);
+  }
+  // Once it has been said, it is simply printed.
+  const greetShown = alreadyGreeted ? greetLines : greetRows;
+
   // NEXT is a two-step, like a tap on the dialogue box: the first press
   // finishes the crawl, the second turns the page. ACCEPT / DECLINE / TURN IN
   // are NOT gated on it — those are decisions, and making a player wait out an
@@ -359,17 +407,25 @@ export function QuestOverlay({
                   )}
                 />
               </div>
-              <div className="quest-lines" ref={greetRef}>
-                {wrapPage(
-                  giver.greeting ?? ["WHAT CAN I DO FOR YOU?"],
-                  greetColFontPx == null
-                    ? null
-                    : (line) => font.wrap(line, greetColFontPx),
-                ).map((line, i) => (
+              {/* A tap on the hello finishes it, exactly as a tap on an ask
+                  does — and, exactly as there, it is scoped to the TEXT rather
+                  than the box, because the rows below it are answers. */}
+              <div
+                className="quest-lines"
+                ref={greetRef}
+                onPointerDown={() => {
+                  if (!greetDone) skipGreet();
+                }}
+                role="presentation"
+              >
+                {/* Reserve every row up front (PixelText is fixed-height even
+                    when empty) so the list does not walk down the screen as the
+                    hello types itself in. */}
+                {greetLines.map((_, i) => (
                   <PixelText
                     key={i}
                     font={font}
-                    text={line}
+                    text={greetShown[i] ?? ""}
                     scale={TEXT_SCALE}
                     maxWidth={columnCapRem(
                       greetColFontPx,
