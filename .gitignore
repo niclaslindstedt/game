@@ -63,10 +63,13 @@ mob-hp-curve.html
 
 # Store submission build outputs (§11.2 — the YAML/recipes are the source of
 # truth, these are regenerated). `make store-metadata` compiles the listing;
-# `make store-shots` captures the screenshot set.
+# `make store-shots` captures the screenshot set; `make store-achievement-art`
+# cuts the portals' badge artwork out of the game's own sprite atlas.
 native/store/store.config.json
 native/store/screenshots/
+native/store/achievements/
 electron/store/screenshots/
+electron/store/achievements/
 electron/store/preview/output/
 
 # fastlane: the metadata tree and staged screenshots are GENERATED from

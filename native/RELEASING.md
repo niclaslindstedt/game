@@ -115,6 +115,13 @@ leave it on.**
    node scripts/game-center-leaderboards.mjs
    ```
 
+   Each achievement also needs an **image** (512×512 minimum, 1024×1024
+   recommended). Don't draw them: every badge already has a picture — the atlas
+   sprite the game's own shelf shows for it — and `make store-achievement-art`
+   writes one 1024×1024 PNG per row into `store/achievements/<id>.png`, named
+   after the Achievement ID it belongs to. See
+   [`store/README.md`](store/README.md) → The achievement artwork.
+
 4. **Credentials.** Fill `native/.env` from `native/.env.example`: the Apple
    Account email and the two team ids fastlane acts as, plus an **App Store
    Connect API key** (Users and Access → Integrations → App Manager role). The

@@ -39,6 +39,7 @@
     "electron:test": "npm --prefix electron test",
     "electron:dist": "npm --prefix electron run dist",
     "store:metadata": "node scripts/generate-store-metadata.mjs",
+    "store:achievement-art": "node scripts/achievement-art.mjs",
     "store:stage": "node scripts/generate-store-metadata.mjs && node scripts/stage-store-screenshots.mjs",
     "store:deliver": "npm run store:stage && npm --prefix native run deliver"
   },

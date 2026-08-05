@@ -112,6 +112,23 @@ see [What fails quietly](#what-fails-quietly).
    > rows. That switch goes false → true and **never back**: an achievement id
    > is permanent once any player has unlocked it.
 
+   Every row also takes **two 64×64 icons** — achieved and locked, which the
+   overlay draws side by side. Both are generated, not drawn:
+
+   ```sh
+   make store-achievement-art          # both portals
+   make store-achievement-art ARGS="--only steam"
+   ```
+
+   That writes `store/achievements/<id>-achieved.png` and `<id>-locked.png` for
+   every row, cut from the badge's own atlas sprite — the picture the in-game
+   shelf shows — upscaled nearest-neighbour at an integer factor. The locked
+   one is the same art under the shelf's own unearned treatment
+   (`grayscale(1) brightness(0.55)`), so the pair reads as one badge in two
+   states rather than as two pictures. Needs `npm run assets` to have built the
+   atlas; the output is gitignored and regenerated on demand, like the
+   screenshots.
+
 5. **App Admin → Cloud** → enable Steam Cloud and give it a byte/file quota.
    `isAvailable()` demands both this app setting and the player's own per-game
    toggle, so a forgotten app setting means cloud save quietly reports
