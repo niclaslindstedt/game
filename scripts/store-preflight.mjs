@@ -43,6 +43,8 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
+import { nativeEnv } from "./asset-tools/app-store-connect.mjs";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 const native = path.join(root, "native");
@@ -62,32 +64,16 @@ const warn = (msg, hint) => findings.push({ level: "warn", group, msg, hint });
 const fail = (msg, hint) => findings.push({ level: "fail", group, msg, hint });
 
 // ---------------------------------------------------------------------------
-// native/.env, read the way fastlane reads it (dotenv searches the fastlane/
-// folder and its parent, and the lane is run from native/). A value that is
-// still the one shipped in .env.example counts as unset — a half-filled
-// template is the most common way this ends up "configured" but not working.
+// native/.env, read the way fastlane reads it — and the way the Game Center
+// pusher reads it, which is why the rules (dotenv searching the fastlane/
+// folder and its parent; a value still equal to the one in .env.example
+// counting as unset) live in one shared module rather than twice here.
 // ---------------------------------------------------------------------------
-const parseEnv = (file) => {
-  const out = {};
-  if (!existsSync(file)) return out;
-  for (const line of readFileSync(file, "utf8").split("\n")) {
-    const m = /^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/.exec(line);
-    if (!m) continue;
-    out[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
-  }
-  return out;
-};
-
-const envFile = path.join(native, ".env");
-const dotenv = parseEnv(envFile);
-const template = parseEnv(path.join(native, ".env.example"));
+const env = nativeEnv(root);
+const envFile = env.file;
 
 /** The value fastlane would see, with template leftovers treated as absent. */
-const envValue = (key) => {
-  const value = process.env[key] ?? dotenv[key] ?? "";
-  if (!value) return "";
-  return value === template[key] ? "" : value;
-};
+const envValue = (key) => env.value(key);
 
 // ---------------------------------------------------------------------------
 // 1. The app record. Without these `eas submit` has nothing to submit TO.
@@ -352,12 +338,15 @@ for (const [label, script, file] of [
   if (result.status === 0) {
     warn(
       `${manifest.count} Game Center ${label} must exist in the portal`,
-      `every row of ${file} — the id column is the ${label.slice(0, -1)} id.`,
+      `every row of ${file} — the id column is the ${label.slice(0, -1)} id. ` +
+        "`make store-game-center` prints the diff against the portal and " +
+        'pushes it with ARGS="--apply"; no hand entry needed.',
     );
   } else if (drifted(result)) {
     fail(
       `${file} has drifted from the game's catalog`,
-      `run \`node scripts/${script}\` and create the new rows in the portal.`,
+      `run \`node scripts/${script}\`, then \`make store-game-center\` to ` +
+        "push the new rows.",
     );
   } else {
     // The generator did not get as far as comparing anything. Reporting that

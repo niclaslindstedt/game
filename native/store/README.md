@@ -7,6 +7,7 @@ committed in this repo. Two commands produce the whole submission package:
 make store-metadata          # listing.yaml  → store.config.json  (text metadata)
 make store-shots             # the real game → screenshots/       (captioned PNGs)
 make store-achievement-art   # the sprite atlas → achievements/   (badge images)
+make store-game-center       # the two manifests → App Store Connect (91 entries)
 ```
 
 | Path                            | What it is                                                                     | Committed? |
@@ -15,8 +16,8 @@ make store-achievement-art   # the sprite atlas → achievements/   (badge image
 | `store.config.json`             | Compiled listing for `eas metadata:push`                                       | no (built) |
 | `screenshots/<device>/`         | Upload-ready captioned PNGs at Apple's exact rasters                           | no (built) |
 | `achievements/<id>.png`         | The 1024×1024 image for each Game Center achievement                           | no (built) |
-| `game-center-achievements.json` | The Game Center achievement list to enter in App Store Connect                 | yes        |
-| `game-center-leaderboards.json` | The Game Center leaderboard list to enter in App Store Connect                 | yes        |
+| `game-center-achievements.json` | The Game Center achievement list, pushed by `make store-game-center`           | yes        |
+| `game-center-leaderboards.json` | The Game Center leaderboard list, pushed by `make store-game-center`           | yes        |
 
 The generated three are gitignored for the same reason the sprite atlas is
 (§11.2): they are reproducible outputs, and reviewing a 2868×1320 PNG diff in a
@@ -142,6 +143,56 @@ run while iterating.
 Steam's half of the same generator is described in
 [`../../electron/RELEASING.md`](../../electron/RELEASING.md).
 
+## The Game Center entries
+
+`make store-game-center` creates and updates all 91 rows — the 86 achievements
+and 5 leaderboards of the two committed manifests — through App Store Connect's
+own API, instead of typing them into 91 web forms.
+
+```sh
+make store-game-center                      # the work list; writes NOTHING
+make store-game-center ARGS="--apply"       # …and then do it
+make store-game-center ARGS="--only leaderboards --apply"
+```
+
+A **dry run is the default**, because the interesting output is the diff: it is
+the same work list a regenerated manifest's diff is, and reading it is how you
+find out that a catalog change added four badges and re-pointed eleven.
+`--apply` is the second command, deliberately.
+
+It authenticates with the **same App Store Connect API key fastlane uses** —
+`ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_PATH` (or `ASC_KEY_CONTENT`) from
+`.env`, no new secret — and needs the app record to exist, because the numeric
+Apple ID in `../eas.json` is what it looks the app up by.
+
+Four properties make re-running it the normal way to apply a catalog change:
+
+1. **It reconciles rather than creates**, matching on `vendorIdentifier` — the
+   id the _game_ reports, never a display name and never Apple's own resource
+   id. Missing rows are created, drifted ones patched, and a row that already
+   agrees is left untouched (so a second run has nothing to say).
+2. **It refuses a stale manifest.** Both generators' `--check` runs first: a
+   manifest that has drifted from the catalog would write yesterday's catalog
+   into the portal and report success.
+3. **It checks the two silent failures before the first request.** The count
+   under Apple's 100, the points landing on exactly 1,000/1,000 (Apple refuses
+   the row that overruns the budget, so an over-budget manifest would
+   half-write), and every board's score formatter agreeing with the scale the
+   game applies on the way out.
+4. **It never deletes.** An achievement somebody has earned cannot be un-earned
+   and a board's scores cannot be recovered, so a portal row the manifest no
+   longer lists is reported and left alone.
+
+Each achievement's image is uploaded from `achievements/<id>.png` when it is
+there; a badge whose artwork has not been generated is reported as outstanding
+rather than failing the push, since Game Center takes the image afterwards. Run
+`make store-achievement-art` first to include them, or `ARGS="--skip-images"` to
+leave them alone.
+
+What it does **not** do is _release_ the rows: attaching them to the version
+under review is the deliberate act [`../RELEASING.md`](../RELEASING.md) §5
+describes, tied to a build rather than to a catalog change.
+
 ## What still has to be done by hand
 
 Neither command can do these — they live in the store consoles:
@@ -149,22 +200,9 @@ Neither command can do these — they live in the store consoles:
 - The **App Privacy** questionnaire (answer: no data collected; iCloud and
   Game Center are Apple-mediated, and purchases are handled by the App Store).
 - Create the five consumable IAP products and their prices.
-- Create the **Game Center achievements** listed in
-  `game-center-achievements.json` (App Store Connect → Game Center →
-  Achievements): the `id` column is the _Achievement ID_, and the `points`
-  column already spends Game Center's 1,000-point budget exactly. Regenerate
-  the file with `node scripts/game-center-achievements.mjs` after any change to
-  the badge catalog — the diff is the list of rows to add. An achievement the
-  game reports but the portal has never heard of is silently dropped. Upload
-  each row's image from `achievements/<id>.png` (`make store-achievement-art`).
-- Create the **Game Center leaderboards** listed in
-  `game-center-leaderboards.json` (App Store Connect → Game Center →
-  Leaderboards): the `id` column is the _Leaderboard ID_, and the `format`
-  column has to match — the game scales a rate or a duration on its way out
-  (a score is one Int64), so a portal format that disagrees makes every score
-  on that board wrong by a factor of a hundred. Regenerate with
-  `node scripts/game-center-leaderboards.mjs`; a board the portal doesn't have
-  is dropped as silently as an achievement.
+- Enable **Game Center** on the app record. `make store-game-center` fills it in
+  from there, but it cannot switch the feature on.
+- Attach the achievements and leaderboards to the version under review.
 - The Play Console's **Data safety** form, content rating, and the 1024×500
   feature graphic Play requires and Apple does not.
 

@@ -91,43 +91,60 @@ leave it on.**
    **Submit them with the first binary** — IAPs reviewed separately from a
    first release get stuck waiting for one.
 
-3. **Game Center** → enable it on the app, then create every row of the two
+3. **Game Center** → enable it on the app, then push every row of the two
    committed manifests. Neither is optional detail: the game reports against
    these ids, and an id the portal has never heard of is dropped silently — no
    error anywhere, the badge or score just never appears.
 
-   | Manifest                              | Create under               | Rows |
+   | Manifest                              | Goes under                 | Rows |
    | ------------------------------------- | -------------------------- | ---- |
    | `store/game-center-achievements.json` | Game Center → Achievements | 86   |
    | `store/game-center-leaderboards.json` | Game Center → Leaderboards | 5    |
 
-   The `id` column is the portal's _Achievement ID_ / _Leaderboard ID_, and for
-   achievements the `points` column is verbatim — Game Center allows 100
-   achievements and 1,000 points total, and the manifest spends exactly that.
-   For leaderboards the **`format` column must match**: the game scales a rate
-   or a duration on its way out (a score is one Int64), so a portal format that
-   disagrees makes every score on that board wrong by a factor of a hundred.
+   That is 91 forms by hand, so **don't**. Both manifests are generated from the
+   live catalogs and drift-tested, which makes the data already exact — one
+   command pushes it through App Store Connect's own API:
 
-   Regenerate after any catalog change — the diff is the work list:
+   ```sh
+   make store-achievement-art              # the badge images, cut from the atlas
+   make store-game-center                  # the work list; writes NOTHING
+   make store-game-center ARGS="--apply"   # …and then do it
+   ```
+
+   A dry run is the default and prints the diff against what the portal already
+   holds. It is idempotent — it matches on the id the game reports, creates what
+   is missing, patches what drifted, and never deletes — so **re-running it is
+   how a catalog change is applied**, after regenerating the manifests:
 
    ```sh
    node scripts/game-center-achievements.mjs
    node scripts/game-center-leaderboards.mjs
+   make store-game-center                  # the diff IS the work list
    ```
 
+   It refuses to push before three things are true, each of which fails silently
+   if a human gets it wrong: the achievement count is under Apple's 100, the
+   points land on exactly 1,000/1,000 (Apple refuses the row that overruns the
+   budget, so an over-budget manifest half-writes), and every leaderboard's
+   score **format matches the scale** the game applies on the way out — a score
+   is one Int64, so a portal format that disagrees makes every score on that
+   board wrong by a factor of a hundred.
+
    Each achievement also needs an **image** (512×512 minimum, 1024×1024
-   recommended). Don't draw them: every badge already has a picture — the atlas
-   sprite the game's own shelf shows for it — and `make store-achievement-art`
-   writes one 1024×1024 PNG per row into `store/achievements/<id>.png`, named
-   after the Achievement ID it belongs to. See
-   [`store/README.md`](store/README.md) → The achievement artwork.
+   recommended), which the push uploads for you. Don't draw them: every badge
+   already has a picture — the atlas sprite the game's own shelf shows for it —
+   and `make store-achievement-art` writes one 1024×1024 PNG per row into
+   `store/achievements/<id>.png`. A badge whose image has not been generated is
+   reported as outstanding rather than blocking the push. See
+   [`store/README.md`](store/README.md) → The Game Center entries.
 
 4. **Credentials.** Fill `native/.env` from `native/.env.example`: the Apple
    Account email and the two team ids fastlane acts as, plus an **App Store
    Connect API key** (Users and Access → Integrations → App Manager role). The
    `.p8` downloads once and is gitignored — a key, not config. Preflight
    verifies every one of them, including that the team ids fastlane and EAS
-   act as agree.
+   act as agree. The same key is what step 3's push and `fastlane metadata`
+   authenticate with, so there is one credential for the whole pipeline.
 
 ## 2. Version
 
@@ -217,7 +234,9 @@ Then in App Store Connect, by hand:
 - **Export compliance** is pre-answered (`ITSAppUsesNonExemptEncryption: false`).
 - **Game Center** — confirm the achievements and leaderboards from step 1.3 are
   attached to the version. They are reviewed with the build, and a board that
-  ships un-attached ranks nobody.
+  ships un-attached ranks nobody. `make store-game-center` CONFIGURES them but
+  deliberately does not release them: that is tied to a build, not to a catalog
+  change, so it stays a decision made here.
 
 ## 6. Once it is live
 
