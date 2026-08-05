@@ -22,7 +22,7 @@ import {
   rollEquipment,
 } from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
-import { clearOfFog } from "./fog.ts";
+import { visibleTo } from "./sight.ts";
 import { nearestHero } from "./party.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
@@ -41,46 +41,32 @@ export function crateMaxHp(playerLevel: number, difficulty: string): number {
   return Math.max(CRATES.minHp, Math.round(bar * CRATES.hpFraction));
 }
 
-/** A view rect test mirroring step/'s `insideView` — a crate the player
- * can't see yet is not an auto-attack target. */
-function insideView(
-  pos: Vec2,
-  view: { x: number; y: number; width: number; height: number },
-): boolean {
-  return (
-    pos.x >= view.x &&
-    pos.x <= view.x + view.width &&
-    pos.y >= view.y &&
-    pos.y <= view.y + view.height
-  );
-}
-
 /**
- * The nearest breakable crate within `range` of `from`, on screen, out of the
- * fog and with a clear line to it — the fallback target the hero's auto-attack
- * smashes when no foe is in reach (see stepWeapon). Enemies always win the
- * pick; this only runs once they're all out of range, so a lone crate in an
- * empty room still gets cracked open.
+ * The nearest breakable crate within `range` of `from` that `owner` can SEE,
+ * with a clear line to it — the fallback target the hero's auto-attack smashes
+ * when no foe is in reach (see stepWeapon). Enemies always win the pick; this
+ * only runs once they're all out of range, so a lone crate in an empty room
+ * still gets cracked open.
  *
- * The fog rule is the horde's (`clearOfFog`): a box on ground the hero has not
- * uncovered is swallowed by the same blackness a mob standing there would be,
- * so the auto-attack does not fire into it. Walk up and it is a target.
+ * The sight rule is the horde's (`sight.ts` `visibleTo`): a box off the screen,
+ * or on ground the hero has not uncovered, is exactly as invisible as a mob
+ * standing there, so the auto-attack does not swing at it. Walk up and it is a
+ * target.
  */
 export function nearestCrate(
   state: GameState,
   from: Vec2,
   range: number,
-  view?: { x: number; y: number; width: number; height: number },
+  owner: Player | undefined,
 ): Obstacle | undefined {
   const rangeSq = range * range;
   let best: Obstacle | undefined;
   let bestSq = rangeSq;
   for (const obstacle of state.obstacles) {
     if (!obstacle.breakable) continue;
-    if (view && !insideView(obstacle.pos, view)) continue;
     const dSq = distanceSq(from, obstacle.pos);
     if (dSq > bestSq) continue;
-    if (!clearOfFog(state, obstacle.pos)) continue;
+    if (!visibleTo(state, owner, obstacle.pos)) continue;
     if (!lineOfSight(state, from, obstacle.pos)) continue;
     best = obstacle;
     bestSq = dSq;

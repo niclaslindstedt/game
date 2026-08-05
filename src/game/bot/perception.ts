@@ -14,7 +14,7 @@ import { blockedByObstacle } from "../obstacles.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponRangeFor } from "../items/index.ts";
-import { clearOfFog } from "../fog.ts";
+import { heroView, visibleTo } from "../sight.ts";
 import { exploredRay } from "../map.ts";
 import type { Enemy, GameState, Player } from "../types/index.ts";
 import { inertEnemy } from "../disposition.ts";
@@ -485,11 +485,12 @@ export function bestEscapeTarget(
 }
 
 /** Is there a foe the hero could actually strike right now — in weapon range,
- * out of the fog and with a clear line? While there is, standing still is
+ * VISIBLE to him and with a clear line? While there is, standing still is
  * FIGHTING, not being wedged, so the stall detector holds off (a boss/pack brawl
- * never trips the unstuck). The fog counts because the auto-attack will not fire
- * at anything still in it (`clearOfFog`): a hero standing over a mob he refuses
- * to shoot is wedged, and the detector has to be allowed to say so. */
+ * never trips the unstuck). Sight counts because the auto-attack will not fire
+ * at anything it cannot see (`visibleTo` — off the screen or still in the fog):
+ * a hero standing over a mob he refuses to shoot is wedged, and the detector has
+ * to be allowed to say so. */
 export function hasReachableFoe(state: GameState, hero: Player): boolean {
   const range = weaponRangeFor(state, hero, hero.equipment.weapon);
   const rangeSq = range * range;
@@ -498,7 +499,7 @@ export function hasReachableFoe(state: GameState, hero: Player): boolean {
   for (let i = 0; i < scan.len; i++) {
     if ((scan.distSq[i] as number) > rangeSq) break; // sorted — rest are farther
     const enemy = scan.sorted[i] as Enemy;
-    if (!clearOfFog(state, enemy.pos)) continue;
+    if (!visibleTo(state, hero, enemy.pos)) continue;
     if (!blockedByObstacle(state, hero.pos, enemy.pos, r)) return true;
   }
   return false;
@@ -506,27 +507,75 @@ export function hasReachableFoe(state: GameState, hero: Player): boolean {
 
 /**
  * THE REACH THE HERO CAN ACTUALLY FIRE AT along the bearing to `at` — his
- * weapon's effective range (`weaponRangeFor`) cut short where the FOG begins.
+ * weapon's effective range (`weaponRangeFor`) cut short by BOTH things that
+ * stop the auto-attack: the edge of the screen, and the edge of the light.
  *
  * Every stand-off the bot picks measures from this rather than from the weapon's
- * paper reach, because the auto-attack refuses a target that is not `clearOfFog`
- * (step/weapon.ts): across unexplored ground a long gun's range is NOT where its
- * shots land. Holding at the paper figure parks the hero beyond the light,
- * standing still and firing nothing at a mob that never closes — the same
- * mistake reading the weapon's BASE range used to make, one layer further out.
+ * paper reach, because the auto-attack refuses a target it cannot see
+ * (`visibleTo`, step/weapon.ts): neither across unexplored ground nor off the
+ * top of the frame is a long gun's range where its shots land. Holding at the
+ * paper figure parks the hero beyond what he can shoot at, standing still and
+ * firing nothing at a mob that never closes — the same mistake reading the
+ * weapon's BASE range used to make, one layer further out.
  *
- * The cut is `exploredRay` (how far the uncovered ground runs that way) less the
- * frontier band, so it grows as the hero walks and never has to be re-derived.
- * Ground explored clean to the level edge yields the weapon's own reach: there
- * is nothing hidden out there. A pure read of `state.explored` — botted runs
- * stay deterministic.
+ * The FOG cut is `exploredRay` (how far the uncovered ground runs that way) less
+ * the frontier band, so it grows as the hero walks and never has to be
+ * re-derived. Ground explored clean to the level edge yields the weapon's own
+ * reach: there is nothing hidden out there. The SCREEN cut is the distance to
+ * the camera rect's own edge on that bearing. Both are pure reads (`explored`
+ * and the reported view), so botted runs stay deterministic.
  */
 export function firingReach(state: GameState, hero: Player, at: Vec2): number {
-  const reach = weaponRangeFor(state, hero, hero.equipment.weapon);
+  const paper = weaponRangeFor(state, hero, hero.equipment.weapon);
+  const reach = Math.min(paper, screenReach(state, hero, at));
   const angle = Math.atan2(at.y - hero.pos.y, at.x - hero.pos.x);
   const ray = exploredRay(state, hero.pos, angle, reach);
   if (!ray.fog) return reach;
   return Math.max(0, Math.min(reach, ray.dist - MAP.fogBand));
+}
+
+/**
+ * How far the hero may shoot toward `at` before the shot leaves HIS OWN SCREEN
+ * — the distance from him to the camera rect's boundary along that bearing.
+ *
+ * Infinite when nobody reported a camera (headless runs and the sim's
+ * `--view none`, where there is no screen to fall off), and infinite too if the
+ * hero somehow stands outside his own view rect: that is a broken camera rather
+ * than a firing rule, and answering 0 to it would freeze the bot in place.
+ */
+function screenReach(state: GameState, hero: Player, at: Vec2): number {
+  const view = heroView(state, hero);
+  if (!view) return Infinity;
+  const { x, y } = hero.pos;
+  if (
+    x < view.x ||
+    x > view.x + view.width ||
+    y < view.y ||
+    y > view.y + view.height
+  ) {
+    return Infinity;
+  }
+  const dx = at.x - x;
+  const dy = at.y - y;
+  const len = Math.hypot(dx, dy);
+  if (len === 0) return Infinity;
+  // The classic slab clip, one axis at a time: how far along the unit bearing
+  // each pair of edges sits, nearest wins.
+  const ux = dx / len;
+  const uy = dy / len;
+  const tx =
+    ux > 0
+      ? (view.x + view.width - x) / ux
+      : ux < 0
+        ? (view.x - x) / ux
+        : Infinity;
+  const ty =
+    uy > 0
+      ? (view.y + view.height - y) / uy
+      : uy < 0
+        ? (view.y - y) / uy
+        : Infinity;
+  return Math.min(tx, ty);
 }
 
 /** How far out the contact clock bothers to look (world px). A body beyond

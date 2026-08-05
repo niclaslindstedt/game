@@ -836,16 +836,31 @@ escort.ts` walks the people an escort errand puts on the field, and
   map.ts's grid arithmetic and so puts that whole module inside the 170 KB
   critical-path budget, and the sweep would drag the collision module in with
   it) is the engine's own deterministic reading of that
-  same frontier — no unexplored cell centre within `MAP.fogBand` — and every
-  automatic target pick goes through it (the hero's auto-attack and its crate
-  fallback, the conjured powers that pick their own mark, the companions' engage
-  bubble, and the autopilot's `firingReach`, which shortens a stand-off to where
-  its shots can actually land). A hero who fires into the blackness is acting on
-  knowledge the player does not have. It deliberately reads OFF-MAP cells as
+  same frontier — no unexplored cell centre within `MAP.fogBand`. A hero who
+  fires into the blackness is acting on knowledge the player does not have. It
+  deliberately reads OFF-MAP cells as
   clear, unlike the renderer, which seeds them as frontier so a level's rim
   fogs: nothing out past the boundary is undiscovered, and fogging it would
   leave a mob pinned against the level edge untargetable for the rest of the
-  run. A sibling render-side cull
+  run.
+- **`src/game/sight.ts`** — **CAN THIS PLAYER SEE THAT SPOT**, which is the
+  question every automatic target pick actually asks, and it has TWO halves:
+  `clearOfFog` above, and the EDGE OF THE SCREEN. The fog alone stopped being an
+  answer within a minute of play — it never rolls back, so "explored" soon says
+  yes to most of the map, and a power reaching 300 world px happily marked a
+  monster two screens away on a phone whose landscape viewport is ~422×195 world
+  units. `visibleTo(state, hero, pos)` runs both, and everything that aims on a
+  hero's behalf goes through it: the auto-attack and its crate fallback, the
+  conjured powers and granted spells that pick their own mark (storm, volley,
+  singularity, the well's hunt), the sentry grid, a weapon proc's fresh pick, the
+  companions' engage bubble, and the autopilot's `firingReach`, which shortens a
+  stand-off to where its shots can actually land. WHOSE screen is the whole
+  question in co-op, so the rect is per-hero (`Player.view`, stamped by `step()`
+  from that seat's own `GameInput.view`); `state.view` stays seat 0's and answers
+  the questions that only want "a screenful" — the spawner's off-screen summon
+  distance and the bot's wall-end sense. A hero nobody reports a camera for
+  (engine tests, `simulate --view none`) is not blind: the screen half abstains
+  and the fog half still applies. A sibling render-side cull
   drops any enemy the hero has no LINE OF SIGHT to — one tucked fully behind a
   wall or boulder — reusing the engine's `lineOfSight` (`src/game/obstacles.ts`,
   the same tall-obstacle query that stops shots); a mob only peeking out from an

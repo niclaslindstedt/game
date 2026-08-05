@@ -334,13 +334,27 @@ the seat the session admitted the client into — never from a field on the fram
 caches it; a wall that appears without the bump is a wall it routes straight
 through.
 
-**NOTHING IN THE FOG IS A TARGET — every automatic pick goes through
-`clearOfFog(state, pos)`.** The main view does not draw a body standing in the
-fog or in its frontier band, so a pass that picks its own mark without asking
-(a new power, a turret, an ally, a second weapon) has the character firing into
-blackness on the player's behalf. Reach is NOT the fog's business: weapons keep
-their range, they just cannot reach past what has been walked — which is why the
-autopilot measures a stand-off with `firingReach` rather than `weaponRangeFor`.
+**NOTHING THE PLAYER CANNOT SEE IS A TARGET — every automatic pick goes through
+`visibleTo(state, hero, pos)` (`src/game/sight.ts`), and it is TWO facts, not
+one.** A pass that picks its own mark without asking (a new power, a turret, an
+ally, a second weapon) has the character firing at something the player has no
+picture of, and there are two ways to have no picture of it:
+
+- **THE FOG** (`clearOfFog`) — the main view does not draw a body standing in
+  the fog or in its frontier band.
+- **THE SCREEN** (`Player.view`, each seat's own camera rect, stamped by
+  `step()` from that seat's `GameInput.view`) — and this half is the one that
+  keeps being forgotten, because the fog NEVER ROLLS BACK. A minute into a level
+  "explored" says yes to most of the map, so a 300-px power reached two screens
+  north at a mob nobody could see. `state.view` is SEAT 0's and answers "a
+  screenful" for the summon geometry and the bot's wall sense; anything aiming
+  for a HERO wants that hero's, or a joiner may only shoot what is on the host's
+  screen.
+
+Reach is NOT sight's business: weapons keep their range, they just cannot reach
+past what the player is being shown — which is why the autopilot measures a
+stand-off with `firingReach` (cut by BOTH the frame's edge and the fog's) rather
+than `weaponRangeFor`.
 **AND THE FOG STOPS AT THE WALLS**: the sweep that lifts it (`revealAround`) is
 sight-limited, so ground behind a wall stays dark until the hero can see it, and
 it deliberately reaches `MAP.fogWallDepth` PAST the blocker — a frontier along

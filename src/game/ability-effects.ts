@@ -233,7 +233,11 @@ export function applyStorm(
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const victim = nearestEnemy(state, player.pos, storm.range);
+  // The bolt strikes only what its owner can SEE (sight.ts, through
+  // `nearestEnemy`): the storm reaches 300 px and half a landscape screen is
+  // ~97 px down, so without the gate it spent itself on mobs the player had no
+  // picture of — thunder off the top of the frame.
+  const victim = nearestEnemy(state, player.pos, storm.range, player);
   if (!victim) return;
   scratch.cooldownMs = storm.intervalMs;
   state.events.push({ type: "lightning", pos: { ...victim.pos } });
@@ -248,7 +252,9 @@ export function applyStorm(
  * Damage is pre-scaled by `power` HERE — the shots resolve later, in
  * `stepProjectiles`, which cannot re-ask the ability scale — and every shot of
  * one volley shares an id so its hits group like a trigger pull's pellets.
- * Holds the shot AND the clock when nothing is in range.
+ * Holds the shot AND the clock when nothing is in range — and "in range" is
+ * the owner's SIGHT as much as the reach (`nearestEnemy`): a volley never
+ * looses itself at a pack the player is not being shown.
  */
 export function applyVolley(
   state: GameState,
@@ -258,7 +264,7 @@ export function applyVolley(
   power: number,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const mark = nearestEnemy(state, player.pos, volley.range);
+  const mark = nearestEnemy(state, player.pos, volley.range, player);
   if (!mark) return;
   scratch.cooldownMs = volley.intervalMs;
 
@@ -299,6 +305,11 @@ export function applyVolley(
  * continuously, a singularity re-centres on the horde at each collapse: it is a
  * periodic event with a position, not a thing standing on the field. Victims are
  * snapshotted before `hitEnemy` splices the list.
+ *
+ * The SEED it collapses on is picked through the owner's sight
+ * (`nearestEnemy`), so the vortex opens somewhere the player can watch it —
+ * everything inside its radius is then dragged in, seen or not, because a
+ * visible collapse pulling half a visible pack would be the odder rule.
  */
 export function applySingularity(
   state: GameState,
@@ -309,7 +320,7 @@ export function applySingularity(
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const seed = nearestEnemy(state, player.pos, singularity.range);
+  const seed = nearestEnemy(state, player.pos, singularity.range, player);
   if (!seed) return;
   scratch.cooldownMs = singularity.intervalMs;
 

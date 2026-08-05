@@ -256,9 +256,13 @@ export function stepProcs(state: GameState): void {
     const owner = heroAt(state, proc.seat ?? 0) ?? state.players[0];
     const power = abilityPowerScale(state, owner);
     if (proc.spell === "bolt") {
+      // The body that TRIGGERED the proc is a mark the owner was already
+      // fighting, so it needs no sight test — it is only when that one is
+      // already dead that a fresh pick is made, and that one goes through the
+      // owner's eyes like every other (`nearestEnemy`).
       const target =
         state.enemies.find((e) => e.id === proc.enemyId) ??
-        nearestEnemy(state, proc.pos, SPELL.bolt.range);
+        nearestEnemy(state, proc.pos, SPELL.bolt.range, owner);
       if (!target) continue;
       state.events.push({ type: "lightning", pos: { ...target.pos } });
       hitEnemy(state, target, boltProcDamage(proc.rank) * power, "magic", {

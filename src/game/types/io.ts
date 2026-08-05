@@ -4,7 +4,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import type { AmmoType, Equipment, StatName } from "./core.ts";
+import type { AmmoType, Equipment, StatName, ViewRect } from "./core.ts";
 
 /** Per-step player intent, produced by the app's input layer. */
 export type GameInput = {
@@ -70,12 +70,20 @@ export type GameInput = {
    */
   useRepairKit?: boolean;
   /**
-   * The world rect currently on screen (the camera view). When set, the
-   * auto-weapon only targets monsters inside it — the character never
-   * shoots at enemies the player cannot see yet. Absent (headless tests,
-   * bots) targeting falls back to weapon range alone.
+   * THIS SEAT'S CAMERA — the world rect currently on its screen.
+   *
+   * When set, NOTHING THE GAME AIMS ON THIS PLAYER'S BEHALF may pick a mark
+   * outside it: not the auto-weapon, not the conjured powers it carries, not
+   * the sentry grid it deployed, not the companions walking beside it. The
+   * character never strikes at what the player cannot see, and "cannot see" is
+   * two facts — off the screen, or in the fog — that `game/sight.ts` answers
+   * together. Stamped onto the hero each tick (`Player.view`) so the passes
+   * that run outside the input's reach can still ask.
+   *
+   * Absent (headless tests, bots with no camera) every pick falls back to
+   * weapon range and the fog alone.
    */
-  view?: { x: number; y: number; width: number; height: number };
+  view?: ViewRect;
   /**
    * The desktop mouse pointer's world position — the aim dimension. When set,
    * the auto-weapon prefers the monster in the pointer's direction over a

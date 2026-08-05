@@ -479,10 +479,13 @@ export {
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
 export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
 
-// Is a spot somewhere the player can SEE — out of the fog AND out of its
-// frontier band? The read every automatic target pick goes through; kept off
-// map.ts because that module is on the app's startup path (see fog.ts).
+// Is a spot somewhere the player can SEE? TWO halves, and every automatic
+// target pick in the game runs the pair through `visibleTo`: out of the fog and
+// out of its frontier band (`clearOfFog`), and inside the rect that hero's own
+// camera is showing them (`heroView`). Kept off map.ts because that module is
+// on the app's startup path (see fog.ts).
 export { clearOfFog } from "./game/fog.ts";
+export { heroView, insideView, visibleTo } from "./game/sight.ts";
 
 // Obstacle sight queries: the swept "does this line clear every TALL obstacle?"
 // test the simulation runs against solid features (walls, boulders, rocks —

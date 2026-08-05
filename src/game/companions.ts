@@ -62,7 +62,7 @@ import {
   qualityMult,
 } from "./items/index.ts";
 import { enemyKillXp, hitEnemy, killEnemy, shareXp } from "./loot.ts";
-import { clearOfFog } from "./fog.ts";
+import { visibleTo } from "./sight.ts";
 import { addMapMarker } from "./map.ts";
 import { heroAt, heroInPlay, partyLevel } from "./party.ts";
 import { startJoinWords } from "./story.ts";
@@ -390,18 +390,20 @@ export function stepCompanions(
   // same work `party × horde` times a tick. Enemies don't move during this
   // pass; one slain mid-pass is skipped by hp in pickTarget.
   //
-  // NOTHING IN THE FOG IS IN THE BUBBLE, the same rule the hero's own weapon
-  // picks through (`clearOfFog`, step/weapon.ts): the engage radius (230) reaches
-  // further than the fog lifts (`MAP.revealRadius` 160), so without it the party
-  // would stand beside a hero holding his fire and shoot into the blackness he
-  // is refusing to. Checked last — it is the dearest of the three tests.
+  // NOTHING THE ANCHOR CANNOT SEE IS IN THE BUBBLE, the same rule the hero's
+  // own weapon picks through (`visibleTo`, sight.ts): the engage radius (230)
+  // reaches further than the fog lifts (`MAP.revealRadius` 160) AND further
+  // than half a landscape screen is tall (~97), so without it the party would
+  // stand beside a hero holding his fire and shoot into blackness he is
+  // refusing to — or off the top of the frame at something he cannot see at
+  // all. Checked last — it is the dearest of the three tests.
   engageCandidates.length = 0;
   const anchor = companionAnchor(state);
   const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
   for (const enemy of state.enemies) {
     if (inertEnemy(enemy)) continue;
     if (distanceSq(enemy.pos, anchor.pos) > radiusSq) continue;
-    if (!clearOfFog(state, enemy.pos)) continue;
+    if (!visibleTo(state, anchor, enemy.pos)) continue;
     engageCandidates.push(enemy);
   }
   for (let i = 0; i < count; i++) {

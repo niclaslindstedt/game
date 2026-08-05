@@ -321,7 +321,7 @@ describe("crate targeting helpers", () => {
     ];
 
     const from = { x: 500, y: 500 };
-    const hit = nearestCrate(state, from, 120);
+    const hit = nearestCrate(state, from, 120, state.players[0]);
     expect(hit).toBeDefined();
     expect(hit?.breakable).toBe(true);
     expect(hit?.pos.x).toBe(560);

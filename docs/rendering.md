@@ -205,14 +205,27 @@ reading as seen — which draws as stipple anyway.
 
 **THE SIMULATION ANSWERS THAT SAME QUESTION FOR ITSELF, AND MUST.** A mob the
 band hides is also a mob the hero refuses to fire at (`clearOfFog`,
-`src/game/fog.ts`) — otherwise the character shoots into blackness on the
-player's behalf, which is what a long gun advancing into unexplored ground used
+`src/game/fog.ts`, read through `visibleTo` in `src/game/sight.ts`) — otherwise
+the character shoots into blackness on the player's behalf, which is what a long
+gun advancing into unexplored ground used
 to do. The engine cannot read `FogField.shown` to decide it: that field eases on
 a RENDER clock, and a simulation that depended on one would desync a session and
 break every seeded replay. So the two are deliberately near-copies rather than
 one function — the engine measures where the frontier IS, the picture draws
 where it has eased to, and the few frames between them are the frontier gliding
 the last pixels onto ground the hero already owns.
+
+**AND THE FOG IS ONLY HALF OF "CANNOT SEE".** The other half is the edge of the
+frame, and it is the half that actually bites, because the fog never rolls back:
+a minute into a level the hero has explored far more ground than a phone held
+sideways shows him (~422×195 world units, so ~211 to the side edge and ~97 to
+the top). A power reaching 220–340 px — the storm, the volley, the singularity,
+the sentry grid, the well's hunt — therefore spent itself on monsters that were
+never on screen, and the fight the player was watching was not the fight the
+game was fighting. So the CAMERA RECT is a simulation input
+(`GameInput.view` → `Player.view`, per seat) and `visibleTo(state, hero, pos)`
+runs both halves for every automatic pick. It is the same rule the picture obeys,
+stated the same way twice: what is not drawn is not shot at.
 
 Note the two defects only looked alike from outside: the warp above was
 sub-pixel rounding in the PROJECTION, this is whole-cell quantization in the

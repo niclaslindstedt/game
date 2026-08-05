@@ -92,6 +92,19 @@ export type PlayerScreen =
 export type Difficulty = string;
 
 /**
+ * A RECTANGLE OF THE WORLD, in world px — in practice always the same one: the
+ * patch of floor a camera is showing somebody.
+ *
+ * It is one named shape rather than four repeated fields because THREE
+ * different places hold one and they must mean the same thing: what the app
+ * reports each tick (`GameInput.view`), what the run remembers of the host's
+ * (`GameState.view`), and what each hero is personally watching
+ * (`Player.view`). Everything that asks "can this player SEE that" reads one
+ * of the three through `game/sight.ts`.
+ */
+export type ViewRect = { x: number; y: number; width: number; height: number };
+
+/**
  * The five trainable stats, points awarded per level-up. (Move speed is no
  * longer its own stat — DEXTERITY is the mobility attribute; the base walk and
  * gear supply the rest. SPIRIT is retired too: it bought nothing but a slow
