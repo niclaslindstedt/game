@@ -283,8 +283,9 @@ describe("getting back out", () => {
     expect(state.obstaclesVersion).toBeGreaterThan(version);
     // He is standing beside it, not inside it — and no longer riding along.
     const hero = state.players[0]!;
-    expect(Math.hypot(hero.pos.x - car.pos.x, hero.pos.y - car.pos.y))
-      .toBeGreaterThan(CAR.footprint.radius);
+    expect(
+      Math.hypot(hero.pos.x - car.pos.x, hero.pos.y - car.pos.y),
+    ).toBeGreaterThan(CAR.footprint.radius);
     run(state, steerTo(car.pos.x + 400, car.pos.y), 30);
     expect(car.pos).toEqual(droveTo); // nobody is driving it any more
   });

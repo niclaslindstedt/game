@@ -214,7 +214,10 @@ describe("the place-pinned beats", () => {
     run(state, 1);
     advanceDialogue(state); // the arrival errand
     const door = state.doors.find((d) => d.approach);
-    expect(door, "the hub hangs a roll-up for him to walk out of").toBeDefined();
+    expect(
+      door,
+      "the hub hangs a roll-up for him to walk out of",
+    ).toBeDefined();
     // Standing INSIDE says nothing, however long he loiters.
     run(state, 120);
     expect(state.phase).toBe("playing");
