@@ -134,6 +134,7 @@ import {
   type RunCheckpoint,
   type RunProgress,
 } from "./game-screen/run-progress.ts";
+import { createAutosave } from "./game-screen/autosave.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
 import { RunVaultScreen } from "./VaultScreen.tsx";
 import {
@@ -840,6 +841,16 @@ export function GameScreen({
       setNewRecord,
     });
     progressRef.current = progress;
+    // THE CHECKPOINT AUTOSAVE: park this run to storage as it is played, so a
+    // phone that kills the app from the app switcher — which runs no unload
+    // handler at all — still leaves a CONTINUE behind (autosave.ts). Off for
+    // every run that is not the player's own campaign: the demo and BOT VIEW
+    // fly a synthetic hero, and a joined session's run belongs to its host.
+    const autosave = createAutosave({
+      state,
+      characterRef,
+      enabled: !demo && !botView && !join && !suppressAchievements,
+    });
     // The bank-before-the-swap half of an in-session crossing: the driver
     // calls this with the OLD state, before the incoming snapshot moves the
     // world, so the local hero is banked off the level being left.
@@ -1154,6 +1165,11 @@ export function GameScreen({
           if (event.type === "meteorFall") powerupAura.flash("powerup-quake");
           if (bot) botFeedback.onEvent(event, state, camera);
           progress.onEvent(event, state);
+          // AFTER `progress`, which is what banks a win or a death onto the
+          // character: the autosave drops the parked run on those same two
+          // events, and dropping it before the outcome was banked would leave
+          // a window with the progress in neither place.
+          autosave.onEvent(event);
           autopilotDirector.onEvent(event, state);
         }
         // Money taken in one breath floats as ONE number: the group lands the
@@ -1170,6 +1186,9 @@ export function GameScreen({
         // because `step()` — which does it here — is running in another
         // process. See run-driver.ts for what leaving it in place sounds like.
         driver.endTick();
+        // …and park the run if this tick earned it (a few seconds of progress,
+        // or one of the beats worth not replaying). Cheap on every other tick.
+        autosave.tick(state);
         // AN IN-SESSION CROSSING LANDED: the session rebuilt the run
         // on another level and the snapshot moved this state wholesale — the
         // hero was already banked by the driver's travel hook. What is left
@@ -1207,6 +1226,7 @@ export function GameScreen({
 
     return () => {
       stop();
+      autosave.dispose();
       // A joined run's driver belongs to the join effect, which holds the
       // connection for the whole mount: disposing it here would drop the
       // session every time this effect re-ran. A driver parked for an

@@ -4,6 +4,12 @@
 // live only in React memory: applying a PWA update reloads the page, memory is
 // wiped, and the CONTINUE button vanished with it (the exact bug this fixes).
 //
+// IT IS ALSO WRITTEN WHILE THE RUN IS STILL BEING PLAYED — every few seconds of
+// progress, and on every backgrounding — so a phone that kills the app from the
+// app switcher (which fires no unload event a page could listen for) leaves a
+// run to come back to rather than nothing at all. See
+// game-screen/autosave.ts for the cadence; this module is only the freezer.
+//
 // The whole engine GameState is plain JSON apart from its `rng` closure, so we
 // serialize the state as-is and snapshot the rng's internal position beside it,
 // rebuilding the generator on load so a resumed run picks up the exact same
@@ -25,6 +31,10 @@ import { createRngFromState, rngState } from "@game/lib/rng.ts";
 import { storageKey } from "../identity.ts";
 
 const KEY = storageKey("current-run");
+
+/** The stand-in `explored` a thawed state carries for the one statement
+ * between spreading the blob and `reviveExplored` replacing it. */
+const EMPTY_FOG = new Uint8Array(0);
 
 // Bump this whenever the serialized GameState shape changes in a way an older
 // snapshot can't be read into. A mismatched (or unparseable) blob is dropped
@@ -137,15 +147,62 @@ type Serialized = {
   rngState: number;
   fxRngState: number;
   goldRngState: number;
-  // The GameState verbatim minus its rng streams (restored on load). `events`
-  // is transient per-step chatter, blanked so a resume doesn't replay stale sfx.
-  state: Omit<GameState, "rng" | "fxRng" | "goldRng">;
+  // The fog grid as a base64 BITFIELD (see packExplored). Absent on a blob
+  // written before the packing landed — those carry the grid inside `state`
+  // instead, which `reviveExplored` still reads.
+  fog?: string;
+  // The GameState verbatim minus its rng streams (restored on load) and minus
+  // the fog grid (carried packed, above). `events` is transient per-step
+  // chatter, blanked so a resume doesn't replay stale sfx.
+  state: Omit<GameState, "rng" | "fxRng" | "goldRng" | "explored"> & {
+    explored?: Uint8Array;
+  };
 };
+
+/**
+ * The fog grid as a base64 bitfield — one BIT per tile, not one JSON number.
+ *
+ * `JSON.stringify` spells a `Uint8Array` out as `{"0":0,"1":1,…}`, which on a
+ * 119×99 map is ~104 KB of the ~320 KB blob: a quarter of every write, for a
+ * grid that only ever holds 0 or 1. Packed it is ~1.5 KB. That was tolerable
+ * while a run was parked once per session and is not now that the autosave
+ * writes every few seconds of play on a phone.
+ */
+function packExplored(explored: Uint8Array): string {
+  const bytes = new Uint8Array((explored.length + 7) >> 3);
+  for (let i = 0; i < explored.length; i++) {
+    if (explored[i] === 1) {
+      const byte = i >> 3;
+      bytes[byte] = (bytes[byte] ?? 0) | (1 << (i & 7));
+    }
+  }
+  // `String.fromCharCode(...bytes)` in one call blows the argument limit on a
+  // big map, so the string is built in chunks.
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
+/** Unpack {@link packExplored} back into a `size`-long grid. Sized from the
+ * LEVEL rather than from the string, so a truncated or foreign blob still
+ * yields a full, correctly-indexed grid (the tail simply reads dark). */
+function unpackExplored(packed: string, size: number): Uint8Array {
+  const binary = atob(packed);
+  const grid = new Uint8Array(size);
+  for (let i = 0; i < size; i++) {
+    // Past the end `charCodeAt` is NaN, and `NaN & n` is 0 — a dark tile.
+    if (binary.charCodeAt(i >> 3) & (1 << (i & 7))) grid[i] = 1;
+  }
+  return grid;
+}
 
 /** Freeze the parked run to storage. Best-effort — a storage failure is logged, not thrown. */
 export function saveRun(run: ParkedRun): void {
   try {
-    const { rng, fxRng, goldRng, ...rest } = run.state;
+    const { rng, fxRng, goldRng, explored, ...rest } = run.state;
     const payload: Serialized = {
       v: SAVE_VERSION,
       characterId: run.characterId,
@@ -154,6 +211,7 @@ export function saveRun(run: ParkedRun): void {
       rngState: rngState(rng),
       fxRngState: rngState(fxRng),
       goldRngState: rngState(goldRng),
+      fog: packExplored(explored),
       // `events` is transient per-step chatter; blank it so a resume doesn't
       // replay stale sfx (it's overwritten again on the first step anyway).
       state: { ...rest, events: [] },
@@ -255,10 +313,19 @@ function adoptRunEquipment(state: GameState): void {
  * bug). Reviving to the level-sized typed array on load restores every consumer
  * at once. Sized from the level (not the object's key count) so a partial or
  * corrupt blob still yields a full, correctly-indexed grid.
+ *
+ * A blob written since the packing landed carries the grid as a base64
+ * bitfield beside the state instead, and takes the first branch; the plain
+ * object below is what a blob parked by an older build of this same save
+ * version still looks like.
  */
-function reviveExplored(state: GameState): void {
-  if (state.explored instanceof Uint8Array) return;
+function reviveExplored(state: GameState, packed?: string): void {
   const size = mapCols(state.level) * mapRows(state.level);
+  if (packed !== undefined) {
+    state.explored = unpackExplored(packed, size);
+    return;
+  }
+  if (state.explored instanceof Uint8Array) return;
   const grid = new Uint8Array(size);
   const raw = state.explored as unknown;
   if (raw && typeof raw === "object") {
@@ -310,6 +377,10 @@ export function loadSavedRun(): ParkedRun | null {
     }
     const state: GameState = {
       ...payload.state,
+      // Stood up by `reviveExplored` below — from the packed bitfield when the
+      // blob carries one, from the plain object left in `state` when it
+      // doesn't. Placeholder here only so the shape is complete before then.
+      explored: payload.state.explored ?? EMPTY_FOG,
       events: [],
       rng: createRngFromState(payload.rngState),
       // Restore the flavor stream too (older saves predate it — fall back to a
@@ -340,7 +411,7 @@ export function loadSavedRun(): ParkedRun | null {
     };
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
     // plain object, which freezes the fog renderers (see reviveExplored).
-    reviveExplored(state);
+    reviveExplored(state, payload.fog);
     // Freeze every kept item to its dropped-with stats before the run resumes,
     // so a catalog edge that landed while the run was parked can't reach it.
     adoptRunEquipment(state);
