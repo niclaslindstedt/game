@@ -17,6 +17,7 @@ import {
   hasAmmoFor,
   outOfAmmoDesperation,
   rollEquipment,
+  startingAmmo,
   step,
   weaponAmmoLeft,
   weaponAmmoType,
@@ -108,11 +109,30 @@ describe("the opening holster", () => {
       expect(ammoCount(state.players[0], held)).toBe(AMMO.starting);
     }
     // …and the fallback sidearm is stocked too, because a dry last resort is
-    // not a setback, it is a run that cannot be finished.
+    // not a setback, it is a run that cannot be finished — but only with the
+    // RESERVE, so the foot rail does not open a shotgun run reading "100
+    // BULLETS, 100 CELLS".
     const sidearm = weaponDef("blaster").ammo;
-    if (sidearm !== undefined) {
-      expect(ammoCount(state.players[0], sidearm)).toBe(AMMO.starting);
+    if (sidearm !== undefined && sidearm !== held) {
+      expect(ammoCount(state.players[0], sidearm)).toBe(AMMO.sidearmReserve);
     }
+  });
+
+  it("stocks the held kind whether or not the sidearm eats one", () => {
+    // The fixture sidearm deliberately does NOT play by the shipped ranged
+    // rule (it wears out rather than eating a kind), which is the arrangement
+    // that used to leave the pouch empty: the opening holster reads the HELD
+    // weapon first, so a run still opens loaded. The sidearm's own half is the
+    // shipped catalog's business — `tests/content/ammo_content_test.ts`.
+    expect(startingAmmo("test_carbine").bullets).toBe(AMMO.starting);
+  });
+
+  it("is a seatbelt, not a second stack", () => {
+    // The reserve has one job — keep `swapOffDryWeapon` able to draw a sidearm
+    // that shoots — and a reserve as deep as the opening stock would make the
+    // wrong kind look exactly as important as the right one.
+    expect(AMMO.sidearmReserve).toBeGreaterThan(0);
+    expect(AMMO.sidearmReserve).toBeLessThan(AMMO.starting / 2);
   });
 });
 

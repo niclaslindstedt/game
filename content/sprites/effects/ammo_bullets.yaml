@@ -2,29 +2,32 @@ name: ammo_bullets
 family: effects
 size: [12, 12]
 description: >
-  The BULLETS pickup — an olive ammunition can with its lid off and a rank of
-  brass cartridges standing in it. Every firearm in the game eats these.
+  The BULLETS pickup — cartridges lying loose on the ground, the near one whole
+  and side-on: a brass case rounded by the light off its top, an extractor
+  groove cut across its head, and a bullet drawn out to a point off the far end.
+  Every firearm in the game eats these.
 subject:
   kind: pickup
-  build: an open olive-drab ammunition can, steel latch on the front, a rank of
-    brass cartridges standing upright out of the open top
-  accent: warm brass against olive drab
-  flavor: a can of rounds, cracked open and ready to grab
+  build: two cartridges lying flat and side-on, the near one whole and the far
+    one half hidden under it, each a straight brass case with a groove cut
+    across its head at one end and a long pointed bullet drawn out of the other
+  accent: warm brass throughout, lit along the top of each case
+  flavor: somebody dropped a handful and did not stop to pick them up
 palette:
   O: "#1a1c2c" # dark outline
-  Y: "#c98b2a" # brass casing
-  y: "#ffd27a" # lit brass edge
-  m: "#8d9196" # steel rim
+  y: "#ffd27a" # lit brass and the bullet
+  Y: "#c98b2a" # brass case
+  q: "#96762e" # shaded brass underside
 grid: |
   ............
-  ............
-  .OOOOOOOOOO.
-  .OyyOyyOyyO.
-  .OYyOYyOYyO.
-  .OYyOYyOYyO.
-  .OYyOYyOYyO.
-  .OmmOmmOmmO.
-  .OOOOOOOOOO.
-  ............
-  ............
+  OOOOOOOOO...
+  OyyOyyyyO...
+  OYYOYYYyyOO.
+  OYYOYYYyyyyO
+  OYYOYYYyyOO.
+  OqqOqqqyO...
+  OOOOOOOOOOO.
+  ..OyyOyyyyyO
+  ..OYYOYYYyyO
+  ..OOOOOOOOO.
   ............

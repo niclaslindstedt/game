@@ -15,7 +15,14 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { AMMO, AMMO_KINDS, AMMO_TYPES, WEAPON_DEFS } from "@game/core";
+import {
+  AMMO,
+  AMMO_KINDS,
+  AMMO_TYPES,
+  DIFFICULTY_DEFS,
+  startingAmmo,
+  WEAPON_DEFS,
+} from "@game/core";
 
 const WEAPONS = Object.values(WEAPON_DEFS);
 
@@ -72,6 +79,46 @@ describe("the built-in sidearm", () => {
     // pouch. A sidearm that ate nothing would silently leave that half empty.
     expect(WEAPON_DEFS.blaster!.ammo).toBeDefined();
     expect(WEAPON_DEFS.blaster!.durability).toBeUndefined();
+  });
+});
+
+describe("the opening holster, against the shipped difficulty ladder", () => {
+  const sidearm = WEAPON_DEFS.blaster!.ammo!;
+
+  it.each(Object.values(DIFFICULTY_DEFS).map((d) => [d.id, d.startingWeapon]))(
+    "%s opens loaded for the weapon it actually hands out",
+    (_id, startingWeapon) => {
+      const pouch = startingAmmo(startingWeapon);
+      const held = WEAPON_DEFS[startingWeapon]?.ammo;
+      if (held !== undefined) {
+        expect(pouch[held]).toBe(AMMO.starting);
+      }
+      // A MELEE or MAGIC opening leaves the sidearm as the hero's only gun, so
+      // it gets the full stock; a RANGED opening leaves it a fallback, and a
+      // fallback gets the reserve. The bug this pins is EASY's sawed-off
+      // shotgun opening beside a full hundred rounds of CELLS — a kind nothing
+      // the hero carries can fire, reading in the bag's foot rail as though it
+      // mattered as much as his bullets.
+      expect(pouch[sidearm]).toBe(
+        held === undefined || held === sidearm
+          ? AMMO.starting
+          : AMMO.sidearmReserve,
+      );
+    },
+  );
+
+  it("never opens a kind nothing in the run can fire", () => {
+    // Every kind the opening pouch carries must be one SOME weapon eats — the
+    // sidearm's or the starting weapon's, never a third.
+    for (const diff of Object.values(DIFFICULTY_DEFS)) {
+      const pouch = startingAmmo(diff.startingWeapon);
+      const wanted = new Set(
+        [WEAPON_DEFS[diff.startingWeapon]?.ammo, sidearm].filter(
+          (kind) => kind !== undefined,
+        ),
+      );
+      expect(Object.keys(pouch).sort()).toEqual([...wanted].sort());
+    }
   });
 });
 

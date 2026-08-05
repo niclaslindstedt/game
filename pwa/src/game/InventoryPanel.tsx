@@ -39,7 +39,9 @@ import {
   isUnidentified,
   lookupTicketIndex,
   reviveTarget,
+  SIDEARM_DEF_ID,
   weaponAmmoType,
+  weaponDef,
   wouldUpgradeSlot,
   type AmmoType,
   type EquipSlot,
@@ -93,15 +95,49 @@ type DragSource =
 const BAG_FRAME_CELLS = 40;
 
 /**
- * WHAT ONE AMMUNITION SOCKET IS, in the player's terms — the rule that governs
- * every kind, then the one fact that differs per hero: whether anything he is
- * carrying actually fires this.
+ * WHAT EACH KIND SERVES, pre-wrapped against the 390px reference phone
+ * (InfoNote never wraps) — the ARSENAL half of the socket's note.
  *
- * That last line is the whole reason the pouch confused: three icons and three
- * numbers say nothing about which of them the weapon in your hand will spend,
- * and a stack for a gun sold two levels ago looks exactly like the stack that
- * is about to run you dry. So the note NAMES the weapon — the held one first,
- * since that is the one the trigger is on.
+ * A kind's note answers exactly one question, and it is the question three
+ * icons and three numbers in a foot rail never answered: WHICH GUNS TAKE
+ * THESE. So each entry names the weapon families its own kind feeds and
+ * nothing else. It used to open with the rule shared by all three and a
+ * clause about weapons that wear out instead — which meant the CELLS socket
+ * explained a shotgun's pellets and a volley's arrows, neither of which has
+ * anything to do with a cell, and the swords the whole system does not touch.
+ * A note that spends its first four lines on the other kinds is a note the
+ * player reads once.
+ */
+const AMMO_SERVES: Record<AmmoType, readonly string[]> = {
+  bullets: [
+    "WHAT EVERY FIREARM TAKES —",
+    "PISTOLS, REVOLVERS, SHOTGUNS,",
+    "CARBINES AND REPEATERS.",
+    "ONE ROUND PER TRIGGER PULL; A",
+    "SHOTGUN'S PELLETS ARE ONE.",
+  ],
+  arrows: [
+    "WHAT A DRAWN BOW TAKES.",
+    "ONE ARROW PER SHOT, HOWEVER",
+    "MANY A VOLLEY LOOSES.",
+  ],
+  cells: [
+    "WHAT THE ENERGY WEAPONS TAKE —",
+    "THE PRINTED SIDEARM, TASERS,",
+    "RAILS AND PLASMA.",
+    "ONE CELL PER TRIGGER PULL.",
+  ],
+};
+
+/**
+ * WHAT ONE AMMUNITION SOCKET IS, in the player's terms — which guns take this
+ * kind, then the one fact that differs per hero: whether anything he is
+ * carrying actually fires it.
+ *
+ * That last line is the other half of why the pouch confused: a stack for a
+ * gun sold two levels ago looks exactly like the stack that is about to run
+ * you dry. So the note NAMES the weapon — the held one first, since that is
+ * the one the trigger is on.
  */
 function ammoHelp(player: Player, type: AmmoType): string[] {
   const held = player.equipment.weapon;
@@ -111,17 +147,25 @@ function ammoHelp(player: Player, type: AmmoType): string[] {
     if (piece && weaponAmmoType(piece) === type)
       eaters.push(equipmentName(piece));
   }
+  // The SIDEARM is nowhere in the bag — it is minted into an empty hand — so a
+  // pouch stocked only for it reads as rounds for nothing at all. That is the
+  // one stack a fresh run opens with beside the weapon it hands out, so it is
+  // the case the note has to answer rather than shrug at.
+  const sidearmOnly =
+    eaters.length === 0 && weaponDef(SIDEARM_DEF_ID).ammo === type;
   return [
-    "ONE ROUND PER TRIGGER PULL —",
-    "A SHOTGUN'S PELLETS AND A",
-    "VOLLEY'S EXTRA ARROWS ARE",
-    "STILL ONE. GUNS AND BOWS RUN",
-    "DRY; THEY NEVER WEAR OUT.",
+    ...AMMO_SERVES[type],
     "",
-    eaters.length === 0
-      ? "NOTHING YOU CARRY FIRES THESE."
-      : `FIRED BY ${eaters[0]}.`,
-    ...(eaters.length > 1 ? [`AND ${eaters.length - 1} MORE IN THE BAG.`] : []),
+    ...(eaters.length > 0
+      ? [
+          `FIRED BY ${eaters[0]}.`,
+          ...(eaters.length > 1
+            ? [`AND ${eaters.length - 1} MORE IN THE BAG.`]
+            : []),
+        ]
+      : sidearmOnly
+        ? ["OF WHAT YOU CARRY, ONLY THE", "SIDEARM YOU FALL BACK ON."]
+        : ["NOTHING YOU CARRY FIRES THESE."]),
   ];
 }
 
@@ -521,7 +565,16 @@ export function InventoryPanel({
                 with nothing to do goes flat and colourless, so the pair reads
                 as "there is loot worth acting on" at a glance. */}
             <div className="inv-bag-header">
-              <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
+              {/* The title sits on the FOOT of the header rather than its top,
+                  so it labels the frame directly under it instead of floating
+                  a tool-button's height clear of the thing it names. */}
+              <PixelText
+                font={font}
+                className="inv-bag-title"
+                text="BAG"
+                scale={2}
+                color="#9aa3ad"
+              />
               <div className="inv-bag-actions">
                 <ToolButton
                   font={font}

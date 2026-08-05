@@ -76,9 +76,12 @@ refuses either half being wrong. Rules in `src/game/items/ammo.ts`, knobs in
   kind to its own independent cap, and carry between levels. Ammunition a hero
   cannot pick up because he is carrying a spare helmet is a frustration with
   nothing to say.
-- **A run opens stocked for both hands** — the weapon held and the sidearm
-  behind it, since a run whose starter is a shotgun would otherwise open with a
-  hundred rounds of the wrong thing.
+- **A run opens stocked for the weapon in HAND**, since a run whose starter is a
+  shotgun would otherwise open with a hundred rounds of the wrong thing. The
+  built-in sidearm's kind gets a small reserve behind it (`AMMO.sidearmReserve`)
+  — enough that the dry-weapon swap always has something to draw, not so much
+  that the pouch shows two full stacks for one gun. When the starter is melee or
+  magic the sidearm is the hero's only gun, so it opens with the full stock.
 - Every read of `player.ammo[...]` outside `ammo.ts` is a cap, an overflow
   remainder or a dry-swap about to disagree with the others.
 

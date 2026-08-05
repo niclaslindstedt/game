@@ -384,6 +384,7 @@ export {
   medkitTierIndex,
   meetsLevelReq,
   hasAmmoFor,
+  startingAmmo,
   weaponAmmoLeft,
   weaponAmmoType,
   scrapInferiorLoot,

@@ -58,6 +58,10 @@ export const GLYPHS = {
   "·": [".", ".", "#", ".", "."],
   ",": [".", ".", ".", "#", "#"],
   ":": [".", "#", ".", "#", "."],
+  // Semicolon — the colon's dot over the comma's tail. It was missing, and a
+  // missing glyph falls back to "?" (pixel-font.ts), so the bag's ammunition
+  // note shipped reading "GUNS AND BOWS RUN DRY? THEY NEVER WEAR OUT."
+  ";": [".", "#", ".", "#", "#"],
   "!": ["#", "#", "#", ".", "#"],
   "?": ["###", "..#", ".##", "...", ".#."],
   "-": ["...", "...", "###", "...", "..."],

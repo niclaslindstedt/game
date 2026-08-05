@@ -81,6 +81,23 @@ export const AMMO = {
    */
   starting: 100,
   /**
+   * …and the EMERGENCY RESERVE the built-in SIDEARM's kind gets when it is NOT
+   * what the hero is holding. It is a seatbelt rather than a second stack: the
+   * dry-weapon swap (`swapOffDryWeapon`) will only draw the sidearm if it can
+   * actually shoot, so a sidearm with an empty pouch is the one genuinely
+   * unrecoverable state the system can create — a hero holding a weapon that
+   * clicks, with nothing to fall back on, cannot earn the kill that would drop
+   * him a box.
+   *
+   * But a FULL second stack was the wrong answer to that. EASY opens with a
+   * SAWED-OFF SHOTGUN, and the pouch it opened beside read "100 BULLETS, 100
+   * CELLS" — a hundred rounds for a gun the hero does not have, sitting in the
+   * bag's foot rail looking exactly as important as the ammunition he is
+   * actually firing. Two dozen shots is the whole job: enough to fight back to
+   * a box, small enough to read as what it is.
+   */
+  sidearmReserve: 24,
+  /**
    * The share of the KILL drop ladder ammunition takes, alongside `LOOT`'s
    * medkit / repair / drink slices (and fitted under the same one roll they
    * are — see `dropLoot`). Read through `ammoAppetite`, so this is what a hero
