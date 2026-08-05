@@ -459,6 +459,15 @@ export function createSession(options: SessionOptions): Session {
    * seed so travelling A → B → A does not rebuild B's first carve. */
   let travels = 0;
 
+  /** `cleared` plus the level `run` is on, when the party has WON it. Pure,
+   * and never mutates the list it was handed — the old params outlive the
+   * crossing as every connected client's baseline. */
+  function clearedAfter(cleared: readonly string[], run: GameState): string[] {
+    const won = run.phase === "victory" || run.phase === "outro" || run.staying;
+    if (!won || cleared.includes(run.level.id)) return [...cleared];
+    return [...cleared, run.level.id];
+  }
+
   /**
    * AN IN-SESSION CROSSING: tear the level down and carry the party
    * through together.
@@ -493,6 +502,16 @@ export function createSession(options: SessionOptions): Session {
       seed: hash32(`${params.seed}|${request.to}|${++travels}`),
       levelId: request.to,
       loadout: seats[0]!.loadout,
+      // THE LEVEL BEING LEFT COUNTS AS CLEARED IF THE PARTY WON IT. The engine
+      // gates drops on this list (the bunker key stays latent until Boot Hill
+      // falls), and a campaign played in company crosses on VICTORY far more
+      // often than through a door — so a session that carried the original
+      // parameters forward unchanged would keep every clear-gated drop latent
+      // for the rest of the run. Asked of the run's own phase rather than of a
+      // banked character, because the session has no roster: `victory` and
+      // `outro` are the splash and its epilogue, and `staying` is the player
+      // who took STAY to farm the cleared field before moving on.
+      clearedLevels: clearedAfter(params.clearedLevels, state),
       // The run's own campaign chain travels with it — each client's app
       // banks the same chain to its own character beside this.
       campaignQuests: bankCampaignQuests(state),

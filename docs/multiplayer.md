@@ -957,9 +957,31 @@ acknowledged — a delta coded against the old level's baseline would name
 entity ids the client no longer holds. The app end keeps the driver across
 the remount, joiner-style, and each device banks its OWN hero off the level
 being left (`NetClient.onTravel`). A solo local run keeps the app-side
-crossing byte-identically; VICTORY → NEXT LEVEL is the one crossing that
-still re-mounts app-side and drops joiners (recorded in the plan's R1
-as-built box).
+crossing byte-identically.
+
+**AND THAT INCLUDES VICTORY → NEXT LEVEL, WHICH IS WHAT A CAMPAIGN IS MADE
+OF.** It was the one crossing left re-mounting app-side, so a party playing
+the campaign was kicked apart at every level completion and had to rejoin by
+hand. It routes through the same `travelTo` now
+(`RunProgress.travelTo(state, to, { banked: true })` — the `banked` flag says
+the hero is already on the character, because `recordVictory` put it there a
+beat earlier together with the clear and the campaign tally). The splash is
+seat 0's: a joiner's copy shows THE HOST CHOOSES THE ROAD rather than two
+buttons the session would refuse, and keeps STAY, which any seat may send.
+One thing the session has to work out for itself on this crossing — the app
+that would normally answer it is not the one banking — is that **the level
+being left is now CLEARED**: the destination's `clearedLevels` gains it when
+the run crosses out of `victory`, `outro`, or a STAY on the cleared field, so
+clear-gated drops (the bunker key) stay correct for the rest of the session.
+
+Two ways out of a run still re-mount app-side, and both are deliberate rather
+than forgotten: the victory splash's **RESTART** and the **AUTO PILOT**'s
+automatic next-lap routing. Neither is a CROSSING — they replay the level the
+party is already on, which `travelTo` refuses by name (`dest ===
+state.level.id`), and which a client would not even notice as a swap, since
+`NetClient.applyWhole` reads a crossing off a CHANGED level id. Giving a
+session a re-roll verb is its own piece of work; until then RESTART is hidden
+from a joiner and ends the host's session exactly as leaving does.
 
 **THE PARTY IS VISIBLE, AND A JOINER IS A FIRST-CLASS PLAYER (§4.5).** The
 field pass draws every hero in play — their own public worn kit through the
@@ -1247,10 +1269,6 @@ ticked from one.
   P2P API is polled, deprecated and thinner on guarantees than SDR; it must be
   spiked under real load before a release leans on it. The direct UDP path
   exists partly as the insurance policy on exactly that.
-- **VICTORY → NEXT LEVEL still drops joiners** ([#862](https://github.com/niclaslindstedt/game/issues/862)). In-session travel carries the
-  party through every door, gate and drive-out — but the post-victory crossing
-  is tangled in the outro/banking flow and still re-mounts app-side, ending
-  the session. The one deliberate leftover of the travel work.
 - **A trade has no request step** ([#863](https://github.com/niclaslindstedt/game/issues/863)). The window exists (`TradeOverlay` — the
   table is a per-player `"trade"` screen raised on BOTH seats by `openTrade`,
   opened from a teammate's party frame or the pause roster), but opening one

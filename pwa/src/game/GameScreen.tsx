@@ -1815,9 +1815,21 @@ export function GameScreen({
           state={state}
           font={font}
           newRecord={newRecord}
+          // The road is seat 0's to pick — a joiner watches the host choose.
+          canAdvance={!join}
+          // NEXT LEVEL IS A CROSSING LIKE ANY OTHER. With a party aboard it
+          // goes through the session (the level swaps under everybody and
+          // nobody has to rejoin); a local run takes the app-side road this
+          // splash has always taken.
           onAdvance={(next) => {
-            setHud(null);
-            setLevelId(next);
+            if (state)
+              progressRef.current?.travelTo(state, next, {
+                // The hero went onto the character when the level was WON.
+                // …unless the player took STAY afterwards, in which case what
+                // he is carrying now is a farmed field's worth more than what
+                // was banked then, and leaving would lose it.
+                banked: !state.staying,
+              });
           }}
           onRestart={() => {
             setHud(null);

@@ -15,7 +15,6 @@ import {
   BOT_STRATEGIES,
   createBot,
   debug,
-  levelDef,
   runLevelDef,
   hasLevel,
   markThoughtsSeen,
@@ -38,9 +37,7 @@ import {
   characterPurse,
   campaignChainFor,
   clearedLevelsFor,
-  hasClearedLevel,
   hasMetMerchant,
-  hasSeenOpening,
   seenThoughts,
   type Character,
 } from "../characters.ts";
@@ -50,7 +47,7 @@ import { buildBotViewLoadout } from "../seed-characters.ts";
 import { armedLootMode } from "../session-intent.ts";
 import { getSettings } from "../settings.ts";
 import type { PlayerAction } from "../render.ts";
-import type { RunCheckpoint } from "./run-progress.ts";
+import { openingSeenFor, type RunCheckpoint } from "./run-progress.ts";
 
 import { runCommand } from "../run-commands.ts";
 
@@ -265,10 +262,13 @@ export function createRunSession(deps: {
   // afterwards. The HUB is the one exception: home never "completes", so its
   // opening — the campaign's own prelude — skips once witnessed instead of
   // replaying on every LOAD.
-  const openingSeen =
-    hasClearedLevel(characterRef.current, runLevelId, difficulty) ||
-    (levelDef(runLevelId).objective.type === "hub" &&
-      hasSeenOpening(characterRef.current, runLevelId, difficulty));
+  // …asked through the rule an IN-SESSION crossing shares with it: the host's
+  // app answers the same question for the destination it hands the session.
+  const openingSeen = openingSeenFor(
+    characterRef.current,
+    runLevelId,
+    difficulty,
+  );
   // `?scenario=<json>` stages an exact situation on a run built from scratch,
   // and it is applied AFTER the run is built. A run that is about to be staged
   // therefore skips nothing here, exactly as before: the staging decides where
