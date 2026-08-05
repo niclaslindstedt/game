@@ -107,19 +107,23 @@ describe("the fog of war hides a mob from the auto-attack", () => {
 
   it("leaves a crate in the fog alone until the hero has seen it", () => {
     const state = foggyStage(startGame());
-    state.obstacles = [];
     const spot = east(state, 200);
-    state.obstacles.push({
-      id: state.nextId++,
-      kind: "test_block",
-      sprite: "test_block",
-      pos: spot,
-      radius: 13,
-      jumpable: true, // a crate is jumpable cover — and never blocks its own sight line
-      breakable: true,
-      hp: 50,
-      maxHp: 50,
-    });
+    // REPLACED rather than pushed into: the obstacle spatial index caches on
+    // the array's identity (obstacles.ts), so a pushed crate registers in no
+    // cell of the grid a run has already built.
+    state.obstacles = [
+      {
+        id: state.nextId++,
+        kind: "test_block",
+        sprite: "test_block",
+        pos: spot,
+        radius: 13,
+        jumpable: true, // a crate is jumpable cover — and never blocks its own sight line
+        breakable: true,
+        hp: 50,
+        maxHp: 50,
+      },
+    ];
 
     expect(nearestCrate(state, state.players[0].pos, 260)).toBeUndefined();
     revealAll(state);

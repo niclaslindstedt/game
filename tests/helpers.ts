@@ -13,7 +13,7 @@ import {
 } from "@game/core";
 import type { Enemy, GameEvent, GameInput, GameState, Vec2 } from "@game/core";
 // Engine-internal: the seed reveal a fresh run stamps around the spawn.
-import { revealAround } from "../src/game/map.ts";
+import { revealAround } from "../src/game/fog.ts";
 
 export const SEED = 42;
 export const DT = 16;

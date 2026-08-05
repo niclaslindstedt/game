@@ -813,18 +813,29 @@ escort.ts` walks the people an escort errand puts on the field, and
   levels.
 - **`src/game/map.ts`** — the level map and its fog of war: run-scoped
   exploration as a coarse byte grid on the state (`state.explored`, one cell
-  per config `MAP.cellSize` world px), stamped as a `MAP.revealRadius` CIRCLE
+  per config `MAP.cellSize` world px), stamped as a `MAP.revealRadius` circle
   around the hero every step (`revealAround`, called from `step()`; the spawn is
   pre-revealed at creation) and queried with `isExplored` — the fog lifts along
   his path (Warcraft-style, no re-fogging), feeding both the minimap and the
   MAIN-VIEW fog of war (`render.ts` `drawFog`): everything uncovered reads
   fully clear, never-explored terrain is solid black, and the frontier between
   them is a graded ordered-dither transition band (`MAP.fogBand` wide) that also
-  hides any mob standing in it or the dark beyond. **And what is not drawn is
-  not shot at**: `clearOfFog` (the sibling **`src/game/fog.ts`**, kept out of
-  map.ts because `src/menu.ts` re-exports map.ts's grid arithmetic and so puts
-  that whole module inside the 170 KB critical-path budget) is the engine's own
-  deterministic reading of that
+  hides any mob standing in it or the dark beyond. **THE SWEEP IS A SIGHT
+  LINE, NOT A DISC**: each cell is tested with `lineOfSight`, so a wall casts a
+  shadow and the ground behind it stays dark until the hero stands somewhere it
+  is in view — a doorway shows him a cone of the room rather than the room, and
+  the horde waiting inside is not drawn (a body appears exactly where the fog
+  has lifted). The line stops `MAP.fogWallDepth` SHORT of the cell so the wall's
+  own ground comes up seen: stopping it ON the wall would run a fog frontier
+  down the inside face of every wall in the level, and a frontier is what the
+  band stipples and what `clearOfFog` refuses to target inside of — every mob
+  near a wall would go undrawn and unshootable in the room the hero is standing
+  in. **And what is not drawn is
+  not shot at**: `clearOfFog` (the sibling **`src/game/fog.ts`**, which owns the
+  sweep too — both are kept out of map.ts because `src/menu.ts` re-exports
+  map.ts's grid arithmetic and so puts that whole module inside the 170 KB
+  critical-path budget, and the sweep would drag the collision module in with
+  it) is the engine's own deterministic reading of that
   same frontier — no unexplored cell centre within `MAP.fogBand` — and every
   automatic target pick goes through it (the hero's auto-attack and its crate
   fallback, the conjured powers that pick their own mark, the companions' engage

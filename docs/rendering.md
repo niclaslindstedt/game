@@ -185,6 +185,24 @@ rather than an optimization: the fog can never crawl back over floor already
 uncovered. `fogDistanceAt` reads the drawn field, so the mob cull and the band
 stay the same frontier — a mob appears as the ground under it clears.
 
+**AND THE FRONTIER IS SHAPED BY THE WALLS, NOT BY A RADIUS.** The sweep that
+lifts the fog (`revealAround`, `src/game/fog.ts`) tests each cell of its disc
+with `lineOfSight` before uncovering it, so a wall inside the disc casts a
+shadow: the ground behind it stays dark until the hero stands somewhere it is in
+view. That is what makes a doorway show a CONE of the room rather than the room,
+and it is a targeting rule as much as a picture one — a body is drawn exactly
+where the fog has lifted, so the disc alone put the horde waiting inside a
+compound on screen from outside its wall. The sight line stops
+`MAP.fogWallDepth` short of the cell it is testing, which is load-bearing rather
+than slop: a line that stopped ON the wall would leave the wall's own cells
+fogged, running a frontier down the inside face of every wall in the level, and
+the band is what hides a mob and `clearOfFog` is what refuses to shoot one — so
+every mob standing near a wall would go undrawn and unshootable in the room the
+hero is standing in. Reaching a band plus a half cell (the grid answers per cell
+CENTRE) past the blocker instead puts the drawn clear ground right up against
+the stone, and costs only a sliver of the floor immediately behind a thin wall
+reading as seen — which draws as stipple anyway.
+
 **THE SIMULATION ANSWERS THAT SAME QUESTION FOR ITSELF, AND MUST.** A mob the
 band hides is also a mob the hero refuses to fire at (`clearOfFog`,
 `src/game/fog.ts`) — otherwise the character shoots into blackness on the

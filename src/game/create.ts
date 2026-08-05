@@ -56,7 +56,8 @@ import {
   wearSlotFor,
 } from "./items/index.ts";
 import { xpToLevelUp } from "./leveling.ts";
-import { createExplored, revealAround } from "./map.ts";
+import { revealAround } from "./fog.ts";
+import { createExplored } from "./map.ts";
 import { resolveLevelDef } from "./mapgen/index.ts";
 import { createMerchant, revealMerchant } from "./merchant.ts";
 import { createVehicles, vehicleFootprint } from "./vehicles.ts";

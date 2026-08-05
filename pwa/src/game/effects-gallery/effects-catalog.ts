@@ -22,6 +22,7 @@ import {
   debugLevelUpFx,
   dropItem,
   rollEquipment,
+  type Obstacle,
   type Tier,
 } from "@game/core";
 
@@ -1291,15 +1292,18 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // boxy shutters standing among it reads as more of the same. The exhibit
       // is about the SHAPE the ring makes and the hole in it, so it clears the
       // room first — the only liberty it takes, and it takes it in the open.
-      ctx.state.obstacles.length = 0;
       const gapAt = 0.9;
+      // Built into a FRESH array (which also clears the room) rather than
+      // mutated in place: the obstacle spatial index caches on the array's
+      // identity, so shutters pushed into the live one register nowhere.
+      const shutters: Obstacle[] = [];
       for (let i = 0; i < 16; i++) {
         const angle = (i / 16) * Math.PI * 2;
         let d = angle - gapAt;
         while (d > Math.PI) d -= Math.PI * 2;
         while (d < -Math.PI) d += Math.PI * 2;
         if (Math.abs(d) <= (55 * Math.PI) / 180 / 2) continue;
-        ctx.state.obstacles.push({
+        shutters.push({
           id: 9200 + i,
           kind: "shutter",
           sprite: "blast_shutter",
@@ -1311,6 +1315,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
           jumpable: false,
         });
       }
+      ctx.state.obstacles = shutters;
       ctx.state.obstaclesVersion++;
       ctx.emit({
         type: "bossLockdown",

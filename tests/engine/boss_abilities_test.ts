@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   createGame,
   dismissIntro,
+  lineOfSight,
   registerDefs,
   seatHero,
   skipCutscene,
@@ -803,6 +804,23 @@ describe("lockdown", () => {
       );
       expect(Math.abs(d - LOCKDOWN.radius)).toBeLessThan(2);
     }
+  });
+
+  it("drops shutters that actually STOP something", () => {
+    // The ring is only a cage if the obstacle index knows about it. It did not:
+    // the spatial grid caches on `state.obstacles`' identity, and the raise
+    // pushed into the live array instead of replacing it — so every shutter
+    // registered in no cell, collided with nothing and stopped no shot, while
+    // all three assertions above stayed green.
+    const state = startWith("test_warden", LOCKDOWN);
+    plant(state, "test_warden", 140, 0);
+    run(state, idle, steps(LOCKDOWN.windupMs + 60));
+    const shutter = state.obstacles.find((o) => o.kind === "shutter");
+    expect(shutter).toBeDefined();
+    const at = shutter?.pos ?? { x: 0, y: 0 };
+    expect(
+      lineOfSight(state, { x: at.x - 20, y: at.y }, { x: at.x + 20, y: at.y }),
+    ).toBe(false);
   });
 
   it("bumps the obstacle version so a cached nav grid rebuilds", () => {
