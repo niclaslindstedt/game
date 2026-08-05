@@ -2906,12 +2906,28 @@
       "portrait": "player",
       "speaker": "ME"
     },
+    "garage_on_foot": {
+      "id": "garage_on_foot",
+      "pages": [
+        ["WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR."]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
     "garage_ship_unfinished": {
       "id": "garage_ship_unfinished",
       "pages": [
         [
           "STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT."
         ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "garage_take_the_car": {
+      "id": "garage_take_the_car",
+      "pages": [
+        ["THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT."]
       ],
       "portrait": "hero",
       "speaker": "ME"

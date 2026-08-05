@@ -344,11 +344,22 @@ ${speech(story.outro, "THE HERO")}`);
         .filter((thought) => thought.when === when)
         .map((thought) => thought.enemy?.name ?? thought.enemy)
         .filter(Boolean);
+    // A PLACE beat has nobody to name — it is pinned to being somewhere — so
+    // its clause says the place instead of a monster.
+    const PLACES = {
+      arrival: "first stands here",
+      pastDoor: "walks out of here on his own feet",
+    };
+    const places = story.thoughts
+      .filter((thought) => thought.when === "place")
+      .map((thought) => PLACES[thought.where])
+      .filter(Boolean);
     const clauses = [
       named("sight").length > 0
         ? `first lays eyes on ${list(named("sight"))}`
         : null,
       named("kill").length > 0 ? `first kills ${list(named("kill"))}` : null,
+      ...places,
     ].filter(Boolean);
     parts.push(`      <h3>What stops him mid-run</h3>
       <p>The run halts on its own, once each, when he ${clauses.join(", and when he ")}.</p>`);

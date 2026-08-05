@@ -26,6 +26,32 @@
 # see mod/FORMAT.md.)
 
 thoughts:
+  # HOME, AND THE ERRAND THAT STARTS HERE. The hub's ARRIVAL beat
+  # (`placeThoughts`, `where: arrival`) — the first live tick the hero ever has
+  # in his own bay, after the prelude and after the doorstep monologue. The
+  # monologue is the establishing shot ("home, the lawn is dead"); this is the
+  # to-do, and it is the only thing in the game that tells a new player what the
+  # car is FOR. It names the errand and the vehicle and nothing else: the rocket
+  # and the seam are two chapters away and must not be mentioned. Portrait is
+  # "hero" (unsuited — he is at home). Read once, ever.
+  garage_take_the_car:
+    speaker: ME
+    portrait: hero
+    pages:
+      - - THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT.
+  # …AND THE SAME ERRAND, SAID LESS KINDLY. The hub's on-foot beat
+  # (`placeThoughts`, `where: pastDoor`): he has walked out under the roll-up
+  # door on his own two feet and left the car standing in the bay. It is the
+  # only nudge in the game a player earns by ignoring one — so it is short, it
+  # is dry, and it says the stake out loud rather than the mechanic. He is not
+  # going to GOODCO for a part, he is going for ADA; the part is how. Read
+  # once, ever, and never while he is at the wheel (the car crosses this same
+  # threshold on its way out).
+  garage_on_foot:
+    speaker: ME
+    portrait: hero
+    pages:
+      - - WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
   # THE SHIP HE CANNOT FLY YET. Tapping the rocket on the garage's back lawn
   # before GOODCO HQ has fallen plays this instead of the travel picker (the
   # door's `unready:` pin — see `LevelDef.travelDoors`). Two things it must do

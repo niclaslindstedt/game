@@ -72,7 +72,11 @@ bench is a mess, and the ship is one part from perfect. Nothing hunts him
 here. The vendor who stocked GOODCO's machines has parked his cart at a
 counter inside (lockdown is a seller's market, and he follows the customer),
 buying what weighs the hero down, selling what keeps him upright, and mending
-what the road broke.
+what the road broke. And the first time he is standing in his own bay with the
+run live, he says the one thing the place is for out loud to nobody: the part
+is at GOODCO, and the car on the deck is what gets him there. If he wanders out
+under the roll-up on foot anyway, leaving the car where it stands, he catches
+himself at it — Ada is not down the street; get in the car.
 
 **The doors.** Three ways out, earned in order. THE CAR — the white hatchback
 — does the earthbound leg: he drives it to GOODCO HQ the night he takes the

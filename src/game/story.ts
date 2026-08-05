@@ -15,7 +15,10 @@ import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { DialoguePage } from "./defs/enemies/types.ts";
 import { levelDef, runLevelDef } from "./defs/levels/index.ts";
-import type { ThoughtTrigger } from "./defs/levels/types.ts";
+import type {
+  PlaceThoughtTrigger,
+  ThoughtTrigger,
+} from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { capThoughtIds, thoughtDef } from "./defs/thoughts.ts";
 import { knockEnemyBack } from "./knockback.ts";
@@ -494,6 +497,79 @@ export function stepSightThoughts(
     startPlayerThought(state, trigger.thought);
     return;
   }
+}
+
+/**
+ * The per-tick hook for a level's `placeThoughts`: beats pinned to WHERE the
+ * hero is rather than to a monster (see `PlaceThoughtTrigger`).
+ *
+ * The hub needed them and nothing else fit. A venue's `intro` is the doorstep
+ * cutscene — it plays before the level is walkable and once per difficulty, and
+ * it is the establishing SHOT rather than a to-do — while every other pinned
+ * monologue in the game hangs off a monster, of which the garage deliberately
+ * has none. So this is the third trigger: no mob, no kill, no sighting, just
+ * "he is here" and "he has walked out of here on his own feet".
+ *
+ * Fired once each and tracked in `state.thoughtsSeen` like every other pinned
+ * beat, so the app's per-difficulty ledger skips them on the way back from
+ * GOODCO. One per tick at most, in authored order, and each yields to anything
+ * already on stage (the opening monologue, a cutscene) and simply retries on the
+ * next playing tick — which is what makes "after the intro" true without either
+ * beat knowing the other exists.
+ */
+export function stepPlaceThoughts(
+  state: GameState,
+  triggers: PlaceThoughtTrigger[] | undefined,
+): void {
+  if (state.dialogue !== null || !triggers) return;
+  for (const trigger of triggers) {
+    if (state.thoughtsSeen.includes(trigger.thought)) continue;
+    if (trigger.after && !state.thoughtsSeen.includes(trigger.after)) continue;
+    if (trigger.where === "pastDoor" && !anyHeroPastApproachDoor(state)) {
+      continue;
+    }
+    state.thoughtsSeen.push(trigger.thought);
+    startPlayerThought(state, trigger.thought);
+    return;
+  }
+}
+
+/**
+ * HAS ANYBODY WALKED OUT? — the `pastDoor` predicate.
+ *
+ * An APPROACH door is a segment (`from`→`to`, the first and last slat), so
+ * "out" is simply the far SIDE of that line from the level's own
+ * `playerSpawn` — which is where the hero starts and is therefore, by
+ * construction, inside whatever the door shuts. Derived rather than authored:
+ * a blueprint that moves the bay's doorway moves this with it, and no venue
+ * has to name a zone it cannot author anyway (a mission carries no geometry —
+ * the floor plan is carved per run).
+ *
+ * A hero AT A WHEEL is not walking, and is skipped. That is the whole point of
+ * the hub's beat rather than a nicety: the car crosses this same threshold on
+ * its way out, and a "you forgot the car" read fired at the man driving it
+ * would be the single worst-timed line in the game.
+ */
+function anyHeroPastApproachDoor(state: GameState): boolean {
+  const inside = runLevelDef(state).playerSpawn;
+  const driving = new Set(
+    state.vehicles.flatMap((v) => (v.driver === null ? [] : [v.driver])),
+  );
+  for (const door of state.doors) {
+    if (!door.approach || !door.from || !door.to) continue;
+    const dx = door.to.x - door.from.x;
+    const dy = door.to.y - door.from.y;
+    const sideOf = (p: Vec2): number =>
+      dx * (p.y - door.from!.y) - dy * (p.x - door.from!.x);
+    const home = sideOf(inside);
+    if (home === 0) continue; // a doorway the spawn stands in says nothing
+    for (let seat = 0; seat < state.players.length; seat++) {
+      const hero = state.players[seat] as Player;
+      if (!heroInPlay(hero) || driving.has(seat)) continue;
+      if (sideOf(hero.pos) * home < 0) return true;
+    }
+  }
+  return false;
 }
 
 /**

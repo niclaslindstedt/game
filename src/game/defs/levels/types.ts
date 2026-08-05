@@ -1012,6 +1012,24 @@ export type LevelDef = {
    */
   firstSightThoughts?: ThoughtTrigger[];
   /**
+   * THE PLACE-PINNED BEATS — inner monologues pinned to WHERE the hero is
+   * rather than to a monster, in the order they should be read.
+   *
+   * The third trigger beside the two above, and the one a venue with no horde
+   * needs: `intro` is the doorstep cutscene (it plays before the level is
+   * walkable, once per difficulty, and it is the establishing SHOT rather than
+   * a to-do), while both `first*Thoughts` hang off a mob. The HUB has neither a
+   * mob nor a reason to keep quiet about where the car goes — so the two things
+   * it wants to say are "the part is at GOODCO and the car is right there" on
+   * arrival, and "you are walking, and it is not walking distance" when the
+   * hero strolls out of the bay on his own feet instead.
+   *
+   * Each fires once, tracked in `state.thoughtsSeen` like every other pinned
+   * beat (so the app's per-difficulty ledger skips them on every return home),
+   * and each yields to whatever is already on stage rather than cutting it off.
+   */
+  placeThoughts?: PlaceThoughtTrigger[];
+  /**
    * This level's WANDERING MERCHANT persona (see merchant.ts / config
    * MERCHANT). The trader roams every level; this names how he dresses for
    * THIS one (`sprite`, walk frames `<sprite>_0/_1`), what the dialogue box
@@ -1178,6 +1196,45 @@ export type ThoughtTrigger = {
    * Ignored by `firstKillThoughts`.
    */
   radius?: number;
+};
+
+/**
+ * WHERE a place-pinned beat fires (`PlaceThoughtTrigger.where`).
+ *
+ * Both are geometric facts the ENGINE can answer on any map, which is what
+ * keeps this a trigger vocabulary rather than a list of hard-coded garage
+ * beats — a mod's own hub gets the same two for free:
+ *
+ *   `arrival`  — the hero is standing on this level with the run actually
+ *                live. Nothing else: the first playing tick that has no scene
+ *                on stage.
+ *   `pastDoor` — a hero ON HIS OWN FEET has crossed one of the level's
+ *                APPROACH doors (`LevelDef.doors[].opens === "approach"` — the
+ *                roll-up that opens for anybody who walks up to it) and now
+ *                stands on the far side of it from the level's own
+ *                `playerSpawn`. He has walked OUT. A hero at a wheel does not
+ *                count, which is the whole point of the garage's beat: the
+ *                car crossing the same threshold is not somebody who forgot
+ *                to take it.
+ */
+export type PlaceThoughtWhere = "arrival" | "pastDoor";
+
+/**
+ * One place-pinned inner monologue (`LevelDef.placeThoughts`): being in the
+ * place `where` names plays the THOUGHT_DEFS entry named by `thought`, once,
+ * tracked in `state.thoughtsSeen` like every other pinned beat.
+ */
+export type PlaceThoughtTrigger = {
+  /** Key into THOUGHT_DEFS. */
+  thought: string;
+  /** What being "there" means — see {@link PlaceThoughtWhere}. */
+  where: PlaceThoughtWhere;
+  /**
+   * Ordering gate: this beat holds until the thought named here has been read.
+   * A held trigger isn't spent — it simply retries on a later tick — so the
+   * hub's "take the car" always lands before its "you are walking".
+   */
+  after?: string;
 };
 
 /**

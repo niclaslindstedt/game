@@ -293,6 +293,15 @@ function thoughtsOn(level) {
         when: "door",
         door: door.name,
       })),
+    // …and the PLACE-pinned beats, which have no speaker and no door either:
+    // they fire on the hero BEING somewhere (`placeThoughts`), so `where` is
+    // what the others carry in `enemy`. Same reason the door beats are here —
+    // without them the hub publishes as a chapter with a door list in it.
+    ...(level.placeThoughts ?? []).map((t) => ({
+      thought: t.thought,
+      when: "place",
+      where: t.where,
+    })),
   ];
   return triggers.map((trigger) => {
     const def = THOUGHT_DEFS[trigger.thought];
@@ -306,6 +315,8 @@ function thoughtsOn(level) {
       // The door a "door" beat answers, by its picker name (THE ROCKET) —
       // the slot a mob-fired beat fills with its speaker.
       door: trigger.door ?? null,
+      // …and the PLACE a "place" beat answers, in the same slot.
+      where: trigger.where ?? null,
       enemy: enemy
         ? {
             id: enemy.id,

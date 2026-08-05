@@ -1223,6 +1223,24 @@ firstSightThoughts:
     thought: mymod_creeper_sight
 ```
 
+…or by a level pinning it to a PLACE rather than to a monster — which is what a
+hub with no horde in it has to do. `placeThoughts` takes a list, fired in the
+order you write them, each once per run:
+
+```yaml
+# levels/mymod_hub.yaml
+placeThoughts:
+  # `arrival` — the first live tick he ever has here, after the intro
+  - thought: mymod_hub_errand
+    where: arrival
+  # `pastDoor` — he has walked out through one of this level's APPROACH doors
+  # (the roll-up kind that opens for anybody who walks up) on his own feet,
+  # rather than driving. `after:` holds it until the beat named has been read.
+  - thought: mymod_hub_on_foot
+    where: pastDoor
+    after: mymod_hub_errand
+```
+
 `capRotation:` (optional, a list of your own thought ids) is the mutter a hero
 cycles while farming a map he has out-levelled. It **replaces** the game's
 rotation rather than adding to it, so it is a conversion's business — an addon

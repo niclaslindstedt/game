@@ -241,6 +241,102 @@ describe("the drive-out", () => {
   });
 });
 
+// A car you can climb into and not climb out of is a trap: the seat used to be
+// a one-way door out of the level. `exitCar` is the same tap read backwards.
+describe("getting back out", () => {
+  const board = (state: ReturnType<typeof startHub>): CarVehicle => {
+    const car = carOf(state);
+    state.players[0]!.pos = { x: car.pos.x - 30, y: car.pos.y };
+    applyRunCommand(state, "enterCar");
+    return car;
+  };
+
+  it("refuses anybody who is not at that car's wheel", () => {
+    const state = startHub();
+    expect(applyRunCommand(state, "exitCar")).toBe(false);
+    board(state);
+    expect(applyRunCommand(state, "exitCar")).toBe(true);
+    // …and a second press has nothing left to get out of.
+    expect(applyRunCommand(state, "exitCar")).toBe(false);
+  });
+
+  it("switches off, re-parks the body and stands the hero beside it", () => {
+    const state = startHub();
+    const car = board(state);
+    run(state, steerTo(car.pos.x + 400, car.pos.y), 40);
+    const droveTo = { x: car.pos.x, y: car.pos.y };
+    const version = state.obstaclesVersion;
+    state.events = [];
+    expect(applyRunCommand(state, "exitCar")).toBe(true);
+    expect(car.driver).toBeNull();
+    expect(car.speed).toBe(0);
+    expect(state.events.some((e) => e.type === "carStopped")).toBe(true);
+    // The car is furniture again WHERE IT NOW STANDS, and the nav grid is told.
+    const prints = state.obstacles.filter((o) => o.kind === "vehicle");
+    expect(prints).toHaveLength(4); // three under the car, one under the ship
+    const reach = Math.max(...CAR.footprint.offsets.map(Math.abs));
+    for (const print of prints.filter((o) => o.jumpable)) {
+      expect(
+        Math.hypot(print.pos.x - droveTo.x, print.pos.y - droveTo.y),
+      ).toBeLessThanOrEqual(reach + 0.5);
+    }
+    expect(state.obstaclesVersion).toBeGreaterThan(version);
+    // He is standing beside it, not inside it — and no longer riding along.
+    const hero = state.players[0]!;
+    expect(
+      Math.hypot(hero.pos.x - car.pos.x, hero.pos.y - car.pos.y),
+    ).toBeGreaterThan(CAR.footprint.radius);
+    run(state, steerTo(car.pos.x + 400, car.pos.y), 30);
+    expect(car.pos).toEqual(droveTo); // nobody is driving it any more
+  });
+});
+
+// The body is 48 px of car, not a dot at its middle, and the lot it is driven
+// around is finite. Both used to be untrue.
+describe("the body collides", () => {
+  const board = (state: ReturnType<typeof startHub>): CarVehicle => {
+    const car = carOf(state);
+    state.players[0]!.pos = { x: car.pos.x - 30, y: car.pos.y };
+    applyRunCommand(state, "enterCar");
+    return car;
+  };
+
+  it("stops the BUMPER at a wall, not the middle of the car", () => {
+    const state = startHub();
+    const car = board(state);
+    const wallX = car.pos.x + 120;
+    // Replaced rather than pushed into: the obstacle grid caches on the
+    // array's identity (obstacles.ts).
+    state.obstacles = state.obstacles.concat([
+      {
+        id: 9001,
+        kind: "wall",
+        sprite: "",
+        pos: { x: wallX, y: car.pos.y },
+        radius: 8,
+        jumpable: false,
+      },
+    ]);
+    run(state, steerTo(wallX + 200, car.pos.y), 120);
+    // The front body circle sits at `wheelOffsets`-ish along the nose; it must
+    // clear the wall by both radii, so the CENTRE stops well short of where a
+    // single-circle car used to bury its bonnet.
+    const nose = car.pos.x + CAR.footprint.offsets[2]!;
+    expect(nose).toBeLessThanOrEqual(wallX - (8 + CAR.footprint.radius) + 0.5);
+  });
+
+  it("keeps the whole car on the lot", () => {
+    const state = startHub();
+    const car = board(state);
+    // West, hard, for long enough to have driven clean off the map twice over.
+    run(state, steerTo(-4000, car.pos.y), 900);
+    const rear = car.pos.x + CAR.footprint.offsets[0]!;
+    expect(rear).toBeGreaterThanOrEqual(CAR.footprint.radius - 0.5);
+    expect(car.pos.y).toBeGreaterThan(0);
+    expect(car.pos.y).toBeLessThan(state.level.height);
+  });
+});
+
 describe("determinism", () => {
   it("spends no rng — bumps, sheds, lost wheels and the drive included", () => {
     const state = startHub();

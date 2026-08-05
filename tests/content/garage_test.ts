@@ -9,12 +9,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  advanceDialogue,
+  applyRunCommand,
   createGame,
   dismissIntro,
   enemyDef,
   LEVEL_ORDER,
   LEVELS,
   MAP_BLUEPRINTS,
+  markThoughtsSeen,
   resolveLevelDef,
   SECRET_LEVEL_ORDER,
   skipCutscene,
@@ -30,10 +33,21 @@ const garage = LEVELS.garage!;
 const BLUEPRINT = MAP_BLUEPRINTS.garage!;
 const carved = resolveLevelDef("garage", SEED, "medium");
 
+/** The hub's own place-pinned beats, in authored order. */
+const PLACE_BEATS = (garage.placeThoughts ?? []).map((t) => t.thought);
+
+/**
+ * A run at home with the opening scenes cleared AND the place-pinned beats
+ * already read — which is what a returning player's ledger looks like, and what
+ * every assertion below about the run still `playing` needs: the arrival beat
+ * lands on the first live tick and would otherwise be the thing the phase is.
+ * The beats themselves are tested from a fresh ledger, below.
+ */
 function startHome(): GameState {
   const state = createGame(SEED, "garage", "medium");
   skipCutscene(state);
   dismissIntro(state);
+  markThoughtsSeen(state, PLACE_BEATS);
   return state;
 }
 
@@ -150,6 +164,94 @@ describe("the doors", () => {
     // the rift creator exists to change.
     expect(LEVELS.mars!.exitTo).toBeUndefined();
     expect(LEVELS.the_rift!.exitTo).toBeUndefined();
+  });
+});
+
+// The hub has no horde, so it has nothing to pin a thought to but the ground
+// itself — the two beats that tell a new player what the car is FOR, and what
+// he is doing walking out without it (`LevelDef.placeThoughts`).
+describe("the place-pinned beats", () => {
+  /** Home with the opening scenes cleared and NOTHING read yet. */
+  const freshHome = (): GameState => {
+    const state = createGame(SEED, "garage", "medium");
+    skipCutscene(state);
+    dismissIntro(state);
+    return state;
+  };
+
+  const said = (state: GameState): string =>
+    thoughtDef((state.dialogue as { source: { defId: string } }).source.defId)
+      .pages.flat()
+      .join(" ")
+      .toUpperCase();
+
+  it("pins the errand on arrival and the nudge past the door, in that order", () => {
+    expect(garage.placeThoughts?.map((t) => t.where)).toEqual([
+      "arrival",
+      "pastDoor",
+    ]);
+    // The nudge holds until the errand has been read — a player who is told
+    // "get in the car" before he is told what the car is for is being nagged
+    // about an errand he has not been given.
+    expect(garage.placeThoughts?.[1]?.after).toBe(PLACE_BEATS[0]);
+    for (const beat of PLACE_BEATS) expect(thoughtDef(beat)).toBeDefined();
+  });
+
+  it("thinks the errand on the first live tick at home, once ever", () => {
+    const state = freshHome();
+    run(state, 1);
+    expect(state.phase).toBe("dialogue");
+    expect(said(state)).toContain("GOODCO");
+    advanceDialogue(state);
+    expect(state.phase).toBe("playing");
+    // Read: it never fires again, however long he stands in his own garage.
+    run(state, 600);
+    expect(state.phase).toBe("playing");
+  });
+
+  it("catches him walking out under the roll-up on his own feet", () => {
+    const state = freshHome();
+    run(state, 1);
+    advanceDialogue(state); // the arrival errand
+    const door = state.doors.find((d) => d.approach);
+    expect(
+      door,
+      "the hub hangs a roll-up for him to walk out of",
+    ).toBeDefined();
+    // Standing INSIDE says nothing, however long he loiters.
+    run(state, 120);
+    expect(state.phase).toBe("playing");
+    // …and stepping out the far side of the doorway from his own spawn does.
+    state.players[0].pos = {
+      x: door!.center.x + (door!.center.x > carved.playerSpawn.x ? 40 : -40),
+      y: door!.center.y,
+    };
+    run(state, 1);
+    expect(state.phase).toBe("dialogue");
+    expect(said(state)).toContain("CAR");
+    advanceDialogue(state);
+    run(state, 120);
+    expect(state.phase).toBe("playing"); // once, ever
+  });
+
+  it("never nags the man who took the car — a driven car crosses the same line", () => {
+    const state = freshHome();
+    run(state, 1);
+    advanceDialogue(state); // the arrival errand
+    const car = state.vehicles.find((v) => v.kind === "car")!;
+    state.players[0].pos = { x: car.pos.x, y: car.pos.y };
+    expect(applyRunCommand(state, "enterCar")).toBe(true);
+    // Drive him out through the roll-up and on across the drive: the beat is
+    // pinned to WALKING out, and the wheel is the opposite of that.
+    const drive = {
+      steering: true,
+      target: { x: carved.width, y: car.pos.y },
+      jump: false,
+    };
+    for (let i = 0; i < 240 && state.phase === "playing"; i++) {
+      step(state, drive, DT);
+    }
+    expect(state.thoughtsSeen).not.toContain(PLACE_BEATS[1]);
   });
 });
 

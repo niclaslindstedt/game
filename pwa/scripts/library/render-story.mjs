@@ -264,6 +264,12 @@ function thoughtsSection(chapter, { href }) {
               // Not a speaker but a DOOR he tries too early — so the slot the
               // others fill with a mob's name gets the door's instead.
               door: "The way out he cannot take yet",
+              // Not a speaker either: a PLACE, and being in it is the whole
+              // trigger. The slot gets what "being there" means.
+              place: {
+                arrival: "The first minute he stands here",
+                pastDoor: "When he walks out of here instead",
+              }[thought.where],
             }[thought.when]
           }${
             thought.door

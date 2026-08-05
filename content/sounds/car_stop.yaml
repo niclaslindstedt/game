@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: car_stop
+description: >-
+  The hero switches the thirty-year-old hatchback off and gets out: the idle
+  sags away down the scale as the engine dies, one last dry cough after it
+  lets go, and the door handle clacks. The mirror of `car_start` — shorter,
+  because a car takes longer to talk into life than out of it.
+on:
+  type: carStopped
+voices:
+  # The idle dying: the sawtooth the running rumble left off, sagging away.
+  - call: tone
+    type: sawtooth
+    from: 58
+    to: 22
+    durationMs: 340
+    volume: 0.05
+    detuneCents: 14
+  - call: noise
+    durationMs: 300
+    volume: 0.025
+    filter:
+      type: lowpass
+      frequency: 320
+  # The dieseling cough after the key is out — the one every old engine gives.
+  - call: tone
+    type: square
+    from: 96
+    to: 74
+    durationMs: 80
+    volume: 0.03
+    delayMs: 260
+  # The door: a short bright clack, and he is standing on the cement.
+  - call: noise
+    durationMs: 45
+    volume: 0.05
+    delayMs: 360
+    filter:
+      type: bandpass
+      frequency: 2200

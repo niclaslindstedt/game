@@ -10,6 +10,7 @@ import { useMemo, useRef } from "react";
 import type { MutableRefObject } from "react";
 
 import {
+  CAR,
   MERCHANT,
   QUESTS,
   enemyDef,
@@ -637,6 +638,32 @@ export function handleFieldTaps(
       playUiSound(synth, "confirm");
       bumpUi();
       break;
+    }
+  }
+  // A tap on the car YOU ARE SITTING IN gets you out again (`exitCar`). It runs
+  // ahead of the travel-door sweep below and takes the tap with it, because the
+  // two gestures are the same gesture read in the two directions a door has: the
+  // press that put the hero in the seat is the press that takes him out of it.
+  //
+  // …and it has to be aimed at the CAR rather than at the car's LANDMARK, which
+  // is the one thing the boarding path can get away with. The landmark is the
+  // parking spot and never moves; a driven car does, so by the time a player
+  // wants out he is halfway down the drive and the tap target he can see is the
+  // machine under his thumb.
+  if (shopTap && !bot && fieldLive(state)) {
+    const car = drivenCar(state);
+    if (car) {
+      const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+      if (
+        Math.hypot(wx - car.pos.x, wy - car.pos.y) <= CAR.boardRadius &&
+        runCommandOk(state, "exitCar")
+      ) {
+        input.jump = false;
+        input.useItem = false;
+        playUiSound(synth, "confirm");
+        bumpUi();
+        return;
+      }
     }
   }
   // A tap on a STANDING TRAVEL DOOR (the hub's rocket / rift portal) reaches
