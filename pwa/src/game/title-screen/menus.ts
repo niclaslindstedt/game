@@ -23,7 +23,10 @@ import {
 import { buildDataMenu, buildExportMenu } from "./menus-data.ts";
 import {
   buildBalanceMenu,
+  buildCheatsMenu,
   buildDeveloperMenu,
+  buildGalleriesMenu,
+  buildPlaygroundMenu,
   buildSeedMenu,
   buildVisualsMenu,
 } from "./menus-developer.ts";
@@ -89,6 +92,9 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "modorder") return buildModOrderMenu(ctx, ctx.mods);
   if (screen === "settings") return buildSettingsMenu(ctx);
   if (__DEV_TOOLS__ && screen === "developer") return buildDeveloperMenu(ctx);
+  if (__DEV_TOOLS__ && screen === "playground") return buildPlaygroundMenu(ctx);
+  if (__DEV_TOOLS__ && screen === "cheats") return buildCheatsMenu(ctx);
+  if (__DEV_TOOLS__ && screen === "galleries") return buildGalleriesMenu(ctx);
   if (__DEV_TOOLS__ && screen === "visuals") return buildVisualsMenu(ctx);
   if (__DEV_TOOLS__ && screen === "balance") return buildBalanceMenu(ctx);
   if (__DEV_TOOLS__ && screen === "seed") return buildSeedMenu(ctx);

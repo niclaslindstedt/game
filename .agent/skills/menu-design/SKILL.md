@@ -37,7 +37,7 @@ and friends — and none of them reads the tree.
 | Reading the tree | `pwa/src/game/title-screen/menu-tree.ts` — `screenDef`, `rowDef`, `rowHelp`, `rowAria`, `parentOf`, `screenHeading`, `SETTINGS_TREE`. The ONE way to ask the tree anything |
 | Row shape + shared factories | `pwa/src/game/title-screen/menu-model.ts` — `MenuEntry`, `MenuScreen` (the hand-written screen union), `MenuContext`, `assembleRows`, `actionRow`, `navRow`, `backRow`, `onOffRow`, `sliderRow`, `volumeRow` |
 | Screen → builder dispatch | `pwa/src/game/title-screen/menus.ts` (`buildMenu`, `headingFor`) |
-| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the six settings pages + GORE), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
+| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the six settings pages + GORE), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
 | Async state a builder must be HANDED | `use-mods.ts`, `use-sessions.ts`, `use-coin-store.ts`, `use-cloud-save.ts`, `use-character-transfer.ts` |
 | Rendering | `title-screen/MenuList.tsx` (rows, cursor, controls), `MenuHeading.tsx` (title + trail + rule), `TitleScreen.tsx` (orchestration, keyboard, cursor, overflow) |
 | Layout hooks | `title-screen/use-title-layout.ts` — `useHelpWrapRem`, `useMenuOverflow` |
@@ -272,30 +272,40 @@ gives up, the star cools, and the gesture rearms at seven taps. Four rules:
 The growing disc is also its own growing TARGET — the hit test measures the
 sun's live rect, transform included — so the race gets kinder to the thumb
 exactly as it gets harder to sustain. Under `prefers-reduced-motion` the growth
-stays (it is the meter) and the buzz goes. That screen offers **SELECT LEVEL** (the warp picker: pick any
-difficulty and mission regardless of unlock state, skipping the intro), **VIEW
-ARSENAL** (`ArsenalScreen.tsx` — a
-scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
-via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
-inventory tooltip reuses so the two never drift), **VIEW EFFECTS** (the EFFECTS
-GALLERY — see below), a **BALANCE** subpage (see
-below), a **DEBUG MODE** toggle
-(`debug: "on" | "off"`, also persisted), a **FORCE STORE** switch
-(`storeForce`, persisted — surfaces the coin store in any build with packs
-granted FREE; see `pwa/src/game/store.ts`), a **MAP SIZE** row
-(`generatedMapSize`, persisted: SMALL/MEDIUM/LARGE/RANDOM — every mission is
-carved from its blueprint, so the size is the one knob left over the generator;
-the `mapgen-improvement` skill), a
-**VISUALS** subpage (the KNOCKBACK and BLOOD amounts, plus the **CAMERA PITCH**
-and **CAMERA YAW** sliders that dial the whole world projection live —
-`docs/rendering.md`), and
-a feature flag. DEBUG MODE
-shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
-the render loop — the first probe for performance regressions) and is the hook
-further developer diagnostics wire to via `getSettings().debug`. Keep it
-distinct from the `?debug` URL param (console verbosity, `window.__game` /
-`window.__scenario`, and the same FPS meter forced on — see
-`docs/configuration.md`).
+stays (it is the meter) and the buzz goes.
+
+**THE DEVELOPER SCREEN IS AN INDEX OF DOORS, NOT A DRAWER OF TOOLS.** Flat, it
+grew to twelve rows of four unrelated kinds and a developer had to READ the
+column every time; the rows are now filed by WHAT KIND OF THING THEY DO, and a
+new developer tool joins the page whose kind it shares rather than the bottom of
+the index:
+
+| Page | Holds |
+| --- | --- |
+| **PLAYGROUND** | a run: **SELECT LEVEL** (the warp picker — any difficulty and mission regardless of unlock state, skipping the intro), **BOT VIEW** (the autopilot on a real hero, then GAME SPEED + BOT SPEC), the terms a run is carved on — **MAP SIZE** (`generatedMapSize`, persisted: SMALL/MEDIUM/LARGE/RANDOM, the one knob left over the generator — `mapgen-improvement`) and **AUTO LEVEL STATS** (`autoLevelStats`) — and **DEBUG MODE**, the meter drawn over it |
+| **CHEATS** | what a run would otherwise earn: **SEED CHARACTERS**, **GRANT 10B COINS**, and **FORCE STORE** (`storeForce`, persisted — the coin store in any build with packs granted FREE, so it is a cheat rather than a build flag; `pwa/src/game/store.ts`) |
+| **BALANCE** | the runtime multiplier sliders (see below) |
+| **VISUALS** | KNOCKBACK, BLOOD and GORE LINGER, plus the **CAMERA PITCH** / **CAMERA YAW** sliders that dial the whole world projection live — `docs/rendering.md` |
+| **GALLERIES** | the two full-screen shelves that only LOOK: **ARSENAL** (`ArsenalScreen.tsx` — every unique/legendary by ilvl, minted via `mintUnique` and drawn through the shared `ItemCard.tsx` the inventory tooltip reuses, so the two never drift) and **EFFECTS** (the EFFECTS GALLERY — see below) |
+
+**EVERY ROW ON THE INDEX IS A DOOR** — no switch or slider is parked among them,
+which is what keeps the page (five rows and a BACK, above the help line) inside
+the landscape phone it is drawn for. A new developer tool joins the page whose
+KIND it shares; a sixth door is where the index stops fitting that screen, so
+earning one means merging two.
+
+**DEBUG MODE** (`debug: "on" | "off"`, persisted) shows the in-run FPS
+meter (`GameScreen.tsx` `showFps`, written to the DOM by the render loop — the
+first probe for performance regressions) and is the hook further developer
+diagnostics wire to via `getSettings().debug`. Keep it distinct from the
+`?debug` URL param (console verbosity, `window.__game` / `window.__scenario`,
+and the same FPS meter forced on — see `docs/configuration.md`).
+
+The warp is a MODE rather than a place, which is the one thing the tree cannot
+carry: `SELECT LEVEL` / `BOT VIEW` set `warp` and jump to the campaign pickers,
+and both the pickers' own BACK row (`menus-campaign.ts`) and Escape
+(`TitleScreen.tsx`) return to PLAYGROUND — onto whichever of the two doors armed
+the mode, read BEFORE the mode is cleared.
 
 **NONE OF IT SHIPS IN THE STORE BUILD — and "does not ship" means the code is
 gone, not hidden.** The reveal, the whole DEVELOPER tree, and the commit hash

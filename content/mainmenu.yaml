@@ -611,7 +611,7 @@ screens:
   # =========================================================================
   # THE CAMPAIGN PICKERS — difficulty, then mission. Opened from NEW GAME /
   # LOAD GAME (through the roster) and from the developer warp, which ignores
-  # every unlock gate and backs out to the DEVELOPER menu instead.
+  # every unlock gate and backs out to the PLAYGROUND page that armed it.
   #
   # Both drop the breadcrumb: their flavour titles are long enough on a phone
   # without one, and the screen above is a single press away.
@@ -946,16 +946,70 @@ screens:
   # THE DEVELOPER TREE — hidden behind the two-movement sun gesture, and
   # compiled out of the store build entirely.
   #
-  # Ordered as a workbench: the ways INTO a run first, then the things that MINT
-  # one, then the two tuning subpages, then the flags that change what a run is.
+  # THE INDEX IS A SET OF DOORS, NOT A DRAWER OF TOOLS. Flat, this page ran to
+  # twelve rows of four unrelated kinds — two warps, two galleries, two minting
+  # cheats, two tuning subpages, three switches and a cycled label — in one
+  # column a developer had to READ every time to find the row they came for.
+  # The rows are the same rows; they are now filed by WHAT KIND OF THING THEY
+  # DO, so the index is scanned once and the page behind it holds one kind:
+  #
+  #   PLAYGROUND  a run — how it is carved, how the hero grows, what is drawn
+  #               over it, and two doors into one
+  #   CHEATS      putting into the save what a run would have to earn
+  #   BALANCE     the engine's numbers
+  #   VISUALS     what the game looks like
+  #   GALLERIES   browsing what the game ships
+  #
+  # EVERY ROW HERE IS A DOOR, WITH NO EXCEPTION PARKED BESIDE THEM, and that is
+  # also what keeps the page off the scrollbar: five rows and a BACK are what
+  # fits above the help line on the reference phone held in landscape, which is
+  # the device this menu is drawn for.
   # =========================================================================
   developer:
     title: DEVELOPER
     parent: settings
     tone: dev
     form: settings
-    scroll: true
-    notice: true
+    dev: true
+    rows:
+      - id: playground
+        label: PLAYGROUND
+        icon: icon_treasure_map
+        help: WARP INTO A RUN, THE TERMS IT IS BUILT ON, THE FPS METER
+        opens: playground
+      - id: cheats
+        label: CHEATS
+        icon: icon_coins
+        help: MINT HEROES, COINS AND A STORE TO SPEND THEM IN
+        opens: cheats
+      - id: balance
+        label: BALANCE
+        icon: icon_ledger
+        help: TUNE XP, MOB STRENGTH AND LOOT MULTIPLIERS
+        opens: balance
+      - id: visuals
+        label: VISUALS
+        icon: icon_menu_display
+        help: TUNE THE FEEL - KNOCKBACK, BLOOD AND THE CAMERA
+        opens: visuals
+      - id: galleries
+        label: GALLERIES
+        icon: icon_menu_library
+        help: BROWSE EVERY UNIQUE ITEM AND EVERY VISUAL EFFECT
+        opens: galleries
+
+  # -------------------------------------------------------------------------
+  # DEVELOPER -> PLAYGROUND — A RUN, and nothing else. The two doors lead,
+  # because they are what the page is opened for; under them sit the terms a
+  # run is built on (both read when a level is BUILT, so a change lands on the
+  # next run rather than one in progress) and the one thing drawn OVER a run,
+  # the FPS meter — the first probe for a performance regression.
+  # -------------------------------------------------------------------------
+  playground:
+    title: PLAYGROUND
+    parent: developer
+    tone: dev
+    form: settings
     dev: true
     rows:
       - id: select-level
@@ -964,44 +1018,6 @@ screens:
       - id: bot-view
         label: BOT VIEW
         help: WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO
-      - id: arsenal
-        label: VIEW ARSENAL
-        help: EVERY UNIQUE & LEGENDARY ITEM, BY ITEM LEVEL
-        opens: arsenal
-      - id: effects
-        label: VIEW EFFECTS
-        help: EVERY VISUAL EFFECT, STAGED FULLSCREEN - BROWSE AND REPLAY
-        opens: effects
-      - id: seed
-        label: SEED CHARACTERS
-        help: MINT MELEE / RANGED / MAGIC HEROES AT THE HIGH TIERS
-        opens: seed
-      - id: grant-coins
-        label: GRANT 10B COINS
-        help: POUR 10 BILLION COINS INTO EVERY BANKED HERO
-      - id: balance
-        label: BALANCE
-        help: TUNE XP, MOB STRENGTH AND LOOT MULTIPLIERS
-        opens: balance
-      - id: visuals
-        label: VISUALS
-        help: TUNE THE FEEL - KNOCKBACK, BLOOD AND THE CAMERA
-        opens: visuals
-      - id: debug
-        label: DEBUG MODE
-        help:
-          on: THE FPS METER SHOWS DURING RUNS
-          off: NO FPS METER DURING RUNS
-      - id: auto-level-stats
-        label: AUTO LEVEL STATS
-        help:
-          on: FREE BASE STATS EACH LEVEL - MOBS SCALE TO MATCH
-          off: BASE STATS ONLY FROM POINTS YOU SPEND
-      - id: force-store
-        label: FORCE STORE
-        help:
-          on: THE COIN STORE SHOWS IN THIS BUILD - PACKS ARE FREE
-          off: THE COIN STORE SHOWS IN NATIVE BUILDS ONLY
       # Every mission is carved from its blueprint, so the size is the only
       # knob left over the generator.
       - id: map-size
@@ -1011,6 +1027,68 @@ screens:
           medium: A FULL MAP - A REAL SEARCH FOR THE BOSS
           large: A SPRAWLING MAP - THE BOSS IS A LONG WAY OFF
           random: THE MAP ROLLS ITS OWN SIZE EACH RUN
+      - id: auto-level-stats
+        label: AUTO LEVEL STATS
+        help:
+          on: FREE BASE STATS EACH LEVEL - MOBS SCALE TO MATCH
+          off: BASE STATS ONLY FROM POINTS YOU SPEND
+      - id: debug
+        label: DEBUG MODE
+        help:
+          on: THE FPS METER SHOWS DURING RUNS
+          off: NO FPS METER DURING RUNS
+
+  # -------------------------------------------------------------------------
+  # DEVELOPER -> CHEATS — everything that puts into the save what a run would
+  # otherwise have to earn: the heroes, the purse, and the shop that sells the
+  # purse (FORCE STORE hands its packs over free, which is what makes it one of
+  # these rather than a build flag).
+  # -------------------------------------------------------------------------
+  cheats:
+    title: CHEATS
+    parent: developer
+    tone: dev
+    form: settings
+    notice: true
+    dev: true
+    rows:
+      - id: seed
+        label: SEED CHARACTERS
+        icon: icon_class_melee
+        help: MINT MELEE / RANGED / MAGIC HEROES AT THE HIGH TIERS
+        opens: seed
+      - id: grant-coins
+        label: GRANT 10B COINS
+        help: POUR 10 BILLION COINS INTO EVERY BANKED HERO
+      - id: force-store
+        label: FORCE STORE
+        help:
+          on: THE COIN STORE SHOWS IN THIS BUILD - PACKS ARE FREE
+          off: THE COIN STORE SHOWS IN NATIVE BUILDS ONLY
+
+  # -------------------------------------------------------------------------
+  # DEVELOPER -> GALLERIES — the two shelves that only LOOK at what the game
+  # ships. Neither starts anything, neither writes anything, and both take the
+  # whole screen, which is why they sit together and away from the rows that
+  # change a run.
+  # -------------------------------------------------------------------------
+  galleries:
+    title: GALLERIES
+    parent: developer
+    tone: dev
+    form: settings
+    dev: true
+    rows:
+      - id: arsenal
+        label: ARSENAL
+        icon: icon_zweihander
+        help: EVERY UNIQUE & LEGENDARY ITEM, BY ITEM LEVEL
+        opens: arsenal
+      - id: effects
+        label: EFFECTS
+        icon: icon_storm
+        help: EVERY VISUAL EFFECT, STAGED FULLSCREEN - BROWSE AND REPLAY
+        opens: effects
 
   visuals:
     title: VISUALS
@@ -1050,7 +1128,7 @@ screens:
 
   seed:
     title: SEED CHARACTERS
-    parent: developer
+    parent: cheats
     tone: dev
     form: settings
     scroll: true
@@ -1064,7 +1142,7 @@ screens:
   # The GAME SPEED step of BOT VIEW, reached after a difficulty and a level.
   botspeed:
     title: BOT VIEW
-    trail: DEVELOPER
+    trail: PLAYGROUND
     parent: levels
     home: dynamic
     tone: dev
@@ -1082,13 +1160,13 @@ screens:
         label: START
 
   arsenal:
-    parent: developer
+    parent: galleries
     tone: dev
     surface: full
     dev: true
 
   effects:
-    parent: developer
+    parent: galleries
     tone: dev
     surface: full
     dev: true

@@ -244,7 +244,7 @@ function arrivalLevelFor(levelId: string, difficulty: Difficulty): number {
   return Math.max(lo, floor, 1);
 }
 
-/** A realistic hero for the DEVELOPER → BOT VIEW mode: a `build`-lane specimen
+/** A realistic hero for the DEVELOPER → PLAYGROUND → BOT VIEW mode: a `build`-lane specimen
  * (melee/ranged/magic — the chosen BOT SPEC) minted at the level a player would
  * REACH the chosen map on the chosen difficulty (the map's own low mob band) in
  * level-appropriate rerolled gear — so the watched autopilot plays the level the

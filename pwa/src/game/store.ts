@@ -280,7 +280,7 @@ export function mergeCoinLedgers(a: CoinLedger, b: CoinLedger): CoinLedger {
   return { counters, seen: trimSeen(seen) };
 }
 
-// The DEVELOPER → FORCE STORE switch, applied by settings.ts on load and on
+// The DEVELOPER → CHEATS → FORCE STORE switch, applied by settings.ts on load and on
 // every update (the same pattern as the audio/haptics/auto-stat flags).
 let storeForced = false;
 

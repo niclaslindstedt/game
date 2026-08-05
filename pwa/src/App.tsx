@@ -136,10 +136,10 @@ export function App() {
   const [run, setRun] = useState<{
     difficulty: Difficulty;
     levelId: string;
-    // Warp-in from the developer menu's SELECT LEVEL: skip the prelude and
+    // Warp-in from PLAYGROUND's SELECT LEVEL: skip the prelude and
     // intro monologue and drop straight into the level.
     skipIntro?: boolean;
-    // DEVELOPER → BOT VIEW: hand the run to the engine autopilot with a realistic
+    // DEVELOPER → PLAYGROUND → BOT VIEW: hand the run to the engine autopilot with a realistic
     // arrival hero (see GameScreen `botView`).
     botView?: boolean;
     // Resuming a run parked in memory: GameScreen adopts this live engine

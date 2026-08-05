@@ -152,7 +152,7 @@ export function createRunSession(deps: {
   checkpointRef: MutableRefObject<RunCheckpoint | null>;
   botView: boolean;
   demo: boolean;
-  /** Warp-in (the developer menu's SELECT LEVEL): skip the whole opening. */
+  /** Warp-in (PLAYGROUND's SELECT LEVEL): skip the whole opening. */
   skipOpening: boolean;
   runId: number;
   /**
@@ -220,7 +220,7 @@ export function createRunSession(deps: {
   // BOT VIEW drops a REALISTIC arrival hero (leveled + rolled gear for this
   // map/difficulty) so the watched autopilot plays the level as an arriving
   // player would, not from the character's own build. The chosen BOT SPEC
-  // (DEVELOPER → BOT VIEW → BOT SPEC) picks the whole showcase: the arrival
+  // (DEVELOPER → PLAYGROUND → BOT VIEW → BOT SPEC) picks the whole showcase: the arrival
   // hero's weapon/gear lane here, and the bot's stat picks + posture below.
   // The demo pins the melee showcase; the developer BOT VIEW honours the
   // picked BOT SPEC.
@@ -231,7 +231,7 @@ export function createRunSession(deps: {
     ? buildBotViewLoadout(runLevelId, difficulty, botViewChoice.build)
     : null;
   // Autoplay: the engine bot steers instead of the pointer and spends level-ups
-  // itself. Turned on by DEVELOPER → BOT VIEW (the chosen BOT SPEC's posture +
+  // itself. Turned on by DEVELOPER → PLAYGROUND → BOT VIEW (the chosen BOT SPEC's posture +
   // stat lane) or the `?bot=<strategy>` URL param. An optional
   // ?botProfile=<build> (melee/ranged/magic/balanced/auto) commits the hero to a
   // stat-distribution build — a lane, or the even `balanced` spread. See the

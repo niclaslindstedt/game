@@ -184,11 +184,11 @@ export function TitleScreen({
   // follows reads it to decide which levels are unlocked (progress is per
   // difficulty), and it carries into the run.
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  // Warp mode: the level list was opened via the developer menu's SELECT LEVEL,
+  // Warp mode: the level list was opened via PLAYGROUND's SELECT LEVEL,
   // so every level is reachable regardless of progress and picking one skips
   // the intro.
   const [warp, setWarp] = useState(false);
-  // BOT VIEW: the warp pickers were opened via DEVELOPER → BOT VIEW, so picking a
+  // BOT VIEW: the warp pickers were opened via DEVELOPER → PLAYGROUND → BOT VIEW, so picking a
   // level hands the run to the engine autopilot (a realistic arrival hero) rather
   // than starting a normal playable run. Rides on top of `warp` (same pickers).
   const [botView, setBotView] = useState(false);
@@ -692,10 +692,14 @@ export function TitleScreen({
       } else if (event.key === "Escape" && screen !== "main") {
         unlockAudio();
         playUiSound(synth, "back");
-        // The warp picker walks developer → difficulty → levels; Escape backs
+        // The warp picker walks playground → difficulty → levels; Escape backs
         // out one rung at a time, leaving warp mode only once it returns to the
-        // developer menu (from the warp difficulty picker).
-        if (screen === "difficulty" && warp) {
+        // PLAYGROUND page (from the warp difficulty picker).
+        const leavingWarp = screen === "difficulty" && warp;
+        // Which of the two doors armed it — read BEFORE the mode is cleared, so
+        // the cursor lands back on the row that was pressed.
+        const warpHome = botView ? "bot-view" : "select-level";
+        if (leavingWarp) {
           setWarp(false);
           setBotView(false);
           setBotLevel(null);
@@ -705,17 +709,15 @@ export function TitleScreen({
         // one had drifted, and Escape from three of the settings pages walked
         // the player out to the front door instead of up one screen. The warp
         // pickers are the one exception the tree cannot carry: they are a mode,
-        // and back out to the DEVELOPER menu that armed them.
-        const parent =
-          __DEV_TOOLS__ && warp && screen === "difficulty"
-            ? "developer"
-            : (parentOf(screen) ?? "main");
+        // and back out to the PLAYGROUND page that armed them.
+        const warpBack = __DEV_TOOLS__ && leavingWarp;
+        const parent = warpBack ? "playground" : (parentOf(screen) ?? "main");
         setScreen(parent);
-        setCursor(0);
+        setCursor(warpBack ? ctx.rowIndexIn("playground", warpHome) : 0);
       }
     };
     return onFreshKeyDown(onKeyDown);
-  }, [entries, cursor, screen, captureBind, warp, bumpSettings]);
+  }, [entries, cursor, screen, captureBind, warp, botView, ctx, bumpSettings]);
 
   // While a KEY BINDINGS row is armed, a mouse button or wheel notch can be
   // bound too. The LEFT button (0) is left alone — it's how the menu is
@@ -1022,8 +1024,8 @@ export function TitleScreen({
             relicFonts={assets.relicFonts}
             sprites={assets.sprites}
             onClose={() => {
-              setScreen("developer");
-              setCursor(ctx.rowIndexIn("developer", "arsenal"));
+              setScreen("galleries");
+              setCursor(ctx.rowIndexIn("galleries", "arsenal"));
             }}
           />
         </Suspense>
@@ -1036,8 +1038,8 @@ export function TitleScreen({
         <Suspense fallback={<LoadingScreen />}>
           <EffectsGallery
             onClose={() => {
-              setScreen("developer");
-              setCursor(ctx.rowIndexIn("developer", "effects"));
+              setScreen("galleries");
+              setCursor(ctx.rowIndexIn("galleries", "effects"));
             }}
           />
         </Suspense>

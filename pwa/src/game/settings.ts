@@ -271,7 +271,7 @@ export type DeathScenes = "on" | "off";
  * running MORE fixed game-loop steps per frame — never bigger steps — so `1` is
  * real time and `2`/`4`/`8` run the run that many times as fast while staying
  * deterministic. A DEVELOPER control, not a user setting: it's chosen in the
- * DEVELOPER → BOT VIEW flow (the GAME SPEED step shown after difficulty + level)
+ * DEVELOPER → PLAYGROUND → BOT VIEW flow (the GAME SPEED step shown after difficulty + level)
  * so the autopilot can blitz a level for a quick read — a normal player never
  * sees it and plays at `1`. Persisted like the other developer flags and read
  * app-side by the game loop (GameScreen `simSpeed`); a pure pacing lever, so it
@@ -386,7 +386,7 @@ export type GameSettings = {
    * the hero's death tableau (see DeathScenes). */
   deathScenes: DeathScenes;
   /** Developer fast-forward: how fast a run plays, real time (1) up to 8×,
-   * chosen in the DEVELOPER → BOT VIEW flow (see GameSpeed). */
+   * chosen in the DEVELOPER → PLAYGROUND → BOT VIEW flow (see GameSpeed). */
   gameSpeed: GameSpeed;
   /** Developer BOT VIEW build preset (a `bot-view-specs.ts` id): which generated
    * hero the autopilot showcases — weapon/gear lane, stat picks, and positioning
@@ -712,7 +712,7 @@ function loadBalance(
   return balance;
 }
 
-/** Upper bound of the DEVELOPER → KNOCKBACK slider — 1× is the shipped feel,
+/** Upper bound of the DEVELOPER → VISUALS → KNOCKBACK slider — 1× is the shipped feel,
  * so 3× is deep into off-the-screen territory. Shared by the slider row
  * (position ↔ multiplier) and the stored-value clamp. */
 export const KNOCKBACK_MAX = 3;
@@ -720,7 +720,7 @@ function clampKnockback(v: number): number {
   return Math.round(clamp(v, 0, KNOCKBACK_MAX) * 20) / 20;
 }
 
-/** Upper bound of the DEVELOPER → BLOOD slider — 1× is the shipped feel, so 3×
+/** Upper bound of the DEVELOPER → VISUALS → BLOOD slider — 1× is the shipped feel, so 3×
  * is a floor that reddens three times as fast. Shared by the slider row
  * (position ↔ multiplier) and the stored-value clamp. */
 export const BLOOD_MAX = 3;
@@ -728,7 +728,7 @@ function clampBlood(v: number): number {
   return Math.round(clamp(v, 0, BLOOD_MAX) * 20) / 20;
 }
 
-/** Upper bound of the DEVELOPER → GORE LINGER slider, in SECONDS. Half a minute
+/** Upper bound of the DEVELOPER → VISUALS → GORE LINGER slider, in SECONDS. Half a minute
  * is well past any reasonable taste and that is the point of a ceiling: it has
  * to be possible to hold the whole mess on screen long enough to photograph it.
  * Snapped to half-seconds, which is finer than anyone can judge. */
@@ -737,7 +737,7 @@ function clampGoreLinger(v: number): number {
   return Math.round(clamp(v, 0, GORE_LINGER_MAX) * 2) / 2;
 }
 
-/** The DEVELOPER → CAMERA sliders, snapped so a dragged value reads as a round
+/** The DEVELOPER → VISUALS → CAMERA sliders, snapped so a dragged value reads as a round
  * number rather than as 0.7314. The bounds are the renderer's own — a
  * projection outside them is not a camera angle, it is a broken picture. */
 function clampPitch(v: number): number {
@@ -780,7 +780,7 @@ function visualsFrom(
   return out;
 }
 
-/** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real
+/** The GAME SPEED choices the DEVELOPER → PLAYGROUND → BOT VIEW step cycles through — real
  * time up to a brisk 8× fast-forward for the autopilot. Kept discrete so the
  * row cycles cleanly (bot playtests bypass this and go higher via `?speed=` /
  * `__speed`). Shared by the menu row and the stored-value clamp. */

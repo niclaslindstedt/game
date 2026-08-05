@@ -243,10 +243,19 @@ for (const vp of VIEWPORTS) {
     await click("developer-balance");
     await shot("developer-balance");
     await page.keyboard.press("Escape");
-    await click("developer-arsenal");
+    // The three category pages the index files its rows onto.
+    await click("developer-cheats");
+    await shot("developer-cheats");
+    await page.keyboard.press("Escape");
+    await click("developer-galleries");
+    await shot("developer-galleries");
+    await click("galleries-arsenal");
     await page.locator(".arsenal-panel").waitFor();
     await shot("arsenal");
     await page.locator(".arsenal-close").click();
+    await page.keyboard.press("Escape");
+    await click("developer-playground");
+    await shot("developer-playground");
     // The warp picker: SELECT LEVEL -> difficulty (warp) -> level list. The
     // difficulty list is built from what the ROSTER has unlocked, and this
     // sweep's profile is a hero created two steps ago who has never finished a
@@ -254,7 +263,7 @@ for (const vp of VIEWPORTS) {
     // Skip rather than spend the locator's full timeout on a row that cannot
     // be there: the throw would otherwise abort the whole settings step, and
     // every capture after this line with it.
-    await click("developer-select-level");
+    await click("playground-select-level");
     const warpEasy = page.getByRole("button", { name: "difficulty-easy" });
     const warpLevel = page.getByRole("button", { name: /level-/ }).first();
     if (await warpEasy.isVisible().catch(() => false)) {
