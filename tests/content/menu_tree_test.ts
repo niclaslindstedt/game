@@ -47,6 +47,9 @@ const UNION: MenuScreen[] = [
   "data",
   "export",
   "developer",
+  "playground",
+  "cheats",
+  "galleries",
   "visuals",
   "balance",
   "seed",
@@ -283,6 +286,62 @@ describe("the title menu tree", () => {
       "main-settings",
       "main-quit",
     ]);
+  });
+
+  it("keeps the DEVELOPER index a short list of doors", () => {
+    // The second screen worth pinning row by row. Flat, this page was twelve
+    // rows of four unrelated kinds and a developer read the whole column every
+    // time; the rows now live one press deeper, filed by what kind of thing
+    // they do. The order is the design (a run, what goes into it, the two
+    // tuning pages, the shelves that only look).
+    const rows = buildMenu("developer", ctxFor());
+    expect(rows.map((row) => row.aria)).toEqual([
+      "developer-playground",
+      "developer-cheats",
+      "developer-balance",
+      "developer-visuals",
+      "developer-galleries",
+      "developer-back",
+    ]);
+    // EVERY row is a door — no switch or slider parked among them. That is what
+    // keeps the page inside the landscape phone's screen, and it is why every
+    // row may carry its own emblem: on a phone nothing hovers, and the icon is
+    // what makes a row read as pressable.
+    for (const row of rows) {
+      expect(row.icon, `${row.aria} has no icon`).toBeTruthy();
+      expect(row.toggle ?? row.slider, `${row.aria} is not a door`).toBe(
+        undefined,
+      );
+    }
+  });
+
+  it("files every developer row onto exactly one page", () => {
+    // The rows that moved are still all there, and none of them got left on two
+    // pages by a half-finished move.
+    const pages = ["developer", "playground", "cheats", "galleries"] as const;
+    const seen = pages.flatMap((page) =>
+      buildMenu(page, ctxFor())
+        .map((row) => row.aria)
+        .filter((aria) => !aria.endsWith("-back")),
+    );
+    expect(new Set(seen).size).toBe(seen.length);
+    const rowIds = seen.map((aria) => aria.split("-").slice(1).join("-"));
+    for (const id of [
+      "select-level",
+      "bot-view",
+      "map-size",
+      "auto-level-stats",
+      "seed",
+      "grant-coins",
+      "force-store",
+      "arsenal",
+      "effects",
+      "balance",
+      "visuals",
+      "debug",
+    ]) {
+      expect(rowIds, `${id} is not on any developer page`).toContain(id);
+    }
   });
 
   it("drops the rows a plain web build has no answer for", () => {

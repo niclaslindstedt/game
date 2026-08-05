@@ -1236,7 +1236,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   exhibits can never drift from what ships; the melee/shot/talent shelves are
   generated from `weapon-fx.ts` and the talent catalog, and
   `tests/content/effects_gallery_test.ts` fails the build when one falls behind.
-  Reached from SETTINGS → DEVELOPER → VIEW EFFECTS or at `?effects`),
+  Reached from SETTINGS → DEVELOPER → GALLERIES → EFFECTS or at `?effects`),
   `tiers.ts` (tier name colors), `sfx/` (engine events →
   synthesized 16-bit-palette sounds, organized by domain: `ui.ts`,
   `combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts` behind `index.ts`),
@@ -1389,7 +1389,7 @@ seams a browser can't provide on iOS:
   keeps redelivery from double-crediting. Payment is only demanded by real
   store distributions (`EXPO_PUBLIC_STORE_PAYMENTS=required`, set solely by
   the `production` EAS profile) — dev/preview/TestFlight builds grant packs
-  `FREE` through the same flow, and the DEVELOPER → FORCE STORE switch
+  `FREE` through the same flow, and the DEVELOPER → CHEATS → FORCE STORE switch
   surfaces the free store in any browser/PWA build.
 - **Cloud save — heroes and paid coins follow the player, not the device.**
   Coin packs cost real money, so the bank they land in cannot belong to one
@@ -1969,9 +1969,9 @@ goes away.
 
 **One build flavour differs, and only one: the store upload.** The website
 carries the DEVELOPER tooling — the hidden sun reveal (seven taps to arm, then
-the click race — `use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (warp, BOT VIEW,
-arsenal, effects gallery and its `?effects` deep link, the BALANCE knobs, DEBUG
-MODE, FORCE STORE), and the build's commit hash beside the version in the title
+the click race — `use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (the
+PLAYGROUND warps, the CHEATS, the BALANCE and VISUALS knobs, the GALLERIES and
+the `?effects` deep link, DEBUG MODE), and the build's commit hash beside the version in the title
 footer — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local
 dev, the installed PWA, and the native `preview`/`testflight` apps. The single
 exception is the binary uploaded to the App Store / Play Store, built from the

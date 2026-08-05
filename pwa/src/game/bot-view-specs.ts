@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The BOT VIEW build presets (DEVELOPER → BOT VIEW → BOT SPEC). Each spec is a
+// The BOT VIEW build presets (DEVELOPER → PLAYGROUND → BOT VIEW → BOT SPEC). Each spec is a
 // coherent "who is the autopilot playing" bundle across the three axes the
 // engine exposes, so one pick decides the whole showcase:
 //

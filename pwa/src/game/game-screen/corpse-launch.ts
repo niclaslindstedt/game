@@ -78,7 +78,7 @@ export function corpseLaunch(
   const mass = LAUNCH_MASS[role] ?? 1;
   // At and above one full bar the throw rides the calibrated slope off the
   // floor; below it, the same floor tails off proportionally to nothing. The
-  // DEVELOPER → KNOCKBACK slider scales the whole throw live (1× shipped, 0×
+  // DEVELOPER → VISUALS → KNOCKBACK slider scales the whole throw live (1× shipped, 0×
   // disables it, higher rockets bodies off the screen) and heavy elites/bosses
   // barely budge (LAUNCH_MASS).
   const reach =

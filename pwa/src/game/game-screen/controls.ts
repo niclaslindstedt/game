@@ -493,7 +493,7 @@ export function createControls(deps: {
   // signals fire in different browsers, and pause() is idempotent.
   //
   // A genuine backgrounding is a DELIBERATE user action, so the pause must
-  // STICK — even under the autopilot's input loop (DEVELOPER → BOT VIEW),
+  // STICK — even under the autopilot's input loop (DEVELOPER → PLAYGROUND → BOT VIEW),
   // which otherwise clears auto-pauses and would keep the run going in the
   // background. Latch it like a hand-opened pause so the bot leaves it be
   // (the ordering matters: `onBlur` may have already raised the hero's

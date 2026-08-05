@@ -625,7 +625,7 @@ export function importCharacter(data: unknown): Character {
 }
 
 /**
- * DEVELOPER → GRANT COINS: pour `amount` coins into every rostered
+ * DEVELOPER → CHEATS → GRANT COINS: pour `amount` coins into every rostered
  * character's banked purse. The purse rides the banked `Loadout`, so a fresh
  * character who has never finished a level has nothing to pour into and is
  * skipped (play one level first). A parked/checkpointed run keeps its own

@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The hidden DEVELOPER tree (unlocked by the two-movement sun gesture — seven
-// quick taps to arm the star, then the click race):
-// the DEVELOPER index (the warp, BOT VIEW, the arsenal, the effects gallery,
-// the minting rows and the flags), the VISUALS subpage (game feel + the camera),
-// the BALANCE knob subpage (runtime multipliers over the shipped tuning), and
-// the SEED CHARACTERS minting screen.
+// quick taps to arm the star, then the click race).
+//
+// The index is five doors and one instrument switch; each door's page holds ONE
+// KIND of row (see the tree's own comment for why):
+//
+//   PLAYGROUND  the next run — the two warps, plus the terms it is carved on
+//   CHEATS      what a run would otherwise have to earn (heroes, coins, a shop)
+//   BALANCE     the runtime multipliers over the shipped tuning
+//   VISUALS     game feel + the camera
+//   GALLERIES   the arsenal and the effects gallery, which only LOOK
 //
 // The whole tree is `dev: true` in `content/mainmenu.yaml`, and the compiler
 // refuses a plain screen hanging under a developer one — so a page added here
@@ -60,61 +65,48 @@ const MAP_SIZE_LABEL: Record<GeneratedMapSize, string> = {
   random: "RANDOM",
 };
 
+/** The DEVELOPER index: five doors, and nothing else. Every row goes somewhere
+ * — which is what keeps the page short enough to read at a glance. */
 export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
-  const s = getSettings();
   return [
     ...assembleRows("developer", {
-      "select-level": actionRow("developer", "select-level", () => {
+      playground: navRow(ctx, "developer", "playground"),
+      cheats: navRow(ctx, "developer", "cheats", {
+        before: () => ctx.setNotice(null),
+      }),
+      balance: navRow(ctx, "developer", "balance"),
+      visuals: navRow(ctx, "developer", "visuals"),
+      galleries: navRow(ctx, "developer", "galleries"),
+    }),
+    backRow(ctx, "developer"),
+  ];
+}
+
+/** DEVELOPER → PLAYGROUND: the two doors into a run of your own choosing, the
+ * terms the run is carved on (read when a level is BUILT, so they land on the
+ * run these doors are about to start) and the meter drawn over it. */
+export function buildPlaygroundMenu(ctx: MenuContext): MenuEntry[] {
+  const s = getSettings();
+  return [
+    ...assembleRows("playground", {
+      "select-level": actionRow("playground", "select-level", () => {
         playUiSound(synth, "confirm");
         ctx.setWarp(true);
         ctx.setScreen("difficulty");
         ctx.setCursor(0);
       }),
-      "bot-view": actionRow("developer", "bot-view", () => {
+      "bot-view": actionRow("playground", "bot-view", () => {
         playUiSound(synth, "confirm");
         ctx.setWarp(true);
         ctx.setBotView(true);
         ctx.setScreen("difficulty");
         ctx.setCursor(0);
       }),
-      arsenal: navRow(ctx, "developer", "arsenal"),
-      effects: navRow(ctx, "developer", "effects"),
-      seed: navRow(ctx, "developer", "seed", {
-        before: () => ctx.setNotice(null),
-      }),
-      // A war chest for probing the AUTO PILOT economy: pours 10B coins into
-      // every character's banked purse (a fresh hero has no bank yet — the
-      // purse rides the loadout banked on a level clear).
-      "grant-coins": actionRow("developer", "grant-coins", () => {
-        playUiSound(synth, "confirm");
-        const funded = grantCoins(10_000_000_000);
-        ctx.setNotice(
-          funded > 0
-            ? {
-                tone: "info",
-                text: `FUNDED ${funded} HERO${funded === 1 ? "" : "ES"}`,
-              }
-            : {
-                tone: "error",
-                text: "NO BANKED HEROES - FINISH A LEVEL FIRST",
-              },
-        );
-      }),
-      balance: navRow(ctx, "developer", "balance"),
-      visuals: navRow(ctx, "developer", "visuals"),
-      debug: onOffRow(ctx, "developer", "debug", "debug"),
-      "auto-level-stats": onOffRow(
-        ctx,
-        "developer",
-        "auto-level-stats",
-        "autoLevelStats",
-      ),
-      "force-store": onOffRow(ctx, "developer", "force-store", "storeForce"),
       // Every map is carved, so the size is the one knob left over the
       // generator. A label-cycling row, not a switch: four choices are not an
       // on/off.
       "map-size": actionRow(
-        "developer",
+        "playground",
         "map-size",
         () => {
           playUiSound(synth, "confirm");
@@ -131,8 +123,64 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
           state: s.generatedMapSize,
         },
       ),
+      "auto-level-stats": onOffRow(
+        ctx,
+        "playground",
+        "auto-level-stats",
+        "autoLevelStats",
+      ),
+      // The in-run FPS meter (`GameScreen`'s `showFps`) — and the hook further
+      // developer diagnostics read through `getSettings().debug`.
+      debug: onOffRow(ctx, "playground", "debug", "debug"),
     }),
-    backRow(ctx, "developer"),
+    backRow(ctx, "playground"),
+  ];
+}
+
+/** DEVELOPER → CHEATS: everything that hands the save what a run would have to
+ * earn. FORCE STORE belongs here rather than among the build flags because the
+ * packs it surfaces are granted FREE — it is the shop that sells the purse. */
+export function buildCheatsMenu(ctx: MenuContext): MenuEntry[] {
+  return [
+    ...assembleRows("cheats", {
+      seed: navRow(ctx, "cheats", "seed", {
+        before: () => ctx.setNotice(null),
+      }),
+      // A war chest for probing the AUTO PILOT economy: pours 10B coins into
+      // every character's banked purse (a fresh hero has no bank yet — the
+      // purse rides the loadout banked on a level clear).
+      "grant-coins": actionRow("cheats", "grant-coins", () => {
+        playUiSound(synth, "confirm");
+        const funded = grantCoins(10_000_000_000);
+        ctx.setNotice(
+          funded > 0
+            ? {
+                tone: "info",
+                text: `FUNDED ${funded} HERO${funded === 1 ? "" : "ES"}`,
+              }
+            : {
+                tone: "error",
+                text: "NO BANKED HEROES - FINISH A LEVEL FIRST",
+              },
+        );
+      }),
+      "force-store": onOffRow(ctx, "cheats", "force-store", "storeForce"),
+    }),
+    backRow(ctx, "cheats"),
+  ];
+}
+
+/** DEVELOPER → GALLERIES: the two full-screen shelves that only look. Both own
+ * their own surface and their own keyboard steering, so the rows here are pure
+ * navigation — see `TitleScreen`, which mounts them and hands the cursor back
+ * to the row it left from. */
+export function buildGalleriesMenu(ctx: MenuContext): MenuEntry[] {
+  return [
+    ...assembleRows("galleries", {
+      arsenal: navRow(ctx, "galleries", "arsenal"),
+      effects: navRow(ctx, "galleries", "effects"),
+    }),
+    backRow(ctx, "galleries"),
   ];
 }
 

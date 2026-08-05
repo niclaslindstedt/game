@@ -44,7 +44,7 @@ that way:
 ## Thoughts are load-bearing — keep them in sync with the code
 
 Every decision branch calls `think(bot, "LABEL")` (`src/game/bot/state.ts`). That label is the
-hero's thought bubble in **BOT VIEW** (DEVELOPER menu) and under the FPS meter
+hero's thought bubble in **BOT VIEW** (DEVELOPER → PLAYGROUND) and under the FPS meter
 (`GameScreen.tsx` draws `bot.lastThought`) — and it is the ONLY window into *why*
 the bot did what it did. When you debug a bad run, the thought trail ("ARM UP" →
 "KITE" → "GIVE GROUND" → "PUNCH OUT") IS the trace.
@@ -170,7 +170,7 @@ deficiency (§7.4), not an XP-split one. Do not reach for
    immortal there (deaths are BOOKED, never run-ending), so deaths + damage-in are
    the "how much would a real player have died" gauge. For the real look-and-feel,
    playtest in headless Chromium (below).
-2. **Read the thought trail.** Turn on BOT VIEW (DEVELOPER menu) or `?debug`, or
+2. **Read the thought trail.** Turn on BOT VIEW (DEVELOPER → PLAYGROUND) or `?debug`, or
    probe `window.__game` — watch which labels fire when the hero misbehaves.
 3. **Hypothesize, then edit** `src/game/bot/` (logic) and/or `bot.yaml` (a knob). Prefer
    moving a magic number into `bot.yaml` over hard-coding it, so it's tunable next
@@ -196,7 +196,7 @@ deficiency (§7.4), not an XP-split one. Do not reach for
 | `scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
 | `pwa/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |
 | `tests/engine/bot_test.ts` | The determinism + behaviour guardrails — run after every edit |
-| BOT VIEW (DEVELOPER menu) | Draws `bot.lastThought` over the hero — the live decision trace |
+| BOT VIEW (DEVELOPER → PLAYGROUND) | Draws `bot.lastThought` over the hero — the live decision trace |
 
 ### Running a playtest
 

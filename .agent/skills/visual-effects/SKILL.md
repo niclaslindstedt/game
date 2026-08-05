@@ -74,7 +74,7 @@ Mirror `createNukeFx` (`game-screen/nuke-fx.ts`) / `createTapFx`
 Never tune an effect blind. Give yourself a way to fire it on demand and
 screenshot it in the REAL game.
 
-**Start at the EFFECTS GALLERY** (`?effects`, or SETTINGS → DEVELOPER → VIEW
+**Start at the EFFECTS GALLERY** (`?effects`, or SETTINGS → DEVELOPER → GALLERIES →
 EFFECTS — `pwa/src/game/effects-gallery/`): every effect the game ships is
 already staged there, fullscreen and looping, so the first look costs nothing.
 An effect you are ADDING gets an exhibit in the same change — a `ScenarioSpec`

@@ -57,10 +57,12 @@ export function buildDifficultyMenu(
   ctx: MenuContext,
   character: Character,
 ): MenuEntry[] {
-  // Warp mode (opened from the developer menu's SELECT LEVEL) ignores the
+  // Warp mode (opened from PLAYGROUND's SELECT LEVEL or BOT VIEW) ignores the
   // unlock ladder: every difficulty is selectable so you can warp into any
   // mission at any difficulty. Picking one hands off to the level picker
-  // (still in warp mode); backing out returns to the developer menu.
+  // (still in warp mode); backing out returns to PLAYGROUND, onto whichever of
+  // the two doors armed the mode — read before it is cleared.
+  const warpHome = ctx.botView ? "bot-view" : "select-level";
   const warpBack: MenuEntry = {
     label: "BACK",
     aria: rowAria("difficulty", "back"),
@@ -70,8 +72,8 @@ export function buildDifficultyMenu(
       ctx.setWarp(false);
       ctx.setBotView(false);
       ctx.setBotLevel(null);
-      ctx.setScreen("developer");
-      ctx.setCursor(0);
+      ctx.setScreen("playground");
+      ctx.setCursor(ctx.rowIndexIn("playground", warpHome));
     },
   };
   return [
@@ -148,7 +150,7 @@ export function buildDifficultyMenu(
       };
     }),
     // Re-home on the front door's NEW GAME row — where the tree says this
-    // picker hangs (the warp picker backs to DEVELOPER instead).
+    // picker hangs (the warp picker backs to PLAYGROUND instead).
     ctx.warp ? warpBack : backRow(ctx, "difficulty"),
   ];
 }
@@ -157,7 +159,7 @@ export function buildLevelsMenu(
   ctx: MenuContext,
   character: Character,
 ): MenuEntry[] {
-  // Warp mode (opened from the developer menu's SELECT LEVEL) ignores the
+  // Warp mode (opened from PLAYGROUND's SELECT LEVEL) ignores the
   // unlock gate: every level is reachable so you can try any of them, and
   // picking one drops straight into play with no intro. Backing out returns
   // to the warp difficulty picker it was launched from (still in warp mode).

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The roster + character-transfer plumbing behind SETTINGS → DATA and
-// DEVELOPER → SEED CHARACTERS: the roster snapshot (refreshed via a tick so
+// DEVELOPER → CHEATS → SEED CHARACTERS: the roster snapshot (refreshed via a tick so
 // an import/seed/purchase shows up), the EXPORT picker's tick-set, the
 // export/import runners, and the seed minting. Results surface through the
 // setNotice line TitleScreen renders under the menu.
@@ -137,7 +137,7 @@ export function useCharacterTransfer(
     input.click();
   }, [transferOpen, runImport]);
 
-  // DEVELOPER → SEED CHARACTERS: mint the melee/ranged/magic specimens for a
+  // DEVELOPER → CHEATS → SEED CHARACTERS: mint the melee/ranged/magic specimens for a
   // tier (or the whole 3×4 matrix with no tier) straight into the roster, then
   // refresh the roster snapshot and report the count under the menu.
   //
