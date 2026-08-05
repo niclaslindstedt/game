@@ -158,6 +158,13 @@ export const PRIVATE_RUN_FIELDS: readonly string[] = ["questOffer", "talk"];
  * (`TradeSide.item`). No bag is enumerable from it, which is the boundary the
  * private tier exists to hold — and the copy is presentation, so a client that
  * altered one would change a picture rather than a swap.
+ *
+ * **`tradeRequests` is off the list for the same reason and one more.** An ask
+ * is a fact about two seats too, and both ends have to see it: the target to
+ * answer it, the requester to know it is still standing. What it exposes is
+ * who asked whom — which the answer is about to make public anyway. It carries
+ * no countdown, only the stamp it was made at, so a standing request is a
+ * field the differ writes once and then never resends.
  */
 
 const STATIC = new Set(STATIC_FIELDS);

@@ -6,6 +6,7 @@
 // bottom docks live in their own components (ConsumableDock, PowerupDock).
 
 import { fieldLive, localHero } from "../local-seat.ts";
+import { useEffect, useRef } from "react";
 import type { MutableRefObject, ReactNode, RefObject } from "react";
 
 import { weaponDef, type GameState } from "@game/core";
@@ -122,6 +123,19 @@ export function PlayingHud({
       bumpUi();
     }
   };
+  // A NEW ASK CHIRPS ONCE. The pip is deliberately quiet furniture on a rail
+  // the player is not looking at mid-fight, so the arrival gets a sound —
+  // driven off the standing asks rather than an engine event, because the
+  // request is a fact that STANDS: a client whose snapshot arrived late still
+  // hears it, and a re-render for any other reason does not repeat it.
+  const askedBy = hud.tradeRequests.join(",");
+  const heardAsks = useRef(askedBy);
+  useEffect(() => {
+    const before = new Set(heardAsks.current.split(",").filter(Boolean));
+    const fresh = hud.tradeRequests.some((seat) => !before.has(String(seat)));
+    heardAsks.current = askedBy;
+    if (fresh) playUiSound(synth, "blip");
+  }, [askedBy, hud.tradeRequests]);
   const onPause = () => {
     if (fieldLive(state)) {
       // Latch it as viewer-initiated so BOT VIEW's autopilot won't clear the
@@ -544,9 +558,10 @@ export function PlayingHud({
               thirds. The portrait is the hero's own dressed paper-doll bust
               (the compositor the roster and the avatar already share); the
               sliver is their hp; DOWN grays the frame where they fell; a BAG
-              badge is D2's own "in their menus" affordance. A press asks for
-              a TRADE — the engine refuses it politely when either side is
-              busy, which is exactly what the badge warned. */}
+              badge is D2's own "in their menus" affordance. A press ASKS for a
+              trade (`requestTrade`, trade.ts rule 5) and raises nothing on
+              their screen — so the BAG badge now reads as "they may take a
+              moment to answer" rather than as a refusal waiting to happen. */}
           {hud.partyFrames.length > 0 && (
             <div className="party-frames">
               {hud.partyFrames.map((frame) => {
@@ -571,7 +586,7 @@ export function PlayingHud({
                     title={name}
                     onClick={() => {
                       if (!fieldLive(state)) return;
-                      if (runCommandOk(state, "openTrade", frame.seat)) {
+                      if (runCommandOk(state, "requestTrade", frame.seat)) {
                         playUiSound(synth, "confirm");
                         bumpUi();
                       }
@@ -614,6 +629,78 @@ export function PlayingHud({
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {/* THE ASKS: somebody wants to trade (trade.ts rule 5). A PIP under
+              the party frames — never a screen — because a request that
+              halted the target would be exactly the interruption the consent
+              step exists to prevent. The hero keeps fighting behind it; YES
+              raises the table on both seats, NO costs nobody anything, and
+              ignoring it lets the ask lapse on its own. */}
+          {hud.tradeRequests.length > 0 && (
+            <div className="trade-asks">
+              {hud.tradeRequests.map((seat) => (
+                <div className="trade-ask" key={seat}>
+                  {/* Two lines rather than one: the phone is the reference
+                      device, and a name plus a sentence on one row is the
+                      widest thing on this rail. */}
+                  <PixelText
+                    font={font}
+                    text={(seatName?.(seat) ?? `SEAT ${seat + 1}`)
+                      .slice(0, 8)
+                      .toUpperCase()}
+                    scale={2}
+                    color="#ffd75e"
+                  />
+                  <PixelText
+                    font={font}
+                    text="WANTS TO TRADE"
+                    scale={2}
+                    color="#9aa3ad"
+                  />
+                  <div className="trade-ask-row">
+                    <button
+                      type="button"
+                      className="trade-ask-btn yes"
+                      aria-label={`trade-accept-${seat}`}
+                      onClick={() => {
+                        // The engine's busy-hero refusal is the backstop here
+                        // (the requester may have wandered into their own bag
+                        // since asking), and the request is spent either way —
+                        // so the pip goes whatever the answer was.
+                        runCommandOk(state, "acceptTradeRequest", seat);
+                        playUiSound(synth, "confirm");
+                        bumpUi();
+                      }}
+                    >
+                      <PixelText
+                        font={font}
+                        text="YES"
+                        scale={2}
+                        color="#7cff9b"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className="trade-ask-btn no"
+                      aria-label={`trade-decline-${seat}`}
+                      onClick={() => {
+                        runCommandOk(state, "declineTradeRequest", seat);
+                        playUiSound(synth, "back");
+                        bumpUi();
+                      }}
+                    >
+                      <PixelText
+                        font={font}
+                        text="NO"
+                        scale={2}
+                        color="#ff9b9b"
+                      />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

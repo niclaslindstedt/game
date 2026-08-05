@@ -115,16 +115,23 @@ export {
 // module and the swap is a single transaction.
 export {
   acceptTrade,
+  acceptTradeRequest,
   cancelTrade,
+  declineTradeRequest,
   endTradesFor,
   isOfferedInTrade,
   offerCoins,
   offerItem,
   openTrade,
+  requestTrade,
+  stepTradeRequests,
   tradeOf,
   tradePartner,
+  tradeRequestMsLeft,
+  tradeRequestsTo,
   type Trade,
   type TradeRefusal,
+  type TradeRequest,
 } from "./game/trade.ts";
 export { requestTravel } from "./game/travel.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
@@ -1147,6 +1154,7 @@ export {
   STAMPEDES,
   STATS,
   STAT_REQ,
+  TRADE,
   UNIQUE,
   VAULT,
   WEAPON,

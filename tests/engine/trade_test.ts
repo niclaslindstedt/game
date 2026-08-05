@@ -7,29 +7,43 @@
 // and after, and check that no id exists twice and none has gone missing. A
 // test that only asserted "the sword arrived" would pass just as happily for an
 // implementation that left a copy behind.
+//
+// The FIRST block is the consent step (rule 5), and its assertions have a
+// different shape: they are about what does NOT happen to the person being
+// asked. A request that opened anything on the target's screen would be the
+// interruption the whole step exists to prevent, so nearly every test here
+// checks a `screen` that stayed undefined.
 
 import { describe, expect, it } from "vitest";
 
 import {
   acceptTrade,
+  acceptTradeRequest,
   cancelTrade,
+  declineTradeRequest,
   departHero,
   discardFromInventory,
+  downHero,
   equipFromInventory,
   isOfferedInTrade,
   moveInventoryItem,
   offerCoins,
   offerItem,
   openTrade,
+  requestTrade,
   seatHero,
+  step,
   tradeOf,
   tradePartner,
+  tradeRequestMsLeft,
+  tradeRequestsTo,
+  TRADE,
   type Equipment,
   type GameState,
   type Player,
 } from "@game/core";
 
-import { startGame } from "./helpers.ts";
+import { DT, idle, startGame, stopWaves } from "./helpers.ts";
 
 /** A plain piece, minted by hand so the suite never depends on a drop roll. */
 function piece(state: GameState, defId = "blaster"): Equipment {
@@ -70,6 +84,200 @@ function allIds(state: GameState): number[] {
   }
   return ids.sort((x, y) => x - y);
 }
+
+/** Two heroes on the field, nothing open on either screen, no waves. The
+ * staging every consent test starts from. */
+function pair(): { state: GameState; a: Player; b: Player } {
+  const state = startGame(17);
+  stopWaves(state);
+  state.enemies = [];
+  const a = state.players[0]!;
+  const b = seatHero(state, null);
+  return { state, a, b };
+}
+
+/** Push the run's clock forward by `ms` and let one tick sweep the lapsed
+ * asks. Faster and more exact than stepping thirty seconds of frames, and it
+ * still goes through `step()` — the pass has to actually be wired in. */
+function age(state: GameState, ms: number): void {
+  state.stats.timeMs += ms;
+  step(state, idle, DT);
+}
+
+describe("the ask before the table", () => {
+  it("opens nothing on either screen", () => {
+    // RULE 5's entire point. A request that raised a screen would be the
+    // interruption it exists to prevent.
+    const { state, a, b } = pair();
+    expect(requestTrade(state, a, 1)).toBeNull();
+    expect(a.screen).toBeUndefined();
+    expect(b.screen).toBeUndefined();
+    expect(state.trades ?? []).toHaveLength(0);
+    expect(tradeRequestsTo(state, 1).map((r) => r.from)).toEqual([0]);
+    expect(tradeRequestsTo(state, 0)).toHaveLength(0);
+  });
+
+  it("raises the table on both seats only once it is accepted", () => {
+    const { state, a, b } = pair();
+    requestTrade(state, a, 1);
+    expect(acceptTradeRequest(state, b, 0)).toBeNull();
+    expect(a.screen).toBe("trade");
+    expect(b.screen).toBe("trade");
+    expect(tradePartner(state, a)).toBe(1);
+    // The ask is spent — a table is standing, and a second acceptance of the
+    // same request must not be able to raise another.
+    expect(tradeRequestsTo(state, 1)).toHaveLength(0);
+    expect(acceptTradeRequest(state, b, 0)).toBe("no-request");
+  });
+
+  it("asks a hero who is busy, and lets them answer when they are free", () => {
+    // The BAG badge is a hint, not a refusal: somebody in their inventory is
+    // exactly who a non-blocking ask is for. The busy-hero rule stays on the
+    // OPEN, which is the accept path.
+    const { state, a, b } = pair();
+    b.screen = "inventory";
+    expect(requestTrade(state, a, 1)).toBeNull();
+    expect(b.screen).toBe("inventory");
+    b.screen = undefined;
+    expect(acceptTradeRequest(state, b, 0)).toBeNull();
+    expect(b.screen).toBe("trade");
+  });
+
+  it("refuses to ask from behind a screen", () => {
+    const { state, a } = pair();
+    a.screen = "inventory";
+    expect(requestTrade(state, a, 1)).toBe("busy");
+    expect(state.tradeRequests ?? []).toHaveLength(0);
+  });
+
+  it("refuses a seat nobody is behind, and yourself", () => {
+    const { state, a } = pair();
+    expect(requestTrade(state, a, 0)).toBe("bad-seat");
+    expect(requestTrade(state, a, 7)).toBe("bad-seat");
+    departHero(state, 1);
+    expect(requestTrade(state, a, 1)).toBe("bad-seat");
+    expect(state.tradeRequests ?? []).toHaveLength(0);
+  });
+
+  it("refuses to ask when either side is already at a table", () => {
+    const { state, a } = pair();
+    const c = seatHero(state, null);
+    openTrade(state, a, 1);
+    expect(requestTrade(state, a, 2)).toBe("busy");
+    expect(requestTrade(state, c, 0)).toBe("busy");
+  });
+
+  it("keeps one outstanding ask per seat, and re-asking refreshes it", () => {
+    // A player leaning on the button must not be able to paper a teammate's
+    // HUD with pips — but pressing again plainly means "still here", so the
+    // replacement restarts the clock.
+    const { state, a } = pair();
+    seatHero(state, null);
+    requestTrade(state, a, 1);
+    age(state, 10_000);
+    requestTrade(state, a, 2);
+    expect(state.tradeRequests).toHaveLength(1);
+    expect(tradeRequestsTo(state, 1)).toHaveLength(0);
+    requestTrade(state, a, 2);
+    const [again] = tradeRequestsTo(state, 2);
+    expect(tradeRequestMsLeft(state, again!)).toBe(TRADE.requestMs);
+  });
+
+  it("keeps the asks of two different requesters apart", () => {
+    const { state, a, b } = pair();
+    const c = seatHero(state, null);
+    requestTrade(state, a, 2);
+    requestTrade(state, b, 2);
+    expect(tradeRequestsTo(state, 2).map((r) => r.from)).toEqual([0, 1]);
+    // Answering one leaves the other standing — and the seat argument is what
+    // says which was answered.
+    expect(declineTradeRequest(state, c, 0)).toBe(true);
+    expect(tradeRequestsTo(state, 2).map((r) => r.from)).toEqual([1]);
+    expect(acceptTradeRequest(state, c, 1)).toBeNull();
+    expect(b.screen).toBe("trade");
+    expect(c.screen).toBe("trade");
+    expect(a.screen).toBeUndefined();
+  });
+
+  it("costs nobody anything when it is declined", () => {
+    const { state, a, b } = pair();
+    requestTrade(state, a, 1);
+    expect(declineTradeRequest(state, b, 0)).toBe(true);
+    expect(a.screen).toBeUndefined();
+    expect(b.screen).toBeUndefined();
+    expect(state.trades ?? []).toHaveLength(0);
+    expect(tradeRequestsTo(state, 1)).toHaveLength(0);
+    // Declining a second time answers nothing, and there is no cooldown on
+    // asking again.
+    expect(declineTradeRequest(state, b, 0)).toBe(false);
+    expect(requestTrade(state, a, 1)).toBeNull();
+  });
+
+  it("lapses on its own, and cannot raise a table afterwards", () => {
+    const { state, a, b } = pair();
+    requestTrade(state, a, 1);
+    age(state, TRADE.requestMs - 1_000);
+    expect(tradeRequestsTo(state, 1)).toHaveLength(1);
+    age(state, 2_000);
+    expect(tradeRequestsTo(state, 1)).toHaveLength(0);
+    expect(acceptTradeRequest(state, b, 0)).toBe("no-request");
+    expect(b.screen).toBeUndefined();
+  });
+
+  it("goes with a seat that departs, in both directions", () => {
+    const { state, a, b } = pair();
+    const c = seatHero(state, null);
+    requestTrade(state, a, 1);
+    requestTrade(state, b, 2);
+    departHero(state, 1);
+    expect(state.tradeRequests ?? []).toHaveLength(0);
+    expect(acceptTradeRequest(state, c, 1)).toBe("no-request");
+    void a;
+  });
+
+  it("goes with a seat that is knocked down", () => {
+    // A corpse cannot answer, and a table raised on one can never settle —
+    // the same rule a departure applies.
+    const { state, a, b } = pair();
+    seatHero(state, null);
+    requestTrade(state, a, 1);
+    downHero(state, b);
+    expect(state.tradeRequests ?? []).toHaveLength(0);
+  });
+
+  it("refuses an accept whose requester left play between ask and answer", () => {
+    const { state, a, b } = pair();
+    requestTrade(state, a, 1);
+    // Straight off the record rather than through `departHero`, so this tests
+    // the accept's OWN check rather than the teardown that would normally have
+    // dropped the ask first.
+    state.players[0]!.hp = 0;
+    expect(acceptTradeRequest(state, b, 0)).toBe("bad-seat");
+    expect(b.screen).toBeUndefined();
+    expect(state.trades ?? []).toHaveLength(0);
+    void a;
+  });
+
+  it("spends the ask when the requester is busy by the time it is answered", () => {
+    // The busy-hero refusal is rule 5's backstop, and a request that survived
+    // its own failure would be retried into the same refusal for ever.
+    const { state, a, b } = pair();
+    requestTrade(state, a, 1);
+    a.screen = "inventory";
+    expect(acceptTradeRequest(state, b, 0)).toBe("busy");
+    expect(a.screen).toBe("inventory");
+    expect(b.screen).toBeUndefined();
+    expect(tradeRequestsTo(state, 1)).toHaveLength(0);
+  });
+
+  it("costs a solo run nothing at all", () => {
+    const state = startGame(17);
+    stopWaves(state);
+    state.enemies = [];
+    step(state, idle, DT);
+    expect(state.tradeRequests).toBeUndefined();
+  });
+});
 
 describe("opening a table", () => {
   it("puts two seats at one table", () => {

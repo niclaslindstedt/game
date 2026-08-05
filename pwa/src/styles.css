@@ -7781,6 +7781,63 @@ canvas.tier-artifact {
   overflow: hidden;
 }
 
+/* ---- The trade ASK -------------------------------------------------------- */
+/* Somebody wants to trade (trade.ts rule 5). A pip under the party frames on
+   the same left rail — never a screen, because a request that halted the
+   target is the interruption the consent step exists to prevent. The gold
+   border is the same "somebody is talking to you" colour the quest marks and
+   the merchant toast use; the two answers are deliberately small and far
+   enough apart not to be hit while steering. */
+.trade-asks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  pointer-events: auto;
+}
+
+.trade-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.22rem 0.3rem;
+  max-width: 8.5rem;
+  background: rgba(11, 13, 16, 0.72);
+  border: 2px solid #7a6320;
+  border-radius: 5px;
+}
+
+.trade-ask-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.1rem;
+}
+
+/* Bigger than the text needs. These are answered with a thumb, in a fight,
+   on a phone — and the two answers sit next to each other, so the miss is
+   never harmless. */
+.trade-ask-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  min-height: 1.4rem;
+  padding: 0.1rem 0.4rem;
+  background: rgba(11, 13, 16, 0.6);
+  border: 2px solid #2f4a3a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.trade-ask-btn.no {
+  border-color: #4a1d1d;
+}
+
+.trade-ask-btn:active {
+  transform: translateY(2px);
+}
+
 /* The SPARE-or-KILL verdict box (ChoiceOverlay): the kneeling figure's face
    over two big fates. Shares the level-up box's window skin. */
 .choice-box {

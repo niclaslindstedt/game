@@ -34,6 +34,22 @@
 //     Nothing here takes a hero from a caller's claim; a command arrives for
 //     the seat the session admitted that client into (see `commands.ts`), and
 //     `tradePartner` is the only way to reach the other side.
+//  5. **AND NOBODY RAISES A TABLE ON SOMEBODY ELSE'S SCREEN.** A trade is
+//     REQUESTED (`requestTrade`) and the other player answers it
+//     (`acceptTradeRequest` / `declineTradeRequest`) or lets it lapse; only an
+//     acceptance calls `openTrade`. D2's shape, and the reason is not manners:
+//     the table is a `"trade"` screen on BOTH seats, so a unilateral open is a
+//     stranger taking a teammate's controls away mid-fight. The request itself
+//     must therefore cost the target NOTHING — it is a pip on their HUD, never
+//     a screen — or it recreates the interruption it exists to prevent.
+//
+// **A REQUEST IS A FACT ABOUT TWO SEATS, exactly as a trade is**, so it lives
+// on the run (`state.tradeRequests`) rather than in a private field on either
+// hero: held on one side, the two sides could disagree about whether an ask is
+// still standing. It replicates for free with everything else on the run, and
+// it obeys the same lifecycle a trade does — a seat that departs or goes down
+// takes its requests with it (`endTradesFor`), so nothing stale can raise a
+// table later.
 //
 // **WHAT THIS DELIBERATELY IS NOT.** There is no shared STASH. A stash is an
 // account-shaped store — it outlives a run, it has to merge across devices
@@ -43,6 +59,7 @@
 // something away and want it back"; a stash is its own feature and should be
 // designed as one rather than smuggled in beside this.
 
+import { TRADE } from "./config/index.ts";
 import { inventoryCapacity } from "./items/inventory.ts";
 import { heroInPlay } from "./party.ts";
 import { seatOf } from "./party.ts";
@@ -58,10 +75,142 @@ export type TradeRefusal =
   | "moved"
   | "not-accepted"
   | "no-room"
-  | "no-coins";
+  | "no-coins"
+  | "no-request";
+
+/**
+ * ASK a teammate for a trade (rule 5). Nothing opens on either screen; the
+ * target gets a pip and answers when they want to.
+ *
+ * Refused for the same reasons opening one is — a seat nobody is behind, a
+ * departed body, yourself, either side already at a table — plus the requester
+ * having a screen up, which is the same "be standing on the field to start
+ * this" rule `openTrade` applies to the acting hero. The TARGET's screen is
+ * deliberately NOT checked: somebody in their bag is exactly who a
+ * non-blocking ask is for, and the busy-hero refusal stays where it belongs,
+ * on the accept.
+ *
+ * ONE OUTSTANDING ASK PER SEAT. A re-request replaces the old one rather than
+ * queueing a second, so a player leaning on the button cannot paper a
+ * teammate's HUD with pips — and the replacement refreshes the clock, which is
+ * what a player pressing again means by it.
+ *
+ * NO EVENT IS EMITTED, deliberately. The ask is a fact that STANDS rather than
+ * a moment that happened, so the pip (and the chirp the app gives it) are
+ * driven off `state.tradeRequests` — which means a client whose snapshot
+ * arrived a frame late still draws it, where a missed event would have shown
+ * nothing at all until the request lapsed.
+ */
+export function requestTrade(
+  state: GameState,
+  actor: Player,
+  targetSeat: number,
+): TradeRefusal | null {
+  const seat = seatOf(state, actor);
+  if (seat === null || seat === targetSeat) return "bad-seat";
+  // BOTH ends have to be somebody in play. A hero lying on the ground steers
+  // nothing and holds no screen, so the busy check below would wave them
+  // through — and an ask from a corpse is one `endTradesFor` was never given a
+  // chance to clear.
+  if (!heroInPlay(actor)) return "bad-seat";
+  const target = state.players[targetSeat];
+  if (!target || !heroInPlay(target)) return "bad-seat";
+  if (tradeOf(state, seat) || tradeOf(state, targetSeat)) return "busy";
+  if (actor.screen !== undefined) return "busy";
+  const open = (state.tradeRequests ??= []);
+  const existing = open.findIndex((r) => r.from === seat);
+  if (existing >= 0) open.splice(existing, 1);
+  open.push({ from: seat, to: targetSeat, atMs: state.stats.timeMs });
+  return null;
+}
+
+/**
+ * Answer YES to the ask from `fromSeat` — the one call that raises a table.
+ *
+ * The request is SPENT either way: an accept that `openTrade` refuses (the
+ * requester wandered into their own bag in the meantime — rule 5's backstop)
+ * leaves nothing standing to be tried again into the same refusal, and the
+ * requester is free to ask again. A stale request that survived its own
+ * failure is precisely the thing that raises a table nobody is expecting.
+ */
+export function acceptTradeRequest(
+  state: GameState,
+  actor: Player,
+  fromSeat: number,
+): TradeRefusal | null {
+  const seat = seatOf(state, actor);
+  if (seat === null) return "bad-seat";
+  const open = state.tradeRequests ?? [];
+  const index = open.findIndex((r) => r.from === fromSeat && r.to === seat);
+  if (index < 0) return "no-request";
+  open.splice(index, 1);
+  const requester = state.players[fromSeat];
+  if (!requester || !heroInPlay(requester)) return "bad-seat";
+  // The TABLE is opened as the REQUESTER's — they are `openTrade`'s acting
+  // hero and the accepting seat is the partner. Which way round it is makes no
+  // difference to the trade (the two sides are symmetric), but it keeps the
+  // busy-hero check reading the way rule 5 words it: the person who asked is
+  // the one who has to still be free to have meant it.
+  return openTrade(state, requester, seat);
+}
+
+/** Answer NO. Costs the decliner nothing and the requester nothing but the
+ * ask — there is no cooldown, deliberately: a decline the game punishes is a
+ * decline players stop giving, and an ignored request is worse for everybody
+ * than a fast no. */
+export function declineTradeRequest(
+  state: GameState,
+  actor: Player,
+  fromSeat: number,
+): boolean {
+  const seat = seatOf(state, actor);
+  if (seat === null) return false;
+  const open = state.tradeRequests ?? [];
+  const index = open.findIndex((r) => r.from === fromSeat && r.to === seat);
+  if (index < 0) return false;
+  open.splice(index, 1);
+  return true;
+}
+
+/** The standing asks THIS seat has been sent, oldest first — what the HUD
+ * draws a pip for. */
+export function tradeRequestsTo(
+  state: GameState,
+  seat: number,
+): TradeRequest[] {
+  return (state.tradeRequests ?? []).filter((r) => r.to === seat);
+}
+
+/** How much longer this ask stands (ms), for the pip's own countdown. */
+export function tradeRequestMsLeft(
+  state: GameState,
+  request: TradeRequest,
+): number {
+  return Math.max(0, TRADE.requestMs - (state.stats.timeMs - request.atMs));
+}
+
+/**
+ * DROP THE ASKS THAT HAVE LAPSED. Run every tick from the step pipeline,
+ * straight after the run's clock advances — so a request ages on RUN time and
+ * a party that all stepped behind screens at once comes back to the ask they
+ * left standing.
+ *
+ * Costs nothing without requests, which is every single-player run there is.
+ */
+export function stepTradeRequests(state: GameState): void {
+  const open = state.tradeRequests;
+  if (!open?.length) return;
+  const kept = open.filter((r) => tradeRequestMsLeft(state, r) > 0);
+  if (kept.length !== open.length) state.tradeRequests = kept;
+}
 
 /**
  * Open a trade between the hero acting and the seat they named.
+ *
+ * **NOT A VERB THE APP MAY SEND** — reached only through
+ * `acceptTradeRequest`, because a table raised without the other player's yes
+ * is rule 5's whole subject. It stays a function of its own so the consent
+ * step and the transaction it guards remain separable.
  *
  * Refused if either side is already trading — a hero in two trades at once is
  * the shape that lets one item be promised twice — or if the partner is not
@@ -78,10 +227,12 @@ export function openTrade(
   const partner = state.players[partnerSeat];
   if (!partner || !heroInPlay(partner)) return "bad-seat";
   if (tradeOf(state, seat) || tradeOf(state, partnerSeat)) return "busy";
-  // Both heroes must be FREE — standing on the field with nothing open. A
-  // table raised over somebody's bag or mid-respec would hijack a screen they
-  // are using, and there is no request/consent step to soften it with: the
-  // refusal IS the consent model until one exists.
+  // Both heroes must be FREE — standing on the field with nothing open. The
+  // consent step is the answer to "should this table exist at all"; this is
+  // the answer to "is either of them in the middle of something else right
+  // now", and a table raised over somebody's bag or mid-respec would still
+  // hijack a screen they are using. So it stays as the backstop on the accept
+  // path (rule 5).
   if (actor.screen !== undefined || partner.screen !== undefined) {
     return "busy";
   }
@@ -284,6 +435,15 @@ export function tradePartner(state: GameState, player: Player): number | null {
  * other side will never accept and whose items can never be settled.
  */
 export function endTradesFor(state: GameState, seat: number): void {
+  // THE ASKS GO WITH THE TABLES, in both directions. A request this seat sent
+  // would otherwise raise a table on somebody's screen for a hero who is a
+  // corpse or a vacancy by the time it is answered, and one they were sent
+  // would sit as a pip that can never be honoured.
+  const asked = state.tradeRequests;
+  if (asked?.length) {
+    const kept = asked.filter((r) => r.from !== seat && r.to !== seat);
+    if (kept.length !== asked.length) state.tradeRequests = kept;
+  }
   const open = state.trades;
   if (!open?.length) return;
   const ended = open.filter((trade) => trade.seats.includes(seat));
@@ -300,6 +460,24 @@ export function endTradesFor(state: GameState, seat: number): void {
 export type Trade = {
   seats: [number, number];
   offers: [TradeSide, TradeSide];
+};
+
+/**
+ * ONE STANDING ASK (rule 5). Two seats and the moment it was made — and it is
+ * a MOMENT rather than a countdown on purpose: a `msLeft` ticking down every
+ * frame would be a field the snapshot differ resends twenty times a second for
+ * half a minute, where a stamp is written once and never touched again.
+ *
+ * `atMs` is `GameStats.timeMs`, the run's own clock, so an ask ages on the
+ * time the party actually played rather than on wall clock.
+ */
+export type TradeRequest = {
+  /** The seat that asked. */
+  from: number;
+  /** The seat being asked. */
+  to: number;
+  /** `state.stats.timeMs` when the ask was made. */
+  atMs: number;
 };
 
 function emptySide(): TradeSide {
