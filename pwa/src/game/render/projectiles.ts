@@ -9,6 +9,7 @@ import { drawFaded } from "@ui/lib/canvas-fade.ts";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawProjectileTrail, shotStyleFor } from "../weapon-fx.ts";
+import { seatX, seatY } from "./shared.ts";
 import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -51,8 +52,8 @@ function drawProjectilePass(
     // stands clear of the foreshortening the ground under it takes — and so
     // does the signature trail streaming behind it.
     beginBillboard(ctx, projectile.pos.x, projectile.pos.y, camera.x, camera.y);
-    const px = Math.round(projectile.pos.x - camera.x);
-    const py = Math.round(projectile.pos.y - camera.y - projectile.z);
+    const px = seatX(projectile.pos.x, camera.x);
+    const py = seatY(projectile.pos.y, camera.y) - Math.round(projectile.z);
     // The hero's own round/bolt carries its weapon's signature glow trail —
     // drawn UNDER the sprite. Only his shots (not hostile, not a companion's).
     // Uses the CURRENTLY held weapon's shot style (an in-flight round can't

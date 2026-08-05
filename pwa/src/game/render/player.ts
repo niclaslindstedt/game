@@ -34,7 +34,14 @@ import {
   weaponCoat,
   type CoatLayer,
 } from "./soak-ladder.ts";
-import { clamp01, drawSpriteCentered, fract, TILE } from "./shared.ts";
+import {
+  clamp01,
+  drawSpriteCentered,
+  fract,
+  seatX,
+  seatY,
+  TILE,
+} from "./shared.ts";
 import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -558,10 +565,14 @@ function drawHero(
   // The step's own rise and the standstill breath ride on top of all that — a
   // hero in the air is on his jump arc and gets neither.
   const stride = airborne ? 0 : gait.lift;
-  const x = Math.round(player.pos.x - TILE / 2 - camera.x);
-  const y = Math.round(
-    player.pos.y - TILE / 2 - camera.y - player.z - hover + stride,
-  );
+  // Seat, then a WHOLE-pixel step: the half-tile is a constant and the height
+  // off the floor is its own rounded offset, so the hero never twitches against
+  // his own shadow, coat and aura (see `seatX`).
+  const x = seatX(player.pos.x, camera.x) - TILE / 2;
+  const y =
+    seatY(player.pos.y, camera.y) -
+    TILE / 2 -
+    Math.round(player.z + hover - stride);
 
   // DEAD: the hero has fallen (the `dying` death scene, and on through the
   // `defeat` splash behind the modal). Lay him sprawled on his back in a
@@ -811,8 +822,8 @@ function drawDeadHero(
   // The scene's own clock in ms — the pool and spray ride THIS, not the sim
   // clock, which is frozen while `dying`. Held past the end behind the modal.
   const sceneMs = scene ? scene.ms : DEATH_SCENE.durationMs;
-  const cx = Math.round(player.pos.x - camera.x);
-  const cy = Math.round(player.pos.y - camera.y + 5); // the ground line
+  const cx = seatX(player.pos.x, camera.x);
+  const cy = seatY(player.pos.y, camera.y) + 5; // the ground line
 
   // The blood, under the body (the body lies IN the pool): the growing puddle,
   // the rivulets creeping outward, and the welling droplets.
@@ -1088,8 +1099,9 @@ export function drawLevelUpBurn(
   if (left <= 0) return;
   const duration = LEVELING.dingCelebrationMs;
   const t = 1 - left / duration; // 0 → 1 across the celebration
-  const x = Math.round(localHero(state).pos.x - camera.x);
-  const y = Math.round(localHero(state).pos.y - camera.y - localHero(state).z);
+  const x = seatX(localHero(state).pos.x, camera.x);
+  const y =
+    seatY(localHero(state).pos.y, camera.y) - Math.round(localHero(state).z);
   // The burn is sized to the level just reached, like the rest of the ding
   // (levelup-intensity.ts): a modest early wreath, a towering pillar at the
   // cap. It folds into `fade`, so every layer below dims together.

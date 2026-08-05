@@ -155,15 +155,21 @@ export function unprojectY(sx: number, sy: number): number {
  * scene is RIGID.
  *
  * Rounding the camera-relative offset instead — `round(project(world - camera))`
- * — is the bug this exists to prevent, and it is invisible on one axis and
- * glaring on the other. Square-on, x projects through the identity and the
- * camera is a whole world unit (`computeCamera` rounds), so every body's
- * rounding moves in lockstep and the picture is solid east-west. In y the pitch
- * is a FRACTION, so a whole world unit of camera travel is 0.75 of a screen
- * pixel: each body crosses its own rounding boundary at its own moment, and two
- * props 16.4 units apart sit 12 px apart on one frame and 13 on the next. The
- * whole field visibly squeezes and stretches as the hero walks north, while the
- * baked floor — one rigid blit — sits still underneath and gives it away.
+ * — is the bug this exists to prevent. The camera's world point is EXACT
+ * (`computeCamera` deliberately does not round it: view.ts), so `world - camera`
+ * sweeps continuously and each body crosses its own rounding boundary at its own
+ * moment. Two props 16.4 units apart sit 12 px apart on one frame and 13 on the
+ * next: the whole field visibly squeezes and stretches as the hero walks, while
+ * the baked floor — one rigid blit — sits still underneath and gives it away.
+ * It is loudest in y, where the pitch makes a world unit of travel 0.75 of a
+ * screen pixel, but square-on x is no more exempt than y is.
+ *
+ * The MATCHING rule for everything drawn INSIDE the resulting billboard is
+ * `seatX`/`seatY` (render/shared.ts): the shift below subtracts the caller's own
+ * `Math.round(pos - camera)`, so that is the only rounding a pass may do, and
+ * every offset it adds — half a sprite, a hover, a height off the floor — has to
+ * be a whole pixel of its own. Folding a fractional one inside that round undoes
+ * the cancellation and the body shivers a pixel against this rigid anchor.
  *
  * The camera half is also what the fog's dither lattice registers against
  * (`fogGridAnchor`) and what the ground layer's blit steps by, so all three sit

@@ -28,7 +28,7 @@ import { XP_TUNING, type GameState } from "@game/core";
 
 import { localHero } from "../local-seat.ts";
 import { glowSprite } from "./caches.ts";
-import { fract } from "./shared.ts";
+import { fract, seatX, seatY } from "./shared.ts";
 import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -117,8 +117,8 @@ export function drawXpBoostVeil(
   const halo = glowSprite(VEIL_RGB, HALO_RADIUS);
   if (!halo) return;
 
-  const x = Math.round(hero.pos.x - camera.x);
-  const y = Math.round(hero.pos.y - camera.y - hero.z);
+  const x = seatX(hero.pos.x, camera.x);
+  const y = seatY(hero.pos.y, camera.y) - Math.round(hero.z);
 
   // Billboarded as one piece, like the ding's burn: the halo is a shroud
   // AROUND a standing body and the motes climb, and foreshortening either with

@@ -19,6 +19,7 @@
 
 import { isFloorPlaneSprite } from "../assets.ts";
 import { flatSprite } from "./caches.ts";
+import { seatX, seatY } from "./shared.ts";
 import { billboard, bodyAnchorX, bodyAnchorY } from "./tilt.ts";
 
 /**
@@ -46,21 +47,26 @@ export function drawWorldSprite(
     // apply it a second time.
     const flat = flatSprite(sprite, name);
     if (!flat) return;
+    // Seat first, then step back by a WHOLE half-sprite — see `seatX`. A wall
+    // panel or a cable run baked to an odd height is exactly the art that
+    // shivered when the two were rounded together.
     billboard(ctx, pos.x, pos.y, camera.x, camera.y, () =>
       ctx.drawImage(
         flat,
-        Math.round(pos.x - flat.width / 2 - camera.x),
-        Math.round(pos.y - flat.height / 2 - camera.y),
+        seatX(pos.x, camera.x) - Math.round(flat.width / 2),
+        seatY(pos.y, camera.y) - Math.round(flat.height / 2),
       ),
     );
     return;
   }
-  const yAnchor = anchor === "base" ? sprite.height - 2 : sprite.height / 2;
+  const yAnchor = Math.round(
+    anchor === "base" ? sprite.height - 2 : sprite.height / 2,
+  );
   billboard(ctx, pos.x, pos.y, camera.x, camera.y, () =>
     ctx.drawImage(
       sprite,
-      Math.round(pos.x - sprite.width / 2 - camera.x),
-      Math.round(pos.y - yAnchor - camera.y),
+      seatX(pos.x, camera.x) - Math.round(sprite.width / 2),
+      seatY(pos.y, camera.y) - yAnchor,
     ),
   );
 }
@@ -77,9 +83,9 @@ export function drawWorldSprite(
  * floor of blood WOBBLE — a nearest-neighbour squash decides which rows to drop
  * from the DESTINATION offset, so a floor whose destination moves 0.75 px per
  * world unit of northward travel re-picks them every frame, and the stains crawl
- * against a ground layer that is a single rigid blit. East-west travel hid it
- * completely: there the projection is the identity and `computeCamera` rounds to
- * a whole world unit, so nothing ever landed between two pixels.
+ * against a ground layer that is a single rigid blit. Northward travel is where
+ * it shouts, the pitch being the fraction it is, but the camera's world point is
+ * exact on both axes (view.ts), so east-west was never actually exempt.
  *
  * The seat is `bodyAnchor*` — the same whole-pixel lattice the standing bodies,
  * the ground blit and the fog's dither register against — so the blood steps

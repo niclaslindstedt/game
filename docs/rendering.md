@@ -49,10 +49,11 @@ ONE DECIDES WHETHER IT WOBBLES.** A pass drawn live inside
 decides which rows to drop from the DESTINATION offset — so at pitch 0.75, where
 a world unit of northward travel moves that offset three quarters of a pixel,
 every piece re-picks its dropped rows at its own moment while the baked ground
-layer under it sits perfectly still. That is what made the BLOOD wobble as the
-hero walked north or diagonally and hold rock steady walking east or west (there
-the projection is the identity and `computeCamera` rounds to a whole world unit,
-so nothing lands off a pixel). The fix is the ground layer's and the flat
+layer under it sits perfectly still. That is what made the BLOOD wobble hardest
+as the hero walked north or diagonally — north is the axis the pitch actually
+foreshortens — though the camera's world point is exact on both axes
+(`computeCamera` deliberately does not round it), so east-west was quieter rather
+than exempt. The fix is the ground layer's and the flat
 furniture's: bake the art through the projection ONCE (`bakeFlat`) and blit it in
 SCREEN space at the decal's own whole-pixel seat — `render/plane.ts`
 `drawFloorDecal`, used by the blood grid and the boot prints, seated on
@@ -142,15 +143,15 @@ merchant, and where a floating DOM label pins itself all follow from that pair.
 **A BODY'S PIXEL GRID IS ITS OWN, NOT THE CAMERA'S — quantize the two ends
 SEPARATELY.** `beginBillboard` used to place a body at
 `round(project(world - camera))`, rounding the camera-relative offset in ONE
-go, so every body's rounding phase depended on where the camera was. Square-on
-that is exact in x (the projection is the identity there and `computeCamera`
-rounds to a whole world unit, so every body's rounding moves in lockstep) —
-which is exactly what hid the bug on one axis for as long as it existed. In y
-the pitch is a FRACTION, so a whole unit of camera travel is 0.75 of a screen
-pixel and each body crosses its own rounding boundary at its own moment: two
-static props 16.4 units apart measured 12 px apart on one frame and 13 on the
-next, and the whole field rippled as the hero walked north. Under a yaw there
-was no solid axis left at all. Floor tiles were exempt because the baked ground
+go, so every body's rounding phase depended on where the camera was. The
+camera's world point is EXACT — `computeCamera` deliberately does not round it,
+because a camera quantized in WORLD units projects to fractional SCREEN steps
+and the hero rocks above and below centre — so `world - camera` sweeps
+continuously and each body crosses its own rounding boundary at its own moment:
+two static props 16.4 units apart measured 12 px apart on one frame and 13 on
+the next, and the whole field rippled as the hero walked. It shouts in y, where
+the pitch makes a world unit of travel 0.75 of a screen pixel, and under a yaw
+there is no quiet axis left at all. Floor tiles were exempt because the baked ground
 layer is a single rigid blit — which is what made the rest of the picture look
 like it was warping against a floor that wasn't.
 
@@ -166,6 +167,34 @@ it. `tests/world_tilt_test.ts` sweeps 36 projections (pitch 1 → 0.25 × yaw
 0° → 45°) asserting the screen distance between static bodies does not change
 as the camera pans — against the old math 35 of the 36 fail, every setting
 except the true no-op at pitch 1, yaw 0.
+
+**…AND INSIDE THAT BILLBOARD, ROUND THE SEAT AND ADD WHOLE PIXELS — `seatX` /
+`seatY` (`render/shared.ts`), THE ONLY PLACE A CAMERA-RELATIVE OFFSET MAY BE
+ROUNDED.** `beginBillboard` shifts a body's space by
+`bodyAnchor − Math.round(pos − camera)`, and that subtraction exists to CANCEL
+the pass's own `Math.round(pos − camera)` so the body lands exactly on the rigid
+anchor above. Round the seat and an offset TOGETHER —
+`Math.round(pos.x − sprite.width / 2 − camera.x)`, which is what `spriteTopLeft`
+and a dozen passes did — and the cancellation only survives when the offset is a
+whole number. Half of an EVEN sprite is; half of an ODD one is `k + 0.5`, the two
+rounds step at different fractions of `pos − camera`, and their difference flips
+between two values as the camera tracks.
+
+That is the WOBBLE, and its signature is that it afflicts only SOME of the art:
+a 12×12 ammo box sat perfectly still on the same floor a 14×9 pile of coins
+shivered on. **The axis a piece wobbles on is the axis its ODD dimension is on**
+— odd width east/west, odd height north/south, odd × odd everywhere — which is
+also why turning the yaw up makes it general: under a yaw both screen axes are
+mixtures of both world ones, so any direction of travel moves both seats and
+every odd-dimensioned sprite in the atlas shivers at once. Of the 1834 frames in
+the shipped atlas, 222 have an odd dimension.
+
+So half a sprite, half a health bar, a hover, a lift, a jump's height off the
+floor: each is rounded to a whole pixel of its OWN and then added to a seat.
+`tests/world_tilt_test.ts` sweeps the same 36 projections × five sprite sizes
+covering all four parities, along a deliberately fractional camera walk (whole
+world steps hide it — every body lands on the same side of its boundary every
+time), asserting a sprite's top-left keeps ONE fixed offset from its seat.
 
 **AND THE FRONTIER GLIDES RATHER THAN LURCHING, WHICH IS A DIFFERENT DEFECT
 FROM THE ONE ABOVE.** `state.explored` is one byte per `MAP.cellSize` (32 world

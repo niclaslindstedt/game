@@ -27,7 +27,7 @@ import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { withStance } from "./gait.ts";
-import { drawSpriteFacing } from "./shared.ts";
+import { drawSpriteFacing, seatX, seatY } from "./shared.ts";
 import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -93,8 +93,8 @@ export function drawFauna(
     if (!sprite) continue;
     const w = sprite.width * critter.scale;
     const h = sprite.height * critter.scale;
-    const x = Math.round(at.x - camera.x - w / 2);
-    const y = Math.round(at.y - camera.y - h / 2);
+    const x = seatX(at.x, camera.x) - Math.round(w / 2);
+    const y = seatY(at.y, camera.y) - Math.round(h / 2);
     // An animal stands on the field like everything else with legs — and its
     // WANDER foreshortens with the floor, which is what makes a herd read as
     // spread across the ground rather than stacked up a wall.

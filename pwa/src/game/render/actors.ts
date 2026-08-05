@@ -21,6 +21,7 @@ import {
   drawSpriteCentered,
   drawSpriteFacing,
   makeInView,
+  seatX,
   spriteTopLeft,
   worldViewOf,
 } from "./shared.ts";
@@ -71,7 +72,7 @@ export function drawMerchant(
       const bob = Math.round(Math.sin(timeMs / 320) * 1.5);
       ctx.drawImage(
         coin,
-        Math.round(merchant.pos.x - coin.width / 2 - camera.x),
+        seatX(merchant.pos.x, camera.x) - Math.round(coin.width / 2),
         y - coin.height - 1 + bob,
       );
     }
@@ -126,7 +127,7 @@ export function drawCompanions(
     // down any more, and a bar that filled would promise a revive that is not
     // coming (the salts are, and they are in the player's bag).
     const barWidth = 16;
-    const bx = Math.round(companion.pos.x - barWidth / 2 - camera.x);
+    const bx = seatX(companion.pos.x, camera.x) - Math.round(barWidth / 2);
     const by = y - 6;
     if (downed) {
       ctx.fillStyle = "#0b0d10";

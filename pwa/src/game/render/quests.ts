@@ -27,6 +27,7 @@ import { walkFrame, walkGait, withStance } from "./gait.ts";
 import {
   drawSpriteFacing,
   makeInView,
+  seatX,
   spriteTopLeft,
   worldViewOf,
 } from "./shared.ts";
@@ -83,7 +84,7 @@ export function drawQuestGivers(
       { tilt: gait.tilt },
       () => drawSpriteFacing(ctx, sprite, x, bodyY, giver.faceLeft),
     );
-    drawMark(ctx, sprites, state, giver.id, giver.pos.x - camera.x, y);
+    drawMark(ctx, sprites, state, giver.id, seatX(giver.pos.x, camera.x), y);
     endBillboard(ctx);
   }
 }
@@ -94,7 +95,8 @@ function drawMark(
   sprites: GameAssets["sprites"],
   state: GameState,
   giverId: string,
-  screenX: number,
+  /** The glyph owner's whole-pixel seat (`seatX`) — never a raw offset. */
+  seat: number,
   headY: number,
 ): void {
   const mark = giverMark(state, giverId);
@@ -110,7 +112,7 @@ function drawMark(
   );
   ctx.drawImage(
     glyph,
-    Math.round(screenX - glyph.width / 2),
+    seat - Math.round(glyph.width / 2),
     headY - glyph.height - 2 + bob,
   );
 }
@@ -150,7 +152,7 @@ export function drawEscorts(
       () => drawSpriteFacing(ctx, sprite, x, bodyY, escort.faceLeft),
     );
     if (escort.hp < escort.maxHp) {
-      drawEscortBar(ctx, escort.pos.x - camera.x, y - 4, escort);
+      drawEscortBar(ctx, seatX(escort.pos.x, camera.x), y - 4, escort);
     }
     if (escort.waiting) {
       // The leash tell: the same grey `?` the tracker's "in progress" state
@@ -159,7 +161,7 @@ export function drawEscorts(
       if (glyph) {
         ctx.drawImage(
           glyph,
-          Math.round(escort.pos.x - camera.x - glyph.width / 2),
+          seatX(escort.pos.x, camera.x) - Math.round(glyph.width / 2),
           y - glyph.height - 8,
         );
       }
@@ -171,13 +173,14 @@ export function drawEscorts(
 /** A short health bar over an escort — green, not the horde's red. */
 function drawEscortBar(
   ctx: CanvasRenderingContext2D,
-  screenX: number,
+  /** The escort's whole-pixel seat (`seatX`) — never a raw offset. */
+  seat: number,
   y: number,
   escort: { hp: number; maxHp: number },
 ): void {
   const w = 18;
   const frac = Math.max(0, Math.min(1, escort.hp / escort.maxHp));
-  const x = Math.round(screenX - w / 2);
+  const x = seat - Math.round(w / 2);
   ctx.fillStyle = "#1a1c2c";
   ctx.fillRect(x - 1, y - 1, w + 2, 4);
   ctx.fillStyle = frac > 0.35 ? "#63c74d" : "#e8b93e";

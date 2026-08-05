@@ -28,6 +28,48 @@ export { clamp01 } from "@game/lib/vec.ts";
 
 import { worldViewRect } from "./tilt.ts";
 
+/**
+ * THE SEAT — the whole-pixel spot a world point takes inside its own billboard,
+ * and THE ONLY PLACE A CAMERA-RELATIVE OFFSET MAY BE ROUNDED.
+ *
+ * `beginBillboard` (render/tilt.ts) hands each body a 1:1 space shifted by
+ * `bodyAnchor − Math.round(pos − camera)`, and that subtraction is the whole
+ * contract: it CANCELS the caller's own `Math.round(pos − camera)`, leaving the
+ * body sitting exactly on the rigid, separately-quantized anchor. So the rule
+ * every pass has to obey is:
+ *
+ *   **Round the seat, then add WHOLE pixels.** Never round the seat and an
+ *   offset together — `Math.round(pos.x − sprite.width / 2 − camera.x)`.
+ *
+ * Folding a fractional offset inside that round is THE WOBBLE, and it is a
+ * one-pixel jitter that only shows on SOME of the art, which is what makes it so
+ * confusing to look at. `Math.round(rel − w/2)` equals `Math.round(rel) − w/2`
+ * for an EVEN `w` — the half is an integer, so it factors straight out and the
+ * cancellation still holds. For an ODD `w` the half is `k + 0.5`, the two rounds
+ * step at different fractions of `rel`, and their difference flips between two
+ * values as the camera moves. `computeCamera` deliberately keeps the camera's
+ * world point EXACT (view.ts), so `rel` sweeps continuously and the flip happens
+ * several times a second: the sprite twitches a pixel against its own glow, its
+ * shadow, and the rigid ground under it.
+ *
+ * That is why a 12×12 ammo box sat still while a 14×9 pile of coins shivered,
+ * and why the axis it shivers on is the axis its odd dimension is on — an odd
+ * WIDTH twitches as the camera tracks east/west, an odd HEIGHT as it tracks
+ * north/south. Under a YAW both screen axes are mixtures of both world ones, so
+ * every direction of travel moves both seats and an isometric camera makes every
+ * odd-dimensioned sprite in the atlas shiver at once.
+ *
+ * Half a sprite, half a health bar, a hover, a lift, a height off the floor: all
+ * of them are offsets, and all of them get rounded to a whole pixel of their own
+ * BEFORE they are added to a seat.
+ */
+export function seatX(worldX: number, cameraX: number): number {
+  return Math.round(worldX - cameraX);
+}
+export function seatY(worldY: number, cameraY: number): number {
+  return Math.round(worldY - cameraY);
+}
+
 /** Top-left screen position (rounded) that centres `sprite` on world `pos`. */
 export function spriteTopLeft(
   pos: { x: number; y: number },
@@ -35,8 +77,8 @@ export function spriteTopLeft(
   camera: { x: number; y: number },
 ): { x: number; y: number } {
   return {
-    x: Math.round(pos.x - sprite.width / 2 - camera.x),
-    y: Math.round(pos.y - sprite.height / 2 - camera.y),
+    x: seatX(pos.x, camera.x) - Math.round(sprite.width / 2),
+    y: seatY(pos.y, camera.y) - Math.round(sprite.height / 2),
   };
 }
 
