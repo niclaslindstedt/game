@@ -1,21 +1,46 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: item_collected_repair
 description: >-
-  The treasure flourish — brighter and wetter for magic+ finds.
+  A repair kit stashed into the consumable dock: the toolbox latch shutting — two
+  hard metallic clicks close together — then a bright fourth up (G5 → C6) on a
+  detuned triangle so it rings like struck metal rather than singing. All
+  hardware where the medkit a rung below is all cloth, which is what keeps the
+  two dock pickups apart with your eyes shut. Kept quiet and short: the
+  ratchet-and-ring mend belongs to `repairKitUsed`, the moment the kit is
+  actually spent.
 on:
   type: itemCollected
   kind: repair
 voices:
+  # The latch: two clicks, the second thinner and higher, as a catch sounds.
   - call: noise
-    durationMs: 45
-    volume: 0.02
+    durationMs: 22
+    volume: 0.026
     filter:
       type: bandpass
-      frequency: 2200
-      q: 1
+      frequency: 2600
+      q: 1.8
+  - call: noise
+    durationMs: 22
+    volume: 0.02
+    delayMs: 55
+    filter:
+      type: bandpass
+      frequency: 3400
+      q: 1.8
+  # Stowed: struck metal, detuned wide enough to shimmer.
   - call: tone
     type: triangle
-    from: 660
-    durationMs: 70
-    volume: 0.03
-    delayMs: 30
+    from: 784
+    durationMs: 50
+    volume: 0.028
+    delayMs: 40
+    detuneCents: 8
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 90
+    volume: 0.028
+    delayMs: 95
+    detuneCents: 8
+    echo: 0.15

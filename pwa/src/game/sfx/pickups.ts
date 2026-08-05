@@ -67,29 +67,88 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
           echo: 0.45,
         });
       } else if (event.kind === "repair") {
-        // Repair kits now STASH into the consumable dock rather than firing on
-        // contact — so the pickup is a soft metallic "tuck the toolbox away"
-        // click, leaving the satisfying ratchet-and-ring mend chime for the
-        // moment it's actually spent (see the repairKitUsed case).
+        // A repair kit stashed into the consumable dock: the toolbox latch
+        // shutting — two hard metallic clicks — then a bright fourth up
+        // (G5 → C6) on a detuned triangle, so it rings like struck metal. All
+        // hardware where the medkit below it is all cloth. The satisfying
+        // ratchet-and-ring mend belongs to the moment it is actually spent (see
+        // the repairKitUsed case). Kept byte-identical to
+        // `content/sounds/item_collected_repair.yaml`, which is the shipped
+        // voice (the catalog answers first — see sfx/index.ts); this is the
+        // fallback, and `tests/sound_catalog_test.ts` proves the two agree.
         synth.noise({
-          durationMs: 45,
+          durationMs: 22,
+          volume: 0.026,
+          filter: { type: "bandpass", frequency: 2600, q: 1.8 },
+        });
+        synth.noise({
+          durationMs: 22,
           volume: 0.02,
-          filter: { type: "bandpass", frequency: 2200, q: 1 },
+          delayMs: 55,
+          filter: { type: "bandpass", frequency: 3400, q: 1.8 },
         });
         synth.tone({
           type: "triangle",
-          from: 660,
-          durationMs: 70,
-          volume: 0.03,
-          delayMs: 30,
+          from: 784,
+          durationMs: 50,
+          volume: 0.028,
+          delayMs: 40,
+          detuneCents: 8,
         });
-      } else if (event.kind === "drink" || event.kind === "medkit") {
-        // Medkits and stamina potions now STASH into the consumable dock rather
-        // than firing on contact — so the pickup is a soft "tuck it into the
-        // pouch" click (a low cloth rustle + a quiet blip), leaving the
-        // satisfying heal/fizz chime for the moment it's actually spent (see the
-        // medkitUsed / staminaPotionUsed cases). The drink stows a touch lower
-        // than the kit so the two read apart.
+        synth.tone({
+          type: "triangle",
+          from: 1047,
+          durationMs: 90,
+          volume: 0.028,
+          delayMs: 95,
+          detuneCents: 8,
+          echo: 0.15,
+        });
+      } else if (event.kind === "medkit") {
+        // A medkit stashed into the consumable dock: soft canvas into the pouch,
+        // then a major third up (C5 → E5) on a triangle with an attack on it so
+        // it swells rather than blips, under an octave of sine for glow. No
+        // click anywhere in it — what the hero heals with sounds like cloth, not
+        // hardware — and a THIRD where medkitUsed is a loud FIFTH, because the
+        // mend chime belongs to spending the kit rather than finding it. Kept
+        // byte-identical to `content/sounds/item_collected_medkit.yaml` — see
+        // the note on the repair branch above.
+        synth.noise({
+          durationMs: 60,
+          volume: 0.02,
+          filter: { type: "lowpass", frequency: 1200 },
+        });
+        // Butted end to end rather than overlapped, so the swell stays under
+        // medkitUsed's own peak — stacking them made the find as loud as
+        // spending it.
+        synth.tone({
+          type: "triangle",
+          from: 523,
+          durationMs: 60,
+          volume: 0.03,
+          attackMs: 8,
+          delayMs: 25,
+        });
+        synth.tone({
+          type: "triangle",
+          from: 659,
+          durationMs: 110,
+          volume: 0.03,
+          attackMs: 8,
+          delayMs: 85,
+        });
+        synth.tone({
+          type: "sine",
+          from: 1319,
+          durationMs: 120,
+          volume: 0.018,
+          delayMs: 85,
+          echo: 0.15,
+        });
+      } else if (event.kind === "drink") {
+        // A stamina potion stows the same way, but stays the plain low blip the
+        // dock pickups used to share (a cloth rustle + one note) — the fizz
+        // belongs to draining it (see staminaPotionUsed).
         synth.noise({
           durationMs: 45,
           volume: 0.02,
@@ -97,7 +156,7 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
         });
         synth.tone({
           type: "triangle",
-          from: event.kind === "drink" ? 466 : 587,
+          from: 466,
           durationMs: 70,
           volume: 0.03,
           delayMs: 30,
