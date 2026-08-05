@@ -16,6 +16,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { fogGridAnchor } from "../pwa/src/game/render/fog.ts";
 import { drawFloorDecal } from "../pwa/src/game/render/plane.ts";
+import { seatX, seatY, spriteTopLeft } from "../pwa/src/game/render/shared.ts";
 import {
   beginBillboard,
   bodyAnchorX,
@@ -118,6 +119,34 @@ const PROJECTIONS = [
   { pitch: 0.5, yaw: 45, name: "full 2:1 isometric" },
   { pitch: 0.4, yaw: 22, name: "somewhere in between" },
 ];
+
+// THE WARP, pinned — and swept across the WHOLE range both knobs can reach
+// rather than sampled at the shipped camera, because the failure is a property
+// of the projection's ARITHMETIC and every setting has its own rounding phase.
+// A yawed camera is the case that has to be swept: it turns BOTH screen axes
+// into fractional combinations of the two world ones, so the asymmetry that hid
+// the original bug at yaw 0 (x exact, y foreshortened) is gone and an isometric
+// picture ripples in every direction at once.
+const RIGIDITY_SWEEP: { pitch: number; yaw: number; name: string }[] = [];
+for (const pitch of [1, 0.75, 0.6, 0.5, 0.4, 0.25]) {
+  for (const yaw of [0, 5, 15, 22, 30, 45]) {
+    RIGIDITY_SWEEP.push({ pitch, yaw, name: `pitch ${pitch}, yaw ${yaw}°` });
+  }
+}
+
+/**
+ * A camera walk with NOTHING whole about it — `computeCamera` deliberately keeps
+ * the camera's world point exact (view.ts), so this is the path the renderer
+ * actually sees. Sweeping whole world units instead is what let the sprite-seat
+ * wobble hide: a whole step lands every body on the same side of its own
+ * rounding boundary every time.
+ */
+const CAMERA_WALK: { x: number; y: number }[] = [];
+for (let step = 0; step < 48; step++) {
+  CAMERA_WALK.push({ x: 200, y: 200 + step * 0.37 }); // north
+  CAMERA_WALK.push({ x: 200 + step * 0.37, y: 200 }); // east
+  CAMERA_WALK.push({ x: 200 + step * 0.29, y: 200 + step * 0.43 }); // diagonal
+}
 
 describe("the world projection", () => {
   it("clamps a knob to its range rather than refusing it", () => {
@@ -392,20 +421,6 @@ describe("billboard", () => {
     },
   );
 
-  // THE WARP, pinned — and swept across the WHOLE range both knobs can reach
-  // rather than sampled at the shipped camera, because the failure is a
-  // property of the projection's ARITHMETIC and every setting has its own
-  // rounding phase. A yawed camera is the case that has to be swept: it turns
-  // BOTH screen axes into fractional combinations of the two world ones, so the
-  // asymmetry that hid this bug at yaw 0 (x exact, y foreshortened) is gone and
-  // an isometric picture ripples in every direction at once.
-  const RIGIDITY_SWEEP: { pitch: number; yaw: number; name: string }[] = [];
-  for (const pitch of [1, 0.75, 0.6, 0.5, 0.4, 0.25]) {
-    for (const yaw of [0, 5, 15, 22, 30, 45]) {
-      RIGIDITY_SWEEP.push({ pitch, yaw, name: `pitch ${pitch}, yaw ${yaw}°` });
-    }
-  }
-
   it.each(RIGIDITY_SWEEP)(
     "holds the whole field rigid as the camera pans — $name",
     (p) => {
@@ -579,6 +594,106 @@ describe("billboard", () => {
     ctx.restore();
     expect(ctx.matrix).toEqual(before);
   });
+});
+
+describe("a sprite's seat inside its billboard", () => {
+  // THE WOBBLE, pinned — the one that only ever afflicted SOME of the art, and
+  // whose tell was that a 12×12 ammo box sat still on the same floor a 14×9 pile
+  // of coins shivered on.
+  //
+  // `beginBillboard` hands a body a space shifted by
+  // `bodyAnchor − Math.round(pos − camera)`, and that subtraction is there to
+  // CANCEL the caller's own `Math.round(pos − camera)`. `spriteTopLeft` used to
+  // round the seat and the half-sprite together — `Math.round(rel − w/2)` — and
+  // that cancels cleanly only when `w` is EVEN, because then the half is an
+  // integer and factors out. For an ODD `w` the two rounds step at different
+  // fractions of `rel`, their difference flips between two values as the camera
+  // tracks, and the sprite twitches a pixel against its own glow, its shadow and
+  // the rigid ground beneath it.
+  //
+  // Which is why the axis a piece wobbles on is the axis its ODD dimension is
+  // on: an odd width shivers as the camera tracks east/west, an odd height as it
+  // tracks north/south, and an odd/odd sprite in every direction. Under a YAW
+  // both screen axes are mixtures of both world ones, so isometric moves both
+  // seats however the hero walks and every odd-dimensioned sprite in the atlas
+  // shivers at once.
+  const SIZES = [
+    { width: 12, height: 12, name: "even × even (ammo_cells)" },
+    { width: 13, height: 10, name: "odd width (gold_coins_c)" },
+    { width: 14, height: 9, name: "odd height (gold_pile_a)" },
+    { width: 11, height: 11, name: "odd × odd (car_wheel_0)" },
+    { width: 26, height: 17, name: "a tall odd landmark (boulder_pitted)" },
+  ];
+  const CASES = RIGIDITY_SWEEP.flatMap((p) =>
+    SIZES.map((size) => ({ ...p, size, label: `${size.name} at ${p.name}` })),
+  );
+
+  it.each(CASES)("holds a fixed step from its own seat — $label", (c) => {
+    // The direct claim, and the smallest one that pins the bug: whatever the
+    // camera is doing, a sprite's top-left sits the SAME whole number of pixels
+    // from the seat the billboard cancels against. Two distinct offsets over a
+    // camera walk IS the twitch.
+    setWorldProjection(c);
+    const pos = { x: 317.4, y: 288.6 };
+    const offsets = new Set<string>();
+    for (const cam of CAMERA_WALK) {
+      const at = spriteTopLeft(pos, c.size, cam);
+      expect(Number.isInteger(at.x)).toBe(true);
+      expect(Number.isInteger(at.y)).toBe(true);
+      offsets.add(
+        `${at.x - seatX(pos.x, cam.x)},${at.y - seatY(pos.y, cam.y)}`,
+      );
+    }
+    expect([...offsets]).toHaveLength(1);
+  });
+
+  it.each(CASES)(
+    "keeps two of them a fixed distance apart as the camera pans — $label",
+    (c) => {
+      // …and the claim a player would actually make: two pieces of loot lying on
+      // the floor do not drift against each other, or against the ground, because
+      // the hero walked past. Driven through `beginBillboard` and the real
+      // `spriteTopLeft`, so what is pinned is where a pass's draw genuinely lands.
+      setWorldProjection(c);
+      const props = [
+        { x: 300, y: 300 },
+        { x: 316.4, y: 316.4 },
+        { x: 287.25, y: 341.5 },
+      ] as const;
+      const ctx = transformProbe();
+      const drawnAt = (
+        prop: { x: number; y: number },
+        cam: { x: number; y: number },
+      ) => {
+        ctx.save();
+        beginBillboard(
+          ctx as unknown as CanvasRenderingContext2D,
+          prop.x,
+          prop.y,
+          cam.x,
+          cam.y,
+        );
+        const at = spriteTopLeft(prop, c.size, cam);
+        const screen = ctx.at(at.x, at.y);
+        ctx.restore();
+        return screen;
+      };
+      const gapAt = (cam: { x: number; y: number }) => {
+        const first = drawnAt(props[0], cam);
+        return props.map((prop) => {
+          const at = drawnAt(prop, cam);
+          // Rounded past the float noise a yawed matrix's compose-then-invert
+          // leaves behind (~1e-14); the `+ 0` folds a -0 back to 0.
+          return {
+            x: Math.round(at.x - first.x) + 0,
+            y: Math.round(at.y - first.y) + 0,
+          };
+        });
+      };
+      const base = gapAt(CAMERA_WALK[0]!);
+      for (const cam of CAMERA_WALK) expect(gapAt(cam)).toEqual(base);
+    },
+  );
 });
 
 describe("the camera under the projection", () => {

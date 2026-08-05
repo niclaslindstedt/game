@@ -16,7 +16,7 @@ import {
 } from "@game/core";
 import { normalize } from "@game/lib/vec.ts";
 
-import { clamp01, spriteTopLeft } from "./shared.ts";
+import { clamp01, seatX, seatY, spriteTopLeft } from "./shared.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { getSettings } from "../settings.ts";
 import { enemySprites, opaqueWidth } from "./caches.ts";
@@ -173,9 +173,10 @@ export function drawEnemies(
     // The shadow goes down BEFORE the body and before every aura, so the crowd's
     // glows lie over the floor rather than under it. Placed at the feet the mob
     // would have had, which is the only thing that sells the hover as height.
-    const groundY = Math.round(
-      enemy.pos.y - camera.y + sprite.height / 2 - SHADOW_INSET,
-    );
+    const groundY =
+      seatY(enemy.pos.y, camera.y) +
+      Math.round(sprite.height / 2) -
+      SHADOW_INSET;
     // A departing apparition dissolves over its linger countdown — shadow and
     // all, since a shadow outliving the body that cast it is a hole in the floor.
     const vanishFade =
@@ -186,7 +187,7 @@ export function drawEnemies(
       drawFloatShadow(
         ctx,
         sprites.shadow,
-        Math.round(enemy.pos.x - camera.x),
+        seatX(enemy.pos.x, camera.x),
         groundY,
         opaqueWidth(sprite),
         lift,
@@ -198,8 +199,8 @@ export function drawEnemies(
     // that a rampage has toughened the horde it lured in.
     const evo = enemy.evo ?? 0;
     if (evo > 0) {
-      const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y + lift);
+      const cx = seatX(enemy.pos.x, camera.x);
+      const cy = seatY(enemy.pos.y, camera.y) + Math.round(lift);
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 200 + enemy.id);
       ctx.globalAlpha = 0.12 + 0.1 * pulse;
       ctx.fillStyle = evo >= 4 ? "#ff5030" : evo >= 2 ? "#ff9040" : "#ffd050";
@@ -213,8 +214,8 @@ export function drawEnemies(
     // a one-of-a-kind unique — so the special find reads at a glance over the
     // recolored body, wherever it stands in the horde.
     if (def.rarity) {
-      const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y + lift);
+      const cx = seatX(enemy.pos.x, camera.x);
+      const cy = seatY(enemy.pos.y, camera.y) + Math.round(lift);
       const unique = def.rarity === "unique";
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 260 + enemy.id);
       // Two nested rings — a soft body halo under a brighter rim — so the tell
@@ -239,8 +240,8 @@ export function drawEnemies(
     // Two counter-phased rings breathe against each other, so the aura churns
     // rather than merely pulsing.
     if (def.hellborn) {
-      const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y + lift);
+      const cx = seatX(enemy.pos.x, camera.x);
+      const cy = seatY(enemy.pos.y, camera.y) + Math.round(lift);
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 190 + enemy.id);
       const churn = 0.5 + 0.5 * Math.sin(timeMs / 310 - enemy.id);
       ctx.fillStyle = "#7a2ce0";
@@ -273,9 +274,9 @@ export function drawEnemies(
     // game already taught the player to read exactly that.
     const telegraph = enemy.mech?.telegraph;
     if (telegraph) {
-      const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y + lift);
-      const groundCy = Math.round(enemy.pos.y - camera.y);
+      const cx = seatX(enemy.pos.x, camera.x);
+      const cy = seatY(enemy.pos.y, camera.y) + Math.round(lift);
+      const groundCy = seatY(enemy.pos.y, camera.y);
       // 0 → 1 across the windup. Every mark below ramps on it, so a tell that
       // is about to land looks nothing like a tell that just started.
       const near = clamp01(1 - telegraph.remainingMs / TELL_RAMP_MS);
@@ -351,8 +352,8 @@ export function drawEnemies(
     // An ENRAGED set piece burns: a steady red aura under the sprite, the
     // standing tell that its speed and blows are up for good.
     if (enemy.mech?.enraged) {
-      const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y + lift);
+      const cx = seatX(enemy.pos.x, camera.x);
+      const cy = seatY(enemy.pos.y, camera.y) + Math.round(lift);
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 120 + enemy.id);
       ctx.globalAlpha = 0.18 + 0.1 * pulse;
       ctx.fillStyle = "#ff3020";
@@ -377,7 +378,7 @@ export function drawEnemies(
       // from rotating, so they stay out of the transform.
       withStance(
         ctx,
-        { x: Math.round(enemy.pos.x - camera.x), y: y + sprite.height },
+        { x: seatX(enemy.pos.x, camera.x), y: y + sprite.height },
         { tilt: gait?.tilt ?? 0 },
         () => ctx.drawImage(sprite, x, y),
       );
@@ -415,7 +416,7 @@ export function drawEnemies(
               ? "#d9a0f0"
               : "#e05050";
       healthBars.push({
-        x: enemy.pos.x - camera.x,
+        x: seatX(enemy.pos.x, camera.x),
         y: y - (plainMinion ? 3 : 6),
         width,
         height: plainMinion ? 1 : 3,
@@ -434,7 +435,7 @@ export function drawEnemies(
   if (barFade <= 0) return;
   ctx.globalAlpha = barFade;
   for (const bar of healthBars) {
-    const bx = Math.round(bar.x - bar.width / 2);
+    const bx = bar.x - Math.round(bar.width / 2);
     billboard(ctx, bar.worldX, bar.worldY, camera.x, camera.y, () => {
       ctx.fillStyle = "#0b0d10";
       ctx.fillRect(bx - 1, bar.y - 1, bar.width + 2, bar.height + 2);

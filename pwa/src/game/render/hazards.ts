@@ -12,7 +12,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
-import { clamp01, type ViewSize } from "./shared.ts";
+import { clamp01, seatX, seatY, type ViewSize } from "./shared.ts";
 import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -72,8 +72,8 @@ export function drawAsteroids(
     // itself is in the sky, and `height` is an altitude — so it stands clear of
     // the tilt, and the plunge keeps its full length (render/tilt.ts).
     beginBillboard(ctx, gx, gy, camera.x, camera.y);
-    const sx = Math.round(gx - camera.x);
-    const sy = Math.round(gy - camera.y - height);
+    const sx = seatX(gx, camera.x);
+    const sy = seatY(gy, camera.y) - Math.round(height);
     // A DROP POD (an ORBITAL DELIVERY, `Asteroid.sprite`) rides this same
     // system, so the only difference at draw time is what is falling: a pod is
     // one guided sprite that does not tumble, a rock churns its two frames.
@@ -193,8 +193,8 @@ export function drawSandstorms(
     billboard(ctx, storm.pos.x, storm.pos.y, camera.x, camera.y, () =>
       ctx.drawImage(
         sprite,
-        Math.round(storm.pos.x - size / 2 - camera.x),
-        Math.round(storm.pos.y - size / 2 - camera.y),
+        seatX(storm.pos.x, camera.x) - Math.round(size / 2),
+        seatY(storm.pos.y, camera.y) - Math.round(size / 2),
         size,
         size,
       ),
@@ -330,16 +330,16 @@ export function drawStampedes(
       // A quick pumping bob so the wall reads as a hard sprint, not a slide.
       const bob =
         2 * Math.abs(Math.sin(Math.PI * (timeMs / 130 + runner.phase)));
-      const sx = Math.round(rx - size / 2 - camera.x);
-      const sy = Math.round(ry - size / 2 - camera.y - bob);
+      const sx = seatX(rx, camera.x) - Math.round(size / 2);
+      const sy = seatY(ry, camera.y) - Math.round(size / 2 + bob);
       // A tight ground shadow anchors each runner to the floor.
       ctx.save();
       ctx.globalAlpha = 0.22;
       ctx.fillStyle = "#1a1c2c";
       ctx.beginPath();
       ctx.ellipse(
-        Math.round(rx - camera.x),
-        Math.round(ry - camera.y + size / 2 - 3),
+        seatX(rx, camera.x),
+        seatY(ry, camera.y) + Math.round(size / 2 - 3),
         size / 2.6,
         size / 6,
         0,

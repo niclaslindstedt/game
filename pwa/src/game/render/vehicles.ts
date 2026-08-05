@@ -32,6 +32,7 @@ import { localHero } from "../local-seat.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { glowSprite } from "./caches.ts";
 import { drawWorldSprite } from "./plane.ts";
+import { seatX, seatY } from "./shared.ts";
 import { billboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 import type { InView } from "./world.ts";
@@ -242,8 +243,8 @@ function drawShellLayer(
   billboard(ctx, pos.x, pos.y, camera.x, camera.y, () => {
     const w = sprite.width;
     const h = sprite.height;
-    const left = Math.round(pos.x - w / 2 - camera.x);
-    const top = Math.round(pos.y - (h - 2) - camera.y);
+    const left = seatX(pos.x, camera.x) - Math.round(w / 2);
+    const top = seatY(pos.y, camera.y) - (h - 2);
     if (Math.round(rearDrop) === Math.round(frontDrop)) {
       ctx.drawImage(sprite, left, top + Math.round(rearDrop));
       return;

@@ -7,6 +7,7 @@ import { localHero } from "../local-seat.ts";
 import { enemyDef, nextPathWaypoint, type GameState } from "@game/core";
 import { distance, normalize } from "@game/lib/vec.ts";
 
+import { seatX, seatY } from "./shared.ts";
 import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -78,8 +79,8 @@ export function drawGuidanceArrow(
   const { x: ux, y: uy } = normalize(wp.x - hero.x, wp.y - hero.y);
   // A soft blink so the cue pulses without strobing.
   const alpha = 0.4 + 0.45 * Math.abs(Math.sin(timeMs / 320));
-  const cx = Math.round(hero.x + ux * 34 - camera.x);
-  const cy = Math.round(hero.y + uy * 34 - camera.y) - 6; // chest height
+  const cx = seatX(hero.x + ux * 34, camera.x);
+  const cy = seatY(hero.y + uy * 34, camera.y) - 6; // chest height
   // The chevron floats at chest height and is a CUE, not a mark on the floor —
   // it keeps its shape whichever way it happens to be pointing, which a
   // foreshortened rotation would not (render/tilt.ts).
