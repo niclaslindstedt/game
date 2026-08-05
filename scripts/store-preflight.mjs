@@ -477,7 +477,10 @@ for (const os of ["windows", "macos", "linux"]) {
         "must exist in the partner site",
       "App Admin → Achievements — the id column is the API Name, and the " +
         "game reports it verbatim. An id the portal never heard of is dropped " +
-        "silently, forever.",
+        "silently, forever. Valve documents no API for creating one, so " +
+        "`make store-steam-achievements` prints them as a paste-ready " +
+        'worksheet and ARGS="--verify" reads them back afterwards and names ' +
+        "anything missing or mistyped.",
     );
   } else if (drifted(result)) {
     fail(

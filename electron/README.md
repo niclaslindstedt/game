@@ -220,7 +220,11 @@ version:
 - [ ] **Create the achievement rows** in the partner site. They are generated
       into `store/steam-achievements.json`; the suite fails when it drifts.
       Steam caps a new app at **100 achievements** until it reaches the Profile
-      Features threshold, which is why the shipped list is curated.
+      Features threshold, which is why the shipped list is curated. Type them
+      from `make store-steam-achievements` (the form's own columns, both icon
+      paths filled in) rather than from the JSON, then
+      `make store-steam-achievements ARGS="--verify"` to check what went in —
+      an id the partner site doesn't have is dropped silently, forever.
 - [ ] **Turn Steam Cloud on for the app.** `isAvailable()` demands both the
       player's per-game toggle and the app's own setting, so a forgotten app
       setting means cloud save quietly reports unavailable for everyone.

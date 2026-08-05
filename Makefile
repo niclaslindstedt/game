@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center sim-bench mod-check mod-catalog
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench mod-check mod-catalog
 
 build:
 	npm run build
@@ -140,6 +140,15 @@ store-shots:
 # Connect API key `fastlane metadata` already uses (native/.env).
 store-game-center:
 	node scripts/game-center-push.mjs $(ARGS)
+
+# The Steam half of the same job, split where Valve splits it: the partner site
+# has no API for CREATING an achievement definition, so this prints the 86 rows
+# as a paste-ready worksheet — the form's own columns, both icon paths filled in
+# — and then reads them back with ARGS="--verify" and names every id that is
+# missing or mistyped. Verifying needs STEAM_WEB_API_KEY (the publisher key).
+# `make store-steam-achievements ARGS="--format tsv --out /tmp/rows.tsv"`
+store-steam-achievements:
+	@node scripts/steam-achievements-portal.mjs $(ARGS)
 
 # Cut the achievement artwork both portals require out of the game's own sprite
 # atlas — a 1024px image per Game Center achievement, and Steam's achieved +
