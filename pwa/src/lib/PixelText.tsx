@@ -6,6 +6,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 
+import { onCanvasWake } from "./canvas-wake.ts";
 import type { PixelFont } from "./pixel-font.ts";
 
 /** CSS px per rem at the default root font-size — the 1:1 reference. */
@@ -61,45 +62,53 @@ export function PixelText({
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // A rem cap converts to unscaled font pixels (the units `measure`/`wrap`
-    // speak): rem → CSS px (×16) → font px (÷scale). Wrapping stays keyed to
-    // rem so it tracks the root-font bump on large screens automatically.
-    const lines =
-      maxWidth && maxWidth > 0
-        ? font.wrap(text, (maxWidth * REM_BASE_PX) / scale)
-        : [text];
-    const lineH = font.height * scale;
-    const gap =
-      lines.length > 1 ? Math.round(font.height * scale * LINE_GAP_RATIO) : 0;
-    const step = lineH + gap;
-    const textW = lines.reduce(
-      (max, line) => Math.max(max, font.measure(line)),
-      0,
-    );
-    const w = Math.max(1, textW * scale);
-    const h = step * lines.length - gap;
-    canvas.width = w;
-    canvas.height = h;
-    // Display the crisp bitmap in rem so it tracks the root font-size: at the
-    // default 16px root this is exactly 1:1 (unchanged), and where the root is
-    // bumped for large screens (styles.css) the text scales up with the rest
-    // of the rem-sized UI. `pixelated` keeps that upscale sharp.
-    canvas.style.width = `${w / REM_BASE_PX}rem`;
-    canvas.style.height = `${h / REM_BASE_PX}rem`;
-    canvas.style.imageRendering = "pixelated";
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    lines.forEach((line, i) => {
-      // Centering keeps whole pixels: the offset is rounded in FONT px before
-      // scaling, so a centered line lands on the pixel grid like a left-aligned
-      // one and the glyphs stay crisp.
-      const x =
-        align === "center"
-          ? Math.round((textW - font.measure(line)) / 2) * scale
-          : 0;
-      font.draw(ctx, line, x, i * step, { scale, color });
-    });
+    const paint = () => {
+      // A rem cap converts to unscaled font pixels (the units `measure`/`wrap`
+      // speak): rem → CSS px (×16) → font px (÷scale). Wrapping stays keyed to
+      // rem so it tracks the root-font bump on large screens automatically.
+      const lines =
+        maxWidth && maxWidth > 0
+          ? font.wrap(text, (maxWidth * REM_BASE_PX) / scale)
+          : [text];
+      const lineH = font.height * scale;
+      const gap =
+        lines.length > 1 ? Math.round(font.height * scale * LINE_GAP_RATIO) : 0;
+      const step = lineH + gap;
+      const textW = lines.reduce(
+        (max, line) => Math.max(max, font.measure(line)),
+        0,
+      );
+      const w = Math.max(1, textW * scale);
+      const h = step * lines.length - gap;
+      canvas.width = w;
+      canvas.height = h;
+      // Display the crisp bitmap in rem so it tracks the root font-size: at the
+      // default 16px root this is exactly 1:1 (unchanged), and where the root is
+      // bumped for large screens (styles.css) the text scales up with the rest
+      // of the rem-sized UI. `pixelated` keeps that upscale sharp.
+      canvas.style.width = `${w / REM_BASE_PX}rem`;
+      canvas.style.height = `${h / REM_BASE_PX}rem`;
+      canvas.style.imageRendering = "pixelated";
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lines.forEach((line, i) => {
+        // Centering keeps whole pixels: the offset is rounded in FONT px before
+        // scaling, so a centered line lands on the pixel grid like a left-aligned
+        // one and the glyphs stay crisp.
+        const x =
+          align === "center"
+            ? Math.round((textW - font.measure(line)) / 2) * scale
+            : 0;
+        font.draw(ctx, line, x, i * step, { scale, color });
+      });
+    };
+    paint();
+    // A label is drawn ONCE and then left alone, so it cannot heal itself from
+    // what a backgrounded page does to its bitmap — the dialogue box came back
+    // from a tab switch wearing the bottom rows of the text it was showing when
+    // the player left. Repaint on the way back in (see canvas-wake.ts).
+    return onCanvasWake(canvas, paint);
   }, [font, text, scale, color, maxWidth, align]);
 
   return (
