@@ -25,6 +25,7 @@ import {
   menaceStage,
   playerAppearance,
   tradeOf,
+  tradeRequestsTo,
   weaponAmmoType,
   weaponDamageFor,
   weaponDps,
@@ -160,6 +161,16 @@ export type Hud = {
     downed: boolean;
     busy: boolean;
   }[];
+  /**
+   * WHO HAS ASKED THIS SEAT FOR A TRADE (`trade.ts` rule 5), oldest first —
+   * the requesters' seat numbers, which is also the argument the accept and
+   * decline verbs take.
+   *
+   * A pip on the HUD and never a screen: a request that halted the target
+   * would be the interruption the consent step exists to prevent. Empty solo,
+   * and empty for every seat nobody has asked.
+   */
+  tradeRequests: number[];
   stats: GameStats;
 };
 
@@ -392,7 +403,12 @@ export function buildHud(
         .map((o) => `${o.cell}:${o.itemId}:${o.coins}:${o.accepted ? 1 : 0}`)
         .join("|")
     : "";
-  const key = `${state.phase}/${screen ?? ""}/${live ? 1 : 0}/${downed ? 1 : 0}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${partyKey}/${tradeKey}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
+  // THE ASKS. Membership alone — a request carries no countdown to redraw (see
+  // `TradeRequest`), so the pip only has to republish when one arrives, is
+  // answered, or lapses.
+  const tradeRequests = tradeRequestsTo(state, localSeat()).map((r) => r.from);
+  const askKey = tradeRequests.join(",");
+  const key = `${state.phase}/${screen ?? ""}/${live ? 1 : 0}/${downed ? 1 : 0}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${localHero(state).level}/${localHero(state).pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${ammo ? `${ammo.type}:${ammo.count}` : ""}/${localHero(state).coins}/${appearance}/${outfit}/${stage}/${party}/${partyKey}/${tradeKey}/${askKey}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
@@ -439,6 +455,7 @@ export function buildHud(
         canHeal: canHealCompanion(state, localHero(state), c.id) >= 0,
       })),
       partyFrames,
+      tradeRequests,
       stats: { ...state.stats },
     },
   };

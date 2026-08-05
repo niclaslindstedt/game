@@ -57,6 +57,7 @@ import { advancePath } from "../path.ts";
 import { stepQuests } from "../quests/index.ts";
 import { stepRangedAttacks } from "../ranged.ts";
 import { stepTimers } from "../timers.ts";
+import { stepTradeRequests } from "../trade.ts";
 import { stepSpawners } from "../spawners.ts";
 import {
   advanceCutsceneChain,
@@ -176,6 +177,10 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
 
   const dt = dtMs / 1000;
   state.stats.timeMs += dtMs;
+  // A standing TRADE REQUEST that nobody answered lapses (trade.ts rule 5).
+  // Straight after the clock it ages on, and free of charge without requests —
+  // which is every single-player run.
+  stepTradeRequests(state);
   // The ding celebration: a fresh level-up burns on the hero for a beat
   // (golden pillar + fanfare). The points BANK (`Player.pendingStatPoints`)
   // rather than forcing the chooser open — the chooser is a non-blocking

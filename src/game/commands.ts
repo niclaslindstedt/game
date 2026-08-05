@@ -104,10 +104,12 @@ import {
 import { clearVault, reclaimVaultItem } from "./items/vault.ts";
 import {
   acceptTrade,
+  acceptTradeRequest,
   cancelTrade,
+  declineTradeRequest,
   offerCoins,
   offerItem,
-  openTrade,
+  requestTrade,
 } from "./trade.ts";
 import { closeMap, openMap } from "./map.ts";
 import {
@@ -314,9 +316,16 @@ export const RUN_COMMAND_ARGS = {
   // THE TABLE — trade (src/game/trade.ts). Every one of these acts for the
   // seat the session admitted this client into, never a seat named on the
   // frame.
-  // `openTrade` names the PARTNER, because who else is on the map is a public
-  // fact; whose bag is being offered FROM is the server's answer.
-  openTrade: ["int"],
+  // THE ASK COMES FIRST, AND `openTrade` IS DELIBERATELY NOT ON THIS LIST.
+  // The table is a screen on BOTH seats, so a verb that raised one on a
+  // stranger's say-so is a verb that takes a teammate's controls away
+  // mid-fight (trade.ts rule 5). What travels is the ASK and its two answers;
+  // the engine's `openTrade` is reached only through an acceptance.
+  // Each names a SEAT — who else is on the map is a public fact; whose bag is
+  // being offered FROM is the server's answer.
+  requestTrade: ["int"],
+  acceptTradeRequest: ["int"],
+  declineTradeRequest: ["int"],
   cancelTrade: [],
   offerTradeItem: ["int"],
   // Taking an item back OFF the table is its own verb rather than
@@ -674,8 +683,12 @@ export function applyRunCommand(
       return closeTalk(state, hero);
 
     // THE LOST & FOUND
-    case "openTrade":
-      return openTrade(state, hero, num(a, 0));
+    case "requestTrade":
+      return requestTrade(state, hero, num(a, 0));
+    case "acceptTradeRequest":
+      return acceptTradeRequest(state, hero, num(a, 0));
+    case "declineTradeRequest":
+      return declineTradeRequest(state, hero, num(a, 0));
     case "cancelTrade":
       return cancelTrade(state, hero);
     case "offerTradeItem":

@@ -838,6 +838,44 @@ that sentence true:
    with no way to explain why.
 4. **A departing seat's trade goes with it,** or the partner is stranded at a
    table whose other side will never accept and whose cell stays locked all run.
+5. **Nobody raises a table on somebody else's screen.** A trade is REQUESTED
+   and the other player answers it — D2's shape, and the reason is not manners:
+   the table is a `"trade"` screen on BOTH seats, so a unilateral open takes a
+   teammate's controls away mid-fight.
+
+### The ask (rule 5)
+
+`requestTrade` records a `TradeRequest` — two seats and the moment it was made
+— on `state.tradeRequests`, and opens **nothing**. The target gets a pip on
+their HUD under the party frames with YES and NO on it; the hero keeps
+fighting behind it. Only `acceptTradeRequest` calls `openTrade`.
+
+- **It is run state, not a private field,** for the same reason `trades` is: an
+  ask is a fact about two seats, and half of one held on each side is how the
+  two halves come to disagree about whether it still stands. It replicates with
+  everything else on the run — see the note in `server/wire/split.ts`.
+- **It carries a STAMP, not a countdown.** `atMs` is `GameStats.timeMs` when it
+  was made, so a standing request is a field the snapshot differ writes once
+  and never resends; a `msLeft` ticking down would be twenty writes a second
+  for half a minute. `stepTradeRequests` sweeps the lapsed ones each tick,
+  straight after the clock they age on — which means an ask does not age while
+  the whole party is behind screens.
+- **`TRADE.requestMs` (30 s)** is about one pack: long enough that "after this
+  fight" is a real answer, short enough that a forgotten ask cannot raise a
+  table minutes later.
+- **One outstanding ask per seat.** A re-request replaces the old one and
+  refreshes its clock, so nobody can paper a teammate's HUD with pips.
+- **The requester must be free; the target need not be.** Somebody in their bag
+  is exactly who a non-blocking ask is for, so the busy-hero refusal stays
+  where it belongs — on the accept, as rule 5's backstop. An accept that
+  refuses spends the ask anyway: a request that survived its own failure would
+  be retried into the same refusal for ever.
+- **A lapse, a decline, a departure or a knockdown all dissolve it cleanly**
+  (`endTradesFor` drops the seat's asks in both directions), so nothing stale
+  can raise a table later.
+- **`openTrade` is not on the command allow-list** — only `requestTrade`,
+  `acceptTradeRequest` and `declineTradeRequest` travel. The engine function
+  stays, reached only through an acceptance.
 
 `TradeSide.item` carries a COPY of the offered piece, because a bag is PRIVATE
 and the partner has no other way to see what is on the table; it is presentation
@@ -1269,11 +1307,6 @@ ticked from one.
   P2P API is polled, deprecated and thinner on guarantees than SDR; it must be
   spiked under real load before a release leans on it. The direct UDP path
   exists partly as the insurance policy on exactly that.
-- **A trade has no request step** ([#863](https://github.com/niclaslindstedt/game/issues/863)). The window exists (`TradeOverlay` — the
-  table is a per-player `"trade"` screen raised on BOTH seats by `openTrade`,
-  opened from a teammate's party frame or the pause roster), but opening one
-  is unilateral: the refusal for a busy hero is the whole consent model, and a
-  D2-style ask-first flow is future work.
 - **The soak has run for minutes, not hours.** The instrument exists and works
   — `scripts/bot-client.mjs` drives a fleet of headless clients against a
   dedicated server, with latency, jitter and loss injected at the transport

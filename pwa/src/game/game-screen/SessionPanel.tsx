@@ -46,11 +46,12 @@ export function SessionPanel({
    * status poll: it changes when somebody joins, which is exactly when the
    * server sends one. */
   link: SessionLink;
-  /** Open a trade with this SEAT. Absent when this client cannot trade
-   * — a spectator, or a session with nobody else seated. The press leaves the
-   * pause screen behind it, so it lives with the pause overlay's wiring. */
+  /** ASK this SEAT for a trade (`requestTrade`). Nothing opens on either
+   * screen — they answer on their own HUD. Absent when this client cannot
+   * trade: a spectator, or a session with nobody else seated. The press leaves
+   * the pause screen behind it, so it lives with the pause overlay's wiring. */
   onTrade?: (seat: number) => void;
-  /** This client's own seat — its roster row gets no TRADE button (a table
+  /** This client's own seat — its roster row gets no ASK button (a table
    * with yourself is refused by the engine anyway). */
   mySeat?: number | null;
 }) {
@@ -130,7 +131,7 @@ export function SessionPanel({
           }${seat.rate > 0 ? ` - ${(seat.rate / 1024).toFixed(1)} KB/S` : ""}`}
           action={
             onTrade && seat.seat !== null && seat.seat !== mySeat
-              ? { label: "TRADE", run: () => onTrade(seat.seat!) }
+              ? { label: "ASK TRADE", run: () => onTrade(seat.seat!) }
               : undefined
           }
         />

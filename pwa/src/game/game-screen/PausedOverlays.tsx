@@ -141,11 +141,13 @@ export function RunPausedOverlay({
               font={font}
               link={sessionLink}
               mySeat={localSeat()}
-              // TRADE, from the roster row. The press has to leave the
-              // pause screen first — `openTrade` refuses a hero with any other
-              // screen up — so it resumes exactly as the RESUME row does and
-              // sends the verb behind it. A spectator holds no seat and gets
-              // no button.
+              // ASK FOR A TRADE, from the roster row. The press has to leave
+              // the pause screen first — `requestTrade` refuses a hero with
+              // any other screen up, the same "be standing on the field to
+              // start this" rule the table itself applies — so it resumes
+              // exactly as the RESUME row does and sends the verb behind it.
+              // Nothing opens here: the teammate answers on their own HUD. A
+              // spectator holds no seat and gets no button.
               onTrade={
                 sessionLink.spectating
                   ? undefined
@@ -153,7 +155,7 @@ export function RunPausedOverlay({
                       if (localScreen(state) !== "paused") return;
                       userPausedRef.current = false;
                       runCommand(state, "resumeGame");
-                      runCommandOk(state, "openTrade", seat);
+                      runCommandOk(state, "requestTrade", seat);
                       resumeMusic();
                       bumpUi();
                     }

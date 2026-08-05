@@ -1731,7 +1731,8 @@ export function GameScreen({
       )}
 
       {/* THE TRADE WINDOW — the hero's own `trade` screen, raised on
-          both seats at once by `openTrade`. The overlay only shows the table
+          both seats at once by `openTrade` — which only an accepted REQUEST
+          reaches (trade.ts rule 5). The overlay only shows the table
           and sends verbs; every rule is the engine's. The partner's NAME comes
           from the session roster — the engine's Player carries no name. */}
       {state && hud?.screen === "trade" && (

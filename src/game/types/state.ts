@@ -31,7 +31,7 @@ import type {
   StatName,
 } from "./core.ts";
 import type { GameEvent, GameStats } from "./events.ts";
-import type { Trade } from "../trade.ts";
+import type { Trade, TradeRequest } from "../trade.ts";
 import type {
   Asteroid,
   BaitCharge,
@@ -491,6 +491,16 @@ export type GameState = {
    * halves come to disagree about what is on the table.
    */
   trades?: Trade[];
+  /**
+   * STANDING TRADE REQUESTS (`src/game/trade.ts` rule 5) — the asks nobody has
+   * answered yet, at most one outgoing per seat, and absent on every
+   * single-player run.
+   *
+   * Run state for exactly the reason `trades` is: an ask is a fact about two
+   * seats at once, and half of one held on each side is how the two halves
+   * come to disagree about whether it still stands.
+   */
+  tradeRequests?: TradeRequest[];
   /**
    * A REQUESTED IN-SESSION CROSSING (`src/game/travel.ts`) — the destination
    * the host chose, and how much of its opening to skip (`OpeningSkip`'s own

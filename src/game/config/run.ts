@@ -70,6 +70,24 @@ export const CORPSE = {
 } as const;
 
 /**
+ * THE TRADE REQUEST (`trade.ts`) — the ask that has to be answered before a
+ * table is raised on anybody's screen.
+ */
+export const TRADE = {
+  /**
+   * How long an unanswered request stands (ms of RUN time, so it does not age
+   * while the whole party is behind screens).
+   *
+   * Long enough to survive the fight the target is in the middle of — the
+   * request is a pip on their HUD, not a screen, so the honest answer is often
+   * "after this pack" — and short enough that a forgotten ask cannot raise a
+   * table minutes later over whatever the two of them are doing by then. Half
+   * a minute is about one pack.
+   */
+  requestMs: 30_000,
+} as const;
+
+/**
  * The BOSS DEATH RITE — the scripted send-off a boss gets instead of merely
  * toppling over (see `boss-death.ts`). The mirror image of the DEATH SCENE
  * above, and deliberately built to the same shape: the engine owns the beats,
