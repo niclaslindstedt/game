@@ -3,13 +3,17 @@
 // the bridge, the persisted LOAD ORDER, and the two handoffs — play the enabled
 // stack, publish one.
 //
-// The list is fetched LAZILY, the first time the screen is opened, and not at
-// launch. Compiling every installed mod means reading and validating a folder
-// of YAML per mod, and a player with a dozen subscriptions must not pay for
-// that on a launch where they only wanted to press RESUME. It is then held for
-// the session, because the answer does not change while the game is running:
-// Steam installs a new subscription's files, but this build reads them at the
-// next launch rather than swapping content under a menu the player is reading.
+// The list is fetched LAZILY — never at launch. Compiling every installed mod
+// means reading and validating a folder of YAML per mod, and a player with a
+// dozen subscriptions must not pay for that on a launch where they only wanted
+// to press RESUME.
+//
+// It is then re-read EVERY TIME the screen is opened, because the answer can
+// now change while the game is running: the player can drop a folder or a
+// `.zip` into a mods folder the screen itself offers to open, and "go back and
+// come in again" is the loop that has to pick it up. The previous list is kept
+// on screen while the new one is compiled, so returning to a screen you have
+// already seen never flashes LOADING at you.
 //
 // The ORDER, unlike the list, is persisted (`modOrder` in settings) and written
 // through on every change. A load order the player spent time on must survive a
@@ -22,7 +26,9 @@ import {
   listMods,
   modsBridgeAvailable,
   publishMod,
+  revealModsFolder,
   type InstalledMod,
+  type ModsFolders,
 } from "../../app/mods-bridge.ts";
 import {
   brandFor,
@@ -56,6 +62,7 @@ export function useMods({
 } {
   const modsOpen = modsBridgeAvailable();
   const [installed, setInstalled] = useState<InstalledMod[] | null>(null);
+  const [folders, setFolders] = useState<ModsFolders | null>(null);
   const [order, setOrder] = useState(() => getSettings().modOrder);
   const [publishing, setPublishing] = useState(false);
 
@@ -65,15 +72,19 @@ export function useMods({
   }, [modsOpen]);
 
   useEffect(() => {
-    if (!modsOpen || screen !== "mods" || installed !== null) return;
+    if (!modsOpen || screen !== "mods") return;
     let cancelled = false;
     void listMods().then((list) => {
-      if (!cancelled) setInstalled(list);
+      if (cancelled) return;
+      setInstalled(list.mods);
+      if (list.folders) setFolders(list.folders);
     });
     return () => {
       cancelled = true;
     };
-  }, [modsOpen, screen, installed]);
+    // Deliberately NOT keyed on `installed`: entering the screen is the
+    // trigger, so a mod added since the last visit is found.
+  }, [modsOpen, screen]);
 
   // A mod is identified by its COMPILED id, never its folder: a folder is a
   // Workshop item number or whatever the player named a directory, and neither
@@ -171,6 +182,8 @@ export function useMods({
 
   const mods: ModsMenuState = {
     rows,
+    folders,
+    reveal: revealModsFolder,
     isOn: (id) => rows?.some((row) => row.id === id && row.on) ?? false,
     setEnabled,
     move,

@@ -447,8 +447,21 @@ the same binary, and burying it three rows deep would say it was a
 configuration detail. The row appears only where `modsBridgeAvailable()` is true
 — the Steam shell — so no other build shows a door it cannot open.
 
-Two details in `menus-mods.ts` are load-bearing:
+Three details in `menus-mods.ts` are load-bearing:
 
+- **The screen says where mods come from, and opens it.** Two rows at the foot
+  of the list name the folders the list was just read from — the path in the
+  subtitle, the file manager one press away (`shell.openPath`, through a
+  `reveal` action that takes WHICH folder rather than a path, so the renderer
+  can never name one of its own). Documentation is where "put it in
+  `%APPDATA%\adastrail\mods`" goes to be not read; the screen the player is
+  already on is where it works. The row is absent where the platform has no such
+  folder, which is how macOS shows one row instead of two.
+- **The list is re-read every time the screen is opened**, and the previous one
+  stays up while it compiles (so returning never flashes LOADING). That is what
+  makes the loop closed: press the row, drop a mod in, come back, play it — no
+  relaunch. It was a launch-once cache when the only source was a Steam
+  subscription, which the player could not add to without restarting anyway.
 - **A mod that did not compile still appears**, greyed, with its first error as
   the row's help line. A player who subscribed to something and then finds an
   empty list has no way at all to learn why.

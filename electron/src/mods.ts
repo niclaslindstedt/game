@@ -55,15 +55,27 @@ import { publishMod, subscribedItems } from "./workshop";
 
 /** A message from the web side (already parsed; `__gisMods` checked). */
 export type ModsRequest = {
-  action?: "list" | "publish" | "workshop";
+  action?: "list" | "publish" | "workshop" | "reveal";
   requestId?: number;
   folder?: string;
   changeNote?: string;
+  /** Which of OUR folders to reveal. A NAME, never a path: the page picking
+   * from a closed set is what keeps "open this in the file manager" from
+   * becoming "open anything on this disk in the file manager". */
+  which?: "local" | "portable";
 };
 
 /** An event to inject back into the page (see the web bridge's protocol). */
 export type ModsEvent =
-  | { event: "list"; requestId: number; ok: boolean; mods: InstalledMod[] }
+  | {
+      event: "list";
+      requestId: number;
+      ok: boolean;
+      mods: InstalledMod[];
+      /** The folders that list was read from, for the screen to show and to
+       * offer to open. `portable` is null where the platform has none. */
+      folders: { local: string; portable: string | null };
+    }
   | {
       event: "publish";
       requestId: number;
@@ -191,8 +203,32 @@ export function createModsBridge(emit: (event: ModsEvent) => void): ModsBridge {
       const requestId = request.requestId ?? 0;
       if (request.action === "list") {
         void listInstalled().then((mods) =>
-          emit({ event: "list", requestId, ok: true, mods }),
+          emit({
+            event: "list",
+            requestId,
+            ok: true,
+            mods,
+            folders: { local: localModsDir(), portable: portableModsDir() },
+          }),
         );
+        return;
+      }
+      // Open one of our own folders in the desktop's file manager. Creating it
+      // first is the point: a folder the player is told about and then cannot
+      // find is worse than no row at all, and the portable one is never made
+      // at startup (an install directory may be read-only, which is fine to
+      // READ from and worth failing quietly on here).
+      if (request.action === "reveal") {
+        const dir =
+          request.which === "portable" ? portableModsDir() : localModsDir();
+        if (dir) {
+          try {
+            mkdirSync(dir, { recursive: true });
+          } catch {
+            /* opening a read-only folder still works */
+          }
+          void shell.openPath(dir);
+        }
         return;
       }
       if (request.action === "publish") {

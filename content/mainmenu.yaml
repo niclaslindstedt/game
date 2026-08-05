@@ -788,6 +788,17 @@ screens:
         label: PLAY WITH THESE MODS
         help:
           none: SWITCH AT LEAST ONE MOD ON FIRST
+      # The two folders the game reads, so "where do I put it" is answered on
+      # the screen rather than in a document nobody opened. Pressing one opens
+      # it in the desktop's own file manager; the list re-reads itself every
+      # time this screen is entered, so dropping a mod in and coming back is
+      # the whole loop. GAME FOLDER is absent where the platform has none.
+      - id: folder-mods
+        label: OPEN MODS FOLDER
+        help: DROP A MOD OR A .ZIP IN, THEN COME BACK
+      - id: folder-game
+        label: OPEN GAME FOLDER
+        help: ITS MODS/ FOLDER IS READ TOO
 
   modorder:
     title: LOAD ORDER

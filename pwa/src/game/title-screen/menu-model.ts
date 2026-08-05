@@ -177,6 +177,11 @@ export type ModsMenuState = {
    * winning everything it defines. Reads the last applied stack, so it is only
    * meaningful once a modded run has been started. */
   overriddenIds: (id: string) => number;
+  /** The folders that list was read from, or null before the first reply.
+   * `portable` is null where the platform has none. */
+  folders: { local: string; portable: string | null } | null;
+  /** Show one of them in the desktop's file manager. */
+  reveal: (which: "local" | "portable") => void;
   /** Start a run with the enabled mods, in order. */
   onPlay: () => void;
   onPublish: (mod: InstalledMod) => void;

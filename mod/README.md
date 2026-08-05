@@ -89,9 +89,12 @@ else's.
 
 ## Testing a mod without publishing it — and sending one to a friend
 
-The game reads **two** mods folders, and anything in either appears in **MODS**
-on the next launch alongside your subscriptions. `node mod/tools/cli.mjs where`
-prints both.
+**The game will show you.** Open **MODS** on the main menu: the rows at the foot
+of the list name the folders it reads from, and pressing one opens it in your
+file manager. Drop a mod folder or a `.zip` in, come back to the screen, and it
+is there — the list is re-read every time you enter it, so nothing needs a
+relaunch. `node mod/tools/cli.mjs where` prints the same two folders from a
+terminal.
 
 **`mods/` beside the game** (Windows and Linux) — the folder to tell another
 player about:

@@ -11,7 +11,14 @@
 // Electron runtime, which is also the arrangement that keeps the desktop
 // check job cheap (no 100 MB binary download in CI).
 
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -47,10 +54,18 @@ let userData: string;
 let portableHome: string;
 const originalCwd = process.cwd();
 
+const opened: string[] = [];
 vi.mock("electron", () => ({
   app: {
     getPath: () => userData,
     isPackaged: false,
+  },
+  shell: {
+    openPath: (dir: string) => {
+      opened.push(dir);
+      return Promise.resolve("");
+    },
+    openExternal: () => Promise.resolve(),
   },
 }));
 
@@ -218,6 +233,42 @@ describe("listing", () => {
     mkdirSync(join(localModsDir(), "just-some-notes"), { recursive: true });
     const mods = (await list(3)).mods;
     expect(mods.some((m) => m.key === "local:just-some-notes")).toBe(false);
+  });
+});
+
+describe("showing a folder in the file manager", () => {
+  const reveal = (which: "local" | "portable") => {
+    const bridge = createModsBridge(() => {});
+    bridge.handle({ action: "reveal", requestId: 0, which });
+  };
+
+  it("opens the folder the page NAMED, resolved here", () => {
+    opened.length = 0;
+    reveal("local");
+    expect(opened).toEqual([localModsDir()]);
+    reveal("portable");
+    expect(opened[1]).toBe(portableDir());
+  });
+
+  it("creates the folder first, so it is never opened into nothing", () => {
+    rmSync(portableDir(), { recursive: true, force: true });
+    opened.length = 0;
+    reveal("portable");
+    expect(existsSync(portableDir())).toBe(true);
+  });
+
+  it("takes no path from the page — only the two names", () => {
+    // The request carries `which`, never a directory: there is no field here
+    // that could name /etc or somebody's documents.
+    opened.length = 0;
+    const bridge = createModsBridge(() => {});
+    bridge.handle({
+      action: "reveal",
+      requestId: 0,
+      folder: "/etc",
+    } as Parameters<typeof bridge.handle>[0]);
+    // With no `which`, it falls back to the authoring folder — never `folder`.
+    expect(opened).toEqual([localModsDir()]);
   });
 });
 
