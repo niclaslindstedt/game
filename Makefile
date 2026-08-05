@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot sim-bench mod-check mod-catalog
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art sim-bench mod-check mod-catalog
 
 build:
 	npm run build
@@ -131,6 +131,14 @@ store-metadata:
 # native/store/README.md for the full recipe.
 store-shots:
 	node pwa/scripts/store-shots.mjs $(ARGS)
+
+# Cut the achievement artwork both portals require out of the game's own sprite
+# atlas — a 1024px image per Game Center achievement, and Steam's achieved +
+# locked 64px pair — so a portal badge is the same picture the in-game shelf
+# shows. Needs `npm run assets` to have built the atlas.
+# `make store-achievement-art ARGS="--only steam"`
+store-achievement-art:
+	node scripts/achievement-art.mjs $(ARGS)
 
 # Explore WHEN to shoot: sample one staged recipe at a matrix of delays and
 # contact-sheet them, so the frame is picked by eye instead of guessed.

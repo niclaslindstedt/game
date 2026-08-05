@@ -123,6 +123,15 @@ declare module "*/asset-tools/surface.mjs" {
   ): void;
 }
 
+declare module "*/asset-tools/achievement-badge.mjs" {
+  export const BADGE_BACKDROP: Rgba;
+  export function lockedBadge(surface: Surface): Surface;
+  export function badgeCanvas(
+    sprite: Surface,
+    target: { size: number; margin?: number },
+  ): Surface;
+}
+
 declare module "*/sprite-data/load-yaml.mjs" {
   export function loadSprites(): {
     CORE_PALETTE: Record<string, Rgba>;

@@ -4,8 +4,9 @@ Everything App Store Connect and the Play Console need, generated from sources
 committed in this repo. Two commands produce the whole submission package:
 
 ```sh
-make store-metadata   # listing.yaml  → store.config.json  (text metadata)
-make store-shots      # the real game → screenshots/       (captioned PNGs)
+make store-metadata          # listing.yaml  → store.config.json  (text metadata)
+make store-shots             # the real game → screenshots/       (captioned PNGs)
+make store-achievement-art   # the sprite atlas → achievements/   (badge images)
 ```
 
 | Path                            | What it is                                                                     | Committed? |
@@ -13,10 +14,11 @@ make store-shots      # the real game → screenshots/       (captioned PNGs)
 | `listing.yaml`                  | **Source of truth** — subtitle, description, keywords, age rating, review info | yes        |
 | `store.config.json`             | Compiled listing for `eas metadata:push`                                       | no (built) |
 | `screenshots/<device>/`         | Upload-ready captioned PNGs at Apple's exact rasters                           | no (built) |
+| `achievements/<id>.png`         | The 1024×1024 image for each Game Center achievement                           | no (built) |
 | `game-center-achievements.json` | The Game Center achievement list to enter in App Store Connect                 | yes        |
 | `game-center-leaderboards.json` | The Game Center leaderboard list to enter in App Store Connect                 | yes        |
 
-The generated two are gitignored for the same reason the sprite atlas is
+The generated three are gitignored for the same reason the sprite atlas is
 (§11.2): they are reproducible outputs, and reviewing a 2868×1320 PNG diff in a
 pull request helps nobody. Regenerate them whenever you submit.
 
@@ -114,6 +116,32 @@ every smaller device in its family.
 
 Edit the `SHOTS` array to change what is captured; it is plain data.
 
+## The achievement artwork
+
+Game Center wants an image per achievement localization — 512×512 minimum,
+1024×1024 recommended — and `make store-achievement-art` writes one per row of
+`game-center-achievements.json` into `achievements/<id>.png`, named so the file
+to upload is the row's own _Achievement ID_.
+
+None of it is new art. Every badge already has a picture: the atlas sprite its
+def names as `icon`, which the in-game shelf and the unlock toast draw. A portal
+badge showing something else would be the feature disagreeing with itself on two
+screens, so `scripts/achievement-art.mjs` cuts that same sprite out of the same
+atlas, upscales it **nearest-neighbour at an integer factor** (a resample would
+turn a two-color pixel edge into a gradient at exactly the size a store shows it
+biggest), and centres it on the shelf's own cell color with a tenth of the
+canvas kept clear for Game Center's rounded corners. The image is flattened —
+neither portal accepts an alpha channel.
+
+The id list is the committed manifest, which the suite already drift-tests
+against the catalog, so an added or retired badge flows into the artwork on the
+next run with no second list to maintain. Needs `npm run assets` to have built
+the atlas; `ARGS="--only game-center"` or `ARGS="--id boss_slayer"` narrows a
+run while iterating.
+
+Steam's half of the same generator is described in
+[`../../electron/RELEASING.md`](../../electron/RELEASING.md).
+
 ## What still has to be done by hand
 
 Neither command can do these — they live in the store consoles:
@@ -127,7 +155,8 @@ Neither command can do these — they live in the store consoles:
   column already spends Game Center's 1,000-point budget exactly. Regenerate
   the file with `node scripts/game-center-achievements.mjs` after any change to
   the badge catalog — the diff is the list of rows to add. An achievement the
-  game reports but the portal has never heard of is silently dropped.
+  game reports but the portal has never heard of is silently dropped. Upload
+  each row's image from `achievements/<id>.png` (`make store-achievement-art`).
 - Create the **Game Center leaderboards** listed in
   `game-center-leaderboards.json` (App Store Connect → Game Center →
   Leaderboards): the `id` column is the _Leaderboard ID_, and the `format`

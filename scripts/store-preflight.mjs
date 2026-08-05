@@ -384,17 +384,37 @@ if (existsSync(webroot)) {
   );
 }
 
-const shotsDir = path.join(native, "store", "screenshots");
-const shots = existsSync(shotsDir)
-  ? readdirSync(shotsDir, { recursive: true }).filter((f) =>
-      String(f).endsWith(".png"),
-    ).length
-  : 0;
+/** How many PNGs a generated art directory holds (0 when it was never run). */
+const pngCount = (dir) =>
+  existsSync(dir)
+    ? readdirSync(dir, { recursive: true }).filter((f) =>
+        String(f).endsWith(".png"),
+      ).length
+    : 0;
+
+const shots = pngCount(path.join(native, "store", "screenshots"));
 if (shots > 0) ok(`${shots} store screenshots staged`);
 else
   warn(
     "no store screenshots have been captured",
     "`make store-shots` — fastlane uploads text only without them.",
+  );
+
+// One image per achievement, and Game Center has no default to fall back on —
+// a row created without one goes up blank.
+const gcBadges = JSON.parse(
+  readFileSync(
+    path.join(native, "store/game-center-achievements.json"),
+    "utf8",
+  ),
+).count;
+const gcArt = pngCount(path.join(native, "store", "achievements"));
+if (gcArt >= gcBadges) ok(`${gcArt} Game Center achievement images rendered`);
+else
+  warn(
+    `${gcArt} of ${gcBadges} Game Center achievement images rendered`,
+    "`make store-achievement-art` — cut from the game's own sprite atlas, so " +
+      "the portal badge is the picture the in-game shelf shows.",
   );
 
 // ---------------------------------------------------------------------------
@@ -530,12 +550,7 @@ if (wrongCapsules.length > 0) {
 
 // Valve requires at least five, and four of them marked suitable for all ages.
 const STEAM_MIN_SHOTS = 5;
-const steamShotsDir = path.join(electron, "store", "screenshots");
-const steamShots = existsSync(steamShotsDir)
-  ? readdirSync(steamShotsDir, { recursive: true }).filter((f) =>
-      String(f).endsWith(".png"),
-    ).length
-  : 0;
+const steamShots = pngCount(path.join(electron, "store", "screenshots"));
 if (steamShots >= STEAM_MIN_SHOTS) {
   ok(`${steamShots} Steam screenshots captured`);
 } else {
@@ -543,6 +558,22 @@ if (steamShots >= STEAM_MIN_SHOTS) {
     `${steamShots} of ${STEAM_MIN_SHOTS} required Steam screenshots captured`,
     "`node pwa/scripts/store-shots.mjs --only steam` — the 1920×1080 raster, " +
       "written to electron/store/screenshots/.",
+  );
+}
+
+// TWO icons per achievement — Steam draws the achieved and locked variants side
+// by side in the overlay.
+const steamBadges = JSON.parse(
+  readFileSync(path.join(electron, "store/steam-achievements.json"), "utf8"),
+).count;
+const steamArt = pngCount(path.join(electron, "store", "achievements"));
+if (steamArt >= steamBadges * 2) {
+  ok(`${steamArt} Steam achievement icons rendered`);
+} else {
+  warn(
+    `${steamArt} of ${steamBadges * 2} Steam achievement icons rendered`,
+    "`make store-achievement-art` — the achieved/locked 64×64 pair for every " +
+      "row, cut from the badge's own sprite.",
   );
 }
 
