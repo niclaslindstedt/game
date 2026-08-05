@@ -64,7 +64,7 @@ import { createVehicles, vehicleFootprint } from "./vehicles.ts";
 import { createQuestGivers } from "./quests/index.ts";
 import {
   difficultyBandIndex,
-  evolutionHpMult,
+  evolutionLevelBonus,
   mobContactScaleFor,
   mobHpLevelFactor,
   mobHpScaleFor,
@@ -290,7 +290,6 @@ export function createGame(
           nextId++,
           mobHp,
           0,
-          1,
           mobLvl,
         ),
         spawn.level,
@@ -345,7 +344,6 @@ export function createGame(
           nextId++,
           s.hpMult,
           0,
-          1,
           s.mlvl,
           s.banded,
         ),
@@ -364,7 +362,6 @@ export function createGame(
       nextId++,
       s.hpMult,
       0,
-      1,
       s.mlvl,
       s.banded,
     );
@@ -493,7 +490,6 @@ export function createGame(
           nextId++,
           sc.hpMult,
           0,
-          1,
           sc.mlvl,
           sc.banded,
         ),
@@ -1036,7 +1032,7 @@ function placeRareEncounters(
                 def.height - margin,
               ),
             );
-      enemies.push(spawnEnemy(pick, pos, rng, takeId(), mobHp, 0, 1, mobLvl));
+      enemies.push(spawnEnemy(pick, pos, rng, takeId(), mobHp, 0, mobLvl));
     }
   }
 }
@@ -1046,9 +1042,10 @@ function placeRareEncounters(
  * (mobHpScaleFor / mobLevelScale). Kill XP is LEVEL-based (`mobLevelXp` off the
  * mob's `mlvl`), not hp-based, so hp and xp are decoupled. `evo` is the menace
  * evolution stage stamped onto a MINION spawned while the horde is rampaging
- * (see menace.ts): it stacks extra hp (a challenge knob, scaled by the
- * difficulty's `menaceEffectMult` via `evoEffect`) and marks the mob so its
- * drop rolls WORSE. Elites and bosses ignore `evo` — they instead power-match
+ * (see menace.ts): it adds ONE LEVEL PER STAGE to the mob's monster level
+ * (`evolutionLevelBonus`), which is what makes it tougher, meaner, worth more
+ * xp and richer to loot — all through the same `mlvl` the ordinary spawn band
+ * moves. Elites and bosses ignore `evo` — they instead power-match
  * the player when they engage (maybePowerScale). */
 /**
  * Stamp a freshly-spawned instance with a SET PIECE's authored per-difficulty
@@ -1101,7 +1098,6 @@ export function spawnEnemy(
   id: number,
   hpMult = 1,
   evo = 0,
-  evoEffect = 1,
   mlvl = 1,
   // HARD-CODED level? Then `mlvl` is the mob's final level (the level spec's
   // rolled band already varies it), so skip the internal ±spawn band that the
@@ -1113,7 +1109,10 @@ export function spawnEnemy(
     def.role === "boss"
       ? 0
       : randomRange(rng, -ENEMY_AI.speedJitter, ENEMY_AI.speedJitter);
-  const evolved = def.role === "minion" ? Math.max(0, evo) : 0;
+  // The menace EVOLUTION step, in LEVELS: a minion spawned into a rampage of
+  // stage N carries N levels over its normal level. Elites/bosses take none —
+  // they power-match the hero when their fight opens instead.
+  const evolved = def.role === "minion" ? evolutionLevelBonus(evo) : 0;
   // A RARE/UNIQUE mob's whole tier lands here (config RARE_MOBS): the def is
   // authored at ordinary minion numbers and the multipliers make it special.
   const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
@@ -1134,21 +1133,24 @@ export function spawnEnemy(
       : 0;
   // The developer mob-hp knob multiplies in here — the one chokepoint every
   // spawn path funnels through — so placed mobs, waves, and rushers all
-  // toughen together. The band shifts the mob's monster LEVEL, so it moves hp
-  // through the same geometric `mobHpLevelFactor` the caller used for the
-  // baseline (`hpMult` = factor(mlvl) × autoPowerScale): the band ratio
-  // `factor(mlvl+band) / factor(mlvl)` re-levels the bar, floored by the same
-  // `mobHpScaleFloor` so a deep-negative roll can't zero a mob out.
-  const bandHpMult =
-    band === 0
+  // toughen together. The band AND the evolution stage both shift the mob's
+  // monster LEVEL, so they move hp through the same geometric
+  // `mobHpLevelFactor` the caller used for the baseline (`hpMult` =
+  // factor(mlvl) × autoPowerScale): the ratio `factor(mlvl+shift) /
+  // factor(mlvl)` re-levels the bar, floored by the same `mobHpScaleFloor` so
+  // a deep-negative roll can't zero a mob out. Evolution therefore costs no
+  // separate multiplier at all — a stage-3 mob is simply a mob three levels
+  // higher, in hp exactly as in xp and loot.
+  const levelShift = band + evolved;
+  const shiftedHpMult =
+    levelShift === 0
       ? hpMult
-      : hpMult * (mobHpLevelFactor(mlvl + band) / mobHpLevelFactor(mlvl));
+      : hpMult * (mobHpLevelFactor(mlvl + levelShift) / mobHpLevelFactor(mlvl));
   const hp = Math.max(
     1,
     Math.round(
       def.hp *
-        Math.max(MENACE.mobHpScaleFloor, bandHpMult) *
-        evolutionHpMult(evolved, evoEffect) *
+        Math.max(MENACE.mobHpScaleFloor, shiftedHpMult) *
         BALANCE.mobHp *
         (rarity?.hpMult ?? 1),
     ),
@@ -1178,10 +1180,12 @@ export function spawnEnemy(
     // rare/unique tier adds its own — the special finds reach the tier gates
     // early, like elites do). Elites and bosses re-stamp it the moment their
     // fight engages (maybePowerScale), so their drops match the hero who
-    // beat them — and rare/unique mobs re-stamp the same way.
+    // beat them — and rare/unique mobs re-stamp the same way. The menace
+    // EVOLUTION stage rides here too (one level per stage), which is the whole
+    // of what a rampage does to the rank and file.
     mlvl: Math.max(
       1,
-      mlvl + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0) + band,
+      mlvl + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0) + levelShift,
     ),
     speed: mobSpeed(def) * (1 + jitter),
     contactCooldownMs: 0,

@@ -14,7 +14,7 @@
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { DEATH_SCENE } from "./config/index.ts";
 import { spawnEnemy } from "./create.ts";
-import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
+import { meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { areDeathScenesEnabled } from "./flags.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
@@ -263,7 +263,6 @@ function spawnCrowdMob(state: GameState, center: Vec2): void {
     state.nextId++,
     sc.hpMult,
     menaceStage(state),
-    difficultyDef(state.difficulty).menaceEffectMult,
     sc.mlvl,
     sc.banded,
   );

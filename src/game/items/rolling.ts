@@ -165,6 +165,33 @@ export function magicFind(state: GameState, player: Player): number {
 }
 
 /**
+ * THE OVER-CAP CHASE MULTIPLIER: what a mob's own MONSTER LEVEL past the hero
+ * level cap (`LEVELING.maxLevel`, 99) does to the VERY RARE tiers' odds —
+ * unique, legendary and artifact. 1× at or below the cap, ramping linearly to
+ * `LOOT.overCapChaseMult` (3×) once the mob is `LOOT.overCapChaseLevels` past
+ * it, and flat from there: a level-200 JESUS mob is the ceiling, not a
+ * springboard.
+ *
+ * Mobs get past 99 exactly one way — the MENACE meter, which spawns the horde
+ * one level over its normal level per stage and is uncapped on JESUS (see
+ * `evolutionLevelBonus` / `menaceStageCap`). So this is the reward for holding
+ * a deep rampage: the crowd that is hardest to survive drops the best.
+ *
+ * A MULTIPLIER ON A CHANCE, NEVER A GATE. Everything that decides whether a
+ * tier may drop at all — the difficulty locks (legendary/artifact from HARD
+ * up), the artifact's level-cap gate, the tier unlock, the level's base pool —
+ * is applied before this and is untouched by it. A level-99 hero rampaging on
+ * EASY multiplies the odds of what EASY can already pay him; it opens nothing
+ * EASY was holding back.
+ */
+export function overCapChaseMult(mlvl: number): number {
+  const over = mlvl - LEVELING.maxLevel;
+  if (over <= 0) return 1;
+  const t = Math.min(1, over / Math.max(1, LOOT.overCapChaseLevels));
+  return 1 + (LOOT.overCapChaseMult - 1) * t;
+}
+
+/**
  * The MF multiplier on a tier's chance: MAGIC is LINEAR (uncapped in MF); rare
  * and up SATURATE toward `LOOT.mfSaturation[tier]` via `1 + cap·mf/(cap+mf)`,
  * so stacking LUCK/aura is strong early and gives diminishing returns on the
@@ -197,6 +224,7 @@ function rollTier(
   tierBonus: number,
   role: EnemyRole = "minion",
   mobRarity?: "rare" | "unique",
+  mlvl = lootLevel,
 ): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
   const mf = magicFind(state, player);
@@ -240,6 +268,15 @@ function rollTier(
   // richer, applied to the CHASE tiers' chance here and to the world-drop
   // channel in `maybeDropWorldUnique`, so both scale together.
   const namedMult = runLevelDef(state).loot.namedDropMult ?? 1;
+  // PAST THE CAP: a mob pushed above level 99 by a deep rampage (menace spawns
+  // mobs a level over normal per stage) multiplies the CHASE tiers' odds,
+  // ramping to `overCapChaseMult` (3×) at `overCapChaseLevels` over the cap and
+  // holding there — the best named-item farm in the game is the deepest
+  // rampage a build can sustain. It touches only the CHANCE: every gate above
+  // (the rung's hard/JESUS locks, the tier unlock, the base pool) still says
+  // what it said, so a level-99 hero rampaging on EASY farms EASY's odds
+  // harder, not other rungs' items.
+  const overCapMult = overCapChaseMult(mlvl);
   // TIER_ROLL_ORDER never contains "regular" (the fall-through) or "trash"
   // (scripted mints only), so the rarity config maps index safely.
   for (const tier of TIER_ROLL_ORDER) {
@@ -261,7 +298,10 @@ function rollTier(
     if (base <= 0) continue;
     const chance = Math.min(
       LOOT.rarityChanceMax,
-      base * magicFindFactor(tier, mf) * BALANCE.gearQuality,
+      base *
+        magicFindFactor(tier, mf) *
+        (named ? overCapMult : 1) *
+        BALANCE.gearQuality,
     );
     if (state.rng() < chance) return tier;
   }
@@ -593,6 +633,7 @@ export function rollEquipment(
       opts.tierBonus ?? 0,
       opts.role,
       opts.mobRarity,
+      mlvl,
     );
   // STAGE 3 — the D2 FOLD: a NATURALLY-rolled unique/legendary becomes a NAMED
   // item, chosen among those eligible for this slot by its per-item `rarity`

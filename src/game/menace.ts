@@ -12,11 +12,13 @@
 //   1. LURE — the wave spawner keeps a denser, bigger crowd on the player
 //      (crowd growth alone caps at lureStageCap), and every overkill drags
 //      nearby mobs in through the walk-credit channel.
-//   2. EVOLVE — minions spawned while menace is high carry extra hp (baked in
-//      at spawn), so they take more killing — but their drops roll WORSE
-//      tiers, so a rampage is a poor loot farm. (Kill XP is LEVEL-based now,
-//      not hp-proportional, so evolution no longer sweetens the xp; it is
-//      purely a challenge knob.)
+//   2. EVOLVE — a minion spawned while menace is high spawns LEVELS ABOVE its
+//      normal level: menace stage 3 means every mob is three levels over the
+//      one it would otherwise have carried (baked in at spawn). Level is the
+//      whole of it — hp (`mobHpLevelFactor`), contact damage
+//      (`mobContactScaleFor`), kill XP (`mobLevelXp`) and the loot gates all
+//      hang off `Enemy.mlvl` already, so a rampaging horde is tougher AND
+//      worth more, rather than a hp sponge that pays nothing.
 //   3. POWER-MATCH — elites and bosses scale their hp and contact damage when
 //      they first engage, keyed to the hero's CHARACTER level (plus the menace
 //      heat), so the set-piece fights keep pace instead of melting. Gear and
@@ -54,13 +56,35 @@ export function menaceFloorStage(state: GameState): number {
   return Math.floor(state.menaceFloor / MENACE.perStage);
 }
 
+/**
+ * THE HORDE'S LEVEL HEADROOM: how many levels the hero stands ABOVE the mobs
+ * this venue fields (`partyLevel − currentMobLevel`, floored at 0). Every rung
+ * pins its horde a fixed distance under (or over) the hero — EASY's mobs stop
+ * climbing at level 34, and a level appoints its own band outright — so a hero
+ * who keeps farming a rung he has outgrown opens a gap, and THAT gap is what
+ * the rampage is allowed to spend (see `menaceStageCap`). Zero while the horde
+ * is at or above the hero: a fresh arrival on NIGHTMARE gets no free stages.
+ */
+export function menaceLevelHeadroom(state: GameState): number {
+  return Math.max(0, Math.round(partyLevel(state)) - currentMobLevel(state));
+}
+
 /** The highest evolution STAGE this run's difficulty lets the meter reach —
- * its PEAK. EASY tops out at 3, MEDIUM 5, HARD 10, NIGHTMARE 100; JESUS omits
- * the knob and stays UNCAPPED (`Infinity` here). Both the live meter and the
- * permanent ratchet floor are clamped to it (see `menaceCeiling`), so a gentle
- * rung never evolves the horde past its ceiling however hard it is steamrolled. */
+ * its PEAK: the rung's own allowance (EASY 3, MEDIUM 5, HARD 10, NIGHTMARE 100)
+ * PLUS the level headroom the hero has opened over the horde
+ * (`menaceLevelHeadroom`). Because a stage now means "every mob spawns one
+ * level higher" (see `evolutionLevelBonus`), the peak is really the answer to
+ * "how far past its normal level may this rung's horde be pushed": a level-13
+ * hero mowing level-9 mobs on EASY may reach stage 4 + 3, so the crowd can
+ * climb to (and a little past) his own level, and no further. JESUS omits the
+ * knob and stays UNCAPPED (`Infinity` here) — its mobs can reach level 200 and
+ * beyond. Both the live meter and the permanent ratchet floor are clamped to
+ * it (see `menaceCeiling`), so a gentle rung never evolves the horde past its
+ * ceiling however hard it is steamrolled. */
 export function menaceStageCap(state: GameState): number {
-  return difficultyDef(state.difficulty).menaceStageCap ?? Infinity;
+  const rung = difficultyDef(state.difficulty).menaceStageCap;
+  if (rung === undefined) return Infinity;
+  return rung + menaceLevelHeadroom(state);
 }
 
 /** The raw-menace ceiling: the cap stage's worth of points (`cap · perStage`),
@@ -107,11 +131,25 @@ export function menaceSensitivity(state: GameState): number {
   );
 }
 
-/** The hp multiplier a minion spawned at evolution `stage` carries.
- * `effectMult` is the difficulty's `menaceEffectMult` — how hard a rampage
- * lands on the mobs on this rung (1 = the tuned baseline). */
-export function evolutionHpMult(stage: number, effectMult = 1): number {
-  return 1 + Math.max(0, stage) * MENACE.hpPerStage * effectMult;
+/**
+ * THE EVOLUTION STEP, IN LEVELS: how many levels ABOVE its normal level a
+ * minion spawned at evolution `stage` carries. One level per stage, flat —
+ * "menace 3" means every mob spawns three levels over the level this venue,
+ * this rung and this hero would otherwise have given it.
+ *
+ * A LEVEL, not a multiplier, is the whole design: `Enemy.mlvl` already drives
+ * hp (`mobHpLevelFactor`), contact damage (`mobContactScaleFor`), kill XP
+ * (`mobLevelXp`) and every loot gate (which bases may drop, which tiers are
+ * unlocked, the dropped item's own level), so one number moves the rampage's
+ * threat AND its reward together. The old per-stage hp multiplier made a
+ * rampage a wall that paid nothing; a level makes it a harder, richer horde.
+ *
+ * Difficulty does NOT scale the step (`menaceEffectMult` still sizes the
+ * LURE): a stage is a level on every rung, and what a rung controls is how
+ * many stages it lets the meter reach — `menaceStageCap`.
+ */
+export function evolutionLevelBonus(stage: number): number {
+  return Math.max(0, Math.floor(stage));
 }
 
 /**
@@ -267,9 +305,10 @@ export function heroPowerLevel(state: GameState): number {
  * rank-and-file minions included — locks in from the hero's POWER level (now
  * simply the CHARACTER level — gear and weapon damage no longer toughen the
  * horde, see `heroPowerLevel`) and the run's difficulty. Stamped at spawn
- * (see spawnEnemy); each mob then rolls its own ±level band on top. The menace EVOLUTION stage
- * (`evolutionHpMult`) is the moment-to-moment overkill half, and the two
- * multiply together. The auto-stat compensation (`autoPowerScale`) stays
+ * (see spawnEnemy); each mob then rolls its own ±level band on top. The menace
+ * EVOLUTION stage is the moment-to-moment overkill half, and it lands as extra
+ * LEVELS on top of that baseline (`evolutionLevelBonus`, re-levelled through
+ * the same `mobHpLevelFactor` at spawn). The auto-stat compensation (`autoPowerScale`) stays
  * keyed to the CHARACTER level — it cancels the free stat gains, which gear
  * has nothing to do with.
  */
@@ -429,8 +468,9 @@ export function resolveMobScaling(
  * The tier bonus a minion's drop rolls from the player's LEVEL — better gear to
  * match the tougher horde `mobLevelScale` produces (`tierBonusPerLevel` per
  * level above 1, CAPPED at `tierBonusLevelCap`). Read in `dropMinionLoot`
- * alongside the mob's own `dropProfile` bonus and the menace evolution stage's
- * `tierPenaltyPerStage` (which pulls the other way on evolved mobs). The cap is
+ * alongside the mob's own `dropProfile` bonus. (An EVOLVED mob no longer pays
+ * a tier penalty: evolution is levels now, so a rampage's crop rolls its loot
+ * off a HIGHER monster level — see `evolutionLevelBonus`.) The cap is
  * what keeps the tier ladder discriminating all campaign: uncapped, the level
  * term alone eventually dwarfed every base chance and made every late drop
  * roll rare — tier progression belongs to the difficulty ladder
@@ -717,16 +757,18 @@ export function tickMenace(
   // as FEWER bars per second, and the meter settles at the stage the player's
   // real throughput can actually sustain.
   const diff = difficultyDef(state.difficulty);
-  const effectMult = diff.menaceEffectMult;
   // The reference healthbar carries the rung's `mobHpMult` too, so a tougher
   // ladder rung doesn't read as "fewer bars per second" and quietly cool the
-  // meter — the yardstick and the mobs move together.
+  // meter — the yardstick and the mobs move together. The evolution stage
+  // rides it as LEVELS (the same `evolutionLevelBonus` the spawner stamps), so
+  // the bar is literally the one a mob spawned this instant would carry.
   const bar =
     LEVELING.refMobHp *
-    mobHpLevelFactor(Math.max(1, currentMobLevel(state))) *
+    mobHpLevelFactor(
+      Math.max(1, currentMobLevel(state) + evolutionLevelBonus(before)),
+    ) *
     autoPowerScale(partyLevel(state)) *
-    diff.mobHpMult *
-    evolutionHpMult(before, effectMult);
+    diff.mobHpMult;
   // The rolling heat only fires through the clearance gate: sustained DPS and
   // kill rate escalate the meter while the player is THINNING the horde, and go
   // inert the moment the screen is merely holding or filling. Overkill jolts

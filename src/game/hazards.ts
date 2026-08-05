@@ -398,7 +398,6 @@ function explodeAsteroid(
         state.nextId++,
         mobLevelScale(state),
         menaceStage(state),
-        difficultyDef(state.difficulty).menaceEffectMult,
         currentMobLevel(state),
       );
       add.awake = true; // shipped to the fight, not to a nap

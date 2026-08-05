@@ -21,7 +21,6 @@
 
 import { vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyAuthoredScaling, spawnEnemy } from "./create.ts";
-import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
@@ -117,7 +116,6 @@ function mint(
       state.nextId++,
       1,
       menaceStage(state),
-      difficultyDef(state.difficulty).menaceEffectMult,
       partyLevel(state),
     ),
     level,

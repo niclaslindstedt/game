@@ -11,8 +11,10 @@ import {
   difficultyDef,
   equipFromInventory,
   isBetterEquipment,
+  LEVELING,
   LOOT,
   meetsLevelReq,
+  overCapChaseMult,
   registerDefs,
   rollEquipment,
 } from "@game/core";
@@ -70,10 +72,24 @@ const LEG_WPN = {
   lore: "A TEST LEGENDARY FOLDED FROM THE RARITY ROLL.",
 };
 
+// A CAP-LEVEL unique on the same base: the named FOLD retires any named item
+// more than `LOOT.namedIlvlWindow` under the drop's own loot level, so a deep
+// (level-200) kill needs a deep relic to fold or every chase roll downgrades
+// to a rare. Registered only by the tests that farm past the cap.
+const DEEP_WPN = {
+  id: "test_deep_wpn",
+  name: "TEST DEEP BLADE",
+  base: "test_relic",
+  slot: "weapon" as const,
+  ilvl: 190,
+  bonuses: [{ kind: "stat" as const, stat: "strength" as const, value: 9 }],
+  lore: "A TEST UNIQUE FOR THE FARM PAST THE LEVEL CAP.",
+};
+
 /** Re-register the fixture catalogs with the relic added and `test_level`'s
  * weapon pool reduced to sidearm-vs-relic, so pool-gate assertions are
  * unambiguous. Vitest isolates modules per file — this never leaks. */
-function installLootFixtures(): void {
+function installLootFixtures(extraUniques: Record<string, unknown> = {}): void {
   registerDefs({
     levels: {
       test_level: {
@@ -98,7 +114,11 @@ function installLootFixtures(): void {
     abilities: FIX_ABILITIES,
     difficulties: FIX_DIFFICULTIES,
     storyItems: FIX_STORY_ITEMS,
-    uniques: { test_uniq_wpn: UNIQ_WPN, test_leg_wpn: LEG_WPN },
+    uniques: {
+      test_uniq_wpn: UNIQ_WPN,
+      test_leg_wpn: LEG_WPN,
+      ...extraUniques,
+    } as Parameters<typeof registerDefs>[0]["uniques"],
   });
 }
 
@@ -373,6 +393,69 @@ describe("level requirements", () => {
     expect(meetsLevelReq(state, state.players[0], relic)).toBe(true);
     expect(equipFromInventory(state, state.players[0], 0)).toBe(true);
     expect(state.players[0].equipment.weapon.defId).toBe("test_relic");
+  });
+});
+
+describe("past the level cap — the rampage's chase premium", () => {
+  it("ramps the very-rare odds from 1× at the cap to 3× and holds there", () => {
+    // A mob only gets past level 99 one way — a deep MENACE rampage, which
+    // spawns the horde a level over normal per stage. Every level past the cap
+    // widens the CHASE tiers' odds, topping out at 3× a level-99 mob's.
+    expect(overCapChaseMult(50)).toBe(1);
+    expect(overCapChaseMult(LEVELING.maxLevel)).toBe(1);
+    const half = overCapChaseMult(
+      LEVELING.maxLevel + LOOT.overCapChaseLevels / 2,
+    );
+    expect(half).toBeCloseTo(1 + (LOOT.overCapChaseMult - 1) / 2);
+    expect(overCapChaseMult(LEVELING.maxLevel + LOOT.overCapChaseLevels)).toBe(
+      LOOT.overCapChaseMult,
+    );
+    // …and flat from there: level 200 is the ceiling, not a springboard.
+    expect(overCapChaseMult(500)).toBe(LOOT.overCapChaseMult);
+  });
+
+  it("a level-200 mob really does find more named items than a level-99 one", () => {
+    // Both halves of a deep kill push the same way — the D2 depth slope and
+    // this premium on top of it — and what the player sees is the sum: the
+    // horde a sustained rampage fields is the best chase farm in the game.
+    installLootFixtures({ test_deep_wpn: DEEP_WPN });
+    const namedRate = (mlvl: number): number => {
+      const state = startGame(7, "test_level");
+      state.difficulty = "jesus" as Difficulty;
+      state.players[0].stats.luck = 20;
+      let named = 0;
+      for (let i = 0; i < 400; i++) {
+        const tier = rollEquipment(state, state.players[0], {
+          slot: "weapon",
+          mlvl,
+        }).tier;
+        if (tier === "unique" || tier === "legendary") named++;
+      }
+      return named;
+    };
+    const deep = namedRate(200);
+    const atCap = namedRate(99);
+    installLootFixtures(); // put the ordinary fixture catalog back
+    expect(deep).toBeGreaterThan(atCap);
+  });
+
+  it("opens nothing a rung was holding back — EASY still drops no legendary", () => {
+    // The rule the premium must not break: a level-99 hero rampaging a gentle
+    // rung farms what THAT rung can pay, harder. Legendary/artifact are HARD
+    // and up, and a level-200 mob on EASY changes nothing about that.
+    const state = startGame(7, "test_level");
+    state.difficulty = "easy" as Difficulty;
+    state.players[0].level = 99;
+    state.players[0].stats.luck = 100;
+    const tiers = new Set<Tier>();
+    for (let i = 0; i < 400; i++) {
+      tiers.add(
+        rollEquipment(state, state.players[0], { slot: "weapon", mlvl: 200 })
+          .tier,
+      );
+    }
+    expect(tiers.has("legendary")).toBe(false);
+    expect(tiers.has("artifact")).toBe(false);
   });
 });
 
