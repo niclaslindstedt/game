@@ -333,7 +333,14 @@ afterAll(() => {
   server.close();
 });
 
-describe("the dry run", () => {
+/** Every test here SPAWNS the real script against the HTTP stand-in — two full
+ * runs of it in places — so vitest's 5 s default is not a budget for anything
+ * these measure, and under the full suite's load it timed one out on a run
+ * where the same test passes in 11 s on its own. The number is a ceiling for a
+ * hung child process, not a performance assertion. */
+const SPAWN_MS = 60_000;
+
+describe("the dry run", { timeout: SPAWN_MS }, () => {
   it("reads the portal, prints the work list, and writes nothing", async () => {
     const result = await run(["--app", APP_ID, "--only", "leaderboards"]);
     expect(result.stderr).toBe("");
@@ -357,7 +364,7 @@ describe("the dry run", () => {
   });
 });
 
-describe("the apply", () => {
+describe("the apply", { timeout: SPAWN_MS }, () => {
   it("creates each board and its localization, then has nothing left to do", async () => {
     portal.log.length = 0;
     const first = await run([
@@ -465,7 +472,7 @@ describe("the apply", () => {
   });
 });
 
-describe("the achievements", () => {
+describe("the achievements", { timeout: SPAWN_MS }, () => {
   it("creates every badge and reports the artwork it has none of", async () => {
     // `--art` points at an EMPTY directory rather than trusting the real one to
     // be empty: the badge PNGs are gitignored build output, so whether they
