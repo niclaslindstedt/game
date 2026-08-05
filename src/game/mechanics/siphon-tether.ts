@@ -32,8 +32,8 @@ import { landHostileBlow, mobBlowDamage, pushEliteCast } from "./shared.ts";
  * is only sampled once is not one. */
 function holds(ability: SiphonTetherAbility, ctx: AbilityCtx): boolean {
   const { state, enemy } = ctx;
-  if (distance(enemy.pos, state.players[0].pos) > ability.range) return false;
-  return lineOfSight(state, enemy.pos, state.players[0].pos);
+  if (distance(enemy.pos, ctx.target.pos) > ability.range) return false;
+  return lineOfSight(state, enemy.pos, ctx.target.pos);
 }
 
 function ready(ability: SiphonTetherAbility, ctx: AbilityCtx): boolean {
@@ -44,7 +44,7 @@ function cast(ability: SiphonTetherAbility, ctx: AbilityCtx): void {
   ctx.mech.siphonMs = ability.durationMs;
   ctx.mech.siphonTickMs = 0;
   pushEliteCast(ctx.state, ctx.enemy, ability, {
-    to: { ...ctx.state.players[0].pos },
+    to: { ...ctx.target.pos },
     ms: ability.durationMs,
   });
 }
@@ -68,6 +68,7 @@ function step(ability: SiphonTetherAbility, ctx: AbilityCtx): boolean {
     mech.siphonTickMs = ability.tickMs;
     const lost = landHostileBlow(
       state,
+      ctx.target,
       mobBlowDamage(enemy, ctx.def.contactDamage, ability.damageFrac),
       enemy.mlvl,
       `${enemy.defId}:siphon_tether`,
@@ -81,7 +82,7 @@ function step(ability: SiphonTetherAbility, ctx: AbilityCtx): boolean {
     }
     pushEliteCast(state, enemy, ability, {
       phase: "tick",
-      to: { ...state.players[0].pos },
+      to: { ...ctx.target.pos },
     });
   }
   // TRUE — the tether holds the mob still while it drinks. See the header.

@@ -716,13 +716,13 @@ export function applyRunCommand(
 
     // THE RIDE
     case "startAutopilot":
-      return startAutopilot(state, num(a, 0));
+      return startAutopilot(state, hero, num(a, 0));
     case "stopAutopilot":
       return stopAutopilot(state);
     case "setAutopilotSpeed":
       return setAutopilotSpeed(state, num(a, 0));
     case "creditAutopilotPurse":
-      return creditAutopilotPurse(state, num(a, 0));
+      return creditAutopilotPurse(state, hero, num(a, 0));
     case "refundAutopilotBuild":
       return refundAutopilotBuild(state, hero);
   }

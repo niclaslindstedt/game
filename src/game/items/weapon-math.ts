@@ -92,9 +92,17 @@ export function weaponDamageFor(
  * `rng` — so damage spread can't perturb the loot/crit sequence. This is the
  * value combat feeds into `hitEnemy`; every readout (item card, DPS, scoring)
  * keeps using the deterministic average so a weapon still reads as one number.
+ *
+ * `hero` is WHOSE BLOW IT IS — the damage scales off their stats and their
+ * loadout, which is a private read and therefore a parameter (the `roll`
+ * variant beside it has always taken one).
  */
-export function rollWeaponDamage(state: GameState, weapon: Equipment): number {
-  return rollWeaponHit(state, state.players[0], weapon).damage;
+export function rollWeaponDamage(
+  state: GameState,
+  hero: Player,
+  weapon: Equipment,
+): number {
+  return rollWeaponHit(state, hero, weapon).damage;
 }
 
 /**

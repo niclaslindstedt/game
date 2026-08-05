@@ -64,6 +64,8 @@ export function stepLairs(state: GameState): void {
     // through instead of standing in it.
     // Out toward whoever knocked — the NEAREST hero, so the occupant clears
     // its own doorway rather than walking into the frame.
+    // Seat 0 only when the party is WIPED — the occupant still needs a bearing
+    // to step out along, and a corpse's position is a point on the map.
     const knocker = nearestHero(state, lair.pos) ?? state.players[0];
     const out = stepOut(lair.pos, knocker.pos);
     mint(state, spec.enemy, out, spec.level, spec.hp);

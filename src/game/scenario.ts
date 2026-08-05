@@ -271,6 +271,14 @@ const SPAWN_ATTEMPTS = 24;
  * to a mid-flight run works but tramples whatever the run had done.
  */
 export function applyScenario(state: GameState, spec: ScenarioSpec): void {
+  // SEAT 0 IS CORRECT THROUGHOUT THIS FILE, and it is the only file in the
+  // engine where that sentence is a design statement rather than an oversight.
+  // A `?scenario=` staging is the DEVELOPER's own instrument: it is applied to
+  // a freshly created run (which by construction has exactly one hero, before
+  // any client can have joined), it stages "the hero" — one build, one bag, one
+  // ring of mobs around one body — and it is not reachable in normal play at
+  // all. Parameterizing it would mean inventing a way for a spec to name a seat
+  // that a scenario has no use for.
   const player = state.players[0];
 
   // A staged run wants PLAY, not the title card the replay skip now lands
@@ -496,7 +504,7 @@ function placePlayer(
   state: GameState,
   place: "boss" | "merchant" | Vec2,
 ): void {
-  const player = state.players[0];
+  const player = state.players[0]; // the staged hero — see `applyScenario`
   let target: Vec2;
   if (place === "boss") {
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
@@ -554,7 +562,7 @@ function spawnRing(state: GameState, spawn: ScenarioSpawn): void {
   const max = Math.max(min, spawn.maxDistance ?? min + 160);
   const mlvl = spawn.mlvl ?? currentMobLevel(state);
   const hpMult = mobLevelScale(state) * (spawn.hpMult ?? 1);
-  const center = state.players[0].pos;
+  const center = state.players[0].pos; // the staged hero — see `applyScenario`
 
   for (let i = 0; i < count; i++) {
     const pos =
@@ -586,7 +594,7 @@ function dropRing(state: GameState, drop: ScenarioDrop): void {
   const count = Math.max(1, Math.floor(drop.count ?? 1));
   const min = Math.max(0, drop.minDistance ?? 30);
   const max = Math.max(min, drop.maxDistance ?? min + 90);
-  const center = state.players[0].pos;
+  const center = state.players[0].pos; // the staged hero — see `applyScenario`
   for (let i = 0; i < count; i++) {
     const pos =
       drop.at !== undefined
@@ -631,6 +639,7 @@ function mintDrop(
       // Identified whatever the tier: a scenario's drop exists to be picked up
       // and worn in the staged moment, not appraised first.
       equipment: markIdentified(
+        // The staged hero — see `applyScenario`.
         rollEquipment(state, state.players[0], {
           defId: id,
           tier: drop.tier ?? "regular",

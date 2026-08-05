@@ -1744,6 +1744,9 @@ function dropGuaranteedLoot(
   def: EnemyDef,
   at: Vec2,
   mlvl = 1,
+  // The killer, for the rolls that read a hero's build. Seat 0 is the honest
+  // default for the callers that know no attacker (a scripted drop, the
+  // library's tables), and solo it is the same hero either way.
   attacker: Player = state.players[0],
 ): void {
   const loot = def.loot;
@@ -1875,10 +1878,14 @@ function dropGuaranteedLoot(
  * celebration window while the mob's AI sits out. No damage, no kills, no
  * events — the light only throws them; the FX (canvas burst + screen flash)
  * are the app's reaction to the `levelUp` event. Called once per ding.
+ *
+ * `hero` IS WHO DINGED, and the blast is centred on THEM. Anchoring it on seat
+ * 0 meant a joiner's level-up cleared the horde off the host, on the far side
+ * of the map, and left the horde standing on the hero who actually earned it.
  */
-export function levelUpShockwave(state: GameState): void {
+export function levelUpShockwave(state: GameState, hero: Player): void {
   const { radius, knockbackSpeed, knockbackMs } = LEVELING.shockwave;
-  const origin = state.players[0].pos;
+  const origin = hero.pos;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
     // Ghosts have no body the light could shove, and a bystander is not in
@@ -1906,11 +1913,15 @@ export function levelUpShockwave(state: GameState): void {
  * reachable in normal play.
  */
 export function debugLevelUpFx(state: GameState): void {
-  levelUpShockwave(state);
+  // SEAT 0 IS CORRECT HERE: this is the developer's own `window.__levelup()`
+  // preview, driven from the page that is playing the hero it stages the
+  // spectacle on — a host-only hook that is not reachable in normal play.
+  const hero = state.players[0];
+  levelUpShockwave(state, hero);
   state.levelUpFxMs = LEVELING.dingCelebrationMs;
   state.events.push({
     type: "levelUp",
-    level: state.players[0].level,
+    level: hero.level,
     gains: [],
   });
 }
@@ -2033,7 +2044,7 @@ export function grantXp(
     // open — the HUD pips while points wait, and `promptPendingPoints` opens
     // it when the player wants it.
     state.levelUpFxMs = LEVELING.dingCelebrationMs;
-    levelUpShockwave(state);
+    levelUpShockwave(state, player);
   }
 }
 

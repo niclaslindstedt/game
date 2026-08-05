@@ -123,8 +123,11 @@ export function saturateToward(x: number, cap: number): number {
 export function playerCritChance(
   state: GameState,
   player: Player,
-  weaponClass: WeaponClass = weaponDef(state.players[0].equipment.weapon.defId)
-    .class,
+  // Unstated, the class is THIS hero's own weapon — never seat 0's. The default
+  // read the wrong equipment the moment there was a second hero: a joiner
+  // swinging a sword had his crit chance scored off whatever the host was
+  // holding, which is a different stat (`CRIT_STAT`) entirely.
+  weaponClass: WeaponClass = weaponDef(player.equipment.weapon.defId).class,
 ): number {
   let chance =
     STATS.baseCritChance +

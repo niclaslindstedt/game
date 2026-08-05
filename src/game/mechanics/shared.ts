@@ -14,7 +14,7 @@ import { queueStruckProcs } from "../loot.ts";
 import { BALANCE } from "../tuning.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import type { BossAbility } from "../defs/enemies/abilities.ts";
-import type { Enemy, GameEvent, GameState } from "../types/index.ts";
+import type { Enemy, GameEvent, GameState, Player } from "../types/index.ts";
 
 /**
  * Land one hostile blow on the hero, through every layer a contact hit goes
@@ -26,16 +26,23 @@ import type { Enemy, GameEvent, GameState } from "../types/index.ts";
  * `damage` is the raw figure BEFORE armor — every caller prices its own move
  * (usually a fraction of the attacker's `contactDamage`) and hands it here.
  * Returns the hp actually lost, so a caller can tell a hit from a whiff.
+ *
+ * **`player` IS A PARAMETER.** Armor, worn-armor wear, the barrier's absorption
+ * and the struck procs are all PRIVATE to one hero, so the victim is the hero
+ * the move actually reached — `ctx.target` for a set piece, which is the mob's
+ * own quarry. Reading seat 0 here billed the host for every blow a boss landed
+ * on anybody, which in a party is both an untouchable joiner and a host taking
+ * damage from a fight happening across the map.
  */
 export function landHostileBlow(
   state: GameState,
+  player: Player,
   damage: number,
   mlvl: number,
   cause: string,
   striker?: Enemy,
   crit = false,
 ): number {
-  const player = state.players[0];
   const raw = Math.round(damage * (crit ? STATS.critMultiplier : 1));
   const hpDamage = Math.max(
     0,
@@ -66,14 +73,18 @@ export function mobBlowDamage(
 }
 
 /**
- * May a ground-plane move touch the hero at all? A JUMP sails clean over
+ * May a ground-plane move touch THIS hero at all? A JUMP sails clean over
  * anything that runs along the floor — the same rule as contact, and the
  * reason "jump it" is a readable answer the player can carry from the slam to
  * the beam to the burning floor without being taught each one separately. The
  * pre-combat grace (`disarmed`) is honoured here too.
+ *
+ * The hero is a PARAMETER for the same reason `landHostileBlow`'s victim is:
+ * jumping is something ONE hero does, and asking seat 0 whether a beam may burn
+ * a joiner made the host's hop a party-wide immunity frame.
  */
-export function groundMoveCanTouch(state: GameState): boolean {
-  return state.players[0].z <= JUMP.dodgeHeight && !state.players[0].disarmed;
+export function groundMoveCanTouch(hero: Player): boolean {
+  return hero.z <= JUMP.dodgeHeight && !hero.disarmed;
 }
 
 /**

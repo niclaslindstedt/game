@@ -319,3 +319,20 @@ describe("a seat outlives the player in it", () => {
     expect(live.state.players[1]).toBe(hero);
   });
 });
+
+describe("the run's own guidance marker", () => {
+  it("is walked forward by whoever actually reached the node", () => {
+    const state = startGame(7, "test_path_level");
+    stopWaves(state);
+    state.enemies = [];
+    const b = seatHero(state, null);
+    // The host stays at the spawn; the joiner walks the route. `pathIndex` is
+    // ONE marker for the whole party, so the arrow has to follow the scout —
+    // read against seat 0 it never advances at all.
+    state.players[0].pos = { x: 340, y: 1320 };
+    expect(state.pathIndex).toBe(0);
+    b.pos = { x: 800, y: 1100 };
+    step(state, idle, DT);
+    expect(state.pathIndex).toBeGreaterThan(0);
+  });
+});

@@ -14,6 +14,7 @@ import {
   createGame,
   dismissIntro,
   markThoughtsSeen,
+  seatHero,
   skipStoryOpening,
 } from "@game/core";
 import { SEED } from "./helpers.ts";
@@ -38,6 +39,19 @@ describe("skipStoryOpening", () => {
     expect(state.phase).toBe("intro");
     skipStoryOpening(state);
     expect(state.phase).toBe("title");
+  });
+
+  it("arms the WHOLE party, not just seat 0", () => {
+    const state = createGame(SEED, "test_level");
+    const joiner = seatHero(state, null);
+    // Both start the level holstered — the opening is the LEVEL's, so the skip
+    // has to be too. Armed only at seat 0, a joiner could never swing again on
+    // a level whose one arming beat has just been skipped past.
+    state.players[0].disarmed = true;
+    joiner.disarmed = true;
+    skipStoryOpening(state);
+    expect(state.players[0].disarmed).toBe(false);
+    expect(joiner.disarmed).toBe(false);
   });
 
   it("is a harmless no-op on a run already in play", () => {

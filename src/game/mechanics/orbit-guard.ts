@@ -92,7 +92,7 @@ function step(ability: OrbitGuardAbility, ctx: AbilityCtx): boolean {
 
   // A jump clears the ring exactly as it clears a slam, a bite and burning
   // floor — one answer the player carries from move to move.
-  if (mech.orbitBiteMs > 0 || !groundMoveCanTouch(state)) return false;
+  if (mech.orbitBiteMs > 0 || !groundMoveCanTouch(ctx.target)) return false;
 
   const motes = orbitMotePositions(
     enemy.pos,
@@ -101,12 +101,13 @@ function step(ability: OrbitGuardAbility, ctx: AbilityCtx): boolean {
     ability.radius,
   );
   const reach = ability.orbRadius + PLAYER.radius;
-  const struck = motes.some((m) => distance(m, state.players[0].pos) <= reach);
+  const struck = motes.some((m) => distance(m, ctx.target.pos) <= reach);
   if (!struck) return false;
 
   mech.orbitBiteMs = ability.hitIntervalMs;
   landHostileBlow(
     state,
+    ctx.target,
     mobBlowDamage(enemy, ctx.def.contactDamage, ability.damageFrac),
     enemy.mlvl,
     `${enemy.defId}:orbit_guard`,
@@ -115,7 +116,7 @@ function step(ability: OrbitGuardAbility, ctx: AbilityCtx): boolean {
   );
   pushEliteCast(state, enemy, ability, {
     phase: "tick",
-    pos: state.players[0].pos,
+    pos: ctx.target.pos,
   });
   // FALSE — the ring never owns the mob's tick. See the header.
   return false;

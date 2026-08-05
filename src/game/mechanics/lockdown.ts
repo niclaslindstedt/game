@@ -35,7 +35,7 @@ function ready(ability: LockdownAbility, ctx: AbilityCtx): boolean {
 
 function cast(ability: LockdownAbility, ctx: AbilityCtx): void {
   const { state, enemy, mech } = ctx;
-  const hero = state.players[0].pos;
+  const hero = ctx.target.pos;
   // The gap's bearing is ROLLED, so the way out is somewhere different every
   // time and the move stays a search rather than a memorised sidestep.
   const gapAt = state.rng() * Math.PI * 2;

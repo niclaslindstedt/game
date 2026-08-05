@@ -43,15 +43,13 @@ function cast(ability: ShockPulseAbility, ctx: AbilityCtx): void {
   pushEliteCast(state, enemy, ability, { radius: ability.radius });
 
   // A jump sails clean over it — the same answer a slam takes.
-  if (!groundMoveCanTouch(state)) return;
-  if (
-    distance(state.players[0].pos, enemy.pos) >
-    ability.radius + PLAYER.radius
-  ) {
+  if (!groundMoveCanTouch(ctx.target)) return;
+  if (distance(ctx.target.pos, enemy.pos) > ability.radius + PLAYER.radius) {
     return;
   }
   landHostileBlow(
     state,
+    ctx.target,
     mobBlowDamage(enemy, def.contactDamage, ability.damageFrac),
     enemy.mlvl,
     `${enemy.defId}:shock_pulse`,
@@ -59,7 +57,7 @@ function cast(ability: ShockPulseAbility, ctx: AbilityCtx): void {
     state.rng() < def.critChance,
   );
   pushPlayer(
-    state.players[0],
+    ctx.target,
     enemy.pos,
     ability.push,
     ability.pushCoastMs ?? DEFAULT_PUSH_COAST_MS,

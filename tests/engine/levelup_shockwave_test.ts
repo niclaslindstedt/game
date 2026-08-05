@@ -68,7 +68,7 @@ describe("level-up light shockwave", () => {
     });
     state.enemies.push(near, far);
 
-    levelUpShockwave(state);
+    levelUpShockwave(state, state.players[0]);
 
     // The near mob is flung faster than a mid-ring one would be (falloff), and
     // the far mob outside the radius is never touched.

@@ -16,7 +16,8 @@
 
 import { AUTOPILOT } from "./config/index.ts";
 import { captureBuildSnapshot } from "./items/stat-points.ts";
-import type { Difficulty, GameState } from "./types/index.ts";
+import { heroAt, seatOf } from "./party.ts";
+import type { Difficulty, GameState, Player } from "./types/index.ts";
 
 /** Snap a requested speed to the closest offered rung (config `speeds`). */
 export function normalizeAutopilotSpeed(speed: number): number {
@@ -39,20 +40,30 @@ export function autopilotDrainPerSecond(speed: number): number {
  * be able to run at all — or when the run is already over. Idempotent on the
  * speed: engaging while active just retunes it.
  */
-export function startAutopilot(state: GameState, speed = 1): boolean {
+export function startAutopilot(
+  state: GameState,
+  hero: Player,
+  speed = 1,
+): boolean {
   if (state.phase === "victory" || state.phase === "defeat") return false;
   const snapped = normalizeAutopilotSpeed(speed);
-  if (state.players[0].coins < autopilotDrainPerSecond(snapped)) return false;
+  if (hero.coins < autopilotDrainPerSecond(snapped)) return false;
   state.autopilot.active = true;
   state.autopilot.speed = snapped;
   state.autopilot.drainCarry = 0;
+  // WHOSE PURSE THE METER BILLS. A purse is PRIVATE, so the payer is the hero
+  // who engaged the ride — remembered on the run because `stepAutopilot` is a
+  // per-tick pass with no actor to hand it. Billed to seat 0 instead, a joiner
+  // buying a ride spent the HOST's coins, and on a joiner's own client seat 0's
+  // purse is a field the split never sent.
+  state.autopilot.seat = seatOf(state, hero);
   // THE FLIGHT'S BASELINE, stamped once and never overwritten. A ride crosses
   // levels and every level is a fresh `GameState`, so a run the flight arrives
   // INTO is handed the original baseline through `SessionParams.autopilotBuild`
   // — re-stamping here would quietly re-baseline the refund on the build the
   // BOT had already grown, and the player would get back only the last level's
   // points. `refundAutopilotBuild` clears it when the ride is settled.
-  state.autopilot.build ??= captureBuildSnapshot(state, state.players[0]);
+  state.autopilot.build ??= captureBuildSnapshot(state, hero);
   return true;
 }
 
@@ -77,10 +88,15 @@ export function setAutopilotSpeed(state: GameState, speed: number): boolean {
  * so a purse too thin to engage can be refilled without leaving the level.
  * Returns the whole coins actually credited (0 for a non-positive amount).
  */
-export function creditAutopilotPurse(state: GameState, coins: number): number {
+export function creditAutopilotPurse(
+  state: GameState,
+  hero: Player,
+  coins: number,
+): number {
   const credit = Math.floor(coins);
   if (!(credit > 0)) return 0;
-  state.players[0].coins += credit;
+  // The top-up lands in the BUYER's purse — the hero whose seat sent the verb.
+  hero.coins += credit;
   return credit;
 }
 
@@ -98,11 +114,22 @@ export function stepAutopilot(state: GameState, dtMs: number): void {
   const owed = Math.floor(ap.drainCarry);
   if (owed <= 0) return;
   ap.drainCarry -= owed;
-  const paid = Math.min(owed, state.players[0].coins);
-  state.players[0].coins -= paid;
+  // The payer is the hero who engaged the ride (`AutopilotState.seat`), or seat
+  // 0 for a legacy/adopted state that carries no seat — which solo is the same
+  // hero. A payer who has left the run stops the meter rather than billing
+  // somebody else for a ride they never bought.
+  const payer = heroAt(state, ap.seat ?? 0);
+  if (!payer) {
+    ap.active = false;
+    ap.drainCarry = 0;
+    state.events.push({ type: "autopilotStopped", reason: "coins" });
+    return;
+  }
+  const paid = Math.min(owed, payer.coins);
+  payer.coins -= paid;
   ap.coinsSpent += paid;
-  if (state.players[0].coins <= 0) {
-    state.players[0].coins = 0;
+  if (payer.coins <= 0) {
+    payer.coins = 0;
     ap.active = false;
     ap.drainCarry = 0;
     state.events.push({ type: "autopilotStopped", reason: "coins" });

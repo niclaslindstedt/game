@@ -22,7 +22,7 @@
 import { difficultyDef } from "../defs/difficulties.ts";
 import type { BossAbility, BossAbilityId } from "../defs/enemies/abilities.ts";
 import type { EnemyDef } from "../defs/enemies/types.ts";
-import type { Enemy, EnemyMech, GameState } from "../types/index.ts";
+import type { Enemy, EnemyMech, GameState, Player } from "../types/index.ts";
 
 /** What every ability method is handed. */
 export type AbilityCtx = {
@@ -34,7 +34,20 @@ export type AbilityCtx = {
   /** Seconds and ms elapsed this tick. */
   dt: number;
   dtMs: number;
-  /** Distance from the mob to the hero, computed once by the orchestrator. */
+  /**
+   * WHO THIS MOB IS FIGHTING — its own quarry (`aggro.ts`), resolved once by
+   * the orchestrator and handed to every beat of every move.
+   *
+   * An ability that reached for seat 0 instead aimed at the host wherever the
+   * boss happened to be standing: a joiner could stand in a beam untouched
+   * while the host, three rooms away, took the burn. It is one value on the
+   * context rather than a lookup per handler precisely so the tell, the cast
+   * and the resolve cannot disagree about who the move is for — a boss walking
+   * toward hero A while its slam telegraphs at hero B is not a difficulty, it
+   * is a bug nobody can read.
+   */
+  target: Player;
+  /** Distance from the mob to its `target`, computed once by the orchestrator. */
   distance: number;
   /**
    * The bearing LOCKED when the windup started, handed to `cast` — the single

@@ -512,6 +512,9 @@ export function stepUseConsumables(
 export function debugDetonateNuke(state: GameState): void {
   detonateNuke(
     state,
+    // SEAT 0 IS CORRECT HERE: the developer's own `window.__nuke()` FX preview,
+    // driven from the page playing the hero it stages the blast on. Not
+    // reachable in normal play.
     state.players[0],
     abilityDef(NUKE_DEF_ID).nuke?.radius ?? 240,
   );

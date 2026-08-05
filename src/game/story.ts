@@ -22,7 +22,7 @@ import { knockEnemyBack } from "./knockback.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
-import { anyHeroWithin } from "./party.ts";
+import { anyHeroWithin, heroInPlay, partyLevel } from "./party.ts";
 import type { DialogueState, Enemy, GameState, Player } from "./types/index.ts";
 
 // The `dialogue`/`cutscenes` display preferences live in the engine's leaf
@@ -447,7 +447,10 @@ export function maybeCapThought(state: GameState): void {
   if (state.dialogue !== null || state.capThoughtMs > 0) return;
   if (menaceStage(state) > DIALOGUE.capThoughtMenaceStageCeiling) return;
   const cap = xpLevelCap(state.level.id, state.difficulty);
-  if (state.players[0].level < cap) return;
+  // THE PARTY's level, not seat 0's: the line is about the venue having nothing
+  // left to teach, which is a fact about the run rather than about the host —
+  // and the cap is what the horde is scaled against (`partyLevel`).
+  if (partyLevel(state) < cap) return;
   // A conversion may replace the thought catalog without authoring a rotation,
   // which leaves nothing to mutter — the beat simply never fires.
   const rotation = capThoughtIds();
@@ -480,10 +483,11 @@ export function stepSightThoughts(
     if (state.thoughtsSeen.includes(trigger.thought)) continue;
     if (trigger.after && !state.thoughtsSeen.includes(trigger.after)) continue;
     const radius = trigger.radius ?? DIALOGUE.sightRadius;
+    // ANY hero laying eyes on it fires the beat — the trigger rule for
+    // everything the world does when somebody walks up to it. A sighting only
+    // seat 0 could make is a beat seven players never see.
     const seen = state.enemies.some(
-      (e) =>
-        e.defId === trigger.enemy &&
-        distance(e.pos, state.players[0].pos) <= radius,
+      (e) => e.defId === trigger.enemy && anyHeroWithin(state, e.pos, radius),
     );
     if (!seen) continue;
     state.thoughtsSeen.push(trigger.thought);
@@ -531,7 +535,16 @@ export function stepSightThoughts(
  * already-read check only suppresses RE-SHOWING the monologue.
  */
 export function stepOpeningStrike(state: GameState): void {
-  if (state.dialogue !== null || !state.players[0].disarmed) return;
+  if (state.dialogue !== null) return;
+  // THE BEAT IS THE RUN'S, AND SO IS THE ANSWER TO IT. Every hero starts the
+  // level holstered, so the gate is "is anybody still disarmed" and the draw
+  // below arms the WHOLE party — a level whose opening blow armed seat 0 alone
+  // would leave every joiner unable to swing for the rest of it, which is the
+  // same soft-lock the vanquished-vanguard safety net exists to close.
+  const holstered = state.players.filter(
+    (hero) => heroInPlay(hero) && hero.disarmed,
+  );
+  if (holstered.length === 0) return;
   const opening = runLevelDef(state).openingStrike;
   if (!opening) return;
   if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
@@ -544,10 +557,15 @@ export function stepOpeningStrike(state: GameState): void {
   // very tick the player taps the last one closed, and three separate blows
   // read as one uninterrupted scene. The gate is what makes "he comes again"
   // a fact rather than a number that happens to be big enough today.
-  const striker = vanguards.find(
-    (e) =>
-      (e.knockMs ?? 0) <= 0 && distance(e.pos, state.players[0].pos) <= radius,
-  );
+  //
+  // The blow lands on WHOEVER the vanguard reached, which in a party is the
+  // holstered hero it ran at rather than the one who pressed HOST.
+  let victim: Player | undefined;
+  const striker = vanguards.find((e) => {
+    if ((e.knockMs ?? 0) > 0) return false;
+    victim = holstered.find((hero) => distance(e.pos, hero.pos) <= radius);
+    return victim !== undefined;
+  });
   const struck = striker !== undefined;
   // The vanguard's touch draws the blade — but a COMPANION (or a conjured
   // power) can cut the lone rusher down before it ever reaches the holstered
@@ -573,9 +591,9 @@ export function stepOpeningStrike(state: GameState): void {
   const pending = (opening.warnings ?? []).find(
     (id) => !state.thoughtsSeen.includes(id),
   );
-  if (striker && pending !== undefined) {
+  if (striker && victim && pending !== undefined) {
     // He takes it — the flash, no HP, exactly as the arming blow costs none.
-    state.players[0].hurtFlashMs = 250;
+    victim.hurtFlashMs = 250;
     state.events.push({ type: "playerHurt", crit: false });
     // …and shoves the man off rather than swinging at him. The recoil is what
     // makes the NEXT blow a separate event: the trigger is contact, so a
@@ -583,7 +601,7 @@ export function stepOpeningStrike(state: GameState): void {
     // player tapped this beat closed.
     knockEnemyBack(
       striker,
-      state.players[0].pos,
+      victim.pos,
       DIALOGUE.strikeRecoilSpeed,
       DIALOGUE.strikeRecoilMs,
     );
@@ -592,12 +610,13 @@ export function stepOpeningStrike(state: GameState): void {
     return;
   }
 
-  // Draw the blade: combat is live from here on.
-  state.players[0].disarmed = false;
+  // Draw the blade: combat is live from here on — for the WHOLE party, since
+  // the opening is the level's, not one hero's (see the gate above).
+  for (const hero of holstered) hero.disarmed = false;
   // The soft first hit is a flash, no HP — but a vanguard cut down before it
   // arrived landed no blow, so there is nothing to flash for the death path.
-  if (struck) {
-    state.players[0].hurtFlashMs = 250;
+  if (struck && victim) {
+    victim.hurtFlashMs = 250;
     state.events.push({ type: "playerHurt", crit: false });
   }
   // Fire the pinned thought once, but only if it hasn't been read yet — a
@@ -623,7 +642,9 @@ export function wantsDialogue(state: GameState, enemy: Enemy): boolean {
     !enemy.spoke &&
     state.dialogue === null &&
     state.phase === "playing" &&
-    distance(enemy.pos, state.players[0].pos) <= DIALOGUE.speakRadius
+    // ANY hero close enough opens the scene: an arrival the host happened to
+    // walk past is an arrival nobody in the party ever hears.
+    anyHeroWithin(state, enemy.pos, DIALOGUE.speakRadius)
   );
 }
 

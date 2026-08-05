@@ -45,6 +45,30 @@ stat)`. A pass that reaches for seat 0 to find a bag is a pass that has not
   party walked past is a pack that never fights) where `nearestHero` is what a
   mob chases.
 
+**A SURVIVING `state.players[0]` IN `src/game/` NOW CARRIES ITS OWN REASON.**
+The sweep that closed the last of them classified every site into three kinds,
+and only the third is allowed to remain unannotated-free:
+
+1. A **private read** that was not a parameter yet — the merchant's mutators, a
+   consumable's spend, a crate's appetite roll, the AUTO PILOT's purse, a
+   weapon's crit class. Fixed by taking the acting hero.
+2. A **party question answered with seat 0** — a boss's locked bearing, a
+   hostile round's victim, an escort's leader, the lift's rider, the guidance
+   arrow's scout, the level-up shockwave's origin. Fixed with `party.ts`'s own
+   vocabulary, or with the mob's `quarry` where the answer is "the hero this
+   thing is dealing with" (that is what `AbilityCtx.target` is).
+3. A **legitimate seat 0** — three shapes, and each survivor says which it is in
+   a comment beside it: a `?? state.players[0]` fallback on an
+   already-parameterized function (the party is wiped, or a legacy caller named
+   nobody); code that runs while the party is one hero BY CONSTRUCTION
+   (`createGame`, `createRunFromParams`, a met-before merchant reveal — all
+   before any client can have joined); and the developer's own host-only hooks
+   (`?scenario=`, `window.__nuke()`, `window.__levelup()`).
+
+So a bare `state.players[0]` with no comment is, once again, an un-migrated
+site rather than an answer — which is the only state in which that rule can be
+enforced by reading the diff.
+
 **Whom a mob chases is the nearest VISIBLE hero, with HYSTERESIS**
 (`src/game/aggro.ts`), and each word is load-bearing. Nearest, or a party parks
 one hero across the map and farms with the other seven. Visible, because the
@@ -1209,8 +1233,9 @@ Every one of these is a real defect, and not one of them fails a unit test.
   green. **This is precisely the failure the bot client exists to catch and the
   one nothing else can**: every other suite asks whether a field that changed
   arrived, and none asks whether what a client HAS is enough to decide with.
-  The merchant's MUTATORS are still seat-0 reads and are the same bug waiting to
-  be met — see the plan's §5.9.
+  The merchant's MUTATORS were the same bug waiting to be met, and they have
+  since been parameterized on the ACTING hero along with the rest of the sweep
+  below — `tests/engine/merchant_test.ts`'s co-op block is the guard.
 - **A run parked on the TITLE CARD for ever.** A session builds its run waiting
   on the level card, and a headless joiner that never sends `dismissIntro` steers
   a hero on a run that has not started. 143,793 ticks "played", zero kills, and

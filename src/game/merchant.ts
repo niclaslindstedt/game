@@ -323,8 +323,12 @@ export function revealMerchant(state: GameState): void {
   // met-before wanderer keeps his line for the walk-up.
   merchant.greetedReturn = runLevelDef(state).merchant?.parked === true;
   merchant.wanderTarget = null;
-  // A met-before reveal happens before anybody joins, so the arriving hero is
-  // seat 0 by construction rather than by the old habit.
+  // SEAT 0 IS CORRECT HERE. A met-before reveal runs inside `createGame`,
+  // before the run has been handed to a session and therefore before anybody
+  // can have joined it: the party is one hero by construction, and that hero
+  // is the arriving one the stall prices itself against. (A joiner arriving
+  // later meets a stall that is already stocked — the shelf is a fixture of
+  // the run, shared by the whole party, exactly like the trader himself.)
   merchant.stock = rollStock(state, merchant, state.players[0]);
   addMapMarker(state, "merchant", merchant.pos, "merchant");
 }

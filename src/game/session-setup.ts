@@ -171,6 +171,11 @@ export function createRunFromParams(params: RunParams): GameState {
     state,
     (params.campaignQuests as CampaignQuestSave | null) ?? undefined,
   );
+  // SEAT 0 IS CORRECT HERE: this runs inside `createRunFromParams`, which
+  // builds the run from its session parameters BEFORE the run is handed to a
+  // session — so the party is one hero by construction, and the purse the
+  // parameters describe is that hero's. A joiner brings their own purse with
+  // their own seat (see `seatHero`), never this one.
   if (typeof params.coins === "number") state.players[0].coins = params.coins;
   if (params.seenThoughts?.length) {
     markThoughtsSeen(state, params.seenThoughts);

@@ -84,9 +84,14 @@ export function dismissIntro(state: GameState): void {
   if (state.phase === "intro" || state.phase === "title") {
     state.phase = "playing";
     // A LEVEL TOKEN jump owes a respec before the first step: open the
-    // reallocation chooser in place of dropping straight into play.
+    // reallocation chooser in place of dropping straight into play. Opened for
+    // EVERY hero who is owed one — `respecPending` is a run parameter applied
+    // before anybody joins, so solo this is the same single chooser it always
+    // was, and a party arriving on a token jump each place their own points.
     if (state.respecPending) {
-      beginRespec(state, state.players[0]);
+      for (const hero of state.players) {
+        if (heroInPlay(hero)) beginRespec(state, hero);
+      }
       return;
     }
     // A hero who starts the run owing the chooser — an adopted veteran whose
@@ -179,7 +184,11 @@ export function skipCutscene(state: GameState): void {
 export function skipStoryOpening(state: GameState): void {
   if (state.phase === "cutscene") skipCutscene(state);
   if (state.phase === "intro") state.phase = "title";
-  state.players[0].disarmed = false;
+  // Arm the WHOLE party. The opening is the level's, so the skip is too: a
+  // party that armed seat 0 alone would leave every joiner holstered for the
+  // rest of a level whose one arming beat has just been skipped past — the
+  // same soft-lock `stepOpeningStrike`'s vanquished-vanguard net exists for.
+  for (const hero of state.players) hero.disarmed = false;
 }
 
 /**

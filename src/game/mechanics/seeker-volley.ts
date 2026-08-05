@@ -27,12 +27,12 @@ const DEFAULT_BOLT_RADIUS = 4;
 
 function ready(ability: SeekerVolleyAbility, ctx: AbilityCtx): boolean {
   if (ctx.distance > ability.range) return false;
-  return lineOfSight(ctx.state, ctx.enemy.pos, ctx.state.players[0].pos);
+  return lineOfSight(ctx.state, ctx.enemy.pos, ctx.target.pos);
 }
 
 function cast(ability: SeekerVolleyAbility, ctx: AbilityCtx): void {
   const { state, enemy, def } = ctx;
-  const locked = ctx.lockedDir ?? direction(enemy.pos, state.players[0].pos);
+  const locked = ctx.lockedDir ?? direction(enemy.pos, ctx.target.pos);
   const centre = Math.atan2(locked.y, locked.x);
   const spread = (ability.spreadDeg * Math.PI) / 180;
   const damage = mobBlowDamage(enemy, def.contactDamage, ability.damageFrac);

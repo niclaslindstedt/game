@@ -53,7 +53,7 @@ function ready(_ability: FlagPlantAbility, ctx: AbilityCtx): boolean {
 function cast(ability: FlagPlantAbility, ctx: AbilityCtx): void {
   const { state, enemy, mech } = ctx;
   const def = enemyDef(ability.defId);
-  const aim = ctx.lockedDir ?? direction(enemy.pos, state.players[0].pos);
+  const aim = ctx.lockedDir ?? direction(enemy.pos, ctx.target.pos);
   const wanted = {
     x: enemy.pos.x + aim.x * ability.distance,
     y: enemy.pos.y + aim.y * ability.distance,

@@ -26,6 +26,7 @@
 import { distance } from "@game/lib/vec.ts";
 import { ELEVATOR } from "./config/index.ts";
 import { revealAround } from "./map.ts";
+import { nearestHeroWhere } from "./party.ts";
 import type { GameState } from "./types/index.ts";
 
 /**
@@ -41,12 +42,26 @@ export function stepElevators(state: GameState, dtMs: number): void {
     state.elevatorLockMs = Math.max(0, state.elevatorLockMs - dtMs);
     return;
   }
-  // A hero in the air is between floors: the jump arc regularly carries him over
-  // a plate he was steering past, and being yanked off it mid-hop reads as a bug
-  // rather than as a lift.
-  if (state.players[0].z > 0) return;
   for (const pad of state.elevators) {
-    if (distance(state.players[0].pos, pad.pos) > pad.radius) continue;
+    // WHOEVER IS STANDING ON THE PLATE RIDES IT. The car is a fixture of the
+    // level rather than the host's private lift — a party that could only send
+    // seat 0 down would leave everybody else stranded on a floor with no way
+    // to follow, since the destination is by design a place no wall connects
+    // to. A hero in the air is between floors: the jump arc regularly carries
+    // him over a plate he was steering past, and being yanked off it mid-hop
+    // reads as a bug rather than as a lift.
+    const rider = nearestHeroWhere(
+      state,
+      pad.pos,
+      (hero) => hero.z <= 0 && distance(hero.pos, pad.pos) <= pad.radius,
+    );
+    if (
+      !rider ||
+      rider.z > 0 ||
+      distance(rider.pos, pad.pos) > pad.radius // the fallback nearest, not a rider
+    ) {
+      continue;
+    }
     // A KEYED CAR does not come when called. The pad is drawn and labelled
     // either way — a lift you can see and cannot ride is what sends the player
     // back for whoever is carrying the pass — and the refusal is silent here
@@ -59,18 +74,21 @@ export function stepElevators(state: GameState, dtMs: number): void {
       });
       continue;
     }
-    const from = { ...state.players[0].pos };
-    state.players[0].pos = { ...pad.to };
+    const from = { ...rider.pos };
+    rider.pos = { ...pad.to };
     // Cancel the momentum he arrived with, or he walks out of the car still
     // travelling in the direction that put him in it.
-    state.players[0].vel = { x: 0, y: 0 };
+    rider.vel = { x: 0, y: 0 };
+    // The lock is the RUN's, not the rider's: it exists so the car cannot
+    // immediately grab whoever it just set down, and one shared beat between
+    // two players riding in turn costs a party nothing.
     state.elevatorLockMs = ELEVATOR.lockMs;
     const first = !pad.used;
     pad.used = true;
     // Light the room he was just dropped into. The fog sweep is a disc around the
     // hero every tick anyway; this only makes the FIRST frame of the arrival show
     // the place rather than the inside of a cloud.
-    revealAround(state, state.players[0].pos, ELEVATOR.arrivalReveal);
+    revealAround(state, rider.pos, ELEVATOR.arrivalReveal);
     state.events.push({
       type: "elevatorRide",
       id: pad.id,

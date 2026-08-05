@@ -64,7 +64,7 @@ import {
 import { enemyKillXp, hitEnemy, killEnemy, shareXp } from "./loot.ts";
 import { clearOfFog } from "./fog.ts";
 import { addMapMarker } from "./map.ts";
-import { heroAt, heroInPlay } from "./party.ts";
+import { heroAt, heroInPlay, partyLevel } from "./party.ts";
 import { startJoinWords } from "./story.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import { createProjectile } from "./projectile.ts";
@@ -168,7 +168,10 @@ function mintCompanionWeapon(state: GameState, weaponId: string): Equipment {
     defId: weaponId,
     slot: "weapon",
     tier: "regular",
-    ilvl: Math.max(1, state.players[0].level),
+    // THE PARTY's level, the same yardstick the horde and the drop ladder are
+    // scaled against — never seat 0's, which would price a joiner's new friend
+    // off whoever happened to press HOST.
+    ilvl: Math.max(1, partyLevel(state)),
     affixes: [],
     def: structuredClone(weaponDef(weaponId)),
   };
@@ -194,13 +197,18 @@ export function recruitCompanion(
   state: GameState,
   defId: string,
   pos: { x: number; y: number },
+  // WHO SPARED IT — the hero the retired companion hands its borrowed armor
+  // back to. A bag is PRIVATE, so the lender is a parameter; seat 0 is the
+  // honest fallback for a caller with no actor (a scenario staging), which
+  // solo is the same hero.
+  recruiter: Player = state.players[0],
 ): Companion {
   while (state.companions.length >= COMPANIONS.maxParty) {
     const outgoing = state.companions.shift() as Companion;
     for (const slot of ["head", "chest"] as const) {
       const piece = outgoing.equipment[slot];
-      const free = piece ? state.players[0].inventory.indexOf(null) : -1;
-      if (piece && free >= 0) state.players[0].inventory[free] = piece;
+      const free = piece ? recruiter.inventory.indexOf(null) : -1;
+      if (piece && free >= 0) recruiter.inventory[free] = piece;
     }
     state.events.push({
       type: "companionDismissed",
@@ -209,9 +217,9 @@ export function recruitCompanion(
     });
   }
   const def = companionDef(defId);
-  // Recruited TRAINED to the hero — it joins as an equal, then earns its own
+  // Recruited TRAINED to the party — it joins as an equal, then earns its own
   // levels from here (its XP bar starts fresh at that level).
-  const level = Math.max(1, state.players[0].level);
+  const level = Math.max(1, partyLevel(state));
   const maxHp = companionMaxHp(def, level);
   const companion: Companion = {
     id: state.nextId++,
@@ -299,7 +307,7 @@ export function resolveChoice(
     );
   }
   if (def.spareable) {
-    recruitCompanion(state, def.spareable.companion, enemy.pos);
+    recruitCompanion(state, def.spareable.companion, enemy.pos, killer);
   }
   // A SPARED elite is a fight the party won, so its XP is shared exactly as a
   // kill's is — through the same door, gated on the same distance from the same
@@ -341,6 +349,27 @@ export function maybeCompanionQuote(
 // ---- The per-tick companion pass ------------------------------------------------
 
 /**
+ * THE HERO THE COMPANIONS FORM ON — their formation rank, their catch-up snap,
+ * their engagement bubble and their target pick are all measured from here.
+ *
+ * **A COMPANION HAS NO OWNER YET, AND THIS IS THE ONE PLACE THAT ADMITS IT.**
+ * `state.companions` is the RUN's list, recruited by sparing an elite; nothing
+ * on a `Companion` records which seat spared it, so "the hero" a companion
+ * follows genuinely has one answer per run rather than one per companion. Seat
+ * 0 is that answer — with the one correction the party model demands: a seat
+ * whose player QUIT is not somebody the world reacts to (`heroInPlay`), and
+ * anchoring the party on a departed host froze every companion in the run
+ * around a body standing still in a corner. So it is the first hero still IN
+ * PLAY, which solo is exactly seat 0.
+ *
+ * When companions grow an owner, this is the single site that changes.
+ */
+function companionAnchor(state: GameState): Player {
+  for (const hero of state.players) if (heroInPlay(hero)) return hero;
+  return state.players[0];
+}
+
+/**
  * Advance the party one tick: keep up with the hero, pick fights inside his
  * engagement bubble when he holds still, strike/shoot on the weapon's cadence,
  * soak the horde's contact swings, and get back up from a beating. The camera
@@ -367,10 +396,11 @@ export function stepCompanions(
   // would stand beside a hero holding his fire and shoot into the blackness he
   // is refusing to. Checked last — it is the dearest of the three tests.
   engageCandidates.length = 0;
+  const anchor = companionAnchor(state);
   const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
   for (const enemy of state.enemies) {
     if (inertEnemy(enemy)) continue;
-    if (distanceSq(enemy.pos, state.players[0].pos) > radiusSq) continue;
+    if (distanceSq(enemy.pos, anchor.pos) > radiusSq) continue;
     if (!clearOfFog(state, enemy.pos)) continue;
     engageCandidates.push(enemy);
   }
@@ -418,7 +448,7 @@ function stepCompanion(
   dtMs: number,
 ): void {
   const def = companionDef(companion.defId);
-  const player = state.players[0];
+  const player = companionAnchor(state);
   companion.moving = false;
   companion.quoteCooldownMs = Math.max(0, companion.quoteCooldownMs - dtMs);
   companion.weaponCooldownMs = Math.max(0, companion.weaponCooldownMs - dtMs);
@@ -551,11 +581,14 @@ function stepCompanion(
 function pickTarget(state: GameState): Enemy | undefined {
   let best: Enemy | undefined;
   let bestD = Infinity;
+  // Hoisted out of the loop: the anchor is one answer for the whole pass, and
+  // this runs once per companion per candidate at horde scale.
+  const anchor = companionAnchor(state).pos;
   for (const enemy of engageCandidates) {
     if (enemy.hp <= 0) continue;
     // A kneeling spareable awaiting its verdict is out of the fight.
     if (state.choice !== null && state.choice.enemyId === enemy.id) continue;
-    const d = distanceSq(enemy.pos, state.players[0].pos);
+    const d = distanceSq(enemy.pos, anchor);
     if (d < bestD) {
       best = enemy;
       bestD = d;
@@ -571,7 +604,7 @@ function formationSpot(
   index: number,
   count: number,
 ): { x: number; y: number } {
-  const player = state.players[0];
+  const player = companionAnchor(state);
   const facing = player.facing;
   const perp = { x: -facing.y, y: facing.x };
   const offset = (index - (count - 1) / 2) * COMPANIONS.spacing;

@@ -31,7 +31,8 @@ import type { EnemyDef, EnemyMechanics } from "../defs/enemies/types.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "../menace.ts";
 import { lineOfSight } from "../obstacles.ts";
-import type { Enemy, GameState } from "../types/index.ts";
+import { quarryOf } from "../aggro.ts";
+import type { Enemy, GameState, Player } from "../types/index.ts";
 import {
   abilityHandler,
   abilityUnlocked,
@@ -168,7 +169,12 @@ export function stepEnemyMechanics(
   const mechanics = activeMechanics(enemy, def);
   if (!mechanics || def.role === "minion" || def.apparition) return false;
   const mech = (enemy.mech ??= {});
-  const player = state.players[0];
+  // WHOM THIS SET PIECE IS FOR — the mob's OWN quarry, so the move aims at the
+  // hero it is already chasing rather than at whoever pressed HOST. Read once
+  // here and carried on the context (`AbilityCtx.target`): the wakefulness
+  // test, the bearing lock, the slam's reach and every catalog ability then
+  // agree about who the fight is with.
+  const player = quarryOf(state, enemy);
 
   // Cooldown clocks burn down whatever else happens.
   if (mech.chargeCooldownMs) {
@@ -195,6 +201,7 @@ export function stepEnemyMechanics(
     mech,
     dt,
     dtMs,
+    target: player,
     distance: distance(enemy.pos, player.pos),
   };
 
@@ -256,7 +263,7 @@ export function stepEnemyMechanics(
         radius: slam.radius,
         defId: enemy.defId,
       });
-      resolveSlamHit(state, enemy, slam.radius, slam.damageFrac);
+      resolveSlamHit(state, enemy, player, slam.radius, slam.damageFrac);
     } else if (telegraph.kind !== "charge" && telegraph.kind !== "slam") {
       // Hand the ability the bearing its windup locked. The telegraph itself
       // is already gone (clearing it is what un-roots the mob), so this is the
@@ -383,7 +390,7 @@ export function stepEnemyMechanics(
 }
 
 /**
- * Land the slam on the player: grounded inside the radius takes
+ * Land the slam on the mob's quarry: grounded inside the radius takes
  * `contactDamage × damageFrac` through the ordinary armor curve (a jump
  * clears it exactly like contact — the readable answer). No dodge roll: the
  * windup WAS the dodge window.
@@ -391,16 +398,17 @@ export function stepEnemyMechanics(
 function resolveSlamHit(
   state: GameState,
   enemy: Enemy,
+  target: Player,
   radius: number,
   damageFrac: number,
 ): void {
   // A jump sails clean over it, exactly like contact — the readable answer.
-  if (!groundMoveCanTouch(state)) return;
-  if (distance(state.players[0].pos, enemy.pos) > radius + PLAYER.radius)
-    return;
+  if (!groundMoveCanTouch(target)) return;
+  if (distance(target.pos, enemy.pos) > radius + PLAYER.radius) return;
   const def = enemyDef(enemy.defId);
   landHostileBlow(
     state,
+    target,
     mobBlowDamage(enemy, def.contactDamage, damageFrac),
     enemy.mlvl,
     enemy.defId,
@@ -459,7 +467,7 @@ function startReadyAbility(
     if (!handler) continue;
     if (!handler.ready(ability as never, ctx as never)) continue;
     const ms = abilityWindupMs(ability, state.difficulty);
-    const dir = direction(enemy.pos, state.players[0].pos);
+    const dir = direction(enemy.pos, ctx.target.pos);
     // The bearing AND the range are both locked here — see `AbilityCtx`.
     mech.telegraph = {
       kind: ability.id,
