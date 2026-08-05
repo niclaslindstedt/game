@@ -69,6 +69,17 @@ function exampleWithMap(
   const file = path.join(dir, "maps", `${as}.yaml`);
   if (as !== "greenhouse") {
     renameSync(path.join(dir, "maps", "greenhouse.yaml"), file);
+    // The manifest's `contents:` names every file the game loads, so a renamed
+    // one is renamed there too — otherwise every test through this helper
+    // fails on the inventory rather than on the blueprint it is about.
+    const manifest = path.join(dir, "mod.yaml");
+    writeFileSync(
+      manifest,
+      readFileSync(manifest, "utf8").replace(
+        "path: maps/greenhouse.yaml",
+        `path: maps/${as}.yaml`,
+      ),
+    );
   }
   writeFileSync(file, mutate(readFileSync(file, "utf8")));
   return dir;

@@ -20,16 +20,20 @@ written in**, checked by the same validator, so anything you can read in
 ## The shortest possible mod
 
 ```sh
-node mod/tools/cli.mjs new my-mod     # scaffold a mod that already works
-node mod/tools/cli.mjs check my-mod   # validate it
-node mod/tools/cli.mjs ids boots      # what ids may I reference?
-node mod/tools/cli.mjs where          # where do I put it to play it?
+node mod/tools/cli.mjs new my-mod        # scaffold a mod that already works
+node mod/tools/cli.mjs check my-mod      # does it compile?
+node mod/tools/cli.mjs ids boots         # what ids may I reference?
+node mod/tools/cli.mjs validate my-mod   # is the FOLDER fit to hand over?
+node mod/tools/cli.mjs package my-mod    # the zip to hand over
+node mod/tools/cli.mjs where             # where do I put it to play it?
 ```
 
 `new` copies the worked example with every id renamed to yours, and verifies the
 result compiles before it says so — you start from something that already runs
 rather than from an empty folder. `check` then prints every problem it finds,
 with a filename and a reason; when it prints a `✓`, the game will accept it.
+`validate` and `package` are the pair that come before anybody else sees it —
+see below.
 
 **Working with a coding agent?** Point it at
 [`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)
@@ -62,14 +66,35 @@ my-mod/
   cutscenes/<id>.yaml          one scene each — stage, cast, timeline of beats
   thoughts.yaml                the hero's inner monologues
   story-items.yaml             the plot pieces his finds spell out
+  README.md                    what your mod is, for a person
   preview.png                  the Workshop thumbnail (optional but do it)
 ```
 
-Every path is optional except `mod.yaml` — a mod that adds only monsters is a
-mod, and so is one that adds only a level. See [`FORMAT.md`](FORMAT.md) for the
-field-by-field reference.
+Every content path is optional — a mod that adds only monsters is a mod, and so
+is one that adds only a level. `mod.yaml` and `README.md` are the two that are
+not. See [`FORMAT.md`](FORMAT.md) for the field-by-field reference.
 
-**If you are building a conversion, write the story.** The last three paths are
+**Nothing else belongs in the folder**, and a command says so:
+
+```sh
+node mod/tools/cli.mjs validate my-mod    # the folder, the README, the inventory
+node mod/tools/cli.mjs package my-mod     # then the zip you hand somebody
+```
+
+The compiler only looks where content lives, so a `.DS_Store`, a folder of
+layered source art or last week's `notes.txt` all compile perfectly and then
+travel to everybody who installs your mod. `validate` refuses them by name — and
+refuses the opposite mistake too, a real file sitting one directory deeper than
+any loader reads, which compiles just as happily and is simply not in the game.
+
+It also refuses a mod whose manifest does not describe its own files.
+`contents:` in `mod.yaml` lists every file the game loads with one line saying
+what it is, **and the game shows those lines**: tapping your mod on the MODS
+screen opens a page built from them. `package` then zips exactly what is
+listed — never your `.workshop-id`, never the compiler's `mod.json`, never
+anything you did not mean to send.
+
+**If you are building a conversion, write the story.** The three story paths are
 what make a mod a different game rather than a re-skin: the scene it opens on, the
 hero's read on what he is looking at, and the lore he finds on the floor. They are
 also the part nobody governs — your plot does not have to agree with the shipped
@@ -109,6 +134,12 @@ them a zip** and naming this directory — no unpacking, and no application-data
 path to dictate. A zip may be the mod's own files at the top level or wrapped
 in one folder (what right-click → compress produces); both are read, and the
 game unpacks it itself into its own cache.
+
+Write that zip with `cli.mjs package` rather than with the archiver, though.
+Right-click → compress puts in whatever the folder happens to contain, which is
+how a `.DS_Store`, a `.workshop-id` naming YOUR Workshop item and forty
+megabytes of layered source art end up on somebody else's disk; `package`
+audits the folder first and then writes exactly what the manifest declares.
 
 **macOS has no such folder, deliberately.** An installed app lives in
 `/Applications` — not a place a game should be writing its data into — and

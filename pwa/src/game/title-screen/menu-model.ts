@@ -63,6 +63,7 @@ export type MenuScreen =
   | "storehero"
   | "storesend"
   | "mods"
+  | "modinfo"
   | "modorder"
   | "multiplayer"
   | "host"
@@ -171,6 +172,12 @@ export type ModsMenuState = {
   /** Is this mod id switched on? */
   isOn: (id: string) => boolean;
   setEnabled: (id: string, on: boolean) => void;
+  /** The mod the MOD INFO screen is showing, keyed by `InstalledMod.key` — a
+   * folder or a Workshop item id, so a mod that did not compile (and therefore
+   * has no id of its own) still has a page. Null off that screen. */
+  selected: InstalledMod | null;
+  /** Open a mod's page. The list row calls it on the way to `modinfo`. */
+  select: (mod: InstalledMod | null) => void;
   /** Move a mod one place earlier (-1) or later (+1) in the load order. */
   move: (id: string, dir: -1 | 1) => void;
   /** How many of this mod's ids a LATER enabled mod overrides — 0 when it is

@@ -51,6 +51,48 @@ Required at the mod's root. Everything else is optional.
 | `kind`        | no               | `addon` (default) or `conversion`. See README.                                                                                                          |
 | `campaign`    | conversions only | Your level ids, in play order. A conversion REPLACES the game's campaign, so there is nothing to fall back to.                                          |
 | `brand`       | conversions only | `title` (≤28 chars) and optional `tagline` (≤48) — what the TITLE SCREEN calls the game while your conversion is on. See below.                         |
+| `contents`    | to publish       | Every file the game loads, and what each one is. See below — the game shows these lines to a player who taps your mod.                                  |
+
+### `contents:` — every file, and what it is
+
+The manifest's inventory: one entry per file the game loads.
+
+```yaml
+contents:
+  - path: levels/greenhouse.yaml
+    summary: THE GREENHOUSE - a sixth venue, an orbital seed vault still running.
+  - path: sounds/shotgun_fire.yaml
+    summary: A wetter bark for the shotgun.
+    change: replaces
+```
+
+| Field     | Required | What it is                                                                                      |
+| --------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `path`    | yes      | Relative to your mod folder, with `/` separators.                                               |
+| `summary` | yes      | One line, 8–120 characters, in the game's own alphabet. Written for a PLAYER, not a compiler.   |
+| `change`  | no       | `adds` (default) — something new — or `replaces`: it takes over something the game already had. |
+
+**The game reads this.** Tapping a mod on the MODS screen opens its page, and
+that page is built from these lines: the file, whether it adds or replaces, and
+your sentence about what it is. Nobody else can write them — a compiler can
+count two enemy files, it cannot say that one of them is a gardener who will
+fight beside the hero if she is spared.
+
+It is also an **allow-list**. `cli.mjs validate` refuses a mod with a file this
+block does not describe, and `cli.mjs package` zips exactly what is listed — so
+nothing ships that nobody meant to ship.
+
+The compiler treats it as optional (a mod published before the block existed
+still loads, with a warning and a page that can only count its files);
+`validate` requires it, and so does anything you intend to hand somebody.
+
+### `README.md` — what your mod is, for a person
+
+Required by `validate`, carried by `package`, and the first thing anybody reads.
+`description` is one sentence on a menu row; this is the paragraph or three
+behind it — what the mod is, what it adds or changes, whether it joins the
+campaign or replaces it, who made what, and what people may do with it.
+[`examples/greenhouse/README.md`](examples/greenhouse/README.md) is the shape.
 
 ### `brand:` — opening under your own name
 
@@ -1345,12 +1387,40 @@ invisible in Workshop browsing. Any reasonable size works; Steam scales it.
 
 ---
 
-## Compiling
+## What may be in a mod folder
+
+The compiler reads only where content lives, so anything else in the folder is
+invisible to it — and travels to everybody who installs your mod. `validate`
+asks the other question, and this is the whole list of what it allows:
+
+| Where                                                            | What                                                                                                                                                          |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mod.yaml`                                                       | the manifest                                                                                                                                                  |
+| `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                   |
+| `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                      |
+| the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml` |
+| alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                         |
+
+Everything else is refused by name, and each refusal says which of the two it
+is: **junk** (a `.DS_Store`, an editor backup, a layered `.psd`, a
+`node_modules/`), or a file **nothing reads** — which is the more useful one,
+because a sprite one directory too deep and an item under a rarity that does not
+exist both compile perfectly and are simply not in the game.
+
+## Compiling, validating, packaging
 
 ```sh
-node mod/tools/cli.mjs check <mod-dir>          # validate, write nothing
-node mod/tools/cli.mjs build <mod-dir>          # validate, write mod.json
+node mod/tools/cli.mjs check <mod-dir>          # compile, write nothing
+node mod/tools/cli.mjs build <mod-dir>          # compile, write mod.json
+node mod/tools/cli.mjs validate <mod-dir>       # check + the folder, the README, the inventory
+node mod/tools/cli.mjs package <mod-dir>        # validate, then write the zip you hand over
 ```
+
+`check` is the fast inner loop while authoring. `validate` is what to run before
+anybody else sees the folder, and `package` runs it for you — it writes nothing
+at all if the audit fails, and what it does write is the manifest, every file
+`contents:` declares, and your README, LICENSE and thumbnail. Nothing else,
+ever.
 
 The desktop game runs this **same compiler** on every mod it loads, so a mod
 that passes `check` is a mod the game accepts. There is deliberately not a

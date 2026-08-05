@@ -80,6 +80,17 @@ shipped file is a worked example of its kind.
 compiler refuses it. This catches people out; it is step 3b, not an optional
 extra.
 
+### Two files that are not content, and are not optional either
+
+- **`README.md`** — what your mod is, written for a person deciding whether to
+  install it. `validate` refuses a folder without one (and refuses the
+  scaffold's unwritten one), and `package` carries it into the zip.
+- **`contents:` in `mod.yaml`** — every file the game loads, each with one line
+  saying what it is. **The game shows these lines**: tapping a mod on the MODS
+  screen opens a page built from them. Add the entry in the same edit as the
+  file, the way a `ladder.yaml` row goes in with its level —
+  [`FORMAT.md`](FORMAT.md#contents--every-file-and-what-it-is) has the fields.
+
 ### Finding ids you may reference
 
 ```sh
@@ -119,6 +130,29 @@ means the game will accept it.
 | `belongs to no set`                        | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
 | `is not one of the game's rungs`           | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
 | `fx.element "x" is not one of…`            | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                       |
+
+### 4b. Audit the folder — `validate`
+
+```sh
+node mod/tools/cli.mjs validate my-mod
+```
+
+`check` compiles; this asks the questions a compiler cannot. Is everything in
+the folder something the game reads (a `.DS_Store`, a layered `.psd`, last
+week's `notes.txt` — all of them compile fine and all of them would ship)? Is
+anything in a place NOTHING reads (a sprite one directory too deep, an item
+under a rarity that does not exist)? Is there a README, and does the manifest's
+`contents:` describe every file the game loads?
+
+Run it before anybody else sees the folder. It writes nothing.
+
+| Message                           | What it means                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------ |
+| `remove it before you package`    | Junk — an editor or an operating system left it there.                                     |
+| `nothing is loaded this deep`     | The file is real and the game never sees it. Check the depth against `FORMAT.md`.          |
+| `contents: does not describe "x"` | A file the game loads with no line saying what it is. Write one.                           |
+| `"x" is not in the mod folder`    | The inventory describes a file that is not there — usually a rename that stopped half-way. |
+| `README.md: still carries…`       | The scaffold's README. Write it before you publish.                                        |
 
 ## 5. Measure it — every instrument in this repo takes `--mod`
 
@@ -227,14 +261,24 @@ Honest list, so nothing is spent hunting a flag that is not there:
 - **`make assets` / `make levels`** — those compile THIS repo's `content/` tree.
   Your mod is compiled by `cli.mjs check`; never add your files to `content/`.
 
-## 6. Play it
+## 6. Package it, and play it
 
 ```sh
-node mod/tools/cli.mjs where     # prints both folders the game reads
+node mod/tools/cli.mjs package my-mod    # validate, then write the zip
+node mod/tools/cli.mjs where             # prints both folders the game reads
 ```
 
-Copy (or symlink) your mod folder into either and launch the game. It appears
-under **MODS** on the main menu; switch it on, then **PLAY WITH THESE MODS**.
+`package` runs the whole audit first and writes **nothing** if it fails; what it
+does write is `<id>-<version>.zip`, holding the manifest, every file
+`contents:` declares, and your README, LICENSE and thumbnail. Not the
+`.workshop-id` (that names YOUR Workshop item), not the `mod.json` the compiler
+left, not a `.DS_Store`. That zip is the thing to hand somebody: both folders
+below take one, unpacked or not.
+
+Copy (or symlink) your mod folder — or drop the zip — into either, and launch
+the game. It appears under **MODS** on the main menu; open it there to see the
+page your `contents:` block writes, switch it on, and back out to **PLAY WITH
+THESE MODS**.
 
 |                 | `mods/` beside the game                                   | the game's data folder                                                                       |
 | --------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -251,7 +295,9 @@ Both sort after any subscriptions, so the one you just added wins its clashes.
 
 ## 7. Publish it
 
-From the game: **MODS → your mod → PUBLISH TO WORKSHOP**.
+From the game: **MODS → your mod → PUBLISH TO WORKSHOP** (the row is on the
+mod's own page, and only for a mod in the game's data folder — what gets
+published is what somebody AUTHORED).
 
 The first publish creates the Workshop item and records its id in your folder
 (`.workshop-id`), so publishing again _updates_ the same item rather than making
@@ -330,7 +376,7 @@ skill's list, with the reasoning behind each.
 ## Reference
 
 - [`README.md`](README.md) — the guide
-- [`FORMAT.md`](FORMAT.md) — every file and field
+- [`FORMAT.md`](FORMAT.md) — every file and field, what may be in the folder at all, and `contents:`
 - [`examples/greenhouse`](examples/greenhouse) — the worked mod `new` copies
 - [`catalog.json`](catalog.json) — every referenceable id (`cli.mjs ids` searches it)
 - [`LICENSE.md`](LICENSE.md) — samples are CC0; your mod is yours

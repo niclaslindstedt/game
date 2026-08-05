@@ -49,9 +49,8 @@ beats:
   - kind: say
     actor: hero
     text:
-      - EVERYONE WHO TENDED THIS
-      - STOPPED ANSWERING YEARS AGO.
-      - SOMETHING STILL DID THE ROUNDS.
+      - EVERYONE WHO TENDED THIS STOPPED ANSWERING YEARS AGO. SOMETHING STILL
+        DID THE ROUNDS.
   - { kind: move, actor: hero, to: { x: 40, y: 97 }, speed: 38 }
   - kind: say
     actor: hero

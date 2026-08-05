@@ -23,3 +23,63 @@ description: >-
 #              re-skin THE MOON rather than adding a seventh venue), and you
 #              must list `campaign:` in play order.
 kind: addon
+
+# EVERY FILE THE GAME LOADS, and what each one is.
+#
+# The game reads this: tapping a mod on the MODS screen opens a page built from
+# the lines below, so a player can see what a mod puts in their game before they
+# switch it on. Nobody but you can write them — a compiler can count two enemy
+# files, it cannot say that one of them is a gardener who will fight beside you
+# if you let her live.
+#
+#   path     relative to this folder
+#   summary  one line, under 120 characters, written for a player
+#   change   adds (the default) or replaces — is this something new, or does it
+#            take over something the game already had?
+#
+# `cli.mjs validate` refuses a file this list does not describe, and
+# `cli.mjs package` zips exactly what is listed: nothing ships that nobody meant
+# to ship.
+contents:
+  - path: levels/greenhouse.yaml
+    summary: THE GREENHOUSE - a sixth venue, an orbital seed vault still running on its timer.
+  - path: maps/greenhouse.yaml
+    summary: The vault's floor plan - planting beds, gravel walks and overgrowth, carved fresh every run.
+  - path: ladder.yaml
+    summary: Where the new venue sits on the difficulty ladder, rung by rung.
+  - path: enemies/greenhouse/greenhouse_creeper.yaml
+    summary: THE CREEPER - a vine that walks, and the rank and file of the vault.
+  - path: enemies/greenhouse/greenhouse_gardener.yaml
+    summary: THE GARDENER - the vault's last horticulturist, and she can be spared.
+  - path: companions.yaml
+    summary: Who the gardener becomes if you spare her - a companion for the rest of the run.
+  - path: items/regular/greenhouse_pruning_saw.yaml
+    summary: THE PRUNING SAW - a new base weapon, meant for stems the thickness of an arm.
+  - path: items/unique/greenhouse_first_cutting.yaml
+    summary: FIRST CUTTING - a named relic, the saw the vault's first graft was taken with.
+  - path: powerups.yaml
+    summary: SPORE BLOOM - a power that lays burning ground behind you and rings you in it.
+  - path: talents.yaml
+    summary: Two passives that join the shipped melee and magic trees.
+  - path: cutscenes/greenhouse_arrival.yaml
+    summary: The scene the venue opens on - what the hero finds still growing in there.
+  - path: thoughts.yaml
+    summary: The hero's own read on the vault, the first time he sees what lives in it.
+  - path: story-items.yaml
+    summary: The seed log - the plot piece the vault spells itself out with.
+  - path: sounds/greenhouse_saw_swing.yaml
+    summary: The saw's swing - the sound the new weapon makes.
+  - path: music/greenhouse_hymn.yaml
+    summary: The venue's score - a slow hymn for a room nobody is tending.
+  - path: sprites/greenhouse/greenhouse_creeper_0.yaml
+    summary: The creeper, frame one of its walk.
+  - path: sprites/greenhouse/greenhouse_creeper_1.yaml
+    summary: The creeper, frame two of its walk.
+  - path: sprites/greenhouse/greenhouse_gardener_0.yaml
+    summary: The gardener, frame one of her walk.
+  - path: sprites/greenhouse/greenhouse_gardener_1.yaml
+    summary: The gardener, frame two of her walk.
+  - path: sprites/greenhouse/greenhouse_pruning_saw.yaml
+    summary: The saw's icon, on the ground and in the bag.
+  - path: sprites/greenhouse/icon_talent_greenhouse_deep_roots.yaml
+    summary: The picker glyph for the DEEP ROOTS talent.

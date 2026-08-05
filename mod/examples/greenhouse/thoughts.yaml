@@ -16,12 +16,10 @@ thoughts:
     speaker: ME
     portrait: hero_suit
     pages:
-      - - IT'S A PLANT. IT HAS A GAIT.
-        - THOSE TWO FACTS DO NOT
-        - BELONG IN ONE SENTENCE.
-      - - SOMEBODY KEPT FEEDING THIS
-        - PLACE ON A TIMER. NOBODY
-        - CAME BACK TO SWITCH IT OFF.
+      - - IT'S A PLANT. IT HAS A GAIT. THOSE TWO FACTS DO NOT BELONG IN ONE
+          SENTENCE.
+      - - SOMEBODY KEPT FEEDING THIS PLACE ON A TIMER. NOBODY CAME BACK TO
+          SWITCH IT OFF.
 
 # `capRotation:` is optional and this mod leaves it out. It replaces the mutter a
 # hero cycles while farming an out-levelled map, so it is a CONVERSION's business
