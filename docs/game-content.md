@@ -144,6 +144,26 @@ Difficulty decides only how touchy it is. When it lights, the horde lures more
 foes, evolves what it sends, and scales elites and bosses so they cannot be
 one-shot.
 
+**Evolving means LEVELLING.** A menace stage of 3 spawns every mob three levels
+over the level it would otherwise have carried — nothing else. One number does
+all of it: a mob's level already sets its health, its contact damage, the XP it
+pays and the loot gates it rolls against, so a rampaging horde is harder to
+survive and worth more to farm at the same time.
+
+How far it may go is the rung's **allowance plus the hero's headroom**: each
+difficulty authors a peak (easy 3, medium 5, hard 10, nightmare 100; JESUS has
+none at all), and to that is added however many levels the hero stands over
+this venue's normal mobs. Since a venue pins its mob level per rung, a player
+who returns to an outgrown map opens a gap — and the rampage may spend exactly
+that gap, bringing the crowd back up to roughly his own level and no further.
+On the uncapped JESUS rung there is no "further" at all: a sustained rampage
+fields mobs at level 200 and beyond, and past the level cap of 99 every extra
+mob level widens the odds on the very rare tiers, topping out at three times a
+level-99 kill's (`LOOT.overCapChaseMult`). What a rung CANNOT pay it still
+cannot: the difficulty gates (legendaries from hard up, plate, rings, amulets)
+are untouched by any of this, so a level-99 hero rampaging on easy farms easy's
+own table harder — he does not unlock a harder rung's items.
+
 On the hardest two rungs it also opens **HELLGATES** (config `HELLGATES`,
 `SpawnerSpec.hellgate`) — rampage-only spawn points laced across every map,
 invisible until menace reaches `openStage`. Each stage past the threshold widens

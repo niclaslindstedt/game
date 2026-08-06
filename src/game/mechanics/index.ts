@@ -28,7 +28,6 @@ import { spawnEnemy } from "../create.ts";
 import type { BossAbility } from "../defs/enemies/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import type { EnemyDef, EnemyMechanics } from "../defs/enemies/types.ts";
-import { difficultyDef } from "../defs/difficulties.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "../menace.ts";
 import { lineOfSight } from "../obstacles.ts";
 import { quarryOf } from "../aggro.ts";
@@ -363,7 +362,6 @@ export function stepEnemyMechanics(
           state.nextId++,
           mobLevelScale(state),
           menaceStage(state),
-          difficultyDef(state.difficulty).menaceEffectMult,
           currentMobLevel(state),
         );
         add.awake = true; // called to the fight, not to a nap

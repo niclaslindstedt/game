@@ -313,20 +313,28 @@ export type DifficultyDef = {
    */
   menaceDecayMult: number;
   /**
-   * How hard a menace stage lands on the MOBS: multiplies both the extra hp
-   * evolved minions spawn with (`MENACE.hpPerStage`) and the lure that swells
-   * the live crowd (`MENACE.lurePerStage`). The gentle rungs turn a rampage
-   * into a shrug; the hard rungs turn it into a wall.
+   * How hard a menace stage lands on the CROWD: multiplies the lure that
+   * swells the live horde (`MENACE.lurePerStage`). The gentle rungs turn a
+   * rampage into a shrug; the hard rungs turn it into a wall.
+   *
+   * It no longer sizes the evolution STEP — a stage is one mob LEVEL on every
+   * rung (`evolutionLevelBonus`), and what a difficulty controls is how many
+   * stages it allows (`menaceStageCap`).
    */
   menaceEffectMult: number;
   /**
-   * The highest evolution STAGE the rampage meter is allowed to reach on this
-   * rung — its PEAK. Both the live meter and the permanent ratchet floor are
-   * clamped here (see `menaceStageCap`/`menaceCeiling` in menace.ts), so a
-   * gentle rung tops out early no matter how thoroughly the horde is
-   * steamrolled: EASY peaks at 3, MEDIUM 5, HARD 10, NIGHTMARE 100. Left
+   * This rung's ALLOWANCE of evolution stages — the base of its PEAK. Both the
+   * live meter and the permanent ratchet floor are clamped to that peak (see
+   * `menaceStageCap`/`menaceCeiling` in menace.ts), so a gentle rung tops out
+   * early no matter how thoroughly the horde is steamrolled: EASY allows 3,
+   * MEDIUM 5, HARD 10, NIGHTMARE 100. Left
    * `undefined` on JESUS — that rung stays UNCAPPED, the horde evolving without
    * a roof for as long as the player keeps proving it too easy.
+   *
+   * The peak is this number PLUS the hero's LEVEL HEADROOM over the venue's
+   * horde (`menaceLevelHeadroom`): a stage is one mob level now, so a hero who
+   * has outgrown a pinned-level map may rampage the crowd back up to about his
+   * own level — the allowance is what he gets on top of that, not instead of it.
    */
   menaceStageCap?: number;
   /**

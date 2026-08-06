@@ -3,10 +3,11 @@
 // Overkilling and fast kills bank menace; idling bleeds it off — but never
 // below the permanent floor the evolution RATCHET earns by one-shotting the
 // current crop. The stage lures a denser horde, evolves freshly-spawned
-// minions (more hp → more xp, worse loot), and — with the hero's power level —
-// scales elites and bosses when they engage. Each difficulty caps the meter's
-// PEAK (easy 3, medium 5, hard 10, nightmare 100; JESUS uncapped). Runs on the
-// synthetic engine fixtures.
+// minions (ONE LEVEL over normal per stage — tougher, meaner, richer), and —
+// with the hero's power level — scales elites and bosses when they engage.
+// Each difficulty caps the meter's PEAK at its own allowance (easy 3, medium 5,
+// hard 10, nightmare 100; JESUS uncapped) PLUS the levels the hero has grown
+// over that rung's horde. Runs on the synthetic engine fixtures.
 
 import { describe, expect, it } from "vitest";
 
@@ -26,12 +27,14 @@ import {
   menaceCeiling,
   menaceClearGate,
   menaceFloorStage,
+  menaceLevelHeadroom,
   menaceStage,
   menaceStageCap,
   menaceWarmup,
   mobHpLevelFactor,
   mobHpScaleFor,
   mobLevelFor,
+  mobLevelXp,
   mobLevelScale,
   recruitCompanion,
   resetBalanceTuning,
@@ -61,12 +64,13 @@ function startOn(difficulty: string, levelId = "test_level"): GameState {
 }
 
 /** The [min, max] rounded hp a rank-and-file minion can carry off base `hp`,
- * horde `scale`, and an optional evolution `mult`, once the per-mob spawn band
- * (MENACE.mobLevelBand) rolls its ±level offset in ramp space. */
+ * horde `scale`, and an evolution stage `evo`, once the per-mob spawn band
+ * (MENACE.mobLevelBand) rolls its ±level offset in ramp space. Evolution is
+ * LEVELS now (one per stage), so it rides the very same ramp the band does. */
 function bandHpBounds(
   hp: number,
   difficulty: string,
-  mult = 1,
+  evo = 0,
   playerLevel = 1,
 ): [number, number] {
   const scale = mobHpScaleFor(playerLevel, difficulty);
@@ -76,9 +80,9 @@ function bandHpBounds(
       hp *
         Math.max(
           MENACE.mobHpScaleFloor,
-          scale * (mobHpLevelFactor(mlvl + offset) / mobHpLevelFactor(mlvl)),
-        ) *
-        mult,
+          scale *
+            (mobHpLevelFactor(mlvl + offset + evo) / mobHpLevelFactor(mlvl)),
+        ),
     );
   return [at(MENACE.mobLevelBand.min), at(MENACE.mobLevelBand.max)];
 }
@@ -381,7 +385,37 @@ describe("menace — evolution of the horde", () => {
     }
   });
 
-  it("evolves wave-spawned minions while menace is high: more hp, stamped", () => {
+  it("a stage is a LEVEL: an evolved crop spawns exactly `stage` levels over the plain one", () => {
+    // The whole of what a rampage does to the rank and file: menace 3 means
+    // every mob spawns three levels over the level it would otherwise carry.
+    const crop = (stage: number): number[] => {
+      const state = startGame();
+      const before = new Set(state.enemies.map((e) => e.id));
+      // Pin the stream so every mob rolls the SAME ±spawn band (+0 here) —
+      // what is left is the evolution step alone.
+      state.rng = () => 0.5;
+      for (let i = 0; i < 4 * 60; i++) {
+        // Mid-bucket, re-pinned each tick so the stage holds across the run.
+        state.menace = MENACE.perStage * stage + MENACE.perStage / 2;
+        step(state, idle, DT);
+      }
+      return state.enemies
+        .filter((e) => !before.has(e.id) && enemyDef(e.defId).role === "minion")
+        .map((e) => e.mlvl)
+        .sort((a, b) => a - b);
+    };
+    const plain = crop(0);
+    const evolved = crop(3);
+    expect(plain.length).toBeGreaterThan(0);
+    expect(evolved.length).toBeGreaterThan(0);
+    // With the band pinned, a calm crop is flat at the horde baseline…
+    const baseline = mobLevelFor(1, "medium");
+    expect(new Set(plain)).toEqual(new Set([baseline]));
+    // …and a stage-3 crop is flat three levels over it. That is the rule.
+    expect(new Set(evolved)).toEqual(new Set([baseline + 3]));
+  });
+
+  it("evolves wave-spawned minions while menace is high: higher level, more hp, stamped", () => {
     const state = startGame();
     // Mid-bucket so the stage is stable across the few decaying ticks.
     state.menace = MENACE.perStage * 3 + MENACE.perStage / 2; // stage 3
@@ -389,62 +423,64 @@ describe("menace — evolution of the horde", () => {
 
     const evolved = state.enemies.filter((e) => e.evo !== undefined);
     expect(evolved.length).toBeGreaterThan(0);
+    const baseline = mobLevelFor(1, "medium");
     for (const e of evolved) {
       expect(e.evo).toBeGreaterThanOrEqual(1);
-      // Each mob's hp is consistent with its OWN stamped stage, on top of the
-      // relative-level scale (medium menaceEffectMult is 1) and its spawn band.
-      const mult = 1 + (e.evo ?? 0) * MENACE.hpPerStage;
-      const [lo, hi] = bandHpBounds(enemyDef(e.defId).hp, "medium", mult);
+      // The stamped stage is IN the monster level: the mob sits its own stage
+      // above the horde baseline, give or take its ±spawn band.
+      expect(e.mlvl).toBeGreaterThanOrEqual(
+        baseline + (e.evo ?? 0) + MENACE.mobLevelBand.min,
+      );
+      expect(e.mlvl).toBeLessThanOrEqual(
+        baseline + (e.evo ?? 0) + MENACE.mobLevelBand.max,
+      );
+      // …and its hp is that level's hp — no separate evolution multiplier.
+      const [lo, hi] = bandHpBounds(enemyDef(e.defId).hp, "medium", e.evo ?? 0);
       expect(e.maxHp).toBeGreaterThanOrEqual(lo);
       expect(e.maxHp).toBeLessThanOrEqual(hi);
-      // Even the lowest band roll on a stage-3 evolved mob out-toughens an
-      // un-evolved spawn's baseline — a rampage crop takes more killing.
-      // (It no longer pays more xp, though: kill xp is LEVEL-based now, and
-      // evolution stacks hp, not level.)
-      expect(e.maxHp).toBeGreaterThan(
-        Math.round(enemyDef(e.defId).hp * mobHpScaleFor(1, "medium")),
-      );
     }
+    // Band for band, the stage-3 crop out-toughens the calm one at both ends
+    // of its spread — a rampage crop takes more killing, because it is higher
+    // level, not because it carries a bonus-hp multiplier.
+    const calm = bandHpBounds(enemyDef("test_minion").hp, "medium", 0);
+    const hot = bandHpBounds(enemyDef("test_minion").hp, "medium", 3);
+    expect(hot[0]).toBeGreaterThan(calm[0]);
+    expect(hot[1]).toBeGreaterThan(calm[1]);
   });
 
-  it("evolved (malice) mobs find worse gear — the tier roll pays the penalty", () => {
-    // Kill 120 mobs at saturated drop odds, once un-evolved and once at a
-    // deep evolution stage, off the same seed: the per-stage tier PENALTY
-    // (MENACE.tierPenaltyPerStage) drives the evolved crop's magic odds to
-    // zero — a rampage is a leveling faucet, not a loot farm.
-    const magicOrBetter = (evo: number): number => {
-      setBalanceTuning({ dropRate: 20 });
-      const state = startGame(); // same seed both arms — comparable streams
+  it("an evolved kill pays MORE xp and rolls its loot off a higher level", () => {
+    // The point of evolving by LEVEL: the rampage crop is worth what its level
+    // says it is worth, on both faucets, instead of being a hp sponge that
+    // paid nothing (and once even dropped worse).
+    const baseline = mobLevelFor(1, "medium");
+    expect(mobLevelXp(baseline + 3, 1)).toBeGreaterThan(
+      mobLevelXp(baseline, 1),
+    );
+
+    // In play: the same fixture minion, killed plain and killed at stage 3.
+    const xpFrom = (stage: number): number => {
+      const state = startGame();
       stopWaves(state);
-      state.items = [];
-      for (let i = 0; i < 120; i++) {
-        const enemy = makeEnemy(
-          {
-            id: state.nextId++,
-            pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
-            hp: 45,
-            maxHp: 45,
-          },
-          "test_minion",
-        );
-        if (evo > 0) enemy.evo = evo;
-        state.enemies.push(enemy);
-        hitEnemy(state, enemy, 45, undefined, { rollAccuracy: false });
-      }
-      resetBalanceTuning();
-      return state.items.filter(
-        (i) =>
-          i.kind === "equipment" &&
-          i.equipment.tier !== "regular" &&
-          i.equipment.tier !== "trash",
-      ).length;
+      state.players[0].level = 8;
+      state.players[0].xpToNext = xpToLevelUp(state.players[0].level);
+      state.rng = () => 0.99; // no crits, no drops — the payout is the formula
+      const enemy = makeEnemy(
+        {
+          id: state.nextId++,
+          pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y },
+          hp: 45,
+          maxHp: 45,
+          mlvl: mobLevelFor(8, "medium") + stage,
+        },
+        "test_minion",
+      );
+      if (stage > 0) enemy.evo = stage;
+      state.enemies.push(enemy);
+      const before = state.stats.xpGained;
+      hitEnemy(state, enemy, 45, undefined, { rollAccuracy: false });
+      return state.stats.xpGained - before;
     };
-    const plain = magicOrBetter(0);
-    const evolved = magicOrBetter(10);
-    expect(plain).toBeGreaterThan(0); // the ordinary rain pays magic finds
-    // Ten stages of tier PENALTY thin the evolved crop's magic+ rate well
-    // below the ordinary rain — a rampage is a leveling faucet, not a loot farm.
-    expect(evolved).toBeLessThan(plain);
+    expect(xpFrom(3)).toBeGreaterThan(xpFrom(0));
   });
 
   it("high menace lures a denser crowd than a calm field", () => {
@@ -755,15 +791,67 @@ describe("menace — difficulty caps the peak", () => {
     hitEnemy(state, enemy, 130); // ~12 healthbars of overkill (proof caps at 12)
   }
 
-  it("each rung's peak matches the design (easy 3 … nightmare 100, jesus uncapped)", () => {
-    expect(menaceStageCap(startOn("easy"))).toBe(3);
-    expect(menaceStageCap(startOn("medium"))).toBe(5);
-    expect(menaceStageCap(startOn("hard"))).toBe(10);
-    expect(menaceStageCap(startOn("nightmare"))).toBe(100);
-    // JESUS omits the knob entirely — no roof.
-    expect(menaceStageCap(startOn("jesus"))).toBe(Infinity);
+  /** A rung's peak for a hero pinned at `level` — the allowance plus whatever
+   * headroom he has opened over that rung's horde. */
+  function capAt(difficulty: string, level: number): number {
+    const state = startOn(difficulty);
+    state.players[0].level = level;
+    return menaceStageCap(state);
+  }
+
+  it("each rung's peak is its allowance PLUS the hero's level headroom", () => {
+    // At level 1 the fixtures' hordes sit at each rung's own floor, so a fresh
+    // hero has no headroom to spend on any of them and reads the bare
+    // allowance — easy 3, medium 5, hard 10, nightmare 100.
+    expect(capAt("easy", 1)).toBe(3);
+    expect(capAt("medium", 1)).toBe(5);
+    expect(capAt("hard", 1)).toBe(10);
+    expect(capAt("nightmare", 1)).toBe(100);
+    // JESUS omits the knob entirely — no roof, headroom or not.
+    expect(capAt("jesus", 1)).toBe(Infinity);
+    expect(capAt("jesus", 40)).toBe(Infinity);
+
+    // Once the hero out-levels the horde, every level of that gap buys a
+    // stage: EASY fields mobs three under him, so a level-13 hero facing
+    // level-10 mobs peaks at 3 + 3.
+    const easy = startOn("easy");
+    easy.players[0].level = 13;
+    expect(currentMobLevel(easy)).toBe(10);
+    expect(menaceLevelHeadroom(easy)).toBe(3);
+    expect(menaceStageCap(easy)).toBe(3 + 3);
+    // NIGHTMARE fields mobs AT the hero's level (offset 0) — no gap, no bonus.
+    const nightmare = startOn("nightmare");
+    nightmare.players[0].level = 45;
+    expect(menaceLevelHeadroom(nightmare)).toBe(0);
+    expect(menaceStageCap(nightmare)).toBe(100);
+
     expect(menaceCeiling(startOn("medium"))).toBe(5 * MENACE.perStage);
     expect(menaceCeiling(startOn("jesus"))).toBe(Infinity);
+  });
+
+  it("outgrowing a venue's pinned horde widens its peak, level for level", () => {
+    // The case the rule exists for: every campaign venue PINS its mob level
+    // per rung, so the horde stops tracking the hero and a returning player
+    // opens a real gap — which is exactly what the rampage may spend.
+    const state = startOn("easy");
+    // A COPY of the carve — the fixture's level def is shared across the
+    // suite, and pinning a band on it in place would follow every later test.
+    state.carvedLevel = { ...state.carvedLevel!, mobLevels: [9, 9, 9, 9] };
+    // The worked example: level-9 mobs, a level-13 hero — menace may reach
+    // the 4 levels he stands over them, plus EASY's own allowance of 3.
+    state.players[0].level = 13;
+    expect(currentMobLevel(state)).toBe(9);
+    expect(menaceLevelHeadroom(state)).toBe(4);
+    expect(menaceStageCap(state)).toBe(4 + 3);
+    // Six more hero levels, six more stages…
+    state.players[0].level = 19;
+    expect(menaceStageCap(state)).toBe(10 + 3);
+    // …and what those stages buy always tops out at the hero's own level plus
+    // the rung's allowance — the horde is brought back up to him, not past.
+    expect(currentMobLevel(state) + menaceStageCap(state)).toBe(19 + 3);
+    // A hero who has NOT outgrown the venue gets no widening at all.
+    state.players[0].level = 5;
+    expect(menaceStageCap(state)).toBe(3);
   });
 
   it("the live meter can't climb past the difficulty's peak", () => {
@@ -777,17 +865,21 @@ describe("menace — difficulty caps the peak", () => {
     expect(menaceStage(state)).toBe(5);
   });
 
-  it("the ratchet stops evolving the horde at the peak (EASY tops out at 3)", () => {
+  it("the ratchet stops evolving the horde at the peak (EASY: 3 + its headroom)", () => {
     // EASY's meter is near-inert, but the ratchet is difficulty-blind — so a
     // relentless steamroll is exactly what would run it past a low cap. It
-    // climbs to stage 3 and then holds, no matter how long the one-shots last.
+    // climbs to the rung's peak and then holds, no matter how long the
+    // one-shots last: EASY's own allowance of 3, plus the three levels its
+    // horde sits under this hero.
     const state = startOn("easy");
     bareStage(state);
     state.players[0].level = 8; // past the warmup damping
     state.rng = () => 0.99; // no crits/dodges/drops — clean overkill each blow
+    const peak = menaceStageCap(state);
+    expect(peak).toBe(3 + menaceLevelHeadroom(state));
     for (let i = 0; i < 40; i++) ratchetOnce(state);
-    expect(menaceFloorStage(state)).toBe(3);
-    expect(menaceStage(state)).toBe(3);
+    expect(menaceFloorStage(state)).toBe(peak);
+    expect(menaceStage(state)).toBe(peak);
     // The meter itself is likewise pinned at the ceiling, never a stage beyond.
     expect(state.menace).toBeLessThanOrEqual(menaceCeiling(state));
   });

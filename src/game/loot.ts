@@ -25,7 +25,6 @@ import {
   LEVELING,
   LOOT,
   MEDKIT,
-  MENACE,
   MERCY,
   MOB_ARMOR,
   RARE_MOBS,
@@ -56,6 +55,7 @@ import {
   mercyRescueWaiting,
   mintUnique,
   outOfAmmoDesperation,
+  overCapChaseMult,
   playerCritChance,
   playerMissChance,
   recomputeMaxHp,
@@ -884,8 +884,10 @@ export function queueStruckProcs(
  * place the reward rules live, so every death path (a normal kill, a routed
  * boss, a companion's finishing blow) reads the same figure. EVERY role is
  * MOB-PRICED (`mobLevelXp` — proportional to the mob's level, NOT its hp), so
- * a tank and a squishy of the same level pay alike and an evolved (extra-hp)
- * minion is no richer. ELITES and BOSSES pay a flat MULTIPLE of that unit
+ * a tank and a squishy of the same level pay alike — while an EVOLVED (menace)
+ * minion pays MORE, because evolution is levels now, not bonus hp: the stage
+ * sits inside its `mlvl` like any other level does. ELITES and BOSSES pay a
+ * flat MULTIPLE of that unit
  * (the def's `xpMobMult` or the role default `XP_TUNING.eliteXpMobMult` /
  * `bossXpMobMult`, authored in content/leveling.yaml) — their `mlvl` carries
  * the def's `levelBonus`, so a big set piece pays more naturally, and because
@@ -1108,7 +1110,6 @@ export function killEnemy(
       def,
       enemy.pos,
       attacker,
-      enemy.evo ?? 0,
       enemy.mlvl,
       opts?.noNukeDrop ?? false,
       efficiency,
@@ -1254,10 +1255,11 @@ function dropEarlyDrops(state: GameState, at: Vec2, attacker: Player): void {
  * A dead regular monster's drop roll: LUCK widens the odds, the loot shares
  * split what falls between equipment, ability pickups, weapon upgrades, and
  * medkits — and a pity rule forces equipment whenever the monsters left
- * alive couldn't otherwise cover the level's guaranteed minimum. `evo` is the
- * mob's menace evolution stage: an evolved (malice) kill pays MORE xp (its
- * extra hp) but rolls a WORSE tier when it drops — a rampage is a leveling
- * faucet, not a loot farm. A tougher mob's `dropProfile` sweetens its rolls
+ * alive couldn't otherwise cover the level's guaranteed minimum. `mlvl` is the
+ * dead mob's own MONSTER LEVEL — the menace evolution stage is already inside
+ * it (evolution spawns mobs levels above normal), so a rampage's crop simply
+ * rolls a higher-level drop, with no separate penalty or bonus of its own.
+ * A tougher mob's `dropProfile` sweetens its rolls
  * by a fixed amount, so a heavy hitter is worth the effort of dropping.
  * `noNukeDrop` marks a kill dealt by a screen-nuke blast: bombs never pay out
  * more bombs, so both screen-nuke slices sit out (skipped before their rng
@@ -1270,18 +1272,15 @@ function dropEarlyDrops(state: GameState, at: Vec2, attacker: Player): void {
  * before.
  *
  * A HELLBORN kill (config HELLGATES — what a rampage-only hellgate lets
- * through) inverts the rampage rule that governs everything else here: it is
- * EXEMPT from the evolution tier penalty, and its drop chance, tier roll and
- * payout COUNT all climb with the rampage stage. So the meter costs the ordinary
- * horde's loot exactly as before, and the gates are where the player goes to
- * turn a rampage into gear — deeper meter, better farm.
+ * through) is paid on top of all that: its drop chance, tier roll and
+ * payout COUNT all climb with the rampage stage, so the gates stay where the
+ * player goes to turn a rampage into gear — deeper meter, better farm.
  */
 function dropMinionLoot(
   state: GameState,
   def: EnemyDef,
   at: Vec2,
   attacker: Player,
-  evo = 0,
   mlvl = 1,
   noNukeDrop = false,
   efficiency = 1,
@@ -1341,15 +1340,15 @@ function dropMinionLoot(
   const owed = LOOT.minEquipmentPerLevel - state.minionEquipmentDrops;
   const forced = owed > remaining;
 
-  // An evolved (malice) mob finds WORSE gear: each evolution stage SUBTRACTS
-  // from its drop's tier roll, so the magic/rare odds thin out as the horde
-  // toughens — its reward is the extra xp its extra hp pays, not loot. A
-  // tougher mob's own drop profile still sweetens its rolls, and the player's
-  // LEVEL keeps sweetening the tier (see mobLevelScale), so ordinary kills
-  // stay rewarding; only the rampage-evolved crop pays out lean.
-  // A HELLBORN kill (config HELLGATES) is the ONE exception to the rule above,
-  // and the reason the gates are worth opening: no evolution penalty, and a
-  // per-stage BONUS to both the drop chance and the tier roll instead, capped at
+  // An EVOLVED (malice) mob carries no drop penalty any more, and needs none:
+  // evolution is LEVELS (see `evolutionLevelBonus`), so a rampage's crop
+  // already rolls its loot off a higher monster level — deeper base pools,
+  // earlier tier unlocks, a higher item level on what falls. A rampage is a
+  // harder horde that pays better, which is the trade the meter's per-rung
+  // PEAK (`menaceStageCap`) prices.
+  // A HELLBORN kill (config HELLGATES) still pays its own premium on top, and
+  // it is why the gates are worth opening: a per-stage BONUS to both the drop
+  // chance and the tier roll, capped at
   // `bonusStageCap` so even an uncapped JESUS rampage can't make every drop a
   // guaranteed rare. `hellStages` is how deep the rampage is past the gate
   // threshold — the same dial the gates escalate their emission on.
@@ -1359,9 +1358,6 @@ function dropMinionLoot(
         Math.max(0, menaceStage(state) - HELLGATES.openStage),
       )
     : 0;
-  const evoTierPenalty = def.hellborn
-    ? 0
-    : Math.max(0, evo) * MENACE.tierPenaltyPerStage;
   const dropBonus =
     (def.dropProfile?.dropBonus ?? 0) +
     hellStages * HELLGATES.dropBonusPerStage;
@@ -1373,8 +1369,7 @@ function dropMinionLoot(
     (def.dropProfile?.tierBonus ?? 0) +
     (rarity?.tierBonus ?? 0) +
     hellStages * HELLGATES.tierBonusPerStage +
-    mobLevelTierBonus(state) -
-    evoTierPenalty;
+    mobLevelTierBonus(state);
 
   // The overkill toll: the whole per-kill drop chance scales by the killing
   // blow's efficiency, so a mob one-shot for triple its health surrenders a
@@ -1725,9 +1720,14 @@ function maybeDropWorldUnique(
   // `namedDropMult` is the farm-venue sweetener: a dedicated grind venue (the
   // bunker) pays better per kill than the relics' home levels (default 1). It
   // lifts the global legendary/artifact roll too (see `rollTier`).
+  // A mob pushed PAST THE LEVEL CAP by a deep rampage widens this channel by
+  // the same premium the rarity roll takes (`overCapChaseMult`, 1× at 99 up to
+  // 3×) — a relic is a very rare item too, and it would read as arbitrary for
+  // the endgame farm to pay off in one named channel and not the other.
   const chance =
     WORLD_DROP.chanceByRole[def.role] *
     BALANCE.uniqueDrops *
+    overCapChaseMult(enemy.mlvl) *
     (loot.namedDropMult ?? 1);
   for (const id of ids) {
     if (state.rng() >= chance) continue;

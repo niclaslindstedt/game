@@ -493,7 +493,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   gates now key off the hero's earned LOOT level with the `mobLevelOffset`
   stripped back out, not the raw monster level), the stamina burn, dodge/miss accuracy multipliers, the
   menace meter's trigger/decay/effect/PEAK (`menaceStageCap` — easy 3, medium 5,
-  hard 10, nightmare 100, JESUS uncapped), and — on EASY/MEDIUM only — how far the
+  hard 10, nightmare 100, JESUS uncapped, each widened by the hero's level
+  headroom over the horde), and — on EASY/MEDIUM only — how far the
   plain horde's chase speed drops once an elite or boss is ENGAGED
   (`mobPursuitNearElite`, 10%/50%, so the player can break past the swarm and
   run to the set piece). MEDIUM is the exact 1.0 baseline.
@@ -653,20 +654,23 @@ escort.ts` walks the people an escort errand puts on the field, and
   stage, at most one per `ratchetCooldownMs` — so a horde whose current
   crop keeps getting one-shot evolves stage by stage until the player's
   blows stop dropping mobs outright OR the difficulty's PEAK is reached
-  (the per-rung `menaceStageCap`: easy 3, medium 5, hard 10, nightmare 100;
-  JESUS uncapped — both the meter and the ratchet floor are clamped to
-  `menaceCeiling`). The transient
+  (the per-rung `menaceStageCap`: easy 3, medium 5, hard 10, nightmare 100,
+  JESUS uncapped — PLUS `menaceLevelHeadroom`, the levels the hero has grown
+  over this venue's horde, so a rung that pins its mob level lets a returning
+  player spend exactly the gap he has opened; both the meter and the ratchet
+  floor are clamped to `menaceCeiling`). The transient
   gain is scaled by `menaceSensitivity` — the difficulty's `menaceMult`
   times an early-game `menaceWarmup` — but the ratchet is deliberately
   difficulty-blind (warmup-damped only, up to the cap): every rung keeps
-  evolving; the difficulty sizes each step (`menaceEffectMult`) and its peak
-  (`menaceStageCap`), not whether it happens.
+  evolving; every step is the same size — one mob LEVEL — and what the
+  difficulty sets is its peak (`menaceStageCap`), not whether it happens.
   The `menaceStage` lures a denser horde (`lureMult`, read by
   the wave spawner, its crowd growth alone capped at `lureStageCap`),
-  evolves freshly-spawned minions (`evolutionHpMult`, stamped in
-  `create.ts`'s `spawnEnemy` — more hp, but a WORSE loot tier roll via
-  `tierPenaltyPerStage`; evolution is a challenge knob, not an xp or loot
-  faucet, since kill xp is level-based), and power-matches elites/bosses when
+  evolves freshly-spawned minions (`evolutionLevelBonus`, stamped in
+  `create.ts`'s `spawnEnemy` — ONE LEVEL over their normal level per stage,
+  which is the whole of it: `Enemy.mlvl` already drives hp, contact damage,
+  kill xp and every loot gate, so a rampage's crop is tougher AND richer),
+  and power-matches elites/bosses when
   they engage (`enemyPowerScale`/`maybePowerScale`, called from both
   `step/` wake and `loot.ts` first-hit). POWERUP output — the screen-nuke
   bomb, fire orbs, and storm cell — is exempt from all of this: `hitEnemy`'s

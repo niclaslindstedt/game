@@ -412,7 +412,6 @@ function spawnWaveEnemy(
         state.nextId++,
         wsc.hpMult,
         menaceStage(state),
-        difficultyDef(state.difficulty).menaceEffectMult,
         wsc.mlvl,
         wsc.banded,
       ),

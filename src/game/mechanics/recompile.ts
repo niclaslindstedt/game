@@ -20,7 +20,6 @@
 
 import { spawnEnemy } from "../create.ts";
 import type { RecompileAbility } from "../defs/enemies/abilities.ts";
-import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "../menace.ts";
 import { insideObstacle } from "../obstacles.ts";
@@ -70,7 +69,6 @@ function cast(ability: RecompileAbility, ctx: AbilityCtx): void {
     state.nextId++,
     mobLevelScale(state),
     menaceStage(state),
-    difficultyDef(state.difficulty).menaceEffectMult,
     currentMobLevel(state),
   );
   node.awake = true;

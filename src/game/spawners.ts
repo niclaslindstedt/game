@@ -263,7 +263,6 @@ function emitBatch(
       state.nextId++,
       sc.hpMult,
       menaceStage(state),
-      difficultyDef(state.difficulty).menaceEffectMult,
       sc.mlvl,
       sc.banded,
     );

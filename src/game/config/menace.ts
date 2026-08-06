@@ -12,12 +12,15 @@
  * below the PERMANENT floor the evolution ratchet has earned (see
  * `ratchetHealthbars`): a horde that evolved because it was getting one-shot
  * stays evolved — no breaks, up to the difficulty's PEAK (the per-rung
- * `menaceStageCap`: easy 3 … nightmare 100, JESUS uncapped). Menace is read as
+ * `menaceStageCap` PLUS the level headroom the hero has opened over the horde:
+ * easy 3 … nightmare 100, JESUS uncapped — see `menaceStageCap` in menace.ts).
+ * Menace is read as
  * a stage that does
  * three things: it LURES more of the horde toward the player (the crowd
- * growth alone caps at `lureStageCap`), it EVOLVES freshly-spawned minions
- * (more hp and WORSE loot — a challenge knob, not an xp or loot faucet; kill
- * xp is level-based now), and it scales elites and bosses when they engage
+ * growth alone caps at `lureStageCap`), it EVOLVES freshly-spawned minions —
+ * ONE LEVEL PER STAGE over their normal level, so they hit harder, take more
+ * killing, pay more xp and drop richer, all off the one `mlvl` number — and it
+ * scales elites and bosses when they engage
  * (keyed to the hero's CHARACTER level), so the epic fights keep pace with the
  * player instead of melting. Units: raw menace points, world px, hp.
  */
@@ -93,9 +96,10 @@ export const MENACE = {
    * horde that evolved to stage N because stage N−1 was getting one-shot
    * stays at N — it keeps evolving, stage by stage, until the player's blows
    * stop dropping mobs outright OR the difficulty's PEAK is reached (the
-   * per-rung `menaceStageCap` bounds the floor; JESUS is uncapped). The
-   * difficulty also sets the SIZE of each step (`menaceEffectMult` scales
-   * `hpPerStage`), not just how many there are.
+   * per-rung `menaceStageCap`, widened by the hero's level headroom over the
+   * horde, bounds the floor; JESUS is uncapped). Every step is the SAME size
+   * on every rung — one mob level — so what a difficulty controls is how many
+   * of them it allows, not how big each one is.
    */
   ratchetHealthbars: 6,
   /**
@@ -118,20 +122,6 @@ export const MENACE = {
    * so a burst carries at most one deferred stage past its own moment.
    */
   ratchetCooldownMs: 10_000,
-  /**
-   * Extra minion hp per evolution stage (+35% each), stamped when the mob
-   * spawns. Kill XP is LEVEL-based now (`mobLevelXp`), so evolution does NOT
-   * pay more xp — it is purely a challenge knob (more killing for the same
-   * reward), and its drops get WORSE per stage (see tierPenaltyPerStage below).
-   */
-  hpPerStage: 0.35,
-  /**
-   * Subtracted from an evolved minion's drop TIER roll per stage: malice
-   * mobs take more killing but find WORSE gear — magic/rare odds thin out as
-   * the horde evolves, so a rampage is a poor way of farming loot. Chances
-   * floor at 0 in `rollTier`.
-   */
-  tierPenaltyPerStage: 0.03,
   /**
    * The wave spawner's live floor AND cap grow by this fraction per stage —
    * a rampage pulls a denser, bigger crowd onto the screen.
@@ -319,8 +309,7 @@ export const MENACE = {
    * Better gear as the hero levels: added to a minion's drop tier roll per
    * player level above 1 (+0.4% each), so a higher-level hero's kills yield
    * richer loot to match the tougher mobs they came off — the drop-quality
-   * companion to `mobHpPerLevel` (the menace `tierPenaltyPerStage` pulls the
-   * other way on evolved mobs). Kept SMALL and capped (`tierBonusLevelCap`):
+   * companion to `mobHpPerLevel`. Kept SMALL and capped (`tierBonusLevelCap`):
    * at the old 1.5% the level term alone hit +0.59 by level 40 — past the
    * magic AND rare base chances combined, so every mid-game drop rolled at
    * least rare and the tier ladder stopped discriminating. Tier quality is

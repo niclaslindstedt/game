@@ -21,7 +21,6 @@
 import { direction } from "@game/lib/vec.ts";
 import { spawnEnemy } from "../create.ts";
 import type { FlagPlantAbility } from "../defs/enemies/abilities.ts";
-import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "../menace.ts";
 import { insideObstacle } from "../obstacles.ts";
@@ -76,7 +75,6 @@ function cast(ability: FlagPlantAbility, ctx: AbilityCtx): void {
     state.nextId++,
     mobLevelScale(state),
     menaceStage(state),
-    difficultyDef(state.difficulty).menaceEffectMult,
     currentMobLevel(state),
   );
   // Planted, not asleep — its own summon runs off the elite awake latch, and a

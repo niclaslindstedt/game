@@ -576,7 +576,6 @@ function spawnRing(state: GameState, spawn: ScenarioSpawn): void {
       state.nextId++,
       hpMult,
       0,
-      1,
       mlvl,
     );
     // Staged battle damage: land on the wound fraction directly (never

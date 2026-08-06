@@ -29,7 +29,6 @@ import { LEVELING, MENACE, RARE_MOBS } from "../game/config/index.ts";
 import { createGame, spawnEnemy } from "../game/create.ts";
 import { BALANCE } from "../game/tuning.ts";
 import {
-  difficultyDef,
   DIFFICULTY_ORDER,
   meetsMinDifficulty,
   resolvePackCount,
@@ -200,8 +199,8 @@ export type Checkpoint = {
    * one-shots; the higher it climbs the faster the horde evolves. */
   overkillRatio: number;
   /** The sustained MENACE (RAMPAGE) stage this build settles at: the evolution
-   * stage whose toughened minion (`evolutionHpMult`) finally survives the
-   * hero's blow — `(overkillRatio − 1) / (hpPerStage × menaceEffectMult)`,
+   * stage — one mob LEVEL each — whose higher-level minion finally survives the
+   * hero's blow, `log(overkillRatio) / log(mobHpGrowthPerLevel)`,
    * floored at 0. The endgame's real score: better gear/spec → higher stage,
    * uncapped. An ESTIMATE (steady-state, ignores warmup/relief), but monotone
    * in build power, which is what a balance read needs. */
@@ -438,7 +437,6 @@ function killOne(
     state.nextId++,
     sc.hpMult,
     menaceStage(state),
-    1,
     sc.mlvl,
     sc.banded,
   );
@@ -569,12 +567,14 @@ function snapshot(
   const reduction = ref ? armorReduction(state, player, ref.mlvl) : 0;
   const incoming = Math.max(1, mobDamage * (1 - reduction));
   const overkillRatio = mobHp > 0 ? heroBlow / mobHp : 0;
-  // Evolution hp is LINEAR in stage (evolutionHpMult), so the stage where a
-  // toughened minion finally survives the hero's blow solves in closed form.
-  const eff = difficultyDef(difficulty).menaceEffectMult;
+  // Evolution is one mob LEVEL per stage now (`evolutionLevelBonus`), and mob
+  // hp compounds per level (`mobHpGrowthPerLevel`), so the stage where a
+  // toughened minion finally survives the hero's blow is the LOG of the
+  // overkill in that growth base — the same below-knee inverse
+  // `heroDamageLevel` uses, and close enough for a diagnostic readout.
   const menaceStageEq =
     overkillRatio > 1
-      ? (overkillRatio - 1) / (MENACE.hpPerStage * Math.max(1e-6, eff))
+      ? Math.log(overkillRatio) / Math.log(MENACE.mobHpGrowthPerLevel)
       : 0;
 
   return {

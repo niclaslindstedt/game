@@ -278,6 +278,25 @@ export const LOOT = {
    */
   // AUTHORED per tier as `mfSaturation` in content/item_rarity.yaml.
   mfSaturation: ITEM_RARITY.mfSaturation,
+  /**
+   * PAST THE LEVEL CAP — the menace endgame's own reward. A mob can now be
+   * pushed ABOVE the hero level cap (99) by the rampage meter, which spawns
+   * mobs one level over their normal level per menace stage: on the uncapped
+   * JESUS rung a deep rampage fields mobs at level 200 and beyond. Every level
+   * over `LEVELING.maxLevel` multiplies the CHASE tiers' chance
+   * (unique/legendary/artifact — the very rare finds) by a factor ramping
+   * linearly from 1× at level 99 to `overCapChaseMult` once the mob is
+   * `overCapChaseLevels` past it, and holding there. So the deepest rampage a
+   * player can sustain is the best chase farm in the game — three times the
+   * named-item odds of an ordinary level-99 kill — and nothing beyond.
+   *
+   * It multiplies the CHANCE, never a GATE: a tier that cannot drop on this
+   * rung (legendary/artifact below HARD) or off this base pool still cannot,
+   * however high the mobs climb, so pushing a level-99 hero's menace on EASY
+   * widens the odds of what EASY can already pay and opens nothing new.
+   */
+  overCapChaseMult: 3,
+  overCapChaseLevels: 100,
   /** The EXPLICIT set-piece boost: an additive bonus to the named-tier rarity
    * BASE when the killer is an elite or a boss (RARE/UNIQUE mobs share the
    * elite bonus — see `rollTier`'s `mobRarity`), so those special fights are a

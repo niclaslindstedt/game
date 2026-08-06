@@ -5,7 +5,7 @@
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
 import { PACKS } from "../config/index.ts";
 import { spawnEnemy } from "../create.ts";
-import { difficultyDef, resolvePackCount } from "../defs/difficulties.ts";
+import { resolvePackCount } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { runLevelDef, type PackSpec } from "../defs/levels/index.ts";
 import {
@@ -100,7 +100,6 @@ function wakePack(state: GameState, pack: PackState, spec: PackSpec): void {
         state.nextId++,
         psc.hpMult,
         menaceStage(state),
-        difficultyDef(state.difficulty).menaceEffectMult,
         psc.mlvl,
         psc.banded,
       );
