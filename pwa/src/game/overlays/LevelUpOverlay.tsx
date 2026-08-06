@@ -198,9 +198,7 @@ export function LevelUpOverlay({
         <div className="levelup-choose-row">
           <PixelText
             font={font}
-            text={
-              points > 1 ? `CHOOSE A STAT (${points} POINTS)` : "CHOOSE A STAT"
-            }
+            text={`CHOOSE A STAT (${points} ${points === 1 ? "POINT" : "POINTS"})`}
             scale={2}
             color="#9aa3ad"
           />
