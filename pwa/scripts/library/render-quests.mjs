@@ -227,6 +227,12 @@ function paysSection(quest, base) {
           `${reward.cleanSlates} — every stat point refunded into a pool and the whole build re-placed, spent whenever you like`,
         ]
       : null,
+    reward?.cache
+      ? [
+          "THE CACHE",
+          `the antique chest in the garage — twenty cells to KEEP what you cannot carry, standing from the moment you hand this in`,
+        ]
+      : null,
   ].filter(Boolean);
 
   return `      <h2 id="pays">What it pays</h2>

@@ -138,11 +138,17 @@ const EMPTY_FOG = new Uint8Array(0);
 // screen, so essentially every one carries `phase: "paused"` — a value the
 // union no longer holds — and its talent queue sits where nothing reads it.
 //
+// v27: THE CACHE — the garage chest (src/game/cache.ts). `Player.cache` is a
+// required list the engine indexes unguarded (`stashItem`), and the run grew
+// `cachePos`/`cacheOwned`, which decide whether the chest is standing at all. A
+// v26 blob carries none of the three, so a thaw would hand the stash verbs an
+// `undefined` grid and draw a chest nobody can open.
+//
 // The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
 // hero, or the stats record grows a field this version doesn't know — bump
 // here (and update the guard's lists) in the SAME commit as the shape change,
 // or the next release resumes old snapshots into a state the engine can't read.
-export const SAVE_VERSION = 26;
+export const SAVE_VERSION = 27;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

@@ -1091,6 +1091,22 @@ escort.ts` walks the people an escort errand puts on the field, and
   its keep needs a clear gain (`SWAP_GAIN_MARGIN`) whenever it GIVES UP REACH,
   because the bot's standoff is derived from the held weapon's range — reaching
   farther is free, reaching less far has to pay for the ground it costs.
+- **`src/game/cache.ts`** — THE CACHE: the antique chest against the garage's
+  north wall, and the one place a piece of gear is KEPT rather than carried.
+  `CACHE.slots` cells on the hero (`Player.cache`, private on the wire like the
+  bag, riding the `Loadout` so it lands on the character); the FIXTURE is a
+  `cache` landmark the carve reserves on the hub alone, so `GameState.cachePos`
+  is null everywhere else and every verb refuses. Whether it STANDS there is
+  `cacheOwned` — a session parameter off the character's keepsakes, flipped
+  mid-run exactly once by `grantCache` when Ruth's THE SCALE is handed in, which
+  also starts the `cacheArriveMs` the app dramatizes as the thing coming into
+  being (`pwa/src/game/render/conjure.ts`, over the `cacheGiven` cue). Opening it
+  is the stall's own gesture — a tap on the fixture → `openCache` → the hero's
+  `cache` screen (`pwa/src/game/CachePanel.tsx`), two grids where one tap moves a
+  piece to the other side (`stashItem` / `takeFromCache`, first free cell either
+  way, a full destination simply refused). Distinct from the vault below, which
+  is a HOLDING PEN the next ride empties: the cache is the player's and nothing
+  ever clears it. → `docs/game-content.md` → THE CACHE
 - **`src/game/items/vault.ts`** — THE LOST & FOUND: what the cull shed, held
   for the player to buy back. An unattended ride flies with a bag it cannot
   empty, so on a long flight it must eventually shed something the player would

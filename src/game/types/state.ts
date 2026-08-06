@@ -705,6 +705,32 @@ export type GameState = {
   gates: GateState[];
   /** The level's wandering merchant (see merchant.ts). */
   merchant: Merchant;
+  /**
+   * THE CACHE — the antique chest (src/game/cache.ts). WHERE it stands on this
+   * map, or null on every map that has no spot for one (which is all of them
+   * but the hub: a stash you can reach mid-mission is a bag with no cap).
+   *
+   * The spot comes off the carve like any landmark, so it is decided whether or
+   * not the hero owns the chest yet — the map always knows where the thing goes.
+   * Whether it is THERE is `cacheOwned`.
+   */
+  cachePos: Vec2 | null;
+  /**
+   * Does this hero own the chest at all? A SESSION PARAMETER, off the
+   * character's keepsakes (`RunParams.cacheOwned`) — never a fact the run
+   * discovers, because a joiner and the host must build the same world from the
+   * same parameters. Flipped mid-run exactly once: when the errand that pays it
+   * is handed in (`grantCache`).
+   */
+  cacheOwned: boolean;
+  /**
+   * The chest COMING INTO BEING, counting down from `CACHE.arriveMs`; 0 or
+   * absent once it simply stands there. Set by `grantCache` at the handover and
+   * counted off in the step, so the arrival plays on the client exactly as the
+   * mercy angel's descent does — the engine holds the tap and the renderer
+   * dramatizes the rest (render/conjure.ts).
+   */
+  cacheArriveMs?: number;
   /** THE HERO'S VEHICLES — the car and the garage ship, minted where the
    * carve pins their landmarks (the garage; empty everywhere else). Machines,
    * not props: see `Vehicle` and src/game/vehicles.ts. */

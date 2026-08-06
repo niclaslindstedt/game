@@ -74,6 +74,10 @@ export type PlayerScreen =
   | "map"
   | "questLog"
   | "shop"
+  // THE CACHE — the garage chest's own window (src/game/cache.ts). A screen
+  // like the bag and the stall: this hero stands at the chest while the rest of
+  // the party plays on, and solo it freezes the run exactly as the bag does.
+  | "cache"
   | "quest"
   | "talk"
   | "companion"

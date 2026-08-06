@@ -11,6 +11,8 @@ lore: >
   trail's gut-punch find says so. Her mother asks for a scale like it, off the
   same scaled breed, not as proof and not for comfort: she wants to hold what
   her daughter is up against, and find out it is the gods who should worry.
+  What she gives back is the family chest - three generations of keeping -
+  which stands in the bay from that day on.
 offer:
   - - WHERE SHE'S GONE NOW, THE THINGS THAT KEEP HER ARE SCALED. GODS, YOU SAID.
   - - MY GIRL WILL BE PRYING AT THEM. SHE PRIES. SHE ALWAYS HAS.
@@ -20,6 +22,7 @@ incomplete:
 complete:
   - - IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
   - - I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
+  - - THERE'S A CHEST AGAINST THAT WALL NOW - MY MOTHER'S, AND HERS BEFORE THAT. PUT IN IT WHAT YOU CAN'T CARRY.
   - - GO AND MEET HER HALFWAY.
 objectives:
   - kind: collect
@@ -38,6 +41,11 @@ items:
 reward:
   xpShare: 1
   coins: 800
+  # THE CACHE — the antique chest against the bay's north wall (src/game/
+  # cache.ts). The last thing Ruth has to give, paid for the last errand she
+  # has to give it for, and the only one in the game: from here on the hero has
+  # somewhere to KEEP a piece instead of carrying it.
+  cache: true
   loot:
     count: 2
     tierBonus: 2

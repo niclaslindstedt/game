@@ -177,6 +177,14 @@ export type Loadout = {
    * before the vault shipped load with an empty one.
    */
   vault?: Equipment[];
+  /**
+   * THE CACHE (src/game/cache.ts): what the hero keeps in the garage chest.
+   * It rides the loadout for the same reason the bag does — the loadout is how
+   * everything a hero owns reaches the character — even though the cells are
+   * only REACHABLE standing at the chest itself. Optional so loadouts banked
+   * before the chest shipped load with an empty one.
+   */
+  cache?: (Equipment | null)[];
   /** Banked ability pickups (ABILITY_DEFS ids). */
   heldAbilities: string[];
   /** Stacked medkits per quality (see `Player.medkits`). Optional so loadouts

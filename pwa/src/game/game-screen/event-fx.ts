@@ -8,6 +8,7 @@
 
 import { localHero } from "../local-seat.ts";
 import {
+  CACHE,
   companionDef,
   enemyDef,
   PLAYER,
@@ -1108,6 +1109,27 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // a `splash`, the same one-shot bloom a spell lands on, tinted to the tier:
   // the moment is the CHIME's twin, and both exist because a good drop in a
   // ten-item spill has to be findable without reading ten item names.
+  // THE CACHE IS GIVEN — Ruth's chest comes into being against the garage's
+  // north wall. The LIGHT is here — the pool on the floor, the motes rushing
+  // in, the snap when it turns real; the chest's own body knitting itself out
+  // of that light is drawn from the run's `cacheArriveMs` (render/cache.ts),
+  // because it belongs to the fixture and has to keep playing if the effect
+  // list is culled.
+  //
+  // It arrives in the UNIQUE gold the loot ladder already uses for a named
+  // relic — the chest is the rarest thing the game ever hands over, and saying
+  // so in the vocabulary the player has spent the whole campaign learning
+  // beats inventing a second one for a single moment.
+  if (event.type === "cacheGiven") {
+    effects.push({
+      kind: "conjure",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + CACHE.arriveMs,
+      durationMs: CACHE.arriveMs,
+      color: TIER_RGB.unique,
+      seed: state.stats.timeMs,
+    });
+  }
   if (event.type === "lootShine") {
     effects.push({
       kind: "lootShine",

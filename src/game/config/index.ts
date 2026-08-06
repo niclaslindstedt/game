@@ -23,6 +23,7 @@ export * from "./abilities.ts";
 export * from "./talents.ts";
 export * from "./dialogue.ts";
 export * from "./companions.ts";
+export * from "./cache.ts";
 export * from "./quests.ts";
 export * from "./economy.ts";
 export * from "./run.ts";

@@ -34,9 +34,11 @@ import {
 import { botViewSpec } from "../bot-view-specs.ts";
 import { cloneGameState } from "../checkpoint.ts";
 import {
+  CACHE_KEEPSAKE,
   characterPurse,
   campaignChainFor,
   clearedLevelsFor,
+  hasKeepsake,
   hasMetMerchant,
   seenThoughts,
   type Character,
@@ -303,6 +305,11 @@ export function createRunSession(deps: {
       runLevelId,
       difficulty,
     ),
+    // THE CACHE — has Ruth handed this hero the chest yet? A keepsake on the
+    // character, so it survives a death, an abandoned run and a fresh
+    // difficulty: furniture is not re-earned. The engine still only stands it
+    // where the carve gave it a spot, which is the garage.
+    cacheOwned: hasKeepsake(characterRef.current, CACHE_KEEPSAKE),
     // THE CAMPAIGN CHAIN the hero carries (quests/campaign.ts), seeded before
     // anything reads the quest log so a chain's gate, a giver's head mark and
     // the tracker are all correct on the first frame.

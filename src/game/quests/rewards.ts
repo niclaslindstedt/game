@@ -16,6 +16,7 @@
 import type { Vec2 } from "@game/lib/vec.ts";
 
 import { canBankAbility } from "../abilities.ts";
+import { grantCache } from "../cache.ts";
 import { pickedQuestReward } from "./reward-choices.ts";
 import type { QuestReward } from "../defs/quests.ts";
 import { xpToLevelUp } from "../leveling.ts";
@@ -139,6 +140,12 @@ export function payQuestReward(
       }
     }
   }
+
+  // THE CACHE — the garage chest (src/game/cache.ts). It is not an item and
+  // does not touch the bag: `grantCache` stands it at the spot the carve
+  // reserved and starts its arrival, which is why nothing about it appears in
+  // `payout` — there is nothing to list, only somewhere new to walk.
+  if (reward.cache) grantCache(state);
 
   // A CLEAN SLATE goes on the hero himself rather than into the bag — see
   // `Player.cleanSlates` for why a thing that must never be lost does not live

@@ -93,6 +93,14 @@ export type RunParams = {
    * trader is set up at the door from the start. */
   merchantDiscovered?: boolean;
   /**
+   * THE CHARACTER HAS EARNED THE CACHE — the garage chest Ruth pays for THE
+   * SCALE (src/game/cache.ts). Seeded from the character's keepsakes, so the
+   * chest stands in the hub from the first frame of every visit after the one
+   * it was given in. It still only appears where the carve gave it a spot,
+   * which is the garage and nowhere else.
+   */
+  cacheOwned?: boolean;
+  /**
    * The CAMPAIGN chain the hero carries (`quests/campaign.ts`), or null.
    *
    * Seeded before anything reads the quest log, so a chain's gate, a giver's
@@ -175,6 +183,7 @@ export function createRunFromParams(params: RunParams): GameState {
     params.respec ?? false,
     params.clearedLevels ? [...params.clearedLevels] : [],
     params.merchantDiscovered ?? false,
+    params.cacheOwned ?? false,
   );
   seedCampaignQuests(
     state,

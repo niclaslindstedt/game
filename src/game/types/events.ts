@@ -533,6 +533,17 @@ export type GameEvent =
    */
   | { type: "mercyDrop"; pos: Vec2 }
   /**
+   * THE CACHE HAS BEEN GIVEN — Ruth's chest is coming into being against the
+   * garage's north wall (`grantCache`, src/game/cache.ts). Fires once, on the
+   * handover, so the app can start the arrival the run's own `cacheArriveMs`
+   * counts off and can bank the chest on the CHARACTER, where a permanent
+   * acquisition belongs (a death must never un-give it).
+   *
+   * `pos` is where the thing lands, which is not where the conversation
+   * happened: the chest goes to its wall, not to the giver's feet.
+   */
+  | { type: "cacheGiven"; pos: Vec2 }
+  /**
    * The player walked over loot he couldn't carry — the bag is full, so the
    * piece stays on the ground. `pos` is the hero (the app floats a "bags full"
    * thought over him and pulses the inventory button to nudge a cleanup).

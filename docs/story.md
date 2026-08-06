@@ -135,7 +135,12 @@ SCALE: in the rift Ada pried a scale off a lizard god, so Ruth asks for a scale
 like it, off the same scaled breed, to hold what her daughter's hands were
 strong enough to do. She is never scared for Ada and says so; each trophy
 confirms what she already believed, and her last word on the subject is that
-the girl is fighting her way back and the hero should go on.
+the girl is fighting her way back and the hero should go on. **For the last of
+the three she gives something back**: the family's own chest — her mother's,
+and hers before that — which is standing against the bay's north wall by the
+time she has finished the sentence, and which is where the hero keeps from then
+on whatever he cannot carry. It is the only thing anybody in the game hands him
+that is not a weapon, and the only one he never has to earn twice.
 
 ## Level 1 — GOODCO HQ
 

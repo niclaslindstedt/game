@@ -263,6 +263,7 @@ export function rewardProse(quest) {
     reward.abilities.length > 0
       ? list(reward.abilities.map((a) => a.name))
       : "",
+    reward.cache ? "the CACHE" : "",
   ].filter(Boolean);
   lines.push(`Handing it in pays ${list(parts)}.`);
 
@@ -287,6 +288,11 @@ export function rewardProse(quest) {
       `${list(reward.uniques.map((u) => u.name))} ${
         reward.uniques.length === 1 ? "is" : "are"
       } handed over WHOLE rather than rolled for — a named relic an author picked, which is the one payout in the game that is not a roll.`,
+    );
+  }
+  if (reward.cache) {
+    lines.push(
+      `And it gives something back rather than paying for something. THE CACHE is an antique chest that comes into being against the garage's north wall as the errand is handed in and stands there for good — twenty cells deep, and the only place in the game a piece of gear can be KEPT without being carried. It is yours once and forever: a death, an abandoned run and a fresh difficulty all leave it exactly where it stands, and what is in it never expires.`,
     );
   }
   return lines;

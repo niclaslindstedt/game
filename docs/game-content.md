@@ -84,6 +84,41 @@ maps taught and adds its own, so the arsenal grows across the campaign rather
 than being replaced — which is why a base weapon named by only one venue (there
 is one) stops being available the moment the hero leaves it.
 
+## THE CACHE — where a hero KEEPS something instead of carrying it
+
+Everything a hero owns rides on his body: what is worn, and what fits in the
+bag. That is right for loot, which is meant to be spent or sold — but it made
+the piece a player was SAVING (the off-build unique, the set item three pieces
+short, the weapon for a level they have not reached) cost a bag cell for as long
+as they saved it. **THE CACHE** is D2's answer: an antique chest standing against
+the garage's north wall, `CACHE.slots` (20) cells deep, where a piece can be put
+down without being given up. The bag stays a bag, and keeping stops competing
+with carrying.
+
+Four rules define it, and `src/game/cache.ts` is the one place they live:
+
+- **It is EARNED, once, forever.** Ruth pays it for THE SCALE, the last of her
+  three errands (`reward.cache`) — the only errand in the game that gives
+  something back rather than paying for something. Owning it is a KEEPSAKE on
+  the character, like the rift creator, so a death, an abandoned run or a fresh
+  difficulty never takes it back: furniture is not re-earned.
+- **It is the HUB'S ALONE.** Only the garage's blueprint stands one (a `cache`
+  landmark), and that is the whole balance of it: a stash reachable mid-mission
+  is a bag with no cap, and the decision the bag exists to force — what do I
+  carry home — would stop being a decision.
+- **The chest is public; what is in it is private.** In a co-op session anybody
+  may walk up to it and open THEIR OWN (`Player.cache`, withheld from every
+  other seat exactly as the bag is). One piece of furniture, one stash per hero.
+- **Nothing in it is culled.** The contents ride the loadout like the bag, and
+  unlike every other carried list they are NOT filtered by what the body can
+  still wear — a chest is where a piece goes precisely because the hero cannot
+  use it yet.
+
+The window is two grids and one gesture: tap a bag cell to keep it, tap a chest
+cell to take it back, and the engine picks the free slot either way. A full
+destination refuses the move and leaves the piece where the player last saw it;
+nothing ever lands on the floor.
+
 ## Ammunition — what a ranged weapon spends instead of wearing out
 
 A gun does not get blunt. **Ranged** weapons carry no `durability` at all and

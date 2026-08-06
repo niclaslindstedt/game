@@ -242,6 +242,10 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "baits",
       "bossCorpse",
       "bossDeath",
+      // v27: THE CACHE — where the garage chest stands on this map, and
+      // whether this hero has earned it (src/game/cache.ts).
+      "cacheOwned",
+      "cachePos",
       "campAnchor",
       "campMs",
       "canopy",
@@ -360,6 +364,9 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       // v24: the ammunition pouch — the field whose missing bump shipped the
       // frozen-resume bug this guard exists to prevent.
       "ammo",
+      // v27: the CACHE's cells — the chest's contents, private like the bag
+      // and riding the loadout with it.
+      "cache",
       "cleanSlates",
       "coins",
       "disarmed",

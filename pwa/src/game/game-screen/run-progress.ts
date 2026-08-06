@@ -21,6 +21,7 @@ import {
 import {
   accrueCampaign,
   bankKeepsake,
+  CACHE_KEEPSAKE,
   bankRiftRoad,
   bankLoadout,
   campaignTally,
@@ -321,6 +322,16 @@ export function createRunProgress(deps: {
       storyItemDef(event.defId)?.keepsake
     ) {
       characterRef.current = bankKeepsake(characterRef.current, event.defId);
+    }
+    // THE CACHE — Ruth's chest, banked the moment she hands it over. It is not
+    // a story item and is never picked up, but it is the same KIND of fact the
+    // keepsakes list holds: a permanent acquisition. Booked here rather than at
+    // the level's end for the reason the campaign chain beside it is — the case
+    // that matters is the player who quits to the menu after the handover, and
+    // a bank that waited for a victory would make them earn their own furniture
+    // twice.
+    if (event.type === "cacheGiven") {
+      characterRef.current = bankKeepsake(characterRef.current, CACHE_KEEPSAKE);
     }
     // A CAMPAIGN ERRAND MOVED — bank the chain on the character now rather
     // than at the level's end. The whole point of a campaign chain is that it

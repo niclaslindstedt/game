@@ -3,7 +3,7 @@
 // decor, meteor craters, landmarks, the fallen-boss exit ring, obstacles,
 // and gravity wells — all drawn under the moving actors.
 
-import { ASTEROIDS, type GameState } from "@game/core";
+import { ASTEROIDS, CACHE, cacheStanding, type GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import {
@@ -13,6 +13,7 @@ import {
   groundLayer,
   groundLayerOrigin,
 } from "./caches.ts";
+import { drawConjuringSprite } from "./conjure.ts";
 import { isLandmarkHidden } from "./hidden-landmarks.ts";
 import { drawWorldSprite } from "./plane.ts";
 import {
@@ -21,7 +22,14 @@ import {
   riftPortalLook,
 } from "./rift-portal.ts";
 import { drawSpriteCentered, seatX, seatY, type ViewSize } from "./shared.ts";
-import { billboard, cameraAnchorX, cameraAnchorY } from "./tilt.ts";
+import { TIER_RGB } from "../tiers.ts";
+import {
+  beginBillboard,
+  billboard,
+  cameraAnchorX,
+  cameraAnchorY,
+  endBillboard,
+} from "./tilt.ts";
 import { VEHICLE_LANDMARK_KINDS } from "./vehicles.ts";
 import { type Camera } from "./view.ts";
 
@@ -162,6 +170,31 @@ export function drawLandmarks(
     // `drawRiftPortals` below for why.
     if (riftPortalLook(landmark.sprite)) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
+    // THE CACHE is the one landmark whose PRESENCE is a fact about the hero
+    // rather than about the map (src/game/cache.ts): the garage always reserves
+    // the spot, and the chest only stands in it once Ruth has handed it over.
+    // Unlike a sealed door's seam this is engine state, not roster knowledge,
+    // so it is asked here rather than through `isLandmarkHidden`.
+    if (landmark.kind === "cache") {
+      if (!cacheStanding(state)) continue;
+      // …and while it is still ARRIVING, it is drawn coming into being instead
+      // of standing there (./conjure.ts). The burst of light around it is a
+      // transient effect off the `cacheGiven` event; this is the chest itself.
+      const arriving = state.cacheArriveMs ?? 0;
+      if (arriving > 0) {
+        beginBillboard(ctx, landmark.pos.x, landmark.pos.y, camera.x, camera.y);
+        drawConjuringSprite(
+          ctx,
+          sprite,
+          landmark.pos.x - camera.x,
+          landmark.pos.y - camera.y - sprite.height / 2,
+          1 - arriving / CACHE.arriveMs,
+          TIER_RGB.unique,
+        );
+        endBillboard(ctx);
+        continue;
+      }
+    }
     drawWorldSprite(
       ctx,
       landmark.sprite,

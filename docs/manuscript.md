@@ -296,7 +296,9 @@ start she is simply there between them, standing by the engine parts, because
 waiting at home means staring at the phone. Her chain is the game's second
 campaign-long one (`campaign: true`): three errands, one per leg of the trail,
 each asking for something of her daughter's — and she is never once scared for
-Ada, only proud._
+Ada, only proud. The last of the three is the only errand in the game that gives
+something back rather than paying for something: the family chest, three
+generations of keeping, which stands in the bay from that day on._
 
 #### SHE LET HERSELF IN — the meeting, played before the errands
 
@@ -369,11 +371,14 @@ anywhere._
 
 - A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT.
 
-**The handover:**
+**The handover** — and the one errand in the game that gives something back.
+_The chest arrives as she speaks: it comes into being against the bay's north
+wall, and stands there for good (THE CACHE, `src/game/cache.ts`)._
 
 1. IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
 2. I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
-3. GO AND MEET HER HALFWAY.
+3. THERE'S A CHEST AGAINST THAT WALL NOW - MY MOTHER'S, AND HERS BEFORE THAT. PUT IN IT WHAT YOU CAN'T CARRY.
+4. GO AND MEET HER HALFWAY.
 
 **Farewell.**
 

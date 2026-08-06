@@ -52,6 +52,7 @@ import {
   partyWiped,
 } from "../party.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
+import { stepCache } from "../cache.ts";
 import { stepMerchant } from "../merchant.ts";
 import { stepVehicles } from "../vehicles.ts";
 import { advancePath } from "../path.ts";
@@ -352,6 +353,11 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // wandering (and can't be discovered mid-pose), the horde neither moves,
   // strikes, nor fires — while the hero stays fully playable.
   if (!state.freeze) stepMerchant(state, dt, dtMs);
+  // THE CACHE's arrival, when one is mid-flight. Deliberately OUTSIDE the
+  // freeze: it is a timer on a piece of furniture rather than an actor, and a
+  // chest frozen half-materialised in a posed scenario is a chest nobody can
+  // open when the pose ends.
+  stepCache(state, dtMs);
   // The machines: the car's springs settle, its wheels roll from its speed,
   // and a seated driver's held pointer steers it (the garage drive-out). A
   // no-op loop on every map without a vehicle.

@@ -39,6 +39,7 @@ import { MapOverlay } from "../overlays/MapOverlay.tsx";
 import { QuestLogOverlay } from "../overlays/QuestLogOverlay.tsx";
 import { RespecOverlay } from "../overlays/RespecOverlay.tsx";
 import { playUiSound } from "../sfx/ui.ts";
+import { CachePanel } from "../CachePanel.tsx";
 import { ShopPanel } from "../ShopPanel.tsx";
 import { TalentPickerOverlay } from "../overlays/TalentPickerOverlay.tsx";
 import { TitleCard } from "../TitleCard.tsx";
@@ -328,6 +329,24 @@ export function SceneOverlays({
           onChange={bumpUi}
           onClose={() => {
             runCommand(state, "closeShop");
+            playUiSound(synth, "back");
+            bumpUi();
+          }}
+        />
+      )}
+
+      {/* THE CACHE — the garage chest (src/game/cache.ts), raised by a tap on
+          the thing itself. A screen like the stall: this hero stands at it
+          while the party plays on, and solo the world holds. */}
+      {hud.screen === "cache" && (
+        <CachePanel
+          state={state}
+          font={font}
+          relicFonts={assets.relicFonts}
+          sprites={assets.sprites}
+          onChange={bumpUi}
+          onClose={() => {
+            runCommand(state, "closeCache");
             playUiSound(synth, "back");
             bumpUi();
           }}

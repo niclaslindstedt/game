@@ -44,6 +44,7 @@ import {
   type LevelDef,
 } from "./defs/levels/index.ts";
 import type { DifficultyHp, DifficultyMobLevels } from "./defs/levels/types.ts";
+import { emptyCache } from "./cache.ts";
 import { crateMaxHp } from "./crates.ts";
 import { buildWells } from "./hazards.ts";
 import {
@@ -118,6 +119,12 @@ export function createGame(
   // set up at the door from the first tick — a death-and-restart can walk
   // straight to the counter to repair — and greets the hero back on approach.
   merchantDiscovered = false,
+  // True when this CHARACTER has earned the CACHE — the garage chest Ruth pays
+  // for THE SCALE (src/game/cache.ts). A session parameter, seeded from the
+  // character's keepsakes: the run never discovers it, so a joiner and the host
+  // build the same world. The chest still only STANDS where the carve gave it a
+  // spot, which is the hub and nowhere else.
+  cacheOwned = false,
 ): GameState {
   // This run's map: a chamber grid carved from the mission's blueprint on the
   // run's own seed (see `mapgen/`). Everything below reads a plain `LevelDef`.
@@ -681,6 +688,14 @@ export function createGame(
       blocked,
       merchantDiscovered,
     ),
+    // THE CACHE — where the chest stands, off the carve's own `cache` landmark
+    // (the garage's bay wall, and nowhere else in the game). The spot is
+    // decided whether or not this hero has earned the thing yet: the map always
+    // knows where the furniture goes, and OWNING it is a session parameter.
+    cachePos: def.landmarks.find((l) => l.kind === "cache")?.pos
+      ? { ...def.landmarks.find((l) => l.kind === "cache")!.pos }
+      : null,
+    cacheOwned,
     // The parked machines minted above (their footprints already stand in
     // `obstacles`) — the car and the ship, where the carve pinned them.
     vehicles,
@@ -1912,5 +1927,10 @@ export function createHero(
     // The LOST & FOUND starts empty; only a paid AUTO PILOT ride fills it
     // (see items/vault.ts), and `applyLoadout` carries it across.
     vault: [],
+    // THE CACHE's cells (src/game/cache.ts) — always laid out, even for a hero
+    // who has not earned the chest and even on maps that stand none, so nothing
+    // downstream has to ask whether the grid exists before reading it.
+    // `applyLoadout` carries what is in it across, like the bag.
+    cache: emptyCache(),
   };
 }

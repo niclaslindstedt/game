@@ -153,6 +153,8 @@ const REWARD_FIELDS = {
   abilities: "the powers row, linked to the powers section",
   cleanSlates:
     "the CLEAN SLATE row — a respec the hero carries and spends when he likes",
+  cache:
+    "the CACHE row — the garage chest, and its own paragraph in what it pays",
 };
 
 const REWARD_LOOT_FIELDS = {
@@ -395,6 +397,11 @@ function rewardModel(reward, venue) {
     // the arsenal for a way to re-pick a build will find no item to find:
     // this row is the only place the answer exists.
     cleanSlates: reward.cleanSlates ?? 0,
+    // THE CACHE — the garage chest (src/game/cache.ts). One errand in the game
+    // pays it, and a reader hunting the arsenal for a way to keep a piece they
+    // cannot carry will find no ITEM to find: this row is the only place the
+    // answer exists.
+    cache: reward.cache === true,
   };
 }
 

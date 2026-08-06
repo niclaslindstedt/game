@@ -123,6 +123,13 @@ export type Character = {
    * across every run and every difficulty: the RIFT CREATOR that unseals
    * the garage's rift seam. Recorded on the `storyItemCollected` engine
    * event; read by the hub's travel doors (`travelDoors[].requires`).
+   *
+   * THE CACHE rides here too, under `CACHE_KEEPSAKE`. It is not a story item
+   * and is never picked up — Ruth hands it over — but it is exactly the same
+   * KIND of fact this list exists for: a permanent acquisition that a death,
+   * an abandoned run or a fresh difficulty must never take back. Banking it
+   * anywhere run-scoped would leave a hero re-earning their own furniture.
+   *
    * Optional: a roster stored before the field existed reads as none.
    */
   keepsakes?: string[];
@@ -831,6 +838,15 @@ export function bankKeepsake(character: Character, defId: string): Character {
   persist(updated);
   return updated;
 }
+
+/**
+ * THE CACHE's own keepsake id — what "this hero has been given the chest" is
+ * recorded as (see `Character.keepsakes`). A constant rather than a literal at
+ * the two call sites, because the two must agree exactly: one banks it on the
+ * `cacheGiven` event and the other seeds `RunParams.cacheOwned` from it, and a
+ * typo in either is a chest that vanishes between visits.
+ */
+export const CACHE_KEEPSAKE = "cache";
 
 /** Does this character keep `defId` — the travel doors' `requires` read. */
 export function hasKeepsake(character: Character, defId: string): boolean {

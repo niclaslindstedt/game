@@ -1631,6 +1631,11 @@ export const FIX_HUB_LEVEL: LevelDef = (() => {
       // createGame mints a Vehicle for each (src/game/vehicles.ts).
       { kind: "car", anchor: "base", pos: { x: 700, y: 500 } },
       { kind: "rocket", anchor: "base", pos: { x: 1100, y: 300 } },
+      // THE CACHE's spot (src/game/cache.ts) — `cache` is an ENGINE landmark
+      // kind like the two above: the carve reserves the ground and the RUN
+      // decides whether the chest stands in it. A hub is the only venue that
+      // has one, exactly as the shipped garage is.
+      { kind: "cache", anchor: "base", pos: { x: 500, y: 300 } },
     ],
   };
   delete base.waves;
