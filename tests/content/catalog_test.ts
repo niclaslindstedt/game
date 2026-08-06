@@ -33,7 +33,7 @@ import {
 // carved from its blueprint carries the cast. Both halves are walked below, so
 // a typo in either fails here rather than mid-run.
 const levels: LevelDef[] = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER].map((id) =>
-  resolveLevelDef(id, 11, "medium"),
+  resolveLevelDef(id, 11),
 );
 
 /** Resolve an equipment id whether it is a weapon or a piece of gear. */

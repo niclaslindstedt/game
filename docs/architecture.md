@@ -56,7 +56,7 @@ run against synthetic fixtures with no shipped content (see
   `src/generated/map-blueprints.ts` by `scripts/generate-maps.mjs`, part of
   `make levels`), which is a RECIPE rather than a layout — a purpose-typed object
   palette, an AREA palette saying what kinds of place the map is made of, the
-  horde's breeds and the depths they hold, the cast, three sizes, and the compass
+  horde's breeds and the depths they hold, the cast, its extents, and the compass
   regions the boss may be hiding in. `resolveLevelDef` carves a whole `LevelDef`
   from it using the run's own seed, so the boss is somewhere new every run and
   has to be found; everything non-geometric (story, loot pools, merchant,

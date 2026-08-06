@@ -30,9 +30,6 @@ import type {
   DifficultyHp,
   DifficultyMobLevels,
 } from "../defs/levels/types.ts";
-import type { MapSizeName } from "../flags.ts";
-
-export type { MapSizeName };
 export type { Enclosure, MapArea, MapSpace } from "./areas.ts";
 
 /**
@@ -134,8 +131,8 @@ export type MapObject = {
   radius?: number;
   /**
    * How THICK the scatter lies, as placements per 1,000,000 world px² — a
-   * density rather than a count, because a blueprint is carved at three sizes
-   * and a fixed count would leave LARGE bare. Scatter types only.
+   * density rather than a count, so the dressing follows the floor it is given
+   * whatever a district's cells rolled. Scatter types only.
    */
   density?: number;
   /** A jumping hero clears it (the horde never jumps). Scatter types only. */
@@ -367,7 +364,7 @@ export type MapPrefab = {
   props?: { object: string; at: [number, number] }[];
 };
 
-/** One of the three sizes a blueprint may be carved at. */
+/** The extents a blueprint is carved into. */
 export type MapSizeSpec = {
   width: number;
   height: number;
@@ -532,10 +529,10 @@ export type MapAnnex = {
    * The annex costs the level a whole band of its own — the room's height plus
    * its margins — and that band is as wide as the map whether the room is or
    * not. A fixed-width room therefore leaves a bigger and bigger apron of dead
-   * rock either side of it as the carve scales up, which is exactly the shape of
-   * a bug ("why is half my minimap empty?"). Sizing the room off the map keeps
-   * the band mostly ROOM at all three sizes, and a long low gallery is a better
-   * operations centre than a square hall anyway.
+   * rock either side of it on a wide map, which is exactly the shape of a bug
+   * ("why is half my minimap empty?"). Sizing the room off the map keeps the
+   * band mostly ROOM, and a long low gallery is a better operations centre
+   * than a square hall anyway.
    */
   widthFrac?: number;
   /** Dead ground left around the room inside its band (world px, default 200). */
@@ -591,7 +588,7 @@ export type MapBlueprint = {
    * a COMPOSED venue uses — the garage laying out the cutscene's own shot:
    * bay southwest, lawn behind, the paved drive out the door — where a
    * weighted roll could only gamble at it. The rooms should tile the map's
-   * `sizes` extents; `sizes.rooms` is ignored when a plan is present.
+   * `size` extents; `size.rooms` is ignored when a plan is present.
    */
   plan?: MapPlan;
   /**
@@ -600,7 +597,9 @@ export type MapBlueprint = {
    * these few pieces of it are drawn.
    */
   prefabs?: MapPrefab[];
-  sizes: Record<MapSizeName, MapSizeSpec>;
+  /** The world rectangle this blueprint is carved into, and how many chambers
+   * the carve splits it into. */
+  size: MapSizeSpec;
   /**
    * The AREA PALETTE — what kinds of place this map is made of (see areas.ts).
    * Every carved cell is assigned one, and the walls between cells are DERIVED

@@ -25,16 +25,6 @@ export { createGame } from "./game/create.ts";
 // seam `createGame` resolves a level through. Read by the map tooling and the
 // content tests; never by the app's startup path, which reaches levels through
 // `defs/levels/summary.ts` and must not pull the generator's bytes.
-// The engine's runtime toggles. Most reach the app through `@game/menu`; the
-// map-size pair is re-exported here too so a simulation-side caller (the map
-// tooling, the content guard) need not import the menu entry point to set a
-// flag that gates the simulation.
-export {
-  setGeneratedMapSize,
-  generatedMapSizeSetting,
-  type GeneratedMapSizeSetting,
-} from "./game/flags.ts";
-
 // The autopilot's global pathfinder. Exported so the map tooling and the
 // generated-map guard can ask the engine's OWN router whether a carved map is
 // walkable, instead of re-deriving reachability and drifting from it.
@@ -54,11 +44,9 @@ export {
   regionRect,
   resolveLevelDef,
   setMapBlueprints,
-  resolveMapSize,
   type MapBlueprint,
   type MapObject,
   type MapObjectType,
-  type MapSizeName,
 } from "./game/mapgen/index.ts";
 export { IDLE_INPUT, step, type PartyInput } from "./game/step/index.ts";
 // CLIENT-SIDE MOVEMENT PREDICTION — the engine's own movement pass with combat

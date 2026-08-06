@@ -17,8 +17,6 @@
 //                       rather than only what is minted at creation
 //     [--bare]          no labels and no title strip — a pure art view
 //     [--all]           render every level
-//     [--size N]        small|medium|large — the carve's scale (see
-//                       src/game/mapgen; a mission has no map of its own)
 //     [--mod <dir>]     compile that MOD and render its venues too, drawn with
 //                       its own sprites (repeatable, load order — see
 //                       scripts/mod-support.mjs and mod/AGENTS.md)
@@ -28,7 +26,7 @@
 // --dormant, for a MAP-BLUEPRINT pass: the only honest way to judge whether a
 // carved chamber grid reads as a place worth searching is to look at it drawn
 // with the real sprites and the real horde standing in it. Every render is of a
-// CARVE, so `--seed` and `--size` are the two knobs that decide which one.
+// CARVE, so `--seed` is the knob that decides which one.
 
 import { register } from "node:module";
 import { mkdirSync } from "node:fs";
@@ -381,7 +379,7 @@ export function renderLevel(def, opts) {
   // stamped-on caption would be a caption nobody asked for on a public page.)
   if (!opts.bare) {
     const title = renderText(
-      `${def.name}  ${def.id}  ${opts.size}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
+      `${def.name}  ${def.id}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
       [235, 235, 240, 255],
     );
     fillRect(surf, 0, 0, title.width + 6, title.height + 6, [0, 0, 0, 200]);
@@ -401,7 +399,6 @@ function parseArgs(argv) {
     all: false,
     bare: false,
     dormant: false,
-    size: "medium",
   };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
@@ -409,7 +406,6 @@ function parseArgs(argv) {
     if (a === "--all") opts.all = true;
     else if (a === "--bare") opts.bare = true;
     else if (a === "--dormant") opts.dormant = true;
-    else if (a === "--size") opts.size = argv[++i];
     else if (a === "--seed") opts.seed = Number(argv[++i]);
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--zoom") opts.zoom = Math.max(1, Number(argv[++i]));
@@ -439,23 +435,19 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 
   // THE MAP IS CARVED, always: a mission authors no geometry, so the def to draw
-  // is the one `createGame` would build — same id, same seed, same size — and the
-  // engine flag is set to that size so the run inside `renderLevel` carves the
-  // very same map. Picture and run agree by construction.
+  // is the one `createGame` would build — same id, same seed — and the run
+  // inside `renderLevel` carves the very same map. Picture and run agree by
+  // construction.
   {
-    const { setGeneratedMapSize } = await import(
-      pathToFileURL(engine("src/game/flags.ts")).href
-    );
     const { resolveLevelDef, hasMapBlueprint } = await import(
       pathToFileURL(engine("src/game/mapgen/index.ts")).href
     );
-    setGeneratedMapSize(opts.size);
     for (const entry of targets) {
       if (!hasMapBlueprint(entry.def.id)) {
         console.warn(`! no map blueprint for "${entry.def.id}"`);
         continue;
       }
-      entry.def = resolveLevelDef(entry.def.id, opts.seed, opts.size);
+      entry.def = resolveLevelDef(entry.def.id, opts.seed);
     }
   }
 

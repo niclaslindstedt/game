@@ -110,19 +110,10 @@ annex:
   # what makes him the gate to the finale rather than one more duel on the way.
   lock: control
 
-sizes:
-  small:
-    width: 3000
-    height: 1800
-    rooms: 9
-  medium:
-    width: 3800
-    height: 2300
-    rooms: 15
-  large:
-    width: 4800
-    height: 2900
-    rooms: 23
+size:
+  width: 3800
+  height: 2300
+  rooms: 15
 
 layout:
   minRoom: 560

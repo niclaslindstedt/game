@@ -104,19 +104,10 @@ areas:
     ground: { common: colony_lawn_0, rare: colony_lawn_1, rareEvery: 5 }
     patch: { a: colony_wood_0, b: colony_wood_1, every: 11 }
 
-sizes:
-  small:
-    width: 2800
-    height: 1800
-    rooms: 9
-  medium:
-    width: 3600
-    height: 2300
-    rooms: 15
-  large:
-    width: 4600
-    height: 2900
-    rooms: 23
+size:
+  width: 3600
+  height: 2300
+  rooms: 15
 
 # THE CARVE. Wide districts (580px floor) with broad passes (250px) — Mars is a
 # long-sightline map and a pressured hero rounds a spine without lining up on it.

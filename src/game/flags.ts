@@ -141,35 +141,3 @@ export function autoStatGainsOn(): boolean {
   return autoStatGainsEnabled;
 }
 
-// -- MAP SIZE (pwa developer flag `generatedMapSize`) -------------------------
-//
-// The three chamber-grid sizes a map may be carved at (see `mapgen/`). The
-// names are the whole vocabulary: a blueprint prices each one (`sizes` in
-// `content/maps/<id>.yaml`) with its own world dimensions and chamber count, so
-// LARGE is a genuinely longer search rather than the same map stretched.
-export type MapSizeName = "small" | "medium" | "large";
-
-/**
- * What the MAP SIZE setting asks for: one of the three sizes, or `random` —
- * rolled per run off the run's own seed, so consecutive runs of the same
- * mission differ in scale as well as layout.
- */
-export type GeneratedMapSizeSetting = MapSizeName | "random";
-
-// The size every run's map is carved at. Read once, at level build
-// (`mapgen/index.ts`), so a change takes effect on the next run — like the
-// story-display preferences above. The shipped answer is MEDIUM; the other
-// sizes are a developer row (see `stripDeveloperState` in the app's
-// settings.ts, which scrubs it so a store build can never carry one).
-let generatedMapSize: GeneratedMapSizeSetting = "medium";
-
-/** Choose the size maps are carved at, or `random` to roll it per run from the
- * seed. */
-export function setGeneratedMapSize(size: GeneratedMapSizeSetting): void {
-  generatedMapSize = size;
-}
-
-/** The requested generated-map size (read at level build). */
-export function generatedMapSizeSetting(): GeneratedMapSizeSetting {
-  return generatedMapSize;
-}

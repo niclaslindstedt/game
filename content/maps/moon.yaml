@@ -64,19 +64,10 @@ areas:
     horde: 1.25
     spawn: false
     label: APOLLO STATION
-sizes:
-  small:
-    width: 2800
-    height: 1900
-    rooms: 9
-  medium:
-    width: 3600
-    height: 2400
-    rooms: 15
-  large:
-    width: 4400
-    height: 3000
-    rooms: 22
+size:
+  width: 3600
+  height: 2400
+  rooms: 15
 # THE CARVE. Big basins (600px floor) with WIDE passes (260px) — the moon's whole
 # character is room to drift, and a pressured hero rounds a rubble ridge without
 # lining up on it. A third of the shut station doors are reinstated as loops, and

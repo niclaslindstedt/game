@@ -32,7 +32,7 @@ import { DT, idle, SEED } from "../helpers.ts";
 
 const garage = LEVELS.garage!;
 const BLUEPRINT = MAP_BLUEPRINTS.garage!;
-const carved = resolveLevelDef("garage", SEED, "medium");
+const carved = resolveLevelDef("garage", SEED);
 
 /** The hub's own place-pinned beats, in authored order. */
 const PLACE_BEATS = (garage.placeThoughts ?? []).map((t) => t.thought);
@@ -67,8 +67,8 @@ describe("the venue", () => {
   });
 
   it("is STATIC: one carve, whatever the seed or the size", () => {
-    const a = resolveLevelDef("garage", 11, "small");
-    const b = resolveLevelDef("garage", 999_999, "large");
+    const a = resolveLevelDef("garage", 11);
+    const b = resolveLevelDef("garage", 999_999);
     expect(JSON.stringify(a)).toEqual(JSON.stringify(b));
     expect(BLUEPRINT.carveSeed).toBeDefined();
   });

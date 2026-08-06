@@ -34,12 +34,12 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 /**
  * What `SessionParams` carries that `RunParams` deliberately does not.
  *
- * The map SIZE is a process-global engine FLAG rather than an argument —
- * `setGeneratedMapSize` — so it is applied by the CALLER before it builds, on
- * both ends, and there is nothing for the builder to do with it. Everything
- * else must appear in both.
+ * Nothing, today: the wire says a run in exactly the terms the builder takes.
+ * A field added to one and not the other is the desync this guard exists to
+ * catch, so a genuine wire-only parameter is listed HERE with its reason
+ * rather than quietly exempted at the comparison.
  */
-const WIRE_ONLY = ["generatedMapSize"];
+const WIRE_ONLY: string[] = [];
 
 const runParams = fieldsOf(
   path.join(repoRoot, "src", "game", "session-setup.ts"),
@@ -75,11 +75,10 @@ describe("a run's parameters and the wire's", () => {
     });
   });
 
-  it("keeps the engine FLAG on the wire side alone", () => {
+  it("keeps every listed wire-only field on the wire side alone", () => {
     // Stated positively as well, so that deleting a row from `WIRE_ONLY` to
-    // make a failure go away is itself a failure. It is on the wire because a
-    // client must carve the same map; it is absent from the builder because it
-    // is set before it, not by it.
+    // make the check above go away is itself a failure: a field exempted there
+    // has to genuinely be on the wire and genuinely absent from the builder.
     for (const flag of WIRE_ONLY) {
       expect(sessionParams).toContain(flag);
       expect(runParams).not.toContain(flag);

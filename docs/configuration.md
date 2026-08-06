@@ -55,10 +55,9 @@ column of a dozen unrelated tools:
 - **PLAYGROUND** — the next run. **SELECT LEVEL** (the warp picker — pick any
   difficulty and mission regardless of unlock state, skipping the intro), **BOT
   VIEW** (hand any level to the autopilot with a real hero, then pick a GAME
-  SPEED and a BOT SPEC), and the two terms a run is built on: **MAP SIZE** and
-  **AUTO LEVEL STATS** (both read when a level is BUILT, so a change lands on
-  the next run rather than one in progress), and **DEBUG MODE** — the one thing
-  drawn OVER a run.
+  SPEED and a BOT SPEC), the one term a run is built on — **AUTO LEVEL STATS**
+  (read when a level is BUILT, so a change lands on the next run rather than
+  one in progress) — and **DEBUG MODE**, the one thing drawn OVER a run.
 - **CHEATS** — what a run would otherwise have to earn: **SEED CHARACTERS**,
   **GRANT 10B COINS**, and **FORCE STORE** (which belongs here rather than among
   the build flags because the packs it surfaces are granted free).
@@ -81,21 +80,17 @@ or off — on also brings the horde's compensating hp scaling in lockstep (both
 derive from the same rule), and off leaves only chosen points and gear to push
 the hero ahead of the curve.
 
-**MAP SIZE** is what is left of the map generator's controls, because the
-generator is no longer optional: every mission's map is carved fresh at the start
-of each run from the mission's own blueprint (`content/maps/<id>.yaml`). The
-chambers, the walls between them, the horde in each of them, the caches and — the
-point of the whole thing — the boss's hiding place are all rolled from the run's
-seed. No intended route is generated, so the "go this way" guidance arrow stays
-silent and the fog-of-war minimap is the only record of where you have been: the
-boss has to be hunted down rather than walked to. The row picks the SCALE —
-SMALL, MEDIUM (shipped), LARGE, or RANDOM (rolled per run off the same seed).
-Each size is priced by the blueprint with its own world dimensions and chamber
-count, so LARGE is a genuinely longer search rather than the same map stretched.
-It is read when a level is BUILT, so a change takes effect on the next run rather
-than the one in progress. The story is untouched by any of it: a mission carries
-its own name, intro, cutscenes, loot pools, merchant, hazards and thought pins,
-so however THE MOON is carved it is still the moon.
+**The map generator has no controls at all**, because it is neither optional nor
+tunable: every mission's map is carved fresh at the start of each run from the
+mission's own blueprint (`content/maps/<id>.yaml`), at the ONE size that
+blueprint prices. The chambers, the walls between them, the horde in each of
+them, the caches and — the point of the whole thing — the boss's hiding place
+are all rolled from the run's seed. No intended route is generated, so the "go
+this way" guidance arrow stays silent and the fog-of-war minimap is the only
+record of where you have been: the boss has to be hunted down rather than walked
+to. The story is untouched by any of it: a mission carries its own name, intro,
+cutscenes, loot pools, merchant, hazards and thought pins, so however THE MOON is
+carved it is still the moon.
 
 The developer screen holds a **BALANCE** subpage: a set of runtime
 multipliers over the engine's shipped tuning (`src/game/tuning.ts`, applied via
@@ -377,7 +372,6 @@ npm run server:start -- server.config.json    # …from a file
 | `bots`             | `--bots`       | 0        | Seats filled with AUTOPILOT heroes. Each is an ordinary client and yields its seat when a person joins. |
 | `password`         | `--password`   | none     | A speed bump between the people invited and everybody else, never a wall.                               |
 | `mods`             | —              | none     | Mod ids in load order. A joiner whose list differs is refused by name.                                  |
-| `generatedMapSize` | `--map-size`   | `random` | `small` / `medium` / `large` / `random`. Every mission is carved, so the size is the only map knob.     |
 | `statusEverySec`   | —              | 30       | Console status interval. 0 turns it off.                                                                |
 
 There are deliberately **no balance knobs here**. A dedicated server runs the

@@ -22,7 +22,7 @@
 export const REQUIRED_FIELDS = [
   "id",
   "level",
-  "sizes",
+  "size",
   "areas",
   "layout",
   "objects",
@@ -36,7 +36,6 @@ const SPACES = new Set(["inside", "outside"]);
 /** What an area that names no `space` is (see `MapArea.space`). */
 const DEFAULT_SPACE = "outside";
 
-const SIZE_NAMES = ["small", "medium", "large"];
 
 const OBJECT_TYPES = new Set([
   "wall",
@@ -277,14 +276,13 @@ export function validateMap(bp, refs, description = "") {
             );
         }
         // It has to FIT: the host has to give it its corner and still leave a
-        // room beside it at every size the map is carved at. Checked against the
-        // SMALLEST, which is where it silently goes missing.
-        const small = bp.sizes?.small;
-        if (small && isPosNum(p.width) && isPosNum(p.height)) {
-          if (p.width >= small.width || p.height >= small.height)
+        // room beside it on the map it is cut into.
+        const size = bp.size;
+        if (size && isPosNum(p.width) && isPosNum(p.height)) {
+          if (p.width >= size.width || p.height >= size.height)
             err(
-              `${where}: ${p.width}×${p.height} does not fit sizes.small ` +
-                `(${small.width}×${small.height})`,
+              `${where}: ${p.width}×${p.height} does not fit size ` +
+                `(${size.width}×${size.height})`,
             );
         }
         for (const [j, prop] of (p.props ?? []).entries()) {
@@ -395,43 +393,25 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: light has no field "${key}"`);
   };
 
-  // ---- sizes ---------------------------------------------------------------
-  if (bp.sizes !== undefined) {
-    for (const name of SIZE_NAMES) {
-      const spec = bp.sizes[name];
-      if (!spec) {
-        err(`sizes.${name} is missing — all three sizes must be priced`);
-        continue;
-      }
-      if (!isPosNum(spec.width) || !isPosNum(spec.height))
-        err(`sizes.${name} needs positive width/height`);
-      // An authored plan draws its own rooms; `rooms` is ignored with one.
-      if (!bp.plan && (!Number.isInteger(spec.rooms) || spec.rooms < 4))
-        err(`sizes.${name}.rooms must be an integer >= 4`);
-      const min = bp.layout?.minRoom;
-      // A size that cannot fit the chambers it asks for silently carves fewer,
-      // which reads as "LARGE is the same as MEDIUM" — a confusing bug to chase.
-      if (isPosNum(min) && isPosNum(spec.width) && isPosNum(spec.height)) {
-        const capacity =
-          Math.floor(spec.width / min) * Math.floor(spec.height / min);
-        if (capacity < spec.rooms)
-          err(
-            `sizes.${name} asks for ${spec.rooms} chambers but ${spec.width}x${spec.height} ` +
-              `fits at most ~${capacity} at minRoom ${min}`,
-          );
-      }
-    }
-    // A PINNED blueprint (`carveSeed` — the static hub) deliberately prices
-    // all three sizes identically: one home, one look, whatever the
-    // GENERATED MAPS setting says. Everything else must climb.
-    for (let i = 1; bp.carveSeed === undefined && i < SIZE_NAMES.length; i++) {
-      const prev = bp.sizes[SIZE_NAMES[i - 1]];
-      const cur = bp.sizes[SIZE_NAMES[i]];
-      if (!prev || !cur) continue;
-      if (cur.width * cur.height <= prev.width * prev.height)
+  // ---- size ----------------------------------------------------------------
+  if (bp.size !== undefined) {
+    const spec = bp.size;
+    if (!isPosNum(spec.width) || !isPosNum(spec.height))
+      err("size needs positive width/height");
+    // An authored plan draws its own rooms; `rooms` is ignored with one.
+    if (!bp.plan && (!Number.isInteger(spec.rooms) || spec.rooms < 4))
+      err("size.rooms must be an integer >= 4");
+    const min = bp.layout?.minRoom;
+    // A map that cannot fit the chambers it asks for silently carves fewer,
+    // which reads as a venue that never grew its districts — a confusing bug
+    // to chase, because nothing in the render says the count was ignored.
+    if (isPosNum(min) && isPosNum(spec.width) && isPosNum(spec.height)) {
+      const capacity =
+        Math.floor(spec.width / min) * Math.floor(spec.height / min);
+      if (capacity < spec.rooms)
         err(
-          `sizes.${SIZE_NAMES[i]} is no bigger than sizes.${SIZE_NAMES[i - 1]} — ` +
-            `the three sizes must climb`,
+          `size asks for ${spec.rooms} chambers but ${spec.width}x${spec.height} ` +
+            `fits at most ~${capacity} at minRoom ${min}`,
         );
     }
   }
@@ -1229,18 +1209,18 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: ground.rareEvery must be an integer >= 1`);
     }
     sprite(bp.annex.padSprite ?? "elevator_pad", `${where} padSprite`);
-    // The room has to fit the band it is cut into at the SMALLEST size, or a
-    // small carve puts the control room half off the map.
+    // The room has to fit the band it is cut into, or the carve puts the
+    // control room half off the map.
     const margin = bp.annex.margin ?? 200;
-    const small = bp.sizes?.small;
+    const size = bp.size;
     if (
-      small &&
+      size &&
       isPosNum(bp.annex.width) &&
-      small.width < bp.annex.width + margin * 2
+      size.width < bp.annex.width + margin * 2
     )
       err(
-        `${where}: ${bp.annex.width}px wide does not fit sizes.small ` +
-          `(${small.width}px) with a ${margin}px margin`,
+        `${where}: ${bp.annex.width}px wide does not fit size ` +
+          `(${size.width}px) with a ${margin}px margin`,
       );
     if (
       bp.annex.widthFrac !== undefined &&

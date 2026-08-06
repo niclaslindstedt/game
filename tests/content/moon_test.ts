@@ -25,7 +25,7 @@ const BLUEPRINT = MAP_BLUEPRINTS.moon!;
 /** One representative far side. The carve is deterministic per seed, so this is
  * a real map rather than a stand-in — see generated_maps_test.ts for the spread
  * of seeds and sizes every rule below is also held to. */
-const CARVED = resolveLevelDef("moon", SEED, "medium");
+const CARVED = resolveLevelDef("moon", SEED);
 import { distance as dist } from "@game/lib/vec.ts";
 
 describe("THE MOON level def", () => {

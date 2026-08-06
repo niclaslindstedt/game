@@ -6,9 +6,6 @@
 // entry script (which registers the @game/lib alias loader before importing
 // the engine, so this module stays engine-import-free).
 
-/** The carve sizes `--map-size` accepts (see `GeneratedMapSizeSetting`). */
-const MAP_SIZES = ["small", "medium", "large", "random"];
-
 export function parseFlags(args, deps) {
   const {
     cpuCount,
@@ -39,7 +36,7 @@ export function parseFlags(args, deps) {
         "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-xp-scroll] " +
         "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
         "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] [--jobs N] " +
-        "[--map-size small|medium|large|random] [--mod <dir>] " +
+        "[--mod <dir>] " +
         "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
         "camera (--view WxH, default 422x195 — the horizontal-phone baseline in world px):\n" +
         "                 every run watches through a real camera rect (player-centred,\n" +
@@ -70,12 +67,10 @@ export function parseFlags(args, deps) {
         "                 is the MODDED game's. A mod's own venues join the level order, so\n" +
         "                 `--level all` sweeps them; `--level <mod level>` measures one.\n" +
         "                 Stack mods in load order — the LAST one wins any shared id.\n\n" +
-        "map size (--map-size, default medium): every mission's map is CARVED from its\n" +
-        "                 v2 blueprint per run, so the only choice left is the SCALE — small,\n" +
-        "                 medium, large, or `random` to roll one per run off its seed. The\n" +
-        "                 carve is the run's own (same seed → same map), so two sweeps at\n" +
-        "                 different sizes are a like-for-like balance read: run both to\n" +
-        "                 --json and --compare them.\n\n" +
+        "maps: every mission's map is CARVED from its v2 blueprint per run, at the one\n" +
+        "                 size the blueprint prices. The carve is the run's own (same seed →\n" +
+        "                 same map), so two sweeps on the same seeds are a like-for-like\n" +
+        "                 balance read: run both to --json and --compare them.\n\n" +
         "specs (--strategy × --class): STRATEGY is the positioning posture — `aggro` (close\n" +
         "                 and hold tight, tolerate a denser ring), `balanced`/`survivor` (the\n" +
         "                 adaptive edge-hug), `flee` (hold far, disengage early). CLASS is the\n" +
@@ -257,17 +252,6 @@ export function parseFlags(args, deps) {
   // on one map has answered the question) and to 0 (never) otherwise. Every
   // death — mortal or not — lands in the DEATHS table with its cause and
   // coordinates, ready for map-layout's death overlay.
-  // MAP SIZE (--map-size): every mission is carved from its v2 blueprint per run,
-  // so what is left to choose is the scale. It is latched around each run inside
-  // the engine (see SimulateLevelOptions.mapSize), so two sweeps at different
-  // sizes can be compared with --compare.
-  const mapSize = String(opt("map-size", "medium")).toLowerCase();
-  if (!MAP_SIZES.includes(mapSize)) {
-    console.error(
-      `--map-size must be one of ${MAP_SIZES.join(", ")}, got '${mapSize}'`,
-    );
-    process.exit(1);
-  }
   const mortal = flag("mortal");
   const maxDeaths = Math.max(0, Number(opt("max-deaths", mortal ? "10" : "0")));
   // THE CAMERA. Every run watches through a real view rect by default — the
@@ -369,7 +353,6 @@ export function parseFlags(args, deps) {
     mortal,
     maxDeaths,
     view,
-    mapSize,
     startLevelDefaulted,
     startLoadoutFor,
   };

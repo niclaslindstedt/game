@@ -16,9 +16,8 @@
 
 import { handAuthoredLevel, levelDef } from "../defs/levels/index.ts";
 import type { LevelDef } from "../defs/levels/types.ts";
-import { generatedMapSizeSetting, type MapSizeName } from "../flags.ts";
 import { mapBlueprint } from "./blueprints.ts";
-import { generateLevel, resolveMapSize } from "./generate.ts";
+import { generateLevel } from "./generate.ts";
 
 // The registry itself lives in the import-free leaf `blueprints.ts`, so the def
 // registry can swap a mod's blueprints in without dragging the generator along.
@@ -28,7 +27,7 @@ export {
   MAP_BLUEPRINTS,
   setMapBlueprints,
 } from "./blueprints.ts";
-export { generateLevel, resolveMapSize } from "./generate.ts";
+export { generateLevel } from "./generate.ts";
 export {
   carveChambers,
   doorDistances,
@@ -42,7 +41,6 @@ export type {
   MapObjectType,
   MapPlan,
   MapSetPiece,
-  MapSizeName,
   MapSizeSpec,
 } from "./types.ts";
 
@@ -61,20 +59,13 @@ export type {
  *
  * @param levelId the mission
  * @param seed    the run seed `createGame` was handed
- * @param size    override the setting's size (the preview tooling passes one)
  */
-export function resolveLevelDef(
-  levelId: string,
-  seed: number,
-  size?: MapSizeName,
-): LevelDef {
+export function resolveLevelDef(levelId: string, seed: number): LevelDef {
   const base = levelDef(levelId);
   const blueprint = mapBlueprint(levelId);
   if (!blueprint) return handAuthoredLevel(base);
   // A pinned blueprint (`carveSeed`) carves on its constant rather than the
   // run's seed — the STATIC hub. The run itself still lives on `seed`.
   const carveSeed = blueprint.carveSeed ?? seed;
-  const carved =
-    size ?? resolveMapSize(blueprint, generatedMapSizeSetting(), carveSeed);
-  return generateLevel(blueprint, base, carveSeed, carved);
+  return generateLevel(blueprint, base, carveSeed);
 }
