@@ -20,6 +20,7 @@ function countingSynth(): { synth: Synth; calls: () => number } {
   return {
     synth: {
       unlock() {},
+      autostart() {},
       resume() {},
       now: () => null,
       tone() {

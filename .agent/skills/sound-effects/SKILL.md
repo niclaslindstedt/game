@@ -129,9 +129,16 @@ bass ~0.055, pads ~0.009, hats ~0.011).
    shorten it before quieting it.
 5. Loop until each event is identifiable with eyes closed.
 
-Audio can only start after a user gesture: `synth.unlock()` is called on
-run start and every canvas pointerdown — keep that invariant if you touch
-`GameScreen.tsx`.
+Audio normally can only start after a user gesture: `synth.unlock()` is called
+on run start and every canvas pointerdown — keep that invariant if you touch
+`GameScreen.tsx`. The one exception is `synth.autostart()`, which builds the
+context with no gesture ONLY where the browser says that is allowed
+(`navigator.getAutoplayPolicy` — the desktop shell, and a browser that already
+trusts the origin); it is a deliberate no-op anywhere that cannot answer,
+because a context built off-gesture on iOS is one no later gesture revives.
+That is what lets the title theme start with the MENU rather than with the
+first row pressed (`armTitleMusic`, `game/music/index.ts`), and where the
+policy withholds it the first touch or key ANYWHERE unlocks instead.
 
 ## Skill self-improvement
 

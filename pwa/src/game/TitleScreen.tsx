@@ -43,7 +43,7 @@ import { AchievementsScreen } from "./achievements-shelf.ts";
 import { ScreenshotsScreen } from "./screenshots-gallery.ts";
 import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
-import { playTitleMusic } from "./music/index.ts";
+import { armTitleMusic } from "./music/index.ts";
 import { characterPurse, type Character } from "./characters.ts";
 import type { JoinIntent } from "./session-intent.ts";
 import {
@@ -279,11 +279,15 @@ export function TitleScreen({
     void loadGameAssets().then((loaded) => {
       if (alive) setAssets(loaded);
     });
-    // Returning from a run the context is already unlocked — bring the
-    // theme back without waiting for a gesture.
-    if (synth.now() !== null) playTitleMusic();
+    // The theme belongs to the menu OPENING: it starts here with no gesture at
+    // all where the platform allows sound (the desktop shell, a browser that
+    // already trusts this origin, and every return from a run — the context is
+    // live by then), and otherwise on the player's first touch or key
+    // ANYWHERE, rather than on the first menu row they happen to press.
+    const disarmMusic = armTitleMusic();
     return () => {
       alive = false;
+      disarmMusic();
     };
   }, []);
 

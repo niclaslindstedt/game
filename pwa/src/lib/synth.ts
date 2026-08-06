@@ -72,6 +72,14 @@ export type NoiseOptions = {
 export type Synth = {
   /** Create/resume the AudioContext. Call from a user gesture handler. */
   unlock: () => void;
+  /** Start audio with NO user gesture behind it — but ONLY where the browser
+   * says that is allowed (`navigator.getAutoplayPolicy`: the desktop shell
+   * runs with `no-user-gesture-required`, and a browser grants it to an origin
+   * the player already engages with). Anywhere that cannot answer the question
+   * it is a deliberate no-op rather than a guess: a context built outside a
+   * gesture lands in a state iOS Safari won't resume (see `now()`), so the
+   * caller keeps waiting for a real one. Safe to call from a mount effect. */
+  autostart: () => void;
   /** Resume an already-created context that fell out of "running" (a
    * browser/OS suspend or an iOS interruption). Unlike `unlock` it never
    * creates a context, so it is safe to call from a timer or a browser event
@@ -274,6 +282,25 @@ export function createSynth(): Synth {
     document.addEventListener("touchend", onGesture, gestureOpts);
   };
 
+  // May a context start before the player has touched anything? Chromium is
+  // the only engine that answers, and it is the one that matters here: the
+  // desktop shell launches with `no-user-gesture-required`, and a browser
+  // grants the policy to an origin with enough media engagement. Anything that
+  // cannot answer — Safari, iOS, an old build — is treated as "no", because a
+  // context built outside a gesture there is one no later gesture can revive.
+  const autoplayAllowed = (): boolean => {
+    if (typeof navigator === "undefined") return false;
+    const nav = navigator as Navigator & {
+      getAutoplayPolicy?: (type: string) => string;
+    };
+    if (typeof nav.getAutoplayPolicy !== "function") return false;
+    try {
+      return nav.getAutoplayPolicy("audiocontext") === "allowed";
+    } catch {
+      return false;
+    }
+  };
+
   const ensure = (): AudioContext | null => {
     if (typeof AudioContext === "undefined") return null;
     if (!ctx) {
@@ -372,6 +399,18 @@ export function createSynth(): Synth {
 
   return {
     unlock() {
+      const c = ensure();
+      if (c) resumeCtx(c);
+    },
+
+    autostart() {
+      // An existing context needs no permission — nudging it is what `resume`
+      // already does, and it is the "came back from a run" case.
+      if (ctx) {
+        resumeCtx(ctx);
+        return;
+      }
+      if (!autoplayAllowed()) return;
       const c = ensure();
       if (c) resumeCtx(c);
     },
