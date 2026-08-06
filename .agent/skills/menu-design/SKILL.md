@@ -282,7 +282,7 @@ the index:
 
 | Page | Holds |
 | --- | --- |
-| **PLAYGROUND** | a run: **SELECT LEVEL** (the warp picker — any difficulty and mission regardless of unlock state, skipping the intro), **BOT VIEW** (the autopilot on a real hero, then GAME SPEED + BOT SPEC), the terms a run is carved on — **MAP SIZE** (`generatedMapSize`, persisted: SMALL/MEDIUM/LARGE/RANDOM, the one knob left over the generator — `mapgen-improvement`) and **AUTO LEVEL STATS** (`autoLevelStats`) — and **DEBUG MODE**, the meter drawn over it |
+| **PLAYGROUND** | a run: **SELECT LEVEL** (the warp picker — any difficulty and mission regardless of unlock state, skipping the intro), **BOT VIEW** (the autopilot on a real hero, then GAME SPEED + BOT SPEC), the term a run is carved on — **AUTO LEVEL STATS** (`autoLevelStats`) — and **DEBUG MODE**, the meter drawn over it |
 | **CHEATS** | what a run would otherwise earn: **SEED CHARACTERS**, **GRANT 10B COINS**, and **FORCE STORE** (`storeForce`, persisted — the coin store in any build with packs granted FREE, so it is a cheat rather than a build flag; `pwa/src/game/store.ts`) |
 | **BALANCE** | the runtime multiplier sliders (see below) |
 | **VISUALS** | KNOCKBACK, BLOOD and GORE LINGER, plus the **CAMERA PITCH** / **CAMERA YAW** sliders that dial the whole world projection live — `docs/rendering.md` |

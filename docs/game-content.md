@@ -259,3 +259,33 @@ an account-wide shelf of badges across story, combat, loot, wardrobe and the
 rest, mirrored to Game Center and Steam by the committed store manifests. A
 change to the shelf regenerates those manifests in the same commit — they are
 drift-tested against a fresh build.
+
+## The hero's name — `{HERO}`
+
+The hero is called whatever the player named him, and the game says it. The name
+is not engine state: it changes no roll, no seed and no tick, so it is neither a
+`RunParams` field nor anything that travels the wire. It is a **token in the
+authored text**, `{HERO}`, resolved by whichever surface draws the line
+(`src/game/hero-name.ts`) against the name of the hero that _viewer_ is playing —
+which is also the only answer that makes sense in a party, where the box on each
+screen belongs to a different person.
+
+It is used in two positions, and the difference matters when authoring:
+
+- **As a label** — the name over his own words. Every pinned thought's
+  `speaker` and every cutscene actor whose `id` is `hero` write the token, so
+  the header of any box he speaks from is the character the player made rather
+  than a pronoun.
+- **As a line** — somebody says it to him. This is rationed on purpose: a name
+  lands because almost nobody in the campaign uses it. The shipped campaign
+  spends it exactly four times, on the four people who genuinely know the man
+  (the LAB SCIENTIST, RUTH, THE ARCHITECT, THE BRO SUPERCORE), and
+  `tests/content/hero_name_test.ts` asserts that list — a fifth is a story
+  change, not a formatting one. `docs/manuscript.md` → "The hero's name" is the
+  script's own account of why.
+
+Spell the token exactly. A near miss (`{hero}`, `{ HERO }`) resolves to nothing
+and prints as `?HERO?`, because the pixel font has no brace glyph — the same
+test refuses one. A caller with no player to ask (a headless sim, the published
+library) gets `HERO_NAME_FALLBACK`, the NEW GAME field's own placeholder, so the
+line still reads as a sentence.

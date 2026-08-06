@@ -21,10 +21,16 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { CAR, createVehicles } from "@game/core";
+import {
+  CAR,
+  createVehicles,
+  setCameraYaw,
+  vehicleFootprint,
+} from "@game/core";
 import type { GameState, LevelDef } from "@game/core";
 
 import type { Sprites } from "../pwa/src/game/assets.ts";
+import { carBeam } from "../pwa/src/game/render/night.ts";
 import { drawVehicles } from "../pwa/src/game/render/vehicles.ts";
 import {
   DEFAULT_PITCH,
@@ -35,9 +41,20 @@ import {
 } from "../pwa/src/game/render/tilt.ts";
 import { startGame } from "./engine/helpers.ts";
 
-/** The projection is module state, so every test puts it back. */
+/**
+ * Point BOTH cameras at the same place — the renderer's projection and the one
+ * number the engine takes from it (`setCameraYaw`, which is how a machine's
+ * blockers find the ground its picture stands on). The app applies them in one
+ * block for the same reason; splitting them is the only way they can drift.
+ */
+function applyCamera(projection: { pitch: number; yaw: number }): void {
+  setWorldProjection(projection);
+  setCameraYaw(projection.yaw);
+}
+
+/** Both are module state, so every test puts them back. */
 afterEach(() => {
-  setWorldProjection({ pitch: DEFAULT_PITCH, yaw: DEFAULT_YAW });
+  applyCamera({ pitch: DEFAULT_PITCH, yaw: DEFAULT_YAW });
 });
 
 /** The part canvas every panel (and the underbody) shares, and the wheel. */
@@ -162,7 +179,7 @@ function drawAt(
   state: GameState,
   projection: { pitch: number; yaw: number },
 ): Blit[] {
-  setWorldProjection(projection);
+  applyCamera(projection);
   const { sprites, names } = carSprites();
   const probe = drawProbe(names);
   drawVehicles(probe.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
@@ -213,6 +230,104 @@ describe("the car assembly", () => {
     for (const part of shell) {
       expect(part.centre.x).toBeCloseTo(shell[0]!.centre.x, 5);
       expect(part.centre.y).toBeCloseTo(shell[0]!.centre.y, 5);
+    }
+  });
+
+  // ── THE HEADLIGHTS ARE BOLTED ON ──────────────────────────────────────────
+  // They are sealed beams in a shell, not steering-linked cornering lamps, and
+  // the shell's picture never turns: the body is one side-profile assembly cut
+  // nose-right and nothing mirrors or rotates it, while `CarVehicle.heading`
+  // swings the better part of 180° inside the yaw stop. Walked down the heading
+  // (which is how the beam started life) the wedge therefore swept a 172° arc
+  // across a car that had not visibly moved a pixel.
+  describe("the headlight beam", () => {
+    /** The car, driven, aimed at `heading` — the field the beam must ignore. */
+    function drivenCar(heading: number) {
+      const state = parkedCar({ x: 317, y: 244 });
+      const car = state.vehicles[0]!;
+      if (car.kind !== "car") throw new Error("no car");
+      car.driver = 0;
+      car.heading = heading;
+      return car;
+    }
+
+    /** Every heading the yaw stop lets the nose reach, and both ends of it. */
+    const HEADINGS = [0, 0.4, 1, -1, CAR.maxYaw, -CAR.maxYaw];
+
+    it("does not swing when the car turns", () => {
+      const camera = { x: 0, y: 0 };
+      const straight = carBeam(drivenCar(0), camera, 1);
+      for (const heading of HEADINGS) {
+        const beam = carBeam(drivenCar(heading), camera, 1);
+        expect(beam.x).toBeCloseTo(straight.x, 6);
+        expect(beam.y).toBeCloseTo(straight.y, 6);
+        expect(beam.dir).toBe(straight.dir);
+      }
+    });
+
+    it("throws out of the drawn nose at every camera angle", () => {
+      const camera = { x: 0, y: 0 };
+      for (const projection of PROJECTIONS) {
+        const state = parkedCar({ x: 317, y: 244 });
+        // Drawn PARKED — a running car burns its daylight cones through canvas
+        // gradients, which this transform-only probe has no business minting.
+        const body = drawAt(state, projection).find(
+          (b) => b.name === "car_doors_0",
+        );
+        expect(body).toBeDefined();
+        const car = state.vehicles[0]!;
+        if (car.kind !== "car") throw new Error("no car");
+        car.driver = 0;
+        // Hard over, which is where the old bug was loudest.
+        car.heading = CAR.maxYaw;
+        const beam = carBeam(car, camera, 1);
+        // The lamps sit AHEAD of the body's own anchor on the screen's x axis,
+        // and on its row — the wheel arches' rule, applied to the light.
+        expect(beam.x).toBeGreaterThan(body!.centre.x);
+        // Within the pixel the body's own anchor is rounded to.
+        expect(Math.abs(beam.y - body!.centre.y)).toBeLessThanOrEqual(1);
+        expect(beam.dir).toBe(1);
+      }
+    });
+  });
+
+  // ── AND THE GROUND IT BLOCKS IS THE GROUND IT STANDS ON ───────────────────
+  // The other half of the same fact, and the half the player walks into: the
+  // car's collision chain (`vehicleFootprint`) is three columns of the SAME part
+  // canvas, so projected it has to land on the drawn body's own columns. Laid
+  // along the heading instead it swung off the picture at the camera's angle,
+  // and the hero walked through the bonnet and was stopped by bare floor.
+  describe("the blockers under it", () => {
+    for (const projection of PROJECTIONS) {
+      it(`land on the drawn body's own columns — ${projection.name}`, () => {
+        const at = { x: 317, y: 244 };
+        const state = parkedCar(at);
+        const blits = drawAt(state, projection);
+        const car = state.vehicles[0]!;
+        const prints = vehicleFootprint(car);
+        expect(prints).toHaveLength(CAR.footprint.offsets.length);
+        prints.forEach((print, i) => {
+          const dx = print.pos.x - at.x;
+          const dy = print.pos.y - at.y;
+          // Projected, the blocker sits at its own column of the assembly, on
+          // the body's own row — at every camera the two knobs can reach.
+          expect(projectX(dx, dy)).toBeCloseTo(CAR.footprint.offsets[i]!, 6);
+          expect(projectY(dx, dy)).toBeCloseTo(0, 6);
+        });
+        // …and the outer two ARE the wheel arches, so they can be read against
+        // the wheels this pass actually blitted. Whole-pixel slack: the drawn
+        // parts are rounded to the device grid and the blockers are not.
+        const shell = blits.find((b) => b.name === "car_doors_0")!;
+        const wheels = blits.filter((b) => b.name.startsWith("car_wheel_"));
+        [0, 2].forEach((i, axle) => {
+          const print = prints[i]!;
+          const column = projectX(print.pos.x - at.x, print.pos.y - at.y);
+          expect(column).toBeCloseTo(
+            wheels[axle]!.centre.x - shell.centre.x,
+            1,
+          );
+        });
+      });
     }
   });
 

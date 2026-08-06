@@ -38,6 +38,14 @@ export type CutsceneProp = {
    * it and paint over their feet.
    */
   ground?: boolean;
+  /**
+   * Start OFF the stage, for a `prop` beat to bring on — the actor's `hidden`
+   * for dressing. It is what makes a prop SWAP: the two states of one thing
+   * (a shut door and the open doorway behind it) are two props at one mark,
+   * one of them hidden, and the beat that opens the door hides the first and
+   * shows the second. Needs a `label`, or nothing can ever show it.
+   */
+  hidden?: boolean;
 };
 
 /**
@@ -76,8 +84,9 @@ export type CutsceneActorDef = {
   id: string;
   /** Sprite key the renderer draws (poses swap it mid-scene). */
   sprite: string;
-  /** Display name shown over this actor's speech ("ME", "ADA"); omitted =
-   * the id upper-cased. */
+  /** Display name shown over this actor's speech ("ADA", or "{HERO}" for the
+   * player's own character — see `src/game/hero-name.ts`); omitted = the id
+   * upper-cased. */
   name?: string;
   at: Vec2;
   /** Which way the sprite mirrors initially (walks update it). */
@@ -132,6 +141,14 @@ export type CutsceneBeat =
    * the moment the hero closes his hand on it. Instant.
    */
   | { kind: "prop"; prop: string; hidden: boolean }
+  /**
+   * Make a NOISE: queue a sound for whoever is playing the scene to fire —
+   * the door the hero opens on his way out. Instant, and the player is the
+   * one who knows what a sound id means: the scene only names it, and
+   * `CutsceneState.sounds` is the queue the host drains (an id nothing
+   * answers to is silence, never a throw).
+   */
+  | { kind: "sound"; sound: string }
   /** Pop an actor onto / off the stage. Instant. */
   | { kind: "enter"; actor: string }
   | { kind: "exit"; actor: string }
@@ -197,8 +214,16 @@ export type CutsceneState = {
   /** The jumping actor's lift when the running jump beat started (its
    * interpolation base — the peer of `fadeFrom`). */
   liftFrom: number;
-  /** Ids of the props a `prop` beat has taken off the stage. */
+  /** Ids of the props off the stage — the ones authored `hidden`, plus
+   * whatever a `prop` beat has since taken off (and minus what it put back). */
   hiddenProps: string[];
+  /**
+   * Sounds a `sound` beat has queued, oldest first, for the host to fire and
+   * EMPTY. The scene state carries them rather than a callback so stepping
+   * stays pure: the run drains them into events on the same tick, and a scene
+   * nobody drains just holds a short list of strings.
+   */
+  sounds: string[];
   /**
    * The camera's accumulated shift in world px (stage `drift` + `pan`
    * beats). The renderer offsets each prop by `shift × its parallax`;
@@ -229,7 +254,10 @@ export function createCutscene(def: CutsceneDef): CutsceneState {
     fade: 0,
     fadeFrom: 0,
     liftFrom: 0,
-    hiddenProps: [],
+    hiddenProps: def.stage.props
+      .filter((p) => p.hidden && p.id)
+      .map((p) => p.id as string),
+    sounds: [],
     shift: { x: 0, y: 0 },
     done: def.beats.length === 0,
   };
@@ -286,6 +314,9 @@ function settleBeat(state: CutsceneState, beat: CutsceneBeat): void {
       state.hiddenProps = hidden;
       break;
     }
+    case "sound":
+      state.sounds.push(beat.sound);
+      break;
     case "fade":
       state.fade = beat.to;
       break;
@@ -322,7 +353,8 @@ function beginBeat(state: CutsceneState, def: CutsceneDef): void {
     beat.kind === "exit" ||
     beat.kind === "shake" ||
     beat.kind === "hold" ||
-    beat.kind === "prop"
+    beat.kind === "prop" ||
+    beat.kind === "sound"
   ) {
     settleBeat(state, beat);
     state.beat++;
@@ -433,9 +465,18 @@ export function advanceCutsceneBeat(
   nextBeat(state, def, beat);
 }
 
-/** Skip the rest of the scene, applying every remaining end state. */
+/**
+ * Skip the rest of the scene, applying every remaining end state.
+ *
+ * A SKIPPED SCENE MAKES NO NOISE: every `sound` beat left in the timeline
+ * settles in this one turn, so draining the queue afterwards would fire the
+ * whole scene's audio as one chord over the fade-out. The end state a sound
+ * leaves behind is nothing — so the queue is dropped, exactly as the frames
+ * nobody sees are.
+ */
 export function finishCutscene(state: CutsceneState, def: CutsceneDef): void {
   while (!state.done) advanceCutsceneBeat(state, def);
+  state.sounds.length = 0;
 }
 
 /** The text currently on screen, if the running beat shows any. */

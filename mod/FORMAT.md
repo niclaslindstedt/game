@@ -178,7 +178,7 @@ levels — re-carving a shipped venue is a `kind: conversion`'s business.
 | Field                  | What it says                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                        |
-| `sizes`                | `small` / `medium` / `large`, each a width, a height and a chamber count                                       |
+| `size`                 | the world rectangle the map is carved into — a width, a height and a chamber count                             |
 | `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of     |
 | `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `light`, …) |
 | `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                               |
@@ -197,8 +197,9 @@ intent, and every difficulty number comes from one file.
 
 Three rules to author by:
 
-- **A count is a DENSITY.** Densities are per 1,000,000 world px², because the
-  same blueprint is carved at three sizes and a fixed count leaves LARGE bare.
+- **A count is a DENSITY.** Densities are per 1,000,000 world px², so the
+  dressing follows the floor a district's cells actually rolled rather than
+  piling up in a small one and leaving a big one bare.
 - **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
   `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
   barrier between two cells falls out of the PAIR — you never draw a wall.
@@ -1172,22 +1173,23 @@ identically.
 Text beats hold the frame until the player taps; timed beats run on the clock and
 a tap cuts them short. Instant beats settle and roll straight into the next one.
 
-| `kind`    | Fields                        | What it does                                                              |
-| --------- | ----------------------------- | ------------------------------------------------------------------------- |
-| `caption` | `text: [line, …]`             | Narrator text, no speaker. Holds for the player.                          |
-| `say`     | `actor`, `text: [line, …]`    | A speech bubble on that actor. Holds for the player.                      |
-| `wait`    | `ms`                          | Hold the frame.                                                           |
-| `move`    | `actor`, `to: {x,y}`, `speed` | Walk an actor there at `speed` px/s; facing follows.                      |
-| `pose`    | `actor`, `sprite`             | Swap an actor's sprite family (sitting → standing, engine cold → firing). |
-| `face`    | `actor`, `faceLeft`           | Mirror an actor without moving.                                           |
-| `enter`   | `actor`                       | Put a `hidden: true` actor on stage.                                      |
-| `exit`    | `actor`                       | Take an actor off.                                                        |
-| `fade`    | `to` (0–1), `ms`              | Fade the frame toward black (`1`) or clear (`0`).                         |
-| `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.   |
-| `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                |
-| `jump`    | `actor`, `lift`, `ms`         | Ease the actor `lift` px off the ground (`0` puts it back down).          |
-| `hold`    | `actor`, `sprite?`, `at?`     | Put a sprite in the actor's hands at `at`; no `sprite` empties them.      |
-| `prop`    | `prop`, `hidden`              | Take a labelled stage prop off the stage, or put it back.                 |
+| `kind`    | Fields                        | What it does                                                                        |
+| --------- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| `caption` | `text: [line, …]`             | Narrator text, no speaker. Holds for the player.                                    |
+| `say`     | `actor`, `text: [line, …]`    | A speech bubble on that actor. Holds for the player.                                |
+| `wait`    | `ms`                          | Hold the frame.                                                                     |
+| `move`    | `actor`, `to: {x,y}`, `speed` | Walk an actor there at `speed` px/s; facing follows.                                |
+| `pose`    | `actor`, `sprite`             | Swap an actor's sprite family (sitting → standing, engine cold → firing).           |
+| `face`    | `actor`, `faceLeft`           | Mirror an actor without moving.                                                     |
+| `enter`   | `actor`                       | Put a `hidden: true` actor on stage.                                                |
+| `exit`    | `actor`                       | Take an actor off.                                                                  |
+| `fade`    | `to` (0–1), `ms`              | Fade the frame toward black (`1`) or clear (`0`).                                   |
+| `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.             |
+| `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                          |
+| `jump`    | `actor`, `lift`, `ms`         | Ease the actor `lift` px off the ground (`0` puts it back down).                    |
+| `hold`    | `actor`, `sprite?`, `at?`     | Put a sprite in the actor's hands at `at`; no `sprite` empties them.                |
+| `prop`    | `prop`, `hidden`              | Take a labelled stage prop off the stage, or put it back.                           |
+| `sound`   | `sound`                       | Play a sound by id — yours or the game's. An id nothing answers to fails the build. |
 
 **A leap is TWO jumps, and the grab happens between them.** A rise decelerates
 into its apex and a fall accelerates out of it — which half a `jump` is, is
@@ -1212,6 +1214,26 @@ it mirrors when the actor turns around.
 **A prop a beat addresses needs a `label:`** — the same handle `variants:`
 patches by, which is also the `id` a `prop` beat names. A prop with no label is
 dressing nothing can touch.
+
+**`hidden: true` starts a prop OFF the stage**, for a `prop` beat to bring on —
+which is how a piece of dressing CHANGES STATE. The game's front door is two
+props on one mark, the shut one and the open one, and the beat that opens it
+hides the first and shows the second (with a `sound` beat over the swap):
+
+```yaml
+props:
+  - { label: shut_door, sprite: door, at: { x: 202, y: 80 } }
+  - { label: open_door, sprite: door_open, at: { x: 202, y: 80 }, hidden: true }
+beats:
+  - { kind: sound, sound: front_door_opened }
+  - { kind: prop, prop: shut_door, hidden: true }
+  - { kind: prop, prop: open_door, hidden: false }
+```
+
+**A `sound` beat only NAMES a sound** — your mod's own (`sounds/<id>.yaml`) or
+one the game ships. It is instant, so it sits directly over the beat it belongs
+to, and a SKIPPED scene plays none of them: the sounds a player taps past are
+dropped rather than fired as one chord over the fade.
 
 **A text line is a PARAGRAPH, not a row.** The box measures its own column on
 the device it is being read on and flows your line into it, so a phone folds
@@ -1245,13 +1267,13 @@ beats:
   - label: take
     kind: caption
     text:
-      - THE OLD SWORD OFF THE WALL.
+      - THE OLD SWORD. IT'LL DO.
 variants:
   jesus:
     arm: { sprite: wall_stick }
     take:
       text:
-        - THE STICK OFF THE WALL.
+        - A STICK. GOD HELP US BOTH.
 ```
 
 Each variant is compiled into a scene of its own, `<id>_<difficulty>`, and the
@@ -1271,13 +1293,34 @@ he just saw.
 ```yaml
 thoughts:
   mymod_creeper_sight:
-    speaker: ME # the name over the words
+    speaker: "{HERO}" # the name over the words — see below
     portrait: hero_suit # a sprite family; frame `<portrait>_0` is drawn
     pages:
       - - IT'S A PLANT. IT HAS A GAIT.
         - THOSE TWO FACTS DO NOT
         - BELONG IN ONE SENTENCE.
 ```
+
+### `{HERO}` — the player's own name
+
+The player names their character on the NEW GAME screen, and **`{HERO}` is that
+name**. Write it anywhere authored text should say it and every box that draws
+the line resolves it: a thought's `speaker` (so the header over his own words is
+the character the player made, which is what the shipped campaign does on every
+one of its beats), a cutscene actor's `name`, a spoken line, a conversation node,
+an errand's ask.
+
+```yaml
+# Somebody who knows him — a line, not a label.
+dialogue:
+  - - "{HERO}. I HEARD YOU WERE DEAD."
+```
+
+Two rules worth knowing. Spell it **exactly** — `{hero}`, `{ HERO }` and
+`{NAME}` resolve to nothing and print as `?HERO?`, because the pixel font has no
+brace glyph. And spend it sparingly: a name lands because almost nobody uses it,
+so give it to the handful of characters who genuinely know the man and to nobody
+else.
 
 A thought is fired by a LEVEL pinning it to a monster — `firstSightThoughts` the
 first time one comes into view, `firstKillThoughts` the first time he puts one

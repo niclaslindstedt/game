@@ -27,7 +27,7 @@ stage:
     - { sprite: stars_b, at: { x: 60, y: 100 }, parallax: 0.25, wrap: true }
     - { sprite: stars_a, at: { x: 120, y: 112 }, parallax: 0.4, wrap: true }
 actors:
-  - { id: hero, name: ME, sprite: ship_fly, at: { x: 58, y: 82 } }
+  - { id: hero, name: "{HERO}", sprite: ship_fly, at: { x: 58, y: 82 } }
 beats:
   - { kind: fade, to: 1, ms: 0 }
   - { kind: fade, to: 0, ms: 900 }

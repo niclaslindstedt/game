@@ -40,6 +40,7 @@ const BEAT_SPECS = {
     optional: ["sprite", "at"],
   },
   prop: { stageProps: ["prop"], bools: ["hidden"] },
+  sound: { sounds: ["sound"] },
 };
 
 /** The colour channels a stage palette paints with. */
@@ -123,10 +124,11 @@ function checkLines(lines, what, err, warn) {
  * Validate one cutscene, as AUTHORED (variants intact).
  *
  * @param {object} doc   the parsed scene YAML.
- * @param {object} refs  `{ sprites, difficulties }` — a Set of live sprite names
- *                        (a prop or actor naming nothing draws as nothing, and
- *                        `spriteByName` says so silently), and the difficulty ids
- *                        a `variants:` key may name.
+ * @param {object} refs  `{ sprites, sounds, difficulties }` — Sets of live
+ *                        sprite names (a prop or actor naming nothing draws as
+ *                        nothing, and `spriteByName` says so silently) and live
+ *                        sound ids (a `sound` beat naming nothing is silence),
+ *                        plus the difficulty ids a `variants:` key may name.
  */
 export function validateCutscene(doc, refs) {
   const errors = [];
@@ -230,9 +232,27 @@ export function validateCutscene(doc, refs) {
           `painted under everything standing on it)`,
       );
     }
+    if (prop.hidden !== undefined) {
+      if (typeof prop.hidden !== "boolean") {
+        err(`${where}.hidden must be a boolean (start it off the stage)`);
+      } else if (prop.hidden && prop.label === undefined) {
+        err(
+          `${where}.hidden needs a \`label:\` — a hidden prop nothing can ` +
+            `address never comes on stage at all`,
+        );
+      }
+    }
     for (const key of Object.keys(prop)) {
       if (
-        !["label", "sprite", "at", "parallax", "wrap", "ground"].includes(key)
+        ![
+          "label",
+          "sprite",
+          "at",
+          "parallax",
+          "wrap",
+          "ground",
+          "hidden",
+        ].includes(key)
       ) {
         err(`unknown field "${where}.${key}"`);
       }
@@ -394,6 +414,16 @@ function checkBeat(beat, where, { cast, stageProps, refs }, err, warn) {
     if (omitted(field)) continue;
     checkSprite(beat[field], `${where}.${field}`, refs, err);
   }
+  // A sound a scene asks for is silent if nothing answers to the name — and a
+  // silent door is exactly the kind of miss nobody notices in a review.
+  for (const field of spec.sounds ?? []) {
+    const id = beat[field];
+    if (typeof id !== "string" || id === "") {
+      err(`${where}.${field} must name a sound`);
+    } else if (refs.sounds && !refs.sounds.has(id)) {
+      err(`${where}.${field} "${id}" is not a sound the game has`);
+    }
+  }
   if (spec.text) checkLines(beat.text, `${where}.text`, err, warn);
   const allowed = new Set([
     "kind",
@@ -405,6 +435,7 @@ function checkBeat(beat, where, { cast, stageProps, refs }, err, warn) {
     ...(spec.stageProps ?? []),
     ...(spec.sprites ?? []),
     ...(spec.art ?? []),
+    ...(spec.sounds ?? []),
     ...(spec.text ? ["text"] : []),
   ]);
   for (const key of Object.keys(beat)) {

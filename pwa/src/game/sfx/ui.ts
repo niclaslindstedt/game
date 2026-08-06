@@ -13,8 +13,20 @@ import { GENERATED_UI_SOUNDS } from "../../generated/sounds-ui.ts";
 
 import { playSound } from "./play.ts";
 
+// `shutter` is the one entry here with no hand-written fallback below it: it
+// was authored as content from the start (content/sounds/ui_shutter.yaml)
+// rather than lifted out of the old imperative bank, so the catalog is the only
+// place it has ever existed.
 export type UiSound =
-  "move" | "confirm" | "back" | "start" | "equip" | "blip" | "boom" | "guide";
+  | "move"
+  | "confirm"
+  | "back"
+  | "start"
+  | "equip"
+  | "blip"
+  | "boom"
+  | "guide"
+  | "shutter";
 
 export function playUiSound(synth: Synth, sound: UiSound): void {
   // The interface's sounds are content like every other (content/sounds/ui_*),

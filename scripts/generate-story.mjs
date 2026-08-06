@@ -58,7 +58,22 @@ for (const family of readdirSync(spritesDir, { withFileTypes: true })) {
   }
 }
 
-const refs = { sprites, difficulties: new Set(DIFFICULTY_RUNGS) };
+// ---- Sound ids (content/sounds/<id>.yaml, stem == sound id) — so a `sound`
+// beat naming a sound the game does not have fails here rather than playing
+// silence in a scene nobody reviews with the volume up. Read from the content
+// tree for the same reason the sprite stems are: this generator imports
+// nothing from the engine, and must not start.
+const soundIds = new Set(
+  readdirSync(engine("content/sounds"))
+    .filter((f) => f.endsWith(".yaml") && !f.startsWith("_"))
+    .map((f) => f.slice(0, -".yaml".length)),
+);
+
+const refs = {
+  sprites,
+  sounds: soundIds,
+  difficulties: new Set(DIFFICULTY_RUNGS),
+};
 
 // ---- Load ------------------------------------------------------------------
 const { cutscenes, entries: sceneEntries } = loadCutscenes(

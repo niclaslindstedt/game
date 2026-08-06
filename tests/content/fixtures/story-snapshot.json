@@ -15,7 +15,7 @@
             "y": 102
           },
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_tee"
         },
         {
@@ -241,7 +241,7 @@
             "y": 96
           },
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_suit"
         },
         {
@@ -416,7 +416,7 @@
           },
           "faceLeft": true,
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_couch"
         },
         {
@@ -484,12 +484,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -607,9 +639,7 @@
         },
         {
           "kind": "caption",
-          "text": [
-            "THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
-          ]
+          "text": ["THE OLD SWORD. IT'LL DO."]
         },
         {
           "actor": "hero",
@@ -621,8 +651,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -631,6 +675,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -652,8 +714,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -665,7 +727,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -679,17 +751,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -712,7 +784,7 @@
           },
           "faceLeft": true,
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_couch"
         },
         {
@@ -780,12 +852,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -903,9 +1007,7 @@
         },
         {
           "kind": "caption",
-          "text": [
-            "GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
-          ]
+          "text": ["GRANDPA'S SAWED-OFF. THAT'LL DO IT."]
         },
         {
           "actor": "hero",
@@ -917,8 +1019,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -927,6 +1043,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -948,8 +1082,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -961,7 +1095,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -975,17 +1119,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -1008,7 +1152,7 @@
           },
           "faceLeft": true,
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_couch"
         },
         {
@@ -1076,12 +1220,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -1199,7 +1375,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH."]
+          "text": ["THE COMBAT KNIFE. IT'LL HAVE TO DO."]
         },
         {
           "actor": "hero",
@@ -1211,8 +1387,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -1221,6 +1411,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -1242,8 +1450,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -1255,7 +1463,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -1269,17 +1487,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -1302,7 +1520,7 @@
           },
           "faceLeft": true,
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_couch"
         },
         {
@@ -1370,12 +1588,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -1493,7 +1743,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE STICK OFF THE WALL. GOD HELP US BOTH."]
+          "text": ["A STICK. GOD HELP US BOTH."]
         },
         {
           "actor": "hero",
@@ -1505,8 +1755,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -1515,6 +1779,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -1536,8 +1818,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -1549,7 +1831,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -1563,17 +1855,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -1596,7 +1888,7 @@
           },
           "faceLeft": true,
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_couch"
         },
         {
@@ -1664,12 +1956,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -1787,7 +2111,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH."]
+          "text": ["THE KNUCKLES. THEY'LL HAVE TO DO."]
         },
         {
           "actor": "hero",
@@ -1799,8 +2123,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -1809,6 +2147,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -1830,8 +2186,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -1843,7 +2199,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -1857,17 +2223,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -1889,7 +2255,7 @@
             "y": 96
           },
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_suit"
         }
       ],
@@ -2001,7 +2367,7 @@
             "y": 96
           },
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "hero_suit"
         }
       ],
@@ -2153,7 +2519,7 @@
             "y": 78
           },
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "ship_fly"
         }
       ],
@@ -2296,7 +2662,7 @@
             "y": 82
           },
           "id": "hero",
-          "name": "ME",
+          "name": "{HERO}",
           "sprite": "ship_fly"
         }
       ],
@@ -2849,7 +3215,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "boot_hill_hosts": {
       "id": "boot_hill_hosts",
@@ -2860,7 +3226,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "bunker_arrival": {
       "id": "bunker_arrival",
@@ -2873,7 +3239,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "bunker_ice": {
       "id": "bunker_ice",
@@ -2884,7 +3250,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "bunker_vacuum": {
       "id": "bunker_vacuum",
@@ -2893,7 +3259,7 @@
         ["OF COURSE THEY AUTOMATED THE HELP. CAN'T HAVE A CLEANER WHO TALKS."]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "cap_pathetic_1": {
       "id": "cap_pathetic_1",
@@ -2901,10 +3267,10 @@
         [
           "THESE THINGS BARELY SLOW ME DOWN ANYMORE. I'M NOT LEARNING A THING OUT HERE."
         ],
-        ["QUIT FARMING SCRAP, BUILDER. ADA'S STILL OUT THERE."]
+        ["QUIT FARMING SCRAP, {HERO}. ADA'S STILL OUT THERE."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "cap_pathetic_2": {
       "id": "cap_pathetic_2",
@@ -2913,7 +3279,7 @@
         ["EVERY MINUTE HERE IS A MINUTE ADA DOESN'T HAVE. MOVE."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "cap_pathetic_3": {
       "id": "cap_pathetic_3",
@@ -2922,7 +3288,7 @@
         ["STOP CIRCLING. THE ONLY THING THAT MATTERS IS FINDING HER. GO."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "cap_pathetic_4": {
       "id": "cap_pathetic_4",
@@ -2933,7 +3299,7 @@
         ["ENOUGH WARMUP. ADA FIRST. ALWAYS ADA."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "cap_pathetic_5": {
       "id": "cap_pathetic_5",
@@ -2944,7 +3310,7 @@
         ["SHE NEEDS ME MOVING, NOT GRINDING. FIND THE WAY OUT. FIND ADA."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "garage_on_foot": {
       "id": "garage_on_foot",
@@ -2952,7 +3318,7 @@
         ["WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR."]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "garage_ship_unfinished": {
       "id": "garage_ship_unfinished",
@@ -2962,7 +3328,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "garage_take_the_car": {
       "id": "garage_take_the_car",
@@ -2970,7 +3336,7 @@
         ["THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT."]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "goodco_armed": {
       "id": "goodco_armed",
@@ -2985,7 +3351,7 @@
         ["I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES."]
       ],
       "portrait": "hero",
-      "speaker": "ME",
+      "speaker": "{HERO}",
       "voice": {
         "portrait": "scientist",
         "speaker": "LAB SCIENTIST"
@@ -3005,7 +3371,7 @@
         ["WE ATE AT THE SAME TABLE FOR SIX YEARS. HEY. IT'S ME. LOOK AT ME."]
       ],
       "portrait": "hero",
-      "speaker": "ME",
+      "speaker": "{HERO}",
       "voice": {
         "portrait": "scientist",
         "speaker": "LAB SCIENTIST"
@@ -3019,7 +3385,7 @@
         ],
         {
           "them": [
-            "I KNOW WHO YOU ARE. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB."
+            "I KNOW WHO YOU ARE, {HERO}. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB."
           ]
         },
         [
@@ -3027,7 +3393,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME",
+      "speaker": "{HERO}",
       "voice": {
         "portrait": "scientist",
         "speaker": "LAB SCIENTIST"
@@ -3044,7 +3410,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "goodco_successor": {
       "id": "goodco_successor",
@@ -3058,7 +3424,7 @@
         ["FUNNY THING, PROGRESS. MY TURN TO MAKE SOMETHING OBSOLETE."]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_ancestor": {
       "id": "hellborn_ancestor",
@@ -3072,7 +3438,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_deadhand": {
       "id": "hellborn_deadhand",
@@ -3086,7 +3452,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_drowned": {
       "id": "hellborn_drowned",
@@ -3100,7 +3466,7 @@
         ["THEY WENT DOWN WITH IT. THEY'RE STILL HOLDING THEIR BREATH."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_investor": {
       "id": "hellborn_investor",
@@ -3114,7 +3480,7 @@
         ["FOUR PLANETS, MAYBE MORE. IT'S HERE TO COLLECT ON THIS ONE."]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_noon": {
       "id": "hellborn_noon",
@@ -3126,7 +3492,7 @@
         ["A WORLD WITH NO SUNSET, AND NOBODY EVER SHOWED. SOMEBODY SHOULD."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_olympus": {
       "id": "hellborn_olympus",
@@ -3136,7 +3502,7 @@
         ["OLYMPUS MONS ISN'T A VOLCANO. IT'S THE EXHAUST. AND IT'S STILL WARM."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_pharaoh": {
       "id": "hellborn_pharaoh",
@@ -3150,7 +3516,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_ruin": {
       "id": "hellborn_ruin",
@@ -3164,7 +3530,7 @@
         ["THEY BUILT THIS WHOLE COUNTY AVAILABLE. THEY RANG THE DINNER BELL."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_saint": {
       "id": "hellborn_saint",
@@ -3180,7 +3546,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_shepherd": {
       "id": "hellborn_shepherd",
@@ -3192,7 +3558,7 @@
         ["I'M INSIDE IT. I'VE BEEN INSIDE IT SINCE I LANDED."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_tunguska": {
       "id": "hellborn_tunguska",
@@ -3204,7 +3570,7 @@
         ]
       ],
       "portrait": "hero",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "hellborn_vanishing": {
       "id": "hellborn_vanishing",
@@ -3220,7 +3586,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "mars_fembot": {
       "id": "mars_fembot",
@@ -3236,7 +3602,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "mars_rover": {
       "id": "mars_rover",
@@ -3249,7 +3615,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "mars_tear_no_rig": {
       "id": "mars_tear_no_rig",
@@ -3273,13 +3639,13 @@
         ["OKAY. ONE BOLT AT A TIME. KEEP MOVING. FIND ADA."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "moon_wisp_kill": {
       "id": "moon_wisp_kill",
       "pages": [["OKAY. THEY GO DOWN LIKE ANYTHING ELSE. THAT'LL HAVE TO DO."]],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "moon_wisp_sight": {
       "id": "moon_wisp_sight",
@@ -3290,7 +3656,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "rift_arrival": {
       "id": "rift_arrival",
@@ -3301,7 +3667,7 @@
         ["THE RIFT DOESN'T FOLLOW THE RULES. GOOD. LATELY, NEITHER DO I."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "rift_asteroid": {
       "id": "rift_asteroid",
@@ -3312,7 +3678,7 @@
         ["BETTER WATCH OUT FOR THESE ASTEROIDS. THEY HURT."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "rift_graviton": {
       "id": "rift_graviton",
@@ -3323,7 +3689,7 @@
         ["NOTED. DON'T STAND STILL. DON'T TRUST THE FLOOR. THERE ISN'T ONE."]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     }
   }
 }

@@ -193,7 +193,7 @@
     "critChance": 0.11,
     "dialogue": [
       [
-        "MY OLD BENCH PARTNER. STILL SOLDERING TOYS IN A GARAGE? I BUILD MINDS NOW. A REAL ONE."
+        "{HERO}. MY OLD BENCH PARTNER. STILL SOLDERING TOYS IN A GARAGE? I BUILD MINDS NOW. A REAL ONE."
       ],
       {
         "hero": [
@@ -728,7 +728,7 @@
     "deathBark": ["NO CHECKPOINT. THAT MAKES TWO OF US."],
     "dialogue": [
       [
-        "HELLO AGAIN, BUILDER. YOU BROKE MY PUP AT GOODCO. PAYLOAD-1. I AM THE REST OF IT."
+        "HELLO AGAIN, {HERO}. YOU BROKE MY PUP AT GOODCO. PAYLOAD-1. I AM THE REST OF IT."
       ],
       {
         "hero": [

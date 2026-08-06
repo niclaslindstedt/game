@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 description: |-
   THE GARAGE — the hub, and the one STATIC blueprint in the game: `carveSeed`
-  pins the carve (and the size roll), so home lays out identically every
-  visit. THE READ IS THE CUTSCENE'S OWN ESTABLISHING SHOT, walkable: the
+  pins the carve, so home lays out identically every visit. THE READ IS THE CUTSCENE'S OWN ESTABLISHING SHOT, walkable: the
   GARAGE BAY southwest (poured CEMENT underfoot — no tiles — the furniture
   against the walls, oil patches, papers and cable on the floor, the car
   mid-floor, the ROLL-UP DOOR on its east wall, the rift seam humming beside
@@ -144,24 +143,14 @@ plan:
   goal: lawn
   stall: drive
 
-# One look, three times: the sizes are identical on purpose — a static hub
-# must not change scale under the GENERATED MAPS setting. A LOT smaller than
-# the rest of the game's venues, because it is a garage, not a level. The lot
-# itself is still 400 wide; the extra 112 is the ROAD and its far VERGE, which
-# belong to the county rather than to the house. `rooms` is ignored under a plan.
-sizes:
-  small:
-    width: 512
-    height: 280
-    rooms: 7
-  medium:
-    width: 512
-    height: 280
-    rooms: 7
-  large:
-    width: 512
-    height: 280
-    rooms: 7
+# One look, every visit. A LOT smaller than the rest of the game's venues,
+# because it is a garage, not a level. The lot itself is still 400 wide; the
+# extra 112 is the ROAD and its far VERGE, which belong to the county rather
+# than to the house. `rooms` is ignored under a plan.
+size:
+  width: 512
+  height: 280
+  rooms: 7
 
 layout:
   minRoom: 128

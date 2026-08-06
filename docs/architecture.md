@@ -56,7 +56,7 @@ run against synthetic fixtures with no shipped content (see
   `src/generated/map-blueprints.ts` by `scripts/generate-maps.mjs`, part of
   `make levels`), which is a RECIPE rather than a layout — a purpose-typed object
   palette, an AREA palette saying what kinds of place the map is made of, the
-  horde's breeds and the depths they hold, the cast, three sizes, and the compass
+  horde's breeds and the depths they hold, the cast, its extents, and the compass
   regions the boss may be hiding in. `resolveLevelDef` carves a whole `LevelDef`
   from it using the run's own seed, so the boss is somewhere new every run and
   has to be found; everything non-geometric (story, loot pools, merchant,
@@ -322,10 +322,10 @@ escort.ts` walks the people an escort errand puts on the field, and
     downgrading to
     an ordinary corpse on a refusal — the same fallback shape the incinerate
     gate takes, and for the same reason.
-  - **It is a GLOBAL phase and must stay one.** `docs/multiplayer-plan.md` §3.2
-    turns the per-player UI phases into `Player.screen`s but keeps the group
-    beats global; a boss's death is one of those, so it must not become a
-    per-player screen.
+  - **It is a GLOBAL phase and must stay one.** The per-player UI phases are
+    `Player.screen`s (`docs/multiplayer.md` → THE SCREENS ARE PER-PLAYER), but
+    the group beats stay on `state.phase`; a boss's death is one of those, so
+    it must not become a per-player screen.
   - **SETTINGS → GAMEPLAY → DEATH SCENES** (`deathScenes`, on by default) turns
     the rite AND the hero's own tableau off together, via
     `setDeathScenesEnabled` in the engine's import-free `flags.ts` leaf. Not a
@@ -796,6 +796,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   the player can equip a fitting weapon for the fight, and
   `closeInventory` hands the stage back to the speaker on the same page;
   every other scene (last words, thoughts, lore) stays read-only.
+- **`src/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
+  it. The player names their character, and `{HERO}` is where a line means that
+  name: over his own pages in every box that speaks, and inside the handful of
+  lines whose speaker actually knows him. An import-free leaf, because the
+  engine's dialogue path, the app's four text overlays and the library's page
+  writer all resolve it. It is deliberately NOT engine state — a name changes
+  no tick, so it is neither a `RunParams` field nor anything on the wire, and
+  each viewer resolves it against the hero THEY are playing (which is the only
+  answer that works in a party). `docs/game-content.md` has the authoring rule.
 - **`src/game/companions.ts`** — the COMPANION system and the SPARE-or-KILL
   verdict (config `COMPANIONS`): a spareable unique (`EnemyDef.spareable`)
   beaten to 0 hp kneels and pauses the run in the `choice` phase (the
@@ -982,7 +991,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`MAGIC_CRIT`, resolved in `stepMagicCritBlobs`) — the `playerDodgeChance`
   sidestep, weapon damage (STR scales physical harder than
   INT scales magic), STR-taxed move speed, INT-scaled reach
-  `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the weapon's own
+  `weaponRangeFor` — and its honest twin `weaponFiringRange`, that paper reach
+  cut down to the distance the weapon's round survives long enough to fly
+  (`speed × lifetimeMs`), which is what every AUTOMATIC pick measures against
+  (the auto-attack, the bot's stand-off, the character sheet's REACH) so a
+  trigger is never pulled at a monster the ammunition cannot reach —,
+  swing/fire cadence `weaponCooldownFor` — the weapon's own
   catalog cooldown, quickened by its
   class's attack-speed stat (DEX for melee & ranged, INT for magic; see
   `SPEED_STAT`) — and the swing cone `weaponSweepHalfAngle` that, capped by
@@ -1555,6 +1569,25 @@ seams a browser can't provide on iOS:
   committed (`native/store/game-center-leaderboards.json`) and the suite failing
   on drift, exactly as for achievements.
 
+- **Screenshots — the picture leaves the game through the platform's own share
+  sheet.** The SCREENSHOT bind (F12) rasterizes the whole screen — world canvas
+  AND interface — into a PNG, files it in a capped IndexedDB roll
+  (`pwa/src/lib/shot-store.ts`), and flashes a miniature the player can press to
+  freeze the run and open the gallery on it (EXTRAS → SCREENSHOTS, the same
+  viewer the title menu opens). Sending one on is the platform's answer rather
+  than ours: `pwa/src/lib/share-image.ts` probes what the BROWSER can do with
+  this exact file (`navigator.share` with a `files` payload, an `image/png`
+  clipboard write, a download) and offers only the buttons that will work, while
+  the shells answer the same question over `pwa/src/app/screenshot-bridge.ts` —
+  the sixth protocol on the one shell channel. The native half
+  (`native/src/screenshots.ts`) stages the PNG in the app's CACHE directory and
+  raises the system sheet with `expo-sharing`; it deliberately does not touch the
+  camera roll, because that needs the photo-library permission and the sheet's
+  own "Save Image" gets the picture there with the player choosing rather than
+  the game asking. **The bridge exists at all because Android has no Web Share
+  API in a WebView** — on iOS the page could nearly do it alone, and on Android
+  the one button a phone player most wants would simply not be offered.
+
 `native/app.config.js` reads brand identity from `game.config.json` (never
 re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build
 profiles. Builds are **manual only** — locally via `eas build`, or the
@@ -1663,6 +1696,19 @@ at the seam in `leaderboards-provider.ts`: steamworks.js binds no leaderboard
 API, and Steam's overlay has no leaderboard page either, so the "the platform
 draws the board" rule that lets the game ship no board UI has no counterpart
 here.
+
+**Screenshots are the one platform feature where doing nothing is the right
+answer**, and `screenshots-provider.ts` argues it at the seam: steamworks.js
+binds no `ISteamScreenshots`, but the overlay this shell injects already hooks
+Steam's own screenshot key at the swap chain, so a press files a copy in the
+player's Steam library with the game entirely uninvolved. The game's bind ships
+on F12 to match and never grabs the key away from it — one press on a Steam
+build gives the player Steam's copy AND the game's own, the latter in the
+in-game gallery and as a real file in their pictures folder
+(`electron/src/screenshots.ts`, whose `share` puts the PNG on the clipboard and
+opens the file manager on it — the desktop's honest version of a share sheet).
+What is actually missing is `AddScreenshotToLibrary`, and only for a build with
+no overlay.
 
 `electron-builder.config.cjs` reads brand identity from `game.config.json`
 (never re-hardcoding it) and shares the mobile app's bundle id. It packages a

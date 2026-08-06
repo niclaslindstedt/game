@@ -5,7 +5,11 @@
 import { clamp, direction, distanceSq, type Vec2 } from "@game/lib/vec.ts";
 import { maybeCompanionQuote } from "../companions.ts";
 import { PROJECTILE, WEAPON } from "../config/index.ts";
-import { crateHitByCircle, damageCrate } from "../crates.ts";
+import {
+  breakableHitBySweep,
+  crateHitByCircle,
+  damageCrate,
+} from "../crates.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { heroAt } from "../party.ts";
@@ -136,6 +140,23 @@ export function stepProjectiles(
       !outOfBounds &&
       blockedByObstacle(state, from, projectile.pos, projectile.radius);
     if (outOfBounds || walled) {
+      // A SOLID BREAKABLE STOPS THE ROUND AND STILL TAKES IT. A hoppable crate
+      // is smashed further down, where the shot flies INTO it and overlaps
+      // (`crateHitByCircle`); a vending machine or a wine rack is solid, so the
+      // shot never gets that far — it dies right here, on the box's face. Solid
+      // is not indestructible, and without this the hero's auto-attack could
+      // pick a box in plain sight, in reach, and pour the entire pouch into it
+      // for as long as he stood there without taking off a single point.
+      // Hero and companion fire only, exactly like the crate branch below.
+      if (walled && !projectile.hostile) {
+        const box = breakableHitBySweep(
+          state,
+          from,
+          projectile.pos,
+          projectile.radius,
+        );
+        if (box) damageCrate(state, box, projectile.damage);
+      }
       // A RICOCHET shot (`bouncesLeft` — the coin cannon) comes back off the
       // wall instead of dying on it, which is what makes cover stop being the
       // answer and the room start being part of the fight.

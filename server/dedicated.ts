@@ -114,9 +114,6 @@ export type DedicatedConfig = {
   password?: string;
   /** Mod ids in load order. A joiner whose list differs is refused by name. */
   mods?: string[];
-  /** MAP SIZE: which of the three sizes this server's maps are carved at. Every
-   * mission is carved from its blueprint, so the size is the only knob left. */
-  generatedMapSize?: string;
   /**
    * Never ask the router to forward the bound port (`--no-portmap`).
    *
@@ -181,7 +178,6 @@ export function paramsFrom(
     respec: false,
     clearedLevels: [],
     merchantDiscovered: false,
-    generatedMapSize: config.generatedMapSize ?? "random",
   };
 }
 
@@ -228,7 +224,7 @@ export function parseArgs(argv: readonly string[]): {
         throw new Error(`--bots must be an integer from 1 to ${MAX_CLIENTS}`);
       }
       overrides.bots = bots;
-    } else if (name === "map-size") overrides.generatedMapSize = value;
+    }
   }
   return { config, overrides };
 }

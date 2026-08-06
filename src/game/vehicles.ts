@@ -31,12 +31,17 @@
 // the level's landmarks (`car` → the car, `rocket` → the ship), keeps the
 // landmark as the travel door's tap anchor, and the renderer draws the
 // assembly in the landmark's place (pwa/src/game/render/vehicles.ts).
+//
+// …and the ground a machine BLOCKS is the ground its picture stands on, which
+// is not the ground its nose points at: `alongBody` below is the one place
+// that conversion happens, and `vehicleFootprint` is the rule.
 
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
 
 import { PLAYER } from "./config/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
+import { billboardBearing } from "./flags.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { openDoor } from "./story.ts";
 import { anyZoneContains, type Zone } from "./zones.ts";
@@ -66,8 +71,9 @@ export const CAR = {
     "roof",
     "glass",
   ] as const,
-  /** Wheel centers, world px from the body center: [rear, front] (the art
-   * pins them at columns 10 and 36 of the 48-wide canvas). */
+  /** Wheel centers, px ALONG THE DRAWN BODY from its center: [rear, front]
+   * (the art pins them at columns 10 and 36 of the 48-wide canvas). Columns of
+   * the assembly, never a step across the floor — see `alongBody`. */
   wheelOffsets: [-14, 12],
   /** Wheel radius (world px) — converts speed into roll. */
   wheelRadius: 5,
@@ -77,7 +83,9 @@ export const CAR = {
   springDamping: 7,
   /** The axle's travel limit (px) — a spring never buries the body. */
   maxCompress: 3,
-  /** The blockers under the body (create.ts): x offsets + radius. */
+  /** The blockers under the body (create.ts): columns of the DRAWN body — the
+   * wheel arches and the middle between them — and the radius each covers.
+   * Laid along the picture rather than along the nose: `vehicleFootprint`. */
   footprint: { offsets: [-14, 0, 12], radius: 9 },
   /** The parts that can work free of the body (the fix ladder). */
   detachables: ["doors", "hood", "bumper", "roof"] as const,
@@ -313,22 +321,49 @@ export function createVehicles(
   return vehicles;
 }
 
-/** The blockers a vehicle parks on `state.obstacles` (kind "vehicle" — the
+/**
+ * A COLUMN OF THE DRAWN MACHINE, as a point on the floor.
+ *
+ * `along` is px along the assembly's own picture from its centre — a wheel
+ * arch, a lamp, a body blocker — and the picture lies across the ground on the
+ * bearing the camera decides (`billboardBearing`, flags.ts). At the shipped
+ * square-on camera that bearing is +x and this is the plain `pos.x + along`
+ * these sums all used to be.
+ */
+function alongBody(pos: Vec2, along: number): Vec2 {
+  const bearing = billboardBearing();
+  return {
+    x: pos.x + Math.cos(bearing) * along,
+    y: pos.y + Math.sin(bearing) * along,
+  };
+}
+
+/**
+ * The blockers a vehicle parks on `state.obstacles` (kind "vehicle" — the
  * obstacle pass skips them; the assembly is drawn by the vehicle renderer).
- * The offsets run along the machine's OWN nose, so a car parked (or left)
- * facing any which way blocks the ground it actually covers. */
+ *
+ * THEY LIE UNDER THE MACHINE AS DRAWN, WHICH IS NOT ALONG ITS NOSE. The car is
+ * one side-profile assembly hung off a single anchor and drawn dead straight-on
+ * (pwa/src/game/render/vehicles.ts): 48 px of body across the screen, whatever
+ * the heading says the nose is doing. So the ground it visibly covers is the
+ * strip along `billboardBearing()`, and `CAR.footprint.offsets` are columns of
+ * that picture — the same numbers as the wheel arches, because the projection
+ * carries a step along that bearing to the same number of screen px.
+ *
+ * Walked down the HEADING instead — which is how these started life — the chain
+ * turned under a car whose picture never turns, and it did so in two ways that
+ * read identically from inside the game: a nose swung up the screen laid the
+ * blockers at a right angle to the drawn body, and once the camera took a yaw
+ * even a PARKED car's chain stood off its own picture at the yaw's own angle. In
+ * both the hero walks through the drawn bonnet and is stopped by open floor half
+ * a car away, and hops onto a roof that is not there.
+ */
 export function vehicleFootprint(
   vehicle: Vehicle,
 ): { pos: Vec2; radius: number }[] {
   const print = vehicle.kind === "car" ? CAR.footprint : SHIP.footprint;
-  const heading = vehicle.kind === "car" ? vehicle.heading : 0;
-  const cos = Math.cos(heading);
-  const sin = Math.sin(heading);
   return print.offsets.map((along) => ({
-    pos: {
-      x: vehicle.pos.x + cos * along,
-      y: vehicle.pos.y + sin * along,
-    },
+    pos: alongBody(vehicle.pos, along),
     radius: print.radius,
   }));
 }
@@ -421,18 +456,14 @@ export function detachWheel(
   car.suspensionVel[axle] = 0;
   state.events.push({
     type: "carGrind",
-    pos: {
-      x: car.pos.x + (CAR.wheelOffsets[axle] ?? 0),
-      y: car.pos.y,
-    },
+    pos: alongBody(car.pos, CAR.wheelOffsets[axle] ?? 0),
     intensity: 1,
   });
   const kick = Math.hypot(vel.x, vel.y);
   state.wheelDebris.push({
-    pos: {
-      x: car.pos.x + (CAR.wheelOffsets[axle] ?? 0),
-      y: car.pos.y,
-    },
+    // The wheel becomes a body of its own here and keeps a world anchor from
+    // now on — but it LEAVES from its arch, which is a column of the picture.
+    pos: alongBody(car.pos, CAR.wheelOffsets[axle] ?? 0),
     vel: { x: vel.x, y: vel.y },
     z: CAR.wheelRadius,
     // A harder hit throws the wheel higher — the pop off the hub.
@@ -593,10 +624,7 @@ export function stepVehicles(
           if (w !== 3) return;
           state.events.push({
             type: "carGrind",
-            pos: {
-              x: vehicle.pos.x + (CAR.wheelOffsets[axle] ?? 0),
-              y: vehicle.pos.y,
-            },
+            pos: alongBody(vehicle.pos, CAR.wheelOffsets[axle] ?? 0),
             intensity,
           });
         });
@@ -929,9 +957,13 @@ function driveCar(
  * bonnet in it, and one small enough to fit through the bay's doorway let the
  * whole back end swing through the door frame on the way out. So the pass runs
  * the SAME circles the parked car blocks the floor with (`vehicleFootprint`),
- * turned with the nose: rear, middle, front, each shoved out on its own and the
- * shove carried back to the body. A corner resolves because each point is read
- * from the position the one before it left the car in.
+ * laid along the DRAWN body: rear, middle, front, each shoved out on its own and
+ * the shove carried back to the body. A corner resolves because each point is
+ * read from the position the one before it left the car in.
+ *
+ * The same circles is the load-bearing half — a driving car and the furniture it
+ * becomes the moment its driver steps out have to occupy the same ground, or
+ * parking would jump the body a foot sideways.
  *
  * THE LOT IS FINITE TOO. Nothing pins an obstacle along the map's outer edge —
  * the hero is held in by an explicit clamp in his own step (step/player.ts) —
@@ -947,14 +979,12 @@ function driveCar(
  * still to run.
  */
 function collideCarBody(state: GameState, car: CarVehicle): void {
-  const cos = Math.cos(car.heading);
-  const sin = Math.sin(car.heading);
   const r = CAR.footprint.radius;
   const leaving = state.departure !== null;
   for (const along of CAR.footprint.offsets) {
-    const px = car.pos.x + cos * along;
-    const py = car.pos.y + sin * along;
-    const point = { x: px, y: py };
+    const point = alongBody(car.pos, along);
+    const px = point.x;
+    const py = point.y;
     resolveObstacles(state, point, r);
     if (!leaving) {
       point.x = clamp(point.x, r, state.level.width - r);

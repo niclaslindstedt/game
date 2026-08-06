@@ -23,6 +23,7 @@ export type BindableAction =
   | "inventory"
   | "map"
   | "achievements"
+  | "screenshot"
   | "pause"
   | "medkit"
   | "stamina"
@@ -40,7 +41,15 @@ export type KeyBindings = Record<BindableAction, string>;
  *
  * ACHIEVEMENTS is Y on purpose: it is the key World of Warcraft opens its own
  * achievement pane with, and a player who has one of those in their fingers
- * should find the trophy shelf where they already reach for it. */
+ * should find the trophy shelf where they already reach for it.
+ *
+ * SCREENSHOT is F12 for the same reason, and it is the one default with a known
+ * cost: F12 is also Steam's screenshot key (which is exactly why players reach
+ * for it, and why the desktop shell leaves the press to Steam's overlay as
+ * well as taking its own picture) — and it is the browser's developer-tools
+ * key, which no page is allowed to swallow. So in a browser tab a press does
+ * both, and a player who minds rebinds it; in either store shell, where there
+ * are no developer tools to open, it is simply the screenshot key. */
 export const DEFAULT_KEYBINDINGS: KeyBindings = {
   moveUp: "KeyW",
   moveDown: "KeyS",
@@ -53,6 +62,7 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   inventory: "KeyI",
   map: "KeyM",
   achievements: "KeyY",
+  screenshot: "F12",
   pause: "KeyP",
   medkit: "KeyC",
   stamina: "KeyX",
@@ -88,6 +98,11 @@ export const KEYBIND_ROWS: {
     action: "achievements",
     label: "ACHIEVEMENTS",
     blurb: "OPEN THE TROPHY SHELF - PAUSES THE RUN",
+  },
+  {
+    action: "screenshot",
+    label: "SCREENSHOT",
+    blurb: "TAKE A PICTURE - EXTRAS - SCREENSHOTS KEEPS THEM",
   },
   { action: "pause", label: "PAUSE", blurb: "PAUSE THE RUN AND ITS MUSIC" },
   {
@@ -130,6 +145,7 @@ const DISCRETE_ACTIONS: BindableAction[] = [
   "inventory",
   "map",
   "achievements",
+  "screenshot",
   "pause",
   "medkit",
   "stamina",

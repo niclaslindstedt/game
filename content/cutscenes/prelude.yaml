@@ -18,7 +18,13 @@ stage:
   # Side view: `at` is bottom-anchored (y is where a thing meets the floor) and
   # the renderer paints back to front by y.
   props:
-    - { sprite: window, at: { x: 150, y: 52 } }
+    # The window hangs at a REAL height: its head under the front door's (the
+    # door is 30 tall off a floor mark of 80, so its frame tops out at y 50)
+    # and its sill at about a standing man's HEAD — a hero walking the wall at
+    # y 88 tops out at 72, which is the bottom of this pane. Parked up at y 52
+    # it read as a skylight: the one opening in the room nobody could have seen
+    # the street through. It clears the floor lamp (x 163…173) at this width.
+    - { sprite: window, at: { x: 146, y: 72 } }
     # The starting weapon, mounted on the back wall until he leaps for it — the
     # one thing the hero owns worth taking, and what he fights with until the
     # run yields better (DifficultyDef.startingWeapon). Its `label:` is also the
@@ -27,13 +33,28 @@ stage:
     # the thing he will carry out of this room is over the two of them for the
     # whole scene, rather than parked in the corner by the door.
     - { label: arm, sprite: wall_medieval_sword, at: { x: 104, y: 54 } }
-    - { sprite: door, at: { x: 202, y: 80 } }
-    # The set they are watching, off to the left; the couch faces it and the
-    # coffee table sits in the gap, pulled toward each other so the pair reads
-    # as actually watching it rather than marooned across the room.
+    # THE FRONT DOOR, SHUT AND OPEN — one thing in two states, stacked on the
+    # same mark and swapped by the `prop` beats below (the open one starts off
+    # the stage). What shows through the opening is the lot the game already
+    # owns: the lit step, the lawn, and past it the road with its centre line —
+    # the same three surfaces the launch scene establishes and the garage hub
+    # lets the player walk on.
+    - { label: shut_door, sprite: door, at: { x: 202, y: 80 } }
+    - {
+        label: open_door,
+        sprite: door_open,
+        at: { x: 202, y: 80 },
+        hidden: true,
+      }
+    # The set they are watching, off to the left; the couch faces it, close
+    # enough that the pair reads as actually watching it rather than marooned
+    # across the room. The coffee table sits where a coffee table sits: square
+    # in FRONT of the couch, on the couch's own x and a step nearer the camera
+    # — its top edge (y 98) picks up exactly where the seated pair's feet
+    # leave off (97), so it fronts them without covering anybody.
     - { sprite: tv, at: { x: 44, y: 94 } }
-    - { sprite: table, at: { x: 76, y: 108 } }
     - { sprite: couch, at: { x: 104, y: 96 } }
+    - { sprite: table, at: { x: 104, y: 108 } }
     - { sprite: lamp, at: { x: 168, y: 90 } }
 # Both of them on the sofa for movie night, watching the TV off to the left —
 # the hero never gets up, which is the whole joke. Their `at.y` sits a hair below
@@ -43,7 +64,7 @@ stage:
 actors:
   - {
       id: hero,
-      name: ME,
+      name: "{HERO}",
       sprite: hero_couch,
       at: { x: 96, y: 97 },
       faceLeft: true,
@@ -79,8 +100,18 @@ beats:
   - { kind: pose, actor: ada, sprite: ada }
   - { kind: move, actor: ada, to: { x: 150, y: 112 }, speed: 42 }
   - { kind: move, actor: ada, to: { x: 201, y: 88 }, speed: 42 }
+  # She opens it, and the room is briefly not the only place in the world: the
+  # step, the lawn and the road are all right there, five minutes away.
+  - { kind: sound, sound: front_door_opened }
+  - { kind: prop, prop: shut_door, hidden: true }
+  - { kind: prop, prop: open_door, hidden: false }
   - { kind: wait, ms: 350 }
   - { kind: exit, actor: ada }
+  - { kind: wait, ms: 400 }
+  # …and it shuts behind her. The last sound of her in the house.
+  - { kind: prop, prop: open_door, hidden: true }
+  - { kind: prop, prop: shut_door, hidden: false }
+  - { kind: sound, sound: front_door_closed }
   - { kind: wait, ms: 900 }
   - kind: caption
     text:
@@ -143,15 +174,26 @@ beats:
   - { kind: wait, ms: 300 }
   - { kind: move, actor: hero, to: { x: 146, y: 108 }, speed: 46 }
   - { kind: wait, ms: 300 }
+  # He names the thing and stops. The hero is short and sharp everywhere he
+  # speaks, and this is the line the whole run starts on: the weapon, then a
+  # verdict on it that gets thinner the harder the rung is (see `variants:`).
   - label: take
     kind: caption
     text:
-      - THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
-  # Out the door Ada walked out of, two hours behind her, armed.
+      - THE OLD SWORD. IT'LL DO.
+  # Out the door Ada walked out of, two hours behind her, armed. The same door,
+  # the same road behind it — and it shuts on an empty living room this time.
   - { kind: move, actor: hero, to: { x: 201, y: 88 }, speed: 46 }
-  - { kind: wait, ms: 300 }
+  - { kind: sound, sound: front_door_opened }
+  - { kind: prop, prop: shut_door, hidden: true }
+  - { kind: prop, prop: open_door, hidden: false }
+  - { kind: wait, ms: 400 }
   - { kind: exit, actor: hero }
   - { kind: wait, ms: 400 }
+  - { kind: prop, prop: open_door, hidden: true }
+  - { kind: prop, prop: shut_door, hidden: false }
+  - { kind: sound, sound: front_door_closed }
+  - { kind: wait, ms: 500 }
   - { kind: fade, to: 1, ms: 1300 }
 # One entry per non-base difficulty; each patches the labelled parts above.
 variants:
@@ -160,22 +202,22 @@ variants:
     grip: { sprite: icon_sawed_off_shotgun }
     take:
       text:
-        - GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
+        - GRANDPA'S SAWED-OFF. THAT'LL DO IT.
   hard:
     arm: { sprite: wall_combat_knife }
     grip: { sprite: icon_combat_knife }
     take:
       text:
-        - THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH.
+        - THE COMBAT KNIFE. IT'LL HAVE TO DO.
   nightmare:
     arm: { sprite: wall_brass_knuckles }
     grip: { sprite: icon_knuckles }
     take:
       text:
-        - THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH.
+        - THE KNUCKLES. THEY'LL HAVE TO DO.
   jesus:
     arm: { sprite: wall_stick }
     grip: { sprite: icon_stick }
     take:
       text:
-        - THE STICK OFF THE WALL. GOD HELP US BOTH.
+        - A STICK. GOD HELP US BOTH.

@@ -1,35 +1,58 @@
 name: window
 family: prelude
-size: [20, 16]
+size: [28, 20]
 description: >
-  A living-room window onto the night sky, the moon in it foreshadowing the
-  destination waiting outside.
+  The living room's window: one white glazing bar each way over a pane onto
+  the same street the front door opens on, with a potted flower on the inner
+  sill in front of them. It hangs at the height a window is really hung at —
+  head under the door's, sill at about a standing man's head — and looks onto
+  the SAME view at the SAME height as the doorway: measure the two and the
+  rooflines, the kerb and the tarmac land on identical world rows in each. The
+  moon rides whole above it all, the same cratered globe the voyage flies to.
 subject:
   kind: prop
-  build: a framed rectangular window pane
-  features: deep-blue night sky with scattered white stars and a small pale moon in one corner
-  accent: pale moon in the corner
+  build: a wide framed rectangular window pane crossed by one white glazing bar each way, into four lights
+  features: a cratered pale moon whole in the upper corner, stars, a band of rooflines in silhouette with two amber-lit windows, the kerb and tarmac with a worn centre-line dash below them, a small red flower in a terracotta pot standing on the inner sill in front of the glass
+  accent: the amber windows still lit across the street
   flavor: the moon hanging in it foreshadows level 2, the destination waiting outside
 palette:
   J: "#2d3b84" # deep-blue night sky
+  K: "#22243a" # neighbours' rooflines, in silhouette
   O: "#1a1c2c" # outline
   V: "#9095a5" # grey window frame
-  W: "#f4f4f4" # white stars
+  W: "#f4f4f4" # white glazing bars, and the stars
+  F: "#a2a4ad" # sunlit rim of the moon
   f: "#888a96" # pale moon
+  D: "#60626c" # dark crater
+  y: "#ffb02e" # windows still lit across the street
+  k: "#5c5e68" # pale kerb, catching the street light
+  t: "#3a3c42" # night tarmac
+  d: "#7c7c75" # traffic white, worn thin
+  u: "#2c2e34" # dark gutter grit
+  G: "#4a7a3e" # flower stem
+  l: "#678f5d" # flower leaves
+  R: "#ff5252" # the bloom
+  B: "#c8ced8" # the glazing bars, a shade off the white frame
+  T: "#8c4a30" # terracotta pot
+  S: "#a86a44" # the pot's lit rim
 grid: |
-  ....................
-  .OOOOOOOOOOOOOOOOOO.
-  .OVVVVVVVVVVVVVVVVO.
-  .OVOOOOOOOOOOOOOOVO.
-  .OVOJJJJJJJJJffJOVO.
-  .OVOJJJWJJJJffffOVO.
-  .OVOJJJJJJJJffffOVO.
-  .OVOJWJJJJJJJffJOVO.
-  .OVOJJJJJWJJJJJJOVO.
-  .OVOJJJJJJJJJJJJOVO.
-  .OVOJJJJJJJJWJJJOVO.
-  .OVOJJJJJJJJJJJJOVO.
-  .OVOOOOOOOOOOOOOOVO.
-  .OVVVVVVVVVVVVVVVVO.
-  .OOOOOOOOOOOOOOOOOO.
-  ....................
+  ............................
+  .OOOOOOOOOOOOOOOOOOOOOOOOOO.
+  .OVVVVVVVVVVVVVVVVVVVVVVVVO.
+  .OVOOOOOOOOOOOOOOOOOOOOOOVO.
+  .OVOJJJJJJJJJJBJJJffffJJOVO.
+  .OVOJJWJJJJJJJBJJfFFfffJOVO.
+  .OVOJJJJJJJJJJBJJfFffDfJOVO.
+  .OVOJJJJJJJWJJBJJffDfffJOVO.
+  .OVOJJJJJJJJJJBJJJffffJJOVO.
+  .OVOJKyKJJKKKKBJJKKyKKJJOVO.
+  .OVOBBBBBBBBBBBBBBBBBBBBOVO.
+  .OVOkkRRkkkkkkBkkkkkkkkkOVO.
+  .OVOtlGGltttttBtttttttttOVO.
+  .OVOttGGttddttBttttddtttOVO.
+  .OVOtSSSStttttBtttttttttOVO.
+  .OVOuTTTTuuuuuBuuuuuuuuuOVO.
+  .OVOOOOOOOOOOOOOOOOOOOOOOVO.
+  .OVVVVVVVVVVVVVVVVVVVVVVVVO.
+  .OOOOOOOOOOOOOOOOOOOOOOOOOO.
+  ............................

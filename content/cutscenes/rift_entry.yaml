@@ -16,7 +16,7 @@ stage:
     # THE FOUNDER's exit, still open. Still humming.
     - { sprite: rift, at: { x: 168, y: 100 } }
 actors:
-  - { id: hero, name: ME, sprite: hero_suit, at: { x: 52, y: 96 } }
+  - { id: hero, name: "{HERO}", sprite: hero_suit, at: { x: 52, y: 96 } }
 beats:
   - { kind: fade, to: 1, ms: 0 }
   - { kind: fade, to: 0, ms: 900 }

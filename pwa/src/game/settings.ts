@@ -10,12 +10,11 @@ import {
   setAutoEquipEnabled,
   setAutoStatGainsEnabled,
   setBalanceTuning,
+  setCameraYaw,
   setCutscenesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,
-  setGeneratedMapSize,
   type BalanceTuning,
-  type GeneratedMapSizeSetting,
 } from "@game/menu";
 
 import { clamp, clamp01 } from "@game/lib/vec.ts";
@@ -136,12 +135,6 @@ export type DebugMode = "on" | "off";
  * from the same rule), so the two switch together and the balance stays whole.
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
-
-/** How big a map is carved. The three sizes are the blueprint's own
- * (each prices its own world dimensions and chamber count, so LARGE is a longer
- * search rather than the same map stretched); `random` rolls one per run off the
- * run's seed, so the scale varies along with the layout. */
-export type GeneratedMapSize = GeneratedMapSizeSetting;
 
 /** FORCE STORE: a developer feature flag for the COIN STORE. `off` (the
  * default) leaves the store to the native shell (see store.ts
@@ -345,9 +338,6 @@ export type GameSettings = {
   autoLevelStats: AutoLevelStats;
   /** Developer flag: surface the coin store in any build, free (see StoreForce). */
   storeForce: StoreForce;
-  /** Developer setting: which size a map is carved at (see
-   * GeneratedMapSize). */
-  generatedMapSize: GeneratedMapSize;
   /** THE MOD LOAD ORDER — every mod this device has seen, in the order they
    * are applied, each with its own on/off. Steam builds only.
    *
@@ -445,9 +435,17 @@ export type GameSettings = {
    * `cameraPitch` is how far the camera looks DOWN (1 = straight down, 0.5 = a
    * 2:1 foreshortened floor) and `cameraYaw` how far it stands round from
    * square-on, in DEGREES (0 = axis-aligned floor tiles, 45 = the diamond grid
-   * of a true isometric view). Both are pure presentation — the simulation is
-   * square whatever they say — so they need no engine setter, only the
-   * renderer's own `setWorldProjection`. */
+   * of a true isometric view). The simulation stays square whatever they say,
+   * so the PITCH needs no engine setter — only the renderer's own
+   * `setWorldProjection`.
+   *
+   * The YAW needs one anyway, and precisely one thing wants it: a body drawn
+   * standing up covers a strip of FLOOR running along whichever world bearing
+   * comes out horizontal, and the car's blockers are laid along that strip so
+   * they sit under the car the player can see (`setCameraYaw` → the engine's
+   * `billboardBearing`, and `vehicleFootprint` for the whole rule). It is
+   * applied in the same block as `setWorldProjection` below and never without
+   * it — they are one camera. */
   cameraPitch: number;
   cameraYaw: number;
   /** Developer switch: ANTI-ALIASING for the art the camera TURNS — the floor
@@ -574,7 +572,6 @@ function defaults(): GameSettings {
     // The coin store surfaces only in the native shell unless a developer
     // forces it (free purchases — see store.ts).
     storeForce: "off",
-    generatedMapSize: "medium",
     // No mods until the player installs some; the list grows as they appear.
     modOrder: [],
     // The shipped game answers to its own name.
@@ -837,11 +834,6 @@ function loadKeybindings(
  * `developerUnlocked`, a FORCE STORE granting free coin packs, or a set of
  * BALANCE multipliers would then quietly govern a shipped game. Applied at load
  * (the stored JSON is left alone — reinstalling a dev build restores it). */
-/** Whether a stored value is one of the four generated-map size choices. */
-function isGeneratedMapSize(v: unknown): v is GeneratedMapSize {
-  return v === "small" || v === "medium" || v === "large" || v === "random";
-}
-
 function stripDeveloperState(s: GameSettings): GameSettings {
   const base = defaults();
   return {
@@ -850,7 +842,6 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     debug: base.debug,
     autoLevelStats: base.autoLevelStats,
     storeForce: base.storeForce,
-    generatedMapSize: base.generatedMapSize,
     gameSpeed: base.gameSpeed,
     botViewSpec: base.botViewSpec,
     knockback: base.knockback,
@@ -1035,12 +1026,9 @@ function load(): GameSettings {
         stored.storeForce === "on" || stored.storeForce === "off"
           ? stored.storeForce
           : base.storeForce,
-      // A save from before every map was carved may still carry a
-      // `generatedMaps` on/off — there is nothing to turn off any more, so it
-      // is read as the retired key it is and dropped.
-      generatedMapSize: isGeneratedMapSize(stored.generatedMapSize)
-        ? stored.generatedMapSize
-        : base.generatedMapSize,
+      // A save from before every map was ONE carved size may still carry a
+      // `generatedMaps` on/off or a `generatedMapSize` — there is nothing left
+      // to choose, so both are read as the retired keys they are and dropped.
       modOrder: loadModOrder(stored.modOrder),
       modBrand: loadModBrand(stored.modBrand),
       xpFloat:
@@ -1134,12 +1122,12 @@ setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
 setDeathScenesEnabled(settings.deathScenes === "on");
 setStoreForced(settings.storeForce === "on");
-setGeneratedMapSize(settings.generatedMapSize);
 setWorldProjection({
   pitch: settings.cameraPitch,
   yaw: settings.cameraYaw,
   antialias: settings.cameraAntialias === "on",
 });
+setCameraYaw(settings.cameraYaw);
 setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
@@ -1166,12 +1154,12 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setCutscenesEnabled(settings.cutscenes === "on");
   setDeathScenesEnabled(settings.deathScenes === "on");
   setStoreForced(settings.storeForce === "on");
-  setGeneratedMapSize(settings.generatedMapSize);
   setWorldProjection({
     pitch: settings.cameraPitch,
     yaw: settings.cameraYaw,
     antialias: settings.cameraAntialias === "on",
   });
+  setCameraYaw(settings.cameraYaw);
   setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

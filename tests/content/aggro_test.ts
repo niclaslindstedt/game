@@ -201,7 +201,7 @@ describe("pack overlap", () => {
 
 describe("moon stone ridges", () => {
   it("the carved moon raises solid boulder walls", () => {
-    const walls = resolveLevelDef("moon", SEED, "medium").walls!;
+    const walls = resolveLevelDef("moon", SEED).walls!;
     expect(walls.length).toBeGreaterThan(0);
     for (const wall of walls) {
       expect(wall.jumpable).toBe(false); // true walls, not hop-overs

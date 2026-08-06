@@ -76,19 +76,10 @@ annex:
   downLabel: THE VAULT
   upLabel: UP
 
-sizes:
-  small:
-    width: 3200
-    height: 1800
-    rooms: 10
-  medium:
-    width: 4200
-    height: 2300
-    rooms: 16
-  large:
-    width: 5200
-    height: 2900
-    rooms: 24
+size:
+  width: 4200
+  height: 2300
+  rooms: 16
 
 layout:
   minRoom: 540

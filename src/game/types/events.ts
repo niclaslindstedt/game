@@ -726,6 +726,14 @@ export type GameEvent =
    * can play the escape as a warp, not a death.
    */
   | { type: "bossFled"; pos: Vec2; defId: string }
+  /**
+   * A CUTSCENE ASKED FOR A NOISE — a `sound` beat came up in the scene the run
+   * is playing (the front door opening on the hero's way out of the prelude).
+   * `sfx` is the sound's own id, which is the seam a weapon's and a power's
+   * own sound already ride: the engine never learns what a scene sounds like,
+   * it only forwards the name the scene wrote down.
+   */
+  | { type: "cutsceneSound"; sfx: string }
   /** A speaker took the stage: the run paused into the `dialogue` phase. */
   | { type: "dialogueStarted"; speaker: string }
   /**

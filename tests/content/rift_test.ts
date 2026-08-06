@@ -37,7 +37,7 @@ import {
 const RIFT = LEVELS.the_rift!;
 const BLUEPRINT = MAP_BLUEPRINTS.the_rift!;
 /** One representative void — the road a run of the rift actually builds. */
-const carved = resolveLevelDef("the_rift", SEED, "medium");
+const carved = resolveLevelDef("the_rift", SEED);
 
 describe("THE RIFT level def", () => {
   it("is story level 4, after Mars", () => {

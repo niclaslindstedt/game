@@ -14,7 +14,13 @@
 
 import { useCallback, useEffect, useState, type MutableRefObject } from "react";
 
-import { playerAppearance, runLevelDef, type GameState } from "@game/core";
+import {
+  heroNameOr,
+  playerAppearance,
+  runLevelDef,
+  withHeroNameLines,
+  type GameState,
+} from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -61,10 +67,14 @@ export function IntroOverlay({
   onBlip,
   revealRef,
   variant = "intro",
+  heroName,
 }: {
   state: GameState;
   assets: GameAssets;
   font: PixelFont;
+  /** The name the player gave this hero — the box's own header, since the
+   * monologue is his, and what an authored `{HERO}` in it resolves to. */
+  heroName?: string;
   /** Turn the page (past the last one the engine flashes the level name). */
   onAdvance: () => void;
   /** The SKIP button: cut the monologue short, straight to the title card. */
@@ -84,7 +94,7 @@ export function IntroOverlay({
   const def = runLevelDef(state);
   const pages = variant === "outro" ? (def.outro ?? []) : def.intro;
   const pageIndex = variant === "outro" ? state.outroPage : state.introPage;
-  const page = pages[pageIndex] ?? EMPTY_PAGE;
+  const page = withHeroNameLines(pages[pageIndex] ?? EMPTY_PAGE, heroName);
 
   // Flow each authored line into the box's live text column, then window the
   // folded result into screens the player scrolls through.
@@ -166,7 +176,12 @@ export function IntroOverlay({
       </div>
       <div className="dialogue-box intro-dialogue-box">
         <div className="dialogue-header">
-          <PixelText font={font} text="ME" scale={2} color="#7ef0c8" />
+          <PixelText
+            font={font}
+            text={heroNameOr(heroName)}
+            scale={2}
+            color="#7ef0c8"
+          />
         </div>
         <div className="dialogue-body" ref={bodyRef}>
           {/* Stack the lines in a flex column: a bare PixelText <canvas> is

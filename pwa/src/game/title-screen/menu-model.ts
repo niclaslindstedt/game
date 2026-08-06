@@ -60,6 +60,7 @@ export type MenuScreen =
   | "arsenal"
   | "effects"
   | "vault"
+  | "screenshots"
   | "achievements"
   | "store"
   | "storeconfirm"

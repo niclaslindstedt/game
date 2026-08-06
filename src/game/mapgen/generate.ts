@@ -74,7 +74,6 @@ import type {
   MapBlueprint,
   MapObject,
   MapSetPiece,
-  MapSizeName,
 } from "./types.ts";
 
 /**
@@ -83,10 +82,6 @@ import type {
  * two runs on adjacent seeds would otherwise share a suspicious amount of shape.
  */
 const LAYOUT_SALT = 0x9e3779b9;
-
-/** A second, unrelated salt for the SIZE roll, so `random` sizing does not
- * correlate with where the first partition happens to land. */
-const SIZE_SALT = 0x85ebca6b;
 
 /**
  * Fields of the hand-authored level a carve DROPS rather than inherits, because
@@ -238,8 +233,8 @@ function pickSpawnChamber(
   // …and the slack WIDENS until the landing is genuinely far away. One doorway
   // of it is enough almost always; on the seeds where it is not, every cell at
   // the graph's far end sits in the boss's own neighbourhood and the map opens
-  // with the objective in plain sight — measured, one large goodco seed in
-  // eight landed the hero 540 px from PAYLOAD-1. So the doorway requirement is
+  // with the objective in plain sight — measured, one goodco seed in eight
+  // landed the hero 540 px from PAYLOAD-1. So the doorway requirement is
   // relaxed a door at a time until the winner clears a floor of a third of the
   // map's diagonal, which is the distance at which the thing being hidden is
   // over the horizon rather than across the room.
@@ -696,19 +691,6 @@ function appendAnnex(
   return room;
 }
 
-/** Which of the three sizes this run is carved at — `random` rolls it off the
- * run's own seed, so the scale of the search varies as well as its shape. */
-export function resolveMapSize(
-  bp: MapBlueprint,
-  requested: MapSizeName | "random",
-  seed: number,
-): MapSizeName {
-  if (requested !== "random") return requested;
-  const names: MapSizeName[] = ["small", "medium", "large"];
-  const rng = createRng((seed ^ SIZE_SALT) >>> 0);
-  return names[Math.floor(rng() * names.length)] as MapSizeName;
-}
-
 /**
  * Carve a `LevelDef` from a blueprint.
  *
@@ -716,15 +698,13 @@ export function resolveMapSize(
  * @param base  the hand-authored level it inherits its story and rules from
  * @param seed  the run seed — the same one `createGame` builds the run with, so a
  *              run and its map replay together
- * @param size  which of the blueprint's three sizes to carve
  */
 export function generateLevel(
   bp: MapBlueprint,
   base: MissionDef,
   seed: number,
-  size: MapSizeName,
 ): LevelDef {
-  const spec = bp.sizes[size];
+  const spec = bp.size;
   const rng = createRng((seed ^ LAYOUT_SALT) >>> 0);
   // The ANNEX gets a band of its own PAST the carved rectangle (see `MapAnnex`).
   // The carve never sees it, so nothing is ever adjacent to the room the lift

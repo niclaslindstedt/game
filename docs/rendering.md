@@ -3,7 +3,9 @@
 The engine simulates a flat, square, top-down world and knows nothing about how
 it is drawn. Everything in this document lives in `pwa/src/game/render/` and is
 **presentation only**: change any of it and the simulation produces the same
-bytes. It is the reference half of the renderer — the projection, the post
+bytes. (One knob is not, and it is named where it is described: the camera's YAW
+turns the ground a BILLBOARD stands on, which the car's blockers have to lie
+under.) It is the reference half of the renderer — the projection, the post
 effects, the canvas and its scale tiers, how bodies carry themselves, and how
 loot announces itself.
 
@@ -30,6 +32,15 @@ rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
 longer cover their axis-aligned collision boxes still read wrong under a turned
 camera, and a proper isometric look needs that structural art redrawn as iso
 pieces — which is an art project, not a render setting.
+
+**THE YAW IS ALSO THE ONE THING ON THIS PAGE THE SIMULATION HEARS ABOUT**, and
+the exception proves the rule: a body drawn standing up covers a strip of FLOOR
+running along whichever world bearing comes out horizontal, and every body in the
+game is round enough not to care — except the CAR, whose blockers have to lie
+under a 48-px side profile that nothing rotates. So the app pushes the yaw into
+the engine's own import-free leaf (`setCameraYaw` → `billboardBearing`,
+src/game/flags.ts) beside `setWorldProjection`, and nothing else crosses. See
+**SO THE GROUND IT BLOCKS…** under the vehicles below.
 
 The whole thing rests on one split, and getting it backwards is the only way to
 break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
@@ -495,12 +506,26 @@ fitting at dusk is a bug — only the pool under it belongs to the night.
 ahead of the bumper was the first attempt: a pool has no direction, so a car
 crossing the drive looked like it was carrying a lantern. The wedge — narrow at
 the lamps, spreading down the road, running out at the end — says which way the
-car is pointing before the sprite does. It is painted as a CHAIN of overlapping
-soft pools walked down `CarVehicle.heading` rather than as a clipped triangle:
-a clip has no edge treatment at all, so the wedge came out with two razor lines
-across the pavement, which is a searchlight in fog rather than a headlight on
-tarmac. Nine cached blits have the same silhouette and feather on every side for
-free.
+car is pointing. It is painted as a CHAIN of overlapping soft pools rather than
+as a clipped triangle: a clip has no edge treatment at all, so the wedge came out
+with two razor lines across the pavement, which is a searchlight in fog rather
+than a headlight on tarmac. Nine cached blits have the same silhouette and
+feather on every side for free.
+
+**AND THE LAMPS ARE BOLTED ON — the beam is a PART OF THE ASSEMBLY, not a thing
+aimed down `CarVehicle.heading`.** These are sealed beams in a shell, not
+steering-linked cornering lamps: they turn when the CAR turns and not one degree
+otherwise, and the car's picture never turns. The body is one side-profile
+assembly cut nose-right that nothing mirrors or rotates (which is the whole
+reason the engine carries a yaw stop), while the heading it is steered on swings
+the better part of 180° inside that stop — so a wedge walked down the heading
+swept a 172° arc across a car that had not visibly moved a pixel, and read as a
+pair of lamps swivelling on their own. The chain is therefore walked in SCREEN px
+along the drawn body off the body's own anchor, exactly as the wheel arches are
+(see the billboard rule below); only the POOLS keep the pitch's squash, because
+light lies on the pavement even when the wedge is welded to the picture. The
+daylight cones (`render/vehicles.ts`) always obeyed this and are the reason the
+mismatch was visible at all. `tests/vehicle_assembly_test.ts` holds the line.
 
 **KEEP THE POOLS SMALL, and judge it at the phone viewport.** The garage is
 512×280 world units and the landscape view sees ~422×260 of it, so two lamps
@@ -606,6 +631,23 @@ exactly the yaw's own angle. The exception is a part that has genuinely become
 its own body — a wheel that came OFF (`state.wheelDebris`), a shed panel lying on
 the floor — which stands on its own ground and keeps its own world anchor.
 `tests/vehicle_assembly_test.ts` holds the line across the whole knob range.
+
+**SO THE GROUND IT BLOCKS IS THE GROUND ITS PICTURE STANDS ON — AND THAT IS THE
+ONE NUMBER THE SIMULATION TAKES FROM THE PROJECTION.** A car's collision chain
+(`vehicleFootprint`, src/game/vehicles.ts) is three circles at three columns of
+that same 48-px canvas, so it has to lie along whichever world bearing comes out
+HORIZONTAL on screen — `billboardBearing()` in the import-free leaf
+`src/game/flags.ts`, which is `-yaw` and is exactly unit-preserving, so a drawn
+column and a world offset along it are the same number. The app pushes the yaw in
+beside `setWorldProjection` (pwa settings.ts) and never without it. Every other
+body in the game is round enough not to care — a mob, a rock, a barrel blocks the
+same circle whichever way that bearing points — which is why this is the only
+place the engine hears about the camera at all. Walked down `CarVehicle.heading`
+instead, the chain turned under a car whose picture never turns: a nose swung up
+the screen laid the blockers square across the drawn body, and a yaw stood even a
+PARKED car's chain off its own picture at the yaw's own angle. Both read the same
+way from inside the game — the hero walks through the drawn bonnet and is stopped
+by open floor half a car away, and hops onto a roof that is not there.
 
 **AND THE CAR MAY NEVER COME ABOUT.** The body is one side-profile assembly and
 nothing mirrors it, so a car free to turn round drove away still facing the way

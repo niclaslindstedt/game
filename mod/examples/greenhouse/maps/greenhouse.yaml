@@ -67,22 +67,14 @@ areas:
       rare: colony_paving_1
       rareEvery: 9
 
-# A blueprint is carved at THREE sizes (the player picks one under DEVELOPER →
-# GENERATED MAPS), so every count below is a DENSITY rather than a number — a
-# fixed count leaves LARGE bare. Each size must fit the chambers it asks for.
-sizes:
-  small:
-    width: 2200
-    height: 1400
-    rooms: 8
-  medium:
-    width: 2800
-    height: 1800
-    rooms: 14
-  large:
-    width: 3400
-    height: 2200
-    rooms: 20
+# THE EXTENTS the blueprint is carved into, and how many chambers the carve
+# splits them into. Every count below is a DENSITY rather than a number, so the
+# dressing follows the floor it is given. The size must fit the chambers it
+# asks for (width/minRoom × height/minRoom, or the carve quietly makes fewer).
+size:
+  width: 2800
+  height: 1800
+  rooms: 14
 
 # THE CARVE. `wall` names the object the barriers are built out of; `doorWidth`
 # is how wide a gate is punched (keep it over 160 or scattered props plug it);

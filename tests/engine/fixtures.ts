@@ -1895,6 +1895,9 @@ export const FIX_CUTSCENE: CutsceneDef = {
     { kind: "caption", text: ["TEST CAPTION."] },
     { kind: "say", actor: "hero", text: ["STAY."] },
     { kind: "exit", actor: "ada" },
+    // The door shutting behind her — a `sound` beat, so the run's forwarding of
+    // a scene's noise into a `cutsceneSound` event has something to forward.
+    { kind: "sound", sound: "test_door" },
     { kind: "caption", text: ["GONE."] },
   ],
 };
