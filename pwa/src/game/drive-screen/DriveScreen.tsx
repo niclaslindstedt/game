@@ -313,7 +313,10 @@ export function DriveScreen({
     : undefined;
 
   return (
-    <div style={SHELL}>
+    // The class carries ONE thing — the stacking band (styles.css). It has to
+    // out-rank the departure curtain, which is still painted full black behind
+    // a drive and would otherwise hide the entire road.
+    <div className="drive-screen" style={SHELL}>
       <canvas ref={canvasRef} style={CANVAS} />
       {/* THE DIALS, IN THE GAME'S OWN FONT. Everything else the player reads
           in this game is the pixel font (`PixelText`) — a browser monospace

@@ -102,6 +102,28 @@ describe("game shell layer bands", () => {
     }
   });
 
+  it("puts the drive over the curtain it is the far side of", () => {
+    // THE REGRESSION THIS PINS: the drive-out fades the shell to black and hands
+    // the trip to the road, and the curtain never lifts for it — the departing
+    // run stays mounted with `state.departure` set, so its opacity is held at 1
+    // for the whole minigame. At `z-index: auto` the road therefore played
+    // underneath a black sheet: nothing on screen, and the departed car's engine
+    // still audible behind it.
+    expect(bandOf(".drive-screen")).toBeGreaterThan(
+      bandOf(".departure-curtain"),
+    );
+  });
+
+  it("lets the drive own the whole picture, modals included", () => {
+    // While a road is up there is no run to look at — the one it left has washed
+    // to black and the one it is going to has not been built — so nothing the
+    // shell can raise may paint over it.
+    const shellTop = Math.max(
+      ...[...MODALS, ...ABOVE_MODALS, ...FX_LAYERS].map(bandOf),
+    );
+    expect(bandOf(".drive-screen")).toBeGreaterThan(shellTop);
+  });
+
   it("leaves the legend reveal inert while it covers the whole screen", () => {
     // The top-tier unlock takes the ENTIRE viewport for six seconds while a
     // hero is still being steered under it. `pointer-events` only inherits to
