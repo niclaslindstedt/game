@@ -982,7 +982,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`MAGIC_CRIT`, resolved in `stepMagicCritBlobs`) — the `playerDodgeChance`
   sidestep, weapon damage (STR scales physical harder than
   INT scales magic), STR-taxed move speed, INT-scaled reach
-  `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the weapon's own
+  `weaponRangeFor` — and its honest twin `weaponFiringRange`, that paper reach
+  cut down to the distance the weapon's round survives long enough to fly
+  (`speed × lifetimeMs`), which is what every AUTOMATIC pick measures against
+  (the auto-attack, the bot's stand-off, the character sheet's REACH) so a
+  trigger is never pulled at a monster the ammunition cannot reach —,
+  swing/fire cadence `weaponCooldownFor` — the weapon's own
   catalog cooldown, quickened by its
   class's attack-speed stat (DEX for melee & ranged, INT for magic; see
   `SPEED_STAT`) — and the swing cone `weaponSweepHalfAngle` that, capped by

@@ -431,6 +431,7 @@ export {
   weaponDamageRange,
   weaponDps,
   maxMeleeTargets,
+  weaponFiringRange,
   weaponRangeFor,
   rollWeaponDamage,
   rollWeaponHit,
