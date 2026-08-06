@@ -705,12 +705,15 @@ export {
   botCareCommand,
   botCullCommands,
   botDrawCommand,
+  botHubCommand,
   botIntent,
   botSortCommand,
   botSweepCommand,
   driveBotActions,
+  driveBotHub,
   driveBotUpkeep,
   runBotActions,
+  runBotHub,
   runBotUpkeep,
 } from "./game/bot/intent.ts";
 export type {
@@ -718,6 +721,21 @@ export type {
   BotCommandSink,
   BotIntent,
 } from "./game/bot/intent.ts";
+
+// THE AUTOPILOT AT HOME (bot/hub.ts): the hub's own travel plan — the people
+// with a mark over their head, the counter, then the car out — plus the reads
+// a host needs to drive it (is this the hub, is the hero at a wheel).
+export {
+  atHub,
+  botScreenCommand,
+  driveOutInput,
+  heroCar,
+  hubCar,
+  hubGiverTarget,
+  hubGoal,
+  hubTapCommand,
+} from "./game/bot/hub.ts";
+export type { HubCommand, HubGoal } from "./game/bot/hub.ts";
 
 // The POCKET ARSENAL: which weapon is in the hand, moment by moment — the
 // blade in reach, the boss round at a big body, the spread across a mass —

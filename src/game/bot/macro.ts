@@ -41,6 +41,7 @@ import {
 } from "./perception.ts";
 import { allyCoverTarget, partyLeash } from "./party-play.ts";
 import { questObjectiveTarget } from "./errands.ts";
+import { hubGoal } from "./hub.ts";
 import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
@@ -211,6 +212,11 @@ function macroPreemptible(
   if (cover && cover.x === goal.x && cover.y === goal.y) return false;
   const quest = questObjectiveTarget(state, hero);
   if (quest && quest.pos.x === goal.x && quest.pos.y === goal.y) return false;
+  // A HOME ERRAND is a committed destination too — and on a hub with a horde
+  // in it (a mod's town under siege), a lull's hunt re-pointing the route off
+  // the car is a ride that never leaves.
+  const home = hubGoal(bot, state, hero, wantsMerchantVisit(state, hero));
+  if (home && home.pos.x === goal.x && home.pos.y === goal.y) return false;
   const c = bot.content;
   if (c?.target && c.target.x === goal.x && c.target.y === goal.y) return false;
   // A boss-ready arrow march is the boss push walked down the authored path —
@@ -351,6 +357,16 @@ function ownMacroTarget(
   // this ladder at all. NULL solo and with everybody healthy.
   const cover = allyCoverTarget(state, hero, tune);
   if (cover) return cover;
+  // AT HOME, THE ROOM IS THE LEVEL (`hub.ts`). A hub has no horde, no cache, no
+  // fog and no boss, so every rung below this one answers "nothing" and the
+  // ladder used to run off its own end — the whole reason turning the AUTO
+  // PILOT on in the garage did nothing at all. The people with a mark over
+  // their head, the counter, and the car ARE the content here, in that order,
+  // and they sit this high because there is nothing above them to lose to:
+  // only a pinned nudge and a teammate on the floor outrank going home's
+  // errands. Null on every other level, which leaves the ladder untouched.
+  const home = hubGoal(bot, state, hero, errand);
+  if (home) return home.pos;
   // The ANTI-LOITER hunt: gone too long without a fight, the bot marches on
   // the latched foe before any other errand — moving toward the enemy IS the
   // point (only the weapon-starved shop run above still outranks it).
@@ -482,6 +498,11 @@ function macroThought(
   // crossing the map toward a spot with no loot on it.
   const cover = allyCoverTarget(state, hero, tune);
   if (cover && cover.x === goal.x && cover.y === goal.y) return "COVER ALLY";
+  // The home errands (hub.ts) carry their own labels — SEE FOLK / TO SHOP /
+  // TO CAR — so the bubble in the garage says which of the three he is on.
+  const home = hubGoal(bot, state, hero, wantsMerchantVisit(state, hero));
+  if (home && home.pos.x === goal.x && home.pos.y === goal.y)
+    return home.thought;
   const hunt = seekTarget(bot, state);
   if (hunt && hunt.x === goal.x && hunt.y === goal.y) return "SEEK FIGHT";
   if (

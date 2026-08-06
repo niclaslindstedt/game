@@ -31,6 +31,14 @@
 //   the wear   → `botWantsGearSweep`    → autoEquipGear()
 //   the shed   → `botCullPlan`          → bankSpareItem(cell)
 //   the tidy   → `inventoryNeedsSort`   → sortInventory()
+//   the room   → `botScreenCommand`     → pickQuestTopic / acceptQuest /
+//                                         turnInQuest / closeQuestDialogue /
+//                                         pickTalkChoice / advanceTalk
+//                `hubTapCommand`        → talkToQuestGiver(id) / enterCar()
+//
+// THE ROOM is a THIRD half, and it has to be: the other two are gated on the
+// hero being on the FIELD, and the whole point of a screen verb is a hero who
+// is not (see {@link driveBotHub}).
 //
 // **THE TICK HAS TWO HALVES AND THAT IS NOT AN ACCIDENT.** The draw and the
 // care are decided BEFORE the step — the hand the bot steers with is the hand it
@@ -67,7 +75,9 @@ import {
   botCullPlan,
   botReviveCell,
   botWantsGearSweep,
+  wantsMerchantVisit,
 } from "./economy.ts";
+import { botScreenCommand, hubTapCommand } from "./hub.ts";
 import { botAct } from "./index.ts";
 import type { Bot } from "./state.ts";
 import { botWeaponSwapTarget } from "./weapon-swap.ts";
@@ -152,6 +162,48 @@ export function botCullCommands(state: GameState, hero: Player): BotCommand[] {
     name: "bankSpareItem" as const,
     args: [cell],
   }));
+}
+
+/**
+ * WORK THE ROOM AT HOME, AND WHATEVER CONVERSATION IS OPEN ANYWHERE — the
+ * autopilot's HUB press (`hub.ts`), as one verb.
+ *
+ * An open conversation comes first and is not hub business at all: a giver
+ * stands on most maps, and a modal left in front of an unattended hero is the
+ * one thing a paid ride must never park behind. Only once nothing is on the
+ * screen does the hub's own press apply — tap the person with a mark over their
+ * head, or climb into the car.
+ *
+ * Null on every other tick, which is nearly all of them.
+ */
+export function botHubCommand(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+): BotCommand | null {
+  const screen = botScreenCommand(state, hero);
+  if (screen) return screen;
+  return hubTapCommand(bot, state, hero, wantsMerchantVisit(state, hero));
+}
+
+/**
+ * The hub half of a tick, pushed at `send`. Its own entry point rather than a
+ * line in {@link driveBotActions}, for the reason the SCREEN is the point: a
+ * host gates the pre-step half on the hero being ON THE FIELD (the app's
+ * `fieldLive`), and a hero reading a quest box is by definition not — so
+ * folding this in there would mean the only tick that can close the box is one
+ * where the box is shut. Call it unconditionally, before the field work.
+ *
+ * Returns whether the run answered yes, so a host can bump its HUD.
+ */
+export function driveBotHub(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  send: BotCommandSink,
+): boolean {
+  const command = botHubCommand(bot, state, hero);
+  return command ? Boolean(send(command)) : false;
 }
 
 /** TIDY the bag the way the powerup dock sorts its slots. */
@@ -241,6 +293,14 @@ export function runBotUpkeep(state: GameState, hero: Player): boolean {
   );
 }
 
+/** {@link driveBotHub}, applied here — the hub press and the open-conversation
+ * verb, before the pre-step half. */
+export function runBotHub(bot: Bot, state: GameState, hero: Player): boolean {
+  return driveBotHub(bot, state, hero, (command) =>
+    applyBotCommand(state, hero, command),
+  );
+}
+
 // ---- The client ----------------------------------------------------------------
 
 /**
@@ -263,7 +323,13 @@ export function runBotUpkeep(state: GameState, hero: Player): boolean {
  */
 export function botIntent(bot: Bot, state: GameState, hero: Player): BotIntent {
   const commands: BotCommand[] = [];
-  const action = botDrawCommand(state, hero) ?? botCareCommand(state, hero);
+  // The HUB press rides in the pre-step half's slot, ahead of the draw: a
+  // hero with a quest box open is not swapping weapons, and the box is the one
+  // thing that has to be cleared before anything else can happen at all.
+  const action =
+    botHubCommand(bot, state, hero) ??
+    botDrawCommand(state, hero) ??
+    botCareCommand(state, hero);
   if (action) commands.push(action);
   const upkeep =
     botSweepCommand(state, hero) ??

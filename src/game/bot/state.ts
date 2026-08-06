@@ -229,6 +229,15 @@ export type Bot = {
     pickFar?: boolean;
   };
   /**
+   * HUB memory (see `hub.ts`): how long the hero has stood at the counter with
+   * the shop errand still wanting, and whether that errand has been WRITTEN OFF
+   * for this visit. At home the counter outranks the car, so a want no trade
+   * can satisfy would park an unattended AUTO PILOT in its own driveway — this
+   * is the dead-man switch that lets it leave anyway. Per-level, pure — same
+   * determinism guarantee as `content`.
+   */
+  hub?: { levelId: string; stallSinceMs: number; shopDone: boolean };
+  /**
    * STAMINA-PACING latch: true while the bot has committed to the recovery
    * WALK (pool dipped below the run threshold — `BotTuning.walkStaminaFrac`,
    * ~70%) and hasn't yet refilled past the resume band. Below the threshold

@@ -54,7 +54,9 @@ import {
   dodgeWell,
 } from "./dodges.ts";
 import { pushBoss, survive } from "./fight.ts";
-import { trackEngagement, unstuckInput } from "./macro.ts";
+import { wantsMerchantVisit } from "./economy.ts";
+import { atHub, driveOutInput, hubGoal, trackHubShop } from "./hub.ts";
+import { macroSteer, trackEngagement, unstuckInput } from "./macro.ts";
 import { applyPartySpacing } from "./party-play.ts";
 import { holdOff, limitTurnRate, navSteer, steer } from "./nav.ts";
 import {
@@ -164,6 +166,25 @@ function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
   // over the shipped defaults) — resolved once per tick and threaded into every
   // branch below. Pure, so determinism holds.
   const tune = botTuningFor(state.level.id);
+  // AT THE WHEEL, EVERYTHING ELSE IS SOMEBODY ELSE'S PROBLEM. A hero driving
+  // the hub's car is not walking, dodging, aiming or picking anything up — his
+  // held pointer is steering the CAR this tick (step/index.ts hands it to
+  // `stepVehicles`, and every on-foot pass sits out). So the drive is decided
+  // ahead of the whole ladder and returned raw: no preempt reflex applies to a
+  // man in a car, and the TURN RATE LIMIT below emphatically must not, since
+  // "stand still for half a second" reads to `driveCar` as the wheel being let
+  // go — the car coasts to a halt in the middle of its own driveway.
+  const drive = driveOutInput(bot, state, hero);
+  if (drive) {
+    think(bot, "DRIVE OUT");
+    return drive;
+  }
+  // The hub's own bookkeeping (hub.ts): gauge how long the hero has stood at
+  // the counter with the shop errand still unfinished, so a want no trade can
+  // satisfy can't park the ride in its own driveway. Above the empty-field
+  // branch because a hub is EXPECTED to be empty — that branch returns.
+  const homeShop = atHub(state) && wantsMerchantVisit(state, hero);
+  if (atHub(state)) trackHubShop(bot, state, hero, homeShop);
   // A clear field: nothing to fight, so the loop below would just idle — but a
   // sand storm (mars) or a falling meteor (the moon/rift) can still catch him
   // unopposed, and idling into a knockout or a blast is the worst place to be
@@ -194,6 +215,15 @@ function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
     if (stormDodge) {
       think(bot, "STORM");
       return sprint(stormDodge);
+    }
+    // …EXCEPT AT HOME, WHERE AN EMPTY FIELD IS THE NORMAL STATE OF THE LEVEL.
+    // A hub never places a knot (`horde: 0` on every area), so "nothing to
+    // fight" is not a lull the bot should stand easy through — it is the
+    // garage, and there is a slate to work, a counter to clear and a car to
+    // take (`hub.ts`). This is the whole of the fix for an AUTO PILOT engaged
+    // at home doing nothing at all.
+    if (hubGoal(bot, state, hero, homeShop)) {
+      return macroSteer(bot, state, hero, tune);
     }
     think(bot, "IDLE");
     return idleInput();

@@ -51,7 +51,11 @@ import {
   wantsMerchantVisit,
   weaponStarved as heroWeaponStarved,
 } from "../game/bot/economy.ts";
-import { runBotActions, runBotUpkeep } from "../game/bot/intent.ts";
+import {
+  runBotActions,
+  runBotHub,
+  runBotUpkeep,
+} from "../game/bot/intent.ts";
 import { applyRunCommand } from "../game/commands.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
@@ -1661,6 +1665,12 @@ function playRun(args: {
     // never has a wire under it, so this changes
     // nothing it measures — but it is the reason a verb cannot behave one way
     // under the bot and another in a session.
+    // …and the ROOM half ahead of them (bot/intent.ts `runBotHub`): work
+    // whatever conversation is open, and at HOME tap the person with a mark
+    // over their head or climb into the car. Its own call rather than a line in
+    // `runBotActions` because a hero reading a quest box has a SCREEN up, and
+    // the field housekeeping below is about a hero who does not.
+    runBotHub(bot, state, state.players[0]);
     runBotActions(state, state.players[0]);
     const input = botAct(bot, state, state.players[0]);
     // The camera the simulated player watches through: player-centred and
@@ -1696,6 +1706,7 @@ function playRun(args: {
         // other members never equipped a find, never swapped a weapon and
         // never revived a companion would report the party's damage as flat
         // and call it balance.
+        runBotHub(seatBot, state, hero);
         runBotActions(state, hero);
         const seatInput = botAct(seatBot, state, hero);
         // EACH SEAT WATCHES ITS OWN SCREEN. The weapon's targeting gate reads
