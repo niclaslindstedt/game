@@ -109,6 +109,49 @@ their own dynamic `import()` and stay there.
 of its own to get there. The sections up to "Clashes between mods" are those —
 one per catalog family, in the order they landed.
 
+### A mod may ship RECORDED sound, and the game may not
+
+The one asymmetry in the format, and a deliberate one. Every shipped effect is
+synthesized from parameters, because a PWA that ships no audio files stays small
+and offline and diffable. That reasoning does not transfer to a mod: a sound
+designer's work IS the waveform, and no list of detuned oscillators is going to
+be the orchestral hit they recorded. So `sounds/<id>.wav` and `sounds/<id>.mp3`
+are the one media file a mod may hand the game.
+
+**The file name is the routing, and there is no second mechanism.** A recording
+named `enemy_killed.wav` replaces the sound `enemy_killed` — the event table the
+shipped catalog already carries keeps pointing exactly where it pointed, and the
+bank consulted at play time simply answers with the recording instead. That is
+what makes a SOUND PACK a complete mod with no YAML in it at all, and it is why
+this is the one id clash an ADDON is allowed: naming the sound it stands in for
+is the only way to ship a recording, so a footstep pack would otherwise have to
+declare itself a total conversion.
+
+Three rules hold the seam together, and each is one that would otherwise bite:
+
+- **The check goes in the FUNNEL, not in a caller.** Every sound in the game —
+  a run's events, the interface's clicks, the road's scrapes, a weapon's own
+  `sfx:` — passes through `playSound` (`pwa/src/game/sfx/play.ts`), so one line
+  there is every sound id at once. (The interface keeps its `ui_*` sounds in
+  their OWN catalog so a title screen does not download the combat bank to click
+  a button — which is why `applyMods` merges into both, or `ui_confirm.yaml`
+  would compile, ship, and never be heard.)
+- **Decoding is lazy and FAILS OPEN.** `decodeAudioData` needs a running
+  AudioContext, and there is none until the player has touched something, so a
+  recording cannot be decoded at the moment a mod is applied; it is warmed as
+  soon as audio is live and decoded on demand otherwise. A file the browser
+  refuses is DROPPED from the bank, which puts the synthesized sound back — a
+  corrupt download must not silence one sound for the rest of a run.
+- **The bytes are never parsed by us.** They travel base64'd and untouched and
+  go to the browser's own audio decoder, the same one every `<audio>` on the web
+  uses. This is a real widening of what a mod reaches — the sprites deliberately
+  arrive as raw pixels rather than as PNGs precisely to keep a stranger's file
+  away from a decoder — and it is accepted here because re-encoding somebody's
+  mastered audio into a container of ours would be the one lossy step in a
+  pipeline that has none. What the compiler can check honestly, it does: the
+  name is an id, the magic bytes agree with the extension, the size is sane
+  (2 MiB a file, 24 MiB a mod), and nothing deeper.
+
 ### A mod's venue is CARVED, like every other
 
 `maps/<id>.yaml` is the map half of a venue (the `mapgen-improvement` skill in

@@ -28,6 +28,32 @@ export type ModSprite = {
 };
 
 /**
+ * ONE RECORDED SOUND — a `.wav` or `.mp3` a mod ships to replace a synthesized
+ * one, base64'd exactly as a sprite's pixels are.
+ *
+ * `id` is the routing, and it is the whole routing: it is the id of the sound
+ * this recording stands in for, taken from the file's own stem, so a mod
+ * shipping `sounds/enemy_killed.wav` is heard everywhere `enemy_killed` was.
+ * The bytes travel encoded rather than as PCM because the file IS the mod
+ * author's deliverable — re-encoding somebody's mastered audio into our own
+ * container would be the one lossy step in a pipeline that has none.
+ */
+export type ModSample = {
+  id: string;
+  /** The container, for the log and for the compiler's own refusals. The page
+   * never branches on it: the browser's decoder sniffs the bytes. */
+  format: "wav" | "mp3";
+  /** The encoded file, base64'd. */
+  data: string;
+  /** Optional mixing, from an accompanying `sounds/<id>.yaml`'s `sample:`
+   * block — a recording that is simply dropped in carries none of these and
+   * plays as it was mastered. */
+  volume?: number;
+  pan?: number;
+  echo?: number;
+};
+
+/**
  * What a CONVERSION calls itself — the two strings the title screen draws in
  * place of the game's own, so a total conversion opens under its own name
  * rather than under somebody else's.
@@ -93,6 +119,10 @@ export type ModBundle = {
   uniques: Record<string, unknown>;
   /** The mod's own sounds, by id. */
   sounds: Record<string, unknown>;
+  /** The mod's RECORDED sounds — the `.wav`/`.mp3` files it ships, each named
+   * after the sound id it replaces. Absent from a bundle compiled before they
+   * were a thing, and from the many mods that ship none. */
+  samples?: ModSample[];
   /** The mod's own POWERUPS, by id — already `{ id → AbilityDef }`. */
   powerups: Record<string, unknown>;
   /** The mod's own TALENTS, by id — already `{ id → TalentDef }`. They merge

@@ -34,7 +34,7 @@ const EXAMPLE = path.join(repoRoot, "mod", "examples", "greenhouse");
 /** A throwaway mod folder. Each test writes only the files it cares about, so
  * a failure names one missing or malformed thing rather than a whole tree. */
 const temps: string[] = [];
-function scratchMod(files: Record<string, string>): string {
+function scratchMod(files: Record<string, string | Uint8Array>): string {
   const dir = mkdtempSync(path.join(tmpdir(), "gis-mod-"));
   temps.push(dir);
   for (const [rel, body] of Object.entries(files)) {
@@ -49,6 +49,45 @@ afterEach(() => {
   for (const dir of temps.splice(0))
     rmSync(dir, { recursive: true, force: true });
 });
+
+/**
+ * A real, tiny WAV — a header the compiler's sniffer accepts over a few
+ * milliseconds of silence.
+ *
+ * Written by hand rather than checked in as a fixture, because the whole point
+ * of the checks it exercises is that they read the FIRST BYTES: a fixture file
+ * would make "wrong container", "empty", and "not audio at all" three files to
+ * maintain instead of three lines to write.
+ */
+function wav(samples = 16): Uint8Array {
+  const body = Buffer.alloc(samples * 2);
+  const head = Buffer.alloc(44);
+  head.write("RIFF", 0);
+  head.writeUInt32LE(36 + body.length, 4);
+  head.write("WAVE", 8);
+  head.write("fmt ", 12);
+  head.writeUInt32LE(16, 16); // chunk size
+  head.writeUInt16LE(1, 20); // PCM
+  head.writeUInt16LE(1, 22); // mono
+  head.writeUInt32LE(8000, 24); // sample rate
+  head.writeUInt32LE(16_000, 28); // byte rate
+  head.writeUInt16LE(2, 32); // block align
+  head.writeUInt16LE(16, 34); // bits
+  head.write("data", 36);
+  head.writeUInt32LE(body.length, 40);
+  return Buffer.concat([head, body]);
+}
+
+/** A scratch mod ships no `contents:` and every build says so — the noise that
+ * would otherwise drown out the finding a sound test is actually about. */
+function soundWarnings(warnings: string[]): string[] {
+  return warnings.filter((w) => !w.includes("no contents: block"));
+}
+
+/** A tagless MP3's first bytes: a frame sync, then whatever. */
+function mp3(): Uint8Array {
+  return Buffer.concat([Buffer.from([0xff, 0xfb, 0x90, 0x00]), wav(8)]);
+}
 
 /**
  * A throwaway copy of the worked example with its BLUEPRINT rewritten.
@@ -244,6 +283,137 @@ describe("the worked example", () => {
       voices: { call: string }[];
     };
     expect(sound.voices.map((v) => v.call)).toEqual(["tone", "noise"]);
+  });
+
+  // -------------------------------------------------------------------------
+  // RECORDED SOUNDS — the one media file a mod may hand the game.
+  //
+  // The rule under every case below is the same one: THE FILE NAME IS THE
+  // ROUTING. `sounds/enemy_killed.wav` replaces the sound `enemy_killed`, and
+  // there is nothing else to say — no `on:` block, no manifest entry, no id
+  // written down twice. So most of what is worth testing is what happens when
+  // the name is wrong, which is the one way to ship a mod that installs
+  // perfectly and makes no sound at all.
+  // -------------------------------------------------------------------------
+
+  it("carries a recording named after the sound it replaces", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.wav": wav(),
+    });
+    const { bundle, errors, warnings } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    // No warning: `enemy_killed` is a sound the game has, so this replaces it.
+    expect(soundWarnings(warnings)).toEqual([]);
+    expect(bundle!.samples).toHaveLength(1);
+    expect(bundle!.samples?.[0]?.id).toBe("enemy_killed");
+    expect(bundle!.samples?.[0]?.format).toBe("wav");
+    // The bytes travel base64'd and UNTOUCHED — the page hands them to the
+    // browser's decoder, so anything we re-encoded would be a lossy step in a
+    // pipeline that has none.
+    expect(Buffer.from(bundle!.samples?.[0]?.data ?? "", "base64")).toEqual(
+      Buffer.from(wav()),
+    );
+    // And it is NOT in `sounds`, which holds only what the synth can play.
+    expect(bundle!.sounds).toEqual({});
+  });
+
+  it("counts a folder of recordings as a mod that adds something", () => {
+    // The sound pack: no YAML anywhere in it, and the whole reason the format
+    // grew a media file. `adds === 0` would refuse it as a bundle of nothing.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.mp3": mp3(),
+      "sounds/level_up.wav": wav(),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle!.samples!.map((s) => s.id)).toEqual([
+      "enemy_killed",
+      "level_up",
+    ]);
+  });
+
+  it("lets an ADDON record over a shipped sound", () => {
+    // Every other id clash is an error for an addon, because it silently ate
+    // something the player already had. A recording inverts it: naming the
+    // sound it stands in for is the ONLY way to ship one, so a sound pack
+    // would otherwise have to declare itself a total conversion.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/ui_confirm.wav": wav(),
+    });
+    expect(buildMod(dir, catalog).errors).toEqual([]);
+  });
+
+  it("takes a sample: block for the mixing that is ours, not the file's", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.wav": wav(),
+      "sounds/enemy_killed.yaml": [
+        "id: enemy_killed",
+        "description: the recorded takedown, quieter and further off",
+        "sample:",
+        "  volume: 0.6",
+        "  pan: -0.3",
+        "  echo: 0.2",
+      ].join("\n"),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle!.samples?.[0]).toMatchObject({
+      id: "enemy_killed",
+      volume: 0.6,
+      pan: -0.3,
+      echo: 0.2,
+    });
+    // The YAML carried no voices, so nothing lands in the synth's catalog —
+    // a def with `voices: undefined` in there is a crash on the day a
+    // recording fails to decode and the player falls back to it.
+    expect(bundle!.sounds).toEqual({});
+  });
+
+  it("routes a recording for a brand-new sound through its own on: block", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/scratch_boom.wav": wav(),
+      "sounds/scratch_boom.yaml": [
+        "id: scratch_boom",
+        "description: a recorded crack of thunder when a crate goes",
+        "on:",
+        "  type: crateBroken",
+      ].join("\n"),
+    });
+    const { bundle, errors, warnings } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(soundWarnings(warnings)).toEqual([]);
+    expect(bundle!.soundKeys["crateBroken||||"]).toBe("scratch_boom");
+    expect(bundle!.samples?.[0]?.id).toBe("scratch_boom");
+  });
+
+  it("lets a weapon name a recording as its sfx", () => {
+    // A recorded sound is a sound: every cross-reference resolves against it
+    // exactly as it does against an authored one.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/scratch_swing.wav": wav(),
+      "items/regular/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: weapon",
+        "rarity: regular",
+        "name: SCRATCH BLADE",
+        "description: a test blade",
+        "class: melee",
+        "levelReq: 1",
+        "damage: 10",
+        "cooldownMs: 300",
+        "range: 30",
+        "durability: 100",
+        "icon: icon_box_cutter",
+        "sfx: scratch_swing",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors).toEqual([]);
   });
 
   it("carries its own score, and the level that names it", () => {
@@ -914,6 +1084,117 @@ describe("what the compiler refuses", () => {
     );
   });
 
+  // A RECORDING NOBODY CAN HEAR. Every case here compiles, ships, installs,
+  // and is silent — which is why each is caught with a filename to blame.
+
+  it("a recording named after no sound at all", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_kiled.wav": wav(),
+    });
+    const { errors, warnings } = buildMod(dir, catalog);
+    // A warning rather than an error: the id might be one the game grows
+    // later, and a mod refusing to compile over an unused file is worse than
+    // one that says so. But it MUST say so — the typo is invisible otherwise.
+    expect(errors).toEqual([]);
+    expect(soundWarnings(warnings).join()).toMatch(
+      /"enemy_kiled" is not a sound the game has, and nothing in this mod plays it/,
+    );
+  });
+
+  it("a file in sounds/ that is not audio", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.wav": Buffer.from("MZ this is an executable"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/not a WAV or an MP3/);
+  });
+
+  it("a recording whose contents disagree with its extension", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.mp3": wav(),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /the contents are WAV, not MP3 — rename it to "enemy_killed.wav"/,
+    );
+  });
+
+  it("one sound recorded twice", () => {
+    // Which of a .wav and an .mp3 won would be decided by alphabetical order.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.wav": wav(),
+      "sounds/enemy_killed.mp3": mp3(),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already recorded by sounds\/enemy_killed\.mp3 — one sound, one file/,
+    );
+  });
+
+  it("a recording over the per-file size limit", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.wav": wav(1_200_000),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /is over the 2\.0 MiB limit for one sound/,
+    );
+  });
+
+  it("a sound carrying both a recording and voices", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.wav": wav(),
+      "sounds/enemy_killed.yaml": [
+        "id: enemy_killed",
+        "description: which of these did you mean",
+        "sample:",
+        "  volume: 0.5",
+        "voices:",
+        "  - call: tone",
+        "    from: 440",
+        "    durationMs: 50",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /carries both a recording and `voices`/,
+    );
+  });
+
+  it("a sample: block with no recording beside it", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/scratch_boom.yaml": [
+        "id: scratch_boom",
+        "description: a sound with neither a file nor a voice",
+        "sample:",
+        "  volume: 0.5",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /has a `sample:` block but no recording/,
+    );
+  });
+
+  it("a sample: block naming a file", () => {
+    // The one field an author reaches for and the one the format refuses: the
+    // stem IS the id, so a `file:` would be a second place to get it wrong.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/enemy_killed.wav": wav(),
+      "sounds/enemy_killed.yaml": [
+        "id: enemy_killed",
+        "description: the recorded takedown",
+        "sample:",
+        "  file: my-sound.wav",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /`sample.file` is not a field a recording takes/,
+    );
+  });
+
   it("a track whose pitched voice is given a drum hit", () => {
     // "x" under a lead reaches `noteFrequency`, which throws — mid-run, on
     // the player's machine, in whichever bar it is in. It is the exact class
@@ -1016,7 +1297,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, map blueprint, enemy, item, sound, track, powerup, talent, companion/,
+      /at least one level, map blueprint, enemy, item, sound, recording, track, powerup, talent, companion/,
     );
   });
 

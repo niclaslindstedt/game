@@ -1,6 +1,6 @@
 ---
 name: sound-effects
-description: "Use when adding or tuning game audio. All SFX and music are synthesized from authored YAML (WebAudio, zero audio files); this skill covers the 16-bit sound design vocabulary, the event → sound mapping, the tracker-style music format, and how to audition and iterate."
+description: "Use when adding or tuning game audio. All SHIPPED SFX and music are synthesized from authored YAML (WebAudio, zero audio files) — a MOD may also ship a real .wav/.mp3 recording; this skill covers the 16-bit sound design vocabulary, the event → sound mapping, the tracker-style music format, recorded sounds in a mod, and how to audition and iterate."
 ---
 
 # Designing Sound Effects and Music
@@ -25,11 +25,31 @@ unmistakably chip.
 | `content/music/<id>.yaml` | **The soundtrack.** One file per track — its instruments, its patterns and its order — with `id` the value a `LevelDef.music` names (`title` is the menu's). |
 | `pwa/src/game/sfx/` | The DISPATCH: `index.ts` looks a sound up in the compiled catalog by event shape (or by a weapon's own `sfx`) and plays it. The domain files (`combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts`, `ui.ts`) now hold only what a static entry cannot express — the handful of sounds whose pitch or volume scales with a continuous intensity. |
 | `pwa/src/game/music/index.ts` | The single player: play/stop/pause, which track is current, the per-track dynamic import, and `setModTracks` for a mod's scores. |
+| `pwa/src/game/sfx/samples.ts` | **A MOD'S RECORDINGS** — the one place audio comes out of a file. Consulted by `playSound` BEFORE the catalog, so it covers every sound in the game at once. Nothing shipped uses it. |
 
 The engine emits `GameEvent`s from `step()`; `playEventSounds` translates
 them. A new sound therefore starts as an engine event (see the
 `engine-system` skill) — the app never invents audio moments the simulation
 didn't report.
+
+## The shipped game synthesizes; a MOD may record
+
+Everything under `content/sounds/` is parameters, and that is not changing —
+zero audio files is what keeps the app small, offline and diffable, and a sound
+you can read as a list of voices is one the next person can retune.
+
+**A mod is not under that constraint**, and this is the one asymmetry in the
+content format. Drop `sounds/<id>.wav` (or `.mp3`) into a mod folder and it is
+played in place of the synthesized sound of that name — a sound designer's work
+IS the waveform, and no list of detuned oscillators is the orchestral hit they
+recorded. THE FILE NAME IS THE ROUTING: there is no `on:` block to write and no
+manifest field, because the event already pointing at `enemy_killed` keeps
+pointing at it. `node mod/tools/cli.mjs sounds [pattern]` prints every id with
+what fires it, and an optional `sounds/<id>.yaml` carrying a `sample:` block
+(`volume`, `pan`, `echo` — nothing that reshapes the recording) trims how it
+sits in the mix. Details: `mod/FORMAT.md` → "a recording", `docs/modding.md`.
+
+When the work lands in a mod folder, load `mod-authoring` too.
 
 ## Sound design vocabulary
 

@@ -30,6 +30,8 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { parse } from "yaml";
+
 // Engine modules under src/lib use the @game/lib alias — map it so the def
 // catalogs import cleanly under plain node.
 register("../../scripts/game-alias-loader.mjs", import.meta.url);
@@ -143,6 +145,38 @@ function shippedSoundIds() {
       .filter((f) => f.endsWith(".yaml"))
       .map((f) => f.slice(0, -".yaml".length)),
   );
+}
+
+/**
+ * THE SOUND INDEX — every shipped sound, what fires it, and what it is
+ * supposed to feel like.
+ *
+ * The id list above answers "is this a real sound"; this answers the question
+ * somebody actually has when they open a folder of recordings they made: WHICH
+ * ONE DO I NAME THIS FILE. A mod replaces a sound by shipping
+ * `sounds/<id>.wav`, so the id is the entire interface, and an id with no word
+ * beside it is a guess. `cli.mjs sounds` prints this.
+ *
+ * The description travels but the VOICES never do: how the shipped effect is
+ * synthesized is this repo's business, and a mod that wanted it can read
+ * `content/sounds/` in the SDK.
+ */
+function soundIndex() {
+  const out = {};
+  for (const id of shippedSoundIds()) {
+    const doc =
+      parse(readFileSync(engine(`content/sounds/${id}.yaml`), "utf8")) ?? {};
+    out[id] = {
+      // The event shape that plays it, in the same words the `on:` block uses.
+      // Absent for the sounds played BY NAME — the interface's, the road's,
+      // and the ones a weapon points at with `sfx:`.
+      ...(doc.on ? { on: doc.on } : {}),
+      what: String(doc.description ?? "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    };
+  }
+  return out;
 }
 
 /** The track ids the game ships, so a mod may replace one by name and a
@@ -297,6 +331,10 @@ const catalog = {
   // Not an id set: the characters the pixel font can draw (see `fontGlyphs`).
   glyphs: fontGlyphs(),
   sounds: shippedSoundIds(),
+  // Not an id set: the same ids WITH what fires each one and what it is meant
+  // to feel like, so a mod recording replacements knows which file to name
+  // what (`cli.mjs sounds`).
+  soundIndex: soundIndex(),
   music: shippedMusicIds(),
   events: emittedEvents(),
   // THE RULES a mod may take over: script file → the hooks that file owns.

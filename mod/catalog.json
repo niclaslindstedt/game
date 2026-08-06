@@ -3270,6 +3270,785 @@
     "well_death",
     "well_swallowed"
   ],
+  "soundIndex": {
+    "ability_ended": {
+      "on": {
+        "type": "abilityEnded"
+      },
+      "what": "The power winding down: a soft falling sigh into the echo."
+    },
+    "ability_started": {
+      "on": {
+        "type": "abilityStarted"
+      },
+      "what": "Enabling a powerup: a bright ascending power-up flourish. A rising saw sweep swells underneath a four-note arpeggio (C–E–G–C), capped with a shimmering bell — the unmistakable \"power ON\" moment."
+    },
+    "achievement_legend": {
+      "what": "The fanfare for a LEGEND badge — the sound of the card reveal, in the four beats the light is drawn in: a filtered rip sweeping up over a sub as the rays tear open, a slow choir triad swelling behind them, the badge chime's arpeggio carried two octaves higher and racing the card in, and the full chord landing under the bloom with an impact beneath it. The only achievement cue allowed to stand beside the level-up ding rather than under it."
+    },
+    "achievement_unlocked": {
+      "what": "The badge chime, at the middle of the effort ladder — G, C, E climbing 70 ms apart, each triangle note shadowed an octave up by a quiet sine, with a bright airy hiss over the top and a last shimmer rising out of the tail, over a warm root swell and the fifth it settles on. A lesser badge plays the same chime quieter and without those last two; the top rung plays a different piece entirely (achievement_legend)."
+    },
+    "apparition_vanished": {
+      "on": {
+        "type": "apparitionVanished"
+      },
+      "what": "An apparition dissolves: a glassy shimmer rising out of hearing, more sigh than event — the figure was never really there."
+    },
+    "armor_broke": {
+      "on": {
+        "type": "armorBroke"
+      },
+      "what": "Something rigid giving way — a hard bandpassed crack, a ringing shard above it, then a sawtooth plunging two octaves as the piece falls off."
+    },
+    "auto_equipped": {
+      "on": {
+        "type": "autoEquipped"
+      },
+      "what": "The replacement clacking into the hand (mirrors the UI equip)."
+    },
+    "barrier_absorbed": {
+      "on": {
+        "type": "barrierAbsorbed"
+      },
+      "what": "The BLAST SHIELD eating a blow: one glassy tick. This can fire on every contact hit, so it is the quietest sound the game makes."
+    },
+    "barrier_broke": {
+      "on": {
+        "type": "barrierBroke"
+      },
+      "what": "The shell giving up: a bright shatter — a hard noise crack, then two falling shards. The player must hear that the protection is GONE."
+    },
+    "boss_defeated": {
+      "on": {
+        "type": "bossDefeated"
+      },
+      "what": "The giant coming down: a long rumble under descending detuned saws, ending in a floor-shaking thud."
+    },
+    "boss_fled": {
+      "on": {
+        "type": "bossFled"
+      },
+      "what": "The coward's exit: reality unzipping — a long rising saw sweep with a glassy shimmer on top, snapped shut by a bright crack instead of a corpse hitting the floor."
+    },
+    "cache_given": {
+      "on": {
+        "type": "cacheGiven"
+      },
+      "what": "THE CACHE arriving: a long shimmering swell that rises rather than strikes — a low drone opening under two voices climbing a fifth apart, a wash of high-passed noise gathering over the top, and a bright bell landing on the snap at the end, when the chest is finally a thing in the room. Wet with echo, and pitched clear of the handover's coin figure so the two layer instead of clashing."
+    },
+    "car_start": {
+      "on": {
+        "type": "carStarted"
+      },
+      "what": "The hero turns the key on a thirty-year-old hatchback: the starter motor cranks — a dry whirr with three low square coughs riding it — then the engine CATCHES: a saw swell climbing out of the floor into the idle the running `carEngine` rumble takes over from."
+    },
+    "car_stop": {
+      "on": {
+        "type": "carStopped"
+      },
+      "what": "The hero switches the thirty-year-old hatchback off and gets out: the idle sags away down the scale as the engine dies, one last dry cough after it lets go, and the door handle clacks. The mirror of `car_start` — shorter, because a car takes longer to talk into life than out of it."
+    },
+    "companion_downed": {
+      "on": {
+        "type": "companionDowned"
+      },
+      "what": "A companion beaten to its knees: a dull body-drop thud under a short falling tone — heavy, but under playerHurt's ceiling (an ally, not the hero)."
+    },
+    "companion_joined": {
+      "on": {
+        "type": "companionJoined"
+      },
+      "what": "A spared figure takes the hero's side: a warm little oath — a rising third with a glassy top, brighter than the dialogue knock but far short of a jingle (the joining scene follows anyway)."
+    },
+    "companion_revived": {
+      "on": {
+        "type": "companionRevived"
+      },
+      "what": "Back on its feet: the downed thud inverted — a quick rising triangle with a soft top, more relief than fanfare."
+    },
+    "crate_broken": {
+      "on": {
+        "type": "crateBroken"
+      },
+      "what": "The crate gives way: a wooden crash — a burst of broadband noise (the splintering) over a short falling tone (the box collapsing), a touch meatier than a single hit so the break lands."
+    },
+    "crate_hit": {
+      "on": {
+        "type": "crateHit"
+      },
+      "what": "A blow biting a wooden crate: a short, dry knock — a low filtered thud under a woody click, quiet so a flurry of hits doesn't drown the fight."
+    },
+    "defeat": {
+      "on": {
+        "type": "defeat"
+      },
+      "what": "The falling minor line with a saw shadow underneath, closed by a dull thud in the dust."
+    },
+    "dialogue_started": {
+      "on": {
+        "type": "dialogueStarted"
+      },
+      "what": "A speaker takes the stage: two knocks with a glassy edge."
+    },
+    "door_opened": {
+      "on": {
+        "type": "doorOpened"
+      },
+      "what": "The lock giving way: a heavy clunk, then the slide up and open."
+    },
+    "drive_body_a": {
+      "what": "A body meeting the bumper at speed — the FIRST of three, so a road with twenty people on it never plays one sample twenty times. A dull square thud with no ring to it (a person is not a bell), a wet bandpass slap of contact over the top, and a scuff of grit as they go under. Kept quiet: this fires more often than anything else in the minigame."
+    },
+    "drive_body_b": {
+      "what": "The second body thud — the same blow caught a touch lower and softer, so a run of hits reads as different people rather than one repeated event."
+    },
+    "drive_body_c": {
+      "what": "The third body thud — brighter and shorter, the one that reads as a clipping blow on the wing rather than a square hit on the nose."
+    },
+    "drive_body_hard_a": {
+      "what": "A body taken square at the top end — the sound the arrival lines are refusing to talk about. A sawtooth dive to the floor for the weight of it, a lowpass boom under that, and a short wet burst of contact. Louder than the ordinary thud because the physics says it was: the app picks this over `drive_body_a` off the collision's own joules, not at random."
+    },
+    "drive_body_hard_b": {
+      "what": "The second heavy body hit — a shade deeper and longer, with a scatter of highpass debris after it, for the one that came apart over the bonnet."
+    },
+    "drive_breakdown": {
+      "what": "The engine giving up in the middle of the road: the note sags away down the scale, the block knocks twice as it dies, and then there is nothing but steam out of a split hose while the wreck rolls to a stop. The mirror of `car_start`'s catch, played backwards and badly."
+    },
+    "drive_crunch_a": {
+      "what": "A real collision with another car — the sound that means the drive may be over. Three layers, the way every big impact in the game is built: a saw diving to the floor for the mass of it, a lowpass boom for the air it moved, and delayed highpass sizzle for the glass and trim landing after. Near the mix ceiling, because it is rare and it should frighten."
+    },
+    "drive_crunch_b": {
+      "what": "The second heavy collision — the same shape pitched lower and given a metallic wrench in the middle of it, for the hit that folds a wing rather than shattering a light cluster."
+    },
+    "drive_panel_a": {
+      "what": "A panel giving up a rung: the dull metallic bonk of a wing folding one step further, with a short click of the seam letting go. Quiet — it plays under a hit that already made its own noise, and is there to tell the player the damage was structural rather than cosmetic."
+    },
+    "drive_panel_b": {
+      "what": "The second panel bend — lower and duller, the one that sounds like the car is running out of straight metal to bend."
+    },
+    "drive_part_shed": {
+      "what": "A part working free and going: the tear of the last fixing, then the piece skipping away down the tarmac behind — three bright clatters in quick succession, each quieter than the last, so the ear puts it in the mirror rather than on the car."
+    },
+    "drive_scrape_a": {
+      "what": "Trading paint — the wagon's flank against another car's at speed. A bandpass band of grinding noise with a thin metallic squeal sliding down over it, and no low end at all: a scrape is a surface event, and giving it a boom would make every glancing touch read as a crash."
+    },
+    "drive_scrape_b": {
+      "what": "The second scrape — shorter and higher, the touch that costs a wing mirror rather than a door."
+    },
+    "enemy_dodge": {
+      "on": {
+        "type": "enemyDodge"
+      },
+      "what": "A blow that hit only air: a short dry whiff, no impact body. Quieter and higher than the hero's own dodge so a whiffed swing reads as a near-miss, not a takedown — it fires often, so it stays out of the way."
+    },
+    "enemy_hit": {
+      "on": {
+        "type": "enemyHit",
+        "crit": false
+      },
+      "what": "Body blow: a mid square thud plus a click of contact."
+    },
+    "enemy_hit_crit": {
+      "on": {
+        "type": "enemyHit",
+        "crit": true
+      },
+      "what": "Body blow: a mid square thud plus a click of contact."
+    },
+    "enemy_killed": {
+      "on": {
+        "type": "enemyKilled",
+        "crit": false
+      },
+      "what": "The takedown: a saw dive to the floor, a lowpass boom, and a spray of debris sizzle just behind it."
+    },
+    "enemy_killed_crit": {
+      "on": {
+        "type": "enemyKilled",
+        "crit": true
+      },
+      "what": "The takedown: a saw dive to the floor, a lowpass boom, and a spray of debris sizzle just behind it."
+    },
+    "enemy_last_words": {
+      "on": {
+        "type": "enemyLastWords"
+      },
+      "what": "A unique mob's death scene takes the stage: not the arrival knock but a parting breath — a soft detuned tone sinking into the echo bus under a faint high shimmer. Quiet by design; the kill thud already landed."
+    },
+    "enemy_miss": {
+      "on": {
+        "type": "enemyMiss"
+      },
+      "what": "A blow going past — one short breathy band of noise, quiet enough to read as a near thing rather than as a hit."
+    },
+    "enemy_shielded": {
+      "on": {
+        "type": "enemyShielded"
+      },
+      "what": "The blow bouncing off the shield: a hard metallic tink with no give — clearly a wall, not a wound."
+    },
+    "enemy_shot": {
+      "on": {
+        "type": "enemyShot"
+      },
+      "what": "A hostile pew: lower and meaner than the hero's own shot, so return fire reads as a threat arriving, not the player's output."
+    },
+    "escort_arrived": {
+      "on": {
+        "type": "escortArrived"
+      },
+      "what": "They made it: a short relieved rising pair on a triangle, with an airy breath over the top. Deliberately modest — the objective's own completion fanfare fires on the same frame, and two fanfares are one mess."
+    },
+    "escort_hurt": {
+      "on": {
+        "type": "escortHurt"
+      },
+      "what": "The person the hero is walking somewhere takes a blow: a short strained square-wave cry falling away, with a thin body-thud under it. Pitched well clear of the hero's own hurt cue so the player can tell instantly that it was not them."
+    },
+    "front_door_closed": {
+      "what": "The same door swinging shut: a short pull of air, the leaf meeting its frame in a low wooden thud, and the latch snapping home a moment behind it. The mirror of `front_door_opened` — everything falls where that one rises, and the latch lands LAST, which is what makes it read as shut rather than as a knock."
+    },
+    "front_door_opened": {
+      "what": "A house's front door pulled open: the latch letting go with a small dry click, then a wooden hinge creaking upward as the leaf swings and the night outside comes in behind it. Quiet — a room's own door, not a bulkhead — and the rise is what says OPEN, against the fall of `front_door_closed`."
+    },
+    "garage_door": {
+      "on": {
+        "type": "garageDoorOpened"
+      },
+      "what": "The garage door rolling up: the chain drive taking up with a clack, then the long rattling climb of thirty-year-old slats on their track."
+    },
+    "hay_ball_hit": {
+      "on": {
+        "type": "hayBallHit"
+      },
+      "what": "A hay bale bumping the hero: a soft, muffled WHUMP — a low band of noise (the straw) under a short low tone (the shove), gentle so a bale caught in the lane doesn't nag on every overlap tick."
+    },
+    "hellgate_opened": {
+      "on": {
+        "type": "hellgateOpened"
+      },
+      "what": "A HELLGATE tears open: reality ripping, not a monster arriving. A long filtered noise SWEEP up (the tear widening) under a descending tritone — the interval that refuses to resolve — capped by a sub-bass boom as whatever is on the other side steps through."
+    },
+    "item_collected_ability": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "ability"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_ammo": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "ammo"
+      },
+      "what": "Scooping up a box of ammunition — loose rounds shifting in the carton, then the pouch taking it with a short dry fourth up (G4 → C5) on a square that reads as machined rather than musical. It sits at the BOTTOM of the pickup ladder on purpose (ammo → medkit → repair → coins climb a fourth at a time, each with its own material): rounds are a stock topped up constantly, so this is the driest and lowest of the four and carries no echo at all — it has to survive being heard fifty times a level."
+    },
+    "item_collected_drink": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "drink"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_artifact": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "artifact"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_legendary": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "legendary"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_magic": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "magic"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_rare": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "rare"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_regular": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "regular"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_set": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "set"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_trash": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "trash"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_equipment_unique": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "equipment",
+        "tier": "unique"
+      },
+      "what": "The treasure flourish — brighter and wetter for magic+ finds."
+    },
+    "item_collected_gold": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "gold"
+      },
+      "what": "Coins into the purse: the thin clink of metal on metal, then THE coin couplet — a perfect fourth leap (B5 → E6) with a glint of sine two octaves up. The top rung of the pickup ladder and the brightest of the four, but still the QUIETEST reward in the bank: a farm run walks over dozens of these a minute, so it is two notes rather than a run and its echo send stays low. Anything with a flourish on it would be unbearable by the second map."
+    },
+    "item_collected_medkit": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "medkit"
+      },
+      "what": "A medkit stashed into the consumable dock: soft canvas going into the pouch, then the warmest rung of the pickup ladder — a major third up (C5 → E5) on a triangle with an attack on it, so it swells rather than blips, under an octave of sine for glow. The only one of the four loose pickups with no click anywhere in it: what the hero heals with should sound like cloth and care, not like hardware. Deliberately quieter, and a THIRD where `medkitUsed` is a loud FIFTH — the satisfying mend chime belongs to the moment the kit is spent, not to finding it."
+    },
+    "item_collected_repair": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "repair"
+      },
+      "what": "A repair kit stashed into the consumable dock: the toolbox latch shutting — two hard metallic clicks close together — then a bright fourth up (G5 → C6) on a detuned triangle so it rings like struck metal rather than singing. All hardware where the medkit a rung below is all cloth, which is what keeps the two dock pickups apart with your eyes shut. Kept quiet and short: the ratchet-and-ring mend belongs to `repairKitUsed`, the moment the kit is actually spent."
+    },
+    "item_collected_xp": {
+      "on": {
+        "type": "itemCollected",
+        "kind": "xp"
+      },
+      "what": "An XP SCROLL read on the run: parchment unrolling in a short dry rasp, then the script catching — a rising arcane shimmer with a bell over the top. Airier and longer than the pickups around it because it isn't a pickup, it's a spell going off, and the thirty seconds it lights are worth announcing."
+    },
+    "item_landed_blade": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "blade"
+      },
+      "what": "A blade hitting the floor: the bandpass clack of steel on stone with a bright edge ringing off it, gone in a blink. Loot lands constantly, so every voice in this family is short and sits well under a kill."
+    },
+    "item_landed_cloth": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "cloth"
+      },
+      "what": "Cloth landing: a soft flump and nothing else. The quietest drop in the game — a robe hitting regolith barely makes a sound, and that contrast is what makes mail and plate read as heavy."
+    },
+    "item_landed_coin": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "coin"
+      },
+      "what": "A purse coming apart on the floor: a bright metallic chime with a second, lower one a beat behind it, over a short hiss of loose change settling. Not one object landing — several, which is what tells it apart from the trinket's single tink."
+    },
+    "item_landed_flask": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "flask"
+      },
+      "what": "Glass on stone: two close sine partials beating against each other for the clink, with a bright chip of contact under them. Medkits and drinks both land on it."
+    },
+    "item_landed_gun": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "gun"
+      },
+      "what": "A gun going down: the dull thunk of a heavy receiver, a metallic clack of the action, and the tiniest spring ping behind it."
+    },
+    "item_landed_leather": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "leather"
+      },
+      "what": "Leather hitting the ground: a slap with a creak in its tail. Duller and a touch longer than cloth, with a low body cloth doesn't have."
+    },
+    "item_landed_mail": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "mail"
+      },
+      "what": "Mail landing: not one impact but a hundred small ones — three bright chips of link-on-link a beat apart over a thin ring. The jingle is the whole read; a single clack would just be plate again."
+    },
+    "item_landed_plate": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "plate"
+      },
+      "what": "Plate armor going down — the heaviest landing in the game: a low clang with a real body under it, a broad metal wash, and enough echo that it reads as something big rather than something loud."
+    },
+    "item_landed_relic": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "relic"
+      },
+      "what": "A story piece coming to rest: a low resonant hum that swells rather than strikes, wet with echo. Rare enough to be allowed the length."
+    },
+    "item_landed_scrap": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "scrap"
+      },
+      "what": "A repair kit's toolbox clatter: two bandpass chips a beat apart over a blunt square thunk. Junk, and it should sound like junk."
+    },
+    "item_landed_spark": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "spark"
+      },
+      "what": "A charged pickup settling — an XP scroll or a powerup canister: a quick rising ting with a hiss of static, so the energy reads before the weight does."
+    },
+    "item_landed_trinket": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "trinket"
+      },
+      "what": "A ring, an amulet or a charm going down: one tiny metallic tink with a breath of sizzle. Small object, small sound."
+    },
+    "item_landed_wand": {
+      "on": {
+        "type": "itemLanded",
+        "kind": "wand"
+      },
+      "what": "A wand or a staff knocking down: a hollow wooden tap with a thin crystal shimmer sitting on top of it."
+    },
+    "jump": {
+      "on": {
+        "type": "jump"
+      },
+      "what": "The rising boing (moon gravity edition), with a soft sine top."
+    },
+    "knockout_recovered": {
+      "on": {
+        "type": "knockoutRecovered"
+      },
+      "what": "He shakes it off and gets up: a quick, light rising triangle — relief, not fanfare, well under the hurt ceiling."
+    },
+    "land": {
+      "on": {
+        "type": "land"
+      },
+      "what": "Boots in regolith: a dull lowpass puff."
+    },
+    "level_up": {
+      "on": {
+        "type": "levelUp"
+      },
+      "what": "The DING — the game's biggest triumph, sized to fill the engine's ding-celebration window (LEVELING.dingCelebrationMs) while the light EXPLODES off the hero and the horde is hurled back, so sound and light are one moment. Anatomy of the triumph, ground-up: 1. THE DETONATION — a deep sub-boom the instant the light bursts: a low sine dropping into the floor under a soft filtered thump, so the ding lands with WEIGHT before the fanfare lifts off it."
+    },
+    "lightning": {
+      "on": {
+        "type": "lightning"
+      },
+      "what": "The storm strike: a bright crack, a falling zap, thunder in the echo."
+    },
+    "loot_shine_artifact": {
+      "on": {
+        "type": "lootShine",
+        "tier": "artifact"
+      },
+      "what": "The red-white find, and the rarest sound in the game: a sub swell, a full rising figure over it, and a long shimmering tail. It is allowed to be the biggest thing on screen because a player may go a whole campaign without hearing it."
+    },
+    "loot_shine_legendary": {
+      "on": {
+        "type": "lootShine",
+        "tier": "legendary"
+      },
+      "what": "The orange find: the unique's arpeggio taken a step further and given a floor — a low saw swell rises underneath the bells so the moment has weight as well as sparkle."
+    },
+    "loot_shine_magic": {
+      "on": {
+        "type": "lootShine",
+        "tier": "magic"
+      },
+      "what": "The blue find: one soft sine bell over the thud, and no more than that. Magic items are common enough that the flourish has to stay a hint."
+    },
+    "loot_shine_rare": {
+      "on": {
+        "type": "lootShine",
+        "tier": "rare"
+      },
+      "what": "The yellow find: two bells stepping up. The first interval in the family — a rare says \"and there is more\" where a magic just says \"look\"."
+    },
+    "loot_shine_set": {
+      "on": {
+        "type": "lootShine",
+        "tier": "set"
+      },
+      "what": "The green find: a three-note triangle figure, warmer and rounder than the rare's sines — a set piece is a collection, so it arrives as a phrase rather than as a step."
+    },
+    "loot_shine_unique": {
+      "on": {
+        "type": "lootShine",
+        "tier": "unique"
+      },
+      "what": "The gold find — the one every Diablo player learns to hear from across a room: a bright four-note major arpeggio with a shimmer over the top, and enough echo to hang for a beat after the item has settled."
+    },
+    "medkit_used": {
+      "on": {
+        "type": "medkitUsed"
+      },
+      "what": "Spending a kit: the warm two-note mend (a major fifth up) with a soft octave glow — the satisfying \"patched up\" chime. A bigger kit (`tier` ≥ LARGE) rings a brighter bell on top so the grade is audible."
+    },
+    "menace_rose": {
+      "on": {
+        "type": "menaceRose"
+      },
+      "what": "The horde evolves: a dark, rising swell — three detuned sawtooth steps climbing a minor triad under a low growl, so a rampage feels answered rather than rewarded."
+    },
+    "merchant_run_down": {
+      "on": {
+        "type": "merchantKilled"
+      },
+      "what": "A body goes under the car. The heaviest, wettest impact in the game and the only one with no weapon in it: a bandpass thump of the bumper arriving, a lowpass boom of the mass going down under the wheels, and a short scrape of tyre over tarmac coming out the far side of it. Rare enough to be big — it happens at most once a visit — but no shot at the top of the mix: the drive-out's engine is running under it and this has to land INSIDE that rather than over it."
+    },
+    "mercy_drop": {
+      "on": {
+        "type": "mercyDrop"
+      },
+      "what": "The guardian's arrival: a soft, consonant halo of sound — a rising major arpeggio of sine bells (C6–E6–G6–C7) under a shimmering high sine, all wet with echo. Gentle (a rescue, not a fanfare) and pitched above the drop's own tick so the two layer rather than clash."
+    },
+    "meteor_fall": {
+      "on": {
+        "type": "meteorFall"
+      },
+      "what": "MOONFALL landing: a dead-weight rock hitting regolith — a low lowpassed thud with a short gravel crack over it. No ring: this is stone, not ordnance, and it repeats every half second, so it stays dry."
+    },
+    "nova": {
+      "on": {
+        "type": "nova"
+      },
+      "what": "A NOVA proc: a short arcane whump — a low burst and a rising shimmer, deliberately smaller than the nuke (procs fire often)."
+    },
+    "nuke": {
+      "on": {
+        "type": "nuke"
+      },
+      "what": "The screen-clearer: sub detonation, long lowpass rumble, and a falling scream, all sent to the echo so it hangs in the air."
+    },
+    "pack_awoken": {
+      "on": {
+        "type": "packAwoken"
+      },
+      "what": "The ambush sting: a pack boils up out of the ground. A short, low menace growl — a saw dropping under a detuned square stab, dusted with a gritty noise burst — threatening, but a notch under a boss arrival."
+    },
+    "pack_cleared": {
+      "on": {
+        "type": "packCleared"
+      },
+      "what": "The all-clear: this patch of ground is yours. A bright, brief rising two-note affirmation with a glass octave — satisfying without reaching for the boss-kill or level-clear fanfare."
+    },
+    "parry": {
+      "on": {
+        "type": "parry"
+      },
+      "what": "A blow turned aside on steel: a bright metallic clang — a high bandpassed tick over a quick ringing tone that snaps shut."
+    },
+    "player_death": {
+      "on": {
+        "type": "playerDeath"
+      },
+      "what": "THE FALL — the fatal blow lands and the hero drops. A hard, dull body thud into the dust (a filtered low-noise punch under a short sub-drop), then a slow, sinking doom tone opening the death scene. The mournful `defeat` fanfare comes later, with the modal."
+    },
+    "player_dodge": {
+      "on": {
+        "type": "playerDodge"
+      },
+      "what": "A clean sidestep: a short airy whiff sweeping up and out of the way, no impact body — the blow that never landed."
+    },
+    "player_hurt": {
+      "on": {
+        "type": "playerHurt"
+      },
+      "what": "Must cut through everything: a wide detuned saw buzz dropping to the sub register, with a dull body-impact under it. Mix ceiling."
+    },
+    "player_phased": {
+      "on": {
+        "type": "playerPhased"
+      },
+      "what": "A blow passing clean through the spectral hero: a breath of air where a hit should have been. Deliberately almost nothing — the ABSENCE of the usual thud is the feedback."
+    },
+    "quest_accepted": {
+      "on": {
+        "type": "questAccepted"
+      },
+      "what": "The errand is taken on: a short paper-and-ink figure — a dry parchment rustle under two clipped square notes a fourth apart, rising. Deliberately small and dry, because ACCEPTING is the start of the work; the fanfare belongs to finishing it."
+    },
+    "quest_completed": {
+      "on": {
+        "type": "questCompleted"
+      },
+      "what": "Every objective is met — the WoW \"quest complete\" beat, and the one moment the system gets a real fanfare: a four-note rising figure (C, E, G, high C) in triangle, each note shadowed an octave up by a quiet sine, with a bright hiss over the top and a shimmer rising out of the tail. Louder and longer than the accept cue on purpose: this is the sound the player is working for."
+    },
+    "quest_failed": {
+      "on": {
+        "type": "questFailed"
+      },
+      "what": "The errand is lost — today only an escort who fell. A falling minor third in a dull square wave with a low thud under it: no sting, no alarm. The player already watched somebody die; the cue only has to confirm it counted."
+    },
+    "quest_giver_met": {
+      "on": {
+        "type": "questGiverMet"
+      },
+      "what": "Somebody with an errand notices the hero: a soft two-note greeting on a sine, quieter than the merchant's till — this is a person looking up, not a shop opening."
+    },
+    "quest_progress": {
+      "on": {
+        "type": "questProgress"
+      },
+      "what": "A tally moved: one clipped high tick, a tally mark going down on paper. Under a twentieth of the completion cue's volume — this fires once per kill on a long errand, so it has to sit UNDER the combat rather than on top of it."
+    },
+    "quest_turned_in": {
+      "on": {
+        "type": "questTurnedIn"
+      },
+      "what": "The handover and the payout: a warm coin-and-thanks figure — a low triangle settling under two bright chimes, with a little purse rattle of filtered noise. Warmer and shorter than the completion fanfare, because the celebration already happened; this is the reward landing in the hand."
+    },
+    "repair_kit_used": {
+      "on": {
+        "type": "repairKitUsed"
+      },
+      "what": "Spending a repair kit: the toolbox at work — two ratchet clicks, then the mended edge rings bright (the chime that used to fire on pickup)."
+    },
+    "seismic_landing": {
+      "on": {
+        "type": "seismicLanding"
+      },
+      "what": "A warlord's touchdown slams the ground: a heavy low boom under a gravelly lowpass crunch — the shockwave the SEISMIC LANDING talent rings."
+    },
+    "shot_magic": {
+      "on": {
+        "type": "shot",
+        "weaponClass": "magic"
+      },
+      "what": "An arcane zap: detuned triangle rise with a shimmer tail."
+    },
+    "shot_ranged": {
+      "on": {
+        "type": "shot",
+        "weaponClass": "ranged"
+      },
+      "what": "An arcane zap: detuned triangle rise with a shimmer tail."
+    },
+    "shot_sawed_off": {
+      "what": "Both barrels at once: a sub-heavy boom under a lowpass powder blast, a sharp crack of the report on top, and the shot sizzling away after it. The class `shot_ranged` zap is a pea-shooter beside it — the opening weapon of the gentlest rung is meant to land like a door being kicked in, so it sits above every other weapon in the mix and stays under `player_hurt`, which is the ceiling. Named by the weapon itself (`WeaponDef.sfx`), not by an event shape."
+    },
+    "singularity": {
+      "on": {
+        "type": "singularity"
+      },
+      "what": "An ARCANE SINGULARITY collapse: the inverse of a nova — a DOWNward in-rush whoosh that swallows itself, tuned pitch falling as the vortex draws the swarm into its core."
+    },
+    "spare_offered": {
+      "on": {
+        "type": "spareOffered"
+      },
+      "what": "A beaten unique kneels and the verdict lands on the table: a held low question mark — two slow detuned steps that don't resolve, hanging in the echo until the player answers."
+    },
+    "stamina_potion_used": {
+      "on": {
+        "type": "staminaPotionUsed"
+      },
+      "what": "Draining a stamina potion: a fizzy hiss cracking open, then a quick two-note lift as the legs come back under the hero."
+    },
+    "story_item_collected": {
+      "on": {
+        "type": "storyItemCollected"
+      },
+      "what": "A plot piece: a slow, reverent rise left hanging in the echo."
+    },
+    "swing": {
+      "on": {
+        "type": "swing"
+      },
+      "what": "Air being cut: a band-shaped whoosh over a low triangle thunk."
+    },
+    "ui_back": {
+      "what": "The confirm inverted: two falling steps, drier."
+    },
+    "ui_blip": {
+      "what": "The letter-print tick: the dry, quiet square pip heard under scrolling 16-bit dialogue as each character lands. Fired many times per line, so it stays the shortest and softest voice in the set — a whisper of a chip pulse, never a menu blip's full \"blip\"."
+    },
+    "ui_boom": {
+      "what": "The title sun going supernova: the star COLLAPSES first — a short, rising, sucking sweep — and everything else lands 150ms later on the white-out flash: a cracking sub-detonation, a long lowpass rumble that rolls out under it, and a falling scream, all pushed into the echo bus so the blast hangs in the air. The title screen's loudest moment by design — a secret payoff, not a menu tick."
+    },
+    "ui_confirm": {
+      "what": "Two rising detuned steps: \"accepted\", with a little room on it."
+    },
+    "ui_equip": {
+      "what": "Two blades crossing: a metallic double-clang. Each strike is a bright bandpass noise chink under a pair of inharmonic steel partials (the non-octave 3:2-ish ratio is what reads as \"metal\", not \"note\"); the parry lands a beat after the first strike and rings out into the echo bus for the WoW-style \"shiiing\"."
+    },
+    "ui_guide": {
+      "what": "The \"go this way\" beacon: a soft sonar ping in step with the guidance arrow's blink (~once a second while the way is clear). A gentle sine pulse with a glassy octave sparkle and a breath of echo — it sits at the very bottom of the mix, a nudge onward, never an alert. Repeats often, so it stays among the quietest and shortest voices in the set."
+    },
+    "ui_move": {
+      "what": "A dry cursor blip with a glassy octave on top."
+    },
+    "ui_shutter": {
+      "what": "A camera shutter: the leaf snapping open and, a breath later, closed — two bright, dry noise clicks with a tiny mechanical tick between them. Short and quiet enough to fire mid-fight without stepping on the weapon it interrupts."
+    },
+    "ui_start": {
+      "what": "The run-start fanfare: a brassy rising arpeggio over a root, capped with a snare — a two-second console \"here we go\"."
+    },
+    "victory": {
+      "on": {
+        "type": "victory"
+      },
+      "what": "The triumph fanfare: brass squares over a held triangle root, capped with a snare — the full parade."
+    },
+    "void_wave": {
+      "on": {
+        "type": "voidWave"
+      },
+      "what": "THE UNMAKING: a swell that falls away instead of rising — a descending sine under a wide, filtered wash, so the wave reads as taking something out of the room rather than adding to it."
+    },
+    "ward_held": {
+      "on": {
+        "type": "wardHeld"
+      },
+      "what": "CONTINUITY PROTOCOL refusing a killing blow — the single most important beat a run has. A struck gold bell over a rising swell, wet with echo: the one powerup sound written to be unmistakable through everything else happening at the moment the hero should have died."
+    },
+    "weapon_broke": {
+      "on": {
+        "type": "weaponBroke"
+      },
+      "what": "Something giving out: a metallic crack, a ping of shrapnel, and the pieces sagging away down a saw drop. Armor wearing through shares the weapon's snap — same \"your kit just failed\" alarm, same urgency."
+    },
+    "well_death": {
+      "on": {
+        "type": "wellDeath"
+      },
+      "what": "The hole swallows the HERO: the swallow dive, longer and lower, with a heavier low rumble behind it — the same spiral, but this one is fatal."
+    },
+    "well_swallowed": {
+      "on": {
+        "type": "wellSwallowed"
+      },
+      "what": "A black hole swallows a mob: a deep spiral down into nothing — a sine dive with a swallowed puff of filtered noise."
+    }
+  },
   "music": [
     "bench_light",
     "hq_lockdown",

@@ -12,6 +12,7 @@ import type { Synth } from "@ui/lib/synth.ts";
 import { GENERATED_UI_SOUNDS } from "../../generated/sounds-ui.ts";
 
 import { playSound } from "./play.ts";
+import type { SoundCatalog } from "./types.ts";
 
 // `shutter` is the one entry here with no hand-written fallback below it: it
 // was authored as content from the start (content/sounds/ui_shutter.yaml)
@@ -28,11 +29,25 @@ export type UiSound =
   | "guide"
   | "shutter";
 
+// The LIVE interface bank — the shipped `ui_*` sounds, plus whatever a mod
+// merged on top. Its own binding rather than the run's (`sfx/index.ts`) for
+// the chunking reason in the import above, but the same arrangement and the
+// same rule: nothing downstream of here can tell a mod's click from ours.
+let uiCatalog: SoundCatalog = GENERATED_UI_SOUNDS;
+
+/** The shipped interface bank, for the mod loader to merge onto. */
+export const SHIPPED_UI_SOUNDS = GENERATED_UI_SOUNDS;
+
+/** Replace the live interface bank; `SHIPPED_UI_SOUNDS` puts it back. */
+export function setUiSoundCatalog(sounds: SoundCatalog): void {
+  uiCatalog = sounds;
+}
+
 export function playUiSound(synth: Synth, sound: UiSound): void {
   // The interface's sounds are content like every other (content/sounds/ui_*),
   // and this file keeps only the ones the catalog cannot hold — see
   // `playSunCharge`, whose shape rides a continuous charge level.
-  if (playSound(synth, GENERATED_UI_SOUNDS, `ui_${sound}`)) return;
+  if (playSound(synth, uiCatalog, `ui_${sound}`)) return;
   switch (sound) {
     case "guide":
       // The "go this way" beacon: a soft sonar ping in step with the guidance

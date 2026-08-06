@@ -2,7 +2,10 @@
 // Tiny WebAudio SFX synthesizer. Generic React/UI game code — lives in
 // pwa/src/lib/, the pool a later game keeps as-is.
 // All game sounds are synthesized (tones + filtered noise), so the PWA ships
-// zero audio files and stays fully offline-capable.
+// zero audio files and stays fully offline-capable. A MOD is the one exception,
+// and the only reason `sample`/`decode` exist below: somebody else's sound
+// design is the waveform, so a mod may ship a real .wav/.mp3 (see
+// pwa/src/game/sfx/samples.ts). Nothing the game itself ships calls them.
 //
 // The voice model is 16-bit-console shaped: every tone can carry an attack
 // envelope, a detuned second oscillator (chorus width), delayed vibrato, a
@@ -69,6 +72,34 @@ export type NoiseOptions = {
   echo?: number;
 };
 
+/**
+ * A RECORDING, played through the same chain a synthesized voice takes.
+ *
+ * The game itself authors none of these — every shipped sound is parameters
+ * (see the module header). It exists for the one case parameters cannot cover:
+ * a MOD that ships real audio files, where the sound designer's work IS the
+ * waveform. The buffer arrives already decoded (`decode`), so nothing here
+ * parses a container format.
+ */
+export type SampleOptions = {
+  /** The decoded audio, from `decode()`. */
+  buffer: AudioBuffer;
+  /** Trim, 0–1. 1 (the default) plays the file at the level it was mastered
+   * at — a recording is mixed by its author, unlike a voice whose volume is
+   * this codebase's to choose. */
+  volume?: number;
+  /** Schedule the sound this far in the future. */
+  delayMs?: number;
+  /** Absolute AudioContext start time in seconds; overrides `delayMs`. */
+  at?: number;
+  /** Stereo position, -1 to 1. */
+  pan?: number;
+  /** 0–1 send level into the shared echo bus. */
+  echo?: number;
+  /** Playback rate; 1 (the default) is the recording's own pitch. */
+  rate?: number;
+};
+
 export type Synth = {
   /** Create/resume the AudioContext. Call from a user gesture handler. */
   unlock: () => void;
@@ -90,6 +121,17 @@ export type Synth = {
   resume: () => void;
   tone: (options: ToneOptions) => void;
   noise: (options: NoiseOptions) => void;
+  /** Play an already-decoded recording through the same pan/limiter/echo
+   * chain a voice takes. Nothing in the shipped game calls this — see
+   * `SampleOptions`. */
+  sample: (options: SampleOptions) => void;
+  /** Decode an encoded audio file (WAV, MP3) into a buffer `sample` can play.
+   *
+   * Null rather than a throw for every failure there is: no context yet (the
+   * player has not touched anything, so ask again later), a context that is
+   * not running, or bytes the browser cannot make sense of. A caller that
+   * gets null retries or gives up; nothing here is ever a crashed frame. */
+  decode: (bytes: ArrayBuffer) => Promise<AudioBuffer | null>;
   /** The AudioContext clock in seconds, or null while locked/unavailable.
    * Absolute `at` times for tone/noise are measured on this clock. */
   now: () => number | null;
@@ -539,6 +581,50 @@ export function createSynth(): Synth {
       applyFilter(c, source, filter).connect(gain);
       output(c, gain, pan, echo);
       source.start(t0);
+    },
+
+    sample({
+      buffer,
+      volume = 1,
+      delayMs = 0,
+      at,
+      pan = 0,
+      echo = 0,
+      rate = 1,
+    }) {
+      const c = ensure();
+      if (!c) return;
+      if (c.state !== "running") {
+        resumeCtx(c); // nudge a suspended/interrupted context back; this one
+        return; //       sound is dropped, but audio recovers for the next.
+      }
+      const t0 = at ?? c.currentTime + delayMs / 1000;
+      const source = c.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = Math.max(0.05, rate);
+      const gain = c.createGain();
+      // No envelope: a recording carries its own attack and release, and
+      // ramping one on top is the difference between playing somebody's sound
+      // and playing our idea of it. The limiter still catches the sum.
+      gain.gain.setValueAtTime(Math.max(0.0001, volume), t0);
+      source.connect(gain);
+      output(c, gain, pan, echo);
+      source.start(t0);
+    },
+
+    async decode(bytes) {
+      const c = ensure();
+      // A locked or non-running context cannot decode; the caller is expected
+      // to ask again once audio is live rather than to treat this as a fault.
+      if (!c || c.state !== "running") return null;
+      try {
+        // `decodeAudioData` DETACHES the ArrayBuffer it is handed, so a retry
+        // (or a second sound sharing one file's bytes) would be decoding an
+        // empty buffer. Slice a copy and let the original stay usable.
+        return await c.decodeAudioData(bytes.slice(0));
+      } catch {
+        return null;
+      }
     },
   };
 }

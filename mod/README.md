@@ -23,6 +23,7 @@ written in**, checked by the same validator, so anything you can read in
 node mod/tools/cli.mjs new my-mod        # scaffold a mod that already works
 node mod/tools/cli.mjs check my-mod      # does it compile?
 node mod/tools/cli.mjs ids boots         # what ids may I reference?
+node mod/tools/cli.mjs sounds killed     # which sound do I name my .wav after?
 node mod/tools/cli.mjs validate my-mod   # is the FOLDER fit to hand over?
 node mod/tools/cli.mjs package my-mod    # the zip to hand over
 node mod/tools/cli.mjs where             # where do I put it to play it?
@@ -56,7 +57,9 @@ my-mod/
   enemies/<biome>/<id>.yaml    one monster each
   items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each
-  sounds/<id>.yaml             one sound each
+  sounds/<id>.yaml             one synthesized sound each
+  sounds/<id>.wav | .mp3       a RECORDING, played in place of the sound of
+                               that name — a folder of these is a sound pack
   music/<id>.yaml              one score each
   powerups.yaml                every power your mod adds
   talents.yaml                 the passives the hero buys ranks in

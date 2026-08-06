@@ -13,16 +13,23 @@
 
 import type { Synth } from "@ui/lib/synth.ts";
 
+import { playSample } from "./samples.ts";
 import type { SoundCatalog, SoundDef } from "./types.ts";
 
 /** Fire one sound. Unknown ids are silent by design — a mod naming a sound it
- * forgot to ship should be a quiet game, never a crashed frame. */
+ * forgot to ship should be a quiet game, never a crashed frame.
+ *
+ * A MOD'S RECORDING ANSWERS FIRST (see `samples.ts`), and it answers here
+ * rather than in any one caller because this is the funnel every sound in the
+ * game passes through — the run's events, the interface, the road, a weapon's
+ * own `sfx:`. One line, every sound id. */
 export function playSound(
   synth: Synth,
   catalog: SoundCatalog,
   id: string | undefined,
 ): boolean {
   if (!id) return false;
+  if (playSample(synth, id)) return true;
   const def = catalog[id];
   if (!def) return false;
   playDef(synth, def);

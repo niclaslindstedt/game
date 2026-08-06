@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Sound design front door. Every effect is synthesized from parameters
-// (@ui/lib/synth.ts) — no audio files. The palette is 16-bit console:
+// (@ui/lib/synth.ts) — no audio files, except the ones a MOD ships to replace
+// them with (see ./samples.ts). The palette is 16-bit console:
 // layered oscillators with detune for width, filtered noise for percussion
 // and impacts, attack envelopes on soft sounds, and the shared echo bus on
 // big moments. Sounds live in domain modules so each area of the game's

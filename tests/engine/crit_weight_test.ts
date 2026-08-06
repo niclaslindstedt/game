@@ -20,7 +20,12 @@ import {
 // Engine-internal kill funnel — asserting the crit math right at the door.
 import { hitEnemy } from "../../src/game/loot.ts";
 
-import { equipRangedSidearm, makeEnemy, revealAll, startGame } from "./helpers.ts";
+import {
+  equipRangedSidearm,
+  makeEnemy,
+  revealAll,
+  startGame,
+} from "./helpers.ts";
 
 const weaponAt = (cls: WeaponClass): WeaponDef => ({
   id: "test_class",

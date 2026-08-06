@@ -36,6 +36,10 @@ document and a schema disagree, the schema is right.**
 | `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs) |
 | `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)         |
 
+A `sounds/<id>.wav` or `.mp3` is the one file with no schema, because it has no
+fields: it is a RECORDING, and the compiler checks only that it is one (see
+[`sounds/<id>.wav`](#soundsidwav--soundsidmp3--a-recording)).
+
 ---
 
 ## `mod.yaml` — the manifest
@@ -779,11 +783,98 @@ stray `0.9` is not a louder sound, it is a clipped one. The compiler warns above
   Two sounds may not answer the same shape — within one mod the compiler refuses
   it; between two mods the load order decides, like every other clash.
 
-An `addon` may not ship a sound with a shipped id (prefix yours, or switch to
-`conversion`). There is no control flow in the format and there is not going to
-be: a mod's sound is data the game replays, never a program it runs.
+An `addon` may not ship an AUTHORED sound with a shipped id (prefix yours, or
+switch to `conversion`) — a RECORDING is the exception, and the next section is
+about it. There is no control flow in the format and there is not going to be:
+a mod's sound is data the game replays, never a program it runs.
 
 Full reference: [`../content/sounds/`](../content/sounds).
+
+## `sounds/<id>.wav` / `sounds/<id>.mp3` — a recording
+
+The game itself ships **no audio files**: every shipped effect is synthesized
+from the voices above, which is what keeps it small and offline. Your mod is not
+under that constraint. Drop a `.wav` or an `.mp3` into `sounds/` and it is
+played in place of the synthesized sound of the same name — which is how a mod
+ships professionally produced audio instead of a list of oscillators.
+
+**THE FILE NAME IS THE ROUTING, and it is the whole of it.** There is no `on:`
+block to write, no manifest field, no id typed twice:
+
+```
+my-mod/
+  sounds/
+    enemy_killed.wav      ← heard on every takedown, in place of the saw dive
+    level_up.mp3          ← heard on every ding
+    ui_confirm.wav        ← heard on every menu accept
+```
+
+The sound `enemy_killed` already has an event pointing at it, and that pointer
+does not move; your file simply becomes what it plays. So a **sound pack** — a
+folder of recordings and not one line of YAML — is a complete, valid mod.
+
+### Which names may I use?
+
+Every sound the game ships, and there are 135 of them:
+
+```sh
+node mod/tools/cli.mjs sounds            # all of them
+node mod/tools/cli.mjs sounds killed     # the ones about a kill
+node mod/tools/cli.mjs sounds enemyShot  # by the event that fires them
+```
+
+It prints the id to name your file after, the event that fires it (or
+`(by name)` for the interface, the road, and the ones a weapon points at with
+`sfx:`), and a sentence saying what the shipped effect was designed to feel
+like — so you know what you are replacing before you replace it.
+
+A name that is **not** one of those is fine too, as long as something in your
+mod plays it: a weapon's `sfx:`, a power's `sfx:`, or a `sounds/<id>.yaml`
+beside it carrying an `on:` block. A recording named after nothing at all
+compiles, ships, installs and is never heard — so the compiler warns about it,
+which is almost always a typo in a name.
+
+### Trimming a recording — `sample:`
+
+A recording plays exactly as you mastered it. When it needs to sit differently
+in the mix, put a `sounds/<id>.yaml` beside it with a `sample:` block and no
+`voices:`:
+
+```yaml
+# sounds/enemy_killed.yaml, beside sounds/enemy_killed.wav
+id: enemy_killed
+description: >-
+  A real bone-and-gravel collapse, run a little under the shipped one and
+  pushed off to the left where the horde comes from.
+sample:
+  volume: 0.7 # 0–1, trim; the default plays it as mastered
+  pan: -0.3 # -1 (left) to 1 (right)
+  echo: 0.2 # 0–1 send into the game's shared hall
+```
+
+Those three fields are all a `sample:` block takes. There is deliberately no
+`file:` — the stem IS the id, so there is exactly one place the recording can
+be and exactly one sound it can replace. And a sound is played from **one**
+source: a YAML carrying both `sample:` and `voices:` is refused, because voices
+under a recording are voices that can never be heard.
+
+The same file is also how you give a **brand-new** sound a recording — add an
+`on:` block (or point a weapon's `sfx:` at it) and no `voices:`, and the
+recording answers that event.
+
+### What the compiler refuses
+
+| Refusal                                       | Why                                                                                             |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Anything but `.wav` or `.mp3`                 | Those two are decoded by every shell the game runs in.                                          |
+| Contents that disagree with the extension     | Read from the first bytes, not the name — a mislabelled file would reach the player as silence. |
+| One id with both a `.wav` and an `.mp3`       | Which won would be decided by alphabetical order.                                               |
+| A single recording over **2 MiB**             | About twelve seconds of CD-quality stereo WAV. Trim it, or ship `.mp3`.                         |
+| More than **24 MiB** of recordings in one mod | Every enabled mod's audio is held in memory at once. Past 8 MiB it warns and points at `.mp3`.  |
+| A `sample:` block with no recording beside it | A sound with neither a file nor a voice is silence.                                             |
+
+WAV is the honest choice for a short effect and MP3 for anything long — a
+minute of ambience is a tenth the size as MP3, and both decode everywhere.
 
 ## `music/<id>.yaml` — a score
 
@@ -1644,6 +1735,7 @@ asks the other question, and this is the whole list of what it allows:
 | `mod.yaml`                                                       | the manifest                                                                                                                                                  |
 | `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                   |
 | `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                      |
+| `sounds/` also                                                   | `<id>.wav` and `<id>.mp3` — a RECORDING replacing the sound of that name; the one tree that holds media beside its YAML                                       |
 | `scripts/`                                                       | `<id>.lua`, one level deep — the only tree that is not YAML                                                                                                   |
 | the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml` |
 | alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                         |

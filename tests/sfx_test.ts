@@ -29,6 +29,10 @@ function countingSynth(): { synth: Synth; calls: () => number } {
       noise() {
         count++;
       },
+      sample() {
+        count++;
+      },
+      decode: () => Promise.resolve(null),
     },
     calls: () => count,
   };

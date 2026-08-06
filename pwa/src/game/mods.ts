@@ -52,6 +52,7 @@ import {
 
 import type { ChiptuneTrack } from "@ui/lib/chiptune.ts";
 
+import { synth } from "./audio.ts";
 import type { Sprites } from "./assets.ts";
 import { setModTracks } from "./music/index.ts";
 import {
@@ -59,6 +60,13 @@ import {
   SHIPPED_SOUNDS,
   SHIPPED_SOUND_KEYS,
 } from "./sfx/index.ts";
+import {
+  clearSamples,
+  setSamples,
+  warmSamples,
+  type LoadedSample,
+} from "./sfx/samples.ts";
+import { setUiSoundCatalog, SHIPPED_UI_SOUNDS } from "./sfx/ui.ts";
 import type { SoundCatalog, SoundDef } from "./sfx/types.ts";
 import {
   setActiveDefs,
@@ -75,6 +83,7 @@ export {
   modClashes,
   type ModBundle,
   type ModClash,
+  type ModSample,
   type ModSprite,
   type ModStamp,
 } from "./mod-state.ts";
@@ -116,7 +125,10 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.thoughts,
       bundle.storyItems,
       bundle.quests,
-    ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0);
+    ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0) +
+    // A mod whose whole contribution is a folder of recordings — the point of
+    // shipping real audio at all — adds nothing to any catalog above.
+    (bundle.samples?.length ?? 0);
   return adds === 0 ? "empty" : null;
 }
 
@@ -235,6 +247,16 @@ export async function applyMods(
   let capThoughts: readonly string[] = baseDefs.capThoughts ?? [];
   const sounds: SoundCatalog = { ...SHIPPED_SOUNDS };
   const soundKeys: Record<string, string> = { ...SHIPPED_SOUND_KEYS };
+  // THE INTERFACE'S BANK IS A SECOND CATALOG, not a slice of the first: the
+  // menus keep the `ui_*` sounds in their own chunk so a title screen does not
+  // download the combat bank to click a button. A mod merges into both, or
+  // `sounds/ui_confirm.yaml` compiles, ships, and is never heard.
+  const uiSounds: SoundCatalog = { ...SHIPPED_UI_SOUNDS };
+  // The RECORDINGS, keyed by the sound id each one stands in for. One ledger
+  // with the synthesized sounds (`soundOwners`), because to a player they are
+  // one thing — "which mod's kill sound am I hearing" — and the answer must
+  // not depend on whether the mod that won authored voices or shipped a file.
+  const samples = new Map<string, LoadedSample>();
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
   const blueprintOwners = new Map<string, string[]>();
@@ -331,7 +353,21 @@ export async function applyMods(
     }
     for (const [id, def] of Object.entries(bundle.sounds ?? {})) {
       sounds[id] = def as SoundDef;
+      if (id in uiSounds) uiSounds[id] = def as SoundDef;
       claim(soundOwners, id, bundle.id);
+    }
+    // A RECORDING wins over voices for the same id no matter which order the
+    // two arrived in — a mod that ships `enemy_killed.wav` beside its own
+    // `enemy_killed.yaml` meant the file, and the compiler already said so.
+    for (const sample of bundle.samples ?? []) {
+      samples.set(sample.id, {
+        id: sample.id,
+        bytes: base64ToBytes(sample.data),
+        ...(sample.volume === undefined ? {} : { volume: sample.volume }),
+        ...(sample.pan === undefined ? {} : { pan: sample.pan }),
+        ...(sample.echo === undefined ? {} : { echo: sample.echo }),
+      });
+      claim(soundOwners, sample.id, bundle.id);
     }
     for (const [id, track] of Object.entries(bundle.music ?? {})) {
       music[id] = track as ChiptuneTrack;
@@ -370,6 +406,14 @@ export async function applyMods(
   }
 
   setSoundCatalog(sounds, soundKeys);
+  setUiSoundCatalog(uiSounds);
+  // The recordings go in as bytes and are decoded by the browser's own audio
+  // decoder. Warming here rather than on first play so the kill that starts a
+  // modded run is heard: a decode takes milliseconds, but a frame is 16 of
+  // them. It is a no-op while audio is still locked, and the lazy path in
+  // `samples.ts` picks those up on the player's first gesture.
+  setSamples([...samples.values()]);
+  warmSamples(synth);
   // Only the mods' scores travel: the shipped ones are behind their own dynamic
   // imports and stay exactly where they are, so a mod that replaces one does it
   // by claiming its id here rather than by anything being rebuilt.
@@ -472,6 +516,8 @@ export function restoreBaseDefs(sprites: Sprites): void {
     Object.assign(sprites, baseSprites);
   }
   setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
+  setUiSoundCatalog(SHIPPED_UI_SOUNDS);
+  clearSamples();
   setModTracks({});
   setActiveMods([], []);
   setActiveDefs(null);

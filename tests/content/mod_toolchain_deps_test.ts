@@ -40,6 +40,24 @@ const declared = Object.keys(
 );
 
 /**
+ * An import STATEMENT, in the three shapes this house style writes them.
+ *
+ * Anchored at the start of a line and required to begin with `import` or
+ * `export`, because a bare `from "…"` is not rare enough to match loosely: the
+ * layout module's own refusals read `no catalog is read from "notes.txt"`, and
+ * a pattern that took those for imports declared a dependency on `${name}` the
+ * moment the compiler started importing that module.
+ */
+const IMPORT_PATTERNS = [
+  // import "./side-effect.mjs"
+  /^\s*import\s+"([^"]+)"/gm,
+  // import x from "…" / export * from "…" — one line, no strings in between
+  /^\s*(?:import|export)\s[^"'\n]*\bfrom\s+"([^"]+)"/gm,
+  // import {\n a,\n b,\n} from "…" — the multi-line named list
+  /^\s*(?:import|export)\s*\{[^{}]*\}\s*from\s+"([^"]+)"/gm,
+];
+
+/**
  * Every BARE specifier the toolchain reaches, following relative imports from
  * `entry` through the whole graph. Regex over the source rather than a real
  * parser: these are our own files in one house style, and the alternative is a
@@ -69,10 +87,12 @@ function walkToolchain(entry: string): {
     } catch {
       return; // a path we mis-resolved is a different test's problem
     }
-    for (const match of source.matchAll(/from\s+"([^"]+)"/g)) {
-      const spec = match[1]!;
-      if (spec.startsWith(".")) walk(path.join(path.dirname(resolved), spec));
-      else if (!spec.startsWith("node:")) external.add(spec.split("/")[0]!);
+    for (const pattern of IMPORT_PATTERNS) {
+      for (const match of source.matchAll(pattern)) {
+        const spec = match[1]!;
+        if (spec.startsWith(".")) walk(path.join(path.dirname(resolved), spec));
+        else if (!spec.startsWith("node:")) external.add(spec.split("/")[0]!);
+      }
     }
   };
 
