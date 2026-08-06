@@ -225,6 +225,16 @@ thoughts:
     pages:
       - - THAT LITTLE THING WEIGHED MORE THAN MY SHIP. SPACE IN HERE BENDS AROUND A GRUDGE.
       - - NOTED. DON'T STAND STILL. DON'T TRUST THE FLOOR. THERE ISN'T ONE.
+  # Tapping the tear THE FOUNDER bolted through on MARS without having picked
+  # his rig up off the ground. Pinned to a DOOR rather than to a mob (the
+  # rocket's idiom), so it REPLAYS — it answers the tap, not a beat the player
+  # is owed once — and its job is to send him back for the thing he stepped
+  # over: a hole in the universe is not a door until you hold the handle.
+  mars_tear_no_rig:
+    speaker: "{HERO}"
+    portrait: player
+    pages:
+      - - IT'S STILL HANGING OPEN. BUT IT'S HIS HOLE, AND HE TOOK THE HANDLE WITH HIM - FIND IT.
   # Sighting the first COWBOT in Boot Hill: the drop-in arrival read — the
   # rift's far side is a wild-west theme park, and the town is a machine
   # pretending it's 1880. Wide radius so it lands as the town comes on

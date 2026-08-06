@@ -190,8 +190,14 @@ objects:
     density: 4.3
     areas: [drift, cage]
   # The rift he stepped through, and the far door he is running for.
-  - id: rift
+  # THE WAY IN — the tear the hero arrived through, standing where he landed.
+  # Its own id rather than `rift`, because that KIND belongs to the tear THE
+  # FOUNDER rips open when he bolts (`flees.landmark`), which is a door the
+  # player can follow him through. Two tears that read the same and answer
+  # differently need two names.
+  - id: arrival_tear
     type: landmark
+    sprite: rift
     at: spawn
   - id: far_door
     type: landmark

@@ -552,6 +552,31 @@ export type LevelDef = {
      */
     requires?: string;
     /**
+     * A PORTAL WITH A SET DESTINATION — no picker: the tap simply takes it.
+     *
+     * The tears a fleeing boss rips open are these, and it is what separates
+     * them from the garage's seam. THE FOUNDER's exit goes exactly one place —
+     * wherever he went — and asking the player to confirm that in a panel is a
+     * dialogue with one row in it. The SEAM is the one portal with a question
+     * worth putting, because the RIFT CREATOR is the thing that can choose.
+     *
+     * A `direct` door with more than one destination is a content error the
+     * schema refuses: "set destination" has to mean one.
+     */
+    direct?: boolean;
+    /**
+     * A DOOR THAT ONLY REACHES WHERE THE HERO HAS ALREADY BEEN — the garage's
+     * rift seam, and the reason the RIFT CREATOR reads the way its own lore
+     * says it does ("tears a seam to anywhere it has already been").
+     *
+     * Its rows are the destinations this character has ARRIVED AT through a
+     * rift portal (`Character.riftRoads`), not the campaign's unlock ladder: a
+     * road is offered here because the hero walked it the long way once, so the
+     * seam grows a row each time a portal out in the world is used. Omitted =
+     * the ordinary rule, campaign progress per destination.
+     */
+    reached?: boolean;
+    /**
      * WHAT HE THINKS WHEN THE DOOR CAN TAKE HIM NOWHERE YET — a thought id
      * (`content/thoughts.yaml`) played INSTEAD of the picker on a tap that
      * finds every one of `to` still locked.
@@ -577,6 +602,23 @@ export type LevelDef = {
    * The farm-loop return door; omitted = the campaign's NEXT LEVEL rules.
    */
   exitTo?: string;
+  /**
+   * THE WAY ONWARD FROM HERE IS A RIFT PORTAL — so crossing it teaches the
+   * garage's seam the road (`Character.riftRoads`, read by a `reached` travel
+   * door). Authored on the two venues whose exit is a tear: MARS, where THE
+   * FOUNDER rips one open and bolts through it, and THE RIFT, whose far door
+   * opens on the western.
+   *
+   * IT IS A PROPERTY OF THE CROSSING, NOT A DOOR, and it has to be — both of
+   * those bosses FLEE, and a fled boss ends the level the instant it goes
+   * (`objectiveCleared`). The tear is therefore torn open at the exact moment
+   * the field stops being playable, so there is never a live run in which the
+   * hero could walk over and tap it. What the player actually does is take the
+   * crossing the victory splash offers, and the prelude on the far side is the
+   * scene of him stepping through — which is the portal being used, told the
+   * way this game tells it.
+   */
+  riftExit?: boolean;
   /**
    * HARD-CODED per-difficulty mob levels (see {@link DifficultyMobLevels}) —
    * the level default every regular spawn (spawn points, packs, waves, the

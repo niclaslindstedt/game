@@ -52,6 +52,36 @@ merchant:
     - - IT KEPT THE DOME. I KEPT THE SCALES. SELL ME WHAT THE MACHINES DROP - BUY WHAT HELPS.
   returnGreeting:
     - THE LIVE ONE RETURNS. SCALES ARE STILL HONEST.
+# THE WAY ON IS A TEAR. THE FOUNDER rips one open and bolts through it at a
+# quarter health, and the hero follows — which is what `rift_entry` (the rift's
+# own prelude) is a scene of. Crossing it teaches the garage's seam the road,
+# so the way home starts reaching the rift once it has been walked the long way.
+riftExit: true
+# THE COWARD'S OWN EXIT — the tear THE FOUNDER rips open and bolts through, left
+# standing where he vanished (`flees.landmark: rift` on his def; the landmark
+# outlives the scene on purpose, so the map remembers where he went). Tapping it
+# FOLLOWS HIM, which is the whole of the chase in one gesture, and the crossing
+# teaches the seam back home this road.
+#
+# THE CAMPAIGN'S FIRST REAL CHOICE, and the one tear in the world that asks:
+# the RIFT CREATOR falls out of the scramble here, so the moment it is in hand
+# the hero can steer the tear rather than merely fall through it — on after the
+# coward, or home with what he is carrying. Everything past this point is a long
+# way from the garage, which is exactly why the rig drops before it rather than
+# after.
+#
+# `requires` IS THE TEACHING. The rig lands on the floor in the same scramble
+# that opens the tear, and a player can walk over it — so without it the tear
+# answers the tap with a line pointing back at what he stepped over, rather
+# than silently doing nothing. Nobody is stranded either way: the victory
+# splash's own road into the rift is untouched.
+travelDoors:
+  - id: rift
+    name: THE COWARD'S TEAR
+    to: [the_rift, garage]
+    requires: rift_creator
+    unready: mars_tear_no_rig
+
 objective:
   type: killBoss
 placedItems:

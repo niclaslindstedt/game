@@ -214,9 +214,11 @@ objects:
     type: landmark
     sprite: starship
     at: goal
-  # The seam hums on the bay wall beside the car — a step off the hero's own
-  # landing, INSIDE the garage. The app hides it until THE FOUNDER's RIFT
-  # CREATOR has come home (nothing to see before the rift has been walked).
+  # The seam hums on the bay floor beside the car — a step off the hero's own
+  # landing and level with it, INSIDE the garage rather than up against the
+  # wall behind it (`home`, mapgen/generate.ts, which is where that step is
+  # measured). The app hides it until THE FOUNDER's RIFT CREATOR has come home
+  # (nothing to see before the rift has been walked).
   - id: rift_seam
     type: landmark
     at: home

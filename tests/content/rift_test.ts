@@ -292,8 +292,14 @@ describe("THE FOUNDER flees again", () => {
     expect(events.some((e) => e.type === "bossFled")).toBe(true);
     expect(events.some((e) => e.type === "bossDefeated")).toBe(false);
 
-    // The second rift — the far door he bolted through — stays on the board.
-    expect(state.landmarks.filter((l) => l.kind === "rift")).toHaveLength(2);
+    // The tear he bolted through stays on the board — and it is the ONLY
+    // landmark of kind `rift`, because that kind is the door the player
+    // follows him through (`travelDoors`). The one he ARRIVED by carries its
+    // own id so the two can never be confused.
+    expect(state.landmarks.filter((l) => l.kind === "rift")).toHaveLength(1);
+    expect(
+      state.landmarks.filter((l) => l.kind === "arrival_tear"),
+    ).toHaveLength(1);
 
     // The coward's second exit plays through the death-scene box.
     expect(state.dialogue?.source).toEqual({

@@ -80,6 +80,12 @@ export function missionLead(mission) {
     );
   }
 
+  if (mission.riftExit) {
+    lines.push(
+      "The way onward from here is a rift portal rather than a road, and walking it teaches the seam in the garage that destination — so the way home reaches one venue further afterwards.",
+    );
+  }
+
   if (mission.travelDoors.length > 0) {
     const doors = mission.travelDoors
       .map((door) => {

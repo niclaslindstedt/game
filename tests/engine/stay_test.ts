@@ -15,6 +15,7 @@ import {
   killEnemy,
   reopenVictoryChoice,
   RUN,
+  runLevelDef,
   stayOnField,
 } from "@game/core";
 import type { GameState } from "@game/core";
@@ -93,6 +94,25 @@ describe("stayOnField", () => {
     expect(state.phase).toBe("playing");
     expect(state.victoryCountdownMs).toBeNull();
     expect(state.bossCorpse).not.toBeNull();
+  });
+
+  it("takes on a corpse-less clear when a tear is what he follows him into", () => {
+    const state = startGame();
+    reachVictory(state);
+    // A COWARD LEAVES NOTHING (boss-death.ts): a boss who FLEES books the win
+    // and leaves no body, so the usual tap target is not on the field — and
+    // with nothing else there the run is over at the menu.
+    state.bossCorpse = null;
+    expect(stayOnField(state)).toBe(false);
+    expect(state.phase).toBe("victory");
+    // What he leaves instead is the tear he bolted through, and it is a door.
+    // Without this the chase was a cutscene rather than a thing the player does.
+    runLevelDef(state).travelDoors = [
+      { id: "rift", name: "TEST TEAR", to: ["test_level_2"], direct: true },
+    ];
+    expect(stayOnField(state)).toBe(true);
+    expect(state.phase).toBe("playing");
+    expect(state.staying).toBe(true);
   });
 
   it("only takes from the victory phase with a corpse", () => {

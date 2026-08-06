@@ -3617,6 +3617,16 @@
       "portrait": "player",
       "speaker": "{HERO}"
     },
+    "mars_tear_no_rig": {
+      "id": "mars_tear_no_rig",
+      "pages": [
+        [
+          "IT'S STILL HANGING OPEN. BUT IT'S HIS HOLE, AND HE TOOK THE HANDLE WITH HIM - FIND IT."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "{HERO}"
+    },
     "moon_successor": {
       "id": "moon_successor",
       "pages": [

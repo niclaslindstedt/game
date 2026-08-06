@@ -1240,12 +1240,20 @@ export function generateLevel(
         : at === "stall"
           ? vec(Math.round(merchantAt.x + 70), Math.round(merchantAt.y - 40))
           : at === "home"
-            ? // A fixed step off the hero's own landing — `stall`'s offset
-              // mirrored, so the two never collide when both stand near it —
+            ? // A fixed step off the hero's own landing, on the far side of it
+              // from `stall` so the two never collide when both stand near it —
               // clamped on-map for a landing near the western/northern edge.
+              //
+              // MIRRORED IN X AND BARELY LIFTED IN Y, and the Y is the load-
+              // bearing half: it used to be `stall`'s own −40, which stood the
+              // garage's rift seam right on top of the bay's north wall run —
+              // straddling the stone rather than standing in the room. A thing
+              // anchored `home` belongs INSIDE the home, level with the hero
+              // who landed there; the x-mirror is what keeps it out of the
+              // trader's way.
               vec(
                 Math.max(24, Math.round(playerSpawn.x - 70)),
-                Math.max(24, Math.round(playerSpawn.y - 40)),
+                Math.max(24, Math.round(playerSpawn.y - 14)),
               )
             : vec(Math.round(playerSpawn.x), Math.round(playerSpawn.y));
   const landmarks: LevelDef["landmarks"] = bp.objects

@@ -81,10 +81,6 @@ ai:
 loot:
   items:
     - golden_parachute
-  # "KEEP THE RIFT, GARAGE MAN." — he means it: the rig that unseals the
-  # garage's rift seam falls here (see content/story-items.yaml).
-  storyItems:
-    - rift_creator
   tierDrops:
     magic: 2
     rare: 1

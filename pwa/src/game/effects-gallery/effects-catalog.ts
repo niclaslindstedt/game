@@ -35,6 +35,7 @@ import {
   strike,
   type Exhibit,
 } from "./exhibit-kit.ts";
+import { riftPortalLook } from "../render/rift-portal.ts";
 import { talentExhibits } from "./talent-exhibits.ts";
 import { weaponExhibits } from "./weapon-exhibits.ts";
 
@@ -2023,6 +2024,53 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 6000,
     fire: (ctx) => {
       ctx.state.hayBallTimerMs = 0;
+    },
+  },
+  {
+    id: "rift-portal",
+    icon: "rift",
+    label: "THE RIFT PORTALS",
+    blurb: "THE TEARS FOLD INTO THEMSELVES - BLACK THROATS, SPARKS AND SMOKE",
+    group: "WORLD",
+    keywords: [
+      "rift",
+      "portal",
+      "tear",
+      "door",
+      "seam",
+      "void",
+      "fold",
+      "smoke",
+      "sparkle",
+      "gate",
+    ],
+    // Staged on the rift's own ground, which is the only floor dark enough to
+    // judge black smoke against.
+    levelId: "the_rift",
+    showMs: 11000,
+    fire: (ctx) => {
+      // THE WHOLE SET SIDE BY SIDE — the road's own door, the garage's seam,
+      // the far door onto Boot Hill (the one you can see through) and the
+      // vault's blast gate. The carve pins its own two doors wherever the road
+      // ran, so the exhibit takes every tear off the field and re-lays them in
+      // a row in front of the hero; dropping the existing ones first is what
+      // keeps a replay a re-stage rather than a pile-up.
+      const hero = localHero(ctx.state);
+      const staged = ["rift", "rift_seam", "rift_west", "bunker_gate"];
+      ctx.state.landmarks = ctx.state.landmarks.filter(
+        (mark) => !riftPortalLook(mark.sprite),
+      );
+      staged.forEach((sprite, i) => {
+        ctx.state.landmarks.push({
+          kind: `gallery_${sprite}`,
+          sprite,
+          anchor: "center",
+          pos: {
+            x: hero.pos.x + (i - (staged.length - 1) / 2) * 54,
+            y: hero.pos.y - 40,
+          },
+        });
+      });
     },
   },
   {

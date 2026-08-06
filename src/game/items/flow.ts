@@ -280,7 +280,16 @@ export function resumeGame(player: Player): void {
  * `victory` phase with a corpse to return to. Returns true if it took.
  */
 export function stayOnField(state: GameState): boolean {
-  if (state.phase !== "victory" || !state.bossCorpse) return false;
+  if (state.phase !== "victory") return false;
+  // SOMETHING TO GO BACK FOR. Usually that is the boss's corpse — it is the tap
+  // that re-opens this menu. A boss who FLEES leaves none ("a coward leaves
+  // nothing", boss-death.ts) but leaves something better: the tear he bolted
+  // through, standing where he vanished, which the player can follow him into
+  // (a `direct` travel door). Without this the level ended at the splash and
+  // that tear could never be reached — the chase was a cutscene rather than a
+  // thing the player does.
+  const doors = runLevelDef(state).travelDoors ?? [];
+  if (!state.bossCorpse && doors.length === 0) return false;
   state.staying = true;
   state.victoryCountdownMs = null;
   state.phase = "playing";

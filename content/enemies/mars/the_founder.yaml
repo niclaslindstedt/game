@@ -114,6 +114,14 @@ loot:
     # The chainsaw a southern president handed him on a stage. He never used it
     # and never serviced it; it comes off him with twenty teeth left on it.
     - austerity_chainsaw
+  # "KEEP THE RIFT, GARAGE MAN." — he means it, and he says it HERE, on the
+  # first flight: the pocket rig falls out of the scramble as he bolts through
+  # the tear he just tore. It is the campaign's town portal (see
+  # content/story-items.yaml), so it has to be in hand for the road that
+  # follows him — the rift, the western and the vault are all past this point,
+  # and every one of them is a long way from home.
+  storyItems:
+    - rift_creator
   tierDrops:
     magic: 1.5
     rare: 0.75

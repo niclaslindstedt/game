@@ -89,13 +89,21 @@ travelDoors:
     name: THE ROCKET
     to: [moon, mars]
     unready: garage_ship_unfinished
-  # THE RIFT SEAM — sealed until the RIFT CREATOR is bolted to the wall
-  # (`requires`: a keepsake banked on the character), then it reaches the
-  # deep roads already walked. D2's going-back rule, in the fiction's words.
+  # THE RIFT SEAM — the ONE rift portal in the game that asks where to, which
+  # is the whole point of the tool it runs on. Sealed until the RIFT CREATOR is
+  # bolted to the wall (`requires`: a keepsake banked on the character), and
+  # then it reaches exactly the roads the hero has ALREADY WALKED through a
+  # portal out in the world (`reached` — see Character.riftRoads), which is what
+  # the keepsake's own lore says it does: it tears a seam to anywhere it has
+  # already been. So the seam grows a row when THE FOUNDER's tear on Mars is
+  # followed into the rift, when the far door is taken out to Boot Hill, and
+  # when the blast gate a dead man's hand talks open is stepped through.
+  # D2's going-back rule, in the fiction's words.
   - id: rift_seam
     name: THE RIFT SEAM
-    to: [the_rift, boot_hill]
+    to: [the_rift, boot_hill, the_bunker]
     requires: rift_creator
+    reached: true
 # The stall serves whoever comes home, whatever rung they are on, so the pools
 # are the campaign's whole cumulative list (the bunker idiom, one map further):
 # the trader's gamble rolls gate on levelReq and price like any drop.

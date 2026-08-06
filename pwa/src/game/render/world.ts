@@ -15,8 +15,13 @@ import {
 } from "./caches.ts";
 import { isLandmarkHidden } from "./hidden-landmarks.ts";
 import { drawWorldSprite } from "./plane.ts";
-import { drawSpriteCentered, type ViewSize } from "./shared.ts";
-import { cameraAnchorX, cameraAnchorY } from "./tilt.ts";
+import {
+  drawRiftPortal,
+  riftPortalBob,
+  riftPortalLook,
+} from "./rift-portal.ts";
+import { drawSpriteCentered, seatX, seatY, type ViewSize } from "./shared.ts";
+import { billboard, cameraAnchorX, cameraAnchorY } from "./tilt.ts";
 import { VEHICLE_LANDMARK_KINDS } from "./vehicles.ts";
 import { type Camera } from "./view.ts";
 
@@ -153,6 +158,9 @@ export function drawLandmarks(
     // A sealed travel door's landmark (the rift seam before the RIFT
     // CREATOR is home) is not there yet as far as this character knows.
     if (isLandmarkHidden(landmark.kind)) continue;
+    // A TEAR IN SPACE is drawn with the WALLS, not with the landmarks — see
+    // `drawRiftPortals` below for why.
+    if (riftPortalLook(landmark.sprite)) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     drawWorldSprite(
       ctx,
@@ -162,6 +170,71 @@ export function drawLandmarks(
       camera,
       landmark.anchor === "base" ? "base" : "center",
     );
+  }
+}
+
+/**
+ * THE RIFT PORTALS — the landmark and the churn inside it (./rift-portal.ts).
+ *
+ * A pass of its own, run AFTER the obstacles, for the reason the lamps are:
+ * **a tear is IN a wall, not behind one.** The garage's seam hums on the bay
+ * wall a step off the hero's landing, and drawn with the rest of the landmarks
+ * — before the walls — the stone painted straight over it and left a hole in
+ * the world you could see about a third of. It takes the same trade the barn
+ * lights take: anything drawn after the walls is drawn over ALL of them,
+ * including one genuinely standing in front, and a fixture bolted to masonry is
+ * better always-visible than sometimes-erased.
+ *
+ * The tear's own animation is drawn inside the landmark's billboard so it
+ * stands with the art rather than lying down on the tilted floor, and is seeded
+ * off the tear's own position so a map with two of them never has them folding
+ * in step.
+ */
+export function drawRiftPortals(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  inView: InView,
+  timeMs: number,
+): void {
+  for (const landmark of state.landmarks) {
+    if (!inView(landmark.pos.x, landmark.pos.y, 48)) continue;
+    if (isLandmarkHidden(landmark.kind)) continue;
+    const look = riftPortalLook(landmark.sprite);
+    if (!look) continue;
+    const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
+    const base = landmark.anchor === "base";
+    const seed = landmark.pos.x * 0.017 + landmark.pos.y * 0.031;
+    // THE TEAR HANGS, so it rides. The ART moves with it — the bob wraps the
+    // sprite AND the churn inside it, because shifting only one slides the
+    // throat out of its own lips.
+    const bob = riftPortalBob(look, timeMs, seed);
+    ctx.save();
+    ctx.translate(0, -bob);
+    drawWorldSprite(
+      ctx,
+      landmark.sprite,
+      sprite,
+      landmark.pos,
+      camera,
+      base ? "base" : "center",
+    );
+    // Where the sprite's own centre ends up, given the anchor `drawWorldSprite`
+    // just used: a base-anchored piece stands its feet on the pos, so its
+    // middle is half a sprite up from it.
+    const midY = base ? -Math.round(sprite.height / 2) + 2 : 0;
+    billboard(ctx, landmark.pos.x, landmark.pos.y, camera.x, camera.y, () =>
+      drawRiftPortal(
+        ctx,
+        look,
+        seatX(landmark.pos.x, camera.x),
+        seatY(landmark.pos.y, camera.y) + midY,
+        timeMs,
+        seed,
+      ),
+    );
+    ctx.restore();
   }
 }
 

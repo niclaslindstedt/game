@@ -70,6 +70,7 @@ export const LEVEL_FIELDS = {
   doors: "the map render, and the LOCKED note",
   gates: "the secret-gate note",
   exitTo: "the RETURNS TO row",
+  riftExit: "the prose — that the way onward from here is a tear",
   travelDoors: "the DOORS list — the hub's standing doors and their roads",
   driveOut: "the DOORS list — that the car door is driven out to a real road",
   wells: "the map render and the hazards section",
@@ -339,6 +340,9 @@ function missionModel(level, order) {
     sky: level.sky ?? null,
     lamps: (level.lights ?? []).length,
     exitTo: level.exitTo ? missionLink(level.exitTo) : null,
+    // THE WAY ONWARD IS A TEAR rather than a road (`LevelDef.riftExit`), which
+    // is why the seam back home grows a branch the first time it is walked.
+    riftExit: level.riftExit === true,
     gates: (level.gates ?? []).map((gate) => ({
       to: missionLink(gate.to),
       key: itemLink(gate.opensWith),
