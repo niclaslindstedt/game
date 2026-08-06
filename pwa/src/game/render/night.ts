@@ -90,50 +90,26 @@ const HERO_LIGHT = { radius: 40, intensity: 0.42, rgb: "222, 226, 240" };
 const LAMP_TINT = 0.42;
 
 /**
- * A DRIVEN CAR'S HEADLIGHTS — a BEAM, not a bulb.
+ * A DRIVEN CAR'S HEADLIGHTS ARE NOT DRAWN HERE — see `drawLightCones` in
+ * render/vehicles.ts, which is the ONE pair of lamps the car has.
  *
- * Two round pools ahead of the bumper was the first attempt and it was wrong in
- * the way that matters: a pool has no direction, so a car creeping up the drive
- * looked like it was carrying a lantern rather than pointing headlights
- * somewhere. Light from a car is a WEDGE — narrow at the lamps, spreading down
- * the road, running out at the far end — and once it is that shape the picture
- * says which way the car is pointing.
+ * There used to be a second: a wedge walked out of the nose as nine overlapping
+ * glow pools and punched through this sheet, so a night drive laid its own light
+ * along the pavement. It was the wrong picture twice over. It disagreed with the
+ * assembly's own cone about what colour the lamps burn — the car threw warm
+ * tungsten and the night pass threw cold daylight out of the same two bulbs —
+ * and it disagreed about their SIZE, reaching half a screen and opening 26° each
+ * side, so a wagon idling in its own bay lit the lot like a searchlight. Beside
+ * the driving minigame, which has no night pass and is exactly the same car, it
+ * read as a different vehicle.
  *
- * AND IT POINTS OUT OF THE DRAWN NOSE, NOT DOWN `CarVehicle.heading`. These are
- * sealed beams bolted into a shell, not steering-linked cornering lamps: they
- * turn when the CAR turns and not one degree otherwise. The car's picture never
- * turns — the body is one side-profile assembly cut nose-right and nothing
- * anywhere mirrors or rotates it (which is the whole reason the engine carries a
- * yaw stop; see `CAR.maxYaw`) — while the heading it is steered on swings the
- * better part of 180° inside that stop. Walked down the heading, the wedge
- * therefore swept a 172° arc across a car that had not visibly moved a pixel,
- * which reads as a pair of lamps swivelling on their own.
- *
- * So the beam is a PART OF THE ASSEMBLY like the wheels and the arches, and it
- * is placed the way every other part is: screen px along the drawn body, off the
- * body's own anchor (see THE ASSEMBLY IS ONE BILLBOARD in render/vehicles.ts,
- * which is also where the daylight cone this agrees with is drawn). The pools
- * themselves are still squashed by the pitch, because the light lies ON the
- * pavement — it is the WEDGE that is pinned to the body, not the pool.
+ * So the cone is the whole of it, on the road and on the drive alike. It is part
+ * of the ASSEMBLY, drawn with the panels and the arches in the body's own screen
+ * space, which is also why it never swivels: the lamps are sealed beams bolted
+ * into a shell that is one side-profile cut nose-right, and nothing anywhere
+ * mirrors or rotates it, while `CarVehicle.heading` swings the better part of
+ * 180° inside the yaw stop.
  */
-const HEADLIGHT = {
-  /** Screen px from the body's centre to the lamps themselves — the apex. */
-  nose: 15,
-  /** How far down the road the beam reaches (screen px along the body). */
-  reach: 132,
-  /** Half the beam's spread, in radians (~26° each side of the bearing). */
-  halfAngle: 0.46,
-  /** How wide the apex itself is (screen px) — a beam that starts at a
-   * mathematical point reads as a laser; a car's lamps are a hand's width
-   * apart and the light leaves them already spread. */
-  mouth: 22,
-  /** How many pools the beam is walked out of. Nine overlap into a smooth
-   * cone; fewer read as a string of discs. */
-  steps: 9,
-  intensity: 0.92,
-  /** The cold white of a sealed beam, against the drive's sodium lamps. */
-  rgb: "236, 242, 255",
-} as const;
 
 /**
  * The two lobes every lamp is cut with: `[radius scale, share of its alpha]`.
@@ -229,101 +205,6 @@ export function drawLamps(
 }
 
 /**
- * One headlight beam, in CANVAS px — where its lamps sit on the screen, which
- * way along the drawn body it throws, and how bright it burns. Painted by
- * {@link paintBeam}, built by {@link carBeam}.
- *
- * `dir` is a screen-x direction (+1 out of a nose-right car), never a bearing:
- * see HEADLIGHT above for why a beam has no bearing of its own to carry.
- */
-type Beam = { x: number; y: number; dir: number; a: number };
-
-/**
- * WHICH WAY THE DRAWN CAR POINTS, as a screen-x direction — always right.
- *
- * A fact about the ART rather than about the simulation, and the one thing the
- * lamps are placed against. The engine's `CarVehicle.faceLeft` is deliberately
- * NOT read here: it records which axis the yaw stop holds the nose around, and
- * the shipped car is parked nose-right (`tests/engine/vehicles_test.ts` pins it),
- * but nothing in the renderer mirrors the assembly — so a beam that believed a
- * left-facing car would come out of the boot. If the art ever grows a mirrored
- * profile, this is the line that learns about it.
- */
-const NOSE_DIR = 1;
-
-/**
- * Where a driven car's beam starts and which way it throws.
- *
- * Split out and exported so the rule above can be ASSERTED rather than merely
- * commented: the beam a car throws must not move when its heading does
- * (`tests/vehicle_assembly_test.ts`).
- */
-export function carBeam(
-  car: { pos: { x: number; y: number } },
-  camera: Camera,
-  alpha: number,
-): Beam {
-  // The lamps hang off the body's own screen anchor — the same one the panels
-  // and the wheel arches are measured from — so the wedge stays welded to the
-  // picture at every camera angle, exactly as the arches do.
-  const at = worldToCanvas(car.pos.x, car.pos.y, camera);
-  return {
-    x: at.x + NOSE_DIR * HEADLIGHT.nose,
-    y: at.y,
-    dir: NOSE_DIR,
-    a: alpha,
-  };
-}
-
-/**
- * Paint one BEAM onto a context: a chain of pools walked down the bearing,
- * each one wider and fainter than the last.
- *
- * A CHAIN RATHER THAN A CLIPPED WEDGE, and the first attempt was the wedge —
- * a triangle path filled with a gradient. It is exactly the right SHAPE and it
- * looked like a paper cutout, because a clip has no edge treatment at all: the
- * sides came out as two razor lines across the pavement, which is what a
- * searchlight in fog looks like rather than what a headlight on tarmac does.
- * Nine overlapping soft pools have the same silhouette, feather on every side
- * for free, and reuse the same baked gradients the lamps do — so the cone costs
- * nine cached blits instead of a per-frame path, clip and gradient.
- *
- * The caller owns the composite mode: the sheet punches the beam out with
- * `destination-out`, the colour pass adds it back with `lighter`.
- */
-function paintBeam(
-  ctx: CanvasRenderingContext2D,
-  beam: Beam,
-  rgb: string,
-  alpha: number,
-  pitch: number,
-): void {
-  if (alpha <= 0) return;
-  const { reach, halfAngle, mouth, steps } = HEADLIGHT;
-  // The half-width the beam has opened to at its far end — the wedge's own
-  // geometry, so `halfAngle` really is the spread.
-  const flare = Math.tan(halfAngle) * reach;
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    // Radii are QUANTIZED to the glow cache's own step (see `glowSize`): a
-    // continuous radius per sample would bake a fresh gradient canvas for every
-    // frame the car moves, which is the leak that once took the tab past 280 MB.
-    const r = Math.round((mouth / 2 + t * flare) / 4) * 4;
-    const glow = glowSprite(rgb, r);
-    if (!glow) continue;
-    // Walked along the DRAWN body, in screen px (see HEADLIGHT): the pools march
-    // straight out of the nose and the wedge never swings off it. Each one is
-    // still squashed by the pitch, because a pool of light lies on the pavement.
-    const x = beam.x + beam.dir * t * reach;
-    // Fading down the road, and each pool weak enough that it is the OVERLAP
-    // of several that makes the near field bright — which is what gives the
-    // beam its soft, gradual falloff instead of nine visible discs.
-    ctx.globalAlpha = Math.max(0, Math.min(1, alpha * (1 - t) * (1 - t) * 0.7));
-    ctx.drawImage(glow, x - r, beam.y - r * pitch, r * 2, r * 2 * pitch);
-  }
-}
-
-/**
  * Wash the finished world picture down to night and cut the lamps out of it.
  *
  * Call in SCREEN space, after the tilted world is restored and before the fog:
@@ -384,16 +265,8 @@ export function drawNight(
       a: HERO_LIGHT.intensity,
     });
   }
-  // HEADLIGHTS. A car with somebody at the wheel has its lights on, and out
-  // here they are most of the light there is: a wedge thrown out of the drawn
-  // nose, so a night drive lays its own light along the pavement ahead of it.
-  // It is welded to the picture and does NOT swivel with the steering — see
-  // HEADLIGHT above, and `carBeam` for the geometry.
-  const beams: Beam[] = [];
-  for (const vehicle of state.vehicles) {
-    if (vehicle.kind !== "car" || vehicle.driver === null) continue;
-    beams.push(carBeam(vehicle, camera, HEADLIGHT.intensity));
-  }
+  // …and NO headlights: a driven car's lamps are the assembly's own cone and
+  // nothing else (see A DRIVEN CAR'S HEADLIGHTS above).
 
   // 1. THE SHEET, and the holes in it.
   const bctx = buf.ctx;
@@ -456,13 +329,6 @@ export function drawNight(
       bctx.drawImage(cut, lamp.x - r, lamp.y - r * pitch, r * 2, r * 2 * pitch);
     }
   }
-  // …and the beams last, cut through the same sheet as everything else, so a
-  // car driving into a lit pool does not double-erase a hole that is already
-  // open.
-  bctx.globalAlpha = 1;
-  for (const beam of beams) {
-    paintBeam(bctx, beam, "255, 255, 255", beam.a, pitch);
-  }
   bctx.globalCompositeOperation = "source-over";
   bctx.globalAlpha = 1;
 
@@ -494,13 +360,6 @@ export function drawNight(
       lamp.r * 2,
       lamp.r * 2 * pitch,
     );
-  }
-  // The beams' own colour, added the same way. `globalAlpha` is left at 1 and
-  // the strength put in the gradient instead: the painter clips and fills, and
-  // a context alpha would scale the clip's edge as well as its middle.
-  ctx.globalAlpha = 1;
-  for (const beam of beams) {
-    paintBeam(ctx, beam, HEADLIGHT.rgb, beam.a * LAMP_TINT * dark, pitch);
   }
   ctx.restore();
 }
