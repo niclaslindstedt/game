@@ -732,9 +732,11 @@ _A first-generation SUCCESSOR, decommissioned eleven years ago and never collect
 ## Travel — THE LAUNCH (cutscene)
 
 _Between GOODCO HQ and the moon, part one of the moon level's prelude chain
-(`content/cutscenes/launch.yaml`). The garage at night: the stolen part is in,
-the ship he built over ten years of weekends stands on the lawn, and the hero
-leaves home the way Ada did — out the door, no plan to be long._
+(`content/cutscenes/launch.yaml`). The garage at night — the lot exactly as the
+hub is walked: the paved drive running from the roll-up door down to the road
+across the front, two lanes of tarmac with a painted centre line. The stolen
+part is in, the ship he built over ten years of weekends stands on the lawn, and
+the hero leaves home the way Ada did — out the door, no plan to be long._
 
 > **CAPTION:** TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART.
 
@@ -743,7 +745,7 @@ _(The hero crosses the lawn to the ship.)_
 **ME:** ENGINE. FUEL. DUCT TAPE. AND THE PART THEY SAID I COULDN'T HAVE.
 
 _(He boards. The engine lights and the hull rattles on the pad; the ship
-climbs, and the camera follows it up — house, lawn, and ground fall away
+climbs, and the camera follows it up — house, lawn, drive and road fall away
 until only stars remain.)_
 
 > **CAPTION:** FIRST FLIGHT. NO TEST RUNS. ADA WOULD CALL IT ROMANTIC.

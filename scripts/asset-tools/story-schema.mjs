@@ -224,8 +224,16 @@ export function validateCutscene(doc, refs) {
     if (prop.wrap !== undefined && typeof prop.wrap !== "boolean") {
       err(`${where}.wrap must be a boolean`);
     }
+    if (prop.ground !== undefined && typeof prop.ground !== "boolean") {
+      err(
+        `${where}.ground must be a boolean (art that LIES on the floor, ` +
+          `painted under everything standing on it)`,
+      );
+    }
     for (const key of Object.keys(prop)) {
-      if (!["label", "sprite", "at", "parallax", "wrap"].includes(key)) {
+      if (
+        !["label", "sprite", "at", "parallax", "wrap", "ground"].includes(key)
+      ) {
         err(`unknown field "${where}.${key}"`);
       }
     }

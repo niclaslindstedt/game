@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: road_lane
+family: scenes
+size: [56, 12]
+description: >
+  One tile of the public road that runs past the hero's lot, seen across the
+  front of the launch scene: dark night tarmac with a kerb lip along its far
+  edge and one worn dash of the painted centre line, laid so a row of these
+  tiles paints an unbroken road with an evenly broken line down it.
+subject:
+  kind: "cutscene ground art (road)"
+  build: "a band of laid tarmac running the width of the frame, kerb lip along the far edge"
+  features: "one short white centre-line dash per tile, loose aggregate speckle, the near edge worn a shade darker"
+  accent: "dulled traffic white on cold grey tarmac"
+  flavor: "the county's tarmac at the end of the drive — the same road the car leaves the garage by"
+palette:
+  A: "#3a3c42" # laid tarmac, night
+  a: "#34363c" # worn tarmac
+  V: "#43454c" # pale aggregate
+  s: "#2c2e34" # dark grit / kerb lip
+  W: "#9a9a92" # traffic white under moonlight
+  w: "#7c7c75" # paint worn thin
+grid: |
+  ssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+  AAAaAAsaAAAAAaAAAAAAAAAAAAAAAAAsAAAsaAAAAAAAAAAAAAAAAAAA
+  AAAAAVAAAaaAsAAAAAAAAAAAAAaVAAAaAAAAAAAAsAVAAAVAAAAAAAAA
+  AAAVAAAAAsAaAAAAAAAAAAAAAAAAsAAAAAVAAAAAAaAVAAAAAAAAAAAA
+  AAAAAAAAAAAAAAVAAVAAAWWWwWWWWWWWWWWAAAAAAAAAAAAAAAAAAaAA
+  AAAAAAAsAAAAaAAAAAAAAWWWWWWWWWwwWWWAAAAAsAAAVAAAAAAAAAAA
+  AAAaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsa
+  AAAAAAAAAAAAAAAAAAVAAAAAAAAaAAAAVAAAAAAAAAAAAAAAAAAAAAAa
+  AAVAAAAsVAAaAAAAAAAAAAAAAAAAAAAAAaAAAAAAVAAAAAAAVAAAAAAA
+  AAAAAAAAAAaAAAAAVAAAAAAAAAAAAAAAAAAaAAAAAAAAAAAAAAAAAAAA
+  AAAAAsAAAaAAAAAAAAAVAAAAAAAAAAAAAAAAAaAAAAAAAAAAAAAAAAAA
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

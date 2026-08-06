@@ -126,7 +126,7 @@ function sceneDef(doc, id) {
         pos: prop.at,
         // A labelled prop keeps its label as the id beats address it by.
         ...(prop.label === undefined ? {} : { id: prop.label }),
-        ...pick(prop, ["parallax", "wrap"]),
+        ...pick(prop, ["parallax", "wrap", "ground"]),
       })),
     },
     actors: (doc.actors ?? []).map((actor) =>

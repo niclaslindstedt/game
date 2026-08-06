@@ -30,6 +30,14 @@ export type CutsceneProp = {
   parallax?: number;
   /** Wrap around the stage horizontally instead of leaving it. */
   wrap?: boolean;
+  /**
+   * Art that LIES ON THE GROUND (paving, a road, a painted marking) rather
+   * than standing on it. Ground props are painted with the floor, under
+   * everything in the standing queue — because a slab is anchored at its NEAR
+   * edge, which would otherwise sort it in front of every actor standing on
+   * it and paint over their feet.
+   */
+  ground?: boolean;
 };
 
 /**
