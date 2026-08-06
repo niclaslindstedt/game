@@ -41,6 +41,12 @@ const GOODCO = "goodco_hq";
  * ladder is the one thing about the road that cannot be judged from a single
  * drive), `&seed=` pins the stretch of road, and `&gore=off` plays it with
  * bodies knocked aside rather than burst.
+ *
+ * `&bot=1` hands the wheel to the engine's own auto-driver, which is what makes
+ * this a place to LOOK at the road rather than only to play it: a screenshot, a
+ * spark tune or a "does the engine note drop when it shifts" needs the car
+ * moving, and holding a key down while judging a picture is how a tuning pass
+ * becomes a wrestling match.
  */
 export function driveFromParams(params: URLSearchParams): {
   seed: number;
@@ -48,18 +54,23 @@ export function driveFromParams(params: URLSearchParams): {
   to: string;
   gib: boolean;
   difficulty: Difficulty;
+  bot: boolean;
 } {
   const home = (params.get("drive") ?? "").toLowerCase() === "home";
   const wanted = (params.get("difficulty") ?? "").toLowerCase();
   const difficulty = (
     DIFFICULTY_ORDER.includes(wanted as Difficulty) ? wanted : "medium"
   ) as Difficulty;
+  const bot = params.get("bot");
   return {
     seed: Number(params.get("seed")) || 1234,
     direction: home ? -1 : 1,
     to: home ? GARAGE : GOODCO,
     gib: (params.get("gore") ?? "").toLowerCase() !== "off",
     difficulty,
+    // Bare `&bot` counts, like every other flag in the query string; only an
+    // explicit "0"/"off" turns it back off.
+    bot: bot !== null && !["0", "off", "false"].includes(bot.toLowerCase()),
   };
 }
 
@@ -157,6 +168,7 @@ export function DriveWorkbench({
         key={`${lap}:${trip.seed}:${trip.difficulty}:${trip.direction}`}
         params={trip}
         assets={assets}
+        auto={trip.bot}
         stage={stagerFor(params.get("stage") ?? "", trip.direction)}
         onArrived={() => {
           setTrip((t) => ({ ...t, seed: (t.seed + 7919) >>> 0 }));
@@ -180,7 +192,7 @@ export function DriveWorkbench({
           font={assets.font}
           text={`${trip.difficulty.toUpperCase()} · ${
             trip.direction === 1 ? "OUT" : "HOME"
-          } · SEED ${trip.seed} · ESC TO LEAVE`}
+          } · SEED ${trip.seed}${trip.bot ? " · BOT" : ""} · ESC TO LEAVE`}
           scale={1}
           color="#e8e4d8"
         />

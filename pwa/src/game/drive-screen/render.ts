@@ -187,14 +187,27 @@ export function drawDrive(
   type Drawn = { y: number; draw: () => void };
   const drawn: Drawn[] = [];
 
-  const put = (name: string, x: number, y: number, lift = 0, faceLeft = false) => {
+  const put = (
+    name: string,
+    x: number,
+    y: number,
+    lift = 0,
+    faceLeft = false,
+  ) => {
     const sprite = spriteByName(sprites, name);
     if (!sprite) return;
     drawn.push({
       y,
       draw: () => {
         if (!faceLeft) {
-          drawWorldSprite(ctx, name, sprite, { x, y: y - lift }, camera, "base");
+          drawWorldSprite(
+            ctx,
+            name,
+            sprite,
+            { x, y: y - lift },
+            camera,
+            "base",
+          );
           return;
         }
         // NOSE-FIRST DOWN ITS OWN LANE. Every car sprite is drawn facing right,

@@ -23,7 +23,7 @@
 
 import { randomRange, type Rng } from "@game/lib/rng.ts";
 
-import { DRIVE } from "./config.ts";
+import { courseLength, DRIVE } from "./config.ts";
 import type { DrivePedestrian, DriveState } from "./types.ts";
 
 /** How many distinct bodies the crowd is drawn from. The app's sprite table is
@@ -68,6 +68,15 @@ export function crowdEdges(): { top: number; bottom: number } {
 export function laneCenter(lane: number): number {
   const half = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
   return -half + (lane + 0.5) * DRIVE.laneWidth;
+}
+
+/** …and the way back: which lane a world y sits in. Clamped, because the road's
+ * gutters (`roadEdges`) sit outside the painted lanes and a car in one is still
+ * on somebody's side of the white line. */
+export function laneAt(y: number): number {
+  const half = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
+  const lane = Math.floor((y + half) / DRIVE.laneWidth);
+  return Math.max(0, Math.min(DRIVE.laneCount - 1, lane));
 }
 
 /**
@@ -120,7 +129,7 @@ export function spawnCrowd(state: DriveState): void {
     // the hero gets his think about the people ahead, before anybody is in the
     // way. See `DRIVE.crowdStartPx`.
     if (at < DRIVE.crowdStartPx) continue;
-    if (at > DRIVE.coursePx) break;
+    if (at > courseLength(state.params)) break;
     // ON A CROSSING, OR STREWN. Half the crowd is gathered onto the next
     // painted crossing ahead, spread across its width — which is what gives
     // the trip a rhythm to read instead of an even smear of people. The

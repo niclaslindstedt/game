@@ -45,6 +45,7 @@ make assets        # regenerate in-game pixel assets + previews (runs make level
 make levels        # recompile every content catalog from content/*.yaml
 make lua-vm        # compile src/lib/lua/ for the SHIPPED mod compiler
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
+make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
 make bump          # print the release bump derived from .changes/unreleased/
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```

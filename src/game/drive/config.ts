@@ -104,19 +104,49 @@ export const DRIVE = {
    * the minigame in one number: it is a DISTANCE, not a timer, so driving fast
    * genuinely ends it sooner and driving scared genuinely drags.
    *
-   * MEASURED, driving in a dead straight line and never dodging once (the
-   * pessimal case — a real player steers, so both columns come down):
+   * MEASURED with `make drive-bench`, 60 seeds a rung on MEDIUM. First the
+   * PESSIMAL case — a dead straight line, never dodging once:
    *
    *   throttle   trip      bodies   ending wear
-   *   1.00       39–54 s   13–24    breaks about half the time
-   *   0.80       58–66 s   23–25    survives, badly bent
-   *   0.55       74–78 s   35–39    survives comfortably
+   *   1.00       53 s      17       breaks 2 legs in 12; every leg above HARD
+   *   0.80       58 s      19       survives, badly bent (63%)
+   *   0.55       74 s      25       survives comfortably (22%)
    *
    * Which is the shape the whole thing wants: flat out is genuinely faster and
    * genuinely might not get there, and the safe pace costs you twenty seconds
    * and hits MORE people, because you are on the road longer.
+   *
+   * And then the same road driven by something that STEERS — the shipped
+   * auto-driver (`drive/driver.ts`), which is the bar a decent human clears:
+   *
+   *   rung        trip    bodies   ending wear   arrived
+   *   easy        46 s     8.8       1%          60/60
+   *   medium      48 s     9.1       5%          60/60
+   *   hard        49 s    10.1       9%          60/60
+   *   nightmare   50 s     9.9      12%          60/60
+   *   jesus       52 s    10.5      15%          60/60
+   *
+   * Read the two together, because between them they are the design: steering
+   * is worth about half the bodies and the whole of the car, the ladder still
+   * costs a JESUS driver six seconds and fifteen times the damage an EASY one
+   * takes — and even driven properly the leg cannot be threaded clean. Ten
+   * people is `bumpyRideBodies`, so the good driver arrives to the same line
+   * the bad one does, which is the joke the course length exists to land.
    */
   coursePx: 24000,
+  /**
+   * THE ATTRACT LOOP'S LEG (world px) — the same road with the finish brought
+   * forward, for a demo that is showing somebody the whole game rather than
+   * playing one trip of it.
+   *
+   * About fifteen seconds, which is a long beat in an attract loop and a short
+   * one in a minute. It is past `crowdStartPx` with real room to spare, so the
+   * demo still shows what the road is FOR — the monologue, the first crossing,
+   * a body or six — rather than the empty opening stretch and a fade.
+   * `DriveParams.coursePx` is how it gets there; nothing a player drives uses
+   * it.
+   */
+  attractCoursePx: 6200,
   /** How far ahead of the car the world is populated, and how far behind it is
    * forgotten (world px). Both a comfortable screen and a half. */
   spawnAheadPx: 700,
@@ -309,6 +339,14 @@ export const DRIVE = {
    * it the ride was "fine"; at or over it, it was "a bit bumpy". */
   bumpyRideBodies: 10,
 } as const;
+
+/** HOW LONG THIS LEG IS — the whole road unless the params shortened it (the
+ * attract loop's only difference from a played drive). The ONE accessor: the
+ * spawner, the arrival check and the bench all read the finish here, so a
+ * shortened leg cannot end up with a crowd laid out for a longer one. */
+export function courseLength(params: { coursePx?: number }): number {
+  return params.coursePx ?? DRIVE.coursePx;
+}
 
 /** How the drive ended — read by the app to decide what happens next. */
 export const DRIVE_OUTCOME = {

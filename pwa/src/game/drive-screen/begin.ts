@@ -30,6 +30,7 @@
 
 import {
   areMinigamesEnabled,
+  DRIVE,
   type Difficulty,
   type DriveDirection,
   type DriveParams,
@@ -54,6 +55,12 @@ const GOODCO = "goodco_hq";
  * `difficulty` is the RUN'S OWN rung, carried in because a drive is settled
  * whole before its first tick and has no run under it to ask afterwards. It is
  * what the road weighs on the way to work.
+ *
+ * `attract` shortens the leg. A minute of road is the right length for a trip
+ * to work and much too long for a title-screen demo trying to show somebody the
+ * whole game — so the demo drives the SAME road, same crowd, same rung, with
+ * the finish brought forward (`DRIVE.attractCoursePx`). Only the demo: a
+ * `?bot=` playtest is a measurement and gets the road a player gets.
  */
 export function driveParamsFor(
   to: string,
@@ -62,6 +69,7 @@ export function driveParamsFor(
   autoplayed: boolean,
   seed: number,
   difficulty: Difficulty,
+  attract = false,
 ): DriveParams | null {
   if (!areMinigamesEnabled()) return null;
   if (!solo) return null;
@@ -73,6 +81,7 @@ export function driveParamsFor(
     direction,
     to,
     difficulty,
+    ...(attract ? { coursePx: DRIVE.attractCoursePx } : {}),
     // THE GORE GATE, ASKED ONCE AND CARRIED. Both halves have to say yes: the
     // family switch (people bleed) and the switch for a body BURST rather than
     // cut. Fixed for the whole road on purpose — a switch flipped mid-drive

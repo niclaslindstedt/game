@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench mod-check mod-catalog
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench mod-check mod-catalog
 
 build:
 	npm run build
@@ -91,6 +91,15 @@ mod-catalog:
 # behavior change, not a speedup.
 sim-bench:
 	node scripts/simulate-bench.mjs $(ARGS)
+
+# Measure THE DRIVE — N seeds a difficulty rung, played by the shipped
+# auto-driver, reporting arrival rate, trip time, bodies and ending wear. The
+# closing loop of any change to the road, the crowd, the traffic or the impact
+# model; seconds to run, so sweep freely.
+# `make drive-bench ARGS="--seeds 100 --difficulty jesus"`
+# `make drive-bench ARGS="--straight 0.8"` is the same road with NOBODY steering.
+drive-bench:
+	node scripts/drive-bench.mjs $(ARGS)
 
 # Render an annotated top-down map of a level for game-design review —
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the

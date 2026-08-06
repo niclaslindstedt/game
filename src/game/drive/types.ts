@@ -172,6 +172,23 @@ export type DriveParams = {
   /** Where the car ends up: the level the drive hands on to when it arrives. */
   to: string;
   /**
+   * HOW LONG THE LEG IS (world px), when it is not the whole road. Omitted for
+   * every drive a player takes — the course is `DRIVE.coursePx` and always has
+   * been.
+   *
+   * It exists for the ATTRACT LOOP. A minute of tarmac is the right length for
+   * a trip to work and much too long for a title-screen demo that is trying to
+   * show somebody the whole game in a couple of them, so the demo drives the
+   * same road with the finish line brought forward (`DRIVE.attractCoursePx`)
+   * rather than a different, shorter, quieter road nobody would ever play. Same
+   * crowd, same traffic, same rung — just the first stretch of it.
+   *
+   * A PARAMETER rather than a knob turned mid-drive, like everything else about
+   * a road: it is settled whole before the first tick, so the spawner lays the
+   * crowd down against the same finish the arrival check reads.
+   */
+  coursePx?: number;
+  /**
    * WHETHER BODIES COME APART. Decided by the app's gore gate at creation and
    * carried as a plain boolean, because the engine has no business reading a
    * settings screen — and because the answer must be fixed for the whole drive

@@ -102,6 +102,7 @@ make test                                # the full test suite
 | `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                |
 | `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                 |
 | `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                |
+| `make drive-bench`                    | Measure the DRIVE minigame — N seeds a rung, played by the auto-driver                      |
 | `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                     |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                          |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`              |
