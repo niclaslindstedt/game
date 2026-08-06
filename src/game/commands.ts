@@ -150,7 +150,7 @@ import {
 } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
 import { enterCar, exitCar } from "./vehicles.ts";
-import { requestTravel } from "./travel.ts";
+import { requestSoloTravel, requestTravel } from "./travel.ts";
 import type {
   CompanionSlot,
   EquipSlot,
@@ -361,6 +361,13 @@ export const RUN_COMMAND_ARGS = {
   // locally-built run would). Refused for any seat but 0: the host chooses
   // the road.
   travelTo: ["str", "str"],
+
+  // THE TOWN PORTAL — a SOLO crossing (src/game/travel.ts). The same two
+  // arguments the party road takes, and the same words for the skip; what
+  // differs is who moves. Any seat may send it, for their OWN body alone: the
+  // party keeps playing the field while one hero goes home to sell. Only a
+  // MULTI-WORLD session consumes it (server/worlds.ts).
+  travelSolo: ["str", "str"],
 
   // THE RIDE. `refundAutopilotBuild` takes no arguments on purpose: the build
   // the ride is measured against lives on the RUN (`state.autopilot.build`,
@@ -719,6 +726,8 @@ export function applyRunCommand(
     // THE ROAD
     case "travelTo":
       return requestTravel(state, hero, str(a, 0), str(a, 1));
+    case "travelSolo":
+      return requestSoloTravel(state, hero, str(a, 0), str(a, 1));
 
     // THE RIDE
     case "startAutopilot":

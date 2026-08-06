@@ -50,7 +50,12 @@ import { type CommandArg } from "@game/core";
 
 import { createPredictor } from "./client-predict.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
-import { patchState, type StatePatch, type WireState } from "./wire/delta.ts";
+import {
+  asBytes,
+  patchState,
+  type StatePatch,
+  type WireState,
+} from "./wire/delta.ts";
 import { FRAME, type CommandName } from "./wire/frames.ts";
 import {
   PROTOCOL_VERSION,
@@ -67,6 +72,7 @@ import {
   type WelcomePayload,
 } from "./wire/protocol.ts";
 import { baselineFor, stripPrivate } from "./wire/snapshot.ts";
+import { BYTE_ARRAY_FIELDS } from "./wire/split.ts";
 
 /** The pipe, whatever it is. A `MessagePort` for a local host; a Steam P2P
  * peer or a UDP connection for a remote one. The client knows nothing else
@@ -333,17 +339,31 @@ export function createNetClient(options: NetClientOptions): NetClient {
     options.onReady?.(state, welcome.params);
   }
 
-  /** A full snapshot: assign every field it carries, leaving the ones it does
-   * not (the rng closures, the app's own view rect) exactly where they are. */
+  /**
+   * A full snapshot: assign every field it carries, leaving the ones it does
+   * not (the rng closures, the app's own view rect) exactly where they are.
+   *
+   * **THIS IS HOW A CLIENT IS HANDED A WORLD IT COULD NOT HAVE BUILT** — an
+   * adopted run, and every crossing. The second case is the one that grew
+   * teeth once a session could hold two levels at once (`server/worlds.ts`): a
+   * player stepping back onto the field their party has been fighting on for
+   * five minutes has a baseline for that carve that is either stale or absent
+   * entirely, so a delta against it would name entity ids they never held.
+   * They are sent the WHOLE world instead — every mob where it now stands,
+   * every item on the floor that dropped while they were away, every teammate's
+   * position, the fog as the party has explored it — and the session keeps
+   * sending it whole until they acknowledge one (`fullUntilAck`), because on an
+   * unreliable transport there is no ordering to lean on.
+   */
   function applyWhole(snapshot: WireState): void {
     if (!state) return;
     const target = state as unknown as WireState;
-    // AN IN-SESSION CROSSING: the world moved under us. The statics a
-    // full snapshot carries (the level, the carve, the decor) move the client
-    // wholesale — the same ~100 KB an adopted session costs, once per
-    // crossing — but the hero being LEFT BEHIND has to be banked first, off
-    // the state as it still stands. The one field the swap must not leave
-    // stale is the request itself: the new world never carried one.
+    // A CROSSING: the world moved under us. The statics a full snapshot
+    // carries (the level, the carve, the decor) move the client wholesale —
+    // the same ~100 KB an adopted session costs, once per crossing — but the
+    // hero being LEFT BEHIND has to be banked first, off the state as it still
+    // stands. The fields the swap must not leave stale are the requests
+    // themselves: the world we are arriving in never carried ours.
     const level = snapshot.level as { id?: unknown } | null | undefined;
     if (level && typeof level.id === "string" && level.id !== state.level.id) {
       options.onTravel?.(state);
@@ -352,9 +372,22 @@ export function createNetClient(options: NetClientOptions): NetClient {
       // interpolation samples name positions on a map nobody is on.
       predictor?.reset();
       delete target.pendingTravel;
+      delete target.pendingSolo;
     }
     for (const [field, value] of Object.entries(snapshot)) {
       target[field] = value;
+    }
+    // THE BYTE FIELDS COME BACK AS TYPED ARRAYS. `JSON.stringify` turns a
+    // `Uint8Array` into an object keyed by every index, and a delta puts that
+    // back through `patchBytes` — but a full snapshot is assigned field by
+    // field, so without this the fog grid would sit here as a plain object:
+    // right to read by index, wrong the moment anything asks it for a length
+    // or writes a byte into it. The arriving player's whole picture of where
+    // the party has been rests on it.
+    for (const field of BYTE_ARRAY_FIELDS) {
+      if (!(field in snapshot)) continue;
+      const bytes = asBytes(target[field]);
+      if (bytes) target[field] = bytes;
     }
     baseline = { ...snapshot };
   }

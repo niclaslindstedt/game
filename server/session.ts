@@ -40,10 +40,8 @@
 
 import {
   adoptRun,
-  bankCampaignQuests,
   createRunFromParams,
   departHero,
-  extractLoadout,
   LEVEL_ORDER,
   nextFreeSeat,
   releaseSeat,
@@ -54,7 +52,6 @@ import {
   step,
   validateLoadout,
   type GameInput,
-  type GameState,
   type Loadout,
 } from "@game/core";
 
@@ -75,6 +72,13 @@ import {
   type SessionOptions,
   type SessionPeers,
 } from "./session-model.ts";
+// MORE THAN ONE LEVEL IN ONE SESSION. Everything about how a second carve is
+// raised, populated and routed into lives next door; this module owns only the
+// LOOP over them and who is standing in which.
+import { padWorld, type World } from "./worlds.ts";
+// A SEAT LEAVING ONE CARVE AND STANDING UP IN ANOTHER — the crossing, both
+// roads through it, in its own module (`server/crossing.ts`).
+import { createCrossings } from "./crossing.ts";
 
 // Re-exported so every existing importer keeps its one import site.
 export type {
@@ -105,7 +109,6 @@ import {
   type ChatPayload,
   type RosterEntry,
   type RosterPayload,
-  type SessionParams,
   type WelcomePayload,
 } from "./wire/protocol.ts";
 import {
@@ -115,11 +118,6 @@ import {
 } from "./wire/snapshot.ts";
 
 export function createSession(options: SessionOptions): Session {
-  // MUTABLE, because an in-session crossing replaces the run: the
-  // params are what a LATER joiner's welcome carries, so after a travel they
-  // must describe the level the party is actually on.
-  let params = options.params;
-
   // TWO DOORS INTO A RUN, and which one was used decides what an arriving
   // client is sent.
   //
@@ -133,35 +131,90 @@ export function createSession(options: SessionOptions): Session {
   // ADOPTED — a parked run or a checkpoint restore, which no set of parameters
   // describes. The client cannot rebuild it, so it gets a full snapshot.
   const adopted = options.adopt ?? null;
-  let state = adopted ? adoptRun(adopted) : createRunFromParams(params);
+
+  /**
+   * EVERY LIVE CARVE IN THIS SESSION, by its world id (`server/worlds.ts`).
+   *
+   * One entry is the ordinary case and always will be: the campaign crosses as
+   * a party and holds exactly one. A second appears only when somebody steps
+   * off the field alone — a town portal home — and it goes away again when the
+   * last seat leaves it.
+   */
+  const worlds = new Map<number, World>();
+  let nextWorldId = 0;
+  /**
+   * THE WORLD THE SESSION IS ABOUT — where an arriving player is seated, what
+   * `session.state` reports, and whose parameters a welcome carries.
+   *
+   * A party crossing moves it; a solo one never does. That is the whole of
+   * "which world does a joiner join" (issue #952, question 5): they join their
+   * friends, not whichever level somebody happens to be shopping on.
+   */
+  let primary: World = (() => {
+    const state = adopted
+      ? adoptRun(adopted)
+      : createRunFromParams(options.params);
+    const world: World = {
+      id: nextWorldId++,
+      params: options.params,
+      state,
+      // The world at tick 0, frozen — the state every client's first delta into
+      // this world is coded against. See {@link frozenGenesis} for why it goes
+      // through JSON.
+      genesis: frozenGenesis(state),
+      pendingEvents: [],
+      startedLevel: null,
+      frame: [],
+    };
+    worlds.set(world.id, world);
+    return world;
+  })();
+
+  /**
+   * WHICH WORLD EACH SEAT IS STANDING IN, by seat number. Absent means the
+   * primary — which is every seat in an ordinary session, so the map stays
+   * empty until somebody actually crosses alone.
+   *
+   * A seat number is NOT re-numbered by any of this: it names the same player
+   * in every world (see `server/worlds.ts`), so the reconnect ticket, the
+   * roster, the private tier's withholding and every input frame in flight are
+   * untouched by there being two carves.
+   */
+  const seatWorld = new Map<number, number>();
+
   const ownerless = options.ownerless === true;
   if (ownerless) {
     // Seat 0 is a body nobody is behind until somebody joins — see
     // `SessionOptions.ownerless`. `seatZero` is passed because THIS is the
     // session the seat-0 rule was written to exclude: there is no host here to
     // lose, so seat 0 is an ordinary seat.
-    departHero(state, 0, { seatZero: true });
-    state.party = { seats: state.party?.seats ?? state.players.length };
+    departHero(primary.state, 0, { seatZero: true });
+    primary.state.party = {
+      seats: primary.state.party?.seats ?? primary.state.players.length,
+    };
   }
 
-  /**
-   * The world at tick 0, frozen — the state every client's first delta is
-   * coded against.
-   *
-   * Through JSON rather than by reference, and that is the point: the live
-   * state is about to change, and a baseline aliasing it would compare the
-   * running world against itself. The rng closures cannot survive the trip and
-   * do not need to (the wire never carries them; a client has its own from the
-   * same seed), and `explored` arrives back as an index-keyed object, which
-   * the differ's byte strategy reads as bytes on purpose.
-   */
-  /**
-   * The world at tick 0, frozen — the state every client's first delta is
-   * coded against. See {@link frozenGenesis} for why it goes through JSON.
-   * Mutable because an in-session crossing replaces the world, and the
-   * genesis a later joiner is baselined on has to be the NEW one.
-   */
-  let genesis = frozenGenesis(state);
+  /** The world a seat is standing in — the primary until it crosses alone. */
+  function worldOf(seat: number): World {
+    return worlds.get(seatWorld.get(seat) ?? primary.id) ?? primary;
+  }
+
+  /** The world a client is watching: its seat's, or the primary for a
+   * spectator (who watches the run the session is about). */
+  function worldFor(client: Client): World {
+    const seat = client.recipient.seat;
+    return seat === null ? primary : worldOf(seat);
+  }
+
+  /** How many chairs the party has, across every world — the high-water mark a
+   * new world is padded out to so seat N exists in all of them. */
+  function seatCount(): number {
+    let seats = 0;
+    for (const world of worlds.values()) {
+      seats = Math.max(seats, world.state.players.length);
+    }
+    return seats;
+  }
 
   // WHAT THE ADOPTED STATE CLAIMS TO BE has to match what the parameters will
   // make a client build, and there is no delta that could ever reconcile them:
@@ -177,12 +230,12 @@ export function createSession(options: SessionOptions): Session {
   // rest is on `SessionOptions.adopt`'s own contract.
   if (
     adopted &&
-    (state.level.id !== params.levelId ||
-      state.difficulty !== params.difficulty)
+    (primary.state.level.id !== primary.params.levelId ||
+      primary.state.difficulty !== primary.params.difficulty)
   ) {
     throw new Error(
-      `adopted a ${state.level.id}/${state.difficulty} run into a ` +
-        `${params.levelId}/${params.difficulty} session`,
+      `adopted a ${primary.state.level.id}/${primary.state.difficulty} run ` +
+        `into a ${primary.params.levelId}/${primary.params.difficulty} session`,
     );
   }
 
@@ -210,8 +263,6 @@ export function createSession(options: SessionOptions): Session {
   const tickets = new Map<number, string>();
   const secret = options.secret ?? 0;
   const now = options.now ?? (() => 0);
-  /** Every event since the last publish, in the order the ticks produced them. */
-  let pendingEvents: unknown[] = [];
   let tick = 0;
   let seq = 0;
   let sinceSnapshot = 0;
@@ -259,6 +310,12 @@ export function createSession(options: SessionOptions): Session {
         // seam's word for that rather than a flattering 0.
         ping: client.slot === 0 ? -1 : peers.ping(client.id),
         rate: client.sendRate,
+        // WHICH LEVEL THIS SEAT IS ON. Only ever differs from everybody else's
+        // while somebody has stepped through a town portal, and it is the one
+        // thing on the wire that lets a party frame tell a teammate in the
+        // garage apart from one who has quit — in a client's own snapshot both
+        // are nothing but a departed body.
+        level: worldFor(client).state.level.id,
       }));
   }
 
@@ -289,11 +346,14 @@ export function createSession(options: SessionOptions): Session {
   let playersOverride: number | null = null;
 
   /** Bot seats still standing in the run — departed ones stopped counting the
-   * moment they yielded. */
+   * moment they yielded. Counted per SEAT rather than per body: a seat standing
+   * in another world is one bot, not two, and its chair is departed everywhere
+   * it is not. */
   function botSeatsInPlay(): number {
     let bots = 0;
-    for (const hero of state.players) {
-      if (hero.bot && !hero.departed) bots++;
+    for (let seat = 0; seat < seatCount(); seat++) {
+      const hero = worldOf(seat).state.players[seat];
+      if (hero?.bot && !hero.departed) bots++;
     }
     return bots;
   }
@@ -344,7 +404,11 @@ export function createSession(options: SessionOptions): Session {
     // other reason. `resumeHero` refuses a seat that is not being held, so
     // this is belt and braces rather than the check itself.
     if (now() > record.expiresAt) return null;
-    return resumeHero(state, record.seat) ? record.seat : null;
+    // INTO THE WORLD THEY DROPPED OUT OF, which is not necessarily the one the
+    // party is on: somebody whose connection went while they were shopping
+    // comes back to the garage counter, not to a fight they were not in.
+    const world = worldOf(record.seat);
+    return resumeHero(world.state, record.seat) ? record.seat : null;
   }
 
   /** Give up every hold whose window has lapsed, so the seat can be handed to
@@ -356,7 +420,17 @@ export function createSession(options: SessionOptions): Session {
     for (const [ticket, record] of held) {
       if (at <= record.expiresAt) continue;
       held.delete(ticket);
-      releaseSeat(state, record.seat);
+      const world = worldOf(record.seat);
+      releaseSeat(world.state, record.seat);
+      // A chair is only ever handed out again in the PRIMARY world (a joiner
+      // joins their friends), so a hold that lapses in a SECOND one gives the
+      // seat back to the party's world and lets the carve it was standing in
+      // go if nobody else is left in it.
+      if (world !== primary) {
+        releaseSeat(primary.state, record.seat);
+        seatWorld.delete(record.seat);
+        disposeIfEmpty(world);
+      }
       options.log?.(`net: seat ${record.seat} released — nobody came back`);
     }
   }
@@ -370,7 +444,9 @@ export function createSession(options: SessionOptions): Session {
    */
   function mintTicket(seat: number): string {
     ticketNonce++;
-    return hash32(`${secret >>> 0}|${seat}|${ticketNonce}|${params.seed}`)
+    return hash32(
+      `${secret >>> 0}|${seat}|${ticketNonce}|${primary.params.seed}`,
+    )
       .toString(36)
       .padStart(7, "0");
   }
@@ -395,11 +471,6 @@ export function createSession(options: SessionOptions): Session {
     for (const client of clients.values()) client.send(frame);
   }
 
-  /** Reused across ticks: one slot per seat, so the per-tick input array is not
-   * a fresh allocation sixty times a second. */
-  const frame: GameInput[] = [];
-  let startedLevel: string | null = null;
-
   function playerName(seat: number): string {
     for (const client of clients.values()) {
       if (client.recipient.seat === seat) return client.name;
@@ -407,24 +478,58 @@ export function createSession(options: SessionOptions): Session {
     return `PLAYER ${seat + 1}`;
   }
 
-  function stepOnce(): void {
+  /**
+   * DOES THIS WORLD OWE A TICK? — issue #952, question 4.
+   *
+   * **A WORLD TICKS WHILE A SEAT IS ASSIGNED TO IT**, and "assigned" is
+   * deliberately NOT "in play": a hero who is dead, downed or whose player
+   * dropped is still ON this level, and a freeze rule that read `heroInPlay`
+   * would stop the world on the very tick a death needs it to keep turning.
+   * Only WALKING OUT of a world un-assigns a seat from it. In a session where
+   * nobody has ever crossed alone, every seat is assigned to the one world and
+   * this is byte-for-byte today's behaviour.
+   *
+   * So the answer to "does an unattended world keep ticking" is: **your
+   * friends' fight carries on while you shop** — they are standing in it — and
+   * the level NOBODY is standing in costs nothing, whether that is the garage
+   * you left or the field the whole party portalled out of. Which makes the
+   * host-CPU price of the feature exactly two worlds stepping while two worlds
+   * are genuinely being played, and never a background level ticking for an
+   * empty room.
+   */
+  function isLive(world: World): boolean {
+    const seats = seatCount();
+    for (let seat = 0; seat < seats; seat++) {
+      if ((seatWorld.get(seat) ?? primary.id) === world.id) return true;
+    }
+    return false;
+  }
+
+  function stepOnce(world: World): void {
     // ONE FRAME PER SEAT, index-aligned with `state.players` — which is exactly
     // what `PartyInput` is. A seat whose owner has sent nothing (a player with a
     // screen open, a dropped packet, an empty chair) contributes IDLE rather
     // than repeating its last frame: a lost packet must not leave a hero
     // walking into the horde until the next one arrives.
+    //
+    // AND A SEAT STANDING IN ANOTHER WORLD CONTRIBUTES IDLE HERE. Its body in
+    // this one is departed and answers to nothing, but its live input frame is
+    // steering it somewhere else — folding that into this world too would walk
+    // a corpse around the field in step with a hero two levels away.
+    const state = world.state;
+    const frame = world.frame;
     frame.length = state.players.length;
     for (let seat = 0; seat < frame.length; seat++) {
-      frame[seat] = inputs.get(seat) ?? IDLE_INPUT;
+      const here = (seatWorld.get(seat) ?? primary.id) === world.id;
+      frame[seat] = (here ? inputs.get(seat) : undefined) ?? IDLE_INPUT;
     }
     step(state, frame, TICK_MS);
-    tick++;
-    if (state.phase === "playing" && startedLevel !== state.level.id) {
-      startedLevel = state.level.id;
+    if (state.phase === "playing" && world.startedLevel !== state.level.id) {
+      world.startedLevel = state.level.id;
       options.log?.(`game started — ${state.level.id}`);
     }
     if (state.events.length) {
-      pendingEvents.push(...state.events);
+      world.pendingEvents.push(...state.events);
       for (const event of state.events) {
         if (event.type === "heroDown") {
           options.log?.(`player died — ${playerName(event.seat)}`);
@@ -441,135 +546,81 @@ export function createSession(options: SessionOptions): Session {
         }
       }
     }
+  }
+
+  /**
+   * One session tick: every live world steps once, and the discrete input edges
+   * are consumed after ALL of them have.
+   *
+   * The edge clearing is the one thing that could not stay inside the per-world
+   * step. `inputs` is keyed by SEAT and shared across worlds, so clearing a tap
+   * inside the first world's step would eat it before the world that seat is
+   * actually standing in ever read it — a jump that fires only when your friend
+   * happens to be on the same level as you.
+   */
+  function tickOnce(): void {
+    for (const world of worlds.values()) {
+      if (isLive(world)) stepOnce(world);
+    }
+    tick++;
     // A discrete edge is consumed by the tick it was sampled for. Left set, a
     // single tap would jump on every tick until the next input frame arrived —
     // which at 60 Hz simulation and (say) 30 Hz input is a double jump the
     // player never asked for.
     for (const seated of inputs.values()) clearEdges(seated);
+    // A REQUESTED CROSSING IS CONSUMED BETWEEN TICKS, where no frame is
+    // half-applied — and before the publish, so the first snapshot after one is
+    // already the new world.
+    for (const world of [...worlds.values()]) {
+      if (world.state.pendingTravel) performTravel(world);
+      if (world.state.pendingSolo?.length) performSolo(world);
+    }
   }
-
-  /** How many crossings this session has performed — folded into each new
-   * seed so travelling A → B → A does not rebuild B's first carve. */
-  let travels = 0;
-
-  /** `cleared` plus the level `run` is on, when the party has WON it. Pure,
-   * and never mutates the list it was handed — the old params outlive the
-   * crossing as every connected client's baseline. */
-  function clearedAfter(cleared: readonly string[], run: GameState): string[] {
-    const won = run.phase === "victory" || run.phase === "outro" || run.staying;
-    if (!won || cleared.includes(run.level.id)) return [...cleared];
-    return [...cleared, run.level.id];
-  }
+  // THE CROSSINGS live next door (`server/crossing.ts`) — raising a second
+  // carve, routing a seat into it, and letting the one it left go. They close
+  // over this session, so they are built here with everything they may touch
+  // handed over explicitly rather than reached for.
+  const { disposeIfEmpty, performSolo, performTravel } = createCrossings({
+    worlds,
+    primary: () => primary,
+    setPrimary: (world) => {
+      primary = world;
+    },
+    mintWorldId: () => nextWorldId++,
+    seatWorld,
+    seatCount,
+    clients,
+    inputs,
+    log: options.log,
+    announce: (message) => broadcastChat([chat.announce(message)]),
+    rosterChanged: broadcastRoster,
+    playerName,
+  });
 
   /**
-   * AN IN-SESSION CROSSING: tear the level down and carry the party
-   * through together.
+   * ONE PUBLISH, CUT PER RECIPIENT — and with two worlds live that cut is a
+   * SAVING rather than a cost.
    *
-   * The request arrived as the `travelTo` run command (seat 0 only — the host
-   * chooses the road) and was parked on `state.pendingTravel` for THIS moment:
-   * between ticks, where no frame is half-applied. Every seat's loadout is
-   * extracted from the authoritative run (the same funnel every bank uses, an
-   * unrecovered corpse's gear included), the destination is built from the
-   * session's own parameters with a derived seed, and the party is re-seated
-   * in the SAME ORDER — a seat is an index every in-flight frame names, so
-   * the rebuild may not renumber anybody. Departed and held seats keep their
-   * flags: a body nobody is behind is still nobody's on the next level, and a
-   * reconnect ticket must still name a real chair.
-   *
-   * Every client is then re-baselined: full snapshots until one is
-   * acknowledged (`fullUntilAck`), because a delta against a baseline from
-   * the old level would name entity ids the client no longer holds. The
-   * params are REPLACED so a later joiner's welcome builds the new level.
+   * There is no spatial or interest culling in this replication: a snapshot is
+   * the whole run minus the seat's private withholdings, so every client gets
+   * every enemy, every projectile and every event in the world it is in. What
+   * splitting the party across two carves changes is only WHICH world that is
+   * — so per-client bandwidth does not double, it stays one world's worth, and
+   * in the split case each world holds fewer entities than the single world
+   * would have. The hero in the garage stops paying for the rift's horde: no
+   * positions, no projectiles, and none of the gore, sound and haptic events
+   * for a fight happening two universes away. The machinery was already the
+   * right shape — the snapshot is cut per RECIPIENT for the private tier, so
+   * "cut it for this seat's world" is the same seam widened.
    */
-  function performTravel(): void {
-    const request = state.pendingTravel;
-    delete state.pendingTravel;
-    if (!request) return;
-    const seats = state.players.map((hero) => ({
-      loadout: extractLoadout(state, hero),
-      departed: hero.departed === true,
-      held: hero.held === true,
-    }));
-    const nextParams: SessionParams = {
-      ...params,
-      seed: hash32(`${params.seed}|${request.to}|${++travels}`),
-      levelId: request.to,
-      loadout: seats[0]!.loadout,
-      // THE LEVEL BEING LEFT COUNTS AS CLEARED IF THE PARTY WON IT. The engine
-      // gates drops on this list (the bunker key stays latent until Boot Hill
-      // falls), and a campaign played in company crosses on VICTORY far more
-      // often than through a door — so a session that carried the original
-      // parameters forward unchanged would keep every clear-gated drop latent
-      // for the rest of the run. Asked of the run's own phase rather than of a
-      // banked character, because the session has no roster: `victory` and
-      // `outro` are the splash and its epilogue, and `staying` is the player
-      // who took STAY to farm the cleared field before moving on.
-      clearedLevels: clearedAfter(params.clearedLevels, state),
-      // The run's own campaign chain travels with it — each client's app
-      // banks the same chain to its own character beside this.
-      campaignQuests: bankCampaignQuests(state),
-      seenThoughts: [...state.thoughtsSeen],
-      // The loadout's banked purse IS the purse: the wealth fold happened
-      // when the run was first built.
-      coins: null,
-      // The session has no roster to ask (a per-character fact) — the
-      // destination's merchant starts undiscovered, and each app still banks
-      // the meeting for its own hero when he is found.
-      merchantDiscovered: false,
-      respec: false,
-      openingSkip: request.skip,
-      // A flight in progress crosses with the run (the refund must revert to
-      // the pre-FLIGHT build, not the pre-level one).
-      autopilotBuild: state.autopilot.build ?? null,
-    };
-    let fresh: GameState;
-    try {
-      fresh = createRunFromParams(nextParams);
-    } catch (err) {
-      // A destination this build cannot carve. The verb validated the id, so
-      // this is belt and braces — refused loudly rather than killing the
-      // session process mid-run.
-      options.log?.(`net: travel to ${request.to} refused — ${String(err)}`);
-      return;
-    }
-    // The PARTY STAMP survives the crossing — a run more than one person has
-    // played does not get its records back by walking through a door.
-    if (state.party) fresh.party = { ...state.party };
-    for (let seat = 1; seat < seats.length; seat++) {
-      seatHero(fresh, seats[seat]!.loadout);
-    }
-    for (const [seat, info] of seats.entries()) {
-      const hero = fresh.players[seat];
-      if (!hero) continue;
-      if (info.departed) hero.departed = true;
-      if (info.held) hero.held = true;
-    }
-    state = fresh;
-    params = nextParams;
-    genesis = frozenGenesis(state);
-    for (const client of clients.values()) {
-      client.needsFull = true;
-      client.fullUntilAck = -1;
-      client.history.clear();
-      client.baseline = baselineFor(genesis, client.recipient);
-    }
-    inputs.clear();
-    for (const client of clients.values()) {
-      if (client.recipient.seat !== null) {
-        inputs.set(client.recipient.seat, { ...IDLE_INPUT });
-      }
-    }
-    options.log?.(`net: travelled to ${request.to} (${travels})`);
-    broadcastChat([chat.announce(`TRAVELLING TO ${request.to.toUpperCase()}`)]);
-  }
-
   function publish(): void {
     seq++;
     for (const client of clients.values()) {
+      const world = worldFor(client);
       const snapshot = captureSnapshot(
-        state as unknown as Record<string, unknown>,
+        world.state as unknown as Record<string, unknown>,
         client.recipient,
-        pendingEvents,
+        world.pendingEvents,
       );
       // A CLIENT THAT CANNOT REBUILD THE WORLD IS SENT ALL OF IT, ONCE. Only a
       // session that ADOPTED its run ever takes this branch: everybody else
@@ -633,7 +684,7 @@ export function createSession(options: SessionOptions): Session {
     }
     // Every client that exists has been handed these; one that joins after
     // this point starts from the genesis baseline and owes nothing.
-    pendingEvents = [];
+    for (const world of worlds.values()) world.pendingEvents = [];
   }
 
   /** Remove one client — `removeClient`'s whole body, named so the bot-yield
@@ -672,7 +723,10 @@ export function createSession(options: SessionOptions): Session {
     tickets.delete(id);
     if (client.recipient.seat !== null) {
       inputs.set(client.recipient.seat, { ...IDLE_INPUT });
-      departHero(state, client.recipient.seat, {
+      // IN THE WORLD THEY ARE ACTUALLY STANDING IN. A player who drops while
+      // shopping leaves a body in the garage, not on the field — and the field
+      // has held a departed placeholder for them since they stepped through.
+      departHero(worldOf(client.recipient.seat).state, client.recipient.seat, {
         hold: ticket !== undefined,
         // Only an ownerless session may empty seat 0 — see `DepartOptions`.
         seatZero: ownerless,
@@ -724,7 +778,19 @@ export function createSession(options: SessionOptions): Session {
 
   return {
     get state() {
-      return state;
+      return primary.state;
+    },
+
+    get worlds() {
+      return [...worlds.values()].map((world) => ({
+        levelId: world.state.level.id,
+        state: world.state,
+        seats: [...Array(world.state.players.length).keys()].filter(
+          (seat) => (seatWorld.get(seat) ?? primary.id) === world.id,
+        ),
+        primary: world === primary,
+        live: isLive(world),
+      }));
     },
     get tick() {
       return tick;
@@ -747,11 +813,7 @@ export function createSession(options: SessionOptions): Session {
       sweepHeldSeats();
       const owed = Math.min(Math.floor(ms / TICK_MS), MAX_TICKS_PER_ADVANCE);
       for (let i = 0; i < owed; i++) {
-        stepOnce();
-        // A requested crossing is consumed BETWEEN ticks, where no
-        // frame is half-applied — and before the publish, so the first
-        // snapshot after a travel is already the new world.
-        if (state.pendingTravel) performTravel();
+        tickOnce();
         if (++sinceSnapshot >= SNAPSHOT_EVERY_TICKS) {
           sinceSnapshot = 0;
           publish();
@@ -806,7 +868,7 @@ export function createSession(options: SessionOptions): Session {
         !host &&
         resumed === null &&
         wants.play &&
-        nextFreeSeat(state) >= maxClients
+        nextFreeSeat(primary.state) >= maxClients
       ) {
         yieldBotSeat();
       }
@@ -821,7 +883,7 @@ export function createSession(options: SessionOptions): Session {
       } else if (resumed !== null) {
         seat = resumed;
         options.log?.(`net: slot ${slot} resumed seat ${seat}`);
-      } else if (wants.play && nextFreeSeat(state) < maxClients) {
+      } else if (wants.play && nextFreeSeat(primary.state) < maxClients) {
         // A joiner arrives beside the party with their OWN bag, purse and
         // build. The seat is never RENUMBERED — every command and input frame
         // in flight names one by index — but a seat somebody has LEFT is handed
@@ -843,12 +905,21 @@ export function createSession(options: SessionOptions): Session {
               checked.problems.join("; "),
           );
         }
+        // INTO THE PRIMARY WORLD — a joiner joins their friends, never
+        // whichever level somebody happens to be shopping on (issue #952,
+        // question 5). Every other world is padded out to the new width so the
+        // chair exists there too, ready for the day they step through a portal.
         seat = seatOf(
-          state,
-          seatHero(state, (checked?.loadout as Loadout | null) ?? null, {
-            bot,
-          }),
+          primary.state,
+          seatHero(
+            primary.state,
+            (checked?.loadout as Loadout | null) ?? null,
+            {
+              bot,
+            },
+          ),
         );
+        for (const world of worlds.values()) padWorld(world, seatCount());
         // A bot seat prices the horde the moment it stands in the fight —
         // the same knob `/players` turns, from the same one function.
         if (bot) applyPlayerScaling();
@@ -867,7 +938,7 @@ export function createSession(options: SessionOptions): Session {
         // level, per client, that the static tier is supposed to save. Cut per
         // recipient because a spectator's own `createGame` invented private
         // fields the server must never confirm or deny.
-        baseline: baselineFor(genesis, recipient),
+        baseline: baselineFor(primary.genesis, recipient),
         ackedSeq: 0,
         lastInputSeq: 0,
         needsFull: adopted !== null,
@@ -896,7 +967,7 @@ export function createSession(options: SessionOptions): Session {
           build: options.build,
           mods: options.mods ?? [],
         },
-        params,
+        params: primary.params,
         slot: client.slot,
         seat: recipient.seat,
         // The ticket back into this seat. Minted per WELCOME rather than per
@@ -1008,11 +1079,15 @@ export function createSession(options: SessionOptions): Session {
         // talent tree are private, so a command that touches one had to learn
         // whose it is — and letting a client NAME the seat would hand a
         // stranger somebody else's inventory in one field.
+        // AGAINST THE WORLD THE ACTING SEAT IS STANDING IN. A verb is about a
+        // hero, and the hero is wherever they walked to — a shopper's BUY has
+        // to reach the garage's merchant rather than the field's.
+        const world = worldOf(client.recipient.seat);
         runCommand(
-          state,
+          world.state,
           frame?.name,
           frame?.args,
-          state.players[client.recipient.seat],
+          world.state.players[client.recipient.seat],
         );
       }
     },

@@ -427,8 +427,17 @@ function patchBytes(current: unknown, entry: FieldPatch): unknown {
  * while a state assembled locally still holds the real thing and one thawed
  * from `saved-run.ts` holds the object form. Accepting all three is what lets
  * one differ run on either side of the wire.
+ *
+ * EXPORTED because the FULL-snapshot path needs it too. A delta puts the bytes
+ * back through `patchBytes` and gets a real typed array out; a full snapshot is
+ * assigned field by field, so without this the client would hold an
+ * index-keyed OBJECT where the fog grid should be — which reads correctly by
+ * index and is wrong the moment anything asks it for its length or writes to
+ * it. That path is taken exactly when a client is being handed a world it
+ * cannot rebuild: an adopted run, or a crossing into a level somebody else has
+ * been playing (`server/client.ts`).
  */
-function asBytes(value: unknown): Uint8Array | null {
+export function asBytes(value: unknown): Uint8Array | null {
   if (value instanceof Uint8Array) return value;
   if (Array.isArray(value)) return Uint8Array.from(value as number[]);
   if (isPlainObject(value)) {
