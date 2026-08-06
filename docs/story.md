@@ -104,9 +104,11 @@ laughed about it for a week — and she asks him for the one thing a search part
 cannot bring back: something of her daughter's. **The first time he speaks to
 her she says how she got here**, and everything she asks for afterwards comes
 out of that one conversation: the company rang at midnight with a woman reading
-a script about an incident involving a minor, never once said Ada's name, gave
-her a case number and asked whether she had any questions — so she put the
-phone down and drove straight out, and she is not going home to sit by it. He
+a script about an incident involving a NON-EMPLOYEE — the only category it has
+for a grown woman who was standing at its vending machines — never once said
+Ada's name, gave her a case number and asked whether she had any questions, so
+she put the phone down and drove straight out. She is not going home to sit by
+it. He
 can ask who rang, tell her she needn't have come, or tell her he is going after
 Ada; the three answers meet at the same ask, and on none of them is she scared
 for her daughter. Then, and only then, the errands: three, one per leg of

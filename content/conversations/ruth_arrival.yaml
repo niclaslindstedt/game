@@ -39,8 +39,8 @@ nodes:
         goto: going
   who:
     say:
-      - A WOMAN READING A SCRIPT. 'AN INCIDENT INVOLVING A MINOR.' NEVER HER NAME.
-      - THEN A CASE NUMBER, AND DID I HAVE QUESTIONS.
+      - A WOMAN WITH A SCRIPT. 'AN INCIDENT INVOLVING A NON-EMPLOYEE.' NOT HER NAME.
+      - THEN A CASE NUMBER. HAD I ANY QUESTIONS.
     choices:
       - text: WHAT DID YOU ASK?
         goto: asked
