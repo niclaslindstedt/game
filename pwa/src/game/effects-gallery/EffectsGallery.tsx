@@ -42,14 +42,17 @@ import {
 import { synth } from "../audio.ts";
 import { LoadingScreen } from "../LoadingScreen.tsx";
 import { playUiSound } from "../sfx/ui.ts";
+import { runDriveExhibit } from "./drive-exhibit.ts";
 import { effectsCatalog, searchExhibits } from "./effects-catalog.ts";
-import { pinEliteCaster, type Exhibit } from "./exhibit-kit.ts";
 import {
   EXHIBIT_SPEEDS,
-  runExhibit,
+  isDriveExhibit,
+  pinEliteCaster,
   speedLabel,
+  type Exhibit,
   type ExhibitRun,
-} from "./run-exhibit.ts";
+} from "./exhibit-kit.ts";
+import { runExhibit } from "./run-exhibit.ts";
 
 /** How far a drag must travel (CSS px) before it counts as a swipe rather than
  * a tap. A thumb's flick on a phone clears this easily; a tap never does. */
@@ -285,8 +288,15 @@ export function EffectsGallery({
     onClose();
   };
 
-  // Build (and rebuild) the staged run for the selected exhibit. One exhibit =
-  // one engine state; browsing tears the old diorama down and stands up the new.
+  // Build (and rebuild) the staged show for the selected exhibit. One exhibit =
+  // one live state; browsing tears the old one down and stands up the new.
+  //
+  // WHICH HOST stands it up is the exhibit's own `kind`, and it is the only
+  // thing on this screen that knows there are two: the DRIVE shelf runs on a
+  // `DriveState` with its own clock and its own events, everything else on a
+  // real run. Both answer the same `ExhibitRun`, so the keys, the swipe, the
+  // slow-motion chip and the contact-sheet script below are unchanged either
+  // way.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !exhibit || !assets) return;
@@ -296,15 +306,17 @@ export function EffectsGallery({
     // caster's kit as it builds the event. Cleared by `runExhibit`'s own
     // teardown, beside the cleave pin.
     pinEliteCaster(caster);
-    const run = runExhibit({
-      exhibit,
-      canvas,
-      ctx,
-      assets,
-      nukeFxRef,
-      levelUpFxRef,
-      speed,
-    });
+    const run = isDriveExhibit(exhibit)
+      ? runDriveExhibit({ exhibit, canvas, ctx, assets, speed })
+      : runExhibit({
+          exhibit,
+          canvas,
+          ctx,
+          assets,
+          nukeFxRef,
+          levelUpFxRef,
+          speed,
+        });
     runRef.current = run;
     return () => {
       runRef.current = null;

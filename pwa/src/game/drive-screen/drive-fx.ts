@@ -49,6 +49,19 @@ type DriveFx = {
   force: number;
   /** Per-effect scatter seed, so two sparks in the same tick differ. */
   seed: number;
+  /**
+   * RIDE THE CAR instead of staying where it happened.
+   *
+   * Everything else here is anchored to the ROAD, which is right for every one
+   * of them: grit, sparks and shards are thrown off at a point and left behind,
+   * and watching them recede is most of what makes speed read. The dead engine's
+   * SMOKE is the one exception, and it was wrong until this existed — a
+   * breakdown does not stop the car, it kills it, and the wreck then coasts the
+   * better part of a screen and a half before it comes to rest
+   * (`breakdownCoastPx`). Pinned to the road, the column stood over the spot the
+   * engine died and the wreck rolled silently out from under it.
+   */
+  follow?: boolean;
 };
 
 /** The road's live effects, its shake and its flash — one object the screen
@@ -131,14 +144,16 @@ export function drivePartHit(
   kick(state, shed ? 0.5 : 0.25, 0);
 }
 
-/** The engine has died: smoke off the bonnet for as long as the wreck sits. */
+/** The engine has died: smoke off the bonnet for as long as the wreck rolls and
+ * then sits. It RIDES the car (see `DriveFx.follow`) — a dead engine's smoke
+ * belongs to the engine, not to the patch of road it gave up on. */
 export function driveBreakdown(
   state: DriveFxState,
   x: number,
   y: number,
   nowMs: number,
 ): void {
-  push(state, "smoke", x, y, nowMs, DRIVE.breakdownHoldMs, 1);
+  push(state, "smoke", x, y, nowMs, DRIVE.breakdownHoldMs, 1, true);
   kick(state, 0.7, 0.2);
 }
 
@@ -157,6 +172,7 @@ function push(
   bornMs: number,
   lifeMs: number,
   force: number,
+  follow = false,
 ): void {
   state.fx.push({
     kind,
@@ -165,6 +181,7 @@ function push(
     bornMs,
     lifeMs,
     force,
+    follow,
     // The seed is the spawn POSITION rather than a draw — a `Math.random` here
     // would be fine (it is spawn-time, not per-frame), but deriving it means an
     // identical road replays with an identical picture, which is what makes a
@@ -252,16 +269,21 @@ export function drawDriveFx(
   nowMs: number,
   viewW: number,
   viewH: number,
+  /** Where the car is NOW — where a `follow` effect is drawn instead of where it
+   * was born. Omitted leaves every effect on the road, which is what all but one
+   * of them want. */
+  carAt?: { x: number; y: number },
 ): void {
   for (const fx of state.fx) {
     const t = Math.min(1, Math.max(0, (nowMs - fx.bornMs) / fx.lifeMs));
+    const at = fx.follow && carAt ? carAt : fx;
     // THROUGH THE PROJECTION, like everything else with a place on this road.
     // The world is drawn raked (`applyWorldProjection`, pitch 0.75) and every
     // body is seated by `bodyAnchor*`; an effect that took the raw camera
     // offset instead would sit a lane and a half below the collision it came
     // from — invisible on a flat road, glaring the moment the pitch is dialled.
-    const sx = bodyAnchorX(fx.x, fx.y, camera.x, camera.y);
-    const sy = bodyAnchorY(fx.x, fx.y, camera.x, camera.y);
+    const sx = bodyAnchorX(at.x, at.y, camera.x, camera.y);
+    const sy = bodyAnchorY(at.x, at.y, camera.x, camera.y);
     if (fx.kind === "spark") drawSparks(ctx, fx, t, sx, sy);
     else if (fx.kind === "grit") drawGrit(ctx, fx, t, sx, sy);
     else if (fx.kind === "shard") drawShards(ctx, fx, t, sx, sy);

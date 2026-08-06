@@ -36,6 +36,7 @@ import {
   type Exhibit,
 } from "./exhibit-kit.ts";
 import { riftPortalLook } from "../render/rift-portal.ts";
+import { driveExhibits } from "./drive-exhibits.ts";
 import { talentExhibits } from "./talent-exhibits.ts";
 import { weaponExhibits } from "./weapon-exhibits.ts";
 
@@ -2217,7 +2218,8 @@ const FIELD_EXHIBITS: Exhibit[] = [
 /**
  * The whole effects catalog, shelf by shelf: what a blow looks like where it
  * lands, every signature blade, every signature shot, the powers, every talent,
- * and the field's own effects.
+ * the field's own effects, and — last, because it is the one shelf a run does
+ * not host — the road's.
  */
 export function effectsCatalog(): Exhibit[] {
   const weapons = weaponExhibits();
@@ -2230,6 +2232,13 @@ export function effectsCatalog(): Exhibit[] {
     ...FIELD_EXHIBITS.filter((e) => e.group === "BOSSES"),
     ...FIELD_EXHIBITS.filter((e) => e.group === "ELITES"),
     ...FIELD_EXHIBITS.filter((e) => e.group === "WORLD"),
+    // THE ROAD, hosted by a `DriveState` rather than a run (see
+    // `drive-exhibit.ts`). It sits in this catalog rather than in a gallery of
+    // its own because everything ABOUT an exhibit — the search, the shelf jump,
+    // the slow-motion chip, `H`, the `?effects=` deep link and the contact
+    // sheet — is chrome, and the chrome is the whole reason the gallery is worth
+    // having. Only the HOST differs, and the gallery picks that off `kind`.
+    ...driveExhibits(),
   ];
 }
 

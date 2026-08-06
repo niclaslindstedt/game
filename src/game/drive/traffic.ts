@@ -23,10 +23,11 @@
 // without moving the collision.
 
 import { randomRange } from "@game/lib/rng.ts";
+import { clamp } from "@game/lib/vec.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
 import { courseLength, DRIVE } from "./config.ts";
-import { laneCenter } from "./crowd.ts";
+import { laneCenter, roadEdges } from "./crowd.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
 
 /** How thick the traffic is on this drive's rung — the baseline density
@@ -94,6 +95,7 @@ export function spawnTraffic(state: DriveState): void {
  * is well behind. */
 export function stepTraffic(state: DriveState, dt: number): void {
   const dir = state.params.direction;
+  const edges = roadEdges();
   for (const other of state.traffic) {
     if (other.hitCooldownMs > 0) other.hitCooldownMs -= dt * 1000;
     other.pos.x += other.speed * dt;
@@ -102,6 +104,17 @@ export function stepTraffic(state: DriveState, dt: number): void {
       const damp = Math.max(0, 1 - DRIVE.shuntDampPerSec * dt);
       other.slew *= damp;
       if (Math.abs(other.slew) < 1) other.slew = 0;
+      // A SHUNTED CAR IS STILL ON THE ROAD. The shove is a slew of up to
+      // `shuntMaxPx` bleeding off over a couple of seconds, and nothing else
+      // ever moved a car across the lanes, so nothing else had to say this —
+      // but unclamped it carries a hard-hit van a hundred and fifty px clear of
+      // the tarmac and parks it on the verge in front of the houses, which
+      // reads as the collision having deleted it rather than shoved it. The
+      // hero is held to the same edges (`stepDrive`); so is everybody else.
+      other.pos.y = clamp(other.pos.y, edges.top, edges.bottom);
+      if (other.pos.y === edges.top || other.pos.y === edges.bottom) {
+        other.slew = 0;
+      }
     }
   }
   state.traffic = state.traffic.filter((other) => {

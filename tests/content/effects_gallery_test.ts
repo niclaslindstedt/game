@@ -20,9 +20,16 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { effectsCatalog } from "../../pwa/src/game/effects-gallery/effects-catalog.ts";
-import type { Exhibit } from "../../pwa/src/game/effects-gallery/exhibit-kit.ts";
+import {
+  isDriveExhibit,
+  type Exhibit,
+} from "../../pwa/src/game/effects-gallery/exhibit-kit.ts";
 
 const EFFECTS = effectsCatalog();
+/** The RUN-hosted exhibits — everything the coverage checks below are about.
+ * The DRIVE shelf stages a road rather than a `ScenarioSpec` and is covered by
+ * its own suite (drive_exhibits_test.ts). */
+const STAGED = EFFECTS.filter((e) => !isDriveExhibit(e));
 
 // `effectsCatalog` composes its shelves by filtering the hand-authored list per
 // group, so an exhibit whose group is missing from that composition is authored,
@@ -37,6 +44,10 @@ const SHELVES = [
   "BOSSES",
   "ELITES",
   "WORLD",
+  // THE ROAD — hosted by a `DriveState` rather than a run, and composed onto the
+  // end of the catalog like every other shelf, so the same "is it actually
+  // reachable" check covers it.
+  "DRIVE",
 ];
 
 // The generated sprite-atlas manifest is the shipping sprite inventory.
@@ -55,7 +66,9 @@ const sprites = new Set(
  * behind (`applyScenario` only warns on an unknown id — the gallery would show
  * an empty stage and nobody would know why). */
 function stagedIds(exhibit: Exhibit) {
-  const stage = exhibit.stage ?? {};
+  // A DRIVE exhibit has no `ScenarioSpec` at all — it stages a road rather than
+  // a run, and what it plants is checked by driving it (drive_exhibits_test.ts).
+  const stage = isDriveExhibit(exhibit) ? {} : (exhibit.stage ?? {});
   return {
     weapons: [stage.weapon].filter(
       (id): id is string => typeof id === "string",
@@ -132,7 +145,7 @@ describe("effects gallery / catalog hygiene", () => {
           `${exhibit.id}: unknown enemy "${id}"`,
         ).toBeDefined();
       }
-      if (exhibit.levelId) {
+      if (!isDriveExhibit(exhibit) && exhibit.levelId) {
         expect(
           LEVELS[exhibit.levelId],
           `${exhibit.id}: unknown level`,
@@ -164,7 +177,7 @@ describe("effects gallery / coverage", () => {
       // A signature on something that is not a weapon can never play, so there
       // would be nothing to show — the schema refuses one anyway.
       const base = weaponOf(id);
-      expect(base === null || EFFECTS.some((e) => e.stage?.weapon === id)).toBe(
+      expect(base === null || STAGED.some((e) => e.stage?.weapon === id)).toBe(
         true,
       );
     });
@@ -173,7 +186,7 @@ describe("effects gallery / coverage", () => {
   for (const def of Object.values(talentDefs())) {
     it(`talent ${def.id} has an exhibit`, () => {
       expect(
-        EFFECTS.some((e) => e.stage?.talents?.[def.id] !== undefined),
+        STAGED.some((e) => e.stage?.talents?.[def.id] !== undefined),
         `no exhibit trains ${def.id} — see gallery/talent-exhibits.ts`,
       ).toBe(true);
     });
@@ -183,7 +196,7 @@ describe("effects gallery / coverage", () => {
     const timed = Object.values(ABILITY_DEFS).filter((def) => !def.nuke);
     for (const def of timed) {
       expect(
-        EFFECTS.some((e) => e.stage?.runAbilities?.includes(def.id)),
+        STAGED.some((e) => e.stage?.runAbilities?.includes(def.id)),
         `no exhibit runs the ${def.id} powerup`,
       ).toBe(true);
     }
