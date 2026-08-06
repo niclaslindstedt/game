@@ -80,6 +80,19 @@ export function createControls(deps: {
   openShots: () => void;
   /** Live mirror of whether that gallery is up — it owns the keyboard too. */
   shotsOpenRef: MutableRefObject<boolean>;
+  /**
+   * THE ROAD IS UP — a DRIVE owns the whole screen and the whole of the input
+   * (pwa/src/game/drive-screen/), so this layer cedes to it exactly as it cedes
+   * to a shelf.
+   *
+   * It has to be ceded rather than merely ignored. The departing run is still
+   * mounted under an interlude (that is the point — its mount is never torn
+   * down and rebuilt around a minute of road), so without this every key the
+   * road reads ALSO reaches the run: the screenshot bind took two pictures,
+   * WASD queued jumps and steering against a frozen hero, and the pause bind
+   * raised a screen on a run nobody could see.
+   */
+  driveOpenRef?: MutableRefObject<unknown>;
   /** The SCREENSHOT bind's own verb: take one, captioned by the caller. */
   takeScreenshot: () => void;
   /** A pause the viewer opened by hand — latched so the bot's input loop
@@ -116,6 +129,7 @@ export function createControls(deps: {
     shotFlashElRef,
     openShots,
     shotsOpenRef,
+    driveOpenRef,
     takeScreenshot,
     userPausedRef,
     dialogueRevealRef,
@@ -342,6 +356,7 @@ export function createControls(deps: {
     // tableau is a moment a player wants a picture of. The screenshot bind
     // neither freezes the run nor raises a screen, so letting it through
     // cannot eat the beat the guard exists to protect.
+    if (driveOpenRef?.current) return;
     if (state.phase === "dying") {
       if (actionForCode(event.code, getSettings().keybindings) === "screenshot")
         takeScreenshot();
@@ -359,6 +374,7 @@ export function createControls(deps: {
     // SCREENSHOT gallery is the same shelf discipline (use-run-shelf.ts) and
     // cedes on the same line.
     if (achievementsOpenRef.current || shotsOpenRef.current) return;
+    if (driveOpenRef?.current) return;
     const binds = getSettings().keybindings;
     // Track held movement keys + the walk modifier every keydown (repeats
     // included — Set.add is idempotent) so the sim loop reads live state.
@@ -522,6 +538,7 @@ export function createControls(deps: {
   // to fight the canvas steering.
   const onMouseDown = (event: MouseEvent) => {
     if (achievementsOpenRef.current || shotsOpenRef.current) return;
+    if (driveOpenRef?.current) return;
     const action = actionForCode(
       mouseButtonCode(event.button),
       getSettings().keybindings,
@@ -533,6 +550,7 @@ export function createControls(deps: {
   };
   const onWheel = (event: WheelEvent) => {
     if (achievementsOpenRef.current || shotsOpenRef.current) return;
+    if (driveOpenRef?.current) return;
     const action = actionForCode(
       wheelCode(event.deltaY),
       getSettings().keybindings,

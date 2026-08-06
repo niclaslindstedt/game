@@ -3320,15 +3320,55 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "drive_arrive_cars": {
+      "id": "drive_arrive_cars",
+      "pages": [["NOBODY OUT HERE CAN DRIVE. NOT ONE OF THEM LOOKED."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "drive_arrive_clean": {
       "id": "drive_arrive_clean",
       "pages": [["CLEAN RUN. NOT A MARK ON HER."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "drive_arrive_posts": {
+      "id": "drive_arrive_posts",
+      "pages": [
+        [
+          "THEY'VE PUT THOSE LAMP STANDARDS FAR TOO CLOSE TO THE KERB. SOMEBODY'S GOING TO HAVE AN ACCIDENT."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_arrive_quick": {
+      "id": "drive_arrive_quick",
+      "pages": [["GOOD RUN TONIGHT. ROAD OPENED RIGHT UP FOR ME."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_arrive_slow": {
+      "id": "drive_arrive_slow",
+      "pages": [
+        ["TOOK MY TIME. NO SENSE ARRIVING SOMEWHERE LIKE THIS IN A HURRY."]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "drive_arrive_some": {
       "id": "drive_arrive_some",
       "pages": [["ROADS ARE ROUGH OUT THIS WAY. ALWAYS HAVE BEEN."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_arrive_wreck": {
+      "id": "drive_arrive_wreck",
+      "pages": [
+        [
+          "I'LL HAVE TO LOOK AT HER TONIGHT. THIRTY YEARS AND SHE'S NEVER GIVEN ME A DAY'S TROUBLE."
+        ]
+      ],
       "portrait": "hero",
       "speaker": "{HERO}"
     },

@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 29;
+export const PROTOCOL_VERSION = 30;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -100,6 +100,9 @@ export type SessionParams = {
   cacheSlots?: number;
   /** Arrive at the wheel — the far side of the drive home (`RunParams`). */
   startInCar?: boolean;
+  /** A thought the hero arrived still having, spoken as the first page of the
+   * level's opening monologue (`RunParams.arrivalThought`). */
+  arrivalThought?: string;
   /** The CAMPAIGN quest chain the hero carries. Opaque here like `loadout`:
    * the wire moves it, the engine reads it. */
   campaignQuests?: unknown | null;

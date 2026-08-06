@@ -7,6 +7,7 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
+import { thoughtDef } from "../defs/thoughts.ts";
 import { heroInPlay } from "../party.ts";
 import { isPartyRun } from "../seating.ts";
 import { advanceCutsceneChain } from "../story.ts";
@@ -89,13 +90,58 @@ export function closeLevelup(player: Player): void {
 }
 
 /**
+ * THE LINE THE HERO ARRIVED STILL HAVING, as pages — empty for a plain arrival.
+ *
+ * Today it is the DRIVE's verdict on the trip in (`driveVerdict`, src/game/
+ * drive/): he gets out of the car and says what he made of the journey. A
+ * thought MAY carry a `{ them: [...] }` block when somebody answers him; an
+ * arrival line never does — he is on his own, standing beside a car — so the
+ * plain rows are the whole of it.
+ */
+function arrivalPages(state: GameState): readonly (readonly string[])[] {
+  const def = state.arrivalThought
+    ? thoughtDef(state.arrivalThought)
+    : undefined;
+  if (!def) return [];
+  return def.pages.filter((page): page is string[] => Array.isArray(page));
+}
+
+/**
+ * THE OPENING MONOLOGUE THIS RUN ACTUALLY PLAYS — the level's own, with
+ * whatever the hero arrived still thinking about after it.
+ *
+ * ONE ARRIVAL, ONE MONOLOGUE. The trip in can leave him with something to say,
+ * and the right place for a man's opinion of a journey is the moment he gets
+ * out of the car — not a popup on the road he is still driving. So it arrives
+ * as a session parameter (`RunParams.arrivalThought`) and is spoken in the
+ * level's own briefing, in the same box, in the same voice.
+ *
+ * IT GOES LAST, and that is load-bearing rather than a taste call. A repeat
+ * visit SKIPS the level's own opening (`skipStoryOpening` — we die and replay a
+ * lot, and nobody wants the same monologue five times), but the trip that just
+ * happened has never been read: putting the arrival line at the END means the
+ * skip can land on it by paging past what it skipped, with no second piece of
+ * state saying which half is spent. It is also the better joke — he has his
+ * serious thought about the job ahead, and then his last word is about the
+ * suspension.
+ *
+ * Everything that walks the intro reads it through here, so a run with an
+ * arrival line has one more page to turn and nothing else has to know.
+ */
+export function introPages(state: GameState): readonly (readonly string[])[] {
+  const arrival = arrivalPages(state);
+  const level = runLevelDef(state).intro;
+  return arrival.length ? [...level, ...arrival] : level;
+}
+
+/**
  * The player's tap through the level-intro monologue: turn the page. Past the
  * last page the briefing is over — flash the level-name `title` card before
  * the drop.
  */
 export function advanceIntro(state: GameState): void {
   if (state.phase !== "intro") return;
-  const pages = runLevelDef(state).intro;
+  const pages = introPages(state);
   state.introPage++;
   if (state.introPage >= pages.length) {
     state.introPage = pages.length;
@@ -216,7 +262,15 @@ export function skipCutscene(state: GameState): void {
  */
 export function skipStoryOpening(state: GameState): void {
   if (state.phase === "cutscene") skipCutscene(state);
-  if (state.phase === "intro") state.phase = "title";
+  if (state.phase === "intro") {
+    // …but a line he arrived WITH is not part of the level's opening and has
+    // never been read: what he made of tonight's drive is about tonight. Page
+    // straight to it and let the monologue play out from there (`introPages`
+    // puts it last precisely so this is one assignment rather than a second
+    // piece of state); a plain arrival has nothing there and lands on the card.
+    state.introPage = runLevelDef(state).intro.length;
+    if (state.introPage >= introPages(state).length) state.phase = "title";
+  }
   // Arm the WHOLE party. The opening is the level's, so the skip is too: a
   // party that armed seat 0 alone would leave every joiner holstered for the
   // rest of a level whose one arming beat has just been skipped past — the

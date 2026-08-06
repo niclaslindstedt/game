@@ -40,6 +40,7 @@ import { DRIVE_BOT_OVERRIDES } from "../../generated/botTuning.ts";
 import { CAR } from "../vehicles.ts";
 import { DRIVE, DRIVE_OUTCOME } from "./config.ts";
 import { laneAt, roadEdges } from "./crowd.ts";
+import { propRadius } from "./street.ts";
 import { laneRunsWithHero } from "./traffic.ts";
 import {
   DRIVE_BOT_DEFAULTS,
@@ -234,6 +235,23 @@ function lineCost(
     const predY = ped.pos.y + ped.vel.y * eta;
     cost +=
       tune.bodyCost * proximity(predY - y, bodyNeed) * urgency(eta, horizonSec);
+  }
+
+  // THE KERB. Standing furniture only — a felled post is lying flat on the
+  // tarmac and is nobody's problem any more (the collision skips it too). It is
+  // read exactly like a body, with two differences that both matter: it does
+  // not move, so where it looks is where it is; and it is worth far more to
+  // miss, because it neither flinches nor crumples.
+  for (const prop of drive.props) {
+    if (prop.felled) continue;
+    const along = (prop.pos.x - car.pos.x) * dir;
+    if (along <= 0 || along > aheadPx) continue;
+    const eta = along / speed;
+    const need = tune.clearancePx + CAR_HALF_W + propRadius(prop.kind);
+    cost +=
+      (prop.kind === "parked_car" ? tune.trafficCost : tune.propCost) *
+      proximity(prop.pos.y - y, need) *
+      urgency(eta, horizonSec);
   }
 
   const carNeed = tune.clearancePx + CAR_HALF_W * 2;

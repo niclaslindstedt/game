@@ -25,6 +25,8 @@ import {
   createDriveDriver,
   driveDriverInput,
   driveMph,
+  driveVerdict,
+  inevitableHit,
   restartDrive,
   stepDrive,
   thoughtDef,
@@ -41,9 +43,17 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import { carKeyControl } from "../car-keys.ts";
+import { actionForCode } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
+import {
+  DialogueBox,
+  IDLE_REVEAL,
+  type DialogueReveal,
+} from "../overlays/DialogueBox.tsx";
+import { worldToCanvas } from "../render/tilt.ts";
 import { viewScaleFor } from "../render/view.ts";
 import { engineNote } from "../sfx/drive.ts";
+import { DrivePause } from "./DrivePause.tsx";
 import {
   clearDriveFx,
   createDriveFx,
@@ -52,6 +62,15 @@ import {
   stepDriveFx,
   type DriveFxState,
 } from "./drive-fx.ts";
+import {
+  armDrama,
+  clearDrama,
+  createDriveDrama,
+  dramaDepth,
+  dramaTimeScale,
+  dramaZoom,
+  type DriveDrama,
+} from "./drive-time.ts";
 import {
   createEngineNote,
   drainDrive,
@@ -69,25 +88,59 @@ const STEP_MS = 16;
 const MAX_CATCHUP_MS = 100;
 
 /**
- * How long one of the hero's lines is left up when NOBODY IS WATCHING FOR A TAP
- * (ms). A line parks the car — that is the point of it, and a player dismisses
- * it — but an attract loop has no thumb, so without this the demo stops dead on
- * the monologue and never reaches the road it was raised to talk about.
- * Comfortably longer than reading four short lines out loud.
+ * One of the hero's thoughts, mid-delivery — which one, its pages, how far
+ * through them he has got, and the drive-clock ms this page gives way at.
+ *
+ * IT IS A BARK, NOT A SCENE, and that is the whole design of the road's voice.
+ * The first cut froze the world for it — the same freeze the run's own dialogue
+ * is — and it was wrong for a reason that only shows up at speed: the hero's
+ * line about minding how you go is funny BECAUSE he says it while driving, and
+ * a box that stops the car to deliver it turns a man talking to himself at the
+ * wheel into a cutscene about talking to himself. So it prints over the moving
+ * road, holds long enough to read, and gets out of the way on its own. Nothing
+ * on this screen ever waits for the player to dismiss a line.
  */
-const AUTO_SPEECH_MS = 3400;
+type Speech = {
+  id: string;
+  pages: string[][];
+  page: number;
+  /** Drive-clock ms this page is retired at — the drive's clock rather than
+   * the wall's, so a paused road holds the line where it was. */
+  untilMs: number;
+};
+
+/**
+ * How long a page of it sits there: a fixed beat, plus reading time.
+ *
+ * The crawl prints at about 30 ms a character (`useTypewriter`), so the second
+ * term covers the printing AND leaves the finished line up for roughly as long
+ * again — which at the speeds this is read at is the difference between a line
+ * the player noticed and one they saw go past.
+ */
+function barkMs(page: readonly string[]): number {
+  const chars = page.join(" ").length;
+  return Math.min(9000, Math.max(3600, 1800 + chars * 62));
+}
 
 export function DriveScreen({
   params,
   assets,
   onArrived,
   stage,
+  heroName,
+  heroPortrait,
+  onScreenshot,
   auto = false,
 }: {
   params: DriveParams;
   assets: GameAssets;
-  /** The road is behind him: make the crossing that was waiting on it. */
-  onArrived: (to: string, bodies: number) => void;
+  /**
+   * The road is behind him: make the crossing that was waiting on it, carrying
+   * what he made of the trip — `verdict` is the id of the thought the drive
+   * earned (`driveVerdict`), spoken as the first page of the destination's
+   * opening monologue rather than as a popup on the road.
+   */
+  onArrived: (to: string, bodies: number, verdict: string) => void;
   /**
    * DEVELOPER STAGING, run once on the fresh road before its first tick — the
    * hook the `?drive` workbench plants a body or a van in front of the bumper
@@ -95,6 +148,22 @@ export function DriveScreen({
    * `createDrive` built and this parameter does not exist for them.
    */
   stage?: (drive: DriveState) => void;
+  /** The name the player gave this hero — the speech box's own header. */
+  heroName?: string;
+  /**
+   * His face, already composed by the caller.
+   *
+   * The DOLL is built from a `GameState` (worn armor, held weapon, the blood on
+   * his coat) and a drive has none — so the screen that mounts the road hands
+   * the picture in rather than this one reaching for a run it deliberately does
+   * not have. Omitted (the `?drive` workbench) → the box prints his name over
+   * the lines with no portrait panel, which is the same box a shade shorter.
+   */
+  heroPortrait?: string | null;
+  /** Take a picture (the SCREENSHOT bind). The road is inside the run's own
+   * screen, so the caller owns the roll and the flash; all this does is notice
+   * the key, because while a drive is up the run's controls are not listening. */
+  onScreenshot?: () => void;
   /**
    * SOMEBODY ELSE AT THE WHEEL — the engine's own auto-driver
    * (`createDriveDriver`) supplies the input and the pad and the keys sit out.
@@ -106,9 +175,10 @@ export function DriveScreen({
    * it is a stalled attract loop, because the crossing on the far side of the
    * road is what the run was waiting for.
    *
-   * The DIALOGUE follows the wheel: with nobody to tap, the hero's four lines
-   * dismiss themselves after {@link AUTO_SPEECH_MS} instead of parking the car
-   * forever on the first one.
+   * The DIALOGUE needs no switch of its own: his lines are BARKED over a road
+   * that never stops for them (see `Speech`), so an unattended drive pages
+   * through them exactly as an attended one does — there is nothing here for a
+   * missing thumb to be stuck on.
    */
   auto?: boolean;
 }): ReactElement {
@@ -122,6 +192,7 @@ export function DriveScreen({
   );
   const burstsRef = useRef<Burst[]>([]);
   const fxRef = useRef<DriveFxState>(createDriveFx());
+  const dramaRef = useRef<DriveDrama>(createDriveDrama());
   const engineRef = useRef(createEngineNote());
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
   const keysRef = useRef<Set<string>>(new Set());
@@ -132,32 +203,63 @@ export function DriveScreen({
   const driverRef = useRef<DriveDriver | null>(
     auto ? createDriveDriver() : null,
   );
-  /** Drive-clock ms at which an unattended line puts itself away. */
-  const autoSpeechRef = useRef(0);
-  const [speech, setSpeech] = useState<string[] | null>(null);
+  const [speech, setSpeech] = useState<Speech | null>(null);
+  const [paused, setPaused] = useState(false);
   const [hud, setHud] = useState({ mph: 0, gear: 0, bodies: 0, wear: 0 });
-  const speechRef = useRef<string[] | null>(null);
+  const speechRef = useRef<Speech | null>(null);
+  const pausedRef = useRef(false);
+  /** What the speech box says its tap means — the same seam the run's own
+   * dialogue uses, so a keypress and a tap can never disagree about whether
+   * this one finishes the crawl or turns the page. */
+  const revealRef = useRef<DialogueReveal>(IDLE_REVEAL);
 
-  /** Raise one of the hero's four lines. Held on a ref as well as in state so
-   * the loop can tell whether one is already up without re-rendering. */
-  const say = useCallback((id: string) => {
-    const def = thoughtDef(id);
-    if (!def) return;
-    // A page may carry a `{ them: [...] }` block when somebody answers him;
-    // none of the drive's four do — he is alone in the car, which is the whole
-    // joke — so the plain string rows are the whole of it.
-    const rows = def.pages
-      .flat()
-      .filter((p): p is string => typeof p === "string");
-    const lines = [...withHeroNameLines(rows)];
-    speechRef.current = lines;
-    setSpeech(lines);
+  /** Raise one of the hero's lines. Held on a ref as well as in state so the
+   * loop can tell whether one is already up without re-rendering. */
+  const say = useCallback(
+    (id: string, nowMs: number) => {
+      const def = thoughtDef(id);
+      if (!def) return;
+      // A page may carry a `{ them: [...] }` block when somebody answers him;
+      // none of the drive's do — he is alone in the car, which is the whole
+      // joke — so the plain string rows are the whole of it.
+      const pages = def.pages.map((page) => [
+        ...withHeroNameLines(Array.isArray(page) ? page : page.them, heroName),
+      ]);
+      const next = {
+        id,
+        pages,
+        page: 0,
+        untilMs: nowMs + barkMs(pages[0] ?? []),
+      };
+      speechRef.current = next;
+      setSpeech(next);
+    },
+    [heroName],
+  );
+
+  /** The bark's own clock, run from inside the loop: turn the page when this
+   * one has had its time, and take the box away after the last. */
+  const ageSpeech = useCallback((nowMs: number) => {
+    const live = speechRef.current;
+    if (!live || nowMs < live.untilMs) return;
+    if (live.page + 1 >= live.pages.length) {
+      speechRef.current = null;
+      setSpeech(null);
+      return;
+    }
+    const page = live.page + 1;
+    const next = {
+      ...live,
+      page,
+      untilMs: nowMs + barkMs(live.pages[page] ?? []),
+    };
+    speechRef.current = next;
+    setSpeech(next);
   }, []);
 
-  const dismiss = useCallback(() => {
-    speechRef.current = null;
-    autoSpeechRef.current = 0;
-    setSpeech(null);
+  const setPause = useCallback((on: boolean) => {
+    pausedRef.current = on;
+    setPaused(on);
   }, []);
 
   // ── THE CONTROLS ──────────────────────────────────────────────────────────
@@ -171,10 +273,28 @@ export function DriveScreen({
   //
   // THE KEYS ARE FIXED: D accelerates, A slows and backs up, W and S are the
   // wheel, on both legs and whichever way the wagon is facing.
+  //
+  // TWO OF THE RUN'S OWN BINDS ARE ANSWERED HERE TOO, and they have to be:
+  // while a drive is up the run's control layer is not listening (there is no
+  // live `GameState` under an interlude for it to be built around), so PAUSE
+  // and SCREENSHOT would simply do nothing on the one screen a player is most
+  // likely to want a picture of.
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      const action = actionForCode(e.code, getSettings().keybindings);
+      if (action === "screenshot") {
+        onScreenshot?.();
+        return;
+      }
+      // ESCAPE is the pause on this screen whatever the bind says: it is what
+      // every player reaches for, and the road has no other menu for it to
+      // mean.
+      if (action === "pause" || e.code === "Escape") {
+        setPause(!pausedRef.current);
+        return;
+      }
+      if (pausedRef.current) return;
       keysRef.current.add(e.code);
-      if (speechRef.current) dismiss();
     };
     const up = (e: KeyboardEvent) => keysRef.current.delete(e.code);
     window.addEventListener("keydown", down);
@@ -183,7 +303,7 @@ export function DriveScreen({
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [dismiss]);
+  }, [onScreenshot, setPause]);
 
   const nose = params.direction === 1 ? 1 : -1;
 
@@ -234,37 +354,50 @@ export function DriveScreen({
           ? { pedal: pad.x * nose, wheel: pad.y }
           : carKeyControl(keysRef.current, getSettings().keybindings);
 
-      // A line on screen parks the car — the same freeze the run's own dialogue
-      // is, and for the same reason: nobody reads a monologue at 120 mph. With
-      // nobody there to tap it away, it puts ITSELF away (see `auto`); the
-      // clock is the wall's, because the drive's own stops with the road.
-      if (driver && speechRef.current !== null) {
-        if (autoSpeechRef.current === 0)
-          autoSpeechRef.current = now + AUTO_SPEECH_MS;
-        else if (now >= autoSpeechRef.current) dismiss();
-      }
-      const paused = speechRef.current !== null;
-      acc += Math.min(MAX_CATCHUP_MS, now - last);
+      // ONE THING PARKS THE CAR, and it is the pause card. A LINE DOES NOT —
+      // his thoughts are barked over a road that keeps moving (see `Speech`),
+      // which is the only way a man muttering at the wheel reads as a man
+      // muttering at the wheel, and it is also what leaves an UNATTENDED drive
+      // (the attract loop, a playtest) nothing to be stuck on.
+      const frozen = pausedRef.current;
+
+      // ── THE MOMENT ────────────────────────────────────────────────────────
+      // How much simulation a real millisecond buys right now. 1 nearly always;
+      // a quarter for the length of a collision nobody could have avoided (see
+      // drive-time.ts, and `inevitableHit` for who decides "nobody could").
+      const depth = frozen ? 0 : dramaDepth(dramaRef.current, now);
+      acc += Math.min(MAX_CATCHUP_MS, now - last) * dramaTimeScale(depth);
       last = now;
       while (acc >= STEP_MS) {
         acc -= STEP_MS;
-        if (!paused) {
-          stepDrive(drive, STEP_MS, inputRef.current);
-          drainDrive(drive, burstsRef.current, fxRef.current, say);
-          // THE FX AND THE ENGINE AGE ON THE DRIVE'S OWN CLOCK, inside the
-          // fixed step — so a slow frame never skips a grain or fast-forwards a
-          // spark, and the speech box's freeze stops both dead exactly as it
-          // stops the road.
-          stepDriveFx(fxRef.current, STEP_MS, drive.ms);
-          runEngineNote(drive, engineRef.current);
-          endDrive(drive, burstsRef.current, fxRef.current, onArrived);
-        }
+        if (frozen) break;
+        stepDrive(drive, STEP_MS, inputRef.current);
+        drainDrive(drive, burstsRef.current, fxRef.current, say);
+        ageSpeech(drive.ms);
+        // Ask the road whether the next hit is already settled, and take the
+        // moment if it is. AFTER the step, so the question is asked of where
+        // the bumper actually got to rather than where it was a frame ago —
+        // the same ordering the collision itself is resolved on.
+        if (inevitableHit(drive)) armDrama(dramaRef.current, now);
+        // THE FX AND THE ENGINE AGE ON THE DRIVE'S OWN CLOCK, inside the
+        // fixed step — so a slow frame never skips a grain or fast-forwards a
+        // spark, the pause card's freeze stops both dead exactly as it stops
+        // the road, and the slow-motion slows them with it.
+        stepDriveFx(fxRef.current, STEP_MS, drive.ms);
+        runEngineNote(drive, engineRef.current);
+        endDrive(
+          drive,
+          burstsRef.current,
+          fxRef.current,
+          dramaRef.current,
+          onArrived,
+        );
       }
 
       // ── PAINT ─────────────────────────────────────────────────────────────
       const viewW = w / (scale * dpr);
       const viewH = h / (scale * dpr);
-      ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+      const unit = scale * dpr;
       ctx.imageSmoothingEnabled = false;
       // THE CAMERA IS SHAKEN, NOT THE CONTEXT: everything drawn this frame —
       // the road, the crowd, the gore and the sparks — reads the same camera,
@@ -274,9 +407,29 @@ export function DriveScreen({
         fxRef.current,
         driveCamera(drive, viewW, viewH),
         drive.ms,
-        Math.abs(drive.car.speed) / DRIVE.topSpeedPx,
       );
-      drawDrive(ctx, drive, camera, assets.sprites, viewW, viewH, now);
+      // …but the LEAN-IN is a context scale, about the car's own screen point —
+      // the run's own death push-in, exactly (render/death.ts, and the note in
+      // game-screen/render-frame.ts for why it is a transform rather than a
+      // smaller view rect). Everything below still draws in unzoomed view
+      // units, so no pass downstream knows or cares that the camera leaned in,
+      // and the whole-view fills still cover the canvas for any anchor inside
+      // the frame.
+      const zoom = dramaZoom(depth);
+      if (zoom > 1) {
+        const seat = worldToCanvas(drive.car.pos.x, drive.car.pos.y, camera);
+        ctx.setTransform(
+          unit * zoom,
+          0,
+          0,
+          unit * zoom,
+          unit * seat.x * (1 - zoom),
+          unit * seat.y * (1 - zoom),
+        );
+      } else {
+        ctx.setTransform(unit, 0, 0, unit, 0, 0);
+      }
+      drawDrive(ctx, drive, camera, assets.sprites, viewW, viewH, drive.ms);
 
       burstsRef.current = drawBursts(
         ctx,
@@ -315,7 +468,16 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [assets, dismiss, nose, onArrived, say]);
+  }, [ageSpeech, assets, nose, onArrived, say]);
+
+  /** Give up on the road: arrive anyway, with whatever the trip had reached. */
+  const skipDrive = useCallback(() => {
+    setPause(false);
+    const drive = driveRef.current;
+    // He still made the trip — the game just stops showing it — so the verdict
+    // is read off however far he actually got.
+    onArrived(params.to, drive.bodies, driveVerdict(drive));
+  }, [onArrived, params.to, setPause]);
 
   const damage = hud.wear;
   const failing = damage > 70;
@@ -365,10 +527,6 @@ export function DriveScreen({
       <div
         style={PAD}
         onPointerDown={(e) => {
-          if (speechRef.current) {
-            dismiss();
-            return;
-          }
           (e.target as Element).setPointerCapture(e.pointerId);
           padRef.current = { x: 0, y: 0 };
           padOrigin = { x: e.clientX, y: e.clientY };
@@ -390,46 +548,64 @@ export function DriveScreen({
           padOrigin = null;
         }}
       />
+      {/* HIS OWN VOICE, IN THE GAME'S OWN WINDOW. The very same box every
+          other line in the game is delivered in (`DialogueBox`): the grained
+          panel, his face beside his name, the letter-by-letter crawl, and copy
+          re-broken to the box's MEASURED column — which is the bug this
+          replaced. The road's old box wrapped its text at a fixed 40 rem and
+          sat in a 78vw card, so on any phone the monologue printed straight out
+          through both walls of the window it was supposedly inside.
+
+          NO BACKDROP AND NO POINTER. It is a bark over a road that is still
+          moving, so it neither dims the picture nor takes the thumb: the wrapper
+          is inert, and the box's own `pointer-events: none` means a player who
+          puts a thumb down over it is steering, not reading. */}
       {speech && (
-        <button type="button" style={SPEECH} onClick={dismiss}>
-          {speech.map((line, i) => (
-            <PixelText
-              key={i}
-              font={assets.font}
-              text={line}
-              scale={2}
-              color="#e8e4d8"
-              maxWidth={40}
-            />
-          ))}
-          <PixelText
+        <div style={BARK} aria-live="polite">
+          <DialogueBox
             font={assets.font}
-            text="TAP TO GO ON"
-            scale={1}
-            color="#8b8f99"
+            lines={speech.pages[speech.page] ?? EMPTY_PAGE}
+            speaker={heroName ?? "YOU"}
+            speakerColor="#7ef0c8"
+            portrait={heroPortrait}
+            pageKey={`${speech.id}:${speech.page}`}
+            revealRef={revealRef}
           />
-        </button>
+        </div>
+      )}
+      {paused && (
+        <DrivePause
+          font={assets.font}
+          onResume={() => setPause(false)}
+          onSkip={skipDrive}
+        />
       )}
     </div>
   );
 }
+
+const EMPTY_PAGE: string[] = [];
 
 /** The pad's anchor, in client px — module-scoped because it is read inside
  * handlers that must not re-bind every render. */
 let padOrigin: { x: number; y: number } | null = null;
 
 /**
- * THE TWO TERMINAL BEATS, once their hold has run out — the SCREEN's own
- * policy, which is why they are here rather than in the shared drain
- * (`loop.ts`). A BREAKDOWN puts the player back at the top of the SAME road
- * (the seed is kept, so the stretch that killed him is the stretch he gets to
- * learn); an ARRIVAL hands the crossing back to the game screen.
+ * THE TWO TERMINAL BEATS, once their hold has run out. A BREAKDOWN puts the
+ * player back at the top of the SAME road (the seed is kept, so the stretch
+ * that killed him is the stretch he gets to learn); an ARRIVAL hands the
+ * crossing back to the game screen.
+ *
+ * Not in `loop.ts` with the rest of the drain, because these are POLICY rather
+ * than presentation and the drive's two hosts answer them differently — the
+ * gallery's exhibit simply re-stages its show.
  */
 function endDrive(
   drive: DriveState,
   bursts: Burst[],
   fx: DriveFxState,
-  onArrived: (to: string, bodies: number) => void,
+  drama: DriveDrama,
+  onArrived: (to: string, bodies: number, verdict: string) => void,
 ): void {
   if (
     drive.outcome === DRIVE_OUTCOME.broken &&
@@ -438,12 +614,19 @@ function endDrive(
     Object.assign(drive, restartDrive(drive));
     bursts.length = 0;
     clearDriveFx(fx);
+    clearDrama(drama);
   }
   if (
     drive.outcome === DRIVE_OUTCOME.arrived &&
     drive.outcomeMs > DRIVE.arrivalHoldMs
   ) {
-    onArrived(drive.params.to, drive.bodies);
+    // WHAT HE MAKES OF THE TRIP goes with him rather than being said here.
+    // `driveVerdict` reads the whole drive — the clock, the car, the other
+    // drivers, the council's lighting and the people — and the line it picks is
+    // spoken as the last page of the destination's opening monologue, which is
+    // where a man's opinion of a journey belongs: standing beside the car,
+    // having finished it. (`RunParams.arrivalThought` → `introPages`.)
+    onArrived(drive.params.to, drive.bodies, driveVerdict(drive));
   }
 }
 
@@ -476,18 +659,12 @@ const PAD: CSSProperties = {
   inset: 0,
   touchAction: "none",
 };
-const SPEECH: CSSProperties = {
+/** Where a bark sits: across the bottom of the picture, inert. The box inside
+ * places itself (`.dialogue-box` is absolutely positioned against its own
+ * offset parent), so this only has to be a full-screen, tap-transparent layer
+ * over the pad. */
+const BARK: CSSProperties = {
   position: "absolute",
-  left: "50%",
-  bottom: "10%",
-  transform: "translateX(-50%)",
-  maxWidth: "min(78vw, 560px)",
-  padding: "14px 18px",
-  background: "rgba(10, 12, 20, 0.92)",
-  border: "2px solid #4a4f5c",
-  display: "flex",
-  flexDirection: "column",
-  gap: 8,
-  alignItems: "flex-start",
-  cursor: "pointer",
+  inset: 0,
+  pointerEvents: "none",
 };

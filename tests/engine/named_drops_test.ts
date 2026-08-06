@@ -127,7 +127,11 @@ describe("named-item drop gates", () => {
     art.players[0].level = 99;
     const { tiers } = rollMany(art, 120_000);
     expect(tiers.artifact ?? 0).toBeGreaterThan(0);
-  });
+    // A hundred and twenty thousand rolls crosses the 5 s default under a full
+    // suite's parallel load — a flake in the RUNNER, never in the assertion,
+    // which is deterministic on a fixed seed. Headroom rather than fewer rolls:
+    // the count is what makes the rarest tier show up at all.
+  }, 20_000);
 
   it("ARTIFACTS never drop below the level cap (even on JESUS)", () => {
     // The cap chase: an artifact falls only once the hero has reached
@@ -141,5 +145,6 @@ describe("named-item drop gates", () => {
     const { tiers } = rollMany(state, 120_000);
     expect(tiers.artifact ?? 0).toBe(0);
     expect(tiers.legendary ?? 0).toBeGreaterThan(0);
-  });
+    // Same headroom, same reason, same number of rolls.
+  }, 20_000);
 });

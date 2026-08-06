@@ -212,37 +212,27 @@ export function stepDriveFx(
 }
 
 /**
- * THE RIDE ITSELF — how hard the frame trembles at a given fraction of top
- * speed, before any collision is counted.
- *
- * A wagon this old at 120 mph is not a smooth place to sit, and the tremble is
- * the only thing on screen that says so: the road's own art is four flat
- * colours and the car is drawn dead level, so without this the difference
- * between 30 and 120 is a number in the corner. It rises with the SQUARE of
- * speed — barely there at a crawl, unmistakable at the top end — and it is
- * capped well under a collision's shove so a hit still lands as an event.
- */
-const RUMBLE_MAX = 0.62;
-export function roadRumble(speedFrac: number): number {
-  const frac = Math.min(1, Math.max(0, speedFrac));
-  return frac * frac * RUMBLE_MAX;
-}
-
-/**
  * Where the camera actually stands this frame — the shake, applied to the
  * camera rather than to a `ctx.translate`, so the effects, the gore and the
  * road all move together instead of sliding against each other.
  *
- * `speedFrac` folds the ride's own tremble in with whatever the last hit left
- * behind, so the two are one motion rather than two shakes fighting.
+ * A COLLISION IS THE ONLY THING THAT MOVES THIS CAMERA, and that is a decision
+ * rather than an omission. The road used to carry a permanent SPEED TREMBLE as
+ * well — a wobble rising with the square of the speed, meant to say "this wagon
+ * is thirty years old and doing 120". What it actually said was that the game
+ * was broken: at the top end every house, every lamp post and the car itself
+ * jittered a pixel back and forth several times a second, and a picture made of
+ * hard-edged pixel art has no motion blur to hide that in. It read as a bad
+ * frame rate, not as a fast car — and worse, it left nothing for a real hit to
+ * do, because the frame was already shaking before anything was struck. Silence
+ * between the blows is what makes a blow land.
  */
 export function shakeCamera(
   state: DriveFxState,
   camera: Camera,
   nowMs: number,
-  speedFrac = 0,
 ): Camera {
-  const amount = state.calm ? 0 : state.shake + roadRumble(speedFrac);
+  const amount = state.calm ? 0 : state.shake;
   if (amount <= 0) return camera;
   const amp = amount * SHAKE_PER_FORCE;
   // Two incommensurate rates, so the shudder never settles into a wobble.

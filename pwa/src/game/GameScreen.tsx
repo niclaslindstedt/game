@@ -52,6 +52,9 @@ import type { CutsceneReveal } from "./overlays/CutsceneOverlay.tsx";
 import type { DialogueReveal } from "./overlays/DialogueOverlay.tsx";
 import type { IntroReveal } from "./overlays/IntroOverlay.tsx";
 import { levelUpIntensity } from "./levelup-intensity.ts";
+import { dollDataUrl } from "./paper-doll.ts";
+import { playerDollLayers } from "./paper-doll-live.ts";
+import { heroSoak } from "./game-screen/hero-soak.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import {
   pauseMusic,
@@ -370,6 +373,8 @@ export function GameScreen({
   /** Set as the drive HOME hands the trip back, consumed by the next run's
    * build (run-setup.ts): he pulls onto his own drive at the wheel. */
   const arriveInCarRef = useRef(false);
+  /** The line the drive in earned, spent by the next run's setup. */
+  const arrivalThoughtRef = useRef<string | undefined>(undefined);
   // What landed the fatal blow, ready to print — the line the SOFTCORE YOU DIED
   // splash leads with (death-cause.ts). Captured off the tick the hero fell on,
   // because that tick carries both the blow and the death.
@@ -727,6 +732,7 @@ export function GameScreen({
       difficulty,
       characterRef,
       arriveInCarRef,
+      arrivalThoughtRef,
       resumeRef,
       checkpointRef,
       botView,
@@ -927,6 +933,9 @@ export function GameScreen({
       shotFlashElRef,
       openShots,
       shotsOpenRef,
+      // While a DRIVE is up it owns the screen and the input; the run under it
+      // is still mounted, so this layer has to be told to stand down.
+      driveOpenRef: driveRef,
       // The caption is the venue the picture was taken in, read at the press:
       // the gallery lists a roll of pictures, and "which level was that" is the
       // one thing a thumbnail cannot say for itself.
@@ -1612,6 +1621,25 @@ export function GameScreen({
         <DriveScreen
           params={drive}
           assets={assets}
+          // HIS OWN FACE AND HIS OWN NAME in the road's speech box — the same
+          // dressed paper doll the HUD, the bag and the in-world dialogue draw
+          // him as. Composed HERE rather than on the road: the doll is built
+          // from a `GameState` (worn armor, held weapon, the blood on his coat)
+          // and a drive deliberately has none.
+          heroName={character.name}
+          heroPortrait={
+            state
+              ? (dollDataUrl(
+                  assets.sprites,
+                  playerDollLayers(state, "0"),
+                  heroSoak(state),
+                  { bust: true },
+                ) ?? null)
+              : null
+          }
+          // The SCREENSHOT bind, which the run's own control layer is not
+          // listening for while a road is up.
+          onScreenshot={() => takeScreenshot("THE DRIVE")}
           // NOBODY'S THUMB IS ON THIS ONE. A demo or a BOT VIEW run is the
           // autopilot playing the game, and the road is part of the game: with
           // no driver it coasts down from its opening 28% throttle, stops, and
@@ -1620,13 +1648,19 @@ export function GameScreen({
           // switch is what lets `playtest.mjs` and the shot recipes see the
           // road at all.
           auto={demo || botView}
-          onArrived={(to) => {
+          onArrived={(to, _bodies, verdict) => {
             // The crossing that was waiting on the road, made exactly as it
             // would have been a minute ago — the drive changed how long the
             // trip took, not what it was.
             // Homeward, he arrives sitting in it — the whole point of having
             // driven. Outbound he gets out at GOODCO like anybody parking.
             arriveInCarRef.current = drive.direction === -1;
+            // …and what he made of the trip goes with him: the line the drive
+            // earned is spoken as the last page of the destination's opening
+            // monologue (`RunParams.arrivalThought` → `introPages`), which is
+            // where a man's opinion of a journey belongs — standing beside the
+            // car, having finished it.
+            arrivalThoughtRef.current = verdict;
             driveRef.current = null;
             setDrive(null);
             const pending = pendingTravelRef.current;

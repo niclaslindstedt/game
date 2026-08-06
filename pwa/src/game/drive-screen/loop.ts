@@ -21,17 +21,13 @@
 // what lets the gallery play a 200 ms collision at an eighth speed with the gore,
 // the sparks and the physics all stretching together.
 
-import {
-  DRIVE,
-  DRIVE_OUTCOME,
-  driveRideQuality,
-  type DriveState,
-} from "@game/core";
+import { DRIVE, DRIVE_OUTCOME, type DriveState } from "@game/core";
 
 import { type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { goreBurst, type GoreBurst } from "../game-screen/gore-burst.ts";
 import { drawGore } from "../render/gibs.ts";
+import { bodyAnchorX, bodyAnchorY } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
 import { playDriveSound } from "../sfx/index.ts";
 import {
@@ -50,6 +46,7 @@ import {
 import {
   bodyHitSound,
   BREAKDOWN_SOUND,
+  lampHitSound,
   panelSound,
   SHED_SOUND,
   trafficHitSound,
@@ -110,13 +107,20 @@ export function runEngineNote(
  *
  * `say` is optional because only one host has a mouth: the gallery's exhibits
  * have no speech box, and a diorama that parked itself on a monologue would
- * stop being a loop.
+ * stop being a loop. It takes the drive's own clock, because a line on this
+ * road is a BARK that retires itself rather than a scene somebody dismisses.
+ *
+ * WHAT HE MAKES OF THE TRIP IS NOT SAID HERE. Only two of his lines belong to
+ * the road — the promise before the crowd and the wagon giving up under him;
+ * the arrival's verdict is read off the whole journey (`driveVerdict`) and
+ * spoken at the far end, standing beside the car, as the last page of the
+ * destination's opening monologue. See `src/game/items/flow.ts` `introPages`.
  */
 export function drainDrive(
   drive: DriveState,
   bursts: Burst[],
   fx: DriveFxState,
-  say?: (id: string) => void,
+  say?: (id: string, nowMs: number) => void,
 ): void {
   for (const strike of drive.strikes) {
     const frames = CROWD_SPRITES[strike.variant % CROWD_SPRITES.length];
@@ -160,6 +164,14 @@ export function drainDrive(
         trafficHitSound(event.pos.x, event.pos.y, event.joules),
       );
     }
+    // A STREET LIGHT LEAVING ITS BASE — the shards a car sheds, plus the
+    // crunch, because what the player has just heard is steel shearing off a
+    // concrete foot rather than a fender folding.
+    if (event.type === "lampFelled") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
+    }
     if (event.type === "panelBent") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
       playDriveSound(synth, panelSound(event.pos.x, event.pos.y));
@@ -173,24 +185,21 @@ export function drainDrive(
       playDriveSound(synth, BREAKDOWN_SOUND);
     }
     if (!say) continue;
-    if (event.type === "monologue") say("drive_out_welfare");
-    if (event.type === "breakdown") say("drive_broke_down");
-    if (event.type === "arrived") {
-      const quality = driveRideQuality(drive);
-      say(
-        quality === "clean"
-          ? "drive_arrive_clean"
-          : quality === "some"
-            ? "drive_arrive_some"
-            : "drive_arrive_bumpy",
-      );
-    }
+    if (event.type === "monologue") say("drive_out_welfare", drive.ms);
+    if (event.type === "breakdown") say("drive_broke_down", drive.ms);
   }
 }
 
 /**
  * The bodies coming apart, over the finished picture — the same pass the run
  * uses, handed a synthetic effect because a drive has no effect layer.
+ *
+ * SEATED THROUGH THE PROJECTION (`bodyAnchor*`), like the fx layer beside it
+ * and like every standing body in the game. A raw `pos - camera` put every
+ * burst most of a lane BELOW the person it came off — the road is drawn raked
+ * (pitch 0.75) and a quarter of the offset from the camera's own line went
+ * missing, which on a phone is a good fifty screen pixels of daylight between a
+ * man and his own blood.
  *
  * Returns the bursts still in the air, so the caller keeps a list that shrinks.
  */
@@ -213,8 +222,8 @@ export function drawBursts(
         durationMs: BURST_LIFE_MS,
         pos: { x: b.x, y: b.y },
       } as Parameters<typeof drawGore>[1],
-      Math.round(b.x - camera.x),
-      Math.round(b.y - camera.y),
+      bodyAnchorX(b.x, b.y, camera.x, camera.y),
+      bodyAnchorY(b.x, b.y, camera.x, camera.y),
       nowMs,
       sprites,
     );

@@ -46,7 +46,6 @@ import {
   createDriveFx,
   driveBodyHit,
   driveTrafficHit,
-  roadRumble,
   shakeCamera,
   stepDriveFx,
 } from "../../pwa/src/game/drive-screen/drive-fx.ts";
@@ -179,10 +178,13 @@ function gearOpening(gear: number): number {
 }
 
 describe("the road's shake", () => {
-  it("trembles harder the faster the ride, and not at all at a standstill", () => {
-    expect(roadRumble(0)).toBe(0);
-    expect(roadRumble(1)).toBeGreaterThan(roadRumble(0.5));
-    expect(roadRumble(0.5)).toBeGreaterThan(roadRumble(0.2));
+  it("stands perfectly still until something is actually hit", () => {
+    // The road used to tremble with SPEED, and it read as a broken frame rate
+    // rather than as a fast car — worse, it left a real collision nothing to
+    // do. Silence between the blows is what makes a blow land.
+    const fx = createDriveFx();
+    const camera = { x: 100, y: -50 };
+    expect(shakeCamera(fx, camera, 1234)).toEqual(camera);
   });
 
   it("shoves harder for a heavier hit, and settles back to still", () => {
@@ -205,7 +207,7 @@ describe("the road's shake", () => {
     expect(calm.shake).toBe(0);
     expect(calm.flash).toBe(0);
     const camera = { x: 100, y: -50 };
-    expect(shakeCamera(calm, camera, 1234, 1)).toEqual(camera);
+    expect(shakeCamera(calm, camera, 1234)).toEqual(camera);
     // The hit still SHOWS — the pieces are thrown, it is only the frame that
     // stays put.
     expect(calm.fx.length).toBeGreaterThan(0);

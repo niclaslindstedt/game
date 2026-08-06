@@ -101,6 +101,53 @@ export type DriveTraffic = {
   hitCooldownMs: number;
 };
 
+/** What a piece of kerbside furniture is. */
+export type DrivePropKind =
+  /** Somebody's car, left at the near kerb with the handbrake on. */
+  | "parked_car"
+  /** A street light — the one thing on this road that BREAKS rather than
+   * moves. */
+  | "lamp_post";
+
+/**
+ * One piece of street furniture, as the sim holds it.
+ *
+ * It is a LIVE OBJECT rather than a derived drawing, and that is the whole
+ * change: where it stands is still derived from its slot (`street.ts`, a hash
+ * of the position — no rng draw, the same street both ways), but once the road
+ * has unrolled far enough to reach it, it exists, it can be hit, and what
+ * happens to it afterwards is physics rather than a redraw.
+ */
+export type DriveProp = {
+  id: number;
+  kind: DrivePropKind;
+  pos: Vec2;
+  /** Which sprite it wears — a parked car's model. Unread for a lamp post,
+   * which comes in exactly one flavour. */
+  variant: number;
+  /**
+   * THE POST HAS COME OFF ITS BASE. Only ever true of a `lamp_post`: a car does
+   * not stop being a car when it is hit, but a street light emphatically stops
+   * being a street light, and everything after that moment — the flight, the
+   * cartwheel, the skid, the fact it can never be hit again — hangs off this
+   * one flag.
+   */
+  felled: boolean;
+  /** Ground velocity while it is on its way somewhere (world px/s). */
+  vel: Vec2;
+  /** Height off the road (px) and its rate. */
+  z: number;
+  vz: number;
+  /** How far over it has turned (radians), and how fast. A standing post is
+   * dead upright at 0; a felled one cartwheels. */
+  angle: number;
+  spin: number;
+  /** Ms of immunity left after being hit — the same "one contact is one
+   * impact" latch the traffic carries, and needed for the same reason: two
+   * bodies that touch keep touching for dozens of ticks. */
+  hitCooldownMs: number;
+};
+
 /**
  * A BODY, AT THE INSTANT IT WAS HIT — everything the app needs to burst it,
  * and nothing about how.
@@ -133,8 +180,10 @@ export type DriveStrike = {
 export type DriveEvent =
   /** A person went under the car. */
   | { type: "pedestrianHit"; pos: Vec2; joules: number }
-  /** Traded paint with another car. */
+  /** Traded paint with another car — moving, or parked at the kerb. */
   | { type: "trafficHit"; pos: Vec2; joules: number }
+  /** A street light has left its base and is on its way down the road. */
+  | { type: "lampFelled"; pos: Vec2; joules: number }
   /** A panel climbed a damage rung. */
   | { type: "panelBent"; pos: Vec2 }
   /** A part worked free, hung, or tore off entirely. */
@@ -217,6 +266,9 @@ export type DriveState = {
   pedestrians: DrivePedestrian[];
   /** Everything else with wheels. */
   traffic: DriveTraffic[];
+  /** The kerbside furniture the road has unrolled so far — the lamp posts and
+   * the cars somebody left out. */
+  props: DriveProp[];
   /** Wheels the car has thrown, bouncing down the road behind it. Reuses the
    * run's own debris physics (`WHEEL_DEBRIS`, src/game/vehicles.ts). */
   wheelDebris: WheelDebris[];
@@ -227,8 +279,10 @@ export type DriveState = {
   /** How many people the car has hit. The number the hero's arrival line reads,
    * and the only score the minigame keeps. */
   bodies: number;
-  /** How many other cars have been shunted. */
+  /** How many other cars have been shunted — moving and parked alike. */
   shunts: number;
+  /** How many street lights have been taken off their bases. */
+  posts: number;
   /** The fastest the car has gone this drive (px/s) — the HUD's own bragging
    * rights, and what "the minigame will award speed" is measured on. */
   topSpeed: number;
@@ -251,6 +305,11 @@ export type DriveState = {
   nextPedestrianAt: number;
   /** …and the same for traffic. */
   nextTrafficAt: number;
+  /** The next kerb slot the street has not put its furniture down at — an
+   * INDEX rather than a distance, because the furniture stands on a fixed
+   * pitch in world x (so the way home passes the same posts) and it walks in
+   * whichever direction this leg runs. */
+  nextPropSlot: number;
   /** Latched once the hero has had his think about the people ahead. */
   monologueDone: boolean;
   /** The id counter for everything the road mints. */

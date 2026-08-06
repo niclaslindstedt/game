@@ -17,7 +17,13 @@
 // DEVELOPER TOOLING. `__DEV_TOOLS__` folds the whole branch (and this chunk)
 // out of a store build, exactly like the gallery.
 
-import { useEffect, useState, type ReactElement } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 
 import { DIFFICULTY_ORDER, type Difficulty } from "@game/menu";
 
@@ -26,6 +32,9 @@ import { DRIVE, type DriveState } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { loadGameAssets, peekGameAssets, type GameAssets } from "../assets.ts";
+import { synth } from "../audio.ts";
+import { captureScreen } from "../screenshots.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { DriveScreen } from "./DriveScreen.tsx";
 
 /** The two ends of the one road there is — the same pair `legDirection` knows,
@@ -135,6 +144,7 @@ export function DriveWorkbench({
   params: URLSearchParams;
   onClose: () => void;
 }): ReactElement | null {
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [assets, setAssets] = useState<GameAssets | null>(peekGameAssets);
   const [trip, setTrip] = useState(() => driveFromParams(params));
   // ARRIVING RESTARTS IT rather than ending: a workbench that emptied itself
@@ -153,6 +163,10 @@ export function DriveWorkbench({
     };
   }, [assets]);
 
+  // ESCAPE LEAVES THE WORKBENCH. The road's own pause card answers the same
+  // key, and that is fine: this handler unmounts the whole thing, so the card
+  // it raised never gets a frame. A developer surface's exit outranks a menu
+  // inside the thing being worked on.
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -161,15 +175,26 @@ export function DriveWorkbench({
     return () => window.removeEventListener("keydown", key);
   }, [onClose]);
 
+  /** The SCREENSHOT bind, here as in the game. No flash miniature — the shelf
+   * that shows one belongs to a run, and the workbench has none; the shutter
+   * and the roll are the parts a developer taking reference shots needs. */
+  const takeScreenshot = useCallback(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    playUiSound(synth, "shutter");
+    void captureScreen(root, "THE DRIVE");
+  }, []);
+
   if (!assets) return null;
   return (
-    <div style={{ position: "absolute", inset: 0 }}>
+    <div ref={rootRef} style={{ position: "absolute", inset: 0 }}>
       <DriveScreen
         key={`${lap}:${trip.seed}:${trip.difficulty}:${trip.direction}`}
         params={trip}
         assets={assets}
         auto={trip.bot}
         stage={stagerFor(params.get("stage") ?? "", trip.direction)}
+        onScreenshot={takeScreenshot}
         onArrived={() => {
           setTrip((t) => ({ ...t, seed: (t.seed + 7919) >>> 0 }));
           setLap((n) => n + 1);

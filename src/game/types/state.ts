@@ -415,8 +415,24 @@ export type GameState = {
    * Which page of the level's opening monologue is on screen while
    * `phase === "intro"` — the hero's black-screen briefing dialogue. Turning
    * past the last page drops into the `title` card; unused in other phases.
+   * Indexes `introPages(state)`, which is the level's own monologue with any
+   * ARRIVAL line in front of it.
    */
   introPage: number;
+  /**
+   * A THOUGHT THE HERO ARRIVED STILL HAVING — the id of the line spoken as the
+   * first page of this level's opening monologue, or undefined for a plain
+   * arrival.
+   *
+   * It is what the trip in left him with. The DRIVE reads the whole journey —
+   * the clock, the car, the other drivers, the council's lighting and the
+   * people — and hands the arriving run the one line it earned
+   * (`driveVerdict`), because a man's opinion of a journey belongs to the
+   * moment he gets out of the car rather than to a popup over the road he is
+   * still driving. A SESSION PARAMETER (`RunParams.arrivalThought`) like
+   * everything else the app settles before a run's first tick.
+   */
+  arrivalThought?: string;
   /**
    * Which page of the level's post-victory EPILOGUE is on screen while
    * `phase === "outro"` (`LevelDef.outro` — the intro's black-screen mirror,

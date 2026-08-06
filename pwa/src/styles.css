@@ -6229,6 +6229,18 @@ html.app-locked body {
   gap: 0.5rem;
 }
 
+/* …and WITHOUT a portrait, where it is a direct child of the box instead of a
+   cell in the VN row. `.dialogue-box` is a COLUMN flex with `align-items:
+   flex-start`, so a child that does not claim the width shrinks to its own
+   min-content — and since the box measures this element to decide where to
+   break the speech (`useTextColumn`), the column it measured was about three
+   characters wide and every line printed one syllable per row. Stretching it is
+   the whole fix; with a portrait, `.dialogue-vn` was already doing this. */
+.dialogue-content-plain {
+  align-self: stretch;
+  width: 100%;
+}
+
 /* The text column's scroll viewport. Stretches to the full content width (so
    the overlay can measure it and wrap lines to fit — a portrait box is far
    narrower than the authored lines assume) and clips the scroll-in slide when

@@ -45,7 +45,6 @@ import {
   createDrive,
   error,
   stepDrive,
-  DRIVE,
   type DriveInput,
   type DriveParams,
   type DriveState,
@@ -245,15 +244,10 @@ export function runDriveExhibit(deps: {
         holdAtX === null
           ? tracking
           : { x: tracking.x + (holdAtX - drive.car.pos.x), y: tracking.y };
-      const camera = shakeCamera(
-        fx,
-        held,
-        drive.ms,
-        // THE TREMBLE IS THE RIDE'S, not the frame's, so it is read off the car
-        // even after the camera has stopped chasing it — a held camera watching
-        // a wreck coast to a halt still shudders with what the wreck is doing.
-        Math.abs(drive.car.speed) / DRIVE.topSpeedPx,
-      );
+      // ONLY A COLLISION MOVES THIS CAMERA. The road used to carry a permanent
+      // speed tremble as well, and it read as a broken frame rate rather than
+      // as a fast car — worse, it left a real hit nothing to do (drive-fx.ts).
+      const camera = shakeCamera(fx, held, drive.ms);
       // EVERY CLOCK HANDED DOWN IS THE DRIVE'S, including the walk cycle's:
       // the wall clock would leave the crowd striding on through a show being
       // watched at an eighth speed.

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState, type MutableRefObject } from "react";
 
 import {
   heroNameOr,
+  introPages,
   playerAppearance,
   runLevelDef,
   withHeroNameLines,
@@ -92,7 +93,10 @@ export function IntroOverlay({
   variant?: "intro" | "outro";
 }) {
   const def = runLevelDef(state);
-  const pages = variant === "outro" ? (def.outro ?? []) : def.intro;
+  // The INTRO is read through the engine (`introPages`), never straight off the
+  // level def: a run can arrive carrying a line of its own — the drive's
+  // verdict on the trip in — and it is spoken as the monologue's first page.
+  const pages = variant === "outro" ? (def.outro ?? []) : introPages(state);
   const pageIndex = variant === "outro" ? state.outroPage : state.introPage;
   const page = withHeroNameLines(pages[pageIndex] ?? EMPTY_PAGE, heroName);
 

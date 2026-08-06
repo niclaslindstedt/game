@@ -48,6 +48,37 @@ export const DRIVE_UNITS = {
   /** Another car on the road (kg), on MEDIUM — a bit lighter than the hero's
    * barge, which is why they get shoved and he does not. Laddered per rung. */
   trafficMassKg: 1300,
+  /**
+   * A car left at the kerb (kg), on MEDIUM — laddered on the traffic's own
+   * multiplier, because it is a car.
+   *
+   * HEAVIER THAN ONE THAT IS DRIVING, on purpose and honestly: this one is in
+   * gear with the handbrake on and a kerb behind its wheels, so shoving it
+   * means shoving the kerb too. But the mass is the SMALL half of why hitting
+   * one hurts. The big half is free: the collision is solved on the SWEEP (the
+   * speed the car's surface runs at the thing), and a car parked dead still is
+   * met at the hero's WHOLE speed, where one dawdling along in the same
+   * direction is met at the difference. At 120 mph that is 624 px/s against
+   * about 400 — and the energy the crumple absorbs goes as the SQUARE of it, so
+   * the parked one does about two and a half times the damage for the same
+   * geometry. Nobody had to write that down; it falls out of `solveImpact`.
+   */
+  parkedCarMassKg: 1700,
+  /**
+   * A lamp post's column (kg) — the mass the car actually has to deal with,
+   * which is the POST rather than the installation.
+   *
+   * A street light is a slip-base column: it is meant to shear off its foot
+   * rather than stop a car dead, and the number here is what that leaves the
+   * bumper arguing with. MEASURED against the thing it has to feel like: at the
+   * top end a clouted post costs about a twentieth of the car and a dozen mph,
+   * so one is a bad moment and a gutter-hugging run down the whole street is a
+   * breakdown — which is exactly the lesson the kerb is there to teach.
+   * Unladdered by difficulty: the ladder is about the ROAD (what traffic and
+   * the crowd weigh), and the council's lighting is the same steel on every
+   * rung.
+   */
+  lampPostMassKg: 120,
 } as const;
 
 export const DRIVE = {
@@ -104,34 +135,39 @@ export const DRIVE = {
    * the minigame in one number: it is a DISTANCE, not a timer, so driving fast
    * genuinely ends it sooner and driving scared genuinely drags.
    *
-   * MEASURED with `make drive-bench`, 60 seeds a rung on MEDIUM. First the
+   * MEASURED with `make drive-bench`, 60 seeds a rung on MEDIUM, and re-taken
+   * on the crowd this road now carries (`pedestriansPerKPx`). First the
    * PESSIMAL case — a dead straight line, never dodging once:
    *
    *   throttle   trip      bodies   ending wear
-   *   1.00       53 s      17       breaks 2 legs in 12; every leg above HARD
-   *   0.80       58 s      19       survives, badly bent (63%)
-   *   0.55       74 s      25       survives comfortably (22%)
+   *   1.00       51 s      41       breaks 40 legs in 60, most of them late
+   *   0.80       61 s      56       survives 58 in 60, barely (74%)
+   *   0.55       77 s      74       survives every one, comfortably (40%)
    *
    * Which is the shape the whole thing wants: flat out is genuinely faster and
-   * genuinely might not get there, and the safe pace costs you twenty seconds
+   * genuinely might not get there, and the safe pace costs you thirty seconds
    * and hits MORE people, because you are on the road longer.
    *
    * And then the same road driven by something that STEERS — the shipped
    * auto-driver (`drive/driver.ts`), which is the bar a decent human clears:
    *
    *   rung        trip    bodies   ending wear   arrived
-   *   easy        46 s     8.8       1%          60/60
-   *   medium      48 s     9.1       5%          60/60
-   *   hard        49 s    10.1       9%          60/60
-   *   nightmare   50 s     9.9      12%          60/60
-   *   jesus       52 s    10.5      15%          60/60
+   *   easy        59 s    50         7%          60/60
+   *   medium      64 s    55        22%          60/60
+   *   hard        67 s    59        33%          60/60
+   *   nightmare   69 s    62        42%          60/60
+   *   jesus       72 s    65        51%          60/60
    *
    * Read the two together, because between them they are the design: steering
-   * is worth about half the bodies and the whole of the car, the ladder still
-   * costs a JESUS driver six seconds and fifteen times the damage an EASY one
-   * takes — and even driven properly the leg cannot be threaded clean. Ten
-   * people is `bumpyRideBodies`, so the good driver arrives to the same line
-   * the bad one does, which is the joke the course length exists to land.
+   * is worth the whole of the car — a straight line at full throttle breaks two
+   * legs in three, and a driver who steers arrives every time on every rung —
+   * while the ladder still costs a JESUS driver thirteen seconds and seven
+   * times the damage an EASY one takes. And note the column that does NOT come
+   * down: even driven properly the leg cannot be threaded, because the crowd is
+   * laid down thick enough that the good driver arrives with fifty people on
+   * the count. That is the joke the course length exists to land, and it is why
+   * the arrival lines are read off the CAR and the CLOCK rather than off the
+   * tally (`DRIVE.verdict`).
    */
   coursePx: 24000,
   /**
@@ -160,8 +196,30 @@ export const DRIVE = {
    * clean is a road that makes him a monster rather than a man who did not
    * look. "Impossible to not hit people" is the design, so this number is
    * tuned until a good driver still arrives with bodies on the count.
+   *
+   * THREE TIMES WHAT IT OPENED WITH, and the reason is the thing the first cut
+   * got wrong about its own joke. At a body every three hundred pixels the road
+   * had GAPS in it — long enough to relax in, long enough for a careful driver
+   * to believe he was being careful — and the whole bit is that there is no
+   * such thing as careful out here. A crowd is a CROWD: it stands three deep on
+   * the crossings and it is never entirely off the tarmac.
+   *
+   * WHAT IT DOES TO THE WHEEL, measured (`make drive-bench`, and pinned in
+   * `drive_driver_test.ts`): the tarmac is now SATURATED, so per mile of road
+   * the shipped auto-driver meets exactly as many people as a car driven in a
+   * dead straight line does. The wheel did not stop mattering — steering is
+   * still worth the whole of the car (22% ending wear against 92%) — but what
+   * it is FOR is the traffic, the kerb and the wagon. The tally is the one
+   * thing on this road nobody can drive their way out of, which is precisely
+   * the joke the arrival lines are written against.
+   *
+   * And note what it does NOT change: a body's COST. The gentle rungs weigh a
+   * person at a quarter of MEDIUM's (`DifficultyDef.drive.pedestrianMassMult`),
+   * so a road this thick is a wall of people to a JESUS driver and a soft
+   * snowfall to an EASY one — the crowd is scenery until the difficulty says it
+   * is physics.
    */
-  pedestriansPerKPx: 3.4,
+  pedestriansPerKPx: 10.2,
   /** How fast somebody out on the road walks, and how fast they move once they
    * have seen a car worth stepping in front of (world px/s). */
   walkPx: 22,
@@ -212,6 +270,58 @@ export const DRIVE = {
    * the kerb is not something this wagon does.
    */
   pavementPx: 16,
+
+  // ── THE KERB ──────────────────────────────────────────────────────────────
+  /**
+   * THE STREET FURNITURE — the lamp posts down both pavements and the cars
+   * somebody left at the near kerb.
+   *
+   * IT IS A WORLD FACT, NOT A BACKDROP, and it used to be the other way round:
+   * the renderer derived a pretty street from a hash and the sim knew nothing
+   * about it, so the wagon drove THROUGH a parked van at 120 and the lamp posts
+   * were painted onto a road that could not feel them. A picture the player is
+   * asked to read as an obstacle and then cannot hit is worse than no picture
+   * at all — he brakes for it once, learns it is a lie, and stops reading the
+   * kerb at all. So the furniture is the engine's now (`street.ts`) and the
+   * renderer draws what the sim is holding.
+   *
+   * The placement is DERIVED FROM POSITION rather than rolled, exactly as it
+   * was when it was scenery: a hash of the slot index, so the same street is
+   * laid out the same way on the way home as on the way out, a restart puts
+   * every post back where it was, and none of it costs the road's seeded stream
+   * a single draw.
+   */
+  street: {
+    /** How far apart the kerbside slots stand (world px). Sparse: everything
+     * here is between the player and the road, and a solid row of it would be
+     * a fence to read the crowd through. */
+    pitchPx: 104,
+    /** What share of the NEAR kerb's slots hold a car rather than a lamp post.
+     * One in six: often enough that the near gutter is never a free lane, rare
+     * enough that a parked car still reads as a thing rather than as a wall. */
+    parkedShare: 0.16,
+    /** How far onto the pavement the furniture stands, measured off the
+     * tarmac's own edge (world px). */
+    kerbOffsetPx: 4,
+    /** A lamp post's collision circle at the ground (world px) — the column,
+     * not the hood it carries. */
+    lampRadiusPx: 4,
+    /** A parked car's collision circle (world px). Its own footprint, so it is
+     * exactly as wide standing at the kerb as it was driving. */
+    parkedRadiusPx: 9,
+    /** How fast a felled post sheds its speed on the tarmac (1/s), and the
+     * speed under which it has stopped for good. */
+    lampDragPerSec: 1.8,
+    lampRestPx: 10,
+    /** Gravity for a post in the air (px/s²) and what a bounce keeps — it is
+     * steel, so it keeps very little and it does not roll far. */
+    lampGravityPx: 640,
+    lampBounce: 0.22,
+    /** How fast a felled post turns over, in radians per second per px/s of
+     * the speed it left at. A post knocked out at 120 cartwheels down the road;
+     * one nudged at 20 leans over and drops where it stood. */
+    lampSpinPerSpeed: 0.006,
+  },
 
   // ── THE TRAFFIC ───────────────────────────────────────────────────────────
   /**
@@ -293,6 +403,15 @@ export const DRIVE = {
     /** A shunted car is a much bigger lump than a person, so it does its damage
      * on the same curve at this multiple. Trading paint hurts. */
     trafficWearScale: 2.6,
+    /**
+     * …and a LAMP POST, which is a third thing again. A person crumples and a
+     * car crumples with you; a galvanized column does neither — it shears off
+     * its base and hands the bumper the whole blow back. So the same energy
+     * buys more damage than a body's would, and much less than a van's, which
+     * is what "it should hurt the car a bit" comes out as: a clout at the top
+     * end costs about a tenth of the wagon, and a couple of mph.
+     */
+    lampWearScale: 1.5,
     /** How hard a hit shoves the suspension (px/s per unit of wear dealt) —
      * `nudgeCar`'s own units, so the body visibly takes the blow. */
     nudgePerWear: 900,
@@ -335,9 +454,45 @@ export const DRIVE = {
   /** How long the arrival beat holds at the end of the course before the drive
    * hands back (ms). */
   arrivalHoldMs: 1400,
-  /** The body count that separates the hero's two readings of the trip. Under
-   * it the ride was "fine"; at or over it, it was "a bit bumpy". */
-  bumpyRideBodies: 10,
+
+  /**
+   * WHAT HE MAKES OF THE TRIP — the lines the arrival is read against
+   * (`driveVerdict`).
+   *
+   * THE READING IS THE MINIGAME'S ONLY SCORE, and the joke is what it is a
+   * score OF. He arrives having driven through a crowd at a hundred and twenty
+   * and remarks on the SUSPENSION, the CLOCK, the OTHER DRIVERS and the
+   * COUNCIL'S LIGHTING — the four things a man notices on a commute — and never
+   * once on a person. The player does the noticing on his behalf, which is the
+   * only way this is funny rather than nasty, and it is why every threshold
+   * below is about the CAR, the TIME or the street furniture: the body count is
+   * the one number he files under road surface.
+   *
+   * Ordered by what is most remarkable, not by what is worst.
+   */
+  verdict: {
+    /** Wear past which the car is the only thing he can think about. */
+    wreckWear: 0.7,
+    /** Street lights taken out before the council becomes the story. */
+    posts: 3,
+    /** …and cars traded paint with before the other drivers do. MEASURED: a
+     * driver who never touches the wheel still collects four down a course and
+     * a good one seven on JESUS (they include the cars parked at the kerb), so
+     * the line has to sit above what the road hands out for free. */
+    cars: 8,
+    /** The trip time (ms) under which he made unusually good going, and over
+     * which he plainly dawdled. Both sit outside the band the two measured
+     * tables in `coursePx` cover — a good driver takes 59–72 s and a reckless
+     * straight line 51 s — so neither is the line a player gets by default. */
+    quickMs: 52000,
+    slowMs: 78000,
+    /** The body count that turns "roads are rough out this way" into "bit
+     * bumpy tonight". Scaled to the crowd the road actually carries: the
+     * shipped auto-driver arrives with fifty on MEDIUM and sixty-five on JESUS
+     * (see `coursePx`), so the line has to sit near the middle of that or one
+     * of the two lines never plays. */
+    bumpyBodies: 45,
+  },
 } as const;
 
 /** HOW LONG THIS LEG IS — the whole road unless the params shortened it (the

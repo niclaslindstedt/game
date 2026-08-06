@@ -96,6 +96,19 @@ export function panelSound(x: number, y: number): string {
   return pick(PANEL_SOUNDS, x, y);
 }
 
+/**
+ * The sound of a street light leaving its base.
+ *
+ * ALWAYS THE HEAVY SHELF, and it is the one pick here that does not consult the
+ * joules. Every other collision on this road can be light or hard depending on
+ * how it was taken; a lamp post cannot. It is a galvanized column bolted to a
+ * concrete foot, and whatever speed it is met at, what happens is a shear —
+ * there is no gentle version of it to play.
+ */
+export function lampHitSound(x: number, y: number): string {
+  return pick(CRUNCH_SOUNDS, x, y);
+}
+
 /** Every id the road can ask the bank for — what the content test walks. */
 export const DRIVE_SOUND_IDS: readonly string[] = [
   ...BODY_SOUNDS,

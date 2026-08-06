@@ -22,6 +22,7 @@ import {
   runLevelDef,
   SECRET_LEVEL_ORDER,
   markThoughtsSeen,
+  muteDialogue,
   OBSTACLES,
   PLAYER,
   dismissIntro,
@@ -208,6 +209,13 @@ describe("GOODCO HQ level def", () => {
       state.stampedeTimerMs = Number.POSITIVE_INFINITY;
       state.items = [];
       state.players[0].stats.luck = 0; // isolate the base rate + the profile bonus
+      // …AND SILENCE THE ARRIVAL SCENES. A stack of forty staffers parked in
+      // plain sight raises one, the scene FREEZES the run, and `idle` never
+      // taps it away — so the loop below spent its whole budget on a held
+      // dialogue box, one round fired, forty mobs alive, and the test timed out
+      // rather than failing on anything it was measuring. Muting is the honest
+      // fix: this measures the drop ladder, not who says what on the way to it.
+      muteDialogue(state);
       // The parked stack sits inside the sight radius — mute the level's
       // sight-pinned story beats so the run measures drops, not dialogue.
       state.thoughtsSeen.push("goodco_staff", "goodco_successor");
@@ -234,10 +242,28 @@ describe("GOODCO HQ level def", () => {
       }
       // The tall bars pay real xp now — auto-spend each ding's point so the
       // stat chooser never freezes the massacre being measured.
+      //
+      // STOP WHEN THE KILLING STOPS, not when the field is empty. A staged
+      // stack does not reliably clear to the last body — a straggler drifts
+      // out of the sidearm's reach, or behind something — and waiting for one
+      // spent the whole 40,000-tick budget six times over and timed the test
+      // out at twenty seconds without failing on anything it measures. A stall
+      // is the honest end of the massacre, and it costs the comparison nothing:
+      // both sides are staged identically, so a straggler is a straggler on
+      // each.
+      const STALL = 900; // ~15 s of sim with nobody dying
+      let alive = state.enemies.length;
+      let lastKill = 0;
       for (let i = 0; i < 40_000 && state.enemies.length > 1; i++) {
         step(state, idle, DT);
         while (state.players[0].pendingStatPoints > 0) {
           allocateStat(state, state.players[0], "stamina");
+        }
+        if (state.enemies.length < alive) {
+          alive = state.enemies.length;
+          lastKill = i;
+        } else if (i - lastKill > STALL) {
+          break;
         }
       }
       // GOLD is excluded, and has to be: this measures the `dropProfile`
